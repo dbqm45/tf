@@ -502,7 +502,7 @@ def main() -> int:
         cc = repo / ".github" / "workflows" / "change-check.yml"
         cbody = cc.read_text(encoding="utf-8") if cc.is_file() else ""
         csteps = [c for c in cbody.split("\n      - ")[1:]]
-        scan_i = next((i for i, c in enumerate(csteps) if c.startswith("name: Skan bezpieczeństwa")), -1)
+        scan_i = next((i for i, c in enumerate(csteps) if c.startswith("name: Security scan")), -1)
         ci_i = next((i for i, c in enumerate(csteps) if "repository: dbqm45/ci_for_sdlc" in c), -1)
         check(r.returncode == 0 and "pull_request:" in cbody and "paths:" not in cbody
               and "security_scan.py scan --base" in cbody and "--out reports/security" in cbody
@@ -510,7 +510,7 @@ def main() -> int:
               and "pipx install semgrep==" in cbody and "pipx install pip-audit==" in cbody,
               f"W-15: change-check na każdym PR: skanery przypięte, skan od bazy PR, SARIF do ci_for_sdlc: {r.stdout}{r.stderr}")
         check(0 <= scan_i < ci_i and "continue-on-error: true" in csteps[scan_i]
-              and any(c.startswith("name: Błędy skanu") and "verdict.json" in c and "sys.exit(1 if e" in c
+              and any(c.startswith("name: Scan errors") and "verdict.json" in c and "sys.exit(1 if e" in c
                       for c in csteps[scan_i + 1:]),
               "W-16: skan przed checkoutem ci_for_sdlc (bez obcych plików), błąd skanu czerwieni, ustalenia ocenia SEC-001")
         # Z7b-1b: cele zmiany (TGT-001…004) — opcjonalne pokrycie i mutacje przekazywane do ci_for_sdlc
@@ -701,24 +701,24 @@ if sys.argv[1:3] == ["pr", "create"]:
         steps[head.removeprefix("name: ").strip()] = code
     checkout = next((c for h, c in steps.items() if h.startswith("uses: actions/checkout")), "")
     check("persist-credentials: false" in checkout, "W-10: checkout bez zapisanego tokenu (persist-credentials: false)")
-    scanners = steps.get("Skanery bezpieczeństwa (delivery)", "")
+    scanners = steps.get("Security scanners (delivery)", "")
     check("if: env.PHASE == 'delivery'" in scanners and "pipx install semgrep==" in scanners
-          and "pipx install pip-audit==" in scanners and list(steps).index("Skanery bezpieczeństwa (delivery)")
-          < list(steps).index("Faza bez interakcji"),
+          and "pipx install pip-audit==" in scanners and list(steps).index("Security scanners (delivery)")
+          < list(steps).index("Non-interactive phase"),
           f"W-19: przed fazą delivery skanery dla pętli kawałka (security_scan.py): {scanners}")
     with_token = {h for h, c in steps.items() if "github.token" in c or "GITHUB_TOKEN" in c or "GH_TOKEN" in c}
-    check(with_token == {"Gałąź fazy (poprawki trafiają do tego samego PR)", "PR-y cięć (delivery)", "PR fazy"},
+    check(with_token == {"Phase branch (fixes go to the same PR)", "Cut PRs (delivery)", "Phase PR"},
           f"W-11: GH_TOKEN tylko w krokach gałęzi i PR: {sorted(with_token)}")
     check(all("gh auth setup-git" in steps.get(h, "") for h in with_token),
           "W-12: kroki z tokenem logują git przez gh (token tylko w env kroku)")
-    persona = steps.get("Faza bez interakcji", "")
-    sandbox = steps.get("Sandbox Claude Code dla persony", "")
+    persona = steps.get("Non-interactive phase", "")
+    sandbox = steps.get("Claude Code sandbox for the persona", "")
     check(persona and "GH_TOKEN" not in persona and "github.token" not in persona
           and "ANTHROPIC_API_KEY" in persona, f"W-13: krok persony bez tokenu GitHuba: {persona}")
     check("bubblewrap socat" in sandbox and "sandbox_settings.py" in sandbox
           and "/etc/claude-code/managed-settings.json" in sandbox and "PDI_CLAUDE_SETTINGS" in sandbox
-          and "apparmor" in sandbox.lower() and list(steps).index("Sandbox Claude Code dla persony")
-          < list(steps).index("Faza bez interakcji"),
+          and "apparmor" in sandbox.lower() and list(steps).index("Claude Code sandbox for the persona")
+          < list(steps).index("Non-interactive phase"),
           f"W-14: przed personą sandbox: bwrap, AppArmor, ustawienia zarządzane i --settings: {sandbox}")
 
     # sandbox_settings.py: te same klucze co pdi.phase_sandbox.claude_settings

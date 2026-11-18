@@ -155,7 +155,7 @@ def main() -> int:
 
     # P-8: change-check.yml ma obowiązkowy krok N3 (brak verify.sh → czerwony)
     cc = (TEMPLATES / "change-check.yml").read_text(encoding="utf-8")
-    check("name: Weryfikacja produktu (N3)" in cc and "exit 1" in cc.split("Weryfikacja produktu (N3)", 1)[1][:600],
+    check("name: Product verification (N3)" in cc and "exit 1" in cc.split("Product verification (N3)", 1)[1][:600],
           "P-8 krok N3 w change-check.yml")
 
     if fails:

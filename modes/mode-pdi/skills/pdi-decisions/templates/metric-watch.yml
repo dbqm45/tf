@@ -1,10 +1,10 @@
-# Pasma kontrolne na metrykach PROD z ShipScope (tryb mode-pdi, F5): raz dziennie szereg z API usług ShipScope,
-# poziomy z control_band.py, a punkt poza 3σ w ostatnich dniach → podpisane metric.breached do skrzynki pdi.
-# Instalacja: python3 .claude/skills/pdi-decisions/scripts/metric_watch.py workflow install
-# Sekrety repozytorium: SHIPSCOPE_TOKEN (token usługi shps_… z ShipScope: Settings → General → Service tokens),
-# PDI_TF_SIGNING_SECRET (ten sam co PDI_TF_SIGNING_SECRET odbiornika pdi). Zmienne repozytorium: SHIPSCOPE_URL,
-# PDI_EVENTS_URL (https). Model nie jest wołany; metryki i progi: .claude/pdi-metrics.json.
-# Uwaga: dla bezpieczeństwa przypnij akcje do pełnego SHA commita (np. skill ops-ci-cd w pack-it).
+# Control bands on ShipScope PROD metrics (mode-pdi, F5): once a day the series from the ShipScope service API,
+# levels from control_band.py, and a point outside 3σ in the last days → a signed metric.breached to the pdi inbox.
+# Install: python3 .claude/skills/pdi-decisions/scripts/metric_watch.py workflow install
+# Repository secrets: SHIPSCOPE_TOKEN (a service token shps_… from ShipScope: Settings → General → Service tokens),
+# PDI_TF_SIGNING_SECRET (the same as PDI_TF_SIGNING_SECRET of the pdi receiver). Repository variables: SHIPSCOPE_URL,
+# PDI_EVENTS_URL (https). No model is called; metrics and thresholds: .claude/pdi-metrics.json.
+# Note: for security pin the actions to a full commit SHA (e.g. skill ops-ci-cd in pack-it).
 name: metric-watch
 
 on:
@@ -25,7 +25,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - name: Pasma kontrolne i metric.breached do pdi
+      - name: Control bands and metric.breached to pdi
         env:
           SHIPSCOPE_URL: ${{ vars.SHIPSCOPE_URL }}
           SHIPSCOPE_TOKEN: ${{ secrets.SHIPSCOPE_TOKEN }}

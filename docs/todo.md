@@ -812,6 +812,12 @@ treści (angielska), bez równoległej polskiej.
       Podpowiedzi bez zmian (901/918 · 31/43), `--hints` czysto (all, mode-pdi). Haiku przed/po (5 scenariuszy, te same
       kryteria): 3/5 → 3/5, 1,59 USD; te same 2 porażki na main i po zmianie (`faza-uruchomiona-przez-pdi`: Haiku
       proponuje `decision add`; `faza-design-tabela-ramek`: wybiera ux-feature-design) — do przejrzenia osobno.
+    - [x] 4c-y (2026-11-18): mode-pdi — szablony workflow `sdlc-phase.yml`, `change-check.yml`, `metric-watch.yml`
+      po angielsku (komentarze, opisy wejść, nazwy kroków, komunikat `::error::` braku verify.sh, commit fazy
+      `docs(CHG-n): phase <faza> (pdi)`). Nazwy kroków czytają tylko testy tf (W-16, P-8, kroki z GH_TOKEN) —
+      zaktualizowane; pdi ich nie parsuje (sprawdzone w `src/pdi`), a sekcję „Przewodnik dokończenia” w opisie PR
+      pisze samo pdi. Zainstalowane już workflow w produktach działają dalej (nadpisuje je tylko `workflow install
+      --force`). Bez próbki Haiku: SKILL.md bez zmian, szablony nie trafiają do modelu.
       Zostaje: szablony workflow `sdlc-phase.yml`, `change-check.yml`, `metric-watch.yml` (komentarze i nazwy kroków;
       P-8 i pdi czytają nazwę kroku N3 i sekcję „Przewodnik dokończenia”) — osobna partia 4c-y.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
