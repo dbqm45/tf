@@ -1,40 +1,40 @@
-# Wizualizacja danych
+# Data visualisation
 
-## Dobór wykresu do pytania
-| Pytanie | Wykres | Unikaj |
+## Choosing a chart for the question
+| Question | Chart | Avoid |
 |---|---|---|
-| zmiana w czasie | liniowy (wiele serii — maks. kilka, reszta szara) | słupkowy dla długich szeregów |
-| porównanie kategorii | słupkowy poziomy, posortowany | kołowy z wieloma kawałkami |
-| część całości | słupek skumulowany 100% lub kołowy dla 2–3 części | kołowy dla porównania wielu całości |
-| rozkład | histogram, wykres gęstości, pudełkowy, skrzypcowy (wiele grup) | sama średnia |
-| zależność dwóch zmiennych | rozrzutu (z linią trendu, przezroczystością przy dużej liczbie punktów) | liniowy dla danych bez porządku |
-| intensywność w dwóch wymiarach | mapa ciepła (dzień tygodnia × godzina) | tęczowa paleta |
-| etapy procesu z odpływem | lejek (lub słupkowy z odsetkiem przejścia między etapami) | lejek bez liczb |
-| jedna liczba z kontekstem | kafelek: wartość, zmiana, odniesienie (cel, okres poprzedni) | wskaźnik-zegar |
+| change over time | line (many series — at most a few, the rest grey) | bar for long series |
+| comparing categories | horizontal bar, sorted | pie with many slices |
+| part of a whole | a 100% stacked bar or a pie for 2–3 parts | a pie for comparing many wholes |
+| distribution | histogram, density plot, box plot, violin (many groups) | the mean alone |
+| relationship of two variables | scatter (with a trend line, transparency with many points) | a line for data without order |
+| intensity in two dimensions | heatmap (day of week × hour) | a rainbow palette |
+| process stages with drop-off | funnel (or a bar with the pass-through rate between stages) | a funnel without numbers |
+| one number with context | a tile: value, change, reference (target, previous period) | a gauge |
 
-## Zasady
-- **Tytuł mówi wniosek** („Konwersja spadła w segmencie mobilnym po 12 maja”), nie temat („Konwersja”).
-- Oś Y wykresów słupkowych od zera; skrócona oś tylko dla liniowych i z wyraźnym oznaczeniem. Jednakowe skale przy
-  wykresach do porównania.
-- Mniej elementów: bez 3D, cieni, zbędnych siatek; podpisy bezpośrednio przy seriach zamiast legendy, gdy się da.
-- Kolor ma znaczenie: jeden akcent na to, co ważne; palety dostępne dla daltonistów; kolor nigdy jedynym nośnikiem
-  informacji (ux-feature-design: kolor). Kontrast i tekst alternatywny lub tabela z danymi dla wykresów w raportach.
-- Liczby z jednostkami i okresem; źródło i data danych pod wykresem.
-- Wykres kłamie przez dobór okresu, osi i agregacji — sprawdź, czy inny rozsądny wybór nie zmienia wniosku.
+## Rules
+- **The title states the conclusion** ("Conversion fell in the mobile segment after 12 May"), not the topic ("Conversion").
+- The Y axis of bar charts from zero; a truncated axis only for line charts and clearly marked. Identical scales for
+  charts meant for comparison.
+- Fewer elements: no 3D, shadows, needless grids; labels directly on the series instead of a legend where possible.
+- Colour matters: one accent for what is important; palettes accessible to colour-blind people; colour never the only carrier
+  of information (ux-feature-design: colour). Contrast and alternative text or a data table for charts in reports.
+- Numbers with units and period; the source and date of the data under the chart.
+- A chart lies through the choice of period, axis and aggregation — check whether another reasonable choice changes the conclusion.
 
-## Narzędzia
-Python: matplotlib (pełna kontrola), seaborn (wykresy statystyczne), Plotly (interaktywne). R: ggplot2 (gramatyka
-grafiki). BI: Power BI, Tableau, Looker, Metabase — dashboardy z definicjami miar w warstwie semantycznej i
-odświeżaniem danych. W aplikacji webowej: biblioteka wykresów frontendu, dane agregowane po stronie serwera.
+## Tools
+Python: matplotlib (full control), seaborn (statistical charts), Plotly (interactive). R: ggplot2 (the grammar
+of graphics). BI: Power BI, Tableau, Looker, Metabase — dashboards with definitions of measures in a semantic layer and
+data refresh. In a web application: a frontend chart library, data aggregated on the server side.
 
 ## Dashboard
-Odpowiada na kilka stałych pytań jednego odbiorcy: najważniejsze miary na górze (z odniesieniem), szczegóły niżej,
-filtry tylko potrzebne; każda miara z definicją dostępną po najechaniu lub w słowniku. Dashboard, którego nikt nie
-otwiera przez miesiąc, usuń.
+It answers a few fixed questions of one recipient: the most important measures at the top (with a reference), details below,
+only the necessary filters; every measure with a definition available on hover or in a dictionary. A dashboard nobody
+opens for a month, remove.
 
-## Źródła
+## Sources
 - E. Tufte, *The Visual Display of Quantitative Information*; C. Nussbaumer Knaflic, *Storytelling with Data*;
   F. Anscombe (1973)
 - [roadmap.sh — Data Analyst](https://roadmap.sh/data-analyst) (charting, bar/line/pie/stacked/funnel charts,
   histograms, scatter plot, heatmap, matplotlib, seaborn, ggplot2, Power BI, Tableau)
-Opisane własnymi słowami.
+Described in our own words.

@@ -1,26 +1,26 @@
-# Przykłady regresji
+# Regression examples
 
-Nazwy projektów, testów i liczby są ilustracyjne.
+The names of projects, tests and the numbers are illustrative.
 
-## 1. Podział 70-minutowego zestawu na warstwy
-**Sytuacja:** „Każdy PR w monorepo Nx uruchamia wszystkie 1 400 testów, w tym 380 e2e w Playwright na trzech
-przeglądarkach — 70 minut. Ludzie scalają bez czekania na wynik”.
+## 1. Splitting a 70-minute suite into layers
+**Situation:** "Every PR in an Nx monorepo runs all 1,400 tests, including 380 e2e in Playwright on three
+browsers — 70 minutes. People merge without waiting for the result".
 
-**Jak:**
-1. Testy oznaczasz tagami (`@smoke`, `@critical`, `@visual`) zamiast kopiować je do osobnych zestawów.
-2. Smoke: ścieżki krytyczne i zdrowie aplikacji, jedna przeglądarka, < 5 min.
-3. PR: tylko projekty dotknięte zmianą (`nx affected`) + smoke e2e, < 15 min.
-4. Nocny: pełny zestaw, trzy przeglądarki, regresja wizualna, testy mutacyjne modułu płatności.
-5. Mierzysz czas zestawu PR i odsetek flaky, nie liczbę testów.
+**How:**
+1. You tag tests (`@smoke`, `@critical`, `@visual`) instead of copying them into separate suites.
+2. Smoke: critical paths and application health, one browser, < 5 min.
+3. PR: only the projects affected by the change (`nx affected`) + e2e smoke, < 15 min.
+4. Nightly: the full suite, three browsers, visual regression, mutation tests of the payments module.
+5. You measure the PR suite time and the share of flaky tests, not the number of tests.
 
-**Wynik:** układ zestawów i fragment CI.
+**Result:** the layout of the suites and a CI fragment.
 
-| Zestaw | Wyzwalacz | Polecenie | Zawartość | Budżet | Teraz |
+| Suite | Trigger | Command | Contents | Budget | Now |
 |---|---|---|---|---|---|
-| smoke | push na `main`, każde wdrożenie | `npx playwright test --grep @smoke --project=chromium` | 24 testy: logowanie, koszyk, płatność, `/health` | < 5 min | 3 min 40 s |
-| PR | każdy pull request | `npx nx affected -t test lint` + smoke | jednostkowe i integracyjne dotkniętych projektów | < 15 min | 9–13 min |
-| nocny | 2:00 codziennie | `npx playwright test` + `npx nx run-many -t test` + Stryker dla `payments` | wszystko, `chromium`/`firefox`/`webkit`, `@visual` | godziny OK | 2 h 10 min |
-| przed wydaniem | kandydat `v*-rc.*` | nocny + lista kontrolna + UAT | automat i testy ręczne (qa-exploratory-manual) | wg planu | 1 dzień |
+| smoke | a push to `main`, every deployment | `npx playwright test --grep @smoke --project=chromium` | 24 tests: login, cart, payment, `/health` | < 5 min | 3 min 40 s |
+| PR | every pull request | `npx nx affected -t test lint` + smoke | unit and integration of the affected projects | < 15 min | 9–13 min |
+| nightly | 2:00 every day | `npx playwright test` + `npx nx run-many -t test` + Stryker for `payments` | everything, `chromium`/`firefox`/`webkit`, `@visual` | hours are OK | 2 h 10 min |
+| pre-release | a `v*-rc.*` candidate | nightly + checklist + UAT | automation and manual tests (qa-exploratory-manual) | per the plan | 1 day |
 
 ```yaml
 # .github/workflows/pr.yml (fragment)
@@ -44,54 +44,54 @@ jobs:
       - run: npx playwright test --grep @smoke --project=chromium
 ```
 
-## 2. Niestabilny test w kwarantannie
-**Sytuacja:** „Test `checkout.spec.ts › płatność BLIK kończy zamówienie` w raporcie flaky padł 4 razy na 50 przebiegów
-w tym tygodniu. Dodajmy `retries: 3` i będzie spokój”.
+## 2. An unstable test in quarantine
+**Situation:** "The test `checkout.spec.ts › BLIK payment completes the order` in the flaky report failed 4 times out of 50 runs
+this week. Let's add `retries: 3` and have peace".
 
-**Jak:**
-1. Retries zostają tylko do wykrywania niestabilności; to defekt testu albo aplikacji, nie pech.
-2. Kwarantanna: test wyjęty z bramki PR, z właścicielem, zgłoszeniem i terminem naprawy.
-3. Diagnoza wg typowych przyczyn — tu sztywne czekanie na odpowiedź bramki płatności.
-4. Naprawa: asercja z oczekiwaniem zamiast `waitForTimeout`; test wraca do bramki po 20 zielonych przebiegach nocnych.
-5. Po terminie bez naprawy test usuwasz albo naprawiasz — nie przedłużasz bez końca.
+**How:**
+1. Retries stay only for detecting instability; it is a defect of the test or of the application, not bad luck.
+2. Quarantine: the test taken out of the PR gate, with an owner, a ticket and a fix deadline.
+3. Diagnosis by the typical causes — here a hard wait for the payment gateway's response.
+4. The fix: an assertion with waiting instead of `waitForTimeout`; the test returns to the gate after 20 green nightly runs.
+5. After the deadline with no fix you delete or fix the test — you do not extend it forever.
 
-**Wynik:** wpis w rejestrze kwarantanny i poprawka.
+**Result:** an entry in the quarantine register and the fix.
 
 ```yaml
 # tests/quarantine.yaml
-- test: "checkout.spec.ts › płatność BLIK kończy zamówienie"
+- test: "checkout.spec.ts › BLIK payment completes the order"
   tag: "@quarantine"
   owner: "@anowak"
   issue: "QA-1187"
   since: "2026-09-28"
   deadline: "2026-10-12"
-  symptom: "4/50 czerwonych, timeout na „Zamówienie przyjęte”"
-  cause: "waitForTimeout(2000) zamiast oczekiwania na stan; odpowiedź symulatora BLIK trwa 1,5–3 s"
+  symptom: "4/50 red, a timeout on 'Order accepted'"
+  cause: "waitForTimeout(2000) instead of waiting for a state; the BLIK simulator's response takes 1.5–3 s"
 ```
 
 ```ts
-// przed
+// before
 await page.waitForTimeout(2000);
-expect(await page.getByRole('heading').textContent()).toBe('Zamówienie przyjęte');
-// po
-await expect(page.getByRole('heading', { name: 'Zamówienie przyjęte' })).toBeVisible({ timeout: 10_000 });
+expect(await page.getByRole('heading').textContent()).toBe('Order accepted');
+// after
+await expect(page.getByRole('heading', { name: 'Order accepted' })).toBeVisible({ timeout: 10_000 });
 ```
 
-## 3. Idempotencja konsumenta w zestawie PR
-**Sytuacja:** po wydaniu klient dostał dwa e-maile z fakturą, bo zdarzenie `InvoiceIssued` doszło dwa razy.
-„Dopiszcie test e2e, który to wyłapie”.
+## 3. Consumer idempotency in the PR suite
+**Situation:** after a release a customer received two e-mails with an invoice, because the `InvoiceIssued` event arrived twice.
+"Add an e2e test that will catch it".
 
-**Jak:**
-1. Regresja kontraktu wiadomości jest tańsza niż e2e — test idempotencji konsumenta idzie do zestawu PR.
-2. Dane testowe ze stałym id zdarzenia i stałym czasem; ten sam serializer co outbox.
-3. To samo id dwa razy → jeden efekt (jeden e-mail, jeden wpis).
-4. Migawka formatu zdarzenia pilnuje kompatybilności wstecz.
+**How:**
+1. A message contract regression is cheaper than e2e — the consumer idempotency test goes into the PR suite.
+2. Test data with a fixed event id and a fixed time; the same serializer as the outbox.
+3. The same id twice → one effect (one e-mail, one entry).
+4. A snapshot of the event format guards backward compatibility.
 
-**Wynik:** zestaw testów konsumenta.
+**Result:** the consumer's test suite.
 
-| Test | Wejście | Oczekiwany efekt | Zestaw |
+| Test | Input | Expected effect | Suite |
 |---|---|---|---|
-| `invoice-issued: duplikat id` | `InvoiceIssued` z `eventId=7f3a…01` dwa razy | 1 e-mail w Mailpit, 1 wiersz w `processed_events` | PR |
-| `invoice-issued: różne id` | dwa zdarzenia z różnym `eventId` | 2 e-maile | PR |
-| `invoice-issued: migawka formatu` | zdarzenie z fabryki, stały czas `2026-01-15T10:00:00Z` | zgodność z zapisaną migawką | PR |
-| `invoice-issued: stara wersja schematu` | zdarzenie bez pola dodanego w nowej wersji | przetworzone bez błędu | PR |
+| `invoice-issued: duplicate id` | `InvoiceIssued` with `eventId=7f3a…01` twice | 1 e-mail in Mailpit, 1 row in `processed_events` | PR |
+| `invoice-issued: different ids` | two events with different `eventId` | 2 e-mails | PR |
+| `invoice-issued: format snapshot` | an event from the factory, a fixed time `2026-01-15T10:00:00Z` | matches the saved snapshot | PR |
+| `invoice-issued: old schema version` | an event without the field added in the new version | processed without an error | PR |

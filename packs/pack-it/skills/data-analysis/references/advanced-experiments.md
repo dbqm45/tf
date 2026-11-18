@@ -1,49 +1,49 @@
-# Eksperymenty: moc, czułość i metryki ilorazowe
+# Experiments: power, sensitivity and ratio metrics
 
-Podstawy testu A/B (hipoteza, jednostka losowania, pułapki, etyka): proc-product-discovery,
-`experiments-and-release.md`. Tu — jak wykryć mniejszy efekt przy tym samym ruchu i jak nie pomylić się w statystyce.
+The basics of an A/B test (the hypothesis, the randomisation unit, pitfalls, ethics): proc-product-discovery,
+`experiments-and-release.md`. Here — how to detect a smaller effect with the same traffic and how not to make a statistical mistake.
 
-## Prawdopodobieństwo i próbkowanie — minimum
-- **Centralne twierdzenie graniczne**: średnia z dużej próby ma rozkład zbliżony do normalnego, nawet gdy dane nie
-  są normalne — dlatego test t działa dla średnich. Przy bardzo skośnych danych (przychód, w którym kilku klientów
-  robi większość) „duża próba” musi być naprawdę duża; inaczej przedziały są zbyt optymistyczne.
-- Losowanie na poziomie jednostki, którą analizujesz (użytkownik), i niezależność jednostek. Efekty sieciowe
-  (rynki dwustronne, funkcje społecznościowe) łamią niezależność → losowanie klastrami lub regionami.
+## Probability and sampling — the minimum
+- **The central limit theorem**: the mean of a large sample has a distribution close to normal, even when the data are not
+  normal — which is why the t-test works for means. With very skewed data (revenue, where a few customers
+  make up most of it) a "large sample" must be really large; otherwise the intervals are too optimistic.
+- Randomisation at the level of the unit you analyse (the user), and independence of units. Network effects
+  (two-sided markets, social features) break independence → randomisation by clusters or regions.
 
-## Minimalny wykrywalny efekt (MDE) i moc
-- MDE to najmniejszy efekt, który test wykryje z zadaną mocą (np. 80%) przy danym poziomie istotności, wariancji
-  i liczebności. MDE rośnie z wariancją metryki i maleje z pierwiastkiem z liczby jednostek: czterokrotnie więcej
-  ruchu = dwukrotnie mniejszy MDE.
-- Policz MDE **przed** testem. Jeśli realny efekt zmiany jest mniejszy niż MDE, test nic nie rozstrzygnie —
-  zmień metrykę, wydłuż test albo zastosuj redukcję wariancji.
+## The minimum detectable effect (MDE) and power
+- The MDE is the smallest effect the test will detect with a given power (e.g. 80%) at a given significance level, variance
+  and sample size. The MDE grows with the metric's variance and shrinks with the square root of the number of units: four times more
+  traffic = a twice smaller MDE.
+- Calculate the MDE **before** the test. If the real effect of the change is smaller than the MDE, the test will settle nothing —
+  change the metric, lengthen the test or apply variance reduction.
 
-## Redukcja wariancji
-- **CUPED**: skorygowana metryka `Y' = Y − θ·(X − średnia X)`, gdzie X to ta sama (lub skorelowana) metryka
-  użytkownika z okresu **przed** eksperymentem, a θ = cov(X, Y) / var(X). Wariancja maleje o czynnik (1 − R²)
-  — przy R² = 0,4 to tak, jakby ruch wzrósł ok. 1,66 raza. Nie wprowadza obciążenia, bo X nie zależy od przydziału
-  do grupy.
-  - Zmienna X musi pochodzić sprzed ekspozycji (nie może jej zmienić testowana funkcja).
-  - Nowi użytkownicy bez historii: X = średnia (lub osobny wskaźnik), korekta działa wtedy słabiej.
-  - Zysk zależy od metryki — dla części metryk prawie żaden; sprawdzaj na danych historycznych.
-- **CUPAC**: zamiast jednej metryki z przeszłości — predykcja modelu z wielu cech sprzed eksperymentu jako zmienna X.
-- **Stratyfikacja**: losowanie lub analiza w warstwach (kraj, platforma, segment), żeby różnice między warstwami nie
-  zwiększały wariancji.
-- **Ciężkie ogony**: obcięcie lub winsoryzacja skrajnych wartości (próg ustalony przed testem) albo transformacja
-  rangowa — inaczej kilku nietypowych użytkowników decyduje o wyniku.
+## Variance reduction
+- **CUPED**: an adjusted metric `Y' = Y − θ·(X − mean of X)`, where X is the same (or a correlated) metric of
+  the user from the period **before** the experiment, and θ = cov(X, Y) / var(X). The variance falls by a factor of (1 − R²)
+  — at R² = 0.4 it is as if traffic grew about 1.66 times. It introduces no bias, because X does not depend on the assignment
+  to a group.
+  - The variable X must come from before exposure (the feature under test cannot change it).
+  - New users without history: X = the mean (or a separate indicator), the adjustment then works less well.
+  - The gain depends on the metric — for some metrics almost none; check on historical data.
+- **CUPAC**: instead of a single metric from the past — the prediction of a model built on many pre-experiment features as the variable X.
+- **Stratification**: randomisation or analysis in strata (country, platform, segment), so that differences between strata do not
+  increase the variance.
+- **Heavy tails**: truncating or winsorising extreme values (a threshold set before the test) or a rank
+  transformation — otherwise a few atypical users decide the result.
 
-## Metryki ilorazowe
-- Gdy jednostka analizy jest inna niż jednostka losowania — CTR na sesję, przychód na zamówienie, czas na stronę —
-  obserwacje w obrębie jednego użytkownika nie są niezależne. Zwykły test t na poziomie sesji zaniża wariancję
-  i daje fałszywe „istotne” wyniki.
-- Licz iloraz jako stosunek sum per grupa (suma kliknięć / suma sesji) i wariancję **metodą delta** (przybliżenie
-  wariancji ilorazu dwóch średnich z kowariancją licznika i mianownika) albo **bootstrapem po użytkownikach**.
-- Sprawdzaj też licznik i mianownik osobno — iloraz może wzrosnąć, bo spadł mianownik (mniej sesji), co bywa złą
-  wiadomością.
+## Ratio metrics
+- When the unit of analysis differs from the unit of randomisation — CTR per session, revenue per order, time on page —
+  observations within one user are not independent. An ordinary t-test at the session level understates the variance
+  and gives false "significant" results.
+- Calculate the ratio as a ratio of sums per group (the sum of clicks / the sum of sessions) and the variance with the **delta method** (an approximation of
+  the variance of a ratio of two means with the covariance of numerator and denominator) or a **bootstrap over users**.
+- Also check the numerator and denominator separately — a ratio can rise because the denominator fell (fewer sessions), which can be bad
+  news.
 
-## Źródła
-- A. Deng i in., „Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-Experiment Data” (2013)
+## Sources
+- A. Deng et al., "Improving the Sensitivity of Online Controlled Experiments by Utilizing Pre-Experiment Data" (2013)
   — CUPED; [Microsoft Research — Deep Dive Into Variance Reduction](https://www.microsoft.com/en-us/research/articles/deep-dive-into-variance-reduction/)
 - [Booking.com — How Booking.com increases the power of online experiments with CUPED](https://booking.ai/how-booking-com-increases-the-power-of-online-experiments-with-cuped-995d186fff1d);
-  DoorDash — CUPAC; Netflix — stratyfikacja; A. Deng i in. — metoda delta dla metryk ilorazowych (2018)
+  DoorDash — CUPAC; Netflix — stratification; A. Deng et al. — the delta method for ratio metrics (2018)
 - R. Kohavi, D. Tang, Y. Xu, *Trustworthy Online Controlled Experiments*; [roadmap.sh — AI and Data Scientist](https://roadmap.sh/ai-data-scientist)
-Opisane własnymi słowami.
+Described in our own words.

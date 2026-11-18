@@ -1,27 +1,27 @@
-# Prywatność i zgody
+# Privacy and consent
 
-## Kiedy potrzebna zgoda
-- Zapis lub odczyt informacji na urządzeniu użytkownika (ciasteczka, localStorage, identyfikator w skrypcie)
-  wymaga zgody, chyba że jest niezbędny do usługi, o którą użytkownik prosi (art. 5 ust. 3 ePrivacy; w Polsce
-  art. 399 Prawa komunikacji elektronicznej). Analityka i nagrywanie sesji zwykle nie są niezbędne.
-- Zgoda musi być aktywna (nie zaznaczone z góry pole, nie „dalsze korzystanie oznacza zgodę”), równie łatwa do
-  odmowy jak do udzielenia i do wycofania.
-- Dane osobowe w zdarzeniach (także pseudonimowe ID powiązane z osobą) to przetwarzanie wg RODO: cel, podstawa,
-  retencja, umowa powierzenia z dostawcą narzędzia, transfer poza EOG. Szczegóły: arch-privacy-compliance.
+## When consent is needed
+- Storing or reading information on the user's device (cookies, localStorage, an identifier in a script)
+  requires consent, unless it is strictly necessary for a service the user asks for (Art. 5(3) ePrivacy; in Poland
+  Art. 399 of the Prawo komunikacji elektronicznej (Electronic Communications Law)). Analytics and session recording are usually not necessary.
+- Consent must be active (not a pre-ticked box, not "continued use means consent"), and just as easy to
+  refuse as to give, and to withdraw.
+- Personal data in events (including a pseudonymous ID linked to a person) is processing under the GDPR: purpose, basis,
+  retention, a processing agreement with the tool vendor, transfer outside the EEA. Details: arch-privacy-compliance.
 
-## Wariant, gdy zgody nie ma
-- Zdarzenia biznesowe z serwera (konto utworzone, płatność) — bez skryptu na urządzeniu; nadal dane osobowe,
-  więc podstawa prawna i minimalizacja.
-- Analityka bez identyfikatora na urządzeniu, tylko zagregowana (liczby wejść, bez śledzenia osoby między
-  wizytami) — ocenę, czy w danym kraju nie wymaga zgody, zostawiasz prawnikowi; nie obiecujesz zgodności.
+## A variant when there is no consent
+- Business events from the server (account created, payment) — no script on the device; it is still personal data,
+  so a legal basis and minimisation apply.
+- Analytics without an identifier on the device, aggregated only (visit counts, no tracking of a person between
+  visits) — whether it needs consent in a given country you leave to a lawyer; you do not promise compliance.
 
-## Nagrywanie sesji i autocapture
-- Tylko po zgodzie; domyślnie maskowane wszystkie pola tekstowe, wyłączone strony z danymi wrażliwymi
-  (płatności, dane zdrowotne, panel administracyjny z danymi klientów).
-- Krótka retencja nagrań (np. 30 dni) i dostęp tylko dla wskazanych osób.
-- Autocapture wyłączone albo ograniczone do listy elementów; zbiera teksty z ekranu, w tym dane osobowe.
+## Session recording and autocapture
+- Only after consent; all text fields masked by default, pages with sensitive data switched off
+  (payments, health data, an admin panel with customer data).
+- Short retention of recordings (e.g. 30 days) and access only for named people.
+- Autocapture switched off or limited to a list of elements; it collects on-screen text, including personal data.
 
-## Minimalizacja
-- Przedziały zamiast dokładnych wartości, kraj zamiast adresu IP, wewnętrzne ID zamiast e-maila.
-- Okres przechowywania surowych zdarzeń ustawiony w narzędziu, nie „bez końca”.
-- Żądanie usunięcia danych (RODO art. 17) obejmuje też narzędzie analityczne — procedura usuwania po `user_id`.
+## Minimisation
+- Ranges instead of exact values, country instead of an IP address, an internal ID instead of an email.
+- The retention period of raw events set in the tool, not "forever".
+- A data erasure request (GDPR Art. 17) also covers the analytics tool — a deletion procedure by `user_id`.

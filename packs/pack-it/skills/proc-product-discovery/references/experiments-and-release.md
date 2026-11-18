@@ -1,49 +1,49 @@
-# Eksperymenty A/B i gotowość do wydania
+# A/B experiments and launch readiness
 
-## Kiedy A/B, a kiedy nie
-A/B odpowiada na pytanie „czy zmiana X poprawia metrykę Y” przy dużym ruchu. Nie nadaje się do pytania „dlaczego”
-(wywiady, testy użyteczności), przy małym ruchu (wynik nie osiągnie mocy), dla zmian, których nie da się cofnąć,
-ani dla funkcji wymaganych prawem.
+## When A/B, and when not
+A/B answers the question "does change X improve metric Y" with high traffic. It is not suited to the question "why"
+(interviews, usability tests), to low traffic (the result will not reach power), to changes that cannot be undone,
+or to features required by law.
 
-## Projekt testu (przed startem, zapisany)
-1. **Hipoteza**: „Jeśli [zmiana], to [metryka] wzrośnie o [minimalny istotny efekt], bo [dowód z odkrywania]”.
-2. **Metryka główna** (jedna) i **ochronne** (błędy, czas ładowania, rezygnacje, przychód).
-3. **Jednostka losowania** (użytkownik, nie sesja — inaczej ta sama osoba widzi oba warianty) i grupa docelowa.
-4. **Wielkość próby i czas trwania** z kalkulatora mocy: poziom istotności (zwykle 5%), moc (zwykle 80%), minimalny
-   wykrywalny efekt, wartość wyjściowa. Czas: pełne tygodnie (cykl tygodniowy), co najmniej 1–2.
-5. **Reguła decyzji**: co zrobisz przy wygranej, przegranej i braku różnicy.
-Realizacja przez flagi funkcji z przypisaniem wariantu po stronie serwera (eng-continuous-delivery, ops-release-engineering).
+## Test design (before the start, written down)
+1. **Hypothesis**: "If [change], then [metric] will rise by [minimum meaningful effect], because [evidence from discovery]".
+2. **The primary metric** (one) and **guardrail** metrics (errors, load time, cancellations, revenue).
+3. **The unit of randomization** (the user, not the session — otherwise the same person sees both variants) and the target group.
+4. **Sample size and duration** from a power calculator: the significance level (usually 5%), power (usually 80%), the minimum
+   detectable effect, the baseline value. Duration: full weeks (the weekly cycle), at least 1–2.
+5. **The decision rule**: what you will do on a win, a loss and no difference.
+Implemented through feature flags with the variant assigned on the server side (eng-continuous-delivery, ops-release-engineering).
 
-## Inne rodzaje testów
-- **Test przyrostowy (A/B jednej zmiany)**: jedna różnica między wariantami, więc wynik da się jej przypisać. Domyślny
-  wybór przy walidacji pojedynczej decyzji projektowej.
-- **Test wielowariantowy**: kilka elementów naraz (nagłówek × obraz × przycisk) i ich interakcje. Liczba kombinacji
-  rośnie mnożąco, więc potrzebny jest dużo większy ruch — przy małym ruchu rób kolejne testy A/B.
-- **Test inkrementalności** (grupa kontrolna bez żadnej interwencji, np. bez kampanii lub powiadomień): mierzy, ile
-  efektu w ogóle dała interwencja, a nie która wersja jest lepsza.
+## Other kinds of tests
+- **An incremental test (an A/B of a single change)**: one difference between the variants, so the result can be attributed to it. The default
+  choice when validating a single design decision.
+- **A multivariate test**: several elements at once (headline × image × button) and their interactions. The number of combinations
+  grows multiplicatively, so much more traffic is needed — with low traffic, run successive A/B tests.
+- **An incrementality test** (a control group with no intervention at all, e.g. no campaign or notifications): it measures how much
+  effect the intervention had at all, not which version is better.
 
-## Pułapki
-- **Podglądanie wyników** i kończenie testu, gdy „wyszło istotne” — fałszywe wygrane. Albo stały czas, albo metoda
-  sekwencyjna przewidziana od początku.
-- **Niezgodność proporcji grup** (SRM, np. 50/50 zaplanowane, 52/48 wyszło przy dużej próbie) — błąd przypisania lub
-  zbierania danych; wynik do kosza, najpierw naprawa.
-- **Wiele metryk i segmentów** bez korekty — któryś „wygra” przypadkiem. Segmenty jako hipotezy na następny test.
-- **Efekt nowości** — wzrost z ciekawości opada po tygodniach; patrz na trend dzienny.
-- Etyka i prawo: bez testowania cen dyskryminujących, wzorców zwodniczych i zmian w zgodach; informacja w polityce
-  prywatności, że prowadzisz eksperymenty.
+## Pitfalls
+- **Peeking at results** and ending the test when "it came out significant" — false wins. Either a fixed duration or a sequential
+  method planned from the start.
+- **A sample ratio mismatch** (SRM, e.g. 50/50 planned, 52/48 came out with a large sample) — an assignment or data-collection
+  error; the result goes in the bin, fix it first.
+- **Many metrics and segments** without correction — one will "win" by chance. Treat segments as hypotheses for the next test.
+- **The novelty effect** — a rise from curiosity fades after weeks; look at the daily trend.
+- Ethics and law: no testing of discriminatory prices, deceptive patterns or changes to consents; a note in the privacy
+  policy that you run experiments.
 
-## Gotowość do wydania (launch readiness)
-- **Cele**: metryki sukcesu i ochronne, wartości wyjściowe, dashboard, data przeglądu po wydaniu (np. 2 i 6 tygodni).
-- **Produkt**: stany brzegowe i błędów sprawdzone (ux-feature-design), dostępność (WCAG 2.2 AA), treści i tłumaczenia,
-  zgody i polityka prywatności, jeśli zbierasz nowe dane.
-- **Technika**: flagi i plan stopniowego włączania, wycofanie przećwiczone, monitoring i alerty, testy obciążenia,
-  jeśli ruch wzrośnie (ops-release-engineering, ops-sre-incidents).
-- **Organizacja**: wsparcie klienta przeszkolone i z odpowiedziami na typowe pytania, dokumentacja i notatki
-  o wydaniu, sprzedaż i marketing wiedzą, co i kiedy; właściciel decyzji „wydajemy / wstrzymujemy”.
-- **Ograniczenia**: prawo i regulacje (dział prawny), terminy partnerów, zależności od innych zespołów.
+## Launch readiness
+- **Goals**: success and guardrail metrics, baseline values, a dashboard, the date of the post-launch review (e.g. 2 and 6 weeks).
+- **Product**: edge and error states checked (ux-feature-design), accessibility (WCAG 2.2 AA), content and translations,
+  consents and the privacy policy if you collect new data.
+- **Technology**: flags and a gradual rollout plan, rollback rehearsed, monitoring and alerts, load tests
+  if traffic will grow (ops-release-engineering, ops-sre-incidents).
+- **Organization**: customer support trained and given answers to typical questions, documentation and release
+  notes, sales and marketing know what and when; an owner of the "release / hold" decision.
+- **Constraints**: law and regulations (the legal department), partner deadlines, dependencies on other teams.
 
-## Źródła
+## Sources
 - R. Kohavi, D. Tang, Y. Xu, *Trustworthy Online Controlled Experiments* (2020)
 - [Atlassian — product launch checklist](https://www.atlassian.com/agile/product-management/product-launch-checklist);
   [roadmap.sh — Product Design](https://roadmap.sh/product-design) (A/B testing, experimentation, launch readiness)
-Opisane własnymi słowami.
+Described in our own words.

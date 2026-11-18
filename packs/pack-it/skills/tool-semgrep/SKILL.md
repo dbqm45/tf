@@ -1,82 +1,82 @@
 ---
 name: tool-semgrep
-description: Użyj przy własnych regułach Semgrep i CodeQL — wzorce, taint, autofix, testy reguł, fałszywe trafienia, CI.
+description: Use for custom Semgrep and CodeQL rules — patterns, taint, autofix, rule tests, false positives, CI.
 metadata:
   review: "2027-01-24"
-  catalog: "Użyj, gdy piszesz, testujesz lub poprawiasz własną regułę Semgrep albo zapytanie CodeQL — składnia reguły (pattern, patterns, pattern-either, pattern-inside, pattern-not, metazmienne, metavariable-regex, focus-metavariable), tryb taint (źródła, sanityzatory, ujścia), autofix (fix:) z testem poprawki (.fixed), testy reguł (ruleid:, ok:, todoruleid:, todook:, semgrep scan --test), ograniczanie fałszywych trafień (ograniczenia metazmiennych, paths.exclude, przypadki ok: z prawdziwych alarmów), reguły w CI (testy reguł, --baseline-commit, --error), licencje reguł z rejestru, testy zapytań CodeQL (.qlref, .expected, codeql test run). Nie do szukania wariantów znalezionej podatności (sec-variant-analysis), doboru skanerów i progów w programie AppSec (sec-appsec-devsecops) ani reguł detekcji w SIEM (sec-detection-engineering)."
-  keywords: "semgrep, własna reguła semgrep, napisać regułę semgrep, reguła semgrep fałszywe trafienia, false positives semgrep, mode: taint, pattern-sources, pattern-sinks, pattern-sanitizers, pattern-not, pattern-inside, metavariable-regex, focus-metavariable, ruleid, todoruleid, semgrep --test, test reguły, autofix semgrep, fix:, .fixed, baseline-commit, .semgrepignore, opengrep, codeql test run, qlref, zapytanie codeql test"
+  catalog: "Use when writing, testing or fixing a custom Semgrep rule or a CodeQL query — rule syntax (pattern, patterns, pattern-either, pattern-inside, pattern-not, metavariables, metavariable-regex, focus-metavariable), taint mode (sources, sanitizers, sinks), autofix (fix:) with a fix test (.fixed), rule tests (ruleid:, ok:, todoruleid:, todook:, semgrep scan --test), reducing false positives (metavariable constraints, paths.exclude, ok: cases from real alarms), rules in CI (rule tests, --baseline-commit, --error), licenses of registry rules, CodeQL query tests (.qlref, .expected, codeql test run). Not for hunting variants of a found vulnerability (sec-variant-analysis), choosing scanners and thresholds in an AppSec program (sec-appsec-devsecops) or detection rules in a SIEM (sec-detection-engineering)."
+  keywords: "semgrep, własna reguła semgrep, napisać regułę semgrep, reguła semgrep fałszywe trafienia, false positives semgrep, mode: taint, pattern-sources, pattern-sinks, pattern-sanitizers, pattern-not, pattern-inside, metavariable-regex, focus-metavariable, ruleid, todoruleid, semgrep --test, test reguły, autofix semgrep, fix:, .fixed, baseline-commit, .semgrepignore, opengrep, codeql test run, qlref, zapytanie codeql test, custom semgrep rule, write a semgrep rule, semgrep rule false positives, rule test, codeql query test"
 ---
 
-# Semgrep — własne reguły z testami
+# Semgrep — custom rules with tests
 
-Kiedy pisać regułę po znalezionej podatności: sec-variant-analysis. Program skanerów i progi: sec-appsec-devsecops.
-Ten skill to rzemiosło reguły: składnia, testy, precyzja, CI.
+When to write a rule after a vulnerability is found: sec-variant-analysis. The scanner program and thresholds: sec-appsec-devsecops.
+This skill is the craft of the rule: syntax, tests, precision, CI.
 
-## Procedura
-1. **Najpierw test, potem reguła.** Plik testu o tej samej nazwie bazowej co reguła (reguła x.yaml, test x.py):
-   kod podatny z `# ruleid: <id>` nad linią trafienia, poprawny z `# ok: <id>`. Najlepsze przykłady to prawdziwy
-   kod sprzed naprawy i prawdziwe fałszywe alarmy. Znana luka reguły → `todoruleid:`, znany fałszywy alarm →
-   `todook:` (test przechodzi, dług jest widoczny).
-2. **Najwęższa składnia, która wystarcza**:
-   - jedno wywołanie → `pattern`; kilka form → `pattern-either`; warunki łączne → `patterns`;
-   - kontekst → `pattern-inside` / `pattern-not-inside`; wyjątki → `pattern-not`;
-   - warunek na treści → `metavariable-regex` / `metavariable-pattern`; miejsce zgłoszenia → `focus-metavariable`;
-   - dane płyną przez zmienne i funkcje → `mode: taint` ze źródłami, ujściami i **sanityzatorami** (bez nich
-     każda poprawna ścieżka to alarm).
-   Pełne nazwy modułów (`flask.request`, `subprocess.run`) — Semgrep rozwiązuje importy i aliasy.
-3. **Komunikat mówi, jak naprawić**, nie tylko co jest źle; `metadata` z CWE i `confidence`. `severity: ERROR`
-   tylko dla reguł, które mają blokować merge.
-4. **Autofix** (`fix:` z metazmiennymi) tylko dla zamiany jednoznacznej; test poprawki w pliku x.fixed.py.
-   Na kodzie najpierw `--autofix --dryrun`, zmiany przez przegląd jak każdy commit.
-5. **Precyzja przed wdrożeniem**: uruchom regułę na całym repozytorium, przejrzyj próbkę trafień i policz
-   odsetek prawdziwych. Każdy fałszywy alarm → przypadek `ok:` w teście → zawężenie reguły (ograniczenia
-   metazmiennych, `pattern-not`, kontekst). Kod testowy i przykłady → `paths.exclude` w regule albo
-   `.semgrepignore`. Reguła blokująca z wieloma fałszywymi alarmami zostanie wyłączona — wtedy `WARNING` albo
-   tylko raport, dopóki precyzja nie wzrośnie.
-6. **CI**: reguły w repozytorium (np. `.semgrep/`); najpierw `semgrep scan --test` dla reguł, potem skan PR
-   z `--baseline-commit` (tylko nowe trafienia) i `--error` (kod 1 przy trafieniu); całe repozytorium nocą.
-   `--metrics=off`, gdy polityka zabrania telemetrii.
-7. **Licencje**: silnik Semgrep CE i fork Opengrep — LGPL-2.1; reguły z rejestru (`semgrep/semgrep-rules`) mają
-   osobną licencję „Semgrep Rules License v1.0” — przed użyciem w produkcie lub usłudze przeczytaj jej warunki
-   [niezweryfikowane: treść warunków, semgrep.dev niedostępne z sesji]. Własne reguły są Twoje.
+## Procedure
+1. **The test first, then the rule.** A test file with the same base name as the rule (rule x.yaml, test x.py):
+   vulnerable code with `# ruleid: <id>` above the matching line, correct code with `# ok: <id>`. The best examples are real
+   code from before the fix and real false alarms. A known gap in the rule → `todoruleid:`, a known false alarm →
+   `todook:` (the test passes, the debt is visible).
+2. **The narrowest syntax that suffices**:
+   - one call → `pattern`; several forms → `pattern-either`; joint conditions → `patterns`;
+   - context → `pattern-inside` / `pattern-not-inside`; exceptions → `pattern-not`;
+   - a condition on the content → `metavariable-regex` / `metavariable-pattern`; the reporting location → `focus-metavariable`;
+   - data flows through variables and functions → `mode: taint` with sources, sinks and **sanitizers** (without them
+     every correct path is an alarm).
+   Full module names (`flask.request`, `subprocess.run`) — Semgrep resolves imports and aliases.
+3. **The message says how to fix**, not only what is wrong; `metadata` with CWE and `confidence`. `severity: ERROR`
+   only for rules that are meant to block a merge.
+4. **Autofix** (`fix:` with metavariables) only for an unambiguous replacement; the fix test in the x.fixed.py file.
+   On code, first `--autofix --dryrun`, changes go through review like any commit.
+5. **Precision before rollout**: run the rule on the whole repository, review a sample of the matches and count
+   the share of true ones. Every false alarm → an `ok:` case in the test → narrowing the rule (metavariable
+   constraints, `pattern-not`, context). Test code and examples → `paths.exclude` in the rule or
+   `.semgrepignore`. A blocking rule with many false alarms will be switched off — then `WARNING` or
+   report-only until precision improves.
+6. **CI**: rules in the repository (e.g. `.semgrep/`); first `semgrep scan --test` for the rules, then a PR scan
+   with `--baseline-commit` (only new matches) and `--error` (exit code 1 on a match); the whole repository at night.
+   `--metrics=off` when policy forbids telemetry.
+7. **Licenses**: the Semgrep CE engine and the Opengrep fork — LGPL-2.1; registry rules (`semgrep/semgrep-rules`) have
+   a separate license, "Semgrep Rules License v1.0" — before using it in a product or service, read its terms
+   [unverified: the content of the terms, semgrep.dev not reachable from the session]. Your own rules are yours.
 
-## CodeQL — testy zapytań
-Gdy wariant wymaga pełnej analizy przepływu między plikami, regułą jest zapytanie CodeQL (sec-variant-analysis,
-krok 3). Testy wg dokumentacji GitHub: osobna paczka testowa z plikiem qlpack.yml (`extractor: <język>`, zależność od
-paczki z zapytaniami, `codeql pack install`), w katalogu testu kod przykładowy, plik `.qlref` ze ścieżką zapytania
-i `.expected` o tej samej nazwie bazowej. `codeql test run <katalog>` buduje bazę z przykładów, zapisuje `.actual`
-i pokazuje różnicę z `.expected`; świadomie zaakceptowany wynik — `codeql test accept`. Nie sprawdzone lokalnie
-(pobranie CLI zablokowane w sesji).
+## CodeQL — query tests
+When a variant requires full flow analysis across files, the rule is a CodeQL query (sec-variant-analysis,
+step 3). Tests per the GitHub documentation: a separate test pack with a qlpack.yml file (`extractor: <language>`, a dependency on the
+pack with the queries, `codeql pack install`), sample code in the test directory, a `.qlref` file with the query path
+and `.expected` with the same base name. `codeql test run <directory>` builds a database from the examples, writes `.actual`
+and shows the difference from `.expected`; a deliberately accepted result — `codeql test accept`. Not verified locally
+(the CLI download was blocked in the session).
 
-## Przykład
-Reguła `shell-injection-from-request` (taint: `request.args.get` → pierwszy argument `subprocess.run(...,
-shell=True)`, sanityzator `shlex.quote`) z testem: dwa `ruleid`, dwa `ok`, jeden `todoruleid` (wartość przez
-obiekt pomocniczy). `semgrep scan --test` przechodzi; po usunięciu sanityzatora test oblewa na linii z
-`shlex.quote` — dowód, że test pilnuje reguły. Kod tej reguły, autofixu `yaml.load` → `yaml.safe_load` z plikiem
-.fixed.py i reguły na hasła z `paths.exclude`: `references/rules-and-tests.md`.
+## Example
+The rule `shell-injection-from-request` (taint: `request.args.get` → the first argument of `subprocess.run(...,
+shell=True)`, sanitizer `shlex.quote`) with a test: two `ruleid`, two `ok`, one `todoruleid` (a value passed through a
+helper object). `semgrep scan --test` passes; after removing the sanitizer the test fails on the line with
+`shlex.quote` — proof that the test guards the rule. The code of this rule, of the `yaml.load` → `yaml.safe_load` autofix with the
+.fixed.py file and of the password rule with `paths.exclude`: `references/rules-and-tests.md`.
 
-## Zależne od wersji
-Przykłady z `references/rules-and-tests.md` przechodzą na 1.50.0, 1.100.0 i 1.182.1 (2026-10-24); progi podpoleceń
-sprawdzone `semgrep --help` kolejnych wydań z PyPI (1.99.0 bez `test`, 1.149.0 bez `mcp`). Wydania co tydzień.
-| Wersja | Zmiany istotne dla tego skilla |
+## Version-dependent
+The examples from `references/rules-and-tests.md` pass on 1.50.0, 1.100.0 and 1.182.1 (2026-10-24); the subcommand thresholds
+were checked with `semgrep --help` of successive PyPI releases (1.99.0 without `test`, 1.149.0 without `mcp`). Releases weekly.
+| Version | Changes relevant to this skill |
 |---|---|
-| 1.50 | `scan --test` z `ruleid`/`ok`/`todoruleid`/`todook` i testami poprawek `.fixed`, tryb taint, `--baseline-commit` |
-| 1.100 | podpolecenie `semgrep test` (eksperymentalne, obok `semgrep validate`); `scan --test` dalej działa |
-| 1.150 | podpolecenie `semgrep mcp` (serwer MCP Semgrepa — ocena przed podłączeniem: core-agent-security) |
-Projekt z wersją starszą niż 1.50 → `PROJECT_OLDER`: sprawdź przykłady testem przed użyciem.
+| 1.50 | `scan --test` with `ruleid`/`ok`/`todoruleid`/`todook` and `.fixed` fix tests, taint mode, `--baseline-commit` |
+| 1.100 | the `semgrep test` subcommand (experimental, alongside `semgrep validate`); `scan --test` still works |
+| 1.150 | the `semgrep mcp` subcommand (Semgrep's MCP server — evaluate before connecting: core-agent-security) |
+A project with a version older than 1.50 → `PROJECT_OLDER`: check the examples with a test before using them.
 
-## Checklista
-- [ ] test reguły z `ruleid` i `ok` (w tym prawdziwe fałszywe alarmy), test oblewa po zepsuciu reguły
-- [ ] taint ma sanityzatory; `focus-metavariable` wskazuje właściwe miejsce
-- [ ] komunikat z naprawą, CWE w `metadata`, `severity` zgodne z tym, czy reguła blokuje
-- [ ] precyzja zmierzona na repozytorium przed włączeniem blokowania
-- [ ] CI: testy reguł, potem skan PR z `--baseline-commit` i `--error`
+## Checklist
+- [ ] a rule test with `ruleid` and `ok` (including real false alarms), the test fails after the rule is broken
+- [ ] taint has sanitizers; `focus-metavariable` points to the right place
+- [ ] a message with the fix, CWE in `metadata`, `severity` consistent with whether the rule blocks
+- [ ] precision measured on the repository before enabling blocking
+- [ ] CI: rule tests, then a PR scan with `--baseline-commit` and `--error`
 
-## Źródła
-- Semgrep 1.50.0, 1.100.0, 1.182.1 (PyPI) — przykłady, `--baseline-commit`, `--validate`, `todook` sprawdzone
-  w działaniu 2026-10-24; `semgrep scan --help`.
-- Licencje: `LICENSE` w `semgrep/semgrep`, `semgrep/semgrep-rules`, `opengrep/opengrep` (GitHub, odczyt 2026-10-24).
-- GitHub Docs, „Testing custom queries”, „Query reference files”, `codeql test accept` (github/docs, commit
+## Sources
+- Semgrep 1.50.0, 1.100.0, 1.182.1 (PyPI) — examples, `--baseline-commit`, `--validate`, `todook` verified
+  in operation 2026-10-24; `semgrep scan --help`.
+- Licenses: `LICENSE` in `semgrep/semgrep`, `semgrep/semgrep-rules`, `opengrep/opengrep` (GitHub, read 2026-10-24).
+- GitHub Docs, "Testing custom queries", "Query reference files", `codeql test accept` (github/docs, commit
   02c25d1, 2026-10-23).
-- Inspiracja tematu: Trail of Bits `semgrep-rule-creator` — treści nie przejęto.
-Opisane własnymi słowami.
+- Inspiration for the topic: Trail of Bits `semgrep-rule-creator` — the content was not taken over.
+Described in our own words.

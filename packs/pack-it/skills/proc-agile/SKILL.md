@@ -1,65 +1,65 @@
 ---
 name: proc-agile
-description: Użyj przy organizacji pracy zespołu — Scrum, Kanban i metryki przepływu, historyjki (INVEST), Definition of Done.
+description: Use for organizing a team's work — Scrum, Kanban and flow metrics, user stories (INVEST), Definition of Done.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy planowaniu i organizacji pracy zespołu — wartości i zasady Manifestu Agile, Scrum (Scrum Guide 2020 + Expansion Pack 2025), Kanban i metryki przepływu, historyjki użytkownika (INVEST, cięcie pionowe, mapa historyjek, wzorce dzielenia), Definition of Done, prognozowanie. Nie do skalowania na wiele zespołów (proc-safe) ani ekonomii przepływu."
-  keywords: "jeden zespół, Scrum czy Kanban, sprint, retrospektywa, daily, planowanie sprintu, tablica Kanban, limit WIP, mapa historyjek, story map, co wejdzie do pierwszego wydania, historyjka nie mieści się w sprincie, podzielić historyjkę, za duża historyjka, nikt nie widzi całości backlogu"
+  catalog: "Use when planning and organizing a team's work — the values and principles of the Agile Manifesto, Scrum (Scrum Guide 2020 + Expansion Pack 2025), Kanban and flow metrics, user stories (INVEST, vertical slicing, story map, splitting patterns), Definition of Done, forecasting. Not for scaling across many teams (proc-safe) or flow economics."
+  keywords: "jeden zespół, Scrum czy Kanban, sprint, retrospektywa, daily, planowanie sprintu, tablica Kanban, limit WIP, mapa historyjek, story map, co wejdzie do pierwszego wydania, historyjka nie mieści się w sprincie, podzielić historyjkę, za duża historyjka, nikt nie widzi całości backlogu, pociąć historyjkę, cięcie pionowe, historyjka rozbita na zadania, one team, Scrum or Kanban, retrospective, sprint planning, Kanban board, WIP limit, user story map, what goes into the first release, story does not fit in a sprint, split a story, story too big, nobody sees the whole backlog, slice a story, vertical slicing, story split into tasks"
 ---
 
-# Agile: Scrum i Kanban w praktyce
+# Agile: Scrum and Kanban in practice
 
-## Manifest — sedno
-Ludzie i interakcje, działające oprogramowanie, współpraca z klientem, reagowanie na zmiany — **ponad** procesy i narzędzia,
-dokumentację, negocjacje kontraktu i trzymanie się planu (prawe strony też mają wartość). Kluczowe zasady: częste
-dostarczanie działającego oprogramowania, zmiana wymagań jest mile widziana, codzienna współpraca biznesu i zespołu,
-zrównoważone tempo, prostota — sztuka maksymalizacji pracy **niewykonanej**, regularna refleksja i dostosowanie.
+## The Manifesto — the core
+Individuals and interactions, working software, customer collaboration, responding to change — **over** processes and tools,
+documentation, contract negotiation and following a plan (the items on the right have value too). Key principles: frequent
+delivery of working software, changing requirements are welcome, daily collaboration between the business and the team,
+a sustainable pace, simplicity — the art of maximizing the amount of work **not done**, regular reflection and adjustment.
 
 ## Scrum (Scrum Guide 2020)
-- **Filary empiryzmu**: przejrzystość, inspekcja, adaptacja. **Wartości**: zaangażowanie, skupienie, otwartość, szacunek, odwaga.
-- **Odpowiedzialności**: Developers (jak), Product Owner (co i w jakiej kolejności, maksymalizacja wartości), Scrum Master (skuteczność zespołu i Scruma).
-- **Wydarzenia**: Sprint (≤ 1 miesiąc), Sprint Planning (dlaczego/co/jak), Daily Scrum (15 min, postęp ku celowi Sprintu),
-  Sprint Review (inspekcja wyniku z interesariuszami), Sprint Retrospective (jak pracujemy).
-- **Artefakty i zobowiązania**: Product Backlog → **Product Goal**; Sprint Backlog → **Sprint Goal**; Increment → **Definition of Done**.
-- **Expansion Pack (2025)** — opcjonalny *dodatek*, nie zastępstwo: nacisk na wyniki (outcomes) zamiast samych funkcji,
-  praca w niepewności, zespoły korzystające z AI.
+- **Pillars of empiricism**: transparency, inspection, adaptation. **Values**: commitment, focus, openness, respect, courage.
+- **Accountabilities**: Developers (how), Product Owner (what and in what order, maximizing value), Scrum Master (the effectiveness of the team and of Scrum).
+- **Events**: Sprint (≤ 1 month), Sprint Planning (why/what/how), Daily Scrum (15 min, progress toward the Sprint Goal),
+  Sprint Review (inspecting the outcome with stakeholders), Sprint Retrospective (how we work).
+- **Artifacts and commitments**: Product Backlog → **Product Goal**; Sprint Backlog → **Sprint Goal**; Increment → **Definition of Done**.
+- **Expansion Pack (2025)** — an optional *addition*, not a replacement: an emphasis on outcomes instead of features alone,
+  working under uncertainty, teams using AI.
 
 ## Kanban
-- Wizualizuj przepływ, **ograniczaj pracę w toku (WIP)**, aktywnie zarządzaj przepływem, jawne zasady (np. definicja „gotowe” dla kolumn), doskonal.
-- **Metryki przepływu**: WIP, przepustowość (throughput), czas cyklu (cycle time), **wiek elementu pracy** (work item age — najlepszy wczesny sygnał problemu).
-- Zasada: kończ, zanim zaczniesz nowe („stop starting, start finishing”).
-- **Specyfikacja w cyklu (praca z agentami):** backlog i refinement na poziomie celu i zamiaru; kontrakt dojrzewa
-  w sprincie (Scrum) albo tuż przed punktem zobowiązania (Kanban, z limitem WIP na etapie analizy, żeby specyfikacje
-  nie starzały się w kolejce). Definition of Ready to umowa zespołu o jakości wejścia, nie bramka przeciw PO. Poziom
-  specyfikacji (spec-first, spec-anchored, spec-as-source — B. Böckeler) dobierasz do problemu i mierzysz czas cyklu,
-  odsetek przeróbek i stosunek linii Markdown do kodu, zamiast ufać odczuciu przyspieszenia.
+- Visualize the flow, **limit work in progress (WIP)**, actively manage the flow, explicit policies (e.g. a definition of "done" for columns), improve.
+- **Flow metrics**: WIP, throughput, cycle time, **work item age** (the best early signal of a problem).
+- Rule: finish before you start new work ("stop starting, start finishing").
+- **Specification in the cycle (working with agents):** the backlog and refinement are at the level of the goal and intent; the contract matures
+  in the sprint (Scrum) or just before the commitment point (Kanban, with a WIP limit on the analysis stage so that specifications
+  do not age in the queue). Definition of Ready is the team's agreement on input quality, not a gate against the PO. You choose the level
+  of specification (spec-first, spec-anchored, spec-as-source — B. Böckeler) to fit the problem and measure cycle time,
+  the rework rate and the ratio of Markdown lines to code, instead of trusting the feeling of speeding up.
 
-## Historyjki i backlog
-- Historyjka = potrzeba użytkownika i wartość, nie zadanie techniczne: „Jako … chcę … aby …” + **kryteria akceptacji** (Given/When/Then — eng-testing).
-- Historyjki według INVEST, cięte pionowo; z wyników Event Stormingu tniesz po zdarzeniach (ddd-event-storming); przykład: `references/examples.md` §2.
-- **Mapa historyjek**, gdy backlog jest długi i nikt nie widzi całości: kręgosłup z aktywności i kroków użytkownika
-  (od lewej do prawej), pod każdym krokiem historyjki (od najważniejszej), poziome linie wydań — pierwsze wydanie
-  to najcieńszy plaster przez wszystkie kroki, który daje wynik (chodzący szkielet). Wzorce dzielenia za dużej
-  historyjki (kroki przepływu, warianty reguł, dane, interfejsy, ścieżki, rozpoznanie): `references/map-and-split.md`.
-- **Definition of Done** wspólna i sprawdzalna (testy, review, dokumentacja, wdrożone na środowisko…).
+## Stories and the backlog
+- A story = a user need and value, not a technical task: "As a … I want … so that …" + **acceptance criteria** (Given/When/Then — eng-testing).
+- Stories follow INVEST and are cut vertically; from Event Storming results you cut along events (ddd-event-storming); example: `references/examples.md` §2.
+- A **story map**, when the backlog is long and nobody sees the whole: a backbone of user activities and steps
+  (left to right), stories under each step (the most important first), horizontal release lines — the first release
+  is the thinnest slice through all the steps that delivers an outcome (a walking skeleton). Patterns for splitting a story that is too big
+  (flow steps, rule variants, data, interfaces, paths, a spike): `references/map-and-split.md`.
+- A shared, verifiable **Definition of Done** (tests, review, documentation, deployed to an environment…).
 
-## Prognozowanie
-Zamiast obietnic z estymat — prognozy z danych: przepustowość historyczna + symulacja Monte Carlo („85% szans na X elementów do daty Y”).
-Estymaty (np. punkty) traktuj jako narzędzie rozmowy o zrozumieniu, nie miarę wydajności.
+## Forecasting
+Instead of promises from estimates — forecasts from data: historical throughput + a Monte Carlo simulation ("85% chance of X items by date Y").
+Treat estimates (e.g. points) as a tool for a conversation about understanding, not a measure of productivity.
 
-## Anty-wzorce
-„Scrum-ceremonie bez empiryzmu”, sprint jako mini-waterfall, Daily jako raport dla przełożonego, velocity jako cel,
-backlog jako lista życzeń bez kolejności, brak działającego przyrostu na koniec sprintu.
+## Anti-patterns
+"Scrum ceremonies without empiricism", the sprint as a mini-waterfall, the Daily as a report to a manager, velocity as a goal,
+a backlog as a wish list with no order, no working increment at the end of the sprint.
 
-## Przykład
-**Sytuacja:** „Ile elementów zrobicie w 6 tygodni?” Przepustowość z 10 tygodni: 4, 6, 3, 5, 7, 2, 5, 6, 4, 5.
-**Wynik:** zamiast średniej × 6 (≈ 28, czyli ok. 50% szans) — Monte Carlo, 10 000 symulacji z losowaniem tygodni
-z historii:
+## Example
+**Situation:** "How many items will you finish in 6 weeks?" Throughput over 10 weeks: 4, 6, 3, 5, 7, 2, 5, 6, 4, 5.
+**Result:** instead of the average × 6 (≈ 28, i.e. about a 50% chance) — Monte Carlo, 10,000 simulations drawing weeks
+from the history:
 
-| Pewność | 50% | 70% | 85% | 95% |
+| Confidence | 50% | 70% | 85% | 95% |
 |---|---|---|---|---|
-| Elementów w 6 tygodni (co najmniej) | 28 | 26 | 25 | 22 |
+| Items in 6 weeks (at least) | 28 | 26 | 25 | 22 |
 
-Odpowiedź: „85% szans na co najmniej 25 elementów w 6 tygodni”; prognozę odświeżasz co tydzień.
+Answer: "an 85% chance of at least 25 items in 6 weeks"; you refresh the forecast every week.
 
-Więcej przykładów: `references/examples.md`.
+More examples: `references/examples.md`.

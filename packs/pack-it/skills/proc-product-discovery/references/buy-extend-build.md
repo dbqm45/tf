@@ -1,57 +1,57 @@
-# Kup, uzupełnij czy zbuduj — kwalifikacja narzędzia wewnętrznego
+# Buy, extend or build — qualifying an internal tool
 
-AI obniża koszt pierwszej wersji, ale nie koszt utrzymania: odpowiedzialność za dane, zmiany API dostawców,
-tłumaczenie zespołowi, „dlaczego raport dziś milczy”. Pytanie nie brzmi „czy umiemy to zbudować”, tylko „czy chcemy
-przejąć tę odpowiedzialność”. Pełny zamiennik SaaS przejmuje też uprawnienia, audyt, niezawodność, wdrażanie nowych
-osób i ryzyko danych.
+AI lowers the cost of a first version, but not the cost of maintenance: responsibility for the data, changes in vendors' APIs,
+explaining to the team "why the report is silent today". The question is not "can we build it", but "do we want to
+take on this responsibility". A full SaaS replacement also takes on permissions, audit, reliability, onboarding of new
+people and data risk.
 
-## Cztery kierunki
-- **Kup albo użyj funkcji wbudowanej** — problem generyczny (podsumowanie zgłoszenia, etykiety, widok zaległości,
-  panel CI).
-- **Uzupełnij** (zwykle najlepszy start) — wartość bierze się z połączenia kilku systemów, których żaden SaaS osobno
-  nie widzi. Cienka warstwa czyta, streszcza, **linkuje do źródeł** i nie udaje nowego źródła prawdy.
-- **Zbuduj pełniejszy przepływ** — dopiero gdy uzupełnienie przetrwało zderzenie z rzeczywistością: ktoś go używa,
-  oszczędza czas, ma właściciela i zakres.
-- **Czekaj albo nie buduj** — sygnał słaby, problem rozwiązany gdzie indziej albo tarcie jest **istotne** (wynika
-  z realnego ograniczenia lub decyzji), a nie przypadkowe.
+## Four directions
+- **Buy or use a built-in feature** — a generic problem (a ticket summary, labels, a backlog view,
+  a CI panel).
+- **Extend** (usually the best start) — the value comes from connecting several systems that no SaaS sees
+  on its own. A thin layer reads, summarizes, **links to the sources** and does not pretend to be a new source of truth.
+- **Build a fuller flow** — only when the extension has survived contact with reality: someone uses it,
+  it saves time, it has an owner and a scope.
+- **Wait or do not build** — the signal is weak, the problem is solved elsewhere, or the friction is **essential** (it results
+  from a real constraint or decision) rather than accidental.
 
-## Mapa okazji
-Jeden wiersz na sygnał tarcia — powtarzalny i obserwowalny („w poniedziałek kierownik 40 minut zbiera statusy z trzech
-narzędzi”), a nie rozwiązanie („zróbmy dashboard”).
-| Sygnał tarcia | Co dają istniejące narzędzia | Cienkie uzupełnienie | Pierwsza użyteczna wersja | Ryzyko danych | Kierunek, jeśli się sprawdzi |
+## The opportunity map
+One row per friction signal — repeatable and observable ("on Monday a manager spends 40 minutes collecting statuses from three
+tools"), not a solution ("let's make a dashboard").
+| Friction signal | What existing tools give | A thin extension | The first useful version | Data risk | Direction, if it proves itself |
 |---|---|---|---|---|---|
-Ryzyko danych: makiety, dane lokalne, tylko odczyt, dane niewrażliwe → można lekko; prawdziwe dane firmy lub klientów
-→ dostęp, uprawnienia i audyt **przed** implementacją (arch-privacy-compliance).
+Data risk: mockups, local data, read-only, non-sensitive data → you can go light; real company or customer data
+→ access, permissions and audit **before** implementation (arch-privacy-compliance).
 
-## Wybór kandydata (najwyżej jeden)
-Kandydat: powtarza się regularnie · łączy co najmniej 2 źródła albo 2 role · ma dziś ręczny koszt · da się go sprawdzić
-na eksporcie albo w trybie tylko do odczytu · nie przejmuje odpowiedzialności platformy · ma jasny kierunek rozwoju.
-Żaden sygnał nie przechodzi → rekomendacja „nie budować” z nazwanym istniejącym narzędziem do wypróbowania.
-Lepiej 2–3 utrzymywane narzędzia niż 10 prototypów — ograniczeniem jest uwaga potrzebna do utrzymania, nie czas startu.
+## Choosing a candidate (at most one)
+A candidate: recurs regularly · connects at least 2 sources or 2 roles · has a manual cost today · can be checked
+on an export or in read-only mode · does not take over the responsibility of a platform · has a clear direction of growth.
+No signal passes → a "do not build" recommendation with a named existing tool to try.
+Better 2–3 maintained tools than 10 prototypes — the limit is the attention needed for maintenance, not the time to start.
 
-## Opis pierwszej wersji (5–8 zdań)
-Czyta: [źródła] · Zwraca: [raport, widok, podsumowanie] · Nie robi: [świadome wykluczenia] · Ryzyko danych: […] ·
-Kierunek: [produkt / funkcja / narzędzie wewnętrzne / usługa / czekaj].
-Kolejność dojrzewania: makieta raportu w Markdown → skrypt na eksportach JSON lub CSV → statyczny HTML udostępniany
-ręcznie → dopiero potem agent, harmonogram, aplikacja.
+## A description of the first version (5–8 sentences)
+Reads: [sources] · Returns: [a report, a view, a summary] · Does not do: [deliberate exclusions] · Data risk: […] ·
+Direction: [product / feature / internal tool / service / wait].
+The order of maturing: a Markdown mockup of the report → a script on JSON or CSV exports → static HTML shared
+by hand → only then an agent, a schedule, an application.
 
-## Sygnały, że narzędzie stało się produktem
-Zespół planuje dzień według jego wyniku; błędny raport wywołuje zamieszanie; pojawiają się prośby o nowe źródła,
-kontrolę dostępu i działanie bez ręcznego uruchamiania → świadoma zmiana statusu: właściciel, obsługa błędów,
-zachowanie przy braku danych, kto widzi wynik.
+## Signals that a tool has become a product
+The team plans its day around its output; a wrong report causes confusion; requests appear for new sources,
+access control and running without a manual start → a conscious change of status: an owner, error handling,
+behavior when data is missing, who sees the result.
 
-## Następny krok
-Najtańszy: kilkuminutowa rozmowa z kierownikiem i zespołem (często znają powód tarcia). Potem walidacja pytaniami
-o przeszłe zachowania (ddd-discovery-intake, `user-research.md`), potem wymagania (proc-requirements-shaping)
-albo — przy wąskim sygnale z jasną pierwszą wersją — od razu plan i realizacja.
+## Next step
+The cheapest: a few-minute conversation with the manager and the team (they often know the reason for the friction). Then validation by questions
+about past behavior (ddd-discovery-intake, `user-research.md`), then requirements (proc-requirements-shaping)
+or — with a narrow signal and a clear first version — straight to the plan and implementation.
 
-## Przykład
-**Sygnał:** „Kierownik co poniedziałek 40 minut składa status z Jiry, GitHuba i Slacka.”
-**Mapa:** Jira i GitHub mają osobne raporty, żaden nie łączy zgłoszeń z PR i wątkami → uzupełnienie: skrypt czyta
-eksporty (tylko odczyt), składa listę „zgłoszenie — PR — ostatni wątek” z linkami → pierwsza wersja: Markdown
-z eksportów z ostatniego tygodnia → ryzyko danych: nazwy klientów w zgłoszeniach (tylko wewnętrznie) → kierunek:
-narzędzie wewnętrzne, jeśli po 4 tygodniach kierownik z niego korzysta.
-**Odrzucone:** własny dashboard z bazą i logowaniem („zbuduj”) — przejmuje uprawnienia i utrzymanie bez dowodu wartości.
+## Example
+**Signal:** "Every Monday a manager spends 40 minutes assembling a status from Jira, GitHub and Slack."
+**Map:** Jira and GitHub have separate reports, neither links tickets with PRs and threads → extension: a script reads
+exports (read-only), builds a "ticket — PR — last thread" list with links → first version: Markdown
+from the exports of the last week → data risk: customer names in tickets (internal only) → direction:
+an internal tool, if after 4 weeks the manager uses it.
+**Rejected:** your own dashboard with a database and login ("build") — it takes on permissions and maintenance with no proof of value.
 
-Źródło: kurs 10xDevs, ed. 3 (2026), moduł 5, lekcja 1 (narzędzia wewnętrzne, mapa okazji) — materiał szkoleniowy
-(dostęp 2026-10-09). Opisane własnymi słowami.
+Source: 10xDevs course, ed. 3 (2026), module 5, lesson 1 (internal tools, the opportunity map) — training material
+(accessed 2026-10-09). Described in our own words.

@@ -1,89 +1,89 @@
 ---
 name: tool-playwright
-description: Użyj przy testach e2e i API w Playwright — lokatory wg ról, asercje z oczekiwaniem, fixtures, trace, flaky w CI.
+description: Use for e2e and API tests in Playwright — role-based locators, web-first assertions, fixtures, trace, flaky tests in CI.
 metadata:
   review: "2027-01-09"
-  catalog: "Użyj przy testach e2e i API w Playwright (@playwright/test) — lokatory wg ról, asercje z oczekiwaniem, fixtures, projekty i tagi, migawki dostępności, zegar, trace, sharding, flaky w CI, test agents. Nie do wyboru przypadków (qa-test-design) ani zasad wyroczni (qa-spec-first-testing)."
+  catalog: "Use for e2e and API tests in Playwright (@playwright/test) — role-based locators, web-first assertions, fixtures, projects and tags, accessibility snapshots, clock, trace, sharding, flaky tests in CI, test agents. Not for choosing test cases (qa-test-design) or oracle rules (qa-spec-first-testing)."
 ---
 
 # Playwright
 
-## Zasady
-1. **Oczekiwany wynik z przypadku testowego** (TC/AC w nazwie), nigdy „z tego, co pokazuje aplikacja” — qa-spec-first-testing.
-2. **Lokatory jak użytkownik:** `getByRole(…, { name })` > `getByLabel` > `getByText` > `getByTestId`; CSS/XPath tylko w ostateczności.
-   Brak dobrego lokatora wg roli to często **defekt dostępności** — zgłoś go.
-3. **Asercje z oczekiwaniem** (`await expect(locator).toHaveText/ToBeVisible/…`) — nigdy `waitForTimeout` ani ręczne `sleep`.
-4. **Izolacja:** każdy test ma świeży `context`; stan (użytkownik, dane) przygotuj przez API lub `storageState` w projekcie
-   „setup”, nie przez klikanie. Zero zależności między testami.
-5. **Czas pod kontrolą:** `page.clock.setFixedTime(...)` / `page.clock.install()` zamiast prawdziwego zegara.
-6. **Sieć:** zewnętrzne usługi przez `page.route()` (albo HAR); własne API — prawdziwe (to test e2e).
-7. **Mało e2e** — tylko ścieżki krytyczne; reguły biznesowe testuj niżej (qa-test-design).
+## Rules
+1. **The expected result comes from the test case** (TC/AC in the name), never "from what the application shows" — qa-spec-first-testing.
+2. **Locators like a user:** `getByRole(…, { name })` > `getByLabel` > `getByText` > `getByTestId`; CSS/XPath only as a last resort.
+   The lack of a good role-based locator is often an **accessibility defect** — report it.
+3. **Web-first assertions** (`await expect(locator).toHaveText/ToBeVisible/…`) — never `waitForTimeout` or a manual `sleep`.
+4. **Isolation:** every test has a fresh `context`; prepare the state (user, data) through the API or `storageState` in a
+   "setup" project, not by clicking. Zero dependencies between tests.
+5. **Time under control:** `page.clock.setFixedTime(...)` / `page.clock.install()` instead of the real clock.
+6. **Network:** external services through `page.route()` (or HAR); your own API — the real one (this is an e2e test).
+7. **Few e2e tests** — critical paths only; test business rules lower down (qa-test-design).
 
-## Wzorzec (sprawdzony: Playwright 1.63, Chromium)
+## Pattern (verified: Playwright 1.63, Chromium)
 ```ts
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test.describe('zamówienie @smoke', () => {
+test.describe('order @smoke', () => {
   test.beforeEach(async ({ page }) => { await page.goto('/'); });
 
-  test('TC-014 H1-AC2: 10 szt. z rabatem 5%', async ({ page }) => {
-    await page.getByLabel('Ilość').fill('10');
-    await page.getByRole('button', { name: 'Przelicz' }).click();
-    await expect(page.getByRole('status')).toHaveText('Suma: 190,00 zł'); // wartość z requirements.md
+  test('TC-014 H1-AC2: 10 pcs with a 5% discount', async ({ page }) => {
+    await page.getByLabel('Quantity').fill('10');
+    await page.getByRole('button', { name: 'Recalculate' }).click();
+    await expect(page.getByRole('status')).toHaveText('Total: 190.00 PLN'); // the value from requirements.md
   });
 
-  test('struktura strony', async ({ page }) => {
+  test('page structure', async ({ page }) => {
     await expect(page.getByRole('main')).toMatchAriaSnapshot(`
-      - heading "Zamówienie" [level=1]
-      - spinbutton "Ilość"
-      - button "Przelicz"
+      - heading "Order" [level=1]
+      - spinbutton "Quantity"
+      - button "Recalculate"
     `);
   });
 
-  test('dostępność (axe)', async ({ page }) => {
+  test('accessibility (axe)', async ({ page }) => {
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   });
 });
 ```
-Znany defekt: `test.fail(true, 'BUG-7')` lub `test.fixme()` z linkiem — oczekiwanej wartości nie zmieniaj.
+A known defect: `test.fail(true, 'BUG-7')` or `test.fixme()` with a link — do not change the expected value.
 
-## Konfiguracja (fragmenty)
+## Configuration (excerpts)
 ```ts
 export default defineConfig({
   fullyParallel: true, forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,           // retries wykrywają flaky, nie ukrywają ich
-  failOnFlakyTests: !!process.env.CI,        // (1.52+) np. w zestawie nocnym
+  retries: process.env.CI ? 2 : 0,           // retries detect flaky tests, they do not hide them
+  failOnFlakyTests: !!process.env.CI,        // (1.52+) e.g. in the nightly suite
   use: { baseURL: 'http://localhost:4173', trace: 'on-first-retry' },
   webServer: { command: 'npm run preview', url: 'http://localhost:4173', reuseExistingServer: !process.env.CI },
 });
 ```
-Zestawy (qa-regression): tagi w tytule/`{ tag: '@smoke' }` + `--grep @smoke`; PR: `--only-changed=origin/main` (1.46+);
-CI: `--shard=1/4` + `merge-reports`. Page Object tylko gdy upraszcza — preferuj fixtures (`test.extend`) i funkcje pomocnicze.
-Testy API: fixture `request` (`request.post(...)`, `expect(res).toBeOK()`).
+Suites (qa-regression): tags in the title/`{ tag: '@smoke' }` + `--grep @smoke`; PR: `--only-changed=origin/main` (1.46+);
+CI: `--shard=1/4` + `merge-reports`. A Page Object only when it simplifies — prefer fixtures (`test.extend`) and helper functions.
+API tests: the `request` fixture (`request.post(...)`, `expect(res).toBeOK()`).
 
 ## Test agents (1.56+)
-`npx playwright init-agents` generuje agentów planner → generator → healer. Traktuj ich wynik jak kod od juniora:
-plan zestawiaj z przypadkami z qa-test-design, a **healer nie może zmieniać oczekiwanych wartości** — tylko lokatory/czekanie.
+`npx playwright init-agents` generates the planner → generator → healer agents. Treat their output like code from a junior:
+compare the plan with the cases from qa-test-design, and the **healer must not change expected values** — only locators/waiting.
 
-Generowanie E2E przez agenta (bramka przed testem, test wzorcowy `seed.spec.ts`, szablon zlecenia, CLI vs MCP, przegląd
-pięciu antywzorców, celowe psucie, sprzątanie danych): `references/e2e-with-agent.md`.
+Generating E2E through an agent (the gate before the test, the model test `seed.spec.ts`, the task template, CLI vs MCP, the review of
+five anti-patterns, deliberate breaking, data cleanup): `references/e2e-with-agent.md`.
 
-## Zależne od wersji
-| Wersja | Co się zmieniło |
+## Version-dependent
+| Version | What changed |
 |---|---|
-| 1.44 | punkt odniesienia: `getByRole`, `toHaveAccessibleName`, `expect.toPass`, tagi (`{ tag }`), `webServer`, projekty i zależności |
-| 1.45 | API zegara `page.clock` |
-| 1.46 | `--only-changed` (tylko testy dotknięte zmianą w git) |
-| 1.49 | `toMatchAriaSnapshot` (migawki drzewa dostępności); `chromium-headless-shell` domyślnie w trybie headless |
+| 1.44 | baseline: `getByRole`, `toHaveAccessibleName`, `expect.toPass`, tags (`{ tag }`), `webServer`, projects and dependencies |
+| 1.45 | the `page.clock` clock API |
+| 1.46 | `--only-changed` (only tests touched by a change in git) |
+| 1.49 | `toMatchAriaSnapshot` (accessibility tree snapshots); `chromium-headless-shell` by default in headless mode |
 | 1.52 | `failOnFlakyTests`; `toContainClass` |
 | 1.56 | Playwright Test Agents (`init-agents`: planner, generator, healer) |
-| 1.57 | usunięte `page.accessibility` (używaj migawek aria / axe) |
-| 1.63 | testy komponentów (`@playwright/experimental-ct-*`) wycofywane — komponenty testuj w Vitest (tryb przeglądarki) |
+| 1.57 | removed `page.accessibility` (use aria snapshots / axe) |
+| 1.63 | component tests (`@playwright/experimental-ct-*`) being deprecated — test components in Vitest (browser mode) |
 
-## Checklista
-- [ ] nazwa zawiera ID przypadku/kryterium, oczekiwanie ma źródło
-- [ ] tylko lokatory wg ról/etykiet; brak `waitForTimeout`
-- [ ] dane i logowanie przez API/`storageState`; test niezależny
-- [ ] trace przy ponowieniu; flaky raportowane, nie ukrywane
-- [ ] test generowany przez agenta przeszedł przegląd pięciu antywzorców i celowe psucie
+## Checklist
+- [ ] the name contains the case/criterion ID, the expectation has a source
+- [ ] only role/label locators; no `waitForTimeout`
+- [ ] data and login through the API/`storageState`; the test is independent
+- [ ] trace on retry; flaky tests reported, not hidden
+- [ ] an agent-generated test passed the review of five anti-patterns and deliberate breaking

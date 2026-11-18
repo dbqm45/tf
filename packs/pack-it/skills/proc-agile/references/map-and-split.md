@@ -1,46 +1,46 @@
-# Mapa historyjek i dzielenie historyjek
+# Story map and splitting stories
 
-## Mapa historyjek
-1. **Kręgosłup** — aktywności użytkownika od lewej do prawej w kolejności, w jakiej je wykonuje („znajdź salę” →
-   „zarezerwuj” → „zmień lub odwołaj” → „rozlicz”), pod każdą kroki (np. „filtruj po terminie”, „sprawdź
-   wyposażenie”). Opowiadasz historię jednego użytkownika, nie spisujesz modułów systemu.
-2. **Historyjki pod krokami** — od góry najważniejsze, niżej warianty, wyjątki i udogodnienia. Istniejący backlog
-   rozkładasz pod kroki; historyjka, której nie da się przypiąć do kroku, to sygnał (brak kroku albo zbędna praca).
-3. **Linie wydań** — poziome cięcia przez całą mapę. Pierwsze wydanie: najcieńszy plaster przez wszystkie kroki,
-   który daje użytkownikowi wynik od początku do końca (chodzący szkielet), nawet jeśli każdy krok jest ubogi.
-   Każde wydanie ma nazwany wynik i miarę (proc-product-discovery), nie listę funkcji.
-4. **Luki i ryzyka** — kroki bez historyjek, kroki z samymi wariantami bez wersji podstawowej, zależności
-   zewnętrzne; oznacz je na mapie i dopisz pytania.
-5. **Aktualizacja** — mapa żyje: po każdym wydaniu przesuwasz linie według tego, czego się nauczyliście.
+## The story map
+1. **The backbone** — user activities from left to right in the order in which the user performs them ("find a room" →
+   "book" → "change or cancel" → "settle"), with steps under each (e.g. "filter by date", "check the
+   equipment"). You tell the story of one user, you do not list the modules of the system.
+2. **Stories under the steps** — the most important at the top, below them variants, exceptions and conveniences. You lay out
+   the existing backlog under the steps; a story that cannot be attached to a step is a signal (a missing step or unnecessary work).
+3. **Release lines** — horizontal cuts across the whole map. The first release: the thinnest slice through all the steps
+   that gives the user an outcome from start to finish (a walking skeleton), even if every step is poor.
+   Each release has a named outcome and a measure (proc-product-discovery), not a list of features.
+4. **Gaps and risks** — steps with no stories, steps with only variants and no basic version, external
+   dependencies; mark them on the map and add questions.
+5. **Updating** — the map is alive: after each release you move the lines according to what you have learned.
 
-## Wzorce dzielenia za dużej historyjki
-Każdy kawałek po podziale nadal daje użytkownikowi coś działającego (pionowo), nie warstwę.
-| Wzorzec | Kiedy | Przykład (import wyciągów) |
+## Patterns for splitting a story that is too big
+Every piece after the split still gives the user something that works (vertically), not a layer.
+| Pattern | When | Example (importing bank statements) |
 |---|---|---|
-| Kroki przepływu | historyjka obejmuje kilka kroków procesu | wgraj plik → podgląd → zatwierdź → uzgodnij |
-| Warianty reguł | reguły biznesowe mają przypadki | najpierw bez dopasowania automatycznego, potem dopasowanie po kwocie, potem po tytule |
-| Dane | różne formaty lub źródła danych | najpierw jeden bank i jeden format, kolejne banki osobno |
-| Interfejsy | kilka kanałów wejścia | najpierw ręczne wgranie pliku, potem import przez API banku |
-| Ścieżki | ścieżka główna i alternatywne | najpierw poprawny plik, potem błędy i duplikaty |
-| Proste przed złożonym | jest wersja „wystarczająca” | najpierw ręczne przypisanie, potem podpowiedzi |
-| Wydajność później | wymagania wydajności są osobną pracą | najpierw 500 wierszy, potem 50 000 |
-| Rozpoznanie (spike) | za dużo niewiadomych, żeby ocenić | ograniczone czasowo rozpoznanie formatu, wynik: decyzja i nowe historyjki |
+| Flow steps | the story covers several steps of a process | upload a file → preview → approve → reconcile |
+| Rule variants | the business rules have cases | first without automatic matching, then matching by amount, then by title |
+| Data | different data formats or sources | first one bank and one format, further banks separately |
+| Interfaces | several input channels | first a manual file upload, then an import through the bank's API |
+| Paths | a main path and alternative ones | first a valid file, then errors and duplicates |
+| Simple before complex | a "good enough" version exists | first manual assignment, then suggestions |
+| Performance later | performance requirements are separate work | first 500 rows, then 50,000 |
+| Spike | too many unknowns to estimate | a time-boxed investigation of the format, the result: a decision and new stories |
 
-Kolejność kawałków: najpierw ten, który daje najwięcej wiedzy albo wartości przy najmniejszym ryzyku.
-Podział na „backend” i „frontend” albo „baza, API, UI” to zadania, nie historyjki.
+The order of the pieces: first the one that gives the most knowledge or value at the least risk.
+A split into "backend" and "frontend" or "database, API, UI" gives tasks, not stories.
 
-## Sygnały, że historyjka miesza funkcjonalności
-Te same sygnały sprawdza `requirements_lint.py` (proc-requirements-shaping) jako reguły STORY-001…003.
-| Sygnał | Przykład | Co zrobić |
+## Signals that a story mixes features
+`requirements_lint.py` (proc-requirements-shaping) checks the same signals as the STORY-001…003 rules.
+| Signal | Example | What to do |
 |---|---|---|
-| Spójnik albo ukośnik między czasownikami w tytule lub celu (STORY-001) | „chcę dodać, edytować i usunąć kartę”, „Eksport/import produktów” | jedna historyjka na akcję; „numer i datę” (rzeczowniki) to nie sygnał |
-| Kilku aktorów (STORY-001) | „Jako klient lub sprzedawca chcę…” | osobna historyjka dla każdej roli albo jedna rola i reszta później |
-| Różne akcje główne w scenariuszach (STORY-001) | AC-1 „Gdy doda adres”, AC-2 „Gdy usunie adres” | wzorzec „Kroki przepływu” albo „Ścieżki”; warianty danych tej samej akcji (różne filtry) zostają razem |
-| Za dużo scenariuszy lub akcji (STORY-002) | ponad 6 scenariuszy albo ponad 3 akcje | „Warianty reguł”, „Dane” albo „Proste przed złożonym” |
-| Tytuł od warstwy technicznej (STORY-003) | „BE: endpoint do zapisu karty”, „Migracja tabeli zamówień” | to zadanie — nazwij wartość dla użytkownika i przypnij zadanie do historyjki |
+| A conjunction or slash between verbs in the title or goal (STORY-001) | "I want to add, edit and delete a card", "Export/import of products" | one story per action; "number and date" (nouns) is not a signal |
+| Several actors (STORY-001) | "As a customer or a seller I want…" | a separate story for each role, or one role and the rest later |
+| Different main actions in the scenarios (STORY-001) | AC-1 "When they add an address", AC-2 "When they delete an address" | the "Flow steps" or "Paths" pattern; data variants of the same action (different filters) stay together |
+| Too many scenarios or actions (STORY-002) | more than 6 scenarios or more than 3 actions | "Rule variants", "Data" or "Simple before complex" |
+| A title that starts from a technical layer (STORY-003) | "BE: endpoint for saving a card", "Orders table migration" | that is a task — name the value for the user and attach the task to a story |
 
-## Źródła
+## Sources
 - J. Patton, *User Story Mapping* (2014).
-- R. Lawrence, „Patterns for Splitting User Stories” (2009); M. Cohn, SPIDR (Spikes, Paths, Interfaces, Data,
+- R. Lawrence, "Patterns for Splitting User Stories" (2009); M. Cohn, SPIDR (Spikes, Paths, Interfaces, Data,
   Rules), mountaingoatsoftware.com (2017).
-Opisane własnymi słowami.
+Described in our own words.

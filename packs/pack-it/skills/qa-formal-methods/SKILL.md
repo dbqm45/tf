@@ -1,38 +1,38 @@
 ---
 name: qa-formal-methods
-description: Użyj przy weryfikacji formalnej — kiedy warto, Z3, TLA+/TLC, Alloy, kontrprzykład jako test AC-n, granice modelu.
+description: Use for formal verification — when it pays off, Z3, TLA+/TLC, Alloy, a counterexample as an AC-n test, model limits.
 metadata:
   review: "2027-11-15"
-  catalog: "Użyj, gdy przykłady i losowanie nie wystarczą jako wyrocznia — współbieżność i ponowienia, protokoły i maszyny stanów, reguły kombinatoryczne z limitem; wybór szczebla (kontrakty, testy właściwości, solver SMT Z3, model checking TLA+/TLC lub Alloy, Dafny), kontrprzykład jako test akceptacyjny z AC-n, granice modelu w raporcie, model obok kodu. Nie do projektowania agregatów i ich niezmienników (ddd-tactical-design) ani składni Hypothesis (tool-pytest)."
-  keywords: "weryfikacja formalna, metody formalne, zweryfikować formalnie, TLA+, PlusCal, TLC, Alloy, Z3, solver SMT, model checking, udowodnić, że żadna kombinacja, wyścig przy rezerwacji, podwójna rezerwacja, protokół synchronizacji, kontrprzykład, poprawność protokołu, projekt protokołu, przeploty, blokada optymistyczna, ponowienie po timeoucie"
+  catalog: "Use when examples and random generation are not enough as an oracle — concurrency and retries, protocols and state machines, combinatorial rules with a limit; choosing the rung (contracts, property tests, the Z3 SMT solver, TLA+/TLC or Alloy model checking, Dafny), a counterexample as an acceptance test with AC-n, model limits in the report, the model next to the code. Not for designing aggregates and their invariants (ddd-tactical-design) or Hypothesis syntax (tool-pytest)."
+  keywords: "weryfikacja formalna, metody formalne, zweryfikować formalnie, TLA+, PlusCal, TLC, Alloy, Z3, solver SMT, model checking, udowodnić, że żadna kombinacja, wyścig przy rezerwacji, podwójna rezerwacja, protokół synchronizacji, kontrprzykład, poprawność protokołu, projekt protokołu, przeploty, blokada optymistyczna, ponowienie po timeoucie, formal verification, formal methods, verify formally, SMT solver, prove that no combination, race on booking, double booking, synchronization protocol, counterexample, protocol correctness, protocol design, interleavings, optimistic locking, retry after timeout"
 ---
 
-# Metody formalne jako wyrocznia
+# Formal methods as an oracle
 
-Współbieżność i ponowienia, protokoły i maszyny stanów, reguły kombinatoryczne z limitem: wyrocznią jest solver
-(Z3) albo model checker (TLA+/TLC, Alloy), a nie losowanie. Nie cały moduł — 1–3 właściwości o najwyższym koszcie błędu.
+Concurrency and retries, protocols and state machines, combinatorial rules with a limit: the oracle is a solver
+(Z3) or a model checker (TLA+/TLC, Alloy), not random generation. Not a whole module — 1–3 properties with the highest cost of failure.
 
-## Procedura
-0. **Najtańszy szczebel, który wyraża właściwość:** kontrakty i asercje → testy właściwości (Hypothesis, fast-check)
-   → solver Z3 → model checking (TLA+/TLC, Alloy) → Dafny. Wyżej tylko wtedy, gdy niższy nie umie wyrazić właściwości
-   albo nie trafia w próg lub przeplot. Zespół bez doświadczenia zaczyna od testów właściwości i Z3.
-1. Właściwość z kryterium `AC-n`; model tylko ze stanu i kroków, które jej dotyczą; narzędzie szuka negacji.
-2. **Kontrprzykład → test akceptacyjny z `AC-n`** (czerwony przed poprawką, widoczny w `tf trace`); poprawka najpierw
-   w modelu, potem w kodzie.
-3. „Brak kontrprzykładu” raportujesz **z granicami modelu** (liczba procesów, zakres liczb, głębokość) — to nie dowód
-   dla produkcji. Kwoty w groszach albo z zaokrągleniem jak w kodzie.
-4. Model w repozytorium obok kodu; zmiana protokołu bez zmiany modelu to ustalenie w przeglądzie.
+## Procedure
+0. **The cheapest rung that expresses the property:** contracts and assertions → property tests (Hypothesis, fast-check)
+   → the Z3 solver → model checking (TLA+/TLC, Alloy) → Dafny. Go higher only when the lower one cannot express the property
+   or does not hit the threshold or interleaving. A team without experience starts with property tests and Z3.
+1. A property with an `AC-n` criterion; the model only from the state and steps that concern it; the tool looks for the negation.
+2. **A counterexample → an acceptance test with `AC-n`** (red before the fix, visible in `tf trace`); the fix first
+   in the model, then in the code.
+3. You report "no counterexample" **with the model limits** (number of processes, number range, depth) — it is not proof
+   for production. Amounts in grosze or with rounding as in the code.
+4. The model in the repository next to the code; a protocol change without a model change is a finding in review.
 
-## Przykład
-Trzy uruchomione modele z wynikami: `references/formal-methods.md`.
-- **Z3, reguły rabatowe:** `sat` → koszyk 0,50 zł z rabatem lojalnościowym 20 zł daje ujemną cenę; z limitem w kodzie `unsat`.
-- **TLA+/TLC, ponowienie po zgubionej odpowiedzi:** ślad 6 stanów kończy się dwiema rezerwacjami jednego klienta;
-  z kluczem idempotencji brak naruszenia w 382 stanach (2 klientów, 3 miejsca, 1 ponowienie).
-- **Alloy, uprawnienia przez zagnieżdżone grupy:** podgrupa innego najemcy daje dostęp do cudzej faktury; z regułą
-  dla podgrup `UNSAT` w zakresie 4.
-Każdy kontrprzykład ma gotowy test `AC-n` i raport z granicami modelu.
+## Example
+Three models that were run, with results: `references/formal-methods.md`.
+- **Z3, discount rules:** `sat` → a cart of PLN 0.50 with a PLN 20 loyalty discount gives a negative price; with the limit in the code `unsat`.
+- **TLA+/TLC, a retry after a lost response:** a trace of 6 states ends with two reservations for one client;
+  with an idempotency key no violation in 382 states (2 clients, 3 seats, 1 retry).
+- **Alloy, permissions through nested groups:** a subgroup of another tenant gives access to someone else's invoice; with a rule
+  for subgroups `UNSAT` in scope 4.
+Every counterexample has a ready `AC-n` test and a report with the model limits.
 
-## Źródła
-- Z3 (`z3-solver` 4.15.4), TLA+ (`tla2tools.jar` z wydania v1.8.0, TLC rev bc1b506), Alloy 6.2.0 — przykłady
-  uruchomione 2026-11-15; wersje i polecenia w `references/formal-methods.md` §Źródła.
-Opisane własnymi słowami.
+## Sources
+- Z3 (`z3-solver` 4.15.4), TLA+ (`tla2tools.jar` from release v1.8.0, TLC rev bc1b506), Alloy 6.2.0 — examples
+  run 2026-11-15; versions and commands in `references/formal-methods.md` §Sources.
+Described in our own words.

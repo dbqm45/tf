@@ -1,16 +1,16 @@
-# Plan zaangażowania — szablon
+# Engagement plan — template
 
-| Osoba / grupa | Pole mapy | Na czym im zależy | Zaangażowanie dziś → potrzebne | Komunikat | Kanał | Częstotliwość | Właściciel | Następny krok |
+| Person / group | Map box | What matters to them | Engagement today → needed | Message | Channel | Frequency | Owner | Next step |
 |---|---|---|---|---|---|---|---|---|
-| Zarząd | współpracuj blisko | termin, koszt, ryzyko | wspierający → prowadzący | postęp względem miary, decyzje do podjęcia | spotkanie, 1 strona | co 2 tyg. | sponsor | zatwierdzić pilotaż |
-| Dyrektor sprzedaży | współpracuj blisko | wynik zespołu, kontrola nad lejkiem | opierający się → wspierający | co zyskuje zespół, jego wpływ na pola i raporty | rozmowa 1:1 | co tydzień | kierownik projektu | warsztat o polach |
-| Handlowcy | informuj | czas na sprzedaż, prowizje | nieświadomy/opierający się → wspierający | mniej ręcznych wpisów, pilotaż kolegów | spotkanie zespołu, czat | co 2 tyg. | lider pilotażu | demo pilotażu |
-| Dział IT | dbaj o zadowolenie | bezpieczeństwo, integracje, utrzymanie | neutralny → wspierający | wymagania integracji i dostępu, plan utrzymania | zgłoszenie, krótka notatka | przy decyzjach | architekt | przegląd integracji |
+| Board | work closely | deadline, cost, risk | supportive → leading | progress against the measure, decisions to make | meeting, 1 page | every 2 weeks | sponsor | approve the pilot |
+| Sales director | work closely | the team's results, control over the funnel | resistant → supportive | what the team gains, their influence on fields and reports | 1:1 conversation | weekly | project manager | a workshop on fields |
+| Salespeople | keep informed | time for selling, commissions | unaware/resistant → supportive | fewer manual entries, colleagues' pilot | team meeting, chat | every 2 weeks | pilot lead | pilot demo |
+| IT department | keep satisfied | security, integrations, maintenance | neutral → supportive | integration and access requirements, a maintenance plan | ticket, a short note | at decisions | architect | integration review |
 
-## Zasady
-- Jeden właściciel kontaktu na osobę lub grupę; bez „wszyscy informują wszystkich”.
-- Komunikat zaczyna się od interesu odbiorcy, nie od opisu projektu.
-- Każdy wiersz ma następny krok z datą; wiersz bez kroku przez dwa przeglądy — sprawdź, czy osoba wciąż jest
-  istotna.
-- Oceny zaangażowania to hipotezy zespołu; weryfikujesz je rozmową, nie plotką.
-- Mapa zawiera oceny ludzi — przechowuj ją w miejscu dostępnym dla zespołu projektu, nie w publicznym repozytorium.
+## Rules
+- One contact owner per person or group; no "everyone informs everyone".
+- A message starts from the recipient's interest, not from a description of the project.
+- Every row has a next step with a date; a row without a step for two reviews — check whether the person is still
+  relevant.
+- Engagement assessments are the team's hypotheses; you verify them by conversation, not by gossip.
+- The map contains assessments of people — keep it in a place accessible to the project team, not in a public repository.

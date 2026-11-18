@@ -1,95 +1,95 @@
 ---
 name: tool-stripe
-description: Użyj przy integracji ze Stripe — Checkout, Payment Element, Intents, webhooki, Billing, Connect, Tax, wersje API.
+description: Use for a Stripe integration — Checkout, Payment Element, Intents, webhooks, Billing, Connect, Tax, API versions.
 metadata:
   review: "2027-01-21"
-  catalog: "Użyj, gdy planujesz, piszesz, przeglądasz lub testujesz integrację ze Stripe — wybór API (Checkout Sessions, Payment Element, PaymentIntents, SetupIntents) i odejście od przestarzałych (Charges, Sources, Tokens, Card Element), dynamiczne metody płatności zamiast payment_method_types, realizacja zamówienia z webhooka, piaskownice i tryb testowy, klucze ograniczone (rk_), sejf sekretów, rotacja, podpis webhooka, CSP, Billing z Checkout i portalem klienta, rozliczanie zużycia, Connect (Accounts v2, typy obciążeń, prowizja platformy), Stripe Tax (rejestracje, kody podatkowe, automatic_tax), aktualizacja wersji API, SDK, Stripe.js i miejsc docelowych zdarzeń. Nie do modelu subskrypcji niezależnego od dostawcy (be-billing-subscriptions), ogólnego projektu API (be-api-design) ani PCI DSS jako programu zgodności (sec-governance-compliance)."
-  keywords: "stripe, stripe checkout, checkout session, payment intent, paymentintent, setup intent, payment element, card element, payment_method_types, charges api, stripe webhook, checkout.session.completed, klucz stripe, sk_live, rk_live, restricted key, klucz ograniczony, stripe billing, customer portal, stripe connect, accounts v2, destination charges, application_fee_amount, stripe tax, automatic_tax, txcd, wersja api stripe, stripe-version, upgrade stripe, stripe sdk, stripe.js, stripe cli, piaskownica stripe"
+  catalog: "Use when planning, writing, reviewing or testing a Stripe integration — choosing an API (Checkout Sessions, Payment Element, PaymentIntents, SetupIntents) and moving away from deprecated ones (Charges, Sources, Tokens, Card Element), dynamic payment methods instead of payment_method_types, order fulfillment from a webhook, sandboxes and test mode, restricted keys (rk_), a secrets vault, rotation, webhook signatures, CSP, Billing with Checkout and the customer portal, usage-based billing, Connect (Accounts v2, charge types, platform fee), Stripe Tax (registrations, tax codes, automatic_tax), upgrading the API version, SDKs, Stripe.js and event destinations. Not for a provider-independent subscription model (be-billing-subscriptions), general API design (be-api-design) or PCI DSS as a compliance program (sec-governance-compliance)."
+  keywords: "stripe, stripe checkout, checkout session, payment intent, paymentintent, setup intent, payment element, card element, payment_method_types, charges api, stripe webhook, checkout.session.completed, klucz stripe, sk_live, rk_live, restricted key, klucz ograniczony, stripe billing, customer portal, stripe connect, accounts v2, destination charges, application_fee_amount, stripe tax, automatic_tax, txcd, wersja api stripe, stripe-version, upgrade stripe, stripe sdk, stripe.js, stripe cli, piaskownica stripe, stripe key, stripe API version, stripe sandbox"
 ---
 
 # Stripe
 
-**Rola agenta:** prowadzi integrację ze Stripe drogą, którą zaleca sam dostawca: najwyższy poziom API, który
-wystarcza, realizacja zamówienia z webhooka, klucze z minimalnymi uprawnieniami i jawnie przypięta wersja API.
-Model subskrypcji, stany i windykacja niezależne od dostawcy: be-billing-subscriptions.
+**The agent's role:** runs the Stripe integration the way the provider itself recommends: the highest API level that
+suffices, order fulfillment from a webhook, keys with minimal permissions and an explicitly pinned API version.
+The subscription model, states and dunning independent of the provider: be-billing-subscriptions.
 
-## 1. Wersja i środowisko
-- **Wersja API:** sprawdź aktualną w dokumentacji Stripe (strona „API versioning”). Migawka ze źródła z 2026-10-21:
-  `2026-09-30.endive`; starsza niż miesiąc jest prawdopodobnie nieaktualna. Nie zgaduj nowszego numeru.
-- **Wersję przypinasz w kodzie** (konfiguracja klienta SDK), a nie zdajesz się na domyślną wersję konta.
-- **Klient SDK jako instancja** (`new Stripe(...)`, `StripeClient`); globalny klucz modułu (`stripe.api_key = …`)
-  jest przestarzały we wszystkich aktualnych SDK.
-- **Środowiska:** do nowej integracji osobne piaskownice (sandboxes) dla pracy lokalnej i CI zamiast wspólnego trybu
-  testowego konta. Tryb testowy tylko dla istniejącej integracji, która od niego zależy.
+## 1. Version and environment
+- **API version:** check the current one in the Stripe documentation (the "API versioning" page). A snapshot from the source dated 2026-10-21:
+  `2026-09-30.endive`; one older than a month is probably out of date. Do not guess a newer number.
+- **You pin the version in code** (the SDK client configuration), and do not rely on the account's default version.
+- **The SDK client as an instance** (`new Stripe(...)`, `StripeClient`); a global module key (`stripe.api_key = …`)
+  is deprecated in all current SDKs.
+- **Environments:** for a new integration, separate sandboxes for local work and CI instead of the account's shared test
+  mode. Test mode only for an existing integration that depends on it.
 
-## 2. Które API — mapa decyzji
-| Budujesz | Użyj | Szczegóły |
+## 2. Which API — a decision map
+| You are building | Use | Details |
 |---|---|---|
-| płatność jednorazową | Checkout Sessions (hostowany lub osadzony) | `references/payments.md` |
-| własny formularz płatności | Checkout Sessions + Payment Element (`ui_mode: 'custom'`) | `references/payments.md` |
-| zapis metody płatności na później | SetupIntents | `references/payments.md` |
-| płatność bez obecności klienta, własny stan koszyka | PaymentIntents | `references/payments.md` |
-| subskrypcje i odnowienia | Billing API + Checkout (`mode: 'subscription'`) + portal klienta | `references/billing-connect-tax.md` |
-| rozliczanie za zużycie (nowa integracja) | Metronome (według Stripe); Billing Meters tylko przy istniejącym prostym użyciu | `references/billing-connect-tax.md` |
-| platformę lub marketplace | Connect, Accounts v2 (`/v2/core/accounts`) | `references/billing-connect-tax.md` |
-| podatek (sales tax, VAT, GST) | Stripe Tax + rejestracje | `references/billing-connect-tax.md` |
-| aktualizację wersji API, SDK, Stripe.js | procedura | `references/update.md` |
+| a one-time payment | Checkout Sessions (hosted or embedded) | `references/payments.md` |
+| your own payment form | Checkout Sessions + Payment Element (`ui_mode: 'custom'`) | `references/payments.md` |
+| saving a payment method for later | SetupIntents | `references/payments.md` |
+| a payment without the customer present, your own cart state | PaymentIntents | `references/payments.md` |
+| subscriptions and renewals | Billing API + Checkout (`mode: 'subscription'`) + the customer portal | `references/billing-connect-tax.md` |
+| usage-based billing (a new integration) | Metronome (according to Stripe); Billing Meters only for existing simple usage | `references/billing-connect-tax.md` |
+| a platform or marketplace | Connect, Accounts v2 (`/v2/core/accounts`) | `references/billing-connect-tax.md` |
+| tax (sales tax, VAT, GST) | Stripe Tax + registrations | `references/billing-connect-tax.md` |
+| upgrading the API version, SDK, Stripe.js | the procedure | `references/update.md` |
 
-Kolejność preferencji interfejsu: Payment Links (bez kodu) → Checkout → Payment Element. Przed kodem przeczytaj
-właściwy plik z `references/`.
+The order of interface preference: Payment Links (no code) → Checkout → Payment Element. Before the code, read the
+right file from `references/`.
 
-## 3. Zasady krytyczne
-- **Nie przekazuj `payment_method_types`.** Pominięcie włącza dynamiczne metody płatności (konfiguracja w panelu,
-  dobór metod do klienta). Wyjątek: terminal stacjonarny (`card_present`). Ograniczenia przez
-  `payment_method_configurations`, `excluded_payment_method_types` albo `allowed_payment_method_types`.
-- **Webhook nie jest opcjonalny.** Realizacja zamówienia w obsłudze zdarzeń, nie na stronie sukcesu: klient może nie
-  wrócić na stronę po udanej płatności. Dla Checkout obsłuż `checkout.session.completed`
-  i `checkout.session.async_payment_succeeded`, realizuj, gdy `payment_status` nie jest `unpaid`;
-  `checkout.session.async_payment_failed` dla porażek. Webhooki są wymagane przy subskrypcjach i metodach
-  z opóźnionym potwierdzeniem.
-- **Podpis webhooka** weryfikujesz przed obsługą; sekret podpisu to sekret jak klucz API. Idempotencja i kolejność
-  zdarzeń: be-billing-subscriptions §5.
-- **Klucz ograniczony (`rk_`) zamiast tajnego (`sk_`)**, osobny na usługę i środowisko, z minimalnymi uprawnieniami;
-  klucze w sejfie sekretów platformy, nigdy w repozytorium, logach ani kodzie klienta. `references/security.md`.
-- **Przestarzałe API:** nie proponuj Charges, Sources, Tokens ani Card Element; wskaż migrację (`references/payments.md`).
-- **`automatic_tax` bez aktywnej rejestracji nie pobiera podatku i nie zwraca błędu.** Najpierw potwierdź rejestrację
-  w jurysdykcji klienta (`references/billing-connect-tax.md`).
+## 3. Critical rules
+- **Do not pass `payment_method_types`.** Omitting it enables dynamic payment methods (configured in the dashboard,
+  methods matched to the customer). Exception: an in-person terminal (`card_present`). Restrictions through
+  `payment_method_configurations`, `excluded_payment_method_types` or `allowed_payment_method_types`.
+- **The webhook is not optional.** Fulfill the order in event handling, not on the success page: the customer may not
+  return to the page after a successful payment. For Checkout handle `checkout.session.completed`
+  and `checkout.session.async_payment_succeeded`, fulfill when `payment_status` is not `unpaid`;
+  `checkout.session.async_payment_failed` for failures. Webhooks are required for subscriptions and for methods
+  with delayed confirmation.
+- **You verify the webhook signature** before handling; the signing secret is a secret like an API key. Idempotency and the order of
+  events: be-billing-subscriptions §5.
+- **A restricted key (`rk_`) instead of a secret one (`sk_`)**, separate per service and environment, with minimal permissions;
+  keys in the platform's secrets vault, never in the repository, logs or client code. `references/security.md`.
+- **Deprecated APIs:** do not propose Charges, Sources, Tokens or Card Element; point to the migration (`references/payments.md`).
+- **`automatic_tax` without an active registration does not collect tax and returns no error.** First confirm the registration
+  in the customer's jurisdiction (`references/billing-connect-tax.md`).
 
-## 4. Typowe błędy w przeglądzie kodu
-- Integracja „gotowa” bez obsługi webhooków albo z realizacją zamówienia na stronie powrotu.
-- `payment_method_types: ['card']` „bo klient chce tylko karty”.
-- Klucz `sk_live_` w kodzie, pliku `.env` w repozytorium albo w aplikacji mobilnej; brak hooka pre-commit na `sk_`/`rk_`.
-- Ręczna pętla odnowień na PaymentIntents zamiast Billing; obiekt `plan` zamiast `Price`; różne plany jako ceny jednego
-  produktu.
-- Mapowanie zdarzeń na obiekty aplikacji przez `metadata` zamiast przez identyfikatory obiektów Stripe.
-- Brak przypiętej wersji API; webhook z inną wersją API niż kod.
+## 4. Typical errors in code review
+- An integration "done" without webhook handling, or with order fulfillment on the return page.
+- `payment_method_types: ['card']` "because the customer wants only cards".
+- An `sk_live_` key in code, an `.env` file in the repository or in a mobile app; no pre-commit hook for `sk_`/`rk_`.
+- A manual renewal loop on PaymentIntents instead of Billing; a `plan` object instead of `Price`; different plans as prices of one
+  product.
+- Mapping events to application objects through `metadata` instead of through Stripe object identifiers.
+- No pinned API version; a webhook with a different API version than the code.
 
-## 5. Dokumenty startowe Stripe
-Integration Options (wybór drogi), API Tour (przegląd), Go Live Checklist (przed uruchomieniem produkcji) —
+## 5. Stripe starter documents
+Integration Options (choosing a path), API Tour (an overview), Go Live Checklist (before going to production) —
 docs.stripe.com.
 
-## Przykład
-**Sytuacja:** „Sklep w Next.js, płatność kartą przez `charges.create` z tokenem z Card Element; zamówienie oznaczamy
-jako opłacone na stronie `/success`.”
-**Wynik (skrót):**
-- Migracja na Checkout Sessions (hostowany albo osadzony), bez `payment_method_types`; Card Element → Payment Element
-  tylko przy własnym formularzu.
-- Webhook z weryfikacją podpisu; realizacja przy `checkout.session.completed` lub `async_payment_succeeded`
-  z `payment_status` różnym od `unpaid`; strona `/success` tylko pokazuje stan.
-- Klucz ograniczony z uprawnieniami do Checkout i odczytu zdarzeń, w sejfie sekretów; wersja API przypięta w kliencie.
-- Testy w piaskownicy: płatność, metoda z opóźnionym potwierdzeniem, to samo zdarzenie dwa razy.
+## Example
+**Situation:** "A shop in Next.js, a card payment through `charges.create` with a token from Card Element; we mark the order
+as paid on the `/success` page."
+**Result (abridged):**
+- Migrate to Checkout Sessions (hosted or embedded), without `payment_method_types`; Card Element → Payment Element
+  only for a custom form.
+- A webhook with signature verification; fulfillment on `checkout.session.completed` or `async_payment_succeeded`
+  with `payment_status` other than `unpaid`; the `/success` page only shows the state.
+- A restricted key with permissions for Checkout and reading events, in the secrets vault; the API version pinned in the client.
+- Tests in a sandbox: a payment, a method with delayed confirmation, the same event twice.
 
-## Checklista
-- [ ] wersja API przypięta w kodzie i sprawdzona w dokumentacji; klient SDK jako instancja
-- [ ] najwyższy wystarczający poziom API; brak Charges, Sources, Tokens, Card Element
-- [ ] brak `payment_method_types` (poza terminalem)
-- [ ] webhook z podpisem; realizacja z webhooka; zdarzenia asynchroniczne obsłużone
-- [ ] klucze ograniczone w sejfie, osobne na środowisko; plan rotacji i reakcji na wyciek
-- [ ] podatek: rejestracje potwierdzone przed `automatic_tax`; Connect na Accounts v2
+## Checklist
+- [ ] the API version pinned in code and checked in the documentation; the SDK client as an instance
+- [ ] the highest sufficient API level; no Charges, Sources, Tokens, Card Element
+- [ ] no `payment_method_types` (except on a terminal)
+- [ ] a webhook with a signature; fulfillment from the webhook; asynchronous events handled
+- [ ] restricted keys in a vault, separate per environment; a plan for rotation and for responding to a leak
+- [ ] tax: registrations confirmed before `automatic_tax`; Connect on Accounts v2
 
-## Źródła
-- Repozytorium stripe/ai, skille `stripe-best-practices` i `upgrade-stripe`, commit
-  1bcd18aa0e69b0e4dad9e268b873c7e245d6da5e (2026-10-21), licencja MIT. Ranga: pierwotne (materiał dostawcy).
-  Opisane własnymi słowami; nazwy parametrów, zdarzeń i wersji przepisane ze źródła.
-- Stron docs.stripe.com nie czytano w tej sesji; zalecenia dostawcy podane za skillami, a nie za dokumentacją
-  [niezweryfikowane względem docs.stripe.com].
+## Sources
+- The stripe/ai repository, the `stripe-best-practices` and `upgrade-stripe` skills, commit
+  1bcd18aa0e69b0e4dad9e268b873c7e245d6da5e (2026-10-21), MIT license. Rank: primary (the provider's material).
+  Described in our own words; names of parameters, events and versions copied from the source.
+- The docs.stripe.com pages were not read in this session; the provider's recommendations are given after the skills, not after the documentation
+  [unverified against docs.stripe.com].

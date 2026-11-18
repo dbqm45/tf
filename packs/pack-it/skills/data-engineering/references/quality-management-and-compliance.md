@@ -1,65 +1,65 @@
-# Jakość danych, zarządzanie danymi i zgodność
+# Data quality, data governance and compliance
 
-## Wymiary jakości
-| Wymiar | Pytanie | Przykładowy test |
+## Quality dimensions
+| Dimension | Question | Example test |
 |---|---|---|
-| kompletność | czy są wszystkie rekordy i pola | liczba wierszy vs źródło, odsetek braków |
-| poprawność | czy wartości odpowiadają rzeczywistości | uzgodnienie sumy z systemem źródłowym, zakresy |
-| spójność | czy te same fakty zgadzają się między tabelami | klucze obce, suma szczegółów = suma nagłówka |
-| aktualność | czy dane są świeże | czas ostatniej aktualizacji vs SLA |
-| ważność | czy pasują do formatu i reguł | wzorce (NIP, e-mail), wartości dozwolone |
-| unikalność | czy nie ma duplikatów | unikalność klucza biznesowego |
-- Testy przy każdym uruchomieniu potoku (dbt tests, Great Expectations, Soda albo własne zapytania), z progiem:
-  ostrzeżenie czy zatrzymanie publikacji.
-- Każdy zbiór ma **właściciela** i **odbiorców**; incydent jakości obsługujesz jak incydent usługi (ops-sre-incidents):
-  wykrycie, komunikat do odbiorców, naprawa, backfill, analiza przyczyny.
-- Obserwowalność danych: świeżość, wolumen, rozkłady, schemat i pochodzenie w jednym widoku; anomalie wolumenu
-  i rozkładu łapią błędy, na które nie ma testu.
+| completeness | are all records and fields present | row count vs the source, the share of missing values |
+| accuracy | do the values correspond to reality | reconciling the sum with the source system, ranges |
+| consistency | do the same facts agree between tables | foreign keys, the sum of details = the header total |
+| timeliness | is the data fresh | the time of the last update vs the SLA |
+| validity | does it fit the format and rules | patterns (NIP (Polish tax ID), email), allowed values |
+| uniqueness | are there no duplicates | uniqueness of the business key |
+- Tests on every pipeline run (dbt tests, Great Expectations, Soda or your own queries), with a threshold:
+  a warning or a halt of publication.
+- Every dataset has an **owner** and **consumers**; you handle a quality incident like a service incident (ops-sre-incidents):
+  detection, a message to consumers, a fix, a backfill, a root cause analysis.
+- Data observability: freshness, volume, distributions, schema and lineage in one view; anomalies of volume
+  and distribution catch errors for which there is no test.
 
-## Metadane, katalog i pochodzenie
-- **Katalog danych**: co istnieje, opis, właściciel, klasyfikacja (publiczne, wewnętrzne, poufne, osobowe), świeżość,
-  przykładowe zapytania. Bez katalogu ludzie budują własne kopie tych samych danych.
-- **Pochodzenie** (lineage): z jakich źródeł i transformacji powstała kolumna lub tabela — do oceny wpływu zmiany,
-  szukania przyczyny błędu i odpowiedzi na żądania RODO. Generowane automatycznie (dbt, standard OpenLineage), nie
-  rysowane ręcznie.
-- **Architektura „najpierw metadane”**: potoki, uprawnienia i jakość sterowane z deklaracji (schemat, właściciel,
-  klasyfikacja, reguły jakości), a nie zaszyte w kodzie.
+## Metadata, catalog and lineage
+- **Data catalog**: what exists, a description, an owner, a classification (public, internal, confidential, personal), freshness,
+  example queries. Without a catalog people build their own copies of the same data.
+- **Lineage**: from which sources and transformations a column or table arose — to assess the impact of a change,
+  look for the cause of an error and answer GDPR requests. Generated automatically (dbt, the OpenLineage standard), not
+  drawn by hand.
+- **A "metadata first" architecture**: pipelines, permissions and quality driven by declarations (schema, owner,
+  classification, quality rules), not hard-coded.
 
-## Organizacja danych
-| Pojęcie | Czym jest |
+## Data organisation
+| Concept | What it is |
 |---|---|
-| **jezioro danych** | magazyn plików w surowej postaci, różne formaty; tani, ale bez zarządzania staje się „bagnem” |
-| **hurtownia** i **hurtownia tematyczna** (data mart) | modele do analityki; hurtownia tematyczna — wycinek dla jednego działu |
-| **lakehouse** | jezioro z formatem tabel (Iceberg, Delta, Hudi) — transakcje i schemat jak w hurtowni |
-| **hub danych** | punkt wymiany danych między systemami z kontrolą dostępu |
-| **data fabric** | warstwa integracji i metadanych łącząca rozproszone źródła, często z automatyzacją |
-| **data mesh** | organizacyjnie: domeny odpowiadają za swoje dane jako **produkty** (właściciel, kontrakt, jakość, dokumentacja), platforma samoobsługowa, wspólne zasady federacyjne. Wymaga dojrzałości zespołów; odpowiada granicom kontekstów DDD (ddd-strategic-analysis, proc-team-topologies) |
-Wybierasz według skali organizacji, a nie mody: mały zespół zwykle potrzebuje jednej hurtowni z dbt.
+| **data lake** | file storage in raw form, various formats; cheap, but without governance it becomes a "swamp" |
+| **warehouse** and **data mart** | models for analytics; a data mart — a slice for one department |
+| **lakehouse** | a lake with a table format (Iceberg, Delta, Hudi) — transactions and a schema as in a warehouse |
+| **data hub** | a data exchange point between systems with access control |
+| **data fabric** | an integration and metadata layer connecting distributed sources, often with automation |
+| **data mesh** | organisationally: domains are responsible for their data as **products** (an owner, a contract, quality, documentation), a self-service platform, shared federated rules. Requires mature teams; corresponds to DDD context boundaries (ddd-strategic-analysis, proc-team-topologies) |
+You choose by the organisation's scale, not by fashion: a small team usually needs one warehouse with dbt.
 
-## Ochrona danych
-- **Klasyfikacja** kolumn (dane osobowe, szczególne, finansowe) w katalogu, uprawnienia według klasyfikacji (dostęp
-  na poziomie kolumn i wierszy w hurtowni).
-- **Maskowanie** (dynamiczne — w zależności od uprawnień — lub statyczne w kopiach), **pseudonimizacja**
-  i **tokenizacja** (wartość zastąpiona tokenem, mapowanie w osobnym, chronionym magazynie — np. numery kart przez
-  dostawcę płatności), **anonimizacja** nieodwracalna dla danych testowych i otwartych. Pseudonimizacja i tokenizacja
-  to nadal dane osobowe w rozumieniu RODO.
-- Szyfrowanie w ruchu i w spoczynku, klucze w KMS (ops-secrets-identities, `cryptography-and-pki.md`).
-- Minimalizacja i retencja: dane trzymasz tylko tak długo, jak cel tego wymaga; usuwanie obejmuje też kopie,
-  migawki i hurtownię.
+## Data protection
+- **Classification** of columns (personal, special-category, financial data) in the catalog, permissions by classification (column-
+  and row-level access in the warehouse).
+- **Masking** (dynamic — depending on permissions — or static in copies), **pseudonymisation**
+  and **tokenisation** (a value replaced by a token, the mapping in a separate, protected store — e.g. card numbers through a
+  payment provider), irreversible **anonymisation** for test and open data. Pseudonymisation and tokenisation
+  are still personal data within the meaning of the GDPR.
+- Encryption in transit and at rest, keys in a KMS (ops-secrets-identities, `cryptography-and-pki.md`).
+- Minimisation and retention: you keep data only as long as the purpose requires; deletion also covers copies,
+  snapshots and the warehouse.
 
-## Prawo (dział prawny rozstrzyga, agent przygotowuje fakty)
-- **RODO**: podstawa prawna i cel przetwarzania, prawo dostępu, sprostowania i usunięcia (pochodzenie pokazuje, gdzie
-  są dane osoby), przekazywanie poza EOG, rejestr czynności przetwarzania, ocena skutków dla ryzykownych przetwarzań.
-- **AI Act** (UE): obowiązki przejrzystości (art. 50 — informowanie o kontakcie z AI, oznaczanie treści syntetycznych)
-  stosuje się od 2.08.2026; pakiet Digital Omnibus przesunął obowiązki dla systemów wysokiego ryzyka z załącznika III
-  na 2.12.2027, a z załącznika I na 2.08.2028 — sprawdź, czy zmiany weszły w życie i jak brzmią w dniu decyzji.
-  Dla danych: dokumentacja źródeł i jakości danych treningowych, przeciwdziałanie stronniczości.
-- Inne jurysdykcje według rynku (np. w USA przepisy federalne o komunikacji elektronicznej — ECPA — i stanowe ustawy
-  o prywatności).
+## Law (the legal department decides, the agent prepares the facts)
+- **GDPR**: the legal basis and purpose of processing, the right of access, rectification and erasure (lineage shows where
+  a person's data is), transfers outside the EEA, the record of processing activities, an impact assessment for risky processing.
+- **The AI Act** (EU): transparency obligations (Art. 50 — informing about contact with AI, labelling synthetic content)
+  apply from 2.08.2026; the Digital Omnibus package moved the obligations for high-risk systems from Annex III
+  to 2.12.2027, and from Annex I to 2.08.2028 — check whether the changes have entered into force and what they say on the decision date.
+  For data: documentation of the sources and quality of training data, counteracting bias.
+- Other jurisdictions by market (e.g. in the USA the federal electronic communications law — ECPA — and state
+  privacy laws).
 
-## Źródła
-- DAMA-DMBOK (wymiary jakości); Z. Dehghani, *Data Mesh* (2022); OpenLineage; dokumentacja dbt
+## Sources
+- DAMA-DMBOK (quality dimensions); Z. Dehghani, *Data Mesh* (2022); OpenLineage; the dbt documentation
 - [Jones Walker — EU AI Act Digital Omnibus](https://www.joneswalker.com/en/insights/blogs/ai-law-blog/yes-august-2-still-matters-the-eu-approved-a-high-risk-ai-delay-but-most-trans.html?id=102nbon)
 - [roadmap.sh — Data Engineer](https://roadmap.sh/data-engineer) (data quality, lineage, metadata management, data lake,
   mart, hub, fabric, mesh, masking, obfuscation, tokenization, GDPR, EU AI Act, ECPA)
-Opisane własnymi słowami.
+Described in our own words.

@@ -1,78 +1,78 @@
 ---
 name: qa-fuzzing
-description: Użyj przy fuzzingu kodu przyjmującego niezaufane wejście — kiedy, harness, korpus, sanitizery, crash → test regresyjny, CI (Go, Atheris, libFuzzer).
+description: Use for fuzzing code that takes untrusted input — when, a harness, a corpus, sanitizers, crash → regression test, CI (Go, Atheris, libFuzzer).
 metadata:
   review: "2027-04-24"
   visibility: name
-  catalog: "Użyj, gdy kod przyjmuje niezaufane lub złożone wejście (parsery, dekodery, protokoły, formaty plików, deserializacja, uploady) i trzeba automatycznie szukać wejść, które go wywracają — kiedy fuzzować, a kiedy wystarczą testy właściwości, harness (jedno wejście → jedno wywołanie, oczekiwane błędy odróżnione od znalezisk, właściwości jak round-trip), korpus startowy i słowniki, sanitizery (AddressSanitizer, UBSan) dla kodu natywnego, znalezisko → minimalizacja → test regresyjny, fuzzing w CI (krótko w PR, długo nocą, ClusterFuzzLite, OSS-Fuzz), narzędzia: natywny fuzzing Go (testing.F), Atheris (Python), libFuzzer (C/C++), Jazzer (Java). Nie do testów właściwości w Hypothesis lub fast-check bez fuzzera (tool-pytest, eng-testing), testów obciążeniowych (qa-performance-testing), skanowania podatności w zależnościach (ops-supply-chain-security) ani analizy wariantów znalezionej podatności (sec-variant-analysis)."
-  keywords: "fuzzing, fuzzer, fuzz test, sfuzzować, go test -fuzz, testing.F, f.Fuzz, f.Add, Atheris, libFuzzer, LLVMFuzzerTestOneInput, AFL++, Jazzer, cargo-fuzz, AddressSanitizer, ASan, UBSan, sanitizer, korpus, corpus, harness, crash, minimalizacja crasha, złośliwe wejście, parser binarny, dekoder, panika na wejściu, ClusterFuzzLite, OSS-Fuzz"
+  catalog: "Use when code takes untrusted or complex input (parsers, decoders, protocols, file formats, deserialization, uploads) and you need to automatically search for inputs that break it — when to fuzz and when property tests are enough, a harness (one input → one call, expected errors told apart from findings, properties such as round-trip), a seed corpus and dictionaries, sanitizers (AddressSanitizer, UBSan) for native code, a finding → minimization → a regression test, fuzzing in CI (short in a PR, long overnight, ClusterFuzzLite, OSS-Fuzz), tools: native Go fuzzing (testing.F), Atheris (Python), libFuzzer (C/C++), Jazzer (Java). Not for property tests in Hypothesis or fast-check without a fuzzer (tool-pytest, eng-testing), load tests (qa-performance-testing), scanning dependencies for vulnerabilities (ops-supply-chain-security) or variant analysis of a vulnerability that was found (sec-variant-analysis)."
+  keywords: "fuzzing, fuzzer, fuzz test, sfuzzować, go test -fuzz, testing.F, f.Fuzz, f.Add, Atheris, libFuzzer, LLVMFuzzerTestOneInput, AFL++, Jazzer, cargo-fuzz, AddressSanitizer, ASan, UBSan, sanitizer, korpus, corpus, harness, crash, minimalizacja crasha, złośliwe wejście, parser binarny, dekoder, panika na wejściu, ClusterFuzzLite, OSS-Fuzz, to fuzz, crash minimization, malicious input, binary parser, decoder, panic on input"
 ---
 
 # Fuzzing
 
-Fuzzer generuje i mutuje wejścia, kierując się pokryciem kodu, i szuka takich, które wywołują crash, panikę,
-nieoczekiwany wyjątek, zawieszenie albo złamanie właściwości. Uzupełnia testy przykładami i testy właściwości
-(eng-testing): tamte sprawdzają reguły, fuzzer szuka wejść, o których nikt nie pomyślał.
+A fuzzer generates and mutates inputs, guided by code coverage, and looks for ones that cause a crash, a panic,
+an unexpected exception, a hang or a violated property. It complements example tests and property tests
+(eng-testing): those check rules, the fuzzer looks for inputs nobody thought of.
 
-## Kiedy fuzzować
-- **Tak**: parser, dekoder, deserializacja, obsługa protokołu, format pliku, kompresja, wyrażenia i szablony —
-  zwłaszcza na wejściu z sieci lub od użytkownika i w kodzie natywnym (C, C++, `unsafe`).
-- **Testy właściwości wystarczą**: logika biznesowa na typowanych danych (kwoty, daty, reguły) — Hypothesis
-  lub fast-check (tool-pytest, tool-vitest).
-- **Nie fuzzer**: wydajność pod obciążeniem (qa-performance-testing), błędy w zależnościach (SCA,
+## When to fuzz
+- **Yes**: a parser, a decoder, deserialization, protocol handling, a file format, compression, expressions and templates —
+  especially on input from the network or from a user, and in native code (C, C++, `unsafe`).
+- **Property tests are enough**: business logic on typed data (amounts, dates, rules) — Hypothesis
+  or fast-check (tool-pytest, tool-vitest).
+- **Not a fuzzer**: performance under load (qa-performance-testing), bugs in dependencies (SCA,
   ops-supply-chain-security).
 
-## Procedura
-1. **Cel**: jedna funkcja na granicy zaufania (`Decode(bytes)`, `parse(text)`), bez sieci, plików, zegara
-   i stanu globalnego — wynik zależy tylko od wejścia, więc każde znalezisko da się odtworzyć.
-2. **Harness**: wejście fuzzera → typ funkcji (bajty, tekst, struktura przez `FuzzedDataProvider`), jedno
-   wywołanie, potem sprawdzenie:
-   - oczekiwane, udokumentowane błędy (`ErrShort`, `ConfigError`) przepuszczasz; każdy inny wyjątek, panika lub
-     crash to znalezisko;
-   - właściwości zamiast samego „nie wywraca się”: round-trip (`Encode(Decode(b))`), wynik w granicach bufora,
-     zgodność z implementacją wzorcową.
-3. **Korpus startowy**: kilka poprawnych i brzegowych wejść (`f.Add`, katalog `corpus/`), dla formatów z
-   tokenami — słownik. Korpus rośnie podczas fuzzingu; trzymaj go w repozytorium albo w cache CI.
-4. **Sanitizery dla kodu natywnego**: `-fsanitize=fuzzer,address,undefined`. Bez ASan błąd pamięci ujawnia się
-   daleko od przyczyny (zawieszenie, crash w alokatorze, błędnie zapisane wejście); z ASan — linia i rozmiar
-   zapisu. Bufor w harnessie przydzielaj osobno (`malloc` na dokładny rozmiar), żeby ASan widział granicę.
-5. **Znalezisko**: odtwórz z zapisanego pliku, zminimalizuj, napraw przyczynę, zamień wejście w test regresyjny
-   (Go robi to sam: `testdata/fuzz/`), puść fuzzer ponownie. Znalezisko w kodzie bezpieczeństwa → sprawdź warianty
+## Procedure
+1. **The target**: one function at a trust boundary (`Decode(bytes)`, `parse(text)`), with no network, files, clock
+   or global state — the result depends only on the input, so every finding can be reproduced.
+2. **The harness**: the fuzzer input → the function's type (bytes, text, a structure through `FuzzedDataProvider`), one
+   call, then a check:
+   - expected, documented errors (`ErrShort`, `ConfigError`) you let through; any other exception, panic or
+     crash is a finding;
+   - properties instead of just "does not blow up": round-trip (`Encode(Decode(b))`), a result within the buffer bounds,
+     agreement with a reference implementation.
+3. **The seed corpus**: a few valid and edge inputs (`f.Add`, the `corpus/` directory), for formats with
+   tokens — a dictionary. The corpus grows during fuzzing; keep it in the repository or in the CI cache.
+4. **Sanitizers for native code**: `-fsanitize=fuzzer,address,undefined`. Without ASan a memory error shows up
+   far from the cause (a hang, a crash in the allocator, a wrongly saved input); with ASan — the line and the size of
+   the write. Allocate the buffer in the harness separately (`malloc` of the exact size) so that ASan sees the boundary.
+5. **A finding**: reproduce from the saved file, minimize, fix the cause, turn the input into a regression test
+   (Go does this itself: `testdata/fuzz/`), run the fuzzer again. A finding in security code → check the variants
    (sec-variant-analysis).
-6. **CI**: krótki przebieg w każdym PR (30–600 s, ze stałym korpusem), długi nocą lub w harmonogramie
-   (ClusterFuzzLite `code-change` i `batch`; projekty open source — OSS-Fuzz); korpus i znaleziska zachowane między
-   przebiegami. Fuzzing bez limitu czasu nie mieści się w PR.
-7. **Narzędzie wg języka**: Go — `testing.F` (`go test -fuzz`); Python — Atheris; C/C++ — libFuzzer (lub AFL++);
-   Java — Jazzer z JUnit 5.9+ (`jazzer-junit`, `@FuzzTest`) [niezweryfikowane: nie uruchamiano]. Przykłady
-   z kodem i wynikami: `references/harness-and-examples.md`.
+6. **CI**: a short run in every PR (30–600 s, with a fixed corpus), a long one overnight or on a schedule
+   (ClusterFuzzLite `code-change` and `batch`; open source projects — OSS-Fuzz); the corpus and findings kept between
+   runs. Fuzzing without a time limit does not fit in a PR.
+7. **A tool by language**: Go — `testing.F` (`go test -fuzz`); Python — Atheris; C/C++ — libFuzzer (or AFL++);
+   Java — Jazzer with JUnit 5.9+ (`jazzer-junit`, `@FuzzTest`) [unverified: not run]. Examples
+   with code and results: `references/harness-and-examples.md`.
 
-## Pułapki (każda sprawdzona)
-- **Go**: wycinek do pojemności nie panikuje, a fuzzer podaje `[]byte` z zapasem pojemności — odczyt poza danymi
-  był niewidoczny przez 10 mln wykonań. W celu fuzzingu: `b = b[:len(b):len(b)]` albo jawne sprawdzenie długości.
-- **Atheris**: `FuzzedDataProvider` wybiera kodowanie tekstu pierwszym bajtem — test regresyjny pisz na tekście
-  po dekodowaniu, nie na surowych bajtach. Minimalizacja (`-minimize_crash=1`) uruchamia skrypt jako program:
-  shebang, prawo wykonania i właściwy `python3` w `PATH`.
-- Harness, który łapie każdy wyjątek (`except Exception`), nic nie znajdzie — łap tylko udokumentowane.
+## Pitfalls (each verified)
+- **Go**: slicing up to the capacity does not panic, and the fuzzer passes a `[]byte` with spare capacity — a read beyond the data
+  was invisible for 10 million executions. For fuzzing: `b = b[:len(b):len(b)]` or an explicit length check.
+- **Atheris**: `FuzzedDataProvider` picks the text encoding with the first byte — write the regression test on the text
+  after decoding, not on raw bytes. Minimization (`-minimize_crash=1`) runs the script as a program:
+  a shebang, the execute permission and the right `python3` in `PATH`.
+- A harness that catches every exception (`except Exception`) will find nothing — catch only the documented ones.
 
-## Przykład
-Dekoder ramek w Go bez sprawdzenia, czy treść ma zadeklarowaną długość: `FuzzDecode` z dwoma przykładami
-w `f.Add` i właściwością round-trip. Fuzzer znalazł wejście `"000"`, ale dopiero po dodaniu `b[:len(b):len(b)]`
-— wcześniej 2 × 40 s bez znaleziska. Plik z `testdata/fuzz/FuzzDecode/` oblewa `go test` przed naprawą
-i przechodzi po niej. Analogicznie: Atheris znalazł nieudokumentowany `ValueError` w parserze konfiguracji
-po ~80 wykonaniach, libFuzzer z ASan — przepełnienie sterty w dekoderze RLE z linią źródła.
-Kod: `references/harness-and-examples.md`.
+## Example
+A frame decoder in Go without a check that the payload has the declared length: `FuzzDecode` with two examples
+in `f.Add` and a round-trip property. The fuzzer found the input `"000"`, but only after adding `b[:len(b):len(b)]`
+— before that 2 × 40 s with no finding. The file from `testdata/fuzz/FuzzDecode/` fails `go test` before the fix
+and passes after it. Likewise: Atheris found an undocumented `ValueError` in a config parser
+after ~80 executions, libFuzzer with ASan — a heap overflow in an RLE decoder with the source line.
+Code: `references/harness-and-examples.md`.
 
-## Checklista
-- [ ] cel deterministyczny, na granicy zaufania; harness odróżnia oczekiwane błędy od znalezisk
-- [ ] co najmniej jedna właściwość poza „nie wywraca się”
-- [ ] korpus startowy w repozytorium; kod natywny z ASan i UBSan
-- [ ] każde znalezisko: odtworzenie → minimalizacja → naprawa → test regresyjny → ponowny fuzzing
-- [ ] krótki fuzzing w PR, długi nocą; korpus zachowany między przebiegami
+## Checklist
+- [ ] the target is deterministic, at a trust boundary; the harness tells expected errors from findings
+- [ ] at least one property beyond "does not blow up"
+- [ ] a seed corpus in the repository; native code with ASan and UBSan
+- [ ] every finding: reproduce → minimize → fix → regression test → fuzz again
+- [ ] short fuzzing in a PR, long overnight; the corpus kept between runs
 
-## Źródła
-- Go: pakiet `testing` (`F.Add`, `F.Fuzz`), `go test -fuzz`, go1.24.7 — przykład uruchomiony 2026-10-24.
-- Atheris 3.1.0 (PyPI), libFuzzer i sanitizery z clang 18.1.3 (Ubuntu 24.04) — przykłady uruchomione 2026-10-24.
-- ClusterFuzzLite, dokumentacja GitHub Actions (google/clusterfuzzlite, commit 52ecc61); Jazzer, README
-  (CodeIntelligenceTesting/jazzer, commit a4e09fb, Apache 2.0) — odczyt 2026-10-24.
-- Inspiracja tematu: Trail of Bits `testing-handbook-skills` — treści nie przejęto.
-Opisane własnymi słowami.
+## Sources
+- Go: the `testing` package (`F.Add`, `F.Fuzz`), `go test -fuzz`, go1.24.7 — the example run 2026-10-24.
+- Atheris 3.1.0 (PyPI), libFuzzer and sanitizers from clang 18.1.3 (Ubuntu 24.04) — the examples run 2026-10-24.
+- ClusterFuzzLite, GitHub Actions documentation (google/clusterfuzzlite, commit 52ecc61); Jazzer, README
+  (CodeIntelligenceTesting/jazzer, commit a4e09fb, Apache 2.0) — read 2026-10-24.
+- The inspiration for the topic: Trail of Bits `testing-handbook-skills` — the content was not taken over.
+Described in our own words.

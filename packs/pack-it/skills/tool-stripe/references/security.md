@@ -1,49 +1,49 @@
-# Bezpieczeństwo integracji ze Stripe
+# Security of a Stripe integration
 
-## 1. Klucze API
-- Klucza nie ma w kodzie źródłowym ani w commitowanych plikach środowiska. Ciągi `sk_live_…` i `rk_live_…` to klucze
-  produkcyjne; `sk_test_…` w kodzie też jest ryzykiem — ostrzeż.
-- Przechowywanie: sejf sekretów platformy (AWS Secrets Manager lub Parameter Store jako `SecureString`, Google Secret
-  Manager, Azure Key Vault) z odczytem tylko dla aplikacji, która klucza potrzebuje. Vercel nie ma wbudowanego sejfu:
-  dodatek synchronizujący sekrety albo zmienna oznaczona jako wrażliwa. Zmienna środowiskowa tylko, gdy platforma
-  nie ma sejfu. Ogólnie: ops-secrets-identities.
-- Osobne klucze dla produkcji, stagingu i QA; klucza nie logujesz ani nie zwracasz w błędach; żaden endpoint nie
-  zrzuca zmiennych środowiskowych.
-- Hook pre-commit wykrywający `sk_` i `rk_` (eng-local-quality-gates); rotacja przy odejściu osób z dostępem.
-- Klucze nigdy w kodzie klienta ani aplikacji mobilnej (da się je wydobyć). Wywołania przez własny backend; gdy klient
-  musi rozmawiać ze Stripe — klucze efemeryczne (krótkie, ograniczone do zasobu).
+## 1. API keys
+- The key is not in source code or in committed environment files. Strings `sk_live_…` and `rk_live_…` are production
+  keys; `sk_test_…` in code is also a risk — warn.
+- Storage: the platform's secrets vault (AWS Secrets Manager or Parameter Store as `SecureString`, Google Secret
+  Manager, Azure Key Vault) with read access only for the application that needs the key. Vercel has no built-in vault:
+  an add-on that syncs secrets or a variable marked as sensitive. An environment variable only when the platform
+  has no vault. In general: ops-secrets-identities.
+- Separate keys for production, staging and QA; you do not log the key or return it in errors; no endpoint
+  dumps environment variables.
+- A pre-commit hook detecting `sk_` and `rk_` (eng-local-quality-gates); rotation when people with access leave.
+- Keys never in client code or a mobile app (they can be extracted). Calls through your own backend; when the client
+  must talk to Stripe — ephemeral keys (short-lived, scoped to a resource).
 
-## 2. Klucze ograniczone (RAK, `rk_`)
-Mają tylko nadane uprawnienia, więc wyciek szkodzi mniej niż wyciek `sk_`. Jeden klucz na usługę, minimum uprawnień.
-Migracja z klucza tajnego:
-1. Z logów żądań w Workbench wypisz wywołania, które robi klucz tajny.
-2. Utwórz klucz ograniczony w trybie testowym z tymi uprawnieniami.
-3. Obserwuj logi (`stripe logs tail` w Stripe CLI) i testuj; każdy `403` to brakujące uprawnienie.
-4. Utwórz odpowiednik produkcyjny, podmień klucz, potem wycofaj lub wygaś stary klucz tajny.
+## 2. Restricted keys (RAK, `rk_`)
+They have only the permissions granted, so a leak does less harm than a leak of `sk_`. One key per service, minimum permissions.
+Migrating from a secret key:
+1. From the request logs in Workbench, list the calls the secret key makes.
+2. Create a restricted key in test mode with those permissions.
+3. Watch the logs (`stripe logs tail` in the Stripe CLI) and test; every `403` is a missing permission.
+4. Create the production equivalent, swap the key, then retire or expire the old secret key.
 
-Dodatkowo polityki dostępu (ograniczenie IP) per klucz, różne dla środowisk.
+Additionally access policies (IP restriction) per key, different for each environment.
 
-## 3. Wyciek klucza
-1. Natychmiast obróć (roll) albo usuń klucz w panelu — także przy niepewności, czy ktoś go użył.
-2. Przejrzyj logi żądań tego klucza w Workbench.
-3. Nieznana aktywność → wsparcie Stripe. Obsługa incydentu: ops-security-operations.
+## 3. A key leak
+1. Immediately roll or delete the key in the dashboard — also when unsure whether anyone used it.
+2. Review the request logs of that key in Workbench.
+3. Unknown activity → Stripe support. Incident handling: ops-security-operations.
 
-Przygotowanie: ćwicz obracanie kluczy, skanuj repozytorium, hook pre-commit.
+Preparation: practice rotating keys, scan the repository, a pre-commit hook.
 
-## 4. Webhooki, przeglądarka, OAuth
-- Podpis webhooka weryfikujesz zawsze przed obsługą; sekret podpisu traktujesz jak klucz API. Dodatkowo lista
-  dozwolonych adresów IP Stripe na endpoincie.
-- **CSP:** nagłówek `Content-Security-Policy` w każdej aplikacji ze Stripe.js; co najmniej `https://*.stripe.com`
-  w `script-src`, `frame-src`, `connect-src` (pełna lista: przewodnik bezpieczeństwa integracji Stripe). Nie
-  `default-src *`. Ogólnie: fe-web-platform.
-- **OAuth (Connect, Link, Stripe Apps):** parametr `state` — unikalny, nieprzewidywalny, sprawdzany w callbacku (CSRF).
+## 4. Webhooks, browser, OAuth
+- You always verify the webhook signature before handling; you treat the signing secret like an API key. Additionally an allowlist
+  of Stripe IP addresses on the endpoint.
+- **CSP:** a `Content-Security-Policy` header in every application with Stripe.js; at least `https://*.stripe.com`
+  in `script-src`, `frame-src`, `connect-src` (the full list: Stripe's integration security guide). Not
+  `default-src *`. In general: fe-web-platform.
+- **OAuth (Connect, Link, Stripe Apps):** the `state` parameter — unique, unpredictable, checked in the callback (CSRF).
 
-## 5. Dostęp do panelu i Connect
-- Dwuskładnikowe logowanie przez klucze dostępu (passkeys) albo aplikację, nie SMS (przejęcie numeru). SSO przez SAML
-  i provisioning SCIM dla zespołów.
-- Connect: przy kontach Express i Custom platforma odpowiada za oszustwa i spory; onboarding hostowany przez Stripe
-  zamiast własnego (mniej danych osobowych po stronie platformy). Konfiguracja kont: `references/billing-connect-tax.md`.
+## 5. Dashboard access and Connect
+- Two-factor login through passkeys or an app, not SMS (number takeover). SSO through SAML
+  and SCIM provisioning for teams.
+- Connect: with Express and Custom accounts the platform is responsible for fraud and disputes; onboarding hosted by Stripe
+  instead of your own (less personal data on the platform's side). Account configuration: `references/billing-connect-tax.md`.
 
-## Źródła
-stripe/ai, plik skills/stripe-best-practices/references/security.md, commit 1bcd18a (2026-10-21), MIT. Opisane własnymi
-słowami.
+## Sources
+stripe/ai, file skills/stripe-best-practices/references/security.md, commit 1bcd18a (2026-10-21), MIT. Described in our own
+words.

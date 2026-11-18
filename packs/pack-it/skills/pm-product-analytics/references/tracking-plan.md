@@ -1,29 +1,29 @@
-# Plan śledzenia
+# Tracking plan
 
-## Format jednego zdarzenia
-| Pole | Przykład | Uwagi |
+## The format of one event
+| Field | Example | Notes |
 |---|---|---|
-| nazwa | `invoice_sent` | `obiekt_czynność`, czas przeszły, `snake_case`, angielski; bez nazw ekranów i wersji UI |
-| pytanie | „ilu klientów wysyła pierwszą fakturę w ciągu 7 dni” | po co jest zdarzenie |
-| źródło | serwer | serwer dla faktów biznesowych, klient dla zachowań w UI |
-| właściwości | `invoice_id` (string), `amount_band` (`<1k`, `1k-10k`, `>10k`), `is_first` (bool) | typ i dozwolone wartości; przedziały zamiast dokładnych kwot, gdy wystarczą |
-| właściciel | zespół fakturowania | kto odpowiada za poprawność |
-| wersja | 2 (od 2026-11-09: dodane `is_first`) | zmiana typu albo znaczenia = nowa nazwa |
+| name | `invoice_sent` | `obiekt_czynność` (object_action), past tense, `snake_case`, English; no screen names or UI versions |
+| question | "how many customers send their first invoice within 7 days" | what the event is for |
+| source | server | server for business facts, client for UI behaviour |
+| properties | `invoice_id` (string), `amount_band` (`<1k`, `1k-10k`, `>10k`), `is_first` (bool) | type and allowed values; ranges instead of exact amounts when they suffice |
+| owner | the invoicing team | who is responsible for correctness |
+| version | 2 (from 2026-11-09: `is_first` added) | a change of type or meaning = a new name |
 
-## Reguły nazw
-- Jeden słownik obiektów (`account`, `invoice`, `project`) i czynności (`created`, `viewed`, `submitted`,
-  `completed`, `failed`, `deleted`); nowa czynność tylko, gdy żadna nie pasuje.
-- Wynik kroku jako właściwość, nie osobne zdarzenia: `payment_completed` z `status: failed` nie jest dobre —
-  osobno `payment_failed` z `reason`, bo lejek liczy sukcesy.
-- Właściwości wspólne (`app_version`, `platform`, `plan`) ustawia jedna warstwa, nie każde wywołanie.
+## Naming rules
+- One vocabulary of objects (`account`, `invoice`, `project`) and actions (`created`, `viewed`, `submitted`,
+  `completed`, `failed`, `deleted`); a new action only when none fits.
+- The result of a step as a property, not separate events: `payment_completed` with `status: failed` is not good —
+  a separate `payment_failed` with `reason`, because the funnel counts successes.
+- Common properties (`app_version`, `platform`, `plan`) are set by one layer, not by every call.
 
-## Gdzie trzymać plan
-- Plik w repo (YAML lub JSON) obok kodu; z niego typy dla klienta i walidacja w CI albo w narzędziu (schemat
-  zdarzeń), żeby literówka w nazwie nie tworzyła nowego zdarzenia.
-- Przegląd planu przy każdej zmianie zdarzeń w PR (jak migracji bazy).
+## Where to keep the plan
+- A file in the repo (YAML or JSON) next to the code; from it types for the client and validation in CI or in the tool (an event
+  schema), so that a typo in a name does not create a new event.
+- A plan review on every change of events in a PR (like a database migration).
 
-## Tożsamość
-- Przed zalogowaniem: anonimowe ID z narzędzia lub własne (losowe, bez danych osobowych).
-- Przy rejestracji i logowaniu: połączenie anonimowego ID z `user_id` raz, w jednym miejscu kodu.
-- Wylogowanie: reset identyfikatora, żeby następny użytkownik na tym urządzeniu nie dostał cudzej historii.
-- Konta firmowe (B2B): dodatkowo `account_id` lub grupa, żeby liczyć aktywność firmy, nie tylko osoby.
+## Identity
+- Before login: an anonymous ID from the tool or your own (random, without personal data).
+- At registration and login: linking the anonymous ID with `user_id` once, in one place in the code.
+- Logout: reset the identifier so that the next user on that device does not get someone else's history.
+- Company accounts (B2B): additionally `account_id` or a group, to count a company's activity, not only a person's.

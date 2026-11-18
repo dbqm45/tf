@@ -1,68 +1,68 @@
 ---
 name: qa-regression
-description: Użyj przy regresji — zestawy (smoke, PR, nocne), testy dotknięte zmianą, flaky i kwarantanna, dane testowe.
+description: Use for regression — suites (smoke, PR, nightly), tests affected by a change, flaky tests and quarantine, test data.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy budowie i utrzymaniu regresji — warstwy zestawów testów (smoke, PR, nocne, przed wydaniem), wybór testów dotkniętych zmianą, niestabilne testy (flaky) i kwarantanna, dane testowe, regresja wizualna i kontraktowa, metryki jakości testów. Nie do projektowania pojedynczych przypadków (qa-test-design)."
+  catalog: "Use when building and maintaining regression — layers of test suites (smoke, PR, nightly, pre-release), choosing the tests affected by a change, unstable (flaky) tests and quarantine, test data, visual and contract regression, test quality metrics. Not for designing individual cases (qa-test-design)."
 ---
 
-# Testy regresji
+# Regression tests
 
-## Warstwy uruchomień
-| Zestaw | Kiedy | Zawartość | Budżet czasu |
+## Run layers
+| Suite | When | Contents | Time budget |
 |---|---|---|---|
-| **smoke** | każdy commit / wdrożenie | ścieżki krytyczne, zdrowie aplikacji | < 5 min |
-| **PR** | każdy pull request | testy jednostkowe + integracyjne **dotknięte zmianą** (np. `nx affected`, `--only-changed`, `--changed`) + smoke e2e | < 15 min |
-| **nocny** | raz na dobę | pełny zestaw, wszystkie przeglądarki, regresja wizualna, testy mutacyjne modułów krytycznych | godziny OK |
-| **przed wydaniem** | kandydat do wydania | pełny automat + ręczna lista kontrolna (qa-exploratory-manual) + UAT | wg planu |
-Oznaczaj testy tagami (`@smoke`, `@critical`, `@visual`) i uruchamiaj zestawy filtrem, nie osobnymi kopiami testów.
-**Przed CI** — warstwy lokalne: po edycji (hook agenta, sekundy: format, lint, testy powiązane z plikiem z obszaru
-ryzyka), pre-commit (pliki w stage, kilkanaście sekund), pre-push (typy, szerszy zestaw, minuty) —
-eng-local-quality-gates. Każda warstwa lokalna, która złapie błąd, to jeden cykl CI mniej; pełnego zestawu w CI nie
-zastępuje.
+| **smoke** | every commit / deployment | critical paths, application health | < 5 min |
+| **PR** | every pull request | unit + integration tests **affected by the change** (e.g. `nx affected`, `--only-changed`, `--changed`) + e2e smoke | < 15 min |
+| **nightly** | once a day | the full suite, all browsers, visual regression, mutation tests of critical modules | hours are OK |
+| **pre-release** | a release candidate | the full automation + a manual checklist (qa-exploratory-manual) + UAT | per the plan |
+Tag tests (`@smoke`, `@critical`, `@visual`) and run the suites with a filter, not with separate copies of the tests.
+**Before CI** — local layers: after an edit (an agent hook, seconds: format, lint, tests tied to a file from the risk
+area), pre-commit (staged files, a dozen or so seconds), pre-push (types, a wider suite, minutes) —
+eng-local-quality-gates. Every local layer that catches a bug saves one CI cycle; it does not
+replace the full suite in CI.
 
-## Niestabilne testy (flaky)
-- Test raz zielony, raz czerwony bez zmiany kodu **to defekt** (testu albo aplikacji), nie „pech”.
-- Ponowienia (retries) tylko do **wykrywania** niestabilności w CI; raport flaky + opcja „fail on flaky” w nocnym zestawie.
-- **Kwarantanna**: test wyjęty z bramki PR, z właścicielem, zgłoszeniem i terminem naprawy; bez terminu → usuń lub napraw.
-- Typowe przyczyny: sztywne czekanie (`sleep`) zamiast asercji z oczekiwaniem, współdzielony stan/dane, zależność od kolejności,
-  czas i strefa (użyj kontrolowanego zegara), prawdziwa sieć i usługi zewnętrzne, animacje.
+## Unstable tests (flaky)
+- A test that is green once and red once with no code change **is a defect** (of the test or of the application), not "bad luck".
+- Retries only for **detecting** instability in CI; a flaky report + a "fail on flaky" option in the nightly suite.
+- **Quarantine**: a test taken out of the PR gate, with an owner, a ticket and a fix deadline; no deadline → delete or fix it.
+- Typical causes: a hard wait (`sleep`) instead of an assertion with waiting, shared state/data, order dependence,
+  time and time zone (use a controlled clock), a real network and external services, animations.
 
-## Dane testowe
-Każdy test tworzy własne dane (fabryki/budowniczowie, API do przygotowania stanu) i nie zależy od innych testów;
-unikalne identyfikatory; brak danych produkcyjnych (RODO). Stan przygotowuj przez API, nie przez klikanie UI.
+## Test data
+Every test creates its own data (factories/builders, an API to set up state) and does not depend on other tests;
+unique identifiers; no production data (GDPR). Set up state through the API, not by clicking through the UI.
 
-Szerzej (dane syntetyczne i anonimizacja kopii produkcji, e-maile przez Mailpit, macierz kompatybilności, aplikacje
-mobilne, narzędzia testów API, DAST w CI, monitoring syntetyczny po wydaniu): `references/environment-and-special-data.md`.
+More broadly (synthetic data and anonymization of a production copy, e-mails through Mailpit, a compatibility matrix, mobile
+apps, API testing tools, DAST in CI, synthetic monitoring after release): `references/environment-and-special-data.md`.
 
-## Regresja wizualna i dostępności
-Zrzuty ekranu komponentów/stron ze stabilizacją (czcionki, animacje wyłączone, stały zegar i dane); przegląd różnic
-przez człowieka przed aktualizacją wzorców. Migawki drzewa dostępności wykrywają zmiany struktury bez kruchości pikseli.
+## Visual and accessibility regression
+Screenshots of components/pages with stabilization (fonts, animations disabled, a fixed clock and data); a review of the differences
+by a human before updating the baselines. Accessibility tree snapshots detect structure changes without pixel fragility.
 
-## Regresja kontraktów
-Testy kontraktowe (np. Pact, walidacja względem OpenAPI) między frontem a API i między usługami — łapią zmiany łamiące
-kompatybilność wcześniej i taniej niż e2e.
-**Wiadomości** (zdarzenia, komendy): migawka formatu tym samym serializerem co outbox, stałe id i czasy w danych testowych,
-sprawdzenie kompatybilności wstecz; w zestawie PR test **idempotencji konsumenta** — to samo id dwa razy → jeden efekt
+## Contract regression
+Contract tests (e.g. Pact, validation against OpenAPI) between the front end and the API and between services — they catch changes that break
+compatibility earlier and more cheaply than e2e.
+**Messages** (events, commands): a snapshot of the format with the same serializer as the outbox, fixed ids and times in test data,
+a backward compatibility check; in the PR suite a **consumer idempotency** test — the same id twice → one effect
 (be-messaging-outbox).
 
-## Utrzymanie
-Testy to kod: review, refaktoryzacja, usuwanie przestarzałych. Test, który nigdy nie złapał błędu i dubluje inny poziom → usuń.
+## Maintenance
+Tests are code: review, refactoring, removing obsolete ones. A test that has never caught a bug and duplicates another level → delete it.
 
-## Metryki (do uczenia się, nie jako cele)
-defekty, które uciekły na produkcję · odsetek niestabilnych testów · czas zestawu PR · mutation score modułów krytycznych ·
-pokrycie **wymagań** testami (qa-spec-first-testing). Procent pokrycia linii — tylko jako wskazówka, gdzie brakuje testów.
+## Metrics (to learn from, not as targets)
+defects that escaped to production · the share of unstable tests · the PR suite time · the mutation score of critical modules ·
+coverage of **requirements** by tests (qa-spec-first-testing). Line coverage percentage — only as a hint of where tests are missing.
 
-## Przykład
-**Sytuacja:** każdy PR w monorepo Nx uruchamia 1 400 testów (380 e2e na trzech przeglądarkach) — 70 minut.
-**Wynik:** zestawy z tagów, jedna kopia testów:
+## Example
+**Situation:** every PR in an Nx monorepo runs 1,400 tests (380 e2e on three browsers) — 70 minutes.
+**Result:** suites from tags, one copy of the tests:
 
-| Zestaw | Polecenie | Budżet |
+| Suite | Command | Budget |
 |---|---|---|
 | smoke | `npx playwright test --grep @smoke --project=chromium` | < 5 min |
 | PR | `npx nx affected -t test lint` + smoke | < 15 min |
-| nocny | pełny Playwright (3 przeglądarki, `@visual`) + Stryker dla `payments` | godziny OK |
+| nightly | full Playwright (3 browsers, `@visual`) + Stryker for `payments` | hours are OK |
 
-Flaky z raportu idzie do kwarantanny (właściciel, zgłoszenie, termin), nie do `retries: 3`.
+A flaky test from the report goes to quarantine (owner, ticket, deadline), not to `retries: 3`.
 
-Więcej przykładów: `references/examples.md`.
+More examples: `references/examples.md`.

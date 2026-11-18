@@ -1,34 +1,34 @@
-# Wielkość rynku, otoczenie i kierunek wzrostu
+# Market size, environment and growth direction
 
 ## TAM, SAM, SOM
-- **TAM** (całkowity rynek) — przychód, gdyby każdy, kto ma ten problem, kupił rozwiązanie tego typu.
-- **SAM** (rynek dostępny) — część TAM, którą możesz obsłużyć obecnym produktem: kraj, język, segment, model
-  sprzedaży, wymagania prawne.
-- **SOM** (rynek osiągalny) — część SAM, którą realnie zdobędziesz w 3–5 lat przy swoich kanałach, budżecie
-  i konkurencji. Liczysz z pojemności sprzedaży i konwersji, nie z procentu.
+- **TAM** (total market) — the revenue if everyone who has this problem bought a solution of this type.
+- **SAM** (serviceable market) — the part of TAM you can serve with the current product: country, language, segment, sales
+  model, legal requirements.
+- **SOM** (obtainable market) — the part of SAM you will realistically win in 3–5 years with your channels, budget
+  and competition. You compute it from sales capacity and conversion, not from a percentage.
 
-**Od dołu** (główna metoda): liczba klientów docelowych (rejestr, GUS, izba branżowa, baza firm — z datą) × roczny
-przychód na klienta (cennik × typowy plan). Każde ograniczenie SAM to filtr z liczbą i źródłem.
-**Od góry** (kontrola): raport branżowy × udział segmentu. Rozjazd większy niż 2–3 razy → sprawdź założenia.
-Błąd typowy: „wystarczy 1% rynku” — nie mówi, skąd przyjdzie ten 1% ani ile kosztuje jego zdobycie.
+**Bottom up** (the main method): the number of target customers (a register, GUS (Statistics Poland), an industry chamber, a company database — with a date) × annual
+revenue per customer (the price list × a typical plan). Every SAM restriction is a filter with a number and a source.
+**Top down** (a check): an industry report × the segment's share. A gap larger than 2–3 times → check the assumptions.
+A typical mistake: "1% of the market is enough" — it does not say where that 1% will come from or how much winning it costs.
 
-Format wyniku: tabela poziom → wzór → liczby → źródło z datą → założenia; na końcu czułość (co zmienia wynik
-najbardziej).
+Result format: a table of level → formula → numbers → a dated source → assumptions; at the end sensitivity (what changes the result
+most).
 
-## PESTEL — otoczenie rynku
-Polityka (stabilność, zamówienia publiczne, dotacje) · Ekonomia (siła nabywcza, waluta, cykl) · Społeczeństwo
-(nawyki, język, zaufanie do chmury) · Technologia (infrastruktura, standardy, integracje) · Ekologia (wymogi
-raportowania, energochłonność) · Prawo (licencje, ochrona danych, prawo konsumenckie, podatki, branżowe).
-Przy każdym punkcie: wpływ na nas (szansa / zagrożenie), siła, źródło z datą. Punkty bez wpływu skreślasz —
-pełna tabela bez wniosków nie jest wynikiem. Prawo UE dla produktu cyfrowego: arch-eu-product-law.
+## PESTEL — the market environment
+Political (stability, public procurement, subsidies) · Economic (purchasing power, currency, the cycle) · Social
+(habits, language, trust in the cloud) · Technological (infrastructure, standards, integrations) · Environmental (reporting
+requirements, energy intensity) · Legal (licences, data protection, consumer law, taxes, sector-specific).
+For every point: the impact on us (opportunity / threat), strength, a dated source. Points with no impact you cross out —
+a full table without conclusions is not a result. EU law for a digital product: arch-eu-product-law.
 
-## Macierz Ansoffa — kierunek wzrostu
-| | Obecny produkt | Nowy produkt |
+## The Ansoff matrix — growth direction
+| | Current product | New product |
 |---|---|---|
-| **Obecny rynek** | penetracja rynku (więcej tych samych klientów, większe użycie) | rozwój produktu (nowy produkt dla obecnych klientów) |
-| **Nowy rynek** | rozwój rynku (nowy kraj, segment, kanał) | dywersyfikacja (nowe i nowe — największe ryzyko) |
+| **Current market** | market penetration (more of the same customers, greater use) | product development (a new product for current customers) |
+| **New market** | market development (a new country, segment, channel) | diversification (new and new — the greatest risk) |
 
-Ryzyko rośnie z każdym „nowym”, bo maleje wiedza o kliencie albo o produkcie. Dla każdej opcji: co musi być
-prawdą (założenia), koszt wejścia, czas do pierwszego przychodu, co wiemy z dowodów, najtańszy test (pilot
-z 3–5 klientami, list intencyjny, strona z zapisami). Nowy kraj → PESTEL tego kraju i koszt lokalizacji
-(język, płatności, faktury, prawo, wsparcie).
+Risk grows with every "new", because knowledge of the customer or of the product shrinks. For each option: what must be
+true (assumptions), the cost of entry, time to first revenue, what we know from evidence, the cheapest test (a pilot
+with 3–5 customers, a letter of intent, a sign-up page). A new country → that country's PESTEL and the cost of localisation
+(language, payments, invoices, law, support).
