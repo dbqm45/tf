@@ -1,5 +1,7 @@
 # The project test strategy — a living document
 
+> **Contents:** When · Inputs — you read, you do not invent; every fact with a… · The interview (one question at a time, with 2–3 sample… · The risk map (5–7 rows) · The response to a risk (one row per risk) · The check before writing (every risk) · The rollout phases (3–5) · Quality gates · Recipes (they grow with the phases) · What we knowingly do not test · Freshness · What is not in the document
+
 The file: `docs/project/05-plan/test-strategy.md` (template: `.claude/skills/qa-test-design/templates/test-strategy.md`).
 The change's test plan (`test-plan.md`) draws on the strategy and updates it when it is done.
 

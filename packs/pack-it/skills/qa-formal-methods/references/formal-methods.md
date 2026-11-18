@@ -1,6 +1,6 @@
 # Formal methods as an oracle
 
-> **Contents:** 1. When it pays off · 2. The cost ladder (from the cheapest) · 3. The flow · 4. Limits of the result · 5. Example: discount rules (Z3, run) · 6. Example: a retry after a lost response (TLA+, TLC,… · 7. Example: permissions through nested groups (Alloy,…
+> **Contents:** 1. When it pays off · 2. The cost ladder (from the cheapest) · 3. The flow · 4. Limits of the result · 5. Example: discount rules (Z3, run) · 6. Example: a retry after a lost response (TLA+, TLC, run) · 7. Example: permissions through nested groups (Alloy, run)
 
 ## 1. When it pays off
 A model checked by a tool pays off where examples and random generation are not enough and a failure is expensive:
