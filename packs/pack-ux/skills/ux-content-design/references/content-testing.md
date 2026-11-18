@@ -1,37 +1,37 @@
-# Testy treści
+# Content tests
 
-Spis treści: 1. Dobór metody · 2. Cloze · 3. Highlighter · 4. Zadania na zrozumienie · 5. Interpretacja
+Contents: 1. Choosing the method · 2. Cloze · 3. Highlighter · 4. Comprehension tasks · 5. Interpretation
 
-## 1. Dobór metody
-| Pytanie | Metoda | Koszt |
+## 1. Choosing the method
+| Question | Method | Cost |
 |---|---|---|
-| Czy ta grupa zrozumie cały tekst? | cloze | niski, można zdalnie |
-| Co jest jasne, a co niepokojące lub niejasne? | highlighter | niski |
-| Czy zrozumiał skutek działania / cenę / warunki? | zadanie na zrozumienie | średni |
-| Czy znajdzie informację? | zadanie wyszukiwania lub test drzewa (ux-research-methods) | średni |
-| Czy ton pasuje? | porównanie dwóch wersji, wywiad | średni |
-Wskaźniki czytelności (np. Flesch dla angielskiego, indeksy Pisarka dla polskiego [niezweryfikowane]) są sygnałem
-wstępnym, nie dowodem: mierzą długość słów i zdań, nie zrozumienie przez konkretną grupę.
+| Will this group understand the whole text? | cloze | low, can be remote |
+| What is clear, and what is worrying or unclear? | highlighter | low |
+| Did they understand the effect of the action / the price / the terms? | comprehension task | medium |
+| Will they find the information? | a search task or a tree test (ux-research-methods) | medium |
+| Does the tone fit? | comparing two versions, an interview | medium |
+Readability indexes (e.g. Flesch for English, the Pisarek indexes for Polish [unverified]) are a preliminary
+signal, not evidence: they measure the length of words and sentences, not understanding by a specific group.
 
 ## 2. Cloze
-1. Weź fragment 125–250 słów, który wcześniej nie był widziany przez badanych.
-2. Zastąp co 5. lub 6. słowo (w polskim ważne: nie wycinaj samych spójników) równym polem.
-3. Badany uzupełnia luki bez ograniczeń czasu; liczysz trafienia (dokładne słowo, ewentualnie synonimy – zdecyduj przed testem).
-4. Wynik w procentach: wg źródeł wtórnych ok. 60% i więcej oznacza, że grupa tekst rozumie [niezweryfikowane
-   w NN/g]; poniżej – tekst do przeróbki. Porównuj wersje na tej samej grupie.
+1. Take a fragment of 125–250 words that the participants have not seen before.
+2. Replace every 5th or 6th word (in Polish it matters: do not cut out only conjunctions) with an equal field.
+3. The participant fills in the gaps without a time limit; you count hits (the exact word, possibly synonyms – decide before the test).
+4. The result in percent: according to secondary sources about 60% or more means the group understands the text [unverified
+   at NN/g]; below that – the text needs rework. Compare versions on the same group.
 
 ## 3. Highlighter
-1. Wydrukuj lub pokaż tekst w narzędziu do zaznaczania; dwa kolory: zielony = jasne, budzi zaufanie; czerwony = niejasne,
-   niepokojące, nie wierzę.
-2. Badani zaznaczają, co chcą, bez ograniczeń; potem krótko pytasz o największe czerwone plamy.
-3. Zestaw zaznaczenia wielu osób: fragment czerwony u większości = poprawka w pierwszej kolejności.
-4. 5–8 osób na grupę; wynik jakościowy, nie statystyka.
+1. Print or show the text in a marking tool; two colors: green = clear, builds trust; red = unclear,
+   worrying, I do not believe it.
+2. Participants mark whatever they want, without limits; then you briefly ask about the largest red patches.
+3. Combine the marks of many people: a fragment red for most = a fix first.
+4. 5–8 people per group; a qualitative result, not statistics.
 
-## 4. Zadania na zrozumienie
-- Scenariusz: „Chcesz zwrócić buty kupione 20 dni temu. Co zrobisz i ile to potrwa?”
-- Notuj: poprawna odpowiedź, pewność, własne słowa badanego. Pytanie o „co tu jest niejasne” zadajesz po zadaniu.
-- Sukces: większość trafnie odtwarza skutek bez pytania o wyjaśnienia.
+## 4. Comprehension tasks
+- Scenario: "You want to return shoes bought 20 days ago. What will you do and how long will it take?"
+- Note: the correct answer, the confidence, the participant's own words. You ask "what is unclear here" after the task.
+- Success: most reproduce the effect correctly without asking for explanations.
 
-## 5. Interpretacja i zapis
-Wynik: tabela fragment → problem → liczba osób → poprawka → wersja po poprawce. Powtórz mały test na poprawionej
-wersji, jeśli zmiana dotyczy kosztów, zgód lub bezpieczeństwa. Zgody badanych i dane osobowe — ux-research-methods.
+## 5. Interpretation and recording
+Result: a table fragment → problem → number of people → fix → version after the fix. Repeat a small test on the fixed
+version if the change concerns costs, consents or security. Participants' consents and personal data — ux-research-methods.

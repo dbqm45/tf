@@ -1,44 +1,44 @@
-# Przewodnik stylu treści i wzorce mikrotekstu
+# Content style guide and microcopy patterns
 
-Spis treści: 1. Szablon przewodnika · 2. Głos i ton · 3. Wzorce mikrotekstu · 4. Antywzorce
+Contents: 1. Guide template · 2. Voice and tone · 3. Microcopy patterns · 4. Anti-patterns
 
-## 1. Szablon przewodnika stylu (`docs/content-guide.md`)
-Krótki dokument, nie podręcznik. Sekcje:
-1. **Cel i odbiorcy** — dla kogo piszemy, w jakich sytuacjach (2–3 persony lub sytuacje).
-2. **Głos** — 3–4 cechy, każda w formie „jesteśmy X, nie Y” z przykładem zdania „tak” i „nie”.
-3. **Ton wg sytuacji** — tabela: sytuacja (sukces, błąd, ostrzeżenie, płatność, pierwsze użycie) → ton → przykład.
-4. **Forma zwracania się** — jedna decyzja (ty / Pan, Pani / bezosobowo) i wyjątki.
-5. **Słownik** — pojęcie preferowane, zakazane synonimy, definicja jednym zdaniem (zgodny ze słownikiem domeny
-   z ddd-facilitation; ta sama lista zasila glosariusz tłumaczeń).
-6. **Zasady pisania** — długość zdań, strona czynna, liczby i daty (format), wielkie litery, skróty, emoji.
-7. **Wzorce** — gotowe szkielety z p. 3; każdy z przykładem dobrym i złym.
-8. **Proces** — kto zatwierdza, jak zmieniać (PR), jak zgłaszać wyjątki.
-Przegląd tekstów w PR jak kodu; polszczyzna — txt-polish-correctness i txt-polish-style.
+## 1. Style guide template (`docs/content-guide.md`)
+A short document, not a manual. Sections:
+1. **Goal and readers** — who we write for, in what situations (2–3 personas or situations).
+2. **Voice** — 3–4 traits, each in the form "we are X, not Y" with a "yes" and a "no" example sentence.
+3. **Tone by situation** — a table: situation (success, error, warning, payment, first use) → tone → example.
+4. **Form of address** — one decision (informal / formal / impersonal) and the exceptions.
+5. **Glossary** — the preferred concept, banned synonyms, a one-sentence definition (consistent with the domain glossary
+   from ddd-facilitation; the same list feeds the translation glossary).
+6. **Writing rules** — sentence length, active voice, numbers and dates (format), capital letters, abbreviations, emoji.
+7. **Patterns** — ready skeletons from point 3; each with a good and a bad example.
+8. **Process** — who approves, how to change (PR), how to report exceptions.
+Review texts in a PR like code; Polish — txt-polish-correctness and txt-polish-style.
 
-## 2. Głos i ton
-- Głos stały: np. „rzeczowy, nie zimny”; „życzliwy, nie poufały”; „konkretny, nie żargonowy”.
-- Ton zmienny: im większy stres użytkownika (utrata pieniędzy, danych), tym mniej żartów, więcej konkretu i wyjścia.
-- Humor tylko w sytuacjach bez ryzyka i bez kosztu dla osoby, która czyta po raz dziesiąty.
-- Test: czy zdanie można powiedzieć głośno osobie przy okienku? Jeśli nie, przepisz.
+## 2. Voice and tone
+- A constant voice: e.g. "matter-of-fact, not cold"; "kind, not overfamiliar"; "concrete, not jargony".
+- A changing tone: the more stress the user has (losing money, data), the fewer jokes, the more concreteness and a way out.
+- Humour only in situations without risk and without a cost for the person reading it for the tenth time.
+- Test: could you say the sentence aloud to a person at a counter? If not, rewrite it.
 
-## 3. Wzorce mikrotekstu
-| Element | Szkielet | Przykład |
+## 3. Microcopy patterns
+| Element | Skeleton | Example |
 |---|---|---|
-| Błąd pola | co poprawić + wymóg | „Wpisz NIP — 10 cyfr, bez kresek” |
-| Błąd systemu | co się stało + czy dane bezpieczne + co dalej | „Nie udało się zapisać faktury. Twoje zmiany zostały w formularzu. Spróbuj za chwilę lub napisz do nas.” |
-| Pusty stan | dlaczego pusto + pierwszy krok + przycisk | „Nie masz jeszcze klientów. Dodaj pierwszego albo zaimportuj plik CSV.” |
-| Pusty wynik wyszukiwania | co znaleziono (nic) + wskazówka | „Brak wyników dla „fakt”. Sprawdź pisownię lub szukaj po numerze.” |
-| Potwierdzenie | skutek + czasownik | „Usunąć projekt „Dom”? Usuniesz też 12 zadań.” → [Usuń projekt] [Anuluj] |
-| Przycisk | czasownik + dopełnienie | „Wyślij fakturę”, nie „OK” |
-| Sukces | co się stało + co dalej (opcjonalnie) | „Faktura 03/2026 wysłana do Jan Kowalski.” |
-| Onboarding | jedna rzecz na ekran, korzyść przed funkcją | „Wystaw pierwszą fakturę w 2 minuty” |
-| Powiadomienie | kto/co + czego dotyczy + akcja | „Klient zapłacił fakturę 03/2026. Zobacz płatność” |
-| Zgoda | co, po co, jak wycofać; opcje równorzędne | „Wysyłać przypomnienia o terminach? Możesz to wyłączyć w Ustawieniach.” |
+| Field error | what to fix + the requirement | "Enter the tax ID — 10 digits, no dashes" |
+| System error | what happened + whether data is safe + what next | "We could not save the invoice. Your changes are still in the form. Try again in a moment or write to us." |
+| Empty state | why it is empty + the first step + a button | "You have no customers yet. Add the first one or import a CSV file." |
+| Empty search result | what was found (nothing) + a hint | "No results for "invc". Check the spelling or search by number." |
+| Confirmation | the effect + a verb | "Delete the project "Home"? You will also delete 12 tasks." → [Delete project] [Cancel] |
+| Button | a verb + an object | "Send invoice", not "OK" |
+| Success | what happened + what next (optional) | "Invoice 03/2026 sent to Jan Kowalski." |
+| Onboarding | one thing per screen, the benefit before the feature | "Issue your first invoice in 2 minutes" |
+| Notification | who/what + what it concerns + an action | "The customer paid invoice 03/2026. See the payment" |
+| Consent | what, why, how to withdraw; equal options | "Send reminders about due dates? You can turn this off in Settings." |
 
-## 4. Antywzorce
-- „Wystąpił nieoczekiwany błąd” bez dalszego kroku; „Nieprawidłowe dane”; kod zamiast zdania.
-- Obwinianie: „Podałeś zły numer” → „Numer ma 9 cyfr, potrzeba 10”.
-- „Przepraszamy za niedogodności” zamiast pomocy; wykrzykniki i „Ups!” przy utracie danych.
-- Przyciski „Tak” / „Nie” na pytaniu z negacją; „Anuluj” niejasne (anulować akcję czy zamknąć okno?).
-- Ta sama rzecz pod trzema nazwami (zamówienie, order, transakcja).
-- Tekst jako obrazek lub tekst sklejany z fragmentów w kodzie (psuje tłumaczenie i czytniki ekranu).
+## 4. Anti-patterns
+- "An unexpected error occurred" without a next step; "Invalid data"; a code instead of a sentence.
+- Blaming: "You entered a wrong number" → "The number has 9 digits, 10 are needed".
+- "We apologize for the inconvenience" instead of help; exclamation marks and "Oops!" when data is lost.
+- "Yes" / "No" buttons on a negated question; an unclear "Cancel" (cancel the action or close the window?).
+- The same thing under three names (order, purchase, transaction).
+- Text as an image or text glued from fragments in code (it breaks translation and screen readers).

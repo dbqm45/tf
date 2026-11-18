@@ -1,31 +1,31 @@
-# Nawigacja, etykiety, wyszukiwanie, mapa serwisu
+# Navigation, labels, search, site map
 
-## Wzorce nawigacji
-| Wzorzec | Kiedy | Uwaga |
+## Navigation patterns
+| Pattern | When | Note |
 |---|---|---|
-| nawigacja globalna (główne menu) | główne działy, zawsze widoczne | 5–9 pozycji [heurystyka, nie reguła], stałe położenie |
-| nawigacja lokalna / boczna | podział w dziale, wiele poziomów | pokazuj położenie (bieżąca pozycja) |
-| okruszki | głębsza hierarchia | uzupełnienie, nie zamiennik menu |
-| mega menu | dużo pozycji w 2 poziomach | czytelne grupy, klawiatura, nie otwiera się tylko na hover |
-| powiązane treści, odsyłacze | treść pasuje do kilku miejsc | zamiast kopii |
-| nawigacja fasetowa | sklep, katalog z cechami | filtry z metadanych, liczba wyników |
-| stopka | prawne, pomoc, kontakt | nie na zadania główne |
-| nawigacja w aplikacji (dolny pasek, zakładki) | 3–5 głównych obszarów | etykiety tekstowe obok ikon |
-Dostępność: kolejność fokusu, landmarki `nav`, nazwy dostępne, bez zależności od hovera — fe-web-platform.
+| global navigation (main menu) | main sections, always visible | 5–9 items [a heuristic, not a rule], a fixed position |
+| local / side navigation | a split within a section, many levels | show the position (the current item) |
+| breadcrumbs | a deeper hierarchy | a complement, not a replacement for the menu |
+| mega menu | many items on 2 levels | clear groups, keyboard, does not open only on hover |
+| related content, cross-links | content fits several places | instead of a copy |
+| faceted navigation | a shop, a catalog with traits | filters from metadata, the number of results |
+| footer | legal, help, contact | not for main tasks |
+| in-app navigation (bottom bar, tabs) | 3–5 main areas | text labels next to icons |
+Accessibility: focus order, `nav` landmarks, accessible names, no reliance on hover — fe-web-platform.
 
-## Etykiety
-- Z języka użytkowników (sortowanie otwarte, zapytania w wyszukiwarce), nie z organigramu firmy.
-- Rozłączne i przewidywalne („Urlopy i nieobecności”, nie „Różne”); koniec z „Inne”, „Pozostałe”, „Usługi” bez dopowiedzenia.
-- Jedna nazwa na jedno pojęcie w całym serwisie; pierwsze słowo niesie informację (zapach informacji).
-- Linki opisowe („Zasady pracy zdalnej”), nie „Kliknij tutaj”.
+## Labels
+- From the users' language (open sorting, search queries), not from the company's org chart.
+- Disjoint and predictable ("Leave and time off", not "Miscellaneous"); an end to "Other", "Remaining", "Services" without a qualifier.
+- One name for one concept across the whole site; the first word carries the information (information scent).
+- Descriptive links ("Remote work rules"), not "Click here".
 
-## Wyszukiwanie
-- Analiza dzienników: najczęstsze zapytania, zapytania bez wyników, wyniki bez kliknięć → synonimy, nowe treści, korekty etykiet.
-- Pole widoczne, szeroko; podpowiedzi; tolerancja literówek; filtry z metadanych; wynik z kontekstem (typ, data).
-- Brak wyników: komunikat, sugestie, kontakt; nie pusta strona.
-- Najlepsze wyniki: strona zadania na górze (promowane wyniki dla częstych zapytań).
+## Search
+- Log analysis: the most frequent queries, queries without results, results without clicks → synonyms, new content, label corrections.
+- A visible, wide field; suggestions; typo tolerance; filters from metadata; a result with context (type, date).
+- No results: a message, suggestions, contact; not an empty page.
+- Best results: the task page at the top (promoted results for frequent queries).
 
-## Mapa serwisu
-Hierarchia wcięciami albo diagram Mermaid `flowchart TD`: poziom 1 (działy), poziom 2, kluczowe strony; oznacz
-treści w kilku miejscach (odsyłacze), strony tylko z wyszukiwarki i planowane usunięcia. Mapa jest wersjonowana
-razem z `ia-documentation.md`.
+## Site map
+A hierarchy with indents or a Mermaid `flowchart TD` diagram: level 1 (sections), level 2, key pages; mark
+content in several places (cross-links), pages only from search and planned removals. The map is versioned
+together with `ia-documentation.md`.

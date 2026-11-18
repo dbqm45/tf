@@ -1,35 +1,35 @@
-# Inwentarz, audyt, metadane i taksonomia
+# Inventory, audit, metadata and taxonomy
 
-## Inwentarz treści
-Arkusz lub eksport z CMS, jedna linia na stronę lub zasób:
-`ID | adres | tytuł | typ | poziom w hierarchii | właściciel | autor | data publikacji i aktualizacji | język | ruch (12 mies.) | źródła wejść | metadane`.
-Zbieraj automatycznie (mapa XML, crawler, API CMS, analityka). Ręcznie tylko dopisujesz właściciela i decyzję.
-Bez właściciela strona jest kandydatem do usunięcia lub przejęcia.
+## Content inventory
+A spreadsheet or an export from the CMS, one line per page or asset:
+`ID | address | title | type | hierarchy level | owner | author | publication and update date | language | traffic (12 mo.) | entry sources | metadata`.
+Collect it automatically (XML sitemap, crawler, CMS API, analytics). By hand you only add the owner and the decision.
+Without an owner a page is a candidate for removal or for being taken over.
 
-## Audyt treści
-Oceń próbkę lub całość według kryteriów:
-| Kryterium | Pytanie |
+## Content audit
+Assess a sample or the whole by these criteria:
+| Criterion | Question |
 |---|---|
-| aktualność | czy treść jest zgodna ze stanem faktycznym i datą |
-| dokładność | czy jest poprawna, nie sprzeczna z inną stroną |
-| przydatność | czy ktoś jej potrzebuje (ruch, zadania z kroku 1) |
-| zrozumiałość | prosty język, jedno zadanie na stronę |
-| duplikaty | czy ta sama informacja jest gdzie indziej (połącz) |
-Decyzja: **zostaw / popraw / połącz / usuń / dopisz**. Przy usuwaniu: przekierowania 301 i zmiana linków wewnętrznych.
-Wynik audytu zasila zarówno karty do sortowania (reprezentatywna próbka stron), jak i plan migracji.
+| currency | is the content consistent with the actual state and the date |
+| accuracy | is it correct, not contradicting another page |
+| usefulness | does anyone need it (traffic, the tasks from step 1) |
+| understandability | plain language, one task per page |
+| duplicates | is the same information elsewhere (merge) |
+Decision: **keep / fix / merge / remove / add**. When removing: 301 redirects and updating internal links.
+The audit result feeds both the cards for sorting (a representative sample of pages) and the migration plan.
 
-## Karty do sortowania z inwentarza
-Wybierz 30–60 stron/pojęć reprezentujących wszystkie obszary, w tym te często szukane (z zapytań do wyszukiwarki).
-Nazwy w języku użytkowników; krótki opis na rewersie.
+## Cards for sorting from the inventory
+Choose 30–60 pages/concepts representing all areas, including the frequently searched ones (from search queries).
+Names in the users' language; a short description on the back.
 
-## Metadane
-- Minimum: tytuł, opis, typ treści, temat, odbiorca (jeśli różny), data aktualizacji, właściciel.
-- Zakres wartości: **kontrolowane słownictwo** (lista, nie wolny tekst), synonimy i formy przestarzałe mapowane na nazwę preferowaną.
-- Zastosowanie: filtry i facety w wyszukiwarce i listach, treści powiązane, raporty o stanie treści.
-- Zasada: każdy atrybut ma użytkownika (filtr lub raport). Nie zbieraj metadanych „na wszelki wypadek”.
+## Metadata
+- Minimum: title, description, content type, topic, audience (if different), update date, owner.
+- Range of values: a **controlled vocabulary** (a list, not free text), synonyms and outdated forms mapped to the preferred name.
+- Use: filters and facets in search and lists, related content, reports on the state of the content.
+- Rule: every attribute has a user (a filter or a report). Do not collect metadata "just in case".
 
-## Taksonomia i słownik etykiet
-Wpis: `nazwa preferowana | definicja | synonimy i zwroty użytkowników | nazwa niezalecana | poziom | właściciel`.
-Hierarchia i zasady: jedna zasada grupowania na poziom; nazwy rozłączne; relacje szersze/węższe/powiązane.
-Fasety (np. kategoria, marka, cena, zastosowanie) zamiast jednego drzewa, gdy obiekty mają kilka niezależnych cech (sklep).
-Słownik żyje: właściciel i data przeglądu (co kwartał lub przy zmianie oferty).
+## Taxonomy and label glossary
+Entry: `preferred name | definition | synonyms and user phrases | discouraged name | level | owner`.
+Hierarchy and rules: one grouping principle per level; disjoint names; broader/narrower/related relations.
+Facets (e.g. category, brand, price, use) instead of one tree when objects have several independent traits (a shop).
+The glossary lives: an owner and a review date (every quarter or when the offer changes).
