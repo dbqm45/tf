@@ -1,15 +1,19 @@
-# Część II. Zasady interpunkcji
+# Part II. Punctuation rules
 
-> **Spis treści:** 11. Kropka · 12. Przecinek · 13. Średnik · 14. Znak zapytania (pytajnik) · 15. Wykrzyknik · 16. Wielokropek · 17. Dwukropek · 18. Myślnik (pauza) · 19. Nawias · 20. Cudzysłów
+> **Contents:** 11. Full stop · 12. Comma · 13. Semicolon · 14. Question mark · 15. Exclamation mark · 16. Ellipsis · 17. Colon · 18. Dash · 19. Parentheses · 20. Quotation marks
 
-<!-- polish-lint: ignore-file (plik zawiera celowe przykłady błędów) -->
+<!-- polish-lint: ignore-file (the file contains deliberate error examples) -->
 
-Źródło: Rada Języka Polskiego przy Prezydium PAN, *Zasady pisowni i interpunkcji polskiej*, Warszawa 2024,
-obowiązujące od 1 stycznia 2026 r. W polskim używa się dziesięciu znaków: kropka, średnik, przecinek,
-dwukropek, myślnik, wielokropek, pytajnik, wykrzyknik, nawias, cudzysłów. Numeracja rozdziałów jak
-w oryginale.
+Source: Rada Języka Polskiego przy Prezydium PAN, *Zasady pisowni i interpunkcji polskiej*, Warszawa 2024,
+in force from 1 January 2026. Polish uses ten marks: kropka, średnik, przecinek,
+dwukropek, myślnik, wielokropek, pytajnik, wykrzyknik, nawias, cudzysłów. Chapter numbering as
+in the original. The rules are the Polish norm and stay in Polish; the *In short* line under each heading says in
+English what the section is about.
 
-## 11. Kropka
+## 11. Full stop (*kropka*)
+
+*In short: ends declarative sentences; placement next to other marks; abbreviations with and without a full stop;
+ordinal numerals and dates; where no full stop goes.*
 
 - Zamyka zdania i równoważniki zdań oznajmujące (*Przyjadę jutro.*, *Już czas.*).
 - Przy zbiegu znaków: kropkę stawia się **po** nawiasie/cudzysłowie zamykającym, ale **nie** po
@@ -29,9 +33,12 @@ w oryginale.
   ale kropka/inny znak wraca, gdy skrótowiec zamyka zdanie); po skrótach jednostek monetarnych/miar (*zł,
   gr, kg, km*); po formułach zamykających list (*Z poważaniem\nTomasz Malinowski*).
 
-## 12. Przecinek
+## 12. Comma (*przecinek*)
 
-### 12.1.1 — przecinek rozdzielający
+### 12.1.1 — the separating comma (*przecinek rozdzielający*)
+
+*In short: always between a subordinate and a main clause; between coordinate clauses without a conjunction or with an
+adversative, resultative or explanatory conjunction; between homogeneous parts of a sentence; between repeated words.*
 
 - **Zawsze** między zdaniem podrzędnym i nadrzędnym, niezależnie od szyku (*Przekonałem się, że można na
   niego liczyć.*; *Zanim przyjdą goście, przygotujemy desery.*) — także przy zestawieniach `zwłaszcza że,
@@ -49,7 +56,10 @@ w oryginale.
   Powszechnym wystawiano sztukę…*).
 - Wyrazy powtarzane (*Pospiesz się, pospiesz się.*).
 
-### 12.1.2 — przecinek podwójny (wydzielający)
+### 12.1.2 — the double (setting-off) comma (*przecinek podwójny, wydzielający*)
+
+*In short: commas on both sides of parentheticals, sentence adverbs, explanations, adverbial participles with their
+modifiers (with exceptions), evaluative/modal words and the vocative.*
 
 Przecinkami z obu stron wydziela się:
 - wtrącone człony zdań (*Tadeusz Łomnicki, wybitny aktor, znany był…*);
@@ -67,7 +77,10 @@ Przecinkami z obu stron wydziela się:
   pomożemy ci.*);
 - wołacz (*Pani Haniu, proszę poprawić raport.*; *Skarbie, dziękuję ci.*).
 
-### 12.1.3 — inne użycia przecinka
+### 12.1.3 — other uses of the comma
+
+*In short: a comma before repeated conjunctions, adversative/explanatory conjunctions in a simple sentence, compound
+conjunctions, enumerations introduced by „jak:” and afterthoughts like „i to”.*
 
 Przecinkiem poprzedza się: powtórzone spójniki o tej samej funkcji w zdaniu pojedynczym (*i…, i…*; *bądź…,
 bądź…*: *Czytał i horrory, i thrillery.*); spójniki przeciwstawne/synonimiczne w zdaniu pojedynczym (*ale,
@@ -78,7 +91,11 @@ nie skrzywdzić.*); wyliczenia wprowadzane przez `jak:` (*jak: szkielety, zęby,
 `i to, albo raczej, ani też, czy może` o charakterze dopowiedzeń (*Byłem na stażu w Paryżu, i to przez pół
 roku.*).
 
-### 12.2 — kiedy NIE stawiać przecinka
+### 12.2 — when NOT to use a comma
+
+*In short: no comma before a single copulative, alternative or exclusive conjunction, between non-equivalent attributes,
+between two adjacent conjunctions, before restrictive attributes, in the listed uses of „a”, in fixed expressions and in
+comparisons in a simple sentence.*
 
 - Zdania współrzędne ze spójnikiem łącznym (*i, oraz, tudzież*), rozłącznym (*lub, albo, bądź, czy*),
   wyłączającym (*ani, ni*) — *Nagle zatrzymał się i ciężko westchnął.*
@@ -99,14 +116,20 @@ roku.*).
 - Człony porównawcze w zdaniu pojedynczym: *jak, jakby, niby, niczym, niż, podobnie jak* (*Był ślepy jak
   kret.*).
 
-## 13. Średnik
+## 13. Semicolon (*średnik*)
+
+*In short: separates only equivalent members — full independent sentences and long enumerations whose items already
+contain commas.*
 
 Oddziela człony **równorzędne** logiczno-składniowo (nigdy nierównorzędne). Stosuje się w: rozbudowanych
 wypowiedzeniach złożonych o dwudzielnej budowie; oddzielaniu samodzielnych, pełnych zdań (*Większość
 słowników… powstała w Warszawie; mniej ich publikowano w Krakowie.*); rozbudowanych wyliczeniach, w których
 człony już zawierają przecinki (np. punkty a)/b)/c) z wewnętrznymi przecinkami).
 
-## 14. Znak zapytania (pytajnik)
+## 14. Question mark (*znak zapytania, pytajnik*)
+
+*In short: ends a question, also when the main clause asks; not after an indirect (subordinate) question; „(?)” casts
+doubt; „?!” and „!?” combinations.*
 
 - Zamyka zdania pytające, także w tytułach (*Która godzina?*, *Ars poetica?*).
 - Zamyka zdanie złożone, gdy pytające jest zdanie **nadrzędne** (*Co zrobimy, jeśli nie znajdą bagażu?*).
@@ -118,7 +141,10 @@ człony już zawierają przecinki (np. punkty a)/b)/c) z wewnętrznymi przecinka
 - Łączenie z wykrzyknikiem: `?!` — zdanie bardziej wykrzyknieniem niż pytaniem (*Po co ten stres?!*); `!?`
   — bardziej pytaniem niż wykrzyknieniem (*Jak możesz tego nie widzieć!?*).
 
-## 15. Wykrzyknik
+## 15. Exclamation mark (*wykrzyknik*)
+
+*In short: after exclamations and emphatic commands or wishes (optional for neutral ones); after the vocative and the
+opening formula of a letter; „(!)” marks that a surprising passage is not a mistake.*
 
 - Po okrzykach, silnie emocjonalnych życzeniach/rozkazach/żądaniach (*Brawo!*, *Uciekajmy stąd!*, *Proszę o
   uwagę!*) — **nieobowiązkowy** po rozkazach/życzeniach bez silnego zabarwienia (*Otwórz okno.*).
@@ -132,7 +158,10 @@ człony już zawierają przecinki (np. punkty a)/b)/c) z wewnętrznymi przecinka
   prawdziwe: *aż 11 (!) Oscarów*) lub że błąd jest w cytowanym oryginale, nie u cytującego; w tekstach
   naukowych używa się też `(sic!)`.
 
-## 16. Wielokropek
+## 16. Ellipsis (*wielokropek*)
+
+*In short: an unfinished utterance or a surprise; „[…]” marks an omission in a quotation; which marks are kept or dropped
+next to it; not the same as dotting out letters.*
 
 - Wskazuje niepełność/urwanie wypowiedzi (*Obiecałeś przecież…*) albo zapowiada zaskakującą, nieoczekiwaną
   treść (*…podniosła oczy i… oniemiała z wrażenia.*).
@@ -142,7 +171,10 @@ człony już zawierają przecinki (np. punkty a)/b)/c) z wewnętrznymi przecinka
 - Nie mylić z **wykropkowaniem** (nie jest znakiem interpunkcyjnym) — maskuje litery, głównie w wyrazach
   wulgarnych (*K…, znowu się nachlał!*).
 
-## 17. Dwukropek
+## 17. Colon (*dwukropek*)
+
+*In short: always before a quotation and an enumeration announced by a general term; not before an enumeration without
+such a term or with a singular predicate; optionally before an explained term or an explanation.*
 
 **Zawsze** poprzedza: przytoczenie cudzych/własnych słów (cytat); kompletne wyliczenie przy podmiocie
 szeregowym z orzeczeniem w liczbie mnogiej (*krajami… są: Rosja, Finlandia, Szwecja i Norwegia.*);
@@ -161,14 +193,18 @@ pominięty); zdanie-wyjaśnienie/uzasadnienie poprzedzającego (*Widać, że si�
 przydawkę rzeczowną w formie wyjaśniającego równoważnika zdania (*Jego główne zadanie: pozyskiwanie
 pracowników.*).
 
-## 18. Myślnik (pauza)
+## 18. Dash (*myślnik, pauza*)
 
-(Zasady używają jednego terminu „myślnik” dla znaku; „pauza”/„półpauza” to terminy typograficzne z
-edytorstwa, nieregulowane tu.)
+(The rules use one term, „myślnik”, for the mark; „pauza”/„półpauza” are typographic terms from
+editing, not regulated here.)
+
+*In short: replaces an omitted member or an implied „jest/są”; before a summary or a surprise; two dashes set off a longer
+parenthetical; opens each line of dialogue; customarily also in enumerations, between antonyms, for routes, scores and
+ranges.*
 
 - Zastępuje pominięty człon, by uniknąć powtórzenia (*W dni powszednie odwiedzała ją wieczorem, w niedzielę
   – rano.*).
-- Przed wyrażeniem ogólnie podsumowującym wcześej wymienione szczegóły (*…góry, oceany, człowiek i bakterie
+- Przed wyrażeniem ogólnie podsumowującym wcześniej wymienione szczegóły (*…góry, oceany, człowiek i bakterie
   – wszystko zbudowane jest z atomów.*).
 - Po rozbudowanym członie, zaznaczając powrót do głównej myśli; przed elementem zaskakującym (*…ziemia
   grecka wydaje – obrazy na kamieniu.*); między dwoma wyrazami, by uniknąć dwuznaczności.
@@ -182,13 +218,19 @@ edytorstwa, nieregulowane tu.)
   wartościami przybliżonymi lub w znaczeniu *od–do* (*2 – 3 razy*, *1618 – 1648* — w druku zwykle bez
   spacji, jako półpauza: *1618–1648*).
 
-## 19. Nawias
+## 19. Parentheses (*nawias*)
+
+*In short: set off supplementary, secondary information; round brackets are the default, square and slash brackets are
+specialised.*
 
 Wydziela fragmenty o charakterze uzupełniającym/drugoplanowym — dodatkowe informacje, objaśnienia (*Jest to
 książka niewielkiego formatu (c5) i objętości (144 strony).*). Rodzaje: okrągły `( )` (podstawowy),
 kwadratowy `[ ]` i prosty `/ /` (specjalistyczne, np. transkrypcja fonetyczna, dane bibliograficzne).
 
-## 20. Cudzysłów
+## 20. Quotation marks (*cudzysłów*)
+
+*In short: the Polish form is „…” (not English-style straight quotes); for quotations, titles, some proper names and
+irony; do not put figurative words or idioms in quotation marks.*
 
 - Standardowy polski cudzysłów apostrofowy: **`„ ”`** (otwierający na dole, zamykający na górze) — nie
   cudzysłów w stylu angielskim `" "`. Rzadziej: ostrokątny `» «`/`« »`; definicyjny `' '` (znaczenia
