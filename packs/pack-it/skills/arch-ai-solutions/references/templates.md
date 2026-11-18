@@ -1,58 +1,58 @@
-# Szablony: ai-architecture.md, koszt, ADR
+# Templates: ai-architecture.md, cost, ADR
 
-## Szablon ai-architecture.md
+## ai-architecture.md template
 ```
-# Architektura AI — <system>
-TL;DR: wzorzec, źródło modelu, koszt na żądanie, p95, główne ryzyko.
-Przekazanie: otwarte decyzje, kryteria rewizji.
-1. Osie wymagań (świeżość, trafność, opóźnienie, koszt, dane, wyjaśnialność) — liczby i źródło
-2. Wzorzec i odrzucone alternatywy (z dowodem z ewaluacji)
-3. Źródło modelu, region, retencja, plan zmiany modelu
-4. Komponenty i diagram z granicami zaufania
-5. Budżet opóźnienia, timeouty, fallback, cache
-6. Koszt i pojemność (tabela poniżej)
-7. Izolacja najemców
-8. Ryzyka, ADR-y
+# AI architecture — <system>
+TL;DR: pattern, model source, cost per request, p95, the main risk.
+Handoff: open decisions, revision criteria.
+1. Requirement axes (freshness, accuracy, latency, cost, data, explainability) — numbers and source
+2. Pattern and rejected alternatives (with evidence from evaluation)
+3. Model source, region, retention, model change plan
+4. Components and a diagram with trust boundaries
+5. Latency budget, timeouts, fallback, cache
+6. Cost and capacity (table below)
+7. Tenant isolation
+8. Risks, ADRs
 ```
 
-## Koszt żądania i miesiąca
-Wartości w nawiasach to **symbole**; ceny bierzesz z cennika dostawcy z datą, nie z pamięci.
+## Cost of a request and of a month
+The values in brackets are **symbols**; you take the prices from the provider's price list with a date, not from memory.
 
 ```
-koszt_wywołania_bez_cache = (T_wej × C_wej + T_wyj × C_wyj)
-koszt_wywołania_z_cache   = (T_stały × C_odczyt + T_zmienny × C_wej + T_wyj × C_wyj)
-                            + zapis przy chybieniu: T_stały × C_zapis
-C_odczyt = m_odczyt × C_wej   (mnożnik zależy od modelu)
-C_zapis  = m_zapis × C_wej    (mnożnik zależy od TTL)
-koszt_żądania = Σ wywołań (kroki workflow, ponowienia, ewaluacja online)
-              + wyszukiwanie + narzędzia
-koszt_miesiąca = koszt_żądania × żądania_dziennie × dni
+call_cost_without_cache = (T_in × C_in + T_out × C_out)
+call_cost_with_cache    = (T_fixed × C_read + T_variable × C_in + T_out × C_out)
+                          + write on a miss: T_fixed × C_write
+C_read  = m_read × C_in    (the multiplier depends on the model)
+C_write = m_write × C_in   (the multiplier depends on the TTL)
+request_cost = Σ calls (workflow steps, retries, online evaluation)
+             + retrieval + tools
+month_cost = request_cost × requests_per_day × days
 ```
-Trafienia: `h` = udział wywołań z odczytem z cache; koszt średni = h × z_cache + (1 − h) × (bez_cache + zapis).
-Przy ruchu rzadszym niż TTL cache `h` spada, więc szacuj `h` z realnego rozkładu odstępów między żądaniami.
+Hits: `h` = the share of calls with a cache read; average cost = h × with_cache + (1 − h) × (without_cache + write).
+With traffic sparser than the cache TTL `h` drops, so estimate `h` from the real distribution of gaps between requests.
 
-| Pozycja | Symbol | Wartość [przykład] | Źródło i data |
+| Item | Symbol | Value [example] | Source and date |
 |---|---|---|---|
-| tokeny stałe (instrukcje, narzędzia) | T_stały | 6 000 | pomiar |
-| tokeny zmienne wejścia | T_zmienny | 800 | pomiar |
-| tokeny wyjścia | T_wyj | 400 | pomiar |
-| cena wejścia / wyjścia | C_wej / C_wyj | z cennika | dostawca, data |
-| wolumen dzienny | | 200 000 | wymagania |
-| udział trafień cache | h | 0,8 | pomiar po pilotażu |
+| fixed tokens (instructions, tools) | T_fixed | 6,000 | measurement |
+| variable input tokens | T_variable | 800 | measurement |
+| output tokens | T_out | 400 | measurement |
+| input / output price | C_in / C_out | from the price list | provider, date |
+| daily volume | | 200,000 | requirements |
+| cache hit share | h | 0.8 | measurement after a pilot |
 
-Pojemność: równoległe żądania w szczycie ≈ żądania/s × średni czas trwania (prawo Little'a);
-porównaj z limitami tokenów na minutę u dostawcy. Własny model: **ops-ai-inference**.
+Capacity: concurrent requests at peak ≈ requests/s × average duration (Little's law);
+compare with the provider's tokens-per-minute limits. Your own model: **ops-ai-inference**.
 
-## Szablon ADR dla decyzji AI
+## ADR template for an AI decision
 ```
-# ADR-NNN: <decyzja>
+# ADR-NNN: <decision>
 Status: proposed | accepted | superseded
-Kontekst: osie wymagań, ograniczenia (region, licencja, zespół)
-Opcje: min. 2–3, w tym „nudna”; fakty ze źródłem i datą
-Decyzja: wybrana opcja i dlaczego
-Konsekwencje: koszt (z i bez cache), opóźnienie, lock-in, ryzyka
-Dowód: wynik ewaluacji (zbiór, metryka, wersja modelu i promptu)
-Kryterium rewizji: np. jakość poniżej progu, cena zmieniona o X%, wycofanie modelu
+Context: requirement axes, constraints (region, licence, team)
+Options: at least 2–3, including the "boring" one; facts with a source and a date
+Decision: the chosen option and why
+Consequences: cost (with and without cache), latency, lock-in, risks
+Evidence: the evaluation result (set, metric, model and prompt version)
+Revision criterion: e.g. quality below a threshold, price changed by X%, model retirement
 ```
-Decyzje, które zasługują na ADR: wzorzec (workflow czy agent), źródło modelu i region, polityka retencji u dostawcy,
-fallback i routing, izolacja najemców, zakres akcji bez zatwierdzenia człowieka.
+Decisions that deserve an ADR: the pattern (workflow or agent), the model source and region, the retention policy at the provider,
+fallback and routing, tenant isolation, the scope of actions without a human's approval.

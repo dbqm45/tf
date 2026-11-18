@@ -1,55 +1,55 @@
-# Akty i obowiązki — szczegóły (stan na 2026-10-18)
+# Acts and obligations — details (as of 2026-10-18)
 
-Wszystkie fakty pochodzą ze źródeł wtórnych [wtórne] (dostęp 2026-10-18); EUR-Lex, ISAP i gov.pl były z sesji
-niedostępne. Przed oddaniem mapy prawnikowi potwierdź w tekście aktu daty i artykuły, na których opiera się obowiązek.
-DSA, prawa konsumenta, KSeF i ViDA — poza zakresem fabryki: `outside-factory-scope.md`.
+All facts come from secondary sources [secondary] (accessed 2026-10-18); EUR-Lex, ISAP and gov.pl were
+unavailable from the session. Before handing the map to a lawyer, confirm in the act's text the dates and articles the obligation rests on.
+DSA, consumer law, KSeF and ViDA — outside the factory's scope: `outside-factory-scope.md`.
 
-## Data Act — rozp. (UE) 2023/2854
-- **Dotyczy:** dostawców usług przetwarzania danych (IaaS, PaaS, SaaS) w zakresie zmiany dostawcy; także produktów
-  skomunikowanych i danych z nich (osobny rozdział).
-- **Zmiana dostawcy (art. 23–25):** klient może wypowiedzieć umowę z wyprzedzeniem nie dłuższym niż 2 miesiące;
-  okres przejściowy 30 dni kalendarzowych; okres na odzyskanie danych co najmniej 30 dni [wtórne; ustępy i początek
-  biegu terminów [niezweryfikowane], źródła różnią się]. Liczby „14 dni roboczych” i „7 miesięcy” krążą w szablonach
-  umów — nie przyjmuj ich bez tekstu aktu.
-- **Opłaty (art. 29):** do 12.01.2027 opłaty za zmianę i transfer danych (w tym egress) najwyżej w wysokości kosztów
-  bezpośrednio związanych ze zmianą; od 12.01.2027 zakaz takich opłat [wtórne; jedno źródło podaje 11.01.2027 jako
-  koniec okresu obniżek].
-- **Stosowanie:** 12.09.2025 [niezweryfikowane].
-- **W kodzie:** pełny eksport danych w formacie ustrukturyzowanym, dokumentacja formatów, brak opłat za egress
-  przy zmianie dostawcy w cenniku, procedura zmiany dostawcy w umowie.
-- Źródła: penningtonslaw.com (switching rights), maples.com (switching framework), mondaq.com (Data Act cloud contracts).
+## Data Act — Reg. (EU) 2023/2854
+- **Applies to:** providers of data processing services (IaaS, PaaS, SaaS) as regards switching providers; also connected
+  products and their data (a separate chapter).
+- **Switching providers (Art. 23–25):** the customer can terminate the contract with a notice of no more than 2 months;
+  a transition period of 30 calendar days; a period to retrieve the data of at least 30 days [secondary; the paragraphs and the start
+  of the time limits [unverified], sources differ]. The numbers "14 working days" and "7 months" circulate in contract
+  templates — do not adopt them without the act's text.
+- **Charges (Art. 29):** until 12.01.2027 switching and data transfer charges (including egress) at most at the level of the costs
+  directly linked to the switch; from 12.01.2027 a ban on such charges [secondary; one source gives 11.01.2027 as
+  the end of the reduction period].
+- **Application:** 12.09.2025 [unverified].
+- **In the code:** a full data export in a structured format, documentation of the formats, no egress charges
+  on switching providers in the price list, a provider switching procedure in the contract.
+- Sources: penningtonslaw.com (switching rights), maples.com (switching framework), mondaq.com (Data Act cloud contracts).
 
-## PLD — dyr. (UE) 2024/2853
-- Oprogramowanie jest produktem, także SaaS i rozwiązania w chmurze (motyw 13); sam kod źródłowy nie jest produktem.
-- Wolne i otwarte oprogramowanie jest wyłączone tylko wtedy, gdy rozwijane lub dostarczane poza działalnością
-  handlową; płatna usługa albo „płatność danymi osobowymi” przywraca status produktu (motyw 14).
-- Transpozycja do 9.12.2026; nowe zasady dla produktów wprowadzonych do obrotu po tej dacie; starsze podlegają
-  dawnemu reżimowi, chyba że zostały istotnie zmodyfikowane (np. aktualizacją) [wtórne; numery artykułów [niezweryfikowane]].
-- **Stan w PL (2026-10-20) [wtórne]:** projekt ustawy o zmianie Kodeksu cywilnego i Kodeksu postępowania cywilnego
-  (RCL, UC163) opublikowany 8.09.2026, skrócone konsultacje zakończone 22.09.2026; komentatorzy widzą ryzyko, że ustawa
-  nie wejdzie w życie przed 9.12.2026. Projekt przebudowuje art. 449¹ i nast. k.c.
-- **Treść projektu ważna dla budowy oprogramowania [wtórne]:**
-  - produktem jest oprogramowanie, także system AI, SaaS i pliki produkcyjne (np. CAD);
-  - producent odpowiada za wadę powstałą przez późniejszą modyfikację (aktualizacja, uczenie się systemu) albo przez
-    brak aktualizacji bezpieczeństwa, dopóki produkt pozostaje pod jego kontrolą;
-  - łagodniejszy ciężar dowodu: sąd może domniemać wadę, gdy sprawa jest technicznie skomplikowana (np. AI), a powód
-    ma nadmierne trudności z dowodem; zmiany w k.p.c. dotyczą ujawniania dowodów przez pozwanego;
-  - przedawnienie przy szkodzie na zdrowiu ujawniającej się po latach wydłużone z 10 do 25 lat.
-- **W kodzie:** ślad wersji i aktualizacji (co, kiedy, komu), obsługa podatności i aktualizacje bezpieczeństwa przez
-  cały okres kontroli nad produktem, dokumentacja techniczna i testów gotowa do ujawnienia w sporze (przy domniemaniu
-  wady to ona jest dowodem producenta), przechowywana co najmniej tak długo jak okres odpowiedzialności.
-- Źródła: arws.cz („Software as a defective product as of 9 December 2026”), ibanet.org (PLD and software), dostęp
-  2026-10-18; lex.pl (odpowiedzialność za produkty wadliwe, PLD), gazetaprawna.pl, krk.legal (konsultacje projektu),
-  webites.pl (PLD a oprogramowanie), twobirds.com (2025, przedawnienie), bakowski.net.pl (06.2026), wolftheiss.com
-  (EU PLD tracker 2026) — dostęp 2026-10-20, przekazane przez człowieka. Tekstu projektu w RCL nie odczytano.
+## PLD — Dir. (EU) 2024/2853
+- Software is a product, also SaaS and cloud solutions (recital 13); source code alone is not a product.
+- Free and open-source software is excluded only when developed or supplied outside a commercial
+  activity; a paid service or "payment with personal data" restores the product status (recital 14).
+- Transposition by 9.12.2026; the new rules for products placed on the market after that date; older ones fall under
+  the former regime, unless substantially modified (e.g. by an update) [secondary; article numbers [unverified]].
+- **State in PL (2026-10-20) [secondary]:** the draft law amending the Civil Code and the Code of Civil Procedure
+  (RCL, UC163) published 8.09.2026, a shortened consultation closed 22.09.2026; commentators see a risk that the law
+  will not enter into force before 9.12.2026. The draft rebuilds Art. 449¹ et seq. of the Civil Code.
+- **The draft's content relevant to building software [secondary]:**
+  - a product is software, also an AI system, SaaS and manufacturing files (e.g. CAD);
+  - the manufacturer is liable for a defect arising from a later modification (an update, the system learning) or from
+    a lack of security updates, as long as the product remains under its control;
+  - a lighter burden of proof: a court may presume a defect when the case is technically complex (e.g. AI), and the claimant
+    has excessive difficulty with proof; the changes in the Code of Civil Procedure concern disclosure of evidence by the defendant;
+  - the limitation period for damage to health that becomes apparent after years extended from 10 to 25 years.
+- **In the code:** a trace of versions and updates (what, when, to whom), vulnerability handling and security updates for
+  the whole period of control over the product, technical and test documentation ready for disclosure in a dispute (with a presumption
+  of defect it is the manufacturer's evidence), kept at least as long as the liability period.
+- Sources: arws.cz ("Software as a defective product as of 9 December 2026"), ibanet.org (PLD and software), accessed
+  2026-10-18; lex.pl (liability for defective products, PLD), gazetaprawna.pl, krk.legal (consultation of the draft),
+  webites.pl (PLD and software), twobirds.com (2025, limitation), bakowski.net.pl (06.2026), wolftheiss.com
+  (EU PLD tracker 2026) — accessed 2026-10-20, provided by the human. The draft's text in RCL was not read.
 
-## Sąsiednie akty (szczegóły w ich skillach)
-- **AI Act po rozp. (UE) 2026/1744** (Dz.U. UE 24.07.2026, w mocy 27.07.2026): wysokie ryzyko z załącznika III
-  od 2.12.2027, z załącznika I od 2.08.2028; nowy zakaz i znakowanie systemów już na rynku od 2.12.2026 [wtórne].
-  Ogólny termin art. 50 [niezweryfikowane] → ai-governance-compliance.
-- **CRA 2024/2847:** zgłaszanie (art. 14) od 11.09.2026: 24 h wczesne ostrzeżenie, 72 h powiadomienie, raport
-  końcowy 14 dni od udostępnienia poprawki (podatność aktywnie wykorzystywana) albo miesiąc (poważny incydent);
-  reszta od 11.12.2027. Czysty SaaS zwykle poza zakresem (motyw 9), chyba że to zdalne przetwarzanie danych
-  dla produktu [wtórne] → sec-eu-regulations.
-- **EAA 2019/882:** w PL ustawa z 26.04.2024 (Dz.U. 2024 poz. 731), od 28.06.2025; wyłączenie mikroprzedsiębiorstw
-  świadczących usługi [niezweryfikowane] → ux-accessibility.
+## Neighbouring acts (details in their skills)
+- **AI Act after Reg. (EU) 2026/1744** (OJ EU 24.07.2026, in force 27.07.2026): high risk from Annex III
+  from 2.12.2027, from Annex I from 2.08.2028; a new prohibition and marking of systems already on the market from 2.12.2026 [secondary].
+  The general deadline of Art. 50 [unverified] → ai-governance-compliance.
+- **CRA 2024/2847:** reporting (Art. 14) from 11.09.2026: a 24 h early warning, a 72 h notification, a final
+  report 14 days after a fix is made available (an actively exploited vulnerability) or a month (a severe incident);
+  the rest from 11.12.2027. Pure SaaS is usually out of scope (recital 9), unless it is remote data processing
+  for a product [secondary] → sec-eu-regulations.
+- **EAA 2019/882:** in PL the act of 26.04.2024 (Dz.U. 2024 item 731), from 28.06.2025; the exemption of microenterprises
+  providing services [unverified] → ux-accessibility.

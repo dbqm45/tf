@@ -1,141 +1,141 @@
 ---
 name: arch-ai-solutions
-description: Użyj przy architekturze systemu z AI — wzorzec (LLM, RAG, agent), lock-in dostawcy, koszt, opóźnienie, granice zaufania.
+description: Use for the architecture of a system with AI — the pattern (LLM, RAG, agent), provider lock-in, cost, latency, trust boundaries.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj, gdy projektujesz architekturę systemu z komponentem AI na poziomie decyzji — dobór wzorca (zwykłe wywołanie modelu, RAG, workflow z narzędziami, agent, fine-tuning, klasyczne ML) wg tabeli wymagań, źródło modelu (API, open-weights na własnej infrastrukturze, usługa zarządzana w chmurze), rezydencja danych i lock-in, komponenty architektury referencyjnej (bramka, serwis promptów, warstwa wyszukiwania i narzędzi, ewaluacje, guardrails, kolejka przeglądu), budżet opóźnienia, cache, fallback i routing modeli, granice bezpieczeństwa, szablon kosztu i pojemności, izolacja najemców, ADR dla decyzji AI. Nie do ogólnego projektu systemu (arch-system-design), metody doboru stacku (arch-tech-selection), atrybutów jakości (arch-quality-attributes), modelu zagrożeń (arch-threat-modeling), szczegółów RAG (ai-rag), projektu agenta (ai-agents), kodu z SDK (eng-llm-features) ani hostowania modeli (ops-ai-inference)."
-  keywords: "wymiana modelu na tańszy, zostawić harness, uzależnienie od dostawcy, wymiana harnessu, architektura ai, architekt rozwiązań ai, rag czy agent, jaki wzorzec ai, wybór modelu, api czy własny model, open-weights, rezydencja danych, lock-in dostawcy, brama llm, llm gateway, routing modeli, fallback modelu, budżet opóźnienia, koszt na żądanie, szacunek kosztu llm, prompt caching w architekturze, izolacja klientów, multi-tenant ai, human review queue, adr dla ai, referencyjna architektura ai, system AI odpowiada liczbami, pewnie złe liczby, kiedy odpowiedzi można ufać, model pisze SQL, text-to-SQL architektura, wycofanie zmiany AI, wróciliśmy do starego promptu, jakość spadła po wdrożeniu promptu, rollback promptu i indeksu, bramka LLM, gateway LLM, przełączanie dostawców LLM"
+  catalog: "Use when you design the architecture of a system with an AI component at the decision level — choosing the pattern (a plain model call, RAG, a workflow with tools, an agent, fine-tuning, classic ML) by a requirements table, the model source (an API, open-weights on your own infrastructure, a managed cloud service), data residency and lock-in, the components of the reference architecture (gateway, prompt service, retrieval and tool layer, evaluations, guardrails, review queue), the latency budget, cache, fallback and model routing, security boundaries, a cost and capacity template, tenant isolation, ADRs for AI decisions. Not for the general system design (arch-system-design), the stack selection method (arch-tech-selection), quality attributes (arch-quality-attributes), the threat model (arch-threat-modeling), RAG details (ai-rag), agent design (ai-agents), code with an SDK (eng-llm-features) or hosting models (ops-ai-inference)."
+  keywords: "wymiana modelu na tańszy, zostawić harness, uzależnienie od dostawcy, wymiana harnessu, architektura ai, architekt rozwiązań ai, rag czy agent, jaki wzorzec ai, wybór modelu, api czy własny model, open-weights, rezydencja danych, lock-in dostawcy, brama llm, llm gateway, routing modeli, fallback modelu, budżet opóźnienia, koszt na żądanie, szacunek kosztu llm, prompt caching w architekturze, izolacja klientów, multi-tenant ai, human review queue, adr dla ai, referencyjna architektura ai, system AI odpowiada liczbami, pewnie złe liczby, kiedy odpowiedzi można ufać, model pisze SQL, text-to-SQL architektura, wycofanie zmiany AI, wróciliśmy do starego promptu, jakość spadła po wdrożeniu promptu, rollback promptu i indeksu, bramka LLM, gateway LLM, przełączanie dostawców LLM, swap the model for a cheaper one, keep the harness, provider dependency, harness swap, ai architecture, ai solutions architect, rag or agent, which ai pattern, model choice, api or own model, data residency, provider lock-in, model routing, model fallback, latency budget, cost per request, llm cost estimate, tenant isolation, adr for ai, reference ai architecture, ai answers with numbers, confidently wrong numbers, when answers can be trusted, model writes SQL, text-to-SQL architecture, rolling back an ai change, quality dropped after a prompt rollout, prompt and index rollback, switching llm providers"
 ---
 
-# Architektura rozwiązań z AI — decyzje przed kodem
+# Architecture of solutions with AI — decisions before code
 
-Skill prowadzi od wymagań do udokumentowanych decyzji: jaki wzorzec, jaki model, jakie komponenty, jakie granice
-i ile to kosztuje. Ogólny projekt systemu (szacunki, API, dane, dostępność) daje **arch-system-design**; wybór
-technologii metodą kandydatów i macierzy — **arch-tech-selection**. Tu dodajesz to, co specyficzne dla AI.
-Wynik: `docs/project/04-architecture/ai-architecture.md` i ADR-y (szablon: `references/templates.md`).
+The skill leads from requirements to documented decisions: which pattern, which model, which components, which boundaries
+and what it costs. The general system design (estimates, API, data, availability) comes from **arch-system-design**; choosing
+technology by candidates and a matrix — **arch-tech-selection**. Here you add what is specific to AI.
+Result: `docs/project/04-architecture/ai-architecture.md` and ADRs (template: `references/templates.md`).
 
-## Procedura
-1. **Wymagania, które rozstrzygają.** Zapisz sześć osi: świeżość wiedzy, wymagana trafność (cena błędu), opóźnienie,
-   koszt na żądanie, wrażliwość danych, wyjaśnialność. Bez liczb (np. p95 ≤ 2 s, ≤ 0,02 USD na żądanie [przykład])
-   nie wybierzesz wzorca. Brak osi → pytanie do człowieka, nie założenie.
-2. **Wzorzec: najprostszy, który spełnia osie.** Zaczynasz od góry tabeli i schodzisz niżej tylko z dowodem
-   (ewaluacja, **ai-evals**), że wyższy nie wystarcza. Anthropic radzi to samo: najprostsze rozwiązanie, złożoność
-   dopiero, gdy mierzalnie pomaga.
+## Procedure
+1. **The requirements that decide.** Record six axes: knowledge freshness, required accuracy (the cost of an error), latency,
+   cost per request, data sensitivity, explainability. Without numbers (e.g. p95 ≤ 2 s, ≤ 0.02 USD per request [example])
+   you will not choose a pattern. A missing axis → a question to the human, not an assumption.
+2. **Pattern: the simplest one that meets the axes.** You start from the top of the table and go lower only with evidence
+   (an evaluation, **ai-evals**) that the higher one is not enough. Anthropic advises the same: the simplest solution, complexity
+   only when it measurably helps.
 
-   | Wzorzec | Wybierz, gdy | Cena (opóźnienie, koszt, ryzyko) |
+   | Pattern | Choose when | Price (latency, cost, risk) |
    |---|---|---|
-   | klasyczne ML lub reguły | zadanie wąskie, dane etykietowane, potrzebna wyjaśnialność i niski koszt | najtańsze; wymaga danych i MLOps (**ai-mlops**) |
-   | jedno wywołanie LLM | wiedza ogólna lub podana w prompcie, zadanie jednokrokowe | 1 wywołanie; brak aktualnych faktów |
-   | RAG | wiedza prywatna, zmienna, z uprawnieniami lub cytatami | + wyszukiwanie; szczegóły **ai-rag** |
-   | workflow z narzędziami | kroki znane z góry, dane na żywo, akcje w systemach | przewidywalne; koszt i czas rosną liniowo z krokami |
-   | agent | liczba kroków nieznana z góry, potrzebna elastyczność | najdroższy, najwolniejszy, błędy się kumulują; **ai-agents** |
-   | fine-tuning | stały styl, format lub zachowanie, duży wolumen, tańszy mały model | nie dostarcza aktualnych faktów [założenie]; **ai-fine-tuning** |
+   | classic ML or rules | a narrow task, labelled data, explainability and low cost needed | the cheapest; needs data and MLOps (**ai-mlops**) |
+   | a single LLM call | general knowledge or knowledge given in the prompt, a single-step task | 1 call; no current facts |
+   | RAG | private, changing knowledge, with permissions or citations | + retrieval; details **ai-rag** |
+   | a workflow with tools | steps known up front, live data, actions in systems | predictable; cost and time grow linearly with the steps |
+   | an agent | the number of steps unknown up front, flexibility needed | the most expensive, the slowest, errors compound; **ai-agents** |
+   | fine-tuning | a stable style, format or behaviour, a large volume, a cheaper small model | does not deliver current facts [assumption]; **ai-fine-tuning** |
 
-   Wzorce łączy się (RAG w kroku workflow). Decyzję „agent” uzasadnij tym, czego workflow nie umie.
-3. **Źródło modelu.** Trzy opcje, kryteria jak w arch-tech-selection (filtry, potem macierz):
-   - **API dostawcy modeli** — najszybszy start i najlepsze modele; ryzyko: rezydencja danych, zmiany i wycofywanie wersji;
-   - **usługa zarządzana w chmurze** (modele przez konto chmurowe) — wspólne IAM, sieć prywatna, wybór regionu;
-     ryzyko: lock-in w narzędziach wokół modelu, opóźnienie wdrożenia nowych modeli [niezweryfikowane];
-   - **open-weights na własnej infrastrukturze** — pełna kontrola danych i koszt stały; ryzyko: obsługa GPU
-     i słabszy model (**ops-ai-inference**, **ai-model-optimization**); sprawdź licencję wag.
-   Filtry obowiązkowe: region przetwarzania (także logów i cache u dostawcy), umowa powierzenia i zero-retention,
-   dostępność modelu w regionie. Lock-in ograniczasz cienką warstwą własnego interfejsu (bramka) i zestawem
-   ewaluacji, który pozwala zmienić model w dni, nie miesiące.
-   Drugie piętro lock-inu to wagi przyzwyczajone do formatu narzędzi harnessu — widać je w wynikach, nie w konfiguracji;
-   przed wymianą samego modelu albo samego harnessu zrób **test wymiany w obu kierunkach** na własnych ewaluacjach
-   (stary model w nowym harnessie i nowy model w starym); wymiana samego modelu nie zdejmuje lock-inu
-   (hipoteza z jednego preprintu, źródło niżej).
-4. **Komponenty (architektura referencyjna).** Dobierz z listy tylko to, co uzasadniają wymagania:
-   - **bramka** przed modelem: uwierzytelnienie, limity (żądania i tokeny na klienta), liczenie kosztu per najemca,
-     routing i fallback, logowanie z maskowaniem PII;
-   - **serwis promptów**: wersjonowane szablony, wdrażane jak kod, z ewaluacją w CI (**ai-prompt-engineering**);
-   - **warstwa wyszukiwania** (**ai-rag**) i **warstwa narzędzi** (kontrakty, uprawnienia, idempotencja);
-   - **ewaluacje i obserwowalność**: zbiór złoty, ewaluacje online, tracing kroków, koszt i tokeny na żądanie
+   Patterns combine (RAG in a workflow step). Justify an "agent" decision by what a workflow cannot do.
+3. **Model source.** Three options, criteria as in arch-tech-selection (filters, then a matrix):
+   - **a model provider's API** — the fastest start and the best models; risk: data residency, version changes and retirements;
+   - **a managed cloud service** (models through the cloud account) — shared IAM, a private network, region choice;
+     risk: lock-in in the tooling around the model, a delay in rolling out new models [unverified];
+   - **open-weights on your own infrastructure** — full control of data and a fixed cost; risk: running GPUs
+     and a weaker model (**ops-ai-inference**, **ai-model-optimization**); check the weights' licence.
+   Mandatory filters: the processing region (also of logs and the cache at the provider), a data processing agreement and zero-retention,
+   the model's availability in the region. You limit lock-in with a thin layer of your own interface (the gateway) and a set of
+   evaluations that lets you change the model in days, not months.
+   The second floor of lock-in is weights used to the harness's tool format — it shows in the results, not in the configuration;
+   before swapping just the model or just the harness, do a **swap test in both directions** on your own evaluations
+   (the old model in the new harness and the new model in the old one); swapping just the model does not remove lock-in
+   (a hypothesis from one preprint, source below).
+4. **Components (reference architecture).** Pick from the list only what the requirements justify:
+   - a **gateway** in front of the model: authentication, limits (requests and tokens per client), cost accounting per tenant,
+     routing and fallback, logging with PII masking;
+   - a **prompt service**: versioned templates, deployed like code, with an evaluation in CI (**ai-prompt-engineering**);
+   - a **retrieval layer** (**ai-rag**) and a **tool layer** (contracts, permissions, idempotency);
+   - **evaluations and observability**: a golden set, online evaluations, step tracing, cost and tokens per request
      (**ai-evals**, **ops-observability**);
-   - **guardrails**: walidacja wejścia i wyjścia, filtry treści, schemat wyniku;
-   - **kolejka przeglądu przez człowieka** dla akcji nieodwracalnych lub o niskiej pewności; człowiek widzi propozycję
-     i dowody, a nie tylko „zatwierdź”.
-5. **Budżet opóźnienia.** Rozpisz cel p95 na kroki: bramka, wyszukiwanie, model (czas do pierwszego tokenu i generowanie),
-   narzędzia, walidacja. Dźwignie: streaming (użytkownik widzi początek, więc liczy się czas do pierwszego tokenu),
-   równoległe niezależne kroki, mniejszy model w prostych krokach, krótsze wyjście, cache. Dla każdego kroku: **timeout**
-   i zachowanie po jego przekroczeniu.
+   - **guardrails**: input and output validation, content filters, a result schema;
+   - a **human review queue** for irreversible or low-confidence actions; the human sees the proposal
+     and the evidence, not just "approve".
+5. **Latency budget.** Break the p95 target down into steps: gateway, retrieval, model (time to first token and generation),
+   tools, validation. Levers: streaming (the user sees the beginning, so the time to first token counts),
+   independent steps in parallel, a smaller model in simple steps, shorter output, cache. For every step: a **timeout**
+   and the behaviour after it is exceeded.
 6. **Cache, fallback, routing.**
-   - **Prompt caching** (u dostawcy): stały prefiks na początku (narzędzia, instrukcje, dokumenty), zmienne na końcu;
-     zmiana definicji narzędzi lub prefiksu unieważnia cache, więc szablony wersjonuj świadomie. Ceny i TTL: tabela
-     w **core-cost-control**; wartości sprawdzaj w cenniku dostawcy w dniu decyzji.
-   - **Cache wyników** (dokładny lub semantyczny) tylko dla odpowiedzi niezależnych od użytkownika i uprawnień;
-     klucz zawiera wersję promptu i modelu oraz najemcę.
-   - **Fallback**: drugi model lub dostawca z tym samym kontraktem wyjścia, degradacja (odpowiedź z cache, tryb
-     bez AI, kolejka do człowieka). Przełączenie musi przejść ewaluację, nie tylko zwracać HTTP 200.
-   - **Routing modeli**: prosty klasyfikator lub reguła kieruje łatwe żądania do taniego modelu, trudne do mocnego;
-     próg ustawiasz na zbiorze złotym.
-   - **Idempotencja akcji**: narzędzie zmieniające stan przyjmuje klucz idempotencji, bo ponowienie po timeoucie
-     nie może wystawić dwóch zwrotów (**be-api-design**, **be-messaging-outbox**).
-7. **Granice bezpieczeństwa** (pełny model zagrożeń: **arch-threat-modeling**). Rysujesz je na diagramie:
-   - treść z dokumentów, maili i stron to **dane, nie polecenia** (prompt injection); model nie dostaje narzędzi
-     zapisu ani wysyłki sterowanych taką treścią bez zatwierdzenia;
-   - narzędzia działają z **uprawnieniami wywołującego użytkownika**, nie konta serwisowego z pełnym dostępem;
-     autoryzacja po stronie narzędzia, nie w prompcie;
-   - **egress danych**: lista dozwolonych adresów wyjściowych, brak renderowania obrazków i linków z adresami
-     z modelu bez kontroli, maskowanie PII przed wysłaniem do dostawcy (**arch-privacy-compliance**).
-8. **Koszt i pojemność** (wzór: `references/templates.md`). Koszt żądania = Σ po wywołaniach (tokeny wejścia ×
-   cena wejścia + tokeny wyjścia × cena wyjścia), osobno **bez cache** i **z cache** (odczyt z cache kosztuje ułamek
-   ceny wejścia, zapis więcej). Pomnóż przez wolumen, dodaj wyszukiwanie, narzędzia i ewaluacje. Pojemność: żądania
-   równoległe w szczycie × czas trwania, limity tokenów dostawcy; własny model — **ops-ai-inference**.
-   Ceny podstawiasz z cennika z datą, nie z pamięci.
-9. **Izolacja najemców.** Domyślnie wspólna infrastruktura i **logiczna izolacja**: identyfikator najemcy w każdym
-   zapytaniu do indeksu, narzędzia i cache (filtr w bazie, nie w prompcie), osobne klucze szyfrowania i limity
-   kosztu per najemca. Osobny indeks, instancja lub model tylko tam, gdzie wymaga tego umowa lub ryzyko
-   (np. dane regulowane). Test: zapytanie najemcy A o dane B zwraca „brak”.
-   **Wynik liczbowy z modelu (np. text-to-SQL):** dwie niezależne drogi — model pisze SQL, a drugi model wypełnia
-   strukturę z katalogu metryk, którą kod kompiluje do SQL regułami. Zgodne wyniki = wysoka pewność, rozbieżność →
-   krytyk albo odmowa, jedna droga → niższa pewność. Model pisze zapytanie, baza liczy (arytmetyka modelu zawodzi).
-   Przed dołożeniem komponentu (wyszukiwanie wartości, wybór tabel) mierz, czy pomaga — gdy cały schemat mieści się
-   w promptcie, dodatkowy etap potrafi pogorszyć wynik (F. Khan, 2026-10 [niezweryfikowane]).
-   **Bramka przed modelami, ponowienia i strumień, wycofanie z wersją indeksu, zarządzany runtime agenta:**
+   - **Prompt caching** (at the provider): a stable prefix at the start (tools, instructions, documents), variables at the end;
+     changing the tool definitions or the prefix invalidates the cache, so version the templates consciously. Prices and TTL: the table
+     in **core-cost-control**; check the values in the provider's price list on the day of the decision.
+   - **Result cache** (exact or semantic) only for answers independent of the user and permissions;
+     the key includes the prompt and model version and the tenant.
+   - **Fallback**: a second model or provider with the same output contract, degradation (an answer from the cache, a mode
+     without AI, a queue to a human). The switch must pass the evaluation, not just return HTTP 200.
+   - **Model routing**: a simple classifier or rule sends easy requests to a cheap model, hard ones to a strong one;
+     you set the threshold on the golden set.
+   - **Action idempotency**: a tool that changes state accepts an idempotency key, because a retry after a timeout
+     must not issue two refunds (**be-api-design**, **be-messaging-outbox**).
+7. **Security boundaries** (the full threat model: **arch-threat-modeling**). You draw them on the diagram:
+   - content from documents, emails and pages is **data, not commands** (prompt injection); the model does not get write
+     or send tools driven by such content without approval;
+   - tools work with the **permissions of the calling user**, not a service account with full access;
+     authorization on the tool's side, not in the prompt;
+   - **data egress**: an allowlist of outgoing addresses, no rendering of images and links with addresses
+     from the model without control, PII masking before sending to the provider (**arch-privacy-compliance**).
+8. **Cost and capacity** (formula: `references/templates.md`). Request cost = Σ over calls (input tokens ×
+   input price + output tokens × output price), separately **without cache** and **with cache** (a cache read costs a fraction
+   of the input price, a write more). Multiply by the volume, add retrieval, tools and evaluations. Capacity: concurrent requests
+   at peak × duration, the provider's token limits; your own model — **ops-ai-inference**.
+   You plug in prices from a price list with a date, not from memory.
+9. **Tenant isolation.** By default shared infrastructure and **logical isolation**: the tenant ID in every
+   query to the index, tool and cache (a filter in the database, not in the prompt), separate encryption keys and cost
+   limits per tenant. A separate index, instance or model only where a contract or the risk requires it
+   (e.g. regulated data). Test: tenant A's query for B's data returns "none".
+   **A numeric result from a model (e.g. text-to-SQL):** two independent paths — the model writes SQL, and a second model fills in
+   a structure from the metrics catalogue that code compiles to SQL by rules. Matching results = high confidence, a discrepancy →
+   a critic or a refusal, one path → lower confidence. The model writes the query, the database computes (the model's arithmetic fails).
+   Before adding a component (value lookup, table selection) measure whether it helps — when the whole schema fits
+   in the prompt, an extra stage can make the result worse (F. Khan, 2026-10 [unverified]).
+   **A gateway in front of the models, retries and the stream, rollback with the index version, a managed agent runtime:**
    `references/gate-and-reliability.md`.
-   **Obsługa dużego wolumenu spraw** (zwroty, reklamacje, zmiany danych): progi autonomii per intencja, macierz
-   pomyłek z kosztem i „model proponuje, orkiestrator wykonuje” — `references/case-handling.md`.
-10. **Zapis.** `ai-architecture.md` (TL;DR, osie, wzorzec, komponenty, budżety, granice, koszt, ryzyka) i **ADR** dla
-    każdej decyzji kluczowej: wzorzec, źródło modelu, rezydencja, fallback (**arch-architect-practice**,
-    **docs-tech-writing**). Kryterium rewizji decyzji (np. jakość na zbiorze złotym poniżej progu) wpisz do ADR.
+   **Handling a large volume of cases** (refunds, complaints, data changes): autonomy thresholds per intent, a confusion
+   matrix with costs and "the model proposes, the orchestrator executes" — `references/case-handling.md`.
+10. **Record.** `ai-architecture.md` (TL;DR, axes, pattern, components, budgets, boundaries, cost, risks) and an **ADR** for
+    every key decision: pattern, model source, residency, fallback (**arch-architect-practice**,
+    **docs-tech-writing**). Write the decision's revision criterion (e.g. quality on the golden set below a threshold) into the ADR.
 
-## Przykład
-**Wejście:** „Asystent wsparcia: regulamin zmieniany co tydzień, zwroty w systemie płatności, dane tylko w UE, 200 tys.
-żądań dziennie [przykład].”
-**Wynik:**
-- osie: świeżość wysoka, cena błędu wysoka (pieniądze), p95 ≤ 3 s, dane osobowe w UE;
-- wzorzec: **workflow** (RAG po regulaminie, narzędzie `refund` z kluczem idempotencji, zatwierdzenie człowieka powyżej
-  progu kwoty); agent odrzucony — kroki znane, ADR-002;
-- model: usługa zarządzana w regionie UE albo API z umową powierzenia; bramka z własnym interfejsem, fallback na drugi model;
-- budżet p95: bramka 0,1 s + wyszukiwanie 0,4 s + model do pierwszego tokenu 1,2 s (streaming) + narzędzia 0,8 s [przykład];
-- koszt: wzór z `references/templates.md` z cache i bez; stały prefiks (instrukcje, narzędzia) na początku promptu;
-- granice: regulamin to dane; `refund` z uprawnieniami agenta wsparcia, nie konta serwisowego.
+## Example
+**Input:** "A support assistant: the terms change every week, refunds in the payment system, data only in the EU, 200k
+requests a day [example]."
+**Result:**
+- axes: high freshness, a high cost of error (money), p95 ≤ 3 s, personal data in the EU;
+- pattern: a **workflow** (RAG over the terms, a `refund` tool with an idempotency key, a human's approval above
+  an amount threshold); agent rejected — the steps are known, ADR-002;
+- model: a managed service in an EU region or an API with a data processing agreement; a gateway with its own interface, fallback to a second model;
+- p95 budget: gateway 0.1 s + retrieval 0.4 s + model to first token 1.2 s (streaming) + tools 0.8 s [example];
+- cost: the formula from `references/templates.md` with and without cache; a stable prefix (instructions, tools) at the start of the prompt;
+- boundaries: the terms are data; `refund` with the support agent's permissions, not a service account's.
 
-## Checklista
-- [ ] sześć osi wymagań z liczbami; wzorzec najprostszy z dowodem, że niższy nie wystarcza
-- [ ] źródło modelu: filtry (region, retencja, licencja), ocena lock-inu, ADR
-- [ ] komponenty dobrane do wymagań; bramka z kosztem per najemca
-- [ ] budżet opóźnienia per krok, timeouty, streaming, fallback po ewaluacji
-- [ ] akcje zmieniające stan idempotentne; człowiek zatwierdza nieodwracalne
-- [ ] granice zaufania na diagramie: dane to nie polecenia, uprawnienia wywołującego, egress
-- [ ] koszt z i bez cache, ceny z datą; pojemność w szczycie
-- [ ] izolacja najemców przetestowana; ADR-y z kryterium rewizji
+## Checklist
+- [ ] six requirement axes with numbers; the simplest pattern with evidence that a lower one is not enough
+- [ ] model source: filters (region, retention, licence), a lock-in assessment, an ADR
+- [ ] components matched to the requirements; a gateway with cost per tenant
+- [ ] a latency budget per step, timeouts, streaming, fallback after evaluation
+- [ ] state-changing actions idempotent; a human approves the irreversible ones
+- [ ] trust boundaries on the diagram: data is not commands, the caller's permissions, egress
+- [ ] cost with and without cache, prices with a date; capacity at peak
+- [ ] tenant isolation tested; ADRs with a revision criterion
 
-## Źródła
-- Anthropic, „Building effective agents” (anthropic.com/engineering, dostęp 2026-10-17): najprostsze rozwiązanie
-  najpierw, workflow dla zadań przewidywalnych, agent przy potrzebie elastyczności, punkty kontrolne człowieka i limity iteracji.
-- Anthropic, „Prompt caching” (platform.claude.com/docs, dostęp 2026-10-17): zapis 1,25× (5 min) lub 2× (1 h),
-  odczyt zwykle 0,1× ceny wejścia (mnożnik zależy od modelu), TTL domyślnie 5 min, minimalna długość zależna od modelu,
-  zmiana definicji narzędzi lub prefiksu unieważnia cache.
-- Microsoft, „AI gateway in Azure API Management” (dostęp 2026-10-17, przez wyniki wyszukiwania): limity tokenów
-  na konsumenta, cache semantyczny, równoważenie backendów — potwierdzono tylko pośrednio [niezweryfikowane w pełnym tekście].
-- AWS, „Well-Architected Framework — Generative AI Lens” (docs.aws.amazon.com, dostęp 2026-10-17): sześć filarów
-  w fazach cyklu życia, kontrolowana autonomia, odpowiedzialne AI; treść zasad szczegółowych [niezweryfikowane].
-- [niezweryfikowane] opóźnienie wdrażania nowych modeli w usługach zarządzanych oraz dostępność regionów — sprawdź
-  u wybranego dostawcy w dniu decyzji.
-- Yu i in. (Salesforce AI), arXiv:2609.09134, preprint v1 z 8.09.2026, omówiony przez J. Wasowskiego („Model–Harness
-  Fit: Why A Better Teacher Makes A Worse Agent”, Medium, ok. 12.10.2026); preprintu nie otwarto, liczby z artykułu
-  [niezweryfikowane] — lock-in w wagach, test wymiany w obu kierunkach.
+## Sources
+- Anthropic, "Building effective agents" (anthropic.com/engineering, accessed 2026-10-17): the simplest solution
+  first, a workflow for predictable tasks, an agent when flexibility is needed, human checkpoints and iteration limits.
+- Anthropic, "Prompt caching" (platform.claude.com/docs, accessed 2026-10-17): write 1.25× (5 min) or 2× (1 h),
+  read usually 0.1× the input price (the multiplier depends on the model), TTL 5 min by default, the minimum length depends on the model,
+  a change of the tool definitions or the prefix invalidates the cache.
+- Microsoft, "AI gateway in Azure API Management" (accessed 2026-10-17, through search results): token limits
+  per consumer, a semantic cache, backend balancing — confirmed only indirectly [unverified in the full text].
+- AWS, "Well-Architected Framework — Generative AI Lens" (docs.aws.amazon.com, accessed 2026-10-17): six pillars
+  in lifecycle phases, controlled autonomy, responsible AI; the content of the detailed principles [unverified].
+- [unverified] the delay in rolling out new models in managed services and the availability of regions — check
+  with the chosen provider on the day of the decision.
+- Yu et al. (Salesforce AI), arXiv:2609.09134, preprint v1 of 8.09.2026, discussed by J. Wasowski ("Model–Harness
+  Fit: Why A Better Teacher Makes A Worse Agent", Medium, about 12.10.2026); the preprint was not opened, the numbers are from the article
+  [unverified] — lock-in in the weights, the swap test in both directions.
 
-Opisane własnymi słowami.
+Described in our own words.

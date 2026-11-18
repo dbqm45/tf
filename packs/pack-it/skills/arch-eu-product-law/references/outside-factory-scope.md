@@ -1,61 +1,61 @@
-# Poza zakresem fabryki — DSA, prawa konsumenta, KSeF, ViDA (stan na 2026-10-18)
+# Outside the factory's scope — DSA, consumer law, KSeF, ViDA (as of 2026-10-18)
 
-**Poza zakresem fabryki.** Fabryka IT zajmuje się prawem tylko w zakresie budowy oprogramowania, także z AI
-(decyzja człowieka z 2026-10-20). Poniższe notatki zostają jako materiał pomocniczy: skill ich nie stosuje w mapie
-obowiązków, a pytanie o te akty kierujesz do prawnika, księgowości lub właściciela produktu. Fakty ze źródeł wtórnych
-[wtórne] (dostęp 2026-10-18), nie sprawdzone w EUR-Lex ani ISAP.
+**Outside the factory's scope.** The IT factory deals with law only within the scope of building software, also with AI
+(the human's decision of 2026-10-20). The notes below stay as supporting material: the skill does not apply them in the map
+of obligations, and you direct a question about these acts to a lawyer, accounting or the product owner. Facts from secondary sources
+[secondary] (accessed 2026-10-18), not checked in EUR-Lex or ISAP.
 
-## Wiersze dawnej mapy aktów
-| Akt | Kiedy dotyczy | Termin |
+## Rows of the former map of acts
+| Act | When it applies | Deadline |
 |---|---|---|
-| DSA, rozp. (UE) 2022/2065 | hosting treści, platformy internetowe | od 17.02.2024 [wtórne] |
-| Prawa konsumenta, dyr. 2011/83/UE z Omnibusem 2019/2161 | B2C online, treści i usługi cyfrowe, także „płatne danymi” | Omnibus od 28.05.2022 [wtórne] |
-| Przycisk odstąpienia, art. 11a dyr. 2011/83 (dyr. 2023/2673) | umowy B2C zawierane online | stosowanie 19.06.2026; w PL brak transpozycji (stan 18.10.2026) [wtórne] |
-| KSeF, ustawa z 5.08.2025 (Dz.U. 2025 poz. 1203) | faktury w Polsce | 1.02.2026 duzi, 1.04.2026 pozostali; kary od 1.01.2027 [wtórne] |
-| ViDA, dyr. (UE) 2025/516 | e-faktury i raportowanie VAT B2B wewnątrz UE | 1.07.2030 [wtórne] |
+| DSA, Reg. (EU) 2022/2065 | content hosting, online platforms | from 17.02.2024 [secondary] |
+| Consumer law, Dir. 2011/83/EU with the Omnibus 2019/2161 | B2C online, digital content and services, also "paid with data" | Omnibus from 28.05.2022 [secondary] |
+| The withdrawal button, Art. 11a Dir. 2011/83 (Dir. 2023/2673) | B2C contracts concluded online | application 19.06.2026; in PL no transposition (as of 18.10.2026) [secondary] |
+| KSeF, the act of 5.08.2025 (Dz.U. 2025 item 1203) | invoices in Poland | 1.02.2026 large, 1.04.2026 the rest; penalties from 1.01.2027 [secondary] |
+| ViDA, Dir. (EU) 2025/516 | e-invoices and VAT reporting for B2B within the EU | 1.07.2030 [secondary] |
 
-Dawne pytania kwalifikujące: „Klientami są konsumenci (B2C)?” → prawa konsumenta i przycisk odstąpienia;
-„Przechowujecie lub publikujecie treści użytkowników?” → DSA; „Wystawiacie faktury w Polsce albo B2B w UE?” → KSeF, ViDA.
-Dawne luki w kodzie: przycisk odstąpienia, zgłaszanie treści, uzasadnienie blokady konta, integracja KSeF.
+Former qualifying questions: "Are the customers consumers (B2C)?" → consumer law and the withdrawal button;
+"Do you store or publish user content?" → DSA; "Do you issue invoices in Poland or B2B in the EU?" → KSeF, ViDA.
+Former gaps in the code: the withdrawal button, content reporting, a justification for an account block, KSeF integration.
 
-## DSA — rozp. (UE) 2022/2065
-- Stosowanie od 17.02.2024.
-- **Art. 17:** uzasadnienie dla użytkownika przy ograniczeniu treści, płatności lub konta [wtórne].
-- **Art. 16:** mechanizm zgłaszania nielegalnych treści — treści nie odczytano [niezweryfikowane].
-- **Art. 25:** zakaz manipulacyjnych interfejsów (dark patterns) dla dostawców platform internetowych; nie obejmuje
-  praktyk objętych dyrektywą 2005/29/WE ani RODO [wtórne].
-- **Art. 19:** mikro i małe przedsiębiorstwa wyłączone z sekcji o platformach internetowych (poza art. 24 ust. 3);
-  nie dotyczy bardzo dużych platform (VLOP). Art. 29 to osobna sekcja dla platform handlowych [wtórne].
-- **W kodzie:** formularz zgłoszeń, rejestr decyzji moderacyjnych z uzasadnieniem, przegląd interfejsu pod kątem
-  manipulacji (rezygnacja tak łatwa jak zapis).
-- Źródło: springlex.eu (DSA, art. 19 i 25).
+## DSA — Reg. (EU) 2022/2065
+- Applies from 17.02.2024.
+- **Art. 17:** a statement of reasons for the user on restricting content, payments or an account [secondary].
+- **Art. 16:** a mechanism for reporting illegal content — the content was not read [unverified].
+- **Art. 25:** a ban on manipulative interfaces (dark patterns) for online platform providers; it does not cover
+  practices covered by Directive 2005/29/EC or the GDPR [secondary].
+- **Art. 19:** micro and small enterprises are exempt from the section on online platforms (apart from Art. 24(3));
+  it does not apply to very large platforms (VLOP). Art. 29 is a separate section for marketplaces [secondary].
+- **In the code:** a reporting form, a register of moderation decisions with reasons, a review of the interface for
+  manipulation (cancelling as easy as signing up).
+- Source: springlex.eu (DSA, Art. 19 and 25).
 
-## Prawa konsumenta — dyr. 2011/83/UE po Omnibusie (2019/2161)
-- Treści cyfrowe: konsument traci prawo odstąpienia po wyraźnym żądaniu natychmiastowego dostarczenia i przyjęciu
-  do wiadomości utraty prawa (art. 16 lit. m); przy usłudze prawo wygasa po pełnym wykonaniu (art. 16 lit. a) [wtórne,
-  brzmienie [niezweryfikowane]].
-- Dyrektywa obejmuje też umowy, w których konsument „płaci” danymi osobowymi (art. 3 ust. 1a) [wtórne].
-- Omnibus stosowany od 28.05.2022 [wtórne].
-- Reguła ceny sprzed obniżki (art. 6a dyr. 98/6/WE): zakres wobec usług cyfrowych [niezweryfikowane].
-- **Przycisk odstąpienia (art. 11a, dodany dyr. 2023/2673):** transpozycja do 19.12.2025, stosowanie od 19.06.2026.
-  W Polsce brak transpozycji na 18.10.2026: projekt UC82 wycofany w maju 2026, nowy projekt od początku procedury
-  [wtórne, jedno źródło: akademialtca.pl]. Sprawdź stan w ISAP przed decyzją.
-- **W kodzie:** informacje przedkontraktowe przed płatnością, potwierdzenie na trwałym nośniku (e-mail), zgoda na
-  natychmiastowe dostarczenie z utratą prawa odstąpienia (osobne pole), funkcja odstąpienia online.
-- Źródła: fieldfisher.com (Omnibus), iubenda.com (right of withdrawal), akademialtca.pl (dyr. 2023/2673).
+## Consumer law — Dir. 2011/83/EU after the Omnibus (2019/2161)
+- Digital content: the consumer loses the right of withdrawal after an express request for immediate delivery and acknowledging
+  the loss of the right (Art. 16(m)); for a service the right expires after full performance (Art. 16(a)) [secondary,
+  wording [unverified]].
+- The directive also covers contracts in which the consumer "pays" with personal data (Art. 3(1a)) [secondary].
+- The Omnibus applies from 28.05.2022 [secondary].
+- The prior-price rule (Art. 6a Dir. 98/6/EC): the scope for digital services [unverified].
+- **The withdrawal button (Art. 11a, added by Dir. 2023/2673):** transposition by 19.12.2025, application from 19.06.2026.
+  In Poland no transposition as of 18.10.2026: draft UC82 withdrawn in May 2026, a new draft from the start of the procedure
+  [secondary, one source: akademialtca.pl]. Check the state in ISAP before a decision.
+- **In the code:** pre-contractual information before payment, confirmation on a durable medium (an email), consent to
+  immediate delivery with the loss of the right of withdrawal (a separate field), an online withdrawal function.
+- Sources: fieldfisher.com (Omnibus), iubenda.com (right of withdrawal), akademialtca.pl (Dir. 2023/2673).
 
-## KSeF — ustawa z 5.08.2025 (Dz.U. 2025 poz. 1203)
-- Obowiązek: od 1.02.2026 podatnicy ze sprzedażą powyżej 200 mln zł w 2024 r.; od 1.04.2026 pozostali.
-- Kary (art. 106ni ustawy o VAT): brak sankcji do 31.12.2026; od 1.01.2027 [wtórne].
-- Zwolnienie przy sprzedaży do 10 tys. zł brutto miesięcznie: źródła sprzeczne (do końca 2026 albo inaczej)
-  [niezweryfikowane].
-- **W kodzie:** integracja z API KSeF (wysyłka, numer KSeF na fakturze, odbiór faktur zakupowych), tryb awaryjny,
-  uprawnienia i tokeny w menedżerze sekretów.
-- Źródła: mddp.pl (Tax Alert KSeF 2.0, 2.09.2025), amavat.pl, ksiegowosc.infor.pl.
+## KSeF — the act of 5.08.2025 (Dz.U. 2025 item 1203)
+- Obligation: from 1.02.2026 taxpayers with sales above PLN 200 million in 2024; from 1.04.2026 the rest.
+- Penalties (Art. 106ni of the VAT act): no sanctions until 31.12.2026; from 1.01.2027 [secondary].
+- The exemption for sales up to PLN 10 thousand gross a month: sources conflict (until the end of 2026 or otherwise)
+  [unverified].
+- **In the code:** integration with the KSeF API (sending, the KSeF number on the invoice, receiving purchase invoices), an emergency mode,
+  permissions and tokens in the secrets manager.
+- Sources: mddp.pl (Tax Alert KSeF 2.0, 2.09.2025), amavat.pl, ksiegowosc.infor.pl.
 
-## ViDA — dyr. (UE) 2025/516
-- Opublikowana 25.03.2025, w mocy od 14.04.2025.
-- Obowiązkowe e-fakturowanie i e-raportowanie transakcji wewnątrzunijnych B2B od 1.07.2030; harmonizacja krajowych
-  systemów do 2035 [wtórne].
-- Krajowe e-faktury bez zgody odbiorcy i bez derogacji Rady — data różni się w źródłach (25.03 albo 14.04.2025).
-- Źródła: kpmg.com (ViDA publication), accountancyeurope.eu.
+## ViDA — Dir. (EU) 2025/516
+- Published 25.03.2025, in force from 14.04.2025.
+- Mandatory e-invoicing and e-reporting of intra-EU B2B transactions from 1.07.2030; harmonization of national
+  systems by 2035 [secondary].
+- National e-invoices without the recipient's consent and without a Council derogation — the date differs in sources (25.03 or 14.04.2025).
+- Sources: kpmg.com (ViDA publication), accountancyeurope.eu.
