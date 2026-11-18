@@ -774,6 +774,14 @@ treści (angielska), bez równoległej polskiej.
       core-git-workflow, core-agent-retro przechodzą.
     - [ ] dalsze partie: 4c (pack-docs, pack-ux, mode-team, mode-pdi, org).
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
+    - [x] 4c-1 (2026-11-18): `docs-tech-writing` (+ 6 referencji), rola `tech-writer` i wiersz routingu pack-docs,
+      `team-session` i przewodnik mode-team; nazwy i pytania wymiarów (`facets`) rdzenia, pack-docs i mode-team po
+      angielsku (pominięte w 4b-9); `content_language: en` w przetłumaczonych nakładkach i w szkielecie
+      `workspace.py new-pack`. Polskie słowa kluczowe zostają, angielskie dochodzą; `hint.pl.txt` dla obu skilli.
+      Podpowiedzi bez zmian: all 901/918 · 32/43, none 168/175 · 16/16, `--hints` czysto (all, none, pack-docs,
+      mode-team). Haiku `docs-tech-writing` przed/po 3/3 → 3/3, 0,74 USD. `translation_check`: różnice tylko
+      zamierzone (przykład polecenia `/team-session`, notacja `event [condition] / action`; blok kodu w SKILL.md to
+      fałszywy alarm — wzmianka ```` ```bash ```` w środku zdania).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
