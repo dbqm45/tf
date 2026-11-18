@@ -802,6 +802,15 @@ treści (angielska), bez równoległej polskiej.
       zostaje na 4c-x. Podpowiedzi bez zmian względem 4c-3a (901/918 · 31/43; remis `core-agent-security` nadal),
       `--hints` czysto (all, pack-ux). Haiku przed/po (4 scenariusze): 3/4 → 3/4, 1,07 USD — `spec-faktury` pada na
       main i po zmianie tak samo (Haiku nie uruchamia skilla), do przejrzenia osobno.
+    - [x] 4c-x (2026-11-18): mode-pdi — `pdi-decisions` SKILL, GUIDE, facet, `content_language: en`, szablony
+      `intent.md`, `plan.md`, `design.md`, `decisions.md`, `REVIEW.md`, `release.yaml` po angielsku. Czytniki przyjmują
+      obie formy (`# pl: sprzed 14.x`): `decision_record.py` (kolumny `Slice | Kind | Release | Flag | Value |
+      Requirements | Unblocks | Verification`, `## Options considered`/`### Option`, `## Change targets`),
+      `phase_run.py` (`## Gate questions`), `run_report.py` (kolumny `Flag`, `Value`). Sprawdzone w kodzie
+      ci_for_sdlc (`connectors/repo.ts` przyjmuje angielskie kolumny i `Success metrics`) i w kontrakcie pdi
+      (`conventions.design.columns.en`). Kryteria 5 scenariuszy eval przyjmują też angielskie nazwy formatów.
+      Zostaje: szablony workflow `sdlc-phase.yml`, `change-check.yml`, `metric-watch.yml` (komentarze i nazwy kroków;
+      P-8 i pdi czytają nazwę kroku N3 i sekcję „Przewodnik dokończenia”) — osobna partia 4c-y.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
