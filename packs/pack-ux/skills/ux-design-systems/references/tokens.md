@@ -1,61 +1,61 @@
-# Tokeny — warstwy, nazwy, format, motywy
+# Tokens — layers, names, format, themes
 
-## Spis treści
-Warstwy · Nazwy · DTCG · Style Dictionary · Motywy i marki · Pułapki
+## Contents
+Layers · Names · DTCG · Style Dictionary · Themes and brands · Pitfalls
 
-## Warstwy
-| Warstwa | Przykład | Kto używa | Zmienia się przy |
+## Layers
+| Layer | Example | Who uses it | Changes with |
 |---|---|---|---|
-| prymitywna (referencyjna) | `color.blue.600` = `#2563EB`, `space.4` = 16 px | tylko warstwa semantyczna | zmianie palety |
-| semantyczna (systemowa) | `color.action.bg`, `space.inset.md` | komponenty i produkty | motywie, marce |
-| komponentowa | `button.primary.bg` | jeden komponent | odstępstwie komponentu od roli |
+| primitive (reference) | `color.blue.600` = `#2563EB`, `space.4` = 16 px | only the semantic layer | a palette change |
+| semantic (system) | `color.action.bg`, `space.inset.md` | components and products | theme, brand |
+| component | `button.primary.bg` | one component | the component departing from the role |
 
-- Warstwę komponentową dodajesz dopiero, gdy komponent musi mieć wartość inną niż rola; w małym systemie często
-  wystarcza para prymityw + semantyka. Źródła różnią się co do ścisłości (czy semantyczny może wskazywać na
-  semantyczny); przyjmij regułę jednego kierunku i trzymaj ją we wszystkich zespołach.
-- Skala prymitywów: kolor 10–12 tonów na rodzinę, odstępy wg skali 4 px, typografia wg skali modularnej (wartości
-  decyduje ux-visual-design).
+- You add the component layer only when a component must have a value different from the role; in a small system the pair
+  primitive + semantic is often enough. Sources differ on strictness (whether a semantic token may point to a
+  semantic one); adopt a one-direction rule and keep it across all teams.
+- The primitive scale: color 10–12 tones per family, spacing on a 4 px scale, typography on a modular scale (values
+  decided by ux-visual-design).
 
-## Nazwy
-- Wzór: `kategoria.[podkategoria].właściwość.rola.[stan]`, np. `color.text.secondary`, `color.border.input.focus`,
+## Names
+- Pattern: `category.[subcategory].property.role.[state]`, e.g. `color.text.secondary`, `color.border.input.focus`,
   `space.inset.md`, `radius.control`, `motion.duration.short`.
-- Nazwa mówi, **do czego**, nie **jak wygląda**: `color.feedback.error`, nie `color.red`; rozmiary w skali
-  `xs–xl` albo cyfrowej, nie `big`/`bigger`.
-- Jedna konwencja wielkości liter i separatora (np. kropka w DTCG, kebab-case w CSS: `--color-text-secondary`);
-  przekształcenie jest zadaniem Style Dictionary, nie ręcznym.
-- Nazwa tokenu jest publicznym API: zmiana nazwy to zmiana niezgodna wstecz (versioning-and-governance.md).
+- The name says **what for**, not **how it looks**: `color.feedback.error`, not `color.red`; sizes on an
+  `xs–xl` or numeric scale, not `big`/`bigger`.
+- One letter-case and separator convention (e.g. a dot in DTCG, kebab-case in CSS: `--color-text-secondary`);
+  the conversion is a job for Style Dictionary, not a manual one.
+- A token name is public API: renaming is a backwards-incompatible change (versioning-and-governance.md).
 
-## DTCG — format
-- Specyfikacja *Design Tokens Format Module* ma pierwszą stabilną wersję 2025.10 (Final Community Group Report,
-  2025-10-28). Grupa nie jest na ścieżce standaryzacji W3C — to raport grupy społecznej, więc nie nazywaj go
-  „standardem W3C”. Zapowiedziane są kolejne, zastępujące wersje.
-- Token to obiekt z `$value`; `$type` (np. `color`, `dimension`, `duration`) można ustawić na tokenie lub grupie
-  (dziedziczenie); `$description` opcjonalny; `$extensions` na dane narzędzi (klucz z nazwą dostawcy).
-- Alias: wartość `{ścieżka.do.tokenu}` [niezweryfikowane w tej sesji, składnia z wcześniejszych wersji specyfikacji].
-- Typ medium: preferowany `application/design-tokens+json`, dopuszczalny `application/json`; rozszerzenie pliku
-  `.tokens` lub `.tokens.json` [niezweryfikowane w tekście specyfikacji, wtórne źródła].
-- Wycofanie tokenu: pole `$deprecated` [niezweryfikowane w tej sesji]; do czasu pewności zapisz wycofanie także
-  w `$description` i w changelogu.
-- Pola ze znakiem `$` są zarezerwowane; nazwy tokenów nie zaczynają się od `$` i nie zawierają `{`, `}`, `.`.
-  [niezweryfikowane]
+## DTCG — the format
+- The *Design Tokens Format Module* specification has its first stable version 2025.10 (Final Community Group Report,
+  2025-10-28). The group is not on the W3C standards track — it is a community group report, so do not call it
+  "a W3C standard". Further, superseding versions are announced.
+- A token is an object with `$value`; `$type` (e.g. `color`, `dimension`, `duration`) can be set on the token or the group
+  (inheritance); `$description` optional; `$extensions` for tool data (a key with the vendor name).
+- An alias: the value `{path.to.token}` [unverified in this session, syntax from earlier versions of the specification].
+- Media type: preferred `application/design-tokens+json`, allowed `application/json`; file extension
+  `.tokens` or `.tokens.json` [unverified in the specification text, secondary sources].
+- Token deprecation: the `$deprecated` field [unverified in this session]; until certain, record the deprecation also
+  in `$description` and in the changelog.
+- Fields starting with `$` are reserved; token names do not start with `$` and do not contain `{`, `}`, `.`.
+  [unverified]
 
 ## Style Dictionary
-- Transformuje tokeny na artefakty platform: CSS custom properties, JS/TS, XML dla Androida, Swift dla iOS.
-  Konfiguracja: źródła (`source`), platformy, transformacje (kolor, jednostki, nazwy), formaty, pliki wyjściowe.
-- Wersja 5 przyjmuje DTCG 2025.10 jako format bazowy (wtórne źródło) [niezweryfikowane]; sprawdź numer i obsługę typów
-  złożonych w dokumentacji i `package.json` repozytorium, zanim zaplanujesz migrację z wersji 3/4.
-- Potok: Figma (zmienne) → eksport/wtyczka → `*.tokens.json` w repozytorium → Style Dictionary w CI → pakiet
-  wersjonowany. Kierunek jeden; edycje ręczne w plikach wygenerowanych są zakazane.
+- Transforms tokens into platform artifacts: CSS custom properties, JS/TS, XML for Android, Swift for iOS.
+  Configuration: sources (`source`), platforms, transforms (color, units, names), formats, output files.
+- Version 5 adopts DTCG 2025.10 as the base format (secondary source) [unverified]; check the number and the support for composite types
+  in the documentation and the repository's `package.json` before you plan a migration from version 3/4.
+- Pipeline: Figma (variables) → export/plugin → `*.tokens.json` in the repository → Style Dictionary in CI → a
+  versioned package. One direction; manual edits in generated files are forbidden.
 
-## Motywy i marki
-- Motyw (jasny/ciemny) i marka (A/B) to **osie** wartości warstwy semantycznej. Dwie osie = macierz (marka × tryb);
-  generuj ją, nie utrzymuj ręcznie. W Figmie: kolekcja semantyczna z trybami; w CSS: zestaw custom properties pod
-  atrybutem (`[data-theme]`, `[data-brand]`) — implementacja w fe-css.
-- Zakres marki: kolory, krój, promienie, ewentualnie ikony; układ i zachowanie wspólne. Marka, która zmienia
-  zachowanie komponentu, to osobny komponent.
-- Każda kombinacja przechodzi kontrast (ux-visual-design): test automatyczny liczący pary tekst/tło z tokenów.
+## Themes and brands
+- A theme (light/dark) and a brand (A/B) are **axes** of the semantic layer's values. Two axes = a matrix (brand × mode);
+  generate it, do not maintain it by hand. In Figma: a semantic collection with modes; in CSS: a set of custom properties under
+  an attribute (`[data-theme]`, `[data-brand]`) — the implementation in fe-css.
+- Brand scope: colors, typeface, radii, possibly icons; layout and behaviour shared. A brand that changes
+  a component's behaviour is a separate component.
+- Every combination passes contrast (ux-visual-design): an automated test computing text/background pairs from the tokens.
 
-## Pułapki
-- Wartość surowa w komponencie omija motywy. Zakazuj w lintingu (np. reguła stylelint na kolory i odstępy).
-- Zbyt wiele tokenów komponentowych: setki nazw bez użytkownika. Dodawaj na żądanie użycia.
-- Token semantyczny nazwany od jednego zastosowania (`color.header.bg`) — nie przenosi się; nazwij rolę.
+## Pitfalls
+- A raw value in a component bypasses themes. Forbid it in linting (e.g. a stylelint rule for colors and spacing).
+- Too many component tokens: hundreds of names without a user. Add them on demand of use.
+- A semantic token named after one use (`color.header.bg`) — it does not carry over; name the role.

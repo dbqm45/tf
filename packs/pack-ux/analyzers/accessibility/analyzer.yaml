@@ -1,7 +1,7 @@
 name: accessibility
 prefix: A11Y
-title: Dostępność (statyka szablonów)
-description: obrazy bez alt, przyciski i linki bez nazwy, pola bez etykiety, kliknięcie bez klawiatury, tabindex > 0, brak lang — HTML, JSX/TSX, Vue, Svelte, Angular
+title: Accessibility (template statics)
+description: images without alt, buttons and links without a name, fields without a label, click without keyboard, tabindex > 0, missing lang — HTML, JSX/TSX, Vue, Svelte, Angular
 version: 0.1.0
 review: "2027-05-10"
 skills: [ux-accessibility, fe-web-platform]

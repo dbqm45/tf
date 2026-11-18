@@ -1,57 +1,57 @@
-# Teksty interfejsu, projekt włączający i etyczny
+# Interface copy, inclusive and ethical design
 
-## Teksty interfejsu (UX writing)
-- Słowa użytkownika i słownika domeny (ddd-facilitation), nie systemu: „Zamówienie wysłane”, nie „Status: SHIPPED”.
-  Ta sama rzecz zawsze tą samą nazwą.
-- **Przyciski** mówią, co się stanie, czasownikiem: „Wyślij fakturę”, „Usuń 3 pliki” — nie „OK”, „Zatwierdź”, „Tak”.
-- **Komunikat błędu**: co się stało + dlaczego (jeśli pomaga) + co zrobić, przy polu, bez obwiniania i kodów:
-  „Ten NIP ma 9 cyfr — wpisz 10 cyfr bez kresek”, a nie „Nieprawidłowe dane (E1043)”. Kod błędu tylko jako
-  identyfikator dla wsparcia.
-- **Pusty stan**: dlaczego jest pusto i pierwszy krok („Nie masz jeszcze klientów. Dodaj pierwszego albo zaimportuj
-  z pliku CSV”).
-- **Potwierdzenia** nieodwracalnych działań nazywają skutek („Usunąć projekt „Dom”? Usuniesz też 12 zadań”), a przycisk
-  powtarza czasownik. Gdy się da — cofnięcie zamiast potwierdzenia.
-- Krótko i na początku najważniejsze; teksty mieszczą się także po polsku (dłuższe niż angielskie o kilkadziesiąt
-  procent) i z odmianą liczebników (fe-web-platform, `i18n.md`).
-- Polszczyzna: korekta i styl według txt-polish-correctness i txt-polish-style.
+## Interface copy (UX writing)
+- The words of the user and of the domain glossary (ddd-facilitation), not of the system: "Order shipped", not "Status: SHIPPED".
+  The same thing always under the same name.
+- **Buttons** say what will happen, with a verb: "Send invoice", "Delete 3 files" — not "OK", "Submit", "Yes".
+- **Error message**: what happened + why (if it helps) + what to do, next to the field, without blame or codes:
+  "This tax ID has 9 digits — enter 10 digits without dashes", not "Invalid data (E1043)". An error code only as
+  an identifier for support.
+- **Empty state**: why it is empty and the first step ("You have no customers yet. Add the first one or import
+  from a CSV file").
+- **Confirmations** of irreversible actions name the consequence ("Delete the project "Home"? You will also delete 12 tasks"), and the button
+  repeats the verb. Where possible — undo instead of confirmation.
+- Short, with the most important first; copy must also fit in longer languages (Polish is several tens of
+  percent longer than English) and with plural forms of numerals (fe-web-platform, `i18n.md`).
+- Polish copy: proofreading and style by txt-polish-correctness and txt-polish-style.
 
-## Głos i ton
-- **Głos** (stały): charakter produktu, np. „rzeczowy, życzliwy, bez żargonu”. **Ton** (zmienny): zależy od sytuacji
-  użytkownika — przy błędzie płatności spokojnie i konkretnie, przy sukcesie krótko, bez euforii.
-- Forma zwracania się: jedna w całym produkcie (np. „ty” w aplikacji konsumenckiej, bezosobowo lub „Państwo” w B2B
-  i urzędowych) — decyzja zapisana w dokumencie głównym systemu projektowego.
-- Lista słów preferowanych i zakazanych w repo (np. `docs/content-guide.md`), przegląd tekstów w PR jak kodu.
+## Voice and tone
+- **Voice** (constant): the product's character, e.g. "matter-of-fact, kind, no jargon". **Tone** (variable): depends on the user's
+  situation — at a payment error calm and concrete, at a success short, without euphoria.
+- The form of address: one across the whole product (e.g. informal "ty" in a consumer app, impersonal or formal "Państwo" in B2B
+  and official products in Polish) — a decision recorded in the main document of the design system.
+- A list of preferred and forbidden words in the repo (e.g. `docs/content-guide.md`), a review of copy in PRs like code.
 
-## Projekt włączający
-- Niepełnosprawność jako spektrum: trwała (osoba niewidoma), czasowa (złamana ręka), sytuacyjna (rodzic z dzieckiem
-  na ręku, słońce na ekranie). Rozwiązanie dla jednej grupy często pomaga wszystkim (napisy, duże cele dotyku).
-- Rekrutuj do badań osoby z niepełnosprawnościami, starsze, z mniejszą biegłością cyfrową; testuj z czytnikiem ekranu,
-  klawiaturą, powiększeniem 200%, słabym łączem.
-- Formularze bez założeń kulturowych: imię i nazwisko jednym polem lub elastycznie, płeć opcjonalna z sensownymi
-  opcjami, adresy różnych krajów, znaki diakrytyczne wszędzie.
-- Wymogi prawne: WCAG 2.2 AA, European Accessibility Act (fe-web-platform).
+## Inclusive design
+- Disability as a spectrum: permanent (a blind person), temporary (a broken arm), situational (a parent with a child
+  in their arms, sun on the screen). A solution for one group often helps everyone (captions, large touch targets).
+- Recruit people with disabilities, older people, people with lower digital proficiency for research; test with a screen reader,
+  a keyboard, 200% zoom, a weak connection.
+- Forms without cultural assumptions: first name and surname in one field or flexibly, gender optional with sensible
+  options, addresses of different countries, diacritics everywhere.
+- Legal requirements: WCAG 2.2 AA, the European Accessibility Act (fe-web-platform).
 
-## Projekt etyczny — wzorce zwodnicze, których nie stosujesz
-| Wzorzec | Przykład | Zamiast tego |
+## Ethical design — deceptive patterns you do not use
+| Pattern | Example | Instead |
 |---|---|---|
-| utrudnione wyjście | rezygnacja z subskrypcji tylko telefonicznie | rezygnacja tak łatwa jak zakup |
-| zawstydzanie | „Nie, wolę przepłacać” | neutralne „Nie, dziękuję” |
-| ukryte koszty | opłata dodana na ostatnim kroku | pełna cena od początku |
-| wstępnie zaznaczone zgody i dodatki | zaznaczony newsletter, ubezpieczenie w koszyku | wybór domyślnie wyłączony |
-| fałszywa pilność lub niedobór | licznik, który się resetuje; „zostały 2 sztuki” bez pokrycia | tylko prawdziwe informacje |
-| nierówne opcje zgody | „Akceptuj wszystko” wyróżnione, „Odrzuć” ukryte w ustawieniach | równorzędne przyciski na pierwszym poziomie |
-| ukryta reklama, wymuszona rejestracja | konto wymagane do przejrzenia oferty | dostęp bez konta, gdzie to możliwe |
-- Prawo UE: rozporządzenie o usługach cyfrowych (DSA, art. 25) zakazuje platformom internetowym projektowania
-  interfejsu, który wprowadza w błąd lub manipuluje; dyrektywa o nieuczciwych praktykach handlowych i RODO (zgoda
-  dobrowolna, świadoma, łatwa do wycofania) obejmują szerzej. Unia przygotowuje kolejne przepisy (Digital Fairness Act) —
-  przed projektowaniem przepływów zakupu, subskrypcji i zgód sprawdź aktualny stan z działem prawnym.
-- Projektuj odpowiedzialnie: kto może ucierpieć przez tę funkcję (nadużycie, nękanie, uzależnienie, wykluczenie)?
-  Pytanie dopisz do przeglądu projektu i modelu zagrożeń (arch-threat-modeling).
+| hard exit | cancelling a subscription only by phone | cancelling as easy as buying |
+| confirmshaming | "No, I prefer to overpay" | a neutral "No, thanks" |
+| hidden costs | a fee added at the last step | the full price from the start |
+| pre-ticked consents and extras | a ticked newsletter, insurance in the cart | the choice off by default |
+| false urgency or scarcity | a countdown that resets; "2 left" without substance | only true information |
+| unequal consent options | "Accept all" highlighted, "Reject" hidden in settings | equal buttons on the first level |
+| disguised ads, forced registration | an account required to browse the offer | access without an account where possible |
+- EU law: the Digital Services Act (DSA, Art. 25) forbids online platforms from designing
+  an interface that deceives or manipulates; the Unfair Commercial Practices Directive and the GDPR (consent
+  voluntary, informed, easy to withdraw) cover more broadly. The EU is preparing further rules (the Digital Fairness Act) —
+  before designing purchase, subscription and consent flows check the current state with the legal department.
+- Design responsibly: who can be harmed by this feature (abuse, harassment, addiction, exclusion)?
+  Add the question to the design review and the threat model (arch-threat-modeling).
 
-## Źródła
+## Sources
 - NN/g, [UX Writing: Study Guide](https://www.nngroup.com/articles/ux-writing-study-guide/),
   [Inclusive Design](https://www.nngroup.com/articles/inclusive-design/); Microsoft Inclusive Design Toolkit
 - [DSA art. 25](https://dsa-library.com/article/25/); H. Brignull, *Deceptive Patterns* (2023)
 - [roadmap.sh — Product Design](https://roadmap.sh/product-design) (UX writing, microcopy, voice & tone, inclusive,
   ethical design, designing responsibly)
-Opisane własnymi słowami.
+Described in our own words.

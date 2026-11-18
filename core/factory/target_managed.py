@@ -119,8 +119,9 @@ def roster(groups: list[list[str]], limit: int = ROSTER_LIMIT) -> tuple[list[str
 
 
 def description(text: str) -> str:
-    """Opis bez wskazówki uruchomienia w Claude Code („Uruchom przez `claude --agent …`” do końca zdania)."""
-    return re.sub(r"\s*Uruchom przez `claude --agent [^`]*`[^.]*\.", "", text).strip()
+    """Opis bez wskazówki uruchomienia w Claude Code („Run with `claude --agent …`” do końca zdania)."""
+    # pl: sprzed 14.x — persony nieprzetłumaczone mają „Uruchom przez …”.
+    return re.sub(r"\s*(?:Run with|Uruchom przez) `claude --agent [^`]*`[^.]*\.", "", text).strip()
 
 
 def system_prompt(claude_doc: str) -> str:

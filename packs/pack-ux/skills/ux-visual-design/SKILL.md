@@ -1,82 +1,82 @@
 ---
 name: ux-visual-design
-description: Użyj przy wyglądzie interfejsu — hierarchia, typografia, kontrast WCAG, siatka, ruch, marka, Figma, zgodność wdrożenia z projektem.
+description: Use for the look of an interface — hierarchy, typography, WCAG contrast, grid, motion, brand, Figma, fidelity of the implementation to the design.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy projekcie wizualnym interfejsu i jego ocenie — hierarchia wizualna, skala typograficzna, długość linii i interlinia, system kolorów z obliczeniem kontrastu WCAG, siatka i skala odstępów, ikony i obrazy, zasady ruchu (cel, czas, reduced motion), nałożenie marki, praktyka w Figmie (komponenty, warianty, auto layout, zmienne), przegląd zgodności wdrożenia z projektem i krytyka projektu wizualnego. Nie do przepływów, stanów ekranu i testów z użytkownikami (ux-feature-design), audytu dostępności i deklaracji (ux-accessibility), kodu CSS i tokenów w kodzie (fe-css) ani budowy biblioteki komponentów, nazewnictwa tokenów i ich wersjonowania (ux-design-systems)."
-  keywords: "wygląd, UI, ładne, brzydkie, nieczytelne, hierarchia wizualna, font, krój pisma, skala typograficzna, kolory, paleta, kontrast, kontrast WCAG, siatka, odstępy, ikony, animacja, czas animacji, reduced motion, brand, księga znaku, Figma, auto layout, warianty, makieta wizualna, zgodność z projektem, pixel perfect, przegląd wizualny, krytyka projektu"
+  catalog: "Use for the visual design of an interface and its evaluation — visual hierarchy, the type scale, line length and line height, a color system with a computed WCAG contrast, the grid and the spacing scale, icons and images, motion principles (purpose, duration, reduced motion), applying the brand, practice in Figma (components, variants, auto layout, variables), a review of the implementation's fidelity to the design and a critique of the visual design. Not for flows, screen states and tests with users (ux-feature-design), an accessibility audit and statement (ux-accessibility), CSS code and tokens in code (fe-css) or building a component library, token naming and versioning (ux-design-systems)."
+  keywords: "wygląd, UI, ładne, brzydkie, nieczytelne, hierarchia wizualna, font, krój pisma, skala typograficzna, kolory, paleta, kontrast, kontrast WCAG, siatka, odstępy, ikony, animacja, czas animacji, reduced motion, brand, księga znaku, Figma, auto layout, warianty, makieta wizualna, zgodność z projektem, pixel perfect, przegląd wizualny, krytyka projektu, look, pretty, ugly, unreadable, visual hierarchy, typeface, type scale, colors, palette, contrast, WCAG contrast, grid, spacing, icons, animation, animation duration, brand book, variants, visual mockup, design fidelity, visual review, design critique"
 ---
 
-# Projekt wizualny interfejsu — decyzje z liczbami
+# Visual interface design — decisions with numbers
 
-Cel: wygląd, który prowadzi wzrok, jest czytelny i da się go wiernie wdrożyć. Zasady podstawowe (jedna główna akcja,
-stany, mikrointerakcje) są w **ux-feature-design** (`.claude/skills/ux-feature-design/references/visual-ui-and-motion.md`) — tu je pogłębiasz procedurą
-i liczysz. Wdrożenie w CSS i tokenach w kodzie: **fe-css**; budowa i utrzymanie biblioteki: **ux-design-systems**.
+Goal: a look that guides the eye, is readable and can be implemented faithfully. The basic principles (one primary action,
+states, microinteractions) are in **ux-feature-design** (`.claude/skills/ux-feature-design/references/visual-ui-and-motion.md`) — here you deepen them with a procedure
+and compute. Implementation in CSS and tokens in code: **fe-css**; building and maintaining the library: **ux-design-systems**.
 
-## Procedura
-1. **Wejście.** Ustal: platformy i szerokości, tryby (jasny, ciemny), markę (księga znaku, kolory, krój) oraz istniejący
-   system projektowy. Jest system — jego tokeny i komponenty mają pierwszeństwo przed nowym pomysłem. Brak marki
-   → zapytaj, nie wymyślaj logo ani palety.
-2. **Hierarchia.** Wypisz elementy ekranu w kolejności ważności dla zadania użytkownika (1 = główne, max 3 poziomy).
-   Każdy poziom różnisz co najmniej dwoma środkami: rozmiar, grubość, kontrast, odstęp. Test: rozmycie ekranu —
-   nadal widać poziom 1? Szczegóły i typowe błędy: `references/typography-color-grid.md`.
-3. **Typografia.** Skala modularna (stosunek 1,2–1,25) z 5–7 stopni na tokenach; tekst ciągły 16 px, interlinia
-   1,4–1,6, nagłówki 1,1–1,3; linia 45–75 znaków (twardy sufit 80). Nagłówek lepiej oddzielać odstępem niż kolorem.
-4. **Kolor i kontrast — liczysz, nie oceniasz na oko.** Role (tło, powierzchnia, tekst, akcent, stany) zamiast barw.
-   Dla każdej pary tekst/tło podaj współczynnik i próg: tekst ≥ 4,5:1 (SC 1.4.3); duży tekst (≥ 18 pt = 24 px albo
-   ≥ 14 pt pogrubiony ≈ 18,7 px) ≥ 3:1; ramki pól, ikony niosące znaczenie, fokus ≥ 3:1 względem tła (SC 1.4.11).
-   Obie palety (jasna i ciemna) liczysz osobno. Kolor nigdy jedynym nośnikiem znaczenia. Poprawka: ściemnij ton, nie
-   pogrubiaj tekstu.
-5. **Siatka i odstępy.** Skala odstępów 4 px (4, 8, 12, 16, 24, 32, 48, 64) z tokenów; bliskość ma znaczenie:
-   odstęp wewnątrz grupy mniejszy niż między grupami (min. dwukrotnie). Siatka 12 kolumn dla treści, elastyczna dla
-   aplikacji. Cele dotyku ≥ 24×24 px (SC 2.5.8), zalecane 44×44 px.
-6. **Ikony i obrazy.** Jedna rodzina ikon, jedna siatka (np. 24 px, obrys 1,5–2 px), wyrównanie optyczne; ikona
-   niosąca znaczenie ma etykietę. Obrazy: proporcje z góry, fokus kadru, tekst na zdjęciu tylko na warstwie
-   zapewniającej kontrast; alternatywy tekstowe ustala treść, nie projektant od wyglądu.
-7. **Ruch.** Najpierw cel (związek, zmiana stanu, kierunek, uwaga), potem czas: mikro 100–150 ms, panele i okna
-   200–300 ms, duże przejścia ≤ 500 ms; wyjście ok. 70–80% czasu wejścia; wejście ease-out, wyjście ease-in.
-   `prefers-reduced-motion`: przesunięcia i skalowanie zamień na przenikanie lub brak ruchu (nie usuwaj samej
-   informacji o zmianie). Szczegóły: `references/motion-and-brand.md`.
-8. **Marka.** Marka daje kolor akcentu, krój, ton ilustracji i zdjęć; nie nadpisuje progów kontrastu ani rozmiarów
-   dotyku. Kolor marki nie przechodzi kontrastu → ciemniejszy wariant do tekstu i przycisków, oryginał do dużych
-   powierzchni. Wiele marek: `ux-design-systems`.
-9. **Figma.** Zasady pracy (komponenty, warianty vs właściwości, auto layout, zmienne, nazwy warstw, przekazanie)
-   w `references/figma.md`.
-10. **Przegląd zgodności wdrożenia i krytyka.** Procedura nakładki, tolerancje i format uwag:
-    `references/visual-review.md`. Uwagi pisz wobec celu i progu („kontrast 3,45:1 < 4,5:1”), nie gustu.
+## Procedure
+1. **Input.** Establish: platforms and widths, modes (light, dark), the brand (brand book, colors, typeface) and the existing
+   design system. If there is a system — its tokens and components take precedence over a new idea. No brand
+   → ask, do not invent a logo or a palette.
+2. **Hierarchy.** List the screen's elements in order of importance for the user's task (1 = primary, max 3 levels).
+   You differentiate each level by at least two means: size, weight, contrast, spacing. Test: blur the screen —
+   is level 1 still visible? Details and typical mistakes: `references/typography-color-grid.md`.
+3. **Typography.** A modular scale (ratio 1.2–1.25) of 5–7 steps on tokens; body text 16 px, line height
+   1.4–1.6, headings 1.1–1.3; a line of 45–75 characters (hard ceiling 80). Separate a heading by spacing rather than color.
+4. **Color and contrast — you compute, you do not judge by eye.** Roles (background, surface, text, accent, states) instead of hues.
+   For every text/background pair give the ratio and the threshold: text ≥ 4.5:1 (SC 1.4.3); large text (≥ 18 pt = 24 px or
+   ≥ 14 pt bold ≈ 18.7 px) ≥ 3:1; field borders, icons carrying meaning, focus ≥ 3:1 against the background (SC 1.4.11).
+   You compute both palettes (light and dark) separately. Color is never the only carrier of meaning. Fix: darken the tone, do not
+   embolden the text.
+5. **Grid and spacing.** A 4 px spacing scale (4, 8, 12, 16, 24, 32, 48, 64) from tokens; proximity matters:
+   spacing within a group smaller than between groups (at least twice). A 12-column grid for content, flexible for
+   applications. Touch targets ≥ 24×24 px (SC 2.5.8), 44×44 px recommended.
+6. **Icons and images.** One icon family, one grid (e.g. 24 px, stroke 1.5–2 px), optical alignment; an icon
+   carrying meaning has a label. Images: proportions set up front, the focal point of the crop, text on a photo only on a layer
+   ensuring contrast; text alternatives are set by the content, not by the visual designer.
+7. **Motion.** First the purpose (relationship, state change, direction, attention), then the duration: micro 100–150 ms, panels and dialogs
+   200–300 ms, large transitions ≤ 500 ms; exit about 70–80% of the entrance time; entrance ease-out, exit ease-in.
+   `prefers-reduced-motion`: replace movement and scaling with a cross-fade or no motion (do not remove the
+   information about the change itself). Details: `references/motion-and-brand.md`.
+8. **Brand.** The brand gives the accent color, the typeface, the tone of illustrations and photos; it does not override the contrast thresholds or the touch
+   sizes. A brand color that fails contrast → a darker variant for text and buttons, the original for large
+   surfaces. Multiple brands: `ux-design-systems`.
+9. **Figma.** Working rules (components, variants vs properties, auto layout, variables, layer names, handoff)
+   in `references/figma.md`.
+10. **Implementation fidelity review and critique.** The overlay procedure, tolerances and the comment format:
+    `references/visual-review.md`. Write comments against the goal and the threshold ("contrast 3.45:1 < 4.5:1"), not taste.
 
-## Przykład
-Wejście: tekst pomocniczy `#8A8A8A` na `#FFFFFF`, przycisk `#3B82F6` z białym napisem 14 px.
-Wynik:
+## Example
+Input: helper text `#8A8A8A` on `#FFFFFF`, a button `#3B82F6` with white 14 px text.
+Result:
 
-| Para | Kontrast | Próg | Werdykt |
+| Pair | Contrast | Threshold | Verdict |
 |---|---|---|---|
-| `#8A8A8A` / `#FFFFFF`, tekst 14 px | 3,45:1 | 4,5:1 | nie przechodzi; zamień na `#767676` (4,54:1) lub ciemniejszy `#6B6B6B` (5,33:1) |
-| `#FFFFFF` / `#3B82F6`, tekst 14 px | 3,68:1 | 4,5:1 | nie przechodzi; użyj `#2563EB` (5,17:1) |
+| `#8A8A8A` / `#FFFFFF`, 14 px text | 3.45:1 | 4.5:1 | fails; change to `#767676` (4.54:1) or the darker `#6B6B6B` (5.33:1) |
+| `#FFFFFF` / `#3B82F6`, 14 px text | 3.68:1 | 4.5:1 | fails; use `#2563EB` (5.17:1) |
 
-Dodatkowo: odstęp wewnątrz karty 8 px, między kartami 24 px (trzykrotnie), skala typograficzna 14/16/20/25/31 (×1,25).
-Panel boczny: wejście 250 ms ease-out, wyjście 200 ms ease-in; przy reduced motion samo przenikanie 100 ms.
+Additionally: spacing within a card 8 px, between cards 24 px (three times), the type scale 14/16/20/25/31 (×1.25).
+Side panel: entrance 250 ms ease-out, exit 200 ms ease-in; with reduced motion only a 100 ms cross-fade.
 
-## Checklista
-- [ ] hierarchia w 3 poziomach, każdy różni się co najmniej dwoma środkami
-- [ ] skala typograficzna i odstępów z tokenów; linia ≤ 75 znaków (sufit 80), interlinia ≥ 1,4 dla tekstu
-- [ ] kontrast policzony dla każdej pary w obu motywach: 4,5:1 / 3:1 / 3:1 dla elementów UI
-- [ ] kolor nie jest jedynym nośnikiem znaczenia; cele dotyku ≥ 24 px
-- [ ] ruch ma cel, czasy z progów, wariant reduced motion
-- [ ] marka nie łamie progów; przegląd wdrożenia z tolerancjami i listą różnic
+## Checklist
+- [ ] hierarchy in 3 levels, each differing by at least two means
+- [ ] the type and spacing scales from tokens; a line ≤ 75 characters (ceiling 80), line height ≥ 1.4 for text
+- [ ] contrast computed for every pair in both themes: 4.5:1 / 3:1 / 3:1 for UI elements
+- [ ] color is not the only carrier of meaning; touch targets ≥ 24 px
+- [ ] motion has a purpose, durations from the thresholds, a reduced motion variant
+- [ ] the brand does not break the thresholds; an implementation review with tolerances and a list of differences
 
-## Materiały dodatkowe
-- `references/typography-color-grid.md` — skala, długość linii, kontrast i jego poprawki, siatka, odstępy, ikony.
-- `references/motion-and-brand.md` — czasy i krzywe, reduced motion, nałożenie marki.
-- `references/figma.md` — komponenty, warianty, auto layout, zmienne, przekazanie.
-- `references/visual-review.md` — zgodność wdrożenia z projektem i krytyka.
+## Additional materials
+- `references/typography-color-grid.md` — scale, line length, contrast and its fixes, grid, spacing, icons.
+- `references/motion-and-brand.md` — durations and curves, reduced motion, applying the brand.
+- `references/figma.md` — components, variants, auto layout, variables, handoff.
+- `references/visual-review.md` — implementation fidelity to the design and critique.
 
-## Źródła
+## Sources
 - W3C, WCAG 2.2: Understanding SC 1.4.3 Contrast (Minimum), 1.4.12 Text Spacing, 2.4.11 Focus Not Obscured (Minimum),
-  2.5.8 Target Size (Minimum), 2.3.3 Animation from Interactions (dostęp 2026-10-17). SC 1.4.11 Non-text Contrast
-  (3:1), 2.2.2 i 2.3.1 [niezweryfikowane w tej sesji, wartości z WCAG 2.1].
-- Material Design 3 — tokeny ruchu (`md.motion.duration.short1` = 50 ms); pozostałe czasy w skillu to praktyka,
-  nie wartości z Material [niezweryfikowane] (dostęp 2026-10-17).
-- Figma Help Center: Guide to variables, Explore component properties (dostęp 2026-10-17).
-- Bringhurst, *The Elements of Typographic Style* (45–75 znaków w linii, za wtórnym źródłem [niezweryfikowane]).
-Opisane własnymi słowami; współczynniki kontrastu policzone wzorem WCAG (luminancja względna sRGB).
+  2.5.8 Target Size (Minimum), 2.3.3 Animation from Interactions (accessed 2026-10-17). SC 1.4.11 Non-text Contrast
+  (3:1), 2.2.2 and 2.3.1 [unverified in this session, values from WCAG 2.1].
+- Material Design 3 — motion tokens (`md.motion.duration.short1` = 50 ms); the other durations in the skill are practice,
+  not values from Material [unverified] (accessed 2026-10-17).
+- Figma Help Center: Guide to variables, Explore component properties (accessed 2026-10-17).
+- Bringhurst, *The Elements of Typographic Style* (45–75 characters per line, after a secondary source [unverified]).
+Described in our own words; contrast ratios computed with the WCAG formula (sRGB relative luminance).

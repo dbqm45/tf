@@ -1,47 +1,47 @@
-# Ocena heurystyczna, przegląd ekspercki i testy użyteczności
+# Heuristic evaluation, expert review and usability tests
 
-## 10 heurystyk Nielsena (do oceny i do uzasadniania uwag)
-1. **Widoczność stanu systemu** — użytkownik wie, co się dzieje (postęp, zapisano, ile zostało).
-2. **Zgodność ze światem użytkownika** — jego słowa i kolejność, nie język bazy danych.
-3. **Kontrola i swoboda** — wyjście awaryjne: anuluj, cofnij, wróć bez utraty danych.
-4. **Spójność i standardy** — to samo wygląda i działa tak samo; konwencje platformy.
-5. **Zapobieganie błędom** — ograniczenia, dobre wartości domyślne, potwierdzenie przed nieodwracalnym.
-6. **Rozpoznawanie zamiast przypominania** — opcje widoczne, kontekst przy polu, ostatnio używane.
-7. **Elastyczność i wydajność** — skróty dla wprawnych, bez utrudniania początkującym.
-8. **Estetyka i minimalizm** — każda informacja konkuruje o uwagę; usuń zbędne.
-9. **Rozpoznanie, diagnoza i naprawa błędów** — komunikat prostym językiem: co się stało i co zrobić.
-10. **Pomoc i dokumentacja** — w kontekście zadania, krótka, z krokami.
+## Nielsen's 10 heuristics (for evaluation and for justifying comments)
+1. **Visibility of system status** — the user knows what is happening (progress, saved, how much is left).
+2. **Match with the user's world** — their words and order, not the language of the database.
+3. **User control and freedom** — an emergency exit: cancel, undo, go back without losing data.
+4. **Consistency and standards** — the same thing looks and works the same way; platform conventions.
+5. **Error prevention** — constraints, good defaults, confirmation before the irreversible.
+6. **Recognition rather than recall** — options visible, context next to the field, recently used.
+7. **Flexibility and efficiency** — shortcuts for the proficient, without making it harder for beginners.
+8. **Aesthetics and minimalism** — every piece of information competes for attention; remove the unneeded.
+9. **Recognizing, diagnosing and recovering from errors** — a message in plain language: what happened and what to do.
+10. **Help and documentation** — in the context of the task, short, with steps.
 
-## Przegląd heurystyczny i ekspercki — procedura
-1. Zakres: przepływy i ekrany, dla kogo, jakie zadania.
-2. 3–5 oceniających niezależnie (jeden znajduje mniej niż połowę problemów), najlepiej osoby, które nie projektowały
-   ekranu. Agent może być jednym z oceniających, nie jedynym.
-3. Każdy problem: miejsce (ekran, element), naruszona heurystyka lub zasada, opis, **waga 0–4**
-   (0 nie problem, 1 kosmetyczny, 2 drobny, 3 poważny — naprawić przed wydaniem, 4 katastrofa — blokuje zadanie),
-   rekomendacja. Także mocne strony — żeby ich nie zepsuć.
-4. Scal wyniki, uzgodnij wagi, posortuj. Przegląd ekspercki rozszerza heurystyki o wytyczne, psychologię poznawczą
-   i doświadczenie oceniającego; nie zastępuje testów z użytkownikami.
+## Heuristic and expert review — procedure
+1. Scope: flows and screens, for whom, which tasks.
+2. 3–5 evaluators independently (one finds less than half of the problems), preferably people who did not design
+   the screen. The agent can be one of the evaluators, not the only one.
+3. Every problem: the location (screen, element), the violated heuristic or principle, a description, **severity 0–4**
+   (0 not a problem, 1 cosmetic, 2 minor, 3 major — fix before the release, 4 catastrophe — blocks the task),
+   a recommendation. Also strengths — so as not to break them.
+4. Merge the results, agree the severities, sort. An expert review extends the heuristics with guidelines, cognitive psychology
+   and the evaluator's experience; it does not replace tests with users.
 
-## Test użyteczności
-- **Uczestnicy**: prawdziwi lub reprezentatywni użytkownicy; ok. 5 na segment w teście jakościowym (większość
-  częstych problemów), więcej przy pomiarze ilościowym (ok. 20+ i jasno zdefiniowane miary).
-- **Zadania** realistyczne, z celem, bez podpowiadania słowami z interfejsu: „Zwróć buty, które przyszły w złym
-  rozmiarze” zamiast „Kliknij Zwroty”. Kolejność od łatwych; każde z kryterium sukcesu.
-- **Myślenie na głos**, prowadzący neutralny (nie pomaga, nie tłumaczy, pyta „czego się spodziewałeś?”).
-- **Formy**: moderowany (na miejscu lub zdalnie) — głębsze „dlaczego”; niemoderowany zdalnie — szybciej i taniej,
-  bez dopytania.
-- **Miary**: ukończenie zadania, czas, błędy, ocena trudności po zadaniu (SEQ, 1–7), na końcu SUS (10 pytań, wynik
-  0–100; średnia z wielu badań ok. 68).
-- **Raport**: najważniejsze problemy z wagą, częstością (ilu uczestników), cytatem i nagraniem lub zrzutem, rekomendacje;
-  co działało dobrze. Nagrania to dane osobowe — zgoda i retencja (ddd-discovery-intake).
+## Usability test
+- **Participants**: real or representative users; about 5 per segment in a qualitative test (most
+  frequent problems), more for quantitative measurement (about 20+ and clearly defined measures).
+- **Tasks** realistic, with a goal, without hinting with words from the interface: "Return the shoes that came in the wrong
+  size" instead of "Click Returns". Order from easy ones; each with a success criterion.
+- **Thinking aloud**, a neutral moderator (does not help, does not explain, asks "what did you expect?").
+- **Forms**: moderated (on site or remote) — a deeper "why"; unmoderated remote — faster and cheaper,
+  without follow-up questions.
+- **Measures**: task completion, time, errors, post-task difficulty rating (SEQ, 1–7), at the end SUS (10 questions, a score
+  of 0–100; the average from many studies about 68).
+- **Report**: the most important problems with severity, frequency (how many participants), a quote and a recording or screenshot, recommendations;
+  what worked well. Recordings are personal data — consent and retention (ddd-discovery-intake).
 
-## Benchmark UX
-Te same zadania i miary powtarzane co wydanie lub kwartał (oraz u konkurencji, jeśli to możliwe) pokazują, czy
-zmiany poprawiają doświadczenie. Warunek: stały zestaw zadań, podobni uczestnicy, wystarczająca próba.
+## UX benchmark
+The same tasks and measures repeated every release or quarter (and at competitors, if possible) show whether
+changes improve the experience. Condition: a fixed set of tasks, similar participants, a sufficient sample.
 
-## Źródła
-- J. Nielsen, *10 Usability Heuristics for User Interface Design* (NN/g, 1994, aktualizacja 2020); skala wagi Nielsena
+## Sources
+- J. Nielsen, *10 Usability Heuristics for User Interface Design* (NN/g, 1994, updated 2020); Nielsen's severity scale
 - NN/g: [UX Expert Reviews](https://www.nngroup.com/articles/ux-expert-reviews/),
   [Usability Testing 101](https://www.nngroup.com/articles/usability-testing-101/),
   [Benchmarking UX](https://www.nngroup.com/articles/benchmarking-ux/); J. Brooke — SUS (1996)
-Opisane własnymi słowami.
+Described in our own words.
