@@ -51,9 +51,9 @@ def scan(root: str):
                 continue
             # `packages` to zależności tylko w projekcie .NET; w monorepo JS to katalog pakietów
             if d in DEPS and not (d == "packages" and not any(f.endswith(".sln") for f in fn)):
-                excluded.append({"path": p, "reason": "zależności"})
+                excluded.append({"path": p, "reason": "dependencies"})
             elif d in BUILD_OUT:
-                excluded.append({"path": p, "reason": "wynik budowania"})
+                excluded.append({"path": p, "reason": "build output"})
             else:
                 keep.append(d)
         dn[:] = keep
@@ -73,7 +73,7 @@ def scan(root: str):
             except OSError:
                 continue
             if GENERATED.search(f) or GEN_HEADER.search(head):
-                excluded.append({"path": p, "reason": "wygenerowany"})
+                excluded.append({"path": p, "reason": "generated"})
                 continue
             files.append({"path": p, "language": LANG[ext], "bytes": size, "test": bool(TEST.search(p))})
     return files, excluded, build
@@ -106,11 +106,11 @@ def split(name: str, files: list[dict], budget: int, depth: int = 0) -> list[dic
         for f in loose:
             t = tokens(f["bytes"])
             if cur and cur_t + t > budget:
-                out.append({"name": f"{name or '.'} (pliki)", "files": cur, "tokens": cur_t})
+                out.append({"name": f"{name or '.'} (files)", "files": cur, "tokens": cur_t})
                 cur, cur_t = [], 0
             cur.append(f["path"])
             cur_t += t
-        out.append({"name": f"{name or '.'} (pliki)", "files": cur, "tokens": cur_t})
+        out.append({"name": f"{name or '.'} (files)", "files": cur, "tokens": cur_t})
     return out
 
 
@@ -142,14 +142,14 @@ def inventory(root: str, budget: int) -> dict:
 
 def render(r: dict) -> str:
     t = r["totals"]
-    L = [f"Pliki produkcyjne: {t['files']} (~{t['tokens']} tokenów), testy: {t['test_files']}, partie: {t['batches']} "
-         f"(budżet {r['budget_tokens']})", "Języki (pliki, testy, tokeny):"]
+    L = [f"Production files: {t['files']} (~{t['tokens']} tokens), tests: {t['test_files']}, batches: {t['batches']} "
+         f"(budget {r['budget_tokens']})", "Languages (files, tests, tokens):"]
     L += [f"  - {x['language']}: {x['files']}, {x['test_files']}, ~{x['tokens']}" for x in r["languages"]]
-    L.append("Pliki budowania: " + (", ".join(f"{b['file']} ({b['kind']})" for b in r["build_files"]) or "brak"))
+    L.append("Build files: " + (", ".join(f"{b['file']} ({b['kind']})" for b in r["build_files"]) or "none"))
     if r["excluded"]:
         by = collections.Counter(e["reason"] for e in r["excluded"])
-        L.append("Wykluczone: " + ", ".join(f"{k} {v}" for k, v in sorted(by.items())))
-    L.append("Partie (nazwa, pliki, tokeny):")
+        L.append("Excluded: " + ", ".join(f"{k} {v}" for k, v in sorted(by.items())))
+    L.append("Batches (name, files, tokens):")
     L += [f"  - {b['name']}: {len(b['files'])}, ~{b['tokens']}" for b in r["batches"]]
     return "\n".join(L)
 
@@ -168,7 +168,7 @@ def main(argv: list[str]) -> int:
         else:
             args.append(a)
     if len(args) != 1 or not os.path.isdir(args[0]):
-        print(f"✗ podaj katalog repozytorium (jest: {args})", file=sys.stderr)
+        print(f"✗ give a repository directory (got: {args})", file=sys.stderr)
         return 2
     r = inventory(args[0], budget)
     print(json.dumps(r, ensure_ascii=False, indent=2) if as_json else render(r))

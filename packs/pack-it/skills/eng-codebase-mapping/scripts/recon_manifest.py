@@ -17,6 +17,7 @@ import datetime
 import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -62,7 +63,7 @@ def diff(old: dict, new: dict) -> dict:
     modified = sorted(p for p in set(of) & set(nf) if of[p] != nf[p])
     ot, nt = old.get("tests", {}), new["tests"]
     tests = sorted(p for p in set(ot) | set(nt) if ot.get(p) != nt.get(p))
-    ob = {b["name"]: b["hash"] for b in old.get("batches", [])}
+    ob = {re.sub(r" \(pliki\)$", " (files)", b["name"]): b["hash"] for b in old.get("batches", [])}   # pl: sprzed 14.x
     nb = {b["name"]: b["hash"] for b in new["batches"]}
     changed = sorted(set(added) | set(removed) | set(modified))
     return {"refresh": sorted(n for n in nb if ob.get(n) != nb[n]),
@@ -74,18 +75,18 @@ def diff(old: dict, new: dict) -> dict:
 
 
 def render(d: dict, base: str) -> str:
-    L = [f"Względem manifestu (commit {base or '—'}): zmienione pliki {len(d['changed_files'])} ({d['share']}%), "
-         f"testy {len(d['tests_changed'])}",
-         "Odśwież: " + (", ".join(d["refresh"]) or "nic")]
+    L = [f"Against the manifest (commit {base or '—'}): changed files {len(d['changed_files'])} ({d['share']}%), "
+         f"tests {len(d['tests_changed'])}",
+         "Refresh: " + (", ".join(d["refresh"]) or "nothing")]
     if d["new_batches"]:
-        L.append("  w tym nowe partie: " + ", ".join(d["new_batches"]))
+        L.append("  including new batches: " + ", ".join(d["new_batches"]))
     if d["removed_batches"]:
-        L.append("Partie usunięte (skasuj ich karty): " + ", ".join(d["removed_batches"]))
-    L.append("Bez zmian: " + (", ".join(d["unchanged"]) or "—"))
+        L.append("Removed batches (delete their cards): " + ", ".join(d["removed_batches"]))
+    L.append("Unchanged: " + (", ".join(d["unchanged"]) or "—"))
     if d["tests_changed"]:
-        L.append("Zmienione testy (przejrzyj wymagania): " + ", ".join(d["tests_changed"]))
+        L.append("Changed tests (review the requirements): " + ", ".join(d["tests_changed"]))
     if d["share"] > 50:
-        L.append("Zmieniło się ponad połowę plików — rozważ pełny przebieg zamiast odświeżania.")
+        L.append("Over half of the files changed. Consider a full run instead of a refresh.")
     return "\n".join(L)
 
 
@@ -104,13 +105,13 @@ def main(argv: list[str]) -> int:
     cmd, rest = (argv[0], argv[1:]) if argv else ("", [])
     repo = rest[0] if rest and not rest[0].startswith("--") else ""
     if cmd not in ("write", "diff") or not os.path.isdir(repo):
-        print(f"✗ użycie: write|diff <repo> … (jest: {argv})", file=sys.stderr)
+        print(f"✗ usage: write|diff <repo> … (got: {argv})", file=sys.stderr)
         return 2
     try:
         if cmd == "write":
             out = opt(rest, "--out")
             if not out:
-                print("✗ podaj --out <manifest.json>", file=sys.stderr)
+                print("✗ give --out <manifest.json>", file=sys.stderr)
                 return 2
             budget = int(opt(rest, "--budget-tokens", 60000))
             cost = opt(rest, "--cost-usd")
@@ -118,11 +119,11 @@ def main(argv: list[str]) -> int:
                  "cost_usd": float(cost) if cost is not None else None, **snapshot(repo, budget)}
             with open(out, "w", encoding="utf-8") as fh:
                 json.dump(m, fh, ensure_ascii=False, indent=2)
-            print(f"✓ manifest: {out} — partie {len(m['batches'])}, pliki {len(m['files'])}")
+            print(f"✓ manifest: {out} — batches {len(m['batches'])}, files {len(m['files'])}")
             return 0
         path = opt(rest, "--manifest")
         if not path or not os.path.isfile(path):
-            print(f"✗ brak manifestu: {path}", file=sys.stderr)
+            print(f"✗ no manifest: {path}", file=sys.stderr)
             return 2
         with open(path, encoding="utf-8") as fh:
             old = json.load(fh)

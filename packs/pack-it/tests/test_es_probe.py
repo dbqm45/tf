@@ -18,11 +18,11 @@ log = os.environ.get("FAKE_LOG")
 if log:
     with open(log, "a", encoding="utf-8") as fh:
         fh.write(json.dumps({"system": sysp, "prompt": prompt}) + "\n")
-if "Oceniasz PROWADZENIE" in sysp:
+if "You assess how the session was RUN" in sysp:
     print(json.dumps({"result": "# Debrief\nFacylitator zderzył sprzeczność.", "total_cost_usd": 0.02}))
     sys.exit(0)
 pid = re.search(r"\(id: (\w+)\)", prompt).group(1)
-now = prompt.split("Facylitator mówi teraz", 1)[-1] if "Facylitator mówi teraz" in prompt else prompt
+now = prompt.split("The facilitator says now", 1)[-1] if "The facilitator says now" in prompt else prompt
 reply = {"persona": pid, "dialogue": "", "stickies": [], "memory": "", "anecdote_used": None}
 if pid == "it":
     print(json.dumps({"result": "nie wiem, co powiedzieć", "total_cost_usd": 0.01}))
@@ -97,14 +97,14 @@ def main() -> int:
         state = json.loads((sd / "state.json").read_text(encoding="utf-8")) if (sd / "state.json").exists() else {}
         check(state.get("round") == 4 and len(list((sd / "rounds/01").glob("*.reply.json"))) == 6,
               f"EP-5: 4 rundy, odpowiedzi 6 osób w rundzie 1: {state.get('round')}")
-        check(any("wariant dnia wyłączony" in ln and "pominięte" in ln and "✗" not in ln for ln in text.splitlines())
-              and "## Oczekiwania (4/5)" in text,
+        check(any("wariant dnia wyłączony" in ln and "skipped" in ln and "✗" not in ln for ln in text.splitlines())
+              and "## Expectations (4/5)" in text,
               f"EP-13: oczekiwanie pominięte przy wskazanym wariancie dnia, nie liczy się do wyniku: {text[:900]}")
-        check("niepoprawny JSON: 4" in text, f"EP-6: brak JSON od jednej osoby w 4 rundach policzony: {text[:900]}")
-        check("0,27 USD" in text and "0,27 USD" in r.stdout, f"EP-7: koszt (25 wywołań + coach): {r.stdout[-400:]}")
+        check("invalid JSON: 4" in text, f"EP-6: brak JSON od jednej osoby w 4 rundach policzony: {text[:900]}")
+        check("0.27 USD" in text and "0.27 USD" in r.stdout, f"EP-7: koszt (25 wywołań + coach): {r.stdout[-400:]}")
         calls = [json.loads(ln) for ln in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
-        part = [c for c in calls if "Oceniasz PROWADZENIE" not in c["system"]]
-        check(part and all("Zapisz ten JSON" not in c["prompt"] and '"persona"' in c["prompt"] for c in part),
+        part = [c for c in calls if "You assess how the session was RUN" not in c["system"]]
+        check(part and all("Save this JSON" not in c["prompt"] and '"persona"' in c["prompt"] for c in part),
               "EP-8: uczestnik dostaje kontrakt JSON bez polecenia zapisu pliku (bez narzędzi)")
         check((sd / "debrief.md").exists() and "Debrief" in (sd / "debrief.md").read_text(encoding="utf-8"),
               "EP-9: coach zapisał debrief")
@@ -112,12 +112,24 @@ def main() -> int:
 
         r = run(root, fake, "--variant", "pelna", "--probe", str(probe), "--id", "p2", "--budget-usd", "0.05", "--coach", "none")
         st = json.loads((root / "docs/training/es-sim/p2/state.json").read_text(encoding="utf-8"))
-        check(r.returncode == 3 and "budżet" in r.stdout.lower() and st.get("round") == 1
+        check(r.returncode == 3 and "budget" in r.stdout.lower() and st.get("round") == 1
               and not (root / "docs/training/es-sim/p2/debrief.md").exists(),
               f"EP-11: przekroczony budżet zatrzymuje próbę po rundzie: rc={r.returncode} {r.stdout[-300:]}")
 
         r = run(root, fake, "--variant", "pelna", "--probe", str(root / "brak.json"), "--id", "p3")
         check(r.returncode == 2, f"EP-12: brak pliku próby → 2: {r.returncode}")
+
+    # zgodność wstecz (pl: sprzed 14.x): polskie polecenie zapisu w prompcie i polski komunikat o złym JSON
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("es_probe", SCRIPT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    old = "kontrakt\n\nZapisz ten JSON do pliku `docs/x/a.reply.json` i odpowiedz jednym słowem: ok.\n"
+    new = "kontrakt\n\nSave this JSON to the file `docs/x/a.reply.json` and reply with one word: ok.\n"
+    check(mod.WRITE_FILE.sub("|", old) == "kontrakt|" and mod.WRITE_FILE.sub("|", new) == "kontrakt|",
+          "EP-14: polecenie zapisu pliku usuwane z promptu po polsku i po angielsku")
+    tr = "> problem: a: brak lub niepoprawny JSON — x\n> problem: b: missing or invalid JSON; y\n"
+    check(sum(tr.count(m) for m in mod.BAD_JSON) == 2, "EP-15: zły JSON liczony w starej i nowej transkrypcji")
 
     for f in fails:
         print("✗", f)

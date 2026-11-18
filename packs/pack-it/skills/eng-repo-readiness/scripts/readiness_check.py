@@ -43,22 +43,22 @@ SKIP_DIRS = {"node_modules", ".git", "dist", "build", "vendor", "target", ".venv
 # rodzina: (manifesty, lockfile'e, komenda audytu lub None, uwaga do audytu)
 FAMILIES = {
     "js": (["package.json"], ["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"],
-           None, "kod wyjścia ≠ 0 przy znaleziskach to informacja, nie awaria"),
+           None, "a non-zero exit code on findings is information, not a failure"),
     "python": (["pyproject.toml", "requirements.txt", "setup.py", "Pipfile"],
                ["uv.lock", "poetry.lock", "Pipfile.lock", "pdm.lock"],
-               "pip-audit --format json", "bez natywnej wagi — domyślnie średnia, chyba że opis mówi inaczej"),
+               "pip-audit --format json", "no native severity — default medium unless the description says otherwise"),
     "rust": (["Cargo.toml"], ["Cargo.lock"], "cargo audit --json", ""),
-    "go": (["go.mod"], ["go.sum"], "govulncheck -json ./...", "zgłasza tylko podatności osiągalne z kodu"),
-    "ruby": (["Gemfile"], ["Gemfile.lock"], "bundle audit check --update", "wynik tekstowy"),
-    "php": (["composer.json"], ["composer.lock"], "composer audit --format json", "wymaga Composera ≥ 2.4"),
+    "go": (["go.mod"], ["go.sum"], "govulncheck -json ./...", "reports only vulnerabilities reachable from the code"),
+    "ruby": (["Gemfile"], ["Gemfile.lock"], "bundle audit check --update", "text output"),
+    "php": (["composer.json"], ["composer.lock"], "composer audit --format json", "requires Composer ≥ 2.4"),
     "dotnet": ([], ["packages.lock.json"], "dotnet list package --vulnerable --include-transitive",
-               "w nowszym SDK także `dotnet package list --vulnerable`"),
+               "newer SDKs also have `dotnet package list --vulnerable`"),
     "java": (["pom.xml", "build.gradle", "build.gradle.kts"], ["gradle.lockfile"], None,
-             "brak wbudowanego audytu — narzędzie zewnętrzne (np. OWASP Dependency-Check)"),
-    "dart": (["pubspec.yaml"], ["pubspec.lock"], None, "brak wbudowanego audytu — narzędzie zewnętrzne"),
+             "no built-in audit — use an external tool (e.g. OWASP Dependency-Check)"),
+    "dart": (["pubspec.yaml"], ["pubspec.lock"], None, "no built-in audit — use an external tool"),
 }
 JS_AUDIT = {"pnpm-lock.yaml": "pnpm audit --json", "yarn.lock": "yarn npm audit --json (Yarn Berry) / yarn audit --json",
-            "bun.lock": "npm audit --json (bun bez audytu — sprawdź wersję)", "bun.lockb": "npm audit --json (bun bez audytu — sprawdź wersję)"}
+            "bun.lock": "npm audit --json (bun has no audit — check the version)", "bun.lockb": "npm audit --json (bun has no audit — check the version)"}
 
 CI_FILES = [".gitlab-ci.yml", "azure-pipelines.yml", "Jenkinsfile", ".circleci/config.yml", "bitbucket-pipelines.yml"]
 STAGES = {
@@ -138,7 +138,7 @@ def runner_for(family: str, mdir: Path, manifest: Path) -> tuple[str | None, str
             if name in deps or name.lstrip("@").split("/")[0] in test_script:
                 return name, cmd
         if "node --test" in test_script:
-            return "node:test", "brak trybu na sucho — uruchom `node --test` za zgodą"
+            return "node:test", "no dry-run mode — run `node --test` with consent"
         return None, None
     if family == "python":
         text = " ".join(read(mdir / f) for f in ("pyproject.toml", "requirements.txt", "requirements-dev.txt",
@@ -146,7 +146,7 @@ def runner_for(family: str, mdir: Path, manifest: Path) -> tuple[str | None, str
         if "pytest" in text or (mdir / "pytest.ini").exists() or (mdir / "conftest.py").exists():
             return "pytest", "pytest --collect-only -q"
         if any(p.name.startswith("test_") and p.suffix == ".py" for p in walk(mdir, 2)):
-            return "unittest", "python -m unittest discover -v (uruchamia testy — za zgodą)"
+            return "unittest", "python -m unittest discover -v (runs the tests — with consent)"
         return None, None
     if family == "rust":
         return "cargo test", "cargo test --no-run"
@@ -166,7 +166,7 @@ def runner_for(family: str, mdir: Path, manifest: Path) -> tuple[str | None, str
             return ("junit/testng", "mvn -q test-compile" if manifest.name == "pom.xml" else "./gradlew testClasses")
         return None, None
     if family == "dart":
-        return "dart test", "dart test (bez trybu na sucho — za zgodą)"
+        return "dart test", "dart test (no dry-run mode — with consent)"
     return None, None
 
 
@@ -218,10 +218,10 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
     if m:
         setup.append(f"README: {m.group(0).lstrip('#').strip()}")
     if families and not setup:
-        findings.append(("dx", "medium", "brak jednego polecenia startowego (make/just/Taskfile, skrypt dev/setup) "
-                         "ani instrukcji uruchomienia w README", "—",
-                         "dodaj `make setup` lub `just dev` (zależności, usługi, dane startowe) i opisz w README "
-                         "i CLAUDE.md — agent i nowa osoba zaczynają od jednego polecenia"))
+        findings.append(("dx", "medium", "no single start command (make/just/Taskfile, dev/setup script) "
+                         "and no run instructions in the README", "—",
+                         "add `make setup` or `just dev` (dependencies, services, seed data) and document it in the README "
+                         "and CLAUDE.md — the agent and a newcomer start with one command"))
     # zależności usług
     dep_text = " ".join(all_deps) + " " + " ".join(
         read(f) for f in files if f.name in ("pyproject.toml", "requirements.txt", "requirements-dev.txt", "Pipfile",
@@ -248,20 +248,20 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
     testcontainers = bool(re.search(r"testcontainers", dep_text, re.I))
     missing = [k for k in needed if k not in covered]
     if missing and not testcontainers:
-        findings.append(("dx", "medium", f"zależności usług ({', '.join(missing)}) bez lokalnego środowiska "
+        findings.append(("dx", "medium", f"service dependencies ({', '.join(missing)}) without a local environment "
                          "(compose, devcontainer, Testcontainers)", "—",
-                         "dodaj `compose.yaml` z tymi usługami i healthcheckami — agent uruchomi testy bez "
-                         "ręcznej konfiguracji"))
+                         "add `compose.yaml` with these services and healthchecks — the agent can then run tests without "
+                         "manual setup"))
     if no_health:
-        findings.append(("dx", "low", f"usługi w compose bez healthcheck: {', '.join(no_health)}",
+        findings.append(("dx", "low", f"compose services without a healthcheck: {', '.join(no_health)}",
                          compose.name if compose else "—",
-                         "dodaj healthcheck i `depends_on: condition: service_healthy` — testy nie startują przed bazą"))
+                         "add a healthcheck and `depends_on: condition: service_healthy` — tests do not start before the database"))
     # dane startowe
     seed = any(re.search(r"seed", f.name, re.I) for f in walk(root, 3)) or any(
         "seed" in k for pkg in pkgs for k in js_deps(pkg)[1]) or "loaddata" in read(root / "Makefile")
     if any(k in needed for k in ("postgres", "mysql", "mongodb")) and not seed:
-        findings.append(("dx", "low", "brak danych startowych (seed) dla lokalnej bazy", "—",
-                         "dodaj idempotentny skrypt danych startowych z danymi syntetycznymi (bez kopii produkcji)"))
+        findings.append(("dx", "low", "no seed data for the local database", "—",
+                         "add an idempotent seed script with synthetic data (no production copy)"))
     # sekrety w .env.example — tylko nazwy zmiennych, nigdy wartości
     leaked = []
     for line in read(root / ".env.example").splitlines():
@@ -273,9 +273,9 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
                                           and len(value) >= 20 and not PLACEHOLDER.search(value)):
             leaked.append(name)
     if leaked:
-        findings.append(("dx", "high", f".env.example zawiera wartości wyglądające na prawdziwe sekrety: "
+        findings.append(("dx", "high", f".env.example contains values that look like real secrets: "
                          f"{', '.join(leaked)}", ".env.example",
-                         "zostaw puste wartości albo oczywiste atrapy; jeśli klucz był prawdziwy — unieważnij go "
+                         "leave values empty or use obvious dummies; if the key was real, revoke it "
                          "(ops-secrets-identities)"))
     # testy powiązane ze zmianą
     runners = [f.get("runner") or "" for f in families]
@@ -283,13 +283,13 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
     if (root / "nx.json").is_file():
         related = "npx nx affected -t test"
     elif "vitest" in runners:
-        related = "npx vitest related <zmienione pliki> --run"
+        related = "npx vitest related <changed files> --run"
     elif "jest" in runners:
-        related = "npx jest --findRelatedTests <zmienione pliki>"
+        related = "npx jest --findRelatedTests <changed files>"
     elif "pytest" in runners:
-        related = "pytest --lf (ostatnio nieudane) albo pytest-testmon (testy dotknięte zmianą)"
+        related = "pytest --lf (last failed) or pytest-testmon (tests touched by the change)"
     elif "go test" in runners:
-        related = "go test ./<zmieniony pakiet>/..."
+        related = "go test ./<changed package>/..."
     dx = {"setup": setup, "services": services, "services_without_healthcheck": no_health,
           "services_needed": needed, "devcontainer": devcontainer, "related_tests": related}
     return dx, findings
@@ -313,24 +313,24 @@ def detect(root: Path) -> dict:
             lock = find_lock(m.parent, root, locks)
             lock_note = None
             if not lock and family == "python" and (m.parent / "requirements.txt").exists():
-                lock_note = "requirements.txt to słaby zamiennik lockfile (brak sum i zależności przechodnich)"
+                lock_note = "requirements.txt is a weak lockfile substitute (no hashes, no transitive dependencies)"
             entry = {"family": family, "manifest": rel, "lockfile": lock, "lockfile_note": lock_note}
             cmd = audit
             if family == "js":
                 cmd = JS_AUDIT.get(Path(lock).name, "npm audit --json") if lock else "npm audit --json"
-            entry["audit"] = cmd or "pominięto (brak wbudowanego audytu)"
+            entry["audit"] = cmd or "skipped (no built-in audit)"
             entry["audit_note"] = note
             entry["runner"], entry["dry_run"] = runner_for(family, m.parent, m)
             families.append(entry)
             if not lock and family != "java":
-                findings.append(("fundament", "high", f"{family}: brak lockfile przy {rel}"
-                                 + (" (requirements.txt to słaby zamiennik)" if lock_note else ""),
-                                 rel, f"wygeneruj lockfile menedżerem projektu ({', '.join(locks[:2])})"))
+                findings.append(("foundation", "high", f"{family}: no lockfile for {rel}"
+                                 + (" (requirements.txt is a weak substitute)" if lock_note else ""),
+                                 rel, f"generate a lockfile with the project's package manager ({', '.join(locks[:2])})"))
             if not entry["runner"]:
-                findings.append(("środowisko", "high", f"{family}: nie wykryto runnera testów ({rel})", rel,
-                                 "dodaj runner testów zgodny ze stackiem — poprawka nr 1 dla agenta"))
+                findings.append(("environment", "high", f"{family}: no test runner detected ({rel})", rel,
+                                 "add a test runner that fits the stack — fix #1 for the agent"))
             if cmd is None:
-                findings.append(("fundament", "low", f"{family}: audyt zależności pominięto — brak wbudowanego narzędzia",
+                findings.append(("foundation", "low", f"{family}: dependency audit skipped — no built-in tool",
                                  rel, note))
 
     # CI
@@ -340,21 +340,21 @@ def detect(root: Path) -> dict:
     stages = {name: bool(re.search(rx, ci_text, re.I)) for name, rx in STAGES.items()} if ci_files else {}
     ci = {"files": [str(p.relative_to(root)) for p in ci_files], "stages": stages}
     if not ci_files:
-        findings.append(("środowisko", "medium", "brak konfiguracji CI", "—",
-                         "pipeline z etapami lint / test / build / typy / bezpieczeństwo (ops-ci-cd)"))
+        findings.append(("environment", "medium", "no CI configuration", "—",
+                         "a pipeline with lint / test / build / types / security stages (ops-ci-cd)"))
     else:
         missing = [s for s, ok in stages.items() if not ok]
         if missing:
-            findings.append(("środowisko", "medium", f"CI bez etapów: {', '.join(missing)}", ci["files"][0],
-                             "dopisz brakujące etapy (ops-ci-cd)"))
+            findings.append(("environment", "medium", f"CI is missing stages: {', '.join(missing)}", ci["files"][0],
+                             "add the missing stages (ops-ci-cd)"))
 
     # konfiguracja
     names = {p.name for p in root.iterdir()} if root.is_dir() else set()
     config = {}
     config[".gitignore"] = ".gitignore" in names
     if not config[".gitignore"]:
-        findings.append(("konfiguracja", "high", "brak .gitignore (ryzyko commitu sekretów i artefaktów)", "—",
-                         "dodaj .gitignore dla stacku"))
+        findings.append(("configuration", "high", "no .gitignore (risk of committing secrets and artifacts)", "—",
+                         "add a .gitignore for the stack"))
     tsconfigs = [f for f in files if f.name == "tsconfig.json"]
     if tsconfigs:
         ts = tsconfigs[0]
@@ -365,10 +365,10 @@ def detect(root: Path) -> dict:
             extends = json.loads(text).get("extends")
         except ValueError:
             strict, extends = None, None
-        config["typescript_strict"] = bool(strict) if strict is not None else ("nieznane (extends)" if extends else False)
+        config["typescript_strict"] = bool(strict) if strict is not None else ("unknown (extends)" if extends else False)
         if strict is not True and not extends:
-            findings.append(("konfiguracja", "high", "TypeScript bez \"strict\": true", str(ts.relative_to(root)),
-                             "włącz strict (stopniowo, per katalog, jeśli błędów dużo)"))
+            findings.append(("configuration", "high", "TypeScript without \"strict\": true", str(ts.relative_to(root)),
+                             "enable strict (gradually, per directory, if there are many errors)"))
     pyproject = read(root / "pyproject.toml")
     linter = [n for n in LINTERS if n in names] + (["ruff (pyproject)"] if "[tool.ruff" in pyproject else [])
     pkg_deps = js_deps(root / "package.json")[0] if (root / "package.json").exists() else {}
@@ -377,23 +377,23 @@ def detect(root: Path) -> dict:
                                                          if re.search(r"\[tool\.(black|ruff\.format)", pyproject) else [])
     formatter += [d for d in ("prettier", "@biomejs/biome") if d in pkg_deps]
     if any(f["family"] in ("go", "rust") for f in families):
-        formatter.append("gofmt/rustfmt (wbudowany)")
+        formatter.append("gofmt/rustfmt (built-in)")
     config["linter"], config["formatter"] = sorted(set(linter)), sorted(set(formatter))
     if families and not linter:
-        findings.append(("konfiguracja", "medium", "nie wykryto lintera", "—", "dodaj linter zgodny ze stackiem"))
+        findings.append(("configuration", "medium", "no linter detected", "—", "add a linter that fits the stack"))
     if families and not formatter:
-        findings.append(("konfiguracja", "medium", "nie wykryto formatera", "—", "dodaj formater zgodny ze stackiem"))
-    for name, msg in ((".editorconfig", "brak .editorconfig"), (".env.example", "brak .env.example (lista zmiennych bez wartości)")):
+        findings.append(("configuration", "medium", "no formatter detected", "—", "add a formatter that fits the stack"))
+    for name, msg in ((".editorconfig", "no .editorconfig"), (".env.example", "no .env.example (list of variables without values)")):
         config[name] = name in names
         if not config[name]:
-            findings.append(("konfiguracja", "low", msg, "—", f"dodaj {name}"))
+            findings.append(("configuration", "low", msg, "—", f"add {name}"))
 
     instructions = [n for n in ("CLAUDE.md", "AGENTS.md", ".claude") if (root / n).exists()]
     dx, dx_findings = dev_loop(root, files, families)
     findings += dx_findings
 
     high = [f for f in findings if f[1] == "high"]
-    no_runner = any("runnera testów" in f[2] for f in findings)
+    no_runner = any("no test runner" in f[2] or "runnera testów" in f[2] for f in findings)   # pl: sprzed 14.x
     verdict = "critical" if (no_runner or len(high) >= 3) else ("needs-attention" if findings and any(
         f[1] in ("high", "medium") for f in findings) else "healthy")
     findings.sort(key=lambda f: SEV_ORDER[f[1]])
@@ -406,44 +406,44 @@ def detect(root: Path) -> dict:
         "dx": dx,
         "findings": [{"area": a, "severity": s, "message": m, "evidence": e, "fix": fx} for a, s, m, e, fx in findings],
         "verdict": verdict,
-        "note": "audyt, testy i build nie były uruchamiane; krytyczne podatności z audytu podnoszą werdykt",
+        "note": "audit, tests and build were not run; critical vulnerabilities from the audit raise the verdict",
     }
 
 
 def to_text(r: dict) -> str:
-    out = [f"# Gotowość repo: {r['root']}", "", f"Werdykt projektu: **{r['verdict']}** ({r['note']})", "",
-           "| Rodzina | Manifest | Lockfile | Audyt | Runner testów | Na sucho |", "|---|---|---|---|---|---|"]
+    out = [f"# Repo readiness: {r['root']}", "", f"Project verdict: **{r['verdict']}** ({r['note']})", "",
+           "| Family | Manifest | Lockfile | Audit | Test runner | Dry run |", "|---|---|---|---|---|---|"]
     for f in r["families"]:
-        lock = f["lockfile"] or ("BRAK — " + f["lockfile_note"] if f["lockfile_note"] else "BRAK")
-        out.append(f"| {f['family']} | `{f['manifest']}` | {lock} | `{f['audit']}` | {f['runner'] or 'BRAK'} | "
+        lock = f["lockfile"] or ("MISSING — " + f["lockfile_note"] if f["lockfile_note"] else "MISSING")
+        out.append(f"| {f['family']} | `{f['manifest']}` | {lock} | `{f['audit']}` | {f['runner'] or 'MISSING'} | "
                    f"{('`' + f['dry_run'] + '`') if f['dry_run'] else '—'} |")
     if not r["families"]:
-        out.append("| — | nie wykryto manifestów | | | | |")
+        out.append("| — | no manifests detected | | | | |")
     st = r["ci"]["stages"]
-    out += ["", f"CI: {', '.join(r['ci']['files']) or 'BRAK'}"
+    out += ["", f"CI: {', '.join(r['ci']['files']) or 'MISSING'}"
             + (" — " + " · ".join(f"{k} {'✓' if v else '✗'}" for k, v in st.items()) if st else ""),
-            f"Instrukcje agenta: {', '.join(r['instructions']) or 'BRAK'}",
-            f"Pętla deweloperska: start {', '.join(r['dx']['setup']) or 'BRAK'} · usługi "
-            f"{', '.join(r['dx']['services']) or '—'} (potrzebne: {', '.join(r['dx']['services_needed']) or '—'}) · "
-            f"devcontainer {'✓' if r['dx']['devcontainer'] else '✗'} · testy powiązane: "
+            f"Agent instructions: {', '.join(r['instructions']) or 'MISSING'}",
+            f"Developer loop: start {', '.join(r['dx']['setup']) or 'MISSING'} · services "
+            f"{', '.join(r['dx']['services']) or '—'} (needed: {', '.join(r['dx']['services_needed']) or '—'}) · "
+            f"devcontainer {'✓' if r['dx']['devcontainer'] else '✗'} · related tests: "
             f"{r['dx']['related_tests'] or '—'}", "",
-            "| Waga | Obszar | Ustalenie | Dowód | Poprawka |", "|---|---|---|---|---|"]
+            "| Severity | Area | Finding | Evidence | Fix |", "|---|---|---|---|---|"]
     for x in r["findings"]:
         out.append(f"| {x['severity']} | {x['area']} | {x['message']} | {x['evidence']} | {x['fix']} |")
     if not r["findings"]:
-        out.append("| — | — | brak ustaleń | — | — |")
+        out.append("| — | — | no findings | — | — |")
     return "\n".join(out)
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(description="Gotowość repo do pracy agentów (tylko odczyt plików). "
-                                             "Kod wyjścia: 0 brak ustaleń wysokich, 1 są ustalenia wysokie, 2 błąd wywołania.")
-    ap.add_argument("path", nargs="?", default=".", help="katalog repozytorium (domyślnie bieżący)")
-    ap.add_argument("--json", action="store_true", help="wynik w JSON")
+    ap = argparse.ArgumentParser(description="Repo readiness for agent work (reads files only). "
+                                             "Exit code: 0 no high findings, 1 high findings, 2 usage error.")
+    ap.add_argument("path", nargs="?", default=".", help="repository directory (default: current)")
+    ap.add_argument("--json", action="store_true", help="output as JSON")
     a = ap.parse_args(argv)
     root = Path(a.path).resolve()
     if not root.is_dir():
-        print(f"błąd: {root} nie jest katalogiem", file=sys.stderr)
+        print(f"error: {root} is not a directory", file=sys.stderr)
         return 2
     r = detect(root)
     print(json.dumps(r, ensure_ascii=False, indent=2) if a.json else to_text(r))

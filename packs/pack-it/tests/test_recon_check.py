@@ -99,9 +99,9 @@ def main() -> int:
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
         why = {b["ref"]: b["problem"] for b in out.get("bad", [])}
         check(r.returncode == 1, f"R-3: złe dowody → kod 1: rc={r.returncode}")
-        check(why.get("src/billing/discount.py:5") == "brak pliku", f"R-4: brak pliku: {why}")
-        check(why.get("src/billing/tax.py:40") == "linia poza plikiem (1)", f"R-5: linia poza plikiem: {why}")
-        check(why.get("src/billing/invoice.py:4") == "cytat nie pasuje do linii 2–5", f"R-6: cytat niezgodny: {why}")
+        check(why.get("src/billing/discount.py:5") == "no such file", f"R-4: brak pliku: {why}")
+        check(why.get("src/billing/tax.py:40") == "line outside the file (1)", f"R-5: linia poza plikiem: {why}")
+        check(why.get("src/billing/invoice.py:4") == "quote does not match lines 2–5", f"R-6: cytat niezgodny: {why}")
         uns = out.get("unsupported", [])
         check(len(uns) == 1 and "EUR" in uns[0]["text"] and uns[0]["at"] == "bad.md:6", f"R-7: twierdzenie bez dowodu: {uns}")
         r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--final", cwd=d)
@@ -125,7 +125,7 @@ def main() -> int:
         check(r.returncode == 1 and "TL;DR" in r.stdout and "Not checked" in r.stdout,
               f"R-9: --final wymienia brakujące sekcje: {r.stdout[-500:]}")
         r = run("docs/project/00-reconstruction", "--repo", str(repo), cwd=d)
-        check(r.returncode == 0 and "Dowody: 8," in r.stdout, f"R-10: katalog raportu: {r.stdout[-300:]}")
+        check(r.returncode == 0 and "Evidence: 8," in r.stdout, f"R-10: katalog raportu: {r.stdout[-300:]}")
 
         # --final: tabela stacku z wymaganymi wierszami i lista modułów zgodna z kartami
         rep = repo / "docs/project/00-reconstruction"
@@ -138,7 +138,7 @@ def main() -> int:
             "| Testy | brak testów [niezweryfikowane] | — |\n", "")
         write(rep, {"report.md": no_ci})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
-        check(r.returncode == 1 and "stack: brak wierszy: Tests, CI" in r.stdout, f"R-12: brak wierszy stacku: {r.stdout[-500:]}")
+        check(r.returncode == 1 and "stack: missing rows: Tests, CI" in r.stdout, f"R-12: brak wierszy stacku: {r.stdout[-500:]}")
         write(rep, {"report.md": GOOD.replace("| Konfiguracja | stała w kodzie | `src/billing/tax.py:1` |",
                                               "| Konfiguracja | stała w kodzie | — |")})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", "--json", cwd=d)
@@ -148,7 +148,7 @@ def main() -> int:
         write(rep, {"report.md": GOOD})
         card(rep, "customers", {"module": "customers"})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
-        check(r.returncode == 1 and "moduły bez wpisu w sekcji Modules: customers" in r.stdout,
+        check(r.returncode == 1 and "modules with no entry in the Modules section: customers" in r.stdout,
               f"R-14: moduł z karty nieopisany w raporcie: {r.stdout[-500:]}")
         write(rep, {"report.md": no_ci})
         r = run(str(rep / "report.md"), "--repo", str(repo), cwd=d)
@@ -160,7 +160,7 @@ def main() -> int:
         write(rep, {"report.md": GOOD})
         (rep / "modules/billing.md").unlink()
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
-        check(r.returncode == 1 and "karty bez aktualnego .md (recon_cards.py): billing" in r.stdout,
+        check(r.returncode == 1 and "cards without an up-to-date .md (recon_cards.py): billing" in r.stdout,
               f"R-16: karta bez .md: {r.stdout[-500:]}")
         card(rep, "billing", {"module": "billing"})
         write(rep, {"modules/billing.json": json.dumps({"module": "billing", "purpose": "zmiana"})})
@@ -176,7 +176,7 @@ def main() -> int:
         check(r.returncode == 1 and out.get("ci_unreferenced") == [".github/workflows/ci.yml"],
               f"R-18: CI w repo, wiersz CI bez wskazania: {r.stdout[-500:]}")
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
-        check("CI: w repo są pliki pipeline'u, wiersz CI nie wskazuje żadnego: .github/workflows/ci.yml" in r.stdout,
+        check("CI: the repo has pipeline files, but the CI row points to none of them: .github/workflows/ci.yml" in r.stdout,
               f"R-19: komunikat o CI: {r.stdout[-500:]}")
         write(rep, {"report.md": GOOD.replace("| CI | brak konfiguracji CI [niezweryfikowane] | — |",
                                               "| CI | GitHub Actions na push | `.github/workflows/ci.yml:2` |")})

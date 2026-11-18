@@ -54,13 +54,13 @@ FASTAPI_WRITE = re.compile(rf"^\s*@\w+\.{WRITE}\s*\(", re.I)
 
 
 def emit(rel: str, line: int, snippet: str, framework: str) -> None:
-    print(json.dumps({"rule": "write-without-authz", "title": f"endpoint zmieniający dane bez sprawdzenia uprawnień "
+    print(json.dumps({"rule": "write-without-authz", "title": f"endpoint that changes data without a permission check "
                       f"({framework})", "file": rel, "line": line, "snippet": snippet.strip()[:160],
                       "severity": "high", "confidence": 0.6,
-                      "evidence": "brak widocznego middleware'u, guarda lub zależności sprawdzającej uprawnienie",
-                      "basis": "OWASP API1/API5 (BOLA, BFLA), CWE-862 (brak autoryzacji)",
-                      "suggestion": "sprawdzaj uprawnienie na serwerze przy tej operacji (middleware, guard, "
-                                    "zależność); jeśli robi to warstwa wyżej — opisz to w kodzie i oznacz w raporcie"},
+                      "evidence": "no visible middleware, guard or dependency that checks the permission",
+                      "basis": "OWASP API1/API5 (BOLA, BFLA), CWE-862 (missing authorization)",
+                      "suggestion": "check the permission on the server for this operation (middleware, guard, "
+                                    "dependency); if a higher layer does it, say so in the code and mark it in the report"},
                      ensure_ascii=False))
 
 

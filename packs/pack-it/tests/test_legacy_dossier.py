@@ -184,7 +184,7 @@ def main() -> int:
           f"DC-1: kompletna teczka → OK w pierwszej linii: {r.stdout}{r.stderr}")
 
     r = case(INDEX.replace("<!-- legacy-dossier -->\n", ""))
-    check(r.returncode == 1 and r.stdout.startswith("legacy-dossier-check: ERRORS") and "znacznik" in r.stdout,
+    check(r.returncode == 1 and r.stdout.startswith("legacy-dossier-check: ERRORS") and "marker" in r.stdout,
           f"DC-2: brak znacznika w README.md → błąd: {r.stdout}")
 
     r = case(INDEX.replace("## Słownik", "## Inne"))
@@ -204,7 +204,7 @@ def main() -> int:
     check(r.returncode == 1 and "R-FAK-02" in r.stdout, f"DC-7: reguła bez dowodu i z pewnością „kod” → błąd: {r.stdout}")
 
     r = case(module=MODULE.replace("R-FAK-02", "R-FAK-01"))
-    check(r.returncode == 1 and "R-FAK-01" in r.stdout and "powt" in r.stdout, f"DC-8: powtórzone ID reguły → błąd: {r.stdout}")
+    check(r.returncode == 1 and "R-FAK-01" in r.stdout and "duplicated" in r.stdout, f"DC-8: powtórzone ID reguły → błąd: {r.stdout}")
 
     r = case(module=MODULE.replace("Stan: żółty — zaokrąglenia w dwóch miejscach\n", ""))
     check(r.returncode == 1 and "State" in r.stdout, f"DC-9: karta modułu bez pola Stan → błąd: {r.stdout}")
@@ -216,7 +216,7 @@ def main() -> int:
     check(r.returncode == 0, f"DC-11: zakres linii w dowodzie jest poprawny: {r.stdout}")
 
     r = case(module=MODULE.replace("src/Invoice.java:3", "../../etc/hosts:1"))
-    check(r.returncode == 1 and "poza repozytorium" in r.stdout, f"DC-13: dowód spoza repozytorium → błąd: {r.stdout}")
+    check(r.returncode == 1 and "outside the repository" in r.stdout, f"DC-13: dowód spoza repozytorium → błąd: {r.stdout}")
 
     r = case(INDEX, MODULE, "--json")
     try:
@@ -237,7 +237,7 @@ def main() -> int:
     r = case(assess=ASSESS.replace("Kategoria: preferencja", "Kategoria: drobiazg"), recs=RECS)
     check(r.returncode == 1 and "drobiazg" in r.stdout, f"DC-15: nieznana kategoria ustalenia → błąd: {r.stdout}")
     r = case(assess=ASSESS.replace("Dowód: src/Invoice.java:3", "Dowód: —"), recs=RECS)
-    check(r.returncode == 1 and "ARCH-001" in r.stdout and "dow" in r.stdout.lower(),
+    check(r.returncode == 1 and "ARCH-001" in r.stdout and "evidence" in r.stdout.lower(),
           f"DC-16: potwierdzony problem bez dowodu → błąd: {r.stdout}")
     r = case(assess=ASSESS, recs=RECS.replace("Dotyczy: ARCH-002", "Dotyczy: ARCH-099"))
     check(r.returncode == 1 and "ARCH-099" in r.stdout, f"DC-17: rekomendacja do nieistniejącego ustalenia → błąd: {r.stdout}")
@@ -252,7 +252,7 @@ def main() -> int:
     r = case(assess=ASSESS.replace("Luka: zmiana w aplikacji psuje bibliotekę\n", ""), recs=RECS)
     check(r.returncode == 1 and "Gap" in r.stdout, f"DC-22: ustalenie bez pola Luka → błąd: {r.stdout}")
     r = case(assess=ASSESS, recs=RECS.replace("Decyzja: dokumentacja", "Decyzja: przeprojektowanie"))
-    check(r.returncode == 1 and "preferencj" in r.stdout and "REC-002" in r.stdout,
+    check(r.returncode == 1 and "preference" in r.stdout and "REC-002" in r.stdout,
           f"DC-23: przeprojektowanie uzasadnione samą preferencją → błąd: {r.stdout}")
 
     # 14.x: migracja przepisuje polskie dossier na angielską składnię; treść zostaje, kontrola przechodzi

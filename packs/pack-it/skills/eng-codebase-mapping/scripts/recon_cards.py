@@ -32,7 +32,7 @@ import os
 import re
 import sys
 
-NO_EVIDENCE = "[niezweryfikowane: brak dowodu w karcie]"
+NO_EVIDENCE = "[unverified: no evidence in the card]"
 REF_IN_TEXT = re.compile(r"(?<![\w/.-])((?:[\w.@-]+/)*[\w.@-]+\.[A-Za-z0-9]+:\d+(?:-\d+)?)")
 
 
@@ -205,7 +205,7 @@ def render(stem: str, card: dict, digest: str, repo: str | None = None) -> str:
     section("Rules", card.get("rules"), lambda i: rule_line(i, fix))
     section("Terms", card.get("terms"), lambda i: f"- {i.get('term', '?')} → {i.get('code_name', '?')} {ev(i, fix)}")
     section("Deviations", card.get("deviations"), lambda i: f"- {i.get('what', '?')} {ev(i, fix)}")
-    unknowns = [f"- [niezweryfikowane] {REF_IN_TEXT.sub(lambda m: fix(m.group(1)), str(u))}"
+    unknowns = [f"- [unverified] {REF_IN_TEXT.sub(lambda m: fix(m.group(1)), str(u))}"
                 for u in card.get("unknowns") or [] if str(u).strip()]
     if unknowns:
         out.extend(["## Unknowns", *unknowns, ""])
@@ -233,18 +233,18 @@ def inject(report: str, lines: list[str]) -> int:
         with open(report, encoding="utf-8") as fh:
             text = fh.read()
     except OSError:
-        print(f"✗ {report}: brak pliku raportu")
+        print(f"✗ {report}: no report file")
         return 1
     m = re.search(r"^## (?:Modules|Moduły)[^\n]*\n", text, re.M)
     if not m:
-        print(f"✗ {report}: brak sekcji „## Modules”")
+        print(f"✗ {report}: no „## Modules” section")
         return 1
     nxt = re.search(r"^#{1,2} ", text[m.end():], re.M)
     end = m.end() + nxt.start() if nxt else len(text)
     body = "\n".join(lines) + "\n" + ("\n" if nxt else "")
     with open(report, "w", encoding="utf-8") as fh:
         fh.write(text[:m.end()] + body + text[end:])
-    print(f"✓ {report}: sekcja Modules — {len(lines)} wpisów z kart")
+    print(f"✓ {report}: Modules section — {len(lines)} entries from cards")
     return 0
 
 
@@ -263,7 +263,7 @@ def main(argv: list[str]) -> int:
         elif not a.startswith("--"):
             paths.append(a)
     if len(paths) != 1 or not os.path.isdir(paths[0]) or (repo is not None and not os.path.isdir(repo)):
-        print(f"✗ podaj katalog kart modules/ (jest: {paths})", file=sys.stderr)
+        print(f"✗ give the modules/ card directory (got: {paths})", file=sys.stderr)
         return 2
     d, rc, written, lines, rules = paths[0], 0, 0, [], []
     for f in sorted(os.listdir(d)):
@@ -275,9 +275,9 @@ def main(argv: list[str]) -> int:
         try:
             card = json.loads(raw.decode("utf-8"))
             if not isinstance(card, dict):
-                raise ValueError("karta nie jest obiektem JSON")
+                raise ValueError("the card is not a JSON object")
         except (ValueError, UnicodeDecodeError) as e:
-            print(f"✗ {f}: niepoprawna karta ({e})")
+            print(f"✗ {f}: invalid card ({e})")
             rc = 1
             continue
         text = render(stem, card, card_hash(raw), repo)
@@ -296,10 +296,10 @@ def main(argv: list[str]) -> int:
         items = [rule_line(i, fix) for i in card.get("rules") or [] if isinstance(i, dict)]
         if items:
             rules += ["", f"## {card.get('module') or stem} (details: modules/{stem}.md)", *items]
-    print(f"{'✓' if rc == 0 else '✗'} karty → .md: {len(lines)}, zapisane od nowa: {written}")
+    print(f"{'✓' if rc == 0 else '✗'} cards → .md: {len(lines)}, rewritten: {written}")
     if "--rules" in argv:
         head = ["# Rules from module cards",
-                "Złożone skryptem z `modules/*.json`; reguły przekrojowe i mapowania dopisuje synteza poniżej."]
+                "Built by a script from `modules/*.json`. The synthesis adds cross-cutting rules and mappings below."]
         path = os.path.join(os.path.dirname(os.path.abspath(d)), "rules.md")
         keep = ""
         try:
@@ -315,11 +315,11 @@ def main(argv: list[str]) -> int:
         rc = max(rc, inject(into, lines))
     if prev:
         hits = stale_candidates(prev, d, os.path.dirname(os.path.abspath(d)))
-        print(f"Do sprawdzenia: {len(hits)} miejsc (znaczniki ze starych kart, których nie ma w nowych regułach):")
+        print(f"To check: {len(hits)} places (markers from old cards that are not in the new rules):")
         for path, n, tok, line in hits:
             print(f"  {path}:{n} [{tok}] {line[:160]}")
     if "--summary" in argv:
-        print("\n## Modules (propozycja do raportu)")
+        print("\n## Modules (proposal for the report)")
         print("\n".join(lines))
     return rc
 

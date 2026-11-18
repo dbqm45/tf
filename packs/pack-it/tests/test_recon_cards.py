@@ -67,8 +67,8 @@ def main() -> int:
               f"C-1: modules/billing.md ze skrótem karty: rc={r.returncode} {md[:200]!r} {r.stderr[-300:]}")
         check("POST /invoices — `services/billing/api.py:4`" in md, f"C-2: wejście z dowodem: {md}")
         check('`services/billing/service.py:5` "raise EmptyInvoice" (confidence: test)' in md, f"C-3: reguła z cytatem: {md}")
-        check("[niezweryfikowane] Kolejka 'invoices.created'" in md, f"C-4: niewiadoma oznaczona: {md}")
-        check("invoice (write) [niezweryfikowane: brak dowodu w karcie]" in md, f"C-5: element bez dowodu oznaczony: {md}")
+        check("[unverified] Kolejka 'invoices.created'" in md, f"C-4: niewiadoma oznaczona: {md}")
+        check("invoice (write) [unverified: no evidence in the card]" in md, f"C-5: element bez dowodu oznaczony: {md}")
 
         # wygenerowany .md przechodzi kontrolę dowodów: dowody istnieją, cytaty się zgadzają, nic bez dowodu
         r = run("recon_check.py", str(md_path), "--repo", str(repo), "--json", cwd=d)
@@ -93,7 +93,7 @@ def main() -> int:
               f"C-9: zła karta zgłoszona, reszta wygenerowana: rc={r.returncode} {r.stdout[-300:]}")
         vet = (mods / "vet.md").read_text(encoding="utf-8") if (mods / "vet.md").exists() else ""
         r = run("recon_cards.py", str(mods), "--summary", cwd=d)
-        check("- vet: Lista weterynarzy. [niezweryfikowane: brak dowodu w karcie] (details: modules/vet.md)" in r.stdout
+        check("- vet: Lista weterynarzy. [unverified: no evidence in the card] (details: modules/vet.md)" in r.stdout
               and "# vet" in vet, f"C-10: karta bez dowodów: {r.stdout[-300:]} {vet[:200]!r}")
 
         # --repo: dowód ze ścieżką względną wobec partii → ścieżka od korzenia repo, gdy w partii jest jeden taki plik
@@ -144,7 +144,7 @@ def main() -> int:
               f"C-15: sekcja Moduły z kart: {txt[:700]}")
         rep.write_text("# R\n## Stack\nx\n", encoding="utf-8")
         r = run("recon_cards.py", str(mods), "--into", str(rep), cwd=d)
-        check(r.returncode == 1 and "brak sekcji" in r.stdout, f"C-16: raport bez sekcji Moduły: rc={r.returncode} {r.stdout[-200:]}")
+        check(r.returncode == 1 and "no „## Modules” section" in r.stdout, f"C-16: raport bez sekcji Moduły: rc={r.returncode} {r.stdout[-200:]}")
 
     # --prev: stare karty kontra nowe → miejsca w dokumentacji, które mogą opisywać stan sprzed zmiany
     with tempfile.TemporaryDirectory() as d:
@@ -181,9 +181,9 @@ def main() -> int:
               f"CR-2: stary opis przepisany do nowej karty wskazany: {out[-800:]}")
         check("requirements.md:3" not in out and "requirements.md:4" not in out and "requirements.md:6" not in out,
               f"CR-3: aktualny stan i inne tematy nie są wskazane: {out[-800:]}")
-        check("raw/notes.md" not in out and "PetValidator" not in out.split("Do sprawdzenia")[-1].split("\n")[0],
+        check("raw/notes.md" not in out and "PetValidator" not in out.split("To check")[-1].split("\n")[0],
               f"CR-4: raw/ pominięte, reguła bez zmiany znaczników nie daje miejsc: {out[-800:]}")
-        check("Do sprawdzenia: 5 miejsc" in out and "modules/owner.md" in out and "modules/api.md" in out,
+        check("To check: 5 places" in out and "modules/owner.md" in out and "modules/api.md" in out,
               f"CR-5: liczba miejsc (z wzmianką „było 10” i mapowaniem w karcie api): {out[-600:]}")
 
     # ten sam (ucięty) cytat, zmieniony tekst reguły → reguła zmieniona, nie ta sama

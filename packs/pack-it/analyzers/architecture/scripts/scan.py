@@ -32,7 +32,7 @@ def find_graph(root: Path) -> Path:
     for p in (root / ".claude" / REL, here.parents[5] / ".claude" / REL, here.parents[3] / REL):
         if p.is_file():
             return p
-    raise SystemExit("brak code_graph.py (skill eng-codebase-mapping z pack-it) — tf add pack-it")
+    raise SystemExit("code_graph.py is missing (skill eng-codebase-mapping from pack-it). Run: tf add pack-it")
 
 
 def emit(rule, title, rel, snippet, sev, conf, evidence, basis, suggestion):
@@ -50,26 +50,26 @@ def main() -> int:
     r = subprocess.run([sys.executable, str(find_graph(root)), str(root), "--json", "--top", "50"],
                        capture_output=True, text=True, timeout=600)
     if r.returncode != 0:
-        raise SystemExit(f"code_graph.py: kod {r.returncode}: {r.stderr.strip()[-300:]}")
+        raise SystemExit(f"code_graph.py: exit code {r.returncode}: {r.stderr.strip()[-300:]}")
     g = json.loads(r.stdout)
     for c in g.get("cycles", {}).get("runtime", []):
         files = sorted(c.get("files", []))
         if files:
-            emit("cycle", f"cykl importów ({len(files)} plików)", files[0], " → ".join(files), "medium", 0.9,
-                 "importy wykonywane przy imporcie tworzą cykl: " + ", ".join(files),
-                 "eng-codebase-mapping (cykle), ddd-connascence-analysis",
-                 "przerwij cykl: wydziel wspólną część, odwróć zależność przez interfejs albo zdarzenie")
+            emit("cycle", f"import cycle ({len(files)} files)", files[0], " → ".join(files), "medium", 0.9,
+                 "imports run at import time form a cycle: " + ", ".join(files),
+                 "eng-codebase-mapping (cycles), ddd-connascence-analysis",
+                 "break the cycle: extract the shared part, or invert the dependency through an interface or an event")
     for u in g.get("upstream", []):
-        emit("upstream", f"zależność w obie strony: {u['a']} ⇄ {u['b']}", u["a"], f"{u['a']} <-> {u['b']}",
-             "medium", 0.7, f"{u['a']}→{u['b']}: {u['a_to_b']} importów, {u['b']}→{u['a']}: {u['b_to_a']}"
-             + (f"; cykl {u['cycle']}" if u.get("cycle") else ""), "eng-codebase-mapping (pod prąd)",
-             "ustal kierunek zależności między grupami i usuń importy przeciwne")
+        emit("upstream", f"two-way dependency: {u['a']} ⇄ {u['b']}", u["a"], f"{u['a']} <-> {u['b']}",
+             "medium", 0.7, f"{u['a']}→{u['b']}: {u['a_to_b']} imports, {u['b']}→{u['a']}: {u['b_to_a']}"
+             + (f"; cycle {u['cycle']}" if u.get("cycle") else ""), "eng-codebase-mapping (upstream)",
+             "decide the dependency direction between the groups and remove the imports going the other way")
     for h in g.get("hubs", []):
         if h.get("in", 0) >= HUB_MIN and "_vendor" not in h["file"]:
-            emit("hub", f"hub: importowany przez {h['in']} plików", h["file"], h["file"], "low", 0.6,
-                 f"{h['in']} importujących, {h.get('out', 0)} importowanych",
-                 "eng-codebase-mapping (huby), arch-quality-attributes (modyfikowalność)",
-                 "przejrzyj, czy plik nie łączy kilku odpowiedzialności; zmiany tu mają szeroki zasięg")
+            emit("hub", f"hub: imported by {h['in']} files", h["file"], h["file"], "low", 0.6,
+                 f"{h['in']} importers, {h.get('out', 0)} imported",
+                 "eng-codebase-mapping (hubs), arch-quality-attributes (modifiability)",
+                 "check whether the file mixes several responsibilities; changes here have a wide reach")
     return 0
 
 

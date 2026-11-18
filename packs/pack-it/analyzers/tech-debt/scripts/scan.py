@@ -72,7 +72,7 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
          suggestion: str, confidence: float = 0.8) -> None:
     print(json.dumps({"rule": rule, "title": title, "file": rel, "line": line, "snippet": snippet.strip()[:160],
                       "severity": severity, "confidence": confidence, "evidence": evidence,
-                      "basis": "eng-tech-debt-audit (dług jawny i ukryty), qa-regression (pominięte testy)",
+                      "basis": "eng-tech-debt-audit (visible and hidden debt), qa-regression (skipped tests)",
                       "suggestion": suggestion}, ensure_ascii=False))
 
 
@@ -120,35 +120,35 @@ def scan_file(root: Path, rel: str, text: str, git: bool) -> None:
                     ages = blame_ages(root, rel) if git else {}
                 age = ages.get(i + 1)
                 sev = "medium" if age is not None and age > OLD_DAYS else "low"
-                emit("marker-without-ticket", rel, i + 1, line, f"{m.group(1)} bez zgłoszenia", sev,
-                     f"znacznik w komentarzu bez odwołania do zgłoszenia"
-                     + (f"; wiek linii {age} dni (git blame)" if age is not None else ""),
-                     "załóż zgłoszenie i dopisz jego numer (np. `TODO(#123)`) albo napraw i usuń znacznik")
+                emit("marker-without-ticket", rel, i + 1, line, f"{m.group(1)} without a ticket", sev,
+                     f"comment marker with no ticket reference"
+                     + (f"; line age {age} days (git blame)" if age is not None else ""),
+                     "open a ticket and add its number (e.g. `TODO(#123)`), or fix it and remove the marker")
             sup = None
             if "@ts-ignore" in com:
                 sup = "@ts-ignore"
             elif "eslint-disable" in com and "--" not in com.split("eslint-disable", 1)[1]:
-                sup = "eslint-disable bez powodu"
+                sup = "eslint-disable without a reason"
             elif ext == ".py" and re.search(r"#\s*type:\s*ignore(?!\[)", com):
-                sup = "type: ignore bez kodu"
+                sup = "type: ignore without a code"
             elif ext == ".py" and re.search(r"#\s*noqa(?!\s*:)", com, re.I):
-                sup = "noqa bez kodu"
+                sup = "noqa without a code"
             if sup:
-                emit("suppressed-check", rel, i + 1, line, f"wyciszone sprawdzenie: {sup}", "low",
-                     "wyciszenie bez zawężenia albo bez powodu ukrywa też przyszłe błędy",
-                     "zawęź wyciszenie (`@ts-expect-error`, kod reguły w `noqa:`/`type: ignore[…]`, reguła w "
-                     "`eslint-disable`) i dopisz powód po ` -- `")
+                emit("suppressed-check", rel, i + 1, line, f"suppressed check: {sup}", "low",
+                     "a suppression that is not narrowed or has no reason also hides future errors",
+                     "narrow the suppression (`@ts-expect-error`, a rule code in `noqa:`/`type: ignore[…]`, a rule in "
+                     "`eslint-disable`) and add a reason after ` -- `")
         if SKIP_JS.match(line) or SKIP_ANNOT.match(line):
             prev = lines[i - 1].strip() if i else ""
             has_reason = TICKET.search(line) or prev.startswith(("//", "#", "/*", "*"))
             if not has_reason:
-                emit("skipped-test", rel, i + 1, line, "pominięty test bez powodu", "medium",
-                     "test wyłączony bez powodu i bez zgłoszenia — regresja w tym miejscu przejdzie niezauważona",
-                     "napraw test albo zostaw powód ze zgłoszeniem (`reason=…`, `@Disabled(\"#123 …\")`, komentarz)")
+                emit("skipped-test", rel, i + 1, line, "skipped test without a reason", "medium",
+                     "test disabled with no reason and no ticket: a regression here will go unnoticed",
+                     "fix the test or leave a reason with a ticket (`reason=…`, `@Disabled(\"#123 …\")`, a comment)")
     if ext in CODE_EXT and len(lines) > LARGE and not GENERATED.search("\n".join(lines[:5])):
-        emit("large-file", rel, 1, lines[0] if lines else "", f"plik ma {len(lines)} linii", "low",
-             f"{len(lines)} linii (próg {LARGE})", "podziel według odpowiedzialności (eng-module-depth, "
-             "eng-refactor-planning); najpierw testy charakteryzujące", confidence=0.6)
+        emit("large-file", rel, 1, lines[0] if lines else "", f"file has {len(lines)} lines", "low",
+             f"{len(lines)} lines (threshold {LARGE})", "split it by responsibility (eng-module-depth, "
+             "eng-refactor-planning); write characterization tests first", confidence=0.6)
 
 
 def list_files(root: Path) -> tuple[list[str], bool]:

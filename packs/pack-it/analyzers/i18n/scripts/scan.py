@@ -63,7 +63,7 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
          confidence: float = 0.6) -> None:
     print(json.dumps({"rule": rule, "title": title, "file": rel, "line": line,
                       "snippet": " ".join(snippet.split())[:160], "severity": severity, "confidence": confidence,
-                      "evidence": "statyczna analiza kodu", "basis": "eng-i18n (teksty w katalogu, formatowanie Intl)",
+                      "evidence": "static code analysis", "basis": "eng-i18n (texts in a catalog, Intl formatting)",
                       "suggestion": suggestion}, ensure_ascii=False))
 
 
@@ -104,8 +104,8 @@ def scan_text_nodes(rel: str, text: str) -> None:
                 if re.search(rf"(?:^|\s)i18n-{a.group(1)}\b", attrs) or not WORD.search(a.group(2)):
                     continue
                 ln = src.count("\n", 0, m.start()) + 1
-                emit("hardcoded-ui-text", rel, ln, m.group(0), f"tekst atrybutu `{a.group(1)}` poza tłumaczeniem",
-                     "low", "przenieś tekst do katalogu tłumaczeń i użyj funkcji `t(…)`/`$t(…)`/potoku `translate`")
+                emit("hardcoded-ui-text", rel, ln, m.group(0), f"`{a.group(1)}` attribute text outside translation",
+                     "low", "move the text to the translation catalog and use `t(…)`/`$t(…)` or the `translate` pipe")
         nxt = src.find("<", m.end())
         if nxt < 0:
             continue
@@ -119,22 +119,22 @@ def scan_text_nodes(rel: str, text: str) -> None:
             continue
         if WORD.search(literal):
             ln = src.count("\n", 0, m.end() + len(run) - len(run.lstrip())) + 1
-            emit("hardcoded-ui-text", rel, ln, literal.strip(), "tekst interfejsu poza tłumaczeniem", "low",
-                 "przenieś tekst do katalogu tłumaczeń i użyj funkcji `t(…)`/`$t(…)`/potoku `translate` "
-                 "albo atrybutu `i18n`")
+            emit("hardcoded-ui-text", rel, ln, literal.strip(), "UI text outside translation", "low",
+                 "move the text to the translation catalog and use `t(…)`/`$t(…)`, the `translate` pipe "
+                 "or the `i18n` attribute")
 
 
 def scan_formats(rel: str, text: str, locale_matters: bool, ui: bool) -> None:
     for i, line in enumerate(text.splitlines()):
         m = LOCALE_LESS.search(line) if locale_matters else None
         if m:
-            emit("locale-less-format", rel, i + 1, line, f"formatowanie bez locale: {m.group(0).lstrip('.')}",
-                 "medium", "podaj locale użytkownika jawnie, np. `toLocaleDateString(locale)` albo "
+            emit("locale-less-format", rel, i + 1, line, f"formatting without a locale: {m.group(0).lstrip('.')}",
+                 "medium", "pass the user's locale explicitly, e.g. `toLocaleDateString(locale)` or "
                  "`new Intl.DateTimeFormat(locale, …)`", confidence=0.8)
         if ui and TOFIXED.search(line) and CURRENCY.search(TOFIXED.sub(" ", line)):
-            emit("money-without-intl", rel, i + 1, line, "kwota z toFixed sklejona z walutą", "medium",
-                 "użyj `new Intl.NumberFormat(locale, { style: \"currency\", currency })`; kwoty licz w groszach "
-                 "lub typem dziesiętnym", confidence=0.7)
+            emit("money-without-intl", rel, i + 1, line, "amount from toFixed glued to a currency", "medium",
+                 "use `new Intl.NumberFormat(locale, { style: \"currency\", currency })`; compute amounts in minor units (cents) "
+                 "or with a decimal type", confidence=0.7)
 
 
 def list_files(root: Path) -> list[str]:

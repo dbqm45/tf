@@ -194,14 +194,14 @@ def scan(root: str) -> dict:
 
 
 def render(r: dict) -> str:
-    L = [f"Tabele i encje: {len(r['tables'])}; kandydaci na reguły: {len(r['rules'])}"]
+    L = [f"Tables and entities: {len(r['tables'])}; rule candidates: {len(r['rules'])}"]
     for t in r["tables"]:
         refs = f" → {', '.join(t['references'])}" if t["references"] else ""
         L.append(f"  - {t['name']} ({t['source']}, {t['at']}){refs}: " +
                  ", ".join(c["name"] + (f" [{'; '.join(c['constraints'])}]" if c["constraints"] else "") for c in t["columns"]))
-    L.append("Reguły (ograniczenia) z miejscem:")
+    L.append("Rules (constraints) with location:")
     L += [f"  - {x['table']}: {x['rule']} — {x['at']}" for x in r["rules"]]
-    L.append("Ograniczenia to kandydaci na reguły biznesowe — potwierdź znaczenie w kodzie i u ludzi.")
+    L.append("Constraints are candidates for business rules. Confirm their meaning in the code and with people.")
     return "\n".join(L)
 
 
@@ -212,7 +212,7 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 0
     if len(args) != 1 or not os.path.isdir(args[0]):
-        print(f"✗ podaj katalog repozytorium (jest: {args})", file=sys.stderr)
+        print(f"✗ give a repository directory (got: {args})", file=sys.stderr)
         return 2
     r = scan(args[0])
     print(json.dumps(r, ensure_ascii=False, indent=2) if as_json else render(r))

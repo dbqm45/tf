@@ -30,7 +30,8 @@ from recon_check import MARK, QUOTE, REF, norm  # noqa: E402  (ten sam format do
 
 SOURCES = (("rules", "rules.md"), ("requirements", "requirements.md"), ("domain", "domain.md"))
 CONFIDENCE = re.compile(r"\(\s*(?:confidence|pewność):?\s*([^)]+?)\s*\)", re.I)
-STATUS = {"założenie": "assumption", "niezweryfikowane": "unverified", "pytanie": "question"}
+STATUS = {"assumption": "assumption", "unverified": "unverified", "question": "question",
+          "założenie": "assumption", "niezweryfikowane": "unverified", "pytanie": "question"}   # pl: sprzed 14.x
 MODULE_HEAD = re.compile(r"^(.+?)\s+\((?:details|szczegóły): modules/[^)]+\)$")
 
 
@@ -163,7 +164,7 @@ def main(argv: list[str]) -> int:
     args = [a for a in argv if not a.startswith("--")]
     opts = {argv[i]: argv[i + 1] for i in range(len(argv) - 1) if argv[i] in ("--repo", "--out")}
     if not args or not os.path.isdir(args[0]):
-        print(__doc__.strip() if not args else f"✗ brak katalogu rekonstrukcji: {args[0]}", file=sys.stderr)
+        print(__doc__.strip() if not args else f"✗ no reconstruction directory: {args[0]}", file=sys.stderr)
         return 2
     rec = args[0]
     data = export(rec, opts.get("--repo"))
@@ -172,8 +173,8 @@ def main(argv: list[str]) -> int:
         json.dump(data, fh, ensure_ascii=False, indent=2)
         fh.write("\n")
     unv = sum(1 for k, _ in SOURCES for i in data[k] for e in i["evidence"] if e.get("verified") is False)
-    print(f"✓ {out}: reguły {len(data['rules'])}, wymagania {len(data['requirements'])}, domena {len(data['domain'])}, "
-          f"moduły {len(data['modules'])}" + (f"; dowody niezgodne z kodem: {unv} (recon_check.py)" if unv else ""))
+    print(f"✓ {out}: rules {len(data['rules'])}, requirements {len(data['requirements'])}, domain {len(data['domain'])}, "
+          f"modules {len(data['modules'])}" + (f"; evidence that does not match the code: {unv} (recon_check.py)" if unv else ""))
     return 0
 
 

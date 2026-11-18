@@ -36,16 +36,20 @@ SKILL = HERE.parent
 ES_SIM = HERE / "es_sim.py"
 DEFAULT_CMD = ["claude", "-p", "--tools", "", "--strict-mcp-config", "--no-session-persistence", "--output-format", "json"]
 MODELS = {"pelna": "sonnet", "oszczedna": "haiku"}
-PARTICIPANT_SYS = ("Jesteś uczestnikiem symulacji warsztatu Event Storming. Zagraj osobę (albo osoby) opisaną w wiadomości "
-                   "dokładnie według karty i zasad. Odpowiedz wyłącznie blokiem JSON w podanym kształcie. Nie komentuj symulacji.")
-COACH_SYS = ("Oceniasz PROWADZENIE sesji, nie treść domenową. Wejście: transkrypcja, statystyki (JSON ze skryptu), brief "
-             "scenariusza (celowe sprzeczności, oczekiwane zdarzenia przełomowe, kto trenuje jaki anty-wzorzec). Tryb light: tylko "
-             "dominacja, milczący uczestnicy, niesprawdzony język. Tryb full: 10 anty-wzorców facylitacji, każdy "
-             "zielony/żółty/czerwony z dowodem (runda, cytat). Uczestnicy reagują na echo z opóźnieniem jednej rundy. Nie zaczynaj "
-             "od pochwał. Format: 3 zdania podsumowania · tabela anty-wzorców · 3 mocne momenty i 3 do pracy · czy facylitator "
-             "zderzył celowe sprzeczności · jeden cytat. Dodatkowo, bo to próba scenariusza: czy karty osób i sprzeczności "
-             "zadziałały jak w briefie. Zwróć sam debrief w Markdownie.")
-WRITE_FILE = re.compile(r"\n*Zapisz (?:ten JSON|tablicę) do pliku `[^`]+` i odpowiedz(?: jednym słowem)?: ok\.\s*$")
+PARTICIPANT_SYS = ("You are a participant in a simulated Event Storming workshop. Play the person (or people) described in the "
+                   "message exactly as the card and the rules say. Reply only with a JSON block in the given shape. "
+                   "Do not comment on the simulation.")
+COACH_SYS = ("You assess how the session was RUN, not the domain content. Input: the transcript, statistics (JSON from the "
+             "script), the scenario brief (deliberate contradictions, expected pivotal events, who trains which anti-pattern). "
+             "Light mode: only dominance, silent participants, unchecked language. Full mode: 10 facilitation anti-patterns, each "
+             "green/yellow/red with evidence (round, quote). Participants react to the echo with a one-round delay. Do not start "
+             "with praise. Format: a 3-sentence summary · an anti-pattern table · 3 strong moments and 3 things to work on · "
+             "whether the facilitator confronted the deliberate contradictions · one quote. Also, because this is a scenario "
+             "trial: whether the persona cards and the contradictions worked as the brief describes. Return only the debrief "
+             "in Markdown.")
+WRITE_FILE = re.compile(r"\n*(?:Save (?:this JSON|the array) to the file `[^`]+` and reply(?: with one word)?: ok\.|"
+                        r"Zapisz (?:ten JSON|tablicę) do pliku `[^`]+` i odpowiedz(?: jednym słowem)?: ok\.)\s*$")  # pl: sprzed 14.x
+BAD_JSON = ("missing or invalid JSON", "brak lub niepoprawny JSON")   # pl: sprzed 14.x
 
 
 def sim(env: dict, *args: str) -> str:
@@ -72,7 +76,7 @@ def sentences(text: str) -> int:
 
 
 def usd(x: float) -> str:
-    return f"{x:.2f}".replace(".", ",") + " USD"
+    return f"{x:.2f} USD"
 
 
 def evaluate(st: dict, transcript: str, expect: dict) -> list[tuple[bool | None, str, str]]:
@@ -81,20 +85,20 @@ def evaluate(st: dict, transcript: str, expect: dict) -> list[tuple[bool | None,
     out = []
     for h in expect.get("hidden", []):
         ok = any(k.lower() in low for k in h["any"])
-        out.append((ok, "wiedza ukryta", h["fact"]))
+        out.append((ok, "hidden knowledge", h["fact"]))
     for c in expect.get("contradictions", []):
         ok = any(k.lower() in hs for k in c["hot_spot_any"])
-        out.append((ok, "sprzeczność (hot spot)", c["name"]))
+        out.append((ok, "contradiction (hot spot)", c["name"]))
     rounds = {r["n"]: r for r in st.get("rounds", [])}
     for b in expect.get("behaviour", []):
         var = st.get("day_variant", {}).get(b["persona"])
-        what = f"runda {b['round']}, {b['persona']} (wariant dnia {'—' if var is None else var + 1}): {b.get('why', '')}"
+        what = f"round {b['round']}, {b['persona']} (day variant {'—' if var is None else var + 1}): {b.get('why', '')}"
         if var in b.get("skip_variants", []):   # wariant dnia z karty zmienia temperament — zachowanie może być inne
-            out.append((None, "karta osoby", what + " — pominięte przy tym wariancie dnia"))
+            out.append((None, "persona card", what + " (skipped for this day variant)"))
             continue
         d = (rounds.get(b["round"], {}).get("replies", {}).get(b["persona"], {}) or {}).get("dialogue", "")
         ok = bool(d.strip()) if b.get("speaks") else sentences(d) <= b.get("max_sentences", 0)
-        out.append((ok, "karta osoby", what))
+        out.append((ok, "persona card", what))
     return out
 
 
@@ -111,7 +115,7 @@ def main() -> int:
     try:
         probe = json.loads(probe_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
-        print(f"✗ plik próby: {e}", file=sys.stderr)
+        print(f"✗ trial file: {e}", file=sys.stderr)
         return 2
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     env = {**os.environ, "CLAUDE_PROJECT_DIR": str(root)}
@@ -127,7 +131,7 @@ def main() -> int:
 
         def one(c):
             pf = root / c["prompt_file"]
-            prompt = WRITE_FILE.sub("\n\nOdpowiedz wyłącznie tym blokiem JSON.", pf.read_text(encoding="utf-8"))
+            prompt = WRITE_FILE.sub("\n\nReply with this JSON block only.", pf.read_text(encoding="utf-8"))
             text, usd_ = call_model(PARTICIPANT_SYS, prompt, model)
             (pf.parent / pf.name.replace(".prompt.md", ".reply.json")).write_text(text, encoding="utf-8")
             return usd_
@@ -144,28 +148,28 @@ def main() -> int:
     if a.coach != "none" and not stopped:
         stats = sim(env, "stats", "--id", sid, "--json")
         brief = (SKILL / "scenarios" / st["scenario"] / "brief.md").read_text(encoding="utf-8")
-        debrief, c_usd = call_model(COACH_SYS, f"Tryb: {a.coach} (końcowy).\n\n## Brief scenariusza\n{brief}\n\n"
-                                               f"## Statystyki\n{stats}\n\n## Transkrypcja\n{transcript}", "sonnet")
+        debrief, c_usd = call_model(COACH_SYS, f"Mode: {a.coach} (final).\n\n## Scenario brief\n{brief}\n\n"
+                                               f"## Statistics\n{stats}\n\n## Transcript\n{transcript}", "sonnet")
         cost, calls = cost + c_usd, calls + 1
         (sd / "debrief.md").write_text(debrief, encoding="utf-8")
     checks = evaluate(st, transcript, probe.get("expect", {}))
-    bad_json = transcript.count("brak lub niepoprawny JSON")
+    bad_json = sum(transcript.count(m) for m in BAD_JSON)
     silent = [p for p in st["present"]
               if not any((r.get("replies", {}).get(p, {}) or {}).get("dialogue", "").strip() for r in st["rounds"])]
     counted = [ok for ok, _, _ in checks if ok is not None]
     met = sum(counted)
-    L = [f"# Próba scenariusza „{st['scenario']}” — {sid}", "",
-         f"Wariant {a.variant} (model uczestników: {model}), rundy {st['round']}, wywołania modelu {calls}, "
-         f"koszt {usd(cost)}{' — przerwana: przekroczony budżet' if stopped else ''}.",
-         f"Zdarzenia {len(st['events'])}, hot spoty {len(st['hot_spots'])}, odrzucone kartki {len(st['rejected'])}, "
-         f"niepoprawny JSON: {bad_json}, osoby bez ani jednej wypowiedzi: {', '.join(silent) or '—'}.", "",
-         f"## Oczekiwania ({met}/{len(counted)})", "| | Rodzaj | Oczekiwanie |", "|---|---|---|"]
+    L = [f"# Scenario trial \"{st['scenario']}\": {sid}", "",
+         f"Variant {a.variant} (participant model: {model}), rounds {st['round']}, model calls {calls}, "
+         f"cost {usd(cost)}{'; stopped: budget exceeded' if stopped else ''}.",
+         f"Events {len(st['events'])}, hot spots {len(st['hot_spots'])}, rejected stickies {len(st['rejected'])}, "
+         f"invalid JSON: {bad_json}, people who never spoke: {', '.join(silent) or '—'}.", "",
+         f"## Expectations ({met}/{len(counted)})", "| | Kind | Expectation |", "|---|---|---|"]
     L += [f"| {'—' if ok is None else '✓' if ok else '✗'} | {kind} | {what} |" for ok, kind, what in checks]
-    L += ["", "Transkrypcja: `transcript.md` · tablica: `board.md`" + (" · debrief coacha: `debrief.md`" if (sd / "debrief.md").exists() else "")]
+    L += ["", "Transcript: `transcript.md` · board: `board.md`" + (" · coach debrief: `debrief.md`" if (sd / "debrief.md").exists() else "")]
     (sd / "probe-report.md").write_text("\n".join(L) + "\n", encoding="utf-8")
-    print("\n".join(L[:4] + [ln for ln in L[6:] if ln.startswith("| ✗")] + [f"Raport: {sd / 'probe-report.md'}"]))
+    print("\n".join(L[:4] + [ln for ln in L[6:] if ln.startswith("| ✗")] + [f"Report: {sd / 'probe-report.md'}"]))
     if stopped:
-        print(f"⚠ budżet {usd(a.budget_usd)} przekroczony — próba przerwana po rundzie {st['round']}")
+        print(f"⚠ budget {usd(a.budget_usd)} exceeded; trial stopped after round {st['round']}")
         return 3
     return 0 if met == len(counted) else 1
 

@@ -92,7 +92,7 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
          suggestion: str) -> None:
     print(json.dumps({"rule": rule, "title": title, "file": rel, "line": line, "snippet": snippet.strip()[:160],
                       "severity": severity, "confidence": 0.5 if rule == "pii-field-unclassified" else 0.6,
-                      "evidence": evidence, "basis": "RODO art. 5 ust. 1 lit. c i f, art. 25, art. 30, art. 32",
+                      "evidence": evidence, "basis": "GDPR Art. 5(1)(c) and (f), Art. 25, Art. 30, Art. 32",
                       "suggestion": suggestion}, ensure_ascii=False))
 
 
@@ -202,18 +202,18 @@ def expressions(args: str) -> str:
 
 def scan_calls(rel: str, text: str) -> None:
     for pat, rule, title, sev, sugg in (
-            (LOG_CALL, "pii-in-logs", "dane osobowe w logu", "high",
-             "loguj identyfikator techniczny albo pseudonim (HMAC) zamiast danej; logi z danymi osobowymi mają "
-             "klasę zbioru i retencję"),
-            (ANALYTICS_CALL, "pii-to-analytics", "dane osobowe wysyłane do analityki", "high",
-             "wysyłaj pseudonim (HMAC) albo agregat; dostawca analityki to procesor z umową powierzenia")):
+            (LOG_CALL, "pii-in-logs", "personal data in a log", "high",
+             "log a technical identifier or a pseudonym (HMAC) instead of the data; logs with personal data "
+             "get a dataset class and a retention period"),
+            (ANALYTICS_CALL, "pii-to-analytics", "personal data sent to analytics", "high",
+             "send a pseudonym (HMAC) or an aggregate; the analytics vendor is a processor and needs a data processing agreement")):
         for m in pat.finditer(text):
             expr = expressions(call_args(text, m.end()))
             hits = sorted({t for t in re.findall(r"[A-Za-z_]\w*", expr) if is_pii(t)})
             if hits:
                 line = text[:m.start()].count("\n")
                 emit(rule, rel, line + 1, text.splitlines()[line], f"{title}: {', '.join(hits)}", sev,
-                     f"identyfikator osobowy w argumentach wywołania: {', '.join(hits)}", sugg)
+                     f"personal identifier in the call arguments: {', '.join(hits)}", sugg)
 
 
 # ---- przebieg ---------------------------------------------------------------------------------------------------
@@ -253,10 +253,10 @@ def scan(root: Path, files: list[str]) -> None:
         lines = text.splitlines()
         for i, name in schema_fields(rel, text):
             if is_pii(name) and not marked(lines, i) and norm(name) not in inventory | commented:
-                emit("pii-field-unclassified", rel, i + 1, lines[i], f"pole z danymi osobowymi bez klasy: {name}",
-                     "medium", "nazwa pola typowa dla danych osobowych; brak znacznika klasy i wpisu w inwentarzu",
-                     "nadaj klasę przy polu (komentarz `pii` lub adnotacja) i dopisz wiersz do "
-                     "docs/project/04-architecture/data-inventory.md (klasa, cel, retencja, właściciel)")
+                emit("pii-field-unclassified", rel, i + 1, lines[i], f"personal data field without a class: {name}",
+                     "medium", "the field name is typical for personal data; no class marker and no inventory entry",
+                     "give the field a class (a `pii` comment or an annotation) and add a row to "
+                     "docs/project/04-architecture/data-inventory.md (class, purpose, retention, owner)")
         if Path(rel).suffix.lower() in CODE_EXT:
             scan_calls(rel, text)
 
