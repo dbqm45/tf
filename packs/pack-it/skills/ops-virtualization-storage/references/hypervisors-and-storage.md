@@ -1,22 +1,22 @@
-# Hiperwizory i storage — fakty do sprawdzenia przed decyzją
+# Hypervisors and storage — facts to check before deciding
 
-Spis treści: Wersje i licencje · Kiedy co · Pytania do dostawców
+Contents: Versions and licences · When to use what · Questions for vendors
 
-## Wersje i licencje (stan wg wyszukiwania 2026-10-17)
-- Proxmox VE 9.1: Debian 13 „Trixie”, jądro 6.17, QEMU 10.1, Ceph Squid 19.2.3, ZFS 2.3.4. Czy istnieje nowsze wydanie: [niezweryfikowane].
-  Aktualizacja z 8.x wymaga najpierw Ceph Reef → Squid.
-- Ceph: Tentacle (20.x) najnowsza seria, Squid (19.x) w końcowej fazie wsparcia; w Tentacle 20.2.0 zgłoszono błąd
-  przy włączeniu `allow_ec_optimizations` na puli EC — przed włączeniem sprawdź zgłoszenie (Tracker 74813)
-  [niezweryfikowane].
-- VMware (Broadcom): subskrypcja zamiast licencji wieczystych, rozliczenie za rdzeń, minimum 16 rdzeni na procesor;
-  doniesienia o minimum 72 rdzeni na zakup od 2025-04 (nie dotyczy wszystkich renewali — źródła rozbieżne)
-  [niezweryfikowane]. Zawsze weryfikuj w ofercie partnera i umowie; nazwy pakietów (VCF, VVF) się zmieniają.
+## Versions and licences (status according to a search on 2026-10-17)
+- Proxmox VE 9.1: Debian 13 "Trixie", kernel 6.17, QEMU 10.1, Ceph Squid 19.2.3, ZFS 2.3.4. Whether a newer release exists: [unverified].
+  Upgrading from 8.x first requires Ceph Reef → Squid.
+- Ceph: Tentacle (20.x) the newest series, Squid (19.x) in the final phase of support; in Tentacle 20.2.0 a bug was reported
+  when enabling `allow_ec_optimizations` on an EC pool — check the report (Tracker 74813) before enabling it
+  [unverified].
+- VMware (Broadcom): subscription instead of perpetual licences, per-core billing, a minimum of 16 cores per processor;
+  reports of a minimum of 72 cores per purchase from 2025-04 (does not apply to all renewals — sources differ)
+  [unverified]. Always verify in the partner's offer and the contract; package names (VCF, VVF) change.
 
-## Kiedy co
-- Mała firma, 2–10 węzłów, umiejętności Linuksa: Proxmox VE lub KVM.
-- Duże środowisko z narzędziami VMware i certyfikacjami aplikacji: licz koszt subskrypcji i koszt migracji obok siebie.
-- Obciążenia kontenerowe: węzły Kubernetes mogą działać też na gołym metalu — decyzja w ops-kubernetes.
+## When to use what
+- A small company, 2–10 nodes, Linux skills: Proxmox VE or KVM.
+- A large environment with VMware tooling and application certifications: put the subscription cost and the migration cost side by side.
+- Container workloads: Kubernetes nodes can also run on bare metal — the decision is in ops-kubernetes.
 
-## Pytania do dostawców
-Minima zakupowe na lokalizację, polityka renewali, okres wsparcia sprzętu, macierz zgodności firmware, czas wymiany
-części w lokalizacji brzegowej, eksport VM do formatów otwartych.
+## Questions for vendors
+Purchase minimums per site, renewal policy, hardware support period, firmware compatibility matrix, part replacement
+time at an edge site, VM export to open formats.

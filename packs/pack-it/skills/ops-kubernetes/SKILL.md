@@ -1,69 +1,69 @@
 ---
 name: ops-kubernetes
-description: Użyj przy manifestach i operacjach Kubernetes — zasoby, sondy, repliki i PDB, autoskalowanie, RBAC, NetworkPolicy.
+description: Use for Kubernetes manifests and operations — resources, probes, replicas and PDB, autoscaling, RBAC, NetworkPolicy.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj przy manifestach i operacjach Kubernetes — zasoby (requests/limits), sondy, liczba replik i PodDisruptionBudget, autoskalowanie, bezpieczeństwo podów (Pod Security Standards, securityContext), RBAC i konta usług, NetworkPolicy, sekrety, walidacja manifestów w CI, aktualizacje klastra. Nie do obrazów (ops-docker), wydań i GitOps (ops-release-engineering) ani chmury."
+  catalog: "Use for Kubernetes manifests and operations — resources (requests/limits), probes, replica count and PodDisruptionBudget, autoscaling, pod security (Pod Security Standards, securityContext), RBAC and service accounts, NetworkPolicy, secrets, manifest validation in CI, cluster upgrades. Not for images (ops-docker), releases and GitOps (ops-release-engineering) or the cloud."
 ---
 
 # Kubernetes
 
-## 1. Każdy Deployment ma
-- **requests** CPU i pamięci z rzeczywistego zużycia (bez nich scheduler zgaduje, a HPA na procencie CPU/pamięci nie działa);
-  **limit pamięci** zawsze; limit CPU ostrożnie — zbyt niski dławi aplikację (throttling).
-- **readinessProbe** (czy przyjmować ruch) i **livenessProbe** (czy restartować) — różne endpointy, liveness nie
-  sprawdza zależności zewnętrznych, bo awaria bazy zrestartuje wszystkie pody. Wolny start: `startupProbe`.
-- Co najmniej 2 repliki dla usług produkcyjnych, `PodDisruptionBudget` (np. `maxUnavailable: 1`) i strategia
-  `RollingUpdate` z `maxUnavailable`, która nie wyłącza wszystkich podów naraz.
-- Obraz przypięty do wersji lub digestu, nigdy `latest` — przy restarcie lub przeniesieniu poda węzeł pobierze to, na co
-  tag wskazuje **teraz**, i zachowanie zmieni się bez żadnego wdrożenia.
-- Łagodne zamykanie: obsługa SIGTERM, `terminationGracePeriodSeconds` dłuższy niż najdłuższe żądanie.
+## 1. Every Deployment has
+- CPU and memory **requests** from real usage (without them the scheduler guesses, and an HPA on CPU/memory percentage does not work);
+  a **memory limit** always; a CPU limit with care — one that is too low chokes the application (throttling).
+- **readinessProbe** (whether to accept traffic) and **livenessProbe** (whether to restart) — different endpoints, liveness does not
+  check external dependencies, because a database failure would restart all pods. Slow start: `startupProbe`.
+- At least 2 replicas for production services, a `PodDisruptionBudget` (e.g. `maxUnavailable: 1`) and a
+  `RollingUpdate` strategy with a `maxUnavailable` that does not shut down all pods at once.
+- The image pinned to a version or digest, never `latest` — when a pod restarts or moves, the node pulls whatever the
+  tag points to **now**, and the behaviour changes without any deployment.
+- Graceful shutdown: SIGTERM handling, `terminationGracePeriodSeconds` longer than the longest request.
 
-## 2. Autoskalowanie
-- HPA na metryce, która naprawdę rośnie z obciążeniem (CPU, żądania na sekundę, długość kolejki — KEDA dla kolejek
-  i zdarzeń). Minimum i maksimum replik ustawione świadomie; maksimum chroni przed kosztem i przeciążeniem bazy.
-- Autoskalowanie węzłów (Cluster Autoscaler, Karpenter) wymaga poprawnych requests — inaczej węzły są źle dobrane.
+## 2. Autoscaling
+- HPA on a metric that really grows with load (CPU, requests per second, queue length — KEDA for queues
+  and events). Minimum and maximum replicas set deliberately; the maximum protects against cost and database overload.
+- Node autoscaling (Cluster Autoscaler, Karpenter) needs correct requests — otherwise the nodes are badly sized.
 
-## 3. Bezpieczeństwo podów
-- Namespace z etykietą `pod-security.kubernetes.io/enforce: restricted` (Pod Security Standards); wyjątki jawne.
+## 3. Pod security
+- A namespace with the label `pod-security.kubernetes.io/enforce: restricted` (Pod Security Standards); exceptions explicit.
 - `securityContext`: `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, `capabilities.drop: [ALL]`,
-  `seccompProfile.type: RuntimeDefault` (tego wymaga profil `restricted`) oraz `readOnlyRootFilesystem: true` (poza
-  profilem — wymuś polityką Kyverno lub Gatekeeper).
-- `automountServiceAccountToken: false`, jeśli pod nie rozmawia z API Kubernetes.
-- **NetworkPolicy** (działa tylko z wtyczką sieci CNI, która ją egzekwuje) domyślnie odmawiająca ruchu w namespace, potem jawne zezwolenia; ruch wychodzący ograniczony
-  (także do metadanych chmury).
-- RBAC: jedno konto usługi na aplikację, Role w namespace zamiast ClusterRole, bez `*` w zasobach i czasownikach.
-  Dostęp chmurowy przez tożsamość obciążenia (IRSA, EKS Pod Identity, Workload Identity), nie przez klucze w sekretach.
-- Polityki wymuszane przy przyjęciu (admission): Kyverno lub OPA Gatekeeper — np. zakaz `latest`, wymagane requests,
-  tylko obrazy z zaufanego rejestru i podpisane (cosign).
+  `seccompProfile.type: RuntimeDefault` (required by the `restricted` profile) and `readOnlyRootFilesystem: true` (outside
+  the profile — enforce it with a Kyverno or Gatekeeper policy).
+- `automountServiceAccountToken: false`, if the pod does not talk to the Kubernetes API.
+- **NetworkPolicy** (works only with a CNI network plugin that enforces it) denying traffic in the namespace by default, then explicit allows; egress restricted
+  (also to the cloud metadata).
+- RBAC: one service account per application, Role in the namespace instead of ClusterRole, no `*` in resources and verbs.
+  Cloud access through workload identity (IRSA, EKS Pod Identity, Workload Identity), not through keys in secrets.
+- Policies enforced at admission: Kyverno or OPA Gatekeeper — e.g. a ban on `latest`, required requests,
+  only images from a trusted registry and signed (cosign).
 
-## 4. Sekrety i konfiguracja
-- Sekrety przez `secretKeyRef`/wolumeny z zewnętrznego menedżera (External Secrets, Vault, Sealed Secrets, SOPS),
-  nigdy jawnie w manifeście ani w pliku pipeline'u. Włączone szyfrowanie sekretów w etcd.
-- Nazwy zmiennych w manifeście i aplikacji zgodne — niezgodność kończy się awarią podów przy starcie; aplikacja
-  waliduje konfigurację przy starcie (lang-typescript, sekcja o `process.env`).
-- **Konfiguracja wdraża się razem z kodem.** Częsty „drobny” błąd: nowa wersja aplikacji oczekuje nowej wartości
-  (np. adresu API), a ConfigMap lub Secret zostały stare — pody działają, wdrożenie wygląda na udane, aplikacja pada
-  dopiero przy pierwszym wywołaniu. Dlatego:
-  - ConfigMap i odwołania do sekretów w tym samym PR i repozytorium GitOps co zmiana kodu, która ich wymaga;
-  - zmiana konfiguracji wymusza nowy rollout: Kustomize `configMapGenerator`/`secretGenerator` (nazwa z sufiksem
-    skrótu) albo w Helm adnotacja z sumą kontrolną konfiguracji w szablonie poda. Zmienne środowiskowe z ConfigMap nie
-    odświeżają się w działającym podzie;
-  - aplikacja sprawdza wymagane wartości przy starcie i nie zgłasza gotowości (readiness), gdy ich brakuje — wtedy
-    rolling update zatrzyma się na pierwszym podzie zamiast wymienić wszystkie.
+## 4. Secrets and configuration
+- Secrets through `secretKeyRef`/volumes from an external manager (External Secrets, Vault, Sealed Secrets, SOPS),
+  never in plain text in the manifest or in the pipeline file. Secret encryption in etcd enabled.
+- Variable names in the manifest and the application match — a mismatch ends in pods failing at startup; the application
+  validates its configuration at startup (lang-typescript, the section on `process.env`).
+- **Configuration is deployed together with the code.** A common "minor" mistake: the new version of the application expects a new value
+  (e.g. an API address), but the ConfigMap or Secret stayed old — the pods run, the deployment looks successful, the application fails
+  only on the first call. Therefore:
+  - the ConfigMap and secret references go in the same PR and GitOps repository as the code change that needs them;
+  - a configuration change forces a new rollout: Kustomize `configMapGenerator`/`secretGenerator` (a name with a hash
+    suffix) or, in Helm, an annotation with a configuration checksum in the pod template. Environment variables from a ConfigMap do not
+    refresh in a running pod;
+  - the application checks the required values at startup and does not report readiness when they are missing — then
+    the rolling update stops at the first pod instead of replacing all of them.
 
-## 5. Walidacja w CI
-`yamllint`, walidacja schematu (`kubeconform`), `kubectl apply --dry-run=server` na klastrze testowym, lint
-Helm/Kustomize, skan polityk (Kyverno CLI, Conftest). Agent nie wykonuje `kubectl apply` na klastrze współdzielonym —
-zmiana idzie przez GitOps (ops-release-engineering); hook `guard_bash.py` pyta o zgodę przy `kubectl apply/delete`.
+## 5. Validation in CI
+`yamllint`, schema validation (`kubeconform`), `kubectl apply --dry-run=server` on a test cluster, Helm/Kustomize
+lint, policy scan (Kyverno CLI, Conftest). The agent does not run `kubectl apply` on a shared cluster —
+the change goes through GitOps (ops-release-engineering); the `guard_bash.py` hook asks for consent on `kubectl apply/delete`.
 
-## 6. Aktualizacje klastra
-Przed aktualizacją: lista usuwanych wersji API (np. `kubent`, `pluto`), zgodność kontrolerów i operatorów, aktualizacja
-najpierw w środowisku testowym, węzły po kolei z respektowaniem PDB.
+## 6. Cluster upgrades
+Before an upgrade: the list of removed API versions (e.g. `kubent`, `pluto`), compatibility of controllers and operators, the upgrade
+first in a test environment, nodes one by one while respecting PDBs.
 
-## Przykład
-**Sytuacja:** `orders-api` na produkcję; start ok. 40 s, zużycie ok. 300m CPU i 380 MiB.
-**Wynik** (kluczowe pola Deployment, zagnieżdżenie skrócone; obok PDB `maxUnavailable: 1`):
+## Example
+**Situation:** `orders-api` to production; startup approx. 40 s, usage approx. 300m CPU and 380 MiB.
+**Result** (key Deployment fields, nesting shortened; next to it a PDB `maxUnavailable: 1`):
 ```yaml
 replicas: 3
 image: registry.acme.example/orders-api@sha256:<digest>
@@ -73,21 +73,21 @@ readinessProbe: { httpGet: { path: /health/ready, port: 8080 } }
 livenessProbe: { httpGet: { path: /health/live, port: 8080 } }
 securityContext: { runAsNonRoot: true, allowPrivilegeEscalation: false, capabilities: { drop: [ALL] } }
 ```
-Więcej przykładów: `references/examples.md`.
+More examples: `references/examples.md`.
 
-## Checklista
-- [ ] requests, limit pamięci, sondy readiness/liveness, ≥ 2 repliki i PDB
-- [ ] Pod Security `restricted`, securityContext, NetworkPolicy domyślnie odmawiająca
-- [ ] konto usługi per aplikacja, minimalny RBAC, tożsamość obciążenia zamiast kluczy
-- [ ] sekrety z menedżera, walidacja manifestów i polityk w CI
-- [ ] zmiana konfiguracji w tym samym PR co kod i wymuszająca rollout; walidacja konfiguracji przy starcie
-- [ ] przed aktualizacją klastra sprawdzone usuwane API
+## Checklist
+- [ ] requests, memory limit, readiness/liveness probes, ≥ 2 replicas and a PDB
+- [ ] Pod Security `restricted`, securityContext, a default-deny NetworkPolicy
+- [ ] a service account per application, minimal RBAC, workload identity instead of keys
+- [ ] secrets from a manager, validation of manifests and policies in CI
+- [ ] a configuration change in the same PR as the code and forcing a rollout; configuration validation at startup
+- [ ] removed APIs checked before a cluster upgrade
 
-## Źródła
-- [10 Minor DevOps Mistakes That Can Cause Major Production Issues](https://medium.com/coinmonks/10-minor-devops-mistakes-that-can-cause-major-production-issues-191d141e7686) — Pawan Natekar, 2026 (nieaktualny ConfigMap/Secret, `latest`, brak limitów)
+## Sources
+- [10 Minor DevOps Mistakes That Can Cause Major Production Issues](https://medium.com/coinmonks/10-minor-devops-mistakes-that-can-cause-major-production-issues-191d141e7686) — Pawan Natekar, 2026 (stale ConfigMap/Secret, `latest`, no limits)
 - [Why Your Deployments Fail: A Deep Dive Into Misconfigured Pipelines](https://devops.com/why-your-deployments-fail-a-deep-dive-into-misconfigured-pipelines/) (devops.com)
-- Dokumentacja Kubernetes: [Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/),
+- Kubernetes documentation: [Pod Security Standards](https://kubernetes.io/docs/concepts/security/pod-security-standards/),
   [Liveness, Readiness and Startup Probes](https://kubernetes.io/docs/concepts/workloads/pods/probes/),
   [Network Policies](https://kubernetes.io/docs/concepts/services-networking/network-policies/),
   [Specifying a Disruption Budget](https://kubernetes.io/docs/tasks/run-application/configure-pdb/)
-devops.com ma niewiele praktycznych artykułów o operacjach Kubernetes, dlatego skill opiera się głównie na dokumentacji projektu.
+devops.com has few practical articles on Kubernetes operations, so the skill relies mainly on the project documentation.

@@ -1,75 +1,75 @@
 ---
 name: ops-secrets-identities
-description: Użyj przy sekretach i tożsamościach maszynowych — skanowanie, rotacja, OIDC zamiast kluczy, PKI.
+description: Use for secrets and machine identities — scanning, rotation, OIDC instead of keys, PKI.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj przy sekretach i tożsamościach maszynowych — inwentarz kont usług, tokenów, kluczy i certyfikatów (właściciel, zakres, wygaśnięcie), rozdział tożsamości buildu i wdrożenia, skanowanie sekretów przed commitem i w CI, push protection, rotacja i sprzątanie, inwentarz kryptografii (CBOM). Nie do auth użytkowników aplikacji (be-auth-security) ani zależności (ops-supply-chain-security)."
+  catalog: "Use for secrets and machine identities — an inventory of service accounts, tokens, keys and certificates (owner, scope, expiry), separating the build and deployment identities, secret scanning before commit and in CI, push protection, rotation and clean-up, a cryptography inventory (CBOM). Not for authenticating application users (be-auth-security) or dependencies (ops-supply-chain-security)."
 ---
 
-# Sekrety i tożsamości maszynowe
+# Secrets and machine identities
 
-Tożsamości nieludzkie (konta usług, tokeny CI, klucze wdrożeniowe, role chmurowe, aplikacje GitHub, tokeny agentów AI)
-mnożą się szybciej niż konta ludzi i nie przechodzą przez procesy HR: nikt ich nie „zwalnia”. Dostęp nadany awaryjnie
-zostaje na lata. Wyciek sekretu wypchniętego do publicznego repozytorium bywa wykorzystany w ciągu minut.
+Non-human identities (service accounts, CI tokens, deploy keys, cloud roles, GitHub apps, AI agent tokens)
+multiply faster than human accounts and do not go through HR processes: nobody "lets them go". Access granted in an emergency
+stays for years. A leaked secret pushed to a public repository can be exploited within minutes.
 
-## 1. Inwentarz
-Dla każdej tożsamości, która sięga do produkcji lub do repozytoriów: **właściciel, cel, zakres uprawnień, data
-utworzenia, data wygaśnięcia, ostatnie użycie, co od niej zależy.**
-- GitHub Enterprise Cloud udostępnia inwentarz poświadczeń (klucze SSH, PAT klasyczne i fine-grained, tokeny aplikacji
-  OAuth i GitHub App) jako CSV i przez REST API, z osobnym uprawnieniem do samego podglądu. Pobieraj go codziennie
-  i alarmuj o tokenach bez daty wygaśnięcia, ze zbyt szerokim zakresem i nieużywanych od 90 dni.
-- Inwentarz tylko raportuje — sprzątanie i zakazy (np. maksymalny czas życia PAT) konfigurujesz osobno.
-- Tokeny agentów AI traktuj priorytetowo: mają szerokie uprawnienia i działają bez nadzoru (core-agent-security).
+## 1. Inventory
+For every identity that reaches production or the repositories: **the owner, the purpose, the scope of permissions, the creation
+date, the expiry date, the last use, what depends on it.**
+- GitHub Enterprise Cloud provides a credential inventory (SSH keys, classic and fine-grained PATs, OAuth app
+  and GitHub App tokens) as CSV and through the REST API, with a separate permission for viewing only. Fetch it daily
+  and alert on tokens with no expiry date, with too broad a scope and unused for 90 days.
+- The inventory only reports — clean-up and bans (e.g. a maximum PAT lifetime) you configure separately.
+- Treat AI agent tokens as a priority: they have broad permissions and act without supervision (core-agent-security).
 
-## 2. Najmniejsze uprawnienia i krótki czas życia
-- **Build i wdrożenie to osobne tożsamości.** Job budujący nie ma ról wdrożeniowych ani dostępu do produkcji.
-- Poświadczenia wydawane na żądanie (OIDC → rola chmurowa, Vault z dynamicznymi sekretami), ważne minuty lub godziny,
-  zamiast stałych kluczy w sekretach CI.
-- Przegląd okresowy: kto przyjmuje które role chmurowe, jakie integracje ma repozytorium; nieużywane uprawnienia usuń
-  (np. AWS IAM Access Analyzer pokazuje nieużywane akcje).
+## 2. Least privilege and a short lifetime
+- **Build and deployment are separate identities.** The build job has no deployment roles and no access to production.
+- Credentials issued on demand (OIDC → a cloud role, Vault with dynamic secrets), valid for minutes or hours,
+  instead of static keys in CI secrets.
+- A periodic review: who assumes which cloud roles, which integrations the repository has; remove unused permissions
+  (e.g. AWS IAM Access Analyzer shows unused actions).
 
-## 3. Skanowanie sekretów w trzech miejscach
-1. **Przed commitem** (na maszynie programisty): Gitleaks lub TruffleHog na plikach dodanych do indeksu (`--staged`),
-   w czasie poniżej ok. 5 s — wolny hook ludzie omijają. Przed pushem cięższe skany (OSV-Scanner, Semgrep, Trivy).
-2. **Przy pushu:** GitHub push protection (domyślnie włączona w publicznych repozytoriach dla wybranych typów tokenów;
-   w prywatnych trzeba ją włączyć — GitHub Secret Protection) z kontrolą ważności —
-   najpierw zajmujesz się sekretami, które nadal działają.
-3. **W CI** jako zabezpieczenie ostateczne, bo hooki lokalne da się pominąć (`--no-verify`).
-Każdy wyjątek od skanera ma właściciela, uzasadnienie i datę wygaśnięcia. Kod napisany przez AI przechodzi te same skany
-co kod ludzi — raporty dostawców wskazują, że w repozytoriach pisanych z asystentami AI wycieków sekretów jest więcej.
+## 3. Secret scanning in three places
+1. **Before commit** (on the developer's machine): Gitleaks or TruffleHog on the files added to the index (`--staged`),
+   in under about 5 s — people bypass a slow hook. Before push, heavier scans (OSV-Scanner, Semgrep, Trivy).
+2. **On push:** GitHub push protection (on by default in public repositories for selected token types;
+   in private ones it has to be turned on — GitHub Secret Protection) with a validity check —
+   you deal first with the secrets that still work.
+3. **In CI** as the final safeguard, because local hooks can be skipped (`--no-verify`).
+Every exception to the scanner has an owner, a justification and an expiry date. Code written by AI goes through the same scans
+as human code — vendor reports indicate that repositories written with AI assistants have more secret leaks.
 
-## 4. Gdy sekret wycieknie
-- Rotujesz od razu (unieważnij, wydaj nowy), a dopiero potem czyścisz historię. Usunięcie z pliku niczego nie zamyka.
-- Po incydencie unieważniasz **wszystkie** poświadczenia osiągalne z przejętego miejsca: w kampanii wokół Trivy
-  napastnicy wrócili, bo pierwszego włamania nie domknięto (według analizy CloudSEK — przez jeden nieunieważniony
-  token). Zakładasz, że skradzione poświadczenia mogą być użyte długo po incydencie.
+## 4. When a secret leaks
+- You rotate immediately (revoke, issue a new one), and only then clean the history. Removing it from the file closes nothing.
+- After an incident you revoke **all** credentials reachable from the compromised place: in the campaign around Trivy
+  the attackers came back because the first breach was not closed (according to CloudSEK's analysis — through one unrevoked
+  token). You assume that stolen credentials can be used long after the incident.
 
-## 5. Klucze, certyfikaty i kryptografia
-- Certyfikaty z automatycznym odnawianiem i alarmem na zbliżające się wygaśnięcie.
-- Wybór algorytmów, KMS i szyfrowanie kopertowe, cykl życia certyfikatów, własna PKI z odpornością na awarię,
-  kryptografia postkwantowa: `references/cryptography-and-pki.md`.
-- Inwentarz kryptografii (CBOM, format CycloneDX): jakie algorytmy, biblioteki, protokoły, certyfikaty i klucze
-  używa każda aplikacja i jak wrażliwe dane chronią. To pierwszy krok przed migracją na algorytmy odporne na komputery
-  kwantowe; priorytet mają dane wrażliwe i przechowywane długo.
+## 5. Keys, certificates and cryptography
+- Certificates with automatic renewal and an alert on approaching expiry.
+- Choosing algorithms, KMS and envelope encryption, the certificate lifecycle, your own PKI with failure resilience,
+  post-quantum cryptography: `references/cryptography-and-pki.md`.
+- A cryptography inventory (CBOM, CycloneDX format): which algorithms, libraries, protocols, certificates and keys
+  each application uses and how sensitive the data they protect is. It is the first step before migrating to algorithms resistant to quantum
+  computers; data that is sensitive and stored for a long time has priority.
 
-## Przykład
-**Sytuacja:** klucz AWS z `deploy.env` trafił do publicznego repozytorium; plik usunięto kolejnym commitem.
-**Wynik:** runbook — rotacja przed porządkami:
-1. 15 min: dezaktywacja klucza konta `svc-shop-deploy` (właściciel i zależności z inwentarza).
-2. 1 h: nowe poświadczenie albo od razu rola przez OIDC przypięta do `repo:acme/shop:environment:production`.
-3. 4 h: logi audytu chmury z okna od pusha do dezaktywacji.
-4. 24 h: rotacja wszystkiego, co osiągalne z tej roli (hasło bazy, token płatności).
-5. 2 dni: czyszczenie historii, push protection, skan `--staged` w hooku; stary klucz usunięty.
+## Example
+**Situation:** an AWS key from `deploy.env` reached a public repository; the file was removed in the next commit.
+**Result:** a runbook — rotation before clean-up:
+1. 15 min: deactivate the key of the `svc-shop-deploy` account (owner and dependencies from the inventory).
+2. 1 h: a new credential or straight away a role through OIDC pinned to `repo:acme/shop:environment:production`.
+3. 4 h: the cloud audit logs from the window between the push and the deactivation.
+4. 24 h: rotation of everything reachable from that role (the database password, the payment token).
+5. 2 days: history clean-up, push protection, a `--staged` scan in the hook; the old key deleted.
 
-Więcej przykładów: `references/examples.md`.
+More examples: `references/examples.md`.
 
-## Checklista
-- [ ] każda tożsamość maszynowa ma właściciela, zakres i datę wygaśnięcia; brak tokenów bez końca ważności
-- [ ] build i wdrożenie na osobnych tożsamościach; poświadczenia krótkotrwałe przez OIDC
-- [ ] skan sekretów przed commitem, push protection i skan w CI; wyjątki z datą wygaśnięcia
-- [ ] procedura rotacji znana i przećwiczona; po incydencie rotacja wszystkiego, co osiągalne
+## Checklist
+- [ ] every machine identity has an owner, a scope and an expiry date; no tokens that never expire
+- [ ] build and deployment on separate identities; short-lived credentials through OIDC
+- [ ] secret scanning before commit, push protection and a scan in CI; exceptions with an expiry date
+- [ ] the rotation procedure known and rehearsed; after an incident, rotation of everything reachable
 
-## Źródła (devops.com)
+## Sources (devops.com)
 - [Your CI/CD Pipeline Has Non-Human Identities You Forgot About](https://devops.com/your-ci-cd-pipeline-has-non-human-identities-you-forgot-about/)
 - [GitHub Gives Enterprises a Full Count of Who Holds the Keys](https://devops.com/github-gives-enterprises-a-full-count-of-who-holds-the-keys/)
 - [Shift Left to the Developer's Machine: Local Git Security Gates](https://devops.com/shift-left-to-the-developers-machine-building-local-git-security-gates/)

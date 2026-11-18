@@ -1,44 +1,44 @@
-# Analiza ryzyka, FAIR, ubezpieczenie i KRI
+# Risk analysis, FAIR, insurance and KRIs
 
-Spis treści: 1. Skale jakościowe · 2. FAIR krok po kroku · 3. Ubezpieczenie cyber · 4. KRI · 5. Granica z modelem zagrożeń
+Contents: 1. Qualitative scales · 2. FAIR step by step · 3. Cyber insurance · 4. KRIs · 5. The boundary with the threat model
 
-## 1. Skale jakościowe
-Skala 1–5 działa tylko z **definicjami**: wpływ 1 = strata <10 tys. zł, 3 = 100–500 tys. zł, 5 = >5 mln zł lub
-utrata licencji [przykład; progi ustala zarząd]; prawdopodobieństwo 1 = rzadziej niż raz na 10 lat, 3 = raz na 1–3
-lata, 5 = więcej niż raz w roku. Ocena = P × W; progi: 1–6 niska, 7–14 średnia, 15–25 wysoka [przykład]. Wady macierzy:
-kompresja ocen, brak dodawania ryzyk, subiektywność — dlatego dla decyzji o pieniądzach używasz FAIR.
+## 1. Qualitative scales
+A 1–5 scale works only with **definitions**: impact 1 = a loss < PLN 10 thousand, 3 = PLN 100–500 thousand, 5 = > PLN 5 million or
+the loss of a licence [example; the thresholds are set by the board]; likelihood 1 = less often than once in 10 years, 3 = once in 1–3
+years, 5 = more than once a year. Score = L × I; thresholds: 1–6 low, 7–14 medium, 15–25 high [example]. The matrix's weaknesses:
+compression of scores, no adding up of risks, subjectivity — which is why for decisions about money you use FAIR.
 
-## 2. FAIR krok po kroku
-1. **Scenariusz**: aktywo, zagrożenie (kto/co), rodzaj straty (poufność, integralność, dostępność), zakres.
-2. **Częstotliwość zdarzeń strat (LEF)** = częstotliwość prób × odsetek, który się udaje (podatność). Przedział,
-   np. 0,05–0,5 rocznie, najbardziej prawdopodobna 0,15 [przykład]; dane: własne incydenty, branżowe raporty, ekspert.
-3. **Wielkość straty (LM)**: straty pierwotne (reakcja, przestój, odtworzenie) i wtórne (kary, powiadomienia, utrata
-   klientów, koszty prawne). Każda kategoria jako przedział (min, najbardziej prawdopodobna, max).
-4. **Symulacja Monte Carlo**: tysiące losowań z przedziałów (np. rozkład trójkątny lub PERT) → rozkład rocznej straty;
-   raportujesz medianę, średnią i P90, nie jedną liczbę. Narzędzia: arkusz, Python (np. biblioteka pyfair).
-5. **Decyzja**: porównaj rozkład przed i po kontroli z kosztem kontroli i apetytem; różnica to wartość kontroli.
-6. **Kalibracja**: ekspertów ćwicz w podawaniu 90% przedziałów; zapisz założenia, bo wynik jest tak dobry jak dane.
-Nie liczysz FAIR dla każdego ryzyka — tylko dla najwyższych i spornych. Wynik wpisujesz do rejestru obok oceny macierzowej.
+## 2. FAIR step by step
+1. **Scenario**: the asset, the threat (who/what), the type of loss (confidentiality, integrity, availability), the scope.
+2. **Loss event frequency (LEF)** = the frequency of attempts × the share that succeeds (vulnerability). A range,
+   e.g. 0.05–0.5 per year, most likely 0.15 [example]; data: own incidents, industry reports, an expert.
+3. **Loss magnitude (LM)**: primary losses (response, downtime, recovery) and secondary ones (fines, notifications, loss of
+   customers, legal costs). Each category as a range (min, most likely, max).
+4. **A Monte Carlo simulation**: thousands of draws from the ranges (e.g. a triangular or PERT distribution) → the distribution of the annual loss;
+   you report the median, the mean and P90, not a single number. Tools: a spreadsheet, Python (e.g. the pyfair library).
+5. **Decision**: compare the distribution before and after the control with the cost of the control and the appetite; the difference is the value of the control.
+6. **Calibration**: train the experts in giving 90% ranges; record the assumptions, because the result is only as good as the data.
+You do not calculate FAIR for every risk — only for the highest and disputed ones. You enter the result into the register next to the matrix score.
 
-## 3. Ubezpieczenie cyber (podział ryzyka)
-Przenosi część skutku finansowego (koszty reakcji, przestój, roszczenia stron trzecich — zależnie od polisy), nie usuwa
-przyczyny. Sprawdź z brokerem i prawnikiem: sumy i podlimity, **wyłączenia** (np. wojna, brak spełnienia minimalnych
-kontroli), franszyzę, wymagane kontrole (MFA, kopie offline, EDR) i ich zgodność z rzeczywistością przy wniosku
-(nieprawdziwe odpowiedzi mogą unieważnić ochronę), okres wykrycia i zgłoszenia, wybór doradców przez ubezpieczyciela.
-Wiersz rejestru ma opcję „podział” z numerem polisy i datą wygaśnięcia. Warunki rynku zmieniają się — [niezweryfikowane] w sesji.
+## 3. Cyber insurance (risk sharing)
+It transfers part of the financial consequence (response costs, downtime, third-party claims — depending on the policy), it does not remove
+the cause. Check with a broker and a lawyer: the sums and sub-limits, the **exclusions** (e.g. war, failing to meet the minimum
+controls), the deductible, the required controls (MFA, offline backups, EDR) and whether they match reality at the time of the application
+(untrue answers may void the cover), the discovery and notification period, the insurer's choice of advisers.
+The register row has the "sharing" option with the policy number and the expiry date. Market conditions change — [unverified] in the session.
 
-## 4. KRI (wskaźniki ryzyka)
-| KRI | Próg zielony / czerwony [przykład] | Właściciel |
+## 4. KRIs (key risk indicators)
+| KRI | Green / red threshold [example] | Owner |
 |---|---|---|
-| krytyczne podatności po terminie SLA | 0 / >3 | CISO |
-| akceptacje ryzyka po terminie | 0 / >0 | CISO |
-| dostawcy tier 1 bez oceny <12 mies. | 0 / >1 | zakupy |
-| odsetek kont uprzywilejowanych z MFA | 100% / <98% | IT |
-| udany test odtworzenia w ostatnich 6 mies. | tak / nie | SRE |
-Zasady: KRI przewiduje (wskaźnik wyprzedzający), ma próg i akcję przy przekroczeniu; nie raportuj liczby bez trendu.
+| critical vulnerabilities past the SLA deadline | 0 / >3 | CISO |
+| overdue risk acceptances | 0 / >0 | CISO |
+| tier 1 vendors without an assessment <12 months | 0 / >1 | procurement |
+| share of privileged accounts with MFA | 100% / <98% | IT |
+| a successful restore test in the last 6 months | yes / no | SRE |
+Rules: a KRI predicts (a leading indicator), has a threshold and an action when it is exceeded; do not report a number without a trend.
 
-## 5. Granica z modelem zagrożeń
-**arch-threat-modeling** ocenia konkretny projekt (DFD, STRIDE, kontrole w backlogu) i daje listę zagrożeń z oceną.
-Ten skill bierze z niego ryzyka istotne dla organizacji, agreguje je w jednym rejestrze z jednymi kryteriami, ustala
-właścicieli, apetyt i akceptacje oraz raportuje zarządowi. Niska ocena techniczna w modelu zagrożeń może być wysoka
-organizacyjnie (aktywo krytyczne, wiele funkcji dotkniętych) — przelicz wg kryteriów organizacji.
+## 5. The boundary with the threat model
+**arch-threat-modeling** assesses a specific design (DFD, STRIDE, controls in the backlog) and gives a list of threats with a score.
+This skill takes from it the risks relevant to the organization, aggregates them in one register with one set of criteria, sets
+the owners, the appetite and the acceptances, and reports to the board. A low technical score in the threat model may be high
+organizationally (a critical asset, many features affected) — recalculate it according to the organization's criteria.

@@ -1,30 +1,30 @@
-# Przykłady FinOps
+# FinOps examples
 
-Kwoty i nazwy w przykładach są ilustracyjne — w prawdziwej pracy biorą się z Infracost, raportu kosztów dostawcy
-i metryk wykorzystania.
+The amounts and names in the examples are illustrative — in real work they come from Infracost, the provider's cost report
+and utilization metrics.
 
-## 1. Koszt w PR ze zmianą bazy
-**Sytuacja:** PR w Terraform powiększa bazę `orders-db` i dodaje środowisko `orders-preview`. Infracost
-skomentował różnicę, a polityka Conftest zgłosiła ostrzeżenie.
+## 1. Cost in a PR with a database change
+**Situation:** A Terraform PR enlarges the `orders-db` database and adds the `orders-preview` environment. Infracost
+commented on the difference, and a Conftest policy raised a warning.
 
-**Jak:**
-1. Przeczytaj różnicę kosztu miesięcznego z komentarza Infracost i rozbij ją na zasoby.
-2. Sprawdź tagi `team`, `env`, `project` i `expires` przy zasobach tymczasowych — brak tagu blokuje plan.
-3. Odróżnij warstwy polityki: ostrzeżenie (ryzykowny wybór) od blokady (oczywiste marnotrawstwo poza produkcją).
-4. Wpisz różnicę kosztu i uzasadnienie do opisu PR.
+**How:**
+1. Read the monthly cost difference from the Infracost comment and break it down by resource.
+2. Check the tags `team`, `env`, `project` and `expires` on temporary resources — a missing tag blocks the plan.
+3. Distinguish the policy layers: a warning (a risky choice) from a block (obvious waste outside production).
+4. Put the cost difference and the justification in the PR description.
 
-**Wynik:** fragment opisu PR
+**Result:** a fragment of the PR description
 ```text
-Koszt (Infracost): +1 240 USD/mies.
+Cost (Infracost): +1,240 USD/month
 
-| Zasób                       | Przed | Po    | Różnica | Uwagi                                  |
-|-----------------------------|-------|-------|---------|----------------------------------------|
-| orders-db (prod)            | 610   | 1 220 | +610    | 2× większa klasa; CPU p95 = 85% od 3 tyg. |
-| orders-preview-db (preview) | 0     | 630   | +630    | klasa produkcyjna poza produkcją     |
+| Resource                    | Before | After | Diff    | Notes                                  |
+|-----------------------------|--------|-------|---------|----------------------------------------|
+| orders-db (prod)            | 610    | 1,220 | +610    | a 2× larger class; CPU p95 = 85% for 3 weeks |
+| orders-preview-db (preview) | 0      | 630   | +630    | a production class outside production  |
 
-Polityka: WARN orders-preview-db — klasa spoza listy dozwolonych dla env=preview
-Decyzja: preview zmienione na najmniejszą dozwoloną klasę (+90 zamiast +630),
-         tag expires=2026-11-15; nowa różnica: +700 USD/mies.
+Policy: WARN orders-preview-db — class not on the allowed list for env=preview
+Decision: preview changed to the smallest allowed class (+90 instead of +630),
+          tag expires=2026-11-15; new difference: +700 USD/month
 ```
 ```hcl
 tags = {
@@ -35,51 +35,51 @@ tags = {
 }
 ```
 
-## 2. Cotygodniowy przegląd sprzątania
-**Sytuacja:** „Agent, przygotuj listę rzeczy do usunięcia z konta dev — rachunek rośnie.”
+## 2. A weekly clean-up review
+**Situation:** "Agent, prepare a list of things to delete from the dev account — the bill is growing."
 
-**Jak:**
-1. Zbierz kandydatów według progów: CPU < 5% przez 30 dni, niepodpięte dyski, migawki starsze niż 90 dni, load
-   balancery bez celów; osobno zasoby wykorzystane poniżej 40% (do zmniejszenia).
-2. Przypisz właściciela z tagu `team`; zasób bez tagu idzie do zespołu platformy.
-3. Wyślij listę właścicielom z terminem sprzeciwu 7 dni.
-4. Niczego nie usuwaj — usunięcie wykonuje człowiek po upływie terminu.
+**How:**
+1. Collect candidates by thresholds: CPU < 5% for 30 days, unattached disks, snapshots older than 90 days, load
+   balancers without targets; separately resources used below 40% (to downsize).
+2. Assign the owner from the `team` tag; a resource without a tag goes to the platform team.
+3. Send the list to the owners with a 7-day objection deadline.
+4. Do not delete anything — the deletion is done by a human after the deadline passes.
 
-**Wynik:**
+**Result:**
 ```text
-Przegląd 2026-10-05 (konto dev) — sprzeciw do 2026-10-12
+Review 2026-10-05 (dev account) — objections until 2026-10-12
 
-| Zasób               | Kryterium               | Koszt/mies. | Właściciel | Propozycja      |
+| Resource            | Criterion               | Cost/month  | Owner      | Proposal        |
 |---------------------|-------------------------|-------------|------------|-----------------|
-| vm-batch-old-2      | CPU 1,8% przez 30 dni   | 140 USD     | data       | usunąć          |
-| vol-0a91 (200 GiB)  | niepodpięty od 41 dni   | 16 USD      | brak tagu  | usunąć          |
-| snap-ci-* (37 szt.) | starsze niż 90 dni      | 52 USD      | platform   | usunąć          |
-| lb-legacy-api       | brak celów              | 18 USD      | orders     | usunąć          |
-| vm-search-1         | CPU 22%, pamięć 31%     | 280 USD     | search     | zmniejszyć o pół |
+| vm-batch-old-2      | CPU 1.8% for 30 days    | 140 USD     | data       | delete          |
+| vol-0a91 (200 GiB)  | unattached for 41 days  | 16 USD      | no tag     | delete          |
+| snap-ci-* (37 items)| older than 90 days      | 52 USD      | platform   | delete          |
+| lb-legacy-api       | no targets              | 18 USD      | orders     | delete          |
+| vm-search-1         | CPU 22%, memory 31%     | 280 USD     | search     | halve the size  |
 
-Potencjalna oszczędność: 226 USD/mies. (usunięcia) + ok. 140 USD/mies. (zmniejszenie)
-Agent: brak usunięć; czeka na decyzję właścicieli i akceptację człowieka.
+Potential savings: 226 USD/month (deletions) + about 140 USD/month (downsizing)
+Agent: no deletions; waiting for the owners' decision and a human's approval.
 ```
 
-## 3. Rosnący rachunek a koszt jednostkowy
-**Sytuacja:** Budżet zespołu `payments` przekroczył próg 100%, kierownik pyta, czy to marnotrawstwo.
+## 3. A growing bill and unit cost
+**Situation:** The budget of the `payments` team exceeded the 100% threshold, the manager asks whether this is waste.
 
-**Jak:**
-1. Zestaw koszt z miarą biznesową (transakcje) — sam rachunek nie odpowiada na pytanie.
-2. Policz koszt jednostkowy miesiąc do miesiąca.
-3. Gdy koszt jednostkowy stoi, wzrost jest zdrowy; gdy rośnie, szukaj anomalii i zasobów do sprzątania.
-4. Zaproponuj korektę budżetu albo działania naprawcze, z alertami 80/100/120%.
+**How:**
+1. Put the cost next to a business measure (transactions) — the bill alone does not answer the question.
+2. Compute the unit cost month over month.
+3. When the unit cost is flat, the growth is healthy; when it grows, look for anomalies and resources to clean up.
+4. Propose a budget correction or corrective actions, with alerts at 80/100/120%.
 
-**Wynik:**
+**Result:**
 ```text
-| Miesiąc  | Koszt [USD] | Transakcje | USD / 1000 transakcji |
-|----------|-------------|------------|-----------------------|
-| lipiec   | 8 000       | 4,0 mln    | 2,00                  |
-| sierpień | 9 100       | 4,6 mln    | 1,98                  |
-| wrzesień | 11 900      | 4,8 mln    | 2,48  ← +25%          |
+| Month     | Cost [USD]  | Transactions | USD / 1000 transactions |
+|-----------|-------------|--------------|-------------------------|
+| July      | 8,000       | 4.0 million  | 2.00                    |
+| August    | 9,100       | 4.6 million  | 1.98                    |
+| September | 11,900      | 4.8 million  | 2.48  ← +25%            |
 
-Wniosek: lipiec→sierpień to zdrowy wzrost (koszt jednostkowy płaski). We wrześniu koszt
-jednostkowy skoczył o 25% przy +4% ruchu — anomalia: klaster testów obciążeniowych bez tagu
-expires działa od 3.09 (ok. 2 600 USD). Działanie: właściciel potwierdza wyłączenie, polityka
-wymaga expires dla env=perf; budżet bez zmian.
+Conclusion: July→August is healthy growth (flat unit cost). In September the unit cost
+jumped by 25% with +4% traffic — an anomaly: a load-testing cluster without the expires
+tag has been running since 3.09 (about 2,600 USD). Action: the owner confirms the shutdown, a policy
+requires expires for env=perf; the budget unchanged.
 ```

@@ -1,22 +1,22 @@
-# Przykłady Kubernetes
+# Kubernetes examples
 
-> **Spis treści:** 1. Produkcyjny Deployment z PDB · 2. NetworkPolicy i RBAC dla nowej usługi · 3. Wdrożenie „udane”, aplikacja pada — stary ConfigMap
+> **Contents:** 1. A production Deployment with a PDB · 2. NetworkPolicy and RBAC for a new service · 3. A "successful" deployment, the application fails — a…
 
-Nazwy, liczby i rejestr są ilustracyjne. Wartości requests bierz z rzeczywistego zużycia (metryki z ostatnich tygodni),
-nie z tych przykładów.
+The names, numbers and registry are illustrative. Take requests values from real usage (metrics from recent weeks),
+not from these examples.
 
-## 1. Produkcyjny Deployment z PDB
-**Sytuacja:** „Napisz manifest dla `orders-api` na produkcję. Startuje ok. 40 s, zużywa zwykle 300m CPU i 380 MiB
-pamięci, nie rozmawia z API Kubernetes.”
+## 1. A production Deployment with a PDB
+**Situation:** "Write a manifest for `orders-api` for production. It starts in approx. 40 s, usually uses 300m CPU and 380 MiB
+of memory, and does not talk to the Kubernetes API."
 
-**Jak:**
-1. requests z rzeczywistego zużycia, limit pamięci z zapasem, bez limitu CPU (unikasz throttlingu).
-2. readiness i liveness na różnych endpointach; liveness bez zależności; `startupProbe` na wolny start.
-3. 3 repliki, `RollingUpdate` z `maxUnavailable: 0`, osobny `PodDisruptionBudget`.
-4. Obraz przypięty do digestu; `securityContext` zgodny z profilem `restricted`; `automountServiceAccountToken: false`.
-5. `terminationGracePeriodSeconds` dłuższy niż najdłuższe żądanie (tu 30 s).
+**How:**
+1. requests from real usage, a memory limit with headroom, no CPU limit (you avoid throttling).
+2. readiness and liveness on different endpoints; liveness without dependencies; `startupProbe` for the slow start.
+3. 3 replicas, `RollingUpdate` with `maxUnavailable: 0`, a separate `PodDisruptionBudget`.
+4. The image pinned to a digest; `securityContext` compliant with the `restricted` profile; `automountServiceAccountToken: false`.
+5. `terminationGracePeriodSeconds` longer than the longest request (here 30 s).
 
-**Wynik:**
+**Result:**
 ```yaml
 apiVersion: v1
 kind: Namespace
@@ -97,19 +97,19 @@ spec:
     matchLabels:
       app: orders-api
 ```
-`startupProbe` daje do 60 s (12 × 5 s) na start, zanim zacznie działać liveness. Walidacja: `kubeconform`, potem zmiana
-przez GitOps — agent nie robi `kubectl apply` na klastrze współdzielonym.
+`startupProbe` gives up to 60 s (12 × 5 s) for startup before liveness starts working. Validation: `kubeconform`, then the change
+through GitOps — the agent does not do `kubectl apply` on a shared cluster.
 
-## 2. NetworkPolicy i RBAC dla nowej usługi
-**Sytuacja:** Usługa `orders-admin` ma przyjmować ruch tylko z kontrolera ingress, łączyć się z bazą `orders-db`
-na 5432 i czytać jeden ConfigMap przez API Kubernetes (dlatego, inaczej niż w przykładzie 1, montuje token).
+## 2. NetworkPolicy and RBAC for a new service
+**Situation:** The `orders-admin` service is to accept traffic only from the ingress controller, connect to the `orders-db` database
+on 5432 and read one ConfigMap through the Kubernetes API (which is why, unlike in example 1, it mounts the token).
 
-**Jak:**
-1. Najpierw polityka domyślnie odmawiająca ruchu w obie strony w namespace (sprawdź, czy CNI egzekwuje NetworkPolicy).
-2. Jawne zezwolenia: wejście z namespace ingress, wyjście do bazy i DNS — nic więcej, więc metadane chmury też odcięte.
-3. Jedno konto usługi, Role w namespace z konkretnym zasobem i czasownikami, bez `*`.
+**How:**
+1. First a policy denying traffic in both directions in the namespace by default (check whether the CNI enforces NetworkPolicy).
+2. Explicit allows: ingress from the ingress namespace, egress to the database and DNS — nothing more, so the cloud metadata is cut off too.
+3. One service account, a Role in the namespace with a specific resource and verbs, no `*`.
 
-**Wynik:**
+**Result:**
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -185,21 +185,21 @@ roleRef:
   kind: Role
   name: orders-admin-config-reader
 ```
-Ruch do API Kubernetes wymaga osobnej reguły egress (adres serwera API zależy od klastra) — dodaj ją świadomie,
-po sprawdzeniu adresu.
+Traffic to the Kubernetes API needs a separate egress rule (the API server address depends on the cluster) — add it deliberately,
+after checking the address.
 
-## 3. Wdrożenie „udane”, aplikacja pada — stary ConfigMap
-**Sytuacja:** Po wdrożeniu `orders-api` w wersji 2.4 wszystkie pody są `Running`, ale pierwsze płatności kończą się
-błędem 500. Log: `PAYMENTS_API_URL is not set`.
+## 3. A "successful" deployment, the application fails — a stale ConfigMap
+**Situation:** After deploying `orders-api` version 2.4 all pods are `Running`, but the first payments end with
+error 500. Log: `PAYMENTS_API_URL is not set`.
 
-**Jak:**
-1. Porównaj zmienne oczekiwane przez nową wersję z ConfigMap w repozytorium GitOps — nowej wartości tam nie ma.
-2. Przyczyna: kod zmieniono w jednym PR, konfigurację miał dodać ktoś „później”; ConfigMap bez zmian nie wymusza rolloutu.
-3. Naprawa: ConfigMap generowany przez Kustomize (nazwa z sufiksem skrótu) w tym samym PR co kod.
-4. Zabezpieczenie: aplikacja waliduje konfigurację przy starcie i nie zgłasza gotowości, gdy wartości brakuje —
-   następnym razem rolling update zatrzyma się na pierwszym podzie.
+**How:**
+1. Compare the variables expected by the new version with the ConfigMap in the GitOps repository — the new value is not there.
+2. Cause: the code was changed in one PR, someone was to add the configuration "later"; an unchanged ConfigMap does not force a rollout.
+3. Fix: a ConfigMap generated by Kustomize (a name with a hash suffix) in the same PR as the code.
+4. Safeguard: the application validates its configuration at startup and does not report readiness when a value is missing —
+   next time the rolling update stops at the first pod.
 
-**Wynik:** `kustomization.yaml`
+**Result:** `kustomization.yaml`
 ```yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -212,5 +212,5 @@ configMapGenerator:
       - PAYMENTS_API_URL=https://payments.internal.acme.example
       - ORDERS_TIMEOUT_MS=3000
 ```
-W Deployment: `envFrom: [{configMapRef: {name: orders-api-config}}]` — Kustomize podmieni nazwę na
-`orders-api-config-<skrót>`, więc każda zmiana wartości zmienia szablon poda i wywołuje nowy rollout.
+In the Deployment: `envFrom: [{configMapRef: {name: orders-api-config}}]` — Kustomize replaces the name with
+`orders-api-config-<hash>`, so every value change changes the pod template and triggers a new rollout.

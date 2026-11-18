@@ -1,38 +1,38 @@
-# Architektura Zero Trust: PDP/PEP, ZTNA, VPN, SASE/SSE
+# Zero Trust architecture: PDP/PEP, ZTNA, VPN, SASE/SSE
 
-Spis treści: komponenty · wzorce · ZTNA a VPN · SASE i SSE · pułapki
+Contents: components · patterns · ZTNA vs VPN · SASE and SSE · pitfalls
 
-## Komponenty (NIST SP 800-207)
-- **Policy engine** (ocena żądania wg polityki i sygnałów) + **policy administrator** (wydaje token/ustanawia sesję)
-  = PDP. **PEP** stoi na ścieżce do zasobu (agent, bramka, proxy) i zamyka sesję na polecenie PDP.
-- Źródła sygnałów: IdP, zarządzanie urządzeniami (MDM/EDR), SIEM, inteligencja zagrożeń, polityki zgodności,
-  klasyfikacja danych, logi dostępu.
-- Wymóg: PEP jest jedyną drogą; PDP jest wysoko dostępny (awaria → plan „fail closed” dla zasobów krytycznych
-  i kontrolowany tryb awaryjny dla reszty, zapisany w ADR).
+## Components (NIST SP 800-207)
+- **Policy engine** (evaluates the request against the policy and the signals) + **policy administrator** (issues the token/establishes the session)
+  = PDP. The **PEP** sits on the path to the resource (an agent, a gateway, a proxy) and closes the session on the PDP's command.
+- Signal sources: the IdP, device management (MDM/EDR), the SIEM, threat intelligence, compliance policies,
+  data classification, access logs.
+- Requirement: the PEP is the only path; the PDP is highly available (a failure → a "fail closed" plan for critical resources
+  and a controlled emergency mode for the rest, recorded in an ADR).
 
-## Wzorce wdrożenia
-1. Oparty na ulepszonym zarządzaniu tożsamością (polityka z tożsamości i grup).
-2. Mikrosegmentacja (bramki lub agenty hosta wokół zasobów).
-3. Sieć programowalna (SDP), czyli sieć „niewidoczna”, dopóki PDP nie zezwoli.
-Zwykle łączysz wzorce; wybór zależy od tego, czy dominują aplikacje webowe, stare protokoły, czy serwery.
+## Deployment patterns
+1. Based on enhanced identity governance (policy from identity and groups).
+2. Microsegmentation (gateways or host agents around resources).
+3. A software-defined perimeter (SDP), i.e. a network that is "invisible" until the PDP allows it.
+You usually combine the patterns; the choice depends on whether web applications, legacy protocols or servers dominate.
 
-## ZTNA a VPN
+## ZTNA vs VPN
 | | VPN | ZTNA |
 |---|---|---|
-| zakres po zalogowaniu | segment lub cała sieć | pojedyncza aplikacja |
-| decyzja | raz przy połączeniu | na sesję, z postury i kontekstu |
-| ruch boczny | ułatwiony | ograniczony |
-| widoczność | adresy IP | użytkownik, aplikacja, urządzenie |
-| ryzyko | skradzione poświadczenia dają szeroki dostęp; bramka VPN to cel ataków | zależność od brokera i IdP |
-ZTNA bez agenta (przeglądarka) pasuje do BYOD i partnerów, z agentem do protokołów nie-HTTP. Migracja: po jednej
-aplikacji, z równoległym VPN do czasu potwierdzenia.
+| scope after logging in | a segment or the whole network | a single application |
+| decision | once at connection | per session, from posture and context |
+| lateral movement | made easier | limited |
+| visibility | IP addresses | user, application, device |
+| risk | stolen credentials give broad access; the VPN gateway is an attack target | dependence on the broker and the IdP |
+Agentless ZTNA (browser) fits BYOD and partners, with an agent for non-HTTP protocols. Migration: one
+application at a time, with the VPN in parallel until confirmed.
 
-## SASE i SSE (definicje wg Gartnera, [niezweryfikowane] w źródle)
-- **SASE** — chmurowa usługa łącząca sieć (SD-WAN) z funkcjami bezpieczeństwa.
-- **SSE** — część bezpieczeństwa SASE bez sieci: zwykle SWG (bezpieczna bramka webowa), CASB (kontrola SaaS)
-  i ZTNA, często z DLP. Używaj nazw jako opisu funkcji; sprawdzaj, co dostawca naprawdę oferuje.
+## SASE and SSE (definitions per Gartner, [unverified] in the source)
+- **SASE** — a cloud service combining the network (SD-WAN) with security functions.
+- **SSE** — the security part of SASE without the network: usually SWG (secure web gateway), CASB (SaaS control)
+  and ZTNA, often with DLP. Use the names as a description of functions; check what the vendor really offers.
 
-## Pułapki
-„Zero Trust” jako nazwa produktu; ZTNA przed porządkiem w tożsamości; polityki zbyt szczegółowe, więc obchodzone
-wyjątkami; brak planu awarii PDP; zaufanie do postury zgłaszanej przez samo urządzenie bez atestacji.
-Zagrożenia i odporność: `arch-threat-modeling`, `ops-security-operations`.
+## Pitfalls
+"Zero Trust" as a product name; ZTNA before putting identity in order; policies too detailed, so bypassed
+with exceptions; no plan for a PDP failure; trusting posture reported by the device itself without attestation.
+Threats and resilience: `arch-threat-modeling`, `ops-security-operations`.

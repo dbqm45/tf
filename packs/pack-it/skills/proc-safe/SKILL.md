@@ -5,6 +5,7 @@ metadata:
   review: "2027-10-17"
   visibility: name
   catalog: "Use when the work spans many teams in a large organization that uses SAFe — the Agile Release Train, PI Planning, roles (RTE, Product Management, System Architect, Business Owners), the backlog hierarchy, WSJF, Inspect & Adapt, Lean Portfolio Management — and when assessing whether SAFe fits. Not for the work of a single team (proc-agile)."
+  keywords: "SAFe, czy SAFe ma sens, wdrożyć SAFe, wiele zespołów, kilka zespołów, skalowanie zwinności, pociąg wydań, PI Planning, zależności między zespołami, is SAFe worth it, adopt SAFe, many teams, several teams, scaling agile, release train, dependencies between teams"
 ---
 
 # SAFe (Scaled Agile Framework)

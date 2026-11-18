@@ -1,89 +1,89 @@
-# Moduły zaawansowane — wybierane po cechach aplikacji
+# Advanced modules — chosen by the application's features
 
-Każdy moduł: kiedy go włączyć, czego szukać w kodzie, jak atakujący to wykorzystuje, obrona i test. Dowody tylko
-lokalnie albo w testach.
+Every module: when to turn it on, what to look for in the code, how an attacker exploits it, the defence and the test. Proofs only
+locally or in tests.
 
-## A1. Logika biznesowa i wyścigi
-**Włącz, gdy:** pieniądze, kredyty, kupony, limity (głosy, zaproszenia, próby), stany zamówień, zwroty.
+## A1. Business logic and races
+**Turn on when:** money, credits, coupons, limits (votes, invitations, attempts), order states, refunds.
 
-| Problem | W kodzie | Obrona | Test |
+| Problem | In the code | Defence | Test |
 |---|---|---|---|
-| wyścig „sprawdź, potem zapisz” (CWE-362, TOCTOU) | `if (!coupon.used) { …; coupon.used = true }`, saldo czytane i zapisywane osobno | jeden atomowy zapis warunkowy: `UPDATE coupons SET used = true WHERE id = ? AND used = false` i sprawdzenie liczby zmienionych wierszy; albo `SELECT … FOR UPDATE` w transakcji; ograniczenie unikalności (np. `UNIQUE(user_id, coupon_id)`) | N równoległych żądań (`Promise.all`, pula wątków) → dokładnie jedno udane |
-| powtórzenie żądania płatności | brak klucza idempotencji | `Idempotency-Key` zapisany z wynikiem w tej samej transakcji (be-api-design) | dwa identyczne żądania → jedno obciążenie |
-| przeskok stanu | `status` z body, brak maszyny stanów | dozwolone przejścia w jednym miejscu, przejście jako warunek w `UPDATE … WHERE status = 'paid'` | `shipped` → `created` → 409 |
-| wartości ujemne i graniczne | ilość, kwota, rabat z klienta | walidacja zakresu na serwerze, cena z serwera, nie z formularza | ilość −1, 0, 10⁹; cena zmieniona w żądaniu → odrzucenie lub cena z bazy |
-| limit obchodzony równolegle | licznik czytany przed zapisem | atomowy inkrement z warunkiem albo limiter z atomowym licznikiem | N żądań naraz → najwyżej limit udanych |
-| zaokrąglenia | wiele małych operacji zaokrąglanych w dół na korzyść klienta | kwoty w groszach (liczby całkowite), zaokrąglenie raz, w jednym miejscu | 1000 operacji po 0,004 → suma zgodna z regułą |
+| a "check, then write" race (CWE-362, TOCTOU) | `if (!coupon.used) { …; coupon.used = true }`, a balance read and written separately | one atomic conditional write: `UPDATE coupons SET used = true WHERE id = ? AND used = false` and a check of the number of changed rows; or `SELECT … FOR UPDATE` in a transaction; a uniqueness constraint (e.g. `UNIQUE(user_id, coupon_id)`) | N parallel requests (`Promise.all`, a thread pool) → exactly one succeeds |
+| repeating a payment request | no idempotency key | `Idempotency-Key` saved with the result in the same transaction (be-api-design) | two identical requests → one charge |
+| a state jump | `status` from the body, no state machine | allowed transitions in one place, the transition as a condition in `UPDATE … WHERE status = 'paid'` | `shipped` → `created` → 409 |
+| negative and boundary values | quantity, amount, discount from the client | range validation on the server, the price from the server, not from the form | quantity −1, 0, 10⁹; price changed in the request → rejection or the price from the database |
+| a limit bypassed in parallel | a counter read before the write | an atomic increment with a condition or a limiter with an atomic counter | N requests at once → at most the limit succeed |
+| rounding | many small operations rounded down in the customer's favour | amounts in grosze (minor units, integers), rounding once, in one place | 1000 operations of 0.004 → the sum matches the rule |
 
-Wyścig potwierdzasz tylko testem równoległym; jedno żądanie w teście go nie pokaże.
+You confirm a race only with a parallel test; a single request in a test will not show it.
 
-## A2. Warstwa HTTP (CDN, proxy, cache)
-**Włącz, gdy:** CDN, reverse proxy, load balancer, cache odpowiedzi, kilka serwerów w łańcuchu.
+## A2. The HTTP layer (CDN, proxy, cache)
+**Turn on when:** a CDN, reverse proxy, load balancer, response cache, several servers in a chain.
 
-| Problem | Mechanizm | Obrona | Test |
+| Problem | Mechanism | Defence | Test |
 |---|---|---|---|
-| request smuggling (CWE-444) | front i backend różnie liczą długość ciała (`Content-Length` vs `Transfer-Encoding`, HTTP/2 → HTTP/1.1) | HTTP/2 do backendu albo normalizacja na froncie, odrzucanie żądań z oboma nagłówkami i niejednoznacznym `Transfer-Encoding`, aktualne proxy | lokalny łańcuch proxy + backend, żądanie z oboma nagłówkami → 400 |
-| zatruwanie cache (web cache poisoning) | nagłówek spoza klucza cache (`X-Forwarded-Host`, `X-Original-URL`) zmienia odpowiedź | ignoruj nieoczekiwane nagłówki albo dodaj je do klucza (`Vary`), host z konfiguracji | żądanie z `X-Forwarded-Host: evil.example` → odpowiedź bez tego hosta, cache nie zapisuje |
-| oszukiwanie cache (web cache deception) | adres /konto/profil.css trafia do dynamicznej strony, a CDN cache'uje po rozszerzeniu | cache tylko dla ścieżek statycznych z allowlisty, `Cache-Control: no-store, private` na stronach z danymi, ścisły routing (404 dla nieznanych sufiksów) | adres /account/x.css z sesją → `no-store`, brak `HIT` dla innej sesji |
-| zatruwanie nagłówkiem Host | link w e-mailu resetu z `Host` żądania | adres bazowy z konfiguracji, allowlista hostów | reset z `Host: evil.example` → link z domeną z konfiguracji |
-| rozdzielenie odpowiedzi (CRLF, CWE-113) | wejście w nagłówku odpowiedzi | biblioteki odrzucające `\r\n`, bez sklejania nagłówków | wartość z `%0d%0a` → odrzucenie |
+| request smuggling (CWE-444) | the front and the backend compute the body length differently (`Content-Length` vs `Transfer-Encoding`, HTTP/2 → HTTP/1.1) | HTTP/2 to the backend or normalization at the front, rejecting requests with both headers and an ambiguous `Transfer-Encoding`, an up-to-date proxy | a local proxy chain + backend, a request with both headers → 400 |
+| web cache poisoning | a header outside the cache key (`X-Forwarded-Host`, `X-Original-URL`) changes the response | ignore unexpected headers or add them to the key (`Vary`), the host from configuration | a request with `X-Forwarded-Host: evil.example` → a response without that host, the cache does not store it |
+| web cache deception | the address /account/profile.css reaches a dynamic page, and the CDN caches by extension | cache only for static paths from an allowlist, `Cache-Control: no-store, private` on pages with data, strict routing (404 for unknown suffixes) | the address /account/x.css with a session → `no-store`, no `HIT` for another session |
+| Host header poisoning | a link in the reset e-mail built from the request's `Host` | the base address from configuration, an allowlist of hosts | a reset with `Host: evil.example` → a link with the domain from configuration |
+| response splitting (CRLF, CWE-113) | input in a response header | libraries rejecting `\r\n`, no concatenation of headers | a value with `%0d%0a` → rejection |
 
-## A3. Parsery i serializacja
-**Włącz, gdy:** głębokie łączenie obiektów z JSON, szablony z treścią użytkownika, własne formaty, deserializacja,
-wyrażenia regularne na wejściu, porównywanie nazw/e-maili.
+## A3. Parsers and serialization
+**Turn on when:** deep merging of objects from JSON, templates with user content, custom formats, deserialization,
+regular expressions on input, comparing names/e-mails.
 
-| Problem | W kodzie | Obrona | Test |
+| Problem | In the code | Defence | Test |
 |---|---|---|---|
-| prototype pollution (CWE-1321) | `merge(target, req.body)`, `lodash.set` z kluczem od użytkownika | odrzucaj `__proto__`, `constructor`, `prototype`; `Object.create(null)` lub `Map`; walidacja schematem z `additionalProperties: false` | `{"__proto__": {"isAdmin": true}}` → `({}).isAdmin === undefined` |
-| SSTI (CWE-1336) | szablon budowany z wejścia (`render_template_string(user)`, `new Function`, `eval`) | wejście tylko jako dane do szablonu, nigdy jako szablon; sandbox nie jest obroną | `{{7*7}}`, `${7*7}`, `<%= 7*7 %>` → wyświetlone dosłownie |
-| deserializacja (CWE-502) | `pickle`, `ObjectInputStream`, `BinaryFormatter`, YAML z tagami typów | tylko formaty danych ze schematem (be-auth-security) | ładunek z gadżetem w teście → odrzucenie przed deserializacją |
-| ReDoS (CWE-1333) | wyrażenia z zagnieżdżonymi kwantyfikatorami (`(a+)+`, `(\w+\s?)*$`) na wejściu | silnik liniowy (RE2, `re2`), limit długości wejścia, proste wyrażenia | 50 000 znaków `a` + `!` → odpowiedź < 100 ms |
-| normalizacja Unicode | porównanie e-maili/loginów przed normalizacją; `ﬀ`, `İ`, znaki pełnej szerokości | NFKC + case folding przed porównaniem i przed zapisem unikalnym; ta sama normalizacja wszędzie | rejestracja `Admin` i `Ａｄｍｉｎ` → konflikt |
-| zanieczyszczenie parametrów (HPP) | `?role=user&role=admin` różnie czytane przez warstwy | jedna biblioteka parsująca, odrzucanie powtórzonych parametrów krytycznych | powtórzony parametr → 400 |
+| prototype pollution (CWE-1321) | `merge(target, req.body)`, `lodash.set` with a key from the user | reject `__proto__`, `constructor`, `prototype`; `Object.create(null)` or `Map`; schema validation with `additionalProperties: false` | `{"__proto__": {"isAdmin": true}}` → `({}).isAdmin === undefined` |
+| SSTI (CWE-1336) | a template built from input (`render_template_string(user)`, `new Function`, `eval`) | input only as data for the template, never as the template; a sandbox is not a defence | `{{7*7}}`, `${7*7}`, `<%= 7*7 %>` → displayed literally |
+| deserialization (CWE-502) | `pickle`, `ObjectInputStream`, `BinaryFormatter`, YAML with type tags | only data formats with a schema (be-auth-security) | a payload with a gadget in the test → rejection before deserialization |
+| ReDoS (CWE-1333) | expressions with nested quantifiers (`(a+)+`, `(\w+\s?)*$`) on input | a linear engine (RE2, `re2`), an input length limit, simple expressions | 50,000 `a` characters + `!` → a response < 100 ms |
+| Unicode normalization | comparing e-mails/logins before normalization; `ﬀ`, `İ`, full-width characters | NFKC + case folding before comparison and before a unique write; the same normalization everywhere | registering `Admin` and `Ａｄｍｉｎ` → a conflict |
+| HTTP parameter pollution (HPP) | `?role=user&role=admin` read differently by the layers | one parsing library, rejecting repeated critical parameters | a repeated parameter → 400 |
 
-## A4. Przeglądarka
-**Włącz, gdy:** CORS z poświadczeniami, `postMessage`, WebSocket, osadzanie w iframe, własna CSP, dane wrażliwe
-w odpowiedziach GET.
+## A4. The browser
+**Turn on when:** CORS with credentials, `postMessage`, WebSocket, embedding in an iframe, a custom CSP, sensitive data
+in GET responses.
 
-| Problem | W kodzie | Obrona | Test |
+| Problem | In the code | Defence | Test |
 |---|---|---|---|
-| CORS z odbiciem `Origin` (CWE-942) | `Access-Control-Allow-Origin: <origin z żądania>` + `Allow-Credentials: true`, dopasowanie `endsWith('example.com')`, `null` dozwolone | dokładna allowlista originów, bez `null`, bez wzorców sufiksowych | `Origin: https://example.com.evil.example` i `null` → brak nagłówków CORS |
-| `postMessage` | `addEventListener('message', e => …)` bez sprawdzenia `e.origin`; `postMessage(data, '*')` | sprawdzaj `event.origin` dokładnie, docelowy origin zamiast `*`, dane jako dane, nie HTML | wiadomość z obcego originu → zignorowana |
-| WebSocket bez sprawdzenia Origin (CSWSH, CWE-1385) | uwierzytelnianie ciasteczkiem przy handshake | sprawdzaj `Origin` przy handshake albo token w pierwszej wiadomości; autoryzacja per wiadomość | handshake z obcym `Origin` → odrzucony |
-| obejścia CSP | `'unsafe-inline'`, allowlista CDN z JSONP lub bibliotekami z gadżetami, brak `base-uri`, `object-src` | strict CSP z nonce i `strict-dynamic`, `base-uri 'none'`, `object-src 'none'` | ładunek z `<base href>` i skryptem z dozwolonego CDN → zablokowany (raport CSP) |
-| DOM clobbering | `window.config || {}`, odwołania do globali, które może nadpisać `<form id=config>` | jawne zmienne modułów, sanitizer z ochroną przed clobberingiem | HTML z `id=config` → bez wpływu na logikę |
-| clickjacking | brak `frame-ancestors` | `frame-ancestors 'none'` lub lista | strona w iframe z obcej domeny → zablokowana |
-| XS-Leaks | odpowiedź zależna od stanu użytkownika, różniąca się czasem, rozmiarem, liczbą ramek | `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy: same-origin`, ciasteczka `SameSite`, `Sec-Fetch-*` po stronie serwera (fetch metadata) | żądanie z `Sec-Fetch-Site: cross-site` do wrażliwego GET → odmowa |
+| CORS reflecting `Origin` (CWE-942) | `Access-Control-Allow-Origin: <origin from the request>` + `Allow-Credentials: true`, matching `endsWith('example.com')`, `null` allowed | an exact allowlist of origins, no `null`, no suffix patterns | `Origin: https://example.com.evil.example` and `null` → no CORS headers |
+| `postMessage` | `addEventListener('message', e => …)` without checking `e.origin`; `postMessage(data, '*')` | check `event.origin` exactly, the target origin instead of `*`, data as data, not HTML | a message from a foreign origin → ignored |
+| WebSocket without an Origin check (CSWSH, CWE-1385) | cookie authentication at the handshake | check `Origin` at the handshake or a token in the first message; authorization per message | a handshake with a foreign `Origin` → rejected |
+| CSP bypasses | `'unsafe-inline'`, a CDN allowlist with JSONP or libraries with gadgets, no `base-uri`, `object-src` | strict CSP with a nonce and `strict-dynamic`, `base-uri 'none'`, `object-src 'none'` | a payload with `<base href>` and a script from an allowed CDN → blocked (CSP report) |
+| DOM clobbering | `window.config || {}`, references to globals that `<form id=config>` can overwrite | explicit module variables, a sanitizer with clobbering protection | HTML with `id=config` → no effect on the logic |
+| clickjacking | no `frame-ancestors` | `frame-ancestors 'none'` or a list | the page in an iframe from a foreign domain → blocked |
+| XS-Leaks | a response dependent on the user's state, differing in time, size, number of frames | `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy: same-origin`, `SameSite` cookies, `Sec-Fetch-*` on the server side (fetch metadata) | a request with `Sec-Fetch-Site: cross-site` to a sensitive GET → refusal |
 
-## A5. API
-**Włącz, gdy:** automatyczne wiązanie pól, GraphQL, publiczne API, wielu klientów.
+## A5. APIs
+**Turn on when:** automatic field binding, GraphQL, a public API, many clients.
 
-| Problem | W kodzie | Obrona | Test |
+| Problem | In the code | Defence | Test |
 |---|---|---|---|
-| mass assignment (CWE-915) | `User.update(req.body)`, `Object.assign(user, body)`, `@ModelAttribute` bez listy pól | DTO/schemat z allowlistą pól dla każdej operacji (`pick(body, ['name','email'])`) | `{"role":"admin","tenantId":"inny"}` → pola zignorowane albo 400 |
-| nadmiarowe dane w odpowiedzi | serializacja całej encji | DTO odpowiedzi | snapshot bez `passwordHash`, `resetToken` |
-| GraphQL: introspekcja w produkcji | domyślna konfiguracja | wyłączona albo tylko dla uwierzytelnionych narzędzi | zapytanie `__schema` bez uprawnień → błąd |
-| GraphQL: głębokość, koszt, batching, aliasy | brak limitów; aliasy omijają limit prób logowania | limit głębokości, kosztu i liczby operacji/aliasów w żądaniu; autoryzacja w resolverach, nie tylko na bramie | zapytanie z 100 aliasami logowania → odrzucenie |
-| brak limitów | kosztowne endpointy, eksport, wyszukiwanie | limity per użytkownik i per IP, paginacja z maksimum (be-api-design) | N+1 żądań ponad limit → 429 |
-| BFLA w API | metody admina na tej samej ścieżce (`DELETE /users/{id}`) | autoryzacja per akcja w jednym module | `DELETE` z sesją zwykłego użytkownika → 403 |
+| mass assignment (CWE-915) | `User.update(req.body)`, `Object.assign(user, body)`, `@ModelAttribute` without a list of fields | a DTO/schema with an allowlist of fields for each operation (`pick(body, ['name','email'])`) | `{"role":"admin","tenantId":"other"}` → fields ignored or 400 |
+| excess data in the response | serializing the whole entity | a response DTO | a snapshot without `passwordHash`, `resetToken` |
+| GraphQL: introspection in production | the default configuration | disabled or only for authenticated tools | a `__schema` query without permissions → an error |
+| GraphQL: depth, cost, batching, aliases | no limits; aliases bypass the login attempt limit | limits on depth, cost and the number of operations/aliases in a request; authorization in resolvers, not only at the gateway | a query with 100 login aliases → rejection |
+| no limits | expensive endpoints, export, search | limits per user and per IP, pagination with a maximum (be-api-design) | N+1 requests over the limit → 429 |
+| BFLA in an API | admin methods on the same path (`DELETE /users/{id}`) | authorization per action in one module | `DELETE` with an ordinary user's session → 403 |
 
-## A6. Otoczenie aplikacji
-**Włącz, gdy:** własne domeny i subdomeny, zasobniki plików, środowiska podglądowe, usługi wewnętrzne osiągalne
-z aplikacji.
+## A6. The application's surroundings
+**Turn on when:** own domains and subdomains, file buckets, preview environments, internal services reachable
+from the application.
 
-| Problem | Mechanizm | Obrona | Test lub kontrola |
+| Problem | Mechanism | Defence | Test or control |
 |---|---|---|---|
-| przejęcie subdomeny | rekord CNAME wskazuje na usuniętą usługę (strona statyczna, aplikacja w chmurze), atakujący ją zakłada | inwentarz DNS, usuwanie rekordów razem z zasobem, okresowe skanowanie wiszących rekordów | lista CNAME → każdy cel istnieje i należy do Was |
-| DNS rebinding na usługi lokalne | serwer deweloperski lub panel na `localhost` bez sprawdzenia `Host` | allowlista `Host`, uwierzytelnianie także lokalnie | żądanie z `Host: evil.example` do lokalnej usługi → 403 |
-| publiczny zasobnik | ACL „public”, podpisane URL-e z długim czasem życia | blokada dostępu publicznego na poziomie konta, krótkie podpisane URL-e, osobny zasobnik na treści publiczne (sec-cloud-security) | anonimowe listowanie i odczyt → odmowa |
-| środowiska podglądowe i debug | `/debug`, `/actuator`, `/_next/` z mapami źródeł, Swagger z prawdziwymi danymi | wyłączone w produkcji albo za uwierzytelnieniem, podglądy bez danych produkcyjnych | skan listy znanych ścieżek na środowisku testowym → 404 |
-| ciasteczka na domenę nadrzędną | `Domain=.example.com` → każda subdomena czyta i ustawia | ciasteczka bez `Domain` (tylko host), prefiks `__Host-` | nagłówek `Set-Cookie` sesji ma `__Host-` i brak `Domain` |
+| subdomain takeover | a CNAME record points to a deleted service (a static site, a cloud application), the attacker creates it | a DNS inventory, deleting records together with the resource, periodic scanning for dangling records | the CNAME list → every target exists and belongs to you |
+| DNS rebinding against local services | a development server or panel on `localhost` without a `Host` check | a `Host` allowlist, authentication also locally | a request with `Host: evil.example` to a local service → 403 |
+| a public bucket | a "public" ACL, signed URLs with a long lifetime | blocking public access at the account level, short signed URLs, a separate bucket for public content (sec-cloud-security) | anonymous listing and reading → refusal |
+| preview and debug environments | `/debug`, `/actuator`, `/_next/` with source maps, Swagger with real data | disabled in production or behind authentication, previews without production data | a scan of a list of known paths on the test environment → 404 |
+| cookies for the parent domain | `Domain=.example.com` → every subdomain reads and sets them | cookies without `Domain` (host only), the `__Host-` prefix | the session's `Set-Cookie` header has `__Host-` and no `Domain` |
 
-## Źródła
-- PortSwigger Web Security Academy (portswigger.net/web-security) [niezweryfikowane, dostęp 2026-11-07] — request
-  smuggling, web cache poisoning i deception, prototype pollution, SSTI, race conditions, DOM clobbering.
-- OWASP API Security Top 10 2023 (owasp.org) [niezweryfikowane] — BOLA, BFLA, mass assignment, limity.
-- MITRE CWE (cwe.mitre.org) — identyfikatory klas.
-- W3C Fetch Metadata Request Headers, Cross-Origin-Opener-Policy (MDN) [niezweryfikowane] — obrona przed XS-Leaks.
+## Sources
+- PortSwigger Web Security Academy (portswigger.net/web-security) [unverified, accessed 2026-11-07] — request
+  smuggling, web cache poisoning and deception, prototype pollution, SSTI, race conditions, DOM clobbering.
+- OWASP API Security Top 10 2023 (owasp.org) [unverified] — BOLA, BFLA, mass assignment, limits.
+- MITRE CWE (cwe.mitre.org) — class identifiers.
+- W3C Fetch Metadata Request Headers, Cross-Origin-Opener-Policy (MDN) [unverified] — defence against XS-Leaks.
 
-Opisane własnymi słowami.
+Described in our own words.

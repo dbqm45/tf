@@ -1,115 +1,115 @@
 ---
 name: ops-cloud-migration
-description: Użyj przy migracji obciążeń do chmury lub między środowiskami — portfel, strategie 7R, fale, dane, cutover, rollback.
+description: Use for migrating workloads to the cloud or between environments — portfolio, 7R strategies, waves, data, cutover, rollback.
 metadata:
   review: "2027-04-17"
   visibility: name
-  catalog: "Użyj, gdy planujesz przeniesienie aplikacji, baz lub całego centrum danych do chmury albo między chmurami i środowiskami — discovery i ocena portfela (zależności, grawitacja danych, licencje), strategie 7R (retire, retain, rehost, relocate, replatform, repurchase, refactor), fale i grupy przenoszenia, pilot, migracja danych (transfer offline, replikacja, podwójny zapis, cutover z budżetem przestoju), runbook przełączenia i plan wycofania, łączność hybrydowa, kryteria sukcesu, optymalizacja po migracji, typowe błędy. Wynik to plan migracji z falami i runbookiem cutover. Nie do strategii wydań (ops-release-engineering), migracji schematu bazy (be-database), wzorca Strangler w kodzie (eng-refactor-planning) ani budowy fundamentu chmury (ops-cloud-landing-zones)."
-  keywords: "migracja do chmury, cloud migration, lift and shift, 7R, rehost, replatform, refactor, repurchase, retire, retain, relocate, fale migracji, wave planning, discovery, portfel aplikacji, przeniesienie serwerowni, cutover, rollback, przełączenie, okno przestoju, replikacja danych, DMS, migracja bazy do chmury, połączenie hybrydowe, Direct Connect, ExpressRoute, migracja między chmurami"
+  catalog: "Use when you plan to move applications, databases or a whole data center to the cloud or between clouds and environments — discovery and portfolio assessment (dependencies, data gravity, licences), the 7R strategies (retire, retain, rehost, relocate, replatform, repurchase, refactor), waves and move groups, a pilot, data migration (offline transfer, replication, dual-write, cutover with a downtime budget), a cutover runbook and a rollback plan, hybrid connectivity, success criteria, post-migration optimization, typical mistakes. The result is a migration plan with waves and a cutover runbook. Not for release strategy (ops-release-engineering), database schema migrations (be-database), the Strangler pattern in code (eng-refactor-planning) or building the cloud foundation (ops-cloud-landing-zones)."
+  keywords: "migracja do chmury, cloud migration, lift and shift, 7R, rehost, replatform, refactor, repurchase, retire, retain, relocate, fale migracji, wave planning, discovery, portfel aplikacji, przeniesienie serwerowni, cutover, rollback, przełączenie, okno przestoju, replikacja danych, DMS, migracja bazy do chmury, połączenie hybrydowe, Direct Connect, ExpressRoute, migracja między chmurami, migration waves, application portfolio, moving a server room, switchover, downtime window, data replication, migrating a database to the cloud, hybrid connectivity, migration between clouds"
 ---
 
-# Migracja do chmury: portfel, fale, cutover
+# Cloud migration: portfolio, waves, cutover
 
-Cel: przenieść obciążenia przewidywalnie, z odwracalnym przełączeniem i dowodem, że po migracji jest nie gorzej.
-Wynik: `docs/project/05-plan/migration-plan.md` (core-project-record): portfel ze strategią, fale, plan danych,
-runbook cutover, kryteria sukcesu. Fundament docelowy (konta, sieć, tożsamość) to ops-cloud-landing-zones i musi
-istnieć przed pierwszą falą. Skill niczego nie przełącza: zmiany na produkcji idą z planem, oknem zmian i zgodą
-człowieka; każdy krok ma właściciela.
+The goal: move workloads predictably, with a reversible switchover and proof that after the migration things are no worse.
+The result: `docs/project/05-plan/migration-plan.md` (core-project-record): the portfolio with a strategy, waves, a data plan,
+a cutover runbook, success criteria. The target foundation (accounts, network, identity) is ops-cloud-landing-zones and must
+exist before the first wave. The skill does not switch anything over: production changes go with a plan, a change window and a human's
+approval; every step has an owner.
 
-## Procedura
-1. **Cel i ograniczenia.** Po co migrujemy (wyjście z centrum danych z datą kontraktu, koszt, skalowanie, regulacje)
-   i co jest nieprzekraczalne (data, budżet przestoju, rezydencja danych). Cel „bo chmura” nie pozwala wybrać strategii.
-2. **Discovery.** Inwentarz: serwery, aplikacje, bazy, **zależności** (ruch sieciowy, kto z kim rozmawia — z
-   obserwacji przez co najmniej pełny cykl biznesowy, np. koniec miesiąca, a nie z dokumentacji), właściciele,
-   system operacyjny i wsparcie producenta, **licencje** (czy wolno uruchomić w chmurze, model per rdzeń/socket),
-   **grawitacja danych** (rozmiar, tempo zmian, kto je czyta), wymagania: RPO/RTO, opóźnienie, zgodność.
-   Narzędzia dostawców (AWS Application Discovery Service / Migration Hub, Azure Migrate, Google Migration Center)
-   [niezweryfikowane: bieżące nazwy i funkcje]. Luki w danych oznacz jawnie.
-3. **Strategia per aplikacja (7R)**, wg AWS Prescriptive Guidance:
-   | Strategia | Sens |
+## Procedure
+1. **The goal and constraints.** Why we are migrating (exiting a data center by the contract date, cost, scaling, regulations)
+   and what is non-negotiable (the date, the downtime budget, data residency). The goal "because cloud" does not let you choose a strategy.
+2. **Discovery.** An inventory: servers, applications, databases, **dependencies** (network traffic, who talks to whom — from
+   observation over at least a full business cycle, e.g. the end of the month, not from documentation), owners,
+   the operating system and vendor support, **licences** (whether running in the cloud is allowed, the per-core/socket model),
+   **data gravity** (size, rate of change, who reads it), requirements: RPO/RTO, latency, compliance.
+   Provider tools (AWS Application Discovery Service / Migration Hub, Azure Migrate, Google Migration Center)
+   [unverified: current names and features]. Mark gaps in the data explicitly.
+3. **A strategy per application (7R)**, per AWS Prescriptive Guidance:
+   | Strategy | Meaning |
    |---|---|
-   | retire | wyłącz, bo nikt nie używa (często kilka–kilkanaście % portfela [przykład]) |
-   | retain | zostaw tam, gdzie jest (powód i data ponownej oceny) |
-   | rehost | „lift and shift”, bez zmian aplikacji |
-   | relocate | przeniesienie na poziomie hipernadzorcy lub kontenerów bez zakupu sprzętu i zmian aplikacji |
-   | replatform | drobna optymalizacja (np. zarządzana baza) bez zmiany architektury |
-   | repurchase | zamiana na inny produkt, zwykle SaaS |
-   | refactor | zmiana architektury pod chmurę (kod: Strangler Fig w eng-refactor-planning) |
-   Domyślnie najtańsza strategia, która spełnia cel (z kroku 1); refactor tylko gdy uzasadnia go wartość biznesowa,
-   nie w ramach migracji pod presją daty. Definicje retire, retain i repurchase streszczone [niezweryfikowane: dosłowny tekst AWS];
-   źródła wymieniają siedem kategorii, ale nie w każdym przewodniku identycznie (pochodzenie od Gartnera: 2011 lub 2019).
-4. **Fale i grupy przenoszenia.** Grupa = aplikacje, które muszą przejść razem (silne zależności, wspólna baza,
-   opóźnienie). Fala = grupy przenoszone w jednym oknie czasu. Kolejność:
-   - **pilot**: 1–3 aplikacje o niskim ryzyku, ale reprezentatywne (sprawdzają proces, narzędzia, sieć i zespół);
-   - potem od najprostszych i najmniej połączonych do najtrudniejszych; krytyczne i silnie powiązane na końcu;
-   - limit przepustowości zespołu (ilu cutover naraz) i kalendarz biznesowy (nie w szczycie sezonu).
-   Zależność między falami = wspólny wąski punkt: zapisz ją i sprawdź (np. współdzielona baza dzieli grupę).
-5. **Łączność hybrydowa.** Na czas migracji obie strony widzą się: VPN lub łącze dedykowane (Direct Connect,
-   ExpressRoute, Cloud Interconnect), spójna adresacja bez nakładania CIDR (rejestr z ops-cloud-landing-zones),
-   DNS rozstrzygający obie strony, tożsamość dostępna po obu. Policz przepustowość i opóźnienie: aplikacja
-   rozmawiająca z bazą „po drugiej stronie” często staje się wolna (wiele małych zapytań przez WAN). Łącze
-   zaplanuj z zapasem i zdecyduj, kiedy jest wyłączane.
-6. **Dane.** Wybór po rozmiarze, tempie zmian i budżecie przestoju (czas przełączenia):
-   | Podejście | Kiedy | Uwaga |
+   | retire | switch off, because nobody uses it (often a few to a dozen or so % of the portfolio [example]) |
+   | retain | leave it where it is (a reason and a reassessment date) |
+   | rehost | "lift and shift", without application changes |
+   | relocate | a move at the hypervisor or container level without buying hardware and without application changes |
+   | replatform | a small optimization (e.g. a managed database) without changing the architecture |
+   | repurchase | a switch to another product, usually SaaS |
+   | refactor | an architecture change for the cloud (code: Strangler Fig in eng-refactor-planning) |
+   By default the cheapest strategy that meets the goal (from step 1); refactor only when business value justifies it,
+   not as part of a migration under date pressure. The definitions of retire, retain and repurchase are summarized [unverified: the literal AWS text];
+   the sources list seven categories, but not identically in every guide (origin from Gartner: 2011 or 2019).
+4. **Waves and move groups.** A group = applications that must move together (strong dependencies, a shared database,
+   latency). A wave = groups moved in one time window. The order:
+   - **a pilot**: 1–3 low-risk but representative applications (they test the process, the tools, the network and the team);
+   - then from the simplest and least connected to the hardest; critical and strongly coupled ones at the end;
+   - a limit on the team's throughput (how many cutovers at once) and the business calendar (not at the peak of the season).
+   A dependency between waves = a shared bottleneck: record it and check it (e.g. a shared database splits a group).
+5. **Hybrid connectivity.** For the duration of the migration both sides see each other: a VPN or a dedicated link (Direct Connect,
+   ExpressRoute, Cloud Interconnect), consistent addressing without overlapping CIDRs (the registry from ops-cloud-landing-zones),
+   DNS resolving both sides, identity available on both. Calculate the bandwidth and latency: an application
+   talking to a database "on the other side" often becomes slow (many small queries over the WAN). Plan the link
+   with headroom and decide when it is switched off.
+6. **Data.** The choice by size, rate of change and the downtime budget (the switchover time):
+   | Approach | When | Note |
    |---|---|---|
-   | transfer offline (urządzenie fizyczne, kopia) | duże, rzadko zmieniane dane, wolne łącze | policz czas dostawy i dosyłkę różnicy |
-   | jednorazowa kopia w oknie | małe dane, długie okno | prosty rollback = stare źródło |
-   | replikacja ciągła (CDC, replikacja natywna, DMS) | duże i żywe dane, krótki przestój | monitoruj opóźnienie replikacji; przełączasz przy opóźnieniu ≈ 0 |
-   | podwójny zapis (dual-write) | gdy nie ma replikacji; bardzo ostrożnie | ryzyko rozjazdu, wymaga rekoncyliacji; ostatnia opcja |
-   Weryfikacja: liczby wierszy, sumy kontrolne, próbka biznesowa. Schemat i migracje wersji: be-database.
-   Rezydencja danych i dane osobowe: arch-privacy-compliance.
-7. **Cutover i runbook.** Per grupa osobny dokument: numerowane kroki z właścicielem, czasem i poleceniem;
-   **freeze** zmian; ostatnia synchronizacja; test dymny; przełączenie ruchu (DNS z obniżonym wcześniej TTL, load
-   balancer; wzorce wydań: ops-release-engineering); decyzja **go/no-go** z kryteriami zapisanymi z góry. Zapisz
-   **punkt bez powrotu** (po nim rollback to restore, nie przełączenie) i budżet przestoju z podziałem na kroki.
-   Próba generalna na kopii z zegarem; po niej poprawiony runbook.
-8. **Rollback.** Plan wycofania gotowy przed cutover: warunki uruchomienia (metryki, czas), kroki, kto decyduje,
-   co z danymi zapisanymi po stronie nowej (replikacja zwrotna albo utrata uzgodniona z biznesem). Źródło
-   zostaje działające i niezmienne do końca okresu stabilizacji (np. 2–4 tygodnie [przykład]); wyłączane dopiero
-   po akceptacji.
-9. **Kryteria sukcesu i po migracji.** Przed startem zmierz bazę: opóźnienie p95, błędy, koszt, dostępność
-   (ops-observability; SLO: ops-sre-incidents). Sukces = progi w tych samych miarach plus zamknięcie źródła.
-   Potem optymalizacja: dopasowanie rozmiaru, rezerwacje po 1–3 miesiącach danych, tagi i budżety (ops-finops),
-   wyłączenie łączy i licencji, retrospektywa fali.
-10. **Zapis.** Portfel (tabela: aplikacja, strategia, grupa, fala, właściciel, ryzyko), harmonogram fal, plan danych,
-    runbook i rollback per grupa, ryzyka. Status `proposed`; wykonanie po zgodzie człowieka.
+   | offline transfer (a physical device, a copy) | large, rarely changed data, a slow link | calculate the delivery time and the catch-up of the delta |
+   | a one-off copy in the window | small data, a long window | a simple rollback = the old source |
+   | continuous replication (CDC, native replication, DMS) | large and live data, short downtime | monitor the replication lag; you switch over at a lag ≈ 0 |
+   | dual-write | when there is no replication; very carefully | a risk of divergence, requires reconciliation; the last option |
+   Verification: row counts, checksums, a business sample. The schema and version migrations: be-database.
+   Data residency and personal data: arch-privacy-compliance.
+7. **Cutover and the runbook.** A separate document per group: numbered steps with an owner, a time and a command;
+   a change **freeze**; a final sync; a smoke test; switching the traffic (DNS with a TTL lowered beforehand, the load
+   balancer; release patterns: ops-release-engineering); a **go/no-go** decision with criteria written down in advance. Record
+   **the point of no return** (after it a rollback is a restore, not a switch back) and the downtime budget broken down into steps.
+   A dress rehearsal on a copy against the clock; after it a corrected runbook.
+8. **Rollback.** The rollback plan ready before the cutover: trigger conditions (metrics, time), steps, who decides,
+   what happens to the data written on the new side (reverse replication or a loss agreed with the business). The source
+   stays running and unchanged until the end of the stabilization period (e.g. 2–4 weeks [example]); switched off only
+   after acceptance.
+9. **Success criteria and after the migration.** Before the start, measure the baseline: p95 latency, errors, cost, availability
+   (ops-observability; SLO: ops-sre-incidents). Success = thresholds in the same measures plus the source shut down.
+   Then optimization: rightsizing, reservations after 1–3 months of data, tags and budgets (ops-finops),
+   switching off links and licences, a wave retrospective.
+10. **The record.** The portfolio (a table: application, strategy, group, wave, owner, risk), the wave schedule, the data plan,
+    the runbook and rollback per group, risks. Status `proposed`; execution after a human's approval.
 
-## Typowe porażki
-- Ukryte zależności (zadanie wsadowe raz w miesiącu, hardkodowane IP, wspólny dysk sieciowy).
-- Nieobliczone opóźnienie WAN i koszt transferu danych wychodzących.
-- Licencja nie przenosi się na chmurę, a wychodzi to po cutover.
-- Brak próby generalnej i brak punktu bez powrotu w runbooku.
-- Lift and shift bez późniejszej optymalizacji: rachunek wyższy niż w centrum danych.
-- Wyłączenie źródła w dniu cutover.
+## Typical failures
+- Hidden dependencies (a batch job once a month, hardcoded IPs, a shared network drive).
+- Uncalculated WAN latency and the cost of outbound data transfer.
+- The licence does not carry over to the cloud, and this comes out after the cutover.
+- No dress rehearsal and no point of no return in the runbook.
+- Lift and shift without later optimization: the bill is higher than in the data center.
+- Switching off the source on the day of the cutover.
 
-## Przykład
-**Sytuacja:** „Wychodzimy z serwerowni do końca marca. 120 aplikacji, baza zamówień 2 TB (zmienia się cały dzień), okno przestoju 30 minut.”
-**Wynik** (fragment, liczby [przykład]):
+## Example
+**Situation:** "We are leaving the server room by the end of March. 120 applications, an orders database of 2 TB (it changes all day), a downtime window of 30 minutes."
+**Result** (a fragment, numbers [example]):
 
-| Aplikacja | Strategia | Grupa | Fala |
+| Application | Strategy | Group | Wave |
 |---|---|---|---|
-| intranet-stary | retire | — | 0 |
-| raporty-wsadowe | rehost | G2 | 1 (pilot) |
-| zamowienia + baza | replatform (baza zarządzana) | G5 | 3 |
-| stary-ERP (licencja per socket) | retain do renegocjacji, ocena 2027-Q2 | — | — |
+| legacy-intranet | retire | — | 0 |
+| batch-reports | rehost | G2 | 1 (pilot) |
+| orders + database | replatform (managed database) | G5 | 3 |
+| legacy-ERP (per-socket licence) | retain until renegotiation, assessment 2027-Q2 | — | — |
 
-Baza zamówień: replikacja ciągła od T-14 dni; cutover w nocy: freeze → opóźnienie replikacji < 5 s → odcięcie
-zapisów → synchronizacja → test dymny → DNS (TTL obniżony do 60 s dzień wcześniej). Budżet 30 min: freeze+sync 10, test 10,
-DNS 5, zapas 5. Punkt bez powrotu: po pierwszym zapisie do nowej bazy; rollback do tego momentu = powrót DNS.
+The orders database: continuous replication from T-14 days; cutover at night: freeze → replication lag < 5 s → cut off
+writes → sync → smoke test → DNS (TTL lowered to 60 s a day earlier). The 30-minute budget: freeze+sync 10, test 10,
+DNS 5, headroom 5. The point of no return: after the first write to the new database; a rollback until that moment = switching DNS back.
 
-## Checklista
-- [ ] cel i nieprzekraczalne ograniczenia; fundament docelowy gotowy
-- [ ] zależności z obserwacji pełnego cyklu, licencje i grawitacja danych w inwentarzu
-- [ ] strategia 7R z uzasadnieniem dla każdej aplikacji (w tym retire i retain)
-- [ ] pilot reprezentatywny; grupy zależności; fale z kalendarzem biznesowym
-- [ ] łączność hybrydowa: CIDR bez kolizji, DNS, przepustowość, opóźnienie
-- [ ] metoda danych dobrana do budżetu przestoju; weryfikacja zgodności danych
-- [ ] runbook z go/no-go, punktem bez powrotu i próbą generalną; rollback z warunkami
-- [ ] baza pomiarowa przed migracją, źródło utrzymane do końca stabilizacji
-- [ ] optymalizacja i retrospektywa po fali
+## Checklist
+- [ ] the goal and non-negotiable constraints; the target foundation ready
+- [ ] dependencies from observing a full cycle, licences and data gravity in the inventory
+- [ ] a 7R strategy with a justification for every application (including retire and retain)
+- [ ] a representative pilot; dependency groups; waves with the business calendar
+- [ ] hybrid connectivity: CIDRs without collisions, DNS, bandwidth, latency
+- [ ] the data method matched to the downtime budget; data consistency verification
+- [ ] a runbook with go/no-go, a point of no return and a dress rehearsal; a rollback with conditions
+- [ ] a measurement baseline before the migration, the source kept until the end of stabilization
+- [ ] optimization and a retrospective after the wave
 
-## Źródła
-- AWS Prescriptive Guidance: strategie migracji (7R), glosariusz, szczegółowe discovery portfela — wyszukiwanie 2026-10-17,
-  strony dokumentacji niedostępne bezpośrednio; definicje relocate, rehost i replatform potwierdzone, retire/retain/repurchase [niezweryfikowane]
-- Microsoft Learn: Cloud Adoption Framework (Migrate); Google Cloud: Migration Center i przewodniki migracji — nie sprawdzano szczegółowo
-  [niezweryfikowane]
+## Sources
+- AWS Prescriptive Guidance: migration strategies (7R), glossary, detailed portfolio discovery — search 2026-10-17,
+  documentation pages not directly accessible; the definitions of relocate, rehost and replatform confirmed, retire/retain/repurchase [unverified]
+- Microsoft Learn: Cloud Adoption Framework (Migrate); Google Cloud: Migration Center and migration guides — not checked in detail
+  [unverified]

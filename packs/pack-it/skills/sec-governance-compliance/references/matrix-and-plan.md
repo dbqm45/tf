@@ -1,43 +1,43 @@
-# Macierz kontroli i plan gotowości do audytu
+# The control matrix and the audit readiness plan
 
-Spis treści: 1. Macierz kontroli · 2. Plan gotowości · 3. Przebieg audytów · 4. Rejestr dowodów
+Contents: 1. The control matrix · 2. The readiness plan · 3. The course of audits · 4. The evidence register
 
-## 1. Macierz kontroli (jeden rejestr na organizację)
-| ID | Kontrola (jak działa) | Właściciel | System | Częstotliwość | Dowód (źródło, ścieżka) | ISO 27001 | SOC 2 | CSF 2.0 | PCI DSS | Status |
+## 1. The control matrix (one register per organization)
+| ID | Control (how it works) | Owner | System | Frequency | Evidence (source, path) | ISO 27001 | SOC 2 | CSF 2.0 | PCI DSS | Status |
 |---|---|---|---|---|---|---|---|---|---|---|
-| K-014 | Przegląd dostępów do AWS co kwartał, usunięcie nadmiarowych | CTO | AWS IAM | kwartał | eksport IAM + zgłoszenie | A.5.18 | CC6.2 | PR.AA | 7.2.4 | działa, dowód |
-[przykład: numeracja kontroli i mapowania ilustracyjne; zweryfikuj w tekstach ram przed użyciem]
+| K-014 | A quarterly review of access to AWS, removal of excess access | CTO | AWS IAM | quarterly | an IAM export + a ticket | A.5.18 | CC6.2 | PR.AA | 7.2.4 | works, evidence |
+[example: the control numbering and mappings are illustrative; verify them in the framework texts before use]
 
-Zasady: kontrola opisana czasownikiem i częstotliwością („co kwartał”), nie hasłem („zarządzanie dostępem”); jeden
-właściciel; dowód wskazuje źródło, z którego pobierasz go bez prośby do człowieka; mapowanie do wymagań ram dopiero po
-sformułowaniu kontroli. Brak kontroli dla wymagania = luka; kontrola bez wymagania = kandydat do usunięcia.
+Rules: a control described with a verb and a frequency ("every quarter"), not with a slogan ("access management"); one
+owner; the evidence points to a source from which you fetch it without asking a human; mapping to the framework requirements only after
+formulating the control. No control for a requirement = a gap; a control without a requirement = a candidate for removal.
 
-## 2. Plan gotowości do audytu
-| Etap | Wynik | Właściciel | Bramka |
+## 2. The audit readiness plan
+| Stage | Result | Owner | Gate |
 |---|---|---|---|
-| Zakres i motyw | zatwierdzony zakres, wyłączenia | CISO/zarząd | podpis kierownictwa |
-| Ryzyka | rejestr ryzyk, plan postępowania (sec-risk-management) | CISO | akceptacje ryzyk |
-| Polityki i standardy | komplet, zatwierdzone, znane zespołom | CISO | potwierdzenia zapoznania |
-| Luki | zadania z terminami | właściciele kontroli | brak luk krytycznych |
-| Dowody | automatyczny zbiór, kalendarz kontroli okresowych | właściciele | próbka dowodów z 3 miesięcy |
-| Audyt wewnętrzny | raport, niezgodności, działania | niezależny audytor | zamknięte niezgodności większe |
-| Przegląd zarządzania | protokół (wejścia i decyzje) | zarząd | protokół podpisany |
-| Audyt zewnętrzny | próba generalna z dostawcą, rezerwacja terminu | CISO | brak otwartych blokad |
+| Scope and motive | an approved scope, exclusions | CISO/the board | management's signature |
+| Risks | the risk register, the treatment plan (sec-risk-management) | CISO | risk acceptances |
+| Policies and standards | complete, approved, known to the teams | CISO | acknowledgements |
+| Gaps | tasks with deadlines | control owners | no critical gaps |
+| Evidence | automatic collection, a calendar of periodic controls | owners | a sample of evidence from 3 months |
+| Internal audit | a report, nonconformities, actions | an independent auditor | major nonconformities closed |
+| Management review | minutes (inputs and decisions) | the board | minutes signed |
+| External audit | a dress rehearsal with the provider, a booked date | CISO | no open blockers |
 
-Rezerwa terminu: wybór jednostki certyfikującej lub firmy audytorskiej z wyprzedzeniem; czas zależy od zakresu.
+Booking a date: choose the certification body or the audit firm in advance; the time depends on the scope.
 
-## 3. Przebieg audytów
-- **ISO 27001**: etap 1 — przegląd dokumentacji i gotowości (zakres, polityki, SoA, ocena ryzyka, audyt wewnętrzny,
-  przegląd zarządzania); etap 2 — sprawdzenie wdrożenia próbkami i rozmowami; niezgodności większe blokują certyfikat
-  do zamknięcia; potem audyty nadzoru i ponowna certyfikacja [niezweryfikowane: częstość wg jednostki].
-- **SOC 2**: wybór kategorii, ocena gotowości (readiness), okres obserwacji dla typu II, próbkowanie dowodów z okresu,
-  raport z opinią i listą wyjątków.
-- **PCI DSS**: wyznaczenie poziomu i formy walidacji z acquirerem, dowody per wymaganie, AOC.
-- **Zachowanie podczas audytu**: jedna osoba koordynuje, odpowiedzi wynikają z dowodów, „nie wiem, sprawdzę” zamiast
-  zgadywania; nie poprawiasz dowodów wstecz.
+## 3. The course of audits
+- **ISO 27001**: stage 1 — a review of the documentation and readiness (scope, policies, SoA, risk assessment, internal audit,
+  management review); stage 2 — checking the implementation with samples and interviews; major nonconformities block the certificate
+  until they are closed; then surveillance audits and recertification [unverified: the frequency according to the body].
+- **SOC 2**: choosing the categories, a readiness assessment, the observation period for Type II, sampling evidence from the period,
+  a report with an opinion and a list of exceptions.
+- **PCI DSS**: determining the level and form of validation with the acquirer, evidence per requirement, the AOC.
+- **Conduct during the audit**: one person coordinates, the answers follow from the evidence, "I don't know, I'll check" instead of
+  guessing; you do not correct evidence retroactively.
 
-## 4. Rejestr dowodów
-| Dowód | Kontrola | Źródło | Zbiór | Data | Retencja |
+## 4. The evidence register
+| Evidence | Control | Source | Collection | Date | Retention |
 |---|---|---|---|---|---|
-| Eksport użytkowników IAM | K-014 | AWS CLI/API | automatyczny, kwartalnie | 2026-10-01 | 3 lata |
-[przykład]. Dowód zawiera dane osobowe? Retencja i dostęp wg arch-privacy-compliance.
+| An export of IAM users | K-014 | AWS CLI/API | automatic, quarterly | 2026-10-01 | 3 years |
+[example]. Does the evidence contain personal data? Retention and access per arch-privacy-compliance.

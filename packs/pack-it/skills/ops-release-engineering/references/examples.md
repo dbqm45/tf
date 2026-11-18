@@ -1,28 +1,28 @@
-# Przykłady wydań
+# Release examples
 
-> **Spis treści:** 1. Canary z bramkami w Argo Rollouts · 2. Zmiana nazwy kolumny przez expand–contract · 3. Zmiana awaryjna przy włączonym GitOps
+> **Contents:** 1. A canary with gates in Argo Rollouts · 2. Renaming a column through expand–contract · 3. An emergency change with GitOps enabled
 
-Liczby w scenariuszach są ilustracyjne; progi bramek zawsze bierzesz z SLO danej usługi (ops-sre-incidents).
+The numbers in the scenarios are illustrative; you always take gate thresholds from the given service's SLO (ops-sre-incidents).
 
-## 1. Canary z bramkami w Argo Rollouts
-**Sytuacja:** „Nowy ranking w `search-api` przeszedł staging, ale staging nie ma prawdziwego ruchu ani pełnego indeksu.
-Chcemy wydać bez ryzyka dla wszystkich użytkowników”. SLO: błędy < 0,1%, p99 < 200 ms.
+## 1. A canary with gates in Argo Rollouts
+**Situation:** "A new ranking in `search-api` passed staging, but staging has no real traffic and no full index.
+We want to release without risk for all users". SLO: errors < 0.1%, p99 < 200 ms.
 
-**Jak:**
-1. Wybór strategii (sekcja 1): staging nie odtwarza produkcji → canary.
-2. Drabina 5% → 25% → 50% → 100%, najdłuższa obserwacja na pierwszym kroku (15 min).
-3. Bramki z metryk wersji kanarkowej, progi z SLO; przekroczenie = automatyczne wycofanie.
-4. `revisionHistoryLimit` zostawia poprzednie ReplicaSety, a obraz przypięty digestem (sekcja 6a).
-5. Agent przygotowuje PR w repozytorium GitOps; promocję na produkcję zatwierdza człowiek (sekcja 7).
+**How:**
+1. Choosing the strategy (section 1): staging does not reproduce production → canary.
+2. Ladder 5% → 25% → 50% → 100%, the longest observation at the first step (15 min).
+3. Gates from the canary version's metrics, thresholds from the SLO; exceeding them = automatic rollback.
+4. `revisionHistoryLimit` keeps the previous ReplicaSets, and the image is pinned by digest (section 6a).
+5. The agent prepares a PR in the GitOps repository; a human approves the promotion to production (section 7).
 
-**Wynik:** plan i manifesty.
+**Result:** the plan and the manifests.
 
-| Krok | Ruch | Obserwacja | Bramka (canary) | Gdy przekroczona |
+| Step | Traffic | Observation | Gate (canary) | When exceeded |
 |---|---|---|---|---|
-| 1 | 5% | 15 min | błędy 5xx < 0,1%, p99 < 200 ms | automatyczne wycofanie do 0% |
-| 2 | 25% | 10 min | jak wyżej | automatyczne wycofanie |
-| 3 | 50% | 10 min | jak wyżej | automatyczne wycofanie |
-| 4 | 100% | — | analiza w tle do końca rolloutu | — |
+| 1 | 5% | 15 min | 5xx errors < 0.1%, p99 < 200 ms | automatic rollback to 0% |
+| 2 | 25% | 10 min | as above | automatic rollback |
+| 3 | 50% | 10 min | as above | automatic rollback |
+| 4 | 100% | — | background analysis until the end of the rollout | — |
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -99,27 +99,27 @@ spec:
             histogram_quantile(0.99, sum by (le) (
               rate(http_request_duration_seconds_bucket{service="{{args.service}}",track="canary"}[5m])))
 ```
-W opisie PR: „Bramki: błędy < 0,1%, p99 < 200 ms; trzy nieudane pomiary = wycofanie. Mierzymy czas od wykrycia
-do wycofania”.
+In the PR description: "Gates: errors < 0.1%, p99 < 200 ms; three failed measurements = rollback. We measure the time from detection
+to rollback".
 
-## 2. Zmiana nazwy kolumny przez expand–contract
-**Sytuacja:** „Zmień `customers.phone` na `phone_e164` i dodaj indeks po nowej kolumnie — w jednym PR, będzie szybciej”.
-Tabela ma kilkadziesiąt milionów wierszy, wdrożenie jest rolling (stara i nowa wersja działają razem).
+## 2. Renaming a column through expand–contract
+**Situation:** "Change `customers.phone` to `phone_e164` and add an index on the new column — in one PR, it will be faster".
+The table has tens of millions of rows, the deployment is rolling (the old and new versions run together).
 
-**Jak:**
-1. Rozbij na trzy wydania (sekcja 4) — jeden PR łamałby starą wersję aplikacji w trakcie rollingu.
-2. Każda migracja idempotentna i zgodna z dwiema wersjami aplikacji.
-3. Indeks z `CONCURRENTLY`, bo linter DDL w CI zablokuje wersję blokującą tabelę.
-4. Backfill i migrację testujesz na danych o rozmiarze produkcyjnym (be-database).
-5. Wydanie 3 oznaczasz w PR jako nieodwracalne (sekcja 6a).
+**How:**
+1. Split it into three releases (section 4) — one PR would break the old application version during the rolling update.
+2. Every migration idempotent and compatible with two application versions.
+3. The index with `CONCURRENTLY`, because the DDL linter in CI blocks the table-locking version.
+4. You test the backfill and the migration on production-sized data (be-database).
+5. You mark release 3 in the PR as irreversible (section 6a).
 
-**Wynik:** plan wydań.
+**Result:** the release plan.
 
-| Wydanie | Schemat | Aplikacja | Wycofanie |
+| Release | Schema | Application | Rollback |
 |---|---|---|---|
-| v2.14.0 (expand) | `ADD COLUMN IF NOT EXISTS phone_e164 text`; indeks `CONCURRENTLY`; backfill partiami po 10 000 wierszy | zapis do obu kolumn, odczyt ze starej | `git revert`, kolumna zostaje (nieszkodliwa) |
-| v2.15.0 (przełączenie) | bez zmian | odczyt z `phone_e164`, zapis nadal do obu | revert do v2.14.0, dane spójne |
-| v2.16.0 (contract) | `DROP COLUMN IF EXISTS phone` | tylko `phone_e164` | **nieodwracalne** — naprawa w przód lub kopia |
+| v2.14.0 (expand) | `ADD COLUMN IF NOT EXISTS phone_e164 text`; index `CONCURRENTLY`; backfill in batches of 10,000 rows | write to both columns, read from the old one | `git revert`, the column stays (harmless) |
+| v2.15.0 (switch) | no changes | read from `phone_e164`, still write to both | revert to v2.14.0, data consistent |
+| v2.16.0 (contract) | `DROP COLUMN IF EXISTS phone` | only `phone_e164` | **irreversible** — fix forward or backup |
 
 ```sql
 -- V2_14_0__expand_phone_e164.sql
@@ -127,18 +127,18 @@ ALTER TABLE customers ADD COLUMN IF NOT EXISTS phone_e164 text;
 CREATE INDEX CONCURRENTLY IF NOT EXISTS customers_phone_e164_idx ON customers (phone_e164);
 ```
 
-## 3. Zmiana awaryjna przy włączonym GitOps
-**Sytuacja:** incydent o 2:40 — `checkout-api` wyczerpuje pulę połączeń z bazą. Dyżurny chce od razu zwiększyć
-`DB_POOL_SIZE` z 20 do 40 przez `kubectl edit`, a Argo CD ma włączoną samonaprawę.
+## 3. An emergency change with GitOps enabled
+**Situation:** an incident at 2:40 — `checkout-api` exhausts its database connection pool. The on-call engineer wants to raise
+`DB_POOL_SIZE` from 20 to 40 right away through `kubectl edit`, and Argo CD has self-healing enabled.
 
-**Jak:**
-1. Wpis w dzienniku incydentu: kto, co, dlaczego (sekcja 6b).
-2. Jawnie wyłącz samonaprawę tylko dla tej aplikacji — inaczej Argo CD cofnie zmianę po kilku minutach.
-3. Zmiana ręczna, obserwacja metryk puli.
-4. Ta sama zmiana jako PR w repozytorium konfiguracji w ciągu jednego dnia roboczego.
-5. Po scaleniu przywróć samonaprawę; sprawdź, że Argo CD nie pokazuje dryfu.
+**How:**
+1. An entry in the incident log: who, what, why (section 6b).
+2. Explicitly disable self-healing for this application only — otherwise Argo CD reverts the change after a few minutes.
+3. The manual change, watching the pool metrics.
+4. The same change as a PR in the configuration repository within one working day.
+5. After the merge, restore self-healing; check that Argo CD shows no drift.
 
-**Wynik:** stan aplikacji Argo CD w trakcie incydentu i oś czasu.
+**Result:** the state of the Argo CD application during the incident and the timeline.
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -158,12 +158,12 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: false  # INC-2291: wstrzymane na czas zmiany awaryjnej, przywrócić po scaleniu PR
+      selfHeal: false  # INC-2291: paused for the emergency change, restore after the PR is merged
 ```
 
-| Czas | Działanie | Kto |
+| Time | Action | Who |
 |---|---|---|
-| 02:45 | wpis w INC-2291, `selfHeal: false` dla `checkout-api-prod` | dyżurny |
-| 02:48 | `DB_POOL_SIZE=40` ręcznie, błędy wracają do normy | dyżurny |
-| 10:30 | PR „fix(checkout): DB_POOL_SIZE 40” w `gitops-config` | właściciel usługi |
-| 11:15 | scalenie, `selfHeal: true`, brak dryfu w Argo CD | właściciel usługi |
+| 02:45 | entry in INC-2291, `selfHeal: false` for `checkout-api-prod` | on-call engineer |
+| 02:48 | `DB_POOL_SIZE=40` manually, errors return to normal | on-call engineer |
+| 10:30 | PR "fix(checkout): DB_POOL_SIZE 40" in `gitops-config` | service owner |
+| 11:15 | merge, `selfHeal: true`, no drift in Argo CD | service owner |

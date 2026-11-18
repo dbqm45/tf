@@ -1,42 +1,42 @@
-# Macierz obowiązków NIS2, DORA, CRA
+# NIS2, DORA, CRA obligations matrix
 
-Spis treści: NIS2 · DORA · CRA · Kary · Dowody. Wszystkie numery artykułów i kwoty: wiedza własna, w sesji niepotwierdzone
-w EUR-Lex [niezweryfikowane u źródła]. Nie jest poradą prawną; ustawa krajowa i wytyczne organów mają pierwszeństwo.
+Contents: NIS2 · DORA · CRA · Penalties · Evidence. All article numbers and amounts: own knowledge, not confirmed in the session
+in EUR-Lex [unverified at the source]. Not legal advice; the national act and the authorities' guidelines take precedence.
 
-## NIS2 (dyrektywa (UE) 2022/2555)
-| Temat | Treść | Dowód |
+## NIS2 (Directive (EU) 2022/2555)
+| Topic | Content | Evidence |
 |---|---|---|
-| Zakres (art. 2–3) | średnie i duże podmioty z zał. I (energia, transport, bankowość, infrastruktura rynku finansowego, zdrowie, woda, infrastruktura cyfrowa, zarządzanie usługami ICT B2B, administracja, kosmos) i zał. II (poczta, odpady, chemikalia, żywność, wytwarzanie, dostawcy cyfrowi, badania) | analiza kwalifikacji, wpis do wykazu |
-| Kluczowy a ważny | kluczowy: duży z zał. I i wyjątki niezależne od wielkości; ważny: pozostałe. Różnica to głównie nadzór (kluczowe także z góry) i górne kary | uzasadnienie klasy |
-| Zarząd (art. 20) | zatwierdza środki z art. 21, nadzoruje, odpowiada za naruszenia, szkolenia | protokoły, listy szkoleń |
-| Środki (art. 21 ust. 2) | analiza ryzyka i polityki; obsługa incydentów; ciągłość (kopie, zarządzanie kryzysowe); łańcuch dostaw; bezpieczeństwo nabywania, rozwoju i utrzymania, w tym obsługa podatności; ocena skuteczności; higiena i szkolenia; kryptografia; kadry, kontrola dostępu, zasoby; MFA i bezpieczna łączność | polityki, rejestry, testy |
-| Zgłaszanie (art. 23) | incydent poważny: 24 h wczesne ostrzeżenie (czy podejrzenie czynu zabronionego, skutek transgraniczny), 72 h zgłoszenie z oceną, raport pośredni na żądanie, raport końcowy miesiąc po zgłoszeniu, przy trwającym incydencie raport z postępu | playbook, rejestr zgłoszeń |
-| Kary (art. 34) | kluczowe do 10 mln euro lub 2% obrotu; ważne do 7 mln euro lub 1,4% obrotu (wyższa z kwot); ustawa krajowa może ustalać własne pułapy | — |
-Krajowo (PL): ustawa o KSC po nowelizacji (Dz.U. 2026 poz. 252) — sprawdź w ISAP wykaz, terminy, krajowe kary, rolę CSIRT
-(NASK, GOV, MON) i organów właściwych dla sektora [niezweryfikowane].
+| Scope (Art. 2–3) | medium and large entities from Annex I (energy, transport, banking, financial market infrastructure, health, water, digital infrastructure, B2B ICT service management, public administration, space) and Annex II (postal services, waste, chemicals, food, manufacturing, digital providers, research) | a qualification analysis, the entry in the list |
+| Essential vs important | essential: large from Annex I and the size-independent exceptions; important: the rest. The difference is mainly supervision (essential ones also ex ante) and the upper penalties | the justification of the class |
+| Management body (Art. 20) | approves the measures from Art. 21, oversees, is liable for infringements, training | minutes, training lists |
+| Measures (Art. 21(2)) | risk analysis and policies; incident handling; continuity (backups, crisis management); the supply chain; security in acquisition, development and maintenance, including vulnerability handling; assessment of effectiveness; hygiene and training; cryptography; human resources, access control, assets; MFA and secure communications | policies, registers, tests |
+| Reporting (Art. 23) | a significant incident: 24 h early warning (whether an unlawful act is suspected, cross-border impact), 72 h notification with an assessment, an intermediate report on request, a final report a month after the notification, a progress report for an ongoing incident | the playbook, the register of notifications |
+| Penalties (Art. 34) | essential up to EUR 10 million or 2% of turnover; important up to EUR 7 million or 1.4% of turnover (whichever is higher); the national act may set its own caps | — |
+Nationally (PL): the KSC act after the amendment (Dz.U. 2026 item 252) — check in ISAP the list, the deadlines, the national penalties, the role of the CSIRTs
+(NASK, GOV, MON) and the authorities competent for the sector [unverified].
 
-## DORA (rozporządzenie (UE) 2022/2554, od 2025-01-17)
-| Filar | Treść |
+## DORA (Regulation (EU) 2022/2554, from 2025-01-17)
+| Pillar | Content |
 |---|---|
-| Zarządzanie ryzykiem ICT (rozdz. II) | ramy zatwierdzane i nadzorowane przez organ zarządzający, identyfikacja zasobów, ochrona, wykrywanie, reagowanie i odtwarzanie, kopie, uczenie się |
-| Incydenty (rozdz. III) | proces, klasyfikacja wg kryteriów (klienci, straty danych, czas, zasięg geograficzny, krytyczność usług, skutki ekonomiczne), zgłaszanie poważnych incydentów: wstępne, pośrednie, końcowe; dobrowolne zgłaszanie istotnych cyberzagrożeń |
-| Testy odporności (rozdz. IV) | program testów co najmniej raz w roku; TLPT (testy penetracyjne oparte na zagrożeniach) co najmniej co 3 lata dla wskazanych podmiotów; RTS (UE) 2025/1190 [niezweryfikowane] |
-| Ryzyko dostawców ICT (rozdz. V) | strategia, rejestr informacji o ustaleniach umownych (pierwsze przekazanie organom 2025-04-30), obowiązkowe klauzule umowne (art. 30), strategie wyjścia, nadzór nad krytycznymi dostawcami ICT przez ESA (Lead Overseer) |
-| Wymiana informacji | dobrowolna wymiana informacji o cyberzagrożeniach |
-Kary: ustalają państwa członkowskie i organy nadzoru; dla krytycznych dostawców ICT okresowe kary pieniężne ESA [niezweryfikowane].
+| ICT risk management (Chapter II) | a framework approved and overseen by the management body, identification of assets, protection, detection, response and recovery, backups, learning |
+| Incidents (Chapter III) | a process, classification by criteria (clients, data losses, duration, geographical spread, criticality of services, economic impact), reporting of major incidents: initial, intermediate, final; voluntary notification of significant cyber threats |
+| Resilience testing (Chapter IV) | a testing programme at least once a year; TLPT (threat-led penetration testing) at least every 3 years for designated entities; RTS (EU) 2025/1190 [unverified] |
+| ICT third-party risk (Chapter V) | a strategy, the register of information on contractual arrangements (first submission to the authorities 2025-04-30), mandatory contractual clauses (Art. 30), exit strategies, oversight of critical ICT providers by an ESA (Lead Overseer) |
+| Information sharing | voluntary sharing of information on cyber threats |
+Penalties: set by the member states and the supervisory authorities; for critical ICT providers, periodic penalty payments by the ESA [unverified].
 
-## CRA (rozporządzenie (UE) 2024/2847)
-| Temat | Treść |
+## CRA (Regulation (EU) 2024/2847)
+| Topic | Content |
 |---|---|
-| Daty | w mocy 2024-12-10; przepisy o jednostkach oceniających zgodność od 2026-06-11 [niezweryfikowane]; zgłaszanie (art. 14) od 2026-09-11; większość obowiązków od 2027-12-11 |
-| Producent | wymogi zasadnicze (zał. I): bezpieczeństwo w projekcie i domyślnie, brak znanych możliwych do wykorzystania podatności przy wprowadzeniu, aktualizacje bezpieczeństwa, SBOM, polityka koordynowanego ujawniania podatności; ocena ryzyka; dokumentacja techniczna; okres wsparcia co najmniej 5 lat, chyba że produkt krócej |
-| Ocena zgodności | kategorie: domyślna (samoocena), ważne (klasa I i II), krytyczne; znak CE i deklaracja zgodności UE |
-| Zgłaszanie (art. 14) | aktywnie wykorzystywana podatność i poważny incydent wpływający na bezpieczeństwo produktu: 24 h, 72 h, raport końcowy (podatność: 14 dni po poprawce; incydent: miesiąc), przez platformę ENISA do koordynatora CSIRT i ENISA |
-| Importer, dystrybutor | weryfikują zgodność producenta, oznakowanie, współpracę z organami |
-| Open source | steward z lżejszymi obowiązkami; komponenty OSS w produkcie nadal na producencie (due diligence) |
-Kary: do 15 mln euro lub 2,5% obrotu (naruszenie wymogów zasadniczych), niższe progi za pozostałe [niezweryfikowane u źródła].
+| Dates | in force 2024-12-10; the provisions on conformity assessment bodies from 2026-06-11 [unverified]; reporting (Art. 14) from 2026-09-11; most obligations from 2027-12-11 |
+| Manufacturer | essential requirements (Annex I): security by design and by default, no known exploitable vulnerabilities when placed on the market, security updates, SBOM, a coordinated vulnerability disclosure policy; risk assessment; technical documentation; a support period of at least 5 years, unless the product is used for less time |
+| Conformity assessment | categories: default (self-assessment), important (class I and II), critical; the CE marking and the EU declaration of conformity |
+| Reporting (Art. 14) | an actively exploited vulnerability and a severe incident affecting the security of the product: 24 h, 72 h, final report (vulnerability: 14 days after the fix; incident: a month), through the ENISA platform to the CSIRT coordinator and ENISA |
+| Importer, distributor | verify the manufacturer's conformity, the marking, cooperation with the authorities |
+| Open source | a steward with lighter obligations; OSS components in a product remain the manufacturer's responsibility (due diligence) |
+Penalties: up to EUR 15 million or 2.5% of turnover (infringement of the essential requirements), lower thresholds for the rest [unverified at the source].
 
-## Dowody (wspólne)
-Rejestr zasobów i dostawców, polityki zatwierdzone przez zarząd, szkolenia zarządu, rejestr incydentów z osią czasu, protokoły
-tabletop, raporty testów, umowy z klauzulami (NIS2 łańcuch dostaw, DORA art. 30), SBOM i polityka podatności (CRA).
-Mapowanie na ISO 27001 — `.claude/skills/sec-governance-compliance/SKILL.md`.
+## Evidence (common)
+A register of assets and providers, policies approved by the management body, management body training, an incident register with a timeline, tabletop
+minutes, test reports, contracts with clauses (NIS2 supply chain, DORA Art. 30), SBOM and a vulnerability policy (CRA).
+Mapping to ISO 27001 — `.claude/skills/sec-governance-compliance/SKILL.md`.

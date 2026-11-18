@@ -1,33 +1,33 @@
-# Zgodność: mapowanie kontroli na ramy i audyty
+# Compliance: mapping controls onto frameworks and audits
 
-Agent pomaga zbierać dowody i mapować kontrole. **Nie stwierdza zgodności** — to rola audytora i działu prawnego.
+The agent helps collect evidence and map controls. **It does not declare compliance** — that is the role of the auditor and the legal department.
 
-## Ramy, które spotkasz najczęściej
-| Rama | Czym jest | Struktura |
+## The frameworks you will meet most often
+| Framework | What it is | Structure |
 |---|---|---|
-| **NIST CSF 2.0** (2024) | dobrowolna rama zarządzania ryzykiem cyber | 6 funkcji: Govern, Identify, Protect, Detect, Respond, Recover → kategorie → podkategorie |
-| **ISO/IEC 27001:2022** | certyfikowany system zarządzania bezpieczeństwem informacji (ISMS) | klauzule 4–10 (zarządzanie, ryzyko, audyt wewnętrzny, doskonalenie) + Załącznik A: 93 kontrole w 4 grupach (organizacyjne, ludzkie, fizyczne, technologiczne); deklaracja stosowania (SoA) |
-| **SOC 2** (AICPA) | raport audytora dla klientów usługi | kryteria Trust Services: bezpieczeństwo (obowiązkowe) + opcjonalnie dostępność, integralność przetwarzania, poufność, prywatność. Typ I — projekt kontroli w dniu; typ II — działanie przez okres (zwykle 6–12 mies.) |
-| **PCI DSS 4.0** | wymagania dla danych kart płatniczych | zakres zmniejszasz tokenizacją u dostawcy płatności |
-| **RODO**, **NIS2**, **DORA** (UE) | prawo: dane osobowe; cyberbezpieczeństwo podmiotów kluczowych i ważnych; odporność cyfrowa sektora finansowego | obowiązki zgłaszania incydentów i zarządzania ryzykiem — interpretuje dział prawny |
+| **NIST CSF 2.0** (2024) | a voluntary cyber risk management framework | 6 functions: Govern, Identify, Protect, Detect, Respond, Recover → categories → subcategories |
+| **ISO/IEC 27001:2022** | a certified information security management system (ISMS) | clauses 4–10 (management, risk, internal audit, improvement) + Annex A: 93 controls in 4 groups (organizational, people, physical, technological); the statement of applicability (SoA) |
+| **SOC 2** (AICPA) | an auditor's report for the service's customers | Trust Services criteria: security (mandatory) + optionally availability, processing integrity, confidentiality, privacy. Type I — the design of controls on a date; type II — operation over a period (usually 6–12 months) |
+| **PCI DSS 4.0** | requirements for payment card data | you reduce the scope with tokenization at the payment provider |
+| **GDPR (RODO)**, **NIS2**, **DORA** (EU) | law: personal data; cybersecurity of essential and important entities; digital operational resilience of the financial sector | incident notification and risk management obligations — interpreted by the legal department |
 
-## Procedura mapowania
-1. **Rejestr kontroli** (jedna lista dla organizacji): ID, opis, właściciel, jak działa, dowód, częstotliwość.
-2. **Mapowanie wiele-do-wielu**: jedna kontrola (np. „MFA odporne na phishing dla wszystkich kont administracyjnych”)
-   spełnia wymagania w kilku ramach naraz — nie prowadź osobnych list per audyt.
-3. **Dowody automatyczne**, gdzie się da: polityki jako kod i ich wyniki w CI, eksport konfiguracji IAM, wyniki CSPM,
-   historia PR z przeglądami (ochrona gałęzi), logi wdrożeń, raporty skanów, zapisy przeglądów dostępu. Dowód ma datę
-   i źródło; zrzuty ekranu tylko tam, gdzie nie ma innej drogi.
-4. **Luki** jako zadania z właścicielem i terminem; wyjątki z akceptacją ryzyka (arch-threat-modeling) i datą przeglądu.
-5. **Ciągłość**: kontrola, która działa tylko przed audytem, nie przejdzie SOC 2 typu II.
+## The mapping procedure
+1. **A control register** (one list for the organization): ID, description, owner, how it works, evidence, frequency.
+2. **Many-to-many mapping**: one control (e.g. "phishing-resistant MFA for all administrative accounts")
+   meets requirements in several frameworks at once — do not keep separate lists per audit.
+3. **Automatic evidence** where possible: policies as code and their results in CI, an export of the IAM configuration, CSPM findings,
+   PR history with reviews (branch protection), deployment logs, scan reports, access review records. Evidence has a date
+   and a source; screenshots only where there is no other way.
+4. **Gaps** as tasks with an owner and a deadline; exceptions with risk acceptance (arch-threat-modeling) and a review date.
+5. **Continuity**: a control that works only before the audit will not pass SOC 2 type II.
 
-## Gdzie fabryka już dostarcza dowody
-Ochrona gałęzi i review (ops-ci-cd), skany zależności i SBOM (ops-supply-chain-security), inwentarz tożsamości
-i rotacja (ops-secrets-identities), IaC z planem w PR i wykrywaniem dryfu, postmortemy
-i ćwiczenia odtwarzania (ops-sre-incidents), modele zagrożeń (arch-threat-modeling), dziennik decyzji i ADR
+## Where the factory already supplies evidence
+Branch protection and review (ops-ci-cd), dependency scans and SBOM (ops-supply-chain-security), the identity inventory
+and rotation (ops-secrets-identities), IaC with a plan in the PR and drift detection, postmortems
+and restore exercises (ops-sre-incidents), threat models (arch-threat-modeling), the decision log and ADRs
 (core-project-record).
 
-## Źródła
+## Sources
 - NIST Cybersecurity Framework 2.0 (02.2024); ISO/IEC 27001:2022; AICPA Trust Services Criteria
 - [roadmap.sh — DevSecOps](https://roadmap.sh/devsecops) (audit & compliance mapping, SOC 2, ISO 27001, NIST)
-Opisane własnymi słowami.
+Described in our own words.

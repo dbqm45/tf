@@ -4,6 +4,7 @@ description: Use for tests in Vitest — structure, tables of examples, test dou
 metadata:
   review: "2027-01-09"
   catalog: "Use for unit, integration and component tests in Vitest — test structure, tables of examples, test doubles (vi.fn, vi.when), controlled time, projects, browser mode, coverage, mutation testing with Stryker, version migrations. Not for oracle rules (qa-spec-first-testing) or Jest (tool-jest)."
+  keywords: "Vitest, vi.fn, vi.when, vi.mock, stub, atrapa, zaślepka, dubler testowy, port, clearMocks, restoreMocks, mockReset, kontrolowany czas, sztuczne zegary, tryb przeglądarki, test.each, tabela przykładów, Stryker, mutanty, spec.ts, test double, fake timers, controlled time, browser mode, examples table, mutation testing"
 ---
 
 # Vitest

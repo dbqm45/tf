@@ -1,70 +1,70 @@
-# Zagrożenia LLM i kontrole
+# LLM threats and controls
 
-Spis treści: prompt injection · eksfiltracja · sprawczość · dane i wyciek promptu · pośrednie wstrzyknięcie (Anthropic) · RAG · zużycie
+Contents: prompt injection · exfiltration · agency · data and prompt leaks · indirect injection (Anthropic) · RAG · consumption
 
 ## Prompt injection (LLM01:2026, ASI01)
-- **Bezpośredni**: użytkownik sam wpisuje instrukcje (jailbreak). Skutek ogranicza się zwykle do jego uprawnień, więc
-  kluczowe są uprawnienia narzędzi, nie treść promptu.
-- **Pośredni**: instrukcja siedzi w treści pobieranej przez system (mail, strona, PDF, komentarz w kodzie, opis
-  narzędzia MCP, dokument w RAG). Napastnik nie jest użytkownikiem; to główny wektor dla agentów.
-- Środek: architektura (potrójna kombinacja), nie lista zakazanych fraz.
+- **Direct**: the user types the instructions themselves (jailbreak). The effect is usually limited to their permissions, so
+  tool permissions are what matters, not the prompt content.
+- **Indirect**: the instruction sits in content fetched by the system (an email, a page, a PDF, a code comment, an MCP
+  tool description, a document in RAG). The attacker is not the user; this is the main vector for agents.
+- Remedy: architecture (the triple combination), not a list of forbidden phrases.
 
-## Eksfiltracja
-Kanały: obraz markdown z adresem zawierającym dane w zapytaniu, link do kliknięcia, wywołanie narzędzia HTTP, mail,
-zapis do współdzielonego dokumentu, wywołanie MCP do obcego serwera. Środki: CSP, brak zdalnych obrazów, proxy z
-allow-listą, brak narzędzia z dowolnym URL, zatwierdzenie wysyłki.
+## Exfiltration
+Channels: a markdown image with an address carrying data in the query, a link to click, an HTTP tool call, an email,
+a write to a shared document, an MCP call to a foreign server. Remedies: CSP, no remote images, a proxy with
+an allow-list, no tool that takes an arbitrary URL, approval of sending.
 
-## Nadmierna sprawczość (LLM03:2026, ASI02–ASI03)
-Trzy źródła: za dużo funkcji, za duże uprawnienia, za mało zatwierdzeń. Środek: narzędzia wąskie (zadanie, nie
-„wykonaj SQL”), poświadczenia użytkownika, zatwierdzenia dla zapisu.
+## Excessive agency (LLM03:2026, ASI02–ASI03)
+Three sources: too many functions, too broad permissions, too few approvals. Remedy: narrow tools (a task, not
+"run SQL"), the user's credentials, approvals for writes.
 
-## Dane (LLM02, LLM08, LLM05 — numeracja 2026)
-Wyciek: dane treningowe lub dostrajania, kontekst z innych sesji, system prompt. Środki: separacja kontekstu per
-użytkownik, brak sekretów w prompcie, minimalizacja i anonimizacja danych (`arch-privacy-compliance`), kontrola
-pochodzenia danych dostrajania (`ai-fine-tuning`). Zatrucie: zapis do bazy wiedzy i pamięci agenta wymaga kontroli
-źródła i przeglądu.
+## Data (LLM02, LLM08, LLM05 — 2026 numbering)
+Leaks: training or fine-tuning data, context from other sessions, the system prompt. Remedies: context separation per
+user, no secrets in the prompt, data minimization and anonymization (`arch-privacy-compliance`), control of
+the provenance of fine-tuning data (`ai-fine-tuning`). Poisoning: writes to the knowledge base and agent memory require source
+control and review.
 
-Ujawnienie ukrytego kontekstu (LLM08:2026, dawniej wyciek promptu systemowego LLM07:2025) — kolejność wg Anthropic („Reduce prompt leak”, platform.claude.com, odczyt
-2026-10-20): najpierw nic poufnego w prompcie (czego model nie potrzebuje, tego nie dostaje), potem monitorowanie
-i filtr wyjścia (wyrażenia, słowa kluczowe, tani model jako klasyfikator), regularny przegląd odpowiedzi. Utrudnianie
-wycieku instrukcjami („nie ujawniaj…”) na końcu i z testem: komplikuje zadanie i może pogorszyć jakość odpowiedzi.
+Hidden context exposure (LLM08:2026, formerly system prompt leakage LLM07:2025) — order per Anthropic ("Reduce prompt leak", platform.claude.com, read
+2026-10-20): first nothing confidential in the prompt (what the model does not need, it does not get), then monitoring
+and an output filter (expressions, keywords, a cheap model as a classifier), regular review of responses. Making
+leaks harder with instructions ("do not reveal…") last and with a test: it complicates the task and can degrade answer quality.
 
-## Pośrednie wstrzyknięcie — zalecenia Anthropic
-Źródło: „Mitigate jailbreaks and prompt injections”, platform.claude.com, odczyt 2026-10-20.
-- Treść obcą (mail, strona, OCR, wynik narzędzia) podawaj w bloku wyniku narzędzia (`tool_result`), nie w prompcie
-  systemowym ani w zwykłym tekście użytkownika; model traktuje instrukcje w wynikach narzędzi z rezerwą.
-- W opisie narzędzia albo w samym wyniku podaj rodzaj i pochodzenie treści („treść maila od nieznanego nadawcy”).
-- W prompcie systemowym napisz wprost, że treść z narzędzi, dokumentów i wyszukiwania to niezaufane dane, które nie
-  zmieniają instrukcji ani prośby użytkownika.
-- Obcy tekst opakuj w JSON zamiast doklejać do wolnego tekstu — escapowanie wyznacza jednoznaczną granicę.
-- Własnych instrukcji nie umieszczaj w wynikach narzędzi (model może je zignorować jako podejrzane) — wyślij je
-  w turze użytkownika po wyniku.
-- Wynik narzędzia sprawdź tanim modelem-klasyfikatorem, zanim agent na nim zadziała; przy podejrzeniu zatrzymaj
-  akcję albo poproś człowieka.
-- Przed wdrożeniem red teaming z dokumentami i wynikami narzędzi zawierającymi wstrzyknięte polecenia
+## Indirect injection — Anthropic recommendations
+Source: "Mitigate jailbreaks and prompt injections", platform.claude.com, read 2026-10-20.
+- Pass foreign content (an email, a page, OCR, a tool result) in a tool result block (`tool_result`), not in the system
+  prompt or in plain user text; the model treats instructions in tool results with reserve.
+- In the tool description or in the result itself, state the kind and origin of the content ("email content from an unknown sender").
+- In the system prompt, state outright that content from tools, documents and search is untrusted data that does not
+  change the instructions or the user's request.
+- Wrap foreign text in JSON instead of appending it to free text — escaping sets an unambiguous boundary.
+- Do not put your own instructions in tool results (the model may ignore them as suspicious) — send them
+  in the user turn after the result.
+- Check the tool result with a cheap classifier model before the agent acts on it; on suspicion stop the
+  action or ask a human.
+- Before deployment, red teaming with documents and tool results containing injected instructions
   (`references/red-teaming.md`).
 
-## RAG i wektory (LLM09:2026, ASI06)
-Uprawnienia dokumentów egzekwowane przy wyszukiwaniu (filtr po tożsamości), izolacja najemców w indeksie, kontrola
-tego, co trafia do indeksu (zatrucie), wersjonowanie i możliwość usunięcia dokumentu. Szczegóły: `ai-rag`.
+## RAG and vectors (LLM09:2026, ASI06)
+Document permissions enforced at retrieval (a filter by identity), tenant isolation in the index, control of
+what goes into the index (poisoning), versioning and the ability to delete a document. Details: `ai-rag`.
 
-## Zużycie (LLM06:2026)
-Limity wejścia i wyjścia, maks. kroków agenta, budżet per użytkownik i per najemca, alert na koszt, ochrona przed
-zapytaniami powielającymi (rekurencja narzędzi).
+## Consumption (LLM06:2026)
+Input and output limits, max agent steps, a budget per user and per tenant, a cost alert, protection against
+duplicating requests (tool recursion).
 
-## SQL generowany przez model
-Agent analityczny, który pisze i wykonuje SQL, to wykonanie kodu z niezaufanego wejścia. Tryb tylko do odczytu nie
-chroni: SELECT potrafi czytać pliki z dysku, dołączać inne bazy i ładować rozszerzenia (w case study autora 5 z 11
-ataków przeszło mimo trybu tylko do odczytu [niezweryfikowane]). Warstwy:
-1. **Strażnik tekstu** przed wykonaniem: dokładnie jedno zapytanie SELECT, lista zakazanych funkcji (plikowe,
-   sieciowe, `ATTACH`, ładowanie rozszerzeń), koszt planu oceniony własnym estymatorem liczby wierszy — planer silnika
-   potrafi pomylić się o rzędy wielkości.
-2. **Blokada w silniku**, której zapytanie nie zmieni. W DuckDB np. wyłączony dostęp zewnętrzny
-   (`enable_external_access = false`), wyłączone automatyczne ładowanie rozszerzeń i zablokowana konfiguracja
-   (`lock_configuration = true`); nazwy ustawień sprawdź w dokumentacji wersji z projektu.
-3. **Limity** czasu i liczby zwracanych wierszy. Przerwanie zapytania działa zwykle dopiero między krokami silnika,
-   więc jedno utknięte zapytanie wydłuża ogon czasu — limit ustawiasz z zapasem i mierzysz p95.
-Bramka wejściowa (klasyfikator „czy odpowiadać”) zawodzi otwarcie: nieczytelna odpowiedź klasyfikatora = odmowa,
-nie „odpowiadaj”.
+## Model-generated SQL
+An analytics agent that writes and runs SQL is code execution from untrusted input. Read-only mode does not
+protect: SELECT can read files from disk, attach other databases and load extensions (in the author's case study 5 of 11
+attacks got through despite read-only mode [unverified]). Layers:
+1. **A text guard** before execution: exactly one SELECT query, a list of forbidden functions (file,
+   network, `ATTACH`, loading extensions), the plan cost assessed by your own row-count estimator — the engine's planner
+   can be wrong by orders of magnitude.
+2. **A lock in the engine** that the query cannot change. In DuckDB e.g. external access disabled
+   (`enable_external_access = false`), automatic extension loading disabled and the configuration locked
+   (`lock_configuration = true`); check the setting names in the documentation of the project's version.
+3. **Limits** on time and the number of returned rows. Interrupting a query usually works only between engine steps,
+   so one stuck query lengthens the tail latency — set the limit with headroom and measure p95.
+An input gate (a "whether to answer" classifier) fails closed: an unreadable classifier answer = a refusal,
+not "answer".
 
-Źródło: F. Khan, „Engineering Multi-Agent AI for a 100 GB Data Warehouse” (2026-10).
+Source: F. Khan, "Engineering Multi-Agent AI for a 100 GB Data Warehouse" (2026-10).
