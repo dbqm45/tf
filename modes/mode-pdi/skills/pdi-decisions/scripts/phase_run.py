@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
 """
-Fazy zmiany uruchamiane przez pdi (tryb mode-pdi, F4): persona pracuje bez interakcji i kończy prośbą o bramkę.
+Change phases run by pdi (mode-pdi, F4): the persona works without interaction and ends with a gate request.
 
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py prompt --change CHG-12 --phase requirements \\
       [--rework --gate B2 --decision DEC-41] [--budget-usd 5]
-      JSON {persona, artifact, gate, prompt} — co i kto zrobi, bez uruchamiania modelu
-  python3 .claude/skills/pdi-decisions/scripts/phase_run.py run --change CHG-12 --phase requirements [jak wyżej] [--dry-run]
-      uruchamia personę: claude --print --agent <persona> --permission-mode acceptEdits [--max-budget-usd N]
+      JSON {persona, artifact, gate, prompt} — what will be done and by whom, without running the model
+  python3 .claude/skills/pdi-decisions/scripts/phase_run.py run --change CHG-12 --phase requirements [as above] [--dry-run]
+      runs the persona: claude --print --agent <persona> --permission-mode acceptEdits [--max-budget-usd N]
       [--settings $PDI_CLAUDE_SETTINGS];
-      JSON {status: waiting_gate | done | failed, …}; kod wyjścia 0 — czeka na bramkę albo gotowe, 1 — błąd;
-      delivery nie rusza, gdy `## Gate questions` (dawniej `## Pytania do bramki`) w plan.md ma pytanie bez odpowiedzi w decisions.md, a artefakt,
-      który powtarza pytanie już rozstrzygnięte w decisions.md, kończy fazę błędem `repeated_question` (Z1, PRB-3)
+      JSON {status: waiting_gate | done | failed, …}; exit code 0 — waiting for a gate or done, 1 — error;
+      delivery does not start when `## Gate questions` (formerly `## Pytania do bramki`) in plan.md has a question without an answer in decisions.md, and an artifact
+      that repeats a question already settled in decisions.md ends the phase with the error `repeated_question` (Z1, PRB-3)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
-      gate.requested (kontrakt pdi 0.13.0) na $PDI_EVENTS_URL/events/tf, podpis z $PDI_TF_SIGNING_SECRET;
-      odmawia, gdy artefakt powtarza rozstrzygnięte pytanie
+      gate.requested (pdi contract 0.13.0) to $PDI_EVENTS_URL/events/tf, signature from $PDI_TF_SIGNING_SECRET;
+      refuses when the artifact repeats a settled question
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list
-      JSON z lokalnymi gałęziami cięć story/* — zapis przed fazą delivery
-  python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts publish --before PLIK [--base main] [--dry-run]
-      po fazie delivery: push nowych gałęzi story/* z commitami ponad --base i PR każdej (persona w --print nie może
-      pushować); cięcie zbudowane na innym ma PR do niego; JSON {status, prs: [{branch, pr}]}, bez cięć kod 1
+      JSON with the local story/* cut branches — recorded before the delivery phase
+  python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts publish --before FILE [--base main] [--dry-run]
+      after the delivery phase: push the new story/* branches with commits above --base and a PR for each (a persona in --print cannot
+      push); a cut built on another has a PR to it; JSON {status, prs: [{branch, pr}]}, exit code 1 when there are no cuts
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install [--workflow sdlc-phase|change-check] [--force]
-      szablon .github/workflows/sdlc-phase.yml (workflow_dispatch wywoływany przez pdi) albo change-check.yml
-      (sprawdzenie zmian i skan bezpieczeństwa na każdym PR przez ci_for_sdlc)
+      template .github/workflows/sdlc-phase.yml (workflow_dispatch invoked by pdi) or change-check.yml
+      (change check and security scan on every PR via ci_for_sdlc)
 
-Fazy, persony i bramki: PHASES niżej; nadpisanie w .claude/pdi-phases.json ({"requirements": {"persona": "jan"}}).
-Przyjęcie zgłoszenia w pdi (F3) uruchamia fazę intent z treścią zgłoszenia: $PDI_SOURCE (PRB) i $PDI_PROBLEM (JSON).
-Model: $PDI_CLAUDE_BIN (domyślnie claude), GitHub CLI: $PDI_GH_BIN (domyślnie gh). Kod wyjścia: 0 — w porządku, 1 — błąd (z podpowiedzią), 2 — złe wywołanie.
+Phases, personas and gates: PHASES below; override in .claude/pdi-phases.json ({"requirements": {"persona": "jan"}}).
+Accepting a report in pdi (F3) starts the intent phase with the report's content: $PDI_SOURCE (PRB) and $PDI_PROBLEM (JSON).
+Model: $PDI_CLAUDE_BIN (default claude), GitHub CLI: $PDI_GH_BIN (default gh). Exit code: 0 — OK, 1 — error (with a hint), 2 — bad invocation.
 """
 import argparse
 import hashlib
@@ -54,20 +54,20 @@ CONTRACT_VERSION = "0.13.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Gate questions"
 QUESTIONS_PL = "Pytania do bramki"   # pl: sprzed 14.x — artefakty z polskim nagłówkiem
-# Drugi przegląd (N1, DZ12): sidecar z second_review.py obok artefaktu fazy; fazy, dla których go szukamy.
+# Second review (N1, DZ12): a sidecar from second_review.py next to the phase artifact; the phases we look for one in.
 SECOND_REVIEW_PHASES = ("requirements", "architecture")
 SECOND_REVIEW_DIR = ".review"
-# Ustalenia tej wagi dopisujemy do pytań bramki; minor/info lądują tylko w artefakcie (nie blokują B2/B3).
+# Findings of this severity are appended to the gate questions; minor/info land only in the artifact (they do not block B2/B3).
 BLOCKING_SEVERITIES = ("blocker", "major")
 REVIEW_QUESTION_PREFIX = "[second review] "
-# Pola zgłoszenia z pdi (contract/problem.schema.json), które trafiają do promptu fazy intent.
+# Report fields from pdi (contract/problem.schema.json) that go into the intent phase prompt.
 PROBLEM_FIELDS = {"title": "title", "kind": "kind", "who": "who has the problem", "cannot": "what they cannot do",
                   "impact": "impact", "workaround": "how they cope today", "frequency": "how often"}
 PROBLEM_MAX = 8000
 DETAIL_MAX = 2000   # koniec odpowiedzi i stderr persony w wyniku nieudanej fazy
 BINDING_MAX = 40     # najnowsze decyzje zmiany wymienione w prompcie
-QUOTE_MAX = 600      # długość jednego cytowanego pola decyzji w prompcie
-# Faza z pdi (wejście `phase` szablonu, dbqm45/pdi src/pdi/flow.py) → persona, artefakt w changes/CHG-n/, bramka po fazie.
+QUOTE_MAX = 600      # length of one quoted decision field in the prompt
+# A phase from pdi (the template's `phase` input, dbqm45/pdi src/pdi/flow.py) → persona, artifact in changes/CHG-n/, gate after the phase.
 PHASES = {
     "intent": {"persona": "maja", "artifact": "intent.md", "gate": "B1"},
     "requirements": {"persona": "ewa", "artifact": "requirements.md", "gate": "B2"},
@@ -75,8 +75,8 @@ PHASES = {
     "design": {"persona": "natalia", "artifact": "design.md", "gate": "design-review"},
     "delivery": {"persona": "tf", "artifact": None, "gate": None},
 }
-# Wynik poprzedniej fazy, bez którego faza nie startuje (poza szkicem z `change new`). Brak = PR poprzedniej fazy
-# nie jest scalony, a gałąź tej fazy rozjechałaby się z nim w dzienniku projektu i decisions.md.
+# The previous phase's result without which the phase does not start (except the draft from `change new`). Missing = the previous phase's PR
+# is not merged, and this phase's branch would diverge from it in the project log and decisions.md.
 REQUIRES = {"requirements": "intent.md", "architecture": "requirements.md", "design": "plan.md", "delivery": "plan.md"}
 WHAT = {
     "intent": ("the change intent: problem, options with their cost, the chosen option, success metrics, out of scope; "
@@ -92,7 +92,7 @@ WHAT = {
 
 
 class Refused(Exception):
-    """Błąd do pokazania człowiekowi (kod wyjścia 1)."""
+    """An error to show a human (exit code 1)."""
 
 
 def phase_spec(phase: str) -> dict:
@@ -134,7 +134,7 @@ def budget_of(value: str | None) -> str | None:
 
 
 def problem_from_env() -> dict | None:
-    """Treść zgłoszenia z pdi ($PDI_PROBLEM, obiekt JSON z polami tekstowymi) albo None."""
+    """The report content from pdi ($PDI_PROBLEM, a JSON object with text fields) or None."""
     raw = os.environ.get("PDI_PROBLEM") or ""
     if not raw:
         return None
@@ -154,8 +154,8 @@ def _drec():
 
 
 def normalized(question: str) -> str:
-    """Pytanie do porównania: małe litery, bez numeru i pola wyboru, bez dopisków po „?” (adresat) i w nawiasach,
-    bez interpunkcji i nadmiarowych spacji."""
+    """A question for comparison: lowercase, without the number and the choice field, without notes after "?" (the addressee) and in parentheses,
+    without punctuation and excess spaces."""
     s = question.lower()
     s = re.sub(r"^\s*(\[[ x]\]\s*)?(\d+[.)]\s*)?", "", s)
     if "?" in s:
@@ -166,19 +166,19 @@ def normalized(question: str) -> str:
 
 
 def decisions_of(change: str) -> list[dict]:
-    """Wpisy decisions.md zmiany (decyzje bramek, z pdi i zatwierdzone w repo) — wszystkie wiążą fazę."""
+    """The change's decisions.md entries (gate decisions, from pdi and approved in the repo) — all bind the phase."""
     f = CHANGES / change / "decisions.md"
     return _drec().parse_entries(f) if f.is_file() else []
 
 
 def settled(change: str) -> list[dict]:
-    """Pytania z odpowiedzią w decisions.md: {question, answer, ref, id}."""
+    """Questions with an answer in decisions.md: {question, answer, ref, id}."""
     return [{"question": q, "answer": ans, "ref": e["ref"], "id": e.get("id") or None}
             for e in decisions_of(change) for q, ans in e.get("answers") or [] if q and ans]
 
 
 def repeated(change: str, artifact: Path) -> list[str]:
-    """Pytania z `## Gate questions` artefaktu, które decisions.md już rozstrzyga — z odwołaniem do decyzji."""
+    """Questions from the artifact's `## Gate questions` that decisions.md already settles — with a reference to the decision."""
     done = {normalized(s["question"]): s for s in settled(change)}
     out = []
     for q in questions_in(artifact):
@@ -190,19 +190,19 @@ def repeated(change: str, artifact: Path) -> list[str]:
 
 
 def unanswered(change: str, artifact: Path) -> list[str]:
-    """Pytania z `## Gate questions` artefaktu bez odpowiedzi w decisions.md."""
+    """Questions from the artifact's `## Gate questions` without an answer in decisions.md."""
     done = {normalized(s["question"]) for s in settled(change)}
     return [q for q in questions_in(artifact) if normalized(q) not in done]
 
 
 def _quote(text) -> str:
-    """Pole decyzji jako dane w bloku JSON: jeden wiersz, bez znaków kończących blok, przycięte."""
+    """A decision field as data in a JSON block: one row, without characters that end the block, trimmed."""
     s = " ".join(str(text or "").split()).replace("`", "'")
     return s if len(s) <= QUOTE_MAX else s[:QUOTE_MAX - 1] + "…"
 
 
 def decisions_block(change: str) -> list[str]:
-    """Akapity promptu z wiążącymi decyzjami i rozstrzygniętymi pytaniami jako cytowanymi danymi (puste bez wpisów)."""
+    """Prompt paragraphs with the binding decisions and the settled questions as quoted data (empty without entries)."""
     entries = decisions_of(change)[-BINDING_MAX:]
     if not entries:
         return []
@@ -266,10 +266,10 @@ def build_prompt(a) -> dict:
                          f"{problem['proposed_solution']}.")
     if a.phase == "delivery":
         budget_flag = f" --budget {budget}" if budget else ""
-        # PRB-33: `--change CHG-n` wymagane, bo ten sam klucz TSK może być w planach wielu zmian — bez niego
-        # `run_report.py start --task TSK-n` zgaduje (pierwsze trafienie) albo kończy się błędem z listą zmian.
-        # Gałąź fazy pdi (pdi/CHG-n-delivery) ma commit `decisions.md` zrobiony tuż przed uruchomieniem pętli
-        # (pdi #148) — cięcia odgałęziają się od niej, nie od `main`, inaczej straciłyby decyzje wiążące.
+        # PRB-33: `--change CHG-n` is required, because the same TSK key may be in the plans of many changes — without it
+        # `run_report.py start --task TSK-n` guesses (first hit) or ends with an error listing the changes.
+        # The pdi phase branch (pdi/CHG-n-delivery) has a `decisions.md` commit made right before the loop starts
+        # (pdi #148) — cuts branch off it, not off `main`, otherwise they would lose the binding decisions.
         lines.append(f"You are on the pdi phase branch pdi/{a.change}-delivery (pdi committed `decisions.md` right "
                      f"before starting you). Start each cut as `story/<slug>` from this branch — "
                      f"`git switch -c story/<slug>`, no `git switch main` — and go back to it between cuts "
@@ -297,7 +297,7 @@ def cmd_prompt(a) -> int:
 
 
 def missing_input(change: str, phase: str) -> str | None:
-    """Komunikat, gdy brak wyniku poprzedniej fazy (plik nie istnieje albo ma status draft)."""
+    """A message when the previous phase's result is missing (the file does not exist or has status draft)."""
     name = REQUIRES.get(phase)
     if not name:
         return None
@@ -314,16 +314,16 @@ def missing_input(change: str, phase: str) -> str | None:
 
 
 def cmd_run(a) -> int:
-    # stream-json wymaga --print i --verbose (code.claude.com/docs/en/cli-reference, odczyt 2026-11-06);
-    # końcowe zdarzenie `result` ma pola total_cost_usd, is_error, subtype, result.{type,text}, permission_denials,
-    # usage, duration_ms, session_id (code.claude.com/docs/en/agent-sdk/typescript, odczyt 2026-11-06).
+    # stream-json requires --print and --verbose (code.claude.com/docs/en/cli-reference, read 2026-11-06);
+    # the final `result` event has the fields total_cost_usd, is_error, subtype, result.{type,text}, permission_denials,
+    # usage, duration_ms, session_id (code.claude.com/docs/en/agent-sdk/typescript, read 2026-11-06).
     p = build_prompt(a)
     argv = [os.environ.get("PDI_CLAUDE_BIN") or "claude", "--print", "--verbose", "--output-format", "stream-json",
             "--agent", p["persona"], "--permission-mode", "acceptEdits"]
     budget = budget_of(a.budget_usd)
     if budget:
         argv += ["--max-budget-usd", budget]
-    if os.environ.get("PDI_CLAUDE_SETTINGS"):  # sandbox persony (pdi Z8a): plik z sandbox_settings.py
+    if os.environ.get("PDI_CLAUDE_SETTINGS"):  # persona sandbox (pdi Z8a): a file from sandbox_settings.py
         argv += ["--settings", os.environ["PDI_CLAUDE_SETTINGS"]]
     out = {"change": a.change, "phase": a.phase, "persona": p["persona"], "gate": p["gate"]}
     if a.dry_run:
@@ -361,7 +361,7 @@ def cmd_run(a) -> int:
         try:
             event = json.loads(line)
         except ValueError:
-            continue  # linia niejsonowa — pdi hostowa też ją zignoruje
+            continue  # a non-JSON line — pdi on the host will ignore it too
         for row in relay.handle(event):
             if phase_progress.is_valid_progress(row):
                 print(phase_progress.format_line(row))
@@ -372,10 +372,10 @@ def cmd_run(a) -> int:
     failed = code != 0 or not isinstance(result, dict) or result.get("is_error") or not result
     status = "failed" if failed else ("waiting_gate" if p["gate"] else "done")
     out.update(status=status, cost_usd=cost)
-    # PRB-28: `detail` i `permission_denials` w wyniku też na sukcesie — bez tego diagnoza failed delivery
-    # (pdi A6 2026-11-04 CHG-3 na sdlc-proba) nie ma odpowiedzi persony i listy odmów. Kształt `result` w stream-JSON:
-    # pole `result: {type, text}` (code.claude.com/docs/en/agent-sdk/typescript, odczyt 2026-11-06); starsze testy
-    # i output-format json podają `result` jako string — oba obsługuje `phase_progress.result_text`.
+    # PRB-28: `detail` and `permission_denials` in the result also on success — without them the diagnosis of a failed delivery
+    # (pdi A6 2026-11-04 CHG-3 on sdlc-proba) has neither the persona's answer nor the list of denials. The shape of `result` in stream-JSON:
+    # field `result: {type, text}` (code.claude.com/docs/en/agent-sdk/typescript, read 2026-11-06); older tests
+    # and output-format json give `result` as a string — both are handled by `phase_progress.result_text`.
     if isinstance(result, dict):
         text = phase_progress.result_text(result.get("result"))
         if text:
@@ -386,18 +386,18 @@ def cmd_run(a) -> int:
     if failed:
         out["error"] = (result.get("subtype") if isinstance(result, dict) and result else None) or f"exit code {code}"
         out["exit_code"] = code
-        if "detail" not in out:                        # brak zdarzenia result → surowe linie stdout bez PDI-PROGRESS
+        if "detail" not in out:                        # no result event → raw stdout lines without PDI-PROGRESS
             tail = "\n".join(ln for ln in raw_lines if not ln.startswith(phase_progress.PREFIX))[-DETAIL_MAX:]
             out["detail"] = tail or None
         out["stderr"] = (stderr_text or "")[-DETAIL_MAX:] or None
     repeats = repeated(a.change, Path(p["artifact"])) if p["artifact"] and not failed else []
-    if repeats:   # persona skończyła, ale artefakt pyta o to, co już rozstrzygnięto (Z1, PRB-3)
+    if repeats:   # the persona finished, but the artifact asks about what was already settled (Z1, PRB-3)
         failed = True
         out.update(status="failed", error="repeated_question", repeated=repeats,
                    detail=f"{p['artifact']} repeats in `## {QUESTIONS}` questions already settled in decisions.md: "
                           + "; ".join(repeats) + ". Remove them from the artifact (record the outcome with a "
                           "reference) and retry the phase.")
-    # Końcowa linia postępu (waiting_gate / done / failed) z kosztem z last_result.
+    # The final progress line (waiting_gate / done / failed) with the cost from last_result.
     final_message = result.get("subtype") if isinstance(result, dict) and failed else p["gate"] or None
     final_row = relay.emit_final(status=out["status"], message=final_message)
     if phase_progress.is_valid_progress(final_row):
@@ -407,7 +407,7 @@ def cmd_run(a) -> int:
 
 
 def questions_in(path: Path) -> list[str]:
-    """Wiersze listy z sekcji `## Gate questions` (albo `## Pytania do bramki`) artefaktu."""
+    """Rows of the list from the `## Gate questions` section (or `## Pytania do bramki`) of the artifact."""
     if not path.is_file():
         return []
     out, inside = [], False
@@ -420,7 +420,7 @@ def questions_in(path: Path) -> list[str]:
 
 
 def design_problems(path: Path) -> list[str]:
-    """Braki tabeli ramek design.md (design_check.py, kontrakt 0.9.0) jako pytania do bramki design-review."""
+    """Gaps in the design.md frames table (design_check.py, contract 0.9.0) as design-review gate questions."""
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import design_check
     try:
@@ -430,8 +430,8 @@ def design_problems(path: Path) -> list[str]:
     problems = design_check.problems(rows)
     missing = [r for r in rows if r["status"] == "missing"]
     if len(missing) < 2 or any(r["status"] == "linked" for r in rows):
-        return problems   # z plikiem Figmy każdy brakujący wiersz to osobna sprawa dla projektanta
-    # Bez żadnej ramki w pliku to jedna decyzja (podać plik albo zostać bez ramek), nie pytanie na wiersz (CHG-4).
+        return problems   # with a Figma file every missing row is a separate matter for the designer
+    # With no frame at all in the file it is one decision (provide a file or stay without frames), not a question per row (CHG-4).
     rest = [p for p in problems if ": no frame — " not in p and ": brak ramki — " not in p]   # pl: sprzed 14.x
     n = len(missing)
     listed = ", ".join(f"{r['requirement']} {r['state']}" for r in missing)
@@ -442,7 +442,7 @@ def design_problems(path: Path) -> list[str]:
 
 
 def second_review_sidecar(change: str, phase: str) -> dict | None:
-    """Wynik drugiego przeglądu (second_review.py artifact) z docs/project/changes/<CHG>/.review/<phase>.json."""
+    """Result of the second review (second_review.py artifact) from docs/project/changes/<CHG>/.review/<phase>.json."""
     f = CHANGES / change / SECOND_REVIEW_DIR / f"{phase}.json"
     if not f.is_file():
         return None
@@ -453,7 +453,7 @@ def second_review_sidecar(change: str, phase: str) -> dict | None:
 
 
 def second_review_questions(sidecar: dict) -> list[str]:
-    """Blokujące ustalenia drugiego przeglądu jako pytania do bramki; contradiction z `settled_ref` idzie z prefiksem."""
+    """Blocking findings of the second review as gate questions; a contradiction with `settled_ref` goes with a prefix."""
     out = []
     for f in sidecar.get("findings") or []:
         if f.get("kind") == "contradiction" and f.get("settled_ref"):
@@ -462,7 +462,7 @@ def second_review_questions(sidecar: dict) -> list[str]:
             continue
         if f.get("severity") not in BLOCKING_SEVERITIES:
             continue
-        if f.get("settled_ref"):   # rozstrzygnięte pytanie, które nie jest contradiction — nie wraca do bramki
+        if f.get("settled_ref"):   # a settled question that is not a contradiction — does not return to the gate
             continue
         reason = (f.get("reason") or "").strip()
         quote = (f.get("quote") or "").strip()
@@ -472,7 +472,7 @@ def second_review_questions(sidecar: dict) -> list[str]:
 
 
 def second_review_summary(sidecar: dict | None, phase: str) -> dict:
-    """Streszczenie do payload['second_review']. Dla fazy wymagającej przeglądu brak sidecara → unavailable/not_run."""
+    """Summary for payload['second_review']. For a phase that requires a review, a missing sidecar → unavailable/not_run."""
     if sidecar is None:
         if phase in SECOND_REVIEW_PHASES:
             return {"status": "unavailable", "reason": "not_run"}
@@ -523,7 +523,7 @@ def gate_event(a) -> dict:
     summary = second_review_summary(sidecar, a.phase)
     if summary:
         payload["second_review"] = summary
-        if summary.get("status") != "ok":   # N1: brak przeglądu widoczny dla człowieka, nigdy ciche „zdane”
+        if summary.get("status") != "ok":   # N1: a missing review is visible to a human, never a quiet "passed"
             payload["summary"] += f" (second review: unavailable ({summary.get('reason') or 'unknown'}))"
     if a.url:
         payload["url"] = a.url
@@ -545,7 +545,7 @@ def cmd_gate_request(a) -> int:
 
 
 def post_event(event: dict) -> int:
-    """Podpisane zdarzenie kontraktu na $PDI_EVENTS_URL/events/tf; status HTTP albo Refused (też metric_watch.py)."""
+    """A signed contract event to $PDI_EVENTS_URL/events/tf; HTTP status or Refused (also metric_watch.py)."""
     body = json.dumps(event, ensure_ascii=False).encode()
     base = (os.environ.get("PDI_EVENTS_URL") or "").rstrip("/")
     secret = os.environ.get("PDI_TF_SIGNING_SECRET") or ""
@@ -562,7 +562,7 @@ def post_event(event: dict) -> int:
         "content-type": "application/json", "x-pdi-timestamp": ts, "x-pdi-event": event["type"],
         "x-pdi-signature": sig})
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310 — adres sprawdzony wyżej
+        with urllib.request.urlopen(req, timeout=15) as resp:  # noqa: S310 — address checked above
             return resp.status
     except urllib.error.HTTPError as e:
         raise Refused(f"pdi answered {e.code} to {event['type']}") from e

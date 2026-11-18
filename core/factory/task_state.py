@@ -1,80 +1,80 @@
 #!/usr/bin/env python3
 """
-tf task — stan zadania w jednym miejscu: `docs/project/changes/<KEY>/task.json`. Jedyny pisarz tego pliku;
-model woła polecenia, nie edytuje stanu ręcznie. Bez modelu i bez sieci.
+tf task — task state in one place: `docs/project/changes/<KEY>/task.json`. The only writer of this file;
+the model calls commands, it does not edit the state by hand. No model and no network.
 
-  tf task start <KEY> --title "<tytuł>" [--weight light|normal|full] [--mode plan|normal|auto]
-  tf task start <CHG>-<TSK> --title "<tytuł>" --change <CHG> --cut <TSK>      # zadanie cięcia zmiany pdi
-  tf task stage <KEY> <etap> [--force]
+  tf task start <KEY> --title "<title>" [--weight light|normal|full] [--mode plan|normal|auto]
+  tf task start <CHG>-<TSK> --title "<title>" --change <CHG> --cut <TSK>      # a pdi change cut task
+  tf task stage <KEY> <stage> [--force]
   tf task status <KEY> [--json]
-  tf task slice <KEY> S1 planned|implemented|blocked [--title "<wartość>"] [--reason "<powód blokady>"]
-  tf task verify <KEY> S1 --files <plik>[,<plik>…] [--command "<polecenie>"] [--timeout <s>]
-  tf task artifact <KEY> <plik> --stage <etap> --by <wykonawca> [--inputs <plik>[,<plik>…]]
-  tf task approve <KEY> <plik> --by human:<id>
+  tf task slice <KEY> S1 planned|implemented|blocked [--title "<value>"] [--reason "<block reason>"]
+  tf task verify <KEY> S1 --files <file>[,<file>…] [--command "<command>"] [--timeout <s>]
+  tf task artifact <KEY> <file> --stage <stage> --by <executor> [--inputs <file>[,<file>…]]
+  tf task approve <KEY> <file> --by human:<id>
   tf task check <KEY>
-  tf task weight <KEY> [--apply | --set light|normal|full] [--by human:<id> --reason "<dlaczego>"] [--json]
+  tf task weight <KEY> [--apply | --set light|normal|full] [--by human:<id> --reason "<why>"] [--json]
   tf task mode <KEY> [plan|normal|auto]
-  tf task deployed <KEY> [--version <X>] [--timeout <s>]           # test dymny z karty operacyjnej po wdrożeniu
-  tf task deployed <KEY> --rolled-back --by human:<id> [--note "<co zrobiono>"]   # decyzja człowieka o wycofaniu
-  tf task finding <KEY> add "<ważne ustalenie przeglądu>" [--slice S1] [--round 1]
-  tf task finding <KEY> control F1 "<test, hook, reguła albo powód jej braku>"   # co złapie to następnym razem
-  tf task review <KEY> <recenzent> pass|fail [--note "<uwaga>"]   # werdykt panelu przy wadze pełnej
-  tf task close <KEY> [--lesson "<lekcja>" --by human:<id>] [--base <gałąź>] [--force --by human:<id>]
+  tf task deployed <KEY> [--version <X>] [--timeout <s>]           # smoke test from the operations card after deployment
+  tf task deployed <KEY> --rolled-back --by human:<id> [--note "<what was done>"]   # the human's rollback decision
+  tf task finding <KEY> add "<important review finding>" [--slice S1] [--round 1]
+  tf task finding <KEY> control F1 "<test, hook, rule or the reason there is none>"   # what will catch it next time
+  tf task review <KEY> <reviewer> pass|fail [--note "<remark>"]   # panel verdict at full weight
+  tf task close <KEY> [--lesson "<lesson>" --by human:<id>] [--base <branch>] [--force --by human:<id>]
 
-`tf status` (czyli `task_state.py list [--json]`) wypisuje wszystkie zadania: etap, ile kawałków ma aktualny dowód
-i które pliki trzeba odświeżyć — stan liczony przy odczycie, nie z INDEX.md. Pod zadaniem, które czeka na człowieka,
-jest linia „czeka na Ciebie”: plan do zatwierdzenia, zatrzymanie przebiegu (co się stało, powód, pytanie
-i rekomendowana opcja — z `.tf/runs/<KEY>/run.json` i komunikatów pętli) albo kawałek zablokowany pytaniem;
-w `--json` to pole `waiting`.
+`tf status` (that is `task_state.py list [--json]`) lists all tasks: stage, how many slices have current evidence
+and which files need refreshing — state computed at read time, not from INDEX.md. Under a task that waits for a human
+there is a “waiting for you” line: a plan to approve, a run stop (what happened, the reason, the question
+and the recommended option — from `.tf/runs/<KEY>/run.json` and the loop messages) or a slice blocked by a question;
+in `--json` this is the `waiting` field.
 
-Klucz: numer z trackera (PROJ-123), klucz pdi (CHG-12, TSK-57) albo T-<RRRRMMDD>-<slug>. Etapy idą w kolejności:
-intake → spec → plan → implementation → review → pr → deploy → closed; cofnięcie wymaga --force.
-`start` w istniejącym katalogu zmiany (np. z trybu pdi) dokłada sam `task.json` i nie rusza innych plików.
-Listę zadań daje `tf status` — liczy ją z folderów, więc agent nie musi ich przeglądać. Spisu w pliku nie ma:
-`docs/project/changes/INDEX.md` przepisywał każdy zapis zadania, przez co dwa otwarte naraz pull requesty zadań miały
-w nim konflikt. Plik, który już jest w repozytorium, pierwszy zapis zamienia na stałą notkę („listę podaje tf
-status”) i więcej go nie zmienia; nowego pliku skrypt nie zakłada.
+Key: a tracker number (PROJ-123), a pdi key (CHG-12, TSK-57) or T-<YYYYMMDD>-<slug>. Stages go in order:
+intake → spec → plan → implementation → review → pr → deploy → closed; going back requires --force.
+`start` in an existing change directory (e.g. from pdi mode) adds only `task.json` and touches no other files.
+`tf status` gives the task list — it computes it from the folders, so the agent need not browse them. There is no index file:
+`docs/project/changes/INDEX.md` was rewritten on every task write, so two task pull requests open at once had
+a conflict in it. A file that is already in the repository is replaced on the first write with a fixed note (“the list is given by tf
+status”) and not changed again; the script does not create a new file.
 
-Zadanie cięcia zmiany pdi (`--change CHG-12 --cut TSK-57`) ma klucz `<CHG>-<TSK>` (`CHG-12-TSK-57`) i pola `change`
-oraz `cut` w `task.json`; `list` i `status` pokazują je razem z ich zmianą. Plan zmiany
-człowiek zatwierdził na bramce pdi przed fazą realizacji, dlatego cięcie o wadze pełnej może iść w trybie `auto`.
+A pdi change cut task (`--change CHG-12 --cut TSK-57`) has the key `<CHG>-<TSK>` (`CHG-12-TSK-57`) and the `change`
+and `cut` fields in `task.json`; `list` and `status` show them together with their change. The change plan
+was approved by a human at the pdi gate before the implementation phase, so a full-weight cut can run in `auto` mode.
 
-Kawałek jest „zweryfikowany” tylko wtedy, gdy ma dowód. `verify` samo uruchamia polecenie (domyślnie to z
-`.claude/quality-gate.json`), więc kodu wyjścia nie da się zadeklarować, i zapisuje `evidence/S1-<n>.json`
-(polecenie, kod wyjścia, SHA commita, czas, skróty plików kawałka); pełne wyjście idzie do `.tf/runs/<KEY>/`. Stan jest wyliczany przy każdym odczycie: brak dowodu albo zmiana
-pliku po dowodzie → unverified; kod wyjścia inny niż 0 → czerwony. Do etapu `review` i dalszych zadanie
-przechodzi dopiero, gdy wszystkie kawałki są zweryfikowane (albo z --force). Gdy zadanie ma `spec.md`, do etapu `plan`
-i dalszych przechodzi dopiero ze specyfikacją bez błędów (`tf spec check <KEY>`), a do etapu `review` i dalszych —
-gdy każde kryterium ma test (`tf trace <KEY>`); zadanie bez `spec.md` działa jak dotąd.
+A slice is “verified” only when it has evidence. `verify` itself runs the command (by default the one from
+`.claude/quality-gate.json`), so the exit code cannot be declared, and writes `evidence/S1-<n>.json`
+(command, exit code, commit SHA, time, slice file hashes); the full output goes to `.tf/runs/<KEY>/`. The state is computed on every read: no evidence or a change of a
+file after the evidence → unverified; an exit code other than 0 → red. A task moves to the `review` stage and later
+only when all slices are verified (or with --force). When a task has `spec.md`, it moves to the `plan` stage
+and later only with an error-free specification (`tf spec check <KEY>`), and to the `review` stage and later —
+when every criterion has a test (`tf trace <KEY>`); a task without `spec.md` works as before.
 
-Waga zadania (`weight`, reguły w `task_weight.py`): bez opcji pokazuje obecną wagę i propozycję z powodem; `--apply`
-przydziela propozycję (pierwszy raz dowolną, potem tylko wyższą; po decyzji człowieka nic nie zmienia); `--set` podnosi swobodnie, a obniża tylko z
-`--by human:<id>` i `--reason`. Skutki: zadanie o wadze `full` wchodzi do etapu `implementation` dopiero z planem
-zatwierdzonym przez człowieka (`approve <KEY> plan.md`); zadanie o wadze `light` ma w planie najwyżej jeden kawałek.
+Task weight (`weight`, rules in `task_weight.py`): without options it shows the current weight and a proposal with the reason; `--apply`
+assigns the proposal (the first time any, later only a higher one; after a human decision it changes nothing); `--set` raises freely, and lowers only with
+`--by human:<id>` and `--reason`. Effects: a task of weight `full` enters the `implementation` stage only with a plan
+approved by a human (`approve <KEY> plan.md`); a task of weight `light` has at most one slice in the plan.
 
-Tryb zadania (`mode`; wybiera go człowiek w poleceniu): `plan` — zadanie nie wchodzi do etapu `implementation` (przebieg
-kończy się na planie); `normal` — zadanie z zarejestrowanym `plan.md` wchodzi do realizacji po zgodzie człowieka
-(`approve <KEY> plan.md`); `auto` — bez zgody, chyba że waga jest pełna. Trybu `auto` nie da się ustawić przy wadze
-pełnej: zostaje `normal`, a polecenie mówi dlaczego (wyjątek: zadanie cięcia, opis wyżej).
+Task mode (`mode`; chosen by a human in the command): `plan` — the task does not enter the `implementation` stage (the run
+ends at the plan); `normal` — a task with a registered `plan.md` enters implementation after the human's consent
+(`approve <KEY> plan.md`); `auto` — without consent, unless the weight is full. `auto` mode cannot be set at full
+weight: `normal` stays, and the command says why (exception: a cut task, described above).
 
-Pliki zadania (`spec.md`, `plan.md`…) rejestruje `artifact`: kto je wygenerował i z których plików powstały (skróty
-wejść). Zatwierdza tylko człowiek (`approve --by human:<id>`). Stan pliku jest wyliczany: zmiana wejścia → nieaktualny;
-zmiana pliku po zatwierdzeniu → do ponownego zatwierdzenia. Stan jest w `task.json`, nie w nagłówkach plików — plików
-skrypt nigdy nie zmienia (nagłówki kontraktu pdi zostają nietknięte). Wykonawca: `<narzędzie>/<wersja>`,
-`human:<id>` albo `process:<id>` (jak w OKF 0.2). `check` kończy się kodem 1, gdy któryś plik nie jest aktualny.
+Task files (`spec.md`, `plan.md`…) are registered by `artifact`: who generated them and from which files they were made (the input
+hashes). Only a human approves (`approve --by human:<id>`). A file's state is computed: an input change → stale;
+a file change after approval → needs re-approval. The state is in `task.json`, not in file headers — the script never
+changes the files (the pdi contract headers stay untouched). Executor: `<tool>/<version>`,
+`human:<id>` or `process:<id>` (as in OKF 0.2). `check` exits with code 1 when any file is not current.
 
-Wyrocznia zadania: `freeze <KEY> <plik>[,<plik>…] --by human:<id>` zamraża pliki spoza katalogu zadania (np. testy
-akceptacyjne) — hook `guard_paths` pyta człowieka przed zapisem do nich, do zatwierdzonych plików zadania i do
-`spec.md` od etapu realizacji, a zmiana zamrożonego pliku inną drogą blokuje `check` i etap `review`.
-`reopen <KEY> <plik> --by human:<id> --reason "<powód>"` zdejmuje zatwierdzenie albo zamrożenie i zapisuje powód.
+Task oracle: `freeze <KEY> <file>[,<file>…] --by human:<id>` freezes files outside the task directory (e.g. acceptance
+tests) — the `guard_paths` hook asks the human before writing to them, to the task's approved files and to
+`spec.md` from the implementation stage, and a change to a frozen file by another route blocks `check` and the `review` stage.
+`reopen <KEY> <file> --by human:<id> --reason "<reason>"` removes an approval or a freeze and records the reason.
 
-Flaga funkcji: `flag <KEY> set <klucz> [--remove-by RRRR-MM-DD]` zapisuje flagę, za którą chowa się nowe zachowanie;
-`flag <KEY> none --reason "bez flagi, bo …"` — jawny brak flagi; `flag <KEY> allow <środowisko> --by human:<id>` —
-zgodę człowieka na włączenie poza środowiskiem testowym. Zadanie ze `spec.md` przechodzi do etapu `pr` dopiero
-z flagą albo powodem jej braku i bez błędu `tf flag check <KEY>` (flaga włączona poza testem bez zgody).
+Feature flag: `flag <KEY> set <key> [--remove-by YYYY-MM-DD]` records the flag behind which new behavior hides;
+`flag <KEY> none --reason "bez flagi, bo …"` — an explicit absence of a flag; `flag <KEY> allow <environment> --by human:<id>` —
+a human's consent to enabling outside the test environment. A task with `spec.md` moves to the `pr` stage only
+with a flag or the reason for its absence and without a `tf flag check <KEY>` error (a flag enabled outside the test without consent).
 
-Kod wyjścia: 0 — zrobione; 1 — odmowa (zadanie istnieje, nie ma go, etap wstecz); 2 — błąd wywołania.
-Tylko biblioteka standardowa.
+Exit code: 0 — done; 1 — refusal (the task exists, does not exist, a stage backwards); 2 — invocation error.
+Standard library only.
 """
 from __future__ import annotations
 
@@ -89,22 +89,22 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes also write and read UTF-8
 
 SCHEMA = 1
 CHANGES = Path("docs") / "project" / "changes"
-RUNS = Path(".tf") / "runs"                       # katalogi robocze przebiegów pętli /tf (run.json: etap, zatrzymanie)
+RUNS = Path(".tf") / "runs"                       # working directories of /tf loop runs (run.json: stage, stop)
 STOP_MESSAGES = Path(".claude") / "skills" / "tf" / "templates" / "stop_messages.json"
-CARD = Path(".tf") / "config" / "operations.json"   # karta operacyjna projektu; sekcja `deploy`: jak sprawdzić i cofnąć wdrożenie
-PANEL = ("security-reviewer", "spec-reviewer")   # panel recenzentów przy wadze pełnej (krok H11, decyzja D11)
+CARD = Path(".tf") / "config" / "operations.json"   # the project's operations card; the `deploy` section: how to check and roll back a deployment
+PANEL = ("security-reviewer", "spec-reviewer")   # reviewer panel at full weight (step H11, decision D11)
 LESSONS = Path("docs") / "project" / "lessons.md"
-LESSON_HEAD = "Execution and verification"        # kategoria lekcji zapisywanych przy zamknięciu zadania
-LESSON_HEADS = (LESSON_HEAD, "Wykonanie i weryfikacja")   # dawny nagłówek (lessons.md sprzed 14.x) też pasuje
+LESSON_HEAD = "Execution and verification"        # category of lessons recorded when a task is closed
+LESSON_HEADS = (LESSON_HEAD, "Wykonanie i weryfikacja")   # the old heading (lessons.md from before 14.x) matches too
 BASES = ("origin/main", "main", "origin/master", "master")
 DEPLOY_STATES = {"ok": "the smoke test is green", "red": "the smoke test is red — waits for a rollback decision",
                  "rolled-back": "rolled back by the human's decision"}
@@ -112,10 +112,10 @@ KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
 STAGES = ("intake", "spec", "plan", "implementation", "review", "pr", "deploy", "closed")
 WEIGHTS = ("light", "normal", "full")
 MODES = ("plan", "normal", "auto")
-PDI_KEY = re.compile(r"[A-Z][A-Z0-9]+-[0-9]+")   # klucz zmiany i cięcia pdi (CHG-12, TSK-57)
-SLICE = re.compile(r"[KS][1-9][0-9]?")   # S<n>; K<n> — zadania sprzed 14.0.0
+PDI_KEY = re.compile(r"[A-Z][A-Z0-9]+-[0-9]+")   # key of a pdi change and cut (CHG-12, TSK-57)
+SLICE = re.compile(r"[KS][1-9][0-9]?")   # S<n>; K<n> — tasks from before 14.0.0
 SLICE_STATES = ("planned", "implemented", "blocked")
-GATED = STAGES[STAGES.index("review"):]   # etapy, do których nie wchodzi zadanie z niezweryfikowanym kawałkiem
+GATED = STAGES[STAGES.index("review"):]   # stages a task with an unverified slice does not enter
 ACTOR = re.compile(r"(human|process):[\w.@-]+|[\w.-]+/[\w.-]+")
 INDEX_NOTE = ("# Tasks\n\nThe `tf status` command gives the list of tasks with their stage and state — it computes it live from the "
               "folders next to this file (one folder is one task or one change).\n\nThis file is no longer an index. In the "
@@ -145,7 +145,7 @@ def load(root: Path, key: str) -> dict | None:
 
 
 def write_atomic(path: Path, text: str) -> None:
-    """Zapis przez plik tymczasowy i zamianę — przerwany zapis nie zostawia połowy pliku."""
+    """Write via a temporary file and a rename — an interrupted write does not leave half a file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
     tmp.write_text(text, encoding="utf-8")
@@ -158,13 +158,13 @@ def save(root: Path, task: dict) -> None:
 
 
 def cut_note(task: dict) -> str:
-    """„cięcie TSK-57 zmiany CHG-12” dla zadania cięcia; pusty tekst dla zwykłego zadania."""
+    """“cut TSK-57 of change CHG-12” for a cut task; empty text for an ordinary task."""
     return f"cut {task.get('cut')} of the change {task['change']}" if task.get("change") else ""
 
 
 def retire_index(root: Path) -> None:
-    """Dawny spis `INDEX.md` zamienia raz na stałą notkę; nowego pliku nie zakłada. Spis przepisywany przy każdym
-    zapisie dawał konflikt między gałęziami dwóch zadań — listę daje `tf status`."""
+    """Replaces the old `INDEX.md` index once with a fixed note; does not create a new file. An index rewritten on every
+    write caused a conflict between the branches of two tasks — the list is given by `tf status`."""
     index = root / CHANGES / "INDEX.md"
     try:
         if index.is_file() and index.read_text(encoding="utf-8") != INDEX_NOTE:
@@ -184,8 +184,8 @@ TICKED = re.compile(rb"(?m)^(\s*-\s*)\[[xX]\](\s*[KS]\d+\b)")
 
 
 def approval_sha(path: Path) -> str | None:
-    """Skrót pliku do zatwierdzenia. W `plan.md` nie liczy się odhaczenie kawałka (`- [x] S1`): pętla odhacza kawałki
-    po zatwierdzeniu planu i nie zmienia przez to jego treści; nowy albo zmieniony kawałek zmienia skrót."""
+    """The hash of a file for approval. In `plan.md` ticking a slice (`- [x] S1`) does not count: the loop ticks slices
+    after the plan is approved and thereby does not change its content; a new or changed slice changes the hash."""
     if path.name != "plan.md":
         return sha256(path)
     try:
@@ -206,7 +206,7 @@ def evidence_of(root: Path, key: str, sl: dict) -> dict | None:
 
 
 def slice_state(root: Path, key: str, sl: dict) -> tuple[str, str]:
-    """(stan, powód) wyliczony z dowodu i bieżących plików — nie z deklaracji."""
+    """(state, reason) computed from the evidence and the current files — not from a declaration."""
     if sl.get("state") == "blocked":
         return "blocked", sl.get("reason") or "no reason given"
     ev = evidence_of(root, key, sl)
@@ -225,7 +225,7 @@ def slice_states(root: Path, task: dict) -> dict[str, tuple[str, str]]:
 
 
 def inside(folder: Path, name: str) -> Path | None:
-    """Plik zadania po nazwie względem katalogu zadania; None, gdy wskazuje poza katalog albo nie istnieje."""
+    """A task file by name relative to the task directory; None when it points outside the directory or does not exist."""
     target = (folder / name).resolve()
     if Path(name).is_absolute() or folder.resolve() not in target.parents or not target.is_file():
         return None
@@ -233,7 +233,7 @@ def inside(folder: Path, name: str) -> Path | None:
 
 
 def artifact_state(root: Path, key: str, art: dict, name: str) -> tuple[str, str]:
-    """(stan, powód) pliku zadania wyliczony ze skrótów: draft / approved / stale / changed-after-approval."""
+    """(state, reason) of a task file computed from hashes: draft / approved / stale / changed-after-approval."""
     folder = root / CHANGES / key
     changed = [f for f, h in (art.get("inputs") or {}).items() if sha256(folder / f) != h]
     if changed:
@@ -250,7 +250,7 @@ def artifact_states(root: Path, task: dict) -> dict[str, tuple[str, str]]:
 
 
 def frozen_changed(root: Path, task: dict) -> list[str]:
-    """Zamrożone pliki, których treść różni się od zapisanej przy zamrożeniu (albo których już nie ma)."""
+    """Frozen files whose content differs from what was recorded at freezing (or that no longer exist)."""
     return [rel for rel, f in sorted((task.get("frozen") or {}).items()) if sha256(root / rel) != f.get("sha")]
 
 
@@ -367,7 +367,7 @@ def cmd_slice(root: Path, key: str, slice_id: str, state: str, title: str | None
 
 
 def run_command(root: Path, command: str, timeout: float) -> tuple[int, str]:
-    """Uruchamia polecenie weryfikacji (bez powłoki; przez blokadę testów, gdy fabryka ją ma): (kod wyjścia, wyjście)."""
+    """Runs the verification command (without a shell; through the test lock when the factory has one): (exit code, output)."""
     argv = shlex.split(command)
     lock = root / ".claude" / "hooks" / "test_lock.py"
     if lock.is_file():
@@ -390,8 +390,8 @@ def clip(out: str, saved: str) -> str:
 
 
 def red_tests(root: Path, files: list[str]) -> dict[str, str]:
-    """Pliki kawałka, które hook TDD widział jako czerwony test (`.tf/logs/tdd-red.jsonl`): plik → czas pierwszego
-    czerwonego uruchomienia. Dziennik jest poza gitem, więc wpis trafia do dowodu kawałka."""
+    """Slice files that the TDD hook saw as a red test (`.tf/logs/tdd-red.jsonl`): file → time of the first
+    red run. The journal is outside git, so the entry goes into the slice's evidence."""
     out: dict[str, str] = {}
     try:
         lines = (root / ".tf" / "logs" / "tdd-red.jsonl").read_text(encoding="utf-8").splitlines()
@@ -431,7 +431,7 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
         commit = None
     code, out = run_command(root, command, timeout)
     log = Path(".tf") / "runs" / key / f"{slice_id}-{n}.log"
-    try:   # pełne wyjście poza gitem; w dowodzie zostaje tylko ścieżka
+    try:   # the full output is outside git; only the path stays in the evidence
         (root / log).parent.mkdir(parents=True, exist_ok=True)
         (root / log).write_text(out, encoding="utf-8")
     except OSError:
@@ -457,8 +457,8 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
 
 
 def deploy_card(root: Path) -> dict:
-    """Sekcja `deploy` karty operacyjnej: `smoke` (test dymny), `rollback`, `rollback_minutes`, `approval`, `logs`.
-    Pusta, gdy karty nie ma albo nie da się jej odczytać."""
+    """The `deploy` section of the operations card: `smoke` (smoke test), `rollback`, `rollback_minutes`, `approval`, `logs`.
+    Empty when there is no card or it cannot be read."""
     try:
         dep = json.loads((root / CARD).read_text(encoding="utf-8")).get("deploy")
     except (OSError, ValueError, AttributeError):
@@ -467,12 +467,12 @@ def deploy_card(root: Path) -> dict:
 
 
 def one_line(value, limit: int = 300) -> str:
-    """Jedna linia bez znaków sterujących — tekst z karty i z poleceń trafia na terminal i do task.json."""
+    """One line without control characters — text from the card and from commands goes to the terminal and to task.json."""
     return " ".join(re.sub(r"[\x00-\x1f\x7f-\x9f]", " ", str(value)).split())[:limit]
 
 
 def minutes(value) -> str:
-    """„ok. N min” dla rozsądnej liczby minut z karty; pusty tekst dla każdej innej wartości."""
+    """“ok. N min” for a sensible number of minutes from the card; empty text for any other value."""
     try:
         ok = isinstance(value, (int, float)) and not isinstance(value, bool) and 0 < value < 100000
         return f"ok. {float(value):g} min" if ok else ""
@@ -481,7 +481,7 @@ def minutes(value) -> str:
 
 
 def rollback_text(dep: dict) -> str:
-    """Jak cofnąć wdrożenie: kroki z karty (tekst albo lista) z czasem, a bez nich krok domyślny."""
+    """How to roll back a deployment: steps from the card (text or a list) with the time, and the default step without them."""
     value = dep.get("rollback")
     lines = value.splitlines() if isinstance(value, str) else value if isinstance(value, list) else []
     steps = [one_line(x) for x in lines if isinstance(x, str) and x.strip()][:10]
@@ -529,10 +529,10 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
         commit = None
     try:
         code, out = run_command(root, smoke, timeout)
-    except ValueError as e:          # polecenie z karty nie daje się podzielić na argumenty (np. niedomknięty cudzysłów)
+    except ValueError as e:          # the command from the card cannot be split into arguments (e.g. an unclosed quote)
         code, out = 127, f"the smoke test command is invalid: {e}"
     log = RUNS / key / f"deploy-{n}.log"
-    try:   # pełne wyjście poza gitem; w dowodzie zostaje tylko ścieżka
+    try:   # the full output is outside git; only the path stays in the evidence
         (root / log).parent.mkdir(parents=True, exist_ok=True)
         (root / log).write_text(out, encoding="utf-8")
     except OSError:
@@ -567,7 +567,7 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
 
 def cmd_finding(root: Path, key: str, action: str, first: str | None, second: str | None, slice_id: str | None,
                 rnd: int | None) -> int:
-    """Ważne ustalenia przeglądu (`findings` w task.json) i kontrola, która złapie je następnym razem."""
+    """Important review findings (`findings` in task.json) and the control that will catch them next time."""
     task = load(root, key)
     if task is None:
         return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
@@ -599,8 +599,8 @@ def cmd_finding(root: Path, key: str, action: str, first: str | None, second: st
 
 
 def merged_on(root: Path, key: str, base: str | None) -> tuple[bool | None, str]:
-    """Czy zmiana jest scalona: plik task.json zadania jest na gałęzi domyślnej (działa też przy squash i rebase).
-    (True, gałąź) | (False, sprawdzone gałęzie) | (None, powód) — None, gdy nie da się tego sprawdzić."""
+    """Whether the change is merged: the task's task.json file is on the default branch (works with squash and rebase too).
+    (True, branch) | (False, checked branches) | (None, reason) — None when this cannot be checked."""
     rel, seen = (CHANGES / key / "task.json").as_posix(), []
     for cand in ([base] if base else BASES):
         try:
@@ -617,7 +617,7 @@ def merged_on(root: Path, key: str, base: str | None) -> tuple[bool | None, str]
 
 
 def add_lesson(root: Path, key: str, lesson: str) -> bool:
-    """Dopisuje lekcję człowieka do docs/project/lessons.md (raz); True, gdy plik się zmienił."""
+    """Appends the human's lesson to docs/project/lessons.md (once); True when the file changed."""
     path = root / LESSONS
     text = path.read_text(encoding="utf-8") if path.is_file() else "# Project lessons\n"
     if lesson in text:
@@ -628,7 +628,7 @@ def add_lesson(root: Path, key: str, lesson: str) -> bool:
     if at is None:
         lines += ["", f"## {LESSON_HEAD}", "", entry]
     elif at + 1 < len(lines) and not lines[at + 1].strip():
-        lines.insert(at + 2, entry)                 # pod nagłówkiem, przed starszymi wpisami (najnowsze na górze)
+        lines.insert(at + 2, entry)                 # under the heading, before older entries (newest on top)
     else:
         lines[at + 1:at + 1] = ["", entry]
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -687,15 +687,15 @@ def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: st
 
 
 def work_style(root: Path) -> dict:
-    """Domyślny i dozwolone tryby po złożeniu warstw (silnik ← firma ← projekt ← osoba, `packs.work_style`); bez
-    packs.py (sam skrypt) — tryb zwykły i wszystkie tryby, jak dotąd."""
+    """The default and allowed modes after layering (engine ← company ← project ← person, `packs.work_style`); without
+    packs.py (the script alone) — the normal mode and all modes, as before."""
     try:
         import importlib.util
         spec = importlib.util.spec_from_file_location("tf_packs_style", Path(__file__).resolve().with_name("packs.py"))
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         return mod.work_style(root)
-    except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienia domyślne
+    except Exception:  # noqa: BLE001 — no configuration means the default settings
         return {"default_mode": "normal", "allowed_modes": list(MODES)}
 
 
@@ -711,16 +711,16 @@ def cmd_start(root: Path, key: str, title: str, weight: str, mode: str | None, c
               cut: str | None = None) -> int:
     if load(root, key) is not None:
         return fail(f"the task {key} already exists ({CHANGES / key / 'task.json'}) — its state: tf task status {key}")
-    if mode is None:                 # domyślny tryb z konfiguracji (styl pracy osoby w granicach firmy i projektu)
+    if mode is None:                 # the default mode from configuration (a person's work style within company and project limits)
         mode = work_style(root).get("default_mode") or "normal"
     elif mode_refusal(root, mode):
         return fail(mode_refusal(root, mode), 2)
     stamp = now()
     task = {"schema": SCHEMA, "key": key, "title": title, "stage": STAGES[0], "weight": weight, "mode": mode,
             "created": stamp, "updated": stamp}
-    if change:                       # zadanie cięcia zmiany pdi
+    if change:                       # a pdi change cut task
         task["change"], task["cut"] = change, cut
-    if weight != "normal":           # waga podana wprost przy zakładaniu to już przydział — `weight --apply` jej nie obniży
+    if weight != "normal":           # a weight given explicitly at creation is already an assignment — `weight --apply` will not lower it
         task["weight_log"] = [{"from": "normal", "to": weight, "by": "process:start", "at": stamp}]
     save(root, task)
     print(f"✓ the task {key} is created: {CHANGES / key}/ (stage: {STAGES[0]})")
@@ -728,7 +728,7 @@ def cmd_start(root: Path, key: str, title: str, weight: str, mode: str | None, c
 
 
 def weight_rules():
-    """Reguły wagi zadania z `task_weight.py` obok tego skryptu; None, gdy pliku nie ma (starsza instalacja)."""
+    """Task weight rules from `task_weight.py` next to this script; None when the file is absent (an older installation)."""
     script = Path(__file__).resolve().with_name("task_weight.py")
     if not script.is_file():
         return None
@@ -740,8 +740,8 @@ def weight_rules():
 
 
 def weight_gate(root: Path, task: dict, stage: str) -> str | None:
-    """Skutki wagi przy zmianie etapu: `light` — plan z jednym kawałkiem; `full` — plan zatwierdzony przez człowieka
-    przed realizacją. Zwraca powód odmowy albo None."""
+    """Effects of weight on a stage change: `light` — a plan with one slice; `full` — a plan approved by a human
+    before implementation. Returns the refusal reason or None."""
     key, weight = task["key"], task.get("weight")
     rules = weight_rules()
     if weight == "light" and rules and STAGES.index(stage) >= STAGES.index("plan"):
@@ -760,7 +760,7 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
                 f"with a separate command (/tf {key}); then change the mode: tf task mode {key} normal (or auto)")
     art = (task.get("artifacts") or {}).get("plan.md")
     state = artifact_state(root, key, art, "plan.md")[0] if art else "none"
-    upstream = bool(task.get("change")) and mode == "auto"   # cięcie: plan zmiany zatwierdzono na bramce pdi
+    upstream = bool(task.get("change")) and mode == "auto"   # cut: the change plan was approved at the pdi gate
     if weight == "full" and state != "approved" and not upstream:
         return (f"the task has the full weight (a sensitive area), so it moves to the stage {stage} only with a plan "
                 f"approved by the human (the plan's state: {state}): show the plan to the human, and after their consent "
@@ -838,7 +838,7 @@ def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | Non
         current, assigned = new, True
     elif apply:
         last = (task.get("weight_log") or [{}])[-1]
-        if str(last.get("by", "")).startswith("human:"):      # decyzja człowieka zostaje; fabryka tylko mówi, co widzi
+        if str(last.get("by", "")).startswith("human:"):      # the human's decision stays; the factory only says what it sees
             if prop["weight"] != current:
                 note = (f"the human set the weight ({last['by']}) — the factory does not change it; its proposal is "
                         f"{rules.LABEL[prop['weight']]}")
@@ -867,7 +867,7 @@ def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | Non
 
 
 def spec_errors(root: Path, key: str) -> list[dict]:
-    """Błędy spec.md zadania wg `spec_check.py` obok tego skryptu; pusta lista, gdy pliku albo skryptu nie ma."""
+    """Task spec.md errors per `spec_check.py` next to this script; an empty list when the file or the script is absent."""
     script = Path(__file__).resolve().with_name("spec_check.py")
     if not script.is_file() or not (root / CHANGES / key / "spec.md").is_file():
         return []
@@ -880,8 +880,8 @@ def spec_errors(root: Path, key: str) -> list[dict]:
 
 
 def trace_errors(root: Path, key: str) -> list[dict]:
-    """Błędy śladu kryterium → test wg `trace_check.py` obok tego skryptu; pusta lista, gdy zadanie nie ma spec.md,
-    skryptu nie ma albo śladu nie da się policzyć (katalog poza gitem, brak gałęzi bazowej)."""
+    """Criterion → test trace errors per `trace_check.py` next to this script; an empty list when the task has no spec.md,
+    the script is absent or the trace cannot be computed (a directory outside git, no base branch)."""
     script = Path(__file__).resolve().with_name("trace_check.py")
     if not script.is_file() or not (root / CHANGES / key / "spec.md").is_file():
         return []
@@ -894,7 +894,7 @@ def trace_errors(root: Path, key: str) -> list[dict]:
 
 
 def flag_errors(root: Path, key: str) -> list[dict]:
-    """Błędy flagi zadania wg `flag_check.py` obok tego skryptu; pusta lista, gdy skryptu nie ma."""
+    """Task flag errors per `flag_check.py` next to this script; an empty list when the script is absent."""
     script = Path(__file__).resolve().with_name("flag_check.py")
     if not script.is_file():
         return []
@@ -948,7 +948,7 @@ def git_head(root: Path) -> str | None:
 
 
 def cmd_review(root: Path, key: str, reviewer: str, verdict: str, note: str) -> int:
-    """Werdykt recenzenta panelu (waga pełna): werdykt, commit HEAD, czas i uwaga w `reviews` zadania."""
+    """A panel reviewer's verdict (full weight): verdict, HEAD commit, time and remark in the task's `reviews`."""
     task = load(root, key)
     if task is None:
         return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
@@ -962,7 +962,7 @@ def cmd_review(root: Path, key: str, reviewer: str, verdict: str, note: str) -> 
 
 
 def panel_errors(root: Path, task: dict) -> list[str]:
-    """Czego brakuje w panelu recenzentów zadania o wadze pełnej; pusta lista — panel kompletny (albo niewymagany)."""
+    """What is missing from the reviewer panel of a full-weight task; an empty list — the panel is complete (or not required)."""
     if task.get("weight") != "full":
         return []
     head, reviews = git_head(root), task.get("reviews") if isinstance(task.get("reviews"), dict) else {}
@@ -1028,7 +1028,7 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
 
 
 def stop_message(root: Path, code: str | None) -> dict:
-    """Komunikat zatrzymania pętli /tf dla człowieka (co, potrzeba, pytanie, opcje); pusty, gdy pętli albo kodu nie ma."""
+    """The /tf loop stop message for a human (what, need, question, options); empty when there is no loop or code."""
     for base in (Path(__file__).resolve().parents[2], root):
         try:
             msg = json.loads((base / STOP_MESSAGES).read_text(encoding="utf-8")).get(code or "")
@@ -1040,8 +1040,8 @@ def stop_message(root: Path, code: str | None) -> dict:
 
 
 def waiting(root: Path, task: dict) -> list[dict]:
-    """Na co zadanie czeka u człowieka: plan do zatwierdzenia albo zatrzymanie przebiegu (`.tf/runs/<KEY>/run.json`)
-    oraz kawałki zablokowane pytaniem. Pusta lista — nic nie czeka."""
+    """What the task is waiting for from a human: a plan to approve or a run stop (`.tf/runs/<KEY>/run.json`)
+    and slices blocked by a question. An empty list — nothing is waiting."""
     key, out = task.get("key", ""), []
     try:
         run = json.loads((root / RUNS / key / "run.json").read_text(encoding="utf-8"))
@@ -1081,7 +1081,7 @@ def waiting(root: Path, task: dict) -> list[dict]:
 
 
 def task_rows(root: Path) -> list[dict]:
-    """Wszystkie zadania ze stanem wyliczonym teraz (kawałki, pliki do odświeżenia)."""
+    """All tasks with the state computed now (slices, files to refresh)."""
     rows = []
     for f in sorted((root / CHANGES).glob("*/task.json")):
         t = load(root, f.parent.name)
@@ -1323,7 +1323,7 @@ def main(argv: list[str]) -> int:
     if a.cmd == "deployed":
         if a.rolled_back and not ((a.by or "").startswith("human:") and ACTOR.fullmatch(a.by)):
             return fail("rolling back a deployment is the human's decision: --rolled-back --by human:<id>", 2)
-        if not 0 < a.timeout <= 86400:      # odrzuca też nan i inf
+        if not 0 < a.timeout <= 86400:      # also rejects nan and inf
             return fail("limit czasu testu dymnego: liczba sekund od 1 do 86400", 2)
         return cmd_deployed(root, a.key, a.version, a.timeout, a.rolled_back, a.by, a.note)
     if a.cmd == "stage":
@@ -1371,7 +1371,7 @@ def main(argv: list[str]) -> int:
         if not files:
             return fail("give the slice's files: --files <file>[,<file>…] — without them the evidence is not tied to the code", 2)
         command = a.command
-        if not command:   # domyślnie to samo polecenie, którego pilnuje bramka jakości
+        if not command:   # by default the same command the quality gate watches
             try:
                 gate = json.loads((root / ".claude" / "quality-gate.json").read_text(encoding="utf-8")).get("command")
             except (OSError, ValueError, AttributeError):

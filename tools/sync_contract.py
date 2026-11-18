@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Kopie kontraktu pdi w tf: przypięte do wersji, generowane z tagu wydania, nigdy edytowane ręcznie.
+Copies of the pdi contract in tf: pinned to a version, generated from a release tag, never edited by hand.
 
   python3 tools/sync_contract.py sync  [--pin tools/pdi-contract.json] [--source DIR]
-      pobiera pliki z tagu contract-v<wersja> w repo z przypięcia (albo z katalogu DIR = katalog contract/)
-      i zapisuje je we wszystkich miejscach z przypięcia; pliki z version_files dostają numer wersji
+      fetches files from the tag contract-v<version> in the repo from the pin (or from the directory DIR = the contract/ directory)
+      and writes them to all the places from the pin; files from version_files get the version number
   python3 tools/sync_contract.py check [--pin …] [--source DIR]
-      porównuje kopie bajt w bajt ze źródłem; kod 1 i lista rozjazdów, gdy coś się różni
+      compares the copies byte by byte with the source; exit 1 and a list of mismatches when something differs
 
-Aktualizacja kontraktu: zmień "version" w przypięciu, uruchom sync, testy, PR. Kod wyjścia: 0 — zgodne/zapisane,
-1 — rozjazd albo brak pliku w źródle, 2 — złe przypięcie lub wywołanie. Tylko biblioteka standardowa.
+Updating the contract: change "version" in the pin, run sync, tests, PR. Exit code: 0 — consistent/written,
+1 — a mismatch or a file missing in the source, 2 — a bad pin or invocation. Standard library only.
 """
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ def fetch(pin: dict, name: str, source: Path | None) -> bytes | None:
         return f.read_bytes() if f.is_file() else None
     url = RAW.format(repo=pin["repo"], version=pin["version"], name=name)
     try:
-        with urllib.request.urlopen(url, timeout=30) as r:  # noqa: S310 — stały adres GitHuba z przypięcia
+        with urllib.request.urlopen(url, timeout=30) as r:  # noqa: S310 — a fixed GitHub address from the pin
             return r.read()
     except urllib.error.HTTPError as e:
         if e.code == 404:
@@ -82,7 +82,7 @@ def main(argv: list[str]) -> int:
     except PinError as e:
         print(f"✗ {e}")
         return 2
-    # ścieżki w przypięciu tf są względem katalogu głównego repo; inne przypięcie (testy) — względem swojego katalogu
+    # paths in the tf pin are relative to the repo root; another pin (tests) — relative to its own directory
     base = ROOT if a.pin.resolve() == PIN else a.pin.resolve().parent
     where = a.source or f"tag contract-v{pin['version']} in {pin['repo']}"
     want, missing = expected(pin, a.source, base)

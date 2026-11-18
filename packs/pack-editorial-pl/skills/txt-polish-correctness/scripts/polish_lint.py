@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Szybka, deterministyczna kontrola polskiej prozy w plikach Markdown/tekstowych (zero tokenów).
-Łapie błędy mechaniczne o wysokiej pewności: typografię, najczęstsze błędy pisowni, pleonazmy, kalki
-i brak przecinka przed „że”/„który”. Nie zastępuje korekty (skill txt-polish-correctness) — ją odciąża.
+A fast, deterministic check of Polish prose in Markdown/text files (zero tokens).
+It catches high-confidence mechanical errors: typography, the most common spelling errors, pleonasms, calques
+and a missing comma before „że”/„który”. It does not replace proofreading (skill txt-polish-correctness) — it relieves it.
 
-  python3 .claude/skills/txt-polish-correctness/scripts/polish_lint.py <plik|katalog> [...] [--strict] [--json]
+  python3 .claude/skills/txt-polish-correctness/scripts/polish_lint.py <file|directory> [...] [--strict] [--json]
 
-Pomija: frontmatter YAML, bloki kodu ```…```, `kod w linii`, adresy URL, linie z HTML-owymi komentarzami.
-Pliki bez polskich znaków diakrytycznych są pomijane (tekst prawdopodobnie nie jest po polsku).
-Wyjście: plik:linia [KATEGORIA|PRIORYTET] fragment → sugestia. Kod wyjścia: 0 (doradczo), z --strict 1 przy uwagach WYSOKICH.
+Skips: YAML frontmatter, code blocks ```…```, `inline code`, URLs, lines with HTML comments.
+Files without Polish diacritics are skipped (the text is probably not in Polish).
+Output: file:line [CATEGORY|PRIORITY] fragment → suggestion. Exit code: 0 (advisory), with --strict 1 for HIGH remarks.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from pathlib import Path
 
 PL_CHARS = re.compile(r"[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]")
 
-# (wzorzec, kategoria, priorytet, sugestia) — wzorce z granicami słów, bez rozróżniania wielkości liter
+# (pattern, category, priority, suggestion) — patterns with word boundaries, case-insensitive
 WORDS: list[tuple[str, str, str, str]] = [
     (r"\bnapewno\b", "SPELLING", "HIGH", "na pewno"),
     (r"\bwogóle\b", "SPELLING", "HIGH", "w ogóle"),
@@ -54,17 +54,17 @@ WORDS: list[tuple[str, str, str, str]] = [
      "COLLOCATION", "MEDIUM", "liczba … (countable nouns)"),
 ]
 
-# spójniki/zaimki wymagające przecinka przed (zdanie podrzędne)
+# conjunctions/pronouns requiring a comma before them (a subordinate clause)
 SUB = r"(że|żeby|aby|ponieważ|gdyż|który|która|które|którego|której|któremu|którym|którzy|których|którymi|którą)"
 PREP = {"w", "we", "o", "na", "do", "z", "ze", "przez", "dla", "po", "od", "przy", "za", "pod", "nad", "ku", "bez",
         "przed", "między", "u", "wśród", "według", "wg", "wewnątrz", "względem", "podstawie", "pomocą", "ramach", "trakcie", "wyniku", "przypadku", "zakresie", "obrębie", "sprawie", "stosunku", "dzięki", "mimo", "wobec", "spośród"}
 COMPOUND = {"mimo", "chyba", "zwłaszcza", "tyle", "tak", "jako", "dlatego", "tylko", "zanim", "aż", "pomimo", "podczas",
-            "przy", "czym", "to"}  # „to że” zostawiamy — zbyt wiele wyjątków
+            "przy", "czym", "to"}  # we leave out „to że” — too many exceptions
 COORD = {"i", "oraz", "lub", "albo", "a", "ani", "czy", "bądź", "lecz", "ale"}
 
 
 def strip_inline(line: str) -> str:
-    # kod i adresy zastępujemy jednym słowem-zaślepką, żeby nie tworzyć sztucznych odstępów
+    # code and addresses are replaced with a single placeholder word, so as not to create artificial gaps
     line = re.sub(r"`[^`]*`", "KOD", line)
     line = re.sub(r"https?://\S+", "URL", line)
     line = re.sub(r"\]\([^)]*\)", "]", line)   # cel linku Markdown
@@ -72,7 +72,7 @@ def strip_inline(line: str) -> str:
 
 
 def prose_lines(text: str):
-    """Linie prozy. Wyłączenia: `<!-- polish-lint: ignore-file -->`, bloki `<!-- polish-lint: off -->` … `on`."""
+    """Prose lines. Exclusions: `<!-- polish-lint: ignore-file -->`, blocks `<!-- polish-lint: off -->` … `on`."""
     if re.search(r"^\s*<!--\s*polish-lint:\s*ignore-file", text, re.M):
         return
     off = False
@@ -120,17 +120,17 @@ def check_line(line: str) -> list[tuple[str, str, str, str]]:
             out.append(("TYPOGRAPHY", "LOW", body[max(0, m.start() - 10):m.end() + 10].strip(), "single space"))
     if re.search(r"\w\.\.\.(\s|$)", line):
         out.append(("TYPOGRAPHY", "LOW", "...", "ellipsis „…”"))
-    # nagłówek w stylu angielskim („Title Case”) — po polsku wielka litera tylko na początku i w nazwach własnych
+    # a heading in English style („Title Case”) — in Polish a capital letter only at the start and in proper names
     h = re.match(r"\s*#{1,6}\s+(.+)$", line)
     if h:
-        head = re.sub(r"\([^)]*\)|—.*$|–.*$", "", h.group(1))          # bez nawiasów i dopisków po myślniku
+        head = re.sub(r"\([^)]*\)|—.*$|–.*$", "", h.group(1))          # without parentheses and additions after a dash
         english = re.search(r"\b(the|and|of|to|for|with|between|when|how|is|a|an|in|on)\b", head, re.I)
         words = [w for w in re.findall(r"[A-Za-ząćęłńóśźżĄĆĘŁŃÓŚŹŻ]+", head) if len(w) > 3]
         polish = [w for w in words if PL_CHARS.search(w) or re.search(
             r"(cja|cji|sja|sji|zja|ja|ji|ów|ych|ami|ach|ości|ość|enie|anie|ania|enia|ski|cki|owy|owa|owe)$", w.lower())]
         if not english and len(words) >= 2 and len(polish) >= 2 and all(w[0].isupper() and not w.isupper() for w in words):
             out.append(("SPELLING", "LOW", h.group(1).strip()[:60], "heading: capitalise only the first word and proper names"))
-    # brak przecinka przed zdaniem podrzędnym
+    # a missing comma before a subordinate clause
     for m in re.finditer(rf"(?<![\w-]){SUB}\b", line):
         before = line[:m.start()]
         words = re.findall(r"[\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ-]+|[^\s\w]", before)
@@ -141,13 +141,13 @@ def check_line(line: str) -> list[tuple[str, str, str, str]]:
             continue
         prev = words[i]
         if prev.lower() in COORD or not re.match(r"[\wąćęłńóśźżĄĆĘŁŃÓŚŹŻ]", prev):
-            continue   # po spójniku współrzędnym albo po znaku (przecinek, nawias, myślnik, dwukropek…)
+            continue   # after a coordinating conjunction or after a character (comma, parenthesis, dash, colon…)
         if m.group(1).startswith("któr") and prev.lower() in {"kiedy", "jak", "co", "gdzie", "czy", "który", "która", "które"}:
-            continue   # pytanie zależne / nagłówek „kiedy który”
+            continue   # an indirect question / a „kiedy który” heading
         if m.group(1) == "że" and prev.lower() in {"to", "tak", "tyle", "dlatego", "tylko", "chyba", "mimo", "zwłaszcza", "aż", "nie"}:
             continue
         frag = line[max(0, m.start() - 25):m.end()].strip()
-        prio = "MEDIUM" if m.group(1) in ("że", "żeby", "ponieważ", "gdyż") else "LOW"   # „który” bywa w pytaniu zależnym — tylko sygnał
+        prio = "MEDIUM" if m.group(1) in ("że", "żeby", "ponieważ", "gdyż") else "LOW"   # „który” may occur in an indirect question — only a signal
         out.append(("PUNCTUATION", prio, frag, f"check for a comma before „{m.group(1)}” (or before the preposition/compound conjunction)"))
     return out
 

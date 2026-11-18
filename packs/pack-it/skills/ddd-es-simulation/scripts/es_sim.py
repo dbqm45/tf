@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Stan symulowanego warsztatu Event Storming (skill ddd-es-simulation). Tylko biblioteka standardowa, zero tokenów:
-księgowość sesji, budowa promptów uczestników, tani router, tablica, statystyki dla coacha.
+State of a simulated Event Storming workshop (skill ddd-es-simulation). Standard library only, zero tokens:
+session bookkeeping, building participant prompts, a cheap router, the board, statistics for the coach.
 
   es_sim.py init --variant pelna|oszczedna [--scenario veterinary] [--id 2026-09-27-a]
-  es_sim.py round-begin --id <id> --text "<wypowiedź facylitatora>"   # zapisuje prompty rundy, wypisuje kogo wywołać
-  es_sim.py round-end --id <id>                                      # wczytuje odpowiedzi, aktualizuje tablicę, wypisuje streszczenie
-  es_sim.py invite --id <id> --persona <id>                          # dołącza osobę spoza sali
-  es_sim.py pivotal --id <id> --event ev_003                         # facylitator oznacza zdarzenie przełomowe
-  es_sim.py stats --id <id> [--json]                                 # metryki dla coacha
-  es_sim.py board --id <id>                                          # tablica w markdown
+  es_sim.py round-begin --id <id> --text "<facilitator's utterance>"   # saves the round prompts, prints who to call
+  es_sim.py round-end --id <id>                                      # loads the answers, updates the board, prints a summary
+  es_sim.py invite --id <id> --persona <id>                          # adds a person from outside the room
+  es_sim.py pivotal --id <id> --event ev_003                         # the facilitator marks a pivotal event
+  es_sim.py stats --id <id> [--json]                                 # metrics for the coach
+  es_sim.py board --id <id>                                          # the board in markdown
 
-Katalog sesji: $CLAUDE_PROJECT_DIR/docs/training/es-sim/<id>/ (materiał treningowy — nigdy dowód domenowy).
+Session directory: $CLAUDE_PROJECT_DIR/docs/training/es-sim/<id>/ (training material — never domain evidence).
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from pathlib import Path
 SKILL = Path(__file__).resolve().parent.parent
 ALLOWED_TYPES = {"event", "hot_spot"}
 MEMORY_KEEP, ECHO_N, RECENT_EVENTS, ROOM_MAX = 5, 3, 12, 4
-LONG_TURN = 6  # zdań — próg „monopolizowania” dla coacha
+LONG_TURN = 6  # sentences — the "monopolising" threshold for the coach
 
 
 # ───────────── pliki ─────────────
@@ -95,7 +95,7 @@ def cmd_init(a) -> None:
     present = [pid for pid, c in ps.items() if c["meta"].get("obecna_od_startu", "tak") == "tak"]
     state = {
         "id": sid, "scenario": a.scenario, "variant": a.variant, "round": 0, "present": present,
-        # wariant dnia: deterministyczny z id sesji i persony (inny temperament w każdej sesji, ta sama wiedza)
+        # variant of the day: deterministic from the session and persona id (a different temperament in each session, the same knowledge)
         "day_variant": {pid: int(hashlib.sha256(f"{sid}:{pid}".encode()).hexdigest(), 16) % max(1, len(c["variants"]))
                         for pid, c in ps.items()},
         "memory": {pid: [] for pid in ps}, "anecdotes_used": {pid: [] for pid in ps},
@@ -105,7 +105,7 @@ def cmd_init(a) -> None:
                                      "> Training material (simulation); not a source of knowledge about the real domain.\n",
                                      encoding="utf-8")
     save(state)
-    # Gotowe wprowadzenie dla facylitatora — gospodarz pokazuje je dosłownie i nie czyta brief.md (tam jest wiedza ukryta).
+    # A ready introduction for the facilitator — the host shows it verbatim and does not read brief.md (it holds the hidden knowledge).
     brief = (SKILL / "scenarios" / a.scenario / "brief.md").read_text(encoding="utf-8")
     m = re.search(r"^##\s+(?:Domain|Domena)\s*\n(.*?)(?=^##\s|\Z)", brief, re.M | re.S)  # pl: sprzed 14.x
     title = re.search(r"^#\s+(.+)$", brief, re.M)
@@ -145,14 +145,14 @@ def cmd_pivotal(a) -> None:
     print(f"✓ {a.event} marked as pivotal")
 
 
-# ───────────── router (wersja oszczędna) ─────────────
+# ───────────── router (economy version) ─────────────
 
 def route(st: dict, ps: dict, text: str) -> list[str]:
-    """Kogo wywołać: zaadresowani imieniem/rolą > dopasowani słowami kluczowymi > najdłużej milczący (rotacja)."""
+    """Who to call: those addressed by name/role > those matched by keywords > the longest silent (rotation)."""
     low = text.lower()
     present = [p for p in st["present"] if p in ps]
     def stems(p: str) -> list[str]:
-        # rdzenie imion odporne na odmianę: „Beata” → „beat” trafia też „Beato”, „Beaty”, „Beatą”
+        # name stems robust to inflection: „Beata” → „beat” also matches „Beato”, „Beaty”, „Beatą”
         forms = ps[p]["meta"].get("formy_imienia") or []
         words = [w for w in re.findall(r"\w+", ps[p]["meta"].get("imie", "")) if len(w) >= 4]
         return [f.lower() for f in forms] + [w[:max(4, len(w) - 2)].lower() for w in words] + [p.lower()]
@@ -161,7 +161,7 @@ def route(st: dict, ps: dict, text: str) -> list[str]:
         named = named or present[:]
     scored = sorted(present, key=lambda p: (-sum(k.lower() in low for k in ps[p]["meta"].get("slowa_kluczowe", [])),
                                             st["last_spoke"].get(p, 0), p))
-    # osoby, które z natury wtrącają się (karta: `wtraca_sie: tak`) — ich zachowanie jest częścią treningu
+    # people who interject by nature (card: `wtraca_sie: tak`) — their behaviour is part of the training
     butt_in = [p for p in present if str(ps[p]["meta"].get("wtraca_sie", "nie")).lower() == "tak"]
     chosen: list[str] = []
     for p in named + butt_in + scored:

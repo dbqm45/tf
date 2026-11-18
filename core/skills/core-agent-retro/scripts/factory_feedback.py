@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Zgłoszenie do repozytorium fabryki z zapisanej retrospektywy (skill core-agent-retro) — tylko biblioteka standardowa.
+Report to the factory repository from a saved retrospective (skill core-agent-retro) — standard library only.
 
-  python3 .claude/skills/core-agent-retro/scripts/factory_feedback.py              # link „nowe zgłoszenie” z treścią
-  ... --item "skill:core-semver: brak przykładu wersji 0.y.z"                      # własna uwaga o skillu/agencie fabryki
-  ... --gh                                                                       # plan wysyłki przez gh (nic nie wysyła)
-  ... --gh --yes                                                                 # wyślij przez `gh issue create`
-  ... --mark-sent                                                                # po wysłaniu z linku: zapamiętaj klucze
-  --date RRRR-MM-DD (retrospektywa; domyślnie najnowsza) · --repo właściciel/repo · --force (także już zgłoszone)
-  --json (tytuł, treść, link i blok danych) · --root <katalog projektu>
+  python3 .claude/skills/core-agent-retro/scripts/factory_feedback.py              # "new issue" link with the body
+  ... --item "skill:core-semver: missing example of a 0.y.z version"                      # own note about a factory skill/agent
+  ... --gh                                                                       # plan of sending through gh (sends nothing)
+  ... --gh --yes                                                                 # send through `gh issue create`
+  ... --mark-sent                                                                # after sending from the link: remember the keys
+  --date YYYY-MM-DD (retrospective; default: newest) · --repo owner/repo · --force (also already reported)
+  --json (title, body, link and data block) · --root <project directory>
 
-Co trafia do zgłoszenia: wyłącznie sygnały o skillach i agentach FABRYKI z pliku retrospektywy
-(`hint-missed:<skill>`, `hint-ignored:<skill>`, `tier:<agent>:<sygnał>`) z liczbami, decyzją projektu (bez odrzuconych),
-wersją fabryki i anonimowym identyfikatorem projektu. Pułapki, dziennik, koszty, ścieżki i nazwy projektu — nigdy.
-Własne uwagi (`--item`) są sprawdzane: ścieżka, adres, e-mail albo cel spoza fabryki → odmowa (kod 2).
-Repozytorium: `--repo`, inaczej `source` z manifestu (adres GitHub). Wysyłka przez gh tylko z `--yes`.
+What goes into the report: only signals about FACTORY skills and agents from the retrospective file
+(`hint-missed:<skill>`, `hint-ignored:<skill>`, `tier:<agent>:<signal>`) with counts, the project's decision (without rejected),
+the factory version and an anonymous project identifier. Pitfalls, journal, costs, paths and project names — never.
+Own notes (`--item`) are checked: a path, address, e-mail or a target outside the factory → refusal (code 2).
+Repository: `--repo`, otherwise `source` from the manifest (GitHub address). Sending through gh only with `--yes`.
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ import urllib.parse
 from pathlib import Path
 
 RETRO_DIR = Path("docs") / "project" / "archive" / "retro"
-SIGNAL = re.compile(r"^(hint-missed|hint-ignored):([a-z0-9][a-z0-9-]*)$|^tier:([a-z0-9][a-z0-9-]*):(?:za )?(?:niski|wysoki)$")   # retro_data pisze klucz z wartością log_usage („niski”); „za niski” — dawna forma
+SIGNAL = re.compile(r"^(hint-missed|hint-ignored):([a-z0-9][a-z0-9-]*)$|^tier:([a-z0-9][a-z0-9-]*):(?:za )?(?:niski|wysoki)$")   # retro_data writes the key with the log_usage value („niski”); „za niski” — the old form
 GITHUB = re.compile(r"github\.com[:/]([\w.-]+)/([\w.-]+?)(?:\.git)?(?:#.*)?$")
 LEAK = [(re.compile(r"(?:^|\s)(?:~|[A-Za-z]:\\|\.{0,2}/)[\w.-]+[/\\]"), "a path"),
         (re.compile(r"https?://|www\.", re.I), "an address"), (re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"), "an e-mail")]
@@ -42,7 +42,7 @@ def factory_names(root: Path, manifest: dict) -> tuple[set, set]:
         skills = {m.group(1) for f in files if (m := re.match(r"\.claude/skills/([^/]+)/SKILL\.md$", f))}
         agents = {m.group(1) for f in files if (m := re.match(r"\.claude/agents/_generated/([^/]+)\.md$", f))}
         return skills, agents
-    return ({p.parent.name for p in (root / ".claude" / "skills").glob("*/SKILL.md")},     # repozytorium fabryki
+    return ({p.parent.name for p in (root / ".claude" / "skills").glob("*/SKILL.md")},     # the factory repository
             {p.stem for p in (root / ".claude" / "agents" / "_generated").glob("*.md")})
 
 
@@ -109,7 +109,7 @@ def compose(payload: dict) -> tuple[str, str]:
 
 def link(repo: str, title: str, body: str) -> str:
     url = f"https://github.com/{repo}/issues/new?" + urllib.parse.urlencode({"title": title, "body": body})
-    if len(url) > URL_MAX:   # przeglądarki i GitHub tną długie adresy — zostaje sam blok danych
+    if len(url) > URL_MAX:   # browsers and GitHub truncate long URLs — only the data block remains
         short = body.split("```json", 1)[1]
         url = f"https://github.com/{repo}/issues/new?" + urllib.parse.urlencode({"title": title, "body": "```json" + short})
     return url

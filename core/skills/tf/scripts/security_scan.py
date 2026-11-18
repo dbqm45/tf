@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-Skan bezpieczeństwa kawałka: semgrep (reguły OWASP Top 10, .semgrep.yml produktu i semgrep.yml nakładek) na plikach zmienionych
-przez kawałek, audyt zależności tylko przy zmianie manifestu albo lockfile'a, SARIF w katalogu wyniku, werdykt jak
-SEC-001 w ci_for_sdlc. Brak skanera to FAIL z poleceniem instalacji, nigdy cichy PASS.
+Security scan of a slice: semgrep (OWASP Top 10 rules, the product's .semgrep.yml and the overlays' semgrep.yml) on the files changed
+by the slice, dependency audit only when a manifest or lockfile changes, SARIF in the result directory, a verdict like
+SEC-001 in ci_for_sdlc. A missing scanner is a FAIL with an install command, never a silent PASS.
 
   python3 .claude/skills/tf/scripts/security_scan.py scan [--base REF] [--out DIR]
                                                                        [--slice S<n> --attempt k] [--json]
-  python3 .claude/skills/tf/scripts/security_scan.py verdict PLIK.sarif... [--json]
+  python3 .claude/skills/tf/scripts/security_scan.py verdict FILE.sarif... [--json]
   python3 .claude/skills/tf/scripts/security_scan.py cooldown
 
-scan     — bez --base: zmiany nieskomitowane i nowe pliki (pętla kawałka); z --base: także commity od bazy (CI na PR).
-           Zapisuje do --out (domyślnie reports/security): semgrep.sarif, npm-audit.sarif, pip-audit.sarif,
-           verdict.json, summary.md (sekcja raportu przebiegu) i feedback.md (ustalenia dla następnej próby).
-           Z --slice wynik próby trafia do --out/attempt-<k>/ (próby się nie nadpisują), a --out/feedback.md to
-           kopia feedback.md ostatniej próby.
-verdict  — werdykt z gotowych plików SARIF.
-cooldown — karencja wersji (N10): min-release-age npm, minimumReleaseAge pnpm, npmMinimalAgeGate Yarn,
-           exclude-newer uv ≥ 7 dni i lockfile w gicie.
+scan     — without --base: uncommitted changes and new files (the slice loop); with --base: also commits since the base (CI on a PR).
+           Writes to --out (default reports/security): semgrep.sarif, npm-audit.sarif, pip-audit.sarif,
+           verdict.json, summary.md (a section of the run report) and feedback.md (findings for the next attempt).
+           With --slice the attempt's result goes to --out/attempt-<k>/ (attempts do not overwrite each other), and --out/feedback.md is
+           a copy of the last attempt's feedback.md.
+verdict  — a verdict from ready SARIF files.
+cooldown — version cooldown (N10): npm min-release-age, pnpm minimumReleaseAge, Yarn npmMinimalAgeGate,
+           uv exclude-newer ≥ 7 days and a lockfile in git.
 
-Blokujące: poziom error albo warning z CWE z OWASP Top 10 2021 lub 2025; poziom wyniku → domyślny poziom reguły →
-warning; poziom none pomijany. Reszta trafia do raportu. Kod wyjścia: 0 PASS, 1 FAIL, 2 złe wywołanie.
-Skanery szukane w PATH, albo tylko w TF_SCAN_PATH, jeśli ustawione. Reguły semgrep: TF_SEMGREP_CONFIG
-(domyślnie p/owasp-top-ten z rejestru semgrep.dev; host musi być na liście dozwolonych kontenera).
+Blocking: level error or warning with a CWE from OWASP Top 10 2021 or 2025; result level → the rule's default level →
+warning; level none is skipped. The rest goes into the report. Exit code: 0 PASS, 1 FAIL, 2 bad call.
+Scanners are looked up in PATH, or only in TF_SCAN_PATH if set. Semgrep rules: TF_SEMGREP_CONFIG
+(default p/owasp-top-ten from the semgrep.dev registry; the host must be on the container's allowlist).
 """
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ class ScanError(Exception):
     pass
 
 
-# ── SARIF i werdykt ────────────────────────────────────────────────────────────────────────────────────────────────
+# ── SARIF and verdict ────────────────────────────────────────────────────────────────────────────────────────────────
 
 def empty_sarif(tool: str) -> dict:
     return {"$schema": "https://json.schemastore.org/sarif-2.1.0.json", "version": "2.1.0",
@@ -110,7 +110,7 @@ def cwes_of(*props) -> list[int]:
 
 
 def findings(sarif: dict) -> list[dict]:
-    """Ustalenia z logu SARIF: reguła, plik, linia, poziom, CWE, komunikat (poziom none pominięty)."""
+    """Findings from a SARIF log: rule, file, line, level, CWE, message (level none skipped)."""
     out = []
     for run in sarif.get("runs") or []:
         driver = ((run.get("tool") or {}).get("driver") or {})
@@ -182,7 +182,7 @@ def render(v: dict) -> list[str]:
     return lines
 
 
-# ── pliki zmienione ────────────────────────────────────────────────────────────────────────────────────────────────
+# ── changed files ────────────────────────────────────────────────────────────────────────────────────────────────
 
 def git(*args, cwd: Path) -> str:
     r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True)
@@ -196,12 +196,12 @@ def changed_files(root: Path, base: str | None, skip: list[str]) -> list[str]:
     names |= set(git("ls-files", "--others", "--exclude-standard", cwd=root).splitlines())
     if base:
         names |= set(git("diff", "--name-only", f"{base}...HEAD", cwd=root).splitlines())
-    # Wyniki pracy fabryki (.tf/: przebiegi, raporty, logi) poza skanem.
+    # The factory's work output (.tf/: runs, reports, logs) outside the scan.
     prefixes = [".tf/", *(s.rstrip("/") + "/" for s in skip if s)]
     return sorted(n for n in names if n and (root / n).is_file() and not any(n.startswith(p) for p in prefixes))
 
 
-# ── skanery ────────────────────────────────────────────────────────────────────────────────────────────────────────
+# ── scanners ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 def tool(name: str) -> str | None:
     return shutil.which(name, path=os.environ.get("TF_SCAN_PATH") or None)
@@ -213,9 +213,9 @@ SEMGREP_STATE_VARS = {"SEMGREP_SETTINGS_FILE": "settings.yml", "SEMGREP_LOG_FILE
 
 
 def semgrep_env(root: Path) -> dict[str, str]:
-    """Stan semgrepa w klonie zamiast w $HOME (PRB-32): w sandboxie Bash kontenera fazy pdi HOME nie jest zapisywalny
-    i semgrep 1.183.0 kończy się FileNotFoundError przy mkdir (odtworzone 2026-11-05). Katalog ma własny .gitignore
-    z `*`, więc nie brudzi drzewa; zmienne ustawione przez człowieka zostają."""
+    """Semgrep state in the clone instead of in $HOME (PRB-32): in the Bash sandbox of the pdi phase container HOME is not writable
+    and semgrep 1.183.0 fails with FileNotFoundError at mkdir (reproduced 2026-11-05). The directory has its own .gitignore
+    with `*`, so it does not dirty the tree; variables set by a human stay."""
     state = root / SEMGREP_STATE
     state.mkdir(parents=True, exist_ok=True)
     ignore = state / ".gitignore"
@@ -236,7 +236,7 @@ def run_semgrep(root: Path, files: list[str], out: Path) -> None:
            "--config", os.environ.get("TF_SEMGREP_CONFIG") or SEMGREP_DEFAULT]
     if (root / ".semgrep.yml").is_file():
         cmd += ["--config", ".semgrep.yml"]
-    for rules in sorted((root / ".tf" / "factory" / "packs").glob("*/semgrep.yml")):   # reguły nakładek (np. firmowej)
+    for rules in sorted((root / ".tf" / "factory" / "packs").glob("*/semgrep.yml")):   # overlay rules (e.g. the company's)
         cmd += ["--config", rules.relative_to(root).as_posix()]
     r = subprocess.run([*cmd, *files], cwd=root, capture_output=True, text=True, env=semgrep_env(root))
     if r.returncode != 0 or not target.is_file():
@@ -250,7 +250,7 @@ def line_of(text: str, pred) -> int | None:
 
 
 def npm_audit_sarif(audit, lock_rel: str, lock_text: str | None) -> dict:
-    """`npm audit --json` (auditReportVersion 2) jako SARIF — port scripts/lib/npm-audit-sarif.mjs z ci_for_sdlc."""
+    """`npm audit --json` (auditReportVersion 2) as SARIF — a port of scripts/lib/npm-audit-sarif.mjs from ci_for_sdlc."""
     if not isinstance(audit, dict):
         raise ScanError("npm audit: this is not an audit report (auditReportVersion 2)")
     if audit.get("error"):
@@ -300,8 +300,8 @@ def run_npm_audit(root: Path, lock_rel: str, out: Path, name: str) -> None:
 
 
 def pip_audit_sarif(report, manifest_rel: str, manifest_text: str | None) -> dict:
-    """Wynik `pip-audit -f json` jako SARIF. pip-audit nie podaje ważności: każda znana podatność to error
-    z CWE-1104 (komponent z podatnością, A06:2021 / A03:2025), czyli blokuje."""
+    """The result of `pip-audit -f json` as SARIF. pip-audit does not give severity: every known vulnerability is an error
+    with CWE-1104 (a component with a vulnerability, A06:2021 / A03:2025), i.e. it blocks."""
     if not isinstance(report, dict) or not isinstance(report.get("dependencies"), list):
         raise ScanError("pip-audit: the output has no dependencies list")
     rules, index, results = [], {}, []
@@ -332,10 +332,10 @@ def run_pip_audit(root: Path, manifest_rel: str, out: Path, name: str) -> None:
     path = root / manifest_rel
     if path.name.startswith("requirements"):
         cmd = [tool("pip-audit"), "-r", manifest_rel, "-f", "json", "-o", str(raw)]
-    else:  # projekt (pyproject.toml / lockfile): pip-audit rozwiązuje zależności katalogu projektu
+    else:  # project (pyproject.toml / lockfile): pip-audit resolves the project directory's dependencies
         cmd = [tool("pip-audit"), "-f", "json", "-o", str(raw), str(path.parent.relative_to(root) or ".")]
     r = subprocess.run(cmd, cwd=root, capture_output=True, text=True)
-    if r.returncode not in (0, 1) or not raw.is_file():  # 1 = znaleziono podatności
+    if r.returncode not in (0, 1) or not raw.is_file():  # 1 = vulnerabilities found
         raise ScanError(f"pip-audit ({manifest_rel}) ended with code {r.returncode}: {(r.stderr or r.stdout).strip()[-300:]}")
     try:
         report = json.loads(raw.read_text(encoding="utf-8"))
@@ -352,8 +352,8 @@ NO_DEPS = "package.json without dependencies (dependencies, devDependencies, opt
 
 
 def node_has_deps(manifest: Path) -> bool:
-    """Czy package.json deklaruje zależności. Nieczytelny manifest liczy się jak z zależnościami (nigdy cichy PASS);
-    brak pliku (usunięty manifest) — bez zależności."""
+    """Whether package.json declares dependencies. An unreadable manifest counts as having dependencies (never a silent PASS);
+    a missing file (a deleted manifest) — no dependencies."""
     if not manifest.is_file():
         return False
     try:
@@ -364,8 +364,8 @@ def node_has_deps(manifest: Path) -> bool:
 
 
 def audit_jobs(root: Path, files: list[str]) -> tuple[list[tuple], list[str], list[str]]:
-    """Audyty do uruchomienia, gdy zmienił się manifest albo lockfile: (narzędzie, plik). Błędy: stos bez audytu.
-    Pominięte: manifesty bez zależności i bez lockfile'a — nie ma czego audytować."""
+    """Audits to run when a manifest or lockfile changed: (tool, file). Errors: a stack without an audit.
+    Skipped: manifests without dependencies and without a lockfile — nothing to audit."""
     jobs, errors, skipped, dirs_node, dirs_py = [], [], [], set(), set()
     for f in files:
         if NODE_MANIFEST.search(f):
@@ -392,7 +392,7 @@ def audit_jobs(root: Path, files: list[str]) -> tuple[list[tuple], list[str], li
     return jobs, errors, skipped
 
 
-# ── polecenia ──────────────────────────────────────────────────────────────────────────────────────────────────────
+# ── commands ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
 def slice_lines(v: dict, slice_id: str, attempt: int) -> list[str]:
     if v["status"] == "PASS":
@@ -434,8 +434,8 @@ def cmd_scan(a) -> int:
     except ValueError:
         rel_out = ""
     base_out = out
-    # Kawałek: każda próba we własnym katalogu attempt-<k> (raport pokazuje wszystkie); w --out tylko feedback.md
-    # ostatniej próby. Bez --slice (CI) wynik prosto w --out.
+    # Slice: every attempt in its own attempt-<k> directory (the report shows all of them); in --out only the last
+    # attempt's feedback.md. Without --slice (CI) the result goes straight into --out.
     clean = [out]
     if a.slice:
         out = base_out / f"attempt-{a.attempt}"
@@ -489,14 +489,14 @@ def cmd_verdict(a) -> int:
     return 0 if v["status"] == "PASS" else 1
 
 
-# ── karencja wersji (N10) ──────────────────────────────────────────────────────────────────────────────────────────
+# ── version cooldown (N10) ──────────────────────────────────────────────────────────────────────────────────────────
 
 DUR = re.compile(r"^\s*(\d+(?:\.\d+)?)\s*(m|min|mins|minutes?|h|hours?|d|days?|w|weeks?)\s*$", re.I)
 ISO = re.compile(r"^P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?)?$", re.I)
 
 
 def minutes(value) -> float | None:
-    """Czas w minutach: liczba (minuty), „7 days”, „1w”, „P7D”; None, gdy nieczytelny."""
+    """Time in minutes: a number (minutes), „7 days”, „1w”, „P7D”; None when unreadable."""
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return float(value)
     s = str(value).strip().strip("'\"")
@@ -582,7 +582,7 @@ def cmd_cooldown(_a) -> int:
         lock("uv.lock")
     if (root / "package.json").is_file() and not any(
             (root / n).is_file() for n in ("package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock")):
-        if node_has_deps(root / "package.json"):  # ta sama reguła co audit_jobs w skanie
+        if node_has_deps(root / "package.json"):  # the same rule as audit_jobs in the scan
             problems.append("package.json has dependencies but no lockfile — generate it (npm install) "
                             "and commit package-lock.json (N10)")
         elif not ok and not problems:

@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Graf importów kodu do mapy (kroki 2–5 skilla eng-codebase-mapping) — gdy nie ma madge, dependency-cruisera ani nx graph.
-Python przez ast; TS/JS, Java, C# i Go przez regex importów (Java: package/import, C#: namespace/using — krawędź do
-każdego pliku przestrzeni nazw, Go: go.mod + ścieżka pakietu). Tylko biblioteka standardowa; kodu nie uruchamia.
+Code import graph for the map (steps 2–5 of the eng-codebase-mapping skill) — when there is no madge, dependency-cruiser or nx graph.
+Python via ast; TS/JS, Java, C# and Go via import regexes (Java: package/import, C#: namespace/using — an edge to
+every file of the namespace, Go: go.mod + package path). Standard library only; it does not run the code.
 
-  python3 code_graph.py <repo>                        # punkty wejścia, pakiety, grupy, pod prąd, huby, cykle
-  python3 code_graph.py <repo> --impact <plik>        # do tego zasięg zmiany pliku (2 kroki w górę + testy)
-  python3 code_graph.py <repo> --focus <ścieżka>      # importy przez granicę modułu (do i od reszty repo)
-  python3 code_graph.py <repo> --focus A --focus B    # tylko importy między A i B (szew pary)
-  --top N (domyślnie 10) · --group-depth N (domyślnie 2; grupa z > 40% plików jest wtedy rozbijana sama) · --json (pełny wynik z listą krawędzi)
+  python3 code_graph.py <repo>                        # entry points, packages, groups, upstream, hubs, cycles
+  python3 code_graph.py <repo> --impact <file>        # up to here the reach of a file change (2 steps up + tests)
+  python3 code_graph.py <repo> --focus <path>         # imports across a module boundary (to and from the rest of the repo)
+  python3 code_graph.py <repo> --focus A --focus B    # only imports between A and B (the pair's seam)
+  --top N (default 10) · --group-depth N (default 2; a group with > 40% of files is then split on its own) · --json (full result with the edge list)
 
-Rodzaje krawędzi: module (wykonywany przy imporcie), function (import w ciele funkcji — leniwy), type (pod
-TYPE_CHECKING albo `import type` / `{ type X }`), dynamic (`import()`). Cykle runtime liczone tylko z krawędzi module;
-cykle domykane dopiero przez krawędzie leniwe są osobno (closed_by). Testy, fikstury i migracje są poza grafem
-produkcyjnym (ale liczą się w --impact). Barrel = plik index.* / __init__.py z samymi re-eksportami — poza hubami
-i statystykami grup. Krawędzie to WYCIĄGNIĘTE z tekstu importów; DI, rejestry, kolejki, sygnały, importy po nazwie
-(import_string, apps.get_model, string w settings) i HTTP między usługami graf pomija — wpisz je do unknowns.
+Edge kinds: module (executed on import), function (an import in a function body — lazy), type (under
+TYPE_CHECKING or `import type` / `{ type X }`), dynamic (`import()`). Runtime cycles are counted only from module edges;
+cycles closed only by lazy edges are listed separately (closed_by). Tests, fixtures and migrations are outside the
+production graph (but count in --impact). Barrel = an index.* / __init__.py file with only re-exports — outside hubs
+and group statistics. Edges are EXTRACTED from import text; DI, registries, queues, signals, imports by name
+(import_string, apps.get_model, a string in settings) and HTTP between services are missed by the graph — put them in unknowns.
 """
 from __future__ import annotations
 
@@ -84,7 +84,7 @@ def is_type_checking(test: ast.AST) -> bool:
 
 
 def py_imports(tree: ast.AST):
-    """(węzeł importu, rodzaj) z kontekstem: funkcja → function, if TYPE_CHECKING → type, reszta → module."""
+    """(import node, kind) with context: function → function, if TYPE_CHECKING → type, the rest → module."""
     def visit(node, kind):
         for child in ast.iter_child_nodes(node):
             if isinstance(child, (ast.Import, ast.ImportFrom)):
@@ -113,7 +113,7 @@ def call_name(node: ast.AST) -> str:
 
 
 def py_registries(p: str, tree: ast.AST) -> collections.Counter:
-    """Wejścia z rejestrów: zadania Celery, aplikacje i trasy HTTP, schemat GraphQL, komendy Django."""
+    """Entries from registries: Celery tasks, HTTP apps and routes, the GraphQL schema, Django commands."""
     c = collections.Counter()
     if re.search(r"/management/commands/[^/]+\.py$", p) and not p.endswith("__init__.py"):
         c["django-command"] += 1
@@ -181,7 +181,7 @@ FROM = re.compile(r"(?m)^[ \t]*(import|export)\s+(type\s+)?([^'\";]*?)\s*from\s*
 SIDE = re.compile(r"(?m)^[ \t]*import\s*['\"]([^'\"]+)['\"]")
 DYN = re.compile(r"\bimport\(\s*['\"]([^'\"]+)['\"]\s*\)")
 REQ = re.compile(r"\brequire\(\s*['\"]([^'\"]+)['\"]\s*\)")
-COMMENT = re.compile(r"(?<![\w'\"*/\\])/\*.*?\*/|^[ \t]*//[^\n]*", re.S | re.M)   # // tylko do końca linii
+COMMENT = re.compile(r"(?<![\w'\"*/\\])/\*.*?\*/|^[ \t]*//[^\n]*", re.S | re.M)   # // only to the end of the line
 
 
 def load_json(root: str, p: str) -> dict:
@@ -262,8 +262,8 @@ CLIKE_COMMENT = re.compile(r"/\*.*?\*/|//[^\n]*", re.S)
 
 
 def java_graph(root: str, files: list[str], edges: dict, mains: set) -> None:
-    """Krawędź do klasy z importu (też static), `import pakiet.*` → wszystkie klasy pakietu. Klasy z tego samego
-    pakietu bez importu i refleksja (Spring, CDI) są niewidoczne — do unknowns."""
+    """An edge to the class from an import (also static), `import package.*` → all classes of the package. Classes from the same
+    package without an import and reflection (Spring, CDI) are invisible — to unknowns."""
     texts, by_fqn, by_pkg = {}, {}, collections.defaultdict(list)
     for p in files:
         t = texts[p] = CLIKE_COMMENT.sub("", read(root, p))
@@ -287,8 +287,8 @@ def java_graph(root: str, files: list[str], edges: dict, mains: set) -> None:
 
 
 def cs_graph(root: str, files: list[str], edges: dict, mains: set) -> None:
-    """`using X.Y;` → krawędź do każdego pliku, który deklaruje przestrzeń nazw X.Y (zgrubnie: using nie mówi, której
-    klasy plik używa); `using static X.Y.Z;` → plik klasy Z, jeśli się nazywa Z.cs. DI i refleksja — do unknowns."""
+    """`using X.Y;` → an edge to every file that declares the namespace X.Y (roughly: using does not say which
+    class the file uses); `using static X.Y.Z;` → the file of class Z, if it is named Z.cs. DI and reflection — to unknowns."""
     texts, by_ns = {}, collections.defaultdict(list)
     for p in files:
         t = texts[p] = CLIKE_COMMENT.sub("", read(root, p))
@@ -310,7 +310,7 @@ def cs_graph(root: str, files: list[str], edges: dict, mains: set) -> None:
 
 
 def go_graph(root: str, all_files: list[str], files: list[str], edges: dict, mains: set) -> None:
-    """Import ścieżki pakietu z modułu (go.mod) → krawędź do każdego pliku katalogu pakietu (bez _test.go)."""
+    """A package path import from the module (go.mod) → an edge to every file in the package directory (without _test.go)."""
     mods = {}
     for gm in (f for f in all_files if os.path.basename(f) == "go.mod"):
         m = re.search(r"^\s*module\s+(\S+)", read(root, gm), re.M)
@@ -335,9 +335,9 @@ def go_graph(root: str, all_files: list[str], files: list[str], edges: dict, mai
             mains.add(p)
 
 
-# ---------- pakiety i punkty wejścia ----------
+# ---------- packages and entry points ----------
 def workspaces(root: str, all_files: list[str]):
-    """{katalog pakietu: (nazwa, plik wejścia lub None, pliki z scripts/main/bin)}."""
+    """{package directory: (name, entry file or None, files from scripts/main/bin)}."""
     out = {}
     for p in all_files:
         if not p.endswith("package.json") or "/node_modules/" in p:
@@ -476,7 +476,7 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
         closed = sorted({k for s in c for t, k in E.get(s, {}).items() if t in cs and k != "module"})
         groups = collections.Counter(group_of(f, gdepth) for f in c)
         lazy.append({"files": c, "size": len(c), "closed_by": closed, "groups": groups.most_common(5)})
-    comp = {}   # plik -> (rodzaj cyklu, nr składowej): runtime ma pierwszeństwo
+    comp = {}   # file -> (cycle kind, component no.): runtime takes precedence
     for i, c in enumerate(lazy):
         for f in c["files"]:
             comp[f] = ("lazy", i)
@@ -484,7 +484,7 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
         for f in c:
             comp[f] = ("runtime", i)
 
-    # punkty wejścia
+    # entry points
     refs = {r for _, _, rr in pkgs.values() for r in rr}
     outs, ins = sorted(outdeg[n] for n in nodes), sorted(indeg[n] for n in nodes)
     q = lambda arr, f: arr[min(len(arr) - 1, int(len(arr) * f))] if arr else 0
@@ -498,7 +498,7 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
             s += 3; why.append("package.json")
         elif n in mains:
             s += 3; why.append("main")
-        elif ENTRY_NAME.search(n) and depth <= 1:   # app.py czy urls.py głęboko w drzewie to zwykle moduł, nie wejście
+        elif ENTRY_NAME.search(n) and depth <= 1:   # app.py or urls.py deep in the tree is usually a module, not an entry
             s += 3; why.append("name")
         if depth <= 1:
             s += 1; why.append("shallow")
@@ -512,7 +512,7 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
         if n in barrels:
             continue
         s, why = score(n)
-        if s >= 3 and why[0] in ("name", "package.json", "main"):   # bez sygnału nazwy płytki liść to jeszcze nie wejście
+        if s >= 3 and why[0] in ("name", "package.json", "main"):   # without a name signal a shallow leaf is not yet an entry
             cand.append({"file": n, "score": s, "out": outdeg[n], "in": indeg[n], "why": why})
     cand.sort(key=lambda e: (-e["score"], -e["out"], e["file"]))
 
@@ -526,10 +526,10 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
     packages = [{"from": a, "to": b, "edges": v["edges"], "type_only": v["edges"] == v["type"]}
                 for (a, b), v in sorted(pk.items(), key=lambda x: (-x[1]["edges"], x[0]))]
 
-    # grupy (bez barreli) i zależności pod prąd
+    # groups (without barrels) and upstream dependencies
     grp = {n: group_of(n, gdepth) for n in nodes}
     split = []
-    if auto:   # grupa z > 40% plików produkcyjnych nic nie mówi o warstwach — rozbij ją o poziom (najwyżej 2 razy)
+    if auto:   # a group with > 40% of production files says nothing about layers — split it by one level (at most 2 times)
         for extra in (1, 2):
             sizes = collections.Counter(grp.values())
             big = [g for g, n in sizes.items() if n >= 20 and n > 0.4 * len(nodes)]
@@ -555,7 +555,7 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
         else:
             ge[(a, b)] += 1
             cs, ct = comp.get(s), comp.get(t)
-            if cs and cs == ct:   # oba końce w tym samym cyklu plików
+            if cs and cs == ct:   # both ends in the same file cycle
                 key = frozenset((a, b))
                 gcyc[key] = "runtime" if "runtime" in (gcyc.get(key), cs[0]) else "lazy"
     groups = []
@@ -572,7 +572,7 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
         if a < b and y:
             cyc = gcyc.get(frozenset((a, b)))
             if nested(a, b) and not cyc:
-                continue   # katalog i jego podkatalog bez cyklu: artefakt grupowania, nie strzałka pod prąd
+                continue   # a directory and its subdirectory without a cycle: a grouping artifact, not an upstream arrow
             upstream.append({"a": a, "b": b, "a_to_b": x, "b_to_a": y, "cycle": cyc})
     upstream.sort(key=lambda u: (-min(u["a_to_b"], u["b_to_a"]), u["a"]))
 

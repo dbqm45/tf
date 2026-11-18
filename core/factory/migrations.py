@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Migracje rdzenia — autokorekta plików projektu po zmianach w publicznym API fabryki (.tf/factory/PUBLIC_API.md).
+Core migrations — auto-correction of project files after changes in the factory's public API (.tf/factory/PUBLIC_API.md).
 
-  python3 .tf/factory/migrations.py            # pokaż, co trzeba poprawić (nic nie zmienia)
-  python3 .tf/factory/migrations.py --apply    # popraw
+  python3 .tf/factory/migrations.py            # show what needs fixing (changes nothing)
+  python3 .tf/factory/migrations.py --apply    # fix it
 
-Uruchamiają je instalator (po każdej aktualizacji) i `tf doctor --fix`. Poprawiane są tylko pliki projektu, których
-fabryka nie instalowała: własne persony i role (`.tf/config/personas/`, `.tf/config/roles/`), własne nakładki
-(`.tf/factory/packs/<id>/` spoza manifestu) i własne skille (`.claude/skills/<skill>/SKILL.md` spoza manifestu).
-Pliki fabryki aktualizuje instalator. Biblioteka standardowa + PyYAML (przez packs.py) do czytania pack.yaml.
+They are run by the installer (after every update) and `tf doctor --fix`. Only project files the factory did not install are fixed:
+own personas and roles (`.tf/config/personas/`, `.tf/config/roles/`), own overlays
+(`.tf/factory/packs/<id>/` outside the manifest) and own skills (`.claude/skills/<skill>/SKILL.md` outside the manifest).
+The installer updates factory files. Standard library + PyYAML (via packs.py) to read pack.yaml.
 
-Nowa zmiana nazwy w rdzeniu = nowy wpis w RENAMES (z wersją rdzenia, od której obowiązuje). Zmiana nazwy w nakładce =
-wpis `renames: {"<wersja>": {stara: nowa}}` w jej pack.yaml (działa też dla nakładek spoza repozytorium fabryki).
+A new rename in the core = a new entry in RENAMES (with the core version from which it applies). A rename in an overlay =
+an entry `renames: {"<version>": {old: new}}` in its pack.yaml (also works for overlays outside the factory repository).
 """
 from __future__ import annotations
 
@@ -20,28 +20,28 @@ import re
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-# wersja rdzenia → stara nazwa → nowa nazwa (skille, cechy, role)
+# core version → old name → new name (skills, traits, roles)
 RENAMES: dict[str, dict[str, str]] = {
     "3.0.0": {
         "core-tech-docs": "docs-tech-writing",          # pack-docs
         "fe-ux-design": "ux-feature-design",            # pack-ux
     },
     "5.0.0": {
-        "core-story-run": "tf",                         # pętla „zadanie → PR” (do 9.33 skill talos-story-run trybu mode-talos)
+        "core-story-run": "tf",                         # the “task → PR” loop (until 9.33 the talos-story-run skill of the mode-talos mode)
     },
     "10.0.0": {
-        "talos-story-run": "tf",                        # pętla przeniesiona z trybu mode-talos do rdzenia
+        "talos-story-run": "tf",                        # loop moved from the mode-talos mode to the core
     },
 }
 
@@ -54,7 +54,7 @@ def factory_files(root: Path) -> set[str]:
 
 
 def own_files(root: Path) -> list[Path]:
-    """Pliki projektu, które mogą odwoływać się do nazw fabryki, a których fabryka nie instaluje."""
+    """Project files that may refer to factory names and that the factory does not install."""
     installed = factory_files(root)
     cands = [*(root / ".tf" / "config" / "personas").glob("*.yaml"), *(root / ".tf" / "config" / "roles").glob("*.yaml"),
              *(root / ".tf" / "factory" / "packs").glob("*/**/*.yaml"), *(root / ".claude" / "skills").glob("*/SKILL.md")]
@@ -62,7 +62,7 @@ def own_files(root: Path) -> list[Path]:
 
 
 def pack_renames(root: Path) -> dict[str, str]:
-    """Zmiany nazw zadeklarowane przez zainstalowane nakładki (`renames` w .tf/factory/packs/<id>/pack.yaml)."""
+    """Renames declared by installed overlays (`renames` w .tf/factory/packs/<id>/pack.yaml)."""
     base = root / ".tf" / "factory" / "packs"
     files = sorted(base.glob("*/pack.yaml")) if base.is_dir() else []
     if not files:
@@ -79,7 +79,7 @@ def pack_renames(root: Path) -> dict[str, str]:
 
 
 def apply(root: Path = ROOT, dry: bool = True) -> list[str]:
-    """Zmiany nazw w plikach projektu. Zwraca opis zmian (przy dry=True — zmian do zrobienia)."""
+    """Renames in project files. Returns a description of the changes (with dry=True — changes to be made)."""
     mapping = {old: new for table in RENAMES.values() for old, new in table.items()}
     mapping.update(pack_renames(root))
     pattern = re.compile(r"\b(" + "|".join(map(re.escape, mapping)) + r")\b")
@@ -95,7 +95,7 @@ def apply(root: Path = ROOT, dry: bool = True) -> list[str]:
     return out
 
 
-# 11.0.0: identyfikatory stanu zadania, pętli i konfiguracji po angielsku (opisy zostają po polsku)
+# 11.0.0: task state, loop and configuration identifiers in English (descriptions stay in Polish)
 VALUES = {
     "przyjecie": "intake", "specyfikacja": "spec", "realizacja": "implementation", "przeglad": "review",
     "wdrozenie": "deploy", "zamkniecie": "closed", "lekka": "light", "zwykla": "normal", "pelna": "full",
@@ -110,7 +110,7 @@ STEP_KEYS = {"fakty": "facts", "wersje": "versions", "realizacja": "implementati
              "przeglad": "review", "decyzja": "decision", "bezpieczenstwo": "security", "opis": "description"}
 
 
-# 12.0.0: pola wpisu dziennika decyzji pdi (`docs/project/changes/*/decisions.md`, wiersze `- pole: wartość`)
+# 12.0.0: fields of a pdi decision journal entry (`docs/project/changes/*/decisions.md`, rows `- pole: wartość`)
 DECISION_KEYS = {"wyslano": "sent", "kiedy": "date", "kto": "by", "rodzaj": "kind", "dlaczego": "why", "zrodlo": "source",
                  "szkic": "drafted_by", "ustalenie": "finding", "skutek": "effect", "pochodzenie": "origin",
                  "pytanie": "question", "odpowiedz": "answer"}
@@ -119,9 +119,9 @@ SENT_RX = re.compile(r"(?m)^- sent: (tak|nie)[ \t]*$")
 
 
 REGISTER_STATUS = {"otwarte": "open", "rozstrzygnięte": "resolved"}
-ART_STATUS = {"szkic": "draft", "zatwierdzony": "approved"}   # 14.0.0: status pliku zadania w task.json
+ART_STATUS = {"szkic": "draft", "zatwierdzony": "approved"}   # 14.0.0: task file status in task.json
 
-# 14.0.0: składnia specyfikacji i planu otwartych zadań (zamknięte zostają jako historia)
+# 14.0.0: syntax of the specification and plan of open tasks (closed ones stay as history)
 SPEC_HEADINGS = [(re.compile(r"(?m)^# Specyfikacja:"), "# Spec:"),
                  (re.compile(r"(?mi)^## Kryteria(?: akceptacji)?\s*$"), "## Acceptance criteria"),
                  (re.compile(r"(?mi)^## Bez zmian\s*$"), "## Unchanged"),
@@ -162,8 +162,8 @@ def _plan(text: str) -> str:
 
 
 def _pack_migrations(root: Path, dry: bool) -> list[str]:
-    """Migracje danych projektu z nakładek: `.tf/factory/packs/<id>/migrations.py` z funkcją
-    `migrate_values(root, dry) -> list[str]` (rdzeń nie zna skilli nakładek — każda migruje swoje pliki)."""
+    """Project data migrations from overlays: `.tf/factory/packs/<id>/migrations.py` with the function
+    `migrate_values(root, dry) -> list[str]` (the core does not know overlay skills — each migrates its own files)."""
     import importlib.util
     out = []
     for f in sorted((root / ".tf" / "factory" / "packs").glob("*/migrations.py")):
@@ -172,7 +172,7 @@ def _pack_migrations(root: Path, dry: bool) -> list[str]:
         try:
             spec.loader.exec_module(mod)
             out += list(mod.migrate_values(root, dry) or [])
-        except Exception as e:   # noqa: BLE001 — błąd migracji nakładki nie zatrzymuje aktualizacji
+        except Exception as e:   # noqa: BLE001 — an overlay migration error does not stop the update
             print(f"⚠ pack migration {f.parent.name}: {e}")
     return out
 
@@ -183,8 +183,8 @@ def _sha(data: bytes, plan: bool = False) -> str:
 
 
 def _task_docs(root: Path, tj: Path, dry: bool) -> list[str]:
-    """spec.md i plan.md otwartego zadania w składni 14.0.0; skróty w task.json przeliczone tylko tam, gdzie zgadzały
-    się z plikiem przed migracją — zgoda człowieka zostaje ważna, a zmiana bez zgody nadal jest widoczna."""
+    """spec.md and plan.md of an open task in the 14.0.0 syntax; hashes in task.json recomputed only where they matched
+    the file before the migration — human consent stays valid, and a change without consent is still visible."""
     try:
         task = json.loads(tj.read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -240,7 +240,7 @@ def _walk(o):
 
 
 def migrate_values(root: Path = ROOT, dry: bool = True) -> list[str]:
-    """Dane projektu sprzed 11.0.0: zadania, przebiegi, konfiguracja projektu i osoby, profil kosztów."""
+    """Project data from before 11.0.0: tasks, runs, project and people configuration, cost profile."""
     out = []
     jsons = [*root.glob("docs/project/changes/*/task.json"), *root.glob(".tf/runs/*/run.json"),
              root / ".claude" / "factory-profile.json"]
@@ -257,8 +257,8 @@ def migrate_values(root: Path = ROOT, dry: bool = True) -> list[str]:
             if not dry:
                 p.write_text(json.dumps(new, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     keys = {**STEP_KEYS, "oszczedny": "economy", "zrownowazony": "balanced", "jakosc": "quality"}
-    key_rx = re.compile(r"(?m)^(\s+)(" + "|".join(map(re.escape, keys)) + r"):")          # kroki, profile, opis
-    val_rx = re.compile(r"(?m)^(\s*(?:default_profile|default_mode|profile):\s*)([\w-]+)")  # pojedyncze wartości
+    key_rx = re.compile(r"(?m)^(\s+)(" + "|".join(map(re.escape, keys)) + r"):")          # steps, profiles, description
+    val_rx = re.compile(r"(?m)^(\s*(?:default_profile|default_mode|profile):\s*)([\w-]+)")  # single values
     list_rx = re.compile(r"(?m)^(\s*allowed_modes:\s*\[)([^\]]*)(\])")
     for p in [root / ".tf" / "config" / "config.yaml", root / ".tf" / "config" / "me.yaml"]:
         if p.is_file():

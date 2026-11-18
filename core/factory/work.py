@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Praca bez nadzoru (krok H19): `tf work --once` bierze jedno zadanie, które człowiek oznaczył trybem Auto
-(`tf task mode <KEY> auto`), i prowadzi je pętlą `/tf` w osobnym worktree z limitem wydatku. Nie scala i nie wdraża:
-wynikiem jest gałąź `story/<key>` z PR albo blok STOP w worktree zadania.
+"""Unattended work (step H19): `tf work --once` takes one task that a human marked with the Auto mode
+(`tf task mode <KEY> auto`), and runs it with the `/tf` loop in a separate worktree with a spending limit. It does not merge or deploy:
+the result is a `story/<key>` branch with a PR or a STOP block in the task's worktree.
 
-  tf work --once --budget <USD> [--key <KEY>] [--base <gałąź>] [--dry-run]
+  tf work --once --budget <USD> [--key <KEY>] [--base <branch>] [--dry-run]
 
-Zadanie do wzięcia: tryb Auto, waga lekka albo zwykła, etap przed PR, nie czeka na człowieka, nie ma jeszcze worktree
-(wznowienie w istniejącym worktree tylko przez `--key`) i nie jest zajęte przez inny przebieg (`.tf/locks/<KEY>.json`).
-Kod wyjścia: 0 — przebieg zakończony, 2 — odmowa, 3 — nie ma zadania do wzięcia, inny — kod agenta.
-Agent: `claude -p "/tf <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode <tryb, domyślnie acceptEdits>
---strict-mcp-config`, tylko z dozwolonymi zmiennymi środowiskowymi; przed startem pliki sterujące agentem w worktree
-muszą być takie jak w kopii człowieka. Zmienna `TF_WORK_AGENT` podmienia polecenie `claude` (testy). Dziennik:
+A task that can be taken: Auto mode, light or normal weight, stage before PR, not waiting for a human, no worktree yet
+(resuming in an existing worktree only via `--key`) and not taken by another run (`.tf/locks/<KEY>.json`).
+Exit code: 0 — run finished, 2 — refusal, 3 — no task to take, other — the agent's code.
+Agent: `claude -p "/tf <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode <mode, default acceptEdits>
+--strict-mcp-config`, only with allowed environment variables; before the start the files controlling the agent in the worktree
+must be the same as in the human's copy. The `TF_WORK_AGENT` variable replaces the `claude` command (tests). Journal:
 `.tf/logs/work.jsonl`.
 """
 from __future__ import annotations
@@ -30,7 +30,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 os.environ.setdefault("PYTHONUTF8", "1")
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa nie zna „✓” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page lacks “✓” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8")
     except (AttributeError, ValueError):
@@ -44,20 +44,20 @@ MANIFEST = Path(".claude") / "factory-manifest.json"
 OWN_CONFIG = Path(".tf") / "config"
 OPEN_STAGES = ("intake", "spec", "plan", "implementation", "review")
 DEFAULTS = {"budget_usd": 0, "task_budget_usd": 20, "permission_mode": "acceptEdits", "lock_hours": 6, "timeout_minutes": 180}
-# bez nadzoru nikt nie odpowie na pytanie o zgodę: w trybie -p narzędzie spoza listy dozwolonych jest odrzucane.
-# acceptEdits (domyślny) przyjmuje edycje plików w katalogu roboczym (worktree) — bez tego pętla nie napisze kodu, bo
-# ustawienia fabryki nie dopuszczają Edit/Write (pilotaż 2026-11-15); dontAsk odrzuca też edycje; szersze tryby odpadają
+# unattended, nobody answers a permission question: in -p mode a tool outside the allowed list is rejected.
+# acceptEdits (default) accepts file edits in the working directory (worktree) — without it the loop cannot write code, because
+# the factory settings do not allow Edit/Write (pilot 2026-11-15); dontAsk rejects edits too; broader modes are out
 MODES = ("acceptEdits", "dontAsk", "plan")
-COPY_PREFIXES = (".claude/", ".tf/factory/")   # z manifestu kopiowane są tylko pliki fabryki
+COPY_PREFIXES = (".claude/", ".tf/factory/")   # from the manifest only factory files are copied
 MAX_RUN_USD = 500
-# pliki, które sterują agentem (uprawnienia, hooki, instrukcje, serwery MCP): w worktree muszą być takie jak w kopii
-# człowieka — inaczej gałąź zadania (np. z cudzego pusha) wykonałaby bez pytania własny hook albo instrukcję
+# files that control the agent (permissions, hooks, instructions, MCP servers): in the worktree they must be the same as in the
+# human's copy — otherwise a task branch (e.g. from someone else's push) would run its own hook or instruction without asking
 CONTROL_FILES = (".claude/settings.json", ".claude/settings.local.json", ".mcp.json", "CLAUDE.md", "CLAUDE.local.md",
                  "AGENTS.md", ".claude/CLAUDE.md", ".claude/rules", ".claude/output-styles", ".claude/hooks",
                  ".claude/agents", ".claude/skills", ".claude/commands", ".tf/factory", ".tf/config")
-INSTRUCTION_NAMES = ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md")     # także zagnieżdżone w katalogach projektu
-# zmienne środowiskowe przekazywane agentowi: system, proxy i certyfikaty, uwierzytelnianie Claude; reszta (tokeny
-# GitHuba, chmury, bazy) tylko z listy człowieka w zmiennej TF_WORK_ENV_ALLOW
+INSTRUCTION_NAMES = ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md")     # also nested in project directories
+# environment variables passed to the agent: system, proxy and certificates, Claude authentication; the rest (GitHub,
+# cloud, database tokens) only from the human's list in the TF_WORK_ENV_ALLOW variable
 ENV_ALLOW = {"PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "LANGUAGE", "TERM", "TMPDIR", "TMP", "TEMP", "TZ",
              "PWD", "PYTHONUTF8", "PYTHONIOENCODING", "HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy",
              "http_proxy", "no_proxy", "ALL_PROXY", "all_proxy", "SSL_CERT_FILE", "SSL_CERT_DIR", "NODE_EXTRA_CA_CERTS",
@@ -66,8 +66,8 @@ ENV_ALLOW = {"PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "LANGUAGE", "TE
              "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT", "APPDATA", "LOCALAPPDATA", "USERPROFILE",
              "HOMEDRIVE", "HOMEPATH", "PROGRAMFILES", "PROGRAMDATA", "NUMBER_OF_PROCESSORS", "PROCESSOR_ARCHITECTURE",
              "TF_WORK_AGENT"}
-ENV_PREFIXES = ("LC_", "CLAUDE_CODE_", "ANTHROPIC_MODEL", "ANTHROPIC_DEFAULT_")   # bez TF_: Terraform trzyma tam sekrety
-ENV_EXTRA = "TF_WORK_ENV_ALLOW"   # dodatkowe zmienne (np. GITHUB_TOKEN) podaje człowiek w swoim środowisku, nie repozytorium
+ENV_PREFIXES = ("LC_", "CLAUDE_CODE_", "ANTHROPIC_MODEL", "ANTHROPIC_DEFAULT_")   # without TF_: Terraform keeps secrets there
+ENV_EXTRA = "TF_WORK_ENV_ALLOW"   # extra variables (e.g. GITHUB_TOKEN) are given by the human in their own environment, not the repository
 CONTROL = re.compile(r"[\x00-\x1f\x7f-\x9f]")
 KEY = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 
@@ -77,16 +77,16 @@ def now() -> str:
 
 
 def config(root: Path) -> dict:
-    """Sekcja `work`: silnik ← organizacja (nakładka firmowa) ← projekt; bez konfiguracji — wartości domyślne."""
+    """The `work` section: engine ← organization (company overlay) ← project; without configuration — default values."""
     try:
         spec = importlib.util.spec_from_file_location("tf_packs_cfg", Path(__file__).resolve().with_name("packs.py"))
         packs = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(packs)
         cfg = packs.load_yaml(Path(__file__).resolve().with_name("config.yaml"))
-        for _label, layer in packs.config_layers(root)[1:]:   # organizacja (nakładka firmowa), potem projekt
+        for _label, layer in packs.config_layers(root)[1:]:   # organization (company overlay), then project
             cfg = packs.deep_merge(cfg, layer)
         section = cfg.get("work") if isinstance(cfg.get("work"), dict) else {}
-    except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienia domyślne
+    except Exception:  # noqa: BLE001 — no configuration means the default settings
         section = {}
     return {**DEFAULTS, **section}
 
@@ -112,8 +112,8 @@ def clean(text, limit: int = 120) -> str:
 
 
 def refusal(root: Path, task: dict, folder: str) -> str | None:
-    """Dlaczego zadania nie wolno wziąć bez nadzoru; None — wolno. Klucz to nazwa folderu zadania, a pole `key`
-    w task.json musi się z nią zgadzać (task.json przychodzi z repozytorium, np. z cudzego PR)."""
+    """Why the task must not be taken unattended; None — allowed. The key is the task folder name, and the `key` field
+    in task.json must match it (task.json comes from the repository, e.g. from someone else's PR)."""
     if not KEY.fullmatch(folder) or task.get("key") != folder:
         return f"{clean(folder)}: the key in task.json does not match the task folder name. Task skipped"
     key = folder
@@ -130,7 +130,7 @@ def refusal(root: Path, task: dict, folder: str) -> str | None:
 
 
 def candidates(root: Path) -> list[dict]:
-    """Zadania do wzięcia, najstarsze pierwsze; pomija te z worktree (wznowienie tylko przez --key)."""
+    """Tasks that can be taken, oldest first; skips those with a worktree (resuming only via --key)."""
     out = []
     for f in sorted((root / CHANGES).glob("*/task.json")):
         task = load_task(root, f.parent.name)
@@ -147,12 +147,12 @@ def alive(pid) -> bool:
     except ProcessLookupError:
         return False
     except OSError:
-        return True            # brak uprawnień albo system bez sygnałów — traktuj jak żywy
+        return True            # no permission or a system without signals — treat as alive
     return True
 
 
 def claim(root: Path, key: str, hours: float) -> tuple[bool, str]:
-    """Zajmuje zadanie atomowo (`O_CREAT|O_EXCL`). Martwą blokadę tego hosta starszą niż `hours` przejmuje."""
+    """Takes the task atomically (`O_CREAT|O_EXCL`). Takes over a dead lock of this host older than `hours`."""
     folder = root / LOCKS
     folder.mkdir(parents=True, exist_ok=True)
     path = folder / f"{key}.json"
@@ -182,12 +182,12 @@ def claim(root: Path, key: str, hours: float) -> tuple[bool, str]:
 
 
 def take_over(path: Path, seen: dict, hours: float) -> bool:
-    """Usuwa martwą blokadę pod osobnym muteksem (`<KEY>.json.takeover`, `O_EXCL`): przejmuje jeden proces, a przed
-    usunięciem sprawdza, że blokada to nadal ta sama martwa, którą odczytał (nie świeża blokada innego procesu)."""
+    """Removes a dead lock under a separate mutex (`<KEY>.json.takeover`, `O_EXCL`): one process takes over, and before
+    removing it checks that the lock is still the same dead one it read (not a fresh lock of another process)."""
     mutex = path.with_name(path.name + ".takeover")
     try:
         if time.time() - mutex.stat().st_mtime > hours * 3600:
-            mutex.unlink(missing_ok=True)          # muteks po przerwanym przejęciu
+            mutex.unlink(missing_ok=True)          # mutex left after an interrupted takeover
     except OSError:
         pass
     try:
@@ -231,8 +231,8 @@ def within(base: Path, path: Path) -> bool:
 
 
 def copy_missing(src: Path, dst: Path, src_root: Path, dst_root: Path) -> int:
-    """Kopiuje plik albo katalog, pomijając to, co w miejscu docelowym już jest, symlinki i ścieżki wychodzące poza
-    katalogi źródłowy i docelowy; zwraca liczbę plików."""
+    """Copies a file or directory, skipping what already exists at the destination, symlinks and paths leading outside
+    the source and destination directories; returns the number of files."""
     if src.is_symlink() or not within(src_root, src) or not within(dst_root, dst.parent / "x"):
         return 0
     if src.is_file():
@@ -249,8 +249,8 @@ def copy_missing(src: Path, dst: Path, src_root: Path, dst_root: Path) -> int:
 
 
 def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]:
-    """Worktree zadania na gałęzi `story/<key>`; przy instalacji prywatnej pliki fabryki nie są w gicie, więc kopiuje
-    pliki z manifestu, konfigurację projektu i folder zadania, których w worktree brakuje."""
+    """The task worktree on the `story/<key>` branch; in a private installation the factory files are not in git, so it copies
+    the files from the manifest, the project configuration and the task folder that are missing in the worktree."""
     wt = root / WORKTREES / key
     if not within(root / WORKTREES, wt):
         return None, "worktree path is outside .tf/worktrees"
@@ -265,13 +265,13 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
         files = json.loads((root / MANIFEST).read_text(encoding="utf-8")).get("files") or {}
     except (OSError, ValueError, AttributeError):
         files = {}
-    referenced = sorted(r for r in settings_paths(root)            # bez sekretów, nawet gdy polecenie je wskazuje
+    referenced = sorted(r for r in settings_paths(root)            # without secrets, even when the command points to them
                         if not any(part.startswith((".env", ".git")) for part in Path(r).parts))
     rels = [MANIFEST.as_posix(), *CONTROL_FILES, *referenced, (CHANGES / key).as_posix(),
             (Path(".tf") / "runs" / key).as_posix(),
             *[r for r in files if isinstance(r, str) and r.startswith(COPY_PREFIXES) and ".." not in Path(r).parts]]
-    # brakujące w worktree pliki sterujące (niezatwierdzone albo poza gitem) pochodzą z kopii człowieka; pliki, które
-    # gałąź ma inne niż ta kopia, nie są nadpisywane — wykrywa je control_drift i przebieg jest odrzucany
+    # control files missing in the worktree (uncommitted or outside git) come from the human's copy; files that
+    # the branch has different from that copy are not overwritten — control_drift detects them and the run is rejected
     copied = sum(copy_missing(src, wt / rel, root, wt) for rel in dict.fromkeys(rels)
                  if (src := inside(root, rel)) and src.exists())
     return wt, f"copied {copied} factory and task files to the worktree" if copied else ""
@@ -280,18 +280,18 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
 def agent_command(key: str, budget: str, mode: str) -> list[str]:
     agent = shlex.split(os.environ.get("TF_WORK_AGENT") or "claude")
     return [*agent, "-p", f"/tf {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode", mode,
-            "--strict-mcp-config"]        # bez --mcp-config: żadnych serwerów MCP z repozytorium ani z konfiguracji
+            "--strict-mcp-config"]        # without --mcp-config: no MCP servers from the repository or from configuration
 
 
 def agent_env() -> dict:
-    """Środowisko agenta: zmienne z listy dozwolonych i te, które człowiek wymienił w `TF_WORK_ENV_ALLOW` swojego
-    środowiska (konfiguracja z repozytorium nie może tej listy rozszerzyć — przyszłaby z cudzym PR)."""
+    """The agent's environment: variables from the allowed list and those the human named in `TF_WORK_ENV_ALLOW` of their
+    environment (configuration from the repository cannot extend this list — it would arrive with someone else's PR)."""
     allow = set(ENV_ALLOW) | {x.strip() for x in (os.environ.get(ENV_EXTRA) or "").split(",") if x.strip()}
     return {k: v for k, v in os.environ.items() if k in allow or k.startswith(ENV_PREFIXES)}
 
 
 def files_of(base: Path, rel: str) -> dict[str, str]:
-    """Pliki ścieżki sterującej (plik albo katalog) z ich skrótem; symlink dostaje znacznik, nie treść."""
+    """Files of a control path (a file or directory) with their hash; a symlink gets a marker, not content."""
     import hashlib
     top = base / rel
     paths = [top] if top.is_file() or top.is_symlink() else (sorted(top.rglob("*")) if top.is_dir() else [])
@@ -309,9 +309,9 @@ def files_of(base: Path, rel: str) -> dict[str, str]:
 
 
 def settings_paths(base: Path) -> set[str]:
-    """Pliki projektu, które wskazują polecenia w ustawieniach (hooki, statusLine, apiKeyHelper…) i polecenie bramki
-    jakości (`.claude/quality-gate.json`, np. `./verify.sh` z tf onboard): wykonują je claude i hooki, więc należą do
-    plików sterujących. Bierze każdy napis z ustawień i każde jego słowo, które jest plikiem projektu."""
+    """Project files that the commands in settings point to (hooks, statusLine, apiKeyHelper…) and the quality gate command
+    (`.claude/quality-gate.json`, e.g. `./verify.sh` from tf onboard): claude and the hooks execute them, so they belong to
+    the control files. It takes every string from settings and every word of it that is a project file."""
     out: set[str] = set()
 
     def strings(x):
@@ -328,7 +328,7 @@ def settings_paths(base: Path) -> set[str]:
         f = base / name
         try:
             if f.is_symlink() or not f.is_file() or f.stat().st_size > 1_000_000:
-                continue                   # symlink i plik nienaturalnej wielkości trafią do różnic przez files_of
+                continue                   # a symlink and a file of unnatural size reach the differences via files_of
             data = json.loads(f.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
@@ -345,7 +345,7 @@ def settings_paths(base: Path) -> set[str]:
 
 
 def instruction_files(base: Path) -> set[str]:
-    """Zatwierdzone pliki instrukcji w całym projekcie (także zagnieżdżone `CLAUDE.md` modułów)."""
+    """Committed instruction files across the whole project (including nested module `CLAUDE.md` files)."""
     pats = [f":(glob)**/{n}" for n in INSTRUCTION_NAMES]
     out: set[str] = set()
     for extra in ([], ["-o", "--exclude-standard"]):          # zatwierdzone i nowe, niezignorowane
@@ -367,7 +367,7 @@ def snapshot(base: Path, rels: list[str]) -> dict[str, str]:
 
 
 def control_drift(root: Path, wt: Path) -> list[str]:
-    """Pliki sterujące agentem, które w worktree różnią się od kopii człowieka (brak po jednej stronie też)."""
+    """Agent control files that differ in the worktree from the human's copy (absence on one side too)."""
     diff = [f"{d} (symlink)" for d in (".claude", ".tf") if (wt / d).is_symlink()]
     rels = control_set(root, wt)
     mine, theirs = snapshot(root, rels), snapshot(wt, rels)
@@ -383,7 +383,7 @@ def budget_text(value) -> str | None:
 
 
 def spent(root: Path, key: str) -> float:
-    """Suma limitów wcześniejszych przebiegów zadania z dziennika (górne oszacowanie wydatku)."""
+    """The sum of the limits of earlier task runs from the journal (an upper estimate of spending)."""
     total = 0.0
     try:
         lines = (root / LOG).read_text(encoding="utf-8").splitlines()
@@ -421,10 +421,10 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
         print("✗ --base: give a branch name or a commit")
         return 2
     try:
-        cap = float(cfg.get("task_budget_usd"))        # 0 — świadomie bez łącznego limitu
+        cap = float(cfg.get("task_budget_usd"))        # 0 — deliberately without a total limit
         cap = cap if cap >= 0 and cap == cap else float(DEFAULTS["task_budget_usd"])
     except (TypeError, ValueError):
-        cap = float(DEFAULTS["task_budget_usd"])       # zepsuta wartość nie wyłącza limitu
+        cap = float(DEFAULTS["task_budget_usd"])       # a broken value does not disable the limit
     if key:
         task = load_task(root, key) if KEY.fullmatch(key) else None
         if task is None:
@@ -479,7 +479,7 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
             before = snapshot(root, [*watched, ".git/hooks", ".git/config"])
             print(f"• {k}: /tf loop in {wt.as_posix()}, limit {budget} USD")
             write_log(root, {"key": k, "event": "start", "started": started, "budget_usd": float(budget),
-                             "worktree": wt.relative_to(root).as_posix()})   # przed agentem: przerwanie też się liczy
+                             "worktree": wt.relative_to(root).as_posix()})   # before the agent: an interruption counts too
             try:
                 code = subprocess.run(agent_command(k, budget, mode), cwd=wt, env=agent_env(),
                                       timeout=float(cfg.get("timeout_minutes") or 180) * 60).returncode

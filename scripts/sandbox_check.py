@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-"""Sprawdza na żywo piaskownicę Bash Claude Code z szablonem fabryki (core/factory/templates/sandbox.settings.json)
-na tej maszynie — przede wszystkim na macOS (Seatbelt), gdzie fabryka nie ma własnego wyniku.
+"""Live-checks the Claude Code Bash sandbox with the factory template (core/factory/templates/sandbox.settings.json)
+on this machine — above all on macOS (Seatbelt), where the factory has no result of its own.
 
   python3 scripts/sandbox_check.py [--model haiku] [--budget 0.05] [--keep]
 
-Płatne: 6 przebiegów `claude -p` (4 przypadki i 2 pomiary narzutu), każdy z limitem `--max-budget-usd`
-(domyślnie 0,05 USD, czyli najwyżej 0,30 USD; typowo ok. 0,03 USD razem na haiku). Każdy przebieg działa
-w świeżym repozytorium tymczasowym z `--setting-sources project,local`, więc Twoje ustawienia użytkownika nie
-wpływają na wynik, a skrypt niczego w nich nie zmienia. Sonda zapisuje jeden plik w katalogu domowym
-(`~/.sandbox-check-outside.tmp`) — skrypt usuwa go na końcu. Model dostaje pozwolenie tylko na `./probe.sh`
-i `./noop.sh`.
+Paid: 6 `claude -p` runs (4 cases and 2 overhead measurements), each with a `--max-budget-usd` limit
+(default 0.05 USD, i.e. at most 0.30 USD; typically about 0.03 USD in total on haiku). Each run works
+in a fresh temporary repository with `--setting-sources project,local`, so your user settings do not
+affect the result, and the script changes nothing in them. The probe writes one file in the home directory
+(`~/.sandbox-check-outside.tmp`) — the script deletes it at the end. The model is permitted only `./probe.sh`
+and `./noop.sh`.
 
-Przypadki:
-  A_root          start w korzeniu repozytorium z ustawieniami projektu
-  B_subdir        start w podkatalogu `pkg/` (ustawienia projektu leżą w korzeniu)
-  B2_subdir_flag  jak B, plus `--settings <szablon>`
-  D_merge         jak A, plus `--settings` z samym `sandbox.excludedCommands` (czy scala się per klucz)
-Narzut: 5 wywołań `./noop.sh` z piaskownicą i bez; czas z hooków PreToolUse→PostToolUse.
+Cases:
+  A_root          start at the repository root with the project settings
+  B_subdir        start in the `pkg/` subdirectory (the project settings are in the root)
+  B2_subdir_flag  like B, plus `--settings <template>`
+  D_merge         like A, plus `--settings` with only `sandbox.excludedCommands` (does it merge per key)
+Overhead: 5 calls of `./noop.sh` with and without the sandbox; time from the PreToolUse→PostToolUse hooks.
 
-Wynik (Markdown) idzie na stdout — wklej go do rozmowy z agentem.
+The result (Markdown) goes to stdout — paste it into the conversation with the agent.
 """
 from __future__ import annotations
 
@@ -76,7 +76,7 @@ PERF_PROMPT = ("Run the Bash command ./noop.sh exactly 5 times, as 5 separate Ba
 
 
 def parse_probe(text: str) -> dict[str, str]:
-    """Linie „klucz: wartość” sondy → słownik; inne linie pomija."""
+    """The probe's „klucz: wartość” ("key: value") lines → a dict; other lines are skipped."""
     out = {}
     for line in text.splitlines():
         key, sep, value = line.partition(": ")
@@ -86,7 +86,7 @@ def parse_probe(text: str) -> dict[str, str]:
 
 
 def read_stream(text: str) -> tuple[dict[str, str], float]:
-    """Strumień `--output-format stream-json` → (wynik pierwszego wywołania sondy, koszt w USD)."""
+    """The `--output-format stream-json` stream → (the result of the first probe call, cost in USD)."""
     probe: dict[str, str] | None = None
     cost = 0.0
     for line in text.splitlines():
@@ -110,7 +110,7 @@ def read_stream(text: str) -> tuple[dict[str, str], float]:
 
 
 def perf_medians(log: str) -> dict[str, float]:
-    """Log hooków „pre|post <ns> <etykieta>” → mediana czasu wywołania w ms dla każdej etykiety."""
+    """The hook log „pre|post <ns> <etykieta>” ("pre|post <ns> <label>") → the median call time in ms for each label."""
     start: dict[str, int] = {}
     times: dict[str, list[float]] = {}
     for line in log.splitlines():
@@ -126,7 +126,7 @@ def perf_medians(log: str) -> dict[str, float]:
 
 
 class _Ok(http.server.BaseHTTPRequestHandler):
-    def do_GET(self):  # noqa: N802 — nazwa wymagana przez http.server
+    def do_GET(self):  # noqa: N802 — name required by http.server
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"ok")
@@ -136,7 +136,7 @@ class _Ok(http.server.BaseHTTPRequestHandler):
 
 
 def serve_localhost() -> tuple[http.server.HTTPServer, int]:
-    """Serwer HTTP na 127.0.0.1 poza piaskownicą — czy sonda go osiągnie (`allowLocalBinding`, sieć)."""
+    """An HTTP server on 127.0.0.1 outside the sandbox — can the probe reach it (`allowLocalBinding`, network)."""
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), _Ok)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     return server, server.server_address[1]
@@ -161,7 +161,7 @@ def _write_exec(path: Path, text: str) -> None:
 
 
 def prepare(workdir: Path, template: Path, port: int, outside: Path) -> Path:
-    """Repo tymczasowe: ustawienia projektu = szablon, sonda w korzeniu i w `pkg/`, wszystko w commicie."""
+    """A temporary repo: project settings = the template, the probe in the root and in `pkg/`, all in one commit."""
     repo = Path(workdir) / "repo"
     _init_repo(repo)
     (repo / ".claude").mkdir()
@@ -175,7 +175,7 @@ def prepare(workdir: Path, template: Path, port: int, outside: Path) -> Path:
 
 
 def _perf_repo(workdir: Path, template: Path, label: str, log: Path) -> Path:
-    """Repo do pomiaru narzutu: szablon (z piaskownicą albo bez) + hooki zapisujące znacznik czasu."""
+    """A repo for measuring overhead: the template (with or without the sandbox) + hooks that record a timestamp."""
     repo = Path(workdir) / f"perf-{label}"
     _init_repo(repo)
     settings = json.loads(template.read_text(encoding="utf-8"))
@@ -214,7 +214,7 @@ def _cell(value: str | None) -> str:
 
 
 def report(results: dict[str, dict[str, str]], perf: dict[str, float], meta: dict) -> str:
-    """Raport Markdown: tabela sprawdzenie × przypadek, narzut, system i wersja Claude Code."""
+    """Markdown report: a check × case table, overhead, system and Claude Code version."""
     cases = list(results)
     lines = [
         "## Piaskownica Bash — sandbox_check",

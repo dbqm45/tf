@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""Odczyt wyniku `phase_run.py run` — jedno miejsce dla runnera N5 (DZ13).
+"""Reading the result of `phase_run.py run` — a single place for the N5 runner (DZ13).
 
-phase_run.py w `cmd_run` wypisuje strumień linii:
-  - zero lub więcej linii postępu `PDI-PROGRESS: {json}` (phase_progress.py; A7 stream-json)
-  - jeden końcowy obiekt JSON (`json.dumps(out, ensure_ascii=False, indent=2)`) ze stanem fazy
+In `cmd_run` phase_run.py prints a stream of lines:
+  - zero or more progress lines `PDI-PROGRESS: {json}` (phase_progress.py; A7 stream-json)
+  - one final JSON object (`json.dumps(out, ensure_ascii=False, indent=2)`) with the phase state
 
-Ten moduł udostępnia:
-  - `read_result(stdout: str) -> dict` — ostatni poprawny obiekt JSON ze stdout (status w zestawie);
-  - `read_progress(stdout: str) -> list[dict]` — linie postępu sparsowane do słowników;
-  - `files_read(rows)`, `denials_count(rows)` — metryki pochodne.
+This module provides:
+  - `read_result(stdout: str) -> dict` — the last valid JSON object from stdout (status within the set);
+  - `read_progress(stdout: str) -> list[dict]` — progress lines parsed into dicts;
+  - `files_read(rows)`, `denials_count(rows)` — derived metrics.
 
-Czytając wynik tylko przez `read_result`, runner N5 jest odporny na zmiany A7 (postać stream-json, nowe pola
-w liniach postępu) i N1 (nowe pole `second_review` w końcowym słowniku) — oba scenariusze dalej zwracają
-spójny słownik z `status/cost_usd/detail/permission_denials/error`.
+By reading the result only through `read_result`, the N5 runner is resistant to A7 changes (the stream-json form, new fields
+in progress lines) and N1 (a new `second_review` field in the final dict) — both scenarios still return a
+consistent dict with `status/cost_usd/detail/permission_denials/error`.
 
-Źródło kształtu `out` (pola): `phase_run.py:cmd_run` (PRB-28 fix 2026-11-06).
-Źródło prefiksu `PDI-PROGRESS`: `phase_progress.PREFIX` (A7, kontrakt pdi 0.11.0 `run_progress`).
+Source of the shape of `out` (fields): `phase_run.py:cmd_run` (PRB-28 fix 2026-11-06).
+Source of the `PDI-PROGRESS` prefix: `phase_progress.PREFIX` (A7, pdi contract 0.11.0 `run_progress`).
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ import re
 from typing import Any
 
 PREFIX = "PDI-PROGRESS: "
-# Statusy, które `cmd_run` wypisuje (phase_run.py); `dry_run` wchodzi z `--dry-run`.
+# Statuses that `cmd_run` prints (phase_run.py); `dry_run` comes from `--dry-run`.
 STATUSES = ("waiting_gate", "done", "failed", "dry_run")
 # Wiadomości postępu z phase_progress.py; oba języki (pl: sprzed 14.x).
 _READ_FILE = re.compile(r"\b(?:czyta plik|reads file|reading file)\s+(?P<path>\S+)")
@@ -32,15 +32,15 @@ _DENIAL = re.compile(r"\b(?:odmowa narzędzia|tool denied|tool denial|denied too
 
 
 def _strip_progress(stdout: str) -> str:
-    """Stdout bez linii zaczynających się od `PDI-PROGRESS:` — do parsowania końcowego JSONa."""
+    """Stdout without lines starting with `PDI-PROGRESS:` — for parsing the final JSON."""
     return "\n".join(line for line in stdout.splitlines() if not line.startswith(PREFIX))
 
 
 def _iter_json_objects(text: str):
-    """Iteruj po poprawnych obiektach JSON (`{...}`) w tekście, w kolejności wystąpienia.
+    """Iterate over the valid JSON objects (`{...}`) in the text, in order of appearance.
 
-    Skanuje od pierwszego `{`, próbuje `json.loads` od tego miejsca do coraz większych długości przez raw decoder,
-    co pozwala obsłużyć pretty-printed JSON wielolinijkowy między śmieciami.
+    Scans from the first `{`, tries `json.loads` from that place to ever larger lengths via a raw decoder,
+    which makes it possible to handle multi-line pretty-printed JSON between junk.
     """
     decoder = json.JSONDecoder()
     i = 0
@@ -59,12 +59,12 @@ def _iter_json_objects(text: str):
 
 
 def read_result(stdout: str) -> dict:
-    """Ostatni poprawny obiekt JSON ze stdout fazy (po pominięciu linii postępu).
+    """The last valid JSON object from the phase's stdout (after skipping progress lines).
 
-    Rzuca `ValueError`, gdy:
-      - stdout jest pusty albo zawiera tylko linie postępu;
-      - żaden fragment poza postępem nie jest słownikiem JSON;
-      - status w słowniku nie pasuje do `STATUSES`.
+    Raises `ValueError` when:
+      - stdout is empty or contains only progress lines;
+      - no fragment outside the progress is a JSON dict;
+      - the status in the dict does not match `STATUSES`.
     """
     if not stdout or not stdout.strip():
         raise ValueError("phase_run result: stdout is empty")
@@ -84,7 +84,7 @@ def read_result(stdout: str) -> dict:
 
 
 def read_progress(stdout: str) -> list[dict]:
-    """Linie postępu (słowniki) ze stdout; niepoprawny JSON po prefiksie pomijany bez wyjątku."""
+    """Progress lines (dicts) from stdout; invalid JSON after the prefix is skipped without an exception."""
     rows: list[dict] = []
     if not stdout:
         return rows
@@ -101,7 +101,7 @@ def read_progress(stdout: str) -> list[dict]:
 
 
 def files_read(rows: list[dict]) -> int:
-    """Liczba unikatowych plików wczytanych przez personę w strumieniu (po wiadomości „czyta plik <ścieżka>")."""
+    """Number of unique files read by the persona in the stream (by the message „czyta plik <ścieżka>")."""
     seen: set[str] = set()
     for row in rows:
         msg = row.get("message") if isinstance(row, dict) else None
@@ -114,7 +114,7 @@ def files_read(rows: list[dict]) -> int:
 
 
 def denials_count(rows: list[dict]) -> int:
-    """Liczba odmów narzędzi w strumieniu (sygnał PRB-32: folder nietrusted albo brak reguły allow)."""
+    """Number of tool denials in the stream (signal PRB-32: untrusted folder or no allow rule)."""
     count = 0
     for row in rows:
         msg = row.get("message") if isinstance(row, dict) else None
@@ -124,8 +124,8 @@ def denials_count(rows: list[dict]) -> int:
 
 
 def read_cost(result: Any) -> float | None:
-    """Koszt USD z wyniku `phase_run.py`; None, gdy brak albo nieliczbowy. `phase_result` utrzymuje tu jedno miejsce,
-    żeby runner N5 nie zgadywał pól `cost_usd` z result.json i progress równolegle."""
+    """USD cost from the `phase_run.py` result; None when missing or non-numeric. `phase_result` keeps this one place,
+    so that the N5 runner does not guess the `cost_usd` fields from result.json and progress in parallel."""
     if not isinstance(result, dict):
         return None
     value = result.get("cost_usd")

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Tabela ramek w design.md zmiany (kontrakt pdi 0.9.0, conventions.design; etap 07 Design).
+Frames table in a change's design.md (pdi contract 0.9.0, conventions.design; stage 07 Design).
 
   python3 .claude/skills/pdi-decisions/scripts/design_check.py check CHG-12 [--json]
-      czyta docs/project/changes/CHG-12/design.md, sprawdza format tabeli
-      `Wymaganie | Ścieżka | Stan | Ramka | Uwagi` i pokrycie: każde wymaganie z tabeli ma stany minimalne
-      (idle, success i co najmniej jeden stan błędu — liczone per
-      historyjka, kryteria US-3/AC-n należą do US-3), a każdy wiersz ramkę albo „nie dotyczy” z powodem.
-      Wiersz „brak” to problem (pytanie do projektanta). Wynik: lista problemów; --json: wiersze i problemy.
+      reads docs/project/changes/CHG-12/design.md, checks the table format
+      `Wymaganie | Ścieżka | Stan | Ramka | Uwagi` and coverage: every requirement in the table has the minimal states
+      (idle, success and at least one error state — counted per
+      story, US-3/AC-n criteria belong to US-3), and every row has a frame or „nie dotyczy” (not applicable) with a reason.
+      A „brak” (missing) row is a problem (a question to the designer). Result: a list of problems; --json: rows and problems.
 
-phase_run.py dokłada te problemy jako pytania do prośby o bramkę design-review. Kod wyjścia: 0 — bez problemów,
-1 — problemy albo błąd formatu, 2 — brak pliku lub złe wywołanie. Tylko biblioteka standardowa Pythona 3.9+.
+phase_run.py adds these problems as questions to the design-review gate request. Exit code: 0 — no problems,
+1 — problems or a format error, 2 — missing file or bad invocation. Python 3.9+ standard library only.
 """
 from __future__ import annotations
 
@@ -22,14 +22,14 @@ from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
 CHANGES = Path("docs") / "project" / "changes"
-# contract.json → conventions.design (kontrakt pdi 0.9.0); test pilnuje zgodności ze schematem z kontraktu.
+# contract.json → conventions.design (pdi contract 0.9.0); a test keeps it consistent with the contract schema.
 STATES = ("idle", "loading", "processing", "success", "validation_error", "server_error", "timeout", "retry",
           "empty", "confirmation", "session_expired", "network_failure", "permission_denied")
 COLUMNS = (("wymaganie", "ścieżka", "stan", "ramka", "uwagi"), ("requirement", "journey", "state", "frame", "notes"))
 MISSING = ("brak", "missing")
 NOT_APPLICABLE = ("nie dotyczy", "n/a")
 REQUIREMENT = re.compile(r"^[A-Z][A-Z0-9]*-[0-9]+(/AC-[0-9]+)?$")
-# Minimum dla każdego wymaganego wiersza tabeli: wejście, wynik i co najmniej jeden stan błędu (plan F6 tf).
+# Minimum for every required table row: input, result and at least one error state (tf plan F6).
 MINIMUM = ("idle", "success")
 ERRORS = ("validation_error", "server_error", "timeout", "network_failure", "permission_denied", "session_expired")
 _FIGMA_PATH = re.compile(r"^/(design|file|proto)/([A-Za-z0-9]+)(/|$)")
@@ -37,7 +37,7 @@ _NODE = re.compile(r"^([0-9]+)[-:]([0-9]+)$")
 
 
 class DesignFormatError(ValueError):
-    """Tabela niezgodna z kontraktem; komunikat zaczyna się od numeru wiersza tabeli (od 1)."""
+    """A table that violates the contract; the message starts with the table row number (from 1)."""
 
 
 def _cells(line: str) -> list[str]:
@@ -56,7 +56,7 @@ def _frame(url: str, row: int) -> dict:
 
 
 def parse_design_md(text: str) -> dict:
-    """Pierwsza tabela z nagłówkiem z kontraktu → {"rows": [...]} (kształt design-links.schema.json)."""
+    """The first table with a header from the contract → {"rows": [...]} (the shape of design-links.schema.json)."""
     lines = text.splitlines()
     start = next((i for i, ln in enumerate(lines)
                   if ln.strip().startswith("|") and tuple(c.lower() for c in _cells(ln)) in COLUMNS), None)
@@ -93,11 +93,11 @@ def parse_design_md(text: str) -> dict:
 
 
 def problems(rows: list[dict]) -> list[str]:
-    """Braki do rozstrzygnięcia przed bramką: wiersze bez ramki i wymagania bez stanów minimalnych."""
+    """Gaps to resolve before the gate: rows without a frame and requirements without the minimal states."""
     out = [f"{r['requirement']} {r['state']} ({r['journey']}): no frame — {r['note']}"
            for r in rows if r["status"] == "missing"]
     by_req: dict[str, set[str]] = {}
-    for r in rows:   # stany minimalne liczone per historyjka: US-3, US-3/AC-2 i US-3/AC-3 to jeden przepływ
+    for r in rows:   # minimal states counted per story: US-3, US-3/AC-2 and US-3/AC-3 are one flow
         by_req.setdefault(r["requirement"].split("/")[0], set()).add(r["state"])
     for req, states in by_req.items():
         lacking = [s for s in MINIMUM if s not in states]

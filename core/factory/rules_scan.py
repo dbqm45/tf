@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-Skaner reguł deklaratywnych dla `tf analyze` (piętro 0, bez modelu i sieci): standardy zapisane w pliku YAML zamiast
-w skrypcie. Moduł analizy ustawia w `analyzer.yaml` pole `tier0.rules: rules.yaml` — wtedy analyze.py uruchamia ten
-skaner zamiast `tier0.script`. Nakładka firmowa dostarcza tylko reguły i przykłady do bramki; poprawki skanera
-przychodzą z aktualizacją fabryki.
+Declarative rules scanner for `tf analyze` (tier 0, no model and no network): standards written in a YAML file instead of
+a script. The analysis module sets the `tier0.rules: rules.yaml` field in `analyzer.yaml` — then analyze.py runs this
+scanner instead of `tier0.script`. A company overlay supplies only the rules and examples for the gate; scanner fixes
+arrive with a factory update.
 
-  python3 .tf/factory/rules_scan.py --rules <rules.yaml> --root <repo> [--files a,b]   # JSON Lines na stdout
+  python3 .tf/factory/rules_scan.py --rules <rules.yaml> --root <repo> [--files a,b]   # JSON Lines on stdout
 
-Format reguły (lista `rules`):
-  id          małe litery, cyfry i „-” (np. no-print)                  — wymagane
-  title       krótki opis naruszenia                                   — wymagane
-  files       wzorce ścieżek (`**` dowolne katalogi, `*` w nazwie)    — domyślnie wszystkie pliki
-  exclude     wzorce ścieżek pomijanych
-  forbid      wyrażenie regularne zakazane w linii — ustalenie na każdej pasującej linii
-  require     wyrażenie regularne wymagane w pliku (albo w pierwszych `head` liniach) — ustalenie w linii 1, gdy go brak
-  head        liczba linii dla `require` (domyślnie cały plik)
-  severity    critical | high | medium | low (domyślnie medium)
-  suggestion  co zrobić;  basis — źródło reguły (np. dokument firmowy)
-Dokładnie jedno z `forbid` i `require`. Błędna reguła → kod 2 i opis na stderr, bez częściowego wyniku.
-Pomijane: zależności i wyniki budowania (node_modules, dist, build, .venv…), pliki fabryki (.tf/, .claude/), pliki
-binarne i większe niż 1 MB. Tylko biblioteka standardowa + PyYAML (systemowy albo dołączony w .tf/factory/_vendor).
+Rule format (the `rules` list):
+  id          lowercase letters, digits and “-” (e.g. no-print)           — required
+  title       short description of the violation                       — required
+  files       path patterns (`**` any directories, `*` within a name)  — default all files
+  exclude     path patterns to skip
+  forbid      regular expression forbidden in a line — a finding on every matching line
+  require     regular expression required in the file (or in the first `head` lines) — a finding at line 1 when absent
+  head        number of lines for `require` (default the whole file)
+  severity    critical | high | medium | low (default medium)
+  suggestion  what to do;  basis — the rule's source (e.g. a company document)
+Exactly one of `forbid` and `require`. An invalid rule → exit code 2 and a description on stderr, no partial result.
+Skipped: dependencies and build output (node_modules, dist, build, .venv…), factory files (.tf/, .claude/), binary
+files and files larger than 1 MB. Standard library only + PyYAML (system or bundled in .tf/factory/_vendor).
 """
 from __future__ import annotations
 
@@ -30,16 +30,16 @@ import re
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes also write and read UTF-8
 
 try:
     import yaml
-except ImportError:  # dołączona kopia PyYAML (licencja MIT, .tf/factory/_vendor/yaml/LICENSE)
+except ImportError:  # bundled PyYAML copy (licencja MIT, .tf/factory/_vendor/yaml/LICENSE)
     sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
     import yaml
 
@@ -55,7 +55,7 @@ class RuleError(ValueError):
 
 
 def glob_re(pattern: str) -> re.Pattern:
-    """Wzorzec ścieżki → wyrażenie: `**/` dowolne katalogi (także żadne), `**` cokolwiek, `*` i `?` w jednym członie."""
+    """Path pattern → expression: `**/` any directories (including none), `**` anything, `*` and `?` within one segment."""
     out, i = "", 0
     while i < len(pattern):
         if pattern.startswith("**/", i):

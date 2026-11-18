@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-Statystyki kosztów per dzień, tydzień albo miesiąc z .tf/logs/usage.jsonl (hook log_usage) i historii git.
+Cost statistics per day, week or month from .tf/logs/usage.jsonl (the log_usage hook) and the git history.
 
-  python3 .tf/factory/cost_stats.py                       # tygodnie (ostatnie 8)
+  python3 .tf/factory/cost_stats.py                       # weeks (last 8)
   python3 .tf/factory/cost_stats.py --period day --last 14
   python3 .tf/factory/cost_stats.py --period month --json
-  python3 .tf/factory/cost_stats.py --usd-pln 3.65        # kurs ręcznie (np. bez sieci)
-  --log <usage.jsonl> · --repo-root <repozytorium do liczenia zmian> · --config <config.yaml>
+  python3 .tf/factory/cost_stats.py --usd-pln 3.65        # rate set manually (e.g. offline)
+  --log <usage.jsonl> · --repo-root <repository to count changes in> · --config <config.yaml>
 
-Per okres: sesje i uruchomienia, tokeny (wejście, wyjście, odczyt i zapis cache), udział modeli w % tokenów, koszt
-w USD (ceny `prices_usd_per_mtok` z .tf/config/config.yaml; dokładny identyfikator modelu ma pierwszeństwo przed rodziną)
-i w PLN po **kursie średnim NBP z tabeli A** z chwili wyliczenia (api.nbp.pl; zapamiętany na dzień w
-~/.cache/claude-team-factory/, bez sieci ostatni znany kurs z oznaczeniem). Tokeny wejścia i cache rekordu dzielone są
-między modele proporcjonalnie do ich tokenów wyjścia (log zapisuje wyjście per model) — przybliżenie.
+Per period: sessions and runs, tokens (input, output, cache read and write), model share in % of tokens, cost
+in USD (`prices_usd_per_mtok` prices from .tf/config/config.yaml; an exact model identifier takes precedence over the family)
+and in PLN at the **NBP average rate from table A** at the time of calculation (api.nbp.pl; remembered per day in
+~/.cache/claude-team-factory/, offline the last known rate, marked as such). A record's input and cache tokens are split
+between models in proportion to their output tokens (the log records output per model) — an approximation.
 
-Skuteczność: zmiany (commity feat/fix w repozytorium), koszt na zmianę, praca od nowa (fix pliku, który w tym okresie
-dodał feat), udział cache w wejściu, „Tier: za niski” na 100 uruchomień wykonawców.
-Drogo czy tanio (obiektywnie, bez stawek godzinowych): koszt na zmianę na tle własnej historii (pasmo mediana ± 3·MAD,
-od 4 okresów) oraz porównanie z wariantami „wszystko na Opusie” (ile dał dobór modeli) i „bez cache” (ile dał cache).
-Przy subskrypcji (Pro/Max) koszt jest równoważny cenom API, a nie faktycznym wydatkiem. Luki w logach (commity po
-ostatnim wpisie, np. sesja bez hooków) są oznaczane — koszt jest wtedy zaniżony.
+Effectiveness: changes (feat/fix commits in the repository), cost per change, rework (a fix of a file that a feat
+added in the same period), cache share of input, „Tier: za niski” per 100 executor runs.
+Expensive or cheap (objectively, no hourly rates): cost per change against its own history (band median ± 3·MAD,
+from 4 periods) and a comparison with the “everything on Opus” (what model selection gave) and “no cache” (what the cache gave) variants.
+With a subscription (Pro/Max) the cost is equivalent to API prices, not actual spend. Log gaps (commits after the
+last entry, e.g. a session without hooks) are marked — the cost is then understated.
 """
 from __future__ import annotations
 
@@ -31,14 +31,14 @@ import statistics
 import subprocess
 import sys
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 import urllib.request
 from collections import defaultdict
 from pathlib import Path
@@ -51,7 +51,7 @@ TYPES = ("input", "output", "cache_read", "cache_write")
 
 
 def _tf_config(root: Path) -> dict:
-    """Konfiguracja fabryki: domyślna silnika z nadpisaniami projektu (.tf/config/config.yaml) — packs.load_config."""
+    """Factory configuration: the engine default with project overrides (.tf/config/config.yaml) — packs.load_config."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("tf_packs_cfg", root / ".tf" / "factory" / "packs.py")
     mod = importlib.util.module_from_spec(spec)
@@ -150,7 +150,7 @@ def _fetch_nbp() -> dict:
 
 
 def usd_pln(cache_dir: Path, now: dt.datetime | None = None, fetch=None, override: float | None = None) -> dict | None:
-    """Kurs średni USD/PLN z tabeli A NBP: z pamięci (ten sam dzień), pobrany, albo ostatni znany (stale)."""
+    """Average USD/PLN rate from NBP table A: from memory (same day), fetched, or the last known (stale)."""
     if override:
         return {"rate": float(override), "source": "manual", "table": None, "date": None}
     now = now or dt.datetime.now(dt.timezone.utc)
@@ -175,7 +175,7 @@ def usd_pln(cache_dir: Path, now: dt.datetime | None = None, fetch=None, overrid
 
 
 def band(values: list[float]) -> list[str]:
-    """Pasmo kontrolne: mediana ± 3·(1,4826·MAD) — wartości poza pasmem to „drogo” / „tanio” na tle własnej historii."""
+    """Control band: median ± 3·(1.4826·MAD) — values outside the band are “expensive” / “cheap” against its own history."""
     if len(values) < 4:
         return ["too little data"] * len(values)
     med = statistics.median(values)
@@ -184,7 +184,7 @@ def band(values: list[float]) -> list[str]:
 
 
 def changes(repo: Path, period: str) -> dict[str, dict]:
-    """Zmiany (commity feat/fix) i praca od nowa (fix pliku dodanego przez feat w tym samym okresie) per okres."""
+    """Changes (feat/fix commits) and rework (a fix of a file added by a feat in the same period) per period."""
     try:
         r = subprocess.run(["git", "-C", str(repo), "log", "--reverse", "--format=\x1e%cI\x1f%s", "--name-only"],
                            capture_output=True, text=True, timeout=60)
@@ -286,7 +286,7 @@ def main(argv: list[str]) -> int:
     try:
         try:
             import yaml
-        except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
+        except ImportError:  # bundled PyYAML copy (.tf/factory/_vendor)
             sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
             import yaml
         cfg = (yaml.safe_load(Path(opts["--config"]).read_text(encoding="utf-8")) or {}) if opts.get("--config") \
@@ -328,7 +328,7 @@ def main(argv: list[str]) -> int:
     lc = last_commit(repo)
     gap = {"last_log": last_log.isoformat(), "last_commit": lc.isoformat()} \
         if last_log and lc and lc > last_log + dt.timedelta(hours=1) else None
-    for p in periods:      # od okresu ostatniego wpisu logu koszt jest zaniżony, a zmiany policzone w całości
+    for p in periods:      # from the period of the last log entry the cost is understated, while changes are counted in full
         p["incomplete"] = bool(gap) and p["period"] >= period_key(last_log, period)
         if p["incomplete"]:
             p["band"] = "incomplete data"

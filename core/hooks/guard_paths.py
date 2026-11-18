@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-PreToolUse (Read|Edit|Write|NotebookEdit|Grep|Glob): chroni pliki z sekretami
-i konfigurację zabezpieczeń przed zmianą przez samego agenta.
+PreToolUse (Read|Edit|Write|NotebookEdit|Grep|Glob): protects files with secrets
+and the security configuration from being changed by the agent itself.
 
-Chroni też „wyrocznię” zadania (docs/project/changes/<KEY>/): zapis narzędziem Edit/Write wymaga zgody człowieka dla
-`spec.md` od etapu realizacji, pliku zadania zatwierdzonego przez człowieka, pliku zamrożonego (`tf task freeze`,
-np. test akceptacyjny) oraz plików, które pisze tylko skrypt (task.json, INDEX.md, evidence/). Zatwierdzenie albo
-zamrożenie zdejmuje `tf task reopen <KEY> <plik> --by human:<id> --reason "…"`. Zadanie zamknięte niczego nie chroni.
+It also protects the task "oracle" (docs/project/changes/<KEY>/): a write with the Edit/Write tool requires human approval for
+`spec.md` from the implementation stage on, a task file approved by a human, a frozen file (`tf task freeze`,
+e.g. an acceptance test) and files written only by a script (task.json, INDEX.md, evidence/). Approval or
+freezing is lifted by `tf task reopen <KEY> <file> --by human:<id> --reason "…"`. A closed task protects nothing.
 """
 from __future__ import annotations
 
@@ -18,8 +18,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record_block  # blokada do .tf/logs/hook-blocks.jsonl (ostrzeżenie po aktualizacji)
-except ImportError:  # starsza instalacja bez dziennika blokad — hook działa jak dotąd
+    from hook_errors import record_block  # block to .tf/logs/hook-blocks.jsonl (warning after an update)
+except ImportError:  # older install without the block log — the hook works as before
     def record_block(hook: str, decision: str) -> None:
         return None
 
@@ -37,11 +37,11 @@ SECRET_PATHS = re.compile(
 )
 SAFE_ENV = re.compile(r"\.env\.(example|sample|template|dist)$", re.IGNORECASE)
 
-# Samomodyfikacja zabezpieczeń wymaga zgody człowieka
+# Self-modification of the safeguards requires human approval
 GUARDRAILS = re.compile(r"(^|/)\.claude/(settings(\.local)?\.json|hooks/|cleanroom\.json)|(^|/)\.git/")
 
-# Ekonomia kontekstu: zależności, artefakty i lockfile'e nie trafiają do okna modelu. Tu, a nie w permissions.deny,
-# bo piaskownica Bash zamienia reguły Read(...) deny w zakaz odczytu dla programów (npm test, build).
+# Context economy: dependencies, artifacts and lockfiles do not enter the model window. Here rather than in permissions.deny,
+# because the Bash sandbox turns Read(...) deny rules into a read ban for programs (npm test, build).
 CONTEXT_ANY = re.compile(r"(^|/)node_modules(/|$)")
 CONTEXT_ROOT = re.compile(r"^(dist|build|coverage)(/|$)")
 LOCKFILES = re.compile(r"(^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$")
@@ -49,7 +49,7 @@ CONTEXT_TOOLS = ("Read", "Grep", "Glob")
 
 
 def project_relative(norm: str, root: str) -> str | None:
-    """Ścieżka względem katalogu projektu; None, gdy leży poza nim albo katalog jest nieznany."""
+    """Path relative to the project directory; None when it lies outside it or the directory is unknown."""
     if not norm.startswith("/") and not re.match(r"^[A-Za-z]:/", norm):
         return norm[2:] if norm.startswith("./") else norm
     root = root.replace("\\", "/").rstrip("/")
@@ -60,7 +60,7 @@ def project_relative(norm: str, root: str) -> str | None:
 
 TASKS = "docs/project/changes"
 TASK_FILE = re.compile(r"^docs/project/changes/(?:INDEX\.md|([^/]+)/(.+))$")
-LOCKED_FROM = ("implementation", "review", "pr", "deploy")     # etapy, w których specyfikacja jest wyrocznią
+LOCKED_FROM = ("implementation", "review", "pr", "deploy")     # stages in which the specification is the oracle
 CLOSED = "closed"
 
 
@@ -74,7 +74,7 @@ def load_task(root: str, key: str) -> dict:
 
 
 def oracle_reason(rel: str, root: str) -> str | None:
-    """Powód, dla którego zapis do pliku wymaga zgody człowieka (wyrocznia zadania); None, gdy plik nie jest chroniony."""
+    """The reason a write to the file requires human approval (the task oracle); None when the file is not protected."""
     m = TASK_FILE.match(rel)
     if m:
         key, name = m.group(1), m.group(2)
@@ -121,7 +121,7 @@ def main() -> None:
         data = json.load(sys.stdin)
     except json.JSONDecodeError:
         sys.exit(0)
-    if not isinstance(data, dict):   # dane spoza formatu Claude Code: decyzja, nie awaria (onFailure: block)
+    if not isinstance(data, dict):   # data outside the Claude Code format: a decision, not a failure (onFailure: block)
         sys.exit(0)
     tool = data.get("tool_name", "")
     ti = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}

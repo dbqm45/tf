@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Semantic Versioning 2.0.0 (semver.org) bez zgadywania — walidacja, porównanie, podbicie, następna wersja z historii
-commitów i kontrola CHANGELOG. Tylko biblioteka standardowa; działa też jako moduł (import).
+Semantic Versioning 2.0.0 (semver.org) without guessing — validation, comparison, bumping, the next version from commit
+history and CHANGELOG checks. Standard library only; also works as a module (import).
 
-  python3 semver.py valid 1.0.0-rc.1+build.5          # kod 0 = poprawna, 1 = niepoprawna (z powodem)
-  python3 semver.py compare 1.0.0-alpha 1.0.0         # -1 / 0 / 1 (precedencja wg reguły 11; metadane pomijane)
+  python3 semver.py valid 1.0.0-rc.1+build.5          # code 0 = valid, 1 = invalid (with the reason)
+  python3 semver.py compare 1.0.0-alpha 1.0.0         # -1 / 0 / 1 (precedence per rule 11; metadata ignored)
   python3 semver.py sort 1.0.0 1.0.0-rc.1 1.0.0-beta.11 1.0.0-beta.2
   python3 semver.py bump 2.4.1 major|minor|patch      # 3.0.0 / 2.5.0 / 2.4.2
-  python3 semver.py bump 1.2.3 pre --id rc            # 1.2.4-rc.1 (kolejne wywołanie na 1.2.4-rc.1 → 1.2.4-rc.2)
+  python3 semver.py bump 1.2.3 pre --id rc            # 1.2.4-rc.1 (the next call on 1.2.4-rc.1 → 1.2.4-rc.2)
   python3 semver.py bump 1.2.4-rc.2 release           # 1.2.4
   python3 semver.py next [--since v1.4.0] [--path packages/api] [--current 1.4.0]
-        # podbicie z commitów Conventional Commits od ostatniego tagu vX.Y.Z (lub --since): BREAKING → major,
-        # feat → minor, fix/perf → patch; w fazie 0.y.z BREAKING → minor, feat i fix → patch (API niestabilne, reguła 4)
+        # bump from Conventional Commits since the last vX.Y.Z tag (or --since): BREAKING → major,
+        # feat → minor, fix/perf → patch; in the 0.y.z phase BREAKING → minor, feat and fix → patch (unstable API, rule 4)
   python3 semver.py check-changelog CHANGELOG.md [--version-file VERSION] [--strict-from 1.35.0]
-        # nagłówki „## [X.Y.Z]” poprawne, malejące i bez powtórzeń; najnowszy = plik wersji; od --strict-from rodzaj
-        # podbicia zgodny z sekcjami wpisu (Niezgodne/Usunięte → major; Nowe/Wycofywane → co najmniej minor)
+        # headings „## [X.Y.Z]” valid, descending and without repeats; the newest = the version file; from --strict-from the kind
+        # of bump matches the entry's sections (Niezgodne/Usunięte → major; Nowe/Wycofywane → at least minor)
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ import sys
 from functools import cmp_to_key
 from pathlib import Path
 
-# Oficjalne wyrażenie z semver.org (wersja z nazwanymi grupami).
+# The official regular expression from semver.org (version with named groups).
 SEMVER_RE = re.compile(
     r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)"
     r"(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
@@ -67,18 +67,18 @@ def _cmp_ident(a: str, b: str) -> int:
     if an and bn:
         return (int(a) > int(b)) - (int(a) < int(b))
     if an != bn:
-        return -1 if an else 1          # liczbowy identyfikator ma niższą precedencję niż alfanumeryczny
-    return (a > b) - (a < b)            # porównanie leksykalne ASCII
+        return -1 if an else 1          # a numeric identifier has lower precedence than an alphanumeric one
+    return (a > b) - (a < b)            # lexical ASCII comparison
 
 
 def compare(a: str | Version, b: str | Version) -> int:
-    """Precedencja wg reguły 11 SemVer 2.0.0; metadane budowania (+…) nie mają znaczenia."""
+    """Precedence per SemVer 2.0.0 rule 11; build metadata (+…) does not matter."""
     va, vb = (a if isinstance(a, Version) else Version(a)), (b if isinstance(b, Version) else Version(b))
     for x, y in ((va.major, vb.major), (va.minor, vb.minor), (va.patch, vb.patch)):
         if x != y:
             return -1 if x < y else 1
     if not va.pre or not vb.pre:
-        return 0 if va.pre == vb.pre else (-1 if va.pre else 1)   # wersja przedpremierowa < normalna
+        return 0 if va.pre == vb.pre else (-1 if va.pre else 1)   # a pre-release version < a normal one
     for x, y in zip(va.pre, vb.pre):
         c = _cmp_ident(x, y)
         if c:
@@ -109,7 +109,7 @@ def bump(version: str, part: str, pre_id: str = "rc") -> str:
     raise ValueError(f"unknown bump type: {part} (major|minor|patch|pre|release)")
 
 
-# ───────────── następna wersja z historii commitów (Conventional Commits) ─────────────
+# ───────────── next version from the commit history (Conventional Commits) ─────────────
 
 HEAD_RE = re.compile(r"^(?P<type>[a-zA-Z]+)(?:\([^)]*\))?(?P<bang>!)?:\s")
 
@@ -147,12 +147,12 @@ def next_version(current: str, kind: str | None) -> str | None:
     if kind is None:
         return None
     v = Version(current)
-    if v.major == 0:                                   # faza 0.y.z: zmiana niezgodna → minor, reszta → patch
+    if v.major == 0:                                   # phase 0.y.z: a breaking change → minor, the rest → patch
         kind = "minor" if kind == "major" else "patch"
     return bump(str(v), kind)
 
 
-# ───────────── kontrola CHANGELOG ─────────────
+# ───────────── CHANGELOG check ─────────────
 
 ENTRY_RE = re.compile(r"^## \[(?P<v>[^\]]+)\]", re.M)
 MAJOR_SECTIONS = re.compile(r"^### (Niezgodne|Usunięte|Breaking|Removed)", re.M | re.I)

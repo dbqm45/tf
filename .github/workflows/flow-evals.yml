@@ -1,9 +1,9 @@
-# Evale przebiegu (N5, DZ13): zmiana modelu/skilla/persony/promptu fazy nie wchodzi bez przebiegu,
-# a raport porównuje wynik i koszt z poprzednim przebiegiem. Walidacja zadań (schemat) biegnie zawsze;
-# pełny przebieg tylko, gdy ANTHROPIC_API_KEY ustawiony jako sekret repo (brak sekretu — status „pominięty",
-# nigdy „passed").
-# Źródło pattern gatowania sekretem: GitHub Actions — secrets w env, if na env.X (`contexts/secrets`,
-# odczyt 2026-11-06); secrets w `if:` joba nie są dopuszczone.
+# Flow evals (N5, DZ13): a change to a phase's model/skill/persona/prompt does not land without a run,
+# and the report compares the result and cost with the previous run. Task validation (schema) always runs;
+# the full run only when ANTHROPIC_API_KEY is set as a repo secret (no secret — status "skipped",
+# never "passed").
+# Source of the secret-gating pattern: GitHub Actions — secrets in env, if on env.X (`contexts/secrets`,
+# read 2026-11-06); secrets in a job's `if:` are not allowed.
 name: flow-evals
 on:
   pull_request:

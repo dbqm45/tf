@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-PostToolUse (Edit|Write): skanuje zapisany plik pod kątem sekretów.
-Exit 2 → komunikat trafia do Claude, który musi usunąć sekret, zanim pójdzie dalej.
+PostToolUse (Edit|Write): scans the written file for secrets.
+Exit 2 → the message goes to Claude, who must remove the secret before proceeding.
 """
 import json
 import re
@@ -10,8 +10,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record_block  # blokada do .tf/logs/hook-blocks.jsonl (ostrzeżenie po aktualizacji)
-except ImportError:  # starsza instalacja bez dziennika blokad — hook działa jak dotąd
+    from hook_errors import record_block  # block to .tf/logs/hook-blocks.jsonl (warning after an update)
+except ImportError:  # older install without the block log — the hook works as before
     def record_block(hook: str, decision: str) -> None:
         return None
 

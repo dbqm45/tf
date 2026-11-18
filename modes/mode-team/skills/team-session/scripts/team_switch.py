@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Przełącznik agent teams Claude Code w tym projekcie (tryb mode-team, skill team-session).
+Toggle for Claude Code agent teams in this project (mode-team, skill team-session).
 
-  python3 .claude/skills/team-session/scripts/team_switch.py on       # włącz (od następnej sesji)
-  python3 .claude/skills/team-session/scripts/team_switch.py off      # wyłącz
+  python3 .claude/skills/team-session/scripts/team_switch.py on       # enable (from the next session)
+  python3 .claude/skills/team-session/scripts/team_switch.py off      # disable
   python3 .claude/skills/team-session/scripts/team_switch.py status
 
-Zmienna `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` trafia do `env` w `.claude/settings.local.json` — osobista decyzja,
-także przy instalacji zespołowej (plik nie jest commitowany). Pozostałe ustawienia zostają bez zmian. Po włączeniu
-podagent, któremu Claude nada nazwę, startuje jako członek zespołu, dlatego po sesji zespołu flagę wyłączasz.
+The variable `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` goes into `env` in `.claude/settings.local.json` — a personal decision,
+even in a team installation (the file is not committed). Other settings are left unchanged. Once enabled, a
+subagent that Claude gives a name starts as a team member, which is why you turn the flag off after a team session.
 """
 from __future__ import annotations
 

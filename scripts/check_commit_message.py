@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Sprawdza wiadomość commita lub tytuł PR wg Conventional Commits (docs/RELEASING.md).
+"""Checks a commit message or PR title against Conventional Commits (docs/RELEASING.md).
 
-  python3 scripts/check_commit_message.py "feat(build): flaga --only dla wybranych person"   # tytuł
+  python3 scripts/check_commit_message.py "feat(build): --only flag for selected personas"   # title
   python3 scripts/check_commit_message.py --file .git/COMMIT_EDITMSG                         # hook commit-msg
 """
 from __future__ import annotations

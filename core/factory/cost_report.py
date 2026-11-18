@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Raport zużycia tokenów per agent i model na podstawie .tf/logs/usage.jsonl.
+Token usage report per agent and model, based on .tf/logs/usage.jsonl.
 
-  python3 .tf/factory/cost_report.py            # całość
-  python3 .tf/factory/cost_report.py --days 7   # ostatnie 7 dni
-  python3 .tf/factory/cost_report.py --delegation   # koszt delegowania wg klasy zadania (delegation.jsonl)
+  python3 .tf/factory/cost_report.py            # everything
+  python3 .tf/factory/cost_report.py --days 7   # last 7 days
+  python3 .tf/factory/cost_report.py --delegation   # delegation cost by task class (delegation.jsonl)
 
-Pokazuje też dobór tierów: którzy wykonawcy byli eskalowani na mocniejszy model albo zgłaszali w raporcie
-„Tier: za niski/za wysoki” — z podpowiedzią, gdzie zmienić domyślny tier.
+Also shows tier selection: which executors were escalated to a stronger model or reported in the report
+„Tier: za niski/za wysoki” (tier too low/too high) — with a hint where to change the default tier.
 
-Ceny ustaw w .tf/config/config.yaml → prices_usd_per_mtok (bez nich raport pokazuje same tokeny).
+Set prices in .tf/config/config.yaml → prices_usd_per_mtok (without them the report shows tokens only).
 """
 from __future__ import annotations
 
@@ -21,19 +21,19 @@ from datetime import datetime, timedelta, timezone
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 try:
     import yaml
-except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
+except ImportError:  # bundled PyYAML copy (.tf/factory/_vendor)
     sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
     import yaml
 
@@ -44,7 +44,7 @@ DELEG_LOG = ROOT / ".tf" / "logs" / "delegation.jsonl"
 
 
 def _tf_config(root: Path) -> dict:
-    """Konfiguracja fabryki: domyślna silnika z nadpisaniami projektu (.tf/config/config.yaml) — packs.load_config."""
+    """Factory configuration: the engine default with project overrides (.tf/config/config.yaml) — packs.load_config."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("tf_packs_cfg", root / ".tf" / "factory" / "packs.py")
     mod = importlib.util.module_from_spec(spec)
@@ -67,7 +67,7 @@ def dominant(models: dict) -> str | None:
 
 
 def where_tier(agent: str, cfg: dict) -> str:
-    """Gdzie zmienić domyślny tier agenta: rola persony albo agent wspólny."""
+    """Where to change an agent's default tier: a persona role or a shared agent."""
     if agent in (cfg.get("shared_agents") or {}):
         return f".tf/config/config.yaml → shared_agents.{agent}.tier"
     if "-" in agent:
@@ -78,8 +78,8 @@ def where_tier(agent: str, cfg: dict) -> str:
 
 
 def tier_advice(records: list[dict], cfg: dict) -> list[str]:
-    """Samoocena zespołu z danych: eskalacje (ten sam agent w jednej sesji na mocniejszym modelu) i linie
-    „Tier: za niski/za wysoki” z raportów wykonawców."""
+    """Team self-assessment from the data: escalations (the same agent in one session on a stronger model) and lines
+    „Tier: za niski/za wysoki” from executor reports."""
     stats = defaultdict(lambda: {"runs": 0, "escalated": 0, "low": 0, "high": 0})
     last: dict[tuple, int] = {}
     for r in sorted(records, key=lambda r: r.get("ts", "")):
@@ -119,8 +119,8 @@ def record_cost(r: dict, prices: dict) -> float | None:
 
 
 def delegation_summary(deleg: list[dict], usage: list[dict], prices: dict) -> list[dict]:
-    """Delegowania wg klasy zadania (linia „Klasa: …” briefu): liczba, ile połączono z zużyciem wykonawcy
-    (agent_id z SubagentStop), mediany tokenów, kosztu, długości briefu i raportu. Klasa None = brief bez klasy."""
+    """Delegations by task class (the brief's „Klasa: …” line): count, how many were joined with executor usage
+    (agent_id from SubagentStop), medians of tokens, cost, brief length and report. Class None = brief without a class."""
     by_id = {r["agent_id"]: r for r in usage if r.get("event") == "SubagentStop" and r.get("agent_id")}
     groups: dict = defaultdict(list)
     for d in deleg:

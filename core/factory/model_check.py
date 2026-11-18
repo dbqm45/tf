@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""Nazwy modeli w konfiguracji fabryki (krok H20): czy konfiguracja i silnik nie odwołują się do modeli, których nie ma.
+"""Model names in the factory configuration (step H20): whether the configuration and engine refer to models that do not exist.
 
-  python3 .tf/factory/model_check.py            # wynik dla człowieka (też w `tf doctor`)
-  python3 .tf/factory/model_check.py --json     # wynik dla skryptów
-  python3 .tf/factory/model_check.py --today RRRR-MM-DD   # data odniesienia (testy)
+  python3 .tf/factory/model_check.py            # human-readable result (also in `tf doctor`)
+  python3 .tf/factory/model_check.py --json     # result for scripts
+  python3 .tf/factory/model_check.py --today YYYY-MM-DD   # reference date (tests)
 
-Jedno źródło prawdy to trzy klucze `.tf/factory/config.yaml`: `models_current` (alias → bieżący identyfikator),
-`models_legacy` (starsze identyfikatory, nadal dozwolone, gdy ktoś przypnie je celowo) i `models_checked` (data
-sprawdzenia, źródło: skill `claude-api`). Sprawdzane są:
-- każdy identyfikator `claude-…` w konfiguracji rdzenia, w nadpisaniach projektu (`.tf/config/config.yaml`)
-  i w kodzie silnika (`.tf/factory/*.py`) — nieznany to błąd (literówka albo model, którego już nie ma);
-- aliasy w `managed_agents.models` — muszą wskazywać model z `models_current`, nie starszy;
-- cennik `prices_usd_per_mtok` — każdy bieżący alias ma cenę (brak to ostrzeżenie: raport kosztów pokaże same tokeny);
-- data `models_checked` — starsza niż 90 dni to ostrzeżenie (nie błąd: CI nie zaczerwieni się od upływu czasu).
+The single source of truth is three keys of `.tf/factory/config.yaml`: `models_current` (alias → current identifier),
+`models_legacy` (older identifiers, still allowed when someone pins them deliberately) and `models_checked` (the date
+of the check, source: the `claude-api` skill). Checked are:
+- every `claude-…` identifier in the core configuration, in project overrides (`.tf/config/config.yaml`)
+  and in the engine code (`.tf/factory/*.py`) — an unknown one is an error (a typo or a model that no longer exists);
+- aliases in `managed_agents.models` — they must point to a model from `models_current`, not an older one;
+- the price list `prices_usd_per_mtok` — every current alias has a price (missing is a warning: the cost report will show only tokens);
+- the `models_checked` date — older than 90 days is a warning (not an error: CI does not turn red from the passage of time).
 
-Kod wyjścia: 0 — bez błędów (ostrzeżenia możliwe), 1 — błędy, 2 — błąd wywołania. Tylko biblioteka standardowa
-(PyYAML opcjonalnie, jak reszta silnika).
+Exit code: 0 — no errors (warnings possible), 1 — errors, 2 — invocation error. Standard library only
+(PyYAML optional, like the rest of the engine).
 """
 from __future__ import annotations
 
@@ -28,12 +28,12 @@ import sys
 from datetime import date
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes also write and read UTF-8
 sys.dont_write_bytecode = True
 
 ENGINE = Path(".tf") / "factory"
@@ -51,7 +51,7 @@ def packs_module(root: Path):
 
 
 def strings(value, path: str = "") -> list[tuple[str, str]]:
-    """(ścieżka klucza, tekst) dla każdego napisu i klucza w strukturze konfiguracji."""
+    """(key path, text) for every string and key in the configuration structure."""
     out = []
     if isinstance(value, dict):
         for k, v in value.items():
@@ -70,7 +70,7 @@ def check(root: Path, today: date) -> dict:
     mod = packs_module(root)
     try:
         core = mod.load_yaml(root / ENGINE / "config.yaml") or {}
-    except Exception as e:  # noqa: BLE001 — konfiguracja rdzenia nieczytelna: nie ma czego sprawdzać
+    except Exception as e:  # noqa: BLE001 — the core configuration is unreadable: there is nothing to check
         return {"errors": [f"cannot read {ENGINE / 'config.yaml'}: {e}"], "warnings": [], "current": {},
                 "legacy": [], "checked": None, "ids": []}
     own = {}

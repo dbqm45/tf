@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
 """
-Szablon hooka PostToolUse (Write|Edit): lokalne bramki jakości po edycji pliku przez agenta.
+PostToolUse hook template (Write|Edit): local quality gates after the agent edits a file.
 
-Kopiujesz go do projektu (np. `.claude/hooks/post_edit_checks.py`) i rejestrujesz w `.claude/settings.json` projektu
-dopiero za zgodą człowieka (skill eng-local-quality-gates). Bramki opisuje `.claude/quality-gates.json`:
+You copy it into the project (e.g. `.claude/hooks/post_edit_checks.py`) and register it in the project's `.claude/settings.json`
+only with the human's consent (skill eng-local-quality-gates). The gates are described by `.claude/quality-gates.json`:
 
   {
     "max_lines": 40,
     "checks": [
       {"name": "eslint", "glob": "src/**/*.{ts,tsx}", "cmd": "npx eslint --fix {file}", "timeout": 15},
-      {"name": "testy powiązane", "glob": "src/billing/**/*.ts", "cmd": "npx vitest related {file} --run",
+      {"name": "related tests", "glob": "src/billing/**/*.ts", "cmd": "npx vitest related {file} --run",
        "timeout": 30, "env": {"AI_AGENT": "1"}}
     ]
   }
 
-  glob     wzorzec ścieżki względem katalogu projektu (`**` = dowolne katalogi, `{a,b}` = warianty); może być listą
-  cmd      polecenie bez powłoki (napis dzielony jak w shellu albo lista); `{file}` = ścieżka edytowanego pliku
-  timeout  limit jednego sprawdzenia w sekundach (domyślnie 20); env, name, max_lines — opcjonalne
+  glob     a path pattern relative to the project directory (`**` = any directories, `{a,b}` = variants); may be a list
+  cmd      a command without a shell (a string split like in a shell, or a list); `{file}` = the path of the edited file
+  timeout  the limit of a single check in seconds (default 20); env, name, max_lines — optional
 
-Działanie: brak pliku konfiguracji albo brak pasującego wzorca → nic. Porażka sprawdzenia → kod 2 i końcówka wyjścia
-na stderr (Claude Code przekazuje ją agentowi). Przekroczony limit, brak programu, zła konfiguracja → kod 0 i komunikat
-(hook nie blokuje z własnej winy). Cały hook kończy się sam po CLAUDE_QG_DEADLINE sekund (domyślnie 50) — ustaw
-`timeout` hooka w settings.json wyżej (np. 60). CLAUDE_QUALITY_GATES=off wyłącza hook.
+Behaviour: no config file or no matching pattern → nothing. A failed check → code 2 and the tail of the output
+on stderr (Claude Code passes it to the agent). Exceeded limit, missing program, bad config → code 0 and a message
+(the hook does not block through its own fault). The whole hook ends by itself after CLAUDE_QG_DEADLINE seconds (default 50) — set the hook's
+`timeout` in settings.json higher (e.g. 60). CLAUDE_QUALITY_GATES=off disables the hook.
 
-Użycie ręczne (sprawdzenie konfiguracji, nic nie uruchamia):
+Manual use (config check, runs nothing):
   python3 post_edit_checks.py --dry-run src/billing/invoice.ts [--json]
-Kody wyjścia: 0 — OK / nic do zrobienia; 2 — sprawdzenie nie przeszło (tryb hooka); 1 — zła konfiguracja (--dry-run).
-Tylko biblioteka standardowa Pythona 3.9+, bez sieci.
+Exit codes: 0 — OK / nothing to do; 2 — a check failed (hook mode); 1 — bad configuration (--dry-run).
+Python 3.9+ standard library only, no network.
 """
 from __future__ import annotations
 
@@ -52,12 +52,12 @@ CONFIG = Path(".claude") / "quality-gates.json"
 EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
 DEFAULT_TIMEOUT = 20.0
 DEFAULT_MAX_LINES = 40
-MAX_CHARS = 8000          # stderr dla agenta — krótko, żeby nie zalać kontekstu
+MAX_CHARS = 8000          # stderr for the agent — short, so as not to flood the context
 _current: dict = {"proc": None}
 _t0 = time.monotonic()
 
 
-# ───────────── limit całego hooka ─────────────
+# ───────────── limit of the whole hook ─────────────
 
 def deadline_seconds() -> float:
     try:
@@ -83,7 +83,7 @@ def kill(proc) -> None:
 
 
 def start_deadline() -> None:
-    """Hook kończy się sam (kod 0) przed limitem Claude Code — zabity proces daje niejasny błąd hooka."""
+    """The hook ends by itself (code 0) before the Claude Code limit — a killed process gives an unclear hook error."""
     def fire():
         kill(_current["proc"])
         try:
@@ -134,7 +134,7 @@ def matches(rel: str, globs) -> bool:
 
 
 def load_config(root: Path) -> dict | None:
-    """None — brak pliku; ValueError — zła konfiguracja."""
+    """None — no file; ValueError — bad configuration."""
     path = root / CONFIG
     if not path.is_file():
         return None
@@ -150,7 +150,7 @@ def load_config(root: Path) -> dict | None:
 def split_cmd(cmd) -> list[str]:
     if isinstance(cmd, list):
         return [str(x) for x in cmd]
-    if os.name == "nt":  # ścieżki z \ — tryb nie-POSIX, cudzysłowy zdejmujemy sami
+    if os.name == "nt":  # paths with \ — non-POSIX mode, we strip the quotes ourselves
         return [t[1:-1] if len(t) > 1 and t[0] == t[-1] == '"' else t for t in shlex.split(cmd, posix=False)]
     return shlex.split(cmd)
 
@@ -184,7 +184,7 @@ def tail(text: str, max_lines: int) -> str:
 
 
 def run_check(check: dict, rel: str, root: Path, max_lines: int) -> tuple[str, str]:
-    """→ (stan, szczegóły); stan: ok | fail | timeout | missing."""
+    """→ (state, details); state: ok | fail | timeout | missing."""
     argv = build_argv(check, rel)
     exe = shutil.which(argv[0], path=os.environ.get("PATH")) or (
         str(root / argv[0]) if (root / argv[0]).is_file() else None)
@@ -296,7 +296,7 @@ def main(argv: list[str]) -> int:
         return 0
     try:
         return hook(data)
-    except Exception as e:  # błąd hooka nie blokuje pracy agenta
+    except Exception as e:  # a hook error does not block the agent's work
         print(json.dumps({"systemMessage": f"Post-edit gates: hook error ({type(e).__name__}: {e})."},
                          ensure_ascii=False))
         return 0

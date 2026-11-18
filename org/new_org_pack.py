@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Nakładka firmowa z szablonu `org/template/` — standardy i domyślne ustawienia jednej organizacji dla wszystkich jej
-projektów. Uruchamiasz raz na firmę, w klonie repozytorium fabryki; wynik ląduje poza nim, w repozytorium firmy.
+Company overlay from the `org/template/` template — one organization's standards and default settings for all its projects.
+You run it once per company, in a clone of the factory repository; the output lands outside it, in the company repository.
 
-  python3 org/new_org_pack.py <firma> --out <katalog> [--prefix p-] [--title "Nazwa firmy"]
-  python3 org/new_org_pack.py <firma> --team <zespół> --out <katalog> [--prefix p-] [--title "Nazwa zespołu"]
+  python3 org/new_org_pack.py <company> --out <dir> [--prefix p-] [--title "Company name"]
+  python3 org/new_org_pack.py <company> --team <team> --out <dir> [--prefix p-] [--title "Team name"]
 
-  <firma>    id nakładki pack-<firma>: małe litery, cyfry i „-” (np. acme)
-  --out      katalog wyniku, poza repozytorium fabryki; nie może istnieć
-  --prefix   prefiks skilli firmy (domyślnie <firma>-); nie może być zajęty przez rdzeń ani nakładkę fabryki
-  --title    nazwa firmy w tekstach (domyślnie z <firma>)
-  --team     nakładka zespołu pack-<firma>-<zespół> (szablon `org/template-team/` dla pack.yaml i README.md, reszta
-             z `org/template/`): standardy zespołu ponad nakładką firmy pack-<firma>, którą wymaga; prefiks skilli
-             domyślnie <zespół>-
+  <company>  id of the pack-<company> overlay: lowercase letters, digits and "-" (e.g. acme)
+  --out      output directory, outside the factory repository; must not exist
+  --prefix   prefix of the company's skills (default <company>-); must not be taken by the core or a factory overlay
+  --title    company name in the texts (default derived from <company>)
+  --team     team overlay pack-<company>-<team> (template `org/template-team/` for pack.yaml and README.md, the rest
+             from `org/template/`): team standards on top of the company overlay pack-<company>, which it requires; skill prefix
+             defaults to <team>-
 
-Pola do uzupełnienia mają znacznik TODO; opis każdego pola i dalsze kroki: org/README.md i README.md w wyniku.
-Tylko biblioteka standardowa.
+Fields to fill in are marked TODO; description of each field and further steps: org/README.md and README.md in the output.
+Standard library only.
 """
 from __future__ import annotations
 
@@ -26,11 +26,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TEMPLATE = Path(__file__).resolve().parent / "template"
-TEAM_TEMPLATE = Path(__file__).resolve().parent / "template-team"     # pack.yaml i README.md nakładki zespołu
+TEAM_TEMPLATE = Path(__file__).resolve().parent / "template-team"     # pack.yaml and README.md of the team overlay
 
 
 def taken_prefixes() -> dict[str, str]:
-    """Prefiksy wymiarów rdzenia, nakładek i trybów fabryki → właściciel (dopasowanie `prefix: x-`)."""
+    """Prefixes of the factory's core, overlay and mode dimensions → owner (matching `prefix: x-`)."""
     out: dict[str, str] = {}
     files = [ROOT / "core" / "factory" / "config.yaml", *sorted(ROOT.glob("packs/*/pack.yaml")),
              *sorted(ROOT.glob("modes/*/pack.yaml"))]
@@ -94,12 +94,12 @@ def main(argv: list[str]) -> int:
     for src in sorted(f for f in TEMPLATE.rglob("*") if f.is_file()):
         rel_src = src.relative_to(TEMPLATE)
         if team and (TEAM_TEMPLATE / rel_src).is_file():
-            src = TEAM_TEMPLATE / rel_src          # pack.yaml i README.md zespołu
+            src = TEAM_TEMPLATE / rel_src          # the team's pack.yaml and README.md
         rel = fill(rel_src.as_posix())
         dst = out / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         text = fill(src.read_text(encoding="utf-8"))
-        if team and rel_src.name == "SKILL.md":   # opis skilla: ustalenia zespołu ponad standardami firmy
+        if team and rel_src.name == "SKILL.md":   # skill description: team rules on top of the company standards
             text = re.sub(r"^description: .*$", f"description: Use for {title} team rules on top of the company "
                           f"standards ({org}-standards) — who approves, thresholds, bans and exceptions that apply in the team.",
                           text, count=1, flags=re.M)

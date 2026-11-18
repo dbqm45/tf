@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Sprawdza kompletność teczki systemu legacy (skill eng-legacy-dossier) — tylko biblioteka standardowa, bez sieci.
+Checks the completeness of a legacy system dossier (skill eng-legacy-dossier) — standard library only, no network.
 
   python3 .claude/skills/eng-legacy-dossier/scripts/dossier_check.py docs/project/04-architecture/legacy-dossier
-  python3 … <katalog teczki> --root <katalog repozytorium>   # względem niego sprawdzane są dowody plik:linia (domyślnie .)
-  python3 … <katalog teczki> --json
+  python3 … <dossier directory> --root <repository directory>   # file:line evidence is checked relative to it (default .)
+  python3 … <dossier directory> --json
 
-Tryb audytu architektury (opcjonalne pliki obok indeksu): `assessment.md` — ustalenia `### ARCH-NNN — tytuł` z polami
-Obszar, Kategoria, Stan obecny, Stan oczekiwany, Luka, Dowód, Wpływ; `recommendations.md` — `### REC-NNN — tytuł`
-z polami Dotyczy, Decyzja, Priorytet, Wysiłek, Ryzyko, Weryfikacja. Potwierdzony problem i niespójność wymagają
-dowodu; każdy potwierdzony problem — rekomendacji; samą preferencją nie uzasadnisz refaktoryzacji strukturalnej.
+Architecture audit mode (optional files next to the index): `assessment.md` — findings `### ARCH-NNN — title` with the fields
+Area, Category, Current state, Expected state, Gap, Evidence, Impact; `recommendations.md` — `### REC-NNN — title`
+with the fields Addresses, Decision, Priority, Effort, Risk, Verification. A confirmed problem and an inconsistency require
+evidence; every confirmed problem — a recommendation; preference alone does not justify a structural refactoring.
 
-Sprawdza: znaczniki i sekcje README.md oraz kart modułów (modules/*.md), pole `State:` karty, moduły z indeksu bez
-pliku (błąd) i pliki spoza indeksu (ostrzeżenie), reguły biznesowe — unikalne ID, znana pewność (test / kod /
-do weryfikacji), dowód `ścieżka:linia` lub `ścieżka:od-do` wskazujący istniejący plik i linię; reguła bez dowodu
-musi mieć pewność „to verify”. Pierwsza linia wyniku: `legacy-dossier-check: OK` albo `… ERRORS`; kod 0 / 1.
+It checks: the markers and sections of README.md and of the module cards (modules/*.md), the card's `State:` field, modules from the index without a
+file (an error) and files outside the index (a warning), business rules — a unique ID, a known confidence (test / code /
+to verify), evidence `path:line` or `path:from-to` pointing to an existing file and line; a rule without evidence
+must have the confidence "to verify". The first output line: `legacy-dossier-check: OK` or `… ERRORS`; code 0 / 1.
 """
 from __future__ import annotations
 
@@ -41,8 +41,8 @@ DECISIONS = ["no change", "documentation", "configuration", "incremental refacto
              "redesign"]
 HEAVY = {"structural refactoring", "redesign"}
 PRIORITIES = ("P1", "P2", "P3")
-# Dossier sprzed 14.x (po polsku): nazwy sekcji, pól i wartości przyjmowane jako angielskie odpowiedniki; ta sama mapa
-# przepisuje istniejące dossier przy migracji (`migrations.migrate_values`).
+# Pre-14.x dossiers (in Polish): section, field and value names are accepted as English equivalents; the same map
+# rewrites existing dossiers during migration (`migrations.migrate_values`).
 ALIASES = {
     "Moduły": "Modules", "Przepływy": "Flows", "Słownik": "Glossary",
     "Stan i kandydaci do refaktoru": "State and refactoring candidates", "Pytania otwarte": "Open questions",
@@ -113,7 +113,7 @@ def check_evidence(ev: str, root: Path) -> str | None:
 
 
 def blocks(body: str, prefix: str) -> list[tuple[str, dict[str, str]]]:
-    """Bloki `### <prefix>-NNN — tytuł` z polami `Klucz: wartość` (kolejność bloków zachowana)."""
+    """Blocks `### <prefix>-NNN — title` with `Key: value` fields (block order preserved)."""
     out = []
     for part in re.split(rf"^### (?={prefix}-)", body, flags=re.M)[1:]:
         head, _, rest = part.partition("\n")

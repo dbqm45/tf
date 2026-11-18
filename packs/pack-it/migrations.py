@@ -1,7 +1,7 @@
-"""Migracje danych projektu nakładki pack-it (wywołuje je `migrations.migrate_values` rdzenia przy aktualizacji).
+"""Project data migrations of the pack-it overlay (called by the core `migrations.migrate_values` on update).
 
-14.x: dossier legacy (`eng-legacy-dossier`) w angielskiej składni — sekcje, pola ustaleń i rekomendacji, `State:`,
-tabela reguł. Mapy nazw i wartości pochodzą ze skilla (`dossier_check.ALIASES`, `VALUE_ALIASES`)."""
+14.x: legacy dossier (`eng-legacy-dossier`) in English syntax — sections, finding and recommendation fields, `State:`,
+the rules table. The name and value maps come from the skill (`dossier_check.ALIASES`, `VALUE_ALIASES`)."""
 from __future__ import annotations
 
 import re
@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 def _dossier_maps(root: Path) -> tuple[dict, dict] | None:
-    """Mapy nazw i wartości dossier z zainstalowanego skilla eng-legacy-dossier (pack-it); bez skilla — None."""
+    """Dossier name and value maps from the installed eng-legacy-dossier skill (pack-it); without the skill — None."""
     f = root / ".claude" / "skills" / "eng-legacy-dossier" / "scripts" / "dossier_check.py"
     if not f.is_file():
         return None
@@ -19,12 +19,12 @@ def _dossier_maps(root: Path) -> tuple[dict, dict] | None:
     try:
         spec.loader.exec_module(mod)
         return dict(mod.ALIASES), dict(mod.VALUE_ALIASES)
-    except Exception:   # noqa: BLE001 — uszkodzony skill nie zatrzymuje aktualizacji
+    except Exception:   # noqa: BLE001 — a broken skill does not stop the update
         return None
 
 
 def _dossier_text(text: str, names: dict, values: dict) -> str:
-    """Składnia dossier 14.x: nagłówki `##`, pola `Klucz: wartość` bloków ARCH/REC, `State:`, tabela reguł."""
+    """Dossier 14.x syntax: `##` headings, `Key: value` fields of ARCH/REC blocks, `State:`, the rules table."""
     out, section = [], ""
     for line in text.split("\n"):
         h = re.match(r"^## (.+?)\s*$", line)
@@ -56,7 +56,7 @@ def _dossier_text(text: str, names: dict, values: dict) -> str:
 
 
 def _dossiers(root: Path, dry: bool) -> list[str]:
-    """Istniejące dossier legacy (pliki ze znacznikiem `<!-- legacy-dossier`) w składni 14.x."""
+    """Existing legacy dossiers (files with the `<!-- legacy-dossier` marker) in 14.x syntax."""
     maps = _dossier_maps(root)
     if maps is None:
         return []

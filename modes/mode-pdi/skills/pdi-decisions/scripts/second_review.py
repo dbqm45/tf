@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
-"""Drugi przegląd artefaktu (N1, DZ12): drugi model czyta artefakt razem z intent.md, decyzjami zmiany i (dla
-architecture) requirements.md, wylicza luki (brakujące stany błędu, kryteria bez przykładów, sprzeczności z decyzją
-w decisions.md, cięcia bez dowodu sprawdzalności). Dla N2 druga podkomenda `comments` sprawdza uwagi recenzenta z PR.
+"""Second artifact review (N1, DZ12): a second model reads the artifact together with intent.md, the change's decisions and (for
+architecture) requirements.md, and lists gaps (missing error states, criteria without examples, contradictions with a decision
+in decisions.md, cuts without proof of verifiability). For N2 the second subcommand `comments` checks the PR reviewer's remarks.
 
   python3 .claude/skills/pdi-decisions/scripts/second_review.py artifact --change CHG-n --phase P [--dry-run]
-      czyta docs/project/changes/CHG-n/<artefakt>, wysyła prompt recenzenta (rubryka N17, temperatura 0), parsuje
-      JSON według schematu, doczepia sekcję `## Przegląd drugim modelem` do artefaktu i pisze sidecar
-      docs/project/changes/CHG-n/.review/<phase>.json z wynikiem (status, provider, model, same_vendor, cost_usd,
+      reads docs/project/changes/CHG-n/<artifact>, sends the reviewer prompt (rubric N17, temperature 0), parses
+      JSON against the schema, attaches a `## Przegląd drugim modelem` section to the artifact and writes the sidecar
+      docs/project/changes/CHG-n/.review/<phase>.json with the result (status, provider, model, same_vendor, cost_usd,
       input_tokens, output_tokens, findings, run_at)
-  python3 .claude/skills/pdi-decisions/scripts/second_review.py comments --pr <n> --input PLIK [--dry-run]
-      wejście PLIK: JSON [{id, body, ...}]; wynik stdout: {status, provider, model, same_vendor, cost_usd, comments:
+  python3 .claude/skills/pdi-decisions/scripts/second_review.py comments --pr <n> --input FILE [--dry-run]
+      input FILE: JSON [{id, body, ...}]; stdout result: {status, provider, model, same_vendor, cost_usd, comments:
       [{id, confirmed, reason}]}
 
-Dostawca: PDI_SECOND_MODEL (`openai:<model>` → OPENAI_API_KEY, Chat Completions, response_format json_schema strict;
-`claude:<model>` → ANTHROPIC_API_KEY, Messages API z tool_use). Bez PDI_SECOND_MODEL albo gdy wskazany dostawca nie ma
-klucza — zapasowo `claude:claude-sonnet-5-5` z innym systemowym promptem recenzenta (`same_vendor: true`).
-Klucze nigdy w argv ani logu. N14: artefakt, decyzje i komentarze idą w znacznikach `<untrusted>…</untrusted>` ze
-zneutralizowanymi znacznikami w treści. Retry 2× przy złym JSON (łącznie 3 próby); po tym `status: unavailable`.
+Provider: PDI_SECOND_MODEL (`openai:<model>` → OPENAI_API_KEY, Chat Completions, response_format json_schema strict;
+`claude:<model>` → ANTHROPIC_API_KEY, Messages API with tool_use). Without PDI_SECOND_MODEL or when the chosen provider has no
+key — fallback to `claude:claude-sonnet-5-5` with a different system reviewer prompt (`same_vendor: true`).
+Keys never in argv or the log. N14: the artifact, decisions and comments go in `<untrusted>…</untrusted>` markers with
+neutralized markers in the content. Retry 2× on bad JSON (3 attempts in total); after that `status: unavailable`.
 
-Koszt: tokeny × PDI_SECOND_MODEL_PRICE_IN/_OUT (USD/1M); bez tych zmiennych `cost_usd: 0.0`, tokeny w sidecarze.
+Cost: tokens × PDI_SECOND_MODEL_PRICE_IN/_OUT (USD/1M); without these variables `cost_usd: 0.0`, tokens in the sidecar.
 
-W testach (TDD): dostawca wstrzyknięty atrapą przez PDI_SECOND_MODEL_FAKE_SEQ (lista plików po przecinku; kolejne
-wywołania czytają kolejne pliki). PDI_SECOND_MODEL_FAKE_IN_TOKENS/_OUT_TOKENS udają zwracane `usage`.
+In tests (TDD): the provider is replaced by a stub via PDI_SECOND_MODEL_FAKE_SEQ (a comma-separated list of files; successive
+calls read successive files). PDI_SECOND_MODEL_FAKE_IN_TOKENS/_OUT_TOKENS fake the returned `usage`.
 
-Kod wyjścia: 0 — w porządku (także gdy drugi przegląd zgłasza niedostępność w sidecarze — niedostępność nie jest
-błędem skryptu, tylko wynikiem); 2 — złe wywołanie.
+Exit code: 0 — OK (also when the second review reports unavailability in the sidecar — unavailability is not a
+script error, but a result); 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -48,7 +48,7 @@ UNTRUSTED_CLOSE = "</untrusted>"
 UNTRUSTED_NEUTRAL = "</untrusted_>"
 RETRY_MAX = 2
 TIMEOUT_SECONDS = 60
-# Zapasowy model Claude dla ścieżki same-vendor (inny niż domyślny Opus wykonawcy; w planie Z9 §8.3 DZ12).
+# Fallback Claude model for the same-vendor path (different from the executor's default Opus; in plan Z9 §8.3 DZ12).
 CLAUDE_FALLBACK = "claude-sonnet-5-5"
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
@@ -124,11 +124,11 @@ SYSTEM_PROMPT_COMMENTS = (
 
 
 class Refused(Exception):
-    """Błąd wywołania skryptu (kod 2)."""
+    """A script invocation error (code 2)."""
 
 
 def neutralise(text: str) -> str:
-    """Zastępuje znaczniki niezaufanej treści w środku bloku, żeby nie dało się zamknąć bloku z zewnątrz (N14)."""
+    """Replaces the untrusted-content markers inside the block so that the block cannot be closed from outside (N14)."""
     return text.replace(UNTRUSTED_CLOSE, UNTRUSTED_NEUTRAL)
 
 
@@ -137,9 +137,9 @@ def wrap(label: str, body: str) -> str:
 
 
 def choose_provider(env: dict[str, str]) -> tuple[str, str, bool, str | None]:
-    """Zwraca (provider, model, same_vendor, reason_if_unavailable).
+    """Returns (provider, model, same_vendor, reason_if_unavailable).
 
-    provider ∈ {openai, claude}; same_vendor=True, gdy drugi model jest Claude (fallback albo wprost wybrany)."""
+    provider ∈ {openai, claude}; same_vendor=True when the second model is Claude (fallback or explicitly chosen)."""
     model_env = (env.get("PDI_SECOND_MODEL") or "").strip()
     openai_key = env.get("OPENAI_API_KEY") or ""
     anthropic_key = env.get("ANTHROPIC_API_KEY") or ""
@@ -164,13 +164,13 @@ def choose_provider(env: dict[str, str]) -> tuple[str, str, bool, str | None]:
 
 
 def read_decisions(change: str) -> str:
-    """decisions.md zmiany jako treść (albo pusty tekst)."""
+    """The change's decisions.md as content (or an empty text)."""
     f = CHANGES / change / "decisions.md"
     return f.read_text(encoding="utf-8") if f.is_file() else ""
 
 
 def read_context(change: str, phase: str) -> list[tuple[str, str]]:
-    """(etykieta, treść) artefaktów fazy wcześniejszej, które drugi model ma znać."""
+    """(label, content) of the earlier phase's artifacts that the second model should know."""
     d = CHANGES / change
     out: list[tuple[str, str]] = []
     for name in PHASE_CONTEXT.get(phase, ()):
@@ -219,8 +219,8 @@ def _fake_tokens(env: dict[str, str]) -> tuple[int, int]:
 
 
 def _call_fake(env: dict[str, str]) -> tuple[str, int, int]:
-    """Atrapa: bierze pierwszy nieoznaczony plik z PDI_SECOND_MODEL_FAKE_SEQ (CSV); po odczycie pisze marker
-    `<file>.used`. Każde uruchomienie skryptu ma własną sekwencję (test tworzy nowe pliki), więc stan się nie rozjedzie."""
+    """Stub: takes the first unmarked file from PDI_SECOND_MODEL_FAKE_SEQ (CSV); after reading it writes a marker
+    `<file>.used`. Each script run has its own sequence (the test creates new files), so the state does not drift apart."""
     seq = [s for s in (env.get("PDI_SECOND_MODEL_FAKE_SEQ") or "").split(",") if s]
     if not seq:
         raise Refused("PDI_SECOND_MODEL_FAKE_SEQ is empty — no fake response")
@@ -250,7 +250,7 @@ def _post_json(url: str, headers: dict[str, str], body: dict[str, Any]) -> dict[
 
 def call_provider(provider: str, model: str, system: str, user: str, schema: dict[str, Any], schema_name: str,
                   env: dict[str, str]) -> tuple[str, int, int]:
-    """Zwraca (tekst_odpowiedzi_z_JSON, input_tokens, output_tokens). Atrapa ma pierwszeństwo przy testach."""
+    """Returns (response_text_from_JSON, input_tokens, output_tokens). The stub takes precedence in tests."""
     if env.get("PDI_SECOND_MODEL_FAKE_SEQ"):
         return _call_fake(env)
     if provider == "openai":
@@ -277,7 +277,7 @@ def call_provider(provider: str, model: str, system: str, user: str, schema: dic
 
 
 def parse_with_schema(text: str, schema: dict[str, Any]) -> dict[str, Any]:
-    """Minimalna walidacja według schematu (typy pól, enum, additionalProperties)."""
+    """Minimal validation against the schema (field types, enum, additionalProperties)."""
     data = json.loads(text)
     _validate(data, schema, "$")
     return data
@@ -350,7 +350,7 @@ def cost_of(in_tokens: int, out_tokens: int, env: dict[str, str]) -> float:
 
 def run_review(provider: str, model: str, system: str, user: str, schema: dict[str, Any], schema_name: str,
                env: dict[str, str]) -> dict[str, Any]:
-    """Wywołuje dostawcę z retry przy złym JSON. Zwraca {status, parsed?, input_tokens, output_tokens, reason?}."""
+    """Calls the provider with retry on bad JSON. Returns {status, parsed?, input_tokens, output_tokens, reason?}."""
     reason = None
     in_total, out_total = 0, 0
     for attempt in range(RETRY_MAX + 1):
@@ -386,10 +386,10 @@ def _section_meta(meta: dict[str, Any]) -> str:
 
 
 def append_section(artifact: Path, findings: list[dict[str, Any]], meta: dict[str, Any]) -> None:
-    """Doczepia (albo zastępuje) sekcję `## Przegląd drugim modelem` — idempotentnie."""
+    """Attaches (or replaces) the `## Przegląd drugim modelem` section — idempotently."""
     lines = [f"\n\n{SECTION}"]
     if meta.get("status") != "ok":
-        # Brak przeglądu nie może wyglądać jak przegląd bez ustaleń (N1: nigdy ciche „zdane”).
+        # A missing review must not look like a review with no findings (N1: never a quiet "passed").
         lines.append(f"*second review: unavailable ({meta.get('reason') or 'unknown'})* — no second model read"
                      " the artifact; there are no findings here and no confirmation that there are none.")
     elif findings:
@@ -403,15 +403,15 @@ def append_section(artifact: Path, findings: list[dict[str, Any]], meta: dict[st
     else:
         lines += [_section_meta(meta), "", "- no blocking findings"]
     body = artifact.read_text(encoding="utf-8")
-    # usuń starą sekcję od nagłówka do końca pliku albo do następnego `## `
+    # remove the old section from the heading to the end of the file or to the next `## `
     pattern = re.compile(rf"\n+(?:{re.escape(SECTION)}|{re.escape(SECTION_PL)})[\s\S]*?(?=\n## |\Z)")
     body = pattern.sub("", body).rstrip() + "\n"
     artifact.write_text(body + "\n".join(lines) + "\n", encoding="utf-8")
 
 
 def process_findings(raw: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Zasada N17: finding odnoszący się do pytania rozstrzygniętego (`settled_ref`) i NIE będący contradiction
-    jest pomijany; pozostałe zachowane."""
+    """Rule N17: a finding that refers to a settled question (`settled_ref`) and is NOT a contradiction
+    is skipped; the others are kept."""
     out = []
     for f in raw:
         if f.get("settled_ref") and f.get("kind") != "contradiction":
