@@ -26,8 +26,9 @@ from typing import Any
 PREFIX = "PDI-PROGRESS: "
 # Statusy, które `cmd_run` wypisuje (phase_run.py); `dry_run` wchodzi z `--dry-run`.
 STATUSES = ("waiting_gate", "done", "failed", "dry_run")
-_READ_FILE = re.compile(r"\bczyta plik\s+(?P<path>\S+)")
-_DENIAL = re.compile(r"\bodmowa narzędzia\b")
+# Wiadomości postępu z phase_progress.py; oba języki (pl: sprzed 14.x).
+_READ_FILE = re.compile(r"\b(?:czyta plik|reads file|reading file)\s+(?P<path>\S+)")
+_DENIAL = re.compile(r"\b(?:odmowa narzędzia|tool denied|tool denial|denied tool)\b")
 
 
 def _strip_progress(stdout: str) -> str:
@@ -66,19 +67,19 @@ def read_result(stdout: str) -> dict:
       - status w słowniku nie pasuje do `STATUSES`.
     """
     if not stdout or not stdout.strip():
-        raise ValueError("phase_run wynik: stdout jest pusty")
+        raise ValueError("phase_run result: stdout is empty")
     text = _strip_progress(stdout)
     if not text.strip():
-        raise ValueError("phase_run wynik: w stdout są tylko linie postępu, brak JSONa")
+        raise ValueError("phase_run result: stdout has only progress lines, no JSON")
     last: dict | None = None
     for obj in _iter_json_objects(text):
         if isinstance(obj, dict):
             last = obj
     if last is None:
-        raise ValueError("phase_run wynik: w stdout nie ma obiektu JSON (jest tablica albo niepoprawne dane)")
+        raise ValueError("phase_run result: stdout has no JSON object (an array or invalid data)")
     status = last.get("status")
     if status not in STATUSES:
-        raise ValueError(f"phase_run wynik: status {status!r} spoza zestawu {', '.join(STATUSES)}")
+        raise ValueError(f"phase_run result: status {status!r} is not one of {', '.join(STATUSES)}")
     return last
 
 

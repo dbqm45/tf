@@ -26,7 +26,7 @@ def load() -> dict | None:
     try:
         data = json.loads(LOCAL.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
-        print(f"✗ {LOCAL}: nie da się odczytać ({e}) — popraw plik ręcznie; nic nie zmieniono.", file=sys.stderr)
+        print(f"✗ {LOCAL}: cannot read it ({e}) — fix the file by hand; nothing was changed.", file=sys.stderr)
         return None
     return data if isinstance(data, dict) else None
 
@@ -41,7 +41,7 @@ def main(argv: list[str]) -> int:
         return 2
     env = data.get("env") or {}
     if cmd == "status":
-        print(f"agent teams: {'włączone' if env.get(VAR) == '1' else 'wyłączone'} ({LOCAL})")
+        print(f"agent teams: {'on' if env.get(VAR) == '1' else 'off'} ({LOCAL})")
         return 0
     if cmd == "on":
         env[VAR] = "1"
@@ -53,8 +53,9 @@ def main(argv: list[str]) -> int:
         data.pop("env", None)
     LOCAL.parent.mkdir(parents=True, exist_ok=True)
     LOCAL.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    state = "włączone" if cmd == "on" else "wyłączone"
-    print(f"✓ agent teams {state} w {LOCAL} — zmiana działa od następnej sesji: zamknij tę i otwórz nową sesję.")
+    state = "on" if cmd == "on" else "off"
+    print(f"✓ agent teams {state} in {LOCAL} — the change takes effect from the next session: close this one and "
+          "open a new session.")
     return 0
 
 

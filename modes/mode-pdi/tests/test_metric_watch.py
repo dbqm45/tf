@@ -117,12 +117,12 @@ def main() -> int:
         csv.write_text(series(rollbacks={i: 0 for i in range(40)}), encoding="utf-8")
         r = run(["check", "--csv", str(csv)], repo)
         rb = {m["metric"]: m for m in (jl(r) or {}).get("metrics", [])}.get("rollbacks", {})
-        check(r.returncode == 0 and rb.get("tier") is None and "zmienno" in rb.get("note", ""),
+        check(r.returncode == 0 and rb.get("tier") is None and "variation" in rb.get("note", ""),
               f"M-6: same zera w linii bazowej → uwaga, nie błąd: {rb} {r.stdout}")
         csv.write_text(series(n=20), encoding="utf-8")
         r = run(["check", "--csv", str(csv)], repo)
         notes = [m.get("note", "") for m in (jl(r) or {}).get("metrics", [])]
-        check(r.returncode == 0 and notes and all("punkt" in n for n in notes),
+        check(r.returncode == 0 and notes and all("point" in n for n in notes),
               f"M-7: za mało punktów → uwaga przy każdej metryce: {r.stdout}")
         csv.write_text(series(n=50, rollbacks={32: 9}), encoding="utf-8")
         r = run(["check", "--csv", str(csv)], repo)

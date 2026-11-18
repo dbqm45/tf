@@ -67,25 +67,25 @@ def tool_use_message(name: str, tool_input: Any) -> str:
     if not isinstance(tool_input, dict):
         tool_input = {}
     if name == "Read":
-        return sanitize(f"czyta plik {rel_path(tool_input.get('file_path', ''))}")
+        return sanitize(f"reads file {rel_path(tool_input.get('file_path', ''))}")
     if name in ("Edit", "Write", "NotebookEdit"):
-        return sanitize(f"pisze plik {rel_path(tool_input.get('file_path', ''))}")
+        return sanitize(f"writes file {rel_path(tool_input.get('file_path', ''))}")
     if name == "Bash":
-        return "uruchamia polecenie"
+        return "runs a command"
     if name == "Grep":
         path = tool_input.get("path") or ""
-        return sanitize(f"szuka wzorca w {rel_path(path)}" if path else "szuka wzorca")
+        return sanitize(f"searches for a pattern in {rel_path(path)}" if path else "searches for a pattern")
     if name == "Glob":
-        return "szuka plików"
+        return "searches for files"
     if name in ("WebFetch", "WebSearch"):
-        return "pobiera dane z sieci"
+        return "fetches data from the web"
     if name == "Task":
         kind = tool_input.get("subagent_type") or ""
-        return sanitize(f"uruchamia agenta {kind}" if kind else "uruchamia agenta")
+        return sanitize(f"starts agent {kind}" if kind else "starts an agent")
     if name == "TodoWrite":
-        return "aktualizuje listę zadań"
-    pretty = _mcp_pretty(name) if name else "nieznane"
-    return sanitize(f"używa narzędzia {pretty}")
+        return "updates the task list"
+    pretty = _mcp_pretty(name) if name else "unknown"
+    return sanitize(f"uses tool {pretty}")
 
 
 def result_text(result: Any) -> str:
@@ -150,11 +150,11 @@ class ProgressRelay:
             subtype = event.get("subtype")
             if subtype == "init" and not self._started:
                 self._started = True
-                return [self._row(status="started", message="persona startuje")]
+                return [self._row(status="started", message="persona starting")]
             if subtype == "permission_denied":
                 tool = event.get("tool_name") or "?"
                 reason = event.get("reason") or ""
-                msg = f"odmowa narzędzia {tool}" + (f": {reason}" if reason else "")
+                msg = f"tool denied {tool}" + (f": {reason}" if reason else "")
                 return [self._row(status="in_progress", message=msg)]
             return []
         if etype == "assistant":
@@ -179,7 +179,7 @@ class ProgressRelay:
                 return []
             for block in content:
                 if isinstance(block, dict) and block.get("type") == "tool_result" and block.get("is_error"):
-                    return [self._row(status="in_progress", message="błąd wyniku narzędzia")]
+                    return [self._row(status="in_progress", message="tool result error")]
             return []
         if etype == "result":
             self.last_result = event
@@ -189,7 +189,7 @@ class ProgressRelay:
     def emit_final(self, *, status: str, message: Optional[str] = None) -> dict:
         """Końcowa linia postępu (z kosztem z `last_result`, gdy jest)."""
         if status not in STATUSES:
-            raise ValueError(f"status {status!r} spoza {', '.join(STATUSES)}")
+            raise ValueError(f"status {status!r} is not one of {', '.join(STATUSES)}")
         cost: Optional[float] = None
         if isinstance(self.last_result, dict):
             raw = self.last_result.get("total_cost_usd")

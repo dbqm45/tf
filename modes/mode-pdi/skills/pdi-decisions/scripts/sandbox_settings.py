@@ -65,9 +65,9 @@ def settings(allowed: list[str], *, nested: bool) -> dict:
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(description="Ustawienia sandboxu Claude Code dla persony fazy (JSON na stdout).")
-    ap.add_argument("--root", default=".", help="katalog repo produktu (domyślnie bieżący)")
-    ap.add_argument("--nested", action="store_true", help="sandbox w nieuprzywilejowanym kontenerze (pdi lokalnie)")
+    ap = argparse.ArgumentParser(description="Claude Code sandbox settings for a phase persona (JSON on stdout).")
+    ap.add_argument("--root", default=".", help="product repo folder (default: current)")
+    ap.add_argument("--nested", action="store_true", help="sandbox in an unprivileged container (pdi locally)")
     a = ap.parse_args(argv)
     allowed = hosts(Path(a.root), os.environ.get("PDI_DISPATCH_ALLOW_HOSTS") or "")
     print(json.dumps(settings(allowed, nested=a.nested), ensure_ascii=False, indent=2))

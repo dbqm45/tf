@@ -48,29 +48,29 @@ def main() -> int:
     check(validate(got, schema, "") == [], f"D-3: wynik parsera przechodzi schemat kontraktu: {validate(got, schema, '')}")
 
     bad = {
-        "nieznany stan": ("| US-3 | zmiana | busy | " + LINK.format("1-2") + " | |", "stan"),
+        "nieznany stan": ("| US-3 | zmiana | busy | " + LINK.format("1-2") + " | |", "state"),
         "link spoza figmy": ("| US-3 | zmiana | idle | https://example.com/x | |", "link"),
         "link bez node-id": ("| US-3 | zmiana | idle | https://www.figma.com/design/K/x | |", "node-id"),
-        "brak bez uwagi": ("| US-3 | zmiana | idle | brak | |", "uwag"),
-        "zły klucz": ("| us3 | zmiana | idle | " + LINK.format("1-2") + " | |", "wymagani"),
+        "brak bez uwagi": ("| US-3 | zmiana | idle | brak | |", "note"),
+        "zły klucz": ("| us3 | zmiana | idle | " + LINK.format("1-2") + " | |", "requirement"),
     }
     for label, (row, word) in bad.items():
         try:
             dc.parse_design_md(HEADER + row + "\n")
             check(False, f"D-4 {label}: oczekiwano błędu formatu")
         except dc.DesignFormatError as e:
-            check(str(e).startswith("wiersz 1:") and word in str(e), f"D-4 {label}: błąd z numerem wiersza: {e}")
+            check(str(e).startswith("row 1:") and word in str(e), f"D-4 {label}: błąd z numerem wiersza: {e}")
 
     problems = dc.problems(want["rows"])
     check(any("US-3/AC-3" in p and "server_error" in p and "pytanie do projektanta" in p for p in problems)
           and not any("session_expired" in p for p in problems),
           f"D-5: brak ramki → problem z uwagą; 'nie dotyczy' z powodem nie jest problemem: {problems}")
-    check(not any(p.startswith(("US-3:", "US-3/")) and "brak wiersza" in p for p in problems),
+    check(not any(p.startswith(("US-3:", "US-3/")) and "no row for" in p for p in problems),
           f"D-6a: stany minimalne liczone per historyjka (US-3 i jej AC razem mają idle, success, błąd): {problems}")
     only_idle = [{"requirement": "US-7/AC-1", "journey": "j", "state": "idle", "status": "linked",
                   "frame": {"file_key": "K", "node_id": "1:2", "url": LINK.format("1-2")}}]
     got7 = dc.problems(only_idle)
-    check(len(got7) == 1 and got7[0].startswith("US-7:") and "success" in got7[0] and "błędu" in got7[0],
+    check(len(got7) == 1 and got7[0].startswith("US-7:") and "success" in got7[0] and "error state" in got7[0],
           f"D-6b: historyjka bez stanu wyniku i błędu → jeden problem z listą braków: {got7}")
     full = [{"requirement": "US-9", "journey": "j", "state": s, "status": "linked",
              "frame": {"file_key": "K", "node_id": "1:2", "url": LINK.format("1-2")}}

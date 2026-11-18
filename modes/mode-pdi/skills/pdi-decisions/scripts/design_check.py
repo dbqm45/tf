@@ -48,10 +48,10 @@ def _frame(url: str, row: int) -> dict:
     parsed = urlparse(url)
     match = _FIGMA_PATH.match(parsed.path)
     if parsed.scheme != "https" or parsed.netloc.lower() not in ("figma.com", "www.figma.com") or not match:
-        raise DesignFormatError(f"wiersz {row}: link do ramki musi prowadzić do pliku w figma.com")
+        raise DesignFormatError(f"row {row}: the frame link must point to a file on figma.com")
     node = _NODE.match(unquote((parse_qs(parsed.query).get("node-id") or [""])[0]))
     if not node:
-        raise DesignFormatError(f"wiersz {row}: link do ramki bez node-id (ramka, nie cały plik)")
+        raise DesignFormatError(f"row {row}: the frame link has no node-id (link a frame, not the whole file)")
     return {"file_key": match.group(2), "node_id": f"{node.group(1)}:{node.group(2)}", "url": url}
 
 
@@ -61,7 +61,8 @@ def parse_design_md(text: str) -> dict:
     start = next((i for i, ln in enumerate(lines)
                   if ln.strip().startswith("|") and tuple(c.lower() for c in _cells(ln)) in COLUMNS), None)
     if start is None:
-        raise DesignFormatError("brak tabeli ramek (nagłówek: Wymaganie | Ścieżka | Stan | Ramka | Uwagi)")
+        raise DesignFormatError("no frames table (header: Wymaganie | Ścieżka | Stan | Ramka | Uwagi, "
+                                "or Requirement | Journey | State | Frame | Notes)")
     rows = []
     for line in lines[start + 2:]:
         if not line.strip().startswith("|"):
@@ -69,19 +70,19 @@ def parse_design_md(text: str) -> dict:
         n = len(rows) + 1
         cells = _cells(line)
         if len(cells) != 5:
-            raise DesignFormatError(f"wiersz {n}: oczekiwano 5 kolumn, jest {len(cells)}")
+            raise DesignFormatError(f"row {n}: expected 5 columns, got {len(cells)}")
         req, journey, state, frame, note = cells
         if not REQUIREMENT.match(req):
-            raise DesignFormatError(f"wiersz {n}: identyfikator wymagania '{req}' (np. US-3 albo US-3/AC-2)")
+            raise DesignFormatError(f"row {n}: bad requirement ID '{req}' (e.g. US-3 or US-3/AC-2)")
         if not journey:
-            raise DesignFormatError(f"wiersz {n}: pusta ścieżka")
+            raise DesignFormatError(f"row {n}: empty journey")
         if state not in STATES:
-            raise DesignFormatError(f"wiersz {n}: nieznany stan '{state}' (lista w conventions.design.states)")
+            raise DesignFormatError(f"row {n}: unknown state '{state}' (see conventions.design.states)")
         row = {"requirement": req, "journey": journey, "state": state}
         if frame.lower() in MISSING + NOT_APPLICABLE:
             row["status"] = "missing" if frame.lower() in MISSING else "not_applicable"
             if not note:
-                raise DesignFormatError(f"wiersz {n}: '{frame}' wymaga uwagi z powodem albo pytaniem")
+                raise DesignFormatError(f"row {n}: '{frame}' needs a note with a reason or a question")
         else:
             row["status"] = "linked"
             row["frame"] = _frame(frame, n)
@@ -93,7 +94,7 @@ def parse_design_md(text: str) -> dict:
 
 def problems(rows: list[dict]) -> list[str]:
     """Braki do rozstrzygnięcia przed bramką: wiersze bez ramki i wymagania bez stanów minimalnych."""
-    out = [f"{r['requirement']} {r['state']} ({r['journey']}): brak ramki — {r['note']}"
+    out = [f"{r['requirement']} {r['state']} ({r['journey']}): no frame — {r['note']}"
            for r in rows if r["status"] == "missing"]
     by_req: dict[str, set[str]] = {}
     for r in rows:   # stany minimalne liczone per historyjka: US-3, US-3/AC-2 i US-3/AC-3 to jeden przepływ
@@ -101,9 +102,9 @@ def problems(rows: list[dict]) -> list[str]:
     for req, states in by_req.items():
         lacking = [s for s in MINIMUM if s not in states]
         if not states & set(ERRORS):
-            lacking.append("stan błędu (" + ", ".join(ERRORS[:3]) + "…)")
+            lacking.append("an error state (" + ", ".join(ERRORS[:3]) + "…)")
         if lacking:
-            out.append(f"{req}: brak wiersza dla {', '.join(lacking)} — dodaj ramkę albo „nie dotyczy” z powodem")
+            out.append(f"{req}: no row for {', '.join(lacking)} — add a frame, or „n/a” with a reason")
     return out
 
 
@@ -116,7 +117,7 @@ def main(argv: list[str]) -> int:
     a = ap.parse_args(argv)
     path = CHANGES / a.change / "design.md"
     if not path.is_file():
-        print(f"✗ brak {path} — projekt zmiany powstaje w fazie design (szablon templates/design.md)")
+        print(f"✗ no {path} — the change design is made in the design phase (template templates/design.md)")
         return 2
     try:
         rows = parse_design_md(path.read_text(encoding="utf-8"))["rows"]
@@ -127,12 +128,12 @@ def main(argv: list[str]) -> int:
     if a.json:
         print(json.dumps({"rows": rows, "problems": found}, ensure_ascii=False, indent=2))
     elif found:
-        print(f"✗ {path}: {len(found)} do rozstrzygnięcia przed bramką design-review")
+        print(f"✗ {path}: {len(found)} to resolve before the design-review gate")
         for p in found:
             print(f"  - {p}")
     else:
         linked = sum(r["status"] == "linked" for r in rows)
-        print(f"✓ {path}: {len(rows)} wierszy, {linked} z ramką, stany minimalne pokryte")
+        print(f"✓ {path}: {len(rows)} rows, {linked} with a frame, minimum states covered")
     return 1 if found else 0
 
 

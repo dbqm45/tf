@@ -39,12 +39,12 @@ Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
 - **Drugi przegląd przed bramkami B2 i B3 (N1, DZ12):** `second_review.py artifact --change CHG-n --phase P`
   po fazie `requirements`/`architecture`, a przed prośbą o bramkę, czyta artefakt razem z decyzjami zmiany i
   (dla architecture) `requirements.md` i podaje luki (brakujące stany błędu, kryteria bez przykładu, sprzeczności
-  z decyzją, cięcia bez dowodu sprawdzalności) jako JSON ze schematem i sekcję „Przegląd drugim modelem"
+  z decyzją, cięcia bez dowodu sprawdzalności) jako JSON ze schematem i sekcję „Second-model review"
   w artefakcie. Dostawca: `PDI_SECOND_MODEL` (`openai:<model>` → `OPENAI_API_KEY`, `claude:<model>` →
   `ANTHROPIC_API_KEY`); bez `PDI_SECOND_MODEL` albo bez klucza dostawcy — zapasowy
   `claude:claude-sonnet-5-5` oznaczony jako przegląd tego samego dostawcy (`same_vendor: true`).
   Blokujące ustalenia (`blocker` i `major`) dopisuje `phase_run.py gate request` do pytań bramki z prefiksem
-  `[drugi przegląd]`, a sprzeczności z decyzjami wymienia z odwołaniem `[sprzeczne z <ref>]`. Niedostępność
+  `[second review]`, a sprzeczności z decyzjami wymienia z odwołaniem `[contradicts <ref>]`. Niedostępność
   drugiego modelu jest w prośbie o bramkę jako `second_review: {status: unavailable, reason: …}`. W Actions
   `OPENAI_API_KEY` dostaje tylko ten krok (klucz nie trafia do kontenera persony — Z8g). Koszt zapisany
   w sidecarze (`docs/project/changes/CHG-n/.review/<phase>.json`) wchodzi w budżet fazy (`PDI_PHASE_BUDGET_USD`)

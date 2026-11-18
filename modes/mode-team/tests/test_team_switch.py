@@ -29,7 +29,7 @@ def main() -> int:
         local = proj / ".claude" / "settings.local.json"
 
         r = run(proj, "status")
-        check(r.returncode == 0 and "wyłączone" in r.stdout and not local.exists(), f"S-1: status bez ustawień: {r.stdout}")
+        check(r.returncode == 0 and "agent teams: off" in r.stdout and not local.exists(), f"S-1: status bez ustawień: {r.stdout}")
 
         local.parent.mkdir(parents=True)
         local.write_text(json.dumps({"permissions": {"allow": ["Bash(ls)"]}, "env": {"FOO": "1"}}), encoding="utf-8")
@@ -37,11 +37,11 @@ def main() -> int:
         data = json.loads(local.read_text(encoding="utf-8"))
         check(r.returncode == 0 and data["env"] == {"FOO": "1", VAR: "1"} and data["permissions"]["allow"] == ["Bash(ls)"],
               f"S-2: on dopisuje zmienną, reszta nietknięta: {data}")
-        check("nową sesję" in r.stdout, f"S-3: przypomnienie o nowej sesji: {r.stdout}")
+        check("new session" in r.stdout, f"S-3: przypomnienie o nowej sesji: {r.stdout}")
         r = run(proj, "on")
         check(r.returncode == 0 and json.loads(local.read_text(encoding="utf-8"))["env"][VAR] == "1", "S-4: on dwa razy")
         r = run(proj, "status")
-        check("włączone" in r.stdout and "wyłączone" not in r.stdout, f"S-5: status po on: {r.stdout}")
+        check("agent teams: on" in r.stdout and "agent teams: off" not in r.stdout, f"S-5: status po on: {r.stdout}")
 
         r = run(proj, "off")
         data = json.loads(local.read_text(encoding="utf-8"))

@@ -60,11 +60,11 @@ def main() -> int:
           and rows[0]["change"] == "CHG-12" and rows[0]["budget_usd"] == 3,
           f"P-1: pierwsza linia started z phase/change/budget: {rows[0]}")
     check(rows[1]["status"] == "in_progress"
-          and rows[1]["message"] == "czyta plik docs/project/changes/CHG-12/intent.md",
+          and rows[1]["message"] == "reads file docs/project/changes/CHG-12/intent.md",
           f"P-1: Read → ścieżka względna od docs/project/changes/: {rows[1]}")
-    check(rows[2]["message"] == "pisze plik docs/project/changes/CHG-12/requirements.md",
+    check(rows[2]["message"] == "writes file docs/project/changes/CHG-12/requirements.md",
           f"P-1: Write → pisze plik z względną ścieżką: {rows[2]}")
-    check(rows[3]["message"] == "uruchamia polecenie",
+    check(rows[3]["message"] == "runs a command",
           f"P-1: Bash nigdy nie zdradza polecenia: {rows[3]}")
     check(isinstance(final, dict) and final.get("total_cost_usd") == 0.42,
           f"P-1: final result zachowany: {final}")
@@ -104,7 +104,7 @@ def main() -> int:
          "session_id": "s"},
     )
     rows, final = pp.events_to_progress(denied_stream, phase="design", change="CHG-12")
-    check(any(r.get("message", "").startswith("odmowa narzędzia Write") for r in rows),
+    check(any(r.get("message", "").startswith("tool denied Write") for r in rows),
           f"P-4: linia z odmową narzędzia: {rows}")
 
     # P-5: message nigdy nie wrzuca pełnego wejścia narzędzia
@@ -120,8 +120,8 @@ def main() -> int:
         ]}},
     )
     rows, _ = pp.events_to_progress(secret_stream, phase="delivery")
-    bash = next((r for r in rows if "polecenie" in r.get("message", "")), None)
-    edit = next((r for r in rows if "pisze plik" in r.get("message", "")), None)
+    bash = next((r for r in rows if "command" in r.get("message", "")), None)
+    edit = next((r for r in rows if "writes file" in r.get("message", "")), None)
     check(bash and "SECRET" not in bash["message"] and "abcDEF123" not in bash["message"]
           and "rm -rf" not in bash["message"],
           f"P-5a: Bash nie zdradza polecenia ani sekretu: {bash}")
@@ -185,7 +185,7 @@ def main() -> int:
         ]}},
     )
     rows, _ = pp.events_to_progress(mcp_stream, phase="requirements")
-    check(any(r.get("message") == "używa narzędzia pdi/list_inbox" for r in rows),
+    check(any(r.get("message") == "uses tool pdi/list_inbox" for r in rows),
           f"P-10: MCP ładnie nazwane: {rows}")
 
     # P-11: tool_result z is_error=True → linia „błąd wyniku narzędzia”
@@ -197,7 +197,7 @@ def main() -> int:
         ]}},
     )
     rows, _ = pp.events_to_progress(err_stream, phase="delivery")
-    check(any(r.get("message") == "błąd wyniku narzędzia" for r in rows),
+    check(any(r.get("message") == "tool result error" for r in rows),
           f"P-11: błąd wyniku narzędzia: {rows}")
 
     # Podsumowanie

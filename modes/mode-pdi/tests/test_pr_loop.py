@@ -94,7 +94,7 @@ def main() -> int:
         # P-1: przegląd bez REVIEW.md → szablon tf, diff w znacznikach z neutralizacją, schemat i tylko narzędzia odczytu
         r = run("review", "--change", "CHG-4", "--branch", "story/tsk-1-a", "--base", "main", "--dry-run")
         d = json.loads(r.stdout)
-        check(d.get("review_md") == "template" and "szablon REVIEW.md z tf" in d["prompt"], f"P-1 szablon: {r.stdout[:300]}")
+        check(d.get("review_md") == "template" and "the tf REVIEW.md template" in d["prompt"], f"P-1 szablon: {r.stdout[:300]}")
         check("<untrusted source=git diff main...story/tsk-1-a>" in d["prompt"] and "</untrusted_>" in d["prompt"]
               and d["prompt"].count("</untrusted>") == 1, "P-1 diff jako dane z neutralizacją")
         argv = d["argv"]
@@ -116,7 +116,7 @@ def main() -> int:
         d = last_json(run("review", "--change", "CHG-4", "--branch", "story/tsk-1-a", "--base", "main", FAKE_MODE="empty"))
         check(d["status"] == "failed" and d["reason"] == "no_structured_output", f"P-3 empty: {d}")
         d = last_json(run("review", "--change", "CHG-4", "--branch", "story/tsk-1-a", "--base", "main", FAKE_MODE="crash"))
-        check(d["status"] == "failed" and d["reason"] == "kod 3", f"P-3 crash: {d}")
+        check(d["status"] == "failed" and d["reason"] == "exit code 3", f"P-3 crash: {d}")
 
         # P-4: złe wejście → kod 2
         r = run("review", "--change", "CHG-4", "--branch", "main; rm -rf /", "--base", "main")
@@ -148,7 +148,7 @@ def main() -> int:
 
         # P-7: scaffold nie nadpisuje REVIEW.md produktu
         r = run("scaffold")
-        check("już jest" in r.stdout and "Tylko src/." in (repo / "REVIEW.md").read_text(encoding="utf-8"), "P-7")
+        check("already exists" in r.stdout and "Tylko src/." in (repo / "REVIEW.md").read_text(encoding="utf-8"), "P-7")
         (repo / "REVIEW.md").unlink()
         run("scaffold")
         check("## Waga ustaleń" in (repo / "REVIEW.md").read_text(encoding="utf-8"), "P-7 szablon")

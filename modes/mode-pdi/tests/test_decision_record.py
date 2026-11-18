@@ -134,7 +134,7 @@ def main() -> int:
         for key in ("CHG-12-TSK-57", "PROJ-123"):
             shutil.rmtree(repo / "docs/project/changes" / key)
         r = run(["change", "new", "CHG-12"], repo)
-        check(r.returncode != 0 and "istnieje" in r.stdout + r.stderr, "D-8: istniejący katalog → błąd")
+        check(r.returncode != 0 and "already exists" in r.stdout + r.stderr, "D-8: istniejący katalog → błąd")
         check(header(d / "intent.md").get("source") == "PRB-34", "D-9: bez nadpisania istniejących plików")
         r = run(["change", "new", "chg-1"], repo)
         check(r.returncode != 0, "D-10: zły kształt klucza zmiany → błąd")
@@ -178,7 +178,7 @@ def main() -> int:
         r = run(["check"], tmp)
         check(r.returncode == 0, f"D-14: poprawny plan (przykład z kontraktu) przechodzi: {r.stdout}{r.stderr}")
         r = run(["check"], Path(tmp) / "docs")
-        check(r.returncode == 0 and "brak" in r.stdout.lower(), f"D-15: bez docs/project/changes — nic do sprawdzenia: {r.stdout}")
+        check(r.returncode == 0 and "no change artifacts" in r.stdout.lower(), f"D-15: bez docs/project/changes — nic do sprawdzenia: {r.stdout}")
         # D-15a: `check --change` sprawdza tylko tę zmianę — stare artefakty innych zmian nie blokują fazy (CHG-4, 2026-11-07).
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-2" / "intent.md",
               "artifact: intent\nphase: discovery\nstatus: draft\nversion: 0\ncreated: 2026-10-23\n"
@@ -271,8 +271,8 @@ def main() -> int:
               f"F-2: ustalenie samej zmiany, bez skutku (resolve domyślnie): {r.stdout}{last}")
         r = run(["check"], repo)
         check(r.returncode == 0, f"F-3: wpisy z ustaleniem przechodzą check: {r.stdout}")
-        for bad, why in ((["--finding", "des-1"], "id ustalenia"), (["--finding", "DES-001:TSK-99"], "TSK-99"),
-                         (["--effect", "resolve"], "--effect tylko z --finding")):
+        for bad, why in ((["--finding", "des-1"], "finding id"), (["--finding", "DES-001:TSK-99"], "TSK-99"),
+                         (["--effect", "resolve"], "--effect only with --finding")):
             r = run(fadd + bad, repo)
             check(r.returncode != 0 and why in r.stdout + r.stderr, f"F-4: {bad} → błąd ({why}): {r.stdout}{r.stderr}")
         dec.write_text(dec.read_text(encoding="utf-8").replace("- finding: DES-001:TSK-57", "- finding: DES-001:TSK-98"), encoding="utf-8")
@@ -405,7 +405,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as tmp:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted, body_one)
         r = run(["check"], tmp)
-        check(r.returncode != 0 and "co najmniej dwóch" in r.stdout,
+        check(r.returncode != 0 and "at least two" in r.stdout,
               f"Z-2: plan z jedną opcją dostaje ustalenie: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted,
@@ -433,13 +433,13 @@ def main() -> int:
         r = run(gate, repo)
         text = dec.read_text(encoding="utf-8")
         check(r.returncode == 0 and "CHG-12/D1" in r.stdout, f"G-1: decision gate dopisuje wpis D1: {r.stdout}{r.stderr}")
-        check("## Bramka B1: approved" in text and "- id: DEC-41" in text and "- sent: yes" in text
+        check("## Gate B1: approved" in text and "- id: DEC-41" in text and "- sent: yes" in text
               and "- kind: gate" in text and "- by: pdi" in text and "- source: manual" in text
               and "- drafted_by: human" in text and "DEC-41" in text.split("- why:")[-1].splitlines()[0],
               f"G-2: wpis z numerem z pdi, sent: yes, rodzaj gate: {text[-500:]}")
         r = run(gate, repo)
         check(r.returncode == 0 and dec.read_text(encoding="utf-8").count("DEC-41") == text.count("DEC-41")
-              and "już" in r.stdout, f"G-3: ponowienie z tym samym numerem nic nie dopisuje: {r.stdout}")
+              and "already" in r.stdout, f"G-3: ponowienie z tym samym numerem nic nie dopisuje: {r.stdout}")
         r = run(["decision", "pending"], repo)
         check(jl(r) == [], "G-4: decyzja z bramki nie czeka na wysłanie")
         r = run(["check"], repo)
@@ -447,7 +447,7 @@ def main() -> int:
         r = run(["decision", "gate", "CHG-12", "--gate", "B2", "--outcome", "changes_requested", "--id", "DEC-42",
                  "--by", "PO Payments", "--date", "2026-10-26"], repo)
         text = dec.read_text(encoding="utf-8")
-        check(r.returncode == 0 and "## Bramka B2: changes_requested" in text and "- by: PO Payments" in text
+        check(r.returncode == 0 and "## Gate B2: changes_requested" in text and "- by: PO Payments" in text
               and "- date: 2026-10-26" in text, f"G-6: --by i --date: {r.stdout}{text[-300:]}")
         for bad, why in ((["--outcome", "maybe"], "outcome"), (["--id", "41"], "id"), (["--gate", ""], "gate")):
             args = gate[:3] + ["--gate", "B3", "--outcome", "approved", "--id", "DEC-43"]
@@ -459,7 +459,7 @@ def main() -> int:
                  "--why", "Bez zmian w config/build.json.\n Dlaczego: DEC-0003   to rozstrzyga."], repo)
         line = dec.read_text(encoding="utf-8").split("- id: DEC-45")[-1].split("- why:")[1].splitlines()[0]
         check(r.returncode == 0 and line.strip() == "Bez zmian w config/build.json. Dlaczego: DEC-0003 to rozstrzyga. "
-              "(decyzja w skrzynce bramek pdi, DEC-45)", f"G-9: --why trafia do wpisu w jednym wierszu: {line!r}")
+              "(decision in the pdi gate inbox, DEC-45)", f"G-9: --why trafia do wpisu w jednym wierszu: {line!r}")
         r = run(["check"], repo)
         check(r.returncode == 0, f"G-10: wpis z --why przechodzi check: {r.stdout}")
         r = run(["decision", "gate", "CHG-99", "--gate", "B1", "--outcome", "approved", "--id", "DEC-44"], repo)
@@ -530,7 +530,7 @@ def main() -> int:
               and "- source: ci_for_sdlc\n" in text and text.count("- origin: pdi") == 2
               and "- question: Jaki format?\n- answer: CSV.\n" in text,
               f"Z1-4: import dopisuje decyzje z pdi z numerem i pochodzeniem: {r.stdout}{text[-900:]}")
-        check(text.count("- id: DEC-7") == 1 and "pominięte" in r.stdout,
+        check(text.count("- id: DEC-7") == 1 and "skipped" in r.stdout,
               f"Z1-5: decyzja z numerem już w decisions.md (bramka) jest pominięta: {r.stdout}")
         r = run(imp, repo)
         check(r.returncode == 0 and dec.read_text(encoding="utf-8") == text,
@@ -551,7 +551,7 @@ def main() -> int:
         check(r.returncode != 0 and "origin" in r.stdout, f"Z1-11: nieznane pochodzenie → check: {r.stdout}")
         dec.write_text(text.replace("- answer: CSV.\n", "", 1), encoding="utf-8")
         r = run(["check"], repo)
-        check(r.returncode != 0 and "parami" in r.stdout, f"Z1-12: pytanie bez odpowiedzi → check: {r.stdout}")
+        check(r.returncode != 0 and "in pairs" in r.stdout, f"Z1-12: pytanie bez odpowiedzi → check: {r.stdout}")
 
     # Kontrakt pdi 0.12.0: decision.schema.json (kopia z tagu) zgodny z tym, co dziennik zapisuje i importuje
     import importlib.util

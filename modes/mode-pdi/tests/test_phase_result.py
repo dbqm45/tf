@@ -152,15 +152,16 @@ def main() -> int:
         {"phase": "intent", "status": "in_progress", "message": "czyta plik docs/project/changes/CHG-1/intent.md"},
         {"phase": "intent", "status": "in_progress", "message": "czyta plik docs/project/changes/CHG-1/intent.md"},
         {"phase": "intent", "status": "in_progress", "message": "czyta plik docs/project/changes/CHG-1/plan.md"},
+        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/spec.md"},   # 14.x
         {"phase": "intent", "status": "in_progress", "message": "uruchamia polecenie"},
         {"phase": "intent", "status": "done", "cost_usd": 0.4},
     ]
-    check(pr.files_read(rows) == 2, f"M-1: files_read {pr.files_read(rows)} ≠ 2")
+    check(pr.files_read(rows) == 3, f"M-1: files_read {pr.files_read(rows)} ≠ 3 (polskie i angielskie wiadomości)")
 
     # M-2: denials_count liczy wiadomości z prefiksem „odmowa narzędzia"
     rows = [
         {"phase": "delivery", "status": "in_progress", "message": "odmowa narzędzia Bash: not in allow"},
-        {"phase": "delivery", "status": "in_progress", "message": "odmowa narzędzia Write: locked path"},
+        {"phase": "delivery", "status": "in_progress", "message": "tool denied Write: locked path"},   # 14.x
         {"phase": "delivery", "status": "in_progress", "message": "czyta plik x"},
     ]
     check(pr.denials_count(rows) == 2, f"M-2: denials {pr.denials_count(rows)} ≠ 2")
