@@ -72,10 +72,10 @@ def write(skill: Path) -> str:
     md = skill / "SKILL.md"
     text = md.read_text(encoding="utf-8")
     if language(text) == "pl":
-        return f"• {skill.relative_to(ROOT)}: treść po polsku — indeks niepotrzebny"
+        return f"• {skill.relative_to(ROOT)}: content is in Polish — no index needed"
     found = polish_version(md)
     if not found:
-        return f"• {skill.relative_to(ROOT)}: brak polskiej wersji w historii — pominięty"
+        return f"• {skill.relative_to(ROOT)}: no Polish version in history — skipped"
     sha, old = found
     (skill / INDEX).write_text(f"head: {head_of(old)}\n" + body_of(old), encoding="utf-8")
     return f"✓ {skill.relative_to(ROOT)}/{INDEX} ← {sha[:7]}"
@@ -106,8 +106,8 @@ def main(argv: list[str]) -> int:
     if check:
         gaps = missing(skills)
         for g in gaps:
-            print(f"✗ {g}: angielska treść bez {INDEX} — uruchom python3 tools/hint_pl_index.py {g}")
-        print("✓ każdy przetłumaczony skill ma polski indeks podpowiedzi" if not gaps else f"✗ braków: {len(gaps)}")
+            print(f"✗ {g}: English content without {INDEX} — run python3 tools/hint_pl_index.py {g}")
+        print("✓ every translated skill has a Polish hint index" if not gaps else f"✗ missing: {len(gaps)}")
         return 1 if gaps else 0
     for s in skills:
         print(write(s))

@@ -9,18 +9,18 @@ from pathlib import Path
 LINT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hooks").is_dir()) / ".claude/skills/txt-polish-correctness/scripts/polish_lint.py"
 
 BAD = [  # (tekst, oczekiwana kategoria)
-    ("To napewno zadziała, bo wiem.", "ORTOGRAFIA"),
-    ("Wiem że system działa poprawnie.", "INTERPUNKCJA"),
-    ("Moduł pełni rolę bramy do usług.", "KOLOKACJA"),
-    ("Proces trzeba kontynuować dalej jutro.", "PLEONAZM"),
-    ("Zwiększyła się ilość użytkowników w systemie.", "KOLOKACJA"),
-    ("Kliknij \"Zapisz\" na dole ekranu, żeby zakończyć.", "TYPOGRAFIA"),
-    ("Wdrożenie - jak zawsze - zajęło godzinę.", "TYPOGRAFIA"),
-    ("Proszę wybrać tą opcję z listy.", "GRAMATYKA"),
-    ("Trzeba zaadresować problem wydajności.", "KALKA"),
-    ("Na dzień dzisiejszy nie mamy danych.", "STYL"),
-    ("\n# Aplikacja Rezerwacji Sal Konferencyjnych", "ORTOGRAFIA"),
-    ("Test może zawodzić mimo że kod jest dobry.", "INTERPUNKCJA"),
+    ("To napewno zadziała, bo wiem.", "SPELLING"),
+    ("Wiem że system działa poprawnie.", "PUNCTUATION"),
+    ("Moduł pełni rolę bramy do usług.", "COLLOCATION"),
+    ("Proces trzeba kontynuować dalej jutro.", "PLEONASM"),
+    ("Zwiększyła się ilość użytkowników w systemie.", "COLLOCATION"),
+    ("Kliknij \"Zapisz\" na dole ekranu, żeby zakończyć.", "TYPOGRAPHY"),
+    ("Wdrożenie - jak zawsze - zajęło godzinę.", "TYPOGRAPHY"),
+    ("Proszę wybrać tą opcję z listy.", "GRAMMAR"),
+    ("Trzeba zaadresować problem wydajności.", "CALQUE"),
+    ("Na dzień dzisiejszy nie mamy danych.", "STYLE"),
+    ("\n# Aplikacja Rezerwacji Sal Konferencyjnych", "SPELLING"),
+    ("Test może zawodzić mimo że kod jest dobry.", "PUNCTUATION"),
 ]
 GOOD = [
     "Wiem, że system działa, i wiem, który moduł odpowiada za zapis.",
@@ -51,7 +51,7 @@ def main() -> int:
         if cat not in got:
             fails.append(f"nie wykryto {cat}: {text!r} (jest {got})")
     for text in GOOD:
-        got = [i for i in lint("Zażółć gęślą jaźń. " + text) if i["priority"] != "NISKI" or i["category"] != "INTERPUNKCJA"]
+        got = [i for i in lint("Zażółć gęślą jaźń. " + text) if i["priority"] != "LOW" or i["category"] != "PUNCTUATION"]
         if got:
             fails.append(f"fałszywy alarm: {text!r} → {[(i['category'], i['fragment']) for i in got]}")
     code = "Zażółć.\n```\nWiem że \"to\" napewno - kod\n```\n"

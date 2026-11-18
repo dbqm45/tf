@@ -29,8 +29,8 @@ import sys
 from pathlib import Path
 
 TF = Path(__file__).resolve().parents[1]
-CRITERIA = ["poprawność wobec kryteriów zgłoszenia", "testy sprawdzają zachowanie", "zgodność z konwencjami repo",
-            "rozmiar i czytelność zmiany", "gotowe do merge bez dalszych poprawek (tak/nie)"]
+CRITERIA = ["correctness against the ticket's criteria", "tests check behaviour", "follows the repo's conventions",
+            "size and readability of the change", "ready to merge without further fixes (yes/no)"]
 
 
 def _load(name: str, path: Path):
@@ -46,7 +46,7 @@ budget = _load("pr_budget", TF / "core" / "skills" / "core-delivery-lifecycle" /
 def git(repo: Path, *args: str) -> str:
     r = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, errors="replace", timeout=120)
     if r.returncode != 0:
-        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)}: kod {r.returncode}")
+        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)}: exit code {r.returncode}")
     return r.stdout
 
 
@@ -85,20 +85,20 @@ def cmd_prepare(m: dict, out: Path, seed: int) -> int:
             diff = git(repo, "diff", f"{mb}..{run['branch']}")
             (d / f"{letter}.diff").write_text(diff, encoding="utf-8")
             key[t["id"]][letter] = run["flow"]
-        tmpl = {"zgloszenie": t["id"], "kryteria": CRITERIA, "skala": "score 1–10 (całość), mergeable: true/false",
+        tmpl = {"zgloszenie": t["id"], "kryteria": CRITERIA, "skala": "score 1–10 (overall), mergeable: true/false",
                 "oceny": {letter: {"score": None, "mergeable": None, "uwagi": ""} for letter in key[t["id"]]}}
         (d / "ocena.json").write_text(json.dumps(tmpl, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     (out / "key.json").write_text(json.dumps(key, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"✓ {len(key)} zgłoszeń: diffy i szablony ocen w {out}/<zgłoszenie>/; klucz: {out / 'key.json'} "
-          f"(nie przekazuj oceniającemu)")
+    print(f"✓ {len(key)} tickets: diffs and score templates in {out}/<ticket>/; key: {out / 'key.json'} "
+          f"(do not give it to the grader)")
     return 0
 
 
 def cmd_report(m: dict, mf: Path, key: dict, verdicts: dict, out: Path) -> int:
     repo, base, baseline = Path(m["repo"]), m.get("base", "main"), m.get("baseline")
-    lines = ["# Porównanie przepływów na tych samych zgłoszeniach", "",
-             f"Pliki: manifest przebiegów `{mf.name}`, klucz `{Path(key.get('_path', 'key.json')).name}`"
-             + (", oceny ślepe z pliku przekazanego przez --verdicts" if verdicts else ", bez ocen") + ".", ""]
+    lines = ["# Flow comparison on the same tickets", "",
+             f"Files: run manifest `{mf.name}`, key `{Path(key.get('_path', 'key.json')).name}`"
+             + (", blind scores from the file given with --verdicts" if verdicts else ", no scores") + ".", ""]
     wins: dict[str, int] = {}
     for t in m["tickets"]:
         flow_of = key.get(t["id"], {})
@@ -106,8 +106,8 @@ def cmd_report(m: dict, mf: Path, key: dict, verdicts: dict, out: Path) -> int:
         ver = verdicts.get(t["id"], {})
         base_cost = next((r["cost_usd"] for r in t["runs"] if r["flow"] == baseline), None)
         lines += [f"## {t['id']}", "",
-                  "| Przepływ | Koszt USD | × bazy | Czas min | Commity | Kod | Artefakty | Udział artefaktów "
-                  "| Ocena | Gotowy do merge | USD na punkt |",
+                  "| Flow | Cost USD | × baseline | Time min | Commits | Code | Artifacts | Artifact share "
+                  "| Score | Ready to merge | USD per point |",
                   "|---|---|---|---|---|---|---|---|---|---|---|"]
         best = None
         for run in t["runs"]:
@@ -120,23 +120,23 @@ def cmd_report(m: dict, mf: Path, key: dict, verdicts: dict, out: Path) -> int:
             per = num(run["cost_usd"] / score) if score else "—"
             lines.append(f"| {run['flow']} | {num(run['cost_usd'])} | {ratio} | {run.get('minutes', '—')} | "
                          f"{ms['commits']} | {ms['code']} | {ms['artifacts']} | {share} | "
-                         f"{score if score is not None else 'bez oceny'} | "
-                         f"{'tak' if merge else ('nie' if merge is False else '—')} | {per} |")
+                         f"{score if score is not None else 'no score'} | "
+                         f"{'yes' if merge else ('no' if merge is False else '—')} | {per} |")
             if merge and score is not None:
                 cand = (-score, run["cost_usd"], run["flow"])
                 best = min(best, cand) if best else cand
         if best:
             wins[best[2]] = wins.get(best[2], 0) + 1
-            lines += ["", f"Werdykt: {best[2]} — najwyższa ocena wśród gotowych do merge ({-best[0]}), przy remisie "
-                          f"tańszy.", ""]
+            lines += ["", f"Verdict: {best[2]} — highest score among runs ready to merge ({-best[0]}); on a tie, "
+                          f"the cheaper one.", ""]
         else:
-            lines += ["", "Werdykt: brak — żaden przebieg nie ma oceny „gotowy do merge” (oceny ślepe nie wpłynęły "
-                          "albo nic nie nadaje się do merge).", ""]
+            lines += ["", "Verdict: none — no run is scored “ready to merge” (blind scores have not come in "
+                          "or nothing is fit to merge).", ""]
     if wins:
-        lines += ["## Podsumowanie", "", ", ".join(f"{f}: {n}" for f, n in sorted(wins.items(), key=lambda x: -x[1]))
-                  + " wygranych.", ""]
+        lines += ["## Summary", "", ", ".join(f"{f}: {n}" for f, n in sorted(wins.items(), key=lambda x: -x[1]))
+                  + " wins.", ""]
     out.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
-    print(f"✓ raport: {out}")
+    print(f"✓ report: {out}")
     return 0
 
 

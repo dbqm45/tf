@@ -59,17 +59,17 @@ def main() -> int:
         check("| Finanse | `chargeback` | 0 |" in rep, "C-3: hasło tylko w treści skilla to dziura (liczą się metadane)")
         check("| Plan | `harmonogram` | 2 | core-a, y-flow |" in rep, "C-4: słowa kluczowe, rdzeń i tryb liczone")
         check("| Finanse | `zwrot` | 1 | x-billing |" in rep, "C-5: rdzeń wyrazu trafia w odmianę („zwroty”)")
-        check("Dziury" in rep and "`chargeback`" in rep.split("Dziury", 1)[1] and "Cienkie" in rep
-              and "`zwrot`" in rep.split("Cienkie", 1)[1], f"C-6: sekcje dziur i cienkich: {rep[-600:]}")
+        check("Holes" in rep and "`chargeback`" in rep.split("Holes", 1)[1] and "Thin" in rep
+              and "`zwrot`" in rep.split("Thin", 1)[1], f"C-6: sekcje dziur i cienkich: {rep[-600:]}")
         r = run("--root", str(root), "--areas", str(areas), "--summary")
-        check(r.returncode == 0 and "dziury: 2" in r.stdout and "chargeback" in r.stdout,
+        check(r.returncode == 0 and "holes: 2" in r.stdout and "chargeback" in r.stdout,
               f"C-7: --summary do CI: {r.stdout}")
     # C-8: prawdziwe repo — plik obszarów niepusty, każdy obszar ma hasła, raport powstaje
     areas = json.loads(AREAS.read_text(encoding="utf-8")) if AREAS.is_file() else {}
     check(len(areas) >= 8 and all(isinstance(v, list) and len(v) >= 3 for v in areas.values()),
           f"C-8: tools/coverage_areas.json — co najmniej 8 obszarów po 3+ hasła: {list(areas)}")
     r = run("--summary")
-    check(r.returncode == 0 and "haseł:" in r.stdout, f"C-9: --summary na repo fabryki: {r.stdout[:300]} {r.stderr[-300:]}")
+    check(r.returncode == 0 and "terms:" in r.stdout, f"C-9: --summary na repo fabryki: {r.stdout[:300]} {r.stderr[-300:]}")
     wf = (ROOT / ".github" / "workflows" / "factory-checks.yml").read_text(encoding="utf-8")
     check("tools/coverage_map.py --summary" in wf, "C-10: krok informacyjny w CI (factory-checks.yml)")
     for f in fails:

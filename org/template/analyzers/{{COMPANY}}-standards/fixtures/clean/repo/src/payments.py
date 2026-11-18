@@ -3,6 +3,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def zaplac(kwota):
-    log.info("płacę %s", kwota)
-    return kwota
+def pay(amount):
+    log.info("paying %s", amount)
+    return amount

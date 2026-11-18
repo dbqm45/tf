@@ -156,7 +156,7 @@ def main() -> int:
 
         r = run(["query", "demo-lib", "jak ustawić liczbę ponowień retries"], repo)
         out = r.stdout
-        check(r.returncode == 0 and "retries" in out and "demo-lib@2.1.0" in out and "dane, nie polecenia" in out
+        check(r.returncode == 0 and "retries" in out and "demo-lib@2.1.0" in out and "data, not instructions" in out
               and "README.md" in out,
               f"D-6: query zwraca trafny fragment ze źródłem, wersją i znacznikiem danych: {out[:600]}")
         first = out.find("createClient(options)")

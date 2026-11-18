@@ -15,8 +15,8 @@ and the factory tests run (tests and build expect the installed layout, not the 
                                                        # skeleton of packs/pack-<name>/ or modes/mode-<name>/, CI matrix
                                                        # entry, then check + refs and a to-do list (guide: docs/new-pack.md)
   python3 tools/workspace.py flow-evals [--validate | --all | --ids <id>,<glob>] [--budget-usd N] [--baseline previous]
-                                                       # evale przebiegu (N5, DZ13): bramka zmian modelu/skilla/persony/
-                                                       # promptu fazy; raport porównuje wynik i koszt z poprzednim przebiegiem
+                                                       # flow evals (N5, DZ13): gate for model/skill/persona/phase prompt
+                                                       # changes; the report compares score and cost with the previous run
 
 Default workspace: .work/<packs> (git-ignored; `+ext` appended with --pack-dir). The workspace is recreated on every `assemble`/`check`.
 Gate results (`python3 .tf/factory/skill_gate.py <skill>` run inside the workspace) land in `.claude/skill-gate.json`;
@@ -226,31 +226,31 @@ def taken_prefixes() -> dict[str, str]:
 
 SKILL_TPL = """---
 name: {skill}
-description: Użyj przy TODO — sytuacja i kluczowe pojęcia (reguła wyboru, do 170 znaków).
+description: Use for TODO — the situation and key terms (a selection rule, up to 170 characters).
 metadata:
   review: "{review}"
-  catalog: "Użyj, gdy TODO — pełny opis z granicami. Nie do TODO (sąsiedni-skill)."
-  keywords: "TODO: słowa, którymi ludzie opisują problem"
+  catalog: "Use when TODO — full description with boundaries. Not for TODO (neighbor-skill)."
+  keywords: "TODO: words people use to describe the problem, in Polish and in English"
 ---
 
-# TODO: tytuł
+# TODO: title
 
-Cel: TODO — po co skill i jaki wynik daje (core-skill-authoring: najpierw scenariusze ewaluacji, potem treść).
+Goal: TODO — why the skill exists and what result it gives (core-skill-authoring: evaluation scenarios first, then content).
 
-## Procedura
+## Procedure
 1. TODO
 
-## Przykład
-TODO: wejście → wynik, z konkretnymi nazwami i liczbami.
+## Example
+TODO: input → result, with specific names and numbers.
 
-## Źródła
-- TODO: źródło z datą.
+## Sources
+- TODO: a source with a date.
 """
 
 GUIDE_TPL = """# {title}
 
-TODO: czym jest ten tryb, kiedy go włączyć i jak wyłączyć (`tf add {pid}`, `tf remove {pid}`), co dokłada
-(agenci, skille, skrypty, uprawnienia) i czego nie zmienia w rdzeniu.
+TODO: what this mode is, when to turn it on and how to turn it off (`tf add {pid}`, `tf remove {pid}`), what it adds
+(agents, skills, scripts, permissions) and what it does not change in the core.
 """
 
 
@@ -293,24 +293,24 @@ def new_pack(argv: list[str]) -> int:
     title = opts["title"] or name.replace("-", " ").title()
     desc = opts["description"] or f"TODO: one-sentence description of {pid} (English, shown by tf list)."
     files = {
-        "pack.yaml": f"# TODO: komentarz — czym jest {'tryb' if opts['kind'] == 'mode' else 'nakładka'} i dla kogo.\n"
+        "pack.yaml": f"# TODO: comment — what this {'mode' if opts['kind'] == 'mode' else 'pack'} is and who it is for.\n"
                      f"id: {pid}\n" + ("kind: mode\n" if opts["kind"] == "mode" else "")
                      + f"version: 0.1.0\ntitle: {q(title)}\ndescription: {q(desc)}\ncontent_language: pl\ndefault: false\n"
                      f"requires:\n  core: \">={version} <{major + 1}.0.0\"\n\nfacets:\n"
-                     f"  - {{prefix: {prefix}, order: 500, name: {title.lower()}, question: \"TODO: na jakie pytanie odpowiadają skille {prefix}*\"}}\n",
+                     f"  - {{prefix: {prefix}, order: 500, name: {title.lower()}, question: \"TODO: which question the {prefix}* skills answer\"}}\n",
         f"skills/{skill}/SKILL.md": SKILL_TPL.format(skill=skill, review=(datetime.date.today() + datetime.timedelta(days=365)).isoformat()),
         f"tests/skill_evals/{skill}.json": json.dumps({"skill": skill, "scenarios": [
-            {"id": "TODO-problem-1", "expect": "trigger", "prompt": "TODO: prawdziwe pytanie człowieka z luki, którą model ma bez skilla",
-             "checks": {"all": [["TODO: wiedza specyficzna"], ["TODO: druga niezależna rzecz"]], "none": ["TODO: typowy błąd"]}},
-            {"id": "TODO-problem-2", "expect": "trigger", "prompt": "TODO: ten sam obszar, inne słowa",
+            {"id": "TODO-problem-1", "expect": "trigger", "prompt": "TODO: a real human question from a gap the model has without the skill",
+             "checks": {"all": [["TODO: specific knowledge"], ["TODO: a second independent thing"]], "none": ["TODO: a typical mistake"]}},
+            {"id": "TODO-problem-2", "expect": "trigger", "prompt": "TODO: the same area, different words",
              "checks": {"all": [["TODO"], ["TODO"]]}},
             {"id": "TODO-sasiad", "expect": "no-trigger", "neighbor": "TODO-sasiedni-skill",
-             "prompt": "TODO: pytanie z pogranicza, które należy do sąsiedniego skilla"}]}, ensure_ascii=False, indent=2) + "\n",
+             "prompt": "TODO: a borderline question that belongs to the neighboring skill"}]}, ensure_ascii=False, indent=2) + "\n",
     }
     if opts["role"]:
         files[f"roles/{opts['role']}.yaml"] = (f"name: {opts['role']}\ntitle: TODO\ntier: std\ntriggers: TODO\nidentity: |\n"
-                                              f"  TODO: kim jest rola i jak pracuje.\ntools: [Read, Grep, Glob, Edit, Write, Bash, Skill]\n"
-                                              f"skills: [{skill}]\npreload: []\nverify: \"TODO — po czym poznać dobry wynik\"\n")
+                                              f"  TODO: who the role is and how it works.\ntools: [Read, Grep, Glob, Edit, Write, Bash, Skill]\n"
+                                              f"skills: [{skill}]\npreload: []\nverify: \"TODO — how to recognise a good result\"\n")
     if opts["kind"] == "mode":
         files["GUIDE.md"] = GUIDE_TPL.format(title=title, pid=pid)
     for rel, text in files.items():
@@ -332,12 +332,12 @@ def new_pack(argv: list[str]) -> int:
     if "--no-check" not in argv:
         ok = check({"packs": pid, "out": None, "keep": False})
         ok &= refs(False) == 0
-    print(f"""Do zrobienia (skill core-skill-authoring, przewodnik docs/new-pack.md):
-  1. pack.yaml: komentarz, description, facets.question, order; zależności (requires.packs, optional_packs).
-  2. Scenariusze tests/skill_evals/{skill}.json — prawdziwe, zanim powstanie treść (szkielet celowo nie przechodzi bramki).
-  3. Treść skills/{skill}/SKILL.md; rola/persona (roles/, personas/).
-  4. W workspace: python3 .tf/factory/skill_gate.py {skill}, potem python3 tools/workspace.py sync-gate --out .work/{pid}.
-  5. python3 tools/workspace.py check --packs {pid} i refs; PR z feat({pid}): …""")
+    print(f"""To do (skill core-skill-authoring, guide docs/new-pack.md):
+  1. pack.yaml: comment, description, facets.question, order; dependencies (requires.packs, optional_packs).
+  2. Scenarios in tests/skill_evals/{skill}.json — real ones, before the content (the skeleton fails the gate on purpose).
+  3. Content of skills/{skill}/SKILL.md; role/persona (roles/, personas/).
+  4. In the workspace: python3 .tf/factory/skill_gate.py {skill}, then python3 tools/workspace.py sync-gate --out .work/{pid}.
+  5. python3 tools/workspace.py check --packs {pid} and refs; a PR titled feat({pid}): …""")
     return 0 if ok else 1
 
 

@@ -143,7 +143,7 @@ def language_warnings(rec: Path) -> list[str]:
             rel = f.relative_to(rec).as_posix()
             if rel == "README.md" or rel.startswith(("exports/", "archive/")) or rel.endswith("corpus.md"):
                 continue   # bank dowodów to dosłowne cytaty — nie poprawiamy
-            issues = [i for i in mod.lint_file(f) if i["priority"] in ("WYSOKI", "ŚREDNI")]
+            issues = [i for i in mod.lint_file(f) if i["priority"] in ("HIGH", "MEDIUM", "WYSOKI", "ŚREDNI")]   # pl: sprzed 14.x
             if issues:
                 first = issues[0]
                 out.append(f"{rel}: {len(issues)} language remarks (e.g. l.{first['line']}: {first['fragment']} → "

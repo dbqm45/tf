@@ -51,7 +51,7 @@ Szczegóły, tabele zamienników i przykłady: `references/editing.md`. Tekst, k
 - Artefakt `docs/project/`: po redakcji `project_record.py check` musi przejść (TL;DR i Przekazanie zostają).
 
 ## Checklista
-- [ ] tekst przeszedł korektę (linter czysty z uwag WYSOKICH/ŚREDNICH)
+- [ ] tekst przeszedł korektę (linter bez uwag HIGH i MEDIUM)
 - [ ] sens, liczby, terminy, kod i cytaty bez zmian
 - [ ] jedna perspektywa i ton; zdania krótkie tam, gdzie instrukcja
 - [ ] nota redakcyjna z zachowanymi decyzjami autora

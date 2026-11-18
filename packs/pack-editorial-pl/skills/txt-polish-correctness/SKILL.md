@@ -22,7 +22,7 @@ Gotowy, przeredagowany tekst (styl, skracanie, ton) → **txt-polish-style**.
 
 ## Krok 0 — linter (zero tokenów)
 `python3 .claude/skills/txt-polish-correctness/scripts/polish_lint.py <plik|katalog>` — typografia (cudzysłów, myślnik, spacje,
-wielokropek), częste błędy pisowni, pleonazmy, kalki, brak przecinka przed „że”. Uwagi NISKIE przy „który” to tylko sygnał
+wielokropek), częste błędy pisowni, pleonazmy, kalki, brak przecinka przed „że”. Uwagi LOW przy „który” to tylko sygnał
 (bywa pytanie zależne). Linter nie zastępuje czytania — łapie mechanikę, żeby model skupił się na sensie.
 Plik z celowymi przykładami błędów: `<!-- polish-lint: ignore-file -->`; fragment: `<!-- polish-lint: off -->` … `on`.
 
@@ -71,7 +71,7 @@ ustaloną w słowniku projektu. Commity i komentarze w kodzie są po angielsku (
 | `references/analysis-report.md` | format uwag, kategorie i priorytety, podsumowanie, raport do pliku |
 
 ## Checklista
-- [ ] linter uruchomiony, uwagi WYSOKIE i ŚREDNIE rozstrzygnięte
+- [ ] linter uruchomiony, uwagi HIGH i MEDIUM rozstrzygnięte
 - [ ] przecinki przed spójnikami podrzędnymi i wokół wtrąceń
 - [ ] `nie` łącznie/rozdzielnie; wielkie litery; cudzysłów i myślniki polskie
 - [ ] brak kalk, pleonazmów, „ilość” przy policzalnych; spójna terminologia i forma zwracania się

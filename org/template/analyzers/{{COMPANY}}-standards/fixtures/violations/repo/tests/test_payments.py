@@ -1,2 +1,2 @@
-def test_zaplac():
-    print("w testach wolno")
+def test_pay():
+    print("allowed in tests")
