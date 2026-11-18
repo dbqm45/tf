@@ -1,4 +1,4 @@
-export type Money = number; // grosze
+export type Money = number; // grosze (1/100 PLN)
 
 export function discountRate(quantity: number): number {
   if (quantity >= 50) return 0.10;

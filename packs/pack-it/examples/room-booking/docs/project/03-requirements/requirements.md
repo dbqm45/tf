@@ -3,41 +3,41 @@ artifact: requirements
 phase: requirements
 status: accepted
 version: 1
-author: użytkownik
+author: user
 created: 2026-09-27
 updated: 2026-09-27
 inputs: [docs/project/01-discovery/brief.md]
 ---
-# Wymagania: Rezerwacja sal i biurek
+# Requirements: Room and desk booking
 
 ## TL;DR
-6 historyjek MVP. Kluczowe atrybuty: brak podwójnych rezerwacji przy współbieżności, SSO M365, dostępność w godzinach pracy 99,5%.
+6 MVP stories. Key attributes: no double bookings under concurrency, M365 SSO, 99.5% availability during working hours.
 
-## Historyjki (MVP)
-| ID | Jako … chcę … aby … | Kryteria akceptacji | Priorytet |
+## Stories (MVP)
+| ID | As … I want … so that … | Acceptance criteria | Priority |
 |---|---|---|---|
-| H1 | pracownik — zarezerwować salę na przedział czasu | Given sala wolna When rezerwuję Then rezerwacja i wpis w M365 | H |
-| H2 | pracownik — zarezerwować biurko na dzień | jak H1 | H |
-| H3 | facility — zablokować zasób do serwisu | zablokowany zasób niedostępny do rezerwacji | H |
-| H4 | system — zwolnić rezerwację bez potwierdzenia obecności po 15 min | zasób wraca do puli | M |
-| H5 | pracownik — widzieć kalendarz dostępności zasobów | widok dnia/tygodnia | H |
-| H6 | pracownik — zalogować się kontem firmowym | SSO Entra ID | H |
-## Atrybuty jakości (scenariusze — wejście dla architektury)
-| Atrybut | Scenariusz | Priorytet |
+| H1 | employee — book a room for a time slot | Given the room is free When I book Then a booking and an entry in M365 | H |
+| H2 | employee — book a desk for a day | as H1 | H |
+| H3 | facility — block a resource for maintenance | a blocked resource cannot be booked | H |
+| H4 | system — release a booking without a check-in after 15 min | the resource returns to the pool | M |
+| H5 | employee — see the availability calendar of resources | a day/week view | H |
+| H6 | employee — sign in with the company account | Entra ID SSO | H |
+## Quality attributes (scenarios — input for the architecture)
+| Attribute | Scenario | Priority |
 |---|---|---|
-| Spójność | 50 osób jednocześnie rezerwuje tę samą salę w 9:00 → dokładnie 1 sukces, reszta dostaje czytelną odmowę, 0 podwójnych rezerwacji | H,H |
-| Bezpieczeństwo | logowanie tylko kontem firmowym Entra ID; dane w UE | H,M |
-| Dostępność | 99,5% w godz. 7–19 | M,M |
-| Modyfikowalność | nowy typ zasobu (np. miejsce parkingowe) w ≤ 2 dni pracy | H,M |
-## Ograniczenia techniczne i organizacyjne
-Azure (UE), zespół TS/Angular + Java, MVP 3 miesiące.
-## Poza zakresem MVP
-Rozliczenia, aplikacja natywna.
+| Consistency | 50 people book the same room at the same time at 9:00 → exactly 1 success, the rest get a clear refusal, 0 double bookings | H,H |
+| Security | sign-in only with a company Entra ID account; data in the EU | H,M |
+| Availability | 99.5% during 7:00–19:00 | M,M |
+| Modifiability | a new resource type (e.g. a parking space) in ≤ 2 working days | H,M |
+## Technical and organisational constraints
+Azure (EU), a TS/Angular + Java team, MVP in 3 months.
+## Out of scope (MVP)
+Settlements, a native application.
 
-## Otwarte pytania
-- [ ] Limity rezerwacji na osobę? → facility
+## Open questions
+- [ ] Booking limits per person? → facility
 
-## Przekazanie
-- **Dla:** tomasz (solution architect)
-- **Zadanie:** stack i styl architektury
-- **Przeczytaj:** TL;DR, Atrybuty jakości, Ograniczenia
+## Handoff
+- **For:** tomasz (solution architect)
+- **Task:** the stack and the architecture style
+- **Read:** TL;DR, Quality attributes, Constraints

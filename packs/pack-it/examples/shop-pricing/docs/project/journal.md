@@ -8,12 +8,12 @@ created: 2026-09-27
 updated: 2026-09-27
 inputs: []
 ---
-# Dziennik projektu
-<!-- Tylko dopisywanie. Najłatwiej: python3 .claude/hooks/project_record.py log --by <kto> --phase <faza> "<co i dlaczego>" -->
+# Project journal
+<!-- Append only. The easiest way: python3 .claude/hooks/project_record.py log --by <who> --phase <phase> "<what and why>" -->
 
-| Kiedy | Kto | Faza | Zdarzenie |
+| When | Who | Phase | Event |
 |---|---|---|---|
-| 2026-09-27 08:56 | system | meta | Utworzono dziennik projektu (docs/project/) |
-| 2026-09-27 08:59 | kasia | plan | Zaprojektowano plan testów wyceny (rabat ilościowy) |
-| 2026-09-27 09:01 | kasia | plan | Zautomatyzowano testy wyceny wg planu TC-001..TC-014 |
-| 2026-09-27 09:01 | kasia | review | Zgłoszono 2 defekty (progi rabatu 10 szt., walidacja całkowitości qty) w docs/project/07-review/defects.md |
+| 2026-09-27 08:56 | system | meta | Created the project record (docs/project/) |
+| 2026-09-27 08:59 | kasia | plan | Designed the pricing test plan (quantity discount) |
+| 2026-09-27 09:01 | kasia | plan | Automated the pricing tests per plan TC-001..TC-014 |
+| 2026-09-27 09:01 | kasia | review | Reported 2 defects (discount threshold at 10 units, qty integer validation) in docs/project/07-review/defects.md |

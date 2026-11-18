@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Moduł `security` tf analyze, piętro 0 (bez modelu): sekrety w kodzie (wzorce hooka scan_secrets), pliki .env w repo
-(tylko nazwa — treści nie czyta), niebezpieczne API (eval, exec, pickle, yaml.load, shell=True, innerHTML…),
-wyłączona weryfikacja TLS, md5/sha1 przy hasłach, manifest zależności bez lockfile'a.
+The `security` module of tf analyze, tier 0 (no model): secrets in the code (the patterns of the scan_secrets hook), .env files in the repo
+(the name only — it does not read the content), dangerous APIs (eval, exec, pickle, yaml.load, shell=True, innerHTML…),
+disabled TLS verification, md5/sha1 for passwords, a dependency manifest without a lockfile.
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines on stdout (contract: .tf/factory/analyze.py)
 
-Wartość sekretu nie trafia do wyjścia (fragment jest maskowany). Tylko biblioteka standardowa.
+The secret's value does not reach the output (the snippet is masked). Standard library only.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) has no "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -31,17 +31,17 @@ SKIP_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".zip", ".
             ".ttf", ".jar", ".so", ".dll", ".exe", ".bin", ".svg"}
 LOCKFILES = {"package-lock.json", "pnpm-lock.yaml", "yarn.lock", "npm-shrinkwrap.json", "uv.lock", "poetry.lock",
              "pdm.lock", "Pipfile.lock", "bun.lockb"}
-FACTORY_OWNED = (".tf/factory/", ".claude/")   # pliki fabryki w projekcie (instalacja zespołowa) — nie kod produktu
+FACTORY_OWNED = (".tf/factory/", ".claude/")   # the factory's files in the project (team installation) — not product code
 ENV_OK = {".env.example", ".env.sample", ".env.template", ".env.dist"}
 CODE_EXT = {".py", ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts", ".java", ".cs", ".go", ".rb",
             ".php", ".html", ".vue", ".svelte"}
 JS_EXT = {".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts", ".vue", ".svelte", ".html"}
 
 TEST_OR_DOC = re.compile(r"(^|/)(tests?|__tests__|e2e|fixtures|spec|examples?|docs?)/|\.(test|spec)\.|"
-                         r"(^|/)test_[^/]*$|\.(md|rst|txt|adoc)$")   # przykłady i atrapy: niska waga, zostają widoczne
+                         r"(^|/)test_[^/]*$|\.(md|rst|txt|adoc)$")   # examples and fakes: low severity, they stay visible
 
 
-# (reguła, tytuł, regex, rozszerzenia (None = kod), waga, pewność, podstawa, co zrobić)
+# (rule, title, regex, extensions (None = code), severity, confidence, basis, what to do)
 API = [
     ("dangerous-api", "eval / new Function in JS", r"\beval\s*\(|\bnew\s+Function\s*\(", JS_EXT, "medium", 0.6,
      "CWE-94 (code injection)", "remove eval; parse data (JSON.parse) and pick logic from a map of functions"),
@@ -72,7 +72,7 @@ API = [
 def load_secret_rules(root: Path):
     for hook in (root / ".claude" / "hooks" / "scan_secrets.py",
                  Path(__file__).resolve().parents[5] / ".claude" / "hooks" / "scan_secrets.py",
-                 Path(__file__).resolve().parents[5] / "core" / "hooks" / "scan_secrets.py"):   # źródła fabryki
+                 Path(__file__).resolve().parents[5] / "core" / "hooks" / "scan_secrets.py"):   # the factory's sources
         if hook.is_file():
             spec = importlib.util.spec_from_file_location("tf_scan_secrets", hook)
             mod = importlib.util.module_from_spec(spec)
