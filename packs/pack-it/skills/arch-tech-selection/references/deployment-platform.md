@@ -1,52 +1,52 @@
-# Platforma wdrożeniowa dla MVP
+# The deployment platform for an MVP
 
-Wybór hostingu to część decyzji o stacku (`stack-decision.md`, sekcja platformy). Fakty o platformach (funkcje,
-statusy, limity, ceny) zmieniają się w tygodniach — zawsze ze źródła pierwotnego z datą sprawdzenia
-(core-source-research), nigdy z pamięci.
+Choosing the hosting is part of the stack decision (`stack-decision.md`, the platform section). Facts about platforms (features,
+statuses, limits, prices) change within weeks — always from a primary source with a check date
+(core-source-research), never from memory.
 
-## 1. Filtry twarde (odrzucają bez punktacji)
-- runtime stacku nieobsługiwany (wersja języka, adapter frameworka);
-- wymagane trwałe połączenia (WebSocket), procesy w tle lub długie zadania → odpadają platformy wyłącznie serverless;
-- wymogi zgodności (region danych, np. UE) nie do spełnienia.
+## 1. Hard filters (they reject without scoring)
+- the stack's runtime unsupported (the language version, the framework adapter);
+- persistent connections (WebSocket), background processes or long tasks required → platforms that are serverless only drop out;
+- compliance requirements (the data region, e.g. the EU) impossible to meet.
 
-## 2. Pięć kryteriów (Pass / Partial / Fail)
-| Kryterium | Waga | Pytanie |
+## 2. Five criteria (Pass / Partial / Fail)
+| Criterion | Weight | Question |
 |---|---|---|
-| CLI do pełnej obsługi | wysoka | wdrożenie, wycofanie i logi bez panelu WWW? |
-| usługa zarządzana zamiast surowych maszyn | wysoka | kto łata system, skaluje, robi kopie? |
-| deterministyczne, skryptowalne wdrożenie | wysoka | jedno polecenie z kodem wyjścia, które agent i CI mogą sprawdzić? |
-| dokumentacja czytelna dla agenta | średnia | markdown, `llms.txt`, aktualne przykłady dla wersji projektu? |
-| serwer MCP lub inna integracja z agentem | niska | rozstrzyga remisy |
-Przy każdej funkcji status: GA / beta / preview / ograniczona regionalnie + data sprawdzenia. Funkcja w becie nie
-jest argumentem za wyborem do produkcji.
+| a CLI for full operation | high | deployment, rollback and logs without a web panel? |
+| a managed service instead of raw machines | high | who patches the system, scales it, makes backups? |
+| a deterministic, scriptable deployment | high | one command with an exit code that the agent and CI can check? |
+| documentation readable for the agent | medium | markdown, `llms.txt`, current examples for the project's version? |
+| an MCP server or another integration with the agent | low | it settles ties |
+For every feature a status: GA / beta / preview / regionally limited + a check date. A feature in beta is
+not an argument for choosing it for production.
 
-## 3. Wywiad (tak / nie / nie wiem)
-Trwałe połączenia? Koszt czy wygoda? Platforma znana zespołowi? Zasięg globalny? Baza i storage od jednego
-dostawcy? Odpowiedzi zmieniają wagi kryteriów, nie wykluczają (wyjątek: trwałe połączenia → filtr twardy).
+## 3. Interview (yes / no / don't know)
+Persistent connections? Cost or convenience? A platform known to the team? Global reach? The database and storage from one
+provider? The answers change the criteria weights, they do not exclude (the exception: persistent connections → a hard filter).
 
-## 4. Kandydaci i historia operacyjna
-Trzech kandydatów, na liderze test odporności decyzji (arch-architect-practice). Potem „historia operacyjna” —
-jedna konkretna odpowiedź na oś:
-| Oś | Konkretna odpowiedź |
+## 4. Candidates and the operational story
+Three candidates, the decision resilience test on the leader (arch-architect-practice). Then the "operational story" —
+one concrete answer per axis:
+| Axis | A concrete answer |
 |---|---|
-| podgląd per PR (i jego ochrona przed publicznym dostępem) | |
-| sekrety: gdzie, kto czyta, jak rotować | |
-| wycofanie: polecenie, czas, zastrzeżenia dla migracji bazy | |
-| co wymaga człowieka (konta, domeny, płatności, sekrety produkcyjne) | |
-| logi dla agenta tylko do odczytu (CLI lub MCP) | |
+| a preview per PR (and its protection against public access) | |
+| secrets: where, who reads them, how to rotate | |
+| rollback: the command, the time, caveats for database migrations | |
+| what requires a human (accounts, domains, payments, production secrets) | |
+| logs for the agent, read-only (CLI or MCP) | |
 
-## 5. Pierwsze kroki i sygnał zmiany decyzji
-- „Pierwsze kroki” (polecenia CLI, adapter frameworka) sprawdzasz wobec **wersji z projektu** — adaptery i CLI
-  platform zmieniają się między wersjami głównymi; ogólny poradnik bywa nieaktualny.
-- Pierwsze wdrożenie planujesz wg ops-release-engineering („Pierwsze wdrożenie”).
-- Zapisz sygnał zmiany decyzji: co ją unieważni po wyjściu z MVP (zadania cykliczne, długie zadania, dedykowana
-  baza, ruch globalny, koszt przy N użytkowników).
+## 5. First steps and the signal to change the decision
+- You check the "first steps" (CLI commands, the framework adapter) against **the project's version** — platform adapters and CLIs
+  change between major versions; a general guide is often outdated.
+- You plan the first deployment per ops-release-engineering ("First deployment").
+- Record the signal to change the decision: what will invalidate it after leaving the MVP (recurring jobs, long tasks, a dedicated
+  database, global traffic, the cost at N users).
 
-## Przykład
-SvelteKit + PostgreSQL, zespół 2 osoby, MVP w UE. Filtr: potrzebne WebSockety do powiadomień → platforma tylko
-serverless odpada. Kandydaci A (PaaS z kontenerami, CLI pełne, Pass×4), B (serverless + zewnętrzny serwis
-WebSocket, Partial), C (VM z panelem, Fail na usłudze zarządzanej). Test odporności na A: pre-mortem ujawnia brak
-kopii bazy w planie podstawowym → zapisane jako znane ograniczenie + zadanie „kopia nocna do storage”. Historia
-operacyjna A: podgląd per PR z hasłem, sekrety w magazynie platformy (czyta tylko runtime), wycofanie poleceniem
-do poprzedniego wydania (~1 min, migracje expand–contract), człowiek zakłada konto i domenę, logi agent czyta przez
-CLI tylko do odczytu.
+## Example
+SvelteKit + PostgreSQL, a team of 2, an MVP in the EU. Filter: WebSockets needed for notifications → a serverless-only platform
+drops out. Candidates A (PaaS with containers, a full CLI, Pass×4), B (serverless + an external WebSocket
+service, Partial), C (a VM with a panel, Fail on the managed service). The resilience test on A: the pre-mortem reveals no
+database backup on the basic plan → recorded as a known limitation + the task "a nightly backup to storage". The operational
+story of A: a preview per PR with a password, secrets in the platform's store (only the runtime reads them), rollback with a command
+to the previous release (~1 min, expand–contract migrations), a human creates the account and the domain, the agent reads logs through
+the CLI read-only.
