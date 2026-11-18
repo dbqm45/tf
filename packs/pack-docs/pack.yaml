@@ -4,7 +4,7 @@ id: pack-docs
 version: 1.0.2
 title: Documentation
 description: Technical writing — README, API docs, ADRs, changelogs, runbooks and manuals; adds the docs skill to every persona and the tech-writer role.
-content_language: pl
+content_language: en
 default: true          # zaznaczona domyślnie w instalatorze
 requires:
   core: ">=3.0.0 <19.0.0"
@@ -12,10 +12,10 @@ requires:
 optional_packs: [pack-it, pack-ux, pack-editorial-pl]
 
 facets:
-  - {prefix: docs-, order: 175, name: dokumentacja, question: "jak piszemy i utrzymujemy dokumentację techniczną — rodzaje, struktura, styl, recenzja"}
+  - {prefix: docs-, order: 175, name: documentation, question: "how we write and maintain technical documentation — types, structure, style, review"}
 
 routing: |
-  | zapis artefaktu albo dokumentu, którego treść jest już ustalona | {persona}-tech-writer (jeśli jest) | fast |
+  | writing down an artifact or a document whose content is already settled | {persona}-tech-writer (if present) | fast |
 
 contributes:
   personas:

@@ -295,7 +295,7 @@ def new_pack(argv: list[str]) -> int:
     files = {
         "pack.yaml": f"# TODO: comment — what this {'mode' if opts['kind'] == 'mode' else 'pack'} is and who it is for.\n"
                      f"id: {pid}\n" + ("kind: mode\n" if opts["kind"] == "mode" else "")
-                     + f"version: 0.1.0\ntitle: {q(title)}\ndescription: {q(desc)}\ncontent_language: pl\ndefault: false\n"
+                     + f"version: 0.1.0\ntitle: {q(title)}\ndescription: {q(desc)}\ncontent_language: en\ndefault: false\n"
                      f"requires:\n  core: \">={version} <{major + 1}.0.0\"\n\nfacets:\n"
                      f"  - {{prefix: {prefix}, order: 500, name: {title.lower()}, question: \"TODO: which question the {prefix}* skills answer\"}}\n",
         f"skills/{skill}/SKILL.md": SKILL_TPL.format(skill=skill, review=(datetime.date.today() + datetime.timedelta(days=365)).isoformat()),

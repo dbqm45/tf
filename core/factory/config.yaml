@@ -329,11 +329,11 @@ models_legacy: [claude-fable-5-1, claude-fable-5, claude-opus-5, claude-opus-4-8
 facets:
   # Wymiary technologii: skille dostarcza nakładka (np. pack-it) albo projekt; rejestr technologii hooka
   # detect_stack (core-stack-sync/references/technologies.json) używa tych prefiksów.
-  - {prefix: fw-,   order: 90,  name: framework,       question: "GDZIE i czym to umieścić w konkretnym frameworku", contract: true, versioned: true}
-  - {prefix: lang-, order: 100, name: język,           question: "JAK wyrazić pojęcia w konkretnym języku", contract: true, versioned: true}
-  - {prefix: tool-, order: 110, name: narzędzia,       question: "czym budujemy i jak organizujemy repozytorium (monorepo, build)", versioned: true}
-  - {prefix: core-, order: 900, name: praktyki,        question: "jak pracujemy (kompozycja skilli, wersje, git, commity, dziennik projektu)"}
-  - {prefix: tf,    order: 950, name: przebieg,        question: "jak przeprowadzić zadanie od zgłoszenia do PR (pętla fabryki, polecenie /tf)"}
+  - {prefix: fw-,   order: 90,  name: framework,       question: "WHERE and with what to place it in a specific framework", contract: true, versioned: true}
+  - {prefix: lang-, order: 100, name: language,        question: "HOW to express the concepts in a specific language", contract: true, versioned: true}
+  - {prefix: tool-, order: 110, name: tools,           question: "what we build with and how we organize the repository (monorepo, build)", versioned: true}
+  - {prefix: core-, order: 900, name: practices,       question: "how we work (skill composition, versions, git, commits, project record)"}
+  - {prefix: tf,    order: 950, name: delivery,        question: "how to take a task from the ticket to the PR (the factory loop, the /tf command)"}
 
 # Słownik pojęć — kontrakt, który musi pokryć każdy skill z `contract: true`
 # (sekcja „## Pojęcia domenowe w …” z mapowaniem pojęcie → idiom).

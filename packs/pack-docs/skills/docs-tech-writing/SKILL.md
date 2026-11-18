@@ -1,120 +1,120 @@
 ---
 name: docs-tech-writing
-description: Użyj przy dokumentacji technicznej w repo — kiedy i jak pisać ADR, README, API, CHANGELOG, runbook, podręcznik; struktura, styl, recenzja.
+description: Use for technical documentation in the repo — when and how to write an ADR, README, API, CHANGELOG, runbook, manual; structure, style, review.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy pisaniu, poprawianiu lub ocenie dokumentacji technicznej w repo — README, dokumentacja API, ADR, CHANGELOG, runbook, podręcznik, opis modułu/funkcjonalności; odbiorca, struktura, styl, proces i recenzja. Nie do artefaktów dziennika docs/project/ (core-project-record), commit message (core-conventional-commits) ani komentarzy w kodzie."
-  keywords: "kiedy pisać ADR, dokumentować decyzję, dokumentacja, README, runbook, instrukcja, opis modułu"
+  catalog: "Use when writing, fixing or assessing technical documentation in the repo — README, API documentation, ADR, CHANGELOG, runbook, manual, module/feature description; audience, structure, style, process and review. Not for the project record artifacts in docs/project/ (core-project-record), commit messages (core-conventional-commits) or code comments."
+  keywords: "kiedy pisać ADR, dokumentować decyzję, dokumentacja, README, runbook, instrukcja, opis modułu, when to write an ADR, document a decision, documentation, user manual, module description, technical writing"
 ---
 
-# Dokumentacja techniczna
+# Technical documentation
 
-## Zanim zaczniesz — dwa pytania
-1. **Dla kogo?** Użytkownik UI ≠ programista rozwijający system (inna treść, styl, słownictwo). Bez innych wskazówek
-   pisz dla programisty wdrażającego/integrującego. Kilka grup o różnych potrzebach → osobne dokumenty albo wyraźnie
-   oznaczone sekcje.
-2. **Opisowo czy zadaniowo?** Opisowo (kolejność elementów systemu) → referencja, API. Zadaniowo (kolejność pracy
-   odbiorcy) → podręczniki, tutoriale.
+## Before you start — two questions
+1. **For whom?** A UI user ≠ a developer extending the system (different content, style, vocabulary). Without other hints,
+   write for a developer who deploys/integrates. Several groups with different needs → separate documents or clearly
+   marked sections.
+2. **Descriptive or task-based?** Descriptive (the order of the system's elements) → reference, API. Task-based (the order of the
+   reader's work) → manuals, tutorials.
 
-## Zasady ogólne
-- Czytelnik jest zajęty: najważniejsze na początku, potem szczegóły. Wiele małych rozdziałów > kilka dużych.
-- **Najpierw struktura** (rozdziały → podrozdziały), potem wypełnianie węzłów — nie pisz liniowo.
-- **KISS:** krótkie zdania i akapity; kroki jako lista numerowana, porównania jako tabela, nie wyliczenia po przecinku.
-  Runbook, instalacja, kroki naprawcze: zasady ASD-STE100 — jedna czynność na krok, zdanie do ok. 20 słów,
-  ostrzeżenie przed krokiem (`references/style-and-structure.md`).
-- **Spójność terminów ważniejsza niż elegancja** — raz „system”, zawsze „system”; to samo dla formatowania.
-  Przy konflikcie reguły stylu z jednoznacznością wybierz jednoznaczność.
-- Każda komenda/metoda/endpoint z **przykładem kodu**, który da się skopiować i uruchomić (bloki z językiem, ```bash).
-  Przykłady od najprostszego do trudnego.
-- Dane w przykładach i zrzutach: realistyczne, ale **zmyślone**; nigdy dane prawdziwych osób ani prawdziwe sekrety.
-- Jeden stały znacznik miejsc do uzupełnienia (`TBD`) — da się je znaleźć jednym wyszukiwaniem.
-- Dokumentacja żyje obok kodu i zmienia się w tym samym commicie co kod (`docs:` — core-conventional-commits).
-  Dokumentację referencyjną generuj ze źródeł, gdy się da (OpenAPI, TypeDoc/JSDoc).
+## General rules
+- The reader is busy: the most important things first, then the details. Many small chapters > a few large ones.
+- **Structure first** (chapters → subchapters), then fill in the nodes — do not write linearly.
+- **KISS:** short sentences and paragraphs; steps as a numbered list, comparisons as a table, not comma-separated lists.
+  Runbook, installation, repair steps: ASD-STE100 rules — one action per step, a sentence up to about 20 words,
+  a warning before the step (`references/style-and-structure.md`).
+- **Consistent terms matter more than elegance** — once "system", always "system"; the same for formatting.
+  When a style rule conflicts with clarity, choose clarity.
+- Every command/method/endpoint with a **code example** that can be copied and run (blocks with a language, ```bash).
+  Examples from the simplest to the hard ones.
+- Data in examples and screenshots: realistic but **made up**; never real people's data or real secrets.
+- One fixed marker for places to fill in (`TBD`) — one search finds them all.
+- Documentation lives next to the code and changes in the same commit as the code (`docs:` — core-conventional-commits).
+  Generate reference documentation from the sources when you can (OpenAPI, TypeDoc/JSDoc).
 
-## Który dokument
-| Potrzeba | Dokument | Uwagi |
+## Which document
+| Need | Document | Notes |
 |---|---|---|
-| Wejście do repo/pakietu | README | szkielet niżej |
-| Decyzja architektoniczna | ADR | w `docs/project/` szablon z core-project-record |
-| Zmiany dla użytkowników wersji | CHANGELOG | Keep a Changelog lub generowany (`nx release`) |
-| Reakcja na alert | runbook | Objaw → potwierdzenie → naprawa → rollback → eskalacja |
-| Kontrakt HTTP | dokumentacja API / OpenAPI | aktualizuj spec, nie osobny dokument |
-| Praca użytkownika z systemem | podręcznik | zadaniowo; spis treści, słowniczek, indeks |
-| Pierwszy sukces, nauka | tutorial / szybki start | Diátaxis: `references/documentation-types.md` |
-| Konkretny cel praktyka | instrukcja (how-to) | jw. |
-| Zmiany dla użytkowników (nie dla programistów) | notatki o wydaniu | co nowego, co zrobić, zmiany łamiące; jw. |
-| Błąd, objaw | rozwiązywanie problemów / lista błędów | według objawu; jw. |
-| Artykuł, porównanie, studium przypadku | treść techniczna poza dokumentacją | `references/technical-content-and-seo.md` |
-| Artefakty faz projektu (brief, wymagania, plan…) | — | **core-project-record**, nie tu |
+| Entry to the repo/package | README | skeleton below |
+| Architecture decision | ADR | in `docs/project/` the template from core-project-record |
+| Changes for users of a version | CHANGELOG | Keep a Changelog or generated (`nx release`) |
+| Reaction to an alert | runbook | Symptom → confirmation → fix → rollback → escalation |
+| HTTP contract | API documentation / OpenAPI | update the spec, not a separate document |
+| A user's work with the system | manual | task-based; table of contents, glossary, index |
+| First success, learning | tutorial / quick start | Diátaxis: `references/documentation-types.md` |
+| A practitioner's specific goal | how-to guide | as above |
+| Changes for users (not developers) | release notes | what is new, what to do, breaking changes; as above |
+| Error, symptom | troubleshooting / error list | by symptom; as above |
+| Article, comparison, case study | technical content outside documentation | `references/technical-content-and-seo.md` |
+| Project phase artifacts (brief, requirements, plan…) | — | **core-project-record**, not here |
 
-## README — szkielet
-1. Jedno zdanie: czym to jest i dla kogo.
-2. Szybki start (≤ 5 komend do działającego stanu).
-3. Konfiguracja (tabela: zmienna | domyślnie | opis) — tylko placeholdery sekretów.
-4. Typowe zadania (test, build, deploy).
-5. Struktura katalogów (tylko kluczowe).
-6. Gdzie szukać pomocy / jak kontrybuować.
+## README — skeleton
+1. One sentence: what it is and for whom.
+2. Quick start (≤ 5 commands to a working state).
+3. Configuration (table: variable | default | description) — only placeholders for secrets.
+4. Typical tasks (test, build, deploy).
+5. Directory structure (key ones only).
+6. Where to find help / how to contribute.
 
 ## ADR — `docs/project/04-architecture/adr/NNNN-short-title.md`
-**Próg — wszystkie trzy naraz:** (1) trudno odwrócić, (2) bez kontekstu zaskoczy przyszłego czytelnika („czemu tak?”),
-(3) był prawdziwy wybór między alternatywami. Brak któregokolwiek → bez ADR (wystarczy wiersz w `decisions.md` albo nic).
-Kwalifikują się: kształt architektury, sposób integracji kontekstów, technologia z uzależnieniem (baza, kolejka,
-dostawca tożsamości — nie każda biblioteka), decyzje o granicach i własności danych (także jawne „nie”), świadome
-odstępstwa od oczywistej drogi, ograniczenia niewidoczne w kodzie (prawo, umowy, wymagania wydajności), odrzucona
-alternatywa, jeśli powód nie jest oczywisty. ADR może mieć jeden akapit — liczy się *że* i *dlaczego*. ADR **proponujesz**,
-nie zakładasz; odrzucenie kandydata z trwałym powodem też warto zapisać, żeby nie wracał.
-W projektach z dziennikiem (`docs/project/`) użyj szablonu `core-project-record/templates/adr.md` (z nagłówkiem YAML)
-i dopisz wiersz do `decisions.md`. Poza dziennikiem wystarczy:
+**Threshold — all three at once:** (1) hard to reverse, (2) without context it will surprise a future reader ("why like this?"),
+(3) there was a real choice between alternatives. Any of them missing → no ADR (a row in `decisions.md` or nothing is enough).
+These qualify: the shape of the architecture, the way contexts integrate, a technology with lock-in (database, queue,
+identity provider — not every library), decisions about data boundaries and ownership (also an explicit "no"), deliberate
+departures from the obvious path, constraints invisible in the code (law, contracts, performance requirements), a rejected
+alternative if the reason is not obvious. An ADR may be one paragraph — what counts is *that* and *why*. You **propose** an ADR,
+you do not create it on your own; rejecting a candidate for a lasting reason is also worth recording, so that it does not come back.
+In projects with a record (`docs/project/`) use the template `core-project-record/templates/adr.md` (with a YAML header)
+and add a row to `decisions.md`. Outside the record this is enough:
 ```markdown
-# NNNN. Tytuł decyzji
-Status: Proponowana | Przyjęta | Zastąpiona przez NNNN
-Data: RRRR-MM-DD
-## Kontekst
-Jaki problem, jakie ograniczenia.
-## Decyzja
-Co wybieramy (1–3 zdania).
-## Rozważane opcje
-- Opcja A — zalety / wady
-- Opcja B — zalety / wady
-## Konsekwencje
-Co zyskujemy, co tracimy, co trzeba zrobić dalej.
+# NNNN. Decision title
+Status: Proposed | Accepted | Superseded by NNNN
+Date: YYYY-MM-DD
+## Context
+What problem, what constraints.
+## Decision
+What we choose (1–3 sentences).
+## Considered options
+- Option A — pros / cons
+- Option B — pros / cons
+## Consequences
+What we gain, what we lose, what needs to be done next.
 ```
 
 ## CHANGELOG, runbook, API
-- **CHANGELOG** (Keep a Changelog): sekcje w `## [Unreleased]`: Added, Changed, Deprecated, Removed, Fixed, Security.
-  Wpis = jedna linia z perspektywy użytkownika. Przy `nx release` changelog powstaje z commitów — pilnuj ich formatu.
-- **Runbook:** dla każdego alertu **Objaw → Jak potwierdzić (komendy) → Naprawa krok po kroku → Rollback → Eskalacja**.
-- **API:** dla każdego endpointu metoda + ścieżka, auth, parametry (tabela), przykład żądania i odpowiedzi, kody błędów.
+- **CHANGELOG** (Keep a Changelog): sections in `## [Unreleased]`: Added, Changed, Deprecated, Removed, Fixed, Security.
+  An entry = one line from the user's perspective. With `nx release` the changelog comes from the commits — watch their format.
+- **Runbook:** for every alert **Symptom → How to confirm (commands) → Step-by-step fix → Rollback → Escalation**.
+- **API:** for every endpoint the method + path, auth, parameters (table), a request and response example, error codes.
 
-## Weryfikacja i korekta
-- **Wykonaj** procedury z dokumentu i sprawdź wynik — testuj opis jak kod.
-- Merytoryka i korekta językowa to **dwa osobne przebiegi** (najpierw merytoryka).
-- Recenzja przez kogoś bez głębokiej wiedzy o systemie wyłapuje „oczywistości” autora. Przy ponownej recenzji zaznacz zmiany.
-- **Tekst po polsku przed oddaniem** → kontrola języka: txt-polish-correctness (poprawność), txt-polish-style (redakcja)
-  lub persona Stefan (edytor).
+## Verification and proofreading
+- **Run** the procedures from the document and check the result — test the description like code.
+- Content review and language proofreading are **two separate passes** (content first).
+- A review by someone without deep knowledge of the system catches the author's "obvious things". In a repeat review mark the changes.
+- **Polish text before handing it in** → a language check: txt-polish-correctness (correctness), txt-polish-style (editing)
+  or the persona Stefan (editor).
 
-## Indeks references
-- Czytaj `references/style-and-structure.md`, gdy planujesz strukturę większego dokumentu (co na początku/końcu, słowniczek,
-  nawigacja, formatowanie, cechy dobrej dokumentacji).
-- Czytaj `references/process.md`, gdy prowadzisz pisanie jako proces: zbieranie informacji, konsultacje z developerami,
-  plan i kamienie milowe, metody recenzji, korekta, przejmowanie cudzej dokumentacji, post-mortem.
-- Czytaj `references/documentation-types.md`, gdy wybierasz rodzaj strony (Diátaxis), piszesz dla programistów
-  (szybki start, referencja, lista błędów), rozwiązywanie problemów, FAQ albo notatki o wydaniu.
-- Czytaj `references/maintenance-and-measurement.md`, gdy utrzymujesz serwis dokumentacji: przeglądy, linki i przykłady w CI,
-  luki ze zgłoszeń, przewodnik stylu i Vale, metryki.
-- Czytaj `references/technical-content-and-seo.md`, gdy piszesz artykuł, porównanie lub studium przypadku dla odbiorcy
-  technicznego: lejek, SEO, dystrybucja.
-- Czytaj `references/diagrams-and-presentations.md`, gdy dokument potrzebuje diagramu (Mermaid, C4, UML), strony HTML
-  z wyjaśnieniem albo prezentacji: wybór formy, notacja, czytelny układ, pułapki Mermaid, dostępność, slajdy.
+## Index of references
+- Read `references/style-and-structure.md` when you plan the structure of a larger document (what goes at the start/end, glossary,
+  navigation, formatting, traits of good documentation).
+- Read `references/process.md` when you run writing as a process: gathering information, consulting developers,
+  plan and milestones, review methods, proofreading, taking over someone else's documentation, post-mortem.
+- Read `references/documentation-types.md` when you choose a page type (Diátaxis), write for developers
+  (quick start, reference, error list), troubleshooting, FAQ or release notes.
+- Read `references/maintenance-and-measurement.md` when you maintain a documentation site: reviews, links and examples in CI,
+  gaps from tickets, style guide and Vale, metrics.
+- Read `references/technical-content-and-seo.md` when you write an article, comparison or case study for a technical
+  audience: funnel, SEO, distribution.
+- Read `references/diagrams-and-presentations.md` when the document needs a diagram (Mermaid, C4, UML), an HTML page
+  with an explanation or a presentation: choice of form, notation, readable layout, Mermaid pitfalls, accessibility, slides.
 
-## Checklista
-- [ ] Znam odbiorcę i wybrałem podejście (opisowe/zadaniowe).
-- [ ] Najważniejsze na początku; kroki jako listy, porównania jako tabele.
-- [ ] Terminy i formatowanie spójne w całym dokumencie.
-- [ ] Przykłady kodu działają (sprawdzone), dane zmyślone, bez sekretów.
-- [ ] Brak `TBD` (albo świadomie zostawione i zgłoszone).
-- [ ] Osobny przebieg korekty językowej (tekst po polsku → txt-polish-*).
-- [ ] Dokumentacja zmieniona w tym samym commicie co kod.
+## Checklist
+- [ ] I know the audience and chose the approach (descriptive/task-based).
+- [ ] The most important things first; steps as lists, comparisons as tables.
+- [ ] Terms and formatting consistent across the document.
+- [ ] Code examples work (checked), data made up, no secrets.
+- [ ] No `TBD` (or deliberately left and reported).
+- [ ] A separate language proofreading pass (Polish text → txt-polish-*).
+- [ ] Documentation changed in the same commit as the code.
 
-Źródła (opisane własnymi słowami): poradnik Transparent Data o dokumentacji technicznej aplikacji; „What is Technical
-Documentation and Why it Matters”; testerzy.pl „Jak poprawnie tworzyć dokumentację”; Keep a Changelog.
+Sources (described in our own words): the Transparent Data guide to the technical documentation of applications; "What is Technical
+Documentation and Why it Matters"; testerzy.pl "Jak poprawnie tworzyć dokumentację"; Keep a Changelog.
