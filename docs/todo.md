@@ -829,6 +829,17 @@ treści (angielska), bez równoległej polskiej.
       wyróżniało problemy w dzienniku tylko po polskich słowach, a dziennik od M2/M3 piszą agenci po angielsku (AR-6 z
       wpisami w obu językach). Bramki 11 skilli odnowione.
       Zostaje: dopasowanie „już ocenione” w retro raz nie trafi starych dowodów (zmienione teksty) — jednorazowo.
+    - [x] M6 (2026-11-18): skrypty pack-it — rekonstrukcja repozytorium (`eng-codebase-mapping`, 11 skryptów),
+      `readiness_check`, `requirements_lint`, `dossier_check`, szablon `post_edit_checks`, Event Storming (`es_board`,
+      `es_sim`, `es_probe`) i 7 modułów `tf analyze`. Odczyt przyjmuje stare formy: partie `(pliki)` w manifeście (M-18),
+      polska pieczątka odświeżenia (RF-21), polskie znaczniki symulacji w `es_probe` (EP-14, EP-15); `requirements_lint`
+      czyta też angielski brief (budżet czasu, szacunek, potwierdzenie kosztu), jednostki i sekcję „Quality attributes”.
+      Identyfikatory ustaleń analizy bez zmian (skrót z reguły, pliku i fragmentu). **Naprawione błędy:** eksport
+      rekonstrukcji dawał angielskim znacznikom status `evidence` (E-16); odświeżenie porównywało zmiany reguł ze starą
+      nazwą `zmieniona`. Skuteczność: płatna próba symulacji ES na scenariuszu weterynaria 11/11 oczekiwań (wcześniej
+      10/11), 1,43 USD. Bramki 7 skilli odnowione.
+      Zostaje: treść skilli pack-it (4d) cytuje jeszcze polskie etykiety wyjścia (`idiomy testów`, `WYCIĄGNIĘTE`,
+      „krytyczne”) i znacznik `=== POKAŻ DOSŁOWNIE ===` symulacji — zmienić razem z tłumaczeniem tych skilli.
   - [ ] pack-editorial-pl: instrukcje po angielsku, przykłady i reguły polszczyzny zostają po polsku (to ich przedmiot).
 
 Treść fabryki jest dziś po polsku. Chodzi o:
