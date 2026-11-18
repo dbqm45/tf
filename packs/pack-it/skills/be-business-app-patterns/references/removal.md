@@ -1,30 +1,30 @@
-# Usuwanie: soft delete, kosz i usunięcie danych
+# Deletion: soft delete, the trash and data erasure
 
-## Kiedy soft delete
-- Tak: potrzebne przywracanie (kosz), rekord jest celem relacji (faktury wskazują klienta), audyt lub rozliczenia
-  wymagają historii.
-- Nie: dane osobowe na żądanie usunięcia, dane bez wartości historycznej (sesje, tokeny, logi techniczne), tabele,
-  w których filtr `deleted_at IS NULL` byłby wszędzie i łatwo go zapomnieć.
+## When soft delete
+- Yes: restoring is needed (a trash), the record is the target of relations (invoices point to the customer), the audit or settlements
+  require history.
+- No: personal data on an erasure request, data without historical value (sessions, tokens, technical logs), tables
+  in which the `deleted_at IS NULL` filter would be everywhere and easy to forget.
 
-## Pułapki implementacji
-- Filtr domyślny (zakres w ORM, widok, polityka RLS) — inaczej usunięte rekordy wracają w raportach, wyszukiwarce,
-  eksporcie i licznikach.
-- Unikalność: indeks unikalny częściowy `WHERE deleted_at IS NULL`, żeby po usunięciu można było użyć tej samej
-  nazwy lub e-maila.
-- Kaskady: co dzieje się z dziećmi (oznaczyć razem, zostawić, zablokować usunięcie) — decyzja jawna.
-- Pliki w magazynie obiektów i dane w wyszukiwarce lub cache usuwasz albo ukrywasz razem z rekordem.
+## Implementation pitfalls
+- A default filter (a scope in the ORM, a view, an RLS policy) — otherwise deleted records come back in reports, search,
+  export and counters.
+- Uniqueness: a partial unique index `WHERE deleted_at IS NULL`, so that after deletion the same
+  name or email can be used.
+- Cascades: what happens to the children (mark them together, leave them, block the deletion) — an explicit decision.
+- Files in the object store and data in search or the cache you delete or hide together with the record.
 
-## Kosz i nieodwracalne usuwanie
-- Usunięcie z dużym skutkiem: uprawnienie (właściciel), potwierdzenie przez wpisanie nazwy z liczbą elementów,
-  które znikną; dla krytycznych ponowne uwierzytelnienie lub drugi czynnik.
-- Okres karencji (np. 30 dni) z przywracaniem, potem trwałe usunięcie zadaniem w tle; powiadomienie osób, których
-  dotyczy.
+## The trash and irreversible deletion
+- A deletion with a large effect: a permission (the owner), a confirmation by typing the name with the number of items
+  that will disappear; for critical ones re-authentication or a second factor.
+- A grace period (e.g. 30 days) with restoring, then permanent deletion by a background job; a notification to the people
+  it concerns.
 
-## Żądanie usunięcia danych osobowych (RODO art. 17)
-- `deleted_at` nie wystarcza: dane nadal są w bazie. Usunięcie trwałe albo anonimizacja (nieodwracalna, bez
-  klucza do przywrócenia; pseudonimizacja to nadal dane osobowe).
-- Obejmuje: tabele aplikacji, pliki, wyszukiwarkę, analitykę, systemy zewnętrzne i podwykonawców, logi i audyt
-  (pseudonimizacja), kopie zapasowe (zwykle wygasają z rotacją; dokumentujesz termin i nie przywracasz usuniętych
-  danych przy odtwarzaniu).
-- Wyjątki (obowiązek prawny, np. dokumenty księgowe) — dane zostają tylko w zakresie wymaganym; decyzja i podstawa
-  zapisane. Ocena prawna: arch-privacy-compliance.
+## A personal data erasure request (GDPR Art. 17)
+- `deleted_at` is not enough: the data is still in the database. Permanent deletion or anonymization (irreversible, without
+  a key to restore; pseudonymization is still personal data).
+- It covers: the application tables, files, search, analytics, external systems and subcontractors, logs and the audit
+  (pseudonymization), backups (they usually expire with the rotation; you document the deadline and do not restore deleted
+  data when restoring).
+- Exceptions (a legal obligation, e.g. accounting documents) — the data stays only in the required scope; the decision and the basis
+  recorded. The legal assessment: arch-privacy-compliance.
