@@ -638,6 +638,11 @@ treści (angielska), bez równoległej polskiej.
   `Not for …`), `keywords` po polsku i angielsku (wyrażenia z pytań), bramka (`skill_gate.py`: krok 3 trafność, krok 5
   rozpoznaje język), pomiar `tools/hint_holdout.py` przed i po partii. Punkt odniesienia (all, 2026-11-17): strojenie
   902/918, holdout 29/43.
+  Zakres (decyzja właściciela, 2026-11-18: „Tłumaczymy wszystko”): całe repo, także `docs/`, komentarze w kodzie,
+  komunikaty testów, persony i role, na koniec polskie aliasy w czytnikach. Wyjątki dla skuteczności: polskie prompty
+  scenariuszy eval zostają, a obok dochodzą angielskie odpowiedniki (pokrycie obu języków); w pack-editorial-pl
+  opisy i procedury po angielsku, reguły polszczyzny i przykłady zdań po polsku (to ich przedmiot); `hint.pl.txt`
+  i polskie słowa kluczowe zostają z założenia.
   Skuteczność fabryki nie może spaść (właściciel, 2026-11-17). Każda partia przechodzi, zanim trafi do PR:
   1. `tools/translation_check.py <pliki>` — te same bloki kodu, `…`, liczby, odnośniki i struktura co przed
      tłumaczeniem (różnica = zgubiony albo dopisany fakt; zmiana treści to osobny commit, nie tłumaczenie);
