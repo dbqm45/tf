@@ -1,45 +1,45 @@
-# Szablony: research-plan.md i research-report.md
+# Templates: research-plan.md and research-report.md
 
 ## research-plan.md (`docs/project/01-discovery/research-plan.md`)
 ```markdown
-# Plan badania: <nazwa>
-TL;DR: <decyzja, metoda, liczba osób, termin>
-## Decyzja i właściciel
-Decyzja, którą zmieni wynik; kto decyduje; do kiedy.
-## Pytania badawcze
-P1…P3 (otwarte, o zachowanie i powód).
-## Co już wiemy
-Dane, wcześniejsze badania z repozytorium, założenia do sprawdzenia.
-## Metoda
-Metoda, uzasadnienie wobec pytań, czemu nie inna; zadania lub tematy wywiadu.
-## Uczestnicy
-Kryteria (zachowania), liczba, segmenty, osoby z potrzebami dostępności, zapas, wykluczenia, wynagrodzenie.
-## Harmonogram i role
-Rekrutacja, pilotaż, sesje, synteza, warsztat decyzyjny; moderator, obserwator, osoba od zgód.
-## Dane osobowe
-Podstawa, zgody, narzędzia i miejsce zapisu, dostęp, retencja z datą usunięcia, procesory.
-## Ryzyka i ograniczenia
-Stronniczość próby, prototyp niepełny, konflikt interesów.
-## Miary sukcesu badania
-Po czym poznamy, że decyzja zapadła i wskaźnik się poruszył.
-Przekazanie: <kto bierze raport>
+# Study plan: <name>
+TL;DR: <decision, method, number of people, date>
+## Decision and owner
+The decision the result will change; who decides; by when.
+## Research questions
+Q1…Q3 (open, about behaviour and the reason).
+## What we already know
+Data, earlier studies from the repository, assumptions to check.
+## Method
+The method, the justification against the questions, why not another; tasks or interview topics.
+## Participants
+Criteria (behaviours), number, segments, people with accessibility needs, reserve, exclusions, incentive.
+## Schedule and roles
+Recruitment, pilot, sessions, synthesis, decision workshop; moderator, observer, person handling consents.
+## Personal data
+Basis, consents, tools and storage location, access, retention with a deletion date, processors.
+## Risks and limitations
+Sample bias, an incomplete prototype, a conflict of interest.
+## Study success measures
+How we will know the decision was made and the indicator moved.
+Handoff: <who takes the report>
 ```
 
 ## research-report.md (`docs/project/01-discovery/research-report.md`)
 ```markdown
-# Raport z badania: <nazwa>
-TL;DR: <3 zdania: główne ustalenie, rekomendacja, pewność>
-## Rekomendacje
-| ID | Rekomendacja | Ustalenia | Właściciel | Termin | Waga |
-## Ustalenia
-U1 <zdanie>. Pewność: wysoka/średnia/niska (ilu z ilu, jakość dowodu). Dowód: cytaty C3, C5; nagranie 12:40.
-## Metoda i próba
-Kto, ilu, jak rekrutowani, kiedy; odstępstwa od planu.
-## Ograniczenia i czego nie wiemy
-## Pytania do dalszych badań
-## Repozytorium
-Linki do nuggets, nagrań (z datą usunięcia), plan badania.
-Przekazanie: <następny krok i osoba>
+# Study report: <name>
+TL;DR: <3 sentences: the main finding, the recommendation, confidence>
+## Recommendations
+| ID | Recommendation | Findings | Owner | Date | Severity |
+## Findings
+F1 <sentence>. Confidence: high/medium/low (how many of how many, quality of evidence). Evidence: quotes C3, C5; recording 12:40.
+## Method and sample
+Who, how many, how recruited, when; departures from the plan.
+## Limitations and what we do not know
+## Questions for further research
+## Repository
+Links to nuggets, recordings (with a deletion date), the study plan.
+Handoff: <next step and person>
 ```
-Waga ustalenia dla problemów użyteczności: 0–4 jak w `.claude/skills/ux-feature-design/references/heuristics-and-tests.md`.
-Pewność oceniaj z dowodu, nie z przekonania badacza.
+The severity of a finding for usability problems: 0–4 as in `.claude/skills/ux-feature-design/references/heuristics-and-tests.md`.
+Rate confidence from the evidence, not from the researcher's conviction.

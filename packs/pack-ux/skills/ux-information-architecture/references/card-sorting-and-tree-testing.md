@@ -1,42 +1,42 @@
-# Sortowanie kart i test drzewa
+# Card sorting and the tree test
 
-## Spis treści
-Sortowanie kart · Test drzewa · Interpretacja · Pułapki
+## Contents
+Card sorting · Tree test · Interpretation · Pitfalls
 
-## Sortowanie kart
-- **Warianty:** otwarte (grupują i nazywają), zamknięte (do gotowych kategorii), hybrydowe (gotowe + własne).
-  Moderowane (rozmowa, dlaczego tak) lub niemoderowane (liczby, więcej osób); moderowane przy 5–8 osobach jako
-  uzupełnienie jakościowe.
-- **Liczba uczestników (heurystyki wtórne, nie dogmat):** ok. 15 osób na grupę użytkowników przy wzorcach jakościowych;
-  20–30 przy wnioskach ilościowych (Tullis i Wood 2004 wg streszczeń); sortowanie zamknięte często 15–20 [różnie u różnych dostawców].
-  Więcej segmentów = próba na każdy. Przy bardzo zróżnicowanych użytkownikach rośnie rozrzut.
-- **Karty:** 30–60 (powyżej 60 uczestnicy się męczą), jedna idea na kartę, bez słów, które mają stać się nazwą kategorii.
-- **Analiza:** macierz podobieństw (jak często dwie karty trafiły razem), dendrogram/klastry, standaryzacja nazw
-  grup (łączenie synonimów), lista kart bez zgody („problematycznych” — dobry kandydat na odsyłacz).
-  Wynik jest wejściem do projektu, nie gotową strukturą.
+## Card sorting
+- **Variants:** open (they group and name), closed (into ready categories), hybrid (ready + their own).
+  Moderated (a conversation about why) or unmoderated (numbers, more people); moderated with 5–8 people as a
+  qualitative complement.
+- **Number of participants (secondary heuristics, not dogma):** about 15 people per user group for qualitative patterns;
+  20–30 for quantitative conclusions (Tullis and Wood 2004 according to summaries); closed sorting often 15–20 [varies across vendors].
+  More segments = a sample for each. With very diverse users the spread grows.
+- **Cards:** 30–60 (above 60 participants get tired), one idea per card, without the words meant to become a category name.
+- **Analysis:** a similarity matrix (how often two cards ended up together), a dendrogram/clusters, standardization of group
+  names (merging synonyms), a list of cards without agreement ("problematic" ones — a good candidate for a cross-link).
+  The result is an input to the design, not a ready structure.
 
-## Test drzewa
-- Tekstowa hierarchia, bez wyglądu i wyszukiwarki; uczestnik klika przez drzewo i wskazuje, gdzie by szukał.
-- **Zadania:** 8–10 (powyżej tego spada jakość odpowiedzi), prawdziwe cele („Chcesz wziąć dwa dni wolne w grudniu —
-  gdzie to załatwisz?”), bez słów z etykiet; kolejność losowa.
-- **Liczba uczestników:** różne źródła wskazują 30–50 na segment dla stabilnych procentów, poniżej to kierunek
-  [wtórne źródła z wyszukiwania 2026-10-17, niezweryfikowane].
-- **Miary:** odsetek sukcesu (dotarł do poprawnego węzła), bezpośredniość (bez cofania), czas, węzeł pierwszego
-  kliknięcia, ślady ścieżek. Wskaźnik: odsetek sukcesu sam nie wystarcza.
+## Tree test
+- A text hierarchy, without visuals and search; the participant clicks through the tree and points to where they would look.
+- **Tasks:** 8–10 (above that the quality of answers drops), real goals ("You want to take two days off in December —
+  where do you arrange it?"), without words from the labels; random order.
+- **Number of participants:** various sources point to 30–50 per segment for stable percentages, below that it is a direction
+  [secondary sources from the search of 2026-10-17, unverified].
+- **Measures:** success rate (reached the correct node), directness (without going back), time, first-click
+  node, path traces. Indicator: the success rate alone is not enough.
 
-## Interpretacja
-| Sukces | Bezpośredniość | Znaczenie | Co zrobić |
+## Interpretation
+| Success | Directness | Meaning | What to do |
 |---|---|---|---|
-| wysoki | wysoka | struktura działa | zostaw |
-| wysoki | niska | dochodzą metodą prób, etykiety mylą | przejrzyj nazwy i ścieżki cofania |
-| niski | wysoka | pewny wybór złego miejsca | konkurencyjne kategorie, dodaj odsyłacz lub przenieś |
-| niski | niska | struktura nie pasuje do modelu użytkownika | wróć do sortowania kart |
-Progi „dobry wynik” różnią się między dostawcami (np. 60–80% jako akceptowalny) — ustal własny cel z wartości bazowej
-istniejącej struktury i porównuj to samo zadanie przed/po zmianie.
+| high | high | the structure works | keep it |
+| high | low | they get there by trial and error, the labels mislead | review the names and the back-tracking paths |
+| low | high | a confident choice of the wrong place | competing categories, add a cross-link or move |
+| low | low | the structure does not fit the user's model | go back to card sorting |
+The "good result" thresholds differ between vendors (e.g. 60–80% as acceptable) — set your own goal from the baseline value
+of the existing structure and compare the same task before/after the change.
 
-## Pułapki
-- Karty lub zadania podpowiadają odpowiedź słowem.
-- Za mało osób w jednym segmencie; wnioski z procentów przy kilkunastu osobach.
-- Test drzewa po wyglądzie (menu, ikony) — mierzy wtedy wygląd, nie strukturę.
-- Brak ponownego testu po poprawkach.
-- Pomijanie zapytań z wyszukiwarki i danych o ścieżkach jako źródła zadań.
+## Pitfalls
+- Cards or tasks hint the answer with a word.
+- Too few people in one segment; conclusions from percentages with a dozen or so people.
+- A tree test after the visuals (menu, icons) — it then measures the look, not the structure.
+- No repeat test after fixes.
+- Skipping search queries and path data as a source of tasks.

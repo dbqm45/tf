@@ -1,31 +1,31 @@
-# Dobór metody i wielkość próby
+# Choice of method and sample size
 
-## Tabela metod
-| Metoda | Odpowiada na | Kiedy | Uwaga |
+## Table of methods
+| Method | Answers | When | Note |
 |---|---|---|---|
-| Wywiad pogłębiony | dlaczego, jak działają dziś, motywacje | początek, rozumienie kontekstu | pytaj o konkretne zdarzenia z przeszłości, nie o opinie i przyszłe zamiary |
-| Test moderowany | gdzie i dlaczego się mylą | prototyp lub produkt | zadania realistyczne, bez słów z interfejsu |
-| Test niemoderowany | ilu ukończy, ile czasu | gotowy przepływ, więcej osób | brak dopytania; zadania muszą być jednoznaczne |
-| Ankieta | ile osób, jak często, jak ocenia | gdy znasz już pytania i odpowiedzi | źle ułożone pytania dają pewne, ale błędne liczby; ankieta nie wyjaśnia „dlaczego” |
-| Badanie dzienniczkowe | zachowania w czasie i kontekście | proces trwający dni lub tygodnie | koszt: motywacja uczestników, rośnie rezygnacja; krótkie wpisy, przypomnienia |
-| Benchmark konkurencji | jak wypadamy na tle | przed przebudową, cyklicznie | te same zadania i miary u wszystkich; analiza ekspercka tylko uzupełnia testy |
-| Badanie włączające | bariery dostępności i niskich umiejętności | zawsze, od wczesnych etapów | osoby z czytnikiem ekranu, sterowaniem głosem, niską biegłością cyfrową |
+| In-depth interview | why, how they work today, motivations | the start, understanding the context | ask about concrete past events, not opinions and future intentions |
+| Moderated test | where and why they make mistakes | a prototype or the product | realistic tasks, without words from the interface |
+| Unmoderated test | how many will complete, how much time | a finished flow, more people | no follow-up questions; tasks must be unambiguous |
+| Survey | how many people, how often, how they rate | when you already know the questions and the answers | badly built questions give confident but wrong numbers; a survey does not explain "why" |
+| Diary study | behaviours over time and in context | a process lasting days or weeks | cost: participants' motivation, dropout grows; short entries, reminders |
+| Competitive benchmark | how we compare | before a rebuild, periodically | the same tasks and measures for everyone; an expert review only complements tests |
+| Inclusive research | barriers of accessibility and low skills | always, from early stages | people with a screen reader, voice control, low digital skills |
 
-Dane z analityki mówią, **co** się dzieje; badanie, **dlaczego**. Zaczynaj od danych, jeśli istnieją.
+Analytics data says **what** happens; a study says **why**. Start from the data if it exists.
 
-## Wielkość próby — heurystyki
-- **Test jakościowy: ok. 5 osób na segment.** Nielsen i Landauer: odsetek problemów wykrytych przez n osób
-  ≈ 1−(1−L)^n, przy L≈31% pięć osób daje ok. 85%. Zastrzeżenia: L różni się między produktami i zadaniami;
-  grupa musi być jednorodna (kolejne segmenty = kolejne próby); wynik to „większość częstych problemów”, nie
-  wszystkie; zasada dotyczy **rund z poprawkami**, nie jednego dużego badania.
-- **Test z pomiarem** (czas, odsetek ukończeń): więcej osób, kilkadziesiąt (NN/g podaje ok. 40 [niezweryfikowane]);
-  przy małej próbie podawaj przedział ufności lub nie podawaj procentów, tylko liczby („6 z 8”).
-- **Wywiady:** nasycenie tematyczne — kończysz, gdy kolejne 2–3 sesje nie dają nowych wątków. 5–8 na segment
-  to punkt startowy [założenie], nie norma.
-- **Sortowanie kart i test drzewa:** `.claude/skills/ux-information-architecture/SKILL.md`.
-- **Ankieta:** liczba wynika z żądanej precyzji i wielkości populacji — policz (data-analysis); nie dobieraj „na oko”.
-- Próba celowa nie jest reprezentatywna: nie uogólniaj procentów z 8 wywiadów na wszystkich użytkowników.
+## Sample size — heuristics
+- **Qualitative test: about 5 people per segment.** Nielsen and Landauer: the share of problems found by n people
+  ≈ 1−(1−L)^n, with L≈31% five people give about 85%. Caveats: L differs between products and tasks;
+  the group must be homogeneous (further segments = further samples); the result is "most of the frequent problems", not
+  all of them; the rule is about **rounds with fixes**, not one big study.
+- **A test with measurement** (time, completion rate): more people, several dozen (NN/g gives about 40 [unverified]);
+  with a small sample give a confidence interval or do not give percentages, only counts ("6 of 8").
+- **Interviews:** thematic saturation — you stop when the next 2–3 sessions bring no new threads. 5–8 per segment
+  is a starting point [assumption], not a norm.
+- **Card sorting and tree test:** `.claude/skills/ux-information-architecture/SKILL.md`.
+- **Survey:** the number follows from the required precision and the population size — compute it (data-analysis); do not pick it "by eye".
+- A purposive sample is not representative: do not generalize percentages from 8 interviews to all users.
 
-## Benchmark UX
-Stały zestaw zadań i miar (ukończenie, czas, błędy, SEQ po zadaniu, SUS na końcu), podobni uczestnicy, powtarzany
-co wydanie lub kwartał. Zmiana zestawu zadań unieważnia porównanie. SUS i SEQ opisuje ux-feature-design.
+## UX benchmark
+A fixed set of tasks and measures (completion, time, errors, SEQ after the task, SUS at the end), similar participants, repeated
+every release or quarter. Changing the task set invalidates the comparison. SUS and SEQ are described by ux-feature-design.

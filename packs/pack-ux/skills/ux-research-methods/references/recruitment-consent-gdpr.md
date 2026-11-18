@@ -1,35 +1,35 @@
-# Rekrutacja, zgody i RODO uczestników
+# Recruitment, consents and participants' GDPR
 
 ## Screener
-- Pytania o zachowanie z ostatniego okresu („W jaki sposób wystawiał(a) Pan(i) faktury w ostatnich 3 miesiącach?”),
-  odpowiedzi do wyboru z „żadne z powyższych”; poprawna odpowiedź nie jest oczywista.
-- Wykluczenia: pracownicy firmy i konkurencji, osoby, które brały udział w badaniu niedawno (zawodowi uczestnicy).
-- Pytania o dostępność (technologia asystująca, preferencje) zadawaj dobrowolnie, bez wymagania ujawnienia.
-- Źródła: własna baza klientów (osobna zgoda na kontakt w celach badawczych), panel zewnętrzny, społeczność,
-  organizacje wspierające osoby z niepełnosprawnościami. Wynagrodzenie ustal z góry; nie uzależniaj go od treści opinii.
+- Questions about behaviour in a recent period ("How did you issue invoices in the last 3 months?"),
+  answers to choose from with "none of the above"; the correct answer is not obvious.
+- Exclusions: employees of the company and of competitors, people who took part in a study recently (professional participants).
+- Ask the accessibility questions (assistive technology, preferences) voluntarily, without requiring disclosure.
+- Sources: your own customer base (a separate consent to be contacted for research), an external panel, a community,
+  organizations supporting people with disabilities. Set the incentive up front; do not make it depend on the content of opinions.
 
-## Uczestnicy włączający
-Uczestnicy to rzeczywiści lub potencjalni użytkownicy, także osoby niepełnosprawne, starsze, z niską biegłością cyfrową
-(GOV.UK Service Manual). Wytyczne NHS i Home Office podają regułę ok. 1 osoby na 5 z potrzebami dostępności
-[wtórne źródło z wyszukiwania 2026-10-17, niezweryfikowane u źródła]. Prototyp papierowy bywa niedostępny dla osób
-niewidomych — zaplanuj test z technologią asystującą, gdy prototyp ma kod. Środowisko sesji: przygotuj kanał
-dostępny dla czytnika ekranu, napisy, dłuższy czas, możliwość przerw.
+## Inclusive participants
+Participants are actual or potential users, also disabled people, older people, people with low digital skills
+(GOV.UK Service Manual). NHS and Home Office guidance gives a rule of about 1 person in 5 with accessibility needs
+[a secondary source from the search of 2026-10-17, unverified at the source]. A paper prototype is often inaccessible to blind
+people — plan a test with assistive technology once the prototype has code. Session environment: prepare a channel
+accessible to a screen reader, captions, longer time, the option of breaks.
 
-## RODO — lista dla badacza
-Numery artykułów podane z wiedzy własnej, niezweryfikowane w tej sesji; zweryfikuj z IOD lub tekstem rozporządzenia.
-1. **Podstawa:** zwykle zgoda (art. 6 ust. 1 lit. a) lub prawnie uzasadniony interes (lit. f) przy badaniu klientów;
-   wybór uzgodnij z IOD. Zgoda jest dobrowolna, konkretna, świadoma i jednoznaczna — czynność aktywna, bez
-   zaznaczonego okienka z góry; osobno na nagrywanie i osobno na ewentualne użycie cytatów lub nagrań poza zespołem.
-2. **Informacja (art. 13):** kto jest administratorem, cel, podstawa, odbiorcy (narzędzie do nagrań, firma
-   transkrybująca), okres przechowywania, prawa (dostęp, sprostowanie, usunięcie, sprzeciw, skarga do UODO),
-   dobrowolność. Przekaż **przed** zgodą.
-3. **Wycofanie (art. 7 ust. 3):** w dowolnym momencie, tak łatwo jak wyrażenie zgody; wpływa na dalsze przetwarzanie,
-   nie na zgodność wcześniejszego. Uczestnik może przerwać sesję bez uzasadnienia i bez utraty wynagrodzenia za czas.
-4. **Minimalizacja i retencja (art. 5 ust. 1 lit. c, e):** zbieraj tylko to, co potrzebne; nagrania usuń po
-   ustalonym czasie (data w repozytorium), w nuggets zostaje wersja zanonimizowana (kod uczestnika P07 zamiast nazwiska).
-   Dane wrażliwe (zdrowie, niepełnosprawność, art. 9) tylko gdy konieczne i z wyraźną zgodą.
-5. **Procesory:** narzędzia do nagrań, transkrypcji i AI — umowa powierzenia, lokalizacja danych; transkrypty
-   z danymi osobowymi nie trafiają do narzędzi AI bez umowy i zgody uczestników na takie użycie.
-6. Uczestnicy poniżej 16 lat (próg zgody dziecka na usługi społeczeństwa informacyjnego — art. 8, w Polsce 16 lat [niezweryfikowane]) albo duża skala,
-   dane szczególne i profilowanie → konsultacja i DPIA: arch-privacy-compliance.
-7. Wyciek lub zagubienie nagrania → zgłoszenie do IOD od razu; nie rozstrzygasz sam.
+## GDPR — a list for the researcher
+The article numbers are given from own knowledge, unverified in this session; verify them with the DPO or the text of the regulation.
+1. **Basis:** usually consent (Art. 6(1)(a)) or legitimate interest (point (f)) in research with customers;
+   agree the choice with the DPO. Consent is freely given, specific, informed and unambiguous — an active act, without
+   a box ticked in advance; separately for recording and separately for any use of quotes or recordings outside the team.
+2. **Information (Art. 13):** who the controller is, the purpose, the basis, the recipients (the recording tool, the transcription
+   company), the retention period, the rights (access, rectification, erasure, objection, complaint to the supervisory authority — in Poland UODO),
+   voluntariness. Give it **before** consent.
+3. **Withdrawal (Art. 7(3)):** at any moment, as easily as giving consent; it affects further processing,
+   not the lawfulness of earlier processing. A participant can stop the session without a reason and without losing the incentive for the time.
+4. **Minimization and retention (Art. 5(1)(c), (e)):** collect only what is needed; delete recordings after
+   the agreed time (a date in the repository), the nuggets keep an anonymized version (participant code P07 instead of the name).
+   Sensitive data (health, disability, Art. 9) only when necessary and with explicit consent.
+5. **Processors:** tools for recording, transcription and AI — a data processing agreement, data location; transcripts
+   with personal data do not go to AI tools without an agreement and the participants' consent to such use.
+6. Participants under 16 (the age of a child's consent to information society services — Art. 8, in Poland 16 [unverified]) or a large scale,
+   special-category data and profiling → a consultation and a DPIA: arch-privacy-compliance.
+7. A leak or loss of a recording → report it to the DPO immediately; you do not decide it alone.

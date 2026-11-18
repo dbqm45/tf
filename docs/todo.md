@@ -782,6 +782,12 @@ treści (angielska), bez równoległej polskiej.
       mode-team). Haiku `docs-tech-writing` przed/po 3/3 → 3/3, 0,74 USD. `translation_check`: różnice tylko
       zamierzone (przykład polecenia `/team-session`, notacja `event [condition] / action`; blok kodu w SKILL.md to
       fałszywy alarm — wzmianka ```` ```bash ```` w środku zdania).
+    - [x] 4c-2 (2026-11-18): pack-ux — `ux-information-architecture` (+ 3 referencje), `ux-research-methods`
+      (+ 5 referencji, w tym szablony planu i raportu badania), `ux-content-design` (+ 3 referencje). Polskie słowa
+      kluczowe zostają, angielskie dochodzą; `hint.pl.txt` dla trzech skilli. Polskie źródła i treści o polszczyźnie
+      zostają nazwane po polsku (KPRM „Prosto i kropka”, indeksy Pisarka, UODO). Podpowiedzi identyczne jak przed
+      partią (all 901/918 · 32/43), `--hints` czysto (all, pack-ux). Haiku przed/po (6 scenariuszy, 3 skille): 6/6 → 6/6,
+      1,50 USD. `translation_check`: różnice tylko w nazwach kolumn szablonów (inwentarz, taksonomia, nuggets).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,

@@ -1,40 +1,40 @@
-# Synteza, repozytorium i ResearchOps
+# Synthesis, repository and ResearchOps
 
-## Spis treści
-Nuggets · Mapowanie powinowactwa · Synteza z AI · Repozytorium · ResearchOps · Od ustaleń do decyzji
+## Contents
+Nuggets · Affinity mapping · Synthesis with AI · Repository · ResearchOps · From findings to decisions
 
-## Nuggets (atomowe obserwacje)
-Jedna obserwacja = jeden wpis: `ID | obserwacja (fakt) | cytat | uczestnik (kod) | sesja i czas | metoda | tagi | data`.
-Obserwację piszesz bez interpretacji („Nie znalazł przycisku Wyślij”, nie „interfejs jest nieczytelny”). Atomowość
-pozwala łączyć wpisy z różnych badań i nie wymaga czytania całego raportu.
+## Nuggets (atomic observations)
+One observation = one entry: `ID | observation (fact) | quote | participant (code) | session and time | method | tags | date`.
+You write the observation without interpretation ("Did not find the Send button", not "the interface is unreadable"). Atomicity
+lets you combine entries from different studies and does not require reading the whole report.
 
-## Mapowanie powinowactwa
-1. Wpisy na kartkach lub w tablicy. 2. Grupuj od dołu — grupy wynikają z treści, bez narzuconych kategorii.
-3. Nazwa grupy to zdanie-wniosek („Nie rozumieją, po co NIP nabywcy”), nie etykieta tematu. 4. Po grupach: wzorce,
-rozbieżności, wyjątki (osoba, która robi inaczej, bywa najcenniejsza). 5. Ustalenie = wzorzec + liczba osób + cytaty.
-Liczby podawaj jako „6 z 8”, nie „75%”.
+## Affinity mapping
+1. Entries on sticky notes or a board. 2. Group bottom-up — the groups come from the content, without imposed categories.
+3. The group name is a conclusion sentence ("They do not understand why the buyer's tax ID is needed"), not a topic label. 4. After the groups: patterns,
+discrepancies, exceptions (the person who does it differently is often the most valuable). 5. A finding = a pattern + the number of people + quotes.
+Give numbers as "6 of 8", not "75%".
 
-## Synteza wspomagana AI — zasady
-- AI streszcza, proponuje grupy i szkice nuggets; **nie jest źródłem faktów**. Każde ustalenie: cytat z transkryptu
-  sprawdzony przez człowieka (czy dosłowny, czy w kontekście, czy ktoś naprawdę tak powiedział).
-- Prompt wymusza: cytat dosłowny + kod uczestnika + znacznik czasu; „brak dowodu” zamiast dopowiadania.
-- Człowiek sprawdza próbkę (np. co najmniej 20% wpisów i wszystkie, od których zależy rekomendacja), szuka
-  pominiętych wątków i wyjątków; AI pomija wątki rzadkie i niewerbalne (zawahanie, miny).
-- Dane osobowe: pseudonimizuj transkrypty przed wysłaniem; narzędzie z umową powierzenia (recruitment-consent-gdpr.md).
-- W raporcie zaznacz, że użyto AI, i jak sprawdzono wyniki.
+## AI-assisted synthesis — rules
+- AI summarizes, proposes groups and drafts of nuggets; **it is not a source of facts**. Every finding: a quote from the transcript
+  checked by a human (is it verbatim, is it in context, did someone really say it).
+- The prompt enforces: a verbatim quote + participant code + timestamp; "no evidence" instead of filling in.
+- A human checks a sample (e.g. at least 20% of the entries and all on which the recommendation depends), looks for
+  missed threads and exceptions; AI skips rare and non-verbal threads (hesitation, facial expressions).
+- Personal data: pseudonymize transcripts before sending; a tool with a data processing agreement (recruitment-consent-gdpr.md).
+- In the report mark that AI was used and how the results were checked.
 
-## Repozytorium
-Jedno miejsce (wiki, baza, narzędzie): plan, raport, nuggets z tagami (temat, segment, produkt, metoda, data),
-status zgód i data usunięcia nagrań. Przed nowym badaniem szukaj w repozytorium — część pytań ma już odpowiedź.
-Wpisy starsze niż ok. 12–18 miesięcy oznacz do weryfikacji [założenie — zależy od tempa zmian produktu].
+## Repository
+One place (wiki, database, tool): plan, report, nuggets with tags (topic, segment, product, method, date),
+consent status and the deletion date of recordings. Before a new study search the repository — some questions already have an answer.
+Mark entries older than about 12–18 months for verification [assumption — depends on the pace of product change].
 
 ## ResearchOps
-- **Panel:** lista osób po zgodzie na kontakt (źródło, segment, historia udziału, częstotliwość zaproszeń,
-  wynagrodzenia); zgoda i wycofanie obsługiwane w jednym miejscu.
-- **Backlog badań:** pytania od zespołów, decyzja, której dotyczą, pilność; priorytet po koszcie opóźnienia decyzji.
-- **Playbooki:** szablony planu, screenera, zgody, skryptu sesji, raportu; instrukcja narzędzi i budżetu.
-- **Metryki operacyjne:** czas od zgłoszenia do wyników, odsetek badań z decyzją, odsetek niestawiennictwa.
+- **Panel:** a list of people who consented to be contacted (source, segment, participation history, invitation frequency,
+  incentives); consent and withdrawal handled in one place.
+- **Research backlog:** questions from teams, the decision they concern, urgency; priority by the cost of delaying the decision.
+- **Playbooks:** templates of the plan, screener, consent, session script, report; instructions for tools and budget.
+- **Operational metrics:** time from request to results, the share of studies with a decision, the no-show rate.
 
-## Od ustaleń do decyzji
-Warsztat 60 min: ustalenia (5 min na każde) → opcje → decyzja i właściciel → miara sukcesu. Ustalenie bez decyzji
-wraca do backlogu z powodem. Hipotezy do sprawdzenia w produkcie: proc-product-discovery.
+## From findings to decisions
+A 60-min workshop: findings (5 min each) → options → decision and owner → success measure. A finding without a decision
+goes back to the backlog with a reason. Hypotheses to check in the product: proc-product-discovery.
