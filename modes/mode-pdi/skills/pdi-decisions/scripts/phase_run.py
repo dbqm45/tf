@@ -244,7 +244,7 @@ def build_prompt(a) -> dict:
         "this session each part of a compound command must match the allow list on its own, otherwise it is rejected.",
         f"First read the change log {d}/ (intent.md, plan.md, decisions.md and whatever is already there) and "
         f"`.claude/skills/pdi-decisions/SKILL.md`.",
-        f"The `## Bramka …` entries in {d}/decisions.md are human decisions from pdi gates and they are binding: do "
+        f"The `## Gate …` entries (in older changes `## Bramka …`) in {d}/decisions.md are human decisions from pdi gates and they are binding: do "
         f"not challenge them. A question from `## Pytania do bramki` in earlier artifacts that such an entry answers "
         f"is settled: in your artifact, record the outcome with a reference to the entry (e.g. {a.change}/D2) and do "
         f"not ask it again.",
@@ -431,7 +431,7 @@ def design_problems(path: Path) -> list[str]:
     if len(missing) < 2 or any(r["status"] == "linked" for r in rows):
         return problems   # z plikiem Figmy każdy brakujący wiersz to osobna sprawa dla projektanta
     # Bez żadnej ramki w pliku to jedna decyzja (podać plik albo zostać bez ramek), nie pytanie na wiersz (CHG-4).
-    rest = [p for p in problems if ": brak ramki — " not in p]
+    rest = [p for p in problems if ": no frame — " not in p and ": brak ramki — " not in p]   # pl: sprzed 14.x
     n = len(missing)
     listed = ", ".join(f"{r['requirement']} {r['state']}" for r in missing)
     grouped = (f"Frames: {n} design.md rows have no frame ({listed}) and the Figma file has no frames at all — "

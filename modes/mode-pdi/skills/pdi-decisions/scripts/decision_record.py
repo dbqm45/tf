@@ -102,19 +102,19 @@ def render(fields: dict) -> str:
 
 
 def new_change(key: str, source: str | None, author: str, reported: str | None = None) -> int:
-    bad = [f"{name} '{v}'" for name, v in (("klucz zmiany", key), ("klucz zgłoszenia", source)) if v and not KEY.match(v)]
+    bad = [f"{name} '{v}'" for name, v in (("change key", key), ("problem key", source)) if v and not KEY.match(v)]
     if bad:
-        print(f"✗ zły kształt: {', '.join(bad)} — wzorzec [A-Z][A-Z0-9]+-[0-9]+, np. CHG-12, PRB-34")
+        print(f"✗ bad format: {', '.join(bad)} — pattern [A-Z][A-Z0-9]+-[0-9]+, e.g. CHG-12, PRB-34")
         return 1
     if reported and not source:
-        print("✗ --source-reported-at bez --source — data dotyczy zgłoszenia, z którego wyszła zmiana")
+        print("✗ --source-reported-at without --source — the date belongs to the problem the change came from")
         return 1
     if reported and not DATE.match(reported):
-        print(f"✗ --source-reported-at '{reported}' — data RRRR-MM-DD")
+        print(f"✗ --source-reported-at '{reported}' — date YYYY-MM-DD")
         return 1
     target = CHANGES / key
     if target.exists():
-        print(f"✗ {target} już istnieje — nie nadpisuję; zmień istniejące pliki albo użyj innego klucza")
+        print(f"✗ {target} already exists — not overwriting; edit the existing files or use another key")
         return 1
     today = dt.date.today().isoformat()
     target.mkdir(parents=True)
@@ -138,30 +138,30 @@ def new_change(key: str, source: str | None, author: str, reported: str | None =
 def check_file(path: Path) -> list[str]:
     h = parse_header(path.read_text(encoding="utf-8"))
     if h is None:
-        return ["brak nagłówka YAML (--- … ---) na początku pliku"]
-    errs = [f"brak pola {k}" for k in REQUIRED if not h.get(k)]
-    errs += [f"nieznane pole {k} (kontrakt pdi 0.5.0 dopuszcza: {', '.join(KEYS)})" for k in h if k not in KEYS]
+        return ["no YAML header (--- … ---) at the top of the file"]
+    errs = [f"missing field {k}" for k in REQUIRED if not h.get(k)]
+    errs += [f"unknown field {k} (pdi contract 0.5.0 allows: {', '.join(KEYS)})" for k in h if k not in KEYS]
     for k, allowed in (("artifact", ARTIFACTS), ("phase", PHASES), ("status", STATUSES)):
         if h.get(k) and h[k] not in allowed:
-            errs.append(f"{k}: '{h[k]}' spoza {', '.join(allowed)}")
+            errs.append(f"{k}: '{h[k]}' not in {', '.join(allowed)}")
     if h.get("version") and not (str(h["version"]).isdigit() and int(h["version"]) >= 1):
-        errs.append(f"version: '{h['version']}' — liczba całkowita ≥ 1")
+        errs.append(f"version: '{h['version']}' — integer ≥ 1")
     for k in ("created", "updated", "source_reported_at"):
         if h.get(k) and not DATE.match(str(h[k])):
-            errs.append(f"{k}: '{h[k]}' — data RRRR-MM-DD")
+            errs.append(f"{k}: '{h[k]}' — date YYYY-MM-DD")
     for k in ("change", "source"):
         if h.get(k) and not KEY.match(str(h[k])):
-            errs.append(f"{k}: '{h[k]}' — klucz [A-Z][A-Z0-9]+-[0-9]+, np. CHG-12")
+            errs.append(f"{k}: '{h[k]}' — key [A-Z][A-Z0-9]+-[0-9]+, e.g. CHG-12")
     if h.get("change") and KEY.match(str(h["change"])) and h["change"] != path.parent.name:
-        errs.append(f"change: '{h['change']}' różny od katalogu {path.parent.name}")
+        errs.append(f"change: '{h['change']}' differs from folder {path.parent.name}")
     if "tasks" in h:
         if h.get("artifact") != "plan":
-            errs.append("tasks tylko w plan.md (artifact: plan)")
+            errs.append("tasks only in plan.md (artifact: plan)")
         tasks = h["tasks"] if isinstance(h["tasks"], list) else [h["tasks"]] if h["tasks"] else []
-        errs += [f"tasks: '{t}' — klucz cięcia, np. TSK-57" for t in tasks if not KEY.match(t)]
+        errs += [f"tasks: '{t}' — cut key, e.g. TSK-57" for t in tasks if not KEY.match(t)]
     for k in ("inputs",):
         if k in h and not isinstance(h[k], list) and h[k]:
-            errs.append(f"{k}: lista ścieżek, np. [docs/project/changes/CHG-12/intent.md]")
+            errs.append(f"{k}: list of paths, e.g. [docs/project/changes/CHG-12/intent.md]")
     return errs
 
 
@@ -202,12 +202,12 @@ def load_answers(path: str) -> list:
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
-        raise ValueError(f"--answers {path}: nie da się przeczytać JSON ({e})") from e
+        raise ValueError(f"--answers {path}: cannot read JSON ({e})") from e
     ok = isinstance(data, list) and all(isinstance(a, dict) and isinstance(a.get("question"), str)
                                         and isinstance(a.get("answer"), str) and a["question"].strip()
                                         and a["answer"].strip() for a in data)
     if not ok:
-        raise ValueError(f"--answers {path}: oczekiwana lista [{{question, answer}}] z niepustymi tekstami")
+        raise ValueError(f"--answers {path}: expected a list [{{question, answer}}] with non-empty texts")
     return [(a["question"], a["answer"]) for a in data]
 
 
@@ -235,19 +235,19 @@ def all_entries(change: str | None = None) -> list[tuple[dict, dict]]:
 def decision_add(a) -> int:
     f = decisions_file(a.key) if KEY.match(a.key) else None
     if f is None:
-        print(f"✗ brak {CHANGES / a.key / 'decisions.md'} — najpierw: decision_record.py change new {a.key}")
+        print(f"✗ no {CHANGES / a.key / 'decisions.md'} — first run: decision_record.py change new {a.key}")
         return 1
-    errs = [f"--kind '{a.kind}' spoza {', '.join(KINDS)}" for _ in [0] if a.kind not in KINDS]
-    errs += [f"--source-kind '{a.source_kind}' spoza {', '.join(SOURCE_KINDS)}" for _ in [0]
+    errs = [f"--kind '{a.kind}' not in {', '.join(KINDS)}" for _ in [0] if a.kind not in KINDS]
+    errs += [f"--source-kind '{a.source_kind}' not in {', '.join(SOURCE_KINDS)}" for _ in [0]
              if a.source_kind not in SOURCE_KINDS]
-    errs += [f"--date '{a.date}' — RRRR-MM-DD" for _ in [0] if a.date and not DATE.match(a.date)]
-    errs += [f"--{n} puste" for n, v in (("statement", a.statement), ("why", a.why), ("by", a.by)) if not v.strip()]
+    errs += [f"--date '{a.date}' — YYYY-MM-DD" for _ in [0] if a.date and not DATE.match(a.date)]
+    errs += [f"--{n} is empty" for n, v in (("statement", a.statement), ("why", a.why), ("by", a.by)) if not v.strip()]
     if a.finding and not FINDING.match(a.finding):
-        errs.append(f"--finding '{a.finding}' — id ustalenia ci_for_sdlc, np. DES-001:TSK-1")
+        errs.append(f"--finding '{a.finding}' — ci_for_sdlc finding id, e.g. DES-001:TSK-1")
     elif a.finding and a.finding.split(":")[1] not in items_of(a.key):
-        errs.append(f"--finding '{a.finding}' dotyczy {a.finding.split(':')[1]}, a to nie {a.key} ani jego cięcie (plan.md)")
+        errs.append(f"--finding '{a.finding}' refers to {a.finding.split(':')[1]}, which is neither {a.key} nor one of its cuts (plan.md)")
     if a.effect and not a.finding:
-        errs.append("--effect tylko z --finding")
+        errs.append("--effect only with --finding")
     if errs:
         print("✗ " + "; ".join(errs))
         return 1
@@ -259,7 +259,7 @@ def decision_add(a) -> int:
     if a.finding:
         entry += f"- finding: {a.finding}\n" + (f"- effect: {a.effect}\n" if a.effect else "")
     f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
-    print(f"✓ {ref} w {f} (sent: no)")
+    print(f"✓ {ref} in {f} (sent: no)")
     return 0
 
 
@@ -267,12 +267,12 @@ def decision_gate(a) -> int:
     """Decyzja podjęta w skrzynce pdi: numer nadał już rejestr, więc wpis od razu jest wysłany."""
     f = decisions_file(a.key) if KEY.match(a.key) else None
     if f is None:
-        print(f"✗ brak {CHANGES / a.key / 'decisions.md'} — najpierw: decision_record.py change new {a.key}")
+        print(f"✗ no {CHANGES / a.key / 'decisions.md'} — first run: decision_record.py change new {a.key}")
         return 1
-    errs = [f"--outcome '{a.outcome}' spoza {', '.join(OUTCOMES)}" for _ in [0] if a.outcome not in OUTCOMES]
-    errs += [f"--id '{a.id}' — numer z rejestru pdi, np. DEC-41" for _ in [0] if not KEY.match(a.id)]
-    errs += [f"--date '{a.date}' — RRRR-MM-DD" for _ in [0] if a.date and not DATE.match(a.date)]
-    errs += [f"--{n} puste" for n, v in (("gate", a.gate), ("by", a.by)) if not v.strip()]
+    errs = [f"--outcome '{a.outcome}' not in {', '.join(OUTCOMES)}" for _ in [0] if a.outcome not in OUTCOMES]
+    errs += [f"--id '{a.id}' — number from the pdi registry, e.g. DEC-41" for _ in [0] if not KEY.match(a.id)]
+    errs += [f"--date '{a.date}' — YYYY-MM-DD" for _ in [0] if a.date and not DATE.match(a.date)]
+    errs += [f"--{n} is empty" for n, v in (("gate", a.gate), ("by", a.by)) if not v.strip()]
     if errs:
         print("✗ " + "; ".join(errs))
         return 1
@@ -284,39 +284,39 @@ def decision_gate(a) -> int:
     entries = parse_entries(f)
     same = next((e for e in entries if e.get("id") == a.id), None)
     if same:
-        print(f"✓ {same['ref']} ma już {a.id} — nic nie dopisuję")
+        print(f"✓ {same['ref']} already has {a.id} — nothing to add")
         return 0
     n = 1 + max([int(e["ref"].rsplit("D", 1)[1]) for e in entries if re.search(r"/D\d+$", e["ref"])] or [0])
     ref = f"{a.key}/D{n}"
     # Ustalenie i uzasadnienie z pdi (PRB-3) w jednym wierszu, bo wpis to lista `- pole: wartość`.
     why = " ".join((a.why or "").split())
-    why = f"{why} (decyzja w skrzynce bramek pdi, {a.id})" if why else (
-        f"decyzja w skrzynce bramek pdi ({a.id}); uzasadnienie w rejestrze pdi")
-    entry = (f"\n## Bramka {a.gate.strip()}: {a.outcome}\n- ref: {ref}\n- id: {a.id}\n- sent: yes\n"
+    why = f"{why} (decision in the pdi gate inbox, {a.id})" if why else (
+        f"decision in the pdi gate inbox ({a.id}); rationale in the pdi registry")
+    entry = (f"\n## Gate {a.gate.strip()}: {a.outcome}\n- ref: {ref}\n- id: {a.id}\n- sent: yes\n"
              f"- date: {a.date or dt.date.today().isoformat()}\n- by: {a.by.strip()}\n- kind: gate\n"
              f"- why: {one_line(why)}\n- source: manual\n- drafted_by: human\n" + answers_lines(answers))
     f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
-    told = f", odpowiedzi na pytania: {len(answers)}" if answers else ""
-    print(f"✓ {ref} w {f} ({a.id}, sent: yes{told})")
+    told = f", answers to questions: {len(answers)}" if answers else ""
+    print(f"✓ {ref} in {f} ({a.id}, sent: yes{told})")
     return 0
 
 
 def import_problems(d, n: int) -> list[str]:
     """Braki jednej decyzji z pdi do importu (pola z contract/decision.schema.json kontraktu pdi 0.12.0)."""
     if not isinstance(d, dict):
-        return [f"[{n}]: oczekiwany obiekt decyzji"]
-    errs = [f"[{n}]: id '{d.get('id')}' — numer z rejestru pdi, np. DEC-41" for _ in [0]
+        return [f"[{n}]: expected a decision object"]
+    errs = [f"[{n}]: id '{d.get('id')}' — number from the pdi registry, e.g. DEC-41" for _ in [0]
             if not (isinstance(d.get("id"), str) and KEY.match(d["id"]))]
-    errs += [f"[{n}]: brak pola {k}" for k in ("statement", "why", "decided_by")
+    errs += [f"[{n}]: missing field {k}" for k in ("statement", "why", "decided_by")
              if not (isinstance(d.get(k), str) and d[k].strip())]
-    errs += [f"[{n}]: decided_at '{d.get('decided_at')}' — RRRR-MM-DD" for _ in [0]
+    errs += [f"[{n}]: decided_at '{d.get('decided_at')}' — YYYY-MM-DD" for _ in [0]
              if not (isinstance(d.get("decided_at"), str) and DATE.match(d["decided_at"]))]
-    errs += [f"[{n}]: kind '{d.get('kind')}' spoza {', '.join(KINDS)}" for _ in [0] if d.get("kind") not in KINDS]
-    errs += [f"[{n}]: drafted_by ai albo human" for _ in [0] if d.get("drafted_by") not in ("ai", "human")]
+    errs += [f"[{n}]: kind '{d.get('kind')}' not in {', '.join(KINDS)}" for _ in [0] if d.get("kind") not in KINDS]
+    errs += [f"[{n}]: drafted_by must be ai or human" for _ in [0] if d.get("drafted_by") not in ("ai", "human")]
     answers = d.get("answers") or []
     if not (isinstance(answers, list) and all(isinstance(x, dict) and isinstance(x.get("question"), str)
                                               and isinstance(x.get("answer"), str) for x in answers)):
-        errs.append(f"[{n}]: answers — lista [{{question, answer}}]")
+        errs.append(f"[{n}]: answers — a list [{{question, answer}}]")
     return errs
 
 
@@ -324,15 +324,15 @@ def decision_import(a) -> int:
     """Decyzje zmiany z rejestru pdi (Z1, PRB-3): dopisuje te, których numeru jeszcze nie ma w decisions.md."""
     f = decisions_file(a.key) if KEY.match(a.key) else None
     if f is None:
-        print(f"✗ brak {CHANGES / a.key / 'decisions.md'} — najpierw: decision_record.py change new {a.key}")
+        print(f"✗ no {CHANGES / a.key / 'decisions.md'} — first run: decision_record.py change new {a.key}")
         return 1
     try:
         data = json.loads(Path(a.json).read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
-        print(f"✗ --json {a.json}: nie da się przeczytać JSON ({e})")
+        print(f"✗ --json {a.json}: cannot read JSON ({e})")
         return 1
     if not isinstance(data, list):
-        print(f"✗ --json {a.json}: oczekiwana lista decyzji z pdi")
+        print(f"✗ --json {a.json}: expected a list of decisions from pdi")
         return 1
     errs = [e for n, d in enumerate(data) for e in import_problems(d, n)]
     if errs:
@@ -359,8 +359,8 @@ def decision_import(a) -> int:
     if added:
         f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + text, encoding="utf-8")
     skipped = len(data) - len(added)
-    print(f"✓ {f}: zaimportowane z pdi {len(added)}" + (f" — {', '.join(added)}" if added else "")
-          + (f"; pominięte (numer już jest): {skipped}" if skipped else ""))
+    print(f"✓ {f}: imported from pdi {len(added)}" + (f" — {', '.join(added)}" if added else "")
+          + (f"; skipped (number already present): {skipped}" if skipped else ""))
     return 0
 
 
@@ -373,22 +373,22 @@ def decision_pending(change: str | None) -> int:
 
 def decision_mark(ref: str, dec_id: str) -> int:
     if not KEY.match(dec_id):
-        print(f"✗ --id '{dec_id}' — numer z rejestru pdi, np. DEC-41")
+        print(f"✗ --id '{dec_id}' — number from the pdi registry, e.g. DEC-41")
         return 1
     f = decisions_file(ref.split("/")[0])
     entry = next((e for e in parse_entries(f) if e["ref"] == ref), None) if f else None
     if entry is None:
-        print(f"✗ nie ma decyzji {ref}")
+        print(f"✗ no decision {ref}")
         return 1
     if entry.get("id"):
-        print(f"✗ {ref} ma już numer {entry['id']} — nie nadpisuję")
+        print(f"✗ {ref} already has number {entry['id']} — not overwriting")
         return 1
     text = f.read_text(encoding="utf-8")
     comments = [m.span() for m in re.finditer(r"<!--.*?-->", text, flags=re.S)]
     block = next((m for m in re.finditer(rf"^- ref: {re.escape(ref)}\n- id:[ \t]*\n- sent: no$", text, flags=re.M)
                   if not any(a <= m.start() < b for a, b in comments)), None)
     if not block:
-        print(f"✗ {ref}: wpis nie ma wierszy `- id:` i `- sent: no` zaraz po `- ref:` — popraw ręcznie")
+        print(f"✗ {ref}: the entry has no `- id:` and `- sent: no` lines right after `- ref:` — fix it by hand")
         return 1
     f.write_text(text[:block.start()] + f"- ref: {ref}\n- id: {dec_id}\n- sent: yes" + text[block.end():],
                  encoding="utf-8")
@@ -417,39 +417,39 @@ def check_entries(path: Path) -> list[str]:
     for e in parse_entries(path):
         r = e["ref"]
         if not re.fullmatch(rf"{re.escape(path.parent.name)}/D\d+", r):
-            errs.append(f"{r}: ref w postaci {path.parent.name}/Dn")
+            errs.append(f"{r}: ref must look like {path.parent.name}/Dn")
         if r in seen:
-            errs.append(f"{r}: powtórzony ref")
+            errs.append(f"{r}: duplicate ref")
         seen.add(r)
         if e.get("id") and not KEY.match(e["id"]):
-            errs.append(f"{r}: id '{e['id']}' — numer z rejestru pdi, np. DEC-41")
+            errs.append(f"{r}: id '{e['id']}' — number from the pdi registry, e.g. DEC-41")
         if e.get("sent") not in ("yes", "no"):
-            errs.append(f"{r}: sent yes albo no")
+            errs.append(f"{r}: sent must be yes or no")
         if e.get("sent") == "yes" and not e.get("id"):
-            errs.append(f"{r}: sent: yes bez numeru id")
+            errs.append(f"{r}: sent: yes without an id number")
         if e.get("kind") not in KINDS:
-            errs.append(f"{r}: kind '{e.get('kind')}' spoza {', '.join(KINDS)}")
+            errs.append(f"{r}: kind '{e.get('kind')}' not in {', '.join(KINDS)}")
         if e.get("source") not in SOURCE_KINDS:
-            errs.append(f"{r}: source '{e.get('source')}' spoza {', '.join(SOURCE_KINDS)}")
+            errs.append(f"{r}: source '{e.get('source')}' not in {', '.join(SOURCE_KINDS)}")
         if e.get("drafted_by") not in ("ai", "human"):
-            errs.append(f"{r}: drafted_by ai albo human")
+            errs.append(f"{r}: drafted_by must be ai or human")
         if not DATE.match(e.get("date", "")):
-            errs.append(f"{r}: date RRRR-MM-DD")
-        errs += [f"{r}: brak pola {k}" for k in ("by", "why") if not e.get(k)]
+            errs.append(f"{r}: date YYYY-MM-DD")
+        errs += [f"{r}: missing field {k}" for k in ("by", "why") if not e.get(k)]
         finding = e.get("finding")
         if finding is not None and not FINDING.match(finding):
-            errs.append(f"{r}: finding '{finding}' — id ustalenia ci_for_sdlc, np. DES-001:TSK-1")
+            errs.append(f"{r}: finding '{finding}' — ci_for_sdlc finding id, e.g. DES-001:TSK-1")
         elif finding and finding.split(":")[1] not in items:
-            errs.append(f"{r}: finding {finding} dotyczy elementu spoza {path.parent.name} i jej cięć")
+            errs.append(f"{r}: finding {finding} refers to an item outside {path.parent.name} and its cuts")
         if e.get("effect") is not None and (not finding or e["effect"] not in EFFECTS):
-            errs.append(f"{r}: effect {'/'.join(EFFECTS)} i tylko przy polu finding")
+            errs.append(f"{r}: effect {'/'.join(EFFECTS)} and only with the finding field")
         if e.get("origin") is not None and e["origin"] not in ORIGINS:
-            errs.append(f"{r}: origin '{e['origin']}' — tylko {', '.join(ORIGINS)} (decision import)")
+            errs.append(f"{r}: origin '{e['origin']}' — only {', '.join(ORIGINS)} (decision import)")
         if e.get("origin") == "pdi" and not e.get("id"):
-            errs.append(f"{r}: origin: pdi bez numeru id")
+            errs.append(f"{r}: origin: pdi without an id number")
         for q, ans in e.get("answers") or []:
             if not q or not ans:
-                errs.append(f"{r}: wiersze `- question:` i `- answer:` idą parami, oba niepuste")
+                errs.append(f"{r}: `- question:` and `- answer:` lines go in pairs, both non-empty")
     return errs
 
 
@@ -484,32 +484,32 @@ def validate(v, s: dict, at: str) -> list[str]:
     types = {"object": dict, "array": list, "string": str, "integer": int}
     t = s.get("type")
     if t and (not isinstance(v, types[t]) or (t == "integer" and isinstance(v, bool))):
-        return [f"{at or 'plik'}: oczekiwano {t}, jest {type(v).__name__} ({v!r})"]
+        return [f"{at or 'file'}: expected {t}, got {type(v).__name__} ({v!r})"]
     if "const" in s and v != s["const"]:
-        return [f"{at or 'plik'}: oczekiwano {s['const']!r}"]
+        return [f"{at or 'file'}: expected {s['const']!r}"]
     errs = []
     if isinstance(v, dict) and t in (None, "object"):
-        errs += [f"{at or 'plik'}: brak pola {k}" for k in s.get("required", []) if k not in v]
+        errs += [f"{at or 'file'}: missing field {k}" for k in s.get("required", []) if k not in v]
         props = s.get("properties", {})
         if s.get("additionalProperties") is False:
-            errs += [f"{at or 'plik'}: nieznane pole {k} (dozwolone: {', '.join(props)})" for k in v if k not in props]
+            errs += [f"{at or 'file'}: unknown field {k} (allowed: {', '.join(props)})" for k in v if k not in props]
         for k, sub in props.items():
             if k in v:
                 errs += validate(v[k], sub, f"{at}.{k}" if at else k)
     elif t == "array":
         if len(v) < s.get("minItems", 0):
-            errs.append(f"{at}: co najmniej {s['minItems']} pozycji")
+            errs.append(f"{at}: at least {s['minItems']} items")
         for i, x in enumerate(v):
             errs += validate(x, s.get("items", {}), f"{at}[{i}]")
     elif t == "string":
         if len(v) < s.get("minLength", 0):
-            errs.append(f"{at}: pusty tekst")
+            errs.append(f"{at}: empty text")
         if "pattern" in s and not re.search(s["pattern"], v):
-            errs.append(f"{at}: '{v}' nie pasuje do {s['pattern']}")
+            errs.append(f"{at}: '{v}' does not match {s['pattern']}")
     elif t == "integer" and "minimum" in s and v < s["minimum"]:
         errs.append(f"{at}: {v} < {s['minimum']}")
     if "enum" in s and not isinstance(v, (dict, list)) and v not in s["enum"]:   # także bez type (warunki kontraktu)
-        errs.append(f"{at}: '{v}' spoza {', '.join(map(str, s['enum']))}")
+        errs.append(f"{at}: '{v}' not in {', '.join(map(str, s['enum']))}")
     for sub in s.get("allOf", []):
         if "if" in sub:
             if not validate(v, sub["if"], at):
@@ -568,26 +568,26 @@ def check_plan(d: Path) -> list[str]:
         if FOUNDATION.match(row.get("rodzaj") or "") or FOUNDATION_VALUE.match(row.get("wartość") or ""):
             unblocks = REQUIREMENT_ID.findall(row.get("odblokowuje") or "")
             if not unblocks:
-                errs.append(f"plan.md: {t} — fundament bez „Odblokowuje” (cięcia tej zmiany, których wymaga); "
-                            "bez tego to praca warstwowa: usuń go albo włącz do pierwszego cięcia, które go potrzebuje")
+                errs.append(f"plan.md: {t} — foundation without „Odblokowuje” (the cuts of this change it unblocks); "
+                            "without it this is layered work: remove it or merge it into the first cut that needs it")
             for u in unblocks:
                 if u not in known:
-                    errs.append(f"plan.md: {t} — „Odblokowuje” {u}, a {u} nie jest cięciem tej zmiany")
+                    errs.append(f"plan.md: {t} — „Odblokowuje” lists {u}, but {u} is not a cut of this change")
         elif "wymagania" in row and not REQUIREMENT_ID.findall(row["wymagania"] or "") and not row.get("weryfikacja"):
-            errs.append(f"plan.md: {t} — cięcie bez ID wymagania w „Wymagania” i bez weryfikacji")
+            errs.append(f"plan.md: {t} — cut without a requirement ID in „Wymagania” and without verification")
     status = (h.get("status") or "").strip().lower() if isinstance(h.get("status"), str) else ""
     if status and status != "draft":
         if not OPTIONS_HEADING.search(text):
-            errs.append("plan.md: brak sekcji „## Rozważone opcje” (N20): architekt wskazuje co najmniej dwie "
-                        "rozważone opcje z plusami, minusami i kosztem, z wyborem i powodem")
+            errs.append("plan.md: no „## Rozważone opcje” section (N20): the architect lists at least two options "
+                        "considered, with pros, cons and cost, plus the choice and the reason")
         else:
             options = OPTION_ENTRY.findall(text)
             if len(options) < 2:
-                errs.append(f"plan.md: „## Rozważone opcje” ma {len(options)} opcji — N20 wymaga co najmniej dwóch "
-                            "(nagłówki `### Opcja A`, `### Opcja B`); plan z jedną opcją dostaje ustalenie przed B3")
+                errs.append(f"plan.md: „## Rozważone opcje” has {len(options)} options — N20 needs at least two "
+                            "(headings `### Opcja A`, `### Opcja B`); a plan with one option gets a finding before B3")
         if not TARGETS_HEADING.search(text):
-            errs.append("plan.md: brak sekcji „## Cele zmiany (targets)” (Z7b-1a, DZ7): architekt zapisuje "
-                        "pokrycie i mutacje zmienionego kodu (N4), dla produktu AI także progi ewaluacji")
+            errs.append("plan.md: no „## Cele zmiany (targets)” section (Z7b-1a, DZ7): the architect records "
+                        "coverage and mutation targets for the changed code (N4), and eval thresholds for an AI product")
     return errs
 
 
@@ -595,38 +595,38 @@ def check_release(d: Path) -> list[str]:
     try:
         data, err = load_yaml((d / "release.yaml").read_text(encoding="utf-8"))
     except ImportError:
-        return ["brak PyYAML (pip install pyyaml) — nie mogę sprawdzić planu wydania"]
+        return ["PyYAML missing (pip install pyyaml) — cannot check the release plan"]
     if err:
-        return [f"niepoprawny YAML: {err}"]
+        return [f"invalid YAML: {err}"]
     if not isinstance(data, dict):
-        return ["niepoprawny YAML: oczekiwano mapy z polami change, releases (kontrakt release-plan)"]
+        return ["invalid YAML: expected a map with fields change, releases (release-plan contract)"]
     errs = validate(data, json.loads(RELEASE_SCHEMA.read_text(encoding="utf-8")), "")
     if errs:
-        return [f"schemat kontraktu: {e}" for e in errs]
+        return [f"contract schema: {e}" for e in errs]
     if data["change"] != d.name:
-        errs.append(f"change: '{data['change']}' różny od katalogu {d.name}")
+        errs.append(f"change: '{data['change']}' differs from folder {d.name}")
     line_of: dict[str, str] = {}
     ids = [r["id"] for r in data["releases"]]
-    errs += [f"linia {i} powtórzona" for i in sorted({i for i in ids if ids.count(i) > 1})]
+    errs += [f"release line {i} repeated" for i in sorted({i for i in ids if ids.count(i) > 1})]
     for r in data["releases"]:
         for t in r["tasks"]:
             if t in line_of:
-                errs.append(f"{t} w dwóch liniach: {line_of[t]} i {r['id']} — cięcie należy do jednej linii")
+                errs.append(f"{t} in two release lines: {line_of[t]} and {r['id']} — a cut belongs to one line")
             line_of.setdefault(t, r["id"])
     if "mvp" in data and data["mvp"]["release"] not in ids:
-        errs.append(f"mvp.release {data['mvp']['release']} nie jest linią z releases ({', '.join(ids)})")
+        errs.append(f"mvp.release {data['mvp']['release']} is not a line in releases ({', '.join(ids)})")
     flag_of: dict[str, str] = {}
     for fl in data.get("flags", []):
         k = fl["key"]
         if not fl.get("rollout"):
-            errs.append(f"flaga {k}: brak etapów udostępniania (rollout), np. internal → 10% → 100%")
+            errs.append(f"flag {k}: no rollout stages (rollout), e.g. internal → 10% → 100%")
         if not fl.get("remove_by"):
-            errs.append(f"flaga {k}: brak daty usunięcia (remove_by)")
+            errs.append(f"flag {k}: no removal date (remove_by)")
         for t in fl.get("tasks", []):
             if t not in line_of:
-                errs.append(f"flaga {k}: {t} nie należy do żadnej linii wydania")
+                errs.append(f"flag {k}: {t} is not in any release line")
             if t in flag_of and flag_of[t] != k:
-                errs.append(f"{t} za dwiema flagami: {flag_of[t]} i {k}")
+                errs.append(f"{t} behind two flags: {flag_of[t]} and {k}")
             flag_of.setdefault(t, k)
     plan = d / "plan.md"
     if plan.is_file():
@@ -635,16 +635,16 @@ def check_release(d: Path) -> list[str]:
         tasks = set(h["tasks"] if isinstance(h.get("tasks"), list) else [h["tasks"]] if h.get("tasks") else [])
         only_rel, only_plan = sorted(set(line_of) - tasks), sorted(tasks - set(line_of))
         if only_rel or only_plan:
-            errs.append("TSK w liniach wydań ≠ tasks w plan.md: " + "; ".join(
-                x for x in (f"tylko w release.yaml: {', '.join(only_rel)}" if only_rel else "",
-                            f"tylko w plan.md: {', '.join(only_plan)}" if only_plan else "") if x))
+            errs.append("TSK in release lines ≠ tasks in plan.md: " + "; ".join(
+                x for x in (f"only in release.yaml: {', '.join(only_rel)}" if only_rel else "",
+                            f"only in plan.md: {', '.join(only_plan)}" if only_plan else "") if x))
         for t, row in plan_columns(text).items():
             if "wydanie" in row and row["wydanie"] != line_of.get(t):
-                errs.append(f"plan.md: {t} — kolumna „Wydanie” {row['wydanie'] or 'pusta'}, w release.yaml "
-                            f"{line_of.get(t) or 'brak linii'}")
+                errs.append(f"plan.md: {t} — column „Wydanie” is {row['wydanie'] or 'empty'}, in release.yaml "
+                            f"{line_of.get(t) or 'no line'}")
             if "flaga" in row and row["flaga"] != flag_of.get(t):
-                errs.append(f"plan.md: {t} — kolumna „Flaga” {row['flaga'] or 'pusta'}, w release.yaml "
-                            f"{flag_of.get(t) or 'bez flagi'}")
+                errs.append(f"plan.md: {t} — column „Flaga” is {row['flaga'] or 'empty'}, in release.yaml "
+                            f"{flag_of.get(t) or 'no flag'}")
     return errs
 
 
@@ -660,17 +660,17 @@ def check(change: str | None = None) -> int:
     pattern = "*"
     if change is not None:
         if not KEY.match(change):
-            print(f"✗ --change '{change}' — klucz zmiany, np. CHG-12")
+            print(f"✗ --change '{change}' — change key, e.g. CHG-12")
             return 2
         if not (CHANGES / change).is_dir():
-            print(f"✗ brak {CHANGES / change} — zmiana {change} nie ma dziennika")
+            print(f"✗ no {CHANGES / change} — change {change} has no log")
             return 1
         pattern = change
     files = sorted(CHANGES.glob(f"{pattern}/*.md")) if CHANGES.is_dir() else []
     files = [f for f in files if not is_task_folder(f.parent)]
     releases = sorted(CHANGES.glob(f"{pattern}/release.yaml")) if CHANGES.is_dir() else []
     if not files and not releases:
-        print(f"Brak artefaktów zmian w {CHANGES} — nic do sprawdzenia.")
+        print(f"No change artifacts in {CHANGES} — nothing to check.")
         return 0
     bad = 0
     for f in files:
@@ -682,7 +682,7 @@ def check(change: str | None = None) -> int:
         for e in check_release(f.parent):
             print(f"✗ {f}: {e}")
             bad += 1
-    print(f"{'✓' if not bad else '✗'} {len(files) + len(releases)} plików w {CHANGES}, błędów: {bad}")
+    print(f"{'✓' if not bad else '✗'} {len(files) + len(releases)} files in {CHANGES}, errors: {bad}")
     return 1 if bad else 0
 
 
@@ -695,7 +695,7 @@ def main(argv: list[str]) -> int:
     new.add_argument("--source")
     new.add_argument("--author", default="claude")
     new.add_argument("--source-reported-at")
-    sub.add_parser("check").add_argument("--change", help="tylko ta zmiana (np. CHG-12); bez — wszystkie")
+    sub.add_parser("check").add_argument("--change", help="only this change (e.g. CHG-12); without it — all changes")
     dec = sub.add_parser("decision").add_subparsers(dest="action", required=True)
     add = dec.add_parser("add")
     add.add_argument("key")
@@ -706,8 +706,8 @@ def main(argv: list[str]) -> int:
     add.add_argument("--date")
     add.add_argument("--source-kind", default="claude-cli")
     add.add_argument("--drafted-by", default="ai", choices=("ai", "human"))
-    add.add_argument("--finding", help="id ustalenia ci_for_sdlc, na które to odpowiedź (np. DES-001:TSK-1)")
-    add.add_argument("--effect", choices=EFFECTS, help="skutek odpowiedzi; domyślnie resolve")
+    add.add_argument("--finding", help="id of the ci_for_sdlc finding this answers (e.g. DES-001:TSK-1)")
+    add.add_argument("--effect", choices=EFFECTS, help="effect of the answer; default resolve")
     dec.add_parser("pending").add_argument("--change")
     mark = dec.add_parser("mark")
     mark.add_argument("ref")
@@ -720,11 +720,11 @@ def main(argv: list[str]) -> int:
     gate.add_argument("--id", required=True)
     gate.add_argument("--by", default="pdi")
     gate.add_argument("--date")
-    gate.add_argument("--why", help="ustalenie i uzasadnienie decyzji z rejestru pdi (trafia do wpisu)")
-    gate.add_argument("--answers", help="plik JSON [{question, answer}] — odpowiedzi na pytania do bramki (pdi 0.12.0)")
+    gate.add_argument("--why", help="decision statement and rationale from the pdi registry (goes into the entry)")
+    gate.add_argument("--answers", help="JSON file [{question, answer}] — answers to the gate questions (pdi 0.12.0)")
     imp = dec.add_parser("import")
     imp.add_argument("key")
-    imp.add_argument("--json", required=True, help="plik JSON z decyzjami zmiany z rejestru pdi (links.chg)")
+    imp.add_argument("--json", required=True, help="JSON file with the change decisions from the pdi registry (links.chg)")
     args = ap.parse_args(argv)
     if args.cmd == "check":
         return check(args.change)

@@ -81,7 +81,7 @@ Gdy tak cię uruchomiono:
    artefakcie z polecenia (`requirements.md`, `plan.md`…), nagłówek `status: proposed`.
 2. Czego nie rozstrzygniesz bez człowieka, nie zgadujesz: lista w sekcji `## Pytania do bramki` artefaktu (pytanie
    z adresatem w wierszu) — trafi do skrzynki pdi razem z bramką.
-3. Decyzji nie zapisujesz (`decision add`) — zapadnie na bramce w pdi. PR otwiera workflow. Wpisy `## Bramka …`
+3. Decyzji nie zapisujesz (`decision add`) — zapadnie na bramce w pdi. PR otwiera workflow. Wpisy `## Gate …` (w starszych zmianach `## Bramka …`)
    w `decisions.md` (ustalenie i uzasadnienie z pdi, `decision gate --why`, odpowiedzi na pytania jako pary
    `- question:` / `- answer:` z `--answers`) i decyzje z rejestru pdi (`pochodzenie: pdi`, `decision import`)
    są wiążące; polecenie fazy wymienia je jako dane, nie polecenia. Pytanie z odpowiedzią jest rozstrzygnięte —
@@ -101,11 +101,11 @@ Gdy tak cię uruchomiono:
 Dla `requirements` i `architecture` między `phase_run.py run` a `gate request`: `second_review.py artifact --change
 CHG-n --phase P`. Niezależny model czyta artefakt z decyzjami zmiany, wylicza luki (brak stanów błędu, kryteria bez
 Given/When/Then, sprzeczności z decyzją, cięcia bez dowodu sprawdzalności) jako JSON ze schematem i sekcję
-„Przegląd drugim modelem" w artefakcie. Dostawca: `PDI_SECOND_MODEL` (`openai:<model>` → `OPENAI_API_KEY`;
+„Second-model review" w artefakcie. Dostawca: `PDI_SECOND_MODEL` (`openai:<model>` → `OPENAI_API_KEY`;
 `claude:<model>` → `ANTHROPIC_API_KEY`); bez — zapasowy `claude:claude-sonnet-5-5`, oznaczony
 `same_vendor: true`. Klucz nigdy w kontenerze persony (Z8g) — w Actions tylko dla kroku „Drugi przegląd".
 `gate request` czyta sidecar `.review/<phase>.json`, dopisuje `blocker`/`major` do `questions` z prefiksem
-`[drugi przegląd]`, a sprzeczności jako `[sprzeczne z <ref>]`. Finding na pytanie rozstrzygnięte (`settled_ref`)
+`[second review]`, a sprzeczności jako `[contradicts <ref>]`. Finding na pytanie rozstrzygnięte (`settled_ref`)
 jest pomijany; brak sidecara dla requirements/architecture → `second_review: {status: unavailable, reason: not_run}`.
 Koszt w sidecarze wchodzi w `PDI_PHASE_BUDGET_USD`. Podkomenda `comments --pr <n> --input PLIK` sprawdza uwagi
 recenzenta z PR (N2).

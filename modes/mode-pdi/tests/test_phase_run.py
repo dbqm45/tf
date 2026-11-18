@@ -136,7 +136,7 @@ def main() -> int:
               f"R-2b: check tylko bieżącej zmiany — stare artefakty innych zmian nie blokują fazy: {text[-600:]}")
         check("one command per call" in text and "&&" in text and "Read" in text and "Grep" in text,
               f"R-2c: bez złożonych poleceń Bash (w --print każda część musi być na liście allow): {text[:900]}")
-        check("## Bramka" in text and "binding" in text and "settled" in text,
+        check("## Gate" in text and "## Bramka" in text and "binding" in text and "settled" in text,
               f"R-2a: decyzje z bramek w decisions.md są wiążące, a odpowiedziane pytania rozstrzygnięte: {text[:900]}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "architecture", "--rework", "--gate", "B3",
                  "--decision", "DEC-41"], repo)
@@ -265,7 +265,7 @@ def main() -> int:
               f"R-30a: sukces zachowuje waiting_gate z liniami postępu: {r.stdout}")
         statuses = [row.get("status") for row in rows]
         check(statuses[:1] == ["started"]
-              and any(row.get("message", "").startswith("czyta plik docs/project/changes/CHG-12/intent.md") for row in rows)
+              and any(row.get("message", "").startswith("reads file docs/project/changes/CHG-12/intent.md") for row in rows)
               and any(row.get("message") == "runs a command" for row in rows)
               and statuses[-1] == "waiting_gate",
               f"R-30b: linie postępu: started → in_progress × 2 → waiting_gate; sekwencja: {rows}")
@@ -358,7 +358,7 @@ def main() -> int:
                        + "| US-2 | koniec | success | brak | ramka końca US-2 |\n", encoding="utf-8")
         r = run(["gate", "request", "--change", "CHG-12", "--phase", "design"], repo, **genv)
         qs = json.loads(Catch.got[-1]["body"]).get("payload", {}).get("questions", [])
-        check(r.returncode == 0 and sum("brak ramki" in q for q in qs) == 3,
+        check(r.returncode == 0 and sum("no frame" in q for q in qs) == 3,
               f"D-2: przy pliku Figmy pytanie na każdy wiersz bez ramki: {qs}")
         des.unlink()
         n = len(Catch.got)

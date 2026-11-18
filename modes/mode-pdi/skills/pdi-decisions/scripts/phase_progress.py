@@ -67,7 +67,7 @@ def tool_use_message(name: str, tool_input: Any) -> str:
     if not isinstance(tool_input, dict):
         tool_input = {}
     if name == "Read":
-        return sanitize(f"czyta plik {rel_path(tool_input.get('file_path', ''))}")
+        return sanitize(f"reads file {rel_path(tool_input.get('file_path', ''))}")
     if name in ("Edit", "Write", "NotebookEdit"):
         return sanitize(f"writes file {rel_path(tool_input.get('file_path', ''))}")
     if name == "Bash":
@@ -154,7 +154,7 @@ class ProgressRelay:
             if subtype == "permission_denied":
                 tool = event.get("tool_name") or "?"
                 reason = event.get("reason") or ""
-                msg = f"odmowa narzędzia {tool}" + (f": {reason}" if reason else "")
+                msg = f"tool denied {tool}" + (f": {reason}" if reason else "")
                 return [self._row(status="in_progress", message=msg)]
             return []
         if etype == "assistant":

@@ -60,7 +60,7 @@ def main() -> int:
           and rows[0]["change"] == "CHG-12" and rows[0]["budget_usd"] == 3,
           f"P-1: pierwsza linia started z phase/change/budget: {rows[0]}")
     check(rows[1]["status"] == "in_progress"
-          and rows[1]["message"] == "czyta plik docs/project/changes/CHG-12/intent.md",
+          and rows[1]["message"] == "reads file docs/project/changes/CHG-12/intent.md",
           f"P-1: Read → ścieżka względna od docs/project/changes/: {rows[1]}")
     check(rows[2]["message"] == "writes file docs/project/changes/CHG-12/requirements.md",
           f"P-1: Write → pisze plik z względną ścieżką: {rows[2]}")
@@ -104,7 +104,7 @@ def main() -> int:
          "session_id": "s"},
     )
     rows, final = pp.events_to_progress(denied_stream, phase="design", change="CHG-12")
-    check(any(r.get("message", "").startswith("odmowa narzędzia Write") for r in rows),
+    check(any(r.get("message", "").startswith("tool denied Write") for r in rows),
           f"P-4: linia z odmową narzędzia: {rows}")
 
     # P-5: message nigdy nie wrzuca pełnego wejścia narzędzia

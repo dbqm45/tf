@@ -41,16 +41,16 @@ def load(path: str) -> tuple[dict | None, list[str]]:
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except OSError as e:
-        return None, [f"nie mogę odczytać {path}: {e}"]
+        return None, [f"cannot read {path}: {e}"]
     except ValueError as e:
-        return None, [f"niepoprawny JSON w {path}: {e}"]
-    return (data, []) if isinstance(data, dict) else (None, [f"{path}: oczekiwano obiektu JSON (zgłoszenie PRB)"])
+        return None, [f"invalid JSON in {path}: {e}"]
+    return (data, []) if isinstance(data, dict) else (None, [f"{path}: expected a JSON object (a PRB problem)"])
 
 
 def check_problem(data: dict) -> list[str]:
-    errs = [f"schemat kontraktu: {e}" for e in validate(data, json.loads(PROBLEM_SCHEMA.read_text(encoding="utf-8")), "")]
+    errs = [f"contract schema: {e}" for e in validate(data, json.loads(PROBLEM_SCHEMA.read_text(encoding="utf-8")), "")]
     if not errs and data["status"] not in TRIAGE_INPUT:
-        errs.append(f"status '{data['status']}' — triaż już był (decyzja należy do pdi); triaż tylko dla: "
+        errs.append(f"status '{data['status']}' — already triaged (the decision belongs to pdi); triage only for: "
                     f"{', '.join(TRIAGE_INPUT)}")
     return errs
 
@@ -58,47 +58,47 @@ def check_problem(data: dict) -> list[str]:
 def build(prb: dict, a) -> tuple[dict, list[str]]:
     errs = []
     if a.status not in ("clarifying", "accepted", "rejected", "parked", "duplicate"):
-        errs.append(f"--status '{a.status}' — rekomendacja to clarifying, accepted, rejected, parked albo duplicate "
-                    "(new i ready_for_triage to stany wejścia)")
+        errs.append(f"--status '{a.status}' — the recommendation is clarifying, accepted, rejected, parked or duplicate "
+                    "(new and ready_for_triage are input states)")
     rec = {"problem": prb["id"], "contract_version": CONTRACT, "recommended_status": a.status,
            "tf_state": "ready-for-human" if a.executor == "human" else TF_STATE.get(a.status, "ready-for-agent"),
            "rationale": (a.rationale or "").strip(), "drafted_by": "ai"}
     if not rec["rationale"]:
-        errs.append("brak --rationale (uzasadnienie rekomendacji dla PO)")
+        errs.append("no --rationale (the reason for the recommendation, for the PO)")
     if a.status == "parked":
         rec["tf_labels"] = ["deferred"]
     if a.category or prb.get("category"):
         rec["category"] = a.category or prb["category"]
     if a.status == "clarifying":
         if not a.question:
-            errs.append("clarifying wymaga pytań do zgłaszającego: --question \"…\" (konkretne, nie „podaj więcej”)")
+            errs.append("clarifying needs questions for the reporter: --question \"…\" (specific, not „tell us more”)")
         rec["questions"] = a.question
     if a.status == "accepted":
         if not (a.brief or "").strip():
-            errs.append("accepted wymaga briefu dla wykonawcy: --brief \"…\" (format z proc-issue-triage)")
+            errs.append("accepted needs a brief for the executor: --brief \"…\" (format from proc-issue-triage)")
         rec.update(brief=a.brief, executor=a.executor or "agent")
     if a.status == "rejected":
         if not a.reason:
-            errs.append(f"rejected wymaga powodu: --reason {'|'.join(REASONS)}")
+            errs.append(f"rejected needs a reason: --reason {'|'.join(REASONS)}")
         elif a.reason not in REASONS:
-            errs.append(f"--reason '{a.reason}' spoza listy kontraktu: {', '.join(REASONS)}")
+            errs.append(f"--reason '{a.reason}' is not in the contract list: {', '.join(REASONS)}")
         rec["rejection_reason"] = a.reason
         if a.note:
             rec["rejection_note"] = a.note
         if a.reason == "out_of_scope_recorded":
             f = a.out_of_scope_file
             if not f or not Path(f).is_file() or not f.startswith(".out-of-scope/"):
-                errs.append("out_of_scope_recorded wymaga istniejącego wpisu: --out-of-scope-file .out-of-scope/<pojęcie>.md")
+                errs.append("out_of_scope_recorded needs an existing entry: --out-of-scope-file .out-of-scope/<concept>.md")
             rec["out_of_scope_file"] = f
     if a.status == "parked":
         if not a.return_when:
-            errs.append("parked wymaga progu powrotu: --return-when \"…\" (np. 3 nowe zgłoszenia albo incydent)")
+            errs.append("parked needs a return threshold: --return-when \"…\" (e.g. 3 new problems or an incident)")
         rec["return_when"] = a.return_when
     if a.status == "duplicate":
         if not a.duplicate_of:
-            errs.append("duplicate wymaga oryginału: --duplicate-of PRB-n")
+            errs.append("duplicate needs the original: --duplicate-of PRB-n")
         elif a.duplicate_of == prb["id"]:
-            errs.append(f"--duplicate-of {a.duplicate_of} — zgłoszenie nie jest duplikatem samego siebie")
+            errs.append(f"--duplicate-of {a.duplicate_of} — a problem cannot duplicate itself")
         rec["duplicate_of"] = a.duplicate_of
     evidence = [{"text": t, "epistemic_status": "observation"} for t in a.observation or []]
     evidence += [{"text": t, "epistemic_status": "ai_inference"} for t in a.evidence or []]
@@ -106,7 +106,7 @@ def build(prb: dict, a) -> tuple[dict, list[str]]:
         rec["evidence"] = evidence
     rec = {k: v for k, v in rec.items() if v is not None}
     if not errs:
-        errs = [f"schemat rekomendacji: {e}" for e in
+        errs = [f"recommendation schema: {e}" for e in
                 validate(rec, json.loads(RECOMMENDATION_SCHEMA.read_text(encoding="utf-8")), "")]
     return rec, errs
 
@@ -138,7 +138,7 @@ def main(argv: list[str]) -> int:
         for e in errs:
             print(f"✗ {a.prb}: {e}")
         if not errs:
-            print(f"✓ {prb['id']} ({prb['status']}) — zgodne z kontraktem pdi {CONTRACT}, gotowe do triażu")
+            print(f"✓ {prb['id']} ({prb['status']}) — matches pdi contract {CONTRACT}, ready for triage")
         return 1 if errs else 0
     rec, errs = build(prb, a)
     if errs:
