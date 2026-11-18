@@ -920,6 +920,17 @@ treści (angielska), bez równoległej polskiej.
     12 + 4 oczekiwane porażki, bramka analizatorów 7/7 (wynik bajt w bajt jak przed), test_workflows 20/20;
     `--hints` czysto w `all` i `pack-it`, 901/918 · 31/43.
     - [ ] etykiety i prompt weryfikacji w `workflows/code-audit.js` po angielsku razem z testami W-7…W-18.
+  - [x] 4f (2026-11-18): pack-editorial-pl — opisy, procedury, persona, rola, cecha i `pack.yaml` po angielsku; normy
+    RJP, przykłady zdań, pary błędne/poprawne i nazwy źródeł zostają po polsku (z angielską glosą). Kategorie raportu
+    jak w `polish_lint.py` (SPELLING, PUNCTUATION…); `keywords` PL+EN w txt-polish-correctness (podpowiedzi 3/3);
+    literówka „wcześej” → „wcześniej” w regule §18. Haiku 3/4, `komunikaty-ui` 2/2 przed i po (szum).
+  - [x] 4g (2026-11-18): komentarze i docstringi w kodzie po angielsku — 132 pliki (core/factory, hooks, tools,
+    scripts, core/skills, modes, org, .github, packs). Kontrola: AST bez docstringów identyczne dla 117 plików `.py`
+    (własny skrypt, niezależnie od wykonawców), YAML — dane identyczne poza komentarzami w blokach `run:`. Zostają:
+    literały, regexy, linie `pl: sprzed 14.x`, cytowane polskie dane. Ponowna bramka 21 skilli (skrypty w odcisku).
+    Wykonawcy na Sonnecie (tańsze, praca mechaniczna).
+    - [ ] polskie napisy w szablonie `core-git-workflow/templates/ai-review.yml` (prompt, komentarz PR, nazwy kroków)
+      i komunikaty `echo` w workflow — razem z etapem komunikatów i testów.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
     M2 hooki, M3–M4 silnik (`core/factory`), M5 skrypty pozostałych skilli rdzenia, M6 pack-it, M7 mode-pdi, M8 org,
     tools, editorial, ux. Docstringi i komentarze w kodzie to dokumentacja opiekunów — poza tym etapem.
