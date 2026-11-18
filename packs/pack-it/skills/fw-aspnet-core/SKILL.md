@@ -1,71 +1,71 @@
 ---
 name: fw-aspnet-core
-description: Użyj przy ASP.NET Core (.NET 8–10) — Minimal API, ProblemDetails, walidacja, OpenAPI, DI, WebApplicationFactory.
+description: Use for ASP.NET Core (.NET 8–10) — Minimal API, ProblemDetails, validation, OpenAPI, DI, WebApplicationFactory.
 metadata:
   review: "2027-01-23"
-  catalog: "Użyj przy budowie i przeglądzie usług HTTP w ASP.NET Core (.NET 8–10) — Minimal API i grupy tras, wyniki typowane (TypedResults, Results<…>), błędy jako ProblemDetails (application/problem+json), walidacja żądań (AddValidation w .NET 10), dokument OpenAPI (AddOpenApi/MapOpenApi od .NET 9), wstrzykiwanie zależności i czasy życia, konfiguracja i opcje, mapowanie wyniku domeny na HTTP, testy integracyjne z WebApplicationFactory, różnice między wersjami. Nie do składni i idiomów C# (lang-csharp), projektu API niezależnie od technologii (be-api-design), uwierzytelniania i autoryzacji jako tematu (be-auth-security), bazy danych (be-database) ani wdrożenia (ops-*)."
-  keywords: "ASP.NET Core, aspnetcore, Minimal API, minimal api, MapGet, MapPost, MapGroup, TypedResults, Results<>, ProblemDetails, problem+json, AddProblemDetails, walidacja w ASP.NET, AddValidation, OpenAPI w .NET, AddOpenApi, MapOpenApi, Swagger, WebApplicationFactory, test integracyjny ASP.NET, Mvc.Testing, kontrolery czy minimal api, DI scoped singleton, IOptions, appsettings, Kestrel"
+  catalog: "Use when building and reviewing HTTP services in ASP.NET Core (.NET 8–10) — Minimal API and route groups, typed results (TypedResults, Results<…>), errors as ProblemDetails (application/problem+json), request validation (AddValidation in .NET 10), the OpenAPI document (AddOpenApi/MapOpenApi from .NET 9), dependency injection and lifetimes, configuration and options, mapping the domain result to HTTP, integration tests with WebApplicationFactory, differences between versions. Not for C# syntax and idioms (lang-csharp), technology-independent API design (be-api-design), authentication and authorization as a topic (be-auth-security), the database (be-database) or deployment (ops-*)."
+  keywords: "ASP.NET Core, aspnetcore, Minimal API, minimal api, MapGet, MapPost, MapGroup, TypedResults, Results<>, ProblemDetails, problem+json, AddProblemDetails, walidacja w ASP.NET, AddValidation, OpenAPI w .NET, AddOpenApi, MapOpenApi, Swagger, WebApplicationFactory, test integracyjny ASP.NET, Mvc.Testing, kontrolery czy minimal api, DI scoped singleton, IOptions, appsettings, Kestrel, validation in ASP.NET, OpenAPI in .NET, ASP.NET integration test, controllers or minimal api"
 ---
 
 # ASP.NET Core
 
-## Procedura
-1. **Wersja platformy** z `TargetFramework` (tabela niżej) — od niej zależy dostępność walidacji i OpenAPI.
-2. **Endpointy**: Minimal API z `MapGroup` dla zasobu (kontrolery tylko, gdy projekt już ich używa); handler jako
-   metoda statyczna lub klasa, parametry wiązane jawnie (trasa, treść, usługi).
-3. **Wynik typowany**: handler zwraca `Results<Ok<T>, NotFound, ProblemHttpResult>` — kompilator pilnuje zestawu
-   odpowiedzi, a OpenAPI je opisuje. Wynik domeny (lang-csharp) mapujesz na HTTP w handlerze, nie w domenie.
-4. **Błędy**: `AddProblemDetails()` + `UseExceptionHandler()` + `UseStatusCodePages()`; odrzucenie biznesowe →
-   `TypedResults.Problem(title, detail, statusCode)`. Uwaga: `TypedResults.Conflict(new ProblemDetails {…})`
-   wysyła zwykły `application/json`, nie `application/problem+json` (sprawdzone testem).
-5. **Walidacja** (.NET 10): `AddValidation()` i atrybuty `System.ComponentModel.DataAnnotations` na typach
-   żądań (także na parametrach rekordu) → 400 z `ValidationProblem` bez kodu w handlerze. Na .NET 8–9: walidacja
-   ręczna w handlerze albo filtr endpointu. Reguły biznesowe zostają w domenie.
-6. **OpenAPI** (.NET 9+): pakiet `Microsoft.AspNetCore.OpenApi`, `AddOpenApi()` i `MapOpenApi()` →
-   `/openapi/v1.json`; nazwy operacji `WithName`. Na .NET 8: Swashbuckle albo NSwag.
-7. **Zależności**: czasy życia — `Singleton` bez stanu na żądanie, `Scoped` dla jednostki pracy (np. `DbContext`),
-   nigdy `Scoped` wstrzykiwany do `Singleton`; czas przez `TimeProvider`; konfiguracja przez `IOptions<T>`
-   z walidacją przy starcie (`ValidateOnStart`), sekrety ze zmiennych środowiskowych lub magazynu sekretów.
-8. **Testy integracyjne**: `Microsoft.AspNetCore.Mvc.Testing`, `WebApplicationFactory<Program>` jako
-   `IClassFixture`, `CreateClient()`; podmiana usług przez `WithWebHostBuilder(b => b.ConfigureServices(…))`.
-   Na .NET 10 test widzi `Program` z instrukcji najwyższego poziomu bez dopisywania `public partial class Program`
-   (sprawdzone 2026-10-23); na starszych dopisz tę linię.
+## Procedure
+1. **Platform version** from `TargetFramework` (table below) — the availability of validation and OpenAPI depends on it.
+2. **Endpoints**: Minimal API with `MapGroup` per resource (controllers only when the project already uses them); the handler as
+   a static method or a class, parameters bound explicitly (route, body, services).
+3. **Typed result**: the handler returns `Results<Ok<T>, NotFound, ProblemHttpResult>` — the compiler guards the set of
+   responses, and OpenAPI describes them. You map the domain result (lang-csharp) to HTTP in the handler, not in the domain.
+4. **Errors**: `AddProblemDetails()` + `UseExceptionHandler()` + `UseStatusCodePages()`; a business rejection →
+   `TypedResults.Problem(title, detail, statusCode)`. Note: `TypedResults.Conflict(new ProblemDetails {…})`
+   sends plain `application/json`, not `application/problem+json` (checked by a test).
+5. **Validation** (.NET 10): `AddValidation()` and `System.ComponentModel.DataAnnotations` attributes on request
+   types (also on record parameters) → 400 with `ValidationProblem` without code in the handler. On .NET 8–9: manual
+   validation in the handler or an endpoint filter. Business rules stay in the domain.
+6. **OpenAPI** (.NET 9+): the `Microsoft.AspNetCore.OpenApi` package, `AddOpenApi()` and `MapOpenApi()` →
+   `/openapi/v1.json`; operation names with `WithName`. On .NET 8: Swashbuckle or NSwag.
+7. **Dependencies**: lifetimes — `Singleton` without per-request state, `Scoped` for a unit of work (e.g. `DbContext`),
+   never `Scoped` injected into a `Singleton`; time through `TimeProvider`; configuration through `IOptions<T>`
+   with validation at startup (`ValidateOnStart`), secrets from environment variables or a secret store.
+8. **Integration tests**: `Microsoft.AspNetCore.Mvc.Testing`, `WebApplicationFactory<Program>` as an
+   `IClassFixture`, `CreateClient()`; replacing services through `WithWebHostBuilder(b => b.ConfigureServices(…))`.
+   On .NET 10 the test sees `Program` from top-level statements without adding `public partial class Program`
+   (checked 2026-10-23); on older versions add that line.
 
-## Przykład
-`POST /resources/{id}/block` z `BlockRequest([Required, StringLength(50, MinimumLength = 2)] string By)`:
-200 z `BlockResponse`, 404 dla nieznanego zasobu, 409 jako `application/problem+json` dla „zajęte przez jan”
-i „wyłączony”, 400 z walidacji dla `By = "a"`, operacja `BlockResource` w `/openapi/v1.json`. Kod i 4 testy
-integracyjne: `references/minimal-api.md`.
+## Example
+`POST /resources/{id}/block` with `BlockRequest([Required, StringLength(50, MinimumLength = 2)] string By)`:
+200 with `BlockResponse`, 404 for an unknown resource, 409 as `application/problem+json` for "taken by jan"
+and "disabled", 400 from validation for `By = "a"`, the `BlockResource` operation in `/openapi/v1.json`. The code and 4
+integration tests: `references/minimal-api.md`.
 
-## Zależne od wersji
-Progi sprawdzone kompilacją 2026-10-23 (net8.0 i net10.0 z SDK; net9.0 z pakietami referencyjnymi z NuGet).
-| Wersja | Zmiany istotne dla tego skilla |
+## Version-dependent
+Thresholds checked by compilation 2026-10-23 (net8.0 and net10.0 from the SDK; net9.0 with reference packages from NuGet).
+| Version | Changes relevant to this skill |
 |---|---|
-| .NET 8 (LTS) | Minimal API z `TypedResults` i `Results<…>`, `AddProblemDetails`; brak `AddOpenApi` i `AddValidation` |
-| .NET 9 | wbudowany dokument OpenAPI: `AddOpenApi`, `MapOpenApi`; brak `AddValidation` |
-| .NET 10 (LTS) | walidacja w Minimal API: `AddValidation`; `Program` dostępny dla `WebApplicationFactory` bez deklaracji częściowej |
-.NET 11 — wydanie planowane na listopad 2026 [niezweryfikowane]; projekt na .NET 11 → `SKILL_OUTDATED`
+| .NET 8 (LTS) | Minimal API with `TypedResults` and `Results<…>`, `AddProblemDetails`; no `AddOpenApi` and no `AddValidation` |
+| .NET 9 | built-in OpenAPI document: `AddOpenApi`, `MapOpenApi`; no `AddValidation` |
+| .NET 10 (LTS) | validation in Minimal API: `AddValidation`; `Program` available to `WebApplicationFactory` without a partial declaration |
+.NET 11 — release planned for November 2026 [unverified]; a project on .NET 11 → `SKILL_OUTDATED`
 (core-stack-sync).
 
-## Pojęcia domenowe w aspnet-core
-<!-- Kontrakt: każde pojęcie ze słownika → idiom tej technologii. Sprawdzane przez `build.py check`. -->
-| Pojęcie (słownik) | Idiom |
+## Domain concepts in aspnet-core
+<!-- Contract: every concept from the glossary → an idiom of this technology. Checked by `build.py check`. -->
+| Concept (glossary) | Idiom |
 |---|---|
-| **obiekt wartości** | typ domeny (lang-csharp); w żądaniu i odpowiedzi osobny `record` DTO mapowany na granicy |
-| **encja** | klasa domeny; przez API wystawiasz DTO, nie encję (ani encję EF Core) |
-| **agregat** | ładowany z repozytorium w handlerze, jedna metoda biznesowa na żądanie, zapis z oczekiwaną wersją → 409 przy konflikcie współbieżności |
-| **warianty** | wynik domeny mapowany w handlerze `switch` na `Results<…>` |
-| **wynik operacji** | `Results<Ok<T>, NotFound, ProblemHttpResult>`; odrzucenie → `TypedResults.Problem(statusCode: 409)` |
-| **zdarzenie** | zbierane z agregatu (`PullEvents`) i zapisywane w outboxie w tej samej transakcji (be-messaging-outbox) |
-| **polityka** | usługa w DI wstrzykiwana do handlera lub fabryki agregatu |
-| **repozytorium** | adapter portu zarejestrowany w DI (`Scoped` przy EF Core), wstrzykiwany do handlera |
-| **read model** | osobny endpoint `GET` z zapytaniem omijającym agregat (projekcja, `AsNoTracking`) |
-| **maszyna stanów** | przejścia w domenie; endpoint wywołuje metodę przejścia, niedozwolone przejście → 409 jako ProblemDetails |
-| **moduł** | grupa tras (`MapGroup`) i metoda rozszerzająca rejestrująca usługi modułu (`AddBooking()`) |
+| **value object** | a domain type (lang-csharp); in the request and response a separate DTO `record` mapped at the boundary |
+| **entity** | a domain class; through the API you expose a DTO, not the entity (nor an EF Core entity) |
+| **aggregate** | loaded from the repository in the handler, one business method per request, saved with the expected version → 409 on a concurrency conflict |
+| **variants** | the domain result mapped in the handler with a `switch` onto `Results<…>` |
+| **operation result** | `Results<Ok<T>, NotFound, ProblemHttpResult>`; a rejection → `TypedResults.Problem(statusCode: 409)` |
+| **event** | collected from the aggregate (`PullEvents`) and saved in the outbox in the same transaction (be-messaging-outbox) |
+| **policy** | a service in DI injected into the handler or the aggregate factory |
+| **repository** | a port adapter registered in DI (`Scoped` with EF Core), injected into the handler |
+| **read model** | a separate `GET` endpoint with a query that bypasses the aggregate (a projection, `AsNoTracking`) |
+| **state machine** | transitions in the domain; the endpoint calls the transition method, a disallowed transition → 409 as ProblemDetails |
+| **module** | a route group (`MapGroup`) and an extension method registering the module's services (`AddBooking()`) |
 
-## Źródła
-- Microsoft Learn: Minimal APIs, „Handle errors in ASP.NET Core APIs”, „Generate OpenAPI documents”, „What's new in
-  ASP.NET Core 9.0/10.0”, „Integration tests in ASP.NET Core” (dostęp 2026-10-23; zachowanie sprawdzone na
-  przykładzie z `references/minimal-api.md`).
-- RFC 9457 „Problem Details for HTTP APIs”.
-Opisane własnymi słowami.
+## Sources
+- Microsoft Learn: Minimal APIs, "Handle errors in ASP.NET Core APIs", "Generate OpenAPI documents", "What's new in
+  ASP.NET Core 9.0/10.0", "Integration tests in ASP.NET Core" (accessed 2026-10-23; behaviour checked on the
+  example from `references/minimal-api.md`).
+- RFC 9457 "Problem Details for HTTP APIs".
+Described in our own words.

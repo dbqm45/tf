@@ -1,98 +1,98 @@
-# Asynchroniczność: Promise, async/await, event loop
+# Asynchrony: Promise, async/await, event loop
 
-> **Spis treści:** Stany Promise · `.then()` zawsze zwraca NOWY Promise · ⚠️ Reguła #1: zawsze `return` w `.then()`, inaczej floating… · Obsługa błędów — `.catch()` · `Promise.all` / `allSettled` / `race` / `any` · Sekwencyjne vs równoległe `await` — częsty problem z… · `async`/`await` — cukier nad Promise, nie inny mechanizm · ⚠️ Pułapka: `try/catch` NIE łapie błędu z callbacku… · Microtask queue vs macrotask (event loop)
+> **Contents:** Promise states · `.then()` always returns a NEW Promise · ⚠️ Rule #1: always `return` in `.then()`, otherwise a… · Error handling — `.catch()` · `Promise.all` / `allSettled` / `race` / `any` · Sequential vs parallel `await` — a common performance… · `async`/`await` — sugar over Promise, not a different… · ⚠️ Pitfall: `try/catch` does NOT catch an error from an… · Microtask queue vs macrotask (event loop)
 
-Na podstawie MDN Web Docs (developer.mozilla.org/docs/Web/JavaScript/Guide/Using_promises), opisane własnymi słowami; przykłady sprawdzone w Node 22.
+Based on MDN Web Docs (developer.mozilla.org/docs/Web/JavaScript/Guide/Using_promises), described in our own words; examples checked in Node 22.
 
-## Stany Promise
+## Promise states
 
-Promise ma jeden z trzech stanów, nieodwracalnie: **pending** → **fulfilled** albo **rejected**.
+A Promise has one of three states, irreversibly: **pending** → **fulfilled** or **rejected**.
 
 ```js
-const p = new Promise((resolve, reject) => { /* operacja async */ });
-Promise.resolve(value);  // od razu fulfilled
-Promise.reject(error);   // od razu rejected
+const p = new Promise((resolve, reject) => { /* async operation */ });
+Promise.resolve(value);  // fulfilled at once
+Promise.reject(error);   // rejected at once
 ```
 
-## `.then()` zawsze zwraca NOWY Promise
+## `.then()` always returns a NEW Promise
 
 ```js
 const p2 = p.then(onFulfilled, onRejected); // p2 !== p
 ```
 
-## ⚠️ Reguła #1: zawsze `return` w `.then()`, inaczej floating promise
+## ⚠️ Rule #1: always `return` in `.then()`, otherwise a floating promise
 
 ```js
-// ❌ BUG — brak return, kolejny .then() NIE czeka na fetch()
+// ❌ BUG — no return, the next .then() does NOT wait for fetch()
 doSomething().then((url) => { fetch(url); })
-             .then((result) => console.log(result)); // undefined — fetch się jeszcze nie skończył
+             .then((result) => console.log(result)); // undefined — fetch has not finished yet
 
-// ✅ POPRAWNIE
+// ✅ CORRECT
 doSomething().then((url) => { return fetch(url); })
-             .then((result) => console.log(result)); // prawidłowa odpowiedź
+             .then((result) => console.log(result)); // the proper response
 ```
 
-To jest jeden z najczęstszych realnych bugów w kodzie z Promise — brakujący `return` tworzy **race
-condition**: kod dalej w łańcuchu wykonuje się, zanim wewnętrzna operacja faktycznie się zakończy.
+This is one of the most common real bugs in Promise code — a missing `return` creates a **race
+condition**: code further down the chain runs before the inner operation actually finishes.
 
-## Obsługa błędów — `.catch()`
+## Error handling — `.catch()`
 
-`.catch()` łapie błąd z **każdego** wcześniejszego kroku w łańcuchu (odpowiednik `try/catch` dla
-kodu synchronicznego):
+`.catch()` catches an error from **any** earlier step in the chain (the equivalent of `try/catch` for
+synchronous code):
 
 ```js
 doSomething()
   .then((r) => doSomethingElse(r))
   .then((r2) => doThirdThing(r2))
-  .catch(failureCallback); // łapie błąd z doSomething, doSomethingElse LUB doThirdThing
+  .catch(failureCallback); // catches an error from doSomething, doSomethingElse OR doThirdThing
 ```
 
-Kod po `.catch()` w łańcuchu **wykonuje się dalej normalnie**, nawet po złapaniu błędu:
+Code after `.catch()` in the chain **continues to run normally**, even after the error was caught:
 ```js
 doSomething()
   .then(() => { throw new Error("x"); })
-  .catch(() => console.error("handled"))   // wykonane
-  .then(() => console.log("runs anyway")); // WYKONANE — .catch() "naprawił" łańcuch
+  .catch(() => console.error("handled"))   // runs
+  .then(() => console.log("runs anyway")); // RUNS — .catch() "repaired" the chain
 ```
 
-**Unhandled rejection** — Promise rejected bez `.catch()`/bez `try/catch` wokół `await`:
+**Unhandled rejection** — a Promise rejected without `.catch()`/without a `try/catch` around `await`:
 ```js
-window.addEventListener("unhandledrejection", (e) => console.error(e.reason)); // przeglądarka
+window.addEventListener("unhandledrejection", (e) => console.error(e.reason)); // browser
 process.on("unhandledRejection", (reason) => console.error(reason));           // Node.js
 ```
 
 ## `Promise.all` / `allSettled` / `race` / `any`
 
-| Metoda | Czeka na | Wynik przy błędzie |
+| Method | Waits for | Result on an error |
 |---|---|---|
-| `Promise.all([...])` | wszystkie | odrzuca całość przy **pierwszym** rejected |
-| `Promise.allSettled([...])` | wszystkie, zawsze | nigdy nie odrzuca — zwraca `{status, value/reason}` per Promise |
-| `Promise.race([...])` | pierwszy zakończony (fulfilled **lub** rejected) | wynik/błąd tego pierwszego |
-| `Promise.any([...])` | pierwszy **fulfilled** | `AggregateError`, jeśli wszystkie rejected |
+| `Promise.all([...])` | all | rejects the whole on the **first** rejected |
+| `Promise.allSettled([...])` | all, always | never rejects — returns `{status, value/reason}` per Promise |
+| `Promise.race([...])` | the first settled (fulfilled **or** rejected) | the result/error of that first one |
+| `Promise.any([...])` | the first **fulfilled** | `AggregateError` if all are rejected |
 
 ```js
-const [r1, r2] = await Promise.all([func1(), func2()]); // obie równolegle
-const results = await Promise.allSettled([func1(), func2()]); // żadna nie "zepsuje" reszty
+const [r1, r2] = await Promise.all([func1(), func2()]); // both in parallel
+const results = await Promise.allSettled([func1(), func2()]); // none "breaks" the rest
 ```
 
-## Sekwencyjne vs równoległe `await` — częsty problem z wydajnością
+## Sequential vs parallel `await` — a common performance problem
 
 ```js
-// ❌ niepotrzebnie sekwencyjne — func2 czeka na func1, mimo że są niezależne
+// ❌ needlessly sequential — func2 waits for func1 even though they are independent
 const r1 = await func1();
 const r2 = await func2();
 
-// ✅ równoległe — obie startują natychmiast
+// ✅ parallel — both start immediately
 const [r1, r2] = await Promise.all([func1(), func2()]);
 ```
 
-Sekwencyjne `await` jest właściwe **tylko** wtedy, gdy druga operacja faktycznie zależy od wyniku
-pierwszej — w przeciwnym razie to niepotrzebne, łatwe do naprawienia opóźnienie.
+Sequential `await` is right **only** when the second operation really depends on the result of
+the first — otherwise it is an unnecessary delay that is easy to fix.
 
-## `async`/`await` — cukier nad Promise, nie inny mechanizm
+## `async`/`await` — sugar over Promise, not a different mechanism
 
 ```js
-// Identyczne zachowanie:
+// Identical behaviour:
 doSomething().then((url) => fetch(url)).then((r) => r.json()).then((d) => console.log(d));
 
 async function run() {
@@ -103,7 +103,7 @@ async function run() {
 }
 ```
 
-Obsługa błędów z `async/await` — zwykły `try/catch` (patrz `errors-and-exceptions.md`):
+Error handling with `async/await` — a plain `try/catch` (see `errors-and-exceptions.md`):
 ```js
 async function main() {
   try {
@@ -115,34 +115,34 @@ async function main() {
 }
 ```
 
-## ⚠️ Pułapka: `try/catch` NIE łapie błędu z callbacku asynchronicznego
+## ⚠️ Pitfall: `try/catch` does NOT catch an error from an asynchronous callback
 
 ```js
-// ❌ catch nigdy się nie wykona — setTimeout callback biegnie poza tym try
+// ❌ the catch never runs — the setTimeout callback runs outside this try
 try {
   setTimeout(() => { throw new Error("boom"); }, 1000);
-} catch (e) { console.error(e); } // nieużywalne
+} catch (e) { console.error(e); } // useless
 
-// ✅ owinięcie w Promise + await sprowadza błąd do miejsca, gdzie try/catch działa
+// ✅ wrapping in a Promise + await brings the error back to where try/catch works
 async function safe() {
   try {
     await new Promise((_, reject) => setTimeout(() => reject(new Error("boom")), 1000));
-  } catch (e) { console.error(e); } // teraz działa
+  } catch (e) { console.error(e); } // now it works
 }
 ```
 
 ## Microtask queue vs macrotask (event loop)
 
-Promise callbacki (`.then`, `await`) trafiają do **microtask queue**, która jest opróżniana
-**przed** kolejnym makrotaskiem (np. `setTimeout`, nawet z opóźnieniem `0`):
+Promise callbacks (`.then`, `await`) go to the **microtask queue**, which is drained
+**before** the next macrotask (e.g. `setTimeout`, even with a `0` delay):
 
 ```js
 Promise.resolve().then(() => console.log("promise"));
 setTimeout(() => console.log("timeout"), 0);
 console.log("sync");
-// kolejność: "sync", "promise", "timeout" — ZAWSZE, niezależnie od tego, że wygląda symetrycznie
+// order: "sync", "promise", "timeout" — ALWAYS, even though it looks symmetrical
 ```
 
-**Reguła praktyczna:** `async`/Promise-based kod jest zawsze asynchroniczny, nawet jeśli Promise
-jest już `resolved` w momencie tworzenia — callback i tak trafia do kolejki mikrotasków, nie
-wykonuje się synchronicznie w miejscu.
+**Practical rule:** `async`/Promise-based code is always asynchronous, even if the Promise
+is already `resolved` when it is created — the callback still goes to the microtask queue, it does not
+run synchronously in place.

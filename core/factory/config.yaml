@@ -336,19 +336,20 @@ facets:
   - {prefix: tf,    order: 950, name: delivery,        question: "how to take a task from the ticket to the PR (the factory loop, the /tf command)"}
 
 # Słownik pojęć — kontrakt, który musi pokryć każdy skill z `contract: true`
-# (sekcja „## Pojęcia domenowe w …” z mapowaniem pojęcie → idiom).
+# (sekcja „## Domain concepts in …” z mapowaniem pojęcie → idiom). Polskie nazwy (sprzed 14.x) przyjmuje
+# build.py check jako aliasy (VOCABULARY_PL).
 vocabulary:
-  - obiekt wartości
-  - encja
-  - agregat
-  - warianty
-  - wynik operacji
-  - zdarzenie
-  - polityka
-  - repozytorium
+  - value object
+  - entity
+  - aggregate
+  - variants
+  - operation result
+  - event
+  - policy
+  - repository
   - read model
-  - maszyna stanów
-  - moduł
+  - state machine
+  - module
 
 # Skill wymaga innych (dokładane automatycznie do zespołu, który go używa). Nakładki dokładają swoje.
 skill_requires: {}

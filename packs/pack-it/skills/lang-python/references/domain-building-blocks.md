@@ -1,10 +1,10 @@
-# Klocki domenowe w Pythonie — przykłady
+# Domain building blocks in Python — examples
 
-> **Spis treści:** 1. Money · 2. Result · 3. Zdarzenia · 4. Agregat rezerwacji sali · 5. Port repozytorium i adapter w pamięci · 6. Wariant dla Pythona 3.11
+> **Contents:** 1. Money · 2. Result · 3. Events · 4. Room booking aggregate · 5. Repository port and in-memory adapter · 6. Variant for Python 3.11
 
-Kod sprawdzony 2026-10-03:
-- wariant 3.12+ (sekcje 1–5) uruchomiony na CPython 3.14 i sprawdzony `mypy --strict` (mypy 2.4.0) oraz `ruff check`;
-- wariant 3.11 (sekcja 6) uruchomiony na CPython 3.11.
+Code checked 2026-10-03:
+- the 3.12+ variant (sections 1–5) run on CPython 3.14 and checked with `mypy --strict` (mypy 2.4.0) and `ruff check`;
+- the 3.11 variant (section 6) run on CPython 3.11.
 
 ## 1. Money
 ```python
@@ -23,7 +23,7 @@ class Money:
 
     def __post_init__(self) -> None:
         if len(self.currency) != 3:
-            raise ValueError(f"kod waluty ISO 4217: {self.currency!r}")
+            raise ValueError(f"ISO 4217 currency code: {self.currency!r}")
         object.__setattr__(self, "amount", self.amount.quantize(CENT, ROUND_HALF_EVEN))
 
     @classmethod
@@ -32,10 +32,10 @@ class Money:
 
     def __add__(self, other: Money) -> Money:
         if other.currency != self.currency:
-            raise ValueError("różne waluty")
+            raise ValueError("different currencies")
         return Money(self.amount + other.amount, self.currency)
 ```
-`ValueError` jest tu poprawny: zła waluta to błąd programisty, nie odrzucenie biznesowe.
+`ValueError` is correct here: a wrong currency is a programmer error, not a business rejection.
 
 ## 2. Result
 ```python
@@ -59,15 +59,15 @@ type Result[T] = Ok[T] | Rejected
 def message(r: Result[str]) -> str:
     match r:
         case Ok(value=v):
-            return f"Zarezerwowano: {v}"
+            return f"Booked: {v}"
         case Rejected(reason=why):
-            return f"Odrzucono: {why}"
+            return f"Rejected: {why}"
         case _:
             assert_never(r)
 ```
-Dodanie trzeciego wariantu bez nowej gałęzi `case` → mypy zgłasza błąd w `assert_never`.
+Adding a third variant without a new `case` branch → mypy reports an error in `assert_never`.
 
-## 3. Zdarzenia
+## 3. Events
 ```python
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -96,7 +96,7 @@ def now() -> datetime:
     return datetime.now(UTC)
 ```
 
-## 4. Agregat rezerwacji sali
+## 4. Room booking aggregate
 ```python
 from dataclasses import dataclass
 
@@ -120,7 +120,7 @@ type SlotState = Free | Held | Booked
 
 
 class RoomSchedule:
-    """Agregat: granica spójności = jedna sala; zmiany tylko przez metody biznesowe."""
+    """Aggregate: consistency boundary = one room; changes only through business methods."""
 
     def __init__(self, room: str, version: int = 0) -> None:
         self.room = room
@@ -135,9 +135,9 @@ class RoomSchedule:
                 self._events.append(SlotHeld(self.room, slot, by, now()))
                 return Ok(slot)
             case Held(by=other) | Booked(by=other) if other != by:
-                return Rejected("termin zajęty")
+                return Rejected("slot taken")
             case _:
-                return Ok(slot)   # ponowienie przez tę samą osobę — idempotentnie
+                return Ok(slot)   # a retry by the same person — idempotent
 
     def confirm(self, slot: str, by: str) -> Result[str]:
         match self._slots.get(slot, Free()):
@@ -148,20 +148,20 @@ class RoomSchedule:
             case Booked(by=holder) if holder == by:
                 return Ok(slot)
             case _:
-                return Rejected("najpierw wstępna rezerwacja")
+                return Rejected("hold the slot first")
 
     def pull_events(self) -> list[RoomEvent]:
         events, self._events = self._events, []
         return events
 ```
 
-## 5. Port repozytorium i adapter w pamięci
+## 5. Repository port and in-memory adapter
 ```python
 from typing import Protocol
 
 
 class ConcurrencyConflict(Exception):
-    """Ktoś zapisał agregat wcześniej — ponów komendę na świeżym stanie."""
+    """Someone saved the aggregate earlier — retry the command on fresh state."""
 
 
 class RoomSchedules(Protocol):
@@ -192,12 +192,12 @@ def reserve(repo: RoomSchedules, room: str, slot: str, by: str) -> Result[str]:
         repo.save(schedule)
     return result
 ```
-Adapter SQL implementuje ten sam `Protocol` i sprawdza wersję w `UPDATE … WHERE version = :expected`.
-Test domeny w pytest używa `InMemoryRoomSchedules` (tool-pytest).
+The SQL adapter implements the same `Protocol` and checks the version in `UPDATE … WHERE version = :expected`.
+The domain test in pytest uses `InMemoryRoomSchedules` (tool-pytest).
 
-## 6. Wariant dla Pythona 3.11
-Bez instrukcji `type` i bez `class Ok[T]`: generyk przez `TypeVar`, alias przez `TypeAlias`, `assert_never`
-z `typing` (3.11 je ma).
+## 6. Variant for Python 3.11
+Without the `type` statement and without `class Ok[T]`: the generic through `TypeVar`, the alias through `TypeAlias`, `assert_never`
+from `typing` (3.11 has it).
 ```python
 from dataclasses import dataclass
 from typing import Generic, TypeAlias, TypeVar, Union, assert_never
@@ -220,9 +220,9 @@ Result: TypeAlias = Union[Ok[T], Rejected]
 
 def message(r: "Result[str]") -> str:
     if isinstance(r, Ok):
-        return f"Zarezerwowano: {r.value}"
+        return f"Booked: {r.value}"
     if isinstance(r, Rejected):
-        return f"Odrzucono: {r.reason}"
+        return f"Rejected: {r.reason}"
     assert_never(r)
 ```
-W 3.11 `match` też działa; `slots=True` w dataclass i `datetime.UTC` są dostępne od 3.10 i 3.11.
+In 3.11 `match` also works; `slots=True` in a dataclass and `datetime.UTC` are available from 3.10 and 3.11.

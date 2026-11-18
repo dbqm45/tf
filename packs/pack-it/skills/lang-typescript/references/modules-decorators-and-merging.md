@@ -1,81 +1,81 @@
-# Moduły, dekoratory i declaration merging
+# Modules, decorators and declaration merging
 
-> **Spis treści:** Moduły · Dekoratory · Declaration merging
+> **Contents:** Modules · Decorators · Declaration merging
 
-Na podstawie podręcznika TypeScript („Modules”, „Decorators”, „Declaration Merging”) i release notes 5.0–7.0,
-opisane własnymi słowami. Przykłady sprawdzone w tsc 6.0.3 i 7.0.2 (`strict`, `module: nodenext`).
+Based on the TypeScript Handbook ("Modules", "Decorators", "Declaration Merging") and release notes 5.0–7.0,
+described in our own words. Examples checked in tsc 6.0.3 and 7.0.2 (`strict`, `module: nodenext`).
 
-## Moduły
+## Modules
 
-### Eksporty, importy, aliasy
+### Exports, imports, aliases
 ```ts
 // maths.ts
 export const pi = 3.14;
 export function absolute(n: number) { return n < 0 ? -n : n; }
 export default function helloWorld() { console.log("Hello"); }
 
-// import — w ESM pod `nodenext` z rozszerzeniem `.js` (albo `.ts` + `rewriteRelativeImportExtensions`)
+// import — in ESM under `nodenext` with the `.js` extension (or `.ts` + `rewriteRelativeImportExtensions`)
 import helloWorld, { pi, absolute as abs } from "./maths.js";
 import * as math from "./maths.js";
 ```
 
-### Importy tylko typów
+### Type-only imports
 ```ts
 import { createCatName, type Cat, type Dog } from "./animal.js"; // inline (4.5+)
-import type { Cat, Dog } from "./animal.js";                     // cały import typowy
+import type { Cat, Dog } from "./animal.js";                     // the whole import is type-only
 ```
-Z `verbatimModuleSyntax` (zalecane; zastępuje `importsNotUsedAsValues`/`preserveValueImports`) import typu bez
-`type` jest błędem — i słusznie: bundlery/Node kompilujące plik po pliku nie wiedzą, co jest typem.
+With `verbatimModuleSyntax` (recommended; it replaces `importsNotUsedAsValues`/`preserveValueImports`) a type import without
+`type` is an error — and rightly so: bundlers/Node compiling file by file do not know what is a type.
 
-### Interop z CommonJS
-| Sytuacja | Zapis |
+### Interop with CommonJS
+| Situation | Form |
 |---|---|
-| plik ESM importuje pakiet CJS | `import pkg from "pkg"` (`esModuleInterop` — od TS 6.0 zawsze włączone; `false` usunięte w 7.0) |
-| plik `.cts` / projekt CJS | `import fs = require("node:fs")`, `export =` — **nie** w plikach ESM i błąd przy `erasableSyntaxOnly` |
-| Node ≥ 22.12 | `require()` modułu ESM działa (bez top-level await) — mniej powodów do dual-package |
+| an ESM file imports a CJS package | `import pkg from "pkg"` (`esModuleInterop` — always on since TS 6.0; `false` removed in 7.0) |
+| a `.cts` file / a CJS project | `import fs = require("node:fs")`, `export =` — **not** in ESM files, and an error with `erasableSyntaxOnly` |
+| Node ≥ 22.12 | `require()` of an ESM module works (without top-level await) — fewer reasons for a dual package |
 
-`module.exports = …` w pliku `.ts` to znak, że plik powinien być `.cts` albo przepisany na `export`.
+`module.exports = …` in a `.ts` file is a sign that the file should be `.cts` or rewritten to `export`.
 
-### Dynamiczny import, pliki-skrypty
+### Dynamic import, script files
 ```ts
-const math = await import("./maths.js");  // leniwe ładowanie (top-level await tylko w ESM)
-export {};                                 // wymusza traktowanie pliku jako modułu
+const math = await import("./maths.js");  // lazy loading (top-level await only in ESM)
+export {};                                 // forces the file to be treated as a module
 ```
-`moduleDetection: "force"` traktuje każdy plik jako moduł bez tej sztuczki.
+`moduleDetection: "force"` treats every file as a module without this trick.
 
-### Import JSON i atrybuty importu
+### JSON import and import attributes
 ```ts
 import data from "./data.json" with { type: "json" };   // ✅ import attributes
-import data from "./data.json" assert { type: "json" }; // ❌ od TS 6.0 błąd — `assert` zastąpione przez `with`
+import data from "./data.json" assert { type: "json" }; // ❌ an error since TS 6.0 — `assert` replaced by `with`
 ```
 
-### Reguły
-- Preferuj eksporty nazwane; `default` dla jednego głównego eksportu pliku.
-- `export *` ukrywa, co jest publicznym API — w `index.ts` modułu wypisuj eksporty jawnie.
-- Aliasy ścieżek: `paths` względem tsconfig (bez `baseUrl`, usuniętego w 7.0) albo `imports` w `package.json`
-  (`#shared/*` — `domain-modeling-patterns.md`); aliasy działają w runtime tylko, jeśli zna je bundler/Node.
+### Rules
+- Prefer named exports; `default` for a file's single main export.
+- `export *` hides what the public API is — in a module's `index.ts` list the exports explicitly.
+- Path aliases: `paths` relative to the tsconfig (without `baseUrl`, removed in 7.0) or `imports` in `package.json`
+  (`#shared/*` — `domain-modeling-patterns.md`); aliases work at runtime only if the bundler/Node knows them.
 
 ---
 
-## Dekoratory
+## Decorators
 
-Dwie **niezgodne** implementacje:
+Two **incompatible** implementations:
 
-| | Standardowe (TC39) — **domyślne od TS 5.0** | Legacy (`experimentalDecorators: true`) |
+| | Standard (TC39) — **the default since TS 5.0** | Legacy (`experimentalDecorators: true`) |
 |---|---|---|
-| sygnatura | `(value, context)` — `context: ClassMethodDecoratorContext` itd. | `(target, key, descriptor)` |
-| dekoratory parametrów | **brak** | są (`@Inject()` w konstruktorze) |
-| `emitDecoratorMetadata` / `reflect-metadata` | brak | tak |
-| `accessor` (auto-akcesory) | tak | nie |
-| gdzie spotkasz | nowy kod, biblioteki ES | starsze NestJS, TypeORM, class-validator, Angular (dekoratory przetwarza kompilator Angulara — fw-angular) |
+| signature | `(value, context)` — `context: ClassMethodDecoratorContext` etc. | `(target, key, descriptor)` |
+| parameter decorators | **none** | yes (`@Inject()` in the constructor) |
+| `emitDecoratorMetadata` / `reflect-metadata` | none | yes |
+| `accessor` (auto-accessors) | yes | no |
+| where you meet them | new code, ES libraries | older NestJS, TypeORM, class-validator, Angular (the decorators are processed by the Angular compiler — fw-angular) |
 
-Nie zmieniaj trybu w istniejącym projekcie „przy okazji” — biblioteki oparte na metadanych przestaną działać.
-Dekoratory nie są usuwalną składnią: Node 22 uruchamiający TS przez usuwanie typów ich nie obsłuży (V8 jeszcze
-ich nie implementuje) — potrzebny kompilator/bundler.
+Do not switch the mode in an existing project "while you are at it" — metadata-based libraries will stop working.
+Decorators are not erasable syntax: Node 22 running TS by type stripping will not handle them (V8 does not
+implement them yet) — a compiler/bundler is needed.
 
-### Standardowe dekoratory (TS 5.0+)
+### Standard decorators (TS 5.0+)
 ```ts
-// dekorator metody — zwraca funkcję zastępującą
+// method decorator — returns a replacement function
 function logged<This, Args extends unknown[], R>(
   target: (this: This, ...args: Args) => R,
   context: ClassMethodDecoratorContext<This, (this: This, ...args: Args) => R>,
@@ -86,7 +86,7 @@ function logged<This, Args extends unknown[], R>(
   };
 }
 
-// fabryka dekoratora (parametryzowany)
+// decorator factory (parameterised)
 function repeat(times: number) {
   return function <This, Args extends unknown[]>(
     target: (this: This, ...args: Args) => void,
@@ -98,7 +98,7 @@ function repeat(times: number) {
   };
 }
 
-// dekorator auto-akcesora (`accessor` — TS 4.9+ składnia, dekorowanie w 5.0+)
+// auto-accessor decorator (`accessor` — TS 4.9+ syntax, decorating in 5.0+)
 function nonNegative<This>(
   target: ClassAccessorDecoratorTarget<This, number>,
   _context: ClassAccessorDecoratorContext<This, number>,
@@ -106,7 +106,7 @@ function nonNegative<This>(
   return { set(this: This, v: number) { if (v < 0) throw new RangeError("negative"); target.set.call(this, v); } };
 }
 
-// dekorator klasy
+// class decorator
 function sealed<T extends abstract new (...args: never[]) => unknown>(value: T, _ctx: ClassDecoratorContext<T>) {
   Object.seal(value);
   Object.seal(value.prototype);
@@ -119,10 +119,10 @@ class Calculator {
   @repeat(2) ping(msg: string) { console.log(msg); }
 }
 ```
-`context.addInitializer(fn)` uruchamia kod przy tworzeniu instancji (np. rejestracja, wiązanie `this`);
-`context.metadata` (TS 5.2, `Symbol.metadata`) zastępuje `reflect-metadata` w nowym kodzie.
+`context.addInitializer(fn)` runs code when an instance is created (e.g. registration, binding `this`);
+`context.metadata` (TS 5.2, `Symbol.metadata`) replaces `reflect-metadata` in new code.
 
-### Legacy (`experimentalDecorators`) — tylko do utrzymania istniejącego kodu
+### Legacy (`experimentalDecorators`) — only for maintaining existing code
 ```ts
 function logMethod(_target: object, key: string, descriptor: PropertyDescriptor) {
   const original = descriptor.value as (...a: unknown[]) => unknown;
@@ -131,41 +131,41 @@ function logMethod(_target: object, key: string, descriptor: PropertyDescriptor)
     return original.apply(this, args);
   };
 }
-function requiredParam(_target: object, _key: string | symbol | undefined, _index: number) { /* metadane */ }
+function requiredParam(_target: object, _key: string | symbol | undefined, _index: number) { /* metadata */ }
 class Report {
   @logMethod add(a: number, b: number) { return a + b; }
-  print(@requiredParam verbose: boolean) { return verbose; } // parametry — tylko legacy
+  print(@requiredParam verbose: boolean) { return verbose; } // parameters — legacy only
 }
 ```
-Kolejność (oba tryby): wyrażenia dekoratorów/fabryk ewaluowane z góry na dół, same dekoratory stosowane
-z dołu do góry; dekoratory składowych przed dekoratorem klasy (klasa na końcu).
+Order (both modes): decorator/factory expressions are evaluated top to bottom, the decorators themselves are applied
+bottom to top; member decorators before the class decorator (the class last).
 
 ### Angular
-Dekoratory `@Component`, `@Injectable`/`@Service` zostają, ale `@Input`/`@Output` i DI przez konstruktor
-zastępują funkcje `input()`, `output()`, `inject()` — nie wprowadzaj nowego kodu na starych wzorcach (fw-angular).
+The `@Component`, `@Injectable`/`@Service` decorators stay, but `@Input`/`@Output` and constructor DI
+are replaced by the `input()`, `output()`, `inject()` functions — do not introduce new code on the old patterns (fw-angular).
 
 ---
 
 ## Declaration merging
 
-### Interfejsy
+### Interfaces
 ```ts
 interface Box { height: number; width: number }
-interface Box { scale: number }  // Box ma height, width, scale
+interface Box { scale: number }  // Box has height, width, scale
 ```
-Metody o tej samej nazwie stają się przeciążeniami; późniejsza deklaracja ma pierwszeństwo, sygnatury z typami
-literałów trafiają na początek.
+Methods with the same name become overloads; the later declaration takes precedence, signatures with literal
+types go to the front.
 
-### Namespace + funkcja/klasa/enum
+### Namespace + function/class/enum
 ```ts
 function buildLabel(name: string): string { return buildLabel.prefix + name; }
-namespace buildLabel { export let prefix = "Hello, "; }   // namespace z wartością — błąd przy erasableSyntaxOnly
+namespace buildLabel { export let prefix = "Hello, "; }   // a namespace with a value — an error with erasableSyntaxOnly
 ```
-Nowy kod: przypisanie właściwości do funkcji (`buildLabel.prefix = "Hello, "` — TS rozumie je od 3.1) albo
-obiekt-towarzysz; `namespace` tylko w plikach deklaracji (`declare namespace`). Słowo `module` zamiast `namespace`
-(`module Foo {}`) jest wycofane od TS 6.0.
+New code: assigning a property to the function (`buildLabel.prefix = "Hello, "` — TS understands it since 3.1) or
+a companion object; `namespace` only in declaration files (`declare namespace`). The `module` keyword instead of `namespace`
+(`module Foo {}`) is deprecated since TS 6.0.
 
-### Module augmentation — rozszerzanie typów bibliotek
+### Module augmentation — extending library types
 ```ts
 declare module "./observable.js" {
   interface Observable<T> { map<U>(f: (x: T) => U): Observable<U> }
@@ -177,20 +177,20 @@ declare global {
   interface Window { appVersion?: string }
 }
 ```
-Plik z `declare module`/`declare global` musi być modułem (mieć `import`/`export`). To właściwa droga zamiast
-`as any` rozsianego po miejscach użycia.
+A file with `declare module`/`declare global` must be a module (have an `import`/`export`). This is the right way instead of
+`as any` scattered across the call sites.
 
-### Co może się łączyć
+### What can merge
 
-| Deklaracja | tworzy namespace | tworzy typ | tworzy wartość | łączy się z `namespace` |
+| Declaration | creates a namespace | creates a type | creates a value | merges with `namespace` |
 |---|---|---|---|---|
-| namespace | tak | — | tak (jeśli ma wartości) | tak |
-| class | — | tak | tak | tak |
-| enum | — | tak | tak | tak |
-| interface | — | tak | — | tak (wzorzec „typ + towarzysz”) |
-| type alias | — | tak | — | tak |
-| function | — | — | tak | tak |
-| variable (`const`/`let`) | — | — | tak | nie |
+| namespace | yes | — | yes (if it has values) | yes |
+| class | — | yes | yes | yes |
+| enum | — | yes | yes | yes |
+| interface | — | yes | — | yes (the "type + companion" pattern) |
+| type alias | — | yes | — | yes |
+| function | — | — | yes | yes |
+| variable (`const`/`let`) | — | — | yes | no |
 
-Nie łączą się: dwie klasy, klasa i zmienna, zmienna i namespace z wartościami, dwa `type` o tej samej nazwie.
-Typ + `const` o tej samej nazwie (typ i wartość w osobnych przestrzeniach) to najprostszy „towarzysz” bez namespace.
+These do not merge: two classes, a class and a variable, a variable and a namespace with values, two `type`s with the same name.
+A type + a `const` with the same name (the type and the value in separate spaces) is the simplest "companion" without a namespace.

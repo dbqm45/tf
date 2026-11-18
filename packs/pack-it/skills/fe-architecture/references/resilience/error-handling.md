@@ -1,52 +1,52 @@
 # Error Handling
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/error-handling.
+Source: frontendpatterns.dev/error-handling.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Resilience
-- **Poziom:** Advanced
-- **Przykłady:** React, Vue, Native web
-- **Data aktualizacji:** 29 października 2025
-- **Autor:** Den Odell
+- **Category:** Resilience
+- **Level:** Advanced
+- **Examples:** React, Vue, Native web
+- **Last updated:** 29 October 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Handle errors at appropriate layers: catch at API boundaries, transform for display, and show
-users actionable messages with recovery options.”
+"Handle errors at appropriate layers: catch at API boundaries, transform for display, and show
+users actionable messages with recovery options."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Rzucenie błędu w `.catch()` wewnątrz `useEffect` NIE trafia do Error Boundary** (to odrzucona obietnica poza
-  renderem). Przekaż go jawnie: `showBoundary(err)` z `react-error-boundary` albo przez stan
-  (`setState(() => { throw err; })`). Poprawiono przykład „Error Boundary Integration”.
-- „Try again” ma ponawiać operację, nie przeładowywać strony (`window.location.reload()` gubi stan) — poprawiono.
-- Timeout: `AbortSignal.timeout(ms)` i łączenie z sygnałem anulowania `AbortSignal.any([signal, AbortSignal.timeout(ms)])`
-  zamiast ręcznego `setTimeout` (daje `TimeoutError`, odróżnialny od `AbortError`).
-- `TypeError` z `fetch` = błąd sieci/CORS, ale `TypeError` z Twojego kodu też — klasyfikuj tylko błędy z samego
-  wywołania `fetch`, nie z całego bloku.
-- Modeluj wynik jako unię dyskryminowaną (`idle | loading | error | success`), nie trzy niezależne flagi
-  (lang-typescript). W Angularze status daje `resource`/`httpResource` (fw-angular).
-- Retry z backoffem — kanoniczna wersja w resilience/retry.md (tu skrót); 409/422 to normalne wyniki biznesowe,
-  pokazuj je przy polach (fe-web-platform).
+- **Throwing an error in `.catch()` inside `useEffect` does NOT reach the Error Boundary** (it is a rejected promise outside
+  the render). Pass it explicitly: `showBoundary(err)` from `react-error-boundary` or through state
+  (`setState(() => { throw err; })`). The "Error Boundary Integration" example has been corrected.
+- "Try again" should retry the operation, not reload the page (`window.location.reload()` loses state) — corrected.
+- Timeout: `AbortSignal.timeout(ms)` and combining it with a cancellation signal `AbortSignal.any([signal, AbortSignal.timeout(ms)])`
+  instead of a manual `setTimeout` (it gives a `TimeoutError`, distinguishable from `AbortError`).
+- A `TypeError` from `fetch` = a network/CORS error, but a `TypeError` from your own code too — classify only errors from the
+  `fetch` call itself, not from the whole block.
+- Model the result as a discriminated union (`idle | loading | error | success`), not three independent flags
+  (lang-typescript). In Angular the status is given by `resource`/`httpResource` (fw-angular).
+- Retry with backoff — the canonical version is in resilience/retry.md (a shortcut here); 409/422 are normal business outcomes,
+  show them next to the fields (fe-web-platform).
 
 ## Problem
 
-Brak konsekwentnej obsługi błędów prowadzi do: nieskończonych stanów ładowania (błąd nigdy nie
-kończy `loading`), cichych porażek (błąd występuje, nic się nie dzieje na ekranie), braku logowania
-błędów po stronie deva, i niekonsekwentnego podejścia między różnymi komponentami tej samej
-aplikacji.
+A lack of consistent error handling leads to: infinite loading states (the error never
+ends `loading`), silent failures (an error occurs, nothing happens on the screen), no error logging
+on the dev side, and an inconsistent approach between different components of the same
+application.
 
-## Rozwiązanie
+## Solution
 
-Kluczowe zasady: każda operacja asynchroniczna wymaga **jawnej** obsługi błędu; błędy trzeba
-**klasyfikować** (404 vs timeout vs 401) i traktować różnie w zależności od typu; komunikaty dla
-użytkownika muszą być **zrozumiałe dla człowieka**, nie surowym błędem z devtoolsów; gdzie to możliwe,
-zastosuj graceful degradation (dane z cache) zamiast całkowitej porażki.
+Key principles: every asynchronous operation requires **explicit** error handling; errors must be
+**classified** (404 vs timeout vs 401) and treated differently depending on the type; messages for
+the user must be **understandable to a human**, not a raw error from the devtools; where possible,
+apply graceful degradation (data from the cache) instead of a complete failure.
 
-## Przykłady kodu
+## Code examples
 
 ### Basic Error Handling
 
@@ -295,29 +295,29 @@ async function fetchUserWithFallback(userId) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Użytkownik widzi, co się stało, zamiast czekać na nieskończone ładowanie.
-- Przejściowe błędy stają się odzyskiwalne dzięki przyciskom retry.
-- Debugowanie produkcyjne jest możliwe dzięki logowaniu z kontekstem.
-- Częściowa funkcjonalność bije całkowitą porażkę.
-- Różne typy błędów dostają odpowiednie, dopasowane traktowanie.
-- Użytkownik nie traci wpisanych danych formularza dzięki zachowaniu stanu przy błędzie.
+- The user sees what happened instead of waiting for an infinite load.
+- Transient errors become recoverable thanks to retry buttons.
+- Production debugging is possible thanks to logging with context.
+- Partial functionality beats complete failure.
+- Different types of errors get appropriate, tailored treatment.
+- The user does not lose the form data they entered, thanks to preserving state on error.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Bloki try/catch dodają boilerplate w każdym miejscu, gdzie się z czymś łączymy.
-- Pusty `catch (e) {}` ukrywa błąd zamiast go obsłużyć — to antywzorzec, nie „obsługa błędów”.
-- Każdy typ błędu wymaga przemyślanego, osobnego podejścia — nie da się tego uogólnić w 100%.
-- Scentralizowane handlery mogą nadmiernie uprościć niuanse konkretnego przypadku.
-- W React obsługa błędów **asynchronicznych** nie jest oczywista — Error Boundary tego nie łapie.
-- Komunikaty błędów muszą służyć dwóm odbiorcom naraz: użytkownikowi (przyjazny język) i deweloperowi
-  (szczegóły do debugowania) — to bywa sprzeczne.
-- Zbyt agresywne logowanie może zalać narzędzia monitoringu szumem.
-- Fallback z cache może zmylić użytkownika, jeśli nie zaznaczysz wprost, że dane są nieaktualne
-  (`stale: true` w przykładzie wyżej to nie tylko flaga techniczna — powinna mieć odzwierciedlenie w UI).
+- try/catch blocks add boilerplate in every place where we connect to something.
+- An empty `catch (e) {}` hides the error instead of handling it — that is an anti-pattern, not "error handling".
+- Every type of error requires a thought-through, separate approach — it cannot be generalized 100%.
+- Centralized handlers can oversimplify the nuances of a specific case.
+- In React handling **asynchronous** errors is not obvious — an Error Boundary does not catch them.
+- Error messages must serve two audiences at once: the user (friendly language) and the developer
+  (details for debugging) — these can conflict.
+- Overly aggressive logging can flood monitoring tools with noise.
+- A fallback from the cache can mislead the user if you do not state explicitly that the data is stale
+  (`stale: true` in the example above is not just a technical flag — it should be reflected in the UI).
 
-## Powiązane wzorce
+## Related patterns
 
 - [Error Boundary](./error-boundary.md) — Resilience
 - [Loading State](./loading-state.md) — Resilience
@@ -326,12 +326,12 @@ async function fetchUserWithFallback(userId) {
 - [try...catch Statement (MDN)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch)
 - [Promise Error Handling (MDN)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises#error_handling)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-To nie jest opcjonalny wzorzec „do dodania później” — każda operacja asynchroniczna w produkcyjnym
-kodzie **musi** mieć jawną obsługę błędu (patrz fundament „Resilience by Design” w
-`../principles.md`). Jedyna decyzja to **poziom** obsługi: prosty try/catch + komunikat
-wystarcza dla mało istotnych operacji; klasyfikacja błędów + centralny handler + Sentry ma sens, gdy
-błędy w danym miejscu realnie wpływają na zaufanie użytkownika (płatności, utrata danych
-formularza). Nie buduj `ErrorHandler` klasy z przykładu dla jednego, rzadko wywoływanego
-`fetch()` — to przerost formy nad treścią (YAGNI).
+This is not an optional pattern "to be added later" — every asynchronous operation in production
+code **must** have explicit error handling (see the "Resilience by Design" foundation in
+`../principles.md`). The only decision is the **level** of handling: a simple try/catch + a message
+is enough for unimportant operations; error classification + a central handler + Sentry make sense when
+errors in a given place really affect the user's trust (payments, loss of form
+data). Do not build the `ErrorHandler` class from the example for one rarely called
+`fetch()` — that is form over substance (YAGNI).

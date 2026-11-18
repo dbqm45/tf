@@ -1,52 +1,52 @@
 # Component Testing
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/component-testing.
+Source: frontendpatterns.dev/component-testing.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Testing
-- **Poziom:** Intermediate
-- **Przykłady frameworków:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 29 listopada 2025
-- **Autor:** Den Odell
+- **Category:** Testing
+- **Level:** Intermediate
+- **Framework examples:** React, Vue, Svelte, Native web
+- **Last updated:** 29 November 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Test components by rendering them, simulating user interactions, and asserting on the resulting
-output rather than implementation details.”
+"Test components by rendering them, simulating user interactions, and asserting on the resulting
+output rather than implementation details."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Strategia (trofeum testów, co testować, dublery) — eng-testing; wybór przypadków — qa-test-design; narzędzia —
-  tool-vitest (także tryb przeglądarki), tool-jest, tool-playwright (e2e, migawki dostępności).
-- Przykłady używają `jest.fn()`; w Vitest to `vi.fn()` / `vi.spyOn()` — API zgodne.
-- Preferuj `userEvent` nad `fireEvent` (realistyczna sekwencja zdarzeń) i zapytania wg ról/etykiet
-  (`getByRole`, `getByLabelText`) nad `getByText`/selektorami CSS.
-- Mock `fetch` musi mieć `ok: true` (i `status`), jeśli komponent sprawdza `response.ok` — poprawiono. Lepiej
-  mockować sieć na poziomie HTTP (MSW) niż `global.fetch`.
-- Svelte 5: `component.$set` nie istnieje — użyj `rerender({ … })` z `@testing-library/svelte`. Poprawiono.
+- Strategy (the testing trophy, what to test, test doubles) — eng-testing; choosing cases — qa-test-design; tools —
+  tool-vitest (also browser mode), tool-jest, tool-playwright (e2e, accessibility snapshots).
+- The examples use `jest.fn()`; in Vitest it is `vi.fn()` / `vi.spyOn()` — a compatible API.
+- Prefer `userEvent` over `fireEvent` (a realistic sequence of events) and queries by roles/labels
+  (`getByRole`, `getByLabelText`) over `getByText`/CSS selectors.
+- A `fetch` mock must have `ok: true` (and `status`) if the component checks `response.ok` — corrected. It is better
+  to mock the network at the HTTP level (MSW) than `global.fetch`.
+- Svelte 5: `component.$set` does not exist — use `rerender({ … })` from `@testing-library/svelte`. Corrected.
 - Angular: `TestBed` + Angular Testing Library (`render(Component, { inputs })`), `provideHttpClientTesting()`;
-  w zoneless — `await fixture.whenStable()` (fw-angular).
-- Snapshoty całych drzew są kruche — jeśli już, to małe, celowane (`toMatchInlineSnapshot`) lub migawki ARIA
+  in zoneless — `await fixture.whenStable()` (fw-angular).
+- Snapshots of whole trees are brittle — if at all, then small, targeted ones (`toMatchInlineSnapshot`) or ARIA snapshots
   (Playwright `toMatchAriaSnapshot`).
 
 ## Problem
 
-Deweloperzy testują komponenty ręcznie, co prowadzi do przeoczenia stanów błędów, pustych stanów i
-przypadków granicznych. Brak testów automatycznych czyni każdy refaktor ryzykownym — zmiana w
-komponencie współdzielonym może zepsuć wiele stron bez wiedzy zespołu.
+Developers test components manually, which leads to missing error states, empty states and
+edge cases. The lack of automated tests makes every refactor risky — a change in
+a shared component can break many pages without the team knowing.
 
-## Rozwiązanie
+## Solution
 
-Testy renderują komponent, symulują interakcję użytkownika i sprawdzają wynik — ścieżkę szczęśliwą,
-błędy, stany ładowania, przypadki graniczne. Kluczowa idea z Testing Library: testować komponent tak,
-jak go faktycznie używa użytkownik — wyszukiwać elementy po dostępnych nazwach (role/label), symulować
-kliknięcia i wpisywanie, sprawdzać widoczną treść, nie szczegóły implementacji. Mockowanie API
-utrzymuje testy szybkimi i deterministycznymi.
+Tests render the component, simulate user interaction and check the result — the happy path,
+errors, loading states, edge cases. The key idea of Testing Library: test the component the way
+the user actually uses it — find elements by accessible names (role/label), simulate
+clicks and typing, check the visible content, not implementation details. Mocking the API
+keeps tests fast and deterministic.
 
-## Przykłady kodu
+## Code examples
 
 ### Basic Component Testing — React
 
@@ -281,44 +281,44 @@ test('useCounter increments count', () => {
 });
 ```
 
-## Zalety
+## Advantages
 
-- Regresje wychwytywane przed produkcją — błędy znalezione wcześniej kosztują mniej.
-- Refaktoryzacja staje się bezpieczna, bo testy ją asekurują.
-- Testy działają jako dokumentacja dla nowych osób w zespole.
-- Skraca się czas ręcznej kontroli jakości.
-- Pisanie testów wymusza myślenie o przypadkach granicznych z góry.
-- Komponenty stają się lepiej zaprojektowane — te trudne do przetestowania zwykle mają problem
-  projektowy, nie tylko testowy.
+- Regressions caught before production — bugs found earlier cost less.
+- Refactoring becomes safe, because the tests back it up.
+- Tests act as documentation for new people on the team.
+- The time of manual quality checks shrinks.
+- Writing tests forces you to think about edge cases upfront.
+- Components become better designed — the ones that are hard to test usually have a design
+  problem, not just a testing one.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Pisanie dokładnych testów potrafi podwoić wstępny czas rozwoju.
-- Testowanie szczegółów implementacji (nie zachowania) tworzy kruche testy, które łamią się przy
-  każdym refaktorze.
-- Zielone testy nie oznaczają, że kod działa — nierealistyczne mocki dają fałszywą pewność.
-- Mockowanie dodaje złożoność i może maskować problemy integracji.
-- Wolne zestawy testów zabijają produktywność zespołu.
-- Testy snapshot psują się przy nieszkodliwych zmianach formatowania.
-- Testowanie asynchroniczności jest realnie trudne — `waitFor`/`act` mają subtelne zachowanie
-  czasowe.
-- Decyzja, co testować, wymaga osądu — zbyt wiele testów jednostkowych daje kruchość, zbyt mało
-  przegapia ważne przypadki.
-- Nieaktualne, niepilnowane testy są gorsze niż brak testów — dają fałszywe poczucie
-  bezpieczeństwa.
+- Writing thorough tests can double the initial development time.
+- Testing implementation details (not behaviour) creates brittle tests that break on
+  every refactor.
+- Green tests do not mean the code works — unrealistic mocks give false confidence.
+- Mocking adds complexity and can mask integration problems.
+- Slow test suites kill the team's productivity.
+- Snapshot tests break on harmless formatting changes.
+- Testing asynchrony is genuinely hard — `waitFor`/`act` have subtle timing
+  behaviour.
+- Deciding what to test requires judgement — too many unit tests give brittleness, too few
+  miss important cases.
+- Outdated, unmaintained tests are worse than no tests — they give a false sense
+  of safety.
 
-## Powiązane wzorce
+## Related patterns
 
 - Testing Library Documentation (React).
 - Vue Test Utils.
 - Svelte Testing Library.
 - Component Testing — Cypress.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Testuj zachowanie z perspektywy użytkownika (co widzi, co może kliknąć/wpisać) domyślnie dla każdego
-komponentu z realną logiką (warunki, stany, interakcje) — to jest ta granica, gdzie ręczne testowanie
-manualne systematycznie przeocza przypadki graniczne. **Nie** testuj szczegółów implementacji
-(wewnętrzny stan, nazwy zmiennych, struktura wewnętrzna) — to dokładnie ten typ testu, który się
-łamie przy każdym nieszkodliwym refaktorze i w efekcie zniechęca zespół do testowania, zamiast
-budować zaufanie do niego.
+Test behaviour from the user's perspective (what they see, what they can click/type) by default for every
+component with real logic (conditions, states, interactions) — this is the boundary where manual
+testing systematically misses edge cases. Do **not** test implementation details
+(internal state, variable names, internal structure) — that is exactly the type of test that
+breaks on every harmless refactor and as a result discourages the team from testing, instead of
+building trust in it.

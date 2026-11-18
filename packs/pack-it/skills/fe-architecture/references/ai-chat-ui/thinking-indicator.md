@@ -1,52 +1,52 @@
 # Thinking Indicator
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/thinking-indicator.
+Source: frontendpatterns.dev/thinking-indicator.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** AI chat UI (u źródła: Resilience)
-- **Poziom:** Beginner
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 28 czerwca 2026
-- **Autor:** Den Odell
+- **Category:** AI chat UI (at the source: Resilience)
+- **Level:** Beginner
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** 28 June 2026
+- **Author:** Den Odell
 
 ## TLDR
 
-„The one to three seconds between sending a prompt and the first token is the most anxious moment
+"The one to three seconds between sending a prompt and the first token is the most anxious moment
 of an AI interaction. Fill it with a thinking state that appears instantly, is announced to
-assistive tech, respects reduced motion, and disappears the moment real text arrives.”
+assistive tech, respects reduced motion, and disappears the moment real text arrives."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- `.sr-only`: właściwość `clip` jest przestarzała — używaj `clip-path: inset(50%)` + `white-space: nowrap`
-  (poprawione w CSS niżej).
-- Jeśli wskaźnik siedzi wewnątrz wątku z `role="log"` (message-thread.md), nie dawaj mu własnego `role="status"`
-  — zagnieżdżone live regiony dają podwójne ogłoszenia. Wystarczy tekst dla czytnika w slocie wiadomości.
-- Etykiety etapów dla agentów bierz z realnych zdarzeń serwera (np. zdarzenia SSE typu `status`), nigdy z timera.
-- Przykłady Svelte używają składni Svelte 4 (`export let`, `$:`, `on:click`). W Svelte 5: `$props()`, `$state`,
-  `$derived`, atrybuty `onclick`.
+- `.sr-only`: the `clip` property is deprecated — use `clip-path: inset(50%)` + `white-space: nowrap`
+  (corrected in the CSS below).
+- If the indicator sits inside a thread with `role="log"` (message-thread.md), do not give it its own `role="status"`
+  — nested live regions produce double announcements. Text for the screen reader in the message slot is enough.
+- Take phase labels for agents from real server events (e.g. SSE events of type `status`), never from a timer.
+- The Svelte examples use Svelte 4 syntax (`export let`, `$:`, `on:click`). In Svelte 5: `$props()`, `$state`,
+  `$derived`, `onclick` attributes.
 
 ## Problem
 
-Użytkownik czeka 1–3 sekundy na pierwszą odpowiedź modelu bez żadnej informacji zwrotnej, co
-sugeruje, że żądanie nie powiodło się — prowadzi to do ponownego wysłania tego samego promptu.
-Generyczny spinner nie komunikuje precyzyjnie „asystent komponuje odpowiedź”. Wskaźniki bywają
-wyłącznie wizualne, pozostawiając użytkowników czytników ekranu bez żadnej informacji.
+The user waits 1–3 seconds for the model's first response without any feedback, which
+suggests that the request has failed — this leads to sending the same prompt again.
+A generic spinner does not communicate precisely "the assistant is composing an answer". Indicators are often
+purely visual, leaving screen reader users without any information.
 
-## Rozwiązanie
+## Solution
 
-Umieść wskaźnik myślenia natychmiast w slocie wiadomości asystenta (patrz Message Thread), bez
-czekania na jakąkolwiek odpowiedź sieciową. Stylizuj go jako odrębny element (animowane kropki,
-pulsujący awatar), który komunikuje „asystent komponuje odpowiedź”, nie generyczne ładowanie. Gdy
-przychodzi pierwszy token przez `streaming-response.md`, wskaźnik zamienia się w rzeczywistą treść.
+Place the thinking indicator immediately in the assistant's message slot (see Message Thread), without
+waiting for any network response. Style it as a distinct element (animated dots,
+a pulsing avatar) that communicates "the assistant is composing an answer", not generic loading. When
+the first token arrives through `streaming-response.md`, the indicator turns into the real content.
 
-Zapewnij dostępność: renderuj wewnątrz `polite` live region z ukrytym dla oka tekstem „Assistant is
-thinking…”. Pod `prefers-reduced-motion` daj statyczną wersję bez animacji. Dla agentów wykonujących
-pracę przed odpowiedzią — aktualizuj etykietę etapu („Searching the docs…”, „Writing…”).
+Ensure accessibility: render it inside a `polite` live region with visually hidden text "Assistant is
+thinking…". Under `prefers-reduced-motion` provide a static version without animation. For agents doing
+work before answering — update the phase label ("Searching the docs…", "Writing…").
 
-## Przykłady kodu
+## Code examples
 
 ### The Indicator — React
 
@@ -168,27 +168,27 @@ function AgentStatus({ phase }) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Eliminuje martwy czas przed pierwszym tokenem, zapobiegając przedwczesnemu ponowieniu wysyłki.
-- Dedykowany wskaźnik komunikuje „asystent komponuje” znacznie jaśniej niż generyczny spinner.
-- Live region daje użytkownikom czytników ekranu informację audialną zamiast ciszy.
-- To naturalny, pusty stan wiadomości streamującej — prawie żaden dodatkowy koszt implementacyjny.
-- Status zależny od etapu (dla agentów) zamienia długie czekanie w widoczny, konkretny postęp.
+- It eliminates the dead time before the first token, preventing a premature resend.
+- A dedicated indicator communicates "the assistant is composing" much more clearly than a generic spinner.
+- A live region gives screen reader users audio information instead of silence.
+- It is the natural, empty state of a streaming message — almost no extra implementation cost.
+- A phase-dependent status (for agents) turns a long wait into visible, concrete progress.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Animowany wskaźnik bez rzeczywistych informacji o postępie może z czasem wydawać się fasadą przy
-  dłuższym czekaniu; etykiety etapów pomagają, ale tylko jeśli są **prawdziwe**.
-- Ogłoszenia live region wymagają umiaru — wskaźnik myślenia plus napływające tokeny mogą wywołać
-  podwójne, nadmiarowe ogłoszenia bez odpowiedniej ostrożności.
-- Fałszywe etykiety etapów („Analyzing…”, gdy nic realnie się nie analizuje) niszczą zaufanie
-  użytkownika do interfejsu.
-- Animacja wymaga fallbacku `prefers-reduced-motion` — łatwo o tym zapomnieć.
-- Przejście ze wskaźnika do pierwszego tokenu może migać, jeśli nie obsłużysz go w tym samym slocie
-  DOM (patrz `AssistantMessage` wyżej — warunek na tym samym miejscu, nie osobne elementy).
+- An animated indicator without real progress information can over time seem like a facade during
+  a longer wait; phase labels help, but only if they are **true**.
+- Live region announcements require restraint — a thinking indicator plus incoming tokens can cause
+  double, redundant announcements without proper care.
+- Fake phase labels ("Analyzing…" when nothing is really being analysed) destroy the user's trust
+  in the interface.
+- The animation requires a `prefers-reduced-motion` fallback — it is easy to forget.
+- The transition from the indicator to the first token can flicker if you do not handle it in the same DOM
+  slot (see `AssistantMessage` above — a condition in the same place, not separate elements).
 
-## Powiązane wzorce
+## Related patterns
 
 - [Streaming Response](streaming-response.md) — ai-chat-ui
 - [Message Thread](message-thread.md)
@@ -198,10 +198,10 @@ function AgentStatus({ phase }) {
 - [prefers-reduced-motion (MDN)](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion)
 - [Progress Indicators (NN Group)](https://www.nngroup.com/articles/progress-indicators/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj **zawsze** w interfejsach czatu/AI dla okna między wysłaniem promptu a pierwszym tokenem —
-to minimalny koszt o dużym wpływie na postrzeganą wiarygodność. **Nie** wprowadzaj etykiet etapów
-(„Searching…”, „Writing…”), jeśli backend faktycznie nie raportuje takich etapów — statyczny,
-uczciwy wskaźnik „Thinking…” jest lepszy niż zmyślone, nieprawdziwe etapy, które prędzej czy później
-zdemaskują się jako fasada.
+Use it **always** in chat/AI interfaces for the window between sending a prompt and the first token —
+it is a minimal cost with a large impact on perceived reliability. Do **not** introduce phase labels
+("Searching…", "Writing…") if the backend does not actually report such phases — a static,
+honest "Thinking…" indicator is better than invented, untrue phases that sooner or later
+will be exposed as a facade.

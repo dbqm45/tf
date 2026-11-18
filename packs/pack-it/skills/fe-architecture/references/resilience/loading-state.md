@@ -1,56 +1,56 @@
 # Loading State
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/loading-state.
+Source: frontendpatterns.dev/loading-state.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Resilience
-- **Poziom:** Advanced
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 15 listopada 2025
-- **Autor:** Den Odell
+- **Category:** Resilience
+- **Level:** Advanced
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** 15 November 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-Wyświetlaj spinnery, szkielety (skeletons) lub paski postępu podczas operacji asynchronicznych, żeby
-użytkownik wiedział, że aplikacja pracuje, i nie porzucał ani nie ponawiał akcji przedwcześnie.
+Show spinners, skeletons or progress bars during asynchronous operations, so that
+the user knows the application is working and does not abandon or retry the action prematurely.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Modeluj stan jako unię (`idle | loading | error | empty | success`) — nie trzy niezależne flagi. Każdy widok
-  danych obsługuje cztery stany: ładowanie, błąd (z akcją „spróbuj ponownie”), pusto, dane.
-- W przykładzie React przed nowym żądaniem zeruj `error` (inaczej stary błąd przykrywa nowe dane) — poprawiono.
-- Optymistyczne aktualizacje: tylko dla operacji o wysokim prawdopodobieństwie sukcesu, zawsze z rollbackiem;
-  React 19 ma `useOptimistic`, TanStack Query — `onMutate`/rollback. Rollback do `todos` z domknięcia może nadpisać
-  późniejsze zmiany — cofaj konkretną zmianę, nie cały stan.
-- Wyszukiwanie „inline” w przykładzie nie ma debounce ani anulowania — patrz performance/debounce.md.
-- Kolory szkieletu w CSS to tokeny (fe-css), a animacja shimmer respektuje `prefers-reduced-motion`.
-- `role="progressbar"` wymaga `aria-valuemin`/`aria-valuemax` (albo natywnego `<progress>`) — poprawiono.
-- Angular: `resource`/`httpResource` dają `isLoading()`, `error()`, `value()`, `reload()` (fw-angular).
-- Przykłady Svelte to składnia Svelte 4 (`export let`); w Svelte 5 `$props()`/`$state`.
+- Model the state as a union (`idle | loading | error | empty | success`) — not three independent flags. Every data
+  view handles four states: loading, error (with a "try again" action), empty, data.
+- In the React example reset `error` before a new request (otherwise an old error covers the new data) — corrected.
+- Optimistic updates: only for operations with a high probability of success, always with a rollback;
+  React 19 has `useOptimistic`, TanStack Query — `onMutate`/rollback. A rollback to `todos` from the closure can overwrite
+  later changes — revert the specific change, not the whole state.
+- The "inline" search in the example has no debounce or cancellation — see performance/debounce.md.
+- The skeleton colours in CSS are tokens (fe-css), and the shimmer animation respects `prefers-reduced-motion`.
+- `role="progressbar"` requires `aria-valuemin`/`aria-valuemax` (or a native `<progress>`) — corrected.
+- Angular: `resource`/`httpResource` provide `isLoading()`, `error()`, `value()`, `reload()` (fw-angular).
+- The Svelte examples are Svelte 4 syntax (`export let`); in Svelte 5 `$props()`/`$state`.
 
 ## Problem
 
-Użytkownik klika „Zapisz”, ale nic się wizualnie nie zmienia — przycisk wygląda tak samo, formularz
-wygląda tak samo. Brak informacji zwrotnej powoduje, że użytkownik klika ponownie, przypadkowo
-wysyłając formularz dwa razy, albo odświeża/opuszcza stronę, tracąc swoją pracę, myśląc, że aplikacja
-się zawiesiła, choć w rzeczywistości działa w tle.
+The user clicks "Save", but nothing changes visually — the button looks the same, the form
+looks the same. The lack of feedback makes the user click again, accidentally
+submitting the form twice, or refresh/leave the page, losing their work, thinking that the application
+has frozen, although in reality it is working in the background.
 
-## Rozwiązanie
+## Solution
 
-„Pokazuj użytkownikom, co się dzieje, zawsze — zbyt wiele aplikacji zapomina tę podstawową zasadę
-UX.” Pokazuj spinner/szkielet/pasek postępu podczas ładowania; wyłączaj przyciski i zmieniaj ich
-etykietę na „Zapisywanie…”; dla długich operacji pokazuj **realny** postęp („Przesyłanie: 47%”), nie
-nieokreślony spinner; rozdzielaj stan ładowania od stanu danych i od stanu błędu (trzy różne stany,
-nie jeden boolean).
+"Always show users what is happening — too many applications forget this basic UX
+rule." Show a spinner/skeleton/progress bar while loading; disable buttons and change their
+label to "Saving…"; for long operations show **real** progress ("Uploading: 47%"), not
+an indeterminate spinner; separate the loading state from the data state and from the error state (three different states,
+not one boolean).
 
-Szkielety ekranów (skeleton screens) działają szczególnie dobrze — pokazują **kształt** nadchodzącej
-treści, co sprawia, że ładowanie subiektywnie „czuje się” szybsze niż pusty spinner, nawet przy
-identycznym rzeczywistym czasie oczekiwania.
+Skeleton screens work particularly well — they show the **shape** of the upcoming
+content, which makes loading subjectively "feel" faster than an empty spinner, even with
+an identical real waiting time.
 
-## Przykłady kodu
+## Code examples
 
 ### Basic Loading State — React
 
@@ -361,33 +361,33 @@ function SearchBox() {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Użytkownik przestaje „wściekle klikać” — informacja zwrotna potwierdza, że akcja została
-  zarejestrowana.
-- Porzucanie strony spada — użytkownik nie odświeża/nie ucieka, widząc, że aplikacja pracuje.
-- Postrzegana wydajność się poprawia — szkielety „czują się” szybsze niż pusty spinner nawet przy
-  identycznym czasie oczekiwania.
-- Jasne rozróżnienie „ładowanie” / „załadowane ale puste” / „porażka” — nie trzeba zgadywać.
-- Duplikaty zgłoszeń formularza znikają, bo wyłączony przycisk zapobiega przypadkowemu
-  podwójnemu kliknięciu.
-- Pasek postępu ustala oczekiwania — „Przesyłanie: 47%” mówi, jak długo jeszcze czekać.
-- Układ strony jest stabilny — szkielet rezerwuje miejsce, więc nie ma nagłych przeskoków treści.
+- The user stops "clicking furiously" — the feedback confirms that the action has been
+  registered.
+- Page abandonment drops — the user does not refresh/run away, seeing that the application is working.
+- Perceived performance improves — skeletons "feel" faster than an empty spinner even with
+  an identical waiting time.
+- A clear distinction between "loading" / "loaded but empty" / "failure" — no need to guess.
+- Duplicate form submissions disappear, because a disabled button prevents an accidental
+  double click.
+- A progress bar sets expectations — "Uploading: 47%" says how much longer to wait.
+- The page layout is stable — the skeleton reserves space, so there are no sudden content jumps.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Ryzyko „spinner spam” — zbyt wiele wskaźników naraz tworzy bałagan wizualny.
-- Bardzo szybkie operacje mogą błysnąć wskaźnikiem na 50ms — to gorsze niż jego brak; dodaj krótkie
-  opóźnienie (patrz „Delayed Loading Indicator” wyżej).
-- Więcej stanu do zarządzania per komponent (`loading`, `data`, `error` zamiast samych danych).
-- Szkielety wymagają utrzymania — zmiana layoutu wymaga aktualizacji odpowiadającego szkieletu.
-- Optimistic updates są trudne — wymagają solidnej logiki wycofania (rollback) przy błędzie.
-- Paski postępu wymagają wsparcia backendu — bez danych o postępie nie da się pokazać sensownego %.
-- Wyrafinowany stan ładowania **nie** jest naprawą prawdziwego problemu wydajności — realną poprawką
-  jest przyspieszenie samej operacji, nie ładniejszy spinner na wolnej operacji.
-- Dostępność jest łatwo pomijana — `role="status"`, `aria-busy` są często zapominane.
+- The risk of "spinner spam" — too many indicators at once create visual clutter.
+- Very fast operations can flash an indicator for 50ms — that is worse than none; add a short
+  delay (see "Delayed Loading Indicator" above).
+- More state to manage per component (`loading`, `data`, `error` instead of just the data).
+- Skeletons require maintenance — a layout change requires updating the corresponding skeleton.
+- Optimistic updates are hard — they require solid rollback logic on error.
+- Progress bars require backend support — without progress data you cannot show a meaningful %.
+- A sophisticated loading state is **not** a fix for a real performance problem — the real fix
+  is speeding up the operation itself, not a nicer spinner on a slow operation.
+- Accessibility is easily overlooked — `role="status"`, `aria-busy` are often forgotten.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Error Handling](./error-handling.md) — Resilience
 - [Async Boundary](./async-boundary.md) — Resilience
@@ -396,11 +396,11 @@ function SearchBox() {
 - [Suspense (Vue)](https://vuejs.org/guide/built-ins/suspense.html)
 - [Await Blocks (Svelte)](https://svelte.dev/docs/logic-blocks#await)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj **zawsze**, gdy operacja trwa długo/nieprzewidywalnie (sieć, upload) — to jest fundament
-Resilience, nie opcja. **Nie** dodawaj wskaźnika dla operacji, które kończą się w <100–200ms — pusty
-ekran przez ułamek sekundy jest lepszy niż migający spinner, który migocze i znika, zanim użytkownik
-zdąży go zauważyć (patrz wzorzec „Delayed Loading Indicator”). Dopasuj typ wskaźnika do charakteru
-operacji: spinner na przycisku dla krótkich akcji, szkielet dla treści strony, pasek postępu tylko
-gdy backend faktycznie daje Ci dane o postępie.
+Use it **always** when an operation takes long/unpredictably (network, upload) — this is a foundation of
+Resilience, not an option. Do **not** add an indicator for operations that finish in <100–200ms — an empty
+screen for a fraction of a second is better than a flashing spinner that flickers and disappears before the user
+manages to notice it (see the "Delayed Loading Indicator" pattern). Match the type of indicator to the nature of the
+operation: a spinner on the button for short actions, a skeleton for page content, a progress bar only
+when the backend actually gives you progress data.

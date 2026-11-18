@@ -1,21 +1,21 @@
-# Pojęcia domenowe w TypeScript — przetestowane implementacje
+# Domain concepts in TypeScript — tested implementations
 
-Sprawdzone kompilatorem TypeScript 5.9, 6.0 i 7.0 (`strict`, `noUncheckedIndexedAccess`; w 6.0+ z jawnym `rootDir`) i testami. Bez zależności od frameworka —
-w projekcie rozbij na pliki wg komentarzy `=====` i umieść w warstwie domeny (np. `src/domain/` lub `shared/domain/`).
-Przykłady pochodzą z archetypów (ddd-archetypes): Money/Quantity, Party, Availability, Product, Configurator.
+Checked with the TypeScript 5.9, 6.0 and 7.0 compilers (`strict`, `noUncheckedIndexedAccess`; in 6.0+ with an explicit `rootDir`) and with tests. No framework dependency —
+in a project, split it into files by the `=====` comments and place it in the domain layer (e.g. `src/domain/` or `shared/domain/`).
+The examples come from the archetypes (ddd-archetypes): Money/Quantity, Party, Availability, Product, Configurator.
 
 ```ts
 // ===== money.ts =====
 export type Currency = 'PLN' | 'EUR' | 'USD';
 
-/** Kwota w najmniejszej jednostce (grosze) jako bigint — bez błędów liczb zmiennoprzecinkowych. */
+/** An amount in the smallest unit (grosze) as a bigint — no floating-point errors. */
 export class Money {
   private constructor(readonly minor: bigint, readonly currency: Currency) {}
 
-  /** Money.of('12.50', 'PLN'); przyjmuje też przecinek dziesiętny. */
+  /** Money.of('12.50', 'PLN'); also accepts a decimal comma. */
   static of(amount: string, currency: Currency): Money {
     const m = /^(-)?(\d+)(?:[.,](\d{1,2}))?$/.exec(amount.trim());
-    if (!m) throw new Error(`Nieprawidłowa kwota: "${amount}"`);
+    if (!m) throw new Error(`Invalid amount: "${amount}"`);
     const [, sign, int = '0', frac = ''] = m;
     const minor = BigInt(int) * 100n + BigInt(frac.padEnd(2, '0'));
     return new Money(sign ? -minor : minor, currency);
@@ -55,19 +55,19 @@ export class Money {
     return this.currency === other.currency && this.minor === other.minor;
   }
 
-  /** Dzieli kwotę na `parts` części tak, by suma się zgadzała (np. raty). */
+  /** Splits the amount into `parts` parts so that the sum still matches (e.g. instalments). */
   allocate(parts: number): Money[] {
-    if (!Number.isInteger(parts) || parts <= 0) throw new Error('Liczba części musi być dodatnią liczbą całkowitą');
+    if (!Number.isInteger(parts) || parts <= 0) throw new Error('The number of parts must be a positive integer');
     const n = BigInt(parts);
     const base = this.minor / n;
-    const remainder = this.minor % n; // ten sam znak co kwota
+    const remainder = this.minor % n; // the same sign as the amount
     const step = remainder < 0n ? -1n : 1n;
     const extra = remainder < 0n ? -remainder : remainder;
     return Array.from({ length: parts }, (_, i) =>
       new Money(base + (BigInt(i) < extra ? step : 0n), this.currency));
   }
 
-  /** '12.50' — do wysyłki do API (nigdy nie wysyłaj float). */
+  /** '12.50' — for sending to an API (never send a float). */
   toDecimalString(): string {
     const abs = this.minor < 0n ? -this.minor : this.minor;
     const int = abs / 100n;
@@ -77,7 +77,7 @@ export class Money {
 
   private assertSameCurrency(other: Money): void {
     if (other.currency !== this.currency) {
-      throw new Error(`Różne waluty: ${this.currency} i ${other.currency}`);
+      throw new Error(`Different currencies: ${this.currency} and ${other.currency}`);
     }
   }
 }
@@ -89,12 +89,12 @@ export interface Unit {
 }
 
 export const Units = {
-  pieces: { symbol: 'szt.', name: 'sztuki' },
-  kilograms: { symbol: 'kg', name: 'kilogramy' },
-  hours: { symbol: 'h', name: 'godziny' },
+  pieces: { symbol: 'pcs', name: 'pieces' },
+  kilograms: { symbol: 'kg', name: 'kilograms' },
+  hours: { symbol: 'h', name: 'hours' },
 } as const satisfies Record<string, Unit>;
 
-/** Ilość z jednostką; wartość jako skalowana liczba całkowita (3 miejsca po przecinku). */
+/** A quantity with a unit; the value as a scaled integer (3 decimal places). */
 export class Quantity {
   private static readonly SCALE = 1000n;
 
@@ -102,14 +102,14 @@ export class Quantity {
 
   static of(value: string, unit: Unit): Quantity {
     const m = /^(\d+)(?:[.,](\d{1,3}))?$/.exec(value.trim());
-    if (!m) throw new Error(`Nieprawidłowa ilość: "${value}"`);
+    if (!m) throw new Error(`Invalid quantity: "${value}"`);
     const [, int = '0', frac = ''] = m;
     return new Quantity(BigInt(int) * Quantity.SCALE + BigInt(frac.padEnd(3, '0')), unit);
   }
 
   add(other: Quantity): Quantity {
     if (other.unit.symbol !== this.unit.symbol) {
-      throw new Error(`Nie można dodać ${other.unit.symbol} do ${this.unit.symbol}`);
+      throw new Error(`Cannot add ${other.unit.symbol} to ${this.unit.symbol}`);
     }
     return new Quantity(this.scaled + other.scaled, this.unit);
   }
@@ -125,7 +125,7 @@ export class Quantity {
 export type PartyId = string & { readonly __brand: 'PartyId' };
 
 export interface RegisteredIdentifier {
-  readonly type: string; // np. 'NIP', 'PESEL'
+  readonly type: string; // e.g. 'NIP', 'PESEL'
   readonly value: string;
 }
 
@@ -144,13 +144,13 @@ export interface Person extends PartyBase {
 export interface Organization extends PartyBase {
   readonly kind: 'organization';
   readonly name: string;
-  readonly parent?: PartyId; // jednostka organizacyjna
+  readonly parent?: PartyId; // organisational unit
 }
 
 export type Party = Person | Organization;
 
 export function assertNever(x: never): never {
-  throw new Error(`Nieobsłużony wariant: ${JSON.stringify(x)}`);
+  throw new Error(`Unhandled variant: ${JSON.stringify(x)}`);
 }
 
 export function displayName(party: Party): string {
@@ -169,19 +169,19 @@ export const hasRole = (party: Party, role: string): boolean => party.roles.incl
 // ===== availability.ts =====
 export interface TimeSlot {
   readonly from: Date;
-  readonly to: Date; // wyłącznie: [from, to)
+  readonly to: Date; // exclusive: [from, to)
 }
 
 export const overlaps = (a: TimeSlot, b: TimeSlot): boolean => a.from < b.to && b.from < a.to;
 
-/** Read model z backendu: właściciel → przedziały; `null` = wolne. */
+/** A read model from the backend: owner → slots; `null` = free. */
 export interface CalendarView {
   readonly resourceId: string;
   readonly free: readonly TimeSlot[];
   readonly taken: ReadonlyMap<string, readonly TimeSlot[]>;
 }
 
-/** Podpowiedź dla UI (np. wyszarzenie), NIE decyzja — decyduje backend. */
+/** A hint for the UI (e.g. greying out), NOT a decision — the backend decides. */
 export function looksFree(calendar: CalendarView, wanted: TimeSlot): boolean {
   return calendar.free.some(slot => slot.from <= wanted.from && wanted.to <= slot.to);
 }
@@ -206,24 +206,24 @@ export interface FeatureType {
   readonly constraint: FeatureConstraint;
 }
 
-/** Zwraca komunikat błędu albo null. Te same ograniczenia, które zwraca API typu produktu. */
+/** Returns an error message or null. The same constraints that the product type API returns. */
 export function validateFeature(feature: FeatureType, raw: string): string | null {
   const value = raw.trim();
-  if (!value) return feature.mandatory ? `${feature.name}: pole wymagane` : null;
+  if (!value) return feature.mandatory ? `${feature.name}: required field` : null;
   const c = feature.constraint;
   switch (c.type) {
     case 'ALLOWED_VALUES':
-      return c.values.includes(value) ? null : `${feature.name}: dozwolone ${c.values.join(', ')}`;
+      return c.values.includes(value) ? null : `${feature.name}: allowed ${c.values.join(', ')}`;
     case 'NUMERIC_RANGE': {
       const n = Number(value);
-      return Number.isInteger(n) && n >= c.min && n <= c.max ? null : `${feature.name}: liczba ${c.min}–${c.max}`;
+      return Number.isInteger(n) && n >= c.min && n <= c.max ? null : `${feature.name}: number ${c.min}–${c.max}`;
     }
     case 'DATE_RANGE':
       return /^\d{4}-\d{2}-\d{2}$/.test(value) && value >= c.from && value <= c.to
         ? null
-        : `${feature.name}: data ${c.from} – ${c.to}`;
+        : `${feature.name}: date ${c.from} – ${c.to}`;
     case 'REGEX':
-      return new RegExp(`^(?:${c.pattern})$`).test(value) ? null : `${feature.name}: nieprawidłowy format`;
+      return new RegExp(`^(?:${c.pattern})$`).test(value) ? null : `${feature.name}: invalid format`;
     case 'UNCONSTRAINED':
       return null;
     default:
@@ -239,20 +239,20 @@ export type ConfigRule =
 
 export interface OptionState {
   readonly option: string;
-  readonly disabledBecause?: string; // wyjaśnienie dla użytkownika
+  readonly disabledBecause?: string; // explanation for the user
 }
 
-/** Szybka podpowiedź w UI. Ostateczną poprawność (pełne reguły, solver) sprawdza backend. */
+/** A quick hint in the UI. The backend checks final correctness (full rules, solver). */
 export function optionStates(all: readonly string[], picked: ReadonlySet<string>, rules: readonly ConfigRule[]): OptionState[] {
   return all.map(option => {
     if (picked.has(option)) return { option };
     for (const rule of rules) {
       if (rule.type === 'NOT_TOGETHER' && rule.options.includes(option)) {
         const clash = rule.options.find(o => o !== option && picked.has(o));
-        if (clash) return { option, disabledBecause: `nie łączy się z: ${clash}` };
+        if (clash) return { option, disabledBecause: `does not combine with: ${clash}` };
       }
       if (rule.type === 'EXCLUDES_IF' && picked.has(rule.ifPicked) && rule.excluded.includes(option)) {
-        return { option, disabledBecause: `wykluczone przez: ${rule.ifPicked}` };
+        return { option, disabledBecause: `excluded by: ${rule.ifPicked}` };
       }
     }
     return { option };
@@ -263,10 +263,10 @@ export function missingRequirements(picked: ReadonlySet<string>, rules: readonly
   return rules
     .filter((r): r is Extract<ConfigRule, { type: 'REQUIRES_ONE_OF' }> => r.type === 'REQUIRES_ONE_OF')
     .filter(r => picked.has(r.ifPicked) && !r.oneOf.some(o => picked.has(o)))
-    .map(r => `${r.ifPicked} wymaga jednej z: ${r.oneOf.join(', ')}`);
+    .map(r => `${r.ifPicked} requires one of: ${r.oneOf.join(', ')}`);
 }
 
-// ===== result.ts — wynik operacji =====
+// ===== result.ts — operation result =====
 export type Result<E, T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: E };
@@ -274,16 +274,16 @@ export type Result<E, T> =
 export const success = <T>(value: T): Result<never, T> => ({ ok: true, value });
 export const failure = <E>(error: E): Result<E, never> => ({ ok: false, error });
 
-// ===== resource-availability.ts — agregat (archetyp Availability, wariant segmentu) =====
+// ===== resource-availability.ts — aggregate (Availability archetype, segment variant) =====
 export type OwnerId = string & { readonly __brand: 'OwnerId' };
 
-/** Maszyna stanów blokady: wolny → zablokowany / wyłączony. */
+/** Blockade state machine: free → blocked / disabled. */
 export type Blockade =
   | { readonly state: 'free' }
   | { readonly state: 'blocked'; readonly by: OwnerId }
   | { readonly state: 'disabled'; readonly by: OwnerId };
 
-/** Zdarzenia domenowe — czas przeszły, niezmienne. */
+/** Domain events — past tense, immutable. */
 export type AvailabilityEvent =
   | { readonly type: 'ResourceBlocked'; readonly resourceId: string; readonly by: OwnerId }
   | { readonly type: 'ResourceReleased'; readonly resourceId: string; readonly by: OwnerId }
@@ -291,7 +291,7 @@ export type AvailabilityEvent =
 
 export type Rejection = 'ALREADY_TAKEN' | 'DISABLED' | 'NOT_OWNER';
 
-/** Agregat: stan prywatny, zmiany tylko metodami biznesowymi, wynik zamiast wyjątków. */
+/** Aggregate: private state, changes only through business methods, a result instead of exceptions. */
 export class ResourceAvailability {
   private blockade: Blockade = { state: 'free' };
   private readonly pending: AvailabilityEvent[] = [];
@@ -327,14 +327,14 @@ export class ResourceAvailability {
   }
 }
 
-/** Repozytorium jako port — implementacja (HTTP, IndexedDB, pamięć) poza domeną. */
+/** Repository as a port — the implementation (HTTP, IndexedDB, memory) outside the domain. */
 export interface ResourceAvailabilityRepository {
   load(resourceId: string, segment: TimeSlot): Promise<ResourceAvailability>;
   save(availability: ResourceAvailability): Promise<void>;
 }
 ```
 
-## Testy (przypadki brzegowe)
+## Tests (edge cases)
 
 ```ts
 import { ResourceAvailability, OwnerId, Money, Quantity, Units, displayName, missingRequirements, optionStates, overlaps, validateFeature, PartyId } from './domain/archetypes';
@@ -354,16 +354,16 @@ eq(displayName({ kind: 'organization', id: 'x' as PartyId, roles: [], identifier
 const d = (h: number) => new Date(Date.UTC(2026, 0, 1, h));
 eq(overlaps({ from: d(10), to: d(12) }, { from: d(11), to: d(13) }), true, 'overlap');
 eq(overlaps({ from: d(10), to: d(12) }, { from: d(12), to: d(13) }), false, 'touch');
-eq(validateFeature({ name: 'kolor', mandatory: true, constraint: { type: 'ALLOWED_VALUES', values: ['red'] } }, 'blue'), 'kolor: dozwolone red', 'feat');
-eq(validateFeature({ name: 'rok', mandatory: false, constraint: { type: 'NUMERIC_RANGE', min: 2020, max: 2024 } }, '2022'), null, 'feat ok');
+eq(validateFeature({ name: 'color', mandatory: true, constraint: { type: 'ALLOWED_VALUES', values: ['red'] } }, 'blue'), 'color: allowed red', 'feat');
+eq(validateFeature({ name: 'year', mandatory: false, constraint: { type: 'NUMERIC_RANGE', min: 2020, max: 2024 } }, '2022'), null, 'feat ok');
 const rules = [
   { type: 'NOT_TOGETHER', options: ['diesel', 'hybrid'] },
   { type: 'REQUIRES_ONE_OF', ifPicked: 'towbar', oneOf: ['diesel', 'petrol'] },
   { type: 'EXCLUDES_IF', ifPicked: 'sport', excluded: ['towbar'] },
 ] as const;
 eq(optionStates(['diesel', 'hybrid', 'towbar'], new Set(['diesel', 'sport']), rules),
-  [{ option: 'diesel' }, { option: 'hybrid', disabledBecause: 'nie łączy się z: diesel' }, { option: 'towbar', disabledBecause: 'wykluczone przez: sport' }], 'config');
-eq(missingRequirements(new Set(['towbar']), rules), ['towbar wymaga jednej z: diesel, petrol'], 'missing');
+  [{ option: 'diesel' }, { option: 'hybrid', disabledBecause: 'does not combine with: diesel' }, { option: 'towbar', disabledBecause: 'excluded by: sport' }], 'config');
+eq(missingRequirements(new Set(['towbar']), rules), ['towbar requires one of: diesel, petrol'], 'missing');
 const seg = { from: d(10), to: d(11) };
 const ra = new ResourceAvailability('car-1', seg);
 const alice = 'alice' as OwnerId, bob = 'bob' as OwnerId;

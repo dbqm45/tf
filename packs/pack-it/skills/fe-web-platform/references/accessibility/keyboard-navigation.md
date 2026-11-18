@@ -1,52 +1,52 @@
 # Keyboard Navigation
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state as of 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / trade-offs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/keyboard-navigation (Den Odell).
+Source: frontendpatterns.dev/keyboard-navigation (Den Odell).
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Accessibility
-- **Poziom:** Beginner
-- **Przykłady:** Native web
+- **Category:** Accessibility
+- **Level:** Beginner
+- **Examples:** Native web
 
 ## TLDR
 
-„Make all interactive elements reachable and operable via keyboard using logical tab order, arrow
-key patterns, and standard shortcuts.”
+"Make all interactive elements reachable and operable via keyboard using logical tab order, arrow
+key patterns, and standard shortcuts."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state as of 2026, corrections to the source)
 
-- **Nie zeruj `*:focus { outline: none; }`** — przeglądarki same pokazują pierścień tylko dla `:focus-visible`;
-  globalne zerowanie `:focus` odbiera fokus programowy (np. nagłówki po nawigacji). Wystarczy styl
-  `:focus-visible`. Poprawiono CSS.
-- Przykład dropdownu to szkic — pełny listbox/combobox wymaga `aria-activedescendant` z ID opcji, Home/End,
-  type-ahead. Zanim napiszesz własny: natywny `<select>` (w Chromium stylowalny przez `appearance: base-select`)
-  albo biblioteka headless (Radix, React Aria, Angular Aria/CDK `ListKeyManager`).
-- Skróty: `e.key` zależy od układu i Shift (`'s'` vs `'S'`) — porównuj `e.key.toLowerCase()` albo `e.code` dla
-  pozycji klawisza; nie przechwytuj skrótów w polach tekstowych bez potrzeby. Ujawnij skróty (`aria-keyshortcuts`,
-  pomoc „?”).
+- **Do not reset `*:focus { outline: none; }`** — browsers themselves show the ring only for `:focus-visible`;
+  a global reset of `:focus` takes away programmatic focus (e.g. headings after navigation). A `:focus-visible`
+  style is enough. The CSS was corrected.
+- The dropdown example is a sketch — a full listbox/combobox requires `aria-activedescendant` with option IDs, Home/End,
+  type-ahead. Before you write your own: the native `<select>` (stylable in Chromium through `appearance: base-select`)
+  or a headless library (Radix, React Aria, Angular Aria/CDK `ListKeyManager`).
+- Shortcuts: `e.key` depends on the layout and Shift (`'s'` vs `'S'`) — compare `e.key.toLowerCase()` or `e.code` for
+  the key position; do not intercept shortcuts in text fields without need. Expose the shortcuts (`aria-keyshortcuts`,
+  a "?" help).
 
 ## Problem
 
-Niestandardowe komponenty UI budowane z `<div>` i CSS często zawodzą pod kątem dostępności
-klawiaturowej: elementy nie są domyślnie fokusowalne, standardowe interakcje klawiszowe
-(Enter, strzałki) nie działają, użytkownicy zostają „uwięzieni” w modalach bez metody wyjścia przez
-klawiaturę. Menu zależne od hover całkowicie wykluczają użytkowników klawiatury, a niestandardowe
-implementacje często łamią ustalone konwencje interakcji.
+Custom UI components built from `<div>` and CSS often fail at keyboard
+accessibility: elements are not focusable by default, standard key interactions
+(Enter, arrows) do not work, users get "trapped" in modals with no way out via
+the keyboard. Hover-dependent menus completely exclude keyboard users, and custom
+implementations often break established interaction conventions.
 
-## Rozwiązanie
+## Solution
 
-Elementy interaktywne muszą być osiągalne przez Tab i obsługiwalne wyłącznie klawiaturą. Semantyczne
-elementy HTML (`<button>`, `<a>`, `<input>`) dają to automatycznie. Dla niestandardowych widżetów —
-stosuj wzorce WAI-ARIA: strzałki nawigują po listach, Enter/Space aktywują elementy, Escape zamyka
-nakładki. Używaj `tabindex="0"` dla fokusowalności, dodawaj handlery `keydown`, utrzymuj widoczne
-wskaźniki fokusu (`:focus-visible`) i zawsze dawaj klawiaturowe alternatywy dla funkcji zależnych od
-myszy.
+Interactive elements must be reachable with Tab and operable with the keyboard alone. Semantic
+HTML elements (`<button>`, `<a>`, `<input>`) give this automatically. For custom widgets —
+apply the WAI-ARIA patterns: arrows navigate lists, Enter/Space activate elements, Escape closes
+overlays. Use `tabindex="0"` for focusability, add `keydown` handlers, keep visible
+focus indicators (`:focus-visible`) and always provide keyboard alternatives for mouse-dependent
+features.
 
-## Przykłady kodu
+## Code examples
 
-### Dropdown z nawigacją klawiaturową
+### A dropdown with keyboard navigation
 
 ```javascript
 function Dropdown({ items, onSelect }) {
@@ -97,7 +97,7 @@ function Dropdown({ items, onSelect }) {
 }
 ```
 
-### Panel zakładek z roving tabindex
+### A tab panel with roving tabindex
 
 ```javascript
 function TabPanel({ tabs }) {
@@ -138,7 +138,7 @@ function TabPanel({ tabs }) {
 }
 ```
 
-### Modal z obsługą klawiatury (Escape)
+### A modal with keyboard handling (Escape)
 
 ```javascript
 function Modal({ isOpen, onClose, children }) {
@@ -169,7 +169,7 @@ function Modal({ isOpen, onClose, children }) {
 }
 ```
 
-### Skróty klawiaturowe
+### Keyboard shortcuts
 
 ```javascript
 function Editor() {
@@ -202,7 +202,7 @@ function Layout({ children }) {
 }
 ```
 
-### Wskaźniki fokusu
+### Focus indicators
 
 ```css
 /* No global *:focus { outline: none } — browsers already limit the ring to :focus-visible */
@@ -213,38 +213,38 @@ function Layout({ children }) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Technologie wspomagające zależą od interfejsu klawiaturowego — działająca nawigacja klawiaturą
-  zapewnia też kompatybilność z czytnikami ekranu.
-- Zaawansowani użytkownicy operują szybciej klawiaturą niż myszą.
-- „WCAG Level A requires keyboard operability, making this a legal requirement in many
-  jurisdictions.”
-- Niepełnosprawności motoryczne, RSI, tymczasowe urazy uniemożliwiają wielu osobom użycie myszy.
-- Utrzymanie fokusu klawiaturowego eliminuje przełączanie mysz/klawiatura, szczególnie przy
-  wprowadzaniu danych.
+- Assistive technologies depend on the keyboard interface — working keyboard navigation
+  also ensures compatibility with screen readers.
+- Advanced users operate faster with the keyboard than with the mouse.
+- "WCAG Level A requires keyboard operability, making this a legal requirement in many
+  jurisdictions."
+- Motor disabilities, RSI and temporary injuries prevent many people from using a mouse.
+- Keeping keyboard focus eliminates switching between mouse and keyboard, especially when
+  entering data.
 
-## Wady / tradeoffs
+## Disadvantages / trade-offs
 
-- Niestandardowe widżety wymagają rozbudowanej implementacji — semantyczny HTML daje wsparcie
-  klawiaturowe automatycznie, stylowane `<div>` wymagają ręcznych handlerów.
-- Wzorce WAI-ARIA są złożone — poprawny listbox potrzebuje Home, End, PageUp, PageDown, wyszukiwania
-  „type-ahead” i obsługi trybu wyboru.
-- Własne skróty klawiaturowe mogą kolidować z domyślnymi skrótami przeglądarki; `preventDefault()`
-  usuwa natywną funkcjonalność.
-- Przechwytywanie strzałek może dezorientować użytkowników oczekujących scrollowania — wymaga
-  ostrożnego zarządzania propagacją zdarzeń.
-- Utrzymanie roving tabindex robi się trudne przy dynamicznych listach (zarządzanie `tabindex="0"`
+- Custom widgets require an extensive implementation — semantic HTML gives keyboard
+  support automatically, styled `<div>` elements require manual handlers.
+- WAI-ARIA patterns are complex — a correct listbox needs Home, End, PageUp, PageDown, "type-ahead"
+  search and handling of the selection mode.
+- Custom keyboard shortcuts can clash with the browser's default shortcuts; `preventDefault()`
+  removes native functionality.
+- Intercepting arrows can disorient users who expect scrolling — it requires
+  careful management of event propagation.
+- Maintaining roving tabindex gets hard with dynamic lists (managing `tabindex="0"`
   vs `-1`).
-- Skróty klawiaturowe są niewidoczne bez dokumentacji/wskazówek — użytkownik nie wie, że istnieją.
-- Klawiatury międzynarodowe (AZERTY, Dvorak) mają inaczej rozmieszczone klawisze niż QWERTY, co robi
-  niektóre skróty niewygodnymi lub niedostępnymi.
-- Widoczność wskaźnika fokusu bywa źródłem napięcia projektowego — wskaźniki zgodne z dostępnością
-  często wykraczają poza preferencje wizualne projektanta.
-- Testowanie nawigacji klawiaturowej wymaga manualnej interakcji — automatyczne skanery nie oceniają
-  jakości faktycznego doświadczenia użytkownika.
+- Keyboard shortcuts are invisible without documentation/hints — the user does not know they exist.
+- International keyboards (AZERTY, Dvorak) have keys placed differently from QWERTY, which makes
+  some shortcuts awkward or unavailable.
+- The visibility of the focus indicator is sometimes a source of design tension — accessibility-compliant indicators
+  often go beyond the designer's visual preferences.
+- Testing keyboard navigation requires manual interaction — automated scanners do not assess
+  the quality of the actual user experience.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Focus Management](focus-management.md) — Accessibility
 - [Focus Trap](focus-trap.md) — Accessibility
@@ -253,11 +253,11 @@ function Layout({ children }) {
 - [Keyboard Accessibility — W3C](https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html)
 - [WAI-ARIA Keyboard Patterns — W3C](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Zawsze, gdy budujesz **jakikolwiek** interaktywny element — to nie jest opcjonalne ulepszenie, WCAG
-Level A wymaga obsługi klawiaturowej i jest to wymóg prawny w wielu jurysdykcjach. Domyślnie sięgaj
-po natywne elementy (`<button>`, `<a>`, `<select>`) — dają to za darmo, bez pisania jednego handlera
-`keydown`. Pisz własną logikę klawiaturową (strzałki, roving tabindex) tylko dla widżetów, których
-natywny HTML nie obsługuje (custom combobox, tab panel) — nie odtwarzaj ręcznie zachowania, które
-`<select>`/`<button>` już mają wbudowane.
+Always, whenever you build **any** interactive element — this is not an optional enhancement, WCAG
+Level A requires keyboard operability and it is a legal requirement in many jurisdictions. By default reach
+for native elements (`<button>`, `<a>`, `<select>`) — they give this for free, without writing a single
+`keydown` handler. Write your own keyboard logic (arrows, roving tabindex) only for widgets that
+native HTML does not support (a custom combobox, a tab panel) — do not recreate by hand behaviour that
+`<select>`/`<button>` already have built in.

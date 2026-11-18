@@ -1,53 +1,53 @@
 # Prompt Input
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/prompt-input.
+Source: frontendpatterns.dev/prompt-input.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** AI chat UI (u źródła: Components)
-- **Poziom:** Intermediate
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** June 29, 2026
-- **Autor:** Den Odell
+- **Category:** AI chat UI (at the source: Components)
+- **Level:** Intermediate
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** June 29, 2026
+- **Author:** Den Odell
 
 ## TLDR
 
-„A chat composer is a textarea, not a text field: it grows with its content, sends on Enter but adds a newline on Shift+Enter, respects IME composition, and turns into a stop button while the model is replying.”
+"A chat composer is a textarea, not a text field: it grows with its content, sends on Enter but adds a newline on Shift+Enter, respects IME composition, and turns into a stop button while the model is replying."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- `field-sizing: content` — Chromium od 2024; w pozostałych silnikach sprawdź wsparcie (Baseline) i zostaw JS-owy
-  auto-grow jako fallback (`@supports not (field-sizing: content)`).
-- Sprawdzanie IME: w React `e.nativeEvent.isComposing`; w innych — `e.isComposing` (fallback `e.keyCode === 229` tylko
-  dla starych Safari). Dodaj też obsługę `compositionend`, jeśli wysyłasz przy końcu kompozycji.
-- Pole potrzebuje dostępnej nazwy (`<label>` lub `aria-label`), sam `placeholder` nią nie jest — fe-web-platform
+- `field-sizing: content` — Chromium since 2024; in the other engines check support (Baseline) and keep a JS
+  auto-grow as a fallback (`@supports not (field-sizing: content)`).
+- IME checking: in React `e.nativeEvent.isComposing`; elsewhere — `e.isComposing` (the `e.keyCode === 229` fallback only
+  for old Safari). Also add `compositionend` handling if you send at the end of composition.
+- The field needs an accessible name (`<label>` or `aria-label`); a `placeholder` alone is not one — fe-web-platform
   (`.claude/skills/fe-web-platform/references/accessibility/accessible-forms.md`).
-- Przykłady Svelte używają składni Svelte 4 (`export let`, `$:`, `on:click`, `createEventDispatcher`). W Svelte 5
-  odpowiednio: `let { … } = $props()`, `$derived`/`$effect`, atrybuty `onclick`, callback props zamiast dispatchera.
-- Angular (fw-angular): stan wątku w `signal<Message[]>` + `computed`, strumień przez `HttpClient` z
-  `observe: 'events', reportProgress: true` albo `fetch` w serwisie; `@for (m of messages(); track m.id)`.
+- The Svelte examples use Svelte 4 syntax (`export let`, `$:`, `on:click`, `createEventDispatcher`). In Svelte 5
+  respectively: `let { … } = $props()`, `$derived`/`$effect`, `onclick` attributes, callback props instead of the dispatcher.
+- Angular (fw-angular): the thread state in a `signal<Message[]>` + `computed`, the stream through `HttpClient` with
+  `observe: 'events', reportProgress: true` or `fetch` in a service; `@for (m of messages(); track m.id)`.
 
 ## Problem
 
-Naiwny input tekstowy w interfejsie czatu/AI ma cztery typowe problemy:
-1. Użytkownik nie może pisać wielolinijkowo bez przewijania niewidocznego tekstu.
-2. Enter wysyła niedokończoną wiadomość zamiast dodać nową linię.
-3. Przy kompozycji IME (japoński, chiński, koreański) Enter potwierdzający znaki wysyła wiadomość przedwcześnie.
-4. Przycisk Send zostaje aktywny podczas generowania odpowiedzi, co pozwala na kolizję promptów (dwa żądania naraz).
+A naive text input in a chat/AI interface has four typical problems:
+1. The user cannot write multiple lines without scrolling invisible text.
+2. Enter sends an unfinished message instead of adding a new line.
+3. During IME composition (Japanese, Chinese, Korean) the Enter that confirms the characters sends the message prematurely.
+4. The Send button stays active while the response is being generated, which allows prompts to collide (two requests at once).
 
-## Rozwiązanie
+## Solution
 
-- Użyj `<textarea>`, nie `<input>`.
-- Auto-grow elementu do maksymalnej wysokości, potem scroll.
-- Enter wysyła; Shift+Enter (lub Ctrl/Cmd+Enter) dodaje nową linię.
-- Ignoruj Enter podczas aktywnej kompozycji IME (`event.isComposing` albo `event.keyCode === 229`).
-- Przycisk zmienia się z Send na Stop podczas generowania odpowiedzi.
-- Przycinaj (`trim`) białe znaki przed wysłaniem.
-- Wyczyść pole i zresetuj wysokość po wysłaniu.
+- Use a `<textarea>`, not an `<input>`.
+- Auto-grow the element up to a maximum height, then scroll.
+- Enter sends; Shift+Enter (or Ctrl/Cmd+Enter) adds a new line.
+- Ignore Enter during an active IME composition (`event.isComposing` or `event.keyCode === 229`).
+- The button changes from Send to Stop while the response is being generated.
+- Trim (`trim`) whitespace before sending.
+- Clear the field and reset its height after sending.
 
-## Przykłady kodu
+## Code examples
 
 ### React
 
@@ -205,7 +205,7 @@ class PromptInput extends HTMLElement {
 customElements.define('prompt-input', PromptInput);
 ```
 
-### Send albo Stop, nigdy oba naraz
+### Send or Stop, never both at once
 
 ```javascript
 function Composer({ busy, canSend, onSend, onStop }) {
@@ -226,7 +226,7 @@ function Composer({ busy, canSend, onSend, onStop }) {
 }
 ```
 
-### Auto-grow tylko przez CSS
+### Auto-grow with CSS only
 
 ```css
 .composer textarea {
@@ -238,7 +238,7 @@ function Composer({ busy, canSend, onSend, onStop }) {
 }
 ```
 
-### Baseline bez JavaScriptu
+### A baseline without JavaScript
 
 ```html
 <form action="/chat" method="post" class="composer">
@@ -247,23 +247,23 @@ function Composer({ busy, canSend, onSend, onStop }) {
 </form>
 ```
 
-## Zalety
+## Advantages
 
-- Wielolinijkowe prompty działają naturalnie, bez przewijania niewidocznego tekstu.
-- Enter-to-send z Shift+Enter dla nowej linii odpowiada konwencji znanej z innych aplikacji czatowych.
-- Respektowanie kompozycji IME zapobiega przypadkowemu wysłaniu wiadomości przez użytkowników piszących po japońsku, chińsku, koreańsku i innych językach wymagających IME.
-- Zamiana Send na Stop podczas generowania jasno komunikuje aktualny stan systemu.
-- Auto-grow utrzymuje cały szkic widoczny; opakowanie w `<form>` daje działającą linię bazową jeszcze przed załadowaniem JavaScriptu (Progressive Enhancement).
+- Multi-line prompts work naturally, without scrolling invisible text.
+- Enter-to-send with Shift+Enter for a new line matches the convention known from other chat applications.
+- Respecting IME composition prevents accidental sending of messages by users writing in Japanese, Chinese, Korean and other languages that require an IME.
+- Swapping Send for Stop during generation clearly communicates the current state of the system.
+- Auto-grow keeps the whole draft visible; wrapping it in a `<form>` gives a working baseline even before JavaScript loads (Progressive Enhancement).
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Obsługa klawiatury ma wiele edge case’ów (IME, potwierdzenie autouzupełnienia, klawiatury mobilne) — wymaga testów na rzeczywistych urządzeniach, nie tylko w desktopowej przeglądarce.
-- Enter-to-send może zaskoczyć część użytkowników oczekujących Enter = nowa linia — konwencja jest powszechna w czatach, ale wymaga odkrywalnego UI (np. podpowiedzi „Shift+Enter for new line”).
-- JavaScriptowy auto-grow wymusza reflow przy każdym naciśnięciu klawisza; CSS `field-sizing` jest czystszy, ale nie wszędzie wspierany.
-- Na małych ekranach rosnący textarea konkuruje z klawiaturą ekranową o miejsce — potrzebny sensowny limit wysokości.
-- Przełączanie stanu busy/idle na przycisku dodaje stan, który musi być zsynchronizowany z rzeczywistym przebiegiem generowania odpowiedzi.
+- Keyboard handling has many edge cases (IME, autocomplete confirmation, mobile keyboards) — it requires tests on real devices, not only in a desktop browser.
+- Enter-to-send can surprise some users who expect Enter = a new line — the convention is common in chats, but it needs a discoverable UI (e.g. a "Shift+Enter for new line" hint).
+- A JavaScript auto-grow forces a reflow on every keystroke; CSS `field-sizing` is cleaner, but not supported everywhere.
+- On small screens a growing textarea competes with the on-screen keyboard for space — a sensible height limit is needed.
+- Toggling the busy/idle state on the button adds state that must be synchronized with the actual course of response generation.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Message Thread](message-thread.md) — ai-chat-ui.
 - [Stop Generation](stop-generation.md) — ai-chat-ui.
@@ -272,8 +272,8 @@ function Composer({ busy, canSend, onSend, onStop }) {
 - `KeyboardEvent.isComposing` — MDN.
 - `field-sizing` — MDN.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj tego wzorca zawsze, gdy budujesz pole wejściowe dla interfejsu czatu/AI — edge case’y (IME, multiline, busy state) są realne i regularnie zgłaszane przez użytkowników, nie teoretyczne.
+Use this pattern whenever you build an input field for a chat/AI interface — the edge cases (IME, multiline, busy state) are real and regularly reported by users, not theoretical.
 
-Dla zwykłego, jednoliniowego pola formularza (np. wyszukiwarka, e-mail) to jest nadmiarowe — zwykły `<input type="text">` bez auto-grow/IME-handling wystarczy; nie kopiuj tej złożoności tam, gdzie nie ma multiline treści do wpisania.
+For an ordinary, single-line form field (e.g. a search box, e-mail) it is excessive — a plain `<input type="text">` without auto-grow/IME handling is enough; do not copy this complexity where there is no multi-line content to type.

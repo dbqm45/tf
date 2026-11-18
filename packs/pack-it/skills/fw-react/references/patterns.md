@@ -1,17 +1,17 @@
-# Wzorce React 19 — przykłady
+# React 19 patterns — examples
 
-> **Spis treści:** 1. Wartość wyliczana zamiast stanu i efektu · 2. Reset stanu przez `key` · 3. `useEffectEvent` — efekt nie reaguje na wartość, którą… · 4. Formularz z `useActionState` i odrzuceniem biznesowym · 5. Pobieranie w efekcie bez wyścigu · 6. Maszyna stanów w `useReducer` · 7. Odpowiedniki dla React 18
+> **Contents:** 1. A computed value instead of state and an effect · 2. Resetting state through `key` · 3. `useEffectEvent` — the effect does not react to a value… · 4. A form with `useActionState` and a business rejection · 5. Fetching in an effect without a race · 6. A state machine in `useReducer` · 7. Equivalents for React 18
 
-Przykłady sprawdzone kompilatorem TypeScript (`tsc --noEmit`, `strict`) z typami `react` 19.3. Każdy pokazuje
-najpierw błąd, potem poprawkę.
+Examples checked with the TypeScript compiler (`tsc --noEmit`, `strict`) with the `react` 19.3 types. Each shows
+the mistake first, then the fix.
 
-## 1. Wartość wyliczana zamiast stanu i efektu
-Błąd: dodatkowy render i chwila, w której `total` nie pasuje do `items`.
+## 1. A computed value instead of state and an effect
+Mistake: an extra render and a moment in which `total` does not match `items`.
 ```tsx
 const [total, setTotal] = useState(0);
 useEffect(() => { setTotal(items.reduce((s, i) => s + i.price * i.qty, 0)); }, [items]);
 ```
-Poprawka: wylicz podczas renderowania. Gdy wyliczenie jest kosztowne, a kompilator nie jest włączony — `useMemo`.
+Fix: compute during render. When the computation is expensive and the compiler is not enabled — `useMemo`.
 ```tsx
 type Item = { price: number; qty: number };
 
@@ -21,9 +21,9 @@ export function CartTotal({ items }: { items: Item[] }) {
 }
 ```
 
-## 2. Reset stanu przez `key`
-Błąd: efekt czyszczący stan po zmianie `userId` — przez jeden render widać stare dane.
-Poprawka: rodzic nadaje `key`; nowa wartość `key` to nowy komponent z czystym stanem.
+## 2. Resetting state through `key`
+Mistake: an effect clearing the state after `userId` changes — for one render the old data is visible.
+Fix: the parent sets `key`; a new `key` value is a new component with clean state.
 ```tsx
 import { useState } from 'react';
 
@@ -36,11 +36,11 @@ export function Profile({ userId }: { userId: string }) {
   return <NoteForm key={userId} />;
 }
 ```
-Reset tylko części stanu: porównaj poprzednią wartość podczas renderowania (wzorzec `prevUserId` z react.dev), nie w efekcie.
+Resetting only part of the state: compare the previous value during render (the `prevUserId` pattern from react.dev), not in an effect.
 
-## 3. `useEffectEvent` — efekt nie reaguje na wartość, którą tylko czyta
-Błąd: `theme` w zależnościach — zmiana motywu zrywa i odnawia połączenie.
-Poprawka (19.2+): logika „przy zdarzeniu połącz się, pokaż powiadomienie w aktualnym motywie” idzie do Effect Event.
+## 3. `useEffectEvent` — the effect does not react to a value it only reads
+Mistake: `theme` in the dependencies — a theme change drops and re-establishes the connection.
+Fix (19.2+): the logic "on the event connect, show a notification in the current theme" goes into an Effect Event.
 ```tsx
 import { useEffect, useEffectEvent } from 'react';
 
@@ -49,18 +49,18 @@ declare function connect(roomId: string): Conn;
 declare function notify(msg: string, theme: 'light' | 'dark'): void;
 
 export function ChatRoom({ roomId, theme }: { roomId: string; theme: 'light' | 'dark' }) {
-  const onConnected = useEffectEvent(() => notify('Połączono', theme));
+  const onConnected = useEffectEvent(() => notify('Connected', theme));
   useEffect(() => {
     const c = connect(roomId);
     c.on('connected', () => onConnected());
     return () => c.disconnect();
-  }, [roomId]);   // onConnected nie trafia do zależności
+  }, [roomId]);   // onConnected does not go into the dependencies
   return null;
 }
 ```
-Zasady: Effect Event wołasz tylko z efektów, nie przekazujesz go do innych komponentów ani hooków.
+Rules: you call an Effect Event only from effects; you do not pass it to other components or hooks.
 
-## 4. Formularz z `useActionState` i odrzuceniem biznesowym
+## 4. A form with `useActionState` and a business rejection
 ```tsx
 import { useActionState } from 'react';
 
@@ -78,17 +78,17 @@ export function ReserveForm() {
     <form action={action}>
       <input name="room" required />
       <input name="slot" required />
-      <button disabled={pending}>Zarezerwuj</button>
+      <button disabled={pending}>Reserve</button>
       {state.status === 'rejected' && <p role="alert">{state.reason}</p>}
     </form>
   );
 }
 ```
-W Next.js funkcja `reserve` może być Server Action — wtedy autoryzacja i walidacja wejścia w niej samej (fw-nextjs).
+In Next.js the `reserve` function can be a Server Action — then authorization and input validation go inside it (fw-nextjs).
 
-## 5. Pobieranie w efekcie bez wyścigu
-Tylko gdy nie ma frameworka ani biblioteki zapytań. Spóźniona odpowiedź dla starego filtra jest ignorowana,
-a żądanie przerwane.
+## 5. Fetching in an effect without a race
+Only when there is no framework or query library. A late response for an old filter is ignored,
+and the request aborted.
 ```tsx
 import { useEffect, useState } from 'react';
 
@@ -106,7 +106,7 @@ export function Results({ query }: { query: string }) {
 }
 ```
 
-## 6. Maszyna stanów w `useReducer`
+## 6. A state machine in `useReducer`
 ```tsx
 import { useReducer } from 'react';
 
@@ -123,18 +123,18 @@ export function slot(s: S, e: E): S {
 
 export function Slot() {
   const [s, dispatch] = useReducer(slot, { kind: 'free' });
-  return <button onClick={() => dispatch({ type: 'hold', by: 'ja' })}>{s.kind}</button>;
+  return <button onClick={() => dispatch({ type: 'hold', by: 'me' })}>{s.kind}</button>;
 }
 ```
-Reducer testujesz jako czystą funkcję: `expect(slot({ kind: 'free' }, { type: 'confirm' })).toEqual({ kind: 'free' })`.
+You test the reducer as a pure function: `expect(slot({ kind: 'free' }, { type: 'confirm' })).toEqual({ kind: 'free' })`.
 
-## 7. Odpowiedniki dla React 18
+## 7. Equivalents for React 18
 | React 19 | React 18 |
 |---|---|
-| `ref` jako prop | `forwardRef((props, ref) => …)` |
-| `useActionState` / `<form action>` | `onSubmit` + `useState` dla wyniku i `useTransition` dla oczekiwania |
-| `useOptimistic` | lokalny stan zmieniany przed żądaniem i cofany po błędzie |
-| `useEffectEvent` (19.2) | `useRef` z najnowszą wartością aktualizowaną w efekcie (wzorzec „latest ref”) |
-| `use(promise)` | biblioteka zapytań albo efekt z sprzątaniem (punkt 5) |
-| `act` z `react` | `act` z `react-dom/test-utils` |
-| React Compiler | działa też z 17 i 18 (pakiet `react-compiler-runtime`) |
+| `ref` as a prop | `forwardRef((props, ref) => …)` |
+| `useActionState` / `<form action>` | `onSubmit` + `useState` for the result and `useTransition` for pending |
+| `useOptimistic` | local state changed before the request and rolled back after an error |
+| `useEffectEvent` (19.2) | `useRef` with the latest value updated in an effect (the "latest ref" pattern) |
+| `use(promise)` | a query library or an effect with a cleanup (point 5) |
+| `act` from `react` | `act` from `react-dom/test-utils` |
+| React Compiler | also works with 17 and 18 (the `react-compiler-runtime` package) |

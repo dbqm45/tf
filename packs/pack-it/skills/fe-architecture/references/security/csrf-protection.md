@@ -1,53 +1,53 @@
 # CSRF Protection
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/csrf-protection.
+Source: frontendpatterns.dev/csrf-protection.
 
-## Metadane
+## Metadata
 
-Kategoria: Security. Poziom: Advanced. Frameworki: React, Vue, Svelte, Native Web. Autor: Den Odell.
-Data aktualizacji: 16 czerwca 2026.
+Category: Security. Level: Advanced. Frameworks: React, Vue, Svelte, Native Web. Author: Den Odell.
+Last updated: 16 June 2026.
 
 ## TLDR
 
-Wymuszaj niedogadalny, losowy token per-sesję na każdym żądaniu zmieniającym stan, walidowany po
-stronie serwera przed wykonaniem pracy — dodaj `SameSite` cookies jako drugą warstwę.
+Enforce an unguessable, random per-session token on every state-changing request, validated on
+the server before any work is done — add `SameSite` cookies as a second layer.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Dodatkowa, tania warstwa 2026: **Fetch Metadata** — serwer odrzuca żądania zmieniające stan z
-  `Sec-Fetch-Site: cross-site` (oraz sprawdza `Origin`). Wspierane we wszystkich głównych przeglądarkach.
-- Ciasteczko sesji z prefiksem `__Host-` (wymusza `Secure`, `Path=/`, brak `Domain`) utrudnia nadpisanie z subdomeny —
-  ważne dla double-submit.
-- Nie zakładaj, że `SameSite=Lax` jest domyślne — to zachowanie Chromium, nie wszystkich przeglądarek
+- An additional, cheap layer in 2026: **Fetch Metadata** — the server rejects state-changing requests with
+  `Sec-Fetch-Site: cross-site` (and checks `Origin`). Supported in all major browsers.
+- A session cookie with the `__Host-` prefix (it enforces `Secure`, `Path=/`, no `Domain`) makes overwriting from a subdomain harder —
+  important for double-submit.
+- Do not assume that `SameSite=Lax` is the default — that is Chromium behaviour, not that of all browsers
   (samesite-cookie.md).
-- Wiele frameworków ma to wbudowane: Angular `HttpClient` automatycznie odsyła token z ciasteczka `XSRF-TOKEN` w
-  nagłówku `X-XSRF-TOKEN` (`withXsrfConfiguration`) — fw-angular. Serwerowa strona — be-auth-security.
-- Przykład Svelte: `<script context="module">` to Svelte 4; w Svelte 5 `<script module>`.
+- Many frameworks have this built in: Angular's `HttpClient` automatically sends back the token from the `XSRF-TOKEN` cookie in
+  the `X-XSRF-TOKEN` header (`withXsrfConfiguration`) — fw-angular. The server side — be-auth-security.
+- The Svelte example: `<script context="module">` is Svelte 4; in Svelte 5 `<script module>`.
 
 ## Problem
 
-Ataki CSRF wykorzystują automatyczne dołączanie cookies przez przeglądarki. Gdy zalogowany
-użytkownik odwiedzi złośliwą stronę, może ona wysłać w jego imieniu żądanie zmieniające stan
-(transfer, zmiana hasła). Serwer odbiera prawidłowo uwierzytelnione żądanie, bo cookies są
-dołączone, ale użytkownik nigdy nie wydał takiego polecenia. Atakujący nigdy nie widzi odpowiedzi i
-nie czyta żadnych danych — potrzebuje tylko, żeby ofiara załadowała stronę, podczas gdy aktywna
-sesja istnieje w przeglądarce.
+CSRF attacks exploit the automatic attachment of cookies by browsers. When a logged-in
+user visits a malicious site, it can send a state-changing request on their behalf
+(a transfer, a password change). The server receives a correctly authenticated request, because the cookies are
+attached, but the user never issued such a command. The attacker never sees the response and
+does not read any data — they only need the victim to load the page while an active
+session exists in the browser.
 
-## Rozwiązanie
+## Solution
 
-Trzy uzupełniające się mechanizmy:
+Three complementary mechanisms:
 
-1. **Synchronizer Token Pattern** — token przechowywany po stronie serwera, przekazywany klientowi
-   (meta tag albo endpoint), odsyłany w nagłówku `X-CSRF-Token` na każdym żądaniu POST/PUT/PATCH/DELETE.
-2. **Double-Submit Cookie Pattern** — serwer ustawia token w ciasteczku czytelnym dla JS, klient
-   kopiuje wartość do nagłówka; atakujący może wysłać ciasteczko, ale nie może odczytać jego
-   zawartości z innej domeny.
-3. **Warstwa `SameSite`** — `SameSite=Lax`/`Strict` na ciasteczku sesji jako dodatkowa ochrona,
-   uniemożliwiająca załączanie go do żądań cross-site (patrz `samesite-cookie.md`).
+1. **Synchronizer Token Pattern** — a token stored on the server side, passed to the client
+   (a meta tag or an endpoint), sent back in the `X-CSRF-Token` header on every POST/PUT/PATCH/DELETE request.
+2. **Double-Submit Cookie Pattern** — the server sets the token in a JS-readable cookie, the client
+   copies the value into a header; an attacker can send the cookie, but cannot read its
+   contents from another domain.
+3. **The `SameSite` layer** — `SameSite=Lax`/`Strict` on the session cookie as additional protection,
+   preventing it from being attached to cross-site requests (see `samesite-cookie.md`).
 
-## Przykłady kodu
+## Code examples
 
 ### Client-side token attachment — React
 
@@ -265,52 +265,52 @@ app.post('/api/transfer', (req, res) => {
 app.listen(3000);
 ```
 
-Uwaga: `crypto.timingSafeEqual` zamiast `===` zapobiega wyciekom informacji na podstawie czasu
-porównania — patrz też be-auth-security (sekcja o timing
-attacks). Dla wzorca synchronizer token przechowuj go w `req.session.csrfToken`.
+Note: `crypto.timingSafeEqual` instead of `===` prevents information leaks based on the comparison
+time — see also be-auth-security (the section on timing
+attacks). For the synchronizer token pattern store it in `req.session.csrfToken`.
 
-## Zalety
+## Advantages
 
-- Żądania z trzecich stron są odrzucane, bo atakujący nie posiada ważnego tokenu.
-- Ochrona konkretnych niebezpiecznych operacji (transfery, zmiana hasła, usunięcie konta).
-- Same-origin policy odrabia ciężką pracę — token musi być niedogadalny, nie zaszyfrowany.
-- Naturalne łączenie z `SameSite` cookies dla warstwowej obrony.
-- Strona kliencka to cienka otoczka wokół `fetch`, pisana raz i używana wszędzie.
-- Wariant double-submit nie wymaga magazynu sesji po stronie serwera — łatwiej skalować.
-- Niepowodzenia walidacji są widoczne i głośne (HTTP 403) — łatwo złapać błędy konfiguracji.
+- Requests from third-party sites are rejected, because the attacker does not have a valid token.
+- Protection of specific dangerous operations (transfers, password change, account deletion).
+- The same-origin policy does the heavy lifting — the token must be unguessable, not encrypted.
+- Natural combination with `SameSite` cookies for a layered defence.
+- The client side is a thin wrapper around `fetch`, written once and used everywhere.
+- The double-submit variant does not require a server-side session store — easier to scale.
+- Validation failures are visible and loud (HTTP 403) — configuration errors are easy to catch.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Każde żądanie zmieniające stan nosi bagaż tokenowy; zapomniane nagłówki powodują ciche błędy.
-- Serwer musi generować, przechowywać i bezpiecznie porównywać tokeny — dodaje kwestie kryptografii.
-- Legalni klienci cross-origin łamią się przez ten wzorzec z projektu — natywne aplikacje/API
-  wymagają innego schematu (np. bearer tokens).
-- SPA muszą utrzymywać token świeży po logowaniu/wylogowaniu; żądania mogą zawieść mid-sesji.
-- Double-submit wymaga ciasteczka czytelnego dla JS — potencjalna pułapka przy stosowaniu do
-  wrażliwych ciasteczek.
-- `SameSite` cookies nie są pełną obroną; starsze przeglądarki ignorują atrybut, `Lax` pozwala na
-  niektóre nawigacje.
-- Cachowanie i CDN się komplikują — strona zcache'owana z tokenem jednego użytkownika nigdy nie
-  powinna trafić do innego.
-- Naiwne porównanie stringów przecieka informacje czasowe — walidacja wymaga stałoczasowego
-  porównania (`crypto.timingSafeEqual`).
+- Every state-changing request carries the token baggage; forgotten headers cause silent errors.
+- The server must generate, store and securely compare tokens — this adds cryptography concerns.
+- Legitimate cross-origin clients break by design under this pattern — native applications/APIs
+  require a different scheme (e.g. bearer tokens).
+- SPAs must keep the token fresh after login/logout; requests can fail mid-session.
+- Double-submit requires a JS-readable cookie — a potential trap when applied to
+  sensitive cookies.
+- `SameSite` cookies are not a full defence; older browsers ignore the attribute, `Lax` allows
+  some navigations.
+- Caching and CDNs get complicated — a page cached with one user's token should never
+  reach another.
+- A naive string comparison leaks timing information — validation requires a constant-time
+  comparison (`crypto.timingSafeEqual`).
 
-## Powiązane wzorce
+## Related patterns
 
 - SameSite Cookie — Security (`samesite-cookie.md`)
 - Secure Token Storage — Security (`secure-token-storage.md`)
 - Content Security Policy (CSP) — Security (`content-security-policy.md`)
-- Patrz też be-auth-security — sekcja CSRF pokrywa ten sam temat
-  z perspektywy backendu Node.js/Express, ten plik — z perspektywy frontendu.
-- Zewnętrzne: [Cross-Site Request Forgery — OWASP](https://owasp.org/www-community/attacks/csrf),
+- See also be-auth-security — the CSRF section covers the same topic
+  from the perspective of a Node.js/Express backend, this file — from the frontend perspective.
+- External: [Cross-Site Request Forgery — OWASP](https://owasp.org/www-community/attacks/csrf),
   [CSRF Prevention Cheat Sheet — OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html),
   [SameSite Cookies — MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Użyj **zawsze**, gdy aplikacja ma żądania zmieniające stan (POST/PUT/PATCH/DELETE) wykonywane w
-imieniu zalogowanego użytkownika przez sesję opartą na cookies — to nie jest opcjonalny dodatek,
-to fundamentalna ochrona dla tego modelu autentykacji. Jeśli aplikacja używa **wyłącznie** bearer
-tokenów w nagłówku `Authorization` (nie cookies) do autentykacji API, CSRF w klasycznej formie nie
-ma zastosowania (przeglądarka nie dołącza nagłówków automatycznie tak jak cookies) — w takim
-przypadku skup się na `secure-token-storage.md` zamiast dodawać niepotrzebną warstwę tokenów CSRF.
+Use it **always** when the application has state-changing requests (POST/PUT/PATCH/DELETE) executed on
+behalf of a logged-in user through a cookie-based session — this is not an optional add-on,
+it is the fundamental protection for this authentication model. If the application uses **only** bearer
+tokens in the `Authorization` header (not cookies) for API authentication, CSRF in its classic form does not
+apply (the browser does not attach headers automatically the way it does cookies) — in that
+case focus on `secure-token-storage.md` instead of adding an unnecessary layer of CSRF tokens.

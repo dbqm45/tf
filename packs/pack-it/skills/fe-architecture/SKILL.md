@@ -1,97 +1,97 @@
 ---
 name: fe-architecture
-description: Użyj przy strukturze frontendu — stan i dane, granice komponentów, SSR/RSC, wydajność, odporność.
+description: Use for frontend structure — state and data, component boundaries, SSR/RSC, performance, resilience.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy decyzjach o strukturze frontendu (każdy framework) — styl architektury, FSD/feature folders, stan i warstwa danych, granice komponentów, renderowanie (SSR/RSC), wydajność, odporność (błędy, ładowanie, retry), routing, bezpieczeństwo klienta (CSP, CSRF, tokeny), testy komponentów, UI czatu AI. Nie do stylów (fe-css), API przeglądarki i a11y (fe-web-platform) ani składni (lang-*, fw-*)."
-  keywords: "tabela danych, tabela z filtrowaniem i sortowaniem, filtry znikają po odświeżeniu, filtry w URL, wirtualizacja listy, zaznacz wszystkie, aria-sort, architektura frontendu, SPA, ponawianie żądań, retry w przeglądarce, odporność frontendu, stan aplikacji, zarządzanie stanem, warstwa danych frontu, podatność we frameworku frontendowym, czy to problem tylko frontendu, Server Components, mikrofrontendy, routing, micro-frontendy, micro-frontends, Module Federation, dwie wersje Reacta, współdzielone zależności, BFF, backend for frontend, SSR na brzegu, edge rendering"
+  catalog: "Use for decisions about frontend structure (any framework) — architecture style, FSD/feature folders, state and the data layer, component boundaries, rendering (SSR/RSC), performance, resilience (errors, loading, retry), routing, client security (CSP, CSRF, tokens), component tests, AI chat UI. Not for styles (fe-css), browser APIs and a11y (fe-web-platform) or syntax (lang-*, fw-*)."
+  keywords: "tabela danych, tabela z filtrowaniem i sortowaniem, filtry znikają po odświeżeniu, filtry w URL, wirtualizacja listy, zaznacz wszystkie, aria-sort, architektura frontendu, SPA, ponawianie żądań, retry w przeglądarce, odporność frontendu, stan aplikacji, zarządzanie stanem, warstwa danych frontu, podatność we frameworku frontendowym, czy to problem tylko frontendu, Server Components, mikrofrontendy, routing, micro-frontendy, micro-frontends, Module Federation, dwie wersje Reacta, współdzielone zależności, BFF, backend for frontend, SSR na brzegu, edge rendering, data table, table with filtering and sorting, filters disappear after refresh, filters in URL, list virtualization, select all, frontend architecture, request retries, retry in the browser, frontend resilience, application state, state management, frontend data layer, vulnerability in a frontend framework, is it only a frontend problem, microfrontends, two versions of React, shared dependencies, SSR at the edge"
 ---
 
-# Architektura frontendu
+# Frontend architecture
 
-Zasady są niezależne od frameworka; przykłady w references są często w React („przykład w React”) — idiomy
-Angulara bierz z fw-angular, języka z lang-*. Najpierw nazwij problem (skala zespołu, wydajność, odporność,
-bezpieczeństwo), potem dobierz wzorzec — nie odwrotnie.
+The rules are framework-independent; the examples in references are often in React ("example in React") — take
+Angular idioms from fw-angular, language idioms from lang-*. First name the problem (team scale, performance, resilience,
+security), then choose the pattern — not the other way round.
 
-## Struktura (feature-first)
+## Structure (feature-first)
 ```
 src/
-  app/            # bootstrap, routing, providery
-  features/<x>/   # wszystko dla jednej funkcji: ui, model/stan, api, testy
-  shared/         # UI kit, utils, klient API — bez wiedzy o domenie
+  app/            # bootstrap, routing, providers
+  features/<x>/   # everything for one feature: ui, model/state, api, tests
+  shared/         # UI kit, utils, API client — no knowledge of the domain
 ```
-- Funkcja nie importuje z innej bezpośrednio — tylko przez jej publiczne API (`index.ts`); `shared/` nie importuje z `features/`.
-- Nazwy folderów z języka domeny (Screaming Architecture). Przy wielu zespołach/granicach → pełne FSD
-  (`app/pages/widgets/features/entities/shared`, importy tylko w dół) wymuszane lintem.
+- A feature does not import from another one directly — only through its public API (`index.ts`); `shared/` does not import from `features/`.
+- Folder names from the domain language (Screaming Architecture). With many teams/boundaries → full FSD
+  (`app/pages/widgets/features/entities/shared`, imports only downwards) enforced by a linter.
 
-## Stan — najniższy wystarczający poziom
-1. Lokalny stan komponentu (React `useState`, Vue `ref`, Angular `signal`).
-2. Stan w URL (filtry, paginacja, zakładki) — linkowalny, odporny na odświeżenie.
-3. Stan serwera → warstwa z cache (TanStack Query, loadery routera, Angular `httpResource`). Nie kopiuj danych z API do globalnego store'a.
-4. Globalny store — tylko prawdziwie globalny stan klienta (sesja UI, preferencje).
+## State — the lowest sufficient level
+1. Local component state (React `useState`, Vue `ref`, Angular `signal`).
+2. State in the URL (filters, pagination, tabs) — linkable, survives a refresh.
+3. Server state → a layer with a cache (TanStack Query, router loaders, Angular `httpResource`). Do not copy API data into a global store.
+4. A global store — only for truly global client state (UI session, preferences).
 
-## Komponenty i dane
-- Prezentacja (wejścia → UI) oddzielona od pobierania danych (kontener / hook / composable / serwis).
-- > ~200 linii albo > 5–6 boolowskich wejść → podziel lub użyj kompozycji (children/sloty, compound components).
-- Wszystkie wywołania API przez jeden klient (`shared/api`) z auth, błędami, anulowaniem; mapowanie DTO → model na granicy, nie w komponentach.
-- Render czysty (bez efektów ubocznych); każdy otwarty zasób (subskrypcja, timer, listener) ma symetryczne sprzątanie.
+## Components and data
+- Presentation (inputs → UI) separated from data fetching (container / hook / composable / service).
+- > ~200 lines or > 5–6 boolean inputs → split it or use composition (children/slots, compound components).
+- All API calls through one client (`shared/api`) with auth, errors, cancellation; DTO → model mapping at the boundary, not in components.
+- A pure render (no side effects); every opened resource (subscription, timer, listener) has a symmetrical cleanup.
 
-## Odporność
-- Każdy widok danych ma 4 stany: ładowanie, błąd (z „spróbuj ponownie”), pusto, dane — jako unia, nie flagi.
-- Error boundary na trasę + wokół niezależnych widgetów; błędy async przekazuj do granicy jawnie.
-- Retry z backoffem i jitterem tylko dla operacji idempotentnych; 409/422 to wynik biznesowy, nie awaria.
-- Formularze: walidacja schematem współdzielonym z backendem, gdy się da; błędy serwera mapowane na pola; blokada podwójnej wysyłki.
-- Optymistyczne aktualizacje tylko dla operacji prawie zawsze udanych — zawsze z rollbackiem.
-- Feature flags sprawdzane w jednym miejscu; po pełnym wdrożeniu usuwane (dodaj zadanie sprzątające).
+## Resilience
+- Every data view has 4 states: loading, error (with "try again"), empty, data — as a union, not flags.
+- An error boundary per route + around independent widgets; pass async errors to the boundary explicitly.
+- Retry with backoff and jitter only for idempotent operations; 409/422 is a business outcome, not a failure.
+- Forms: validation with a schema shared with the backend when possible; server errors mapped onto fields; a lock against double submission.
+- Optimistic updates only for operations that almost always succeed — always with a rollback.
+- Feature flags checked in one place; removed after full rollout (add a cleanup task).
 
-## Wydajność
-- Code splitting per trasa; ciężkie biblioteki (wykresy, edytory) leniwie (`import()`, Angular `@defer`). Obrazu LCP nie ładuj leniwie.
-- Model renderowania (CSR/SSR/SSG/ISR/RSC) wybierany per trasa.
-- Mierz przed optymalizacją (LCP/INP/CLS, profiler, bundle analyzer); memoizacja tylko przy zmierzonym problemie.
+## Performance
+- Code splitting per route; heavy libraries (charts, editors) lazily (`import()`, Angular `@defer`). Do not lazy-load the LCP image.
+- The rendering model (CSR/SSR/SSG/ISR/RSC) chosen per route.
+- Measure before optimizing (LCP/INP/CLS, profiler, bundle analyzer); memoization only for a measured problem.
 
-## Bezpieczeństwo klienta
-- Treść od użytkownika i od modeli AI jest niezaufana: interpolacja frameworka zamiast `innerHTML`; escape hatch
-  (`dangerouslySetInnerHTML`, `v-html`, `bypassSecurityTrust*`) tylko po sanitizerze.
-- Sesja w ciasteczku `HttpOnly; Secure; SameSite` (najlepiej BFF), nie w `localStorage`; CSRF: token + Fetch Metadata.
-- Strict CSP (nonce + `strict-dynamic`), SRI dla zasobów z obcych CDN, PII redagowane przed logami/telemetrią.
-- SSR, React Server Components, Angular SSR i server actions to **kod serwera** wystawiony do internetu: wymagają
-  łatek w ciągu doby przy krytycznych CVE (React2Shell, CVE-2025-55182: wykonanie kodu bez logowania jednym żądaniem)
-  i uruchamiania jak backend (bez root, bez powłoki w obrazie — ops-docker).
-- Strona serwerowa (auth, walidacja) — be-auth-security.
+## Client security
+- Content from users and from AI models is untrusted: framework interpolation instead of `innerHTML`; escape hatches
+  (`dangerouslySetInnerHTML`, `v-html`, `bypassSecurityTrust*`) only after a sanitizer.
+- The session in an `HttpOnly; Secure; SameSite` cookie (preferably a BFF), not in `localStorage`; CSRF: a token + Fetch Metadata.
+- Strict CSP (nonce + `strict-dynamic`), SRI for resources from third-party CDNs, PII redacted before logs/telemetry.
+- SSR, React Server Components, Angular SSR and server actions are **server code** exposed to the internet: they require
+  patches within a day for critical CVEs (React2Shell, CVE-2025-55182: code execution without logging in with a single request)
+  and running like a backend (no root, no shell in the image — ops-docker).
+- The server side (auth, validation) — be-auth-security.
 
-## Decyzje
-Zmiana struktury (nowa biblioteka stanu, nowy wzorzec, micro-frontends) → ADR wg docs-tech-writing; czynniki
-jakości — arch-quality-attributes. Zasady ogólne (KISS/YAGNI/SOLID) — eng-design-principles; strategia testów — eng-testing.
+## Decisions
+A change of structure (a new state library, a new pattern, micro-frontends) → an ADR per docs-tech-writing; quality
+drivers — arch-quality-attributes. General principles (KISS/YAGNI/SOLID) — eng-design-principles; testing strategy — eng-testing.
 
-## Indeks references
-Czytaj tylko plik potrzebny do bieżącego pytania:
-- `principles.md` — 6 fundamentów, zasady (spójność/powiązanie, enkapsulacja), model „navigation/content/affordances”, indeks przewodników frontendpatterns.dev.
-- `architecture-styles.md` — monolit, modularna, component-based, micro-frontends, Flux, warstwowa, serverless — zalety/wady/kiedy.
-- `fsd-screaming-architecture.md` — warstwy i reguły FSD, Screaming Architecture, rodzaje stanu per framework, tooling 2026.
-- `rendering-models.md` — VDOM vs sygnały, CSR/SSR/SSG/ISR, hydratacja (mismatch, przyrostowa), RSC, wybór per trasa.
-- `components/` — `component-lifecycle`, `presentational-vs-container`, `props-and-attributes`, `pure-component`, `compound-components` — gdy projektujesz API lub podział komponentu.
-- `fundamentals/` — `barrel-export`, `separation-of-concerns`, `single-responsibility` — granice modułów i podział kodu.
-- `performance/` — `code-splitting`, `lazy-loading`, `debounce` (i throttle), `memoization`.
+## References index
+Read only the file needed for the current question:
+- `principles.md` — 6 fundamentals, principles (cohesion/coupling, encapsulation), the "navigation/content/affordances" model, the index of frontendpatterns.dev guides.
+- `architecture-styles.md` — monolith, modular, component-based, micro-frontends, Flux, layered, serverless — advantages/disadvantages/when.
+- `fsd-screaming-architecture.md` — FSD layers and rules, Screaming Architecture, kinds of state per framework, tooling in 2026.
+- `rendering-models.md` — VDOM vs signals, CSR/SSR/SSG/ISR, hydration (mismatch, incremental), RSC, choice per route.
+- `components/` — `component-lifecycle`, `presentational-vs-container`, `props-and-attributes`, `pure-component`, `compound-components` — when you design a component's API or split.
+- `fundamentals/` — `barrel-export`, `separation-of-concerns`, `single-responsibility` — module boundaries and code splitting.
+- `performance/` — `code-splitting`, `lazy-loading`, `debounce` (and throttle), `memoization`.
 - `resilience/` — `async-boundary`, `error-boundary`, `error-handling`, `loading-state`, `retry`.
-- `routing/client-side-routing.md` — router klienta, Navigation API, scroll i fokus po nawigacji.
-- `data-tables.md` — **tabele danych**: stan filtrów i sortowania w URL, dane po stronie serwera, wirtualizacja, „zaznacz wszystkie pasujące” a operacja masowa, paleta poleceń, dostępność (`aria-sort`).
+- `routing/client-side-routing.md` — the client router, the Navigation API, scroll and focus after navigation.
+- `data-tables.md` — **data tables**: filter and sort state in the URL, server-side data, virtualization, "select all matching" versus a bulk operation, the command palette, accessibility (`aria-sort`).
 - `security/` — `content-security-policy`, `csrf-protection`, `samesite-cookie`, `secure-token-storage`, `input-sanitization`, `output-encoding`, `trusted-types`, `subresource-integrity`, `pii-redaction`.
-- `testing/component-testing.md` — testy komponentów z perspektywy użytkownika (narzędzia: tool-vitest, tool-jest, tool-playwright).
-- `ai-chat-ui/` — **interfejsy czatu z modelem AI**: model wątku jako lista wiadomości ze statusem (`message-thread`),
-  pole promptu z IME i Send/Stop (`prompt-input`), strumieniowanie odpowiedzi i SSE (`streaming-response`),
-  przerwanie z `AbortController` także na serwerze (`stop-generation`), wskaźnik „myśli” (`thinking-indicator`),
-  regeneracja jako warianty (`response-regeneration`). Czytaj tylko przy budowie UI czatu/asystenta.
+- `testing/component-testing.md` — component tests from the user's perspective (tools: tool-vitest, tool-jest, tool-playwright).
+- `ai-chat-ui/` — **chat interfaces with an AI model**: the thread model as a list of messages with a status (`message-thread`),
+  the prompt field with IME and Send/Stop (`prompt-input`), response streaming and SSE (`streaming-response`),
+  interruption with `AbortController` also on the server (`stop-generation`), the "thinking" indicator (`thinking-indicator`),
+  regeneration as variants (`response-regeneration`). Read only when building a chat/assistant UI.
 
-Pliki wzorców mają sekcję „Uwagi (stan 2026)” — poprawki względem źródła i odpowiedniki w innych frameworkach.
+Pattern files have a "Notes (state in 2026)" section — corrections to the source and equivalents in other frameworks.
 
-## Checklista
-- [ ] Granice funkcji i publiczne API modułów zachowane; importy tylko w dozwolonym kierunku
-- [ ] Stan na najniższym wystarczającym poziomie; dane serwera w warstwie z cache
-- [ ] Każdy widok danych obsługuje ładowanie/błąd/pusto/dane; błędy nie kładą całej strony
-- [ ] Tabela: filtry i sortowanie w URL, dane z serwera, „wszystkie pasujące” jako filtr, `aria-sort` na sortowanej kolumnie
-- [ ] Brak `innerHTML` z niezaufanymi danymi; tokeny poza `localStorage`
-- [ ] Podział kodu i model renderowania uzasadnione pomiarem
-- [ ] Decyzja strukturalna opisana w ADR
+## Checklist
+- [ ] Feature boundaries and public module APIs preserved; imports only in the allowed direction
+- [ ] State at the lowest sufficient level; server data in a layer with a cache
+- [ ] Every data view handles loading/error/empty/data; errors do not take down the whole page
+- [ ] Table: filters and sorting in the URL, data from the server, "all matching" as a filter, `aria-sort` on the sorted column
+- [ ] No `innerHTML` with untrusted data; tokens outside `localStorage`
+- [ ] Code splitting and the rendering model justified by measurement
+- [ ] The structural decision described in an ADR
 
-Źródła: frontendpatterns.dev (Den Odell), M. Hrynkevych „Frontend Architecture”, „The Grand Unifying Architecture of
-Frontend” (playfulprogramming), LogRocket „modern frontend architecture patterns” — opisane własnymi słowami, licencje źródeł nieokreślone.
+Sources: frontendpatterns.dev (Den Odell), M. Hrynkevych "Frontend Architecture", "The Grand Unifying Architecture of
+Frontend" (playfulprogramming), LogRocket "modern frontend architecture patterns" — described in our own words, source licences unspecified.

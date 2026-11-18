@@ -1,53 +1,53 @@
 # Live Regions
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state as of 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / trade-offs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/live-regions (Den Odell, aktualizacja 7 października 2025).
+Source: frontendpatterns.dev/live-regions (Den Odell, updated 7 October 2025).
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Accessibility
-- **Poziom:** Beginner
-- **Przykłady:** React, Vue, Native web
+- **Category:** Accessibility
+- **Level:** Beginner
+- **Examples:** React, Vue, Native web
 
 ## TLDR
 
-„Announce dynamic content changes to screen readers using ARIA live regions, choosing politeness
-levels based on urgency.”
+"Announce dynamic content changes to screen readers using ARIA live regions, choosing politeness
+levels based on urgency."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state as of 2026, corrections to the source)
 
-- `.sr-only`: `clip` jest przestarzałe — użyj `clip-path: inset(50%)` (poprawiono CSS).
-- `role="alert"` już implikuje `aria-live="assertive"` (i `aria-atomic="true"`), `role="status"` — `polite`; nie
-  dubluj atrybutów. Region musi istnieć w DOM przed zmianą treści — renderuj go zawsze, zmieniaj tylko tekst.
-- W przykładzie odliczania `setAnnouncement` było wywoływane wewnątrz funkcji aktualizującej `setSeconds` (efekt
-  uboczny w updaterze — w StrictMode wykona się dwukrotnie). Poprawiono: ogłoszenia liczone z wartości w efekcie.
-- `useCallback(debounce(...), [])` — lint nie widzi zależności; stabilną funkcję debounce trzymaj w `useMemo`/`useRef`.
-- Angular: `LiveAnnouncer` z CDK (`announce(msg, 'polite')`) — fw-angular. Specyfikacja: WAI-ARIA 1.2.
+- `.sr-only`: `clip` is deprecated — use `clip-path: inset(50%)` (the CSS was corrected).
+- `role="alert"` already implies `aria-live="assertive"` (and `aria-atomic="true"`), `role="status"` — `polite`; do not
+  duplicate the attributes. The region must exist in the DOM before the content changes — always render it, change only the text.
+- In the countdown example `setAnnouncement` was called inside the `setSeconds` updater function (a side
+  effect in the updater — in StrictMode it runs twice). Corrected: the announcements are derived from the value in an effect.
+- `useCallback(debounce(...), [])` — the lint does not see the dependencies; keep a stable debounce function in `useMemo`/`useRef`.
+- Angular: `LiveAnnouncer` from the CDK (`announce(msg, 'polite')`) — fw-angular. Specification: WAI-ARIA 1.2.
 
 ## Problem
 
-Dynamiczne zmiany na stronie (toast notifications, komunikaty walidacji, wskaźniki autosave) nie są
-słyszalne dla użytkowników czytników ekranu. Gdy strona się nie przeładowuje, czytnik ekranu nie ma
-wbudowanego powodu, by ogłaszać nowo wstrzykniętą treść — musi zostać do tego jawnie
-poinstruowany.
+Dynamic changes on the page (toast notifications, validation messages, autosave indicators) are not
+audible to screen reader users. When the page does not reload, the screen reader has no
+built-in reason to announce newly injected content — it must be explicitly
+instructed to do so.
 
-## Rozwiązanie
+## Solution
 
-Oznacz regiony strony atrybutem `aria-live`, żeby poinformować czytniki ekranu o automatycznym
-ogłaszaniu zmian treści:
-- `aria-live="polite"` — aktualizacje nieurgentne (np. „Item added to cart”), czeka, aż czytnik
-  skończy aktualną wypowiedź.
-- `aria-live="assertive"` — pilne wiadomości (np. błędy), przerywa natychmiast.
-- `role="status"` — skrót równoważny `aria-live="polite"`.
-- `role="alert"` — skrót równoważny `aria-live="assertive"`.
+Mark regions of the page with the `aria-live` attribute to tell screen readers to automatically
+announce content changes:
+- `aria-live="polite"` — non-urgent updates (e.g. "Item added to cart"), it waits until the screen reader
+  finishes the current utterance.
+- `aria-live="assertive"` — urgent messages (e.g. errors), it interrupts immediately.
+- `role="status"` — a shorthand equivalent to `aria-live="polite"`.
+- `role="alert"` — a shorthand equivalent to `aria-live="assertive"`.
 
-**Kluczowy wymóg:** kontener live region musi istnieć w DOM **przed** wstrzyknięciem do niego
-treści — dodanie samego kontenera i treści w tym samym momencie może nie zostać wykryte.
+**The key requirement:** the live region container must exist in the DOM **before** content is injected into
+it — adding the container and the content at the same moment may not be detected.
 
-## Przykłady kodu
+## Code examples
 
-### Podstawowe live regions — HTML
+### Basic live regions — HTML
 
 ```html
 <!-- Polite: waits for current announcement to finish -->
@@ -57,7 +57,7 @@ treści — dodanie samego kontenera i treści w tym samym momencie może nie zo
 <div aria-live="assertive" aria-atomic="true" class="error-message"></div>
 ```
 
-### Podstawowe live regions — React
+### Basic live regions — React
 
 ```javascript
 function NotificationSystem() {
@@ -79,7 +79,7 @@ function NotificationSystem() {
 }
 ```
 
-### Podstawowe live regions — Vue
+### Basic live regions — Vue
 
 ```vue
 <template>
@@ -100,7 +100,7 @@ const addItem = () => {
 </script>
 ```
 
-### Ogłaszanie błędów walidacji formularza
+### Announcing form validation errors
 
 ```javascript
 function SignupForm() {
@@ -132,7 +132,7 @@ function SignupForm() {
 }
 ```
 
-### Ogłaszanie stanu ładowania
+### Announcing the loading state
 
 ```javascript
 function DataLoader({ userId }) {
@@ -159,7 +159,7 @@ function DataLoader({ userId }) {
 }
 ```
 
-### Wskaźnik postępu
+### A progress indicator
 
 ```javascript
 function FileUpload() {
@@ -182,7 +182,7 @@ function FileUpload() {
 }
 ```
 
-### Ogłoszenie licznika/odliczania
+### Announcing a timer/countdown
 
 ```javascript
 function Countdown({ initialSeconds }) {
@@ -210,7 +210,7 @@ function Countdown({ initialSeconds }) {
 }
 ```
 
-### Ogłoszenie wyników wyszukiwania
+### Announcing search results
 
 ```javascript
 function SearchResults() {
@@ -236,7 +236,7 @@ function SearchResults() {
 }
 ```
 
-### Status autozapisu
+### Autosave status
 
 ```javascript
 function Editor() {
@@ -266,7 +266,7 @@ function Editor() {
 }
 ```
 
-### Klasa „screen reader only”
+### The "screen reader only" class
 
 ```css
 .sr-only {
@@ -282,28 +282,28 @@ function Editor() {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Czytniki ekranu ogłaszają zmiany treści, o których inaczej nie miałyby powodu wiedzieć.
-- Wiadomości ogłaszane są automatycznie, bez dodatkowej interakcji użytkownika.
-- Działa ze wszystkimi głównymi czytnikami ekranu (NVDA, JAWS, VoiceOver).
-- Stany ładowania, kamienie milowe postępu i komunikaty ukończenia stają się słyszalne.
-- Użytkownicy czytników ekranu otrzymują ten sam feedback co użytkownicy wzrokowi.
+- Screen readers announce content changes they would otherwise have no reason to know about.
+- Messages are announced automatically, without additional user interaction.
+- It works with all the major screen readers (NVDA, JAWS, VoiceOver).
+- Loading states, progress milestones and completion messages become audible.
+- Screen reader users get the same feedback as sighted users.
 
-## Wady / tradeoffs
+## Disadvantages / trade-offs
 
-- Zbyt wiele ogłoszeń zamienia się w hałas audiowy — męczy i dezorientuje.
-- Wybór poziomu grzeczności (`polite` vs `assertive`) ma realne znaczenie — źle dobrany psuje
-  doświadczenie.
-- Kontener live region **musi** istnieć w DOM przed zmianą treści.
-- Szybkie, częste aktualizacje mogą przytłoczyć czytnik ekranu.
-- Różne czytniki ekranu mają różne zachowania czasowe przy ogłoszeniach.
-- Treść musi pozostać widoczna/obecna wystarczająco długo, żeby czytnik zdążył ją odczytać.
-- `aria-atomic="true"` ogłasza **cały** region przy każdej zmianie; `false` ogłasza tylko zmienioną
-  część — wybór wpływa na to, co użytkownik usłyszy.
-- Testy automatyczne nie mogą zweryfikować, czy ogłoszenia są sensowne dla człowieka.
+- Too many announcements turn into audio noise — it tires and disorients.
+- The choice of the politeness level (`polite` vs `assertive`) really matters — a wrong one spoils
+  the experience.
+- The live region container **must** exist in the DOM before the content changes.
+- Fast, frequent updates can overwhelm a screen reader.
+- Different screen readers have different timing behaviours for announcements.
+- The content must stay visible/present long enough for the screen reader to read it.
+- `aria-atomic="true"` announces the **whole** region on every change; `false` announces only the changed
+  part — the choice affects what the user will hear.
+- Automated tests cannot verify whether the announcements make sense to a human.
 
-## Powiązane wzorce
+## Related patterns
 
 - [ARIA Roles and Attributes](aria-roles-and-attributes.md)
 - [Loading State](fe-architecture/references/resilience/loading-state.md)
@@ -312,13 +312,13 @@ function Editor() {
 - [aria-live Attribute — W3C](https://www.w3.org/TR/wai-aria-1.2/#aria-live)
 - [Dynamic Content Accessibility — W3C](https://www.w3.org/WAI/ARIA/apg/practices/updating-content/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj do **każdej** dynamicznej zmiany treści, o której użytkownik czytnika ekranu powinien się
-dowiedzieć bez utraty swojej aktualnej pozycji fokusu (toast, wynik walidacji, status
-zapisu/wyszukiwania). Domyślnie `polite` — `assertive` zarezerwuj **oszczędnie**, tylko dla
-faktycznie krytycznych, wymagających natychmiastowej reakcji komunikatów (błąd blokujący dalsze
-działanie); nadużycie `assertive` jest gorsze niż jego brak, bo przerywa użytkownikowi w trakcie
-innej czynności. Nie stosuj live region dla treści, którą użytkownik i tak zobaczy przez przeniesienie
-fokusu (patrz `focus-management.md`) — te dwa mechanizmy się czasem wykluczają: nie łącz obu na tę
-samą zmianę bez konkretnego powodu.
+Use it for **every** dynamic content change that a screen reader user should
+learn about without losing their current focus position (a toast, a validation result, a save/search
+status). By default `polite` — reserve `assertive` **sparingly**, only for
+really critical messages requiring an immediate reaction (an error blocking further
+action); overusing `assertive` is worse than not using it, because it interrupts the user in the middle of
+another activity. Do not use a live region for content the user will see anyway through a focus
+move (see `focus-management.md`) — these two mechanisms sometimes exclude each other: do not combine both for the same
+change without a specific reason.

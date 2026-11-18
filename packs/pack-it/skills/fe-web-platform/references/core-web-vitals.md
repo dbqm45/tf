@@ -1,34 +1,34 @@
-# Core Web Vitals i pomiar wydajności
+# Core Web Vitals and performance measurement
 
-Przeniesione z importu frontend-developer (`senior.md`, „Core Web Vitals”), uzupełnione o narzędzia 2026.
+Moved from the frontend-developer import (`senior.md`, "Core Web Vitals"), supplemented with the 2026 tools.
 
-## Trzy metryki (próg „dobry” na 75. percentylu wizyt)
+## Three metrics (the "good" threshold at the 75th percentile of visits)
 
-| Metryka | Mierzy fazę | Dobry | Typowe przyczyny złego wyniku | Typowe poprawki |
+| Metric | Measures the phase | Good | Typical causes of a bad result | Typical fixes |
 |---|---|---|---|---|
-| **LCP** — Largest Contentful Paint | ładowanie | ≤ 2,5 s | wolny TTFB, render-blocking CSS/JS, obraz LCP odkrywany późno lub leniwy, ciężkie obrazy | cache/CDN, SSR/SSG, `fetchpriority="high"`, preload, nowoczesne formaty (AVIF/WebP), `srcset` |
-| **INP** — Interaction to Next Paint | interaktywność | ≤ 200 ms | long tasks, ciężkie handlery, duże przerenderowania, hydratacja | dzielenie pracy (`scheduler.yield()`), Web Worker, mniejszy zakres renderu, debounce, mniej JS |
-| **CLS** — Cumulative Layout Shift | stabilność wizualna | ≤ 0,1 | obrazy/iframe/reklamy bez wymiarów, podmiana fontów, treść wstrzykiwana nad istniejącą | `width`/`height` lub `aspect-ratio`, rezerwacja miejsca, `font-display` + metryki zastępcze, animacje `transform` |
+| **LCP** — Largest Contentful Paint | loading | ≤ 2.5 s | slow TTFB, render-blocking CSS/JS, the LCP image discovered late or lazy, heavy images | cache/CDN, SSR/SSG, `fetchpriority="high"`, preload, modern formats (AVIF/WebP), `srcset` |
+| **INP** — Interaction to Next Paint | interactivity | ≤ 200 ms | long tasks, heavy handlers, large re-renders, hydration | splitting the work (`scheduler.yield()`), Web Worker, a smaller render scope, debounce, less JS |
+| **CLS** — Cumulative Layout Shift | visual stability | ≤ 0.1 | images/iframes/ads without dimensions, font swapping, content injected above existing content | `width`/`height` or `aspect-ratio`, reserving space, `font-display` + fallback metrics, `transform` animations |
 
-- **INP zastąpił FID** (marzec 2024): FID mierzył tylko opóźnienie do startu handlera, INP — cały czas od
-  interakcji do odmalowania, z najgorszych interakcji w wizycie.
-- **TTI** nie jest już metryką Lighthouse; pomocnicze: TTFB, FCP, TBT (laboratoryjny zamiennik INP).
-- Każda metryka to inna faza — dobry LCP nic nie mówi o INP. Najpierw ustal, **która** jest zła, potem szukaj przyczyny
+- **INP replaced FID** (March 2024): FID measured only the delay until the handler started, INP — the whole time from
+  the interaction to the repaint, from the worst interactions in the visit.
+- **TTI** is no longer a Lighthouse metric; auxiliary ones: TTFB, FCP, TBT (the lab substitute for INP).
+- Each metric is a different phase — a good LCP says nothing about INP. First establish **which** one is bad, then look for the cause
   (rendering-pipeline.md).
 
-## Dane polowe vs laboratoryjne
+## Field vs lab data
 
-- **Polowe (RUM)** — prawdziwi użytkownicy: CrUX (Chrome UX Report), PageSpeed Insights, biblioteka `web-vitals`
-  (`onLCP`, `onINP`, `onCLS` z atrybucją — który element/skrypt winny) wysyłana do własnej telemetrii
-  (ops-observability). To one decydują o ocenie i SEO.
-- **Laboratoryjne** — Lighthouse, DevTools Performance (panel pokazuje też lokalne LCP/INP/CLS na żywo), WebPageTest;
-  powtarzalne, do diagnozy i regresji w CI (Lighthouse CI, budżety rozmiaru bundla).
-- Long Animation Frames API (LoAF) wskazuje skrypty odpowiedzialne za wolne klatki — lepsze od Long Tasks API.
+- **Field (RUM)** — real users: CrUX (Chrome UX Report), PageSpeed Insights, the `web-vitals` library
+  (`onLCP`, `onINP`, `onCLS` with attribution — which element/script is to blame) sent to your own telemetry
+  (ops-observability). These decide the assessment and SEO.
+- **Lab** — Lighthouse, DevTools Performance (the panel also shows local LCP/INP/CLS live), WebPageTest;
+  repeatable, for diagnosis and regressions in CI (Lighthouse CI, bundle size budgets).
+- The Long Animation Frames API (LoAF) points to the scripts responsible for slow frames — better than the Long Tasks API.
 
-## Zasady
+## Rules
 
-- Mierz przed i po zmianie; optymalizuj najgorszy percentyl realnych urządzeń (średni Android, słaba sieć), nie
-  MacBooka dewelopera.
-- Budżety wydajności (rozmiar JS na trasę, LCP) w CI zatrzymują regresje, zanim trafią do użytkowników.
-- Checklista przed wydaniem i budżety w CI: `performance-checklist.md`.
-- Wzorce: code splitting, lazy loading, debounce, memoizacja — fe-architecture (`references/performance/`).
+- Measure before and after a change; optimize the worst percentile of real devices (an average Android, a poor network), not
+  the developer's MacBook.
+- Performance budgets (JS size per route, LCP) in CI stop regressions before they reach users.
+- The pre-release checklist and budgets in CI: `performance-checklist.md`.
+- Patterns: code splitting, lazy loading, debounce, memoization — fe-architecture (`references/performance/`).

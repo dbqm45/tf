@@ -1,60 +1,60 @@
 # Content Security Policy (CSP)
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/content-security-policy.
+Source: frontendpatterns.dev/content-security-policy.
 
-## Metadane
+## Metadata
 
-Kategoria: Security. Poziom: Advanced. Przykłady: Native web. Autor: Den Odell. Data aktualizacji:
-16 czerwca 2026.
+Category: Security. Level: Advanced. Examples: Native web. Author: Den Odell. Last updated:
+16 June 2026.
 
 ## TLDR
 
-CSP to wymuszany przez przeglądarkę allowlist, dostarczany jako nagłówek HTTP, definiujący, skąd
-mogą pochodzić skrypty, style i inne zasoby.
+CSP is a browser-enforced allowlist, delivered as an HTTP header, that defines where
+scripts, styles and other resources may come from.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Polityka oparta na **allowliście domen** jest słaba (obejścia przez JSONP/gadżety na dozwolonych CDN). Zalecana
-  jest **strict CSP**: `script-src 'nonce-{losowy}' 'strict-dynamic'; object-src 'none'; base-uri 'none'`
-  (+ `'unsafe-inline' https:` jako fallback ignorowany przez nowe przeglądarki). Allowlistę traktuj jako etap
-  przejściowy.
-- `report-uri` jest przestarzałe — używaj `report-to` + nagłówka `Reporting-Endpoints` (starsze `Report-To` też
-  jest przestarzałe); `report-uri` zostaw tylko jako fallback.
-- Frameworki: Angular wspiera nonce (`ngCspNonce` / `CSP_NONCE`) i Trusted Types (fw-angular); Next.js — nonce przez
-  middleware; SPA hostowane statycznie — hashe (`'sha256-…'`) zamiast nonce.
-- CSP ustawia serwer/CDN — to decyzja wspólna z backendem (be-auth-security).
+- A policy based on a **domain allowlist** is weak (bypasses through JSONP/gadgets on allowed CDNs). What is recommended
+  is a **strict CSP**: `script-src 'nonce-{random}' 'strict-dynamic'; object-src 'none'; base-uri 'none'`
+  (+ `'unsafe-inline' https:` as a fallback ignored by new browsers). Treat the allowlist as a transitional
+  stage.
+- `report-uri` is deprecated — use `report-to` + the `Reporting-Endpoints` header (the older `Report-To` is also
+  deprecated); keep `report-uri` only as a fallback.
+- Frameworks: Angular supports nonces (`ngCspNonce` / `CSP_NONCE`) and Trusted Types (fw-angular); Next.js — nonces through
+  middleware; statically hosted SPAs — hashes (`'sha256-…'`) instead of nonces.
+- The CSP is set by the server/CDN — it is a decision shared with the backend (be-auth-security).
 
 ## Problem
 
-Aplikacje webowe są narażone na XSS mimo zastosowania sanitacji inputu i kodowania outputu — zagrożenie
-pochodzi zarówno z wewnętrznego kodu, jak i zaufanych źródeł (CDN, dostawcy analityki, sieci
-reklamowe). Inline skrypty pogarszają sytuację: gdy legalny inline kod jest normalny na stronie,
-przeglądarka nie ma sposobu odróżnić `<script>onClick()</script>` od wstrzykniętego przez
-atakującego — są identyczne w formie.
+Web applications are exposed to XSS despite input sanitization and output encoding — the threat
+comes both from internal code and from trusted sources (CDNs, analytics providers, ad
+networks). Inline scripts make the situation worse: when legitimate inline code is normal on the page,
+the browser has no way of telling `<script>onClick()</script>` apart from one injected by
+an attacker — they are identical in form.
 
-## Rozwiązanie
+## Solution
 
-CSP to nagłówek HTTP odpowiedzi definiujący whitelistę źródeł dla skryptów, stylów i zasobów.
-Przeglądarka natywnie egzekwuje te reguły, blokując źródła spoza listy. Kluczowe elementy:
+CSP is an HTTP response header that defines a whitelist of sources for scripts, styles and resources.
+The browser natively enforces these rules, blocking sources outside the list. Key elements:
 
-- zasada „deny by default” z `default-src 'self'`,
-- dyrektywy specjalizowane: `script-src`, `style-src`, `img-src`, `connect-src`,
-- zakaz `'unsafe-inline'` i `'unsafe-eval'`,
-- **nonce'y** (losowe wartości per-request) do autoryzacji konkretnych inline skryptów,
-- **report-only mode** do testowania polityki przed jej wymuszeniem.
+- the "deny by default" principle with `default-src 'self'`,
+- specialized directives: `script-src`, `style-src`, `img-src`, `connect-src`,
+- a ban on `'unsafe-inline'` and `'unsafe-eval'`,
+- **nonces** (random per-request values) to authorize specific inline scripts,
+- **report-only mode** for testing the policy before enforcing it.
 
-## Przykłady kodu
+## Code examples
 
-### Starter Policy (natywny nagłówek HTTP)
+### Starter Policy (a native HTTP header)
 
 ```
 Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.example.com; style-src 'self'; img-src 'self' data: https:; connect-src 'self' https://api.example.com; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
 ```
 
-`object-src 'none'` wyłącza pluginy; `base-uri 'self'` zapobiega hijackingowi URL-i względnych;
-`frame-ancestors 'none'` chroni przed clickjackingiem.
+`object-src 'none'` disables plugins; `base-uri 'self'` prevents hijacking of relative URLs;
+`frame-ancestors 'none'` protects against clickjacking.
 
 ### Express + Helmet (Node.js middleware)
 
@@ -96,13 +96,13 @@ app.use((req, res, next) => {
 ```
 
 ```html
-<!-- Template markup (np. EJS, Handlebars) -->
+<!-- Template markup (e.g. EJS, Handlebars) -->
 <script nonce="r4nd0mPerRequestValue==">
   window.__APP_CONFIG__ = { theme: "dark" };
 </script>
 ```
 
-Nonce musi być **losowy i unikatowy per request** — reużycie wartości statycznej unieważnia ochronę.
+The nonce must be **random and unique per request** — reusing a static value invalidates the protection.
 
 ### Violation Reporting
 
@@ -111,52 +111,52 @@ Reporting-Endpoints: csp-endpoint="https://example.com/csp-reports"
 Content-Security-Policy: default-src 'self'; script-src 'self'; report-to csp-endpoint; report-uri /csp-reports
 ```
 
-Report-only deployment (testowanie bez wpływu na funkcjonalność):
+Report-only deployment (testing without affecting functionality):
 
 ```
 Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; report-to csp-endpoint
 ```
 
-## Zalety
+## Advantages
 
-- Wstrzyknięte skrypty są blokowane na poziomie przeglądarki, nawet gdy sanitizacja inputu i
-  kodowanie outputu coś przeoczą.
-- Ochrona przed skompromitowanymi CDN/dostawcami trzecimi.
-- Nonces/hashes pozwalają kontrolować inline skrypty bez `'unsafe-inline'`.
-- Violation reports dają widoczność ataków i błędów konfiguracji.
-- Egzekwowanie na poziomie nagłówka — niezależne od kodu aplikacji.
-- Report-only mode do walidacji polityki bez wpływu na funkcjonalność.
+- Injected scripts are blocked at the browser level, even when input sanitization and
+  output encoding miss something.
+- Protection against compromised CDNs/third-party providers.
+- Nonces/hashes let you control inline scripts without `'unsafe-inline'`.
+- Violation reports give visibility into attacks and configuration errors.
+- Enforcement at the header level — independent of the application code.
+- Report-only mode for validating the policy without affecting functionality.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Złożoność autoringu — konfiguracja strict policy wymaga iteracyjnego tuningu.
-- Istniejące inline skrypty i event handlery muszą być zrefaktoryzowane.
-- Biblioteki trzeciej strony (analytics, tag managery, sieci reklamowe) często wymagają liberalnych
-  uprawnień.
-- Polityki oparte na nonce wymagają synchronizacji server-side → template (dodatkowe powiązanie).
-- CSP łagodzi, nie zapobiega atakom — nie zastępuje output encodingu i input validation.
-- Wsparcie przeglądarek i zachowanie dyrektyw się różni — wymaga fallbacków.
-- Szerokie polityki z wildcardami `https:` dają fałszywe poczucie bezpieczeństwa.
-- Reporting endpoints mogą generować szum z rozszerzeń przeglądarek.
+- Authoring complexity — configuring a strict policy requires iterative tuning.
+- Existing inline scripts and event handlers must be refactored.
+- Third-party libraries (analytics, tag managers, ad networks) often require liberal
+  permissions.
+- Nonce-based policies require server-side → template synchronization (extra coupling).
+- CSP mitigates, it does not prevent attacks — it does not replace output encoding and input validation.
+- Browser support and directive behaviour differ — fallbacks are required.
+- Broad policies with `https:` wildcards give a false sense of security.
+- Reporting endpoints can generate noise from browser extensions.
 
-## Powiązane wzorce
+## Related patterns
 
 - Subresource Integrity — Security (`../security/subresource-integrity.md`)
 - Trusted Types — Security (`../security/trusted-types.md`)
 - CSRF Protection — Security (`../security/csrf-protection.md`)
 - Output Encoding — Security (`../security/output-encoding.md`)
-- Zewnętrzne: [CSP — MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP),
+- External: [CSP — MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP),
   [CSP Quick Reference](https://content-security-policy.com/),
   [CSP Best Practices — web.dev](https://web.dev/strict-csp/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Użyj, gdy chcesz **ostatniej linii obrony przed XSS na poziomie przeglądarki**, niezależnej od tego,
-czy sanitizacja/kodowanie w kodzie aplikacji zadziałały poprawnie — zwłaszcza jeśli aplikacja
-ładuje skrypty z CDN/analityki/reklam, które są poza Twoją kontrolą. **Zacznij od report-only**,
-żeby zmierzyć rzeczywisty koszt (ile istniejącego kodu złamie strict policy), zanim wymusisz
-enforcement — wprowadzenie strict CSP „na produkcję od razu” bez tego kroku jest częstą przyczyną
-ubitej aplikacji. Jeśli aplikacja jest mała, statyczna, bez treści od użytkowników i bez zasobów
-trzecich — koszt utrzymania restrykcyjnej polityki może przewyższać realne ryzyko (patrz YAGNI w
-`../principles.md`); wtedy solidne Output Encoding + Input Sanitization mogą wystarczyć
-jako pierwsza warstwa.
+Use it when you want **a last line of defence against XSS at the browser level**, independent of whether
+sanitization/encoding in the application code worked correctly — especially if the application
+loads scripts from CDNs/analytics/ads that are outside your control. **Start with report-only**
+to measure the real cost (how much existing code a strict policy will break) before you turn on
+enforcement — introducing a strict CSP "straight into production" without this step is a common cause
+of a broken application. If the application is small, static, without user content and without third-party
+resources — the cost of maintaining a restrictive policy may exceed the real risk (see YAGNI in
+`../principles.md`); then solid Output Encoding + Input Sanitization may be enough
+as the first layer.

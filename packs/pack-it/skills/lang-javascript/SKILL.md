@@ -1,80 +1,80 @@
 ---
 name: lang-javascript
-description: Użyj przy czystym JavaScripcie ES2022+ — koercja, domknięcia, this, async i event loop, tablice, ESM vs CommonJS.
+description: Use for plain JavaScript ES2022+ — coercion, closures, this, async and the event loop, arrays, ESM vs CommonJS.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj przy kodzie i przeglądzie czystego JavaScriptu (ES2022+, przeglądarka lub Node) — koercja i porównania, zasięg i domknięcia, this, klasy, Promise/async i event loop, metody tablic (mutujące vs nie), ESM vs CommonJS, błędy — oraz pojęcia domenowe bez TypeScriptu (JSDoc, Object.freeze, bigint). Nie do API przeglądarki (fe-web-platform), typowania TS (lang-typescript) ani modelowania (ddd-*)."
+  catalog: "Use when writing and reviewing plain JavaScript code (ES2022+, browser or Node) — coercion and comparisons, scope and closures, this, classes, Promise/async and the event loop, array methods (mutating vs not), ESM vs CommonJS, errors — and domain concepts without TypeScript (JSDoc, Object.freeze, bigint). Not for browser APIs (fe-web-platform), TS typing (lang-typescript) or modelling (ddd-*)."
 ---
 
 # JavaScript
 
-Zachowanie w runtime — dotyczy też kodu TypeScript (lang-typescript opisuje typy nałożone na to samo).
+Runtime behaviour — it also applies to TypeScript code (lang-typescript describes the types laid over the same thing).
 
-## Zasady języka
-- Moduły ES (`import`/`export`), `const` domyślnie, bez zmiennych globalnych i bez `var`.
-- `async/await`; każda obietnica ma obsługę błędu; równoległe niezależne operacje przez `Promise.all`/`allSettled`.
-- Nie połykaj błędów (`catch {}`) — obsłuż, zaloguj albo przekaż dalej. Rzucaj `Error` (lub podklasy, z `cause`), nie stringi.
-- Zakaz `eval`, `new Function`, `with`; porównania `===` (wyjątek: `x == null` łapie `null` i `undefined`).
-- Włącz `// @ts-check` i opisuj typy w JSDoc — edytor sprawdzi kod bez migracji do TypeScriptu.
-- Zanim dopiszesz kod, sprawdź system modułów pliku (ESM / CommonJS / klasyczny `<script>`) — nie mieszaj składni.
+## Language rules
+- ES modules (`import`/`export`), `const` by default, no global variables and no `var`.
+- `async/await`; every promise has error handling; parallel independent operations through `Promise.all`/`allSettled`.
+- Do not swallow errors (`catch {}`) — handle, log or pass them on. Throw `Error` (or subclasses, with `cause`), not strings.
+- No `eval`, `new Function`, `with`; `===` comparisons (exception: `x == null` catches `null` and `undefined`).
+- Turn on `// @ts-check` and describe types in JSDoc — the editor checks the code without a migration to TypeScript.
+- Before you add code, check the file's module system (ESM / CommonJS / a classic `<script>`) — do not mix syntaxes.
 
-## Pułapki — pierwsze podejrzenia przy błędzie lub review
-| Objaw | Prawdopodobna przyczyna → poprawka |
+## Pitfalls — first suspects on a bug or in review
+| Symptom | Likely cause → fix |
 |---|---|
-| dziwny wynik warunku | `==` z koercją (`"1" == 1`), `"0"` jest truthy, `typeof null === "object"`, `NaN !== NaN` → `===`, `Number.isNaN`, `== null` |
-| tablica zmieniła się „sama” | metoda mutująca (`sort`, `reverse`, `splice`, `fill`) → `toSorted`/`toReversed`/`toSpliced`/`with`; kopie spread/`slice` są płytkie → `structuredClone` |
-| `undefined` w łańcuchu Promise | brak `return` w `.then()`; niezależne `await` po kolei → `Promise.all` |
-| `catch` nie łapie błędu | błąd w callbacku (`setTimeout`, zdarzenie) poza `try` → opakuj w Promise i `await` |
-| `finally` „zjada” wynik | `return`/`throw` w `finally` nadpisuje wynik → w `finally` tylko sprzątanie |
-| `require is not defined` / `Cannot use import` | pomieszane ESM i CommonJS → sprawdź `"type"`, rozszerzenie `.mjs`/`.cjs` |
-| `ReferenceError` w podklasie | `this` przed `super()` |
+| a strange condition result | `==` with coercion (`"1" == 1`), `"0"` is truthy, `typeof null === "object"`, `NaN !== NaN` → `===`, `Number.isNaN`, `== null` |
+| an array changed "by itself" | a mutating method (`sort`, `reverse`, `splice`, `fill`) → `toSorted`/`toReversed`/`toSpliced`/`with`; spread/`slice` copies are shallow → `structuredClone` |
+| `undefined` in a Promise chain | a missing `return` in `.then()`; independent `await`s one after another → `Promise.all` |
+| `catch` does not catch the error | an error in a callback (`setTimeout`, an event) outside the `try` → wrap it in a Promise and `await` |
+| `finally` "eats" the result | `return`/`throw` in `finally` overrides the result → only cleanup in `finally` |
+| `require is not defined` / `Cannot use import` | mixed ESM and CommonJS → check `"type"`, the `.mjs`/`.cjs` extension |
+| `ReferenceError` in a subclass | `this` before `super()` |
 
-## Pojęcia domenowe w JavaScript
-| Pojęcie (słownik) | Idiom w JavaScript |
+## Domain concepts in JavaScript
+| Concept (vocabulary) | JavaScript idiom |
 |---|---|
-| **obiekt wartości** | fabryka zwracająca `Object.freeze({...})` z walidacją; kwoty jako `bigint` w najmniejszej jednostce |
-| **encja** | obiekt z polem `id` i zachowaniem; identyfikatory opakowane w fabrykę, żeby nie mieszać typów |
-| **warianty** | obiekty z polem `kind` + `switch` z gałęzią `default: throw new Error('nieobsłużony wariant')`; w JSDoc `@typedef {A \| B}` |
-| **wynik operacji** | `{ ok: true, value }` / `{ ok: false, error }` — odrzucenie biznesowe bez wyjątku |
-| **agregat** | klasa z polami prywatnymi `#state`, metody biznesowe zwracające wynik, zdarzenia oddawane przez `pullEvents()` |
-| **maszyna stanów** | stan jako obiekt `{ state: 'free' }` / `{ state: 'blocked', by }`, przejścia w jednej metodzie |
-| **zdarzenie** | zamrożony obiekt `{ type: 'ResourceBlocked', ... }` w czasie przeszłym |
-| **polityka** | funkcja przekazywana do fabryki/obiektu |
-| **repozytorium** | obiekt/klasa z `async load/save`, domena zależy tylko od kształtu (JSDoc `@typedef`) |
-| **read model** | zwykły zamrożony obiekt danych pod widok |
-| **moduł** | plik lub katalog z `index.js` eksportującym tylko publiczne API |
+| **value object** | a factory returning `Object.freeze({...})` with validation; amounts as `bigint` in the smallest unit |
+| **entity** | an object with an `id` field and behaviour; identifiers wrapped in a factory so types are not mixed |
+| **variants** | objects with a `kind` field + a `switch` with a `default: throw new Error('unhandled variant')` branch; in JSDoc `@typedef {A \| B}` |
+| **operation result** | `{ ok: true, value }` / `{ ok: false, error }` — a business rejection without an exception |
+| **aggregate** | a class with private `#state` fields, business methods returning a result, events handed out through `pullEvents()` |
+| **state machine** | the state as an object `{ state: 'free' }` / `{ state: 'blocked', by }`, transitions in one method |
+| **event** | a frozen object `{ type: 'ResourceBlocked', ... }` in the past tense |
+| **policy** | a function passed to a factory/object |
+| **repository** | an object/class with `async load/save`, the domain depends only on the shape (JSDoc `@typedef`) |
+| **read model** | a plain frozen data object for a view |
+| **module** | a file or directory with an `index.js` that exports only the public API |
 
-Implementacje z `lang-typescript/references/domain-building-blocks.md` przenoszą się 1:1 po usunięciu typów:
-`#private` zamiast `private`, `Object.freeze` zamiast `readonly`, JSDoc zamiast adnotacji.
+The implementations from `lang-typescript/references/domain-building-blocks.md` carry over 1:1 after removing the types:
+`#private` instead of `private`, `Object.freeze` instead of `readonly`, JSDoc instead of annotations.
 
-## Indeks `references/` (czytaj tylko potrzebny plik)
-| Plik | Czytaj, gdy… |
+## `references/` index (read only the file you need)
+| File | Read when… |
 |---|---|
-| `types-and-comparisons.md` | `==` vs `===`, algorytm koercji, `typeof`/`instanceof`, truthy/falsy |
-| `scope-and-closures.md` | `var`/`let`/`const`, TDZ, domknięcia, `var` w pętli, koszt closures |
-| `this-and-functions.md` | reguły `this` w każdym kontekście, `call`/`apply`/`bind`, strzałki |
-| `classes-and-prototypes.md` | pola `#`, statyczne bloki, `extends`/`super`, kolejność ewaluacji, prototypy |
-| `asynchrony.md` | stany Promise, `all`/`allSettled`/`race`/`any`, mikro- vs makrozadania |
-| `iteration-and-arrays.md` | wybór pętli, metody mutujące vs nie, 10 pułapek, nowsze API tablic/Set |
-| `modules.md` | ESM vs CommonJS, live bindings, cykle, `require(esm)`, `import.meta` w Node |
-| `errors-and-exceptions.md` | `try/catch/finally`, `Error.cause`, własne klasy błędów, typy błędów |
+| `types-and-comparisons.md` | `==` vs `===`, the coercion algorithm, `typeof`/`instanceof`, truthy/falsy |
+| `scope-and-closures.md` | `var`/`let`/`const`, TDZ, closures, `var` in a loop, the cost of closures |
+| `this-and-functions.md` | the `this` rules in every context, `call`/`apply`/`bind`, arrows |
+| `classes-and-prototypes.md` | `#` fields, static blocks, `extends`/`super`, evaluation order, prototypes |
+| `asynchrony.md` | Promise states, `all`/`allSettled`/`race`/`any`, micro- vs macrotasks |
+| `iteration-and-arrays.md` | choosing a loop, mutating vs non-mutating methods, 10 pitfalls, newer array/Set APIs |
+| `modules.md` | ESM vs CommonJS, live bindings, cycles, `require(esm)`, `import.meta` in Node |
+| `errors-and-exceptions.md` | `try/catch/finally`, `Error.cause`, custom error classes, error types |
 
-## Wersje ECMAScript / Node (sprawdź `target` i środowisko)
-| Od | Co wolno użyć |
+## ECMAScript / Node versions (check `target` and the environment)
+| From | What you may use |
 |---|---|
-| ES2022 | `at()`, `Object.hasOwn`, `Error.cause`, pola `#`, `#x in obj`, statyczne bloki, top-level `await` (ESM) |
+| ES2022 | `at()`, `Object.hasOwn`, `Error.cause`, `#` fields, `#x in obj`, static blocks, top-level `await` (ESM) |
 | ES2023 | `toSorted`/`toReversed`/`toSpliced`/`with`, `findLast` |
 | ES2024 | `Object.groupBy`/`Map.groupBy`, `Promise.withResolvers`, `Array.fromAsync` |
-| ES2025 | metody `Set` (`union`…), iterator helpers, atrybuty importu (`with { type: "json" }`), `Promise.try`, `RegExp.escape` |
-| Node 22 | ma ES2024 + metody `Set` i iterator helpers; **brak** `Promise.try`, `RegExp.escape`, `using`, dekoratorów; `require(esm)` od 22.12, wykrywanie ESM w `.js` od 22.7 |
+| ES2025 | `Set` methods (`union`…), iterator helpers, import attributes (`with { type: "json" }`), `Promise.try`, `RegExp.escape` |
+| Node 22 | has ES2024 + `Set` methods and iterator helpers; **no** `Promise.try`, `RegExp.escape`, `using`, decorators; `require(esm)` from 22.12, ESM detection in `.js` from 22.7 |
 
-## Checklista
-- [ ] `// @ts-check` + JSDoc w plikach domeny
-- [ ] brak arytmetyki pieniędzy na `number`
-- [ ] każdy `switch` po `kind` ma `default` z błędem
-- [ ] brak `==` (poza `== null`), `for...in` na tablicach, `var`
-- [ ] brak metod mutujących na danych współdzielonych; kopie głębokie przez `structuredClone`
-- [ ] każda obietnica obsłużona; niezależne operacje równolegle
-- [ ] system modułów pliku zgodny z `"type"`/rozszerzeniem
+## Checklist
+- [ ] `// @ts-check` + JSDoc in domain files
+- [ ] no money arithmetic on `number`
+- [ ] every `switch` on `kind` has a `default` with an error
+- [ ] no `==` (except `== null`), `for...in` on arrays, `var`
+- [ ] no mutating methods on shared data; deep copies through `structuredClone`
+- [ ] every promise handled; independent operations in parallel
+- [ ] the file's module system matches `"type"`/the extension
 
-Źródła: MDN Web Docs (JavaScript Guide i Reference, treści CC-BY-SA) — opisane własnymi słowami.
+Sources: MDN Web Docs (JavaScript Guide and Reference, CC-BY-SA content) — described in our own words.

@@ -1,69 +1,69 @@
 ---
 name: fe-engineering-levels
-description: Użyj przy ocenie poziomu rozwiązania frontendu (Senior, Staff, Principal) i inwestycji w DevEx.
+description: Use for assessing the level of a frontend solution (Senior, Staff, Principal) and investment in DevEx.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj, gdy trzeba ocenić, na jakim poziomie (Senior → Staff → Principal) rozwiązać problem frontendowy, i przy pracy „ponad kodem” — review i mentoring, design system i standardy wielu zespołów, DevEx (FLOW, tight-loose), ROI i komunikacja z biznesem, wizja techniczna, sponsoring. Nie do wiedzy o kodzie (fe-architecture, fe-web-platform, fe-css) ani metryk DORA (eng-continuous-delivery)."
-  keywords: "tarcie programistów, wolny build, DevEx, standard dla wielu zespołów, koszt migracji, uzasadnienie dla biznesu"
+  catalog: "Use when you must assess at which level (Senior → Staff → Principal) to solve a frontend problem, and for work \"beyond the code\" — review and mentoring, a design system and standards for many teams, DevEx (FLOW, tight-loose), ROI and communication with the business, technical vision, sponsorship. Not for code knowledge (fe-architecture, fe-web-platform, fe-css) or DORA metrics (eng-continuous-delivery)."
+  keywords: "tarcie programistów, wolny build, DevEx, standard dla wielu zespołów, koszt migracji, uzasadnienie dla biznesu, developer friction, slow build, standard for many teams, migration cost, business justification"
 ---
 
-# Poziomy inżyniera frontendu: Senior → Staff → Principal
+# Frontend engineer levels: Senior → Staff → Principal
 
-Ten skill opisuje **zachowania i kompetencje** inżyniera, nie kod. To mapa pytań: czy problem dotyczy jednej
-funkcji (soczewka Senior), wielu zespołów w firmie (Staff), czy całej firmy/branży (Principal). Wiedza techniczna
-żyje w skillach technicznych — tu tylko odsyłacze i oczekiwania.
+This skill describes the **behaviours and competencies** of an engineer, not code. It is a map of questions: does the problem concern one
+feature (the Senior lens), many teams in the company (Staff), or the whole company/industry (Principal). Technical knowledge
+lives in the technical skills — here only pointers and expectations.
 
-## Którą soczewkę zastosować
+## Which lens to apply
 
-| Pytanie | Soczewka | Czytaj |
+| Question | Lens | Read |
 |---|---|---|
-| Problem mieści się w jednej funkcji/jednym repo/zespole? | Senior | `references/senior.md` |
-| Decyzja dotyczy wielu zespołów, wspólnego design systemu, standardu, toolingu wielu repo, budżetu? | Staff | `references/staff.md`, `references/devex.md` |
-| Decyzja jest trudno odwracalna na skali firmy, dotyczy platformy, granicy frontend/infra albo branży? | Principal | `references/principal.md` |
+| Does the problem fit within one feature/one repo/one team? | Senior | `references/senior.md` |
+| Does the decision concern many teams, a shared design system, a standard, tooling for many repos, a budget? | Staff | `references/staff.md`, `references/devex.md` |
+| Is the decision hard to reverse at company scale, does it concern a platform, the frontend/infra boundary or the industry? | Principal | `references/principal.md` |
 
-- **Zaczynaj od najniższej soczewki**, idź wyżej tylko, gdy decyzja realnie wykracza poza zespół. Soczewka Principal
-  na problemie lokalnym to ten sam błąd co nadużywanie wzorców (eng-design-principles).
-- Rozróżniaj decyzje **odwracalne** (wybór biblioteki w module — decyduj szybko) i **nieodwracalne** (kontrakt
-  design systemu, framework dla setek zespołów, model danych wspólnego API — rygor, ADR wg docs-tech-writing).
+- **Start from the lowest lens**, go higher only when the decision really goes beyond the team. The Principal lens
+  on a local problem is the same mistake as overusing patterns (eng-design-principles).
+- Distinguish **reversible** decisions (choosing a library in a module — decide quickly) from **irreversible** ones (a design
+  system contract, a framework for hundreds of teams, the data model of a shared API — rigour, an ADR per docs-tech-writing).
 
-## Oczekiwane zachowania (skrót)
+## Expected behaviours (summary)
 
-**Senior** — dowozi funkcję od pomysłu do produkcji z obserwowalnością; tłumaczy i diagnozuje (event loop,
-wycieki, CRP, LCP/INP/CLS, hydratacja) zamiast recytować definicje; stosuje wzorzec do nazwanego problemu i widzi
-jego nadużycie; review z konkretną alternatywą i podziałem na blokujące/nit; mentoring przez pytania.
+**Senior** — delivers a feature from idea to production with observability; explains and diagnoses (event loop,
+leaks, CRP, LCP/INP/CLS, hydration) instead of reciting definitions; applies a pattern to a named problem and sees
+its overuse; reviews with a concrete alternative and a split into blocking/nit; mentors through questions.
 
-**Staff** — ustala standardy **wielu** zespołów i je wymusza automatyzacją (lint, CI, wspólny klient HTTP), nie
-wiedzą indywidualną; prowadzi design system jako produkt (tokeny, governance, SLA kontrybucji, żywa dokumentacja);
-liczy koszt migracji toolingu **przed** decyzją; zarządza długiem systemowo (strangler fig, codemody, jawny budżet);
-diagnozuje tarcie DevEx przed wyborem narzędzia; tłumaczy decyzje na metryki biznesu (koszt, korzyść, horyzont zwrotu).
+**Staff** — sets the standards of **many** teams and enforces them through automation (lint, CI, a shared HTTP client), not
+individual knowledge; runs the design system as a product (tokens, governance, a contribution SLA, living documentation);
+calculates the tooling migration cost **before** the decision; manages debt systematically (strangler fig, codemods, an explicit budget);
+diagnoses DevEx friction before choosing a tool; translates decisions into business metrics (cost, benefit, payback horizon).
 
-**Principal** — formułuje „north star” architektury, według której zespoły decydują same; traktuje frontend jako
-platformę (roadmapa, wersjonowanie, ścieżki migracji, adopcja); rozmawia z infrastrukturą na równych prawach
-(edge, CDN, serverless — gdzie leży granica); wpływa na standardy (open source, TC39, W3C); **sponsoruje** ludzi
-(otwiera okazje), a nie tylko mentoruje; kształtuje kulturę (blameless postmortem, ADR, rozstrzyganie sporów).
+**Principal** — formulates the architecture "north star" by which teams decide on their own; treats the frontend as
+a platform (roadmap, versioning, migration paths, adoption); talks with infrastructure as an equal
+(edge, CDN, serverless — where the boundary lies); influences standards (open source, TC39, W3C); **sponsors** people
+(opens opportunities), not only mentors them; shapes the culture (blameless postmortem, ADR, resolving disputes).
 
-## Komunikacja biznesowa — zasada wspólna dla Staff+
-- Koszt techniczny wyrażaj metryką, którą biznes już śledzi (lead time, incydenty, konwersja, LCP → przychód), nie „kod jest brzydki”.
-- Duża inwestycja = koszt (osobo-czas, ryzyko przestoju delivery) + mierzalna korzyść + horyzont zwrotu.
-- Decyzje „loose” (lokalne dla zespołu) nie wymagają eskalacji; „tight” (wiele zespołów, budżet, harmonogram) — tak.
+## Business communication — a shared rule for Staff+
+- Express a technical cost in a metric the business already tracks (lead time, incidents, conversion, LCP → revenue), not "the code is ugly".
+- A large investment = cost (person-time, risk of a delivery stall) + a measurable benefit + a payback horizon.
+- "Loose" decisions (local to the team) do not require escalation; "tight" ones (many teams, budget, schedule) do.
 
-## Gdzie jest wiedza techniczna
+## Where the technical knowledge is
 
-| Temat | Skill |
+| Topic | Skill |
 |---|---|
-| Event loop, CRP, Core Web Vitals, service workers, i18n, dostępność i WCAG | fe-web-platform |
-| Style architektury, FSD, micro-frontends, modele renderowania (SSR/RSC), wzorce, bezpieczeństwo klienta | fe-architecture |
-| Tokeny, motywy, izolacja stylów | fe-css |
-| Język i framework | lang-typescript, lang-javascript, fw-angular |
-| Wzorce GoF, zasady projektowe | eng-design-principles |
+| Event loop, CRP, Core Web Vitals, service workers, i18n, accessibility and WCAG | fe-web-platform |
+| Architecture styles, FSD, micro-frontends, rendering models (SSR/RSC), patterns, client security | fe-architecture |
+| Tokens, themes, style isolation | fe-css |
+| Language and framework | lang-typescript, lang-javascript, fw-angular |
+| GoF patterns, design principles | eng-design-principles |
 | DORA, trunk-based, feature flags | eng-continuous-delivery |
-| Granice zespołów, platform team | proc-team-topologies |
+| Team boundaries, platform team | proc-team-topologies |
 
-## Checklista
-- [ ] Nazwana soczewka (Senior/Staff/Principal) i uzasadnienie, dlaczego nie niższa
-- [ ] Decyzja oznaczona jako odwracalna/nieodwracalna; nieodwracalna ma ADR
-- [ ] Standard dla wielu zespołów wymuszony automatycznie (lint/CI), nie tylko opisany
-- [ ] Decyzja Staff+ ma koszt, korzyść i horyzont zwrotu w języku biznesu
-- [ ] Zmiana DevEx poprzedzona diagnozą tarcia i zmierzona po wdrożeniu
+## Checklist
+- [ ] A named lens (Senior/Staff/Principal) and a justification for why not a lower one
+- [ ] The decision marked as reversible/irreversible; an irreversible one has an ADR
+- [ ] A standard for many teams enforced automatically (lint/CI), not only described
+- [ ] A Staff+ decision has a cost, a benefit and a payback horizon in business language
+- [ ] A DevEx change preceded by a friction diagnosis and measured after rollout
 
-Źródła: własna drabina kompetencji z importu „frontend-developer”; DevEx — networkperspective.io, conlea.pl, signadot (opisane własnymi słowami).
+Sources: our own competency ladder from the "frontend-developer" import; DevEx — networkperspective.io, conlea.pl, signadot (described in our own words).

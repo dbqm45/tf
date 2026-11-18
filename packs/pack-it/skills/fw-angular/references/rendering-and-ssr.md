@@ -1,72 +1,72 @@
-# Renderowanie, SSR, hydratacja i `@defer`
+# Rendering, SSR, hydration and `@defer`
 
-Spis treści: 1. Wybór sposobu renderowania · 2. Tryb renderowania per trasa · 3. Hydratacja · 4. Kod zgodny
-z serwerem · 5. Dane żądania i transfer cache · 6. `@defer` · Źródła
+Contents: 1. Choosing the rendering approach · 2. Rendering mode per route · 3. Hydration · 4. Server-compatible
+code · 5. Request data and transfer cache · 6. `@defer` · Sources
 
-## 1. Wybór sposobu renderowania
-| Sposób | Kiedy | Koszt |
+## 1. Choosing the rendering approach
+| Approach | When | Cost |
 |---|---|---|
-| **CSR** (domyślny) | panele, narzędzia wewnętrzne, treść po zalogowaniu | słabe SEO, treść dopiero po załadowaniu JS |
-| **SSG** (prerendering) | strony marketingowe, blog, dokumentacja, katalog znany w czasie budowania | zmiana treści wymaga przebudowy; nie dla danych użytkownika |
-| **SSR** | strony produktów, wiadomości, treść dynamiczna z SEO | serwer lub środowisko serverless, wyższy koszt i opóźnienie |
+| **CSR** (the default) | dashboards, internal tools, content behind login | weak SEO, content only after the JS loads |
+| **SSG** (prerendering) | marketing pages, a blog, documentation, a catalogue known at build time | a content change requires a rebuild; not for user data |
+| **SSR** | product pages, news, dynamic content with SEO | a server or a serverless environment, higher cost and latency |
 
-Sposób wybierasz per trasa, nie dla całej aplikacji.
+You choose the approach per route, not for the whole application.
 
-## 2. Tryb renderowania per trasa
-- W konfiguracji serwera tablica `ServerRoute[]` przypisuje trasom `RenderMode.Client`, `RenderMode.Prerender` albo
-  `RenderMode.Server`; podpięta przez `provideServerRendering(withRoutes(serverRoutes))`.
-- Zasady:
-  - ścieżki szczegółowe przed `**`; ścieżki serwera zgodne z trasami routera;
-  - `Prerender` tylko wtedy, gdy dane są dostępne w czasie budowania. Parametry tras dynamicznych zwraca
-    `getPrerenderParams()`: `inject()` przed pierwszym `await`, klucze równe nazwom parametrów, wartości jako tekst;
-  - ścieżki niewygenerowane w czasie budowania obsługuje `fallback` (`PrerenderFallback.Server`, domyślnie, albo
+## 2. Rendering mode per route
+- In the server configuration a `ServerRoute[]` array assigns routes `RenderMode.Client`, `RenderMode.Prerender` or
+  `RenderMode.Server`; plugged in through `provideServerRendering(withRoutes(serverRoutes))`.
+- Rules:
+  - specific paths before `**`; server paths consistent with the router routes;
+  - `Prerender` only when the data is available at build time. The parameters of dynamic routes are returned by
+    `getPrerenderParams()`: `inject()` before the first `await`, keys equal to the parameter names, values as text;
+  - paths not generated at build time are handled by `fallback` (`PrerenderFallback.Server`, the default, or
     `Client`, `None`);
-  - nagłówki statyczne w `headers`; `status` tylko dla tras CSR i SSR.
+  - static headers in `headers`; `status` only for CSR and SSR routes.
 
-## 3. Hydratacja
-- `provideClientHydration()` w konfiguracji wspólnej dla przeglądarki i serwera. Od v22 włącza domyślnie
-  hydratację przyrostową i odtwarzanie zdarzeń sprzed hydratacji; nie dodawaj wycofanego `withIncrementalHydration()`.
-- **DOM z serwera i z przeglądarki musi być identyczny:**
-  - bez różnych szablonów zależnych od `isPlatformBrowser`;
-  - bez ręcznego wstawiania, usuwania i przenoszenia węzłów DOM;
-  - poprawny HTML; `preserveWhitespaces` jednakowe po obu stronach.
-- `ngSkipHydration` na komponencie to ostateczność i rozwiązanie tymczasowe: Angular renderuje wtedy całe poddrzewo od
-  nowa.
+## 3. Hydration
+- `provideClientHydration()` in the configuration shared by the browser and the server. Since v22 it enables by default
+  incremental hydration and replay of events from before hydration; do not add the deprecated `withIncrementalHydration()`.
+- **The DOM from the server and from the browser must be identical:**
+  - no different templates depending on `isPlatformBrowser`;
+  - no manual inserting, removing and moving of DOM nodes;
+  - valid HTML; `preserveWhitespaces` the same on both sides.
+- `ngSkipHydration` on a component is a last resort and a temporary solution: Angular then renders the whole subtree from
+  scratch.
 
-## 4. Kod zgodny z serwerem
-- Na serwerze nie ma DOM, `localStorage` ani pomiarów układu. Pracę tylko dla przeglądarki umieszczasz
-  w `afterNextRender`, `afterEveryRender` albo `afterRenderEffect` (nie działają na serwerze).
-- `afterRenderEffect` dzieli pracę na fazy w kolejności `earlyRead` → `write` → `mixedReadWrite` → `read`: w fazie
-  zapisu nie czytasz układu, w fazie odczytu nie zapisujesz; zapobiega to wymuszonym przeliczeniom układu.
-- `DOCUMENT` z wstrzykiwania zamiast globalnego `document`; różne implementacje dla przeglądarki i serwera za jednym
-  tokenem aplikacji.
-- **Brak wycieku między żądaniami:** wartości zależne od żądania nie trafiają do zmiennych modułu ani do providerów
-  `useValue` najwyższego poziomu; tworzy je fabryka.
+## 4. Server-compatible code
+- On the server there is no DOM, `localStorage` or layout measurement. You put browser-only work
+  in `afterNextRender`, `afterEveryRender` or `afterRenderEffect` (they do not run on the server).
+- `afterRenderEffect` splits work into phases in the order `earlyRead` → `write` → `mixedReadWrite` → `read`: in the write
+  phase you do not read the layout, in the read phase you do not write; this prevents forced layout recalculations.
+- `DOCUMENT` from injection instead of the global `document`; different implementations for the browser and the server behind one
+  application token.
+- **No leaks between requests:** request-dependent values do not go into module variables or into top-level `useValue`
+  providers; a factory creates them.
 
-## 5. Dane żądania i transfer cache
-- Tokeny z `@angular/core`: `REQUEST` (obiekt `Request`), `RESPONSE_INIT` (status i nagłówki odpowiedzi),
-  `REQUEST_CONTEXT` (kontekst od adaptera serwera). Mogą być `null` (CSR, SSG, budowanie), więc zawsze to sprawdzasz.
-- Transfer cache HTTP zostawiasz domyślny, ale żądania zależne od użytkownika wyłączasz
-  (`withHttpTransferCacheOptions({ filter })` albo `transferCache: false` w żądaniu). Odpowiedzi uwierzytelnionych nie
-  przenosisz do HTML strony.
-- Własna praca asynchroniczna, na którą serwer ma poczekać przed wysłaniem HTML: `PendingTasks` albo
+## 5. Request data and transfer cache
+- Tokens from `@angular/core`: `REQUEST` (the `Request` object), `RESPONSE_INIT` (the response status and headers),
+  `REQUEST_CONTEXT` (the context from the server adapter). They can be `null` (CSR, SSG, build), so you always check that.
+- You leave the HTTP transfer cache at its default, but you exclude user-dependent requests
+  (`withHttpTransferCacheOptions({ filter })` or `transferCache: false` in the request). You do not transfer authenticated
+  responses into the page HTML.
+- Your own asynchronous work that the server must wait for before sending the HTML: `PendingTasks` or
   `pendingUntilEvent()`.
-- Produkcyjna lista `allowedHosts` bez symboli wieloznacznych; `trustProxyHeaders` tylko za zaufanym proxy, które
-  podmienia nagłówki przekazywane dalej.
+- A production `allowedHosts` list without wildcards; `trustProxyHeaders` only behind a trusted proxy that
+  replaces the forwarded headers.
 
 ## 6. `@defer`
-- Do bloku trafiają tylko zależności standalone, do których nie ma odwołań poza blokiem w tym samym pliku (także
-  w zapytaniach widoku). Importy przez pliki zbiorcze (`index.ts`) potrafią to zepsuć.
-- Bloki `@placeholder`, `@loading` (z `after` i `minimum` przeciw miganiu) i `@error` ładują się od razu, więc są małe.
-- Wyzwalacze: `on idle` (domyślny), `viewport`, `interaction`, `hover`, `immediate`, `timer`; `when <wyrażenie>`
-  działa raz, gdy wyrażenie stanie się prawdziwe. `prefetch on …` pobiera kod wcześniej.
-- `viewport`, `interaction` i `hover` potrzebują placeholdera z jednym elementem głównym albo referencji do elementu.
-- **SSR:** serwer renderuje sam placeholder i nie uruchamia wyzwalaczy. Gdy treść ma być renderowana na serwerze
-  i ożyć później, dodaj `hydrate on …` (np. `@defer (on viewport; hydrate on interaction)`).
-- **Stabilność układu:** nie odkładasz treści widocznej od razu ani elementu LCP; placeholder ma wymiary treści
-  docelowej; zagnieżdżone bloki mają różne wyzwalacze.
+- Only standalone dependencies that are not referenced outside the block in the same file (also
+  in view queries) go into the block. Imports through barrel files (`index.ts`) can break this.
+- The `@placeholder`, `@loading` (with `after` and `minimum` against flickering) and `@error` blocks load immediately, so they are small.
+- Triggers: `on idle` (the default), `viewport`, `interaction`, `hover`, `immediate`, `timer`; `when <expression>`
+  fires once, when the expression becomes true. `prefetch on …` fetches the code earlier.
+- `viewport`, `interaction` and `hover` need a placeholder with one root element or a reference to an element.
+- **SSR:** the server renders only the placeholder and does not run triggers. When the content should be rendered on the server
+  and come alive later, add `hydrate on …` (e.g. `@defer (on viewport; hydrate on interaction)`).
+- **Layout stability:** you do not defer content visible immediately or the LCP element; the placeholder has the dimensions of the target
+  content; nested blocks have different triggers.
 
-## Źródła
-- angular/skills, skill `angular-developer` (pliki angular-developer/references: rendering-strategies, server-side-rendering,
-  deferrable-views, effects), commit 43ec6adc2b35049734d0d114e3948e022f1cd1e7 z 2026-10-21, licencja MIT,
-  autor Google LLC. Opisane własnymi słowami; odczyt 2026-10-21.
+## Sources
+- angular/skills, the `angular-developer` skill (angular-developer/references files: rendering-strategies, server-side-rendering,
+  deferrable-views, effects), commit 43ec6adc2b35049734d0d114e3948e022f1cd1e7 of 2026-10-21, MIT licence,
+  author Google LLC. Described in our own words; accessed 2026-10-21.

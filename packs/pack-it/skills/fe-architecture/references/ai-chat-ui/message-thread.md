@@ -1,49 +1,49 @@
 # Message Thread
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/message-thread („Structuring an AI Conversation Transcript”).
+Source: frontendpatterns.dev/message-thread ("Structuring an AI Conversation Transcript").
 
-## Metadane
+## Metadata
 
-- **Kategoria:** AI chat UI (u źródła: Components)
-- **Poziom:** Intermediate
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** June 30, 2026
-- **Autor:** Den Odell
+- **Category:** AI chat UI (at the source: Components)
+- **Level:** Intermediate
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** June 30, 2026
+- **Author:** Den Odell
 
 ## TLDR
 
-„Represent a conversation as an ordered array of messages, each with a stable id, a role, content, and its own status.”
+"Represent a conversation as an ordered array of messages, each with a stable id, a role, content, and its own status."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Treść od modelu jest niezaufana** (prompt injection może przemycić HTML/JS). Renderuj ją jako tekst
-  (interpolacja frameworka, `textContent`) albo przez parser markdown + sanitizer (DOMPurify / Sanitizer API) —
-  nigdy przez surowe `innerHTML`. Przykład Web Components niżej został poprawiony z `innerHTML` na DOM API.
-- Nie zagnieżdżaj live regionów: `role="log"` na wątku już ogłasza dopisane węzły (polite). Podczas streamowania
-  ustaw `aria-busy="true"` na wiadomości asystenta i zdejmij je po zakończeniu — inaczej czytnik ogłasza każdy token.
-  Przykład „ogłaszaj raz” niżej stosuj zamiast `aria-live` na kontenerze, nie razem z nim.
-- Przykłady Svelte używają składni Svelte 4 (`export let`, `$:`, `on:click`, `createEventDispatcher`). W Svelte 5
-  odpowiednio: `let { … } = $props()`, `$derived`/`$effect`, atrybuty `onclick`, callback props zamiast dispatchera.
-- Angular (fw-angular): stan wątku w `signal<Message[]>` + `computed`, strumień przez `HttpClient` z
-  `observe: 'events', reportProgress: true` albo `fetch` w serwisie; `@for (m of messages(); track m.id)`.
+- **Content from the model is untrusted** (prompt injection can smuggle in HTML/JS). Render it as text
+  (framework interpolation, `textContent`) or through a markdown parser + a sanitizer (DOMPurify / the Sanitizer API) —
+  never through raw `innerHTML`. The Web Components example below has been corrected from `innerHTML` to the DOM API.
+- Do not nest live regions: `role="log"` on the thread already announces appended nodes (polite). While streaming,
+  set `aria-busy="true"` on the assistant's message and remove it when done — otherwise the screen reader announces every token.
+  Use the "announce once" example below instead of `aria-live` on the container, not together with it.
+- The Svelte examples use Svelte 4 syntax (`export let`, `$:`, `on:click`, `createEventDispatcher`). In Svelte 5
+  respectively: `let { … } = $props()`, `$derived`/`$effect`, `onclick` attributes, callback props instead of the dispatcher.
+- Angular (fw-angular): the thread state in a `signal<Message[]>` + `computed`, the stream through `HttpClient` with
+  `observe: 'events', reportProgress: true` or `fetch` in a service; `@for (m of messages(); track m.id)`.
 
 ## Problem
 
-Częsty błąd: przechowywanie konwersacji jako dwóch osobnych stringów (ostatni prompt użytkownika + ostatnia odpowiedź asystenta) albo umieszczenie flag typu `isStreaming`/`error` na szczycie całego komponentu. To powoduje wyciek stanu między wiadomościami — błąd jednej odpowiedzi wpływa na cały wątek. Cytat ze strony: „A conversation is a list of turns, each authored by someone, each in some state of completion.”
+A common mistake: storing the conversation as two separate strings (the last user prompt + the last assistant response) or putting flags like `isStreaming`/`error` at the top of the whole component. This causes state to leak between messages — the error of one response affects the whole thread. A quote from the site: "A conversation is a list of turns, each authored by someone, each in some state of completion."
 
-## Rozwiązanie
+## Solution
 
-Przechowuj konwersację jako uporządkowaną tablicę obiektów wiadomości, każdy z:
-- stabilnym `id`,
-- `role` (`user`, `assistant`, `system`),
+Store the conversation as an ordered array of message objects, each with:
+- a stable `id`,
+- a `role` (`user`, `assistant`, `system`),
 - `content`,
-- `status` (`streaming`, `complete`, `stopped`, `error`).
+- a `status` (`streaming`, `complete`, `stopped`, `error`).
 
-## Przykłady kodu
+## Code examples
 
-### Model konwersacji (reducer)
+### The conversation model (reducer)
 
 ```javascript
 function conversationReducer(messages, action) {
@@ -71,7 +71,7 @@ function conversationReducer(messages, action) {
 }
 ```
 
-### Renderowanie transkryptu — React
+### Rendering the transcript — React
 
 ```jsx
 function MessageThread({ messages }) {
@@ -144,7 +144,7 @@ defineProps({ messages: Array });
 class MessageThread extends HTMLElement {
   set messages(list) {
     this.setAttribute('role', 'log');
-    // DOM API zamiast innerHTML: treść modelu/użytkownika nigdy nie jest parsowana jako HTML
+    // DOM API instead of innerHTML: model/user content is never parsed as HTML
     this.replaceChildren(...list.map(m => {
       const article = document.createElement('article');
       article.className = `message message--${m.role}`;
@@ -164,7 +164,7 @@ class MessageThread extends HTMLElement {
 customElements.define('message-thread', MessageThread);
 ```
 
-### Stylowanie tur wizualnie i semantycznie
+### Styling turns visually and semantically
 
 ```css
 .message { display: grid; gap: 0.25rem; padding: 0.75rem 1rem; }
@@ -175,7 +175,7 @@ customElements.define('message-thread', MessageThread);
 .message[data-status="stopped"] .content::after { content: " (stopped)"; opacity: 0.6; }
 ```
 
-### Ogłaszanie nowej tury tylko raz (nie per token)
+### Announcing a new turn only once (not per token)
 
 ```jsx
 function AssistantMessage({ message }) {
@@ -192,23 +192,23 @@ function AssistantMessage({ message }) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- „Streaming, stopping, and errors scope to a single turn” — błąd/streaming jednej wiadomości nie wpływa na resztę wątku.
-- Stabilne `id` umożliwiają ponowne wykorzystanie węzłów DOM (kluczowanie list).
-- Historia, edycja, branching i regeneracja stają się prostymi operacjami na tablicy (map/filter), nie na dwóch osobnych stringach.
-- Rola `log` + `aria-live` czynią konwersację dostępną dla technologii wspomagających.
-- Znormalizowana tablica jest łatwa do zserializowania i przetestowania.
+- "Streaming, stopping, and errors scope to a single turn" — the error/streaming of one message does not affect the rest of the thread.
+- Stable `id`s enable reuse of DOM nodes (list keying).
+- History, editing, branching and regeneration become simple array operations (map/filter), not operations on two separate strings.
+- The `log` role + `aria-live` make the conversation accessible to assistive technologies.
+- A normalized array is easy to serialize and test.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Wymaga dyscypliny, żeby nie „przeciekał” stan z powrotem na poziom pojedynczego komponentu (top-level flags).
-- Live regiony per-wiadomość wymagają ostrożnej obsługi ogłoszeń (patrz przykład „ogłaszaj raz, nie per token”).
-- Długie wątki ostatecznie wymagają wirtualizacji listy, co komplikuje logikę przewijania.
-- Bogata zawartość wewnątrz wiadomości (markdown, kod, obrazy) to osobny problem renderowania, nie rozwiązany przez sam model danych.
-- Generowanie stabilnych `id` (`crypto.randomUUID()`) dodaje niewielką, ale dodatkową ceremonię.
+- Requires discipline so that state does not "leak" back to the level of a single component (top-level flags).
+- Per-message live regions require careful handling of announcements (see the "announce once, not per token" example).
+- Long threads eventually require list virtualization, which complicates the scrolling logic.
+- Rich content inside messages (markdown, code, images) is a separate rendering problem, not solved by the data model itself.
+- Generating stable `id`s (`crypto.randomUUID()`) adds a small but extra ceremony.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Streaming Response](streaming-response.md) — ai-chat-ui.
 - [Prompt Input](prompt-input.md) — ai-chat-ui.
@@ -218,8 +218,8 @@ function AssistantMessage({ message }) {
 - Normalizing State Shape — Redux docs.
 - List rendering keys — React docs.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj tego modelu zawsze, gdy budujesz UI konwersacyjne/czatowe (z AI albo między ludźmi) — nawet prosty MVP korzysta na tym, bo dodanie streamingu/retry/regeneracji później do „dwóch stringów” wymaga przepisania całego stanu, a do tablicy wiadomości — tylko dodania pola `status`.
+Use this model whenever you build a conversational/chat UI (with AI or between people) — even a simple MVP benefits from it, because adding streaming/retry/regeneration later to "two strings" requires rewriting the whole state, while for an array of messages — only adding a `status` field.
 
-Nie wprowadzaj tego dla prostego, jednorazowego komunikatu (np. jeden toast/alert) — to jest wzorzec dla **wątku** wielu tur, nie dla pojedynczej wiadomości bez historii.
+Do not introduce it for a simple, one-off message (e.g. a single toast/alert) — this is a pattern for a **thread** of many turns, not for a single message without history.

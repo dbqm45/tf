@@ -1,123 +1,123 @@
-# Błędy i wyjątki: try/catch/finally
+# Errors and exceptions: try/catch/finally
 
-> **Spis treści:** Składnia — trzy formy · Optional catch binding i destrukturyzacja · Warunkowa obsługa po typie błędu, i re-throw · Custom error classes i `Error.cause` · ⚠️ `finally` z `return`/`throw` NADPISUJE wynik z… · `finally` wykonuje się zawsze, nawet przy nieobsłużonym… · Zagnieżdżone try/catch — błąd łapany tylko przez najbliższy… · Async — `try/catch` nie łapie błędu z callbacku, ale łapie… · Katalog wbudowanych typów błędów (MDN Reference)
+> **Contents:** Syntax — three forms · Optional catch binding and destructuring · Conditional handling by error type, and re-throw · Custom error classes and `Error.cause` · ⚠️ `finally` with `return`/`throw` OVERRIDES the result… · `finally` always runs, even with an unhandled error · Nested try/catch — an error is caught only by the nearest… · Async — `try/catch` does not catch an error from a… · Catalogue of built-in error types (MDN Reference)
 
-Na podstawie MDN Web Docs (Reference/Statements/try...catch, wbudowane typy błędów), opisane własnymi słowami;
-przykłady sprawdzone w Node 22.
+Based on MDN Web Docs (Reference/Statements/try...catch, built-in error types), described in our own words;
+examples checked in Node 22.
 
-## Składnia — trzy formy
+## Syntax — three forms
 
 ```js
 try { risky(); } catch (e) { handle(e); }                    // try...catch
 try { risky(); } finally { cleanup(); }                       // try...finally
-try { risky(); } catch (e) { handle(e); } finally { cleanup(); } // pełna forma
+try { risky(); } catch (e) { handle(e); } finally { cleanup(); } // the full form
 ```
 
-`try`/`catch`/`finally` **muszą** być blokami `{}` — `try foo(); catch (e) bar();` to `SyntaxError`.
+`try`/`catch`/`finally` **must** be `{}` blocks — `try foo(); catch (e) bar();` is a `SyntaxError`.
 
-## Optional catch binding i destrukturyzacja
+## Optional catch binding and destructuring
 
 ```js
 try { JSON.parse(text); return true; }
-catch { return false; } // parametr błędu pominięty, nie jest potrzebny
+catch { return false; } // the error parameter is omitted, it is not needed
 
 try { throw new TypeError("oops"); }
 catch ({ name, message }) { console.log(name, message); } // "TypeError" "oops"
 ```
 
-## Warunkowa obsługa po typie błędu, i re-throw
+## Conditional handling by error type, and re-throw
 
 ```js
 try { myRoutine(); }
 catch (e) {
-  if (e instanceof TypeError) { /* obsłuż */ }
-  else if (e instanceof RangeError) { /* obsłuż */ }
-  else { throw e; } // nieznany błąd — przekaż dalej, nie "połykaj" cicho
+  if (e instanceof TypeError) { /* handle */ }
+  else if (e instanceof RangeError) { /* handle */ }
+  else { throw e; } // an unknown error — pass it on, do not "swallow" it silently
 }
 ```
 
-**Reguła:** nie łap błędu, którego nie umiesz sensownie obsłużyć — re-throw jest lepsze niż
-milczące `catch (e) {}`, które chowa realne problemy.
+**Rule:** do not catch an error you cannot handle meaningfully — re-throw is better than
+a silent `catch (e) {}`, which hides real problems.
 
-## Custom error classes i `Error.cause`
+## Custom error classes and `Error.cause`
 
 ```js
 class ValidationError extends Error {
   constructor(message) { super(message); this.name = "ValidationError"; }
 }
 
-try { throw new ValidationError("Pole wymagane"); }
+try { throw new ValidationError("Field required"); }
 catch (e) { if (e instanceof ValidationError) console.log(e.message); }
 
-// Error.cause — łańcuch przyczynowy błędów (przydatne przy owijaniu błędu niższego poziomu)
+// Error.cause — a causal chain of errors (useful when wrapping a lower-level error)
 try {
-  try { throw new Error("Błąd bazy danych"); }
-  catch (dbError) { throw new Error("Nie mogę załadować użytkownika", { cause: dbError }); }
+  try { throw new Error("Database error"); }
+  catch (dbError) { throw new Error("Cannot load the user", { cause: dbError }); }
 } catch (e) {
-  console.error(e.message);        // "Nie mogę załadować użytkownika"
-  console.error(e.cause.message);  // "Błąd bazy danych"
+  console.error(e.message);        // "Cannot load the user"
+  console.error(e.cause.message);  // "Database error"
 }
 ```
 
-## ⚠️ `finally` z `return`/`throw` NADPISUJE wynik z `try`/`catch`
+## ⚠️ `finally` with `return`/`throw` OVERRIDES the result from `try`/`catch`
 
 ```js
 function doIt() {
-  try { return "z try"; }
-  finally { return "z finally"; } // to wygrywa — funkcja zwraca "z finally"!
+  try { return "from try"; }
+  finally { return "from finally"; } // this wins — the function returns "from finally"!
 }
 
 function doIt2() {
-  try { throw "z try"; }
-  catch { throw "z catch"; }
-  finally { return "z finally"; } // return w finally ZATRZYMUJE propagację throw!
+  try { throw "from try"; }
+  catch { throw "from catch"; }
+  finally { return "from finally"; } // return in finally STOPS the throw from propagating!
 }
 ```
 
-**Reguła:** unikaj `return`/`throw`/`break`/`continue` w `finally` — ich efekt jest zaskakujący
-(nadpisuje wynik z `try`/`catch`) i trudny do przewidzenia przy review. `finally` powinien służyć
-tylko do **czyszczenia zasobów** (zamknięcie połączenia, usunięcie listenera), nie do zwracania
-wartości.
+**Rule:** avoid `return`/`throw`/`break`/`continue` in `finally` — their effect is surprising
+(it overrides the result from `try`/`catch`) and hard to predict in review. `finally` should be used
+only for **cleaning up resources** (closing a connection, removing a listener), not for returning
+values.
 
-## `finally` wykonuje się zawsze, nawet przy nieobsłużonym błędzie
+## `finally` always runs, even with an unhandled error
 
 ```js
 try { throw new Error("oops"); }
-finally { console.log("zawsze się wykonam"); }
-// log się wypisuje, A POTEM błąd wciąż propaguje się dalej (brak catch = nieobsłużony wyjątek)
+finally { console.log("I always run"); }
+// the log is printed, AND THEN the error still propagates further (no catch = an unhandled exception)
 ```
 
-## Zagnieżdżone try/catch — błąd łapany tylko przez najbliższy `catch`
+## Nested try/catch — an error is caught only by the nearest `catch`
 
 ```js
 try {
   try { throw new Error("oops"); }
-  catch (e) { console.log("inner", e.message); } // łapie tutaj, koniec propagacji
+  catch (e) { console.log("inner", e.message); } // caught here, propagation ends
   finally { console.log("finally"); }
 } catch (e) {
-  console.log("outer", e.message); // NIE wykona się — błąd już obsłużony wewnątrz
+  console.log("outer", e.message); // does NOT run — the error is already handled inside
 }
 ```
-Żeby błąd doszedł do zewnętrznego `catch`, wewnętrzny musi go **re-throw** (`throw e;`).
+For the error to reach the outer `catch`, the inner one must **re-throw** it (`throw e;`).
 
-## Async — `try/catch` nie łapie błędu z callbacku, ale łapie `await`
+## Async — `try/catch` does not catch an error from a callback, but catches `await`
 
-Patrz `asynchrony.md`, sekcja o `setTimeout`/callbackach — to jedna z najczęstszych pomyłek
-przy łączeniu `try/catch` z kodem asynchronicznym.
+See `asynchrony.md`, the section on `setTimeout`/callbacks — it is one of the most common mistakes
+when combining `try/catch` with asynchronous code.
 
-## Katalog wbudowanych typów błędów (MDN Reference)
+## Catalogue of built-in error types (MDN Reference)
 
-| Typ | Kiedy |
+| Type | When |
 |---|---|
-| `Error` | bazowa klasa, ogólny błąd |
-| `TypeError` | operacja na wartości niewłaściwego typu (`null.foo`, wywołanie nie-funkcji) |
-| `RangeError` | wartość poza dozwolonym zakresem (np. `new Array(-1)`) |
-| `ReferenceError` | odwołanie do nieistniejącej zmiennej |
-| `SyntaxError` | nieprawidłowa składnia (często przy `eval`/`JSON.parse`) |
-| `URIError` | nieprawidłowe użycie funkcji URI (`decodeURIComponent`) |
-| `EvalError` | historyczny, praktycznie nieużywany dziś |
-| `AggregateError` | wiele błędów naraz (np. z `Promise.any`, gdy wszystkie rejected) |
+| `Error` | the base class, a general error |
+| `TypeError` | an operation on a value of the wrong type (`null.foo`, calling a non-function) |
+| `RangeError` | a value outside the allowed range (e.g. `new Array(-1)`) |
+| `ReferenceError` | a reference to a non-existent variable |
+| `SyntaxError` | invalid syntax (often with `eval`/`JSON.parse`) |
+| `URIError` | incorrect use of a URI function (`decodeURIComponent`) |
+| `EvalError` | historical, practically unused today |
+| `AggregateError` | many errors at once (e.g. from `Promise.any`, when all are rejected) |
 
-**Praktyczna reguła przy rzucaniu własnych błędów:** rzucaj instancje `Error` (albo podklasy), nie
-gołe stringi/obiekty — `throw "coś"` sprawia, że `e.message`/`e.stack` nie istnieją w `catch`, co
-utrudnia diagnozowanie później.
+**A practical rule when throwing your own errors:** throw `Error` instances (or subclasses), not
+bare strings/objects — `throw "something"` means `e.message`/`e.stack` do not exist in `catch`, which
+makes diagnosing harder later.

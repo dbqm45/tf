@@ -1,47 +1,47 @@
 # PII Redaction
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/pii-redaction.
+Source: frontendpatterns.dev/pii-redaction.
 
-## Metadane
+## Metadata
 
-Kategoria: Security. Poziom: Advanced. Framework: Native web. Autor: Den Odell. Data aktualizacji:
-17 czerwca 2026.
+Category: Security. Level: Advanced. Framework: Native web. Author: Den Odell. Last updated:
+17 June 2026.
 
 ## TLDR
 
-Usuwaj/maskuj dane wrażliwe na granicy aplikacji, przed wysłaniem do logów, analityki czy error
-reporterów — najbezpieczniejsza wartość to ta, którą nigdy nie zebrałeś.
+Remove/mask sensitive data at the application boundary, before sending it to logs, analytics or error
+reporters — the safest value is the one you never collected.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Logger przykładowy używa `process.stdout` (Node/SSR); w przeglądarce ten sam redaktor podpinasz do transportu
-  logów/telemetrii (np. `beforeSend` Sentry, `beforeSendTransaction`, procesory OpenTelemetry — ops-observability).
-- Nie wysyłaj PII w URL-ach (query string trafia do logów serwerów, historii, `Referer`) — ustaw
-  `Referrer-Policy: strict-origin-when-cross-origin` (domyślna w nowych przeglądarkach).
-- Session replay (Sentry Replay, LogRocket…) — domyślnie maskuj wszystkie pola i tekst, odmaskowuj wybiórczo.
+- The example logger uses `process.stdout` (Node/SSR); in the browser you hook the same redactor into the logs/telemetry
+  transport (e.g. Sentry's `beforeSend`, `beforeSendTransaction`, OpenTelemetry processors — ops-observability).
+- Do not send PII in URLs (the query string ends up in server logs, history, `Referer`) — set
+  `Referrer-Policy: strict-origin-when-cross-origin` (the default in new browsers).
+- Session replay (Sentry Replay, LogRocket…) — mask all fields and text by default, unmask selectively.
 
 ## Problem
 
-Wrażliwe dane użytkowników (hasła, numery kart, tokeny, e-maile) trafiają do systemów zewnętrznych
-przez logi, raporty błędów i narzędzia analityczne. Dane, które nigdy nie miały opuszczać
-przeglądarki, siedzą w dashboardzie stron trzecich dostępnym dla dziesiątek osób. Wycieki powstają
-szczególnie, gdy dane rozprzestrzeniają się przez wiele systemów bez scentralizowanej kontroli.
+Users' sensitive data (passwords, card numbers, tokens, e-mails) reaches external systems
+through logs, error reports and analytics tools. Data that was never meant to leave
+the browser sits in a third-party dashboard accessible to dozens of people. Leaks arise
+especially when data spreads through many systems without centralized control.
 
-## Rozwiązanie
+## Solution
 
-Redakcja na granicy aplikacji — przed transmisją danych:
+Redaction at the application boundary — before data is transmitted:
 
-1. **Allow-list** zamiast deny-list (fail-closed: nowe pola domyślnie redagowane).
-2. **Centralizacja redaktora** — jedno miejsce dla wszystkich sinków (logi, error reporting,
+1. **An allow-list** instead of a deny-list (fail-closed: new fields redacted by default).
+2. **A centralized redactor** — one place for all sinks (logs, error reporting,
    analytics).
-3. **Pattern matching** jako warstwa bezpieczeństwa dla wolnego tekstu (stack trace'y, wiadomości).
-4. **Haki integracyjne** — np. Sentry `beforeSend`, wrappery dla logowania.
+3. **Pattern matching** as a safety layer for free text (stack traces, messages).
+4. **Integration hooks** — e.g. Sentry's `beforeSend`, wrappers for logging.
 
-## Przykłady kodu
+## Code examples
 
-### Redaktor rdzeniowy (vanilla JS)
+### The core redactor (vanilla JS)
 
 ```javascript
 const SENSITIVE_KEYS = new Set([
@@ -83,7 +83,7 @@ function redact(input, { allowList } = {}) {
 export { redact };
 ```
 
-### Integracja Sentry (`beforeSend` hook)
+### Sentry integration (the `beforeSend` hook)
 
 ```javascript
 import * as Sentry from '@sentry/browser';
@@ -114,7 +114,7 @@ Sentry.init({
 });
 ```
 
-### Logowanie strukturalne z allow-list
+### Structured logging with an allow-list
 
 ```javascript
 import { redact } from './redact';
@@ -153,46 +153,46 @@ logger.error('Checkout failed', {
 export { logger };
 ```
 
-## Zalety
+## Advantages
 
-- Wrażliwe wartości nigdy nie opuszczają przeglądarki w stronę systemów zewnętrznych.
-- Allow-list automatycznie redaguje nowe pola (fail-closed) — nowe, niewymienione pole jest
-  bezpieczne z definicji.
-- Jednolita definicja danych wrażliwych dla wszystkich sinków (logi, error reporting, analytics).
-- Wspiera zgodność GDPR/CCPA — brak wrażliwych danych w niekontrolowanych systemach.
-- Zmniejsza szkody po wycieku — baza możliwa do wykorzystania przez atakującego jest znacznie
-  bardziej pusta.
-- Zachowuje wartość diagnostyczną rekordów (nazwy pól, strukturę) — redaguje wartości, nie
-  wywala całych rekordów.
-- Pattern matching wychwytuje PII w wolnym tekście (stack trace'y, wiadomości błędów).
+- Sensitive values never leave the browser towards external systems.
+- An allow-list automatically redacts new fields (fail-closed) — a new, unlisted field is
+  safe by definition.
+- A uniform definition of sensitive data for all sinks (logs, error reporting, analytics).
+- Supports GDPR/CCPA compliance — no sensitive data in uncontrolled systems.
+- Reduces the damage after a leak — the data an attacker can exploit is much
+  emptier.
+- Preserves the diagnostic value of records (field names, structure) — it redacts values, it does not
+  throw away whole records.
+- Pattern matching catches PII in free text (stack traces, error messages).
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- **Over-redaction** — każdy log staje się `[REDACTED]`, utrudniając diagnozę podczas incydentów.
-- **Niedoskonałe wzorce** — międzynarodowe formaty numerów bywają omijane, zdarzają się fałszywe
-  alarmy na zwykłych ciągach.
-- **Koszt wydajności** — głębokie klonowanie i skanowanie przy każdym logowaniu.
-- **Utrzymanie** — listy wymagają aktywnej synchronizacji z rozwojem architektury/pól danych.
-- **Dyscyplina allow-list** — każde przydatne pole musi być jawnie wymienione, inaczej przepada.
-- **Punkt awarii** — błąd w redaktorze wpływa na wszystkie sinki równocześnie.
-- **Ukryte struktury** — JSON zserializowany wewnątrz stringów, blob'y base64 mogą przemycić PII
-  niezauważone.
-- **Nie zastępuje zapobiegania** — najbezpieczniejsza wartość to ta, którą nigdy nie zebrałeś.
-- **Trzecie strony** — SDK zewnętrzne mogą zbierać dane z pominięciem Twoich haków redakcji.
+- **Over-redaction** — every log becomes `[REDACTED]`, making diagnosis harder during incidents.
+- **Imperfect patterns** — international number formats can slip through, false
+  alarms happen on ordinary strings.
+- **Performance cost** — deep cloning and scanning on every log call.
+- **Maintenance** — the lists require active synchronization with the evolution of the architecture/data fields.
+- **Allow-list discipline** — every useful field must be listed explicitly, otherwise it is lost.
+- **A point of failure** — a bug in the redactor affects all sinks at once.
+- **Hidden structures** — JSON serialized inside strings, base64 blobs can smuggle PII
+  unnoticed.
+- **It does not replace prevention** — the safest value is the one you never collected.
+- **Third parties** — external SDKs can collect data bypassing your redaction hooks.
 
-## Powiązane wzorce
+## Related patterns
 
 - Error Handling — Resilience (`../resilience/error-handling.md`)
-- Zewnętrzne: [PII / GDPR](https://gdpr.eu/eu-gdpr-personal-data/),
+- External: [PII / GDPR](https://gdpr.eu/eu-gdpr-personal-data/),
   [Information exposure — OWASP](https://owasp.org/www-community/vulnerabilities/Information_exposure_through_query_strings_in_url),
   [CCPA Compliance — California AG](https://oag.ca.gov/privacy/ccpa)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Wprowadź redaktora **zawsze**, gdy aplikacja wysyła dane do jakiegokolwiek systemu trzeciego (error
-reporting, analytics, logi scentralizowane) — to nie jest wzorzec „na potem”, to podstawowy
-wymóg zgodności (GDPR/CCPA) w większości jurysdykcji. Zacznij od najprostszej wersji: allow-list na
-kluczach dla danych strukturalnych — dodawaj pattern matching dla wolnego tekstu tylko, jeśli
-realnie logujesz surowe wiadomości/stack trace'y, które mogą zawierać PII (nie dodawaj tego z góry
-„na wszelki wypadek”, zgodnie z YAGNI z `../principles.md`, bo over-redaction ma realny
-koszt diagnostyczny podczas incydentów).
+Introduce a redactor **always** when the application sends data to any third-party system (error
+reporting, analytics, centralized logs) — this is not a pattern "for later", it is a basic
+compliance requirement (GDPR/CCPA) in most jurisdictions. Start with the simplest version: an allow-list on
+keys for structured data — add pattern matching for free text only if you
+really log raw messages/stack traces that may contain PII (do not add it upfront
+"just in case", in line with YAGNI from `../principles.md`, because over-redaction has a real
+diagnostic cost during incidents).

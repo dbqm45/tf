@@ -1,50 +1,50 @@
 # Async Boundary
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/async-boundary.
+Source: frontendpatterns.dev/async-boundary.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Resilience
-- **Poziom:** Advanced
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 15 listopada 2025
-- **Autor:** Den Odell
+- **Category:** Resilience
+- **Level:** Advanced
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** 15 November 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Wrap async operations in boundaries that handle loading and error states, keeping child components
-focused on rendering data instead of managing request lifecycle.”
+"Wrap async operations in boundaries that handle loading and error states, keeping child components
+focused on rendering data instead of managing request lifecycle."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **`use(fetchUser(userId))` bez cache to błąd**: każdy render tworzy nową obietnicę, więc Suspense zawiesza się w
-  nieskończoność. Obietnica musi pochodzić z cache/warstwy danych (TanStack Query `useSuspenseQuery`, loader
-  routera, framework RSC) albo być utworzona wyżej i przekazana. Poprawiono przykład.
-- Odpowiedniki granicy: React `<Suspense>`; Vue `<Suspense>` (wciąż eksperymentalny); Svelte `{#await}` /
-  `<svelte:boundary>`; Angular (fw-angular) `@defer` z `@placeholder`/`@loading`/`@error` oraz `resource`/
-  `httpResource` ze statusem.
-- Zamiast ręcznego „opóźnionego fallbacku” w React użyj przejść (`startTransition`) — przy nawigacji już widoczna
-  treść zostaje, zamiast migać fallbackiem.
-- Przykłady Svelte to składnia Svelte 4; w Svelte 5: `$props()`, `$state`, `onclick`, `<svelte:boundary>` (granica błędów
-  i — z `await` w komponentach — ładowania).
+- **`use(fetchUser(userId))` without a cache is a bug**: every render creates a new promise, so Suspense suspends
+  forever. The promise must come from a cache/data layer (TanStack Query `useSuspenseQuery`, a router
+  loader, an RSC framework) or be created higher up and passed down. The example has been corrected.
+- Boundary equivalents: React `<Suspense>`; Vue `<Suspense>` (still experimental); Svelte `{#await}` /
+  `<svelte:boundary>`; Angular (fw-angular) `@defer` with `@placeholder`/`@loading`/`@error` and `resource`/
+  `httpResource` with a status.
+- Instead of a manual "delayed fallback" in React use transitions (`startTransition`) — during navigation the already visible
+  content stays, instead of flashing a fallback.
+- The Svelte examples are Svelte 4 syntax; in Svelte 5: `$props()`, `$state`, `onclick`, `<svelte:boundary>` (a boundary for errors
+  and — with `await` in components — for loading).
 
 ## Problem
 
-Bez koordynacji, niezależne komponenty na jednym ekranie (np. dashboard) pokazują niezsynchronizowane
-stany ładowania — „one widget shows a skeleton, another shows a spinner, a third just sits there
-empty” — co wygląda niechlujnie (jank). Alternatywnie, jeden globalny spinner blokuje całą stronę,
-nie pozwalając użytkownikowi czytać treści, która już jest gotowa.
+Without coordination, independent components on one screen (e.g. a dashboard) show unsynchronized
+loading states — "one widget shows a skeleton, another shows a spinner, a third just sits there
+empty" — which looks sloppy (jank). Alternatively, one global spinner blocks the whole page,
+not letting the user read content that is already ready.
 
-## Rozwiązanie
+## Solution
 
-Owiń powiązane komponenty w granicę koordynującą ich stany ładowania: „think of it like a stage
+Wrap related components in a boundary that coordinates their loading states: "think of it like a stage
 curtain: you don't reveal the set piece by piece, you wait until everything's ready and show it all
-at once”. Zagnieżdżanie granic umożliwia progresywne ładowanie — krytyczna treść pojawia się
-najpierw, mniej istotna dociąga później.
+at once". Nesting boundaries enables progressive loading — critical content appears
+first, less important content follows later.
 
-## Przykłady kodu
+## Code examples
 
 ### React — Basic Async Boundary
 
@@ -210,30 +210,30 @@ function PageWithTimeout() {
 }
 ```
 
-## Zalety
+## Advantages
 
-- UI ładuje się w spójne fragmenty zamiast migotać — „entire sections appear together, which feels
-  polished”.
-- Stany ładowania są przewidywalne; użytkownik wie, co się ładuje.
-- Komponenty-dzieci nie zarządzają własnym stanem ładowania — ta odpowiedzialność żyje na granicy.
-- Progresywne ładowanie (najważniejsza treść pierwsza) staje się naturalnym efektem zagnieżdżania
-  granic, nie dodatkową logiką.
+- The UI loads in coherent chunks instead of flickering — "entire sections appear together, which feels
+  polished".
+- Loading states are predictable; the user knows what is loading.
+- Child components do not manage their own loading state — this responsibility lives at the boundary.
+- Progressive loading (the most important content first) becomes a natural effect of nesting
+  boundaries, not extra logic.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Wymaga wsparcia frameworka (React Suspense, Vue Suspense, Svelte `{#await}`) — nie da się tego
-  zrobić czysto ręcznie bez wsparcia platformy.
-- Jedno wolne dziecko blokuje **całą** granicę — jeśli jeden z trzech widgetów czeka długo, wszystkie
-  trzy czekają.
-- Rozmieszczenie granic jest trudne: zbyt mało → grube, rzadkie ładowanie; zbyt wiele → wszechobecne
-  spinnery.
-- Nie każde pobieranie danych współpracuje z granicami — `useEffect` + `fetch` nie wyzwala Suspense
-  samo z siebie, wymaga integracji.
-- Brak wbudowanego timeoutu — dziecko, które nigdy się nie rozwiąże, czeka wiecznie.
-- Obsługa błędów wymaga dodatkowej pracy — połączenia z Error Boundary (patrz
+- Requires framework support (React Suspense, Vue Suspense, Svelte `{#await}`) — it cannot be
+  done purely by hand without platform support.
+- One slow child blocks the **whole** boundary — if one of three widgets waits long, all
+  three wait.
+- Placing boundaries is hard: too few → coarse, infrequent loading; too many → spinners
+  everywhere.
+- Not every data fetch works with boundaries — `useEffect` + `fetch` does not trigger Suspense
+  by itself, it requires integration.
+- No built-in timeout — a child that never resolves waits forever.
+- Error handling requires extra work — combining it with an Error Boundary (see
   `../resilience/error-boundary.md`).
 
-## Powiązane wzorce
+## Related patterns
 
 - [Error Boundary](../resilience/error-boundary.md) — Resilience
 - [Loading State](../resilience/loading-state.md) — Resilience
@@ -243,11 +243,11 @@ function PageWithTimeout() {
 - [Await Blocks (Svelte)](https://svelte.dev/docs/logic-blocks#await)
 - [Streaming and Suspense (Next.js)](https://nextjs.org/docs/app/building-your-application/routing/loading-ui-and-streaming)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj, gdy masz **kilka niezależnych operacji asynchronicznych renderujących się w tym samym
-obszarze ekranu** i chcesz, żeby pojawiały się jako spójna grupa, nie migoczący, niezsynchronizowany
-zestaw spinnerów. To nie jest wzorzec do wprowadzenia „wszędzie, gdzie jest `fetch()`” — jeśli masz
-jeden, samodzielny komponent z własnym stanem ładowania, prostszy lokalny `loading`/`error` (patrz
-`loading-state.md`) załatwia sprawę bez narzutu Suspense/frameworka. Sięgaj po to specyficznie, gdy
-problem to **koordynacja wielu** stanów ładowania naraz, nie pojedynczy `fetch`.
+Use it when you have **several independent asynchronous operations rendering in the same
+area of the screen** and you want them to appear as a coherent group, not a flickering, unsynchronized
+set of spinners. This is not a pattern to introduce "everywhere there is a `fetch()`" — if you have
+one self-contained component with its own loading state, a simpler local `loading`/`error` (see
+`loading-state.md`) does the job without the overhead of Suspense/the framework. Reach for it specifically when
+the problem is **coordinating many** loading states at once, not a single `fetch`.
