@@ -1,24 +1,24 @@
-# Warstwy obrony (defence in depth) — mapa do przeglądu
+# Layers of defence (defence in depth) — a map for the review
 
-Zasada: każda kontrola kiedyś zawiedzie, więc za nią stoi następna. Przegląd przechodzi warstwy po kolei i dla każdej
-pyta o trzy rodzaje kontroli: **zapobiegawczą** (blokuje), **wykrywającą** (zauważa) i **naprawczą** (przywraca).
-Warstwa bez kontroli to dziura albo świadoma decyzja — wtedy zapisz akceptację ryzyka z właścicielem i datą przeglądu
-(procedura pkt 5).
+The principle: every control will fail at some point, so another one stands behind it. The review goes through the layers one by one and for each
+asks about three kinds of controls: **preventive** (blocks), **detective** (notices) and **corrective** (restores).
+A layer without a control is a hole or a conscious decision — then record the risk acceptance with an owner and a review date
+(procedure step 5).
 
-| Warstwa | Typowe kontrole | Pytanie przeglądowe | Skill |
+| Layer | Typical controls | Review question | Skill |
 |---|---|---|---|
-| sieć | segmentacja i mikrosegmentacja, filtrowanie ruchu (domyślnie odrzuca), WAF, ochrona DDoS, ograniczony ruch wychodzący | Jak daleko dojdzie napastnik po przejęciu jednej usługi (blast radius)? | sec-zero-trust-identity, ops-security-operations (sieć i chmura), ops-kubernetes (NetworkPolicy), ops-cloud-landing-zones |
-| tożsamość i dostęp | MFA odporne na phishing, najmniejsze uprawnienia, krótkotrwałe poświadczenia, PAM i JIT, tożsamości maszyn | Kto i co może zrobić z tym zasobem i skąd to wiemy? | be-auth-security, sec-zero-trust-identity, ops-secrets-identities |
-| host i środowisko uruchomieniowe | utwardzanie (linia bazowa CIS), łatki, inwentarz, EDR, kontener bez roota | Czy każdy host i obraz ma linię bazową i sprawdzany dryf? | ops-security-operations (utwardzanie hosta), ops-docker, sec-cloud-security |
-| aplikacja | bezpieczny projekt (ten skill), walidacja wejścia, autoryzacja per obiekt, SAST/DAST/SCA, bezpieczne ustawienia domyślne | Które przepływy przez granicę zaufania nie mają kontroli i testu nadużycia? | sec-appsec-devsecops, be-auth-security, fe-web-platform, sec-llm-security |
-| dane | klasy danych, szyfrowanie w ruchu i w spoczynku, kontrola dostępu do kluczy, kopie, cykl życia i usuwanie | Co wycieknie, gdy napastnik dostanie kopię bazy albo dostęp aplikacji? | sec-cryptography-pki (dane w spoczynku), arch-privacy-compliance, ops-sre-incidents (kopie) |
-| łańcuch dostaw | lockfile, karencja wersji, SBOM, podpisy i provenance, uprawnienia CI | Czy wiemy, co wdrażamy i kto to zbudował? | ops-supply-chain-security, sec-appsec-devsecops (SLSA), ops-ci-cd |
-| monitorowanie i wykrywanie | centralne logi bezpieczeństwa, reguły wykrywania z testem, SIEM, EDR, IDS | Po jakim czasie zauważymy nadużycie z tej ścieżki i kto dostanie alarm? | ops-security-operations, sec-detection-engineering, ops-observability |
-| reagowanie i odtwarzanie | plan reagowania, playbooki i runbooki, ćwiczenia, kopie z testem odtworzenia | Kto co robi w pierwszej godzinie i ile danych stracimy? | ops-security-operations (NIST SP 800-61r3), ops-sre-incidents, sec-security-leadership (tabletop) |
+| network | segmentation and microsegmentation, traffic filtering (deny by default), WAF, DDoS protection, restricted egress | How far will an attacker get after taking over one service (blast radius)? | sec-zero-trust-identity, ops-security-operations (network and cloud), ops-kubernetes (NetworkPolicy), ops-cloud-landing-zones |
+| identity and access | phishing-resistant MFA, least privilege, short-lived credentials, PAM and JIT, machine identities | Who can do what with this resource, and how do we know? | be-auth-security, sec-zero-trust-identity, ops-secrets-identities |
+| host and runtime | hardening (a CIS baseline), patches, inventory, EDR, a container without root | Does every host and image have a baseline and checked drift? | ops-security-operations (host hardening), ops-docker, sec-cloud-security |
+| application | secure design (this skill), input validation, per-object authorization, SAST/DAST/SCA, secure defaults | Which flows across a trust boundary have no control and no abuse case test? | sec-appsec-devsecops, be-auth-security, fe-web-platform, sec-llm-security |
+| data | data classes, encryption in transit and at rest, control of access to keys, backups, lifecycle and deletion | What will leak when an attacker gets a copy of the database or the application's access? | sec-cryptography-pki (data at rest), arch-privacy-compliance, ops-sre-incidents (backups) |
+| supply chain | lockfile, a version cooldown, SBOM, signatures and provenance, CI permissions | Do we know what we deploy and who built it? | ops-supply-chain-security, sec-appsec-devsecops (SLSA), ops-ci-cd |
+| monitoring and detection | central security logs, detection rules with a test, SIEM, EDR, IDS | How long until we notice abuse from this path and who gets the alarm? | ops-security-operations, sec-detection-engineering, ops-observability |
+| response and recovery | a response plan, playbooks and runbooks, exercises, backups with a restore test | Who does what in the first hour and how much data will we lose? | ops-security-operations (NIST SP 800-61r3), ops-sre-incidents, sec-security-leadership (tabletop) |
 
-## Jak użyć w modelu zagrożeń
-1. Po STRIDE (procedura pkt 4) przypisz każde zagrożenie do warstw, które mogą je zatrzymać, wykryć i naprawić.
-2. Zagrożenie zatrzymywane przez **jedną** kontrolę w **jednej** warstwie to kandydat na dodatkową kontrolę —
-   zwłaszcza dla aktywów o wysokiej wartości.
-3. W `threat-model.md` dodaj krótką tabelę: warstwa → kontrole obecne → luki → decyzja. Szczegóły kontroli opisują
-   skille z kolumny „Skill”; ten plik tylko pilnuje, żeby żadna warstwa nie została pominięta.
+## How to use it in the threat model
+1. After STRIDE (procedure step 4) assign every threat to the layers that can stop it, detect it and fix it.
+2. A threat stopped by **one** control in **one** layer is a candidate for an additional control —
+   especially for high-value assets.
+3. In `threat-model.md` add a short table: layer → controls present → gaps → decision. The details of the controls are described by
+   the skills from the "Skill" column; this file only makes sure no layer is skipped.
