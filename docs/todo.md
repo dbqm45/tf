@@ -835,6 +835,10 @@ treści (angielska), bez równoległej polskiej.
     (+ referencje) po angielsku; `hint.pl.txt`; prefiks `arch-` zamknięty. `quality_override: yes` (nikt go nie parsuje).
     Podpowiedzi bez zmian (901/918 · 32/43), `--hints` czysto (all, pack-it). Haiku przed/po (4 scenariusze): 3/4 → 3/4,
     1,07 USD; `model-webhook-upload` pada tak samo na main (brak ryzyka rezydualnego w odpowiedzi) — do przejrzenia.
+  - [x] 4d-be-a (2026-11-18): pack-it — `be-api-design`, `be-billing-subscriptions`, `be-business-app-patterns`
+    (+ referencje) po angielsku; `hint.pl.txt`. Podpowiedzi: tuning 901/918, holdout 32/43 → 31/43 — ten sam
+    przypadek `ddd-tactical-design`, który w 4d-arch-b zyskał (remis wrażliwy na IDF), `--hints` czysto (all, pack-it).
+    Haiku przed/po (4 scenariusze): 4/4 → 4/4, 0,95 USD.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
