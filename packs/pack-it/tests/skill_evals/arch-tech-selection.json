@@ -37,6 +37,58 @@
       }
     },
     {
+      "id": "stack-startup-en",
+      "expect": "trigger",
+      "prompt": "A startup of 4 people, the team knows Python, and we’re building a B2B SaaS with EU customer data. We have to pick a framework and a database. How should we approach the choice so we don’t regret it later? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "filtr",
+            "odrzuc",
+            "obowiązkow",
+            "must-have",
+            "knock-?out",
+            "filter\\w*",
+            "reject\\w*",
+            "disqualif\\w*",
+            "mandatory",
+            "deal-?breaker",
+            "hard (requirement|constraint)s?"
+          ],
+          [
+            "nudn",
+            "boring",
+            "znan\\w* zespo",
+            "najpowszechni",
+            "najpopularni",
+            "well-known",
+            "team (already )?know\\w*",
+            "familiar",
+            "most (common|popular|widespread)",
+            "proven"
+          ],
+          [
+            "macierz",
+            "ważon",
+            "weighted",
+            "wag[iaę]\\b",
+            "matrix",
+            "weights?\\b",
+            "scor(e|ing)"
+          ],
+          [
+            "kryteri\\w* porzuceni",
+            "pre-?mortem",
+            "przyjazn\\w* dla agent",
+            "dat\\w* sprawdzeni",
+            "(abandon|exit|kill)\\w* criteri\\w*",
+            "agent[- ]friendly",
+            "verified (on|as of)|date (of )?(verification|checked)|as of 20\\d\\d"
+          ]
+        ]
+      }
+    },
+    {
       "id": "ewolucja-stacku",
       "expect": "trigger",
       "prompt": "Mamy 8-letnią aplikację na AngularJS i Javie 8, a część zespołu chce przepisać wszystko od zera na nowy stack. Jak ocenić, co zostawić, a co wymienić? Odpowiedz zwięźle.",

@@ -31,6 +31,39 @@
       }
     },
     {
+      "id": "regresja-200-commitow-en",
+      "expect": "trigger",
+      "prompt": "The invoice report computed totals correctly two weeks ago, and now they come out wrong; about 200 commits have landed since. How do I find the commit that broke it as fast as possible? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "git bisect"
+          ],
+          [
+            "bisect run",
+            "skrypt",
+            "script"
+          ],
+          [
+            "125",
+            "skip",
+            "pomi[jń]"
+          ],
+          [
+            "first-parent",
+            "czerwon\\w*[^.]{0,40}(HEAD|zł)[^.]{0,60}zielon",
+            "__pycache__",
+            "nieaktualn\\w+ (artefakt|cache|bajtkod)",
+            "poza repozytorium",
+            "bisect log",
+            "stale (artifact|cache|bytecode|build)\\w*",
+            "outside (of )?(the )?repo\\w*",
+            "(check|verify)\\w* (that )?(the )?(good|bad) (commit|revision|end)\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "500-dla-czesci-klientow",
       "expect": "trigger",
       "prompt": "Endpoint POST /orders zwraca 500 tylko dla części klientów, a w logach jest NullPointerException w OrderPricing. Jak systematycznie znaleźć przyczynę, zamiast zgadywać? Odpowiedz zwięźle.",

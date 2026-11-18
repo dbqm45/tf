@@ -37,6 +37,56 @@
       }
     },
     {
+      "id": "wdrozenie-crm-opor-en",
+      "expect": "trigger",
+      "prompt": "I'm leading the rollout of a new CRM at a 300-person company. The sales department is resisting and the board wants it fast. How should I plan the work with stakeholders? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "wpływ\\w*[^\\n]{0,60}zainteresowan\\w*",
+            "zainteresowan\\w*[^\\n]{0,60}wpływ\\w*",
+            "władz\\w*",
+            "Mendelow",
+            "(influence|power)[^\\n]{0,60}interest",
+            "interest[^\\n]{0,60}(influence|power)",
+            "power"
+          ],
+          [
+            "plan\\w* (zaangażowania|komunikacji)",
+            "częstotliw\\w*",
+            "kanał\\w*",
+            "(engagement|communication) plan\\w*",
+            "frequency",
+            "channels?"
+          ],
+          [
+            "opór",
+            "obaw\\w*",
+            "przyczyn\\w*",
+            "co (tracą|zyskują)",
+            "resistance",
+            "concerns?",
+            "root causes?",
+            "what (they|people) (lose|stand to lose|gain)"
+          ],
+          [
+            "obecn\\w*[^\\n]{0,60}(pożądan|docelow)\\w*",
+            "nieświadom\\w*",
+            "wspierając\\w*",
+            "neutraln\\w*",
+            "current[^\\n]{0,60}(desired|target)",
+            "unaware",
+            "supportive",
+            "neutral"
+          ]
+        ],
+        "none": [
+          "(zignoruj|pomiń) (dział )?sprzeda\\w*",
+          "(ignore|skip|bypass) (the )?sales"
+        ]
+      }
+    },
+    {
       "id": "kto-jest-interesariuszem",
       "expect": "trigger",
       "prompt": "Zaczynam projekt zmiany procesu zamówień w hurtowni. Jak rozpoznać wszystkich ważnych interesariuszy, żeby nikogo nie pominąć? Odpowiedz zwięźle.",

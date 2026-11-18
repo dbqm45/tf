@@ -32,6 +32,41 @@
       }
     },
     {
+      "id": "wynik-operacji-csharp-en",
+      "expect": "trigger",
+      "prompt": "In C# on .NET 10, the Reserve method should return either success or a rejection (slot taken, resource disabled). Should it throw exceptions or something else? How should I write it so the compiler helps handle all cases? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "record"
+          ],
+          [
+            "switch",
+            "dopasowani\\w* wzorc",
+            "pattern matching"
+          ],
+          [
+            "abstract record",
+            "sealed",
+            "zamknięt\\w*",
+            "prywatn\\w* konstruktor",
+            "closed",
+            "private constructor"
+          ],
+          [
+            "wyjąt\\w*[^\\n]{0,80}(programist|infrastruktur|nieoczekiwan|wyjątkow)",
+            "nie (rzucaj|używaj) wyjątk\\w* (dla|do) (odrzuc|reguł|biznes)",
+            "exception\\w*[^\\n]{0,80}(programmer|infrastructure|unexpected|exceptional|bug)",
+            "(programmer|infrastructure|unexpected|exceptional)[^\\n]{0,80}exception",
+            "(don'?t|do not|avoid|never) (throw|use) exception\\w* (for|to) (reject|rule|business|expected)"
+          ]
+        ],
+        "none": [
+          "throw new \\w*(Conflict|Taken|Busy)\\w*Exception"
+        ]
+      }
+    },
+    {
       "id": "field-i-extension-na-net8",
       "expect": "trigger",
       "prompt": "Projekt ma TargetFramework net8.0. Zespół chce używać słowa kluczowego field we właściwościach i bloków extension. Czy to zadziała i co trzeba zmienić? Odpowiedz zwięźle.",

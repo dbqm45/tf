@@ -23,6 +23,35 @@
       }
     },
     {
+      "id": "force-push-en",
+      "expect": "trigger",
+      "prompt": "After a rebase on my own feature branch, my push was rejected. Should I just do git push --force? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "force-with-lease"
+          ],
+          [
+            "własn\\w* gałęz",
+            "\\bown\\b.{0,20}branch",
+            "your .{0,15}branch",
+            "feature branch"
+          ],
+          [
+            "zgod",
+            "agree\\w*",
+            "consent",
+            "coordinat\\w*",
+            "team ?mates?",
+            "permission"
+          ]
+        ],
+        "none": [
+          "git push --force origin (main|master)"
+        ]
+      }
+    },
+    {
       "id": "add-all-main",
       "expect": "trigger",
       "prompt": "Jestem na main, mam zmiany w kilkunastu plikach. Planuję git add -A, commit i push prosto na main. Co zrobić inaczej? Odpowiedz zwięźle.",

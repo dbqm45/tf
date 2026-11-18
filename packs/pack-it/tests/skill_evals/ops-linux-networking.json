@@ -21,6 +21,28 @@
       }
     },
     {
+      "id": "dysk-inody-en",
+      "expect": "trigger",
+      "prompt": "On a Linux server an application reports \"No space left on device\", while df -h shows 40% free space. How do I diagnose this step by step? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "df -i",
+            "i-w[eę]z|inod",
+            "inodes?"
+          ],
+          [
+            "lsof|dmesg|journalctl"
+          ],
+          [
+            "alert\\w*[^.]{0,40}(i-?węz|inod)|monitoring\\w*[^.]{0,40}(i-?węz|inod)|za zgodą|zgod\\w* człowiek",
+            "(with|after|get|get(ting)?) (the )?(human |user |your |owner )?(approval|consent|permission)",
+            "human (approval|consent|confirmation)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "poczta-spf",
       "expect": "trigger",
       "prompt": "Maile z naszej aplikacji trafiają do spamu w Gmailu. Jakie rekordy DNS i wymagania trzeba spełnić dla domeny wysyłającej? Odpowiedz zwięźle.",

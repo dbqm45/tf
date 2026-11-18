@@ -32,6 +32,37 @@
       }
     },
     {
+      "id": "testy-serwisu-i-e2e-sqlite-en",
+      "expect": "trigger",
+      "prompt": "In src/orders/orders.service.spec.ts I create OrdersService by hand with new, with hand-assembled dependencies, and our NestJS app e2e tests run on in-memory SQLite although production runs on PostgreSQL. How do I fix this? Answer briefly.",
+      "files": {
+        "src/orders/orders.service.spec.ts": "import { OrdersService } from './orders.service';\nimport { OrdersRepository } from './orders.repository';\nimport { PaymentsClient } from '../payments/payments.client';\n\ndescribe('OrdersService', () => {\n  it('places order', async () => {\n    const repo = new OrdersRepository(null as any);\n    const payments = new PaymentsClient({} as any);\n    const service = new OrdersService(repo, payments);\n    await service.place({ sku: 'A-1', qty: 1 });\n  });\n});\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "createTestingModule"
+          ],
+          [
+            "overrideProvider",
+            "useValue"
+          ],
+          [
+            "Testcontainers",
+            "PostgreSqlContainer"
+          ],
+          [
+            "createNestApplication",
+            "supertest"
+          ]
+        ],
+        "none": [
+          "zostaw.{0,20}SQLite",
+          "(leave|keep).{0,20}SQLite"
+        ]
+      }
+    },
+    {
       "id": "walidacja-i-konfiguracja",
       "expect": "trigger",
       "prompt": "Kontroler NestJS sam sprawdza pola req.body ifami i zwraca res.status(400), a w serwisach czytamy process.env.DB_URL bezpośrednio. Jak to zrobić porządnie? Odpowiedz zwięźle.",

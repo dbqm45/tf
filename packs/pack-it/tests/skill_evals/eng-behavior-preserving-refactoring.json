@@ -20,6 +20,28 @@
       }
     },
     {
+      "id": "kontrakt-odrzucenia-en",
+      "expect": "trigger",
+      "prompt": "I’m rewriting a rich Order aggregate into the decider style and I want it to return an empty result instead of throwing an exception when a command is rejected, because it looks nicer. Is this still a refactoring? What should I freeze before the change? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "kontrakt|contract"
+          ],
+          [
+            "rodzaj odrzucenia|różne zachowan|inne zachowanie|zmiana zachowania|nie jest refaktor|to już nie",
+            "(kind|type|reason)s? of rejection|rejection (type|kind|reason)s?|different behaviou?r|behaviou?r change|chang\\w* (the )?behaviou?r|not a refactor\\w*|no longer (a )?refactor\\w*"
+          ],
+          [
+            "zgod|decisions|decyzj",
+            "decisions?",
+            "conform\\w*|compat\\w*",
+            "characteri[sz]ation|golden|snapshot"
+          ]
+        ]
+      }
+    },
+    {
       "id": "dowod-sterownik",
       "expect": "trigger",
       "prompt": "Mam testy domenowe agregatu i migruję go do innego idiomu. Jak udowodnić, że zachowanie się nie zmieniło, skoro testy są związane z typami starej implementacji? Odpowiedz zwięźle.",

@@ -30,6 +30,36 @@
       }
     },
     {
+      "id": "prosba-o-funkcje-en",
+      "expect": "trigger",
+      "prompt": "My boss wants us to add export to Excel because \"customers are asking for it\". How do I decide whether to build it before we start programming? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "wynik",
+            "outcome"
+          ],
+          [
+            "drzewo szans",
+            "opportunity",
+            "JTBD",
+            "problem"
+          ],
+          [
+            "założeń|założen",
+            "assumption",
+            "test"
+          ],
+          [
+            "(co najmniej|minimum|≥|przynajmniej)\\s*(3|trzy)\\s*(rozwiąz|opcj|warian)",
+            "wartoś\\w*[^\\n]{0,200}użyteczn\\w*[^\\n]{0,200}wykonaln",
+            "(at least|minimum|min\\.?|≥)\\s*(3|three)\\s*(solution|option|alternative|variant)\\w*",
+            "value[^\\n]{0,200}usab\\w*[^\\n]{0,200}feasib"
+          ]
+        ]
+      }
+    },
+    {
       "id": "priorytety-rice",
       "expect": "trigger",
       "prompt": "Mamy listę 12 pomysłów na funkcje i muszę je uszeregować oraz wybrać metryki sukcesu po wydaniu. Jakie metody i metryki zastosować? Odpowiedz zwięźle.",

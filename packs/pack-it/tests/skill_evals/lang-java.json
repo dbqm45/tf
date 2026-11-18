@@ -24,6 +24,29 @@
       }
     },
     {
+      "id": "money-bigdecimal-en",
+      "expect": "trigger",
+      "prompt": "In src/main/java/pl/acme/billing/Money.java we keep the amount as a double, and we've covered the class in Lombok @Data. How do I rebuild this in Java 21? Answer briefly.",
+      "files": {
+        "src/main/java/pl/acme/billing/Money.java": "package pl.acme.billing;\n\nimport lombok.Data;\n\n@Data\npublic class Money {\n    private double amount;\n    private String currency;\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "BigDecimal"
+          ],
+          [
+            "RoundingMode",
+            "skal",
+            "scale"
+          ],
+          [
+            "record"
+          ]
+        ]
+      }
+    },
+    {
       "id": "wynik-rezerwacji",
       "expect": "trigger",
       "prompt": "W src/main/java/pl/acme/booking/BookingResult.java modeluję wynik rezerwacji: sukces, brak miejsc, konflikt terminu. Wyjątki czy coś innego? Java 21. Odpowiedz zwięźle.",

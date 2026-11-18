@@ -23,6 +23,29 @@
       }
     },
     {
+      "id": "rabat-ilosciowy-en",
+      "expect": "trigger",
+      "prompt": "Discount: 5% from 10 items, 10% from 50 items, only for customers with a business account. What test cases should I design and with which techniques? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "9\\D{1,12}10\\D{1,12}11",
+            "49\\D{1,12}50\\D{1,12}51"
+          ],
+          [
+            "tablic\\w* decyzyjn",
+            "decision table"
+          ],
+          [
+            "źródł\\w*.{0,25}(wynik|oczekiwan)",
+            "(expected|oczekiwan).{0,40}(source|źródł)",
+            "source[^\\n]{0,25}(result|expected)",
+            "expected (results?|values?|outcomes?)[^\\n]{0,60}(from|source|spec\\w*|requirement\\w*)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "stany-zamowienia",
       "expect": "trigger",
       "prompt": "Zamówienie ma stany: nowe, opłacone, wysłane, anulowane. Jak zaprojektować testy przejść i na jakim poziomie (jednostkowy czy e2e) je pisać? Odpowiedz zwięźle.",

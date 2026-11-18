@@ -24,6 +24,30 @@
       }
     },
     {
+      "id": "zgloszenie-bledu-en",
+      "expect": "trigger",
+      "prompt": "We received a bug report in the repo from an external user: “CSV export crashes”. How should we review it and label it before we hand the fix to an agent? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "needs-info",
+            "needs-triage",
+            "ready-for-agent"
+          ],
+          [
+            "odtwórz",
+            "odtworz",
+            "reprodu",
+            "reproduc\\w+",
+            "repro\\b"
+          ],
+          [
+            "brief"
+          ]
+        ]
+      }
+    },
+    {
       "id": "odrzucona-funkcja",
       "expect": "trigger",
       "prompt": "Ktoś zewnętrzny prosi o tryb ciemny w naszej bibliotece, a już raz to odrzuciliśmy. Jak to obsłużyć, żeby nie spierać się za każdym razem od nowa? Odpowiedz zwięźle.",

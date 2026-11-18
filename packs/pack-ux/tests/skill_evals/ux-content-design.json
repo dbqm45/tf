@@ -14,6 +14,18 @@
       }
     },
     {
+      "id": "test-zrozumialosci-regulaminu-en",
+      "expect": "trigger",
+      "prompt": "We have a long text of return rules and we don't know whether customers understand it. How can I test the comprehension of this content with a few people? Answer briefly.",
+      "checks": {
+        "all": [
+          ["cloze", "test luk", "uzupełnian\\w+ luk", "luk\\w* w tekście"],
+          ["highlighter", "zakreśl", "zaznacz\\w* (marker|tekst)", "marker", "highlight\\w*", "mark\\w*"]
+        ],
+        "none": ["wystarczy (wskaźnik|indeks) (czytelności|mglistości)", "readability (index|score)[^.]{0,20}(is )?(enough|sufficient)", "(fog|readability) (score|index|metric) (is )?(enough|sufficient)"]
+      }
+    },
+    {
       "id": "asystent-ai-w-aplikacji",
       "expect": "trigger",
       "prompt": "Dodajemy do aplikacji bankowej asystenta opartego na LLM. Jak napisać teksty, żeby użytkownik wiedział, że rozmawia z AI, i nie ufał ślepo jego odpowiedziom? Odpowiedz zwięźle.",

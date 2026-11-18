@@ -16,6 +16,20 @@
       }
     },
     {
+      "id": "agent-niezawodnosc-pass-k-en",
+      "expect": "trigger",
+      "prompt": "We have a customer-support agent that solves the task in 75% of attempts in tests. The boss asks whether that is enough for production. How do we assess it, given that the agent is inconsistent, and what exactly should we measure? Answer briefly.",
+      "checks": {
+        "all": [
+          ["pass\\^k", "pass\\^\\s?[0-9k]", "pass hat k"],
+          ["pass@k", "pass@\\s?[0-9k]", "co najmniej jedn\\w+ (udan|sukces)", "at least one (success\\w*|attempt|trial|run)"],
+          ["powtórz\\w*", "kilka prób", "wielokrotn\\w+", "k prób", "trials?", "repeat\\w*", "multiple (trials|runs|attempts)", "several (trials|runs|attempts)", "k (trials|runs|attempts)"],
+          ["42\\s?%", "0[,.]42", "0[,.]75\\^3|0[,.]75 do potęgi", "0[,.]75\\^3", "0[,.]75 (cubed|to the (power of )?(3|three))"]
+        ],
+        "none": ["wystarczy jedno uruchomienie", "75% to wystarczy", "one run is (enough|sufficient)", "75 ?% is (enough|good enough|sufficient)"]
+      }
+    },
+    {
       "id": "sedzia-llm-kalibracja",
       "expect": "trigger",
       "prompt": "Chcemy, żeby drugi model oceniał odpowiedzi naszego chatbota od 1 do 5 zamiast ludzi. Jak zrobić tego sędziego, żeby można było mu ufać? Odpowiedz zwięźle.",

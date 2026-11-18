@@ -33,6 +33,46 @@
       }
     },
     {
+      "id": "agent-czy-workflow-en",
+      "expect": "trigger",
+      "prompt": "We want to automate complaint ticket handling: classification, fetching order data, drafting a reply, checking the draft. The team wants to jump straight to building an autonomous multi-agent system. Is that a good idea? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "prompt chaining",
+            "łańcuch\\w* prompt",
+            "workflow",
+            "przepływ\\w* (z góry|zdefiniowan|predefiniowan)",
+            "prompt chain\\w*|chain\\w* prompt",
+            "predefined (workflow|path|flow)",
+            "fixed (workflow|flow|path)"
+          ],
+          [
+            "routing",
+            "evaluator-optimizer",
+            "orchestrator-workers",
+            "parallelization",
+            "równoległ",
+            "parallel\\w*"
+          ],
+          [
+            "najprostsz\\w* (rozwiązani|wariant)",
+            "dopiero (gdy|jeśli)",
+            "nie (jest )?potrzebn\\w* agent",
+            "koszt\\w* (i )?(opóźnien|latency)",
+            "simplest (solution|option|approach|design|variant)",
+            "only (when|if)",
+            "(do(es)?n'?t|not) (need|require)\\w* (an? )?(autonomous )?agent",
+            "(cost|latency)\\w* (and|&) (latency|cost|delay)"
+          ]
+        ],
+        "none": [
+          "(zawsze|od razu) (buduj|zbuduj) (system )?wieloagentow",
+          "(always|right away|immediately|straight away) (build|start with) (a )?(multi-?agent|multiple[- ]agent)"
+        ]
+      }
+    },
+    {
       "id": "narzedzia-agenta-bledne-wywolania",
       "expect": "trigger",
       "prompt": "Nasz agent ma 40 narzędzi opakowujących endpointy REST naszego CRM i często wybiera złe albo podaje błędne argumenty, a po timeoucie potrafi dwa razy utworzyć to samo zlecenie. Jak przeprojektować narzędzia? Odpowiedz zwięźle.",

@@ -42,6 +42,56 @@
       }
     },
     {
+      "id": "tdd-nowa-regula-en",
+      "expect": "trigger",
+      "prompt": "We have a function that computes the cart total. Add a rule: 10% discount when the total exceeds 200 PLN. How do I do this using TDD? Describe the steps briefly, without writing all the code.",
+      "checks": {
+        "all": [
+          [
+            "najpierw (napisz |piszesz |dodaj )?test",
+            "test (najpierw|przed)",
+            "czerwon",
+            "red",
+            "nie przechodzi",
+            "nie przejdzie",
+            "pada",
+            "(write|add) (a |the )?(failing )?test first",
+            "test (first|before)",
+            "fail\\w*",
+            "doesn'?t pass|does not pass|won'?t pass"
+          ],
+          [
+            "200",
+            "granic",
+            "brzeg",
+            "200,01",
+            "199",
+            "boundar\\w*",
+            "edge"
+          ],
+          [
+            "uruchom",
+            "odpal",
+            "npm test",
+            "vitest",
+            "jest",
+            "\\brun\\b"
+          ],
+          [
+            "tdd_guard",
+            "(oczekiw\\w*|wartoś\\w*).{0,60}z wymagani\\w*",
+            "nie z uruchomieni",
+            "(expected|value\\w*).{0,60}from (the )?requirement\\w*",
+            "not from (running|the run|output)"
+          ]
+        ],
+        "none": [
+          "najpierw (zaimplementuj|napisz kod|dodaj kod)",
+          "first (implement|write (the )?(code|implementation)|add (the )?code)"
+        ]
+      }
+    },
+    {
       "id": "mock-vs-fake",
       "expect": "trigger",
       "prompt": "W testach przypadków użycia mockuję repozytorium i klienta płatności bibliotekami i testy pękają przy każdym refaktorze. Co zmienić w strategii dublerów? Odpowiedz zwięźle.",

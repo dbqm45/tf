@@ -18,6 +18,63 @@
    }
   },
   {
+    "id": "duze-stare-repo-raport-en",
+    "expect": "trigger",
+    "prompt": "I've been handed a large repository (about 400k lines, Java and some Go, history since 2012) with no documentation. I want to reconstruct from the code alone what this project is: domains, stack, requirements, rules and standards, and get a readable report. How do I do this cheaply and reliably? Answer briefly.",
+    "checks": {
+      "all": [
+        [
+          "plik:linia",
+          "dow[oó]d\\w*",
+          "file:line",
+          "evidence"
+        ],
+        [
+          "skrypt\\w*",
+          "deterministycz",
+          "bez modelu",
+          "0 token",
+          "script\\w*",
+          "deterministic",
+          "without (a |the )?model",
+          "(0|zero) tokens?"
+        ],
+        [
+          "tańsz\\w* model",
+          "haiku",
+          "kaskad",
+          "cheaper model",
+          "cascad\\w*"
+        ],
+        [
+          "budżet",
+          "szacun\\w* koszt",
+          "limit koszt",
+          "budget",
+          "cost estimate|estimat\\w* (the )?cost",
+          "cost limit"
+        ],
+        [
+          "standard\\w*"
+        ],
+        [
+          "pewnoś",
+          "czego nie sprawdz",
+          "pytani\\w* do (ludzi|zespołu|człowieka)",
+          "confidence",
+          "what (was|wasn'?t|was not|has not been) (checked|verified)",
+          "questions? for (the )?(people|team|humans?)"
+        ]
+      ],
+      "none": [
+        "przeczytaj całe repo",
+        "wczytaj całe repo do kontekstu",
+        "read the (whole|entire) repo",
+        "load the (whole|entire) repo into (the )?context"
+      ]
+    }
+  },
+  {
    "id": "standardy-z-kodu",
    "expect": "trigger",
    "prompt": "Chcę wyciągnąć z istniejącego kodu standardy, których zespół faktycznie przestrzega (nazewnictwo, obsługa błędów, testy, API), żeby agent AI pisał nowy kod tak samo. Nikt ich nie spisał. Jak to zrobić, żeby nie wyszła lista życzeń? Odpowiedz zwięźle.",

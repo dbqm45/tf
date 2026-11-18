@@ -30,6 +30,43 @@
       }
     },
     {
+      "id": "idempotencja-backfill-en",
+      "expect": "trigger",
+      "prompt": "A nightly job loads orders into the warehouse incrementally 'since the last run'. After a failure we have duplicates, and after fixing the logic we need to recompute three months. How should we rebuild this? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "idempoten"
+          ],
+          [
+            "partycj",
+            "partition\\w*"
+          ],
+          [
+            "merge|nadpisan\\w+ partycj|overwrite",
+            "overwrit\\w* (the )?partitions?",
+            "insert[- ]overwrite"
+          ],
+          [
+            "backfill|zakres dat|przeliczeni",
+            "date range",
+            "recompute\\w*|reprocess\\w*|recalculat\\w*"
+          ],
+          [
+            "surow\\w+ (kopi|warstw)",
+            "warstw\\w+ surow",
+            "SLA (świeżości|danych)",
+            "zależnoś\\w+[^.]{0,40}danych[^.]{0,30}nie[^.]{0,20}godzin",
+            "czas\\w* zdarzenia[^.]{0,40}przetw",
+            "raw (layer|cop(y|ies)|data)",
+            "(freshness|data) SLA",
+            "event time[^.]{0,40}processing",
+            "depend\\w*[^.]{0,40}data[^.]{0,30}not[^.]{0,20}(clock|hour|time)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "cdc-vs-przyrost",
       "expect": "trigger",
       "prompt": "Przyrostowe ładowanie po kolumnie updated_at z tabeli źródłowej ma luki: ktoś kasuje wiersze, a analitycy widzą je dalej. Czy przejść na CDC i na co uważać? Odpowiedz zwięźle.",

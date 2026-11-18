@@ -20,6 +20,27 @@
       }
     },
     {
+      "id": "adr-prog-en",
+      "expect": "trigger",
+      "prompt": "I'm wondering whether choosing a date-formatting library in our service deserves its own ADR. When should you write an ADR at all, and when should you skip it? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "trudno odwrócić|trudn\\w+ do odwrócenia|nieodwracaln|hard to reverse",
+            "hard to (reverse|undo|change)|difficult to (reverse|undo)|irreversib\\w*|costly to (reverse|change|undo)"
+          ],
+          [
+            "zaskoczy|dlaczego tak|czemu tak|surprise",
+            "surpris\\w*|why (we|did we) (did|chose|do|made) (it |this )?(this way)?|why this way"
+          ],
+          [
+            "prawdziw\\w+ wyb|alternatyw",
+            "real (choice|option|alternative)\\w*|genuine (choice|alternative)\\w*|alternative\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "runbook-struktura",
       "expect": "trigger",
       "prompt": "Piszę runbook do alertu 'kolejka zamówień rośnie'. Jaką strukturę ma mieć każdy wpis, żeby dyżurny o 3 w nocy dał radę? Odpowiedz zwięźle.",

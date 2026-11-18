@@ -43,6 +43,68 @@
       }
     },
     {
+      "id": "wylaczenie-modulu-en",
+      "expect": "trigger",
+      "prompt": "Our old reports module is used by 4% of customers, and maintaining it costs us one full-time employee. We want to shut it down. How do we carry that out? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "go/no-go",
+            "kryteri\\w* decyzji",
+            "decyzj\\w*",
+            "decision criteri\\w*"
+          ],
+          [
+            "komunikat\\w*",
+            "ogłosz\\w*",
+            "powiadom\\w*",
+            "poinformuj\\w*",
+            "communicat\\w*",
+            "announc\\w*",
+            "notif\\w*",
+            "inform\\w*"
+          ],
+          [
+            "harmonogram\\w*",
+            "termin\\w*",
+            "data wyłączenia",
+            "okres przejściow\\w*",
+            "schedules?",
+            "timeline",
+            "deadline",
+            "sunset date",
+            "shut-?down date",
+            "transition (period|window)"
+          ],
+          [
+            "migracj\\w*",
+            "zamiennik\\w*",
+            "alternatyw\\w*",
+            "eksport\\w* danych",
+            "migrat\\w*",
+            "replacements?",
+            "alternatives?",
+            "data export",
+            "export\\w* (of )?(the )?data"
+          ],
+          [
+            "umow\\w*",
+            "SLA",
+            "zobowiąz\\w*",
+            "regulamin\\w*",
+            "contracts?",
+            "obligations?",
+            "terms of (service|use)"
+          ]
+        ],
+        "none": [
+          "wyłącz\\w* (go )?(od razu|natychmiast|bez uprzedzenia)",
+          "(shut|turn|switch)\\w* (it )?(off|down) (immediately|right away|at once|without (notice|warning))",
+          "disabl\\w* (it )?(immediately|right away|without (notice|warning))"
+        ]
+      }
+    },
+    {
       "id": "dojrzaly-produkt",
       "expect": "trigger",
       "prompt": "Nasz główny produkt rośnie coraz wolniej, rynek jest nasycony, a konkurenci tną ceny. Czy dalej inwestować, utrzymywać bez rozwoju, czy wygaszać? Odpowiedz zwięźle.",

@@ -80,7 +80,7 @@
   "offline": "2026-11-18"
  },
  "arch-tech-selection": {
-  "fingerprint": "0e2466be0f9d471f",
+  "fingerprint": "7594fb3d4ed8c1e0",
   "offline": "2026-11-18"
  },
  "arch-threat-modeling": {
@@ -116,7 +116,7 @@
   "offline": "2026-11-18"
  },
  "data-engineering": {
-  "fingerprint": "3c078d2de9977b89",
+  "fingerprint": "d3cc29e89eacefd7",
   "offline": "2026-11-18"
  },
  "ddd-algorithm-recognition": {
@@ -244,7 +244,7 @@
   "offline": "2026-11-18"
  },
  "eng-testing": {
-  "fingerprint": "51a383e236ccd610",
+  "fingerprint": "9faa71fe55cfbe74",
   "offline": "2026-11-18"
  },
  "fe-architecture": {
@@ -312,7 +312,7 @@
   "offline": "2026-11-18"
  },
  "lang-typescript": {
-  "fingerprint": "8be33231090eb0f2",
+  "fingerprint": "95cc50211d6daa22",
   "offline": "2026-11-18"
  },
  "ops-ai-inference": {
@@ -380,7 +380,7 @@
   "offline": "2026-11-18"
  },
  "ops-secrets-identities": {
-  "fingerprint": "904273ab677d6472",
+  "fingerprint": "b6ee3c5dec4131d0",
   "offline": "2026-11-18"
  },
  "ops-security-operations": {
@@ -408,7 +408,7 @@
   "offline": "2026-11-18"
  },
  "pm-product-lifecycle": {
-  "fingerprint": "c9d54f6afdcf5808",
+  "fingerprint": "b264eff5d5fbebd3",
   "offline": "2026-11-18"
  },
  "pm-product-strategy": {
@@ -480,7 +480,7 @@
   "offline": "2026-11-18"
  },
  "qa-spec-first-testing": {
-  "fingerprint": "54c674d313478963",
+  "fingerprint": "babb7049f1d897dc",
   "offline": "2026-11-18"
  },
  "qa-test-design": {

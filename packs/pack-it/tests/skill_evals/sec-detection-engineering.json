@@ -16,6 +16,49 @@
       }
     },
     {
+      "id": "regula-sigma-w-ci-en",
+      "expect": "trigger",
+      "prompt": "I want to write detection rules as code in a repository, in a SIEM-independent format, and check them in CI before deployment. How should I set this up? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "Sigma"
+          ],
+          [
+            "logsource",
+            "detection",
+            "condition"
+          ],
+          [
+            "konwers\\w*",
+            "convert",
+            "pySigma",
+            "sigma-cli",
+            "walidacj\\w*",
+            "lint",
+            "conver\\w*",
+            "validat\\w*"
+          ],
+          [
+            "zdarzeni\\w* testow\\w*",
+            "nagran\\w* zdarze",
+            "symulac\\w*",
+            "test\\w* regu\\w*",
+            "Atomic Red Team",
+            "test (events?|data|cases?)",
+            "recorded events?|event recording\\w*",
+            "simulat\\w*",
+            "(rule )?test\\w*"
+          ]
+        ],
+        "none": [
+          "wystarczy wdrożyć regułę bezpośrednio na produkcyjnym SIEM",
+          "just deploy the rule (directly )?(to|on) (the )?production SIEM",
+          "deploy[^.]{0,30}directly (to|on) (the )?production SIEM"
+        ]
+      }
+    },
+    {
       "id": "pokrycie-attack-i-luki",
       "expect": "trigger",
       "prompt": "Szef pyta, ile technik MITRE ATT&CK pokrywamy naszymi regułami i gdzie są luki. Jak to policzyć uczciwie i zaplanować, co pisać najpierw? Odpowiedz zwięźle.",

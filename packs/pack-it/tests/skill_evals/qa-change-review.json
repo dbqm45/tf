@@ -14,6 +14,18 @@
       }
     },
     {
+      "id": "przeglad-planu-en",
+      "expect": "trigger",
+      "prompt": "The agent prepared a step plan in docs/project/06-delivery/003-eksport.md: 4 phases, 11 files, criteria in the end state. Before it starts coding I want to check whether this plan will work at all. How do I review the plan? Answer briefly.",
+      "checks": {
+        "all": [
+          ["sprzeczn", "spójnoś", "bez fazy", "obietnic", "żadna faza", "contradict\\w*", "consisten\\w*", "coheren\\w*", "no phase", "promises?", "none of the phases"],
+          ["ścieżk\\w* (istnieją|z planu)", "istnien\\w* (plik|ścieżek)", "grep", "plik:linia", "ugruntow", "paths? (exist|from the plan)", "(files?|paths?) exist", "file:line", "ground\\w*", "verif\\w+ (the )?paths?"],
+          ["gotowy", "do poprawy", "do przemyślenia", "werdykt", "ready", "needs? (fixing|work|rework|rethinking)", "to (fix|rework|rethink)", "verdict"]
+        ]
+      }
+    },
+    {
       "id": "implementacja-vs-plan",
       "expect": "trigger",
       "prompt": "Agent skończył implementację według planu kroku. W diffie widzę pliki, których w planie nie było, i chyba brakuje jednej zaplanowanej migracji. Jak systematycznie sprawdzić implementację względem planu przed scaleniem? Odpowiedz zwięźle.",

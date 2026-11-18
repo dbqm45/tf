@@ -17,6 +17,46 @@
       }
     },
     {
+      "id": "blueprint-zwrot-towaru-en",
+      "expect": "trigger",
+      "prompt": "Customers of an online shop complain about returns: the online form, courier, warehouse, customer service and accounting each do their own thing and nobody sees the whole. How do I draw a service blueprint of this process and what must it contain? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "frontstage|front stage|widoczn\\w+ dla klienta",
+            "visible to (the )?customer"
+          ],
+          [
+            "backstage|back stage|niewidoczn",
+            "invisible|not visible|hidden from (the )?customer"
+          ],
+          [
+            "linia (widoczności|interakcji)|line of (visibility|interaction)",
+            "(visibility|interaction) line"
+          ],
+          [
+            "procesy wspierające|support process|dowody|evidence"
+          ],
+          [
+            "zdarzeni\\w* (otwier|zamyk)",
+            "od zdarzenia",
+            "concierge",
+            "wskaźnik\\w* ukończ",
+            "service-blueprint\\.md",
+            "(opening|closing) events?",
+            "(open|clos)\\w* with (an |the )?event",
+            "from (the )?event",
+            "(completion|done) (indicator|metric|criteria)\\w*"
+          ]
+        ],
+        "none": [
+          "tylko (jeden )?ekran|wystarczy makieta formularza",
+          "only (one )?screen",
+          "(a )?(form )?mock-?up (of the form )?(is )?(enough|sufficient)"
+        ]
+      }
+    },
+    {
       "id": "prototyp-uslugi-bez-kodu",
       "expect": "trigger",
       "prompt": "Urząd gminy chce wprowadzić nową usługę: wniosek o dodatek składany online, telefonicznie i w okienku. Jak to sprawdzić z mieszkańcami, zanim zbudujemy system? Odpowiedz zwięźle.",

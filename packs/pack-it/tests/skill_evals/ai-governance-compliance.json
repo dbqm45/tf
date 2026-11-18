@@ -18,6 +18,22 @@
       }
     },
     {
+      "id": "rekrutacja-cv-klasyfikacja-en",
+      "expect": "trigger",
+      "prompt": "We bought a tool from an external vendor that scores and ranks candidates’ CVs, and we’re rolling it out in our company in the EU. How should this be classified under the AI Act and what are our obligations? Answer briefly.",
+      "checks": {
+        "all": [
+          ["wysok\\w* ryzyk", "high-risk", "high[- ]risk"],
+          ["załącznik\\w* III", "annex III"],
+          ["podmiot\\w* stosując", "deployer", "użytkownik\\w* systemu"],
+          ["nadzór\\w* człowiek", "human oversight", "nadzór\\w* ludzk", "nadzor\\w* ludzk"],
+          ["nie jest\\w* porad\\w* prawn", "prawnik", "radc\\w* prawn", "inspektor", "not legal advice|legal (advice|counsel)|lawyer|attorney|data protection officer|\\bDPO\\b|compliance officer"],
+          ["klasyfikacj\\w* robocz", "robocz\\w*.{0,40}nie (jest )?porad", "wstępn\\w* .{0,20}robocz", "working classification", "(preliminary|provisional|draft|working) (classification|assessment)", "(draft|working|preliminary).{0,40}not (a )?(formal )?legal advice"]
+        ],
+        "none": ["AI Act nie dotyczy", "AI Act (does not|doesn'?t) apply"]
+      }
+    },
+    {
       "id": "chatbot-terminy",
       "expect": "trigger",
       "prompt": "Mamy chatbota obsługi klienta na modelu od zewnętrznego dostawcy i generujemy w nim obrazy do kampanii. Które obowiązki AI Act nas dotyczą i od kiedy? Odpowiedz zwięźle.",

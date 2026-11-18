@@ -33,6 +33,51 @@
       }
     },
     {
+      "id": "spring-boot-java-en",
+      "expect": "trigger",
+      "prompt": "In pom.xml we have Spring Boot 2.7 and Java 11; we’ve been tasked with upgrading to Spring Boot 3.5 and Java 21. How do we plan and carry this out safely? Answer briefly.",
+      "files": {
+        "pom.xml": "<project>\n  <parent>\n    <groupId>org.springframework.boot</groupId>\n    <artifactId>spring-boot-starter-parent</artifactId>\n    <version>2.7.18</version>\n  </parent>\n  <properties>\n    <java.version>11</java.version>\n  </properties>\n</project>\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "OpenRewrite",
+            "rewrite"
+          ],
+          [
+            "jakarta"
+          ],
+          [
+            "krok",
+            "etap",
+            "po kolei",
+            "najpierw",
+            "step\\w*",
+            "stage\\w*",
+            "phase\\w*",
+            "one (at a time|by one)",
+            "first",
+            "incremental\\w*"
+          ],
+          [
+            "11 ?→ ?17|17[^.]{0,40}warunek|najpierw (na |do )?(Jav\\w* )?17",
+            "11 ?(→|->|to) ?17",
+            "17[^.]{0,40}(prerequisite|requirement|required|must)",
+            "(Java )?17 first",
+            "first (to |on )?(Java )?17"
+          ],
+          [
+            "dryRun|dry-run|testy charakteryzuj|ostrzeże\\w*[^.]{0,30}deprecj",
+            "dry ?run",
+            "characteri[sz]ation tests?",
+            "warning\\w*[^.]{0,30}deprecat\\w*",
+            "deprecat\\w*[^.]{0,30}warning\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "zalew-pr",
       "expect": "trigger",
       "prompt": "Mamy 40 repozytoriów i od roku nikt nie aktualizuje w nich zależności. Jak ustawić regularne aktualizacje w Renovate albo Dependabocie, żeby nie zalały nas pull requesty? Odpowiedz zwięźle.",

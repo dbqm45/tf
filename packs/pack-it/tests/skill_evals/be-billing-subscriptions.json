@@ -29,6 +29,41 @@
       }
     },
     {
+      "id": "zmiana-planu-proporcjonalnie-en",
+      "expect": "trigger",
+      "prompt": "In the middle of a monthly period, a customer switches from the Basic plan to Pro in our SaaS. How should this be billed and what should we design in the subscription code? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "proporcjonaln\\w*|prorat\\w*",
+            "proportion\\w*|pro[- ]rata"
+          ],
+          [
+            "okres\\w*",
+            "period\\w*|cycle"
+          ],
+          [
+            "faktur\\w*",
+            "invoice\\w*|credit note"
+          ],
+          [
+            "idempotent\\w*|webhook\\w*|zdarze\\w*",
+            "events?\\b"
+          ],
+          [
+            "cen\\w* (jest )?(niezmienn|wersjonowan)",
+            "wersjonowan\\w* cen",
+            "regulamin\\w*",
+            "immutable price",
+            "(immutable|versioned) pric\\w*",
+            "price (is |are )?(immutable|versioned)",
+            "price versioning",
+            "terms( of service)?|terms and conditions"
+          ]
+        ]
+      }
+    },
+    {
       "id": "nieudana-platnosc-webhook",
       "expect": "trigger",
       "prompt": "Odnowienie subskrypcji się nie udało — karta odrzucona. Dostawca płatności przysłał webhook dwa razy. Jak obsłużyć to po naszej stronie? Odpowiedz zwięźle.",

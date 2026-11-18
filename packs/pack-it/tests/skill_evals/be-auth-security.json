@@ -37,6 +37,44 @@
       }
     },
     {
+      "id": "rotacja-refresh-en",
+      "expect": "trigger",
+      "prompt": "We have an SPA and an API with refresh tokens. How should we rotate them, and what should we do when someone uses an old refresh token a second time? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "rotacj",
+            "rotat"
+          ],
+          [
+            "ponown\\w* użyci",
+            "reuse",
+            "zużyt",
+            "already used",
+            "replay",
+            "re-?used",
+            "second use",
+            "used (a )?(second time|twice)"
+          ],
+          [
+            "rodzin",
+            "family",
+            "wszystk\\w* (token|sesj)",
+            "unieważni",
+            "revoke"
+          ],
+          [
+            "DPoP",
+            "DBSC",
+            "wiąż\\w* token",
+            "powiąz\\w* token\\w* z (urządzeni|klucz)",
+            "device.?bound",
+            "sender.?constrain"
+          ]
+        ]
+      }
+    },
+    {
       "id": "mfa-nie-wystarcza",
       "expect": "trigger",
       "prompt": "Audyt pokazał, że konta z włączonym MFA i tak są przejmowane. Co jeszcze zabezpieczyć w sesjach i OAuth? Odpowiedz zwięźle.",

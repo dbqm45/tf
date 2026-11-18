@@ -25,6 +25,33 @@
       }
     },
     {
+      "id": "actions-hardening-en",
+      "expect": "trigger",
+      "prompt": "I’m reviewing a GitHub Actions workflow that, on pull_request_target, builds code from a fork and inserts ${{ github.event.pull_request.title }} directly into a run step. What’s wrong here and how do I secure it? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "env:",
+            "przez env|zmienn\\w+ środowiskow",
+            "via env",
+            "environment variables?",
+            "intermediate env"
+          ],
+          [
+            "pull_request_target"
+          ],
+          [
+            "sha",
+            "permissions"
+          ],
+          [
+            "harden-runner|ruch\\w* wychodz|egress",
+            "outbound (traffic|network|connections?)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "npm-publish",
       "expect": "trigger",
       "prompt": "Nasz pipeline publikuje paczkę npm tokenem trzymanym w sekrecie GitHub, a zależności instaluje w tym samym jobie. Jak to ułożyć bezpieczniej? Odpowiedz zwięźle.",

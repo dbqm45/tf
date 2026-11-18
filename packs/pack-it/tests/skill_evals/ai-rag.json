@@ -31,6 +31,43 @@
       }
     },
     {
+      "id": "baza-wiedzy-rag-czy-kontekst-en",
+      "expect": "trigger",
+      "prompt": "We have 300 pages of company policies and procedures in PDFs and want a chatbot that answers employees with citations. Should we do RAG, put everything into a long context, or fine-tune the model? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "200[ .,]?000 token",
+            "200 tys\\.? token",
+            "500 stron",
+            "mieści się w (kontek|oknie)",
+            "200[ ,.]?000 tokens?",
+            "200k tokens?",
+            "500 pages",
+            "fits (in|into) (the )?(context|window)"
+          ],
+          [
+            "prompt caching",
+            "cache\\w* prompt",
+            "buforowan\\w* prompt",
+            "cache'owan",
+            "cach\\w* (the )?prompt"
+          ],
+          [
+            "fine-tuning",
+            "dotrenowan\\w*[^.]{0,80}(styl|format|zachowan)",
+            "nie (uczy|wstrzykuje) wiedzy",
+            "fine-?tun\\w*[^.]{0,80}(style|format|behaviou?r)",
+            "(does ?n.t|does not) (teach|inject|add) (new )?(knowledge|facts)"
+          ]
+        ],
+        "none": [
+          "dotrenuj model na dokumentach, żeby (zapamiętał|nauczył się) fakt",
+          "fine-?tune the model on (the )?documents so (it|that)[^.]{0,20}(memori[sz]e|learn)"
+        ]
+      }
+    },
+    {
       "id": "slabe-wyszukiwanie-kody-bledow",
       "expect": "trigger",
       "prompt": "Nasz RAG po polsku świetnie radzi sobie z pytaniami opisowymi, ale przy zapytaniach o konkretne kody błędów (np. ERR-4012) i numery paragrafów zwraca bzdury. Jak to naprawić? Odpowiedz zwięźle.",

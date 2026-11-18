@@ -16,6 +16,20 @@
       }
     },
     {
+      "id": "hook-po-edycji-ts-en",
+      "expect": "trigger",
+      "prompt": "I want ESLint --fix and the tests related to that file to run automatically in my TypeScript project after every file edit by Claude Code, with the error returned to the agent so it fixes it itself. How do I set that up? Answer briefly.",
+      "checks": {
+        "all": [
+          ["PostToolUse"],
+          ["vitest related", "findRelatedTests"],
+          ["exit\\s*2", "kod\\w* (wyjścia )?2", "decision.{0,20}block", "exit\\s*(code\\s*)?2"],
+          ["post_edit_checks", "quality-gates\\.example", "dry-run", "nieużywan\\w* import", "unused imports?"]
+        ],
+        "none": ["--no-verify"]
+      }
+    },
+    {
       "id": "warstwy-sprawdzen",
       "expect": "trigger",
       "prompt": "Lint, sprawdzanie typów i testy uruchamiamy dziś tylko w CI i czekamy 20 minut na informację. Co przenieść na maszynę programisty — po edycji, przed commitem, przed pushem — żeby commit nie trwał minut? Odpowiedz zwięźle.",

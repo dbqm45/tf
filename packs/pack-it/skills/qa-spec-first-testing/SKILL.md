@@ -4,7 +4,7 @@ description: Use when tests must check the requirement, not the implementation �
 metadata:
   review: "2027-10-09"
   catalog: "Use whenever writing tests — how to make a test check the REQUIREMENT instead of duplicating the implementation (an oracle independent of the code, TDD/ATDD, clean-room, a discrepancy protocol, characterization, mutation and property-based tests). Not for test-case selection techniques (qa-test-design), formal verification (qa-formal-methods) or tool syntax (tool-*)."
-  keywords: "test ze specyfikacji pada, zmienić oczekiwaną wartość w teście, poprawić test pod kod, test czy kod, wyrocznia testu, zgłoszony błąd, testy do poprawki błędu, przykład ze zgłoszenia, próg nie działa, dokładnie na progu, jakie przypadki dodać do poprawki, a spec-based test fails, change the expected value in a test, fix the test to match the code, test or code, test oracle, reported bug, tests for a bug fix, example from the report, threshold does not work, exactly at the threshold, which cases to add for a fix"
+  keywords: "test ze specyfikacji pada, zmienić oczekiwaną wartość w teście, poprawić test pod kod, test czy kod, wyrocznia testu, zgłoszony błąd, testy do poprawki błędu, przykład ze zgłoszenia, próg nie działa, dokładnie na progu, jakie przypadki dodać do poprawki, a spec-based test fails, change the expected value in a test, fix the test to match the code, test or code, test oracle, reported bug, tests for a bug fix, example from the report, threshold does not work, exactly at the threshold, which cases to add for a fix, generate unit tests from the code, AI-generated tests, expected values, tests from implementation, oracle problem"
 ---
 
 # Tests from the specification, not from the implementation

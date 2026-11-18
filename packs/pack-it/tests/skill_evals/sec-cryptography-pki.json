@@ -31,6 +31,39 @@
    }
   },
   {
+   "id": "szyfrowanie-pii-kms-en",
+   "expect": "trigger",
+   "prompt": "We have PESEL numbers (Polish national ID numbers) and document numbers in the database and we want to encrypt them at the field level. Which algorithm, how should we store the keys and how do we rotate them? Answer briefly.",
+   "checks": {
+    "all": [
+     [
+      "AES-256-GCM|AES-GCM|ChaCha20-Poly1305|AEAD"
+     ],
+     [
+      "kopert\\w*|envelope|DEK|KEK"
+     ],
+     [
+      "KMS|HSM"
+     ],
+     [
+      "nonce|IV|wektor inicjuj"
+     ],
+     [
+      "DEK[^.]{0,60}kompromit",
+      "kompromit[^.]{0,60}DEK",
+      "compromi[sz]\\w*[^.]{0,60}DEK",
+      "DEK[^.]{0,60}compromi[sz]\\w*"
+     ]
+    ],
+    "none": [
+     "AES-ECB jest bezpieczny",
+     "własny algorytm szyfrowania",
+     "AES-ECB (is|are) (safe|secure|fine)",
+     "(use|choose) (a |your )?(own|custom|homegrown) encryption algorithm"
+    ]
+   }
+  },
+  {
    "id": "migracja-postkwantowa",
    "expect": "trigger",
    "prompt": "Zarząd pyta o kryptografię postkwantową. Od czego zacząć w firmie, co się dzieje z RSA i ECC i jakie są terminy? Odpowiedz zwięźle.",

@@ -34,6 +34,40 @@
       }
     },
     {
+      "id": "acl-platnosci-en",
+      "expect": "trigger",
+      "prompt": "We have a Sales context (core) and an external payment system with its own poor model. How should we set up the relationship between them on the context map so the foreign model doesn't leak into ours? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "ACL",
+            "anti-corruption",
+            "antykorupcyjn"
+          ],
+          [
+            "conformist",
+            "konformi"
+          ],
+          [
+            "upstream",
+            "downstream"
+          ],
+          [
+            "conformi\\w*[^.]{0,120}(język|core|rdzen|rdzeń)",
+            "(core|rdzen|rdzeń|język)[^.]{0,80}conformi",
+            "conform\\w*[^.]{0,120}(language|core)",
+            "(core|language)[^.]{0,80}conform"
+          ],
+          [
+            "dependency-cruiser|no-restricted-imports|ArchUnit",
+            "\\brg -l\\b|grep[^.]{0,60}adapter",
+            "context-map\\.md",
+            "connascence"
+          ]
+        ]
+      }
+    },
+    {
       "id": "event-carried-state",
       "expect": "trigger",
       "prompt": "Zamówienia mają publikować zdarzenie dla Magazynu i Rozliczeń, które potrzebują lokalnej kopii danych, żeby działać, gdy Zamówienia leżą. Co powinno być w zdarzeniu i jak odbiorcy mają je obsługiwać? Odpowiedz zwięźle.",

@@ -29,6 +29,40 @@
       }
     },
     {
+      "id": "nowy-skill-terraform-en",
+      "expect": "trigger",
+      "prompt": "I want to add a new skill about MongoDB database migrations to the factory. Where do I start and how do I check that it really works before handing it over? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "scenariusz",
+            "ewaluacj",
+            "eval",
+            "scenario\\w*",
+            "evaluation\\w*"
+          ],
+          [
+            "skill_gate",
+            "bramk",
+            "gate"
+          ],
+          [
+            "no-trigger",
+            "sąsiad",
+            "sasiad",
+            "granic",
+            "neighbou?r\\w*",
+            "boundar\\w*",
+            "does not trigger"
+          ]
+        ],
+        "none": [
+          "najpierw napisz (całą|pełną) treść SKILL\\.md",
+          "write (the )?(whole|full|entire) SKILL\\.md (content )?first"
+        ]
+      }
+    },
+    {
       "id": "skill-sie-nie-uruchamia",
       "expect": "trigger",
       "prompt": "Napisałem skill do fabryki, ale model go nie wczytuje, a odpowiada z głowy. Jak to poprawić i jak udowodnić, że po poprawce jest lepiej? Odpowiedz zwięźle.",

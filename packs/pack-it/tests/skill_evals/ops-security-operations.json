@@ -28,6 +28,40 @@
    }
   },
   {
+   "id": "przejete-konto-en",
+   "expect": "trigger",
+   "prompt": "A SIEM alert showed that an administrator account logged in from a new country and created an API token. How do we handle the incident step by step before we shut down the machine and the account? Answer briefly.",
+   "checks": {
+    "all": [
+     [
+      "dowod",
+      "dowód",
+      "migawk",
+      "snapshot",
+      "pamięć",
+      "pamięci",
+      "evidence",
+      "memory",
+      "forensic\\w*",
+      "disk image"
+     ],
+     [
+      "containment",
+      "ograniczen",
+      "contain\\w*",
+      "isolat\\w*"
+     ],
+     [
+      "łańcuch dowodow",
+      "chain of custody",
+      "zakres",
+      "scope",
+      "blast radius"
+     ]
+    ]
+   }
+  },
+  {
    "id": "terminy-zgloszen",
    "expect": "trigger",
    "prompt": "W naszej firmie doszło do wycieku danych osobowych klientów. W jakich terminach trzeba to zgłosić i kto przygotowuje zgłoszenie? Zakładamy, że podlegamy też NIS2. Odpowiedz zwięźle.",

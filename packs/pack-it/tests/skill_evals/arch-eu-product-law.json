@@ -35,6 +35,46 @@
       }
     },
     {
+      "id": "mapa-przepisow-saas-ai-en",
+      "expect": "trigger",
+      "prompt": "We're building a SaaS for businesses in Poland with an AI assistant that generates reports from customer data. Which EU regulations apply to us as a software producer, and from when? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "AI Act|2024/1689|art\\. 50|przejrzystoś\\w*",
+            "transparency"
+          ],
+          [
+            "PLD|2024/2853|odpowiedzialnoś\\w* za produkt",
+            "product liability"
+          ],
+          [
+            "Data Act|2023/2854|zmian\\w* dostawcy",
+            "switching"
+          ],
+          [
+            "prawnik\\w*|nie jest porad\\w*|porad\\w* prawn\\w*",
+            "lawyer|legal advice|counsel"
+          ],
+          [
+            "20\\d\\d"
+          ],
+          [
+            "\\[(wtórne|niezweryfikowane|secondary|unverified)\\]",
+            "źród\\w+ wtórn",
+            "UC163",
+            "secondary sources?"
+          ],
+          [
+            "dostawc\\w+ usług\\w* przetwarzania danych",
+            "rol\\w+ .{0,30}(dostawc|podmiot\\w* stosuj)",
+            "data processing service provider",
+            "roles?.{0,30}(provider|deployer)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "zmiana-dostawcy-saas",
       "expect": "trigger",
       "prompt": "Klient biznesowy chce przenieść wszystkie dane z naszego SaaS do konkurencji i pyta, ile zapłaci za eksport i transfer danych. Co mówi o tym prawo UE? Odpowiedz zwięźle.",

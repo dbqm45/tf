@@ -30,6 +30,40 @@
       }
     },
     {
+      "id": "karencja-wersji-en",
+      "expect": "trigger",
+      "prompt": "How do I configure pnpm and npm so that the project doesn't install freshly published package versions that might be malicious? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "minimumReleaseAge",
+            "min-release-age",
+            "npmMinimalAgeGate"
+          ],
+          [
+            "dni|dzień|minut|1440|4320|\\b3\\b",
+            "days?|minutes?|1440|4320"
+          ],
+          [
+            "wyjątk",
+            "exclude",
+            "łatk",
+            "exceptions?",
+            "exclu\\w+",
+            "patch\\w*"
+          ],
+          [
+            "(1|jeden)[–-]3 dni",
+            "w ciągu (kilku )?godzin",
+            "axios",
+            "allowBuilds",
+            "(1|one|2|3)[–-]3 days",
+            "within (a few )?hours"
+          ]
+        ]
+      }
+    },
+    {
       "id": "skompromitowana-paczka",
       "expect": "trigger",
       "prompt": "Dostaliśmy ostrzeżenie, że paczka z naszych zależności npm została przejęta i opublikowano złośliwą wersję z postinstall. Co robimy krok po kroku? Odpowiedz zwięźle.",

@@ -23,6 +23,33 @@
       }
     },
     {
+      "id": "interpunkcja-nie-en",
+      "expect": "trigger",
+      "prompt": "Check the punctuation and spelling: „Uruchamiając skrypt pojawił się błąd, ilość plików była mała a nie działający test blokował deployment.” Give the corrections with a justification. Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "imiesłów",
+            "ten sam podmiot",
+            "podmiot",
+            "participle",
+            "same subject",
+            "subject",
+            "dangling"
+          ],
+          [
+            "liczba\\s+plików",
+            "policzaln",
+            "countable",
+            "number of files"
+          ],
+          [
+            "niedziałając"
+          ]
+        ]
+      }
+    },
+    {
       "id": "kalki",
       "expect": "trigger",
       "prompt": "Piszę README po polsku. Czy „adresujemy problem”, „dedykowany moduł” i „wspieramy format JSON” są poprawne? Jak to zapisać? Odpowiedz zwięźle.",

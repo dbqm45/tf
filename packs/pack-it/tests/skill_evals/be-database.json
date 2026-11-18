@@ -35,6 +35,43 @@
       }
     },
     {
+      "id": "zmiana-nazwy-kolumny-en",
+      "expect": "trigger",
+      "prompt": "I want to rename the users.fullname column to display_name in PostgreSQL. The table has 80 million rows, and we deploy with zero downtime. How do I do it safely? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "expand",
+            "rozszerz\\w*.*(migr|kontrakt)",
+            "dodaj\\w* now\\w* kolumn",
+            "expand[- /]contract",
+            "add\\w* (a )?new column"
+          ],
+          [
+            "partiami",
+            "w partiach",
+            "batch",
+            "partii",
+            "paczk",
+            "porcj"
+          ],
+          [
+            "osobn\\w* wydani",
+            "kolejn\\w* wydani",
+            "separate release",
+            "later release",
+            "wstecznie kompat",
+            "backward",
+            "osobnych wydani",
+            "wydanie [A-C1-3]\\b",
+            "wydani\\w* (aplikacji )?[A-C1-3]\\b",
+            "(next|following|subsequent) (release|deploy\\w*)",
+            "backward[- ]compatible"
+          ]
+        ]
+      }
+    },
+    {
       "id": "masowy-update-wersja",
       "expect": "trigger",
       "prompt": "Aktualizuję 500 wierszy naraz z optymistycznym blokowaniem po kolumnie version. Jak zrobić masowy UPDATE i wykryć konflikt? Odpowiedz zwięźle.",

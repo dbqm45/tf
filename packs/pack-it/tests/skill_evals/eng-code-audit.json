@@ -23,6 +23,31 @@
       }
     },
     {
+      "id": "pelny-audyt-tanio-en",
+      "expect": "trigger",
+      "prompt": "I want a full code audit of our SaaS application: architecture, security, quality, accessibility and EU legal compliance. How do I organize it with agents so as not to burn the budget? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "budżet|limit koszt|koszt.{0,40}z góry|głębokoś\\w*",
+            "budget|cost (limit|cap|ceiling)|depth|up ?front"
+          ],
+          [
+            "tani\\w* (skan|model)|haiku|scout|najpierw.{0,40}(CLI|narzędzi|skan)",
+            "cheap\\w* (scan|model)|haiku|scout|first.{0,40}(CLI|tool|scan)"
+          ],
+          [
+            "równoleg|jednej wiadomości|osobn\\w+ wykonawc",
+            "parallel|single message|one message|separate (executors?|workers?|agents?|subagents?)"
+          ],
+          [
+            "ranking|scal\\w*|duplikat",
+            "ranking|merg\\w*|dedup\\w*|duplicate"
+          ]
+        ]
+      }
+    },
+    {
       "id": "scalenie-ustalen",
       "expect": "trigger",
       "prompt": "Mam raporty z audytu kodu od pięciu agentów (architektura, bezpieczeństwo, dostępność, testy, dług) i część ustaleń się powtarza. Jak złożyć z tego jeden raport audytu, któremu zespół zaufa? Odpowiedz zwięźle.",

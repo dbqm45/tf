@@ -26,6 +26,34 @@
       }
     },
     {
+      "id": "konfiguracja-9-en",
+      "expect": "trigger",
+      "prompt": "In pyproject.toml we have a [tool.pytest.ini_options] section, and we're moving to pytest 9.1. What should we change in the configuration and how do we enable strict mode? Answer briefly.",
+      "files": {
+        "pyproject.toml": "[project]\nname = \"rezerwacje\"\nrequires-python = \">=3.12\"\n\n[tool.pytest.ini_options]\naddopts = \"-ra\"\ntestpaths = [\"tests\"]\nmarkers = [\"slow: wolne testy\"]\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "\\[tool\\.pytest\\]"
+          ],
+          [
+            "strict\\s*=\\s*true"
+          ],
+          [
+            "zablokowan\\w* wersj",
+            "lockfile",
+            "PytestRemovedIn9",
+            "przyszłe wersje",
+            "pinned versions?",
+            "lock\\w*",
+            "pin\\w*",
+            "future versions?"
+          ]
+        ]
+      }
+    },
+    {
       "id": "powielone-testy",
       "expect": "trigger",
       "prompt": "W tests/test_discount.py (pytest 9) mam dwanaście kopii tego samego testu z różnymi kwotami i ręcznie tworzę katalogi tymczasowe przez tempfile. Jak to uprościć? Odpowiedz zwięźle.",

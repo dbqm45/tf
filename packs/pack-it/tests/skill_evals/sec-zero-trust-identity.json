@@ -17,6 +17,21 @@
       }
     },
     {
+      "id": "zt-zamiast-vpn-en",
+      "expect": "trigger",
+      "prompt": "Management wants to implement Zero Trust and get rid of the VPN. How should we understand this and how do we plan the migration step by step? Answer briefly.",
+      "checks": {
+        "all": [
+          ["800-207"],
+          ["ZTNA"],
+          ["PDP|PEP|policy decision|policy enforcement|punkt\\w* decyzji|punkt\\w* egzekucji"],
+          ["etap\\w*|faz\\w*|krok\\w*|roadmap\\w*", "stages?", "phases?", "steps?", "roadmaps?"],
+          ["powierzchni\\w* ochrony", "protect surface", "protect surfaces"]
+        ],
+        "none": ["Zero Trust to produkt, który się kupuje", "Zero Trust is a product"]
+      }
+    },
+    {
       "id": "mfa-odporne-na-phishing",
       "expect": "trigger",
       "prompt": "Pracownicy dają się nabrać na phishing mimo MFA z SMS-em i kodami push. Jakie uwierzytelnianie wybrać, żeby to zatrzymać, i co z kontami uprzywilejowanymi? Odpowiedz zwięźle.",

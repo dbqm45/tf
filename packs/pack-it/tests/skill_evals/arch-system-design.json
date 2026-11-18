@@ -33,6 +33,45 @@
       }
     },
     {
+      "id": "skracacz-szacunki-en",
+      "expect": "trigger",
+      "prompt": "I'm designing a link shortener: 100 million new links per month, 100 times more reads than writes. Estimate the traffic and capacity and tell me where to start the design. Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "2[,.]5 ?mln",
+            "86 ?400",
+            "~ ?40 ?(zapis|żąd|req|write)",
+            "40 (zapis|żąd|req|write)\\w*/ ?s",
+            "2[,.]5 ?(m|million)\\b",
+            "~ ?40 ?(writes?|req\\w*)",
+            "40 (writes?|req\\w*)(/| per )s"
+          ],
+          [
+            "base ?62",
+            "licznik",
+            "counter",
+            "hasz",
+            "kolizj",
+            "collision",
+            "identyfikator",
+            "hash\\w*",
+            "identifier"
+          ],
+          [
+            "replik",
+            "cache",
+            "pamięć podręczn",
+            "read-heavy",
+            "dominuj\\w* odczyt",
+            "replica",
+            "caching",
+            "reads? dominat\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "dostepnosc-szeregowa",
       "expect": "trigger",
       "prompt": "Moja usługa wywołuje synchronicznie trzy inne, każda ma SLA 99,9%. Jaką dostępność realnie mogę obiecać i jak ją poprawić? Odpowiedz zwięźle.",

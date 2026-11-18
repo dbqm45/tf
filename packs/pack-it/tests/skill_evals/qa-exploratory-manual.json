@@ -25,6 +25,30 @@
       }
     },
     {
+      "id": "karta-sesji-en",
+      "expect": "trigger",
+      "prompt": "We have a new room booking form in the sprint and I want to run exploratory testing in sessions. How should I word the session charter, how long should one session last and what should I write in the notes? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "45\\s*[–-]\\s*90",
+            "45.{0,12}90",
+            "45\\s*(to|-|–)\\s*90 ?min"
+          ],
+          [
+            "przy użyciu",
+            "aby odkryć",
+            "to discover",
+            "explore .{0,40}with"
+          ],
+          [
+            "pytani",
+            "questions"
+          ]
+        ]
+      }
+    },
+    {
       "id": "zgloszenie-defektu",
       "expect": "trigger",
       "prompt": "Znalazłem błąd: rabat 5% nie jest naliczany dla dokładnie 10 sztuk. Jak napisać zgłoszenie defektu, żeby deweloper nie musiał dopytywać? Jakie pola i jakie zasady? Odpowiedz zwięźle.",

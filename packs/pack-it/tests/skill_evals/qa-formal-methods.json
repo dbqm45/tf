@@ -43,6 +43,60 @@
       }
     },
     {
+      "id": "fm-podwojna-rezerwacja-en",
+      "expect": "trigger",
+      "prompt": "We have a seat reservation system: two services can book the last seat at the same time, we have optimistic locks and retries after a timeout. Integration tests pass, but in production a double booking happens once every few weeks. How do we systematically check whether the protocol design itself is correct before we start patching code? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "TLA\\+",
+            "PlusCal",
+            "Alloy"
+          ],
+          [
+            "TLC",
+            "Apalache",
+            "model[- ]check\\w*"
+          ],
+          [
+            "kontrprzykład\\w*",
+            "counterexample",
+            "ślad\\w* (błędu|naruszenia)",
+            "counter-?example\\w*",
+            "(error|violation|failure) trace",
+            "trace of (the )?(error|violation)"
+          ],
+          [
+            "AC-\\d",
+            "AC-n",
+            "test\\w* akceptac\\w*",
+            "test\\w* regresyjn\\w*",
+            "acceptance test\\w*",
+            "regression test\\w*"
+          ],
+          [
+            "granic\\w* modelu",
+            "liczb\\w* (procesów|serwisów|węzłów|uczestników)",
+            "mał\\w* model\\w*",
+            "w tym modelu",
+            "nie (jest )?dow[óo]d\\w* dla produkcji",
+            "rozmiar\\w* modelu",
+            "model (bounds?|size|limits?)",
+            "bounded",
+            "number of (processes|services|nodes|participants|clients)",
+            "small model",
+            "(limits?|bounds?|scope) of the model",
+            "(not|no) proof[^.]{0,30}production"
+          ]
+        ],
+        "none": [
+          "wystarczą testy integracyjne",
+          "integration tests (are )?(enough|sufficient)",
+          "integration tests suffice"
+        ]
+      }
+    },
+    {
       "id": "fm-caly-modul-fakturowania",
       "expect": "trigger",
       "prompt": "Architekt chce, żebyśmy weryfikowali formalnie cały nowy moduł fakturowania. Zespół nie zna TLA+ ani Dafny. Czy to ma sens i jak wybrać, co weryfikować formalnie, a co wystarczy przetestować? Odpowiedz zwięźle.",

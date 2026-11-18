@@ -15,6 +15,19 @@
       }
     },
     {
+      "id": "dry-przypadkowe-en",
+      "expect": "trigger",
+      "prompt": "Two functions in my code look almost the same: one calculates a discount, the other formats a price in an export. Should I extract a shared abstraction in the name of DRY? Answer briefly.",
+      "checks": {
+        "all": [
+          ["wiedz\\w+ biznesow|ta sama wiedza|przypadkow\\w+ podobień|przypadkow\\w+ podobn", "business knowledge", "same knowledge", "(accidental|coincidental) (similarit\\w+|duplicat\\w+)"],
+          ["reguła trzech|AHA|trzeci przypadek|trzech", "rule of three", "AHA", "third (case|occurrence|instance|use)", "three"],
+          ["duplikacja.{0,40}tańsz", "tańsz\\w+ niż zła abstrakcja", "zła abstrakcja", "gorsze niż dwie", "kosztuje więcej niż dwie", "(KISS|YAGNI)[^.]{0,30}(>|przeważa|wygrywa|ważniejsz|nad)[^.]{0,10}DRY", "duplication[^.]{0,40}cheaper", "cheaper than (a )?(the )?wrong abstraction", "wrong abstraction", "worse than (two|duplicat)", "costs more than (two|duplicat)"],
+          ["(KISS|YAGNI)[^.]{0,30}(>|przeważa|wygrywa|ważniejsz)[^.]{0,15}DRY", "DRY[^.]{0,30}(ustępuje|przegrywa)", "DRY[^.]{0,20}(jednak )?wygrywa[^.]{0,60}wiedz", "(KISS|YAGNI)[^.]{0,30}(>|outweighs?|beats?|wins?|trumps?|over|more important)[^.]{0,15}DRY", "DRY[^.]{0,30}(yields?|loses|gives way)", "DRY[^.]{0,20}(still )?wins[^.]{0,60}knowledge"]
+        ]
+      }
+    },
+    {
       "id": "tell-dont-ask",
       "expect": "trigger",
       "prompt": "Review: widzę if (konto.getSaldo() >= kwota) konto.setSaldo(konto.getSaldo() - kwota). Jaką zasadę to narusza i czy mam usunąć wszystkie gettery? Odpowiedz zwięźle.",

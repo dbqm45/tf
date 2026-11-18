@@ -44,6 +44,63 @@
       }
     },
     {
+      "id": "wiedza-czy-finetuning-en",
+      "expect": "trigger",
+      "prompt": "Our bot makes up details of our tariffs and terms and conditions. The boss wants to fine-tune the model on all the documentation so that it “learns” the company. Does that make sense and what should we do first? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "rag",
+            "retrieval",
+            "wyszukiwani\\w+ (w )?(dokument|kontekst|fragment)"
+          ],
+          [
+            "format",
+            "styl",
+            "ton",
+            "wąsk\\w+ zadani",
+            "narrow \\w*task"
+          ],
+          [
+            "prompt\\w*.{0,60}(najpierw|pierwsz)",
+            "drabin\\w+",
+            "najpierw.{0,40}prompt",
+            "kolejność",
+            "z dowodem",
+            "najtańsz\\w+ (szczeb|krok)",
+            "prompt\\w*.{0,60}(first|before)",
+            "ladder",
+            "first.{0,40}prompt",
+            "order",
+            "with evidence",
+            "cheapest (rung|step|option)"
+          ],
+          [
+            "zbiór\\w* (ewaluacyjn|testow|wzorcow)\\w*",
+            "eval",
+            "ewaluacj\\w+",
+            "evaluation (set|dataset)",
+            "(test|eval\\w*) set"
+          ],
+          [
+            "nie wyklucza\\w*",
+            "zamroż\\w+ zbi\\w+",
+            "zamroź",
+            "does ?n.t rule out",
+            "does not rule out",
+            "freez\\w* (the )?(set|dataset)",
+            "frozen"
+          ]
+        ],
+        "none": [
+          "fine-tuning to najlepszy sposób na dodanie wiedzy",
+          "dotrenowanie nauczy model wszystkich faktów",
+          "fine-tuning is the best way to add knowledge",
+          "fine-tuning will teach the model all (the )?facts"
+        ]
+      }
+    },
+    {
       "id": "lora-klasyfikacja-hiperparametry",
       "expect": "trigger",
       "prompt": "Chcę dostroić model 8B do klasyfikacji zgłoszeń, mam 3000 oznaczonych przykładów i jedną kartę 24 GB. Jak ustawić LoRA, od jakich wartości zacząć i jak sprawdzić, że jest lepiej niż przed dostrajaniem? Odpowiedz zwięźle.",

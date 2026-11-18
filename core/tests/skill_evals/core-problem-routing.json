@@ -29,6 +29,48 @@
       }
     },
     {
+      "id": "release-monorepo-en",
+      "expect": "trigger",
+      "prompt": "Our release takes a week, five teams touch the same Nx monorepo and there are constant conflicts. I don't know where to start or whom to involve. Pick an approach and the team composition. Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "rekomendacj",
+            "wynik:",
+            "forma wyniku",
+            "podejście w \\d",
+            "recommend\\w*",
+            "result:",
+            "(output|result) format",
+            "approach(es)? in \\d"
+          ],
+          [
+            "założeni",
+            "hipotez",
+            "do sprawdzenia",
+            "assumption",
+            "hypothes[ie]s",
+            "to (be )?(verified|checked)",
+            "unverified"
+          ],
+          [
+            "najpierw sprawdz|co sprawdzić najpierw|czego nie wiemy|tani\\w* test",
+            "sprawdź,? (które|czy)",
+            "pierwszy krok to sprawdz",
+            "diagnoz\\w+",
+            "zacznij od (mapy|diagnoz|ustal)",
+            "check (first|before)",
+            "first,? (check|verify|diagnos\\w*|measure)",
+            "what we (don't|do not) know",
+            "unknowns?",
+            "cheap\\w* test",
+            "diagnos\\w+",
+            "start (with|by) (a )?(map\\w*|diagnos\\w*|establish\\w*)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "decyzja-trudna",
       "expect": "trigger",
       "prompt": "Mamy zdecydować, czy wydzielić moduł płatności do osobnej usługi. Kompromisy są sprzeczne, decyzja trudna do odwrócenia. Kto powinien to ocenić i jak przedstawić wynik? Odpowiedz zwięźle.",

@@ -17,6 +17,40 @@
       }
     },
     {
+      "id": "nowa-fundacja-chmury-en",
+      "expect": "trigger",
+      "prompt": "We have 20 teams and are just starting with AWS. How should we design the cloud foundation so each team gets its own account with a ready baseline? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "control tower|landing zone accelerator|landing zone"
+          ],
+          [
+            "account factory|account vending|vending|automat\\w+ zakładania kont",
+            "automat\\w+ (account )?(creation|provisioning)",
+            "automat\\w+ (creat|provision)\\w+ (of )?accounts?"
+          ],
+          [
+            "konto logów|log archive|konto.{0,20}log|audit|osobn\\w+ kont\\w* .{0,20}(log|bezpiecze)",
+            "(separate|dedicated|central)[^.]{0,20}(log|security) account"
+          ],
+          [
+            "preventive|zapobiegaw\\w+|detective|wykrywaj\\w+|scp"
+          ],
+          [
+            "polityk\\w*,? nie (według |wg )?organigram|rejestr\\w* CIDR|CIDR[^.]{0,40}(przed|zanim)|tryb\\w* audytu",
+            "polic(y|ies),? not (by )?org(anization)?(al)? ?chart",
+            "CIDR (registry|allocation|plan)\\w*",
+            "CIDR[^.]{0,40}(before|up ?front|in advance)",
+            "audit mode"
+          ]
+        ],
+        "none": [
+          "jedno konto dla wszystkich środowisk"
+        ]
+      }
+    },
+    {
       "id": "siec-hub-spoke",
       "expect": "trigger",
       "prompt": "Budujemy landing zone w Azure i AWS. Jaką topologię sieci wybrać dla kilkudziesięciu aplikacji i jak ją rozliczać kosztowo? Odpowiedz zwięźle.",

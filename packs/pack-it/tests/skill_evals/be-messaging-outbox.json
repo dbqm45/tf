@@ -36,6 +36,46 @@
       }
     },
     {
+      "id": "utrata-zdarzen-en",
+      "expect": "trigger",
+      "prompt": "After saving an order I publish an event to the broker, but after the commit; sometimes the process dies and the event is missing. How do I fix that, and what about duplicates on the consumer side? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "outbox"
+          ],
+          [
+            "tej samej transakcj",
+            "jednej transakcj",
+            "same transaction",
+            "w transakcji"
+          ],
+          [
+            "inbox",
+            "ON CONFLICT",
+            "UNIQUE",
+            "unikaln",
+            "atomow",
+            "compare-and-set",
+            "dedup\\w*",
+            "idempoten\\w*",
+            "atomic"
+          ],
+          [
+            "sprawdź,? (a )?potem zapisz",
+            "check.then.(act|insert)",
+            "wyścig",
+            "\\brace\\b",
+            "synchroniczn",
+            "w locie",
+            "check[, ]+(and )?then (write|insert|save)",
+            "in.flight",
+            "synchronous"
+          ]
+        ]
+      }
+    },
+    {
       "id": "synchroniczne-na-async",
       "expect": "trigger",
       "prompt": "Chcę zamienić synchroniczne wywołanie billingService.charge() z modułu zamówień na wiadomość asynchroniczną. Na co uważać, zanim to zrobię? Odpowiedz zwięźle.",

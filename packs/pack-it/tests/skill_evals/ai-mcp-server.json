@@ -39,6 +39,47 @@
       }
     },
     {
+      "id": "zbudowac-i-przetestowac-en",
+      "expect": "trigger",
+      "prompt": "We want to expose our meeting-room booking system as an MCP server for Claude Code and other agents. How do we build it and how do we test it in CI without calling the model? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "stdio",
+            "Streamable HTTP"
+          ],
+          [
+            "stdout",
+            "stderr"
+          ],
+          [
+            "create_connected_server_and_client_session",
+            "w pamięci",
+            "in-memory",
+            "Inspector"
+          ],
+          [
+            "migawk\\w*",
+            "kontrakt\\w*",
+            "snapshot",
+            "list\\w* narzędzi",
+            "contract\\w*",
+            "tool list\\w*|list of tools|tools/list"
+          ],
+          [
+            "readOnlyHint",
+            "destructiveHint",
+            "adnotac\\w*",
+            "annotation\\w*"
+          ]
+        ],
+        "none": [
+          "print\\([^)]*\\)\\s*(do|na) (logowania|debug)",
+          "print\\([^)]*\\)\\s*(for|to) (logging|debug\\w*)"
+        ]
+      }
+    },
+    {
       "id": "zdalny-serwer-autoryzacja",
       "expect": "trigger",
       "prompt": "Udostępniamy nasz serwer MCP przez HTTP klientom zewnętrznym; za nim jest nasze API. Na co uważać przy autoryzacji i bezpieczeństwie? Odpowiedz zwięźle.",

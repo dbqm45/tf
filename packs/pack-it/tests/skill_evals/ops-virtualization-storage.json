@@ -17,6 +17,21 @@
       }
     },
     {
+      "id": "klaster-3-wezly-en",
+      "expect": "trigger",
+      "prompt": "We have 3 servers and about 60 virtual machines. We want to move from VMware to Proxmox with Ceph. How do we calculate whether the cluster can survive the failure of one node, and what should we not overlook during the migration? Answer briefly.",
+      "checks": {
+        "all": [
+          ["N\\+1", "awari[ai]\\s+(jednego|1)\\s+węzła", "utrat[ay]\\s+(jednego|1)\\s+węzła", "(failure|loss) of (one|1|a single|a) node", "one node (fail\\w*|down|loss|outage)", "single node (fail\\w*|loss)"],
+          ["overcommit", "nadsubskrypcj", "przypisanie vCPU", "vCPU", "oversubscri\\w*"],
+          ["quorum|kworum|QDevice"],
+          ["virtio", "V2V", "wersj[aei]\\s+próbn", "pilota", "pilot", "trial", "test (migration|run)", "proof of concept"],
+          ["steal", "CPU ready", "p99"]
+        ],
+        "none": ["RAID 0 dla Ceph", "RAID ?0 (for|with|under|on) Ceph"]
+      }
+    },
+    {
       "id": "raid-i-backup",
       "expect": "trigger",
       "prompt": "Na macierzy NAS mamy RAID 5 z 8 dysków po 16 TB i robimy migawki raz na dobę. Szef mówi, że to jest backup. Co z tym zrobić? Odpowiedz zwięźle.",
