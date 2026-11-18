@@ -4,6 +4,7 @@ description: Use for asynchronous communication — command or event, outbox/inb
 metadata:
   review: "2027-10-17"
   catalog: "Use when turning a synchronous call between modules into an asynchronous message and when designing an outbox/inbox — whether it may be distributed, command or event, atomicity, the relay, ordering, consumer idempotency, producer, contract and consumer tests. Not for choosing context relationships (ddd-context-mapping) or the database schema in general (be-database)."
+  keywords: "outbox, inbox, komunikacja asynchroniczna, kolejka, broker, Kafka, RabbitMQ, zdarzenie czy komenda, idempotencja konsumenta, deduplikacja, wiadomość przyszła dwa razy, utrata zdarzeń, kolejność wiadomości, at-least-once, co najmniej raz, odtworzenie zdarzeń, replay, reset offsetu, odbudowa modelu odczytu, skutki uboczne przy odtwarzaniu, asynchronous communication, queue, event or command, consumer idempotency, deduplication, the message came twice, lost events, message ordering, event replay, offset reset, rebuilding a read model, side effects on replay, transactional outbox"
 ---
 
 # Asynchronous communication: outbox, inbox, guarantees
