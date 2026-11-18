@@ -33,7 +33,7 @@ def main() -> int:
 
     # 1. --help działa i opisuje kody wyjścia
     r = run("--help")
-    check(r.returncode == 0 and "kod" in r.stdout.lower(), f"--help: {r.returncode} {r.stdout[:200]}")
+    check(r.returncode == 0 and "exit code" in r.stdout.lower(), f"--help: {r.returncode} {r.stdout[:200]}")
 
     with tempfile.TemporaryDirectory() as d:
         # Repo „zdrowe”: TS strict, lockfile, vitest, CI z etapami, linter, formatter, instrukcje agenta
@@ -85,7 +85,7 @@ def main() -> int:
         fam = {f.get("family"): f for f in data.get("families", [])}
         check("python" in fam and "pip-audit" in fam["python"].get("audit", "")
               and "collect-only" in (fam["python"].get("dry_run") or ""), f"python w podkatalogu: {fam}")
-        check("python" in fam and "słaby" in (fam["python"].get("lockfile_note") or ""),
+        check("python" in fam and "weak" in (fam["python"].get("lockfile_note") or ""),
               f"requirements.txt jako słaby zamiennik lockfile: {fam}")
 
         # DX: pętla deweloperska kompletna — polecenie startowe, usługi lokalnie z healthcheckiem, dane startowe,
@@ -123,13 +123,13 @@ def main() -> int:
         data = json.loads(r.stdout or "{}")
         dxf = {x.get("message", ""): x.get("severity") for x in data.get("findings", []) if x.get("area") == "dx"}
         joined = " | ".join(f"{s}:{m}" for m, s in dxf.items())
-        check(any("polecenia startowego" in m and s == "medium" for m, s in dxf.items()),
+        check(any("start command" in m and s == "medium" for m, s in dxf.items()),
               f"DX: brak polecenia startowego (średnia): {joined}")
         check(any("postgres" in m and "redis" in m and s == "medium" for m, s in dxf.items()),
               f"DX: usługi bez środowiska lokalnego (średnia): {joined}")
         check(any(".env.example" in m and s == "high" for m, s in dxf.items()),
               f"DX: sekret w .env.example (wysoka): {joined}")
-        check(any("danych startowych" in m and s == "low" for m, s in dxf.items()),
+        check(any("seed data" in m and s == "low" for m, s in dxf.items()),
               f"DX: brak danych startowych (niska): {joined}")
         check("sk-proj-Ab3d" not in r.stdout, "DX: wartość klucza nie trafia do wyniku")
 
@@ -139,7 +139,7 @@ def main() -> int:
                                "</dependency></dependencies></project>")
         write(java, ".gitignore", "target/\n")
         r = run(str(java))
-        check("pominięto" in r.stdout and "| " in r.stdout, f"java: tekst z 'pominięto' i tabelą: {r.stdout[:400]}")
+        check("skipped" in r.stdout and "| " in r.stdout, f"java: tekst z 'pominięto' i tabelą: {r.stdout[:400]}")
 
         # Błędna ścieżka → kod 2
         check(run(str(Path(d) / "nie-ma")).returncode == 2, "nieistniejąca ścieżka powinna dać kod 2")

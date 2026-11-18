@@ -252,7 +252,7 @@ def main() -> int:
           f"KS-11: linia źródła przed historyjką nie zmienia akcji głównych: {r.get('story')} vs {plain.get('story')}")
     two = sourced.replace("Jako uczący się chcę", "Jako uczący się i lektor chcę")
     out = run({"story.md": two}, "--story", "story.md", "--strict")
-    check(out.returncode == 1 and "kilku aktorów" in out.stdout,
+    check(out.returncode == 1 and "several actors" in out.stdout,
           f"KS-12: kilku aktorów wykrywanych także pod linią źródła: {out.returncode} {out.stdout[-300:]}")
 
     out = run({}, "nie-ma.md")

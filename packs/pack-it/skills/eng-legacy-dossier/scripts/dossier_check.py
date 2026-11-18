@@ -100,15 +100,15 @@ def table_rows(body: str) -> list[list[str]]:
 def check_evidence(ev: str, root: Path) -> str | None:
     m = EVIDENCE.fullmatch(ev.strip())
     if not m:
-        return f"dowód „{ev}” nie ma postaci ścieżka:linia"
+        return f"evidence \"{ev}\" is not in path:line form"
     path, start, end = root / m.group(1), int(m.group(2)), int(m.group(3) or m.group(2))
     if not path.resolve().is_relative_to(root.resolve()):
-        return f"dowód {m.group(1)} wskazuje plik poza repozytorium"
+        return f"evidence {m.group(1)} points to a file outside the repository"
     if not path.is_file():
-        return f"dowód wskazuje nieistniejący plik {m.group(1)}"
+        return f"evidence points to a missing file {m.group(1)}"
     lines = len(path.read_text(encoding="utf-8", errors="replace").splitlines())
     if not 1 <= start <= end <= lines:
-        return f"dowód {m.group(0)} wychodzi poza plik ({lines} linii)"
+        return f"evidence {m.group(0)} goes past the end of the file ({lines} lines)"
     return None
 
 
@@ -130,27 +130,27 @@ def check_audit(dossier: Path, root: Path, errors: list[str]) -> tuple[int, int]
     a_p, r_p = dossier / "assessment.md", dossier / "recommendations.md"
     if not a_p.is_file():
         if r_p.is_file():
-            errors.append("recommendations.md bez assessment.md — rekomendacje wynikają z ustaleń oceny")
+            errors.append("recommendations.md without assessment.md — recommendations follow from assessment findings")
         return 0, 0
     at = a_p.read_text(encoding="utf-8")
     if not at.startswith(ASSESS_MARK):
-        errors.append(f"assessment.md: brak znacznika {ASSESS_MARK} w pierwszej linii")
+        errors.append(f"assessment.md: missing marker {ASSESS_MARK} on the first line")
     asec = sections(at)
-    errors += [f"assessment.md: brak sekcji „## {s}”" for s in ASSESS_SECTIONS if s not in asec]
+    errors += [f"assessment.md: missing section \"## {s}\"" for s in ASSESS_SECTIONS if s not in asec]
     findings: dict[str, str] = {}
     for fid, f in blocks(asec.get("Findings", ""), "ARCH"):
         if fid in findings:
-            errors.append(f"assessment.md: {fid} powtórzone")
+            errors.append(f"assessment.md: {fid} duplicated")
         missing = [k for k in FINDING_FIELDS if not f.get(k)]
         if missing:
-            errors.append(f"assessment.md: {fid} — brak pól: {', '.join(missing)}")
+            errors.append(f"assessment.md: {fid} — missing fields: {', '.join(missing)}")
         cat = value(f.get("Category", ""))
         if cat and cat not in CATEGORIES:
-            errors.append(f"assessment.md: {fid} — nieznana kategoria „{cat}” (dozwolone: {', '.join(CATEGORIES)})")
+            errors.append(f"assessment.md: {fid} — unknown category \"{cat}\" (allowed: {', '.join(CATEGORIES)})")
         ev = f.get("Evidence", "")
         if ev in ("", "—", "-"):
             if cat in NEED_EVIDENCE:
-                errors.append(f"assessment.md: {fid} — „{cat}” wymaga dowodu (plik:linia); bez niego to ryzyko albo pytanie")
+                errors.append(f"assessment.md: {fid} — \"{cat}\" needs evidence (file:line); without it, it is a risk or a question")
         else:
             errors += [f"assessment.md: {fid} — {p}" for p in evidence_problems(ev, root)]
         findings[fid] = cat
@@ -158,29 +158,29 @@ def check_audit(dossier: Path, root: Path, errors: list[str]) -> tuple[int, int]
         return len(findings), 0
     rt = r_p.read_text(encoding="utf-8")
     if not rt.startswith(RECS_MARK):
-        errors.append(f"recommendations.md: brak znacznika {RECS_MARK} w pierwszej linii")
+        errors.append(f"recommendations.md: missing marker {RECS_MARK} on the first line")
     rsec = sections(rt)
-    errors += [f"recommendations.md: brak sekcji „## {s}”" for s in RECS_SECTIONS if s not in rsec]
+    errors += [f"recommendations.md: missing section \"## {s}\"" for s in RECS_SECTIONS if s not in rsec]
     covered, recs = set(), blocks(rsec.get("Recommendations", ""), "REC")
     for rid, r in recs:
         missing = [k for k in REC_FIELDS if not r.get(k)]
         if missing:
-            errors.append(f"recommendations.md: {rid} — brak pól: {', '.join(missing)}")
+            errors.append(f"recommendations.md: {rid} — missing fields: {', '.join(missing)}")
         refs = re.findall(r"ARCH-\d+", r.get("Addresses", ""))
         for ref in refs:
             if ref not in findings:
-                errors.append(f"recommendations.md: {rid} odwołuje się do {ref}, którego nie ma w assessment.md")
+                errors.append(f"recommendations.md: {rid} refers to {ref}, which is not in assessment.md")
         covered.update(refs)
         dec, pri = value(r.get("Decision", "")), r.get("Priority", "")
         if dec and dec not in DECISIONS:
-            errors.append(f"recommendations.md: {rid} — nieznana decyzja „{dec}” (dozwolone: {', '.join(DECISIONS)})")
+            errors.append(f"recommendations.md: {rid} — unknown decision \"{dec}\" (allowed: {', '.join(DECISIONS)})")
         if pri and pri not in PRIORITIES:
-            errors.append(f"recommendations.md: {rid} — nieznany priorytet „{pri}” (dozwolone: P1, P2, P3)")
+            errors.append(f"recommendations.md: {rid} — unknown priority \"{pri}\" (allowed: P1, P2, P3)")
         if dec in HEAVY and refs and all(findings.get(x) == "preference" for x in refs):
-            errors.append(f"recommendations.md: {rid} — „{dec}” uzasadniona samą preferencją; potrzebny problem lub ryzyko")
+            errors.append(f"recommendations.md: {rid} — \"{dec}\" justified by preference alone; it needs a problem or a risk")
     for fid, cat in findings.items():
         if cat == "confirmed problem" and fid not in covered:
-            errors.append(f"recommendations.md: potwierdzony problem {fid} nie ma rekomendacji (także „no change” z powodem)")
+            errors.append(f"recommendations.md: confirmed problem {fid} has no recommendation (\"no change\" with a reason also counts)")
     return len(findings), len(recs)
 
 
@@ -188,46 +188,46 @@ def check(dossier: Path, root: Path) -> dict:
     errors, warnings, rules, unverified, ids = [], [], 0, 0, {}
     index = dossier / "README.md"
     if not index.is_file():
-        return {"status": "ERRORS", "errors": [f"brak {index}"], "warnings": [], "modules": 0, "rules": 0,
+        return {"status": "ERRORS", "errors": [f"missing {index}"], "warnings": [], "modules": 0, "rules": 0,
                 "unverified": 0}
     text = index.read_text(encoding="utf-8")
     if not text.startswith(INDEX_MARK):
-        errors.append(f"README.md: brak znacznika {INDEX_MARK} w pierwszej linii")
+        errors.append(f"README.md: missing marker {INDEX_MARK} on the first line")
     secs = sections(text)
-    errors += [f"README.md: brak sekcji „## {s}”" for s in INDEX_SECTIONS if s not in secs]
+    errors += [f"README.md: missing section \"## {s}\"" for s in INDEX_SECTIONS if s not in secs]
     listed = set(re.findall(r"\]\((modules/[^)]+\.md)\)", secs.get("Modules", "")))
     for rel in sorted(listed):
         if not (dossier / rel).is_file():
-            errors.append(f"README.md: moduł {rel} jest w indeksie, ale pliku nie ma")
+            errors.append(f"README.md: module {rel} is in the index, but the file does not exist")
     files = sorted(p.relative_to(dossier).as_posix() for p in (dossier / "modules").glob("*.md")) \
         if (dossier / "modules").is_dir() else []
-    warnings += [f"{rel}: karta modułu spoza indeksu (dopisz ją w „## Moduły”)" for rel in files if rel not in listed]
+    warnings += [f"{rel}: module card not in the index (add it under \"## Modules\")" for rel in files if rel not in listed]
     for rel in files:
         mt = (dossier / rel).read_text(encoding="utf-8")
         if not mt.startswith(MODULE_MARK):
-            errors.append(f"{rel}: brak znacznika {MODULE_MARK} w pierwszej linii")
+            errors.append(f"{rel}: missing marker {MODULE_MARK} on the first line")
         st = STATE_LINE.search(mt)
         if not st or value(st.group(1)) not in STATES:
-            errors.append(f"{rel}: brak pola „State: green|yellow|red — <powód>”")
+            errors.append(f"{rel}: missing field \"State: green|yellow|red — <reason>\"")
         ms = sections(mt)
-        errors += [f"{rel}: brak sekcji „## {s}”" for s in MODULE_SECTIONS if s not in ms]
+        errors += [f"{rel}: missing section \"## {s}\"" for s in MODULE_SECTIONS if s not in ms]
         for row in table_rows(ms.get("Business rules", "")):
             if len(row) < 4:
-                errors.append(f"{rel}: wiersz reguły ma {len(row)} kolumn zamiast 4 (ID | Rule | Evidence | Confidence)")
+                errors.append(f"{rel}: rule row has {len(row)} columns instead of 4 (ID | Rule | Evidence | Confidence)")
                 continue
             rid, _, ev, conf = row[:4]
             conf = value(conf)
             rules += 1
             if rid in ids:
-                errors.append(f"{rel}: {rid} powtórzone (pierwszy raz w {ids[rid]})")
+                errors.append(f"{rel}: {rid} duplicated (first seen in {ids[rid]})")
             ids.setdefault(rid, rel)
             if conf not in CONFIDENCE:
-                errors.append(f"{rel}: {rid} — nieznana pewność „{conf}” (dozwolone: {', '.join(sorted(CONFIDENCE))})")
+                errors.append(f"{rel}: {rid} — unknown confidence \"{conf}\" (allowed: {', '.join(sorted(CONFIDENCE))})")
             if conf == "to verify":
                 unverified += 1
             if ev in ("", "—", "-"):
                 if conf != "to verify":
-                    errors.append(f"{rel}: {rid} bez dowodu musi mieć pewność „to verify”")
+                    errors.append(f"{rel}: {rid} without evidence must have confidence \"to verify\"")
             else:
                 for one in re.split(r"[,;]\s*", ev):
                     problem = check_evidence(one, root)
@@ -259,8 +259,8 @@ def main(argv: list[str]) -> int:
         print(json.dumps(res, ensure_ascii=False, indent=2))
     else:
         print(f"legacy-dossier-check: {res['status']}")
-        print(f"modułów: {res['modules']} · reguł: {res['rules']} · to verify: {res['unverified']}"
-              + (f" · ustaleń: {res['findings']} · rekomendacji: {res['recommendations']}" if res["findings"] else ""))
+        print(f"modules: {res['modules']} · rules: {res['rules']} · to verify: {res['unverified']}"
+              + (f" · findings: {res['findings']} · recommendations: {res['recommendations']}" if res["findings"] else ""))
         for e in res["errors"]:
             print(f"✗ {e}")
         for w in res["warnings"]:

@@ -74,7 +74,7 @@ SUBJECTS = DETERMINERS | {"i", "we", "you", "he", "she", "it", "they", "user", "
                           "użytkownik", "klient", "system", "się"}
 FILLERS = DETERMINERS | {"to", "do", "na", "w", "we", "z", "ze", "o", "for", "with", "of", "on", "in", "into",
                          "it", "them", "ją", "go", "je", "jej", "jego", "ich", "swój", "swoją", "swoje", "is", "are"}
-UNIT_DAYS = [(r"^dni|^dzie|^dnia", 1.0), (r"^tydz|^tyg", 5.0), (r"^mies", 21.0)]
+UNIT_DAYS = [(r"^dni|^dzie|^dnia|^day", 1.0), (r"^tydz|^tyg|^week|^wk", 5.0), (r"^mies|^month", 21.0)]   # en: 14.x
 
 
 def sections(text: str):
@@ -118,24 +118,24 @@ def is_placeholder(line: str) -> bool:
 def readiness(text: str, rows) -> dict:
     missing = []
     if not re.search(r"\bFR-\d{3}\b", text):
-        missing.append("wymagania FR-NNN („FR-001: [aktor] może [zdolność]. Priorytet: must|nice”)")
+        missing.append("FR-NNN requirements (\"FR-001: [actor] can [capability]. Priority: must|nice\")")
     kw = vocabulary()["keywords"]
     alt = {k: _alt({w for lang in ("en", "pl") for w in kw[lang][k] if len(w) > 1}) for k in ("given", "when", "then")}
     one_line = re.compile(rf"\b({alt['given']})\b.*\b({alt['when']})\b.*\b({alt['then']})\b", re.I)
     gwt = any(one_line.search(l) for _, _, l in rows) or any(
         u["kind"] == "gwt" and u["then"] and u["action"] for s in file_stories(text) for u in ac_units(s["ac"]))
     if not gwt:
-        missing.append("historyjka z kryteriami Given/When/Then dla głównego przepływu")
+        missing.append("a story with Given/When/Then criteria for the main flow")
     rule = [l.strip() for _, l in section_lines(rows, "reguła") if l.strip() and not is_placeholder(l)]
     first = rule[0] if rule else ""
     one_sentence = (first and len(first) <= RULE_MAX and first.endswith(".") and "TODO" not in first.upper()
                     and not re.search(r"[.!?]\s+[A-ZĄĆĘŁŃÓŚŹŻ]", first[:-1]))
     if not one_sentence:
-        missing.append(f"„Reguła biznesowa” jednym zdaniem (≤ {RULE_MAX} znaków, z kropką, bez TODO)")
+        missing.append(f"\"Business rule\" in one sentence (≤ {RULE_MAX} characters, ending with a period, no TODO)")
     out_of_scope = [l for _, l in section_lines(rows, "poza zakresem") if re.match(r"\s*[-*]\s+\S", l) and not is_placeholder(l)]
     out_of_scope += [l for _, _, l in rows if re.match(r"\s*[-*]\s*(?:poza zakresem|out of scope)\s*:\s*[^…<\s]", l, re.I)]
     if not out_of_scope:
-        missing.append("„Poza zakresem” z co najmniej jedną pozycją")
+        missing.append("\"Out of scope\" with at least one item")
     score = 4 - len(missing)
     return {"score": score, "max": 4, "missing": missing, "warning": score < 2}
 
@@ -145,7 +145,7 @@ def leaks(rows) -> list:
     for n, heading, line in rows:
         if any(s in heading for s in SKIP_SECTIONS):
             continue
-        quality = "jakoś" in heading or "jakos" in heading
+        quality = "jakoś" in heading or "jakos" in heading or "quality" in heading   # en: 14.x
         for cat, pat, case, only_quality in LEAK_PATTERNS:
             if only_quality and not quality:
                 continue
@@ -167,14 +167,14 @@ def mvp_check(brief_text: str) -> dict:
         m = re.search(label + r"[^:\n]*:\s*(\d+(?:[.,]\d+)?)\s*([A-Za-ząćęłńóśźżĄĆĘŁŃÓŚŹŻ]+)", brief_text, re.I)
         return to_days(m.group(1), m.group(2)) if m else None
 
-    budget = find(r"budżet czasu")
-    estimate = find(r"szacunek")
-    ack = bool(re.search(r"koszt potwierdzony\s*:\s*[^\s<…]", brief_text, re.I))
+    budget = find(r"(?:budżet czasu|time budget)")   # en: 14.x
+    estimate = find(r"(?:szacunek|estimate)")
+    ack = bool(re.search(r"(?:koszt potwierdzony|cost acknowledged)\s*:\s*[^\s<…]", brief_text, re.I))
     res = {"budget_days": budget, "estimate_days": estimate, "too_big": None, "acknowledged": ack, "warning": None}
     if budget is None:
-        res["warning"] = "brief nie ma budżetu czasu MVP — ustal go z człowiekiem („Budżet czasu MVP: N tygodni”)"
+        res["warning"] = "the brief has no MVP time budget — agree on it with the human (\"MVP time budget: N weeks\")"
     elif estimate is None:
-        res["warning"] = "brief nie ma szacunku przepływu MVP — dopisz „Szacunek przepływu MVP: …”"
+        res["warning"] = "the brief has no MVP flow estimate — add \"MVP flow estimate: …\""
     else:
         res["too_big"] = estimate > budget
     return res
@@ -337,19 +337,19 @@ def mixing_signals(title: str, description: str) -> list:
     tt, gt = _tokens(title or ""), _tokens(goal)
     tw = [k for k, t in enumerate(tt) if t != ","][:2]
     if any(_conj_chain(tt, k, conj) for k in tw):
-        out.append(f"tytuł łączy akcje spójnikiem: „{title}”")
+        out.append(f"title joins actions with a conjunction: \"{title}\"")
     if gt and (_conj_chain(gt, 0, conj) or any(
             t.lower() in v["pl"] and k + 1 < len(gt) and gt[k + 1].lower().endswith("ć") for k, t in enumerate(gt))):
-        out.append(f"cel łączy akcje spójnikiem: „{goal.strip()}”")
+        out.append(f"goal joins actions with a conjunction: \"{goal.strip()}\"")
     if v.get("slash_between_words"):
-        for where, text in (("tytuł", title or ""), ("cel", goal)):
+        for where, text in (("title", title or ""), ("goal", goal)):
             m = re.search(r"(?<![\w/])[^\W\d_]+/[^\W\d_]+(?![\w/])", text)
             if m:
-                out.append(f"{where} łączy akcje ukośnikiem: „{m.group(0)}”")
+                out.append(f"{where} joins actions with a slash: \"{m.group(0)}\"")
                 break
     actor = actor_of(description)
     if actor and (re.search(r"\b(" + "|".join(map(re.escape, conj)) + r")\b", actor, re.I) or "," in actor or "/" in actor):
-        out.append(f"kilku aktorów: „{actor}”")
+        out.append(f"several actors: \"{actor}\"")
     return out
 
 
@@ -375,35 +375,35 @@ def check_story(title: str, description: str, ac: str, story_points=None, policy
     if units and fmt in ("gwt", "ears"):
         bad = [u for u in units if not ((u["kind"] == "gwt" and u["then"]) if fmt == "gwt" else u["kind"] == "ears")]
         if bad:
-            what = "scenariusz bez Then/Wtedy albo kryterium poza formatem GWT" if fmt == "gwt" else "kryterium poza formatem EARS"
-            add("AC-001", f"{what}: " + "; ".join(f"„{(u['id'] + ': ') if u['id'] else ''}{u['text'][:60]}”" for u in bad))
+            what = "scenario without Then/Wtedy, or a criterion outside the GWT format" if fmt == "gwt" else "criterion outside the EARS format"
+            add("AC-001", f"{what}: " + "; ".join(f"\"{(u['id'] + ': ') if u['id'] else ''}{u['text'][:60]}\"" for u in bad))
     weak = sorted({w for lang in ("pl", "en") for w in voc["weak_results"][lang] if w.lower() in text.lower()})
     if weak:
-        add("AC-002", "słaby wynik zamiast obserwowalnego: " + ", ".join(f"„{w}”" for w in weak))
+        add("AC-002", "weak result instead of an observable one: " + ", ".join(f"\"{w}\"" for w in weak))
     impl = [(t["category"], m.group(0)) for t in voc["implementation_terms"]
             for m in [re.search(t["pattern"], text, 0 if t["case_sensitive"] else re.I)] if m]
     if impl:
-        add("AC-003", "szczegół implementacji w kryteriach: " + ", ".join(f"{c} „{m}”" for c, m in impl))
+        add("AC-003", "implementation detail in the criteria: " + ", ".join(f"{c} \"{m}\"" for c, m in impl))
     second = [u for u in units if u["second_action"]]
     if second:
-        add("AC-004", "druga akcja w scenariuszu: " + "; ".join(f"„{u['text'][:60]}”" for u in second))
+        add("AC-004", "second action in a scenario: " + "; ".join(f"\"{u['text'][:60]}\"" for u in second))
     signals = mixing_signals(title, description)
     if len(actions) >= 2:
-        signals.append("różne akcje główne w scenariuszach: " + ", ".join(actions.values()))
+        signals.append("different main actions across scenarios: " + ", ".join(actions.values()))
     if signals:
-        add("STORY-001", "historyjka miesza funkcjonalności — " + "; ".join(signals))
+        add("STORY-001", "the story mixes features — " + "; ".join(signals))
     big = []
     if len(units) > pol["maxScenarios"]:
-        big.append(f"scenariuszy {len(units)} > {pol['maxScenarios']}")
+        big.append(f"scenarios {len(units)} > {pol['maxScenarios']}")
     if len(actions) > pol["maxActions"]:
-        big.append(f"akcji {len(actions)} > {pol['maxActions']}")
+        big.append(f"actions {len(actions)} > {pol['maxActions']}")
     if big:
-        add("STORY-002", "za duża: " + ", ".join(big))
+        add("STORY-002", "too big: " + ", ".join(big))
     lt = voc["layer_terms"]
     layer = [w.rstrip(":") for w in (title or "").split()
              if w.rstrip(":") in lt["case_sensitive"] or w.rstrip(":").lower() in {x.lower() for x in lt["case_insensitive"]}]
     if layer:
-        add("STORY-003", "tytuł od warstwy technicznej zamiast wartości dla użytkownika: " + ", ".join(f"„{w}”" for w in layer))
+        add("STORY-003", "title names a technical layer instead of user value: " + ", ".join(f"\"{w}\"" for w in layer))
     return {"scenarios": len(units), "actions": list(actions.values()), "findings": findings,
             "ac_ids": [u["id"] for u in units], "story_points": story_points}
 
@@ -462,7 +462,7 @@ def lint_file_stories(text: str, policy=None) -> list:
         r = check_story(s["title"], s["description"], s["ac"], None, policy)
         r["findings"] = [f for f in r["findings"] if f["rule"] != "AC-003"]   # AC-003 w pliku: skan wycieków
         if s["block"] and r["scenarios"] and not all(r["ac_ids"]):
-            r["findings"].append({"rule": "AC-ID", "message": "scenariusze bez identyfikatorów AC-n (np. „- AC-1: Zakładając, że …”)"})
+            r["findings"].append({"rule": "AC-ID", "message": "scenarios without AC-n identifiers (e.g. \"- AC-1: Given …\")"})
         res.append({"id": s["id"], "line": s["line"], "title": s["title"], **r})
     return res
 
@@ -496,23 +496,23 @@ def read_story(text: str):
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="Kontrola wymagań (PRD): gotowość, wyciek techniki, próg MVP z briefu, "
-                                             "kształt historyjek (GWT, jedna akcja, identyfikatory AC).")
-    ap.add_argument("requirements", nargs="?", help="plik wymagań, np. docs/project/03-requirements/requirements.md")
-    ap.add_argument("--brief", help="brief z budżetem czasu MVP (próg „MVP za duże”)")
-    ap.add_argument("--story", help="jedna historyjka z pliku (`# tytuł`, „Jako … chcę …”, kryteria akceptacji)")
-    ap.add_argument("--ac-format", choices=["gwt", "ears", "any", "off"], default="gwt", help="format kryteriów (AC-001)")
-    ap.add_argument("--max-scenarios", type=int, default=DEFAULT_POLICY["maxScenarios"], help="próg STORY-002")
-    ap.add_argument("--max-actions", type=int, default=DEFAULT_POLICY["maxActions"], help="próg STORY-002")
-    ap.add_argument("--strict", action="store_true", help="ostrzeżenia kształtu historyjek kończą się kodem 1")
-    ap.add_argument("--json", action="store_true", help="wynik jako JSON")
+    ap = argparse.ArgumentParser(description="Requirements check (PRD): readiness, technology leaks, MVP threshold from the brief, "
+                                             "story shape (GWT, one action, AC identifiers).")
+    ap.add_argument("requirements", nargs="?", help="requirements file, e.g. docs/project/03-requirements/requirements.md")
+    ap.add_argument("--brief", help="brief with the MVP time budget (the \"MVP too big\" threshold)")
+    ap.add_argument("--story", help="a single story from a file (`# title`, \"As … I want …\", acceptance criteria)")
+    ap.add_argument("--ac-format", choices=["gwt", "ears", "any", "off"], default="gwt", help="criteria format (AC-001)")
+    ap.add_argument("--max-scenarios", type=int, default=DEFAULT_POLICY["maxScenarios"], help="STORY-002 threshold")
+    ap.add_argument("--max-actions", type=int, default=DEFAULT_POLICY["maxActions"], help="STORY-002 threshold")
+    ap.add_argument("--strict", action="store_true", help="story shape warnings exit with code 1")
+    ap.add_argument("--json", action="store_true", help="output as JSON")
     a = ap.parse_args(argv)
     policy = {"acFormat": a.ac_format, "maxScenarios": a.max_scenarios, "maxActions": a.max_actions}
     if a.story:
         return story_main(a, policy)
     if not a.requirements:
         ap.print_usage(sys.stderr)
-        print("✗ podaj plik wymagań albo --story PLIK", file=sys.stderr)
+        print("✗ give a requirements file or --story FILE", file=sys.stderr)
         return 2
 
     path = Path(a.requirements)
@@ -520,7 +520,7 @@ def main(argv=None) -> int:
         text = path.read_text(encoding="utf-8")
         brief_text = Path(a.brief).read_text(encoding="utf-8") if a.brief else None
     except OSError as e:
-        print(f"✗ nie mogę odczytać pliku: {e}", file=sys.stderr)
+        print(f"✗ cannot read the file: {e}", file=sys.stderr)
         return 2
 
     rows = sections(text)
@@ -537,14 +537,14 @@ def main(argv=None) -> int:
         print(json.dumps(result, ensure_ascii=False, indent=2))
     else:
         rd = result["readiness"]
-        print(f"Gotowość: {rd['score']}/{rd['max']}" + (" — ostrzeżenie" if rd["warning"] else ""))
+        print(f"Readiness: {rd['score']}/{rd['max']}" + (" — warning" if rd["warning"] else ""))
         for m in rd["missing"]:
-            print(f"  · brak: {m}")
+            print(f"  · missing: {m}")
         for l in result["leaks"]:
-            print(f"{path}:{l['line']} — AC-003 {l['category']}: „{l['match']}” → opisz zachowanie widoczne z zewnątrz "
-                  f"albo przenieś do „Do decyzji o stacku”")
+            print(f"{path}:{l['line']} — AC-003 {l['category']}: \"{l['match']}\" → describe behaviour visible from outside "
+                  f"or move it to \"For the stack decision\"")
         for w in result["warnings"]:
-            print(f"{path}:{w['line']} — ⚠ AC-003 {w['category']}: „{w['match']}” → opisz zachowanie widoczne z zewnątrz")
+            print(f"{path}:{w['line']} — ⚠ AC-003 {w['category']}: \"{w['match']}\" → describe behaviour visible from outside")
         for st in result["stories"]:
             for f in st["findings"]:
                 print(f"{path}:{st['line']} — ⚠ {st['id']} {f['rule']}: {f['message']}")
@@ -552,13 +552,13 @@ def main(argv=None) -> int:
             if mvp["warning"]:
                 print(f"MVP: ⚠ {mvp['warning']}")
             elif mvp["too_big"]:
-                state = "koszt potwierdzony" if mvp["acknowledged"] else "BRAK potwierdzenia kosztu — zaproponuj cięcia"
-                print(f"MVP: szacunek {mvp['estimate_days']:g} dni > budżet {mvp['budget_days']:g} dni — {state}")
+                state = "cost acknowledged" if mvp["acknowledged"] else "cost NOT acknowledged — propose cuts"
+                print(f"MVP: estimate {mvp['estimate_days']:g} days > budget {mvp['budget_days']:g} days — {state}")
             else:
-                print(f"MVP: szacunek {mvp['estimate_days']:g} dni mieści się w budżecie {mvp['budget_days']:g} dni")
-        print("✓ bez blokujących problemów" if result["ok"] else "✗ są blokujące problemy")
+                print(f"MVP: estimate {mvp['estimate_days']:g} days fits the budget of {mvp['budget_days']:g} days")
+        print("✓ no blocking problems" if result["ok"] else "✗ there are blocking problems")
         if n_warn:
-            print(f"⚠ ostrzeżenia kształtu historyjek: {n_warn}" + (" — --strict: kod 1" if a.strict else ""))
+            print(f"⚠ story shape warnings: {n_warn}" + (" — --strict: exit code 1" if a.strict else ""))
     return 1 if blocking or (a.strict and n_warn) else 0
 
 
@@ -566,7 +566,7 @@ def story_main(a, policy) -> int:
     try:
         text = Path(a.story).read_text(encoding="utf-8")
     except OSError as e:
-        print(f"✗ nie mogę odczytać pliku: {e}", file=sys.stderr)
+        print(f"✗ cannot read the file: {e}", file=sys.stderr)
         return 2
     title, desc, ac = read_story(text)
     r = check_story(title, desc, ac, None, policy)
@@ -574,12 +574,12 @@ def story_main(a, policy) -> int:
         print(json.dumps({"file": a.story, "story": {"title": title, **r}, "ok": not r["findings"]},
                          ensure_ascii=False, indent=2))
     else:
-        print(f"Historyjka: {title} — scenariusze: {r['scenarios']}, akcje główne: {', '.join(r['actions']) or '—'}")
+        print(f"Story: {title} — scenarios: {r['scenarios']}, main actions: {', '.join(r['actions']) or '—'}")
         for f in r["findings"]:
             print(f"⚠ {f['rule']}: {f['message']}")
         if any(f["rule"] == "STORY-001" for f in r["findings"]) and len(r["actions"]) >= 2:
-            print("Propozycja podziału: jedna historyjka na akcję — " + " · ".join(r["actions"]))
-        print("✓ kształt historyjki bez uwag" if not r["findings"] else f"⚠ uwag: {len(r['findings'])}")
+            print("Suggested split: one story per action — " + " · ".join(r["actions"]))
+        print("✓ story shape has no remarks" if not r["findings"] else f"⚠ remarks: {len(r['findings'])}")
     return 1 if a.strict and r["findings"] else 0
 
 
