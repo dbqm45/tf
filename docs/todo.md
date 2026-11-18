@@ -795,6 +795,13 @@ treści (angielska), bez równoległej polskiej.
       remisie 18,05 : 18,04 z `eng-llm-features` po przesunięciu IDF; holdoutu nie stroimy, do obserwacji przy 4c-3b.
       `--hints` czysto (all, pack-ux). Haiku przed/po (3 scenariusze): 3/3 → 3/3, 0,77 USD. `translation_check`: różnice
       tylko w nazwach kolumn szablonów i etykietach diagramu Mermaid.
+    - [x] 4c-3b (2026-11-18): pack-ux — `ux-design-systems`, `ux-feature-design`, `ux-visual-design` (+ referencje),
+      persona Natalia, 6 ról UX, `pack.yaml` (facet, konsultanci, `content_language: en`), tytuł i opis analizatora
+      `accessibility`. pack-ux nie ma GUIDE. Tabela ramek w `figma-mcp.md` pokazana po angielsku (`Requirement | Journey
+      | State | Frame | Notes`, `missing`, `n/a` — `design_check.py` czyta obie wersje); szablon `design.md` w mode-pdi
+      zostaje na 4c-x. Podpowiedzi bez zmian względem 4c-3a (901/918 · 31/43; remis `core-agent-security` nadal),
+      `--hints` czysto (all, pack-ux). Haiku przed/po (4 scenariusze): 3/4 → 3/4, 1,07 USD — `spec-faktury` pada na
+      main i po zmianie tak samo (Haiku nie uruchamia skilla), do przejrzenia osobno.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
