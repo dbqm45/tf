@@ -1,85 +1,85 @@
-# Komponenty, granice, polityka i szczegół
+# Components, boundaries, policy and detail
 
-Uzupełnienie SKILL.md na poziomie wyżej niż klasa: jak grupować kod w komponenty (biblioteki Nx, pakiety Javy, moduły
-Mavena/Gradle) i jak ustawić między nimi zależności. Słownik modułu i spoiny: eng-module-depth.
+A supplement to SKILL.md at a level above the class: how to group code into components (Nx libraries, Java packages, Maven/Gradle
+modules) and how to set up the dependencies between them. The module and seam vocabulary: eng-module-depth.
 
-## 1. Paradygmaty jako ograniczenia
-Każdy paradygmat zabiera jakąś swobodę i dzięki temu coś daje (R. C. Martin, *Clean Architecture*):
-| Paradygmat | Co zabiera | Co daje w projekcie |
+## 1. Paradigms as constraints
+Every paradigm takes away some freedom and gives something in return (R. C. Martin, *Clean Architecture*):
+| Paradigm | What it takes away | What it gives in a project |
 |---|---|---|
-| strukturalny | `goto` — sterowanie tylko przez sekwencję, wybór, pętlę | funkcje, które da się czytać i testować osobno |
-| obiektowy | niekontrolowane wskaźniki na funkcje — polimorfizm jest bezpieczny | odwracanie zależności: szczegół zależy od polityki |
-| funkcyjny | przypisanie — dane niezmienne, czyste funkcje | brak wyścigów i ukrytego stanu; logika łatwa w testach |
-W TS i Javie mieszasz je świadomie: niezmienne obiekty wartości i czyste funkcje w domenie (ddd-tactical-design),
-obiekty z zachowaniem dla reguł z niezmiennikami, proste procedury w kleju i skryptach.
+| structured | `goto` — control only through sequence, selection, loop | functions that can be read and tested separately |
+| object-oriented | uncontrolled pointers to functions — polymorphism is safe | dependency inversion: the detail depends on the policy |
+| functional | assignment — immutable data, pure functions | no races and no hidden state; logic easy to test |
+In TS and Java you mix them deliberately: immutable value objects and pure functions in the domain (ddd-tactical-design),
+objects with behaviour for rules with invariants, simple procedures in glue code and scripts.
 
-## 2. Polityka i szczegół
-- **Polityka** — reguły biznesowe i przypadki użycia: *co* system robi. **Szczegół** — baza, framework, UI, protokół,
-  zewnętrzne API, kolejka: *jak* to jest dostarczone.
-- Zależności w kodzie wskazują **od szczegółu do polityki**. Domena nie importuje frameworka, ORM ani klienta HTTP —
-  definiuje port, szczegół dostarcza adapter (eng-design-principles: D z SOLID).
-- **Poziom** = odległość od wejścia i wyjścia. Reguła walidacji rabatu jest wyżej niż kontroler HTTP; kod wyżej zmienia
-  się rzadziej i z ważniejszych powodów, więc nie może zależeć od kodu niżej.
-- Test kontrolny: czy przypadki użycia uruchomisz w teście jednostkowym **bez** serwera, bazy i frameworka? Jeśli nie,
-  szczegół wyciekł do polityki.
+## 2. Policy and detail
+- **Policy** — business rules and use cases: *what* the system does. **Detail** — the database, framework, UI, protocol,
+  external API, queue: *how* it is delivered.
+- Dependencies in the code point **from the detail to the policy**. The domain does not import the framework, the ORM or an HTTP client —
+  it defines a port, the detail supplies an adapter (eng-design-principles: the D of SOLID).
+- **Level** = the distance from input and output. A discount validation rule is higher than an HTTP controller; higher code changes
+  less often and for more important reasons, so it must not depend on lower code.
+- Check test: can you run the use cases in a unit test **without** a server, a database and a framework? If not,
+  the detail has leaked into the policy.
 
-## 3. Framework na dystans
-- Framework to narzędzie, nie architektura. Klasy domeny nie dziedziczą po klasach frameworka i nie noszą jego
-  adnotacji, jeśli da się tego uniknąć (w Javie encja JPA ≠ model domeny, gdy model ma nietrywialne reguły).
-- Kod frameworka trzymasz na brzegu: kontrolery, konfiguracja DI, mapowanie ORM, komponenty Angulara wywołują
-  przypadki użycia, nie zawierają reguł.
-- Koszt: dodatkowe mapowanie. Przy prostym CRUD (skrypt transakcji, be-database) dystans jest zbędny — KISS.
+## 3. The framework at a distance
+- A framework is a tool, not an architecture. Domain classes do not inherit from framework classes and do not carry its
+  annotations, if that can be avoided (in Java a JPA entity ≠ the domain model when the model has non-trivial rules).
+- You keep framework code at the edge: controllers, DI configuration, ORM mapping, Angular components call
+  use cases, they do not contain rules.
+- Cost: additional mapping. For simple CRUD (transaction script, be-database) the distance is unnecessary — KISS.
 
-## 4. Struktura krzycząca domeną i podział według aktora
-- Katalogi najwyższego poziomu nazywają **obszary biznesowe** (`orders/`, `billing/`, `scheduling/`), nie warstwy
-  techniczne (`controllers/`, `services/`, `repositories/`). Nowa osoba ma zobaczyć, *co* system robi, zanim zobaczy,
-  *jak* (Screaming Architecture; dla frontu: Feature-Sliced Design w fe-architecture).
-- Podział według funkcji (package by feature) zamiast według warstwy: zmiana jednej funkcji dotyka jednego katalogu,
-  a widoczność pakietu ukrywa wnętrze.
-- **Podział według aktora** (Single Responsibility w ujęciu Martina): moduł odpowiada przed jedną grupą interesariuszy.
-  Wspólna funkcja liczenia godzin dla księgowości i kadr to pułapka — gdy jeden dział zmieni regułę, zepsuje drugiemu.
-  Podobny kod dla różnych aktorów to często duplikacja przypadkowa (DRY w SKILL.md).
+## 4. A structure that screams the domain and division by actor
+- The top-level directories name **business areas** (`orders/`, `billing/`, `scheduling/`), not technical
+  layers (`controllers/`, `services/`, `repositories/`). A new person should see *what* the system does before they see
+  *how* (Screaming Architecture; for the frontend: Feature-Sliced Design in fe-architecture).
+- Division by feature (package by feature) instead of by layer: a change to one feature touches one directory,
+  and package visibility hides the interior.
+- **Division by actor** (Single Responsibility as Martin frames it): a module answers to one group of stakeholders.
+  A shared function computing hours for accounting and HR is a trap — when one department changes the rule, it breaks it for the other.
+  Similar code for different actors is often accidental duplication (DRY in SKILL.md).
 
-## 5. Granice
-- Granica oddziela to, co zmienia się z różnych powodów i w różnym tempie. Przez granicę przechodzą proste struktury
-  danych (DTO, zdarzenia), nie encje ani obiekty frameworka.
-- Rodzaje od najtańszej: pakiet lub biblioteka w jednym procesie → osobny proces lokalny → usługa sieciowa. Każdy krok
-  w prawo kosztuje (sieć, wersjonowanie, obserwowalność); wybierasz najtańszą, która wystarcza (arch-quality-attributes).
-- Granicę możesz przygotować częściowo (osobne biblioteki i porty w monolicie), żeby później wydzielić usługę bez
-  przepisywania; pełnej granicy „na zapas” nie stawiasz (YAGNI).
+## 5. Boundaries
+- A boundary separates what changes for different reasons and at a different pace. Simple data structures
+  (DTOs, events) cross the boundary, not entities or framework objects.
+- Kinds from the cheapest: a package or library in one process → a separate local process → a network service. Every step
+  to the right costs (network, versioning, observability); you choose the cheapest one that is enough (arch-quality-attributes).
+- You can prepare a boundary partially (separate libraries and ports in a monolith), so that a service can later be extracted without
+  rewriting; you do not set up a full boundary "just in case" (YAGNI).
 
-## 6. Zasady komponentów
-**Spójność — co razem w jednym komponencie**
-| Zasada | Treść | Pytanie |
+## 6. Component principles
+**Cohesion — what goes together in one component**
+| Principle | Content | Question |
 |---|---|---|
-| **REP** — wielokrotne użycie = wydanie | komponent używany przez innych ma wersje i changelog; trzyma razem klasy wydawane razem | czy da się to sensownie wersjonować jako całość? |
-| **CCP** — wspólne domknięcie | razem to, co zmienia się z tego samego powodu i w tym samym czasie (SRP dla komponentów) | czy typowa zmiana dotyka jednego komponentu? |
-| **CRP** — wspólne użycie | nie zmuszaj klientów do zależności od rzeczy, których nie używają (ISP dla komponentów) | czy klient bierze cały komponent, czy jego mały kawałek? |
-REP i CRP rozdrabniają, CCP skleja. Na początku projektu ważniejsze jest CCP (łatwe zmiany), w dojrzałej bibliotece
-współdzielonej — REP i CRP (stabilni klienci).
+| **REP** — reuse = release | a component used by others has versions and a changelog; it keeps together the classes released together | can this be sensibly versioned as a whole? |
+| **CCP** — common closure | together what changes for the same reason and at the same time (SRP for components) | does a typical change touch one component? |
+| **CRP** — common reuse | do not force clients to depend on things they do not use (ISP for components) | does the client take the whole component, or a small piece of it? |
+REP and CRP split things up, CCP glues them together. At the start of a project CCP matters more (easy changes), in a mature shared
+library — REP and CRP (stable clients).
 
-**Sprzężenie — zależności między komponentami**
-- **ADP — brak cykli.** Graf zależności komponentów jest acykliczny. Cykl łamiesz przez odwrócenie zależności (interfejs
-  po stronie używającego) albo wydzielenie wspólnej części do nowego komponentu. Wykrywanie: `nx graph`,
-  `madge --circular`, dependency-cruiser, w Javie ArchUnit (`slices().matching("..app.(*)..").should().beFreeOfCycles()`).
-- **SDP — zależ w stronę stabilności.** Stabilność I = Ce / (Ca + Ce), gdzie Ca to zależności przychodzące, a Ce
-  wychodzące. I = 0 — stabilny (wielu zależy od niego, sam nie zależy od nikogo), I = 1 — niestabilny. Zależność
-  powinna prowadzić do komponentu o mniejszym I.
-- **SAP — stabilny = abstrakcyjny.** Abstrakcyjność A = liczba typów abstrakcyjnych / liczba wszystkich typów.
-  Stabilne komponenty mają być abstrakcyjne (porty, kontrakty), żeby dało się je rozszerzać bez zmiany.
-- **Odległość od ciągu głównego** D = |A + I − 1|. Blisko 0 — dobrze. **Strefa bólu** (A≈0, I≈0): konkretny kod,
-  od którego wszystko zależy — każda zmiana boli (wyjątek: rzeczy stabilne z natury, np. biblioteka standardowa).
-  **Strefa bezużyteczności** (A≈1, I≈1): abstrakcje, których nikt nie używa — usuń.
+**Coupling — dependencies between components**
+- **ADP — no cycles.** The component dependency graph is acyclic. You break a cycle by inverting a dependency (an interface
+  on the user's side) or by extracting the common part into a new component. Detection: `nx graph`,
+  `madge --circular`, dependency-cruiser, in Java ArchUnit (`slices().matching("..app.(*)..").should().beFreeOfCycles()`).
+- **SDP — depend in the direction of stability.** Instability I = Ce / (Ca + Ce), where Ca are the incoming dependencies, and Ce
+  the outgoing ones. I = 0 — stable (many depend on it, it depends on no one), I = 1 — unstable. A dependency
+  should lead to a component with a smaller I.
+- **SAP — stable = abstract.** Abstractness A = the number of abstract types / the number of all types.
+  Stable components should be abstract (ports, contracts), so that they can be extended without change.
+- **Distance from the main sequence** D = |A + I − 1|. Close to 0 — good. **The zone of pain** (A≈0, I≈0): concrete code
+  that everything depends on — every change hurts (exception: things stable by nature, e.g. the standard library).
+  **The zone of uselessness** (A≈1, I≈1): abstractions nobody uses — remove them.
 
-**W praktyce (Nx / Java)**
-- Biblioteki z tagami typu (`type:feature`, `type:ui`, `type:data-access`, `type:util`, `type:domain`) i reguła
-  `@nx/enforce-module-boundaries` utrwalają kierunek zależności.
-- Metryki liczysz dla kilku krytycznych komponentów raz na kwartał lub przy przeglądzie architektury
-  (eng-codebase-mapping daje graf), nie dla całego repo co commit. Wynik to sygnał do rozmowy, nie ocena.
+**In practice (Nx / Java)**
+- Libraries with type tags (`type:feature`, `type:ui`, `type:data-access`, `type:util`, `type:domain`) and the rule
+  `@nx/enforce-module-boundaries` fix the direction of dependencies.
+- You compute the metrics for a few critical components once a quarter or at an architecture review
+  (eng-codebase-mapping gives the graph), not for the whole repo on every commit. The result is a signal for a conversation, not a grade.
 
-## Źródła
-- R. C. Martin, *Clean Architecture* (2017) — paradygmaty, polityka i szczegół, granice, zasady komponentów i metryki.
+## Sources
+- R. C. Martin, *Clean Architecture* (2017) — paradigms, policy and detail, boundaries, component principles and metrics.
 - R. C. Martin, [Screaming Architecture](https://blog.cleancoder.com/uncle-bob/2011/09/30/Screaming-Architecture.html) (2011).
-- [roadmap.sh — Software Design and Architecture](https://roadmap.sh/software-design-architecture) (tematy: component
+- [roadmap.sh — Software Design and Architecture](https://roadmap.sh/software-design-architecture) (topics: component
   principles, policy vs detail, boundaries, keep framework code distant, organize code by actor, programming paradigms).
-Opisane własnymi słowami.
+Described in our own words.

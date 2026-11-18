@@ -1,46 +1,46 @@
-# Podstawy: czym jest wzorzec i jak kategorie naprowadzają na problem
+# Basics: what a pattern is and how the categories lead to the problem
 
-## Definicja
-Wzorzec projektowy to **nazwany, sprawdzony kształt rozwiązania powtarzającego się problemu projektowego**. Nie jest
-gotowym kodem ani biblioteką — to opis ról, relacji i kompromisów, który w każdym projekcie wyrażasz na nowo, w jego
-słownictwie i konwencjach.
+## Definition
+A design pattern is **a named, proven shape of a solution to a recurring design problem**. It is not
+ready-made code or a library — it is a description of roles, relations and trade-offs that you express anew in every project, in its
+vocabulary and conventions.
 
-Opis wzorca (także w plikach tego skilla) składa się z: **problemu** (co boli i dlaczego), **rozwiązania** (role
-i relacje), **zastosowań**, **kosztów**, **powiązań** z innymi wzorcami i **przykładu** w konkretnym języku.
-Powiązania bywają ważniejsze niż sam wzorzec — wiele par wygląda w kodzie identycznie (Dekorator/Pełnomocnik,
-Strategia/Stan, Adapter/Most), a różni je motywacja.
+A pattern description (also in the files of this skill) consists of: **the problem** (what hurts and why), **the solution** (roles
+and relations), **the applications**, **the costs**, **the relations** with other patterns and **an example** in a concrete language.
+The relations are sometimes more important than the pattern itself — many pairs look identical in the code (Decorator/Proxy,
+Strategy/State, Adapter/Bridge), and what separates them is the motivation.
 
-## Wzorzec a algorytm i biblioteka
-- **Algorytm** to dokładny ciąg kroków — wykonany tak samo daje ten sam wynik.
-- **Wzorzec** opisuje kształt na wyższym poziomie; szczegóły (nazwy, podział, API) należą do projektu. Dwie poprawne
-  realizacje tego samego wzorca w jednym repozytorium mogą wyglądać różnie — to nie błąd, tylko dopasowanie.
-- **Biblioteki** się importuje; wzorca nie da się „zainstalować”. Przykłady kodu w `creational/`, `structural/`,
-  `behavioral/` ilustrują kształt — nie wklejaj ich 1:1.
+## A pattern vs an algorithm and a library
+- **An algorithm** is an exact sequence of steps — executed the same way, it gives the same result.
+- **A pattern** describes a shape at a higher level; the details (names, division, API) belong to the project. Two correct
+  implementations of the same pattern in one repository may look different — that is not a mistake, just a fit.
+- **Libraries** are imported; a pattern cannot be "installed". The code examples in `creational/`, `structural/`,
+  `behavioral/` illustrate the shape — do not paste them 1:1.
 
-## Trzy kategorie (katalog GoF)
-| Kategoria | Pytanie, na które odpowiada | Wzorce |
+## Three categories (the GoF catalog)
+| Category | The question it answers | Patterns |
 |---|---|---|
-| **Kreacyjne** | **jak i gdzie powstaje obiekt** — kto decyduje o konkretnej klasie, jak złożyć obiekt, ile ma być instancji | Metoda wytwórcza, Fabryka abstrakcyjna, Budowniczy, Prototyp, Singleton |
-| **Strukturalne** | **jak elementy są złożone** — kto kogo opakowuje/zawiera, jak pogodzić interfejsy, jak współdzielić dane | Adapter, Most, Kompozyt, Dekorator, Fasada, Pyłek, Pełnomocnik |
-| **Behawioralne** | **kto z kim rozmawia i kto za co odpowiada w czasie działania** — przepływ żądań, powiadomień, zmian stanu | Łańcuch zobowiązań, Polecenie, Iterator, Mediator, Pamiątka, Obserwator, Stan, Strategia, Metoda szablonowa, Odwiedzający |
+| **Creational** | **how and where an object is created** — who decides on the concrete class, how to assemble an object, how many instances there should be | Factory Method, Abstract Factory, Builder, Prototype, Singleton |
+| **Structural** | **how elements are composed** — who wraps/contains whom, how to reconcile interfaces, how to share data | Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy |
+| **Behavioral** | **who talks to whom and who is responsible for what at runtime** — the flow of requests, notifications, state changes | Chain of Responsibility, Command, Iterator, Mediator, Memento, Observer, State, Strategy, Template Method, Visitor |
 
-Zaklasyfikowanie problemu do kategorii to pierwszy filtr przed tabelą „symptom → wzorzec” w `SKILL.md`:
-- problem z `new`, konfiguracją przy tworzeniu, liczbą instancji → kreacyjne;
-- problem ze statycznym kształtem (niezgodne interfejsy, wybuch podklas, drzewa, warstwy) → strukturalne;
-- problem z przepływem w czasie (reakcje na zdarzenia, zmiana zachowania ze stanem, kolejkowanie akcji) → behawioralne.
+Classifying the problem into a category is the first filter before the "symptom → pattern" table in `SKILL.md`:
+- a problem with `new`, configuration at creation, the number of instances → creational;
+- a problem with the static shape (incompatible interfaces, an explosion of subclasses, trees, layers) → structural;
+- a problem with the flow over time (reactions to events, behaviour changing with the state, queuing actions) → behavioral.
 
-Oryginalna książka GoF dzieli też wzorce na klasowe i obiektowe; tu nie jest to potrzebne — we współczesnym TS niemal
-wszystko realizujemy kompozycją obiektów i funkcji.
+The original GoF book also divides patterns into class and object patterns; that is not needed here — in modern TS we implement almost
+everything by composing objects and functions.
 
-## Wzorce GoF a pozostałe „wzorce” w repozytorium
-| Poziom | Przykłady | Skill |
+## GoF patterns vs the other "patterns" in the repository
+| Level | Examples | Skill |
 |---|---|---|
-| zasady (dlaczego) | SOLID, KISS, YAGNI, kompozycja > dziedziczenie | eng-design-principles |
-| wzorce GoF (jak w kodzie) | ten skill | eng-design-patterns |
-| building blocks DDD | agregat, polityka (= strategia), specyfikacja (= kompozyt), fabryka, repozytorium | ddd-tactical-design |
-| archetypy biznesowe | Party, Availability, Pricing, Accounting | ddd-archetypes |
-| wzorce UI | compound components, stany ładowania, granice błędów | fe-architecture |
-| idiomy języka | unie dyskryminowane, generatory, `satisfies` | lang-typescript |
+| principles (why) | SOLID, KISS, YAGNI, composition > inheritance | eng-design-principles |
+| GoF patterns (how in the code) | this skill | eng-design-patterns |
+| DDD building blocks | aggregate, policy (= strategy), specification (= composite), factory, repository | ddd-tactical-design |
+| business archetypes | Party, Availability, Pricing, Accounting | ddd-archetypes |
+| UI patterns | compound components, loading states, error boundaries | fe-architecture |
+| language idioms | discriminated unions, generators, `satisfies` | lang-typescript |
 
-Źródła: E. Gamma, R. Helm, R. Johnson, J. Vlissides, „Design Patterns” (1994); katalog refactoring.guru — treść
-opracowana własnymi słowami, przykłady kodu napisane od nowa.
+Sources: E. Gamma, R. Helm, R. Johnson, J. Vlissides, "Design Patterns" (1994); the refactoring.guru catalog — content
+written in our own words, code examples written from scratch.

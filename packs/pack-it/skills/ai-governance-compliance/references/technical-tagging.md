@@ -1,84 +1,83 @@
-# Znakowanie treści generowanych przez AI (art. 50 ust. 2)
+# Marking AI-generated content (Art. 50(2))
 
-Spis treści: 1. Obowiązek i kodeks praktyk · 2. Warstwy znakowania · 3. Znak wodny w tekście · 4. Ograniczenia ·
-5. Co wpisać do dokumentacji zgodności
+Contents: 1. The obligation and the code of practice · 2. Marking layers · 3. A watermark in text · 4. Limitations ·
+5. What to put in the compliance documentation
 
-## 1. Obowiązek i kodeks praktyk
-- Art. 50 ust. 2 AI Act: dostawca systemu generującego dźwięk, obraz, wideo albo tekst zapewnia, że wyniki są
-  oznaczone w formacie nadającym się do odczytu maszynowego i wykrywalne jako wygenerowane lub zmanipulowane
-  sztucznie. Rozwiązania techniczne mają być skuteczne, interoperacyjne, solidne i niezawodne w zakresie technicznie
-  wykonalnym, z uwzględnieniem specyfiki i ograniczeń rodzajów treści, kosztów wdrożenia i powszechnie uznanego stanu
-  wiedzy (jak może go odzwierciedlać norma). Art. 50 stosuje się od **2026-08-02**. (Streszczenie obowiązku ze
-  strony Komisji o kodeksie; dosłowne brzmienie przed cytowaniem sprawdź w eur-lex.)
-- **Kodeks praktyk w sprawie przejrzystości treści generowanych przez AI** (*Code of Practice on Transparency of
-  AI-generated Content*; wersja końcowa opublikowana 2026-06-10, przygotowana przez niezależnych ekspertów przy
-  udziale Urzędu ds. AI). Stan ze strony Komisji (2026-11-01):
-  - **dobrowolny**, ale obowiązki z art. 50 są prawne; kodeks nie zastępuje AI Act ani wytycznych Komisji do art. 50;
-  - obejmuje art. 50 ust. 2, 4 i 5 w dwóch sekcjach: **1 — dostawcy** (oznaczanie i wykrywanie treści generowanych
-    i zmanipulowanych), **2 — podmioty stosujące** (etykietowanie deepfake'ów i tekstów publikowanych w sprawach
-    interesu publicznego, chyba że przeszły redakcję człowieka z odpowiedzialnością redakcyjną);
-  - Komisja i Rada ds. AI uznały kodeks za **adekwatne dobrowolne narzędzie wykazania zgodności**: sygnatariusz
-    może się powołać na jego środki, a kto spełnia obowiązek inaczej, sam wykazuje adekwatność przed organem
-    nadzoru rynku;
-  - UE udostępnia ikony do etykietowania treści AI dla podmiotów stosujących;
-  - ok. 190 sygnatariuszy do końca lipca 2026.
-- **Szczegóły sekcji 1 (wg omówień, nie z tekstu kodeksu)** [niezweryfikowane]: co najmniej dwie warstwy
-  maszynowego oznaczania (zabezpieczone metadane i znak wodny, odcisk opcjonalnie) i narzędzie do wykrywania
-  udostępniane przez dostawcę. Przed wdrożeniem przeczytaj PDF kodeksu (link na stronie Komisji).
-- **Wytyczne Komisji do art. 50** (zakres obowiązków): projekt opublikowany 2026-05-08 z konsultacją; czy i kiedy
-  przyjęto wersję końcową, sprawdź na stronie Komisji [niezweryfikowane]. Termin 2026-12-02 dla systemów
-  wprowadzonych przed 2026-08-02 podają tylko omówienia [niezweryfikowane].
+## 1. The obligation and the code of practice
+- Art. 50(2) AI Act: the provider of a system generating audio, image, video or text ensures that the outputs are
+  marked in a machine-readable format and detectable as artificially generated or manipulated.
+  The technical solutions are to be effective, interoperable, robust and reliable as far as technically
+  feasible, taking into account the specifics and limitations of the types of content, the costs of implementation and the generally acknowledged state
+  of the art (as a standard may reflect it). Art. 50 applies from **2026-08-02**. (A summary of the obligation from
+  the Commission's page on the code; check the literal wording in eur-lex before quoting.)
+- **The Code of Practice on Transparency of AI-generated Content** (final version published 2026-06-10, prepared by independent experts with
+  the participation of the AI Office). The state from the Commission's page (2026-11-01):
+  - **voluntary**, but the Art. 50 obligations are legal ones; the code does not replace the AI Act or the Commission's guidelines on Art. 50;
+  - it covers Art. 50(2), (4) and (5) in two sections: **1 — providers** (marking and detecting generated
+    and manipulated content), **2 — deployers** (labelling deepfakes and texts published on matters of
+    public interest, unless they have undergone editorial review by a human with editorial responsibility);
+  - the Commission and the AI Board have assessed the code as **an adequate voluntary tool for demonstrating compliance**: a signatory
+    can rely on its measures, and whoever meets the obligation in another way demonstrates the adequacy before the market
+    surveillance authority themselves;
+  - the EU provides icons for labelling AI content for deployers;
+  - approx. 190 signatories by the end of July 2026.
+- **The details of section 1 (according to commentaries, not from the text of the code)** [unverified]: at least two layers
+  of machine-readable marking (secured metadata and a watermark, a fingerprint optionally) and a detection tool
+  provided by the provider. Before implementation read the PDF of the code (the link on the Commission's page).
+- **The Commission's guidelines on Art. 50** (the scope of the obligations): a draft published 2026-05-08 with a consultation; whether and when
+  the final version was adopted, check on the Commission's page [unverified]. The deadline 2026-12-02 for systems
+  placed on the market before 2026-08-02 is given only by commentaries [unverified].
 
-## 2. Warstwy znakowania
-| Warstwa | Dla jakiej treści | Co przetrwa | Co ją usuwa |
+## 2. Marking layers
+| Layer | For what content | What survives | What removes it |
 |---|---|---|---|
-| **Metadane z podpisem** (C2PA Content Credentials: manifest z twierdzeniami, podpisany, powiązany ze skrótem pliku) | obraz, wideo, dźwięk, dokumenty | weryfikowalne pochodzenie i historia edycji | zrzut ekranu, ponowne kodowanie, usunięcie metadanych przez platformę |
-| **Znak wodny** (w samej treści) | obraz, dźwięk, wideo; tekst statystycznie | kompresja, przycięcie (w granicach odporności algorytmu) | silna edycja, parafraza tekstu |
-| **Odcisk** (fingerprint, porównanie z bazą dostawcy) | każda | wykrywanie po stronie dostawcy | treść poza bazą |
+| **Signed metadata** (C2PA Content Credentials: a manifest with assertions, signed, bound to the file hash) | image, video, audio, documents | verifiable provenance and edit history | a screenshot, re-encoding, the platform stripping the metadata |
+| **Watermark** (in the content itself) | image, audio, video; text statistically | compression, cropping (within the robustness of the algorithm) | heavy editing, paraphrasing of text |
+| **Fingerprint** (comparison with the provider's database) | any | detection on the provider's side | content outside the database |
 
-C2PA wiąże metadane z treścią także przez „soft binding” (znak wodny lub odcisk, który pozwala odnaleźć manifest po
-jego usunięciu z pliku); listę algorytmów prowadzi C2PA. Jedna warstwa nie wystarcza, bo każda ma inny sposób
-utraty.
+C2PA also binds metadata to the content through a "soft binding" (a watermark or a fingerprint that allows the manifest to be found after
+it has been removed from the file); C2PA maintains the list of algorithms. One layer is not enough, because each one is lost in a different
+way.
 
-## 3. Znak wodny w tekście
-Wzorzec z pracy Kirchenbauer i in. („A Watermark for Large Language Models”, ICML 2023):
-- przed wygenerowaniem tokenu ziarno z poprzedniego tokenu dzieli słownik na listę „zieloną” i „czerwoną”,
-  a próbkowanie lekko faworyzuje zielone tokeny;
-- wykrywanie bez dostępu do modelu i bez klucza API, jeśli reguła jest jawna (albo za API, jeśli jest prywatna):
-  test z na liczbie zielonych tokenów (oczekiwana wartość γT przy braku znaku);
-- wg autorów znak jest wykrywalny już od ok. **25 tokenów**, a fałszywy alarm na tekście człowieka jest
-  statystycznie mało prawdopodobny (przy progu z = 4 jednostronne p ≈ 3 × 10⁻⁵);
-- znak jest silny tylko w tekście o **wysokiej entropii**. Tekst o niskiej entropii (kod, formułki, tekst
-  zapamiętany i odtworzony przez model) prawie nie przenosi znaku i bywa niewykrywalny; autorzy wskazują to jako
-  główną przyczynę pominięć.
+## 3. A watermark in text
+The pattern from the paper by Kirchenbauer et al. ("A Watermark for Large Language Models", ICML 2023):
+- before a token is generated, a seed from the previous token splits the vocabulary into a "green" and a "red" list,
+  and the sampling slightly favours the green tokens;
+- detection without access to the model and without an API key, if the rule is public (or behind an API, if it is private):
+  a z-test on the number of green tokens (the expected value γT when there is no watermark);
+- according to the authors the watermark is detectable from approx. **25 tokens**, and a false alarm on human text is
+  statistically unlikely (at the threshold z = 4 the one-sided p ≈ 3 × 10⁻⁵);
+- the watermark is strong only in text with **high entropy**. Low-entropy text (code, set phrases, text
+  memorized and reproduced by the model) carries almost no watermark and can be undetectable; the authors point to this as
+  the main cause of misses.
 
-## 4. Ograniczenia
-Ataki skatalogowane przez autorów (sekcja „Attacking the watermark”):
-- **Wstawianie, usuwanie i podmiana tokenów**, w tym **parafraza** automatyczna słabszym modelem (osłabia znak
-  i jakość tekstu) albo ręczna. W długich tekstach kilka niezmienionych zdań często wystarcza do wykrycia.
-- **Drobne zmiany** (spacje, literówki) i **ataki na tokenizację**: detektor normalizuje tekst przed liczeniem
-  skrótu.
-- **Homoglify i znaki zerowej szerokości**: detektor kanonizuje Unicode, inaczej podmiana znaków usuwa znak wodny.
-- **Ataki generatywne** („emoji attack”: model wstawia znaki po każdym tokenie, które potem się usuwa).
-- **Odkrycie reguły z próbek**: obserwując pary tokenów, napastnik może poznać listy; zalecane małe okno h i klucz
-  trzymany prywatnie.
+## 4. Limitations
+Attacks catalogued by the authors (the section "Attacking the watermark"):
+- **Inserting, deleting and substituting tokens**, including automatic **paraphrasing** with a weaker model (it weakens the watermark
+  and the quality of the text) or manual paraphrasing. In long texts a few unchanged sentences are often enough for detection.
+- **Minor changes** (spaces, typos) and **tokenization attacks**: the detector normalizes the text before computing
+  the hash.
+- **Homoglyphs and zero-width characters**: the detector canonicalizes Unicode, otherwise substituting characters removes the watermark.
+- **Generative attacks** ("emoji attack": the model inserts characters after each token, which are then removed).
+- **Discovering the rule from samples**: by observing pairs of tokens, an attacker can learn the lists; a small window h and a key
+  kept private are recommended.
 
-Spoza tej pracy [niezweryfikowane — literatura wtórna]: **podrabianie znaku** (oznaczenie cudzego tekstu jako
-„z modelu”) i **„piggyback”** (treść zmieniona przez człowieka, także szkodliwie, nadal wykrywa się jako
-wygenerowana).
-- **Metadane** giną przy zrzucie ekranu i na platformach, które je usuwają.
+Outside this paper [unverified — secondary literature]: **watermark spoofing** (marking someone else's text as
+"from the model") and **"piggyback"** (content changed by a human, also harmfully, is still detected as
+generated).
+- **Metadata** is lost with a screenshot and on platforms that strip it.
 
-## 5. Co wpisać do dokumentacji zgodności
-- Znakowanie **wspiera wykrywanie masowe** (platformy, moderacja). Nie jest dowodem, że konkretny tekst wygenerował
-  konkretny system, i nie przypisuje autorstwa pojedynczej osobie.
-- Opisz warstwy (metadane C2PA + znak wodny, ewentualnie odcisk), zakres treści, narzędzie do wykrywania i znane
-  ograniczenia. Wpisz test odporności na typowe przekształcenia (kompresja, przycięcie, parafraza) z wynikiem.
-- Czy przyjęte rozwiązanie spełnia art. 50 ust. 2, ocenia prawnik na podstawie aktualnego tekstu kodeksu praktyk
-  i wytycznych. Ten plik opisuje technikę, nie interpretację prawa.
+## 5. What to put in the compliance documentation
+- Marking **supports mass detection** (platforms, moderation). It is not proof that a specific text was generated by
+  a specific system, and it does not attribute authorship to an individual person.
+- Describe the layers (C2PA metadata + a watermark, possibly a fingerprint), the scope of content, the detection tool and the known
+  limitations. Record a robustness test against typical transformations (compression, cropping, paraphrasing) with the result.
+- Whether the adopted solution meets Art. 50(2) is assessed by a lawyer on the basis of the current text of the code of practice
+  and the guidelines. This file describes the technique, not an interpretation of the law.
 
-Źródła: Komisja Europejska, „Code of Practice on Transparency of AI-generated Content”,
-digital-strategy.ec.europa.eu/policies/code-practice-ai-generated-content (wydruk strony z 2026-11-01, przekazany
-przez człowieka); szczegóły sekcji 1 wg omówień Jones Day, SCL, Freshfields (2026-06); rozporządzenie (UE) 2024/1689,
-art. 50 (tekst w eur-lex niesprawdzony w tej sesji); J. Kirchenbauer i in., „A Watermark for Large Language Models”,
-arXiv 2301.10226v4 (ICML 2023; PDF przekazany przez człowieka, przeczytane: wstęp, sekcje o entropii i atakach);
-github.com/c2pa-org/specifications (wersja dokumentacji 2.5, commit 2026-10-28; soft binding, `softbinding-alg-list`).
+Sources: European Commission, "Code of Practice on Transparency of AI-generated Content",
+digital-strategy.ec.europa.eu/policies/code-practice-ai-generated-content (a printout of the page from 2026-11-01, provided
+by a human); the details of section 1 according to commentaries by Jones Day, SCL, Freshfields (2026-06); Regulation (EU) 2024/1689,
+Art. 50 (the text in eur-lex not checked in this session); J. Kirchenbauer et al., "A Watermark for Large Language Models",
+arXiv 2301.10226v4 (ICML 2023; the PDF provided by a human, read: the introduction, the sections on entropy and attacks);
+github.com/c2pa-org/specifications (documentation version 2.5, commit 2026-10-28; soft binding, `softbinding-alg-list`).

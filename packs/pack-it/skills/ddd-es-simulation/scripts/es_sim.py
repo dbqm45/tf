@@ -3,7 +3,7 @@
 Stan symulowanego warsztatu Event Storming (skill ddd-es-simulation). Tylko biblioteka standardowa, zero tokenów:
 księgowość sesji, budowa promptów uczestników, tani router, tablica, statystyki dla coacha.
 
-  es_sim.py init --variant pelna|oszczedna [--scenario weterynaria] [--id 2026-09-27-a]
+  es_sim.py init --variant pelna|oszczedna [--scenario veterinary] [--id 2026-09-27-a]
   es_sim.py round-begin --id <id> --text "<wypowiedź facylitatora>"   # zapisuje prompty rundy, wypisuje kogo wywołać
   es_sim.py round-end --id <id>                                      # wczytuje odpowiedzi, aktualizuje tablicę, wypisuje streszczenie
   es_sim.py invite --id <id> --persona <id>                          # dołącza osobę spoza sali

@@ -1,21 +1,21 @@
-# Serwer MCP z testami bez modelu — przetestowany przykład (Python)
+# An MCP server with tests without a model — a tested example (Python)
 
-> **Spis treści:** booking_mcp.py · test_booking_mcp.py · Rejestracja w Claude Code
+> **Contents:** booking_mcp.py · test_booking_mcp.py · Registration in Claude Code
 
-Sprawdzone 2026-10-23: Python SDK `mcp` 1.29.0 (protokół 2025-11-25), `pytest` — 6 testów: migawka kontraktu
-narzędzi, wynik strukturalny, błąd narzędzia z następnym krokiem, odrzucenie wejścia przez schemat, prawdziwy
-proces po stdio, surowy stdout tylko z JSON-RPC. Kontrola odwrotna: dopisanie `print()` w narzędziu wywala ostatni
-test (klient Python SDK pomija obce linie, więc test sesją tego nie wykrywa). Pliki skopiowane bez zmian.
-Zależności: `pip install mcp pytest anyio`.
+Checked 2026-10-23: Python SDK `mcp` 1.29.0 (protocol 2025-11-25), `pytest` — 6 tests: a snapshot of the tool
+contract, a structured result, a tool error with a next step, rejection of input by the schema, a real
+process over stdio, raw stdout with JSON-RPC only. Reverse check: adding a `print()` in a tool breaks the last
+test (the Python SDK client skips foreign lines, so the session test does not detect it). The files were copied unchanged.
+Dependencies: `pip install mcp pytest anyio`.
 
-## Spis treści
-- booking_mcp.py — serwer: dwa narzędzia, schematy z ograniczeniami, adnotacje, `ToolError`, logi na stderr
-- test_booking_mcp.py — testy w CI
-- Rejestracja w Claude Code
+## Contents
+- booking_mcp.py — the server: two tools, schemas with constraints, annotations, `ToolError`, logs on stderr
+- test_booking_mcp.py — the tests in CI
+- Registration in Claude Code
 
 ## booking_mcp.py
 ```python
-"""Serwer MCP rezerwacji sal: dwa narzędzia, transport stdio. Logi tylko na stderr — stdout należy do protokołu."""
+"""Room booking MCP server: two tools, stdio transport. Logs only on stderr — stdout belongs to the protocol."""
 import logging
 import sys
 from typing import Annotated
@@ -30,8 +30,8 @@ log = logging.getLogger("booking-mcp")
 
 mcp = FastMCP("booking")
 
-ROOMS = {"sala-1": {"name": "Sala Wisła", "seats": 8, "blocked_by": None},
-         "sala-2": {"name": "Sala Odra", "seats": 20, "blocked_by": None}}
+ROOMS = {"room-1": {"name": "Vistula Room", "seats": 8, "blocked_by": None},
+         "room-2": {"name": "Oder Room", "seats": 20, "blocked_by": None}}
 
 
 class Room(BaseModel):
@@ -43,15 +43,15 @@ class Room(BaseModel):
 
 class FindResult(BaseModel):
     rooms: list[Room]
-    total: int = Field(description="Liczba wszystkich pasujących sal, także poza limitem")
+    total: int = Field(description="The number of all matching rooms, also beyond the limit")
 
 
 @mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, openWorldHint=False))
 def find_rooms(
-    min_seats: Annotated[int, Field(ge=1, le=500, description="Minimalna liczba miejsc, np. 10")] = 1,
-    limit: Annotated[int, Field(ge=1, le=50, description="Ile sal zwrócić")] = 10,
+    min_seats: Annotated[int, Field(ge=1, le=500, description="The minimum number of seats, e.g. 10")] = 1,
+    limit: Annotated[int, Field(ge=1, le=50, description="How many rooms to return")] = 10,
 ) -> FindResult:
-    """Znajdź sale z co najmniej `min_seats` miejscami. Zwraca listę z informacją, czy sala jest wolna."""
+    """Find rooms with at least `min_seats` seats. Returns a list with information on whether the room is free."""
     hits = [Room(id=k, name=v["name"], seats=v["seats"], free=v["blocked_by"] is None)
             for k, v in sorted(ROOMS.items()) if v["seats"] >= min_seats]
     return FindResult(rooms=hits[:limit], total=len(hits))
@@ -60,27 +60,27 @@ def find_rooms(
 @mcp.tool(annotations=ToolAnnotations(readOnlyHint=False, destructiveHint=False, idempotentHint=True,
                                       openWorldHint=False))
 def block_room(
-    room_id: Annotated[str, Field(pattern=r"^sala-\d+$", description="Identyfikator z find_rooms, np. sala-1")],
-    by: Annotated[str, Field(min_length=2, max_length=50, description="Kto blokuje salę")],
+    room_id: Annotated[str, Field(pattern=r"^room-\d+$", description="An identifier from find_rooms, e.g. room-1")],
+    by: Annotated[str, Field(min_length=2, max_length=50, description="Who is blocking the room")],
 ) -> str:
-    """Zablokuj salę dla osoby `by`. Ponowne wywołanie przez tę samą osobę niczego nie zmienia."""
+    """Block the room for the person `by`. Calling it again by the same person changes nothing."""
     room = ROOMS.get(room_id)
     if room is None:
-        raise ToolError(f"Nie ma sali {room_id}. Użyj find_rooms, żeby poznać identyfikatory.")
+        raise ToolError(f"There is no room {room_id}. Use find_rooms to learn the identifiers.")
     if room["blocked_by"] not in (None, by):
-        raise ToolError(f"Sala {room_id} jest zajęta przez {room['blocked_by']}. Wybierz inną salę z find_rooms.")
+        raise ToolError(f"Room {room_id} is taken by {room['blocked_by']}. Choose another room from find_rooms.")
     room["blocked_by"] = by
     log.info("room %s blocked by %s", room_id, by)
-    return f"Sala {room_id} zablokowana dla {by}."
+    return f"Room {room_id} blocked for {by}."
 
 
 if __name__ == "__main__":
-    mcp.run()  # domyślnie stdio
+    mcp.run()  # stdio by default
 ```
 
 ## test_booking_mcp.py
 ```python
-"""Testy serwera MCP bez modelu: sesja w pamięci (kontrakt i zachowanie) oraz prawdziwy proces po stdio."""
+"""Tests of the MCP server without a model: an in-memory session (contract and behaviour) and a real process over stdio."""
 import sys
 from pathlib import Path
 
@@ -93,7 +93,7 @@ import booking_mcp
 
 pytestmark = pytest.mark.anyio
 
-# Migawka kontraktu: nazwa narzędzia, wymagane parametry, adnotacje. Zmiana = świadoma decyzja o wersji.
+# Contract snapshot: the tool name, required parameters, annotations. A change = a deliberate decision about the version.
 CONTRACT = {
     "find_rooms": {"required": [], "readOnlyHint": True},
     "block_room": {"required": ["by", "room_id"], "readOnlyHint": False},
@@ -125,14 +125,14 @@ async def test_find_returns_structured_content():
         result = await client.call_tool("find_rooms", {"min_seats": 10})
     assert not result.isError
     assert result.structuredContent["total"] == 1
-    assert result.structuredContent["rooms"][0]["id"] == "sala-2"
+    assert result.structuredContent["rooms"][0]["id"] == "room-2"
 
 
 async def test_conflict_is_tool_error_with_next_step():
     async with create_connected_server_and_client_session(booking_mcp.mcp._mcp_server) as client:
-        ok = await client.call_tool("block_room", {"room_id": "sala-1", "by": "anna"})
-        again = await client.call_tool("block_room", {"room_id": "sala-1", "by": "anna"})
-        conflict = await client.call_tool("block_room", {"room_id": "sala-1", "by": "jan"})
+        ok = await client.call_tool("block_room", {"room_id": "room-1", "by": "anna"})
+        again = await client.call_tool("block_room", {"room_id": "room-1", "by": "anna"})
+        conflict = await client.call_tool("block_room", {"room_id": "room-1", "by": "jan"})
     assert not ok.isError and not again.isError
     assert conflict.isError
     assert "find_rooms" in conflict.content[0].text
@@ -145,7 +145,7 @@ async def test_invalid_input_is_rejected_by_schema():
 
 
 async def test_real_stdio_process_handshake():
-    # stdout zanieczyszczony print() zepsułby ten test — protokół idzie po stdout
+    # stdout polluted by print() would break this test — the protocol goes over stdout
     params = StdioServerParameters(command=sys.executable, args=[str(Path(booking_mcp.__file__))])
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:
@@ -156,8 +156,8 @@ async def test_real_stdio_process_handshake():
 
 
 def test_stdout_carries_only_jsonrpc():
-    # Specyfikacja: serwer stdio nie może pisać na stdout nic poza wiadomościami MCP. Klient Python SDK pomija
-    # obce linie, więc test sesją tego nie wykryje — czytamy surowy stdout procesu.
+    # The specification: a stdio server must not write anything to stdout except MCP messages. The Python SDK client skips
+    # foreign lines, so a session test will not detect it — we read the raw stdout of the process.
     import json
     import subprocess
 
@@ -166,7 +166,7 @@ def test_stdout_carries_only_jsonrpc():
          "params": {"protocolVersion": "2025-11-25", "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}}},
         {"jsonrpc": "2.0", "method": "notifications/initialized"},
         {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
-         "params": {"name": "block_room", "arguments": {"room_id": "sala-1", "by": "anna"}}},
+         "params": {"name": "block_room", "arguments": {"room_id": "room-1", "by": "anna"}}},
     ]
     proc = subprocess.run([sys.executable, booking_mcp.__file__], input="\n".join(map(json.dumps, messages)) + "\n",
                           capture_output=True, text=True, timeout=30)
@@ -175,12 +175,12 @@ def test_stdout_carries_only_jsonrpc():
     assert all(json.loads(line)["jsonrpc"] == "2.0" for line in lines)
 ```
 
-## Rejestracja w Claude Code
-Sprawdzone `claude` 2.1.309: nazwa serwera przed `-e` (opcja `-e` przyjmuje wiele wartości i połknie nazwę).
+## Registration in Claude Code
+Checked with `claude` 2.1.309: the server name before `-e` (the `-e` option accepts many values and will swallow the name).
 ```
 claude mcp add --scope project booking -e BOOKING_ENV=dev -- python3 booking_mcp.py
 ```
-Zakres `project` zapisuje do repozytorium `.mcp.json`:
+The `project` scope writes `.mcp.json` to the repository:
 ```json
 {
   "mcpServers": {
@@ -193,6 +193,6 @@ Zakres `project` zapisuje do repozytorium `.mcp.json`:
   }
 }
 ```
-Sekretów nie wpisujesz do `.mcp.json` (trafia do repozytorium). Zakres `local` (domyślny) zapisuje konfigurację
-w `~/.claude.json` użytkownika, w sekcji danego projektu — sprawdzone tym samym CLI; tam albo w zmiennych
-środowiskowych użytkownika trzymasz tokeny.
+You do not put secrets into `.mcp.json` (it goes into the repository). The `local` scope (the default) writes the configuration
+to the user's `~/.claude.json`, in the section of the given project — checked with the same CLI; you keep tokens there or in the user's
+environment variables.

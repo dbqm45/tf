@@ -1,50 +1,50 @@
-# Wzorce spoza GoF: obiekt roli i obiekt rozszerzenia
+# Patterns outside GoF: Role Object and Extension Object
 
-Dwa wzorce strukturalne z późniejszych katalogów PLoP, przydatne w modelach domenowych, gdy ten sam byt pełni wiele
-ról albo dostaje dodatkowe zdolności. Oba zastępują pola-flagi i rosnące pole „status” (ddd-deep-modeling,
+Two structural patterns from the later PLoP catalogs, useful in domain models when the same entity plays many
+roles or gets additional capabilities. Both replace flag fields and a growing "status" field (ddd-deep-modeling,
 `.claude/skills/ddd-deep-modeling/references/untangling.md`).
 
-## Obiekt roli (Role Object)
-- **Problem:** ta sama osoba albo firma jest jednocześnie klientem, dostawcą i pracownikiem. Każda rola ma własne
-  dane, reguły i cykl życia, a role pojawiają się i znikają w czasie. Jedna klasa z polami `isCustomer`,
-  `isSupplier` i ich danymi rośnie bez końca. Podklasy (`KlientDostawca`) wybuchają kombinatorycznie i nie pozwalają
-  zmienić roli w trakcie życia obiektu.
-- **Rozwiązanie i uczestnicy:**
-  - **rdzeń** (core): tożsamość i dane wspólne, np. osoba z imieniem i adresem;
-  - **obiekty ról:** osobne obiekty z danymi i zachowaniem roli (`Klient` z limitem kredytowym, `Dostawca`
-    z warunkami dostaw), które wskazują rdzeń;
-  - rdzeń pozwala zapytać o rolę, dodać ją i usunąć (`hasRole`, `getRole`, `addRole`, `removeRole`).
-- **Kiedy używać:** role są niezależne, dochodzą i znikają w czasie albo każda ma własne reguły i właściciela.
-- **Koszty:** tożsamość jest rozbita na kilka obiektów; trzeba pilnować, by rola nie istniała bez rdzenia, i ustalić,
-  gdzie żyją dane wspólne.
-- **W modelu domenowym:** rola to często osobny agregat w innym kontekście, wskazujący stronę identyfikatorem.
-  Archetyp Party i PartyRole (`.claude/skills/ddd-archetypes/references/party.md`) to ten wzorzec na poziomie
-  modelu biznesowego.
-- **Kiedy NIE:** rola nie ma własnych danych ani reguł, tylko zmienia uprawnienia; wtedy wystarczy atrybut albo
-  mechanizm autoryzacji.
+## Role Object
+- **Problem:** the same person or company is at the same time a customer, a supplier and an employee. Each role has its own
+  data, rules and life cycle, and roles appear and disappear over time. One class with the fields `isCustomer`,
+  `isSupplier` and their data grows without end. Subclasses (`CustomerSupplier`) explode combinatorially and do not allow
+  changing a role during the object's lifetime.
+- **Solution and participants:**
+  - **the core**: the identity and the shared data, e.g. a person with a name and an address;
+  - **role objects:** separate objects with the role's data and behaviour (`Customer` with a credit limit, `Supplier`
+    with delivery terms), which point to the core;
+  - the core allows asking for a role, adding it and removing it (`hasRole`, `getRole`, `addRole`, `removeRole`).
+- **When to use:** the roles are independent, are added and disappear over time, or each has its own rules and owner.
+- **Costs:** the identity is split into several objects; you must make sure a role does not exist without the core, and settle
+  where the shared data lives.
+- **In a domain model:** a role is often a separate aggregate in another context, pointing to the party by an identifier.
+  The Party and PartyRole archetype (`.claude/skills/ddd-archetypes/references/party.md`) is this pattern at the level
+  of the business model.
+- **When NOT:** the role has no data or rules of its own and only changes permissions; then an attribute or
+  an authorization mechanism is enough.
 
-## Obiekt rozszerzenia (Extension Object)
-- **Problem:** do istniejącej klasy trzeba dokładać interfejsy, których potrzebują tylko niektórzy klienci, np.
-  dokument z rozszerzeniem „podpisywalny” albo „do druku”. Dopisanie metod do klasy bazowej rozdyma ją i zmusza
-  wszystkie podklasy do implementacji.
-- **Rozwiązanie i uczestnicy:**
-  - **podmiot** z jedną metodą dostępu do rozszerzenia po nazwie albo typie, np. `getExtension("podpis")`;
-  - **rozszerzenia:** osobne obiekty z dodatkowym interfejsem, dołączane do podmiotu;
-  - klient pyta o rozszerzenie i obsługuje jego brak.
-- **Kiedy używać:** zestaw dodatkowych interfejsów jest otwarty, a o tym, które obiekty je mają, decyduje się
-  w czasie działania, np. we wtyczkach albo w rozszerzeniach dodawanych przez inne moduły.
-- **Koszty:** klient musi sprawdzać, czy rozszerzenie istnieje; interfejs podmiotu przestaje mówić, co obiekt potrafi.
-- **Różnica:** obiekt roli dotyczy ról w modelu biznesowym z cyklem życia, a obiekt rozszerzenia dotyczy dodatkowych
-  interfejsów technicznych. Dekorator zachowuje interfejs i dokłada zachowanie wokół wywołań, a obiekt rozszerzenia
-  dodaje nowy interfejs obok.
-- **Kiedy NIE:** rozszerzeń jest kilka i są znane z góry; wtedy wystarczy zwykły interfejs albo unia typów.
-  W TS często wystarczy mapa rozszerzeń po kluczu typu.
+## Extension Object
+- **Problem:** you need to add to an existing class interfaces that only some clients need, e.g.
+  a document with a "signable" or "printable" extension. Adding methods to the base class bloats it and forces
+  all subclasses to implement them.
+- **Solution and participants:**
+  - **the subject** with one method for accessing an extension by name or type, e.g. `getExtension("signature")`;
+  - **extensions:** separate objects with an additional interface, attached to the subject;
+  - the client asks for the extension and handles its absence.
+- **When to use:** the set of additional interfaces is open, and which objects have them is decided
+  at runtime, e.g. in plugins or in extensions added by other modules.
+- **Costs:** the client must check whether the extension exists; the subject's interface stops saying what the object can do.
+- **Difference:** Role Object concerns roles in the business model with a life cycle, while Extension Object concerns additional
+  technical interfaces. Decorator keeps the interface and adds behaviour around the calls, while Extension Object
+  adds a new interface alongside.
+- **When NOT:** there are a few extensions and they are known up front; then an ordinary interface or a union type is enough.
+  In TS a map of extensions keyed by type is often enough.
 
-## Źródła
-- D. Bäumer, D. Riehle, W. Siberski, M. Wulf, „Role Object”, PLoP '97; przedruk w *Pattern Languages of Program
-  Design 4* (red. N. Harrison, B. Foote, H. Rohnert), Addison-Wesley, 2000, s. 15–32 [niezweryfikowane: dane
-  bibliograficzne z katalogów i źródeł wtórnych, bez lektury tekstu w tej sesji].
-- E. Gamma, „Extension Object”, w: *Pattern Languages of Program Design 3* (red. R. Martin, D. Riehle, F. Buschmann),
-  Addison-Wesley, 1998, ISBN 0201310112 [niezweryfikowane: jak wyżej].
-- Opisane własnymi słowami; zakres na podstawie programu szkolenia „DDD — zaawansowane techniki modelowania
-  i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21).
+## Sources
+- D. Bäumer, D. Riehle, W. Siberski, M. Wulf, "Role Object", PLoP '97; reprinted in *Pattern Languages of Program
+  Design 4* (eds. N. Harrison, B. Foote, H. Rohnert), Addison-Wesley, 2000, pp. 15–32 [unverified: bibliographic
+  data from catalogs and secondary sources, without reading the text in this session].
+- E. Gamma, "Extension Object", in: *Pattern Languages of Program Design 3* (eds. R. Martin, D. Riehle, F. Buschmann),
+  Addison-Wesley, 1998, ISBN 0201310112 [unverified: as above].
+- Described in our own words; the scope based on the programme of the training "DDD — zaawansowane techniki modelowania
+  i archetypy" ("DDD — advanced modelling techniques and archetypes"; Bottega IT Minds, material from a human, 2026-10-21).

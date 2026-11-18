@@ -1,78 +1,78 @@
-# Techniki rozplątywania modelu
+# Techniques for untangling a model
 
-Cztery techniki na model, w którym ta sama wiedza siedzi w wielu miejscach, relacje się rozjeżdżają, a każda nowa
-potrzeba kończy się kolejną wartością pola „status”.
+Four techniques for a model in which the same knowledge sits in many places, relationships drift apart, and every new
+need ends with another value of the "status" field.
 
-## 1. Jedno źródło prawdy (single source of truth)
-- **Zasada:** każdy fakt biznesowy ma jednego właściciela (agregat w jednym kontekście). Pozostali wskazują go
-  identyfikatorem albo trzymają kopię do odczytu, odświeżaną zdarzeniem (read model). Kopia nigdy nie jest
-  podstawą decyzji, która ten fakt zmienia.
-- **Test:** „gdzie zmienię ten fakt, gdy zmieni się w biznesie?”. Więcej niż jedno miejsce oznacza, że fakt jest
-  rozplątany źle.
-- **Sygnały:**
-  - ta sama lista identyfikatorów po obu stronach relacji;
-  - pola „skopiowane dla wygody” bez zdarzenia, które je odświeża;
-  - dwie tabele z tą samą datą ważności;
-  - spory zespołów „u kogo jest prawda”.
-- **Procedura:**
-  1. Wypisz fakty, które się rozjeżdżają.
-  2. Dla każdego ustal właściciela: kto o nim decyduje w biznesie.
-  3. Pozostałe kopie zamień na odwołania albo read modele.
-  4. Zmianę faktu ogłaszaj zdarzeniem (ddd-tactical-design, ddd-context-mapping).
+## 1. A single source of truth
+- **Principle:** every business fact has one owner (an aggregate in one context). The others point to it by an
+  identifier or keep a read-only copy refreshed by an event (a read model). The copy is never the
+  basis of a decision that changes this fact.
+- **Test:** "where will I change this fact when it changes in the business?". More than one place means the fact is
+  untangled badly.
+- **Signals:**
+  - the same list of identifiers on both sides of a relationship;
+  - fields "copied for convenience" without an event that refreshes them;
+  - two tables with the same validity date;
+  - disputes between teams about "who holds the truth".
+- **Procedure:**
+  1. List the facts that drift apart.
+  2. For each, establish the owner: who decides about it in the business.
+  3. Replace the other copies with references or read models.
+  4. Announce a change of the fact with an event (ddd-tactical-design, ddd-context-mapping).
 
-## 2. Ukryte pojęcie w relacji wiele do wielu
-- **Zasada:** relacja wiele do wielu między dwoma pojęciami prawie zawsze kryje trzecie pojęcie. Ma ono własne
-  dane (daty od–do, warunki, rola), własny cykl życia i własne reguły. Nazwij je językiem biznesu. Staje się
-  jedynym źródłem prawdy o relacji.
-- **Przykład:** lekarz ↔ przychodnia to **Zatrudnienie** (od–do, wymiar etatu, specjalizacja w tej przychodni,
-  grafik). Z kolei student ↔ kurs to **Zapis** (termin, status zaliczenia, ocena). Listy identyfikatorów po obu
-  stronach znikają, a pytanie „gdzie pracuje lekarz w dniu X” ma jedno miejsce odpowiedzi.
-- **Pytania do eksperta:**
-  - „Co się dzieje, gdy ta relacja się zaczyna i kończy?”
-  - „Czy relacja ma daty, warunki albo dokument?”
-  - „Czy ta sama para może być powiązana dwa razy w różnych okresach?”
+## 2. A hidden concept in a many-to-many relationship
+- **Principle:** a many-to-many relationship between two concepts almost always hides a third concept. It has its own
+  data (from–to dates, conditions, role), its own life cycle and its own rules. Name it in the business language. It becomes
+  the single source of truth about the relationship.
+- **Example:** doctor ↔ clinic is an **Employment** (*Zatrudnienie*: from–to, working hours, the specialization in this clinic,
+  the schedule). In turn, student ↔ course is an **Enrolment** (*Zapis*: term, pass status, grade). The lists of identifiers on both
+  sides disappear, and the question "where does the doctor work on day X" has one place for the answer.
+- **Questions for the expert:**
+  - "What happens when this relationship begins and ends?"
+  - "Does the relationship have dates, conditions or a document?"
+  - "Can the same pair be related twice in different periods?"
 
-  Każde „tak” potwierdza, że relacja jest osobnym pojęciem.
-- **Archetyp:** relacje między stronami to PartyRelationship
-  (`.claude/skills/ddd-archetypes/references/party.md`), a umowa z pozycjami to Agreement
+  Every "yes" confirms that the relationship is a separate concept.
+- **Archetype:** relationships between parties are PartyRelationship
+  (`.claude/skills/ddd-archetypes/references/party.md`), and a contract with items is Agreement
   (`.claude/skills/ddd-archetypes/references/agreement.md`).
 
-## 3. Status to nie mechanizm rozszerzania
-- **Problem:** każda nowa potrzeba dostaje nową wartość statusu, np. oferta jako „zamówienie ze statusem oferta”,
-  „VIP”, „zamówienie hurtowe”. Kończy się to rozlanymi warunkami `if (status == …)` i regułami, które obowiązują
-  tylko dla części wartości.
-- **Status jest w porządku**, gdy opisuje cykl życia jednego pojęcia z jawnymi przejściami (maszyna stanów):
-  te same dane, inne dozwolone operacje.
-- **Zamiast nowej wartości statusu:**
-  - inne dane, reguły i cykl życia oznaczają **osobne pojęcie** (Becoming: oferta przechodzi w umowę albo
-    zamówienie, ale nią nie jest);
-  - ten sam byt w nowym kontekście to **rola** (Role Object);
-  - dodatkowa zdolność dla części obiektów to **rozszerzenie** (Extension Object);
-  - inny sposób liczenia to **polityka** (ddd-tactical-design).
+## 3. Status is not an extension mechanism
+- **Problem:** every new need gets a new status value, e.g. an offer as "an order with the status offer",
+  "VIP", "wholesale order". This ends with conditions `if (status == …)` spread everywhere and rules that apply
+  only to some of the values.
+- **A status is fine** when it describes the life cycle of one concept with explicit transitions (a state machine):
+  the same data, different allowed operations.
+- **Instead of a new status value:**
+  - different data, rules and life cycle mean a **separate concept** (Becoming: an offer turns into a contract or
+    an order, but it is not one);
+  - the same entity in a new context is a **role** (Role Object);
+  - an additional capability for some of the objects is an **extension** (Extension Object);
+  - a different way of calculating is a **policy** (ddd-tactical-design).
 
-## 4. Dwa poziomy modelu: wiedza i operacje
-- **Poziom wiedzy (knowledge level):** typy, reguły i konfiguracja, które biznes definiuje i zmienia, np. rodzaj
-  ubezpieczenia z polami i regułami, typ produktu, procedura, plan kont, uprawnienia ról.
-- **Poziom operacji (operations level):** konkretne zdarzenia i egzemplarze tworzone na co dzień, np. polisa,
-  egzemplarz produktu, wykonana czynność, księgowanie. Każdy z nich wskazuje swój typ z poziomu wiedzy.
-- **Kiedy:** biznes chce dodawać rodzaje bez programisty, reguły zależą od rodzaju, a rodzajów przybywa.
-- **Zasady:**
-  - Operacje odwołują się do wiedzy, nigdy odwrotnie.
-  - Zmiana wiedzy to nowa wersja. Nowe operacje używają nowej wersji, istniejące zostają przy swojej (agreement,
-    pricing w ddd-archetypes).
-  - Poziom wiedzy ma własne reguły poprawności, np. nie usuniesz typu, który ma operacje.
-- **Koszt:** model staje się abstrakcyjny i trudniejszy do czytania. Gdy rodzajów jest kilka i rzadko przybywa,
-  wystarczą zwykłe klasy.
-- **W archetypach:** ProductType i ProductInstance (`product.md`), procedura i czynność (`activity-process.md`),
-  typ i egzemplarz zasobu (`resource-service.md`).
+## 4. Two levels of the model: knowledge and operations
+- **Knowledge level:** types, rules and configuration that the business defines and changes, e.g. a kind
+  of insurance with fields and rules, a product type, a procedure, a chart of accounts, role permissions.
+- **Operations level:** concrete events and instances created every day, e.g. a policy,
+  a product instance, a performed activity, a posting. Each of them points to its type on the knowledge level.
+- **When:** the business wants to add kinds without a programmer, the rules depend on the kind, and the number of kinds grows.
+- **Rules:**
+  - Operations refer to knowledge, never the other way round.
+  - A change of knowledge is a new version. New operations use the new version, existing ones stay with theirs (agreement,
+    pricing in ddd-archetypes).
+  - The knowledge level has its own validity rules, e.g. you will not delete a type that has operations.
+- **Cost:** the model becomes abstract and harder to read. When there are a few kinds and new ones rarely appear,
+  ordinary classes are enough.
+- **In the archetypes:** ProductType and ProductInstance (`product.md`), procedure and activity (`activity-process.md`),
+  resource type and instance (`resource-service.md`).
 
-## Źródła
-- M. Fowler, *Analysis Patterns: Reusable Object Models*, Addison-Wesley, 1996 [niezweryfikowane: rok według
-  katalogów 1996, część wydań podaje 1997]. Poziom wiedzy i operacji: rozdz. 2 „Accountability”, sekcja
-  „Accountability Knowledge Level” (spis treści u wydawcy, InformIT, odczyt 2026-10-21).
-- E. Evans, *Domain-Driven Design: Tackling Complexity in the Heart of Software*, Addison-Wesley, 2003, rozdz. 16
-  „Large-Scale Structure”, wzorzec „Knowledge Level” [niezweryfikowane: według spisu treści ze źródeł wtórnych].
+## Sources
+- M. Fowler, *Analysis Patterns: Reusable Object Models*, Addison-Wesley, 1996 [unverified: the year according to
+  catalogues is 1996, some editions give 1997]. Knowledge and operations level: chapter 2 "Accountability", section
+  "Accountability Knowledge Level" (table of contents at the publisher, InformIT, accessed 2026-10-21).
+- E. Evans, *Domain-Driven Design: Tackling Complexity in the Heart of Software*, Addison-Wesley, 2003, chapter 16
+  "Large-Scale Structure", the "Knowledge Level" pattern [unverified: according to a table of contents from secondary sources].
 - J. Arlow, I. Neustadt, *Enterprise Patterns and MDA: Building Better Software with Archetype Patterns and UML*,
-  Addison-Wesley, ISBN 9780321112309, rok: źródła podają 2003 lub 2004 (rozdziały Party, Product, Inventory, Rule według spisu treści).
-- Techniki 1–3 opisano własnymi słowami na podstawie powyższych źródeł i programu szkolenia „DDD — zaawansowane
-  techniki modelowania i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21).
+  Addison-Wesley, ISBN 9780321112309, year: sources give 2003 or 2004 (chapters Party, Product, Inventory, Rule according to the table of contents).
+- Techniques 1–3 are described in our own words on the basis of the sources above and the training programme "DDD — zaawansowane
+  techniki modelowania i archetypy" (Advanced modeling techniques and archetypes; Bottega IT Minds, material from a human, 2026-10-21).

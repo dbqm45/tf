@@ -1,30 +1,30 @@
-# Wykrywanie sprzeczności
+# Detecting contradictions
 
-**Wykrycie ≠ rozstrzygnięcie.** Krytyk (osobny agent w świeżym kontekście) tylko znajduje i opisuje sprzeczności;
-rozstrzyga człowiek, a decyzja trafia do `decisions.md`.
+**Detection ≠ resolution.** The critic (a separate agent in a fresh context) only finds and describes contradictions;
+the human resolves them, and the decision goes into `decisions.md`.
 
-## Rodzaje sprzeczności
-1. Ta sama reguła opisana na dwa niezgodne sposoby.
-2. Różne liczby, progi lub terminy dla tego samego.
-3. Decyzja lub oczekiwanie łamiące podane ograniczenie.
-4. Wymagania wzajemnie się wykluczające.
-5. Cicha zmiana zdania (ktoś twierdzi inaczej niż wcześniej, bez zaznaczenia zmiany).
+## Kinds of contradictions
+1. The same rule described in two incompatible ways.
+2. Different numbers, thresholds or deadlines for the same thing.
+3. A decision or expectation breaking a stated constraint.
+4. Mutually exclusive requirements.
+5. A silent change of mind (someone claims something different than before, without marking the change).
 
-## To NIE są sprzeczności
-- podobne słowa o **różnych podmiotach** (dwa różne procesy, dwa działy),
-- jawna zmiana decyzji („kiedyś X, od stycznia Y”),
-- różne preferencje osób (to temat do rozmowy, nie konflikt faktów),
-- ogólnik obok konkretu, który go doprecyzowuje.
+## These are NOT contradictions
+- similar words about **different subjects** (two different processes, two departments),
+- an explicit change of decision ("formerly X, from January Y"),
+- different preferences of people (that is a topic for a conversation, not a conflict of facts),
+- a generality next to a specific statement that refines it.
 
-## Test tego samego podmiotu
-Zanim zgłosisz: przeczytaj po 2–3 linie przed i po obu cytatach — wyjątek lub zawężenie często stoi w następnym zdaniu.
-Zgłoś tylko, gdy oba cytaty dotyczą tego samego podmiotu, w tym samym czasie i warunkach.
+## The same-subject test
+Before you report: read 2–3 lines before and after both quotes — an exception or a narrowing often stands in the next sentence.
+Report only when both quotes concern the same subject, at the same time and under the same conditions.
 
 ## Format (`docs/project/02-domain/contradictions.md`)
-| # | Konflikt (waga: wysoka/średnia/niska) | Cytaty (id, źródło, miejsce) | Dlaczego się wykluczają | Pytanie diagnostyczne | Status |
+| # | Conflict (weight: high/medium/low) | Quotes (id, source, location) | Why they exclude each other | Diagnostic question | Status |
 |---|---|---|---|---|---|
-| C1 | Czy system sam dodaje zasoby? (wysoka) | E3 S1 L20 · E41 S2 tor: Planista/7 | wywiad: „tylko sugeruje”; tablica: polityka dodaje automatycznie | „Gdy brakuje osoby, system ma **zaproponować** kandydata, czy **sam** go przypisać?” | otwarta |
+| C1 | Does the system add resources by itself? (high) | E3 S1 L20 · E41 S2 lane: Planner/7 | interview: "it only suggests"; board: a policy adds automatically | "When a person is missing, should the system **propose** a candidate, or assign them **by itself**?" | open |
 
-Pytanie diagnostyczne: konkretne, rozstrzygalne jednym zdaniem, bez oskarżania („kto ma rację?” — źle).
-Statusy: `otwarta` → `rozstrzygnięta → D-xxx` | `odroczona` (trafia do Otwartych pytań) | `odrzucona` (z powodem).
-Wynik krytyka cache'uj po skrócie treści banku — ponowne uruchomienie na tym samym banku nie zmienia listy.
+A diagnostic question: specific, resolvable in one sentence, without accusing ("who is right?" — wrong).
+Statuses: `open` → `resolved → D-xxx` | `deferred` (goes to Open questions) | `rejected` (with a reason).
+Cache the critic's result by the hash of the bank content — re-running on the same bank does not change the list.

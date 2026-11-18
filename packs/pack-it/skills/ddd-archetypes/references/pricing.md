@@ -1,140 +1,140 @@
-# Archetyp Pricing — mapper (kalkulatory, cenniki, ważność, cena zamrożona)
+# The Pricing archetype — mapper (calculators, price lists, validity, frozen price)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania, w których **cena lub kwota wynika z reguł** (klient, ilość, termin, umowa, promocja, koszt pieniądza
-w czasie), na model nazwanych kalkulatorów. Cena rzadko jest polem produktu; rozsiana po `if`-ach w serwisach sprawia, że każda
-promocja to zmiana kodu i ryzyko regresji, a biznes nie wie, jak ją policzono. Efekt: nowa stawka = dane, nowy sposób liczenia =
-nowy typ, każdą cenę da się **wyjaśnić i odtworzyć**. Protokół wspólny: `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements in which **a price or an amount follows from rules** (the customer, the quantity, the date, the agreement, a promotion, the time value
+of money) into a model of named calculators. A price is rarely a product field; scattered across `if`s in services, it makes every
+promotion a code change and a regression risk, and the business does not know how it was computed. The effect: a new rate = data, a new way of computing =
+a new type, every price can be **explained and reproduced**. The common protocol: `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy kwota powstaje z obliczenia na parametrach (stawki, progi, czas), które biznes chce zmieniać
-bez programisty?* Tak → pasuje. Kwota jest tylko przepisywana z dokumentu lub sumowana z historii → nie Pricing.
+## Fit test
+**The core question:** *is the amount produced by a computation on parameters (rates, thresholds, time) that the business wants to change
+without a developer?* Yes → it fits. The amount is only copied from a document or summed from history → not Pricing.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| cennik, stawka, taryfa, rabat, promocja, „od 10 szt. taniej” | ✅ |
-| odsetki, opłata za dzień/miesiąc, prowizja %, kara umowna | ✅ |
-| „cena zależy od klienta / umowy / sezonu / kanału” | ✅ |
-| „pokaż klientowi, jak policzono cenę” | ✅ |
-| „ile punktów ma klient?”, saldo, rozrachunki | ❌ → Accounting |
-| „jaki wariant / które opcje wolno wybrać razem?” | ❌ → Configurator (cena opcji → Pricing obok) |
-| „kwota w walucie, zaokrąglenia, podział na raty” sam w sobie | ❌ → Quantity/Money |
-| „cena = pole produktu, zmieniana ręcznie raz na rok” | ⚠️ graniczny |
+| price list, rate, tariff, discount, promotion, "cheaper from 10 pcs" | ✅ |
+| interest, a fee per day/month, a % commission, a contractual penalty | ✅ |
+| "the price depends on the customer / agreement / season / channel" | ✅ |
+| "show the customer how the price was computed" | ✅ |
+| "how many points does the customer have?", balance, settlements | ❌ → Accounting |
+| "which variant / which options may be chosen together?" | ❌ → Configurator (the option price → Pricing next to it) |
+| "an amount in a currency, rounding, splitting into instalments" on its own | ❌ → Quantity/Money |
+| "price = a product field, changed manually once a year" | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Cena jako atrybut katalogu* — czy istnieje **jakakolwiek reguła** (ilość, klient, okres)? Nie → atrybut Product z historią;
-  tak → Pricing.
-- *Prowizja/podatek jako skutek zdarzenia* — kwotę liczy Pricing (kalkulator), a zaksięgowanie to reguła księgowania Accounting.
-- *Wycena konfiguracji* — dopuszczalność opcji to Configurator; cena wybranych opcji to kalkulatory Pricing.
+**Borderline cases:**
+- *Price as a catalog attribute* — is there **any rule** (quantity, customer, period)? No → a Product attribute with history;
+  yes → Pricing.
+- *A commission/tax as the effect of an event* — Pricing computes the amount (a calculator), and posting it is an Accounting posting rule.
+- *Pricing a configuration* — whether options are allowed is the Configurator; the price of the chosen options is Pricing calculators.
 
-## Model (istota)
-| Element | Istota |
+## Model (the essence)
+| Element | Essence |
 |---|---|
-| **Typ kalkulatora** | sposób liczenia; deklaruje parametry **przy tworzeniu** (kwota, stopa roczna) i **przy wyliczeniu** (podstawa, liczba dni, jednostka czasu). Brak parametru = czytelny błąd, nie cicha zła cena |
-| **Kalkulator (instancja)** | nazwa + typ + wartości parametrów + czytelny **opis** („stała kwota 20 PLN”, „6% w skali roku naliczane za dzień/tydzień/miesiąc/rok”). Zwraca **Money** |
-| **Rejestr kalkulatorów** | biznes/konfiguracja tworzy nazwane instancje („odsetki-6”, „opłata-stała-20”); wycena = wybór po nazwie + parametry |
-| **Kompozycja** | kalkulator złożony z innych — tabela niżej |
-| **Cennik** | zbiór kalkulatorów z **okresem ważności** (`ważny_od`, `ważny_do`) i **wersją**; zmiana = nowa wersja, stara zostaje do odtwarzania |
-| **Wycena (wynik)** | Money + **rozbicie** (który kalkulator, jakie parametry, jaka wersja cennika) — wyjaśnialność i audyt |
-| **Cena ofertowa** | wycena **zamrożona** na ofercie/zamówieniu: kopia kwoty + odwołanie do wersji; późniejsza zmiana cennika jej nie rusza |
+| **Calculator type** | a way of computing; it declares parameters **at creation** (an amount, an annual rate) and **at calculation** (a base, a number of days, a time unit). A missing parameter = a readable error, not a silently wrong price |
+| **Calculator (instance)** | a name + a type + parameter values + a readable **description** ("a fixed amount of 20 PLN", "6% per year accrued per day/week/month/year"). It returns **Money** |
+| **Calculator registry** | the business/configuration creates named instances ("interest-6", "fixed-fee-20"); pricing = choosing by name + parameters |
+| **Composition** | a calculator composed of others — the table below |
+| **Price list** | a set of calculators with **a validity period** (`valid_from`, `valid_to`) and **a version**; a change = a new version, the old one stays for reproduction |
+| **Quote (result)** | Money + **a breakdown** (which calculator, what parameters, what price list version) — explainability and audit |
+| **Offer price** | a quote **frozen** on an offer/order: a copy of the amount + a reference to the version; a later price list change does not touch it |
 
-**Kompozycja kalkulatorów**
-| Rodzaj | Działanie | Przykład |
+**Calculator composition**
+| Kind | Action | Example |
 |---|---|---|
-| suma | dodaje wyniki składników | cena bazowa + opłata za dostawę |
-| krokowy (schodkowy) | cena za przedział stała, rośnie skokowo | 1–10 szt. po 5 zł, 11–50 po 4 zł (każdy przedział osobno) |
-| progowy | po przekroczeniu progu **cała** ilość w nowej stawce | ≥ 100 szt. → wszystko po 3 zł |
-| procentowy | % od podstawy (innego kalkulatora) | rabat 10%, prowizja 2% |
-| dzienny / odsetkowy | stawka × czas; stopa roczna przeliczana na dzień/miesiąc | 6% rocznie × 45 dni zwłoki |
-| min / max | ogranicza wynik składnika | prowizja 2%, nie mniej niż 5 zł |
+| sum | adds the results of the components | base price + a delivery fee |
+| step (tiered) | a fixed price per range, increases in steps | 1–10 pcs at 5 PLN, 11–50 at 4 PLN (each range separately) |
+| threshold | after crossing a threshold **the whole** quantity at the new rate | ≥ 100 pcs → everything at 3 PLN |
+| percentage | % of a base (another calculator) | a 10% discount, a 2% commission |
+| daily / interest | rate × time; the annual rate converted per day/month | 6% per year × 45 days of delay |
+| min / max | limits a component's result | a 2% commission, no less than 5 PLN |
 
-Zaokrąglanie i skala **jawne**: wewnętrznie wysoka precyzja, wynik do groszy, reguła zaokrąglenia w jednym miejscu
-(Money z `quantity-money.md`).
+Rounding and scale **explicit**: high precision internally, the result to the grosz (cent), the rounding rule in one place
+(Money from `quantity-money.md`).
 
-## Pytania
-**A — decyzje standardowe:**
-- Od czego zależy cena? Co jest **parametrem stałym** kalkulatora, a co **danymi transakcji**?
-- Kto i jak często zmienia reguły cen? (konfiguracja vs kod)
-- Czy klient musi zobaczyć, **jak** policzono cenę? (opis, rozbicie)
-- Od kiedy obowiązuje cena i **jak długo ważna jest oferta**?
-- Czy cena na zamówieniu jest **zamrożona**, czy przeliczana przy realizacji/fakturze?
-- Progi: **krokowo** (każdy przedział osobno) czy **progowo** (cała ilość w stawce progu)?
+## Questions
+**A — standard decisions:**
+- What does the price depend on? What is a **fixed parameter** of the calculator, and what is **transaction data**?
+- Who changes the price rules and how often? (configuration vs code)
+- Must the customer see **how** the price was computed? (description, breakdown)
+- From when is the price in force and **how long is the offer valid**?
+- Is the price on the order **frozen**, or recomputed on fulfilment/invoice?
+- Thresholds: **step** (each range separately) or **threshold** (the whole quantity at the threshold rate)?
 
-**B — luki** (przykłady):
-- kolejność składania rabatów (od ceny bazowej czy kaskadowo)? łączenie promocji (sumują się / wygrywa najlepsza)?
-- cena minimalna / marża minimalna? · waluty i kursy (kiedy przeliczać)? · netto/brutto i VAT (Pricing czy osobno)?
-- zmiana cennika w trakcie okresu rozliczeniowego (proporcjonalnie)? · odtworzenie ceny sprzed roku (reklamacja, audyt)?
-- zaokrąglanie per pozycja czy od sumy? · symulacja „co jeśli” nowego cennika na historycznych zamówieniach?
+**B — gaps** (examples):
+- the order of applying discounts (from the base price or cascading)? combining promotions (they add up / the best one wins)?
+- a minimum price / minimum margin? · currencies and exchange rates (when to convert)? · net/gross and VAT (Pricing or separately)?
+- a price list change during a billing period (pro rata)? · reproducing a price from a year ago (a complaint, an audit)?
+- rounding per item or on the total? · a "what if" simulation of a new price list on historical orders?
 
-## Kroki mapowania
-1. **Kwoty** — wypisz każdą kwotę z wymagań (cena, opłata, odsetki, rabat, prowizja); dla każdej: waluta, precyzja, zaokrąglenie.
-2. **Typy kalkulatorów** — sposoby liczenia; dla każdego parametry tworzenia i wyliczenia. Nie mnóż typów: nowa stawka to instancja.
-3. **Instancje** — nazwane kalkulatory z opisem czytelnym dla biznesu.
-4. **Kompozycje** — drzewo kalkulatorów dla każdej kwoty końcowej (suma, krokowy, progowy, procentowy, dzienny, min/max).
-5. **Cenniki** — grupowanie instancji, okres ważności, wersjonowanie, reguła wyboru cennika (klient, kanał, data).
-6. **Moment wyceny i zamrożenie** — kiedy cena się liczy (oferta, zamówienie, faktura) i gdzie jest zamrażana.
-7. **Rozbicie** — co trafia do wyjaśnienia ceny (klient, audyt, obsługa).
-8. **Granice** — czego Pricing nie robi: kto może nadać rabat (autoryzacja), księgowanie kwoty (Accounting), dopuszczalność opcji
+## Mapping steps
+1. **Amounts** — list every amount from the requirements (price, fee, interest, discount, commission); for each: currency, precision, rounding.
+2. **Calculator types** — the ways of computing; for each the creation and calculation parameters. Do not multiply types: a new rate is an instance.
+3. **Instances** — named calculators with a description readable for the business.
+4. **Compositions** — a tree of calculators for each final amount (sum, step, threshold, percentage, daily, min/max).
+5. **Price lists** — grouping instances, the validity period, versioning, the price list selection rule (customer, channel, date).
+6. **The moment of pricing and freezing** — when the price is computed (offer, order, invoice) and where it is frozen.
+7. **Breakdown** — what goes into the explanation of the price (customer, audit, support).
+8. **Boundaries** — what Pricing does not do: who may grant a discount (authorization), posting the amount (Accounting), whether options are allowed
    (Configurator).
 
-## Decyzje do kontroli (R/A/X)
-typy kalkulatorów i ich parametry · krokowy vs progowy · kolejność i łączenie rabatów · zaokrąglanie (per pozycja / od sumy,
-tryb) · waluta i moment przeliczenia · ważność cennika i oferty · wersjonowanie · zamrożenie ceny na zamówieniu · przeliczanie
-stopy rocznej (365/360, dni rzeczywiste) · netto/brutto · cena minimalna · kto zmienia konfigurację.
+## Decisions to check (R/A/X)
+calculator types and their parameters · step vs threshold · the order and combining of discounts · rounding (per item / on the total,
+mode) · the currency and the moment of conversion · the validity of the price list and the offer · versioning · freezing the price on the order · converting
+the annual rate (365/360, actual days) · net/gross · minimum price · who changes the configuration.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Pricing: <obszar>
-## Kwoty              — | Kwota | Waluta | Precyzja | Zaokrąglenie |
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Typy kalkulatorów  — | Typ | Parametry tworzenia | Parametry wyliczenia | Wynik |
-## Kalkulatory        — | Nazwa | Typ | Parametry | Opis dla biznesu |
-## Kompozycje         — drzewo per kwota końcowa
-## Cenniki            — | Cennik | Kalkulatory | Ważny od | Ważny do | Wersja | Reguła wyboru |
-## Moment wyceny i zamrożenie
-## Rozbicie ceny      — pola wyjaśnienia
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), parametry polityk zmiennych, granice z innymi archetypami
+# Pricing model: <area>
+## Amounts            — | Amount | Currency | Precision | Rounding |
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Calculator types   — | Type | Creation parameters | Calculation parameters | Result |
+## Calculators        — | Name | Type | Parameters | Description for the business |
+## Compositions       — a tree per final amount
+## Price lists        — | Price list | Calculators | Valid from | Valid to | Version | Selection rule |
+## Moment of pricing and freezing
+## Price breakdown    — explanation fields
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), variable policy parameters, boundaries with other archetypes
 ```
 
-## Wzorce i pułapki
-- **Nowa stawka = dane, nowy sposób liczenia = nowy typ.** Typ kalkulatora na każdą promocję to `if` w przebraniu.
-- Cena zapisana tylko jako wynik bez odwołania do kalkulatora i wersji — nie da się jej wyjaśnić ani odtworzyć.
-- Przeliczanie zamówień po zmianie cennika — klasyczny błąd; cena ofertowa jest **zamrożona**.
-- Cennik edytowany w miejscu gubi historię — **wersjonuj**, okres ważności zamiast nadpisywania.
-- Mylenie krokowego z progowym daje różne kwoty na granicy przedziału — zapisz jawnie i dodaj przykład liczbowy.
-- `double` do pieniędzy — nie; Money z jawną skalą i zaokrągleniem.
-- **Poza archetypem:** „czy handlowiec może dać 15% rabatu?” to autoryzacja (warstwa aplikacji), Pricing liczy podany rabat.
-  Polityki zmienne („klient VIP ma inny cennik”) → warstwa reguł wybiera cennik/kalkulator i podaje go jako **parametr**.
+## Patterns and pitfalls
+- **A new rate = data, a new way of computing = a new type.** A calculator type for every promotion is an `if` in disguise.
+- A price stored only as a result with no reference to the calculator and the version — it can be neither explained nor reproduced.
+- Recomputing orders after a price list change — a classic mistake; the offer price is **frozen**.
+- A price list edited in place loses history — **version** it, a validity period instead of overwriting.
+- Confusing step with threshold gives different amounts at a range boundary — record it explicitly and add a numeric example.
+- `double` for money — no; Money with an explicit scale and rounding.
+- **Outside the archetype:** "may a sales rep give a 15% discount?" is authorization (the application layer), Pricing computes the given discount.
+  Variable policies ("a VIP customer has a different price list") → the rules layer chooses the price list/calculator and supplies it as **a parameter**.
 
-## Kontrola jakości
-- [ ] każda kwota z wymagań ma kalkulator (lub kompozycję) i opis czytelny dla biznesu
-- [ ] każdy typ ma listę parametrów tworzenia i wyliczenia; brak parametru → błąd
-- [ ] zaokrąglanie, waluta i precyzja zdefiniowane w jednym miejscu
-- [ ] cenniki mają okres ważności i wersję; wiadomo, kiedy cena jest zamrażana
-- [ ] krokowy/progowy rozstrzygnięty przykładem liczbowym na granicy przedziału
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] every amount from the requirements has a calculator (or a composition) and a description readable for the business
+- [ ] every type has a list of creation and calculation parameters; a missing parameter → an error
+- [ ] rounding, currency and precision defined in one place
+- [ ] price lists have a validity period and a version; it is known when the price is frozen
+- [ ] step/threshold settled with a numeric example at a range boundary
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Wypożyczalnia rowerów: 15 zł za godzinę, od 4 godzin 50 zł za dzień. Za każdy dzień zwłoki kara 30 zł.
-Stali klienci mają 10% rabatu. Cena z rezerwacji obowiązuje, nawet gdy zmienimy cennik.”
+## Example (shortened)
+**Input:** "A bike rental: 15 PLN per hour, from 4 hours 50 PLN per day. For each day of delay a penalty of 30 PLN.
+Regular customers have a 10% discount. The price from the booking is in force even when we change the price list."
 
 ```markdown
-## Typy kalkulatorów
-| stawka_za_jednostkę | stawka, jednostka | liczba jednostek | Money |
-| ryczałt | kwota, okres | — | Money |
-| procent | stopa | podstawa (Money) | Money |
-## Kalkulatory
-| wynajem-godz-15 | stawka_za_jednostkę | 15 PLN/h | „15 zł za każdą godzinę” |
-| wynajem-dzień-50 | ryczałt | 50 PLN/dzień | „cały dzień 50 zł” (min wybiera go od 4 h: 4×15=60 > 50) |
-| kara-zwłoka-30 | stawka_za_jednostkę | 30 PLN/dzień | „30 zł za dzień zwłoki” |
-| rabat-stały-10 | procent | −10% | „10% dla stałych klientów” |
-## Kompozycje — wynajem = min(wynajem-godz-15, wynajem-dzień-50) → procent(rabat) jeśli dotyczy; kara osobno (bez rabatu? → X)
-## Moment wyceny — rezerwacja; cena zamrożona z odwołaniem do wersji cennika (R)
-## Decyzje
-| rabat także od kary? | X → zapytano: „To zależy” → parametr `rabat_obejmuje_kary` z polityki lojalnościowej (A) |
-| kto jest „stałym klientem” | poza archetypem — reguła podaje `rabat` jako parametr (A) |
-| zaokrąglenie do pełnej godziny w górę | X → hot spot |
+## Calculator types
+| rate_per_unit | rate, unit | number of units | Money |
+| flat_fee | amount, period | — | Money |
+| percentage | rate | base (Money) | Money |
+## Calculators
+| rental-hour-15 | rate_per_unit | 15 PLN/h | "15 PLN for each hour" |
+| rental-day-50 | flat_fee | 50 PLN/day | "the whole day 50 PLN" (min chooses it from 4 h: 4×15=60 > 50) |
+| penalty-delay-30 | rate_per_unit | 30 PLN/day | "30 PLN per day of delay" |
+| discount-regular-10 | percentage | −10% | "10% for regular customers" |
+## Compositions — rental = min(rental-hour-15, rental-day-50) → percentage(discount) if applicable; the penalty separately (no discount? → X)
+## Moment of pricing — booking; the price frozen with a reference to the price list version (R)
+## Decisions
+| discount also on the penalty? | X → asked: "It depends" → parameter `discount_covers_penalties` from the loyalty policy (A) |
+| who is a "regular customer" | outside the archetype — a rule supplies `discount` as a parameter (A) |
+| rounding up to a full hour | X → hot spot |
 ```

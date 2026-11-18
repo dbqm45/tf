@@ -1,53 +1,52 @@
-# Archetypy w warstwach systemu (niezależnie od technologii)
+# Archetypes in the layers of a system (independent of technology)
 
-Archetyp to model biznesowy. W każdej warstwie przyjmuje inną postać — ta sama wiedza, różne odpowiedzialności.
-Idiomy konkretnego języka i frameworka biorą się ze skilli `lang-*` i `fw-*` (sekcja „Pojęcia domenowe w …”).
+An archetype is a business model. In each layer it takes a different shape — the same knowledge, different responsibilities.
+The idioms of a specific language and framework come from the `lang-*` and `fw-*` skills (the "Domain concepts in …" section).
 
-## Gdzie co żyje
-| Warstwa | Rola archetypu | Pojęcia ze słownika |
+## What lives where
+| Layer | The archetype's role | Concepts from the glossary |
 |---|---|---|
-| **Domena (serwer)** | źródło prawdy reguł i niezmienników | agregat, obiekt wartości, maszyna stanów, polityka, zdarzenie, repozytorium |
-| **Krawędź modułu (API, fasada)** | mały, stabilny kontrakt archetypu (np. zablokuj/zwolnij/wyłącz), tłumaczenie DTO ↔ domena | wynik operacji, moduł, zdarzenie integracyjne |
-| **Integracja** | Published Language archetypu między kontekstami | zdarzenia (notification / state transfer), read model po stronie odbiorcy |
-| **Odczyt** | skonsolidowane widoki (kalendarz, historia zapisów, katalog) | read model |
-| **UI** | odwzorowanie kształtu i stanów; podpowiedzi, nie decyzje | obiekt wartości (formatowanie, wejście), warianty, read model, maszyna stanów żądania |
+| **Domain (server)** | the source of truth for rules and invariants | aggregate, value object, state machine, policy, event, repository |
+| **Module edge (API, facade)** | a small, stable contract of the archetype (e.g. block/release/disable), DTO ↔ domain translation | operation result, module, integration event |
+| **Integration** | the archetype's Published Language between contexts | events (notification / state transfer), a read model on the receiver's side |
+| **Read** | consolidated views (calendar, entry history, catalog) | read model |
+| **UI** | reflecting the shape and states; hints, not decisions | value object (formatting, input), variants, read model, request state machine |
 
-## Twarde zasady dla UI (w każdym frameworku)
-1. **Ceny, rabaty, odsetki, sumy do zapłaty liczy serwer.** UI pokazuje cenę i jej opis; wyliczenie lokalne tylko jako
-   podgląd oznaczony „orientacyjnie” i nigdy nie wysyłany jako kwota do zapłaty.
-2. **Zasobów, o które się konkuruje, nie rezerwujemy optymistycznie.** Stan `pending` → wynik z serwera; konflikt to
-   normalny wynik. Optymistyczne UI tylko dla operacji bez konkurencji.
-3. **Kwoty nigdy na typie zmiennoprzecinkowym** w obliczeniach; jeden formatter.
-4. **Reguły przychodzą jako dane** (ograniczenia cech, reguły konfiguratora, dostępność) — UI ich nie wymyśla.
-5. W UI **język biznesu** („Klient”, „Termin”), nie nazwy archetypów („Party”, „Blockade”).
+## Hard rules for the UI (in every framework)
+1. **Prices, discounts, interest and totals to pay are computed by the server.** The UI shows the price and its description; a local calculation only as
+   a preview marked "approximate" and never sent as the amount to pay.
+2. **Resources people compete for are not booked optimistically.** A `pending` state → the result from the server; a conflict is
+   a normal result. Optimistic UI only for operations without competition.
+3. **Amounts never on a floating-point type** in calculations; one formatter.
+4. **Rules come as data** (feature constraints, configurator rules, availability) — the UI does not invent them.
+5. In the UI **the language of the business** ("Customer", "Appointment"), not archetype names ("Party", "Blockade").
 
-## Sygnały w kodzie (dowolny język)
-| Sygnał | Prawdopodobny archetyp |
+## Signals in code (any language)
+| Signal | Likely archetype |
 |---|---|
-| kwota jako `float/double/number` + osobne pole waluty, zaokrąglanie w wielu miejscach | Money / Quantity |
-| wartość i jednostka jako osobne teksty, jednostka doklejana przy wyświetlaniu | Quantity |
-| `isCompany`, `isCustomer`, pola osoby i firmy w jednej strukturze, osobne klasy User/Customer/Lead dla tej samej strony | Party |
-| flagi `isReserved`, `inMaintenance`, ręczne sprawdzanie nakładania dat w wielu miejscach | Availability |
-| kolumny/pola cech na sztywno, osobny formularz lub klasa per typ produktu | Product |
-| łańcuchy `if` włączające/wyłączające opcje | Configurator |
-| rabaty, odsetki, opłaty w `if`-ach serwisów lub widoków | Pricing |
-| pole `balance` aktualizowane bezpośrednio, „korekta” nadpisująca kwotę | Accounting |
-| kolejność oczekujących liczona ad hoc | Waitlist |
-| ręczne dopasowywanie zasobów do zadań | General assignment |
+| an amount as `float/double/number` + a separate currency field, rounding in many places | Money / Quantity |
+| the value and the unit as separate texts, the unit appended on display | Quantity |
+| `isCompany`, `isCustomer`, person and company fields in one structure, separate User/Customer/Lead classes for the same party | Party |
+| `isReserved`, `inMaintenance` flags, manual checking of date overlap in many places | Availability |
+| hard-coded feature columns/fields, a separate form or class per product type | Product |
+| chains of `if`s enabling/disabling options | Configurator |
+| discounts, interest, fees in the `if`s of services or views | Pricing |
+| a `balance` field updated directly, a "correction" overwriting the amount | Accounting |
+| the order of those waiting computed ad hoc | Waitlist |
+| manual matching of resources to tasks | General assignment |
 
-## Czy zastosować archetyp w danej warstwie?
-Tak, gdy: pojęcie występuje w wielu miejscach warstwy i ma być spójne; są reguły dające natychmiastową informację
-zwrotną; błędy są kosztowne; druga strona (np. backend) już modeluje archetyp i kontrakt zwraca jego kształt.
-Nie, gdy: to jeden prosty ekran/endpoint CRUD, druga strona nie zna pojęcia (najpierw analiza), albo powstałby
-„framework archetypów” dla jednego przypadku.
+## Should the archetype be applied in a given layer?
+Yes, when: the concept appears in many places of the layer and must be consistent; there are rules giving immediate feedback;
+errors are costly; the other side (e.g. the backend) already models the archetype and the contract returns its shape.
+No, when: it is one simple CRUD screen/endpoint, the other side does not know the concept (analysis first), or
+an "archetype framework" would be created for one case.
 
-## Jak moduły archetypów rozmawiają ze sobą
-| Sposób | Kiedy | Ryzyko |
+## How archetype modules talk to each other
+| Way | When | Risk |
 |---|---|---|
-| **fasada synchroniczna** (np. przydział woła „zablokuj” w dostępności) | potrzebna natychmiastowa odpowiedź „udało się?” | pokusa jednej transakcji przez dwa moduły — świadomy kompromis, zapisz w ADR; docelowo saga/outbox |
-| **zdarzenia prywatne vs publikowane** | prywatne w module; publikowane = Published Language na krawędzi | publikowanie zdarzeń wewnętrznych wiąże odbiorców z modelem nadawcy |
-| **ACL jako czysta funkcja tłumacząca** | dane z systemu legacy / zewnętrznego | tłumaczenie nie może przeciekać dalej niż do typu wejściowego modułu |
-| **saga / proces menedżer** | reakcja na zdarzenia z kilku modułów (np. monitorowanie ryzyka projektu) | stan procesu musi być zapisany; kroki jawne |
-Granice importów między modułami pilnuj regułą lintera lub testem architektury (odpowiednik testów ArchUnit) — nie tylko konwencją.
-Unikaj cykli zależności między modułami (A → B → A); wspólne typy przenieś do wspólnego jądra.
-
+| **a synchronous facade** (e.g. assignment calls "block" in availability) | an immediate "did it succeed?" answer is needed | the temptation of one transaction across two modules — a conscious compromise, record it in an ADR; eventually a saga/outbox |
+| **private vs published events** | private inside the module; published = the Published Language at the edge | publishing internal events ties the receivers to the sender's model |
+| **an ACL as a pure translating function** | data from a legacy / external system | the translation must not leak further than the module's input type |
+| **a saga / process manager** | reacting to events from several modules (e.g. monitoring project risk) | the process state must be stored; the steps explicit |
+Guard the import boundaries between modules with a linter rule or an architecture test (the equivalent of ArchUnit tests) — not only by convention.
+Avoid dependency cycles between modules (A → B → A); move shared types to a shared kernel.

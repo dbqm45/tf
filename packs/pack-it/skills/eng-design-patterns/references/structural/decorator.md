@@ -1,47 +1,47 @@
-# Dekorator (Decorator)
+# Decorator
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: strukturalne. Istota: obiekt opakowuje inny obiekt **o tym samym interfejsie** i dokłada zachowanie
-przed/po delegacji; warstwy można składać w runtime w dowolnych kombinacjach.
+Category: structural. The essence: an object wraps another object **with the same interface** and adds behaviour
+before/after delegating; the layers can be composed at runtime in any combinations.
 
 ## Problem
-Pobieranie kursów walut wymaga: ponawiania przy błędach sieci, cache'owania, logowania, metryk — w różnych
-kombinacjach zależnie od środowiska. Podklasy (`CachedRetryingLoggingRates`…) mnożą się kombinatorycznie, a flagi
-w jednej klasie robią z niej worek warunków.
+Fetching exchange rates requires: retrying on network errors, caching, logging, metrics — in various
+combinations depending on the environment. Subclasses (`CachedRetryingLoggingRates`…) multiply combinatorially, and flags
+in one class turn it into a bag of conditions.
 
-## Rozwiązanie i uczestnicy
-- **Komponent** — wspólny interfejs (`RateProvider`).
-- **Konkretny komponent** — podstawowe zachowanie (`HttpRateProvider`).
-- **Dekoratory** — implementują ten sam interfejs, trzymają opakowany komponent (typu interfejsu, nie klasy!)
-  i dodają logikę przed/po wywołaniu.
-- **Klient/kompozycja aplikacji** — składa stos warstw.
+## Solution and participants
+- **Component** — the shared interface (`RateProvider`).
+- **Concrete component** — the basic behaviour (`HttpRateProvider`).
+- **Decorators** — implement the same interface, hold the wrapped component (of the interface type, not the class!)
+  and add logic before/after the call.
+- **Client/application composition** — assembles the stack of layers.
 
-## Kiedy używać
-- Obowiązki dokładane w runtime, bez zmiany klasy i bez wybuchu podklas.
-- Dziedziczenie niemożliwe lub niepraktyczne (klasa z biblioteki, zamknięta hierarchia).
-- Zachowanie naturalnie układa się w warstwy przekrojowe: retry, cache, logowanie, metryki, autoryzacja, kompresja.
+## When to use
+- Responsibilities added at runtime, without changing the class and without an explosion of subclasses.
+- Inheritance impossible or impractical (a class from a library, a closed hierarchy).
+- The behaviour naturally falls into cross-cutting layers: retry, cache, logging, metrics, authorization, compression.
 
-## Koszty
-Kolejność warstw zmienia wynik (cache przed czy po retry?); trudno wyjąć warstwę ze środka stosu; debugowanie przez
-wiele poziomów pośredniości; kod składający stos bywa nieczytelny.
+## Costs
+The order of the layers changes the result (cache before or after retry?); it is hard to remove a layer from the middle of the stack; debugging through
+many levels of indirection; the code assembling the stack can be unreadable.
 
-## Powiązania
-- **Adapter** zmienia interfejs; Dekorator go zachowuje i pozwala nakładać warstwy.
-- **Pełnomocnik** ma ten sam kształt, inną motywację: kontrola dostępu i cyklu życia obiektu, zwykle jedna warstwa.
-- **Łańcuch zobowiązań** może przerwać przepływ; dekorator zawsze deleguje dalej.
-- **Kompozyt** ma wiele dzieci; dekorator jedno. **Strategia** zmienia wnętrze, Dekorator otoczkę.
+## Relations
+- **Adapter** changes the interface; a Decorator keeps it and allows stacking layers.
+- **Proxy** has the same shape, a different motivation: control over access and the object's life cycle, usually one layer.
+- **Chain of Responsibility** can interrupt the flow; a decorator always delegates further.
+- **Composite** has many children; a decorator has one. **Strategy** changes the inside, a Decorator the shell.
 
-## Forma idiomatyczna w TS
-Dla pojedynczej funkcji dekoratorem jest **funkcja wyższego rzędu**: `withRetry(fetchRate, 3)` zwraca funkcję o tej
-samej sygnaturze. Middleware frameworków HTTP i interceptory klientów to ten wzorzec w wersji frameworkowej.
+## Idiomatic form in TS
+For a single function the decorator is a **higher-order function**: `withRetry(fetchRate, 3)` returns a function with the
+same signature. HTTP framework middleware and client interceptors are this pattern in its framework version.
 
-**Uwaga terminologiczna:** składnia `@dekorator` (dekoratory ECMAScript w TS 5+, legacy `experimentalDecorators`)
-to **mechanizm języka** działający na klasach/metodach w chwili ich definiowania — nie to samo co wzorzec. Może
-posłużyć do jego realizacji (dekorator metody owijający wywołanie), ale obecność `@coś` nie oznacza wzorca:
-sprawdź, czy istnieje opakowanie przez kompozycję ze wspólnym interfejsem (lang-typescript).
+**A note on terminology:** the `@decorator` syntax (ECMAScript decorators in TS 5+, legacy `experimentalDecorators`)
+is **a language mechanism** acting on classes/methods at the moment they are defined — not the same as the pattern. It can
+serve to implement it (a method decorator wrapping the call), but the presence of `@something` does not mean the pattern:
+check whether there is wrapping through composition with a shared interface (lang-typescript).
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 interface RateProvider {
   rate(from: string, to: string): Promise<number>;
@@ -50,7 +50,7 @@ interface RateProvider {
 class HttpRateProvider implements RateProvider {
   async rate(from: string, to: string): Promise<number> {
     if (from === to) return 1;
-    return 4.27; // tu byłoby wywołanie HTTP
+    return 4.27; // an HTTP call would be here
   }
 }
 
@@ -90,11 +90,11 @@ class CachedRates implements RateProvider {
   }
 }
 
-// Kompozycja: cache na zewnątrz — trafienie nie uruchamia ponawiania.
+// Composition: the cache on the outside — a hit does not trigger retrying.
 const rates: RateProvider = new CachedRates(new RetryingRates(new HttpRateProvider()));
 rates.rate('EUR', 'PLN').then((r) => console.log('EUR/PLN', r));
 ```
-Forma funkcyjna:
+The functional form:
 ```ts
 type Fetch<A extends unknown[], R> = (...args: A) => Promise<R>;
 
@@ -116,9 +116,9 @@ const fetchRate = withRetry(async (from: string, to: string) => (from === to ? 1
 fetchRate('EUR', 'PLN').then(console.log);
 ```
 
-## Kiedy NIE używać / pułapki
-- **To nie jest `@dekorator` z TS** — najczęstsza pomyłka w tym języku (uwaga wyżej).
-- Mało (1–2), nierosnących dodatków — parametr lub opcja konfiguracyjna są prostsze niż stos klas.
-- Trzeba często **zdejmować** konkretną warstwę ze środka — rozważ kompozycję funkcji z jawną listą kroków.
-- Dekorator zmieniający znaczenie wyniku (a nie tylko otoczkę) ukrywa logikę biznesową w infrastrukturze — reguły
-  należą do domeny (ddd-tactical-design).
+## When NOT to use / pitfalls
+- **This is not the `@decorator` from TS** — the most common mistake in this language (the note above).
+- Few (1–2), non-growing additions — a parameter or a configuration option is simpler than a stack of classes.
+- You often need to **remove** a specific layer from the middle — consider function composition with an explicit list of steps.
+- A decorator that changes the meaning of the result (and not only the shell) hides business logic in the infrastructure — rules
+  belong to the domain (ddd-tactical-design).

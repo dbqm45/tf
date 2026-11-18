@@ -1,125 +1,125 @@
-# Archetyp Planning / Parallelization — mapper (etapy, zależności, harmonogram)
+# The Planning / Parallelization archetype — mapper (stages, dependencies, schedule)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania, w których praca składa się z **etapów zależnych od siebie**, na model grafu: etapy, zależności jawne
-i niejawne (wspólny zasób), poziomy równoległe, ścieżka krytyczna, cykle i harmonogram. Efekt: odpowiedź na „co można robić
-równolegle?”, „ile to potrwa?” i „co nas opóźni?” jest **wyliczana**, nie zgadywana w arkuszu. Protokół wspólny: `SKILL.md` →
-„Mapper — wspólny protokół”.
+It turns requirements in which work consists of **stages dependent on each other** into a graph model: stages, explicit
+and implicit dependencies (a shared resource), parallel levels, the critical path, cycles and the schedule. The effect: the answer to "what can be done
+in parallel?", "how long will it take?" and "what will delay us?" is **computed**, not guessed in a spreadsheet. The common protocol: `SKILL.md` →
+"Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy jest zbiór prac, z których część wymaga wyników innych, i trzeba ustalić ich kolejność lub
-równoległość?* Tak → pasuje. Pytanie „kto to zrobi?” → General assignment; „czy zasób jest wolny?” → Availability.
+## Fit test
+**The core question:** *is there a set of work items, some of which require the results of others, and must their order or
+parallelism be determined?* Yes → it fits. The question "who will do it?" → General assignment; "is the resource free?" → Availability.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „etap B może ruszyć dopiero po A” | ✅ |
-| „co można robić równolegle?”, „ile potrwa projekt?” | ✅ |
-| ścieżka krytyczna, kary za opóźnienia, „etap X musi zacząć się w oknie” | ✅ |
-| „dwa etapy potrzebują tego samego specjalisty / sprzętu” | ✅ zależność niejawna |
-| „kogo przydzielić, by zmaksymalizować wartość?” | ❌ → General assignment |
-| „zarezerwuj koparkę na 3–7 maja” | ❌ → Availability |
-| „zamówienie: nowe → w realizacji → wysłane” | ❌ maszyna stanów / proces |
-| „kto następny do zasobu?” | ❌ → Waitlist |
-| „proces zatwierdzania wniosku w krokach” | ⚠️ graniczny |
+| "stage B can start only after A" | ✅ |
+| "what can be done in parallel?", "how long will the project take?" | ✅ |
+| critical path, penalties for delays, "stage X must start within a window" | ✅ |
+| "two stages need the same specialist / equipment" | ✅ an implicit dependency |
+| "whom to assign to maximize value?" | ❌ → General assignment |
+| "book the excavator for 3–7 May" | ❌ → Availability |
+| "order: new → in progress → shipped" | ❌ a state machine / process |
+| "who is next for the resource?" | ❌ → Waitlist |
+| "an application approval process in steps" | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Workflow / proces biznesowy* — czy kroki mają **czasy trwania i mogą iść równolegle**, a pytanie dotyczy czasu całości?
-  Tak → Planning. Liniowy przepływ statusów jednego dokumentu → maszyna stanów.
-- *Planowanie zmian pracowników* — gdy etapów nie łączą zależności, a problemem jest obsada → General assignment + Availability.
+**Borderline cases:**
+- *Workflow / a business process* — do the steps have **durations and can they run in parallel**, and does the question concern the total time?
+  Yes → Planning. A linear flow of statuses of one document → a state machine.
+- *Planning employee shifts* — when the stages are not connected by dependencies and the problem is staffing → General assignment + Availability.
 
-## Model (istota)
-**Poziomy problemu:** (1) etapy, część wymaga wyników innych — co **równolegle**? (2) czasy trwania — ile trwa projekt, które
-etapy są **krytyczne** (opóźnienie = opóźnienie całości, kary)? (3) etapy potrzebują tych samych zasobów (ludzie, sprzęt) —
-to też zależność, choć nikt jej nie narysował; (4) zależności się zapętliły — którą zerwać? (5) harmonogram: od daty startu,
-od etapu krytycznego (musi zacząć się w oknie), od dostępności wybranych zasobów.
+## Model (the essence)
+**Problem levels:** (1) stages, some require the results of others — what **in parallel**? (2) durations — how long does the project take, which
+stages are **critical** (a delay = a delay of the whole, penalties)? (3) stages need the same resources (people, equipment) —
+this is also a dependency, even though nobody drew it; (4) the dependencies form a loop — which one to break? (5) the schedule: from a start date,
+from a critical stage (it must start within a window), from the availability of selected resources.
 
-| Element | Istota |
+| Element | Essence |
 |---|---|
-| **Etap** | nazwa, czas trwania, zależności od innych etapów, potrzebne zasoby/kompetencje |
-| **Zależność jawna** | B wymaga A |
-| **Zależność niejawna** | A i B potrzebują tego samego unikalnego zasobu → nie mogą iść równolegle |
-| **Graf etapów** | sortowanie topologiczne na **poziomy równoległe**; poziom = etapy bez zależności między sobą |
-| **Czas projektu** | ≈ suma najdłuższych etapów kolejnych poziomów; dokładnie — ścieżka krytyczna |
-| **Cykl** | sprzeczne reguły planu → wynik „brak wykonalnego planu” + propozycja najmniejszego zestawu zależności do usunięcia (decyduje człowiek), nie wyjątek techniczny |
-| **Harmonogram** | osobne obliczenie — kalkulatory: od startu, od etapu krytycznego, od dostępności zasobów; plan równoległości bez zmian, zmienia się przypięcie do kalendarza |
+| **Stage** | a name, a duration, dependencies on other stages, the needed resources/competences |
+| **Explicit dependency** | B requires A |
+| **Implicit dependency** | A and B need the same unique resource → they cannot run in parallel |
+| **Stage graph** | a topological sort into **parallel levels**; a level = stages with no dependencies between them |
+| **Project time** | ≈ the sum of the longest stages of successive levels; exactly — the critical path |
+| **Cycle** | contradictory plan rules → the result "no feasible plan" + a proposal of the smallest set of dependencies to remove (a human decides), not a technical exception |
+| **Schedule** | a separate computation — calculators: from the start, from a critical stage, from resource availability; the parallelism plan unchanged, only the pinning to the calendar changes |
 
-- Generyczny graf i sortowanie żyją **osobno od domeny** (węzeł niesie dowolny ładunek) — ten sam algorytm użyjesz gdzie indziej.
-- **Współpraca:** Planning mówi **co i w jakiej kolejności**, General assignment — **kim** (optymalny przydział), Availability —
-  **czy zasób jest wolny**, i blokuje go. Brakujące zasoby → zdarzenie „zapotrzebowanie niespełnione” dla innych procesów
-  (np. ryzyka).
+- The generic graph and the sort live **separately from the domain** (a node carries any payload) — you will use the same algorithm elsewhere.
+- **Cooperation:** Planning says **what and in what order**, General assignment — **by whom** (the optimal assignment), Availability —
+  **whether the resource is free**, and blocks it. Missing resources → a "demand not met" event for other processes
+  (e.g. risk).
 
-## Pytania
-**A — decyzje standardowe:**
-- Które zależności wynikają z **natury pracy**, a które z przyzwyczajenia (można je zerwać)?
-- Czy etap może zacząć się **przed całkowitym końcem** poprzedniego (częściowe zależności)?
-- Co się dzieje, gdy etap się **opóźni** — kogo to dotyka, jakie są kary?
-- Czasy trwania **pewne czy szacunkowe** (wtedy zakresy / symulacja)?
+## Questions
+**A — standard decisions:**
+- Which dependencies follow from **the nature of the work**, and which from habit (they can be broken)?
+- Can a stage start **before the previous one has fully ended** (partial dependencies)?
+- What happens when a stage is **delayed** — whom does it affect, what are the penalties?
+- Are durations **certain or estimated** (then ranges / simulation)?
 
-**B — luki** (przykłady):
-- kto zatwierdza plan i czy jest **wiążący** (blokuje zasoby), czy tylko symulacją? · wspólne zasoby między projektami ·
-  kalendarz roboczy (weekendy, święta) · przeplanowanie po opóźnieniu — automatyczne czy ręczne? · porównywanie wariantów planu ·
-  co przy cyklu — kto decyduje, którą zależność zerwać?
+**B — gaps** (examples):
+- who approves the plan, and is it **binding** (it blocks resources) or only a simulation? · shared resources between projects ·
+  the working calendar (weekends, holidays) · replanning after a delay — automatic or manual? · comparing plan variants ·
+  what with a cycle — who decides which dependency to break?
 
-## Kroki mapowania
-1. **Etapy** — lista z czasami trwania (wartość lub zakres) i potrzebnymi zasobami.
-2. **Zależności jawne** — z wymagań; oznacz „z natury” vs „z przyzwyczajenia”.
-3. **Zależności niejawne** — wyprowadź ze wspólnych unikalnych zasobów.
-4. **Graf i poziomy** — sortowanie topologiczne; wykryj cykle → wynik domenowy z propozycją zerwania.
-5. **Czas i ścieżka krytyczna** — etapy krytyczne, kary, okna czasowe.
-6. **Harmonogram** — wybierz kalkulator(y): od startu / od etapu krytycznego / od dostępności zasobów.
-7. **Granice** — co przekazujesz do General assignment (kto) i Availability (blokady); zdarzenie „zapotrzebowanie niespełnione”.
-8. **Testy** — scenariusze biznesowe jako przykłady (patrz niżej).
+## Mapping steps
+1. **Stages** — a list with durations (a value or a range) and the needed resources.
+2. **Explicit dependencies** — from the requirements; mark "by nature" vs "by habit".
+3. **Implicit dependencies** — derive them from shared unique resources.
+4. **Graph and levels** — topological sort; detect cycles → a domain result with a proposal for breaking.
+5. **Time and critical path** — critical stages, penalties, time windows.
+6. **Schedule** — choose the calculator(s): from the start / from a critical stage / from resource availability.
+7. **Boundaries** — what you pass to General assignment (who) and Availability (blocks); the "demand not met" event.
+8. **Tests** — business scenarios as examples (see below).
 
-## Decyzje do kontroli (R/A/X)
-które zależności są twarde · częściowe zależności · pewność czasów (wartość / zakres) · traktowanie wspólnych zasobów ·
-kalkulator harmonogramu · kalendarz roboczy · plan wiążący vs symulacja · reakcja na cykl · reakcja na opóźnienie i kary ·
-kto zatwierdza plan.
+## Decisions to check (R/A/X)
+which dependencies are hard · partial dependencies · certainty of durations (value / range) · handling of shared resources ·
+the schedule calculator · the working calendar · a binding plan vs a simulation · the reaction to a cycle · the reaction to a delay and penalties ·
+who approves the plan.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Planning: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Etapy              — | Etap | Czas trwania | Zasoby | Krytyczny? |
-## Zależności         — | Od | Do | Rodzaj (jawna/niejawna) | Twarda? | Źródło |
-## Poziomy równoległe — | Poziom | Etapy | Najdłuższy etap |
-## Ścieżka krytyczna i czas projektu
-## Cykle              — wykryte / propozycja zerwania / kto decyduje
-## Harmonogram        — kalkulator, punkt zaczepienia, kalendarz roboczy
-## Integracje         — General assignment, Availability, zdarzenia
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), przypadki brzegowe, parametry polityk zmiennych
+# Planning model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Stages             — | Stage | Duration | Resources | Critical? |
+## Dependencies       — | From | To | Kind (explicit/implicit) | Hard? | Source |
+## Parallel levels    — | Level | Stages | Longest stage |
+## Critical path and project time
+## Cycles             — detected / proposal for breaking / who decides
+## Schedule           — calculator, anchor point, working calendar
+## Integrations       — General assignment, Availability, events
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), edge cases, variable policy parameters
 ```
 
-## Wzorce i pułapki
-- Graf w domenie, algorytm (sortowanie topologiczne, ścieżka krytyczna) za interfejsem — generyczny, z ładunkiem domenowym.
-- Pominięte zależności niejawne → plan „równoległy” na papierze, niewykonalny w praktyce.
-- Cykl jako wyjątek techniczny ukrywa problem biznesowy — zwróć wynik z propozycją.
-- Mieszanie planu z harmonogramem: zmiana daty startu nie powinna przeliczać równoległości.
-- „Czy kierownik może zmienić plan?” — **autoryzacja poza archetypem**; Planning tylko liczy.
-- Polityka zmienna (kary, bufory, kalendarz roboczy zależny od kraju) → parametr kalkulatora, nie `if` w grafie.
+## Patterns and pitfalls
+- The graph in the domain, the algorithm (topological sort, critical path) behind an interface — generic, with a domain payload.
+- Missed implicit dependencies → a plan "parallel" on paper, infeasible in practice.
+- A cycle as a technical exception hides a business problem — return a result with a proposal.
+- Mixing the plan with the schedule: changing the start date should not recompute the parallelism.
+- "May the manager change the plan?" — **authorization outside the archetype**; Planning only computes.
+- A variable policy (penalties, buffers, a working calendar depending on the country) → a calculator parameter, not an `if` in the graph.
 
-## Kontrola jakości
-- [ ] każdy etap ma czas trwania (lub zakres) i zasoby
-- [ ] zależności niejawne wyprowadzone ze wspólnych zasobów
-- [ ] poziomy równoległe policzone; cykle obsłużone jako wynik domenowy
-- [ ] ścieżka krytyczna i kalkulator harmonogramu wybrane
-- [ ] granice z General assignment i Availability opisane
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] every stage has a duration (or a range) and resources
+- [ ] implicit dependencies derived from shared resources
+- [ ] parallel levels computed; cycles handled as a domain result
+- [ ] the critical path and the schedule calculator chosen
+- [ ] the boundaries with General assignment and Availability described
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-**Testy:** scenariusze biznesowe (np. „badania i rozwój”, „kaskada z etapem krytycznym”) jako przykłady — wejście: etapy
-i zależności; wynik: poziomy równoległe / czas / etap krytyczny. Asercje w języku domeny („etap Projekt jest na poziomie 2”).
+**Tests:** business scenarios (e.g. "research and development", "a cascade with a critical stage") as examples — input: stages
+and dependencies; result: parallel levels / time / critical stage. Assertions in the language of the domain ("the Design stage is on level 2").
 
-## Przykład (skrócony)
-**Wejście:** „Remont mieszkania: skucie płytek (2 dni), elektryka (3), hydraulika (2), tynki (4) po elektryce i hydraulice,
-malowanie (2) po tynkach. Elektryk i hydraulik to ta sama firma, jedna ekipa. Za każdy dzień po terminie — kara.”
+## Example (shortened)
+**Input:** "A flat renovation: removing tiles (2 days), electrical (3), plumbing (2), plastering (4) after electrical and plumbing,
+painting (2) after plastering. The electrician and the plumber are the same company, one crew. For each day past the deadline — a penalty."
 
 ```markdown
-## Zależności — skucie → elektryka, skucie → hydraulika (R, jawne) · elektryka ↔ hydraulika (niejawna: ta sama ekipa)
-## Poziomy — 1: skucie · 2: elektryka · 3: hydraulika · 4: tynki · 5: malowanie (bez ekipy: 2 i 3 równolegle)
-## Czas — 2+3+2+4+2 = 13 dni; ścieżka krytyczna: wszystkie etapy
-## Harmonogram — od daty startu; kalendarz roboczy: A „czy soboty?” — To zależy → parametr `kalendarz_roboczy`
-## Niezmapowane — kara za dzień (→ Pricing/Accounting) · wybór ekipy (→ General assignment)
-## Decyzje — ekipa nie dzieli się na dwa etapy (X → zapytaj: czy druga ekipa skróci do 11 dni?)
+## Dependencies — removal → electrical, removal → plumbing (R, explicit) · electrical ↔ plumbing (implicit: the same crew)
+## Levels — 1: removal · 2: electrical · 3: plumbing · 4: plastering · 5: painting (without the crew: 2 and 3 in parallel)
+## Time — 2+3+2+4+2 = 13 days; critical path: all stages
+## Schedule — from the start date; working calendar: A "Saturdays?" — It depends → parameter `working_calendar`
+## Unmapped — the penalty per day (→ Pricing/Accounting) · choosing the crew (→ General assignment)
+## Decisions — the crew does not split across two stages (X → ask: would a second crew shorten it to 11 days?)
 ```

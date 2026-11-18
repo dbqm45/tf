@@ -1,91 +1,91 @@
-# Projekt potoku MLOps i lista gotowości
+# MLOps pipeline design and a readiness list
 
-Spis treści: Szablon dokumentu · Lista gotowości do produkcji · Kryteria doboru narzędzi · Typowe pułapki
+Contents: Document template · Production readiness list · Criteria for choosing tools · Common pitfalls
 
-## Szablon dokumentu
+## Document template
 ```markdown
-# Projekt potoku MLOps — <model>
-Właściciel: … · Data przeglądu: … · Poziom: obecny X → docelowy Y (powód)
+# MLOps pipeline design — <model>
+Owner: … · Review date: … · Level: current X → target Y (reason)
 
-## 1. Kontekst
-Cel biznesowy, koszt błędu, opóźnienie etykiety, częstość zmian danych, wymogi prawne.
+## 1. Context
+The business goal, the cost of an error, the label delay, the frequency of data changes, legal requirements.
 
-## 2. Artefakty
-| Artefakt | Gdzie | Wersjonowanie | Właściciel |
+## 2. Artifacts
+| Artifact | Where | Versioning | Owner |
 |---|---|---|---|
-| dane treningowe | … | hash / migawka | … |
-| cechy | … | definicja w repo | … |
-| model | rejestr | wersja + alias | … |
-| karta modelu | rejestr | z wersją | … |
+| training data | … | hash / snapshot | … |
+| features | … | definition in the repo | … |
+| model | registry | version + alias | … |
+| model card | registry | with the version | … |
 
-## 3. Potok i wyzwalacze
-Etapy (dane → walidacja → trening → ocena → rejestracja), orkiestrator i uzasadnienie wyboru,
-wyzwalacze CT z limitem częstości i kosztu.
+## 3. Pipeline and triggers
+Stages (data → validation → training → evaluation → registration), the orchestrator and the justification of the choice,
+CT triggers with a frequency and cost limit.
 
-## 4. Bramki
-| Bramka | Warunek | Skutek niezaliczenia |
+## 4. Gates
+| Gate | Condition | Effect of failing |
 |---|---|---|
 
-## 5. Wdrożenie i wycofanie
-Shadow → canary → pełne; kryterium wycofania; kto decyduje.
+## 5. Deployment and rollback
+Shadow → canary → full; the rollback criterion; who decides.
 
 ## 6. Monitoring
-| Sygnał | Częstość | Próg | Akcja |
+| Signal | Frequency | Threshold | Action |
 |---|---|---|---|
 
-## 7. Luki i kolejność wdrożenia
+## 7. Gaps and the deployment order
 ```
 
-## Lista gotowości do produkcji
-Odpowiedzi: tak / nie / nie dotyczy (z powodem). Każde „nie” trafia do sekcji 7 z właścicielem.
+## Production readiness list
+Answers: yes / no / not applicable (with a reason). Every "no" goes into section 7 with an owner.
 
-**Odtwarzalność**
-- Czy z zapisu przebiegu odtworzysz model: dane, kod, środowisko, ziarna, cechy?
-- Czy środowisko treningu i serwowania ma przypięte wersje bibliotek?
+**Reproducibility**
+- Can you reproduce the model from the run record: data, code, environment, seeds, features?
+- Do the training and serving environments have pinned library versions?
 
-**Dane i cechy**
-- Czy schemat i rozkłady danych są sprawdzane przed treningiem?
-- Czy cechy mają jedną definicję dla treningu i serwowania oraz test skew?
-- Czy odczyt historyczny jest point-in-time (brak wycieku przyszłości)?
+**Data and features**
+- Are the schema and the data distributions checked before training?
+- Do the features have one definition for training and serving, and a skew test?
+- Is the historical read point-in-time (no future leakage)?
 
 **Model**
-- Czy jest punkt odniesienia (prosty model lub reguła) i metryka na plastrach?
-- Czy fairness sprawdzono dla grup istotnych dla przypadku użycia?
-- Czy karta modelu ma przeznaczenie, ograniczenia i właściciela?
+- Is there a baseline (a simple model or a rule) and a metric on slices?
+- Has fairness been checked for the groups relevant to the use case?
+- Does the model card have the purpose, the limitations and the owner?
 
-**Wdrożenie**
-- Czy wycofanie jest jednym krokiem i przećwiczonym?
-- Czy nowy model przeszedł shadow lub canary przed pełnym ruchem?
+**Deployment**
+- Is rollback a single step, and has it been rehearsed?
+- Did the new model go through shadow or canary before full traffic?
 
 **Monitoring**
-- Czy jest drift cech i predykcji oraz jakość na dojrzałych kohortach?
-- Czy każdy alert ma akcję i właściciela?
-- Czy koszt na predykcję (lub na zapytanie LLM) jest mierzony i ma budżet?
+- Is there feature and prediction drift, and quality on mature cohorts?
+- Does every alert have an action and an owner?
+- Is the cost per prediction (or per LLM request) measured, and does it have a budget?
 
-**LLM (dodatkowo)**
-- Czy prompty są w rejestrze z wersjami, a zmiana przechodzi przez PR i zestaw ewaluacyjny?
-- Czy tracing obejmuje tokeny, narzędzia i latencję, a próbka ruchu jest oceniana?
-- Czy są metryki barier ochronnych (odmowy, dane osobowe, wstrzyknięcia, brak oparcia w źródłach)?
+**LLM (additionally)**
+- Are the prompts in a registry with versions, and does a change go through a PR and the evaluation set?
+- Does tracing cover tokens, tools and latency, and is a sample of traffic evaluated?
+- Are there guardrail metrics (refusals, personal data, injections, answers not grounded in sources)?
 
-## Kryteria doboru narzędzi
-| Decyzja | Wybierz | Gdy |
+## Criteria for choosing tools
+| Decision | Choose | When |
 |---|---|---|
-| wersjonowanie danych | DVC | jeden projekt, dane w magazynie obiektowym, potrzebny potok obok kodu |
-| | lakeFS | wiele zespołów na wspólnym jeziorze, gałęzie i atomowe commity na dużych danych |
-| | migawka tabeli (Iceberg, Delta) | dane już w takich tabelach |
-| magazyn cech | Feast | cechy współdzielone przez modele, odczyt online, potrzebny point-in-time |
-| | wspólna biblioteka | jeden model, cechy liczone w partii |
-| orkiestracja | Kubeflow Pipelines | Kubernetes jest, kroki w kontenerach, GPU |
-| | Airflow | orkiestrator już działa w organizacji |
-| | Dagster | model jako zasób danych, lineage, testy lokalne |
-| śledzenie | MLflow | potrzebny rejestr, tracing LLM i ewaluacje w jednym miejscu; inne narzędzie, gdy platforma je narzuca |
+| data versioning | DVC | one project, data in an object store, a pipeline next to the code is needed |
+| | lakeFS | many teams on a shared lake, branches and atomic commits on large data |
+| | table snapshot (Iceberg, Delta) | the data is already in such tables |
+| feature store | Feast | features shared by models, online read, point-in-time needed |
+| | a shared library | one model, features computed in batch |
+| orchestration | Kubeflow Pipelines | Kubernetes is there, steps in containers, GPUs |
+| | Airflow | the orchestrator is already running in the organization |
+| | Dagster | the model as a data asset, lineage, local tests |
+| tracking | MLflow | a registry, LLM tracing and evaluations are needed in one place; another tool when the platform imposes it |
 
-Reguła nadrzędna: narzędzie, które zespół już utrzymuje, wygrywa z lepszym narzędziem do wdrożenia od zera,
-chyba że brakuje mu wymaganej funkcji (np. point-in-time).
+The overriding rule: a tool the team already maintains beats a better tool to be deployed from scratch,
+unless it lacks a required feature (e.g. point-in-time).
 
-## Typowe pułapki
-- Metryka offline rośnie, a produkcyjna spada — zwykle skew cech albo wyciek przyszłości w zbiorze treningowym.
-- Automatyczny retrening na zdryfowanych danych bez bramki utrwala błąd; retrening zawsze przez bramkę.
-- Jakość liczona na „wczorajszych danych” przy etykiecie po 90 dniach nic nie mówi — użyj dojrzałych kohort.
-- Średnia metryka ukrywa pogorszenie w segmencie; bramka ma plastry.
-- Zmiana wersji modelu LLM u dostawcy bez uruchomienia zestawu ewaluacyjnego.
+## Common pitfalls
+- The offline metric rises and the production one falls — usually feature skew or future leakage in the training set.
+- Automatic retraining on drifted data without a gate entrenches the error; retraining always goes through a gate.
+- Quality computed on "yesterday's data" with the label after 90 days says nothing — use mature cohorts.
+- An average metric hides a deterioration in a segment; the gate has slices.
+- Changing the LLM model version at the provider without running the evaluation set.

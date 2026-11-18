@@ -1,78 +1,78 @@
-# TDD z agentem — pionowe plasterki na uzgodnionych spoinach
+# TDD with an agent — vertical slices on agreed seams
 
-Uzupełnienie cyklu z SKILL.md dla pracy agenta. Słownik (moduł, interfejs, spoina, adapter): eng-module-depth.
+A supplement to the cycle from SKILL.md for agent work. Vocabulary (module, interface, seam, adapter): eng-module-depth.
 
-## Bramka przed fazą planu — TDD czy nie?
-1. **Czy kod tej fazy już istnieje** (choćby częściowo)? Tak → to nie TDD. Nie dopisujesz testów „po fakcie” pod
-   etykietą TDD: albo zwykła implementacja z testem i celowym psuciem (qa-spec-first-testing), albo test
-   charakteryzujący przed refaktoryzacją.
-2. **Czy umiesz nazwać pierwszy czerwony test jednym zdaniem o obserwowalnym wyniku?** („zwraca 401, gdy użytkownik
-   nie ma dostępu do kursu”, „resetuje interwał do 1 dnia przy ocenie 0”). Nie → wróć do analizy, nie zgaduj.
+## The gate before a plan phase — TDD or not?
+1. **Does the code of this phase already exist** (even partially)? Yes → this is not TDD. You do not add tests "after the fact" under
+   the TDD label: either an ordinary implementation with a test and deliberate breaking (qa-spec-first-testing), or a
+   characterization test before refactoring.
+2. **Can you name the first red test in one sentence about an observable result?** ("returns 401 when the user
+   has no access to the course", "resets the interval to 1 day for a rating of 0"). No → go back to the analysis, do not guess.
 
-| Dobre dla TDD | Słabe dla TDD |
+| Good for TDD | Weak for TDD |
 |---|---|
-| parsery, walidatory, przekształcenia; reguły z wejściem i wyjściem; kontrakt API (status, ciało, autoryzacja); reduktory i maszyny stanów; bugfix (najpierw test odtwarzający); strażnik regresji dla ryzyka | rusztowanie katalogów, konfiguracja narzędzi, CI i zmiennych środowiska, dokumentacja, kosmetyka UI bez asercji, cienki klej (test przepisałby kod), spike szukający kontraktu |
+| parsers, validators, transformations; rules with an input and an output; an API contract (status, body, authorisation); reducers and state machines; a bugfix (a reproducing test first); a regression guard for a risk | directory scaffolding, configuration of tools, CI and environment variables, documentation, UI cosmetics without assertions, thin glue (a test would copy the code), a spike looking for a contract |
 
-- Faza mieszana: TDD dla części z logiką, reszta zwykłą implementacją — jawnie w raporcie.
-- Budżet: 2–5 testów na fazę, wybranych pod regresje, nie test na getter.
-- RED pokazujesz uruchomieniem **jednego pliku testu**; czerwony z właściwego powodu = asercja albo brak modułu lub
-  funkcji, którą zaraz napiszesz — nie błąd składni, zły import czy „No test files found” w samym teście.
-- GREEN: padły inne testy → naprawiasz kod, nie testy.
-- Commit tylko na zielonym pełnym zestawie; czerwony stan to punkt kontrolny dla człowieka, nie granica commita.
-- Jeden plan może mieszać tryby per faza (środowisko → TDD kontraktu → E2E ścieżki → przepisy w strategii testów),
-  ze stanem postępu w jednym miejscu.
+- A mixed phase: TDD for the part with logic, the rest as an ordinary implementation — explicitly in the report.
+- Budget: 2–5 tests per phase, chosen for regressions, not a test for a getter.
+- You show RED by running **a single test file**; red for the right reason = an assertion or a missing module or
+  function that you are about to write — not a syntax error, a wrong import or "No test files found" in the test itself.
+- GREEN: other tests failed → you fix the code, not the tests.
+- Commit only on a green full suite; a red state is a checkpoint for the human, not a commit boundary.
+- One plan can mix modes per phase (environment → TDD of the contract → E2E of the path → recipes in the test strategy),
+  with the progress state in one place.
 
-## Zanim powstanie pierwszy test
-- **Nazwij spoiny** (publiczne interfejsy, przez które obserwujesz zachowanie) i **zatrzymaj się na potwierdzenie**.
-  Testu w niepotwierdzonej spoinie nie piszesz. Wszystkiego nie przetestujesz — uzgodnienie spoin kieruje wysiłek na
-  krytyczne ścieżki i złożoną logikę, nie na każdy przypadek brzegowy. Spoiny zwykle ustala się już przy specyfikacji
-  (qa-spec-first-testing) albo w briefie zadania.
-- Nazwy testów i interfejsów — słowami ze słownika domeny; szanuj ADR z obszaru.
-- Gdy niejasny jest sam kształt interfejsu — najpierw eng-module-depth, potem testy.
+## Before the first test is written
+- **Name the seams** (the public interfaces through which you observe the behaviour) and **stop for confirmation**.
+  You do not write a test in an unconfirmed seam. You will not test everything — agreeing the seams directs the effort to
+  critical paths and complex logic, not to every edge case. Seams are usually set already in the specification
+  (qa-spec-first-testing) or in the task brief.
+- Names of tests and interfaces — in words from the domain glossary; respect the ADRs of the area.
+- When the very shape of the interface is unclear — eng-module-depth first, then the tests.
 
-## Pętla
-1. **Jeden plasterek na cykl:** jedna spoina, jeden test, minimalna implementacja. Pierwszy cykl to **pocisk smugowy** —
-   jedna ścieżka od początku do końca, która dowodzi, że całość się łączy.
-2. Red → green; nie przewiduj kolejnych testów, nie dodawaj funkcji „na zapas”.
-3. Następny test wynika z tego, czego nauczył poprzedni cykl.
-4. **Refaktoryzacja osobno** — po zielonym, jako osobny krok lub commit, zwykle przy review. Agenci w praktyce pomijają
-   ją w pętli, więc wpisz ją jawnie w plan albo w listę przeglądu, zamiast zakładać, że „sama się zrobi”.
+## The loop
+1. **One slice per cycle:** one seam, one test, a minimal implementation. The first cycle is a **tracer bullet** —
+   one path from start to end, which proves that the whole connects.
+2. Red → green; do not anticipate the next tests, do not add features "just in case".
+3. The next test follows from what the previous cycle taught.
+4. **Refactoring separately** — after green, as a separate step or commit, usually at review. In practice agents skip
+   it in the loop, so write it explicitly into the plan or the review list, instead of assuming that "it will do itself".
 
-## Trzy anty-wzorce
-| Anty-wzorzec | Sygnał | Zapobieganie |
+## Three anti-patterns
+| Anti-pattern | Signal | Prevention |
 |---|---|---|
-| **test związany z implementacją** | test pada po zmianie nazwy funkcji wewnętrznej, choć zachowanie się nie zmieniło; mocki własnych modułów, liczenie wywołań, sprawdzanie przez zapytanie do bazy zamiast przez interfejs | testuj tylko przez interfejs; zapisany obiekt sprawdzasz, odczytując go publiczną metodą |
-| **test tautologiczny** | oczekiwana wartość liczona tak samo jak w kodzie (`expect(suma(a, b)).toBe(a + b)`), migawka wyprowadzona tym samym sposobem | oczekiwana wartość ze specyfikacji, znanego literału albo przeliczonego ręcznie przykładu (`toBe(15)`) |
-| **cięcie poziome** | najpierw paczka testów, potem cały kod | testy sprawdzają wyobrażone zachowanie i kształt, a nie to, czego potrzebuje użytkownik → pionowe plasterki |
+| **a test tied to the implementation** | the test fails after an internal function is renamed, although the behaviour did not change; mocks of your own modules, counting calls, checking through a database query instead of through the interface | test only through the interface; you check a saved object by reading it with a public method |
+| **a tautological test** | the expected value computed the same way as in the code (`expect(sum(a, b)).toBe(a + b)`), a snapshot derived the same way | the expected value from the specification, a known literal or an example calculated by hand (`toBe(15)`) |
+| **horizontal slicing** | first a batch of tests, then all the code | the tests check imagined behaviour and shape, not what the user needs → vertical slices |
 
-## Mocki tylko na granicy systemu
-- Mockujesz: zewnętrzne API (płatności, e-mail), czas, losowość; czasem system plików i bazę (lepiej baza testowa).
-- Nie mockujesz: własnych klas i modułów, wewnętrznych współpracowników — niczego, nad czym masz kontrolę.
-- Zależności zewnętrzne **wstrzykuj** (nie twórz klienta w środku funkcji).
-- Klient zewnętrznego API w stylu SDK — osobna funkcja na operację (`pobierzUzytkownika`, `utworzZamowienie`) zamiast
-  jednego ogólnego `fetch(endpoint, opcje)`: mock zwraca jeden kształt, bez warunków w konfiguracji testu, z typami.
+## Mocks only at the system boundary
+- You mock: external APIs (payments, e-mail), time, randomness; sometimes the file system and the database (a test database is better).
+- You do not mock: your own classes and modules, internal collaborators — anything you have control over.
+- **Inject** external dependencies (do not create the client inside a function).
+- An SDK-style client of an external API — a separate function per operation (`getUser`, `createOrder`) instead of
+  one generic `fetch(endpoint, options)`: the mock returns one shape, without conditions in the test configuration, with types.
 
-## Pętla w większym przepływie
-- Kolejność: przesłuchanie → specyfikacja (tu uzgadniasz spoiny) → zadania → TDD w każdym zadaniu → review.
-- **Review sprawdza spoiny:** czy testy powstały tylko w uzgodnionych spoinach, czy nazwy opisują zachowanie, czy są mocki
-  własnych modułów. Refaktoryzację robi się przy review, nie w pętli.
-- Agent nie widzi innych zadań: do zadania dołącz specyfikację (link), nie sam opis zadania; zadania tnij tak, żeby każde
-  dało się domknąć jedną pętlą.
-- Niejasny wybór spoiny → poproś agenta o porównanie 2–3 wariantów (co każdy pozwala testować, co ukrywa), zanim
-  potwierdzisz.
-- Agenci bez pilnowania czasem piszą kod przed testem. W fabryce kolejność wymusza hook `tdd_guard`: kod produkcyjny
-  dopiero po edycji testu i czerwonym uruchomieniu. Przy kluczowych plasterkach sprawdź w raporcie, czy czerwony wynik
-  był z właściwego powodu.
+## The loop in a larger flow
+- Order: interview → specification (here you agree the seams) → tasks → TDD in each task → review.
+- **The review checks the seams:** whether the tests were created only in the agreed seams, whether the names describe behaviour, whether there are mocks
+  of your own modules. Refactoring is done at review, not in the loop.
+- The agent does not see the other tasks: attach the specification (a link) to the task, not just the task description; cut the tasks so that each
+  can be closed with one loop.
+- An unclear choice of seam → ask the agent to compare 2–3 variants (what each lets you test, what it hides) before
+  you confirm.
+- Agents without supervision sometimes write code before the test. In the factory the order is enforced by the `tdd_guard` hook: production code
+  only after editing a test and a red run. For key slices check in the report whether the red result
+  was for the right reason.
 
-## Działa dobrze, gdy
-Agent nazywa spoiny i czeka przed pierwszym plikiem testów; testy pojawiają się po jednym (pada → minimalny kod → następny);
-nazwy testów opisują możliwość użytkownika („zamówienie z poprawnym koszykiem zostaje potwierdzone”), nie wnętrze
-(„wywołuje paymentService.process”); zmiana nazw wewnętrznych nie psuje żadnego testu; mocki są tylko na granicy.
-Wolne testy E2E/przeglądarkowe uruchamiasz na końcu (zapisz to w `CLAUDE.md` projektu).
-Praca bez określonego zachowania (konfiguracja, klej, proste CRUD) — TDD ma tu małą wartość; wystarczy test integracyjny
-ścieżki.
+## It works well when
+The agent names the seams and waits before the first test file; the tests appear one at a time (fails → minimal code → next);
+test names describe a user capability ("an order with a valid cart is confirmed"), not the internals
+("calls paymentService.process"); renaming internals breaks no test; mocks are only at the boundary.
+Slow E2E/browser tests you run at the end (write this in the project's `CLAUDE.md`).
+Work without defined behaviour (configuration, glue, simple CRUD) — TDD has little value here; an integration test
+of the path is enough.
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 3, lekcja 2 (TDD z agentem, bramka przed fazą) — materiał szkoleniowy (dostęp 2026-10-09).
-- [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), skill `tdd` (z plikami o dobrych testach i mockowaniu);
-opis: [aihero.dev](https://www.aihero.dev/skills-tdd). Opisane własnymi słowami.
+## Sources
+- 10xDevs course, ed. 3 (2026), module 3, lesson 2 (TDD with an agent, the gate before a phase) — training material (accessed 2026-10-09).
+- [mattpocock/skills](https://github.com/mattpocock/skills) (MIT), the `tdd` skill (with files on good tests and mocking);
+description: [aihero.dev](https://www.aihero.dev/skills-tdd). Described in our own words.

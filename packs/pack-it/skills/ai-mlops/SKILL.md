@@ -1,119 +1,119 @@
 ---
 name: ai-mlops
-description: Użyj przy cyklu życia modelu ML lub LLM w produkcji — rejestr, cechy, trenowanie w potoku, wdrożenie, drift, prompty (MLOps, LLMOps).
+description: Use for the life cycle of an ML or LLM model in production — registry, features, training in a pipeline, deployment, drift, prompts (MLOps, LLMOps).
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj, gdy model uczenia maszynowego albo funkcja LLM ma przejść z notebooka do utrzymywanej produkcji — poziom dojrzałości MLOps (Google 0–2), śledzenie eksperymentów (MLflow), wersjonowanie danych (DVC, lakeFS), rejestr modeli z aliasami i bramkami promocji, magazyn cech (Feast) i training-serving skew, dobór orkiestratora trenowania (Kubeflow Pipelines, Airflow, Dagster), continuous training, testy danych i bramki jakości modelu (także fairness), wdrożenie modelu (shadow, canary, A/B, wycofanie), monitoring (drift danych i koncepcji, jakość przy opóźnionych etykietach, opóźnienie, koszt), reprodukowalność, karta modelu, LLMOps (rejestr promptów, ewaluacje w CI, tracing, koszt zapytania, metryki barier ochronnych); wynik to projekt potoku MLOps albo lista gotowości. Nie do samych potoków danych (data-engineering), ogólnego CI/CD (ops-ci-cd) i strategii wydań (ops-release-engineering), ogólnego monitoringu (ops-observability), hostowania modeli na GPU (ops-ai-inference), metod ewaluacji (ai-evals) ani doboru modelu statystycznego (data-analysis)."
-  keywords: "mlops, llmops, model w produkcji, wdrożenie modelu, notebook do produkcji, MLflow, rejestr modeli, model registry, feature store, Feast, training-serving skew, DVC, lakeFS, wersjonowanie danych, retraining, dotrenowanie modelu, continuous training, drift, data drift, concept drift, opóźnione etykiety, shadow deployment, canary modelu, karta modelu, model card, reprodukowalność, Kubeflow, Dagster, prompt registry, wersjonowanie promptów, zmiana promptu w produkcji, regresja po zmianie promptu, rachunek za tokeny, koszt na zapytanie, tracing LLM, guardrails"
+  catalog: "Use when a machine learning model or an LLM feature has to move from a notebook into maintained production — the MLOps maturity level (Google 0–2), experiment tracking (MLflow), data versioning (DVC, lakeFS), a model registry with aliases and promotion gates, a feature store (Feast) and training-serving skew, choosing a training orchestrator (Kubeflow Pipelines, Airflow, Dagster), continuous training, data tests and model quality gates (also fairness), model deployment (shadow, canary, A/B, rollback), monitoring (data and concept drift, quality with delayed labels, latency, cost), reproducibility, the model card, LLMOps (prompt registry, evaluations in CI, tracing, cost per request, guardrail metrics); the result is an MLOps pipeline design or a readiness list. Not for data pipelines alone (data-engineering), general CI/CD (ops-ci-cd) and release strategy (ops-release-engineering), general monitoring (ops-observability), hosting models on GPUs (ops-ai-inference), evaluation methods (ai-evals) or choosing a statistical model (data-analysis)."
+  keywords: "mlops, llmops, model w produkcji, wdrożenie modelu, notebook do produkcji, MLflow, rejestr modeli, model registry, feature store, Feast, training-serving skew, DVC, lakeFS, wersjonowanie danych, retraining, dotrenowanie modelu, continuous training, drift, data drift, concept drift, opóźnione etykiety, shadow deployment, canary modelu, karta modelu, model card, reprodukowalność, Kubeflow, Dagster, prompt registry, wersjonowanie promptów, zmiana promptu w produkcji, regresja po zmianie promptu, rachunek za tokeny, koszt na zapytanie, tracing LLM, guardrails, model in production, model deployment, notebook to production, data versioning, model fine-tuning, delayed labels, model canary, reproducibility, prompt versioning, prompt change in production, regression after a prompt change, token bill, cost per request, LLM tracing"
 ---
 
-# MLOps i LLMOps — od notebooka do utrzymywanej produkcji
+# MLOps and LLMOps — from a notebook to maintained production
 
-Model jest kodem, danymi i parametrami naraz, a psuje się bez zmiany kodu (zmieniły się dane). Skill prowadzi od
-poziomu dojrzałości do projektu potoku: co wersjonować, co testować, co monitorować i kiedy dotrenować.
-Nie buduj więcej, niż wymaga poziom ryzyka i częstość zmian.
+A model is code, data and parameters at once, and it breaks without a code change (the data changed). The skill leads from
+the maturity level to a pipeline design: what to version, what to test, what to monitor and when to retrain.
+Do not build more than the risk level and the frequency of changes require.
 
-## Procedura
-1. **Kontekst.** Ustal: rodzaj (klasyczny ML czy LLM), koszt błędu, jak często zmieniają się dane, **jak późno
-   przychodzi etykieta** (godziny czy 90 dni), kto utrzymuje model. Brakujące odpowiedzi zapisz jako założenia.
-2. **Poziom dojrzałości** (model Google; źródło w Źródłach). Wybierz cel, nie najwyższy:
+## Procedure
+1. **Context.** Establish: the kind (classic ML or LLM), the cost of an error, how often the data changes, **how late
+   the label arrives** (hours or 90 days), who maintains the model. Record missing answers as assumptions.
+2. **Maturity level** (the Google model; the source in Sources). Choose a target, not the highest one:
 
-   | Poziom | Cecha | Wystarcza, gdy |
+   | Level | Feature | Enough when |
    |---|---|---|
-   | 0 — ręczny | notebook, ręczne przekazanie modelu do wdrożenia | model zmienia się rzadko, błąd tani |
-   | 1 — potok trenowania | zautomatyzowany potok, walidacja danych i modelu, continuous training, rejestr | dane się zmieniają, retrening co tydzień/miesiąc |
-   | 2 — CI/CD potoku | testy i budowa potoku w CI, automatyczne wdrożenie potoku i modelu | wiele modeli lub zespołów, częste zmiany kodu |
+   | 0 — manual | a notebook, manual handover of the model for deployment | the model changes rarely, an error is cheap |
+   | 1 — training pipeline | an automated pipeline, data and model validation, continuous training, a registry | the data changes, retraining every week/month |
+   | 2 — pipeline CI/CD | tests and builds of the pipeline in CI, automatic deployment of the pipeline and the model | many models or teams, frequent code changes |
 
-   Pierwszy krok od notebooka do potoku to **walidacja danych przed treningiem** (schemat, zakresy, rozkład względem
-   poprzedniej wersji); bez niej continuous training automatycznie uczy model na zepsutych danych.
-3. **Eksperymenty i reprodukowalność.** Każdy przebieg zapisuje: parametry, metryki, **hash danych**, commit,
-   środowisko (lockfile lub obraz), ziarna losowości, wersję cech. Test: czy za 6 miesięcy odtworzysz model
-   z samego zapisu? MLflow Tracking to standard; wybór narzędzia mniej ważny niż kompletność zapisu (lineage).
-4. **Wersjonowanie danych.** DVC — dane i potok (`dvc.yaml`, `dvc.lock`) obok kodu w repo, dowolny magazyn
-   obiektowy; lakeFS — gałęzie i commity na całym jeziorze danych bez kopiowania. Dane już w tabelach z podróżą
-   w czasie (Iceberg, Delta) → zapisz identyfikator migawki zamiast osobnego narzędzia. Potoki danych: data-engineering.
-5. **Rejestr i promocja.** Wersja modelu w rejestrze wskazuje przebieg, dane, metryki i kartę modelu. Promocję
-   oznacz **aliasami** (`champion`, `challenger`), nie etapami — w MLflow etapy są wycofywane od 2.9. Promocja to
-   bramka (krok 8), nie ręczne kliknięcie. Kod ładuje model po aliasie, więc wycofanie = przestawienie aliasu.
-6. **Cechy i skew.** Training-serving skew powstaje, gdy cecha jest liczona inaczej offline i online, albo gdy
-   trening „widzi przyszłość”. Dwie drogi: magazyn cech (Feast: spójne definicje, odczyt historyczny
-   **point-in-time**, magazyn online) albo jedna biblioteka transformacji używana w obu miejscach. Magazyn cech
-   opłaca się od ~kilku modeli współdzielących cechy lub online ze świeżymi cechami. **Test skew:** dla próbki
-   encji i znaczników czasu porównaj cechy online z offline; zbyt duża różnica blokuje wdrożenie.
-7. **Orkiestracja trenowania** (ogólne zasady orkiestracji — data-engineering). Dobór wg kryteriów:
-   - Kubeflow Pipelines — już jest Kubernetes, kroki jako kontenery, GPU, wielu zespołów; koszt: utrzymanie klastra;
-   - Airflow — orkiestrator już działa, trening to jeden z wielu przepływów, harmonogram i integracje;
-   - Dagster — model jako zasób danych z lineage i partycjami, nacisk na testowalność lokalną;
-   - usługa chmurowa (Vertex AI Pipelines, SageMaker), gdy chmura jest ustalona i nie chcesz utrzymywać platformy.
-8. **CI/CD/CT modelu** (mechanika pipeline'u — ops-ci-cd). Cztery warstwy testów:
-   - kod: testy jednostkowe transformacji i funkcji straty;
-   - **dane:** schemat, zakresy, braki, rozkład względem referencji; pod kontraktem danych;
-   - **model (bramka jakości):** metryka nie gorsza niż `champion` o ustalony margines, **na plastrach** (segmenty,
-     rzadkie klasy), nie tylko średnio; latencja i rozmiar; **fairness** — różnice metryk między grupami poniżej
-     progu uzgodnionego z biznesem i prawnikiem;
-   - integracja: kontrakt serwowania (wejście, wyjście, wersja cech).
+   The first step from a notebook to a pipeline is **data validation before training** (schema, ranges, the distribution relative to
+   the previous version); without it continuous training automatically trains the model on broken data.
+3. **Experiments and reproducibility.** Every run records: parameters, metrics, **the data hash**, the commit,
+   the environment (a lockfile or an image), random seeds, the feature version. Test: will you reproduce the model in 6 months
+   from the record alone? MLflow Tracking is the standard; the choice of tool matters less than the completeness of the record (lineage).
+4. **Data versioning.** DVC — data and the pipeline (`dvc.yaml`, `dvc.lock`) next to the code in the repo, any object
+   store; lakeFS — branches and commits on the whole data lake without copying. Data already in tables with time
+   travel (Iceberg, Delta) → record the snapshot identifier instead of a separate tool. Data pipelines: data-engineering.
+5. **Registry and promotion.** A model version in the registry points to the run, the data, the metrics and the model card. Mark promotion
+   with **aliases** (`champion`, `challenger`), not stages — in MLflow stages have been deprecated since 2.9. Promotion is
+   a gate (step 8), not a manual click. The code loads the model by alias, so a rollback = moving the alias.
+6. **Features and skew.** Training-serving skew arises when a feature is computed differently offline and online, or when
+   training "sees the future". Two ways: a feature store (Feast: consistent definitions, a **point-in-time** historical
+   read, an online store) or one transformation library used in both places. A feature store
+   pays off from ~a few models sharing features, or online with fresh features. **Skew test:** for a sample
+   of entities and timestamps compare the online features with the offline ones; too large a difference blocks the deployment.
+7. **Training orchestration** (general orchestration rules — data-engineering). Choose by criteria:
+   - Kubeflow Pipelines — Kubernetes is already there, steps as containers, GPUs, many teams; the cost: maintaining the cluster;
+   - Airflow — the orchestrator is already running, training is one of many flows, scheduling and integrations;
+   - Dagster — the model as a data asset with lineage and partitions, an emphasis on local testability;
+   - a cloud service (Vertex AI Pipelines, SageMaker), when the cloud is settled and you do not want to maintain a platform.
+8. **Model CI/CD/CT** (the pipeline mechanics — ops-ci-cd). Four layers of tests:
+   - code: unit tests of transformations and loss functions;
+   - **data:** schema, ranges, missing values, the distribution relative to a reference; under a data contract;
+   - **model (quality gate):** a metric no worse than `champion` by an agreed margin, **on slices** (segments,
+     rare classes), not only on average; latency and size; **fairness** — differences in metrics between groups below
+     a threshold agreed with the business and a lawyer;
+   - integration: the serving contract (input, output, feature version).
 
-   Wyzwalacze continuous training: harmonogram, nowe dane, alert driftu — każdy z limitem częstości i kosztu.
-9. **Wdrożenie modelu** (mechanika — ops-release-engineering; serwowanie — ops-ai-inference). Specyfika:
-   **shadow** (nowy model liczy równolegle, bez wpływu na wynik — porównujesz predykcje i latencję) → **canary**
-   (mały ułamek ruchu z bramką metryk) → **A/B** (gdy liczy się metryka biznesowa; policz moc i czas trwania
-   z góry). Wycofanie: alias na poprzednią wersję; sprawdź, że stare cechy nadal są dostępne.
-10. **Monitoring** (ogólne metryki i alerty — ops-observability). Warstwy ponad nimi:
-    - **drift cech** (PSI, test Kołmogorowa–Smirnowa, odległość Jensena–Shannona) i jakość danych (braki, nowe kategorie);
-    - **drift predykcji** (rozkład score lub klas) — działa bez etykiet;
-    - **jakość przy opóźnionych etykietach:** metryka liczona na dojrzałych kohortach (np. rocznik sprzed 90 dni)
-      plus wskaźniki zastępcze (drift predykcji, odsetek niskiej pewności); alert na etykietach zamiast na wczorajszych danych jest spóźniony;
-    - **concept drift** (zmieniła się zależność cech od celu) widać dopiero w etykietach lub w eksperymencie;
-    - opóźnienie, błędy i koszt na predykcję.
+   Continuous training triggers: a schedule, new data, a drift alert — each with a frequency and cost limit.
+9. **Model deployment** (the mechanics — ops-release-engineering; serving — ops-ai-inference). The specifics:
+   **shadow** (the new model computes in parallel, without affecting the result — you compare predictions and latency) → **canary**
+   (a small fraction of traffic with a metric gate) → **A/B** (when a business metric matters; compute the power and duration
+   up front). Rollback: the alias to the previous version; check that the old features are still available.
+10. **Monitoring** (general metrics and alerts — ops-observability). The layers above them:
+    - **feature drift** (PSI, the Kolmogorov–Smirnov test, the Jensen–Shannon distance) and data quality (missing values, new categories);
+    - **prediction drift** (the distribution of scores or classes) — works without labels;
+    - **quality with delayed labels:** a metric computed on mature cohorts (e.g. the cohort from 90 days ago)
+      plus proxy indicators (prediction drift, the share of low confidence); an alert on labels instead of on yesterday's data is late;
+    - **concept drift** (the dependence of the target on the features changed) shows only in the labels or in an experiment;
+    - latency, errors and cost per prediction.
 
-    Każdy alert ma akcję: dotrenuj, wycofaj albo zbadaj; progi PSI traktuj jako punkt startu do kalibracji.
-11. **Dokumentacja.** Karta modelu (przeznaczenie, dane, metryki na plastrach, ograniczenia, ryzyka, właściciel,
-    data przeglądu) trafia do rejestru razem z wersją. Wymogi prawne — arch-privacy-compliance.
-12. **LLMOps.** Różnice względem klasycznego ML:
-    - **prompt jako artefakt:** rejestr z wersjami i aliasami, zmiana przez PR, nie edycja na żywo;
-    - **zestaw ewaluacyjny w CI** uruchamiany przy zmianie promptu, modelu, parametrów i narzędzi (metoda, sędzia,
-      dobór przypadków — ai-evals); zmiana wersji modelu u dostawcy to zmiana wydania;
-    - **tracing** każdego zapytania (kroki, narzędzia, tokeny, latencja) i ocena próbki ruchu produkcyjnego tymi samymi ocenami;
-    - **koszt na zapytanie** = tokeny wejścia i wyjścia × cennik, z podziałem na funkcję; budżet i alert;
-    - **metryki barier ochronnych:** odsetek odmów, wykrytych danych osobowych, prób wstrzyknięcia poleceń,
-      odpowiedzi bez oparcia w źródłach. Kod aplikacji z LLM — eng-llm-features.
+    Every alert has an action: retrain, roll back or investigate; treat PSI thresholds as a starting point for calibration.
+11. **Documentation.** The model card (purpose, data, metrics on slices, limitations, risks, owner,
+    review date) goes into the registry together with the version. Legal requirements — arch-privacy-compliance.
+12. **LLMOps.** Differences from classic ML:
+    - **the prompt as an artifact:** a registry with versions and aliases, a change through a PR, not a live edit;
+    - **an evaluation set in CI** run on a change of the prompt, the model, the parameters and the tools (the method, the judge,
+      the choice of cases — ai-evals); a change of the model version at the provider is a release change;
+    - **tracing** of every request (steps, tools, tokens, latency) and evaluating a sample of production traffic with the same evaluations;
+    - **cost per request** = input and output tokens × the price list, broken down by feature; a budget and an alert;
+    - **guardrail metrics:** the share of refusals, detected personal data, prompt injection attempts,
+      answers not grounded in sources. Application code with an LLM — eng-llm-features.
 
-## Wynik
-Dokument „Projekt potoku MLOps” (`docs/project/…`): poziom docelowy, diagram etapów, tabela
-artefaktów (co, gdzie, kto), bramki z progami, plan monitoringu z akcją na alert, luki i kolejność wdrożenia.
-Szablon i lista gotowości: `references/design-and-readiness.md`.
+## Result
+An "MLOps pipeline design" document (`docs/project/…`): the target level, a diagram of the stages, a table of
+artifacts (what, where, who), gates with thresholds, a monitoring plan with an action per alert, gaps and the deployment order.
+Template and readiness list: `references/design-and-readiness.md`.
 
-## Przykład
-Wejście: „Model churnu, trenowany w notebooku, wdrażany ręcznie co kwartał; etykieta po 90 dniach.”
-Wynik (fragment): poziom 0 → cel 1 (nie 2: jeden model, jeden zespół). Dane w DVC (`dvc.lock` w repo), przebiegi
-w MLflow z hashem danych, rejestr z aliasem `champion`. Airflow już działa → potok `train_churn` raz w miesiącu.
-Bramka: AUC ≥ champion − 0,005 oraz AUC w segmencie „nowi klienci” ≥ 0,70; różnica recall między grupami wiekowymi
-≤ 5 pp. Wdrożenie: shadow 7 dni, potem canary 10%. Monitoring dziennie: PSI cech (>0,25 = alert), drift score;
-jakość tygodniowo na kohorcie sprzed 90 dni. Alert driftu → decyzja człowieka, nie automatyczny retrening.
+## Example
+Input: "A churn model, trained in a notebook, deployed manually every quarter; the label comes after 90 days."
+Result (excerpt): level 0 → target 1 (not 2: one model, one team). Data in DVC (`dvc.lock` in the repo), runs
+in MLflow with the data hash, a registry with the `champion` alias. Airflow is already running → the `train_churn` pipeline once a month.
+Gate: AUC ≥ champion − 0.005 and AUC in the "new customers" segment ≥ 0.70; the recall difference between age groups
+≤ 5 pp. Deployment: shadow for 7 days, then canary 10%. Daily monitoring: feature PSI (>0.25 = alert), score drift;
+weekly quality on the cohort from 90 days ago. A drift alert → a human's decision, not automatic retraining.
 
-## Checklista
-- [ ] poziom obecny i docelowy uzasadnione; opóźnienie etykiety zapisane
-- [ ] przebieg odtwarzalny: dane (hash), kod (commit), środowisko, ziarna, cechy
-- [ ] rejestr z aliasami; promocja tylko przez bramkę; wycofanie = zmiana aliasu
-- [ ] test skew i point-in-time dla cech; brak wycieku przyszłości
-- [ ] bramki: dane, jakość na plastrach, fairness, latencja; wyzwalacze CT z limitem kosztu
-- [ ] wdrożenie shadow lub canary z kryterium wycofania; A/B z policzoną mocą
-- [ ] monitoring: drift cech i predykcji, jakość na dojrzałych kohortach, koszt; alert ma akcję
-- [ ] karta modelu w rejestrze; LLM: prompty wersjonowane, ewaluacje w CI, tracing, koszt na zapytanie
+## Checklist
+- [ ] the current and target level justified; the label delay recorded
+- [ ] a reproducible run: data (hash), code (commit), environment, seeds, features
+- [ ] a registry with aliases; promotion only through a gate; rollback = an alias change
+- [ ] a skew test and point-in-time for features; no future leakage
+- [ ] gates: data, quality on slices, fairness, latency; CT triggers with a cost limit
+- [ ] shadow or canary deployment with a rollback criterion; A/B with computed power
+- [ ] monitoring: feature and prediction drift, quality on mature cohorts, cost; an alert has an action
+- [ ] the model card in the registry; LLM: versioned prompts, evaluations in CI, tracing, cost per request
 
-## Materiały dodatkowe
-- `references/design-and-readiness.md` — szablon dokumentu projektu potoku, lista gotowości i kryteria doboru narzędzi.
+## Additional materials
+- `references/design-and-readiness.md` — a pipeline design document template, a readiness list and criteria for choosing tools.
 
-## Źródła
-- Google Cloud Architecture Center, „MLOps: Continuous delivery and automation pipelines in machine learning” — poziomy 0–2;
-  strony pierwotnej nie udało się pobrać, opis poziomów potwierdzony tylko w źródłach wtórnych, dostęp 2026-10-17 [niezweryfikowane].
-- MLflow: etapy rejestru wycofane na rzecz aliasów od 2.9 (RFC `mlflow/mlflow#10336`, komunikat `FutureWarning`);
-  MLflow 3 — LoggedModel, tracing, rejestr promptów, `mlflow.genai.evaluate()` (docs 3.1.3 i 3.5.x), dostęp 2026-10-17;
-  czy etapy usunięto w obecnym wydaniu — [niezweryfikowane].
-- DVC: `dvc.yaml`, `dvc.lock`, dowolny magazyn obiektowy; lakeFS jako warstwa nad jeziorem danych (dokumentacja DVC
-  i porównania, dostęp 2026-10-17); przejęcie DVC przez lakeFS (2025) — jedno źródło [niezweryfikowane].
-- Feast: odczyt historyczny point-in-time, magazyn offline i online (dokumentacja, wersje 0.x, dostęp 2026-10-17);
-  numer bieżącego wydania [niezweryfikowane].
-- Evidently, Arize: monitoring bez etykiet przez drift cech i predykcji (dokumentacja, dostęp 2026-10-17).
-- Mitchell i in., „Model Cards for Model Reporting” (2019) — karta modelu [niezweryfikowane w tej sesji].
-- Progi PSI 0,1 i 0,25 to reguła kciuka ze scoringu kredytowego [niezweryfikowane].
+## Sources
+- Google Cloud Architecture Center, "MLOps: Continuous delivery and automation pipelines in machine learning" — levels 0–2;
+  the primary page could not be fetched, the description of the levels is confirmed only in secondary sources, accessed 2026-10-17 [unverified].
+- MLflow: registry stages deprecated in favour of aliases since 2.9 (RFC `mlflow/mlflow#10336`, the `FutureWarning` message);
+  MLflow 3 — LoggedModel, tracing, the prompt registry, `mlflow.genai.evaluate()` (docs 3.1.3 and 3.5.x), accessed 2026-10-17;
+  whether stages were removed in the current release — [unverified].
+- DVC: `dvc.yaml`, `dvc.lock`, any object store; lakeFS as a layer over a data lake (DVC documentation
+  and comparisons, accessed 2026-10-17); the acquisition of DVC by lakeFS (2025) — a single source [unverified].
+- Feast: point-in-time historical read, offline and online store (documentation, versions 0.x, accessed 2026-10-17);
+  the number of the current release [unverified].
+- Evidently, Arize: monitoring without labels through feature and prediction drift (documentation, accessed 2026-10-17).
+- Mitchell et al., "Model Cards for Model Reporting" (2019) — the model card [unverified in this session].
+- The PSI thresholds 0.1 and 0.25 are a rule of thumb from credit scoring [unverified].

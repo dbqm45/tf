@@ -1,80 +1,80 @@
-# Pętla deweloperska (Developer Experience)
+# The developer loop (Developer Experience)
 
-Pętla deweloperska to droga od sklonowania repozytorium do uruchomionej aplikacji i zielonych testów, a potem od
-zmiany do odpowiedzi testów. Dla agenta to warunek pracy sprawdzalnej. Agent, który nie umie postawić bazy, zgaduje
-albo pomija testy. Agent, który po każdej zmianie czeka 6 minut na cały zestaw, ma mniej prób na zadanie i większy
-koszt.
+The developer loop is the path from cloning the repository to a running application and green tests, and then from
+a change to the tests' answer. For an agent it is a condition of verifiable work. An agent that cannot set up the database guesses
+or skips the tests. An agent that waits 6 minutes for the whole suite after every change has fewer attempts per task and a higher
+cost.
 
-## 1. Jedno polecenie startowe
-- `make setup` / `just setup` / `task setup` (albo `npm run setup`) robi wszystko, czego potrzebuje świeży klon:
-  instaluje zależności z lockfile'a (`npm ci`, `uv sync`, `poetry install --sync`), stawia usługi
-  (`docker compose up -d --wait`), stosuje migracje i ładuje dane startowe.
-- Obok jest `make dev` (aplikacja z przeładowaniem) i `make test` (cały zestaw). Te same nazwy w każdym
-  repozytorium zespołu.
-- Polecenia wpisz w README (sekcja „Szybki start”) i w CLAUDE.md lub AGENTS.md (sekcja komend). Agent czyta je
-  zamiast zgadywać.
-- Polecenie jest idempotentne: drugie uruchomienie niczego nie psuje.
+## 1. One start command
+- `make setup` / `just setup` / `task setup` (or `npm run setup`) does everything a fresh clone needs:
+  installs dependencies from the lockfile (`npm ci`, `uv sync`, `poetry install --sync`), starts the services
+  (`docker compose up -d --wait`), applies migrations and loads seed data.
+- Next to it there is `make dev` (the application with reloading) and `make test` (the whole suite). The same names in every
+  repository of the team.
+- Write the commands in the README (a "Quick start" section) and in CLAUDE.md or AGENTS.md (the commands section). The agent reads them
+  instead of guessing.
+- The command is idempotent: a second run breaks nothing.
 
-## 2. Usługi lokalnie
-- Zależności usług (PostgreSQL, Redis, kolejka, wyszukiwarka) w `compose.yaml` z wersjami jak na produkcji.
-- **Healthcheck** przy każdej usłudze i `depends_on: { db: { condition: service_healthy } }`. W poleceniu
-  startowym `docker compose up -d --wait`. Bez tego testy startują przed bazą i padają losowo.
-- Testy integracyjne mogą zamiast tego stawiać usługi same: Testcontainers (Java, .NET, Go, Node, Python). Wtedy
-  testy nie zależą od tego, czy ktoś uruchomił compose.
-- Devcontainer (`.devcontainer/devcontainer.json`) opłaca się, gdy narzędzia są trudne do zainstalowania (kilka
-  języków, natywne biblioteki, konkretne wersje CLI) albo zespół pracuje w Codespaces. Przy prostym stosie wystarczy
-  compose i menedżer wersji (`.nvmrc`, `.python-version`, `mise.toml`).
+## 2. Local services
+- Service dependencies (PostgreSQL, Redis, a queue, a search engine) in `compose.yaml` with the same versions as in production.
+- **A healthcheck** on every service and `depends_on: { db: { condition: service_healthy } }`. In the start
+  command `docker compose up -d --wait`. Without this the tests start before the database and fail at random.
+- Integration tests can instead start the services themselves: Testcontainers (Java, .NET, Go, Node, Python). Then
+  the tests do not depend on whether someone ran compose.
+- A devcontainer (`.devcontainer/devcontainer.json`) pays off when the tools are hard to install (several
+  languages, native libraries, specific CLI versions) or the team works in Codespaces. With a simple stack compose
+  and a version manager (`.nvmrc`, `.python-version`, `mise.toml`) are enough.
 
-## 3. Dane startowe i sekrety deweloperskie
-- Skrypt danych startowych (seed) jest idempotentny i tworzy dane **syntetyczne**: kilku użytkowników z rolami,
-  przykładowe rekordy dla głównych przepływów. Nigdy kopia produkcji (arch-privacy-compliance).
-- `.env.example` ma wszystkie zmienne z pustymi wartościami albo oczywistymi atrapami
-  (`DATABASE_URL=postgres://dev:dev@localhost:5432/app`). Prawdziwy klucz w tym pliku trzeba unieważnić, bo jest
-  w historii gita (ops-secrets-identities).
-- Usługi zewnętrzne w pracy lokalnej zastępują atrapy lub sandboxy dostawcy (Stripe w trybie testowym, lokalny
-  serwer SMTP jak Mailpit). Agent nie potrzebuje prawdziwych kluczy do uruchomienia testów.
+## 3. Seed data and development secrets
+- The seed data script is idempotent and creates **synthetic** data: a few users with roles,
+  sample records for the main flows. Never a copy of production (arch-privacy-compliance).
+- `.env.example` has all the variables with empty values or obvious dummies
+  (`DATABASE_URL=postgres://dev:dev@localhost:5432/app`). A real key in this file must be revoked, because it is
+  in the git history (ops-secrets-identities).
+- In local work external services are replaced by dummies or the provider's sandboxes (Stripe in test mode, a local
+  SMTP server such as Mailpit). The agent does not need real keys to run the tests.
 
-## 4. Szybka odpowiedź testów
-- Testy powiązane ze zmianą: `npx vitest related <pliki> --run`, `npx jest --findRelatedTests <pliki>`,
-  `npx nx affected -t test`, `pytest --lf` albo `pytest-testmon`, `go test ./<pakiet>/...`. Cały zestaw przed
-  commitem lub w CI.
-- Podział na szybkie (jednostkowe, sekundy) i wolne (integracyjne, e2e) z osobnymi poleceniami
-  (`make test-unit`, `make test-int`). W CLAUDE.md wpisz, który zestaw agent uruchamia po zmianie, a który przed
-  oddaniem pracy.
-- Bramki lokalne (hook po edycji, pre-commit) opisuje eng-local-quality-gates.
+## 4. A fast test answer
+- The tests related to a change: `npx vitest related <files> --run`, `npx jest --findRelatedTests <files>`,
+  `npx nx affected -t test`, `pytest --lf` or `pytest-testmon`, `go test ./<package>/...`. The whole suite before
+  a commit or in CI.
+- A split into fast (unit, seconds) and slow (integration, e2e) with separate commands
+  (`make test-unit`, `make test-int`). Write in CLAUDE.md which suite the agent runs after a change and which before
+  handing over the work.
+- Local gates (a post-edit hook, pre-commit) are described by eng-local-quality-gates.
 
-## 5. Miara: od klonu do zielonych testów
-Mierz to, zamiast oceniać na oko. Wynik i datę zapisz w raporcie gotowości.
-1. Świeży klon do pustego katalogu tymczasowego, bez cache'ów projektu:
+## 5. The measure: from clone to green tests
+Measure it instead of judging by eye. Record the result and the date in the readiness report.
+1. A fresh clone into an empty temporary directory, without the project's caches:
    `git clone <repo> /tmp/clone-check && cd /tmp/clone-check`.
-2. Postępuj tylko według README i CLAUDE.md, bez wiedzy z głowy, i mierz czas: `time make setup && time make test`.
-3. Zapisz w raporcie:
-   - czas całkowity;
-   - każde miejsce, w którym trzeba było zgadywać albo zapytać człowieka;
-   - kroki ręczne.
-   - Każdy krok ręczny to poprawka na liście.
-4. Orientacyjny cel: setup poniżej 15 minut na zwykłej maszynie, zero kroków ręcznych poza wpisaniem własnych
-   kluczy do `.env`. To cel zespołu, a nie norma branżowa [założenie — dostosuj do projektu].
+2. Follow only the README and CLAUDE.md, without knowledge from your head, and measure the time: `time make setup && time make test`.
+3. Record in the report:
+   - the total time;
+   - every place where you had to guess or ask the human;
+   - manual steps.
+   - Every manual step is a fix on the list.
+4. An indicative goal: setup under 15 minutes on an ordinary machine, zero manual steps apart from entering your own
+   keys into `.env`. This is a team goal, not an industry norm [assumption — adjust to the project].
 
-Pomiar uruchamia instalację i usługi, więc robisz go za zgodą człowieka, w katalogu tymczasowym, bez prawdziwych
-sekretów.
+The measurement runs the installation and the services, so you do it with the human's consent, in a temporary directory, without real
+secrets.
 
-## 6. Fakty ze skryptu
-`scripts/readiness_check.py` zwraca sekcję `dx`:
-- `setup` — wykryte polecenia startowe (`make`/`just`/Taskfile, skrypty `dev`/`setup`, sekcja w README);
-- `services_needed` — usługi wynikające z zależności (sterownik `pg` → postgres, `ioredis` → redis…);
-- `services`, `services_without_healthcheck` — usługi z compose;
+## 6. Facts from the script
+`scripts/readiness_check.py` returns the `dx` section:
+- `setup` — detected start commands (`make`/`just`/Taskfile, `dev`/`setup` scripts, a section in the README);
+- `services_needed` — services that follow from the dependencies (the `pg` driver → postgres, `ioredis` → redis…);
+- `services`, `services_without_healthcheck` — services from compose;
 - `devcontainer`;
-- `related_tests` — polecenie testów powiązanych ze zmianą dla wykrytego runnera.
+- `related_tests` — the command for the tests related to a change for the detected runner.
 
-Ustalenia obszaru `dx` mają wagi:
+Findings in the `dx` area have severities:
 
-| Ustalenie | Waga |
+| Finding | Severity |
 |---|---|
-| wartość wyglądająca na prawdziwy sekret w `.env.example` (w wyniku tylko nazwa zmiennej) | wysoka |
-| brak polecenia startowego | średnia |
-| usługi bez środowiska lokalnego | średnia |
-| usługa zależna bez healthchecka | niska |
-| baza bez danych startowych | niska |
+| a value that looks like a real secret in `.env.example` (only the variable name in the output) | high |
+| no start command | medium |
+| services without a local environment | medium |
+| a dependent service without a healthcheck | low |
+| a database without seed data | low |
 
-Skrypt nie mierzy czasu i niczego nie uruchamia — pomiar z punktu 5 należy do agenta, za zgodą człowieka.
+The script does not measure time and runs nothing — the measurement from point 5 belongs to the agent, with the human's consent.

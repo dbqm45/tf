@@ -1,38 +1,38 @@
-# Podziały danych i wyciek
+# Data splits and leakage
 
-Wyciek (leakage) to informacja z testu lub z przyszłości, która dostaje się do treningu. Wynik jest wtedy
-zawyżony, a model po wdrożeniu rozczarowuje. Kapoor i Narayanan (Patterns 2023) opisują osiem typów wycieku, od
-błędów podręcznikowych po otwarte problemy badawcze.
+Leakage is information from the test set or from the future that gets into training. The result is then
+inflated, and the model disappoints after deployment. Kapoor and Narayanan (Patterns 2023) describe eight types of leakage, from
+textbook errors to open research problems.
 
-## Dobór podziału
-| Sytuacja | Podział |
+## Choosing the split
+| Situation | Split |
 |---|---|
-| dane z czasem, model przewiduje przyszłość | czasowy: trening wcześniej, test później; walidacja kroczącym oknem |
-| wiele wierszy na tę samą jednostkę (klient, pacjent, urządzenie, dokument) | grupowy (GroupKFold): jednostka po jednej stronie |
-| oba naraz | czasowy z grupami: jednostka nie przechodzi przez granicę |
-| duplikaty i bliskie duplikaty (kopie tekstu, zrzuty tego samego obiektu) | deduplikacja przed podziałem, także przybliżona |
-| rzadka klasa | warstwowy (stratified), ale nadal czasowy/grupowy, jeśli wymaga tego sytuacja |
-| mało danych | walidacja krzyżowa zagnieżdżona (strojenie wewnątrz, ocena na zewnątrz) |
+| data over time, the model predicts the future | temporal: training earlier, test later; validation with a rolling window |
+| many rows for the same unit (customer, patient, device, document) | group (GroupKFold): a unit on one side only |
+| both at once | temporal with groups: a unit does not cross the boundary |
+| duplicates and near-duplicates (copies of text, snapshots of the same object) | deduplication before the split, approximate too |
+| a rare class | stratified, but still temporal/group if the situation requires it |
+| little data | nested cross-validation (tuning inside, assessment outside) |
 
-## Typowe źródła wycieku
-- skalowanie, imputacja, selekcja cech lub PCA policzone na całym zbiorze przed podziałem;
-- cecha znana dopiero po zdarzeniu (data zwrotu przy przewidywaniu zwrotu), w tym pochodna etykiety;
-- ta sama jednostka w treningu i teście; duplikaty;
-- etykiety tworzone na podstawie przyszłości względem momentu predykcji;
-- strojenie hiperparametrów i wybór modelu na zbiorze testowym (cichy wyciek, najczęstszy);
-- kontaminacja benchmarku: zbiór testowy lub jego odpowiedzi były w danych treningowych modelu bazowego.
-  Dla modeli językowych sprawdź zgłaszane nakładanie się (n-gramy), użyj zbioru własnego lub utajonego i nie
-  przypisuj przyrostu wyniku metodzie bez kontroli.
+## Typical sources of leakage
+- scaling, imputation, feature selection or PCA computed on the whole dataset before the split;
+- a feature known only after the event (the return date when predicting a return), including a derivative of the label;
+- the same unit in training and test; duplicates;
+- labels created on the basis of the future relative to the moment of prediction;
+- hyperparameter tuning and model selection on the test set (silent leakage, the most common);
+- benchmark contamination: the test set or its answers were in the training data of the base model.
+  For language models check the reported overlap (n-grams), use your own or a hidden set, and do not
+  attribute a gain in the result to the method without a control.
 
-## Wykrywanie
-1. Wynik zbyt dobry: porównaj z prostym baseline i z literaturą; skok o kilkanaście punktów to powód do audytu.
-2. Kontrola negatywna: pomieszaj etykiety treningowe — wynik na teście ma spaść do poziomu losowego.
-3. Ważność cech: cecha dominująca, której nie znasz w chwili predykcji, to podejrzany.
-4. Test „w przód”: wytrenuj na starszych danych, oceń na najnowszych, nie widzianych w ogóle.
-5. Różnica walidacja↔pilotaż większa niż rozrzut między seedami → szukaj wycieku lub dryfu.
+## Detection
+1. A result that is too good: compare with a simple baseline and with the literature; a jump of a dozen or so points is a reason for an audit.
+2. Negative control: shuffle the training labels — the test result must drop to the random level.
+3. Feature importance: a dominant feature that you do not know at the moment of prediction is a suspect.
+4. A "forward" test: train on older data, assess on the newest data, never seen at all.
+5. A validation↔pilot difference larger than the spread between seeds → look for leakage or drift.
 
-## Higiena zbioru testowego
-- Zbiór testowy zamrożony (skrót, data), dostęp ograniczony; liczba odczytów zapisana.
-- Każdy odczyt „spala” zbiór: po wielu rundach zmian na podstawie testu traktuj go jak walidacyjny i zbierz nowy.
-- Decyzje o architekturze, progu i cechach zapadają na walidacji.
-- Raportuj wynik testu raz, razem z liczbą przebiegów strojenia, które do niego doprowadziły.
+## Test-set hygiene
+- The test set is frozen (hash, date), access is restricted; the number of reads is recorded.
+- Every read "burns" the set: after many rounds of changes based on the test, treat it as a validation set and collect a new one.
+- Decisions about the architecture, threshold and features are made on validation.
+- Report the test result once, together with the number of tuning runs that led to it.

@@ -1,44 +1,44 @@
-# Polecenie (Command)
+# Command
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: behawioralne. Istota: żądanie staje się **obiektem-wartością** z metodą wykonania — można je przekazać,
-zakolejkować, zapisać, zalogować i cofnąć.
+Category: behavioral. The essence: a request becomes **a value object** with an execute method — it can be passed,
+queued, saved, logged and undone.
 
 ## Problem
-Kalendarz rezerwacji w panelu recepcji: te same akcje (zarezerwuj, przesuń, zwolnij) wywołuje przycisk, menu
-kontekstowe, skrót klawiszowy i import z pliku; recepcja chce „cofnij” i dziennik zmian. Gdy każdy element UI woła
-logikę bezpośrednio, nie ma jednego miejsca na historię, a cofanie wymaga wiedzy o każdej akcji w wielu miejscach.
+A booking calendar in the reception panel: the same actions (book, move, release) are triggered by a button, a context
+menu, a keyboard shortcut and an import from a file; the reception wants "undo" and a change log. When every UI element calls
+the logic directly, there is no single place for the history, and undoing requires knowledge of every action in many places.
 
-## Rozwiązanie i uczestnicy
-- **Polecenie** — interfejs `execute()` (i `undo()`, jeśli potrzebne).
-- **Konkretne polecenia** — przechowują parametry i to, co potrzebne do cofnięcia; delegują pracę odbiorcy.
-- **Odbiorca** — obiekt z właściwą logiką.
-- **Wywołujący** — uruchamia polecenia, prowadzi historię/kolejkę; nie zna szczegółów akcji.
-- **Klient** — tworzy polecenia i przekazuje je wywołującemu.
+## Solution and participants
+- **Command** — the `execute()` interface (and `undo()`, if needed).
+- **Concrete commands** — store the parameters and what is needed to undo; delegate the work to the receiver.
+- **Receiver** — the object with the actual logic.
+- **Invoker** — runs the commands, keeps the history/queue; does not know the details of the actions.
+- **Client** — creates the commands and passes them to the invoker.
 
-## Kiedy używać
-- Parametryzowanie UI akcjami (przyciski, menu, skróty, paleta poleceń).
-- Kolejkowanie, harmonogramowanie, wykonywanie zdalne — polecenie da się zserializować.
-- Cofnij/ponów, dziennik operacji, makra (polecenie złożone z poleceń).
+## When to use
+- Parameterizing the UI with actions (buttons, menus, shortcuts, a command palette).
+- Queuing, scheduling, remote execution — a command can be serialized.
+- Undo/redo, an operation log, macros (a command composed of commands).
 
-## Koszty
-Dodatkowa warstwa; poprawne `undo()` bywa trudne (efekty uboczne na zewnątrz, np. wysłany e-mail).
+## Costs
+An extra layer; a correct `undo()` can be hard (side effects on the outside, e.g. a sent e-mail).
 
-## Powiązania
-- **Pamiątka** — polecenie zapisuje stan przed wykonaniem, by cofnąć.
-- **Strategia** też parametryzuje obiekt obiektem, ale wymienia *sposób* liczenia; Polecenie reprezentuje *akcję*.
-- **Prototyp** — kopie poleceń w historii; **Łańcuch** — polecenie jako żądanie wędrujące przez ogniwa.
-- **Komenda w CQRS/decider** (ddd-tactical-design) to intencja-wartość bez metody `execute()`; wykonuje ją handler.
-  Nazwa ta sama, rola inna — nie mieszaj.
+## Relations
+- **Memento** — the command saves the state before execution, in order to undo.
+- **Strategy** also parameterizes an object with an object, but replaces the *way* of computing; a Command represents an *action*.
+- **Prototype** — copies of commands in the history; **Chain** — a command as a request travelling through the links.
+- **A command in CQRS/decider** (ddd-tactical-design) is an intent-value without an `execute()` method; a handler executes it.
+  The same name, a different role — do not mix them.
 
-## Forma idiomatyczna w TS
-Funkcja/closure (`() => void`) w tablicy lub `Map<string, () => void>` wystarcza, gdy nie trzeba serializacji ani
-cofania. Serializowalne polecenie to często **unia dyskryminowana** danych + interpreter.
+## Idiomatic form in TS
+A function/closure (`() => void`) in an array or a `Map<string, () => void>` is enough when neither serialization nor
+undo is needed. A serializable command is often a **discriminated union** of data + an interpreter.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
-type Calendar = Map<string, string>; // slot → osoba
+type Calendar = Map<string, string>; // slot → person
 
 interface Command {
   readonly label: string;
@@ -57,7 +57,7 @@ class BookSlot implements Command {
     this.#calendar = calendar;
     this.#slot = slot;
     this.#owner = owner;
-    this.label = `rezerwacja ${slot} dla ${owner}`;
+    this.label = `booking ${slot} for ${owner}`;
   }
 
   execute(): void {
@@ -91,14 +91,14 @@ class CommandHistory {
 
 const calendar: Calendar = new Map();
 const history = new CommandHistory();
-history.run(new BookSlot(calendar, 'pon 10:00', 'Anna'));
-history.run(new BookSlot(calendar, 'pon 10:00', 'Piotr'));
-console.log(calendar.get('pon 10:00'), '→ cofnięto:', history.undo(), '→', calendar.get('pon 10:00'));
+history.run(new BookSlot(calendar, 'Mon 10:00', 'Anna'));
+history.run(new BookSlot(calendar, 'Mon 10:00', 'Piotr'));
+console.log(calendar.get('Mon 10:00'), '→ undone:', history.undo(), '→', calendar.get('Mon 10:00'));
 ```
 
-## Kiedy NIE używać / pułapki
-- **Brak kolejkowania, serializacji i cofania** — funkcja/closure (`Map<string, () => void>`) wystarcza zamiast klas.
-- Pełna klasa zarabia, gdy polecenie niesie własne parametry i stan do cofnięcia albo musi zostać zapisane i odtworzone.
-- Nie wszystko da się cofnąć: dla efektów zewnętrznych (płatność, e-mail) potrzebna jest **akcja kompensująca**
-  (saga — ddd-tactical-design), nie `undo()`.
-- Historię ograniczaj (limit N) — nieograniczona lista poleceń ze stanem to wyciek pamięci.
+## When NOT to use / pitfalls
+- **No queuing, serialization or undo** — a function/closure (`Map<string, () => void>`) is enough instead of classes.
+- A full class pays off when the command carries its own parameters and state for undoing, or must be saved and replayed.
+- Not everything can be undone: for external effects (a payment, an e-mail) a **compensating action** is needed
+  (saga — ddd-tactical-design), not `undo()`.
+- Limit the history (a limit of N) — an unbounded list of commands with state is a memory leak.

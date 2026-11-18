@@ -1,42 +1,42 @@
-# Metoda wytwórcza (Factory Method)
+# Factory Method
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: kreacyjne. Istota: klasa bazowa ma wspólną logikę, a **to, jaki obiekt współpracujący powstaje**, decyduje
-nadpisywalna metoda — podklasy wymieniają produkt bez ruszania logiki.
+Category: creational. The essence: the base class has the shared logic, and **which collaborating object is created** is decided by
+an overridable method — subclasses replace the product without touching the logic.
 
 ## Problem
-Serwis przypomnień ma nietrywialną logikę (ponawianie, logowanie, limity), ale kanał dostarczenia bywa różny: e-mail,
-SMS, push. Gdy `new EmailChannel()` siedzi w środku logiki, każdy nowy kanał oznacza edycję tej logiki albo `switch`
-po typie kanału rozsiany po kodzie.
+A reminder service has non-trivial logic (retries, logging, limits), but the delivery channel varies: e-mail,
+SMS, push. When `new EmailChannel()` sits inside the logic, every new channel means editing that logic or a `switch`
+on the channel type scattered across the code.
 
-## Rozwiązanie i uczestnicy
-- **Produkt** — interfejs (`Channel`); **konkretne produkty** — `EmailChannel`, `SmsChannel`.
-- **Twórca** — klasa bazowa z logiką korzystającą z produktu i abstrakcyjną metodą `createChannel()`.
-- **Konkretni twórcy** — podklasy zwracające konkretny produkt.
-Metoda wytwórcza może też zwracać obiekt z puli/cache zamiast nowego — wywołujący tego nie widzi.
+## Solution and participants
+- **Product** — an interface (`Channel`); **concrete products** — `EmailChannel`, `SmsChannel`.
+- **Creator** — a base class with logic that uses the product and an abstract method `createChannel()`.
+- **Concrete creators** — subclasses returning a concrete product.
+A factory method can also return an object from a pool/cache instead of a new one — the caller does not see it.
 
-## Kiedy używać
-- Biblioteka/framework ma dać użytkownikom rozszerzanie wewnętrznych komponentów przez podklasę.
-- Logika twórcy jest **sama nietrywialna** i ma być dziedziczona razem z punktem wymiany produktu.
-- Hierarchia twórców już istnieje (nie budujesz jej tylko dla wzorca).
+## When to use
+- A library/framework is to let its users extend internal components through a subclass.
+- The creator's logic is **non-trivial in itself** and is to be inherited together with the point of replacing the product.
+- The creator hierarchy already exists (you are not building it just for the pattern).
 
-## Koszty
-Każdy nowy produkt to nowa podklasa twórcy; dziedziczenie wiąże warianty statycznie.
+## Costs
+Every new product is a new creator subclass; inheritance binds the variants statically.
 
-## Powiązania
-- Często punkt startowy: rozrasta się w Fabrykę abstrakcyjną (rodziny), Budowniczego (złożona konstrukcja) albo
-  Prototyp (klonowanie zamiast podklas).
-- Jest szczególnym przypadkiem Metody szablonowej — „utwórz obiekt” to jeden z kroków szkieletu.
-- Kolekcja może zwracać swój iterator metodą wytwórczą.
-- W DDD fabryka agregatu to inna rzecz (gwarancja poprawnego stanu) — ddd-tactical-design.
+## Relations
+- Often a starting point: it grows into an Abstract Factory (families), a Builder (complex construction) or
+  a Prototype (cloning instead of subclasses).
+- It is a special case of Template Method — "create an object" is one of the steps of the skeleton.
+- A collection can return its iterator with a factory method.
+- In DDD an aggregate factory is a different thing (a guarantee of a valid state) — ddd-tactical-design.
 
-## Forma idiomatyczna w TS
-Bez dziedziczenia: przekaż **funkcję tworzącą** (`createChannel: () => Channel`) do konstruktora albo użyj zwykłej
-funkcji fabrykującej (niżej, w pułapkach). Klasowa wersja ma sens, gdy wymiana produktu idzie w parze z innymi
-nadpisaniami.
+## Idiomatic form in TS
+Without inheritance: pass a **creating function** (`createChannel: () => Channel`) to the constructor or use an ordinary
+factory function (below, in the pitfalls). The class version makes sense when replacing the product goes hand in hand with other
+overrides.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 interface Channel {
   deliver(to: string, text: string): Promise<void>;
@@ -54,7 +54,7 @@ class SmsChannel implements Channel {
   }
 }
 
-/** Twórca: wspólna logika ponawiania + metoda wytwórcza dla kanału. */
+/** Creator: shared retry logic + a factory method for the channel. */
 abstract class ReminderService {
   protected abstract createChannel(): Channel;
 
@@ -62,10 +62,10 @@ abstract class ReminderService {
     const channel = this.createChannel();
     for (let attempt = 1; attempt <= attempts; attempt++) {
       try {
-        await channel.deliver(to, `Przypomnienie o rezerwacji ${bookingId}`);
+        await channel.deliver(to, `Reminder about booking ${bookingId}`);
         return true;
       } catch (error) {
-        console.warn(`próba ${attempt} nieudana`, error);
+        console.warn(`attempt ${attempt} failed`, error);
       }
     }
     return false;
@@ -85,14 +85,14 @@ class SmsReminderService extends ReminderService {
 }
 
 const services: readonly ReminderService[] = [new EmailReminderService(), new SmsReminderService()];
-for (const service of services) void service.remind('klient@example.com', 'B-17');
+for (const service of services) void service.remind('customer@example.com', 'B-17');
 ```
 
-## Kiedy NIE używać / pułapki
-- **Jeden wariant i brak sygnału, że przybędą kolejne** — zwykły `new` wystarczy; nie buduj `Creator`/`ConcreteCreator`
-  na wyrost.
-- **Wybór wariantu jest prosty i nie wymaga dziedziczenia** — funkcja fabrykująca ze `switch` po parametrze jest
-  czytelniejsza niż hierarchia klas (`critique-and-pitfalls.md`, pkt 1):
+## When NOT to use / pitfalls
+- **One variant and no signal that more will come** — a plain `new` is enough; do not build `Creator`/`ConcreteCreator`
+  ahead of need.
+- **Choosing the variant is simple and does not require inheritance** — a factory function with a `switch` on a parameter is
+  more readable than a class hierarchy (`critique-and-pitfalls.md`, point 1):
   ```ts
   interface Notifier { send(msg: string): void; }
   class EmailNotifier implements Notifier { send(msg: string) { console.log('e-mail', msg); } }
@@ -105,5 +105,5 @@ for (const service of services) void service.remind('klient@example.com', 'B-17'
     }
   }
   ```
-- Klasowa wersja zarabia na siebie dopiero, gdy logika w klasie bazowej twórcy jest nietrywialna i dziedziczona —
-  nie po to, by „mieć nazwany wzorzec”.
+- The class version pays for itself only when the logic in the creator's base class is non-trivial and inherited —
+  not in order to "have a named pattern".

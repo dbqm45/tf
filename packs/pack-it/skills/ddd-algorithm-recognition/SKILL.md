@@ -1,73 +1,73 @@
 ---
 name: ddd-algorithm-recognition
-description: Użyj, gdy w domenie kryje się problem algorytmiczny — przydział, kolejność, pakowanie, trasy, kolizje w czasie.
+description: Use when an algorithmic problem hides in the domain — assignment, ordering, packing, routes, collisions in time.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj, gdy w obszarze domeny szukasz ukrytego klasycznego problemu algorytmicznego (kolejność i zależności, przydział, pakowanie w limity, pokrycie, trasy, kolizje w czasie, podobieństwo) — dwa tory dopasowania, mapowanie domena→algorytm, pewność, raport. Nie do klasy problemu (ddd-deep-modeling) ani doboru bibliotek (arch-tech-selection)."
-  keywords: "znany problem algorytmiczny, harmonogram etapów, zależności między etapami, równolegle, kara za opóźnienie, ścieżka krytyczna, kolejkowanie zadań, przydział, plan tras, pakowanie"
+  catalog: "Use when you look for a hidden classic algorithmic problem in a domain area (ordering and dependencies, assignment, packing into limits, coverage, routes, collisions in time, similarity) — two matching tracks, domain→algorithm mapping, confidence, report. Not for the problem class (ddd-deep-modeling) or choosing libraries (arch-tech-selection)."
+  keywords: "znany problem algorytmiczny, harmonogram etapów, zależności między etapami, równolegle, kara za opóźnienie, ścieżka krytyczna, kolejkowanie zadań, przydział, plan tras, pakowanie, known algorithmic problem, stage schedule, dependencies between stages, in parallel, delay penalty, critical path, task queuing, assignment, route plan, packing"
 ---
 
-# Rozpoznawanie problemów algorytmicznych w domenie
+# Recognizing algorithmic problems in the domain
 
-Pod językiem biznesu często kryje się problem od dawna rozwiązany („plan etapów z zależnościami” = sortowanie topologiczne
-i ścieżka krytyczna; „dobierz ludzi do projektów w budżecie” = plecak wielowymiarowy). Rozpoznanie daje w spadku
-**złożoność, znane pułapki i gotowe solvery**. Brak dopasowania też jest informacją: to prawdopodobnie nowatorski rdzeń
-(core, lewa strona Cynefin — analiza bottom-up).
+Under the business language there is often a problem solved long ago ("a stage plan with dependencies" = topological sort
+and the critical path; "pick people for projects within a budget" = a multidimensional knapsack). Recognition gives you as an inheritance
+**complexity, known pitfalls and ready solvers**. No match is also information: it is probably a novel core
+(core, the left side of Cynefin — bottom-up analysis).
 
-**Skan wskazuje kandydatów, nie podejmuje decyzji.** Nie wybiera wzorca taktycznego, nie wyznacza granic, nie implementuje.
-Najpierw potwierdź klasę problemu (ddd-deep-modeling): prosty CRUD nie potrzebuje solvera.
+**The scan points to candidates, it does not make decisions.** It does not choose a tactical pattern, does not set boundaries, does not implement.
+First confirm the problem class (ddd-deep-modeling): a simple CRUD does not need a solver.
 
-## Dwa tory dopasowania — wynik to SUMA, nie część wspólna
-1. **Tor językowy** — słowa-pomosty (rzeczowniki, czasowniki, przymiotniki: „zależy od”, „przydziel”, „nie może nachodzić”,
-   „najtaniej”, „kolejka”, „podobny”) dopasowane **po znaczeniu**, w dowolnym języku, do rodzin w `references/`.
-2. **Tor strukturalny** — dla każdego obszaru odpowiedz na pytania o kształt problemu:
-   | Pytanie | Rodzina |
+## Two matching tracks — the result is the UNION, not the intersection
+1. **Language track** — bridge words (nouns, verbs, adjectives: "depends on", "assign", "must not overlap",
+   "cheapest", "queue", "similar") matched **by meaning**, in any language, to the families in `references/`.
+2. **Structural track** — for each area, answer the questions about the shape of the problem:
+   | Question | Family |
    |---|---|
-   | Czy rzeczy muszą następować w **kolejności** wynikającej z zależności? | `graph-order.md` |
-   | Czy **łączymy w pary** elementy dwóch zbiorów (ludzi z zadaniami)? | `matching-flow.md` |
-   | Czy wybieramy **podzbiór mieszczący się w limitach** (budżet, pojemność, czas)? | `optimization.md` |
-   | Czy trzeba **pokryć** wszystkie wymagania jak najmniejszym zestawem? | `optimization.md` |
-   | Czy jest **sieć, trasa, połączenia**, najtańsza droga? | `graph-network.md` |
-   | Czy **grupujemy** rzeczy w rozłączne zbiory / klastry? | `graph-network.md` |
-   | Czy coś **nie może się nakładać w czasie** albo szukamy wolnych przedziałów? | `data-structures.md`, `optimization.md` |
-   | Czy szukamy **podobnych / prawie takich samych** rzeczy? | `search.md` |
-   | Czy ciągle wybieramy **następny najważniejszy** element? | `data-structures.md` |
-   Potem sprawdź *pytanie dopasowania* każdej pozycji z wskazanej rodziny.
+   | Must things follow in an **order** that results from dependencies? | `graph-order.md` |
+   | Do we **pair up** elements of two sets (people with tasks)? | `matching-flow.md` |
+   | Do we choose a **subset fitting within limits** (budget, capacity, time)? | `optimization.md` |
+   | Do all requirements have to be **covered** with the smallest possible set? | `optimization.md` |
+   | Is there a **network, a route, connections**, the cheapest path? | `graph-network.md` |
+   | Do we **group** things into disjoint sets / clusters? | `graph-network.md` |
+   | Must something **not overlap in time**, or are we looking for free intervals? | `data-structures.md`, `optimization.md` |
+   | Are we looking for **similar / almost identical** things? | `search.md` |
+   | Do we keep choosing the **next most important** element? | `data-structures.md` |
+   Then check the *matching question* of each entry from the indicated family.
 
-Trafienie w jednym torze wystarcza, by pozycja była kandydatem. Nie wymagaj zgodności obu torów — gubi prawdziwe trafienia.
-Każda pozycja ma pole **„to nie to, jeśli… → zobacz X”**: to nie odrzucenie, tylko wskazanie wariantu (osobny kandydat).
+A hit in one track is enough for an entry to be a candidate. Do not require agreement of both tracks — it loses real hits.
+Each entry has a field **"it is not this if… → see X"**: this is not a rejection, only a pointer to a variant (a separate candidate).
 
-## Pewność
-- **wysoka** — trafiły oba tory, każdy innym cytatem, a mapowanie obejmuje ≥ 3 elementy wzorca (np. węzeł, krawędź, waga).
-- **średnia** — jeden tor i wiarygodne mapowanie.
-- **niska** — mapowanie spekulatywne. Niska pewność to uczciwy wynik, nie powód do pominięcia.
+## Confidence
+- **high** — both tracks hit, each with a different quote, and the mapping covers ≥ 3 elements of the pattern (e.g. node, edge, weight).
+- **medium** — one track and a credible mapping.
+- **low** — a speculative mapping. Low confidence is an honest result, not a reason to skip it.
 
 
-## Twarde reguły
-- Każdy kandydat ma ≥ 1 **dosłowny cytat** ze źródłem i miejscem (bank dowodów z ddd-discovery-intake albo wymagania);
-  cytat weryfikuj w źródle (`grep -F`). Nieodnaleziony → kandydat odpada; tekst z rozmowy bez źródła → `niezweryfikowany`.
-- **Mapowanie domena → algorytm** jest pełne: co jest węzłem, krawędzią, wagą, pojemnością, ograniczeniem.
-- Słowa sygnalizujące problem, dla których katalog nic nie ma (prognozowanie, symulacja „co jeśli”, negocjacje…) wypisz jako
-  **„uczciwe braki”** — to kandydaci na nowatorski rdzeń.
-- Nie deklaruj „NP-trudne” na słabych dowodach; nie rozwiązuj problemu w raporcie.
+## Hard rules
+- Every candidate has ≥ 1 **verbatim quote** with a source and a location (the evidence bank from ddd-discovery-intake or the requirements);
+  verify the quote in the source (`grep -F`). Not found → the candidate is dropped; text from a conversation without a source → `unverified`.
+- **The domain → algorithm mapping** is complete: what is the node, the edge, the weight, the capacity, the constraint.
+- Words signalling a problem for which the catalogue has nothing (forecasting, "what if" simulation, negotiations…) list as
+  **"honest gaps"** — these are candidates for a novel core.
+- Do not declare "NP-hard" on weak evidence; do not solve the problem in the report.
 
-## Obserwacje między obszarami
-- **Konsolidacja** — ten sam algorytm (≥ średnia pewność) w ≥ 2 obszarach → kandydat do połączenia albo wspólnego jądra.
-- **Wspólne jądro** — ta sama implementacja algorytmu, różne modele domenowe (granice zostają).
-- **Szew** — te same słowa, różne algorytmy → wskazówka, że to różne konteksty (ddd-strategic-analysis).
+## Observations across areas
+- **Consolidation** — the same algorithm (≥ medium confidence) in ≥ 2 areas → a candidate for merging or a shared kernel.
+- **Shared kernel** — the same implementation of the algorithm, different domain models (the boundaries remain).
+- **Seam** — the same words, different algorithms → a hint that these are different contexts (ddd-strategic-analysis).
 
-## Archetyp + algorytm
-Gdy skan i archetyp (ddd-archetypes) wskazują to samo: **archetyp daje model, algorytm — silnik**. Algorytm zamknij w czystej
-funkcji lub solverze za interfejsem archetypu (np. Availability → drzewo przedziałów / ograniczenie wykluczające w bazie;
-General assignment → plecak wielowymiarowy).
+## Archetype + algorithm
+When the scan and an archetype (ddd-archetypes) point to the same thing: **the archetype gives the model, the algorithm — the engine**. Enclose the algorithm in a pure
+function or a solver behind the archetype's interface (e.g. Availability → an interval tree / an exclusion constraint in the database;
+General assignment → a multidimensional knapsack).
 
-## Wynik: `docs/project/02-domain/algorithms.md`
-Format i przykład: `references/report-format.md`. Zapisuj obszar po obszarze (długi przebieg nie utnie wyniku).
-Koszt: czytaj tylko pliki rodzin wskazanych przez tor strukturalny (1–2 pliki na obszar), a skan wielu obszarów zlecaj
-podagentowi, który zwraca sam raport.
+## Result: `docs/project/02-domain/algorithms.md`
+Format and example: `references/report-format.md`. Write area by area (a long run will not cut off the result).
+Cost: read only the family files indicated by the structural track (1–2 files per area), and delegate a scan of many areas
+to a subagent that returns only the report.
 
-## Checklista
-- [ ] klasa problemu potwierdzona przed skanem
-- [ ] oba tory przejrzane dla każdego obszaru; kandydaci z cytatami i pełnym mapowaniem
-- [ ] warianty („to nie to, jeśli”) i uczciwe braki wypisane
-- [ ] obserwacje między obszarami; przekazanie do ddd-strategic-analysis i arch-tech-selection
+## Checklist
+- [ ] problem class confirmed before the scan
+- [ ] both tracks reviewed for each area; candidates with quotes and a complete mapping
+- [ ] variants ("it is not this if") and honest gaps listed
+- [ ] observations across areas; handoff to ddd-strategic-analysis and arch-tech-selection

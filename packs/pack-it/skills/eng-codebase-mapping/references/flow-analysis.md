@@ -1,49 +1,49 @@
-# Analiza jednego przepływu (pogłębienie po mapie)
+# Analysis of a single flow (deepening after the map)
 
-Mapa repo mówi, gdzie patrzeć. Analiza przepływu mówi, **jak jeden przepływ działa dziś** (np. „zapis wiadomości”,
-„naliczenie rabatu”) i co jest w nim kruche — przed decyzją o zmianie. Wynik jest wejściem do planu kroku albo do
-wyboru refaktoryzacji (eng-refactor-planning). Audyt całego modułu w wielu wymiarach to eng-tech-debt-audit;
-przyczyna konkretnego błędu — eng-debugging.
+The repo map says where to look. Flow analysis says **how one flow works today** (e.g. "saving a message",
+"calculating a discount") and what is fragile in it — before a decision about a change. The result is input to a step's plan or to
+choosing a refactoring (eng-refactor-planning). An audit of a whole module in many dimensions is eng-tech-debt-audit;
+the cause of a specific bug — eng-debugging.
 
-## 1. Kontrakt zakresu
-- **Wejście:** mapa repo jako prior — cel ze „Stref ryzyka”, 2–3 pliki startowe z „Pierwszego dnia”, pierwsze
-  `unknowns` z „Ograniczeń”. Bez mapy: najpierw mapa albo jawna zgoda człowieka na analizę bez niej.
-- **Jeden przepływ**, nie podsystem. Na górze raportu jedna linia celu: co badam, od którego pliku, dlaczego mapa
-  wskazała ten obszar.
-- **Twarda granica:** tylko stan obecny — bez propozycji refaktoru i bez docelowej architektury.
+## 1. Scope contract
+- **Input:** the repo map as a prior — the target from "Risk zones", 2–3 starting files from "First day", the first
+  `unknowns` from "Limitations". Without a map: the map first, or the human's explicit consent to an analysis without it.
+- **One flow**, not a subsystem. At the top of the report one line with the goal: what I am researching, from which file, why the map
+  pointed to this area.
+- **Hard boundary:** only the current state — no refactoring proposals and no target architecture.
 
-## 2. Trzech wykonawców równolegle (ten sam kontrakt, tylko odczyt)
-1. **Trace end-to-end:** od punktu wejścia przez warstwy do zapisu lub odczytu i z powrotem; kroki z `plik:linia`;
-   diagram sekwencji (Mermaid). Skąd dane, kto waliduje, gdzie zmienia się stan, co wraca. Obie strony (np.
-   optymistyczny UI i serwer) i miejsce, w którym się uzgadniają. Warstwy, które tylko delegują, nazwij wprost.
-2. **Luki w testach:** które metody i gałęzie ścieżki mają test (nazwa testu), które nie — zwłaszcza ścieżki błędów.
-3. **Zasięg zmiany:** co musi zmienić się razem — szew interfejsu, warstwy generowane, model, migracje, testy;
-   graf statyczny + współzmiany z `git_territory.py --cochange` (para vs hub).
-Każde twierdzenie z etykietą evidence / inference / unknown.
+## 2. Three implementers in parallel (the same contract, read only)
+1. **Trace end-to-end:** from the entry point through the layers to the write or read and back; steps with `file:line`;
+   a sequence diagram (Mermaid). Where the data comes from, who validates, where the state changes, what returns. Both sides (e.g.
+   an optimistic UI and the server) and the place where they reconcile. Name the layers that only delegate explicitly.
+2. **Test gaps:** which methods and branches of the path have a test (the test name), which do not — especially the error paths.
+3. **Change reach:** what must change together — the interface seam, generated layers, the model, migrations, tests;
+   the static graph + co-changes from `git_territory.py --cochange` (pair vs hub).
+Every claim with an evidence / inference / unknown label.
 
-## 3. Raport `docs/project/<krok>/research.md`
-1. **Cel** (1 linia).
-2. **Przegląd przepływu** — przepływ, nie spis plików; diagram sekwencji.
-3. **Dług jako mapa kruchości:** rodzaj ryzyka w języku connascence (kolejność, znaczenie, pozycja, algorytm;
-   statyczna vs dynamiczna; dystans), luki siatki testów, zasięg. **Osobno sprzężenia tanie** — kod generowany,
-   regeneracja, rzeczy łapane przez kompilator lub CI. Nie pisz „tightly coupled”; nazwij rodzaj.
-4. **Korekty priorów:** co z mapy okazało się nieaktualne — jawnie, z dowodem.
-5. **Unknowns** z tym, jak je rozstrzygnąć (kogo zapytać, co uruchomić).
-6. **Weryfikacja twierdzeń strukturalnych** („dokładnie 4 wywołania”, „tylko tutaj”, „zawsze przez X”): każde
-   sprawdzone ast-grepem lub LSP, każde zero potwierdzone `rg`; poprawki w miejscu ze śladem „5 (raport: 4)”;
-   tabela twierdzenie → werdykt → dowód → metoda.
-7. **Hotspoty przepływu:** częstość zmian z mapy × złożoność plików przepływu (tani proxy, np. linie niepuste).
+## 3. The report `docs/project/<step>/research.md`
+1. **Goal** (1 line).
+2. **Flow overview** — the flow, not a list of files; a sequence diagram.
+3. **Debt as a fragility map:** the kind of risk in the language of connascence (order, meaning, position, algorithm;
+   static vs dynamic; distance), gaps in the test net, reach. **Cheap couplings separately** — generated code,
+   regeneration, things caught by the compiler or CI. Do not write "tightly coupled"; name the kind.
+4. **Prior corrections:** what from the map turned out to be outdated — explicitly, with evidence.
+5. **Unknowns** with how to resolve them (whom to ask, what to run).
+6. **Verification of structural claims** ("exactly 4 calls", "only here", "always through X"): each one
+   checked with ast-grep or LSP, every zero confirmed with `rg`; corrections in place with the trace "5 (report: 4)";
+   a table claim → verdict → evidence → method.
+7. **Flow hotspots:** change frequency from the map × the complexity of the flow's files (a cheap proxy, e.g. non-empty lines).
 
-## 4. Kryteria przeglądu raportu (człowiek, świeży kontekst)
-- przepływ zamiast listy plików?
-- dług nazwany rodzajem ryzyka, a tani oddzielony od groźnego?
-- liczby zweryfikowane narzędziem, zera potwierdzone?
-- nic nie proponuje zmian?
+## 4. Report review criteria (a human, fresh context)
+- a flow instead of a list of files?
+- debt named by the kind of risk, and the cheap kind separated from the dangerous one?
+- numbers verified with a tool, zeros confirmed?
+- nothing proposes changes?
 
-## 5. Przykład
-Przepływ „zapis wiadomości”: 6 warstw w katalogach, z czego 4 tylko delegują; zapis pojedynczy jest fasadą nad
-zapisem wsadowym; zapisane obiekty nie są ponownie czytane z bazy. Kruchość: zapis pozycyjny 18 kolumn (connascence
-pozycji, bez osłony); model wiadomości na backendzie i jego ręczna kopia na froncie (znaczenie, duży dystans, prawie
-zero współzmian — cichy dług); ścieżki błędów bez testów. Tanie: warstwy store generowane z interfejsu (rozjazd
-łapie CI). Korekta prioru: mapa podawała 3 warstwy delegujące, są 4. Weryfikacja: „4 wywołania zapisu wsadowego”
-→ 5 (raport: 4), piąte w teście integracyjnym.
+## 5. Example
+The "saving a message" flow: 6 layers in directories, of which 4 only delegate; a single save is a facade over a
+batch save; saved objects are not read back from the database. Fragility: a positional write of 18 columns (connascence
+of position, without a guard); the message model on the backend and its hand-made copy on the front end (meaning, large distance, almost
+zero co-changes — silent debt); error paths without tests. Cheap: store layers generated from the interface (a mismatch
+is caught by CI). Prior correction: the map gave 3 delegating layers, there are 4. Verification: "4 batch save calls"
+→ 5 (report: 4), the fifth in an integration test.

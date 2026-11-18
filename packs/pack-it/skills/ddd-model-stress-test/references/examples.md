@@ -1,71 +1,71 @@
-# Przykłady — test obciążeniowy modelu
+# Examples — model stress test
 
-## 1. Marża na projekcie: od briefu do raportu wpływu
-**Sytuacja.** „Software house, system do prowadzenia projektów klientów. Moduły: `oferty`, `projekty`, `czas-pracy`,
-`fakturowanie`. Sprawdź, czy model wytrzyma to, czego zarząd zechce za rok. Metryka zarządu: marża na projekcie.”
+## 1. Margin per project: from the brief to the impact report
+**Situation.** "A software house, a system for running client projects. Modules: `offers`, `projects`, `time-tracking`,
+`invoicing`. Check whether the model will withstand what the board wants in a year. The board's metric: margin per project."
 
-**Jak.**
-1. **Metryka** podana przez człowieka dosłownie — „marża na projekcie”; nie zmieniam jej i nie dopisuję własnej.
-2. **Brief** (`_blind/brief.md`) o działalności: wyceny ryczałtowe i godzinowe, kary za opóźnienia, ławka między projektami,
-   skala 30 projektów rocznie. Nazwy modułów usunięte; test lustra i niezmienności przechodzi.
-3. **Generator** `blind-analyst` jako podagent: dostaje tylko metrykę, ścieżkę briefu i liczbę wymagań (8). Każde wymaganie
-   ma Prośbę, Mechanizm i Podstawę. Człowiek zatwierdza i zamraża zbiór.
-4. **Ocena wpływu** dopiero teraz, z inwentarzem zdolności modułów (`stress/modules.md`): używa / rozszerza / zyskuje /
-   bez miejsca, klasa górną granicą, każdy wiersz z „dlaczego”.
+**How.**
+1. **Metric** given by the human verbatim — "margin per project"; I do not change it and do not add my own.
+2. **Brief** (`_blind/brief.md`) about the business: fixed-price and hourly quotes, penalties for delays, the bench between projects,
+   a scale of 30 projects a year. Module names removed; the mirror and invariance tests pass.
+3. **Generator** `blind-analyst` as a subagent: it gets only the metric, the brief path and the number of requirements (8). Every requirement
+   has a Request, a Mechanism and a Basis. The human approves and freezes the set.
+4. **Impact assessment** only now, with the inventory of module capabilities (`stress/modules.md`): uses / extends / gains /
+   no place, the class by the upper bound, every row with a "why".
 
-**Wynik** — wymaganie z generatora (`_blind/requirements.md`):
+**Result** — a requirement from the generator (`_blind/requirements.md`):
 ```markdown
-### W-3
-Prośba: co gdyby biznes chciał wyceniać projekty ryczałtowe z rezerwą na ryzyko zależną od rodzaju klienta?
-Mechanizm: rezerwa pokrywa przekroczenia godzin → mniej projektów z ujemnym wynikiem → wyższa średnia marża.
-Podstawa: brief, „Gdzie tracimy”: „co trzeci ryczałt przekracza budżet godzin”.
+### R-3
+Request: what if the business wanted to quote fixed-price projects with a risk reserve that depends on the type of client?
+Mechanism: the reserve covers hour overruns → fewer projects with a negative result → a higher average margin.
+Basis: brief, "Where we lose": "every third fixed price exceeds the hours budget".
 ```
-Fragment raportu (`stress/marza-na-projekcie.md`):
+A fragment of the report (`stress/project-margin.md`):
 
-| Wymaganie | oferty | projekty | czas-pracy | fakturowanie | Klasa | Dlaczego |
+| Requirement | offers | projects | time-tracking | invoicing | Class | Why |
 |---|---|---|---|---|---|---|
-| W-1 alert, gdy zużyte godziny > 80% budżetu | używa | rozszerza | używa | — | lokalne (1) | budżet żyje w projekcie, godziny tylko odczytywane |
-| W-3 rezerwa na ryzyko w ryczałcie | rozszerza | używa | — | rozszerza | rozproszone (2) | rezerwa zmienia wycenę i kwotę na fakturze końcowej |
-| W-5 koszt ławki doliczany do projektów | — | rozszerza | rozszerza | — | rozproszone (2) | czas bez projektu nie ma dziś właściciela |
-| W-7 premia od marży dla kierownika projektu | — | używa | — | używa | nowy moduł: 0 (+1 nowy) | wynagrodzenia — żaden moduł nie jest naturalnym miejscem |
+| R-1 alert when hours used > 80% of the budget | uses | extends | uses | — | local (1) | the budget lives in the project, hours are only read |
+| R-3 risk reserve in a fixed price | extends | uses | — | extends | distributed (2) | the reserve changes the quote and the amount on the final invoice |
+| R-5 bench cost added to projects | — | extends | extends | — | distributed (2) | time without a project has no owner today |
+| R-7 margin bonus for the project manager | — | uses | — | uses | new module: 0 (+1 new) | remuneration — no module is a natural place |
 
-Rozkład klas (8 wymagań): lokalne 3 · rozproszone 4 · nowy moduł 1. Zestawienie per moduł: `projekty` — 4 zmiany, 3 użycia;
-`fakturowanie` — 2 zmiany. Bez ocen jakości; nota: „ten zbiór można powtórzyć na innej dekompozycji”.
+Distribution of classes (8 requirements): local 3 · distributed 4 · new module 1. Summary per module: `projects` — 4 changes, 3 uses;
+`invoicing` — 2 changes. No quality judgements; a note: "this set can be repeated on another decomposition".
 
-## 2. Ten sam zbiór, dwie dekompozycje
-**Sytuacja.** „Architekt proponuje połączyć `czas-pracy` z `projekty` w jeden moduł `realizacja`. Czy to lepszy podział?”
+## 2. The same set, two decompositions
+**Situation.** "The architect proposes merging `time-tracking` with `projects` into one module `delivery`. Is it a better split?"
 
-**Jak.**
-1. Nie generuję nowych wymagań — biorę **zamrożony** zbiór z przykładu 1 (8 wymagań).
-2. Powtarzam tylko krok 5 (ocenę wpływu) dla wariantu B.
-3. Pokazuję, gdzie każdy wariant się napina; nie rozstrzygam — decyzja i ADR należą do człowieka (ddd-strategic-analysis).
+**How.**
+1. I do not generate new requirements — I take the **frozen** set from example 1 (8 requirements).
+2. I repeat only step 5 (the impact assessment) for variant B.
+3. I show where each variant strains; I do not decide — the decision and the ADR belong to the human (ddd-strategic-analysis).
 
-**Wynik**:
+**Result**:
 
-| Klasa | Wariant A (4 moduły) | Wariant B (`realizacja`) |
+| Class | Variant A (4 modules) | Variant B (`delivery`) |
 |---|---|---|
-| lokalne (0–1) | 3 | 5 |
-| rozproszone (≥ 2) | 4 | 2 |
-| nowy moduł | 1 | 1 |
-| moduł z największą liczbą zmian | `projekty` (4) | `realizacja` (6) |
+| local (0–1) | 3 | 5 |
+| distributed (≥ 2) | 4 | 2 |
+| new module | 1 | 1 |
+| module with the most changes | `projects` (4) | `delivery` (6) |
 
-Obserwacja do ADR: B lokalizuje W-5 i W-6, ale skupia 6 zmian w jednym module — tam przenosi się napięcie.
-W-7 w obu wariantach wymaga nowego modułu.
+An observation for the ADR: B localises R-5 and R-6, but concentrates 6 changes in one module — that is where the strain moves.
+R-7 requires a new module in both variants.
 
-## 3. Metryka opisana rozwiązaniem i brief, który nie przeszedł testu lustra
-**Sytuacja.** „Potrząśnij modelem sklepu. Metryka: szybsze API zamówień.”
+## 3. A metric described by a solution and a brief that failed the mirror test
+**Situation.** "Shake the shop's model. Metric: a faster orders API."
 
-**Jak.**
-1. „Szybsze API” to rozwiązanie, nie liczba biznesowa → przeformułowanie **z człowiekiem** (bramka); propozycja:
-   „czas od zamówienia do dostawy”, człowiek potwierdza brzmienie.
-2. Pierwsza wersja briefu ma sekcje „Katalog”, „Koszyk”, „Płatności”, „Wysyłka” — 1:1 z modułami → test lustra nie przechodzi.
-3. Przepisuję brief wokół działań biznesu i usuwam czasowniki ostrzegawcze (*synchronizuje*, *wysyła*).
-4. Test niezmienności: brief brzmiałby tak samo dla sklepu prowadzonego z zeszytem i telefonem.
+**How.**
+1. "A faster API" is a solution, not a business number → reformulation **with the human** (gate); proposal:
+   "time from order to delivery", the human confirms the wording.
+2. The first version of the brief has the sections "Catalogue", "Cart", "Payments", "Shipping" — 1:1 with the modules → the mirror test fails.
+3. I rewrite the brief around business activities and remove the warning verbs (*synchronises*, *sends*).
+4. Invariance test: the brief would sound the same for a shop run with a notebook and a telephone.
 
-**Wynik** — zmiana briefu:
+**Result** — the change of the brief:
 
-| Przed (zawiera rozwiązanie) | Po (działalność) |
+| Before (contains a solution) | After (the business) |
 |---|---|
-| „Moduł Płatności synchronizuje status z operatorem i wysyła zdarzenie do Wysyłki.” | „Paczkę pakujemy dopiero po potwierdzeniu wpłaty; przy przelewie tradycyjnym czekamy średnio 1,5 dnia.” |
-| „Wysyłka przechowuje w bazie trzy kurierów.” | „Współpracujemy z trzema firmami kurierskimi; jedna odbiera paczki tylko do 14:00.” |
-| sekcje: Katalog · Koszyk · Płatności · Wysyłka | sekcje: Kto kupuje i dlaczego · Od zamówienia do paczki · Gdzie tracimy czas i pieniądze · Słownik |
+| "The Payments module synchronises the status with the operator and sends an event to Shipping." | "We pack the parcel only after the payment is confirmed; with a traditional bank transfer we wait 1.5 days on average." |
+| "Shipping stores three couriers in the database." | "We work with three courier companies; one picks up parcels only until 14:00." |
+| sections: Catalogue · Cart · Payments · Shipping | sections: Who buys and why · From the order to the parcel · Where we lose time and money · Vocabulary |

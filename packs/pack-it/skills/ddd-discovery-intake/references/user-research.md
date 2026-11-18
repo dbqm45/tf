@@ -1,63 +1,63 @@
-# Badania z użytkownikami (plan, wywiad, synteza)
+# Research with users (plan, interview, synthesis)
 
-Uzupełnienie intake: gdy dowodów od ekspertów domeny jest za mało albo trzeba zrozumieć użytkowników końcowych.
+A supplement to intake: when there is too little evidence from domain experts or end users need to be understood.
 
-## Plan badania
-- Cel zaczyna się od czasownika, który daje się sprawdzić: opisać, ocenić, zidentyfikować, porównać. „Zrozumieć”
-  i „zbadać” odrzucasz — nie wiadomo, kiedy badanie się skończy.
-- Nazwij decyzję, której badanie ma służyć. Bez decyzji — wróć z pytaniem do zlecającego.
-- Pytanie badawcze (co chcemy wiedzieć) to co innego niż pierwsze pytanie w wywiadzie (co mówimy rozmówcy).
-- Liczebność: ok. 5 osób na segment w testach użyteczności, 8–12 w wywiadach odkrywczych (nasycenie) — liczone per segment.
-- Rekrutacja według zachowań („zamawia online co tydzień”), nie demografii.
-- Ankieta przesiewowa: 2–4 pytania, najpierw dyskwalifikujące, bez pytań tak/nie, opcjonalnie jedno otwarte
-  sprawdzające, czy osoba potrafi opowiadać.
+## The research plan
+- The goal starts with a verb that can be checked: describe, assess, identify, compare. "Understand"
+  and "explore" you reject — it is unknown when the research will end.
+- Name the decision the research is meant to serve. No decision — go back to the requester with a question.
+- The research question (what we want to know) is something different from the first question in the interview (what we say to the interviewee).
+- Sample size: approx. 5 people per segment in usability tests, 8–12 in discovery interviews (saturation) — counted per segment.
+- Recruitment by behaviours ("orders online every week"), not demographics.
+- A screener survey: 2–4 questions, disqualifying ones first, no yes/no questions, optionally one open question
+  checking whether the person can tell a story.
 
-## Scenariusz wywiadu
-- Kształt klepsydry: ogólnie → szczegółowo → ogólnie. Badacz jest uczniem, rozmówca ekspertem.
-- Pytaj o konkretne zdarzenia („opowiedz o ostatnim razie, kiedy…”), nie o uogólnienia i przyszłość.
-- Dopytuj („dlaczego?”, powtórzenie słów rozmówcy), bez pytań sugerujących; po pytaniu otwierającym czekaj na odpowiedź,
-  nie poprawiaj rozmówcy.
+## The interview script
+- An hourglass shape: general → specific → general. The researcher is the student, the interviewee the expert.
+- Ask about specific events ("tell me about the last time when…"), not about generalizations and the future.
+- Probe ("why?", repeating the interviewee's words), without leading questions; after the opening question wait for the answer,
+  do not correct the interviewee.
 
-## Krytyka pytań — nie pytaj o pomysł
-- Nigdy: „czy użył(a)byś…”, „czy podoba ci się pomysł”, „czy przydałby się panel”, „ile byś zapłacił”. Odpowiedzi
-  o przyszłości i komplementy nie są dowodem.
-- Zawsze: ostatni konkretny raz, co wtedy zrobiono, obecne obejście, ile kosztowało (czas, poprawki, ryzyko),
-  czego już próbowano.
-- Przed wywiadem oddziel w materiale **fakty** (logi, zgłoszenia, incydenty) od **domysłów**; dopracowany dokument
-  przy słabych dowodach nazwij wprost.
-- Każde pytanie z roboczej listy klasyfikuj: **zostaw** (konkretne, o zachowaniu) / **przepisz** (dobra intencja,
-  pytanie sugerujące) / **usuń** (komplement, hipoteza, wycena wyobrażonego produktu, akceptacja rozwiązania).
-  Przy przepisaniu: „Zamiast: … / Zapytaj: … / Jaki sygnał to ujawni: …”.
-- Scenariusz 20–30 min (8–12 pytań): kontekst i częstotliwość → ostatnia historia → obecne obejście → koszt bólu →
-  istniejące alternatywy → co skłoniłoby do zmiany → prośba o kontynuację lub wgląd w zanonimizowane artefakty.
+## Critiquing questions — do not ask about the idea
+- Never: "would you use…", "do you like the idea", "would a dashboard be useful", "how much would you pay". Answers
+  about the future and compliments are not evidence.
+- Always: the last specific time, what was done then, the current workaround, how much it cost (time, rework, risk),
+  what has already been tried.
+- Before the interview separate in the material the **facts** (logs, tickets, incidents) from the **guesses**; name a polished document
+  with weak evidence explicitly.
+- Classify every question from the working list: **keep** (specific, about behaviour) / **rewrite** (a good intention,
+  a leading question) / **remove** (a compliment, a hypothesis, pricing an imagined product, accepting a solution).
+  When rewriting: "Instead of: … / Ask: … / What signal it will reveal: …".
+- A 20–30 min script (8–12 questions): context and frequency → the latest story → the current workaround → the cost of the pain →
+  existing alternatives → what would prompt a change → a request for a follow-up or a look at anonymized artifacts.
 
-## Ankieta (szerszy sygnał)
-6–10 pytań; jedno pytanie przesiewowe (czy respondent w ogóle ma ten przepływ pracy); częstość i wysiłek jako
-przedziały; 1–2 pytania otwarte o niedawny przykład; bez rankingu rozwiązań, których nikt nie widział.
+## Survey (a broader signal)
+6–10 questions; one screening question (whether the respondent has this workflow at all); frequency and effort as
+ranges; 1–2 open questions about a recent example; no ranking of solutions nobody has seen.
 
-## Kryteria decyzji (zapisane przed badaniem)
-Progi ustalasz z człowiekiem **przed** wywiadami, np.:
-- **działaj** — co najmniej 3 z 5 rozmówców bez podpowiedzi opisuje to samo niedawne obejście; co najmniej 40%
-  ankietowanych z grupy docelowej ma problem co tydzień lub częściej; koszt mierzalny (czas, pieniądze, poprawki);
-- **zawęź zakres** — sygnał mieszany;
-- **jeszcze nie buduj** — sygnał słaby;
-- **najpierw istniejące narzędzie lub proces** — obecne rozwiązanie wystarcza.
+## Decision criteria (written down before the research)
+You set the thresholds with the human **before** the interviews, e.g.:
+- **act** — at least 3 of 5 interviewees describe the same recent workaround without prompting; at least 40%
+  of the respondents from the target group have the problem weekly or more often; a measurable cost (time, money, rework);
+- **narrow the scope** — a mixed signal;
+- **do not build yet** — a weak signal;
+- **an existing tool or process first** — the current solution is enough.
 
-## Synteza
-1. Zapoznanie z materiałem (partiami), potem księga kodów — każdy kod ma przykładowy cytat (bank cytatów: `corpus.md`).
-2. **Temat wymaga co najmniej 2 wywiadów**; wzorzec z jednego wywiadu to obserwacja.
-3. Sprzeczności i dowody przeciwne pokazujesz na wierzchu (`contradictions.md`), nie chowasz.
-4. Persona (jeśli potrzebna) ma cytat definiujący i 3–5 celów.
-5. Priorytety według celu: waga × częstość (problemy), ważność vs zadowolenie (potrzeby), wpływ/wysiłek (pomysły),
-   drzewo szans i rozwiązań (kierunek produktu).
+## Synthesis
+1. Familiarization with the material (in batches), then a codebook — every code has a sample quote (the quote bank: `corpus.md`).
+2. **A theme requires at least 2 interviews**; a pattern from one interview is an observation.
+3. You show contradictions and counter-evidence on top (`contradictions.md`), you do not hide them.
+4. A persona (if needed) has a defining quote and 3–5 goals.
+5. Priorities by purpose: weight × frequency (problems), importance vs satisfaction (needs), impact/effort (ideas),
+   an opportunity solution tree (product direction).
 
-## Dane osobowe
-Nagrania i transkrypcje to dane osobowe: zgoda rozmówcy, minimalizacja, anonimizacja przed przekazaniem dalej,
-żadnego wysyłania do zewnętrznych usług bez podstawy prawnej i zgody organizacji.
+## Personal data
+Recordings and transcripts are personal data: the interviewee's consent, minimization, anonymization before passing them on,
+no sending to external services without a legal basis and the organization's consent.
 
-## Źródło inspiracji
-Kurs 10xDevs, ed. 3 (2026), moduł 5, lekcja 1 (krytyka pytań w duchu „The Mom Test” R. Fitzpatricka, 2013) —
-materiał szkoleniowy (dostęp 2026-10-09); progi decyzji to przykład, nie norma.
-[user-research-skill](https://github.com/cookiy-ai/user-research-skill) — trasy „plan” i „synteza” (zasady celu,
-liczebności, rekrutacji, scenariusza i syntezy), opisane własnymi słowami; bez części platformy Cookiy (płatna
-usługa zewnętrzna).
+## Source of inspiration
+The 10xDevs course, ed. 3 (2026), module 5, lesson 1 (critiquing questions in the spirit of "The Mom Test" by R. Fitzpatrick, 2013) —
+training material (accessed 2026-10-09); the decision thresholds are an example, not a norm.
+[user-research-skill](https://github.com/cookiy-ai/user-research-skill) — the "plan" and "synthesis" routes (the principles of the goal,
+sample size, recruitment, the script and synthesis), described in our own words; without the parts of the Cookiy platform (a paid
+external service).

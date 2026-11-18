@@ -1,46 +1,46 @@
-# Pełnomocnik (Proxy)
+# Proxy
 
-Kategoria: strukturalne. Istota: obiekt z **tym samym interfejsem** co usługa stoi przed nią i kontroluje dostęp:
-leniwe tworzenie, uprawnienia, cache, zdalność, audyt. Klient nie odróżnia go od prawdziwej usługi.
+Category: structural. The essence: an object with **the same interface** as the service stands in front of it and controls access:
+lazy creation, permissions, cache, remoteness, audit. The client cannot tell it apart from the real service.
 
 ## Problem
-Magazyn dokumentów łączy się z kosztownym zasobem (inicjalizacja klienta chmury, pobranie kluczy) i zawiera dane
-poufne. Część ekranów nigdy nie czyta dokumentów, a dostęp ma zależeć od uprawnień. Dopisywanie sprawdzeń i leniwej
-inicjalizacji w każdym miejscu użycia duplikuje logikę; zmiana klasy magazynu jest niemożliwa (biblioteka).
+A document store connects to an expensive resource (initializing a cloud client, fetching keys) and contains confidential
+data. Some screens never read documents, and access is to depend on permissions. Adding checks and lazy
+initialization at every place of use duplicates logic; changing the store class is impossible (a library).
 
-## Rozwiązanie i uczestnicy
-- **Interfejs usługi** — wspólny kontrakt.
-- **Usługa** — prawdziwa logika (wolna, kosztowna, wrażliwa lub zdalna).
-- **Pełnomocnik** — trzyma (lub tworzy) usługę, wykonuje pracę pomocniczą przed/po delegacji, często zarządza jej
-  cyklem życia.
+## Solution and participants
+- **Service interface** — the shared contract.
+- **Service** — the real logic (slow, expensive, sensitive or remote).
+- **Proxy** — holds (or creates) the service, performs auxiliary work before/after delegating, often manages its
+  life cycle.
 
-| Odmiana | Po co |
+| Variant | What for |
 |---|---|
-| wirtualny (leniwy) | odłożenie kosztownej inicjalizacji do pierwszego użycia |
-| ochronny | sprawdzenie uprawnień przed wywołaniem |
-| zdalny | ukrycie sieci (stub klienta RPC/HTTP generowany z kontraktu) |
-| cache'ujący | zapamiętanie wyników powtarzalnych żądań |
-| logujący/audytowy | zapis, kto i kiedy korzystał |
-| inteligentna referencja | licznik użyć, zwolnienie zasobu, gdy nikt go nie trzyma |
+| virtual (lazy) | deferring an expensive initialization until first use |
+| protection | checking permissions before the call |
+| remote | hiding the network (an RPC/HTTP client stub generated from the contract) |
+| caching | remembering the results of repeated requests |
+| logging/audit | recording who used it and when |
+| smart reference | a usage counter, releasing the resource when nobody holds it |
 
-## Kiedy używać
-Gdy dostęp do istniejącej usługi wymaga nadzoru, a klient ma pozostać nieświadomy — i ten nadzór powtarza się
-w wielu miejscach.
+## When to use
+When access to an existing service requires supervision, and the client is to remain unaware — and this supervision recurs
+in many places.
 
-## Koszty
-Dodatkowa pośredniość i klasa; możliwe opóźnienie; trudniej śledzić przepływ.
+## Costs
+Additional indirection and a class; possible latency; the flow is harder to trace.
 
-## Powiązania
-- **Dekorator** — ten sam kształt; rozstrzyga motywacja: Dekorator **dodaje** zachowanie i warstwy składa klient,
-  Pełnomocnik **kontroluje dostęp** do tego, co usługa już robi, i zwykle sam zarządza jej cyklem życia.
-- **Adapter** zmienia interfejs; **Fasada** daje inny, prostszy interfejs do wielu obiektów.
+## Relations
+- **Decorator** — the same shape; the motivation decides: a Decorator **adds** behaviour and the client composes the layers,
+  a Proxy **controls access** to what the service already does, and usually manages its life cycle itself.
+- **Adapter** changes the interface; **Facade** gives a different, simpler interface to many objects.
 
-## Forma idiomatyczna w TS
-Leniwa inicjalizacja: `this.#real ??= create()`. Cache: `Map`. Wbudowany obiekt `Proxy` (`new Proxy(target, handler)`)
-przechwytuje operacje na poziomie języka — to jedna z możliwych technik realizacji (np. w bibliotekach reaktywnych),
-nie synonim wzorca; w kodzie aplikacyjnym jawna klasa jest czytelniejsza i lepiej typowana.
+## Idiomatic form in TS
+Lazy initialization: `this.#real ??= create()`. Cache: `Map`. The built-in `Proxy` object (`new Proxy(target, handler)`)
+intercepts operations at the language level — it is one of the possible implementation techniques (e.g. in reactive libraries),
+not a synonym for the pattern; in application code an explicit class is more readable and better typed.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 interface DocumentStore {
   read(documentId: string): Promise<string>;
@@ -48,14 +48,14 @@ interface DocumentStore {
 
 class CloudDocumentStore implements DocumentStore {
   constructor() {
-    console.log('kosztowna inicjalizacja klienta chmury');
+    console.log('expensive initialization of the cloud client');
   }
   async read(documentId: string): Promise<string> {
-    return `treść ${documentId}`;
+    return `content of ${documentId}`;
   }
 }
 
-/** Pełnomocnik ochronny + wirtualny: sprawdza uprawnienia i tworzy usługę dopiero przy pierwszym użyciu. */
+/** A protection + virtual proxy: checks permissions and creates the service only on first use. */
 class GuardedLazyStore implements DocumentStore {
   #real: DocumentStore | undefined;
   readonly #create: () => DocumentStore;
@@ -67,7 +67,7 @@ class GuardedLazyStore implements DocumentStore {
   }
 
   async read(documentId: string): Promise<string> {
-    if (!this.#canRead(documentId)) throw new Error(`brak dostępu do ${documentId}`);
+    if (!this.#canRead(documentId)) throw new Error(`no access to ${documentId}`);
     this.#real ??= this.#create();
     return this.#real.read(documentId);
   }
@@ -77,14 +77,14 @@ const store: DocumentStore = new GuardedLazyStore(
   () => new CloudDocumentStore(),
   (id) => !id.startsWith('HR-'),
 );
-store.read('UMOWA-1').then(console.log);
+store.read('CONTRACT-1').then(console.log);
 store.read('HR-7').catch((e: unknown) => console.warn(String(e)));
 ```
 
-## Kiedy NIE używać / pułapki
-- **Motywacją jest nowe zachowanie biznesowe** → to Dekorator (lub zmiana usługi), nie Pełnomocnik.
-- Jedno sprawdzenie w jednym miejscu → zwykły `if` przed wywołaniem.
-- Leniwość i cache często załatwia `??=` i `Map` bez osobnej klasy — Pełnomocnik ma sens, gdy nadzór jest
-  wielokrotnie używany i klient ma go nie widzieć.
-- Autoryzacja ukryta w pełnomocniku nie zastępuje autoryzacji na granicy systemu (be-auth-security) — to warstwa
-  dodatkowa.
+## When NOT to use / pitfalls
+- **The motivation is new business behaviour** → that is a Decorator (or a change to the service), not a Proxy.
+- One check in one place → an ordinary `if` before the call.
+- Laziness and caching are often handled by `??=` and `Map` without a separate class — a Proxy makes sense when the supervision is
+  reused many times and the client is not to see it.
+- Authorization hidden in a proxy does not replace authorization at the system boundary (be-auth-security) — it is an additional
+  layer.

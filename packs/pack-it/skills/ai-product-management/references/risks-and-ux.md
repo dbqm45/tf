@@ -1,27 +1,27 @@
-# Rejestr ryzyk i UX niepewności
+# Risk register and uncertainty UX
 
-## Rejestr ryzyk funkcji AI
-| Ryzyko | Scenariusz | Środek (przykłady) |
+## Risk register for an AI feature
+| Risk | Scenario | Measure (examples) |
 |---|---|---|
-| halucynacja | model podaje nieprawdziwy fakt z pewnością | oparcie na źródłach z cytatem, odmowa przy braku danych, ewaluacja zgodności |
-| uprzedzenia | gorsze wyniki dla grupy użytkowników lub języka | ewaluacja po kawałkach (język, segment), przegląd przykładów |
-| bezpieczeństwo treści | szkodliwa lub niestosowna odpowiedź | filtry, odmowy, zbiór adwersaryjny, eskalacja |
-| prywatność | dane osobowe w promptach, logach lub danych dostawcy | minimalizacja, anonimizacja, umowa powierzenia (arch-privacy-compliance) |
-| prompt injection | treść z zewnątrz zmienia zachowanie modelu | separacja danych i instrukcji, minimalne uprawnienia narzędzi (arch-threat-modeling) |
-| zależność od dostawcy | zmiana wersji, ceny lub wycofanie modelu | przypięta wersja, ewaluacja przy zmianie, plan wyjścia |
-| drift | jakość spada, bo zmieniły się dane lub język użytkowników | próbki z ruchu, alerty, cykliczna ewaluacja |
-| klasa regulacyjna | funkcja trafia w kategorię o obowiązkach | klasyfikację i obowiązki ustala ai-governance-compliance |
+| hallucination | the model states an untrue fact with confidence | grounding in sources with a citation, refusal when data is missing, consistency evaluation |
+| bias | worse results for a group of users or a language | evaluation by slices (language, segment), a review of examples |
+| content safety | a harmful or inappropriate answer | filters, refusals, an adversarial set, escalation |
+| privacy | personal data in prompts, logs or the vendor's data | minimization, anonymization, a data processing agreement (arch-privacy-compliance) |
+| prompt injection | content from outside changes the model's behaviour | separation of data and instructions, minimal tool permissions (arch-threat-modeling) |
+| vendor dependency | a change of version, price or withdrawal of the model | a pinned version, evaluation on a change, an exit plan |
+| drift | quality drops because the data or the users' language changed | samples from traffic, alerts, periodic evaluation |
+| regulatory class | the feature falls into a category with obligations | ai-governance-compliance establishes the classification and the obligations |
 
-Każdy wiersz: prawdopodobieństwo, skutek, właściciel, termin przeglądu. Ryzyko bez właściciela nie istnieje.
+Every row: probability, effect, owner, review date. A risk without an owner does not exist.
 
-## UX niepewności i człowiek w pętli
-1. **Oczekiwania:** powiedz na starcie, co funkcja robi i że się myli; nazwij wynik „propozycją”, jeśli tak jest.
-2. **Pewność:** pokazuj ją tylko, gdy jest skalibrowana (zmierzona na zbiorze); inaczej lepsze są źródła, cytaty
-   i możliwość sprawdzenia. Surowa liczba „87%” bez kalibracji wprowadza w błąd.
-3. **Stopień autonomii** wg kosztu błędu: sugestia → akcja po zatwierdzeniu → akcja z możliwością cofnięcia → automat.
-4. **Fallback:** ścieżka bez AI (formularz, kontakt z człowiekiem) zawsze dostępna i wyraźna.
-5. **Korekta:** edycja wyniku jednym gestem, „zły wynik” z powodem; poprawki trafiają do przeglądu i do zbioru ewaluacyjnego
-   (za zgodą i z uwzględnieniem prywatności).
-6. **Porażka:** komunikat o błędzie mówi, co się stało i co dalej; model nie przeprasza w nieskończoność.
-Wytyczne: Microsoft HAX (cztery fazy: początek, w trakcie, gdy AI się myli, z czasem) i Google PAIR (modele mentalne,
-wyjaśnialność i zaufanie, informacja zwrotna i kontrola, błędy). Teksty komunikatów: ux-content-design; przepływy: ux-feature-design.
+## Uncertainty UX and human in the loop
+1. **Expectations:** say at the start what the feature does and that it makes mistakes; call the result a "proposal" if it is one.
+2. **Confidence:** show it only when it is calibrated (measured on the set); otherwise sources, citations
+   and the possibility to check are better. A raw number "87%" without calibration is misleading.
+3. **Degree of autonomy** by the cost of an error: suggestion → action after approval → action that can be undone → automatic.
+4. **Fallback:** a path without AI (a form, contact with a human) always available and clearly visible.
+5. **Correction:** editing the result with one gesture, "bad result" with a reason; corrections go to review and into the evaluation set
+   (with consent and with privacy taken into account).
+6. **Failure:** the error message says what happened and what next; the model does not apologize endlessly.
+Guidelines: Microsoft HAX (four phases: initially, during interaction, when AI is wrong, over time) and Google PAIR (mental models,
+explainability and trust, feedback and control, errors). Message copy: ux-content-design; flows: ux-feature-design.

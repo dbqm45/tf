@@ -1,42 +1,42 @@
-# Budowniczy (Builder)
+# Builder
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: kreacyjne. Istota: złożony obiekt powstaje **krok po kroku**; kompletny i zwalidowany produkt odbierasz
-dopiero na końcu.
+Category: creational. The essence: a complex object is created **step by step**; you receive the complete and validated product
+only at the end.
 
 ## Problem
-Kryteria wyszukiwania rezerwacji mają przedział czasu (wymagany), listę typów zasobów, minimalną pojemność, sortowanie,
-czasem filtry dostępności. Konstruktor z ośmioma parametrami (część opcjonalna) jest nieczytelny i łatwo zamienić
-kolejność; różne ekrany składają kryteria warunkowo, w kilku miejscach kodu.
+Booking search criteria have a time range (required), a list of resource types, a minimum capacity, sorting,
+sometimes availability filters. A constructor with eight parameters (some optional) is unreadable and it is easy to swap
+their order; different screens assemble the criteria conditionally, in several places in the code.
 
-## Rozwiązanie i uczestnicy
-- **Budowniczy** — obiekt z metodami kroków (`between()`, `ofType()`…) i metodą `build()`, która waliduje i oddaje
-  niezmienny produkt.
-- **Produkt** — wynik; nie jest dostępny w stanie niekompletnym.
-- **Kierownik (opcjonalnie)** — koduje powtarzalne sekwencje kroków („wyszukiwanie last minute”); w TS zwykle zwykła
-  funkcja przyjmująca budowniczego.
-- Różni budowniczowie mogą z tych samych kroków budować różne reprezentacje (np. zapytanie i jego opis dla UI).
+## Solution and participants
+- **Builder** — an object with step methods (`between()`, `ofType()`…) and a `build()` method that validates and hands over
+  an immutable product.
+- **Product** — the result; it is not available in an incomplete state.
+- **Director (optional)** — encodes repeatable sequences of steps ("last minute search"); in TS usually an ordinary
+  function taking the builder.
+- Different builders can build different representations from the same steps (e.g. a query and its description for the UI).
 
-## Kiedy używać
-- Wiele opcjonalnych elementów składanych **warunkowo, w czasie lub rekurencyjnie** (także drzewa — Kompozyt).
-- Kilka powtarzalnych „przepisów” na ten sam produkt (kandydat na kierownika).
-- Niezmiennik produktu da się sprawdzić dopiero, gdy wszystkie części są znane (walidacja w `build()`).
-- **Budowniczowie danych testowych** — domyślne poprawne wartości + nadpisanie tylko tego, co ważne w teście (eng-testing).
+## When to use
+- Many optional elements assembled **conditionally, over time or recursively** (also trees — Composite).
+- Several repeatable "recipes" for the same product (a candidate for a director).
+- The product's invariant can be checked only when all the parts are known (validation in `build()`).
+- **Test data builders** — default valid values + overriding only what matters in the test (eng-testing).
 
-## Koszty
-Dodatkowa klasa (i ew. kierownik); duplikacja listy pól między produktem a budowniczym.
+## Costs
+An extra class (and possibly a director); duplication of the field list between the product and the builder.
 
-## Powiązania
-- Metoda wytwórcza → Fabryka abstrakcyjna → Budowniczy: coraz więcej elastyczności i złożoności.
-- Fabryka abstrakcyjna oddaje produkt od razu; Budowniczy pozwala wykonać kroki przed odbiorem.
-- Dobrze buduje drzewa Kompozytu.
+## Relations
+- Factory Method → Abstract Factory → Builder: more and more flexibility and complexity.
+- An Abstract Factory hands over the product immediately; a Builder lets you perform steps before receiving it.
+- It builds Composite trees well.
 
-## Forma idiomatyczna w TS
-Najpierw **obiekt opcji** z nazwanymi polami i wartościami domyślnymi (`create({ from, to, sort = 'price' })`).
-Łańcuchowe metody zwracają `this` — podklasy budowniczego zachowują wtedy poprawny typ (lang-typescript).
+## Idiomatic form in TS
+First an **options object** with named fields and default values (`create({ from, to, sort = 'price' })`).
+Chained methods return `this` — builder subclasses then keep the correct type (lang-typescript).
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 type SortOrder = 'price' | 'distance';
 
@@ -74,8 +74,8 @@ class BookingSearchBuilder {
   }
 
   build(): BookingSearch {
-    if (this.#from === undefined || this.#to === undefined) throw new Error('brak przedziału czasu');
-    if (this.#to <= this.#from) throw new RangeError('koniec musi być po początku');
+    if (this.#from === undefined || this.#to === undefined) throw new Error('missing time range');
+    if (this.#to <= this.#from) throw new RangeError('the end must be after the start');
     return {
       from: this.#from,
       to: this.#to,
@@ -86,7 +86,7 @@ class BookingSearchBuilder {
   }
 }
 
-/** „Kierownik” jako funkcja: powtarzalny przepis na wyszukiwanie. */
+/** A "director" as a function: a repeatable recipe for a search. */
 function lastMinute(builder: BookingSearchBuilder, now: Date): BookingSearch {
   const in48h = new Date(now.getTime() + 48 * 3_600_000);
   return builder.between(now, in48h).sortedBy('distance').build();
@@ -94,16 +94,16 @@ function lastMinute(builder: BookingSearchBuilder, now: Date): BookingSearch {
 
 const custom = new BookingSearchBuilder()
   .between(new Date('2026-10-01'), new Date('2026-10-03'))
-  .ofType('sala')
+  .ofType('room')
   .forAtLeast(12)
   .build();
 console.log(custom, lastMinute(new BookingSearchBuilder(), new Date()));
 ```
 
-## Kiedy NIE używać / pułapki
-- **2–3 opcjonalne parametry** — obiekt opcji (`{ url: string; method?: string }`) jest krótszy i czytelniejszy niż
-  klasa z metodami łańcuchowymi.
-- Sygnał, że Builder się opłaca: kilka powtarzalnych sekwencji budowy albo kroki odkładane w czasie, warunkowe,
-  rekurencyjne. Jedno wywołanie z kompletem danych → zwykła funkcja (`critique-and-pitfalls.md`).
-- Budowniczy bez walidacji w `build()` to tylko rozwlekły konstruktor — cała wartość leży w gwarancji kompletnego
-  produktu.
+## When NOT to use / pitfalls
+- **2–3 optional parameters** — an options object (`{ url: string; method?: string }`) is shorter and more readable than
+  a class with chained methods.
+- The signal that a Builder pays off: several repeatable build sequences or steps deferred in time, conditional,
+  recursive. One call with the complete data → an ordinary function (`critique-and-pitfalls.md`).
+- A builder without validation in `build()` is just a long-winded constructor — all the value lies in the guarantee of a complete
+  product.

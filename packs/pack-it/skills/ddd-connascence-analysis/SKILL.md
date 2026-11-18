@@ -1,56 +1,56 @@
 ---
 name: ddd-connascence-analysis
-description: Użyj przy pomiarze sprzężenia dwóch modułów lub kontekstów — dowody w kodzie, stopień connascence, koszt.
+description: Use for measuring the coupling of two modules or contexts — evidence in the code, the connascence degree, cost.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy POMIARZE sprzężenia między dwoma modułami/kontekstami (istniejący kod albo mapa kontekstów) — rozbicie na pojedyncze umowy, powtarzalne wyszukiwanie dowodów, stopień liczony z linii kodu, koszt, profil pasm, rejestr decyzji. Nie do projektowania modelu wewnątrz kontekstu (ddd-tactical-design) ani wyboru wzorca relacji (ddd-context-mapping)."
+  catalog: "Use when MEASURING the coupling between two modules/contexts (existing code or a context map) — breaking it into single contracts, a repeatable evidence search, the degree counted from lines of code, cost, a band profile, a decision register. Not for designing the model inside a context (ddd-tactical-design) or choosing a relationship pattern (ddd-context-mapping)."
 ---
 
-# Pomiar connascence na granicy dwóch modułów
+# Measuring connascence on the boundary of two modules
 
-Słownik rodzajów i siły jest w ddd-tactical-design. Ten skill zamienia ocenę „na oko” w **powtarzalny pomiar**:
-dwa przebiegi na tym samym kodzie mają dać ten sam zbiór najgroźniejszych sprzężeń.
+The vocabulary of kinds and strength is in ddd-tactical-design. This skill turns an assessment "by eye" into a **repeatable measurement**:
+two runs on the same code are to give the same set of the most dangerous couplings.
 
-## Zasady
-1. **Zawsze jedna para** A ↔ B. Liczy się tylko to, co **przechodzi przez granicę** — to jest lokalność, zapisana w zakresie.
-2. **Jeden wiersz = jedna umowa jednego rodzaju.** Jeden fakt w kodzie może dać kilka wierszy (reguły: `references/taxonomy.md`).
-3. **Stopień się liczy, nie szacuje:** stopień = liczba miejsc w kodzie produkcyjnym, które trzeba zmienić, gdy umowa się zmieni
-   (import i nieużywana deklaracja się nie liczą; test liczony osobno). Szczegóły: `references/scoring.md`.
-4. **Każde twierdzenie ma źródło** (`kod:ścieżka:linia`, `szukanie:<wzorzec>`, `dok:ścieżka§sekcja`, `człowiek:Q3`).
-   Twierdzenie bez źródła to `założenie:` — wypisane, ale bez kosztu i poza sumami.
-5. **Porównuj zbiór winowajców i udziały pasm, nigdy sumy** (koszt jest porządkowy, nie „punktami”).
+## Rules
+1. **Always one pair** A ↔ B. Only what **crosses the boundary** counts — that is locality, recorded in the scope.
+2. **One row = one contract of one kind.** One fact in the code can give several rows (rules: `references/taxonomy.md`).
+3. **The degree is counted, not estimated:** degree = the number of places in production code that must change when the contract changes
+   (an import and an unused declaration do not count; tests are counted separately). Details: `references/scoring.md`.
+4. **Every claim has a source** (`code:path:line`, `search:<pattern>`, `doc:path§section`, `human:Q3`).
+   A claim without a source is an `assumption:` — listed, but without a cost and outside the totals.
+5. **Compare the set of culprits and the band shares, never the totals** (the cost is ordinal, not "points").
 
-## Przebieg (bramka po krokach 0, 1, 2 — protokół w ddd-facilitation)
-0. **Rama:** co należy do A i do B (ścieżki, pakiety), reguły lokalne stosu: gdzie są testy, jak wygląda import, znacznik transakcji,
-   operacje zapisu, wspólne instancje (singleton, DI). Zapis w `docs/project/02-domain/connascence/<a>-<b>.frame.md`
-   — kolejny przebieg startuje z tej samej ramy.
-1. **Zbieranie dowodów — podagent `scout` wg przepisu** (`references/evidence.md`): publiczna powierzchnia obu stron, wyszukiwanie
-   każdego symbolu po drugiej stronie w obu kierunkach, osobne szukanie sprzężeń dynamicznych (transakcje, wspólne magazyny,
-   współdzielone instancje, czas i ponowienia). Wraca lista trafień `plik:linia` + wykonane wyszukiwania — **bez ocen**.
-   Punkt startu (Python, TS/JS): `python3 .claude/skills/eng-codebase-mapping/scripts/code_graph.py <repo> --focus <A>
-   --focus <B>` — pliki przekraczające granicę w obie strony; sam import nie liczy się do stopnia, to lista miejsc do
-   sprawdzenia, a sprzężeń dynamicznych graf nie widzi.
-   Bramka: człowiek odcina fałszywe trafienia przed najdroższym krokiem.
-2. **Klasyfikacja i koszt** (główny wątek — widzi cały szew): wiersze wg rodzajów, stopień, koszt, pasma.
-3. **Raport** `docs/project/02-domain/connascence/<a>-<b>.md`:
-   - tabele per rodzaj (każdy z 9 rodzajów ma wiersze **albo** opisany brak z dowodem, że szukano),
-   - tabela kosztów posortowana deterministycznie (koszt ↓, potem ścieżka, linia),
-   - **profil pasm:** statyczne słabe (nazwa, typ) · statyczne semantyczne (znaczenie, pozycja, algorytm) · dynamiczne
-     (kolejność, czas, wartość, tożsamość) — liczba wierszy, suma, udział,
-   - największe sprzężenia z rekomendacją osłabienia (tabela refaktoryzacji w ddd-tactical-design),
-   - nieużywana powierzchnia publiczna (kandydaci do ukrycia),
-   - **rejestr decyzji** — każdy przypadek, którego reguły nie rozstrzygnęły, i jak go policzono.
+## Procedure (a gate after steps 0, 1, 2 — the protocol is in ddd-facilitation)
+0. **Frame:** what belongs to A and to B (paths, packages), the local rules of the stack: where the tests are, what an import looks like, the transaction marker,
+   write operations, shared instances (singleton, DI). Recorded in `docs/project/02-domain/connascence/<a>-<b>.frame.md`
+   — the next run starts from the same frame.
+1. **Collecting evidence — the `scout` subagent following the recipe** (`references/evidence.md`): the public surface of both sides, a search
+   for each symbol on the other side in both directions, a separate search for dynamic couplings (transactions, shared stores,
+   shared instances, time and retries). It returns a list of `file:line` hits + the searches performed — **without assessments**.
+   Starting point (Python, TS/JS): `python3 .claude/skills/eng-codebase-mapping/scripts/code_graph.py <repo> --focus <A>
+   --focus <B>` — the files crossing the boundary in both directions; an import alone does not count towards the degree, it is a list of places to
+   check, and the graph does not see dynamic couplings.
+   Gate: the human cuts off false hits before the most expensive step.
+2. **Classification and cost** (the main thread — it sees the whole seam): rows by kind, degree, cost, bands.
+3. **Report** `docs/project/02-domain/connascence/<a>-<b>.md`:
+   - tables per kind (each of the 9 kinds has rows **or** a described absence with evidence that it was searched for),
+   - a cost table sorted deterministically (cost ↓, then path, line),
+   - **band profile:** static weak (name, type) · static semantic (meaning, position, algorithm) · dynamic
+     (execution order, timing, value, identity) — the number of rows, the total, the share,
+   - the largest couplings with a recommendation for weakening them (the refactoring table in ddd-tactical-design),
+   - unused public surface (candidates for hiding),
+   - **decision register** — every case the rules did not settle, and how it was counted.
 
-## Bez kodu
-Na mapie kontekstów lub kontraktach działa tak samo, ale stopnie są **przedziałami** (`2–4`), a brak dowodu jest jawny.
-Gdy mapa i kod się różnią — podaj oba źródła; rozstrzyga kod.
+## Without code
+On a context map or contracts it works the same way, but the degrees are **ranges** (`2–4`), and missing evidence is explicit.
+When the map and the code differ — give both sources; the code decides.
 
-## Interpretacja
-- Relacja Open Host / Published Language powinna dawać głównie pasmo statyczne słabe.
-- Wiersze dynamiczne przez granicę (wspólna transakcja, dwa magazyny, które muszą się zgadzać) = granica przecieka →
-  jeden właściciel danych + zdarzenia / saga (ddd-context-mapping, be-messaging-outbox).
-- Fitness function: pasmo dynamiczne na krytycznych granicach nie rośnie między wydaniami (arch-quality-attributes).
+## Interpretation
+- An Open Host / Published Language relationship should give mainly the static weak band.
+- Dynamic rows across the boundary (a shared transaction, two stores that must agree) = the boundary leaks →
+  one data owner + events / a saga (ddd-context-mapping, be-messaging-outbox).
+- Fitness function: the dynamic band on critical boundaries does not grow between releases (arch-quality-attributes).
 
-## Koszt
-Wyszukiwanie (najdroższe) robi `scout` na tanim modelu; główny wątek dostaje tylko wiersze. Analizuj pary wskazane przez mapę
-kontekstów lub zgłoszony problem — nie wszystkie pary. Mały, oczywisty szew oceń od razu, bez podagenta.
+## Cost
+The search (the most expensive part) is done by `scout` on a cheap model; the main thread gets only the rows. Analyse the pairs indicated by the context
+map or a reported problem — not all pairs. Assess a small, obvious seam right away, without a subagent.

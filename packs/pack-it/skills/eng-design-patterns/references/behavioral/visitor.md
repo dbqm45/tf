@@ -1,40 +1,40 @@
-# Odwiedzający (Visitor)
+# Visitor
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: behawioralne. Istota: nowe **operacje** na stabilnej hierarchii typów żyją w osobnych obiektach
-odwiedzających; elementy tylko „przyjmują gościa” (`accept`) i kierują go do właściwej metody (podwójna dyspozycja).
+Category: behavioral. The essence: new **operations** on a stable type hierarchy live in separate visitor
+objects; the elements only "receive the guest" (`accept`) and direct it to the right method (double dispatch).
 
 ## Problem
-Taryfa ładowania lub cennik jest wyrażeniem: stała, cena za kWh × energia, suma, iloczyn, minimum. Na tym samym drzewie
-potrzeba wielu operacji: obliczenie kwoty, czytelny opis dla klienta, walidacja, eksport do formatu partnera. Dopisywanie
-każdej operacji do każdej klasy węzła rozdyma model i miesza odpowiedzialności.
+A charging tariff or a price list is an expression: a constant, a price per kWh × energy, a sum, a product, a minimum. On the same tree
+many operations are needed: computing the amount, a readable description for the customer, validation, export to a partner's format. Adding
+every operation to every node class bloats the model and mixes responsibilities.
 
-## Rozwiązanie i uczestnicy
-- **Odwiedzający** — interfejs z metodą na każdy konkretny typ elementu.
-- **Konkretny odwiedzający** — jedna operacja dla wszystkich typów (obliczenie, opis).
+## Solution and participants
+- **Visitor** — an interface with a method for each concrete element type.
+- **Concrete visitor** — one operation for all types (computation, description).
 - **Element** — `accept(visitor)`.
-- **Konkretne elementy** — `accept` woła metodę odwiedzającego właściwą dla swojego typu.
+- **Concrete elements** — `accept` calls the visitor's method appropriate for its own type.
 
-## Kiedy używać
-- Hierarchia typów jest **stabilna**, a przybywa **operacji** na niej.
-- Operacje pomocnicze (eksport, raport, walidacja) mają nie zaśmiecać klas elementów.
-- Odwiedzający może zbierać stan podczas przechodzenia struktury (np. statystyki drzewa).
+## When to use
+- The type hierarchy is **stable**, and **operations** on it keep being added.
+- Auxiliary operations (export, a report, validation) are not to clutter the element classes.
+- A visitor can collect state while traversing the structure (e.g. tree statistics).
 
-## Koszty
-Nowy typ elementu wymaga zmiany **wszystkich** odwiedzających; odwiedzający widzi tylko publiczne API elementów;
-dodatkowa złożoność podwójnej dyspozycji.
+## Costs
+A new element type requires changing **all** visitors; a visitor sees only the elements' public API;
+the additional complexity of double dispatch.
 
-## Powiązania
-- Pracuje zwykle na drzewie **Kompozytu**, często razem z **Iteratorem**.
-- Bywa opisywany jako silniejsze **Polecenie** — operacja na obiektach wielu niezwiązanych typów.
+## Relations
+- It usually works on a **Composite** tree, often together with an **Iterator**.
+- It is sometimes described as a more powerful **Command** — an operation on objects of many unrelated types.
 
-## Forma idiomatyczna w TS
-**Unia dyskryminowana + funkcja ze `switch`** to „odwiedzający bez `accept`”: każda operacja to funkcja, a kompilator
-wymusza obsługę wszystkich wariantów przy dodaniu nowego (lang-typescript). Klasyczny Visitor — gdy hierarchia jest
-otwarta (klasy z różnych modułów) lub elementy mają własną logikę.
+## Idiomatic form in TS
+**A discriminated union + a function with a `switch`** is "a visitor without `accept`": each operation is a function, and the compiler
+enforces handling all the variants when a new one is added (lang-typescript). The classic Visitor — when the hierarchy is
+open (classes from different modules) or the elements have their own logic.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 interface TariffVisitor<R> {
   fixed(node: Fixed): R;
@@ -86,7 +86,7 @@ class Min implements TariffNode {
   }
 }
 
-/** Operacja 1: kwota za sesję. */
+/** Operation 1: the amount for a session. */
 class Price implements TariffVisitor<number> {
   readonly #kwh: number;
   constructor(kwh: number) {
@@ -106,13 +106,13 @@ class Price implements TariffVisitor<number> {
   }
 }
 
-/** Operacja 2: opis dla klienta. */
+/** Operation 2: a description for the customer. */
 class Describe implements TariffVisitor<string> {
   fixed(n: Fixed): string {
-    return `${(n.cents / 100).toFixed(2)} zł`;
+    return `${(n.cents / 100).toFixed(2)} PLN`;
   }
   perKwh(n: PerKwh): string {
-    return `${(n.centsPerKwh / 100).toFixed(2)} zł/kWh`;
+    return `${(n.centsPerKwh / 100).toFixed(2)} PLN/kWh`;
   }
   sum(n: Sum): string {
     return n.parts.map((p) => p.accept(this)).join(' + ');
@@ -123,9 +123,9 @@ class Describe implements TariffVisitor<string> {
 }
 
 const tariff = new Min(new Sum(new Fixed(200), new PerKwh(239)), new Fixed(15_000));
-console.log(tariff.accept(new Describe()), '=', tariff.accept(new Price(40)) / 100, 'zł za 40 kWh');
+console.log(tariff.accept(new Describe()), '=', tariff.accept(new Price(40)) / 100, 'PLN for 40 kWh');
 ```
-Forma z unią (zamknięty zbiór węzłów):
+The union form (a closed set of nodes):
 ```ts
 type Tariff =
   | { kind: 'fixed'; cents: number }
@@ -148,10 +148,10 @@ function price(t: Tariff, kwh: number): number {
 console.log(price({ kind: 'sum', parts: [{ kind: 'fixed', cents: 200 }, { kind: 'perKwh', centsPerKwh: 239 }] }, 40));
 ```
 
-## Kiedy NIE używać / pułapki
-- **Typy elementów często przybywają** — to odwrotność sytuacji, w której wzorzec pomaga; każdy nowy typ = zmiana
-  każdego odwiedzającego. Wtedy zwykły polimorfizm (metoda w każdej klasie).
-- Sprawdź, w którym wymiarze kod naprawdę rośnie (typy czy operacje), zanim wybierzesz.
-- 2–3 typy i jedna operacja → unia + `switch`; Visitor opłaca się przy kombinacji wielu typów × wielu operacji.
-- Odwiedzający sięgający do wnętrza elementów przez gettery łamie hermetyzację — udostępniaj tylko to, co operacje
-  naprawdę potrzebują.
+## When NOT to use / pitfalls
+- **Element types are added often** — that is the opposite of the situation in which the pattern helps; every new type = a change
+  to every visitor. Then ordinary polymorphism (a method in each class).
+- Check in which dimension the code really grows (types or operations) before you choose.
+- 2–3 types and one operation → a union + `switch`; a Visitor pays off with a combination of many types × many operations.
+- A visitor reaching into the elements' internals through getters breaks encapsulation — expose only what the operations
+  really need.

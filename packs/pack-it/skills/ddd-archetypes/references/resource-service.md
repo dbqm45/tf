@@ -1,152 +1,152 @@
-# Archetyp Resource / Service — mapper (zasoby, aktywa, usługi, katalog usług)
+# The Resource / Service archetype — mapper (resources, assets, services, service catalog)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania o **rzeczach i zdolnościach, którymi organizacja dysponuje albo które świadczy** (maszyny, sprzęt, pojazdy,
-technicy, licencje, usługi techniczne), na model: typ zasobu i egzemplarz, cykl życia aktywa, usługa jako zdolność, katalog
-usług oraz przypisanie zasobu do pracy. Efekt: zasób nie jest ani „wierszem produktu”, ani „kalendarzem”, a usługa nie jest
-mylona z ofertą handlową. Protokół wspólny: `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements about **things and capabilities an organization has at its disposal or provides** (machines, equipment, vehicles,
+technicians, licences, technical services) into a model: the resource type and instance, the asset life cycle, the service as a capability, the service
+catalog and the assignment of a resource to work. The effect: a resource is neither "a product row" nor "a calendar", and a service is not
+confused with a commercial offer. The common protocol: `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy modelujemy rzeczy i zdolności, którymi organizacja dysponuje lub które świadczy — niezależnie od
-tego, jak je sprzedaje?* Tak → pasuje. Jeśli kluczowe jest „co i za ile sprzedajemy” → Product / Pricing.
+## Fit test
+**The core question:** *are we modelling things and capabilities the organization has at its disposal or provides — regardless of
+how it sells them?* Yes → it fits. If the key question is "what do we sell and for how much" → Product / Pricing.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „rejestr maszyn / pojazdów / sprzętu”, „historia serwisu urządzenia” | ✅ aktywo z cyklem życia |
-| „katalog usług”, „usługa X dostępna dla klientów grupy Y” | ✅ usługa i oferta usługi |
-| „usługa składa się z usług technicznych / podusług” | ✅ usługa dla klienta vs techniczna |
-| „technik i narzędzie przypisane do zlecenia” | ✅ przypisanie zasobu do pracy |
-| „środki zużywalne (filtry, części)” | ✅ jeśli to zasób; saldo ilościowe → Quantity / Accounting |
-| „oferta handlowa, warianty, pakiety do sprzedaży” | ❌ → Product (i Pricing) |
-| „czy sala/technik jest wolny we wtorek?” | ❌ → Availability |
-| „kogo przydzielić, by zminimalizować koszt dojazdów?” | ❌ → General assignment |
-| „amortyzacja, wartość bilansowa” | ❌ → Accounting |
-| „kara za przekroczenie czasu reakcji” | ❌ warunek umowy → `agreement.md` |
-| „kroki przeglądu, wykonanie, czas pracy” | ❌ → `activity-process.md` |
-| „zasób, który się rezerwuje” | ⚠️ graniczny |
+| "a register of machines / vehicles / equipment", "the service history of a device" | ✅ an asset with a life cycle |
+| "a service catalog", "service X available to customers of group Y" | ✅ a service and a service offering |
+| "a service consists of technical services / sub-services" | ✅ a customer-facing vs a technical service |
+| "a technician and a tool assigned to an order" | ✅ assigning a resource to work |
+| "consumables (filters, parts)" | ✅ if it is a resource; a quantity balance → Quantity / Accounting |
+| "a commercial offer, variants, bundles for sale" | ❌ → Product (and Pricing) |
+| "is the room/technician free on Tuesday?" | ❌ → Availability |
+| "whom to assign to minimize travel cost?" | ❌ → General assignment |
+| "depreciation, book value" | ❌ → Accounting |
+| "a penalty for exceeding the response time" | ❌ a term of the agreement → `agreement.md` |
+| "inspection steps, execution, working time" | ❌ → `activity-process.md` |
+| "a resource that gets booked" | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Zasób rezerwowany* — samo istnienie i cykl życia to Resource; pytanie „wolny w terminie” i blokada to Availability.
-  Zwykle oba archetypy naraz, z jasnym podziałem: Resource mówi **czym jest**, Availability **kiedy jest dostępny**.
-- *Usługa = produkt?* — jeśli wymaganie dotyczy tego, co klient kupuje (nazwa, cena, warianty), to Product; jeśli tego, co
-  organizacja **potrafi wykonać** i z czego się to składa — Service. Jedna usługa bywa podstawą wielu produktów.
-- *Aktywo klienta vs aktywo własne* — winda klienta, którą serwisujemy, jest dla nas obiektem pracy, nie naszym środkiem
-  trwałym; model musi rozróżnić właściciela (Party) od użytkownika i od serwisującego.
+**Borderline cases:**
+- *A booked resource* — the existence and the life cycle alone are Resource; the question "free on a date" and the block are Availability.
+  Usually both archetypes at once, with a clear split: Resource says **what it is**, Availability **when it is available**.
+- *Service = product?* — if the requirement concerns what the customer buys (a name, a price, variants), it is Product; if it concerns what
+  the organization **can perform** and what it consists of — Service. One service is sometimes the basis of many products.
+- *A customer's asset vs one's own asset* — a customer's lift that we service is an object of work for us, not our fixed
+  asset; the model must distinguish the owner (Party) from the user and from the servicer.
 
-## Model (istota)
-Poniżej jest rozumowanie modelowe fabryki; źródła w sekcji `## Źródła` potwierdzają tylko wskazane tam fakty.
+## Model (the essence)
+Below is the factory's modelling reasoning; the sources in the `## Sources` section confirm only the facts indicated there.
 
-- **Typ zasobu vs egzemplarz** — typ opisuje klasę (model windy, kwalifikacja „elektryk SEP”), egzemplarz konkretną sztukę
-  z numerem seryjnym, lokalizacją i stanem. Konwencja typ/egzemplarz jest znana z literatury wzorców, ale jej zastosowanie do
-  zasobów to nasz wniosek `[założenie]`.
-- **Aktywo trwałe z cyklem życia** — zakup → eksploatacja → serwis → wycofanie. Stan aktywa to maszyna stanów z historią
-  zdarzeń (przekazanie, naprawa, przegląd), a nie jedno pole `status`. Według ISO 55000:2024 aktywo to rzecz lub byt mający
-  dla organizacji potencjalną lub rzeczywistą wartość; **wartość księgową** liczy Accounting, tu jej nie ma.
-- **Zasób zużywalny vs trwały** — to nasz wniosek, nie podział przypisywany autorom wzorców. Trwały: jest egzemplarz,
-  wraca po użyciu, ma historię. Zużywalny: liczy się ilość i zużycie (→ Quantity / Accounting). Ten sam typ bywa jednym
-  i drugim zależnie od kontekstu (narzędzie wypożyczane vs jednorazowe) — rozstrzygnij per typ.
-- **Usługa jako zdolność** — usługa to coś, co organizacja potrafi dostarczyć, nie rzecz do postawienia na półce. W modelu TM
-  Forum SID rozróżnia się usługę widoczną dla klienta (CustomerFacingService, realizuje produkt) i usługę techniczną ukrytą
-  przed klientem (ResourceFacingService); przykład z SID: VPN to CFS, BGP to RFS; istnieją też specyfikacje CFSSpec i RFSSpec.
-  Wniosek: usługa dla klienta składa się z usług technicznych, a te opierają się na zasobach.
-- **Trzy pojęcia, których nie wolno zlewać** (GB922, częściowo): specyfikacja produktu (projekt), oferta (prezentacja rynkowa),
-  produkt w użyciu (instancja u klienta). Szczegóły relacji między nimi nie są tu potwierdzone `[niezweryfikowane]`; w modelu
-  trzymaj trzy osobne byty i zapytaj, którego dotyczy dane wymaganie.
-- **Oferta usługi i katalog usług** (ITIL 4, parafraza): oferta usługi to formalny opis jednej lub więcej usług dla
-  określonej grupy odbiorców (może obejmować dobra, dostęp do zasobów, działania usługowe); katalog usług to uporządkowana
-  informacja o usługach i ofertach, dopasowana do odbiorcy. Katalog jest więc **widokiem**, a nie nową encją sprzedażową.
-- **Przypisanie zasobu do pracy** — osobny byt łączący zasób (sprzęt, osoba) z pracą, z okresem i rolą. W modelach danych
-  Silverstona występują przypisania aktywów trwałych i przypisania aktywów stronom; Fowler opisuje wzorzec Resource
-  Allocation. Podziału zużywalne/trwałe nie przypisujemy żadnemu z nich.
-- **SLA** (np. czas reakcji 4 h) jest warunkiem umowy (`agreement.md`); usługa tylko **wskazuje**, czego dotyczy.
+- **Resource type vs instance** — the type describes a class (a lift model, the "SEP electrician" qualification), the instance a specific item
+  with a serial number, a location and a state. The type/instance convention is known from the pattern literature, but applying it to
+  resources is our conclusion `[assumption]`.
+- **A fixed asset with a life cycle** — purchase → operation → servicing → withdrawal. The asset's state is a state machine with a history
+  of events (handover, repair, inspection), not one `status` field. According to ISO 55000:2024 an asset is an item or entity that has
+  potential or actual value to an organization; **the book value** is computed by Accounting, it is not here.
+- **A consumable vs a durable resource** — this is our conclusion, not a split attributed to the pattern authors. Durable: there is an instance,
+  it comes back after use, it has a history. Consumable: the quantity and consumption count (→ Quantity / Accounting). The same type is sometimes one
+  and sometimes the other depending on the context (a lent tool vs a disposable one) — decide per type.
+- **A service as a capability** — a service is something the organization can deliver, not a thing to put on a shelf. In the TM
+  Forum SID model a service visible to the customer (CustomerFacingService, it realizes a product) is distinguished from a technical service hidden
+  from the customer (ResourceFacingService); an example from SID: VPN is a CFS, BGP is an RFS; there are also the CFSSpec and RFSSpec specifications.
+  The conclusion: a customer-facing service consists of technical services, and these rely on resources.
+- **Three concepts that must not be merged** (GB922, partly): the product specification (the design), the offering (the market presentation),
+  the product in use (the instance at the customer). The details of the relationships between them are not confirmed here `[unverified]`; in the model
+  keep three separate entities and ask which one a given requirement concerns.
+- **The service offering and the service catalog** (ITIL 4, a paraphrase): a service offering is a formal description of one or more services for
+  a defined group of consumers (it may include goods, access to resources, service actions); a service catalog is structured
+  information about services and offerings, tailored to the consumer. The catalog is therefore **a view**, not a new sales entity.
+- **Assigning a resource to work** — a separate entity connecting a resource (equipment, a person) with work, with a period and a role. In
+  Silverston's data models there are fixed asset assignments and assignments of assets to parties; Fowler describes the Resource
+  Allocation pattern. We do not attribute the consumable/durable split to either of them.
+- **SLA** (e.g. a 4 h response time) is a term of the agreement (`agreement.md`); the service only **points to** what it concerns.
 
-## Pytania
-**A — decyzje standardowe:**
-- Co jest **typem**, a co **egzemplarzem** (numer seryjny, lokalizacja, właściciel)? Które egzemplarze są własne, a które klienta?
-- Które zasoby są **trwałe**, a które **zużywalne**? Kto prowadzi ilości (Quantity)?
-- Jakie **etapy cyklu życia** istnieją i kto może je zmieniać (zakup, uruchomienie, serwis, wycofanie)?
-- Czy jest rozdział **usługa dla klienta** vs **usługa techniczna**? Z czego składa się usługa (podusługi, zasoby, kwalifikacje)?
-- Czy **katalog usług** ma różne widoki dla różnych grup odbiorców?
-- Czy zasób może być przypisany do pracy **równolegle** (jeden technik – dwa zlecenia)?
+## Questions
+**A — standard decisions:**
+- What is the **type** and what is the **instance** (serial number, location, owner)? Which instances are our own and which the customer's?
+- Which resources are **durable** and which **consumable**? Who keeps the quantities (Quantity)?
+- What **life cycle stages** exist and who may change them (purchase, commissioning, servicing, withdrawal)?
+- Is there a split **customer-facing service** vs **technical service**? What does a service consist of (sub-services, resources, qualifications)?
+- Does the **service catalog** have different views for different consumer groups?
+- Can a resource be assigned to work **in parallel** (one technician – two orders)?
 
-**B — luki** (przykłady):
-- zastępowalność zasobów (zamiennik egzemplarza) · hierarchia zasobu (część – całość) · lokalizacja i przenoszenie ·
-  kwalifikacje wymagane do obsługi · wersje specyfikacji usługi · zależności między usługami · wycofywanie usługi
-  z katalogu przy istniejących instancjach · historia przypisań (audyt) · dane osobowe techników (RODO).
+**B — gaps** (examples):
+- resource substitutability (a substitute instance) · resource hierarchy (part – whole) · location and moving ·
+  qualifications required for operation · versions of the service specification · dependencies between services · withdrawing a service
+  from the catalog with existing instances · assignment history (audit) · technicians' personal data (GDPR).
 
-## Kroki mapowania
-1. **Inwentarz zasobów** — lista typów i egzemplarzy; właściciel, użytkownik, serwisujący (Party).
-2. **Trwałe vs zużywalne** — decyzja per typ; zużywalne odeślij do Quantity / Accounting.
-3. **Cykl życia** — stany, zdarzenia przejść, kto zmienia; historia jako zdarzenia.
-4. **Usługi** — usługa dla klienta, usługi techniczne, zależności od zasobów i kwalifikacji.
-5. **Oferta i katalog** — kto jest odbiorcą oferty, jakie widoki katalogu; styk z Product (co jest sprzedawane).
-6. **Przypisania** — zasób ↔ praca (rola, okres, wyłączność); styk z Availability i `activity-process.md`.
-7. **Granice** — SLA → `agreement.md`, amortyzacja → Accounting, optymalny przydział → General assignment.
+## Mapping steps
+1. **Resource inventory** — a list of types and instances; the owner, the user, the servicer (Party).
+2. **Durable vs consumable** — a decision per type; refer consumables to Quantity / Accounting.
+3. **Life cycle** — states, transition events, who changes them; history as events.
+4. **Services** — the customer-facing service, technical services, dependencies on resources and qualifications.
+5. **Offering and catalog** — who the consumer of the offering is, what catalog views; the interface with Product (what is sold).
+6. **Assignments** — resource ↔ work (role, period, exclusivity); the interface with Availability and `activity-process.md`.
+7. **Boundaries** — SLA → `agreement.md`, depreciation → Accounting, optimal assignment → General assignment.
 
-## Decyzje do kontroli (R/A/X)
-Typ vs egzemplarz · właściciel aktywa (własne/klienta) · trwały vs zużywalny · stany cyklu życia · usługa dla klienta vs
-techniczna · skład usługi · widoki katalogu · przypisanie równoległe · zastępowalność · wycofanie usługi przy aktywnych instancjach.
+## Decisions to check (R/A/X)
+Type vs instance · the asset owner (own/customer's) · durable vs consumable · life cycle states · customer-facing vs
+technical service · service composition · catalog views · parallel assignment · substitutability · withdrawing a service with active instances.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Resource / Service: <obszar>
-## Zasoby                — | Typ | Egzemplarz (klucz) | Trwały/zużywalny | Właściciel | Lokalizacja |
-## Cykl życia aktywa     — | Stan | Zdarzenie | Następny stan | Kto zmienia |
-## Usługi                — | Usługa | Poziom (dla klienta / techniczna) | Składa się z | Wymaga zasobów/kwalifikacji |
-## Oferta i katalog      — | Oferta usługi | Odbiorca | Usługi w ofercie | Widok katalogu |
-## Przypisania           — | Zasób | Praca | Rola | Okres | Wyłączność |
-## Mapowanie pojęć       — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Integracje            — | Zdarzenie | Z / do archetypu | Reakcja |
-## Decyzje (R/A/X)       — | Decyzja | Źródło |
-## Uwagi                 — założenia (X), parametry polityk zmiennych, [niezweryfikowane]
+# Resource / Service model: <area>
+## Resources             — | Type | Instance (key) | Durable/consumable | Owner | Location |
+## Asset life cycle      — | State | Event | Next state | Who changes it |
+## Services              — | Service | Level (customer-facing / technical) | Consists of | Requires resources/qualifications |
+## Offering and catalog  — | Service offering | Consumer | Services in the offering | Catalog view |
+## Assignments           — | Resource | Work | Role | Period | Exclusivity |
+## Concept mapping       — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Integrations          — | Event | From / to archetype | Reaction |
+## Decisions (R/A/X)     — | Decision | Source |
+## Notes                 — assumptions (X), variable policy parameters, [unverified]
 ```
 
-## Wzorce i pułapki
-- Zlanie usługi z produktem: zmiana ceny lub pakietu nie powinna ruszać opisu zdolności. Trzy pojęcia – trzy byty.
-- Pole `status` zamiast zdarzeń cyklu życia gubi historię serwisu, a ta jest zwykle wartością samą w sobie.
-- Zasób z wbudowanym kalendarzem: dostępność to osobny archetyp (Availability); Resource trzyma tożsamość i stan.
-- Technik jako „konto użytkownika” zamiast strony i zasobu: uprawnienia (autoryzacja poza archetypem) to nie kwalifikacje.
-- Przypisanie jako pole `technik_id` na zleceniu uniemożliwia wielu techników, role i historię zmian.
-- SLA wpisane w usługę – to warunek umowy i może się różnić między klientami; wstaw je jako parametr z `agreement.md`.
-- Wartość i amortyzacja w obiekcie aktywa – to wpisy księgowe (Accounting), nie atrybuty zasobu.
+## Patterns and pitfalls
+- Merging the service with the product: a change of price or bundle should not touch the description of the capability. Three concepts – three entities.
+- A `status` field instead of life cycle events loses the service history, which is usually a value in itself.
+- A resource with a built-in calendar: availability is a separate archetype (Availability); Resource holds the identity and the state.
+- A technician as "a user account" instead of a party and a resource: permissions (authorization outside the archetype) are not qualifications.
+- An assignment as a `technician_id` field on the order makes many technicians, roles and change history impossible.
+- An SLA written into the service – it is a term of the agreement and may differ between customers; insert it as a parameter from `agreement.md`.
+- Value and depreciation in the asset object – these are accounting entries (Accounting), not resource attributes.
 
-## Kontrola jakości
-- [ ] każdy zasób ma typ, egzemplarz i właściciela; rozstrzygnięto trwały/zużywalny
-- [ ] cykl życia ma stany, zdarzenia i historię
-- [ ] usługa dla klienta i techniczna są rozdzielone (lub świadomie połączone — decyzja zapisana)
-- [ ] oferta, specyfikacja i instancja nie są zlane; katalog to widok
-- [ ] przypisania są osobnym bytem z rolą i okresem
-- [ ] SLA, amortyzacja, dostępność i przydział odesłane do właściwych archetypów
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] every resource has a type, an instance and an owner; durable/consumable settled
+- [ ] the life cycle has states, events and history
+- [ ] the customer-facing and the technical service are separated (or consciously merged — the decision recorded)
+- [ ] the offering, the specification and the instance are not merged; the catalog is a view
+- [ ] assignments are a separate entity with a role and a period
+- [ ] SLA, depreciation, availability and assignment referred to the appropriate archetypes
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** `[przykład]` „Firma serwisująca windy. Windy należą do klientów, każda ma numer fabryczny i historię przeglądów.
-Technicy mają uprawnienia i narzędzia pomiarowe. Sprzedajemy usługę »konserwacja z czasem reakcji 4 h«.”
+## Example (shortened)
+**Input:** `[example]` "A company servicing lifts. The lifts belong to customers, each has a factory number and an inspection history.
+Technicians have qualifications and measuring tools. We sell the service "maintenance with a 4 h response time"."
 
 ```markdown
-## Zasoby — | typ windy | winda nr fabr. (egz.) | trwały | klient (Party) | adres budynku |
-   | technik | osoba (Party) | trwały | firma | — | · | miernik | egzemplarz | trwały | firma | magazyn |
-## Cykl życia — winda: w eksploatacji → w serwisie → wyłączona → wycofana (zdarzenia z datą)
-## Usługi — | konserwacja | dla klienta | przegląd okresowy + reakcja na awarię | kwalifikacja „dźwigi” |
-## Oferta — | konserwacja 4 h | klienci z umową ramową | konserwacja | widok katalogu B2B |
-   czas reakcji 4 h → parametr z `agreement.md`, nie atrybut usługi
-## Przypisania — | technik + miernik | zlecenie (activity-process) | wykonawca | okres zlecenia | nie |
-## Niezmapowane — wolny termin technika (→ Availability) · dobór najbliższego technika (→ General assignment) ·
-   cena abonamentu (→ Pricing) · kara za przekroczenie 4 h (→ Agreement)
-## Decyzje — windy klienta nie są aktywami firmy (R) · technik = zasób trwały (X, małe) · wycofanie usługi
-   przy aktywnych umowach (X → zapytaj)
+## Resources — | lift type | lift factory no. (inst.) | durable | customer (Party) | building address |
+   | technician | person (Party) | durable | company | — | · | meter | instance | durable | company | warehouse |
+## Life cycle — lift: in operation → in servicing → disabled → withdrawn (events with a date)
+## Services — | maintenance | customer-facing | periodic inspection + breakdown response | "lifts" qualification |
+## Offering — | maintenance 4 h | customers with a framework agreement | maintenance | B2B catalog view |
+   response time 4 h → a parameter from `agreement.md`, not a service attribute
+## Assignments — | technician + meter | order (activity-process) | performer | order period | no |
+## Unmapped — the technician's free slot (→ Availability) · choosing the nearest technician (→ General assignment) ·
+   the subscription price (→ Pricing) · the penalty for exceeding 4 h (→ Agreement)
+## Decisions — the customer's lifts are not the company's assets (R) · technician = durable resource (X, small) · withdrawing the service
+   with active agreements (X → ask)
 ```
 
-## Źródła
-Odczyt 2026-10-17.
-- ISO 55000:2024 „Asset management — Vocabulary, overview and principles” (wyd. 2, zastąpiło wydanie z 2014) — **norma, pierwotne**; bierzemy pojęcie aktywa jako bytu o wartości dla organizacji. Definicję znamy z opisów wtórnych, więc parafrazujemy.
-- TM Forum, Information Framework (SID), Browsable SID R20.0 — **pierwotne**; rozróżnienie CustomerFacingService i ResourceFacingService, specyfikacje CFSSpec i RFSSpec, przykład VPN/BGP.
-- TM Forum GB922 Product (najnowsza znaleziona v24.5.0, zatwierdzona 7.03.2025) — **pierwotne, potwierdzone częściowo**; bierzemy tylko trzy pojęcia: specyfikacja produktu, oferta, produkt w użyciu; relacje między nimi `[niezweryfikowane]`.
-- AXELOS, ITIL 4 — **pierwotne (parafraza)**; definicje oferty usługi i katalogu usług. Definicji „service” i „SLA” z tej rodziny nie bierzemy (niepotwierdzone).
-- L. Silverston, „The Data Model Resource Book”, Vol. 1 Revised Edition, Wiley 2001, ISBN 978-0-471-38023-8 — **książka; spis potwierdzony w O'Reilly (wtórnie)**; spis rozdziału o zapotrzebowaniu na pracę potwierdzony częściowo (m.in. Fixed Asset Assignments, Party Fixed Asset Assignments). Vol. 2 (Wiley 2001, ISBN 978-0-471-35348-5) to modele branżowe, w tym usługi profesjonalne i telekomunikacja.
-- M. Fowler, „Analysis Patterns: Reusable Object Models”, Addison-Wesley 1997 (autor podaje 1996), ISBN 0-201-89542-0 — **książka; spis potwierdzony u wydawcy (InformIT)**; rozdz. 8 „Planning” zawiera wzorzec Resource Allocation. Podziału zużywalne/trwałe w nim nie potwierdzono.
-- D. Hay, „Enterprise Model Patterns: Describing the World (UML Version)”, Technics Publications, ISBN 978-1-935504-05-4 (rok 2011, potwierdzony częściowo) — **książka; spis potwierdzony u wydawcy**; rozdz. 6 „Assets”. Treść rozdziału (typ aktywa vs aktywo) niepotwierdzona; to konwencja typ/egzemplarz `[założenie]`.
+## Sources
+Accessed 2026-10-17.
+- ISO 55000:2024 "Asset management — Vocabulary, overview and principles" (ed. 2, replaced the 2014 edition) — **a standard, primary**; we take the concept of an asset as an entity with value for the organization. We know the definition from secondary descriptions, so we paraphrase it.
+- TM Forum, Information Framework (SID), Browsable SID R20.0 — **primary**; the distinction CustomerFacingService and ResourceFacingService, the CFSSpec and RFSSpec specifications, the VPN/BGP example.
+- TM Forum GB922 Product (the newest found v24.5.0, approved 7.03.2025) — **primary, partly confirmed**; we take only three concepts: the product specification, the offering, the product in use; the relationships between them `[unverified]`.
+- AXELOS, ITIL 4 — **primary (a paraphrase)**; the definitions of the service offering and the service catalog. We do not take the definitions of "service" and "SLA" from this family (not confirmed).
+- L. Silverston, "The Data Model Resource Book", Vol. 1 Revised Edition, Wiley 2001, ISBN 978-0-471-38023-8 — **a book; table of contents confirmed at O'Reilly (secondary)**; the table of contents of the chapter on work requirements partly confirmed (among others Fixed Asset Assignments, Party Fixed Asset Assignments). Vol. 2 (Wiley 2001, ISBN 978-0-471-35348-5) is industry models, including professional services and telecommunications.
+- M. Fowler, "Analysis Patterns: Reusable Object Models", Addison-Wesley 1997 (the author gives 1996), ISBN 0-201-89542-0 — **a book; table of contents confirmed at the publisher (InformIT)**; ch. 8 "Planning" contains the Resource Allocation pattern. The consumable/durable split was not confirmed in it.
+- D. Hay, "Enterprise Model Patterns: Describing the World (UML Version)", Technics Publications, ISBN 978-1-935504-05-4 (year 2011, partly confirmed) — **a book; table of contents confirmed at the publisher**; ch. 6 "Assets". The content of the chapter (asset type vs asset) not confirmed; this is the type/instance convention `[assumption]`.
 
-Opisane własnymi słowami; treść książek i norm nie była cytowana.
+Described in our own words; the content of books and standards was not quoted.

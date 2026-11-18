@@ -1,25 +1,25 @@
-# Przykłady zasad projektowych
+# Examples of design principles
 
-## 1. Review pod kątem nadmiaru (YAGNI, drabina minimalizmu)
-**Sytuacja:** „Zrób review PR dodającego eksport raportu do CSV”. PR ma 140 linii: interfejs `ReportExporter`,
-fabrykę `ExporterFactory`, klasę `CsvReportExporter` i własną funkcję formatowania dat.
+## 1. A review for excess (YAGNI, the minimalism ladder)
+**Situation:** "Review the PR adding report export to CSV". The PR has 140 lines: a `ReportExporter` interface,
+an `ExporterFactory` factory, a `CsvReportExporter` class and its own date formatting function.
 
-**Jak:**
-1. **Drabina minimalizmu:** czy jest wymaganie *teraz*? Tak, ale tylko CSV — drugi format nie jest planowany.
-2. **YAGNI:** interfejs z jedną implementacją i fabryka jednego produktu są zakazane bez drugiego przypadku.
-3. Szczebel „biblioteka standardowa”: formatowanie dat robi `Intl.DateTimeFormat`.
-4. Granica: walidacji danych wejściowych i obsługi błędu zapisu **nie** upraszczasz.
-5. Uwagi w formacie jednej linii, bilans na końcu; poprawność oceniona osobno.
+**How:**
+1. **The minimalism ladder:** is there a requirement *now*? Yes, but only CSV — a second format is not planned.
+2. **YAGNI:** an interface with one implementation and a factory of one product are forbidden without a second case.
+3. The "standard library" rung: `Intl.DateTimeFormat` does the date formatting.
+4. Boundary: you do **not** simplify the input data validation and the write error handling.
+5. Comments in the one-line format, the balance at the end; correctness assessed separately.
 
-**Wynik:**
+**Result:**
 ```text
-L12: yagni interfejs ReportExporter (1 implementacja, brak planu drugiej) → funkcja exportCsv(rows)
-L31: usuń ExporterFactory → bezpośrednie wywołanie exportCsv
-L58: stdlib własne formatDate() → Intl.DateTimeFormat("pl-PL")
-L77: skróć ręczne sklejanie przecinków → jedna funkcja escapeCsvField użyta w map/join
-Bilans: −96 / +18 linii. Walidacja wierszy (L90–L104) zostaje — granica zaufania.
+L12: yagni interface ReportExporter (1 implementation, no plan for a second) → function exportCsv(rows)
+L31: remove ExporterFactory → a direct call to exportCsv
+L58: stdlib own formatDate() → Intl.DateTimeFormat("pl-PL")
+L77: shorten manual comma joining → one escapeCsvField function used in map/join
+Balance: −96 / +18 lines. Row validation (L90–L104) stays — trust boundary.
 ```
-Po zmianie:
+After the change:
 ```ts
 const dateFormat = new Intl.DateTimeFormat("pl-PL");
 
@@ -33,27 +33,27 @@ export function exportCsv(rows: { client: string; total: number; issuedAt: Date 
 }
 ```
 
-## 2. DRY czy KISS — dwa podobne fragmenty
-**Sytuacja:** „W PR są dwie pary podobnego kodu. Wydzielić wspólne funkcje?” Para A: walidacja długości nazwy produktu
-i nazwy kategorii (obie `1..80` znaków). Para B: rabat 10% od 500 zł liczony w koszyku (frontend) i w serwisie zamówień.
+## 2. DRY or KISS — two similar fragments
+**Situation:** "The PR has two pairs of similar code. Should we extract shared functions?" Pair A: validation of the length of the product name
+and the category name (both `1..80` characters). Pair B: a 10% discount from 500 PLN computed in the cart (frontend) and in the order service.
 
-**Jak:**
-1. Pytanie kontrolne DRY: *ta sama wiedza biznesowa* czy przypadkowo podobny kod?
-2. Para A — przypadkowe podobieństwo (limity mogą się rozjechać niezależnie): **KISS/YAGNI > DRY**.
-3. Para B — jedna reguła cenowa w dwóch miejscach: **DRY > KISS** dla wiedzy biznesowej.
-4. **AHA / reguła trzech:** brak trzeciego przypadku dla A, więc bez abstrakcji z flagami.
+**How:**
+1. The DRY check question: *the same business knowledge* or accidentally similar code?
+2. Pair A — accidental similarity (the limits can drift apart independently): **KISS/YAGNI > DRY**.
+3. Pair B — one pricing rule in two places: **DRY > KISS** for business knowledge.
+4. **AHA / rule of three:** no third case for A, so no abstraction with flags.
 
-**Wynik — decyzja:**
+**Result — the decision:**
 
-| Para | Decyzja | Uzasadnienie (zasada + koszt) |
+| Pair | Decision | Justification (principle + cost) |
 |---|---|---|
-| A: długość nazw | zostawić duplikat | KISS: wspólna funkcja z parametrem „typ pola” to zła abstrakcja; duplikacja jest tańsza |
-| B: rabat 10% od 500 zł | jedno źródło: `pricing.discountFor(total)`, frontend pobiera wynik z API | DRY: reguła w dwóch miejscach rozjedzie się przy pierwszej zmianie progu |
+| A: name lengths | keep the duplicate | KISS: a shared function with a "field type" parameter is a wrong abstraction; duplication is cheaper |
+| B: a 10% discount from 500 PLN | one source: `pricing.discountFor(total)`, the frontend fetches the result from the API | DRY: a rule in two places will drift apart at the first change of the threshold |
 
-## 3. Tell, don't ask i prawo Demeter
-**Sytuacja:** „Review metody wypłaty z konta”.
+## 3. Tell, don't ask and the Law of Demeter
+**Situation:** "Review the method for withdrawing from an account".
 ```ts
-// przed
+// before
 type Balance = { getAmount(): number; setAmount(v: number): void };
 type Account = { getBalance(): Balance };
 declare const account: Account;
@@ -64,13 +64,13 @@ if (account.getBalance().getAmount() >= amount) {
 }
 ```
 
-**Jak:**
-1. **Prawo Demeter:** `account.getBalance().getAmount()` — rozmowa z obcym obiektem.
-2. **Tell, don't ask:** decyzję o wystarczającym saldzie może podjąć samo konto.
-3. **Fail fast:** brak środków sygnalizuj od razu, a nie cichym pominięciem wypłaty.
-4. Gettery do odczytu (wyciąg, prezentacja) zostają — reguła nie każe usuwać wszystkich.
+**How:**
+1. **Law of Demeter:** `account.getBalance().getAmount()` — talking to a stranger object.
+2. **Tell, don't ask:** the account itself can make the decision about a sufficient balance.
+3. **Fail fast:** signal insufficient funds at once, not by silently skipping the withdrawal.
+4. Getters for reading (a statement, presentation) stay — the rule does not tell you to remove all of them.
 
-**Wynik:**
+**Result:**
 ```ts
 class InsufficientFunds extends Error {}
 
@@ -78,14 +78,14 @@ export class BankAccount {
   constructor(private balance: number) {}
 
   withdraw(amount: number): void {
-    if (amount > this.balance) throw new InsufficientFunds(`Brak środków: ${amount} > ${this.balance}`);
+    if (amount > this.balance) throw new InsufficientFunds(`Insufficient funds: ${amount} > ${this.balance}`);
     this.balance -= amount;
   }
 
   get currentBalance(): number {
-    return this.balance; // zapytanie do prezentacji — w porządku
+    return this.balance; // a query for presentation — fine
   }
 }
 ```
-Uwaga w review: „Demeter + tell, don't ask: reguła salda jest poza kontem, więc każdy wywołujący może ją pominąć →
-`account.withdraw(amount)`”.
+Review comment: "Demeter + tell, don't ask: the balance rule is outside the account, so every caller can skip it →
+`account.withdraw(amount)`".

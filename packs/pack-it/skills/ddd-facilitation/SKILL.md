@@ -1,141 +1,141 @@
 ---
 name: ddd-facilitation
-description: Użyj przy rozmowie lub warsztacie z ekspertami domeny — techniki facylitacji, język wszechobecny, słowa-sygnały.
+description: Use for a conversation or workshop with domain experts — facilitation techniques, ubiquitous language, signal words.
 metadata:
   review: "2027-10-09"
-  catalog: "Użyj przy prowadzeniu rozmowy lub warsztatu z ekspertami domenowymi — techniki facylitacji, budowanie wszędobylskiego języka (ubiquitous language), wyłapywanie słów-sygnałów (status, CRUD), dynamika grupy. Także bramki decyzyjne agenta i samokontrola facylitatora. Nie do przebiegu i notacji Event Stormingu (ddd-event-storming) ani projektowania modelu (ddd-deep-modeling)."
+  catalog: "Use when leading a conversation or workshop with domain experts — facilitation techniques, building the ubiquitous language, catching signal words (status, CRUD), group dynamics. Also the agent's decision gates and the facilitator's self-check. Not for the course and notation of Event Storming (ddd-event-storming) or designing the model (ddd-deep-modeling)."
 ---
 
-# Facylitacja i wspólny język
+# Facilitation and a shared language
 
-## Rola facylitatora
-- Jesteś właścicielem **procesu**, nie treści. Nie rozstrzygasz sporów merytorycznych — zapisujesz je jako hot spot.
-- Pilnujesz celu sesji i czasu; decydujesz o przejściu do następnego kroku, gdy grupa się zapętla.
-- Najpierw piszemy, potem mówimy — dzięki temu słychać także cichych ekspertów, a nie tylko najgłośniejszych.
-- Ustal na starcie zasady (w duchu Deep Democracy): każdy ma kawałek racji, nikt całej; różnica zdań to informacja, nie problem.
-- Otwieraj **check-inem** (krótko, po ludzku) i zamykaj **check-outem** („co wynosisz z sesji?”).
+## The facilitator's role
+- You own the **process**, not the content. You do not settle substantive disputes — you record them as a hot spot.
+- You keep the session's goal and time; you decide to move to the next step when the group goes round in circles.
+- First we write, then we talk — this way the quiet experts are heard too, not only the loudest ones.
+- Set the rules at the start (in the spirit of Deep Democracy): everyone is partly right, nobody is wholly right; a difference of opinion is information, not a problem.
+- Open with a **check-in** (short, human) and close with a **check-out** ("what are you taking away from the session?").
 
-## Tryby myślenia — nie mieszaj ich
-1. **Dywergencja** — generujemy (chaotyczna eksploracja): bez oceniania.
-2. **Emergencja** — grupujemy, szukamy wzorców, nazywamy (porządkowanie osi, swimlanes).
-3. **Konwergencja** — decydujemy (głosowanie, wybór granic).
-Zapowiadaj głośno, w którym trybie jesteście. Ocena w fazie dywergencji zabija pomysły; generowanie w fazie decyzji zabija czas.
+## Modes of thinking — do not mix them
+1. **Divergence** — we generate (chaotic exploration): no judging.
+2. **Emergence** — we group, look for patterns, name things (ordering the timeline, swimlanes).
+3. **Convergence** — we decide (voting, choosing boundaries).
+Announce aloud which mode you are in. Judging in the divergence phase kills ideas; generating in the decision phase kills time.
 
-## Techniki na trudne momenty
-- **Sześć kapeluszy** — gdy dyskusja krąży: wszyscy naraz patrzą z jednej perspektywy (fakty → ryzyka → korzyści → pomysły → emocje → proces), zamiast przerzucać się racjami.
-- **Clean Questions** — pytania, które nie podsuwają odpowiedzi i używają słów rozmówcy:
-  „A jaki to rodzaj X?”, „Co jeszcze o X?”, „Skąd się bierze X?”, „Co dzieje się tuż przed X?”, „A co potem?”,
-  „Co chciałbyś, żeby się wydarzyło?”. Idealne do wydobywania pojęć bez narzucania własnego słownika.
-- **Parking** — wątek ważny, ale nie teraz → kartka na parkingu z właścicielem.
-- **Dominujący uczestnik** — daj mu zadanie (np. opowiadanie walkthrough na końcu), zbieraj głosy rundą.
-- **Eksperci się nie zgadzają** — nie rozstrzygaj. Zapisz obie wersje jako hot spot; często to dwa różne konteksty z tym samym słowem.
+## Techniques for difficult moments
+- **Six hats** — when the discussion goes round in circles: everyone looks from one perspective at once (facts → risks → benefits → ideas → emotions → process), instead of trading arguments.
+- **Clean Questions** — questions that do not suggest an answer and use the speaker's words:
+  "And what kind of X is that?", "Is there anything else about X?", "Where does X come from?", "What happens just before X?", "And then what happens?",
+  "What would you like to happen?". Ideal for drawing out concepts without imposing your own vocabulary.
+- **Parking lot** — a thread that is important, but not now → a sticky note in the parking lot with an owner.
+- **A dominant participant** — give them a task (e.g. telling the walkthrough at the end), collect votes in a round.
+- **The experts disagree** — do not settle it. Record both versions as a hot spot; often these are two different contexts with the same word.
 
-## Stopniowe wprowadzanie notacji
-Pokazujesz tylko to, czego grupa potrzebuje w danym kroku: najpierw zdarzenia i hot spoty, potem aktorzy i systemy,
-na końcu komendy, polityki i read modele. Nowy element = krótki przykład na ścianie + dopisek w legendzie.
+## Introducing the notation gradually
+You show only what the group needs in a given step: first events and hot spots, then actors and systems,
+finally commands, policies and read models. A new element = a short example on the wall + a note in the legend.
 
-## Uzupełniające techniki — kiedy po nie sięgnąć
-| Technika | Kiedy | Jak łączyć z Event Stormingiem |
+## Complementary techniques — when to reach for them
+| Technique | When | How to combine it with Event Storming |
 |---|---|---|
-| Customer Journey | gdy liczy się doświadczenie klienta | etapy podróży jako tory nad osią zdarzeń |
-| User Story Mapping | gdy trzeba pociąć zakres na wydania | kroki z osi = kręgosłup mapy, historie pod spodem |
-| Impact Mapping | gdy nie jest jasne, po co coś budujemy | cel → aktorzy → wpływ → produkty; weryfikuje sens procesów z osi |
-| Service Blueprint | gdy ważne jest „zaplecze” usługi | frontstage/backstage jako tory, systemy wsparcia pod spodem |
-| C4 | gdy przechodzisz do architektury | konteksty z sesji → kontenery/komponenty |
+| Customer Journey | when the customer experience matters | the journey stages as lanes above the event timeline |
+| User Story Mapping | when the scope has to be cut into releases | the steps from the timeline = the backbone of the map, the stories underneath |
+| Impact Mapping | when it is not clear why we are building something | goal → actors → impact → products; it checks the sense of the processes on the timeline |
+| Service Blueprint | when the "back office" of the service matters | frontstage/backstage as lanes, support systems underneath |
+| C4 | when you move on to architecture | the contexts from the session → containers/components |
 
-## Wszędobylski język (ubiquitous language)
-Jeśli ekspert nie rozumie modelu, projekt od początku idzie w złą stronę. Język jest wspólny dla biznesu, analizy i kodu.
-- Prowadź słownik `docs/project/02-domain/glossary.md`: pojęcie, znaczenie **w danym kontekście**, przykłady, synonimy, konflikty.
-- To samo słowo, różne znaczenia (np. „Klient” w CRM i w Rozliczeniach) → prawdopodobna **granica kontekstu**. Nie ujednolicaj na siłę.
-- Różne słowa, to samo znaczenie → uzgodnij jedno w obrębie kontekstu.
-- Pytaj: „Jak to nazywacie u siebie?”, „Czy X i Y to to samo?”, „Kto używa tego słowa?”.
+## Ubiquitous language
+If the expert does not understand the model, the project goes in the wrong direction from the start. The language is shared by the business, the analysis and the code.
+- Keep the glossary `docs/project/02-domain/glossary.md`: the term, its meaning **in the given context**, examples, synonyms, conflicts.
+- The same word, different meanings (e.g. "Customer" in CRM and in Billing) → a likely **context boundary**. Do not unify by force.
+- Different words, the same meaning → agree on one within the context.
+- Ask: "What do you call it on your side?", "Are X and Y the same thing?", "Who uses this word?".
 
-### Słownik w trakcie projektowania (nie tylko na warsztacie)
-- **Wpis**: pogrubione pojęcie, 1–2 zdania o tym, czym coś **jest** (nie co robi), linia `_Unikaj_: …` z odrzuconymi
-  synonimami. Bądź stanowczy: z kilku słów wybierz jedno. Wpisy grupuj nagłówkami, gdy pojawiają się naturalne grupy.
-- **Tylko pojęcia tego kontekstu** — bez ogólnych pojęć programistycznych (timeout, typ błędu) i bez szczegółów
-  implementacji. Słownik to nie specyfikacja ani brudnopis. Kilka kontekstów → osobny słownik na kontekst + mapa
-  relacji (ddd-context-mapping).
-- **Zapis od razu**, gdy pojęcie się ustali — nie zbiorczo na końcu sesji. Słownik równie często się kurczy, jak rośnie;
-  okresowo usuwaj z niego szczegóły implementacji.
-- Słowo sprzeczne ze słownikiem → nazwij konflikt od razu („słownik mówi, że Anulowanie to X, a ty mówisz o Y — które?”).
-  Słowo mgliste → zaproponuj precyzyjne („konto — Klient czy Użytkownik?”).
-- Relacje sprawdzaj **wymyślonymi scenariuszami brzegowymi**, aż granice pojęć będą ostre.
-- **Konfrontuj z kodem**: gdy ktoś mówi, jak coś działa, sprawdź w kodzie i zacytuj rozbieżność („kod anuluje całe
-  Zamówienie, a mówisz o częściowym anulowaniu — co jest prawdą?”). Rozbieżność kodu i języka blokuje dalsze decyzje.
-- **Słownik pisany przez agenta to propozycja**, nie autorytet: wpisy bez przeglądu człowieka brzmią pewnie, a mogą być
-  fałszywe. Nowe i zmienione wpisy pokazujesz w podsumowaniu sesji do akceptacji (core-project-record: statusy).
-- **Bez plików na zapas** — słownik i ADR powstają, gdy jest pierwsze pojęcie lub pierwsza decyzja do zapisania.
-- **Istniejące repo bez słownika:** nie czekaj, aż słownik urośnie przy okazji (za wolno). Zrób krótkie przesłuchanie:
-  agent wypisuje kandydatów na pojęcia z kodu (nazwy agregatów, tabel, endpointów) i pyta o znaczenie i synonimy, partiami.
-  Pełna destylacja dokumentów i kodu (słownik z „BRAK w kodzie”, tabela rozjazdów model ↔ kod): ddd-legacy-modernization.
-- Agent konfrontuje język z kodem i zapisanymi artefaktami — nie widzi trackera zgłoszeń; jeśli tam są ustalenia
-  językowe, wskaż je w `CLAUDE.md` projektu.
-Wzorowane na skillu `domain-modeling` z [mattpocock/skills](https://github.com/mattpocock/skills) (MIT; opis: [aihero.dev](https://www.aihero.dev/skills-domain-modeling)), opisane własnymi słowami.
+### The glossary during design (not only at a workshop)
+- **An entry**: the term in bold, 1–2 sentences on what something **is** (not what it does), a `_Avoid_: …` line with the rejected
+  synonyms. Be firm: choose one word out of several. Group entries under headings when natural groups appear.
+- **Only the terms of this context** — no general programming terms (timeout, error type) and no implementation
+  details. The glossary is not a specification or a scratchpad. Several contexts → a separate glossary per context + a map of
+  relationships (ddd-context-mapping).
+- **Record it right away** when a term is settled — not in bulk at the end of the session. The glossary shrinks as often as it grows;
+  periodically remove implementation details from it.
+- A word that contradicts the glossary → name the conflict right away ("the glossary says Cancellation is X, but you are talking about Y — which one?").
+  A vague word → propose a precise one ("account — Customer or User?").
+- Check relationships with **invented edge-case scenarios** until the boundaries of the terms are sharp.
+- **Confront it with the code**: when someone says how something works, check it in the code and quote the discrepancy ("the code cancels the whole
+  Order, but you are talking about a partial cancellation — which is true?"). A discrepancy between the code and the language blocks further decisions.
+- **A glossary written by the agent is a proposal**, not an authority: entries without a human review sound confident, but can be
+  false. You show new and changed entries in the session summary for acceptance (core-project-record: statuses).
+- **No files in advance** — the glossary and an ADR are created when there is the first term or the first decision to record.
+- **An existing repo without a glossary:** do not wait for the glossary to grow along the way (too slow). Do a short interrogation:
+  the agent lists candidate terms from the code (the names of aggregates, tables, endpoints) and asks about meaning and synonyms, in batches.
+  Full distillation of documents and code (a glossary with "BRAK w kodzie" — missing in the code, a table of model ↔ code divergences): ddd-legacy-modernization.
+- The agent confronts the language with the code and the recorded artifacts — it does not see the issue tracker; if there are language
+  agreements there, point to them in the project's `CLAUDE.md`.
+Modelled on the `domain-modeling` skill from [mattpocock/skills](https://github.com/mattpocock/skills) (MIT; description: [aihero.dev](https://www.aihero.dev/skills-domain-modeling)), described in our own words.
 
-### Symulowany ekspert domeny (model językowy)
-- Bez dostępu do eksperta możesz przepytać model o domenę: kluczowe procesy dające wartość, pojęcia, które
-  programista nazwie inaczej niż branża (np. „powtórka”, a nie „quiz”), algorytmy branżowe z kompromisami.
-- Wynik to **generator hipotez**, nie źródło prawdy. Model jest mocny w szeroko opisanych ogólnikach, a zmyśla przy
-  szczegółach brzmiących precyzyjnie: wzory i stałe, progi, nazwy pól cudzego API, świeże zmiany, domeny regulowane
-  (podatki, prawo, normy).
-- Twierdzenie, na którym oprzesz schemat, nazwę klasy lub regułę, sprawdzasz przed zapisem: (1) dokumentacja
-  źródłowa lub specyfikacja, (2) to samo pytanie do modelu innego dostawcy — rozbieżności to lista do ręcznego
-  sprawdzenia, (3) konfrontacja z PRD i kodem (`plik:linia`).
-- Wpisy ze źródłem „model” trafiają do `glossary.md` ze statusem `propozycja` do akceptacji człowieka; prawdziwy
-  ekspert ma pierwszeństwo, gdy tylko jest dostępny.
+### A simulated domain expert (a language model)
+- Without access to an expert you can question a model about the domain: the key processes that deliver value, the terms that
+  a programmer names differently from the industry (e.g. "review" rather than "quiz"), industry algorithms with their trade-offs.
+- The result is a **hypothesis generator**, not a source of truth. The model is strong at widely described generalities, and makes things up in
+  precise-sounding details: formulas and constants, thresholds, the field names of someone else's API, recent changes, regulated domains
+  (taxes, law, standards).
+- A claim on which you base a schema, a class name or a rule is checked before you record it: (1) the source documentation
+  or a specification, (2) the same question to a model from another provider — the discrepancies are a list for manual
+  checking, (3) a confrontation with the PRD and the code (`file:line`).
+- Entries with the source "model" go into `glossary.md` with the status `proposed` for a human's acceptance; a real
+  expert takes precedence as soon as one is available.
 
-### Słowa-sygnały — zatrzymaj się i dopytaj
-| Sygnał | Dlaczego podejrzane | Co zapytać |
+### Signal words — stop and ask more
+| Signal | Why it is suspicious | What to ask |
 |---|---|---|
-| **status** („zmieniono status na…”) | pole statusu często ukrywa kilka różnych cykli życia i kilka zdarzeń biznesowych | „Co się wydarzyło w biznesie, że status się zmienił? Kto o tym decyduje? Co wolno robić w tym stanie, a czego nie?” — każda wartość statusu to potencjalne zdarzenie lub osobne pojęcie |
-| **CRUD**: dodano, zaktualizowano, usunięto, zapisano, edytowano | język bazy danych, nie biznesu | „Po co ktoś to zmienia? Jak to nazywacie?” — „zaktualizowano zamówienie” to np. „Klient zmienił adres dostawy” albo „Zamówienie zostało opłacone” |
-| przetworzono, zsynchronizowano, obsłużono | ukrywa decyzję lub regułę | „Co dokładnie się sprawdza? Co może pójść nie tak?” |
-| dane, rekord, obiekt, informacje, manager | pojęcie bez znaczenia biznesowego | „Jaki to rodzaj informacji? Do czego służy?” |
-| zawsze / nigdy / automatycznie | ukryte wyjątki | „Czy był przypadek, kiedy nie…?” |
-| nazwy ekranów, tabel, systemów | rozwiązanie zamiast problemu | „Co by się działo, gdyby tego systemu nie było?” |
+| **status** ("the status was changed to…") | a status field often hides several different life cycles and several business events | "What happened in the business that the status changed? Who decides about it? What is allowed in this state, and what is not?" — every status value is a potential event or a separate concept |
+| **CRUD**: added, updated, deleted, saved, edited | the language of the database, not of the business | "Why does someone change it? What do you call it?" — "the order was updated" is e.g. "The customer changed the delivery address" or "The order was paid" |
+| processed, synchronized, handled | it hides a decision or a rule | "What exactly is checked? What can go wrong?" |
+| data, record, object, information, manager | a term without a business meaning | "What kind of information is it? What is it for?" |
+| always / never / automatically | hidden exceptions | "Was there a case when it did not…?" |
+| names of screens, tables, systems | a solution instead of a problem | "What would happen if this system did not exist?" |
 
-## Praca agenta z użytkownikiem
-- Zadawaj **jedno–trzy pytania naraz**, konkretne, najlepiej z przykładem.
-- Parafrazuj językiem rozmówcy i proś o korektę („Dobrze rozumiem, że…?”).
-- Nigdy nie uzupełniaj luk zmyśleniem — luka to hot spot z pytaniem i adresatem.
-- Po każdej rundzie zapisz: nowe pojęcia, hot spoty, decyzje.
+## The agent's work with the user
+- Ask **one to three questions at a time**, specific, preferably with an example.
+- Paraphrase in the speaker's language and ask for corrections ("Do I understand correctly that…?").
+- Never fill gaps by making things up — a gap is a hot spot with a question and an addressee.
+- After each round record: new terms, hot spots, decisions.
 
-## Bramki decyzyjne (agent ↔ człowiek)
-Bramka = punkt, w którym agent zatrzymuje się na decyzję człowieka. Pętla: **zbadaj → zaproponuj z uzasadnieniem → stop**.
-- Na turę **3–7 pytań**, każde oparte na dowodzie (cytat/plik), z opcjami, **wartością domyślną** i oznaczeniem „blokuje / nie blokuje”.
-- Człowiek może odpowiedzieć skrótem: `q1: b`, `C2: odrocz`; słowa sterujące: `pomiń` (przyjmij domyślne), `stop`, `powtórz`.
-- Po każdej odpowiedzi jedno zdanie: „OK — na podstawie X robię Y”. Decyzje zapisuj w artefakcie (core-project-record), żeby
-  przerwaną pracę dało się wznowić bez ponownych pytań.
-- Limit 10 tur; po 3 turach bez postępu przyjmij wartości domyślne i zapisz to jako założenie.
-- **Pytaj zawsze:** sprzeczność w źródłach, decyzja wartościująca (priorytet, ryzyko, koszt), słabe dowody, zmiana kontraktu.
-  **Nie pytaj:** o rzeczy mechaniczne, stylistyczne ani o to, na co odpowiedź jest już w materiałach.
-- Podagent nie ma rozmowy z człowiekiem — zamiast pytać, zwraca pytania (hot spoty) personie, która prowadzi rozmowę.
+## Decision gates (agent ↔ human)
+A gate = a point where the agent stops for a human's decision. The loop: **investigate → propose with a justification → stop**.
+- Per turn **3–7 questions**, each based on evidence (a quote/a file), with options, a **default value** and a "blocking / not blocking" mark.
+- The human can answer in shorthand: `q1: b`, `C2: defer`; control words: `skip` (accept the defaults), `stop`, `repeat`.
+- After each answer one sentence: "OK — based on X I am doing Y". Record the decisions in an artifact (core-project-record), so that
+  interrupted work can be resumed without asking again.
+- A limit of 10 turns; after 3 turns without progress accept the default values and record that as an assumption.
+- **Always ask:** a contradiction in the sources, a value decision (priority, risk, cost), weak evidence, a contract change.
+  **Do not ask:** about mechanical or stylistic things, or about what the materials already answer.
+- A subagent has no conversation with the human — instead of asking, it returns the questions (hot spots) to the persona that leads the conversation.
 
-## Metaprogramy — soczewka na uczestników
-| Oś | Rozpoznasz po | Jak prowadzić |
+## Metaprograms — a lens on the participants
+| Axis | You recognize it by | How to lead |
 |---|---|---|
-| podobieństwo ↔ różnica | „jak zawsze” / „to zupełnie inne” | podobnym pokaż ciągłość, różnicującym daj szukać wyjątków (hot spoty) |
-| ogół ↔ szczegół | skróty myślowe / długie opowieści z liczbami | ogólnych proś o przykład, szczegółowych — o nazwę etapu |
-| „od” ↔ „do” | mówi o problemach / o celach | nastawionym na problemy zleć oznaczanie ryzyk i hot spotów |
-| wewnętrzna ↔ zewnętrzna rama | „wiem, że…” / „klienci mówią…” | pewnego siebie nie przekonuj autorytetem — zaproś, by sam sprawdził tezę na przykładzie |
+| sameness ↔ difference | "as always" / "this is completely different" | show continuity to the sameness people, let the difference people look for exceptions (hot spots) |
+| general ↔ specific | mental shortcuts / long stories with numbers | ask the general ones for an example, the specific ones — for the name of the stage |
+| "away from" ↔ "towards" | talks about problems / about goals | give those focused on problems the job of marking risks and hot spots |
+| internal ↔ external frame | "I know that…" / "customers say…" | do not convince a self-assured person with authority — invite them to check the thesis on an example themselves |
 
-## Samokontrola facylitatora (po sesji lub co kilka rund)
-| # | Anty-wzorzec | Sygnał |
+## The facilitator's self-check (after the session or every few rounds)
+| # | Anti-pattern | Signal |
 |---|---|---|
-| 1 | przedwczesne projektowanie | rozmowa o tabelach/API na Big Picture |
-| 2 | jedna osoba zdominowała | ta sama osoba mówi długo, wielokrotnie |
-| 3 | ktoś milczy | brak wkładu przez kilka rund — zaproś wprost |
-| 4 | brak hot spotów | mniej niż jeden na dwie rundy = spory są zamiatane |
-| 5 | brak zdarzeń przełomowych | oś bez struktury |
-| 6 | brak chronologii | kartki bez porządku czasu |
-| 7 | mieszanie poziomów | komendy/polityki na Big Picture |
-| 8 | facylitator pisze za grupę | kartki powstają z jego słów |
-| 9 | pominięte regulacje/compliance | nikt nie zapytał o prawo i umowy |
-| 10 | niesprawdzony język | słowa-sygnały bez dopytania |
-Podsumowanie: po 3 najmocniejsze momenty i 3 do poprawy, w formie „Zauważyłem… to prowadzi do… następnym razem spróbuj…”.
-Zapis: `docs/project/07-review/<data>-facilitation.md`.
+| 1 | premature design | talking about tables/APIs at Big Picture |
+| 2 | one person dominated | the same person speaks long, many times |
+| 3 | someone is silent | no contribution for several rounds — invite them directly |
+| 4 | no hot spots | fewer than one per two rounds = disputes are swept under the rug |
+| 5 | no pivotal events | a timeline without structure |
+| 6 | no chronology | sticky notes without time order |
+| 7 | mixing levels | commands/policies at Big Picture |
+| 8 | the facilitator writes for the group | sticky notes come from their words |
+| 9 | regulations/compliance skipped | nobody asked about the law and contracts |
+| 10 | unchecked language | signal words without asking more |
+Summary: the 3 strongest moments and 3 to improve each, in the form "I noticed… this leads to… next time try…".
+Record: `docs/project/07-review/<date>-facilitation.md`.
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 4, lekcja 5 (wywiad z ekspertem, „kiedy ekspert zmyśla”) — materiał szkoleniowy
-  (dostęp 2026-10-09); opisane własnymi słowami.
+## Sources
+- The 10xDevs course, ed. 3 (2026), module 4, lesson 5 (interviewing an expert, "when the expert makes things up") — training material
+  (accessed 2026-10-09); described in our own words.

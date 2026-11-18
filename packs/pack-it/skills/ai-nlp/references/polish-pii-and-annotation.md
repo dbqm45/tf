@@ -1,71 +1,71 @@
-# Polski, PII i adnotacja — szczegóły
+# Polish, PII and annotation — details
 
-Spis: polszczyzna w NLP · narzędzia i modele · benchmarki · PII i anonimizacja · adnotacja
+Contents: Polish in NLP · tools and models · benchmarks · PII and anonymization · annotation
 
-## Polszczyzna w NLP
-- **Fleksja.** Jedno słowo ma wiele form („umowa, umowy, umowie, umową”). Modele na zliczeniach słów (TF-IDF, BM25,
-  słowniki) potrzebują lematyzacji albo n-gramów znakowych; modele subwordowe radzą sobie lepiej, ale rzadkie formy
-  rozpadają się na wiele tokenów, co skraca efektywny kontekst.
-- **Lematyzacja nazw własnych zawodzi.** Nazwisko „Kowalskiego” analizator może sprowadzić do „Kowalski”, ale
-  nieznane nazwiska i nazwy firm („Żabki”) bywają lematyzowane błędnie. Zliczanie po osobie opieraj na identyfikatorze
-  lub kluczu z rozstrzygnięcia tożsamości, nie na samej formie z tekstu.
-- **Diakrytyki.** Użytkownicy piszą bez polskich znaków („zazolc gesla jazn”). Znormalizowanie do ASCII gubi
-  rozróżnienia (np. „łąka” i „laka”), więc nie zamieniaj tekstu na ASCII w treningu. Zamiast tego dodaj do zbioru
-  testowego odsetek wpisów bez diakrytyków, jeśli ruch taki jest, i zmierz spadek. Normalizację Unicode (NFC) stosuj
-  zawsze, bo ten sam znak może mieć dwie reprezentacje.
-- **Szyk swobodny i brak podmiotu.** Reguły oparte na pozycji słowa psują się częściej niż w angielskim.
-- **Wielkość liter.** Wielka litera w środku zdania wskazuje nazwę własną; nie sprowadzaj do małych liter przed NER.
+## Polish in NLP
+- **Inflection.** One word has many forms ("umowa, umowy, umowie, umową" — forms of "contract"). Models based on word counts (TF-IDF, BM25,
+  dictionaries) need lemmatization or character n-grams; subword models cope better, but rare forms
+  break into many tokens, which shortens the effective context.
+- **Lemmatization of proper names fails.** An analyser may reduce the surname "Kowalskiego" to "Kowalski", but
+  unknown surnames and company names ("Żabki") are often lemmatized wrongly. Base counting per person on an identifier
+  or a key from identity resolution, not on the form from the text alone.
+- **Diacritics.** Users write without Polish characters ("zazolc gesla jazn"). Normalizing to ASCII loses
+  distinctions (e.g. "łąka" and "laka"), so do not convert the text to ASCII in training. Instead, add to the test
+  set a share of entries without diacritics, if there is such traffic, and measure the drop. Always apply Unicode normalization (NFC),
+  because the same character can have two representations.
+- **Free word order and dropped subjects.** Rules based on word position break more often than in English.
+- **Letter case.** A capital letter in the middle of a sentence indicates a proper name; do not lowercase before NER.
 
-## Narzędzia i modele (stan na 2026-10-17)
-- **Morfeusz 2** — słownikowy analizator i generator morfologiczny polskiego, słowniki SGJP i Polimorf; licencja
-  BSD 2-clause (Woliński, LREC 2014; repozytorium CLARIN-PL). Dla Pythona jest nakładka; licencja nakładki bywa inna,
-  sprawdź przed redystrybucją. Aktualna wersja i opieka nad projektem: [niezweryfikowane].
-- **spaCy, potoki `pl_core_news_*`** — tokenizacja, morfologia, lematyzator, parser, NER. Karta modelu
-  `pl_core_news_lg` (Hugging Face, dostęp 2026-10-17): wersja 3.7.0 dla spaCy ≥ 3.7.0 i < 3.8.0, dokładność lematów
-  ok. 94,2%, F-score NER ok. 84,1%, dane: UD Polish PDB, NKJP. Licencja modelu na karcie: GPL-3.0 — sprawdź
-  zgodność z własnym produktem. Wyniki dotyczą tekstu ogólnego; na tekstach specjalistycznych (np. medycznych)
-  mogą być znacznie gorsze, więc zmierz na własnych danych.
-- **HerBERT** — model typu BERT dla polskiego, trenowany na polskich korpusach, wprowadzony razem z KLEJ (Allegro
-  ML Research, ACL 2020). Dostępność aktualnych wariantów i licencji: [niezweryfikowane], sprawdź na Hugging Face.
-- **Polskie modele generatywne (np. Bielik, PLLuM)** — status, licencje i wyniki [niezweryfikowane]; wybór
-  przez własny test, nie przez ranking.
-- Embeddingi i wyszukiwanie dla polskiego: benchmark PIRB i kryteria w **ai-rag**; tu stosuj te same zasady
-  (własne pytania, zapisana nazwa modelu).
+## Tools and models (as of 2026-10-17)
+- **Morfeusz 2** — a dictionary-based morphological analyser and generator for Polish, the SGJP and Polimorf dictionaries; licence
+  BSD 2-clause (Woliński, LREC 2014; CLARIN-PL repository). There is a wrapper for Python; the wrapper's licence may differ,
+  check it before redistribution. The current version and project maintenance: [unverified].
+- **spaCy, the `pl_core_news_*` pipelines** — tokenization, morphology, lemmatizer, parser, NER. The model card of
+  `pl_core_news_lg` (Hugging Face, accessed 2026-10-17): version 3.7.0 for spaCy ≥ 3.7.0 and < 3.8.0, lemma accuracy
+  about 94.2%, NER F-score about 84.1%, data: UD Polish PDB, NKJP. The model licence on the card: GPL-3.0 — check
+  compatibility with your own product. The results concern general text; on specialist texts (e.g. medical ones)
+  they can be much worse, so measure on your own data.
+- **HerBERT** — a BERT-type model for Polish, trained on Polish corpora, introduced together with KLEJ (Allegro
+  ML Research, ACL 2020). Availability of current variants and licences: [unverified], check on Hugging Face.
+- **Polish generative models (e.g. Bielik, PLLuM)** — status, licences and results [unverified]; choose
+  through your own test, not through a leaderboard.
+- Embeddings and search for Polish: the PIRB benchmark and the criteria in **ai-rag**; apply the same principles here
+  (your own questions, the model name recorded).
 
-## Benchmarki
-- **KLEJ** (2020): dziewięć zadań rozumienia języka, w tym NER-podobne, wnioskowanie, sentyment (Allegro Reviews).
-- **LEPISZCZE** (NeurIPS 2022): 13 par zadanie–zbiór, pięć z KLEJ, osiem nowych; zaprojektowany jako rozszerzalny.
-- Ranking publiczny mówi, który model jest dobry **średnio**; o wyborze rozstrzyga zbiór testowy z Twojej domeny.
-  Konkretnych wyników tu nie przytaczam [niezweryfikowane].
+## Benchmarks
+- **KLEJ** (2020): nine language understanding tasks, including NER-like, inference, sentiment (Allegro Reviews).
+- **LEPISZCZE** (NeurIPS 2022): 13 task–dataset pairs, five from KLEJ, eight new; designed to be extensible.
+- A public leaderboard says which model is good **on average**; the choice is decided by a test set from your domain.
+  I do not quote specific results here [unverified].
 
-## PII i anonimizacja w tekście
-1. **Inwentarz typów:** imię i nazwisko, PESEL, NIP, REGON, numer dowodu, telefon, e-mail, adres, IBAN, tablica
-   rejestracyjna, dane w tekście swobodnym („mój sąsiad z Lipowej 5”).
-2. **Warstwy:** regex z walidacją tam, gdzie jest struktura; NER na imiona, nazwiska, adresy; słowniki dla
-   kontekstu. Suma kontrolna PESEL: wagi 1-3-7-9-1-3-7-9-1-3 dla dziesięciu cyfr, cyfra kontrolna = (10 − suma mod 10)
-   mod 10; walidacja odrzuca losowe 11-cyfrowe liczby i podnosi precyzję. NIP ma własną sumę kontrolną [założenie —
-   sprawdź w przepisach].
-3. **Presidio** (Microsoft, open source): domyślnie konfiguracja angielska; polski wymaga podmiany silnika NLP
-   (spaCy lub Stanza) i recognizerów oraz listy słów kontekstowych per język; własne rozpoznawacze to klasa
-   `PatternsRecognizer` albo podklasa bazowa (dokumentacja Presidio, dostęp 2026-10-17). Czy jest gotowy rozpoznawacz
-   PESEL w bieżącej wersji: [niezweryfikowane] — sprawdź w kodzie.
-4. **Miara:** zbiór złoty z oznaczonymi PII (≥ 200 dokumentów w domenie); raportuj **recall per typ** (pominięcie
-   to wyciek) i precision (nadmiar psuje użyteczność tekstu). Błędy w ciągu znaków granicznych też liczą się jako
-   wyciek częściowy.
-5. **Anonimizacja a pseudonimizacja:** zamiana na `[OSOBA]` jest nieodwracalna; stały token (`OSOBA_17`) zachowuje
-   spójność w dokumencie i pozwala zliczać, ale wymaga rozstrzygnięcia koreferencji i odmiany („Kowalskiemu” =
-   „Kowalski”); mapowanie token ↔ osoba trzymaj osobno i chroń. Pseudonimizacja nadal jest przetwarzaniem danych
-   osobowych — ocena prawna: **arch-privacy-compliance**.
-6. **Przed wysłaniem do zewnętrznego LLM** wykonaj anonimizację lokalnie i sprawdź na próbce, że nic nie wycieka.
+## PII and anonymization in text
+1. **Inventory of types:** first name and surname, PESEL (national ID number), NIP (tax ID), REGON (business register number), ID card number, phone, e-mail, address, IBAN, licence
+   plate, data in free text ("my neighbour from Lipowa 5").
+2. **Layers:** regex with validation where there is structure; NER for first names, surnames, addresses; dictionaries for
+   context. The PESEL checksum: weights 1-3-7-9-1-3-7-9-1-3 for ten digits, check digit = (10 − sum mod 10)
+   mod 10; validation rejects random 11-digit numbers and raises precision. NIP has its own checksum [assumption —
+   check in the regulations].
+3. **Presidio** (Microsoft, open source): an English configuration by default; Polish requires swapping the NLP engine
+   (spaCy or Stanza) and the recognizers, and a list of context words per language; your own recognizers are the class
+   `PatternsRecognizer` or a subclass of the base class (Presidio documentation, accessed 2026-10-17). Whether there is a ready PESEL
+   recognizer in the current version: [unverified] — check in the code.
+4. **Measure:** a gold set with labelled PII (≥ 200 documents in the domain); report **recall per type** (a miss
+   is a leak) and precision (an excess spoils the usefulness of the text). Errors in the boundary characters also count as
+   a partial leak.
+5. **Anonymization vs pseudonymization:** replacing with `[PERSON]` is irreversible; a stable token (`PERSON_17`) keeps
+   consistency within a document and allows counting, but requires resolving coreference and inflection ("Kowalskiemu" =
+   "Kowalski"); keep the token ↔ person mapping separately and protect it. Pseudonymization is still processing of personal
+   data — the legal assessment: **arch-privacy-compliance**.
+6. **Before sending to an external LLM**, perform the anonymization locally and check on a sample that nothing leaks.
 
-## Adnotacja
-- **Wytyczne:** definicja klasy, 3–5 przykładów typowych i granicznych, reguły rozstrzygania („gdy dwie klasy
-  pasują, wybierz…”), granice spanu (czy „Pan” wchodzi w nazwisko?). Wersjonuj wytyczne; zmiana = nota o wpływie
-  na już oznaczone dane.
-- **Pilot:** 100–200 przykładów, ≥ 2 annotatorów niezależnie. Miary: Cohen's kappa (2 osoby), Krippendorff's alpha
-  (więcej osób, braki), dla spanów F1 jednego annotatora względem drugiego. Rozbieżności omawiaj i dopisuj do wytycznych.
-- **Złoty zbiór:** część oznacza dwóch annotatorów z rozstrzygnięciem; resztę jedna osoba z kontrolą próbki.
-- **Active learning:** uncertainty sampling (najniższa pewność) lub różnorodność; po każdej rundzie przelicz miary na
-  stałym zbiorze testowym, który nie bierze udziału w wyborze przykładów.
-- **LLM jako pomoc annotatora:** podpowiedź etykiety przyspiesza pracę, ale ryzykuje kotwiczenie; kontroluj próbkę
-  oznaczoną bez podpowiedzi.
+## Annotation
+- **Guidelines:** a definition of the class, 3–5 typical and borderline examples, resolution rules ("when two classes
+  fit, choose…"), span boundaries (does "Pan" (Mr) belong to the surname?). Version the guidelines; a change = a note on its impact
+  on the data already labelled.
+- **Pilot:** 100–200 examples, ≥ 2 annotators independently. Measures: Cohen's kappa (2 people), Krippendorff's alpha
+  (more people, missing values), for spans the F1 of one annotator against the other. Discuss the disagreements and add them to the guidelines.
+- **Gold set:** part is labelled by two annotators with adjudication; the rest by one person with a sample check.
+- **Active learning:** uncertainty sampling (the lowest confidence) or diversity; after each round recompute the measures on
+  a fixed test set that takes no part in selecting the examples.
+- **An LLM as the annotator's aid:** a label suggestion speeds up the work, but risks anchoring; check a sample
+  labelled without suggestions.
