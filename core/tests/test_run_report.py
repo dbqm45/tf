@@ -264,6 +264,21 @@ def main() -> int:
         check("TSK-58" in story and "brak podwójnego obciążenia" in story and "R1" in story
               and "Klient nie może ponowić" in story and "docs/project/changes/CHG-12" in story,
               f"R-16: ticket.md z wiersza planu i zamiaru zmiany: {story[:600]}")
+        # R-16b: angielski szablon planu (mode-pdi 4c-x) — kolumny `Flag` i `Value` dają flagę i tytuł tak jak polskie.
+        chg_en = proj / "docs" / "project" / "changes" / "CHG-14"
+        chg_en.mkdir(parents=True)
+        (chg_en / "plan.md").write_text(PLAN_MD.replace("change: CHG-12", "change: CHG-14").replace("TSK-57, TSK-58", "TSK-61")
+                                        .split("| Cięcie")[0] + "| Slice | Release | Flag | Value | Files | Verification |\n"
+                                        "|---|---|---|---|---|---|\n| TSK-61 | R1 | card-retry | the customer retries a card | "
+                                        "src/card.ts | `npm test` |\n", encoding="utf-8")
+        r = run(["start", "--task", "TSK-61"], proj, cfg)
+        tr_en = proj / ".tf" / "runs" / "CHG-14-TSK-61"
+        meta_en = json.loads((tr_en / "run.json").read_text(encoding="utf-8")) if (tr_en / "run.json").is_file() else {}
+        check(r.returncode == 0 and meta_en.get("flag") == "card-retry" and "the customer retries a card" in str(meta_en),
+              f"R-16b: plan po angielsku — flaga z kolumny Flag, tytuł z Value: {r.stdout} {r.stderr[-300:]} {meta_en}")
+        import shutil as _sh_en
+        for leftover in (chg_en, tr_en, proj / "docs" / "project" / "changes" / "CHG-14-TSK-61"):
+            _sh_en.rmtree(leftover, ignore_errors=True)
         r = run(["start", "--task", "TSK-99"], proj, cfg)
         check(r.returncode == 2 and "TSK-99" in r.stdout + r.stderr and "Traceback" not in r.stderr,
               f"R-17: TSK spoza planów zmian → kod 2 z komunikatem: {r.returncode} {r.stdout} {r.stderr[-300:]}")
