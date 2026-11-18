@@ -423,6 +423,28 @@ def main() -> int:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_draft, "")
         r = run(["check"], tmp)
         check(r.returncode == 0, f"Z-5: szkic planu bez nowych sekcji przechodzi: {r.stdout}")
+    # Z-6..Z-8: angielski szablon (4c-x) — nagłówki „Options considered”, „Option”, „Change targets” i kolumny planu
+    # po angielsku (jak ci_for_sdlc connectors/repo.ts); polskie formy zostają przyjmowane (Z-1..Z-4).
+    body_en = ("| Slice | Kind | Release | Flag | Value | Requirements | Unblocks | Files | Verification |\n"
+               "|---|---|---|---|---|---|---|---|---|\n"
+               "| TSK-1 | slice | R1 | — | the user can pay | US-2 | — | | npm test |\n\n"
+               "## Options considered\n\n### Option A\nPros.\n### Option B\nPros.\n\n## Change targets (`targets`)\n\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted, body_en)
+        r = run(["check"], tmp)
+        check(r.returncode == 0, f"Z-6: plan po angielsku (opcje, cele, kolumny) przechodzi: {r.stdout}")
+    with tempfile.TemporaryDirectory() as tmp:
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted,
+              body_en.replace("### Option B\nPros.\n", ""))
+        r = run(["check"], tmp)
+        check(r.returncode != 0 and "at least two" in r.stdout, f"Z-7: jedna opcja po angielsku dostaje ustalenie: {r.stdout}")
+    with tempfile.TemporaryDirectory() as tmp:
+        write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted,
+              body_en.replace("| TSK-1 | slice | R1 | — | the user can pay | US-2 | — |",
+                              "| TSK-1 | foundation | R1 | — | (foundation) the schema is ready | | — |"))
+        r = run(["check"], tmp)
+        check(r.returncode != 0 and "Unblocks" in r.stdout,
+              f"Z-8: fundament bez „Unblocks” w angielskim planie dostaje ustalenie: {r.stdout}")
 
     # decision gate: decyzja z bramki w pdi (gate.decided) zapisana w repo z numerem z rejestru (F4, D2/R1)
     with tempfile.TemporaryDirectory() as tmp:
