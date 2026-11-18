@@ -88,20 +88,20 @@
   "offline": "2026-11-18"
  },
  "be-api-design": {
-  "fingerprint": "b0558f8787e2d940",
-  "offline": "2026-11-16"
+  "fingerprint": "6f06108dcb7de1a5",
+  "offline": "2026-11-18"
  },
  "be-auth-security": {
   "fingerprint": "6d080bf3d1faa005",
   "offline": "2026-11-16"
  },
  "be-billing-subscriptions": {
-  "fingerprint": "d2df5fa242947aa4",
-  "offline": "2026-11-16"
+  "fingerprint": "48e3e9228ed29eda",
+  "offline": "2026-11-18"
  },
  "be-business-app-patterns": {
-  "fingerprint": "00c7d49229553d7d",
-  "offline": "2026-11-16"
+  "fingerprint": "17f684fa7e065daa",
+  "offline": "2026-11-18"
  },
  "be-database": {
   "fingerprint": "9e76c6a2f27e36fe",
