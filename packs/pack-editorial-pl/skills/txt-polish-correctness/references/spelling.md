@@ -1,6 +1,6 @@
 # Part I. Spelling rules
 
-> **Contents:** 1. General spelling principles · 2. Marking vowels · 3. Marking consonants · 4. Writing together, separately and with a hyphen · 5. Word division · 6. Abbreviations · 7. Acronyms · 8. Capital and lowercase letters · 9. Transcription and transliteration of non-Latin alphabets · 10. Orthographic adaptation of foreign proper names
+> **Spis treści:** 1. General spelling principles · 2. Marking vowels · 3. Marking consonants · 4. Writing together, separately and with a hyphen · 5. Word division · 6. Abbreviations · 7. Acronyms · 8. Capital and lowercase letters · 9. Transcription and transliteration of non-Latin alphabets · 10. Orthographic adaptation of foreign proper names
 
 Source: Rada Języka Polskiego przy Prezydium PAN, *Zasady pisowni i interpunkcji polskiej*, Warszawa 2024,
 in force from 1 January 2026. Chapter numbering as in the original. The rules are the Polish norm and stay in Polish;

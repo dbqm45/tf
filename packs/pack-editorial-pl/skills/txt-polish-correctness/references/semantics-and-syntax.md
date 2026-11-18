@@ -1,6 +1,6 @@
 # Part III. Semantics, vocabulary and syntax — linguistic correctness
 
-> **Contents:** 21. The linguistic norm and register · 22. A typology of linguistic errors — a map to the rest of the skill · 23. Lexical-semantic, word-formation and… errors · 24. Syntax — syntactic relations, word order, reference · 25. Semantic relations and terminology consistency
+> **Spis treści:** 21. The linguistic norm and register · 22. A typology of linguistic errors — a map to the rest of… · 23. Lexical-semantic, word-formation and phraseological… · 24. Syntax — syntactic relations, word order, reference · 25. Semantic relations and terminology consistency
 
 <!-- polish-lint: ignore-file (the file contains deliberate error examples) -->
 

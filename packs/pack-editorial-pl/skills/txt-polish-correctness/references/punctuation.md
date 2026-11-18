@@ -1,6 +1,6 @@
 # Part II. Punctuation rules
 
-> **Contents:** 11. Full stop · 12. Comma · 13. Semicolon · 14. Question mark · 15. Exclamation mark · 16. Ellipsis · 17. Colon · 18. Dash · 19. Parentheses · 20. Quotation marks
+> **Spis treści:** 11. Full stop (*kropka*) · 12. Comma (*przecinek*) · 13. Semicolon (*średnik*) · 14. Question mark (*znak zapytania, pytajnik*) · 15. Exclamation mark (*wykrzyknik*) · 16. Ellipsis (*wielokropek*) · 17. Colon (*dwukropek*) · 18. Dash (*myślnik, pauza*) · 19. Parentheses (*nawias*) · 20. Quotation marks (*cudzysłów*)
 
 <!-- polish-lint: ignore-file (the file contains deliberate error examples) -->
 
