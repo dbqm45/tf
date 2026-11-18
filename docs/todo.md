@@ -809,6 +809,9 @@ treści (angielska), bez równoległej polskiej.
       `phase_run.py` (`## Gate questions`), `run_report.py` (kolumny `Flag`, `Value`). Sprawdzone w kodzie
       ci_for_sdlc (`connectors/repo.ts` przyjmuje angielskie kolumny i `Success metrics`) i w kontrakcie pdi
       (`conventions.design.columns.en`). Kryteria 5 scenariuszy eval przyjmują też angielskie nazwy formatów.
+      Podpowiedzi bez zmian (901/918 · 31/43), `--hints` czysto (all, mode-pdi). Haiku przed/po (5 scenariuszy, te same
+      kryteria): 3/5 → 3/5, 1,59 USD; te same 2 porażki na main i po zmianie (`faza-uruchomiona-przez-pdi`: Haiku
+      proponuje `decision add`; `faza-design-tabela-ramek`: wybiera ux-feature-design) — do przejrzenia osobno.
       Zostaje: szablony workflow `sdlc-phase.yml`, `change-check.yml`, `metric-watch.yml` (komentarze i nazwy kroków;
       P-8 i pdi czytają nazwę kroku N3 i sekcję „Przewodnik dokończenia”) — osobna partia 4c-y.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
