@@ -8,27 +8,27 @@ created: 2026-09-27
 updated: 2026-09-27
 inputs: [docs/project/03-requirements/requirements.md, docs/project/04-architecture/stack-decision.md]
 ---
-# 0004. Integracja z M365: Microsoft Graph, uprawnienia aplikacyjne, outbox, synchronizacja w jedną stronę
+# 0004. M365 integration: Microsoft Graph, application permissions, outbox, one-way synchronisation
 
-## Kontekst
-H1 wymaga wpisu rezerwacji sali w kalendarzu M365. Spójność rezerwacji (ADR-0002) nie może zależeć od dostępności
-zewnętrznego API. Nie wiemy jeszcze, czy sale są skrzynkami zasobów (room mailbox) w Exchange i czy ludzie rezerwują je
-bezpośrednio w Outlooku — wtedy powstają dwa źródła prawdy (otwarte pytanie do IT).
+## Context
+H1 requires an entry of the room booking in the M365 calendar. Booking consistency (ADR-0002) must not depend on the availability
+of an external API. We do not know yet whether the rooms are resource mailboxes (room mailbox) in Exchange and whether people book them
+directly in Outlook — then two sources of truth arise (an open question for IT).
 
-## Decyzja
-**[propozycja, warunkowa — zależy od odpowiedzi IT]**
-- Źródłem prawdy o dostępności jest aplikacja. Synchronizacja **w jedną stronę**: aplikacja → kalendarz M365 (utworzenie, zmiana, anulowanie wydarzenia).
-- Rezerwacja i zdarzenie domenowe zapisywane w jednej transakcji (Spring Modulith Event Publication Registry, JDBC = outbox); moduł `calendarsync` wysyła do Graph asynchronicznie z ponowieniami. Awaria Graph nie cofa rezerwacji; UI pokazuje stan synchronizacji.
-- Uprawnienie aplikacyjne `Calendars.ReadWrite` przyznane przez **Exchange Online RBAC for Applications** z zakresem ograniczonym do grupy pracowników i skrzynek sal (bez uprawnienia w całym tenancie w Entra). Uwierzytelnianie aplikacji do Graph przez Managed Identity lub certyfikat w Key Vault.
-- Jeśli sale są skrzynkami zasobów: bezpośrednie rezerwacje w Exchange muszą zostać zablokowane (polityka rezerwacji skrzynki) albo decyzja o źródle prawdy wraca do użytkownika.
+## Decision
+**[proposal, conditional — depends on IT's answer]**
+- The source of truth about availability is the application. Synchronisation **one way**: application → M365 calendar (creating, changing, cancelling an event).
+- The booking and the domain event are saved in one transaction (Spring Modulith Event Publication Registry, JDBC = outbox); the `calendarsync` module sends to Graph asynchronously with retries. A Graph failure does not roll back the booking; the UI shows the synchronisation state.
+- The application permission `Calendars.ReadWrite` granted through **Exchange Online RBAC for Applications** with the scope limited to the group of employees and the room mailboxes (no tenant-wide permission in Entra). The application authenticates to Graph with a Managed Identity or a certificate in Key Vault.
+- If the rooms are resource mailboxes: direct bookings in Exchange must be blocked (the mailbox booking policy) or the decision about the source of truth goes back to the user.
 
-## Rozważane opcje
-- Graph, uprawnienia aplikacyjne + outbox (wybrana) — zalety: rezerwacja niezależna od Graph, ponowienia, działa też dla zadań w tle (no-show release anuluje wydarzenie); wady: wymaga zgody administratora M365 i konfiguracji RBAC for Applications.
-- Graph delegowany (On-Behalf-Of) synchronicznie w żądaniu — zalety: działa w imieniu użytkownika, węższe uprawnienia; wady: rezerwacja zależy od Graph w szczycie 9:00, zadania w tle (no-show) nie mają tokenu użytkownika.
-- Zaproszenie iCalendar (.ics) mailem — zalety: brak uprawnień do kalendarzy; wady: użytkownik musi zaakceptować, brak automatycznego anulowania przy no-show, słabsze UX. Opcja zapasowa, jeśli IT nie udzieli zgody.
-- Exchange jako źródło prawdy dla sal — odrzucone wstępnie: gwarancja „0 podwójnych” wyszłaby poza naszą bazę i poza scenariusz (H,H).
+## Options considered
+- Graph, application permissions + outbox (chosen) — pros: the booking is independent of Graph, retries, it also works for background jobs (no-show release cancels the event); cons: needs the M365 administrator's consent and the RBAC for Applications configuration.
+- Delegated Graph (On-Behalf-Of) synchronously in the request — pros: works on behalf of the user, narrower permissions; cons: the booking depends on Graph at the 9:00 peak, background jobs (no-show) have no user token.
+- An iCalendar (.ics) invitation by email — pros: no calendar permissions; cons: the user must accept it, no automatic cancellation on a no-show, weaker UX. The fallback option if IT does not give consent.
+- Exchange as the source of truth for rooms — rejected at first: the "0 double bookings" guarantee would move outside our database and outside the (H,H) scenario.
 
-## Konsekwencje
-- Spójność ostateczna między aplikacją a Outlookiem (sekundy–minuty) — akceptowalne, bo o dostępności decyduje aplikacja.
-- Potrzebne: rejestracja aplikacji w Entra, zgoda administratora, zakres RBAC w Exchange (spike S3), test na tenancie deweloperskim (S2).
-- Pierwsze cięcie pionowe (H6 + H1) może powstać bez synchronizacji — `calendarsync` dołączamy po S2/S3.
+## Consequences
+- Eventual consistency between the application and Outlook (seconds–minutes) — acceptable, because the application decides about availability.
+- Needed: an application registration in Entra, the administrator's consent, the RBAC scope in Exchange (spike S3), a test on a developer tenant (S2).
+- The first vertical slice (H6 + H1) can be built without synchronisation — we add `calendarsync` after S2/S3.

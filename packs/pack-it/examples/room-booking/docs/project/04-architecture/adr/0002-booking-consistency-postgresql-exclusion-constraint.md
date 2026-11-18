@@ -8,38 +8,38 @@ created: 2026-09-27
 updated: 2026-09-27
 inputs: [docs/project/03-requirements/requirements.md, docs/project/04-architecture/stack-decision.md]
 ---
-# 0002. Spójność rezerwacji: PostgreSQL + exclusion constraint na (zasób, przedział)
+# 0002. Booking consistency: PostgreSQL + an exclusion constraint on (resource, slot)
 
-## Kontekst
-Scenariusz (H,H): 50 osób jednocześnie rezerwuje tę samą salę o 9:00 → dokładnie 1 sukces, reszta czytelna odmowa,
-0 podwójnych rezerwacji. Sale rezerwuje się na dowolny przedział (H1), biurka na dzień (H2), facility blokuje zasób do
-serwisu (H3), system zwalnia rezerwacje no-show (H4). Każdy z tych przypadków zajmuje zasób w czasie (archetyp Availability).
+## Context
+Scenario (H,H): 50 people book the same room at the same time at 9:00 → exactly 1 success, the rest a clear refusal,
+0 double bookings. Rooms are booked for any slot (H1), desks for a day (H2), facility blocks a resource for
+maintenance (H3), the system releases no-show bookings (H4). Each of these cases occupies a resource in time (the Availability archetype).
 
-## Decyzja
-Azure Database for PostgreSQL Flexible Server 18. Jedna tabela alokacji (rezerwacje **i** blokady serwisowe) z kolumną
-`period tstzrange` (granice `[)`, więc sąsiednie przedziały się nie kolidują) i ograniczeniem:
+## Decision
+Azure Database for PostgreSQL Flexible Server 18. One allocation table (bookings **and** maintenance blocks) with the column
+`period tstzrange` (bounds `[)`, so adjacent slots do not collide) and the constraint:
 
 ```sql
-CREATE EXTENSION IF NOT EXISTS btree_gist;  -- wcześniej dodać do parametru azure.extensions
+CREATE EXTENSION IF NOT EXISTS btree_gist;  -- add it to the azure.extensions parameter first
 ALTER TABLE allocation ADD CONSTRAINT allocation_no_overlap
   EXCLUDE USING gist (resource_id WITH =, period WITH &&)
   WHERE (status IN ('BOOKED', 'CHECKED_IN', 'BLOCKED'));
 ```
 
-Aplikacja robi wstępne sprawdzenie dostępności (dla ładnego komunikatu), ale **gwarancją jest ograniczenie w bazie**:
-błąd SQLSTATE `23P01` mapujemy na wynik operacji „odrzucono: zasób zajęty” (HTTP 409, kod `RESOURCE_UNAVAILABLE`).
-Zwolnienie (anulowanie, no-show) = zmiana statusu poza predykat `WHERE`, więc przedział od razu wraca do puli.
-No-show: zadanie co minutę wykonuje jeden idempotentny `UPDATE … SET status = 'RELEASED' … RETURNING id` — bezpieczny także przy kilku instancjach.
+The application does a preliminary availability check (for a nice message), but **the guarantee is the constraint in the database**:
+the SQLSTATE `23P01` error is mapped to the operation result "rejected: resource taken" (HTTP 409, code `RESOURCE_UNAVAILABLE`).
+A release (cancellation, no-show) = a status change outside the `WHERE` predicate, so the slot returns to the pool at once.
+No-show: a job runs every minute one idempotent `UPDATE … SET status = 'RELEASED' … RETURNING id` — safe also with several instances.
 
-## Rozważane opcje
-- Exclusion constraint (wybrana) — zalety: gwarancja niezależna od ścieżki kodu (także przyszłe importy, zadania, nowe typy zasobów), dowolne przedziały, blokady serwisowe w tym samym mechanizmie; wady: specyficzne dla PostgreSQL, wymaga `btree_gist`, JPA nie wyraża typu zakresu wprost (mapowanie przez natywny typ / Hibernate custom type — spike S1).
-- `SELECT … FOR UPDATE` na wierszu zasobu + sprawdzenie nakładania + insert — zalety: przenośne, proste; wady: poprawność zależy od tego, czy **każda** ścieżka zapisu pobierze blokadę; serializuje wszystkie rezerwacje zasobu. Opcja zapasowa, jeśli S1 wypadnie źle.
-- Optimistic locking (`@Version` na zasobie/dniu) — wady: przy 50 równoczesnych próbach 49 konfliktów i ponowień, więcej kodu obsługi.
-- Unikalny indeks na (zasób, slot) przy stałej siatce slotów (np. 15 min) — zalety: najprostszy mechanizm bazy; wady: wiele wierszy na rezerwację, sztywna granulacja, blokady serwisowe wielodniowe = setki wierszy.
-- `SERIALIZABLE` dla transakcji rezerwacji — poprawne, ale błędy serializacji i ponowienia przy szczycie; brak przewagi nad ograniczeniem.
+## Options considered
+- Exclusion constraint (chosen) — pros: a guarantee independent of the code path (also future imports, jobs, new resource types), any slots, maintenance blocks in the same mechanism; cons: specific to PostgreSQL, needs `btree_gist`, JPA does not express the range type directly (mapping through a native type / a Hibernate custom type — spike S1).
+- `SELECT … FOR UPDATE` on the resource row + an overlap check + insert — pros: portable, simple; cons: correctness depends on **every** write path taking the lock; it serialises all bookings of a resource. The fallback option if S1 turns out badly.
+- Optimistic locking (`@Version` on the resource/day) — cons: with 50 simultaneous attempts 49 conflicts and retries, more handling code.
+- A unique index on (resource, slot) with a fixed slot grid (e.g. 15 min) — pros: the simplest database mechanism; cons: many rows per booking, a rigid granularity, multi-day maintenance blocks = hundreds of rows.
+- `SERIALIZABLE` for the booking transaction — correct, but serialisation errors and retries at the peak; no advantage over the constraint.
 
-## Konsekwencje
-- Punkt wrażliwości spójności leży w schemacie bazy — zmiany migracji `allocation` wymagają przeglądu.
-- Fitness function w CI: test Testcontainers (PostgreSQL 18) z 50 równoległymi żądaniami → dokładnie 1 sukces.
-- Uzależnienie od PostgreSQL (akceptowane; Azure Flexible Server jest usługą zarządzaną).
-- Biurko na dzień = przedział [00:00, 24:00) w strefie biura — potrzebna jawna decyzja o strefie czasowej (przechowujemy `timestamptz`, UTC).
+## Consequences
+- The consistency sensitivity point lies in the database schema — changes to the `allocation` migrations need a review.
+- Fitness function in CI: a Testcontainers test (PostgreSQL 18) with 50 parallel requests → exactly 1 success.
+- Lock-in to PostgreSQL (accepted; Azure Flexible Server is a managed service).
+- A desk for a day = the slot [00:00, 24:00) in the office's time zone — an explicit decision about the time zone is needed (we store `timestamptz`, UTC).

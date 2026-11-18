@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Moduł `tech-debt` tf analyze, piętro 0 (bez modelu i sieci): widoczne ślady długu technicznego (eng-tech-debt-audit).
+The `tech-debt` module of tf analyze, tier 0 (no model and no network): visible traces of technical debt (eng-tech-debt-audit).
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines on stdout (contract: .tf/factory/analyze.py)
 
-Reguły:
-- `marker-without-ticket` — TODO/FIXME/HACK/XXX w komentarzu bez odwołania do zgłoszenia (`#123`, `ABC-123`, URL);
-  w repozytorium git wiek linii z `git blame` trafia do dowodu, a znacznik starszy niż 180 dni ma wagę średnią;
-- `skipped-test` — pominięty test (`it/test/describe.skip`, `xit`, `xdescribe`, `@pytest.mark.skip`, `@Disabled`,
-  `@Ignore`) bez powodu: bez argumentu z powodem, bez zgłoszenia w linii i bez komentarza w linii wyżej; liczy się
-  tylko początek linii (napis w kodzie testu to nie pominięcie);
-- `suppressed-check` — `@ts-ignore`, `eslint-disable…` bez ` -- powód`, gołe `# noqa` i `# type: ignore` bez kodu;
-- `large-file` — plik kodu powyżej 1000 linii (bez wygenerowanych: „generated”, „DO NOT EDIT” w nagłówku).
-Martwy kod (wymaga grafu wywołań) i przestarzałe zależności (wymagają sieci) to kolejne piętro. Znalezienie =
-„sprawdź i zdecyduj: naprawić, opisać zgłoszeniem albo usunąć”. Dokumentacja i fixtures są pomijane. Tylko
-biblioteka standardowa.
+Rules:
+- `marker-without-ticket` — TODO/FIXME/HACK/XXX in a comment without a reference to a ticket (`#123`, `ABC-123`, URL);
+  in a git repository the line's age from `git blame` goes into the evidence, and a marker older than 180 days has medium severity;
+- `skipped-test` — a skipped test (`it/test/describe.skip`, `xit`, `xdescribe`, `@pytest.mark.skip`, `@Disabled`,
+  `@Ignore`) without a reason: without an argument with a reason, without a ticket on the line and without a comment on the line above; only
+  the start of the line counts (a string in the test code is not a skip);
+- `suppressed-check` — `@ts-ignore`, `eslint-disable…` without ` -- reason`, bare `# noqa` and `# type: ignore` without a code;
+- `large-file` — a code file over 1000 lines (except generated ones: "generated", "DO NOT EDIT" in the header).
+Dead code (needs a call graph) and outdated dependencies (need the network) are the next tier. A finding =
+"check it and decide: fix it, describe it in a ticket or remove it". Documentation and fixtures are skipped. Standard
+library only.
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ import sys
 import time
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) has no "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -53,7 +53,7 @@ GENERATED = re.compile(r"DO NOT EDIT|@generated|\bcode generated\b|\bauto-?gener
 
 
 def comment_part(line: str, ext: str) -> str:
-    """Treść komentarza w linii (po usunięciu napisów), albo pusty napis."""
+    """The content of the comment on the line (after removing strings), or an empty string."""
     code = STRING.sub('""', line)
     if ext in HASH_COMMENT:
         i = code.find("#")
@@ -77,7 +77,7 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
 
 
 def blame_ages(root: Path, rel: str) -> dict[int, int]:
-    """Wiek linii w dniach z `git blame` (pusty słownik poza repozytorium git)."""
+    """The line's age in days from `git blame` (an empty dict outside a git repository)."""
     r = subprocess.run(["git", "blame", "--line-porcelain", "--", rel], cwd=root, capture_output=True, text=True,
                        encoding="utf-8", errors="replace")
     if r.returncode != 0:
@@ -93,7 +93,7 @@ def blame_ages(root: Path, rel: str) -> dict[int, int]:
 
 
 def in_multiline_string(lines: list[str], ext: str) -> set[int]:
-    """Indeksy linii wewnątrz wieloliniowych napisów (Python `\"\"\"`/`'''`, szablony JS w odwrotnych apostrofach)."""
+    """Indexes of lines inside multi-line strings (Python `\"\"\"`/`'''`, JS template literals in backticks)."""
     inside, out, delim = False, set(), None
     for i, line in enumerate(lines):
         if inside:

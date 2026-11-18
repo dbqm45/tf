@@ -8,7 +8,7 @@ created: 2026-09-27
 updated: 2026-09-27
 inputs: []
 ---
-# Rejestr decyzji
+# Decision register
 
-| ID | Data | Decyzja | Uzasadnienie (1 zdanie) | Status | Autor | Szczegóły |
+| ID | Date | Decision | Rationale (1 sentence) | Status | Author | Details |
 |---|---|---|---|---|---|---|

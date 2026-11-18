@@ -910,6 +910,16 @@ treści (angielska), bez równoległej polskiej.
     - [ ] kontrola podpowiedzi przed PR w obu obszarach (`all` i sam `pack-it`) — IDF zależy od zestawu skilli.
   - [x] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
+  - [x] 4e (2026-11-18): reszta pack-it po angielsku — 21 person, 22 role, `pack.yaml` (wymiary, prompty agentów
+    wspólnych, konsultanci; `content_language: en`), przykłady (shop-pricing, room-booking — README i eksport
+    odtworzone przez `project_record.py index/report`), 7 analizatorów (opisy, docstringi), workflow code-audit.
+    Nazwy sekcji zgodne z przetłumaczonymi skillami („Request / Mechanism / Basis”, „The facilitator's self-check”,
+    „Decision gates”, „What was not checked”). Zostają po polsku, bo czyta je kod lub test: etykiety agentów workflow
+    (`inwentarz`, `przegląd:`, `raport`, `weryfikacja:`) i prompt „Spróbuj obalić…” (test_workflows W-7…W-18),
+    wzorce wykrywania analizatorów (`zł`, `hasło`, `dane osobowe`…), wejścia fixture'ów. Testy: shop-pricing vitest
+    12 + 4 oczekiwane porażki, bramka analizatorów 7/7 (wynik bajt w bajt jak przed), test_workflows 20/20;
+    `--hints` czysto w `all` i `pack-it`, 901/918 · 31/43.
+    - [ ] etykiety i prompt weryfikacji w `workflows/code-audit.js` po angielsku razem z testami W-7…W-18.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
     M2 hooki, M3–M4 silnik (`core/factory`), M5 skrypty pozostałych skilli rdzenia, M6 pack-it, M7 mode-pdi, M8 org,
     tools, editorial, ux. Docstringi i komentarze w kodzie to dokumentacja opiekunów — poza tym etapem.

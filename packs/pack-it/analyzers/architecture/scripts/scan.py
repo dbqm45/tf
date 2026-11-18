@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Moduł `architecture` tf analyze, piętro 0 (bez modelu): graf importów z `code_graph.py` (skill eng-codebase-mapping)
-zamieniony na ustalenia — cykle importów wykonywanych przy imporcie, zależności w obie strony między grupami modułów
-(„pod prąd”) i huby (plik importowany przez co najmniej HUB_MIN plików produkcyjnych).
+The `architecture` module of tf analyze, tier 0 (no model): the import graph from `code_graph.py` (skill eng-codebase-mapping)
+turned into findings — cycles of imports executed at import time, two-way dependencies between module groups
+("upstream") and hubs (a file imported by at least HUB_MIN production files).
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines on stdout (contract: .tf/factory/analyze.py)
 
-Graf jest całościowy, więc `--files` jest ignorowane (`incremental: false` w analyzer.yaml). Graf pomija DI,
-rejestry, kolejki i HTTP między usługami (ograniczenie code_graph.py) — brak ustaleń nie dowodzi braku sprzężeń.
+The graph is whole-repository, so `--files` is ignored (`incremental: false` in analyzer.yaml). The graph leaves out DI,
+registries, queues and HTTP between services (a limitation of code_graph.py) — no findings does not prove there is no coupling.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) has no "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):

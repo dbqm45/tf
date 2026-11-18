@@ -1,7 +1,7 @@
 name: architecture
 prefix: ARC
-title: Architektura
-description: cykle importów, zależności w obie strony między grupami modułów, huby (graf importów bez modelu)
+title: Architecture
+description: import cycles, two-way dependencies between module groups, hubs (an import graph without a model)
 version: 1.0.0
 review: "2027-05-08"
 skills: [eng-codebase-mapping, ddd-connascence-analysis, arch-quality-attributes]
