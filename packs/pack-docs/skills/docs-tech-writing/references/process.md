@@ -1,6 +1,6 @@
 # The process of writing technical documentation
 
-> **Contents:** Stages · Gathering information · The documentation project (plan) — what it should contain · Verification and review · Proofreading — a pass separate from the review… · Taking over documentation written by someone else · Summary (post-mortem) after the work ends
+> **Contents:** Stages · Gathering information · The documentation project (plan) — what it should contain · Verification and review · Proofreading — a pass separate from the content review · Taking over documentation written by someone else · Summary (post-mortem) after the work ends
 
 An expansion of the docs-tech-writing hub. In projects with a `docs/project/` record, the plan, statuses and handoffs are run by
 core-project-record — here only the process of writing the document itself.

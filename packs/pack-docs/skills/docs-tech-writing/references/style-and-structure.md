@@ -1,6 +1,6 @@
 # Style and structure of technical documentation
 
-> **Contents:** Traits of good documentation · Who you write for — choosing the style · What technical documentation must contain… · Examples of good tables of contents (navigation patterns) · Describing components, methods, commands · Procedures in the spirit of ASD-STE100 · Consistency — more important than elegance · Formatting — one set of styles · Tools (documentation generators) · Why it pays off
+> **Contents:** Traits of good documentation · Who you write for — choosing the style · What technical documentation of an application/system must… · Examples of good tables of contents (navigation patterns) · Describing components, methods, commands · Procedures in the spirit of ASD-STE100 · Consistency — more important than elegance · Formatting — one set of styles · Tools (documentation generators) · Why it pays off
 
 An expansion of the docs-tech-writing hub. The "heavy" elements (copyright, list of figures, index, page numbering) apply to
 larger documents (a manual, system documentation), not to a README.
