@@ -31,7 +31,7 @@ the question; every next one is more expensive.
 4. **Exploration (EDA)**: distributions (a histogram, density), measures of location and spread, missing values, relationships between
    variables, a split by segments and time. You look for surprises and errors in the data before you start drawing inferences.
 5. **Analysis**: aggregations and comparisons of segments, correlations, regression, statistical tests
-   (`references/statistics.md`), predictive models only when needed (`references/machine-learning.md`:
+   with an effect size and, for many comparisons, a correction (Holm, Benjamini-Hochberg) (`references/statistics.md`), predictive models only when needed (`references/machine-learning.md`:
    also MLOps and AI engineering), forecasts and causality from observational data
    (`references/time-series-and-econometrics.md`), experiment sensitivity and ratio metrics
    (`references/advanced-experiments.md`).

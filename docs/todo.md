@@ -858,6 +858,10 @@ treści (angielska), bez równoległej polskiej.
     Przetłumaczone przykładowe teksty w kodzie (Playwright, Vitest, pytest, Semgrep) — żaden scenariusz ani
     projekt przykładowy od nich nie zależy. `proc-agile` stracił podpowiedź w `ciecie-historyjek` (900/918) —
     dodane słowa kluczowe PL+EN (pociąć historyjkę, cięcie pionowe): z powrotem 901/918 · 31/43.
+    Haiku po zmianie: 25/27; `testy-z-kodu` 2/2 w powtórce (szum). `porownanie-grup-skosne` (data-analysis):
+    przed 4/5, po 2/6 — model odpowiada z samego SKILL.md (bez referencji) i rzadziej wspomina korektę wielu
+    porównań; dodany krótki wskaźnik w kroku 5 (wielkość efektu, korekta Holm/Benjamini-Hochberg — z
+    `references/statistics.md`): 3/3. Koszt Haiku rundy: ok. 6 USD.
     Zostaje do dokończenia:
     - [ ] `qa-test-design/templates/test-strategy.md` jest po polsku; `references/project-test-strategy.md`
       celowo zachowuje polskie wartości stanów (zakończona, w realizacji…) — tłumaczyć razem.
