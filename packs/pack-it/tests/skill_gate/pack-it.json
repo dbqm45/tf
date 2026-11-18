@@ -92,8 +92,8 @@
   "offline": "2026-11-18"
  },
  "be-auth-security": {
-  "fingerprint": "6d080bf3d1faa005",
-  "offline": "2026-11-16"
+  "fingerprint": "899700fc57249a84",
+  "offline": "2026-11-18"
  },
  "be-billing-subscriptions": {
   "fingerprint": "48e3e9228ed29eda",
@@ -104,12 +104,12 @@
   "offline": "2026-11-18"
  },
  "be-database": {
-  "fingerprint": "9e76c6a2f27e36fe",
-  "offline": "2026-11-16"
+  "fingerprint": "5da9e6af34865876",
+  "offline": "2026-11-18"
  },
  "be-messaging-outbox": {
-  "fingerprint": "f344f6084c6086bd",
-  "offline": "2026-11-16"
+  "fingerprint": "ea513ce323ada380",
+  "offline": "2026-11-18"
  },
  "data-analysis": {
   "fingerprint": "782476e5a899e80f",

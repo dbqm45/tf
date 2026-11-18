@@ -1,91 +1,92 @@
 ---
 name: be-messaging-outbox
-description: Użyj przy komunikacji asynchronicznej — komenda czy zdarzenie, outbox/inbox, kolejność, idempotencja.
+description: Use for asynchronous communication — command or event, outbox/inbox, ordering, idempotency.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy zamianie synchronicznego wywołania między modułami na asynchroniczną wiadomość i przy projektowaniu outbox/inbox — czy wolno rozproszyć, komenda czy zdarzenie, atomowość, relay, kolejność, idempotencja odbiorcy, testy producenta, kontraktu i konsumenta. Nie do wyboru relacji kontekstów (ddd-context-mapping) ani schematu bazy ogólnie (be-database)."
+  catalog: "Use when turning a synchronous call between modules into an asynchronous message and when designing an outbox/inbox — whether it may be distributed, command or event, atomicity, the relay, ordering, consumer idempotency, producer, contract and consumer tests. Not for choosing context relationships (ddd-context-mapping) or the database schema in general (be-database)."
+  keywords: "outbox, inbox, komunikacja asynchroniczna, kolejka, broker, Kafka, RabbitMQ, zdarzenie czy komenda, idempotencja konsumenta, deduplikacja, wiadomość przyszła dwa razy, utrata zdarzeń, kolejność wiadomości, at-least-once, co najmniej raz, odtworzenie zdarzeń, replay, reset offsetu, odbudowa modelu odczytu, skutki uboczne przy odtwarzaniu, asynchronous communication, queue, event or command, consumer idempotency, deduplication, the message came twice, lost events, message ordering, event replay, offset reset, rebuilding a read model, side effects on replay, transactional outbox"
 ---
 
-# Asynchroniczna komunikacja: outbox, inbox, gwarancje
+# Asynchronous communication: outbox, inbox, guarantees
 
-## 1. Czy to wywołanie w ogóle można rozproszyć?
-Dwa kryteria wykluczające — sprawdź je PRZED projektem:
-- **Wywołujący korzysta z wyniku** (rozgałęzia się na nim, zwraca go, używa w tej samej jednostce pracy) → konwersja zmienia
-  poprawność. **Stop** — zostaje synchronicznie albo trzeba przeprojektować przepływ.
-- **Ktoś czyta efekt zaraz po wywołaniu** (read-after-write, np. ekran po zapisie) → decyzja biznesowa: zaakceptować opóźnienie,
-  zostawić synchronicznie albo dać czytelnikowi własną projekcję.
-Asynchroniczność usuwa sprzężenie **czasowe**, nie **logiczne** — moduły nadal zależą od znaczenia wiadomości.
+## 1. Can this call be distributed at all?
+Two excluding criteria — check them BEFORE the design:
+- **The caller uses the result** (branches on it, returns it, uses it in the same unit of work) → the conversion changes
+  correctness. **Stop** — it stays synchronous or the flow must be redesigned.
+- **Someone reads the effect right after the call** (read-after-write, e.g. a screen after a save) → a business decision: accept the delay,
+  keep it synchronous or give the reader its own projection.
+Asynchrony removes **temporal** coupling, not **logical** coupling — the modules still depend on the meaning of the message.
 
-## 2. Komenda czy zdarzenie?
-- **Zdarzenie** — fakt w czasie przeszłym, 0..N odbiorców, reakcja to polityka odbiorcy; pasuje do granicy kontekstu.
-- **Komenda** — tryb rozkazujący, jeden adresat; zachowuje dotychczasowe sprzężenie, bliższa temu, co było.
-Dla przerabianego wywołania pokaż obie opcje z kosztami; zdarzenie, które już płynie, zostaje zdarzeniem.
-Nazwa oddaje intencję biznesową, nie mechanizm. Wskaż testy, które po zmianie przestaną działać (te sprawdzające efekt w drugim module).
+## 2. Command or event?
+- **An event** — a fact in the past tense, 0..N receivers, the reaction is the receiver's policy; it fits a context boundary.
+- **A command** — the imperative mood, one addressee; it keeps the existing coupling, closer to what was there.
+For a call being reworked show both options with their costs; an event that already flows stays an event.
+The name reflects the business intent, not the mechanism. Point out the tests that will stop working after the change (those checking the effect in the other module).
 
-## 3. Atomowość
-Dwa pytania: czy zmiana stanu producenta jest w transakcji? czy zapis do outboxa trafia **do tego samego zasobu w tej samej transakcji**?
-| Werdykt | Działanie |
+## 3. Atomicity
+Two questions: is the producer's state change in a transaction? does the outbox write go **to the same resource in the same transaction**?
+| Verdict | Action |
 |---|---|
-| atomowe | ok |
-| atomowe po poprawce | dodaj transakcję wokół zmiany stanu + zapisu wiadomości |
-| nieatomowe (różne zasoby) | outbox w magazynie producenta · CDC własnego stanu (listen-to-yourself) · udokumentowane best-effort |
-**Cicha utrata atomowości jest gorsza niż wywołanie synchroniczne.** Publikacja „po commicie” z pamięci (bez outboxa) gubi
-wiadomości przy awarii między commitem a wysłaniem — nazwij to ryzyko, jeśli je akceptujesz.
+| atomic | ok |
+| atomic after a fix | add a transaction around the state change + the message write |
+| non-atomic (different resources) | an outbox in the producer's store · CDC of your own state (listen-to-yourself) · documented best-effort |
+**A silent loss of atomicity is worse than a synchronous call.** Publishing "after the commit" from memory (without an outbox) loses
+messages on a failure between the commit and the send — name this risk, if you accept it.
 
-## 4. Outbox — anatomia i decyzje
-Transakcja producenta zapisuje stan + rekord outboxa → **relay** czyta oczekujące rekordy, wysyła do ujścia i oznacza jako wysłane →
-po drugiej stronie **cienki adapter** woła publiczne API odbiorcy.
-| Decyzja | Opcje (domyślna pogrubiona) |
+## 4. The outbox — anatomy and decisions
+The producer's transaction writes the state + an outbox record → the **relay** reads pending records, sends them to the sink and marks them as sent →
+on the other side a **thin adapter** calls the receiver's public API.
+| Decision | Options (the default in bold) |
 |---|---|
-| gotowe czy własne | **mechanizm frameworka/biblioteki**, jeśli jest · własna tabela + poller |
-| przechwycenie | **za istniejącym portem/szyną** (producent bez zmian) · nowy port wysyłający |
-| magazyn | zawsze zasób transakcyjny producenta |
-| rekord | id wiadomości, typ, ładunek (serializowany), status, czas utworzenia, ewentualnie klucz kolejności |
-| **id wiadomości** | nadawane **przy zapisie w transakcji** — nigdy przez relay (każda ponowiona próba dostałaby nowe id i deduplikacja przestaje działać) |
-| relay | **poller** (opóźnienie = interwał) · śledzenie logu/CDC · natywny strumień bazy |
-| ujście | szyna w procesie (szkielet) · broker — zmiana ujścia to jedyna zmiana potrzebna do rozdzielenia procesów |
-| serializer | jeden, ten sam w outboxie i w teście kontraktu |
-Sprzątanie wysłanych rekordów i metryka zaległości outboxa (ops-observability) należą do projektu.
+| ready or your own | **the framework's/library's mechanism**, if there is one · your own table + a poller |
+| interception | **behind the existing port/bus** (the producer unchanged) · a new sending port |
+| store | always the producer's transactional resource |
+| record | the message id, the type, the payload (serialized), the status, the creation time, possibly an ordering key |
+| **the message id** | assigned **at write time in the transaction** — never by the relay (every retried attempt would get a new id and deduplication stops working) |
+| relay | **a poller** (latency = the interval) · log tailing/CDC · the database's native stream |
+| sink | an in-process bus (a skeleton) · a broker — changing the sink is the only change needed to split the processes |
+| serializer | one, the same in the outbox and in the contract test |
+Cleaning up sent records and an outbox backlog metric (ops-observability) belong to the design.
 
-## 5. Kolejność i ponowienia
-- Kolejność **nie jest gwarantowana** (poller, ponowienia, wielu workerów). Gdy odbiorca jej wymaga: klucz kolejności i jedna
-  wiadomość na klucz „w locie” — kosztem przepustowości.
-- Dostarczenie **co najmniej raz** → odbiorca musi być idempotentny:
-  - rekord deduplikacji (inbox) zapisany **w tej samej jednostce pracy co efekt** — obsługa musi być synchroniczna w tej
-    transakcji; obsługa „po commicie” lub w osobnym wątku łamie gwarancję;
-  - deduplikacja przez **atomowe zajęcie** id (insert z pominięciem przy konflikcie, compare-and-set), nie „sprawdź, potem zapisz”.
-- **Utrata, duplikaty i odtworzenie to trzy osobne problemy:**
-  - utrata → trwałość po stronie producenta i brokera (w Kafce `acks=all`, `min.insync.replicas` > 1, producent
-    idempotentny — ten ostatni nie zastępuje deduplikacji u konsumenta);
-  - duplikaty → konsument idempotentny; rekord deduplikacji ma czas życia dobrany do okna ponownych dostarczeń, a nie
-    rośnie bez końca. Bez naturalnego id nadaje je producent przy utworzeniu albo liczysz skrót niezmiennych pól
-    (encja + wersja);
-  - **celowe odtworzenie historii** (reset offsetu, nowa grupa konsumentów, odbudowa modelu odczytu) → obsługa
-    deterministyczna (czas ze zdarzenia, nie bieżący; bez odczytu stanu innych usług) i skutki zewnętrzne (e-mail,
-    obciążenie karty) oddzielone od odbudowy stanu: flaga trybu odtwarzania albo osobna ścieżka skutków. Klucz
-    idempotencji przekazujesz też do dostawcy płatności.
-- Wiele instancji relaya może wysłać tę samą wiadomość dwa razy — poprawne dzięki idempotencji, ale marnotrawne:
-  `SKIP LOCKED`, compare-and-set statusu lub dzierżawa.
+## 5. Ordering and retries
+- Ordering **is not guaranteed** (a poller, retries, many workers). When the receiver requires it: an ordering key and one
+  message per key "in flight" — at the cost of throughput.
+- **At-least-once** delivery → the receiver must be idempotent:
+  - the deduplication record (an inbox) written **in the same unit of work as the effect** — the handling must be synchronous in that
+    transaction; handling "after the commit" or in a separate thread breaks the guarantee;
+  - deduplication through an **atomic claim** of the id (an insert skipping on conflict, compare-and-set), not "check, then write".
+- **Loss, duplicates and replay are three separate problems:**
+  - loss → durability on the producer's and the broker's side (in Kafka `acks=all`, `min.insync.replicas` > 1, an idempotent
+    producer — the last one does not replace deduplication at the consumer);
+  - duplicates → an idempotent consumer; the deduplication record has a lifetime matched to the redelivery window, and does not
+    grow forever. Without a natural id the producer assigns one at creation or you compute a hash of the immutable fields
+    (the entity + the version);
+  - **a deliberate replay of history** (an offset reset, a new consumer group, rebuilding a read model) → deterministic
+    handling (the time from the event, not the current one; no reading of other services' state) and external effects (an email,
+    charging a card) separated from rebuilding the state: a replay mode flag or a separate effects path. You also pass
+    the idempotency key on to the payment provider.
+- Many relay instances can send the same message twice — correct thanks to idempotency, but wasteful:
+  `SKIP LOCKED`, a compare-and-set of the status or a lease.
 
-## 6. Testy (kolejność TDD)
-1. **Producent:** „wiadomość opublikowana” — test kończy się na granicy transakcji; dubler publikatora jest tu właściwy,
-   bo emisja wiadomości JEST zachowaniem. Najpierw czerwony.
-2. **Kontrakt formatu:** migawka/approval serializacji albo kontrakt konsumencki / rejestr schematów; ten sam serializer co outbox,
-   stałe id i czasy w danych testowych; sprawdzaj kompatybilność wstecz (nowe pola opcjonalne).
-3. **Konsument:** test adaptera (z dublerem API odbiorcy) i integracyjny na prawdziwej infrastrukturze, **z przypadkiem idempotencji**:
-   to samo id dostarczone dwa razy → dokładnie jeden efekt.
+## 6. Tests (the TDD order)
+1. **Producer:** "the message is published" — the test ends at the transaction boundary; a publisher double is right here,
+   because emitting the message IS the behaviour. Red first.
+2. **Format contract:** a snapshot/approval of the serialization or a consumer contract / a schema registry; the same serializer as the outbox,
+   fixed ids and times in the test data; check backwards compatibility (new fields optional).
+3. **Consumer:** an adapter test (with a double of the receiver's API) and an integration test on real infrastructure, **with an idempotency case**:
+   the same id delivered twice → exactly one effect.
 
-## Raport zmiany (`docs/project/04-architecture/adr/…` lub raport kroku)
-klasyfikacja (kryteria 1–2) · komenda/zdarzenie z uzasadnieniem · werdykt atomowości · decyzje outboxa · gwarancje kolejności ·
-co pozostało sprzężone logicznie · wyniki trzech rodzajów testów.
+## The change report (`docs/project/04-architecture/adr/…` or the step report)
+the classification (criteria 1–2) · command/event with a justification · the atomicity verdict · the outbox decisions · the ordering guarantees ·
+what remained logically coupled · the results of the three kinds of tests.
 
-## Przykład
-**Sytuacja:** „Zamówienia wołają synchronicznie `fakturowanie.wystawFakture()`; gdy fakturowanie leży, nie da się zamówić.”
-**Wynik** (raport zmiany):
-- kryteria 1–2: wynik niepotrzebny, nikt nie czyta faktury zaraz po zamówieniu → można rozproszyć;
-- zdarzenie `ZamowienieZlozone` (przyjmie też magazyn), nie komenda; test „zamówienie tworzy fakturę” idzie do konsumenta;
-- atomowe: zamówienie + rekord outboxa w jednej transakcji, id wiadomości nadane przy zapisie; relay: poller co 1 s;
-- kolejność niepotrzebna; odbiorca: inbox `INSERT … ON CONFLICT DO NOTHING` w transakcji faktury;
-- test: to samo id dwa razy → dokładnie jedna faktura.
+## Example
+**Situation:** "Orders call `invoicing.issueInvoice()` synchronously; when invoicing is down, ordering is impossible."
+**Result** (the change report):
+- criteria 1–2: the result is not needed, nobody reads the invoice right after the order → it can be distributed;
+- the event `OrderPlaced` (the warehouse will also take it), not a command; the test "an order creates an invoice" goes to the consumer;
+- atomic: the order + the outbox record in one transaction, the message id assigned at write time; relay: a poller every 1 s;
+- ordering not needed; the receiver: an inbox `INSERT … ON CONFLICT DO NOTHING` in the invoice's transaction;
+- test: the same id twice → exactly one invoice.
 
-Więcej przykładów: `references/examples.md`.
+More examples: `references/examples.md`.

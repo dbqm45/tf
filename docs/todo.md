@@ -638,6 +638,11 @@ treści (angielska), bez równoległej polskiej.
   `Not for …`), `keywords` po polsku i angielsku (wyrażenia z pytań), bramka (`skill_gate.py`: krok 3 trafność, krok 5
   rozpoznaje język), pomiar `tools/hint_holdout.py` przed i po partii. Punkt odniesienia (all, 2026-11-17): strojenie
   902/918, holdout 29/43.
+  Zakres (decyzja właściciela, 2026-11-18: „Tłumaczymy wszystko”): całe repo, także `docs/`, komentarze w kodzie,
+  komunikaty testów, persony i role, na koniec polskie aliasy w czytnikach. Wyjątki dla skuteczności: polskie prompty
+  scenariuszy eval zostają, a obok dochodzą angielskie odpowiedniki (pokrycie obu języków); w pack-editorial-pl
+  opisy i procedury po angielsku, reguły polszczyzny i przykłady zdań po polsku (to ich przedmiot); `hint.pl.txt`
+  i polskie słowa kluczowe zostają z założenia.
   Skuteczność fabryki nie może spaść (właściciel, 2026-11-17). Każda partia przechodzi, zanim trafi do PR:
   1. `tools/translation_check.py <pliki>` — te same bloki kodu, `…`, liczby, odnośniki i struktura co przed
      tłumaczeniem (różnica = zgubiony albo dopisany fakt; zmiana treści to osobny commit, nie tłumaczenie);
@@ -839,6 +844,12 @@ treści (angielska), bez równoległej polskiej.
     (+ referencje) po angielsku; `hint.pl.txt`. Podpowiedzi: tuning 901/918, holdout 32/43 → 31/43 — ten sam
     przypadek `ddd-tactical-design`, który w 4d-arch-b zyskał (remis wrażliwy na IDF), `--hints` czysto (all, pack-it).
     Haiku przed/po (4 scenariusze): 4/4 → 4/4, 0,95 USD.
+  - [x] 4d-be-b (2026-11-18): pack-it — `be-auth-security`, `be-database`, `be-messaging-outbox` (+ referencje)
+    po angielsku; `hint.pl.txt`. Przykłady w Pythonie outbox/inbox przetłumaczone i uruchomione (`OrderPlaced`,
+    test duplikatu „ok”). `be-messaging-outbox` nie miał `keywords` — Haiku po zmianie raz nie uruchomił skilla
+    (`odtworzenie-historii-skutki`), dodane słowa kluczowe PL+EN (replay, reset offsetu, odbudowa modelu odczytu):
+    powtórka 2 scenariuszy × 2: 4/4. Podpowiedzi bez zmian (901/918 · 31/43), `--hints` czysto. Haiku przed/po
+    (4 scenariusze): 4/4 → 3/4 → po poprawce 4/4, 1,48 USD.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,

@@ -1,26 +1,26 @@
-# Modele autoryzacji — który wybrać
+# Authorization models — which one to choose
 
-| Model | Decyzja na podstawie | Dobry dla | Ograniczenia |
+| Model | The decision based on | Good for | Limitations |
 |---|---|---|---|
-| **RBAC** (role) | rola użytkownika → uprawnienia | większość aplikacji biznesowych, mało ról | eksplozja ról („kierownik oddziału Kraków”); nie wyraża „tylko swoje dokumenty” |
-| **ABAC** (atrybuty) | atrybuty użytkownika, zasobu, akcji i kontekstu (dział, region, poziom poufności, godzina) | reguły typu „lekarz widzi pacjentów swojego oddziału” | reguły trudne do przeglądu i testów bez narzędzia |
-| **ReBAC** (relacje) | graf relacji: właściciel, członek zespołu, udostępnione przez | współdzielenie dokumentów, organizacje i zespoły, hierarchie folderów | potrzebny magazyn relacji (np. w stylu Google Zanzibar: OpenFGA, SpiceDB) |
-| **PBAC** (polityki) | polityki zapisane jako kod poza aplikacją, oceniane przez silnik | wiele usług z jednymi zasadami, audyt | dodatkowy komponent (np. OPA/Rego, Cedar), opóźnienie decyzji |
-| **DAC** (uznaniowa) | właściciel zasobu decyduje, komu go udostępnia | udostępnianie plików między użytkownikami | trudno o centralną kontrolę i odebranie dostępu |
-| **MAC** (obowiązkowa) | etykiety poufności nadawane centralnie, użytkownik ich nie zmienia | systemy rządowe i wojskowe, dane ściśle niejawne | sztywna; rzadko w aplikacjach biznesowych |
+| **RBAC** (roles) | the user's role → permissions | most business applications, few roles | role explosion ("Kraków branch manager"); it does not express "only your own documents" |
+| **ABAC** (attributes) | attributes of the user, resource, action and context (department, region, confidentiality level, hour) | rules like "a doctor sees the patients of their own ward" | rules hard to review and test without a tool |
+| **ReBAC** (relations) | a relation graph: owner, team member, shared by | document sharing, organizations and teams, folder hierarchies | a relation store needed (e.g. in the Google Zanzibar style: OpenFGA, SpiceDB) |
+| **PBAC** (policies) | policies written as code outside the application, evaluated by an engine | many services with one set of rules, audit | an extra component (e.g. OPA/Rego, Cedar), decision latency |
+| **DAC** (discretionary) | the resource owner decides whom to share it with | file sharing between users | hard to get central control and to revoke access |
+| **MAC** (mandatory) | confidentiality labels assigned centrally, the user does not change them | government and military systems, strictly classified data | rigid; rare in business applications |
 
-## Zasady niezależne od modelu
-- Zacznij od RBAC z kontrolą własności zasobu w kodzie; dodaj atrybuty lub relacje, gdy pojawi się konkretny przypadek.
-- Decyzja w jednym module lub usłudze (punkt decyzyjny), wywoływana przy **każdym** dostępie do obiektu — BOLA
-  i IDOR to najczęstsze błędy API (be-api-design, `lifecycle-and-security.md`).
-- **Zakresy OAuth** (scopes) ograniczają, co *aplikacja* może robić w imieniu użytkownika; nie zastępują sprawdzenia,
-  co *użytkownik* może zrobić z konkretnym obiektem.
-- Testy autoryzacji jako macierz: role lub relacje × akcje × „swój / cudzy obiekt”; zmiana uprawnień = PR z testami.
-- Decyzje odmowy logowane (sygnał ataku), bez ujawniania w odpowiedzi, czy obiekt istnieje (404 zamiast 403, gdy to
-  ważne).
+## Rules independent of the model
+- Start with RBAC with a resource ownership check in the code; add attributes or relations when a specific case appears.
+- The decision in one module or service (a decision point), called on **every** access to an object — BOLA
+  and IDOR are the most common API bugs (be-api-design, `lifecycle-and-security.md`).
+- **OAuth scopes** limit what *the application* can do on the user's behalf; they do not replace checking
+  what *the user* can do with a specific object.
+- Authorization tests as a matrix: roles or relations × actions × "own / someone else's object"; a permission change = a PR with tests.
+- Denial decisions logged (an attack signal), without revealing in the response whether the object exists (404 instead of 403, when it
+  matters).
 
-## Źródła
+## Sources
 - [roadmap.sh — API Design](https://roadmap.sh/api-design) (RBAC, ABAC, ReBAC, PBAC, DAC, MAC, scopes)
 - [AWS IAM: ABAC](https://docs.aws.amazon.com/IAM/latest/UserGuide/introduction_attribute-based-access-control.html),
   [Auth0: permissions, privileges and scopes](https://auth0.com/blog/permissions-privileges-and-scopes/)
-Opisane własnymi słowami.
+Described in our own words.
