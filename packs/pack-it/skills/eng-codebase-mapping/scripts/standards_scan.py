@@ -54,11 +54,11 @@ TEST_FW = {"Python": [("pytest", r"^\s*import pytest|^\s*from pytest"), ("unitte
                     ("testng", r"import org\.testng")],
            "C#": [("xunit", r"using Xunit;"), ("nunit", r"using NUnit\.Framework;"), ("mstest", r"using Microsoft\.VisualStudio\.TestTools")],
            "Go": [("testing", r"\"testing\""), ("testify", r"github\.com/stretchr/testify")]}
-BROAD = {"Python": [("except bez typu", r"^\s*except\s*:"), ("except Exception", r"^\s*except\s+(Base)?Exception\b")],
+BROAD = {"Python": [("bare except", r"^\s*except\s*:"), ("except Exception", r"^\s*except\s+(Base)?Exception\b")],
          "Java": [("catch Exception/Throwable", r"catch\s*\(\s*(final\s+)?(Exception|Throwable|RuntimeException)\s+\w+\s*\)")],
          "C#": [("catch Exception", r"catch\s*(\(\s*Exception\b[^)]*\))?\s*\{")],
-         "TypeScript": [("pusty catch", r"catch\s*(\([^)]*\))?\s*\{\s*\}")], "JavaScript": [("pusty catch", r"catch\s*(\([^)]*\))?\s*\{\s*\}")],
-         "Go": [("zignorowany błąd (_ =)", r"^\s*_\s*(,\s*_\s*)?=\s*\w")]}
+         "TypeScript": [("empty catch", r"catch\s*(\([^)]*\))?\s*\{\s*\}")], "JavaScript": [("empty catch", r"catch\s*(\([^)]*\))?\s*\{\s*\}")],
+         "Go": [("ignored error (_ =)", r"^\s*_\s*(,\s*_\s*)?=\s*\w")]}
 LOGS = {"Python": [("logging", r"^\s*import logging|getLogger\("), ("structlog", r"import structlog"), ("print", r"^\s*print\(")],
         "TypeScript": [("console", r"\bconsole\.(log|warn|error|info)\("), ("pino", r"from ['\"]pino['\"]"), ("winston", r"from ['\"]winston['\"]")],
         "JavaScript": [("console", r"\bconsole\.(log|warn|error|info)\(")],
@@ -66,34 +66,34 @@ LOGS = {"Python": [("logging", r"^\s*import logging|getLogger\("), ("structlog",
         "C#": [("ILogger", r"\bILogger(<\w+>)?\b"), ("Console", r"\bConsole\.Write(Line)?\(")],
         "Go": [("log/slog", r"\"log/slog\""), ("log", r"\"log\""), ("zap", r"go\.uber\.org/zap")]}
 TEST_IDIOMS = {  # w plikach testów: jak zespół testuje (wzorce do standardu testów)
-    "Java": [("@WebMvcTest (test warstwy web)", r"@WebMvcTest\b"), ("@DataJpaTest (test repozytorium)", r"@DataJpaTest\b"),
-             ("@SpringBootTest (test integracyjny)", r"@SpringBootTest\b"), ("@MockitoBean/@MockBean", r"@Mock(ito)?Bean\b"),
+    "Java": [("@WebMvcTest (web layer test)", r"@WebMvcTest\b"), ("@DataJpaTest (repository test)", r"@DataJpaTest\b"),
+             ("@SpringBootTest (integration test)", r"@SpringBootTest\b"), ("@MockitoBean/@MockBean", r"@Mock(ito)?Bean\b"),
              ("Mockito (mock/when)", r"\bMockito\.|\bwhen\(|@Mock\b"), ("Testcontainers", r"@Testcontainers\b|\bTestcontainers\b|Container<"),
              ("MockMvc", r"\bMockMvc\b"), ("@ParameterizedTest", r"@ParameterizedTest\b"), ("AssertJ (assertThat)", r"\bassertThat\(")],
-    "C#": [("[Fact]", r"\[Fact\]"), ("[Theory] z danymi", r"\[Theory\]"), ("NSubstitute (Substitute.For)", r"\bSubstitute\.For<"),
-           ("Moq (new Mock<>)", r"\bnew Mock<"), ("WebApplicationFactory (testy integracyjne)", r"\bWebApplicationFactory<"),
-           ("builder danych testowych", r"\bclass \w+Builder\b|\bnew \w+Builder\("), ("FluentAssertions (.Should())", r"\.Should\(\)")],
-    "Go": [("t.Run (podtesty)", r"\bt\.Run\("), ("tabela przypadków ([]struct)", r"\[\]struct\s*\{"),
-           ("pakiet zewnętrzny *_test", r"^package \w+_test\b"), ("sqlmock", r"go-sqlmock|sqlmock\."),
+    "C#": [("[Fact]", r"\[Fact\]"), ("[Theory] with data", r"\[Theory\]"), ("NSubstitute (Substitute.For)", r"\bSubstitute\.For<"),
+           ("Moq (new Mock<>)", r"\bnew Mock<"), ("WebApplicationFactory (integration tests)", r"\bWebApplicationFactory<"),
+           ("test data builder", r"\bclass \w+Builder\b|\bnew \w+Builder\("), ("FluentAssertions (.Should())", r"\.Should\(\)")],
+    "Go": [("t.Run (subtests)", r"\bt\.Run\("), ("table of cases ([]struct)", r"\[\]struct\s*\{"),
+           ("external package *_test", r"^package \w+_test\b"), ("sqlmock", r"go-sqlmock|sqlmock\."),
            ("mockery (mocks.)", r"\bmocks\.\w+|mock\.Anything"), ("testify assert/require", r"\b(assert|require)\.\w+\("),
            ("httptest", r"\bhttptest\.")],
-    "Python": [("@pytest.mark.parametrize", r"@pytest\.mark\.parametrize"), ("fixture pytest", r"@pytest\.fixture"),
+    "Python": [("@pytest.mark.parametrize", r"@pytest\.mark\.parametrize"), ("pytest fixture", r"@pytest\.fixture"),
                ("unittest.mock", r"unittest\.mock|\bMagicMock\b|\bpatch\("), ("factory_boy", r"\bfactory\.\w+Factory\b")],
     "TypeScript": [("describe/it", r"\bdescribe\(|\bit\("), ("test.each/it.each", r"\b(test|it)\.each\b"),
                    ("vi.mock/jest.mock", r"\b(vi|jest)\.mock\("), ("Testing Library", r"@testing-library/"), ("msw", r"from ['\"]msw")],
     "JavaScript": [("describe/it", r"\bdescribe\(|\bit\("), ("vi.mock/jest.mock", r"\b(vi|jest)\.mock\(")]}
 CODE_IDIOMS = {  # w kodzie produkcyjnym: idiomy, które warto zapisać w standardzie
-    "Go": [("context.Context pierwszym argumentem", r"^func (\([^)]*\) )?\w+\(\s*\w+ context\.Context\b"),
-           ("błędy sentinel (errors.New w var)", r"^\s*Err\w+\s*=\s*errors\.New\("), ("opakowanie błędu (%w)", r"%w")],
-    "Java": [("wstrzykiwanie konstruktorem (pola final)", r"^\s*private final \w+"), ("@Autowired na polu", r"@Autowired\s*\n?\s*private"),
+    "Go": [("context.Context as first argument", r"^func (\([^)]*\) )?\w+\(\s*\w+ context\.Context\b"),
+           ("sentinel errors (errors.New in var)", r"^\s*Err\w+\s*=\s*errors\.New\("), ("error wrapping (%w)", r"%w")],
+    "Java": [("constructor injection (final fields)", r"^\s*private final \w+"), ("@Autowired on field", r"@Autowired\s*\n?\s*private"),
              ("@InitBinder", r"@InitBinder\b"), ("@ModelAttribute", r"@ModelAttribute\b"),
              ("redirect: (Post/Redirect/Get)", r"\"redirect:"), ("@Transactional", r"@Transactional\b"), ("record", r"\brecord \w+\(")],
-    "C#": [("AsReadOnly (kolekcje tylko do odczytu)", r"\.AsReadOnly\(\)"), ("prywatny setter", r"\{\s*get;\s*private set;"),
-           ("Guard.Against", r"\bGuard\.Against\."), ("rejestracja DI w metodach rozszerzających", r"this IServiceCollection\b"),
+    "C#": [("AsReadOnly (read-only collections)", r"\.AsReadOnly\(\)"), ("private setter", r"\{\s*get;\s*private set;"),
+           ("Guard.Against", r"\bGuard\.Against\."), ("DI registration in extension methods", r"this IServiceCollection\b"),
            ("DI: AddScoped", r"\.AddScoped\b"), ("DI: AddSingleton", r"\.AddSingleton\b"), ("DI: AddTransient", r"\.AddTransient\b"),
-           ("wyjątek domenowy (: Exception)", r"class \w+Exception\s*:\s*\w*Exception\b")],
-    "Python": [("dataclass", r"@dataclass\b"), ("pydantic BaseModel", r"\(BaseModel\)"), ("adnotacje typów w def", r"def \w+\([^)]*:\s*\w")],
-    "TypeScript": [("zod (walidacja na granicy)", r"from ['\"]zod['\"]"), ("readonly", r"\breadonly\b")]}
+           ("domain exception (: Exception)", r"class \w+Exception\s*:\s*\w*Exception\b")],
+    "Python": [("dataclass", r"@dataclass\b"), ("pydantic BaseModel", r"\(BaseModel\)"), ("type annotations in def", r"def \w+\([^)]*:\s*\w")],
+    "TypeScript": [("zod (validation at the boundary)", r"from ['\"]zod['\"]"), ("readonly", r"\breadonly\b")]}
 ROLES = ("Controller", "Service", "Repository", "Validator", "Handler", "Endpoint", "Entity", "Dto", "Mapper",
          "Factory", "Formatter", "Configuration", "Config", "Exception", "Specification", "Middleware")
 LAYERS = {"controller", "controllers", "service", "services", "repository", "repositories", "repo", "model", "models",
@@ -154,12 +154,12 @@ def scan(root: str) -> dict:
         texts = {p: read(root, p) for p in files}
         # nazwy plików (produkcyjnych): styl dominujący + wyjątki
         stems = {p: os.path.basename(p).split(".")[0] for p in prod}
-        styles = {p: next((k for k, rx in NAMING.items() if rx.match(s)), "inne") for p, s in stems.items()}
+        styles = {p: next((k for k, rx in NAMING.items() if rx.match(s)), "other") for p, s in stems.items()}
         cnt = collections.Counter(v for v in styles.values() if v != "lowercase")
         if cnt:
             top = cnt.most_common(1)[0][0]
             ok = [p for p, v in styles.items() if v in (top, "lowercase")]
-            sigs.append(signal("nazwy plików", lang, top, ok, len(prod), ok,
+            sigs.append(signal("file names", lang, top, ok, len(prod), ok,
                                [f"{p} ({styles[p]})" for p in prod if p not in ok]))
         # układ pakietów: katalog z różnymi rolami plików (według funkcji) czy katalog nazwany jak warstwa
         dirs = collections.defaultdict(list)
@@ -169,35 +169,35 @@ def scan(root: str) -> dict:
                    and len({role(x) for x in st} - {None}) >= 2]
         layered = [d for d in dirs if os.path.basename(d).lower() in LAYERS]
         if feature:
-            sigs.append(signal("układ", lang, "pakiety według funkcji (różne role w jednym katalogu)", feature,
+            sigs.append(signal("layout", lang, "packages by feature (different roles in one directory)", feature,
                                len(dirs), [f"{d}/ ({', '.join(sorted({role(x) for x in dirs[d]} - {None}))})" for d in feature],
                                layered))
         if layered:
-            sigs.append(signal("układ", lang, "pakiety według warstw (katalog = warstwa)", layered, len(dirs),
+            sigs.append(signal("layout", lang, "packages by layer (directory = layer)", layered, len(dirs),
                                [f"{d}/" for d in layered], feature))
         # testy: framework i położenie
         for fw, rx in TEST_FW.get(lang, []):
             hit = {p: lines_matching(texts[p], rx) for p in tests}
             hit = {p: l for p, l in hit.items() if l}
             if hit:
-                sigs.append(signal("testy", lang, fw, list(hit), len(tests), [f"{p}:{l[0]}" for p, l in hit.items()]))
+                sigs.append(signal("tests", lang, fw, list(hit), len(tests), [f"{p}:{l[0]}" for p, l in hit.items()]))
         if tests:
             sep = [p for p in tests if re.search(r"(^|/)(tests?|__tests__|spec)/|\.Tests?/", p)]
             if sep:
-                sigs.append(signal("testy", lang, "osobny katalog tests/", sep, len(tests), sep,
+                sigs.append(signal("tests", lang, "separate tests/ directory", sep, len(tests), sep,
                                    [p for p in tests if p not in sep]))
             col = [p for p in tests if p not in sep]
             if col:
-                sigs.append(signal("testy", lang, "test obok kodu", col, len(tests), col, sep))
+                sigs.append(signal("tests", lang, "test next to code", col, len(tests), col, sep))
         # idiomy: testów (w testach) i kodu (w kodzie produkcyjnym)
-        for area, table, pool in (("idiomy testów", TEST_IDIOMS, tests), ("idiomy kodu", CODE_IDIOMS, prod)):
+        for area, table, pool in (("test idioms", TEST_IDIOMS, tests), ("code idioms", CODE_IDIOMS, prod)):
             for rule, rx in table.get(lang, []):
                 hit = {p: lines_matching(texts[p], rx) for p in pool}
                 hit = {p: l for p, l in hit.items() if l}
                 if hit:
                     sigs.append(signal(area, lang, rule, list(hit), len(pool), [f"{p}:{l[0]}" for p, l in hit.items()]))
         # błędy, logowanie, dług — w kodzie produkcyjnym
-        for area, table in (("błędy", BROAD), ("logowanie", LOGS)):
+        for area, table in (("errors", BROAD), ("logging", LOGS)):
             for rule, rx in table.get(lang, []):
                 hit = {p: lines_matching(texts[p], rx) for p in prod}
                 hit = {p: l for p, l in hit.items() if l}
@@ -207,19 +207,19 @@ def scan(root: str) -> dict:
         hit = {p: lines_matching(texts[p], TODO.pattern) for p in prod}
         hit = {p: l for p, l in hit.items() if l}
         if hit:
-            sigs.append(signal("dług", lang, "TODO/FIXME", list(hit), len(prod),
+            sigs.append(signal("debt", lang, "TODO/FIXME", list(hit), len(prod),
                                [f"{p}:{n}" for p, l in hit.items() for n in l]))
     return {"root": os.path.abspath(root), "tools": tools, "signals": sigs,
             "files": {lang: len(f) for lang, f in sorted(by_lang.items())}}
 
 
 def render(r: dict) -> str:
-    L = ["Narzędzia z konfiguracji: " + (", ".join(f"{t['tool']} ({t['file']})" for t in r["tools"]) or "brak"),
-         "Sygnały (obszar · język · reguła: pliki/łącznie = udział; przykłady; wyjątki):"]
+    L = ["Tools from config: " + (", ".join(f"{t['tool']} ({t['file']})" for t in r["tools"]) or "none"),
+         "Signals (area · language · rule: files/total = share; examples; exceptions):"]
     for s in r["signals"]:
         L.append(f"  - {s['area']} · {s['language']} · {s['rule']}: {s['count']}/{s['total']} = {s['share']}%; "
-                 f"np. {', '.join(s['examples'][:3])}" + (f"; wyjątki: {', '.join(s['exceptions'][:3])}" if s["exceptions"] else ""))
-    L.append("To dane, nie standard: regułę zapisz po obejrzeniu przykładów i wyjątków.")
+                 f"e.g. {', '.join(s['examples'][:3])}" + (f"; exceptions: {', '.join(s['exceptions'][:3])}" if s["exceptions"] else ""))
+    L.append("This is data, not a standard: write the rule after you look at the examples and exceptions.")
     return "\n".join(L)
 
 
@@ -230,7 +230,7 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 0
     if len(args) != 1 or not os.path.isdir(args[0]):
-        print(f"✗ podaj katalog repozytorium (jest: {args})", file=sys.stderr)
+        print(f"✗ give a repository directory (got: {args})", file=sys.stderr)
         return 2
     r = scan(args[0])
     print(json.dumps(r, ensure_ascii=False, indent=2) if as_json else render(r))

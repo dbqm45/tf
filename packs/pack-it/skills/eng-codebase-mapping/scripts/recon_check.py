@@ -91,17 +91,17 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
             src = cache[path]
             where = f"{md}:{i}"
             if src is None:
-                bad.append({"ref": ref, "at": where, "problem": "brak pliku"})
+                bad.append({"ref": ref, "at": where, "problem": "no such file"})
                 continue
             if not (1 <= a <= b <= len(src)):
-                bad.append({"ref": ref, "at": where, "problem": f"linia poza plikiem ({len(src)})"})
+                bad.append({"ref": ref, "at": where, "problem": f"line outside the file ({len(src)})"})
                 continue
             q = QUOTE.search(line[m.end():])
             if q:
                 quote = norm(q.group(1) or q.group(2))
                 lo, hi = max(1, a - 2), min(len(src), b + 2)
                 if quote not in norm(" ".join(src[lo - 1:hi])):
-                    bad.append({"ref": ref, "at": where, "problem": f"cytat nie pasuje do linii {lo}–{hi}"})
+                    bad.append({"ref": ref, "at": where, "problem": f"quote does not match lines {lo}–{hi}"})
         bullet = re.match(r"^\s*([-*]|\d+\.)\s+(.*)", line)
         if bullet and not found and not MARK.search(line) and not any(section.startswith(s) for s in NO_EVIDENCE_SECTIONS):
             unsupported.append({"at": f"{md}:{i}", "text": bullet.group(2).strip()})
@@ -178,7 +178,7 @@ def main(argv: list[str]) -> int:
         else:
             paths.append(a)
     if not paths or not all(os.path.exists(p) for p in paths) or not os.path.isdir(repo):
-        print(f"✗ podaj istniejący plik lub katalog raportu i --repo (jest: {paths}, repo {repo})", file=sys.stderr)
+        print(f"✗ give an existing report file or directory and --repo (got: {paths}, repo {repo})", file=sys.stderr)
         return 2
     cache, refs, bad, uns, sections = {}, 0, [], [], []
     stack_missing, modules_missing, cards_stale, ci_unreferenced = [], [], [], []
@@ -205,21 +205,21 @@ def main(argv: list[str]) -> int:
     if as_json:
         print(json.dumps(out, ensure_ascii=False, indent=2))
     else:
-        print(f"Dowody: {refs}, złe: {len(bad)}, twierdzenia bez dowodu: {len(uns)}"
-              + (f", brak sekcji: {', '.join(missing)}" if missing else ""))
+        print(f"Evidence: {refs}, bad: {len(bad)}, claims without evidence: {len(uns)}"
+              + (f", missing sections: {', '.join(missing)}" if missing else ""))
         if stack_missing:
-            print(f"  ✗ stack: brak wierszy: {', '.join(stack_missing)} (tabela w sekcji Stack)")
+            print(f"  ✗ stack: missing rows: {', '.join(stack_missing)} (table in the Stack section)")
         if ci_unreferenced:
-            print(f"  ✗ CI: w repo są pliki pipeline'u, wiersz CI nie wskazuje żadnego: {', '.join(ci_unreferenced)}")
+            print(f"  ✗ CI: the repo has pipeline files, but the CI row points to none of them: {', '.join(ci_unreferenced)}")
         if modules_missing:
-            print(f"  ✗ moduły bez wpisu w sekcji Modules: {', '.join(modules_missing)}")
+            print(f"  ✗ modules with no entry in the Modules section: {', '.join(modules_missing)}")
         if cards_stale:
-            print(f"  ✗ karty bez aktualnego .md (recon_cards.py): {', '.join(cards_stale)}")
+            print(f"  ✗ cards without an up-to-date .md (recon_cards.py): {', '.join(cards_stale)}")
         for b in bad:
             print(f"  ✗ {b['at']}: `{b['ref']}` — {b['problem']}")
         for u in uns[:30]:
-            print(f"  {'✗' if final else '⚠'} {u['at']}: bez dowodu — {u['text'][:100]}")
-        print(("✗" if failed else "✓") + (" raport końcowy" if final else " dowody"))
+            print(f"  {'✗' if final else '⚠'} {u['at']}: no evidence — {u['text'][:100]}")
+        print(("✗" if failed else "✓") + (" final report" if final else " evidence"))
     return 1 if failed else 0
 
 

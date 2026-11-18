@@ -99,7 +99,7 @@ def main() -> int:
 
         # bez zmian w kodzie: nic do zrobienia
         r = run("recon_refresh.py", "prep", str(repo), cwd=d)
-        check(r.returncode == 0 and "Nic do odświeżenia" in r.stdout and not (rep / "raw/refresh").exists(),
+        check(r.returncode == 0 and "Nothing to refresh" in r.stdout and not (rep / "raw/refresh").exists(),
               f"RF-1: brak zmian: rc={r.returncode} {r.stdout[-400:]} {r.stderr[-300:]}")
 
         # zmiana w pliku cytowanym przez kartę billing + nowy plik bez karty
@@ -111,10 +111,10 @@ def main() -> int:
         body = task.read_text(encoding="utf-8") if task.exists() else ""
         check(r.returncode == 0 and (rep / "raw/cards-prev/billing.json").exists() and (rep / "raw/cards-prev/customers.json").exists(),
               f"RF-2: kopia wszystkich kart w raw/cards-prev: {out[-400:]} {r.stderr[-300:]}")
-        check("svc/billing/invoice.py" in body and "modules/billing.json" in body and "svc/billing/tax.py" not in body.split("Zmienione pliki")[-1],
+        check("svc/billing/invoice.py" in body and "modules/billing.json" in body and "svc/billing/tax.py" not in body.split("Changed files")[-1],
               f"RF-3: zlecenie dla karty billing ze zmienionym plikiem: {body[-600:]}")
         check(not (rep / "raw/refresh/customers.md").exists(), "RF-4: karta bez zmienionych plików nie dostaje zlecenia")
-        check("billing" in out and "svc/shipping/ship.py" in out and "bez karty" in out and len(out.splitlines()) <= 40,
+        check("billing" in out and "svc/shipping/ship.py" in out and "without a card" in out and len(out.splitlines()) <= 40,
               f"RF-5: plan z kartą, plikiem bez karty i ≤ 40 linii: {out}")
 
         # wykonawca zaktualizował kartę: reguła „422” zmieniona na „co najmniej dwie pozycje”
@@ -125,16 +125,16 @@ def main() -> int:
         r = run("recon_refresh.py", "finish", str(repo), cwd=d)
         out = r.stdout
         stale = rep / "raw/refresh/STALE.md"
-        check("Do sprawdzenia:" in out and "report.md:" in out and stale.exists() and "422" in stale.read_text(encoding="utf-8"),
+        check("To check:" in out and "report.md:" in out and stale.exists() and "422" in stale.read_text(encoding="utf-8"),
               f"RF-6: lista miejsc ze starym opisem na ekranie i w STALE.md: {out[-800:]}")
         check("z systemu księgowego — `svc/billing/invoice.py:4`" in out,
               f"RF-24: miejsce do poprawy z pełnym tekstem linii: {out[-900:]}")
-        check(any("podobn" in ln and "Faktura bez pozycji jest odrzucana przez system" in ln and "co najmniej dwie pozycje" in ln
+        check(any("similar" in ln and "Faktura bez pozycji jest odrzucana przez system" in ln and "co najmniej dwie pozycje" in ln
                   for ln in out.splitlines()),
               f"RF-30: opis podobny do zmienionej reguły karty na liście, z nową treścią reguły: {out[-900:]}")
         check("- billing:" in (rep / "report.md").read_text(encoding="utf-8") and (rep / "modules/billing.md").exists()
               and (rep / "rules.md").exists(), "RF-7: sekcja Moduły, .md kart i rules.md złożone")
-        check("Kontrola końcowa:" in out and len(out.splitlines()) <= 60, f"RF-8: zwięzłe podsumowanie kontroli: {out[-600:]}")
+        check("Final check:" in out and len(out.splitlines()) <= 60, f"RF-8: zwięzłe podsumowanie kontroli: {out[-600:]}")
 
         # po poprawce opisu kontrola przechodzi i manifest dostaje nowy stan
         rp = (rep / "report.md").read_text(encoding="utf-8").replace("odrzucana kodem 422", "odrzucana, gdy ma mniej niż dwie pozycje")
@@ -148,7 +148,7 @@ def main() -> int:
         check(r.returncode == 0 and "✓ manifest" in r.stdout and after["files"] != before["files"]
               and "svc/shipping/ship.py" in after["files"], f"RF-9: manifest zapisany po przejściu kontroli: {r.stdout[-600:]}")
         r = run("recon_refresh.py", "prep", str(repo), cwd=d)
-        check("Nic do odświeżenia" in r.stdout, f"RF-10: po odświeżeniu manifest zgodny z kodem: {r.stdout[-300:]}")
+        check("Nothing to refresh" in r.stdout, f"RF-10: po odświeżeniu manifest zgodny z kodem: {r.stdout[-300:]}")
         # dowód przesunięty przez zmianę kodu (cytat jednoznacznie w innej linii) → finish poprawia numer linii
         write(repo, {"svc/billing/tax.py": "# stawki\n# VAT\n# PL\n# 2026\nRATE = 0.23\n"})
         rp = (rep / "report.md").read_text(encoding="utf-8")
@@ -158,12 +158,12 @@ def main() -> int:
         write(rep, {"modules/billing.json": json.dumps(moved, ensure_ascii=False)})
         r = run("recon_refresh.py", "finish", str(repo), cwd=d)
         rp = (rep / "report.md").read_text(encoding="utf-8")
-        check('`svc/billing/tax.py:5` "RATE = 0.23"' in rp and "przesunięte dowody: 1" in r.stdout and r.returncode == 0,
+        check('`svc/billing/tax.py:5` "RATE = 0.23"' in rp and "shifted evidence: 1" in r.stdout and r.returncode == 0,
               f"RF-12: przesunięty dowód poprawiony automatycznie: rc={r.returncode} {r.stdout[-700:]}")
         # zmienione reguły kart na ekranie: stara → nowa
         write(rep, {"raw/cards-prev/billing.json": json.dumps(BILLING, ensure_ascii=False)})
         r = run("recon_refresh.py", "finish", str(repo), cwd=d)
-        check("Zmienione reguły kart" in r.stdout and "kod 422" in r.stdout and "co najmniej dwie pozycje" in r.stdout,
+        check("Changed card rules" in r.stdout and "kod 422" in r.stdout and "co najmniej dwie pozycje" in r.stdout,
               f"RF-13: zmiany reguł stara → nowa: {r.stdout[-700:]}")
         r = run("recon_refresh.py", "prep", str(repo / "nie-ma"), cwd=d)
         check(r.returncode == 2, f"RF-11: złe wywołanie → 2: {r.returncode}")
@@ -189,17 +189,17 @@ def main() -> int:
         out = r.stdout
         bj = (rep / "modules/billing.json").read_text(encoding="utf-8")
         rp = (rep / "report.md").read_text(encoding="utf-8")
-        check(not (rep / "raw/refresh/billing.md").exists() and "tylko komentarze" in out.lower()
+        check(not (rep / "raw/refresh/billing.md").exists() and "only comments" in out.lower()
               and "svc/billing/Rate.java" in out, f"RF-14: zmiana tylko w komentarzach bez zlecenia: {out[-700:]}")
         check('"svc/billing/invoice.py:5"' in bj and '"svc/billing/invoice.py:4"' in bj and "`svc/billing/invoice.py:5`" in rp
               and "`svc/billing/invoice.py:4`" not in rp, f"RF-15: numery linii przeliczone w kartach i raporcie: {bj} {rp[-500:]}")
-        check(r.returncode == 0 and "Kontrola końcowa: ✓" in out and "✓ manifest" in out,
+        check(r.returncode == 0 and "Final check: ✓" in out and "✓ manifest" in out,
               f"RF-16: bez zleceń prep uruchamia finish: rc={r.returncode} {out[-700:]}")
-        stamp = [ln for ln in rp.splitlines() if ln.startswith("Odświeżenie przyrostowe:")]
+        stamp = [ln for ln in rp.splitlines() if ln.startswith("Incremental refresh:")]
         check(len(stamp) == 1 and str(__import__("datetime").date.today()) in stamp[0],
               f"RF-17: data odświeżenia w raporcie: {rp[:400]}")
         r = run("recon_refresh.py", "prep", str(repo), cwd=d)
-        check("Nic do odświeżenia" in r.stdout, f"RF-18: po odświeżeniu nic do zrobienia: {r.stdout[-300:]}")
+        check("Nothing to refresh" in r.stdout, f"RF-18: po odświeżeniu nic do zrobienia: {r.stdout[-300:]}")
 
         # zmiana w kodzie po commicie odświeżenia: zlecenie z diffem, przesunięcie przeliczone raz, data nie dubluje się
         git(repo, "add", "-A")
@@ -207,21 +207,23 @@ def main() -> int:
         write(repo, {"svc/billing/invoice.py": (repo / "svc/billing/invoice.py").read_text(encoding="utf-8").replace(
             "    if not lines:", "    if len(lines) < 2:\n        log('za mało')")})
         rp = (rep / "report.md").read_text(encoding="utf-8")
-        write(rep, {"report.md": rp.replace("## Domeny\n", "## Domeny\n- Sprawdzenie liczby pozycji — `svc/billing/invoice.py:4`\n")})
+        # znacznik odświeżenia sprzed 14.x (po polsku) też jest podmieniany, nie dublowany
+        write(rep, {"report.md": rp.replace("## Domeny\n", "## Domeny\n- Sprawdzenie liczby pozycji — `svc/billing/invoice.py:4`\n")
+                    .replace("Incremental refresh:", "Odświeżenie przyrostowe:")})
         r = run("recon_refresh.py", "prep", str(repo), cwd=d)
         task = rep / "raw/refresh/billing.md"
         body = task.read_text(encoding="utf-8") if task.exists() else ""
-        check("-    if not lines:" in body and "+    if len(lines) < 2:" in body and "Kontrola końcowa" not in r.stdout,
+        check("-    if not lines:" in body and "+    if len(lines) < 2:" in body and "Final check" not in r.stdout,
               f"RF-19: zlecenie z diffem zmienionego pliku: {body[-700:]} {r.stdout[-300:]}")
         run("recon_refresh.py", "prep", str(repo), cwd=d)
         bj = (rep / "modules/billing.json").read_text(encoding="utf-8")
         check('"svc/billing/invoice.py:6"' in bj and '"svc/billing/invoice.py:7"' not in bj,
               f"RF-20: przesunięcie przeliczone raz mimo dwóch prep: {bj}")
         r = run("recon_refresh.py", "finish", str(repo), cwd=d)
-        check(any("zmienion" in ln and "Sprawdzenie liczby pozycji" in ln for ln in r.stdout.splitlines()),
+        check(any("changed" in ln and "Sprawdzenie liczby pozycji" in ln for ln in r.stdout.splitlines()),
               f"RF-31: opis z dowodem w zmienionej linii kodu na liście do sprawdzenia: {r.stdout[-900:]}")
         rp = (rep / "report.md").read_text(encoding="utf-8")
-        check(sum(ln.startswith("Odświeżenie przyrostowe:") for ln in rp.splitlines()) == 1,
+        check(sum(ln.startswith("Incremental refresh:") for ln in rp.splitlines()) == 1 and "Odświeżenie przyrostowe:" not in rp,
               f"RF-21: jedna linia z datą odświeżenia po kolejnym finish: {rp[:500]}")
 
         # dowód z cytatem, którego w kodzie już nie ma: finish pokazuje linię, apply ją poprawia i od razu kończy
@@ -238,7 +240,7 @@ def main() -> int:
         fixed = '- Faktura z mniej niż dwiema pozycjami jest odrzucana — `svc/billing/invoice.py:4` "if len(lines) < 2:"'
         r = run("recon_refresh.py", "apply", str(repo), cwd=d, input=f"@@ report.md:{n}\n{fixed}\n")
         rp = (rep / "report.md").read_text(encoding="utf-8")
-        check(r.returncode == 0 and fixed in rp and bad not in rp and "Kontrola końcowa: ✓" in r.stdout and "✓ manifest" in r.stdout,
+        check(r.returncode == 0 and fixed in rp and bad not in rp and "Final check: ✓" in r.stdout and "✓ manifest" in r.stdout,
               f"RF-27: apply poprawia linię i uruchamia finish: rc={r.returncode} {r.stdout[-600:]}")
 
         # poprawki z pliku raw/refresh/fixes.md (Write zamiast heredoc w Bash), po użyciu plik nie zostaje do ponownego użycia
@@ -247,7 +249,7 @@ def main() -> int:
         write(rep, {"raw/refresh/fixes.md": f"@@ {DOCS}/report.md:{n2}\n{again}\n"})
         r = run("recon_refresh.py", "apply", str(repo), cwd=d)
         rp = (rep / "report.md").read_text(encoding="utf-8")
-        check(r.returncode == 0 and again in rp and not (rep / "raw/refresh/fixes.md").exists() and "Kontrola końcowa: ✓" in r.stdout,
+        check(r.returncode == 0 and again in rp and not (rep / "raw/refresh/fixes.md").exists() and "Final check: ✓" in r.stdout,
               f"RF-32: apply czyta raw/refresh/fixes.md (też ze ścieżką od korzenia repo): rc={r.returncode} {r.stdout[-500:]}")
 
         # wykonawca sprawdza kartę jednym poleceniem: przesunięty dowód poprawiony w JSON, brakujący cytat z linią kodu
@@ -265,10 +267,10 @@ def main() -> int:
         write(rep, {"modules/billing.json": json.dumps(cj, ensure_ascii=False)})
         r = run("recon_refresh.py", "card", str(repo), "billing", cwd=d)
         check(r.returncode == 0 and r.stdout.startswith("✓"), f"RF-29: poprawna karta → ✓: {r.stdout[-300:]}")
-        check("Liczy faktury." in r.stdout and "opis modułu" in r.stdout.lower(),
+        check("Liczy faktury." in r.stdout and "module description" in r.stdout.lower(),
               f"RF-33: kontrola karty przypomina o opisie modułu (purpose): {r.stdout[-400:]}")
-        check("purpose" in body and "opis modułu" in body.lower(), f"RF-34: zlecenie każe sprawdzić opis modułu: {body[-900:]}")
-        check("nie jest już" in body and "usunięt" in body, f"RF-35: zlecenie: usunięta reguła → wpis o stanie obecnym: {body[-900:]}")
+        check("purpose" in body and "module description" in body.lower(), f"RF-34: zlecenie każe sprawdzić opis modułu: {body[-900:]}")
+        check("no longer" in body and "removed" in body, f"RF-35: zlecenie: usunięta reguła → wpis o stanie obecnym: {body[-900:]}")
 
     # rozpoznawanie zmian tylko w komentarzach (zachowawczo: w razie wątpliwości to zmiana kodu)
     co = recon_refresh.comment_only

@@ -45,7 +45,7 @@ def main() -> int:
             fails.append(msg)
 
     r = run("--help")
-    check(r.returncode == 0 and "--cochange" in r.stdout and "kod" in r.stdout.lower(), f"--help: {r.stdout[:200]}")
+    check(r.returncode == 0 and "--cochange" in r.stdout and "exit code" in r.stdout.lower(), f"--help: {r.stdout[:200]}")
 
     with tempfile.TemporaryDirectory() as d:
         repo = Path(d) / "repo"
@@ -136,19 +136,19 @@ def main() -> int:
               f"bus factor: obszary z ≥ 5 commitami ludzi (tiny pominięty): kod {r.returncode}, {list(by)} {r.stderr[:300]}")
         b = by.get("billing", {})
         check(b.get("bus_factor") == 1 and b.get("top_author") == "Dana" and b.get("top_share") == 0.83
-              and b.get("commits") == 6 and b.get("people") == 2 and b.get("active") == 1 and b.get("risk") == "wysokie",
+              and b.get("commits") == 6 and b.get("people") == 2 and b.get("active") == 1 and b.get("risk") == "high",
               f"billing: jedna osoba > 50%, bot pominięty, aktywny tylko Ed: {b}")
         c = by.get("catalog", {})
-        check(c.get("bus_factor") == 2 and c.get("commits") == 6 and c.get("top_author") != "Claude" and c.get("risk") == "umiarkowane",
+        check(c.get("bus_factor") == 2 and c.get("commits") == 6 and c.get("top_author") != "Claude" and c.get("risk") == "moderate",
               f"catalog: dokładnie 50% to za mało na 1 osobę, commity agenta nie liczą się: {c}")
         lg = by.get("legacy", {})
-        check(lg.get("active") == 0 and lg.get("risk") == "krytyczne", f"legacy: nikt aktywny w 90 dniach przed HEAD: {lg}")
+        check(lg.get("active") == 0 and lg.get("risk") == "critical", f"legacy: nikt aktywny w 90 dniach przed HEAD: {lg}")
         s = by.get("shared", {})
-        check(s.get("bus_factor") == 4 and s.get("risk") == "niskie", f"shared: 6 osób po 1 commicie → 4: {s}")
+        check(s.get("bus_factor") == 4 and s.get("risk") == "low", f"shared: 6 osób po 1 commicie → 4: {s}")
         check([x["path"] for x in areas] == ["legacy", "billing", "catalog", "shared"], f"kolejność wg ryzyka: {[x['path'] for x in areas]}")
         r = run("--repo", str(bf), "--since", "2024-01-01", "--bus-factor", "--active-days", "400", "--json")
         lg = {x["path"]: x for x in json.loads(r.stdout or "{}").get("bus_factor", {}).get("areas", [])}.get("legacy", {})
-        check(lg.get("active") == 1 and lg.get("risk") == "wysokie", f"--active-days 400: Hal aktywny: {lg}")
+        check(lg.get("active") == 1 and lg.get("risk") == "high", f"--active-days 400: Hal aktywny: {lg}")
         r = run("--repo", str(bf), "--since", "2024-01-01", "--bus-factor", "--min-commits", "2", "--json")
         paths = [x["path"] for x in json.loads(r.stdout or "{}").get("bus_factor", {}).get("areas", [])]
         check("tiny" in paths, f"--min-commits 2 obejmuje tiny: {paths}")

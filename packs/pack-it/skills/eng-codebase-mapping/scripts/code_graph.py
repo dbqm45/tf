@@ -367,8 +367,8 @@ def workspaces(root: str, all_files: list[str]):
                     break
             if entry:
                 break
-        name = d.get("name") or base or "(bez nazwy)"
-        out[base] = (f"{name} (korzeń repo)" if not base else name, entry, refs)
+        name = d.get("name") or base or "(no name)"
+        out[base] = (f"{name} (repo root)" if not base else name, entry, refs)
     return out
 
 
@@ -499,20 +499,20 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
         elif n in mains:
             s += 3; why.append("main")
         elif ENTRY_NAME.search(n) and depth <= 1:   # app.py czy urls.py głęboko w drzewie to zwykle moduł, nie wejście
-            s += 3; why.append("nazwa")
+            s += 3; why.append("name")
         if depth <= 1:
-            s += 1; why.append("płytko")
+            s += 1; why.append("shallow")
         if outdeg[n] and outdeg[n] >= o90:
-            s += 1; why.append("dużo importuje")
+            s += 1; why.append("imports a lot")
         if indeg[n] <= i25:
-            s += 1; why.append("mało importowany")
+            s += 1; why.append("rarely imported")
         return s, why
     cand = []
     for n in nodes:
         if n in barrels:
             continue
         s, why = score(n)
-        if s >= 3 and why[0] in ("nazwa", "package.json", "main"):   # bez sygnału nazwy płytki liść to jeszcze nie wejście
+        if s >= 3 and why[0] in ("name", "package.json", "main"):   # bez sygnału nazwy płytki liść to jeszcze nie wejście
             cand.append({"file": n, "score": s, "out": outdeg[n], "in": indeg[n], "why": why})
     cand.sort(key=lambda e: (-e["score"], -e["out"], e["file"]))
 
@@ -562,7 +562,7 @@ def analyze(root: str, top: int = 10, impact: str | None = None, gdepth: int | N
     for g, n in members.most_common():
         gin = sum(v for (a, b), v in ge.items() if b == g)
         gout = sum(v for (a, b), v in ge.items() if a == g)
-        role = "fundament" if gin > 2 * max(gout, 1) else ("góra" if gout > 2 * max(gin, 1) else "środek")
+        role = "foundation" if gin > 2 * max(gout, 1) else ("top" if gout > 2 * max(gin, 1) else "middle")
         groups.append({"group": g, "files": n, "density": round(inner[g] / (n * (n - 1)), 2) if n > 1 else 0.0,
                        "in": gin, "out": gout, "role": role})
     nested = lambda a, b: a.startswith(b + "/") or b.startswith(a + "/")
@@ -618,60 +618,60 @@ def render(r: dict, top: int) -> str:
     f = r["files"]
     langs = [f"Python {f['python']}", f"TS/JS {f['ts_js']}"] + [f"{n} {f[k]}" for k, n in
                                                               (("java", "Java"), ("csharp", "C#"), ("go", "Go")) if f.get(k)]
-    L = [f"Pliki produkcyjne: {', '.join(langs)}; krawędzie {f['edges']} {f['by_kind']} (WYCIĄGNIĘTE z importów)"]
-    L.append("Punkty wejścia (wynik, out, in, dlaczego):")
+    L = [f"Production files: {', '.join(langs)}; edges {f['edges']} {f['by_kind']} (EXTRACTED from imports)"]
+    L.append("Entry points (score, out, in, why):")
     L += [f"  - {e['file']} ({e['score']}, {e['out']}, {e['in']}; {', '.join(e['why'])})" for e in r["entry_points"]]
     if r["registries"]:
         kinds = collections.defaultdict(list)
         for x in r["registries"]:
             kinds[x["kind"]].append(x)
-        L.append("Wejścia z rejestrów (dekoratory, wywołania, konwencje frameworka; plik liczba):")
+        L.append("Entry points from registries (decorators, calls, framework conventions; file count):")
         for k in sorted(kinds):
             xs = sorted(kinds[k], key=lambda x: (-x["count"], x["file"]))
-            L.append(f"  - {k}: {sum(x['count'] for x in xs)} w {len(xs)} plikach: " +
+            L.append(f"  - {k}: {sum(x['count'] for x in xs)} in {len(xs)} files: " +
                      "; ".join(f"{x['file']} {x['count']}" for x in xs[:top]) + (" …" if len(xs) > top else ""))
     if r["packages"]:
-        L.append("Pakiety workspace (krawędzie; „typy” = tylko importy typów):")
-        L += [f"  - {p['from']} → {p['to']}: {p['edges']}{' (typy)' if p['type_only'] else ''}" for p in r["packages"]]
-    L.append("Grupy (pliki, gęstość, in, out, rola)" +
-             (f"; rozbite automatycznie (> 40% plików): {', '.join(r['groups_split'])}" if r["groups_split"] else "") + ":")
+        L.append("Workspace packages (edges; „types” = type imports only):")
+        L += [f"  - {p['from']} → {p['to']}: {p['edges']}{' (types)' if p['type_only'] else ''}" for p in r["packages"]]
+    L.append("Groups (files, density, in, out, role)" +
+             (f"; split automatically (> 40% of files): {', '.join(r['groups_split'])}" if r["groups_split"] else "") + ":")
     L += [f"  - {g['group']}: {g['files']}, {g['density']}, {g['in']}, {g['out']}, {g['role']}" for g in r["groups"]]
     if r["upstream"]:
-        L.append("Pod prąd — zależności w obie strony między grupami (A→B / B→A; [cykl runtime|lazy] = oba końce "
-                 "w jednym cyklu plików):")
-        L += [f"  - {u['a']} ⇄ {u['b']} ({u['a_to_b']}/{u['b_to_a']})" + (f" [cykl {u['cycle']}]" if u["cycle"] else "")
+        L.append("Upstream: two-way dependencies between groups (A→B / B→A; [cycle runtime|lazy] = both ends "
+                 "in one file cycle):")
+        L += [f"  - {u['a']} ⇄ {u['b']} ({u['a_to_b']}/{u['b_to_a']})" + (f" [cycle {u['cycle']}]" if u["cycle"] else "")
               for u in r["upstream"]]
-    L.append("Huby (importujący pliki produkcyjne, bez barreli): " +
+    L.append("Hubs (importing production files, no barrels): " +
              "; ".join(f"{h['file']} {h['in']}" for h in r["hubs"]))
     if r["barrels"]:
         b = r["barrels"]
-        L.append(f"Barrele ({len(b)}; re-eksporty, poza hubami i grupami; importujący): " +
+        L.append(f"Barrels ({len(b)}; re-exports, outside hubs and groups; importers): " +
                  "; ".join(f"{x['file']} {x['in']}" for x in b[:top]) + (" …" if len(b) > top else ""))
     rt, lz = r["cycles"]["runtime"], r["cycles"]["with_lazy"]
-    L.append(f"Cykle runtime (tylko importy wykonywane przy imporcie modułu): {len(rt)}")
+    L.append(f"Runtime cycles (only imports run when the module is imported): {len(rt)}")
     L += [f"  - {c['size']}: " + ", ".join(c["files"][:10]) + (" …" if c["size"] > 10 else "") for c in rt[:top * 2]]
-    L.append(f"Cykle domykane dopiero importami leniwymi (w funkcji, typy, import()): {len(lz)}")
+    L.append(f"Cycles closed only by lazy imports (in a function, types, import()): {len(lz)}")
     for c in lz[:top]:
         body = ", ".join(c["files"]) if c["size"] <= 6 else \
-            f"grupy: {', '.join(f'{g} {n}' for g, n in c['groups'])}"
-        L.append(f"  - {c['size']} przez {'+'.join(c['closed_by'])}: {body}")
+            f"groups: {', '.join(f'{g} {n}' for g, n in c['groups'])}"
+        L.append(f"  - {c['size']} via {'+'.join(c['closed_by'])}: {body}")
     if "impact" in r:
         i = r["impact"]
-        L.append(f"Zasięg {i['file']}: bezpośrednio {len(i['direct'])}: {', '.join(i['direct'][:20])}")
-        L.append(f"  2. krok {len(i['second'])}: {', '.join(i['second'][:20])}{' …' if len(i['second']) > 20 else ''}")
-        L.append(f"  testy {len(i['tests'])}: {', '.join(i['tests'][:20])}{' …' if len(i['tests']) > 20 else ''}")
+        L.append(f"Reach of {i['file']}: direct {len(i['direct'])}: {', '.join(i['direct'][:20])}")
+        L.append(f"  step 2 {len(i['second'])}: {', '.join(i['second'][:20])}{' …' if len(i['second']) > 20 else ''}")
+        L.append(f"  tests {len(i['tests'])}: {', '.join(i['tests'][:20])}{' …' if len(i['tests']) > 20 else ''}")
     if "focus" in r:
         fo = r["focus"]
-        side = f"{fo['scope']} ↔ {fo['other']}" if fo["other"] else f"{fo['scope']} ↔ reszta repo"
-        L.append(f"Granica {side} ({fo['files']} plików w zakresie; rodzaje {fo['by_kind']}"
-                 f"{'; tylko typy' if fo['type_only'] else ''}):")
-        for title, key, end in (("  wychodzące", "outgoing", "to"), ("  przychodzące", "incoming", "from")):
+        side = f"{fo['scope']} ↔ {fo['other']}" if fo["other"] else f"{fo['scope']} ↔ rest of the repo"
+        L.append(f"Boundary {side} ({fo['files']} files in scope; kinds {fo['by_kind']}"
+                 f"{'; types only' if fo['type_only'] else ''}):")
+        for title, key, end in (("  outgoing", "outgoing", "to"), ("  incoming", "incoming", "from")):
             es = fo[key]
             L.append(f"{title} {len(es)}:")
             L += [f"    - {e['from']} → {e['to']} ({e['kind']})" for e in es[:top * 3]]
             if len(es) > top * 3:
-                L.append(f"    … +{len(es) - top * 3} (pełna lista: --json)")
-    L.append("Graf nie widzi: DI, rejestrów, kolejek, sygnałów, importów po nazwie, HTTP między usługami — do unknowns.")
+                L.append(f"    … +{len(es) - top * 3} (full list: --json)")
+    L.append("The graph does not see: DI, registries, queues, signals, imports by name, HTTP between services. Put these in unknowns.")
     return "\n".join(L)
 
 
@@ -686,11 +686,11 @@ def main(argv: list[str]) -> int:
         else:
             opts[a] = next(it, "") if a in ("--top", "--impact", "--group-depth") else True
     if not os.path.isdir(root):
-        print(f"✗ Nie ma katalogu: {root}")
+        print(f"✗ No such directory: {root}")
         return 2
     for f in focus:
         if not f or not os.path.exists(os.path.join(root, f)):
-            print(f"✗ Nie ma zakresu --focus: {f or '(pusty)'}")
+            print(f"✗ No such --focus scope: {f or '(empty)'}")
             return 2
     top = int(opts.get("--top") or 10)
     gd = int(opts["--group-depth"]) if opts.get("--group-depth") else None

@@ -185,7 +185,7 @@ def main() -> int:
         check(reg.get(("graphql-schema", "app/api_schema.py")) == 1, f"T11 schemat: {reg}")
         check(reg.get(("http", "app/http.py")) == 3, f"T11 http (aplikacja + 2 trasy): {reg}")
         r = run(str(py))
-        check("Wejścia z rejestrów" in r.stdout and "app/jobs.py" in r.stdout, f"T11 tekst: {r.stdout[:600]}")
+        check("Entry points from registries" in r.stdout and "app/jobs.py" in r.stdout, f"T11 tekst: {r.stdout[:600]}")
 
         ts = Path(d) / "ts"
         write(ts, TS)
@@ -204,7 +204,7 @@ def main() -> int:
         pk = {(p["from"], p["to"]): p for p in g["packages"]}
         check(("@x/web", "@x/core") in pk and pk[("@x/web", "@x/core")]["type_only"], f"T4 web->core tylko typy: {pk}")
         check(("@x/server", "@x/core") in pk and not pk[("@x/server", "@x/core")]["type_only"], "T4 server->core runtime")
-        check(("@x/server", "root (korzeń repo)") in pk, f"T4 pakiet korzenia opisany: {list(pk)}")
+        check(("@x/server", "root (repo root)") in pk, f"T4 pakiet korzenia opisany: {list(pk)}")
         # T2/T3 cykle TS
         rt = [sorted(c["files"]) for c in g["cycles"]["runtime"]]
         check(rt == [["packages/web/src/App.tsx", "packages/web/src/pages/Page.tsx"]], f"T2 TS runtime: {rt}")
@@ -242,7 +242,7 @@ def main() -> int:
         check("packages/server/src/app.ts" in imp["second"], f"T8 second: {imp['second']}")
         check("packages/core/test/text.test.ts" in imp["tests"], f"T8 testy: {imp['tests']}")
         r = run(str(ts))
-        check(r.returncode == 0 and "Cykle runtime" in r.stdout and "Punkty wejścia" in r.stdout, f"T8 tekst: {r.stdout[:300]}")
+        check(r.returncode == 0 and "Runtime cycles" in r.stdout and "Entry points" in r.stdout, f"T8 tekst: {r.stdout[:300]}")
         # T10 --focus: krawędzie przecinające granicę zakresu; dwa zakresy = tylko między nimi
         g = graph(ts, "--focus", "packages/core/src/analysis")
         fo = g["focus"]
@@ -260,7 +260,7 @@ def main() -> int:
                         ("packages/web/src/api.ts", "packages/core/src/index.ts", "type")}, f"T10 para web↔core: {pairs}")
         check(fo["type_only"] is True, f"T10 para tylko typy: {fo}")
         r = run(str(ts), "--focus", "packages/web", "--focus", "packages/core")
-        check(r.returncode == 0 and "Granica" in r.stdout and "api.ts" in r.stdout, f"T10 tekst: {r.stdout[-400:]}")
+        check(r.returncode == 0 and "Boundary" in r.stdout and "api.ts" in r.stdout, f"T10 tekst: {r.stdout[-400:]}")
         # T12 automatyczny podział grupy z > 40% plików; --group-depth wyłącza
         big = Path(d) / "big"
         write(big, BIG)

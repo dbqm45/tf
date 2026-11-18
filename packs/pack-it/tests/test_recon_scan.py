@@ -67,12 +67,12 @@ def main() -> int:
         check(inv.get("budget_tokens") == 12000, f"RS-2: małe repo → budżet partii 12000: {inv.get('budget_tokens')}")
         s = r.stdout
         check(len(s.splitlines()) <= 60, f"RS-3: streszczenie ≤ 60 linii: {len(s.splitlines())}")
-        check("Języki: Python" in s and "Pliki budowania: pyproject.toml" in s and "CI: .github/workflows/ci.yml" in s,
+        check("Languages: Python" in s and "Build files: pyproject.toml" in s and "CI: .github/workflows/ci.yml" in s,
               f"RS-4: języki, pliki budowania, CI: {s[:800]}")
-        check("Partie (" in s and "shop/billing" in s, f"RS-5: lista partii: {s[:800]}")
-        check("Tabele: invoice" in s, f"RS-6: tabele ze schematu: {s[:1200]}")
+        check("Batches (" in s and "shop/billing" in s, f"RS-5: lista partii: {s[:800]}")
+        check("Tables: invoice" in s, f"RS-6: tabele ze schematu: {s[:1200]}")
         check("@pytest.mark.parametrize" in s, f"RS-7: sygnały standardów z idiomami: {s[-1200:]}")
-        check("układ · Java · pakiety według funkcji" in s, f"RS-11: układ pakietów w streszczeniu mimo udziału < 50%: {s[-1200:]}")
+        check("layout · Java · packages by feature" in s, f"RS-11: układ pakietów w streszczeniu mimo udziału < 50%: {s[-1200:]}")
         check("raw/" in s or str(out) in s, f"RS-8: gdzie są pełne wyniki: {s[-400:]}")
 
         # bez gita: historia pominięta, reszta działa
@@ -80,7 +80,7 @@ def main() -> int:
         write(plain, REPO)
         r = run(str(plain), "--out", str(out2), "--budget-tokens", "60000")
         inv2 = json.loads((out2 / "inventory.json").read_text()) if (out2 / "inventory.json").is_file() else {}
-        check(r.returncode == 0 and "historia: brak gita" in r.stdout and inv2.get("budget_tokens") == 60000
+        check(r.returncode == 0 and "history: no git" in r.stdout and inv2.get("budget_tokens") == 60000
               and not (out2 / "territory.json").exists(), f"RS-9: bez gita i z jawnym budżetem: rc={r.returncode} {r.stdout[-500:]}")
         r = run(str(Path(d) / "nie-ma"), "--out", str(out2))
         check(r.returncode == 2, f"RS-10: brak repo → kod 2: {r.returncode}")

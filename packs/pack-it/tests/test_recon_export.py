@@ -123,6 +123,12 @@ def main() -> int:
               "E-12: bez --repo dowody nie są sprawdzane (brak pola verified)")
         r = run(str(rec), "--out", str(repo / "x.json"))
         check(r.returncode == 0 and (repo / "x.json").is_file(), f"E-13: --out: {r.stdout}{r.stderr}")
+        # angielskie znaczniki (14.x, np. z recon_cards.py) dają ten sam status co polskie
+        (rec / "rules.md").write_text("# Rules\n\n## X\n- A [unverified: no evidence in the card]\n- B [assumption]\n"
+                                      "- C [question]\n", encoding="utf-8")
+        run(str(rec), "--out", str(repo / "en.json"))
+        st = [i["status"] for i in json.loads((repo / "en.json").read_text(encoding="utf-8"))["rules"]]
+        check(st == ["unverified", "assumption", "question"], f"E-16: angielskie znaczniki → status: {st}")
         r = run(str(repo / "nie-ma"))
         check(r.returncode == 2 and "Traceback" not in r.stderr, f"E-14: brak katalogu → 2: {r.returncode} {r.stderr[-200:]}")
 

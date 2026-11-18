@@ -69,8 +69,8 @@ def main() -> int:
         check({("pom.xml", "maven"), ("billing/pom.xml", "maven"), ("web/package.json", "npm"),
                ("svc/go.mod", "go"), ("big/pyproject.toml", "python")} <= build, f"I-5: pliki budowania: {sorted(build)}")
         ex = {e["path"]: e["reason"] for e in inv.get("excluded", [])}
-        check(ex.get("web/node_modules") == "zależności" and ex.get("vendor") == "zależności", f"I-6: vendor: {ex}")
-        check(ex.get("svc/api.pb.go") == "wygenerowany" and ex.get("web/dist") == "wynik budowania",
+        check(ex.get("web/node_modules") == "dependencies" and ex.get("vendor") == "dependencies", f"I-6: vendor: {ex}")
+        check(ex.get("svc/api.pb.go") == "generated" and ex.get("web/dist") == "build output",
               f"I-7: wygenerowane i build: {ex}")
         mods = {m["path"] for m in inv.get("modules", [])}
         check({"billing", "web", "svc", "big"} <= mods, f"I-8: moduły z plików budowania: {sorted(mods)}")
@@ -87,7 +87,7 @@ def main() -> int:
         check(inv.get("totals", {}).get("tokens", 0) > 0 and inv["totals"].get("files", 0) == len(in_batches),
               f"I-13: sumy: {inv.get('totals')}")
         r = run(str(repo))
-        check(r.returncode == 0 and "Partie" in r.stdout and "Java" in r.stdout, f"I-14: tekst: {r.stdout[:300]}")
+        check(r.returncode == 0 and "Batches" in r.stdout and "Java" in r.stdout, f"I-14: tekst: {r.stdout[:300]}")
         r = run(str(repo / "nie-ma"))
         check(r.returncode == 2, "I-15: brak katalogu → kod 2")
 
