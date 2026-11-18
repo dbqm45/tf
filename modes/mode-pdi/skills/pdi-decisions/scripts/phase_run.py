@@ -9,7 +9,7 @@ Fazy zmiany uruchamiane przez pdi (tryb mode-pdi, F4): persona pracuje bez inter
       uruchamia personę: claude --print --agent <persona> --permission-mode acceptEdits [--max-budget-usd N]
       [--settings $PDI_CLAUDE_SETTINGS];
       JSON {status: waiting_gate | done | failed, …}; kod wyjścia 0 — czeka na bramkę albo gotowe, 1 — błąd;
-      delivery nie rusza, gdy `## Pytania do bramki` w plan.md ma pytanie bez odpowiedzi w decisions.md, a artefakt,
+      delivery nie rusza, gdy `## Gate questions` (dawniej `## Pytania do bramki`) w plan.md ma pytanie bez odpowiedzi w decisions.md, a artefakt,
       który powtarza pytanie już rozstrzygnięte w decisions.md, kończy fazę błędem `repeated_question` (Z1, PRB-3)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
@@ -52,7 +52,8 @@ WORKFLOW = Path(".github") / "workflows" / "sdlc-phase.yml"
 SCRIPTS = ".claude/skills/pdi-decisions/scripts"
 CONTRACT_VERSION = "0.13.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
-QUESTIONS = "Pytania do bramki"
+QUESTIONS = "Gate questions"
+QUESTIONS_PL = "Pytania do bramki"   # pl: sprzed 14.x — artefakty z polskim nagłówkiem
 # Drugi przegląd (N1, DZ12): sidecar z second_review.py obok artefaktu fazy; fazy, dla których go szukamy.
 SECOND_REVIEW_PHASES = ("requirements", "architecture")
 SECOND_REVIEW_DIR = ".review"
@@ -82,10 +83,10 @@ WHAT = {
                "take constraints, what counts as failure and links from the report, and record anything missing as a "
                "question"),
     "requirements": "requirements with acceptance criteria as examples, quality requirements, priorities",
-    "architecture": ("the architecture and the TSK cut plan (plan.md with the Wydanie and Flaga columns), release.yaml, "
+    "architecture": ("the architecture and the TSK cut plan (plan.md with the Release and Flag columns), release.yaml, "
                      "ADRs in this change's architecture.md (the experience design comes in the design phase)"),
-    "design": ("the experience design: flows, states and the Figma frame table `Wymaganie | Ścieżka | Stan | Ramka | "
-               "Uwagi` (pdi contract conventions.design; the designer's frames matched through Figma MCP, a frame sketch "
+    "design": ("the experience design: flows, states and the Figma frame table `Requirement | Journey | State | Frame | "
+               "Notes` (pdi contract conventions.design; the designer's frames matched through Figma MCP, a frame sketch "
                "only when a human asks for it); run design_check.py check before the gate"),
 }
 
@@ -177,7 +178,7 @@ def settled(change: str) -> list[dict]:
 
 
 def repeated(change: str, artifact: Path) -> list[str]:
-    """Pytania z `## Pytania do bramki` artefaktu, które decisions.md już rozstrzyga — z odwołaniem do decyzji."""
+    """Pytania z `## Gate questions` artefaktu, które decisions.md już rozstrzyga — z odwołaniem do decyzji."""
     done = {normalized(s["question"]): s for s in settled(change)}
     out = []
     for q in questions_in(artifact):
@@ -189,7 +190,7 @@ def repeated(change: str, artifact: Path) -> list[str]:
 
 
 def unanswered(change: str, artifact: Path) -> list[str]:
-    """Pytania z `## Pytania do bramki` artefaktu bez odpowiedzi w decisions.md."""
+    """Pytania z `## Gate questions` artefaktu bez odpowiedzi w decisions.md."""
     done = {normalized(s["question"]) for s in settled(change)}
     return [q for q in questions_in(artifact) if normalized(q) not in done]
 
@@ -245,7 +246,7 @@ def build_prompt(a) -> dict:
         f"First read the change log {d}/ (intent.md, plan.md, decisions.md and whatever is already there) and "
         f"`.claude/skills/pdi-decisions/SKILL.md`.",
         f"The `## Gate …` entries (in older changes `## Bramka …`) in {d}/decisions.md are human decisions from pdi gates and they are binding: do "
-        f"not challenge them. A question from `## Pytania do bramki` in earlier artifacts that such an entry answers "
+        f"not challenge them. A question from `## Gate questions` (in older artifacts `## Pytania do bramki`) in earlier artifacts that such an entry answers "
         f"is settled: in your artifact, record the outcome with a reference to the entry (e.g. {a.change}/D2) and do "
         f"not ask it again.",
         *decisions_block(a.change),
@@ -406,13 +407,13 @@ def cmd_run(a) -> int:
 
 
 def questions_in(path: Path) -> list[str]:
-    """Wiersze listy z sekcji `## Pytania do bramki` artefaktu."""
+    """Wiersze listy z sekcji `## Gate questions` (albo `## Pytania do bramki`) artefaktu."""
     if not path.is_file():
         return []
     out, inside = [], False
     for line in path.read_text(encoding="utf-8").splitlines():
         if line.startswith("## "):
-            inside = line[3:].strip() == QUESTIONS
+            inside = line[3:].strip() in (QUESTIONS, QUESTIONS_PL)
         elif inside and line.startswith("- ") and line[2:].strip():
             out.append(line[2:].strip())
     return out

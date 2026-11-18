@@ -17,7 +17,7 @@ trwały polem `task_dir`.
 Przebieg cięcia zmiany pdi (`--task TSK-n`) to takie samo zadanie, z kluczem `<CHG>-<TSK>` (np. `CHG-12-TSK-57`):
 `ticket.md` powstaje z wiersza cięcia w `docs/project/changes/CHG-n/plan.md` (nagłówek `tasks`) i z `intent.md`
 zmiany, task.json dostaje zmianę i cięcie (`tf task start … --change --cut`) oraz flagę
-z planu wydania (kolumna „Flaga” albo `release.yaml`; gdy jej tam nie ma — jawny brak flagi z powodem), a run.json
+z planu wydania (kolumna „Flag”/„Flaga” albo `release.yaml`; gdy jej tam nie ma — jawny brak flagi z powodem), a run.json
 — `change`, `task` i `flag`; z `--task` w dwóch planach dopiero `--change CHG-n` wybiera właściwy (PRB-33); `finish`
 zapisuje wtedy raport także w `docs/project/changes/CHG-n/runs/TSK-n.md` — stamtąd pdi bierze opis PR cięcia.
 Katalog `.tf/runs/cuts/` (stary układ cięć, bez zadania) już nie powstaje. `finish` sumuje zużycie z transkryptów Claude Code — sesji i jej podagentów — od czasu startu:
@@ -407,7 +407,7 @@ def task_contexts(project: Path, task: str) -> list[dict]:
         if task not in header_tasks(front):
             continue
         row = plan_row(body, task)
-        flag = next((v for k, v in row.items() if k.lower() == "flaga" and v not in EMPTY_CELL), None)
+        flag = next((v for k, v in row.items() if k.lower() in ("flag", "flaga") and v not in EMPTY_CELL), None)   # pl: sprzed 14.x
         release, flags = plan.parent / "release.yaml", []
         if release.is_file():
             try:
@@ -458,7 +458,7 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
             print(f"✗ {task} is in the change plans: {keys}. Give `--change CHG-n` to choose one.")
             return 2
         ctx = matches[0]
-        value = next((v for k, v in ctx["row"].items() if k.lower() == "wartość" and v not in EMPTY_CELL), "")
+        value = next((v for k, v in ctx["row"].items() if k.lower() in ("value", "wartość") and v not in EMPTY_CELL), "")
         title = title or (f"{task}: {value}" if value else task)
         story = task_story(task, ctx, story)
         cut, key = ctx, f"{ctx['change']}-{task}"

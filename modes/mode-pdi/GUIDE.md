@@ -1,83 +1,85 @@
-# pdi — decyzje w jednym źródle
+# pdi — decisions in one source
 
-Tryb `mode-pdi` dokłada do fabryki zapis decyzji zgodny z rejestrem pdi. Bez niego fabryka działa jak dotąd.
-Instalacja: `tf add mode-pdi`, usunięcie: `tf remove mode-pdi`.
+The `mode-pdi` mode adds to the factory decision recording consistent with the pdi register. Without it the factory works as before.
+Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
 
-## Co daje
-- **Dziennik zmiany:** `python3 .claude/skills/pdi-decisions/scripts/decision_record.py change new CHG-12 --source PRB-34`
-  tworzy `docs/project/changes/CHG-12/` z `intent.md`, `plan.md` i `decisions.md`; nagłówki są zgodne z kontraktem
-  pdi 0.3.0 (`contract/change.schema.json`). `decision_record.py check` sprawdza nagłówki.
-- **Decyzje:** skill `pdi-decisions` (wspólny dla wszystkich person) po zatwierdzeniu szkicu przez człowieka zapisuje
-  decyzję o zmianie w `decisions.md` (`decision add`) i — gdy serwer MCP pdi jest podłączony — w rejestrze pdi
-  (`record_decision`), który nadaje numer `DEC-n` (`decision mark`). Niewysłane: `decision pending`; wszystkie
-  w JSON: `decision export`.
+## What it gives
+- **Change log:** `python3 .claude/skills/pdi-decisions/scripts/decision_record.py change new CHG-12 --source PRB-34`
+  creates `docs/project/changes/CHG-12/` with `intent.md`, `plan.md` and `decisions.md`; the headers follow pdi contract
+  0.3.0 (`contract/change.schema.json`). `decision_record.py check` checks the headers.
+- **Decisions:** the `pdi-decisions` skill (shared by all personas), after a human approves the draft, records
+  the decision about a change in `decisions.md` (`decision add`) and — when the pdi MCP server is connected — in the pdi register
+  (`record_decision`), which assigns the number `DEC-n` (`decision mark`). Unsent: `decision pending`; all
+  in JSON: `decision export`.
 
-- **Fazy uruchamiane przez pdi (F4):** po decyzji na bramce skrzynka pdi wywołuje w repo workflow `sdlc-phase.yml`
-  (`python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install`). Workflow zapisuje decyzję w
-  `decisions.md` (`decision_record.py decision gate`), uruchamia personę fazy bez interakcji (`phase_run.py run`:
-  `intent` — maja, `requirements` — ewa, `architecture` — tomasz, `design` — natalia, `delivery` — tf (pętla fabryki); inna
-  persona w `.claude/pdi-phases.json`), otwiera PR fazy na gałęzi `pdi/CHG-n-<faza>` i wysyła do pdi prośbę o
-  następną bramkę (`phase_run.py gate request`, podpisane `gate.requested` na `PDI_EVENTS_URL/events/tf`).
-  Potrzebne: sekrety `ANTHROPIC_API_KEY` i `PDI_TF_SIGNING_SECRET` (ten sam w odbiorniku pdi), zmienna
-  `PDI_EVENTS_URL`; w pdi `PDI_DISPATCH_REPO` wskazuje to repo. Zatwierdzając bramkę, scal też PR fazy — następna
-  faza zaczyna od gałęzi domyślnej. Każde uruchomienie kosztuje (model); limit fazy daje `PDI_PHASE_BUDGET_USD` w pdi.
-  Przyjęcie zgłoszenia w pdi (F3) uruchamia fazę `intent` z wejściami `source` (PRB) i `problem` (treść zgłoszenia):
-  workflow zakłada `docs/project/changes/CHG-n/` ze źródłem i dniem zgłoszenia (`source_reported_at`, od niego
-  ShipScope liczy lead time od zgłoszenia), a persona pisze `intent.md` z problemu zgłaszającego.
+- **Phases run by pdi (F4):** after a decision at a gate the pdi inbox calls the `sdlc-phase.yml` workflow in the repo
+  (`python3 .claude/skills/pdi-decisions/scripts/phase_run.py workflow install`). The workflow records the decision in
+  `decisions.md` (`decision_record.py decision gate`), runs the phase persona without interaction (`phase_run.py run`:
+  `intent` — maja, `requirements` — ewa, `architecture` — tomasz, `design` — natalia, `delivery` — tf (the factory loop); another
+  persona in `.claude/pdi-phases.json`), opens the phase PR on the branch `pdi/CHG-n-<phase>` and sends pdi a request for the
+  next gate (`phase_run.py gate request`, a signed `gate.requested` to `PDI_EVENTS_URL/events/tf`).
+  Needed: the secrets `ANTHROPIC_API_KEY` and `PDI_TF_SIGNING_SECRET` (the same in the pdi receiver), the variable
+  `PDI_EVENTS_URL`; in pdi `PDI_DISPATCH_REPO` points to this repo. When approving a gate, merge the phase PR too — the next
+  phase starts from the default branch. Every run costs money (the model); the phase limit is `PDI_PHASE_BUDGET_USD` in pdi.
+  Accepting a report in pdi (F3) runs the `intent` phase with the inputs `source` (PRB) and `problem` (the report's content):
+  the workflow creates `docs/project/changes/CHG-n/` with the source and the report date (`source_reported_at`, from which
+  ShipScope counts lead time from the report), and the persona writes `intent.md` from the reporter's problem.
+  The change templates are in English (`## Gate questions`, the plan columns `Slice | Kind | Release | Flag | …`,
+  `## Options considered`, `## Change targets`); the readers still accept the Polish forms of older changes.
 
-- **Skan bezpieczeństwa na każdym PR (Z8c-2):** `phase_run.py workflow install --workflow change-check` instaluje
-  `change-check.yml`: ten sam skan co w pętli kawałka fabryki (`security_scan.py scan` ze skilla tf — semgrep
-  z regułami OWASP Top 10 i `.semgrep.yml` produktu na plikach zmienionych od bazy PR, `npm audit` / `pip-audit` przy
-  zmianie manifestu lub lockfile'a), a SARIF z `reports/security` sprawdza ci_for_sdlc (`--sarif`, SEC-001…003) razem
-  z definicją zmian. Błąd skanu (brak skanera, audyt, który się nie wykonał) czerwieni PR. W fazie `delivery`
-  `sdlc-phase.yml` instaluje semgrep i pip-audit przed personą, żeby pętla fabryki mogła skanować kawałki. Reguły
-  `p/owasp-top-ten` pobiera się z `semgrep.dev` — w sandboxie persony host jest na liście dozwolonych (Z8a,
-  `sandbox_settings.py`) i działa bez logowania (zestaw węższy niż po `semgrep login` — własne wzorce produktu
-  w `.semgrep.yml`); w CI bez sieci ustaw zmienną repozytorium `TF_SEMGREP_CONFIG` na plik reguł w repo.
-  Skan jest częścią rdzenia fabryki (skill tf).
+- **Security scan on every PR (Z8c-2):** `phase_run.py workflow install --workflow change-check` installs
+  `change-check.yml`: the same scan as in the factory's piece loop (`security_scan.py scan` from the tf skill — semgrep
+  with the OWASP Top 10 rules and the product's `.semgrep.yml` on the files changed since the PR base, `npm audit` / `pip-audit` when
+  a manifest or lockfile changes), and ci_for_sdlc checks the SARIF from `reports/security` (`--sarif`, SEC-001…003) together
+  with the change definitions. A scan error (no scanner, an audit that did not run) turns the PR red. In the `delivery` phase
+  `sdlc-phase.yml` installs semgrep and pip-audit before the persona, so the factory loop can scan the pieces. The
+  `p/owasp-top-ten` rules are fetched from `semgrep.dev` — in the persona's sandbox the host is on the allowlist (Z8a,
+  `sandbox_settings.py`) and it works without logging in (a narrower set than after `semgrep login` — the product's own patterns
+  in `.semgrep.yml`); in CI without network set the repository variable `TF_SEMGREP_CONFIG` to a rules file in the repo.
+  The scan is part of the factory core (the tf skill).
 
-- **Drugi przegląd przed bramkami B2 i B3 (N1, DZ12):** `second_review.py artifact --change CHG-n --phase P`
-  po fazie `requirements`/`architecture`, a przed prośbą o bramkę, czyta artefakt razem z decyzjami zmiany i
-  (dla architecture) `requirements.md` i podaje luki (brakujące stany błędu, kryteria bez przykładu, sprzeczności
-  z decyzją, cięcia bez dowodu sprawdzalności) jako JSON ze schematem i sekcję „Second-model review"
-  w artefakcie. Dostawca: `PDI_SECOND_MODEL` (`openai:<model>` → `OPENAI_API_KEY`, `claude:<model>` →
-  `ANTHROPIC_API_KEY`); bez `PDI_SECOND_MODEL` albo bez klucza dostawcy — zapasowy
-  `claude:claude-sonnet-5-5` oznaczony jako przegląd tego samego dostawcy (`same_vendor: true`).
-  Blokujące ustalenia (`blocker` i `major`) dopisuje `phase_run.py gate request` do pytań bramki z prefiksem
-  `[second review]`, a sprzeczności z decyzjami wymienia z odwołaniem `[contradicts <ref>]`. Niedostępność
-  drugiego modelu jest w prośbie o bramkę jako `second_review: {status: unavailable, reason: …}`. W Actions
-  `OPENAI_API_KEY` dostaje tylko ten krok (klucz nie trafia do kontenera persony — Z8g). Koszt zapisany
-  w sidecarze (`docs/project/changes/CHG-n/.review/<phase>.json`) wchodzi w budżet fazy (`PDI_PHASE_BUDGET_USD`)
-  obok kosztu persony. Druga podkomenda `comments` sprawdza uwagi recenzenta z PR (N2, A5).
+- **Second review before gates B2 and B3 (N1, DZ12):** `second_review.py artifact --change CHG-n --phase P`
+  after the `requirements`/`architecture` phase and before the gate request reads the artifact together with the change's decisions and
+  (for architecture) `requirements.md` and lists gaps (missing error states, criteria without an example, contradictions
+  with a decision, cuts without proof of verifiability) as JSON with a schema and a "Second-model review" section
+  in the artifact. Provider: `PDI_SECOND_MODEL` (`openai:<model>` → `OPENAI_API_KEY`, `claude:<model>` →
+  `ANTHROPIC_API_KEY`); without `PDI_SECOND_MODEL` or without the provider's key — the fallback
+  `claude:claude-sonnet-5-5` marked as a same-vendor review (`same_vendor: true`).
+  `phase_run.py gate request` adds the blocking findings (`blocker` and `major`) to the gate questions with the prefix
+  `[second review]`, and lists contradictions with decisions with a reference `[contradicts <ref>]`. The second model being
+  unavailable shows in the gate request as `second_review: {status: unavailable, reason: …}`. In Actions
+  only this step gets `OPENAI_API_KEY` (the key does not reach the persona's container — Z8g). The cost recorded
+  in the sidecar (`docs/project/changes/CHG-n/.review/<phase>.json`) counts towards the phase budget (`PDI_PHASE_BUDGET_USD`)
+  next to the persona's cost. The second subcommand `comments` checks the reviewer's comments from a PR (N2, A5).
 
-- **Pętla PR (N2):** po fazie `delivery` w trybie lokalnym pdi prowadzi każdy PR cięcia przez rundy:
-  przegląd AI według `REVIEW.md` produktu (`pr_loop.py review`, w kontenerze fazy; bez pliku — szablon tf, a
-  `pr_loop.py scaffold` dodaje go do produktu) → walidacja uwag drugim modelem (`second_review.py comments`, N1) →
-  agent `tf` poprawia tylko potwierdzone uwagi `critical`/`important` i czerwone checki (`pr_loop.py fix`, log CI jako
-  dane cytowane) → ponowny przegląd; najwyżej 2 rundy (jak DZ6). Uwagi niepotwierdzone, przy niedostępnym drugim
-  modelu i sprzeczne z decyzją zmiany idą do człowieka jako pytania; drobne (`minor`) — jako lista w PR. **Zielone**
-  = co najmniej jeden check CI na głowie PR i wszystkie `pass`/`skipping`; dlatego `change-check.yml` ma obowiązkowy
-  krok „Weryfikacja produktu (N3)” (`./verify.sh`). PR bez checków nie jest zielony: pdi uruchamia wtedy
-  `pr_loop.py verify` w kontenerze i kończy z powodem `no_ci_checks`. Opis PR dostaje sekcję „Przewodnik
-  dokończenia” (co zrobione, co zostaje, decyzje poza planem, ryzyka), aktualizowaną po każdej rundzie. W Actions
-  (`sdlc-phase.yml`) pętli nie ma: push tokenem `github.token` nie uruchamia CI na gałęziach cięć.
+- **PR loop (N2):** after the `delivery` phase in local mode pdi takes every cut PR through rounds:
+  an AI review by the product's `REVIEW.md` (`pr_loop.py review`, in the phase container; without the file — the tf template, and
+  `pr_loop.py scaffold` adds it to the product) → validation of the comments by the second model (`second_review.py comments`, N1) →
+  the `tf` agent fixes only confirmed `critical`/`important` comments and red checks (`pr_loop.py fix`, the CI log as
+  quoted data) → a re-review; at most 2 rounds (as DZ6). Unconfirmed comments, those with the second model
+  unavailable and those contradicting a change decision go to the human as questions; minor ones (`minor`) — as a list in the PR. **Green**
+  = at least one CI check on the PR head and all `pass`/`skipping`; that is why `change-check.yml` has a mandatory
+  product verification step (N3, `./verify.sh`). A PR without checks is not green: pdi then runs
+  `pr_loop.py verify` in the container and ends with the reason `no_ci_checks`. The PR description gets a completion guide
+  section (what is done, what remains, decisions outside the plan, risks), updated after every round. In Actions
+  (`sdlc-phase.yml`) there is no loop: a push with the `github.token` token does not run CI on the cut branches.
 
-- **Pasma kontrolne z ShipScope (F5):** `metric_watch.py check` czyta dzienny szereg PROD z API usług ShipScope
-  (rollbacki, wdrożenia nieudane, lead time, liczba wdrożeń), liczy pasma `control_band.py` i przy punkcie poza 3σ
-  z ostatnich dni wysyła do pdi `metric.breached` (`--send`). Codziennie: `metric_watch.py workflow install`
-  (`metric-watch.yml`). Potrzebne: sekrety `SHIPSCOPE_TOKEN` (token usługi z ShipScope) i `PDI_TF_SIGNING_SECRET`,
-  zmienne `SHIPSCOPE_URL` i `PDI_EVENTS_URL`; metryki i linia bazowa w `.claude/pdi-metrics.json`. Bez modelu, bez
-  kosztu. pdi musi przyjmować `metric.breached` od tf (zgłoszenia, F3) — wcześniej odpowie 400.
+- **Control bands from ShipScope (F5):** `metric_watch.py check` reads the daily PROD series from the ShipScope service API
+  (rollbacks, failed deployments, lead time, number of deployments), computes the `control_band.py` bands and on a point outside 3σ
+  in the last days sends pdi `metric.breached` (`--send`). Daily: `metric_watch.py workflow install`
+  (`metric-watch.yml`). Needed: the secrets `SHIPSCOPE_TOKEN` (a service token from ShipScope) and `PDI_TF_SIGNING_SECRET`,
+  the variables `SHIPSCOPE_URL` and `PDI_EVENTS_URL`; metrics and the baseline in `.claude/pdi-metrics.json`. No model, no
+  cost. pdi must accept `metric.breached` from tf (reports, F3) — before that it answers 400.
 
-## Warunek: serwer MCP pdi
-Zapis do rejestru działa tylko wtedy, gdy w sesji jest serwer MCP `pdi` (narzędzia `record_decision`,
-`find_decisions`, `get_decision`, `supersede_decision`). Instalację opisuje repo pdi
-(`integrations/claude-code/README.md`; rejestracja `claude mcp add --scope user pdi …`). Bez niego decyzje zostają w `decisions.md` z pustym `id` i `sent: no` — nic nie ginie.
+## Requirement: the pdi MCP server
+Recording to the register works only when the session has the `pdi` MCP server (the tools `record_decision`,
+`find_decisions`, `get_decision`, `supersede_decision`). The pdi repo describes the installation
+(`integrations/claude-code/README.md`; registration `claude mcp add --scope user pdi …`). Without it decisions stay in `decisions.md` with an empty `id` and `sent: no` — nothing is lost.
 
-## Czego nie zmienia
-Rdzeń fabryki, dziennik faz projektu (`docs/project/0N-*`), inne nakładki i ustawienia — bez zmian. Projekt bez
-katalogu `docs/project/changes/` nie widzi różnicy.
+## What it does not change
+The factory core, the project's phase log (`docs/project/0N-*`), other packs and settings — unchanged. A project without
+the `docs/project/changes/` directory sees no difference.
 
-## Polecenia
+## Commands
 `decision_record.py change new|check`, `decision add|pending|mark|export|gate`, `phase_run.py prompt|run|gate
-request|workflow install`, `metric_watch.py check|workflow install` — pełny opis: `--help` skryptów.
+request|workflow install`, `metric_watch.py check|workflow install` — full description: the scripts' `--help`.

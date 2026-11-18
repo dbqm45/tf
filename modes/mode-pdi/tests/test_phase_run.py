@@ -322,6 +322,16 @@ def main() -> int:
               and pl.get("url") == "https://github.com/acme/shop/pull/7"
               and pl.get("questions") == ["Limit ponowień: 3 czy 5?", "Czy płatności BLIK też?"]
               and pl.get("summary"), f"G-3: treść prośby z pytaniami z artefaktu: {pl}")
+        # G-3b: angielski nagłówek sekcji (`## Gate questions`, szablony 4c-x) daje te same pytania.
+        req.write_text("---\nartifact: requirements\n---\n# Requirements\n\n## Gate questions\n- Retry limit: 3 or 5?\n"
+                       "\n## Other\n- not a question\n", encoding="utf-8")
+        r = run(["gate", "request", "--change", "CHG-12", "--phase", "requirements",
+                 "--url", "https://github.com/acme/shop/pull/7"], repo, **genv)
+        pl_en = json.loads((Catch.got[-1] if Catch.got else {}).get("body") or b"{}").get("payload", {})
+        check(r.returncode == 0 and pl_en.get("questions") == ["Retry limit: 3 or 5?"],
+              f"G-3b: pytania z `## Gate questions`: {pl_en}")
+        req.write_text("---\nartifact: requirements\n---\n# Wymagania\n\n## Pytania do bramki\n- Limit ponowień: 3 czy 5?\n"
+                       "- Czy płatności BLIK też?\n\n## Inne\n- nie pytanie\n", encoding="utf-8")
         gate_schema = json.loads((FIX / "event.schema.json").read_text(encoding="utf-8"))["$defs"]["gate_requested"]
         review_props = gate_schema["properties"].get("second_review", {}).get("properties", {})
         check(set(pl) <= set(gate_schema["properties"]) and set(pl.get("second_review", {})) <= set(review_props)

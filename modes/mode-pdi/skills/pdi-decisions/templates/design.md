@@ -6,21 +6,21 @@ status: proposed
 version: 1
 ---
 
-# Projekt zmiany {CHG}
+# Design of change {CHG}
 
-Plik Figmy: <link do pliku> · tryb: dopasowanie ramek projektanta (szkic ramek przez agenta tylko na prośbę człowieka)
+Figma file: <link to the file> · mode: matching the designer's frames (a frame draft by the agent only at a human's request)
 
-## Ramki per wymaganie i stan
+## Frames per requirement and state
 
-Format z kontraktu pdi (`conventions.design`): stan z listy `idle`, `loading`, `processing`, `success`,
+Format from the pdi contract (`conventions.design`): a state from the list `idle`, `loading`, `processing`, `success`,
 `validation_error`, `server_error`, `timeout`, `retry`, `empty`, `confirmation`, `session_expired`, `network_failure`,
-`permission_denied`; ramka — link z `node-id`, `brak` (z pytaniem) albo `nie dotyczy` (z powodem). Każda historyjka:
-co najmniej `idle`, `success` i stan błędu. Sprawdzenie: `design_check.py check {CHG}`.
+`permission_denied`; the frame — a link with `node-id`, `missing` (with a question) or `n/a` (with a reason). Every story:
+at least `idle`, `success` and an error state. Check: `design_check.py check {CHG}`.
 
-| Wymaganie | Ścieżka | Stan | Ramka | Uwagi |
+| Requirement | Journey | State | Frame | Notes |
 |---|---|---|---|---|
-| US-? | <ścieżka> | idle | brak | <czego brakuje — pytanie do projektanta> |
+| US-? | <journey> | idle | missing | <what is missing — a question to the designer> |
 
-## Przepływy
+## Flows
 
-## Pytania do bramki
+## Gate questions

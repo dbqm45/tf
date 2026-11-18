@@ -28,7 +28,7 @@ Dziennik zmiany zgodny z kontraktem pdi 0.3.0 (contract/change.schema.json; od 0
       --id DEC-41 [--by pdi] [--date RRRR-MM-DD] [--why "…"] [--answers PLIK]
       decyzja ze skrzynki pdi (gate.decided, wejścia szablonu sdlc-phase.yml) jako wpis z numerem i sent: yes;
       ponowienie z tym samym numerem nic nie dopisuje; --answers: JSON [{question, answer}] — odpowiedzi człowieka na
-      pytania z `## Pytania do bramki` (kontrakt pdi 0.12.0, pole answers), w wpisie jako pary `question`/`answer`
+      pytania z `## Gate questions` (dawniej `## Pytania do bramki`; kontrakt pdi 0.12.0, pole answers), w wpisie jako pary `question`/`answer`
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision import CHG-12 --json PLIK
       decyzje zmiany z rejestru pdi (links.chg; JSON lista {id, statement, why, decided_at, decided_by, kind,
       source_kind, drafted_by, answers?}) jako wpisy z numerem, sent: yes i origin: pdi; decyzja, której numer
@@ -520,14 +520,19 @@ def validate(v, s: dict, at: str) -> list[str]:
 
 
 PLAN_COLUMNS = ("wydanie", "flaga", "rodzaj", "wartość", "wymagania", "odblokowuje", "weryfikacja")   # kontrakt pdi
-COLUMN_ALIASES = {"kind": "rodzaj"}   # angielski nagłówek kolumny przyjmowany obok polskiego
+# Angielskie nagłówki kolumn (szablon od 4c-x, jak ci_for_sdlc connectors/repo.ts) → klucze wewnętrzne.
+# pl: sprzed 14.x — polskie nagłówki zostają przyjmowane.
+COLUMN_ALIASES = {"kind": "rodzaj", "release": "wydanie", "flag": "flaga", "flags": "flaga", "value": "wartość",
+                  "requirements": "wymagania", "requirement": "wymagania", "unblocks": "odblokowuje",
+                  "verification": "weryfikacja"}
 FOUNDATION = re.compile(r"^(fundament|foundation|f|f-\d+)$", re.I)   # jak REL-008 w ci_for_sdlc (connectors/repo.ts)
 FOUNDATION_VALUE = re.compile(r"^\((fundament|foundation)\)", re.I)
 REQUIREMENT_ID = re.compile(r"\b[A-Z][A-Z0-9]*-\d+\b")
 # Sekcje architekta w plan.md (N20 i Z7b-1a; kontrakt pdi 0.12.0 — plan.md czyta człowiek, release.yaml maszyna).
-OPTIONS_HEADING = re.compile(r"^##+\s+Rozwa[zż]one opcje\b", re.M)
-OPTION_ENTRY = re.compile(r"^###+\s+Opcja\b", re.M)
-TARGETS_HEADING = re.compile(r"^##+\s+Cele zmiany\b", re.M)
+# pl: sprzed 14.x — „Rozważone opcje”, „Opcja”, „Cele zmiany”.
+OPTIONS_HEADING = re.compile(r"^##+\s+(?:Options considered|Rozwa[zż]one opcje)\b", re.M | re.I)
+OPTION_ENTRY = re.compile(r"^###+\s+(?:Option|Opcja)\b", re.M)
+TARGETS_HEADING = re.compile(r"^##+\s+(?:Change targets|Cele zmiany)\b", re.M | re.I)
 
 
 def plan_columns(text: str) -> dict:
@@ -568,25 +573,25 @@ def check_plan(d: Path) -> list[str]:
         if FOUNDATION.match(row.get("rodzaj") or "") or FOUNDATION_VALUE.match(row.get("wartość") or ""):
             unblocks = REQUIREMENT_ID.findall(row.get("odblokowuje") or "")
             if not unblocks:
-                errs.append(f"plan.md: {t} — foundation without „Odblokowuje” (the cuts of this change it unblocks); "
+                errs.append(f"plan.md: {t} — foundation without „Unblocks” (Odblokowuje: the cuts of this change it unblocks); "
                             "without it this is layered work: remove it or merge it into the first cut that needs it")
             for u in unblocks:
                 if u not in known:
-                    errs.append(f"plan.md: {t} — „Odblokowuje” lists {u}, but {u} is not a cut of this change")
+                    errs.append(f"plan.md: {t} — „Unblocks” (Odblokowuje) lists {u}, but {u} is not a cut of this change")
         elif "wymagania" in row and not REQUIREMENT_ID.findall(row["wymagania"] or "") and not row.get("weryfikacja"):
-            errs.append(f"plan.md: {t} — cut without a requirement ID in „Wymagania” and without verification")
+            errs.append(f"plan.md: {t} — cut without a requirement ID in „Requirements” (Wymagania) and without verification")
     status = (h.get("status") or "").strip().lower() if isinstance(h.get("status"), str) else ""
     if status and status != "draft":
         if not OPTIONS_HEADING.search(text):
-            errs.append("plan.md: no „## Rozważone opcje” section (N20): the architect lists at least two options "
+            errs.append("plan.md: no „## Options considered” (Rozważone opcje) section (N20): the architect lists at least two options "
                         "considered, with pros, cons and cost, plus the choice and the reason")
         else:
             options = OPTION_ENTRY.findall(text)
             if len(options) < 2:
-                errs.append(f"plan.md: „## Rozważone opcje” has {len(options)} options — N20 needs at least two "
-                            "(headings `### Opcja A`, `### Opcja B`); a plan with one option gets a finding before B3")
+                errs.append(f"plan.md: „## Options considered” has {len(options)} options — N20 needs at least two "
+                            "(headings `### Option A`, `### Option B`); a plan with one option gets a finding before B3")
         if not TARGETS_HEADING.search(text):
-            errs.append("plan.md: no „## Cele zmiany (targets)” section (Z7b-1a, DZ7): the architect records "
+            errs.append("plan.md: no „## Change targets (targets)” (Cele zmiany) section (Z7b-1a, DZ7): the architect records "
                         "coverage and mutation targets for the changed code (N4), and eval thresholds for an AI product")
     return errs
 
@@ -640,10 +645,10 @@ def check_release(d: Path) -> list[str]:
                             f"only in plan.md: {', '.join(only_plan)}" if only_plan else "") if x))
         for t, row in plan_columns(text).items():
             if "wydanie" in row and row["wydanie"] != line_of.get(t):
-                errs.append(f"plan.md: {t} — column „Wydanie” is {row['wydanie'] or 'empty'}, in release.yaml "
+                errs.append(f"plan.md: {t} — column „Release” (Wydanie) is {row['wydanie'] or 'empty'}, in release.yaml "
                             f"{line_of.get(t) or 'no line'}")
             if "flaga" in row and row["flaga"] != flag_of.get(t):
-                errs.append(f"plan.md: {t} — column „Flaga” is {row['flaga'] or 'empty'}, in release.yaml "
+                errs.append(f"plan.md: {t} — column „Flag” (Flaga) is {row['flaga'] or 'empty'}, in release.yaml "
                             f"{flag_of.get(t) or 'no flag'}")
     return errs
 

@@ -174,7 +174,7 @@
       "requirements\\.md"
      ],
      [
-      "Pytania do bramki"
+      "Pytania do bramki|Gate questions"
      ],
      [
       "nie pyta|bez pyta|nie czekaj|nikt nie odpowie|bez interakcji"
@@ -236,7 +236,7 @@
       "wariant"
      ],
      [
-      "Pytania do bramki|B1|bramk"
+      "Pytania do bramki|Gate questions|B1|bramk|gate"
      ]
     ],
     "none": [
@@ -252,10 +252,10 @@
    "checks": {
     "all": [
      [
-      "fundament"
+      "fundament|foundation"
      ],
      [
-      "Odblokowuje"
+      "Odblokowuje|Unblocks"
      ],
      [
       "TSK-58"
@@ -286,6 +286,7 @@
         ],
         [
           "Wymaganie \\| Ścieżka \\| Stan \\| Ramka",
+          "Requirement \\| Journey \\| State \\| Frame",
           "tabel\\w* ramek"
         ],
         [
@@ -295,7 +296,7 @@
           "node-id|link\\w* do ramk\\w*"
         ],
         [
-          "Pytania do bramki|pytani\\w*"
+          "Pytania do bramki|Gate questions|pytani\\w*"
         ]
       ],
       "none": []

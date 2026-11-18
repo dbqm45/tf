@@ -1,28 +1,28 @@
-# Zamiar zmiany {CHG}
+# Intent of change {CHG}
 
 ## Problem
-<Czyj problem, w jakiej sytuacji, skąd wiemy (zgłoszenie, dane, rozmowa).>
+<Whose problem, in what situation, how we know (a report, data, a conversation).>
 
-## Warianty
-| Wariant | Za | Przeciw |
+## Options
+| Option | For | Against |
 |---|---|---|
 | A | | |
 | B | | |
 
-## Wybrany wariant
-<Który i dlaczego — decyzja trafia też do decisions.md.>
+## Chosen option
+<Which one and why — the decision also goes into decisions.md.>
 
-## Metryki sukcesu
-- <Mierzalny wynik i próg.>
+## Success metrics
+- <A measurable outcome and a threshold.>
 
-## Poza zakresem
-- <Czego ta zmiana nie robi.>
+## Out of scope
+- <What this change does not do.>
 
-## Ograniczenia
-- <Warunki, w których wynik ma działać (budżet, czas, urządzenia, prawo). Pisze człowiek, który chce wyniku.>
+## Constraints
+- <Conditions in which the outcome must work (budget, time, devices, law). Written by the human who wants the outcome.>
 
-## Kiedy to porażka
-- <Czym wynik nie może być, nawet jeśli metryka wygląda dobrze (np. „za drogi dla klienta”, „niedostępny”).>
+## When it is a failure
+- <What the outcome must not be, even if the metric looks good (e.g. "too expensive for the customer", "inaccessible").>
 
-## Powiązania
-- <Obszary, systemy i inne zmiany (CHG, PRB), których to dotyczy.>
+## Related
+- <Areas, systems and other changes (CHG, PRB) it concerns.>
