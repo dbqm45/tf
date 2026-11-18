@@ -6,14 +6,14 @@ kind: mode
 version: 0.9.0
 title: pdi decisions
 description: Decisions in one source with pdi — per-change journal (docs/project/changes/CHG-n/) following the pdi contract, decision recording through the pdi MCP server, phases started by the pdi gate inbox (sdlc-phase workflow), and control bands on ShipScope PROD metrics sending metric.breached to pdi (metric-watch workflow); opt-in.
-content_language: pl
+content_language: en
 default: false
 requires:
   core: ">=5.6.0 <19.0.0"
 optional_packs: [pack-it]   # persony faz (phase_run.py) i procedura triażu PRB (proc-issue-triage); bez pack-it tryb działa
 
 facets:
-  - {prefix: pdi-, order: 195, name: decyzje pdi, question: "jak zapisać decyzję o zmianie w jednym źródle (repo + rejestr pdi)"}
+  - {prefix: pdi-, order: 195, name: pdi decisions, question: "how to record a decision about a change in one source (repo + pdi register)"}
 
 contributes:
   personas:
