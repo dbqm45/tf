@@ -1,44 +1,44 @@
-# Szablony artefaktów usługi
+# Service artifact templates
 
-## Blueprint — tabela
-Jak w przykładzie SKILL.md: kolumny to kroki w czasie, wiersze to pasy. Każdy punkt awarii ma ID (P1…), dowód
-(liczba, cytat) i właściciela. Stan obecny i docelowy w osobnych sekcjach.
+## Blueprint — table
+As in the SKILL.md example: the columns are steps in time, the rows are lanes. Every failure point has an ID (P1…), evidence
+(a number, a quote) and an owner. The current and the target state in separate sections.
 
 ## Blueprint — Mermaid
 ```mermaid
 flowchart TB
-  subgraph Klient
-    K1[Wypełnia formularz zwrotu] --> K2[Pakuje i nadaje paczkę] --> K3[Czeka na zwrot pieniędzy]
+  subgraph Customer
+    K1[Fills in the return form] --> K2[Packs and sends the parcel] --> K3[Waits for the refund]
   end
   subgraph Frontstage
-    F1[Infolinia i czat]
+    F1[Hotline and chat]
   end
   subgraph Backstage
-    B1[Przepisanie do ERP] --> B2[Magazyn skanuje paczkę] --> B3[Zgoda księgowości]
+    B1[Re-entry into the ERP] --> B2[The warehouse scans the parcel] --> B3[Accounting approval]
   end
-  subgraph Wspierające
-    S1[ERP] ; S2[System kuriera] ; S3[Bank]
+  subgraph Support
+    S1[ERP] ; S2[Courier system] ; S3[Bank]
   end
   K1 -.-> B1
   K3 -.-> F1
   B3 --> S3
 ```
-Linie interakcji, widoczności i wewnętrznej opisz w przypisach lub jako osobne węzły-separatory; Mermaid nie ma
-natywnych pasów, więc zachowaj kolejność subgraphów.
+Describe the lines of interaction, visibility and internal interaction in footnotes or as separate separator nodes; Mermaid has no
+native lanes, so keep the order of the subgraphs.
 
-## Mapa podróży
-| Etap | Działania klienta | Kanał | Myśli | Emocja (−2…+2) | Bolączka i dowód |
+## Journey map
+| Stage | Customer actions | Channel | Thoughts | Emotion (−2…+2) | Pain point and evidence |
 |---|---|---|---|---|---|
-Mapa docelowa ma te same etapy, żeby dało się porównać.
+The target map has the same stages, so that they can be compared.
 
-## Mapa interesariuszy
-| Strona | Rola w usłudze | Potrzeba | Wpływ (W/Ś/N) | Kto go słucha |
+## Stakeholder map
+| Party | Role in the service | Need | Influence (H/M/L) | Who listens to them |
 |---|---|---|---|---|
 
-## Inwentarz punktów styku
-| Punkt styku | Kanał | Właściciel | System | Dane wspólne z | Spójność (ta sama obietnica, język, dane) | Luka |
+## Touchpoint inventory
+| Touchpoint | Channel | Owner | System | Data shared with | Consistency (the same promise, language, data) | Gap |
 |---|---|---|---|---|---|---|
 
-## Omnichannel — test spójności
-Dla jednego przypadku klienta przejdź przez wszystkie kanały: czy zmiana kanału wymaga powtórzenia danych, czy
-odpowiedź o stanie sprawy jest ta sama, czy pracownik widzi historię z innych kanałów.
+## Omnichannel — consistency test
+For one customer case go through all channels: does a channel change require repeating data, is the
+answer about the state of the matter the same, does the employee see the history from other channels.

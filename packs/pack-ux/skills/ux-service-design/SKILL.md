@@ -1,105 +1,105 @@
 ---
 name: ux-service-design
-description: Użyj, gdy problem to usługa w wielu kanałach z zapleczem, nie ekran — service blueprint, mapa podróży, punkty styku, prototyp usługi.
+description: Use when the problem is a service across many channels with a back office, not a screen — service blueprint, journey map, touchpoints, service prototype.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj, gdy problem klienta rozciąga się na wiele kanałów, ludzi i zaplecze (sklep, urząd, bank, serwis, onboarding), a nie na pojedynczy ekran — service blueprint (działania klienta, frontstage, backstage, procesy wspierające, dowody, linie interakcji i widoczności), mapa podróży klienta obecna i docelowa, mapa interesariuszy, inwentarz punktów styku, spójność między kanałami, warsztat współprojektowania, prototyp usługi (odgrywanie ról, concierge, Wizard of Oz), metryki usługi i standard usług publicznych (GOV.UK Service Standard); artefakt service-blueprint.md. Nie do modelowania procesu domenowego zdarzeniami (ddd-event-storming), mapy strumienia wartości i marnotrawstwa, wyboru, co budować, i testów założeń (proc-product-discovery) ani przepływów ekranów i stanów (ux-feature-design)."
-  keywords: "usługa, service design, projektowanie usług, service blueprint, blueprint usługi, plan usługi, frontstage, backstage, zaplecze, mapa podróży klienta, customer journey, journey map, punkty styku, touchpoint, omnichannel, wielokanałowość, spójność kanałów, interesariusze, mapa interesariuszy, współprojektowanie, co-design, warsztat z klientami, prototyp usługi, Wizard of Oz, concierge, odgrywanie ról, bodystorming, standard usług, GOV.UK Service Standard, usługa publiczna, urząd, obsługa klienta, zwroty, reklamacje od strony klienta, nikt nie widzi całości"
+  catalog: "Use when the customer's problem spans many channels, people and the back office (a shop, an office, a bank, a service centre, onboarding), not a single screen — service blueprint (customer actions, frontstage, backstage, support processes, evidence, lines of interaction and visibility), the current and target customer journey map, a stakeholder map, a touchpoint inventory, consistency across channels, a co-design workshop, a service prototype (role-play, concierge, Wizard of Oz), service metrics and the public service standard (GOV.UK Service Standard); the artifact service-blueprint.md. Not for modelling a domain process with events (ddd-event-storming), a value stream map and waste, choosing what to build and assumption tests (proc-product-discovery) or screen flows and states (ux-feature-design)."
+  keywords: "usługa, service design, projektowanie usług, service blueprint, blueprint usługi, plan usługi, frontstage, backstage, zaplecze, mapa podróży klienta, customer journey, journey map, punkty styku, touchpoint, omnichannel, wielokanałowość, spójność kanałów, interesariusze, mapa interesariuszy, współprojektowanie, co-design, warsztat z klientami, prototyp usługi, Wizard of Oz, concierge, odgrywanie ról, bodystorming, standard usług, GOV.UK Service Standard, usługa publiczna, urząd, obsługa klienta, zwroty, reklamacje od strony klienta, nikt nie widzi całości, service, back office, customer journey map, touchpoints, multichannel, channel consistency, stakeholders, stakeholder map, customer workshop, service prototype, role-play, public service, government office, customer service, returns, complaints from the customer side, nobody sees the whole"
 ---
 
-# Projektowanie usługi — od całości doświadczenia do planu zaplecza
+# Service design — from the whole experience to the back-office plan
 
-Usługa to nie ekran: klient przechodzi przez kanały (www, aplikacja, telefon, okienko, paczka), ludzi i systemy,
-z których część widzi, a część nie. Problem jest „usługowy”, gdy skargi dotyczą **styków** (zmiana kanału, przekazanie
-między działami, czekanie na zaplecze), a nie jednego ekranu. Efekt: wspólny obraz całości i lista zmian w
-zapleczu, nie tylko w interfejsie.
+A service is not a screen: the customer passes through channels (web, app, phone, counter, parcel), people and systems,
+some of which they see and some they do not. A problem is a "service" one when the complaints concern the **seams** (a channel change, a handoff
+between departments, waiting for the back office), not a single screen. The effect: a shared picture of the whole and a list of changes in
+the back office, not only in the interface.
 
-## Kiedy ten skill
-- Skargi, powtórzenia danych, „odbijanie” klienta między działami, różne odpowiedzi w różnych kanałach → tak.
-- Pytanie o jeden ekran lub przepływ w aplikacji → **ux-feature-design**.
-- Model zdarzeń i reguł domenowych dla systemu → **ddd-event-storming**.
-- Wybór, które szanse realizować, i testy założeń → **proc-product-discovery**.
+## When this skill
+- Complaints, repeated data, the customer "bounced" between departments, different answers in different channels → yes.
+- A question about one screen or a flow in the app → **ux-feature-design**.
+- A model of the domain events and rules for a system → **ddd-event-storming**.
+- Choosing which opportunities to pursue, and assumption tests → **proc-product-discovery**.
 
-## Procedura
-1. **Zakres i wejście.** Wybierz jedną usługę od zdarzenia otwierającego do zamykającego („klient chce zwrócić
-   towar” → „pieniądze wróciły”). Zbierz dowody z badań (wywiady, zgłoszenia do obsługi, dane); brakuje — zaplanuj
-   badania (ux-research-methods). Nie rysuj z głowy zespołu.
-2. **Mapa interesariuszy.** Klienci (segmenty), pracownicy frontstage i backstage, partnerzy (kurier, płatności),
-   regulator. Dla każdego: czego potrzebuje, na co wpływa, kto go słucha. Zapis jako tabela; diagram tylko przy
-   >10 stronach.
-3. **Mapa podróży — obecna.** Etapy, działania klienta, kanały, myśli i emocje, momenty prawdy i bolączki, każde
-   z dowodem (cytat, liczba). Osobna mapa na segment, jeśli ścieżki się różnią. Mapa pokazuje **perspektywę
-   klienta**; zaplecze dodaje blueprint.
-4. **Inwentarz punktów styku.** Tabela: punkt styku, kanał, właściciel, system, cel, spójność z innymi kanałami
-   (te same dane, ten sam język, ta sama obietnica). Luki spójności to kandydaci do zmian (`references/templates.md`).
-5. **Service blueprint** (obecny stan, potem docelowy). Poziome pasy od góry:
-   dowody fizyczne i cyfrowe → **działania klienta** → *linia interakcji* → **frontstage** (widoczne czynności
-   pracowników i interfejsów) → *linia widoczności* → **backstage** (niewidoczne czynności pracowników) →
-   *linia interakcji wewnętrznej* → **procesy wspierające** (systemy, inne jednostki, partnerzy).
-   Każdy krok: czas, kto, jakim narzędziem, jakie dane. Zaznacz punkty awarii, czekanie i przekazania.
-   Mermaid i szablon tabeli: `references/templates.md`.
-6. **Diagnoza.** Na blueprincie zaznacz: przekazania bez danych, miejsca, gdzie klient robi pracę zaplecza,
-   rozjazdy między kanałami, kroki bez właściciela. Rangę nadaj wpływem na klienta i kosztem obsługi.
-   Najpierw rozwiąż **cały problem** (nie fragment) i spójność między kanałami.
-7. **Współprojektowanie.** Warsztat z klientami i pracownikami obu stron linii widoczności: 6–10 osób, 2–3 godziny,
-   blueprint na ścianie, uczestnicy dopisują brakujące kroki i proponują zmiany. Pracownicy zaplecza znają
-   obejścia, których nie ma w dokumentach. Prowadzenie: ddd-facilitation.
-8. **Prototyp usługi** najtańszą metodą, która odpowie na pytanie: odgrywanie ról i bodystorming (układ
-   okienka, rozmowa), **concierge** (człowiek ręcznie robi to, co potem zrobi system), **Wizard of Oz**
-   (klient sądzi, że system działa, a robi to człowiek), makieta pomieszczenia lub formularza papierowego.
-   Zapisz hipotezę, kryterium sukcesu i co zmierzysz; kod dopiero po potwierdzeniu.
-9. **Docelowy blueprint i mapa docelowa.** Zmiany ułożone w fale; dla każdej: wpływ na klienta, praca zaplecza,
-   zmiany w systemach, zmiana organizacyjna (kto traci, kto zyskuje zadania). Zamień na szanse do
-   proc-product-discovery, a zmiany w zapleczu na backlog.
-10. **Metryki i standard.** Metryki usługi z klientem w środku: wskaźnik ukończenia całego zadania (w każdym kanale),
-    czas od zgłoszenia do wyniku, kontakty ponowne w tej sprawie, koszt obsługi jednego przypadku, satysfakcja. Dla
-    usług publicznych odnieś ocenę do GOV.UK Service Standard (14 punktów, m.in. „Solve a whole problem for users”,
-    „Provide a joined up experience across channels”, „Define what success looks like and publish performance
-    data”) — pełna lista i uwagi: `references/service-standard.md`.
+## Procedure
+1. **Scope and input.** Choose one service from the opening event to the closing one ("the customer wants to return
+   an item" → "the money came back"). Collect evidence from research (interviews, support tickets, data); if it is missing, plan
+   research (ux-research-methods). Do not draw from the team's head.
+2. **Stakeholder map.** Customers (segments), frontstage and backstage staff, partners (courier, payments),
+   the regulator. For each: what they need, what they influence, who listens to them. Record it as a table; a diagram only with
+   >10 parties.
+3. **Journey map — current.** Stages, customer actions, channels, thoughts and emotions, moments of truth and pain points, each
+   with evidence (a quote, a number). A separate map per segment if the paths differ. The map shows **the customer's
+   perspective**; the blueprint adds the back office.
+4. **Touchpoint inventory.** A table: touchpoint, channel, owner, system, purpose, consistency with other channels
+   (the same data, the same language, the same promise). Consistency gaps are candidates for changes (`references/templates.md`).
+5. **Service blueprint** (current state, then target). Horizontal lanes from the top:
+   physical and digital evidence → **customer actions** → *line of interaction* → **frontstage** (visible actions of
+   staff and interfaces) → *line of visibility* → **backstage** (invisible staff actions) →
+   *line of internal interaction* → **support processes** (systems, other units, partners).
+   Each step: time, who, with what tool, what data. Mark failure points, waiting and handoffs.
+   Mermaid and the table template: `references/templates.md`.
+6. **Diagnosis.** On the blueprint mark: handoffs without data, places where the customer does the back office's work,
+   discrepancies between channels, steps without an owner. Rank them by the impact on the customer and the cost of service.
+   First solve the **whole problem** (not a fragment) and the consistency across channels.
+7. **Co-design.** A workshop with customers and staff from both sides of the line of visibility: 6–10 people, 2–3 hours,
+   the blueprint on the wall, participants add missing steps and propose changes. Back-office staff know
+   workarounds that are not in any document. Facilitation: ddd-facilitation.
+8. **Service prototype** with the cheapest method that will answer the question: role-play and bodystorming (the layout
+   of a counter, a conversation), **concierge** (a human does by hand what a system will do later), **Wizard of Oz**
+   (the customer thinks the system works, while a human does it), a mock-up of a room or a paper form.
+   Write down the hypothesis, the success criterion and what you will measure; code only after confirmation.
+9. **Target blueprint and target map.** Changes arranged in waves; for each: the impact on the customer, the back-office work,
+   changes in systems, the organizational change (who loses, who gains tasks). Turn them into opportunities for
+   proc-product-discovery, and the back-office changes into a backlog.
+10. **Metrics and standard.** Service metrics with the customer at the centre: the completion rate of the whole task (in every channel),
+    the time from the request to the result, repeat contacts on the same matter, the cost of handling one case, satisfaction. For
+    public services relate the assessment to the GOV.UK Service Standard (14 points, among them "Solve a whole problem for users",
+    "Provide a joined up experience across channels", "Define what success looks like and publish performance
+    data") — the full list and notes: `references/service-standard.md`.
 
-Wynik: `docs/project/01-discovery/service-blueprint.md` (+ mapy w tym samym katalogu); TL;DR i Przekazanie wg
-core-project-record. Pierwsza linia pliku: `Service blueprint: <usługa> — stan obecny|docelowy`.
+Result: `docs/project/01-discovery/service-blueprint.md` (+ maps in the same directory); TL;DR and Handoff by
+core-project-record. The first line of the file: `Service blueprint: <service> — current|target state`.
 
-## Przykład
-Wejście: „Zwroty w sklepie internetowym: 31% klientów kontaktuje się z obsługą po wysłaniu formularza zwrotu.”
-Wynik (fragment `service-blueprint.md`, stan obecny):
+## Example
+Input: "Returns in an online shop: 31% of customers contact support after sending the return form."
+Result (a fragment of `service-blueprint.md`, current state):
 
 ```markdown
-Service blueprint: zwrot towaru — stan obecny
-| Warstwa | Krok 1 | Krok 2 | Krok 3 |
+Service blueprint: item return — current state
+| Layer | Step 1 | Step 2 | Step 3 |
 |---|---|---|---|
-| Dowody | formularz www, e-mail „przyjęto” | etykieta PDF | SMS kuriera |
-| Działania klienta | wypełnia formularz (6 pól) | drukuje etykietę, pakuje | czeka na zwrot pieniędzy |
-| — linia interakcji — | | | |
-| Frontstage | — | infolinia: „kurier w 3 dni” | czat: „sprawdzę” |
-| — linia widoczności — | | | |
-| Backstage | ręczne przepisanie do ERP (~4 h) | magazyn skanuje paczkę | księgowość czeka na zgodę |
-| — linia int. interakcji — | | | |
-| Procesy wspierające | ERP, e-mail | system kuriera | bank (przelew raz dziennie) |
-Punkty awarii: P1 przepisywanie (opóźnienie 4 h, 9% błędów); P2 brak statusu dla klienta →
-31% kontaktów. Spójność: infolinia i czat podają inny czas zwrotu pieniędzy (3 vs 7 dni).
+| Evidence | web form, "received" e-mail | PDF label | courier SMS |
+| Customer actions | fills in the form (6 fields) | prints the label, packs | waits for the refund |
+| — line of interaction — | | | |
+| Frontstage | — | hotline: "courier in 3 days" | chat: "I will check" |
+| — line of visibility — | | | |
+| Backstage | manual re-entry into the ERP (~4 h) | the warehouse scans the parcel | accounting waits for approval |
+| — line of internal interaction — | | | |
+| Support processes | ERP, e-mail | courier system | bank (transfer once a day) |
+Failure points: P1 re-entry (a 4 h delay, 9% errors); P2 no status for the customer →
+31% of contacts. Consistency: the hotline and the chat give a different refund time (3 vs 7 days).
 ```
 
-Zmiana docelowa: formularz zapisuje się wprost w ERP, klient widzi status w e-mailu; wstępny test przez concierge
-(pracownik ręcznie wysyła statusy 50 klientom), mierzymy spadek kontaktów z 31% w tym samym okresie.
+Target change: the form saves straight into the ERP, the customer sees the status in an e-mail; a first test through concierge
+(an employee sends statuses by hand to 50 customers), we measure the drop in contacts from 31% in the same period.
 
-## Checklista
-- [ ] jedna usługa, zdarzenie otwierające i zamykające; dowody z badań, nie z głowy zespołu
-- [ ] interesariusze, mapa podróży (obecna), inwentarz punktów styku z oceną spójności kanałów
-- [ ] blueprint ze wszystkimi pasami, trzema liniami i punktami awarii; stan obecny osobno od docelowego
-- [ ] warsztat z pracownikami frontstage i backstage; prototyp usługi z hipotezą i kryterium
-- [ ] metryki usługi obejmują całe zadanie we wszystkich kanałach; (usługa publiczna) odniesienie do Service Standard
-- [ ] [niezweryfikowane] i założenia oznaczone; wynik w `docs/project/01-discovery/`
+## Checklist
+- [ ] one service, an opening and a closing event; evidence from research, not from the team's head
+- [ ] stakeholders, the journey map (current), a touchpoint inventory with an assessment of channel consistency
+- [ ] a blueprint with all lanes, three lines and failure points; the current state separate from the target
+- [ ] a workshop with frontstage and backstage staff; a service prototype with a hypothesis and a criterion
+- [ ] service metrics cover the whole task in all channels; (a public service) a reference to the Service Standard
+- [ ] [unverified] and assumptions marked; the result in `docs/project/01-discovery/`
 
-## Materiały dodatkowe
-- `references/templates.md` — szablony blueprintu (tabela i Mermaid), mapy podróży, interesariuszy i inwentarza; czytaj przy pisaniu artefaktu.
-- `references/service-standard.md` — GOV.UK Service Standard, metody prototypowania usługi i jak ich użyć.
+## Additional materials
+- `references/templates.md` — templates of the blueprint (table and Mermaid), the journey map, stakeholders and the inventory; read when writing the artifact.
+- `references/service-standard.md` — the GOV.UK Service Standard, service prototyping methods and how to use them.
 
-## Źródła
-- NN/g, *Service Blueprints: Definition* (nngroup.com/articles/service-blueprints-definition/) — elementy blueprintu;
-  w tej sesji potwierdzone tylko wyszukiwaniem (dostęp 2026-10-17), brzmienie linii z źródeł wtórnych [niezweryfikowane].
-- GOV.UK Service Manual, *Service Standard* (gov.uk/service-manual/service-standard), punkty 2, 3, 4 i 10 potwierdzone
-  w wynikach wyszukiwania (dostęp 2026-10-17); pełna lista 14 punktów w references.
-- Shostack, *How to Design Services* (1984) i Bitner, Ostrom, Morgan, *Service Blueprinting* (2008) — źródło
-  metody blueprintu [niezweryfikowane w tej sesji].
-Opisane własnymi słowami.
+## Sources
+- NN/g, *Service Blueprints: Definition* (nngroup.com/articles/service-blueprints-definition/) — the elements of the blueprint;
+  confirmed in this session only by search (accessed 2026-10-17), the wording of the lines from secondary sources [unverified].
+- GOV.UK Service Manual, *Service Standard* (gov.uk/service-manual/service-standard), points 2, 3, 4 and 10 confirmed
+  in the search results (accessed 2026-10-17); the full list of 14 points in the references.
+- Shostack, *How to Design Services* (1984) and Bitner, Ostrom, Morgan, *Service Blueprinting* (2008) — the source
+  of the blueprint method [unverified in this session].
+Described in our own words.

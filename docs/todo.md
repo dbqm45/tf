@@ -788,6 +788,13 @@ treści (angielska), bez równoległej polskiej.
       zostają nazwane po polsku (KPRM „Prosto i kropka”, indeksy Pisarka, UODO). Podpowiedzi identyczne jak przed
       partią (all 901/918 · 32/43), `--hints` czysto (all, pack-ux). Haiku przed/po (6 scenariuszy, 3 skille): 6/6 → 6/6,
       1,50 USD. `translation_check`: różnice tylko w nazwach kolumn szablonów (inwentarz, taksonomia, nuggets).
+    - [x] 4c-3a (2026-11-18): pack-ux — `ux-service-design`, `ux-design-leadership`, `ux-accessibility` (po 2–3
+      referencje). Polskie słowa kluczowe zostają, angielskie dochodzą; `hint.pl.txt` dla trzech skilli. Polskie akty
+      prawne zostają nazwane po polsku (Dz.U., PFRON, „deklaracja dostępności”). Podpowiedzi: tuning 901/918 bez zmian,
+      holdout 32/43 → 31/43 — jeden przypadek `core-agent-security` (serwer MCP do Jiry) spadł z 3. na 4. miejsce przy
+      remisie 18,05 : 18,04 z `eng-llm-features` po przesunięciu IDF; holdoutu nie stroimy, do obserwacji przy 4c-3b.
+      `--hints` czysto (all, pack-ux). Haiku przed/po (3 scenariusze): 3/3 → 3/3, 0,77 USD. `translation_check`: różnice
+      tylko w nazwach kolumn szablonów i etykietach diagramu Mermaid.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
