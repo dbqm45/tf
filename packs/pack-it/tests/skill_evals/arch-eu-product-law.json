@@ -23,7 +23,7 @@
             "20\\d\\d"
           ],
           [
-            "\\[(wtórne|niezweryfikowane)\\]",
+            "\\[(wtórne|niezweryfikowane|secondary|unverified)\\]",
             "źród\\w+ wtórn",
             "UC163"
           ],
@@ -53,7 +53,7 @@
             "prawnik\\w*|nie jest porad\\w*|porad\\w* prawn\\w*|zweryfik\\w*"
           ],
           [
-            "\\[(wtórne|niezweryfikowane)\\]",
+            "\\[(wtórne|niezweryfikowane|secondary|unverified)\\]",
             "źród\\w+ wtórn",
             "nie zweryfikowan\\w+ w (EUR-Lex|tekście)",
             "nie zweryfikowano"

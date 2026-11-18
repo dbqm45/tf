@@ -1,40 +1,40 @@
-# AI w obsłudze dużego wolumenu spraw
+# AI in handling a large volume of cases
 
-Wzorzec złożony z elementów, które fabryka ma osobno (złoty zbiór i kalibracja — ai-evals; saga — ddd-tactical-design;
-idempotencja — be-messaging-outbox). Opis S. Yegge'a („Counting House”, 2026-10) powstał z rozmów z firmami, bez
-danych z wdrożeń — traktuj go jako projekt do sprawdzenia, nie wynik.
+A pattern built from elements the factory has separately (a golden set and calibration — ai-evals; a saga — ddd-tactical-design;
+idempotency — be-messaging-outbox). S. Yegge's description ("Counting House", 2026-10) came from conversations with companies, without
+data from deployments — treat it as a design to verify, not a result.
 
-## 1. Tabela polityki per intencja
-Każda intencja (typ sprawy) ma osobny próg autonomii:
-| Próg | Co robi model | Kto decyduje |
+## 1. Policy table per intent
+Every intent (case type) has its own autonomy threshold:
+| Threshold | What the model does | Who decides |
 |---|---|---|
-| off | nic | człowiek |
-| shadow | odpowiada równolegle do człowieka, odpowiedź oceniana, niewidoczna dla klienta | człowiek |
-| assist | podpowiedź dla człowieka | człowiek |
-| contain | odpowiada klientowi | model, bez zmian stanu |
-| transact | zmienia stan przez orkiestrator | model w limicie polityki |
+| off | nothing | a human |
+| shadow | answers in parallel with the human, the answer is scored, invisible to the customer | a human |
+| assist | a suggestion for the human | a human |
+| contain | answers the customer | the model, without state changes |
+| transact | changes state through the orchestrator | the model within the policy limit |
 
-Awans intencji na wyższy próg tylko po ewaluacji na złotym zbiorze z ocen ludzi i po podpisach właścicieli
-(operacje, finanse, prawo). To ta sama logika co „uprawnienia rosną z dowodem” w core-async-delegation §5.
+An intent is promoted to a higher threshold only after an evaluation on a golden set from human ratings and after the owners sign off
+(operations, finance, legal). This is the same logic as "permissions grow with evidence" in core-async-delegation §5.
 
-## 2. Macierz pomyłek z kosztem
-Trafność nie wystarcza. Dla intencji łatwych do pomylenia każda komórka poza przekątną ma koszt: pomyłka kierunku
-do kolejki to co innego niż pominięta pomoc dla klienta w trudnej sytuacji. Dla wypłat liczy się precyzja, dla spraw
-krzywdzących klienta — czułość. Porównujesz tę samą macierz dla ludzi (koszt błędów + koszt pracy), nie tylko model
-z zerem błędów.
+## 2. A confusion matrix with costs
+Accuracy is not enough. For intents that are easy to confuse, every off-diagonal cell has a cost: a routing mistake
+to a queue is something else than missed help for a customer in a difficult situation. For payouts precision counts, for cases
+that harm the customer — recall. You compare the same matrix for people (the cost of errors + the cost of work), not only the model
+against zero errors.
 
-## 3. Model proponuje, orkiestrator wykonuje
-- Model wydaje **intencję zapisu** w schemacie (np. `{"action": "refund", "order_id": …, "amount": …}`).
-- Orkiestrator (kod) sprawdza uprawnienie na **żywym systemie źródłowym**, nie na kopii, którą czytał model; nadaje
-  klucz idempotencji z pól żądania; zatwierdza automatycznie do progu z polityki, powyżej — człowiek.
-- Wykonanie jako saga z akcjami kompensującymi i odczytem po zapisie.
-- Odmowa z kodem przyczyny trafia do właściwej kolejki ludzi.
-- Model nie ma poświadczeń do systemów i nie widzi PII (bramka tokenizująca PII odwracalnie).
+## 3. The model proposes, the orchestrator executes
+- The model issues a **write intent** in a schema (e.g. `{"action": "refund", "order_id": …, "amount": …}`).
+- The orchestrator (code) checks the permission on the **live source system**, not on the copy the model read; it assigns
+  an idempotency key from the request fields; it approves automatically up to the policy's threshold, above it — a human.
+- Execution as a saga with compensating actions and a read after the write.
+- A refusal with a reason code goes to the right human queue.
+- The model has no credentials to the systems and does not see PII (a gateway that tokenizes PII reversibly).
 
-## 4. Sędzia i złoty zbiór
-Sędzia LLM tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą, nigdy nie strojony na złotym
-zbiorze (ai-evals, `references/datasets-and-graders.md` §7). Złoty zbiór i ewaluacje są własnością firmy — to one
-pozwalają zmienić model na tańszy.
+## 4. The judge and the golden set
+An LLM judge only where it agrees with people as often as people agree with each other, never tuned on the golden
+set (ai-evals, `references/datasets-and-graders.md` §7). The golden set and the evaluations are the company's property — they
+are what lets you change the model for a cheaper one.
 
-Z artykułu bez wpisu: wątek „dobrostanu modelu”. Zostaje praktyka: prompt prawdomówny, bez gróźb i fałszywej
-pilności, a model ma prawo do odmowy z kodem przyczyny i propozycją poprawki procedury.
+From the article without an entry: the "model welfare" thread. What stays is the practice: a truthful prompt, without threats and false
+urgency, and the model has the right to refuse with a reason code and a proposed fix to the procedure.
