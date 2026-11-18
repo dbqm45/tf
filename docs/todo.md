@@ -840,6 +840,17 @@ treści (angielska), bez równoległej polskiej.
       10/11), 1,43 USD. Bramki 7 skilli odnowione.
       Zostaje: treść skilli pack-it (4d) cytuje jeszcze polskie etykiety wyjścia (`idiomy testów`, `WYCIĄGNIĘTE`,
       „krytyczne”) i znacznik `=== POKAŻ DOSŁOWNIE ===` symulacji — zmienić razem z tłumaczeniem tych skilli.
+    - [x] M7 (2026-11-18): skrypty mode-pdi (`decision_record`, `phase_run`, `pr_loop`, `second_review`, `metric_watch`,
+      `design_check`, `triage_pdi`, `phase_progress`, `phase_result`, `sandbox_settings`) i `team_switch` z mode-team, w tym
+      prompty faz i drugiego przeglądu. pdi tylko wyświetla zmienione teksty (sprawdzone w `src/pdi`), więc obeszło się
+      bez zmian w pdi. Odczyt przyjmuje stare formy: wiadomości postępu `czyta plik`/`odmowa narzędzia` (`phase_result`,
+      test M-1/M-2 w obu językach), `brak ramki` (`phase_run`), sekcja „Przegląd drugim modelem” podmieniana przy
+      ponownym przeglądzie; wpisy bramek `## Gate …`, a prompt fazy wymienia też dawne `## Bramka …`. Bramki 2 skilli
+      odnowione.
+      Zostaje po polsku (format artefaktów i szablonów produktu): sekcja `## Pytania do bramki`, kolumny planu
+      (`Wydanie`, `Flaga` …) i tabeli `design.md`, nagłówki `## Rozważone opcje`/`## Cele zmiany` — do zmiany razem z pdi
+      i szablonami. Skuteczności promptów faz nie zmierzono na modelu: lokalnie działa tylko zadanie `N5-synth-repeated-q`,
+      które przed zmianą też kończyło się `waiting_gate`; pełne flow-evals wymagają repozytoriów `sdlc-trial`.
   - [ ] pack-editorial-pl: instrukcje po angielsku, przykłady i reguły polszczyzny zostają po polsku (to ich przedmiot).
 
 Treść fabryki jest dziś po polsku. Chodzi o:
