@@ -1,120 +1,120 @@
 ---
 name: ops-supply-chain-security
-description: Użyj przy łańcuchu dostaw zależności — lockfile, karencja wersji, skrypty instalacyjne, SBOM, przejęte paczki.
+description: Use for the dependency supply chain — lockfile, version cooldown, install scripts, SBOM, taken-over packages.
 metadata:
   review: "2027-04-10"
-  catalog: "Użyj przy dodawaniu i aktualizacji zależności, przeglądzie lockfile, konfiguracji menedżera pakietów, publikacji paczek i pytaniu „czy dotknęła nas skompromitowana paczka” — lockfile i npm ci, karencja nowych wersji, skrypty instalacyjne, provenance, tokeny publikacji, SBOM, szybka ścieżka łatek, procedura po incydencie. Nie do samego pipeline'u (ops-ci-cd) ani auth aplikacji (be-auth-security)."
-  keywords: "audyt zależności, audyt podatności zależności, podatności w zależnościach, npm audit, pip-audit, govulncheck, cargo audit, composer audit, CVE w paczkach, lockfile, nowa zależność, przejęta paczka, skompromitowana paczka, typosquatting, slopsquatting, SBOM, paczka wewnętrzna, prywatny rejestr npm"
+  catalog: "Use when adding and updating dependencies, reviewing a lockfile, configuring a package manager, publishing packages and for the question \"did a compromised package hit us\" — lockfile and npm ci, a cooldown for new versions, install scripts, provenance, publishing tokens, SBOM, a fast track for patches, the post-incident procedure. Not for the pipeline itself (ops-ci-cd) or application auth (be-auth-security)."
+  keywords: "audyt zależności, audyt podatności zależności, podatności w zależnościach, npm audit, pip-audit, govulncheck, cargo audit, composer audit, CVE w paczkach, lockfile, nowa zależność, przejęta paczka, skompromitowana paczka, typosquatting, slopsquatting, SBOM, paczka wewnętrzna, prywatny rejestr npm, dependency audit, dependency vulnerability audit, vulnerabilities in dependencies, CVE in packages, new dependency, taken-over package, compromised package, internal package, private npm registry"
 ---
 
-# Bezpieczeństwo łańcucha dostaw oprogramowania
+# Software supply chain security
 
-Zależność ma takie same uprawnienia jak Twój kod: w chwili instalacji uruchamia się na laptopie programisty i na
-runnerze CI, gdzie leżą tokeny npm, klucze SSH, dane dostępowe do chmury i pliki `.env`. Przypadek axios (marzec 2026):
-przejęte konto opiekuna, nowa zależność z hookiem `postinstall`, pierwsze zainfekowane maszyny po 89 sekundach, złośliwe
-wersje dostępne około 3 godzin. Szczegóły i inne przypadki: `references/cases.md`.
+A dependency has the same permissions as your code: at install time it runs on the developer's laptop and on the
+CI runner, where npm tokens, SSH keys, cloud credentials and `.env` files are stored. The axios case (March 2026):
+a taken-over maintainer account, a new dependency with a `postinstall` hook, the first infected machines after 89 seconds, the malicious
+versions available for about 3 hours. Details and other cases: `references/cases.md`.
 
-## 1. Instalacja powtarzalna
-- Lockfile w repozytorium; w CI wyłącznie `npm ci` / `pnpm install --frozen-lockfile` / `yarn install --immutable`.
-- Diff lockfile w PR czyta człowiek. **Nowa zależność przechodnia**, której wcześniej nie było, to sygnał alarmowy
-  (w axios była nią `plain-crypto-js`) — pipeline może ją wykrywać i wymagać akceptacji.
-- Java: wersje przypięte (bez zakresów i `LATEST`), weryfikacja sum kontrolnych (Gradle `verification-metadata.xml`,
-  Maven z `checksumPolicy=fail`); wtyczki builda to też kod uruchamiany u Ciebie.
+## 1. Reproducible installation
+- A lockfile in the repository; in CI only `npm ci` / `pnpm install --frozen-lockfile` / `yarn install --immutable`.
+- A human reads the lockfile diff in the PR. **A new transitive dependency** that was not there before is a red flag
+  (in axios it was `plain-crypto-js`) — the pipeline can detect it and require approval.
+- Java: pinned versions (no ranges and no `LATEST`), checksum verification (Gradle `verification-metadata.xml`,
+  Maven with `checksumPolicy=fail`); build plugins are also code that runs on your side.
 
-## 2. Karencja nowych wersji
-Złośliwe wersje zwykle znikają z rejestru w ciągu godzin, więc instaluj wersje starsze niż 1–3 dni.
+## 2. A cooldown for new versions
+Malicious versions usually disappear from the registry within hours, so install versions older than 1–3 days.
 
-| Menedżer | Ustawienie | Jednostka | Od wersji |
+| Manager | Setting | Unit | Since version |
 |---|---|---|---|
-| npm | `min-release-age=3` w `.npmrc` | dni | npm 11.10 |
-| pnpm | `minimumReleaseAge: 4320` w `pnpm-workspace.yaml`, wyjątki `minimumReleaseAgeExclude` | minuty | pnpm 10.16 (od 11 domyślnie 1440) |
-| Yarn Berry | `npmMinimalAgeGate: 4320` w `.yarnrc.yml`, wyjątki `npmPreapprovedPackages` | minuty | Yarn 4.10 |
+| npm | `min-release-age=3` in `.npmrc` | days | npm 11.10 |
+| pnpm | `minimumReleaseAge: 4320` in `pnpm-workspace.yaml`, exceptions `minimumReleaseAgeExclude` | minutes | pnpm 10.16 (from 11 the default is 1440) |
+| Yarn Berry | `npmMinimalAgeGate: 4320` in `.yarnrc.yml`, exceptions `npmPreapprovedPackages` | minutes | Yarn 4.10 |
 
-Renovate i Dependabot mają własne ustawienia opóźnienia — skonfiguruj je osobno.
+Renovate and Dependabot have their own delay settings — configure them separately.
 
-**Wyjątek: łatki bezpieczeństwa.** Krytyczna podatność w komponencie wystawionym do internetu (React2Shell: ujawniona
-3 grudnia 2025, ataki od 4 grudnia) wymaga wdrożenia w ciągu 24 godzin. Łatkę przepuszczasz świadomie przez listę wyjątków,
-z przeglądem diffu paczki, a nie przez wyłączenie karencji dla wszystkich.
+**The exception: security patches.** A critical vulnerability in an internet-facing component (React2Shell: disclosed
+on 3 December 2025, attacks from 4 December) requires deployment within 24 hours. You let the patch through deliberately via the exception list,
+with a review of the package diff, not by disabling the cooldown for everything.
 
-## 3. Skrypty instalacyjne
-- W CI `--ignore-scripts` jako zasada. Paczki, które naprawdę potrzebują skryptu (natywne binaria, np. esbuild),
-  dopuszczasz z allowlisty: pnpm `onlyBuiltDependencies` (pnpm 10) lub `allowBuilds` (pnpm 11), npm z `@lavamoat/allow-scripts`.
-- Nigdy `curl … | sh` ani `iwr … | iex` jako kroku instalacji w repozytorium lub CI — pobierz, sprawdź sumę, dopiero uruchom. <!-- audit-ok: opis ataku, nie polecenie -->
+## 3. Install scripts
+- In CI `--ignore-scripts` as a rule. Packages that really need a script (native binaries, e.g. esbuild)
+  are allowed from an allowlist: pnpm `onlyBuiltDependencies` (pnpm 10) or `allowBuilds` (pnpm 11), npm with `@lavamoat/allow-scripts`.
+- Never `curl … | sh` or `iwr … | iex` as an installation step in the repository or CI — download, check the checksum, only then run. <!-- audit-ok: a description of an attack, not a command -->
 
-## 4. Publikacja własnych paczek
-- **Trusted publishing (OIDC) i usunięcie klasycznych tokenów npm.** W axios OIDC było skonfigurowane, ale długotrwały
-  token nadal działał i to nim opublikowano złośliwe wersje.
-- Publikuj z CI z `--provenance`; odbiorcy sprawdzają `npm audit signatures`.
-- **Provenance mówi, gdzie zbudowano paczkę, a nie czy build był uprawniony.** W kampanii Mini Shai-Hulud (2026)
-  napastnicy użyli własnych workflow ofiar i ich tokenów OIDC (osierocony commit przez fork ominął ochronę gałęzi),
-  więc złośliwe wersje miały poprawne provenance. Dlatego: trusted publisher przypięty do konkretnego pliku workflow
-  i chronionego środowiska z wymaganą akceptacją; publikacja nigdy z commitów z forków; alarm na zależności pobierane
-  prosto z GitHuba (`github:…`, URL git), zwłaszcza opcjonalne.
-- Konta opiekunów: klucze sprzętowe lub passkeys (WebAuthn) zamiast kodów TOTP; lokalne tokeny publikacji tylko
-  granularne i krótkie (npm skraca ich domyślną ważność do 7 dni), klasyczne usunięte.
-- **Paczki wewnętrzne** (także artefakty AI: skille, reguły, prompty dystrybuowane jako paczka): zakres organizacji
-  zmapowany na prywatny rejestr w `.npmrc` repozytorium (bez tokena) — to chroni też przed podmianą nazwy paczką
-  z publicznego npm; token odczytu wyłącznie ze zmiennej środowiskowej CI. Zewnętrzne platformy buildów nie widzą
-  sekretów GitHuba — token synchronizujesz osobno do ich magazynu sekretów (produkcja i podgląd). Rodzaj tokena do
-  odczytu GitHub Packages bywa zmieniany (klasyczne tokeny są wygaszane) — sprawdź aktualną dokumentację przed wdrożeniem.
-- Osoba z prawem publikacji to cel ataku socjotechnicznego: opiekuna axios przekonano podczas fałszywego spotkania
-  (podrobiony Slack i Teams), żeby zainstalował „poprawkę”. Prawa publikacji tylko w CI, nie na laptopie; żadnej instalacji
-  oprogramowania na prośbę rozmówcy.
+## 4. Publishing your own packages
+- **Trusted publishing (OIDC) and the removal of classic npm tokens.** In axios OIDC was configured, but a long-lived
+  token still worked, and the malicious versions were published with it.
+- Publish from CI with `--provenance`; consumers check `npm audit signatures`.
+- **Provenance tells you where the package was built, not whether the build was authorized.** In the Mini Shai-Hulud campaign (2026)
+  the attackers used the victims' own workflows and their OIDC tokens (an orphaned commit via a fork bypassed branch protection),
+  so the malicious versions had valid provenance. Therefore: a trusted publisher pinned to a specific workflow file
+  and a protected environment with required approval; publishing never from commits from forks; an alarm on dependencies fetched
+  straight from GitHub (`github:…`, a git URL), especially optional ones.
+- Maintainer accounts: hardware keys or passkeys (WebAuthn) instead of TOTP codes; local publishing tokens only
+  granular and short-lived (npm shortens their default validity to 7 days), classic ones removed.
+- **Internal packages** (also AI artifacts: skills, rules, prompts distributed as a package): the organization scope
+  mapped to the private registry in the repository's `.npmrc` (without a token) — this also protects against a name substitution by a package
+  from the public npm; the read token only from a CI environment variable. External build platforms do not see
+  GitHub secrets — you sync the token separately to their secret store (production and preview). The kind of token for
+  reading GitHub Packages changes from time to time (classic tokens are being phased out) — check the current documentation before rollout.
+- A person with publishing rights is a target of social engineering: the axios maintainer was persuaded during a fake meeting
+  (a forged Slack and Teams) to install a "fix". Publishing rights only in CI, not on a laptop; no installation
+  of software at the request of the other party in a conversation.
 
-## 5. Wiedza o tym, co masz
-- SBOM (CycloneDX) generowany w CI dla każdego artefaktu — odpowiedź na „czy mamy wersję X?” w minutach, nie w dniach.
-- **Audyt znanych podatności** w CI i przy starcie pracy w repo — polecenia dla npm, pnpm, Pythona, Rusta, Go, Ruby,
-  PHP i .NET, progi CVSS i czytanie wyników: `references/dependency-audit.md`. Zależności bezpośrednie raportujesz
-  osobno od przechodnich; ekosystem bez wbudowanego audytu (Java, Dart) to „pominięto”, nigdy „0 znalezisk”; audyt
-  nie naprawia sam (`npm audit fix` tylko za zgodą, z przeglądem diffu lockfile).
-- Narzędzia bezpieczeństwa w CI (skanery, lintery) to też łańcuch dostaw: w kampanii TeamPCP podmieniono Trivy przez
-  GitHub Actions. Przypinaj je jak każdą akcję (SHA, digest obrazu) — ops-ci-cd.
-- Skan zależności z wykrywaniem złośliwego kodu (nie tylko znanych CVE) w pipeline.
-- **Skanery bez sekretów:** job ze skanerem nie ma tokenów zapisu ani poświadczeń chmury — podmieniony Trivy czytał
-  sekrety z pamięci procesu runnera, a potem wykonywał normalny skan, żeby nikt nic nie zauważył. Wersje narzędzi
-  buildu przypinasz tak samo jak zależności aplikacji.
-- **Priorytety podatności:** najpierw to, co jest osiągalne (paczka → artefakt → obraz → usługa wystawiona do internetu)
-  i znane jako wykorzystywane w atakach (np. katalog CISA KEV); ustalenie osiągalności ma wskazaną ścieżkę dowodu.
-  Model AI może wyjaśniać znalezisko, ale nie rozstrzyga, czy podatność jest wykorzystywalna.
+## 5. Knowing what you have
+- An SBOM (CycloneDX) generated in CI for every artifact — the answer to "do we have version X?" in minutes, not days.
+- **An audit of known vulnerabilities** in CI and at the start of work in a repo — commands for npm, pnpm, Python, Rust, Go, Ruby,
+  PHP and .NET, CVSS thresholds and reading the results: `references/dependency-audit.md`. You report direct dependencies
+  separately from transitive ones; an ecosystem without a built-in audit (Java, Dart) is "skipped", never "0 findings"; the audit
+  does not fix anything by itself (`npm audit fix` only with consent, with a review of the lockfile diff).
+- Security tools in CI (scanners, linters) are also the supply chain: in the TeamPCP campaign Trivy was swapped through
+  GitHub Actions. Pin them like any action (SHA, image digest) — ops-ci-cd.
+- A dependency scan with malicious code detection (not only known CVEs) in the pipeline.
+- **Scanners without secrets:** the job with the scanner has no write tokens or cloud credentials — the swapped Trivy read
+  secrets from the runner process memory and then performed a normal scan, so that nobody noticed anything. You pin the versions of build
+  tools the same way as the application's dependencies.
+- **Vulnerability priorities:** first what is reachable (package → artifact → image → internet-facing service)
+  and known to be exploited in attacks (e.g. the CISA KEV catalog); a reachability finding has an indicated evidence path.
+  An AI model may explain a finding, but it does not decide whether a vulnerability is exploitable.
 
-## 6. Po zgłoszeniu kompromitacji paczki
-Procedura krok po kroku: `references/dependency-incident.md`. W skrócie: znajdź wersję w lockfile'ach i w `node_modules`,
-sprawdź ślady na maszynach, które instalowały w oknie ataku, **przebuduj** zainfekowane maszyny zamiast je „czyścić”,
-zrotuj każdy sekret dostępny z tych maszyn i runnerów, przypnij bezpieczną wersję (`overrides` / `resolutions`).
+## 6. After a package compromise is reported
+The step-by-step procedure: `references/dependency-incident.md`. In short: find the version in the lockfiles and in `node_modules`,
+check for traces on the machines that installed during the attack window, **rebuild** the infected machines instead of "cleaning" them,
+rotate every secret reachable from those machines and runners, pin a safe version (`overrides` / `resolutions`).
 
-## Agent a zależności
-- Agent nie dodaje nowej zależności bez zgody człowieka (hook guard_bash pyta przy `npm install <paczka>`) i nie podnosi
-  wersji w istniejącym projekcie z własnej inicjatywy.
-- **Slopsquatting:** modele AI wymyślają nazwy paczek, które nie istnieją, i robią to powtarzalnie, więc napastnicy
-  mogą rejestrować te nazwy. Paczkę zaproponowaną przez AI sprawdzasz w rejestrze i dokumentacji, zanim trafi do projektu;
-  CI może blokować nowe zależności młodsze niż N dni lub z bardzo małą liczbą pobrań.
-- Przed propozycją nowej paczki: nazwa dokładnie ta sama co w dokumentacji projektu (typosquatting), wydawca, data ostatniej
-  wersji, provenance, liczba zależności przechodnich. Mniej zależności to mniejsza powierzchnia ataku.
+## The agent and dependencies
+- The agent does not add a new dependency without a human's consent (the guard_bash hook asks on `npm install <package>`) and does not raise
+  versions in an existing project on its own initiative.
+- **Slopsquatting:** AI models invent package names that do not exist, and they do it repeatably, so attackers
+  can register those names. You check a package proposed by AI in the registry and the documentation before it enters the project;
+  CI can block new dependencies younger than N days or with a very small number of downloads.
+- Before proposing a new package: the name exactly the same as in the project's documentation (typosquatting), the publisher, the date of the latest
+  version, provenance, the number of transitive dependencies. Fewer dependencies means a smaller attack surface.
 
-## Przykład
-**Sytuacja:** „Słyszałem o przejętym axios. Mamy 12 repozytoriów w Node — czy jesteśmy dotknięci?”
-**Wynik:** odpowiedź oparta na `grep`, nie na czytaniu lockfile'ów:
-- `grep -rn 'plain-crypto-js'` w `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock` wszystkich repozytoriów i gałęzi
-  wydań, plus wersje axios 1.14.1 i 0.30.4.
-- Katalog `node_modules/plain-crypto-js` na runnerze lub laptopie = `postinstall` się wykonał → maszyna przejęta.
-- Trafienie: przebudowa maszyn z instalacją w oknie ataku, rotacja sekretów z nich, `overrides` z bezpieczną wersją.
-- Brak trafień: wpis w dzienniku i wniosek, co by zatrzymało atak (karencja, blokada skryptów, alarm o nowej paczce).
+## Example
+**Situation:** "I heard about the taken-over axios. We have 12 repositories in Node — are we affected?"
+**Result:** an answer based on `grep`, not on reading the lockfiles:
+- `grep -rn 'plain-crypto-js'` in `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock` of all repositories and release
+  branches, plus axios versions 1.14.1 and 0.30.4.
+- The `node_modules/plain-crypto-js` directory on a runner or a laptop = `postinstall` was executed → the machine is compromised.
+- A hit: rebuilding the machines that installed during the attack window, rotating the secrets from them, `overrides` with a safe version.
+- No hits: an entry in the log and a conclusion on what would have stopped the attack (a cooldown, blocking scripts, an alarm on a new package).
 
-Więcej przykładów: `references/examples.md`.
+More examples: `references/examples.md`.
 
-## Checklista
-- [ ] lockfile w repo, w CI instalacja „frozen”, diff lockfile przejrzany (nowe paczki przechodnie?)
-- [ ] karencja nowych wersji w menedżerze pakietów i w Renovate/Dependabot; ścieżka wyjątków dla łatek
-- [ ] skrypty instalacyjne wyłączone w CI lub z allowlisty
-- [ ] publikacja przez OIDC z provenance, klasyczne tokeny unieważnione
-- [ ] SBOM w CI, skan złośliwego kodu, akcje i obrazy narzędzi przypięte
-- [ ] audyt podatności dla każdego ekosystemu repo (bezpośrednie osobno od przechodnich, „pominięto” zamiast „0”)
-- [ ] procedura „czy nas dotknęło” znana zespołowi
+## Checklist
+- [ ] a lockfile in the repo, a "frozen" installation in CI, the lockfile diff reviewed (new transitive packages?)
+- [ ] a cooldown for new versions in the package manager and in Renovate/Dependabot; an exception path for patches
+- [ ] install scripts disabled in CI or from an allowlist
+- [ ] publishing through OIDC with provenance, classic tokens revoked
+- [ ] an SBOM in CI, a malicious code scan, tool actions and images pinned
+- [ ] a vulnerability audit for every ecosystem in the repo (direct separately from transitive, "skipped" instead of "0")
+- [ ] the "did it hit us" procedure known to the team
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 1 (weryfikacja po postawieniu szkieletu, audyt zależności) i moduł 5, lekcja 4
-  (dystrybucja paczek wewnętrznych w zespole) — materiał szkoleniowy (dostęp 2026-10-09); opisane własnymi słowami.
-- `pip-audit --help` (2.10.1, sprawdzone 2026-10-10); Composer 2.4 i `composer audit` —
+## Sources
+- The 10xDevs course, ed. 3 (2026), module 1 (verification after setting up the skeleton, the dependency audit) and module 5, lesson 4
+  (distributing internal packages in a team) — training material (accessed 2026-10-09); described in our own words.
+- `pip-audit --help` (2.10.1, checked 2026-10-10); Composer 2.4 and `composer audit` —
   [php.watch](https://php.watch/articles/composer-audit); govulncheck —
   [pkg.go.dev](https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck); `dotnet list package` —
-  [learn.microsoft.com](https://learn.microsoft.com/dotnet/core/tools/dotnet-list-package) (dostęp 2026-10-10).
+  [learn.microsoft.com](https://learn.microsoft.com/dotnet/core/tools/dotnet-list-package) (accessed 2026-10-10).

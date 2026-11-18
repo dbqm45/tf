@@ -1,98 +1,98 @@
-# Wzorce projektowe bezpiecznych agentów
+# Design patterns for secure agents
 
-Spis treści: 1. Reguła dwóch · 2. Wzorce izolacji (Beurer-Kellner i in.) · 3. Kontrola przepływu informacji (CaMeL) ·
-4. Zgoda związana z argumentami · 5. Poświadczenia i manifest narzędzi · 6. Przekazania między agentami ·
-7. Pamięć i RAG jako niezaufane
+Contents: 1. Rule of Two · 2. Isolation patterns (Beurer-Kellner et al.) · 3. Information flow control (CaMeL) ·
+4. Consent bound to arguments · 5. Credentials and the tool manifest · 6. Handoffs between agents ·
+7. Memory and RAG as untrusted
 
-Wspólna idea: gdy niezaufana treść weszła do agenta, system ma być tak zbudowany, żeby nie mogła ona wywołać
-działania o skutkach. Wymusza to kod i architektura, nie prompt.
+The common idea: once untrusted content has entered the agent, the system must be built so that it cannot trigger
+an action with consequences. This is enforced by code and architecture, not by the prompt.
 
-## 1. Reguła dwóch
-Meta, „Agents Rule of Two” (2025-10-31): dopóki wstrzyknięć nie da się wiarygodnie wykrywać, jedna sesja agenta ma
-najwyżej **dwie z trzech** cech:
-| Cecha | Przykład |
+## 1. Rule of Two
+Meta, "Agents Rule of Two" (2025-10-31): until injections can be reliably detected, one agent session has
+at most **two of three** properties:
+| Property | Example |
 |---|---|
-| A. przetwarza niezaufane wejście | e-maile, strony, dokumenty od klientów, wyniki wyszukiwania |
-| B. ma dostęp do danych wrażliwych lub systemów | dysk firmowy, baza klientów, sekrety |
-| C. zmienia stan albo komunikuje się na zewnątrz | wysyłka e-maila, zapis, płatność, żądanie HTTP |
+| A. processes untrusted input | emails, pages, documents from customers, search results |
+| B. has access to sensitive data or systems | the company drive, the customer database, secrets |
+| C. changes state or communicates externally | sending an email, a write, a payment, an HTTP request |
 
-Sesja z wszystkimi trzema → rozdziel na dwie sesje albo dodaj zatwierdzenie człowieka przed C. Reguła uzupełnia
-„potrójną kombinację” (SKILL.md krok 2) o zmianę stanu i nie zastępuje najmniejszych uprawnień — Meta zaznacza, że
-nie pokrywa nadmiernych uprawnień ani halucynacji.
+A session with all three → split it into two sessions or add human approval before C. The rule complements
+the "triple combination" (SKILL.md step 2) with state change and does not replace least privilege — Meta notes that
+it does not cover excessive permissions or hallucinations.
 
-## 2. Wzorce izolacji
-Beurer-Kellner i in., „Design Patterns for Securing LLM Agents against Prompt Injections” (arXiv 2506.08837,
-2025-06, v3 2025-06-27). Nazwy i liczbę wzorców podaję za streszczeniami pracy; przed cytowaniem sprawdź PDF.
-| Wzorzec | Jak działa | Kiedy | Koszt |
+## 2. Isolation patterns
+Beurer-Kellner et al., "Design Patterns for Securing LLM Agents against Prompt Injections" (arXiv 2506.08837,
+2025-06, v3 2025-06-27). I give the names and number of patterns after summaries of the paper; check the PDF before citing.
+| Pattern | How it works | When | Cost |
 |---|---|---|---|
-| **action-selector** | model wybiera jedną akcję z zamkniętej listy, wynik narzędzia nie wraca do modelu | bot z menu operacji | brak elastyczności |
-| **plan-then-execute** | plan (lista wywołań i adresatów) zamrożony przed odczytem obcych treści; dane z treści wypełniają argumenty, ale nie wybierają akcji ani adresata | asystent e-maila, kalendarza | plan nie reaguje na treść |
-| **map-reduce** | każdy dokument przetwarza osobny izolowany przebieg z ustrukturyzowanym wynikiem; agregacja nie widzi surowych treści | przegląd wielu dokumentów | więcej wywołań |
-| **podwójny LLM** | model *uprzywilejowany* (z narzędziami) nie widzi obcej treści; model *w kwarantannie* (bez narzędzi) ją czyta i oddaje tylko pola schematu — symbole, nie prozę | streszczenia, ekstrakcja | dwa wywołania, kod pośredniczący |
-| **code-then-execute** | model pisze program (np. w ograniczonym języku), który wykonuje się bez dalszego udziału modelu w decyzjach | stałe przepływy danych | trudniejsze debugowanie |
-| **minimalizacja kontekstu** | po ustaleniu intencji usuwasz z kontekstu treść, która mogła ją zmienić | rozmowa wieloetapowa | utrata kontekstu |
+| **action-selector** | the model picks one action from a closed list, the tool result does not return to the model | a bot with a menu of operations | no flexibility |
+| **plan-then-execute** | the plan (a list of calls and recipients) frozen before reading foreign content; data from the content fills arguments, but does not choose the action or the recipient | an email or calendar assistant | the plan does not react to the content |
+| **map-reduce** | each document is processed by a separate isolated run with a structured result; the aggregation does not see the raw content | reviewing many documents | more calls |
+| **dual LLM** | the *privileged* model (with tools) does not see foreign content; the *quarantined* model (without tools) reads it and returns only schema fields — symbols, not prose | summaries, extraction | two calls, mediating code |
+| **code-then-execute** | the model writes a program (e.g. in a restricted language) that runs without further model involvement in decisions | fixed data flows | harder debugging |
+| **context minimization** | after establishing the intent you remove from the context the content that could have changed it | a multi-step conversation | loss of context |
 
-Przykład w kodzie (podwójny LLM, szkic):
+Example in code (dual LLM, a sketch):
 ```python
 summary = quarantined_llm(email_body, schema={"type": "object", "additionalProperties": False,
-    "properties": {"topic": {"enum": ["faktura", "reklamacja", "inne"]},
+    "properties": {"topic": {"enum": ["invoice", "complaint", "other"]},
                    "invoice_id": {"type": "string", "pattern": "^FV/[0-9]{4}/[0-9]+$"}}})
-validate(summary)                     # w kodzie; niezgodność = odrzucenie
-recipient = customer_db.owner_of(summary["invoice_id"])   # adresat z naszych danych, nigdy z treści e-maila
+validate(summary)                     # in code; a mismatch = rejection
+recipient = customer_db.owner_of(summary["invoice_id"])   # recipient from our data, never from the email content
 privileged_llm.draft_reply(topic=summary["topic"], to=recipient)
 ```
 
-## 3. Kontrola przepływu informacji (CaMeL)
-Debenedetti i in., „Defeating Prompt Injections by Design” (arXiv 2503.18813, 2025-03, v2 2025-06). Wartości niosą
-**etykietę pochodzenia i dozwolonych odbiorców**; interpreter sprawdza politykę przed każdym wywołaniem narzędzia
-(np. dokument z dysku można streścić użytkownikowi, ale nie wysłać na adres znaleziony w tym dokumencie). Koszt
-użyteczności według autorów: na AgentDojo 77% zadań z gwarancją bezpieczeństwa wobec 84% bez obrony.
+## 3. Information flow control (CaMeL)
+Debenedetti et al., "Defeating Prompt Injections by Design" (arXiv 2503.18813, 2025-03, v2 2025-06). Values carry
+**a label of origin and allowed recipients**; the interpreter checks the policy before every tool call
+(e.g. a document from the drive can be summarized for the user, but not sent to an address found in that document). The
+utility cost according to the authors: on AgentDojo 77% of tasks with a security guarantee versus 84% without a defence.
 
-## 4. Zgoda związana z argumentami
-Zgoda człowieka obejmuje **skrót kanonicznych argumentów** (np. SHA-256 posortowanego JSON-a z kwotą, kontem,
-walutą), aktora, narzędzie, termin ważności i jednorazowy nonce. Wykonanie sprawdza skrót; inne argumenty = nowa
-zgoda. Brak polityki dla narzędzia albo nieudany zapis audytu = brak wywołania (zamknięcie bezpieczne). Narzędzia mają
-klasy ryzyka (niskie, średnie, wysokie, krytyczne) z domyślną odmową dla nieznanego narzędzia. Człowiek widzi surowe
-argumenty, nie opis wygenerowany przez model.
+## 4. Consent bound to arguments
+Human consent covers **a hash of the canonical arguments** (e.g. SHA-256 of the sorted JSON with the amount, account,
+currency), the actor, the tool, an expiry time and a one-time nonce. Execution checks the hash; different arguments = new
+consent. No policy for the tool or a failed audit write = no call (fail closed). Tools have
+risk classes (low, medium, high, critical) with a default refusal for an unknown tool. The human sees the raw
+arguments, not a description generated by the model.
 
-## 5. Poświadczenia i manifest narzędzi
-- **Krótkotrwałe poświadczenia na jedno wywołanie:** broker poza procesem agenta wydaje token związany z narzędziem
-  i argumentami; agent nie trzyma długich kluczy.
-- **Przypięty skrót manifestu narzędzia MCP** (opis i schemat): zmiana opisu lub schematu = nowa instalacja do
-  przeglądu, nie cicha aktualizacja (core-agent-security §4).
+## 5. Credentials and the tool manifest
+- **Short-lived credentials for a single call:** a broker outside the agent process issues a token bound to the tool
+  and the arguments; the agent does not hold long-lived keys.
+- **A pinned hash of the MCP tool manifest** (description and schema): a change in the description or schema = a new installation to
+  review, not a silent update (core-agent-security §4).
 
-## 6. Przekazania między agentami
-Agent czytający obce dokumenty ma tylko odczyt, bez MCP i narzędzi zapisu, i zwraca JSON ze schematem
-(`additionalProperties: false`, `maxItems`, `maxLength`, `pattern` na każdym polu), sprawdzany w kodzie przed
-orkiestratorem. Prośba o przekazanie zadania (`handoff_request`) przechodzi tylko wtedy, gdy cel jest na liście
-dozwolonych, a ładunek zgadza się ze schematem — dokument może zawierać podrobione bloki przekazania. Wzorzec opisany
-w omówieniu repozytorium `anthropics/financial-services` (M. Craddock, 2026-05-06) [niezweryfikowane w repozytorium].
+## 6. Handoffs between agents
+An agent that reads foreign documents has read-only access, without MCP or write tools, and returns JSON with a schema
+(`additionalProperties: false`, `maxItems`, `maxLength`, `pattern` on every field), checked in code before the
+orchestrator. A request to hand over a task (`handoff_request`) goes through only when the target is on the list of
+allowed ones and the payload matches the schema — a document may contain forged handoff blocks. The pattern is described
+in a review of the `anthropics/financial-services` repository (M. Craddock, 2026-05-06) [unverified in the repository].
 
-## 7. Pamięć i RAG jako niezaufane
-- Zapis do pamięci długotrwałej i bazy wektorowej przechodzi przegląd (człowiek albo reguła) i dostaje etykietę
-  pochodzenia; odczyt z pamięci traktujesz jak treść obcą.
-- Log wywołań narzędzi zapisuje pochodzenie każdego argumentu (użytkownik, narzędzie, dokument).
-- Agent ma wyłącznik awaryjny po stronie platformy (core-async-delegation §6).
+## 7. Memory and RAG as untrusted
+- A write to long-term memory and the vector database goes through review (a human or a rule) and gets a label of
+  origin; treat a read from memory as foreign content.
+- The tool call log records the origin of every argument (user, tool, document).
+- The agent has a kill switch on the platform side (core-async-delegation §6).
 
-## 8. Wiadomości wychodzące (agent wysyła w imieniu użytkownika)
-Agent, który odpisuje na maile, wysyła komunikaty albo sam rozsyła podsumowania, wyprowadza dane każdą wiadomością.
-- **Klasy danych z regułą dla każdej klasy:**
-  - „nigdy”: numery kart, dokumenty tożsamości, sekrety i hasła — odrzucenie bez względu na polecenie;
-  - „tylko na wyraźne polecenie w tej rozmowie”: zdrowie, finanse osobiste, dane osób trzecich;
-  - reszta według zwykłych zasad.
-- **Osobny klasyfikator na każdej wiadomości wychodzącej**, poza głównym agentem (inny model albo reguły z wykrywaniem
-  PII). Główny agent może być już zmanipulowany treścią, na którą odpowiada. Działa obok zatwierdzania akcji (§4),
-  nie zamiast niego.
-- **Akcje czekające na zgodę:** wysłanie do nowego odbiorcy, płatność, podpis, usunięcie. **Lista zakazana nawet za
-  zgodą** (np. przelewy między kontami, handel papierami wartościowymi) jest w kodzie, a nie w prompcie.
-- **Agent proaktywny** (sam pisze skróty lub przypomnienia): rytm i listę tematów ustawia użytkownik. Sprawdzanie co
-  kilka godzin zamiast ciągłego, bo każde przejście kosztuje limit. Tryb i budżet: core-async-delegation §2.
-- Bramka na skutku „wysłanie na zewnątrz”, pokrycie i próg klasyfikatora: core-agent-security,
+## 8. Outgoing messages (the agent sends on the user's behalf)
+An agent that replies to emails, sends messages or distributes summaries on its own takes data out with every message.
+- **Data classes with a rule for each class:**
+  - "never": card numbers, identity documents, secrets and passwords — rejection regardless of the instruction;
+  - "only on an explicit instruction in this conversation": health, personal finances, third-party data;
+  - the rest according to the usual rules.
+- **A separate classifier on every outgoing message**, outside the main agent (a different model or rules with PII
+  detection). The main agent may already be manipulated by the content it is replying to. It works alongside action approval (§4),
+  not instead of it.
+- **Actions waiting for consent:** sending to a new recipient, a payment, a signature, a deletion. **The list forbidden even with
+  consent** (e.g. transfers between accounts, trading securities) is in code, not in the prompt.
+- **A proactive agent** (writes digests or reminders on its own): the user sets the cadence and the list of topics. Checking every
+  few hours instead of continuously, because every pass costs quota. Mode and budget: core-async-delegation §2.
+- The gate on the "sending outside" effect, coverage and the classifier threshold: core-agent-security,
   `references/permissions-and-production.md` §4d.
 
-Źródło: U. Estari, „Claude Duet: The AI That Messages You First” (2026-10-22); lista akcji wg autora, nie sprawdzona
-w kodzie projektu [niezweryfikowane].
+Source: U. Estari, "Claude Duet: The AI That Messages You First" (2026-10-22); the list of actions per the author, not checked
+in the project's code [unverified].
 
-Źródła (dostęp 2026-10-31, przez wyszukiwarkę; strony arXiv niedostępne z sieci sesji): arXiv 2506.08837,
-arXiv 2503.18813, ai.meta.com/blog/practical-ai-agent-security (2025-10-31); artykuły wtórne: A. Dighe, „Top 4
-Security design patterns for AI agents” (2026-10-08), C. Kalhara, „Building Secure AI Agents”.
+Sources (accessed 2026-10-31, via a search engine; arXiv pages unreachable from the session network): arXiv 2506.08837,
+arXiv 2503.18813, ai.meta.com/blog/practical-ai-agent-security (2025-10-31); secondary articles: A. Dighe, "Top 4
+Security design patterns for AI agents" (2026-10-08), C. Kalhara, "Building Secure AI Agents".

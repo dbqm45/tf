@@ -1,32 +1,32 @@
-# Triaż i SLA podatności
+# Vulnerability triage and SLA
 
-## Sygnały
-- **CVSS v4.0** (FIRST, listopad 2023): ważność techniczna; nie jest zgodny wstecznie z v3.1, więc nie porównuj
-  wyników z różnych wersji. Nazwy grup metryk (Base, Threat, Environmental, Supplemental) [niezweryfikowane
-  w tej sesji, z pamięci]. CVSS-B (sama baza) przecenia ryzyko; dodaj wiedzę o zagrożeniu i środowisku.
-- **EPSS** (FIRST): prawdopodobieństwo wykorzystania w ciągu 30 dni, odświeżane codziennie. Estymata statystyczna,
-  nie dowód.
-- **CISA KEV**: katalog podatności potwierdzonych jako wykorzystywane; to najsilniejszy sygnał do pilności.
-- **Osiągalność**: czy podatny kod jest wywoływany, czy usługa jest wystawiona, czy działa kontrola kompensująca (VEX/
-  „not affected” z uzasadnieniem).
+## Signals
+- **CVSS v4.0** (FIRST, November 2023): technical severity; it is not backward compatible with v3.1, so do not compare
+  scores from different versions. The names of the metric groups (Base, Threat, Environmental, Supplemental) [unverified
+  in this session, from memory]. CVSS-B (the base alone) overstates risk; add knowledge of the threat and the environment.
+- **EPSS** (FIRST): the probability of exploitation within 30 days, refreshed daily. A statistical estimate,
+  not proof.
+- **CISA KEV**: a catalog of vulnerabilities confirmed as exploited; this is the strongest urgency signal.
+- **Reachability**: whether the vulnerable code is called, whether the service is exposed, whether a compensating control works (VEX/
+  "not affected" with a justification).
 
-## Reguła priorytetu
-1. W KEV lub z działającym exploitem i usługa dostępna z internetu → P0.
-2. Wysoki EPSS (np. > 0,1 [przykład progu]) albo CVSS ≥ 9 i osiągalne → P1.
-3. CVSS 7–8,9 osiągalne lub krytyczne nieosiągalne → P2.
-4. Reszta → P3 w cyklu, nieosiągalne mogą być zamknięte z VEX.
+## Priority rule
+1. In KEV or with a working exploit and the service reachable from the internet → P0.
+2. High EPSS (e.g. > 0.1 [example threshold]) or CVSS ≥ 9 and reachable → P1.
+3. CVSS 7–8.9 reachable or critical unreachable → P2.
+4. The rest → P3 in the cycle, unreachable ones can be closed with VEX.
 
-## Tabela SLA [przykład, ustal z właścicielem ryzyka]
-| Priorytet | Termin naprawy lub kontroli kompensującej |
+## SLA table [example, agree with the risk owner]
+| Priority | Deadline for a fix or a compensating control |
 |---|---|
-| P0 | 48 godzin (ograniczenie), pełna naprawa 7 dni |
-| P1 | 14 dni |
-| P2 | 30–60 dni |
-| P3 | 90 dni lub cykl wydawniczy |
-Przekroczenie terminu = eskalacja do właściciela produktu; wyjątek wymaga zgody człowieka, uzasadnienia, kontroli
-kompensującej i daty wygaśnięcia. Wykonanie łatki w produkcji: `ops-security-operations`.
+| P0 | 48 hours (mitigation), full fix 7 days |
+| P1 | 14 days |
+| P2 | 30–60 days |
+| P3 | 90 days or the release cycle |
+Missing the deadline = escalation to the product owner; an exception requires human approval, a justification, a compensating
+control and an expiry date. Applying the patch in production: `ops-security-operations`.
 
-## Znalezisko w zgłoszeniu (pola)
-ID, źródło (narzędzie, reguła), komponent i wersja, ważność bazowa, KEV (tak/nie), EPSS, osiągalność z dowodem,
-właściciel, termin, status (nowe / potwierdzone / fałszywe / wyjątek / naprawione), data zamknięcia.
-Fałszywe alarmy oznacz w narzędziu z powodem, by nie wracały.
+## A finding in a ticket (fields)
+ID, source (tool, rule), component and version, base severity, KEV (yes/no), EPSS, reachability with evidence,
+owner, deadline, status (new / confirmed / false / exception / fixed), closure date.
+Mark false positives in the tool with a reason, so they do not come back.

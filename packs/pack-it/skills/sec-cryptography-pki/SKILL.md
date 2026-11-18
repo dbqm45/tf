@@ -1,99 +1,99 @@
 ---
 name: sec-cryptography-pki
-description: Użyj przy wyborze algorytmów, TLS, zarządzaniu kluczami, PKI, krótkich certyfikatach i migracji postkwantowej — decyzje projektowe kryptografii.
+description: Use for choosing algorithms, TLS, key management, PKI, short-lived certificates and post-quantum migration — cryptography design decisions.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj, gdy trzeba zdecydować, jak zaprojektować kryptografię — dobór prymitywów i trybów (AEAD, hashowanie haseł Argon2id, podpisy, wymiana kluczy), konfiguracja TLS 1.3 i HSTS, szyfrowanie w spoczynku z klasami danych (dysk, baza, pole, kopie, bezpieczne usuwanie wg NIST SP 800-88), cykl życia kluczy (KMS/HSM, szyfrowanie kopertowe, rotacja, unieważnianie, zniszczenie), PKI i skracanie ważności certyfikatów (47 dni, ACME), inwentarz kryptografii i zwinność, migracja postkwantowa (FIPS 203/204/205, tryb hybrydowy), typowe błędy (ECB, powtórzony nonce, alg confusion w JWT). Nie do eksploatacji sekretów, rotacji i skanowania (ops-secrets-identities), logowania i tokenów w aplikacji (be-auth-security) ani szerszej architektury zaufania (sec-zero-trust-identity)."
-  keywords: "szyfrowanie w spoczynku, encryption at rest, klasyfikacja danych, klasy danych, TDE, SSE-KMS, szyfrowanie dysków, czy szyfrowanie dysku wystarczy, crypto-erase, bezpieczne usuwanie, kryptografia, szyfrowanie, szyfrować dane, szyfrowanie pól, szyfrowanie danych w bazie, jaki algorytm szyfrowania, jak trzymać klucze, rotacja kluczy, AES-GCM, ChaCha20, AEAD, nonce, IV, ECB, hashowanie haseł, Argon2id, bcrypt, scrypt, podpis cyfrowy, wymiana kluczy, TLS 1.3, HSTS, certyfikat, 47 dni, ACME, PKI, CA, root CA, KMS, HSM, szyfrowanie kopertowe, rotacja klucza, postkwantowa, PQC, ML-KEM, ML-DSA, FIPS 203, CNSA 2.0, harvest now decrypt later, zwinność kryptograficzna, CBOM, alg none, JWT alg, własna kryptografia"
+  catalog: "Use when you must decide how to design cryptography — choosing primitives and modes (AEAD, password hashing with Argon2id, signatures, key exchange), TLS 1.3 and HSTS configuration, encryption at rest with data classes (disk, database, field, backups, secure deletion per NIST SP 800-88), the key lifecycle (KMS/HSM, envelope encryption, rotation, revocation, destruction), PKI and the shortening of certificate validity (47 days, ACME), a cryptography inventory and agility, post-quantum migration (FIPS 203/204/205, hybrid mode), common mistakes (ECB, a repeated nonce, alg confusion in JWT). Not for operating secrets, rotation and scanning (ops-secrets-identities), login and tokens in the application (be-auth-security) or the wider trust architecture (sec-zero-trust-identity)."
+  keywords: "szyfrowanie w spoczynku, encryption at rest, klasyfikacja danych, klasy danych, TDE, SSE-KMS, szyfrowanie dysków, czy szyfrowanie dysku wystarczy, crypto-erase, bezpieczne usuwanie, kryptografia, szyfrowanie, szyfrować dane, szyfrowanie pól, szyfrowanie danych w bazie, jaki algorytm szyfrowania, jak trzymać klucze, rotacja kluczy, AES-GCM, ChaCha20, AEAD, nonce, IV, ECB, hashowanie haseł, Argon2id, bcrypt, scrypt, podpis cyfrowy, wymiana kluczy, TLS 1.3, HSTS, certyfikat, 47 dni, ACME, PKI, CA, root CA, KMS, HSM, szyfrowanie kopertowe, rotacja klucza, postkwantowa, PQC, ML-KEM, ML-DSA, FIPS 203, CNSA 2.0, harvest now decrypt later, zwinność kryptograficzna, CBOM, alg none, JWT alg, własna kryptografia, data classification, data classes, disk encryption, is disk encryption enough, secure deletion, cryptography, encryption, encrypt data, field encryption, encrypting data in the database, which encryption algorithm, how to store keys, key rotation, password hashing, digital signature, key exchange, certificate, 47 days, envelope encryption, post-quantum, crypto agility, custom cryptography"
 ---
 
-# Kryptografia stosowana i zarządzanie kluczami
+# Applied cryptography and key management
 
-**Granica.** Ten skill odpowiada na pytanie „jaką kryptografię wybrać i jak ją zaprojektować”. Eksploatację
-(inwentarz tożsamości maszynowych, skanowanie i rotacja sekretów, operacje PKI) opisuje `ops-secrets-identities`
-(`.claude/skills/ops-secrets-identities/references/cryptography-and-pki.md` to skrót tabelaryczny, tu jest pełniejsza
-decyzja). Hasła i tokeny w przepływach logowania: `be-auth-security`. Zagrożenia: `arch-threat-modeling`.
-Wynik pracy: sekcja „Kryptografia” w `docs/project/04-architecture/` (core-project-record) albo ADR.
+**The boundary.** This skill answers the question "which cryptography to choose and how to design it". Operations
+(the inventory of machine identities, scanning and rotating secrets, PKI operations) are described by `ops-secrets-identities`
+(`.claude/skills/ops-secrets-identities/references/cryptography-and-pki.md` is a tabular summary, here is the fuller
+decision). Passwords and tokens in login flows: `be-auth-security`. Threats: `arch-threat-modeling`.
+The work result: a "Cryptography" section in `docs/project/04-architecture/` (core-project-record) or an ADR.
 
-## Procedura
-1. **Co chronimy i przed kim.** Dane, ich poufność w czasie (lata → ryzyko „zbierz teraz, odszyfruj później”),
-   stan (w spoczynku, w ruchu, w użyciu), wymagania prawne. Bez tego nie ma kryteriów wyboru. Dane w spoczynku:
-   klasy danych, warstwy szyfrowania (nośnik, baza, pole, kopie) i cykl życia z usuwaniem —
+## Procedure
+1. **What we protect and from whom.** The data, its confidentiality over time (years → the "harvest now, decrypt later" risk),
+   the state (at rest, in transit, in use), the legal requirements. Without this there are no selection criteria. Data at rest:
+   data classes, encryption layers (media, database, field, backups) and the lifecycle with deletion —
    `references/data-at-rest.md`.
-2. **Najpierw konstrukcja wysokiego poziomu**, dopiero potem prymitywy: TLS, KMS, biblioteka platformy, libsodium
-   lub Tink. Nigdy własny algorytm, protokół ani „sprytne” złożenie prymitywów. Gdy nie ma gotowca, zapisz
-   uzasadnienie i poproś o przegląd kryptografa.
-3. **Dobór prymitywu** wg tabeli niżej; odchylenie od niej to ADR z powodem.
-4. **Klucze:** wygenerowane CSPRNG, zapisane w KMS/HSM, z właścicielem, rolą i planem cyklu życia
+2. **A high-level construction first**, only then primitives: TLS, KMS, the platform library, libsodium
+   or Tink. Never your own algorithm, protocol or a "clever" composition of primitives. When there is no ready solution, record
+   the justification and ask a cryptographer for a review.
+3. **Choosing a primitive** according to the table below; a deviation from it is an ADR with a reason.
+4. **Keys:** generated by a CSPRNG, stored in a KMS/HSM, with an owner, a role and a lifecycle plan
    (`references/key-lifecycle-and-pki.md`).
-5. **Transport:** TLS 1.3, ścisła walidacja certyfikatów, HSTS (sekcja TLS).
-6. **Inwentarz i zwinność:** każdy algorytm jest wymienialny konfiguracją, a nie przepisaniem kodu; wersja
-   algorytmu zapisana przy danych (nagłówek szyfrogramu, `kid`).
-7. **Przegląd** wg checklisty i listy błędów (`references/common-mistakes.md`).
+5. **Transport:** TLS 1.3, strict certificate validation, HSTS (the TLS section).
+6. **Inventory and agility:** every algorithm is replaceable by configuration, not by rewriting code; the algorithm
+   version recorded with the data (the ciphertext header, `kid`).
+7. **Review** according to the checklist and the list of mistakes (`references/common-mistakes.md`).
 
-## Dobór prymitywów
-| Potrzeba | Wybór | Uwagi |
+## Choosing primitives
+| Need | Choice | Notes |
 |---|---|---|
-| poufność + integralność danych | AEAD: AES-256-GCM albo ChaCha20-Poly1305 (XChaCha20-Poly1305 przy losowych nonce) | nonce unikalny dla klucza; GCM: nie powtarzaj, limit wiadomości na klucz |
-| wiadomość między stronami z kluczem współdzielonym | HMAC-SHA-256 lub AEAD | porównanie w stałym czasie |
-| hasło użytkownika | Argon2id; scrypt; bcrypt dla systemów zastanych; PBKDF2 tylko gdy wymagany FIPS | parametry niżej |
-| skrót danych | SHA-256 / SHA-3 | MD5 i SHA-1 do niczego, co ma odpierać napastnika |
-| podpis | Ed25519 lub ECDSA P-256; RSA-PSS ≥ 3072 bit | RSA 2048 tylko ze względu na zgodność |
-| wymiana klucza | X25519 / ECDHE; w TLS hybryda z ML-KEM | statyczny DH bez forward secrecy odpada |
-| klucz z hasła lub z innego klucza | KDF: Argon2id/scrypt (z hasła), HKDF (z klucza) | nie używaj hasha jako KDF |
-| losowość | CSPRNG systemu (`/dev/urandom`, `crypto.randomBytes`, `SecureRandom`, `secrets`) | `Math.random` i `rand()` wykluczone |
+| data confidentiality + integrity | AEAD: AES-256-GCM or ChaCha20-Poly1305 (XChaCha20-Poly1305 with random nonces) | nonce unique per key; GCM: do not repeat, a message limit per key |
+| a message between parties with a shared key | HMAC-SHA-256 or AEAD | constant-time comparison |
+| a user password | Argon2id; scrypt; bcrypt for legacy systems; PBKDF2 only when FIPS is required | parameters below |
+| a data digest | SHA-256 / SHA-3 | MD5 and SHA-1 for nothing that must resist an attacker |
+| a signature | Ed25519 or ECDSA P-256; RSA-PSS ≥ 3072 bit | RSA 2048 only for compatibility |
+| key exchange | X25519 / ECDHE; in TLS a hybrid with ML-KEM | static DH without forward secrecy is out |
+| a key from a password or from another key | KDF: Argon2id/scrypt (from a password), HKDF (from a key) | do not use a hash as a KDF |
+| randomness | the system CSPRNG (`/dev/urandom`, `crypto.randomBytes`, `SecureRandom`, `secrets`) | `Math.random` and `rand()` excluded |
 
-**Hasła — parametry z OWASP Password Storage Cheat Sheet** (stan wg wyszukiwania 2026-10-17, strony źródłowej nie
-udało się pobrać bezpośrednio, więc przed wdrożeniem porównaj z aktualną: [niezweryfikowane]):
-- Argon2id: minimum 19 MiB pamięci, 2 iteracje, równoległość 1 (równoważne warianty z większą pamięcią i mniejszą
-  liczbą iteracji są dopuszczalne);
-- scrypt: N = 2^17, r = 8, p = 1; bcrypt: współczynnik ≥ 10 (w projekcie przyjmij ≥ 12 jak w `be-auth-security`)
-  i limit hasła 72 bajtów; PBKDF2-HMAC-SHA-256: ≥ 600 000 iteracji.
-- Parametry zmierz na produkcyjnym sprzęcie (cel rzędu setek ms na hash) i zapisuj w haszu, by móc je podnosić
-  przy następnym logowaniu. Papryka (pepper) w KMS to dodatek, nie zamiennik.
+**Passwords — parameters from the OWASP Password Storage Cheat Sheet** (the state per a search on 2026-10-17; the source page
+could not be fetched directly, so compare with the current one before deployment: [unverified]):
+- Argon2id: a minimum of 19 MiB of memory, 2 iterations, parallelism 1 (equivalent variants with more memory and fewer
+  iterations are acceptable);
+- scrypt: N = 2^17, r = 8, p = 1; bcrypt: a work factor ≥ 10 (in the project adopt ≥ 12 as in `be-auth-security`)
+  and a password limit of 72 bytes; PBKDF2-HMAC-SHA-256: ≥ 600,000 iterations.
+- Measure the parameters on production hardware (a target of the order of hundreds of ms per hash) and store them in the hash, so you can raise them
+  at the next login. A pepper in the KMS is an addition, not a replacement.
 
 ## TLS
-- Nowe usługi: TLS 1.3. TLS 1.2 tylko dla klientów, którzy go potrzebują, z szyframi AEAD i ECDHE.
-  Wyłączone: SSL, TLS 1.0 i 1.1, RC4, 3DES, szyfry eksportowe. Profile „modern” i „intermediate” bierz z generatora
-  konfiguracji Mozilli, bo wersje i listy szyfrów się zmieniają ([niezweryfikowane] szczegóły aktualnych profili).
-- Klient waliduje łańcuch, nazwę hosta, ważność i przeznaczenie; nigdy `verify=false`, `InsecureSkipVerify` ani
-  „akceptuj wszystko” poza testem jednostkowym. Pinning kluczy tylko tam, gdzie kontrolujesz klienta i ścieżkę
-  wymiany (aplikacje mobilne: z kluczem zapasowym).
-- Wewnątrz organizacji mTLS z krótkotrwałymi certyfikatami (`references/key-lifecycle-and-pki.md`).
-- HSTS: `Strict-Transport-Security: max-age=…; includeSubDomains`; `preload` dopiero po przetestowaniu wszystkich
-  subdomen, bo cofnięcie trwa miesiącami. Nagłówki ogólne: `be-auth-security`.
+- New services: TLS 1.3. TLS 1.2 only for clients that need it, with AEAD and ECDHE ciphers.
+  Disabled: SSL, TLS 1.0 and 1.1, RC4, 3DES, export ciphers. Take the "modern" and "intermediate" profiles from Mozilla's
+  configuration generator, because versions and cipher lists change ([unverified] the details of the current profiles).
+- The client validates the chain, the host name, the validity and the purpose; never `verify=false`, `InsecureSkipVerify` or
+  "accept everything" outside a unit test. Key pinning only where you control the client and the replacement path
+  (mobile apps: with a backup key).
+- Inside the organization mTLS with short-lived certificates (`references/key-lifecycle-and-pki.md`).
+- HSTS: `Strict-Transport-Security: max-age=…; includeSubDomains`; `preload` only after testing all
+  subdomains, because undoing it takes months. General headers: `be-auth-security`.
 
-## Postkwantowo i zwinność
-- NIST opublikował FIPS 203 (ML-KEM), 204 (ML-DSA) i 205 (SLH-DSA) w sierpniu 2024. Szczegóły, terminy
-  krajowe i plan: `references/post-quantum-migration.md`.
-- Kolejność: inwentarz (CBOM) → priorytet dla danych o długiej poufności i wymiany kluczy → tryb hybrydowy
-  (X25519 + ML-KEM) → podpisy i PKI. Terminy NIST IR 8547 i CNSA 2.0 to [niezweryfikowane] w źródłach pierwotnych.
+## Post-quantum and agility
+- NIST published FIPS 203 (ML-KEM), 204 (ML-DSA) and 205 (SLH-DSA) in August 2024. Details, national
+  deadlines and the plan: `references/post-quantum-migration.md`.
+- The order: inventory (CBOM) → priority for data with long confidentiality and for key exchange → hybrid mode
+  (X25519 + ML-KEM) → signatures and PKI. The NIST IR 8547 and CNSA 2.0 deadlines are [unverified] in primary sources.
 
-## Przykład
-**Wejście:** „Szyfrujemy numery dokumentów w polu bazy. Pomysł: AES-CBC, klucz w pliku konfiguracyjnym, IV stały.”
-**Wynik** (fragment ADR):
-1. AES-256-GCM, 96-bitowy losowy nonce na rekord, nagłówek `v1|kid|nonce|szyfrogram|tag`; AAD = id rekordu.
-2. Szyfrowanie kopertowe: DEK na tabelę lub partię, KEK w KMS; DEK zaszyfrowany obok danych. Rotacja KEK co rok [przykład] bez przeszyfrowania, rotacja DEK przy kompromitacji.
-3. Role KMS rozdzielone: szyfruje aplikacja, odszyfrowuje tylko usługa X, administruje zespół platformy.
-4. Wyszukiwanie po numerze: osobna kolumna HMAC-SHA-256 z kluczem z KMS (blind index), nie szyfrogram deterministyczny.
-5. Odrzucone: CBC bez MAC (podatność na oracle), stały IV (ujawnia równość), klucz w konfiguracji.
+## Example
+**Input:** "We encrypt document numbers in a database field. The idea: AES-CBC, the key in a configuration file, a fixed IV."
+**Result** (an ADR fragment):
+1. AES-256-GCM, a 96-bit random nonce per record, the header `v1|kid|nonce|ciphertext|tag`; AAD = the record id.
+2. Envelope encryption: a DEK per table or batch, the KEK in the KMS; the DEK encrypted next to the data. KEK rotation every year [example] without re-encryption, DEK rotation on compromise.
+3. KMS roles separated: the application encrypts, only service X decrypts, the platform team administers.
+4. Search by number: a separate HMAC-SHA-256 column with a key from the KMS (a blind index), not deterministic ciphertext.
+5. Rejected: CBC without a MAC (vulnerable to an oracle), a fixed IV (reveals equality), the key in the configuration.
 
-## Checklista
-- [ ] cel, czas poufności i model napastnika zapisane; nie ma własnej kryptografii
-- [ ] klasy danych nadane; warstwa szyfrowania w spoczynku dobrana do klasy, kopie i usuwanie objęte
-- [ ] AEAD z unikalnym nonce, wersja algorytmu i `kid` przy danych
-- [ ] hasła: Argon2id/scrypt/bcrypt z zapisanymi parametrami; brak szybkich hashy
-- [ ] klucze w KMS/HSM, szyfrowanie kopertowe, rozdzielone role, rotacja i zniszczenie opisane
-- [ ] TLS 1.3, pełna walidacja certyfikatów, HSTS; brak wyłączonej weryfikacji
-- [ ] certyfikaty automatyczne (ACME) i monitoring wygasania, zgodnie z kalendarzem skracania ważności
-- [ ] inwentarz kryptografii i plan migracji postkwantowej dla danych długowiecznych
-- [ ] przegląd listy typowych błędów (`references/common-mistakes.md`)
+## Checklist
+- [ ] the goal, the confidentiality period and the attacker model recorded; there is no custom cryptography
+- [ ] data classes assigned; the at-rest encryption layer matched to the class, backups and deletion covered
+- [ ] AEAD with a unique nonce, the algorithm version and `kid` with the data
+- [ ] passwords: Argon2id/scrypt/bcrypt with recorded parameters; no fast hashes
+- [ ] keys in a KMS/HSM, envelope encryption, separated roles, rotation and destruction described
+- [ ] TLS 1.3, full certificate validation, HSTS; no disabled verification
+- [ ] automated certificates (ACME) and expiry monitoring, in line with the validity-shortening calendar
+- [ ] a cryptography inventory and a post-quantum migration plan for long-lived data
+- [ ] a review against the list of common mistakes (`references/common-mistakes.md`)
 
-## Źródła
-- OWASP Password Storage Cheat Sheet (parametry przez wyszukiwanie, 2026-10-17; strona nieosiągalna z sandboxu)
-- CA/Browser Forum, głosowanie SC-081v3: ważność 398 → 200 dni (2026-03-15) → 100 (2027-03-15) → 47 (2029-03-15),
-  skrócone ponowne użycie walidacji domeny; źródła wtórne, 2026-10-17 [niezweryfikowane w pierwotnym rejestrze]
-- NIST FIPS 203, 204, 205 (sierpień 2024); NIST IR 8547 (projekt z listopada 2024: wycofanie RSA/ECC po 2030,
-  zakaz po 2035; status końcowy [niezweryfikowane]); NSA CNSA 2.0 (źródła wtórne, 2026-10-17)
-- Mozilla Server Side TLS (generator konfiguracji) — wersje profili [niezweryfikowane]
-Opisane własnymi słowami.
+## Sources
+- OWASP Password Storage Cheat Sheet (parameters through a search, 2026-10-17; the page unreachable from the sandbox)
+- CA/Browser Forum, ballot SC-081v3: validity 398 → 200 days (2026-03-15) → 100 (2027-03-15) → 47 (2029-03-15),
+  shortened reuse of domain validation; secondary sources, 2026-10-17 [unverified in the primary register]
+- NIST FIPS 203, 204, 205 (August 2024); NIST IR 8547 (the November 2024 draft: deprecating RSA/ECC after 2030,
+  disallowed after 2035; final status [unverified]); NSA CNSA 2.0 (secondary sources, 2026-10-17)
+- Mozilla Server Side TLS (the configuration generator) — profile versions [unverified]
+Described in our own words.

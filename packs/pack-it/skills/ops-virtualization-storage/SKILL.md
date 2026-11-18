@@ -1,123 +1,123 @@
 ---
 name: ops-virtualization-storage
-description: Użyj przy infrastrukturze własnej i brzegowej — hiperwizor, klaster, SAN/NAS/Ceph, RAID, kopie, cykl życia sprzętu, edge.
+description: Use for on-premises and edge infrastructure — hypervisor, cluster, SAN/NAS/Ceph, RAID, backups, hardware lifecycle, edge.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj przy projekcie infrastruktury w serwerowni lub na brzegu (edge) — dobór hiperwizora (KVM z libvirt i QEMU, Proxmox VE, VMware vSphere z uwzględnieniem zmian licencyjnych po przejęciu przez Broadcom), wielkość klastra (overcommit CPU i pamięci, N+1, HA, migracja na żywo, kworum), architektura storage (SAN FC i iSCSI, NAS NFS i SMB, Ceph), RAID i erasure coding, IOPS, przepustowość, opóźnienie i głębokość kolejki, migawki a kopie zapasowe, reguła 3-2-1, niezmienialność, cykl życia sprzętu (odświeżanie, części zapasowe, firmware), planowanie pojemności, ograniczenia edge, migracja między hiperwizorami. Wynik to projekt z tabelą wymiarowania. Nie do odtwarzania po awarii regionu i strategii DR (ops-multi-region-resilience), kopii w kontekście incydentów i SLO (ops-sre-incidents), strojenia I/O w systemie operacyjnym (ops-linux-performance) ani orkiestracji kontenerów (ops-kubernetes)."
-  keywords: "hiperwizor, wirtualizacja, KVM, libvirt, QEMU, Proxmox, VMware, vSphere, ESXi, Broadcom, licencje VMware, migracja z VMware, klaster, overcommit, nadsubskrypcja, HA, live migration, vMotion, SAN, iSCSI, Fibre Channel, NAS, NFS, SMB, Ceph, storage, macierz, RAID, RAID 6, erasure coding, IOPS, przepustowość, opóźnienie dysku, głębokość kolejki, migawka, snapshot, backup, 3-2-1, niezmienialna kopia, serwerownia, on-premise, odświeżanie sprzętu, części zapasowe, firmware, pojemność, edge, sklep, oddział, zdalne zarządzanie, iDRAC, iLO, wymiarowanie klastra"
+  catalog: "Use for designing infrastructure in a server room or at the edge — choosing a hypervisor (KVM with libvirt and QEMU, Proxmox VE, VMware vSphere taking into account the licensing changes after the Broadcom acquisition), cluster size (CPU and memory overcommit, N+1, HA, live migration, quorum), storage architecture (SAN FC and iSCSI, NAS NFS and SMB, Ceph), RAID and erasure coding, IOPS, throughput, latency and queue depth, snapshots vs backups, the 3-2-1 rule, immutability, hardware lifecycle (refresh, spare parts, firmware), capacity planning, edge constraints, migration between hypervisors. The output is a design with a sizing table. Not for recovery after a region failure and DR strategy (ops-multi-region-resilience), backups in the context of incidents and SLOs (ops-sre-incidents), I/O tuning in the operating system (ops-linux-performance) or container orchestration (ops-kubernetes)."
+  keywords: "hiperwizor, wirtualizacja, KVM, libvirt, QEMU, Proxmox, VMware, vSphere, ESXi, Broadcom, licencje VMware, migracja z VMware, klaster, overcommit, nadsubskrypcja, HA, live migration, vMotion, SAN, iSCSI, Fibre Channel, NAS, NFS, SMB, Ceph, storage, macierz, RAID, RAID 6, erasure coding, IOPS, przepustowość, opóźnienie dysku, głębokość kolejki, migawka, snapshot, backup, 3-2-1, niezmienialna kopia, serwerownia, on-premise, odświeżanie sprzętu, części zapasowe, firmware, pojemność, edge, sklep, oddział, zdalne zarządzanie, iDRAC, iLO, wymiarowanie klastra, hypervisor, virtualization, VMware licences, migration from VMware, cluster, oversubscription, storage array, throughput, disk latency, queue depth, immutable backup, server room, hardware refresh, spare parts, capacity, store, branch, remote management, cluster sizing"
   visibility: name
 ---
 
-# Wirtualizacja, storage i sprzęt (serwerownia i edge)
+# Virtualization, storage and hardware (server room and edge)
 
-Wynik: **projekt infrastruktury z tabelą wymiarowania** (szablon niżej). Zmiany na działającej infrastrukturze
-agent tylko proponuje jako plan (okno zmian, kolejność, wycofanie, dry-run tam, gdzie narzędzie go ma);
-wykonuje je człowiek lub agent za jego jawną zgodą. Odtwarzanie po awarii lokalizacji: **ops-multi-region-resilience**;
-rola kopii w incydentach i RPO/RTO: **ops-sre-incidents**; I/O w jądrze i systemie plików: **ops-linux-performance**;
-kontenery: **ops-kubernetes** (węzły Kubernetes na wirtualnych maszynach liczysz tu jak każde inne obciążenie).
+Output: **an infrastructure design with a sizing table** (template below). For changes to running infrastructure
+the agent only proposes a plan (change window, order, rollback, dry-run where the tool has one);
+a human executes them, or the agent with the human's explicit consent. Recovery after a site failure: **ops-multi-region-resilience**;
+the role of backups in incidents and RPO/RTO: **ops-sre-incidents**; I/O in the kernel and the file system: **ops-linux-performance**;
+containers: **ops-kubernetes** (you count Kubernetes nodes on virtual machines here like any other workload).
 
-## Procedura
-1. **Obciążenia i wymagania.** Inwentarz VM/usług: vCPU, RAM, dysk, profil I/O (losowy czy sekwencyjny, odczyt/zapis,
-   rozmiar bloku), RPO/RTO, zależności, licencje zależne od rdzeni (bazy, Windows Server). Bez pomiaru z obecnego
-   środowiska (p95 z 30 dni, nie średnia) liczby poniżej są zgadywaniem.
-2. **Hiperwizor** — wybór kryteriami, nie marką:
-   - **KVM + libvirt/QEMU**: jądro Linuksa, najwięcej swobody, zarządzanie i HA budujesz sam (Pacemaker, Ansible).
-   - **Proxmox VE**: KVM i LXC z webowym zarządzaniem, klastrem, HA, Ceph i ZFS w pakiecie; licencja AGPL, płatne
-     jest wsparcie (subskrypcja). Wersje: `references/hypervisors-and-storage.md`.
-   - **VMware vSphere**: dojrzały ekosystem (DRS, vSAN, NSX), ale po przejęciu przez Broadcom zmieniły się licencje
-     (subskrypcja zamiast wieczystych, rozliczenie za rdzeń, minima zakupowe) — **warunki sprawdź w aktualnej ofercie
-     i umowie, nie z pamięci** [niezweryfikowane: szczegóły minimów i renewali, doniesienia resellerów z 2025-04].
-   - Decyzja: umiejętności zespołu, wsparcie dostawcy aplikacji (certyfikacja pod hiperwizor), koszt 5 lat (licencje
-     + wsparcie + ludzie), ryzyko uzależnienia. Dla małych lokalizacji licz minima zakupowe na lokalizację.
-3. **Wymiarowanie klastra** (tabela i wzory w `references/sizing.md`):
-   - **Pojemność po awarii**: projektuj na **N+1** (utrata jednego węzła, przy HA bez przekroczenia limitów);
-     przy dużych klastrach N+2. Nie licz węzłów „na styk” — HA uruchomi VM tylko tam, gdzie jest wolna pamięć.
-   - **CPU**: stosunek vCPU do rdzeni fizycznych zależy od obciążenia; punktem wyjścia są wartości [przykład]
-     2:1–4:1 dla ogólnych usług, 1:1 dla opóźnieniowo wrażliwych i baz, i **weryfikujesz go pomiarem czasu gotowości
-     CPU (CPU ready/steal)**, nie regułą kciuka.
-   - **Pamięć**: bez overcommitu dla baz i obciążeń krytycznych; balloon i swap hosta to wyjątek, nie plan.
-   - **Migracja na żywo** wymaga wspólnego storage lub kopiowania dysków, spójnej rodziny CPU (wspólny model CPU
-     w klastrze) i sieci migracyjnej osobnej od ruchu VM.
-   - **Kworum**: klaster potrzebuje większości głosów; 2 węzły wymagają trzeciego głosu (QDevice, świadek), w innym
-     razie awaria jednego węzła zatrzymuje klaster. Zalecany start to 3 węzły.
-   - Sieć: osobne VLAN-y lub interfejsy dla zarządzania, migracji, storage i ruchu VM; 25 GbE dla storage
-     rozproszonego [przykład], ścieżki redundantne (LACP/MLAG, MPIO dla iSCSI/FC).
-4. **Storage** — wybór architektury:
+## Procedure
+1. **Workloads and requirements.** An inventory of VMs/services: vCPU, RAM, disk, I/O profile (random or sequential, read/write,
+   block size), RPO/RTO, dependencies, core-based licences (databases, Windows Server). Without a measurement from the current
+   environment (p95 over 30 days, not the average) the numbers below are guesswork.
+2. **Hypervisor** — chosen by criteria, not by brand:
+   - **KVM + libvirt/QEMU**: the Linux kernel, the most freedom, you build management and HA yourself (Pacemaker, Ansible).
+   - **Proxmox VE**: KVM and LXC with web management, clustering, HA, Ceph and ZFS in the package; AGPL licence, the support
+     is paid (subscription). Versions: `references/hypervisors-and-storage.md`.
+   - **VMware vSphere**: a mature ecosystem (DRS, vSAN, NSX), but after the Broadcom acquisition the licensing changed
+     (subscription instead of perpetual, per-core billing, purchase minimums) — **check the terms in the current offer
+     and contract, not from memory** [unverified: details of minimums and renewals, reseller reports from 2025-04].
+   - Decision: the team's skills, support from the application vendor (certification for the hypervisor), 5-year cost (licences
+     + support + people), lock-in risk. For small sites, count the purchase minimums per site.
+3. **Cluster sizing** (table and formulas in `references/sizing.md`):
+   - **Capacity after a failure**: design for **N+1** (loss of one node, with HA without exceeding limits);
+     for large clusters N+2. Do not count nodes "to the limit" — HA starts VMs only where there is free memory.
+   - **CPU**: the ratio of vCPU to physical cores depends on the workload; the starting point is the values [example]
+     2:1–4:1 for general services, 1:1 for latency-sensitive workloads and databases, and **you verify it by measuring CPU
+     ready time (CPU ready/steal)**, not by a rule of thumb.
+   - **Memory**: no overcommit for databases and critical workloads; ballooning and host swap are an exception, not a plan.
+   - **Live migration** needs shared storage or disk copying, a consistent CPU family (a common CPU model
+     in the cluster) and a migration network separate from VM traffic.
+   - **Quorum**: a cluster needs a majority of votes; 2 nodes need a third vote (QDevice, witness), otherwise
+     the failure of one node stops the cluster. The recommended start is 3 nodes.
+   - Network: separate VLANs or interfaces for management, migration, storage and VM traffic; 25 GbE for distributed
+     storage [example], redundant paths (LACP/MLAG, MPIO for iSCSI/FC).
+4. **Storage** — choosing the architecture:
 
-   | Wymaganie | Wybór | Uwaga |
+   | Requirement | Choice | Note |
    |---|---|---|
-   | bloki o niskim opóźnieniu, współdzielone | SAN (FC lub iSCSI) | FC: dedykowana sieć, drogie, przewidywalne; iSCSI na Ethernecie: taniej, wymaga izolacji i MPIO |
-   | pliki dla wielu klientów | NAS (NFS dla Linuksa/VM, SMB dla Windows) | uważaj na blokady, uprawnienia i pojedynczą głowicę |
-   | skalowanie poziome bez macierzy | storage definiowany programowo (Ceph, vSAN) | minimum 3 węzły, sieć i dyski z konsekwentnym wymiarowaniem |
-   | pojedynczy host lub edge | lokalny ZFS/LVM, replikacja asynchroniczna | prostota ponad HA |
+   | low-latency shared blocks | SAN (FC or iSCSI) | FC: a dedicated network, expensive, predictable; iSCSI over Ethernet: cheaper, needs isolation and MPIO |
+   | files for many clients | NAS (NFS for Linux/VMs, SMB for Windows) | watch out for locks, permissions and a single head |
+   | horizontal scaling without an array | software-defined storage (Ceph, vSAN) | minimum 3 nodes, network and disks with consistent sizing |
+   | a single host or edge | local ZFS/LVM, asynchronous replication | simplicity over HA |
 
-   Ceph: domyślnie replikacja ×3 z `min_size` 2; pula erasure coding k+m oszczędza miejsce kosztem opóźnienia i
-   narzutu przy odbudowie, wymaga co najmniej k+m domen awarii [niezweryfikowane: wymagania wersji — sprawdź
-   dokumentację używanego wydania].
-5. **RAID i erasure coding** — dla dużych dysków (≥ 10 TB) odbudowa trwa godzinami do dni, a w tym czasie klaster jest
-   podatny na drugą awarię i błąd odczytu (URE):
-   - RAID 5 na dużych dyskach: unikaj dla danych, których utrata boli; **RAID 6 lub RAID 10** (10: szybszy zapis i
-     odbudowa, 50% pojemności); RAID 0 tylko dla danych tymczasowych.
-   - Zapis w RAID 5/6 ma karę (read-modify-write: ok. 4 i 6 operacji na zapis [przykład, kontroler z cache zmniejsza]).
-   - Erasure coding: mniejszy narzut pojemności (np. k=4, m=2 → 1,5× zamiast 3×), ale droższe odczyty/zapisy małych
-     bloków i odbudowa — dla obciążeń archiwalnych i obiektowych, rzadziej dla baz.
-   - RAID nie jest kopią zapasową: chroni przed awarią dysku, nie przed usunięciem, błędem aplikacji ani ransomware.
-6. **Wydajność.** Wymiaruj na trzech osiach: **IOPS**, **przepustowość** (IOPS × rozmiar bloku) i **opóźnienie**
-   (p95/p99). Głębokość kolejki wiąże je prawem Little'a (współbieżność = przepustowość × opóźnienie): bez
-   równoległości SSD NVMe nie osiągnie specyfikacji. Mierz pod realistycznym obciążeniem (fio z profilem aplikacji),
-   zostaw zapas ~30% na odbudowy i szczyty. Strojenie po stronie OS: **ops-linux-performance**.
-7. **Ochrona danych.** **Migawka nie jest kopią zapasową** — leży na tym samym storage i znika razem z nim. Kopia:
-   zasada **3-2-1** (3 kopie, 2 różne nośniki, 1 poza lokalizacją; rozszerzenie 3-2-1-1-0 to konwencja
-   dostawców: +1 niezmienialna/offline, 0 błędów po teście odtworzenia). Co najmniej jedna kopia **niezmienialna**
-   (Object Lock/WORM, taśma, offline) z osobnymi poświadczeniami niż produkcja. Kopia liczy się po **teście odtworzenia**
-   z pomiarem czasu. RPO/RTO i incydenty: **ops-sre-incidents**.
-8. **Cykl życia sprzętu i pojemność.** Rejestr zasobów: model, data zakupu, koniec gwarancji i wsparcia, wersja
-   firmware, wymagane wymiany. Cykl odświeżania typowo 4–6 lat [przykład — zależy od wsparcia producenta i
-   amortyzacji]; część zapasowa na miejscu (dyski, zasilacze, wentylatory, optyki) i umowa SLA na wymianę. Firmware
-   aktualizujesz w oknach zmian, węzeł po węźle, najpierw w środowisku testowym; zgodność BIOS/HBA/dysków z hiperwizorem
-   sprawdzasz w macierzy zgodności dostawcy. Prognoza pojemności z trendu zużycia: alert przy ~70–80% zajętości puli
-   (czas zamówienia sprzętu bywa dłuższy niż czas do zapełnienia).
-9. **Edge.** Założenia: łącze bywa niedostępne, nikt nie jest na miejscu, miejsca i zasilania mało.
-   - Praca **autonomiczna** bez łączności (lokalne DNS, uwierzytelnianie, kolejkowanie danych), synchronizacja po powrocie.
-   - **Zdalne zarządzanie poza pasmem** (BMC: iDRAC, iLO, Redfish), zero-touch provisioning, obrazy zatwierdzone centralnie.
-   - Małe klastry: 1 węzeł + szybka wymiana, 2 węzły + świadek, 3 węzły dla HA. Zapasowy węzeł wysłany kurierem bywa
-     tańszy niż trzeci węzeł w każdej lokalizacji.
-   - Flotą zarządzasz jak kodem, aktualizacje falami (kanarki), telemetria przez bufor lokalny
-     (**ops-observability**). Kontenery na brzegu: **ops-kubernetes**.
-10. **Migracja między hiperwizorami.** Inwentarz VM i zależności, pilotaż na VM niekrytycznej, konwersja dysków
-    (qcow2, VMDK, VHDX), sterowniki wirtualne (virtio), zmiana kart sieciowych i adresów MAC, licencje powiązane ze
-    sprzętem, agenty backupu i monitoringu, okno przełączenia, **plan wycofania** (stare środowisko działa równolegle
-    do akceptacji). Fale od najmniej do najbardziej krytycznych.
-11. **Wynik** — szablon:
+   Ceph: by default replication ×3 with `min_size` 2; an erasure coding k+m pool saves space at the cost of latency and
+   rebuild overhead, needs at least k+m failure domains [unverified: version requirements — check
+   the documentation of the release in use].
+5. **RAID and erasure coding** — for large disks (≥ 10 TB) a rebuild takes hours to days, and during that time the cluster is
+   vulnerable to a second failure and a read error (URE):
+   - RAID 5 on large disks: avoid it for data whose loss hurts; **RAID 6 or RAID 10** (10: faster writes and
+     rebuild, 50% capacity); RAID 0 only for temporary data.
+   - Writes in RAID 5/6 have a penalty (read-modify-write: approx. 4 and 6 operations per write [example, a controller with cache reduces it]).
+   - Erasure coding: lower capacity overhead (e.g. k=4, m=2 → 1.5× instead of 3×), but more expensive reads/writes of small
+     blocks and rebuilds — for archival and object workloads, less often for databases.
+   - RAID is not a backup: it protects against a disk failure, not against deletion, an application bug or ransomware.
+6. **Performance.** Size on three axes: **IOPS**, **throughput** (IOPS × block size) and **latency**
+   (p95/p99). Queue depth links them through Little's law (concurrency = throughput × latency): without
+   parallelism an NVMe SSD will not reach its specification. Measure under a realistic load (fio with the application's profile),
+   leave ~30% headroom for rebuilds and peaks. Tuning on the OS side: **ops-linux-performance**.
+7. **Data protection.** **A snapshot is not a backup** — it sits on the same storage and disappears with it. A backup:
+   the **3-2-1** rule (3 copies, 2 different media, 1 off-site; the 3-2-1-1-0 extension is a vendor
+   convention: +1 immutable/offline, 0 errors after a restore test). At least one **immutable** copy
+   (Object Lock/WORM, tape, offline) with credentials separate from production. A backup counts after a **restore test**
+   with timing. RPO/RTO and incidents: **ops-sre-incidents**.
+8. **Hardware lifecycle and capacity.** An asset register: model, purchase date, end of warranty and support, firmware
+   version, required replacements. The refresh cycle is typically 4–6 years [example — depends on vendor support and
+   depreciation]; spare parts on site (disks, power supplies, fans, optics) and an SLA contract for replacement. You update firmware
+   in change windows, node by node, first in a test environment; you check BIOS/HBA/disk compatibility with the hypervisor
+   in the vendor's compatibility matrix. A capacity forecast from the usage trend: an alert at ~70–80% pool utilization
+   (hardware lead time is sometimes longer than the time until the pool fills up).
+9. **Edge.** Assumptions: the link is sometimes unavailable, nobody is on site, space and power are scarce.
+   - **Autonomous** operation without connectivity (local DNS, authentication, data queuing), synchronization when it comes back.
+   - **Out-of-band remote management** (BMC: iDRAC, iLO, Redfish), zero-touch provisioning, centrally approved images.
+   - Small clusters: 1 node + fast replacement, 2 nodes + a witness, 3 nodes for HA. A spare node sent by courier is sometimes
+     cheaper than a third node at every site.
+   - You manage the fleet as code, updates in waves (canaries), telemetry through a local buffer
+     (**ops-observability**). Containers at the edge: **ops-kubernetes**.
+10. **Migration between hypervisors.** An inventory of VMs and dependencies, a pilot on a non-critical VM, disk conversion
+    (qcow2, VMDK, VHDX), virtual drivers (virtio), changes of network cards and MAC addresses, licences tied to
+    hardware, backup and monitoring agents, a cutover window, **a rollback plan** (the old environment runs in parallel
+    until acceptance). Waves from the least to the most critical.
+11. **Output** — template:
     ```
-    # Projekt infrastruktury: <nazwa>
-    Założenia: obciążenia, RPO/RTO, budżet, horyzont
-    Tabela wymiarowania: | zasób | wymaganie | wyliczenie | z zapasem N+1 | uwagi |
-    Decyzje: hiperwizor, storage, RAID/EC, sieć, kopie (z uzasadnieniem i odrzuconymi opcjami)
-    Ryzyka i pułapki | Plan wdrożenia i wycofania | Do potwierdzenia przez człowieka
+    # Infrastructure design: <name>
+    Assumptions: workloads, RPO/RTO, budget, horizon
+    Sizing table: | resource | requirement | calculation | with N+1 headroom | notes |
+    Decisions: hypervisor, storage, RAID/EC, network, backups (with justification and rejected options)
+    Risks and pitfalls | Deployment and rollback plan | To be confirmed by a human
     ```
 
-## Przykład
-Wejście: 3 węzły po 2×16 rdzeni i 512 GB RAM; 60 VM (łącznie 180 vCPU, 700 GB RAM) [przykład].
-Wynik: po utracie węzła zostaje 64 rdzenie i 1024 GB. Pamięć: 700 GB < 1024 GB, ale z zapasem 15% (805 GB) mieści
-się; CPU: 180/64 = 2,8:1 — akceptowalne dla usług ogólnych, nie dla baz. Decyzja: 3 węzły, Ceph ×3 na NVMe, sieć
-25 GbE, bazy przypięte do 1:1; kopie na osobny serwer z niezmienialną kopią poza lokalizacją i testem odtworzenia
-co kwartał.
+## Example
+Input: 3 nodes, each with 2×16 cores and 512 GB RAM; 60 VMs (180 vCPU, 700 GB RAM in total) [example].
+Output: after losing a node, 64 cores and 1024 GB remain. Memory: 700 GB < 1024 GB, and even with 15% headroom (805 GB) it
+fits; CPU: 180/64 = 2.8:1 — acceptable for general services, not for databases. Decision: 3 nodes, Ceph ×3 on NVMe, a 25 GbE
+network, databases pinned at 1:1; backups to a separate server with an immutable off-site copy and a restore test
+every quarter.
 
-## Checklista
-- [ ] obciążenia zmierzone (p95), nie oszacowane
-- [ ] pojemność policzona po awarii węzła (N+1), kworum zapewnione
-- [ ] CPU i pamięć: overcommit zweryfikowany metryką, nie regułą kciuka
-- [ ] warunki licencji sprawdzone w aktualnej ofercie (VMware) i koszt 5 lat
-- [ ] RAID/EC dobrany do rozmiaru dysków i czasu odbudowy
-- [ ] IOPS, przepustowość i opóźnienie p99 policzone, zapas na odbudowę
-- [ ] 3-2-1, kopia niezmienialna, test odtworzenia z czasem
-- [ ] rejestr sprzętu, firmware, części zapasowe, prognoza pojemności
-- [ ] edge: praca offline, zdalne zarządzanie, zapasowy sprzęt
-- [ ] migracja z planem wycofania; zmiany tylko za zgodą człowieka
+## Checklist
+- [ ] workloads measured (p95), not estimated
+- [ ] capacity calculated after a node failure (N+1), quorum ensured
+- [ ] CPU and memory: overcommit verified with a metric, not a rule of thumb
+- [ ] licence terms checked in the current offer (VMware) and the 5-year cost
+- [ ] RAID/EC matched to disk size and rebuild time
+- [ ] IOPS, throughput and p99 latency calculated, headroom for rebuilds
+- [ ] 3-2-1, an immutable copy, a timed restore test
+- [ ] hardware register, firmware, spare parts, capacity forecast
+- [ ] edge: offline operation, remote management, spare hardware
+- [ ] migration with a rollback plan; changes only with a human's consent
 
-## Źródła
-- Proxmox VE: [Release notes i roadmap](https://pve.proxmox.com/wiki/Roadmap) — w wyszukiwaniu z 2026-10 znaleziono wydanie 9.1 (Debian 13, Ceph Squid 19.2.3); [niezweryfikowane] czy jest nowsze.
-- Ceph: [docs.ceph.com — releases](https://docs.ceph.com/en/latest/releases/) — Tentacle 20.2.x aktywne, Squid 19.2.x z szacowanym końcem wsparcia 2026-09 lub 2026-10 (źródła rozbieżne) [niezweryfikowane].
-- VMware/Broadcom: doniesienia o minimum 72 rdzeni na zakup i 16 rdzeni na procesor (od 2025-04, [Techzine](https://techzine.eu/news/infrastructure/130027/broadcom-raises-minimum-requirement-for-vmware-licenses-from-16-to-72-cores)) — źródła wtórne, [niezweryfikowane] względem warunków Broadcom.
-- Zasada 3-2-1: CISA, [Data Backup Options](https://www.cisa.gov/sites/default/files/publications/data_backup_options.pdf) [niezweryfikowane: stan na dziś].
+## Sources
+- Proxmox VE: [Release notes and roadmap](https://pve.proxmox.com/wiki/Roadmap) — a search in 2026-10 found release 9.1 (Debian 13, Ceph Squid 19.2.3); [unverified] whether there is a newer one.
+- Ceph: [docs.ceph.com — releases](https://docs.ceph.com/en/latest/releases/) — Tentacle 20.2.x active, Squid 19.2.x with an estimated end of support in 2026-09 or 2026-10 (sources differ) [unverified].
+- VMware/Broadcom: reports of a minimum of 72 cores per purchase and 16 cores per processor (from 2025-04, [Techzine](https://techzine.eu/news/infrastructure/130027/broadcom-raises-minimum-requirement-for-vmware-licenses-from-16-to-72-cores)) — secondary sources, [unverified] against Broadcom's terms.
+- The 3-2-1 rule: CISA, [Data Backup Options](https://www.cisa.gov/sites/default/files/publications/data_backup_options.pdf) [unverified: current status].

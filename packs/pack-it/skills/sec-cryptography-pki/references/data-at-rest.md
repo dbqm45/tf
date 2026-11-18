@@ -1,72 +1,72 @@
-# Dane w spoczynku: klasy danych, warstwy szyfrowania, cykl życia
+# Data at rest: data classes, encryption layers, the lifecycle
 
-Odpowiada na „czy szyfrujemy dane w spoczynku” w sposób, który da się obronić przed audytorem i napastnikiem.
-Dobór algorytmów, KMS i szyfrowanie kopertowe: SKILL.md i `references/key-lifecycle-and-pki.md`. Retencja
-i usuwanie danych osobowych (RODO): `arch-privacy-compliance`. Kopie i odtwarzanie: `ops-sre-incidents`.
+It answers "do we encrypt data at rest" in a way that can be defended before an auditor and an attacker.
+Choosing algorithms, the KMS and envelope encryption: SKILL.md and `references/key-lifecycle-and-pki.md`. Retention
+and deletion of personal data (RODO, the Polish name of the GDPR): `arch-privacy-compliance`. Backups and restore: `ops-sre-incidents`.
 
-## 1. Klasy danych
-Najpierw klasyfikacja, potem zabezpieczenia — inaczej wszystko jest „poufne” albo nic.
+## 1. Data classes
+Classification first, then safeguards — otherwise everything is "confidential" or nothing is.
 
-| Klasa | Przykłady | Minimum w spoczynku |
+| Class | Examples | Minimum at rest |
 |---|---|---|
-| publiczne | treści marketingowe, dokumentacja publiczna | integralność (kto może zmienić) |
-| wewnętrzne | konfiguracja, dane operacyjne bez osób | szyfrowanie nośnika (dostawca), kontrola dostępu |
-| poufne | dane klientów, umowy, logi z identyfikatorami | szyfrowanie bazy/obiektów kluczem w KMS organizacji, logi użycia klucza, kopie zaszyfrowane |
-| ściśle poufne | dane szczególnych kategorii, numery dokumentów, dane płatnicze, sekrety | dodatkowo szyfrowanie na poziomie pola/aplikacji, osobny klucz, dostęp do odszyfrowania tylko wybranej usługi |
+| public | marketing content, public documentation | integrity (who can change it) |
+| internal | configuration, operational data without people | media encryption (the provider), access control |
+| confidential | customer data, contracts, logs with identifiers | database/object encryption with a key in the organization's KMS, key usage logs, encrypted backups |
+| strictly confidential | special categories of data, document numbers, payment data, secrets | additionally field/application-level encryption, a separate key, decryption access only for a selected service |
 
-Klasa jest atrybutem zbioru danych (tabela, bucket, kolumna), zapisanym obok niego (tag, katalog danych). Dane
-pochodne (eksport, kopia, środowisko testowe, logi) dziedziczą klasę, chyba że zostały zanonimizowane.
+The class is an attribute of a data set (a table, a bucket, a column), recorded next to it (a tag, a data catalog). Derived
+data (an export, a copy, a test environment, logs) inherits the class, unless it has been anonymized.
 
-## 2. Warstwy szyfrowania i przed czym chronią
+## 2. Encryption layers and what they protect against
 
-| Warstwa | Przykład | Chroni przed | Nie chroni przed |
+| Layer | Example | Protects against | Does not protect against |
 |---|---|---|---|
-| nośnik / wolumen | szyfrowanie dysków u dostawcy, LUKS, BitLocker | kradzieżą lub wyniesieniem nośnika, złym wycofaniem dysku | każdym, kto ma dostęp do działającego systemu, bazy, API |
-| baza / magazyn obiektów | TDE, szyfrowanie po stronie serwera kluczem z KMS (np. SSE-KMS) | dostępem do plików bazy i snapshotów bez uprawnień do klucza; daje log użycia klucza | użytkownikowi lub aplikacji z dostępem do bazy |
-| pole / aplikacja | szyfrowanie wartości przed zapisem (AEAD, klucz z KMS) | administratorowi bazy, wyciekowi kopii lub zrzutu, SQL injection odczytującemu tabelę | przejęciu samej aplikacji, która ma prawo odszyfrować |
+| media / volume | disk encryption at the provider, LUKS, BitLocker | theft or removal of the media, bad decommissioning of a disk | anyone with access to the running system, the database, the API |
+| database / object store | TDE, server-side encryption with a key from the KMS (e.g. SSE-KMS) | access to database files and snapshots without permissions to the key; gives a key usage log | a user or application with access to the database |
+| field / application | encrypting the value before writing (AEAD, a key from the KMS) | the database administrator, a leak of a backup or a dump, SQL injection reading the table | a takeover of the application itself, which has the right to decrypt |
 
-Odpowiedź „dyski są szyfrowane przez dostawcę” zamyka tylko pierwszy wiersz. Dla danych poufnych dodaj klucz
-zarządzany przez organizację (polityka klucza, rozdział ról, log użycia, możliwość odcięcia), a dla ściśle poufnych
-szyfrowanie na poziomie pola.
+The answer "the disks are encrypted by the provider" closes only the first row. For confidential data add a key
+managed by the organization (a key policy, separation of roles, a usage log, the ability to cut off access), and for strictly confidential data
+field-level encryption.
 
-## 3. Klucze
-- KMS/HSM, szyfrowanie kopertowe (DEK przy danych, KEK w KMS), osobne klucze per środowisko i klasa danych.
-- Rozdzielone role: kto administruje kluczem, kto szyfruje, kto odszyfrowuje. Uprawnienie do odszyfrowania jest
-  rzadsze niż dostęp do danych zaszyfrowanych.
-- Rotacja KEK zgodnie z polityką; logi użycia kluczy w SIEM (nietypowe odszyfrowania to sygnał wycieku).
-- Długość życia i stany klucza: NIST SP 800-57 część 1 (rev. 5; rev. 6 to projekt z 12.2025).
+## 3. Keys
+- KMS/HSM, envelope encryption (the DEK with the data, the KEK in the KMS), separate keys per environment and data class.
+- Separated roles: who administers the key, who encrypts, who decrypts. The permission to decrypt is
+  rarer than access to the encrypted data.
+- KEK rotation according to the policy; key usage logs in the SIEM (unusual decryptions are a signal of a leak).
+- Key lifetimes and states: NIST SP 800-57 part 1 (rev. 5; rev. 6 is a draft from 12.2025).
 
-## 4. Kopie zapasowe
-- Kopie mają klasę źródła: szyfrowane, kluczem innym niż produkcyjny, w innym koncie lub regionie, co najmniej jedna
-  niezmienialna (`ops-sre-incidents`).
-- Test odtworzenia sprawdza też dostęp do kluczy — kopia bez klucza nie istnieje.
+## 4. Backups
+- Backups have the class of their source: encrypted, with a key other than the production one, in another account or region, at least one
+  immutable (`ops-sre-incidents`).
+- A restore test also checks access to the keys — a backup without a key does not exist.
 
-## 5. Cykl życia danych
-Tworzenie (klasa nadana) → przechowywanie (zabezpieczenia klasy) → użycie (minimalny dostęp, maskowanie w
-środowiskach nieprodukcyjnych) → archiwum (retencja z uzasadnieniem; dane osobowe: `arch-privacy-compliance`) →
-usunięcie.
-- **Bezpieczne usuwanie** wg NIST SP 800-88 rev. 2: dla nośników w chmurze i danych szyfrowanych praktyczną metodą
-  jest kryptograficzne wymazanie (zniszczenie klucza, którym zaszyfrowano dane) — dlatego osobne klucze per zbiór
-  albo per klient ułatwiają usuwanie. Dla własnego sprzętu: wymazanie lub fizyczne zniszczenie nośnika z zapisem.
-- Usunięcie obejmuje kopie, repliki, eksporty i środowiska testowe; zapisz, po jakim czasie dane znikają z kopii.
+## 5. The data lifecycle
+Creation (class assigned) → storage (the class's safeguards) → use (minimal access, masking in
+non-production environments) → archive (retention with a justification; personal data: `arch-privacy-compliance`) →
+deletion.
+- **Secure deletion** per NIST SP 800-88 rev. 2: for cloud media and encrypted data the practical method
+  is cryptographic erasure (destroying the key with which the data was encrypted) — which is why separate keys per data set
+  or per customer make deletion easier. For your own hardware: erasure or physical destruction of the media with a record.
+- Deletion covers backups, replicas, exports and test environments; record after what time the data disappears from the backups.
 
-## Przykład
-**Wejście:** „Audytor pyta o szyfrowanie w spoczynku. Postgres w chmurze, S3 z plikami klientów, nocne kopie; dyski
-szyfruje dostawca.”
-**Wynik:** klasy — pliki klientów i tabela `customers` poufne, kolumna z numerem dokumentu ściśle poufna. Postgres:
-szyfrowanie magazynu kluczem organizacji w KMS (nie domyślnym kluczem dostawcy), log użycia klucza do SIEM. S3:
-SSE-KMS z kluczem per środowisko, polityka bucketu wymaga szyfrowania i TLS. Kolumna z numerem dokumentu:
-AES-256-GCM w aplikacji (przykład w SKILL.md). Kopie: osobny klucz, osobne konto, kopia niezmienialna, kwartalny
-test odtworzenia z kluczem. Usuwanie klienta: dane w bazie i S3 + upływ retencji kopii; dla eksportów klucz per
-eksport i crypto-erase.
+## Example
+**Input:** "The auditor asks about encryption at rest. Postgres in the cloud, S3 with customer files, nightly backups; the disks
+are encrypted by the provider."
+**Result:** classes — the customer files and the `customers` table confidential, the column with the document number strictly confidential. Postgres:
+storage encryption with the organization's key in the KMS (not the provider's default key), the key usage log to the SIEM. S3:
+SSE-KMS with a key per environment, the bucket policy requires encryption and TLS. The column with the document number:
+AES-256-GCM in the application (the example in SKILL.md). Backups: a separate key, a separate account, an immutable backup, a quarterly
+restore test with the key. Deleting a customer: the data in the database and S3 + the backup retention expiring; for exports a key per
+export and crypto-erase.
 
-## Źródła
+## Sources
 - NIST SP 800-111 *Guide to Storage Encryption Technologies for End User Devices* (final, 11.2007):
   https://csrc.nist.gov/pubs/sp/800/111/final
-- NIST SP 800-88 rev. 2 *Guidelines for Media Sanitization* (final, 09.2025; zastępuje rev. 1):
+- NIST SP 800-88 rev. 2 *Guidelines for Media Sanitization* (final, 09.2025; supersedes rev. 1):
   https://csrc.nist.gov/pubs/sp/800/88/r2/final
-- NIST SP 800-57 część 1 rev. 5 (final, 05.2020); rev. 6 — projekt (12.2025)
+- NIST SP 800-57 part 1 rev. 5 (final, 05.2020); rev. 6 — a draft (12.2025)
 - OWASP Cryptographic Storage Cheat Sheet:
   https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html
-Statusy wg wyszukiwania w domenach nist.gov i owasp.org 2026-10-27; strony csrc.nist.gov i owasp.org niedostępne
-z sandboxu — treść stron [niezweryfikowane]. Opisane własnymi słowami.
+Statuses per a search in the nist.gov and owasp.org domains on 2026-10-27; the csrc.nist.gov and owasp.org pages unavailable
+from the sandbox — the page content [unverified]. Described in our own words.

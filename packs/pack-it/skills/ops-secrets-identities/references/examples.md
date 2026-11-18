@@ -1,43 +1,43 @@
-# Przykłady: sekrety i tożsamości maszynowe
+# Examples: secrets and machine identities
 
-> **Spis treści:** 1. Klucz chmurowy wypchnięty do publicznego repozytorium · 2. OIDC zamiast stałych kluczy w CI · 3. Przegląd inwentarza tokenów
+> **Contents:** 1. A cloud key pushed to a public repository · 2. OIDC instead of static keys in CI · 3. Reviewing the token inventory
 
-Nazwy, konta i liczby są ilustracyjne.
+Names, accounts and numbers are illustrative.
 
-## 1. Klucz chmurowy wypchnięty do publicznego repozytorium
-**Sytuacja:** „Ktoś wrzucił `deploy.env` z kluczem dostępowym AWS do publicznego repozytorium `acme/shop-sdk`.
-Usunąłem plik kolejnym commitem, to wystarczy?”
+## 1. A cloud key pushed to a public repository
+**Situation:** "Someone pushed `deploy.env` with an AWS access key to the public repository `acme/shop-sdk`.
+I removed the file in the next commit, is that enough?"
 
-**Jak:**
-1. Nie wystarczy: klucz jest w historii i mógł zostać użyty w ciągu minut (wstęp skilla). Najpierw rotacja (sekcja 4).
-2. Ustal z inwentarza właściciela, zakres i zależne usługi, żeby rotacja niczego nie wyłączyła po cichu (sekcja 1).
-3. Sprawdź w logach chmury użycie klucza od chwili pusha.
-4. Unieważnij wszystko, co było osiągalne z tym kluczem (np. sekrety odczytane z menedżera sekretów).
-5. Dopiero potem czyszczenie historii i luka w zabezpieczeniach: dlaczego nie zatrzymał tego hook ani push protection.
+**How:**
+1. It is not enough: the key is in the history and could have been used within minutes (the skill's introduction). Rotation first (section 4).
+2. Establish from the inventory the owner, the scope and the dependent services, so that the rotation does not silently switch anything off (section 1).
+3. Check the cloud logs for use of the key since the push.
+4. Revoke everything that was reachable with this key (e.g. secrets read from the secrets manager).
+5. Only then the history clean-up and the security gap: why neither the hook nor push protection stopped it.
 
-**Wynik:** runbook rotacji.
+**Result:** a rotation runbook.
 
-| # | Krok | Kto | Cel czasowy | Dowód |
+| # | Step | Who | Time target | Evidence |
 |---|---|---|---|---|
-| 1 | dezaktywuj klucz `AKIA…7Q2X` konta `svc-shop-deploy` | dyżurny | 15 min od zgłoszenia | status „Inactive” w konsoli |
-| 2 | wydaj nowe poświadczenie albo od razu przejdź na OIDC (przykład 2) | właściciel `svc-shop-deploy` | 1 h | udane wdrożenie testowe |
-| 3 | przejrzyj logi audytu chmury z okna od pusha do dezaktywacji | bezpieczeństwo | 4 h | lista wywołań API z tym kluczem |
-| 4 | zrotuj sekrety osiągalne z roli (hasło bazy `shop-prod`, token płatności) | właściciele usług | 24 h | nowe wersje w menedżerze sekretów |
-| 5 | usuń klucz z historii, włącz push protection w repozytorium, dodaj skan `--staged` w hooku | właściciel repozytorium | 2 dni | zablokowany push z testowym sekretem |
-| 6 | usuń stary klucz na stałe, wpis do dziennika incydentu | dyżurny | po kroku 4 | wpis z datą |
+| 1 | deactivate the key `AKIA…7Q2X` of the `svc-shop-deploy` account | on-call | 15 min from the report | "Inactive" status in the console |
+| 2 | issue a new credential or move straight to OIDC (example 2) | owner of `svc-shop-deploy` | 1 h | a successful test deployment |
+| 3 | review the cloud audit logs from the window between the push and the deactivation | security | 4 h | a list of API calls with this key |
+| 4 | rotate the secrets reachable from the role (the `shop-prod` database password, the payment token) | service owners | 24 h | new versions in the secrets manager |
+| 5 | remove the key from the history, turn on push protection in the repository, add a `--staged` scan in the hook | repository owner | 2 days | a blocked push with a test secret |
+| 6 | delete the old key permanently, an entry in the incident log | on-call | after step 4 | an entry with a date |
 
-## 2. OIDC zamiast stałych kluczy w CI
-**Sytuacja:** „Mamy w sekretach repozytorium `AWS_ACCESS_KEY_ID` z uprawnieniami administratora, używany przez build
-i przez wdrożenie. Zróbmy to porządnie”.
+## 2. OIDC instead of static keys in CI
+**Situation:** "We have `AWS_ACCESS_KEY_ID` with administrator permissions in the repository secrets, used by the build
+and by the deployment. Let's do it properly."
 
-**Jak:**
-1. Rozdziel tożsamości: build nie dostaje żadnej roli chmurowej, wdrożenie — osobną rolę (sekcja 2).
-2. Rola wdrożeniowa przyjmowana przez OIDC, ważna minuty, a nie stały klucz.
-3. Polityka zaufania przypięta do repozytorium **i** chronionego środowiska `production` — nie do każdej gałęzi.
-4. Uprawnienia roli zawężone do tego, czego wdrożenie używa; po miesiącu przegląd nieużywanych akcji.
-5. Stary klucz dezaktywowany i usunięty, sekret usunięty z repozytorium; wpis w inwentarzu.
+**How:**
+1. Separate the identities: the build gets no cloud role, the deployment — a separate role (section 2).
+2. The deployment role assumed through OIDC, valid for minutes, not a static key.
+3. The trust policy pinned to the repository **and** the protected `production` environment — not to every branch.
+4. The role's permissions narrowed to what the deployment uses; after a month a review of unused actions.
+5. The old key deactivated and deleted, the secret removed from the repository; an entry in the inventory.
 
-**Wynik:** polityka zaufania roli `shop-deploy-prod` i fragment workflow.
+**Result:** the trust policy of the `shop-deploy-prod` role and a workflow fragment.
 
 ```json
 {
@@ -65,14 +65,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read          # bez id-token: build nie przyjmie żadnej roli
+      contents: read          # no id-token: the build will not assume any role
     steps:
       - uses: actions/checkout@<SHA>
       - run: make build
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: production   # wymagana akceptacja człowieka
+    environment: production   # human approval required
     permissions:
       contents: read
       id-token: write
@@ -85,22 +85,22 @@ jobs:
       - run: make deploy
 ```
 
-## 3. Przegląd inwentarza tokenów
-**Sytuacja:** pierwszy codzienny eksport inwentarza poświadczeń organizacji (CSV) ma 412 wierszy. Zespół pyta,
-od czego zacząć.
+## 3. Reviewing the token inventory
+**Situation:** the first daily export of the organization's credential inventory (CSV) has 412 rows. The team asks
+where to start.
 
-**Jak:**
-1. Alarmy z sekcji 1: brak daty wygaśnięcia, zbyt szeroki zakres, brak użycia od 90 dni.
-2. Tokeny agentów AI na początek kolejki — szerokie uprawnienia, praca bez nadzoru.
-3. Każda pozycja dostaje właściciela; bez właściciela → unieważnienie po ogłoszeniu terminu.
-4. Inwentarz tylko raportuje — limit czasu życia PAT konfigurujesz osobno jako politykę.
+**How:**
+1. The alerts from section 1: no expiry date, too broad a scope, no use for 90 days.
+2. AI agent tokens to the front of the queue — broad permissions, work without supervision.
+3. Every item gets an owner; no owner → revocation after a deadline is announced.
+4. The inventory only reports — the PAT lifetime limit you configure separately as a policy.
 
-**Wynik:** raport z decyzjami.
+**Result:** a report with decisions.
 
-| Poświadczenie | Właściciel | Problem | Decyzja | Termin |
+| Credential | Owner | Problem | Decision | Deadline |
 |---|---|---|---|---|
-| PAT klasyczny `ci-release` (zakres `repo`, `admin:org`) | brak | bez wygaśnięcia, za szeroki | zastąpić GitHub App z dostępem do 2 repozytoriów | 7 dni |
-| token agenta `review-bot` | zespół platformy | zapis do wszystkich repozytoriów | fine-grained, tylko odczyt kodu i komentarze PR, wygaśnięcie 30 dni | 3 dni |
-| klucz SSH `deploy@old-jenkins` | brak | nieużywany od 214 dni | unieważnić | od razu |
-| 37 PAT fine-grained bez użycia od 90 dni | różni | nieużywane | e-mail do właścicieli, potem unieważnienie | 14 dni |
-| — | — | brak polityki | maksymalny czas życia PAT w ustawieniach organizacji | 14 dni |
+| classic PAT `ci-release` (scope `repo`, `admin:org`) | none | no expiry, too broad | replace with a GitHub App with access to 2 repositories | 7 days |
+| agent token `review-bot` | platform team | write access to all repositories | fine-grained, read-only code access and PR comments, expiry 30 days | 3 days |
+| SSH key `deploy@old-jenkins` | none | unused for 214 days | revoke | immediately |
+| 37 fine-grained PATs unused for 90 days | various | unused | an e-mail to the owners, then revocation | 14 days |
+| — | — | no policy | a maximum PAT lifetime in the organization settings | 14 days |

@@ -1,70 +1,70 @@
 ---
 name: ops-ai-inference
-description: Użyj przy własnym hostowaniu modeli językowych — pamięć GPU i KV cache, vLLM, continuous batching, metryki, skalowanie.
+description: Use for self-hosting language models — GPU memory and KV cache, vLLM, continuous batching, metrics, scaling.
 metadata:
   review: "2027-01-17"
   visibility: name
-  catalog: "Użyj przy własnym hostowaniu modeli językowych i infrastrukturze AI — pamięć GPU i KV cache, prefill i decode, continuous batching (vLLM), routing świadomy cache (llm-d, Gateway API Inference Extension), rozdzielenie prefill/decode, metryki i skalowanie, API czy własny serwer. Nie do SLO funkcji AI (ops-sre-incidents) ani ogólnych operacji Kubernetes (ops-kubernetes)."
+  catalog: "Use for self-hosting language models and AI infrastructure — GPU memory and KV cache, prefill and decode, continuous batching (vLLM), cache-aware routing (llm-d, Gateway API Inference Extension), prefill/decode disaggregation, metrics and scaling, an API or your own server. Not for SLOs of AI features (ops-sre-incidents) or general Kubernetes operations (ops-kubernetes)."
 ---
 
-# Infrastruktura inferencji modeli językowych
+# Language model inference infrastructure
 
-Serwer modelu językowego to nie bezstanowa usługa HTTP, tylko kolejka przed bardzo drogim i wymagającym akceleratorem.
-Narzędzia ze świata aplikacji webowych (round-robin, autoskalowanie po CPU) działają tu źle.
+A language model server is not a stateless HTTP service, but a queue in front of a very expensive and demanding accelerator.
+Tools from the world of web applications (round-robin, autoscaling on CPU) work badly here.
 
-## 0. Czy w ogóle hostować samemu
-Własny serwer ma sens przy stałym, dużym ruchu, wymaganiach co do danych (nie mogą opuścić infrastruktury) albo modelu
-dostrajanym u siebie. Przy małym lub nierównym ruchu API dostawcy jest zwykle tańsze i prostsze — GPU kosztuje także
-wtedy, gdy nic nie robi. Decyzję zapisz jako ADR z kosztem na 1000 żądań po obu stronach (ops-finops).
+## 0. Whether to self-host at all
+Your own server makes sense with constant, high traffic, data requirements (the data must not leave the infrastructure) or a model
+fine-tuned in-house. With low or uneven traffic a provider's API is usually cheaper and simpler — a GPU costs money even
+when it does nothing. Record the decision as an ADR with the cost per 1000 requests on both sides (ops-finops).
 
-## 1. Co ogranicza GPU
-- Wąskim gardłem jest zwykle **pamięć GPU (VRAM)**, nie moc obliczeniowa. Konkurują o nią trzy rzeczy:
-  wagi modelu, aktywacje i **KV cache** (zapamiętany stan przetworzonych tokenów).
-- Wagi: liczba parametrów × bajty na parametr — model 70 mld parametrów w 16 bitach to ok. 140 GB, więc potrzebuje
-  kilku GPU (tensor parallelism, komunikacja między GPU przez NVLink lub InfiniBand przy każdym tokenie).
-- KV cache rośnie z każdym tokenem rozmowy: kilka długich rozmów potrafi wyczerpać pamięć, choć sam model się mieści.
-  Dlatego limit długości kontekstu i liczby równoczesnych sekwencji ustawiasz świadomie.
+## 1. What limits the GPU
+- The bottleneck is usually **GPU memory (VRAM)**, not compute. Three things compete for it:
+  the model weights, the activations and the **KV cache** (the stored state of the processed tokens).
+- Weights: the number of parameters × bytes per parameter — a 70-billion-parameter model in 16 bits is about 140 GB, so it needs
+  several GPUs (tensor parallelism, communication between GPUs over NVLink or InfiniBand at every token).
+- The KV cache grows with every token of the conversation: a few long conversations can exhaust the memory even though the model itself fits.
+  That is why you set the limit on context length and the number of concurrent sequences deliberately.
 
-## 2. Dwie fazy generowania
-| Faza | Co się dzieje | Ogranicza ją |
+## 2. The two phases of generation
+| Phase | What happens | Limited by |
 |---|---|---|
-| prefill | cały prompt przetwarzany naraz, powstaje pierwszy token | moc obliczeniowa; rośnie z długością promptu |
-| decode | kolejne tokeny po jednym | przepustowość pamięci |
-Metryki odpowiadają fazom: czas do pierwszego tokenu (TTFT) to głównie prefill i kolejka, czas między tokenami — decode.
+| prefill | the whole prompt is processed at once, the first token is produced | compute; grows with the prompt length |
+| decode | subsequent tokens one at a time | memory bandwidth |
+The metrics correspond to the phases: time to first token (TTFT) is mainly prefill and the queue, the time between tokens — decode.
 
-## 3. Serwer modelu
-- **Continuous batching** (np. vLLM z PagedAttention): kroki decode wielu żądań przeplatane na jednym GPU, wolne
-  miejsca od razu zajmowane przez nowe żądania. Według autora artykułu jedno GPU obsługuje wtedy dziesiątki rozmów
-  zamiast jednej. Zanim zbudujesz klaster, uruchom sam serwer z równoległymi żądaniami i zmierz to.
-- API zgodne z OpenAI (`/v1/chat/completions`) — klienci (SDK, LangChain) nie zależą od tego, kto serwuje model.
+## 3. The model server
+- **Continuous batching** (e.g. vLLM with PagedAttention): decode steps of many requests interleaved on one GPU, free
+  slots immediately taken by new requests. According to the article's author, one GPU then serves dozens of conversations
+  instead of one. Before you build a cluster, run the server alone with parallel requests and measure it.
+- An OpenAI-compatible API (`/v1/chat/completions`) — clients (SDKs, LangChain) do not depend on who serves the model.
 
-## 4. Routing: round-robin niszczy cache
-- Zwykły Service Kubernetes lub load balancer wysyła kolejną wiadomość rozmowy do przypadkowego poda. Tam cache danej
-  rozmowy nie istnieje, więc cały kontekst jest przeliczany od nowa — to właśnie „wolna” odpowiedź.
-- **Routing świadomy cache** (prefix-cache routing): brama zna stan i obciążenie każdego poda i kieruje wiadomość tam,
-  gdzie leży jej KV cache. Przykład: llm-d (projekt CNCF Sandbox, na bazie vLLM) z bramą Gateway API Inference Extension
-  i komponentem wybierającym endpoint (Endpoint Picker).
-- **Rozdzielenie prefill i decode** na osobne pule podów, skalowane niezależnie; cache przekazywany między nimi przez RDMA.
-- Wynik z artykułu (8 podów, 16 GPU H100, ruch wielu klientów): ok. 2× większa przepustowość niż przy round-robin.
+## 4. Routing: round-robin destroys the cache
+- A plain Kubernetes Service or load balancer sends the next message of a conversation to a random pod. The cache of that
+  conversation does not exist there, so the whole context is recomputed from scratch — that is exactly the "slow" response.
+- **Cache-aware routing** (prefix-cache routing): the gateway knows the state and load of every pod and sends the message to where
+  its KV cache lives. Example: llm-d (a CNCF Sandbox project, built on vLLM) with the Gateway API Inference Extension gateway
+  and the endpoint-selecting component (Endpoint Picker).
+- **Prefill and decode disaggregation** into separate pod pools, scaled independently; the cache transferred between them over RDMA.
+- The result from the article (8 pods, 16 H100 GPUs, multi-client traffic): about 2× higher throughput than with round-robin.
 
-## 5. Operacje
-- Metryki zdrowia: **odsetek trafień w cache**, **głębokość kolejki**, TTFT, czas między tokenami, zajętość KV cache,
-  wykorzystanie GPU (Prometheus). Autoskalowanie po kolejce i opóźnieniu, nie po CPU.
-- GPU w Kubernetes: zasób `nvidia.com/gpu` przez device plugin (lub GPU Operator), węzły GPU z taintami, żeby nie
-  trafiały na nie zwykłe pody; requests i limity pamięci hosta dla procesu serwera (ops-kubernetes).
-- Zmiana modelu = wydanie: wersja modelu i konfiguracji serwera w Git (np. nakładka Kustomize), wdrożenie stopniowe
-  z porównaniem jakości i opóźnień (ops-release-engineering), SLO w trzech warstwach (ops-sre-incidents, sekcja 2).
-- Modele i wagi z zaufanego źródła, z sumą kontrolną; model to też element łańcucha dostaw (ops-supply-chain-security).
-- Ścieżka nauki: sam vLLM z równoległymi żądaniami → mały klaster (kind/minikube z GPU) z llm-d → sprzęt produkcyjny.
+## 5. Operations
+- Health metrics: **the cache hit rate**, **the queue depth**, TTFT, the time between tokens, KV cache occupancy,
+  GPU utilization (Prometheus). Autoscaling on the queue and latency, not on CPU.
+- GPUs in Kubernetes: the `nvidia.com/gpu` resource through the device plugin (or the GPU Operator), GPU nodes with taints, so that
+  regular pods do not land on them; requests and host memory limits for the server process (ops-kubernetes).
+- A model change = a release: the model version and the server configuration in Git (e.g. a Kustomize overlay), a gradual rollout
+  with a comparison of quality and latency (ops-release-engineering), SLOs in three layers (ops-sre-incidents, section 2).
+- Models and weights from a trusted source, with a checksum; a model is also part of the supply chain (ops-supply-chain-security).
+- The learning path: vLLM alone with parallel requests → a small cluster (kind/minikube with a GPU) with llm-d → production hardware.
 
-## Checklista
-- [ ] decyzja API vs własny serwer z kosztem na żądanie
-- [ ] budżet pamięci GPU: wagi + KV cache przy docelowej długości kontekstu i liczbie sekwencji
-- [ ] serwer z continuous batching; routing świadomy cache zamiast round-robin
-- [ ] metryki: trafienia w cache, kolejka, TTFT, czas między tokenami; autoskalowanie po kolejce
-- [ ] model i konfiguracja wersjonowane, wdrażane stopniowo
+## Checklist
+- [ ] the API vs your own server decision with the cost per request
+- [ ] the GPU memory budget: weights + KV cache at the target context length and number of sequences
+- [ ] a server with continuous batching; cache-aware routing instead of round-robin
+- [ ] metrics: cache hits, the queue, TTFT, the time between tokens; autoscaling on the queue
+- [ ] the model and configuration versioned, rolled out gradually
 
-## Źródło
+## Source
 [AI infrastructure — DevOps](https://medium.com/the-advanced-school-of-ai/ai-infrastructure-devops-0466baa552a3) — Gaurav Agnihotri,
-The Advanced School of AI, wrzesień 2026 (streszczenie własnymi słowami; liczby z artykułu oznaczone w tekście).
-Wyliczenie pamięci wag i zasady GPU w Kubernetes: własne.
+The Advanced School of AI, September 2026 (summarized in our own words; numbers from the article marked in the text).
+The weight memory calculation and the GPU rules in Kubernetes: our own.

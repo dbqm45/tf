@@ -1,39 +1,39 @@
-# Typowe błędy kryptograficzne i jak je wychwycić
+# Common cryptographic mistakes and how to catch them
 
-Spis treści: tryby i nonce · losowość · JWT · hasła · porównania i inne · jak testować
+Contents: modes and nonces · randomness · JWT · passwords · comparisons and other · how to test
 
-## Tryby i nonce
-- **ECB** ujawnia powtórzenia bloków; nie używaj go do niczego. Wykrycie: `AES/ECB`, `Cipher.getInstance("AES")`
-  (domyślnie ECB w Javie), `MODE_ECB`.
-- **CBC bez MAC** pozwala modyfikować szyfrogram i tworzy oracle dopełnienia. Zamiast tego AEAD.
-- **Powtórzony nonce w GCM lub ChaCha20-Poly1305** z tym samym kluczem łamie poufność i integralność. Stały IV,
-  licznik zerowany po restarcie i losowy 96-bitowy nonce przy ogromnej liczbie wiadomości na klucz są ryzykiem.
-  Środek zaradczy: nonce z licznika zapisywanego trwale, rotacja klucza po limicie, albo konstrukcja odporna na
-  powtórzenie (AES-GCM-SIV, XChaCha20-Poly1305).
-- Szyfrowanie bez uwierzytelnienia kontekstu: użyj AAD (id rekordu, tenant), by szyfrogram nie dał się przenieść.
+## Modes and nonces
+- **ECB** reveals repeated blocks; do not use it for anything. Detection: `AES/ECB`, `Cipher.getInstance("AES")`
+  (ECB by default in Java), `MODE_ECB`.
+- **CBC without a MAC** allows modifying the ciphertext and creates a padding oracle. Use AEAD instead.
+- **A repeated nonce in GCM or ChaCha20-Poly1305** with the same key breaks confidentiality and integrity. A fixed IV,
+  a counter reset after a restart and a random 96-bit nonce with a huge number of messages per key are a risk.
+  Remedy: a nonce from a persistently stored counter, key rotation after the limit, or a construction resistant to
+  repetition (AES-GCM-SIV, XChaCha20-Poly1305).
+- Encryption without authenticating the context: use AAD (the record id, the tenant), so that the ciphertext cannot be moved.
 
-## Losowość
-- Tokeny, klucze, nonce, sole i identyfikatory resetu z CSPRNG, ≥ 128 bitów entropii. `Math.random`, `rand`,
-  `Random`, czas jako ziarno — to błąd. Własny generator „z kilku źródeł” również.
+## Randomness
+- Tokens, keys, nonces, salts and reset identifiers from a CSPRNG, ≥ 128 bits of entropy. `Math.random`, `rand`,
+  `Random`, time as a seed — that is a mistake. A custom generator "from several sources" too.
 
-## JWT i podpisy
-- **alg confusion:** serwer wybiera algorytm z nagłówka tokenu (`alg: none` albo HS256 z kluczem publicznym RSA
-  jako sekretem). Zasada: algorytm i klucz ustala konfiguracja po stronie serwera, weryfikacja z allowlistą
-  algorytmów, klucz wybierany po `kid` ze zaufanego JWKS. Walidacja `iss`, `aud`, `exp` — `be-auth-security`.
-- Podpis bez weryfikacji łańcucha zaufania (kopiowanie klucza z tokenu, `jku` z dowolnego adresu) to brak podpisu.
+## JWT and signatures
+- **alg confusion:** the server takes the algorithm from the token header (`alg: none` or HS256 with the RSA public key
+  as the secret). The rule: the algorithm and the key are set by the server-side configuration, verification with an allowlist
+  of algorithms, the key chosen by `kid` from a trusted JWKS. Validation of `iss`, `aud`, `exp` — `be-auth-security`.
+- A signature without verifying the chain of trust (copying the key from the token, `jku` from any address) is no signature.
 
-## Hasła i klucze
-- Szybkie hashe (SHA-256, MD5) do haseł; sól globalna zamiast losowej per hasło.
-- Klucz zaszyty w kodzie, w obrazie kontenera lub w aplikacji mobilnej; ten sam klucz w środowiskach test i produkcja.
-- Brak rotacji i brak nagłówka wersji, więc zmiana algorytmu wymaga migracji „big bang”.
+## Passwords and keys
+- Fast hashes (SHA-256, MD5) for passwords; a global salt instead of a random one per password.
+- A key hard-coded in the code, in a container image or in a mobile app; the same key in the test and production environments.
+- No rotation and no version header, so changing the algorithm requires a "big bang" migration.
 
-## Porównania i inne
-- Porównanie MAC/tokenów zwykłym `==` (kanał czasowy) zamiast funkcji stałoczasowej biblioteki.
-- Szyfrogram deterministyczny do wyszukiwania pól (wyciek równości) zamiast indeksu HMAC.
-- Komunikaty błędów odszyfrowania zdradzające powód (padding vs MAC).
-- Wyłączona walidacja TLS „na chwilę” w kodzie, który trafił na produkcję.
+## Comparisons and other
+- Comparing a MAC/tokens with a plain `==` (a timing channel) instead of the library's constant-time function.
+- Deterministic ciphertext for searching fields (an equality leak) instead of an HMAC index.
+- Decryption error messages that reveal the reason (padding vs MAC).
+- TLS validation disabled "for a moment" in code that reached production.
 
-## Jak testować
-Testy jednostkowe z wektorami testowymi biblioteki, test, że ten sam tekst jawny daje różne szyfrogramy, test
-odrzucenia zmodyfikowanego szyfrogramu i tokenu z innym `alg`, analiza statyczna reguł kryptograficznych
-(Semgrep lub odpowiednik) w CI (ops-ci-cd). Testy wyłącznie na własnych systemach.
+## How to test
+Unit tests with the library's test vectors, a test that the same plaintext gives different ciphertexts, a test
+of rejecting a modified ciphertext and a token with a different `alg`, static analysis of cryptographic rules
+(Semgrep or an equivalent) in CI (ops-ci-cd). Tests only on your own systems.

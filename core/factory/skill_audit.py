@@ -198,7 +198,7 @@ def audit_skill(d: Path) -> dict:
         if p.suffix.lower() == ".md" and rel != "SKILL.md":
             all_md += "\n" + t
             lines = t.splitlines()
-            if len(lines) > 100 and not re.search(r"spis treści|table of contents|^## contents", "\n".join(lines[:15]), re.I):
+            if len(lines) > 100 and not re.search(r"spis treści|table of contents|^## contents|^> \*\*contents:\*\*", "\n".join(lines[:15]), re.I | re.M):
                 findings.append(finding("low", "ref-no-toc", rel, 1, "file > 100 lines without a table of contents at the top"))
             if rel.startswith(("references/", "reference/")):
                 for target in sorted(set(re.findall(r"(?<![\w/.-])((?:references?)/[\w./-]+\.md)", t))):

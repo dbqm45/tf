@@ -1,17 +1,17 @@
-# Reguła z testami — szablon (Semgrep)
+# A rule with tests — template (Semgrep)
 
-Reguła bez testów psuje się po cichu: przestaje łapać błąd albo zaczyna łapać wszystko. Test to plik z kodem
-podatnym i poprawnym, oznaczonym komentarzami.
-Więcej przykładów (autofix z testem `.fixed`, ograniczanie fałszywych trafień, `--baseline-commit`):
+A rule without tests breaks silently: it stops catching the bug or starts catching everything. A test is a file with
+vulnerable and correct code, marked with comments.
+More examples (autofix with a `.fixed` test, reducing false hits, `--baseline-commit`):
 `.claude/skills/tool-semgrep/references/rules-and-tests.md`.
 
-## Reguła (tryb taint, Python)
+## Rule (taint mode, Python)
 ```yaml
 rules:
   - id: sql-sort-from-request
     languages: [python]
     severity: ERROR
-    message: Pole sortowania z żądania trafia do SQL — użyj listy dozwolonych pól (sort_clause)
+    message: A sort field from the request reaches SQL — use an allowlist of fields (sort_clause)
     mode: taint
     pattern-sources:
       - pattern: request.GET.get(...)
@@ -26,7 +26,7 @@ rules:
           - focus-metavariable: $Q
 ```
 
-## Test (plik o tej samej nazwie co reguła, np. `sql-sort-from-request.py`)
+## Test (a file with the same name as the rule, e.g. `sql-sort-from-request.py`)
 ```python
 def bad(request, cur):
     sort = request.GET.get("sort")
@@ -38,11 +38,11 @@ def good(request, cur):
     # ok: sql-sort-from-request
     cur.execute("SELECT * FROM reports ORDER BY " + sort)
 ```
-Uruchomienie: `semgrep --test <katalog z regułami i testami>`. Test z prawdziwego przypadku (miejsce sprzed
-naprawy) to najlepszy przykład podatny.
+Running: `semgrep --test <directory with rules and tests>`. A test from a real case (the place before
+the fix) is the best vulnerable example.
 
-## W CI
-- Reguły w repozytorium (np. `.semgrep/`), testy reguł w CI razem z resztą testów.
-- Skan diffu w PR blokuje nowe trafienia tej reguły; całe repozytorium nocą (sec-appsec-devsecops, kroki 4 i 6).
-- Wyjątek tylko z powodem i datą wygaśnięcia, nie komentarzem wyłączającym bez śladu.
-- CodeQL: to samo w postaci zapytania przepływu danych z testem (katalog testów z kodem i oczekiwanym wynikiem).
+## In CI
+- Rules in the repository (e.g. `.semgrep/`), rule tests in CI together with the rest of the tests.
+- A diff scan in the PR blocks new hits of this rule; the whole repository at night (sec-appsec-devsecops, steps 4 and 6).
+- An exception only with a reason and an expiry date, not with a disabling comment that leaves no trace.
+- CodeQL: the same in the form of a data flow query with a test (a test directory with code and the expected result).

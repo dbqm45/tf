@@ -1,36 +1,36 @@
-# Przykłady: łańcuch dostaw
+# Examples: the supply chain
 
-> **Spis treści:** 1. „Czy dotknęło nas axios?” · 2. Karencja i allowlista skryptów w pnpm · 3. Publikacja własnej paczki przez OIDC
+> **Contents:** 1. "Did axios hit us?" · 2. A cooldown and a script allowlist in pnpm · 3. Publishing your own package through OIDC
 
-Nazwy repozytoriów, paczek wewnętrznych i liczby są ilustracyjne; dane o axios pochodzą z `cases.md`.
+The names of repositories, internal packages and the numbers are illustrative; the axios data comes from `cases.md`.
 
-## 1. „Czy dotknęło nas axios?”
-**Sytuacja:** „Słyszałem o przejętym axios. Mamy 12 repozytoriów z frontem i backendem w Node. Czy jesteśmy dotknięci?”
+## 1. "Did axios hit us?"
+**Situation:** "I heard about the taken-over axios. We have 12 repositories with the frontend and backend in Node. Are we affected?"
 
-**Jak:**
-1. Fakty z komunikatu (`dependency-incident.md`, krok 1): złośliwe wersje axios 1.14.1 i 0.30.4, dodatkowa paczka
-   `plain-crypto-js`, okno ataku około 3 godzin.
-2. Szukasz `grep`-em w lockfile'ach wszystkich repozytoriów i gałęzi wydań — nie czytasz całych plików.
-3. Sprawdzasz `node_modules` na runnerach i laptopach: sam katalog `plain-crypto-js` znaczy, że `postinstall` się wykonał.
-4. Dla trafień: lista maszyn, które instalowały w oknie ataku → przebudowa i rotacja sekretów (kroki 3–5 procedury).
-5. Przypinasz bezpieczną wersję przez `overrides` i sprawdzasz, które zabezpieczenie zatrzymałoby atak.
+**How:**
+1. The facts from the advisory (`dependency-incident.md`, step 1): the malicious axios versions 1.14.1 and 0.30.4, the additional package
+   `plain-crypto-js`, an attack window of about 3 hours.
+2. You search with `grep` in the lockfiles of all repositories and release branches — you do not read whole files.
+3. You check `node_modules` on the runners and laptops: the `plain-crypto-js` directory alone means that `postinstall` was executed.
+4. For hits: the list of machines that installed during the attack window → rebuild and secret rotation (steps 3–5 of the procedure).
+5. You pin a safe version through `overrides` and check which safeguard would have stopped the attack.
 
-**Wynik:** polecenia i oczekiwane wyniki.
+**Result:** the commands and the expected results.
 
 ```bash
 #!/usr/bin/env bash
-# Uruchom w katalogu z klonami repozytoriów (np. ~/src/acme).
+# Run in the directory with the repository clones (e.g. ~/src/acme).
 set -euo pipefail
 
-# 1. Dodatkowa paczka z ataku i złośliwe wersje axios w lockfile'ach
+# 1. The additional package from the attack and the malicious axios versions in the lockfiles
 LOCKS=(--include=package-lock.json --include=pnpm-lock.yaml --include=yarn.lock)
-grep -rn "${LOCKS[@]}" 'plain-crypto-js' . || echo "lockfile: brak plain-crypto-js"
-grep -rn -A3 "${LOCKS[@]}" 'axios' . | grep -E '1\.14\.1|0\.30\.4' || echo "lockfile: brak złośliwych wersji axios"
+grep -rn "${LOCKS[@]}" 'plain-crypto-js' . || echo "lockfile: no plain-crypto-js"
+grep -rn -A3 "${LOCKS[@]}" 'axios' . | grep -E '1\.14\.1|0\.30\.4' || echo "lockfile: no malicious axios versions"
 
-# 2. Ślad wykonanego postinstall
-find . -type d -name plain-crypto-js -path '*node_modules*' -print | grep . || echo "node_modules: brak trafień"
+# 2. A trace of an executed postinstall
+find . -type d -name plain-crypto-js -path '*node_modules*' -print | grep . || echo "node_modules: no hits"
 
-# 3. Gałęzie wydań bez checkoutu
+# 3. Release branches without a checkout
 for repo in */; do
   for ref in $(git -C "$repo" for-each-ref --format='%(refname:short)' 'refs/remotes/origin/release/*' 2>/dev/null); do
     git -C "$repo" grep -n 'plain-crypto-js' "$ref" -- '*lock*' || true
@@ -38,34 +38,34 @@ for repo in */; do
 done
 ```
 
-| Wynik | Znaczenie | Dalej |
+| Result | Meaning | Next |
 |---|---|---|
-| same komunikaty „brak…” we wszystkich 12 repozytoriach | niedotknięci | wpis do dziennika projektu, wnioski (krok 7) |
-| `./web-shop/package-lock.json:4182: "node_modules/plain-crypto-js": {` | wersja była w drzewie | maszyny z instalacją w oknie ataku = przejęte |
-| `./web-shop/node_modules/plain-crypto-js` na runnerze `ci-runner-07` | skrypt się wykonał | zniszcz runner i obraz, zrotuj sekrety z runnera |
+| only "no …" messages in all 12 repositories | not affected | an entry in the project log, conclusions (step 7) |
+| `./web-shop/package-lock.json:4182: "node_modules/plain-crypto-js": {` | the version was in the tree | the machines that installed during the attack window = compromised |
+| `./web-shop/node_modules/plain-crypto-js` on the runner `ci-runner-07` | the script was executed | destroy the runner and the image, rotate the secrets from the runner |
 
-## 2. Karencja i allowlista skryptów w pnpm
-**Sytuacja:** „Chcemy się zabezpieczyć przed następnym axios. Projekt na pnpm 10, Renovate otwiera PR-y codziennie”.
-Dzień później ogłoszono krytyczną podatność w `react-dom`, a aplikacja jest wystawiona do internetu.
+## 2. A cooldown and a script allowlist in pnpm
+**Situation:** "We want to protect ourselves against the next axios. The project is on pnpm 10, Renovate opens PRs every day".
+A day later a critical vulnerability in `react-dom` was announced, and the application is internet-facing.
 
-**Jak:**
-1. Karencja 3 dni w menedżerze pakietów (sekcja 2) — i osobno w Renovate.
-2. Skrypty instalacyjne tylko z allowlisty (`onlyBuiltDependencies`), w CI dodatkowo `--ignore-scripts` tam, gdzie
-   build ich nie potrzebuje (sekcja 3).
-3. Instalacja w CI wyłącznie z zamrożonego lockfile'a (sekcja 1).
-4. Łatka w ciągu 24 godzin: pojedynczy wyjątek z przeglądem diffu paczki, a nie wyłączenie karencji (sekcja 2).
-5. Wyjątek usuwasz, gdy łatka przekroczy 3 dni.
+**How:**
+1. A 3-day cooldown in the package manager (section 2) — and separately in Renovate.
+2. Install scripts only from an allowlist (`onlyBuiltDependencies`), in CI additionally `--ignore-scripts` where
+   the build does not need them (section 3).
+3. Installation in CI only from a frozen lockfile (section 1).
+4. The patch within 24 hours: a single exception with a review of the package diff, not disabling the cooldown (section 2).
+5. You remove the exception when the patch is older than 3 days.
 
-**Wynik:** konfiguracja.
+**Result:** the configuration.
 
 ```yaml
 # pnpm-workspace.yaml
 packages:
   - "apps/*"
   - "libs/*"
-minimumReleaseAge: 4320          # minuty = 3 dni
+minimumReleaseAge: 4320          # minutes = 3 days
 minimumReleaseAgeExclude:
-  - react-dom                    # łatka krytyczna, PR #812, przegląd diffu: @jkowalska; usunąć po 3 dniach
+  - react-dom                    # critical patch, PR #812, diff review: @jkowalska; remove after 3 days
 onlyBuiltDependencies:
   - esbuild
 ```
@@ -74,19 +74,19 @@ onlyBuiltDependencies:
 # CI
 pnpm install --frozen-lockfile
 ```
-W PR z łatką: „Wyjątek tylko dla `react-dom`; diff paczki przejrzany, brak nowych zależności przechodnich”.
+In the PR with the patch: "An exception only for `react-dom`; the package diff reviewed, no new transitive dependencies".
 
-## 3. Publikacja własnej paczki przez OIDC
-**Sytuacja:** „Publikujemy `@acme/ui-kit` z laptopa lidera tokenem klasycznym. Przenieśmy to do CI”.
+## 3. Publishing your own package through OIDC
+**Situation:** "We publish `@acme/ui-kit` from the lead's laptop with a classic token. Let's move it to CI".
 
-**Jak:**
-1. Trusted publisher w npm przypięty do jednego pliku workflow i chronionego środowiska z akceptacją (sekcja 4).
-2. Publikacja tylko z tagu w głównym repozytorium, nigdy z commitów z forków.
-3. `--provenance` przy publikacji; odbiorcy sprawdzają `npm audit signatures`.
-4. Klasyczne tokeny unieważnione — w axios działający stary token ominął skonfigurowane OIDC.
-5. Akcje przypięte do SHA, skrypty instalacyjne wyłączone.
+**How:**
+1. A trusted publisher in npm pinned to one workflow file and a protected environment with approval (section 4).
+2. Publishing only from a tag in the main repository, never from commits from forks.
+3. `--provenance` when publishing; consumers check `npm audit signatures`.
+4. Classic tokens revoked — in axios a working old token bypassed the configured OIDC.
+5. Actions pinned to a SHA, install scripts disabled.
 
-**Wynik:** `.github/workflows/publish.yml`.
+**Result:** `.github/workflows/publish.yml`.
 
 ```yaml
 name: publish
@@ -99,7 +99,7 @@ jobs:
   publish:
     if: github.repository == 'acme/ui-kit'
     runs-on: ubuntu-latest
-    environment: npm-publish      # wymagana akceptacja człowieka
+    environment: npm-publish      # a human's approval required
     permissions:
       contents: read
       id-token: write
@@ -112,4 +112,4 @@ jobs:
       - run: npm test
       - run: npm publish --provenance --access public
 ```
-Po pierwszej publikacji: tokeny klasyczne lidera unieważnione, konto z kluczem sprzętowym, wpis w dzienniku decyzji.
+After the first publication: the lead's classic tokens revoked, the account with a hardware key, an entry in the decision log.

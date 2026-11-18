@@ -1,94 +1,94 @@
 ---
 name: sec-appsec-devsecops
-description: Użyj przy programie bezpieczeństwa aplikacji w pipeline — ASVS, SAMM, SAST, DAST, SCA, triaż i SLA podatności, SLSA, podpisy, metryki.
+description: Use for an application security program in the pipeline — ASVS, SAMM, SAST, DAST, SCA, vulnerability triage and SLAs, SLSA, signatures, metrics.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj, gdy budujesz lub oceniasz program bezpieczeństwa aplikacji w cyklu dostarczania (AppSec, DevSecOps) — wymagania wg OWASP ASVS 5.0 i dojrzałość wg OWASP SAMM i DSOMM, mapowanie na NIST SSDF (SP 800-218), shift left i bezpieczne ustawienia domyślne, przegląd kodu pod kątem bezpieczeństwa (niebezpieczne API i domyślne konfiguracje per język), warstwy skanerów w CI/CD (sekrety, SAST, SCA i SBOM, DAST, IAST, IaC i kontenery) i miejsce każdej, strojenie fałszywych alarmów, triaż i terminy napraw wg CVSS v4, EPSS i CISA KEV, polityka blokowania buildu, integralność łańcucha (SLSA, provenance, Sigstore/cosign), security champions, metryki (MTTR, pokrycie). Nie do mechaniki pipeline'u (ops-ci-cd), lockfile i karencji zależności (ops-supply-chain-security), modelu zagrożeń (arch-threat-modeling), kodu auth (be-auth-security), łatek i incydentów w operacjach (ops-security-operations) ani sekretów (ops-secrets-identities) ani szukania wariantów znalezionej podatności (sec-variant-analysis)."
-  keywords: "SSDF, NIST SP 800-218, DSOMM, DevSecOps Maturity Model, shift left, secure by default, bezpieczne ustawienia domyślne, zgodność z SSDF, devsecops, appsec, bezpieczeństwo aplikacji, ASVS, SAMM, SAST, DAST, IAST, SCA, semgrep, codeql, zap, trivy, grype, syft, dependency-track, SBOM cyclonedx spdx, skaner w CI, fałszywe alarmy, false positives, blokować build, SLA podatności, CVSS, EPSS, KEV, MTTR podatności, SLSA, cosign, sigstore, provenance, security champions, podpisywanie obrazów, podpis obrazu kontenera, nikt go nie podmienił, zbudowano w naszym CI, integralność artefaktu, przegląd kodu security, pentest, wymagania bezpieczeństwa, niebezpieczne funkcje, niebezpieczne API, domyślne ustawienia, domyślne hasła, tryb debug na produkcji, wyłączona weryfikacja certyfikatu, pickle, yaml.load, BinaryFormatter, InsecureSkipVerify, przegląd bezpieczeństwa przed wydaniem"
+  catalog: "Use when you build or assess an application security program in the delivery cycle (AppSec, DevSecOps) — requirements per OWASP ASVS 5.0 and maturity per OWASP SAMM and DSOMM, mapping onto NIST SSDF (SP 800-218), shift left and secure defaults, security code review (dangerous APIs and default configurations per language), scanner layers in CI/CD (secrets, SAST, SCA and SBOM, DAST, IAST, IaC and containers) and the place of each, tuning false positives, triage and fix deadlines per CVSS v4, EPSS and CISA KEV, the build-blocking policy, chain integrity (SLSA, provenance, Sigstore/cosign), security champions, metrics (MTTR, coverage). Not for pipeline mechanics (ops-ci-cd), lockfiles and dependency cooldowns (ops-supply-chain-security), the threat model (arch-threat-modeling), auth code (be-auth-security), patches and incidents in operations (ops-security-operations), secrets (ops-secrets-identities) or searching for variants of a found vulnerability (sec-variant-analysis)."
+  keywords: "SSDF, NIST SP 800-218, DSOMM, DevSecOps Maturity Model, shift left, secure by default, bezpieczne ustawienia domyślne, zgodność z SSDF, devsecops, appsec, bezpieczeństwo aplikacji, ASVS, SAMM, SAST, DAST, IAST, SCA, semgrep, codeql, zap, trivy, grype, syft, dependency-track, SBOM cyclonedx spdx, skaner w CI, fałszywe alarmy, false positives, blokować build, SLA podatności, CVSS, EPSS, KEV, MTTR podatności, SLSA, cosign, sigstore, provenance, security champions, podpisywanie obrazów, podpis obrazu kontenera, nikt go nie podmienił, zbudowano w naszym CI, integralność artefaktu, przegląd kodu security, pentest, wymagania bezpieczeństwa, niebezpieczne funkcje, niebezpieczne API, domyślne ustawienia, domyślne hasła, tryb debug na produkcji, wyłączona weryfikacja certyfikatu, pickle, yaml.load, BinaryFormatter, InsecureSkipVerify, przegląd bezpieczeństwa przed wydaniem, secure defaults, SSDF compliance, application security, scanner in CI, block the build, vulnerability SLA, vulnerability MTTR, image signing, container image signature, nobody swapped it, built in our CI, artifact integrity, security code review, security requirements, dangerous functions, dangerous APIs, default settings, default passwords, debug mode in production, disabled certificate verification, security review before release"
 ---
 
-# AppSec w pipeline (DevSecOps)
+# AppSec in the pipeline (DevSecOps)
 
-Cel: znaleźć podatność tam, gdzie jest najtańsza do naprawy (shift left), zacząć od bezpiecznych ustawień
-domyślnych i nie zalać zespołu szumem. Program składa się z czterech
-rzeczy: **wymagania** (co ma być bezpieczne), **kontrole w pipeline** (co sprawdza maszyna), **przegląd ludzki**
-(co wymaga rozumu) i **pomiar** (czy działa). Granice: mechanika jobów i uprawnienia runnera to `ops-ci-cd`,
-lockfile i karencja to `ops-supply-chain-security`, STRIDE to `arch-threat-modeling`, łatanie na produkcji
-to `ops-security-operations`.
+Goal: find a vulnerability where it is cheapest to fix (shift left), start from secure
+defaults and not flood the team with noise. The program consists of four
+things: **requirements** (what must be secure), **controls in the pipeline** (what the machine checks), **human review**
+(what requires judgement) and **measurement** (whether it works). Boundaries: job mechanics and runner permissions are `ops-ci-cd`,
+lockfiles and cooldowns are `ops-supply-chain-security`, STRIDE is `arch-threat-modeling`, patching in production
+is `ops-security-operations`.
 
-## Procedura
-1. **Stan wyjściowy.** Co już skanuje (repo, CI, chmura), kto reaguje na wyniki, ile jest otwartych znalezisk i jak
-   stare. Bez tego nie ma punktu odniesienia dla metryk.
-2. **Wymagania.** Wybierz poziom ASVS dla aplikacji (L1 każda, L2 domyślnie dla danych wrażliwych, L3 krytyczne)
-   i zapisz wybrane rozdziały jako kryteria akceptacji. Dojrzałość całego programu (nie jednej aplikacji) ocenia SAMM,
-   dojrzałość pipeline'u DSOMM; wymóg zgodności z NIST SSDF to tabela praktyka → kontrola → dowód z pipeline'u.
-   Szczegóły i wersje: `references/standards-and-metrics.md`.
-3. **Warstwy kontroli** (tabela niżej): dla każdej wskaż etap, narzędzie, tryb (blokuje / ostrzega) i właściciela.
-   Zaczynaj od tych o najlepszym stosunku sygnału do szumu: sekrety, SCA, SAST z małym zestawem reguł.
-4. **Strojenie przed blokowaniem.** Nowe narzędzie działa 2–4 tygodnie w trybie ostrzegania; mierz odsetek
-   znalezisk uznanych za prawdziwe, wyłącz reguły o niskiej precyzji, dodaj reguły własne dla wzorców firmy.
-   Wyjątki (suppress) mają powód, właściciela i datę wygaśnięcia, nie wpis „ignore” w kodzie bez śladu.
-5. **Triaż i terminy.** Reguły priorytetu i przykładowa tabela SLA: `references/triage-and-sla.md`. Skrót: ważność bazowa
-   (CVSS), do tego znane wykorzystanie (CISA KEV), prawdopodobieństwo (EPSS), osiągalność w kodzie i ekspozycja usługi.
-6. **Polityka blokowania.** Blokuj tylko to, co ma wysoką precyzję i jasną naprawę: ujawniony sekret, znana
-   wykorzystywana podatność w osiągalnej zależności, krytyczne ustalenie SAST nowe w diffie. Resztę zgłaszaj jako
-   zadanie z terminem. Skanuj **diff** w PR (nowy dług), a całość nocą (stary dług). Wyłączenie bramki to decyzja
-   człowieka z wpisem w rejestrze wyjątków.
-7. **Integralność artefaktu.** Każdy wydany artefakt ma SBOM, provenance i podpis; wdrożenie weryfikuje podpis
-   i tożsamość budującego (sekcja niżej).
-8. **Ludzie.** Security champion w zespole (ok. 1 na zespół, część etatu, wspierany szkoleniem i kanałem do AppSec),
-   przegląd bezpieczeństwa dla zmian w auth, kryptografii, parsowaniu wejścia, uploadach i nowych integracjach.
-9. **Pomiar** co miesiąc: MTTR wg ważności, odsetek znalezisk po terminie, pokrycie (repozytoria ze skanerem / wszystkie),
-   odsetek fałszywych alarmów, liczba podatności wykrytych po wdrożeniu (ucieczki). Metryki służą do poprawy
-   procesu, nie do rankingu zespołów.
+## Procedure
+1. **Baseline.** What already scans (repo, CI, cloud), who reacts to the results, how many open findings there are and how
+   old. Without this there is no reference point for the metrics.
+2. **Requirements.** Choose the ASVS level for the application (L1 every one, L2 by default for sensitive data, L3 critical)
+   and record the chosen chapters as acceptance criteria. The maturity of the whole program (not one application) is assessed by SAMM,
+   the maturity of the pipeline by DSOMM; a NIST SSDF compliance requirement is a table practice → control → evidence from the pipeline.
+   Details and versions: `references/standards-and-metrics.md`.
+3. **Control layers** (table below): for each, state the stage, the tool, the mode (blocks / warns) and the owner.
+   Start with those with the best signal-to-noise ratio: secrets, SCA, SAST with a small rule set.
+4. **Tuning before blocking.** A new tool runs for 2–4 weeks in warning mode; measure the share of
+   findings judged true, disable low-precision rules, add your own rules for company patterns.
+   Exceptions (suppress) have a reason, an owner and an expiry date, not an "ignore" entry in the code without a trace.
+5. **Triage and deadlines.** Priority rules and an example SLA table: `references/triage-and-sla.md`. In short: base severity
+   (CVSS), plus known exploitation (CISA KEV), probability (EPSS), reachability in code and service exposure.
+6. **Blocking policy.** Block only what has high precision and a clear fix: an exposed secret, a known
+   exploited vulnerability in a reachable dependency, a critical SAST finding new in the diff. Report the rest as
+   a task with a deadline. Scan the **diff** in the PR (new debt), and everything at night (old debt). Disabling a gate is a
+   human decision with an entry in the exception register.
+7. **Artifact integrity.** Every released artifact has an SBOM, provenance and a signature; the deployment verifies the signature
+   and the builder's identity (section below).
+8. **People.** A security champion in the team (about 1 per team, part-time, supported by training and a channel to AppSec),
+   a security review for changes in auth, cryptography, input parsing, uploads and new integrations.
+9. **Measurement** every month: MTTR by severity, the share of findings past the deadline, coverage (repositories with a scanner / all),
+   the false positive rate, the number of vulnerabilities found after deployment (escapes). The metrics serve to improve the
+   process, not to rank teams.
 
-## Warstwy kontroli
-| Warstwa | Przykłady | Gdzie | Domyślny tryb |
+## Control layers
+| Layer | Examples | Where | Default mode |
 |---|---|---|---|
-| Sekrety | gitleaks, trufflehog, push protection | pre-commit + CI + historia | blokuje |
-| SAST | Semgrep, CodeQL | PR (diff) + nocą (całość) | blokuje krytyczne nowe, resztą ostrzega |
-| SCA + SBOM | Grype, osv-scanner, Syft, CycloneDX/SPDX, Dependency-Track | PR + build + ciągle po wydaniu | blokuje znane wykorzystywane |
-| IaC | Checkov, KICS, tfsec/Trivy | PR | ostrzega, blokuje publiczne magazyny i otwarte porty |
-| Kontener | Trivy, Grype na obrazie | build + rejestr | blokuje krytyczne z poprawką |
-| DAST | OWASP ZAP | staging, nocą, po wdrożeniu | ostrzega (zakres uzgodniony) |
-| IAST | agent w testach | testy integracyjne | ostrzega |
-Testy ofensywne tylko na własnych środowiskach i za zgodą. Skanery to też kod z zewnątrz: przypinasz je
-i izolujesz od sekretów (`ops-ci-cd`, `ops-supply-chain-security`).
+| Secrets | gitleaks, trufflehog, push protection | pre-commit + CI + history | blocks |
+| SAST | Semgrep, CodeQL | PR (diff) + nightly (everything) | blocks new critical, warns on the rest |
+| SCA + SBOM | Grype, osv-scanner, Syft, CycloneDX/SPDX, Dependency-Track | PR + build + continuously after release | blocks known exploited |
+| IaC | Checkov, KICS, tfsec/Trivy | PR | warns, blocks public storage and open ports |
+| Container | Trivy, Grype on the image | build + registry | blocks critical with a fix |
+| DAST | OWASP ZAP | staging, nightly, after deployment | warns (agreed scope) |
+| IAST | an agent in tests | integration tests | warns |
+Offensive tests only on your own environments and with consent. Scanners are also external code: you pin them
+and isolate them from secrets (`ops-ci-cd`, `ops-supply-chain-security`).
 
-## Przegląd kodu pod kątem bezpieczeństwa
-Skanery nie widzą logiki. Człowiek (lub agent, wynik zatwierdza człowiek) sprawdza: kontrolę dostępu na każdym
-zasobie (IDOR), walidację na granicy, budowanie zapytań i poleceń z wejścia, deserializację, SSRF przy pobieraniu URL,
-obsługę błędów bez wycieku, logi bez danych wrażliwych. Lista pytań wg ASVS, nie wg intuicji.
-Niebezpieczne API per język (Python, JS/Node, Java, C#, Go) i domyślne konfiguracje (konta, debug, TLS, CORS,
-usługi bez uwierzytelnienia, fail-open): `references/dangerous-apis.md`. Po znalezieniu podatności — jej
-warianty w reszcie kodu i reguła w CI: sec-variant-analysis.
+## Security code review
+Scanners do not see logic. A human (or an agent, with a human approving the result) checks: access control on every
+resource (IDOR), validation at the boundary, building queries and commands from input, deserialization, SSRF when fetching URLs,
+error handling without leaks, logs without sensitive data. A list of questions per ASVS, not per intuition.
+Dangerous APIs per language (Python, JS/Node, Java, C#, Go) and default configurations (accounts, debug, TLS, CORS,
+services without authentication, fail-open): `references/dangerous-apis.md`. After finding a vulnerability — its
+variants in the rest of the code and a rule in CI: sec-variant-analysis.
 
-## Łańcuch dostaw artefaktu
-- **SLSA** (build track, v1.0): L1 provenance istnieje, L2 provenance podpisuje hostowana platforma buildu, L3 platforma
-  jest utwardzona (izolowane, efemeryczne buildy, klucz niedostępny dla kroków). Celuj w L2, w L3 dla wydań krytycznych.
-- **Podpis** bez długotrwałego klucza: Sigstore/cosign w trybie keyless (tożsamość OIDC z CI, certyfikat krótkożyjący,
-  wpis w dzienniku przejrzystości). Weryfikacja przy wdrożeniu sprawdza **tożsamość i wystawcę**, nie samo istnienie podpisu.
-- Provenance mówi, jak zbudowano; SBOM, z czego; podpis, kto. Żadne nie dowodzi braku podatności.
+## The artifact supply chain
+- **SLSA** (build track, v1.0): L1 provenance exists, L2 provenance is signed by a hosted build platform, L3 the platform
+  is hardened (isolated, ephemeral builds, the key inaccessible to the steps). Aim for L2, for L3 for critical releases.
+- **A signature** without a long-lived key: Sigstore/cosign in keyless mode (OIDC identity from CI, a short-lived certificate,
+  an entry in the transparency log). Verification at deployment checks **the identity and the issuer**, not just that a signature exists.
+- Provenance says how it was built; the SBOM, from what; the signature, by whom. None of them proves the absence of vulnerabilities.
 
-## Przykład
-**Sytuacja:** „Mamy Semgrep w CI, 900 znalezisk, nikt ich nie czyta. Co robimy?”
-**Wynik** [przykład]: (1) tydzień 1: Semgrep tylko na diffie PR, zestaw reguł ograniczony do kategorii security
-z wysoką pewnością, reszta nocą bez blokady; (2) próbka 50 znalezisk → 14 prawdziwych (28%), wyłączone 3 reguły
-odpowiadające za 60% fałszywych; (3) blokada tylko dla nowych znalezisk „high” z pewnością „high”; (4) stare dostają
-zadania z terminem wg tabeli SLA, 20 najważniejszych na sprint; (5) mierzymy MTTR i odsetek fałszywych co miesiąc.
+## Example
+**Situation:** "We have Semgrep in CI, 900 findings, nobody reads them. What do we do?"
+**Result** [example]: (1) week 1: Semgrep only on the PR diff, the rule set limited to security categories
+with high confidence, the rest nightly without blocking; (2) a sample of 50 findings → 14 true (28%), 3 rules
+responsible for 60% of the false ones disabled; (3) blocking only for new "high" findings with "high" confidence; (4) old ones get
+tasks with a deadline per the SLA table, the 20 most important per sprint; (5) we measure MTTR and the false positive rate every month.
 
-## Checklista
-- [ ] poziom ASVS wybrany i zapisany jako kryteria, dojrzałość programu oceniona (SAMM)
-- [ ] każda warstwa ma etap, tryb, właściciela; nowe narzędzia najpierw w trybie ostrzegania
-- [ ] priorytet z CVSS + KEV + EPSS + osiągalność; terminy per ważność; wyjątki z datą wygaśnięcia
-- [ ] blokada tylko dla ustaleń o wysokiej precyzji; skan diffu w PR
-- [ ] SBOM, provenance i podpis; weryfikacja przy wdrożeniu
-- [ ] security champions i metryki (MTTR, pokrycie, fałszywe alarmy)
+## Checklist
+- [ ] ASVS level chosen and recorded as criteria, program maturity assessed (SAMM)
+- [ ] every layer has a stage, a mode, an owner; new tools first in warning mode
+- [ ] priority from CVSS + KEV + EPSS + reachability; deadlines per severity; exceptions with an expiry date
+- [ ] blocking only for high-precision findings; diff scan in the PR
+- [ ] SBOM, provenance and signature; verification at deployment
+- [ ] security champions and metrics (MTTR, coverage, false positives)
 
-## Źródła
-- [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/) — wersja 5.0.0, 30.05.2025 (wyszukiwanie 17.10.2026)
+## Sources
+- [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/) — version 5.0.0, 30.05.2025 (search 17.10.2026)
 - [OWASP SAMM](https://owaspsamm.org/), [SLSA v1.0](https://slsa.dev/spec/v1.0/levels), [Sigstore](https://docs.sigstore.dev/signing/overview/) (17.10.2026)
-- NIST SP 800-218 SSDF 1.1 (final, 02.2022; 1.2 — projekt 12.2025); [OWASP DSOMM](https://dsomm.owasp.org/)
-  (wersja [niezweryfikowane]); statusy wg wyszukiwania 2026-10-27
-- FIRST: CVSS v4.0 (listopad 2023), EPSS; [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
-Opisane własnymi słowami. Szczegóły i znaczniki niezweryfikowanych faktów: pliki w `references/`.
+- NIST SP 800-218 SSDF 1.1 (final, 02.2022; 1.2 — draft 12.2025); [OWASP DSOMM](https://dsomm.owasp.org/)
+  (version [unverified]); statuses per search 2026-10-27
+- FIRST: CVSS v4.0 (November 2023), EPSS; [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
+Described in our own words. Details and markers of unverified facts: the files in `references/`.

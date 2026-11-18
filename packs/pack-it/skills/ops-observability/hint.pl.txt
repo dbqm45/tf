@@ -1,0 +1,110 @@
+head: Użyj przy logach, metrykach, tracingu, alertach i dashboardach (OpenTelemetry, Prometheus, Grafana). Użyj przy logowaniu, metrykach, tracingu, healthcheckach, alertach i dashboardach (OpenTelemetry, Prometheus, Grafana). Nie do debugowania logiki biznesowej ani pipeline'ów CI.
+# Obserwowalność
+
+## Logi
+- Strukturalne (JSON), jeden obiekt na zdarzenie: `timestamp`, `level`, `message`, `service`, `trace_id`, kontekst.
+- Poziomy: `error` = wymaga działania, `warn` = nietypowe, ale obsłużone, `info` = zdarzenia biznesowe, `debug` = wyłączony na produkcji.
+- Nigdy: hasła, tokeny, pełne numery kart, pełne dane osobowe. Maskuj.
+- Loguj błąd raz, w miejscu obsługi — nie na każdym poziomie stosu.
+
+## Metryki (RED + USE)
+- Usługi: **R**ate, **E**rrors, **D**uration (histogram, percentyle p50/p95/p99) per endpoint.
+- Zasoby: **U**tilization, **S**aturation, **E**rrors (CPU, pamięć, pula połączeń, kolejki).
+- Etykiety o niskiej kardynalności — nigdy `user_id` czy pełny URL jako etykieta.
+
+## Tracing
+- OpenTelemetry; propagacja kontekstu (`traceparent`) przez HTTP i kolejki.
+- `trace_id` w każdym logu, aby łączyć logi ze śladami.
+
+### Agent AI i dochodzenie po incydencie
+- **SLO agenta:** z OpenTelemetry dostajesz tylko dostępność i opóźnienie wywołania. Resztę dodaje aplikacja jednym
+  stabilnym rekordem na koniec zadania: stan końcowy (także „słusznie odmówił” i „przekazał człowiekowi” — ani sukces,
+  ani porażka), klasa zadania, liczba kroków, interwencja człowieka, wersja przy odczycie i zapisie pamięci roboczej.
+  SLO liczysz z tego rekordu, nie z backendu śladów (nazwy spanów i typy atrybutów się zmieniają); nazwy atrybutów
+  wg konwencji GenAI OpenTelemetry tam, gdzie istnieją (wersję sprawdź przed użyciem).
+- **Powód odrzucenia narzędzia zwraca serwer narzędzia** (zła struktura / zła wartość / błąd wewnętrzny): awaria
+  narzędzia → alarm do właściciela zależności, błędne wywołanie przez agenta → zgłoszenie dla zespołu agenta.
+- **Wspólny model encji do dochodzenia:** większość czasu analizy przyczyny to odtwarzanie powiązań między
+  narzędziami, które nazywają to samo inaczej. Encja powstaje dopiero po walidacji w jednym autorytatywnym katalogu
+  (bez ogólnego typu „usługa”, który znaczy cztery rzeczy); ontologia jako kod (PR, testy, wersje); wyjście modelu
+  ograniczone do wyliczeń i typów; wolne źródło degraduje graf, ale go nie blokuje. Silnik korelacji **proponuje
+  łańcuchy z dowodami i pewnością** (np. „wdrożenie → błąd w logach” w oknie czasu), nie wydaje werdyktów. Z kanału
+  incydentu zapisujesz rozumowanie (odrzucone hipotezy, co zadziałało, kto wiedział) — postmortem jako dane
+  (ops-sre-incidents). Zmiany proponowane przez agentów zatwierdza człowiek.
+
+## Healthchecki
+- `/health/live` — proces żyje (bez zależności).
+- `/health/ready` — gotowy na ruch (baza, cache osiągalne). Orkiestrator kieruje ruch tylko do „ready”.
+- **Sonda syntetyczna end-to-end:** healthcheck i status kontenera nie dowodzą, że usługa robi swoje (wygasły token
+  potrafi wpychać każdą wiadomość w pustą gałąź obsługi błędu, a `/health` zwraca 200). Cyklicznie (np. co
+  godzinę) wysyłasz prawdziwe zapytanie przez cały potok, od wejścia do odpowiedzi, z asercją: odpowiedź niepusta,
+  zgodna ze schematem, w czasie z SLO. Porażka sondy to alert. Sonda ma osobne konto testowe i znacznik, żeby nie
+  liczyć jej w metrykach biznesowych. Dotyczy zwłaszcza agentów AI i integracji z tokenami, które wygasają.
+
+## Alerty
+- Alertuj na objawy odczuwalne przez użytkownika (SLO: odsetek błędów, latencja p95), nie na każdą przyczynę.
+- Każdy alert: próg, czas trwania, link do runbooka (docs-tech-writing), właściciel.
+- Alert, na który nikt nie reaguje, usuń lub popraw.
+- Wdrożenia jako adnotacje na dashboardach: porównanie „przed / po” (błędy, p95, kluczowa akcja biznesowa, np. liczba
+  zamówień) przez pierwsze minuty po wydaniu; skok latencji z 200 ms do 5 s bez błędów to też awaria.
+
+## Zasoby, które rosną powoli (dysk, certyfikaty)
+Awarie „znikąd” najczęściej mają przyczynę, która rosła tygodniami. Alarmujesz o **trendzie**, nie dopiero o 100%.
+- **Dysk** (węzły, wolumeny, bazy): próg ostrzegawczy i alert z prognozy zapełnienia (`predict_linear`), także
+  dla wolumenów Kubernetes i i-węzłów.
+- **Rotacja logów** skonfigurowana i sprawdzona: Docker `--log-opt max-size=… max-file=…` (sterownik `json-file`),
+  kubelet `containerLogMaxSize`, `logrotate` na maszynach; pliki tymczasowe, stare kopie i obrazy sprzątane zadaniem
+  z alertem, gdy zadanie przestanie działać. Pod w Kubernetes ma `ephemeral-storage` w requests/limits.
+- **Certyfikaty TLS**: odnawianie automatyczne (cert-manager, ACME) **i** niezależny pomiar z zewnątrz (blackbox_exporter),
+  bo automat też się psuje. Obejmij też certyfikaty wewnętrzne (mTLS,
+  webhooki Kubernetes, bazy, kolejki). Ważność publicznych certyfikatów maleje (CA/B Forum: 200 dni od 15.03.2026,
+  100 dni od 2027, 47 dni od 2029) — ręczne odnawianie przestaje być realne.
+- Inne liczniki z datą końca: tokeny i klucze kont usług, domeny, licencje, limity planu (ops-secrets-identities).
+
+## Koszt telemetrii
+- Najpierw ustal, na jakie pytania telemetria ma odpowiadać, potem tnij. Każda reguła próbkowania lub odrzucania
+  danych to zapisana decyzja — cięcie „na ślepo” zostawia martwe pola akurat tam, gdzie będą potrzebne przy incydencie.
+- Potok w OpenTelemetry Collector: filtrowanie i odrzucanie szumu, parsowanie do struktury, maskowanie danych
+  osobowych, próbkowanie śladów (np. zachowuj wszystkie z błędem i wolne, z reszty próbkę), agregacja przy przyjęciu.
+- Etykieta o wysokiej kardynalności (ID użytkownika, pełny URL) tylko wtedy, gdy napędza alert lub decyzję.
+- Dane o niskiej wartości do taniego magazynu obiektowego zamiast indeksowanego backendu; stare dane zwijane (rollup).
+- Jeden kolektor na warstwę — bez zbierania tych samych danych dwa razy; interwały scrapowania dopasowane do potrzeb.
+- Źródła (devops.com): [The Green Side of Observability](https://devops.com/the-green-side-of-observability-why-less-data-can-mean-more-insight/),
+  [Observability's Gaslighting Problem](https://devops.com/observabilitys-gaslighting-problem-send-less-data-isnt-a-strategy/),
+  [Maximize Telemetry Data Value With Observability Pipelines](https://devops.com/how-to-maximize-telemetry-data-value-with-observability-pipelines/)
+
+## Sygnały bezpieczeństwa
+Logi aplikacji i metryki to też materiał dowodowy. Warto alarmować (wnioski z analiz Huntress):
+- **proces aplikacji uruchamia proces potomny** (powłokę, `curl`, instalator) — typowy ślad po podatności typu RCE;
+- nowe wpisy cron, usługi systemd lub zadania harmonogramu, których nie dodał pipeline;
+- trwałe, nietypowe obciążenie CPU (koparki kryptowalut) i połączenia do nieznanych hostów, zwłaszcza długie WebSockety;
+- wydanie lub odświeżenie tokenu użytkownika z zakresów adresów centrów danych i PaaS, odświeżanie o stałych porach
+  (automat), sprzeczny user agent (be-auth-security).
+Zasady: loguj linie poleceń i zdarzenia uwierzytelniania; trzymaj logi poza maszyną (napastnicy kasują lokalne logi
+i historię powłoki); retencja wystarczająca, żeby odpowiedzieć, czy ktoś miał dostęp. Agent, który zauważy takie
+sygnały, zgłasza je człowiekowi (core-agent-security).
+
+## Przykład
+**Sytuacja:** „Alerty dla `checkout-api`; SLO: 99,5% żądań bez 5xx.” **Wynik** (reguła Prometheus):
+```yaml
+- alert: CheckoutApiHighErrorRate
+  expr: sum(rate(http_requests_total{service="checkout-api",status=~"5.."}[5m])) / sum(rate(http_requests_total{service="checkout-api"}[5m])) > 0.005
+  for: 10m
+  labels: { severity: page, team: checkout }
+  annotations: { runbook_url: "https://wiki.acme.example/runbooks/checkout-api#bledy-5xx" }
+```
+Objaw z SLO zamiast przyczyny, czas trwania, właściciel i runbook; p95 to drugi alert.
+Więcej przykładów: `references/examples.md`.
+
+## Checklista dla nowej usługi
+- [ ] logi strukturalne z trace_id
+- [ ] metryki RED
+- [ ] live/ready healthcheck
+- [ ] co najmniej jeden alert SLO z runbookiem
+- [ ] zdarzenia uwierzytelniania i procesy potomne aplikacji logowane poza maszyną
+- [ ] alert z prognozy zapełnienia dysku, rotacja logów sprawdzona
+- [ ] niezależny pomiar wygasania certyfikatów (21 i 7 dni)
+- [ ] wdrożenia jako adnotacje na dashboardach
+
+## Źródła
+- [10 Minor DevOps Mistakes That Can Cause Major Production Issues](https://medium.com/coinmonks/10-minor-devops-mistakes-that-can-cause-major-production-issues-191d141e7686) — Pawan Natekar, 2026 (dysk, certyfikaty, monitoring po wdrożeniu); metryki: dokumentacja node_exporter, blackbox_exporter, cert-manager i Kubernetes.
