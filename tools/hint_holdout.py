@@ -59,7 +59,7 @@ def main(argv: list[str]) -> int:
     as_json = "--json" in args
     ws = Path(args[args.index("--out") + 1]).resolve() if "--out" in args else None
     if ws is None or not (ws / ".claude" / "hooks" / "skill_hint.py").is_file():
-        print("✗ podaj workspace: --out .work/<nakładki> (tools/workspace.py assemble)")
+        print("✗ give a workspace: --out .work/<packs> (tools/workspace.py assemble)")
         return 2
     skip = {"--out", str(args[args.index("--out") + 1]), "--json"}
     res = measure(ws, [a for a in args if a not in skip])
@@ -74,7 +74,7 @@ def main(argv: list[str]) -> int:
             tot[k][1] += r[k]["all"]
             cells.append(f"{k} {r[k]['ok']}/{r[k]['all']}" if r[k]["all"] else f"{k} —")
         print(f"{skill:<36} " + " · ".join(cells))
-    print("razem: " + " · ".join(f"{k} {a}/{b}" for k, (a, b) in tot.items()))
+    print("total: " + " · ".join(f"{k} {a}/{b}" for k, (a, b) in tot.items()))
     return 0
 
 

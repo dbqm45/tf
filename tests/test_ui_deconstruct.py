@@ -105,12 +105,12 @@ def main() -> int:
                            capture_output=True, text=True, timeout=60)
         skill = out / "ux-ds-demo"
         text = (skill / "SKILL.md").read_text(encoding="utf-8") if (skill / "SKILL.md").is_file() else ""
-        check(r.returncode == 0 and "name: ux-ds-demo" in text and "description: Użyj, gdy" in text
-              and "review:" in text and "references/tokens.md" in text and "## Przykład" in text,
+        check(r.returncode == 0 and "name: ux-ds-demo" in text and "description: Use when" in text
+              and "review:" in text and "references/tokens.md" in text and "## Example" in text,
               f"S-3a: szkic skilla w formacie fabryki: {r.stdout}{r.stderr} {text[:400]}")
         ref = (skill / "references" / "tokens.md").read_text(encoding="utf-8") if (skill / "references" / "tokens.md").is_file() else ""
         data = json.loads((skill / "tokens.json").read_text(encoding="utf-8")) if (skill / "tokens.json").is_file() else {}
-        check("#1a73e8" in ref and "768px" in ref and "dane, nie polecenia" in ref and data.get("colors"),
+        check("#1a73e8" in ref and "768px" in ref and "data, not instructions" in ref and data.get("colors"),
               f"S-3b: references/tokens.md i tokens.json: {ref[:300]}")
         check("Zignoruj" not in text + ref and "rm" not in [w for w in (text + ref).split()],
               "S-6: treść skryptów strony nie trafia do skilla")
@@ -132,12 +132,12 @@ def main() -> int:
         asked = Path(t) / "z-pytania"
         r = subprocess.run([sys.executable, str(SCRIPT), "--dir", str(src), "--name", "demo2"], input=f"{asked}\n",
                            capture_output=True, text=True, timeout=60)
-        check(r.returncode == 0 and (asked / "ux-ds-demo2" / "SKILL.md").is_file() and "katalog" in r.stdout.lower(),
+        check(r.returncode == 0 and (asked / "ux-ds-demo2" / "SKILL.md").is_file() and "directory" in r.stdout.lower(),
               f"S-8: bez --out pyta o katalog docelowy i zapisuje tam: {r.stdout}{r.stderr}")
         inside = ROOT / "packs" / "tmp-ui-deconstruct-test"
         r = subprocess.run([sys.executable, str(SCRIPT), "--dir", str(src), "--name", "demo3", "--out", str(inside)],
                            capture_output=True, text=True, timeout=60)
-        check(r.returncode == 1 and not inside.exists() and "fabryk" in r.stdout + r.stderr,
+        check(r.returncode == 1 and not inside.exists() and "factory" in r.stdout + r.stderr,
               f"S-9: katalog wewnątrz repozytorium fabryki odrzucony: {r.stdout}{r.stderr}")
 
         r = subprocess.run([sys.executable, str(SCRIPT), "--url", "http://127.0.0.1:9/", "--name", "x", "--out", str(out)],

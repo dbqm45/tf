@@ -77,9 +77,9 @@ def _diff(label: str, old: Counter, new: Counter) -> list[str]:
     gone, added = old - new, new - old
     out = []
     if gone:
-        out.append(f"{label}: zniknęło {', '.join(sorted(gone))[:300]}")
+        out.append(f"{label}: removed {', '.join(sorted(gone))[:300]}")
     if added:
-        out.append(f"{label}: doszło {', '.join(sorted(added))[:300]}")
+        out.append(f"{label}: added {', '.join(sorted(added))[:300]}")
     return out
 
 
@@ -91,13 +91,13 @@ def compare(old_text: str, new_text: str) -> list[str]:
         out.append(f"name: {a['front'].get('name')} → {b['front'].get('name')}")
     lost_kw = a["front"].get("keywords", set()) - b["front"].get("keywords", set())
     if lost_kw:
-        out.append(f"keywords: zniknęły {', '.join(sorted(lost_kw))[:300]} (polskie słowa kluczowe zostają)")
+        out.append(f"keywords: removed {', '.join(sorted(lost_kw))[:300]} (Polish keywords must stay)")
     if a["blocks"] != b["blocks"]:
-        out.append(f"bloki kodu: {len(a['blocks'])} → {len(b['blocks'])} albo zmieniona treść")
+        out.append(f"code blocks: {len(a['blocks'])} → {len(b['blocks'])} or changed content")
     out += _diff("`…`", a["inline"], b["inline"])
-    out += _diff("liczby", a["numbers"], b["numbers"])
-    out += _diff("odnośniki", a["links"], b["links"])
-    for k, label in (("headings", "nagłówki"), ("items", "punkty list"), ("rows", "wiersze tabel")):
+    out += _diff("numbers", a["numbers"], b["numbers"])
+    out += _diff("links", a["links"], b["links"])
+    for k, label in (("headings", "headings"), ("items", "list items"), ("rows", "table rows")):
         if a[k] != b[k]:
             out.append(f"{label}: {a[k]} → {b[k]}")
     return out
@@ -124,7 +124,7 @@ def main(argv: list[str]) -> int:
         for f in files_of(Path(raw)):
             old = at_ref(f, ref)
             if old is None:
-                print(f"• {f}: nowy plik (brak w {ref}) — pominięty")
+                print(f"• {f}: new file (not in {ref}) — skipped")
                 continue
             diffs = compare(old, f.read_text(encoding="utf-8"))
             if diffs:

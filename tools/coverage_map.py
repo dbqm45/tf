@@ -62,31 +62,31 @@ def coverage(skills: dict[str, str], areas: dict[str, list[str]]) -> list[tuple[
 def report(rows, n_skills: int) -> str:
     holes = [(a, t) for a, t, s in rows if not s]
     thin = [(a, t, s[0]) for a, t, s in rows if len(s) == 1]
-    out = [f"# Mapa pokrycia katalogu", "",
-           f"Skilli: {n_skills} · haseł: {len(rows)} · dziury: {len(holes)} · cienkie: {len(thin)}.", "",
-           "Liczą się metadane skilli (opis, katalog, słowa) — to, po czym trasowanie wybiera skill. Dziura to "
-           "kandydat na skill albo na dopisanie słów do istniejącego; decyzja po scenariuszu ewaluacji.", "",
-           "| Obszar | Hasło | Skilli | Skille (do 4) |", "|---|---|---|---|"]
+    out = [f"# Catalog coverage map", "",
+           f"Skills: {n_skills} · terms: {len(rows)} · holes: {len(holes)} · thin: {len(thin)}.", "",
+           "Only skill metadata counts (description, catalog, keywords) — what routing uses to pick a skill. A hole is "
+           "a candidate for a new skill or for new keywords on an existing one; decide after an evaluation scenario.", "",
+           "| Area | Term | Skills | Skills (up to 4) |", "|---|---|---|---|"]
     for area, term, s in rows:
         more = f" … +{len(s) - 4}" if len(s) > 4 else ""
         out.append(f"| {area} | `{term}` | {len(s)} | {', '.join(s[:4])}{more} |")
-    out += ["", "## Dziury", ""] + ([f"- {a}: `{t}`" for a, t in holes] or ["- brak"])
-    out += ["", "## Cienkie (jeden skill)", ""] + ([f"- {a}: `{t}` — {s}" for a, t, s in thin] or ["- brak"])
+    out += ["", "## Holes", ""] + ([f"- {a}: `{t}`" for a, t in holes] or ["- none"])
+    out += ["", "## Thin (one skill)", ""] + ([f"- {a}: `{t}` — {s}" for a, t, s in thin] or ["- none"])
     return "\n".join(out) + "\n"
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Mapa pokrycia katalogu skilli (informacja, kod 0).")
-    ap.add_argument("--root", default=str(ROOT), help="katalog repozytorium fabryki")
-    ap.add_argument("--areas", default=str(ROOT / "tools" / "coverage_areas.json"), help="plik obszarów (JSON)")
-    ap.add_argument("--out", help="zapisz pełny raport Markdown")
-    ap.add_argument("--summary", action="store_true", help="krótkie podsumowanie na stdout (CI)")
+    ap = argparse.ArgumentParser(description="Coverage map of the skill catalog (information only, exit code 0).")
+    ap.add_argument("--root", default=str(ROOT), help="factory repository directory")
+    ap.add_argument("--areas", default=str(ROOT / "tools" / "coverage_areas.json"), help="areas file (JSON)")
+    ap.add_argument("--out", help="write the full Markdown report")
+    ap.add_argument("--summary", action="store_true", help="short summary on stdout (CI)")
     a = ap.parse_args()
     try:
         areas = json.loads(Path(a.areas).read_text(encoding="utf-8"))
         assert isinstance(areas, dict) and all(isinstance(v, list) for v in areas.values())
     except (OSError, ValueError, AssertionError) as e:
-        print(f"✗ plik obszarów {a.areas}: {e}", file=sys.stderr)
+        print(f"✗ areas file {a.areas}: {e}", file=sys.stderr)
         return 2
     skills = load_skills(Path(a.root))
     rows = coverage(skills, areas)
@@ -96,10 +96,10 @@ def main() -> int:
     if a.summary or not a.out:
         holes = [f"{ar}: {t}" for ar, t, s in rows if not s]
         thin = sum(1 for *_, s in rows if len(s) == 1)
-        print(f"Mapa pokrycia — skilli: {len(skills)}, haseł: {len(rows)}, dziury: {len(holes)}, cienkie: {thin}"
-              + (" (pełny raport: python3 tools/coverage_map.py --out docs/coverage-map.md)" if not a.out else ""))
+        print(f"Coverage map — skills: {len(skills)}, terms: {len(rows)}, holes: {len(holes)}, thin: {thin}"
+              + (" (full report: python3 tools/coverage_map.py --out docs/coverage-map.md)" if not a.out else ""))
         for h in holes:
-            print(f"  ⚠ dziura — {h}")
+            print(f"  ⚠ hole — {h}")
     return 0
 
 

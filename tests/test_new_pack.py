@@ -59,8 +59,8 @@ def main() -> int:
               and 'title: "Demo"' in pack and 'description: "Demo pack for tests."' in pack, f"N-3: pack.yaml:\n{pack}")
         sk = base / "skills" / "dm-start" / "SKILL.md"
         text = sk.read_text(encoding="utf-8") if sk.is_file() else ""
-        check("name: dm-start" in text and "description: Użyj" in text and "catalog:" in text and "review:" in text
-              and "keywords:" in text and "## Przykład" in text and "## Źródła" in text, f"N-4: SKILL.md:\n{text}")
+        check("name: dm-start" in text and "description: Use" in text and "catalog:" in text and "review:" in text
+              and "keywords:" in text and "## Example" in text and "## Sources" in text, f"N-4: SKILL.md:\n{text}")
         ev = base / "tests" / "skill_evals" / "dm-start.json"
         data = json.loads(ev.read_text(encoding="utf-8")) if ev.is_file() else {}
         sc = data.get("scenarios", [])
@@ -70,7 +70,7 @@ def main() -> int:
         check("name: demo-role" in role and "skills: [dm-start]" in role and "verify: \"" in role, f"N-6: rola: {role}")
         ci = (root / ".github" / "workflows" / "factory-checks.yml").read_text(encoding="utf-8")
         check("packs: [none, pack-it, mode-team, pack-demo, all]" in ci, f"N-7: macierz CI: {ci}")
-        check("Do zrobienia" in r.stdout and "skill_gate" in r.stdout, f"N-8: lista do zrobienia: {r.stdout}")
+        check("To do" in r.stdout and "skill_gate" in r.stdout, f"N-8: lista do zrobienia: {r.stdout}")
 
         before = (base / "pack.yaml").read_text(encoding="utf-8") if (base / "pack.yaml").is_file() else ""
         r = run(root, "demo", "--prefix", "dx-", "--no-check")

@@ -100,13 +100,13 @@ def main() -> int:
         check("270" in row and "100" in row and "12,0×" in row and "2" in row,
               f"F-6: pdi: artefakty 270, kod 100 (src + tests), koszt 12,0× bazy, 2 commity: {row}")
         row = next((l for l in text.splitlines() if l.startswith("| talos |")), "")
-        check("1,75" in row and "8" in row and "tak" in row,
+        check("1,75" in row and "8" in row and "| yes |" in row,
               f"F-7: talos: koszt na punkt 14/8 = 1,75 USD, ocena 8, gotowy do merge: {row}")
-        check("Werdykt" in text and "talos" in text.split("Werdykt", 1)[1][:200],
+        check("Verdict" in text and "talos" in text.split("Verdict", 1)[1][:200],
               f"F-8: werdykt: najlepsza ocena wśród gotowych do merge, przy remisie tańszy: {text[-400:]}")
-        check("Pliki:" in text and "flows.json" in text, "F-9: raport deklaruje źródło danych (claims_check)")
+        check("Files:" in text and "flows.json" in text, "F-9: raport deklaruje źródło danych (claims_check)")
         r = run("report", str(mf), "--key", str(out / "key.json"), "--out", str(t / "bez.md"), cwd=t)
-        check(r.returncode == 0 and "bez oceny" in (t / "bez.md").read_text(),
+        check(r.returncode == 0 and "no score" in (t / "bez.md").read_text(),
               f"F-10: raport bez ocen pokazuje miary i „bez oceny”: {r.stdout}{r.stderr}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów porównania przepływów")
     return 1 if fails else 0

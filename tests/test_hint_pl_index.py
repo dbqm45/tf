@@ -52,7 +52,7 @@ def main() -> int:
         check(hpi.missing([skill]) == [], "HPI-4: po zapisie --check bez braków")
         (skill / hpi.INDEX).unlink()
         (skill / "SKILL.md").write_text(PL, encoding="utf-8")
-        check("niepotrzebny" in hpi.write(skill) and not (skill / hpi.INDEX).exists(),
+        check("no index needed" in hpi.write(skill) and not (skill / hpi.INDEX).exists(),
               "HPI-5: polski skill nie dostaje indeksu")
     hpi.ROOT = REPO
     r = subprocess.run([sys.executable, str(REPO / "tools" / "hint_pl_index.py"), "--all", "--check"],
