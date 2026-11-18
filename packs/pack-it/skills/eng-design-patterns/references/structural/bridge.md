@@ -1,43 +1,43 @@
-# Most (Bridge)
+# Bridge
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: strukturalne. Istota: rozdziel dwa **niezależne wymiary zmienności** na dwie hierarchie połączone kompozycją,
-zamiast mnożyć podklasy dla każdej kombinacji.
+Category: structural. The essence: separate two **independent dimensions of variation** into two hierarchies connected by composition,
+instead of multiplying subclasses for every combination.
 
 ## Problem
-Raporty (obłożenie, przychody, reklamacje) trzeba generować w kilku formatach (CSV, Markdown, PDF). Dziedziczenie daje
-`OccupancyCsvReport`, `OccupancyPdfReport`, `RevenueCsvReport`… — liczba klas to iloczyn raportów i formatów, a zmiana
-formatu CSV wymaga edycji w wielu klasach.
+Reports (occupancy, revenue, complaints) have to be generated in several formats (CSV, Markdown, PDF). Inheritance gives
+`OccupancyCsvReport`, `OccupancyPdfReport`, `RevenueCsvReport`… — the number of classes is the product of reports and formats, and changing
+the CSV format requires edits in many classes.
 
-## Rozwiązanie i uczestnicy
-- **Abstrakcja** — logika wysokiego poziomu (`Report`), trzyma referencję do implementacji.
-- **Rozszerzone abstrakcje** — warianty logiki (`OccupancyReport`, `RevenueReport`).
-- **Interfejs implementacji** — proste, prymitywne operacje (`heading()`, `row()`).
-- **Konkretne implementacje** — szczegóły technologii/platformy (`CsvWriter`, `MarkdownWriter`).
-- **Klient** — łączy parę abstrakcja + implementacja (zwykle w konstruktorze lub przez DI).
+## Solution and participants
+- **Abstraction** — the high-level logic (`Report`), holds a reference to the implementation.
+- **Refined abstractions** — variants of the logic (`OccupancyReport`, `RevenueReport`).
+- **Implementation interface** — simple, primitive operations (`heading()`, `row()`).
+- **Concrete implementations** — the details of the technology/platform (`CsvWriter`, `MarkdownWriter`).
+- **Client** — connects an abstraction + implementation pair (usually in the constructor or through DI).
 
-## Kiedy używać
-- Klasa rośnie w dwóch (lub więcej) kierunkach niezależnie: logika × platforma, dane × format, UI × system.
-- Monolityczną klasę obsługującą wiele wariantów technologii (np. kilka baz) trzeba podzielić.
-- Implementację trzeba wymieniać w runtime.
+## When to use
+- A class grows in two (or more) directions independently: logic × platform, data × format, UI × system.
+- A monolithic class supporting many technology variants (e.g. several databases) has to be split.
+- The implementation has to be swapped at runtime.
 
-## Koszty
-Więcej typów i pośredniości; przy spójnej, mało zmiennej klasie tylko zaciemnia kod.
+## Costs
+More types and indirection; with a cohesive, rarely changing class it only obscures the code.
 
-## Powiązania
-- **Adapter** — podobna struktura, ale reaktywny (łata niezgodność); Most jest decyzją projektową z góry.
-- **Strategia** / **Stan** — też kompozycja + delegacja, ale jeden wymienny algorytm/stan, nie dwie hierarchie.
-- **Fabryka abstrakcyjna** może tworzyć pasujące pary abstrakcja–implementacja.
-- Porty i adaptery w architekturze heksagonalnej to w praktyce most między domeną a infrastrukturą.
+## Relations
+- **Adapter** — a similar structure, but reactive (patches an incompatibility); a Bridge is a design decision made up front.
+- **Strategy** / **State** — also composition + delegation, but one interchangeable algorithm/state, not two hierarchies.
+- **Abstract Factory** can create matching abstraction–implementation pairs.
+- Ports and adapters in hexagonal architecture are in practice a bridge between the domain and the infrastructure.
 
-## Forma idiomatyczna w TS
-Implementacja jako `interface` (lub typ funkcyjny), abstrakcja jako klasa lub funkcja przyjmująca implementację.
-Często wystarczą **funkcje wyższego rzędu**: `renderOccupancy(writer, data)`.
+## Idiomatic form in TS
+The implementation as an `interface` (or a function type), the abstraction as a class or a function taking the implementation.
+Often **higher-order functions** are enough: `renderOccupancy(writer, data)`.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
-/** Implementacja: format wyjścia. */
+/** Implementation: the output format. */
 interface ReportWriter {
   heading(text: string): void;
   row(cells: readonly string[]): void;
@@ -70,7 +70,7 @@ class MarkdownWriter implements ReportWriter {
   }
 }
 
-/** Abstrakcja: co raportujemy. */
+/** Abstraction: what we report. */
 abstract class Report {
   protected readonly writer: ReportWriter;
   constructor(writer: ReportWriter) {
@@ -86,7 +86,7 @@ class OccupancyReport extends Report {
     this.#occupancy = occupancy;
   }
   render(): string {
-    this.writer.heading('Obłożenie sal');
+    this.writer.heading('Room occupancy');
     for (const [room, ratio] of this.#occupancy) this.writer.row([room, `${Math.round(ratio * 100)}%`]);
     return this.writer.result();
   }
@@ -99,8 +99,8 @@ class RevenueReport extends Report {
     this.#revenueCents = revenueCents;
   }
   render(): string {
-    this.writer.heading('Przychód');
-    this.writer.row(['razem', (this.#revenueCents / 100).toFixed(2)]);
+    this.writer.heading('Revenue');
+    this.writer.row(['total', (this.#revenueCents / 100).toFixed(2)]);
     return this.writer.result();
   }
 }
@@ -110,10 +110,10 @@ console.log(new OccupancyReport(new MarkdownWriter(), occupancy).render());
 console.log(new RevenueReport(new CsvWriter(), 1_250_000).render());
 ```
 
-## Kiedy NIE używać / pułapki
-- **Rośnie tylko jeden wymiar** — zwykła kompozycja lub jedna hierarchia wystarczy; nie buduj mostu „gdyby drugi
-  wymiar kiedyś się pojawił” (YAGNI — eng-design-principles).
-- Sygnał do zastosowania: nazwy klas będące iloczynem dwóch cech (`CsvOccupancy`, `PdfOccupancy`, `CsvRevenue`…)
-  i realnie rosnąca liczba kombinacji po obu stronach.
-- Interfejs implementacji ma być **niski** i stabilny; jeśli rośnie o metody pod konkretną abstrakcję, granica jest źle
-  wyznaczona.
+## When NOT to use / pitfalls
+- **Only one dimension grows** — ordinary composition or one hierarchy is enough; do not build a bridge "in case a second
+  dimension appears one day" (YAGNI — eng-design-principles).
+- The signal to apply it: class names that are the product of two traits (`CsvOccupancy`, `PdfOccupancy`, `CsvRevenue`…)
+  and a really growing number of combinations on both sides.
+- The implementation interface is to be **low-level** and stable; if it grows by methods for a specific abstraction, the boundary is drawn
+  badly.

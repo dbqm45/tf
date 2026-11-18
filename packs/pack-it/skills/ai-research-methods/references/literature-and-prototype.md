@@ -1,55 +1,55 @@
-# Literatura i droga od artykułu do prototypu
+# Literature and the path from a paper to a prototype
 
-## Szukanie i czytanie artykułu krytycznie
-1. **Zakres:** sformułuj pytanie i hasła; przejrzyj przeglądy (survey), potem prace często cytowane i najnowsze.
-   Zapisz zapytania, daty i kryteria włączenia, żeby przegląd dało się powtórzyć. Szukanie faktów w sieci:
+## Searching for and reading a paper critically
+1. **Scope:** formulate the question and search terms; go through surveys, then frequently cited and the newest papers.
+   Record the queries, dates and inclusion criteria so that the review can be repeated. Searching for facts on the web:
    **core-source-research**.
-2. **Preprint a praca recenzowana:** preprint nie przeszedł recenzji; sprawdź, czy wersja opublikowana się zmieniła.
-3. **Twierdzenie → dowód.** Wypisz główne twierdzenia i dla każdego: na jakich danych, jaka metryka, ile przebiegów,
-   jaki baseline. Pytania kontrolne:
-   - czy baseline był strojony tak samo starannie;
-   - czy raportowano rozrzut i istotność, czy jeden przebieg;
-   - czy zbiór testowy służył do wyboru; czy możliwa jest kontaminacja;
-   - czy poprawa wynika z metody, czy z większej mocy obliczeniowej lub danych;
-   - czy ablacje wskazują element odpowiedzialny za zysk;
-   - czy kod i dane są dostępne.
-4. **Przenaszalność:** czy nasze dane, skala i ograniczenia (opóźnienie, koszt) przypominają warunki z artykułu.
-5. **Replikacja:** przed wdrożeniem odtwórz kluczowy wynik na danych z artykułu (lub choć na jego małej wersji).
-   Nie udało się — to też wynik; zapisz różnice w konfiguracji.
-6. **Notatka:** jedna strona na artykuł: twierdzenie, dowód, wiarygodność (wysoka/średnia/niska) z powodem, pomysł na
-   użycie.
+2. **A preprint vs a peer-reviewed paper:** a preprint has not been peer-reviewed; check whether the published version changed.
+3. **Claim → evidence.** List the main claims and for each: on what data, what metric, how many runs,
+   what baseline. Control questions:
+   - was the baseline tuned just as carefully;
+   - were the spread and significance reported, or a single run;
+   - was the test set used for selection; is contamination possible;
+   - does the improvement come from the method, or from more compute or data;
+   - do the ablations point to the element responsible for the gain;
+   - are the code and the data available.
+4. **Transferability:** do our data, scale and constraints (latency, cost) resemble the conditions in the paper.
+5. **Replication:** before deployment, reproduce the key result on the paper's data (or at least on a small version of it).
+   It failed — that is also a result; record the differences in configuration.
+6. **Note:** one page per paper: the claim, the evidence, credibility (high/medium/low) with a reason, an idea for
+   use.
 
-## Projekty w domenach naukowych (biologia, chemia, medycyna, materiały)
-Gdy założenia projektu zależą od wiedzy naukowej spoza informatyki (np. degradacja ogniw, interakcje leków, dane
-kliniczne), przegląd literatury i analiza danych z baz naukowych to osobny krok przed modelem:
-1. **Narzędzie:** Claude Science (aplikacja desktopowa Anthropic, publiczna beta; literatura i ponad 60 baz
-   naukowych, odtwarzalne notatniki, recenzent cytowań i liczb w tle — strona produktu claude.com/product/claude-science,
-   dostęp 2026-11-08) prowadzi człowiek; agent fabryki nie ma do niego dostępu programowego. Bez niego: wyszukiwanie
-   wg **core-source-research** i bazy dziedzinowe przez ich API.
-2. **Do repozytorium wraca zapis dowodu, nie streszczenie rozmowy:** dla każdego ustalenia teza, źródło (DOI albo
-   adres, wersja preprintu lub artykułu, data dostępu), warunki (próba, metoda, zakres) i ścieżka do notatnika lub
-   skryptu, który odtwarza liczbę. Notatnik i dane pośrednie trafiają obok (np. katalog badań w dzienniku projektu, docs/project/02-domain/badania/),
-   duże dane — tylko opis, skąd je pobrać.
-3. **Sprawdzenie przed użyciem w projekcie:** liczby i daty w zapisie przez
-   `python3 .claude/skills/core-grounding/scripts/claims_check.py`, odwołania przez `grounding_check.py`; ustalenie
-   bez odtwarzalnego źródła ma status [niezweryfikowane] i nie wchodzi do wymagań ani do cech modelu.
-4. Decyzje medyczne, prawne i bezpieczeństwa z takich ustaleń zatwierdza ekspert dziedzinowy, nie agent.
+## Projects in scientific domains (biology, chemistry, medicine, materials)
+When the project's assumptions depend on scientific knowledge from outside computer science (e.g. cell degradation, drug interactions, clinical
+data), the literature review and the analysis of data from scientific databases are a separate step before the model:
+1. **Tool:** Claude Science (an Anthropic desktop application, public beta; literature and over 60 scientific
+   databases, reproducible notebooks, a background reviewer of citations and numbers — product page claude.com/product/claude-science,
+   accessed 2026-11-08) is run by a human; the factory agent has no programmatic access to it. Without it: search
+   per **core-source-research** and domain databases through their APIs.
+2. **What comes back to the repository is a record of the evidence, not a summary of the conversation:** for each finding, the thesis, the source (DOI or
+   address, the version of the preprint or paper, the access date), the conditions (sample, method, scope) and the path to the notebook or
+   script that reproduces the number. The notebook and the intermediate data go next to it (e.g. a research directory in the project record, docs/project/02-domain/badania/),
+   large data — only a description of where to get it from.
+3. **Check before use in the project:** numbers and dates in the record via
+   `python3 .claude/skills/core-grounding/scripts/claims_check.py`, references via `grounding_check.py`; a finding
+   without a reproducible source has the status [unverified] and does not go into the requirements or into the model's features.
+4. Medical, legal and safety decisions based on such findings are approved by a domain expert, not by the agent.
 
-## Z artykułu do prototypu produktowego
-1. Zacznij od decyzji produktowej i metryki zgodnej z nią, nie od metody.
-2. Porównaj metodę z baseline na **własnych** danych z podziałem odpowiadającym użyciu (czasowy/grupowy).
-3. Pilotaż małej skali, potem budżet na pełny przebieg (SKILL.md, krok 9).
-4. Sprawdź wymagania wdrożeniowe: opóźnienie, koszt na predykcję, pamięć (**ai-model-optimization**), zależność
-   od danych, które w produkcji nie istnieją lub są spóźnione.
-5. **Offline → online:** walidacja offline na danych historycznych; potem shadow (wynik liczony, nieużywany) i
-   A/B z metryką biznesową (**data-analysis**). Różnica offline↔online wynika z dryfu, pętli sprzężenia zwrotnego albo
-   metryki niezgodnej z celem — ustal, która, i zapisz.
-6. Przekazanie do produkcji: rejestr modeli, monitoring, progi wycofania (**ai-mlops**).
-7. Dostrajanie dużych modeli i wybór prompt/RAG/fine-tuning: **ai-fine-tuning**; ewaluacja funkcji LLM: **ai-evals**.
+## From a paper to a product prototype
+1. Start from the product decision and a metric aligned with it, not from the method.
+2. Compare the method with the baseline on **your own** data with a split corresponding to the use (temporal/group).
+3. A small-scale pilot, then a budget for the full run (SKILL.md, step 9).
+4. Check the deployment requirements: latency, cost per prediction, memory (**ai-model-optimization**), dependence
+   on data that does not exist in production or arrives late.
+5. **Offline → online:** offline validation on historical data; then shadow (the result computed, not used) and
+   A/B with a business metric (**data-analysis**). The offline↔online difference comes from drift, a feedback loop or
+   a metric not aligned with the goal — establish which one, and record it.
+6. Handover to production: the model registry, monitoring, rollback thresholds (**ai-mlops**).
+7. Fine-tuning large models and the choice of prompt/RAG/fine-tuning: **ai-fine-tuning**; evaluation of LLM features: **ai-evals**.
 
-## Przegląd etyczny danych
-- pochodzenie i licencja (czy wolno trenować, czy wolno komercyjnie), zgody i cel pierwotny;
-- dane osobowe i szczególne kategorie → **arch-privacy-compliance** (DPIA);
-- reprezentatywność: kogo brakuje w danych, wyniki per podgrupa, ryzyko szkody dla grup;
-- etykiety: kto je nadał, w jakich warunkach, zgodność oceniających;
-- zastosowanie wtórne i nadużycie: do czego wynik może posłużyć poza zamierzeniem.
+## Ethical review of the data
+- origin and licence (may it be used for training, may it be used commercially), consents and the original purpose;
+- personal data and special categories → **arch-privacy-compliance** (DPIA);
+- representativeness: who is missing from the data, results per subgroup, risk of harm to groups;
+- labels: who assigned them, under what conditions, inter-rater agreement;
+- secondary use and misuse: what the result may serve beyond the intention.

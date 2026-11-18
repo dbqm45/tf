@@ -1,41 +1,41 @@
-# Porażki RAG i wybór bazy wektorowej
+# RAG failures and choosing a vector database
 
-## Spis treści
-- Objaw → przyczyna → poprawka
-- Baza wektorowa: kryteria i kandydaci
-- Kolejność diagnozy
+## Contents
+- Symptom → cause → fix
+- Vector database: criteria and candidates
+- Diagnosis order
 
-## Objaw → przyczyna → poprawka
-| Objaw | Najczęstsza przyczyna | Poprawka |
+## Symptom → cause → fix
+| Symptom | Most common cause | Fix |
 |---|---|---|
-| właściwy fragment nie jest w top-k | chunk bez kontekstu; słaby model; brak BM25 | contextual retrieval, hybryda, test modeli na zbiorze złotym |
-| fragment jest w top-50, ale nie w top-5 | brak rerankingu | reranker na 50–150 kandydatach |
-| odpowiedź ignoruje dobry fragment | za dużo szumu w kontekście; fragment w środku | mniej fragmentów, lepsza kolejność, cytaty wymuszone |
-| odpowiedź nieprawdziwa, brak źródła | prompt dopuszcza wiedzę ogólną | „tylko z fragmentów”, „nie wiem”, weryfikacja cytatu |
-| stare dane w odpowiedzi | brak reindeksacji, brak wersji | hash treści, data w metadanych, filtr aktualności |
-| tabela rozbita, liczby bez nagłówków | parser spłaszcza tabele | parser strukturalny, wiersz z nagłówkiem w chunku |
-| ten sam fragment 5 razy | duplikaty wersji, zakładka | deduplikacja po hashu, jedna wersja w indeksie |
-| kody i numery nie znajdowane | tylko wektory | BM25 w hybrydzie |
-| selektywny filtr zwraca mało wyników (pgvector) | filtr po skanie indeksu | iterative scan, partycje, albo baza z filtrem w indeksie |
-| użytkownik widzi cudzy fragment | filtr uprawnień po wyszukaniu lub w prompcie | filtr w zapytaniu do indeksu, test z kontem bez uprawnień |
-| odpowiedź wykonuje polecenie z dokumentu | fragment traktowany jak instrukcja | dane, nie polecenia; brak narzędzi sterowanych treścią |
+| the right fragment is not in the top-k | a chunk without context; a weak model; no BM25 | contextual retrieval, hybrid, testing models on the golden set |
+| the fragment is in the top-50, but not in the top-5 | no reranking | a reranker on 50–150 candidates |
+| the answer ignores a good fragment | too much noise in the context; the fragment in the middle | fewer fragments, a better order, enforced citations |
+| an untrue answer, no source | the prompt allows general knowledge | "only from the fragments", "I don't know", quote verification |
+| stale data in the answer | no reindexing, no version | a content hash, the date in the metadata, a freshness filter |
+| a broken table, numbers without headers | the parser flattens tables | a structural parser, the row with the header in the chunk |
+| the same fragment 5 times | duplicate versions, overlap | deduplication by hash, one version in the index |
+| codes and numbers not found | vectors only | BM25 in a hybrid |
+| a selective filter returns few results (pgvector) | the filter after the index scan | iterative scan, partitions, or a database with the filter in the index |
+| a user sees someone else's fragment | the permission filter after retrieval or in the prompt | the filter in the query to the index, a test with an account without permissions |
+| the answer executes an instruction from a document | the fragment treated as an instruction | data, not instructions; no tools driven by the content |
 
-## Baza wektorowa: kryteria i kandydaci
-Kryteria w kolejności ważności: (1) skala i opóźnienie p95 przy filtrach, (2) filtrowanie metadanych w tym samym
-zapytaniu, (3) hybryda (BM25 plus wektory) bez sklejania dwóch systemów, (4) operacje i utrzymanie, (5) koszt,
-(6) integracja z posiadanym stosem. Wynik porównania zapisz jako macierz kryteriów (arch-tech-selection).
+## Vector database: criteria and candidates
+Criteria in order of importance: (1) scale and p95 latency with filters, (2) metadata filtering in the same
+query, (3) hybrid (BM25 plus vectors) without gluing two systems together, (4) operations and maintenance, (5) cost,
+(6) integration with the stack you have. Record the result of the comparison as a criteria matrix (arch-tech-selection).
 
-| Kandydat | Kiedy | Uwaga |
+| Candidate | When | Note |
 |---|---|---|
-| pgvector | PostgreSQL już jest, korpus do kilku milionów wektorów, transakcje z danymi | indeks HNSW lub IVFFlat; filtr po skanie przybliżonym; indeksy i plan: be-database |
-| Qdrant | filtrowanie po metadanych, średnia i duża skala | osobna usługa do utrzymania [niezweryfikowane — sprawdź bieżące funkcje hybrydy] |
-| Milvus | bardzo duża skala, wiele typów indeksów | najwięcej elementów do utrzymania [niezweryfikowane] |
-| OpenSearch | BM25 i wektory w jednym silniku, już używany do logów lub wyszukiwania | dobra hybryda leksykalna, polskie analizatory [niezweryfikowane] |
+| pgvector | PostgreSQL is already there, a corpus of up to a few million vectors, transactions with the data | an HNSW or IVFFlat index; the filter after the approximate scan; indexes and plan: be-database |
+| Qdrant | filtering by metadata, medium and large scale | a separate service to maintain [unverified — check the current hybrid features] |
+| Milvus | very large scale, many index types | the most elements to maintain [unverified] |
+| OpenSearch | BM25 and vectors in one engine, already used for logs or search | a good lexical hybrid, Polish analyzers [unverified] |
 
-Nie wybieraj po rankingach z internetu: wczytaj własne 100 tys. fragmentów, uruchom zbiór złoty i zmierz
-recall@k, opóźnienie i koszt.
+Do not choose by rankings from the internet: load your own 100 thousand fragments, run the golden set and measure
+recall@k, latency and cost.
 
-## Kolejność diagnozy
-1. Czy właściwy fragment w ogóle istnieje w indeksie (parser, ingestia)?
-2. Czy jest w top-50 (embedding, BM25, chunk)? 3. Czy jest w top-5 (reranking)? 4. Czy odpowiedź go używa (prompt,
-kontekst)? Naprawiasz pierwszy etap, który zawodzi.
+## Diagnosis order
+1. Does the right fragment exist in the index at all (the parser, ingestion)?
+2. Is it in the top-50 (the embedding, BM25, the chunk)? 3. Is it in the top-5 (reranking)? 4. Does the answer use it (the prompt,
+the context)? You fix the first stage that fails.

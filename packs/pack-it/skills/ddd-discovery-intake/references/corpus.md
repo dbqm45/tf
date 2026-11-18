@@ -1,27 +1,27 @@
-# Bank dowodów (`docs/project/02-domain/corpus.md`)
+# The evidence bank (`docs/project/02-domain/corpus.md`)
 
-## Zasady
-- **Domyślnie włączaj.** Bank ma być kompletny względem treści merytorycznej źródeł; wyłączaj tylko to, co nie niesie
-  informacji: przywitania, wypełniacze, potakiwanie, komentarze o samym spotkaniu, legendę tablicy.
-- **Dosłownie i w języku źródła** — bez parafrazy, bez tłumaczenia; skróty oznaczaj `[…]`.
-- **Każdy cytat ma lokalizację**, po której człowiek odnajdzie go w źródle.
-- Źródło już ustrukturyzowane (np. opis tablicy `*.es.md`) wchodzi do banku w całości, krok po kroku.
-- **Odpowiedzi człowieka** z rozmowy to pełnoprawne źródło (`user-answers.md`, lokalizacja = id pytania).
-- Cytat przegrany w rozstrzygniętej sprzeczności **zostaje** z dopiskiem `[superseded by C3 → D-007]`.
+## Rules
+- **Include by default.** The bank should be complete with respect to the substantive content of the sources; exclude only what carries no
+  information: greetings, fillers, agreeing noises, comments about the meeting itself, the board legend.
+- **Verbatim and in the source language** — no paraphrase, no translation; mark omissions with `[…]`.
+- **Every quote has a location** by which the human will find it in the source.
+- An already structured source (e.g. a board description `*.es.md`) goes into the bank in full, step by step.
+- **The human's answers** from the conversation are a full-fledged source (`user-answers.md`, location = the question id).
+- A quote that lost in a resolved contradiction **stays** with the note `[superseded by C3 → D-007]`.
 
-## Lokalizacje
-| Źródło | Format |
+## Locations
+| Source | Format |
 |---|---|
-| tekst z numerami linii | `L42-45` |
-| dokument z sekcjami | `§ nazwa sekcji` |
-| PDF | `s12 ¶3` |
-| opis tablicy | `tor: Klient / krok 7` |
-| JSON/YAML | ścieżka `$.orders[2].status` |
-| odpowiedź człowieka | `Q4` / `C2` |
+| text with line numbers | `L42-45` |
+| a document with sections | `§ section name` |
+| PDF | `p12 ¶3` |
+| a board description | `lane: Customer / step 7` |
+| JSON/YAML | the path `$.orders[2].status` |
+| the human's answer | `Q4` / `C2` |
 
-## Siła cytatu
-- **Mocny:** zawiera regułę, liczbę, próg, decyzję, krok procesu, problem („boli nas…”), termin lub odpowiedzialność („to robi dział X”).
-- **Wzmianka:** samo pojęcie bez treści. Wzmianka potwierdza istnienie pojęcia, ale **nie** liczy się do progu obszaru.
+## Quote strength
+- **Strong:** contains a rule, a number, a threshold, a decision, a process step, a problem ("what hurts us is…"), a deadline or a responsibility ("department X does that").
+- **Mention:** a bare term without content. A mention confirms that the term exists, but does **not** count towards the area threshold.
 
 ## Format
 ```markdown
@@ -30,15 +30,15 @@ artifact: corpus
 phase: domain
 …
 ---
-# Bank dowodów
-Źródła: 3 · cytatów: 87 · aktualizacja: 2026-09-27
+# Evidence bank
+Sources: 3 · quotes: 87 · updated: 2026-09-27
 
-## S1 — wywiad-z-prezesem.md (transkrypcja, pl)
-- **E1** > „Kierownik projektu sam wybiera ludzi, ale często nie wie, kto jest wolny.” — L12-13
-- **E2** > „Kara za opóźnienie to 2% wartości kontraktu za tydzień.” — L40 [mocny: liczba]
+## S1 — interview-with-the-ceo.md (transcript, en)
+- **E1** > "The project manager picks the people himself, but often does not know who is free." — L12-13
+- **E2** > "The penalty for a delay is 2% of the contract value per week." — L40 [strong: number]
 ```
 
-## Weryfikacja (tanio, bez LLM)
-Każdy cytat musi dać się odnaleźć w źródle — sprawdza to `python3 .claude/hooks/project_record.py evidence` (także progi obszarów). Brak → cytat usuń albo oznacz `[unverified]`
-i nie licz go do progów. Przy materiałach > ~150 KB twórz bank **per źródło w osobnych podagentach** i scalaj pliki —
-po kompresji kontekstu model potrafi „cytować” linie, których już nie widzi.
+## Verification (cheaply, without an LLM)
+Every quote must be findable in the source — `python3 .claude/hooks/project_record.py evidence` checks this (also the area thresholds). Missing → remove the quote or mark it `[unverified]`
+and do not count it towards the thresholds. With materials > ~150 KB build the bank **per source in separate subagents** and merge the files —
+after context compression the model can "quote" lines it no longer sees.

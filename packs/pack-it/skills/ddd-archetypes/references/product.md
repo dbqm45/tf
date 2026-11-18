@@ -1,157 +1,157 @@
-# Archetyp Product — mapper (typ, egzemplarz, partia, oferta)
+# The Product archetype — mapper (type, instance, batch, offer)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania o **tym, co firma sprzedaje, wydaje, wytwarza lub serwisuje** na model rozdzielający znaczenia, które
-kryją się pod jednym słowem „produkt”: definicję („iPhone 15 Pro 256 GB”), konkretną sztukę (telefon o numerze seryjnym X),
-partię (mleko z partii LOT-2024-001), usługę wykonaną w terminie (8,5 h konsultacji) i pozycję w ofercie („w promocji do końca
-miesiąca”). Efekt: nowy asortyment = nowe dane, nie nowe kolumny i podklasy.
-Protokół wspólny (pytania, „To zależy”, kontrola R/A/X, zapis): `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements about **what a company sells, issues, manufactures or services** into a model that separates the meanings
+hiding under the one word "product": the definition ("iPhone 15 Pro 256 GB"), a specific item (the phone with serial number X),
+a batch (milk from batch LOT-2024-001), a service performed on a date (8.5 h of consulting) and an offer item ("on promotion until the end
+of the month"). The effect: a new assortment = new data, not new columns and subclasses.
+The common protocol (questions, "It depends", the R/A/X check, recording): `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy biznes opisuje „rzeczy” (towary, usługi) cechami i musi odróżniać definicję od sztuk, partii
-lub oferty?* Tak → pasuje. Jedna usługa bez wariantów i bez śledzenia → wystarczy prosty słownik.
+## Fit test
+**The core question:** *does the business describe "things" (goods, services) by features and must it distinguish the definition from items, batches
+or the offer?* Yes → it fits. One service with no variants and no tracking → a simple dictionary is enough.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| katalog, kategorie, karta produktu, „wycofaj z oferty” | ✅ |
-| numery seryjne, VIN, IMEI, gwarancja na sztukę | ✅ |
-| partie, daty ważności, wycofanie partii | ✅ |
-| kolumny `color`, `size`, `year` dopisywane przy nowym asortymencie | ✅ cechy |
-| warianty (rozmiar × kolor), zestawy, pakiety | ✅ |
-| usługa z terminem i cyklem życia | ✅ usługa jako produkt |
-| „ile sztuk mamy na stanie?” | ❌ → Accounting (lub Availability) |
-| „ile kosztuje dla tego klienta?” | ❌ → Pricing |
-| „opcja A wyklucza opcję B” | ❌ → Configurator |
-| „czy ten egzemplarz jest wolny w terminie?” | ❌ → Availability |
-| usługa subskrypcyjna | ⚠️ graniczny |
+| catalog, categories, product card, "withdraw from the offer" | ✅ |
+| serial numbers, VIN, IMEI, a warranty per item | ✅ |
+| batches, expiry dates, batch recall | ✅ |
+| `color`, `size`, `year` columns added with a new assortment | ✅ features |
+| variants (size × colour), sets, bundles | ✅ |
+| a service with a date and a life cycle | ✅ a service as a product |
+| "how many items do we have in stock?" | ❌ → Accounting (or Availability) |
+| "how much does it cost for this customer?" | ❌ → Pricing |
+| "option A excludes option B" | ❌ → Configurator |
+| "is this instance free on a date?" | ❌ → Availability |
+| a subscription service | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Subskrypcja* — czy ma definicję z cechami, a sprzedawane są jej egzemplarze (okresy)? → Product + Accounting/umowa.
-  Tylko stan „aktywna/nieaktywna” → maszyna stanów.
-- *Wariant* — czy wariant ma własny kod (GTIN/SKU) i stan magazynowy? Tak → osobny ProductType w rodzinie. Nie, wybierany
-  przy zamówieniu → cechy egzemplarza / Configurator.
-- *Pakiet* — sprzedawany jako całość z własną ceną, ale wydawany ze składników? → pakiet z pozycjami (typ + ilość).
+**Borderline cases:**
+- *A subscription* — does it have a definition with features, and are its instances (periods) what is sold? → Product + Accounting/agreement.
+  Only the state "active/inactive" → a state machine.
+- *A variant* — does the variant have its own code (GTIN/SKU) and stock level? Yes → a separate ProductType in a family. No, chosen
+  at order time → instance features / Configurator.
+- *A bundle* — sold as a whole with its own price, but issued from components? → a bundle with items (type + quantity).
 
-## Model (istota)
-- **ProductType** — *czym coś jest*: identyfikator (ISBN, GTIN, UUID…), nazwa, opis, **preferowana jednostka** (Quantity),
-  **strategia śledzenia**, definicje cech.
-- **Strategia śledzenia** — „jak odróżniamy sztuki?”:
+## Model (the essence)
+- **ProductType** — *what something is*: an identifier (ISBN, GTIN, UUID…), a name, a description, **a preferred unit** (Quantity),
+  **a tracking strategy**, feature definitions.
+- **Tracking strategy** — "how do we tell items apart?":
 
-| Strategia | Przykład | Egzemplarz wymaga |
+| Strategy | Example | An instance requires |
 |---|---|---|
-| unikatowy | obraz, gitara konkretnego muzyka | identyfikatora jedynej sztuki |
-| śledzony indywidualnie | numer seryjny, VIN, IMEI; też umowa, przesyłka | numeru seryjnego |
-| śledzony partiami | żywność, leki (kontrola jakości, wycofania) | partii |
-| indywidualnie i partiami | telewizory: numer + partia do akcji serwisowych | obu |
-| identyczne / zamienne | śruby, mąka luzem | nic — egzemplarze opcjonalne |
+| unique | a painting, a specific musician's guitar | an identifier of the only item |
+| tracked individually | serial number, VIN, IMEI; also an agreement, a shipment | a serial number |
+| tracked by batches | food, medicines (quality control, recalls) | a batch |
+| individually and by batches | TVs: a number + a batch for service campaigns | both |
+| identical / interchangeable | screws, flour in bulk | nothing — instances optional |
 
-- **ProductInstance** — konkretny egzemplarz: numer seryjny i/lub partia (wg strategii), opcjonalnie ilość (3,2 kg, 8,5 h;
-  domyślnie 1 jednostka preferowana) i **wartości cech**.
-- **Cechy zamiast kolumn** — typ definiuje **typy cech** (nazwa, obowiązkowa/opcjonalna, ograniczenie: lista dozwolonych
-  wartości, zakres liczbowy/dziesiętny, zakres dat, wyrażenie regularne, bez ograniczeń); egzemplarz podaje wartości walidowane
-  względem definicji. Nowa cecha = dane. Cechy typu (stałe dla wszystkich sztuk) ≠ cechy egzemplarza (np. przebieg).
-- **Batch** — partia: typ, ilość w partii (w jednostce typu), daty produkcji / sprzedaży do / użycia do / najlepiej przed,
-  zakres numerów seryjnych, uwagi.
-- **Rodzina i warianty** — rodzina grupuje typy różniące się wartościami cech wyróżniających (rozmiar, kolor); każdy wariant
-  z własnym kodem to ProductType.
-- **Pakiet (zestaw)** — typ złożony z pozycji `typ + ilość`; wybór składników z regułami „jeden z / nie razem” → Configurator.
-- **CatalogEntry** — *że coś jest na sprzedaż*: nazwa marketingowa, opis sprzedażowy, kategorie nawigacji, **okres ważności
-  oferty**, metadane (wyróżnienia, odznaki). Ten sam typ może mieć kilka wpisów (kanały, nazwy, okresy). Wycofanie z oferty
-  = zamknięcie okresu, nie usunięcie typu.
-- **Usługa jako produkt** — egzemplarz usługi to wykonanie procesu: zaplanowana → w trakcie → zakończona / anulowana.
+- **ProductInstance** — a specific instance: a serial number and/or a batch (per the strategy), optionally a quantity (3.2 kg, 8.5 h;
+  by default 1 preferred unit) and **feature values**.
+- **Features instead of columns** — the type defines **feature types** (name, mandatory/optional, constraint: a list of allowed
+  values, a numeric/decimal range, a date range, a regular expression, no constraint); the instance gives values validated
+  against the definition. A new feature = data. Type features (constant for all items) ≠ instance features (e.g. mileage).
+- **Batch** — a batch: the type, the quantity in the batch (in the type's unit), the dates of production / sell by / use by / best before,
+  the range of serial numbers, notes.
+- **Family and variants** — a family groups types differing in the values of distinguishing features (size, colour); each variant
+  with its own code is a ProductType.
+- **Bundle (set)** — a type composed of `type + quantity` items; choosing components with "one of / not together" rules → Configurator.
+- **CatalogEntry** — *that something is for sale*: a marketing name, a sales description, navigation categories, **the offer's validity
+  period**, metadata (highlights, badges). The same type may have several entries (channels, names, periods). Withdrawing from the offer
+  = closing the period, not deleting the type.
+- **A service as a product** — a service instance is the execution of a process: scheduled → in progress → completed / cancelled.
 
-## Pytania
-**A — decyzje standardowe:**
-- Czy biznes rozróżnia konkretne sztuki? Po czym? Czy potrzebne są wycofania partii? (→ strategia śledzenia per typ)
-- Które cechy są obowiązkowe dla typu, a które opcjonalne? Jakie mają ograniczenia?
-- Czy „ten sam produkt” może być w ofercie kilka razy (różne nazwy, kanały, okresy)?
-- Co się dzieje z egzemplarzami, gdy typ zostaje wycofany z oferty?
+## Questions
+**A — standard decisions:**
+- Does the business distinguish specific items? By what? Are batch recalls needed? (→ the tracking strategy per type)
+- Which features are mandatory for the type and which optional? What constraints do they have?
+- Can "the same product" be in the offer several times (different names, channels, periods)?
+- What happens to instances when the type is withdrawn from the offer?
 
-**B — luki** (przykłady): czy strategia śledzenia może się zmienić dla typu w czasie? · wersjonowanie definicji typu (stare
-egzemplarze wg starej definicji)? · dziedziczenie cech w kategoriach? · jednostki zastępcze (sprzedaż na kg, magazyn w szt.)? ·
-zamienniki i następcy produktu? · kto zatwierdza nową kartę produktu (workflow poza archetypem)?
+**B — gaps** (examples): can the tracking strategy change for a type over time? · versioning of the type definition (old
+instances under the old definition)? · inheritance of features in categories? · substitute units (sold per kg, stocked in pcs)? ·
+substitutes and successors of a product? · who approves a new product card (a workflow outside the archetype)?
 
-## Kroki mapowania
-1. **Rozplącz „produkt”** — dla każdego użycia słowa w wymaganiach: typ, egzemplarz, partia, pozycja w ofercie czy wykonanie usługi?
-2. **Typy** — lista ProductType z identyfikatorem, preferowaną jednostką (Quantity) i strategią śledzenia.
-3. **Cechy** — kolumny/atrybuty z wymagań → typy cech z ograniczeniami; podział: cecha typu vs cecha egzemplarza.
-4. **Egzemplarze i partie** — co wymaga numeru, co partii; pola partii (daty, zakres numerów).
-5. **Warianty i pakiety** — rodziny, cechy wyróżniające, składy pakietów; reguły wyboru odeślij do Configurator.
-6. **Oferta** — wpisy katalogowe, kanały, okresy ważności, kategorie; cena → Pricing.
-7. **Usługi** — cykl życia egzemplarza usługi i jednostka zużycia (h, sesja).
+## Mapping steps
+1. **Untangle "product"** — for every use of the word in the requirements: a type, an instance, a batch, an offer item or a service execution?
+2. **Types** — a list of ProductTypes with an identifier, a preferred unit (Quantity) and a tracking strategy.
+3. **Features** — columns/attributes from the requirements → feature types with constraints; the split: a type feature vs an instance feature.
+4. **Instances and batches** — what requires a number, what a batch; batch fields (dates, the range of numbers).
+5. **Variants and bundles** — families, distinguishing features, bundle compositions; refer selection rules to the Configurator.
+6. **Offer** — catalog entries, channels, validity periods, categories; price → Pricing.
+7. **Services** — the life cycle of a service instance and the consumption unit (h, session).
 
-## Decyzje do kontroli (R/A/X)
-strategia śledzenia per typ · cechy obowiązkowe i ograniczenia · cecha typu vs egzemplarza · wariant jako typ vs cecha ·
-skład pakietów · wielokrotne wpisy w katalogu · los egzemplarzy po wycofaniu z oferty · jednostka preferowana ·
-wersjonowanie definicji · pola partii (które daty obowiązkowe).
+## Decisions to check (R/A/X)
+the tracking strategy per type · mandatory features and constraints · a type vs an instance feature · a variant as a type vs a feature ·
+bundle compositions · multiple catalog entries · the fate of instances after withdrawal from the offer · the preferred unit ·
+versioning of the definition · batch fields (which dates are mandatory).
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Product: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Typy produktów     — | Typ | Identyfikator | Jednostka | Strategia śledzenia | Rodzina |
-## Cechy              — | Typ | Cecha | Poziom (typ/egzemplarz) | Obowiązkowa | Ograniczenie |
-## Egzemplarze i partie — | Typ | Wymaga (numer/partia) | Ilość | Pola partii |
-## Pakiety            — | Pakiet | Składnik | Ilość | Reguła wyboru |
-## Oferta             — | Wpis | Typ | Kanał | Ważna od–do | Kategorie |
-## Usługi             — | Usługa | Jednostka | Cykl życia |
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), przypadki brzegowe, parametry polityk zmiennych
+# Product model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Product types      — | Type | Identifier | Unit | Tracking strategy | Family |
+## Features           — | Type | Feature | Level (type/instance) | Mandatory | Constraint |
+## Instances and batches — | Type | Requires (number/batch) | Quantity | Batch fields |
+## Bundles            — | Bundle | Component | Quantity | Selection rule |
+## Offer              — | Entry | Type | Channel | Valid from–to | Categories |
+## Services           — | Service | Unit | Life cycle |
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), edge cases, variable policy parameters
 ```
 
-## Wzorce i pułapki
-- Jedna klasa `Product` pod wszystko = worek flag i kolumn `color`, `size`, `year` dodawanych przy każdym asortymencie.
-- Typ ≠ oferta: usunięcie typu przy wycofaniu z oferty niszczy historię sprzedanych egzemplarzy.
-- Cena nie jest cechą produktu → Pricing; stan magazynowy nie jest polem typu → Accounting/Availability.
-- Ilości egzemplarzy i partii to Quantity (`quantity-money.md`), nie „goła” liczba.
-- **Poza archetypem:** kto może dodać produkt lub opublikować wpis — autoryzacja/workflow; archetyp waliduje tylko
-  strukturę (cechy vs definicje, numer vs strategia).
-- **Polityki zmienne jako parametry:** „leki: sprzedaż do 30 dni przed datą użycia” → partia dostaje gotowe `sprzedaż_do`.
-- **Kanał dystrybucji to osobny wymiar:** ten sam typ produktu bywa sprzedawany w kanałach (sklep, online, hurt,
-  partner) z innym asortymentem, opisem, ceną i dostępnością. Kanał nie jest cechą typu ani flagą `onlineOnly`:
-  wpis katalogowy łączy typ z kanałem i okresem, a cena per kanał to Pricing.
-- **PIM to nie Inventory:** PIM (informacja o produkcie: opisy, zdjęcia, cechy, tłumaczenia) odpowiada „co
-  sprzedajemy i jak to opisać”, Inventory odpowiada „ile mamy, gdzie i czy można to obiecać” (Availability,
-  Accounting). Inny właściciel, rytm zmian i reguły, więc osobne konteksty powiązane identyfikatorem typu.
-- **Poczekalnia importu:** dane z zewnątrz (feed dostawcy, plik, integracja) trafiają najpierw do strefy
-  poczekalni jako surowe rekordy ze statusem walidacji i dopasowania do istniejących typów. Do katalogu albo stanu
-  przechodzą dopiero po walidacji lub decyzji człowieka. Błędny import nie psuje wtedy stanu ani historii, a rekord
-  odrzucony ma powód.
+## Patterns and pitfalls
+- One `Product` class for everything = a bag of flags and `color`, `size`, `year` columns added with every assortment.
+- Type ≠ offer: deleting the type on withdrawal from the offer destroys the history of sold instances.
+- The price is not a product feature → Pricing; the stock level is not a type field → Accounting/Availability.
+- Quantities of instances and batches are Quantity (`quantity-money.md`), not a "bare" number.
+- **Outside the archetype:** who may add a product or publish an entry — authorization/workflow; the archetype validates only
+  the structure (features vs definitions, number vs strategy).
+- **Variable policies as parameters:** "medicines: sale until 30 days before the use-by date" → the batch gets a ready `sell_by`.
+- **The distribution channel is a separate dimension:** the same product type is sometimes sold in channels (shop, online, wholesale,
+  partner) with a different assortment, description, price and availability. The channel is neither a type feature nor an `onlineOnly` flag:
+  a catalog entry connects the type with a channel and a period, and the price per channel is Pricing.
+- **PIM is not Inventory:** PIM (product information: descriptions, photos, features, translations) answers "what
+  we sell and how to describe it", Inventory answers "how much we have, where, and whether it can be promised" (Availability,
+  Accounting). A different owner, rate of change and rules, so separate contexts connected by the type identifier.
+- **An import staging area:** data from outside (a supplier feed, a file, an integration) first goes to a staging
+  zone as raw records with a validation status and a match against existing types. They move to the catalog or the stock
+  only after validation or a human decision. A faulty import then does not break the state or the history, and a rejected
+  record has a reason.
 
-## Kontrola jakości
-- [ ] każde użycie słowa „produkt” przypisane do jednego pojęcia (typ/egzemplarz/partia/oferta/usługa)
-- [ ] każdy typ ma strategię śledzenia i preferowaną jednostkę
-- [ ] brak kolumn-cech: każda cecha ma definicję z ograniczeniem
-- [ ] wycofanie z oferty zamyka okres, nie usuwa typu
-- [ ] cena i stan odesłane do właściwych archetypów
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] every use of the word "product" assigned to one concept (type/instance/batch/offer/service)
+- [ ] every type has a tracking strategy and a preferred unit
+- [ ] no feature columns: every feature has a definition with a constraint
+- [ ] withdrawal from the offer closes the period, does not delete the type
+- [ ] price and stock referred to the appropriate archetypes
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Sklep rowerowy: rowery w rozmiarach S/M/L i kolorach, każdy z numerem ramy. Części (dętki, łańcuchy) sprzedajemy
-na sztuki, smar na ml. Pakiet »start«: rower + kask + lampka. Serwis rowerów na godziny. Niektóre modele sprzedajemy tylko online.”
+## Example (shortened)
+**Input:** "A bike shop: bikes in sizes S/M/L and colours, each with a frame number. Parts (inner tubes, chains) are sold
+per item, grease per ml. The "Start" bundle: a bike + a helmet + a lamp. Bike servicing by the hour. Some models are sold online only."
 
 ```markdown
-## Typy produktów
-| Rower Trek FX2 M czarny | GTIN | szt. | indywidualnie (nr ramy) | rodzina Trek FX2 |
-| Dętka 28" | GTIN | szt. | zamienne | — |
-| Smar do łańcucha | GTIN | ml | partiami (data ważności) | — |
-## Cechy
-| Rower | rozmiar ramy | typ | tak | {S, M, L} |
-| Rower | przebieg serwisowy | egzemplarz | nie | 0–100 000 km |
-## Pakiety — | Start | rower (dowolny z rodziny) + kask + lampka | 1+1+1 | wybór roweru → Configurator |
-## Usługi — | Serwis | h | zaplanowana → w trakcie → zakończona / anulowana |
-## Decyzje
-| wariant (rozmiar × kolor) jako osobny typ | R: własny GTIN |
-| kanały sprzedaży | A: „To zależy” od modelu → parametr `kanały` na CatalogEntry |
-| smar śledzony partiami | X → zapytano → A: tak (wycofania) |
-## Niezmapowane pojęcia — ceny i rabat pakietu (→ Pricing), stan magazynu (→ Accounting)
+## Product types
+| Bike Trek FX2 M black | GTIN | pcs | individually (frame no.) | family Trek FX2 |
+| Inner tube 28" | GTIN | pcs | interchangeable | — |
+| Chain grease | GTIN | ml | by batches (expiry date) | — |
+## Features
+| Bike | frame size | type | yes | {S, M, L} |
+| Bike | service mileage | instance | no | 0–100,000 km |
+## Bundles — | Start | bike (any from the family) + helmet + lamp | 1+1+1 | bike choice → Configurator |
+## Services — | Servicing | h | scheduled → in progress → completed / cancelled |
+## Decisions
+| variant (size × colour) as a separate type | R: its own GTIN |
+| sales channels | A: "It depends" on the model → parameter `channels` on CatalogEntry |
+| grease tracked by batches | X → asked → A: yes (recalls) |
+## Unmapped concepts — prices and the bundle discount (→ Pricing), the stock level (→ Accounting)
 ```
 
-## Źródła
-- J. Arlow, I. Neustadt, *Enterprise Patterns and MDA*, Addison-Wesley, ISBN 9780321112309 (rok: źródła podają 2003
-  lub 2004) — archetypy Product i Inventory (według spisu treści; treści rozdziałów nie weryfikowano).
-- Kanał dystrybucji, PIM a Inventory i poczekalnia importu opisano własnymi słowami na podstawie programu szkolenia
-  „DDD — zaawansowane techniki modelowania i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21);
-  reguły to wnioski modelowe fabryki.
+## Sources
+- J. Arlow, I. Neustadt, *Enterprise Patterns and MDA*, Addison-Wesley, ISBN 9780321112309 (year: the sources give 2003
+  or 2004) — the Product and Inventory archetypes (according to the table of contents; the content of the chapters was not verified).
+- The distribution channel, PIM vs Inventory and the import staging area are described in our own words based on the programme of the training
+  "DDD — zaawansowane techniki modelowania i archetypy" (DDD — advanced modelling techniques and archetypes; Bottega IT Minds, material from a human, 2026-10-21);
+  the rules are the factory's modelling conclusions.

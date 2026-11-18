@@ -1,88 +1,88 @@
 ---
 name: eng-design-principles
-description: Użyj przy decyzjach i review — KISS, YAGNI, DRY, SOLID, Demeter, kompozycja, konflikty zasad.
+description: Use for design decisions and review — KISS, YAGNI, DRY, SOLID, Demeter, composition, conflicts between principles.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy każdej decyzji projektowej i przeglądzie kodu — KISS, YAGNI, DRY (i kiedy go nie stosować), SOLID, separacja odpowiedzialności, prawo Demeter, tell-don't-ask, kompozycja zamiast dziedziczenia, zasady komponentów (REP/CCP/CRP, ADP/SDP/SAP), fail fast, zasada najmniejszego zaskoczenia — oraz rozstrzyganie konfliktów między nimi. Nie do stylu nazw i funkcji (eng-clean-code)."
+  catalog: "Use for every design decision and code review — KISS, YAGNI, DRY (and when not to apply it), SOLID, separation of concerns, the Law of Demeter, tell-don't-ask, composition over inheritance, component principles (REP/CCP/CRP, ADP/SDP/SAP), fail fast, the principle of least surprise — and resolving conflicts between them. Not for the style of names and functions (eng-clean-code)."
 ---
 
-# Zasady projektowe
+# Design principles
 
-Zasady to **heurystyki, nie prawa**. Służą do wyboru prostszego z dwóch rozwiązań i do uzasadniania uwag w review.
-Zawsze nazywaj zasadę i konkretny koszt, którego unikamy („YAGNI: ta abstrakcja ma jedną implementację i nie ma planu drugiej”).
+Principles are **heuristics, not laws**. They serve to choose the simpler of two solutions and to justify comments in a review.
+Always name the principle and the concrete cost we avoid ("YAGNI: this abstraction has one implementation and no plan for a second").
 
-## Zasady i jak je stosować
-| Zasada | Pytanie kontrolne | Sygnał naruszenia |
+## Principles and how to apply them
+| Principle | Check question | Violation signal |
 |---|---|---|
-| **KISS** — najprostsze rozwiązanie, które działa | Czy nowa osoba zrozumie to w 5 minut? | warstwy „na przyszłość”, generyczne frameworki dla jednego przypadku |
-| **YAGNI** — nie buduj, zanim nie jest potrzebne | Czy jest wymaganie *teraz*? | parametry i interfejsy bez użycia, konfigurowalność, o którą nikt nie prosił |
-| **DRY** — jedna wiedza, jedno miejsce | Czy to *ta sama wiedza biznesowa*, czy przypadkowo podobny kod? | reguła biznesowa skopiowana w 3 miejsca (np. rabat w UI i w serwisie) |
-| **AHA / reguła trzech** — unikaj pochopnych abstrakcji | Czy widzę trzeci przypadek? | abstrakcja z flagami `if (typeA)` wewnątrz |
-| **S**ingle Responsibility | Ile jest powodów do zmiany tej klasy/modułu? | zmiany z różnych działów trafiają do jednego pliku |
-| **O**pen/Closed | Czy nowy wariant wymaga edycji istniejącego kodu? | `switch` po typie powtarzany w wielu miejscach → polityka/warianty |
-| **L**iskov | Czy podtyp może zastąpić typ bez niespodzianek? | podklasa rzuca „not supported” |
-| **I**nterface Segregation | Czy klient zależy od metod, których nie używa? | „tłuste” interfejsy serwisów |
-| **D**ependency Inversion | Czy domena zależy od infrastruktury? | import frameworka/ORM w modelu domeny → port + adapter |
-| **Separacja odpowiedzialności** | Czy UI, logika i dostęp do danych są rozdzielone? | zapytania HTTP/SQL w komponentach lub encjach |
-| **Prawo Demeter** | Czy rozmawiam tylko z bezpośrednimi współpracownikami? | `a.getB().getC().doX()` |
-| **Tell, don't ask** | Czy wyciągam dane z obiektu, żeby podjąć decyzję, którą mógłby podjąć sam? | `if (konto.getSaldo() >= kwota) konto.setSaldo(…)` zamiast `konto.obciąz(kwota)`; ale zapytania (gettery) do odczytu i prezentacji są w porządku — reguła nie nakazuje usuwać wszystkich getterów (Fowler) |
-| **Zasada Hollywood** („nie dzwoń do nas, my zadzwonimy”) | Kto steruje przepływem: kod wysokiego poziomu czy szczegół? | moduł niskiego poziomu odpytuje lub wywołuje kod nadrzędny; rozwiązanie: odwrócenie sterowania (DI, zdarzenia, metoda szablonowa, haki cyklu życia frameworka) |
-| **Hermetyzuj to, co się zmienia** | Która część zmienia się częściej niż reszta? | zmienny fragment (taryfa, format, dostawca) rozlany po wielu klasach → za interfejsem; tylko gdy zmienność jest realna (YAGNI) |
-| **Kompozycja > dziedziczenie** | Czy dziedziczę zachowanie, czy tylko kod? | głębokie hierarchie, klasy bazowe z `protected` stanem |
-| **Fail fast** | Czy błąd ujawnia się najbliżej przyczyny? | walidacja „gdzieś później”, ciche wartości domyślne |
-| **Najmniejsze zaskoczenie** | Czy nazwa i zachowanie się zgadzają? | `get…()` ze skutkami ubocznymi |
-| **Reguła skauta** | Czy zostawiam kod trochę lepszym? | ale: bez refaktoru „przy okazji” w tym samym commicie co funkcja |
+| **KISS** — the simplest solution that works | Will a new person understand this in 5 minutes? | layers "for the future", generic frameworks for one case |
+| **YAGNI** — do not build it before it is needed | Is there a requirement *now*? | unused parameters and interfaces, configurability nobody asked for |
+| **DRY** — one piece of knowledge, one place | Is this *the same business knowledge*, or accidentally similar code? | a business rule copied to 3 places (e.g. a discount in the UI and in the service) |
+| **AHA / rule of three** — avoid hasty abstractions | Do I see a third case? | an abstraction with `if (typeA)` flags inside |
+| **S**ingle Responsibility | How many reasons to change does this class/module have? | changes from different departments land in one file |
+| **O**pen/Closed | Does a new variant require editing existing code? | a `switch` on type repeated in many places → a policy/variants |
+| **L**iskov | Can a subtype replace the type without surprises? | a subclass throws "not supported" |
+| **I**nterface Segregation | Does a client depend on methods it does not use? | "fat" service interfaces |
+| **D**ependency Inversion | Does the domain depend on infrastructure? | a framework/ORM import in the domain model → a port + an adapter |
+| **Separation of concerns** | Are the UI, the logic and data access separated? | HTTP/SQL queries in components or entities |
+| **Law of Demeter** | Do I talk only to direct collaborators? | `a.getB().getC().doX()` |
+| **Tell, don't ask** | Do I pull data out of an object to make a decision it could make itself? | `if (account.getBalance() >= amount) account.setBalance(…)` instead of `account.debit(amount)`; but queries (getters) for reading and presentation are fine — the rule does not require removing all getters (Fowler) |
+| **Hollywood principle** ("don't call us, we'll call you") | Who controls the flow: high-level code or a detail? | a low-level module polls or calls the higher-level code; solution: inversion of control (DI, events, template method, framework lifecycle hooks) |
+| **Encapsulate what varies** | Which part changes more often than the rest? | a variable fragment (a tariff, a format, a provider) spread over many classes → behind an interface; only when the variability is real (YAGNI) |
+| **Composition > inheritance** | Do I inherit behaviour, or only code? | deep hierarchies, base classes with `protected` state |
+| **Fail fast** | Does the error show up closest to its cause? | validation "somewhere later", silent default values |
+| **Least surprise** | Do the name and the behaviour match? | `get…()` with side effects |
+| **Boy scout rule** | Do I leave the code a bit better? | but: no refactoring "by the way" in the same commit as the feature |
 
-Poziom komponentów (biblioteki, pakiety): zasady REP/CCP/CRP i ADP/SDP/SAP, metryki stabilności, polityka i szczegół,
-framework na dystans, struktura krzycząca domeną, granice — `references/components-and-boundaries.md`.
+Component level (libraries, packages): the REP/CCP/CRP and ADP/SDP/SAP principles, stability metrics, policy and detail,
+the framework at a distance, a structure that screams the domain, boundaries — `references/components-and-boundaries.md`.
 
-## Gdy zasady się kłócą
-- **KISS/YAGNI > DRY** przy przypadkowym podobieństwie kodu — duplikacja jest tańsza niż zła abstrakcja.
-- **DRY > KISS** dla **wiedzy biznesowej** (reguły, ceny, uprawnienia) — jedno źródło prawdy, nawet kosztem warstwy.
-- **SOLID w granicy modułu, KISS wewnątrz** — interfejsy i odwrócenie zależności na krawędziach, proste funkcje w środku.
-- Konwencje istniejącego projektu mają pierwszeństwo przed „ładniejszym” wzorcem — odstępstwo proponuj osobno.
-- Przy remisie wybierz rozwiązanie **łatwiejsze do usunięcia** (odwracalność).
+## When principles conflict
+- **KISS/YAGNI > DRY** for accidental similarity of code — duplication is cheaper than a wrong abstraction.
+- **DRY > KISS** for **business knowledge** (rules, prices, permissions) — one source of truth, even at the cost of a layer.
+- **SOLID at the module boundary, KISS inside** — interfaces and dependency inversion at the edges, simple functions in the middle.
+- The conventions of the existing project take precedence over a "nicer" pattern — propose a deviation separately.
+- On a tie choose the solution that is **easier to remove** (reversibility).
 
-## Drabina minimalizmu (zanim dopiszesz kod)
-Zrozum przepływ i wszystkich wywołujących (grep), potem zatrzymaj się na pierwszym szczeblu, który wystarcza:
-1. Czy to w ogóle potrzebne teraz? (YAGNI)
-2. Czy już jest w repozytorium?
-3. Czy robi to biblioteka standardowa (JDK, `Array`/`Intl`/`structuredClone`)?
-4. Czy robi to platforma lub framework (Angular: signals, `HttpClient`, formularze, pipe'y; Spring)?
-5. Czy robi to zależność, którą już mamy?
-6. Czy wystarczy jedna linia?
-7. Dopiero teraz — najmniejszy kod, który działa.
-- Błąd naprawiasz u źródła (we wspólnej funkcji), nie w każdym wywołującym.
-- Zakazane bez drugiego przypadku: interfejs z jedną implementacją, fabryka jednego produktu, konfiguracja dla stałej,
-  „rusztowanie na później”. Usunięcie jest lepsze niż dopisanie.
-- **Nigdy nie upraszczasz kosztem:** walidacji na granicy zaufania, obsługi błędów grożących utratą danych,
-  bezpieczeństwa, dostępności ani tego, o co człowiek wprost prosił. Nietrywialna logika zostawia co najmniej jeden test.
-- Świadomy skrót znakujesz komentarzem `debt: <ograniczenie>, <kiedy wrócić>` (zbiera go eng-tech-debt-audit).
-- W raporcie po kodzie najwyżej 3 linie „pominąłem X, dodać gdy Y”.
-- Przegląd pod kątem nadmiaru: jedna linia na uwagę `L<linia>: <usuń|stdlib|platforma|yagni|skróć> <co> → <czym zastąpić>`,
-  na końcu bilans linii; poprawność i bezpieczeństwo oceniasz osobno.
-- **Same reguły w tekście prawie nie działają** na agenta (wklejone zasady i hasło „krótko” w pomiarze F. Khana dały
-  kod niemal tej samej długości co bez nich). Efekt dają: drabina powyżej, jednorazowe zatrzymanie pierwszego
-  „gotowe”, gdy dodano kod bez żadnego sprawdzenia, i przegląd nadmiaru po zakończeniu. Przegląd nadmiaru tnie
-  strukturę; **cięcie zabezpieczenia** (zapytanie z parametrami, porównanie w stałym czasie, escapowanie, odrzucenie
-  wejścia, sprawdzenie wygaśnięcia, tekst alternatywny) wymaga osobnego uzasadnienia. Regułę dla agenta zostawiasz,
-  gdy ablacja pokazuje korzyść; remis znaczy, że nie wchodzi (F. Khan, „Fixing Over-Engineering in LLM Coding
-  Agents”, 2026-10-12, liczby [niezweryfikowane]).
-Inspiracja: [ponytail](https://github.com/DietrichGebert/ponytail) — opisane własnymi słowami, bez jego stałych hooków.
+## The minimalism ladder (before you add code)
+Understand the flow and all callers (grep), then stop at the first rung that is enough:
+1. Is it needed now at all? (YAGNI)
+2. Is it already in the repository?
+3. Does the standard library do it (JDK, `Array`/`Intl`/`structuredClone`)?
+4. Does the platform or framework do it (Angular: signals, `HttpClient`, forms, pipes; Spring)?
+5. Does a dependency we already have do it?
+6. Is one line enough?
+7. Only now — the smallest code that works.
+- You fix a bug at the source (in the shared function), not in every caller.
+- Forbidden without a second case: an interface with one implementation, a factory of one product, configuration for a constant,
+  "scaffolding for later". Removing is better than adding.
+- **You never simplify at the expense of:** validation at the trust boundary, handling of errors that risk data loss,
+  security, accessibility or what the human explicitly asked for. Non-trivial logic leaves at least one test.
+- You mark a deliberate shortcut with a comment `debt: <limitation>, <when to come back>` (eng-tech-debt-audit collects it).
+- In the report after the code at most 3 lines "I skipped X, add it when Y".
+- A review for excess: one line per comment `L<line>: <remove|stdlib|platform|yagni|shorten> <what> → <what to replace it with>`,
+  a line balance at the end; you assess correctness and security separately.
+- **Rules in text alone hardly work** on an agent (pasted principles and the slogan "be brief" in F. Khan's measurement gave
+  code of almost the same length as without them). What has an effect: the ladder above, a one-time stop of the first
+  "done" when code was added without any check, and a review for excess after finishing. The review for excess cuts
+  structure; **cutting a safeguard** (a parameterized query, a constant-time comparison, escaping, rejecting
+  input, an expiry check, alternative text) requires a separate justification. You keep a rule for the agent
+  when an ablation shows a benefit; a tie means it does not go in (F. Khan, "Fixing Over-Engineering in LLM Coding
+  Agents", 2026-10-12, numbers [unverified]).
+Inspiration: [ponytail](https://github.com/DietrichGebert/ponytail) — described in our own words, without its fixed hooks.
 
-## W review
-Uwaga = zasada + konkretny problem + propozycja. Bez „bo tak jest ładniej”. Uwagi stylistyczne automatyzuj (linter, formatter).
+## In review
+A comment = a principle + a concrete problem + a proposal. No "because it is nicer". Automate stylistic comments (linter, formatter).
 
-Konkretny kształt rozwiązania (wzorce GoF, ich lżejsze formy i kiedy ich NIE używać).
+The concrete shape of the solution (GoF patterns, their lighter forms and when NOT to use them).
 
-## Przykład
-**Sytuacja:** review PR eksportu do CSV: interfejs `ReportExporter`, `ExporterFactory`, jedna implementacja, własne
-formatowanie dat.
-**Wynik:**
+## Example
+**Situation:** a review of a PR for export to CSV: a `ReportExporter` interface, an `ExporterFactory`, one implementation, its own
+date formatting.
+**Result:**
 ```text
-L12: yagni interfejs ReportExporter (1 implementacja) → funkcja exportCsv(rows)
-L31: usuń ExporterFactory → bezpośrednie wywołanie
+L12: yagni interface ReportExporter (1 implementation) → function exportCsv(rows)
+L31: remove ExporterFactory → a direct call
 L58: stdlib formatDate() → Intl.DateTimeFormat("pl-PL")
-Bilans: −96 / +18 linii. Walidacja wierszy zostaje — granica zaufania.
+Balance: −96 / +18 lines. Row validation stays — trust boundary.
 ```
-Więcej przykładów: `references/examples.md`.
+More examples: `references/examples.md`.

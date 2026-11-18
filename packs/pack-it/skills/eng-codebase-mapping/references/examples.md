@@ -1,54 +1,54 @@
-# Przykłady mapy kodu
+# Code map examples
 
-## 1. Mapa nieznanego repozytorium Nx
-**Sytuacja:** „Dostałem repo `shop` (Nx, Angular + NestJS). Gdzie zacząć czytać i co jest rdzeniem?”
+## 1. A map of an unfamiliar Nx repository
+**Situation:** "I got the `shop` repo (Nx, Angular + NestJS). Where should I start reading and what is the core?"
 
-**Jak:**
-1. **Inwentarz:** 3 projekty, 84 pliki TS, ok. 9 tys. linii — poniżej ~100 plików w zakresie, więc bez uzgadniania zakresu.
-2. **Graf z narzędzi:** `nx graph --file=graph.json` dla projektów, `madge --json apps/api/src` i `madge --circular` dla plików.
-3. **Punkty wejścia** wg punktacji (nazwa +3, korzeń/poziom niżej +1, górne 10% importów wychodzących +1, dolne 25%
-   przychodzących +1).
-4. **Warstwy i kierunek:** kontrolery → usługi → repozytoria; strzałka pod prąd to ustalenie.
-5. **Węzły centralne** po odfiltrowaniu barreli `index.ts`; **cykle** wypisane; krawędzie z etykietą pewności.
-6. **Zapis:** `docs/project/04-architecture/codebase-map.md`, data i commit `a1b2c3d`.
+**How:**
+1. **Inventory:** 3 projects, 84 TS files, about 9 thousand lines — below ~100 files in scope, so no scope agreement needed.
+2. **Graph from tools:** `nx graph --file=graph.json` for projects, `madge --json apps/api/src` and `madge --circular` for files.
+3. **Entry points** by score (name +3, root/one level lower +1, top 10% of outgoing imports +1, bottom 25% of
+   incoming +1).
+4. **Layers and direction:** controllers → services → repositories; an upstream arrow is a finding.
+5. **Central nodes** after filtering out `index.ts` barrels; **cycles** listed; edges with a confidence label.
+6. **Write-up:** `docs/project/04-architecture/codebase-map.md`, date and commit `a1b2c3d`.
 
-**Wynik** (fragment mapy):
+**Result** (a fragment of the map):
 
-| Kandydat na punkt wejścia | Nazwa | Poziom | Wychodzące | Przychodzące | Suma |
+| Entry point candidate | Name | Level | Outgoing | Incoming | Total |
 |---|---|---|---|---|---|
 | `apps/api/src/main.ts` | +3 | +1 | +1 | +1 | **6** |
 | `apps/web/src/app/app.config.ts` | +3 | +1 | +1 | +1 | **6** |
 | `apps/web/src/app/app.routes.ts` | +3 | +1 | 0 | 0 | 4 |
 | `libs/orders/src/order.service.ts` | 0 | 0 | +1 | 0 | 1 |
 
-Warstwy (API): `orders/*.controller.ts` → `orders/order.service.ts` → `orders/order.repository.ts` → `libs/db`.
-Ustalenie: `libs/db/src/audit.ts` importuje `order.service.ts` — strzałka pod prąd, tworzy cykl
-`order.service.ts → order.repository.ts → audit.ts → order.service.ts` (WYCIĄGNIĘTE, madge).
-Węzeł centralny: `order.service.ts` (23 połączenia) — tu zmiana ma największy zasięg.
-Krawędź `PaymentsModule → StripeGateway` przez token DI: WYWNIOSKOWANE (z konfiguracji modułu, nie z importu).
+Layers (API): `orders/*.controller.ts` → `orders/order.service.ts` → `orders/order.repository.ts` → `libs/db`.
+Finding: `libs/db/src/audit.ts` imports `order.service.ts` — an upstream arrow, it creates the cycle
+`order.service.ts → order.repository.ts → audit.ts → order.service.ts` (EXTRACTED, madge).
+Central node: `order.service.ts` (23 connections) — here a change has the widest reach.
+The edge `PaymentsModule → StripeGateway` through a DI token: INFERRED (from the module configuration, not from an import).
 
-Trasa czytania (fragment, 7 kroków):
-1. `apps/api/src/main.ts` + `app.module.ts` — jak startuje API i jakie moduły ładuje.
-2. `orders/orders.controller.ts` — endpointy, czyli co system robi dla klienta.
-3. `order.service.ts` + `order.repository.ts` — rdzeń reguł zamówienia i zapis; najwięcej połączeń.
-4. `libs/db/src/audit.ts` — przyczyna cyklu, zanim cokolwiek zmienisz w zamówieniach.
+Reading route (fragment, 7 steps):
+1. `apps/api/src/main.ts` + `app.module.ts` — how the API starts and which modules it loads.
+2. `orders/orders.controller.ts` — the endpoints, i.e. what the system does for the client.
+3. `order.service.ts` + `order.repository.ts` — the core of the order rules and persistence; the most connections.
+4. `libs/db/src/audit.ts` — the cause of the cycle, before you change anything in orders.
 
-## 2. Wpływ diffu do opisu PR
-**Sytuacja:** „Oceń wpływ mojej gałęzi przed review — zmieniłem liczenie rabatu”.
+## 2. Diff impact for a PR description
+**Situation:** "Assess the impact of my branch before review — I changed how the discount is calculated."
 
-**Jak:**
-1. Zmienione pliki: `git diff --name-only main...HEAD` → 3 pliki.
-2. Świeżość mapy: `git diff --name-only a1b2c3d HEAD -- libs/pricing` pokazuje tylko 3 pliki tej gałęzi, więc mapa
-   `libs/pricing` jest aktualna; w Nx dodatkowo `nx show projects --affected` → `pricing`, `api`, `web`.
-3. Dla każdego pliku 1 krok w górę i 1 w dół, dotknięte warstwy.
-4. Ryzyko ze złożoności, krawędzi między warstwami i zasięgu.
+**How:**
+1. Changed files: `git diff --name-only main...HEAD` → 3 files.
+2. Map freshness: `git diff --name-only a1b2c3d HEAD -- libs/pricing` shows only the 3 files of this branch, so the map of
+   `libs/pricing` is current; in Nx additionally `nx show projects --affected` → `pricing`, `api`, `web`.
+3. For each file 1 step up and 1 down, the affected layers.
+4. Risk from complexity, edges between layers and reach.
 
-**Wynik** (do opisu PR):
+**Result** (for the PR description):
 
-| Plik | Kto go używa (↑) | Czego używa (↓) | Warstwy | Ryzyko |
+| File | Who uses it (↑) | What it uses (↓) | Layers | Risk |
 |---|---|---|---|---|
-| `libs/pricing/src/discount.ts` | `order.service.ts`, `cart.store.ts` | `money.ts` | usługi, UI | **wysokie** — 2 aplikacje |
-| `libs/pricing/src/money.ts` | `discount.ts`, `invoice.ts` | — | narzędzia | średnie — fundament |
-| `libs/pricing/src/discount.spec.ts` | — | `discount.ts` | testy | niskie |
+| `libs/pricing/src/discount.ts` | `order.service.ts`, `cart.store.ts` | `money.ts` | services, UI | **high** — 2 applications |
+| `libs/pricing/src/money.ts` | `discount.ts`, `invoice.ts` | — | utilities | medium — a foundation |
+| `libs/pricing/src/discount.spec.ts` | — | `discount.ts` | tests | low |
 
-Co przetestować (qa-regression): koszyk w `web`, składanie zamówienia i faktura w `api`.
+What to test (qa-regression): the cart in `web`, placing an order and the invoice in `api`.

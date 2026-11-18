@@ -1,80 +1,80 @@
-# Wielu wykonawców, świadek kroku i długie przebiegi
+# Many executors, the witness of a step and long runs
 
-Spis treści: 1. Wielu wykonawców nad wspólnym stanem · 2. Kto jest świadkiem tego kroku · 3. Długie przebiegi w wielu
-oknach kontekstu · 4. Interfejs harnessu od strony modelu · 5. Kontrola przed oddaniem odpowiedzi ·
-6. Czy agent naprawdę działa
+Contents: 1. Many executors over shared state · 2. Who is the witness of this step · 3. Long runs over many
+context windows · 4. The harness interface from the model's side · 5. The check before handing over the reply ·
+6. Does the agent really work
 
-## 1. Wielu wykonawców nad wspólnym stanem
-- **Dzierżawa zadania z wygaśnięciem i biciem serca.** Wykonawca, który zniknął, traci zadanie, a inny wznawia je
-  z trwałego stanu.
-- **Zakończenie i zapis sprawdzają bieżącego właściciela i wersję rekordu.** Spóźniony wykonawca nie nadpisze
-  nowszego wyniku. Zapis całego rekordu ze starej kopii to utracona aktualizacja — przed zapisem sprawdzasz wersję
-  (compare-and-set, be-database), używasz transakcji albo scalanie robi jeden koordynator.
-- **Trzy różne operacje:** ponowienie (ta sama operacja jeszcze raz), wznowienie (z zapisanego stanu; najpierw
-  sprawdzasz, czy wersje dokumentów i konfiguracji nadal pasują do przyjętej pracy) i kompensacja (osobna operacja
-  biznesowa, która też może zawieść). Żadna nie jest uniwersalnym „cofnij”.
-- **Ukończenie to predykat systemu, nie zdanie modelu:** wymagania spełnione, walidacja przeszła, artefakty są,
-  polityki sprawdzone. Jawne wyjścia inne niż sukces: wyczerpany budżet, brak nowych dowodów, wymaganie do
-  wyjaśnienia. Wynik częściowy oznaczony jako „szkic z zastrzeżeniami”, nie jako zatwierdzony.
-- **Miara odzyskiwania:** ile ukończonej pracy wykonało się ponownie, czy zapisy zewnętrzne się zdublowały, czy
-  przyjęte dowody nie zniknęły.
+## 1. Many executors over shared state
+- **A task lease with expiry and a heartbeat.** An executor that disappeared loses the task, and another one resumes it
+  from durable state.
+- **Completion and the write check the current owner and the record version.** A late executor will not overwrite
+  a newer result. Writing the whole record from an old copy is a lost update — before the write you check the version
+  (compare-and-set, be-database), use a transaction, or one coordinator does the merging.
+- **Three different operations:** retry (the same operation once more), resumption (from the saved state; first
+  you check whether the versions of documents and configuration still match the accepted work) and compensation (a separate business
+  operation, which can also fail). None of them is a universal "undo".
+- **Completion is a predicate of the system, not a sentence from the model:** requirements met, validation passed, the artifacts exist,
+  policies checked. Explicit exits other than success: an exhausted budget, no new evidence, a requirement to
+  clarify. A partial result marked as a "draft with caveats", not as approved.
+- **A recovery measure:** how much completed work ran again, whether external writes were duplicated, whether
+  accepted evidence disappeared.
 
-## 2. Kto jest świadkiem tego kroku
-Krok, którego jedynym sprawdzeniem jest dalszy tekst tego samego modelu, jest przyjęty na wiarę. Reguła trafia
-w miejsce zależne od tego, czego dotyczy:
-| Reguła o… | Gdzie | Przykład |
+## 2. Who is the witness of this step
+A step whose only check is further text from the same model is accepted on faith. The rule goes
+to a place depending on what it concerns:
+| A rule about… | Where | Example |
 |---|---|---|
-| stanie | schemat lub kształt sprawdzany przy zapisie | „oferta ma pole `discount` 0–100” |
-| jednej akcji | polityka per żądanie, domyślnie odmowa, `forbid` wygrywa z `permit` | „przelew tylko na konto z listy” |
-| sekwencji akcji | reguła czasowa nad dziennikiem zdarzeń | „rabat > 20% tylko po zatwierdzeniu kierownika w ciągu 1 h” |
+| state | a schema or shape checked on write | "an offer has a `discount` field 0–100" |
+| a single action | a per-request policy, deny by default, `forbid` wins over `permit` | "a transfer only to an account from the list" |
+| a sequence of actions | a temporal rule over the event log | "a discount > 20% only after a manager's approval within 1 h" |
 
-Werdykt bramki (wykonaj / odmów / eskaluj) jest powtarzalny dla tego samego zapisanego stanu. Reguła tylko w promptcie
-albo werdykt zwracany wyłącznie agentowi niczego nie gwarantuje. Log zapisuje, który świadek sprawdził krok. Hook
-`tdd_guard` w fabryce to przykład reguły czasowej („edycja kodu dozwolona, jeśli od ostatniej zmiany testu był
-czerwony przebieg”).
-Źródło: A. Alcaraz, „Grounded Reasoning For Agents…” (2026-10-20).
+The gate's verdict (execute / deny / escalate) is repeatable for the same saved state. A rule only in the prompt
+or a verdict returned only to the agent guarantees nothing. The log records which witness checked the step. The
+`tdd_guard` hook in the factory is an example of a temporal rule ("editing code is allowed if since the last test change there was
+a red run").
+Source: A. Alcaraz, "Grounded Reasoning For Agents…" (2026-10-20).
 
-## 3. Długie przebiegi w wielu oknach kontekstu
-Anthropic Engineering, „Effective harnesses for long-running agents” (2025-11-26) i „Harness design for long-running
-application development” (2026-03-24), odczyt 2026-10-29:
-- pierwsza sesja przygotowuje środowisko i listę zadań, każda kolejna robi jeden przyrost i zostawia artefakty
-  przekazania (postęp, stan testów); samo kompaktowanie nie wystarcza — agent próbuje zrobić wszystko naraz
-  i ogłasza koniec za wcześnie;
-- oddzielny ewaluator z jawnymi kryteriami; reguła końca sprawdzana testem lub ewaluatorem, nie deklaracją agenta;
-- recenzent tylko do odczytu (raport, nie poprawka — inaczej znika sygnał);
-- narzędzia nieodwracalne z `dry_run` domyślnie włączonym;
-- ścieżkę rozwiązujesz **przed** porównaniem z listą dozwolonych: lista zakazów łapie tylko przewidziane zapisy,
-  a `work/../secrets` przechodzi (core-agent-security);
-- reguła z promptu, która ma działać zawsze, przechodzi do hooka.
+## 3. Long runs over many context windows
+Anthropic Engineering, "Effective harnesses for long-running agents" (2025-11-26) and "Harness design for long-running
+application development" (2026-03-24), read 2026-10-29:
+- the first session prepares the environment and a task list, each next one makes one increment and leaves handover
+  artifacts (progress, test state); compaction alone is not enough — the agent tries to do everything at once
+  and announces the end too early;
+- a separate evaluator with explicit criteria; the end rule checked by a test or an evaluator, not by the agent's declaration;
+- a read-only reviewer (a report, not a fix — otherwise the signal disappears);
+- irreversible tools with `dry_run` enabled by default;
+- you resolve the path **before** comparing it with the allowlist: a denylist catches only the anticipated writes,
+  and `work/../secrets` gets through (core-agent-security);
+- a rule from the prompt that must always work moves to a hook.
 
-## 4. Interfejs harnessu od strony modelu
-- Operacja (jednostka intencji) jest realizowana przez narzędzie, narzędzie złożone (kod, deterministycznie) albo
-  skill (instrukcje). Dojrzewa od skilla do narzędzia złożonego, gdy kroki się ustalą.
-- Skill odwołuje się do narzędzi po id, nie kopiuje ich schematów — jedno miejsce prawdy.
-- Mały zestaw prymitywów (np. wyszukaj w pamięci, lista możliwości, wyszukaj i wczytaj operację, wykonaj, uruchom
-  kod, zapytaj człowieka); zatwierdzenie wymusza harness, nie model.
-- Kanały (Slack, Teams, głos) to adaptery normalizujące zdarzenie do jednej postaci — agent nie należy do kanału.
-- Wybór kontekstu (pamięć, narzędzia) to często klasyfikacja, nie generowanie: tańszy selektor przed dużym modelem,
-  mierzony na własnych danych (ai-evals).
+## 4. The harness interface from the model's side
+- An operation (a unit of intent) is realized by a tool, a composite tool (code, deterministically) or
+  a skill (instructions). It matures from a skill to a composite tool once the steps settle.
+- A skill refers to tools by id, it does not copy their schemas — one source of truth.
+- A small set of primitives (e.g. search memory, list capabilities, find and load an operation, execute, run
+  code, ask a human); the harness enforces approval, not the model.
+- Channels (Slack, Teams, voice) are adapters normalizing an event to one form — the agent does not belong to the channel.
+- Choosing the context (memory, tools) is often classification, not generation: a cheaper selector before the large model,
+  measured on your own data (ai-evals).
 
-## 5. Kontrola przed oddaniem odpowiedzi
-Model przepisuje liczby z wyników narzędzi i czasem je zmienia (limit polisy, wynik ryzyka, kwota). Harness sprawdza
-to w kodzie, zanim odpowiedź wyjdzie:
-- **Liczby i identyfikatory z narzędzia:** wyciągasz z odpowiedzi liczby, kwoty i identyfikatory i porównujesz
-  z wartościami zwróconymi przez narzędzia w tym przebiegu. Rozbieżność odsyłasz modelowi jako konkretny komunikat
-  („limit w odpowiedzi 50 000, narzędzie zwróciło 30 000”), z limitem poprawek. Po limicie odpowiedź trafia do
-  człowieka, a nie do klienta.
-- **Powtórzone identyczne wywołania** (to samo narzędzie, te same argumenty) pomijasz i zwracasz poprzedni wynik.
-- **Wymagane narzędzia:** gdy przed odpowiedzią nie użyto narzędzia wymaganego dla tego typu zadania, harness
-  przypomina o nim modelowi albo blokuje odpowiedź.
-- **Reguły kontroli też mają fałszywe alarmy:** dopasowanie podciągu (np. „ind” wewnątrz innych słów) blokuje dobre
-  odpowiedzi. Reguły testujesz na prawdziwych odpowiedziach modelu, a ich trafność mierzysz w ewaluacji
+## 5. The check before handing over the reply
+The model copies numbers from tool results and sometimes changes them (a policy limit, a risk score, an amount). The harness checks
+this in code before the reply goes out:
+- **Numbers and identifiers from the tool:** you extract the numbers, amounts and identifiers from the reply and compare them
+  with the values returned by the tools in this run. You send a mismatch back to the model as a concrete message
+  ("limit in the reply 50,000, the tool returned 30,000"), with a limit on corrections. After the limit the reply goes to
+  a human, not to the customer.
+- **Repeated identical calls** (the same tool, the same arguments) you skip and return the previous result.
+- **Required tools:** when a tool required for this type of task was not used before the reply, the harness
+  reminds the model about it or blocks the reply.
+- **Check rules also have false alarms:** substring matching (e.g. "ind" inside other words) blocks good
+  replies. You test the rules on real model replies, and measure their accuracy in an evaluation
   (ai-evals, `references/measurement-pitfalls.md` §7–8).
 
-## 6. Czy agent naprawdę działa
-Kontener „Up” i `/health` zwracający 200 nie dowodzą, że agent odpowiada. Wygasły token potrafi kierować wiadomości
-w pustą gałąź obsługi błędu przez długi czas bez alarmu. Syntetyczna sonda end-to-end: ops-observability,
-sekcja „Healthchecki”.
+## 6. Does the agent really work
+A container "Up" and `/health` returning 200 do not prove that the agent responds. An expired token can route messages
+into an empty error-handling branch for a long time without an alarm. A synthetic end-to-end probe: ops-observability,
+the section "Healthchecki" (healthchecks).
 
-Źródła: V. Mysore, „Harness Engineering … Live Examples” (2026-10, demo); J. Hamidun, „Running a Fleet of 33 AI
-Agents” (2026) — szczegóły incydentu wg autora [niezweryfikowane].
+Sources: V. Mysore, "Harness Engineering … Live Examples" (2026-10, demo); J. Hamidun, "Running a Fleet of 33 AI
+Agents" (2026) — incident details per the author [unverified].

@@ -1,57 +1,57 @@
-# Dochodzenie z wielu źródeł dowodów
+# Investigation from many sources of evidence
 
-Żadne pojedyncze źródło nie wystarcza. W raporcie wypisz, co wniósł każdy kanał.
+No single source is enough. In the report, list what each channel contributed.
 
-## Zgłoszenie od użytkownika
-Jedno zdanie bez stack trace („zapis notatki nie działa”) rozpisujesz na pytania, nie na diagnozę: kroki odtworzenia,
-zakres (co działa, co nie), częstotliwość, od kiedy, podejrzany obszar.
+## A report from a user
+One sentence without a stack trace ("saving a note does not work") you break down into questions, not into a diagnosis: reproduction steps,
+scope (what works, what does not), frequency, since when, the suspected area.
 
-## Od czego zacząć
-| Objaw | Pierwsze źródło |
+## Where to start
+| Symptom | First source |
 |---|---|
-| wyjątek, 5xx, crash | monitoring błędów (stack trace, ślad zdarzeń przed błędem, kontekst żądania) |
-| „sukces”, ale efekt nie zachodzi (200, dane bez zmian) | monitoring + logi aplikacji (warn/error bez propagacji) |
-| problem tylko w UI, API zdrowe | przeglądarka: konsola, ruch sieciowy, drzewo dostępności |
-| padający test | wynik testu i stack trace, potem kod |
-| losowe albo tylko na produkcji | monitoring (częstość, wersje, użytkownicy), logi z identyfikatorem żądania |
+| an exception, 5xx, a crash | error monitoring (stack trace, the trail of events before the error, the request context) |
+| "success", but the effect does not happen (200, data unchanged) | monitoring + application logs (warn/error without propagation) |
+| a problem only in the UI, the API healthy | the browser: console, network traffic, accessibility tree |
+| a failing test | the test result and stack trace, then the code |
+| random or only in production | monitoring (frequency, versions, users), logs with a request identifier |
 
-## Kanały i co dają
-- **Monitoring błędów** (Sentry lub odpowiednik, także przez MCP): miejsce i nazwa błędu, stos, zdarzenia przed błędem.
-  Ostrzeżenie z konsoli trafi tam tylko przy włączonym przechwytywaniu konsoli — to zużywa limit zdarzeń; przy ruchu
-  zawęź do błędów albo zgłaszaj wybrane przypadki jawnie.
-- **Logi aplikacji/platformy** (z filtrem po komunikacie): skala — pojedynczy incydent czy każde wywołanie.
-- **Przeglądarka** (Playwright: konsola, lista żądań, szczegóły jednego żądania): oddziela front od backendu.
-- **Kod**: przyczyna źródłowa — czytany dopiero z hipotezą z poprzednich kanałów.
+## Channels and what they give
+- **Error monitoring** (Sentry or an equivalent, also through MCP): the place and name of the error, the stack, the events before the error.
+  A console warning gets there only with console capture turned on — that uses up the event quota; with traffic
+  narrow it down to errors or report selected cases explicitly.
+- **Application/platform logs** (with a filter on the message): the scale — a single incident or every call.
+- **The browser** (Playwright: the console, the list of requests, the details of one request): separates the front end from the backend.
+- **Code**: the root cause — read only with a hypothesis from the previous channels.
 
-## Sygnał wizualny (tylko błędy w pikselach)
-Nakładanie się, z-index, ucięty tekst, animacja — konsola i sieć milczą. Zrzut ekranu i otwarte pytanie do modelu
-z obrazem; odpowiedź to hipoteza (modele mylą położenie i potrafią zgłosić fałszywy alarm albo przeoczyć problem).
-Regresję wizualną w testach sprawdzasz narzędziami deterministycznymi (qa-regression), nie modelem.
+## A visual signal (only pixel bugs)
+Overlapping, z-index, truncated text, an animation — the console and the network are silent. A screenshot and an open question to a model
+with the image; the answer is a hypothesis (models confuse positions and can report a false alarm or miss a problem).
+Visual regression in tests you check with deterministic tools (qa-regression), not with a model.
 
-## Test odtwarzający
-Pada z właściwego powodu i sprawdza **trwały skutek** (wiersz w bazie, plik, wysłaną wiadomość), nie status odpowiedzi.
-Zostaje jako strażnik regresji.
+## The reproducing test
+It fails for the right reason and checks **the durable effect** (a row in the database, a file, a sent message), not the response status.
+It stays as a regression guard.
 
-## Połknięty błąd — poprawka w dwóch częściach
-1. **Przestań ukrywać:** zwróć błąd (5xx albo kod domenowy), nie „sukces” z danymi z pamięci.
-2. **Napraw samą operację.** Sama część 1 zamienia ciche 200 w widoczne 500 — dopiero obie dają działanie.
+## A swallowed error — a fix in two parts
+1. **Stop hiding:** return an error (5xx or a domain code), not a "success" with data from memory.
+2. **Fix the operation itself.** Part 1 alone turns a silent 200 into a visible 500 — only both together make it work.
 
-Przeszukaj kod pod ten sam wzorzec (obsługa błędu, która loguje i zwraca sukces) — zwykle jest kilka kopii
-(eng-clean-code, sekcja „Błędy”).
+Search the code for the same pattern (error handling that logs and returns success) — there are usually several copies
+(eng-clean-code, the "Errors" section).
 
-## Weryfikacja = lustro dochodzenia
-Każdy kanał, który pokazał problem, musi pokazać jego brak: test zielony, brak nowych zdarzeń w monitoringu, brak
-komunikatu w logach, poprawny przebieg w przeglądarce.
+## Verification = the mirror of the investigation
+Every channel that showed the problem must show its absence: a green test, no new events in monitoring, no
+message in the logs, a correct flow in the browser.
 
-## Dlaczego bramki tego nie złapały
-Dopisz analizę ucieczki (qa-test-design, `test-strategy-and-plan.md`): ryzyko nazwane w strategii testów, ale bez
-zbudowanej fazy testów, to jeszcze nie bramka.
+## Why the gates did not catch it
+Add an escape analysis (qa-test-design, `test-strategy-and-plan.md`): a risk named in the test strategy, but without
+a built test phase, is not yet a gate.
 
-## Hook pokazał padający test
-Trywialne (format, import, typ) agent naprawia sam. Test logiki biznesowej pada po 1–2 próbach poprawki → stop i ta
-procedura (albo osobna zmiana); nie poprawiasz kodu „na rozum” do zielonego (eng-local-quality-gates).
+## A hook showed a failing test
+The agent fixes trivial things (format, import, type) itself. A business logic test still fails after 1–2 fix attempts → stop and this
+procedure (or a separate change); you do not fix the code "by intuition" until it is green (eng-local-quality-gates).
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 3, lekcja 5 (debugowanie z monitoringiem, logami i przeglądarką) — materiał
-  szkoleniowy (dostęp 2026-10-09).
-Opisane własnymi słowami.
+## Sources
+- The 10xDevs course, ed. 3 (2026), module 3, lesson 5 (debugging with monitoring, logs and the browser) — training
+  material (accessed 2026-10-09).
+Described in our own words.

@@ -1,42 +1,42 @@
-# Porażki agentów i środki zaradcze
+# Agent failures and remedies
 
-## Porażki
-| Objaw | Przyczyna | Środek |
+## Failures
+| Symptom | Cause | Remedy |
 |---|---|---|
-| zapętlenie, te same wywołania | brak limitu, niejasny cel, narzędzie nie zwraca postępu | limit kroków, wykrycie powtórzeń, jawny stan końcowy |
-| zły wybór narzędzia | za dużo, nakładające się opisy | konsolidacja, przestrzenie nazw, granice w opisie |
-| błędne argumenty | niejednoznaczne parametry | enum, jednoznaczne nazwy, poka-yoke, błąd z poprawką |
-| podwójna akcja po timeoucie | zapis bez idempotencji | klucz idempotencji, sprawdzenie stanu przed zapisem |
-| zgubiony cel po długiej pracy | przepełniony kontekst | kompaktowanie, plik postępu, subagent z czystym kontekstem |
-| błąd w kroku 3 psuje krok 9 | kumulacja błędów stanu | bramki kodu między krokami, punkty kontrolne, wznawianie |
-| koszt rośnie bez poprawy wyniku | multi-agent lub agent tam, gdzie wystarczy workflow | wróć na niższy szczebel, mierz koszt na przypadek |
-| polecenie z treści wykonane | dane traktowane jak instrukcje | dane ≠ polecenia, brak kanału wyjścia przy danych poufnych |
-| subagenci dublują pracę | niedookreślone zadanie | cel, format, granice i narzędzia w zleceniu |
-| „działa na demo” | brak zestawu przypadków | 10–20 przypadków, potem rozszerzanie z produkcji |
+| looping, the same calls | no limit, an unclear goal, the tool does not return progress | a step limit, detection of repetitions, an explicit end state |
+| wrong tool choice | too many, overlapping descriptions | consolidation, namespaces, boundaries in the description |
+| wrong arguments | ambiguous parameters | an enum, unambiguous names, poka-yoke, an error with the fix |
+| a double action after a timeout | a write without idempotency | an idempotency key, a state check before the write |
+| a goal lost after long work | an overfull context | compaction, a progress file, a subagent with a clean context |
+| an error in step 3 breaks step 9 | accumulating state errors | code gates between steps, checkpoints, resumption |
+| the cost grows without a better result | multi-agent or an agent where a workflow is enough | go back to a lower rung, measure the cost per case |
+| a command from the content executed | data treated as instructions | data ≠ commands, no outbound channel next to confidential data |
+| subagents duplicate work | an underspecified task | goal, format, boundaries and tools in the assignment |
+| "works on the demo" | no set of cases | 10–20 cases, then extending from production |
 
-## Wzorzec zatwierdzenia przez człowieka
-Agent przygotowuje akcję (`zwrot_przygotuj` → szkic z kwotą, odbiorcą, skutkiem), człowiek zatwierdza w osobnym
-kanale, dopiero kod wykonuje `zwrot_wykonaj` z kluczem idempotencji. Model nie ma narzędzia wykonującego bez tego kroku.
+## The human approval pattern
+The agent prepares the action (`refund_prepare` → a draft with the amount, the recipient, the effect), a human approves in a separate
+channel, and only the code executes `refund_execute` with an idempotency key. The model has no tool that executes without this step.
 
-## Co logować w śladzie
-Id przebiegu, numer kroku, wywołanie (nazwa, argumenty, wynik skrócony), tokeny wejścia i wyjścia, czas, decyzja
-o zakończeniu, wersja promptu i modelu. Dane osobowe maskuj lub pomijaj w śladach.
+## What to log in the trace
+The run id, the step number, the call (name, arguments, shortened result), input and output tokens, time, the decision
+to end, the prompt and model version. Mask or omit personal data in traces.
 
-## Agent obsługujący program
-Zanim agent dostanie zrzuty ekranu, szukasz wyższego interfejsu, w tej kolejności: własny format pliku programu →
-wiersz poleceń (tryb bez okna) → skrypty lub automatyzacja (np. COM) → oficjalne API → drzewo dostępności (nazwy
-kontrolek jako tekst) → piksele na końcu. Każdy szczebel wyżej jest szybszy, tańszy i odporny na zmianę wyglądu.
-- **Każda funkcja jako narzędzie z kontraktem:** schemat argumentów, implementacja, **weryfikator** (odczyt wyniku
-  z powrotem, np. ponowne otwarcie zapisanego pliku innym czytnikiem) i **skutek** — `local` albo `outward`. Działanie
-  wychodzące do innych ludzi (wysyłka, publikacja) czeka na zgodę człowieka.
-- Wynik narzędzia to krótki JSON z listą wykonanych sprawdzeń. Odmowa narzędzia podaje powód i wykonalną alternatywę.
-- Lista narzędzi zawężona do grup pasujących do prośby, nie wszystkie schematy w każdym wywołaniu. Łańcuch zależnych
-  wywołań planujesz w jednym wywołaniu modelu, z odwołaniami do wyników wcześniejszych kroków.
-- Udany przebieg można skompilować do nowego narzędzia z parametrami. Odtwarzasz go tylko wtedy, gdy okno zgadza się
-  z wyuczonym, i wyłączasz po 2 porażkach.
-- Klasyfikator ryzyka akcji UI działa w kodzie, nie w modelu, bo tekst na ekranie może nieść wstrzyknięcie poleceń.
-- Sprawdzenia dowodzą liczb, nie sensu: zły plan może przejść wszystkie weryfikatory. Wynik wychodzący na zewnątrz
-  ogląda człowiek.
+## An agent operating a program
+Before the agent gets screenshots, you look for a higher interface, in this order: the program's own file format →
+the command line (headless mode) → scripts or automation (e.g. COM) → the official API → the accessibility tree (control
+names as text) → pixels last. Every rung higher is faster, cheaper and resistant to changes in appearance.
+- **Every function as a tool with a contract:** an argument schema, an implementation, a **verifier** (reading the result
+  back, e.g. reopening the saved file with another reader) and an **effect** — `local` or `outward`. An action
+  going out to other people (sending, publishing) waits for a human's consent.
+- The tool result is a short JSON with a list of the checks performed. A tool refusal gives the reason and a feasible alternative.
+- The tool list narrowed to the groups matching the request, not all schemas in every call. A chain of dependent
+  calls you plan in one model call, with references to the results of earlier steps.
+- A successful run can be compiled into a new tool with parameters. You replay it only when the window matches
+  the learned one, and disable it after 2 failures.
+- The risk classifier for UI actions runs in code, not in the model, because the text on the screen can carry command injection.
+- Checks prove numbers, not sense: a bad plan can pass all the verifiers. A human looks at a result going
+  outside.
 
-Źródło: F. Khan, „Building Fast Computer Agents to Solve Complex Tasks” (2026-10-07); liczby autora z jednego
-stanowiska [niezweryfikowane].
+Source: F. Khan, "Building Fast Computer Agents to Solve Complex Tasks" (2026-10-07); the author's numbers from a single
+setup [unverified].

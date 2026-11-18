@@ -1,60 +1,60 @@
 ---
 name: eng-continuous-delivery
-description: Użyj przy sposobie dostarczania — trunk-based, małe partie, CI/CD, metryki DORA, Twelve-Factor.
+description: Use for the way of delivering — trunk-based, small batches, CI/CD, DORA metrics, Twelve-Factor.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy decyzjach o sposobie dostarczania — trunk-based development, małe partie, feature flags, ciągła integracja i dostarczanie, metryki DORA, zasady Twelve-Factor App, bezpieczeństwo „shift left”. Nie do konfiguracji konkretnych narzędzi CI (ops-ci-cd) ani gita na co dzień (core-git-workflow)."
+  catalog: "Use for decisions about the way of delivering — trunk-based development, small batches, feature flags, continuous integration and delivery, DORA metrics, the Twelve-Factor App principles, \"shift left\" security. Not for configuring specific CI tools (ops-ci-cd) or everyday git (core-git-workflow)."
 ---
 
-# Ciągłe dostarczanie
+# Continuous delivery
 
-## Praktyki
-- **Trunk-based development**: krótko żyjące gałęzie (≤ 1–2 dni) albo commity prosto do głównej z review w parach;
-  integracja co najmniej codziennie. Długie gałęzie funkcji = ukryte ryzyko integracji.
-- **Małe partie**: mały PR łatwiej zrecenzować, wdrożyć i wycofać. Duża zmiana → seria kroków, każdy wdrażalny.
-- **Feature flags** oddzielają wdrożenie od udostępnienia; każda flaga ma właściciela i datę usunięcia.
-  Etapy udostępniania (wewnętrzni → procent → 100%), każdy z kryterium wyjścia i minimalnym czasem, zapisujesz
-  w planie wydania `release.yaml` (`flags[].rollout`, `remove_by`), nie tylko w opisie wydania — wtedy da się
-  sprawdzić, czy wydanie idzie zgodnie z planem i kiedy flaga ma zniknąć.
-- **Główna gałąź zawsze wdrażalna**: czerwony build naprawiamy przed nową pracą.
-- **Branch by abstraction / expand–contract** dla dużych zmian i migracji danych (be-database).
-- **Shift left**: testy, analiza statyczna, skan zależności i sekretów w pipeline, nie przed wydaniem.
-- **Postmortemy bez szukania winnych**; wnioski jako zadania.
+## Practices
+- **Trunk-based development**: short-lived branches (≤ 1–2 days) or commits straight to main with pair review;
+  integration at least daily. Long feature branches = a hidden integration risk.
+- **Small batches**: a small PR is easier to review, deploy and roll back. A large change → a series of steps, each deployable.
+- **Feature flags** separate deployment from release; every flag has an owner and a removal date.
+  The rollout stages (internal → percentage → 100%), each with an exit criterion and a minimum time, you record
+  in the release plan `release.yaml` (`flags[].rollout`, `remove_by`), not only in the release description — then it is possible to
+  check whether the release is going according to plan and when the flag should disappear.
+- **The main branch always deployable**: we fix a red build before new work.
+- **Branch by abstraction / expand–contract** for large changes and data migrations (be-database).
+- **Shift left**: tests, static analysis, dependency and secret scanning in the pipeline, not before the release.
+- **Blameless postmortems**; the conclusions as tasks.
 
-## Metryki DORA (poziom aplikacji/usługi)
-| Grupa | Metryka | Definicja |
+## DORA metrics (at the application/service level)
+| Group | Metric | Definition |
 |---|---|---|
-| przepustowość | czas realizacji zmiany | od commita do produkcji |
-| przepustowość | częstotliwość wdrożeń | liczba wdrożeń w okresie |
-| przepustowość | czas przywrócenia po nieudanym wdrożeniu | czas do naprawy wdrożenia wymagającego interwencji |
-| niestabilność | odsetek nieudanych zmian | wdrożenia wymagające natychmiastowej interwencji (rollback, hotfix) |
-| niestabilność | odsetek przeróbek wdrożeń | nieplanowane wdrożenia wynikające z incydentów |
+| throughput | change lead time | from the commit to production |
+| throughput | deployment frequency | the number of deployments in a period |
+| throughput | failed deployment recovery time | the time to fix a deployment that requires intervention |
+| instability | change failure rate | deployments requiring immediate intervention (rollback, hotfix) |
+| instability | deployment rework rate | unplanned deployments resulting from incidents |
 
-Szybkość i stabilność idą w parze, nie są kompromisem. Metryki do uczenia się, **nie cele** (prawo Goodharta);
-porównuj system z nim samym w czasie, nie zespoły między sobą.
+Speed and stability go together, they are not a trade-off. The metrics are for learning, **not targets** (Goodhart's law);
+compare the system with itself over time, not teams with each other.
 
-### Kokpit zdrowia dostarczania (także z agentami AI)
-- **Wskaźniki opóźnione** rozliczają: odsetek nieudanych zmian, odsetek defektów u użytkownika, odsetek przeróbek,
-  realizacja zwrotu z inwestycji.
-- **Wskaźnik wyprzedzający** trafia na kokpit tylko wtedy, gdy przewiduje któryś opóźniony: kolejka PR czekających
-  na przegląd człowieka (liczba, wiek najstarszego) → nieudane zmiany; dryf specyfikacji (kod odbiega od spec) →
-  defekty u użytkownika; czas od ostatniej weryfikacji szablonu lub reguły z rzeczywistością → przeróbki.
-- Każda miara prędkości w parze z miarą jakości, która ruszy się, gdy ktoś zacznie grać pierwszą. Mierzysz system,
-  nigdy osobę.
-- Trzy widoki: zarząd kwartalnie (opóźnione, zwrot), kierownictwo miesięcznie (trendy obu rodzajów), lider zespołu
-  co tydzień (pełny zestaw wyprzedzający z parami). Start od czterech liczb: kolejka przeglądu, dryf specyfikacji,
-  odsetek nieudanych zmian, defekty u użytkownika — definicje „defektu” i „ucieczki” ustalasz przed pierwszym pomiarem.
-Źródło: J. Wąsowski, „SDD Factory Dashboard…” (2026-08-12).
+### The delivery health dashboard (also with AI agents)
+- **Lagging indicators** hold you to account: the change failure rate, the rate of defects reaching users, the rework rate,
+  the realization of the return on investment.
+- **A leading indicator** goes onto the dashboard only when it predicts one of the lagging ones: the queue of PRs waiting
+  for human review (the number, the age of the oldest) → failed changes; specification drift (the code diverges from the spec) →
+  defects reaching users; the time since a template or rule was last checked against reality → rework.
+- Every speed measure is paired with a quality measure that will move when someone starts gaming the first. You measure the system,
+  never a person.
+- Three views: the board quarterly (lagging, return), management monthly (trends of both kinds), the team lead
+  weekly (the full leading set with the pairs). Start from four numbers: the review queue, specification drift,
+  the change failure rate, defects reaching users — you agree the definitions of "defect" and "escape" before the first measurement.
+Source: J. Wąsowski, "SDD Factory Dashboard…" (2026-08-12).
 
-## Twelve-Factor (skrót)
-Jedna baza kodu, jawne zależności, konfiguracja w środowisku, usługi zewnętrzne jako podłączane zasoby, rozdzielone
-build/release/run, bezstanowe procesy, port binding, skalowanie procesami, szybki start i łagodne zamykanie,
-parytet środowisk, logi jako strumień zdarzeń, zadania administracyjne jako jednorazowe procesy.
+## Twelve-Factor (summary)
+One codebase, explicit dependencies, configuration in the environment, backing services as attached resources, separated
+build/release/run, stateless processes, port binding, scaling with processes, fast startup and graceful shutdown,
+environment parity, logs as an event stream, admin tasks as one-off processes.
 
-## Przykład
-**Sytuacja:** gałąź `feature/new-checkout` żyje 3 tygodnie, 74 pliki, konflikty przy każdym rebase.
-**Wynik:** seria 5 wdrażalnych PR-ów: (1) interfejs `CheckoutFlow` nad starym koszykiem (branch by abstraction),
-(2) `CheckoutFlowV2` za flagą `checkout-v2` (właściciel, data usunięcia, domyślnie wyłączona), (3) migracja *expand*,
-(4) flaga dla zespołu wewnętrznego, (5) włączenie dla wszystkich i *contract* — usunięcie starego kodu i flagi.
-Dalej gałęzie ≤ 1–2 dni i integracja codzienna.
-Więcej przykładów: `references/examples.md`.
+## Example
+**Situation:** the branch `feature/new-checkout` has lived for 3 weeks, 74 files, conflicts on every rebase.
+**Result:** a series of 5 deployable PRs: (1) the interface `CheckoutFlow` over the old cart (branch by abstraction),
+(2) `CheckoutFlowV2` behind the flag `checkout-v2` (owner, removal date, off by default), (3) the *expand* migration,
+(4) the flag for the internal team, (5) turning it on for everyone and *contract* — removing the old code and the flag.
+From then on branches ≤ 1–2 days and daily integration.
+More examples: `references/examples.md`.

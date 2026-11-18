@@ -1,136 +1,136 @@
-# Archetyp Party — mapper (strony, role, relacje, adresy)
+# The Party archetype — mapper (parties, roles, relationships, addresses)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania o **kimś** (użytkownik, klient, lead, partner, dostawca, pracownik, dział) na model ze **stroną** (osobą
-lub organizacją) w centrum, rolami jako jej cechą i relacjami jako osobnymi bytami z rolami na obu końcach. Efekt: ta sama
-firma bywa klientem, dostawcą i partnerem bez duplikatów, flag i klas-iloczynów.
-Protokół wspólny (pytania, „To zależy”, kontrola R/A/X, zapis): `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements about **someone** (a user, a customer, a lead, a partner, a supplier, an employee, a department) into a model with **the party** (a person
+or an organization) in the centre, roles as its feature and relationships as separate entities with roles at both ends. The effect: the same
+company is sometimes a customer, a supplier and a partner without duplicates, flags and product classes.
+The common protocol (questions, "It depends", the R/A/X check, recording): `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy ta sama osoba/organizacja występuje w kilku rolach albo łączą ją z innymi znaczące relacje?*
-Tak → pasuje. Jedyny „ktoś” to login bez ról biznesowych → wystarczy moduł tożsamości.
+## Fit test
+**The core question:** *does the same person/organization appear in several roles, or do meaningful relationships connect it with others?*
+Yes → it fits. The only "someone" is a login without business roles → an identity module is enough.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| klient to osoba, firma albo JDG (oba naraz); „klient jest też dostawcą”; lead → klient; partner tylko przez API | ✅ |
-| konto przed klientem (bez subskrypcji) lub po nim (umowa → konta) | ✅ |
-| działy, oddziały; „w imieniu”, pełnomocnik, przełożony–podwładny | ✅ |
-| adresy z zastosowaniami; „obserwuje / przestaje obserwować” (graf) | ✅ |
-| hasło, MFA, sesje | ❌ uwierzytelnianie (osobny moduł, łączy `PartyId`) |
-| „ile punktów ma klient?” | ❌ → Accounting |
-| „czy doradca jest wolny w czwartek?” | ❌ → Availability |
-| grupa docelowa kampanii, segment | ⚠️ graniczny |
+| a customer is a person, a company or a sole proprietorship (JDG, both at once); "the customer is also a supplier"; lead → customer; a partner only through the API | ✅ |
+| an account before the customer (no subscription) or after it (agreement → accounts) | ✅ |
+| departments, branches; "on behalf of", a proxy, superior–subordinate | ✅ |
+| addresses with uses; "follows / stops following" (a graph) | ✅ |
+| password, MFA, sessions | ❌ authentication (a separate module, joined by `PartyId`) |
+| "how many points does the customer have?" | ❌ → Accounting |
+| "is the advisor free on Thursday?" | ❌ → Availability |
+| a campaign target group, a segment | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Segment / grupa* — ma **własną tożsamość i odpowiedzialność** (płaci, podpisuje)? Tak → Organization(Unit); nie → projekcja.
-- *Uprawnienia* — z **roli w relacji** („manager zespołu X”) → relacja; globalne ACL → autoryzacja.
-- *Konto użytkownika* — zwykle strona + rola `UŻYTKOWNIK`; poświadczenia poza archetypem.
+**Borderline cases:**
+- *A segment / group* — does it have **its own identity and responsibility** (it pays, it signs)? Yes → Organization(Unit); no → a projection.
+- *Permissions* — from **a role in a relationship** ("manager of team X") → a relationship; global ACLs → authorization.
+- *A user account* — usually a party + the role `USER`; credentials outside the archetype.
 
-## Model (istota)
-### Strona
-- **Party** — abstrakcja wspólna dla: **Person** (dane osobowe), **Organization** → **Company**, **OrganizationUnit** (dział,
-  oddział, zespół). Zawiera: identyfikator, role, zarejestrowane identyfikatory, wersję.
-- **PartyId** — jeden identyfikator dla wszystkich typów, generowany przez aplikację (kontrola, testowalność). Bez kluczy
-  semantycznych: NIP/PESEL nie dotyczą każdego typu, telefony są odsprzedawane, e-mail bywa niezweryfikowany lub cudzy.
-  Brak `PersonId`/`OrganizationId` — role i relacje nie zależą od typu.
-- **RegisteredIdentifier** — 0..n identyfikatorów semantycznych (NIP, PESEL, REGON, paszport): typ + wartość, reguły użycia
-  (unikalność, format, „NIP tylko dla organizacji”).
-- **Role** — obiekt wartości (nazwa); dodawanie/usuwanie **idempotentne**; polityka może zabraniać ról (organizacyjnych dla osób).
-- **Addresses** — **osobny agregat** (klucz `PartyId`): geograficzny, e-mail, www, telefon; każdy z zastosowaniami
-  (kontaktowy, rozliczeniowy, do faktur) i cyklem życia. Reguły dotyczą zbioru naraz („dokładnie jeden aktywny adres kontaktowy”, „rozliczeniowy
-  tylko dla firm”, „zmiana nie częściej niż raz na kwartał”) → sekcja krytyczna obejmuje wszystkie adresy strony. Adresy
-  zmieniają się w innym rytmie niż role/uwierzytelnianie, rzadko łączą je reguły natychmiastowej spójności → osobno
-  (w dużej skali osobny moduł „książki adresowej”).
-- **Wyniki operacji jako zdarzenia**: sukces / pominięto (duplikat, brak zmian) / porażka; idempotencja upraszcza
-  infrastrukturę; publikuj tylko faktyczne zmiany stanu.
+## Model (the essence)
+### The party
+- **Party** — the abstraction common to: **Person** (personal data), **Organization** → **Company**, **OrganizationUnit** (a department,
+  a branch, a team). It contains: an identifier, roles, registered identifiers, a version.
+- **PartyId** — one identifier for all types, generated by the application (control, testability). No semantic
+  keys: NIP/PESEL (the Polish tax and personal ID numbers) do not apply to every type, phone numbers are resold, an e-mail is sometimes unverified or someone else's.
+  No `PersonId`/`OrganizationId` — roles and relationships do not depend on the type.
+- **RegisteredIdentifier** — 0..n semantic identifiers (NIP, PESEL, REGON, passport): type + value, usage rules
+  (uniqueness, format, "NIP only for organizations").
+- **Role** — a value object (a name); adding/removing is **idempotent**; a policy may forbid roles (organizational ones for persons).
+- **Addresses** — **a separate aggregate** (key `PartyId`): geographic, e-mail, www, phone; each with uses
+  (contact, billing, for invoices) and a life cycle. The rules concern the set at once ("exactly one active contact address", "billing
+  only for companies", "a change no more often than once a quarter") → the critical section covers all the party's addresses. Addresses
+  change at a different rate than roles/authentication, rules of immediate consistency rarely connect them → separately
+  (at large scale a separate "address book" module).
+- **Operation results as events**: success / skipped (duplicate, no changes) / failure; idempotency simplifies
+  the infrastructure; publish only actual state changes.
 
-### Relacje (Party Relationship)
-- **PartyRelationship** — osobny rekord z tożsamością: „od” + rola, „do” + rola, nazwa, opcjonalnie okres; zarządzany
-  niezależnie od stron; zwykle **kierunkowy**.
-- **PartyRole** — rola przypięta do konkretnego końca relacji; tworzona przez fabrykę z **polityką definiowania ról**.
-  Ta sama strona bywa „Managerem” w jednej relacji i „Podwładnym” w innej — uprawnienia z roli w relacji, nie globalne.
-- Poziomy: **znaczenie** (lekarz–pacjent vs lekarz–konsultant — różne uprawnienia) · **(a)symetria** · **role w relacjach** ·
-  **w imieniu** (operator konfiguruje stację właściciela) · **ograniczenia typów** (dostawcą tylko organizacja) · **reguły**
-  ilościowe (max 10 dostawców, 12 podwładnych), jakościowe (kto z kim), czasowe (min. czas trwania, sezon) — sprawdzane przy tworzeniu.
-- **Hierarchia organizacji** = relacje `nadrzędna–podrzędna` (płatnik = centrala, zakupy w oddziałach), nie `parentId`,
-  bo struktur bywa kilka (prawna, kosztowa, sprzedażowa).
-- **Przechowywanie:** strony + krawędzie; baza grafowa, gdy dominują ścieżki; lub oba (zapis relacyjnie z outboxem, zapytania
-  w grafie). Graf służy innym procesom: „kto zatwierdzi wydatek w imieniu firmy?”.
+### Relationships (Party Relationship)
+- **PartyRelationship** — a separate record with an identity: "from" + role, "to" + role, a name, optionally a period; managed
+  independently of the parties; usually **directed**.
+- **PartyRole** — a role attached to a specific end of a relationship; created by a factory with **a role definition policy**.
+  The same party is sometimes "Manager" in one relationship and "Subordinate" in another — permissions from the role in the relationship, not global ones.
+- Levels: **meaning** (doctor–patient vs doctor–consultant — different permissions) · **(a)symmetry** · **roles in relationships** ·
+  **on behalf of** (an operator configures the owner's station) · **type constraints** (only an organization can be a supplier) · **rules**:
+  quantitative (max 10 suppliers, 12 subordinates), qualitative (who with whom), temporal (min. duration, a season) — checked on creation.
+- **The organization hierarchy** = `parent–child` relationships (the payer = the head office, purchases in branches), not a `parentId`,
+  because there are sometimes several structures (legal, cost, sales).
+- **Storage:** parties + edges; a graph database when paths dominate; or both (writes relationally with an outbox, queries
+  in the graph). The graph serves other processes: "who will approve an expense on behalf of the company?".
 
-## Pytania
-**A — decyzje standardowe:**
-- Adresy w agregacie strony czy osobno? (rozstrzyga reguła **natychmiastowej spójności** strony i adresów)
-- Relacje w Party czy osobno? Czy reguły relacji muszą być spójne natychmiast, czy to wykonalne, co przy spójności ostatecznej?
-- Zmiana strony wpływa na relacje (zablokowana strona)? Relacji na stronę (dezaktywacja managera z 10 podwładnymi)?
-- Jakie identyfikatory semantyczne i czy muszą być unikalne?
+## Questions
+**A — standard decisions:**
+- Addresses in the party aggregate or separately? (decided by a rule of **immediate consistency** between the party and the addresses)
+- Relationships in Party or separately? Must relationship rules be consistent immediately, or is it feasible, what with eventual consistency?
+- Does a change to a party affect relationships (a blocked party)? Relationships on the party (deactivating a manager with 10 subordinates)?
+- What semantic identifiers, and must they be unique?
 
-**B — luki** (przykłady): scalanie duplikatów (ten sam NIP dwa razy)? · stan na dzień (historia danych i relacji)? · RODO:
-anonimizacja przy zachowaniu relacji? · osoba kontaktowa firmy jako relacja? · zgody kontaktowe per adres? · wygasanie relacji? ·
-kilka struktur organizacyjnych?
+**B — gaps** (examples): merging duplicates (the same NIP twice)? · state as of a day (history of data and relationships)? · GDPR:
+anonymization while keeping relationships? · a company's contact person as a relationship? · contact consents per address? · relationship expiry? ·
+several organizational structures?
 
-## Kroki mapowania
-1. **Strony** — każdy „ktoś” z wymagań → typ (Person / Company / OrganizationUnit); nazwy ról usuń z nazw bytów.
-2. **Role** — rzeczowniki-role (klient, lead, dostawca, partner, użytkownik) → role strony; polityka dozwolonych ról per typ.
-3. **Identyfikatory** — `PartyId` techniczny; RegisteredIdentifier z regułami.
-4. **Relacje** — z czasowników („pracuje w”, „w imieniu”, „płaci za”): nazwa, role na końcach, kierunek, okres, typy.
-5. **Reguły relacji** — polityki; dla każdej: spójność natychmiastowa czy ostateczna.
-6. **Adresy** — rodzaje, zastosowania, reguły zbioru, granica agregatu.
-7. **Operacje** — rola, relacja, adres → sukces/pominięto/porażka; zwykle CRUD z politykami, czasem proces (rejestracja,
-   zmiana adresu z weryfikacją) — nie buduj procesu, gdzie wystarczy polityka.
+## Mapping steps
+1. **Parties** — every "someone" from the requirements → a type (Person / Company / OrganizationUnit); remove role names from entity names.
+2. **Roles** — role nouns (customer, lead, supplier, partner, user) → the party's roles; a policy of allowed roles per type.
+3. **Identifiers** — a technical `PartyId`; RegisteredIdentifier with rules.
+4. **Relationships** — from verbs ("works at", "on behalf of", "pays for"): name, roles at the ends, direction, period, types.
+5. **Relationship rules** — policies; for each: immediate or eventual consistency.
+6. **Addresses** — kinds, uses, set rules, the aggregate boundary.
+7. **Operations** — role, relationship, address → success/skipped/failure; usually CRUD with policies, sometimes a process (registration,
+   an address change with verification) — do not build a process where a policy is enough.
 
-## Decyzje do kontroli (R/A/X)
-typy stron · role per typ · identyfikatory i unikalność · agregat adresów · relacje w Party vs osobno · spójność reguł relacji ·
-skutki blokady strony · kierunek i okres relacji · limity relacji · hierarchia · scalanie duplikatów · anonimizacja.
+## Decisions to check (R/A/X)
+party types · roles per type · identifiers and uniqueness · the address aggregate · relationships in Party vs separately · consistency of relationship rules ·
+effects of blocking a party · direction and period of relationships · relationship limits · hierarchy · merging duplicates · anonymization.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Party: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Strony             — | Typ strony | Dozwolone role | Identyfikatory (typ, unikalność) | Uwagi |
-## Role               — | Rola | Dla typów | Polityka nadania/odebrania |
-## Relacje            — | Relacja | Od (typ, rola) | Do (typ, rola) | Kierunek | Okres | Ograniczenia |
-## Reguły relacji     — | Reguła | Rodzaj (ilościowa/jakościowa/czasowa) | Spójność | Parametr |
-## Adresy             — | Rodzaj | Zastosowania | Reguły zbioru | Agregat |
-## Operacje i zdarzenia — | Operacja | Sukces | Pominięto | Porażka |
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), przypadki brzegowe, parametry polityk zmiennych
+# Party model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Parties            — | Party type | Allowed roles | Identifiers (type, uniqueness) | Notes |
+## Roles              — | Role | For types | Grant/revoke policy |
+## Relationships      — | Relationship | From (type, role) | To (type, role) | Direction | Period | Constraints |
+## Relationship rules — | Rule | Kind (quantitative/qualitative/temporal) | Consistency | Parameter |
+## Addresses          — | Kind | Uses | Set rules | Aggregate |
+## Operations and events — | Operation | Success | Skipped | Failure |
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), edge cases, variable policy parameters
 ```
 
-## Wzorce i pułapki
-- **`User` + flagi** (`isCustomer`, pola firmy = null, mnożące się `validTo`, `active`, `agreementSignedAt`) — niezależne
-  strumienie zmian w jednej klasie, ciągłe „czym to właściwie jest?”.
-- **Klasa per rola** (`Customer`, `Lead`, `Partner`) — duplikaty albo `CustomerPartner`; semantycznie błędne.
-- **Aplikacja per rola** — wiele źródeł, trudna spójność, błędy badane przez kilka zespołów. Przyczyna: model **zorientowany
-  na rolę**, nie na stronę.
-- Relacje w Party upraszczają proste przypadki; przy regułach ilościowych i dużych grafach Party to **obiekt-bóg** (wolny, mieszane odpowiedzialności).
-- **Poza archetypem:** „czy X może zatwierdzić fakturę?” — autoryzacja **pyta** graf relacji; Party nie zna procesu. Też uwierzytelnianie.
-- **Polityki zmienne jako parametry:** limit relacji zależny od pakietu klienta → Party dostaje gotowe `max_dostawców`.
+## Patterns and pitfalls
+- **`User` + flags** (`isCustomer`, company fields = null, multiplying `validTo`, `active`, `agreementSignedAt`) — independent
+  streams of change in one class, a constant "what is this actually?".
+- **A class per role** (`Customer`, `Lead`, `Partner`) — duplicates or a `CustomerPartner`; semantically wrong.
+- **An application per role** — many sources, hard consistency, errors investigated by several teams. The cause: a model **oriented
+  on the role**, not on the party.
+- Relationships in Party simplify simple cases; with quantitative rules and large graphs Party becomes a **god object** (slow, mixed responsibilities).
+- **Outside the archetype:** "may X approve the invoice?" — authorization **queries** the relationship graph; Party does not know the process. Also authentication.
+- **Variable policies as parameters:** a relationship limit depending on the customer's package → Party gets a ready `max_suppliers`.
 
-## Kontrola jakości
-- [ ] żadna nazwa roli nie jest typem bytu; brak flag `isX` na stronie
-- [ ] jeden `PartyId` dla wszystkich typów; identyfikatory semantyczne nie są kluczem
-- [ ] relacje: nazwa, role na obu końcach, kierunek, typy
-- [ ] reguły relacji mają rodzaj i spójność; granica agregatu adresów uzasadniona
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] no role name is an entity type; no `isX` flags on the party
+- [ ] one `PartyId` for all types; semantic identifiers are not a key
+- [ ] relationships: name, roles at both ends, direction, types
+- [ ] relationship rules have a kind and a consistency; the address aggregate boundary justified
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Sieć klinik: pacjenci i firmy kupujące abonamenty dla pracowników. Lekarz jest pracownikiem kliniki albo
-kontraktowym. Recepcja umawia wizyty w imieniu pacjenta. Fakturę dla firmy wysyłamy na adres centrali.”
+## Example (shortened)
+**Input:** "A chain of clinics: patients and companies buying subscriptions for employees. A doctor is an employee of the clinic or
+a contractor. The reception books visits on behalf of the patient. We send the invoice for a company to the head office address."
 
 ```markdown
-## Mapowanie pojęć
-| pacjent | Person + rola PACJENT | rola, nie klasa |
-| firma-abonent | Company + rola KLIENT_KORP | może być też dostawcą |
-## Relacje
-| zatrudnia / kontrakt | Klinika (PRACODAWCA / ZLECENIODAWCA) | Lekarz (PRACOWNIK / KONTRAKTOR) | → | od–do | — |
-| abonament_dla | Company (PŁATNIK) | Person (BENEFICJENT) | → | od–do | limit `max_beneficjentów` |
-| w_imieniu | Recepcja (PEŁNOMOCNIK) | Pacjent (MOCODAWCA) | → | — | tylko umawianie |
-## Adresy — rozliczeniowy tylko dla Company (R); osobny agregat
-## Decyzje
-| limit beneficjentów | A: „To zależy” od pakietu → parametr `max_beneficjentów` |
-| lekarz może być też pacjentem | X → zapytano → A: tak (dwie role jednej strony) |
-| co z relacjami po zakończeniu zatrudnienia | X → hot spot |
-## Niezmapowane pojęcia — wizyta (→ Availability), abonament jako produkt (→ Product/Pricing)
+## Concept mapping
+| patient | Person + role PATIENT | a role, not a class |
+| subscriber company | Company + role CORP_CUSTOMER | may also be a supplier |
+## Relationships
+| employs / contract | Clinic (EMPLOYER / PRINCIPAL) | Doctor (EMPLOYEE / CONTRACTOR) | → | from–to | — |
+| subscription_for | Company (PAYER) | Person (BENEFICIARY) | → | from–to | limit `max_beneficiaries` |
+| on_behalf_of | Reception (PROXY) | Patient (PRINCIPAL) | → | — | booking only |
+## Addresses — billing only for Company (R); a separate aggregate
+## Decisions
+| beneficiary limit | A: "It depends" on the package → parameter `max_beneficiaries` |
+| a doctor may also be a patient | X → asked → A: yes (two roles of one party) |
+| what happens to relationships after employment ends | X → hot spot |
+## Unmapped concepts — visit (→ Availability), subscription as a product (→ Product/Pricing)
 ```

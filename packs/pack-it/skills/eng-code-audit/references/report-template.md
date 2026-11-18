@@ -1,74 +1,74 @@
-# Szablony: brief wykonawcy i raport audytu
+# Templates: implementer brief and audit report
 
-## Brief dla wykonawcy (etap 1)
+## Brief for an implementer (stage 1)
 ```
-Audyt kodu — wymiar: <wymiar>. Głębokość: <szybki|standard|pełny>.
-Zakres: <moduły / katalogi>; poza zakresem: <vendor/, kod generowany, …>.
-Inwentarz (przeczytaj najpierw, nie skanuj repo od nowa): docs/project/07-review/<data>-code-audit-inventory.md
-Wczytaj skille: <skill-1>, <skill-2>.
-Pytanie: <jedno pytanie, np. „Które miejsca pozwalają użytkownikowi odczytać cudze dane?”>
-Nie zmieniaj kodu. Nie uruchamiaj skanów wobec działających systemów.
-Wynik (≤ <N> ustaleń, najważniejsze pierwsze; „nic istotnego” jest poprawnym wynikiem):
-| ID | plik:linia | ryzyko (1–4) | zasięg (1–3) | koszt naprawy (S/M/L) | dowód | propozycja |
-Na końcu: czego nie sprawdziłeś i dlaczego (1–3 punkty).
+Code audit — dimension: <dimension>. Depth: <quick|standard|full>.
+Scope: <modules / directories>; outside the scope: <vendor/, generated code, …>.
+Inventory (read it first, do not scan the repo from scratch): docs/project/07-review/<date>-code-audit-inventory.md
+Load the skills: <skill-1>, <skill-2>.
+Question: <one question, e.g. "Which places let a user read someone else's data?">
+Do not change the code. Do not run scans against running systems.
+Result (≤ <N> findings, the most important first; "nothing significant" is a correct result):
+| ID | file:line | risk (1–4) | reach (1–3) | cost of the fix (S/M/L) | evidence | proposal |
+At the end: what you did not check and why (1–3 points).
 ```
 
-## Raport (`docs/project/07-review/<data>-code-audit.md`)
+## Report (`docs/project/07-review/<date>-code-audit.md`)
 ```markdown
 ---
 artifact: review
 phase: review
 status: proposed
 version: 1
-author: <kto>
-created: <data>
-updated: <data>
-inputs: [docs/project/07-review/<data>-code-audit-inventory.md]
+author: <who>
+created: <date>
+updated: <date>
+inputs: [docs/project/07-review/<date>-code-audit-inventory.md]
 ---
-# Audyt kodu — <system>, <data>
+# Code audit — <system>, <date>
 
 ## TL;DR
-- Zakres: <wymiary>, głębokość <…>, budżet <…>.
-- Blokery: <liczba> (niżej).
-- Najważniejsze 3 ustalenia: <…>.
+- Scope: <dimensions>, depth <…>, budget <…>.
+- Blockers: <count> (below).
+- The 3 most important findings: <…>.
 
-## Blokery (poza rankingiem, do decyzji od razu)
-| ID | wymiary | plik:linia | dowód | propozycja |
+## Blockers (outside the ranking, for an immediate decision)
+| ID | dimensions | file:line | evidence | proposal |
 |---|---|---|---|---|
 
 ## Ranking
-Priorytet = ryzyko × zasięg ÷ koszt (S = 1, M = 2, L = 4).
-| # | ID | wymiary | plik:linia | ryzyko | zasięg | koszt | priorytet | opis | propozycja | przekazanie |
+Priority = risk × reach ÷ cost (S = 1, M = 2, L = 4).
+| # | ID | dimensions | file:line | risk | reach | cost | priority | description | proposal | handover |
 |---|---|---|---|---|---|---|---|---|---|---|
 
-## Top 10 — szkic zmiany
-<!-- dla każdego: co zmienić, w skrócie diff albo kroki; nie wykonujesz -->
+## Top 10 — a sketch of the change
+<!-- for each: what to change, briefly a diff or steps; you do not carry it out -->
 
-## Szybkie wygrane
-<!-- koszt S przy ryzyku ≥ 2 -->
+## Quick wins
+<!-- cost S with risk ≥ 2 -->
 
-## Hipotezy do sprawdzenia (bez dowodu, poza rankingiem)
+## Hypotheses to check (without evidence, outside the ranking)
 
-## Sprzeczności i decyzje dla człowieka
-<!-- kto co rekomenduje, kompromis, proponowany ADR -->
+## Contradictions and decisions for the human
+<!-- who recommends what, the compromise, the proposed ADR -->
 
-## Czego nie sprawdzono
-<!-- wymiary pominięte, brakujące narzędzia, moduły poza zakresem, ograniczenia środowiska -->
+## What was not checked
+<!-- skipped dimensions, missing tools, modules outside the scope, environment limitations -->
 
-## Koszt audytu
-| Etap | Wykonawcy | Modele | Koszt |
+## Audit cost
+| Stage | Implementers | Models | Cost |
 |---|---|---|---|
-Razem: <kwota> z budżetu <kwota> (źródło: `python3 .tf/factory/cost_report.py --days 1`).
+Total: <amount> out of the budget <amount> (source: `python3 .tf/factory/cost_report.py --days 1`).
 
-## Porównanie z poprzednim audytem (jeśli był)
-| ID | status (ROZWIĄZANE / NOWE / ZMIENIONE) | uwagi |
+## Comparison with the previous audit (if there was one)
+| ID | status (RESOLVED / NEW / CHANGED) | notes |
 |---|---|---|
 
-## Przekazanie
-- **Dla:** <człowiek / persona realizująca poprawki>.
-- **Zadanie:** decyzje o blokerach i sprzecznościach, potem poprawki wg rankingu (osobne zadania).
-- **Przeczytaj:** TL;DR, Blokery, Ranking.
+## Handoff
+- **For:** <the human / the persona carrying out the fixes>.
+- **Task:** decisions on the blockers and contradictions, then fixes according to the ranking (separate tasks).
+- **Read:** TL;DR, Blockers, Ranking.
 ```
 
-Plik inwentarza (`<data>-code-audit-inventory.md`) leży w tym samym katalogu, więc ma ten sam nagłówek (bez `inputs`
-z inwentarza: `inputs: []`) oraz sekcje TL;DR i Przekazanie. Po zapisie: `python3 .claude/hooks/project_record.py check`.
+The inventory file (`<date>-code-audit-inventory.md`) lies in the same directory, so it has the same header (without the `inputs`
+from the inventory: `inputs: []`) and the TL;DR and Handoff sections. After writing: `python3 .claude/hooks/project_record.py check`.

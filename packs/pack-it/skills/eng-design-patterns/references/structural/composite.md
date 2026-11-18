@@ -1,41 +1,41 @@
-# Kompozyt (Composite)
+# Composite
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: strukturalne. Istota: pojedynczy element i grupa elementów mają **ten sam interfejs**, więc klient
-przetwarza całe drzewo rekurencyjnie, nie rozróżniając liści od kontenerów.
+Category: structural. The essence: a single element and a group of elements have **the same interface**, so the client
+processes the whole tree recursively, without distinguishing leaves from containers.
 
 ## Problem
-Cennik zawiera produkty i pakiety; pakiet może zawierać produkty i inne pakiety, każdy z własnym rabatem. Kod liczący
-cenę, który sprawdza „czy to pakiet?” i ręcznie schodzi w głąb, powiela się przy każdej operacji (cena, waga, lista
-SKU) i psuje się przy kolejnym poziomie zagnieżdżenia.
+A price list contains products and bundles; a bundle can contain products and other bundles, each with its own discount. Code computing
+the price that checks "is this a bundle?" and descends manually is duplicated for every operation (price, weight, list
+of SKUs) and breaks at the next level of nesting.
 
-## Rozwiązanie i uczestnicy
-- **Komponent** — wspólny interfejs operacji sensownych dla liścia i kontenera (`priceCents()`).
-- **Liść** — wykonuje pracę sam (`Item`).
-- **Kompozyt** — trzyma dzieci typu Komponent, deleguje im pracę i agreguje wynik, dodając własny wkład (rabat pakietu).
-- **Klient** — pracuje wyłącznie przez interfejs komponentu.
+## Solution and participants
+- **Component** — the shared interface of operations meaningful for a leaf and a container (`priceCents()`).
+- **Leaf** — does the work itself (`Item`).
+- **Composite** — holds children of the Component type, delegates the work to them and aggregates the result, adding its own contribution (the bundle discount).
+- **Client** — works only through the component interface.
 
-## Kiedy używać
-- Model jest naturalnie drzewem część–całość: pakiety, struktura organizacyjna, menu, reguły złożone z reguł.
-- Operacje mają sens na każdym poziomie i mają działać dla dowolnej głębokości.
-- **Specyfikacje** biznesowe łączone przez i/lub/nie to kompozyt (ddd-tactical-design) — tam szczegóły modelowania.
+## When to use
+- The model is naturally a part–whole tree: bundles, an organizational structure, a menu, rules composed of rules.
+- The operations make sense at every level and are to work for any depth.
+- Business **specifications** combined with and/or/not are a composite (ddd-tactical-design) — the modelling details are there.
 
-## Koszty
-Trudno o wspólny interfejs dla bardzo różnych elementów; interfejs kusi, by stać się zbyt ogólny; metody `add()`
-na liściu nie mają sensu (trzymaj je tylko w kompozycie).
+## Costs
+A shared interface for very different elements is hard to find; the interface is tempted to become too general; `add()` methods
+on a leaf make no sense (keep them only in the composite).
 
-## Powiązania
-- **Dekorator** ma jedno opakowane dziecko i dodaje zachowanie; Kompozyt agreguje wiele dzieci.
-- **Iterator** przechodzi drzewo; **Odwiedzający** wykonuje na nim nowe operacje; **Budowniczy** składa je krokami.
-- **Pyłek** — liście mogą być współdzielone, gdy jest ich bardzo dużo; **Prototyp** klonuje całe poddrzewa.
-- **Łańcuch zobowiązań** — żądanie może iść od liścia w górę do przodków.
+## Relations
+- **Decorator** has one wrapped child and adds behaviour; a Composite aggregates many children.
+- **Iterator** traverses the tree; **Visitor** performs new operations on it; **Builder** assembles it in steps.
+- **Flyweight** — leaves can be shared when there are very many of them; **Prototype** clones whole subtrees.
+- **Chain of Responsibility** — a request can go from a leaf up to its ancestors.
 
-## Forma idiomatyczna w TS
-Drzewo jako **unia dyskryminowana** + funkcja rekurencyjna (`switch (node.kind)`) — dobra, gdy zbiór typów węzłów jest
-zamknięty. Klasy z interfejsem — gdy typy węzłów mają być otwarte na rozszerzanie.
+## Idiomatic form in TS
+The tree as a **discriminated union** + a recursive function (`switch (node.kind)`) — good when the set of node types is
+closed. Classes with an interface — when the node types are to be open to extension.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 interface PriceComponent {
   readonly name: string;
@@ -60,7 +60,7 @@ class Bundle implements PriceComponent {
   readonly #children: PriceComponent[] = [];
 
   constructor(name: string, discount = 0) {
-    if (discount < 0 || discount >= 1) throw new RangeError('rabat w przedziale [0, 1)');
+    if (discount < 0 || discount >= 1) throw new RangeError('discount in the range [0, 1)');
     this.name = name;
     this.#discount = discount;
   }
@@ -76,13 +76,13 @@ class Bundle implements PriceComponent {
   }
 }
 
-const conference = new Bundle('Pakiet konferencyjny', 0.1).add(
-  new Item('Sala na dzień', 250_000),
-  new Bundle('Catering', 0.05).add(new Item('Lunch', 60_000), new Item('Przerwa kawowa', 20_000)),
+const conference = new Bundle('Conference bundle', 0.1).add(
+  new Item('Room for a day', 250_000),
+  new Bundle('Catering', 0.05).add(new Item('Lunch', 60_000), new Item('Coffee break', 20_000)),
 );
 console.log(conference.name, conference.priceCents());
 ```
-Wariant z unią (zamknięty zbiór węzłów):
+The union variant (a closed set of nodes):
 ```ts
 type PriceNode =
   | { kind: 'item'; name: string; priceCents: number }
@@ -98,10 +98,10 @@ function price(node: PriceNode): number {
 }
 ```
 
-## Kiedy NIE używać / pułapki
-- **Dane nie są drzewem** — płaska lista + `map`/`reduce` wystarczy.
-- Operacja ma sens tylko dla liści albo tylko dla kontenerów → to dwa różne typy; puste `add()`/`remove()` na liściu
-  sygnalizują, że podział jest sztuczny.
-- Rekurencja bez ograniczeń: przy danych od użytkownika pilnuj cykli i głębokości.
-- Agregaty DDD: nie buduj ogromnego drzewa w jednym agregacie „bo kompozyt” — granice spójności ważniejsze
+## When NOT to use / pitfalls
+- **The data is not a tree** — a flat list + `map`/`reduce` is enough.
+- The operation makes sense only for leaves or only for containers → these are two different types; empty `add()`/`remove()` on a leaf
+  signal that the division is artificial.
+- Unbounded recursion: with data from the user, guard against cycles and depth.
+- DDD aggregates: do not build a huge tree in one aggregate "because composite" — consistency boundaries matter more
   (ddd-tactical-design).

@@ -1,56 +1,56 @@
-# Przeramowanie — czy rozwiązujemy właściwy problem
+# Reframing — are we solving the right problem
 
-Badanie uzupełnia brak danych; przeramowanie poprawia źle postawiony problem. Kolejność zależy od tego, co blokuje.
+Investigation fills in missing data; reframing corrects a wrongly posed problem. The order depends on what is blocking.
 
-## Kiedy
-- druga nieudana poprawka tego samego objawu;
-- badanie otwiera coraz więcej pytań, zamiast zawęzić się do kontraktu;
-- implementacja kolejny raz nie spełnia kryteriów albo uporczywie odchodzi od planu w ten sam sposób;
-- zgłoszenie łączy objaw z przyczyną i poprawką („X się psuje, zróbmy Y”);
-- brak ekspertyzy w obszarze.
+## When
+- a second failed fix of the same symptom;
+- the investigation opens more and more questions instead of narrowing down to a contract;
+- the implementation once again does not meet the criteria or persistently deviates from the plan in the same way;
+- the report combines a symptom with a cause and a fix ("X breaks, let's do Y");
+- a lack of expertise in the area.
 
-Nie dla zmian mechanicznych ani gdy człowiek sam zweryfikował przyczynę.
+Not for mechanical changes or when the human has verified the cause themselves.
 
-## Procedura
-1. **Rozdziel trzy rzeczy i odczytaj je człowiekowi:** obserwacja (dosłowny efekt) · zakładana przyczyna lub
-   podejście · proponowany kierunek. Pewna jest tylko obserwacja, reszta to hipotezy. Nie scalasz ich, nawet gdy
-   człowiek naciska „po prostu zaplanuj poprawkę”.
-2. **Jedna runda 1–3 pytań** zawężających obserwację (który objaw główny, jeden czy kilka, pojedynczy przypadek czy
-   klasa), z opcją „nie wiem / nie rozdzieliłem”. Opcje opisują obserwacje, nigdy przyczyny ani poprawki.
-3. **Mapa wymiarów** z przeczytanego kodu i dokumentów: każdy etap łańcucha (wejście, przekształcenie, stan, efekty
-   uboczne — albo osie decyzji projektowej), w którym problem mógłby powstać. Zaznacz, gdzie ląduje założenie
-   człowieka. Wymiar bez śladu w materiale pomijasz.
-4. **Hipotezy równolegle** — 2–4 (najwyżej 5 wykonawców tylko do odczytu, zlecenie w jednej wiadomości). Każdy dostaje
-   dosłowną obserwację, jedną hipotezę i pytanie „jakie ślady musiałyby istnieć, gdyby problem był tutaj — i czy są?”.
-   Wynik: silne / słabe / brak, z `plik:linia`.
-5. **Pytania rozstrzygające** (2–5 łącznie): każde przesuwa ranking hipotez; zawsze z opcją „nie sprawdzałem”. Dowody
-   jednoznaczne → pomiń i powiedz dlaczego.
-6. **Test od innej strony:** nowy wykonawca dostaje samą obserwację, bez nazwy prowadzącej hipotezy; szukasz podobnych
-   zdarzeń w historii (commity, raporty, zgłoszenia); sprawdzasz, czego hipoteza wymaga, a czego zabrania.
-   Sprzeczność → wróć do kroku 4.
-7. **Zapis** `frame.md` obok raportu kroku (80–150 linii): obserwacja (dosłownie) · pierwotne ujęcie (zachowane) ·
-   mapa wymiarów · tabela Hipoteza | Dowód | Werdykt · sygnały zawężające · problem przeramowany albo potwierdzony
-   (jedno zdanie) · pewność (wysoka / średnia / niska + co sprawdzić przed planem) · co zmienia się w planie.
+## Procedure
+1. **Separate three things and read them back to the human:** the observation (the literal effect) · the assumed cause or
+   approach · the proposed direction. Only the observation is certain, the rest are hypotheses. You do not merge them, even when
+   the human pushes "just plan the fix".
+2. **One round of 1–3 questions** narrowing down the observation (which symptom is the main one, one or several, a single case or
+   a class), with the option "I don't know / I didn't separate them". The options describe observations, never causes or fixes.
+3. **A map of dimensions** from the code and documents read: every stage of the chain (input, transformation, state, side
+   effects — or the axes of a design decision) in which the problem could arise. Mark where the human's assumption
+   lands. You skip a dimension with no trace in the material.
+4. **Hypotheses in parallel** — 2–4 (at most 5 read-only workers, the assignment in one message). Each one gets
+   the literal observation, one hypothesis and the question "what traces would have to exist if the problem were here — and do they?".
+   The result: strong / weak / none, with `file:line`.
+5. **Deciding questions** (2–5 in total): each one shifts the ranking of the hypotheses; always with the option "I haven't checked". The evidence
+   is unambiguous → skip them and say why.
+6. **A test from a different side:** a new worker gets only the observation, without the name of the leading hypothesis; you look for similar
+   events in the history (commits, reports, tickets); you check what the hypothesis requires and what it forbids.
+   A contradiction → go back to step 4.
+7. **A record** `frame.md` next to the step report (80–150 lines): the observation (verbatim) · the original framing (kept) ·
+   the map of dimensions · a table Hypothesis | Evidence | Verdict · narrowing signals · the problem reframed or confirmed
+   (one sentence) · confidence (high / medium / low + what to check before the plan) · what changes in the plan.
 
-## Zasady
-- „Pierwotne ujęcie było trafne” to pełnoprawny wynik — nie wymyślasz przeramowania na siłę.
-- Bez projektowania rozwiązania (faz, plików, decyzji technicznych) — to robi plan kroku.
-- Hipotezy z mapy tego materiału, nie z „widziałem to w innych systemach”; przeczucie bez `plik:linia` nie trafia
-  do wyniku.
-- Limit: 2–4 rundy wykonawców i 2–5 pytań. Dłużej → potrzebne odtworzenie albo zebranie danych, nie analiza.
-- Sprzeciw człowieka → nowa runda hipotez z jego argumentem, nie obrona tezy.
-- Plan kroku, który dostał `frame.md`, nie powtarza pytań diagnostycznych; przy pewności „niska” zadaje jedno: najpierw
-  weryfikacja czy plan z ryzykiem.
+## Rules
+- "The original framing was right" is a fully valid result — you do not invent a reframing by force.
+- No designing of the solution (phases, files, technical decisions) — the step plan does that.
+- Hypotheses from the map of this material, not from "I've seen this in other systems"; a hunch without `file:line` does not go
+  into the result.
+- The limit: 2–4 rounds of workers and 2–5 questions. Longer → a reproduction or data collection is needed, not analysis.
+- The human's objection → a new round of hypotheses with their argument, not a defence of the thesis.
+- The step plan that got `frame.md` does not repeat the diagnostic questions; with "low" confidence it asks one: first
+  verification or a plan with a risk.
 
-## Przykład
-Zgłoszenie: „duplikaty faktur — dodajmy unikalny indeks”. Obserwacja: dwie faktury z tym samym numerem zamówienia,
-oba wpisy w odstępie ok. 2 s. Przyczyna zakładana: brak blokady w bazie. Kierunek: indeks. Mapa: przycisk w UI →
-żądanie → kolejka → konsument → zapis. Hipotezy: (a) podwójne kliknięcie, (b) ponowienie z kolejki bez idempotencji,
-(c) wyścig dwóch konsumentów. Dowody: w logach brokera to samo id wiadomości dostarczone dwa razy po przekroczeniu
-limitu potwierdzenia → (b) silne. Przeramowanie: problem to konsument bez idempotencji (be-messaging-outbox); indeks
-zamieniłby duplikat w błąd 500 przy ponowieniu.
+## Example
+The report: "duplicate invoices — let's add a unique index". The observation: two invoices with the same order number,
+both entries approx. 2 s apart. The assumed cause: no lock in the database. The direction: an index. The map: a button in the UI →
+a request → a queue → a consumer → a write. Hypotheses: (a) a double click, (b) a retry from the queue without idempotency,
+(c) a race of two consumers. Evidence: in the broker logs the same message id delivered twice after the acknowledgement
+limit was exceeded → (b) strong. Reframing: the problem is a consumer without idempotency (be-messaging-outbox); an index
+would turn the duplicate into a 500 error on a retry.
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 2, lekcja 4 (przeramowanie jako koło ratunkowe przy planowaniu) — materiał
-  szkoleniowy (dostęp 2026-10-09).
-Opisane własnymi słowami.
+## Sources
+- The 10xDevs course, ed. 3 (2026), module 2, lesson 4 (reframing as a lifeline in planning) — training
+  material (accessed 2026-10-09).
+Described in our own words.

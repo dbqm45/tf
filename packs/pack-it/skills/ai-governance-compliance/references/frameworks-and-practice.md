@@ -1,55 +1,55 @@
-# Ramy dobrowolne i praktyka zarządzania AI
+# Voluntary frameworks and the practice of AI governance
 
-## NIST AI RMF 1.0 i profil AI 600-1
-- **AI RMF 1.0** (NIST AI 100-1, styczeń 2023), dobrowolny. Cztery funkcje:
-  - **Govern** — polityki, role, kultura, odpowiedzialność, nadzór nad dostawcami;
-  - **Map** — kontekst użycia, interesariusze, możliwe szkody, granice systemu;
-  - **Measure** — metryki, testy, ocena stronniczości, monitorowanie (narzędzia: ai-evals);
-  - **Manage** — priorytety ryzyka, reakcja, wycofanie, incydenty.
-- **Generative AI Profile (NIST AI 600-1, lipiec 2024)** — dodaje do czterech funkcji działania dla ryzyk specyficznych
-  dla generatywnej AI (źródła wtórne mówią o 12 kategoriach, m.in. konfabulacje, prywatność danych, własność
-  intelektualna, szkodliwe treści, łańcuch dostaw) [niezweryfikowane u źródła, dostęp 2026-10-17].
-- Użycie: macierz obowiązków AI Act wypełniasz działaniami z funkcji; nie jest to certyfikat ani dowód zgodności.
+## NIST AI RMF 1.0 and the AI 600-1 profile
+- **AI RMF 1.0** (NIST AI 100-1, January 2023), voluntary. Four functions:
+  - **Govern** — policies, roles, culture, accountability, oversight of suppliers;
+  - **Map** — the context of use, stakeholders, possible harms, the system boundaries;
+  - **Measure** — metrics, tests, bias assessment, monitoring (tools: ai-evals);
+  - **Manage** — risk priorities, response, withdrawal, incidents.
+- **Generative AI Profile (NIST AI 600-1, July 2024)** — adds to the four functions actions for risks specific
+  to generative AI (secondary sources speak of 12 categories, among others confabulation, data privacy, intellectual
+  property, harmful content, the supply chain) [unverified at the source, accessed 2026-10-17].
+- Use: you fill the AI Act obligations matrix with actions from the functions; it is not a certificate or proof of compliance.
 
-## ISO/IEC 42001:2023 a ISO/IEC 27001
-- 42001 to norma na **system zarządzania AI** (AIMS), certyfikowalna przez jednostki zewnętrzne. Ma wspólną
-  strukturę wysokiego poziomu ze standardami zarządzania (kontekst, przywództwo, planowanie, wsparcie, działanie,
-  ocena, doskonalenie), więc łączy się z 27001 w jeden system zarządzania, z jednym przeglądem kierownictwa
-  i audytem wewnętrznym [niezweryfikowane u źródła].
-- 27001 chroni informacje (poufność, integralność, dostępność); 42001 dodaje ryzyka AI: wpływ na ludzi, przejrzystość,
-  nadzór człowieka, cykl życia modelu, dostawców. Zakres się uzupełnia, nie zastępuje.
-- Certyfikat 42001 nie daje domniemania zgodności z AI Act, chyba że Komisja wskaże normę zharmonizowaną
-  [niezweryfikowane — sprawdź stan norm zharmonizowanych w Dz.Urz. UE].
+## ISO/IEC 42001:2023 and ISO/IEC 27001
+- 42001 is a standard for an **AI management system** (AIMS), certifiable by external bodies. It shares the
+  high-level structure with management standards (context, leadership, planning, support, operation,
+  evaluation, improvement), so it combines with 27001 into one management system, with one management review
+  and internal audit [unverified at the source].
+- 27001 protects information (confidentiality, integrity, availability); 42001 adds AI risks: the impact on people, transparency,
+  human oversight, the model life cycle, suppliers. The scopes complement each other, they do not replace each other.
+- A 42001 certificate does not give a presumption of conformity with the AI Act, unless the Commission designates a harmonized standard
+  [unverified — check the state of harmonized standards in the Official Journal of the EU (Dz.Urz. UE)].
 
-## Ocena wpływu (AI impact / FRIA)
-Opis systemu i celu; kogo dotyczy (grupy wrażliwe); prawa podstawowe, które mogą ucierpieć (niedyskryminacja, prywatność,
-rzetelny proces); częstość i czas użycia; środki nadzoru i odwołania; plan reakcji. FRIA wymaga art. 27 tylko w wymienionych
-przypadkach, ale to samo narzędzie służy dobrowolnie przy każdym wysokim ryzyku. DPIA — arch-privacy-compliance.
+## Impact assessment (AI impact / FRIA)
+A description of the system and its purpose; whom it concerns (vulnerable groups); fundamental rights that may suffer (non-discrimination, privacy,
+due process); the frequency and duration of use; measures of oversight and appeal; a response plan. Art. 27 requires a FRIA only in the listed
+cases, but the same tool serves voluntarily for any high risk. DPIA — arch-privacy-compliance.
 
-## Karty modelu i zbiorów danych
-- **Karta modelu:** cel i granice użycia, wersja, dane treningowe (źródło, okres, licencje), metryki z podziałem na
-  podgrupy, znane ograniczenia i błędy, ryzyka, kontakt, data przeglądu.
-- **Karta zbioru (datasheet):** po co powstał, skład, sposób zbierania, adnotacje, wstępne przetwarzanie, zgody
-  i podstawy prawne, uprzedzenia, utrzymanie.
+## Model and dataset cards
+- **Model card:** the purpose and limits of use, the version, the training data (source, period, licences), metrics broken down by
+  subgroups, known limitations and errors, risks, a contact, the review date.
+- **Dataset card (datasheet):** why it was created, its composition, the collection method, annotations, preprocessing, consents
+  and legal bases, biases, maintenance.
 
-## Stronniczość i uczciwość — podstawy
-1. Nazwij grupy chronione i szkodę (odmowa usługi, gorsza jakość, stereotypy).
-2. Wybierz metrykę zgodną z celem: parytet demograficzny, równość szans, kalibracja w grupach. Metryki bywają
-   wzajemnie sprzeczne — wybór i uzasadnienie zapisuje człowiek odpowiedzialny za produkt.
-3. Mierz na podgrupach i przekrojach (ai-evals); duże różnice w błędach to ustalenie.
-4. Środki: dane, progi, przegląd człowieka, odwołanie. Powtarzaj po zmianie modelu lub danych.
-5. Do uczciwości używaj danych wrażliwych tylko za podstawą prawną — sprawdź w arch-privacy-compliance.
+## Bias and fairness — the basics
+1. Name the protected groups and the harm (denial of service, worse quality, stereotypes).
+2. Choose a metric consistent with the goal: demographic parity, equal opportunity, calibration within groups. Metrics can be
+   mutually contradictory — the choice and the justification are recorded by the human responsible for the product.
+3. Measure on subgroups and cross-sections (ai-evals); large differences in errors are a finding.
+4. Measures: data, thresholds, human review, appeal. Repeat after a change of the model or the data.
+5. For fairness use sensitive data only with a legal basis — check in arch-privacy-compliance.
 
-## Proces incydentu AI
-Wykrycie (skargi, monitoring, ewaluacje online) → ocena wagi (szkoda dla osób, naruszenie prawa, systemowość) →
-ograniczenie (wyłączenie funkcji, wycofanie modelu, ręczny tryb) → decyzja człowieka o zgłoszeniu (art. 73 AI Act,
-RODO art. 33 przy danych osobowych, dostawca/odbiorcy wg umów) → przyczyna i naprawa → wpis w rejestrze i lekcje.
-Incydenty bezpieczeństwa (np. prompt injection) prowadzi ops-security-operations.
+## The AI incident process
+Detection (complaints, monitoring, online evaluations) → severity assessment (harm to people, a breach of the law, systemic nature) →
+containment (disabling the feature, withdrawing the model, manual mode) → a human's decision on notification (Art. 73 AI Act,
+GDPR Art. 33 with personal data, the provider/recipients according to contracts) → root cause and fix → an entry in the register and lessons.
+Security incidents (e.g. prompt injection) are handled by ops-security-operations.
 
-## Polityka użycia AI dla pracowników
-- Dozwolone narzędzia i poziomy usługi (firmowe, nie konsumenckie); zakaz wklejania danych osobowych, tajemnic
-  i kodu do niezatwierdzonych narzędzi.
-- Człowiek odpowiada za wynik; weryfikacja faktów i kodu; oznaczanie treści syntetycznych, gdy wymaga tego art. 50.
-- Zakaz decyzji o ludziach (rekrutacja, ocena pracy, kredyt) bez zatwierdzenia przez właściciela zgodności.
-- Zgłaszanie nowych narzędzi do inwentarza i incydentów; szkolenie (art. 4); przegląd co pół roku.
-- Polecenia z treści i narzędzia agentów: core-agent-security.
+## AI use policy for employees
+- Permitted tools and service tiers (business, not consumer); a ban on pasting personal data, secrets
+  and code into unapproved tools.
+- The human is responsible for the result; verification of facts and code; marking synthetic content when Art. 50 requires it.
+- A ban on decisions about people (recruitment, work assessment, credit) without the approval of the compliance owner.
+- Reporting new tools to the inventory, and incidents; training (Art. 4); a review every six months.
+- Instructions from content and agent tools: core-agent-security.

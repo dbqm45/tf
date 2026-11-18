@@ -1,36 +1,36 @@
-# Kontrakt zmiany w istniejącym systemie
+# A change contract in an existing system
 
-Gdy zmiana w legacy **ma** zmienić zachowanie (naprawa błędu, mała funkcja), a reszta ma zostać, zadanie dla agenta
-opisujesz kontraktem. Pełna inwentaryzacja systemu na start nie jest potrzebna, wystarczy zasięg zmiany.
+When a change in legacy **should** change behaviour (a bug fix, a small feature) while the rest stays, you describe the task for the agent
+with a contract. A full inventory of the system at the start is not needed; the reach of the change is enough.
 
-## Sześć pól
-| Pole | Co wpisujesz |
+## Six fields
+| Field | What you write |
 |---|---|
-| **Warunek** | kiedy zmiana działa (dane wejściowe, stan, rola) |
-| **Oczekiwany wynik** | obserwowalny wynik, nie „błąd zniknął” |
-| **Chronione zachowania** | tabela niżej, z decyzją przy każdej pozycji |
-| **Dozwolony zakres plików** | ścieżki, które wolno zmienić; wyjście poza zakres to zgłoszenie do człowieka, nie decyzja agenta |
-| **Dowód naprawy** | test czerwony na commicie bazowym i zielony po zmianie |
-| **Dowód braku regresji** | testy ochronne nagrane na commicie bazowym **przed** zmianą (osobny etap i commit), zielone przed i po |
+| **Condition** | when the change applies (input data, state, role) |
+| **Expected result** | an observable result, not "the bug is gone" |
+| **Protected behaviours** | the table below, with a decision for every item |
+| **Allowed file scope** | the paths that may be changed; going outside the scope is a report to a human, not the agent's decision |
+| **Proof of the fix** | a test red on the base commit and green after the change |
+| **Proof of no regression** | protective tests recorded on the base commit **before** the change (a separate stage and commit), green before and after |
 
-## Chronione zachowania — cztery źródła w zasięgu zmiany
-1. **Wywołujący i konsumenci** (grep, graf importów, logi wywołań API, eng-codebase-mapping). Brak znalezionych
-   to ograniczona wiedza, a nie dowód, że ich nie ma — zapisz to.
-2. **Incydenty i zgłoszenia** dotyczące tych plików.
-3. **Często zmieniane pliki** w zasięgu (`git_territory.py --hotspots`).
-4. **Testy charakteryzujące** istniejące zachowanie (sekcja „Warunek wstępny” w SKILL.md).
+## Protected behaviours — four sources within the reach of the change
+1. **Callers and consumers** (grep, the import graph, API call logs, eng-codebase-mapping). Finding none
+   is limited knowledge, not proof that there are none — record that.
+2. **Incidents and tickets** concerning these files.
+3. **Frequently changed files** within reach (`git_territory.py --hotspots`).
+4. **Characterization tests** of the existing behaviour (the "Precondition" section in SKILL.md).
 
-| Zachowanie | Źródło | Decyzja | Kto zdecydował |
+| Behaviour | Source | Decision | Who decided |
 |---|---|---|---|
-| `GET /invoices/{id}` zwraca 404 dla cudzej faktury | konsument: portal klienta | zobowiązanie (chronić) | J. Nowak, właściciel modułu |
-| kolejność pozycji w eksporcie CSV | test charakteryzujący | przypadek (wolno zmienić) | J. Nowak |
-| zaokrąglenie VAT per pozycja | incydent INC-88 | do decyzji właściciela | — (pytanie otwarte) |
+| `GET /invoices/{id}` returns 404 for someone else's invoice | consumer: the customer portal | commitment (protect) | J. Nowak, module owner |
+| the order of items in the CSV export | characterization test | incidental (may change) | J. Nowak |
+| VAT rounding per item | incident INC-88 | for the owner to decide | — (open question) |
 
-- **Zobowiązanie** dostaje test ochronny przed zmianą. **Przypadek** wolno zmienić, z wpisem w raporcie.
-  **Do decyzji** blokuje start, dopóki właściciel (osoba, nie „zespół”) nie rozstrzygnie.
-- Zmiana zachowania widocznego dla konsumenta to już nie refaktoryzacja: zgoda człowieka i wpis w `decisions.md`.
-- Przy zamknięciu zmiany zatwierdzone gwarancje trafiają do wymagań jako **dodane** (pierwszy zapis wymagania)
-  razem ze swoim testem (proc-requirements-shaping, `references/existing-specifications.md` §4).
+- A **commitment** gets a protective test before the change. An **incidental** behaviour may change, with an entry in the report.
+  **For the owner to decide** blocks the start until the owner (a person, not "the team") settles it.
+- A change of behaviour visible to a consumer is no longer refactoring: a human's consent and an entry in `decisions.md`.
+- When the change is closed, the approved guarantees go into the requirements as **added** (the first record of the requirement)
+  together with their test (proc-requirements-shaping, `references/existing-specifications.md` §4).
 
-Źródła: J. Wąsowski, „Brownfield Spec and Preservation Contract” (2026-10-22); liczby z artykułu (np. odsetek
-agentowych PR z commitem cofającym) [niezweryfikowane]. Przykładowe wiersze tabeli są ilustracją.
+Sources: J. Wąsowski, "Brownfield Spec and Preservation Contract" (2026-10-22); the numbers from the article (e.g. the share
+of agentic PRs with a reverting commit) [unverified]. The sample table rows are an illustration.

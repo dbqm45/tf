@@ -1,33 +1,33 @@
-# Grafy: kolejność i zależności
-Format pozycji: **Pytanie dopasowania** · Sygnały · Mapowanie · To nie to, jeśli… · Pułapki
+# Graphs: order and dependencies
+Entry format: **Matching question** · Signals · Mapping · It is not this if… · Pitfalls
 
-## topological-sort — kolejność z zależności
-- **Pytanie:** czy elementy mają relację „X musi być przed Y” i szukamy dopuszczalnej kolejności lub poziomów równoległych?
-- **Sygnały:** „zależy od”, „najpierw… potem”, „blokuje”, etapy, kroki, „co można robić równolegle”.
-- **Mapowanie:** węzeł = etap/zadanie; krawędź = zależność; poziom = zbiór rzeczy wykonalnych równolegle.
-- **To nie to, jeśli** liczą się czasy trwania i termin → `job-scheduling`; zależności tworzą cykle → `feedback-arc-set`.
-- **Pułapki:** cykl oznacza sprzeczne reguły biznesowe — to pytanie do eksperta, nie błąd techniczny; zależności niejawne
-  (np. wspólny zasób) też są krawędziami.
+## topological-sort — order from dependencies
+- **Question:** do the elements have the relation "X must be before Y" and are we looking for an admissible order or parallel levels?
+- **Signals:** "depends on", "first… then", "blocks", stages, steps, "what can be done in parallel".
+- **Mapping:** node = stage/task; edge = dependency; level = a set of things that can be done in parallel.
+- **It is not this if** durations and a deadline count → `job-scheduling`; the dependencies form cycles → `feedback-arc-set`.
+- **Pitfalls:** a cycle means contradictory business rules — that is a question for the expert, not a technical error; implicit dependencies
+  (e.g. a shared resource) are edges too.
 
-## job-scheduling (ścieżka krytyczna, CPM) — harmonogram z czasami trwania
-- **Pytanie:** czy zadania z zależnościami mają czasy trwania i pytamy o najwcześniejszy koniec, zapas, ścieżkę krytyczną?
-- **Sygnały:** termin, opóźnienie, „kara za spóźnienie”, „co jest krytyczne”, zapas czasu, kaskada opóźnień.
-- **Mapowanie:** DAG etapów, waga = czas trwania; ścieżka krytyczna = najdłuższa ścieżka.
-- **To nie to, jeśli** dochodzą ograniczone zasoby → harmonogramowanie z zasobami (NP-trudne; heurystyki/solver CP).
-- **Pułapki:** z ograniczeniami zasobów problem przestaje być prosty; niepewne czasy → PERT/symulacja.
+## job-scheduling (critical path, CPM) — a schedule with durations
+- **Question:** do tasks with dependencies have durations, and are we asking about the earliest finish, the slack, the critical path?
+- **Signals:** a deadline, a delay, "a penalty for being late", "what is critical", time slack, a cascade of delays.
+- **Mapping:** a DAG of stages, weight = duration; critical path = the longest path.
+- **It is not this if** limited resources come in → resource-constrained scheduling (NP-hard; heuristics/a CP solver).
+- **Pitfalls:** with resource constraints the problem stops being simple; uncertain durations → PERT/simulation.
 
-## transitive-closure — kto na kogo wpływa (osiągalność)
-- **Pytanie:** czy pytamy, co pośrednio zależy od danej rzeczy (kaskada skutków)?
-- **Sygnały:** „wpływa pośrednio”, „jeśli X się opóźni, co jeszcze”, analiza ryzyka, zależności przechodnie.
-- **Mapowanie:** osiągalność w grafie zależności.
-- **Pułapki:** pełne domknięcie jest gęste (n²) — licz na żądanie (BFS/DFS) zamiast przechowywać.
+## transitive-closure — who affects whom (reachability)
+- **Question:** are we asking what indirectly depends on a given thing (a cascade of effects)?
+- **Signals:** "affects indirectly", "if X is delayed, what else", risk analysis, transitive dependencies.
+- **Mapping:** reachability in the dependency graph.
+- **Pitfalls:** the full closure is dense (n²) — compute on demand (BFS/DFS) instead of storing it.
 
-## feedback-arc-set — rozbijanie cykli
-- **Pytanie:** czy zależności tworzą cykle i trzeba wskazać najmniej zależności do usunięcia?
-- **Sygnały:** „kręci się w kółko”, wzajemne blokady, sprzeczne kolejności.
-- **Pułapki:** NP-trudne w ogólności; heurystyki. Decyzję, którą zależność zerwać, podejmuje biznes.
+## feedback-arc-set — breaking cycles
+- **Question:** do the dependencies form cycles, and do we have to point to the fewest dependencies to remove?
+- **Signals:** "goes round in circles", mutual blocking, contradictory orders.
+- **Pitfalls:** NP-hard in general; heuristics. The decision which dependency to break is made by the business.
 
-## connectivity (punkty/krawędzie krytyczne)
-- **Pytanie:** czy usunięcie jednego elementu rozspójnia sieć (pojedynczy punkt awarii)?
-- **Sygnały:** „jeśli ta osoba odejdzie”, „jedyne połączenie”, redundancja.
-- **Mapowanie:** mosty i punkty artykulacji w grafie.
+## connectivity (critical points/edges)
+- **Question:** does removing one element disconnect the network (a single point of failure)?
+- **Signals:** "if this person leaves", "the only connection", redundancy.
+- **Mapping:** bridges and articulation points in the graph.

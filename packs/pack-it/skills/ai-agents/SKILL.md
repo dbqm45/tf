@@ -1,124 +1,124 @@
 ---
 name: ai-agents
-description: Użyj przy projekcie agenta LLM lub przepływu agentowego — workflow czy agent, narzędzia, MCP, kontekst, multi-agent, guardrails, limity, tracing, dobór frameworka.
+description: Use for designing an LLM agent or an agentic flow — workflow or agent, tools, MCP, context, multi-agent, guardrails, limits, tracing, framework choice.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj, gdy projektujesz agenta LLM albo przepływ agentowy w kodzie — czy w ogóle potrzebny agent, wzorce workflow (prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer), projekt narzędzi (nazwy, opisy, parametry, błędy, idempotencja) i serwerów MCP, inżynieria kontekstu (co trafia do kontekstu, kompaktowanie, pamięć), kompromisy multi-agent, guardrails i uprawnienia, zatwierdzanie przez człowieka akcji nieodwracalnych, tracing i obserwowalność, warunki stopu i budżety, typowe porażki, wybór frameworka (Claude Agent SDK, LangGraph) wg kryteriów. Nie do wywołań SDK, kontraktu wyjścia i pętli narzędzi w kodzie (eng-llm-features), uruchamiania Claude Code bez nadzoru (core-async-delegation), doboru modelu i kosztu pracy z agentem (core-cost-control), bezpieczeństwa agenta-programisty (core-agent-security) ani RAG (ai-rag)."
-  keywords: "code mode, agent pisze kod zamiast wywołań narzędzi, za dużo wywołań narzędzi, wyniki narzędzi zapychają kontekst, agent zgaduje brakujące dane, agent pyta o wszystko, kiedy agent ma pytać człowieka, pytanie o brakującą informację, pauza i wznowienie agenta, interrupt, agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy, pamięć agenta, pamięć asystenta, typy pamięci, pamięć długotrwała, asystent przywołuje nieaktualne fakty, trwałe wykonanie, Temporal, Inngest, DBOS, restart serwera agenta, kilku agentów-wykonawców, wykonawca znika w połowie, spóźniony wykonawca nadpisuje wynik, kolejka zadań agentów, dzierżawa zadania, reguła w prompcie agenta, agent sprzedażowy, zatwierdzenie kierownika przed akcją agenta, reguła naprawdę działała, agent wywołuje narzędzie, a potem pisze odpowiedź klientowi, inny limit niż zwróciło narzędzie, liczby z wyników narzędzi, rozbieżność odpowiedzi z narzędziem, wyłapać przed wysłaniem, a2a, agent2agent, agent card, acp, agent client protocol, protokół agent agent, agent partnera w innym frameworku, opentelemetry genai, gen_ai, śledzić agenta w opentelemetry"
+  catalog: "Use when you design an LLM agent or an agentic flow in code — whether an agent is needed at all, workflow patterns (prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer), tool design (names, descriptions, parameters, errors, idempotency) and MCP servers, context engineering (what goes into the context, compaction, memory), multi-agent trade-offs, guardrails and permissions, human approval of irreversible actions, tracing and observability, stop conditions and budgets, typical failures, choosing a framework (Claude Agent SDK, LangGraph) by criteria. Not for SDK calls, the output contract and the tool loop in code (eng-llm-features), running Claude Code unattended (core-async-delegation), model choice and the cost of working with an agent (core-cost-control), the security of a coding agent (core-agent-security) or RAG (ai-rag)."
+  keywords: "code mode, agent pisze kod zamiast wywołań narzędzi, za dużo wywołań narzędzi, wyniki narzędzi zapychają kontekst, agent zgaduje brakujące dane, agent pyta o wszystko, kiedy agent ma pytać człowieka, pytanie o brakującą informację, pauza i wznowienie agenta, interrupt, agent llm, projekt agenta, agentic workflow, workflow czy agent, autonomiczny agent, multi-agent, wieloagentowy, orchestrator, subagent, narzędzia agenta, tool design, mcp server, serwer mcp, kontekst agenta, context engineering, kompaktowanie, pamięć agenta, guardrails, human in the loop, zatwierdzanie, tracing agenta, zapętlenie agenta, warunek stopu, langgraph, claude agent sdk, framework agentowy, pamięć agenta, pamięć asystenta, typy pamięci, pamięć długotrwała, asystent przywołuje nieaktualne fakty, trwałe wykonanie, Temporal, Inngest, DBOS, restart serwera agenta, kilku agentów-wykonawców, wykonawca znika w połowie, spóźniony wykonawca nadpisuje wynik, kolejka zadań agentów, dzierżawa zadania, reguła w prompcie agenta, agent sprzedażowy, zatwierdzenie kierownika przed akcją agenta, reguła naprawdę działała, agent wywołuje narzędzie, a potem pisze odpowiedź klientowi, inny limit niż zwróciło narzędzie, liczby z wyników narzędzi, rozbieżność odpowiedzi z narzędziem, wyłapać przed wysłaniem, a2a, agent2agent, agent card, acp, agent client protocol, protokół agent agent, agent partnera w innym frameworku, opentelemetry genai, gen_ai, śledzić agenta w opentelemetry, agent writes code instead of tool calls, too many tool calls, tool results clog the context, agent guesses missing data, agent asks about everything, when the agent should ask a human, asking for missing information, pausing and resuming an agent, LLM agent, agent design, workflow or agent, autonomous agent, multi-agent system, agent tools, agent context, compaction, agent memory, approval, agent tracing, agent looping, stop condition, agent framework, assistant memory, memory types, long-term memory, assistant recalls stale facts, durable execution, agent server restart, several executor agents, executor disappears halfway, late executor overwrites the result, agent task queue, task lease, rule in the agent prompt, sales agent, manager approval before an agent action, the rule really worked, agent calls a tool and then writes a reply to the customer, a different limit than the tool returned, numbers from tool results, mismatch between the reply and the tool, catch before sending, agent-to-agent protocol, partner agent in another framework, trace an agent in OpenTelemetry"
 ---
 
-# Projekt agenta LLM — od „czy agent” do granic i obserwowalności
+# LLM agent design — from "is an agent needed" to boundaries and observability
 
-Agent to model, który sam wybiera kolejne kroki i narzędzia; workflow to kod, który te kroki ustala z góry.
-Anthropic radzi zaczynać od najprostszego rozwiązania i dodawać złożoność tylko wtedy, gdy mierzalnie poprawia wynik.
-Ten skill dotyczy **projektu**; wywołania SDK, schemat wyjścia i pętlę narzędzi w kodzie opisuje **eng-llm-features**.
+An agent is a model that chooses the next steps and tools itself; a workflow is code that fixes those steps in advance.
+Anthropic advises starting with the simplest solution and adding complexity only when it measurably improves the result.
+This skill is about **design**; SDK calls, the output schema and the tool loop in code are described by **eng-llm-features**.
 
-## Procedura
-1. **Zadanie i miara sukcesu.** Zapisz wejście, wynik, kto i kiedy go sprawdza oraz 10–20 realnych przypadków
-   z oczekiwanym efektem. Bez nich nie wiesz, czy złożoność cokolwiek daje (metoda ewaluacji: **ai-evals**).
-2. **Drabina złożoności.** Idź w górę dopiero po porażce niższego szczebla na przypadkach z kroku 1:
-   - jedno wywołanie modelu z dobrym promptem i przykładami (lub z wyszukiwaniem: **ai-rag**);
-   - **workflow** — kroki znane z góry: *prompt chaining* (kolejne kroki z bramką kodu między nimi), *routing*
-     (klasyfikacja i wybór ścieżki), *parallelization* (podzadania niezależne albo głosowanie tego samego zadania),
-     *orchestrator-workers* (model dzieli zadanie dynamicznie), *evaluator-optimizer* (jeden generuje, drugi krytykuje
-     wg jasnego kryterium);
-   - **autonomiczny agent** — liczby kroków nie da się przewidzieć, a zaufanie do decyzji modelu jest uzasadnione.
-   Agent kupuje elastyczność za opóźnienie, koszt i narastanie błędów. Zadanie o stałych krokach (zgłoszenie →
-   klasyfikacja → dane → szkic → kontrola) to workflow, nie agent.
-3. **Narzędzia** (agent-computer interface; większość błędów agentów to błędy narzędzi):
-   - mało narzędzi o wysokim poziomie (`znajdz_zamowienia_klienta`), nie lustro każdego endpointu REST; jeśli człowiek
-     nie wskaże jednoznacznie, które narzędzie wybrać, model też nie wybierze;
-   - nazwy z przestrzenią (`crm_zamowienia_szukaj`), parametry jednoznaczne (`customer_id`, nie `id`), opis jak dla
-     nowego współpracownika: kiedy użyć, formaty, granice względem podobnych narzędzi, przykład;
-   - *poka-yoke*: taki kształt argumentów, w którym trudno się pomylić (ścieżki bezwzględne, enum zamiast tekstu);
-   - wynik z czytelnymi nazwami zamiast surowych UUID, ze stronicowaniem, filtrem i limitem długości; opcjonalnie
+## Procedure
+1. **The task and the success measure.** Write down the input, the result, who checks it and when, and 10–20 real cases
+   with the expected outcome. Without them you do not know whether the complexity gives anything (evaluation method: **ai-evals**).
+2. **The complexity ladder.** Go up only after the lower rung fails on the cases from step 1:
+   - one model call with a good prompt and examples (or with retrieval: **ai-rag**);
+   - **workflow** — steps known in advance: *prompt chaining* (consecutive steps with a code gate between them), *routing*
+     (classification and choice of a path), *parallelization* (independent subtasks or voting on the same task),
+     *orchestrator-workers* (the model splits the task dynamically), *evaluator-optimizer* (one generates, the other critiques
+     by a clear criterion);
+   - **autonomous agent** — the number of steps cannot be predicted, and trust in the model's decisions is justified.
+   An agent buys flexibility at the price of latency, cost and compounding errors. A task with fixed steps (ticket →
+   classification → data → draft → check) is a workflow, not an agent.
+3. **Tools** (agent-computer interface; most agent errors are tool errors):
+   - few high-level tools (`find_customer_orders`), not a mirror of every REST endpoint; if a human
+     cannot point unambiguously to which tool to choose, the model will not choose either;
+   - namespaced names (`crm_orders_search`), unambiguous parameters (`customer_id`, not `id`), a description as for
+     a new colleague: when to use it, formats, boundaries against similar tools, an example;
+   - *poka-yoke*: an argument shape in which it is hard to make a mistake (absolute paths, an enum instead of text);
+   - a result with readable names instead of raw UUIDs, with pagination, a filter and a length limit; optionally
      `response_format: concise|detailed`;
-   - błąd **podpowiada naprawę** („brak pola `data_od` w formacie RRRR-MM-DD”), a nie zwraca stos wywołań;
-   - narzędzia zapisu **idempotentne** (klucz idempotencji z wywołania), bo po timeoucie agent ponowi akcję;
-   - narzędzia sprawdzasz zadaniami wieloetapowymi z weryfikowalnym wynikiem; liczysz wywołania, błędy i tokeny,
-     czytasz transkrypty i poprawiasz opisy (drobna zmiana opisu potrafi dużo zmienić).
-   Wystawiasz narzędzia przez **serwer MCP**, gdy korzysta z nich wielu klientów; ta sama zasada: narzędzia
-   zorientowane na zadanie, nie na endpointy. Zaufanie do cudzych serwerów MCP: **core-agent-security**; budowa,
-   bezpieczeństwo, testy i wersje własnego serwera: **ai-mcp-server**.
-   Agent ↔ agent (A2A) i edytor ↔ agent (ACP), kiedy który: `references/protocols-and-tracing.md`.
-4. **Kontekst** (okno jest zasobem skończonym, jakość spada, gdy się zapełnia): do kontekstu trafia minimum, które
-   pozwala na kolejny krok. Techniki: ładowanie na żądanie (agent trzyma ścieżki i zapytania, a treść pobiera
-   narzędziem), usuwanie starych wyników narzędzi, **kompaktowanie** (streszczenie rozmowy w nowym oknie), notatki
-   poza oknem (plik postępu, lista zadań), subagenci z czystym kontekstem zwracający krótkie streszczenie. Stan,
-   który ma przetrwać sesję, zapisujesz poza kontekstem.
-   **Code mode:** przy wielu wywołaniach albo dużych wynikach (filtrowanie, łączenie danych z kilku narzędzi) agent
-   pisze krótki program, który woła narzędzia jak API i zwraca do kontekstu tylko wynik końcowy. Program działa
-   w piaskownicy z limitem czasu i kosztu i ma tylko narzędzia do odczytu; akcja zapisu idzie osobnym wywołaniem
-   z zatwierdzeniem (krok 6).
-5. **Multi-agent — tylko z uzasadnieniem.** Anthropic (czerwiec 2025): agent zużywa ok. 4×, a system wieloagentowy
-   ok. 15× więcej tokenów niż czat; opłaca się przy zadaniach szerokich i równoległych o wysokiej wartości
-   (badanie wielu źródeł). Kodowanie ma mniej naprawdę równoległych części, a koordynacja i delegowanie przez modele
-   bywają słabe. Test: czy podzadania są niezależne, czy wynik uzasadnia wielokrotny koszt, czy jeden agent
-   z lepszymi narzędziami nie wystarczy. Subagent dostaje cel, format wyniku, granice i narzędzia — nie „zbadaj to”.
-6. **Guardrails i uprawnienia.** Zasada najmniejszych uprawnień per narzędzie; narzędzia tylko do odczytu domyślnie.
-   Akcje **nieodwracalne lub kosztowne** (przelew, usunięcie, wysyłka na zewnątrz, deploy) wymagają zatwierdzenia
-   człowieka z pokazaniem dokładnego skutku, albo są wykonywane dopiero po twardej walidacji w kodzie (limit kwoty,
-   lista dozwolonych odbiorców). Treść z maili, stron i dokumentów to dane, nie polecenia — agent nie dostaje
-   narzędzia, które by je wykonało, razem z dostępem do danych poufnych i kanałem wyjścia na zewnątrz jednocześnie.
-7. **Stop i budżet.** Zawsze: maksymalna liczba kroków, budżet kosztu i czasu na przebieg, wykrywanie powtarzanych
-   tych samych wywołań, wyraźny stan końcowy (zrobione / nie da się / potrzebny człowiek). Po osiągnięciu limitu
-   agent oddaje stan i powód, a nie urywa się po cichu. „Potrzebny człowiek” to konkretne pytanie po wyczerpaniu narzędzi,
-   z punktem kontrolnym i wznowieniem od niego; kiedy pytać, a kiedy założyć wartość domyślną:
-   `references/asking-for-missing-data.md`. Szczegóły liczenia w kodzie: **eng-llm-features**, dobór
-   modeli: **core-cost-control**.
-8. **Tracing.** Każdy przebieg ma identyfikator; zapisujesz kroki: wejście, wywołanie narzędzia z argumentami
-   i wynikiem, tokeny, czas, powód zakończenia. Bez tego nie zdiagnozujesz zapętlenia ani złej decyzji (ogólnie:
-   **ops-observability**; dane osobowe w śladach maskuj; span-y i atrybuty `gen_ai.*` wg konwencji OpenTelemetry —
-   `references/protocols-and-tracing.md` §3). Pamięć długotrwała to kilka kontraktów (semantyczna,
-   epizodyczna, proceduralna, profil, robocza), a nie jeden indeks wektorowy; trwałe wykonanie zależy od granic
-   kroków — `references/memory-and-durable-execution.md`. Błędy stanu się kumulują, więc projektuj wznawianie
-   od punktu kontrolnego zamiast restartu od zera.
-9. **Framework wg kryteriów.** Zacznij od surowego API i pętli, jeśli przypadek jest prosty. Kryteria: potrzebny
-   trwały stan i wznawianie? sterowanie grafem i punkty zatwierdzenia? gotowe narzędzia plików i basha? wymienność
-   modeli? obserwowalność? ile abstrakcji ukrywa prompty? Claude Agent SDK daje gotowy harness (narzędzia, sesje,
-   kompaktowanie), LangGraph — jawny graf stanu z punktami kontrolnymi i przerwaniami dla człowieka. Wersje i API
-   sprawdź w dokumentacji i w paczce (core-grounding).
+   - an error **suggests the fix** ("missing field `date_from` in the format YYYY-MM-DD"), and does not return a stack trace;
+   - write tools are **idempotent** (an idempotency key from the call), because after a timeout the agent will retry the action;
+   - you check tools with multi-step tasks with a verifiable result; you count calls, errors and tokens,
+     read transcripts and improve descriptions (a small change in a description can change a lot).
+   You expose tools through an **MCP server** when many clients use them; the same principle: tools
+   oriented on the task, not on the endpoints. Trust in other people's MCP servers: **core-agent-security**; building,
+   security, tests and versions of your own server: **ai-mcp-server**.
+   Agent ↔ agent (A2A) and editor ↔ agent (ACP), when to use which: `references/protocols-and-tracing.md`.
+4. **Context** (the window is a finite resource, quality drops as it fills up): the context gets the minimum that
+   allows the next step. Techniques: loading on demand (the agent keeps paths and queries, and fetches the content
+   with a tool), removing old tool results, **compaction** (a summary of the conversation in a new window), notes
+   outside the window (a progress file, a task list), subagents with a clean context returning a short summary. State
+   that must survive the session is written outside the context.
+   **Code mode:** with many calls or large results (filtering, joining data from several tools) the agent
+   writes a short program that calls the tools like an API and returns only the final result to the context. The program runs
+   in a sandbox with a time and cost limit and has only read tools; a write action goes as a separate call
+   with approval (step 6).
+5. **Multi-agent — only with a justification.** Anthropic (June 2025): an agent uses about 4×, and a multi-agent system
+   about 15× more tokens than a chat; it pays off for broad, parallel, high-value tasks
+   (researching many sources). Coding has fewer truly parallel parts, and coordination and delegation by models
+   can be weak. Test: are the subtasks independent, does the result justify the multiplied cost, would one agent
+   with better tools not be enough. A subagent gets a goal, a result format, boundaries and tools — not "look into this".
+6. **Guardrails and permissions.** The principle of least privilege per tool; read-only tools by default.
+   **Irreversible or costly** actions (a transfer, a deletion, sending outside, a deploy) require human
+   approval showing the exact effect, or are executed only after hard validation in code (an amount limit,
+   a list of allowed recipients). Content from emails, pages and documents is data, not commands — the agent does not get
+   a tool that would execute it together with access to confidential data and an outbound channel at the same time.
+7. **Stop and budget.** Always: a maximum number of steps, a cost and time budget per run, detection of repeated
+   identical calls, an explicit end state (done / cannot be done / human needed). After reaching the limit
+   the agent hands over the state and the reason, and does not cut off silently. "Human needed" is a concrete question after the tools are exhausted,
+   with a checkpoint and resumption from it; when to ask, and when to assume a default value:
+   `references/asking-for-missing-data.md`. Details of the accounting in code: **eng-llm-features**, model
+   choice: **core-cost-control**.
+8. **Tracing.** Every run has an identifier; you record the steps: input, a tool call with arguments
+   and the result, tokens, time, the reason for ending. Without it you will not diagnose a loop or a bad decision (in general:
+   **ops-observability**; mask personal data in traces; spans and `gen_ai.*` attributes per the OpenTelemetry convention —
+   `references/protocols-and-tracing.md` §3). Long-term memory is several contracts (semantic,
+   episodic, procedural, profile, working), not one vector index; durable execution depends on the step
+   boundaries — `references/memory-and-durable-execution.md`. State errors accumulate, so design resumption
+   from a checkpoint instead of a restart from zero.
+9. **A framework by criteria.** Start with the raw API and a loop if the case is simple. Criteria: do you need
+   durable state and resumption? graph control and approval points? ready file and bash tools? interchangeable
+   models? observability? how many abstractions hide the prompts? Claude Agent SDK gives a ready harness (tools, sessions,
+   compaction), LangGraph — an explicit state graph with checkpoints and interruptions for a human. Check versions and APIs
+   in the documentation and in the package (core-grounding).
 
-Agent, który obsługuje program (desktop, przeglądarka): **najpierw podnieś interfejs**, zrzuty ekranu na końcu —
-`references/failures-and-patterns.md` §„Agent obsługujący program”.
+An agent that operates a program (desktop, browser): **first go up the interface**, screenshots last —
+`references/failures-and-patterns.md` §"An agent operating a program".
 
-Kilku wykonawców nad wspólnym stanem (dzierżawa, wersja rekordu, ponowienie / wznowienie / kompensacja), „kto jest
-świadkiem tego kroku” (reguła o stanie, akcji lub sekwencji poza modelem), długie przebiegi w wielu oknach kontekstu
-i interfejs harnessu, kontrola liczb z narzędzi przed odpowiedzią, sonda end-to-end: `references/executors-and-gates.md`.
+Several executors over shared state (a lease, a record version, retry / resumption / compensation), "who is the
+witness of this step" (a rule about state, an action or a sequence outside the model), long runs over many context windows
+and the harness interface, checking numbers from tools before the reply, an end-to-end probe: `references/executors-and-gates.md`.
 
-Typowe porażki i środki: `references/failures-and-patterns.md`.
+Typical failures and remedies: `references/failures-and-patterns.md`.
 
-## Przykład
-**Wejście:** „Agent do reklamacji: czyta maila, sprawdza zamówienie w CRM, pisze odpowiedź, w razie zwrotu >500 zł
-zleca przelew.”
-**Wynik:**
-- kroki znane → workflow: routing (reklamacja/pytanie) → pobranie zamówienia → szkic → evaluator-optimizer (1 poprawka);
-  agent nie jest potrzebny, multi-agent tym bardziej (koszt ok. 15×);
-- narzędzia: `crm_zamowienie_pobierz`, `zwrot_przygotuj` (zapis, idempotentny po `reklamacja_id`); nie 40 endpointów;
-- zwrot >500 zł: tylko po zatwierdzeniu człowieka z podsumowaniem skutku; limit kwoty egzekwuje kod;
-- treść maila to dane; agent nie ma narzędzia „wyślij na dowolny adres”;
-- limity: 6 kroków, budżet na przebieg, ślad każdego kroku; 15 przypadków testowych (w tym mail z podłożonym poleceniem).
+## Example
+**Input:** "An agent for complaints: it reads the email, checks the order in the CRM, writes a reply, and for a refund >500 PLN
+it orders a transfer."
+**Result:**
+- known steps → workflow: routing (complaint/question) → fetching the order → draft → evaluator-optimizer (1 revision);
+  an agent is not needed, multi-agent even less so (cost about 15×);
+- tools: `crm_order_get`, `refund_prepare` (a write, idempotent by `complaint_id`); not 40 endpoints;
+- a refund >500 PLN: only after human approval with a summary of the effect; the code enforces the amount limit;
+- the email content is data; the agent has no "send to any address" tool;
+- limits: 6 steps, a budget per run, a trace of every step; 15 test cases (including an email with a planted command).
 
-## Checklista
-- [ ] przypadki z oczekiwanym wynikiem; najprostszy szczebel, który je zalicza, wybrany świadomie
-- [ ] narzędzia: mało, o wysokim poziomie, z opisem „kiedy”, czytelne błędy, zapisy idempotentne
-- [ ] kontekst: minimum, ładowanie na żądanie, plan kompaktowania i notatek
-- [ ] brak danych: najpierw narzędzia; pytanie tylko o decyzję człowieka lub brak nie do uzupełnienia, z opcjami; punkt kontrolny i wznowienie
-- [ ] multi-agent tylko z uzasadnieniem kosztu (ok. 15×) i niezależnych podzadań
-- [ ] akcje nieodwracalne za zatwierdzeniem człowieka lub twardą walidacją; treść = dane
-- [ ] limit kroków, budżet, wykrywanie pętli, jawny stan końcowy
-- [ ] tracing każdego kroku; wznawianie od punktu kontrolnego
-- [ ] framework wybrany kryteriami, nie marką
+## Checklist
+- [ ] cases with an expected result; the simplest rung that passes them chosen deliberately
+- [ ] tools: few, high-level, with a "when" description, readable errors, idempotent writes
+- [ ] context: minimum, loading on demand, a plan for compaction and notes
+- [ ] missing data: tools first; a question only about a human decision or a gap that cannot be filled, with options; a checkpoint and resumption
+- [ ] multi-agent only with a justification of the cost (about 15×) and independent subtasks
+- [ ] irreversible actions behind human approval or hard validation; content = data
+- [ ] step limit, budget, loop detection, explicit end state
+- [ ] tracing of every step; resumption from a checkpoint
+- [ ] framework chosen by criteria, not by brand
 
-## Źródła
-- Anthropic, „Building effective agents” (19.12.2024, dostęp 2026-10-17): wzorce workflow, ACI, poka-yoke, ścieżki
-  bezwzględne, limity iteracji, testy w sandboxie.
-- Anthropic, „How we built our multi-agent research system” (13.06.2025, dostęp 2026-10-17): ok. 4× i ok. 15× tokenów,
-  mniej równoległości w kodowaniu, tracing, wznawianie, rainbow deployments.
-- Anthropic, „Writing effective tools for agents” (11.09.2025, dostęp 2026-10-17): konsolidacja narzędzi, przestrzenie
-  nazw, czytelne identyfikatory, `response_format`, czytelne błędy, ewaluacja narzędzi.
-- Anthropic, „Effective context engineering for AI agents” (29.09.2025, dostęp 2026-10-17): kompaktowanie, notatki,
-  subagenci, ładowanie na żądanie.
-- [niezweryfikowane] opis możliwości LangGraph i Claude Agent SDK w kroku 9 — z wiedzy ogólnej, sprawdź w dokumentacji.
+## Sources
+- Anthropic, "Building effective agents" (19.12.2024, accessed 2026-10-17): workflow patterns, ACI, poka-yoke, absolute
+  paths, iteration limits, tests in a sandbox.
+- Anthropic, "How we built our multi-agent research system" (13.06.2025, accessed 2026-10-17): about 4× and about 15× tokens,
+  less parallelism in coding, tracing, resumption, rainbow deployments.
+- Anthropic, "Writing effective tools for agents" (11.09.2025, accessed 2026-10-17): tool consolidation, namespaces,
+  readable identifiers, `response_format`, readable errors, tool evaluation.
+- Anthropic, "Effective context engineering for AI agents" (29.09.2025, accessed 2026-10-17): compaction, notes,
+  subagents, loading on demand.
+- [unverified] the description of the capabilities of LangGraph and Claude Agent SDK in step 9 — from general knowledge, check in the documentation.
 
-Opisane własnymi słowami.
+Described in our own words.

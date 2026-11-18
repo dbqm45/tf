@@ -894,7 +894,21 @@ treści (angielska), bez równoległej polskiej.
     `ops-secrets-identities` `wyciek-klucza-aws`) — na main też (7 z 8 przebiegów bez wywołania).
     - [ ] cztery scenariusze ops- bez wywołania skilla (także przed tłumaczeniem) — skille bez `keywords`;
       sprawdzić słowa kluczowe PL+EN i opis pod polskie zgłoszenia.
-  - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
+  - [x] 4d-r4 (2026-11-18): czwarta runda równoległa — `eng-` (19), `ddd-` (13), `ai-` (13): 45 skilli (+ referencje)
+    po angielsku, `hint.pl.txt`. Wszystkie skille pack-it są po angielsku. Stałe sekcje referencji `ddd-archetypes`
+    (`reference_sections` w pack.yaml) po angielsku; `build.py check` przyjmuje też plik w całości z polskimi nazwami
+    (`sections_pl`, „pl: sprzed 14.x”). Ciągi czytane przez skrypty zostały bajt w bajt (np. `pelna|oszczedna`,
+    `=== POKAŻ DOSŁOWNIE ===` w ddd-es-simulation, statusy ROZWIĄZANE/NOWE/ZMIENIONE w eng-tech-debt-audit, „BRAK w
+    kodzie”), z angielską glosą. Poprawki: ddd-es-simulation pokazywał `--scenario weterynaria`, a katalog to
+    `veterinary` (polecenie z dokumentacji kończyło się „No scenario”); opis ai-mcp-server skrócony do ≤ 170 znaków;
+    ucięte fragmenty spisów treści (eng-llm-features, trzy pliki fw-nextjs) usunięte. Podpowiedzi: słowa kluczowe PL+EN
+    dla ddd-context-mapping, sec-zero-trust-identity, ddd-tactical-design (i tool-vitest w #329 — sprawdzane też w
+    obszarze roboczym samego pack-it): 902/918 · 31/43, `--hints` czysto w `all` i `pack-it`. Bramki 45/45. Haiku po
+    zmianie 39/43; powtórki przed/po dla czterech porażek: 3/8 → 5/8, `tdd-nowa-regula` (eng-testing) bez wywołania
+    skilla po obu stronach.
+    - [ ] `tdd-nowa-regula`: skill eng-testing nie jest wywoływany (także przed tłumaczeniem) — słowa kluczowe/opis.
+    - [ ] kontrola podpowiedzi przed PR w obu obszarach (`all` i sam `pack-it`) — IDF zależy od zestawu skilli.
+  - [x] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
     M2 hooki, M3–M4 silnik (`core/factory`), M5 skrypty pozostałych skilli rdzenia, M6 pack-it, M7 mode-pdi, M8 org,

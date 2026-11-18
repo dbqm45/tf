@@ -1,28 +1,28 @@
-# Zadania wizyjne i metryki
+# Vision tasks and metrics
 
-Stan z wyszukiwania 2026-10-17 (definicje COCO ze źródeł wtórnych, strony pierwotnej nie otwarto).
+The state from a search on 2026-10-17 (the COCO definitions from secondary sources, the primary page was not opened).
 
-## Zadanie → metryka
-| Zadanie | Wynik modelu | Metryki podstawowe | Uwagi |
+## Task → metric
+| Task | Model output | Basic metrics | Notes |
 |---|---|---|---|
-| Klasyfikacja | etykieta | accuracy (klasy zrównoważone), precision, recall, F1, macierz pomyłek | przy rzadkiej klasie accuracy mylące (98% przy 2% wad to „zawsze OK”) |
-| Detekcja | ramki + klasa + pewność | AP/mAP, AP50, AP75, AP small/medium/large; precision i recall przy progu | COCO: AP uśrednione po progach IoU 0,50–0,95 co 0,05; AP50 zbliżone do PASCAL VOC |
-| Segmentacja semantyczna | klasa na piksel | IoU na klasę (mIoU), Dice | Dice = 2·|A∩B| / (|A|+|B|); IoU = |A∩B| / |A∪B| |
-| Segmentacja instancji | maska na obiekt | mAP na maskach (IoU maski) | jak detekcja, ale IoU liczone na maskach |
-| Punkty kluczowe | współrzędne | OKS i AP na OKS, błąd w pikselach | normalizuj do rozmiaru obiektu |
-| OCR / Document AI | tekst, pola | CER, WER, dokładne dopasowanie pól, F1 pól | liczy się odległość edycji; pola krytyczne (kwota, NIP) oceniaj osobno |
-| Śledzenie w wideo | ścieżki obiektów | metryki śledzenia (zamiany tożsamości, ciągłość) + detekcja | [niezweryfikowane] nazwy metryk sprawdź w dokumentacji wybranej biblioteki |
+| Classification | a label | accuracy (balanced classes), precision, recall, F1, the confusion matrix | with a rare class accuracy is misleading (98% with 2% defects is "always OK") |
+| Detection | boxes + class + confidence | AP/mAP, AP50, AP75, AP small/medium/large; precision and recall at a threshold | COCO: AP averaged over IoU thresholds 0.50–0.95 in steps of 0.05; AP50 close to PASCAL VOC |
+| Semantic segmentation | a class per pixel | IoU per class (mIoU), Dice | Dice = 2·|A∩B| / (|A|+|B|); IoU = |A∩B| / |A∪B| |
+| Instance segmentation | a mask per object | mAP on masks (mask IoU) | like detection, but IoU computed on masks |
+| Keypoints | coordinates | OKS and AP on OKS, error in pixels | normalize to the object size |
+| OCR / Document AI | text, fields | CER, WER, exact field match, field F1 | the edit distance counts; assess critical fields (amount, NIP — the Polish tax ID) separately |
+| Video tracking | object tracks | tracking metrics (identity switches, continuity) + detection | [unverified] check the metric names in the documentation of the chosen library |
 
-## Definicje
-- IoU = pole części wspólnej ramek przez pole ich sumy. Detekcja jest trafieniem, gdy IoU ≥ próg i klasa się zgadza.
-- AP to pole pod krzywą precision–recall dla klasy, mAP to średnia po klasach. W kontekście COCO „mAP” zwykle
-  oznacza AP@[.50:.95]. Podając wynik, zawsze pisz, który wariant i jaki próg.
-- COCO dzieli obiekty wg powierzchni: small < 32², medium 32²–96², large > 96² pikseli.
-- CER = (podstawienia + usunięcia + wstawienia) / liczba znaków wzorca; WER tak samo na słowach.
+## Definitions
+- IoU = the area of the intersection of the boxes divided by the area of their union. A detection is a hit when IoU ≥ the threshold and the class matches.
+- AP is the area under the precision–recall curve for a class, mAP is the average over classes. In the COCO context "mAP" usually
+  means AP@[.50:.95]. When giving a result, always state which variant and which threshold.
+- COCO divides objects by area: small < 32², medium 32²–96², large > 96² pixels.
+- CER = (substitutions + deletions + insertions) / the number of characters in the reference; WER the same on words.
 
-## Pułapki oceny
-- Wynik zależy od progu pewności i progu NMS; zamroź je przed testem końcowym.
-- Mały zbiór testowy daje szeroki przedział: raportuj przedział (bootstrap) i liczbę przykładów w kawałku.
-- Etykiety w zbiorze testowym sprawdzaj ręcznie; błędna etykieta zaniża wynik modelu.
-- Porównuj modele na tym samym zbiorze, rozdzielczości i progu; rozdzielczość wejścia zmienia AP małych obiektów.
-- Zbiór z jednego dnia lub kamery zawyża wynik; testuj na nowej kamerze, porze roku, partii.
+## Assessment pitfalls
+- The result depends on the confidence threshold and the NMS threshold; freeze them before the final test.
+- A small test set gives a wide interval: report the interval (bootstrap) and the number of examples in the slice.
+- Check the labels in the test set by hand; a wrong label lowers the model's result.
+- Compare models on the same dataset, resolution and threshold; the input resolution changes the AP of small objects.
+- A dataset from one day or camera inflates the result; test on a new camera, season, batch.

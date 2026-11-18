@@ -1,23 +1,23 @@
-# Format raportu (`docs/project/02-domain/algorithms.md`)
+# Report format (`docs/project/02-domain/algorithms.md`)
 
-Nagłówek artefaktu wg core-project-record (`artifact: algorithms`, `phase: domain`, `inputs: [areas.md, corpus.md]`).
+The artifact header per core-project-record (`artifact: algorithms`, `phase: domain`, `inputs: [areas.md, corpus.md]`).
 
-## Na obszar
+## Per area
 ```markdown
-## A2 — Planowanie etapów projektu
-| Kandydat | Podstawa (tor) | Pewność | Cytaty |
+## A2 — Planning project stages
+| Candidate | Basis (track) | Confidence | Quotes |
 |---|---|---|---|
-| job-scheduling | językowy + strukturalny | wysoka | E12 S1 L40 „kara 2% za tydzień opóźnienia”; E30 S2 tor: PM/4 |
-| topological-sort | strukturalny | średnia | E31 S2 tor: PM/2 |
+| job-scheduling | language + structural | high | E12 S1 L40 "a 2% penalty per week of delay"; E30 S2 track: PM/4 |
+| topological-sort | structural | medium | E31 S2 track: PM/2 |
 
-**Mapowanie (job-scheduling):** węzeł = etap; krawędź = „etap B wymaga wyników A” (E31); waga = czas trwania etapu (E33);
-termin = data z umowy (E12); zasoby współdzielone = krawędzie niejawne (E35).
-**Warianty:** harmonogram z ograniczonymi zasobami → problem NP-trudny (E35: „ten sam specjalista w dwóch etapach”).
-**Uzasadnienie pewności:** oba tory, różne cytaty, 4 elementy mapowania.
-**Najlepszy kandydat:** job-scheduling.
+**Mapping (job-scheduling):** node = stage; edge = "stage B requires the results of A" (E31); weight = the stage duration (E33);
+deadline = the date from the contract (E12); shared resources = implicit edges (E35).
+**Variants:** a schedule with limited resources → an NP-hard problem (E35: "the same specialist in two stages").
+**Confidence justification:** both tracks, different quotes, 4 mapping elements.
+**Best candidate:** job-scheduling.
 ```
 
-## Na końcu
-- **Uczciwe braki:** słowo/cytat → dlaczego katalog nie pasuje.
-- **Obserwacje między obszarami:** konsolidacja / wspólne jądro / szew — z uzasadnieniem.
-- TL;DR, Otwarte pytania, Przekazanie (dla ddd-strategic-analysis i arch-tech-selection).
+## At the end
+- **Honest gaps:** word/quote → why the catalogue does not fit.
+- **Observations across areas:** consolidation / shared kernel / seam — with a justification.
+- TL;DR, Open questions, Handoff (for ddd-strategic-analysis and arch-tech-selection).

@@ -1,5 +1,4 @@
 # Deployment outside Vercel and version updates
-> runtime · 5. Version update step by step
 
 ## 1. The container image
 - `output: 'standalone'` in `next.config` creates a directory with the server (`server.js`) and only the production dependencies.

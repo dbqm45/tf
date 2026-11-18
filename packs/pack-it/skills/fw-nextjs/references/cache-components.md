@@ -1,5 +1,4 @@
 # Cache Components (Next.js 16+) — model, keys, limitations, migration
-> · 5. Invalidation · 6. Request data · 7. Limitations · 8. Migration from the old settings
 
 You enable it with the `cacheComponents: true` flag in `next.config.ts`; it replaces the experimental `experimental.ppr`.
 Before the change check the documentation matched to the installed version (`.next-docs/`, SKILL.md), because the cache

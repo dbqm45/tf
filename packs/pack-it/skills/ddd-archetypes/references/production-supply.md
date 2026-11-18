@@ -1,166 +1,166 @@
-# Archetyp Production / Supply — mapper (struktura wyrobu, produkcja, zaopatrzenie, identyfikowalność)
+# The Production / Supply archetype — mapper (product structure, production, procurement, traceability)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania o **wytwarzaniu wyrobów** albo **przepływie towaru przez łańcuch dostaw** na model ze strukturą
-wyrobu, marszrutą, zleceniem i śladem partii. Efekt: wiadomo, z czego, gdzie i kiedy coś powstało i dokąd trafiło. Protokół wspólny (pytania, „To zależy”, kontrola R/A/X, zapis):
-`SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements about **manufacturing products** or **the flow of goods through a supply chain** into a model with the product
+structure, the routing, the order and the batch trace. The effect: you know what something was made from, where and when, and where it went. The common protocol (questions, "It depends", the R/A/X check, recording):
+`SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy z materiałów powstają wyroby (albo towar przechodzi przez łańcuch dostaw) i trzeba wiedzieć,
-z czego, gdzie i kiedy?* Tak → pasuje. Jeśli firma tylko kupuje i sprzedaje, nie wiedząc nic o pochodzeniu partii —
-wystarczy Product z Accounting.
+## Fit test
+**The core question:** *are products made from materials (or do goods pass through a supply chain), and do you need to know
+from what, where and when?* Yes → it fits. If the company only buys and sells, knowing nothing about the origin of batches —
+Product with Accounting is enough.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „receptura”, „lista materiałów”, „wyrób składa się z…” | ✅ |
-| „zlecenie produkcyjne”, „marszruta”, „etapy procesu” | ✅ |
-| „co zamówić, żeby zrealizować plan produkcji” (potrzeby materiałowe) | ✅ |
-| „z jakiej partii surowca powstała ta partia wyrobu?”, „wycofaj partię” | ✅ identyfikowalność |
-| katalog, warianty, typy produktu, numery seryjne | ❌ → Product (`product.md`) |
-| „kolejność etapów i ścieżka krytyczna” | ❌ → Planning |
-| „czy maszyna jest wolna w środę?” | ❌ → Availability |
-| „które zlecenie na którą maszynę, by zmaksymalizować wartość” | ❌ → General assignment |
-| „stan magazynowy i wycena zapasów” | ❌ → Accounting |
-| „montaż u klienta jako usługa” | ⚠️ graniczny |
+| "recipe", "bill of materials", "the product consists of…" | ✅ |
+| "production order", "routing", "process stages" | ✅ |
+| "what to order to carry out the production plan" (material requirements) | ✅ |
+| "from which raw material batch was this product batch made?", "recall the batch" | ✅ traceability |
+| catalog, variants, product types, serial numbers | ❌ → Product (`product.md`) |
+| "the order of stages and the critical path" | ❌ → Planning |
+| "is the machine free on Wednesday?" | ❌ → Availability |
+| "which order on which machine to maximize value" | ❌ → General assignment |
+| "stock level and inventory valuation" | ❌ → Accounting |
+| "assembly at the customer's site as a service" | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Usługa a wyrób* — jeśli nic nie powstaje materialnie, a liczy się praca w czasie → activity-process (operacje)
-  i resource-service; Production / Supply pasuje, gdy powstaje partia wyrobu ze śladem materiałów.
-- *Sama dystrybucja* — pasuje tylko identyfikowalność (partie, zdarzenia); struktura i marszruta zbędne.
-- *Maszyna* — aktywo to resource-service, pojemność w czasie → Availability; tu tylko miejsce wykonania segmentu.
+**Borderline cases:**
+- *A service vs a product* — if nothing is created materially, and the work over time is what counts → activity-process (operations)
+  and resource-service; Production / Supply fits when a product batch with a trace of materials is created.
+- *Distribution alone* — only traceability fits (batches, events); the structure and the routing are unnecessary.
+- *A machine* — the asset is resource-service, capacity over time → Availability; here only the place where a segment is executed.
 
-## Model (istota)
-### Struktura wyrobu i proces
-- **Struktura wyrobu (BOM)** — wiedza ogólna z produkcji: wyrób składa się z komponentów w określonych ilościach.
-  Nasz wniosek modelowy: BOM to **asocjacja między produktami** (wyrób → komponent, ilość → Quantity, okres
-  obowiązywania, wersja); produkt pozostaje w Product, BOM nie jest jego polem.
-- **Marszruta / segmenty procesu** — kolejność kroków z miejscem, czasem i materiałami; krok jako czynność →
+## Model (the essence)
+### Product structure and process
+- **Product structure (BOM)** — general manufacturing knowledge: a product consists of components in defined quantities.
+  Our modelling conclusion: the BOM is **an association between products** (product → component, quantity → Quantity, period
+  of validity, version); the product stays in Product, the BOM is not its field.
+- **Routing / process segments** — the order of steps with a place, a time and materials; a step as an activity →
   activity-process.
-- **Definicja produktu, zdolności produkcyjne, harmonogram i wykonanie produkcji** — modele ISA-95 / IEC 62264
-  (wtórne, zob. „Źródła”): „co potrafimy”, „co zaplanowano”, „co zrobiono”. Bierzemy tylko **rozdzielenie
-  plan / wykonanie**.
-- **Zlecenie produkcyjne** — wyrób, ilość, struktura i marszruta **w wersji z dnia zlecenia**, status, zużycie
-  i wynik (partie, braki). Wersje struktury z datą skutku jak w `agreement.md`, nie nadpisanie.
+- **Product definition, production capability, schedule and production execution** — the ISA-95 / IEC 62264 models
+  (secondary, see "Sources"): "what we can do", "what was planned", "what was done". We take only **the separation of
+  plan / execution**.
+- **Production order** — the product, the quantity, the structure and the routing **in the version as of the order date**, a status, consumption
+  and the result (batches, rejects). Versions of the structure with an effective date as in `agreement.md`, not an overwrite.
 
-### Zaopatrzenie
-- **Planowanie potrzeb materiałowych (MRP)** — z planu wyrobów i struktur wynikają potrzeby materiałów w czasie, po
-  uwzględnieniu zapasów (ujęcie demand-driven: Ptak & Smith 2011). Archetyp **przyjmuje wynik** (potrzeby, terminy)
-  jako dane; wyliczenie to algorytm pod interfejsem. Dostawca to strona w roli (Party), zakup — Agreement.
+### Procurement
+- **Material requirements planning (MRP)** — material requirements over time follow from the product plan and the structures, after
+  taking stock into account (the demand-driven approach: Ptak & Smith 2011). The archetype **accepts the result** (requirements, dates)
+  as data; the computation is an algorithm behind an interface. The supplier is a party in a role (Party), the purchase — Agreement.
 
-### Dyskretna vs procesowa
-Własny wniosek, wsparty tym, że Hay ma osobne rozdziały „Material requirements planning” i „Process manufacturing”:
-- **dyskretna** — policzalne sztuki, montaż; kluczowe: struktura, numery seryjne lub partie;
-- **procesowa** — receptury, mieszanie, **współprodukty i odpady**, wydajność zmienna; kluczowe: receptura z tolerancją,
-  partia jako jednostka śladu, przeliczenia ilości (Quantity).
+### Discrete vs process
+Our own conclusion, supported by the fact that Hay has separate chapters "Material requirements planning" and "Process manufacturing":
+- **discrete** — countable items, assembly; key: the structure, serial numbers or batches;
+- **process** — recipes, mixing, **co-products and waste**, a variable yield; key: a recipe with a tolerance,
+  the batch as the trace unit, quantity conversions (Quantity).
 
-### Identyfikowalność
-- **Partia / lot** — jednostka śledzenia (Product); powiązania wejście → wyjście tworzą graf pochodzenia.
-- **Zdarzenia** — zapisujemy fakty (co, kiedy, gdzie, dlaczego). Standard
-  GS1 EPCIS 2.0 (z CBV 2.0, 2022) wyróżnia rodzaje zdarzeń: ObjectEvent (obserwacja obiektu), AggregationEvent
-  (pakowanie w opakowanie zbiorcze), TransformationEvent (wejścia → wyjścia), AssociationEvent (powiązanie, nowe
-  w 2.0), TransactionEvent (powiązanie z transakcją); opisy w nawiasach to skrót autorów fabryki, definicji normatywnych
-  nie czytano. Dla modelu to **słownik rodzajów faktów**, niekoniecznie format wymiany.
-- **GS1 Global Traceability Standard 2.0 (2017)** — ramy procesu identyfikowalności w łańcuchu dostaw.
-- **Wymóg „jeden krok wstecz, jeden krok naprzód”** w żywności (rozp. (WE) 178/2002, art. 18; potwierdzone
-  częściowo, pośrednio) — kontekst do potwierdzenia przez prawnika: podmiot wie, od kogo wziął i komu przekazał.
-  Minimalny ślad = ten wymóg; pełny graf partii to rozszerzenie.
-- **Identyfikatory GS1** (np. GTIN, SSCC, GLN) — [niezweryfikowane] w tym pliku; ustal z ekspertem, czy firma ich używa.
+### Traceability
+- **Batch / lot** — the tracking unit (Product); input → output links form an origin graph.
+- **Events** — we record facts (what, when, where, why). The
+  GS1 EPCIS 2.0 standard (with CBV 2.0, 2022) distinguishes event kinds: ObjectEvent (an observation of an object), AggregationEvent
+  (packing into a collective package), TransformationEvent (inputs → outputs), AssociationEvent (an association, new
+  in 2.0), TransactionEvent (a link to a transaction); the descriptions in parentheses are a shorthand by the factory's authors, the normative definitions
+  were not read. For the model this is **a dictionary of kinds of facts**, not necessarily an exchange format.
+- **GS1 Global Traceability Standard 2.0 (2017)** — a framework for the traceability process in a supply chain.
+- **The "one step back, one step forward" requirement** in food (Regulation (EC) 178/2002, art. 18; confirmed
+  partly, indirectly) — context to be confirmed by a lawyer: an operator knows from whom it took and to whom it handed over.
+  The minimal trace = this requirement; a full batch graph is an extension.
+- **GS1 identifiers** (e.g. GTIN, SSCC, GLN) — [unverified] in this file; settle with an expert whether the company uses them.
 
-## Pytania
-**A — decyzje standardowe:**
-- Produkcja **dyskretna czy procesowa** (receptury, współprodukty, tolerancje)?
-- Jaka jest **jednostka śledzenia**: partia, sztuka (numer seryjny), opakowanie zbiorcze?
-- Jak głęboko **wstecz i naprzód** trzeba sięgać: jeden krok czy pełny graf pochodzenia?
-- Czy struktura wyrobu **ma wersje** i czy zlecenie zamraża wersję z dnia zlecenia?
-- Kto liczy potrzeby materiałowe (nasz system, ERP, ręcznie) i czy archetyp tylko przyjmuje wynik?
+## Questions
+**A — standard decisions:**
+- **Discrete or process** production (recipes, co-products, tolerances)?
+- What is the **tracking unit**: a batch, an item (serial number), a collective package?
+- How deep **back and forward** must we reach: one step or a full origin graph?
+- Does the product structure **have versions**, and does the order freeze the version as of the order date?
+- Who computes the material requirements (our system, the ERP, manually), and does the archetype only accept the result?
 
-**B — luki** (przykłady): zamienniki składników · współprodukty i odpady · partie mieszane · rework · okres
-przydatności · kwarantanna · wycofanie partii i powiadomienie odbiorców (poza archetypem).
+**B — gaps** (examples): component substitutes · co-products and waste · mixed batches · rework · shelf
+life · quarantine · batch recall and notifying recipients (outside the archetype).
 
-## Kroki mapowania
-1. **Rodzaj produkcji** — dyskretna, procesowa, tylko łańcuch dostaw.
-2. **Wyroby i składniki** — produkty z Product; struktura jako asocjacja z ilością (Quantity) i okresem.
-3. **Marszruta** — segmenty, miejsca, materiały na krok.
-4. **Plan a wykonanie** — zlecenie, zużycie, wynik, braki.
-5. **Potrzeby materiałowe** — źródło wyniku MRP; terminy; powiązanie z zakupem (Party, Agreement).
-6. **Partie i graf pochodzenia** — jednostka śledzenia, powiązania wejście → wyjście.
-7. **Zdarzenia** — rodzaje faktów i ich pola.
-8. **Zapytania** — „wstecz”, „naprzód”, „na dzień”.
+## Mapping steps
+1. **Kind of production** — discrete, process, supply chain only.
+2. **Products and components** — products from Product; the structure as an association with a quantity (Quantity) and a period.
+3. **Routing** — segments, places, materials per step.
+4. **Plan vs execution** — the order, consumption, the result, rejects.
+5. **Material requirements** — the source of the MRP result; dates; the link to purchasing (Party, Agreement).
+6. **Batches and the origin graph** — the tracking unit, input → output links.
+7. **Events** — kinds of facts and their fields.
+8. **Queries** — "back", "forward", "as of a day".
 
-## Decyzje do kontroli (R/A/X)
-dyskretna vs procesowa · jednostka śledzenia · głębokość śladu · wersje struktury i marszruty · zamienniki i
-współprodukty · źródło potrzeb materiałowych · status partii · rodzaje zdarzeń.
+## Decisions to check (R/A/X)
+discrete vs process · the tracking unit · the trace depth · versions of the structure and the routing · substitutes and
+co-products · the source of material requirements · batch status · kinds of events.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Production / Supply: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Struktury i marszruty — | Wyrób (→ Product) | Składnik | Ilość | Okres/wersja | Segment i miejsce |
-## Zlecenia           — | Zlecenie | Wyrób | Wersja struktury | Plan vs wykonanie | Status |
-## Partie i pochodzenie — | Partia | Typ | Partie wejściowe | Okres przydatności | Status |
-## Zdarzenia i zapytania — | Rodzaj faktu / pytanie (wstecz, naprzód, na dzień) | Dane | Głębokość |
-## Integracje         — | Zdarzenie | Z / do archetypu | Reakcja |
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), przypadki brzegowe, parametry polityk zmiennych
+# Production / Supply model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Structures and routings — | Product (→ Product) | Component | Quantity | Period/version | Segment and place |
+## Orders             — | Order | Product | Structure version | Plan vs execution | Status |
+## Batches and origin — | Batch | Type | Input batches | Shelf life | Status |
+## Events and queries — | Kind of fact / question (back, forward, as of a day) | Data | Depth |
+## Integrations       — | Event | From / to archetype | Reaction |
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), edge cases, variable policy parameters
 ```
 
-## Wzorce i pułapki
-- **Struktura jako kolumny w produkcie** (`skladnik1`, `skladnik2`) — brak wersji i głębokości.
-- **Bieżąca lokalizacja zamiast zdarzeń** — brak odpowiedzi „gdzie była w czwartek”.
-- **Partia = produkt** — katalog mieszany ze śladem; trzymaj granicę z Product.
-- **Plan i wykonanie w jednym rekordzie** — fakt nadpisuje plan.
-- **Ilości bez jednostek** psują zużycie i wydajność → Quantity.
-- **Autoryzacja poza archetypem**: kto zwalnia partię z kwarantanny lub zarządza wycofaniem, rozstrzyga warstwa
-  polityk; archetyp zapisuje fakt i pilnuje niezmienników (np. nie zużyjesz więcej niż jest na partii).
-- Bez wymogu śladu nie buduj grafu pochodzenia; wystarczy partia i dostawca.
+## Patterns and pitfalls
+- **The structure as columns in the product** (`component1`, `component2`) — no versions and no depth.
+- **The current location instead of events** — no answer to "where was it on Thursday".
+- **Batch = product** — the catalog mixed with the trace; keep the boundary with Product.
+- **Plan and execution in one record** — the fact overwrites the plan.
+- **Quantities without units** break consumption and yield → Quantity.
+- **Authorization outside the archetype**: who releases a batch from quarantine or manages a recall is settled by the policy
+  layer; the archetype records the fact and guards invariants (e.g. you will not consume more than there is in the batch).
+- Without a trace requirement, do not build an origin graph; a batch and a supplier are enough.
 
-## Kontrola jakości
-- [ ] rodzaj produkcji (dyskretna/procesowa) wskazany; jednostka śledzenia nazwana
-- [ ] struktura wyrobu to asocjacja z ilością (Quantity) i okresem, a nie pola produktu
-- [ ] plan i wykonanie rozdzielone; zlecenie zamraża wersję struktury; głębokość śladu zgodna z wymaganiem
-- [ ] granice wskazane (Product, Planning, Availability, General assignment, Accounting, Quantity)
-- [ ] identyfikatory GS1 [niezweryfikowane] lub pominięte; wymóg prawny tylko jako kontekst
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] the kind of production (discrete/process) indicated; the tracking unit named
+- [ ] the product structure is an association with a quantity (Quantity) and a period, not product fields
+- [ ] plan and execution separated; the order freezes the structure version; the trace depth matches the requirement
+- [ ] the boundaries indicated (Product, Planning, Availability, General assignment, Accounting, Quantity)
+- [ ] GS1 identifiers [unverified] or omitted; the legal requirement only as context
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Piekarnia: chleb powstaje z mąki, wody, drożdży i soli według receptury. Mąkę kupujemy od kilku dostawców,
-każda dostawa ma numer partii. Pieczywo wydajemy do sklepów partiami dziennymi. Gdy dostawca zgłosi wadę partii mąki,
-musimy wskazać, które partie pieczywa i do których sklepów trafiły.” [przykład]
+## Example (shortened)
+**Input:** "A bakery: bread is made from flour, water, yeast and salt according to a recipe. We buy flour from several suppliers,
+each delivery has a batch number. We issue bread to shops in daily batches. When a supplier reports a defect in a flour batch,
+we must indicate which bread batches and which shops they went to." [example]
 
 ```markdown
-## Mapowanie pojęć
-| receptura chleba | struktura wyrobu (asocjacja produkt → składnik, ilość z tolerancją) | produkcja procesowa |
-| partia mąki | partia wejściowa (dostawca = Party) | jednostka śledzenia |
-| wypiek dnia | zlecenie produkcyjne → partia pieczywa | partie wejściowe zużyte w zleceniu |
-| wydanie do sklepu | zdarzenie przepływu (przesunięcie partii) | ślad naprzód |
-## Zapytania — wstecz: z jakich partii mąki powstała partia P · naprzód: do których sklepów trafiły partie z partii
-   mąki M (głębokość: pełny graf, bo wycofanie) (A: „To zależy” od wymogu → parametr `głębokość_śladu`)
-## Decyzje — receptura z wersjami (X → zapytaj) · powiadomienie sklepów poza archetypem (R)
-## Niezmapowane pojęcia — zamówienie mąki u dostawcy (→ Agreement / Party) · piec jako zasób (→ Availability,
-   resource-service) · jednostki (kg, worek) (→ Quantity)
+## Concept mapping
+| bread recipe | product structure (an association product → component, quantity with a tolerance) | process production |
+| flour batch | input batch (supplier = Party) | tracking unit |
+| the day's baking | production order → bread batch | input batches consumed in the order |
+| issue to a shop | a flow event (moving a batch) | forward trace |
+## Queries — back: from which flour batches was batch P made · forward: which shops did the batches from flour
+   batch M go to (depth: full graph, because of the recall) (A: "It depends" on the requirement → parameter `trace_depth`)
+## Decisions — recipe with versions (X → ask) · notifying the shops outside the archetype (R)
+## Unmapped concepts — ordering flour from the supplier (→ Agreement / Party) · the oven as a resource (→ Availability,
+   resource-service) · units (kg, sack) (→ Quantity)
 ```
 
-## Źródła
-Odczyt 2026-10-17.
-- **IEC 62264-1:2013 „Enterprise-control system integration — Part 1: Models and terminology”** (wyd. 2, zastąpiło
-  wydanie z 2003) — norma pierwotna; część 1 definiuje poziom 3 (MOM) i interfejs poziomów 3–4. Aktualność na 2026
-  niepewna (EVS: wycofanie 62264-2:2013 z 2026-05-04, możliwe nowsze wydanie).
-- **Modele ISA-95** (personel, wyposażenie, materiał, segment procesu, zdolność produkcyjna, definicja produktu,
-  harmonogram, wykonanie produkcji) — wtórne, potwierdzone częściowo; poziomy 0–4 i B2MML niezweryfikowane.
-- **„Orlicky's Material Requirements Planning”, 3rd ed., Ptak & Smith, McGraw-Hill 2011** — pierwotne dla MRP w ujęciu
-  demand-driven. Pojęć cytowanych jako pochodzące od Orlicky'ego z 1975 roku nie weryfikowano.
-- **Hay, „Data Model Patterns: Conventions of Thought”, Dorset House 1996** — wyłącznie tytuły rozdziałów „Material
-  requirements planning” i „Process manufacturing” (katalog biblioteczny); treści podrozdziałów nie weryfikowano.
-- **Silverston, „The Data Model Resource Book, Vol. 2, Revised Edition”, Wiley 2001, ISBN 978-0-471-35348-5** —
-  rozdz. 2 „Manufacturing”; podrozdziałów (BOM, MRP) nie weryfikowano (źródła sprzeczne).
-- **GS1 EPCIS 2.0 i CBV 2.0** (ratyfikowane czerwiec 2022, ref.gs1.org; EPCIS/CBV Implementation Guideline 2.0 —
-  marzec 2023) — pierwotne; rodzaje zdarzeń potwierdzone częściowo.
-- **GS1 Global Traceability Standard, Release 2.0, sierpień 2017** — pierwotne; ramy procesu identyfikowalności.
-- **Rozporządzenie (WE) nr 178/2002, art. 18** — wymóg „jeden krok wstecz, jeden krok naprzód”; potwierdzone
-  częściowo, pośrednio przez motyw 3 rozporządzenia wykonawczego 931/2011 (EUR-Lex). Wyłącznie kontekst prawny,
-  do potwierdzenia przez prawnika, nie porada.
+## Sources
+Accessed 2026-10-17.
+- **IEC 62264-1:2013 "Enterprise-control system integration — Part 1: Models and terminology"** (ed. 2, replaced
+  the 2003 edition) — a primary standard; part 1 defines level 3 (MOM) and the interface of levels 3–4. Currency in 2026
+  uncertain (EVS: withdrawal of 62264-2:2013 from 2026-05-04, a newer edition possible).
+- **The ISA-95 models** (personnel, equipment, material, process segment, production capability, product definition,
+  schedule, production execution) — secondary, partly confirmed; levels 0–4 and B2MML not verified.
+- **"Orlicky's Material Requirements Planning", 3rd ed., Ptak & Smith, McGraw-Hill 2011** — primary for MRP in the
+  demand-driven approach. Concepts cited as originating from Orlicky in 1975 were not verified.
+- **Hay, "Data Model Patterns: Conventions of Thought", Dorset House 1996** — only the chapter titles "Material
+  requirements planning" and "Process manufacturing" (a library catalog); the content of the sections was not verified.
+- **Silverston, "The Data Model Resource Book, Vol. 2, Revised Edition", Wiley 2001, ISBN 978-0-471-35348-5** —
+  ch. 2 "Manufacturing"; the sections (BOM, MRP) were not verified (the sources contradict each other).
+- **GS1 EPCIS 2.0 and CBV 2.0** (ratified June 2022, ref.gs1.org; EPCIS/CBV Implementation Guideline 2.0 —
+  March 2023) — primary; the event kinds partly confirmed.
+- **GS1 Global Traceability Standard, Release 2.0, August 2017** — primary; the framework for the traceability process.
+- **Regulation (EC) No 178/2002, art. 18** — the "one step back, one step forward" requirement; confirmed
+  partly, indirectly through recital 3 of implementing regulation 931/2011 (EUR-Lex). Only legal context,
+  to be confirmed by a lawyer, not advice.
 
-Reszta (BOM jako asocjacja produktów, dyskretna vs procesowa, graf pochodzenia, pułapki) to nasze wnioski modelowe,
-nieprzypisane autorom. Opisane własnymi słowami; treść książek i norm nie była cytowana.
+The rest (the BOM as an association of products, discrete vs process, the origin graph, pitfalls) are our modelling conclusions,
+not attributed to the authors. Described in our own words; the content of books and standards was not quoted.

@@ -1243,6 +1243,9 @@ def validate() -> tuple[list[str], list[str]]:
                 elif not fence and ln.startswith("## "):
                     heads.append(ln[3:].strip())
             found = [h for h in heads if h in required]
+            required_pl = rule.get("sections_pl") or []   # pl: sprzed 14.x
+            if found != required and required_pl and [h for h in heads if h in required_pl] == required_pl:
+                continue
             if found != required:
                 missing = [h for h in required if h not in heads]
                 errors.append(f"{skill}/references/{f.name}: fixed sections "

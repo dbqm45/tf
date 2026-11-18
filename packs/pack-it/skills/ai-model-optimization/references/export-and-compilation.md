@@ -1,31 +1,31 @@
-# Eksport i kompilacja modeli klasycznych i wizyjnych
+# Export and compilation of classical and vision models
 
-Stan z wyszukiwania 2026-10-17; dokumentacji producentów nie otwarto (źródła wtórne i streszczenia), więc wersje
-i flagi sprawdź w dokumentacji zainstalowanej wersji.
+State from a search on 2026-10-17; the vendors' documentation was not opened (secondary sources and abstracts), so check the versions
+and flags in the documentation of the installed version.
 
-## Kolejność
-1. Pomiar wyjściowy i profil (SKILL.md, krok 1).
-2. Najtańsze: `torch.compile`, mniejsza rozdzielczość lub wsad dopasowany do sprzętu, FP16/BF16.
-3. Eksport do ONNX → silnik docelowy (ONNX Runtime, OpenVINO, TensorRT).
-4. Kwantyzacja INT8 z kalibracją na reprezentatywnych obrazach lub danych z produkcji.
-5. Zgodność liczbowa (tolerancja na wyjściach, metryka zadania) i pomiar na docelowym sprzęcie.
+## Order
+1. The baseline measurement and the profile (SKILL.md, step 1).
+2. The cheapest: `torch.compile`, a smaller resolution or a batch matched to the hardware, FP16/BF16.
+3. Export to ONNX → the target engine (ONNX Runtime, OpenVINO, TensorRT).
+4. INT8 quantization with calibration on representative images or production data.
+5. Numerical parity (a tolerance on the outputs, the task metric) and a measurement on the target hardware.
 
-## Narzędzia
-- **ONNX:** `torch.onnx.export`; od PyTorch 2.9 domyślnie ścieżka oparta na `torch.export` (`dynamo=True`), stara ścieżka TorchScript
-  wymaga `dynamo=False` i jest wygaszana (notatki wydania 2.9, wyszukiwanie). Zamiast `dynamic_axes` używaj `dynamic_shapes`.
-  Nowa ścieżka może ujawnić błędy przechwycenia grafu, które wcześniej były ukryte.
-- **TensorRT** (GPU NVIDIA): silnik budowany z ONNX (`trtexec` lub API), domyślnie związany z architekturą GPU i wersją TensorRT;
-  tryby zgodności wersji i sprzętu to wyjątki, a tabele kalibracji INT8 buduj od nowa po zmianie wersji (macierz wsparcia 10.8,
-  przewodnik DRIVE OS). Buduj na tym typie GPU, na którym działa produkcja.
-- **OpenVINO + NNCF** (CPU i GPU Intela): `nncf.quantize()` do INT8; w wydaniu 2026.0 usunięto `create_compressed_model()`
-  i część metod eksperymentalnych (notatki wydania). Wejścia zalecane: OpenVINO IR, PyTorch, ONNX. Kontrola dokładności
-  (`quantize_with_accuracy_control`) — status w 2026 nie potwierdzony [niezweryfikowane].
-- **torch.compile:** tryby `default`, `reduce-overhead` (grafy CUDA, mniej narzutu na małych wsadach, więcej pamięci),
-  `max-autotune` (dłuższa kompilacja, szybszy kod); pierwsze wywołanie jest wolne (kompilacja), więc mierz po rozgrzewce.
-  Łamania grafu (graph breaks) obniżają zysk — sprawdź je przed strojeniem trybów.
+## Tools
+- **ONNX:** `torch.onnx.export`; since PyTorch 2.9 the path based on `torch.export` (`dynamo=True`) is the default, the old TorchScript path
+  requires `dynamo=False` and is being phased out (release notes 2.9, search). Use `dynamic_shapes` instead of `dynamic_axes`.
+  The new path can reveal graph capture errors that were hidden before.
+- **TensorRT** (NVIDIA GPU): an engine built from ONNX (`trtexec` or the API), by default tied to the GPU architecture and the TensorRT version;
+  the version and hardware compatibility modes are exceptions, and rebuild INT8 calibration tables after a version change (support matrix 10.8,
+  DRIVE OS guide). Build on the GPU type on which production runs.
+- **OpenVINO + NNCF** (Intel CPU and GPU): `nncf.quantize()` to INT8; release 2026.0 removed `create_compressed_model()`
+  and some experimental methods (release notes). Recommended inputs: OpenVINO IR, PyTorch, ONNX. Accuracy control
+  (`quantize_with_accuracy_control`) — status in 2026 not confirmed [unverified].
+- **torch.compile:** modes `default`, `reduce-overhead` (CUDA graphs, less overhead on small batches, more memory),
+  `max-autotune` (longer compilation, faster code); the first call is slow (compilation), so measure after a warm-up.
+  Graph breaks reduce the gain — check them before tuning the modes.
 
-## Pułapki
-- Dynamiczne rozmiary: eksport ze stałym kształtem zawyża szybkość i psuje inne rozmiary.
-- Przetwarzanie wstępne i końcowe (skalowanie obrazu, NMS) zwykle zostaje poza silnikiem i bywa wąskim gardłem.
-- Różnice liczbowe po INT8 rosną w ogonie rozkładu: sprawdź najgorsze przypadki, nie tylko średnią.
-- Silnik TensorRT nie jest artefaktem przenośnym; w repozytorium trzymaj ONNX i skrypt budowy, nie plik silnika jako jedyną kopię.
+## Traps
+- Dynamic sizes: an export with a fixed shape inflates the speed and breaks other sizes.
+- Pre- and post-processing (image scaling, NMS) usually stays outside the engine and can be a bottleneck.
+- Numerical differences after INT8 grow in the tail of the distribution: check the worst cases, not only the average.
+- A TensorRT engine is not a portable artifact; keep ONNX and the build script in the repository, not the engine file as the only copy.

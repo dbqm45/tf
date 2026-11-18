@@ -1,22 +1,22 @@
-# Grafy: parowanie i przepływ
+# Graphs: matching and flow
 
-## bipartite-matching — najwięcej par
-- **Pytanie:** czy łączymy elementy dwóch zbiorów (ludzie–zadania) tak, by jak najwięcej miało parę, a dopuszczalność pary jest tak/nie?
-- **Sygnały:** „przydziel”, „dopasuj”, „każdy może obsłużyć tylko…”.
-- **To nie to, jeśli** pary mają koszt → `assignment`; obie strony mają preferencje → `stable-matching`; element może mieć wiele par z limitem → `max-flow`.
+## bipartite-matching — the most pairs
+- **Question:** do we join elements of two sets (people–tasks) so that as many as possible have a pair, and the admissibility of a pair is yes/no?
+- **Signals:** "assign", "match", "each one can handle only…".
+- **It is not this if** the pairs have a cost → `assignment`; both sides have preferences → `stable-matching`; an element can have many pairs with a limit → `max-flow`.
 
-## assignment (metoda węgierska) — najtańsze parowanie
-- **Pytanie:** czy każda para ma koszt/zysk i szukamy parowania o najlepszej sumie?
-- **Sygnały:** „najtaniej”, „najlepiej dopasowany”, koszt przydziału, ocena kompetencji.
-- **Pułapki:** parowanie maksymalne, stabilne i najtańsze to trzy różne problemy; wersja uogólniona (zadanie zajmuje część
-  pojemności osoby — GAP) jest NP-trudna → `optimization.md` (plecak wielowymiarowy / solver).
+## assignment (Hungarian method) — the cheapest matching
+- **Question:** does each pair have a cost/gain and are we looking for the matching with the best sum?
+- **Signals:** "cheapest", "best matched", the cost of an assignment, a competence rating.
+- **Pitfalls:** maximum, stable and cheapest matching are three different problems; the generalized version (a task takes part of
+  a person's capacity — GAP) is NP-hard → `optimization.md` (multidimensional knapsack / solver).
 
-## stable-matching — preferencje obu stron
-- **Pytanie:** czy obie strony mają listy preferencji i nie może istnieć para, która wolałaby siebie nawzajem?
-- **Sygnały:** rekrutacja, przydział studentów, „obie strony wybierają”.
-- **Pułapki:** wynik faworyzuje stronę proponującą — to decyzja o sprawiedliwości.
+## stable-matching — preferences of both sides
+- **Question:** do both sides have preference lists, and there must not exist a pair that would prefer each other?
+- **Signals:** recruitment, assigning students, "both sides choose".
+- **Pitfalls:** the result favours the proposing side — that is a decision about fairness.
 
-## max-flow / min-cut — przepustowość
-- **Pytanie:** czy przez sieć płynie coś ograniczonego przepustowością i pytamy o maksimum lub wąskie gardło?
-- **Sygnały:** przepustowość, limity dzienne, „wąskie gardło”, rozdział wolumenu między kanały.
-- **Mapowanie:** krawędź = pojemność; minimalne cięcie = wąskie gardło. Przydział z limitami po obu stronach = przepływ.
+## max-flow / min-cut — throughput
+- **Question:** does something limited by capacity flow through a network, and are we asking about the maximum or the bottleneck?
+- **Signals:** throughput, daily limits, "bottleneck", dividing a volume between channels.
+- **Mapping:** edge = capacity; minimum cut = the bottleneck. An assignment with limits on both sides = a flow.

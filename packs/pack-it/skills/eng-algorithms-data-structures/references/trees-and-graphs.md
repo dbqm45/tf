@@ -1,48 +1,48 @@
-# Drzewa, grafy i struktury zaawansowane
+# Trees, graphs and advanced structures
 
-## Drzewa
-- **Drzewo binarne** i przechodzenie: preorder (korzeń, lewe, prawe — kopiowanie, serializacja), inorder (lewe,
-  korzeń, prawe — w BST daje porządek rosnący), postorder (dzieci przed rodzicem — usuwanie, obliczenia od liści),
-  poziomami (BFS z kolejką).
-- **Drzewo poszukiwań binarnych** (BST): lewe < węzeł < prawe; O(log n) tylko gdy zrównoważone — bez tego
-  degeneruje do listy (O(n)) przy danych posortowanych.
-- **Drzewa zrównoważone**: AVL (ściśle zrównoważone, szybsze odczyty), czerwono-czarne (mniej przebudów przy zapisie
-  — `TreeMap` w Javie), drzewa 2-3 (idea stojąca za czerwono-czarnymi).
-- **B-drzewa i B+-drzewa**: szerokie węzły dopasowane do stron dysku → mało odczytów; podstawa indeksów baz danych
-  i systemów plików (w B+ dane w liściach połączonych listą — szybkie zakresy). ISAM — starsza, statyczna metoda
-  indeksowania.
-- **Kopiec**: drzewo zupełne w tablicy, rodzic ≤ dzieci; kolejka priorytetowa, sortowanie przez kopcowanie,
-  harmonogramy.
-- **Trie**: drzewo prefiksów — podpowiedzi, słowniki, routing po ścieżkach.
-- **Drzewo przedziałowe** (segment tree) i **drzewo Fenwicka**: sumy, minima lub maksima w przedziale z aktualizacjami
-  w O(log n) — gdy sumy prefiksowe nie wystarczą, bo dane się zmieniają.
-- **Drzewa i tablice sufiksów**: wyszukiwanie podciągów, najdłuższe powtórzenia w tekście (zwykle zastępowane
-  indeksem pełnotekstowym lub biblioteką).
-- **Lista z przeskokami** (skip list): probabilistyczna alternatywa dla drzew zrównoważonych (np. zbiory posortowane
-  w Redis).
+## Trees
+- **Binary tree** and traversal: preorder (root, left, right — copying, serialization), inorder (left,
+  root, right — in a BST it gives ascending order), postorder (children before the parent — deletion, computations from the leaves),
+  level order (BFS with a queue).
+- **Binary search tree** (BST): left < node < right; O(log n) only when balanced — without that it
+  degenerates into a list (O(n)) on sorted data.
+- **Balanced trees**: AVL (strictly balanced, faster reads), red-black (fewer rebuilds on writes
+  — `TreeMap` in Java), 2-3 trees (the idea behind red-black trees).
+- **B-trees and B+ trees**: wide nodes matched to disk pages → few reads; the basis of database indexes
+  and file systems (in a B+ tree the data is in leaves linked into a list — fast ranges). ISAM — an older, static indexing
+  method.
+- **Heap**: a complete tree in an array, parent ≤ children; a priority queue, heapsort,
+  schedules.
+- **Trie**: a prefix tree — suggestions, dictionaries, routing by path.
+- **Segment tree** and **Fenwick tree**: sums, minima or maxima in an interval with updates
+  in O(log n) — when prefix sums are not enough because the data changes.
+- **Suffix trees and arrays**: substring search, the longest repetitions in a text (usually replaced
+  by a full-text index or a library).
+- **Skip list**: a probabilistic alternative to balanced trees (e.g. sorted sets
+  in Redis).
 
-## Grafy
-- **Reprezentacja**: lista sąsiedztwa (rzadkie grafy — typowe), macierz sąsiedztwa (gęste, szybkie „czy jest
-  krawędź”). Skierowane lub nie, ważone lub nie.
-- **BFS** (kolejka): najkrótsza ścieżka w grafie bez wag, poziomy, odległość w liczbie kroków. **Dwukierunkowy
-  BFS** (jednocześnie od źródła i od celu, aż poszukiwania się spotkają) odwiedza znacznie mniej węzłów, gdy graf
-  szybko się rozgałęzia, np. w sieciach znajomych. Na grafie podzielonym między maszyny grupuj zapytania
-  o sąsiadów z tej samej maszyny i ustaw limit kroków lub czasu (arch-system-design, `project-examples.md`).
-  **DFS** (stos lub rekurencja): spójność, cykle, sortowanie topologiczne, przeszukiwanie z nawrotami.
-- **Najkrótsze ścieżki**: Dijkstra (wagi nieujemne, z kolejką priorytetową — O((V + E) log V)), Bellman-Ford (wagi
-  ujemne, wykrywa ujemne cykle — O(V·E)), A* (Dijkstra z heurystyką odległości do celu — mapy, gry).
-- **Minimalne drzewo rozpinające**: Kruskal (krawędzie od najtańszych + union-find), Prim (rozrastanie od wierzchołka
-  z kolejką priorytetową) — najtańsze połączenie wszystkich punktów (sieci, kable).
-- **Sortowanie topologiczne** (DAG): kolejność zadań z zależnościami, wykrywanie cykli w zależnościach (moduły,
-  migracje, potoki danych — ddd-algorithm-recognition, `graph-order.md`).
-- **Zbiory rozłączne** (union-find) z kompresją ścieżek i łączeniem według rangi: grupy połączonych elementów,
-  deduplikacja klientów z wielu źródeł.
-- Duże grafy i zapytania o relacje w produkcji: baza grafowa lub biblioteka grafowa, nie własna implementacja
+## Graphs
+- **Representation**: an adjacency list (sparse graphs — typical), an adjacency matrix (dense, a fast "is there an
+  edge"). Directed or not, weighted or not.
+- **BFS** (a queue): the shortest path in an unweighted graph, levels, the distance in number of steps. **Bidirectional
+  BFS** (simultaneously from the source and from the target, until the searches meet) visits far fewer nodes when the graph
+  branches out quickly, e.g. in social networks. On a graph split across machines group the queries
+  about neighbours from the same machine and set a limit on steps or time (arch-system-design, `project-examples.md`).
+  **DFS** (a stack or recursion): connectivity, cycles, topological sorting, backtracking search.
+- **Shortest paths**: Dijkstra (non-negative weights, with a priority queue — O((V + E) log V)), Bellman-Ford (negative
+  weights, detects negative cycles — O(V·E)), A* (Dijkstra with a heuristic of the distance to the target — maps, games).
+- **Minimum spanning tree**: Kruskal (edges from the cheapest + union-find), Prim (growing from a vertex
+  with a priority queue) — the cheapest connection of all points (networks, cables).
+- **Topological sorting** (DAG): the order of tasks with dependencies, detecting cycles in dependencies (modules,
+  migrations, data pipelines — ddd-algorithm-recognition, `graph-order.md`).
+- **Disjoint sets** (union-find) with path compression and union by rank: groups of connected elements,
+  deduplicating customers from many sources.
+- Large graphs and relationship queries in production: a graph database or a graph library, not your own implementation
   (arch-quality-attributes, `data-architecture.md`).
 
-## Źródła
-- T. Cormen i in., *Introduction to Algorithms*; R. Sedgewick, K. Wayne, *Algorithms*
+## Sources
+- T. Cormen et al., *Introduction to Algorithms*; R. Sedgewick, K. Wayne, *Algorithms*
 - [roadmap.sh — Data Structures and Algorithms](https://roadmap.sh/datastructures-and-algorithms) (trees, traversal,
   BST, AVL, 2-3, B-trees, ISAM, heap, trie, segment and Fenwick trees, suffix trees, skip list, graphs, BFS, DFS,
   Dijkstra, Bellman-Ford, A*, Kruskal, Prim, union-find)
-Opisane własnymi słowami.
+Described in our own words.

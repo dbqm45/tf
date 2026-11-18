@@ -1,25 +1,25 @@
-# Hooki gita — gotowe konfiguracje
+# Git hooks — ready configurations
 
-Wersje sprawdzone 2026-10-10 w rejestrach: Husky 9.1.7, lint-staged 17.6.0, Lefthook 2.2.1 (npm), pre-commit 4.6.2,
-pytest-testmon 2.2.0 (PyPI). Konfiguracje Lefthook i pre-commit przeszły walidację (`lefthook validate`,
-`pre-commit validate-config`) i instalację w pustym repozytorium.
+Versions checked on 2026-10-10 in the registries: Husky 9.1.7, lint-staged 17.6.0, Lefthook 2.2.1 (npm), pre-commit 4.6.2,
+pytest-testmon 2.2.0 (PyPI). The Lefthook and pre-commit configurations passed validation (`lefthook validate`,
+`pre-commit validate-config`) and installation in an empty repository.
 
-Mechanizm jest wszędzie ten sam: sprawdzenia na plikach w stage, kod wyjścia ≠ 0 odrzuca commit lub push.
+The mechanism is the same everywhere: checks on staged files, an exit code ≠ 0 rejects the commit or the push.
 
-## Wybór narzędzia
-| Projekt | Narzędzie | Dlaczego |
+## Choosing the tool
+| Project | Tool | Why |
 |---|---|---|
-| Node/TS, w repo już jest `.husky/` | Husky + lint-staged | nie migruj działającej konfiguracji |
-| Node/TS, nowy | Husky + lint-staged albo Lefthook | Lefthook: jeden plik YAML, równoległość, bez skryptu `prepare` |
-| Python | framework pre-commit | standard ekosystemu, środowiska hooków izolowane |
-| kilka języków, monorepo | Lefthook | jeden binarny program, `glob` i `root` per polecenie |
+| Node/TS, the repo already has `.husky/` | Husky + lint-staged | do not migrate a working configuration |
+| Node/TS, new | Husky + lint-staged or Lefthook | Lefthook: one YAML file, parallelism, no `prepare` script |
+| Python | the pre-commit framework | the ecosystem standard, isolated hook environments |
+| several languages, a monorepo | Lefthook | one binary, `glob` and `root` per command |
 
 ## Husky + lint-staged (Node)
 ```bash
 npm i -D husky lint-staged
-npx husky init            # dopisuje "prepare": "husky" do package.json i tworzy .husky/pre-commit
+npx husky init            # adds "prepare": "husky" to package.json and creates .husky/pre-commit
 ```
-`.husky/pre-commit` (zastąp domyślną treść `npm test`):
+`.husky/pre-commit` (replace the default content `npm test`):
 ```sh
 npx lint-staged
 ```
@@ -34,10 +34,10 @@ npx tsc --noEmit && npx vitest run
   "*.{json,md,css}": "prettier --write"
 }
 ```
-lint-staged sam dopisuje ścieżki plików z stage na końcu polecenia i dodaje poprawione pliki z powrotem.
-Przydatne flagi (17.x): `--concurrent <n|false>`, `--fail-on-changes` (porażka, gdy zadanie zmieniło pliki — np. w CI).
+lint-staged itself appends the paths of the staged files at the end of the command and adds the fixed files back.
+Useful flags (17.x): `--concurrent <n|false>`, `--fail-on-changes` (a failure when a task changed files — e.g. in CI).
 
-## Lefthook (dowolny język)
+## Lefthook (any language)
 ```yaml
 # lefthook.yml
 pre-commit:
@@ -46,7 +46,7 @@ pre-commit:
     lint:
       glob: "*.{ts,tsx}"
       run: npx eslint --fix {staged_files}
-      stage_fixed: true          # poprawione pliki wracają do stage
+      stage_fixed: true          # fixed files go back to the stage
     types:
       run: npx tsc --noEmit
 pre-push:
@@ -54,22 +54,22 @@ pre-push:
     tests:
       run: npx vitest run
 ```
-Instalacja: `npx lefthook install`; kontrola: `npx lefthook check-install`, `npx lefthook validate`.
-Inne podstawienia: `{all_files}`, `{push_files}`.
+Installation: `npx lefthook install`; checking: `npx lefthook check-install`, `npx lefthook validate`.
+Other substitutions: `{all_files}`, `{push_files}`.
 
 ## pre-commit (Python)
-`.pre-commit-config.yaml` z hookami `repo: local`, `language: system` (narzędzia ze środowiska projektu, bez
-przypinania zewnętrznych repozytoriów hooków): `ruff check --fix` na commit, `pytest -q` z `stages: [pre-push]`
-i `pass_filenames: false`. `default_install_hook_types: [pre-commit, pre-push]` sprawia, że `pre-commit install`
-instaluje oba hooki. Testy powiązane: `pytest --testmon` (pytest-testmon, dane w `.testmondata`).
+`.pre-commit-config.yaml` with `repo: local`, `language: system` hooks (tools from the project's environment, without
+pinning external hook repositories): `ruff check --fix` on commit, `pytest -q` with `stages: [pre-push]`
+and `pass_filenames: false`. `default_install_hook_types: [pre-commit, pre-push]` makes `pre-commit install`
+install both hooks. Related tests: `pytest --testmon` (pytest-testmon, data in `.testmondata`).
 
-## Sprawdzenie, że hook działa
-1. Wprowadź celowy błąd (nieużywany import, zła typizacja) w pliku, `git add`, `git commit` → commit odrzucony,
-   komunikat wskazuje plik.
-2. Popraw, commit przechodzi; poprawki formatera trafiły do commita (`git show --stat`).
-3. Push z czerwonym testem → odrzucony.
-Wynik zapisz jednym zdaniem w raporcie kroku.
+## Checking that the hook works
+1. Introduce a deliberate error (an unused import, wrong typing) in a file, `git add`, `git commit` → the commit is rejected,
+   the message points to the file.
+2. Fix it, the commit passes; the formatter's fixes went into the commit (`git show --stat`).
+3. A push with a red test → rejected.
+Record the result in one sentence in the step report.
 
-## Obejście bramki
-`git commit --no-verify`, `HUSKY=0`, `LEFTHOOK=0` wyłączają hooki. Agent ich nie używa; padła bramka → poprawka
-przyczyny i nowy commit (core-git-workflow). Wyłączenie na stałe to decyzja człowieka zapisana w strategii testów.
+## Bypassing the gate
+`git commit --no-verify`, `HUSKY=0`, `LEFTHOOK=0` turn the hooks off. The agent does not use them; a gate failed → fix
+the cause and a new commit (core-git-workflow). Turning it off permanently is the human's decision recorded in the test strategy.

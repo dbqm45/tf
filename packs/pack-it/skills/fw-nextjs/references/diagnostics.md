@@ -1,5 +1,4 @@
 # Diagnosing common Next.js errors (App Router)
-> `<Suspense>` · 4. Packages incompatible with the server · 5. Navigation in `try/catch` · 6. Development server tools
 
 ## 1. The server–client boundary
 - **An asynchronous client component** (`'use client'` and `async function`) is not allowed. Fetch the data

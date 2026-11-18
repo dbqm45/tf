@@ -1,43 +1,43 @@
-# Szablon zapisu tablicy Event Storming
+# Event Storming board write-up template
 
 ```markdown
-# Event Storming: <temat> — <Big Picture | Process Level | Design Level>
-Data: RRRR-MM-DD · Uczestnicy/źródła: … · Pytanie sesji: …
-Tryb: as-is | to-be | odkrywanie   ·   Begin: „…”  ·  End: „…”
+# Event Storming: <topic> — <Big Picture | Process Level | Design Level>
+Date: YYYY-MM-DD · Participants/sources: … · Session question: …
+Mode: as-is | to-be | discovery   ·   Begin: "…"  ·  End: "…"
 
-## Oś czasu
-### Rozdział 1: <nazwa> (do zdarzenia przełomowego „…”)
-| # | Tor (swimlane) | Aktor/System | Komenda | Zdarzenie | Polityka | Read model | Uwagi |
+## Timeline
+### Chapter 1: <name> (up to the pivotal event "…")
+| # | Lane (swimlane) | Actor/System | Command | Event | Policy | Read model | Notes |
 |---|---|---|---|---|---|---|---|
-| 1 | Sprzedaż | Klient | Złóż zamówienie | Zamówienie złożone | Kiedy złożone → zarezerwuj towar | Koszyk, cennik | |
+| 1 | Sales | Customer | Place order | Order placed | When placed → reserve goods | Cart, price list | |
 
-★ Zdarzenie przełomowe: „…” — dlaczego przełomowe: …
+★ Pivotal event: "…" — why pivotal: …
 
-## Pytania kluczowe (rozgałęziające)
-| Pytanie | Gdzie pada (# zdarzeń) | Kto zna odpowiedź / właściciel | Kandydat na |
+## Key (branching) questions
+| Question | Where it comes up (# of events) | Who knows the answer / owner | Candidate for |
 |---|---|---|---|
 
-## Hot spoty
-- [ ] HS1: … (kogo zapytać, do kiedy)
+## Hot spots
+- [ ] HS1: … (whom to ask, by when)
 
-## Szanse (to-be)
+## Opportunities (to-be)
 - …
 
-## Słownik — nowe/zmienione pojęcia
-| Pojęcie | Znaczenie w tym obszarze | Synonimy / konflikty |
+## Glossary — new/changed terms
+| Term | Meaning in this area | Synonyms / conflicts |
 |---|---|---|
 
-## Kandydaci na konteksty
-- <Nazwa>: zdarzenia #…–#…; język: …; właściciel: …
+## Context candidates
+- <Name>: events #…–#…; language: …; owner: …
 ```
 
-## Diagram (opcjonalnie)
+## Diagram (optional)
 ```mermaid
 flowchart LR
-  subgraph Sprzedaż
-    C1[/Złóż zamówienie/]:::cmd --> E1([Zamówienie złożone]):::evt
+  subgraph Sales
+    C1[/Place order/]:::cmd --> E1([Order placed]):::evt
   end
-  E1 --> P1{{Kiedy złożone → zarezerwuj}}:::pol --> C2[/Zarezerwuj towar/]:::cmd
+  E1 --> P1{{When placed → reserve}}:::pol --> C2[/Reserve goods/]:::cmd
   classDef evt fill:#f9a03f,color:#000
   classDef cmd fill:#7ab8f5,color:#000
   classDef pol fill:#c8a2e8,color:#000

@@ -1,55 +1,55 @@
-# Szablon teczki systemu legacy
+# Legacy system dossier template
 
-Spis treści: 1. Indeks `README.md` · 2. Karta modułu `modules/<moduł>.md` · 3. Skąd brać reguły biznesowe ·
-4. Kontrakt dla `dossier_check.py`
+Contents: 1. Index `README.md` · 2. Module card `modules/<module>.md` · 3. Where to get business rules from ·
+4. Contract for `dossier_check.py`
 
-## 1. Indeks `README.md`
+## 1. Index `README.md`
 
 ```markdown
 <!-- legacy-dossier -->
-# Teczka systemu: <nazwa>
-System: <nazwa> · Commit: <HEAD> · Data: <RRRR-MM-DD>
+# System dossier: <name>
+System: <name> · Commit: <HEAD> · Date: <YYYY-MM-DD>
 
 ## TL;DR
-<5–7 zdań: co system robi dla biznesu, z ilu modułów się składa, gdzie jest rdzeń, największe ryzyko zmiany,
-ile reguł `to verify`.>
+<5–7 sentences: what the system does for the business, how many modules it consists of, where the core is, the biggest risk of change,
+how many `to verify` rules.>
 
 ## Modules
-| Moduł | Po co | Stan |
+| Module | Purpose | State |
 |---|---|---|
-| [faktury](modules/faktury.md) | wystawianie faktur i korekt | żółty |
+| [invoices](modules/invoices.md) | issuing invoices and corrections | yellow |
 
 ## Flows
-### Wystawienie faktury
-1. `InvoiceController.create` (src/web/InvoiceController.java:40) przyjmuje zamówienie …
-(diagram sekwencji Mermaid)
+### Issuing an invoice
+1. `InvoiceController.create` (src/web/InvoiceController.java:40) accepts the order …
+(Mermaid sequence diagram)
 
 ## Glossary
-| W kodzie | W biznesie | Uwaga |
+| In the code | In the business | Note |
 |---|---|---|
-| `Doc` | faktura | także korekta (`type = 'K'`) |
+| `Doc` | invoice | also a correction (`type = 'K'`) |
 
 ## State and refactoring candidates
-| Moduł | Stan | Kandydat | Dlaczego (dowód) |
+| Module | State | Candidate | Why (evidence) |
 |---|---|---|---|
-| faktury | żółty | jedno miejsce zaokrągleń | R-FAK-01 vs R-FAK-02 |
+| invoices | yellow | one place for rounding | R-FAK-01 vs R-FAK-02 |
 
 ## Open questions
-- <pytanie> — kogo zapytać (obszar, nie ocena osoby)
+- <question> — whom to ask (an area, not an assessment of a person)
 
 ## Limitations
-<czego teczka nie obejmuje: moduły pominięte, brak dostępu do bazy produkcyjnej, kod generowany>
+<what the dossier does not cover: skipped modules, no access to the production database, generated code>
 
-## Przekazanie
-<dla eng-tech-debt-audit / eng-refactor-planning: od których kandydatów zacząć>
+## Handoff
+<for eng-tech-debt-audit / eng-refactor-planning: which candidates to start with>
 ```
 
-## 2. Karta modułu `modules/<moduł>.md`
+## 2. Module card `modules/<module>.md`
 
 ```markdown
 <!-- legacy-dossier:module -->
-# Moduł: <nazwa>
-State: green|yellow|red — <powód jednym zdaniem>
+# Module: <name>
+State: green|yellow|red — <reason in one sentence>
 
 ## Purpose
 ## Responsibilities
@@ -57,7 +57,7 @@ State: green|yellow|red — <powód jednym zdaniem>
 ## Business rules
 | ID | Rule | Evidence | Confidence |
 |---|---|---|---|
-| R-<MOD>-01 | <zdanie dla biznesu> | ścieżka/Plik.java:42 | test|code|to verify |
+| R-<MOD>-01 | <a sentence for the business> | path/File.java:42 | test|code|to verify |
 ## Data
 ## Dependencies
 ## Pitfalls
@@ -65,31 +65,31 @@ State: green|yellow|red — <powód jednym zdaniem>
 ## Questions
 ```
 
-- ID reguły unikalne w całej teczce: `R-<skrót modułu>-<numer>`.
-- Dowód: ścieżka względem katalogu repozytorium, `plik:linia` albo `plik:od-do`; kilka dowodów po przecinku.
-- Brak dowodu: `—` i pewność `to verify`, a pytanie trafia do sekcji Questions.
+- A rule ID is unique across the whole dossier: `R-<module abbreviation>-<number>`.
+- Evidence: a path relative to the repository directory, `file:line` or `file:from-to`; several pieces of evidence separated by commas.
+- No evidence: `—` and the confidence `to verify`, and the question goes to the Questions section.
 
-## 3. Skąd brać reguły biznesowe
+## 3. Where to get business rules from
 
-| Miejsce w kodzie | Co zwykle kryje | Przykład |
+| Place in the code | What it usually hides | Example |
 |---|---|---|
-| warunki z liczbami i datami | progi, terminy, limity | `if (days > 30)` → termin płatności |
-| walidacje i komunikaty błędów | warunki konieczne | `"Kwota musi być dodatnia"` |
-| wyjątki domenowe | stany zabronione | `InvoiceAlreadyPaidException` |
-| `WHERE` / filtry w zapytaniach | kto i co jest „aktywne” | `status <> 'ARCH' AND deleted = 0` |
-| enumy i stałe | stany i przejścia | `DRAFT → ISSUED → PAID` |
-| flagi i konfiguracja | warianty dla klientów lub krajów | `vat.reverse-charge.enabled` |
-| nazwy testów | zachowanie potwierdzone testem | `shouldRejectCorrectionAfterPayment` |
-| historia gita (`git log -S`, opisy „fix”) | reguły dodane po incydencie | „fix: korekta po zapłacie” |
-| triggery i procedury w bazie | reguły poza kodem aplikacji | `BEFORE UPDATE ON invoices` |
+| conditions with numbers and dates | thresholds, deadlines, limits | `if (days > 30)` → payment deadline |
+| validations and error messages | necessary conditions | `"Amount must be positive"` |
+| domain exceptions | forbidden states | `InvoiceAlreadyPaidException` |
+| `WHERE` / filters in queries | who and what is "active" | `status <> 'ARCH' AND deleted = 0` |
+| enums and constants | states and transitions | `DRAFT → ISSUED → PAID` |
+| flags and configuration | variants for customers or countries | `vat.reverse-charge.enabled` |
+| test names | behaviour confirmed by a test | `shouldRejectCorrectionAfterPayment` |
+| git history (`git log -S`, "fix" descriptions) | rules added after an incident | "fix: correction after payment" |
+| triggers and procedures in the database | rules outside the application code | `BEFORE UPDATE ON invoices` |
 
-Reguła z testu ma pewność `test`. Reguła z samego kodu — `code`. Wniosek z nazwy, komentarza albo historii bez
-potwierdzenia w kodzie — `to verify`. Gdy test i kod mówią co innego, wpisz obie wersje i pytanie.
+A rule from a test has the confidence `test`. A rule from the code alone — `code`. An inference from a name, a comment or the history without
+confirmation in the code — `to verify`. When the test and the code say different things, write down both versions and a question.
 
-## 4. Kontrakt dla `dossier_check.py`
+## 4. Contract for `dossier_check.py`
 
-- Pierwsza linia indeksu: `<!-- legacy-dossier -->`, karty: `<!-- legacy-dossier:module -->`.
-- Sekcje indeksu: TL;DR, Moduły, Przepływy, Słownik, Stan i kandydaci do refaktoru, Pytania otwarte, Ograniczenia.
-- Sekcje karty: Po co, Odpowiedzialności, Wejścia i wyjścia, Reguły biznesowe, Dane, Zależności, Pułapki, Testy,
-  Pytania; linia `State: <green|yellow|red> — <powód>`.
-- Moduł z indeksu bez pliku i błędny dowód to błąd; karta spoza indeksu — ostrzeżenie.
+- First line of the index: `<!-- legacy-dossier -->`, of the cards: `<!-- legacy-dossier:module -->`.
+- Index sections: TL;DR, Modules, Flows, Glossary, State and refactoring candidates, Open questions, Limitations.
+- Card sections: Purpose, Responsibilities, Inputs and outputs, Business rules, Data, Dependencies, Pitfalls, Tests,
+  Questions; the line `State: <green|yellow|red> — <reason>`.
+- A module in the index without a file and wrong evidence is an error; a card outside the index — a warning.

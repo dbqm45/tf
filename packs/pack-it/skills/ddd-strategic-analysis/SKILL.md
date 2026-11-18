@@ -1,79 +1,79 @@
 ---
 name: ddd-strategic-analysis
-description: Użyj przy podziale domeny na subdomeny (core, supporting, generic) i granicach kontekstów, Cynefin.
+description: Use for splitting a domain into subdomains (core, supporting, generic) and context boundaries, Cynefin.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy wyborze strategii analizy (Cynefin, top-down vs bottom-up), podziale domeny na subdomeny (core, supporting, generic) i wyznaczaniu granic kontekstów (bounded contexts). Nie do relacji między kontekstami (ddd-context-mapping) ani prowadzenia warsztatu (ddd-event-storming)."
+  catalog: "Use when choosing the analysis strategy (Cynefin, top-down vs bottom-up), splitting a domain into subdomains (core, supporting, generic) and drawing context boundaries (bounded contexts). Not for the relationships between contexts (ddd-context-mapping) or running a workshop (ddd-event-storming)."
 ---
 
-# Analiza strategiczna
+# Strategic analysis
 
-## Czy DDD ma tu sens?
-Warto, gdy domena jest złożona z natury (**złożoność istotna**, której nie da się usunąć bez utraty funkcji),
-jest dostęp do ekspertów i zespół potrafi iteracyjnie „przemielać” wiedzę. Nie warto, gdy wyzwaniem jest
-skala lub ergonomia, a nie reguły biznesowe (np. prosty blog) — wtedy rób prosto.
-Uważaj na **złożoność przypadkową** (z wybranych rozwiązań): nowy framework, protokół czy modne słowo nie naprawią złego modelu.
+## Does DDD make sense here?
+It is worth it when the domain is complex by nature (**essential complexity**, which cannot be removed without losing functionality),
+there is access to experts and the team can iteratively "crunch" knowledge. It is not worth it when the challenge is
+scale or ergonomics, not business rules (e.g. a simple blog) — then keep it simple.
+Watch out for **accidental complexity** (from the chosen solutions): a new framework, protocol or buzzword will not fix a bad model.
 
-Formalną ocenę wstępną („czy modularyzować?” — trzy pytania, werdykt człowieka) i obszary biznesowe oparte na dowodach
-przygotowuje ddd-discovery-intake. Obszar z intake to **wejście** do tej analizy, nie gotowy kontekst.
+The formal initial assessment ("whether to modularize?" — three questions, the human's verdict) and business areas based on evidence
+are prepared by ddd-discovery-intake. An area from intake is **input** to this analysis, not a ready context.
 
-## Krok 1: Big Picture, żeby zobaczyć, gdzie jesteśmy
-Zanim wybierzesz metodę, zrób Event Storming Big Picture (ddd-event-storming): jakie są procesy wysokiego poziomu,
-jakie **pytania kluczowe** padają w wielu miejscach i rozgałęziają proces. Na tej podstawie oceń obszary wg Cynefin.
+## Step 1: Big Picture, to see where we are
+Before you choose a method, run a Big Picture Event Storming (ddd-event-storming): what the high-level processes are,
+which **key questions** come up in many places and branch the process. On this basis assess the areas per Cynefin.
 
-## Krok 2: Cynefin — wybór sposobu analizy
-| Strona | Domena | Rozpoznasz po | Jak analizować |
+## Step 2: Cynefin — choosing the way of analysis
+| Side | Domain | You recognize it by | How to analyse |
 |---|---|---|---|
-| **Prawa (uporządkowana)** | Oczywista, Skomplikowana | eksperci się zgadzają, są procedury/regulacje, przyczyna → skutek da się ustalić (czasem przez eksperta) | biznes jest zwykle **procesowy** → **analiza top-down**: najpierw procesy, potem projekt |
-| **Lewa (nieuporządkowana)** | Złożona, Chaotyczna | eksperci się nie zgadzają, nowy produkt/rynek, dużo „nie wiemy”, skutki widać dopiero po fakcie | **zrób i sprawdź** (probe → sense → respond) → **analiza bottom-up** |
+| **Right (ordered)** | Clear, Complicated | experts agree, there are procedures/regulations, cause → effect can be established (sometimes through an expert) | the business is usually **process-driven** → **top-down analysis**: first the processes, then the design |
+| **Left (unordered)** | Complex, Chaotic | experts disagree, a new product/market, a lot of "we do not know", effects are visible only after the fact | **do and check** (probe → sense → respond) → **bottom-up analysis** |
 
-Różne części jednej domeny mogą leżeć po różnych stronach — dobierz podejście per obszar, nie dla całego systemu.
-Archetypy biznesowe (ddd-archetypes) najlepiej sprawdzają się po prawej stronie.
+Different parts of one domain can lie on different sides — choose the approach per area, not for the whole system.
+Business archetypes (ddd-archetypes) work best on the right side.
 
-### Top-down (prawa strona)
-1. Big Picture → lista procesów wysokiego poziomu i zdarzeń przełomowych.
-2. Process Level dla kluczowych procesów (zacznij od core domain i od największych problemów z głosowania).
-3. Wyznacz konteksty i relacje między nimi (ddd-context-mapping).
-4. Design Level w wybranych kontekstach → projekt (ddd-tactical-design).
+### Top-down (the right side)
+1. Big Picture → a list of high-level processes and pivotal events.
+2. Process Level for the key processes (start with the core domain and with the biggest problems from the vote).
+3. Draw the contexts and the relationships between them (ddd-context-mapping).
+4. Design Level in the selected contexts → design (ddd-tactical-design).
 
-### Bottom-up (lewa strona)
-1. Zacznij od **konkretnych przypadków** i przykładów, nie od ogólnego procesu.
-2. Zbuduj mały model dla jednego przypadku, sprawdź go w praktyce (prototyp, spike, test z użytkownikiem).
-3. Uogólniaj dopiero, gdy kolejne przypadki potwierdzają wzorzec; decyzje trzymaj odwracalne.
-4. W systemie istniejącym: czytaj kod i dane — słownik z nazw klas/tabel, pola „status”, „klasy-bogowie”,
-   powtarzające się warunki; zrekonstruuj zdarzenia z kodu i zweryfikuj je z ekspertem.
+### Bottom-up (the left side)
+1. Start with **concrete cases** and examples, not with the general process.
+2. Build a small model for one case, check it in practice (a prototype, a spike, a test with a user).
+3. Generalize only when further cases confirm the pattern; keep decisions reversible.
+4. In an existing system: read the code and the data — a glossary from class/table names, "status" fields, "god classes",
+   repeated conditions; reconstruct the events from the code and verify them with an expert.
 
-## Krok 3: Destylacja — subdomeny
-| Typ | Pytanie rozpoznające | Inwestycja |
+## Step 3: Distillation — subdomains
+| Type | Recognizing question | Investment |
 |---|---|---|
-| **Core** | Czy to daje przewagę konkurencyjną? Czy gdyby to kupić, stracilibyśmy wyróżnik? | najlepsi ludzie, pełne DDD, głęboki model, ciągła pielęgnacja (jak bonsai) |
-| **Supporting** | Potrzebne do działania, ale nie wyróżnia nas | prościej, niższa poprzeczka, kandydat do outsourcingu |
-| **Generic** | Każda firma ma to samo (fakturowanie, uwierzytelnianie) | kupić/użyć gotowego, zintegrować przez ACL |
+| **Core** | Does this give a competitive advantage? If we bought it, would we lose what sets us apart? | the best people, full DDD, a deep model, continuous care (like a bonsai) |
+| **Supporting** | Needed to operate, but does not set us apart | simpler, a lower bar, a candidate for outsourcing |
+| **Generic** | Every company has the same (invoicing, authentication) | buy/use a ready one, integrate through an ACL |
 
-## Krok 4: Granice kontekstów — heurystyki
-Kontekst to granica, wewnątrz której model i język są spójne. Wyznaczaj go na podstawie **zachowania i języka**, nie rzeczowników.
-- **Język**: to samo słowo znaczy co innego → różne konteksty.
-- **Zdarzenia przełomowe** i zmiana swimlane → naturalne cięcia.
-- **Autonomia**: czy ta część może podejmować decyzje i wdrażać zmiany bez pytania innych?
-- **Różny rytm zmian i różni aktorzy/działy** → osobne konteksty.
-- **Pytania kluczowe**: kontekst, który „jest właścicielem odpowiedzi” na pytanie zadawane w wielu miejscach.
-- **Zdolność (capability) zamiast produktu**: wydziel ogólną zdolność (np. „dostępność zasobów”), a nie produktowy wariant
-  („rezerwacja aut”, „rezerwacja sal”) — produkty się zmieniają, zdolność zostaje.
-- **Klasa problemu**: CRUD, obliczenia, integracja i konkurencja o zasoby zwykle chcą różnych modeli (ddd-deep-modeling).
-- **Spójność**: reguły, które muszą być spójne natychmiast, nie mogą przechodzić przez granicę kontekstu.
-- **Algorytm pod spodem** (ddd-algorithm-recognition): ten sam algorytm w kilku obszarach → kandydat do połączenia lub wspólnego jądra;
-  te same słowa, różne algorytmy → szew, czyli prawdopodobna granica; brak znanego algorytmu → kandydat na core, analiza bottom-up.
+## Step 4: Context boundaries — heuristics
+A context is a boundary within which the model and the language are consistent. Draw it on the basis of **behaviour and language**, not nouns.
+- **Language**: the same word means something else → different contexts.
+- **Pivotal events** and a change of swimlane → natural cuts.
+- **Autonomy**: can this part make decisions and deploy changes without asking others?
+- **A different pace of change and different actors/departments** → separate contexts.
+- **Key questions**: the context that "owns the answer" to a question asked in many places.
+- **A capability instead of a product**: extract a general capability (e.g. "resource availability"), not a product variant
+  ("car booking", "room booking") — products change, the capability stays.
+- **The problem class**: CRUD, computation, integration and competition for resources usually want different models (ddd-deep-modeling).
+- **Consistency**: rules that must be consistent immediately cannot cross a context boundary.
+- **The algorithm underneath** (ddd-algorithm-recognition): the same algorithm in several areas → a candidate for merging or for a shared kernel;
+  the same words, different algorithms → a seam, that is a likely boundary; no known algorithm → a candidate for core, bottom-up analysis.
 
-Anty-wzorce: kontekst = encja („Serwis Klienta” z każdym zachowaniem klienta), kontekst = warstwa techniczna,
-kontekst = zespół bez względu na język, mieszanie kontekstów „bo tak szybciej”.
+Anti-patterns: context = entity (a "Customer Service" with every customer behaviour), context = technical layer,
+context = team regardless of the language, mixing contexts "because it is faster".
 
-## Zapis wyniku
-`docs/project/02-domain/strategic.md`: obszary z oceną Cynefin i wybraną metodą, subdomeny z typem i uzasadnieniem, konteksty
-(nazwa, odpowiedzialność, kluczowe pojęcia, zdarzenia wejściowe/wyjściowe, właściciel), otwarte pytania.
-Decyzje o granicach → ADR (docs-tech-writing).
+## Recording the result
+`docs/project/02-domain/strategic.md`: areas with the Cynefin assessment and the chosen method, subdomains with the type and the justification, contexts
+(name, responsibility, key concepts, input/output events, owner), open questions.
+Decisions about boundaries → ADR (docs-tech-writing).
 
-## Sprawdzenie granic przed decyzją
-- **Test obciążeniowy metryką biznesową** (ddd-model-stress-test): ten sam zamrożony zbiór wymagań, wygenerowany bez wglądu
-  w architekturę, puszczony przeciw dwóm wariantom podziału — porównaj rozkład zmian lokalnych/rozproszonych/nowych modułów.
-- **Pomiar sprzężeń** kluczowych par (ddd-connascence-analysis) — dla systemu istniejącego lub mapy kontekstów.
-Wyniki dołącz do ADR jako dowód.
+## Checking the boundaries before the decision
+- **A stress test with a business metric** (ddd-model-stress-test): the same frozen set of requirements, generated without insight
+  into the architecture, run against two variants of the split — compare the distribution of local/distributed/new-module changes.
+- **Measuring the couplings** of key pairs (ddd-connascence-analysis) — for an existing system or a context map.
+Attach the results to the ADR as evidence.

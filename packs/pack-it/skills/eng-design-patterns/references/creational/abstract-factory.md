@@ -1,40 +1,40 @@
-# Fabryka abstrakcyjna (Abstract Factory)
+# Abstract Factory
 
-Kategoria: kreacyjne. Istota: jeden obiekt tworzy **całą rodzinę** współpracujących obiektów, które muszą do siebie
-pasować; klient zna tylko interfejsy.
+Category: creational. The essence: one object creates **a whole family** of collaborating objects that must
+fit together; the client knows only the interfaces.
 
 ## Problem
-System fakturowania obsługuje kilka krajów. Stawka podatku, numeracja dokumentów i format daty muszą pochodzić z **tej
-samej** jurysdykcji — polska numeracja z niemieckim VAT-em to błąd prawny, a nie estetyczny. Gdy klient sam dobiera
-elementy (`new PolishNumbering()`, `new GermanTax()`), łatwo je pomieszać, a każdy nowy kraj rozlewa `if (country)`
-po kodzie.
+An invoicing system supports several countries. The tax rate, the document numbering and the date format must come from **the same**
+jurisdiction — Polish numbering with German VAT is a legal mistake, not an aesthetic one. When the client picks
+the elements itself (`new PolishNumbering()`, `new GermanTax()`), it is easy to mix them up, and every new country spreads `if (country)`
+across the code.
 
-## Rozwiązanie i uczestnicy
-- **Produkty abstrakcyjne** — interfejs na każdy element rodziny (`TaxPolicy`, `InvoiceNumbering`).
-- **Fabryka abstrakcyjna** — interfejs z metodą tworzącą na każdy produkt (`InvoicingKit`).
-- **Konkretne fabryki** — jedna na rodzinę (`PolishInvoicing`, `GermanInvoicing`); zwracają wyłącznie produkty swojej
-  rodziny.
-- **Klient** — dostaje fabrykę raz (konfiguracja, DI) i dalej nie wie, z jaką rodziną pracuje.
+## Solution and participants
+- **Abstract products** — an interface for each element of the family (`TaxPolicy`, `InvoiceNumbering`).
+- **Abstract factory** — an interface with a creating method for each product (`InvoicingKit`).
+- **Concrete factories** — one per family (`PolishInvoicing`, `GermanInvoicing`); they return only the products of their own
+  family.
+- **Client** — gets the factory once (configuration, DI) and from then on does not know which family it works with.
 
-## Kiedy używać
-- Kod działa na produktach z różnych rodzin, a spójność rodziny jest regułą (jurysdykcja, platforma, motyw UI).
-- Rodzin realnie przybywa lub jest ich kilka od początku.
-- Klasa obrasta w wiele metod wytwórczych przesłaniających jej główną odpowiedzialność — sygnał, by je wydzielić.
+## When to use
+- The code works on products from different families, and the consistency of the family is a rule (jurisdiction, platform, UI theme).
+- Families are really being added, or there are several of them from the start.
+- A class accumulates many factory methods that obscure its main responsibility — a signal to extract them.
 
-## Koszty
-Dużo interfejsów i klas; dodanie **nowego typu produktu** wymaga zmiany interfejsu fabryki i wszystkich fabryk.
+## Costs
+Many interfaces and classes; adding **a new product type** requires changing the factory interface and all factories.
 
-## Powiązania
-- Zwykle zestaw Metod wytwórczych w jednym interfejsie; metody mogą też klonować Prototypy.
-- Budowniczy składa jeden złożony obiekt krokami; Fabryka abstrakcyjna oddaje gotowe produkty od razu.
-- Z Mostem: fabryka może tworzyć pasujące pary abstrakcja–implementacja.
-- Fasada też ukrywa złożoność, ale nie specjalizuje się w tworzeniu.
+## Relations
+- Usually a set of Factory Methods in one interface; the methods can also clone Prototypes.
+- A Builder assembles one complex object in steps; an Abstract Factory hands over finished products immediately.
+- With Bridge: the factory can create matching abstraction–implementation pairs.
+- A Facade also hides complexity, but does not specialize in creation.
 
-## Forma idiomatyczna w TS
-Fabryką może być zwykły obiekt spełniający interfejs (`const polishKit = { taxPolicy, numbering } satisfies
-InvoicingKit`), wybierany z mapy `Record<Country, InvoicingKit>`. Klasy dodawaj, gdy fabryka ma zależności.
+## Idiomatic form in TS
+The factory can be an ordinary object satisfying the interface (`const polishKit = { taxPolicy, numbering } satisfies
+InvoicingKit`), chosen from a `Record<Country, InvoicingKit>` map. Add classes when the factory has dependencies.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 interface TaxPolicy {
   vatCents(netCents: number): number;
@@ -43,7 +43,7 @@ interface InvoiceNumbering {
   next(sequence: number, issuedAt: Date): string;
 }
 
-/** Fabryka abstrakcyjna: rodzina elementów jednej jurysdykcji. */
+/** Abstract factory: a family of elements of one jurisdiction. */
 interface InvoicingKit {
   taxPolicy(): TaxPolicy;
   numbering(): InvoiceNumbering;
@@ -69,8 +69,8 @@ class GermanInvoicing implements InvoicingKit {
   }
 }
 
-// Klient: nie zna konkretnych klas, nie może pomieszać rodzin.
-// (W realnym modelu kwoty to obiekt wartości Money — ddd-archetypes, quantity-money.)
+// Client: does not know the concrete classes, cannot mix up the families.
+// (In a real model the amounts are a Money value object — ddd-archetypes, quantity-money.)
 function issueInvoice(kit: InvoicingKit, sequence: number, netCents: number) {
   const taxCents = kit.taxPolicy().vatCents(netCents);
   return {
@@ -86,10 +86,10 @@ console.log(issueInvoice(kits.PL, 42, 10_000));
 console.log(issueInvoice(kits.DE, 42, 10_000));
 ```
 
-## Kiedy NIE używać / pułapki
-- **Tworzysz jeden produkt, nie rodzinę** → to Metoda wytwórcza albo zwykła funkcja.
-- **Jedna rodzina bez perspektywy na drugą** — struktura „na zapas” to klasyczny młotek z `critique-and-pitfalls.md` (pkt 3):
-  koszt interfejsów bez zysku.
-- Przy 2–3 stałych rodzinach funkcja zwracająca literał obiektu (`{ taxPolicy, numbering }`) zwykle wystarcza.
-- Nowe **typy** produktów pojawiają się częściej niż nowe **rodziny** — wzorzec działa odwrotnie do potrzeby (każdy
-  nowy typ zmienia wszystkie fabryki).
+## When NOT to use / pitfalls
+- **You create one product, not a family** → that is a Factory Method or an ordinary function.
+- **One family with no prospect of a second** — a structure "just in case" is the classic hammer from `critique-and-pitfalls.md` (point 3):
+  the cost of interfaces without a gain.
+- With 2–3 fixed families a function returning an object literal (`{ taxPolicy, numbering }`) is usually enough.
+- New product **types** appear more often than new **families** — the pattern works opposite to the need (every
+  new type changes all factories).

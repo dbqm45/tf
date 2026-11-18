@@ -1,23 +1,25 @@
-# Przykłady refaktoryzacji z dowodem zachowania
+# Examples of refactoring with proof of preserved behaviour
 
-> **Spis treści:** 1. Bogaty agregat → decider · 2. Legacy bez testów i ukryty defekt · 3. Czerwony test po przepięciu fasady · 4. Sprzężone tablice kolumn — osłona zamiast przebudowy
+> **Contents:** 1. Rich aggregate → decider · 2. Legacy without tests and a hidden defect · 3. A red test after switching the facade · 4. Coupled column arrays — a guard instead of a rebuild
 
-## 1. Bogaty agregat → decider
-**Sytuacja:** „Przepisz agregat `Reservation` na decider, żeby reguły dało się testować bez bazy. Zachowanie ma zostać
-takie samo”. Testy domenowe (14) są zielone, ORM zapisuje zmienione encje sam.
+> **Table of contents:** 1. Rich aggregate → decider · 2. Legacy without tests and a hidden defect · 3. A red test after switching the facade · 4. Coupled column arrays — a guard instead of a rebuild
 
-**Jak:**
-1. **Warunek wstępny:** 14 testów zielonych — to punkt odniesienia.
-2. **Kontrakt** w `docs/project/06-delivery/03-behavior-contract.md`: scenariusze, sygnatura
-   `ReservationService.confirm(id, at)`, zdarzenie `ReservationConfirmed` bez nowych pól, **rodzaj odrzucenia** (wyjątek
-   `ReservationExpired`), granica spójności: jeden agregat na transakcję, pole `version`.
-3. **Podnieś** (`test(reservation): …`): scenariusze + DSL, sterownik aplikacyjny wołający istniejącą fasadę;
-   rejestr asercji dla każdej przepisanej asercji.
-4. **Zamień** (`refactor(reservation): …`): `decide` obok starego agregatu, powłoka *wczytaj → decyduj → zapisz jawnie →
-   publikuj* (przepis z `idioms.md`), fasada przepięta.
-5. **Obniż:** sterownik domenowy na `decide`, stary agregat usunięty.
+## 1. Rich aggregate → decider
+**Situation:** "Rewrite the aggregate `Reservation` as a decider so the rules can be tested without a database. The behaviour must stay
+the same." The domain tests (14) are green, the ORM saves changed entities by itself.
 
-**Wynik** — rdzeń po zmianie (warunki odrzucenia przeniesione dosłownie, czas jako parametr komendy):
+**How:**
+1. **Precondition:** 14 tests green — that is the reference point.
+2. **The contract** in `docs/project/06-delivery/03-behavior-contract.md`: the scenarios, the signature
+   `ReservationService.confirm(id, at)`, the event `ReservationConfirmed` without new fields, **the kind of rejection** (the exception
+   `ReservationExpired`), the consistency boundary: one aggregate per transaction, the `version` field.
+3. **Lift** (`test(reservation): …`): scenarios + DSL, an application driver calling the existing facade;
+   the assertion register for every rewritten assertion.
+4. **Swap** (`refactor(reservation): …`): `decide` next to the old aggregate, the shell *load → decide → save explicitly →
+   publish* (the recipe from `idioms.md`), the facade switched.
+5. **Lower:** the domain driver on `decide`, the old aggregate removed.
+
+**Result** — the core after the change (rejection conditions moved verbatim, time as a command parameter):
 ```ts
 type State = { readonly id: string; readonly status: "pending" | "confirmed"; readonly expiresAt: Date; readonly version: number };
 type Confirm = { readonly kind: "confirm"; readonly at: Date };
@@ -26,36 +28,36 @@ type ReservationConfirmed = { readonly type: "ReservationConfirmed"; readonly re
 class ReservationExpired extends Error {}
 
 export function decide(state: State, cmd: Confirm): { state: State; events: ReservationConfirmed[] } {
-  if (state.status === "confirmed") return { state, events: [] }; // jak w starym agregacie: idempotentnie, bez zdarzenia
-  if (cmd.at > state.expiresAt) throw new ReservationExpired(state.id); // rodzaj odrzucenia bez zmian
+  if (state.status === "confirmed") return { state, events: [] }; // as in the old aggregate: idempotent, without an event
+  if (cmd.at > state.expiresAt) throw new ReservationExpired(state.id); // kind of rejection unchanged
   return {
     state: { ...state, status: "confirmed" },
     events: [{ type: "ReservationConfirmed", reservationId: state.id, at: cmd.at }],
   };
 }
 ```
-Rejestr asercji (fragment):
+The assertion register (excerpt):
 
-| Asercja oryginalna | Asercja w DSL | Czego już nie rozróżnia | Dlaczego to akceptowalne |
+| Original assertion | Assertion in the DSL | What it no longer distinguishes | Why that is acceptable |
 |---|---|---|---|
-| `expect(res.getStatus()).toBe(Status.CONFIRMED)` | `thenReservationIsConfirmed()` | wewnętrznego enuma | status widać przez fasadę w DTO |
+| `expect(res.getStatus()).toBe(Status.CONFIRMED)` | `thenReservationIsConfirmed()` | the internal enum | the status is visible through the facade in the DTO |
 
-Podsumowanie: 3 commity (podnieś, zamień, obniż), luka pokrycia — ścieżka anulowania bez testu (tryb oszczędny).
+Summary: 3 commits (lift, swap, lower), a coverage gap — the cancellation path without a test (economical mode).
 
-## 2. Legacy bez testów i ukryty defekt
-**Sytuacja:** „Uporządkuj `late_fee()` — 60 linii zagnieżdżonych `if`, nikt nie wie, co robi. Testów brak”.
+## 2. Legacy without tests and a hidden defect
+**Situation:** "Clean up `late_fee()` — 60 lines of nested `if`, nobody knows what it does. There are no tests."
 
-**Jak:**
-1. **Warunek wstępny niespełniony** → najpierw testy charakteryzujące (qa-spec-first-testing), oznaczone jako takie.
-2. Kontrakt: wejście `days_late`, `is_member`, wynik `int` w groszach, brak wyjątków dla `days_late <= 0` (zwraca 0).
-3. Refaktoryzacja na tabelę progów; testy charakteryzujące bez zmian zielone.
-4. **Pułapka „ukryty defekt”:** dla `days_late == 30` stary kod zwraca stawkę niższego progu (`<` zamiast `<=`).
-   Nie poprawiasz go po cichu — testy charakteryzujące utrwalają też błędy, więc zgłaszasz rozbieżność człowiekowi.
+**How:**
+1. **Precondition not met** → first characterization tests (qa-spec-first-testing), marked as such.
+2. The contract: input `days_late`, `is_member`, result `int` in grosze, no exceptions for `days_late <= 0` (returns 0).
+3. Refactoring into a table of thresholds; the characterization tests unchanged and green.
+4. **The "hidden defect" pitfall:** for `days_late == 30` the old code returns the rate of the lower threshold (`<` instead of `<=`).
+   You do not fix it silently — characterization tests also lock in bugs, so you report the discrepancy to a human.
 
-**Wynik:**
+**Result:**
 ```python
-# po zmianie — zachowanie identyczne, łącznie z progiem 30 (zgłoszone jako możliwy defekt)
-_RATES = [(7, 100), (30, 250)]  # (do ilu dni wyłącznie, grosze za dzień)
+# after the change — identical behaviour, including the threshold of 30 (reported as a possible defect)
+_RATES = [(7, 100), (30, 250)]  # (up to how many days, exclusive; grosze per day)
 _MAX_RATE = 500
 
 
@@ -66,18 +68,18 @@ def late_fee(days_late: int, is_member: bool) -> int:
     fee = days_late * rate
     return fee // 2 if is_member else fee
 ```
-Wpis w podsumowaniu: „wykryty ukryty defekt: 30 dni liczone stawką 500 zamiast 250 — zachowane; decyzja w `decisions.md`”.
+The entry in the summary: "hidden defect found: 30 days charged at the rate of 500 instead of 250 — preserved; decision in `decisions.md`".
 
-## 3. Czerwony test po przepięciu fasady
-**Sytuacja:** po kroku „zamień” scenariusz „potwierdzona rezerwacja blokuje termin” jest czerwony.
+## 3. A red test after switching the facade
+**Situation:** after the "swap" step the scenario "a confirmed reservation blocks the time slot" is red.
 
-**Jak:**
-1. Czerwony test = siatka zadziałała; testu **nie** edytujesz.
-2. Sprawdzasz pułapkę **niejawnego utrwalania**: stary agregat zapisywał ORM sam, nowa powłoka nie woła `save`.
-3. Poprawiasz okablowanie powłoki (jawny zapis w tej samej transakcji), scenariusz wraca do zielonego.
-4. Gdyby nie dało się zazielenić bez edycji testu — `git` do stanu po kroku „podnieś” i zgłoszenie.
+**How:**
+1. A red test = the safety net worked; you do **not** edit the test.
+2. You check the **implicit persistence** pitfall: the old aggregate was saved by the ORM by itself, the new shell does not call `save`.
+3. You fix the shell's wiring (an explicit save in the same transaction), the scenario goes back to green.
+4. If it could not be made green without editing the test — `git` back to the state after the "lift" step and a report.
 
-**Wynik** — poprawka w powłoce, nie w teście:
+**Result** — a fix in the shell, not in the test:
 ```ts
 interface Repo { load(id: string): Promise<State>; save(s: State, expectedVersion: number): Promise<void> }
 interface Bus { publish(e: ReservationConfirmed[]): Promise<void> }
@@ -87,40 +89,39 @@ export async function confirm(repo: Repo, bus: Bus, id: string, at: Date): Promi
   const events = await inTransaction(async () => {
     const before = await repo.load(id);
     const { state, events } = decide(before, { kind: "confirm", at });
-    await repo.save(state, before.version); // brakowało: ORM nie zapisze już niezmiennego stanu sam
+    await repo.save(state, before.version); // was missing: the ORM no longer saves the immutable state by itself
     return events;
   });
   await bus.publish(events);
 }
 ```
 
-## 4. Sprzężone tablice kolumn — osłona zamiast przebudowy
-**Sytuacja:** zapis posta buduje INSERT z dwóch tablic (nazwy kolumn i wartości) — 18 pozycji, których kolejność
-musi się zgadzać w dwóch funkcjach; odczyt mapuje po nazwach. `git log -L` pokazuje, że kształt wprowadzono celowo
-(wsadowy INSERT dla szybkości importu), a w historii nie ma żadnej poprawki kolejności. Decyzja (eng-refactor-planning):
-kształt zostaje, dochodzi osłona.
-**Dlaczego nie wystarczy test okrężny:** zamiana `channel_id` i `user_id` (oba tekstowe) daje rekord, który po odczycie
-„wygląda poprawnie” w teście, który porównuje obiekt zapisany z odczytanym przez tę samą (błędną) ścieżkę.
-**Wynik:** jeden commit `test(store): osłona kolejności kolumn zapisu posta`, kod produkcyjny nietknięty.
+## 4. Coupled column arrays — a guard instead of a rebuild
+**Situation:** saving a post builds an INSERT from two arrays (column names and values) — 18 items whose order
+must match in two functions; the read maps by name. `git log -L` shows that the shape was introduced deliberately
+(a batch INSERT for import speed), and the history has no fix of the order. The decision (eng-refactor-planning):
+the shape stays, a guard is added.
+**Why a round-trip test is not enough:** swapping `channel_id` and `user_id` (both text) gives a record that after the read
+"looks correct" in a test that compares the saved object with the one read back through the same (wrong) path.
+**Result:** one commit `test(store): guard the column order of the post write`, the production code untouched.
 ```ts
-// TS — wartości-wartowniki: każde pole unikalne, odczyt surowym SQL po nazwach kolumn
-it("zapis wsadowy umieszcza każdą wartość w kolumnie o tej samej nazwie", async () => {
-  const sentinel = Object.fromEntries(POST_COLUMNS.map((c, i) => [c, `${c}__s${i}`]));  // np. "user_id__s3"
-  await store.saveMultiple([postFrom(sentinel)]);                                        // produkcyjna ścieżka pozycyjna
+// TS — sentinel values: every field unique, the read through raw SQL by column name
+it("batch write puts every value into the column of the same name", async () => {
+  const sentinel = Object.fromEntries(POST_COLUMNS.map((c, i) => [c, `${c}__s${i}`]));  // e.g. "user_id__s3"
+  await store.saveMultiple([postFrom(sentinel)]);                                        // the production positional path
   const [row] = await db.query(`SELECT ${POST_COLUMNS.join(", ")} FROM posts WHERE id = $1`, [sentinel.id]);
-  for (const c of POST_COLUMNS) expect(row[c]).toBe(sentinel[c]);                        // asercja per nazwa
+  for (const c of POST_COLUMNS) expect(row[c]).toBe(sentinel[c]);                        // assertion per name
 });
 ```
 ```java
-// Java (JUnit 5) — to samo dla pól liczbowych: kolejne liczby pierwsze zamiast powtarzalnych wartości
+// Java (JUnit 5) — the same for numeric fields: consecutive prime numbers instead of repeated values
 @Test
 void batchInsertPutsEachValueIntoColumnOfTheSameName() {
-  Map<String, Object> sentinel = Sentinels.forColumns(PostColumns.ALL);  // unikalna wartość per kolumna
+  Map<String, Object> sentinel = Sentinels.forColumns(PostColumns.ALL);  // a unique value per column
   store.saveMultiple(List.of(Posts.from(sentinel)));
   Map<String, Object> row = jdbc.queryForMap("SELECT * FROM posts WHERE id = ?", sentinel.get("id"));
   PostColumns.ALL.forEach(c -> assertEquals(sentinel.get(c), row.get(c), c));
 }
 ```
-Pola z ograniczeniami (enum, klucz obcy) dostają poprawną, ale unikalną wartość z dozwolonego zbioru; jeśli dwa pola
-muszą mieć tę samą wartość, test opisuje to wprost jako wyjątek.
-
+Fields with constraints (an enum, a foreign key) get a valid but unique value from the allowed set; if two fields
+must have the same value, the test describes that explicitly as an exception.

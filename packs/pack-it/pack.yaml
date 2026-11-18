@@ -39,8 +39,11 @@ unversioned_skills: [lang-javascript, tool-stripe]
 reference_sections:
   ddd-archetypes:
     skip: [layers.md]
-    sections: ["Test dopasowania", "Model (istota)", "Pytania", "Kroki mapowania", "Decyzje do kontroli (R/A/X)",
-               "Format wyniku", "Wzorce i pułapki", "Kontrola jakości", "Przykład (skrócony)"]
+    sections: ["Fit test", "Model (the essence)", "Questions", "Mapping steps", "Decisions to check (R/A/X)",
+               "Result format", "Patterns and pitfalls", "Quality check", "Example (shortened)"]
+    # pl: sprzed 14.x — plik w całości z polskimi nazwami sekcji też przechodzi
+    sections_pl: ["Test dopasowania", "Model (istota)", "Pytania", "Kroki mapowania", "Decyzje do kontroli (R/A/X)",
+                  "Format wyniku", "Wzorce i pułapki", "Kontrola jakości", "Przykład (skrócony)"]
 
 # Dokładane personom i wykonawcom tej nakładki (do always_skills rdzenia).
 always_skills: [eng-design-principles]

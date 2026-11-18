@@ -1,53 +1,53 @@
-# Stan (State)
+# State
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: behawioralne. Istota: każdy stan obiektu to osobny obiekt z **własnym zachowaniem**; kontekst deleguje
-do bieżącego stanu, a stany same decydują o przejściach.
+Category: behavioral. The essence: each state of an object is a separate object with **its own behaviour**; the context delegates
+to the current state, and the states themselves decide on the transitions.
 
 ## Problem
-Rezerwacja przechodzi przez „oczekuje → potwierdzona → zameldowana / anulowana”. Metody `confirm()`, `cancel()`,
-`checkIn()` zawierają ten sam `switch (status)` z coraz większą liczbą gałęzi; opłata za anulowanie zależy od stanu
-i czasu. Dodanie stanu „no-show” wymaga edycji każdej metody i łatwo przeoczyć jedną gałąź.
+A reservation goes through "pending → confirmed → checked in / cancelled". The methods `confirm()`, `cancel()`,
+`checkIn()` contain the same `switch (status)` with a growing number of branches; the cancellation fee depends on the state
+and the time. Adding a "no-show" state requires editing every method, and it is easy to miss one branch.
 
-## Rozwiązanie i uczestnicy
-- **Kontekst** — trzyma bieżący stan, deleguje mu operacje, udostępnia przejście (`transitionTo()`).
-- **Interfejs stanu** — operacje zależne od stanu.
-- **Konkretne stany** — zachowanie w danym stanie i decyzja o następnym; mogą mieć własne dane (np. czas
-  potwierdzenia).
+## Solution and participants
+- **Context** — holds the current state, delegates operations to it, exposes the transition (`transitionTo()`).
+- **State interface** — the state-dependent operations.
+- **Concrete states** — the behaviour in a given state and the decision about the next one; they can have their own data (e.g. the time
+  of confirmation).
 
-## Kiedy używać
-- Te same pola stanu sterują rozgałęzieniami w wielu metodach jednej klasy.
-- Stany mają **różne, nietrywialne zachowanie** (nie tylko inne dane) albo własne zależności.
-- Liczba stanów rośnie lub stany mają być rozszerzane niezależnie.
+## When to use
+- The same state fields drive branching in many methods of one class.
+- The states have **different, non-trivial behaviour** (not only different data) or their own dependencies.
+- The number of states grows or the states are to be extended independently.
 
-## Koszty
-Wiele małych klas; przy kilku prostych stanach — przerost formy; przejścia rozproszone po klasach stanów trudniej
-zobaczyć w jednym miejscu niż w tabeli przejść.
+## Costs
+Many small classes; with a few simple states — an overgrown form; transitions scattered across the state classes are harder
+to see in one place than in a transition table.
 
-## Powiązania
-- **Strategia** ma ten sam kształt, ale strategie nie znają się i wybiera je klient; stany zmieniają się same.
-- **Maszyna stanów** w modelu domeny (ddd-tactical-design) — jawne przejścia zamiast rozproszonych `if (status == …)`;
-  ten plik to jedna z technik jej implementacji.
-- **Most/Adapter** — też kompozycja + delegacja, inne problemy.
+## Relations
+- **Strategy** has the same shape, but strategies do not know each other and the client chooses them; states change by themselves.
+- **A state machine** in the domain model (ddd-tactical-design) — explicit transitions instead of scattered `if (status == …)`;
+  this file is one of the techniques for implementing it.
+- **Bridge/Adapter** — also composition + delegation, different problems.
 
-## Forma idiomatyczna w TS
-**Unia dyskryminowana + wyczerpujący `switch`** (lub mapa przejść) jest pierwszym wyborem, gdy stany różnią się
-głównie danymi i dozwolonymi przejściami — kompilator pilnuje kompletności (lang-typescript). Klasy stanów — gdy
-każdy stan ma własną, rozbudowaną logikę.
+## Idiomatic form in TS
+**A discriminated union + an exhaustive `switch`** (or a transition map) is the first choice when the states differ
+mainly in data and allowed transitions — the compiler enforces completeness (lang-typescript). State classes — when
+each state has its own, extensive logic.
 
-## Przykład (TS)
-Klasy stanów:
+## Example (TS)
+State classes:
 ```ts
 interface ReservationState {
   readonly name: string;
   confirm(reservation: Reservation): void;
-  /** Zwraca opłatę za anulowanie w groszach. */
+  /** Returns the cancellation fee in grosze (cents). */
   cancel(reservation: Reservation, now: Date): number;
 }
 
 class Pending implements ReservationState {
-  readonly name = 'oczekuje';
+  readonly name = 'pending';
   confirm(r: Reservation): void {
     r.transitionTo(new Confirmed(new Date()));
   }
@@ -58,13 +58,13 @@ class Pending implements ReservationState {
 }
 
 class Confirmed implements ReservationState {
-  readonly name = 'potwierdzona';
+  readonly name = 'confirmed';
   readonly #confirmedAt: Date;
   constructor(confirmedAt: Date) {
     this.#confirmedAt = confirmedAt;
   }
   confirm(): void {
-    throw new Error('rezerwacja już potwierdzona');
+    throw new Error('reservation already confirmed');
   }
   cancel(r: Reservation, now: Date): number {
     const hours = (now.getTime() - this.#confirmedAt.getTime()) / 3_600_000;
@@ -74,9 +74,9 @@ class Confirmed implements ReservationState {
 }
 
 class Cancelled implements ReservationState {
-  readonly name = 'anulowana';
+  readonly name = 'cancelled';
   confirm(): void {
-    throw new Error('nie można potwierdzić anulowanej rezerwacji');
+    throw new Error('cannot confirm a cancelled reservation');
   }
   cancel(): number {
     return 0;
@@ -89,7 +89,7 @@ class Reservation {
   get status(): string {
     return this.#state.name;
   }
-  /** Wołane tylko przez stany; w większym kodzie ukryj je przed klientami (osobny interfejs). */
+  /** Called only by the states; in larger code hide it from clients (a separate interface). */
   transitionTo(next: ReservationState): void {
     this.#state = next;
   }
@@ -105,7 +105,7 @@ const reservation = new Reservation();
 reservation.confirm();
 console.log(reservation.status, reservation.cancel(), reservation.status);
 ```
-Forma z unią — często czytelniejsza w TS:
+The union form — often more readable in TS:
 ```ts
 type OrderState =
   | { kind: 'pending' }
@@ -119,15 +119,15 @@ function advance(state: OrderState, trackingId: string): OrderState {
     case 'shipped':
       return { kind: 'delivered', deliveredAt: new Date() };
     case 'delivered':
-      return state; // stan końcowy
+      return state; // the final state
   }
 }
 console.log(advance({ kind: 'pending' }, 'PL123'));
 ```
 
-## Kiedy NIE używać / pułapki
-- **2–3 stałe stany** — `if`/`switch` bez wzorca bywa najczytelniejszy.
-- Stany różnią się tylko danymi → unia dyskryminowana; klasy stanów, gdy zachowanie jest naprawdę różne.
-- Publiczne `transitionTo()` pozwala klientom ominąć reguły — ogranicz dostęp (interfejs dla stanów, moduł).
-- Stan trwały: przy zapisie do bazy mapuj stan na wartość (nazwa + dane) i z powrotem — klasy stanów nie są modelem
-  persystencji.
+## When NOT to use / pitfalls
+- **2–3 fixed states** — an `if`/`switch` without a pattern is often the most readable.
+- The states differ only in data → a discriminated union; state classes when the behaviour is really different.
+- A public `transitionTo()` lets clients bypass the rules — limit access (an interface for the states, a module).
+- Persistent state: when saving to the database, map the state to a value (name + data) and back — state classes are not the persistence
+  model.

@@ -1,60 +1,60 @@
-# Szablony dokumentów A–C
+# Templates of the A–C documents
 
-Każdy dokument zaczyna się nagłówkiem: `title`, `created`, `type` (`domain-distillation` / `refactor-plan`), commit,
-na którym analizowano kod. Na końcu podsumowanie 5–8 zdań: co zawiera artefakt i najważniejszy wniosek.
+Every document starts with a header: `title`, `created`, `type` (`domain-distillation` / `refactor-plan`), the commit
+on which the code was analysed. At the end a summary of 5–8 sentences: what the artifact contains and the most important conclusion.
 
 ## A. `docs/project/02-domain/distillation.md`
 ```markdown
-# Destylacja domeny — <produkt>, <data>, commit <sha>
-**Ograniczenia:** <np. brak PRD — źródłem README i kod>
+# Domain distillation — <product>, <date>, commit <sha>
+**Constraints:** <e.g. no PRD — the README and the code are the source>
 
-## Słownik
-| Pojęcie | Definicja | Źródło (dokument) | W kodzie | Inne nazwy |
+## Glossary
+| Term | Definition | Source (document) | In the code | Other names |
 |---|---|---|---|---|
-| Sesja generacji | partia propozycji z jednego tekstu, z momentem finalizacji | `docs/prd.md:88` | BRAK w kodzie (tylko `generation_id` w `flashcards`) | „batch” (UI), „generation” (baza) |
+| Generation session | a batch of proposals from one text, with a moment of finalization | `docs/prd.md:88` | BRAK w kodzie (only `generation_id` in `flashcards`) | "batch" (UI), "generation" (database) |
 
-## Subdomeny
-| Obszar | Typ | Uzasadnienie (cele produktu) |
+## Subdomains
+| Area | Type | Justification (product goals) |
 
-## Kandydaci na agregaty
-| Kandydat | Niezmiennik (cytat) | Status: egzekwowany / deklarowany / ignorowany | Dowód |
+## Aggregate candidates
+| Candidate | Invariant (quote) | Status: enforced / declared / ignored | Evidence |
 
-## Rozjazdy model ↔ kod
-| Dokument mówi | Kod robi | Dowód |
+## Model ↔ code divergences
+| The document says | The code does | Evidence |
 
 ## Ranking
-| # | Kandydat | Wartość | Ryzyko | Uzasadnienie |
+| # | Candidate | Value | Risk | Justification |
 ```
 
-## B. `docs/project/02-domain/invariant-<nazwa>.md`
+## B. `docs/project/02-domain/invariant-<name>.md`
 ```markdown
-# Niezmiennik: <reguła> — plan agregatu-strażnika
-## Lista niezmienników i osie
-| Reguła | Źródło | Rdzeniowość | Rozsmarowanie (pliki/warstwy) | Egzekwowanie |
-## Diagnoza wybranego (wszystkie warstwy)
-| Warstwa | Miejsce | Co robi z regułą | Problem (brak / niespójnie / tylko UI / połyka błąd) |
-## Projekt
-- Korzeń: `<Agregat>`; metody z warunkami wstępnymi (sygnatury + pseudokod)
-- Błędy domenowe: `<NazwaBłędu>` → mapowanie na odpowiedź (np. 409)
-- Repozytorium: `load(id)` / `save(agregat)`; transakcja: <zakres>
-- Trasa API: parsuj → metoda → mapuj błąd
-## Before / after (każde dzisiejsze miejsce reguły)
-## Fazy (test-first) i przypadki testowe
-| Operacja | Stan wejściowy | Oczekiwanie (sukces / nazwany błąd) |
+# Invariant: <rule> — the guardian aggregate plan
+## List of invariants and axes
+| Rule | Source | Coreness | Smearing (files/layers) | Enforcement |
+## Diagnosis of the chosen one (all layers)
+| Layer | Place | What it does with the rule | Problem (missing / inconsistent / UI only / swallows the error) |
+## Design
+- Root: `<Aggregate>`; methods with preconditions (signatures + pseudocode)
+- Domain errors: `<ErrorName>` → mapping to a response (e.g. 409)
+- Repository: `load(id)` / `save(aggregate)`; transaction: <scope>
+- API route: parse → method → map the error
+## Before / after (every current place of the rule)
+## Phases (test-first) and test cases
+| Operation | Input state | Expectation (success / named error) |
 ```
 
-## C. `docs/project/02-domain/acl-<pakiet>.md`
+## C. `docs/project/02-domain/acl-<package>.md`
 ```markdown
-# ACL dla <pakiet> — plan
-## Zależności i sygnały przecieku
-| Pakiet | Pliki, które go znają | Warstwy | Typy w sygnaturach/DTO | Klient/serwer |
-## Wybór (osie: zasięg · koszt wymiany · deklarowana wymienialność)
-## Projekt
-- Obiekt wartości `<Nazwa>`: mapowanie z/do persystencji, konwersja z/do typu biblioteki
-- Port `<Nazwa>` (język domeny), adapter w `<katalog>/`
-## Dowód izolacji
-| Plik | Zna pakiet dziś | Zna po refaktorze |
-## Kryterium ukończenia
-`rg -l "<pakiet>" src | rg -v '^<katalog-adaptera>/'` → pusto; reguła CI: <dependency-cruiser / ESLint / ArchUnit>
-## Fazy
+# ACL for <package> — plan
+## Dependencies and leak signals
+| Package | Files that know it | Layers | Types in signatures/DTOs | Client/server |
+## Choice (axes: reach · replacement cost · declared replaceability)
+## Design
+- Value object `<Name>`: mapping from/to persistence, conversion from/to the library type
+- Port `<Name>` (domain language), adapter in `<directory>/`
+## Proof of isolation
+| File | Knows the package today | Knows it after the refactor |
+## Completion criterion
+`rg -l "<package>" src | rg -v '^<adapter-directory>/'` → empty; CI rule: <dependency-cruiser / ESLint / ArchUnit>
+## Phases
 ```

@@ -5,7 +5,7 @@ przez es_sim.py, uczestnicy jako osobne wywołania modelu bez narzędzi (`claude
 scenariusz działa: czy wiedza ukryta wychodzi, czy celowe sprzeczności dają hot spoty, czy karty osób zachowują się
 zgodnie z opisem, ile odpowiedzi to niepoprawny JSON. Płatne — uruchamiaj tylko za zgodą człowieka.
 
-  es_probe.py --variant pelna|oszczedna [--scenario weterynaria] [--probe <trial.json>] [--id <id>]
+  es_probe.py --variant pelna|oszczedna [--scenario veterinary] [--probe <trial.json>] [--id <id>]
               [--coach full|light|none] [--budget-usd 2.5]
 
 Plik próby (domyślnie scenarios/<scenariusz>/trial.json):

@@ -1,171 +1,171 @@
-# Archetyp Availability — mapper (dostępność zasobów w czasie, blokady)
+# The Availability archetype — mapper (resource availability over time, blocks)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Zapobieganie nakładaniu się przedziałów · W kodzie — na co uważać · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Preventing interval overlap · In code — what to watch out for · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania typu „czy zasób jest wolny?” na jeden kontrakt: **zablokuj / zwolnij / wyłącz** zasób w przedziale czasu
-przez właściciela. Rezerwacja, serwis, relokacja czy awaria to tylko **klienci** kontraktu — model nie zna przyczyn
-niedostępności. Efekt: nowy powód niedostępności nie zmienia istniejących metod. Protokół wspólny (pytania, „To zależy”, kontrola R/A/X, zapis): `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements like "is the resource free?" into one contract: **block / release / disable** a resource in a time interval
+by an owner. A booking, servicing, relocation or a breakdown are only **clients** of the contract — the model does not know the reasons
+for unavailability. The effect: a new reason for unavailability does not change existing methods. The common protocol (questions, "It depends", the R/A/X check, recording): `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy zasób w danym czasie (albo teraz) jest wolny lub trzymany przez dokładnie jednego właściciela?*
-Tak → pasuje. Pytanie „ile jednostek zostało?” → wartość (Accounting); „kto dostanie następny?” → Waitlist.
+## Fit test
+**The core question:** *is the resource at a given time (or now) free or held by exactly one owner?*
+Yes → it fits. The question "how many units are left?" → a value (Accounting); "who gets the next one?" → Waitlist.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „nie wolno dwa razy zarezerwować”, podwójne rezerwacje | ✅ |
-| serwis / przestój / relokacja / awaria wyłącza zasób | ✅ |
-| „czy sala/auto/stanowisko jest wolne w terminie X?” | ✅ |
-| blokada „teraz” z terminem („trzymamy 15 minut”) | ✅ wariant prosty |
-| flagi `reserved`, `inMaintenance` w encji zasobu | ✅ sygnał do refaktoryzacji |
-| „sala na 10 osób, zajętych 7”, pula biletów | ⚠️ graniczny |
-| „kto dostanie zwolnione miejsce?” | ❌ → Waitlist |
-| „kogo przydzielić, by dopasować kompetencje / zmaksymalizować wartość?” | ❌ → General assignment |
-| „co można robić równolegle?”, ścieżka krytyczna | ❌ → Planning |
-| „rezerwacja: złożona → opłacona → anulowana” | ❌ maszyna stanów umowy (która *korzysta* z Availability) |
+| "must not be booked twice", double bookings | ✅ |
+| servicing / downtime / relocation / a breakdown disables the resource | ✅ |
+| "is the room/car/workstation free on date X?" | ✅ |
+| a block "now" with a deadline ("we hold it for 15 minutes") | ✅ the simple variant |
+| `reserved`, `inMaintenance` flags in the resource entity | ✅ a signal for refactoring |
+| "a room for 10 people, 7 taken", a pool of tickets | ⚠️ borderline |
+| "who gets the released place?" | ❌ → Waitlist |
+| "whom to assign to match competences / maximize value?" | ❌ → General assignment |
+| "what can be done in parallel?", critical path | ❌ → Planning |
+| "booking: placed → paid → cancelled" | ❌ a state machine of the agreement (which *uses* Availability) |
 
-**Przypadki graniczne:**
-- *Availability vs Accounting* — czy jednostka jest **niepodzielna** (binarny slot wolny/zajęty)? Tak → Availability.
-  Pojemność liczbowa zużywana częściowo („7 z 10”) → Accounting (pula). Rozstrzyga: *czy klient wybiera konkretne miejsce
-  (12A)?* Tak → N zasobów-slotów w Availability; nie → pula w Accounting.
-- *Przyszłe terminy czy tylko „teraz”?* Rezerwacje w przyszłości → wariant czasowy (segmenty); „wolny teraz / zajęty do T”
-  (hulajnoga, licencja, stanowisko) → wariant prosty.
-- *Dobór zasobu po cechach* („ktoś z uprawnieniami SEP”) — wybór to General assignment, samo zajęcie — Availability.
+**Borderline cases:**
+- *Availability vs Accounting* — is the unit **indivisible** (a binary slot free/taken)? Yes → Availability.
+  A numeric capacity consumed partially ("7 of 10") → Accounting (a pool). The deciding question: *does the customer choose a specific seat
+  (12A)?* Yes → N slot resources in Availability; no → a pool in Accounting.
+- *Future dates or only "now"?* Bookings in the future → the time variant (segments); "free now / taken until T"
+  (a scooter, a licence, a workstation) → the simple variant.
+- *Choosing a resource by features* ("someone with SEP electrical qualifications") — the choice is General assignment, the occupation itself — Availability.
 
-## Model (istota)
-**Poziomy problemu:** (1) wyłączny dostęp — zakaz podwójnej rezerwacji (auto, miejsce, sala); (2) niedostępność z innych
-powodów — serwis, relokacja, awaria; (3) przejścia z regułami — nie wysyłaj do serwisu auta z aktywną rezerwacją, nie
-wycofuj auta w serwisie lub z rezerwacjami, nie rezerwuj auta w serwisie ani wycofanego.
+## Model (the essence)
+**Problem levels:** (1) exclusive access — no double booking (a car, a seat, a room); (2) unavailability for other
+reasons — servicing, relocation, a breakdown; (3) transitions with rules — do not send a car with an active booking to servicing, do not
+withdraw a car that is in servicing or has bookings, do not book a car that is in servicing or withdrawn.
 
-| Ewolucja rozwiązań | Co się psuje |
+| Evolution of solutions | What breaks |
 |---|---|
-| Flagi w encji (`reserved`, `inMaintenance`, `inRelocation`) | miesza niepowiązane sprawy z danymi zasobu; gubi *kto* i *na kiedy* |
-| Osobne modele Rezerwacja / Serwis / Relokacja, sprawdzanie w serwisach | każdy nowy powód mnoży warunki we wszystkich metodach (13, potem 21 sprawdzeń); logika „wolny w czasie?” rozsiana, brak jednego źródła prawdy, eksplozja testów kombinacji |
-| **Stabilna abstrakcja dostępności w czasie** | klient pyta tylko „czy jesteś dostępny?” (ukrywanie informacji); przyczyny jedynie korzystają z kontraktu |
+| Flags in the entity (`reserved`, `inMaintenance`, `inRelocation`) | mixes unrelated matters with the resource data; loses *who* and *for when* |
+| Separate Booking / Servicing / Relocation models, checking in services | each new reason multiplies the conditions in all methods (13, then 21 checks); the "free in time?" logic is scattered, no single source of truth, an explosion of combination tests |
+| **A stable abstraction of availability over time** | the client only asks "are you available?" (information hiding); the reasons merely use the contract |
 
-- **Kontrakt (krawędź modułu):** `zablokuj(zasób, przedział, właściciel)`, `zwolnij(…)`, `wyłącz(…)`. Serwis biznesowy ma
-  jeden warunek: „czy udało się zablokować?”.
-- **Segment `ResourceAvailability`** — mały agregat: zasób, opcjonalnie zasób nadrzędny (grupowanie), przedział, blokada, wersja.
-- **Agregat dynamiczny** — operacja na dłuższym przedziale składa grupę segmentów i blokuje je razem w jednej transakcji.
-- **Stany blokady:** wolny · zablokowany przez właściciela · wyłączony przez właściciela (np. serwis).
+- **The contract (the module edge):** `block(resource, interval, owner)`, `release(…)`, `disable(…)`. The business service has
+  one condition: "did the block succeed?".
+- **The `ResourceAvailability` segment** — a small aggregate: the resource, optionally a parent resource (grouping), the interval, the block, the version.
+- **A dynamic aggregate** — an operation on a longer interval assembles a group of segments and blocks them together in one transaction.
+- **Block states:** free · blocked by an owner · disabled by an owner (e.g. servicing).
 
-| Operacja | Reguła przejścia |
+| Operation | Transition rule |
 |---|---|
-| wyłącz | zawsze; ponownie włączyć może tylko ten, kto wyłączył |
-| zablokuj | tylko wolny; nie zablokowany przez innego; wyłączony — nikt (także wyłączający) |
-| zwolnij | tylko obecny właściciel blokady |
+| disable | always; only the one who disabled it may enable it again |
+| block | only free; not blocked by another; disabled — nobody (including the one who disabled it) |
+| release | only the current owner of the block |
 
-**Ewolucja implementacji** (kontrakt się nie zmienia):
+**Evolution of the implementation** (the contract does not change):
 
-| Wariant | Problem |
+| Variant | Problem |
 |---|---|
-| Jeden kalendarz wszystkich zasobów | ładuje wszystko; konflikty między niezwiązanymi zasobami; wydajność spada z liczbą zasobów |
-| Kalendarz per zasób | konflikty przy równoczesnych operacjach na tym samym zasobie w **różnych** terminach |
-| Kalendarz per zasób per okres (tydzień/miesiąc) | kłopoty na granicach okresów; dobre tylko przy naturalnych granicach biznesowych |
-| **Per zasób per mały segment czasu** ✔ | ładuje tylko segmenty z żądania; konflikt tylko przy realnym nakładaniu |
+| One calendar for all resources | loads everything; conflicts between unrelated resources; performance drops with the number of resources |
+| A calendar per resource | conflicts on concurrent operations on the same resource for **different** dates |
+| A calendar per resource per period (week/month) | trouble at period boundaries; good only with natural business boundaries |
+| **Per resource per small time segment** ✔ | loads only the segments from the request; a conflict only on real overlap |
 
-**Wariant prosty (bez kalendarza)** — tylko „czy wolny **teraz**”; jedna blokada na zasób:
+**The simple variant (no calendar)** — only "is it free **now**"; one block per resource:
 
-| Stan blokady | Znaczenie |
+| Block state | Meaning |
 |---|---|
-| brak | wolny |
-| serwisowa | stan początkowy po rejestracji — zasób trzeba aktywować |
-| wycofania | zasób wycofany |
-| właściciela | zablokowany przez kogoś do określonego momentu |
+| none | free |
+| servicing | the initial state after registration — the resource must be activated |
+| withdrawal | the resource is withdrawn |
+| owner | blocked by someone until a defined moment |
 
-Operacje: *zarejestruj* (start w serwisie) → *aktywuj* (tylko z serwisu); *wycofaj* (tylko wolny lub w serwisie);
-*zablokuj na czas* (tylko wolny); *przedłuż bezterminowo* i *odblokuj* (tylko obecny właściciel). **Wygasanie:** blokada ma
-termin; zadanie cykliczne zwalnia przeterminowane i publikuje „blokada wygasła”. Każda operacja zwraca zdarzenie sukcesu albo
-odrzucenia z powodem („zasób zablokowany”, „brak blokady dla tego właściciela”) — łatwe do obsłużenia na krawędzi i w UI.
+Operations: *register* (start in servicing) → *activate* (only from servicing); *withdraw* (only free or in servicing);
+*block for a time* (only free); *extend indefinitely* and *unblock* (only the current owner). **Expiry:** a block has
+a deadline; a periodic job releases the expired ones and publishes "block expired". Each operation returns a success event or
+a rejection with a reason ("resource blocked", "no block for this owner") — easy to handle at the edge and in the UI.
 
-## Zapobieganie nakładaniu się przedziałów
-- **PostgreSQL:** typ zakresu czasu + ograniczenie wykluczające (exclusion constraint, indeks GiST) na (zasób, przedział) —
-  baza sama odrzuca nakładające się przedziały; zapytania o konflikt używają operatora nakładania.
-- **Inne bazy — normalizacja i segmentacja:** rozszerz przedział do granic segmentów (10:05–11:30 przy 30' → 10:00–11:30),
-  podziel na segmenty, unikalność (zasób, początek, koniec). Żądania nakładające się choćby o 5 minut konkurują o ten sam rekord.
-- Długość segmentu = kompromis między precyzją a liczbą rekordów.
-- **Read model kalendarza:** operacyjnie drobne segmenty, użytkownik chce okresów („1–3 stycznia wolne, 3–7 zajęte przez X”).
-  Łącz sąsiednie segmenty tego samego właściciela (funkcje okna w SQL) → mapa właściciel → przedziały; „brak właściciela” =
-  wolne. Front buduje z tego widoki dnia/miesiąca i filtry.
+## Preventing interval overlap
+- **PostgreSQL:** a time range type + an exclusion constraint (a GiST index) on (resource, interval) —
+  the database itself rejects overlapping intervals; conflict queries use the overlap operator.
+- **Other databases — normalization and segmentation:** extend the interval to segment boundaries (10:05–11:30 with 30' → 10:00–11:30),
+  split it into segments, uniqueness of (resource, start, end). Requests overlapping by even 5 minutes compete for the same record.
+- Segment length = a compromise between precision and the number of records.
+- **The calendar read model:** operationally fine-grained segments, the user wants periods ("1–3 January free, 3–7 taken by X").
+  Merge adjacent segments of the same owner (window functions in SQL) → a map owner → intervals; "no owner" =
+  free. The front end builds day/month views and filters from it.
 
-## W kodzie — na co uważać
-- Zapis grupy segmentów z kontrolą wersji jednym poleceniem (`UPDATE … WHERE wersja = oczekiwana`): **liczba zmienionych
-  wierszy = liczba segmentów**; mniej = konflikt, wycofaj całość.
-- `wyłącz` odbiera blokady innym → zdarzenie „zasób przejęty” z listą poprzednich właścicieli, by ich procesy (projekt,
-  rezerwacja) mogły zareagować.
-- Przedziały półotwarte `[od, do)`; czas ze strefą (`timestamptz`), liczony w UTC; miesiące w niektórych językach od 0 —
-  testuj daty graniczne.
-- Test współbieżności: N równoległych prób zablokowania segmentu → dokładnie jedna się udaje (lub ≥ 1 kończy się konfliktem),
-  stan końcowy spójny.
+## In code — what to watch out for
+- Write a group of segments with version control in one statement (`UPDATE … WHERE version = expected`): **the number of changed
+  rows = the number of segments**; fewer = a conflict, roll back the whole thing.
+- `disable` takes blocks away from others → a "resource taken over" event with the list of previous owners, so that their processes (a project,
+  a booking) can react.
+- Half-open intervals `[from, to)`; time with a zone (`timestamptz`), computed in UTC; months in some languages start at 0 —
+  test boundary dates.
+- A concurrency test: N parallel attempts to block a segment → exactly one succeeds (or ≥ 1 ends with a conflict),
+  a consistent final state.
 
-## Pytania
-**A — decyzje standardowe:**
-- Jakie są powody niedostępności i kto jest ich **właścicielem**? Które to blokada, a które wyłączenie?
-- Rezerwujemy **przyszłe terminy** czy tylko „teraz”? (wariant czasowy / prosty)
-- Jak długie są typowe blokady i jak często się nakładają? (długość segmentu, konflikty)
-- Czy zasoby tworzą grupy/hierarchie (sala w budynku, flota)? (zasób nadrzędny)
-- Wyłączenie przy istniejących blokadach: **odbiera** je (zdarzenie „przejęty”) czy jest odrzucane?
+## Questions
+**A — standard decisions:**
+- What are the reasons for unavailability and who is their **owner**? Which are a block and which a disable?
+- Do we book **future dates** or only "now"? (time / simple variant)
+- How long are typical blocks and how often do they overlap? (segment length, conflicts)
+- Do resources form groups/hierarchies (a room in a building, a fleet)? (parent resource)
+- Disabling with existing blocks: does it **take** them away (a "taken over" event) or is it rejected?
 
-**B — luki** (przykłady):
-- blokady przeterminowane (niezapłacona rezerwacja) — wygasanie, kto ustala termin? · bufor między blokadami (sprzątanie,
-  dojazd)? · przedłużanie blokady? · historia/audyt blokad? · widok kalendarza? · co po zwolnieniu — powiadomić Waitlist? · blokada kilku zasobów naraz (sala + projektor) — wszystko albo nic?
+**B — gaps** (examples):
+- expired blocks (an unpaid booking) — expiry, who sets the deadline? · a buffer between blocks (cleaning,
+  travel)? · extending a block? · history/audit of blocks? · a calendar view? · what after a release — notify Waitlist? · blocking several resources at once (a room + a projector) — all or nothing?
 
-## Kroki mapowania
-1. **Zasoby** — co blokujemy; identyfikacja; zasób nadrzędny.
-2. **Powody niedostępności** → właściciel + operacja (`zablokuj` / `wyłącz`); żaden powód nie trafia do modelu jako flaga.
-3. **Wariant** — czasowy (segmenty) albo prosty (blokada „teraz” z terminem).
-4. **Czas** — ziarnistość, długość segmentu, normalizacja przedziałów, `[od, do)`, strefa.
-5. **Reguły przejść** — tabela operacja → warunek; reguły zależne od *kto/dlaczego* odłóż do warstwy polityk.
-6. **Wygasanie i przedłużanie** — termin jako parametr operacji; zadanie cykliczne; zdarzenie „wygasła”.
-7. **Nakładanie** — exclusion constraint albo unikalność segmentów; kontrola wersji grupy.
-8. **Zdarzenia** — sukces/odrzucenie z powodem, „zasób przejęty”, „blokada wygasła” i kto je konsumuje.
-9. **Read model** — skonsolidowane okresy.
+## Mapping steps
+1. **Resources** — what we block; identification; the parent resource.
+2. **Reasons for unavailability** → owner + operation (`block` / `disable`); no reason enters the model as a flag.
+3. **Variant** — time (segments) or simple (a block "now" with a deadline).
+4. **Time** — granularity, segment length, interval normalization, `[from, to)`, the zone.
+5. **Transition rules** — an operation → condition table; defer rules depending on *who/why* to the policy layer.
+6. **Expiry and extension** — the deadline as an operation parameter; a periodic job; an "expired" event.
+7. **Overlap** — an exclusion constraint or segment uniqueness; group version control.
+8. **Events** — success/rejection with a reason, "resource taken over", "block expired" and who consumes them.
+9. **Read model** — consolidated periods.
 
-## Decyzje do kontroli (R/A/X)
-wariant (czasowy/prosty) · długość segmentu · zasób nadrzędny · wyłączenie vs istniejące blokady · kto może włączyć ·
-termin wygaśnięcia i kto go ustala · przedłużanie · bufor · atomowość blokady wielu zasobów · strefa czasowa i granice
-przedziałów · mechanizm bazy · konsumenci zdarzeń.
+## Decisions to check (R/A/X)
+variant (time/simple) · segment length · parent resource · disabling vs existing blocks · who may enable ·
+the expiry deadline and who sets it · extension · buffer · atomicity of blocking many resources · the time zone and interval
+boundaries · the database mechanism · event consumers.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Availability: <obszar>
-## Zasoby             — | Zasób | Identyfikacja | Zasób nadrzędny | Wariant |
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Powody niedostępności — | Powód | Właściciel | Operacja | Wygasa? |
-## Czas               — ziarnistość, segment, normalizacja, strefa
-## Reguły przejść     — | Operacja | Warunek | Odrzucenie (powód) |
-## Wygasanie          — | Blokada | Termin (parametr) | Co po wygaśnięciu |
-## Zdarzenia          — | Zdarzenie | Kiedy | Konsumenci |
-## Nakładanie         — mechanizm (constraint / segmenty), kontrola wersji
-## Read model         — widoki kalendarza
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), przypadki brzegowe, parametry polityk zmiennych
+# Availability model: <area>
+## Resources          — | Resource | Identification | Parent resource | Variant |
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Reasons for unavailability — | Reason | Owner | Operation | Expires? |
+## Time               — granularity, segment, normalization, zone
+## Transition rules   — | Operation | Condition | Rejection (reason) |
+## Expiry             — | Block | Deadline (parameter) | What after expiry |
+## Events             — | Event | When | Consumers |
+## Overlap            — mechanism (constraint / segments), version control
+## Read model         — calendar views
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), edge cases, variable policy parameters
 ```
 
-## Wzorce i pułapki
-- Modeluj **dostępność**, nie przyczyny — przyczyna to tylko właściciel blokady.
-- „Czy klient X może zarezerwować salę Y?” (limit rezerwacji, abonament, rola) — **autoryzacja poza archetypem**; archetyp
-  pilnuje tylko niezmiennika „jeden właściciel naraz”.
-- Polityka zmienna („VIP ma 48 h na płatność, reszta 2 h”) → archetyp dostaje gotowy termin wygaśnięcia.
-- Stan umowy/rezerwacji (opłacona, anulowana) żyje poza archetypem; Availability zna tylko blokadę.
+## Patterns and pitfalls
+- Model **availability**, not the reasons — a reason is only the owner of a block.
+- "May customer X book room Y?" (a booking limit, a subscription, a role) — **authorization outside the archetype**; the archetype
+  guards only the invariant "one owner at a time".
+- A variable policy ("a VIP has 48 h to pay, the rest 2 h") → the archetype gets a ready expiry deadline.
+- The state of the agreement/booking (paid, cancelled) lives outside the archetype; Availability knows only the block.
 
-## Kontrola jakości
-- [ ] każdy powód niedostępności ma właściciela i operację; brak flag w encji zasobu
-- [ ] tabela reguł przejść pokrywa zablokuj/zwolnij/wyłącz (lub operacje wariantu prostego)
-- [ ] ziarnistość czasu, `[od, do)` i strefa określone; mechanizm przeciw nakładaniu wybrany
-- [ ] wygasanie: termin jako parametr, zadanie cykliczne, zdarzenie
-- [ ] mapowanie i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] every reason for unavailability has an owner and an operation; no flags in the resource entity
+- [ ] the transition rules table covers block/release/disable (or the simple variant's operations)
+- [ ] time granularity, `[from, to)` and the zone defined; the anti-overlap mechanism chosen
+- [ ] expiry: the deadline as a parameter, a periodic job, an event
+- [ ] the mapping and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Coworking wynajmuje sale na godziny. Salę można wyłączyć na sprzątanie lub remont. Rezerwacja nieopłacona
-w terminie przepada.”
+## Example (shortened)
+**Input:** "A coworking space rents rooms by the hour. A room can be disabled for cleaning or renovation. A booking not paid
+on time is lost."
 
 ```markdown
-## Zasoby — | sala | numer | piętro (nadrzędny) | czasowy, segment 15' |
-## Mapowanie — rezerwacja → blokada (właściciel: id rezerwacji) · sprzątanie/remont → wyłącz (właściciel: obsługa) ·
-   „przepada” → wygaśnięcie blokady
-## Niezmapowane — płatność (→ Accounting/umowa) · cena godziny (→ Pricing)
-## Reguły — remont odbiera blokady (A) → „zasób przejęty” → rezerwacja powiadamia klienta
-## Wygasanie — termin płatności: A „ile czasu?” — To zależy → parametr `blokada_ważna_do` liczony przez politykę płatności
-## Decyzje — segment 15' (X → techniczne, w Uwagach) · bufor 15' na sprzątanie po każdej rezerwacji (X → zapytaj)
+## Resources — | room | number | floor (parent) | time, segment 15' |
+## Mapping — booking → block (owner: booking id) · cleaning/renovation → disable (owner: facilities) ·
+   "is lost" → block expiry
+## Unmapped — payment (→ Accounting/agreement) · the hourly price (→ Pricing)
+## Rules — renovation takes blocks away (A) → "resource taken over" → the booking notifies the customer
+## Expiry — payment deadline: A "how much time?" — It depends → parameter `block_valid_to` computed by the payment policy
+## Decisions — segment 15' (X → technical, in Notes) · a 15' buffer for cleaning after each booking (X → ask)
 ```
