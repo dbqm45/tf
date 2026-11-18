@@ -831,6 +831,10 @@ treści (angielska), bez równoległej polskiej.
     holdout 31/43 → 32/43 (`ddd-tactical-design` +1), `--hints` czysto (all, pack-it). Haiku przed/po: 4 scenariusze
     4/4 → 3/4 (`klasyfikacja-danych`: Haiku nie uruchomił skilla), powtórka 2 scenariuszy × 2: 4/4 → 4/4; łącznie
     `klasyfikacja-danych` 3/3 → 2/3 — szum wyboru skilla, do obserwacji. 2,18 USD.
+  - [x] 4d-arch-c (2026-11-18): pack-it — `arch-system-design`, `arch-tech-selection`, `arch-threat-modeling`
+    (+ referencje) po angielsku; `hint.pl.txt`; prefiks `arch-` zamknięty. `quality_override: yes` (nikt go nie parsuje).
+    Podpowiedzi bez zmian (901/918 · 32/43), `--hints` czysto (all, pack-it). Haiku przed/po (4 scenariusze): 3/4 → 3/4,
+    1,07 USD; `model-webhook-upload` pada tak samo na main (brak ryzyka rezydualnego w odpowiedzi) — do przejrzenia.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,

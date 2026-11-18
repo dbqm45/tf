@@ -1,72 +1,72 @@
-# Przykłady — dobór stacku
+# Examples — choosing the stack
 
-## 1. Backend nowej aplikacji: macierz ważona
-**Sytuacja.** „Budujemy aplikację do zgłaszania i obsługi usterek w 300 sklepach. Zespół: 4 osoby, piszą na co dzień
-w TypeScripcie, front już jest w Angularze. Dane muszą zostać w UE. Jaki backend?”
+## 1. The backend of a new application: a weighted matrix
+**Situation.** "We are building an application for reporting and handling faults in 300 shops. Team: 4 people, they write
+TypeScript every day, the frontend is already in Angular. The data must stay in the EU. Which backend?"
 
-**Jak.**
-1. **Czynniki** z wymagań, z wagami 1–5: QA-1 przypisanie zgłoszenia bez podwójnego przydziału (5), QA-2 nowa kategoria
-   usterki w 1 module (4), ograniczenie: zespół 4 osób i start za 3 miesiące (5).
-2. **Filtry obowiązkowe**: hosting w UE, licencja dopuszczająca użycie komercyjne, wsparcie w horyzoncie projektu,
-   aktywne łatki — opcja, która odpada, nie dostaje punktów.
-3. **Kandydaci**: 2–3, w tym „nudny” — to, co zespół zna.
-4. **Fakty** (wersje, daty końca wsparcia, licencje, zgodność z wersją TypeScriptu frontu) deleguję do `researcher`; do macierzy
-   trafiają tylko ze źródłem i datą sprawdzenia, nigdy z pamięci.
-5. **Macierz** wg kryteriów skilla; wynik = suma (ocena 1–5 × waga).
-6. **Wnioski z domeny**: przydział zgłoszeń to konkurencja o zasób → baza z mocną spójnością i ograniczeniami (PostgreSQL).
+**How.**
+1. **Drivers** from the requirements, with weights 1–5: QA-1 assigning a ticket without double assignment (5), QA-2 a new fault
+   category in 1 module (4), constraint: a team of 4 and a start in 3 months (5).
+2. **Mandatory filters**: hosting in the EU, a licence allowing commercial use, support within the project's horizon,
+   active patches — an option that drops out gets no points.
+3. **Candidates**: 2–3, including the "boring" one — what the team knows.
+4. I delegate **facts** (versions, end-of-support dates, licences, compatibility with the frontend's TypeScript version) to `researcher`; they go into
+   the matrix only with a source and a check date, never from memory.
+5. **Matrix** by the skill's criteria; the result = the sum (a score of 1–5 × the weight).
+6. **Conclusions from the domain**: ticket assignment is competition for a resource → a database with strong consistency and constraints (PostgreSQL).
 
-**Wynik** (fragment `04-architecture/stack-decision.md`, status `proposed`):
+**Result** (a fragment of `04-architecture/stack-decision.md`, status `proposed`):
 
-| Kryterium (waga) | A: TypeScript + Node.js („nudna”) | B: Java + Spring | C: Go |
+| Criterion (weight) | A: TypeScript + Node.js ("boring") | B: Java + Spring | C: Go |
 |---|---|---|---|
-| dopasowanie do czynników (5) | 4 | 5 | 4 |
-| kompetencje zespołu (5) | 5 | 2 | 2 |
-| dojrzałość ekosystemu (3) | 4 | 5 | 4 |
-| koszt operacyjny i złożoność (3) | 4 | 3 | 4 |
-| przyjazność dla agentów AI (4) | 5 (`lang-typescript`, wspólne typy z frontem) | 4 (`lang-java`) | 2 (brak skilla `lang-go`) |
-| uzależnienie i koszt wyjścia (2) | 4 | 4 | 4 |
-| bezpieczeństwo (3) | 3 | 4 | 4 |
-| **Suma** | **106** | 95 | 82 |
+| fit to the drivers (5) | 4 | 5 | 4 |
+| team skills (5) | 5 | 2 | 2 |
+| ecosystem maturity (3) | 4 | 5 | 4 |
+| operating cost and complexity (3) | 4 | 3 | 4 |
+| friendliness for AI agents (4) | 5 (`lang-typescript`, types shared with the frontend) | 4 (`lang-java`) | 2 (no `lang-go` skill) |
+| lock-in and exit cost (2) | 4 | 4 | 4 |
+| security (3) | 3 | 4 | 4 |
+| **Total** | **106** | 95 | 82 |
 
-Decyzja: A + PostgreSQL, styl: modularny monolit. Persony realizujące: `stack: [lang-typescript, fw-angular, be-database]`.
-Ryzyko: łańcuch zależności npm → ops-supply-chain-security (lockfile, karencja nowych wersji). ADR-003, wiersz w decisions.md.
+Decision: A + PostgreSQL, style: a modular monolith. Implementing personas: `stack: [lang-typescript, fw-angular, be-database]`.
+Risk: the npm dependency chain → ops-supply-chain-security (lockfile, a cooldown for new versions). ADR-003, a row in decisions.md.
 
-## 2. Stary system: zachowaj / usprawnij / zastąp
-**Sytuacja.** „Mamy 10-letni system zamówień hurtowych. Zespół chce przepisać wszystko od zera na nowy framework.”
+## 2. An old system: keep / improve / replace
+**Situation.** "We have a 10-year-old wholesale order system. The team wants to rewrite everything from scratch on a new framework."
 
-**Jak.**
-1. Projekt istniejący → najpierw `python3 .claude/hooks/detect_stack.py`; rekomendacja per obszar, nie nowy stack.
-2. Dla każdego obszaru: czy blokuje scenariusz (H,H)? ile kosztuje migracja?
-3. Wymianę planuję wzorcem strangler fig, po granicach kontekstów — nowy kod obok starego, ruch przełączany kawałkami.
-4. Odrzucam anty-wzorzec: przepisanie „bo framework jest stary”, bez związku z czynnikami.
+**How.**
+1. An existing project → first `python3 .claude/hooks/detect_stack.py`; a recommendation per area, not a new stack.
+2. For every area: does it block an (H,H) scenario? how much does the migration cost?
+3. I plan the replacement with the strangler fig pattern, along context boundaries — new code next to the old, traffic switched piece by piece.
+4. I reject the anti-pattern: a rewrite "because the framework is old", unrelated to the drivers.
 
-**Wynik**:
+**Result**:
 
-| Obszar | Decyzja | Uzasadnienie (czynnik) | Koszt migracji |
+| Area | Decision | Justification (driver) | Migration cost |
 |---|---|---|---|
-| baza relacyjna | **zachowaj** | spełnia QA-2 (spójność stanów magazynowych) | 0 |
-| backend zamówień | **usprawnij** | testy charakteryzujące + wydzielenie modułów; brak scenariusza, którego nie da się spełnić | 6 tygodni |
-| moduł cennika | **zastąp** (strangler fig) | QA-4: zmiana reguły rabatowej trwa dziś 3 tygodnie | 3 miesiące, kontekst po kontekście |
-| front panelu klienta | **zastąp** | framework bez łatek bezpieczeństwa — odpada na filtrze obowiązkowym | 4 miesiące |
+| relational database | **keep** | meets QA-2 (consistency of stock levels) | 0 |
+| order backend | **improve** | characterization tests + extracting modules; no scenario that cannot be met | 6 weeks |
+| pricing module | **replace** (strangler fig) | QA-4: changing a discount rule takes 3 weeks today | 3 months, context by context |
+| customer panel frontend | **replace** | a framework without security patches — it drops out on a mandatory filter | 4 months |
 
-Pełne przepisanie: odrzucone — koszt całości bez zysku w czynnikach i bez wartości dla użytkownika do ostatniego dnia migracji.
+A full rewrite: rejected — the cost of the whole without a gain in the drivers and without value for the user until the last day of the migration.
 
-## 3. Jądro algorytmiczne: solver i spike z kryterium porzucenia
-**Sytuacja.** „Planujemy trasy 25 serwisantów dziennie z oknami czasowymi klientów. Napiszemy własny algorytm?”
+## 3. An algorithmic core: a solver and a spike with an abandonment criterion
+**Situation.** "We plan routes for 25 service technicians a day with customers' time windows. Shall we write our own algorithm?"
 
-**Jak.**
-1. `02-domain/algorithms.md` (ddd-algorithm-recognition) rozpoznał problem tras z oknami czasowymi — NP-trudny.
-2. Reguła skilla: solver lub biblioteka optymalizacyjna **za interfejsem domenowym**, nie własny algorytm.
-3. Konkretne biblioteki, licencje i wersje sprawdza `researcher` — do decyzji trafiają 2 kandydaci ze źródłami.
-4. Niepewność (czas obliczeń przy realnej skali) zamieniam w spike ograniczony czasem, z **kryterium porzucenia**.
+**How.**
+1. `02-domain/algorithms.md` (ddd-algorithm-recognition) recognized a routing problem with time windows — NP-hard.
+2. The skill's rule: a solver or an optimization library **behind a domain interface**, not your own algorithm.
+3. `researcher` checks the specific libraries, licences and versions — 2 candidates with sources go into the decision.
+4. I turn the uncertainty (computation time at real scale) into a time-boxed spike, with an **abandonment criterion**.
 
-**Wynik** (wpis „Ryzyka i spike'i” w stack-decision.md):
+**Result** (a "Risks and spikes" entry in stack-decision.md):
 ```markdown
-### SPIKE-02: solver tras serwisantów
-Pytanie: czy kandydat X układa plan dla 25 serwisantów i 180 wizyt w < 60 s przy zachowaniu okien czasowych?
-Czas: 5 dni roboczych, 1 osoba.
-Dane: zanonimizowany dzień z marca (180 wizyt), plan ręczny dyspozytora jako punkt odniesienia.
-Sukces: < 60 s i łączny czas jazdy ≤ planu ręcznego.
-Kryterium porzucenia: > 60 s albo naruszone okno czasowe → kandydat Y; oba odpadają → plan ręczny + podpowiedzi.
-Interfejs domenowy (niezależny od solvera): PlanowanieTras.zaplanuj(dzień, serwisanci, wizyty) -> PlanDnia
+### SPIKE-02: the technicians' route solver
+Question: does candidate X build a plan for 25 technicians and 180 visits in < 60 s while respecting the time windows?
+Time: 5 working days, 1 person.
+Data: an anonymized day from March (180 visits), the dispatcher's manual plan as the reference point.
+Success: < 60 s and total driving time ≤ the manual plan.
+Abandonment criterion: > 60 s or a violated time window → candidate Y; both drop out → the manual plan + suggestions.
+Domain interface (independent of the solver): RoutePlanning.plan(day, technicians, visits) -> DayPlan
 ```
