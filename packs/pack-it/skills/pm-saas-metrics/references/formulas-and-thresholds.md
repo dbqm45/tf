@@ -1,33 +1,33 @@
-# Wzory i progi orientacyjne
+# Formulas and indicative thresholds
 
-Okres: miesiąc, chyba że napisano inaczej. Progi to praktyka inwestorów i doradców (źródła w SKILL.md), zależna od
-segmentu i etapu — podawaj je jako orientację.
+Period: a month, unless stated otherwise. The thresholds are the practice of investors and advisers (sources in SKILL.md), dependent on
+segment and stage — give them as an orientation.
 
-## Przychód powtarzalny
-- **MRR** = suma miesięcznych opłat powtarzalnych aktywnych subskrypcji. **ARR** = MRR × 12.
-- Ruchy MRR w okresie: nowy + ekspansja + powrót − kontrakcja − odejście = zmiana MRR.
+## Recurring revenue
+- **MRR** = the sum of the monthly recurring fees of active subscriptions. **ARR** = MRR × 12.
+- MRR movements in the period: new + expansion + reactivation − contraction − churn = change in MRR.
 
-## Odejścia i retencja
-- **Churn klientów** = klienci utraceni w okresie / klienci na początku okresu.
-- **Churn przychodu brutto** = (kontrakcja + odejście) / MRR na początku okresu.
-- **GRR** = (MRR początkowy − kontrakcja − odejście) / MRR początkowy — **nie przekracza 100%**.
-- **NRR** = (MRR początkowy − kontrakcja − odejście + ekspansja) / MRR początkowy.
-  Obie liczysz na **tej samej kohorcie klientów z początku okresu** (zwykle 12 mies.); nowi klienci nie wchodzą.
-- Orientacyjnie (sprzedaż do średnich i dużych firm): GRR ≥ 90%, NRR ≥ 100%; przy małych firmach niższe.
-  NRR > 100% przy niskim GRR = ekspansja kilku dużych klientów przykrywa odejścia wielu — pokaż oba.
+## Churn and retention
+- **Customer churn** = customers lost in the period / customers at the start of the period.
+- **Gross revenue churn** = (contraction + churn) / MRR at the start of the period.
+- **GRR** = (starting MRR − contraction − churn) / starting MRR — **does not exceed 100%**.
+- **NRR** = (starting MRR − contraction − churn + expansion) / starting MRR.
+  You calculate both on **the same cohort of customers from the start of the period** (usually 12 months); new customers are not included.
+- Indicatively (sales to medium and large businesses): GRR ≥ 90%, NRR ≥ 100%; for small businesses lower.
+  NRR > 100% at a low GRR = the expansion of a few large customers masks the churn of many — show both.
 
-## Wartość klienta i koszt pozyskania
-- **LTV** = ARPA × marża brutto % / churn klientów (miesięczny). Przy churnie bliskim zeru wynik rośnie bez
-  granic — ogranicz horyzont (np. 5 lat) i napisz to.
-- **CAC** = koszty sprzedaży i marketingu w okresie (pełne: płace, narzędzia, kampanie, prowizje) / nowi klienci
-  w okresie. Osobno CAC z kanałów płatnych i łączny (z klientami organicznymi).
-- **LTV:CAC** — orientacyjnie ≥ 3. Znacznie powyżej 5 może znaczyć, że firma inwestuje we wzrost za mało.
-- **Okres zwrotu CAC** = CAC / (ARPA × marża brutto %) w miesiącach — orientacyjnie < 12 mies. (małe firmy),
-  dłuższy akceptowalny przy dużych klientach i rocznych umowach.
+## Customer value and acquisition cost
+- **LTV** = ARPA × gross margin % / customer churn (monthly). At a churn close to zero the result grows without
+  bound — limit the horizon (e.g. 5 years) and say so.
+- **CAC** = sales and marketing costs in the period (full: salaries, tools, campaigns, commissions) / new customers
+  in the period. Separately the CAC of paid channels and the blended one (with organic customers).
+- **LTV:CAC** — indicatively ≥ 3. Well above 5 may mean the company is investing too little in growth.
+- **CAC payback period** = CAC / (ARPA × gross margin %) in months — indicatively < 12 months (small businesses),
+  a longer one acceptable with large customers and annual contracts.
 
-## Efektywność wzrostu
-- **Burn multiple** = spalanie gotówki netto / przyrost ARR netto w tym samym okresie. Skala Sacksa: < 1 bardzo
-  dobrze, 1–1,5 dobrze, 1,5–2 przyzwoicie, 2–3 podejrzanie, > 3 źle.
-- **Rule of 40** = wzrost przychodu r/r (%) + marża zysku (%, EBITDA albo wolne przepływy pieniężne — napisz
-  którą) ≥ 40. Typowo stosowana w firmach po etapie wczesnym; na starcie liczy się głównie wzrost.
-- **Quick ratio** = (MRR nowy + ekspansja) / (kontrakcja + odejście) — orientacyjnie ≥ 4 przy szybkim wzroście.
+## Growth efficiency
+- **Burn multiple** = net cash burn / net ARR increase in the same period. The Sacks scale: < 1 very
+  good, 1–1.5 good, 1.5–2 decent, 2–3 suspicious, > 3 bad.
+- **Rule of 40** = year-over-year revenue growth (%) + profit margin (%, EBITDA or free cash flow — say
+  which) ≥ 40. Typically applied to companies past the early stage; at the start mainly growth counts.
+- **Quick ratio** = (new MRR + expansion) / (contraction + churn) — indicatively ≥ 4 at fast growth.

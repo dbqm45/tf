@@ -1,27 +1,27 @@
 ---
 name: proc-lean
-description: Użyj przy przepływie pracy i priorytetach — Lean, marnotrawstwo, prawo Little'a, VSM, MVP, koszt opóźnienia, WSJF.
+description: Use for work flow and priorities — Lean, waste, Little's law, VSM, MVP, cost of delay, WSJF.
 disable-model-invocation: true
 metadata:
-  status: "inactive"  # pomiar 2026-11-16: docs/inactive-skills.md
+  status: "inactive"  # measured 2026-11-16: docs/inactive-skills.md
   review: "2027-10-17"
-  catalog: "Użyj przy usprawnianiu przepływu pracy i decyzjach o priorytetach — zasady Lean Software Development, marnotrawstwo w IT, przepływ i prawo Little'a, mapowanie strumienia wartości, Lean Startup (buduj–mierz–ucz się, MVP), koszt opóźnienia i WSJF. Nie do rytuałów Scruma/Kanbana (proc-agile) ani SAFe (proc-safe)."
-  keywords: "WIP, praca w toku, czas realizacji, przepływ, wąskie gardło w procesie, ile zadań naraz, koszt opóźnienia"
+  catalog: "Use when improving the flow of work and making priority decisions — the principles of Lean Software Development, waste in IT, flow and Little's law, value stream mapping, Lean Startup (build–measure–learn, MVP), cost of delay and WSJF. Not for Scrum/Kanban rituals (proc-agile) or SAFe (proc-safe)."
+  keywords: "WIP, praca w toku, czas realizacji, przepływ, wąskie gardło w procesie, ile zadań naraz, koszt opóźnienia, work in progress, lead time, flow, process bottleneck, how many tasks at once, cost of delay"
 ---
 
-# Lean w wytwarzaniu oprogramowania
+# Lean in software development
 
-## Przepływ
-Prawo Little'a, pull zamiast push, marnotrawstwo według Lean Software Development; w praktyce:
-- **WIP = 1–2 na osobę**, limity WIP na tablicy; mniej pracy w toku to krótszy czas realizacji.
-- **Mapowanie strumienia wartości (VSM)**: kroki od pomysłu do produkcji z czasem pracy i czekania; efektywność
-  przepływu = czas pracy / całkowity czas. **Usprawniaj największe czekanie, nie najdroższy etap.**
-- Przeciw przekazaniom i czekaniu (review, środowiska, decyzje): zespoły międzyfunkcyjne, SLA na review,
-  automatyzacja środowisk, trunk-based.
+## Flow
+Little's law, pull instead of push, waste according to Lean Software Development; in practice:
+- **WIP = 1–2 per person**, WIP limits on the board; less work in progress means a shorter lead time.
+- **Value stream mapping (VSM)**: the steps from idea to production with work time and waiting time; flow
+  efficiency = work time / total time. **Improve the biggest wait, not the most expensive stage.**
+- Against handoffs and waiting (reviews, environments, decisions): cross-functional teams, SLAs on reviews,
+  automated environments, trunk-based development.
 
 ## Lean Startup
-Buduj → mierz → ucz się. **MVP** = najtańszy eksperyment weryfikujący hipotezę (może nie być oprogramowaniem).
-Hipoteza z miarą sukcesu i progiem decyzji ustalonym **przed** eksperymentem; decyzja: kontynuuj / zmień kierunek (pivot) / porzuć.
+Build → measure → learn. An **MVP** = the cheapest experiment that verifies a hypothesis (it may not be software).
+A hypothesis with a success measure and a decision threshold set **before** the experiment; the decision: continue / change direction (pivot) / abandon.
 
-## Priorytety ekonomicznie
-**WSJF** = koszt opóźnienia (ile tracimy za tydzień zwłoki) / rozmiar: najpierw krótkie rzeczy o wysokim koszcie opóźnienia.
+## Economic priorities
+**WSJF** = cost of delay (how much we lose per week of delay) / size: short things with a high cost of delay first.

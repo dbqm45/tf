@@ -1,65 +1,65 @@
-# Przykłady: Team Topologies
+# Examples: Team Topologies
 
-## 1. Zespół „Backend” zawalony prośbami
-**Sytuacja:** Sklep internetowy ma zespoły „Frontend” (6 osób), „Backend” (8 osób) i „DevOps” (3 osoby). Każda
-funkcja wymaga pracy wszystkich trzech; Backend ma 40 otwartych próśb od innych, a wydanie funkcji trwa
-kilka tygodni czekania w kolejkach.
+## 1. A "Backend" team swamped with requests
+**Situation:** An online shop has the teams "Frontend" (6 people), "Backend" (8 people) and "DevOps" (3 people). Every
+feature needs the work of all three; Backend has 40 open requests from others, and releasing a feature takes
+several weeks of waiting in queues.
 
-**Jak:**
-1. Prawo Conwaya: zespoły podzielone warstwami → architektura i przepływ pracy też są podzielone warstwami.
-2. Granice kontekstów z ddd-strategic-analysis: Katalog, Zamówienia, Płatności, Wycena (reguły rabatowe).
-3. Odwrócony manewr Conwaya: zespoły strumieniowe wokół kontekstów, jeden kontekst → jeden właściciel.
-4. Obciążenie poznawcze: Wycena wymaga specjalistycznej wiedzy → osobny zespół complicated-subsystem.
-5. Infrastrukturę dostarcza platforma przez X-as-a-Service, a nie przez zgłoszenia.
+**How:**
+1. Conway's law: teams divided by layers → the architecture and the flow of work are also divided by layers.
+2. The context boundaries from ddd-strategic-analysis: Catalog, Orders, Payments, Pricing (discount rules).
+3. The inverse Conway maneuver: stream-aligned teams around the contexts, one context → one owner.
+4. Cognitive load: Pricing requires specialist knowledge → a separate complicated-subsystem team.
+5. Infrastructure is provided by a platform as X-as-a-Service, not through tickets.
 
-**Wynik:**
+**Result:**
 
-| Przed | Po | Typ | Tryb współpracy |
+| Before | After | Type | Collaboration mode |
 |---|---|---|---|
-| Frontend + Backend (14 osób) | Zespół Katalog (5) | stream-aligned | korzysta z platformy jako X-as-a-Service |
-| | Zespół Zamówienia i Płatności (6) | stream-aligned | j.w.; z Wyceną przez API |
-| | Zespół Wycena (3) | complicated-subsystem | X-as-a-Service (API wyceny) |
-| DevOps (3) | Zespół Platforma (3) | platform | X-as-a-Service: szablon usługi, pipeline, monitoring |
+| Frontend + Backend (14 people) | Catalog team (5) | stream-aligned | uses the platform as X-as-a-Service |
+| | Orders and Payments team (6) | stream-aligned | as above; with Pricing through an API |
+| | Pricing team (3) | complicated-subsystem | X-as-a-Service (the pricing API) |
+| DevOps (3) | Platform team (3) | platform | X-as-a-Service: a service template, a pipeline, monitoring |
 
-Miara zmiany: liczba zależności między zespołami na funkcję (przed: 3 zespoły na każdą funkcję; cel: jeden
-zespół strumieniowy + usługi platformy). Każda pozostała zależność to czekanie.
+The measure of change: the number of dependencies between teams per feature (before: 3 teams for every feature; the goal: one
+stream-aligned team + platform services). Each remaining dependency is waiting.
 
-## 2. Długotrwała „współpraca” jako sygnał złej granicy
-**Sytuacja:** Zespoły Zamówienia i Płatności od pół roku mają wspólne planowanie, wspólne daily i co tydzień
-konflikty w tym samym kodzie. „Świetnie współpracujemy, tylko wszystko trwa”.
+## 2. Long-lasting "collaboration" as a signal of a wrong boundary
+**Situation:** The Orders and Payments teams have had joint planning and a joint daily for half a year, and weekly
+conflicts in the same code. "We collaborate great, it is just that everything takes long".
 
-**Jak:**
-1. Collaboration jest drogi i ma być krótki — na czas odkrywania.
-2. Pół roku współpracy → szukasz złej granicy: obie strony zmieniają ten sam model (status płatności zamówienia).
-3. Ustalasz właściciela kontekstu i interfejs między zespołami (mapa kontekstów — ddd-context-mapping).
-4. Zmianę trybu ogłaszasz jako świadomą decyzję z datą.
+**How:**
+1. Collaboration is expensive and is meant to be short — for the duration of discovery.
+2. Half a year of collaboration → you look for a wrong boundary: both sides change the same model (the order's payment status).
+3. You establish the context owner and the interface between the teams (the context map — ddd-context-mapping).
+4. You announce the change of mode as a conscious decision with a date.
 
-**Wynik:**
+**Result:**
 
-| | Przed | Po |
+| | Before | After |
 |---|---|---|
-| Właściciel statusu płatności | oba zespoły | zespół Płatności |
-| Interfejs | wspólny kod, wspólne tabele | zdarzenie „płatność przyjęta/odrzucona” publikowane przez Płatności |
-| Tryb współpracy | collaboration bez końca | collaboration jeszcze przez 2 sprinty na wydzielenie, potem X-as-a-Service |
-| Spotkania | wspólne planowanie i daily | osobne; wspólny przegląd interfejsu raz na kwartał |
+| Owner of the payment status | both teams | the Payments team |
+| Interface | shared code, shared tables | a "payment accepted/rejected" event published by Payments |
+| Collaboration mode | collaboration without end | collaboration for 2 more sprints to separate it out, then X-as-a-Service |
+| Meetings | joint planning and daily | separate; a joint interface review once a quarter |
 
-## 3. Wprowadzenie wewnętrznej platformy deweloperskiej
-**Sytuacja:** Zespół Platforma chce, by od przyszłego miesiąca wszystkie 7 zespołów wdrażało tylko przez nowy
-portal. Zespoły strumieniowe nie były pytane.
+## 3. Introducing an internal developer platform
+**Situation:** The Platform team wants all 7 teams to deploy only through the new portal from next month. The
+stream-aligned teams were not asked.
 
-**Jak:**
-1. Platforma jako produkt: użytkownicy to zespoły strumieniowe; ich opinia i adopcja to miara sukcesu.
-2. Narzucenie z góry grozi „ShadowOps” — zespoły obchodzą platformę.
-3. Start od jednego zespołu pilotażowego, potem dobrowolne przejście kolejnych.
-4. Zamiast reguł w wiki — złota ścieżka z wbudowanym bezpieczeństwem, tagami kosztowymi i obserwowalnością.
+**How:**
+1. The platform as a product: the users are the stream-aligned teams; their feedback and adoption are the measure of success.
+2. Imposing it from above risks "ShadowOps" — teams bypass the platform.
+3. Start with one pilot team, then a voluntary move of the others.
+4. Instead of rules in a wiki — a golden path with security, cost tags and observability built in.
 
-**Wynik (plan wdrożenia):**
+**Result (a rollout plan):**
 
-| Etap | Zakres | Kryterium przejścia dalej |
+| Stage | Scope | Criterion for moving on |
 |---|---|---|
-| Pilot | zespół Katalog, szablon usługi + pipeline | Katalog wdraża nową usługę samodzielnie, bez zgłoszeń do Platformy |
-| Rozszerzenie | chętne zespoły (kolejne 2–3) | adopcja rośnie, opinie użytkowników zebrane i uwzględnione |
-| Domyślna ścieżka | wszystkie zespoły; stare ścieżki wygaszane | brak obejść poza platformą |
+| Pilot | the Catalog team, a service template + a pipeline | Catalog deploys a new service on its own, with no requests to Platform |
+| Expansion | willing teams (the next 2–3) | adoption grows, user feedback collected and taken into account |
+| Default path | all teams; the old paths phased out | no workarounds outside the platform |
 
-Zespół enabling (2 osoby z Platformy) przez kilka tygodni uczy zespoły korzystania ze złotej ścieżki
-(facilitating), a potem odchodzi.
+An enabling team (2 people from Platform) teaches the teams for several weeks to use the golden path
+(facilitating), and then leaves.

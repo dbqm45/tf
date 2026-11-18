@@ -1,69 +1,69 @@
-# Przykłady: SAFe
+# Examples: SAFe
 
-## 1. Kolejność featurów w backlogu ARTu według WSJF
-**Sytuacja:** Product Management ARTu „Sprzedaż online” ma pięć featurów na najbliższy PI i spór, co pierwsze:
-„BLIK przynosi najwięcej pieniędzy, więc idzie na górę”.
+## 1. The order of features in an ART backlog by WSJF
+**Situation:** Product Management of the "Online Sales" ART has five features for the next PI and a dispute over what goes first:
+"BLIK brings the most money, so it goes to the top".
 
-**Jak:**
-1. Każdy składnik kosztu opóźnienia oceniasz względnie, porównując featury między sobą (tu skala umowna 1–10).
-2. Koszt opóźnienia = wartość biznesowa + krytyczność czasowa + redukcja ryzyka/otwarcie możliwości.
-3. Dzielisz przez rozmiar (też względny) i sortujesz malejąco.
-4. Wynik to podstawa rozmowy na PI Planning, nie wyrok — oceny ustalają razem Product Management i Business Owners.
+**How:**
+1. You rate each component of the cost of delay relatively, comparing the features with each other (here a conventional scale of 1–10).
+2. Cost of delay = business value + time criticality + risk reduction/opportunity enablement.
+3. You divide by size (also relative) and sort in descending order.
+4. The result is the basis for a conversation at PI Planning, not a verdict — the ratings are set together by Product Management and Business Owners.
 
-**Wynik:**
+**Result:**
 
-| Feature | Wartość | Czas | Ryzyko/możliwości | Koszt opóźnienia | Rozmiar | WSJF |
+| Feature | Value | Time | Risk/opportunities | Cost of delay | Size | WSJF |
 |---|---|---|---|---|---|---|
-| Flagi funkcji | 1 | 2 | 8 | 11 | 2 | **5,5** |
-| Wymiana biblioteki szyfrowania (koniec wsparcia) | 2 | 8 | 7 | 17 | 5 | **3,4** |
-| Płatność BLIK | 9 | 7 | 2 | 18 | 6 | **3,0** |
-| Raport sprzedaży | 6 | 2 | 1 | 9 | 4 | **2,25** |
-| Integracja z magazynem | 7 | 3 | 4 | 14 | 10 | **1,4** |
+| Feature flags | 1 | 2 | 8 | 11 | 2 | **5.5** |
+| Replacing the encryption library (end of support) | 2 | 8 | 7 | 17 | 5 | **3.4** |
+| BLIK payment | 9 | 7 | 2 | 18 | 6 | **3.0** |
+| Sales report | 6 | 2 | 1 | 9 | 4 | **2.25** |
+| Warehouse integration | 7 | 3 | 4 | 14 | 10 | **1.4** |
 
-Wniosek: BLIK ma najwyższy koszt opóźnienia, ale dwa mniejsze featury dają więcej wartości na jednostkę pracy
-i otwierają możliwości (flagi pozwolą wydawać BLIK stopniowo). Integrację z magazynem warto pociąć — przy rozmiarze
-10 może nie zmieścić się w PI.
+Conclusion: BLIK has the highest cost of delay, but two smaller features give more value per unit of work
+and open up opportunities (the flags will let BLIK be released gradually). The warehouse integration is worth cutting — at size
+10 it may not fit in the PI.
 
-## 2. Czy SAFe pasuje?
-**Sytuacja:** „Mamy trzy zespoły po 6 osób: aplikacja mobilna, panel dla partnerów, blog firmowy. Zarząd chce
-wdrożyć SAFe, bo »tak robią duzi«”.
+## 2. Does SAFe fit?
+**Situation:** "We have three teams of 6 people: a mobile app, a partner panel, a company blog. The board wants to
+introduce SAFe because 'that is what the big ones do'".
 
-**Jak:**
-1. Sprawdzasz warunki: wspólne rozwiązanie? realne zależności? potrzeba synchronizacji?
-2. Liczysz skalę: 18 osób to poniżej typowego rozmiaru ARTu (~50–125 osób).
-3. Szukasz ryzyka „SAFe-washingu”: nowe nazwy na starym procesie.
-4. Zanim dołożysz koordynację — sprawdzasz, czy da się zmniejszyć zależności.
+**How:**
+1. You check the conditions: a shared solution? real dependencies? a need for synchronization?
+2. You count the scale: 18 people is below the typical size of an ART (~50–125 people).
+3. You look for the "SAFe-washing" risk: new names on an old process.
+4. Before you add coordination — you check whether the dependencies can be reduced.
 
-**Wynik (rekomendacja):**
+**Result (a recommendation):**
 
-| Kryterium | Stan | Ocena |
+| Criterion | State | Assessment |
 |---|---|---|
-| Wspólne rozwiązanie | trzy niezależne produkty | nie |
-| Zależności między zespołami | sporadyczne (wspólne logowanie) | słabe |
-| Skala | 18 osób | poniżej ARTu |
-| Gotowość do zmiany finansowania | brak sygnałów | nie |
+| A shared solution | three independent products | no |
+| Dependencies between teams | sporadic (shared login) | weak |
+| Scale | 18 people | below an ART |
+| Readiness to change funding | no signals | no |
 
-Rekomendacja: **nie wdrażać SAFe**. Każdy zespół pracuje wg proc-agile; wspólne logowanie przenieść do jednego
-właściciela z jasnym interfejsem (proc-team-topologies). Wrócić do tematu, gdy powstanie wspólne rozwiązanie
-z wieloma zespołami i realnymi zależnościami.
+Recommendation: **do not introduce SAFe**. Each team works per proc-agile; move the shared login to a single
+owner with a clear interface (proc-team-topologies). Come back to the topic when a shared solution
+with many teams and real dependencies appears.
 
-## 3. Wynik PI Planning jako wspólny plan
-**Sytuacja:** ART „Sprzedaż online” (4 zespoły, PI = 4 iteracje + iteracja IP) kończy PI Planning. RTE prosi
-o podsumowanie dla Business Owners.
+## 3. The PI Planning outcome as a shared plan
+**Situation:** The "Online Sales" ART (4 teams, PI = 4 iterations + an IP iteration) finishes PI Planning. The RTE asks
+for a summary for the Business Owners.
 
-**Jak:**
-1. Zbierasz cele PI każdego zespołu i zależności z tablicy programu.
-2. Zależności bez właściciela lub z terminem po iteracji odbiorcy oznaczasz jako ryzyko.
-3. Plan opisujesz jako wspólne przewidywanie, które Inspect & Adapt zweryfikuje, a nie kontrakt zakresu.
+**How:**
+1. You collect each team's PI objectives and the dependencies from the program board.
+2. Dependencies with no owner or with a date after the receiving iteration you mark as a risk.
+3. You describe the plan as a shared prediction that Inspect & Adapt will verify, not as a scope contract.
 
-**Wynik:**
+**Result:**
 
-| Zespół | Cel PI | Zależność | Ryzyko |
+| Team | PI objective | Dependency | Risk |
 |---|---|---|---|
-| Płatności | BLIK za flagą dla 10% klientów | flagi funkcji od zespołu Platforma (iteracja 1) | niskie |
-| Platforma | flagi funkcji, nowa biblioteka szyfrowania | — | średnie: migracja szyfrowania niepewna |
-| Koszyk | raport sprzedaży dla działu handlowego | dane z Płatności (iteracja 3) | niskie |
-| Magazyn | pierwszy kawałek integracji: stany magazynowe | API dostawcy magazynu (iteracja 2) | **wysokie**: brak potwierdzenia od dostawcy |
+| Payments | BLIK behind a flag for 10% of customers | feature flags from the Platform team (iteration 1) | low |
+| Platform | feature flags, a new encryption library | — | medium: the encryption migration is uncertain |
+| Cart | a sales report for the sales department | data from Payments (iteration 3) | low |
+| Warehouse | the first piece of the integration: stock levels | the warehouse vendor's API (iteration 2) | **high**: no confirmation from the vendor |
 
-Business Owners akceptują cele i ich wartość; ryzyko „Magazyn” ma właściciela (RTE) i termin wyjaśnienia przed
-końcem iteracji 1. System Demo po każdej iteracji pokazuje zintegrowany przyrost.
+The Business Owners accept the objectives and their value; the "Warehouse" risk has an owner (the RTE) and a deadline for clarification before
+the end of iteration 1. The System Demo after each iteration shows the integrated increment.

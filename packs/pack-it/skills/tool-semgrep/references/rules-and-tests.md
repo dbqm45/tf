@@ -1,30 +1,30 @@
-# Reguły Semgrep z testami — przykłady sprawdzone
+# Semgrep rules with tests — verified examples
 
-> **Spis treści:** 1. Taint: wartość z żądania → polecenie powłoki · 2. Autofix z testem poprawki · 3. Mniej fałszywych trafień: ograniczenia metazmiennych i… · W CI (sprawdzone w repozytorium git) · Pułapki
+> **Contents:** 1. Taint: a value from the request → a shell command · 2. Autofix with a fix test · 3. Fewer false positives: metavariable and path constraints · In CI (verified in a git repository) · Pitfalls
 
-Wszystkie trzy reguły i ich testy przechodzą `semgrep scan --test --metrics=off rules/` na Semgrepie 1.50.0, 1.100.0
-i 1.182.1 (2026-10-24): `3/3: ✓ All tests passed`, `1/1: ✓ All fix tests passed`. Układ katalogu:
+All three rules and their tests pass `semgrep scan --test --metrics=off rules/` on Semgrep 1.50.0, 1.100.0
+and 1.182.1 (2026-10-24): `3/3: ✓ All tests passed`, `1/1: ✓ All fix tests passed`. The directory layout:
 
 ```
 rules/
-  shell-injection-from-request.yaml   # reguła
-  shell-injection-from-request.py     # test: ta sama nazwa bazowa
+  shell-injection-from-request.yaml   # the rule
+  shell-injection-from-request.py     # the test: the same base name
   yaml-load-unsafe.yaml
   yaml-load-unsafe.py
-  yaml-load-unsafe.fixed.py           # oczekiwany kod po autofix
+  yaml-load-unsafe.fixed.py           # the expected code after autofix
   hardcoded-password.yaml
   hardcoded-password.py
 ```
 
-## 1. Taint: wartość z żądania → polecenie powłoki
+## 1. Taint: a value from the request → a shell command
 ```yaml
 rules:
   - id: shell-injection-from-request
     languages: [python]
     severity: ERROR
     message: >-
-      Wartość z żądania trafia do polecenia powłoki (shell=True). Przekaż listę argumentów bez shell=True
-      albo przepuść wartość przez shlex.quote.
+      A value from the request reaches a shell command (shell=True). Pass an argument list without shell=True
+      or run the value through shlex.quote.
     metadata:
       cwe: "CWE-78: OS Command Injection"
       confidence: HIGH
@@ -39,8 +39,8 @@ rules:
           - pattern: subprocess.run($CMD, ..., shell=True, ...)
           - focus-metavariable: $CMD
 ```
-`focus-metavariable` zawęża ujście do pierwszego argumentu — wartość z żądania w innym argumencie nie jest
-trafieniem. Pełna nazwa `flask.request` dopasowuje też `from flask import request` (Semgrep rozwiązuje importy).
+`focus-metavariable` narrows the sink to the first argument — a value from the request in another argument is not
+a match. The full name `flask.request` also matches `from flask import request` (Semgrep resolves imports).
 
 ```python
 import shlex
@@ -71,25 +71,25 @@ def good_list():
 
 
 def known_gap(cfg):
-    name = cfg.lookup(request)  # wartość z żądania przez obiekt pomocniczy
+    name = cfg.lookup(request)  # a value from the request through a helper object
     # todoruleid: shell-injection-from-request
     subprocess.run("ls " + name, shell=True)
 ```
-Sprawdzenie, że test coś pilnuje: po usunięciu `pattern-sanitizers` test oblewa
-(`missed lines: [], incorrect lines: [20]` — linia `good_quoted`).
+Checking that the test guards something: after removing `pattern-sanitizers` the test fails
+(`missed lines: [], incorrect lines: [20]` — the `good_quoted` line).
 
-## 2. Autofix z testem poprawki
+## 2. Autofix with a fix test
 ```yaml
 rules:
   - id: yaml-load-unsafe
     languages: [python]
     severity: WARNING
-    message: yaml.load bez bezpiecznego Loadera może utworzyć dowolny obiekt Pythona. Użyj yaml.safe_load.
+    message: yaml.load without a safe Loader can create an arbitrary Python object. Use yaml.safe_load.
     patterns:
       - pattern: yaml.load($DATA)
     fix: yaml.safe_load($DATA)
 ```
-`yaml.load($DATA)` z jednym argumentem nie dopasowuje `yaml.load(f, Loader=yaml.SafeLoader)` — przypadek `ok:`.
+`yaml.load($DATA)` with one argument does not match `yaml.load(f, Loader=yaml.SafeLoader)` — an `ok:` case.
 
 ```python
 import yaml
@@ -106,17 +106,17 @@ def read_safe(path):
         # ok: yaml-load-unsafe
         return yaml.load(f, Loader=yaml.SafeLoader)
 ```
-`yaml-load-unsafe.fixed.py` to ten sam plik z `return yaml.safe_load(f)` w funkcji `read`; `--test` stosuje
-poprawkę do kopii testu i porównuje z nim („fix tests”). Podgląd na kodzie: `semgrep scan --config rules/ --autofix
+`yaml-load-unsafe.fixed.py` is the same file with `return yaml.safe_load(f)` in the `read` function; `--test` applies
+the fix to a copy of the test and compares it with that file ("fix tests"). A preview on code: `semgrep scan --config rules/ --autofix
 --dryrun`.
 
-## 3. Mniej fałszywych trafień: ograniczenia metazmiennych i ścieżek
+## 3. Fewer false positives: metavariable and path constraints
 ```yaml
 rules:
   - id: hardcoded-password
     languages: [python]
     severity: ERROR
-    message: Hasło zapisane w kodzie ($NAME). Czytaj je ze zmiennej środowiskowej albo magazynu sekretów.
+    message: A password written in code ($NAME). Read it from an environment variable or a secret store.
     paths:
       exclude:
         - "tests/"
@@ -133,8 +133,8 @@ rules:
           metavariable: $VALUE
           regex: ^(?!(changeme|example|xxx+|\*+|<.*>)$).{8,}$
 ```
-Każdy dawny fałszywy alarm jest przypadkiem `ok:` — zanim zmienisz regułę, test pokazuje go jako `incorrect
-lines`, po zmianie przechodzi:
+Every former false alarm is an `ok:` case — before you change the rule, the test shows it as `incorrect
+lines`, after the change it passes:
 
 ```python
 import os
@@ -154,31 +154,31 @@ EMPTY_PASSWORD = ""
 DEFAULT_PASSWORD = "changeme"
 
 # ok: hardcoded-password
-TEMPLATE_PASSWORD = "<wpisz-hasło>"
+TEMPLATE_PASSWORD = "<enter-password>"
 
 # ok: hardcoded-password
-PASSWORD_FIELD_LABEL = "Hasło użytkownika"
+PASSWORD_FIELD_LABEL = "User password"
 
 # ok: hardcoded-password
 db_password = os.environ["DB_PASSWORD"]
 ```
-`paths.exclude` sprawdzone skanem katalogu: ten sam sekret w `tests/conftest.py` i w `app/settings.py` daje jedno
-trafienie (`app/settings.py`).
+`paths.exclude` verified with a directory scan: the same secret in `tests/conftest.py` and in `app/settings.py` gives one
+match (`app/settings.py`).
 
-## W CI (sprawdzone w repozytorium git)
+## In CI (verified in a git repository)
 ```bash
-semgrep scan --test --metrics=off .semgrep/                     # testy reguł — przed skanem
+semgrep scan --test --metrics=off .semgrep/                     # rule tests — before the scan
 semgrep scan --metrics=off --config .semgrep/ --error \
-  --baseline-commit "origin/$GITHUB_BASE_REF" .                 # PR: tylko nowe trafienia, kod 1 przy trafieniu
+  --baseline-commit "origin/$GITHUB_BASE_REF" .                 # PR: only new matches, exit code 1 on a match
 ```
-Z `--baseline-commit main` gałąź z nowym sekretem w `app/b.py` zgłosiła tylko `app/b.py`, a sekretu z `main`
-w `app/a.py` nie (kod wyjścia 1 z `--error`). W GitHub Actions baza musi być pobrana (`actions/checkout`
-z `fetch-depth: 0`). Nocą skan całego repozytorium bez `--baseline-commit`.
+With `--baseline-commit main`, a branch with a new secret in `app/b.py` reported only `app/b.py`, and not the secret from `main`
+in `app/a.py` (exit code 1 from `--error`). In GitHub Actions the base must be fetched (`actions/checkout`
+with `fetch-depth: 0`). At night, a scan of the whole repository without `--baseline-commit`.
 
-## Pułapki
-- `--validate` pobiera reguły lintujące z semgrep.dev (`p/semgrep-rule-lints`); bez sieci kończy się błędem
-  pobierania. Błędny schemat reguły (np. literówka `patern:`) i tak zatrzymuje skan i `--test`
-  (`Invalid rule schema`), więc test reguł w CI wystarcza do wykrycia zepsutej reguły.
-- `--metrics=off` w CI i lokalnie, jeśli polityka firmy nie pozwala wysyłać telemetrii.
-- Reguła z `todoruleid:` przechodzi test, dopóki luka jest znana — to dług reguły; `--test-ignore-todo` pomija te
-  adnotacje.
+## Pitfalls
+- `--validate` downloads lint rules from semgrep.dev (`p/semgrep-rule-lints`); without a network it ends with a download
+  error. An invalid rule schema (e.g. the typo `patern:`) stops the scan and `--test` anyway
+  (`Invalid rule schema`), so the rule test in CI is enough to detect a broken rule.
+- `--metrics=off` in CI and locally if the company policy does not allow sending telemetry.
+- A rule with `todoruleid:` passes the test while the gap is known — it is the rule's debt; `--test-ignore-todo` skips these
+  annotations.

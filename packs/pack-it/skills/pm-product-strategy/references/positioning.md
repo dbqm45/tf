@@ -1,32 +1,32 @@
-# Pozycjonowanie — szablon i kontrola
+# Positioning — template and check
 
-## Tabela robocza
-| Składnik | Treść | Dowód (źródło, data) albo [założenie] |
+## Working table
+| Component | Content | Evidence (source, date) or [assumption] |
 |---|---|---|
-| Konkurencyjne alternatywy | co klient robi dziś bez nas (2–4 pozycje, w tym „nic”) | wywiady, dane o przegranych |
-| Unikalne cechy | czego alternatywy nie mają | porównanie produktów z datą |
-| Wartość | co cechy dają klientowi, w jego jednostkach (czas, pieniądze, ryzyko) | pomiar, cytat, przypadek |
-| Najlepiej dopasowani klienci | cechy wspólne klientów, którzy kupują najszybciej i zostają najdłużej | dane sprzedaży i retencji |
-| Kategoria rynku | rama, w której wartość jest oczywista | test komunikatu z klientami |
-| Trend (opcjonalnie) | zmiana, która sprawia, że wartość rośnie teraz | źródło z datą |
+| Competitive alternatives | what the customer does today without us (2–4 items, including "nothing") | interviews, loss data |
+| Unique attributes | what the alternatives lack | a dated product comparison |
+| Value | what the attributes give the customer, in their units (time, money, risk) | a measurement, a quote, a case |
+| Best-fit customers | the traits shared by the customers who buy fastest and stay longest | sales and retention data |
+| Market category | the frame in which the value is obvious | a message test with customers |
+| Trend (optional) | a change that makes the value grow now | a dated source |
 
-## Zdanie pozycjonujące (forma Moore'a)
-„Dla [najlepiej dopasowani klienci], którzy [potrzeba], [produkt] jest [kategoria], który [kluczowa wartość].
-W przeciwieństwie do [główna alternatywa], [najważniejsza różnica].”
-To narzędzie wewnętrzne do uzgodnienia zespołu, nie hasło na stronę.
+## The positioning statement (Moore's form)
+"For [best-fit customers] who [need], [product] is a [category] that [key value].
+Unlike [the main alternative], [the most important difference]."
+This is an internal tool for aligning the team, not a slogan for the website.
 
-## Komunikaty
-Trzy komunikaty, każdy: wartość → cecha, która ją daje → dowód. Kolejność według tego, co najlepiej dopasowani
-klienci cenią najbardziej (z wywiadów, nie z intuicji).
+## Messages
+Three messages, each: value → the attribute that gives it → evidence. The order by what the best-fit
+customers value most (from interviews, not from intuition).
 
-## Wybór kategorii
-- **Istniejąca kategoria** — klient zna zasady i konkurentów; wygrywasz, gdy jesteś wyraźnie lepszy w tym, co
-  w niej się liczy.
-- **Podkategoria** (istniejąca kategoria + zawężenie, np. „CRM dla biur projektowych”) — gdy wygrywasz w niszy.
-- **Nowa kategoria** — tylko gdy klient nie ma żadnej ramy; kosztowna, bo najpierw trzeba nauczyć rynek problemu.
+## Choosing a category
+- **An existing category** — the customer knows the rules and the competitors; you win when you are clearly better at what
+  matters in it.
+- **A subcategory** (an existing category + a narrowing, e.g. "CRM for design studios") — when you win in a niche.
+- **A new category** — only when the customer has no frame at all; expensive, because you first have to teach the market the problem.
 
-## Kontrola
-- Czy handlowiec i klient najlepiej dopasowany powiedzą to samo własnymi słowami?
-- Czy każda wartość ma dowód albo oznaczenie?
-- Czy klient spoza grupy najlepiej dopasowanej rozpozna, że produkt nie jest dla niego? (To dobrze.)
-- Test komunikatu: 5 rozmów z klientami docelowymi, pytanie „co to jest i dla kogo?” po 10 sekundach na stronie.
+## Check
+- Will a salesperson and a best-fit customer say the same thing in their own words?
+- Does every value have evidence or a marker?
+- Will a customer outside the best-fit group recognise that the product is not for them? (That is good.)
+- A message test: 5 conversations with target customers, the question "what is this and for whom?" after 10 seconds on the page.

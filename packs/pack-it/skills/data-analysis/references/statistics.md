@@ -1,52 +1,52 @@
-# Statystyka dla analityka
+# Statistics for an analyst
 
-## Statystyki opisowe
-- **Położenie**: średnia (wrażliwa na wartości skrajne), mediana (odporna — dla wynagrodzeń, czasów, kwot zamówień
-  zwykle lepsza), dominanta (dla danych kategorycznych).
-- **Rozproszenie**: rozstęp (min–max, wrażliwy na skrajności), rozstęp międzykwartylowy (IQR = Q3 − Q1), wariancja
-  i odchylenie standardowe; percentyle (p50, p90, p95, p99) — dla czasów odpowiedzi i kwot ważniejsze niż średnia.
-- **Kształt rozkładu**: skośność (prawostronna — długi ogon dużych wartości, typowa dla kwot i czasów), kurtoza
-  (grubość ogonów), wielomodalność (kilka garbów = zwykle kilka populacji — rozdziel segmenty). Zawsze patrz na
-  histogram, nie tylko na liczby.
-- **Wartości odstające**: poza [Q1 − 1,5·IQR, Q3 + 1,5·IQR] albo |z| > 3 (dla rozkładów zbliżonych do normalnego).
-  Usuwasz tylko błędy; prawdziwe skrajności analizujesz osobno i raportujesz.
+## Descriptive statistics
+- **Location**: the mean (sensitive to extreme values), the median (robust — for salaries, times, order amounts
+  usually better), the mode (for categorical data).
+- **Spread**: the range (min–max, sensitive to extremes), the interquartile range (IQR = Q3 − Q1), the variance
+  and standard deviation; percentiles (p50, p90, p95, p99) — for response times and amounts more important than the mean.
+- **Distribution shape**: skewness (right-skewed — a long tail of large values, typical of amounts and times), kurtosis
+  (the heaviness of the tails), multimodality (several humps = usually several populations — separate the segments). Always look at
+  the histogram, not only at the numbers.
+- **Outliers**: outside [Q1 − 1.5·IQR, Q3 + 1.5·IQR] or |z| > 3 (for distributions close to normal).
+  You remove only errors; real extremes you analyse separately and report.
 
-## Wnioskowanie
-- **Próba i populacja**: wynik z próby ma niepewność — podawaj **przedział ufności** (np. 95%), nie samą liczbę.
-- **Test hipotezy**: hipoteza zerowa (brak efektu), poziom istotności ustalony przed testem (zwykle α = 0,05),
-  statystyka testowa, wartość p = prawdopodobieństwo uzyskania takiego lub bardziej skrajnego wyniku, **gdyby
-  hipoteza zerowa była prawdziwa** (nie prawdopodobieństwo, że hipoteza jest prawdziwa).
-- Dobór testu:
-  | Sytuacja | Test |
+## Inference
+- **Sample and population**: a result from a sample has uncertainty — give a **confidence interval** (e.g. 95%), not the number alone.
+- **A hypothesis test**: the null hypothesis (no effect), a significance level set before the test (usually α = 0.05),
+  a test statistic, the p-value = the probability of obtaining such or a more extreme result **if the
+  null hypothesis were true** (not the probability that the hypothesis is true).
+- Choosing a test:
+  | Situation | Test |
   |---|---|
-  | średnie dwóch grup, rozkład zbliżony do normalnego | t-Studenta (wariant Welcha przy różnych wariancjach) |
-  | dwie grupy, rozkład skośny lub mała próba | Manna-Whitneya |
-  | więcej grup | ANOVA (lub Kruskala-Wallisa) i porównania post hoc |
-  | proporcje, tabele liczności | chi-kwadrat lub test dla proporcji |
-  | ta sama grupa przed i po | test dla prób zależnych (t sparowany, Wilcoxona) |
-- **Istotność to nie wielkość**: przy dużej próbie mały, bez znaczenia biznesowego efekt bywa „istotny”. Raportuj
-  wielkość efektu (różnica z przedziałem, d Cohena) i znaczenie praktyczne.
-- **Wiele porównań**: przy wielu testach część wyjdzie „istotna” przypadkiem — korekta (Bonferroni, Holm,
-  Benjamini-Hochberg) albo hipotezy ustalone z góry. Przeszukiwanie danych aż coś wyjdzie (p-hacking) daje fałszywe
-  odkrycia.
-- Eksperymenty kontrolowane (A/B) — proc-product-discovery, `experiments-and-release.md`.
+  | means of two groups, a distribution close to normal | Student's t (Welch's variant for unequal variances) |
+  | two groups, a skewed distribution or a small sample | Mann-Whitney |
+  | more groups | ANOVA (or Kruskal-Wallis) and post hoc comparisons |
+  | proportions, contingency tables | chi-square or a test for proportions |
+  | the same group before and after | a test for dependent samples (paired t, Wilcoxon) |
+- **Significance is not size**: with a large sample a small effect of no business importance can be "significant". Report
+  the effect size (a difference with an interval, Cohen's d) and practical importance.
+- **Multiple comparisons**: with many tests some will come out "significant" by chance — a correction (Bonferroni, Holm,
+  Benjamini-Hochberg) or hypotheses set in advance. Searching the data until something turns up (p-hacking) gives false
+  discoveries.
+- Controlled experiments (A/B) — proc-product-discovery, `experiments-and-release.md`.
 
-## Zależności
-- **Korelacja Pearsona** (liniowa, wrażliwa na skrajności), **Spearmana** (monotoniczna, na rangach). Wartość od −1
-  do 1; zawsze z wykresem rozrzutu — ten sam współczynnik mogą mieć zupełnie różne układy punktów (kwartet Anscombe'a).
-- **Korelacja to nie przyczynowość**: zmienna zakłócająca, odwrotny kierunek, przypadek, selekcja próby. Przyczynę
-  ustala eksperyment albo staranna metoda przyczynowa (np. różnica w różnicach), nie sama korelacja.
-- **Regresja liniowa**: wpływ zmiennych na wynik przy kontroli pozostałych; sprawdź założenia (liniowość, reszty bez
-  wzorca, brak silnej współliniowości) i nie ekstrapoluj poza zakres danych.
-- **Macierz niepełnego rzędu („Singular matrix”):** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
-  wolny) i kolumna stała w danych to ten sam problem — dane nie rozróżniają współczynników. Biblioteki reagują różnie
-  (błąd, ostrzeżenie i rozwiązanie o najmniejszej normie, ciche inne wyniki); sprawdź na wersjach z projektu. Przed
-  interpretacją współczynników sprawdzasz rząd macierzy i wskaźnik uwarunkowania (albo VIF). Naprawa to zmiana danych:
-  usunięcie jednej kategorii (kategoria bazowa, `drop_first`) albo stałej kolumny, a nie zmiana biblioteki. W kodzie
-  `solve`/`lstsq` zamiast `inv(A) @ b` — szybciej i dokładniej przy złym uwarunkowaniu.
+## Relationships
+- **Pearson correlation** (linear, sensitive to extremes), **Spearman** (monotonic, on ranks). A value from −1
+  to 1; always with a scatter plot — completely different arrangements of points can have the same coefficient (Anscombe's quartet).
+- **Correlation is not causation**: a confounder, reverse direction, chance, sample selection. Causation
+  is established by an experiment or a careful causal method (e.g. difference-in-differences), not by correlation alone.
+- **Linear regression**: the effect of variables on the outcome while controlling for the others; check the assumptions (linearity, residuals with no
+  pattern, no strong multicollinearity) and do not extrapolate beyond the range of the data.
+- **A rank-deficient matrix ("Singular matrix"):** the dummy-variable trap (all categories + an intercept)
+  and a constant column in the data are the same problem — the data do not distinguish the coefficients. Libraries react differently
+  (an error, a warning and a minimum-norm solution, silently different results); check on the project's versions. Before
+  interpreting the coefficients you check the rank of the matrix and the condition number (or VIF). The fix is a change of data:
+  removing one category (a base category, `drop_first`) or the constant column, not changing the library. In code
+  `solve`/`lstsq` instead of `inv(A) @ b` — faster and more accurate with poor conditioning.
 
-## Źródła
+## Sources
 - D. Diez, M. Çetinkaya-Rundel, C. Barr, *OpenIntro Statistics*; ASA Statement on p-Values (2016)
 - [roadmap.sh — Data Analyst](https://roadmap.sh/data-analyst) (central tendency, dispersion, distribution shape,
   outliers, hypothesis testing, correlation, regression)
-Opisane własnymi słowami.
+Described in our own words.

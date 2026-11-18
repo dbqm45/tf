@@ -1,218 +1,218 @@
-# Metody formalne jako wyrocznia
+# Formal methods as an oracle
 
-> **Spis treści:** 1. Kiedy warto · 2. Drabina kosztu (od najtańszego) · 3. Przebieg · 4. Granice wyniku · 5. Przykład: reguły rabatowe (Z3, uruchomiony) · 6. Przykład: ponowienie po zgubionej odpowiedzi (TLA+, TLC,… · 7. Przykład: uprawnienia przez zagnieżdżone grupy (Alloy,…
+> **Contents:** 1. When it pays off · 2. The cost ladder (from the cheapest) · 3. The flow · 4. Limits of the result · 5. Example: discount rules (Z3, run) · 6. Example: a retry after a lost response (TLA+, TLC,… · 7. Example: permissions through nested groups (Alloy,…
 
-## 1. Kiedy warto
-Model sprawdzany narzędziem opłaca się tam, gdzie przykładów i losowania jest za mało, a błąd jest drogi:
-- **współbieżność i ponowienia** — dwie rezerwacje ostatniego miejsca, podwójne obciążenie po timeoucie, wyścig
-  przy blokadzie optymistycznej (testy integracyjne trafiają tylko w przeploty, które akurat wystąpiły);
-- **protokoły i maszyny stanów** — synchronizacja, sesja ładowania, cykl życia faktury, migracja z dwoma zapisami;
-- **reguły kombinatoryczne z limitem** — rabaty, limity kredytowe, uprawnienia łączone z kilku źródeł.
+## 1. When it pays off
+A model checked by a tool pays off where examples and random generation are not enough and a failure is expensive:
+- **concurrency and retries** — two reservations of the last seat, a double charge after a timeout, a race
+  on an optimistic lock (integration tests only hit the interleavings that happened to occur);
+- **protocols and state machines** — synchronization, a charging session, the lifecycle of an invoice, a migration with two writes;
+- **combinatorial rules with a limit** — discounts, credit limits, permissions combined from several sources.
 
-Nie opłaca się przy mapowaniu danych, UI, integracji z zewnętrznym API ani przy regułach, które da się przejrzeć
-tabelą. „Zweryfikujmy formalnie cały moduł” → wybierz 1–3 właściwości o najwyższym koszcie błędu, resztę testami.
+It does not pay off for data mapping, UI, integration with an external API, or rules that can be reviewed
+with a table. "Let's formally verify the whole module" → pick 1–3 properties with the highest cost of failure, the rest with tests.
 
-## 2. Drabina kosztu (od najtańszego)
-1. Asercje i kontrakty w kodzie (warunki wejścia i wyjścia, niezmienniki agregatu).
-2. Testy właściwości (Hypothesis, fast-check) — losowanie; nie trafia w próg ani w rzadki przeplot.
-3. Solver SMT (Z3) — dowód albo kontrprzykład dla reguł nad liczbami i warunkami logicznymi.
-4. Model checking (TLA+/PlusCal z TLC lub Apalache, Alloy) — wszystkie przeploty małego modelu protokołu.
-5. Weryfikacja programu (Dafny) i asystenci dowodu — gwarancja na samym kodzie, najdroższe w utrzymaniu.
+## 2. The cost ladder (from the cheapest)
+1. Assertions and contracts in code (preconditions and postconditions, aggregate invariants).
+2. Property tests (Hypothesis, fast-check) — random generation; it misses a threshold and a rare interleaving.
+3. An SMT solver (Z3) — a proof or a counterexample for rules over numbers and logical conditions.
+4. Model checking (TLA+/PlusCal with TLC or Apalache, Alloy) — all interleavings of a small protocol model.
+5. Program verification (Dafny) and proof assistants — a guarantee on the code itself, the most expensive to maintain.
 
-Wchodzisz o szczebel wyżej tylko wtedy, gdy niższy nie umie wyrazić właściwości albo jej nie znajduje.
+You go one rung higher only when the lower one cannot express the property or does not find it.
 
-## 3. Przebieg
-1. **Właściwość słowami, z kryterium.** „Nigdy dwie potwierdzone rezerwacje tego samego miejsca” — z identyfikatorem
-   kryterium `AC-n` ze specyfikacji zadania (`tf spec`), z którego wynika.
-2. **Model, nie kod.** Tylko stan i kroki, które dotyczą właściwości; zdarzenia środowiska jako wybór niedeterministyczny
-   (utrata odpowiedzi, opóźnienie, restart, ponowienie).
-3. **Negacja wymagania do narzędzia.** Solver lub checker szuka stanu, który łamie właściwość.
-4. **Kontrprzykład → test.** Każdy znaleziony ślad zamieniasz w test akceptacyjny z identyfikatorem `AC-n` w nazwie
-   (wtedy `tf trace` łączy go z kryterium); test ma być czerwony na obecnym kodzie, zanim go naprawisz.
-5. **Poprawka najpierw w modelu.** Checker bez kontrprzykładu na poprawionym modelu, dopiero potem zmiana kodu.
-6. **Model obok kodu.** Plik modelu w repozytorium, w katalogu modułu, z linią,
-   który commit kodu opisuje; zmiana protokołu w kodzie bez zmiany modelu to ustalenie w przeglądzie
+## 3. The flow
+1. **The property in words, with a criterion.** "Never two confirmed reservations of the same seat" — with the identifier of the
+   `AC-n` criterion from the task specification (`tf spec`) it follows from.
+2. **A model, not code.** Only the state and steps that concern the property; environment events as a nondeterministic choice
+   (a lost response, a delay, a restart, a retry).
+3. **The negation of the requirement for the tool.** The solver or checker looks for a state that violates the property.
+4. **A counterexample → a test.** You turn every trace found into an acceptance test with the `AC-n` identifier in the name
+   (then `tf trace` links it to the criterion); the test must be red on the current code before you fix it.
+5. **The fix first in the model.** The checker with no counterexample on the fixed model, only then a code change.
+6. **The model next to the code.** The model file in the repository, in the module's directory, with a line saying
+   which code commit it describes; a protocol change in code without a model change is a finding in review
    (qa-change-review).
 
-## 4. Granice wyniku
-- **„Brak kontrprzykładu” dotyczy tylko modelu.** W raporcie zawsze: liczba procesów, wiadomości, zakres liczb, głębokość
-  przeszukania („TLC: 2 serwisy, 1 miejsce, do 2 ponowień — brak naruszenia”). Bez tych granic wynik brzmi jak dowód
-  dla produkcji, a nim nie jest.
-- **Model upraszcza arytmetykę.** Liczby rzeczywiste w solverze to nie grosze i nie `float` — kwoty modeluj liczbami
-  całkowitymi w groszach albo dopisz krok zaokrąglenia tak, jak robi to kod; kolejność stosowania reguł jak w kodzie.
-- **Model rozjeżdża się z kodem.** Bez kroku 6 przebiegu za pół roku sprawdza nieistniejący protokół.
-- **Za mały model daje fałszywe „OK”.** Błąd, który wymaga trzech uczestników, nie pojawi się w modelu z dwoma.
-  Rozszerz zakres, gdy czas sprawdzania na to pozwala.
+## 4. Limits of the result
+- **"No counterexample" concerns only the model.** In the report always: the number of processes, messages, the range of numbers, the search
+  depth ("TLC: 2 services, 1 seat, up to 2 retries — no violation"). Without these limits the result sounds like proof
+  for production, and it is not.
+- **The model simplifies arithmetic.** Real numbers in a solver are not grosze and not `float` — model amounts with
+  integers in grosze or add a rounding step the way the code does it; the order of applying rules as in the code.
+- **The model drifts from the code.** Without step 6 of the flow, in half a year it checks a protocol that does not exist.
+- **A model that is too small gives a false "OK".** A bug that needs three participants will not appear in a model with two.
+  Widen the scope when the checking time allows it.
 
-## 5. Przykład: reguły rabatowe (Z3, uruchomiony)
-Trzy reguły rabatowe łączone warunkami, wymaganie: łączny rabat ≤ 30% i cena nie ujemna. Losowe koszyki w typowym
-zakresie (50–500 zł) nic nie znalazły.
+## 5. Example: discount rules (Z3, run)
+Three discount rules combined by conditions, the requirement: the total discount ≤ 30% and the price not negative. Random carts in the typical
+range (50–500 PLN) found nothing.
 
 ```python
 from z3 import Real, Bool, If, Solver, Or, sat
 
-koszyk = Real("koszyk")
-kod, lojalny = Bool("kod"), Bool("lojalny")
+cart = Real("cart")
+code, loyal = Bool("code"), Bool("loyal")
 
-def rabat(z_limitem):
-    r = If(koszyk >= 200, 0.10 * koszyk, 0)      # R1: próg koszyka
-    r = r + If(kod, 0.15 * koszyk, 0)             # R2: kod promocyjny
-    r = r + If(lojalny, 20, 0)                    # R3: lojalność, kwota stała
-    return If(r > 0.30 * koszyk, 0.30 * koszyk, r) if z_limitem else r
+def discount(with_limit):
+    r = If(cart >= 200, 0.10 * cart, 0)      # R1: cart threshold
+    r = r + If(code, 0.15 * cart, 0)             # R2: promo code
+    r = r + If(loyal, 20, 0)                    # R3: loyalty, a fixed amount
+    return If(r > 0.30 * cart, 0.30 * cart, r) if with_limit else r
 
-for z_limitem in (False, True):
+for with_limit in (False, True):
     s = Solver()
-    s.add(koszyk > 0)
-    r = rabat(z_limitem)
-    s.add(Or(r > 0.30 * koszyk, koszyk - r < 0))  # negacja wymagania
-    wynik = s.check()
-    print(f"limit w kodzie={z_limitem}: {wynik}", end="")
-    if wynik == sat:
+    s.add(cart > 0)
+    r = discount(with_limit)
+    s.add(Or(r > 0.30 * cart, cart - r < 0))  # negation of the requirement
+    result = s.check()
+    print(f"limit in code={with_limit}: {result}", end="")
+    if result == sat:
         m = s.model()
-        print(f" -> koszyk={m[koszyk]}, kod={m[kod]}, lojalny={m[lojalny]}", end="")
+        print(f" -> cart={m[cart]}, code={m[code]}, loyal={m[loyal]}", end="")
     print()
 ```
 
-Wynik (z3-solver 4.15.4):
+Result (z3-solver 4.15.4):
 ```
-limit w kodzie=False: sat -> koszyk=1/2, kod=False, lojalny=True
-limit w kodzie=True: unsat
+limit in code=False: sat -> cart=1/2, code=False, loyal=True
+limit in code=True: unsat
 ```
-Kontrprzykład: koszyk 0,50 zł i rabat lojalnościowy 20 zł → ujemna cena. Staje się testem
-`AC-2: koszyk 0,50 zł z lojalnością → cena 0,35 zł` (czerwony przed poprawką). Po dodaniu limitu w kodzie `unsat`
-oznacza: w tym modelu (liczby rzeczywiste, trzy reguły) żadna kombinacja nie łamie wymagania — granice wyniku
-z §4 wpisujesz do raportu.
+The counterexample: a cart of PLN 0.50 and a PLN 20 loyalty discount → a negative price. It becomes the test
+`AC-2: cart of PLN 0.50 with loyalty → price PLN 0.35` (red before the fix). After adding the limit in the code, `unsat`
+means: in this model (real numbers, three rules) no combination violates the requirement — you put the limits of the result
+from §4 in the report.
 
-## 6. Przykład: ponowienie po zgubionej odpowiedzi (TLA+, TLC, uruchomiony)
-Klient rezerwuje miejsce, odpowiedź może zginąć w sieci, po timeoucie klient ponawia żądanie. Właściwość z kryterium:
-jedno żądanie klienta daje najwyżej jedną rezerwację. Testy integracyjne przechodzą, bo zgubiona odpowiedź w nich
-nie występuje.
+## 6. Example: a retry after a lost response (TLA+, TLC, run)
+A client reserves a seat, the response may get lost in the network, after a timeout the client retries the request. The property with a criterion:
+one client request yields at most one reservation. Integration tests pass because a lost response
+does not occur in them.
 
 ```tla
----- MODULE Rezerwacja ----
-\* Klient rezerwuje miejsce; odpowiedź może zginąć, po timeoucie klient ponawia żądanie.
+---- MODULE Reservation ----
+\* A client reserves a seat; the response may get lost, after a timeout the client retries the request.
 EXTENDS Naturals, FiniteSets
-CONSTANTS Klienci, Miejsca, MaxPonowien, Idempotencja
-VARIABLES wolne, rezerwacje, stan, ponowienia, siec
-vars == <<wolne, rezerwacje, stan, ponowienia, siec>>
+CONSTANTS Clients, Seats, MaxRetries, Idempotency
+VARIABLES free, reservations, state, retries, network
+vars == <<free, reservations, state, retries, network>>
 
-Init == /\ wolne = Miejsca
-        /\ rezerwacje = {}
-        /\ stan = [k \in Klienci |-> "start"]
-        /\ ponowienia = [k \in Klienci |-> 0]
-        /\ siec = {}
+Init == /\ free = Seats
+        /\ reservations = {}
+        /\ state = [c \in Clients |-> "start"]
+        /\ retries = [c \in Clients |-> 0]
+        /\ network = {}
 
-Wyslij(k) == /\ stan[k] = "start"
-             /\ siec' = siec \cup {[typ |-> "zad", k |-> k]}
-             /\ stan' = [stan EXCEPT ![k] = "czeka"]
-             /\ UNCHANGED <<wolne, rezerwacje, ponowienia>>
+Send(c) == /\ state[c] = "start"
+           /\ network' = network \cup {[type |-> "req", c |-> c]}
+           /\ state' = [state EXCEPT ![c] = "waiting"]
+           /\ UNCHANGED <<free, reservations, retries>>
 
-Obsluz(m) == /\ m.typ = "zad"
-             /\ IF Idempotencja /\ \E r \in rezerwacje : r.k = m.k
-                  THEN UNCHANGED <<wolne, rezerwacje>>          \* to samo żądanie: zwróć istniejącą
-                  ELSE \E s \in wolne :
-                         /\ rezerwacje' = rezerwacje \cup {[k |-> m.k, miejsce |-> s]}
-                         /\ wolne' = wolne \ {s}
-             /\ siec' = (siec \ {m}) \cup {[typ |-> "odp", k |-> m.k]}
-             /\ UNCHANGED <<stan, ponowienia>>
+Handle(m) == /\ m.type = "req"
+             /\ IF Idempotency /\ \E r \in reservations : r.c = m.c
+                  THEN UNCHANGED <<free, reservations>>          \* the same request: return the existing one
+                  ELSE \E s \in free :
+                         /\ reservations' = reservations \cup {[c |-> m.c, seat |-> s]}
+                         /\ free' = free \ {s}
+             /\ network' = (network \ {m}) \cup {[type |-> "resp", c |-> m.c]}
+             /\ UNCHANGED <<state, retries>>
 
-Odbierz(m) == /\ m.typ = "odp"
-              /\ siec' = siec \ {m}
-              /\ stan' = [stan EXCEPT ![m.k] = "ok"]
-              /\ UNCHANGED <<wolne, rezerwacje, ponowienia>>
+Receive(m) == /\ m.type = "resp"
+              /\ network' = network \ {m}
+              /\ state' = [state EXCEPT ![m.c] = "ok"]
+              /\ UNCHANGED <<free, reservations, retries>>
 
-Zgub(m) == /\ m.typ = "odp"                                  \* utrata odpowiedzi w sieci
-           /\ siec' = siec \ {m}
-           /\ UNCHANGED <<wolne, rezerwacje, stan, ponowienia>>
+Lose(m) == /\ m.type = "resp"                                  \* loss of the response in the network
+           /\ network' = network \ {m}
+           /\ UNCHANGED <<free, reservations, state, retries>>
 
-Ponow(k) == /\ stan[k] = "czeka"
-            /\ ~\E m \in siec : m.k = k                       \* timeout: nic w drodze
-            /\ ponowienia[k] < MaxPonowien
-            /\ ponowienia' = [ponowienia EXCEPT ![k] = @ + 1]
-            /\ siec' = siec \cup {[typ |-> "zad", k |-> k]}
-            /\ UNCHANGED <<wolne, rezerwacje, stan>>
+Retry(c) == /\ state[c] = "waiting"
+            /\ ~\E m \in network : m.c = c                       \* timeout: nothing in transit
+            /\ retries[c] < MaxRetries
+            /\ retries' = [retries EXCEPT ![c] = @ + 1]
+            /\ network' = network \cup {[type |-> "req", c |-> c]}
+            /\ UNCHANGED <<free, reservations, state>>
 
-Next == \/ \E k \in Klienci : Wyslij(k) \/ Ponow(k)
-        \/ \E m \in siec : Obsluz(m) \/ Odbierz(m) \/ Zgub(m)
+Next == \/ \E c \in Clients : Send(c) \/ Retry(c)
+        \/ \E m \in network : Handle(m) \/ Receive(m) \/ Lose(m)
 
 Spec == Init /\ [][Next]_vars
 
-\* AC-1: jedno żądanie klienta daje najwyżej jedną rezerwację.
-JednaRezerwacjaNaKlienta == \A k \in Klienci : Cardinality({r \in rezerwacje : r.k = k}) <= 1
+\* AC-1: one client request yields at most one reservation.
+OneReservationPerClient == \A c \in Clients : Cardinality({r \in reservations : r.c = c}) <= 1
 ====
 ```
 
-Konfiguracja `Rezerwacja.cfg` (dwa warianty, różnią się tylko `Idempotencja`):
+The configuration `Reservation.cfg` (two variants, differing only in `Idempotency`):
 ```
-CONSTANTS Klienci = {a, b}  Miejsca = {m1, m2, m3}  MaxPonowien = 1  Idempotencja = FALSE
+CONSTANTS Clients = {a, b}  Seats = {m1, m2, m3}  MaxRetries = 1  Idempotency = FALSE
 SPECIFICATION Spec
-INVARIANT JednaRezerwacjaNaKlienta
+INVARIANT OneReservationPerClient
 ```
-Uruchomienie: `java -cp tla2tools.jar tlc2.TLC -config Rezerwacja.cfg -deadlock -workers 1 Rezerwacja.tla`
-(`-deadlock` wyłącza zgłaszanie stanów końcowych jako zakleszczeń — klient po `ok` nic już nie robi).
+Running: `java -cp tla2tools.jar tlc2.TLC -config Reservation.cfg -deadlock -workers 1 Reservation.tla`
+(`-deadlock` turns off reporting final states as deadlocks — a client does nothing after `ok`).
 
-Wynik bez idempotencji (skrót śladu TLC, 6 stanów, 83 różne stany przejrzane; nazwy akcji przy stanach 3, 4 i 6
-odczytane ze zmiany stanu — TLC podaje tam `<Next …>`, bo akcje są wywoływane wewnątrz `\E m \in siec`):
+The result without idempotency (an abridged TLC trace, 6 states, 83 distinct states examined; the action names at states 3, 4 and 6
+read from the state change — TLC gives `<Next …>` there, because the actions are invoked inside `\E m \in network`):
 ```
-Error: Invariant JednaRezerwacjaNaKlienta is violated.
-State 2: <Wyslij(a)>    siec = {[k |-> a, typ |-> "zad"]}
-State 3: <Obsluz>       rezerwacje = {[k |-> a, miejsce |-> m1]}, siec = {[k |-> a, typ |-> "odp"]}
-State 4: <Zgub>         siec = {}
-State 5: <Ponow(a)>     siec = {[k |-> a, typ |-> "zad"]}
-State 6: <Obsluz>       rezerwacje = {[k |-> a, miejsce |-> m1], [k |-> a, miejsce |-> m2]}
+Error: Invariant OneReservationPerClient is violated.
+State 2: <Send(a)>    network = {[c |-> a, type |-> "req"]}
+State 3: <Handle>       reservations = {[c |-> a, seat |-> m1]}, network = {[c |-> a, type |-> "resp"]}
+State 4: <Lose>         network = {}
+State 5: <Retry(a)>     network = {[c |-> a, type |-> "req"]}
+State 6: <Handle>       reservations = {[c |-> a, seat |-> m1], [c |-> a, seat |-> m2]}
 ```
-Z `Idempotencja = TRUE`: `Model checking completed. No error has been found.` — 719 stanów wygenerowanych,
-382 różne, głębokość 13. Ślad staje się testem `AC-1: odpowiedź na rezerwację ginie, klient ponawia → jedna
-rezerwacja` (wstrzyknięta utrata odpowiedzi; czerwony przed dodaniem klucza idempotencji). Raport z granicami:
-„TLC: 2 klientów, 3 miejsca, 1 ponowienie, zbiór wiadomości bez duplikatów i bez kolejności — brak naruszenia”.
-Model nie obejmuje duplikatów w sieci (zbiór zamiast wielozbioru) ani wygasania klucza — to osobne rozszerzenia.
+With `Idempotency = TRUE`: `Model checking completed. No error has been found.` — 719 states generated,
+382 distinct, depth 13. The trace becomes the test `AC-1: the response to a reservation gets lost, the client retries → one
+reservation` (an injected loss of the response; red before adding the idempotency key). The report with the limits:
+"TLC: 2 clients, 3 seats, 1 retry, a set of messages without duplicates and without order — no violation".
+The model does not cover duplicates in the network (a set instead of a multiset) or key expiry — those are separate extensions.
 
-## 7. Przykład: uprawnienia przez zagnieżdżone grupy (Alloy, uruchomiony)
-Faktura udostępniona grupie; grupa może zawierać podgrupy. Reguły zapisu z kodu pilnują najemcy członków i faktur,
-ale nie podgrup.
+## 7. Example: permissions through nested groups (Alloy, run)
+An invoice shared with a group; a group may contain subgroups. The write rules from the code guard the tenant of the members and invoices,
+but not of the subgroups.
 
 ```alloy
--- Dostęp do faktur przez grupy, które mogą zawierać inne grupy.
-sig Najemca {}
-sig Uzytkownik { najemca: one Najemca }
-sig Grupa { najemcaG: one Najemca, czlonkowie: set Uzytkownik, podgrupy: set Grupa }
-sig Faktura { wlasciciel: one Najemca, udostepniona: set Grupa }
+-- Access to invoices through groups that may contain other groups.
+sig Tenant {}
+sig User { tenant: one Tenant }
+sig Group { groupTenant: one Tenant, members: set User, subgroups: set Group }
+sig Invoice { owner: one Tenant, sharedWith: set Group }
 
--- użytkownik widzi fakturę, gdy należy do grupy udostępnienia albo do jej podgrupy (na dowolnej głębokości)
-fun widzi[u: Uzytkownik]: set Faktura {
-  { f: Faktura | some g: f.udostepniona | u in g.*podgrupy.czlonkowie }
+-- a user sees an invoice when they belong to the sharing group or to its subgroup (at any depth)
+fun sees[u: User]: set Invoice {
+  { f: Invoice | some g: f.sharedWith | u in g.*subgroups.members }
 }
 
--- reguła z kodu: członkowie grupy i faktura udostępniana grupie należą do tego samego najemcy
-fact RegulyZapisu {
-  all g: Grupa | g.czlonkowie.najemca in g.najemcaG
-  all f: Faktura | f.udostepniona.najemcaG in f.wlasciciel
+-- a rule from the code: the group's members and an invoice shared with the group belong to the same tenant
+fact WriteRules {
+  all g: Group | g.members.tenant in g.groupTenant
+  all f: Invoice | f.sharedWith.groupTenant in f.owner
 }
 
--- AC-3: nikt nie widzi faktury innego najemcy
-pred Izolacja { all u: Uzytkownik | widzi[u].wlasciciel in u.najemca }
--- poprawka: podgrupa należy do tego samego najemcy co grupa nadrzędna
-pred PodgrupyTegoSamegoNajemcy { all g: Grupa | g.podgrupy.najemcaG in g.najemcaG }
+-- AC-3: nobody sees another tenant's invoice
+pred Isolation { all u: User | sees[u].owner in u.tenant }
+-- the fix: a subgroup belongs to the same tenant as its parent group
+pred SubgroupsOfSameTenant { all g: Group | g.subgroups.groupTenant in g.groupTenant }
 
-check BezPoprawki { Izolacja } for 4
-check ZPoprawka { PodgrupyTegoSamegoNajemcy implies Izolacja } for 4
+check WithoutFix { Isolation } for 4
+check WithFix { SubgroupsOfSameTenant implies Isolation } for 4
 ```
 
-Uruchomienie: `java -jar alloy.jar exec -f Uprawnienia.als` (kontrprzykłady w katalogu `Uprawnienia/`,
-`receipt.json`). Wynik:
+Running: `java -jar alloy.jar exec -f Permissions.als` (counterexamples in the `Permissions/` directory,
+`receipt.json`). The result:
 ```
-00. check BezPoprawki              0    1/1     SAT
-01. check ZPoprawka                0       UNSAT
+00. check WithoutFix              0    1/1     SAT
+01. check WithFix                0       UNSAT
 ```
-`SAT` przy `check` to kontrprzykład. Najmniejszy (zakres 2): faktura najemcy A udostępniona grupie G1 najemcy A;
-G1 ma podgrupę G0 najemcy B; członek G0 (najemca B) widzi fakturę A. Test: `AC-3: podgrupa innego najemcy w grupie
-udostępnienia → brak dostępu do faktury`. `UNSAT` po poprawce dotyczy zakresu `for 4` (do 4 obiektów każdego typu).
+`SAT` for a `check` is a counterexample. The smallest (scope 2): an invoice of tenant A shared with group G1 of tenant A;
+G1 has a subgroup G0 of tenant B; a member of G0 (tenant B) sees invoice A. The test: `AC-3: a subgroup of another tenant in the sharing
+group → no access to the invoice`. `UNSAT` after the fix concerns the scope `for 4` (up to 4 objects of each type).
 
-## Źródła
-- Z3 (`z3-solver` 4.15.4 z PyPI) — przykład z §5 uruchomiony 2026-11-15.
-- TLA+: `tla2tools.jar` z wydania `v1.8.0` repozytorium tlaplus/tlaplus (TLC zgłasza się jako „TLC2 Version
-  2026.11.15.002146, rev bc1b506”), OpenJDK 21 — przykład z §6 uruchomiony 2026-11-15.
-- Alloy 6.2.0 (`org.alloytools.alloy.dist.jar` z wydania AlloyTools/org.alloytools.alloy), polecenie `exec` —
-  przykład z §7 uruchomiony 2026-11-15.
-- Apalache i Dafny — nazwy i role narzędzi z wiedzy ogólnej [niezweryfikowane: nie uruchamiano].
-Opisane własnymi słowami.
+## Sources
+- Z3 (`z3-solver` 4.15.4 from PyPI) — the example from §5 run 2026-11-15.
+- TLA+: `tla2tools.jar` from release `v1.8.0` of the tlaplus/tlaplus repository (TLC identifies itself as "TLC2 Version
+  2026.11.15.002146, rev bc1b506"), OpenJDK 21 — the example from §6 run 2026-11-15.
+- Alloy 6.2.0 (`org.alloytools.alloy.dist.jar` from the AlloyTools/org.alloytools.alloy release), the `exec` command —
+  the example from §7 run 2026-11-15.
+- Apalache and Dafny — the names and roles of the tools from general knowledge [unverified: not run].
+Described in our own words.

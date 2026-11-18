@@ -1,94 +1,94 @@
 ---
 name: qa-performance-testing
-description: Użyj przy testach wydajnościowych — model obciążenia, progi z SLO, k6 i Gatling, analiza, raport.
+description: Use for performance testing — a load model, thresholds from SLOs, k6 and Gatling, analysis, a report.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy planowaniu, pisaniu i analizie testów wydajnościowych — rodzaje (dymny, obciążenia, przeciążenia, wytrzymałości, skoku, punktu granicznego), model obciążenia z ruchu produkcyjnego, progi z SLO, k6 (TS/JS) i Gatling (Java), środowisko i dane, analiza wąskich gardeł, raport, test dymny w CI. Nie do wydajności frontendu w przeglądarce (fe-web-platform) ani SLO i alertów (ops-sre-incidents)."
+  catalog: "Use when planning, writing and analysing performance tests — types (smoke, load, stress, soak, spike, breakpoint), a load model from production traffic, thresholds from SLOs, k6 (TS/JS) and Gatling (Java), environment and data, bottleneck analysis, a report, a smoke test in CI. Not for frontend performance in the browser (fe-web-platform) or SLOs and alerts (ops-sre-incidents)."
 ---
 
-# Testy wydajnościowe
+# Performance testing
 
-Odpowiadają na pytanie „czy system spełni wymagania przy spodziewanym ruchu i jak się zachowa ponad nim”. Wymaganie
-pochodzi ze scenariusza atrybutu jakości lub SLO (arch-quality-attributes, ops-sre-incidents), nie z „im szybciej,
-tym lepiej”.
+They answer the question "will the system meet the requirements under the expected traffic, and how will it behave beyond it". The requirement
+comes from a quality attribute scenario or an SLO (arch-quality-attributes, ops-sre-incidents), not from "the faster,
+the better".
 
-## Rodzaje testów
-| Rodzaj | Pytanie | Kształt obciążenia | Kiedy |
+## Types of tests
+| Type | Question | Load shape | When |
 |---|---|---|---|
-| **dymny** | czy skrypt działa i jaki jest punkt odniesienia | 1–5 użytkowników wirtualnych, krótko | po każdej zmianie skryptu; w CI |
-| **obciążenia (średniego)** | czy przy typowym ruchu spełniamy progi | ruch średni z produkcji, 5–60 min, z rozbiegiem | regularnie, przed wydaniem dużych zmian |
-| **przeciążenia** (stress) | co się dzieje powyżej oczekiwań | 1,5–3× średniego, 5–60 min | przed kampanią, sezonem, nowym klientem |
-| **wytrzymałości** (soak) | czy coś narasta w czasie (wycieki pamięci, połączenia, dysk) | ruch średni, godziny | po zmianach w zarządzaniu zasobami, okresowo |
-| **skoku** (spike) | czy system przeżyje nagły napływ i wróci | bardzo duży ruch w krótkim czasie | przed zdarzeniami z gwałtownym ruchem (sprzedaż, publikacja) |
-| **punktu granicznego** (breakpoint) | gdzie jest granica pojemności | stopniowy wzrost aż do awarii | rzadko, do planowania pojemności — nie na środowisku współdzielonym |
-Kolejność: dymny → obciążenia → reszta według ryzyka.
+| **smoke** | does the script work and what is the baseline | 1–5 virtual users, briefly | after every script change; in CI |
+| **load (average)** | do we meet the thresholds under typical traffic | average production traffic, 5–60 min, with a ramp-up | regularly, before releasing big changes |
+| **stress** | what happens above expectations | 1.5–3× the average, 5–60 min | before a campaign, a season, a new customer |
+| **soak** | does anything build up over time (memory leaks, connections, disk) | average traffic, hours | after changes in resource management, periodically |
+| **spike** | will the system survive a sudden inflow and recover | very heavy traffic in a short time | before events with abrupt traffic (a sale, a publication) |
+| **breakpoint** | where is the capacity limit | a gradual increase until failure | rarely, for capacity planning — not on a shared environment |
+The order: smoke → load → the rest by risk.
 
-## Procedura
-1. **Cel i progi**: scenariusz (H,H), np. „p95 czasu złożenia zamówienia < 800 ms i < 1% błędów przy 200 zamówieniach
-   na minutę”. Progi zapisane w skrypcie — test bez progów niczego nie rozstrzyga.
-2. **Model obciążenia z produkcji**: które ścieżki, w jakich proporcjach (np. 70% przeglądania, 20% wyszukiwania,
-   10% zakupu), tempo żądań lub przybyć w szczycie, czasy namysłu, rozkład danych (popularne i rzadkie produkty).
-   Model **otwarty** (stałe tempo przybyć — jak prawdziwy internet) zamiast zamkniętego (stała liczba użytkowników,
-   którzy czekają na odpowiedź i ukrywają spowolnienie), gdy testujesz usługę publiczną.
-3. **Środowisko**: możliwie podobne do produkcji (rozmiary, konfiguracja, dane w podobnej skali); generator obciążenia
-   poza testowanym systemem i z zapasem zasobów (sam generator nie może być wąskim gardłem). Zależności zewnętrzne
-   (płatności, SMS) — zaślepki o realistycznych czasach odpowiedzi, nigdy prawdziwe usługi i prawdziwe pieniądze.
-   Test na produkcji tylko za zgodą człowieka, z planem i oknem czasowym.
-4. **Dane testowe**: dość kont i rekordów, żeby cache i indeksy zachowywały się jak w produkcji; dane syntetyczne
+## Procedure
+1. **Goal and thresholds**: an (H,H) scenario, e.g. "p95 of order placement time < 800 ms and < 1% errors at 200 orders
+   per minute". The thresholds written in the script — a test without thresholds decides nothing.
+2. **A load model from production**: which paths, in what proportions (e.g. 70% browsing, 20% search,
+   10% purchase), the request or arrival rate at the peak, think times, the data distribution (popular and rare products).
+   An **open** model (a constant arrival rate — like the real internet) rather than a closed one (a fixed number of users
+   who wait for a response and hide the slowdown) when you test a public service.
+3. **Environment**: as similar to production as possible (sizes, configuration, data at a similar scale); the load generator
+   outside the system under test and with spare resources (the generator itself must not be the bottleneck). External dependencies
+   (payments, SMS) — stubs with realistic response times, never real services and real money.
+   A test on production only with the human's consent, with a plan and a time window.
+4. **Test data**: enough accounts and records for caches and indexes to behave as in production; synthetic data
    (qa-regression, `.claude/skills/qa-regression/references/environment-and-special-data.md`).
-5. **Skrypt** (k6 dla TS/JS, Gatling dla zespołów Javy): scenariusze ze sprawdzeniami odpowiedzi (status i treść —
-   szybka odpowiedź z błędem to nie sukces), parametryzacja danych, korelacja tokenów i identyfikatorów, tagi per
-   ścieżka, progi.
-6. **Uruchomienie z obserwacją**: równolegle metryki systemu (CPU, pamięć, połączenia do bazy, kolejki, GC, opóźnienia
-   zależności — ops-observability) i ślady rozproszone dla wolnych żądań.
-7. **Analiza**: gdzie rośnie czas — aplikacja, baza (wolne zapytania, blokady, pula połączeń), sieć, zależność;
-   metoda USE dla zasobów (wykorzystanie, nasycenie, błędy). Jedna zmiana naraz, powtórzenie testu po poprawce.
-8. **Raport**: cel i progi, model obciążenia, środowisko i różnice względem produkcji, wyniki (p50/p95/p99, przepustowość,
-   odsetek błędów, zasoby) na wykresie w czasie, wąskie gardła z dowodami, rekomendacje, ryzyka i ograniczenia testu.
+5. **The script** (k6 for TS/JS, Gatling for Java teams): scenarios with response checks (status and content —
+   a fast response with an error is not a success), data parametrization, correlation of tokens and identifiers, tags per
+   path, thresholds.
+6. **A run with observation**: system metrics in parallel (CPU, memory, database connections, queues, GC, dependency
+   latency — ops-observability) and distributed traces for slow requests.
+7. **Analysis**: where the time grows — the application, the database (slow queries, locks, connection pool), the network, a dependency;
+   the USE method for resources (utilization, saturation, errors). One change at a time, repeat the test after the fix.
+8. **The report**: the goal and thresholds, the load model, the environment and differences from production, results (p50/p95/p99, throughput,
+   error rate, resources) on a chart over time, bottlenecks with evidence, recommendations, risks and limitations of the test.
 
-## k6 — szkic
+## k6 — a sketch
 ```js
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
 export const options = {
   scenarios: {
-    zakupy: { executor: 'ramping-arrival-rate', startRate: 10, timeUnit: '1m', preAllocatedVUs: 50,
+    purchases: { executor: 'ramping-arrival-rate', startRate: 10, timeUnit: '1m', preAllocatedVUs: 50,
               stages: [{ target: 200, duration: '5m' }, { target: 200, duration: '20m' }, { target: 0, duration: '2m' }] },
   },
   thresholds: {
     'http_req_failed': ['rate<0.01'],
-    'http_req_duration{sciezka:zamowienie}': ['p(95)<800'],
+    'http_req_duration{path:order}': ['p(95)<800'],
   },
 };
 
 export default function () {
   const res = http.post(`${__ENV.BASE_URL}/api/orders`, JSON.stringify({ sku: 'A-1', qty: 1 }),
-    { headers: { 'Content-Type': 'application/json' }, tags: { sciezka: 'zamowienie' } });
-  check(res, { 'utworzono': (r) => r.status === 201 });
+    { headers: { 'Content-Type': 'application/json' }, tags: { path: 'order' } });
+  check(res, { 'created': (r) => r.status === 201 });
   sleep(1);
 }
 ```
-Niespełniony próg → niezerowy kod wyjścia, więc CI oznacza test jako nieudany. Adres środowiska i tokeny przez zmienne
-środowiskowe, nigdy w skrypcie.
+A missed threshold → a non-zero exit code, so CI marks the test as failed. The environment address and tokens through environment
+variables, never in the script.
 
-## Testy wydajnościowe w CI
-- **Dymny test wydajności** przy każdym PR do ścieżek krytycznych (krótko, mało ruchu) — wykrywa regresje rzędu
-  wielkości (N+1, brak indeksu).
-- **Test obciążenia** nocą lub przed wydaniem na środowisku dedykowanym, z porównaniem do poprzedniego wyniku
-  (trend, nie tylko próg).
-- Wyniki zapisane (artefakt CI, dashboard), żeby było widać, kiedy zaczęło się pogarszać.
+## Performance tests in CI
+- A **performance smoke test** on every PR to critical paths (short, little traffic) — catches regressions of an order
+  of magnitude (N+1, a missing index).
+- A **load test** overnight or before a release on a dedicated environment, with a comparison to the previous result
+  (the trend, not just the threshold).
+- Results saved (a CI artifact, a dashboard), so it is visible when things started getting worse.
 
-## Checklista
-- [ ] progi z wymagań w skrypcie, sprawdzenia treści odpowiedzi
-- [ ] model obciążenia z danych produkcyjnych, model otwarty dla usług publicznych
-- [ ] środowisko i dane opisane z różnicami względem produkcji; zależności zaślepione
-- [ ] metryki systemu zbierane w trakcie; wąskie gardła z dowodami
-- [ ] raport z ograniczeniami testu; dymny test wydajności w CI
+## Checklist
+- [ ] thresholds from the requirements in the script, checks of the response content
+- [ ] a load model from production data, an open model for public services
+- [ ] the environment and data described with differences from production; dependencies stubbed
+- [ ] system metrics collected during the run; bottlenecks with evidence
+- [ ] a report with the test's limitations; a performance smoke test in CI
 
-## Źródła
+## Sources
 - [Grafana k6 — load test types](https://grafana.com/docs/k6/latest/testing-guides/test-types/),
   [thresholds](https://grafana.com/docs/k6/latest/using-k6/thresholds/)
-- B. Gregg — metoda USE; [roadmap.sh — QA](https://roadmap.sh/qa) (load & performance, stress testing, k6, Gatling,
+- B. Gregg — the USE method; [roadmap.sh — QA](https://roadmap.sh/qa) (load & performance, stress testing, k6, Gatling,
   JMeter, Locust, Artillery)
-Opisane własnymi słowami.
+Described in our own words.

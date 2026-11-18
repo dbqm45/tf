@@ -112,12 +112,12 @@
   "offline": "2026-11-18"
  },
  "data-analysis": {
-  "fingerprint": "782476e5a899e80f",
-  "offline": "2026-11-16"
+  "fingerprint": "783431633e0489f2",
+  "offline": "2026-11-18"
  },
  "data-engineering": {
-  "fingerprint": "80890eecde112922",
-  "offline": "2026-11-16"
+  "fingerprint": "3c078d2de9977b89",
+  "offline": "2026-11-18"
  },
  "ddd-algorithm-recognition": {
   "fingerprint": "88f15a7fb8527d95",
@@ -404,88 +404,88 @@
   "offline": "2026-11-16"
  },
  "pm-product-analytics": {
-  "fingerprint": "8baff46b74847500",
-  "offline": "2026-11-16"
+  "fingerprint": "8ad73ac1b2610ab3",
+  "offline": "2026-11-18"
  },
  "pm-product-lifecycle": {
-  "fingerprint": "a08da675e336a917",
-  "offline": "2026-11-16"
+  "fingerprint": "c9d54f6afdcf5808",
+  "offline": "2026-11-18"
  },
  "pm-product-strategy": {
-  "fingerprint": "e245d31a749ac0cb",
-  "offline": "2026-11-16"
+  "fingerprint": "52967ab7f4448893",
+  "offline": "2026-11-18"
  },
  "pm-saas-metrics": {
-  "fingerprint": "725e81488e764aa5",
-  "offline": "2026-11-16"
+  "fingerprint": "91304f239692357a",
+  "offline": "2026-11-18"
  },
  "pm-stakeholders": {
-  "fingerprint": "aacde27b1c339133",
-  "offline": "2026-11-16"
+  "fingerprint": "0cd46763c4e2a2a7",
+  "offline": "2026-11-18"
  },
  "proc-agile": {
-  "fingerprint": "ac2df5f0764c225b",
-  "offline": "2026-11-16"
+  "fingerprint": "cfb1cb92c2b9b0bb",
+  "offline": "2026-11-18"
  },
  "proc-issue-triage": {
-  "fingerprint": "a15dc2760aba6089",
-  "offline": "2026-11-16"
+  "fingerprint": "26dd9c9780462db1",
+  "offline": "2026-11-18"
  },
  "proc-lean": {
-  "fingerprint": "397714e68dc5ace3",
-  "offline": "2026-11-16"
+  "fingerprint": "8fbacefc38de714d",
+  "offline": "2026-11-18"
  },
  "proc-product-discovery": {
-  "fingerprint": "ed3632c70dafcb6b",
-  "offline": "2026-11-16"
+  "fingerprint": "3d07eb55544b6067",
+  "offline": "2026-11-18"
  },
  "proc-project-planning": {
-  "fingerprint": "1b6c12cefe8d9439",
-  "offline": "2026-11-16"
+  "fingerprint": "6413d3c6d4346bdf",
+  "offline": "2026-11-18"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "8fafc6f7adcf8486",
+  "fingerprint": "c3473cabff6b3d41",
   "offline": "2026-11-18"
  },
  "proc-safe": {
-  "fingerprint": "bb881148100226a9",
-  "offline": "2026-11-16"
+  "fingerprint": "1ce3711d6e195950",
+  "offline": "2026-11-18"
  },
  "proc-team-topologies": {
-  "fingerprint": "6bc389611798760e",
-  "offline": "2026-11-16"
+  "fingerprint": "8a9c6bf8d0ea4581",
+  "offline": "2026-11-18"
  },
  "qa-change-review": {
-  "fingerprint": "8aedd5de358db26f",
-  "offline": "2026-11-17"
+  "fingerprint": "d23b92eef998def2",
+  "offline": "2026-11-18"
  },
  "qa-exploratory-manual": {
-  "fingerprint": "e95579d0ea9659d6",
-  "offline": "2026-11-16"
+  "fingerprint": "3560e463a51ea4a2",
+  "offline": "2026-11-18"
  },
  "qa-formal-methods": {
-  "fingerprint": "c85206445b5c8546",
-  "offline": "2026-11-16"
+  "fingerprint": "a6ace9bf12337004",
+  "offline": "2026-11-18"
  },
  "qa-fuzzing": {
-  "fingerprint": "fe7d307b525a394e",
-  "offline": "2026-11-16"
+  "fingerprint": "272d3048a6adeb7e",
+  "offline": "2026-11-18"
  },
  "qa-performance-testing": {
-  "fingerprint": "fa8fcdac7cef988b",
-  "offline": "2026-11-16"
+  "fingerprint": "007bfceb9adeb5b0",
+  "offline": "2026-11-18"
  },
  "qa-regression": {
-  "fingerprint": "8c8c937f6c89ab61",
-  "offline": "2026-11-16"
+  "fingerprint": "33711012d4234f81",
+  "offline": "2026-11-18"
  },
  "qa-spec-first-testing": {
-  "fingerprint": "472c59bf045791a1",
-  "offline": "2026-11-16"
+  "fingerprint": "54c674d313478963",
+  "offline": "2026-11-18"
  },
  "qa-test-design": {
-  "fingerprint": "b09dc9d09825e579",
-  "offline": "2026-11-16"
+  "fingerprint": "b1b69ca7afc54eed",
+  "offline": "2026-11-18"
  },
  "sec-appsec-devsecops": {
   "fingerprint": "e5d2fce60c0a20ce",
@@ -540,31 +540,31 @@
   "offline": "2026-11-16"
  },
  "tool-jest": {
-  "fingerprint": "667671435f306e2a",
-  "offline": "2026-11-16"
+  "fingerprint": "5f787777e8895ff7",
+  "offline": "2026-11-18"
  },
  "tool-nx": {
-  "fingerprint": "b775c564685c0d16",
-  "offline": "2026-11-16"
+  "fingerprint": "045c648d09b51abb",
+  "offline": "2026-11-18"
  },
  "tool-playwright": {
-  "fingerprint": "168124b26bb17668",
-  "offline": "2026-11-16"
+  "fingerprint": "3e1f3d0486dacfda",
+  "offline": "2026-11-18"
  },
  "tool-pytest": {
-  "fingerprint": "7165df13514f9061",
-  "offline": "2026-11-16"
+  "fingerprint": "af4a7aec9e020b2d",
+  "offline": "2026-11-18"
  },
  "tool-semgrep": {
-  "fingerprint": "c9ca3c7961fc9484",
-  "offline": "2026-11-16"
+  "fingerprint": "ea36a09b7af5dc7f",
+  "offline": "2026-11-18"
  },
  "tool-stripe": {
-  "fingerprint": "054d7586b5525b4f",
-  "offline": "2026-11-16"
+  "fingerprint": "9082af3ee47e8dd5",
+  "offline": "2026-11-18"
  },
  "tool-vitest": {
-  "fingerprint": "1f47935b65a9c434",
-  "offline": "2026-11-16"
+  "fingerprint": "7bee0f2279e678e2",
+  "offline": "2026-11-18"
  }
 }

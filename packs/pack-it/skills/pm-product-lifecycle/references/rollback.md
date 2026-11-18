@@ -1,43 +1,43 @@
-# Wycofanie produktu lub modułu
+# Retiring a product or module
 
-## Kryteria go/no-go
-| Kryterium | Pytanie | Dane |
+## Go/no-go criteria
+| Criterion | Question | Data |
 |---|---|---|
-| Użycie | ilu klientów i jak często używa; czy to kluczowi klienci | analityka, lista klientów z MRR |
-| Przychód | ile przychodu zależy od produktu, także pośrednio (powód zakupu pakietu) | rozliczenia, rozmowy sprzedaży |
-| Koszt | ludzie, infrastruktura, licencje, wsparcie, ryzyko bezpieczeństwa | budżet, zgłoszenia, skany zależności |
-| Umowy | czy umowy, SLA, oferty przetargowe gwarantują funkcję i do kiedy | umowy, regulamin |
-| Zastępstwo | czy jest zamiennik albo obejście i ile kosztuje migracja klienta | test z klientami |
-| Wpływ | co tracą najwięksi klienci; ryzyko odejścia | rozmowy, NRR kohorty |
-„Go”, gdy koszt i ryzyko utrzymania przewyższają przychód zagrożony odejściem, a umowy pozwalają na zmianę.
+| Usage | how many customers use it and how often; are they key customers | analytics, a customer list with MRR |
+| Revenue | how much revenue depends on the product, also indirectly (a reason to buy a bundle) | billing, sales conversations |
+| Cost | people, infrastructure, licences, support, security risk | budget, tickets, dependency scans |
+| Contracts | do contracts, SLAs, tender offers guarantee the function and until when | contracts, terms of service |
+| Replacement | is there a replacement or a workaround and how much does the customer's migration cost | a test with customers |
+| Impact | what the largest customers lose; churn risk | conversations, cohort NRR |
+"Go" when the cost and risk of maintenance outweigh the revenue at risk of churn, and the contracts allow the change.
 
-## Harmonogram (typowe etapy)
-1. **Decyzja** wewnętrzna i plan.
-2. **Zapowiedź** — data wyłączenia i powód; okres zależy od umów i kosztu migracji klienta (zwykle 3–12 mies.).
-3. **Koniec sprzedaży** — produkt znika z oferty i cennika dla nowych klientów.
-4. **Koniec wsparcia** — tylko poprawki bezpieczeństwa albo nic (napisz wprost).
-5. **Wyłączenie** — dostęp zamknięty; eksport danych jeszcze przez ustalony okres.
-6. **Usunięcie danych** — zgodnie z umową i polityką retencji; potwierdzenie dla klientów, którzy o nie proszą.
+## Schedule (typical stages)
+1. **Decision** internal and a plan.
+2. **Announcement** — the shutdown date and the reason; the period depends on contracts and the cost of the customer's migration (usually 3–12 months).
+3. **End of sale** — the product disappears from the offer and the price list for new customers.
+4. **End of support** — only security fixes or nothing (say so plainly).
+5. **Shutdown** — access closed; data export still available for an agreed period.
+6. **Data deletion** — per the contract and the retention policy; confirmation for customers who ask for it.
 
-## Kolejność interesariuszy
-Zarząd i właściciele budżetu → wsparcie, sprzedaż, opiekunowie klientów (zanim klient zapyta) → kluczowi klienci
-osobiście → wszyscy klienci (w produkcie, e-mail, dokumentacja) → partnerzy i integratorzy → publicznie (strona,
-notatka o zmianach). Nikt z zespołu nie dowiaduje się z ogłoszenia publicznego.
+## Order of stakeholders
+The board and budget owners → support, sales, account managers (before a customer asks) → key customers
+in person → all customers (in the product, email, documentation) → partners and integrators → publicly (a page,
+a changelog note). Nobody on the team learns of it from the public announcement.
 
-## Komunikat dla klientów
-Co się zmienia · dlaczego (uczciwie, z korzyścią dla klienta, jeśli jest) · od kiedy (daty etapów) · co klient ma
-zrobić (zamiennik, migracja, eksport — z instrukcją) · kto pomoże (kontakt) · co z danymi i opłatami (zwrot,
-zmiana planu). Bez żargonu i bez obietnic, których nie ma w planie.
+## Message to customers
+What is changing · why (honestly, with a benefit for the customer, if there is one) · from when (the dates of the stages) · what the customer is to
+do (a replacement, migration, export — with instructions) · who will help (a contact) · what happens to data and fees (a refund,
+a plan change). No jargon and no promises that are not in the plan.
 
-## Checklista z właścicielami
-- [ ] decyzja i kryteria zapisane (właściciel produktu)
-- [ ] przegląd umów, SLA i regulaminu (prawnik)
-- [ ] zamiennik albo instrukcja migracji gotowa i przetestowana z klientem (zespół produktu)
-- [ ] eksport danych w otwartym formacie, czas trwania eksportu (inżynieria)
-- [ ] rozliczenia: koniec opłat, zwroty, zmiany planów (finanse, be-billing-subscriptions)
-- [ ] wsparcie: odpowiedzi na typowe pytania, skrypty (wsparcie)
-- [ ] dokumentacja, cennik, strona, materiały sprzedaży zaktualizowane (marketing)
-- [ ] w produkcie: ostrzeżenie dla użytkowników modułu z datą (inżynieria)
-- [ ] monitoring użycia po zapowiedzi — kto jeszcze używa tydzień przed wyłączeniem (analityka)
-- [ ] usunięcie kodu, danych, infrastruktury i kosztów po wyłączeniu (inżynieria)
-- [ ] podsumowanie: migracja, odejścia, oszczędność (właściciel produktu)
+## Checklist with owners
+- [ ] decision and criteria recorded (product owner)
+- [ ] review of contracts, SLAs and terms of service (a lawyer)
+- [ ] a replacement or migration instructions ready and tested with a customer (product team)
+- [ ] data export in an open format, the duration of the export (engineering)
+- [ ] billing: end of fees, refunds, plan changes (finance, be-billing-subscriptions)
+- [ ] support: answers to typical questions, scripts (support)
+- [ ] documentation, price list, page, sales materials updated (marketing)
+- [ ] in the product: a warning for users of the module with a date (engineering)
+- [ ] usage monitoring after the announcement — who still uses it a week before the shutdown (analytics)
+- [ ] removal of code, data, infrastructure and costs after the shutdown (engineering)
+- [ ] summary: migration, churn, savings (product owner)

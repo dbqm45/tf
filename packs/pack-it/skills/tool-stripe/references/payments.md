@@ -1,57 +1,57 @@
-# Płatności w Stripe: wybór API, interfejs, webhooki, migracje
+# Payments in Stripe: choosing an API, the interface, webhooks, migrations
 
-## 1. Hierarchia API
-- **Checkout Sessions** (`checkout.sessions.create`) — płatności z obecnym klientem, jednorazowe i subskrypcje;
-  rabaty, wysyłka i adaptacyjne ceny w pakiecie. Podatek tylko z `automatic_tax` i aktywną rejestracją.
-- **PaymentIntents** — płatności bez obecności klienta albo gdy stan koszyka modelujesz sam.
-- **SetupIntents** — zapis metody płatności na później.
-- Wyżej: Invoicing, Payment Links, API subskrypcji. Integracja korzysta tylko z tych poziomów.
-- Od wersji API `2026-03-25.dahlia` Checkout przyjmuje `integration_identifier`: własną etykietę sesji do porównań
-  w panelu; źródło zaleca dopisać do niej 8 losowych liter.
+## 1. The API hierarchy
+- **Checkout Sessions** (`checkout.sessions.create`) — payments with the customer present, one-time and subscriptions;
+  discounts, shipping and adaptive pricing in the package. Tax only with `automatic_tax` and an active registration.
+- **PaymentIntents** — payments without the customer present, or when you model the cart state yourself.
+- **SetupIntents** — saving a payment method for later.
+- Higher up: Invoicing, Payment Links, the subscriptions API. An integration uses only these levels.
+- Since API version `2026-03-25.dahlia`, Checkout accepts `integration_identifier`: your own session label for comparisons
+  in the dashboard; the source recommends appending 8 random letters to it.
 
-## 2. Interfejs płatności (od najprostszego)
-1. **Payment Links** — bez kodu, proste produkty.
-2. **Checkout** — formularz hostowany przez Stripe albo osadzony; wystarcza większości aplikacji.
-3. **Payment Element** — osadzony komponent przy pełnej kontroli wyglądu; zasilaj go sesją Checkout
-   (`ui_mode: 'custom'`), a dopiero gdy się nie da — surowym PaymentIntent.
+## 2. The payment interface (from the simplest)
+1. **Payment Links** — no code, simple products.
+2. **Checkout** — a form hosted by Stripe or embedded; enough for most applications.
+3. **Payment Element** — an embedded component with full control of appearance; feed it with a Checkout session
+   (`ui_mode: 'custom'`), and only when that is impossible — with a raw PaymentIntent.
 
-Nie proponuj Card Element ani Payment Element w trybie tylko kart; przy Card Element wskaż migrację do Payment
-Element. Dopłata za metodę płatności albo podgląd danych karty przed utworzeniem Intentu: Confirmation Tokens
-(finalizacja na serwerze), a nie `createPaymentMethod` ani `createToken` ze Stripe.js.
+Do not propose Card Element or Payment Element in a cards-only mode; for Card Element point to the migration to Payment
+Element. A surcharge for a payment method or a preview of card data before creating an Intent: Confirmation Tokens
+(finalization on the server), not `createPaymentMethod` or `createToken` from Stripe.js.
 
-## 3. Realizacja zamówienia z webhooka
-- Klient może zapłacić i nie wrócić na stronę sukcesu (zerwane połączenie), więc logika tylko na tej stronie gubi
-  zamówienia.
-- Obsłuż `checkout.session.completed` i `checkout.session.async_payment_succeeded`; realizuj, gdy `payment_status`
-  nie jest `unpaid`. Przy metodach z opóźnionym potwierdzeniem `completed` przychodzi przed zapłatą.
-  `checkout.session.async_payment_failed` — porażka.
-- Webhooki są wymagane przy subskrypcjach, metodach z opóźnionym potwierdzeniem i każdym skutku po płatności
-  (dostęp, e-mail, stan magazynu, zapis zamówienia). W prototypie: zalecane od razu, wymagane przed produkcją.
-- Podpis weryfikujesz przed obsługą (`references/security.md`).
+## 3. Order fulfillment from a webhook
+- The customer may pay and not return to the success page (a dropped connection), so logic only on that page loses
+  orders.
+- Handle `checkout.session.completed` and `checkout.session.async_payment_succeeded`; fulfill when `payment_status`
+  is not `unpaid`. With methods that have delayed confirmation `completed` arrives before the payment.
+  `checkout.session.async_payment_failed` — failure.
+- Webhooks are required for subscriptions, methods with delayed confirmation and every effect after a payment
+  (access, e-mail, stock level, saving the order). In a prototype: recommended right away, required before production.
+- You verify the signature before handling (`references/security.md`).
 
-## 4. Dynamiczne metody płatności
-- `checkout.sessions.create`: pomiń `payment_method_types` (dynamiczny dobór to zachowanie domyślne).
-- `paymentIntents.create`, `setupIntents.create`: pomiń; od wersji API 2023-08-16 dynamiczne metody są domyślne,
-  na starszych `automatic_payment_methods: { enabled: true }`.
-- `subscriptions.create`: pomiń `payment_settings.payment_method_types`.
-- Terminal stacjonarny: `payment_method_types: ['card_present']` (w Kanadzie także `interac_present`) — jedyny
-  dozwolony przypadek.
-- Lista dozwolonych metod dla Intentu: `allowed_payment_method_types`; wykluczenia: `excluded_payment_method_types`;
-  zestawy: `payment_method_configurations`.
+## 4. Dynamic payment methods
+- `checkout.sessions.create`: omit `payment_method_types` (dynamic matching is the default behavior).
+- `paymentIntents.create`, `setupIntents.create`: omit it; since API version 2023-08-16 dynamic methods are the default,
+  on older ones `automatic_payment_methods: { enabled: true }`.
+- `subscriptions.create`: omit `payment_settings.payment_method_types`.
+- An in-person terminal: `payment_method_types: ['card_present']` (in Canada also `interac_present`) — the only
+  permitted case.
+- The list of allowed methods for an Intent: `allowed_payment_method_types`; exclusions: `excluded_payment_method_types`;
+  sets: `payment_method_configurations`.
 
-## 5. Przestarzałe API i migracje
-| API | Status | Zamiast |
+## 5. Deprecated APIs and migrations
+| API | Status | Instead |
 |---|---|---|
-| Charges | nie używać | Checkout Sessions albo PaymentIntents (przewodnik migracji Stripe) |
-| Sources | przestarzałe | SetupIntents |
-| Tokens | nieaktualne | SetupIntents albo Checkout Sessions |
-| Card Element | starsze | Payment Element |
+| Charges | do not use | Checkout Sessions or PaymentIntents (Stripe's migration guide) |
+| Sources | deprecated | SetupIntents |
+| Tokens | outdated | SetupIntents or Checkout Sessions |
+| Card Element | legacy | Payment Element |
 
 ## 6. PCI DSS
-Wysyłanie surowego numeru karty (PAN) z serwera (`payment_method_data`) może wymagać wykazania zgodności z PCI DSS.
-Przeniesienie numerów kart od innego operatora: proces importu PAN w Stripe. Program zgodności:
+Sending a raw card number (PAN) from the server (`payment_method_data`) may require demonstrating PCI DSS compliance.
+Moving card numbers from another operator: Stripe's PAN import process. The compliance program:
 sec-governance-compliance.
 
-## Źródła
-stripe/ai, plik skills/stripe-best-practices/references/payments.md, commit 1bcd18a (2026-10-21), MIT. Opisane własnymi
-słowami.
+## Sources
+stripe/ai, file skills/stripe-best-practices/references/payments.md, commit 1bcd18a (2026-10-21), MIT. Described in our own
+words.

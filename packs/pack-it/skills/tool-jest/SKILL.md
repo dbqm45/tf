@@ -1,62 +1,62 @@
 ---
 name: tool-jest
-description: Użyj przy testach w Jest — test.each, dublery, fake timers, ESM, konfiguracja, migracja do Jest 30.
+description: Use for tests in Jest — test.each, test doubles, fake timers, ESM, configuration, migration to Jest 30.
 metadata:
   review: "2027-01-17"
-  catalog: "Użyj przy testach w Jest (projekty istniejące, Node, React Native, Angular z jest-preset) — struktura, test.each, dublery i fake timers, ESM, konfiguracja, migracja do Jest 30 i kiedy przejść na Vitest. Nie do zasad wyroczni (qa-spec-first-testing) ani Vitest (tool-vitest)."
-  keywords: "jestjs, Jest w projekcie, jest.useFakeTimers, fałszywy zegar, setSystemTime, jest.mock, jest.config, snapshot"
+  catalog: "Use for tests in Jest (existing projects, Node, React Native, Angular with jest-preset) — structure, test.each, test doubles and fake timers, ESM, configuration, migration to Jest 30 and when to move to Vitest. Not for oracle rules (qa-spec-first-testing) or Vitest (tool-vitest)."
+  keywords: "jestjs, Jest w projekcie, jest.useFakeTimers, fałszywy zegar, setSystemTime, jest.mock, jest.config, snapshot, Jest in a project, fake clock"
 ---
 
 # Jest
 
-## Zasady
-Te same co w tool-vitest (tabela przykładów ze specyfikacji z ID, test najpierw czerwony, dublery tylko na portach,
-kontrolowany czas, znany defekt jako `test.failing`), w składni Jest:
+## Rules
+The same as in tool-vitest (a table of examples from the specification with IDs, the test red first, test doubles only
+on ports, controlled time, a known defect as `test.failing`), in Jest syntax:
 
-| Cel | Jest |
+| Goal | Jest |
 |---|---|
-| tabela przykładów | `test.each([...])('TC-014: %i szt.', …)` |
-| znany defekt | `test.failing('TC-020 (BUG-7): …', …)` — przechodzi, dopóki błąd istnieje; po naprawie zaczyna padać → usuń `failing` |
-| czas | `jest.useFakeTimers().setSystemTime(new Date(...))` |
-| sprzątanie dublerów | `restoreMocks: true` w konfiguracji (albo `using spy = jest.spyOn(...)` — wymaga środowiska z obsługą `using`, np. transpilacji TS) |
-| dopasowanie tablic | `expect.arrayOf(expect.objectContaining({...}))` (30+) |
+| table of examples | `test.each([...])('TC-014: %i pcs', …)` |
+| known defect | `test.failing('TC-020 (BUG-7): …', …)` — passes while the bug exists; after the fix it starts failing → remove `failing` |
+| time | `jest.useFakeTimers().setSystemTime(new Date(...))` |
+| cleaning up doubles | `restoreMocks: true` in the configuration (or `using spy = jest.spyOn(...)` — requires an environment that supports `using`, e.g. TS transpilation) |
+| array matching | `expect.arrayOf(expect.objectContaining({...}))` (30+) |
 
-## Wzorzec (sprawdzony: Jest 30.5, ESM, Node 22)
+## Pattern (verified: Jest 30.5, ESM, Node 22)
 ```js
 import { jest } from '@jest/globals';
 import { createCart } from './cart.js';
-const fixedClock = { now: () => new Date('2026-03-01T10:00:00Z') };   // fake zamiast mocka
+const fixedClock = { now: () => new Date('2026-03-01T10:00:00Z') };   // a fake instead of a mock
 
 test.each([
   [[['A', 1]], 1],
   [[['A', 2], ['B', 3]], 5],
-])('H2-AC1: liczba sztuk dla %j = %i', (adds, expected) => {
+])('H2-AC1: item count for %j = %i', (adds, expected) => {
   const cart = createCart(fixedClock);
   adds.forEach(([s, q]) => cart.add(s, q));
   expect(cart.count()).toBe(expected);
 });
 
-test.failing('H2-AC3 (BUG-9): łączy te same SKU w jedną pozycję', () => {
+test.failing('H2-AC3 (BUG-9): merges the same SKU into one line', () => {
   const cart = createCart(fixedClock);
   cart.add('A', 1); cart.add('A', 2);
   expect(cart.lines()).toEqual([{ sku: 'A', qty: 3 }]);
 });
 ```
-ESM bez transpilacji: `transform: {}` w konfiguracji i `NODE_OPTIONS=--experimental-vm-modules jest`.
-Składnia `using` nie działa w Node 22 bez transpilacji (sprawdzone: `SyntaxError`).
+ESM without transpilation: `transform: {}` in the configuration and `NODE_OPTIONS=--experimental-vm-modules jest`.
+The `using` syntax does not work in Node 22 without transpilation (verified: `SyntaxError`).
 
-## Jest czy Vitest?
-Nowy projekt na Vite/ESM/TS → **Vitest** (natywny ESM i TS, tryb przeglądarki, szybszy watch). Istniejący zestaw w Jest →
-zostań, dopóki nie boli; migracja to zmiana importów (`vi` zamiast `jest`) i konfiguracji — rób ją osobnym krokiem, nie przy okazji.
-Nie podnoś wersji Jest w projekcie bez prośby (core-stack-sync) — stosuj składnię z wersji projektu.
+## Jest or Vitest?
+A new project on Vite/ESM/TS → **Vitest** (native ESM and TS, browser mode, faster watch). An existing suite in Jest →
+stay with it until it hurts; migration is a change of imports (`vi` instead of `jest`) and of the configuration — do it as a separate step, not in passing.
+Do not raise the Jest version in a project without being asked (core-stack-sync) — use the syntax of the project's version.
 
-## Zależne od wersji
-| Wersja | Co się zmieniło |
+## Version-dependent
+| Version | What changed |
 |---|---|
-| 29 | punkt odniesienia: `test.each`, `test.failing`, nowoczesne fake timers domyślnie, `--testPathPattern` (liczba pojedyncza) |
-| 30 | usunięte wsparcie Node 14/16/19/21; TypeScript ≥ 5.4; `--testPathPattern` → `--testPathPatterns`; jsdom 26; usunięte aliasy matcherów (`toBeCalled`, `toBeCalledWith`… → `toHaveBeenCalled*`); spy z `using` (sprzątanie automatyczne); `expect.arrayOf`; `jest.unstable_mockModule` dla ESM; szybsze i mniej pamięciożerne uruchomienia |
+| 29 | baseline: `test.each`, `test.failing`, modern fake timers by default, `--testPathPattern` (singular) |
+| 30 | dropped support for Node 14/16/19/21; TypeScript ≥ 5.4; `--testPathPattern` → `--testPathPatterns`; jsdom 26; removed matcher aliases (`toBeCalled`, `toBeCalledWith`… → `toHaveBeenCalled*`); spies with `using` (automatic cleanup); `expect.arrayOf`; `jest.unstable_mockModule` for ESM; faster runs that use less memory |
 
-## Checklista
-- [ ] ID przypadku w nazwie, oczekiwanie ze źródła
-- [ ] `restoreMocks`/`clearMocks` w konfiguracji; brak przecieków stanu między testami
-- [ ] matchery w pełnej formie (`toHaveBeenCalledWith`) — zgodne z Jest 30
+## Checklist
+- [ ] the case ID in the name, the expectation from the source
+- [ ] `restoreMocks`/`clearMocks` in the configuration; no state leaking between tests
+- [ ] matchers in the full form (`toHaveBeenCalledWith`) — compatible with Jest 30

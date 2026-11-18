@@ -850,6 +850,21 @@ treści (angielska), bez równoległej polskiej.
     (`odtworzenie-historii-skutki`), dodane słowa kluczowe PL+EN (replay, reset offsetu, odbudowa modelu odczytu):
     powtórka 2 scenariuszy × 2: 4/4. Podpowiedzi bez zmian (901/918 · 31/43), `--hints` czysto. Haiku przed/po
     (4 scenariusze): 4/4 → 3/4 → po poprawce 4/4, 1,48 USD.
+  - [x] 4d-r1 (2026-11-18): pierwsza runda równoległa — `qa-` (8), `proc-` (8), `tool-` (7), `pm-` (5), `data-` (2):
+    30 skilli (+ referencje) po angielsku, `hint.pl.txt`. Decyzja właściciela (2026-11-18): tłumaczą równolegli
+    wykonawcy według jednej instrukcji (zakres, frontmatter, bloki kodu, znaczniki, samokontrola
+    `translation_check`); jakość pilnuję sam: przegląd każdego zgłoszonego ✗ i próbki tekstu, bramki, holdout,
+    `--hints`, Haiku po zmianie (1 scenariusz na skill, przed zmianą tylko dla porażek). Jedna runda = jeden PR.
+    Przetłumaczone przykładowe teksty w kodzie (Playwright, Vitest, pytest, Semgrep) — żaden scenariusz ani
+    projekt przykładowy od nich nie zależy. `proc-agile` stracił podpowiedź w `ciecie-historyjek` (900/918) —
+    dodane słowa kluczowe PL+EN (pociąć historyjkę, cięcie pionowe): z powrotem 901/918 · 31/43.
+    Zostaje do dokończenia:
+    - [ ] `qa-test-design/templates/test-strategy.md` jest po polsku; `references/project-test-strategy.md`
+      celowo zachowuje polskie wartości stanów (zakończona, w realizacji…) — tłumaczyć razem.
+    - [ ] `proc-requirements-shaping`: przykłady zachowują polskie nagłówki i linie briefu czytane przez
+      `requirements_lint.py` (lint przyjmuje już angielskie) — przełączyć na angielskie przy usuwaniu aliasów.
+    - [ ] nagłówek „## Brief dla wykonawcy” w `modes/mode-pdi/tests/test_triage_pdi.py` i
+      `eng-code-audit/references/report-template.md` — skill `proc-issue-triage` ma już „Brief for the implementer”.
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
