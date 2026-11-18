@@ -19,6 +19,6 @@ echo "== typy"
 echo "== testy"
 # npm test                        | pytest -q
 
-echo "== skan bezpieczeństwa"
+echo "== security scan"
 python3 .claude/skills/tf/scripts/security_scan.py cooldown
 python3 .claude/skills/tf/scripts/security_scan.py scan ${BASE:+--base "$BASE"} --out "${SCAN_OUT:-reports/security}"

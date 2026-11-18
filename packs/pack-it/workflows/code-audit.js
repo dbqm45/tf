@@ -49,7 +49,7 @@ const inventory = await agent(
   `the result to ${dir}/${a.date}-code-audit-inventory.md. No global installs; a missing tool is "not checked".\n` +
   `Also check which of these skills are installed (the file .claude/skills/<name>/SKILL.md): ${needed.join(', ')}.`,
   {
-    label: 'inwentarz', phase: 'Inventory', model: 'haiku', effort: 'low',
+    label: 'inventory', phase: 'Inventory', model: 'haiku', effort: 'low',
     schema: {
       type: 'object',
       properties: {
@@ -105,7 +105,7 @@ const results = await pipeline(reviewed, d => agent(
   `"authz" (a bypass), "legal" (an obligation with a deadline), otherwise empty. No significant problems is a correct ` +
   `result — an empty list; do not add findings for volume.`,
   {
-    label: `przegląd:${d.key}`, phase: 'Reviews', schema: FINDINGS,
+    label: `review:${d.key}`, phase: 'Reviews', schema: FINDINGS,
     agentType: (a.executors || {})[d.key] || DIMENSIONS[d.key].agent,
     ...(depth === 'full' && DEEP.includes(d.key) ? { model: 'opus' } : {}),
   }).then(r => r ? r.findings.map(f => ({ ...f, dimension: d.key })) : (notChecked.push(`${d.key}: the executor returned no result`), [])))
@@ -136,10 +136,10 @@ if (depth === 'full') {   // full: one sceptic per blocker and per top-10 findin
   const toCheck = [...blockers, ...ranking.slice(0, 10)]
   if (toCheck.length > budgetLeft) log(`Verification: ${budgetLeft} of ${toCheck.length} findings (executor limit)`)
   const checked = await parallel(toCheck.slice(0, budgetLeft).map(f => () => agent(
-    `Spróbuj obalić to ustalenie audytu, sprawdzając kod samodzielnie: „${f.title}” (${f.file}:${f.line ?? '?'}). ` +
-    `Dowody: ${f.evidence.join(' | ')}. Jeśli dowód nie wytrzymuje sprawdzenia albo jest niepewny — refuted=true.`,
+    `Try to refute this audit finding by checking the code yourself: "${f.title}" (${f.file}:${f.line ?? '?'}). ` +
+    `Evidence: ${f.evidence.join(' | ')}. If the evidence does not hold up or is uncertain — refuted=true.`,
     {
-      label: `weryfikacja:${f.file}:${f.line ?? ''}`, phase: 'Ranking', agentType: 'specialist',
+      label: `verification:${f.file}:${f.line ?? ''}`, phase: 'Ranking', agentType: 'specialist',
       schema: { type: 'object', properties: { refuted: { type: 'boolean' }, reason: { type: 'string' } }, required: ['refuted', 'reason'] },
     }).then(v => ({ f, v }))))
   for (const { f, v } of checked.filter(Boolean)) {
@@ -163,6 +163,6 @@ const report = await agent(
   `The ranking, the blockers and the hypotheses are already computed — copy them without changing the order or the values. Audit cost: ` +
   `python3 .tf/factory/cost_report.py --days 1. At the end python3 .claude/skills/core-grounding/scripts/grounding_check.py ` +
   `${reportPath} and fix the errors. Return only the report's path.\nData:\n${JSON.stringify(data)}`,
-  { label: 'raport', phase: 'Report' })
+  { label: 'report', phase: 'Report' })
 
 return { report: report ? reportPath : null, ...data }

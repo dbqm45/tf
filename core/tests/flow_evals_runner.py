@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Runner evali przebiegu (N5, DZ13): zestaw prawdziwych zadań bramkuje zmianę modelu/skilla/persony/promptu fazy.
+"""Flow evals runner (N5, DZ13): a set of real tasks gates a change of model/skill/persona/phase prompt.
 
-Źródło: pdi `docs/plan-zespol-jednoosobowy.md` §8.3 N5, N17; `docs/decyzje.md` DZ13.
+Source: pdi `docs/plan-zespol-jednoosobowy.md` §8.3 N5, N17; `docs/decyzje.md` DZ13.
 
-  python3 tools/workspace.py flow-evals --validate                         # bez modelu, sprawdza schematy zadań
-  python3 tools/workspace.py flow-evals --ids N5-sdlc-proba-CHG1-intent    # jedno zadanie (wymaga klucza)
-  python3 tools/workspace.py flow-evals --all --budget-usd 15 --yes        # pełny przebieg
+  python3 tools/workspace.py flow-evals --validate                         # no model, checks the task schemas
+  python3 tools/workspace.py flow-evals --ids N5-sdlc-proba-CHG1-intent    # one task (needs a key)
+  python3 tools/workspace.py flow-evals --all --budget-usd 15 --yes        # full run
 
-Współbieżność z A7/N1: wynik `phase_run.py run` czytamy TYLKO przez
-`modes/mode-pdi/skills/pdi-decisions/scripts/phase_result.py`. Reużycie z `core/tests/run_skill_evals.py`:
-`parse_stream`, `judge_model`, `same_family`, `COST_GUESS`-wzór, `LIMIT_RE`-wzór.
+Concurrency with A7/N1: the result of `phase_run.py run` is read ONLY through
+`modes/mode-pdi/skills/pdi-decisions/scripts/phase_result.py`. Reused from `core/tests/run_skill_evals.py`:
+`parse_stream`, `judge_model`, `same_family`, the `COST_GUESS` pattern, the `LIMIT_RE` pattern.
 
-Testy: `core/tests/test_flow_evals.py` (atrapy `phase_fn` i `judge_fn`).
+Tests: `core/tests/test_flow_evals.py` (stubs of `phase_fn` and `judge_fn`).
 """
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ import run_skill_evals  # noqa: E402  -- judge_model, same_family, parse_stream
 
 from flow_evals.kappa import linear_kappa  # noqa: E402
 
-# Prognoza kosztu zadania (USD); średnie z A6 run CHG-3 (pdi `docs/przebieg-lokalny.md`, 2026-11-06).
+# Task cost forecast (USD); averages from A6 run CHG-3 (pdi `docs/przebieg-lokalny.md`, 2026-11-06).
 COST_GUESS: dict[tuple[str, str], float] = {
     ("intent", "happy"): 0.35,
     ("intent", "negative"): 0.30,
@@ -60,7 +60,7 @@ COST_GUESS: dict[tuple[str, str], float] = {
     ("delivery", "happy"): 0.80,
     ("delivery", "negative"): 0.25,
 }
-JUDGE_COST_PER_AXIS = 0.015  # haiku judge; 3 osie × ~0.005 USD; ostrożny bufor
+JUDGE_COST_PER_AXIS = 0.015  # haiku judge; 3 axes × ~0.005 USD; cautious buffer
 AXES = ("correctness", "decision_adherence", "style")
 PHASES = ("intent", "requirements", "architecture", "design", "delivery")
 TYPES = ("happy", "negative", "regression")
@@ -85,55 +85,55 @@ JUDGE_TOOL = {
 }
 
 
-# ────────────────────────────── ładowanie i walidacja ──────────────────────────────
+# ────────────────────────────── loading and validation ──────────────────────────────
 
 def load_budget(root: Path = EVALS) -> dict:
     data = json.loads((root / "budget.json").read_text(encoding="utf-8"))
     for key in ("budget_usd", "per_task_budget_usd", "fail_on_pass_drop_pct", "fail_on_cost_rise_pct",
                 "judge_kappa_min", "length_control_ratio"):
         if key not in data:
-            raise ValueError(f"budget.json: brak klucza {key}")
+            raise ValueError(f"budget.json: missing key {key}")
     return data
 
 
 def validate_task(data: Any, root: Path = EVALS) -> list[str]:
-    """Walidacja pojedynczego zadania. Zwraca listę błędów (puste = OK)."""
+    """Validation of a single task. Returns the list of errors (empty = OK)."""
     errs: list[str] = []
     if not isinstance(data, dict):
-        return [f"zadanie nie jest słownikiem: {type(data).__name__}"]
+        return [f"task is not a dict: {type(data).__name__}"]
     for key in ("id", "repo", "phase", "change", "type", "before_dir", "expect"):
         if key not in data:
-            errs.append(f"{data.get('id', '?')}: brak klucza {key}")
+            errs.append(f"{data.get('id', '?')}: missing key {key}")
     phase = data.get("phase")
     if phase not in PHASES:
-        errs.append(f"{data.get('id')}: phase {phase!r} spoza {PHASES}")
+        errs.append(f"{data.get('id')}: phase {phase!r} not in {PHASES}")
     typ = data.get("type")
     if typ not in TYPES:
-        errs.append(f"{data.get('id')}: type {typ!r} spoza {TYPES}")
+        errs.append(f"{data.get('id')}: type {typ!r} not in {TYPES}")
     expect = data.get("expect") or {}
     if not isinstance(expect, dict):
-        errs.append(f"{data.get('id')}: expect musi być słownikiem")
+        errs.append(f"{data.get('id')}: expect must be a dict")
     else:
         if "status" not in expect:
-            errs.append(f"{data.get('id')}: expect.status wymagane")
+            errs.append(f"{data.get('id')}: expect.status required")
         if "max_cost_usd" in expect and not isinstance(expect["max_cost_usd"], (int, float)):
-            errs.append(f"{data.get('id')}: expect.max_cost_usd musi być liczbą")
+            errs.append(f"{data.get('id')}: expect.max_cost_usd must be a number")
     bd = data.get("before_dir")
     if bd and not (root / bd).is_dir():
-        errs.append(f"{data.get('id')}: before_dir {bd!r} nie istnieje w {root}")
+        errs.append(f"{data.get('id')}: before_dir {bd!r} does not exist in {root}")
     judge = data.get("judge") or {}
     if judge.get("run"):
         rubric = judge.get("rubric")
         if not rubric or not (root / rubric).is_file():
-            errs.append(f"{data.get('id')}: judge.rubric {rubric!r} nie istnieje w {root}")
+            errs.append(f"{data.get('id')}: judge.rubric {rubric!r} does not exist in {root}")
         reqs = judge.get("requirements") or []
         if not isinstance(reqs, list) or not reqs:
-            errs.append(f"{data.get('id')}: judge.requirements musi być niepustą listą")
+            errs.append(f"{data.get('id')}: judge.requirements must be a non-empty list")
     return errs
 
 
 def load_tasks(root: Path = EVALS, ids: Iterable[str] | None = None) -> list[dict]:
-    """Ładuje zadania `*.json` z `root/`. Filtr `ids` (lista id lub glob-wzorców `N5-sdlc-proba-*`)."""
+    """Loads the `*.json` tasks from `root/`. The `ids` filter (a list of ids or glob patterns `N5-sdlc-proba-*`)."""
     tasks: list[dict] = []
     for p in sorted(root.glob("*.json")):
         if p.name == "budget.json":
@@ -141,7 +141,7 @@ def load_tasks(root: Path = EVALS, ids: Iterable[str] | None = None) -> list[dic
         try:
             data = json.loads(p.read_text(encoding="utf-8"))
         except ValueError as e:
-            raise ValueError(f"{p}: zły JSON ({e})") from e
+            raise ValueError(f"{p}: invalid JSON ({e})") from e
         if isinstance(data, dict):
             tasks.append(data)
     if ids:
@@ -154,10 +154,10 @@ def load_tasks(root: Path = EVALS, ids: Iterable[str] | None = None) -> list[dic
     return tasks
 
 
-# ────────────────────────────── prognoza kosztu ──────────────────────────────
+# ────────────────────────────── cost forecast ──────────────────────────────
 
 def estimate_cost(tasks: list[dict], budget: dict) -> float:
-    """Zgrubna prognoza w USD z `COST_GUESS` + sędzia na osie; bufor 20% dolicza wołający (`--yes` zdejmuje bramkę)."""
+    """Rough forecast in USD from `COST_GUESS` + the judge per axis; the caller adds a 20% buffer (`--yes` lifts the gate)."""
     total = 0.0
     for t in tasks:
         key = (t.get("phase"), t.get("type"))
@@ -167,7 +167,7 @@ def estimate_cost(tasks: list[dict], budget: dict) -> float:
     return total
 
 
-# ────────────────────────────── fixture → katalog pracy ──────────────────────────────
+# ────────────────────────────── fixture → working directory ──────────────────────────────
 
 def _copy_tree(src: Path, dst: Path) -> None:
     for root, dirs, files in os.walk(src):
@@ -178,11 +178,11 @@ def _copy_tree(src: Path, dst: Path) -> None:
 
 
 def apply_before(task: dict, work: Path, evals_root: Path | None = None) -> None:
-    """Kopiuje `before_dir` zadania do `work/` (nad istniejącą zawartość klona produktu)."""
+    """Copies the task's `before_dir` into `work/` (over the existing content of the product clone)."""
     root = evals_root if evals_root is not None else EVALS
     before = root / task["before_dir"]
     if not before.is_dir():
-        raise FileNotFoundError(f"before_dir nie istnieje: {before}")
+        raise FileNotFoundError(f"before_dir does not exist: {before}")
     _copy_tree(before, work)
 
 
@@ -190,18 +190,18 @@ _SYNTH_TEMPLATE_CACHE: Path | None = None
 
 
 def synth_template(workdir_root: Path) -> Path:
-    """Zestawia jednorazowo szablon fabryki dla zadań `synth` (potrzebuje .claude/agents/_generated/),
-    buforuje ścieżkę w module. Dla 21 zadań z >10 synth'ów to różnica między 21 × 30 s a 30 s + N × copy.
+    """Assembles the factory template for `synth` tasks once (needs .claude/agents/_generated/),
+    caching the path in the module. For 21 tasks with >10 synths that is the difference between 21 × 30 s and 30 s + N × copy.
     """
     global _SYNTH_TEMPLATE_CACHE
     if _SYNTH_TEMPLATE_CACHE and (_SYNTH_TEMPLATE_CACHE / ".claude" / "agents" / "_generated").is_dir():
         return _SYNTH_TEMPLATE_CACHE
     template = workdir_root.parent / "template"
     if not (template / ".claude" / "agents" / "_generated").is_dir():
-        print(f"  … zestawiam szablon fabryki dla zadań synth w {template.name}/ (jednorazowo)",
+        print(f"  … assembling the factory template for synth tasks in {template.name}/ (once)",
               file=sys.stderr)
-        # mode-pdi ma optional_packs: [pack-it] (persony fazy ewa/maja/tomasz/natalia w pack-it/personas/);
-        # bez pack-it nie da się uruchomić fazy w szablonie.
+        # mode-pdi has optional_packs: [pack-it] (phase personas ewa/maja/tomasz/natalia in pack-it/personas/);
+        # without pack-it a phase cannot be run in the template.
         subprocess.run([sys.executable, str(ROOT / "tools" / "workspace.py"),
                         "assemble", "--packs", "mode-pdi,pack-it", "--out", str(template)],
                        check=True, capture_output=True)
@@ -211,15 +211,15 @@ def synth_template(workdir_root: Path) -> Path:
 
 def prepare_workspace(task: dict, repos: dict[str, Path], workdir_root: Path,
                       evals_root: Path | None = None) -> Path:
-    """Zestawia katalog roboczy zadania: klon produktu (albo szablon fabryki dla `synth`) + zastąpienie
-    `docs/project/changes/<CHG>/` zawartością fixtury.
+    """Assembles the task working directory: a product clone (or the factory template for `synth`) + replacing
+    `docs/project/changes/<CHG>/` with the fixture content.
 
-    Dla `repo == "synth"` używa szablonu `synth_template(workdir_root)` — zainstalowanej fabryki mode-pdi
-    z `.claude/agents/_generated/` (persony fazy), żeby `phase_run.py` miał na kim uruchomić fazę.
+    For `repo == "synth"` it uses the template `synth_template(workdir_root)` — an installed mode-pdi factory
+    with `.claude/agents/_generated/` (phase personas), so that `phase_run.py` has someone to run the phase on.
 
-    Fixtura zastępuje (a nie overlay'uje) katalog zmiany — produkt w HEAD może mieć pełne artefakty
-    poprzednich faz (CHG-3 w sdlc-proba HEAD ma plan.md/design.md z pracy A6), ale faza pre-intent powinna
-    startować bez nich. Resztę repozytorium (`.claude/`, kod produktu) zostawiamy nietkniętą.
+    The fixture replaces (rather than overlays) the change directory — the product at HEAD may hold full artifacts
+    of earlier phases (CHG-3 in sdlc-proba HEAD has plan.md/design.md from the A6 work), but the pre-intent phase should
+    start without them. The rest of the repository (`.claude/`, product code) is left untouched.
     """
     work = workdir_root / task["id"]
     if work.exists():
@@ -232,12 +232,12 @@ def prepare_workspace(task: dict, repos: dict[str, Path], workdir_root: Path,
     else:
         src = repos.get(repo)
         if not src:
-            raise FileNotFoundError(f"brak ścieżki do repo {repo!r} (ustaw w --repos albo przez $FLOW_EVALS_REPOS)")
+            raise FileNotFoundError(f"no path for repo {repo!r} (set it in --repos or through $FLOW_EVALS_REPOS)")
         if not src.is_dir():
-            raise FileNotFoundError(f"ścieżka do repo {repo!r} nie jest katalogiem: {src}")
+            raise FileNotFoundError(f"path of repo {repo!r} is not a directory: {src}")
         _copy_tree(src, work)
-    # W `docs/project/changes/` zostawiamy tylko zmianę zadania — `decision_record.py check` jest globalny
-    # i zawaliłby się na innych zmianach z HEAD produktu (np. sdlc-proba HEAD CHG-1 ma plan.md sprzed N20).
+    # In `docs/project/changes/` we leave only the task's change — `decision_record.py check` is global
+    # and would fail on other changes from the product HEAD (e.g. sdlc-proba HEAD CHG-1 has a plan.md predating N20).
     changes_dir = work / "docs" / "project" / "changes"
     change = task.get("change") or ""
     if changes_dir.is_dir():
@@ -245,16 +245,16 @@ def prepare_workspace(task: dict, repos: dict[str, Path], workdir_root: Path,
             if p.is_dir() and p.name != change:
                 shutil.rmtree(p)
             elif p.is_dir() and p.name == change:
-                shutil.rmtree(p)   # fixture zastępuje, nie overlay'uje
+                shutil.rmtree(p)   # the fixture replaces, it does not overlay
     apply_before(task, work, evals_root if evals_root is not None else EVALS)
     return work
 
 
-# ────────────────────────────── uruchomienie fazy ──────────────────────────────
+# ────────────────────────────── running the phase ──────────────────────────────
 
 def real_phase_runner(task: dict, work: Path, claude_bin: str = "claude",
                       timeout: int = 600) -> dict:
-    """Prawdziwe uruchomienie `phase_run.py run`. Zwraca `{result, progress, duration_s, stderr, exit_code}`."""
+    """A real run of `phase_run.py run`. Returns `{result, progress, duration_s, stderr, exit_code}`."""
     argv = [sys.executable, str(PHASE_RUN), "run",
             "--change", task["change"], "--phase", task["phase"],
             "--budget-usd", str(task.get("budget_usd", 1.0))]
@@ -272,7 +272,7 @@ def real_phase_runner(task: dict, work: Path, claude_bin: str = "claude",
             "duration_s": duration, "stderr": proc.stderr[-2000:], "exit_code": proc.returncode}
 
 
-# ────────────────────────────── deterministyczne sprawdzenia ──────────────────────────────
+# ────────────────────────────── deterministic checks ──────────────────────────────
 
 def _run_script(script: Path, args: list[str], cwd: Path) -> tuple[int, str]:
     if not script.is_file():
@@ -283,7 +283,7 @@ def _run_script(script: Path, args: list[str], cwd: Path) -> tuple[int, str]:
 
 
 def deterministic_checks(task: dict, out: dict, work: Path) -> list[dict]:
-    """Zwraca listę sprawdzeń [{name, passed, detail}]. Każde sprawdzenie niezależne."""
+    """Returns the list of checks [{name, passed, detail}]. Each check is independent."""
     checks: list[dict] = []
 
     def add(name: str, cond: bool, detail: str = "") -> None:
@@ -292,7 +292,7 @@ def deterministic_checks(task: dict, out: dict, work: Path) -> list[dict]:
     expect = task.get("expect") or {}
     status = out.get("status")
     expected_status = expect.get("status")
-    add("status", status == expected_status, f"{status!r} vs oczekiwany {expected_status!r}")
+    add("status", status == expected_status, f"{status!r} vs expected {expected_status!r}")
 
     err_expect = expect.get("error")
     if err_expect:
@@ -302,13 +302,13 @@ def deterministic_checks(task: dict, out: dict, work: Path) -> list[dict]:
         elif err_expect.startswith("any_of:"):
             opts = [o.strip() for o in err_expect[len("any_of:"):].split(",") if o.strip()]
             add("error", any(err == o or (o.endswith("*") and err.startswith(o[:-1])) for o in opts),
-                f"error={err!r} spośród {opts}")
+                f"error={err!r} among {opts}")
         else:
             add("error", err == err_expect, f"error={err!r} vs {err_expect!r}")
 
     for frag in expect.get("contains_detail") or []:
         detail_text = (out.get("detail") or "")
-        add(f"detail~{frag}", frag in detail_text, f"detail nie zawiera {frag!r}")
+        add(f"detail~{frag}", frag in detail_text, f"detail does not contain {frag!r}")
 
     cost = phase_result.read_cost(out)
     if "max_cost_usd" in expect and cost is not None:
@@ -326,13 +326,13 @@ def deterministic_checks(task: dict, out: dict, work: Path) -> list[dict]:
     change_dir = work / "docs" / "project" / "changes" / change
     if artifact_name:
         artifact = change_dir / artifact_name
-        # requirements_lint.py bierze ścieżkę artefaktu jako argument pozycyjny (packs/pack-it/
-        # skills/proc-requirements-shaping/scripts/requirements_lint.py); `--strict` eskaluje ostrzeżenia
-        # do kodu 1. Brak skryptu (pack-it nie zainstalowany) → sprawdzenie pominięte zamiast oblane.
+        # requirements_lint.py takes the artifact path as a positional argument (packs/pack-it/
+        # skills/proc-requirements-shaping/scripts/requirements_lint.py); `--strict` escalates warnings
+        # to exit code 1. A missing script (pack-it not installed) → the check is skipped rather than failed.
         if phase == "requirements" and artifact.is_file() and REQUIREMENTS_LINT.is_file():
             code, msg = _run_script(REQUIREMENTS_LINT, [str(artifact), "--strict"], work)
             add("requirements_lint", code == 0, msg[-400:])
-        # design_check.py check <CHG-N> (kontrakt pdi 0.9.0 — klucz zmiany, nie ścieżka pliku).
+        # design_check.py check <CHG-N> (pdi 0.9.0 contract — the change key, not a file path).
         if phase == "design" and artifact.is_file() and DESIGN_CHECK.is_file():
             code, msg = _run_script(DESIGN_CHECK, ["check", change], work)
             add("design_check", code == 0, msg[-400:])
@@ -343,19 +343,19 @@ def deterministic_checks(task: dict, out: dict, work: Path) -> list[dict]:
     return checks
 
 
-# ────────────────────────────── sędzia (N17) ──────────────────────────────
+# ────────────────────────────── judge (N17) ──────────────────────────────
 
 def real_judge(answer: str, axis: str, rubric: str, task: dict, judge_model: str, *,
                timeout: int = 60, api_key: str | None = None) -> dict:
-    """Sędzia: jeden request na jedną oś, `temperature: 0`, wymuszenie narzędzia `oceń`.
+    """Judge: one request per axis, `temperature: 0`, forcing the `oceń` tool.
 
-    Wariant `claude:*` → Anthropic Messages API (JSON-only przez `tool_use`, zgodnie z N1 planem).
-    Zwraca `{score: 1..5, reason: str, cost_usd: float}`.
+    The `claude:*` variant → Anthropic Messages API (JSON-only through `tool_use`, per the N1 plan).
+    Returns `{score: 1..5, reason: str, cost_usd: float}`.
     """
     if api_key is None:
         api_key = os.environ.get("ANTHROPIC_API_KEY") or ""
     if not api_key:
-        raise RuntimeError("ANTHROPIC_API_KEY nie ustawiony — sędzia nie ruszy")
+        raise RuntimeError("ANTHROPIC_API_KEY not set — the judge will not run")
     prompt = (
         f"Oś: {axis}\n\nRubryka:\n<rubryka>\n{rubric}\n</rubryka>\n\n"
         f"Wymagania do oceny ({len(task.get('judge', {}).get('requirements') or [])}):\n"
@@ -378,22 +378,22 @@ def real_judge(answer: str, axis: str, rubric: str, task: dict, judge_model: str
         headers={"content-type": "application/json", "x-api-key": api_key,
                  "anthropic-version": "2023-06-01"})
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 — host sprawdzony wyżej
+        with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 — host checked above
             data = json.loads(resp.read())
     except urllib.error.HTTPError as e:
-        raise RuntimeError(f"sędzia: HTTP {e.code} ({axis})") from e
+        raise RuntimeError(f"judge: HTTP {e.code} ({axis})") from e
     except OSError as e:
-        raise RuntimeError(f"sędzia: brak połączenia ({axis}): {getattr(e, 'reason', e)}") from e
+        raise RuntimeError(f"judge: no connection ({axis}): {getattr(e, 'reason', e)}") from e
     use = next((b for b in data.get("content") or [] if isinstance(b, dict) and b.get("type") == "tool_use"), None)
     if not use or not isinstance(use.get("input"), dict):
-        raise RuntimeError(f"sędzia: brak tool_use w odpowiedzi ({axis})")
+        raise RuntimeError(f"judge: no tool_use in the response ({axis})")
     ipt = use["input"]
     score = ipt.get("score")
     reason = ipt.get("reason") or ""
     if not isinstance(score, int) or not 1 <= score <= 5:
-        raise RuntimeError(f"sędzia: score poza 1–5 ({axis}): {score!r}")
+        raise RuntimeError(f"judge: score outside 1–5 ({axis}): {score!r}")
     usage = data.get("usage") or {}
-    # Koszt: użyj grubnego mnożnika; pełna tabela cen w kolejnym PR.
+    # Cost: use a rough multiplier; the full price table in a later PR.
     cost_usd = (usage.get("input_tokens", 0) + usage.get("output_tokens", 0) * 5) * 1e-6
     return {"score": score, "reason": reason, "cost_usd": round(cost_usd, 6)}
 
@@ -402,8 +402,8 @@ def judge_task(task: dict, out: dict, work: Path, judge_model: str, *,
                judge_fn: Callable[..., dict] | None = None,
                length_baseline_chars: float | None = None, length_ratio: float = 1.8,
                timeout: int = 60) -> dict:
-    """Ocena na trzech osiach; kontrola długości (N17); zwraca `{correctness, decision_adherence, style, cost_usd,
-    order_flips}`. `order_flips` wypełnione tylko, gdy `task.compare_with` podane (nie w PR1)."""
+    """Rating on three axes; length control (N17); returns `{correctness, decision_adherence, style, cost_usd,
+    order_flips}`. `order_flips` is filled only when `task.compare_with` is given (not in PR1)."""
     judge_fn = judge_fn or real_judge
     jconf = task.get("judge") or {}
     if not jconf.get("run"):
@@ -418,14 +418,14 @@ def judge_task(task: dict, out: dict, work: Path, judge_model: str, *,
                            judge_model=judge_model, timeout=timeout)
         results[axis] = verdict
         cost += float(verdict.get("cost_usd") or 0.0)
-    # Kontrola długości (N17): wyłącznie w `style`, tylko gdy baseline jest.
+    # Length control (N17): only in `style`, only when a baseline exists.
     if length_baseline_chars and length_baseline_chars > 0:
         if len(answer) > length_ratio * length_baseline_chars:
             s = results["style"]
             s["score"] = max(1, int(s["score"]) - 1)
-            s["reason"] = (s.get("reason") or "") + f" [N17: długość {len(answer)} > {length_ratio}×baseline -1]"
+            s["reason"] = (s.get("reason") or "") + f" [N17: length {len(answer)} > {length_ratio}×baseline -1]"
             results["length_penalty"] = True
-    # Porównanie dwóch wyjść (A/B) — tylko gdy zadanie na to pozwala.
+    # Comparison of two outputs (A/B) — only when the task allows it.
     cmp = task.get("compare_with")
     if cmp:
         for axis in AXES:
@@ -441,7 +441,7 @@ def judge_task(task: dict, out: dict, work: Path, judge_model: str, *,
 
 
 def _artifact_text(task: dict, work: Path) -> str | None:
-    """Tekst artefaktu fazy po uruchomieniu (dla sędziego). Dla delivery zwraca None."""
+    """Text of the phase artifact after the run (for the judge). Returns None for delivery."""
     name = {"intent": "intent.md", "requirements": "requirements.md",
             "architecture": "plan.md", "design": "design.md"}.get(task.get("phase"))
     if not name:
@@ -452,13 +452,13 @@ def _artifact_text(task: dict, work: Path) -> str | None:
     return None
 
 
-# ────────────────────────────── jedno zadanie i cały przebieg ──────────────────────────────
+# ────────────────────────────── one task and the whole run ──────────────────────────────
 
 def run_task(task: dict, repos: dict[str, Path], workdir_root: Path, args: argparse.Namespace, *,
              phase_fn: Callable[..., dict] | None = None,
              judge_fn: Callable[..., dict] | None = None,
              baselines_by_phase: dict | None = None) -> dict:
-    """Pełne jedno zadanie. Zwraca `{id, phase, type, status, passed, cost_usd, duration_s, checks, judge, …}`."""
+    """One full task. Returns `{id, phase, type, status, passed, cost_usd, duration_s, checks, judge, …}`."""
     phase_fn = phase_fn or (lambda t, w: real_phase_runner(t, w, claude_bin=args.claude_bin))
     work = prepare_workspace(task, repos, workdir_root)
     phase_out = phase_fn(task, work)
@@ -490,7 +490,7 @@ def run_task(task: dict, repos: dict[str, Path], workdir_root: Path, args: argpa
         "duration_s": round(phase_out.get("duration_s") or 0.0, 3),
         "files_read": phase_result.files_read(phase_out.get("progress") or []),
         "denials": phase_result.denials_count(phase_out.get("progress") or []),
-        "permission_denials": out.get("permission_denials") or [],   # pełna lista z phase_run.py (diagnoza)
+        "permission_denials": out.get("permission_denials") or [],   # full list from phase_run.py (diagnostics)
         "checks": checks,
         "judge": judge,
         "detail": (out.get("detail") or "")[-800:],
@@ -502,7 +502,7 @@ def run_all(tasks: list[dict], repos: dict[str, Path], workdir_root: Path,
             args: argparse.Namespace, *,
             phase_fn: Callable[..., dict] | None = None,
             judge_fn: Callable[..., dict] | None = None) -> list[dict]:
-    """Uruchamia wszystkie zadania; łamie na LIMIT_RE w stderrze/detail (nie zżera budżetu dalszych zadań)."""
+    """Runs all tasks; breaks on LIMIT_RE in stderr/detail (does not eat the budget of further tasks)."""
     results: list[dict] = []
     total = 0.0
     for t in tasks:
@@ -510,15 +510,15 @@ def run_all(tasks: list[dict], repos: dict[str, Path], workdir_root: Path,
         results.append(res)
         total += res.get("cost_usd") or 0.0
         if LIMIT_RE.search(res.get("detail") or "") or LIMIT_RE.search(res.get("error") or ""):
-            print(f"✗ {t['id']}: wygląda na limit użycia — przerywam przebieg", file=sys.stderr)
+            print(f"✗ {t['id']}: looks like a usage limit — aborting the run", file=sys.stderr)
             break
         if args.budget_usd and total >= args.budget_usd:
-            print(f"✗ budżet {args.budget_usd} USD wyczerpany po {t['id']} — przerywam", file=sys.stderr)
+            print(f"✗ budget {args.budget_usd} USD exhausted after {t['id']} — aborting", file=sys.stderr)
             break
     return results
 
 
-# ────────────────────────────── porównanie z baseline + raport ──────────────────────────────
+# ────────────────────────────── comparison with the baseline + report ──────────────────────────────
 
 def load_baseline(path: Path) -> dict | None:
     if not path or not path.is_file():
@@ -527,7 +527,7 @@ def load_baseline(path: Path) -> dict | None:
 
 
 def compare_with_baseline(results: list[dict], baseline: dict | None, budget: dict) -> dict:
-    """Agregaty + per-task diff. Zwraca `{pass_rate, cost_total, regressions, improvements, flags}`."""
+    """Aggregates + per-task diff. Returns `{pass_rate, cost_total, regressions, improvements, flags}`."""
     passed = sum(1 for r in results if r.get("passed"))
     cost_total = round(sum(float(r.get("cost_usd") or 0.0) for r in results), 6)
     out: dict[str, Any] = {
@@ -576,15 +576,15 @@ def _now_iso() -> str:
 def report_md(results: list[dict], baseline: dict | None, diff: dict, meta: dict) -> str:
     lines = [
         f"# Flow evals — {meta.get('model', '?')}",
-        f"- data: {meta.get('run_at', _now_iso())}",
+        f"- date: {meta.get('run_at', _now_iso())}",
         f"- model: {meta.get('model', '?')} (judge: {meta.get('judge_model', '?')})",
-        f"- koszt łączny: {diff['cost_total']:.2f} USD (budżet: {meta.get('budget_usd', '?')} USD)",
+        f"- total cost: {diff['cost_total']:.2f} USD (budget: {meta.get('budget_usd', '?')} USD)",
         f"- pass rate: {diff['pass_count']}/{diff['task_count']} ({diff['pass_rate']*100:.0f}%)",
-        f"- baseline: {'brak (pierwszy przebieg)' if not baseline else baseline.get('run_at', '?')}",
-        f"- flagi: {', '.join(diff.get('flags') or []) or '—'}",
+        f"- baseline: {'none (first run)' if not baseline else baseline.get('run_at', '?')}",
+        f"- flags: {', '.join(diff.get('flags') or []) or '—'}",
         "",
-        "## Zadania (per id)",
-        "| id | status | passed | cost | Δcost | judge (c/d/s) | uwagi |",
+        "## Tasks (per id)",
+        "| id | status | passed | cost | Δcost | judge (c/d/s) | notes |",
         "|---|---|---|---|---|---|---|",
     ]
     base_by_id = {r["id"]: r for r in (baseline or {}).get("tasks") or []}
@@ -600,16 +600,16 @@ def report_md(results: list[dict], baseline: dict | None, diff: dict, meta: dict
                      f"{r.get('cost_usd', 0):.2f} | {d_cost:+.2f} | {judge_cell} | "
                      f"{r.get('error') or ''} |")
     if diff.get("regressions"):
-        lines += ["", "## Regresje"]
+        lines += ["", "## Regressions"]
         for item in diff["regressions"]:
             lines.append(f"- {item['id']}: {item['detail']}")
     if diff.get("improvements"):
-        lines += ["", "## Poprawy"]
+        lines += ["", "## Improvements"]
         for item in diff["improvements"]:
             lines.append(f"- {item['id']}")
     if meta.get("kappa") is not None:
-        lines += ["", f"## Sędzia (N17): κ sędzia↔człowiek = {meta['kappa']:.2f} "
-                      f"({'≥ próg' if meta['kappa'] >= meta.get('kappa_min', 0.4) else 'PONIŻEJ progu'})"]
+        lines += ["", f"## Judge (N17): κ judge↔human = {meta['kappa']:.2f} "
+                      f"({'≥ threshold' if meta['kappa'] >= meta.get('kappa_min', 0.4) else 'BELOW threshold'})"]
     return "\n".join(lines) + "\n"
 
 
@@ -652,8 +652,8 @@ def _default_judge_model(args: argparse.Namespace, budget: dict) -> str:
     requested = args.judge_model or "auto"
     chosen = run_skill_evals.judge_model(requested, model) if requested == "auto" else requested
     if run_skill_evals.same_family(model, chosen):
-        raise SystemExit(f"✗ sędzia {chosen} jest tej samej rodziny co oceniany {model} (N17)")
-    # Jeśli „auto" wybrało rodzinę, zamień na pełen id z budget.json.
+        raise SystemExit(f"✗ judge {chosen} is of the same family as the evaluated {model} (N17)")
+    # If "auto" picked a family, replace it with the full id from budget.json.
     if chosen == "haiku":
         return budget["judge_model_haiku"]
     if chosen == "sonnet":
@@ -663,30 +663,30 @@ def _default_judge_model(args: argparse.Namespace, budget: dict) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--validate", action="store_true", help="sprawdza schematy zadań i rubryki (bez modelu)")
+    ap.add_argument("--validate", action="store_true", help="checks the task schemas and rubrics (no model)")
     ap.add_argument("--all", action="store_true")
-    ap.add_argument("--ids", help="lista id zadań albo glob-wzorców, oddzielone przecinkami")
+    ap.add_argument("--ids", help="list of task ids or glob patterns, comma-separated")
     ap.add_argument("--budget-usd", type=float)
     ap.add_argument("--per-task-budget-usd", type=float)
     ap.add_argument("--model", help="model persony (ocenianego)", default=None)
     ap.add_argument("--judge-model", default="auto",
-                    help="sędzia: 'auto' (inna rodzina), albo pełne id, np. claude-haiku-4-5-20251001")
+                    help="judge: 'auto' (a different family), or a full id, e.g. claude-haiku-4-5-20251001")
     ap.add_argument("--judge", choices=("on", "off"), default="on")
     ap.add_argument("--judge-timeout", type=int, default=60)
     ap.add_argument("--length-ratio", type=float, default=1.8)
-    ap.add_argument("--baseline", help="ścieżka do poprzedniego raportu JSON albo 'previous'")
+    ap.add_argument("--baseline", help="path to a previous JSON report or 'previous'")
     ap.add_argument("--save-baseline", action="store_true")
-    ap.add_argument("--yes", action="store_true", help="pomija pytanie o zgodę na koszt")
+    ap.add_argument("--yes", action="store_true", help="skips the cost consent question")
     ap.add_argument("--claude-bin", default=os.environ.get("CLAUDE_BIN") or "claude")
-    ap.add_argument("--repos", help="mapa repo=ścieżka, oddzielone przecinkami (np. sdlc-proba=~/..,sprintdeck=~/..)")
-    ap.add_argument("--work", help="katalog tymczasowy na zadania", default=None)
-    ap.add_argument("--out", help="katalog raportu (domyślnie tmp/flow-evals/runs/<ts>/)", default=None)
+    ap.add_argument("--repos", help="repo=path map, comma-separated (e.g. sdlc-proba=~/..,sprintdeck=~/..)")
+    ap.add_argument("--work", help="temporary directory for the tasks", default=None)
+    ap.add_argument("--out", help="report directory (default tmp/flow-evals/runs/<ts>/)", default=None)
     a = ap.parse_args(argv)
 
     budget = load_budget(EVALS)
     tasks = load_tasks(EVALS, ids=(a.ids.split(",") if a.ids else None))
     if not tasks and not a.validate:
-        print(f"✗ brak zadań w {EVALS}/ (ids={a.ids})")
+        print(f"✗ no tasks in {EVALS}/ (ids={a.ids})")
         return 1
 
     if a.validate:
@@ -696,28 +696,28 @@ def main(argv: list[str] | None = None) -> int:
         for e in errs:
             print(f"✗ {e}")
         total_tasks = len(tasks or load_tasks(EVALS))
-        print(f"{'✓' if not errs else '✗'} {total_tasks} zadań — walidacja {'OK' if not errs else 'z błędami'}")
+        print(f"{'✓' if not errs else '✗'} {total_tasks} tasks — validation {'OK' if not errs else 'with errors'}")
         return 1 if errs else 0
 
-    # Prognoza kosztu + zgoda (--yes zdejmuje bramkę)
+    # Cost forecast + consent (--yes lifts the gate)
     est = estimate_cost(tasks, budget)
     budget_usd = a.budget_usd or budget["budget_usd"]
-    print(f"Prognoza kosztu przebiegu {len(tasks)} zadań: {est:.2f} USD (budżet: {budget_usd:.2f} USD)")
+    print(f"Cost forecast of a run of {len(tasks)} tasks: {est:.2f} USD (budget: {budget_usd:.2f} USD)")
     if not a.yes:
-        reply = input("Uruchamiam? [y/N]: ").strip().lower()
+        reply = input("Run? [y/N]: ").strip().lower()
         if reply not in ("y", "yes", "tak", "t"):
-            print("Przerwano.")
+            print("Aborted.")
             return 0
 
-    # Sędzia (N17: oceniany ≠ sędzia)
+    # Judge (N17: evaluated ≠ judge)
     try:
         judge_model = _default_judge_model(a, budget) if a.judge == "on" else "off"
     except SystemExit:
         raise
-    print(f"Sędzia: {judge_model}")
+    print(f"Judge: {judge_model}")
 
-    # Ścieżki muszą być absolutne — _run_script używa cwd=work, a str(artifact) z relatywnej Path daje
-    # arg relatywny, który subprocess rozwiąże względem work → podwójna ścieżka, FileNotFoundError.
+    # Paths must be absolute — _run_script uses cwd=work, and str(artifact) of a relative Path gives
+    # a relative arg, which the subprocess resolves against work → a doubled path, FileNotFoundError.
     workdir_root = (Path(a.work).expanduser() if a.work else Path("tmp") / "flow-evals" / "work").resolve()
     workdir_root.mkdir(parents=True, exist_ok=True)
     out_dir = (Path(a.out).expanduser() if a.out else
@@ -744,13 +744,13 @@ def main(argv: list[str] | None = None) -> int:
     (out_dir / "report.md").write_text(md, encoding="utf-8")
     (out_dir / "report.json").write_text(json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
     print(md)
-    print(f"✓ raport w {out_dir}/")
+    print(f"✓ report in {out_dir}/")
 
     if a.save_baseline:
         Path("tmp/flow-evals/baselines").mkdir(parents=True, exist_ok=True)
         base_file = Path("tmp/flow-evals/baselines") / f"{meta['model']}.json"
         base_file.write_text(json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
-        print(f"✓ baseline zapisany w {base_file}")
+        print(f"✓ baseline saved in {base_file}")
 
     if diff["flags"] and any(f.startswith(("pass_rate_drop", "cost_rise")) for f in diff["flags"]):
         return 1

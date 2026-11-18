@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""`profile.py` bez argumentów: lista profili z opisem z `config.yaml` (klucz `description`), a `--team-only`
-przełącza tylko zespół (bez `.claude/settings.local.json`). Uruchamia `--dry-run`, niczego nie zapisuje.
+"""`profile.py` without arguments: a list of profiles with the description from `config.yaml` (the `description` key), and `--team-only`
+switches the team only (without `.claude/settings.local.json`). Runs `--dry-run`, writes nothing.
 python3 .claude/tests/test_profile_show.py"""
 import subprocess
 import sys
@@ -10,7 +10,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory
 
 
 def main() -> int:
-    import importlib.util   # nie `import profile` — nazwa zderza się z modułem biblioteki standardowej
+    import importlib.util   # not `import profile` — the name collides with a standard library module
     spec = importlib.util.spec_from_file_location("tf_profile", ROOT / ".tf" / "factory" / "profile.py")
     prof_mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(prof_mod)
@@ -29,15 +29,15 @@ def main() -> int:
     for name, p in profiles.items():
         desc = p.get("description", "")
         check(desc and any(name in line and desc in line for line in r.stdout.splitlines()),
-              f"PS-1: profil {name} wyświetlony z opisem „{desc}”: {r.stdout}")
+              f"PS-1: profile {name} shown with the description '{desc}': {r.stdout}")
     name = next(iter(profiles))
     r = subprocess.run([sys.executable, str(ROOT / ".tf/factory/profile.py"), name, "--dry-run", "--team-only"],
                        capture_output=True, text=True, encoding="utf-8", cwd=ROOT)
     check(r.returncode == 0 and profiles[name].get("description", "") in r.stdout and "effortLevel" not in r.stdout,
-          f"PS-2: --team-only --dry-run: nagłówek z opisem profilu, bez zmian sesji: {r.returncode} {r.stdout}{r.stderr}")
+          f"PS-2: --team-only --dry-run: a header with the profile description, no session changes: {r.returncode} {r.stdout}{r.stderr}")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów listy profili")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} profile list tests")
     return 1 if fails else 0
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Testy triażu zgłoszenia z pdi (tryb mode-pdi, skill pdi-decisions, scripts/triage_pdi.py): wejście PRB w JSON
-sprawdzane schematem kontraktu pdi (problem.schema.json), rekomendacja w stanach pdi (R7) z polami wymaganymi
-przy danym stanie i stanem tf z tabeli mapowania — schemat triage-recommendation.schema.json z kontraktu pdi (wersja w fixtures/pdi-contract/VERSION). python3 .claude/tests/test_triage_pdi.py"""
+"""Tests of triaging a pdi report (mode-pdi, skill pdi-decisions, scripts/triage_pdi.py): PRB input as JSON
+checked against the pdi contract schema (problem.schema.json), a recommendation in pdi states (R7) with the fields required
+for a given state and the tf state from the mapping table — the triage-recommendation.schema.json schema from the pdi contract (version in fixtures/pdi-contract/VERSION). python3 .claude/tests/test_triage_pdi.py"""
 import json
 import os
 import subprocess
@@ -21,7 +21,7 @@ def run(args, cwd):
 
 
 def new_problem(**changes) -> dict:
-    """Przykład z kontraktu jako zgłoszenie przed triażem (bez zmiany i decyzji)."""
+    """The contract example as a report before triage (no change and no decision)."""
     p = json.loads((FIX / "problem.json").read_text(encoding="utf-8"))
     for k in ("change", "triage_decision"):
         p.pop(k, None)
@@ -50,13 +50,13 @@ def main() -> int:
               == json.loads((FIX / name).read_text(encoding="utf-8")) and contract,
               f"P-0: {name} obok skryptu = kopia z kontraktu pdi {contract}")
     sys.path.insert(0, str(SCRIPT.parent))
-    from decision_record import validate   # walidator tf musi rozumieć schemat z kontraktu
+    from decision_record import validate   # the tf validator must understand the contract schema
     rschema = json.loads((FIX / "triage-recommendation.schema.json").read_text(encoding="utf-8"))
     example = json.loads((FIX / "triage-recommendation.json").read_text(encoding="utf-8"))
-    check(validate(example, rschema, "") == [], f"K-1: przykład rekomendacji z kontraktu przechodzi walidator tf: "
+    check(validate(example, rschema, "") == [], f"K-1: the recommendation example from the contract passes the tf validator: "
           f"{validate(example, rschema, '')}")
     check(validate({**example, "executor": "human"}, rschema, ""),
-          "K-2: wykonawca human przy tf_state ready-for-agent → błąd (mapowanie z kontraktu)")
+          "K-2: executor human with tf_state ready-for-agent → error (mapping from the contract)")
     check(validate("wontfix", {"enum": ["ready-for-agent", "ready-for-human"]}, "tf_state")
           and validate("ready-for-human", {"enum": ["ready-for-agent", "ready-for-human"]}, "tf_state") == [],
           "K-3: walidator tf sprawdza enum bez type (tak jest w warunku accepted w kontrakcie)")
@@ -70,20 +70,20 @@ def main() -> int:
 
         prb = write("prb.json", new_problem())
         r = run(["check", prb], d)
-        check(r.returncode == 0, f"P-1: zgłoszenie z kontraktu (status new) przechodzi check: {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"P-1: report from the contract (status new) passes check: {r.stdout}{r.stderr}")
         bad = {
             "brak who": (new_problem(who=None), "who"),
-            "zły klucz": (new_problem(id="prb-34"), "prb-34"),
+            "bad key": (new_problem(id="prb-34"), "prb-34"),
             "nieznane pole": (new_problem(priority="high"), "priority"),
             "rejected bez powodu": (new_problem(status="rejected"), "rejection_reason"),
-            "zły kanał": (new_problem(channel="email"), "email"),
-            "triaż już był": (new_problem(status="accepted", change="CHG-12"), "accepted"),
+            "bad channel": (new_problem(channel="email"), "email"),
+            "already triaged": (new_problem(status="accepted", change="CHG-12"), "accepted"),
         }
         for label, (data, needle) in bad.items():
             r = run(["check", write("bad.json", data)], d)
             check(r.returncode == 1 and needle in r.stdout, f"P-2 check odrzuca: {label}: {r.stdout}{r.stderr}")
         r = run(["check", write("bad.json", {"id": "PRB-1"})], d)
-        check(r.returncode == 1 and "Traceback" not in r.stderr, f"P-3: niepełne zgłoszenie bez wyjątku: {r.stderr[-200:]}")
+        check(r.returncode == 1 and "Traceback" not in r.stderr, f"P-3: incomplete report without an exception: {r.stderr[-200:]}")
         (d / "zly.json").write_text("{nie json", encoding="utf-8")
         r = run(["check", "zly.json"], d)
         check(r.returncode == 1 and "JSON" in r.stdout, f"P-4: niepoprawny JSON: {r.stdout}{r.stderr}")
@@ -107,7 +107,7 @@ def main() -> int:
         check(ev == {"observation", "ai_inference"}, f"R-2: dowody z epistemic_status: {out.get('evidence')}")
         r, out = rec("--status", "accepted", "--executor", "human", "--rationale", "wymaga decyzji o cenniku",
                      "--brief", "brief")
-        check(out.get("tf_state") == "ready-for-human", f"R-3: accepted z człowiekiem → ready-for-human: {out}")
+        check(out.get("tf_state") == "ready-for-human", f"R-3: accepted with a human → ready-for-human: {out}")
         r, out = rec("--status", "clarifying", "--rationale", "nie wiadomo, które ładowarki",
                      "--question", "Ile ładowarek zmieniasz naraz?", "--question", "Jakie parametry?")
         check(out.get("tf_state") == "needs-info" and len(out.get("questions", [])) == 2,
@@ -129,15 +129,15 @@ def main() -> int:
               f"R-8: odrzucenie z wpisem w .out-of-scope/: {r.stdout}{r.stderr}")
 
         missing = {
-            "clarifying bez pytań": (["--status", "clarifying", "--rationale", "x"], "question"),
+            "clarifying without questions": (["--status", "clarifying", "--rationale", "x"], "question"),
             "rejected bez powodu": (["--status", "rejected", "--rationale", "x"], "reason"),
-            "zły powód": (["--status", "rejected", "--reason", "too_hard", "--rationale", "x"], "too_hard"),
+            "bad reason": (["--status", "rejected", "--reason", "too_hard", "--rationale", "x"], "too_hard"),
             "parked bez progu": (["--status", "parked", "--rationale", "x"], "return-when"),
-            "duplicate bez oryginału": (["--status", "duplicate", "--rationale", "x"], "duplicate-of"),
+            "duplicate without original": (["--status", "duplicate", "--rationale", "x"], "duplicate-of"),
             "duplikat samego siebie": (["--status", "duplicate", "--duplicate-of", "PRB-34", "--rationale", "x"], "PRB-34"),
             "accepted bez briefu": (["--status", "accepted", "--rationale", "x"], "brief"),
             "bez uzasadnienia": (["--status", "parked", "--return-when", "x"], "rationale"),
-            "stan wejściowy": (["--status", "new", "--rationale", "x"], "new"),
+            "input state": (["--status", "new", "--rationale", "x"], "new"),
             "out_of_scope bez pliku": (["--status", "rejected", "--reason", "out_of_scope_recorded", "--rationale", "x"],
                                        ".out-of-scope"),
         }
@@ -146,14 +146,14 @@ def main() -> int:
             check(r.returncode == 1 and needle in r.stdout + r.stderr, f"R-9 odrzuca: {label}: {r.stdout}{r.stderr}")
         r = run(["recommend", write("acc.json", new_problem(status="accepted", change="CHG-12")), "--status", "parked",
                  "--return-when", "x", "--rationale", "x"], d)
-        check(r.returncode == 1, f"R-10: rekomendacja dla zgłoszenia po triażu → błąd: {r.stdout}")
+        check(r.returncode == 1, f"R-10: recommendation for a report after triage → error: {r.stdout}")
         r = run(["recommend", prb, "--status", "parked", "--return-when", "x", "--rationale", "x", "--out", "rec.json"], d)
         saved = json.loads((d / "rec.json").read_text(encoding="utf-8")) if (d / "rec.json").is_file() else {}
         check(r.returncode == 0 and saved.get("recommended_status") == "parked", f"R-11: --out zapisuje JSON: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów triażu zgłoszeń z pdi")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of triaging pdi reports")
     return 1 if fails else 0
 
 

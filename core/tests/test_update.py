@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy update.py: pobieranie nowej wersji (z repozytorium git domyślnie najnowsze wydanie, tag vX.Y.Z) i komunikat
-o nowszym wydaniu przy starcie sesji (notice, hook update_notice.py)."""
+"""Tests of update.py: fetching a new version (from a git repository the latest release by default, tag vX.Y.Z) and the message
+about a newer release at session start (notice, the update_notice.py hook)."""
 import importlib.util
 import json
 import os
@@ -33,7 +33,7 @@ def make_repo(base: Path, name: str, versions: list[tuple[str, str | None]]) -> 
     (work / "core" / "factory" / "install.py").write_text("")
     (work / "core" / "factory" / "CHANGELOG.md").write_text("# Changelog\n")
     (work / "docs").mkdir()
-    (work / "docs" / "notes.md").write_text("duży katalog, którego --check nie pobiera\n")
+    (work / "docs" / "notes.md").write_text("a big directory that --check does not fetch\n")
     git(work, "init", "-q", "-b", "main")
     for version, tag in versions:
         (work / "core" / "factory" / "VERSION").write_text(version + "\n")
@@ -57,7 +57,7 @@ def project(base: Path, name: str, version: str, source: str | None) -> Path:
 
 
 def factory_dir(base: Path, name: str, version: str) -> Path:
-    """Źródło fabryki (katalog) w układzie repozytorium: core/factory/install.py i core/factory/VERSION."""
+    """A factory source (a directory) in the repository layout: core/factory/install.py and core/factory/VERSION."""
     d = base / name
     (d / "core" / "factory").mkdir(parents=True)
     (d / "core" / "factory" / "install.py").write_text("")
@@ -74,33 +74,33 @@ def notice_tests(up, check) -> None:
         p = project(base, "app", "2.19.0", str(src))
         msg = up.notice(p, env=env, cache_dir=cache, now=1000.0)
         check(msg and "2.20.0" in msg and "2.19.0" in msg and "update.py" in msg,
-              f"UN-1: nowsze wydanie w źródle (katalog) → komunikat z wersjami i poleceniem: {msg}")
+              f"UN-1: a newer release in the source (directory) → a message with the versions and the command: {msg}")
         check(up.notice(project(base, "same", "2.20.0", str(src)), env=env, cache_dir=cache, now=1000.0) is None,
-              "UN-2: ta sama wersja → brak komunikatu")
+              "UN-2: the same version → no message")
         bare = base / "bare"
         (bare / ".claude").mkdir(parents=True)
-        check(up.notice(bare, env=env, cache_dir=cache, now=1000.0) is None, "UN-3: brak manifestu (repo fabryki) → brak")
+        check(up.notice(bare, env=env, cache_dir=cache, now=1000.0) is None, "UN-3: no manifest (the factory repo) → none")
         check(up.notice(p, env={**env, "CTF_UPDATE_CHECK": "0"}, cache_dir=cache, now=1000.0) is None,
-              "UN-4: CTF_UPDATE_CHECK=0 wyłącza sprawdzanie")
+              "UN-4: CTF_UPDATE_CHECK=0 disables the check")
         (src / "core" / "factory" / "VERSION").write_text("3.0.0\n")
         msg = up.notice(p, env=env, cache_dir=cache, now=1000.0 + 3600)
-        check(msg and "2.20.0" in msg, f"UN-5: w ciągu doby wynik z pamięci podręcznej (bez ponownego pytania): {msg}")
+        check(msg and "2.20.0" in msg, f"UN-5: within a day the result comes from the cache (no repeated query): {msg}")
         msg = up.notice(p, env=env, cache_dir=cache, now=1000.0 + 2 * 86400)
-        check(msg and "3.0.0" in msg and "MAJOR" in msg, f"UN-6: po dobie sprawdza ponownie; wydanie MAJOR oznaczone: {msg}")
+        check(msg and "3.0.0" in msg and "MAJOR" in msg, f"UN-6: after a day it checks again; a MAJOR release is marked: {msg}")
         z = base / "fabryka.zip"
         with zipfile.ZipFile(z, "w") as zf:
             zf.writestr("team-factory-main/core/factory/VERSION", "2.21.0\n")
             zf.writestr("team-factory-main/core/factory/install.py", "")
         msg = up.notice(project(base, "zip", "2.19.0", str(z)), env=env, cache_dir=cache, now=1000.0)
-        check(msg and "2.21.0" in msg, f"UN-7: źródło .zip → wersja z core/factory/VERSION w archiwum: {msg}")
+        check(msg and "2.21.0" in msg, f"UN-7: a .zip source → the version from core/factory/VERSION in the archive: {msg}")
         envsrc = factory_dir(base, "z-env", "2.22.0")
         msg = up.notice(project(base, "env", "2.19.0", str(src)), env={**env, "TEAM_FACTORY": str(envsrc)},
                         cache_dir=cache, now=1000.0)
-        check(msg and "2.22.0" in msg, f"UN-8: TEAM_FACTORY ma pierwszeństwo przed manifestem: {msg}")
-        check(up.notice(project(base, "gone", "2.19.0", str(base / "nie-ma")), env=env, cache_dir=cache,
-                        now=1000.0) is None, "UN-9: niedostępne źródło → brak komunikatu, bez wyjątku")
+        check(msg and "2.22.0" in msg, f"UN-8: TEAM_FACTORY takes precedence over the manifest: {msg}")
+        check(up.notice(project(base, "gone", "2.19.0", str(base / "missing")), env=env, cache_dir=cache,
+                        now=1000.0) is None, "UN-9: an unavailable source → no message, no exception")
 
-        # Hook SessionStart w projekcie: komunikat widoczny dla człowieka (systemMessage) i w kontekście agenta.
+        # SessionStart hook in a project: the message is visible to the human (systemMessage) and in the agent's context.
         app = project(base, "hook-app", "2.19.0", str(factory_dir(base, "hook-src", "2.20.0")))
         (app / ".tf" / "factory").mkdir(parents=True)
         shutil.copy(ROOT / ".tf" / "factory" / "update.py", app / ".tf" / "factory" / "update.py")
@@ -115,11 +115,11 @@ def notice_tests(up, check) -> None:
             out = {}
         check(r.returncode == 0 and "2.20.0" in out.get("systemMessage", "")
               and "2.20.0" in out.get("hookSpecificOutput", {}).get("additionalContext", ""),
-              f"UN-10: hook pokazuje komunikat człowiekowi i agentowi: {r.stdout}{r.stderr}")
+              f"UN-10: the hook shows the message to the human and the agent: {r.stdout}{r.stderr}")
         r = subprocess.run([sys.executable, str(app / ".claude" / "hooks" / "update_notice.py")], capture_output=True,
                            text=True, env={**env, "CLAUDE_PROJECT_DIR": str(bare)}, input="{}", timeout=30)
-        check(r.returncode == 0 and r.stdout.strip() == "", f"UN-11: nic do powiedzenia → hook milczy: {r.stdout}{r.stderr}")
-        # bramka jakości bez konfiguracji: start sesji mówi o tym wprost (tylko w projekcie z fabryką)
+        check(r.returncode == 0 and r.stdout.strip() == "", f"UN-11: nothing to say → the hook is silent: {r.stdout}{r.stderr}")
+        # the quality gate without configuration: the session start says so explicitly (only in a project with the factory)
         gated = base / "gate-app"
         (gated / ".claude" / "hooks").mkdir(parents=True)
         (gated / ".claude" / "factory-manifest.json").write_text("{}")
@@ -130,7 +130,7 @@ def notice_tests(up, check) -> None:
                            text=True, env={**genv, "CLAUDE_PROJECT_DIR": str(gated), "CTF_UPDATE_CHECK": "0"},
                            input="{}", timeout=30)
         check(r.returncode == 0 and "Quality gate disabled" in r.stdout and "systemMessage" in r.stdout,
-              f"UN-12: brak quality-gate.json → komunikat przy starcie sesji: {r.stdout}{r.stderr}")
+              f"UN-12: no quality-gate.json → a message at session start: {r.stdout}{r.stderr}")
         (gated / ".claude" / "quality-gate.json").write_text(json.dumps({"command": "npm test"}))
         r = subprocess.run([sys.executable, str(gated / ".claude" / "hooks" / "update_notice.py")], capture_output=True,
                            text=True, env={**genv, "CLAUDE_PROJECT_DIR": str(gated), "CTF_UPDATE_CHECK": "0"},
@@ -139,25 +139,25 @@ def notice_tests(up, check) -> None:
 
 
 def preflight_tests(up, check) -> None:
-    """Piaskownica Bash agenta blokuje zapis do skilli, agentów i ustawień: aktualizacja ma to wykryć przed pierwszym
-    zapisem, a nie zostawić instalacji w połowie (root w testach omija chmod, więc blokadę udaje plik zamiast katalogu)."""
+    """The agent's Bash sandbox blocks writes to skills, agents and settings: an update has to detect this before the first
+    write, not leave the installation half done (root in tests bypasses chmod, so the block is faked by a file instead of a directory)."""
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
         for rel in (".claude/hooks", ".claude/agents/_generated", "factory"):
             (root / rel).mkdir(parents=True)
         (root / ".claude" / "settings.json").write_text("{}")
         check(up.unwritable(root) == [], f"PF-1: zapisywalny projekt → pusta lista: {up.unwritable(root)}")
-        check(not list(root.rglob(".ctf-probe-*")), "PF-2: próba zapisu nie zostawia plików")
+        check(not list(root.rglob(".ctf-probe-*")), "PF-2: the write probe leaves no files")
         (root / ".claude" / "skills").write_text("")
         (root / "CLAUDE.md").mkdir()
         got = up.unwritable(root)
-        check(got == [".claude/skills/", "CLAUDE.md"], f"PF-3: niezapisywalne ścieżki wymienione z nazwy: {got}")
+        check(got == [".claude/skills/", "CLAUDE.md"], f"PF-3: unwritable paths listed by name: {got}")
         code, msg = up.preflight(root, "python3 .tf/factory/update.py --yes")
         check(code == 2 and ".claude/skills/" in msg and "python3 .tf/factory/update.py --yes" in msg,
-              f"PF-4: komunikat każe człowiekowi uruchomić polecenie samemu: {code} {msg}")
+              f"PF-4: the message tells the human to run the command themselves: {code} {msg}")
         (root / ".claude" / "skills").unlink()
         (root / "CLAUDE.md").rmdir()
-        check(up.preflight(root, "x") == (0, ""), "PF-5: bez blokad aktualizacja idzie dalej")
+        check(up.preflight(root, "x") == (0, ""), "PF-5: without blocks the update goes on")
 
 
 def main() -> int:
@@ -173,7 +173,7 @@ def main() -> int:
     notice_tests(up, check)
     preflight_tests(up, check)
     if not shutil.which("git"):
-        print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów update.py (brak git — pominięto część)")
+        print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} update.py tests (no git — part skipped)")
         return 1 if fails else 0
 
     def version_of(src: str, tmp: Path) -> str:
@@ -183,39 +183,39 @@ def main() -> int:
         base = Path(d)
         repo = make_repo(base, "factory", [("1.0.0", "v1.0.0"), ("1.10.0", "v1.10.0"), ("1.9.0", "v1.9.0"),
                                            ("2.0.0-rc.1", "v2.0.0-rc.1"), ("2.0.0-dev", None)])
-        check(up.latest_tag(repo) == "v1.10.0", f"najwyższe wydanie wg SemVer, bez rc: {up.latest_tag(repo)}")
+        check(up.latest_tag(repo) == "v1.10.0", f"the highest release by SemVer, without rc: {up.latest_tag(repo)}")
         for i, (src, want, msg) in enumerate((
-                (repo, "1.10.0", "bez #ref → najnowsze wydanie, nie stan main"),
-                (repo + "#main", "2.0.0-dev", "#main → gałąź wprost"),
-                (repo + "#v1.0.0", "1.0.0", "#tag → ta wersja"))):
+                (repo, "1.10.0", "without #ref → the latest release, not the state of main"),
+                (repo + "#main", "2.0.0-dev", "#main → the branch directly"),
+                (repo + "#v1.0.0", "1.0.0", "#tag → that version"))):
             tmp = base / f"t{i}"
             tmp.mkdir()
             got = version_of(src, tmp)
             check(got == want, f"{msg}: {got}")
         untagged = make_repo(base, "untagged", [("0.1.0", None)])
-        check(up.latest_tag(untagged) is None, "repozytorium bez tagów → brak wydania")
+        check(up.latest_tag(untagged) is None, "a repository without tags → no release")
         (base / "t9").mkdir()
-        check(version_of(untagged, base / "t9") == "0.1.0", "bez tagów → domyślna gałąź")
-        check(up.latest_tag(str(base / "brak.git")) is None, "niedostępne repozytorium → None, bez wyjątku")
+        check(version_of(untagged, base / "t9") == "0.1.0", "without tags → the default branch")
+        check(up.latest_tag(str(base / "missing.git")) is None, "an unavailable repository → None, no exception")
         cache = base / "cache"
         for i, (src, want, msg) in enumerate((
-                (repo, "1.10.0", "UN-12: źródło git → komunikat o najnowszym wydaniu (tag)"),
-                (repo + "#v1.0.0", None, "UN-13: źródło przypięte do #ref → brak komunikatu"),
-                (str(base / "brak.git"), None, "UN-14: niedostępne repozytorium → brak komunikatu"))):
+                (repo, "1.10.0", "UN-12: a git source → a message about the latest release (tag)"),
+                (repo + "#v1.0.0", None, "UN-13: a source pinned to #ref → no message"),
+                (str(base / "missing.git"), None, "UN-14: an unavailable repository → no message"))):
             got = up.notice(project(base, f"g{i}", "1.0.0", src), env={"PATH": os.environ.get("PATH", "")},
                             cache_dir=cache, now=1000.0)
             check((got is None) if want is None else (got and want in got), f"{msg}: {got}")
 
-        # UP-1: --check pobiera tylko VERSION, CHANGELOG i install.py (nie całe repozytorium)
+        # UP-1: --check fetches only VERSION, CHANGELOG and install.py (not the whole repository)
         (base / "m1").mkdir()
         meta = up.fetch(repo, base / "m1", meta_only=True)
         check((meta / "core/factory/VERSION").read_text().strip() == "1.10.0" and (meta / "core/factory/CHANGELOG.md").is_file()
               and not (meta / "docs" / "notes.md").exists(),
-              f"UP-1: --check pobiera tylko wersję i listę zmian: {sorted(p.relative_to(meta).as_posix() for p in meta.rglob('*') if p.is_file() and '.git' not in p.parts)}")
+              f"UP-1: --check fetches only the version and the change list: {sorted(p.relative_to(meta).as_posix() for p in meta.rglob('*') if p.is_file() and '.git' not in p.parts)}")
         (base / "m2").mkdir()
-        check((up.fetch(repo, base / "m2") / "docs" / "notes.md").is_file(), "UP-1: pełna aktualizacja pobiera całość")
+        check((up.fetch(repo, base / "m2") / "docs" / "notes.md").is_file(), "UP-1: a full update fetches everything")
 
-    # UP-2: testy fabryki równolegle — wynik ten sam, czas krótszy
+    # UP-2: factory tests in parallel — the same result, a shorter time
     import time
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
@@ -227,24 +227,24 @@ def main() -> int:
         t0 = time.time()
         failed = up.run_tests(root, workers=4)
         check(failed == ["test_zly.py"] and time.time() - t0 < 3.5,
-              f"UP-2: równoległe testy: czerwone {failed}, czas {time.time() - t0:.1f} s (po kolei ≥ 4 s)")
+              f"UP-2: parallel tests: red {failed}, time {time.time() - t0:.1f} s (sequentially ≥ 4 s)")
 
-        # UP-3: szybka kontrola po aktualizacji: build.py check i kompilacja skryptów silnika i hooków
+        # UP-3: a quick check after an update: build.py check and compiling the engine and hook scripts
         (root / ".tf" / "factory").mkdir(parents=True)
         (root / ".tf" / "factory" / "build.py").write_text("import sys\nsys.exit(0)\n")
         (root / ".claude" / "hooks").mkdir()
         (root / ".claude" / "hooks" / "dobry.py").write_text("x = 1\n")
-        check(up.quick_check(root) == [], f"UP-3: zdrowa instalacja — bez uwag: {up.quick_check(root)}")
+        check(up.quick_check(root) == [], f"UP-3: a healthy installation — no remarks: {up.quick_check(root)}")
         (root / ".claude" / "hooks" / "zly.py").write_text("def (:\n")
         probs = up.quick_check(root)
-        check(any("zly.py" in x for x in probs), f"UP-3: błąd składni w hooku wykryty: {probs}")
+        check(any("zly.py" in x for x in probs), f"UP-3: a syntax error in a hook detected: {probs}")
         (root / ".tf" / "factory" / "build.py").write_text("import sys\nprint('✗ brak skilla')\nsys.exit(1)\n")
         probs = up.quick_check(root)
         check(any("build.py check" in x for x in probs), f"UP-3: czerwony build.py check wykryty: {probs}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów update.py")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} update.py tests")
     return 1 if fails else 0
 
 

@@ -164,7 +164,7 @@ def _vet(url: str, env=None):
     try:
         parts = urllib.parse.urlsplit(url)
         host = parts.hostname
-        parts.port  # noqa: B018 — zły port rzuca ValueError
+        parts.port  # noqa: B018 — a bad port raises ValueError
     except ValueError as e:
         return f"invalid address: {e}", None
     if parts.scheme.lower() not in ("http", "https"):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Kawałek zablokowany zamiast STOP (krok F3, przełącznik `loop.blocked_slices`): pytanie blokuje tylko swój
-kawałek, skrypt mówi, który kawałek można robić dalej, a pytania i odpowiedzi zapisuje w `events.jsonl` zadania.
+"""A blocked slice instead of STOP (step F3, the `loop.blocked_slices` switch): a question blocks only its own
+slice, the script says which slice can be done next, and records the questions and answers in the task's `events.jsonl`.
 python3 .claude/tests/test_work_events.py"""
 import json
 import os
@@ -32,7 +32,7 @@ def call(project: Path, script: Path, *args: str) -> subprocess.CompletedProcess
 
 
 def new_run(project: Path, plan: str = PLAN) -> str:
-    """Zadanie IMP-1 gotowe do pętli kawałka: waga zwykła, tryb Auto, specyfikacja, brak flagi, plan."""
+    """Task IMP-1 ready for the slice loop: normal weight, Auto mode, a spec, no flag, a plan."""
     project.mkdir(parents=True)
     for name in ("fees.py", "msg.py", "i18n.py", "report.py"):
         (project / name).write_text("x = 1\n", encoding="utf-8")
@@ -43,7 +43,7 @@ def new_run(project: Path, plan: str = PLAN) -> str:
     doc = project / CHANGES / "IMP-1"
     (doc / "spec.md").write_text(SPEC, encoding="utf-8")
     (doc / "plan.md").write_text(plan, encoding="utf-8")
-    call(project, SCRIPTS / "run_state.py", "flag", d, "none", "--reason", "bez flagi, bo zmiana jest w konfiguracji")
+    call(project, SCRIPTS / "run_state.py", "flag", d, "none", "--reason", "no flag, because the change is in configuration")
     return d
 
 
@@ -64,7 +64,7 @@ def events(project: Path) -> list[dict]:
 
 def done(project: Path, d: str, slice_id: str, file: str) -> None:
     call(project, TASK, "verify", "IMP-1", slice_id, "--files", file, "--command", OK)
-    call(project, SCRIPTS / "run_state.py", "step", d, slice_id, "R1", "scope", "pass")   # przegląd zakresu przed tick
+    call(project, SCRIPTS / "run_state.py", "step", d, slice_id, "R1", "scope", "pass")   # scope review before the tick
     call(project, SCRIPTS / "run_state.py", "tick", d, slice_id)
 
 
@@ -82,59 +82,59 @@ def main() -> int:
         p = Path(t) / "proj"
         d = new_run(p)
 
-        # przełącznik wyłączony (domyślnie): pętla działa jak dotąd — pytanie to blok STOP
+        # the switch off (default): the loop works as before — a question is a STOP block
         r = call(p, rs, "block", d, "K1", "--question", QUESTION)
         check(r.returncode == 2 and "loop.blocked_slices" in r.stdout and "--code question" in r.stdout
               and not events(p) and (task(p).get("slices") or {}).get("K1", {}).get("state") != "blocked",
-              f"WE-1: bez przełącznika `block` odmawia i wskazuje STOP z kodem pytanie: {r.returncode} {r.stdout}")
+              f"WE-1: without the switch `block` refuses and points to STOP with the code question: {r.returncode} {r.stdout}")
         call(p, rs, "step", d, "K1", "R1", "test", "run")
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
-        check(r.returncode == 0, f"WE-2: bez przełącznika STOP z kodem pytanie przechodzi jak dotąd: {r.returncode} {r.stdout}")
+        check(r.returncode == 0, f"WE-2: without the switch STOP with the code question passes as before: {r.returncode} {r.stdout}")
         call(p, rs, "step", d, "K1", "R1", "test", "run")
 
         switch(p, True)
-        # STOP z pytaniem o bieżący kawałek, gdy jest kawałek niezależny → odmowa z podpowiedzią `block`
+        # STOP with a question about the current slice when an independent slice exists → a refusal with a `block` hint
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
         check(r.returncode == 2 and "block" in r.stdout and "K2" in r.stdout and "--task" in r.stdout,
-              f"WE-3: z przełącznikiem STOP z pytaniem o jeden kawałek jest odrzucany, gdy jest co robić dalej: {r.returncode} {r.stdout}")
+              f"WE-3: with the switch a STOP with a question about one slice is rejected when there is something else to do: {r.returncode} {r.stdout}")
         r = call(p, rs, "block", d, "K1", "--question", QUESTION)
         ev = events(p)
         check(r.returncode == 0 and "Next: K2" in r.stdout and task(p)["slices"]["K1"].get("state") == "blocked"
               and task(p)["slices"]["K1"].get("reason") == QUESTION,
-              f"WE-4: block blokuje tylko K1 i wskazuje niezależny kawałek K2: {r.returncode} {r.stdout} {task(p).get('slices')}")
+              f"WE-4: block blocks only K1 and points to the independent slice K2: {r.returncode} {r.stdout} {task(p).get('slices')}")
         check(len(ev) == 1 and ev[0].get("type") == "question" and ev[0].get("slice") == "K1"
               and ev[0].get("text") == QUESTION and ev[0].get("by") == "process:tf" and ev[0].get("at"),
               f"WE-5: pytanie zapisane w events.jsonl zadania (kto, kiedy, co): {ev}")
         r = call(p, TASK, "list")
         check("waiting for you" in r.stdout and "K1" in r.stdout and QUESTION in r.stdout,
-              f"WE-6: pytanie zablokowanego kawałka jest na liście „czeka na Ciebie”: {r.stdout}")
+              f"WE-6: the blocked slice's question is on the 'waiting for you' list: {r.stdout}")
 
-        # kolejność wg zależności: K3 (bez dopisku) zależy od K2, K4 zależy od zablokowanego K1
+        # order by dependencies: K3 (without a suffix) depends on K2, K4 depends on the blocked K1
         done(p, d, "K2", "msg.py")
         r = call(p, rs, "next", d)
-        check(r.returncode == 0 and "Next: K3" in r.stdout, f"WE-7: po K2 kolej na K3 (zależy od poprzedniego): {r.stdout}")
+        check(r.returncode == 0 and "Next: K3" in r.stdout, f"WE-7: after K2 comes K3 (it depends on the previous one): {r.stdout}")
         done(p, d, "K3", "i18n.py")
         r = call(p, rs, "next", d)
         check(r.returncode == 0 and "Next: STOP" in r.stdout and QUESTION in r.stdout and "--code question" in r.stdout
               and "K4" in r.stdout,
-              f"WE-8: gdy nic niezależnego nie zostało (K4 czeka na K1) → STOP z listą pytań: {r.stdout}")
+              f"WE-8: when nothing independent is left (K4 waits for K1) → STOP with a list of questions: {r.stdout}")
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
-        check(r.returncode == 0, f"WE-9: STOP z pytaniem przechodzi, gdy nie ma już kawałka do zrobienia: {r.returncode} {r.stdout}")
+        check(r.returncode == 0, f"WE-9: STOP with a question passes when there is no slice left to do: {r.returncode} {r.stdout}")
 
-        # odpowiedź człowieka odblokowuje kawałek
+        # the human's answer unblocks the slice
         r = call(p, rs, "answer", d, "K1", "Nie, tylko postój jednorazowy")
         check(r.returncode == 2 and "human:" in r.stdout and task(p)["slices"]["K1"].get("state") == "blocked",
-              f"WE-10: odpowiedź zapisuje się z identyfikatorem człowieka (--by human:<id>): {r.returncode} {r.stdout}")
+              f"WE-10: the answer is recorded with the human's identifier (--by human:<id>): {r.returncode} {r.stdout}")
         r = call(p, rs, "answer", d, "K1", "Nie, tylko postój jednorazowy", "--by", "human:anna")
         ev = events(p)
         check(r.returncode == 0 and "Next: K1" in r.stdout and task(p)["slices"]["K1"].get("state") != "blocked"
               and len(ev) == 2 and ev[1].get("type") == "answer" and ev[1].get("by") == "human:anna"
               and ev[1].get("text") == "Nie, tylko postój jednorazowy" and ev[1].get("slice") == "K1",
-              f"WE-11: answer odblokowuje K1, zapisuje odpowiedź i wskazuje go jako następny: {r.returncode} {r.stdout} {ev}")
+              f"WE-11: answer unblocks K1, records the answer and points to it as the next one: {r.returncode} {r.stdout} {ev}")
         r = call(p, TASK, "list")
-        check("czeka na Ciebie" not in r.stdout, f"WE-12: po odpowiedzi nic nie czeka: {r.stdout}")
+        check("waiting for you" not in r.stdout, f"WE-12: after the answer nothing waits: {r.stdout}")
 
-    # plan bez zależności: kawałki idą po kolei, więc pytanie w K1 zatrzymuje przebieg jak dotąd
+    # a plan without dependencies: slices go in order, so a question in K1 stops the run as before
     with tempfile.TemporaryDirectory() as t:
         p = Path(t) / "proj"
         d = new_run(p, PLAN.replace(" · po: brak", "").replace(" · po: K1", ""))
@@ -142,17 +142,17 @@ def main() -> int:
         call(p, rs, "step", d, "K1", "R1", "test", "run")
         r = call(p, rs, "block", d, "K1", "--question", QUESTION)
         check(r.returncode == 0 and "Next: STOP" in r.stdout and "--code question" in r.stdout,
-              f"WE-13: plan bez dopisków „po:” — pytanie w K1 nie zostawia nic do zrobienia: {r.stdout}")
-        # pytanie o całe zadanie: STOP od razu, bez blokowania kawałka
+              f"WE-13: a plan without 'po:' suffixes — a question in K1 leaves nothing to do: {r.stdout}")
+        # a question about the whole task: STOP right away, without blocking a slice
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION, "--task")
-        check(r.returncode == 0, f"WE-14: `--task` (pytanie o całe zadanie) przepuszcza STOP: {r.returncode} {r.stdout}")
+        check(r.returncode == 0, f"WE-14: `--task` (a question about the whole task) lets STOP through: {r.returncode} {r.stdout}")
         r = call(p, rs, "stage", d, "plan")
         check("after:" in r.stdout and "after: none" in r.stdout,
-              f"WE-15: etap plan z włączonym przełącznikiem przypomina o zapisie zależności kawałków: {r.stdout}")
+              f"WE-15: the plan stage with the switch on reminds to record the slice dependencies: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów kawałka zablokowanego")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} blocked slice tests")
     return 1 if fails else 0
 
 

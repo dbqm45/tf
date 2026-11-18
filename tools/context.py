@@ -41,7 +41,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-TF = Path(__file__).resolve().parents[1]   # repozytorium fabryki
+TF = Path(__file__).resolve().parents[1]   # the factory repository
 DEFAULT_CACHE = TF / ".work" / "context"
 MAX_FILE_BYTES = 512 * 1024       # we skip a larger file with a message (usually generated or a dump)
 MAX_FILES = 200

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Migracja wartości 11.0.0 (`migrations.migrate_values`): polskie identyfikatory stanu zadania, pętli i konfiguracji
-w danych projektu → angielskie. Zadania (`task.json`), przebiegi (`run.json`), konfiguracja projektu i osoby,
-profil kosztów; treść opisów (tytuły, powody) bez zmian. python3 .claude/tests/test_migrate_values.py"""
+"""The 11.0.0 value migration (`migrations.migrate_values`): Polish identifiers of the task state, the loop and the configuration
+in the project data → English. Tasks (`task.json`), runs (`run.json`), the project and personal configuration,
+the cost profile; the descriptive content (titles, reasons) unchanged. python3 .claude/tests/test_migrate_values.py"""
 import importlib.util
 import json
 import sys
@@ -46,13 +46,13 @@ def main() -> int:
         prof.write_text(json.dumps({"profile": "jakosc"}))
         plan = mig.migrate_values(p, dry=True)
         check(plan and task.read_text(encoding="utf-8").count("realizacja") == 1,
-              f"MV-1: dry pokazuje zmiany i niczego nie zapisuje: {plan}")
+              f"MV-1: dry shows the changes and writes nothing: {plan}")
         mig.migrate_values(p, dry=False)
         tj = json.loads(task.read_text(encoding="utf-8"))
         check(tj["stage"] == "implementation" and tj["weight"] == "full" and tj["mode"] == "normal"
               and tj["stage_log"] == [{"from": "intake", "to": "spec"}] and tj["deploy"]["state"] == "red"
               and tj["title"] == "Przegląd realizacji" and tj["deploy"]["why"] == "test dymny czerwony",
-              f"MV-2: task.json — etap, waga, tryb, historia, wdrożenie; tytuł i powody bez zmian: {tj}")
+              f"MV-2: task.json — stage, weight, mode, history, deployment; title and reasons unchanged: {tj}")
         rj = json.loads(run.read_text(encoding="utf-8"))
         check(rj["stop_code"] == "question" and rj["current"]["rounds"][0] == {"test": "pass", "code": "pass",
                                                                                "verify": "run", "scope": "todo"},
@@ -61,8 +61,8 @@ def main() -> int:
         check("default_profile: economy" in c and "  review: {tier: deep}" in c and "[plan, normal]" in c,
               f"MV-4: config.yaml projektu: {c}")
         check("default_mode: normal" in (p / ".tf/config/me.yaml").read_text(encoding="utf-8")
-              and json.loads(prof.read_text())["profile"] == "quality", "MV-5: me.yaml i profil kosztów")
-        check(mig.migrate_values(p, dry=False) == [], "MV-6: ponowna migracja nic nie zmienia")
+              and json.loads(prof.read_text())["profile"] == "quality", "MV-5: me.yaml and the cost profile")
+        check(mig.migrate_values(p, dry=False) == [], "MV-6: migrating again changes nothing")
 
         dec = p / "docs/project/changes/CHG-1/decisions.md"
         dec.parent.mkdir(parents=True)
@@ -75,8 +75,8 @@ def main() -> int:
         check("- sent: no\n- date: 2026-11-01\n- by: Ola\n- kind: product\n- why: kto pyta, dostaje odpowiedź\n"
               "- source: manual\n- drafted_by: ai\n- finding: DES-001:TSK-1\n- effect: resolve\n- origin: pdi\n"
               "- question: Jak?\n- answer: Tak.\n" in d and "## Kto: zespół" in d and "- sent: yes" in d,
-              f"MV-7: decisions.md (pdi) — pola wpisu i sent yes/no; nagłówek i treść bez zmian: {d}")
-        check(mig.migrate_values(p, dry=False) == [], "MV-8: ponowna migracja decisions.md nic nie zmienia")
+              f"MV-7: decisions.md (pdi) — entry fields and sent yes/no; heading and content unchanged: {d}")
+        check(mig.migrate_values(p, dry=False) == [], "MV-8: migrating decisions.md again changes nothing")
 
         reg = p / ".tf/register/items.jsonl"
         reg.parent.mkdir(parents=True)
@@ -85,9 +85,9 @@ def main() -> int:
         mig.migrate_values(p, dry=False)
         rows = [json.loads(x) for x in reg.read_text(encoding="utf-8").splitlines()]
         check([r["status"] for r in rows] == ["open", "resolved"] and rows[0]["note"] == "otwarte pytanie",
-              f"MV-9: rejestr tf analyze — status open/resolved, notatka bez zmian: {rows}")
+              f"MV-9: the tf analyze register — status open/resolved, note unchanged: {rows}")
 
-        # 14.0.0: składnia planu i specyfikacji otwartych zadań; zatwierdzenie zostaje ważne, zamknięte — bez zmian
+        # 14.0.0: the plan and spec syntax of open tasks; the approval stays valid, closed ones unchanged
         import hashlib
         import re
 
@@ -120,24 +120,24 @@ def main() -> int:
         check(spec.startswith("# Spec: Limit") and "## Acceptance criteria" in spec and "## Unchanged" in spec
               and "## Out of scope" in spec and "## Open questions" in spec and "[blocking]" in spec
               and "- AC-1: Given postój 12 h, when kierowca płaci, then opłata wynosi 45 zł." in spec,
-              f"MV-10: spec.md otwartego zadania — sekcje i Given/When/Then, treść bez zmian: {spec}")
+              f"MV-10: spec.md of an open task — sections and Given/When/Then, content unchanged: {spec}")
         check("- [x] K1 — opłata · criteria: test_fee · files: src/fee.py · verify: `pytest` · after: none" in plan
               and "- [ ] K2 — paragon · files: src/receipt.py · after: K1" in plan,
-              f"MV-11: plan.md — pola po angielsku, identyfikatory kawałków bez zmian: {plan}")
+              f"MV-11: plan.md — fields in English, slice identifiers unchanged: {plan}")
         tj = json.loads((od / "task.json").read_text(encoding="utf-8"))
         a = tj["artifacts"]
         check(a["spec.md"]["approved_sha"] == h(spec.encode()) and a["plan.md"]["approved_sha"] == approval(plan.encode())
               and a["plan.md"]["inputs"]["spec.md"] == h(spec.encode())
               and tj["frozen"]["docs/project/changes/OPEN-1/spec.md"]["sha"] == h(spec.encode()),
-              f"MV-12: skróty zatwierdzenia, wejść i zamrożenia przeliczone — zgoda człowieka zostaje ważna: {a} {tj['frozen']}")
+              f"MV-12: the approval, input and freeze hashes recomputed — the human's consent stays valid: {a} {tj['frozen']}")
         check(a["spec.md"]["status"] == "approved" and a["notes.md"]["status"] == "draft",
-              f"MV-13: status pliku zadania approved/draft: {a}")
+              f"MV-13: the task file status approved/draft: {a}")
         dd = p / "docs/project/changes/DONE-1"
         check((dd / "spec.md").read_text(encoding="utf-8") == spec_pl and (dd / "plan.md").read_text(encoding="utf-8") == plan_pl,
-              "MV-14: zamknięte zadanie — pliki bez zmian (historia)")
-        check(mig.migrate_values(p, dry=False) == [], "MV-15: ponowna migracja nic nie zmienia")
+              "MV-14: a closed task — files unchanged (history)")
+        check(mig.migrate_values(p, dry=False) == [], "MV-15: migrating again changes nothing")
 
-        # migracje nakładek: `.tf/factory/packs/<id>/migrations.py` z `migrate_values(root, dry)`; błąd nie zatrzymuje
+        # pack migrations: `.tf/factory/packs/<id>/migrations.py` with `migrate_values(root, dry)`; an error does not stop it
         pk = p / ".tf/factory/packs"
         (pk / "pack-x").mkdir(parents=True)
         (pk / "pack-x" / "migrations.py").write_text(
@@ -153,12 +153,12 @@ def main() -> int:
         (pk / "pack-y" / "migrations.py").write_text("def migrate_values(root, dry=True):\n    raise RuntimeError('boom')\n",
                                                     encoding="utf-8")
         plan = mig.migrate_values(p, dry=True)
-        check(plan == ["x.txt"] and not (p / "x.txt").exists(), f"MV-16: dry — migracja nakładki widoczna, nic nie zapisane: {plan}")
+        check(plan == ["x.txt"] and not (p / "x.txt").exists(), f"MV-16: dry — the pack migration is visible, nothing written: {plan}")
         check(mig.migrate_values(p, dry=False) == ["x.txt"] and (p / "x.txt").read_text() == "ok",
-              "MV-17: migracja nakładki wykonana; błąd innej nakładki jej nie zatrzymuje")
+              "MV-17: the pack migration done; another pack's error does not stop it")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów migracji wartości")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} value migration tests")
     return 1 if fails else 0
 
 

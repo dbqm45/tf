@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy trybu zadania (`tf task mode`): Plan / zwykły / Auto i wejście do etapu realizacji.
+"""Task mode tests (`tf task mode`): Plan / normal / Auto and entering the implementation stage.
 python3 .claude/tests/test_task_mode.py"""
 import json
 import os
@@ -46,62 +46,62 @@ def main() -> int:
         p = Path(t)
         new_task(p, "A-1")
         r = tf(p, "mode", "A-1")
-        check(r.returncode == 0 and "normal" in r.stdout, f"M-1: tryb domyślny to zwykły: {r.stdout}{r.stderr}")
+        check(r.returncode == 0 and "normal" in r.stdout, f"M-1: the default mode is normal: {r.stdout}{r.stderr}")
 
-        # tryb Plan: przebieg kończy się na planie
+        # Plan mode: the run ends at the plan
         r = tf(p, "mode", "A-1", "plan")
-        check(r.returncode == 0 and task(p, "A-1").get("mode") == "plan", f"M-2: ustawienie trybu Plan: {r.stdout}")
+        check(r.returncode == 0 and task(p, "A-1").get("mode") == "plan", f"M-2: setting Plan mode: {r.stdout}")
         r = tf(p, "stage", "A-1", "plan")
-        check(r.returncode == 0, f"M-3: w trybie Plan zadanie dochodzi do etapu plan: {r.stdout}")
+        check(r.returncode == 0, f"M-3: in Plan mode the task reaches the plan stage: {r.stdout}")
         r = tf(p, "stage", "A-1", "implementation")
         check(r.returncode == 1 and "mode" in r.stdout and "Plan" in r.stdout and "mode A-1 normal" in r.stdout,
-              f"M-4: tryb Plan nie wchodzi w realizację; komunikat mówi, jak kontynuować: {r.returncode} {r.stdout}")
+              f"M-4: Plan mode does not enter implementation; the message says how to continue: {r.returncode} {r.stdout}")
 
-        # tryb zwykły: zarejestrowany plan wymaga zgody człowieka
+        # normal mode: a registered plan needs the human's approval
         tf(p, "mode", "A-1", "normal")
         r = tf(p, "stage", "A-1", "implementation")
         check(r.returncode == 1 and "approve A-1 plan.md" in r.stdout and "--auto" in r.stdout,
-              f"M-5: tryb zwykły — realizacja dopiero po zgodzie człowieka na plan: {r.returncode} {r.stdout}")
+              f"M-5: normal mode — implementation only after the human approves the plan: {r.returncode} {r.stdout}")
         tf(p, "approve", "A-1", "plan.md", "--by", "human:anna")
         r = tf(p, "stage", "A-1", "implementation")
-        check(r.returncode == 0, f"M-6: po zgodzie realizacja przechodzi: {r.stdout}")
+        check(r.returncode == 0, f"M-6: after approval implementation passes: {r.stdout}")
 
-        # zadanie prowadzone ręcznie (bez zarejestrowanego planu) działa jak dotąd
+        # a task run by hand (without a registered plan) works as before
         new_task(p, "A-2", plan=False)
         r = tf(p, "stage", "A-2", "implementation")
-        check(r.returncode == 0, f"M-7: bez zarejestrowanego planu tryb zwykły nie wymaga zgody: {r.stdout}")
+        check(r.returncode == 0, f"M-7: without a registered plan normal mode needs no approval: {r.stdout}")
 
-        # tryb Auto: bez zgody, chyba że waga pełna
+        # Auto mode: without approval, unless the weight is full
         new_task(p, "A-3")
         r = tf(p, "mode", "A-3", "auto")
         r2 = tf(p, "stage", "A-3", "implementation")
         check(r.returncode == 0 and task(p, "A-3").get("mode") == "auto" and r2.returncode == 0,
-              f"M-8: tryb Auto wchodzi w realizację bez zgody: {r.stdout} | {r2.stdout}")
+              f"M-8: Auto mode enters implementation without approval: {r.stdout} | {r2.stdout}")
         new_task(p, "A-4")
         tf(p, "weight", "A-4", "--set", "full")
         r = tf(p, "mode", "A-4", "auto")
         check(r.returncode == 0 and task(p, "A-4").get("mode") == "normal" and "full-weight" in r.stdout and "normal mode" in r.stdout,
-              f"M-9: Auto przy wadze pełnej niedostępne — zostaje tryb zwykły z wyjaśnieniem: {r.returncode} {r.stdout}")
+              f"M-9: Auto at full weight is unavailable — normal mode stays, with an explanation: {r.returncode} {r.stdout}")
         new_task(p, "A-5")
         tf(p, "mode", "A-5", "auto")
         tf(p, "weight", "A-5", "--set", "full")
         r = tf(p, "stage", "A-5", "implementation")
         check(r.returncode == 1 and "approve A-5 plan.md" in r.stdout,
-              f"M-10: waga podniesiona do pełnej w trybie Auto — realizacja czeka na człowieka: {r.returncode} {r.stdout}")
+              f"M-10: weight raised to full in Auto mode — implementation waits for a human: {r.returncode} {r.stdout}")
 
         r = tf(p, "mode", "A-1", "turbo")
-        check(r.returncode == 2, f"M-11: nieznany tryb → kod 2: {r.returncode} {r.stdout}")
+        check(r.returncode == 2, f"M-11: an unknown mode → code 2: {r.returncode} {r.stdout}")
         r = tf(p, "status", "A-3")
-        check("mode: auto" in r.stdout, f"M-12: status pokazuje tryb: {r.stdout}")
+        check("mode: auto" in r.stdout, f"M-12: status shows the mode: {r.stdout}")
         new_task(p, "A-6")
         tf(p, "mode", "A-6", "plan")
         r = tf(p, "stage", "A-6", "implementation", "--force")
-        check(r.returncode == 0, f"M-13: --force omija bramkę trybu: {r.stdout}")
+        check(r.returncode == 0, f"M-13: --force bypasses the mode gate: {r.stdout}")
         r = tf(p, "mode", "NIE-1")
-        check(r.returncode != 0 and "Traceback" not in r.stderr, f"M-14: brak zadania → błąd bez wyjątku: {r.returncode}")
+        check(r.returncode != 0 and "Traceback" not in r.stderr, f"M-14: no task → an error without an exception: {r.returncode}")
 
-        # zadanie cięcia zmiany pdi (krok E6): plan zmiany zatwierdzono na bramce pdi, więc waga pełna nie zatrzymuje
-        # przebiegu bez nadzoru; w trybie zwykłym człowiek jest obecny i zatwierdza plan jak w każdym zadaniu
+        # a pdi change-cut task (step E6): the change plan was approved at the pdi gate, so full weight does not stop
+        # an unattended run; in normal mode a human is present and approves the plan as in any task
         tf(p, "start", "CHG-12-TSK-57", "--title", "TSK-57: ponowienie płatności", "--change", "CHG-12", "--cut", "TSK-57")
         folder = p / CHANGES / "CHG-12-TSK-57"
         (folder / "ticket.md").write_text("# TSK-57\n\nCięcie TSK-57 zmiany CHG-12.\n", encoding="utf-8")
@@ -110,17 +110,17 @@ def main() -> int:
         tf(p, "weight", "CHG-12-TSK-57", "--set", "full")
         r = tf(p, "stage", "CHG-12-TSK-57", "implementation")
         check(r.returncode == 1 and "approve CHG-12-TSK-57 plan.md" in r.stdout,
-              f"M-15: cięcie o wadze pełnej w trybie zwykłym czeka na zgodę człowieka: {r.returncode} {r.stdout}")
+              f"M-15: a full-weight cut in normal mode waits for the human's approval: {r.returncode} {r.stdout}")
         r = tf(p, "mode", "CHG-12-TSK-57", "auto")
         check(r.returncode == 0 and task(p, "CHG-12-TSK-57").get("mode") == "auto" and "CHG-12" in r.stdout
               and "pdi gate" in r.stdout,
-              f"M-16: cięcie o wadze pełnej dostaje tryb Auto z wyjaśnieniem (bramka zmiany): {r.returncode} {r.stdout}")
+              f"M-16: a full-weight cut gets Auto mode with an explanation (the change gate): {r.returncode} {r.stdout}")
         r = tf(p, "stage", "CHG-12-TSK-57", "implementation")
-        check(r.returncode == 0, f"M-17: cięcie o wadze pełnej w trybie Auto wchodzi w realizację bez zgody: {r.stdout}")
+        check(r.returncode == 0, f"M-17: a full-weight cut in Auto mode enters implementation without approval: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów trybu zadania")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} task mode tests")
     return 1 if fails else 0
 
 

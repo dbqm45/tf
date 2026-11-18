@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy mechanizmów kosztowych: profile (tiery i ustawienia sesji), pasek stanu, samoocena wykonawców w logu,
-rekomendacje tierów w raporcie kosztów, scalanie ustawień w instalatorze."""
+"""Tests of the cost mechanisms: profiles (tiers and session settings), the status line, executors' self-assessment in the log,
+tier recommendations in the cost report, merging settings in the installer."""
 import importlib.util
 import json
 import os
@@ -34,12 +34,12 @@ def agent_model(root: Path, rel: str) -> str:
 def main() -> int:
     fails, total = [], 0
 
-    # ── profile: kopia fabryki w katalogu tymczasowym, żeby nie ruszać repozytorium ──
+    # ── profiles: a copy of the factory in a temporary directory so the repository is not touched ──
     with tempfile.TemporaryDirectory() as d:
         root = Path(d) / "f"
         shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns("__pycache__", "logs", ".git", "*.zip"))
         (root / ".claude" / "factory-profile.json").unlink(missing_ok=True)
-        (root / ".claude" / "settings.local.json").write_text(json.dumps({"model": "opus"}))   # własne ustawienie
+        (root / ".claude" / "settings.local.json").write_text(json.dumps({"model": "opus"}))   # the user's own setting
         prof = str(root / ".tf" / "factory" / "profile.py")
 
         total += 1
@@ -47,31 +47,31 @@ def main() -> int:
         local = json.loads((root / ".claude" / "settings.local.json").read_text())
         if r.returncode != 0 or agent_model(root, "shared/architect.md") != "sonnet" \
                 or local.get("effortLevel") != "low" or local.get("autoCompactWindow") != 150000:
-            fails.append(f"profile economy: architect na sonnet, effort low, kompaktowanie 150k — {r.stdout[-400:]} {local}")
+            fails.append(f"profile economy: architect on sonnet, effort low, compaction 150k — {r.stdout[-400:]} {local}")
 
         total += 1
         r = run([prof, "quality"], cwd=root)
         local = json.loads((root / ".claude" / "settings.local.json").read_text())
         if agent_model(root, "shared/architect.md") != "opus" or local.get("advisorModel") != "opus":
-            fails.append(f"profile quality: architect na opus i doradca opus — {local}")
+            fails.append(f"profile quality: architect on opus and advisor opus — {local}")
 
         total += 1
         run([prof, "balanced"], cwd=root)
         local = json.loads((root / ".claude" / "settings.local.json").read_text())
         if "advisorModel" in local or local.get("model") != "opus" or local.get("effortLevel") != "medium":
-            fails.append(f"profile: powrót do balanced powinien zdjąć doradcę i zostawić własne `model` — {local}")
+            fails.append(f"profile: returning to balanced should remove the advisor and keep the user's own `model` — {local}")
 
         total += 1
         before = (root / ".claude" / "settings.local.json").read_text()
         r = run([prof, "economy", "--dry-run"], cwd=root)
         if (root / ".claude" / "settings.local.json").read_text() != before or "dry-run" not in r.stdout:
-            fails.append("profile --dry-run zmienił ustawienia")
+            fails.append("profile --dry-run changed the settings")
 
         total += 1
         if run([prof, "nieznany"], cwd=root).returncode != 2:
-            fails.append("profile: nieznany profil powinien zwrócić kod 2")
+            fails.append("profile: an unknown profile should return code 2")
 
-    # ── pasek stanu ──
+    # ── status line ──
     total += 1
     sample = {"model": {"display_name": "Opus"}, "effort": {"level": "high"},
               "context_window": {"used_percentage": 60, "current_usage": {"input_tokens": 2000,
@@ -82,11 +82,11 @@ def main() -> int:
     if not all(x in out for x in ("Opus · high", "⚠ kontekst 60% 120k", "cache 91% zimny", "$0.42", "⚠ 5h 85%")):
         fails.append(f"statusline: {out!r}")
     total += 1
-    r = run([str(HOOKS / "statusline.py")], stdin="nie json")
+    r = run([str(HOOKS / "statusline.py")], stdin="not json")
     if r.returncode != 0:
-        fails.append("statusline: błędne wejście nie może przerywać")
+        fails.append("statusline: bad input must not crash it")
 
-    # ── log_usage: samoocena wykonawcy ──
+    # ── log_usage: executor self-assessment ──
     total += 1
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
@@ -99,8 +99,8 @@ def main() -> int:
                                                              "agent_transcript_path": str(tr), "session_id": "s"}))
         rec = json.loads((root / ".tf" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
         if rec.get("tier_feedback") != "niski":
-            fails.append(f"log_usage: brak tier_feedback — {rec}")
-        total += 1     # 14.x: sygnał po angielsku zapisany tą samą wartością co dawny polski
+            fails.append(f"log_usage: no tier_feedback — {rec}")
+        total += 1     # 14.x: the English signal recorded with the same value as the former Polish one
         tr.write_text(json.dumps({"type": "assistant", "message": {"id": "m2", "model": "claude-haiku-4-5",
                       "usage": {"input_tokens": 10, "output_tokens": 50},
                       "content": [{"type": "text", "text": "**Done:** …\n**Tier:** `Tier: too high — a rename only`"}]}}) + "\n")
@@ -114,9 +114,9 @@ def main() -> int:
                                                              "agent_id": "a1", "agent_transcript_path": str(tr)}))
         rec = json.loads((root / ".tf" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
         if rec.get("agent_id") != "a1":
-            fails.append(f"log_usage: SubagentStop bez agent_id (łączenie z delegation.jsonl) — {rec}")
+            fails.append(f"log_usage: SubagentStop without agent_id (joining with delegation.jsonl) — {rec}")
 
-    # ── log_usage: odcisk harnessu (krok H20) — wersja Claude Code, fabryki, nakładek i skrót zainstalowanych plików ──
+    # ── log_usage: harness fingerprint (step H20) — the Claude Code, factory and pack versions and a hash of the installed files ──
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
         tr = root / "main.jsonl"
@@ -139,20 +139,20 @@ def main() -> int:
         total += 1
         if not (h1.get("claude_code") == "2.1.325" and h1.get("factory") == "10.11.0"
                 and h1.get("packs") == {"pack-it": "1.0.2"} and len(h1.get("files") or "") == 12):
-            fails.append(f"log_usage: wpis bez odcisku harnessu (Claude Code, fabryka, nakładki, skrót plików) — {h1}")
+            fails.append(f"log_usage: an entry without the harness fingerprint (Claude Code, factory, packs, file hash) — {h1}")
         man.write_text(json.dumps({"version": "10.11.0", "packs": {"pack-it": "1.0.2"},
                                    "files": {**files, ".tf/factory/tf.py": "cc33"}}))
         h2 = harness()
         total += 1
         if not h2.get("files") or h2.get("files") == h1.get("files"):
-            fails.append(f"log_usage: zmiana zainstalowanego pliku nie zmienia skrótu w odcisku — {h1} {h2}")
+            fails.append(f"log_usage: changing an installed file does not change the hash in the fingerprint — {h1} {h2}")
         man.unlink()
         h3 = harness()
         total += 1
         if h3 != {"claude_code": "2.1.325"}:
-            fails.append(f"log_usage: bez manifestu odcisk ma tylko to, co da się ustalić — {h3}")
+            fails.append(f"log_usage: without a manifest the fingerprint has only what can be determined — {h3}")
 
-    # ── log_usage: dziennik delegowań (PostToolUse narzędzia Agent) ──
+    # ── log_usage: the delegation log (PostToolUse of the Agent tool) ──
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
         env = {**os.environ, "CLAUDE_PROJECT_DIR": str(root)}
@@ -186,8 +186,8 @@ def main() -> int:
             fails.append("log_usage: nieznana klasa → inne")
         total += 1
         if delegate("Klasa: mechaniczna", tool="Task").get("klass") != "mechanical":
-            fails.append("log_usage: narzędzie Task (stara nazwa) też trafia do dziennika")
-        total += 1     # tło: dokumentacja hooków (2026-10-18) — status async_launched, bez usage; resolvedModel
+            fails.append("log_usage: the Task tool (the old name) also goes to the log")
+        total += 1     # background: the hooks documentation (2026-10-18) — status async_launched, without usage; resolvedModel
         run([str(HOOKS / "log_usage.py")], env, json.dumps({
             "hook_event_name": "PostToolUse", "tool_name": "Agent", "tool_input": {"subagent_type": "scout", "prompt": "x"},
             "tool_response": {"status": "async_launched", "agentId": "a9", "resolvedModel": "claude-haiku-5-5",
@@ -203,9 +203,9 @@ def main() -> int:
                                                              "tool_input": {"command": "ls"}}))
         if (len(dl.read_text().splitlines()) if dl.exists() else 0) != n \
                 or (root / ".tf" / "logs" / "usage.jsonl").exists():
-            fails.append("log_usage: PostToolUse innego narzędzia nie może nic zapisać")
+            fails.append("log_usage: PostToolUse of another tool must not write anything")
 
-    # ── cost_report: rekomendacje tierów ──
+    # ── cost_report: tier recommendations ──
     total += 1
     cr = load(ROOT / ".tf" / "factory" / "cost_report.py", "cost_report")
     cfg = {"shared_agents": {"quick-fixer": {}}}
@@ -219,9 +219,9 @@ def main() -> int:
                rec("7", "f", "architect", "claude-opus-5-5")]
     adv = "\n".join(cr.tier_advice(records, cfg))
     if "quick-fixer" not in adv or "raise" not in adv or "architect" not in adv or "lower" not in adv:
-        fails.append(f"cost_report: rekomendacje tierów — {adv!r}")
+        fails.append(f"cost_report: tier recommendations — {adv!r}")
 
-    # ── cost_report --delegation: koszt delegowania wg klasy zadania ──
+    # ── cost_report --delegation: delegation cost by task class ──
     total += 1
     deleg = [{"klass": "reading", "agent_id": "a1", "brief_chars": 100, "result_chars": 50},
              {"klass": "reading", "agent_id": "a2", "brief_chars": 300, "result_chars": 150},
@@ -252,7 +252,7 @@ def main() -> int:
         if r.returncode != 0 or "reading" not in r.stdout or "no class" not in r.stdout:
             fails.append(f"cost_report --delegation: {r.returncode} {r.stdout[-400:]} {r.stderr[-400:]}")
 
-    # ── instalator: scalanie kluczy najwyższego poziomu i polecenie Pythona w pasku stanu ──
+    # ── installer: merging top-level keys and the Python command in the status line ──
     total += 1
     inst = load(ROOT / ".tf" / "factory" / "install.py", "install")
     sp = ROOT / ".claude" / "settings.json"
@@ -264,11 +264,11 @@ def main() -> int:
     py = inst.apply_python(json.loads(json.dumps(merged)), "py")
     if merged.get("autoCompactWindow") != 500000 or "statusLine" not in merged \
             or not py["statusLine"]["command"].startswith("py .claude/hooks/statusline.py"):
-        fails.append(f"install: scalanie ustawień — {merged.get('autoCompactWindow')} {py.get('statusLine')}")
+        fails.append(f"install: merging settings — {merged.get('autoCompactWindow')} {py.get('statusLine')}")
 
-    # ── instalator: wycofane reguły Read(...) ekonomii kontekstu (piaskownica robi z nich denyRead dla programów, więc
-    # npm test nie przeczytałby node_modules) — pilnuje tego guard_paths. Piaskownica Bash jest opt-in: szablon jej nie
-    # włącza (psuje `git add -A`, usługi na localhost) ani nie nadpisuje ustawienia użytkownika ──
+    # ── installer: the withdrawn Read(...) context-economy rules (the sandbox turns them into denyRead for programs, so
+    # npm test would not read node_modules) — guard_paths takes care of it. The Bash sandbox is opt-in: the template does not
+    # enable it (it breaks `git add -A`, localhost services) nor override the user's setting ──
     total += 1
     old = {"permissions": {"deny": ["Read(./node_modules/**)", "Read(**/yarn.lock)", "Read(./vendor/**)"]}}
     merged = inst.merge_settings(src, old)
@@ -276,11 +276,11 @@ def main() -> int:
     mine = inst.merge_settings(src, {"sandbox": {"enabled": True}})
     if any(r in deny for r in ("Read(./node_modules/**)", "Read(**/yarn.lock)")) or "Read(./vendor/**)" not in deny \
             or "sandbox" in merged or mine.get("sandbox") != {"enabled": True}:
-        fails.append(f"install: piaskownica i wycofane reguły — deny={deny} sandbox={merged.get('sandbox')} "
-                     f"własna={mine.get('sandbox')}")
+        fails.append(f"install: the sandbox and withdrawn rules — deny={deny} sandbox={merged.get('sandbox')} "
+                     f"own={mine.get('sandbox')}")
 
-    # ── hooki ochronne blokują akcję, gdy same zawiodą (onFailure: block, Claude Code ≥ 2.1.295); aktualizacja dopisuje
-    # brakujące pole do hooka, który już jest w projekcie, ale nie nadpisuje wyboru użytkownika ──
+    # ── protective hooks block the action when they fail themselves (onFailure: block, Claude Code ≥ 2.1.295); an update adds
+    # the missing field to a hook that is already in the project, but does not override the user's choice ──
     total += 1
     guards = ("guard_bash.py", "guard_paths.py", "cleanroom_guard.py")
     def guard_hooks(settings):
@@ -290,25 +290,25 @@ def main() -> int:
     old_proj = json.loads(json.dumps(src))
     for h in guard_hooks(old_proj).values():
         h.pop("onFailure", None)
-    guard_hooks(old_proj)["guard_paths.py"]["onFailure"] = "continue"     # świadomy wybór użytkownika
+    guard_hooks(old_proj)["guard_paths.py"]["onFailure"] = "continue"     # a deliberate user choice
     upd = guard_hooks(inst.merge_settings(src, old_proj))
     if sorted(in_src) != sorted(guards) or any(h.get("onFailure") != "block" for h in in_src.values()) \
             or upd["guard_bash.py"].get("onFailure") != "block" or upd["cleanroom_guard.py"].get("onFailure") != "block" \
             or upd["guard_paths.py"].get("onFailure") != "continue":
         fails.append(f"hooki ochronne: onFailure — szablon {in_src}, po aktualizacji {upd}")
 
-    # ── jednorazowe pliki objaśnień (HTML, diagramy) w .claude/scratch/ nie trafiają do gita (core-problem-routing) ──
+    # ── one-off explanation files (HTML, diagrams) in .claude/scratch/ do not go to git (core-problem-routing) ──
     total += 1
     gi = ROOT / ".tf" / "factory" / "gitignore"
     for ign in (".claude/scratch/",):
         if ign not in inst.ignored_paths() or (gi.exists() and ign not in gi.read_text(encoding="utf-8")):
-            fails.append(f"install: {ign} poza ignorowanymi ścieżkami")
-    # wyniki pracy fabryki: prywatnie cały .tf/, w szablonie .gitignore (instalacja zespołowa) katalogi odtwarzalne
+            fails.append(f"install: {ign} is outside the ignored paths")
+    # the factory's work results: privately the whole .tf/, in the .gitignore template (a team installation) the reproducible directories
     if ".tf/" not in inst.ignored_paths() or (gi.exists() and not all(
             f".tf/{d}/" in gi.read_text(encoding="utf-8") for d in ("cache", "logs", "runs", "backup"))):
         fails.append("install: .tf/ (prywatnie) albo .tf/{cache,logs,runs,backup}/ (szablon .gitignore) nieignorowane")
 
-    # ── gotowa konfiguracja piaskownicy opt-in: tylko klucz sandbox, bez furtek ──
+    # ── a ready opt-in sandbox configuration: only the sandbox key, no loopholes ──
     total += 1
     sb_file = ROOT / ".tf" / "factory" / "templates" / "sandbox.settings.json"
     try:
@@ -333,7 +333,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów mechanizmów kosztowych")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} cost mechanism tests")
     return 1 if fails else 0
 
 

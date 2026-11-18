@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""tools/translation_check.py: tłumaczenie treści skilla (etap 4) nie gubi ani nie dodaje faktów — bloki kodu,
-fragmenty w `…`, liczby, odnośniki, struktura (sekcje, punkty, wiersze tabel), polskie słowa kluczowe zostają."""
+"""tools/translation_check.py: a translation of skill content (stage 4) neither loses nor adds facts — code blocks,
+fragments in `…`, numbers, links, structure (sections, bullets, table rows); Polish keywords stay."""
 import importlib.util
 from pathlib import Path
 
@@ -64,24 +64,24 @@ Pattern: `tool.py new <name>`.
 def main() -> int:
     fails = []
     if tc.compare(PL, EN):
-        fails.append(f"TC-1: wierne tłumaczenie (0,8 = 0.8, komentarze w kodzie i <placeholdery> przetłumaczone) bez uwag: {tc.compare(PL, EN)}")
+        fails.append(f"TC-1: a faithful translation (0,8 = 0.8, code comments and <placeholders> translated) without remarks: {tc.compare(PL, EN)}")
     cases = {
-        "TC-2 liczba": EN.replace("Limit 200", "Limit 300"),
-        "TC-3 polecenie": EN.replace("--check", "--fix"),
-        "TC-4 blok kodu": EN.replace("python3 tool.py            #", "python3 tool.py --all      #"),
-        "TC-5 punkt listy": EN.replace("- Run `python3 tool.py --check` before committing.\n", ""),
-        "TC-6 odnośnik": EN.replace("references/a.md", "references/b.md"),
-        "TC-7 wiersz tabeli": EN.replace("| `OK` | continue |\n", ""),
-        "TC-8 słowa kluczowe PL": EN.replace("księgowanie, ", ""),
-        "TC-9 nazwa": EN.replace("name: core-x", "name: core-y"),
-        "TC-10 liczba w przykładzie": EN.replace("limit 50k", "limit 60k"),
+        "TC-2 number": EN.replace("Limit 200", "Limit 300"),
+        "TC-3 command": EN.replace("--check", "--fix"),
+        "TC-4 code block": EN.replace("python3 tool.py            #", "python3 tool.py --all      #"),
+        "TC-5 list item": EN.replace("- Run `python3 tool.py --check` before committing.\n", ""),
+        "TC-6 link": EN.replace("references/a.md", "references/b.md"),
+        "TC-7 table row": EN.replace("| `OK` | continue |\n", ""),
+        "TC-8 PL keywords": EN.replace("księgowanie, ", ""),
+        "TC-9 name": EN.replace("name: core-x", "name: core-y"),
+        "TC-10 number in an example": EN.replace("limit 50k", "limit 60k"),
     }
     for label, bad in cases.items():
         if not tc.compare(PL, bad):
-            fails.append(f"{label}: różnica niewykryta")
+            fails.append(f"{label}: difference not detected")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {10 - len(fails)}/10 testów translation_check")
+    print(f"{'✓' if not fails else '✗'} {10 - len(fails)}/10 translation_check tests")
     return 1 if fails else 0
 
 

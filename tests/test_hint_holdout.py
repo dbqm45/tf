@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""tools/hint_holdout.py: trafność podpowiedzi na scenariuszach strojenia i holdout w małym workspace."""
+"""tools/hint_holdout.py: hint accuracy on the tuning scenarios and the holdout in a small workspace."""
 import json
 import shutil
 import subprocess
@@ -35,13 +35,13 @@ def main() -> int:
         except (ValueError, KeyError):
             res = {}
         if res.get("tuning") != {"ok": 2, "all": 2} or res.get("holdout", {}).get("all") != 1:
-            fails.append(f"HH-1: strojenie 2/2 i jeden scenariusz holdout policzony: {r.stdout}{r.stderr}")
+            fails.append(f"HH-1: tuning 2/2 and one holdout scenario counted: {r.stdout}{r.stderr}")
         r = subprocess.run([sys.executable, str(TOOL), "--out", str(ws / "brak")], capture_output=True, text=True)
         if r.returncode != 2:
-            fails.append(f"HH-2: zły workspace → kod 2: {r.returncode}")
+            fails.append(f"HH-2: a bad workspace → code 2: {r.returncode}")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {2 - len(fails)}/2 testów hint_holdout")
+    print(f"{'✓' if not fails else '✗'} {2 - len(fails)}/2 hint_holdout tests")
     return 1 if fails else 0
 
 

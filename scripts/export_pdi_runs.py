@@ -130,10 +130,10 @@ def render_decisions_md(entries: list[dict], change: str) -> str:
 
 def render_answers_md(answers: list[dict]) -> str:
     """An auxiliary `answers.md` file with Q/A pairs (for human review — the fixture does not require them)."""
-    rows = ["# Odpowiedzi bramki", ""]
+    rows = ["# Gate answers", ""]
     for a in answers:
-        rows.append(f"**Pytanie:** {_one_line(a.get('question', ''))}")
-        rows.append(f"**Odpowiedź:** {_one_line(a.get('answer', ''))}")
+        rows.append(f"**Question:** {_one_line(a.get('question', ''))}")
+        rows.append(f"**Answer:** {_one_line(a.get('answer', ''))}")
         rows.append("")
     return "\n".join(rows) + "\n"
 
@@ -195,11 +195,11 @@ def export(runs_root: Path, out: Path, *, manifest_only: bool = False) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--runs", help="katalog z logami faz (domyślnie $PDI_REGISTRY_PATH/runs/)")
+    ap.add_argument("--runs", help="directory with the phase logs (default $PDI_REGISTRY_PATH/runs/)")
     ap.add_argument("--out", default="tmp/flow-evals/import",
-                    help="katalog wynikowy (domyślnie tmp/flow-evals/import)")
+                    help="output directory (default tmp/flow-evals/import)")
     ap.add_argument("--manifest-only", action="store_true",
-                    help="zapisz TYLKO manifest.json, bez podkatalogów na przebieg")
+                    help="write ONLY manifest.json, without a subdirectory per run")
     a = ap.parse_args(argv)
     runs_arg = a.runs or (os.environ.get("PDI_REGISTRY_PATH") and
                           str(Path(os.environ["PDI_REGISTRY_PATH"]) / "runs"))
@@ -207,11 +207,11 @@ def main(argv: list[str] | None = None) -> int:
         runs_arg = str(Path("/Users/kamil/pdi-decisions") / "runs")
     runs_root = Path(runs_arg).expanduser().resolve()
     if not runs_root.is_dir():
-        print(f"✗ brak katalogu {runs_root}")
+        print(f"✗ no such directory: {runs_root}")
         return 1
     out = Path(a.out).expanduser().resolve()
     summary = export(runs_root, out, manifest_only=a.manifest_only)
-    print(f"✓ {summary['count']} przebiegów → {summary['out']}/manifest.json")
+    print(f"✓ {summary['count']} runs → {summary['out']}/manifest.json")
     return 0
 
 

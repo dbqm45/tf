@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Testy polskiego indeksu podpowiedzi (`hint.pl.txt`) w hooku skill_hint: skill przetłumaczony na angielski zachowuje
-trafność polskich poleceń, bo hook dokłada do treści skilla tekst sprzed tłumaczenia (model go nie wczytuje).
-Sekcja źródeł (`## Sources` / `## Źródła`) nie trafia do indeksu. Decyzja właściciela 2026-11-17 (docs/todo.md, etap 4).
+"""Tests of the Polish hint index (`hint.pl.txt`) in the skill_hint hook: a skill translated into English keeps the
+relevance for Polish prompts, because the hook adds the pre-translation text to the skill's content (the model does not load it).
+The sources section (`## Sources` / `## Źródła`) does not go into the index. The owner's decision of 2026-11-17 (docs/todo.md, stage 4).
 python3 core/tests/test_skill_hint_pl_index.py"""
 import importlib.util
 import shutil
@@ -64,36 +64,36 @@ def main() -> int:
             (skills / name / "SKILL.md").write_text(text, encoding="utf-8")
         h = load(skills)
         picks = [it["name"] for _, it in h.select(PROMPT, h.load_index())]
-        check("core-nightly" not in picks, f"HP-1: bez indeksu polskie polecenie nie trafia w angielski skill: {picks}")
+        check("core-nightly" not in picks, f"HP-1: without the index a Polish prompt does not hit the English skill: {picks}")
         (skills / "core-nightly" / "hint.pl.txt").write_text(PL, encoding="utf-8")
         items = h.load_index()
         picks = [it["name"] for _, it in h.select(PROMPT, items)]
-        check(picks[:1] == ["core-nightly"], f"HP-2: z hint.pl.txt polskie polecenie trafia w skill: {picks}")
+        check(picks[:1] == ["core-nightly"], f"HP-2: with hint.pl.txt a Polish prompt hits the skill: {picks}")
         nightly = next(it for it in items if it["name"] == "core-nightly")
         check("trzeci" not in nightly["excerpt"] and "Unsupervised" in nightly["excerpt"],
-              f"HP-3: wyciąg pokazywany modelowi pochodzi z SKILL.md, nie z indeksu: {nightly['excerpt'][:120]}")
+              f"HP-3: the excerpt shown to the model comes from SKILL.md, not from the index: {nightly['excerpt'][:120]}")
         picks = [it["name"] for _, it in h.select(SOURCES_PROMPT, items)]
-        check("core-nightly" not in picks, f"HP-4: sekcja ## Sources nie trafia do indeksu: {picks}")
+        check("core-nightly" not in picks, f"HP-4: the ## Sources section does not go into the index: {picks}")
         (skills / "core-nightly" / "hint.pl.txt").write_text("head: delegacja pracy agentowi bez nadzoru, zamknięty laptop\n" + PL,
                                                              encoding="utf-8")
         nightly = next(it for it in h.load_index() if it["name"] == "core-nightly")
         check({"zamkn", "lapto"} <= nightly["head"] and "head" not in nightly["body"],
-              f"HP-5: linia „head:” indeksu waży jak opis skilla (dawny polski opis i katalog): {sorted(nightly['head'])[:12]}")
-        # HP-6: długość treści do normalizacji wyniku to dłuższa z dwóch wersji językowych, nie ich suma — inaczej
-        # każdy przetłumaczony skill podnosi średnią długość i wyniki wszystkich nieprzetłumaczonych skilli rosną
-        # (szum na poleceniach ogólnych), a sam skill traci punkty za „długą” treść (PR #305, pack-docs).
+              f"HP-5: the index's 'head:' line weighs like the skill's description (the former Polish description and catalogue): {sorted(nightly['head'])[:12]}")
+        # HP-6: the content length used to normalise the score is the longer of the two language versions, not their sum — otherwise
+        # every translated skill raises the average length and the scores of all untranslated skills grow
+        # (noise on general prompts), while the skill itself loses points for 'long' content (PR #305, pack-docs).
         en_only = set(h.stems(EN.split("---\n", 2)[2].split("## Sources")[0]))
         pl_only = set(h.stems(PL))
         check(nightly.get("blen") == max(len(en_only - nightly["head"]), len(pl_only - nightly["head"]))
               and nightly["blen"] < len(nightly["body"]),
-              f"HP-6: długość do normalizacji = dłuższa wersja językowa: blen={nightly.get('blen')}, "
+              f"HP-6: the normalisation length = the longer language version: blen={nightly.get('blen')}, "
               f"body={len(nightly['body'])}")
         check(nightly.get("langs") == [en_only - nightly["head"], pl_only - nightly["head"]],
-              f"HP-6b: wersje językowe treści osobno (wynik liczy się lepiej pasującą): {nightly.get('langs')}")
+              f"HP-6b: the language versions of the content separately (the score counts the better-matching one): {nightly.get('langs')}")
         other = next(it for it in h.load_index() if it["name"] == "core-other")
-        check(other.get("blen") == len(other["body"]), f"HP-7: skill bez indeksu: blen = długość treści: {other.get('blen')}")
+        check(other.get("blen") == len(other["body"]), f"HP-7: a skill without an index: blen = the content length: {other.get('blen')}")
         shutil.rmtree(skills / "core-other")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów polskiego indeksu podpowiedzi")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the Polish hint index")
     return 1 if fails else 0
 
 

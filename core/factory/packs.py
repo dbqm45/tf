@@ -551,7 +551,7 @@ def _commit_language(root: Path, last: int) -> str | None:
 
 
 def language_lines(cfg: dict, root: Path) -> list[str]:
-    """The "Język" section: the conversation rule (fixed), commit language from `git log`, code language."""
+    """The "Language" section: the conversation rule (fixed), commit language from `git log`, code language."""
     cl = cfg.get("commit_language") or {}
     found = commit_language(root)
     code = found or cl.get("new_repo", "en")
@@ -564,7 +564,7 @@ def language_lines(cfg: dict, root: Path) -> list[str]:
 
 
 def write_language_lines(path: Path, cfg: dict, root: Path) -> bool:
-    """Replaces the "### Język" subsection in the factory block in CLAUDE.md / CLAUDE.local.md. Returns True when changed."""
+    """Replaces the "### Language" subsection in the factory block in CLAUDE.md / CLAUDE.local.md. Returns True when changed."""
     if not path.exists():
         return False
     text = path.read_text(encoding="utf-8")

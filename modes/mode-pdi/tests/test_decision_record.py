@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy dziennika zmiany (tryb mode-pdi, skill pdi-decisions, scripts/decision_record.py): `change new` i `check`
-wobec nagłówka z kontraktu pdi 0.3.0 (contract/change.schema.json). python3 .claude/tests/test_decision_record.py"""
+"""Tests of the change log (mode-pdi, skill pdi-decisions, scripts/decision_record.py): `change new` and `check`
+against the header from the pdi 0.3.0 contract (contract/change.schema.json). python3 .claude/tests/test_decision_record.py"""
 import datetime as dt
 import json
 import os
@@ -13,14 +13,14 @@ REL = Path(".claude") / "skills" / "pdi-decisions" / "scripts" / "decision_recor
 ROOT = next((p for p in Path(__file__).resolve().parents if (p / REL).is_file()), None)
 SCRIPT = ROOT / REL if ROOT else None
 
-# Pola nagłówka z pdi/contract/change.schema.json 0.3.0 (additionalProperties: false).
+# Header fields from pdi/contract/change.schema.json 0.3.0 (additionalProperties: false).
 SCHEMA_KEYS = {"artifact", "phase", "status", "version", "author", "created", "updated", "inputs", "change", "source",
-               "source_reported_at", "tasks", "superseded_by"}   # change.schema.json kontraktu pdi 0.5.0
+               "source_reported_at", "tasks", "superseded_by"}   # change.schema.json of the pdi contract 0.5.0
 REQUIRED = {"artifact", "phase", "status", "version", "created", "updated", "change"}
-FIX = Path(__file__).resolve().parent / "fixtures" / "pdi-contract"   # kopia kontraktu pdi (wersja w VERSION, bez zmian)
+FIX = Path(__file__).resolve().parent / "fixtures" / "pdi-contract"   # copy of the pdi contract (version in VERSION, unchanged)
 
-# Plan wydania z pdi docs/plan-g1-g2.md §5.2 (wiersze TSK-59 i TSK-60 dopisane do R2, jak w przykładzie kontraktu).
-RELEASE_OK = """# docs/project/changes/CHG-12/release.yaml   (kontrakt 0.4.0)
+# Release plan from pdi docs/plan-g1-g2.md §5.2 (rows TSK-59 and TSK-60 added to R2, as in the contract example).
+RELEASE_OK = """# docs/project/changes/CHG-12/release.yaml   (contract 0.4.0)
 change: CHG-12
 mvp:
   release: R1
@@ -55,7 +55,7 @@ def run(args, cwd):
 
 
 def header(path: Path) -> dict:
-    """Prosty YAML nagłówka: `klucz: wartość` i listy `[a, b]`."""
+    """Simple header YAML: `key: value` and lists `[a, b]`."""
     text = path.read_text(encoding="utf-8")
     assert text.startswith("---\n"), path
     out = {}
@@ -95,7 +95,7 @@ def main() -> int:
         repo = Path(tmp)
         r = run(["change", "new", "CHG-12", "--source", "PRB-34"], repo)
         d = repo / "docs" / "project" / "changes" / "CHG-12"
-        check(r.returncode == 0, f"D-1: change new kończy się sukcesem: {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"D-1: change new succeeds: {r.stdout}{r.stderr}")
         names = sorted(p.name for p in d.glob("*.md")) if d.is_dir() else []
         check(names == ["decisions.md", "intent.md", "plan.md"], f"D-2: trzy artefakty zmiany: {names}")
         for n in names:
@@ -105,15 +105,15 @@ def main() -> int:
             check(h.get("artifact") == n[:-3] and h.get("change") == "CHG-12" and h.get("source") == "PRB-34"
                   and h.get("status") == "draft" and h.get("version") == "1"
                   and h.get("created") == today and h.get("updated") == today,
-                  f"D-5 {n}: wartości nagłówka: {h}")
+                  f"D-5 {n}: header values: {h}")
             check(("tasks" in h) == (n == "plan.md"), f"D-6 {n}: tasks tylko w plan.md")
         intent = (d / "intent.md").read_text(encoding="utf-8") if d.is_dir() else ""
         for sec in ("## Problem", "## Success metrics", "## Out of scope", "## Constraints", "## When it is a failure",
                     "## Related"):
-            check(sec in intent, f"D-2a: intent.md ma sekcję {sec!r} (ograniczenia, porażka i powiązania pisze człowiek)")
+            check(sec in intent, f"D-2a: intent.md has the section {sec!r} (constraints, failure and related items are written by a human)")
         r = run(["check"], repo)
-        check(r.returncode == 0, f"D-7: świeży dziennik przechodzi check: {r.stdout}{r.stderr}")
-        # folder zadania fabryki obok zmiany (task.json, pliki bez nagłówka pdi) nie jest zmianą — check go pomija
+        check(r.returncode == 0, f"D-7: a fresh log passes check: {r.stdout}{r.stderr}")
+        # a factory task folder next to a change (task.json, files without a pdi header) is not a change — check skips it
         for key in ("CHG-12-TSK-57", "PROJ-123"):
             folder = repo / "docs/project/changes" / key
             folder.mkdir(parents=True)
@@ -122,7 +122,7 @@ def main() -> int:
                 (folder / name).write_text(f"# {name}\n\n- [ ] K1 — coś\n", encoding="utf-8")
         r = run(["check"], repo)
         check(r.returncode == 0 and "ticket.md" not in r.stdout,
-              f"D-7a: check pomija foldery zadań (task.json bez intent.md): {r.returncode} {r.stdout}{r.stderr}")
+              f"D-7a: check skips task folders (task.json without intent.md): {r.returncode} {r.stdout}{r.stderr}")
         (d / "task.json").write_text('{"schema": 1, "key": "CHG-12"}\n', encoding="utf-8")
         (d / "notatka.md").write_text("# bez nagłówka\n", encoding="utf-8")
         r = run(["check"], repo)
@@ -134,15 +134,15 @@ def main() -> int:
         for key in ("CHG-12-TSK-57", "PROJ-123"):
             shutil.rmtree(repo / "docs/project/changes" / key)
         r = run(["change", "new", "CHG-12"], repo)
-        check(r.returncode != 0 and "already exists" in r.stdout + r.stderr, "D-8: istniejący katalog → błąd")
-        check(header(d / "intent.md").get("source") == "PRB-34", "D-9: bez nadpisania istniejących plików")
+        check(r.returncode != 0 and "already exists" in r.stdout + r.stderr, "D-8: existing directory → error")
+        check(header(d / "intent.md").get("source") == "PRB-34", "D-9: existing files not overwritten")
         r = run(["change", "new", "chg-1"], repo)
-        check(r.returncode != 0, "D-10: zły kształt klucza zmiany → błąd")
+        check(r.returncode != 0, "D-10: bad change key shape → error")
         r = run(["change", "new", "CHG-13", "--source", "34"], repo)
-        check(r.returncode != 0 and not (d.parent / "CHG-13").exists(), "D-11: zły klucz zgłoszenia → błąd bez katalogu")
+        check(r.returncode != 0 and not (d.parent / "CHG-13").exists(), "D-11: bad report key → error without a directory")
         r = run(["change", "new", "CHG-14"], repo)
         check(r.returncode == 0 and "source" not in header(d.parent / "CHG-14" / "intent.md"),
-              "D-12: bez --source nagłówek nie ma pola source")
+              "D-12: without --source the header has no source field")
 
     bad = {
         "brak change": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 1\ncreated: 2026-10-23\nupdated: 2026-10-23",
@@ -152,49 +152,49 @@ def main() -> int:
                              "updated: 2026-10-23\nchange: CHG-1",
         "nieznany status": "artifact: intent\nphase: discovery\nstatus: done\nversion: 1\ncreated: 2026-10-23\n"
                            "updated: 2026-10-23\nchange: CHG-1",
-        "nieznane pole": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 1\ncreated: 2026-10-23\n"
+        "unknown field": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 1\ncreated: 2026-10-23\n"
                          "updated: 2026-10-23\nchange: CHG-1\nowner: ja",
-        "tasks poza plan": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 1\ncreated: 2026-10-23\n"
+        "tasks outside the plan": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 1\ncreated: 2026-10-23\n"
                            "updated: 2026-10-23\nchange: CHG-1\ntasks: [TSK-1]",
-        "zły klucz source": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 1\ncreated: 2026-10-23\n"
+        "bad source key": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 1\ncreated: 2026-10-23\n"
                             "updated: 2026-10-23\nchange: CHG-1\nsource: prb-1",
-        "zła data": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 1\ncreated: 23.10.2026\n"
+        "bad date": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 1\ncreated: 23.10.2026\n"
                     "updated: 2026-10-23\nchange: CHG-1",
-        "zła wersja": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 0\ncreated: 2026-10-23\n"
+        "bad version": "artifact: intent\nphase: discovery\nstatus: draft\nversion: 0\ncreated: 2026-10-23\n"
                       "updated: 2026-10-23\nchange: CHG-1",
     }
     for label, head in bad.items():
         with tempfile.TemporaryDirectory() as tmp:
             write(Path(tmp) / "docs" / "project" / "changes" / "CHG-1" / "intent.md", head)
             r = run(["check"], tmp)
-            check(r.returncode != 0, f"D-13 check wykrywa: {label} ({r.stdout.strip()[:200]})")
+            check(r.returncode != 0, f"D-13 check detects: {label} ({r.stdout.strip()[:200]})")
     with tempfile.TemporaryDirectory() as tmp:
-        # Plan w statusie innym niż draft (Z7b-1a, DZ6, DZ7, N20) musi mieć sekcje „Rozważone opcje” i „Cele zmiany”.
+        # A plan in a status other than draft (Z7b-1a, DZ6, DZ7, N20) must have the "Rozważone opcje" (Options considered) and "Cele zmiany" (Change targets) sections.
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-1" / "plan.md",
               "artifact: plan\nphase: plan\nstatus: accepted\nversion: 2\nauthor: x\ncreated: 2026-10-23\n"
               "updated: 2026-10-24\ninputs: [docs/project/changes/CHG-1/intent.md]\nchange: CHG-1\nsource: PRB-3\n"
               "tasks: [TSK-57, TSK-58]",
               "## Rozważone opcje\n\n### Opcja A\n\n### Opcja B\n\n## Cele zmiany (targets)\n\n")
         r = run(["check"], tmp)
-        check(r.returncode == 0, f"D-14: poprawny plan (przykład z kontraktu) przechodzi: {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"D-14: a valid plan (contract example) passes: {r.stdout}{r.stderr}")
         r = run(["check"], Path(tmp) / "docs")
         check(r.returncode == 0 and "no change artifacts" in r.stdout.lower(), f"D-15: bez docs/project/changes — nic do sprawdzenia: {r.stdout}")
-        # D-15a: `check --change` sprawdza tylko tę zmianę — stare artefakty innych zmian nie blokują fazy (CHG-4, 2026-11-07).
+        # D-15a: `check --change` checks only that change — old artifacts of other changes do not block the phase (CHG-4, 2026-11-07).
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-2" / "intent.md",
               "artifact: intent\nphase: discovery\nstatus: draft\nversion: 0\ncreated: 2026-10-23\n"
               "updated: 2026-10-23\nchange: CHG-2")
         r = run(["check"], tmp)
         check(r.returncode != 0 and "CHG-2" in r.stdout, f"D-15a: bez --change dalej sprawdza wszystkie zmiany: {r.stdout}")
         r = run(["check", "--change", "CHG-1"], tmp)
-        check(r.returncode == 0 and "CHG-2" not in r.stdout, f"D-15b: --change CHG-1 pomija błąd w CHG-2: {r.stdout}")
+        check(r.returncode == 0 and "CHG-2" not in r.stdout, f"D-15b: --change CHG-1 skips the error in CHG-2: {r.stdout}")
         r = run(["check", "--change", "CHG-2"], tmp)
-        check(r.returncode != 0 and "CHG-2" in r.stdout, f"D-15c: --change CHG-2 dalej wykrywa jej błąd: {r.stdout}")
+        check(r.returncode != 0 and "CHG-2" in r.stdout, f"D-15c: --change CHG-2 still detects its error: {r.stdout}")
         r = run(["check", "--change", "CHG-9"], tmp)
-        check(r.returncode != 0 and "CHG-9" in r.stdout, f"D-15d: nieznana zmiana → błąd, nie ciche OK: {r.stdout}")
+        check(r.returncode != 0 and "CHG-9" in r.stdout, f"D-15d: unknown change → error, not a silent OK: {r.stdout}")
         r = run(["check", "--change", "../x"], tmp)
-        check(r.returncode != 0, f"D-15e: zły klucz zmiany → błąd: {r.stdout}")
+        check(r.returncode != 0, f"D-15e: bad change key → error: {r.stdout}")
 
-    # F0b: decyzje — add, pending, mark, export, check wpisów.
+    # F0b: decisions — add, pending, mark, export, check of entries.
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)
         run(["change", "new", "CHG-12", "--source", "PRB-34"], repo)
@@ -206,19 +206,19 @@ def main() -> int:
         text = dec.read_text(encoding="utf-8")
         check("## Eksport do CSV zamiast XLSX." in text and "- ref: CHG-12/D1" in text and "- id:\n" in text
               and "- sent: no" in text and f"- date: {today}" in text and "- drafted_by: ai" in text,
-              f"E-2: wpis w decisions.md z ref, pustym id, sent: no, datą i szkicem: {text[-400:]}")
+              f"E-2: decisions.md entry with ref, empty id, sent: no, date and draft: {text[-400:]}")
         r = run(add[:3] + ["--statement", "Druga.", "--why", "Bo tak.", "--kind", "technical", "--by", "zespół",
                            "--source-kind", "slack", "--drafted-by", "human"], repo)
         check(r.returncode == 0 and "CHG-12/D2" in r.stdout, "E-3: kolejny wpis dostaje D2")
         r = run(add[:3] + ["--statement", "Zła.", "--why", "x", "--kind", "decyzja", "--by", "x"], repo)
-        check(r.returncode != 0, "E-4: nieznany rodzaj decyzji → błąd")
+        check(r.returncode != 0, "E-4: unknown decision kind → error")
         r = run(["decision", "add", "CHG-99", "--statement", "x", "--why", "x", "--kind", "other", "--by", "x"], repo)
-        check(r.returncode != 0 and "change new" in r.stdout + r.stderr, "E-5: brak dziennika zmiany → błąd z podpowiedzią")
+        check(r.returncode != 0 and "change new" in r.stdout + r.stderr, "E-5: no change log → error with a hint")
         r = run(["decision", "pending"], repo)
         items = jl(r)
         first = items[0] if items else {}
         check(r.returncode == 0 and [i.get("ref") for i in items] == ["CHG-12/D1", "CHG-12/D2"],
-              f"E-6: pending wypisuje niewysłane w kolejności: {r.stdout[:300]}")
+              f"E-6: pending lists unsent entries in order: {r.stdout[:300]}")
         check(first.get("record_decision") == {
                   "statement": "Eksport do CSV zamiast XLSX.", "why": "Klienci i tak otwierają go w arkuszu.",
                   "kind": "product", "source": {"kind": "claude-cli"}, "drafted_by": "ai",
@@ -229,28 +229,28 @@ def main() -> int:
         check(r.returncode == 0 and "- id: DEC-41" in text and text.count("- sent: yes") == 1,
               f"E-8: mark wpisuje id i sent: yes: {r.stdout}{r.stderr}")
         r = run(["decision", "mark", "CHG-12/D1", "--id", "DEC-42"], repo)
-        check(r.returncode != 0 and "DEC-41" in dec.read_text(encoding="utf-8"), "E-9: ponowne mark innym id → błąd, bez zmiany")
+        check(r.returncode != 0 and "DEC-41" in dec.read_text(encoding="utf-8"), "E-9: marking again with another id → error, no change")
         r = run(["decision", "mark", "CHG-12/D2", "--id", "dec-1"], repo)
-        check(r.returncode != 0, "E-10: zły kształt numeru DEC → błąd")
+        check(r.returncode != 0, "E-10: bad DEC number shape → error")
         r = run(["decision", "pending"], repo)
-        check([i.get("ref") for i in jl(r)] == ["CHG-12/D2"], "E-11: po mark zostaje jeden niewysłany")
+        check([i.get("ref") for i in jl(r)] == ["CHG-12/D2"], "E-11: after mark one unsent entry remains")
         r = run(["decision", "export"], repo)
         allx = jl(r)
         check([(d.get("ref"), d.get("id"), d.get("sent")) for d in allx] == [("CHG-12/D1", "DEC-41", True),
                                                                             ("CHG-12/D2", None, False)]
               and len(allx) > 1 and allx[1].get("source") == {"kind": "slack"} and allx[1].get("drafted_by") == "human",
-              f"E-12: export wszystkich decyzji z id i stanem wysłania: {r.stdout[:400]}")
+              f"E-12: export of all decisions with id and sent state: {r.stdout[:400]}")
         r = run(["check"], repo)
         check(r.returncode == 0, f"E-13: dziennik z decyzjami przechodzi check: {r.stdout}")
         dec.write_text(dec.read_text(encoding="utf-8").replace("- id: DEC-41", "- id: 41"), encoding="utf-8")
         r = run(["check"], repo)
-        check(r.returncode != 0 and "CHG-12/D1" in r.stdout, f"E-14: check wykrywa zły numer w decyzji: {r.stdout}")
+        check(r.returncode != 0 and "CHG-12/D1" in r.stdout, f"E-14: check detects a bad number in a decision: {r.stdout}")
         dec.write_text(dec.read_text(encoding="utf-8").replace("- id: 41\n- sent: yes", "- id:\n- sent: yes"),
                        encoding="utf-8")
         r = run(["check"], repo)
         check(r.returncode != 0, f"E-15: check wykrywa sent: yes bez numeru: {r.stdout}")
 
-    # PRB-16: odpowiedź na ustalenie ci_for_sdlc (pole ustalenie, opcjonalny skutek), czytana przez ci_for_sdlc z repo.
+    # PRB-16: a response to a ci_for_sdlc finding (finding field, optional effect), read by ci_for_sdlc from the repo.
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)
         run(["change", "new", "CHG-12", "--source", "PRB-34"], repo)
@@ -268,22 +268,22 @@ def main() -> int:
         r = run(fadd + ["--finding", "REQ-001:CHG-12"], repo)
         last = dec.read_text(encoding="utf-8").rsplit("\n## ", 1)[1]
         check(r.returncode == 0 and "- finding: REQ-001:CHG-12\n" in last and "effect" not in last,
-              f"F-2: ustalenie samej zmiany, bez skutku (resolve domyślnie): {r.stdout}{last}")
+              f"F-2: a finding of the change itself, no effect (resolve by default): {r.stdout}{last}")
         r = run(["check"], repo)
-        check(r.returncode == 0, f"F-3: wpisy z ustaleniem przechodzą check: {r.stdout}")
+        check(r.returncode == 0, f"F-3: entries with a finding pass check: {r.stdout}")
         for bad, why in ((["--finding", "des-1"], "finding id"), (["--finding", "DES-001:TSK-99"], "TSK-99"),
                          (["--effect", "resolve"], "--effect only with --finding")):
             r = run(fadd + bad, repo)
-            check(r.returncode != 0 and why in r.stdout + r.stderr, f"F-4: {bad} → błąd ({why}): {r.stdout}{r.stderr}")
+            check(r.returncode != 0 and why in r.stdout + r.stderr, f"F-4: {bad} → error ({why}): {r.stdout}{r.stderr}")
         dec.write_text(dec.read_text(encoding="utf-8").replace("- finding: DES-001:TSK-57", "- finding: DES-001:TSK-98"), encoding="utf-8")
         r = run(["check"], repo)
-        check(r.returncode != 0 and "TSK-98" in r.stdout, f"F-5: check: ustalenie o elemencie spoza zmiany → błąd: {r.stdout}")
+        check(r.returncode != 0 and "TSK-98" in r.stdout, f"F-5: check: finding about an element outside the change → error: {r.stdout}")
         dec.write_text(dec.read_text(encoding="utf-8").replace("- finding: DES-001:TSK-98", "- finding: DES-001:TSK-57")
                        .replace("- effect: accept_risk", "- effect: ignore"), encoding="utf-8")
         r = run(["check"], repo)
-        check(r.returncode != 0 and "effect" in r.stdout, f"F-6: check: nieznany skutek → błąd: {r.stdout}")
+        check(r.returncode != 0 and "effect" in r.stdout, f"F-6: check: unknown effect → error: {r.stdout}")
 
-    # G1.1: plan wydania release.yaml (kontrakt pdi 0.4.0, release-plan.schema.json) i spójność z plan.md
+    # G1.1: release plan release.yaml (pdi contract 0.4.0, release-plan.schema.json) and consistency with plan.md
     near = SCRIPT.parent / "release-plan.schema.json"
     check(near.is_file() and FIX.is_dir() and json.loads(near.read_text(encoding="utf-8"))
           == json.loads((FIX / "release-plan.schema.json").read_text(encoding="utf-8"))
@@ -295,9 +295,9 @@ def main() -> int:
         rel = repo / "docs" / "project" / "changes" / "CHG-12" / "release.yaml"
         text = rel.read_text(encoding="utf-8") if rel.is_file() else ""
         check(r.returncode == 0 and "change: CHG-12" in text and "R1" in text and "release.yaml" in r.stdout,
-              f"R-1: change new zakłada release.yaml z linią R1: {r.stdout} {text[:300]}")
+              f"R-1: change new creates release.yaml with the R1 line: {r.stdout} {text[:300]}")
         r = run(["check"], repo)
-        check(r.returncode == 0, f"R-2: świeży release.yaml przechodzi check: {r.stdout}")
+        check(r.returncode == 0, f"R-2: a fresh release.yaml passes check: {r.stdout}")
 
     def release_case(release: str, plan_tasks: str = "TSK-57, TSK-58, TSK-59, TSK-60", rows: str = PLAN_ROWS):
         tmp = tempfile.mkdtemp()
@@ -309,21 +309,21 @@ def main() -> int:
 
     example = (FIX / "release-plan.json").read_text(encoding="utf-8") if FIX.is_dir() else ""
     r = release_case(RELEASE_OK)
-    check(r.returncode == 0, f"R-3: plan wydania z §5.2 planu G1 (YAML) + zgodny plan.md przechodzi: {r.stdout}")
+    check(r.returncode == 0, f"R-3: release plan from §5.2 of the G1 plan (YAML) + a matching plan.md passes: {r.stdout}")
     r = release_case(example)
-    check(r.returncode == 0, f"R-4: przykład z kontraktu (JSON to też YAML) przechodzi: {r.stdout}")
+    check(r.returncode == 0, f"R-4: the contract example (JSON is also YAML) passes: {r.stdout}")
     bad_release = {
-        "schemat: linia X1": (RELEASE_OK.replace("id: R2", "id: X2"), "X2"),
-        "schemat: zły klucz TSK": (RELEASE_OK.replace("TSK-60]", "tsk-60]"), "tsk-60"),
-        "schemat: nieznane pole": (RELEASE_OK.replace("change: CHG-12", "change: CHG-12\nowner: ja"), "owner"),
-        "mvp.release spoza linii": (RELEASE_OK.replace("release: R1", "release: R3"), "R3"),
-        "TSK różne od plan.md": (RELEASE_OK.replace(", TSK-60]", "]"), "TSK-60"),
-        "TSK w dwóch liniach": (RELEASE_OK.replace("tasks: [TSK-59, TSK-60]", "tasks: [TSK-58, TSK-59, TSK-60]"), "TSK-58"),
-        "flaga bez etapów": (RELEASE_OK.split("    rollout:")[0], "payment-retry"),
-        "flaga bez remove_by": (RELEASE_OK.replace("    remove_by: 2026-12-31\n", ""), "remove_by"),
-        "TSK flagi spoza linii": (RELEASE_OK.replace("tasks: [TSK-57, TSK-58]\n    owner", "tasks: [TSK-57, TSK-99]\n    owner"),
+        "schema: line X1": (RELEASE_OK.replace("id: R2", "id: X2"), "X2"),
+        "schema: bad TSK key": (RELEASE_OK.replace("TSK-60]", "tsk-60]"), "tsk-60"),
+        "schema: unknown field": (RELEASE_OK.replace("change: CHG-12", "change: CHG-12\nowner: ja"), "owner"),
+        "mvp.release outside the lines": (RELEASE_OK.replace("release: R1", "release: R3"), "R3"),
+        "TSK differs from plan.md": (RELEASE_OK.replace(", TSK-60]", "]"), "TSK-60"),
+        "TSK in two lines": (RELEASE_OK.replace("tasks: [TSK-59, TSK-60]", "tasks: [TSK-58, TSK-59, TSK-60]"), "TSK-58"),
+        "flag without stages": (RELEASE_OK.split("    rollout:")[0], "payment-retry"),
+        "flag without remove_by": (RELEASE_OK.replace("    remove_by: 2026-12-31\n", ""), "remove_by"),
+        "flag TSK outside the lines": (RELEASE_OK.replace("tasks: [TSK-57, TSK-58]\n    owner", "tasks: [TSK-57, TSK-99]\n    owner"),
                                   "TSK-99"),
-        "niepoprawny YAML": ("change: CHG-12\nreleases: [\n", "YAML"),
+        "invalid YAML": ("change: CHG-12\nreleases: [\n", "YAML"),
     }
     for label, (text, needle) in bad_release.items():
         r = release_case(text)
@@ -335,8 +335,8 @@ def main() -> int:
     r = release_case(RELEASE_OK, rows=PLAN_ROWS.replace("| TSK-58 | R1 | payment-retry |", "| TSK-58 | R1 | — |"))
     check(r.returncode != 0 and "TSK-58" in r.stdout and "Flaga" in r.stdout,
           f"R-7: kolumna „Flaga” w plan.md niezgodna z release.yaml: {r.stdout}")
-    # Samokontrola planu cięć (core-delivery-lifecycle cut-plan.md) = REL-008 w ci_for_sdlc: fundament z „Odblokowuje”,
-    # cięcie z wymaganiem albo weryfikacją. Kolumny jak w szablonie: Rodzaj, Wymagania, Odblokowuje.
+    # Self-check of the cut plan (core-delivery-lifecycle cut-plan.md) = REL-008 in ci_for_sdlc: a foundation with "Odblokowuje" (Unblocks),
+    # a cut with a requirement or verification. Columns as in the template: Rodzaj (Kind), Wymagania (Requirements), Odblokowuje (Unblocks).
     plan_head = ("| Cięcie | Rodzaj | Wydanie | Flaga | Wartość | Wymagania | Odblokowuje | Pliki | Weryfikacja |\n|"
                  + "---|" * 9 + "\n")
     rows_ok = plan_head + (
@@ -345,20 +345,20 @@ def main() -> int:
         "| TSK-59 | cięcie | R2 | — | użytkownik widzi historię prób | US-03 | — | | |\n"
         "| TSK-60 | cięcie | R2 | | użytkownik dostaje powiadomienie | | — | | test powiadomienia |\n")
     r = release_case(RELEASE_OK, rows=rows_ok)
-    check(r.returncode == 0, f"P-1: plan z kolumnami Rodzaj, Wymagania, Odblokowuje i dobrą samokontrolą przechodzi: {r.stdout}")
+    check(r.returncode == 0, f"P-1: a plan with the Rodzaj, Wymagania, Odblokowuje columns and a correct self-check passes: {r.stdout}")
     bad_plan = {
-        "fundament bez Odblokowuje": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
+        "foundation without Odblokowuje": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
                                       "TSK-57", "Odblokowuje"),
-        "Odblokowuje spoza planu": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | TSK-99 | | test klucza |"),
+        "Odblokowuje outside the plan": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | TSK-99 | | test klucza |"),
                                     "TSK-99", "Odblokowuje"),
-        "fundament poznany po wyniku": (rows_ok.replace("| TSK-57 | fundament |", "| TSK-57 | |")
+        "foundation recognized by outcome": (rows_ok.replace("| TSK-57 | fundament |", "| TSK-57 | |")
                                         .replace("| | TSK-58 | | test klucza |", "| | | | test klucza |"),
                                         "TSK-57", "Odblokowuje"),
-        "cięcie bez wymagania i weryfikacji": (rows_ok.replace("| US-03 | — | | |", "| | — | | |"), "TSK-59", "Wymagania"),
-        "fundament tylko w kolumnie Rodzaj": (rows_ok.replace("(fundament) klucz idempotencji", "klucz idempotencji")
+        "cut without a requirement and verification": (rows_ok.replace("| US-03 | — | | |", "| | — | | |"), "TSK-59", "Wymagania"),
+        "foundation only in the Rodzaj column": (rows_ok.replace("(fundament) klucz idempotencji", "klucz idempotencji")
                                                .replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
                                                "TSK-57", "Odblokowuje"),
-        "fundament w kolumnie Kind": (rows_ok.replace("| Cięcie | Rodzaj |", "| Cięcie | Kind |")
+        "foundation in the Kind column": (rows_ok.replace("| Cięcie | Rodzaj |", "| Cięcie | Kind |")
                                        .replace("(fundament) klucz idempotencji", "klucz idempotencji")
                                        .replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
                                        "TSK-57", "Odblokowuje"),
@@ -374,7 +374,7 @@ def main() -> int:
               + "| TSK-1 | fundament | R1 | — | (fundament) schemat | | | | |\n| TSK-2 | cięcie | R1 | — | x | US-1 | | | |\n")
         r = run(["check"], tmp)
         check(r.returncode != 0 and "TSK-1" in r.stdout and "Odblokowuje" in r.stdout,
-              f"P-3: samokontrola planu działa też bez release.yaml: {r.stdout}")
+              f"P-3: the plan self-check also works without release.yaml: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         run(["change", "new", "CHG-3"], tmp)
         plan = Path(tmp) / "docs" / "project" / "changes" / "CHG-3" / "plan.md"
@@ -382,7 +382,7 @@ def main() -> int:
         check(all(c in head for c in ("Kind", "Release", "Flag", "Requirements", "Unblocks", "Verification")),
               f"P-4: szablon plan.md ma kolumny samokontroli planu: {head}")
         r = run(["check"], tmp)
-        check(r.returncode == 0, f"P-5: świeży szablon przechodzi check: {r.stdout}")
+        check(r.returncode == 0, f"P-5: a fresh template passes check: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-1" / "plan.md",
               "artifact: plan\nphase: plan\nstatus: draft\nversion: 1\ncreated: 2026-10-23\nupdated: 2026-10-23\n"
@@ -390,7 +390,7 @@ def main() -> int:
         r = run(["check"], tmp)
         check(r.returncode == 0, f"R-8: zmiana sprzed G1.1 (bez release.yaml) nadal przechodzi: {r.stdout}")
 
-    # Z7b-1a (DZ6, DZ7, N20): plan niebędący szkicem potrzebuje sekcji „Rozważone opcje” (≥2) i „Cele zmiany”.
+    # Z7b-1a (DZ6, DZ7, N20): a non-draft plan needs the "Rozważone opcje" (Options considered, ≥2) and "Cele zmiany" (Change targets) sections.
     head_accepted = ("artifact: plan\nphase: plan\nstatus: accepted\nversion: 1\ncreated: 2026-10-23\n"
                      "updated: 2026-10-23\nchange: CHG-5\ntasks: [TSK-1]")
     head_draft = ("artifact: plan\nphase: plan\nstatus: draft\nversion: 1\ncreated: 2026-10-23\n"
@@ -406,25 +406,25 @@ def main() -> int:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted, body_one)
         r = run(["check"], tmp)
         check(r.returncode != 0 and "at least two" in r.stdout,
-              f"Z-2: plan z jedną opcją dostaje ustalenie: {r.stdout}")
+              f"Z-2: a plan with one option gets a finding: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted,
               "## Cele zmiany (targets)\n\n")
         r = run(["check"], tmp)
         check(r.returncode != 0 and "Rozważone opcje" in r.stdout,
-              f"Z-3: plan bez sekcji „Rozważone opcje” dostaje ustalenie: {r.stdout}")
+              f"Z-3: a plan without the Rozważone opcje section gets a finding: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted, body_no_targets)
         r = run(["check"], tmp)
         check(r.returncode != 0 and "Cele zmiany" in r.stdout,
               f"Z-4: plan bez sekcji „Cele zmiany” dostaje ustalenie: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
-        # Szkic (`draft`) nie musi mieć nowych sekcji — architekt je dopisuje zanim status przejdzie dalej.
+        # A draft (`draft`) need not have the new sections — the architect adds them before the status moves on.
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_draft, "")
         r = run(["check"], tmp)
-        check(r.returncode == 0, f"Z-5: szkic planu bez nowych sekcji przechodzi: {r.stdout}")
-    # Z-6..Z-8: angielski szablon (4c-x) — nagłówki „Options considered”, „Option”, „Change targets” i kolumny planu
-    # po angielsku (jak ci_for_sdlc connectors/repo.ts); polskie formy zostają przyjmowane (Z-1..Z-4).
+        check(r.returncode == 0, f"Z-5: a draft plan without the new sections passes: {r.stdout}")
+    # Z-6..Z-8: English template (4c-x) — the "Options considered", "Option", "Change targets" headings and plan columns
+    # in English (as in ci_for_sdlc connectors/repo.ts); the Polish forms are still accepted (Z-1..Z-4).
     body_en = ("| Slice | Kind | Release | Flag | Value | Requirements | Unblocks | Files | Verification |\n"
                "|---|---|---|---|---|---|---|---|---|\n"
                "| TSK-1 | slice | R1 | — | the user can pay | US-2 | — | | npm test |\n\n"
@@ -463,9 +463,9 @@ def main() -> int:
         check(r.returncode == 0 and dec.read_text(encoding="utf-8").count("DEC-41") == text.count("DEC-41")
               and "already" in r.stdout, f"G-3: ponowienie z tym samym numerem nic nie dopisuje: {r.stdout}")
         r = run(["decision", "pending"], repo)
-        check(jl(r) == [], "G-4: decyzja z bramki nie czeka na wysłanie")
+        check(jl(r) == [], "G-4: a gate decision does not wait to be sent")
         r = run(["check"], repo)
-        check(r.returncode == 0, f"G-5: dziennik z decyzją z bramki przechodzi check: {r.stdout}")
+        check(r.returncode == 0, f"G-5: a log with a gate decision passes check: {r.stdout}")
         r = run(["decision", "gate", "CHG-12", "--gate", "B2", "--outcome", "changes_requested", "--id", "DEC-42",
                  "--by", "PO Payments", "--date", "2026-10-26"], repo)
         text = dec.read_text(encoding="utf-8")
@@ -476,7 +476,7 @@ def main() -> int:
             i = args.index(bad[0])
             args[i + 1] = bad[1]
             r = run(args, repo)
-            check(r.returncode != 0, f"G-7: zły {why} → błąd: {r.stdout}")
+            check(r.returncode != 0, f"G-7: bad {why} → error: {r.stdout}")
         r = run(["decision", "gate", "CHG-12", "--gate", "B3", "--outcome", "approved", "--id", "DEC-45",
                  "--why", "Bez zmian w config/build.json.\n Dlaczego: DEC-0003   to rozstrzyga."], repo)
         line = dec.read_text(encoding="utf-8").split("- id: DEC-45")[-1].split("- why:")[1].splitlines()[0]
@@ -485,25 +485,25 @@ def main() -> int:
         r = run(["check"], repo)
         check(r.returncode == 0, f"G-10: wpis z --why przechodzi check: {r.stdout}")
         r = run(["decision", "gate", "CHG-99", "--gate", "B1", "--outcome", "approved", "--id", "DEC-44"], repo)
-        check(r.returncode != 0 and "change new" in r.stdout, "G-8: brak dziennika zmiany → błąd z podpowiedzią")
+        check(r.returncode != 0 and "change new" in r.stdout, "G-8: no change log → error with a hint")
 
-        # --- data zgłoszenia w nagłówku (kontrakt pdi 0.5.0, lead time od zgłoszenia w ShipScope) ---
+        # --- report date in the header (pdi contract 0.5.0, lead time from the report in ShipScope) ---
         r = run(["change", "new", "CHG-30", "--source", "PRB-3", "--source-reported-at", "2026-10-20"], repo)
         h = header(repo / "docs" / "project" / "changes" / "CHG-30" / "intent.md")
         check(r.returncode == 0 and h.get("source_reported_at") == "2026-10-20" and h.get("source") == "PRB-3",
-              f"S-1: change new zapisuje datę zgłoszenia w nagłówku: {r.stdout} {h}")
+              f"S-1: change new writes the report date in the header: {r.stdout} {h}")
         r = run(["check"], repo)
-        check(r.returncode == 0, f"S-2: nagłówek z datą zgłoszenia przechodzi check: {r.stdout}")
+        check(r.returncode == 0, f"S-2: a header with the report date passes check: {r.stdout}")
         r = run(["change", "new", "CHG-31", "--source", "PRB-3", "--source-reported-at", "wczoraj"], repo)
         check(r.returncode != 0 and not (repo / "docs" / "project" / "changes" / "CHG-31").exists(),
-              f"S-3: zła data zgłoszenia → błąd, nic nie powstaje: {r.stdout}")
+              f"S-3: bad report date → error, nothing is created: {r.stdout}")
         r = run(["change", "new", "CHG-32", "--source-reported-at", "2026-10-20"], repo)
-        check(r.returncode != 0 and "--source" in r.stdout, f"S-4: data bez źródła → błąd: {r.stdout}")
+        check(r.returncode != 0 and "--source" in r.stdout, f"S-4: date without a source → error: {r.stdout}")
         intent = repo / "docs" / "project" / "changes" / "CHG-30" / "intent.md"
         intent.write_text(intent.read_text(encoding="utf-8").replace("source_reported_at: 2026-10-20",
                                                                      "source_reported_at: 20.10.2026"), encoding="utf-8")
         r = run(["check"], repo)
-        check(r.returncode != 0 and "source_reported_at" in r.stdout, f"S-5: zła data w nagłówku → check: {r.stdout}")
+        check(r.returncode != 0 and "source_reported_at" in r.stdout, f"S-5: bad date in the header → check: {r.stdout}")
 
     # Z1 (PRB-3): odpowiedzi na pytania bramki i decyzje zmiany z rejestru pdi (kontrakt pdi 0.12.0)
     with tempfile.TemporaryDirectory() as tmp:
@@ -521,16 +521,16 @@ def main() -> int:
         text = dec.read_text(encoding="utf-8")
         check(r.returncode == 0 and "- question: Czy config/build.json zostaje w repo? (adresat: właściciel)\n"
               "- answer: Nie — generuje go build (DEC-0003).\n- question: Kto zatwierdza teksty?\n"
-              "- answer: Właściciel produktu.\n" in text, f"Z1-1: --answers zapisuje pary w wpisie bramki: {r.stdout}{text[-600:]}")
+              "- answer: Właściciel produktu.\n" in text, f"Z1-1: --answers writes the pairs in the gate entry: {r.stdout}{text[-600:]}")
         r = run(["check"], repo)
         check(r.returncode == 0, f"Z1-2: wpis z odpowiedziami przechodzi check: {r.stdout}")
         bad = repo / "bad.json"
-        for content in ('[{"question": "Q?"}]', '{"question": "Q?", "answer": "A"}', "nie json"):
+        for content in ('[{"question": "Q?"}]', '{"question": "Q?", "answer": "A"}', "not json"):
             bad.write_text(content, encoding="utf-8")
             r = run(["decision", "gate", "CHG-12", "--gate", "B3", "--outcome", "approved", "--id", "DEC-8",
                      "--answers", str(bad)], repo)
             check(r.returncode != 0 and "DEC-8" not in dec.read_text(encoding="utf-8"),
-                  f"Z1-3: złe --answers ({content}) → błąd, nic nie dopisane: {r.stdout}")
+                  f"Z1-3: bad --answers ({content}) → error, nothing appended: {r.stdout}")
 
         linked = repo / "linked.json"
         decisions = [
@@ -553,21 +553,21 @@ def main() -> int:
               and "- question: Jaki format?\n- answer: CSV.\n" in text,
               f"Z1-4: import dopisuje decyzje z pdi z numerem i pochodzeniem: {r.stdout}{text[-900:]}")
         check(text.count("- id: DEC-7") == 1 and "skipped" in r.stdout,
-              f"Z1-5: decyzja z numerem już w decisions.md (bramka) jest pominięta: {r.stdout}")
+              f"Z1-5: a decision whose number is already in decisions.md (gate) is skipped: {r.stdout}")
         r = run(imp, repo)
         check(r.returncode == 0 and dec.read_text(encoding="utf-8") == text,
               f"Z1-6: ponowny import nic nie zmienia (idempotentny po id): {r.stdout}")
         r = run(["check"], repo)
-        check(r.returncode == 0, f"Z1-7: zaimportowane wpisy przechodzą check: {r.stdout}")
+        check(r.returncode == 0, f"Z1-7: imported entries pass check: {r.stdout}")
         r = run(["decision", "pending"], repo)
-        check(jl(r) == [], f"Z1-8: zaimportowane decyzje nie czekają na wysłanie do pdi: {r.stdout}")
-        for broken, why in (([{**decisions[0], "id": "41"}], "zły id"), ([{**decisions[0], "kind": "x"}], "zły kind"),
-                            ({"id": "DEC-1"}, "nie lista")):
+        check(jl(r) == [], f"Z1-8: imported decisions do not wait to be sent to pdi: {r.stdout}")
+        for broken, why in (([{**decisions[0], "id": "41"}], "bad id"), ([{**decisions[0], "kind": "x"}], "bad kind"),
+                            ({"id": "DEC-1"}, "not a list")):
             linked.write_text(json.dumps(broken), encoding="utf-8")
             r = run(imp, repo)
-            check(r.returncode != 0 and dec.read_text(encoding="utf-8") == text, f"Z1-9: {why} → błąd: {r.stdout}")
+            check(r.returncode != 0 and dec.read_text(encoding="utf-8") == text, f"Z1-9: {why} → error: {r.stdout}")
         r = run(["decision", "import", "CHG-99", "--json", str(linked)], repo)
-        check(r.returncode != 0 and "change new" in r.stdout, f"Z1-10: brak dziennika → błąd: {r.stdout}")
+        check(r.returncode != 0 and "change new" in r.stdout, f"Z1-10: no log → error: {r.stdout}")
         dec.write_text(text.replace("- origin: pdi", "- origin: slack", 1), encoding="utf-8")
         r = run(["check"], repo)
         check(r.returncode != 0 and "origin" in r.stdout, f"Z1-11: nieznane pochodzenie → check: {r.stdout}")
@@ -591,24 +591,24 @@ def main() -> int:
           f"K-3: source = source.kind z kontraktu: {props['source']['properties']['kind']['enum']}")
     item = props.get("answers", {}).get("items", {})
     check(set(item.get("required", [])) == {"question", "answer"} and item.get("additionalProperties") is False,
-          f"K-4: answers w kontrakcie = pary question/answer, które zapisuje --answers i import: {item}")
+          f"K-4: answers in the contract = question/answer pairs written by --answers and import: {item}")
     example = json.loads((FIX / "decision.json").read_text(encoding="utf-8"))
     with tempfile.TemporaryDirectory() as tmp:
         repo = Path(tmp)
         run(["change", "new", "CHG-12"], repo)
         src = repo / "linked.json"
-        # kształt z pdi (pdi.phase_decisions): pola decyzji z kontraktu, source.kind jako source_kind
+        # shape from pdi (pdi.phase_decisions): decision fields from the contract, source.kind as source_kind
         src.write_text(json.dumps([{**{k: example[k] for k in ("id", "statement", "why", "decided_at", "decided_by",
                                                               "kind", "drafted_by")},
                                     "source_kind": example["source"]["kind"]}], ensure_ascii=False), encoding="utf-8")
         r = run(["decision", "import", "CHG-12", "--json", str(src)], repo)
         text = (repo / "docs/project/changes/CHG-12/decisions.md").read_text(encoding="utf-8")
         check(r.returncode == 0 and f"- id: {example['id']}" in text and run(["check"], repo).returncode == 0,
-              f"K-5: przykład decyzji z kontraktu importuje się i przechodzi check: {r.stdout}")
+              f"K-5: the decision example from the contract imports and passes check: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów dziennika zmiany (mode-pdi)")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the change log (mode-pdi)")
     return 1 if fails else 0
 
 

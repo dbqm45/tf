@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Moduły tf analyze z pack-it (security, architecture, authz, data-classification, tech-debt, observability,
-i18n): obecne po instalacji, przechodzą bramkę na swoich zestawach testowych, sekret nie trafia do raportu.
+"""tf analyze modules from pack-it (security, architecture, authz, data-classification, tech-debt, observability,
+i18n): present after installation, pass the gate on their own test sets, a secret does not reach the report.
 python3 .claude/tests/test_analyzers.py"""
 import json
 import os
@@ -31,13 +31,13 @@ def main() -> int:
             print(f"✗ {msg}")
 
     for name in ("security", "architecture", "authz", "data-classification", "tech-debt", "observability", "i18n"):
-        check((MODS / name / "analyzer.yaml").is_file(), f"Z-1: moduł {name} zainstalowany w .tf/factory/analyzers/")
+        check((MODS / name / "analyzer.yaml").is_file(), f"Z-1: module {name} installed in .tf/factory/analyzers/")
         r = subprocess.run([sys.executable, str(ANALYZE), "gate", "--module", name], cwd=ROOT, capture_output=True,
                            text=True, timeout=300)
         check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"),
-              f"Z-2: moduł {name} przechodzi bramkę: {r.stdout}{r.stderr}")
+              f"Z-2: module {name} passes the gate: {r.stdout}{r.stderr}")
     r = subprocess.run([sys.executable, str(ANALYZE), "list"], cwd=ROOT, capture_output=True, text=True, timeout=120)
-    check("security" in r.stdout and "architecture" in r.stdout, f"Z-3: tf analyze --list pokazuje moduły: {r.stdout}")
+    check("security" in r.stdout and "architecture" in r.stdout, f"Z-3: tf analyze --list shows the modules: {r.stdout}")
 
     with tempfile.TemporaryDirectory() as t:
         repo = Path(t) / "proj"
@@ -65,10 +65,10 @@ def main() -> int:
         found = json.loads(js).get("findings", []) if js else []
         sev = {f["file"]: f["severity"] for f in found if f["rule"] == "secret"}
         check(sev.get("src/conf.py") == "critical" and sev.get("tests/test_conf.py") == "low",
-              f"Z-6: sekret w pliku testowym zgłaszany z niską wagą, w kodzie — krytyczną: {sev}")
+              f"Z-6: a secret in a test file is reported with low severity, in code — critical: {sev}")
         check(SECRET not in body and SECRET not in js and SECRET[8:] not in js,
-              "Z-5: wartość sekretu nie trafia do raportu ani do .json")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów modułów analizy pack-it")
+              "Z-5: the secret value does not reach the report or the .json")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the pack-it analyzer modules")
     return 1 if fails else 0
 
 

@@ -103,7 +103,7 @@ def org_tracker(root: Path) -> dict:
             mod = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(mod)
             return mod.org_operations(root).get("tracker") or {}
-        except Exception:  # noqa: BLE001 — bez czytelnej nakładki firmowej działa sama karta projektu
+        except Exception:  # noqa: BLE001 — without a readable company overlay the project card works alone
             return {}
     return {}
 
@@ -133,7 +133,7 @@ def cut_changes(root: Path, key: str) -> list[str]:
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         import run_report
         return [c["change"] for c in run_report.task_contexts(root, key)]
-    except Exception:  # noqa: BLE001 — bez czytelnych planów zmian klucz nie jest cięciem
+    except Exception:  # noqa: BLE001 — without readable change plans the key is not a cut
         return []
 
 
@@ -235,7 +235,7 @@ def jira_ready(root: Path) -> bool:
 
 def as_data(text: str) -> str:
     """Tracker content as data: a line starting with `#` gets `\\`, so it does not become a header of the ticket.md file
-    (e.g. a forged „Dodatkowo od człowieka” section)."""
+    (e.g. a forged "Additional from the human" section)."""
     return "\n".join(("\\" + ln) if ln.lstrip().startswith("#") else ln for ln in text.splitlines())
 
 

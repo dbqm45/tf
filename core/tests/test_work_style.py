@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Warstwa osoby i styl pracy (docs/todo.md, „Warstwy zespołu i preferencji osoby”, punkt 1).
+"""The person layer and work style (docs/todo.md, "Team and person preference layers", point 1).
 
-Preferencje osoby (`~/.tf/preferences.yaml`, w testach `TF_PREFERENCES`, oraz `.tf/config/me.yaml` w projekcie) są
-ostatnią warstwą konfiguracji. Osoba ustawia tylko styl i przełączniki sposobu pracy; polityki autonomii nie
-rozluźnia, a domyślny tryb zadania musi mieścić się w `task.allowed_modes` wyższych warstw. Styl (`autonomous`,
-`step-by-step`, `conversation`) to gotowe wartości tych przełączników. Wszystko liczą skrypty, bez modelu.
+A person's preferences (`~/.tf/preferences.yaml`, `TF_PREFERENCES` in the tests, and `.tf/config/me.yaml` in the project) are
+the last configuration layer. A person sets only the style and the work-mode switches; they do not
+loosen the autonomy policy, and the default task mode must fit within `task.allowed_modes` of the higher layers. A style (`autonomous`,
+`step-by-step`, `conversation`) is a ready set of values for those switches. Everything is computed by scripts, without a model.
 python3 .claude/tests/test_work_style.py"""
 import importlib.util
 import json
@@ -55,12 +55,12 @@ def git(project: Path, prefs: Path, *args: str) -> subprocess.CompletedProcess:
 
 
 def project(base: Path, name: str, config: str = "") -> Path:
-    """Projekt z silnikiem fabryki (kopia `.tf/factory` przestrzeni roboczej) i opcjonalną konfiguracją projektu."""
+    """A project with the factory engine (a copy of the workspace's `.tf/factory`) and an optional project configuration."""
     p = base / name
     (p / ".tf").mkdir(parents=True)
     os.symlink(FACTORY, p / ".tf" / "factory")
     (p / ".claude").mkdir()
-    (p / ".claude" / "factory-manifest.json").write_text("{}", encoding="utf-8")   # tf: „fabryka zainstalowana”
+    (p / ".claude" / "factory-manifest.json").write_text("{}", encoding="utf-8")   # tf: "factory installed"
     if config:
         (p / ".tf" / "config").mkdir()
         (p / ".tf" / "config" / "config.yaml").write_text(config, encoding="utf-8")
@@ -83,73 +83,73 @@ def main() -> int:
         prefs.parent.mkdir()
         os.environ["TF_PREFERENCES"] = str(prefs)
 
-        # WS-1..4: warstwa osoby, styl, filtr kluczy, me.yaml
+        # WS-1..4: the person layer, style, key filter, me.yaml
         p = project(base, "a")
         check(not any("person" in lbl for lbl, _ in packs.config_layers(p)),
-              "WS-1: bez pliku preferencji nie ma warstwy osoby")
+              "WS-1: without a preferences file there is no person layer")
         prefs.write_text("style: autonomous\nloop:\n  blocked_slices: false\nwork:\n  budget_usd: 400\n"
                          "autonomy:\n  operations:\n    publish: deny\n  triage:\n    always_review: []\n",
                          encoding="utf-8")
         layers = packs.config_layers(p)
         lbl, person = layers[-1]
-        check("person" in lbl, f"WS-1: preferencje to ostatnia warstwa, oznaczona „osoba”: {[l for l, _ in layers]}")
+        check("person" in lbl, f"WS-1: the preferences are the last layer, labelled 'person': {[l for l, _ in layers]}")
         check(person.get("style") == "autonomous" and (person.get("task") or {}).get("default_mode") == "auto",
-              f"WS-2: styl rozwinięty do wartości przełączników: {person}")
+              f"WS-2: the style expanded into switch values: {person}")
         check((person.get("loop") or {}).get("blocked_slices") is False,
-              f"WS-3: wartość podana wprost wygrywa z wartością stylu: {person}")
+              f"WS-3: an explicitly given value wins over the style's value: {person}")
         check("work" not in person and "triage" not in (person.get("autonomy") or {})
               and (person.get("autonomy") or {}).get("operations") == {"publish": "deny"},
-              f"WS-2: osoba nie ustawia limitów work ani reguł triage, zaostrza tylko operacje: {person}")
+              f"WS-2: a person sets neither the work limits nor the triage rules, only tightens operations: {person}")
         (p / ".tf" / "config").mkdir()
         (p / ".tf" / "config" / "me.yaml").write_text("style: step-by-step\n", encoding="utf-8")
         cfg = packs.load_config(p)
         check(cfg.get("style") == "step-by-step" and cfg["task"]["default_mode"] == "normal"
               and cfg["loop"]["confirm_each_slice"] is True and cfg["loop"]["blocked_slices"] is False,
-              f"WS-4: .tf/config/me.yaml nadpisuje preferencje ogólne: {cfg.get('style')} {cfg.get('task')} {cfg.get('loop')}")
+              f"WS-4: .tf/config/me.yaml overrides the general preferences: {cfg.get('style')} {cfg.get('task')} {cfg.get('loop')}")
 
-        # WS-5: sufit trybów z wyższej warstwy
+        # WS-5: the mode ceiling from a higher layer
         q = project(base, "b", "task:\n  allowed_modes: [plan, normal]\n")
         prefs.write_text("style: autonomous\n", encoding="utf-8")
         ws = packs.work_style(q)
         check(ws["default_mode"] == "normal" and any("allowed_modes" in w for w in ws["warnings"]),
-              f"WS-5: tryb Auto spoza task.allowed_modes nie przechodzi z preferencji osoby: {ws}")
+              f"WS-5: Auto mode outside task.allowed_modes does not pass from the person's preferences: {ws}")
 
-        # WS-6: polityka autonomii — osoba zaostrza, nie rozluźnia
+        # WS-6: the autonomy policy — a person tightens, does not loosen
         prefs.write_text("autonomy:\n  operations:\n    publish: deny\n    git_push: allow\n", encoding="utf-8")
         guard = load(GUARD, "ws_guard")
         levels, warns = guard.load_policy(p)
         check(levels.get("publish") == "deny" and levels.get("git_push") == "confirm",
-              f"WS-6: osoba zaostrza (deny), a „allow” jest ignorowane: {levels} {warns}")
+              f"WS-6: a person tightens (deny), and 'allow' is ignored: {levels} {warns}")
 
-        # WS-7, WS-8: domyślny tryb zadania i sufit przy tf task
+        # WS-7, WS-8: the default task mode and the ceiling for tf task
         prefs.write_text("style: conversation\n", encoding="utf-8")
         r = run(q, prefs, TASK, "start", "IMP-7", "--title", "Domyślny tryb")
         mode = json.loads((q / CHANGES / "IMP-7" / "task.json").read_text(encoding="utf-8")).get("mode") \
             if r.returncode == 0 else None
-        check(mode == "plan", f"WS-7: zadanie bez --mode dostaje domyślny tryb stylu (conversation → plan): {mode} {r.stdout}{r.stderr}")
+        check(mode == "plan", f"WS-7: a task without --mode gets the style's default mode (conversation -> plan): {mode} {r.stdout}{r.stderr}")
         r = run(q, prefs, TASK, "mode", "IMP-7", "auto")
         check(r.returncode != 0 and "allowed_modes" in r.stdout + r.stderr,
-              f"WS-8: tf task mode auto odrzucone, gdy wyższa warstwa nie dopuszcza Auto: {r.returncode} {r.stdout}{r.stderr}")
+              f"WS-8: tf task mode auto rejected when a higher layer does not allow Auto: {r.returncode} {r.stdout}{r.stderr}")
 
         # WS-9: tf style
         prefs.unlink()
         r = run(p, prefs, TF, "style", "step-by-step")
         check(r.returncode == 0 and "style: step-by-step" in prefs.read_text(encoding="utf-8"),
-              f"WS-9: tf style zapisuje styl w preferencjach osoby: {r.stdout}{r.stderr}")
+              f"WS-9: tf style writes the style into the person's preferences: {r.stdout}{r.stderr}")
         r = run(p, prefs, TF, "style", "conversation", "--here")
         check(r.returncode == 0 and "style: conversation" in (p / ".tf/config/me.yaml").read_text(encoding="utf-8"),
-              f"WS-9: tf style --here zapisuje styl tylko dla tego projektu: {r.stdout}{r.stderr}")
+              f"WS-9: tf style --here writes the style for this project only: {r.stdout}{r.stderr}")
         r = run(p, prefs, TF, "style")
         check(r.returncode == 0 and "conversation" in r.stdout and "plan" in r.stdout,
-              f"WS-9: tf style bez nazwy pokazuje styl i jego wartości: {r.stdout}{r.stderr}")
+              f"WS-9: tf style without a name shows the style and its values: {r.stdout}{r.stderr}")
         r = run(p, prefs, TF, "style", "turbo")
         check(r.returncode == 2 and "autonomous" in r.stdout + r.stderr,
-              f"WS-9: nieznany styl → kod 2 z listą stylów: {r.returncode} {r.stdout}{r.stderr}")
+              f"WS-9: an unknown style -> code 2 with the list of styles: {r.returncode} {r.stdout}{r.stderr}")
         r = run(p, prefs, TF, "config", "show")
         check(any(ln.split()[:2] == ["style", "person"] for ln in r.stdout.splitlines()),
-              f"WS-10: tf config show podaje źródło „osoba”: {r.stdout}{r.stderr}")
+              f"WS-10: tf config show gives the source 'person': {r.stdout}{r.stderr}")
 
-        # WS-12: styl conversation włącza tryb planowania Claude Code w .claude/settings.local.json i go oddaje
+        # WS-12: the conversation style turns on Claude Code's planning mode in .claude/settings.local.json and gives it back
         local = p / ".claude" / "settings.local.json"
         local.write_text('{"permissions": {"defaultMode": "default", "allow": ["Bash(ls)"]}}', encoding="utf-8")
         (p / ".tf/config/me.yaml").unlink()
@@ -158,25 +158,25 @@ def main() -> int:
         r = run(p, prefs, TF, "style", "conversation")
         check(r.returncode == 0 and mode_of() == "plan"
               and json.loads(local.read_text(encoding="utf-8"))["permissions"]["allow"] == ["Bash(ls)"],
-              f"WS-12: conversation → defaultMode plan, reszta ustawień bez zmian: {mode_of()} {r.stdout}{r.stderr}")
+              f"WS-12: conversation -> defaultMode plan, the rest of the settings unchanged: {mode_of()} {r.stdout}{r.stderr}")
         check(not any("claude" in w for w in packs.work_style(p)["warnings"]),
-              f"WS-12: ustawienia Claude Code stylu nie są kluczem konfiguracji osoby: {packs.work_style(p)['warnings']}")
+              f"WS-12: the style's Claude Code settings are not a key of the person's configuration: {packs.work_style(p)['warnings']}")
         r = run(p, prefs, TF, "style", "step-by-step")
         check(r.returncode == 0 and mode_of() == "default",
-              f"WS-12: zmiana stylu przywraca poprzedni tryb uprawnień: {mode_of()} {r.stdout}{r.stderr}")
+              f"WS-12: changing the style restores the previous permission mode: {mode_of()} {r.stdout}{r.stderr}")
         local.write_text('{"permissions": {"defaultMode": "acceptEdits"}}', encoding="utf-8")
         r = run(p, prefs, TF, "style", "conversation")
         check(r.returncode == 0 and mode_of() == "acceptEdits" and "acceptEdits" in r.stdout,
-              f"WS-12: własnego trybu uprawnień człowieka styl nie nadpisuje, tylko o nim mówi: {mode_of()} {r.stdout}{r.stderr}")
+              f"WS-12: the style does not overwrite a human's own permission mode, it only mentions it: {mode_of()} {r.stdout}{r.stderr}")
         local.unlink()
         r = run(p, prefs, TF, "style")
         check(r.returncode == 0 and mode_of() == "plan",
-              f"WS-12: tf style bez nazwy uzgadnia tryb uprawnień w tym projekcie (styl z preferencji ogólnych): {r.stdout}{r.stderr}")
+              f"WS-12: tf style without a name reconciles the permission mode in this project (style from the general preferences): {r.stdout}{r.stderr}")
         run(p, prefs, TF, "style", "autonomous")
         check(not local.is_file() or mode_of() is None,
-              f"WS-12: bez wcześniejszej wartości zmiana stylu usuwa ustawiony tryb: {local.read_text(encoding='utf-8') if local.is_file() else ''}")
+              f"WS-12: with no earlier value a style change removes the set mode: {local.read_text(encoding='utf-8') if local.is_file() else ''}")
 
-        # WS-11: step-by-step — po kawałku przebieg czeka na zgodę człowieka
+        # WS-11: step-by-step — after a slice the run waits for the human's consent
         prefs.write_text("style: step-by-step\n", encoding="utf-8")
         s = project(base, "s")
         git(s, prefs, "init", "-q", "-b", "main")
@@ -197,18 +197,18 @@ def main() -> int:
         run(s, prefs, RUN_STATE, "verify", d, "K1", "--files", "pay.py,test_pay.py", "--command", OK)
         r = run(s, prefs, RUN_STATE, "done", d, "K1", "--message", "feat(pay): card payment")
         check(r.returncode == 0 and "STOP" in r.stdout and "proceed" in r.stdout and "Next: K2" not in r.stdout,
-              f"WS-11: po kawałku styl step-by-step zatrzymuje przebieg do zgody człowieka: {r.returncode} {r.stdout}{r.stderr}")
+              f"WS-11: after a slice the step-by-step style stops the run until the human consents: {r.returncode} {r.stdout}{r.stderr}")
         (s / "receipt.py").write_text("R = 1\n", encoding="utf-8")
         r = run(s, prefs, RUN_STATE, "verify", d, "K2", "--files", "receipt.py,test_pay.py", "--command", OK)
         check(r.returncode != 0 and "proceed" in r.stdout + r.stderr,
-              f"WS-11: następny kawałek odrzucony przed zgodą: {r.returncode} {r.stdout}{r.stderr}")
+              f"WS-11: the next slice rejected before consent: {r.returncode} {r.stdout}{r.stderr}")
         r = run(s, prefs, RUN_STATE, "proceed", d)
-        check(r.returncode == 0 and "Next: K2" in r.stdout, f"WS-11: proceed zdejmuje wstrzymanie: {r.stdout}{r.stderr}")
+        check(r.returncode == 0 and "Next: K2" in r.stdout, f"WS-11: proceed lifts the hold: {r.stdout}{r.stderr}")
         r = run(s, prefs, RUN_STATE, "verify", d, "K2", "--files", "receipt.py,test_pay.py", "--command", OK)
-        check(r.returncode == 0, f"WS-11: po zgodzie następny kawałek idzie dalej: {r.returncode} {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"WS-11: after consent the next slice goes on: {r.returncode} {r.stdout}{r.stderr}")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów stylu pracy")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} work style tests")
     return 1 if fails else 0
 
 

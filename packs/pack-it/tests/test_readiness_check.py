@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy skryptu eng-repo-readiness/scripts/readiness_check.py (gotowość repo do pracy agentów, tylko odczyt plików)."""
+"""Tests of the eng-repo-readiness/scripts/readiness_check.py script (repo readiness for agent work, read-only on files)."""
 import json
 import subprocess
 import sys
@@ -31,7 +31,7 @@ def main() -> int:
         if not cond:
             fails.append(msg)
 
-    # 1. --help działa i opisuje kody wyjścia
+    # 1. --help works and describes the exit codes
     r = run("--help")
     check(r.returncode == 0 and "exit code" in r.stdout.lower(), f"--help: {r.returncode} {r.stdout[:200]}")
 
@@ -60,15 +60,15 @@ def main() -> int:
         check(bool(data), f"--json: niepoprawny JSON: {r.stdout[:300]} {r.stderr[:300]}")
         fam = {f.get("family"): f for f in data.get("families", [])}
         check("js" in fam and fam["js"].get("lockfile") == "package-lock.json", f"js + lockfile: {fam}")
-        check("js" in fam and fam["js"].get("audit", "").startswith("npm audit"), f"komenda audytu js: {fam}")
-        check("js" in fam and "vitest list" in (fam["js"].get("dry_run") or ""), f"runner vitest na sucho: {fam}")
+        check("js" in fam and fam["js"].get("audit", "").startswith("npm audit"), f"the js audit command: {fam}")
+        check("js" in fam and "vitest list" in (fam["js"].get("dry_run") or ""), f"the vitest runner dry-run: {fam}")
         ci = data.get("ci", {})
         check(all(ci.get("stages", {}).get(s) for s in ("lint", "test", "build", "types", "security")),
               f"etapy CI: {ci}")
-        check(data.get("verdict") == "healthy" and r.returncode == 0, f"werdykt zdrowe/kod 0: {data.get('verdict')} {r.returncode}")
+        check(data.get("verdict") == "healthy" and r.returncode == 0, f"verdict healthy/code 0: {data.get('verdict')} {r.returncode}")
         check("CLAUDE.md" in data.get("instructions", []), f"pliki instrukcji: {data.get('instructions')}")
 
-        # Repo „krytyczne”: JS bez lockfile i bez runnera testów, TS bez strict, bez .gitignore i bez CI
+        # A "critical" repo: JS without a lockfile and without a test runner, TS without strict, without .gitignore and without CI
         bad = Path(d) / "bad"
         write(bad, "package.json", json.dumps({"name": "b", "dependencies": {"express": "5.1.0"},
                                                 "devDependencies": {"typescript": "5.9.0"}}))
@@ -77,19 +77,19 @@ def main() -> int:
         r = run(str(bad), "--json")
         data = json.loads(r.stdout or "{}")
         msgs = " | ".join(f"{x.get('severity')}:{x.get('area')}:{x.get('message')}" for x in data.get("findings", []))
-        check(r.returncode == 1, f"kod 1 przy ustaleniach wysokiej wagi: {r.returncode}")
-        check("lockfile" in msgs.lower() and "high" in msgs, f"brak lockfile = wysoka: {msgs}")
-        check("strict" in msgs, f"TS bez strict wykryty: {msgs}")
-        check(".gitignore" in msgs, f"brak .gitignore wykryty: {msgs}")
-        check(data.get("verdict") == "critical", f"werdykt krytyczne (brak runnera testów js): {data.get('verdict')}")
+        check(r.returncode == 1, f"code 1 for high-severity findings: {r.returncode}")
+        check("lockfile" in msgs.lower() and "high" in msgs, f"no lockfile = high: {msgs}")
+        check("strict" in msgs, f"TS without strict detected: {msgs}")
+        check(".gitignore" in msgs, f"missing .gitignore detected: {msgs}")
+        check(data.get("verdict") == "critical", f"critical verdict (no js test runner): {data.get('verdict')}")
         fam = {f.get("family"): f for f in data.get("families", [])}
         check("python" in fam and "pip-audit" in fam["python"].get("audit", "")
               and "collect-only" in (fam["python"].get("dry_run") or ""), f"python w podkatalogu: {fam}")
         check("python" in fam and "weak" in (fam["python"].get("lockfile_note") or ""),
-              f"requirements.txt jako słaby zamiennik lockfile: {fam}")
+              f"requirements.txt as a weak lockfile substitute: {fam}")
 
-        # DX: pętla deweloperska kompletna — polecenie startowe, usługi lokalnie z healthcheckiem, dane startowe,
-        # fikcyjne wartości w .env.example, polecenie testów powiązanych ze zmianą
+        # DX: the dev loop complete — a start command, local services with a healthcheck, seed data,
+        # fictitious values in .env.example, a command for tests related to the change
         dxg = Path(d) / "dx-good"
         write(dxg, "package.json", json.dumps({"name": "c", "scripts": {"test": "vitest run", "seed": "tsx db/seed.ts"},
                                                 "dependencies": {"pg": "8.16.0"},
@@ -104,14 +104,14 @@ def main() -> int:
         data = json.loads(r.stdout or "{}")
         dx = data.get("dx", {})
         dxf = [x for x in data.get("findings", []) if x.get("area") == "dx"]
-        check(not dxf, f"DX kompletne: bez ustaleń dx: {dxf}")
-        check("make setup" in (dx.get("setup") or []), f"DX: polecenie startowe z Makefile: {dx}")
+        check(not dxf, f"DX complete: no dx findings: {dxf}")
+        check("make setup" in (dx.get("setup") or []), f"DX: the start command from the Makefile: {dx}")
         check(dx.get("services") == ["app", "postgres"] and dx.get("services_without_healthcheck") == [],
-              f"DX: usługi z compose i healthcheck: {dx}")
-        check("vitest related" in (dx.get("related_tests") or ""), f"DX: testy powiązane ze zmianą: {dx}")
+              f"DX: services from compose with a healthcheck: {dx}")
+        check("vitest related" in (dx.get("related_tests") or ""), f"DX: tests related to the change: {dx}")
 
-        # DX: brak polecenia startowego, usługi (Postgres, Redis) bez środowiska lokalnego, klucz w .env.example,
-        # brak danych startowych
+        # DX: no start command, services (Postgres, Redis) without a local environment, a key in .env.example,
+        # no seed data
         dxb = Path(d) / "dx-bad"
         write(dxb, "package.json", json.dumps({"name": "e", "scripts": {"test": "vitest run"},
                                                 "dependencies": {"pg": "8.16.0", "ioredis": "5.6.0"},
@@ -124,29 +124,29 @@ def main() -> int:
         dxf = {x.get("message", ""): x.get("severity") for x in data.get("findings", []) if x.get("area") == "dx"}
         joined = " | ".join(f"{s}:{m}" for m, s in dxf.items())
         check(any("start command" in m and s == "medium" for m, s in dxf.items()),
-              f"DX: brak polecenia startowego (średnia): {joined}")
+              f"DX: no start command (medium): {joined}")
         check(any("postgres" in m and "redis" in m and s == "medium" for m, s in dxf.items()),
-              f"DX: usługi bez środowiska lokalnego (średnia): {joined}")
+              f"DX: services without a local environment (medium): {joined}")
         check(any(".env.example" in m and s == "high" for m, s in dxf.items()),
               f"DX: sekret w .env.example (wysoka): {joined}")
         check(any("seed data" in m and s == "low" for m, s in dxf.items()),
-              f"DX: brak danych startowych (niska): {joined}")
-        check("sk-proj-Ab3d" not in r.stdout, "DX: wartość klucza nie trafia do wyniku")
+              f"DX: no seed data (low): {joined}")
+        check("sk-proj-Ab3d" not in r.stdout, "DX: the key value does not reach the result")
 
-        # Tekst: tabela i rodzina bez audytu wbudowanego → „pominięto”, nie „0”
+        # Text: a table and a family without a built-in audit → "skipped", not "0"
         java = Path(d) / "java"
         write(java, "pom.xml", "<project><dependencies><dependency><artifactId>junit-jupiter</artifactId>"
                                "</dependency></dependencies></project>")
         write(java, ".gitignore", "target/\n")
         r = run(str(java))
-        check("skipped" in r.stdout and "| " in r.stdout, f"java: tekst z 'pominięto' i tabelą: {r.stdout[:400]}")
+        check("skipped" in r.stdout and "| " in r.stdout, f"java: text with 'skipped' and a table: {r.stdout[:400]}")
 
-        # Błędna ścieżka → kod 2
-        check(run(str(Path(d) / "nie-ma")).returncode == 2, "nieistniejąca ścieżka powinna dać kod 2")
+        # A wrong path → code 2
+        check(run(str(Path(d) / "does-not-exist")).returncode == 2, "a nonexistent path should give code 2")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów readiness_check")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of readiness_check")
     return 1 if fails else 0
 
 

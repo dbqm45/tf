@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy workflows nakładki (.claude/workflows/*.js): poprawny nagłówek `meta`, fazy, brak źródeł niedeterminizmu oraz
-logika audytu kodu (code-audit.js) w Node z atrapami agent/parallel/pipeline — bez modelu i bez kosztu.
+"""Tests of the pack workflows (.claude/workflows/*.js): a valid `meta` header, phases, no sources of nondeterminism and
+the code audit logic (code-audit.js) in Node with agent/parallel/pipeline stubs — without a model and without cost.
 python3 .claude/tests/test_workflows.py"""
 import json
 import re
@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude").is_dir() and (p / ".tf" / "factory").is_dir())
 WF = ROOT / ".claude" / "workflows"
 
-# Uruchamia skrypt workflow jak funkcję: meta bez `export`, ciało w funkcji async (skrypty kończą się `return`).
+# Runs a workflow script like a function: meta without `export`, the body in an async function (scripts end with `return`).
 HARNESS = r"""
 const fs = require('fs')
 const [file, scenarioPath] = process.argv.slice(2)
@@ -42,7 +42,7 @@ run(agent, parallel, pipeline, phase, log, scenario.args, budget)
 """
 
 INVENTORY = {"path": "docs/project/07-review/2026-10-21-code-audit-inventory.md", "stack": "python 3.12",
-             "modules": ["api", "billing"], "missing_tools": ["skaner sekretów"],
+             "modules": ["api", "billing"], "missing_tools": ["secrets scanner"],
              "skills_present": ["arch-quality-attributes", "eng-module-depth", "ddd-connascence-analysis",
                                 "sec-appsec-devsecops", "be-auth-security", "arch-threat-modeling",
                                 "eng-tech-debt-audit", "eng-clean-code"]}
@@ -58,19 +58,19 @@ def scenario(depth="standard", limit=8, dims=("architecture", "security", "quali
     return {"args": {"date": date, "dimensions": list(dims), "depth": depth, "limit": limit, "modules": [],
                      "exclude": ["vendor/"]},
             "replies": [
-                {"label": "inwentarz", "reply": INVENTORY},
-                {"label": "przegląd:architecture", "reply": {"findings": [
-                    finding(title="cykl billing-accounts", file="api/a.py", line=10, risk=3, reach=2, cost="M",
-                            evidence="import cykliczny api/a.py:10")]}},
-                {"label": "przegląd:security", "reply": {"findings": [
-                    finding(title="brak walidacji", file="api/a.py", line=10, risk=3, reach=3, cost="S",
-                            evidence="api/a.py:10 bez walidacji"),
-                    finding(title="brak sprawdzenia właściciela", file="api/b.py", line=5, risk=4, reach=3, cost="S",
+                {"label": "inventory", "reply": INVENTORY},
+                {"label": "review:architecture", "reply": {"findings": [
+                    finding(title="billing-accounts cycle", file="api/a.py", line=10, risk=3, reach=2, cost="M",
+                            evidence="circular import api/a.py:10")]}},
+                {"label": "review:security", "reply": {"findings": [
+                    finding(title="missing validation", file="api/a.py", line=10, risk=3, reach=3, cost="S",
+                            evidence="api/a.py:10 no validation"),
+                    finding(title="missing owner check", file="api/b.py", line=5, risk=4, reach=3, cost="S",
                             evidence="api/b.py:5", blocker="authz")]}},
-                {"label": "przegląd:quality", "reply": {"findings": [
-                    finding(title="podejrzenie martwego kodu", risk=1, reach=1, cost="S")]}},
-                {"label": "raport", "reply": "docs/project/07-review/2026-10-21-code-audit.md"},
-                {"contains": "Spróbuj obalić", "reply": {"refuted": False, "reason": "potwierdzone"}},
+                {"label": "review:quality", "reply": {"findings": [
+                    finding(title="suspected dead code", risk=1, reach=1, cost="S")]}},
+                {"label": "report", "reply": "docs/project/07-review/2026-10-21-code-audit.md"},
+                {"contains": "Try to refute", "reply": {"refuted": False, "reason": "potwierdzone"}},
             ]}
 
 
@@ -99,75 +99,75 @@ def main() -> int:
     for f in scripts:
         text = f.read_text(encoding="utf-8")
         m = re.match(r"export const meta = \{(.*?)\n\}\n", text, re.S)
-        check(m is not None, f"W-1 {f.name}: plik zaczyna się od `export const meta = {{…}}`")
+        check(m is not None, f"W-1 {f.name}: the file starts with `export const meta = {{…}}`")
         head = m.group(1) if m else ""
         check(re.search(rf"name: '{re.escape(f.stem)}'", head) and "description:" in head
               and not re.search(r"\$\{|\.\.\.|\w\(", head),
-              f"W-2 {f.name}: meta to czysty literał z name = nazwa pliku i description")
+              f"W-2 {f.name}: meta is a pure literal with name = the file name and a description")
         titles = re.findall(r"title: '([^']+)'", head)
         used = set(re.findall(r"phase\('([^']+)'\)", text)) | set(re.findall(r"phase: '([^']+)'", text))
-        check(titles and set(titles) == used, f"W-3 {f.name}: fazy w meta = fazy użyte w skrypcie: {titles} / {sorted(used)}")
+        check(titles and set(titles) == used, f"W-3 {f.name}: phases in meta = phases used in the script: {titles} / {sorted(used)}")
         check(not re.search(r"Date\.now\(|Math\.random\(|new Date\(\)", text),
-              f"W-4 {f.name}: bez Date.now / Math.random / new Date() (wznowienie przebiegu)")
+              f"W-4 {f.name}: no Date.now / Math.random / new Date() (resuming a run)")
 
     audit = WF / "code-audit.js"
-    check(audit.is_file(), "W-5: workflow code-audit zainstalowany (/code-audit; /eng-code-audit to skill)")
+    check(audit.is_file(), "W-5: the code-audit workflow installed (/code-audit; /eng-code-audit is a skill)")
     if not shutil.which("node"):
-        print(f"ℹ brak Node — logikę workflows sprawdza CI fabryki; tu tylko testy statyczne")
+        print(f"ℹ no Node — the workflow logic is checked by the factory CI; only static tests here")
     elif audit.is_file():
         with tempfile.TemporaryDirectory() as t:
             tmp = Path(t)
             out = run_node(audit, scenario(), tmp)
             res = out.get("result") or {}
-            check(out.get("ok"), f"W-6: przebieg bez błędu: {out.get('error')}")
+            check(out.get("ok"), f"W-6: a run without an error: {out.get('error')}")
             types = {c.get("label"): c.get("agentType") for c in out.get("calls", [])}
-            check(types.get("przegląd:architecture") == "architect" and types.get("przegląd:security") ==
-                  "security-reviewer" and types.get("przegląd:quality") == "specialist",
-                  f"W-7: wykonawcy wymiarów: {types}")
-            inv = next((c for c in out.get("calls", []) if c.get("label") == "inwentarz"), {})
+            check(types.get("review:architecture") == "architect" and types.get("review:security") ==
+                  "security-reviewer" and types.get("review:quality") == "specialist",
+                  f"W-7: dimension executors: {types}")
+            inv = next((c for c in out.get("calls", []) if c.get("label") == "inventory"), {})
             check(inv.get("model") == "haiku" and "2026-10-21-code-audit-inventory.md" in inv.get("prompt", ""),
-                  "W-8: inwentarz na najtańszym modelu, do pliku z datą z argumentów")
+                  "W-8: the inventory on the cheapest model, to a file with the date from the arguments")
             ranking = res.get("ranking", [])
             merged = next((r for r in ranking if r.get("file") == "api/a.py"), {})
             check(len([r for r in ranking if r.get("file") == "api/a.py"]) == 1
                   and sorted(merged.get("dimensions", [])) == ["architecture", "security"],
-                  f"W-9: duplikat po plik:linia scalony z etykietami wymiarów: {ranking}")
-            # ryzyko 3 × zasięg 3 ÷ koszt M (2) — wartości najostrożniejsze z duplikatów
-            check(merged.get("score") == 4.5 and merged.get("id") == "A-01", f"W-10: ranking ryzyko × zasięg ÷ koszt: {merged}")
+                  f"W-9: a duplicate by file:line merged with the dimension labels: {ranking}")
+            # risk 3 × reach 3 ÷ cost M (2) — the most cautious values of the duplicates
+            check(merged.get("score") == 4.5 and merged.get("id") == "A-01", f"W-10: ranking risk × reach ÷ cost: {merged}")
             check([b.get("file") for b in res.get("blockers", [])] == ["api/b.py"]
-                  and all(r.get("file") != "api/b.py" for r in ranking), f"W-11: bloker poza rankingiem: {res.get('blockers')}")
-            check([h.get("title") for h in res.get("hypotheses", [])] == ["podejrzenie martwego kodu"],
-                  f"W-12: ustalenie bez dowodu → hipotezy: {res.get('hypotheses')}")
+                  and all(r.get("file") != "api/b.py" for r in ranking), f"W-11: the blocker outside the ranking: {res.get('blockers')}")
+            check([h.get("title") for h in res.get("hypotheses", [])] == ["suspected dead code"],
+                  f"W-12: a finding without evidence → hypotheses: {res.get('hypotheses')}")
             nc = " ".join(res.get("not_checked", []))
-            check("accessibility" in nc and "ux-accessibility" in nc, f"W-13: wymiar bez skilli pominięty i zapisany: {nc}")
+            check("accessibility" in nc and "ux-accessibility" in nc, f"W-13: a dimension without skills skipped and recorded: {nc}")
             check(res.get("report") == "docs/project/07-review/2026-10-21-code-audit.md"
                   and any("2026-10-21-code-audit.md" in c.get("prompt", "") for c in out.get("calls", [])
-                          if c.get("label") == "raport"), "W-14: raport do pliku z datą")
-            check(not any("Spróbuj obalić" in c.get("prompt", "") for c in out.get("calls", [])),
-                  "W-15: standard bez weryfikacji (tylko pełny)")
+                          if c.get("label") == "report"), "W-14: the report to a file with the date")
+            check(not any("Try to refute" in c.get("prompt", "") for c in out.get("calls", [])),
+                  "W-15: standard without verification (full only)")
 
             out = run_node(audit, scenario(limit=2), tmp)
             res = out.get("result") or {}
-            reviews = [c for c in out.get("calls", []) if str(c.get("label", "")).startswith("przegląd:")]
+            reviews = [c for c in out.get("calls", []) if str(c.get("label", "")).startswith("review:")]
             check(len(reviews) == 2 and "quality" in " ".join(res.get("not_checked", [])),
-                  f"W-16: limit wykonawców — nadmiarowe wymiary pominięte jawnie: {[c.get('label') for c in reviews]}")
+                  f"W-16: the executor limit — surplus dimensions skipped explicitly: {[c.get('label') for c in reviews]}")
 
             out = run_node(audit, scenario(depth="full"), tmp)
             calls = out.get("calls", [])
             models = {c.get("label"): c.get("model") for c in calls}
-            check(models.get("przegląd:architecture") == "opus" and models.get("przegląd:security") == "opus"
-                  and models.get("przegląd:quality") is None, f"W-17: pełny — architektura i bezpieczeństwo na opus: {models}")
-            check(any("Spróbuj obalić" in c.get("prompt", "") for c in calls), "W-18: pełny — weryfikacja blokerów i top")
+            check(models.get("review:architecture") == "opus" and models.get("review:security") == "opus"
+                  and models.get("review:quality") is None, f"W-17: full — architecture and security on opus: {models}")
+            check(any("Try to refute" in c.get("prompt", "") for c in calls), "W-18: full — verification of blockers and the top")
 
             out = run_node(audit, scenario(date=""), tmp)
             check(not out.get("ok") and "date" in out.get("error", "") and not out.get("calls"),
-                  f"W-19: bez daty w argumentach → błąd przed pierwszym agentem: {out.get('error')}")
+                  f"W-19: no date in the arguments → an error before the first agent: {out.get('error')}")
             out = run_node(audit, scenario(dims=("architecture", "magic")), tmp)
-            check(not out.get("ok") and "magic" in out.get("error", ""), f"W-20: nieznany wymiar → błąd: {out.get('error')}")
+            check(not out.get("ok") and "magic" in out.get("error", ""), f"W-20: an unknown dimension → error: {out.get('error')}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów workflows")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of workflows")
     return 1 if fails else 0
 
 

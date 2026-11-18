@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy skryptu dossier_check.py (skill eng-legacy-dossier): kompletność teczki systemu i dowody reguł biznesowych."""
+"""Tests of the dossier_check.py script (skill eng-legacy-dossier): completeness of the system dossier and the business rule evidence."""
 import json
 import subprocess
 import sys
@@ -181,42 +181,42 @@ def main() -> int:
 
     r = case()
     check(r.returncode == 0 and r.stdout.splitlines()[0] == "legacy-dossier-check: OK",
-          f"DC-1: kompletna teczka → OK w pierwszej linii: {r.stdout}{r.stderr}")
+          f"DC-1: a complete dossier → OK on the first line: {r.stdout}{r.stderr}")
 
     r = case(INDEX.replace("<!-- legacy-dossier -->\n", ""))
     check(r.returncode == 1 and r.stdout.startswith("legacy-dossier-check: ERRORS") and "marker" in r.stdout,
-          f"DC-2: brak znacznika w README.md → błąd: {r.stdout}")
+          f"DC-2: no marker in README.md → error: {r.stdout}")
 
     r = case(INDEX.replace("## Słownik", "## Inne"))
-    check(r.returncode == 1 and "Glossary" in r.stdout, f"DC-3: brak sekcji indeksu → błąd: {r.stdout}")
+    check(r.returncode == 1 and "Glossary" in r.stdout, f"DC-3: a missing index section → error: {r.stdout}")
 
     r = case(module=None)
-    check(r.returncode == 1 and "modules/faktury.md" in r.stdout, f"DC-4: moduł z indeksu bez pliku → błąd: {r.stdout}")
+    check(r.returncode == 1 and "modules/faktury.md" in r.stdout, f"DC-4: a module from the index without a file → error: {r.stdout}")
 
     r = case(module=MODULE.replace("src/Invoice.java:3", "src/Invoice.java:99"))
     check(r.returncode == 1 and "R-FAK-01" in r.stdout and "99" in r.stdout,
-          f"DC-5: dowód wskazuje linię spoza pliku → błąd: {r.stdout}")
+          f"DC-5: evidence points to a line beyond the file → error: {r.stdout}")
 
     r = case(module=MODULE.replace("src/Invoice.java:3", "src/Brak.java:3"))
-    check(r.returncode == 1 and "src/Brak.java" in r.stdout, f"DC-6: dowód wskazuje nieistniejący plik → błąd: {r.stdout}")
+    check(r.returncode == 1 and "src/Brak.java" in r.stdout, f"DC-6: evidence points to a nonexistent file → error: {r.stdout}")
 
     r = case(module=MODULE.replace("| — | do weryfikacji |", "| — | kod |"))
-    check(r.returncode == 1 and "R-FAK-02" in r.stdout, f"DC-7: reguła bez dowodu i z pewnością „kod” → błąd: {r.stdout}")
+    check(r.returncode == 1 and "R-FAK-02" in r.stdout, f"DC-7: a rule without evidence and with confidence 'kod' → error: {r.stdout}")
 
     r = case(module=MODULE.replace("R-FAK-02", "R-FAK-01"))
-    check(r.returncode == 1 and "R-FAK-01" in r.stdout and "duplicated" in r.stdout, f"DC-8: powtórzone ID reguły → błąd: {r.stdout}")
+    check(r.returncode == 1 and "R-FAK-01" in r.stdout and "duplicated" in r.stdout, f"DC-8: a repeated rule ID → error: {r.stdout}")
 
     r = case(module=MODULE.replace("Stan: żółty — zaokrąglenia w dwóch miejscach\n", ""))
-    check(r.returncode == 1 and "State" in r.stdout, f"DC-9: karta modułu bez pola Stan → błąd: {r.stdout}")
+    check(r.returncode == 1 and "State" in r.stdout, f"DC-9: a module card without the Stan field → error: {r.stdout}")
 
     r = case(module=MODULE.replace("| kod |", "| chyba |"))
-    check(r.returncode == 1 and "chyba" in r.stdout, f"DC-10: nieznana pewność → błąd: {r.stdout}")
+    check(r.returncode == 1 and "chyba" in r.stdout, f"DC-10: unknown confidence → error: {r.stdout}")
 
     r = case(module=MODULE.replace("src/Invoice.java:3", "src/Invoice.java:2-3"))
-    check(r.returncode == 0, f"DC-11: zakres linii w dowodzie jest poprawny: {r.stdout}")
+    check(r.returncode == 0, f"DC-11: a line range in the evidence is valid: {r.stdout}")
 
     r = case(module=MODULE.replace("src/Invoice.java:3", "../../etc/hosts:1"))
-    check(r.returncode == 1 and "outside the repository" in r.stdout, f"DC-13: dowód spoza repozytorium → błąd: {r.stdout}")
+    check(r.returncode == 1 and "outside the repository" in r.stdout, f"DC-13: evidence from outside the repository → error: {r.stdout}")
 
     r = case(INDEX, MODULE, "--json")
     try:
@@ -224,38 +224,38 @@ def main() -> int:
     except ValueError:
         data = {}
     check(data.get("status") == "OK" and data.get("modules") == 1 and data.get("rules") == 2
-          and data.get("unverified") == 1, f"DC-12: --json z liczbą modułów, reguł i reguł do weryfikacji: {r.stdout}")
+          and data.get("unverified") == 1, f"DC-12: --json with the number of modules, rules and rules to verify: {r.stdout}")
 
-    # Tryb audytu architektury: assessment.md (ustalenia ARCH-NNN) i recommendations.md (REC-NNN).
+    # Architecture audit mode: assessment.md (ARCH-NNN findings) and recommendations.md (REC-NNN).
     r = case(INDEX, MODULE, "--json", assess=ASSESS, recs=RECS)
     try:
         data = json.loads(r.stdout)
     except ValueError:
         data = {}
     check(data.get("status") == "OK" and data.get("findings") == 2 and data.get("recommendations") == 2,
-          f"DC-14: pełny audyt (inventory + assessment + recommendations) → OK: {r.stdout}")
+          f"DC-14: a full audit (inventory + assessment + recommendations) → OK: {r.stdout}")
     r = case(assess=ASSESS.replace("Kategoria: preferencja", "Kategoria: drobiazg"), recs=RECS)
-    check(r.returncode == 1 and "drobiazg" in r.stdout, f"DC-15: nieznana kategoria ustalenia → błąd: {r.stdout}")
+    check(r.returncode == 1 and "drobiazg" in r.stdout, f"DC-15: an unknown finding category → error: {r.stdout}")
     r = case(assess=ASSESS.replace("Dowód: src/Invoice.java:3", "Dowód: —"), recs=RECS)
     check(r.returncode == 1 and "ARCH-001" in r.stdout and "evidence" in r.stdout.lower(),
-          f"DC-16: potwierdzony problem bez dowodu → błąd: {r.stdout}")
+          f"DC-16: a confirmed problem without evidence → error: {r.stdout}")
     r = case(assess=ASSESS, recs=RECS.replace("Dotyczy: ARCH-002", "Dotyczy: ARCH-099"))
-    check(r.returncode == 1 and "ARCH-099" in r.stdout, f"DC-17: rekomendacja do nieistniejącego ustalenia → błąd: {r.stdout}")
+    check(r.returncode == 1 and "ARCH-099" in r.stdout, f"DC-17: a recommendation for a nonexistent finding → error: {r.stdout}")
     r = case(assess=ASSESS, recs=RECS.replace("Dotyczy: ARCH-001", "Dotyczy: ARCH-002"))
-    check(r.returncode == 1 and "ARCH-001" in r.stdout, f"DC-18: potwierdzony problem bez rekomendacji → błąd: {r.stdout}")
+    check(r.returncode == 1 and "ARCH-001" in r.stdout, f"DC-18: a confirmed problem without a recommendation → error: {r.stdout}")
     r = case(assess=ASSESS, recs=RECS.replace("Priorytet: P1", "Priorytet: pilne"))
-    check(r.returncode == 1 and "pilne" in r.stdout, f"DC-19: nieznany priorytet → błąd: {r.stdout}")
+    check(r.returncode == 1 and "pilne" in r.stdout, f"DC-19: unknown priority → error: {r.stdout}")
     r = case(assess=ASSESS.replace("## Mocne strony", "## Inne"), recs=RECS)
-    check(r.returncode == 1 and "Strengths" in r.stdout, f"DC-20: assessment bez mocnych stron → błąd: {r.stdout}")
+    check(r.returncode == 1 and "Strengths" in r.stdout, f"DC-20: an assessment without strengths → error: {r.stdout}")
     r = case(recs=RECS)
-    check(r.returncode == 1 and "assessment.md" in r.stdout, f"DC-21: rekomendacje bez assessment.md → błąd: {r.stdout}")
+    check(r.returncode == 1 and "assessment.md" in r.stdout, f"DC-21: recommendations without assessment.md → error: {r.stdout}")
     r = case(assess=ASSESS.replace("Luka: zmiana w aplikacji psuje bibliotekę\n", ""), recs=RECS)
-    check(r.returncode == 1 and "Gap" in r.stdout, f"DC-22: ustalenie bez pola Luka → błąd: {r.stdout}")
+    check(r.returncode == 1 and "Gap" in r.stdout, f"DC-22: a finding without the Luka field → error: {r.stdout}")
     r = case(assess=ASSESS, recs=RECS.replace("Decyzja: dokumentacja", "Decyzja: przeprojektowanie"))
     check(r.returncode == 1 and "preference" in r.stdout and "REC-002" in r.stdout,
-          f"DC-23: przeprojektowanie uzasadnione samą preferencją → błąd: {r.stdout}")
+          f"DC-23: a redesign justified by preference alone → error: {r.stdout}")
 
-    # 14.x: migracja przepisuje polskie dossier na angielską składnię; treść zostaje, kontrola przechodzi
+    # 14.x: the migration rewrites a Polish dossier into English syntax; the content stays, the check passes
     import importlib.util
     spec = importlib.util.spec_from_file_location("ld_migrations", ROOT / ".tf" / "factory" / "migrations.py")
     mig = importlib.util.module_from_spec(spec)
@@ -280,14 +280,14 @@ def main() -> int:
               and "| ID | Rule | Evidence | Confidence |" in mod and "| src/Invoice.java:3 | code |" in mod
               and "| — | to verify |" in mod and "Category: confirmed problem" in ass and "Gap: zmiana w aplikacji" in ass
               and "Decision: incremental refactoring" in rec and "Addresses: ARCH-001" in rec,
-              f"DC-24: migracja dossier — sekcje, pola i wartości po angielsku, treść bez zmian: {changed} {mod[:400]}")
+              f"DC-24: dossier migration — sections, fields and values in English, content unchanged: {changed} {mod[:400]}")
         r = subprocess.run([sys.executable, str(SCRIPT), str(target), "--root", str(d)], capture_output=True, text=True)
-        check(r.returncode == 0, f"DC-25: dossier po migracji przechodzi kontrolę: {r.stdout}")
-        check(mig.migrate_values(d, dry=False) == [], "DC-26: ponowna migracja dossier nic nie zmienia")
+        check(r.returncode == 0, f"DC-25: the dossier after migration passes the check: {r.stdout}")
+        check(mig.migrate_values(d, dry=False) == [], "DC-26: a repeated dossier migration changes nothing")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów dossier_check")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of dossier_check")
     return 1 if fails else 0
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy eng-codebase-mapping/scripts/git_territory.py na tymczasowym repo git (deterministyczne daty i autorzy)."""
+"""Tests of eng-codebase-mapping/scripts/git_territory.py on a temporary git repo (deterministic dates and authors)."""
 import json
 import os
 import subprocess
@@ -71,43 +71,43 @@ def main() -> int:
             data = json.loads(r.stdout)
         except ValueError:
             data = {}
-        check(bool(data) and r.returncode == 0, f"--json: kod {r.returncode}, {r.stdout[:200]} {r.stderr[:300]}")
+        check(bool(data) and r.returncode == 0, f"--json: code {r.returncode}, {r.stdout[:200]} {r.stderr[:300]}")
         files = {x["path"]: x for x in data.get("files", [])}
         dirs = {x["path"]: x["commits"] for x in data.get("dirs", [])}
         check(data.get("files", [{}])[0].get("path") == "src/api/a.ts" and files["src/api/a.ts"]["commits"] == 4,
-              f"top plik src/api/a.ts (4 zmiany): {data.get('files')}")
-        check("package-lock.json" not in files and "src/locales/pl.json" not in files, f"szum odfiltrowany: {list(files)}")
-        check(files.get("src/core/x.ts", {}).get("commits") == 3, f"commit agenta liczony w terytorium: {files.get('src/core/x.ts')}")
-        check(data.get("skipped_bot_commits") == 1, f"commit bota pominięty: {data.get('skipped_bot_commits')}")
-        check(dirs.get("src/api") == 4 and dirs.get("src/core") == 3 and dirs.get("src/old") == 2, f"katalogi (głębokość 2): {dirs}")
+              f"top file src/api/a.ts (4 changes): {data.get('files')}")
+        check("package-lock.json" not in files and "src/locales/pl.json" not in files, f"noise filtered out: {list(files)}")
+        check(files.get("src/core/x.ts", {}).get("commits") == 3, f"an agent commit counted in the territory: {files.get('src/core/x.ts')}")
+        check(data.get("skipped_bot_commits") == 1, f"bot commit skipped: {data.get('skipped_bot_commits')}")
+        check(dirs.get("src/api") == 4 and dirs.get("src/core") == 3 and dirs.get("src/old") == 2, f"directories (depth 2): {dirs}")
         check(files.get("src/old/legacy.ts", {}).get("alive") is False and files["src/api/a.ts"].get("alive") is True,
-              f"oznaczenie usuniętych plików: {files.get('src/old/legacy.ts')}")
+              f"marking of deleted files: {files.get('src/old/legacy.ts')}")
         q = data.get("quarters", {})
-        check(q.get("2025-Q1", [{}])[0].get("path") == "src/api" and "2025-Q3" in q, f"ranking kwartalny: {q}")
+        check(q.get("2025-Q1", [{}])[0].get("path") == "src/api" and "2025-Q3" in q, f"quarterly ranking: {q}")
         co = data.get("cochange", {})
         pairs = {(p["a"], p["b"]): p["commits"] for p in co.get("dir_pairs", [])}
-        check(pairs.get(("src/api", "src/core")) == 2, f"para katalogów api-core = 2 (masowy commit pominięty): {pairs}")
-        check(co.get("skipped_large_commits") == 1, f"masowy commit (>30 plików) pominięty: {co.get('skipped_large_commits')}")
+        check(pairs.get(("src/api", "src/core")) == 2, f"directory pair api-core = 2 (mass commit skipped): {pairs}")
+        check(co.get("skipped_large_commits") == 1, f"mass commit (>30 files) skipped: {co.get('skipped_large_commits')}")
         fpairs = {(p["a"], p["b"]): p for p in co.get("file_pairs", [])}
-        check(fpairs.get(("src/api/a.ts", "src/core/x.ts"), {}).get("commits") == 2, f"para plików: {fpairs}")
-        check(any(h["path"] == "src/api/a.ts" for h in co.get("hubs", [])), f"huby: {co.get('hubs')}")
+        check(fpairs.get(("src/api/a.ts", "src/core/x.ts"), {}).get("commits") == 2, f"file pair: {fpairs}")
+        check(any(h["path"] == "src/api/a.ts" for h in co.get("hubs", [])), f"hubs: {co.get('hubs')}")
         authors = {a["name"]: a["commits"] for a in data.get("authors", [])}
-        check(authors == {"Alice": 1, "Bob": 1}, f"kontrybutorzy src/core bez bota i agenta: {authors}")
+        check(authors == {"Alice": 1, "Bob": 1}, f"contributors of src/core without the bot and the agent: {authors}")
         hot = data.get("hotspots", [])
         check(hot and hot[0]["path"] == "src/api/a.ts" and hot[0]["score"] == hot[0]["commits"] * hot[0]["nloc"],
-              f"hotspot = zmiany × linie niepuste: {hot[:2]}")
-        check(len(data.get("head", "")) >= 7, f"nagłówek z commitem HEAD: {data.get('head')}")
+              f"hotspot = changes × non-blank lines: {hot[:2]}")
+        check(len(data.get("head", "")) >= 7, f"heading with the HEAD commit: {data.get('head')}")
 
-        # wyjście tekstowe: tabela Markdown i nagłówek świeżości
+        # text output: a Markdown table and a freshness heading
         r = run("--repo", str(repo), "--since", "2025-01-01", "--top", "3")
-        check(r.returncode == 0 and "| " in r.stdout and "HEAD" in r.stdout, f"tekst: {r.stdout[:300]}")
+        check(r.returncode == 0 and "| " in r.stdout and "HEAD" in r.stdout, f"text: {r.stdout[:300]}")
 
-        # kontrybutorzy z Co-Authored-By: autor-człowiek zostaje
+        # contributors from Co-Authored-By: the human author stays
         r = run("--repo", str(repo), "--since", "2025-01-01", "--authors", "src/old", "--json")
         authors = {a["name"]: a["commits"] for a in json.loads(r.stdout or "{}").get("authors", [])}
-        check(authors == {"Carol": 2}, f"autor-człowiek z trailerem agenta liczony: {authors}")
+        check(authors == {"Carol": 2}, f"human author with an agent trailer counted: {authors}")
 
-        # bus factor: najmniej osób, które mają > 50% commitów obszaru; aktywność względem daty HEAD
+        # bus factor: the fewest people who hold > 50% of the area's commits; activity relative to the HEAD date
         bf = Path(d) / "bf"
         bf.mkdir()
         git(bf, "init", "-q")
@@ -133,39 +133,39 @@ def main() -> int:
             areas = []
         by = {x["path"]: x for x in areas}
         check(r.returncode == 0 and set(by) == {"billing", "catalog", "legacy", "shared"},
-              f"bus factor: obszary z ≥ 5 commitami ludzi (tiny pominięty): kod {r.returncode}, {list(by)} {r.stderr[:300]}")
+              f"bus factor: areas with ≥ 5 human commits (tiny skipped): code {r.returncode}, {list(by)} {r.stderr[:300]}")
         b = by.get("billing", {})
         check(b.get("bus_factor") == 1 and b.get("top_author") == "Dana" and b.get("top_share") == 0.83
               and b.get("commits") == 6 and b.get("people") == 2 and b.get("active") == 1 and b.get("risk") == "high",
-              f"billing: jedna osoba > 50%, bot pominięty, aktywny tylko Ed: {b}")
+              f"billing: one person > 50%, bot skipped, only Ed active: {b}")
         c = by.get("catalog", {})
         check(c.get("bus_factor") == 2 and c.get("commits") == 6 and c.get("top_author") != "Claude" and c.get("risk") == "moderate",
-              f"catalog: dokładnie 50% to za mało na 1 osobę, commity agenta nie liczą się: {c}")
+              f"catalog: exactly 50% is not enough for 1 person, agent commits do not count: {c}")
         lg = by.get("legacy", {})
-        check(lg.get("active") == 0 and lg.get("risk") == "critical", f"legacy: nikt aktywny w 90 dniach przed HEAD: {lg}")
+        check(lg.get("active") == 0 and lg.get("risk") == "critical", f"legacy: nobody active in the 90 days before HEAD: {lg}")
         s = by.get("shared", {})
-        check(s.get("bus_factor") == 4 and s.get("risk") == "low", f"shared: 6 osób po 1 commicie → 4: {s}")
-        check([x["path"] for x in areas] == ["legacy", "billing", "catalog", "shared"], f"kolejność wg ryzyka: {[x['path'] for x in areas]}")
+        check(s.get("bus_factor") == 4 and s.get("risk") == "low", f"shared: 6 people with 1 commit each → 4: {s}")
+        check([x["path"] for x in areas] == ["legacy", "billing", "catalog", "shared"], f"order by risk: {[x['path'] for x in areas]}")
         r = run("--repo", str(bf), "--since", "2024-01-01", "--bus-factor", "--active-days", "400", "--json")
         lg = {x["path"]: x for x in json.loads(r.stdout or "{}").get("bus_factor", {}).get("areas", [])}.get("legacy", {})
-        check(lg.get("active") == 1 and lg.get("risk") == "high", f"--active-days 400: Hal aktywny: {lg}")
+        check(lg.get("active") == 1 and lg.get("risk") == "high", f"--active-days 400: Hal active: {lg}")
         r = run("--repo", str(bf), "--since", "2024-01-01", "--bus-factor", "--min-commits", "2", "--json")
         paths = [x["path"] for x in json.loads(r.stdout or "{}").get("bus_factor", {}).get("areas", [])]
-        check("tiny" in paths, f"--min-commits 2 obejmuje tiny: {paths}")
+        check("tiny" in paths, f"--min-commits 2 includes tiny: {paths}")
         r = run("--repo", str(bf), "--since", "2024-01-01", "--bus-factor")
         check(r.returncode == 0 and "Bus factor" in r.stdout and "| `legacy` |" in r.stdout and "@example.com" not in r.stdout,
-              f"tekst bus factor (bez e-maili): {r.stdout[-600:]}")
+              f"bus factor text (without e-mails): {r.stdout[-600:]}")
         r = run("--repo", str(bf), "--since", "2024-01-01", "--all", "--json")
-        check("bus_factor" not in json.loads(r.stdout or "{}"), "--all nie dołącza bus factor (nazwiska tylko na życzenie)")
+        check("bus_factor" not in json.loads(r.stdout or "{}"), "--all does not add bus factor (names only on request)")
 
-        # nie repo → kod 2
+        # not a repo → code 2
         plain = Path(d) / "plain"
         plain.mkdir()
-        check(run("--repo", str(plain)).returncode == 2, "katalog bez gita powinien dać kod 2")
+        check(run("--repo", str(plain)).returncode == 2, "a directory without git should give code 2")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów git_territory")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of git_territory")
     return 1 if fails else 0
 
 

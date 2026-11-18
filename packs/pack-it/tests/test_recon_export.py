@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Testy eng-codebase-mapping/scripts/recon_export.py: eksport rekonstrukcji z kodu w JSON (F2 integracji z pdi) —
-reguły, wymagania i słownik domeny z plików Markdown z dowodami plik:linia, moduły z kart, commit z manifestu,
-stabilne identyfikatory i sprawdzenie dowodów z --repo. python3 .claude/tests/test_recon_export.py"""
+"""Tests of eng-codebase-mapping/scripts/recon_export.py: export of the reconstruction from code as JSON (F2 of the pdi integration) —
+rules, requirements and the domain glossary from Markdown files with file:line evidence, modules from the cards, the commit from the manifest,
+stable identifiers and an evidence check with --repo. python3 .claude/tests/test_recon_export.py"""
 import json
 import subprocess
 import sys
@@ -83,54 +83,54 @@ def main() -> int:
               and data.get("commit") == "abc1234def", f"E-1: reconstruction.json obok rules.md z commitem z manifestu: "
                                                      f"{r.stdout}{r.stderr}")
         rules, reqs, dom = data.get("rules", []), data.get("requirements", []), data.get("domain", [])
-        check(len(rules) == 3 and len(reqs) == 3 and len(dom) == 3, f"E-2: liczba pozycji: {len(rules)}/{len(reqs)}/{len(dom)}")
+        check(len(rules) == 3 and len(reqs) == 3 and len(dom) == 3, f"E-2: number of items: {len(rules)}/{len(reqs)}/{len(dom)}")
         r1 = rules[0] if rules else {}
         check(r1.get("text") == "Faktura bez pozycji jest odrzucana." and r1.get("module") == "billing"
               and r1.get("quote") == "raise ValueError" and r1.get("confidence") == "test" and r1.get("status") == "evidence"
               and r1.get("evidence") == [{"path": "src/billing/invoice.py", "line": 3, "line_end": 4, "verified": True}]
-              and r1.get("source") == "rules.md:5", f"E-3: reguła z modułem, cytatem, pewnością i zakresem linii: {r1}")
+              and r1.get("source") == "rules.md:5", f"E-3: a rule with a module, a quote, confidence and a line range: {r1}")
         cross = rules[2] if len(rules) > 2 else {}
         check(cross.get("section") == "Reguły przekrojowe" and cross.get("module") is None
               and cross.get("status") == "assumption" and cross.get("evidence") == [],
-              f"E-4: reguła przekrojowa bez dowodu ze znacznikiem [założenie]: {cross}")
+              f"E-4: a cross-cutting rule without evidence with the [założenie] marker: {cross}")
         two = reqs[1] if len(reqs) > 1 else {}
         check(two.get("text") == "Korekta faktury zmniejsza należność" and len(two.get("evidence", [])) == 2
               and two.get("confidence") == "do potwierdzenia" and two.get("section") == "Faktury",
-              f"E-5: wymaganie z dwoma dowodami i pewnością: {two}")
+              f"E-5: a requirement with two pieces of evidence and confidence: {two}")
         check((reqs[2] if len(reqs) > 2 else {}).get("status") == "question", f"E-6: [pytanie] → status question: {reqs[-1:]}")
         rows = [d for d in dom if d.get("cells")]
         check(len(rows) == 2 and rows[0]["cells"].get("Termin") == "korekta" and rows[0]["cells"].get("Nazwa w kodzie") == "CreditNote"
               and rows[0]["evidence"][0]["verified"] is True,
-              f"E-7: wiersze słownika z tabeli (kolumny jako cells): {rows}")
+              f"E-7: glossary rows from the table (columns as cells): {rows}")
         check(len(rows) == 2 and rows[1]["evidence"][0]["verified"] is False,
-              f"E-8: dowód poza plikiem (linia 99) → verified false: {rows[1:]}")
+              f"E-8: evidence beyond the file (line 99) → verified false: {rows[1:]}")
         ids = [i.get("id", "") for i in rules + reqs + dom]
         check(all(ids) and len(set(ids)) == len(ids) and all(i.startswith(("rules-", "requirements-", "domain-")) for i in ids),
               f"E-9: unikalne identyfikatory z rodzajem: {ids}")
         mods = data.get("modules", [])
         check(mods == [{"module": "billing", "purpose": "Wystawia faktury.", "card": "modules/billing.json"}],
-              f"E-10: moduły z kart: {mods}")
+              f"E-10: modules from the cards: {mods}")
 
         (rec / "rules.md").write_text(RULES.replace("## billing", "Nowa linia na górze.\n\n## billing"), encoding="utf-8")
         run(str(rec), "--repo", str(repo))
         moved = json.loads(out_path.read_text(encoding="utf-8"))["rules"]
         check([i["id"] for i in moved] == [i["id"] for i in rules] and moved[0]["source"] != r1.get("source"),
-              "E-11: identyfikator stały po przesunięciu linii (źródło się zmienia)")
+              "E-11: the identifier is stable after the lines shift (the source changes)")
 
         r = run(str(rec))
         noverify = json.loads(out_path.read_text(encoding="utf-8"))
         check(r.returncode == 0 and all("verified" not in e for i in noverify["rules"] for e in i["evidence"]),
-              "E-12: bez --repo dowody nie są sprawdzane (brak pola verified)")
+              "E-12: without --repo the evidence is not checked (no verified field)")
         r = run(str(rec), "--out", str(repo / "x.json"))
         check(r.returncode == 0 and (repo / "x.json").is_file(), f"E-13: --out: {r.stdout}{r.stderr}")
-        # angielskie znaczniki (14.x, np. z recon_cards.py) dają ten sam status co polskie
+        # English markers (14.x, e.g. from recon_cards.py) give the same status as the Polish ones
         (rec / "rules.md").write_text("# Rules\n\n## X\n- A [unverified: no evidence in the card]\n- B [assumption]\n"
                                       "- C [question]\n", encoding="utf-8")
         run(str(rec), "--out", str(repo / "en.json"))
         st = [i["status"] for i in json.loads((repo / "en.json").read_text(encoding="utf-8"))["rules"]]
         check(st == ["unverified", "assumption", "question"], f"E-16: angielskie znaczniki → status: {st}")
         r = run(str(repo / "nie-ma"))
-        check(r.returncode == 2 and "Traceback" not in r.stderr, f"E-14: brak katalogu → 2: {r.returncode} {r.stderr[-200:]}")
+        check(r.returncode == 2 and "Traceback" not in r.stderr, f"E-14: missing directory → 2: {r.returncode} {r.stderr[-200:]}")
 
         schema = json.loads((SCRIPTS / "reconstruction-export.schema.json").read_text(encoding="utf-8")) \
             if (SCRIPTS / "reconstruction-export.schema.json").is_file() else {}
@@ -138,11 +138,11 @@ def main() -> int:
         top_keys = set(schema.get("properties", {}))
         check(top_keys and set(data) <= top_keys and set(schema.get("required", [])) <= set(data)
               and all(set(i) <= item_keys for i in rules + reqs + dom),
-              f"E-15: wynik ma tylko pola ze schematu: {set(data) - top_keys} {item_keys}")
+              f"E-15: the result has only fields from the schema: {set(data) - top_keys} {item_keys}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów eksportu rekonstrukcji")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the reconstruction export")
     return 1 if fails else 0
 
 

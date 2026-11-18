@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""B1b: triaż ryzyka zmian (`tf risk`, .tf/factory/risk_triage.py) na sztucznych repozytoriach git.
+"""B1b: change risk triage (`tf risk`, .tf/factory/risk_triage.py) on artificial git repositories.
 
 python3 tests/test_risk_triage.py
 
-Diff gałęzi względem bazy → poziom high / medium / low i lista „co musi zobaczyć człowiek” (plik, powód).
-Wynik doradczy (decyzja człowieka 2026-11-10, D2): nie blokuje merge'a. Reguły domyślne z nadpisaniem w
-`.tf/config/config.yaml` (`autonomy.triage`). Bez sieci i bez modelu.
+A branch diff against the base → a level high / medium / low and a list of "what a human must see" (file, reason).
+The result is advisory (the human's decision 2026-11-10, D2): it does not block the merge. Default rules with an override in
+`.tf/config/config.yaml` (`autonomy.triage`). No network and no model.
 """
 import importlib.util
 import json
@@ -77,8 +77,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as d:
         t = Path(d)
         cases = [
-            # (nazwa, zmiany, usunięte, oczekiwany poziom, kategoria wymagana na liście albo None)
-            ("docs", {"README.md": "# app\n\nOpis.\n", "docs/guide.md": "x\n"}, (), "low", None),
+            # (name, changes, deleted, expected level, the category required on the list or None)
+            ("docs", {"README.md": "# app\n\nDescription.\n", "docs/guide.md": "x\n"}, (), "low", None),
             ("deps", {"package.json": '{"dependencies": {"left-pad": "1.3.0"}}\n',
                       "package-lock.json": '{"x": 1}\n'}, (), "low", None),
             ("code", {"src/app.py": "def run():\n    return 2\n"}, (), "medium", None),
@@ -95,7 +95,7 @@ def main() -> int:
             ("deleted-test", {"src/app.py": "def run():\n    return 3\n"}, ("tests/test_app.py",), "high",
              "tests-weakened"),
             ("spec", {"docs/project/02-requirements/acceptance.feature": "Feature: x\n"}, (), "high", "spec"),
-            # pominięcie jako dane (napis w kodzie testu), nie dekorator — bez alarmu; zmiana zwykłego kodu = medium
+            # a skip as data (a string in the test code), not a decorator — no alarm; a change to ordinary code = medium
             ("skip-in-string", {"tests/test_app.py": BASE_FILES["tests/test_app.py"]
                                 + "\nSAMPLE = \"@pytest.mark.skip\"\n\ndef test_sample():\n    assert SAMPLE\n"}, (),
              "medium", None),
@@ -105,37 +105,37 @@ def main() -> int:
             res = m.triage(repo, base="main")
             got_cats = {i["category"] for i in res["items"]}
             if res["level"] != level or (cat and cat not in got_cats):
-                fails.append(f"R-{name}: poziom {level}{f', kategoria {cat}' if cat else ''}: {res['level']} — "
+                fails.append(f"R-{name}: level {level}{f', category {cat}' if cat else ''}: {res['level']} — "
                              f"{reasons(res)}")
-        # R-adr (D3): nowy katalog najwyższego poziomu w kodzie bez ADR → punkt „dowód” na liście (poziom medium)
+        # R-adr (D3): a new top-level directory in code without an ADR → an "evidence" item on the list (level medium)
         repo = repo_with(t, "module", {"src/reports/__init__.py": "", "src/reports/build.py": "def b():\n    pass\n"})
         res = m.triage(repo, base="main")
         if res["level"] != "medium" or not any(i["category"] == "evidence-adr" for i in res["items"]):
-            fails.append(f"R-adr: nowy moduł bez ADR → punkt dowodu, poziom medium: {res['level']} {reasons(res)}")
+            fails.append(f"R-adr: a new module without an ADR → an evidence item, level medium: {res['level']} {reasons(res)}")
         repo2 = repo_with(t, "module-adr", {"src/reports/build.py": "def b():\n    pass\n",
                                             "docs/adr/0003-reports.md": "# ADR\n"})
         if any(i["category"] == "evidence-adr" for i in m.triage(repo2, base="main")["items"]):
-            fails.append("R-adr: nowy moduł z ADR w tej samej zmianie — bez punktu dowodu")
-        # R-config: nadpisanie reguł z .tf/config/config.yaml (dodatkowa kategoria high dla ścieżki projektu)
+            fails.append("R-adr: a new module with an ADR in the same change — no evidence item")
+        # R-config: overriding rules from .tf/config/config.yaml (an extra high category for a project path)
         repo = repo_with(t, "custom", {"src/tariffs/calc.py": "def calc():\n    return 0\n"})
         write(repo, ".tf/config/config.yaml",
               "autonomy:\n  triage:\n    high:\n      ev-pricing:\n        - '(^|/)tariffs/'\n")
         res = m.triage(repo, base="main", rules=m.load_rules(repo))
         if res["level"] != "high" or not any(i["category"] == "ev-pricing" for i in res["items"]):
-            fails.append(f"R-config: reguła projektu z .tf/config/config.yaml: {res['level']} {reasons(res)}")
-        # R-org: reguła organizacji z nakładki firmowej (org_defaults.config.autonomy.triage)
+            fails.append(f"R-config: a project rule from .tf/config/config.yaml: {res['level']} {reasons(res)}")
+        # R-org: an organization rule from the company pack (org_defaults.config.autonomy.triage)
         repo = repo_with(t, "org", {"src/kadry/umowy.py": "def umowa():\n    return 0\n"})
         write(repo, ".tf/factory/packs/pack-firma/pack.yaml",
               "id: pack-firma\nversion: 0.1.0\ntitle: Firma\norg_defaults:\n  config:\n    autonomy:\n      triage:\n"
               "        high:\n          kadry:\n            - '(^|/)kadry/'\n")
         res = m.triage(repo, base="main", rules=m.load_rules(repo))
         if res["level"] != "high" or not any(i["category"] == "kadry" for i in res["items"]):
-            fails.append(f"R-org: reguła organizacji z nakładki firmowej: {res['level']} {reasons(res)}")
-        # R-md: sekcja do opisu PR — poziom, lista z plikiem i powodem, uwaga, że to doradztwo
+            fails.append(f"R-org: an organization rule from the company pack: {res['level']} {reasons(res)}")
+        # R-md: a section for the PR description — level, a list with the file and reason, a note that it is advisory
         md = m.to_markdown(m.triage(repo_with(t, "md", {"src/auth/login.py": "x = 1\n"}), base="main"))
         if "## Change risk: high" not in md or "src/auth/login.py" not in md or "advisory" not in md:
-            fails.append(f"R-md: sekcja opisu PR: {md[:300]}")
-        # R-cli: --json bez wyjątku, kod 0 (doradczy — także przy high)
+            fails.append(f"R-md: the PR description section: {md[:300]}")
+        # R-cli: --json without an exception, code 0 (advisory — also for high)
         repo = repo_with(t, "cli", {"src/auth/x.py": "x = 1\n"})
         r = subprocess.run([sys.executable, str(ENGINE / "risk_triage.py"), "--base", "main", "--json"], cwd=repo,
                            capture_output=True, text=True, timeout=60)
@@ -144,14 +144,14 @@ def main() -> int:
         except (json.JSONDecodeError, KeyError):
             ok = False
         if not ok:
-            fails.append(f"R-cli: --json, kod 0 także przy high: {r.returncode} {r.stdout[:200]} {r.stderr[-300:]}")
+            fails.append(f"R-cli: --json, code 0 also for high: {r.returncode} {r.stdout[:200]} {r.stderr[-300:]}")
     tf = (ENGINE / "tf.py").read_text(encoding="utf-8")
     if "tf risk" not in tf.split('"""')[1] or '"risk"' not in tf:
         fails.append("R-tf: tf risk w pomocy i dyspozycji launchera")
     for f in fails:
         print(f"✗ {f}")
     total = 19
-    print(f"{'✓' if not fails else '✗'} triaż ryzyka zmian: {total - len(fails)}/{total}")
+    print(f"{'✓' if not fails else '✗'} change risk triage: {total - len(fails)}/{total}")
     return 1 if fails else 0
 
 

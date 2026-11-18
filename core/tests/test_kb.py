@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy bazy wiedzy fabryki (skill core-knowledge): rejestry źródeł nakładek, pobieranie do lokalnego cache,
-wyszukiwanie BM25 z cytatem plik:linia, status aktualności, kody wyjścia."""
+"""Factory knowledge base tests (skill core-knowledge): pack source registries, fetching into a local cache,
+BM25 search with a file:line citation, freshness status, exit codes."""
 import datetime as dt
 import functools
 import http.server
@@ -26,7 +26,7 @@ def load():
 
 
 def project(t: Path) -> Path:
-    """Mały projekt: dwa skille, notatka, archiwum researchu."""
+    """A small project: two skills, a note, a research archive."""
     (t / ".claude" / "skills" / "dom-alpha" / "references").mkdir(parents=True)
     (t / ".claude" / "skills" / "dom-alpha" / "SKILL.md").write_text(
         "---\nname: dom-alpha\n---\n# Alpha\n\n## Taryfa dynamiczna\nCena zmienia się co godzinę według giełdy.\n"
@@ -78,13 +78,13 @@ def main() -> int:
     kb = load()
     today = dt.date.today().isoformat()
 
-    # Walidacja pojedynczego rejestru
+    # Validation of a single registry
     bad = [{"id": "a", "title": "A", "url": "http://x.org", "areas": ["ocpp"], "rank": "P", "licence": "open", "kind": "spec"},
            {"id": "a", "title": "B", "url": "https://y.org", "areas": ["ocpp"], "rank": "Z", "licence": "open", "kind": "spec"}]
     errs = " ".join(kb.validate_registry(bad))
-    check("https" in errs and "a" in errs and "rank" in errs, f"R-3: walidacja wyłapuje http, duplikat id i złą rangę: {errs}")
+    check("https" in errs and "a" in errs and "rank" in errs, f"R-3: validation catches http, a duplicate id and a bad rank: {errs}")
     errs = " ".join(kb.validate_registry([src("x", ["inny"])], areas={"tariffs"}))
-    check("inny" in errs, f"R-4: obszar spoza zadeklarowanych w rejestrze: {errs}")
+    check("inny" in errs, f"R-4: an area outside those declared in the registry: {errs}")
 
     with tempfile.TemporaryDirectory() as t:
         root = project(Path(t))
@@ -92,19 +92,19 @@ def main() -> int:
         for v in ("TF_KB_DIR", "EVTF_KB_DIR"):
             os.environ.pop(v, None)
 
-        # Rejestry nakładek: każdy skill może mieć references/zrodla.json z deklaracją obszarów
+        # Pack registries: each skill may have references/zrodla.json with a declaration of areas
         reg = kb.load_registry(root=root)
         check([e["id"] for e in reg] == ["spec-tariffs", "spec-roaming", "spec-paid", "spec-gateway"]
               and reg[0]["registry"] == "dom-alpha" and reg[3]["registry"] == "dom-beta",
-              f"R-1: rejestry wszystkich skilli razem, z nazwą skilla: {[(e['id'], e.get('registry')) for e in reg]}")
-        check(kb.validate_registries(root) == [], f"R-2: poprawne rejestry → brak błędów: {kb.validate_registries(root)}")
+              f"R-1: the registries of all skills together, with the skill name: {[(e['id'], e.get('registry')) for e in reg]}")
+        check(kb.validate_registries(root) == [], f"R-2: valid registries -> no errors: {kb.validate_registries(root)}")
         dup = root / ".claude" / "skills" / "dom-gamma" / "references"
         dup.mkdir(parents=True)
         (dup / "zrodla.json").write_text(json.dumps({"version": 1, "sources": [src("spec-gateway", ["gateway"])]}),
                                          encoding="utf-8")
         errs = " ".join(kb.validate_registries(root))
         check("spec-gateway" in errs and "dom-gamma" in errs and "areas" in errs,
-              f"R-5: id zdublowane między rejestrami i brak deklaracji obszarów → błędy: {errs}")
+              f"R-5: ids duplicated across registries and no declaration of areas -> errors: {errs}")
         (dup / "zrodla.json").unlink()
         spec_file = root / "tariffs.asciidoc"
         spec_file.write_text(SPEC, encoding="utf-8")
@@ -113,35 +113,35 @@ def main() -> int:
         m = kb.ingest(rid, root, file=spec_file)
         meta = json.loads((cache / rid / "meta.json").read_text(encoding="utf-8"))
         check(m["status"] == "new" and meta["url"] == reg[0]["url"] and meta["rank"] == reg[0]["rank"]
-              and meta["fetched"] == today and len(meta["sha256"]) == 64, f"I-1: pobranie z pliku dla id z rejestru: {meta}")
-        check((cache / ".gitignore").read_text(encoding="utf-8").strip() == "*", "I-2: cache ma własny .gitignore (pełne teksty nie trafiają do gita)")
-        check(kb.ingest(rid, root, file=spec_file)["status"] == "unchanged", "I-3: to samo źródło drugi raz → unchanged")
+              and meta["fetched"] == today and len(meta["sha256"]) == 64, f"I-1: fetching from a file for an id from the registry: {meta}")
+        check((cache / ".gitignore").read_text(encoding="utf-8").strip() == "*", "I-2: the cache has its own .gitignore (full texts do not reach git)")
+        check(kb.ingest(rid, root, file=spec_file)["status"] == "unchanged", "I-3: the same source a second time -> unchanged")
         spec_file.write_text(SPEC + "Nowy akapit.\n", encoding="utf-8")
         m = kb.ingest(rid, root, file=spec_file)
         check(m["status"] == "changed" and m["previous_sha256"] and m["previous_sha256"] != m["sha256"],
-              f"I-4: zmieniona treść → changed z poprzednią sumą: {m}")
+              f"I-4: changed content -> changed with the previous checksum: {m}")
 
-        # Wyszukiwanie: cache, skille, notatki, research
+        # Search: cache, skills, notes, research
         hits = kb.search("step_size raz na sesję", root)
         top = hits[0] if hits else {}
         lines = spec_file.read_text(encoding="utf-8").splitlines()
         a, b = top.get("lines", [0, 0])
         check(top.get("source") == rid and top.get("kind") == "cache" and any("raz na sesję" in x for x in lines[a - 1:b]),
-              f"S-1: trafienie w cache z zakresem linii zawierającym tekst: {top}")
-        check(top.get("url") == reg[0]["url"] and top.get("fetched") == today, f"S-2: trafienie niesie URL i datę pobrania: {top}")
+              f"S-1: a cache hit with a line range containing the text: {top}")
+        check(top.get("url") == reg[0]["url"] and top.get("fetched") == today, f"S-2: the hit carries the URL and the fetch date: {top}")
         hits = kb.search("taryfy dynamicznej", root)
         check(hits and hits[0]["path"] == ".claude/skills/dom-alpha/SKILL.md" and hits[0]["kind"] == "skill",
-              f"S-3: odmiana polska (rdzeń) trafia w skill: {hits[:1]}")
+              f"S-3: a Polish inflected form (stem) hits the skill: {hits[:1]}")
         hits = kb.search("credit_reference_id", root)
-        check(hits and hits[0]["path"].endswith("references/szczegoly.md"), f"S-4: identyfikator z podkreśleniem: {hits[:1]}")
+        check(hits and hits[0]["path"].endswith("references/szczegoly.md"), f"S-4: an identifier with an underscore: {hits[:1]}")
         hits = kb.search("partner X-Request-ID", root)
-        check(hits and hits[0]["kind"] == "note", f"S-5: notatki z docs/knowledge/: {hits[:1]}")
+        check(hits and hits[0]["kind"] == "note", f"S-5: notes from docs/knowledge/: {hits[:1]}")
         hits = kb.search("płatność kartą 50 kW", root)
-        check(hits and hits[0]["kind"] == "research", f"S-6: archiwum researchu: {hits[:1]}")
-        check(kb.search("zupełnie nieobecne słowo kwarkowe", root) == [], "S-7: brak trafień → pusta lista")
+        check(hits and hits[0]["kind"] == "research", f"S-6: the research archive: {hits[:1]}")
+        check(kb.search("zupełnie nieobecne słowo kwarkowe", root) == [], "S-7: no hits -> empty list")
         check(len(kb.search("dom alpha", root, k=2)) <= 2, "S-8: limit k")
 
-        # Pobieranie z URL (lokalny serwer testowy) i źródło spoza rejestru
+        # Fetching from a URL (a local test server) and a source outside the registry
         site = root / "site"
         site.mkdir()
         (site / "afir.html").write_text(
@@ -154,94 +154,94 @@ def main() -> int:
         try:
             try:
                 kb.ingest(url, root)
-                check(False, "I-5: adres lokalny bez zgody → błąd")
+                check(False, "I-5: a local address without consent -> error")
             except kb.KbError as e:
-                check("local" in str(e) or "private" in str(e), f"I-5: komunikat: {e}")
+                check("local" in str(e) or "private" in str(e), f"I-5: message: {e}")
             os.environ["TF_KB_ALLOW_LOCAL"] = "1"
             m = kb.ingest(url, root)
             text = (cache / m["id"] / "doc.txt").read_text(encoding="utf-8")
             check(m["rank"] == "W" and m["title"] == "AFIR test" and any("not in the registry" in w for w in m["warnings"]),
-                  f"I-6: URL spoza rejestru → ranga W z ostrzeżeniem: {m}")
+                  f"I-6: a URL outside the registry -> rank W with a warning: {m}")
             check("Płatność ad hoc" in text and "alert" not in text and "ukryte" not in text and ".x{}" not in text,
-                  f"I-7: HTML → tekst bez skryptów, stylów i ukrytych elementów: {text!r}")
+                  f"I-7: HTML -> text without scripts, styles and hidden elements: {text!r}")
         finally:
             os.environ.pop("TF_KB_ALLOW_LOCAL", None)
             srv.shutdown()
 
-        # Pusta albo prawie pusta odpowiedź (np. strona wymaga JavaScriptu) to błąd, nie źródło
+        # An empty or almost empty response (e.g. the page requires JavaScript) is an error, not a source
         empty = root / "empty.html"
         empty.write_text("<html><body> </body></html>", encoding="utf-8")
         try:
             kb.ingest(reg[2]["id"], root, file=empty)
-            check(False, "I-8: pusta treść → KbError")
+            check(False, "I-8: empty content -> KbError")
         except kb.KbError as e:
-            check("empty" in str(e) and not (cache / reg[2]["id"]).exists(), f"I-8: komunikat i brak wpisu w cache: {e}")
+            check("empty" in str(e) and not (cache / reg[2]["id"]).exists(), f"I-8: message and no entry in the cache: {e}")
 
-        # Strona anty-botowa (Imperva, Cloudflare) to błąd, nie źródło
+        # An anti-bot page (Imperva, Cloudflare) is an error, not a source
         wall = root / "wall.html"
         wall.write_text("<html><head><title>Pardon Our Interruption</title></head><body><h1>Pardon Our Interruption</h1>"
                         + "<p>As you were browsing something about your browser made us think you were a bot.</p>" * 4
                         + "</body></html>", encoding="utf-8")
         try:
             kb.ingest(reg[2]["id"], root, file=wall)
-            check(False, "I-9: strona anty-botowa → KbError")
+            check(False, "I-9: anti-bot page -> KbError")
         except kb.KbError as e:
-            check("anti-bot" in str(e), f"I-9: komunikat: {e}")
+            check("anti-bot" in str(e), f"I-9: message: {e}")
 
-        # Źródło z wielu plików: trafienie wskazuje konkretny plik
+        # A multi-file source: the hit points to a specific file
         multi = root / "multi.txt"
         multi.write_text("<!-- plik: https://example.org/a.asciidoc -->\n" + "Wstęp do specyfikacji modułu.\n" * 8
                          + "<!-- plik: https://example.org/b.asciidoc -->\n" + "Moduł z polem bliskie_unikalne_pole.\n"
                          + "Dalszy opis modułu.\n" * 8, encoding="utf-8")
         kb.ingest(reg[1]["id"], root, file=multi)
         hits = kb.search("bliskie_unikalne_pole", root)
-        check(hits and hits[0]["file_url"] == "https://example.org/b.asciidoc", f"S-9: plik w źródle wieloplikowym: {hits[:1]}")
+        check(hits and hits[0]["file_url"] == "https://example.org/b.asciidoc", f"S-9: a file in a multi-file source: {hits[:1]}")
 
-        # Status aktualności i usuwanie
+        # Freshness status and removal
         mp = cache / rid / "meta.json"
         meta = json.loads(mp.read_text(encoding="utf-8"))
         meta["fetched"] = "2025-01-01"
         mp.write_text(json.dumps(meta), encoding="utf-8")
         st = {x["id"]: x for x in kb.status(root, max_age=180, today="2026-10-20")}
-        check(st[rid]["stale"] and st[rid]["age_days"] == 657, f"ST-1: źródło starsze niż 180 dni → stale: {st.get(rid)}")
-        check(kb.remove(m["id"], root) and not (cache / m["id"]).exists(), "RM-1: usunięcie źródła z cache")
+        check(st[rid]["stale"] and st[rid]["age_days"] == 657, f"ST-1: a source older than 180 days -> stale: {st.get(rid)}")
+        check(kb.remove(m["id"], root) and not (cache / m["id"]).exists(), "RM-1: removing a source from the cache")
 
-        # Katalog cache z TF_KB_DIR; stara nazwa EVTF_KB_DIR dalej działa
+        # Cache directory from TF_KB_DIR; the old name EVTF_KB_DIR still works
         for n, var in enumerate(("TF_KB_DIR", "EVTF_KB_DIR")):
             alt = Path(t) / f"alt-kb-{n}"
             os.environ[var] = str(alt)
             try:
                 kb.ingest(rid, root, file=spec_file)
-                check((alt / rid / "doc.txt").exists(), f"ENV-{n + 1}: {var} zmienia katalog cache")
+                check((alt / rid / "doc.txt").exists(), f"ENV-{n + 1}: {var} changes the cache directory")
             finally:
                 os.environ.pop(var, None)
 
-        # Wiersz poleceń
+        # Command line
         run = lambda *a: subprocess.run([sys.executable, str(SCRIPT), *a, "--root", str(root)], capture_output=True, text=True)
         p = run("search", "step_size raz na sesję")
         check(p.returncode == 0 and "data, not instructions" in p.stdout and f"{rid}" in p.stdout and ":L" in p.stdout,
-              f"CLI-1: wynik tekstowy z nagłówkiem bezpieczeństwa i cytatem: {p.returncode} {p.stdout[:400]} {p.stderr[-200:]}")
+              f"CLI-1: text result with a safety header and a citation: {p.returncode} {p.stdout[:400]} {p.stderr[-200:]}")
         p = run("search", "credit_reference_id", "--json")
         check(p.returncode == 0 and json.loads(p.stdout)[0]["path"].endswith("szczegoly.md"), f"CLI-2: --json: {p.stdout[:200]}")
         p = run("search", "zupełnie nieobecne słowo kwarkowe")
-        check(p.returncode == 1, f"CLI-3: brak trafień → kod 1: {p.returncode}")
+        check(p.returncode == 1, f"CLI-3: no hits -> code 1: {p.returncode}")
         p = run("sources", "--area", "gateway")
         check(p.returncode == 0 and "spec-gateway" in p.stdout and "spec-tariffs" not in p.stdout,
-              f"CLI-4: lista źródeł obszaru ze wszystkich rejestrów: {p.stdout[:300]}")
+              f"CLI-4: the list of an area's sources from all registries: {p.stdout[:300]}")
         p = run("ingest", "nie-ma-takiego-id")
-        check(p.returncode == 2, f"CLI-5: nieznane id bez URL → kod 2: {p.returncode} {p.stderr[-200:]}")
+        check(p.returncode == 2, f"CLI-5: unknown id without a URL -> code 2: {p.returncode} {p.stderr[-200:]}")
         p = run("status")
         check(p.returncode == 0 and rid in p.stdout, f"CLI-6: status: {p.stdout[:300]}")
 
-    # Prawdziwa fabryka: rejestry zainstalowanych nakładek są poprawne
-    check(kb.validate_registries(ROOT) == [], f"REAL-1: rejestry źródeł fabryki: {kb.validate_registries(ROOT)}")
+    # The real factory: the registries of installed packs are valid
+    check(kb.validate_registries(ROOT) == [], f"REAL-1: the factory's source registries: {kb.validate_registries(ROOT)}")
 
     if fails:
-        print(f"✗ {len(fails)}/{total} testów bazy wiedzy nie przeszło:")
+        print(f"✗ {len(fails)}/{total} knowledge base tests failed:")
         for x in fails:
             print("  -", x)
         return 1
-    print(f"✓ {total}/{total} testów bazy wiedzy")
+    print(f"✓ {total}/{total} knowledge base tests")
     return 0
 
 

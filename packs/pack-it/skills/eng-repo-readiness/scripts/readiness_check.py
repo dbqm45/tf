@@ -129,7 +129,7 @@ def find_lock(manifest_dir: Path, root: Path, locks: list[str]) -> str | None:
 
 
 def runner_for(family: str, mdir: Path, manifest: Path) -> tuple[str | None, str | None]:
-    """(runner, komenda na sucho) dla rodziny w katalogu manifestu."""
+    """(runner, dry-run command) for the family in the manifest directory."""
     if family == "js":
         deps, scripts = js_deps(manifest)
         test_script = scripts.get("test", "")

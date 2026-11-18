@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy rozpoznania wejścia polecenia /tf (skill tf, scripts/intake.py): rodzaj wejścia, klucz, tracker
-z adresu albo z karty operacyjnej, cięcie z planu zmiany, wznowienie, opcje.
+"""Tests of input recognition for the /tf command (the tf skill, scripts/intake.py): input kind, key, tracker
+from a URL or from the operations card, a cut from a change plan, resume, options.
 python3 .claude/tests/test_intake.py"""
 import json
 import os
@@ -57,7 +57,7 @@ def main() -> int:
             fails.append(msg)
 
     if not SCRIPT.is_file():
-        print(f"✗ brak skryptu {REL}")
+        print(f"✗ missing script {REL}")
         return 1
 
     with tempfile.TemporaryDirectory() as t:
@@ -77,41 +77,41 @@ def main() -> int:
         (p / CARD).write_text(json.dumps({"flags": {"file": "config/flags.json", "envs": ["test", "prod"],
                                                     "test_env": "test"}}), encoding="utf-8")
 
-        # zgłoszenie po kluczu: tracker nieznany → pytanie, a droga przez wklejenie zawsze jest podana
+        # a ticket by key: unknown tracker → a question, and the paste route is always given
         before = snapshot(p)
         code, out, raw = resolve(p, "EBO-1236")
         check(code == 0 and out.get("kind") == "issue" and out.get("key") == "EBO-1236"
               and out.get("tracker") is None and out.get("ask") == "tracker" and "paste" in out.get("next", "").lower(),
-              f"I-1: klucz bez trackera w karcie → zgłoszenie, pytanie o tracker, droga przez wklejenie: {raw}")
-        check(snapshot(p) == before, "I-2: resolve niczego nie zapisuje (karta i pliki projektu bez zmian)")
+              f"I-1: a key without a tracker in the card → a ticket, a tracker question, the paste route: {raw}")
+        check(snapshot(p) == before, "I-2: resolve writes nothing (the card and project files unchanged)")
         code, out, raw = resolve(p, "ebo-1236")
-        check(out.get("kind") == "issue" and out.get("key") == "EBO-1236", f"I-3: klucz małymi literami: {raw}")
+        check(out.get("kind") == "issue" and out.get("key") == "EBO-1236", f"I-3: a lowercase key: {raw}")
 
-        # tracker zapamiętany w karcie nie jest pytany ponownie; karta zachowuje sekcję flag
+        # a tracker remembered in the card is not asked about again; the card keeps the flags section
         r = run(p, "tracker", "jira", "--prefix", "EBO")
         card = json.loads((p / CARD).read_text(encoding="utf-8"))
         check(r.returncode == 0 and card.get("tracker", {}).get("prefixes") == {"EBO": "jira"}
               and card.get("flags", {}).get("test_env") == "test",
-              f"I-4: tracker <typ> --prefix zapisuje kartę i nie rusza flag: {r.stdout}{r.stderr} {card}")
+              f"I-4: tracker <type> --prefix writes the card and leaves the flags alone: {r.stdout}{r.stderr} {card}")
         code, out, raw = resolve(p, "EBO-1236")
         check(out.get("tracker") == "jira" and out.get("tracker_from") == "card" and out.get("ask") is None
               and "EBO-1236" in out.get("next", "") and "--key EBO-1236" in out.get("next", ""),
-              f"I-5: tracker z karty → bez pytania, następny krok z kluczem: {raw}")
+              f"I-5: the tracker from the card → no question, the next step with the key: {raw}")
         code, out, raw = resolve(p, "ENG-5")
-        check(out.get("tracker") is None and out.get("ask") == "tracker", f"I-6: inny prefiks nadal nieznany: {raw}")
+        check(out.get("tracker") is None and out.get("ask") == "tracker", f"I-6: another prefix is still unknown: {raw}")
         r = run(p, "tracker", "linear")
         code, out, raw = resolve(p, "ENG-5")
         code2, out2, _ = resolve(p, "EBO-1")
         check(r.returncode == 0 and out.get("tracker") == "linear" and out2.get("tracker") == "jira",
-              f"I-7: tracker domyślny dla pozostałych prefiksów, prefiks wygrywa: {raw}")
+              f"I-7: a default tracker for the remaining prefixes, the prefix wins: {raw}")
         r = run(p, "tracker")
         check(r.returncode == 0 and "linear" in r.stdout and "EBO" in r.stdout and "jira" in r.stdout,
-              f"I-8: tracker bez argumentów pokazuje zapis: {r.stdout}")
+              f"I-8: tracker without arguments shows the setting: {r.stdout}")
         r = run(p, "tracker", "Jira Cloud!")
-        check(r.returncode == 2, f"I-9: nazwa trackera spoza wzorca → kod 2: {r.returncode} {r.stdout}")
+        check(r.returncode == 2, f"I-9: a tracker name outside the pattern → code 2: {r.returncode} {r.stdout}")
 
 
-        # adres zgłoszenia: tracker i klucz z adresu, adres jako źródło
+        # ticket URL: tracker and key from the URL, the URL as the source
         for url, tracker, key in (
                 ("https://acme.atlassian.net/browse/EBO-1236", "jira", "EBO-1236"),
                 ("https://jira.acme.example/browse/OPS-9?focusedId=1", "jira", "OPS-9"),
@@ -121,90 +121,90 @@ def main() -> int:
             code, out, raw = resolve(p, url)
             check(out.get("kind") == "issue" and out.get("tracker") == tracker and out.get("key") == key
                   and out.get("source") == url and out.get("tracker_from") == "address" and out.get("ask") is None,
-                  f"I-10: adres {url} → {tracker} {key}: {raw}")
+                  f"I-10: URL {url} → {tracker} {key}: {raw}")
         code, out, raw = resolve(p, "https://tracker.example.com/t/ABC-5")
         check(out.get("kind") == "issue" and out.get("key") == "ABC-5" and out.get("tracker") == "linear"
               and out.get("tracker_from") == "card",
-              f"I-11: nieznany host z kluczem w adresie → klucz, tracker z karty: {raw}")
+              f"I-11: an unknown host with a key in the URL → the key, the tracker from the card: {raw}")
         code, out, raw = resolve(p, "https://tracker.example.com/tickets/5512")
         check(out.get("kind") == "issue" and out.get("key") is None and out.get("ask") == "content"
               and "paste" in out.get("next", "").lower(),
-              f"I-12: adres bez rozpoznanego klucza → prośba o wklejenie treści: {raw}")
+              f"I-12: a URL without a recognised key → a request to paste the content: {raw}")
 
-        # cięcie z planu zmiany
+        # a cut from a change plan
         code, out, raw = resolve(p, "TSK-57")
         check(out.get("kind") == "cut" and out.get("key") == "TSK-57" and out.get("changes") == ["CHG-12"]
               and out.get("ask") is None and "start --task TSK-57 --change CHG-12" in out.get("next", "")
               and ".claude/skills/tf/references/pdi-cuts.md" in out.get("next", ""),
-              f"I-13: klucz z nagłówka tasks → cięcie: najpierw zasady cięć (references), potem gotowe polecenie: {raw}")
+              f"I-13: a key from the tasks heading → a cut: first the cut rules (references), then a ready command: {raw}")
         code, out, raw = resolve(p, "TSK-58")
         check(out.get("kind") == "cut" and out.get("changes") == ["CHG-12", "CHG-13"] and out.get("ask") == "change",
-              f"I-14: klucz w dwóch planach → pytanie o zmianę: {raw}")
+              f"I-14: a key in two plans → a question about the change: {raw}")
         code, out, raw = resolve(p, "TSK-58", "--change", "CHG-13", "--auto", "--budget", "3")
         check(out.get("changes") == ["CHG-13"] and out.get("ask") is None
               and out.get("options") == {"auto": True, "plan": False, "budget": 3.0, "change": "CHG-13"},
-              f"I-15: --change wybiera zmianę; opcje odcięte i zwrócone: {raw}")
+              f"I-15: --change selects the change; options cut off and returned: {raw}")
         r = run(p, "resolve", "TSK-99", "--change", "CHG-12")
         check(r.returncode == 2 and "TSK-99" in r.stdout and "CHG-12" in r.stdout,
-              f"I-16: klucz spoza planu wskazanej zmiany → kod 2: {r.returncode} {r.stdout}")
+              f"I-16: a key outside the plan of the given change → code 2: {r.returncode} {r.stdout}")
 
-        # wznowienie, plik, treść
+        # resume, file, content
         code, out, raw = resolve(p, "PROJ-7")
         check(out.get("kind") == "resume" and out.get("stage") == "implementation" and "PROJ-7" in out.get("next", ""),
-              f"I-17: klucz istniejącego zadania → wznowienie z etapem: {raw}")
+              f"I-17: the key of an existing task → resume with the stage: {raw}")
         (p / CHANGES / "PROJ-7" / "task.json").write_text(json.dumps(
             {"key": "PROJ-7", "title": "Zadanie PROJ-7", "stage": "plan", "mode": "plan"}), encoding="utf-8")
         code, out, raw = resolve(p, "PROJ-7", "--auto")
         check(out.get("kind") == "resume" and "run_state.py mode .tf/runs/PROJ-7 auto" in out.get("next", ""),
-              f"I-17a: wznowienie zadania z trybu Plan — następny krok ustawia tryb z polecenia: {raw}")
+              f"I-17a: resuming a task from Plan mode — the next step sets the mode from the command: {raw}")
         code, out, raw = resolve(p, "docs/story.md")
         check(out.get("kind") == "file" and out.get("file") == "docs/story.md"
-              and "--story-file docs/story.md" in out.get("next", ""), f"I-18: ścieżka istniejącego pliku: {raw}")
+              and "--story-file docs/story.md" in out.get("next", ""), f"I-18: the path of an existing file: {raw}")
         code, out, raw = resolve(p, "PROJ-12: Eksport sesji do CSV\nJako operator chcę pobrać sesje.")
         check(out.get("kind") == "content" and out.get("key") == "PROJ-12" and out.get("title") == "Eksport sesji do CSV"
-              and "--key PROJ-12" in out.get("next", ""), f"I-19: klucz i treść → treść z kluczem i tytułem: {raw}")
+              and "--key PROJ-12" in out.get("next", ""), f"I-19: key and content → content with the key and title: {raw}")
         code, out, raw = resolve(p, "dodaj", "eksport", "sesji", "do", "CSV")
         check(out.get("kind") == "content" and out.get("key") is None and out.get("title") == "dodaj eksport sesji do CSV"
-              and out.get("intent") is None, f"I-20: zwykłe zdanie → treść bez klucza: {raw}")
+              and out.get("intent") is None, f"I-20: a plain sentence → content without a key: {raw}")
 
         code, out, raw = resolve(p, "X-ray")
         check(out.get("kind") == "content" and out.get("key") is None and out.get("title") == "X-ray",
-              f"I-20a: jedno słowo z łącznikiem, które nie jest zadaniem ani numerem zgłoszenia → treść bez klucza: {raw}")
+              f"I-20a: a single hyphenated word that is neither a task nor a ticket number → content without a key: {raw}")
         code, out, raw = resolve(p, "PROJ-7", "dokończ", "eksport")
         check(out.get("kind") == "resume" and out.get("text") == "dokończ eksport",
-              f"I-20b: klucz istniejącego zadania z dopiskiem → wznowienie, dopisek zachowany: {raw}")
+              f"I-20b: the key of an existing task with an addendum → resume, the addendum kept: {raw}")
 
-        # brak wejścia: zadania w toku do wznowienia (zamknięte pominięte)
+        # no input: tasks in progress to resume (closed ones skipped)
         code, out, raw = resolve(p)
         keys = [x.get("key") for x in out.get("tasks", [])]
-        check(out.get("kind") == "none" and keys == ["PROJ-7"], f"I-21: bez wejścia → lista zadań w toku: {raw}")
+        check(out.get("kind") == "none" and keys == ["PROJ-7"], f"I-21: no input → a list of tasks in progress: {raw}")
 
-        # słowo wymuszające sposób pracy
+        # a word forcing the way of working
         code, out, raw = resolve(p, "question", "jak", "działa", "logowanie?")
         check(out.get("intent") == "question" and out.get("kind") == "content" and out.get("title") == "jak działa logowanie?",
-              f"I-22: „pytanie …” → wymuszona odpowiedź bez pętli: {raw}")
+              f"I-22: “pytanie …” → a forced answer without the loop: {raw}")
         code, out, raw = resolve(p, "szybko", "popraw", "literówkę", "w", "README")
-        check(out.get("intent") == "quick" and "without" in out.get("next", "").lower(), f"I-23: „szybko …”: {raw}")
-        for word, want in (("pytanie", "question"), ("szybko", "quick"), ("zadanie", "task"), ("quick", "quick")):   # oba języki
+        check(out.get("intent") == "quick" and "without" in out.get("next", "").lower(), f"I-23: “szybko …”: {raw}")
+        for word, want in (("pytanie", "question"), ("szybko", "quick"), ("zadanie", "task"), ("quick", "quick")):   # both languages
             code, out, raw = resolve(p, word, "popraw", "literówkę", "w", "README")
-            check(out.get("intent") == want, f"I-23b: „{word} …” rozpoznane jako {want}: {raw}")
+            check(out.get("intent") == want, f"I-23b: “{word} …” recognised as {want}: {raw}")
         code, out, raw = resolve(p, "zadanie", "EBO-1236")
         check(out.get("intent") == "task" and out.get("kind") == "issue" and out.get("key") == "EBO-1236",
-              f"I-24: „zadanie <klucz>”: {raw}")
+              f"I-24: “zadanie <key>”: {raw}")
 
-        # wyjście dla człowieka i błędy wywołania
+        # output for a human and invocation errors
         r = run(p, "resolve", "EBO-1236")
         check(r.returncode == 0 and all(s in r.stdout for s in ("Input: issue", "Key: EBO-1236",
                                                                 "Tracker: jira", "Next: ")),
-              f"I-25: wyjście tekstowe ze stałymi polami: {r.stdout}")
+              f"I-25: text output with fixed fields: {r.stdout}")
         r = run(p, "nieznane")
-        check(r.returncode == 2 and "Traceback" not in r.stderr, f"I-26: nieznane polecenie → kod 2: {r.returncode} {r.stderr[-200:]}")
+        check(r.returncode == 2 and "Traceback" not in r.stderr, f"I-26: an unknown command → code 2: {r.returncode} {r.stderr[-200:]}")
         (p / CARD).write_text("{nie json", encoding="utf-8")
         code, out, raw = resolve(p, "EBO-1236")
         check(code == 0 and out.get("tracker") is None and "Traceback" not in raw,
-              f"I-27: uszkodzona karta nie wywraca skryptu: {raw}")
+              f"I-27: a corrupt card does not crash the script: {raw}")
 
-    # I-org: domyślny tracker organizacji z nakładki firmowej (org_defaults.operations.tracker); karta projektu wygrywa
+    # I-org: the organisation's default tracker from the company overlay (org_defaults.operations.tracker); the project card wins
     with tempfile.TemporaryDirectory() as t:
         p = Path(t)
         f = p / ".tf" / "factory" / "packs" / "pack-firma" / "pack.yaml"
@@ -213,18 +213,18 @@ def main() -> int:
                      "      type: linear\n      prefixes: {ACME: jira}\n", encoding="utf-8")
         code, out, raw = resolve(p, "ACME-3")
         check(out.get("tracker") == "jira" and out.get("tracker_from") == "organisation" and out.get("ask") is None,
-              f"I-org-1: prefiks z nakładki firmowej → bez pytania, źródło „organizacja”: {raw}")
+              f"I-org-1: a prefix from the company overlay → no question, the source “organisation”: {raw}")
         code, out, raw = resolve(p, "OPS-1")
-        check(out.get("tracker") == "linear", f"I-org-2: domyślny typ trackera organizacji: {raw}")
+        check(out.get("tracker") == "linear", f"I-org-2: the organisation's default tracker type: {raw}")
         (p / CARD).parent.mkdir(parents=True, exist_ok=True)
         (p / CARD).write_text(json.dumps({"tracker": {"prefixes": {"ACME": "github"}}}), encoding="utf-8")
         code, out, raw = resolve(p, "ACME-3")
         check(out.get("tracker") == "github" and out.get("tracker_from") == "card",
-              f"I-org-3: karta projektu nadpisuje organizację: {raw}")
+              f"I-org-3: the project card overrides the organisation: {raw}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów rozpoznania wejścia /tf")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} /tf input recognition tests")
     return 1 if fails else 0
 
 

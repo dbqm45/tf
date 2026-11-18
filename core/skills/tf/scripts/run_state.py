@@ -214,7 +214,7 @@ def task_view(project: Path, key: str) -> dict | None:
         if not task:
             return None
         return {"task": task, "slices": {k: s for k, (s, _) in api.slice_states(root, task).items()}}
-    except Exception:  # noqa: BLE001 — podgląd nigdy nie psuje przebiegu
+    except Exception:  # noqa: BLE001 — the preview never breaks the run
         return None
 
 
@@ -525,7 +525,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     meta.pop("needs_at", None)
     if stage == "needs":
         meta["needs"] = needs
-        meta["needs_at"] = now_iso()                # since when the task has been waiting for the human (the „Czeka na Ciebie” list — "Waiting for you")
+        meta["needs_at"] = now_iso()                # since when the task has been waiting for the human (the "Waiting for you" list)
         if needs == "stop":
             meta["stop_code"] = code
             if reason:
@@ -870,7 +870,7 @@ def loop_setting(project: Path, name: str) -> bool:
             if own.is_file():
                 cfg = packs.deep_merge(cfg, packs.load_yaml(own))
             return (cfg.get("loop") or {}).get(name) is True
-        except Exception:  # noqa: BLE001 — brak konfiguracji to ustawienie domyślne, nie awaria
+        except Exception:  # noqa: BLE001 — no configuration means the default setting, not a failure
             continue
     return False
 
@@ -1247,7 +1247,7 @@ def cmd_pr_body(run_dir: Path, base: str | None, project: Path) -> int:
         return no_task(meta)
     try:
         update_usage(run_dir, meta, project)
-    except Exception:  # noqa: BLE001 — koszt jest dodatkiem do opisu
+    except Exception:  # noqa: BLE001 — the cost is an addition to the description
         pass
     text, missing = pr_body(run_dir, meta, project, base)
     target = run_dir / "pr-body.md"
@@ -1519,7 +1519,7 @@ def waiting_items(project: Path, view: dict | None) -> list[dict]:
     try:
         api = task_api(project)
         return api.waiting(project.resolve(), view["task"]) if api and view and hasattr(api, "waiting") else []
-    except Exception:  # noqa: BLE001 — podgląd nigdy nie psuje przebiegu
+    except Exception:  # noqa: BLE001 — the preview never breaks the run
         return []
 
 
@@ -1628,12 +1628,12 @@ def launch(project: Path, open_browser: bool = True) -> str | None:
         return None
     try:
         uri = build_dashboard(project, costs=False).resolve().as_uri()
-    except Exception:  # noqa: BLE001 — podgląd nigdy nie psuje przebiegu
+    except Exception:  # noqa: BLE001 — the preview never breaks the run
         return None
     if open_browser and opts["dashboard_open"]:
         try:
             webbrowser.open(uri)
-        except Exception:  # noqa: BLE001 — brak przeglądarki (chmura, SSH) to nie błąd
+        except Exception:  # noqa: BLE001 — no browser (cloud, SSH) is not an error
             pass
     return uri
 
@@ -1642,7 +1642,7 @@ def refresh(project: Path) -> None:
     """Refreshing the preview after a state write; without computing the cost, without interrupting the run on an error."""
     try:
         build_dashboard(project, costs=False)
-    except Exception:  # noqa: BLE001 — podgląd nigdy nie psuje przebiegu
+    except Exception:  # noqa: BLE001 — the preview never breaks the run
         pass
 
 
