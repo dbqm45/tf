@@ -776,7 +776,7 @@ treści (angielska), bez równoległej polskiej.
   - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
   - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
-  - [ ] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
+  - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
     M2 hooki, M3–M4 silnik (`core/factory`), M5 skrypty pozostałych skilli rdzenia, M6 pack-it, M7 mode-pdi, M8 org,
     tools, editorial, ux. Docstringi i komentarze w kodzie to dokumentacja opiekunów — poza tym etapem.
     - [x] M1 (2026-11-17): skrypty skilla tf (`run_state`, `run_report`, `intake`, `plan_drift`, `security_scan`),
@@ -851,6 +851,15 @@ treści (angielska), bez równoległej polskiej.
       (`Wydanie`, `Flaga` …) i tabeli `design.md`, nagłówki `## Rozważone opcje`/`## Cele zmiany` — do zmiany razem z pdi
       i szablonami. Skuteczności promptów faz nie zmierzono na modelu: lokalnie działa tylko zadanie `N5-synth-repeated-q`,
       które przed zmianą też kończyło się `waiting_gate`; pełne flow-evals wymagają repozytoriów `sdlc-trial`.
+    - [x] M8 (2026-11-18): `org/` (`standards_from_docs`, `new_org_pack` i szablony pakietu firmy i zespołu — szkielet
+      po angielsku), linter polszczyzny (etykiety `HIGH/MEDIUM/LOW` i kategorie po angielsku; reguły i poprawki zostają
+      po polsku, bo to przedmiot lintera), moduł dostępności pack-ux i narzędzia `tools/` (m.in. `workspace.py` ze
+      szkieletem nowej nakładki, `hint_holdout`, `context`, `flow_compare`). Odczyt przyjmuje stare formy: `skill_gate`
+      i `project_record` czytają polskie etykiety lintera, `standards_from_docs` wstawia blok pod dawne polskie nagłówki
+      pakietu firmy i rozpoznaje stary znacznik. Holdout podpowiedzi bez zmian: 901/918 · 32/43. Bramki 2 skilli odnowione.
+      **Etap komunikatów skryptów (M1–M8) zamknięty.** Zostaje: docstringi drukowane jako `--help`, wynik
+      `flow-evals --validate` (runner w `core/tests`), `content_language: pl` w szkieletach `pack.yaml` (pole nieczytane),
+      opisy w `docs/` i `.claude/skills/tf-new-pack` cytujące dawne etykiety.
   - [ ] pack-editorial-pl: instrukcje po angielsku, przykłady i reguły polszczyzny zostają po polsku (to ich przedmiot).
 
 Treść fabryki jest dziś po polsku. Chodzi o:
