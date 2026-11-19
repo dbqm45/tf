@@ -19,8 +19,9 @@ Plan i porównanie ze stanem 9.17: `docs/plans/2026-11-11-program-ai-luki-w-fabr
 jest (ai-evals, ai-mlops, ai-governance-compliance, polityka autonomii, przegląd AI w CI); realne kroki to cztery.
 - [x] **Krok 1 (T6):** lista zatwierdzonych modeli `approved_models` — `models_policy.py`, błąd w `build.py check`,
   odmowa w `profile.py`, hook `model_guard` dla parametru `model` delegacji; bez listy bez zmian.
-- [ ] **Krok 2 (T2):** `tf standard` — jeden wynik z `readiness_check.py`, `instructions_lint.py`, `build.py check`
-  i nowej kontroli dziennika `docs/project/`; kod wyjścia dla CI.
+- [x] **Krok 2 (T2):** `tf standard` (`standard.py`) — jeden wynik z `build.py check`, `project_record.py` (dziennik
+  `docs/project/` — kontrola już była), `instructions_lint.py`, `readiness_check.py` (pack-it) i `hooks_status.py`;
+  statusy ok / warn / fail / skip, kod wyjścia dla CI, krok informacyjny w `team-factory.yml`.
 - [ ] **Krok 3 (T4):** `eval_gate.py` dla produktu (zestaw, grader z kodu, próg wobec linii bazowej, budżet) i szablon
   `eval-gate.yml`; w trybie pdi wynik jako warunek bramki.
 - [ ] **Krok 4 (T13):** nakładka z innego repozytorium (`tf add <repo>#tag:pack-x`) z audytem i przypięciem wersji —

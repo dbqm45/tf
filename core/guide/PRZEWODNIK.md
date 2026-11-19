@@ -149,6 +149,7 @@ doradczy i nigdy nie blokuje merge'a. Własne reguły (np. ścieżki cennika jak
 | `tf analyze [--only a,b] [--since <commit>] [--top N] [--list]` | analiza projektu modułami → `.tf/reports/<moduł>.md` |
 | `tf risk [--base <gałąź>] [--md\|--json]` | triaż ryzyka zmiany na gałęzi (doradczy) |
 | `tf metrics [--weeks N] [--revert-days N] [--no-gh]` | skuteczność fabryki → `.tf/reports/metrics.md` |
+| `tf standard [--json] [--strict] [--only a,b]` | standard repozytorium w jednym wyniku: instalacja, dziennik `docs/project/`, pliki instrukcji, gotowość repo, ślady hooków; kod 1 przy `fail` (w CI: `python3 .tf/factory/standard.py --strict`) |
 | `python3 .claude/hooks/guard_bash.py --check-policy` | sprawdzenie polityki autonomii z `.tf/config/config.yaml` |
 | `python3 .tf/factory/update.py --rollback` | powrót do stanu sprzed ostatniej aktualizacji |
 | `python3 .tf/factory/build.py` | przebudowa agentów i katalogu |

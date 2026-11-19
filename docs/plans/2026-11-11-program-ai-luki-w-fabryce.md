@@ -86,8 +86,14 @@ Synchronizacja listy z bramki — gdy bramka powstanie.
 
 ## 3. Kolejne kroki (osobno, po akceptacji kroku 1)
 
-- **Krok 2 (T2):** `tf standard` — jeden wynik z `readiness_check.py`, `instructions_lint.py`, `build.py check`
-  i nowej kontroli dziennika `docs/project/`; kod wyjścia dla CI; krok w `team-factory.yml`.
+- **Krok 2 (T2) — zrobiony 2026-11-11:** `tf standard` (`.tf/factory/standard.py`) — jeden wynik z pięciu
+  istniejących kontroli: `install` (`build.py check`), `journal` (`project_record.py`: kontrola dziennika
+  `docs/project/` już była, więc nic nowego nie powstało), `instructions` (`instructions_lint.py`), `readiness`
+  (`readiness_check.py` z pack-it; bez nakładki `skip`), `hooks` (`hooks_status.py`). Statusy ok / warn / fail / skip,
+  werdykt = najgorszy, kod 1 przy `fail` (`--strict`: także `warn`), `--json`, `--only`. Kontrole tylko czytają pliki
+  (dziennik sprawdzany funkcją `check`, bez przebudowy indeksu). Krok w `team-factory.yml` jest informacyjny
+  (`continue-on-error`), żeby aktualizacja nie zaczęła blokować CI istniejących projektów. Testy:
+  `core/tests/test_standard.py` (ST-1…ST-8).
 - **Krok 3 (T4):** `eval_gate.py` dla produktu: zestaw (JSONL), grader z kodu, próg wobec linii bazowej z rozrzutem,
   budżet USD, wynik JSON; szablon `eval-gate.yml`; w trybie pdi wynik jako warunek bramki (cele zmiany `targets`).
 - **Krok 4 (T13):** nakładka z innego repozytorium (`tf add <repo>#tag:pack-x`), z `skill_audit.py` i przypięciem

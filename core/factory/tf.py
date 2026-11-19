@@ -21,6 +21,9 @@ tf — the team factory command: install, update, packs, languages, health check
   tf metrics [--weeks N] [--revert-days N] [--no-gh]
                               # factory effectiveness: revert rate, cost per accepted change, cycle time,
                               # rework causes → .tf/reports/metrics.md (.tf/factory/metrics.py)
+  tf standard [--json] [--strict] [--only a,b]
+                              # repository standard in one result: install, project journal, agent instruction
+                              # files, repo readiness, hook traces (.tf/factory/standard.py)
   tf --repo <url>             # another factory repository (also <url>#branch-or-tag)
 
 Install the launcher once, from a factory clone or from a project that already has the factory:
@@ -299,6 +302,10 @@ def main(argv: list[str]) -> int:
         if not need_project():
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "metrics.py"), *rest]).returncode
+    if cmd == "standard":
+        if not need_project():
+            return 2
+        return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "standard.py"), *rest]).returncode
     if cmd not in (None, "install", "update"):
         print(f"✗ Unknown command '{cmd}'.\n{__doc__}")
         return 2
