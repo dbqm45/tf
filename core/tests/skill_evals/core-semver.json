@@ -26,6 +26,35 @@
       }
     },
     {
+      "id": "nastepna-wersja-api-en",
+      "expect": "trigger",
+      "prompt": "Our library is at version 2.4.1. In this release we added an optional parameter to one function and removed a function previously marked as deprecated. What should the next release number be and why? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "3\\.0\\.0"
+          ],
+          [
+            "usunię",
+            "niezgodn",
+            "breaking",
+            "wstecz",
+            "remov\\w*",
+            "incompatible",
+            "backward"
+          ],
+          [
+            "(minor\\w*)[^.\\n]{0,80}(przestarza|deprecat|wycof)|(przestarza|deprecat|wycof)\\w*[^.\\n]{0,80}\\bminor",
+            "(minor\\w*)[^.\\n]{0,80}deprecat|deprecat\\w*[^.\\n]{0,80}\\bminor"
+          ]
+        ],
+        "none": [
+          "następn\\w* (wersj\\w* |wydani\\w* )?(to|będzie|ma być)\\s*\\**2\\.5\\.0",
+          "next (version |release )?(is|will be|would be|should be)\\s*\\**2\\.5\\.0"
+        ]
+      }
+    },
+    {
       "id": "kolejnosc-prerelease",
       "expect": "trigger",
       "prompt": "Ułóż od najstarszej do najnowszej wersje naszego pakietu: 1.0.0, 1.0.0-rc.1, 1.0.0-beta.11, 1.0.0-alpha.beta, 1.0.0-beta.2, 1.0.0+build.7. Która jest „największa” według SemVer?",

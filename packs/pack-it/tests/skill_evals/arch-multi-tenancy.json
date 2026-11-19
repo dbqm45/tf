@@ -35,6 +35,48 @@
       }
     },
     {
+      "id": "izolacja-danych-klientow-en",
+      "expect": "trigger",
+      "prompt": "We’re building a B2B SaaS on PostgreSQL: all customers in one database, a tenant_id column in the tables. How do we ensure that company A never sees company B’s data? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "RLS|row level security|ROW LEVEL SECURITY|polityk\\w* wierszy",
+            "row[- ]level (security|polic\\w*)"
+          ],
+          [
+            "tenant_id|najemc\\w*|tenant\\w*"
+          ],
+          [
+            "test\\w*"
+          ],
+          [
+            "SET LOCAL|set_config|kontekst\\w*",
+            "context\\w*|session (variable|setting)"
+          ],
+          [
+            "uwierzytelnion\\w+ tożsamoś",
+            "z tokenu",
+            "nie ufaj\\w* (parametr|nagłówk)",
+            "authenticated identity",
+            "(authenticated|verified|trusted) (user )?(identity|claims?)",
+            "from the (token|JWT)",
+            "(don'?t|never|do not) trust (the )?(client|param\\w*|header\\w*)"
+          ],
+          [
+            "dw(óch|a|u) najemc",
+            "two tenants",
+            "zalogowany w A",
+            "najemc\\w* A.{0,80}najemc\\w* B",
+            "(two|2) (different )?tenants",
+            "logged in (as|to|in) (tenant |company |customer )?A\\b",
+            "tenant A.{0,80}tenant B",
+            "(company|customer) A.{0,80}(company|customer) B"
+          ]
+        ]
+      }
+    },
+    {
       "id": "tenant-w-zadaniu-w-tle",
       "expect": "trigger",
       "prompt": "W naszym wielodzierżawnym SaaS zadanie w kolejce wygenerowało raport z danymi niewłaściwego klienta. Jak przekazywać kontekst najemcy do kolejek i zadań w tle? Odpowiedz zwięźle.",

@@ -10,6 +10,14 @@
       }
     },
     {
+      "id": "zwykla-implementacja-historyjki-en",
+      "expect": "trigger",
+      "prompt": "Implement this story: as a user I want to reset my password with a link from an email, the link valid for 30 minutes.",
+      "checks": {
+        "all": [["run_report\\.py", "intake\\.py", "ticket\\.md"], ["spec\\.md", "AC-\\d", "kryteri", "criteri\\w*", "acceptance"], ["kawałk", "K1", "slices?", "chunks?", "pieces?", "increments?"]]
+      }
+    },
+    {
       "id": "numer-zgloszenia-bez-trackera",
       "expect": "trigger",
       "prompt": "Zrealizuj zgłoszenie EBO-1236, jest następne w kolejce na ten sprint.",

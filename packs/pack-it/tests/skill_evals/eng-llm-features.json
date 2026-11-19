@@ -36,6 +36,51 @@
       }
     },
     {
+      "id": "recenzent-diffu-sdk-en",
+      "expect": "trigger",
+      "prompt": "In our repo we want to write a TypeScript script that takes a git diff, sends it to a language model and returns an assessment of the change as JSON. Which SDK should we pick and how do we guard the script so it doesn't burn through the budget? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "gotow\\w* agent",
+            "do złożenia",
+            "Agent SDK",
+            "AI SDK",
+            "ToolLoopAgent",
+            "ready-?made agent",
+            "off-the-shelf agent",
+            "prebuilt agent",
+            "agent loop"
+          ],
+          [
+            "maxTurns",
+            "maxBudgetUsd",
+            "stepCountIs",
+            "isStepCount",
+            "limit\\w* (tur|kroków|kosztu)",
+            "max-turns",
+            "(turn|step|cost|budget) limits?",
+            "limit\\w* (the )?(turns|steps|cost|spend|budget)",
+            "max turns"
+          ],
+          [
+            "schemat",
+            "zod",
+            "json schema",
+            "structured output",
+            "pydantic",
+            "schema",
+            "structured (output|response)s?"
+          ]
+        ],
+        "none": [
+          "bez limitu (tur|kroków) (jest|będzie) (w porządku|ok)",
+          "no (turn|step) limit is (fine|ok|okay|acceptable)",
+          "unlimited (turns|steps) (is|are) (fine|ok|okay)"
+        ]
+      }
+    },
+    {
       "id": "niespojne-pola-json",
       "expect": "trigger",
       "prompt": "Nasza funkcja w aplikacji wysyła zgłoszenie klienta do modelu językowego i dostaje JSON z kategorią i priorytetem. Pola są wypełniane niekonsekwentnie, a priorytet czasem wychodzi poza skalę 1–5. Jak to poprawić w kodzie? Odpowiedz zwięźle.",

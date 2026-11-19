@@ -29,6 +29,41 @@
       }
     },
     {
+      "id": "sandbox-zamkniety-laptop-en",
+      "expect": "trigger",
+      "prompt": "I want to hand an agent in a cloud sandbox the task of completing the test plan for the payments module, close my laptop and come back to the result in the morning. What should I set up before starting? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "setup",
+            "skrypt\\w* (startow|przygotow)",
+            "(setup|startup|start-up|preparation|bootstrap) script"
+          ],
+          [
+            "sieć",
+            "sieci",
+            "allowlist",
+            "internet",
+            "network",
+            "egress"
+          ],
+          [
+            "sekret",
+            "secret"
+          ],
+          [
+            "warunek stopu",
+            "limit\\w* tur",
+            "zatrzym",
+            "stop condition",
+            "turn limit",
+            "max[- ]turns",
+            "stop\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "plan-w-nocy-bez-pytan",
       "expect": "trigger",
       "prompt": "Mam zatwierdzony plan w czterech fazach. Chcę, żeby agent wykonał go w nocy przez claude -p, bez pytania mnie o cokolwiek. Jakie reguły wykonania mu dać? Odpowiedz zwięźle.",

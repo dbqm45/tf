@@ -25,6 +25,33 @@
       }
     },
     {
+      "id": "standard-osiem-zespolow-en",
+      "expect": "trigger",
+      "prompt": "I’m a senior engineer and I want to introduce a shared linting standard and a shared HTTP client across 8 frontend teams. How should I approach this and how do I justify it to management? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "automat",
+            "wymus",
+            "lint",
+            "CI",
+            "enforc\\w*"
+          ],
+          [
+            "koszt"
+          ],
+          [
+            "zwrot",
+            "horyzont",
+            "ROI",
+            "return\\w*",
+            "payback|pay ?back",
+            "break-?even"
+          ]
+        ]
+      }
+    },
+    {
       "id": "devex-build",
       "expect": "trigger",
       "prompt": "Deweloperzy narzekają na wolny build i długie czekanie na review; chcę kupić nowe narzędzie do builda dla całej organizacji. Od czego zacząć? Odpowiedz zwięźle.",

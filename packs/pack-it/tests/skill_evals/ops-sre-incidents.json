@@ -21,6 +21,25 @@
       }
     },
     {
+      "id": "burn-rate-en",
+      "expect": "trigger",
+      "prompt": "We have a 99.9% SLO over a 30-day window for the orders API. How do we set up error budget alerts so we don't wake the on-call engineer for no reason? Give concrete thresholds. Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "burn rate",
+            "tempo spalania"
+          ],
+          [
+            "14[,.]4"
+          ],
+          [
+            "43"
+          ]
+        ]
+      }
+    },
+    {
       "id": "kopie-zapasowe",
       "expect": "trigger",
       "prompt": "Robimy codzienne kopie bazy produkcyjnej na S3 w tym samym koncie. Czy to wystarczy, jeśli chodzi o odporność na awarię? Co poprawić? Odpowiedz zwięźle.",

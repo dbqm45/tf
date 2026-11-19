@@ -20,6 +20,27 @@
       }
     },
     {
+      "id": "zdarzenia-przelomowe-en",
+      "expect": "trigger",
+      "prompt": "At a Big Picture workshop we have 80 event sticky notes and the timeline is chaos. How do I pick the pivotal events, how do I recognize them, and how do I derive module boundaries from them? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "pivotal|przełomow"
+          ],
+          [
+            "świętuje|raportuje|zmienia się (właściciel|odpowiedzialno)|trudno (je )?cofn|świat jest inny|odwracaln",
+            "celebrat\\w*|report\\w*|ownership (changes|shifts)|responsibility (changes|shifts|moves)|hard to (undo|reverse)|(world|things?) (is|are|look\\w*) different|irreversib\\w*|point of no return"
+          ],
+          [
+            "swimlane|tor\\w*|rozdzia",
+            "swim ?lane\\w*",
+            "lanes?\\b"
+          ]
+        ]
+      }
+    },
+    {
       "id": "process-level-gramatyka",
       "expect": "trigger",
       "prompt": "Robimy Process Level Event Storming procesu reklamacji. Jak powinien wyglądać domknięty łańcuch od aktora do kolejnej komendy i co zrobić z lukami w nim? Odpowiedz zwięźle.",

@@ -20,6 +20,25 @@
    }
   },
   {
+   "id": "sciezka-skrocona-en",
+   "expect": "trigger",
+   "prompt": "We’re building a small internal report builder: three screens, one team, no sensitive data, easy rollback. We want to take it from idea to deployment with AI agents. Which stages and approvals can be skipped, and which cannot? Answer briefly.",
+   "checks": {
+    "all": [
+     [
+      "B4"
+     ],
+     [
+      "B5"
+     ],
+     [
+      "skrócon|uproszczon",
+      "shortened|abbreviated|simplified|fast[- ]track|lightweight|reduced path|short(er)? (path|track)"
+     ]
+    ]
+   }
+  },
+  {
    "id": "bramki-wdrozenie",
    "expect": "trigger",
    "prompt": "Planuję przeprowadzić cały projekt od pomysłu do produkcji zespołem agentów AI. Jak ułożyć fazy, kto zatwierdza kolejne etapy i kto robi ostateczne wdrożenie na produkcję? Odpowiedz zwięźle.",

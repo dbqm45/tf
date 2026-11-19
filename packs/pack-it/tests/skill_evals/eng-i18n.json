@@ -31,6 +31,43 @@
       }
     },
     {
+      "id": "liczba-mnoga-polski-en",
+      "expect": "trigger",
+      "prompt": "The app needs to support Polish and English. How do I correctly display “1 plik, 2 pliki, 5 plików” (1 file, 2 files, 5 files) and format dates and amounts? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "ICU|MessageFormat|plural|PluralRules"
+          ],
+          [
+            "few|many|kategori\\w*",
+            "categor\\w*",
+            "plural (form|categor\\w*|rule)s?"
+          ],
+          [
+            "Intl|locale|lokalizacj\\w*|ustawie\\w* regionaln\\w*",
+            "locali[sz]ation",
+            "regional settings?",
+            "(user(’|')?s )?locale"
+          ],
+          [
+            "walut\\w*|kwot\\w*|NumberFormat",
+            "currenc\\w*|amount\\w*|NumberFormat"
+          ],
+          [
+            "zada\\w+ w tle",
+            "e-?mail",
+            "PDF",
+            "JPY",
+            "KWD",
+            "przyszł\\w+[^.]{0,60}(lokaln|IANA)",
+            "background (job|task)s?",
+            "(future|upcoming)[^.]{0,60}(local|IANA)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "strefy-czasowe-rtl",
       "expect": "trigger",
       "prompt": "Wchodzimy na rynek arabski i w USA. Spotkania planowane przez użytkowników przesuwają się o godzinę po zmianie czasu, a układ strony trzeba odwrócić. Co zmienić? Odpowiedz zwięźle.",

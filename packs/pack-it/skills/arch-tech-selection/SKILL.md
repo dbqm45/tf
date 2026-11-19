@@ -4,7 +4,7 @@ description: Use for choosing or assessing a stack (language, framework, databas
 metadata:
   review: "2027-10-09"
   catalog: "Use when you must recommend a stack (languages, frameworks, database, hosting, tools) for a new project or assess and evolve the stack of an existing one — drivers, mandatory filters, 2–3 candidates, verifying facts from sources, an assessment matrix, risks and spikes, mapping onto skills and personas. Not for establishing quality attributes (arch-quality-attributes)."
-  keywords: "przepisać od zera, co zostawić a co wymienić, wybrać framework, który framework wybrać, czy wybrać, porównanie frameworków, modernizacja starego systemu, legacy, migracja stacku, nowy stack, wybór technologii, rewrite from scratch, what to keep and what to replace, choose a framework, which framework to choose, framework comparison, modernizing an old system, stack migration, new stack, technology choice, stack decision"
+  keywords: "przepisać od zera, co zostawić a co wymienić, wybrać framework, który framework wybrać, czy wybrać, porównanie frameworków, modernizacja starego systemu, legacy, migracja stacku, nowy stack, wybór technologii, rewrite from scratch, what to keep and what to replace, choose a framework, which framework to choose, framework comparison, modernizing an old system, stack migration, new stack, technology choice, stack decision, pick a framework and a database, choose a stack, startup stack, regret the choice later, team knows Python"
 ---
 
 # Choosing a technology stack

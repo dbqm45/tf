@@ -4,7 +4,7 @@ description: Use for the UX of a feature before code — tasks, flows with state
 metadata:
   review: "2027-10-17"
   catalog: "Use when designing and evaluating the UX of a feature before code — task analysis, flows with states and edge cases, information architecture, wireframes, prototypes, heuristics, usability tests, visual hierarchy, motion, interface copy, inclusive and ethical design, the specification for developers, Figma frames linked to requirements and states through Figma MCP (the frame table in design.md). Not for deciding what to build (proc-product-discovery) or CSS (fe-css)."
-  keywords: "Figma MCP, ramki Figmy, powiązać ekrany z wymaganiami, design.md, tabela ramek, node-id, ramka dla stanu, powiadomienia, nawyk, onboarding, makieta, przepływ użytkownika, stany ekranu, użyteczność, etyka projektowania, dark patterns, Figma frames, link screens to requirements, frame table, frame for a state, notifications, habit, wireframe, user flow, screen states, usability, design ethics"
+  keywords: "Figma MCP, ramki Figmy, powiązać ekrany z wymaganiami, design.md, tabela ramek, node-id, ramka dla stanu, powiadomienia, nawyk, onboarding, makieta, przepływ użytkownika, stany ekranu, użyteczność, etyka projektowania, dark patterns, Figma frames, link screens to requirements, frame table, frame for a state, notifications, habit, wireframe, user flow, screen states, usability, design ethics, spec for developers, screen specification, list screen with filtering, CSV export, so that nothing is missed, design a screen"
 ---
 
 # UX and interface design

@@ -29,6 +29,35 @@
       }
     },
     {
+      "id": "szukajka-fetch-en",
+      "expect": "trigger",
+      "prompt": "A live search sometimes shows results of an older query, and on a 500 response our code still parses the JSON. How do we fix this in plain fetch? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "AbortController",
+            "AbortSignal"
+          ],
+          [
+            "res\\.ok",
+            "response\\.ok",
+            "\\.ok\\b"
+          ],
+          [
+            "debounce"
+          ],
+          [
+            "walid\\w*",
+            "niezaufan",
+            "\\b409\\b",
+            "\\b422\\b",
+            "validat\\w*",
+            "untrusted"
+          ]
+        ]
+      }
+    },
+    {
       "id": "modal-live",
       "expect": "trigger",
       "prompt": "Modal potwierdzenia mamy z div-ów z role=dialog, a komunikat „zapisano” po akcji czytniki ekranu pomijają. Jak to poprawić? Odpowiedz zwięźle.",

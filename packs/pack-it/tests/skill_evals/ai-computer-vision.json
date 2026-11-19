@@ -17,6 +17,67 @@
       }
     },
     {
+      "id": "wykrywanie-wad-linia-en",
+      "expect": "trigger",
+      "prompt": "We have 800 photos of parts from a production line taken by 3 cameras, and defects appear in about 2% of the photos. We want to detect scratches. How should we plan the dataset, the train/test split and the metrics? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "detekcj\\w+",
+            "segmentacj\\w+",
+            "klasyfikacj\\w+",
+            "detect\\w+",
+            "segmentation",
+            "classification"
+          ],
+          [
+            "wyciek\\w*",
+            "leakage",
+            "ta sam\\w+ (kamer\\w+|scen\\w+|partii|detal\\w*)",
+            "podzia\\w+ (wg|po|według) kamer\\w+",
+            "leak\\w*",
+            "same (camera|scene|batch|part|item)\\w*",
+            "split (by|per) camera\\w*",
+            "group\\w* (by|split)"
+          ],
+          [
+            "map@|mAP|iou",
+            "recall|czułość",
+            "f1|precision|precyzj\\w+",
+            "sensitivity"
+          ],
+          [
+            "kawałk\\w+|slice\\w*|podział\\w* (na|wg|według) (kamer|oświetl)\\w+",
+            "oświetleni\\w+",
+            "slice\\w*",
+            "(split|break\\w*|sliced?) (by|per) (camera|lighting)",
+            "lighting|illumination"
+          ],
+          [
+            "kappa",
+            "IoU ramek",
+            "zgodnoś\\w+ (adnotator|etykiet|oznacz)\\w*",
+            "skrót\\w* percepcyjn",
+            "percepcyjn\\w*",
+            "embedding\\w*",
+            "zero-shot",
+            "annotator agreement",
+            "inter-annotator",
+            "label agreement",
+            "perceptual hash\\w*",
+            "near-duplicate\\w*",
+            "box IoU"
+          ]
+        ],
+        "none": [
+          "losowy podział zdjęć wystarczy",
+          "accuracy wystarczy",
+          "random (image |photo )?split (is |will be )?(enough|sufficient)",
+          "accuracy (is |will be )?(enough|sufficient)"
+        ]
+      }
+    },
+    {
       "id": "ocr-faktury",
       "expect": "trigger",
       "prompt": "Mamy skany faktur po polsku i chcemy z nich wyciągać numer, NIP i kwotę. Jak wybrać podejście i jak zmierzyć, czy działa na prawdziwych dokumentach? Odpowiedz zwięźle.",

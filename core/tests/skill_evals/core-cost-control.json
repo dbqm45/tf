@@ -32,6 +32,47 @@
       }
     },
     {
+      "id": "rachunek-za-opusa-en",
+      "expect": "trigger",
+      "prompt": "Our Claude Code bill keeps growing — everything runs on Opus. How do I make simple tasks go to a cheaper model and hard ones to a stronger one, and have the system assess that itself? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "haiku",
+            "sonnet",
+            "tańsz",
+            "cheaper",
+            "cheap\\w* model"
+          ],
+          [
+            "eskal",
+            "kaskad",
+            "o jeden poziom",
+            "po 2 próbach",
+            "po dwóch",
+            "escalat",
+            "cascad",
+            "one level up",
+            "after 2 attempts",
+            "after two"
+          ],
+          [
+            "test",
+            "weryfik",
+            "lint",
+            "sprawdz",
+            "tests?\\b",
+            "verif",
+            "check"
+          ]
+        ],
+        "none": [
+          "zawsze (używaj|uruchamiaj) (opus|najmocniejsz)",
+          "always (use|run) (opus|the strongest)"
+        ]
+      }
+    },
+    {
       "id": "cache-i-przelaczanie-modelu",
       "expect": "trigger",
       "prompt": "W połowie długiej sesji przełączam /model z Opusa na Haiku, żeby było taniej, a potem z powrotem. Czy to dobry sposób na oszczędzanie tokenów? Odpowiedz zwięźle.",

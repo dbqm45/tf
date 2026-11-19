@@ -937,6 +937,14 @@ treści (angielska), bez równoległej polskiej.
     w `run_skill_evals.py` i `flow_evals_runner.py` (zmiana języka sędziego zmienia ocenianie). Kontrola: wszystkie
     testy repo i 8 obszarów roboczych CI zielone, ponowna bramka 7 skilli, 901/918 · 31/43.
     - [ ] prompty sędziego ewaluacji po angielsku — osobno, z kalibracją (te same scenariusze przed i po).
+  - [x] 4i (2026-11-18): angielskie bliźniaki scenariuszy ewaluacji — jeden na skill (`<id>-en`, 165 plików; 11 bez
+    scenariusza trigger, txt-polish-style pominięty — skill redaguje polski tekst). Grupy kontroli te same, polskie
+    alternatywy zostają, dopisane angielskie. Podpowiedzi: 154/165 od razu; 11 skilli dostało angielskie słowa
+    kluczowe (m.in. data-engineering, lang-typescript, ops-secrets-identities, ux-accessibility) — 165/165,
+    1066/1083 · holdout 32/43 (było 31). Haiku na próbie 25 bliźniaków: 23/25; dwie porażki to znane już na
+    polskich wersjach (`model-webhook-upload`, `config-rollout`).
+    Słowa kluczowe EN także dla core-grounding (obszar mode-pdi) i ai-fine-tuning (obszar pack-it); `--hints` czysto
+    we wszystkich 8 obszarach roboczych CI — od teraz sprawdzane we wszystkich, nie tylko w `all` i `pack-it`.
     - [ ] `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
       sprawdzają) — przełożyć razem z testami.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,

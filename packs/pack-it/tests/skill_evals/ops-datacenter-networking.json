@@ -17,6 +17,21 @@
       }
     },
     {
+      "id": "fabric-leaf-spine-en",
+      "expect": "trigger",
+      "prompt": "We're designing a new network fabric in a data center for 40 racks, each with 2x25G servers. Which topology and underlay routing should we choose, and how do we calculate oversubscription? Answer briefly.",
+      "checks": {
+        "all": [
+          ["leaf.?spine|clos"],
+          ["ebgp|rfc ?7938"],
+          ["oversubscription|przesubskrypcj|nadsubskrypcj|stosunek .*(downlink|uplink)|downlink.*uplink"],
+          ["ecmp"],
+          ["NetBox", "źródł\\w* prawdy", "falami", "fal\\w* wdroż", "source of truth", "(rollout|deployment) waves", "in waves"]
+        ],
+        "none": ["spanning.?tree jako (podstawow|główn)", "spanning.?tree as (the )?(primary|main)"]
+      }
+    },
+    {
       "id": "bgp-filtry-rpki",
       "expect": "trigger",
       "prompt": "Zestawiamy nowe sesje BGP z dostawcami tranzytu i na styku z fabryką DC. Jak zabezpieczyć sesje przed wyciekiem tras i błędną konfiguracją? Odpowiedz zwięźle.",

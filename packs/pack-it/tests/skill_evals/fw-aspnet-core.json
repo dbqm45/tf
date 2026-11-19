@@ -33,6 +33,37 @@
       }
     },
     {
+      "id": "bledy-walidacja-openapi-en",
+      "expect": "trigger",
+      "prompt": "I’m building an API in ASP.NET Core on .NET 10 (Minimal API). How do I return business errors (409) and input validation errors according to the standard, so that this also shows up in the OpenAPI documentation? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "ProblemDetails",
+            "problem\\+json",
+            "RFC ?9457",
+            "RFC ?7807"
+          ],
+          [
+            "TypedResults"
+          ],
+          [
+            "Results<"
+          ],
+          [
+            "AddValidation"
+          ],
+          [
+            "AddOpenApi",
+            "MapOpenApi"
+          ]
+        ],
+        "none": [
+          "Conflict\\(new ProblemDetails"
+        ]
+      }
+    },
+    {
       "id": "test-integracyjny",
       "expect": "trigger",
       "prompt": "Jak napisać test integracyjny endpointu ASP.NET Core, który sprawdza kod odpowiedzi i treść, bez ręcznego stawiania serwera? Odpowiedz zwięźle.",

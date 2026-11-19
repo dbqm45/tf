@@ -4,7 +4,7 @@ description: Use for technical documentation in the repo — when and how to wri
 metadata:
   review: "2027-10-17"
   catalog: "Use when writing, fixing or assessing technical documentation in the repo — README, API documentation, ADR, CHANGELOG, runbook, manual, module/feature description; audience, structure, style, process and review. Not for the project record artifacts in docs/project/ (core-project-record), commit messages (core-conventional-commits) or code comments."
-  keywords: "kiedy pisać ADR, dokumentować decyzję, dokumentacja, README, runbook, instrukcja, opis modułu, when to write an ADR, document a decision, documentation, user manual, module description, technical writing"
+  keywords: "kiedy pisać ADR, dokumentować decyzję, dokumentacja, README, runbook, instrukcja, opis modułu, when to write an ADR, document a decision, documentation, user manual, module description, technical writing, does it deserve an ADR, when to write an ADR, skip the ADR, architecture decision record"
 ---
 
 # Technical documentation

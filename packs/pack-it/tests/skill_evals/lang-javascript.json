@@ -31,6 +31,39 @@
       }
     },
     {
+      "id": "sort-liczb-en",
+      "expect": "trigger",
+      "prompt": "In src/utils/sort.js I sort prices: [10, 9, 100].sort() gives a wrong result, and the original array in the component also gets changed. How do I fix this in ES2023+? Answer briefly.",
+      "files": {
+        "src/utils/sort.js": "export function sortPrices(prices) {\n  return prices.sort();\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "a\\s*-\\s*b"
+          ],
+          [
+            "toSorted"
+          ],
+          [
+            "tekst",
+            "string",
+            "leksykograf",
+            "alfabet",
+            "text",
+            "lexicograph\\w*",
+            "alphabetic\\w*"
+          ],
+          [
+            "płytk",
+            "shallow",
+            "structuredClone",
+            "shallow cop\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "async-bledy",
       "expect": "trigger",
       "prompt": "W src/api/client.js robię trzy niezależne await po kolei, a błąd w callbacku setTimeout nie jest łapany przez try/catch. Jak to poprawić? Odpowiedz zwięźle.",

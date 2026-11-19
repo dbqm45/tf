@@ -31,6 +31,45 @@
       }
     },
     {
+      "id": "nowa-funkcja-dane-en",
+      "expect": "trigger",
+      "prompt": "We're adding phone number storage, booking history and user behavior analytics to our room booking app. What do we need to do about GDPR before we start coding? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "podstaw\\w* prawn",
+            "art\\.? 6",
+            "legal basis",
+            "lawful basis",
+            "art(icle|\\.)? ?6"
+          ],
+          [
+            "minimaliz",
+            "minimi[sz]\\w*"
+          ],
+          [
+            "retencj",
+            "okres\\w* przechowywania",
+            "usuwa",
+            "retention",
+            "storage (period|limitation)",
+            "delet\\w*"
+          ],
+          [
+            "DPIA",
+            "ocen\\w* skutków",
+            "impact assessment"
+          ],
+          [
+            "komunikacji elektronicznej",
+            "\\bPKE\\b",
+            "ePrivacy",
+            "electronic communications"
+          ]
+        ]
+      }
+    },
+    {
       "id": "wyciek-testowej-bazy",
       "expect": "trigger",
       "prompt": "Odkryliśmy, że testowa baza z prawdziwymi danymi klientów była publicznie dostępna przez tydzień. Jakie mamy obowiązki wobec UODO i klientów, w jakim czasie, i co zmienić w procesie? Odpowiedz zwięźle.",

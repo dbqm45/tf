@@ -20,6 +20,25 @@
       }
     },
     {
+      "id": "przerwanie-sesji-en",
+      "expect": "trigger",
+      "prompt": "I'm starting a refactoring that will take several days, and the agent session may break off (limits, closed terminal). How should I record the state of the work so another session can pick it up right away? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "wip"
+          ],
+          [
+            "następn\\w+ czynno",
+            "next (action|step)"
+          ],
+          [
+            "git status"
+          ]
+        ]
+      }
+    },
+    {
       "id": "przekazanie-pracy",
       "expect": "trigger",
       "prompt": "Muszę przekazać rozpoczętą pracę koledze, który użyje innego agenta CLI w innym katalogu. Jak przygotować plik przekazania? Odpowiedz zwięźle.",

@@ -35,6 +35,39 @@
       }
     },
     {
+      "id": "model-webhook-upload-en",
+      "expect": "trigger",
+      "prompt": "We're adding webhooks from a payment partner and invoice uploads by customers. How do we build a threat model for this feature? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "STRIDE"
+          ],
+          [
+            "granic\\w* zaufani",
+            "trust boundar"
+          ],
+          [
+            "DFD",
+            "diagram\\w* przepływ\\w* danych",
+            "data.?flow"
+          ],
+          [
+            "rezydualn",
+            "residual",
+            "po kontroli"
+          ],
+          [
+            "test\\w* nadużyci",
+            "abuse case",
+            "misuse case",
+            "powierzchni\\w* ataku",
+            "attack surface"
+          ]
+        ]
+      }
+    },
+    {
       "id": "ryzyko-ilosciowe",
       "expect": "trigger",
       "prompt": "Zarząd pyta, czy warto wydać 200 tys. zł na ochronę przed wyciekiem danych klientów. Jak oszacować ryzyko liczbowo, a nie jako wysokie/średnie? Odpowiedz zwięźle.",

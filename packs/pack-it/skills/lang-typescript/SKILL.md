@@ -4,6 +4,7 @@ description: Use for TypeScript 5.x–7.x code — types, narrowing, generics, t
 metadata:
   review: "2027-04-17"
   catalog: "Use when writing, refactoring and reviewing TypeScript 5.x–7.x code — types, narrowing, generics, decorators, modules, tsconfig, validation at boundaries, TS/npm security pitfalls and domain concepts (value object, variants, aggregate, result) in TS idioms. Not for JS runtime mechanics (lang-javascript), a framework (fw-*), general auth principles (be-auth-security) or modelling (ddd-*)."
+  keywords: "TypeScript types, mixing up IDs, customer ID and order ID, branded type, amounts as number, model money in TypeScript"
 ---
 
 # TypeScript

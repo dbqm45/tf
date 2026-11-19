@@ -14,6 +14,18 @@
       }
     },
     {
+      "id": "rozjazdy-model-kod-en",
+      "expect": "trigger",
+      "prompt": "The application has been running for two years and we have a PRD, but in the code the word Account means three different things, and some PRD concepts have no counterpart at all. How do I check whether the code reflects the domain, and where do I start cleaning up? Answer briefly.",
+      "checks": {
+        "all": [
+          ["słownik|glossary|język wszechobecny|ubiquitous"],
+          ["rozjazd|model vs kod|model ↔ kod|BRAK w kodzie", "drift", "diverge\\w*", "mismatch", "model vs\\.? code", "model ↔ code", "MISSING in (the )?code", "not in (the )?code"],
+          ["niezmiennik|agregat", "invariant", "aggregate"]
+        ]
+      }
+    },
+    {
       "id": "niezmiennik-tylko-w-ui",
       "expect": "trigger",
       "accept": ["ddd-tactical-design"],

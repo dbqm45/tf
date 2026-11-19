@@ -35,6 +35,46 @@
       }
     },
     {
+      "id": "idor-w-endpoincie-faktur-en",
+      "expect": "trigger",
+      "prompt": "We built the app quickly with help from AI. Endpoint in Express: app.get('/api/invoices/:id', requireLogin, async (req, res) => res.json(await Invoice.findById(req.params.id))). Login works. Is something wrong here and how do I check it with a test? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "IDOR",
+            "BOLA",
+            "CWE-639",
+            "cudz\\w* faktur",
+            "inn\\w* użytkownik\\w*",
+            "(other|another|someone else'?s?) (users?'?s?|customers?'?s?)? ?invoices?",
+            "another user",
+            "other users?"
+          ],
+          [
+            "właściciel\\w*",
+            "owner",
+            "userId",
+            "user_id",
+            "tenant",
+            "najemc\\w*",
+            "organizacj\\w*",
+            "organi[sz]ation\\w*",
+            "ownership"
+          ],
+          [
+            "test\\w*[^\\n]{0,160}(drugi|inn\\w*|obc\\w*) (użytkownik|kont|najemc)",
+            "(403|404)[^\\n]{0,120}test",
+            "test\\w*[^\\n]{0,120}(403|404)",
+            "test\\w*[^\\n]{0,160}(second|another|other|different|foreign) (user|account|tenant)"
+          ]
+        ],
+        "none": [
+          "(wystarczy|wystarcza)[^\\n]{0,40}(requireLogin|logowani)",
+          "(requireLogin|login|logging in|authentication)[^\\n]{0,40}(is|are) (enough|sufficient)"
+        ]
+      }
+    },
+    {
       "id": "ssrf-podglad-linku-obejscia",
       "expect": "trigger",
       "prompt": "Dodajemy podgląd linków: serwer pobiera URL podany przez użytkownika i wyciąga tytuł strony. Kolega blokuje URL-e zawierające 'localhost' i '127.0.0.1'. Czy to wystarczy, a jeśli nie, jak to zrobić porządnie? Odpowiedz zwięźle.",

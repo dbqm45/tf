@@ -16,6 +16,20 @@
       }
     },
     {
+      "id": "search-resource-en",
+      "expect": "trigger",
+      "prompt": "In src/app/orders/order-list.component.ts I want order search with debounce after the user types a phrase, in Angular 22. How do I do that the modern way, without a manual subscribe? Answer briefly.",
+      "files": {
+        "src/app/orders/order-list.component.ts": "import { Component } from '@angular/core';\n\n@Component({ selector: 'app-order-list', template: '' })\nexport class OrderListComponent {}\n"
+      },
+      "checks": {
+        "all": [
+          ["httpResource", "rxResource", "resource"],
+          ["debounced"]
+        ]
+      }
+    },
+    {
       "id": "signal-forms",
       "expect": "trigger",
       "prompt": "W src/app/orders/order-form.component.ts mamy Reactive Forms w Angularze 22 i piszę nowy formularz w innym miejscu. Jak ma wyglądać nowy, a co zrobić z istniejącymi? Odpowiedz zwięźle.",

@@ -20,6 +20,27 @@
       }
     },
     {
+      "id": "przesluchanie-graphql-en",
+      "expect": "trigger",
+      "prompt": "I want to move our API from REST to GraphQL and the plan exists only in my head. Interview me about it before we start doing anything. What should that conversation look like? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "rekomendacj",
+            "recommend\\w*"
+          ],
+          [
+            "rund",
+            "round\\w*"
+          ],
+          [
+            "potwierdz|czy tak to rozumiemy",
+            "confirm\\w*|is that (right|correct)|do we understand (it|this)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "agent-odpowiada-sam",
       "expect": "trigger",
       "prompt": "Zleciłem agentowi przepytanie mojego planu, ale on sam odpowiada na swoje pytania decyzyjne i zaczyna kodować. Co zmienić w konfiguracji i podejściu? Odpowiedz zwięźle.",

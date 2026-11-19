@@ -16,6 +16,20 @@
       }
     },
     {
+      "id": "dojrzalosc-ux-en",
+      "expect": "trigger",
+      "prompt": "I’m a new Head of Design at a company where UX is two people making mockups on commission from product. How do I assess UX maturity and what do I do with that for the board? Answer briefly.",
+      "checks": {
+        "all": [
+          ["nn/?g|nielsen"],
+          ["sześć|6 (etap|poziom)|absent|limited|emergent|structured|integrated|user-driven", "six", "6 (stages?|levels?)"],
+          ["strategi\\w+.*kultur|kultur\\w+.*proces|strategy.*culture|proces\\w+.*wynik", "culture.*process", "process\\w*.*(outcome|result)s?"],
+          ["HEART", "1.?(–|-|do) ?3 wynik\\w* biznes", "(1|one)[- ]?(–|-|to) ?3 (business )?(outcome|result|metric)s?"]
+        ],
+        "none": ["liniow\\w+ lista kontrolna, którą odhaczasz", "linear checklist (that )?you (just )?(tick|check) off"]
+      }
+    },
+    {
       "id": "metryki-heart",
       "expect": "trigger",
       "prompt": "Zarząd pyta, jak mierzymy wartość UX. Mamy tylko NPS. Co dodać, żeby metryki były powiązane z celami biznesowymi i nie były czczymi wskaźnikami? Odpowiedz zwięźle.",

@@ -27,6 +27,36 @@
       }
     },
     {
+      "id": "kreator-kluczy-en",
+      "expect": "trigger",
+      "prompt": "I need to configure several API keys in the dashboards of external services, some into .env, some as secrets in GitHub Actions. I don't want the keys to pass through my conversation with you. How do I solve this? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "kreator",
+            "wizard",
+            "interaktywn",
+            "interactive",
+            "guided"
+          ],
+          [
+            "bash",
+            "skrypt"
+          ],
+          [
+            "stdin",
+            "bez echa",
+            "ukryt",
+            "read -s",
+            "-s",
+            "(no|without|disable\\w*) echo",
+            "hidden",
+            "masked"
+          ]
+        ]
+      }
+    },
+    {
       "id": "migracja-reczna",
       "expect": "trigger",
       "prompt": "Czeka mnie jednorazowa migracja z jednego dostawcy poczty na drugi: zmiany w panelach, klucze, nieodwracalne przełączenie DNS. Agent nie ma dostępu do paneli. Jak to zorganizować, żeby nic nie przeoczyć? Odpowiedz zwięźle.",

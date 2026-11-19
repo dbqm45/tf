@@ -32,6 +32,39 @@
       }
     },
     {
+      "id": "regula-taint-z-testem-en",
+      "expect": "trigger",
+      "prompt": "We want a custom Semgrep rule for our Python code: a value from request.args must not reach subprocess.run with shell=True unless it has passed through shlex.quote. How do I write this rule and verify that it works? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "mode: taint",
+            "pattern-sources",
+            "pattern-sinks"
+          ],
+          [
+            "pattern-sanitizers",
+            "sanityzator\\w*",
+            "sanitizers?"
+          ],
+          [
+            "ruleid:",
+            "# ok:",
+            "todoruleid"
+          ],
+          [
+            "semgrep (scan )?--test",
+            "semgrep test"
+          ]
+        ],
+        "none": [
+          "nie da się przetestować reguł",
+          "(cannot|can.t) be tested",
+          "no way to test"
+        ]
+      }
+    },
+    {
       "id": "falszywe-trafienia",
       "expect": "trigger",
       "prompt": "Nasza reguła Semgrep na hardcodowane hasła zgłasza 300 trafień w repozytorium, prawie wszystkie fałszywe (testy, przykładowe configi, stałe z pustym stringiem). Jak ją poprawić, żeby zespół jej nie wyłączył? Odpowiedz zwięźle.",

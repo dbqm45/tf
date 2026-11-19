@@ -46,6 +46,64 @@
       }
     },
     {
+      "id": "dobor-podejscia-klasyfikacja-maili-en",
+      "expect": "trigger",
+      "prompt": "We get 40,000 emails a day in Polish and want to route them to 6 departments. We have about 800 manually labeled ones. Should we use an LLM via API, fine-tune BERT, or do something simpler? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "TF-IDF",
+            "regresj\\w* logistyczn",
+            "klasyczn\\w* (ML|model|klasyfikator)",
+            "punkt odniesienia",
+            "baseline",
+            "logistic regression",
+            "classic(al)? (ML|machine learning|model|classifier)",
+            "starting point"
+          ],
+          [
+            "HerBERT",
+            "enkoder",
+            "encoder",
+            "mał\\w* model\\w* (enkoder|BERT)",
+            "small \\w*\\s?(encoder|BERT)"
+          ],
+          [
+            "koszt",
+            "opóźnien",
+            "latency",
+            "cost",
+            "latenc\\w*",
+            "delay"
+          ],
+          [
+            "macro",
+            "makro",
+            "zbiór (testowy|walidacyjny)",
+            "niezbalansowan",
+            "nierównowag",
+            "test set|validation set|held-?out|imbalanc\\w*|unbalanc\\w*"
+          ],
+          [
+            "kaskad",
+            "krzyw\\w* uczenia",
+            "po źródle",
+            "nie losowo",
+            "zamro\\w*",
+            "cascad\\w*",
+            "learning curve",
+            "split by source",
+            "not random\\w*",
+            "freez\\w*|froze\\w*|frozen"
+          ]
+        ],
+        "none": [
+          "zawsze (użyj|wybierz|bierz) (największego )?(LLM|modelu)",
+          "always (use|choose|take|pick) (the )?(biggest |largest )?(LLM|model)"
+        ]
+      }
+    },
+    {
       "id": "ner-faktury-ocena-spanowa",
       "expect": "trigger",
       "prompt": "Zrobiliśmy NER wyciągający nazwy firm i kwoty z polskich faktur. Accuracy na tokenach wychodzi 98%, a użytkownicy i tak narzekają. Jak to ocenić porządnie? Odpowiedz zwięźle.",

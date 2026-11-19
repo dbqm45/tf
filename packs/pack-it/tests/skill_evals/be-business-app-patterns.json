@@ -44,6 +44,66 @@
    }
   },
   {
+    "id": "usuniecie-projektu-nieodwracalne-en",
+    "expect": "trigger",
+    "prompt": "In our app, deleting a project erases all its data: tasks, files and history. Customers have deleted a project by mistake several times. How should we design this better? Answer briefly.",
+    "checks": {
+      "all": [
+        [
+          "wpis\\w* nazw\\w*",
+          "wpisać nazwę",
+          "przepisa\\w*",
+          "type (in )?(the )?(project )?name",
+          "re-?type\\w*",
+          "confirm\\w* (by )?typing"
+        ],
+        [
+          "karencj\\w*",
+          "kosz\\w*",
+          "przywróc\\w*",
+          "odroczon\\w*",
+          "\\b(7|14|30) dni",
+          "grace period",
+          "trash|recycle bin",
+          "restor\\w*|recover\\w*",
+          "soft[- ]delet\\w*",
+          "delayed|deferred"
+        ],
+        [
+          "audyt\\w*",
+          "audit",
+          "dziennik\\w*",
+          "kto usunął",
+          "who deleted"
+        ],
+        [
+          "uprawnieni\\w*",
+          "rol\\w*",
+          "MFA",
+          "drugi\\w* czynnik",
+          "ponown\\w* (uwierzytel|logow)",
+          "właściciel\\w*",
+          "permission\\w*",
+          "roles?\\b",
+          "second factor",
+          "re-?(authenticat|enter (your )?password)\\w*",
+          "re-?login",
+          "owner\\w*"
+        ],
+        [
+          "indeks\\w* unikaln\\w* częściow\\w*",
+          "WHERE deleted_at IS NULL",
+          "nazw\\w* (ponownie |znów )?dostępn\\w*",
+          "purge\\w*",
+          "magazyn\\w* (plików|obiektów)",
+          "partial unique index",
+          "name\\w* (available|reusable|free) again",
+          "(file|object) (storage|store)"
+        ]
+      ]
+    }
+  },
+  {
    "id": "audit-log-zamowien",
    "expect": "trigger",
    "prompt": "Musimy dodać audit log zmian w zamówieniach — kto, co i kiedy zmienił. Jak go zaprojektować? Odpowiedz zwięźle.",

@@ -18,6 +18,22 @@
       }
     },
     {
+      "id": "nis2-zakres-i-zegary-en",
+      "expect": "trigger",
+      "prompt": "We are a logistics company in Poland, 180 employees, turnover about 60 million euros. Are we subject to NIS2 and what are the incident reporting deadlines? Answer briefly.",
+      "checks": {
+        "all": [
+          ["podmiot\\w* (kluczow|ważn)", "essential", "important"],
+          ["24 godz", "24 h", "24h", "early warning", "wczesne ostrzeżenie", "24 hours?"],
+          ["72 godz", "72 h", "72h", "72 hours?"],
+          ["miesi[ąa]c", "final report", "raport końcow", "sprawozdanie końcow", "months?"],
+          ["krajowym systemie cyberbezpieczeństwa", "KSC", "nie jest\\w* porad\\w* prawn", "niezweryfikowan", "ISAP", "national cyber-?security system", "not legal advice", "unverified", "should be verified"],
+          ["2026-04-03", "2026-10-03", "2027-04-03", "3 kwietnia 2026", "Ministerst\\w* Cyfryzacji", "3 April 2026", "April 3(rd)?,? 2026", "Ministry of Digital\\w*"]
+        ],
+        "none": ["NIS2 nie dotyczy firm poniżej 250", "NIS2 (does not|doesn'?t) apply to (companies|firms|businesses)[^.]{0,30}(below|under|fewer than|less than) 250"]
+      }
+    },
+    {
       "id": "jeden-incydent-wiele-zegarow",
       "expect": "trigger",
       "prompt": "Ransomware zaszyfrował u nas system z danymi klientów, jesteśmy fintechem (instytucja płatnicza) i jednocześnie producentem aplikacji mobilnej. Komu i kiedy musimy to zgłosić? Odpowiedz zwięźle.",

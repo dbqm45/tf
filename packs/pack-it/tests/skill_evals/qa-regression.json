@@ -31,6 +31,35 @@
       }
     },
     {
+      "id": "warstwy-zestawow-en",
+      "expect": "trigger",
+      "prompt": "Our e2e test suite takes 50 minutes and blocks every pull request. How do I split the tests into layers and what time budget should the PR gate have? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "15\\s*min"
+          ],
+          [
+            "smoke"
+          ],
+          [
+            "affected",
+            "only-changed",
+            "--changed",
+            "dotkni",
+            "nocn",
+            "nightly"
+          ],
+          [
+            "tag\\w*",
+            "@smoke",
+            "jedna kopia",
+            "filtrem"
+          ]
+        ]
+      }
+    },
+    {
       "id": "flaky-kwarantanna",
       "expect": "trigger",
       "prompt": "Trzy testy w naszym CI są czasem czerwone, czasem zielone bez zmiany kodu. Zespół chce dodać retries i o nich zapomnieć. Co zrobić z niestabilnymi testami? Odpowiedz zwięźle.",

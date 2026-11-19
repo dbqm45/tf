@@ -39,6 +39,58 @@
       }
     },
     {
+      "id": "pozycjonowanie-kolejny-program-en",
+      "expect": "trigger",
+      "prompt": "We have a billing tool for small accounting offices. Sales are weak, and customers say it's “just another accounting program”. How do we set the positioning and the main message? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "alternatyw\\w*",
+            "konkurenc\\w* alternatyw",
+            "alternatives?"
+          ],
+          [
+            "unikaln\\w*",
+            "wyróżni\\w*",
+            "czym się różni",
+            "unique",
+            "differentiat\\w+",
+            "how it differs"
+          ],
+          [
+            "wartoś\\w* dla",
+            "korzyś\\w*",
+            "wartość",
+            "value (for|to)",
+            "benefits?",
+            "value"
+          ],
+          [
+            "najlepiej dopasowan\\w*",
+            "klient\\w* docelow\\w*",
+            "segment\\w*",
+            "idealn\\w* klient",
+            "best.fit",
+            "target (customers?|audience)",
+            "segments?",
+            "ideal customer"
+          ],
+          [
+            "kategori\\w*",
+            "rama rynk\\w*",
+            "kontekst rynk\\w*",
+            "categor\\w+",
+            "market (frame|context)\\w*",
+            "frame of reference"
+          ]
+        ],
+        "none": [
+          "(zacznij|najpierw) od (logo|nazwy|kolorów)",
+          "(start|first) (with|by) (the )?(logo|name|colou?rs)"
+        ]
+      }
+    },
+    {
       "id": "wielkosc-rynku-dla-inwestora",
       "expect": "trigger",
       "prompt": "Inwestor pyta o wielkość rynku dla naszej aplikacji do układania grafików pracy w restauracjach w Polsce. Jak to policzyć uczciwie? Odpowiedz zwięźle.",

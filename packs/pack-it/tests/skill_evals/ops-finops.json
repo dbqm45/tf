@@ -21,6 +21,28 @@
       }
     },
     {
+      "id": "sprzatanie-en",
+      "expect": "trigger",
+      "prompt": "I want to start cleaning up unused resources in AWS to cut the bill. What criteria and what process should we adopt before we delete anything? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "30 dni",
+            "30 days"
+          ],
+          [
+            "7 dni|sprzeciw",
+            "7 days",
+            "objection"
+          ],
+          [
+            "migawk|snapshot",
+            "niepodpięt|unattached|load balancer"
+          ]
+        ]
+      }
+    },
+    {
       "id": "koszt-w-pr",
       "expect": "trigger",
       "prompt": "Jak wprowadzić kontrolę kosztów chmury do procesu zmian w Terraform, żeby zespoły widziały rachunek przed wdrożeniem? Odpowiedz zwięźle.",

@@ -31,6 +31,36 @@
       }
     },
     {
+      "id": "test-repozytorium-h2-en",
+      "expect": "trigger",
+      "prompt": "In src/test/java/pl/acme/orders/OrderRepositoryTest.java we test the repository on H2 with @SpringBootTest and @MockBean for OrderEventPublisher. Production runs on PostgreSQL, Spring Boot 3.4. How should we fix this? Answer briefly.",
+      "files": {
+        "src/test/java/pl/acme/orders/OrderRepositoryTest.java": "package pl.acme.orders;\n\nimport org.junit.jupiter.api.Test;\nimport org.springframework.beans.factory.annotation.Autowired;\nimport org.springframework.boot.test.context.SpringBootTest;\nimport org.springframework.boot.test.mock.mockito.MockBean;\n\n@SpringBootTest(properties = \"spring.datasource.url=jdbc:h2:mem:test\")\nclass OrderRepositoryTest {\n    @Autowired OrderRepository repository;\n    @MockBean OrderEventPublisher publisher;\n\n    @Test\n    void savesOrder() {\n        repository.save(new Order(\"A-1\"));\n    }\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "@DataJpaTest",
+            "slice"
+          ],
+          [
+            "Testcontainers",
+            "PostgreSQLContainer"
+          ],
+          [
+            "@ServiceConnection"
+          ],
+          [
+            "@MockitoBean"
+          ]
+        ],
+        "none": [
+          "zostaw.{0,20}H2",
+          "(keep|leave|retain|stay on|stick with) H2 (is |as )?(fine|ok|okay|enough|for tests)"
+        ]
+      }
+    },
+    {
       "id": "kontroler-bledy-i-zabezpieczenia",
       "expect": "trigger",
       "prompt": "Mam kontroler Springa, który na błąd walidacji zwraca własną mapę z komunikatem, a dostęp konfigurujemy przez klasę dziedziczącą po WebSecurityConfigurerAdapter. Przechodzimy na Spring Boot 3. Co zmienić? Odpowiedz zwięźle.",

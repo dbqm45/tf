@@ -4,6 +4,7 @@ description: Use for data pipelines — batch, CDC, streaming, idempotency, back
 metadata:
   review: "2027-10-17"
   catalog: "Use when building and maintaining data pipelines — the data lifecycle, ingestion (batch, CDC, streaming), idempotency, backfill, late data, data contracts, orchestration (Airflow, Dagster), dbt, file and table formats, reverse ETL, pipeline tests. Not for analysis (data-analysis) or choosing a data architecture (arch-quality-attributes)."
+  keywords: "nightly job, incremental load, since the last run, duplicates after a failure, backfill, recompute months, rebuild the pipeline, data warehouse, idempotent load"
 ---
 
 # Data engineering
