@@ -1,10 +1,10 @@
-<title>Mapa fabryki tf</title>
+<title>Map of the tf factory</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-/* Układ: przekrój budynku — rdzeń to fundament, wyżej piętra firmy, zespołu, projektu i Twoje; obok klocki (nakładki, tryby), niżej taśma pracy. */
+/* Layout: a building cross-section: the core is the foundation, above it the company, team, project and your own floors; beside it the bricks (overlays, modes), below the work belt. */
 :root{
   --bg:#f3f4f2; --paper:#ffffff; --ink:#1d2421; --muted:#5b6661; --line:#cdd4cf;
   --core:#24564a; --core-soft:#dcebe5; --pack:#2f5f8a; --pack-soft:#dde8f2;
@@ -38,7 +38,7 @@ section{display:grid;gap:20px}
 section>header{display:grid;gap:8px}
 section>header p{max-width:68ch;color:var(--muted)}
 
-/* legenda */
+/* legend */
 .legend{display:flex;flex-wrap:wrap;gap:10px 20px;font-size:.9rem;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:8px}
 .sw{width:22px;height:14px;border-radius:3px;border:2px solid var(--core);background:var(--core-soft)}
@@ -50,7 +50,7 @@ section>header p{max-width:68ch;color:var(--muted)}
 .pill.now{background:var(--core-soft);color:var(--core)}
 .pill.plan{background:var(--plan-soft);color:var(--plan)}
 
-/* diagram całości */
+/* whole diagram */
 .whole{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px}
 .whole svg{display:block;width:100%;min-width:760px;height:auto}
 .w-col{font:600 12px var(--mono);letter-spacing:.08em;fill:var(--muted)}
@@ -72,7 +72,7 @@ section>header p{max-width:68ch;color:var(--muted)}
 .w-dash{stroke:var(--guard);stroke-width:2;stroke-dasharray:3 4}
 .w-arrowhead{fill:var(--muted)}
 
-/* przekrój budynku */
+/* building cross-section */
 .building{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:24px;align-items:stretch}
 .floors{display:grid;gap:8px;position:relative}
 .floor{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:start;
@@ -92,7 +92,7 @@ section>header p{max-width:68ch;color:var(--muted)}
 .rule .rtxt b{font-family:var(--display)}
 .rule .rtxt span{color:var(--muted)}
 
-/* klocki */
+/* bricks */
 .bricks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .brickset{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:12px;align-content:start}
 .brickset>p{color:var(--muted);font-size:.93rem}
@@ -104,7 +104,7 @@ section>header p{max-width:68ch;color:var(--muted)}
 .chip.planned{border-style:dashed;border-color:var(--plan);background:var(--plan-soft)}
 .chip.planned b{color:var(--plan)}
 
-/* taśma pracy */
+/* work belt */
 .belt-wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:20px}
 .belt{display:grid;grid-template-columns:repeat(7,minmax(108px,1fr));gap:0;min-width:760px}
 .step{display:grid;gap:6px;justify-items:center;text-align:center;position:relative;padding:0 6px}
@@ -117,7 +117,7 @@ section>header p{max-width:68ch;color:var(--muted)}
   display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;font-size:.86rem}
 .guards strong{font-family:var(--display);color:var(--guard)}
 
-/* style i tryby */
+/* styles and modes */
 .styles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 .style{border:2px dashed var(--plan);background:var(--plan-soft);border-radius:6px;padding:16px;display:grid;gap:10px;align-content:start}
 .style.now{border:2px solid var(--core);background:var(--core-soft)}
@@ -128,7 +128,7 @@ section>header p{max-width:68ch;color:var(--muted)}
 .mode b{font-family:var(--mono);font-weight:500;color:var(--core);font-size:.9rem}
 .mode span{font-size:.9rem}
 
-/* tabela */
+/* table */
 .tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
 table{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
 th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -151,86 +151,86 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
 
 <main>
   <div class="head">
-    <div class="eyebrow">Fabryka tf · stan na 16 listopada 2026</div>
-    <h1>Mapa fabryki tf</h1>
-    <p class="lead">Fabryka instaluje w Twoim projekcie zespół agentów AI dla Claude Code. Agenci mają gotową wiedzę,
-      stałe zasady i strażników, którzy pilnują, żeby zasad nie łamali. Ta strona pokazuje, z czego składa się fabryka,
-      co da się w niej dopasować i jak przebiega praca. Część rzeczy już działa, część jest zaplanowana.</p>
-    <div class="legend" aria-label="Legenda">
-      <span><i class="sw"></i>rdzeń fabryki, działa</span>
-      <span><i class="sw pk"></i>dokładane klocki, działają</span>
-      <span><i class="sw pl"></i>zaplanowane, jeszcze nie ma</span>
-      <span><i class="sw gd"></i>strażnicy (pilnują zasad)</span>
+    <div class="eyebrow">The tf factory · as of 16 November 2026</div>
+    <h1>Map of the tf factory</h1>
+    <p class="lead">The factory installs a team of AI agents for Claude Code in your project. The agents come with ready knowledge,
+      fixed rules and guards that make sure the rules are not broken. This page shows what the factory is made of,
+      what you can adjust in it and how the work flows. Some things already work, some are planned.</p>
+    <div class="legend" aria-label="Legend">
+      <span><i class="sw"></i>factory core, working</span>
+      <span><i class="sw pk"></i>add-on bricks, working</span>
+      <span><i class="sw pl"></i>planned, not there yet</span>
+      <span><i class="sw gd"></i>guards (enforce the rules)</span>
     </div>
   </div>
 
   <section aria-labelledby="s0">
     <header>
-      <h2 id="s0">Całość na jednym obrazku</h2>
-      <p>Po lewej ustawienia ułożone piętrami. Pośrodku agenci, z którymi pracujesz, i klocki, które dokładają im wiedzę.
-        Po prawej droga zadania od zgłoszenia do pull requestu. Na dole strażnicy, którzy pilnują zasad przy każdym kroku.
-        Szczegóły każdej części opisują kolejne sekcje.</p>
+      <h2 id="s0">The whole on one picture</h2>
+      <p>On the left, the settings stacked in floors. In the middle, the agents you work with and the bricks that add knowledge to them.
+        On the right, the path of a task from ticket to pull request. At the bottom, the guards that enforce the rules at every step.
+        The following sections describe each part in detail.</p>
     </header>
     <div class="whole">
       <svg viewBox="0 0 1000 620" role="img" aria-labelledby="wt wd">
-        <title id="wt">Fabryka tf w całości</title>
-        <desc id="wd">Piętra ustawień: Ty, projekt, zespół, firma i rdzeń ustawiają agentów w projekcie. Developer zleca zadania agentom. Nakładki i tryby dokładają agentom wiedzę. Agenci prowadzą zadanie: zgłoszenie, fakty i plan, test, kod, przegląd, pull request, po którym decyduje człowiek. Narzędzia bez modelu piszą raporty. Strażnicy pilnują każdego kroku.</desc>
+        <title id="wt">The tf factory as a whole</title>
+        <desc id="wd">Settings floors: you, project, team, company and core configure the agents in the project. The developer assigns tasks to the agents. Overlays and modes add knowledge to the agents. The agents run the task: ticket, facts and plan, test, code, review, pull request, after which a human decides. Tools without a model write reports. Guards watch every step.</desc>
         <defs>
           <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" class="w-arrowhead"/>
           </marker>
         </defs>
 
-        <text x="30" y="34" class="w-col">USTAWIENIA</text>
-        <text x="390" y="34" class="w-col">AGENCI I KLOCKI</text>
-        <text x="690" y="34" class="w-col">DROGA ZADANIA</text>
+        <text x="30" y="34" class="w-col">SETTINGS</text>
+        <text x="390" y="34" class="w-col">AGENTS AND BRICKS</text>
+        <text x="690" y="34" class="w-col">TASK PATH</text>
 
-        <!-- piętra ustawień -->
+        <!-- settings floors -->
         <rect x="30" y="60" width="300" height="54" rx="5" class="w-box"/>
-        <text x="46" y="84" class="w-h">Ty</text><text x="46" y="103" class="w-s">styl pracy (tf style), preferencje</text>
+        <text x="46" y="84" class="w-h">You</text><text x="46" y="103" class="w-s">work style (tf style), preferences</text>
         <rect x="30" y="124" width="300" height="54" rx="5" class="w-box"/>
-        <text x="46" y="148" class="w-h">Projekt</text><text x="46" y="167" class="w-s">własne persony, skille, limity</text>
+        <text x="46" y="148" class="w-h">Project</text><text x="46" y="167" class="w-s">own personas, skills, limits</text>
         <rect x="30" y="188" width="300" height="54" rx="5" class="w-box"/>
-        <text x="46" y="212" class="w-h">Zespół</text><text x="46" y="231" class="w-s">standardy zespołu ponad firmą</text>
+        <text x="46" y="212" class="w-h">Team</text><text x="46" y="231" class="w-s">team standards above the company</text>
         <rect x="30" y="252" width="300" height="54" rx="5" class="w-box"/>
-        <text x="46" y="276" class="w-h">Firma</text><text x="46" y="295" class="w-s">zakazy, reguły kodu, Jira, koszty</text>
+        <text x="46" y="276" class="w-h">Company</text><text x="46" y="295" class="w-s">bans, code rules, Jira, costs</text>
         <rect x="30" y="316" width="300" height="64" rx="5" class="w-core"/>
-        <text x="46" y="342" class="w-h">Rdzeń</text><text x="46" y="362" class="w-s">silnik, pętla /tf, zasady, koszty</text>
+        <text x="46" y="342" class="w-h">Core</text><text x="46" y="362" class="w-s">engine, /tf loop, rules, costs</text>
         <line x1="14" y1="376" x2="14" y2="66" class="w-line" marker-end="url(#ar)"/>
-        <text x="30" y="410" class="w-s">Każde piętro dopasowuje fabrykę</text>
-        <text x="30" y="428" class="w-s">w granicach piętra pod sobą.</text>
+        <text x="30" y="410" class="w-s">Each floor adjusts the factory</text>
+        <text x="30" y="428" class="w-s">within the limits of the floor below.</text>
 
         <!-- developer -->
         <rect x="390" y="60" width="240" height="64" rx="5" class="w-dev"/>
         <text x="406" y="86" class="w-h">Developer</text>
-        <text x="406" y="108" class="w-s">/tf, numer zgłoszenia, rozmowa</text>
+        <text x="406" y="108" class="w-s">/tf, ticket number, conversation</text>
 
-        <!-- agenci -->
+        <!-- agents -->
         <rect x="390" y="170" width="240" height="170" rx="5" class="w-core"/>
-        <text x="406" y="198" class="w-h">Agenci w projekcie</text>
-        <text x="406" y="226" class="w-s">persony: Jan, Ola, Kasia…</text>
-        <text x="406" y="250" class="w-s">wykonawcy kroków</text>
-        <text x="406" y="274" class="w-s">skille z wiedzą i procedurami</text>
-        <text x="406" y="298" class="w-s">model dobrany do kroku</text>
-        <text x="406" y="322" class="w-s">(najtańszy, który da radę)</text>
+        <text x="406" y="198" class="w-h">Agents in the project</text>
+        <text x="406" y="226" class="w-s">personas: Jan, Ola, Kasia…</text>
+        <text x="406" y="250" class="w-s">step executors</text>
+        <text x="406" y="274" class="w-s">skills with knowledge and procedures</text>
+        <text x="406" y="298" class="w-s">model matched to the step</text>
+        <text x="406" y="322" class="w-s">(the cheapest that can do it)</text>
 
-        <!-- klocki -->
+        <!-- bricks -->
         <rect x="390" y="400" width="115" height="92" rx="5" class="w-pack"/>
-        <text x="402" y="424" class="w-h">Nakładki</text>
-        <text x="402" y="446" class="w-xs">IT, UX, dokumenty,</text>
-        <text x="402" y="462" class="w-xs">polszczyzna, firma,</text>
-        <text x="402" y="478" class="w-xs">Twoja dziedzina</text>
+        <text x="402" y="424" class="w-h">Overlays</text>
+        <text x="402" y="446" class="w-xs">IT, UX, documents,</text>
+        <text x="402" y="462" class="w-xs">Polish language, company,</text>
+        <text x="402" y="478" class="w-xs">your domain</text>
         <rect x="515" y="400" width="115" height="92" rx="5" class="w-pack"/>
-        <text x="527" y="424" class="w-h">Tryby</text>
-        <text x="527" y="446" class="w-xs">zespół agentów,</text>
-        <text x="527" y="462" class="w-xs">decyzje w pdi;</text>
-        <text x="527" y="478" class="w-xs">na żądanie</text>
+        <text x="527" y="424" class="w-h">Modes</text>
+        <text x="527" y="446" class="w-xs">agent team,</text>
+        <text x="527" y="462" class="w-xs">decisions in pdi;</text>
+        <text x="527" y="478" class="w-xs">on demand</text>
 
-        <!-- droga zadania -->
-        <rect x="690" y="60" width="270" height="42" rx="5" class="w-box"/><text x="706" y="86" class="w-h2">Zgłoszenie z Jiry lub opis</text>
-        <rect x="690" y="122" width="270" height="42" rx="5" class="w-box"/><text x="706" y="148" class="w-h2">Fakty i plan</text>
-        <rect x="690" y="184" width="270" height="42" rx="5" class="w-box"/><text x="706" y="210" class="w-h2">Test, potem kod</text>
-        <rect x="690" y="246" width="270" height="42" rx="5" class="w-box"/><text x="706" y="272" class="w-h2">Przegląd i standardy firmy</text>
+        <!-- task path -->
+        <rect x="690" y="60" width="270" height="42" rx="5" class="w-box"/><text x="706" y="86" class="w-h2">Jira ticket or description</text>
+        <rect x="690" y="122" width="270" height="42" rx="5" class="w-box"/><text x="706" y="148" class="w-h2">Facts and plan</text>
+        <rect x="690" y="184" width="270" height="42" rx="5" class="w-box"/><text x="706" y="210" class="w-h2">Test, then code</text>
+        <rect x="690" y="246" width="270" height="42" rx="5" class="w-box"/><text x="706" y="272" class="w-h2">Review and company standards</text>
         <rect x="690" y="308" width="270" height="42" rx="5" class="w-core"/><text x="706" y="334" class="w-h2">Pull request</text>
         <line x1="825" y1="102" x2="825" y2="120" class="w-line" marker-end="url(#ar)"/>
         <line x1="825" y1="164" x2="825" y2="182" class="w-line" marker-end="url(#ar)"/>
@@ -238,94 +238,94 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
         <line x1="825" y1="288" x2="825" y2="306" class="w-line" marker-end="url(#ar)"/>
 
         <rect x="690" y="400" width="270" height="92" rx="5" class="w-pack"/>
-        <text x="706" y="424" class="w-h">Narzędzia bez modelu</text>
-        <text x="706" y="446" class="w-xs">tf analyze: przegląd projektu i standardów</text>
-        <text x="706" y="462" class="w-xs">tf risk: ryzyko zmiany</text>
-        <text x="706" y="478" class="w-xs">wynik: raporty do odhaczania, bez kosztu</text>
+        <text x="706" y="424" class="w-h">Tools without a model</text>
+        <text x="706" y="446" class="w-xs">tf analyze: project and standards review</text>
+        <text x="706" y="462" class="w-xs">tf risk: change risk</text>
+        <text x="706" y="478" class="w-xs">result: checklist reports, no cost</text>
 
-        <!-- strzałki między kolumnami -->
+        <!-- arrows between columns -->
         <path d="M330 215 C 360 215, 360 240, 388 240" class="w-line" marker-end="url(#ar)"/>
-        <text x="360" y="204" class="w-lab w-sm" text-anchor="middle">ustawiają</text>
+        <text x="360" y="204" class="w-lab w-sm" text-anchor="middle">configure</text>
         <line x1="510" y1="124" x2="510" y2="168" class="w-line" marker-end="url(#ar)"/>
-        <text x="518" y="152" class="w-lab">zleca</text>
+        <text x="518" y="152" class="w-lab">assigns</text>
         <line x1="447" y1="400" x2="447" y2="342" class="w-line" marker-end="url(#ar)"/>
         <line x1="572" y1="400" x2="572" y2="342" class="w-line" marker-end="url(#ar)"/>
-        <text x="509.5" y="376" class="w-lab w-sm" text-anchor="middle">dokładają wiedzę</text>
+        <text x="509.5" y="376" class="w-lab w-sm" text-anchor="middle">add knowledge</text>
         <path d="M630 230 C 660 230, 660 205, 688 205" class="w-line" marker-end="url(#ar)"/>
-        <text x="636" y="254" class="w-lab">prowadzą</text>
+        <text x="636" y="254" class="w-lab">run</text>
         <path d="M960 329 H 982 V 46 H 510 V 58" class="w-line w-back" marker-end="url(#ar)"/>
-        <text x="992" y="190" class="w-lab w-sm" transform="rotate(90 992 190)" text-anchor="middle">decyzja człowieka</text>
+        <text x="992" y="190" class="w-lab w-sm" transform="rotate(90 992 190)" text-anchor="middle">human decision</text>
 
-        <!-- strażnicy -->
+        <!-- guards -->
         <rect x="390" y="530" width="570" height="64" rx="5" class="w-guard"/>
-        <text x="406" y="556" class="w-h w-gtext">Strażnicy przy każdym kroku</text>
-        <text x="406" y="578" class="w-xs">groźne polecenia · sekrety · kod bez testu · czerwone testy · długi kontekst · podpowiedź skilla</text>
+        <text x="406" y="556" class="w-h w-gtext">Guards at every step</text>
+        <text x="406" y="578" class="w-xs">dangerous commands · secrets · code without a test · red tests · long context · skill hint</text>
         <line x1="510" y1="528" x2="510" y2="494" class="w-dash"/>
         <line x1="825" y1="528" x2="825" y2="494" class="w-dash"/>
 
-        <!-- legenda -->
-        <rect x="30" y="470" width="18" height="12" rx="2" class="w-core"/><text x="56" y="481" class="w-xs">rdzeń i jego elementy</text>
-        <rect x="30" y="494" width="18" height="12" rx="2" class="w-pack"/><text x="56" y="505" class="w-xs">klocki i narzędzia</text>
-        <rect x="30" y="518" width="18" height="12" rx="2" class="w-plan"/><text x="56" y="529" class="w-xs">planowane</text>
-        <rect x="30" y="542" width="18" height="12" rx="2" class="w-guard"/><text x="56" y="553" class="w-xs">strażnicy</text>
+        <!-- legend -->
+        <rect x="30" y="470" width="18" height="12" rx="2" class="w-core"/><text x="56" y="481" class="w-xs">core and its parts</text>
+        <rect x="30" y="494" width="18" height="12" rx="2" class="w-pack"/><text x="56" y="505" class="w-xs">bricks and tools</text>
+        <rect x="30" y="518" width="18" height="12" rx="2" class="w-plan"/><text x="56" y="529" class="w-xs">planned</text>
+        <rect x="30" y="542" width="18" height="12" rx="2" class="w-guard"/><text x="56" y="553" class="w-xs">guards</text>
       </svg>
     </div>
   </section>
 
   <section aria-labelledby="s1">
     <header>
-      <h2 id="s1">Budowa: fundament i piętra ustawień</h2>
-      <p>Fabrykę najłatwiej sobie wyobrazić jako budynek. Rdzeń to fundament, taki sam dla wszystkich. Każde piętro wyżej
-        dopasowuje fabrykę do coraz węższej grupy: całej firmy, jednego zespołu, jednego projektu i na końcu Ciebie.
-        Piętro może dodać coś od siebie albo zaostrzyć zasady, ale nie może ich złamać. Jeśli firma czegoś zakazała,
-        żaden zespół ani developer tego nie odblokuje.</p>
+      <h2 id="s1">Structure: the foundation and the settings floors</h2>
+      <p>The factory is easiest to imagine as a building. The core is the foundation, the same for everyone. Each floor above
+        adjusts the factory for a narrower group: the whole company, one team, one project and finally you.
+        A floor can add something of its own or tighten the rules, but it cannot break them. If the company has banned
+        something, no team or developer can unblock it.</p>
     </header>
     <div class="building">
       <div class="floors">
-        <div class="roof">najwęższy zasięg · decyduje ostatni</div>
+        <div class="roof">narrowest scope · decides last</div>
         <div class="floor">
-          <div class="name"><b>Ty</b><span class="pill now">działa</span></div>
+          <div class="name"><b>You</b><span class="pill now">working</span></div>
           <div class="what">
-            <p>Twój sposób pracy: czy agent ma działać sam, pytać o zgodę na każdy krok, czy po prostu rozmawiać. Do tego
-              domyślny tryb zadań i Twoje skróty. Działa we wszystkich Twoich projektach i nie trafia do repozytorium.</p>
-            <div class="where">tf style · ~/.tf/preferences.yaml · .tf/config/me.yaml (tylko ten projekt)</div>
-            <div class="where">do tego: CLAUDE.local.md, .claude/settings.local.json, język pracy i commitów</div>
+            <p>Your way of working: whether the agent acts on its own, asks for consent at every step, or just talks. Plus
+              the default task mode and your shortcuts. It applies to all your projects and does not go into the repository.</p>
+            <div class="where">tf style · ~/.tf/preferences.yaml · .tf/config/me.yaml (this project only)</div>
+            <div class="where">also: CLAUDE.local.md, .claude/settings.local.json, working and commit language</div>
           </div>
         </div>
         <div class="floor">
-          <div class="name"><b>Projekt</b><span class="pill now">działa</span></div>
+          <div class="name"><b>Project</b><span class="pill now">working</span></div>
           <div class="what">
-            <p>Ustawienia jednego repozytorium: własne persony, role i skille, limity pracy bez nadzoru, nakładki i tryby
-              wybrane dla tego projektu.</p>
+            <p>Settings of one repository: own personas, roles and skills, limits for unattended work, and the overlays and modes
+              chosen for this project.</p>
             <div class="where">.tf/config/config.yaml · .tf/config/personas/ · .claude/skills/</div>
           </div>
         </div>
         <div class="floor">
-          <div class="name"><b>Zespół</b><span class="pill now">działa</span></div>
+          <div class="name"><b>Team</b><span class="pill now">working</span></div>
           <div class="what">
-            <p>Standardy i ustawienia wspólne dla repozytoriów jednego zespołu, ponad standardami firmy: swoje reguły kodu,
-              prefiksy zgłoszeń, narzędzia. Zespół może tylko zaostrzyć zakazy firmy i zawęzić dozwolone tryby pracy.</p>
-            <div class="where">nakładka pack-&lt;firma&gt;-&lt;zespół&gt; · generator: org/new_org_pack.py &lt;firma&gt; --team &lt;zespół&gt;</div>
+            <p>Standards and settings shared by the repositories of one team, above the company standards: its own code rules,
+              ticket prefixes, tools. A team can only tighten the company's bans and narrow the allowed work modes.</p>
+            <div class="where">overlay pack-&lt;company&gt;-&lt;team&gt; · generator: org/new_org_pack.py &lt;company&gt; --team &lt;team&gt;</div>
           </div>
         </div>
         <div class="floor">
-          <div class="name"><b>Firma</b><span class="pill now">działa</span></div>
+          <div class="name"><b>Company</b><span class="pill now">working</span></div>
           <div class="what">
-            <p>Standardy całej organizacji: czego agentowi nie wolno (np. publikacji), co zawsze idzie do przeglądu
-              człowieka, reguły kodu sprawdzane automatycznie, Jira i prefiksy zgłoszeń, profil kosztów.</p>
-            <div class="where">nakładka pack-&lt;firma&gt; z własnego repozytorium firmy · generator org/new_org_pack.py</div>
+            <p>Standards of the whole organization: what the agent must not do (e.g. publish), what always goes to human
+              review, automatically checked code rules, Jira and ticket prefixes, a cost profile.</p>
+            <div class="where">overlay pack-&lt;company&gt; from the company's own repository · generator org/new_org_pack.py</div>
           </div>
         </div>
         <div class="floor core">
-          <div class="name"><b>Rdzeń</b><span class="pill now">działa</span></div>
+          <div class="name"><b>Core</b><span class="pill now">working</span></div>
           <div class="what">
-            <p>Fundament: silnik, który buduje agentów, instaluje i aktualizuje fabrykę, prowadzi pętlę pracy
-              <code>/tf</code>, liczy koszty i trzyma dziennik projektu. Do tego 21 skilli z zasadami pracy i strażnicy
-              (hooki), którzy działają niezależnie od decyzji modelu.</p>
+            <p>The foundation: the engine that builds the agents, installs and updates the factory, runs the work loop
+              <code>/tf</code>, counts costs and keeps the project journal. Plus 21 skills with work rules and the guards
+              (hooks) that work regardless of the model's decisions.</p>
             <div class="where">.tf/factory/ · .claude/hooks/ · .claude/skills/core-*</div>
           </div>
         </div>
-        <div class="roof">wspólny dla wszystkich</div>
+        <div class="roof">common to everyone</div>
       </div>
       <div class="rule" aria-hidden="true">
         <svg viewBox="0 0 28 400" preserveAspectRatio="none">
@@ -337,10 +337,10 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
           <line x1="14" y1="392" x2="14" y2="10" stroke="var(--core)" stroke-width="2.5" marker-end="url(#up)"/>
         </svg>
         <div class="rtxt">
-          <div><b>Dopasowanie</b><span>Każde piętro wyżej zmienia ustawienia piętra pod sobą, ale tylko w jego granicach.</span></div>
-          <div><b>Granice</b><span>Zakaz z niższego piętra obowiązuje wszystkie wyższe. Skille bezpieczeństwa,
-            rzetelności i TDD może wyłączyć tylko firma.</span></div>
-          <div><b>Podgląd</b><span><code>tf config show</code> pokazuje przy każdej wartości, z którego piętra pochodzi.</span></div>
+          <div><b>Adjustment</b><span>Each floor above changes the settings of the floor below, but only within its limits.</span></div>
+          <div><b>Limits</b><span>A ban from a lower floor applies to all the higher ones. Only the company can switch off
+            the security, grounding and TDD skills.</span></div>
+          <div><b>Preview</b><span><code>tf config show</code> shows for every value which floor it comes from.</span></div>
         </div>
       </div>
     </div>
@@ -348,37 +348,37 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
 
   <section aria-labelledby="s2">
     <header>
-      <h2 id="s2">Klocki: co dokładasz do fundamentu</h2>
-      <p>Na każdym piętrze można dołożyć gotowe klocki. Nakładka wnosi wiedzę z jednej dziedziny razem z personami, czyli
-        agentami o określonej specjalizacji. Tryb zmienia sposób pracy i włącza się go tylko wtedy, gdy jest potrzebny.
-        Klocki dodaje się poleceniem <code>tf add</code>, a usuwa poleceniem <code>tf remove</code>.</p>
+      <h2 id="s2">Bricks: what you add to the foundation</h2>
+      <p>On every floor you can add ready-made bricks. An overlay brings knowledge of one domain together with personas, that is
+        agents with a specific specialization. A mode changes the way of working and is switched on only when needed.
+        Bricks are added with <code>tf add</code> and removed with <code>tf remove</code>.</p>
     </header>
     <div class="bricks">
       <div class="brickset">
-        <h3>Nakładki fabryki</h3>
-        <p>Wiedza i persony z danej dziedziny.</p>
+        <h3>Factory overlays</h3>
+        <p>Knowledge and personas of a given domain.</p>
         <div class="chips">
-          <div class="chip"><b>pack-it</b>inżynieria: architektura, backend, frontend, DevOps, bezpieczeństwo, AI, testy · 20 person</div>
-          <div class="chip"><b>pack-ux</b>projektowanie: badania, przepływy, systemy projektowe, dostępność</div>
-          <div class="chip"><b>pack-docs</b>dokumentacja: README, API, ADR, instrukcje</div>
-          <div class="chip"><b>pack-editorial-pl</b>korekta polszczyzny, persona Stefan</div>
+          <div class="chip"><b>pack-it</b>engineering: architecture, backend, frontend, DevOps, security, AI, testing · 20 personas</div>
+          <div class="chip"><b>pack-ux</b>design: research, flows, design systems, accessibility</div>
+          <div class="chip"><b>pack-docs</b>documentation: README, API, ADR, guides</div>
+          <div class="chip"><b>pack-editorial-pl</b>Polish proofreading, persona Stefan</div>
         </div>
       </div>
       <div class="brickset">
-        <h3>Nakładki spoza fabryki</h3>
-        <p>Twoje własne klocki z osobnego repozytorium.</p>
+        <h3>Overlays from outside the factory</h3>
+        <p>Your own bricks from a separate repository.</p>
         <div class="chips">
-          <div class="chip"><b>pack-&lt;firma&gt;</b>standardy i ustawienia firmy</div>
-          <div class="chip"><b>pack-&lt;firma&gt;-&lt;zespół&gt;</b>standardy zespołu ponad firmą</div>
-          <div class="chip"><b>pack-&lt;dziedzina&gt;</b>np. bankowość, logistyka; instalacja przez <code>--pack-dir</code></div>
+          <div class="chip"><b>pack-&lt;company&gt;</b>company standards and settings</div>
+          <div class="chip"><b>pack-&lt;company&gt;-&lt;team&gt;</b>team standards above the company</div>
+          <div class="chip"><b>pack-&lt;domain&gt;</b>e.g. banking, logistics; installed with <code>--pack-dir</code></div>
         </div>
       </div>
       <div class="brickset">
-        <h3>Tryby pracy na żądanie</h3>
-        <p>Zmieniają sposób pracy, a nie wiedzę.</p>
+        <h3>Work modes on demand</h3>
+        <p>They change the way of working, not the knowledge.</p>
         <div class="chips">
-          <div class="chip"><b>mode-team</b>zespół 3–5 agentów, którzy piszą do siebie i dzielą listę zadań</div>
-          <div class="chip"><b>mode-pdi</b>decyzje i cykl zmiany zapisywane w jednym źródle (pdi)</div>
+          <div class="chip"><b>mode-team</b>a team of 3-5 agents who write to each other and share a task list</div>
+          <div class="chip"><b>mode-pdi</b>decisions and the change cycle recorded in one source (pdi)</div>
         </div>
       </div>
     </div>
@@ -386,73 +386,73 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
 
   <section aria-labelledby="s3">
     <header>
-      <h2 id="s3">Jak przebiega praca nad zadaniem</h2>
-      <p>Wpisujesz <code>/tf</code> i numer zgłoszenia. Fabryka prowadzi zadanie od zgłoszenia do gotowego pull requestu.
-        Każdy krok wykonuje agent dobrany do zadania, możliwie najtańszy, który da sobie radę. Pod spodem cały czas
-        działają strażnicy.</p>
+      <h2 id="s3">How work on a task goes</h2>
+      <p>You type <code>/tf</code> and a ticket number. The factory takes the task from the ticket to a finished pull request.
+        Each step is done by an agent matched to the task, the cheapest one that can handle it. Underneath, the guards
+        work all the time.</p>
     </header>
-    <div class="belt-wrap" role="img" aria-label="Kroki pracy: zgłoszenie, fakty, plan, test, kod, przegląd, pull request; pod nimi strażnicy">
+    <div class="belt-wrap" role="img" aria-label="Work steps: ticket, facts, plan, test, code, review, pull request; guards underneath">
       <div class="belt">
-        <div class="step"><div class="dot">1</div><b>Zgłoszenie</b><span>numer z Jiry albo opis zwykłym tekstem</span></div>
-        <div class="step"><div class="dot">2</div><b>Fakty</b><span>co jest w repozytorium, jakie wersje</span></div>
-        <div class="step"><div class="dot">3</div><b>Plan</b><span>pliki, kolejność, testy; zapisany przed kodem</span></div>
-        <div class="step"><div class="dot">4</div><b>Test</b><span>najpierw test, który nie przechodzi</span></div>
-        <div class="step"><div class="dot">5</div><b>Kod</b><span>dopiero teraz, aż test przejdzie</span></div>
-        <div class="step"><div class="dot">6</div><b>Przegląd</b><span>zakres, ryzyko, bezpieczeństwo, standardy firmy</span></div>
-        <div class="step"><div class="dot">7</div><b>Pull request</b><span>opis, dowody, decyzja człowieka</span></div>
+        <div class="step"><div class="dot">1</div><b>Ticket</b><span>a Jira number or a plain-text description</span></div>
+        <div class="step"><div class="dot">2</div><b>Facts</b><span>what is in the repository, which versions</span></div>
+        <div class="step"><div class="dot">3</div><b>Plan</b><span>files, order, tests; written before the code</span></div>
+        <div class="step"><div class="dot">4</div><b>Test</b><span>first a test that fails</span></div>
+        <div class="step"><div class="dot">5</div><b>Code</b><span>only now, until the test passes</span></div>
+        <div class="step"><div class="dot">6</div><b>Review</b><span>scope, risk, security, company standards</span></div>
+        <div class="step"><div class="dot">7</div><b>Pull request</b><span>description, evidence, human decision</span></div>
       </div>
       <div class="guards">
-        <strong>Strażnicy</strong>
-        <span>groźne polecenia</span><span>pliki z sekretami</span><span>kod bez testu</span>
-        <span>czerwone testy na koniec</span><span>sekrety w zapisanych plikach</span><span>długi kontekst</span>
-        <span>podpowiedzi właściwego skilla</span>
+        <strong>Guards</strong>
+        <span>dangerous commands</span><span>files with secrets</span><span>code without a test</span>
+        <span>red tests at the end</span><span>secrets in saved files</span><span>long context</span>
+        <span>hints for the right skill</span>
       </div>
     </div>
     <div class="modes">
-      <div class="mode"><b>tryb Plan</b><span>agent kończy na planie, kod piszesz Ty albo zlecasz później</span></div>
-      <div class="mode"><b>tryb zwykły</b><span>kod powstaje po Twojej zgodzie na plan</span></div>
-      <div class="mode"><b>tryb Auto</b><span>agent idzie dalej bez zgody, ale nie przy dużych zmianach</span></div>
-      <div class="mode"><b>tf work</b><span>praca bez nadzoru z limitem kosztów, w osobnej kopii repozytorium</span></div>
+      <div class="mode"><b>Plan mode</b><span>the agent stops at the plan; you write the code or assign it later</span></div>
+      <div class="mode"><b>normal mode</b><span>code is written after you approve the plan</span></div>
+      <div class="mode"><b>Auto mode</b><span>the agent goes on without approval, but not for large changes</span></div>
+      <div class="mode"><b>tf work</b><span>unattended work with a cost limit, in a separate copy of the repository</span></div>
     </div>
-    <p class="foot">Tryb wybierasz dla każdego zadania: <code>tf task mode &lt;KLUCZ&gt; plan|normal|auto</code>. Obok pętli
-      działają też narzędzia bez modelu i bez kosztów: <code>tf analyze</code> (przegląd projektu i standardów firmy)
-      oraz <code>tf risk</code> (ocena ryzyka zmiany).</p>
+    <p class="foot">You choose the mode for each task: <code>tf task mode &lt;KEY&gt; plan|normal|auto</code>. Alongside the loop
+      there are also tools with no model and no cost: <code>tf analyze</code> (review of the project and company standards)
+      and <code>tf risk</code> (change risk assessment).</p>
   </section>
 
   <section aria-labelledby="s4">
     <header>
-      <h2 id="s4">Twój styl pracy <span class="pill now">działa</span></h2>
-      <p>Każdy developer pracuje inaczej. Styl to gotowy zestaw ustawień na piętrze „Ty”, który ustawia kilka przełączników
-        naraz: <code>tf style autonomous</code>, <code>tf style step-by-step</code> albo <code>tf style conversation</code>.
-        Pojedyncze zadanie nadal może dostać inny tryb. Styl działa w granicach ustawionych przez firmę i projekt.</p>
+      <h2 id="s4">Your work style <span class="pill now">working</span></h2>
+      <p>Every developer works differently. A style is a ready set of settings on the "You" floor that sets several switches
+        at once: <code>tf style autonomous</code>, <code>tf style step-by-step</code> albo <code>tf style conversation</code>.
+        A single task can still get a different mode. The style works within the limits set by the company and project.</p>
     </header>
     <div class="styles">
       <div class="style now">
         <h3><code>autonomous</code></h3>
-        <p class="who">„Niech się dzieje samo, pokaż mi wynik”.</p>
+        <p class="who">"Let it run by itself, show me the result."</p>
         <ul>
-          <li>domyślnie tryb Auto, jeśli firma na niego pozwala</li>
-          <li>pytanie wstrzymuje tylko kawałek pracy, który od niego zależy</li>
-          <li>raport na końcu, limity kosztów obowiązują</li>
+          <li>Auto mode by default, if the company allows it</li>
+          <li>a question pauses only the slice of work that depends on it</li>
+          <li>a report at the end, cost limits apply</li>
         </ul>
       </div>
       <div class="style now">
         <h3><code>step-by-step</code></h3>
-        <p class="who">„Chcę widzieć i zatwierdzać każdy krok”.</p>
+        <p class="who">"I want to see and approve every step."</p>
         <ul>
-          <li>tryb zwykły: kod dopiero po zgodzie na plan</li>
-          <li>zatrzymanie po każdym kawałku pracy</li>
-          <li>plan i zmiany do przejrzenia przed następnym krokiem</li>
+          <li>normal mode: code only after the plan is approved</li>
+          <li>a stop after every slice of work</li>
+          <li>the plan and changes to review before the next step</li>
         </ul>
       </div>
       <div class="style now">
         <h3><code>conversation</code></h3>
-        <p class="who">„Wolę pogadać i sam zdecydować, co dalej”.</p>
+        <p class="who">"I prefer to talk and decide what next myself."</p>
         <ul>
-          <li>zadanie kończy się na planie</li>
-          <li>kod dopiero, gdy zmienisz tryb zadania</li>
-          <li>potem zgoda po każdym kawałku pracy</li>
-          <li>Claude Code w trybie planowania: także zwykła rozmowa nie zmienia plików bez zgody</li>
+          <li>the task ends at the plan</li>
+          <li>code only when you change the task mode</li>
+          <li>then approval after every slice of work</li>
+          <li>Claude Code in planning mode: even an ordinary conversation does not change files without approval</li>
         </ul>
       </div>
     </div>
@@ -460,24 +460,24 @@ td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
 
   <section aria-labelledby="s5">
     <header>
-      <h2 id="s5">Kto co ustawia</h2>
-      <p>Ściąga: gdzie leżą ustawienia każdego piętra, kto je zmienia i czy trafiają do repozytorium projektu.</p>
+      <h2 id="s5">Who sets what</h2>
+      <p>A cheat sheet: where the settings of each floor live, who changes them, and whether they go into the project repository.</p>
     </header>
     <div class="tbl">
       <table>
-        <thead><tr><th>Piętro</th><th>Kto zmienia</th><th>Gdzie</th><th>W repozytorium projektu</th><th>Stan</th></tr></thead>
+        <thead><tr><th>Floor</th><th>Who changes it</th><th>Where</th><th>In the project repository</th><th>Status</th></tr></thead>
         <tbody>
-          <tr><td>Rdzeń</td><td>opiekunowie fabryki</td><td>repozytorium fabryki, w projekcie <code>.tf/factory/</code></td><td>przy instalacji zespołowej</td><td><span class="pill now">działa</span></td></tr>
-          <tr><td>Firma</td><td>zespół standardów firmy</td><td>repozytorium firmy (<code>pack-&lt;firma&gt;</code>)</td><td>przy instalacji zespołowej</td><td><span class="pill now">działa</span></td></tr>
-          <tr><td>Zespół</td><td>lider zespołu</td><td>repozytorium zespołu (<code>pack-&lt;firma&gt;-&lt;zespół&gt;</code>)</td><td>przy instalacji zespołowej</td><td><span class="pill now">działa</span></td></tr>
-          <tr><td>Projekt</td><td>zespół projektu</td><td><code>.tf/config/</code>, <code>.claude/skills/</code></td><td>tak, jak zwykły kod</td><td><span class="pill now">działa</span></td></tr>
-          <tr><td>Ty</td><td>Ty (<code>tf style</code>)</td><td><code>~/.tf/preferences.yaml</code>, <code>.tf/config/me.yaml</code>, pliki <code>*.local</code></td><td>nigdy</td><td><span class="pill now">działa</span></td></tr>
+          <tr><td>Core</td><td>factory maintainers</td><td>the factory repository, in the project <code>.tf/factory/</code></td><td>with a team installation</td><td><span class="pill now">working</span></td></tr>
+          <tr><td>Company</td><td>the company standards team</td><td>the company repository (<code>pack-&lt;company&gt;</code>)</td><td>with a team installation</td><td><span class="pill now">working</span></td></tr>
+          <tr><td>Team</td><td>the team lead</td><td>the team repository (<code>pack-&lt;company&gt;-&lt;team&gt;</code>)</td><td>with a team installation</td><td><span class="pill now">working</span></td></tr>
+          <tr><td>Project</td><td>the project team</td><td><code>.tf/config/</code>, <code>.claude/skills/</code></td><td>yes, like ordinary code</td><td><span class="pill now">working</span></td></tr>
+          <tr><td>You</td><td>you (<code>tf style</code>)</td><td><code>~/.tf/preferences.yaml</code>, <code>.tf/config/me.yaml</code>, <code>*.local</code> files</td><td>never</td><td><span class="pill now">working</span></td></tr>
         </tbody>
       </table>
     </div>
-    <p class="foot">Fabrykę instalujesz prywatnie (nic nie trafia do repozytorium, każdy instaluje ją sam) albo
-      zespołowo (<code>--shared</code>, fabryka jest commitowana razem z projektem). Adresy i tokeny, np. do Jiry, nigdy
-      nie leżą w nakładkach, tylko w zmiennych środowiska. Plan warstw zespołu i osoby: <code>docs/todo.md</code>,
-      sekcja „Warstwy zespołu i preferencji osoby”.</p>
+    <p class="foot">You install the factory privately (nothing goes into the repository, everyone installs it themselves) or
+      as a team (<code>--shared</code>, the factory is committed together with the project). Addresses and tokens, e.g. for Jira, never
+      live in overlays, only in environment variables. The plan for the team and personal layers: <code>docs/todo.md</code>,
+      the section "Warstwy zespołu i preferencji osoby" (team and personal preference layers).</p>
   </section>
 </main>

@@ -132,8 +132,8 @@ def main() -> int:
     # step E2: task weight — the script assigns it, the loop tells the human what was chosen and knows the consequences
     start = body.split("## 0.", 1)[-1].split("## 1.", 1)[0]
     waga = ref("weight.md")
-    check("`Waga:" in start and "references/weight.md" in start and "in one sentence" in start,
-          "T-27: start — the loop passes the `Waga:` line to the human in one sentence; the consequences are in references/weight.md")
+    check("`Weight:" in start and "references/weight.md" in start and "in one sentence" in start,
+          "T-27: start — the loop passes the `Weight:` line to the human in one sentence; the consequences are in references/weight.md")
     check(all(w in waga for w in ("light", "zwykła", "pełna", "run_state.py weight", "--by human:", "security-reviewer",
                                   "approve", "STOP", "without `spec.md`")),
           "T-28: references/weight.md — three weights, consequences, who changes them, mandatory review for full, STOP without supervision")

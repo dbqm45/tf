@@ -1,267 +1,277 @@
 # Insights
 
-## Jak działa fabryka: rdzeń i nakładki
+## How the factory works: core and overlays
 
-### Warstwy
-- **Rdzeń** (`core/`) — mechanika: budowa agentów (`factory/build.py`), składanie konfiguracji (`factory/packs.py`),
-  instalator i aktualizator (`install.py`, `update.py`), launcher `tf`, migracje (`migrations.py`), hooki
-  (`core/hooks/`), skille praktyk `core-*`, cechy ogólne i agenci wspólni (`scout`, `researcher`, `architect`,
-  `security-reviewer`, …). Rdzeń nie zakłada, że jakakolwiek nakładka jest zainstalowana.
-- **Nakładki** (`packs/pack-*`) — wiedza dziedziny: skille, role, persony, cechy, agenci, konsultanci. Każda ma
-  `pack.yaml` z własną wersją i zakresem wersji rdzenia (`requires.core`). Dziś: `pack-it`, `pack-ux`, `pack-docs`,
-  `pack-editorial-pl` (`pack-ev` do 10.17 — wiedza EV jest teraz w projekcie EV Intelligence). Nowa dziedzina = nowy katalog `packs/pack-<nazwa>/` z `pack.yaml`.
+### Layers
+- **The core** (`core/`): the mechanics: building agents (`factory/build.py`), assembling the configuration
+  (`factory/packs.py`), the installer and updater (`install.py`, `update.py`), the `tf` launcher, migrations
+  (`migrations.py`), hooks (`core/hooks/`), the `core-*` practice skills, general facets and shared agents (`scout`,
+  `researcher`, `architect`, `security-reviewer`, …). The core does not assume that any overlay is installed.
+- **Overlays** (`packs/pack-*`): domain knowledge: skills, roles, personas, facets, agents, consultants. Each has a
+  `pack.yaml` with its own version and a core version range (`requires.core`). Today: `pack-it`, `pack-ux`,
+  `pack-docs`, `pack-editorial-pl` (`pack-ev` until 10.17; the EV knowledge now lives in the EV Intelligence project).
+  A new domain = a new directory `packs/pack-<name>/` with a `pack.yaml`.
 
-### Źródło a projekt
-Repozytorium to **drzewo źródłowe**. Instalator składa z niego projekt w **układzie instalacji**:
+### Source vs. project
+The repository is a **source tree**. The installer assembles a project from it in the **installation layout**:
 
-| Źródło | W projekcie |
+| Source | In the project |
 |---|---|
 | `core/factory/` | `factory/` |
-| `core/skills/`, `packs/<id>/skills/` | `.claude/skills/` (jedno miejsce — tylko stąd czyta je Claude Code) |
+| `core/skills/`, `packs/<id>/skills/` | `.claude/skills/` (one place; Claude Code reads them only from here) |
 | `core/hooks/`, `packs/<id>/hooks/` | `.claude/hooks/` |
 | `core/tests/`, `packs/<id>/tests/` | `.claude/tests/` |
 | `packs/<id>/{pack.yaml,roles,personas,traits,technologies.json}` | `factory/packs/<id>/` |
-| `core/settings.json` + `packs/<id>/settings.json` | `.claude/settings.local.json` (albo `settings.json` w trybie `--shared`) |
+| `core/settings.json` + `packs/<id>/settings.json` | `.claude/settings.local.json` (or `settings.json` in `--shared` mode) |
 | `core/cleanroom.json` + `packs/<id>/cleanroom.json` | `.claude/cleanroom.json` |
 
-Agenci (`.claude/agents/_generated/`) i katalog (`.claude/catalog.md`) **nie są w repozytorium** — `build.py` buduje
-je w projekcie po każdej instalacji i zmianie ustawień, z tego, co jest zainstalowane.
+Agents (`.claude/agents/_generated/`) and the catalog (`.claude/catalog.md`) **are not in the repository**: `build.py`
+builds them in the project after every installation and settings change, from what is installed.
 
-### Składanie (dziedziczenie)
-`factory/packs.py` łączy `factory/config.yaml` rdzenia z `pack.yaml` zainstalowanych nakładek:
-- **wymiary skilli** (prefiksy, np. `ddd-`, `dom-`) — rdzeń ma `core-`, `fw-`, `lang-`, `tool-`; nakładki dokładają
-  swoje z `order` (kolejność łączenia skilli); ten sam prefiks w dwóch miejscach to błąd;
-- **agenci wspólni, konsultanci, wiersze i akapity routingu** — rdzeń, potem nakładki;
-- **`always_skills`** nakładki trafiają tylko do jej person; rdzenia — do wszystkich;
-- **`contributes`** — wkład nakładki do person, ról i agentów *spoza* niej (np. `pack-docs` dokłada skill
-  dokumentacji każdej personie, `pack-ux` dokłada skill dostępności roli `product-compliance` z `pack-it`,
-  `pack-ev` dopisuje wskazówki do promptu `security-reviewer`). Wzbogaca ten, kto wnosi funkcję — nakładka
-  przyjmująca nic o nim nie wie;
-- **`contributes_when`** — warunek wkładu (np. `{language: pl}`); niespełniony → nakładka „uśpiona”: skille
-  i persony zostają, ale jej agenci, routing i wkład znikają;
-- **`optional_packs`** — odwołania do elementów tych nakładek są pomijane bez błędu, gdy ich nie ma (np. role UX
-  odwołują się do skilli procesu z `pack-it`);
-- **`requires.packs`** — twarda zależność; instalator dokłada wymagane nakładki sam;
-- **dane nakładek** zamiast stałych w kodzie rdzenia: interwały przeglądu skilli (`freshness`), widoczność
-  opisów (`skill_visibility`), rejestr technologii hooka `detect_stack` (`technologies.json`), profile clean-room,
-  uprawnienia, wymagane sekcje plików referencyjnych (`reference_sections`).
+### Assembly (inheritance)
+`factory/packs.py` merges the core's `factory/config.yaml` with the `pack.yaml` of the installed overlays:
+- **skill dimensions** (prefixes, e.g. `ddd-`, `dom-`): the core has `core-`, `fw-`, `lang-`, `tool-`; overlays add
+  theirs with `order` (the order skills are merged in); the same prefix in two places is an error;
+- **shared agents, consultants, routing rows and paragraphs**: the core, then overlays;
+- **`always_skills`** of an overlay go only to its personas; the core's go to all;
+- **`contributes`**: an overlay's contribution to personas, roles and agents *outside* it (e.g. `pack-docs` adds the
+  documentation skill to every persona, `pack-ux` adds the accessibility skill to the `product-compliance` role from
+  `pack-it`, `pack-ev` appends hints to the `security-reviewer` prompt). The one that contributes the feature enriches;
+  the receiving overlay knows nothing about it;
+- **`contributes_when`**: a condition for the contribution (e.g. `{language: pl}`); if unmet, the overlay is "dormant":
+  its skills and personas stay, but its agents, routing and contribution disappear;
+- **`optional_packs`**: references to elements of those overlays are skipped without an error when they are absent
+  (e.g. the UX roles refer to process skills from `pack-it`);
+- **`requires.packs`**: a hard dependency; the installer adds the required overlays itself;
+- **overlay data** instead of constants in the core code: skill review intervals (`freshness`), description visibility
+  (`skill_visibility`), the technology registry for the `detect_stack` hook (`technologies.json`), clean-room profiles,
+  permissions, required sections of reference files (`reference_sections`).
 
-Własne role, persony i cechy projektu (`factory/{roles,personas,traits}/`) mają pierwszeństwo przed nakładkami
-o tej samej nazwie.
+A project's own roles, personas and facets (`factory/{roles,personas,traits}/`) take precedence over overlays of the
+same name.
 
-### Języki
-- **Treść fabryki** jest po polsku (`content_language` w `pack.yaml`); tłumaczenie — `docs/todo.md`.
-- **Język pracy** (`language`, domyślnie `pl`) — rozmowa i dokumentacja; **język commitów** (`commit_language`,
-  domyślnie `en`) — commity, PR, CHANGELOG. Kod zawsze po angielsku.
-- Ustawienia są w `.claude/factory-settings.json` (poza plikami fabryki, aktualizacje ich nie ruszają).
-  `build.py` wkleja sekcję „Język” do każdego agenta, instalator i `tf language` — do bloku w CLAUDE.md.
-- Język może wymagać nakładki (`languages.<kod>.pack` w konfiguracji rdzenia): `pl` → `pack-editorial-pl`.
-- Instalator i `tf` komunikują się z człowiekiem po angielsku.
+### Languages
+- **The factory content** is in English (`content_language` in `pack.yaml`); the Polish skill hints are in the `hint.pl.txt` files.
+- **Working language** (`language`, default `pl`): conversation and documentation; **commit language**
+  (`commit_language`, default `en`): commits, PRs, CHANGELOG. Code is always in English.
+- The settings are in `.claude/factory-settings.json` (outside the factory files, updates do not touch them).
+  `build.py` pastes a "Language" section into every agent; the installer and `tf language` write the block in
+  CLAUDE.md.
+- A language may require an overlay (`languages.<code>.pack` in the core config): `pl` → `pack-editorial-pl`.
+- The installer and `tf` talk to the person in English.
 
-### Instalacja, aktualizacja i autokorekta
-- `tf install` / `core/factory/install.py` — rdzeń zawsze; pierwsza instalacja pyta o język pracy, język commitów
-  i nakładki (`--packs`, `--yes` bez pytań). Manifest `.claude/factory-manifest.json` zapisuje wersję, nakładki
-  i skrót każdego pliku: pliki zmienione przez człowieka nie są nadpisywane (nowa wersja obok jako `*.factory-new`),
-  pliki usunięte z fabryki lub z usuniętej nakładki idą do `.claude/factory-backup/`.
-- `tf update` pobiera nową wersję ze źródła (katalog, .zip, git) i uruchamia **jej** instalator; `tf add`,
-  `tf remove`, `tf language` przechodzą tą samą drogą.
-- **Autokorekta:** po aktualizacji instalator stosuje `factory/migrations.py` (zmiany nazw w rdzeniu i nakładkach)
-  do plików projektu, których fabryka nie instalowała (własne persony, role, nakładki, skille), i buduje agentów
-  od nowa. `tf doctor` sprawdza zgodność wersji, wymagane nakładki, nakładkę języka i aktualność agentów;
-  `tf doctor --fix` naprawia to, co da się naprawić samo.
-- Instalacje `claude-team-factory` i `ev-team-factory` są migrowane: instalator dobiera odpowiadające im nakładki
-  i podmienia stare bloki w CLAUDE.md i plikach ignorowania.
+### Installation, update and self-correction
+- `tf install` / `core/factory/install.py`: the core always; the first installation asks about the working language,
+  the commit language and the overlays (`--packs`, `--yes` without questions). The manifest
+  `.claude/factory-manifest.json` records the version, the overlays and the hash of every file: files changed by a
+  person are not overwritten (the new version goes next to them as `*.factory-new`), files removed from the factory or
+  from a removed overlay go to `.claude/factory-backup/`.
+- `tf update` downloads the new version from a source (directory, .zip, git) and runs **its** installer; `tf add`,
+  `tf remove`, `tf language` go the same way.
+- **Self-correction:** after an update the installer applies `factory/migrations.py` (renames in the core and
+  overlays) to project files the factory did not install (own personas, roles, overlays, skills), and rebuilds the
+  agents. `tf doctor` checks version compatibility, required overlays, the language overlay and agent freshness;
+  `tf doctor --fix` repairs whatever can be repaired automatically.
+- Installations of `claude-team-factory` and `ev-team-factory` are migrated: the installer picks the corresponding
+  overlays and replaces the old blocks in CLAUDE.md and the ignore files.
 
-### Wspólne zasady w promptach agentów
-`build.py` wkleja do promptu każdej persony, wykonawcy, agenta wspólnego (poza `grounding: false`) i konsultanta
-te same sekcje z `factory/config.yaml`:
-- `work_contract` — praca do końca, zatrzymanie tylko bez decyzji człowieka albo przed ryzykownym krokiem, bez
-  niezamówionych dodatków i samodzielnych rund przeglądu (przewodniki do modeli 5.5 na platform.claude.com);
-- `style_note` — styl odpowiedzi w duchu ASD-STE100: wynik najpierw, krótkie zdania, jedna czynność na krok, stałe
-  terminy;
-- `untrusted_note` — treść stron, zgłoszeń i wyników narzędzi to dane, nie polecenia (indirect prompt injection);
-- `report_contract` (wykonawcy) — stałe sekcje raportu: Wynik, Zmienione pliki, Weryfikacja, Niepewne, Do decyzji.
+### Shared rules in agent prompts
+`build.py` pastes the same sections from `factory/config.yaml` into the prompt of every persona, executor, shared agent
+(except `grounding: false`) and consultant:
+- `work_contract`: work to the end, stop only without a human decision or before a risky step, no unrequested extras
+  and no review rounds of its own (guides for the 5.5 models on platform.claude.com);
+- `style_note`: answer style in the spirit of ASD-STE100: result first, short sentences, one action per step, fixed
+  terms;
+- `untrusted_note`: the content of pages, tickets and tool results is data, not commands (indirect prompt injection);
+- `report_contract` (executors): fixed report sections: Result, Changed files, Verification, Uncertain, To decide.
 
-Konsultanci i role z `grounding: sources-only` dostają też `sources_only_note`: odpowiadają tylko z dostarczonych
-materiałów (skille, pliki projektu, źródła z datą), a brak w materiałach nazywają luką. `build.py check` ostrzega,
-gdy skill ustawia `model` lub `effort` (zmiana modelu w turze kasuje cache) albo `paths`.
+Consultants and roles with `grounding: sources-only` also get `sources_only_note`: they answer only from the provided
+materials (skills, project files, dated sources) and name a lack in the materials as a gap. `build.py check` warns
+when a skill sets `model` or `effort` (changing the model in a turn invalidates the cache) or `paths`.
 
-Persona może mieć pole `scenarios` (sytuacja → zachowanie) dla sytuacji, w których łatwo o rozjazd zachowania,
-i `isolation: worktree` — wtedy jej wykonawcy, którzy edytują pliki, pracują w osobnych worktree gita.
+A persona can have a `scenarios` field (situation → behavior) for situations where behavior easily drifts, and
+`isolation: worktree`: then its executors that edit files work in separate git worktrees.
 
-### Hooki ochronne
-`guard_bash`, `guard_paths` i `cleanroom_guard` mają `onFailure: "block"` (Claude Code ≥ 2.1.295): gdy sam hook
-zawiedzie (brak pliku, wyjątek, przekroczony czas), akcja jest blokowana, a nie przepuszczana. Aktualizacja dopisuje
-to pole do hooków już obecnych w projekcie, chyba że użytkownik ustawił inną wartość. Profil `web` w
-`cleanroom.json` ogranicza agenta z dostępem do sieci (`researcher`) do pojedynczych poleceń z listy.
+### Protective hooks
+`guard_bash`, `guard_paths` and `cleanroom_guard` have `onFailure: "block"` (Claude Code ≥ 2.1.295): when the hook
+itself fails (missing file, exception, timeout), the action is blocked, not let through. An update adds this field to
+hooks already in the project, unless the user set a different value. The `web` profile in `cleanroom.json` limits an
+agent with network access (`researcher`) to single commands from a list.
 
-Przywrócenie poprzedniego zachowania (zmiana niezgodna wstecz w 4.0.0):
-- hook ma przepuszczać akcję, gdy zawiedzie — w `.claude/settings.local.json` (albo `settings.json`) ustaw przy nim
-  `"onFailure": "continue"`; aktualizacja nie nadpisuje tej wartości;
-- researcher ma mieć pełną powłokę — zmienna środowiskowa `CLAUDE_CLEANROOM_DISABLE=web` (lista nazw profili po
-  przecinku, np. w `env` ustawień); plik `cleanroom.json` jest nadpisywany przy aktualizacji, zmienna nie.
+Restoring the previous behavior (a backward-incompatible change in 4.0.0):
+- for a hook to let the action through when it fails, set `"onFailure": "continue"` next to it in
+  `.claude/settings.local.json` (or `settings.json`); an update does not overwrite this value;
+- for the researcher to have a full shell, set the environment variable `CLAUDE_CLEANROOM_DISABLE=web` (a
+  comma-separated list of profile names, e.g. in the settings `env`); the `cleanroom.json` file is overwritten on
+  update, the variable is not.
 
-### Tryby (`modes/mode-*`)
-Trzeci rodzaj elementu fabryki obok rdzenia i nakładek: sposób pracy, który włącza człowiek — agent sesji głównej,
-skill procesowy z `disable-model-invocation`, skrypty, testy i przewodnik `GUIDE.md`. Technicznie tryb jest
-nakładką (`pack.yaml` z `kind: mode`, instalacja w `factory/packs/<id>/`, `tf add|remove mode-…`); osobny katalog
-utrzymuje czytelność drzewa źródeł: `packs/` to wiedza dziedzinowa, `modes/` — sposoby pracy.
-- Instalator pilnuje zgodności: w `modes/` tylko `kind: mode` i id `mode-*`, w `packs/` — nakładki `pack-*`.
-- Domyślny tryb (`default: true`) dostaje pierwsza instalacja. Przy aktualizacji domyślny element, którego projekt
-  nigdy nie miał w ofercie, dochodzi raz (manifest: `offered`); usunięty przez człowieka nie wraca. Manifest sprzed
-  trybów: w ofercie były wszystkie nakładki, trybów — nie.
+### Modes (`modes/mode-*`)
+The third kind of factory element next to the core and overlays: a way of working that a person switches on: a main
+session agent, a process skill with `disable-model-invocation`, scripts, tests and a `GUIDE.md` guide. Technically a
+mode is an overlay (`pack.yaml` with `kind: mode`, installed in `factory/packs/<id>/`, `tf add|remove mode-…`); a
+separate directory keeps the source tree readable: `packs/` is domain knowledge, `modes/` is ways of working.
+- The installer enforces consistency: only `kind: mode` with id `mode-*` in `modes/`, only `pack-*` overlays in `packs/`.
+- The default mode (`default: true`) goes to the first installation. On an update, a default element the project never
+  had on offer is added once (manifest: `offered`); one removed by a person does not come back. A manifest from before
+  modes: all overlays were on offer, modes were not.
 
-### Talos (`mode-talos`) — automat „story → PR” na żądanie
-Przewodnik: `modes/mode-talos/GUIDE.md` (w projekcie `factory/packs/mode-talos/GUIDE.md`).
-Tryb włączany tylko przez człowieka: `claude --agent talos` (agent pracuje wyłącznie w nim) albo
-`/talos-story-run <story> [--auto] [--budget USD]` w dowolnej personie. Skill ma `disable-model-invocation`, więc
-model nie włączy automatu sam — i dlatego Talos czyta `SKILL.md` narzędziem Read (skilla z tym polem nie da się
-wczytać agentowi przez `skills`).
-- **Przebieg:** przyjęcie historyjki (kryteria akceptacji albo pytania/STOP) → plan z ≤5 kawałków pionowych
-  (każdy scalany i działający) → zatwierdzenie planu przez człowieka (`--auto` pomija) → na kawałek: test
-  czerwony → kod → weryfikacja → przegląd zakresu (`scope-reviewer`, świeży kontekst) → commit → jeden PR.
-- **KISS:** przypadki brzegowe, pomysły i ryzyka spoza kryteriów trafiają do `parked.md`, a ich lista do opisu PR —
-  nie do kodu. `scope-reviewer` wskazuje kod spoza zakresu do wycofania.
-- **Koszt:** bez domyślnego budżetu, ale zawsze najtańszy wystarczający wykonawca, czytanie raz, fazy warunkowe
-  (dokumentacja, przegląd bezpieczeństwa, architekt) tylko z powodem, najwyżej 2 próby naprawy na bramkę.
-  `--budget` to twardy STOP sprawdzany po kawałku (`run_report.py status`).
-- **Pliki:** `tmp/talos/runs/<data>-<slug>/` (od 5.58.5 — wcześniej `.claude/runs/`, który jest ścieżką chronioną
-  w Claude Code; `status`/`finish` dalej odczytują stare katalogi) — `story.md`, `plan.md` (stan wznowienia),
-  `parked.md`, `report.md`; katalog jest ignorowany przez git (`.gitignore` z `*`).
-- **Raport:** `run_report.py finish` (skrypt skilla `talos-story-run`) sumuje transkrypty sesji i podagentów od startu przebiegu — czas,
-  tokeny (wejście, wyjście, odczyt i zapis cache 5 min / 1 h), koszt wg cennika z `config.yaml`, modele i agenci.
-  Liczy skrypt, nie model, więc raport nie kosztuje tokenów poza wklejeniem kilkunastu linii wyniku. Koszt to szacunek
-  z cennika API (przy subskrypcji — równowartość).
+### Talos (`mode-talos`): a "story → PR" automaton on demand
+Guide: `modes/mode-talos/GUIDE.md` (in a project `factory/packs/mode-talos/GUIDE.md`).
+A mode switched on only by a person: `claude --agent talos` (the agent works only in it) or
+`/talos-story-run <story> [--auto] [--budget USD]` in any persona. The skill has `disable-model-invocation`, so the
+model will not start the automaton itself; and that is why Talos reads `SKILL.md` with the Read tool (a skill with this
+field cannot be loaded into an agent through `skills`).
+- **Flow:** story intake (acceptance criteria or questions/STOP) → a plan of ≤5 vertical slices (each merged and
+  working) → plan approval by a person (`--auto` skips it) → per slice: red test → code → verification → scope review
+  (`scope-reviewer`, fresh context) → commit → one PR.
+- **KISS:** edge cases, ideas and risks outside the criteria go to `parked.md`, and their list to the PR description,
+  not to the code. `scope-reviewer` points out out-of-scope code to roll back.
+- **Cost:** no default budget, but always the cheapest sufficient executor, reading once, conditional phases
+  (documentation, security review, architect) only with a reason, at most 2 repair attempts per gate. `--budget` is a
+  hard STOP checked after each slice (`run_report.py status`).
+- **Files:** `tmp/talos/runs/<date>-<slug>/` (since 5.58.5; earlier `.claude/runs/`, which is a protected path in
+  Claude Code; `status`/`finish` still read the old directories): `story.md`, `plan.md` (resume state), `parked.md`,
+  `report.md`; the directory is ignored by git (`.gitignore` with `*`).
+- **Report:** `run_report.py finish` (a script of the `talos-story-run` skill) sums the transcripts of the session and
+  subagents since the start of the run: time, tokens (input, output, cache read and write 5 min / 1 h), cost by the
+  `config.yaml` price list, models and agents. The script computes it, not the model, so the report costs no tokens
+  beyond pasting a dozen or so lines of output. The cost is an estimate from the API price list (with a subscription:
+  the equivalent).
 
 ### Agent teams (`mode-team`)
-Tryb opt-in (`tf add mode-team`) dla eksperymentalnej funkcji Claude Code: persona prowadzi 3–5 członków zespołu,
-którzy piszą do siebie bezpośrednio i mają wspólną listę zadań. Flagę `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`
-przełącza `team_switch.py on|off` w `.claude/settings.local.json`, czyli osobiście, także w instalacji zespołowej.
-Wyłączenie po sesji jest częścią skilla, bo z włączoną flagą podagent nazwany przez Claude startuje jako członek
-zespołu. Członkowie to wykonawcy person. Pole `skills` z pliku agenta członka nie działa, ale wykonawcy fabryki
-i tak wczytują skille narzędziem Skill według swojej treści. Zespół działa tylko w sesji interaktywnej.
+An opt-in mode (`tf add mode-team`) for an experimental Claude Code feature: a persona leads 3-5 team members who write
+to each other directly and share a task list. The flag `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is switched by
+`team_switch.py on|off` in `.claude/settings.local.json`, that is personally, also in a team installation. Switching it
+off after the session is part of the skill, because with the flag on, a subagent named by Claude starts as a team
+member. The members are the personas' executors. The `skills` field from a member's agent file does not work, but the
+factory's executors load skills with the Skill tool according to their content anyway. A team works only in an
+interactive session.
 
-### Event Storming prowadzony przez agenta (`ddd-event-storming`)
-Agent jest facylitatorem i skrybą: pyta, a wiedzę i decyzje dają ludzie. Sesja idzie przez 5 faz (kontekst sesji,
-zdarzenia, komendy i polityki, agregaty, konteksty i mapa), a agent wczytuje tylko kartę bieżącej fazy
-(`references/agent-phases.md`).
-- **Skrypt `es_board.py`** prowadzi tablicę bez tokenów: dziennik zdarzeń z cofnięciem, odrzucanie kartek
-  z późniejszej fazy, kontrola struktury fazy i zapis `board.md` z Mermaid.
-- **Bramki:** przy agregatach i mapie kontekstów obowiązuje przegląd w świeżym kontekście i zgoda człowieka,
-  bo w późnych krokach błędy modelu się kumulują.
-- **Źródło pomysłów:** artykuły M. Bentleya (StormSpace: fazy, facylitator pytający, ekspert domeny, przegląd)
-  i JIN-a (konteksty, mapa, typowe błędy). Bez interfejsu tablicy i autonomicznego zegara, które pasują do
-  aplikacji webowej, a nie do rozmowy w Claude Code.
+### Event Storming led by an agent (`ddd-event-storming`)
+The agent is a facilitator and scribe: it asks, and people provide knowledge and decisions. The session goes through 5
+phases (session context, events, commands and policies, aggregates, contexts and map), and the agent loads only the
+card of the current phase (`references/agent-phases.md`).
+- **The `es_board.py` script** runs the board without tokens: an event log with undo, rejection of sticky notes from a
+  later phase, a phase structure check and writing `board.md` with Mermaid.
+- **Gates:** for aggregates and the context map, a review in a fresh context and the person's consent apply, because
+  in late steps model errors accumulate.
+- **Source of ideas:** articles by M. Bentley (StormSpace: phases, a questioning facilitator, a domain expert, review)
+  and JIN (contexts, map, common mistakes). Without the board interface and the autonomous clock, which suit a web
+  application, not a conversation in Claude Code.
 
 ### Workflows (`.claude/workflows/*.js`)
-Nakładka lub tryb może dostarczyć skrypty wieloagentowe Claude Code (Workflow) w katalogu `workflows/`. Instalator
-kopiuje je do `.claude/workflows/`, a w trybie prywatnym ignoruje je po nazwie pliku, więc własne workflows projektu
-zostają w repo. Workflow uruchamia się jako `/<name>`, więc jego nazwa różni się od nazwy skilla
-(`/eng-code-audit` to skill, `/code-audit` to workflow).
-- **`code-audit` (pack-it):** etapy skilla `eng-code-audit` jako skrypt. Argumenty to zakres zatwierdzony przez
-  człowieka. Inwentarz robi `haiku`, potem jeden wykonawca na wymiar. Duplikaty, ranking (ryzyko × zasięg ÷ koszt),
-  blokery i hipotezy liczy kod, bez modelu. Wymiar bez zainstalowanych skilli albo ponad limit trafia do „Czego nie
-  sprawdzono”, a nie znika po cichu.
-- **Testy bez modelu:** `test_workflows.py` uruchamia skrypt w Node z atrapami `agent`/`parallel`/`pipeline`
-  i sprawdza logikę; bez Node zostają testy statyczne (`meta`, fazy, brak `Date.now`/`Math.random`).
-- **Symulacja Event Stormingu — bez workflow.** Sesja jest interaktywna: człowiek prowadzi każdą rundę, a workflow
-  nie przyjmuje danych w trakcie przebiegu. Uczestników rundy i tak wywołuje się równolegle w jednej wiadomości,
-  a skrypt workflow nie ma dostępu do powłoki (`es_sim.py` musiałby uruchamiać dodatkowy agent).
+An overlay or mode can ship Claude Code multi-agent scripts (Workflow) in the `workflows/` directory. The installer
+copies them to `.claude/workflows/`, and in private mode ignores them by file name, so the project's own workflows stay
+in the repo. A workflow runs as `/<name>`, so its name differs from the skill name (`/eng-code-audit` is a skill,
+`/code-audit` is a workflow).
+- **`code-audit` (pack-it):** the stages of the `eng-code-audit` skill as a script. The arguments are a scope approved
+  by a person. The inventory is done by `haiku`, then one executor per dimension. Duplicates, ranking (risk × reach ÷
+  cost), blockers and hypotheses are computed by code, without a model. A dimension with no installed skills or over
+  the limit goes to "What was not checked" and does not vanish silently.
+- **Tests without a model:** `test_workflows.py` runs the script in Node with mocks of `agent`/`parallel`/`pipeline`
+  and checks the logic; without Node the static tests remain (`meta`, phases, no `Date.now`/`Math.random`).
+- **Event Storming simulation: no workflow.** The session is interactive: a person leads every round, and a workflow
+  does not accept input during a run. The round's participants are called in parallel in one message anyway, and a
+  workflow script has no shell access (`es_sim.py` would have to be run by an extra agent).
 
-### Rozwój fabryki
-- **Nakładka firmowa** (`org_defaults` w `pack.yaml`; zestaw w `org/`: generator `org/new_org_pack.py`, szablon
-  `org/template/`, przewodnik `org/README.md`): warstwa konfiguracji silnik ← organizacja ← projekt (`packs.config_layers`) czytana przez
-  build, `guard_bash`, `risk_triage`, `work.py` i `tf config show`; domyślny tracker organizacji w `intake.py`.
-  Standardy sprawdzalne wzorcem: moduł analizy z `tier0.rules` (skaner rdzenia `rules_scan.py`, zero tokenów) i
-  `semgrep.yml` nakładki w skanie kawałka (`security_scan.py`).
-- **Wyłączone skille** (`metadata.status: "inactive"` + `disable-model-invocation: true`): zostają w instalacji,
-  ale `build.py` (`drop_inactive`) usuwa je z ról, person, agentów wspólnych, konsultantów i `always_skills`,
-  a katalog pokazuje je w sekcji „Wyłączone skille”. Odsyłacze do nich w aktywnych skillach i promptach
-  agentów zgłasza `build.py check` (`inactive_mentions`). Lista z wynikami pomiaru: `docs/inactive-skills.md`.
-- `python3 tools/workspace.py assemble|check --packs <wybór>` — projekt złożony z bieżących źródeł w `.work/`
-  (testy i `build.py` działają w układzie instalacji, nie w drzewie źródłowym).
-- `python3 tools/workspace.py matrix` — sam rdzeń, każda nakładka i każdy tryb osobno, wszystko razem (to samo
-  robi CI).
-- `python3 tools/workspace.py refs` — rdzeń nie wymienia elementów nakładek (chyba że linia nazywa nakładkę,
-  np. „(pack-it)”), nakładka wymienia tylko elementy nakładek, od których zależy.
-- `python3 tools/workspace.py sync-gate` — wyniki bramki jakości skilli z projektu roboczego z powrotem do źródeł.
-- `python3 tools/context.py fetch <paczka> --version X --online` + `query <paczka> "<temat>" --version X` — własny
-  lokalny indeks dokumentacji wersji biblioteki (README, CHANGELOG, `.d.ts` z paczki w rejestrze, `llms.txt`, strony
-  z `--url`; wyszukiwanie BM25, fragmenty ze źródłem i datą). Do sprawdzania API przed zmianą skilli `fw-*`, `lang-*`,
-  `tool-*` zamiast usług zewnętrznych w rodzaju Context7: temat pytania nie opuszcza maszyny. Indeks w `.work/context`.
-- `python3 tools/ui-deconstruct.py --dir <repo> | --url <https://…> --name <nazwa>` — szkic skilla `ux-ds-<nazwa>`
-  z systemu projektowego (statyczna analiza CSS i HTML: zmienne, kolory, fonty, skale, promienie, cienie,
-  breakpointy, klasy komponentów) plus szkielet scenariuszy ewaluacji do dopracowania wg core-skill-authoring. Wynik
-  dotyczy rzeczy zewnętrznych, więc nie trafia do fabryki: bez `--out` narzędzie pyta o katalog docelowy, a katalog
-  w repozytorium fabryki odrzuca. Oba narzędzia są tylko w fabryce, do projektów nie trafiają.
-- `python3 tools/flow_compare.py prepare|report flows.json …` — porównanie przepływów (tryb planu, talos, mode-pdi)
-  na tych samych zgłoszeniach: zanonimizowane diffy do ślepej oceny, raport z kosztem, czasem, kodem i artefaktami;
-  protokół w `docs/evals/protokol-porownania-przeplywow.md`.
+### Factory development
+- **Company overlay** (`org_defaults` in `pack.yaml`; set in `org/`: generator `org/new_org_pack.py`, template
+  `org/template/`, guide `org/README.md`): a configuration layer engine ← organization ← project
+  (`packs.config_layers`) read by build, `guard_bash`, `risk_triage`, `work.py` and `tf config show`; the organization's
+  default tracker in `intake.py`. Standards checkable by pattern: an analysis module from `tier0.rules` (the core
+  scanner `rules_scan.py`, zero tokens) and the overlay's `semgrep.yml` in the slice scan (`security_scan.py`).
+- **Disabled skills** (`metadata.status: "inactive"` + `disable-model-invocation: true`): they stay in the installation,
+  but `build.py` (`drop_inactive`) removes them from roles, personas, shared agents, consultants and `always_skills`,
+  and the catalog shows them in the "Disabled skills" section. References to them in active skills
+  and agent prompts are reported by `build.py check` (`inactive_mentions`). The list with measurement results:
+  `docs/inactive-skills.md`.
+- `python3 tools/workspace.py assemble|check --packs <selection>`: a project assembled from the current sources in
+  `.work/` (tests and `build.py` work in the installation layout, not in the source tree).
+- `python3 tools/workspace.py matrix`: the core alone, each overlay and each mode separately, everything together (CI
+  does the same).
+- `python3 tools/workspace.py refs`: the core does not name overlay elements (unless the line names the overlay, e.g.
+  "(pack-it)"), an overlay names only elements of overlays it depends on.
+- `python3 tools/workspace.py sync-gate`: the skill quality gate results from the working project back to the sources.
+- `python3 tools/context.py fetch <package> --version X --online` + `query <package> "<topic>" --version X`: a local
+  documentation index of a library version (README, CHANGELOG, `.d.ts` from the registry package, `llms.txt`, pages
+  from `--url`; BM25 search, fragments with source and date). For checking an API before changing `fw-*`, `lang-*`,
+  `tool-*` skills instead of external services like Context7: the topic of the question does not leave the machine. The
+  index is in `.work/context`.
+- `python3 tools/ui-deconstruct.py --dir <repo> | --url <https://…> --name <name>`: a draft of a `ux-ds-<name>` skill
+  from a design system (static analysis of CSS and HTML: variables, colors, fonts, scales, radii, shadows,
+  breakpoints, component classes) plus a skeleton of evaluation scenarios to refine per core-skill-authoring. The
+  result concerns external things, so it does not go into the factory: without `--out` the tool asks for a target
+  directory, and rejects a directory inside the factory repository. Both tools exist only in the factory and do not go
+  into projects.
+- `python3 tools/flow_compare.py prepare|report flows.json …`: comparing flows (plan mode, talos, mode-pdi) on the same
+  tickets: anonymized diffs for blind rating, a report with cost, time, code and artifacts; the protocol is in
+  `docs/evals/protokol-porownania-przeplywow.md`.
 
-## Konsultanci: jak zespoły z różnych nakładek pytają się nawzajem
+## Consultants: how teams from different overlays ask each other
 
-### Ograniczenia, z których to wynika
+### The constraints this follows from
 
-Stan według dokumentacji Claude Code (code.claude.com, strona „Subagents”, sprawdzone 2026-10-20):
+State according to the Claude Code documentation (code.claude.com, the "Subagents" page, checked 2026-10-20):
 
-- **Podagent może wywołać podagenta, ale z limitem głębokości.** Domyślnie do trzech poziomów pod rozmową główną
-  (od Claude Code v2.1.219; w v2.1.172–2.1.216 do pięciu, w v2.1.217–2.1.218 zagnieżdżanie było wyłączone). Limit
-  ustawia zmienna `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`; fabryka ustawia `2` (`core/settings.json`): persona →
-  wykonawca → konsultant. W podagencie lista typów w `Agent(...)` jest ignorowana — który agent może kogo wołać,
-  mówi prompt, a twardo blokuje `disallowedTools: Agent`.
-- **Sesje są od siebie odizolowane.** Persona uruchomiona jako `claude --agent jan` nie widzi rozmowy persony
-  `claude --agent oskar`, nawet w tym samym repozytorium. Nie ma kanału, którym jedna sesja zada pytanie drugiej
-  i dostanie odpowiedź (wyjątek: eksperymentalne agent teams — `docs/todo.md`).
-- **Podagent nie widzi rozmowy, która go wywołała.** Dostaje tylko brief i zwraca jeden raport.
+- **A subagent can call a subagent, but with a depth limit.** By default up to three levels under the main
+  conversation (since Claude Code v2.1.219; in v2.1.172-2.1.216 up to five, in v2.1.217-2.1.218 nesting was disabled).
+  The limit is set by the variable `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`; the factory sets `2`
+  (`core/settings.json`): persona → executor → consultant. In a subagent the list of types in `Agent(...)` is ignored:
+  which agent may call whom is stated by the prompt, and `disallowedTools: Agent` blocks it hard.
+- **Sessions are isolated from each other.** A persona started as `claude --agent jan` does not see the conversation of
+  the persona `claude --agent oskar`, even in the same repository. There is no channel through which one session asks
+  another a question and gets an answer (exception: the experimental agent teams, `docs/todo.md`).
+- **A subagent does not see the conversation that called it.** It gets only a brief and returns one report.
 
-„Swobodna rozmowa” persony IT z personą EV nie jest więc możliwa. Możliwe jest coś węższego: **persona albo jej
-wykonawca wywołuje wyspecjalizowanego podagenta z wiedzą innej dziedziny i dostaje od niego odpowiedź.**
+A "free conversation" of the IT persona with the EV persona is therefore not possible. Something narrower is possible:
+**a persona or its executor calls a specialized subagent with knowledge of another domain and gets an answer from it.**
 
-### Mechanizm
+### The mechanism
 
-1. **Konsultanci nakładki.** Każda nakładka deklaruje w `pack.yaml` (sekcja `consultants`) agentów do konsultacji:
-   nazwę, opis, skille i tier. `factory/build.py` generuje z nich agentów:
-   - tylko do odczytu (`Read`, `Grep`, `Glob`, `Skill`) — konsultant odpowiada, nie zmienia plików;
-   - bez narzędzia `Agent` (`disallowedTools`) — nie deleguje dalej, więc limit głębokości zawsze wystarcza;
-   - bez `CLAUDE.md` projektu (`omitClaudeMd`) — wszystko, czego potrzebuje, ma w prompcie i pytaniu;
-   - z wczytanymi skillami swojej dziedziny;
-   - z kontraktem odpowiedzi: krótka odpowiedź, źródło (skill, plik, standard), czego nie wie, co wymaga decyzji
-     człowieka.
-2. **Generowany katalog „kogo zapytać”.** Do promptu każdej persony i jej wykonawców `build.py` wkleja tabelę
-   konsultantów z **innych** zainstalowanych nakładek. Persona ma ich na liście `Agent(...)`, a wykonawca dostaje
-   narzędzie `Agent` z instrukcją, że służy tylko do tych konsultantów. Persona `jan` (pack-it) przy zainstalowanym pack-ev widzi np.
-   `ev-consult-protocols`; bez pack-ev tego wiersza nie ma i nic się nie psuje.
-3. **Wspólne skille.** Skille wszystkich zainstalowanych nakładek leżą w jednym `.claude/skills/`, więc persona może
-   też sama wczytać skill innej dziedziny. Konsultant jest lepszy przy szerszym pytaniu: czyta wiele skilli i plików
-   we własnym kontekście, a do persony wraca tylko odpowiedź (kontekst persony nie puchnie).
-4. **Plik pytań do innej persony.** Gdy pytanie wymaga pracy innej persony w jej własnej sesji albo decyzji
-   człowieka, persona zapisuje je w `docs/project/questions.md` (kto pyta, do kogo, pytanie, kontekst, termin).
-   Druga persona odpowiada w tym pliku w swojej sesji. To kanał asynchroniczny, nie rozmowa na żywo.
+1. **Overlay consultants.** Each overlay declares in `pack.yaml` (the `consultants` section) agents for consultation:
+   name, description, skills and tier. `factory/build.py` generates agents from them:
+   - read-only (`Read`, `Grep`, `Glob`, `Skill`): a consultant answers, it does not change files;
+   - without the `Agent` tool (`disallowedTools`): it does not delegate further, so the depth limit is always enough;
+   - without the project's `CLAUDE.md` (`omitClaudeMd`): everything it needs is in the prompt and the question;
+   - with the skills of its domain loaded;
+   - with an answer contract: a short answer, the source (skill, file, standard), what it does not know, what needs a
+     human decision.
+2. **A generated "whom to ask" catalog.** `build.py` pastes into the prompt of every persona and its executors a table
+   of consultants from **other** installed overlays. The persona has them on its `Agent(...)` list, and the executor
+   gets the `Agent` tool with an instruction that it serves only for those consultants. The persona `jan` (pack-it)
+   with pack-ev installed sees e.g. `ev-consult-protocols`; without pack-ev that row is absent and nothing breaks.
+3. **Shared skills.** The skills of all installed overlays lie in one `.claude/skills/`, so a persona can also load a
+   skill of another domain itself. A consultant is better for a broader question: it reads many skills and files in
+   its own context, and only the answer returns to the persona (the persona's context does not bloat).
+4. **A questions file for another persona.** When a question requires the work of another persona in its own session or
+   a human decision, the persona writes it into `docs/project/questions.md` (who asks, whom, the question, context,
+   deadline). The other persona answers in that file in its session. It is an asynchronous channel, not a live
+   conversation.
 
-### Kto może konsultować
+### Who can consult
 
-| Kto | Może wywołać konsultanta? | Dlaczego |
+| Who | Can call a consultant? | Why |
 |---|---|---|
-| persona uruchomiona jako sesja (`claude --agent jan`) | tak | ma narzędzie `Agent` z listą agentów |
-| wykonawca persony (`jan-backend`) | tak | ma narzędzie `Agent` (drugi poziom zagnieżdżenia); odpowiedź przenosi do raportu |
-| konsultant | nie | `disallowedTools: Agent`; jeśli pytanie wykracza poza jego dziedzinę, pisze to w odpowiedzi |
+| a persona started as a session (`claude --agent jan`) | yes | has the `Agent` tool with a list of agents |
+| a persona's executor (`jan-backend`) | yes | has the `Agent` tool (the second nesting level); carries the answer into its report |
+| a consultant | no | `disallowedTools: Agent`; if the question goes beyond its domain, it says so in the answer |
 
-Typowy przebieg: `jan-backend` przy korekcie CDR pyta `ev-consult-business`, jak liczyć kWh, dostaje odpowiedź ze
-źródłem i podaje ją w raporcie (sekcja „Niepewne” albo „Do decyzji”, jeśli wymaga decyzji człowieka).
+A typical flow: `jan-backend`, correcting a CDR, asks `ev-consult-business` how to compute kWh, gets an answer with a
+source and gives it in the report (the "Uncertain" or "To decide" section, if it needs a human decision).
 
-### Koszty i granice
+### Costs and limits
 
-- Każde wywołanie konsultanta to nowy kontekst: wczytuje skille od zera. Persona pyta, gdy odpowiedź jest warta
-  więcej niż samodzielne wczytanie jednego skilla.
-- Opisy wszystkich agentów (także konsultantów) trafiają do kontekstu sesji. Każda nakładka dokłada więc kilka
-  wierszy; dlatego konsultantów jest kilku na nakładkę (po obszarach), a nie po jednym na skill.
-- Konsultant nie zastępuje persony innej dziedziny w dłuższej pracy (projekt, implementacja). Do tego służy osobna
-  sesja tej persony i plik pytań.
+- Every consultant call is a new context: it loads skills from scratch. A persona asks when the answer is worth more
+  than loading a single skill itself.
+- The descriptions of all agents (consultants too) go into the session context. So each overlay adds a few rows; that
+  is why there are a few consultants per overlay (by area), not one per skill.
+- A consultant does not replace a persona of another domain in longer work (design, implementation). A separate
+  session of that persona and the questions file serve that.
 
-### Inne narzędzia niż Claude Code
+### Tools other than Claude Code
 
-Lista targetów w `core/factory/build.py` (`TARGETS`, ustawienie projektu `targets`): `claude` i `managed-agents`
-(pliki `ant apply`, `core/factory/target_managed.py`; konsultanci są tam w rosterze koordynatora, wykonawcy nie
-delegują dalej). Inne narzędzia (np. Codex, Gemini CLI) — kolejne targety.
-Tam, gdzie narzędzie nie ma podagentów, konsultacje przechodzą w tryb zastępczy: persona wczytuje skille innej
-nakładki sama (pkt 3) albo korzysta z pliku pytań (pkt 4).
+The list of targets in `core/factory/build.py` (`TARGETS`, the project setting `targets`): `claude` and
+`managed-agents` (`ant apply` files, `core/factory/target_managed.py`; consultants are in the coordinator's roster there,
+executors do not delegate further). Other tools (e.g. Codex, Gemini CLI) are further targets.
+Where a tool has no subagents, consultations fall back: the persona loads the skills of another overlay itself (item 3)
+or uses the questions file (item 4).
