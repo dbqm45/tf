@@ -55,7 +55,7 @@ prints `Input`, `Key`, `Tracker` and `Next`; you do what stands in `Next` (every
    --source "<skąd>"`) creates the task and prints the run directory `.tf/runs/<KEY>/` (working, outside git).
    The permanent files are in `docs/project/changes/<KEY>/` (`ticket.md`, `plan.md`, `task.json`, later `spec.md`,
    `evidence/`, `report.md`) — they go into git with one commit at the end (§4), not in the slices' commits.
-   Only the script writes `task.json`. Pass the `Waga: …` line to the human in one sentence; another weight than
+   Only the script writes `task.json`. Pass the `Weight: …` line to the human in one sentence; another weight than
    normal changes the run — `references/weight.md`.
 3. A branch from the default one (usually `main`): `git switch main`, then `git switch -c story/<slug>` (core-git-workflow).
 4. **The preview:** `run_state.py stage` and `step` record the stage in `run.json` and build `.tf/runs/dashboard.html`
