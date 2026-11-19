@@ -943,6 +943,8 @@ treści (angielska), bez równoległej polskiej.
     kluczowe (m.in. data-engineering, lang-typescript, ops-secrets-identities, ux-accessibility) — 165/165,
     1066/1083 · holdout 32/43 (było 31). Haiku na próbie 25 bliźniaków: 23/25; dwie porażki to znane już na
     polskich wersjach (`model-webhook-upload`, `config-rollout`).
+    Słowa kluczowe EN także dla core-grounding (obszar mode-pdi) i ai-fine-tuning (obszar pack-it); `--hints` czysto
+    we wszystkich 8 obszarach roboczych CI — od teraz sprawdzane we wszystkich, nie tylko w `all` i `pack-it`.
     - [ ] `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
       sprawdzają) — przełożyć razem z testami.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
