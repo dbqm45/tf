@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [20.1.0] — 2026-11-19
+### Added
+- **core:** mcp-runner — MCP tools through a cheap agent, no API keys (#339)
+
 ## [20.0.0] — 2026-11-19
 ### Breaking
 - English-only readers, trailers, slice ids and hook events (4l) (#337)
