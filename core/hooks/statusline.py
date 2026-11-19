@@ -54,6 +54,13 @@ def line(d: dict) -> str:
     cost = (d.get("cost") or {}).get("total_cost_usd")
     if cost is not None:
         parts.append(f"${cost:.2f}")
+    ms = (d.get("cost") or {}).get("total_duration_ms")
+    if isinstance(ms, (int, float)) and ms > 0:
+        mins = int(ms // 60000)
+        parts.append(f"{mins // 60}h {mins % 60}m" if mins >= 60 else f"{mins}m")
+    toks = sum(cw.get(k) or 0 for k in ("total_input_tokens", "total_output_tokens"))   # session tokens, when Claude Code gives them
+    if toks:
+        parts.append(f"{toks / 1e6:.2f}M tok" if toks >= 1e6 else f"{fmt_k(toks)} tok")
 
     rl = d.get("rate_limits") or {}
     for key, label in (("five_hour", "5h"), ("seven_day", "7d")):

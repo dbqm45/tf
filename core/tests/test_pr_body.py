@@ -142,6 +142,17 @@ def main() -> int:
         check("AC-1" in section(text, "## Criteria trace"),
               f"PB-12: criteria trace from the specification: {section(text, '## Criteria trace')}")
 
+        # PB-12b: the Run section gives cost, time and tokens (with the split) when run.json has the usage
+        meta_p = Path(d) / "run.json"
+        meta = json.loads(meta_p.read_text(encoding="utf-8"))
+        meta["usage"] = {"cost_usd": 0.42, "minutes": 75, "models": ["sonnet"],
+                         "tokens": {"input": 1000, "output": 500, "cache_read": 20000, "cache_write": 3000, "total": 24500}}
+        meta_p.write_text(json.dumps(meta), encoding="utf-8")
+        call(p, rs, "pr-body", d, "--base", "main")
+        run_sec = section(body(p), "## Run")
+        check("0.42 USD" in run_sec and "75 min" in run_sec and "24 500 in total" in run_sec and "output 500" in run_sec,
+              f"PB-12b: cost, time and tokens in the Run section: {run_sec}")
+
         # red evidence, a postponed item, an operations card with a rollback step, the scan verdict, the plan_drift result
         (p / "msg.py").write_text("x = 3\n", encoding="utf-8")
         call(p, TASK, "verify", "IMP-1", "S2", "--files", "msg.py", "--command", RED)

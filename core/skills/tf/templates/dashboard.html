@@ -118,7 +118,7 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
 .meta1 .eff.e-low{color:var(--muted)}
 .meta1 .eff.e-medium{color:var(--warn)}
 .meta1 .eff.e-high{color:var(--bad)}
-.meta1 .cost,.meta1 .min{cursor:help}
+.meta1 .cost,.meta1 .min,.meta1 .tok{cursor:help}
 .meta2{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}
 .meta2 span{cursor:help}
 .meta2 .r{color:var(--warn)}
@@ -226,6 +226,8 @@ const RUNS = /*RUNS_JSON*/[];
 /* ===== POMOCNICZE ===== */
 const $ = (s, r=document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtTok = n => n >= 1e6 ? (n/1e6).toFixed(n >= 1e7 ? 0 : 1) + "M" : n >= 1e3 ? Math.round(n/1e3) + "k" : String(n);
+const fmtMin = m => m >= 60 ? Math.floor(m/60) + "h " + (m % 60) + "m" : m + "m";
 let sel = null, curFile = null;
 const MARK = {pass:"✓", fail:"✗", run:"…", todo:"○"};
 const CLS  = {pass:"done", fail:"fail", run:"cur", todo:"todo"};
@@ -296,7 +298,7 @@ function card(r){
     <div class="title">${esc(r.title)}</div>
     ${refs.length?`<div class="refs">${refs.map(x=>`<span>${esc(x)}</span>`).join("")}</div>`:""}
     ${sliceStrip(r)}${rowsHtml(r)}${why}
-    <div class="meta1">${r.effort?`<span class="eff e-${["low","medium"].includes(r.effort)?r.effort:"high"}" title="The session model's effort: grey = low, yellow = medium, red = high or higher">${esc(r.effort)}</span>`:""}${r.cost==null?"":`<span class="cost" title="An estimate from the API price list, not an invoice">$${r.cost.toFixed(2)}</span><span class="min" title="Czas od startu przebiegu">${r.min}m</span>`}</div>
+    <div class="meta1">${r.effort?`<span class="eff e-${["low","medium"].includes(r.effort)?r.effort:"high"}" title="The session model's effort: grey = low, yellow = medium, red = high or higher">${esc(r.effort)}</span>`:""}${r.cost==null?"":`<span class="cost" title="An estimate from the API price list, not an invoice">$${r.cost.toFixed(2)}</span><span class="min" title="Time from the start of the run to the model's last answer">${fmtMin(r.min||0)}</span>${r.tokens?`<span class="tok" title="${esc(`Tokens: input ${r.tokens.input}, output ${r.tokens.output}, cache read ${r.tokens.cache_read}, cache write ${r.tokens.cache_write}`)}">${fmtTok(r.tokens.total)} tok</span>`:""}`}</div>
     <div class="meta2">${r.slices.length?`<span title="The plan's slices already committed">slices ${done}/${r.slices.length}</span>`:""}${r.parked?`<span class="r" title="Items from parked.md: edge cases and ideas outside the criteria. They wait for your decision.">postponed ${r.parked}</span>`:""}${r.auto===true?'<span title="A plan without waiting for the human\'s acceptance">--auto</span>':""}</div>
     ${hint?`<div class="hint">${esc(hint)}</div>`:""}
   </button>`;
@@ -331,7 +333,9 @@ function renderBoard(){
   const active = RUNS.filter(r => r.stage!=="done" && r.stage!=="needs").length;
   const wait = RUNS.filter(r => r.stage==="needs" || (r.waiting||[]).length).length;
   const total = RUNS.reduce((s,r)=>s+(r.cost||0),0);
-  $("#summary").textContent = `${active} in progress · ${wait} waiting for you · $${total.toFixed(2)} API equivalent`;
+  const toks = RUNS.reduce((s,r)=>s+((r.tokens||{}).total||0),0);
+  $("#summary").textContent = `${active} in progress · ${wait} waiting for you · $${total.toFixed(2)} API equivalent`
+    + (toks ? ` · ${fmtTok(toks)} tokens` : "");
 }
 
 /* panel */
@@ -339,7 +343,9 @@ function openRun(slug){
   const r = RUNS.find(x=>x.slug===slug); if(!r) return;
   sel = slug; renderBoard();
   $("#dTitle").textContent = r.title;
-  $("#dMeta").innerHTML = [runDir(r), r.dir && r.taskDir ? "task: " + r.taskDir : null, r.dir ? "branch: story/" + r.slug : null, "models: " + ((r.models||[]).join(", ")||"—")].filter(Boolean).map(x => `<div>${esc(x)}</div>`).join("");
+  $("#dMeta").innerHTML = [runDir(r), r.dir && r.taskDir ? "task: " + r.taskDir : null, r.dir ? "branch: story/" + r.slug : null, "models: " + ((r.models||[]).join(", ")||"—"),
+    r.tokens ? `tokens: ${r.tokens.total.toLocaleString("en")} (input ${r.tokens.input.toLocaleString("en")}, output ${r.tokens.output.toLocaleString("en")}, cache read ${r.tokens.cache_read.toLocaleString("en")}, cache write ${r.tokens.cache_write.toLocaleString("en")})` : null,
+    r.min != null ? "time: " + fmtMin(r.min) : null].filter(Boolean).map(x => `<div>${esc(x)}</div>`).join("");
   window.__files = filesFor(r); window.__run = r;
   curFile = (r.stage==="needs"&&r.needs==="stop" && window.__files.some(g=>g.items.some(i=>i.name==="STOP"))) ? "STOP" : window.__files[0].items[0].name;
   renderFiles();

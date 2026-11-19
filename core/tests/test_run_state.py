@@ -222,6 +222,11 @@ def main() -> int:
         check(isinstance(meta.get("usage"), dict) and "sonnet" in meta["usage"]["models"]
               and o.get("models") == ["sonnet"] and o.get("cost") is not None,
               f"S-8b: cost and models from transcripts saved in run.json: {meta.get('usage')}")
+        check((meta["usage"].get("tokens") or {}).get("total") == 1500 and (o.get("tokens") or {}).get("output") == 500
+              and o.get("min") is not None,
+              f"S-8b2: tokens (total, per kind) and time in run.json and the dashboard: {meta.get('usage')} {o.get('tokens')}")
+        html = dash.read_text(encoding="utf-8")
+        check('class="tok"' in html and "fmtTok" in html, "S-8b3: the dashboard template shows tokens next to cost and time")
         run(SCRIPT, ["step", str(d), "S2", "R1", "test", "run"], proj, cfg)   # refresh without computing cost
         check(one().get("cost") == o.get("cost"), "S-8c: a refresh after step keeps the remembered cost")
 

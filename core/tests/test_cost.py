@@ -82,6 +82,12 @@ def main() -> int:
     if not all(x in out for x in ("Opus · high", "⚠ context 60% 120k", "cache 91% cold", "$0.42", "⚠ 5h 85%")):
         fails.append(f"statusline: {out!r}")
     total += 1
+    sample2 = {**sample, "cost": {"total_cost_usd": 1.5, "total_duration_ms": 4_500_000},
+               "context_window": {**sample["context_window"], "total_input_tokens": 1_234_000, "total_output_tokens": 56_000}}
+    out = run([str(HOOKS / "statusline.py")], stdin=json.dumps(sample2)).stdout
+    if not all(x in out for x in ("$1.50", "1h 15m", "1.29M tok")):
+        fails.append(f"statusline: session time and tokens: {out!r}")
+    total += 1
     r = run([str(HOOKS / "statusline.py")], stdin="not json")
     if r.returncode != 0:
         fails.append("statusline: bad input must not crash it")
