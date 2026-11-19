@@ -27,6 +27,20 @@ jobs:
       - name: Kopie kontraktu pdi zgodne z tagiem wydania (tools/pdi-contract.json)
         run: python3 tools/sync_contract.py check
 
+  addon-dna:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: Dodatek dna (addons/dna) — niezależny od rdzenia
+        run: python3 addons/dna/tests/test_dna.py
+
   workspace:
     runs-on: ubuntu-latest
     timeout-minutes: 30

@@ -1,0 +1,50 @@
+# Technologies reported as the project's stack. A package that is not listed here is not reported, even when it is
+# in the lockfile: the list keeps the stack to what changes how code is written. Match keys per ecosystem:
+#   npm, pypi, cargo, go, nuget — package names; maven — "group:artifact", a trailing * matches a prefix.
+technologies:
+  # JavaScript / TypeScript
+  - {id: typescript, name: TypeScript, category: language, match: {npm: [typescript]}}
+  - {id: react, name: React, category: ui-framework, match: {npm: [react]}}
+  - {id: next, name: Next.js, category: framework, match: {npm: [next]}}
+  - {id: vue, name: Vue, category: ui-framework, match: {npm: [vue]}}
+  - {id: nuxt, name: Nuxt, category: framework, match: {npm: [nuxt]}}
+  - {id: angular, name: Angular, category: ui-framework, match: {npm: ["@angular/core"]}}
+  - {id: svelte, name: Svelte, category: ui-framework, match: {npm: [svelte]}}
+  - {id: react-native, name: React Native, category: ui-framework, match: {npm: [react-native]}}
+  - {id: mui, name: MUI, category: design-system, match: {npm: ["@mui/material"]}}
+  - {id: chakra, name: Chakra UI, category: design-system, match: {npm: ["@chakra-ui/react"]}}
+  - {id: antd, name: Ant Design, category: design-system, match: {npm: [antd]}}
+  - {id: angular-material, name: Angular Material, category: design-system, match: {npm: ["@angular/material"]}}
+  - {id: vuetify, name: Vuetify, category: design-system, match: {npm: [vuetify]}}
+  - {id: radix, name: Radix UI, category: design-system, match: {npm: ["@radix-ui/themes", "@radix-ui/react-slot"]}}
+  - {id: tailwindcss, name: Tailwind CSS, category: styling, match: {npm: [tailwindcss]}}
+  - {id: styled-components, name: styled-components, category: styling, match: {npm: [styled-components]}}
+  - {id: emotion, name: Emotion, category: styling, match: {npm: ["@emotion/react"]}}
+  - {id: storybook, name: Storybook, category: tooling, match: {npm: [storybook, "@storybook/react"]}}
+  - {id: redux-toolkit, name: Redux Toolkit, category: state, match: {npm: ["@reduxjs/toolkit"]}}
+  - {id: tanstack-query, name: TanStack Query, category: data, match: {npm: ["@tanstack/react-query"]}}
+  - {id: express, name: Express, category: framework, match: {npm: [express]}}
+  - {id: nestjs, name: NestJS, category: framework, match: {npm: ["@nestjs/core"]}}
+  - {id: prisma, name: Prisma, category: data, match: {npm: [prisma, "@prisma/client"]}}
+  - {id: jest, name: Jest, category: testing, match: {npm: [jest]}}
+  - {id: vitest, name: Vitest, category: testing, match: {npm: [vitest]}}
+  - {id: playwright, name: Playwright, category: testing, match: {npm: ["@playwright/test"]}}
+  - {id: testing-library, name: Testing Library, category: testing, match: {npm: ["@testing-library/react"]}}
+  # Python
+  - {id: django, name: Django, category: framework, match: {pypi: [django]}}
+  - {id: fastapi, name: FastAPI, category: framework, match: {pypi: [fastapi]}}
+  - {id: flask, name: Flask, category: framework, match: {pypi: [flask]}}
+  - {id: pydantic, name: Pydantic, category: data, match: {pypi: [pydantic]}}
+  - {id: sqlalchemy, name: SQLAlchemy, category: data, match: {pypi: [sqlalchemy]}}
+  - {id: pytest, name: pytest, category: testing, match: {pypi: [pytest]}}
+  # JVM
+  - {id: spring-boot, name: Spring Boot, category: framework,
+     match: {maven: ["org.springframework.boot:spring-boot-starter*", "org.springframework.boot:spring-boot"]}}
+  - {id: junit, name: JUnit, category: testing, match: {maven: ["org.junit.jupiter:junit-jupiter*"]}}
+  # Go, Rust, .NET
+  - {id: gin, name: Gin, category: framework, match: {go: [github.com/gin-gonic/gin]}}
+  - {id: echo, name: Echo, category: framework, match: {go: [github.com/labstack/echo/v4]}}
+  - {id: tokio, name: Tokio, category: framework, match: {cargo: [tokio]}}
+  - {id: axum, name: Axum, category: framework, match: {cargo: [axum]}}
+  - {id: efcore, name: Entity Framework Core, category: data, match: {nuget: [Microsoft.EntityFrameworkCore]}}
+  - {id: xunit, name: xUnit, category: testing, match: {nuget: [xunit]}}

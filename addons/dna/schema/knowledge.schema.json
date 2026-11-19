@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dna/knowledge.schema.json",
+  "title": "dna knowledge (contract 1)",
+  "description": "Canonical output of the dna add-on: out/knowledge.json. Markdown files in out/ are generated from it. lib/verify.py checks the same rules without a JSON Schema library.",
+  "type": "object",
+  "required": ["contract", "generator", "generated", "items", "coverage"],
+  "properties": {
+    "contract": {"const": 1},
+    "generator": {"type": "string", "pattern": "^dna \\d+\\.\\d+\\.\\d+"},
+    "generated": {"type": "string", "format": "date"},
+    "commit": {"type": ["string", "null"]},
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "title", "scope", "evidence", "status"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Z]+(-[A-Za-z0-9.]+)+$"},
+          "kind": {"enum": ["fact", "block", "decision", "convention", "exemplar"]},
+          "title": {"type": "string", "minLength": 1},
+          "scope": {
+            "type": "object",
+            "required": ["paths"],
+            "properties": {"paths": {"type": "array", "minItems": 1, "items": {"type": "string"}}}
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "description": "path:line relative to the repository root, or an https URL with '(fetched YYYY-MM-DD)'"}
+          },
+          "status": {"enum": ["candidate", "auto-accepted", "accepted", "abandoned", "unknown"]},
+          "strength": {"enum": ["hard", "soft"], "description": "required for kind=decision"},
+          "since": {"type": "string", "format": "date"},
+          "acceptance": {"type": "string"},
+          "verified": {"type": "string", "format": "date", "description": "written by a human only"},
+          "data": {"type": "object"}
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["read", "skipped"],
+      "properties": {
+        "read": {"type": "array", "items": {"type": "string"}},
+        "skipped": {"type": "array", "items": {"type": "object", "required": ["source", "reason"]}},
+        "notes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "layers": {"type": "object", "description": "layer name -> enabled (set by replay calibration)"}
+  }
+}

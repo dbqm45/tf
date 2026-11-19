@@ -3,6 +3,10 @@
 Data: 2026-11-19. Status: propozycja; każdy kawałek to osobny PR, kod metodą TDD (testy czerwone przed kodem).
 Podstawa: rozmowa z człowiekiem z 2026-11-18/19 (decyzje w sekcji 2) i przegląd przypadków innych firm (sekcja 9).
 
+**Stan (2026-11-19):** A1 i A2 zrobione w `addons/dna/` 0.1.0 (szkielet, kontrakt, `learn | verify | status`,
+rozpoznanie stacku i wersji, polecenia, narzędzia; 21 testów, job CI `addon-dna`). Kolejność zmieniona: A1–A2 przed
+A0, bo działają samodzielnie (`python3 addons/dna/dna.py learn --root <repo>`) i nie ruszają rdzenia. Następny: A0.
+
 ## 1. Cel
 
 Zadanie z numerem Jiry albo z opisem kończy się kodem, którego nie da się odróżnić od kodu dewelopera z zespołu:
