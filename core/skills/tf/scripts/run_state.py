@@ -1208,6 +1208,10 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
     out += [f"- Agreement with the plan (`plan_drift`): {drift if drift in STATES else 'not recorded'}",
             f"- The evidence is in `{rel_docs}/evidence/` (in this PR); the full command output stays outside the repository."]
 
+    sysdiff = (engine_md(project, "system_diff.py", "--md", *base_args) or "").splitlines()
+    out += ["", "## System diff", ""]
+    out += [ln for ln in sysdiff if ln.strip() and not ln.startswith("**System diff")] or \
+        ["- The system diff could not be computed (`system_diff.py`)."]
     out += ["", "## Risk", "", f"- The task's weight: {WEIGHT_EN.get(task.get('weight'), 'not recorded')}", ""]
     out.append(engine_md(project, "risk_triage.py", "--md", *base_args) or "- The risk triage could not be computed (`tf risk`).")
 

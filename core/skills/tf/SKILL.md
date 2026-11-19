@@ -129,7 +129,7 @@ the start of the loop with the next one (at most two; the script will refuse a t
    --base <gałąź domyślna>` — exit code 1 (a criterion without a test, a test with a foreign `AC-n`) you fix.
 3. `run_state.py stage <katalog> pr` and `run_state.py step <katalog> PR plan_drift pass` (or `fail`). Push the branch
    and one PR. The description is assembled by the script: `run_state.py pr-body <katalog> --base <gałąź domyślna>` → `gh pr create
-   --body-file <plik>` (fixed fields, among them "Jak cofnąć" — how to roll back); at the end you add yourself only the deviations from the plan
+   --body-file <plik>` (fixed fields, among them the system diff and "Jak cofnąć" — how to roll back); you add only the deviations from the plan
    and the `pr_budget` exception. You do not merge.
 4. `run_state.py stage <katalog> done --pr <numer>`, then `run_report.py finish <katalog>` → `report.md`.
    **The task's files — one commit** on `story/<slug>`, never on the default branch: `git add docs/project/changes/<KEY>`,

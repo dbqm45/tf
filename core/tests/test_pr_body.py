@@ -23,7 +23,8 @@ PLAN = ("# Plan: Limit dobowy\n\n"
         "- [ ] S2 — komunikat o limicie · files: msg.py\n\n"
         "- **[assumption]** doba liczy się od północy czasu lokalnego\n")
 ROLLBACK = "Wdróż poprzednią wersję: ./deploy.sh --previous (ok. 5 minut)"
-ORDER = ("## Story", "## Slices", "## Criteria trace", "## How it was checked", "## Risk", "## How to roll back",
+ORDER = ("## Story", "## Slices", "## Criteria trace", "## How it was checked", "## System diff", "## Risk",
+         "## How to roll back",
          "## Postponed for a decision", "## Assumptions")
 
 

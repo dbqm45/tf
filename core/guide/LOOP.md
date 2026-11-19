@@ -167,7 +167,7 @@ it goes into the PR description.
 <directory> --base main` → the file `.tf/runs/<KEY>/pr-body.md`, passed with `gh pr create --body-file`). Every PR has
 the same fields: the story, slices with commits, the criteria trace, **How it was checked** (the
 command, the exit code and the evidence file of every slice, the security scan's verdict, agreement with the plan),
-**Risk** (the task's weight and the `tf risk` triage), **How to roll back**, postponed items and
+**System diff** (what the change touches beyond code lines: UI, data, API, dependencies, configuration, operations; `tf diff`), **Risk** (the task's weight and the `tf risk` triage), **How to roll back**, postponed items and
 assumptions. A slice without green evidence is named plainly in the description. The script takes the deployment
 rollback step from the operations card (`.tf/config/operations.json`, the `deploy.rollback` field — text or a list of
 steps); without it, it gives `git revert` of the merge commit, and for a task with a flag it starts with turning the
