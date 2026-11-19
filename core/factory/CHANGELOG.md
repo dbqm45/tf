@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [19.0.0] — 2026-11-19
+### Breaking
+- drop Polish reader aliases with a 19.0.0 project migration (4k) (#336)
+
 ## [18.2.0] — 2026-11-17
 ### Added
 - **core:** accept English section names in the project record (3c) (#300)
