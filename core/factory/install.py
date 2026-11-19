@@ -108,6 +108,9 @@ PACK_META = ("pack.yaml", "roles", "personas", "traits", "technologies.json", "G
 SHARED_ONLY_FILES = {"workflows/team-factory.yml": ".github/workflows/team-factory.yml"}
 USER_OWNED = (".tf/config/",)   # project configuration — the installer creates the template, never overwrites it
 ALWAYS_OWNED = (".claude/cleanroom.json",)   # assembled from the core and packs — always from the current version
+# The factory's own machinery: without these files the installer, hooks and agents do not work, so a missing one is
+# always restored (a deleted skill or scenario stays deleted).
+REQUIRED = (".tf/factory/", ".claude/hooks/")
 GENERATED = (".claude/agents/_generated/", ".claude/catalog.md")   # built in the project by .tf/factory/build.py
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
 # Core tests that make sense only in the factory repository (paths relative to core/): the N5 run evals import
@@ -337,7 +340,7 @@ class Plan:
         self.root, self.dry, self.update, self.old, self.stamp = dst_root, dry, update, old_files, stamp
         self.created, self.updated, self.conflicts, self.merged = [], [], [], []
         self.kept_new, self.backed_up, self.removed, self.kept_removed, self.skipped_deleted = [], [], [], [], []
-        self.overwritten = []
+        self.overwritten, self.restored = [], []
         self.files: dict[str, str] = {}          # new manifest: path → hash of the installed factory version
 
     def _write(self, dst: Path, data: bytes, src: Path | None) -> None:
@@ -364,8 +367,12 @@ class Plan:
         old_hash = (self.old or {}).get(rel)
         self.files[rel] = new_hash
         if not dst.exists():
-            if self.update and old_hash is not None:     # it was installed and you deleted it — we respect that
+            if self.update and old_hash is not None and not rel.startswith(REQUIRED):   # you deleted it — we respect that
                 self.skipped_deleted.append(rel)
+                return
+            if self.update and old_hash is not None:     # required factory file missing (deleted, antivirus, broken copy)
+                self.restored.append(rel)
+                self._write(dst, data, src)
                 return
             self.created.append(rel)
             self._write(dst, data, src)
@@ -1038,6 +1045,8 @@ def _main(argv: list[str], tmp: Path) -> int:
             plan.backed_up, "If any of them held your change, carry it over from the copy.")
     listing("ℹ Removed from the factory, but changed by you — left in place", plan.kept_removed,
             "Delete them by hand if you no longer need them.")
+    listing("ℹ Missing factory files the factory needs to run — restored", plan.restored,
+            "They were missing from .tf/factory/ or .claude/hooks/ (deleted, blocked by antivirus or a broken copy).")
     listing("ℹ You deleted these factory files — not restoring them", plan.skipped_deleted,
             "To get them back, remove their entries from .claude/factory-manifest.json and run the update.")
     listing("⚠ Skipped existing files with the same name as factory files (yours stay)", plan.conflicts,

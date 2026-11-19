@@ -133,6 +133,19 @@ def main() -> int:
         new = md.read_text(encoding="utf-8")
         check("### Komendy" in old and "### Commands\n- Test: `make proj-test`" in new and "Komendy" not in new,
               f"U-5: the Polish commands subsection migrated before the block is rewritten: {new[:800]}")
+        # U-6: a required factory file missing before an update (deleted, antivirus, broken copy) is restored, and the
+        # update does not crash on it; a deleted skill stays deleted (the project's choice)
+        skill_md = proj / ".claude/skills/aa-run/SKILL.md"
+        skill_bytes = skill_md.read_bytes()
+        for rel_ in (".tf/factory/build.py", ".tf/factory/skill_profile.py", ".claude/skills/aa-run/SKILL.md"):
+            (proj / rel_).unlink()
+        r = install(src, proj)
+        check(r.returncode == 0 and (proj / ".tf/factory/build.py").is_file()
+              and (proj / ".tf/factory/skill_profile.py").is_file() and "restored" in r.stdout,
+              f"U-6: missing .tf/factory files restored by the update: {r.returncode} {r.stdout[-500:]} {r.stderr[-500:]}")
+        check(not (proj / ".claude/skills/aa-run/SKILL.md").exists() and "not restoring" in r.stdout,
+              f"U-6: a deleted skill stays deleted: {r.stdout[-300:]}")
+        skill_md.write_bytes(skill_bytes)   # the rest of the scenario uses the skill
         # U-6 (19.0.0): settings with the Polish snapshot hook arguments — after the update exactly one snapshot hook per event,
         # with the English argument (the old argument would otherwise not match and the hook would be added a second time)
         def snapshot_args(settings: Path) -> dict:
