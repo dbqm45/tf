@@ -249,6 +249,8 @@
           ["warunk\\w+ wycofania", "przed wydaniem", "z góry"]
         ]
       }
-    }
+    },
+    {"id": "brama-llm-model-zapasowy", "expect": "trigger", "prompt": "Przygotowujemy środowisko pod asystenta AI: proxy do dostawców LLM z aliasami modeli, timeouty, ponowienia, limity dostawcy i modele zapasowe. Jak to poukładać, żeby awaria dostawcy nie położyła aplikacji? Odpowiedz zwięźle.", "checks": {"all": [["fallback\\w*", "zapasow\\w*"], ["wyłącznik\\w*", "kill switch"]]}},
+    {"id": "brama-llm-model-zapasowy-en", "expect": "trigger", "prompt": "We are preparing the environment for an AI assistant: a proxy to LLM providers with model aliases, timeouts, retries, provider limits and fallback models. How do we set it up so that a provider outage does not take the application down? Answer briefly.", "checks": {"all": [["fallback\\w*", "zapasow\\w*"], ["wyłącznik\\w*", "kill switch"]]}}
   ]
 }

@@ -184,6 +184,8 @@
           ["router\\w*", "osobn\\w+ ścieżk", "archiw\\w+", "dla reszty", "RAG dla"]
         ]
       }
-    }
+    },
+    {"id": "rag-uprawnienia-izolacja", "expect": "trigger", "prompt": "Budujemy bazę wiedzy dla asystenta z dokumentacji, FAQ i rozwiązanych zgłoszeń wielu klientów. Jak zrobić RAG z uprawnieniami i izolacją klientów, co ze sprzecznymi i nieaktualnymi źródłami i jak osobno ocenić wyszukiwanie i odpowiedzi? Odpowiedz zwięźle.", "checks": {"all": [["filtr\\w*", "ACL", "uprawnie\\w* (w|przy) (wyszukiw|zapyt)", "przed wyszukiw"], ["recall@k", "recall", "mrr", "ndcg"]]}},
+    {"id": "rag-uprawnienia-izolacja-en", "expect": "trigger", "prompt": "We are building a knowledge base for an assistant from documentation, FAQs and resolved tickets of many customers. How do we do RAG with permissions and customer isolation, what about conflicting and stale sources, and how do we evaluate retrieval and answers separately? Answer briefly.", "checks": {"all": [["filtr\\w*", "ACL", "uprawnie\\w* (w|przy) (wyszukiw|zapyt)", "przed wyszukiw", "filter\\w*", "before (the )?(search|retrieval)"], ["recall@k", "recall", "mrr", "ndcg"]]}}
   ]
 }
