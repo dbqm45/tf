@@ -12,6 +12,36 @@ Spis treści: 1. Bramka w CI · 2. Progi z rozrzutu · 3. Koszt · 4. Offline ko
 Zmiana modelu, wersji harnessu, promptu, opisu narzędzia lub schematu uruchamia pełny zestaw. Ten sam model w innym
 harnessie daje inne wyniki, więc po podmianie mierzysz od nowa.
 
+### Gotowa bramka: `scripts/eval_gate.py`
+Skrypt nie uruchamia modelu. Twój runner ewaluacji zapisuje wyniki w JSON Lines, jedna linia na próbę:
+`{"id": "zwrot-17", "passed": true, "layer": "regression", "cost_usd": 0.012, "trial": 2}` (`id` i `passed` wymagane;
+`layer: regression` oznacza zadanie ze zbioru regresyjnego; kilka linii z tym samym `id` to powtórzone próby).
+
+```bash
+# raz, i po każdej zmianie zbioru: baza z 3–5 przebiegów obecnej wersji → evals/baseline.json (commit do repo)
+python3 .claude/skills/ai-evals/scripts/eval_gate.py baseline baza1.jsonl baza2.jsonl baza3.jsonl --margin 0.02
+# w CI, po przebiegu kandydata
+python3 .claude/skills/ai-evals/scripts/eval_gate.py check wyniki.jsonl --budget-usd 5 --report eval-gate.md
+```
+
+| Werdykt | Kiedy | Kod |
+|---|---|---|
+| wstrzymaj | sukces poniżej progu (dolna granica rozrzutu − margines), porażka zadania z warstwy regresyjnej, koszt ponad budżet | 1 |
+| zbadaj | sukces poniżej dolnej granicy rozrzutu, ale w marginesie; padło zadanie stabilne w bazie; zestaw zadań inny niż w bazie; budżet podany, a wyniki bez kosztu | 0 (`--strict`: 1) |
+| wypuść | pozostałe | 0 |
+
+Pusty albo uszkodzony plik wyników to kod 2, nie „0 porażek”. `--json` daje wynik maszynowy (werdykt, sukces, próg,
+rozrzut bazy, pass^k, pass@k, koszt, regresje, powody), np. jako dowód przy bramce wydania. Margines i każdą jego zmianę
+zapisujesz jak decyzję (kto, dlaczego, do kiedy). Szkic kroku w GitHub Actions (akcje przypięte do SHA — ops-ci-cd):
+
+```yaml
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: ./scripts/run-evals.sh --suite smoke --out wyniki.jsonl      # Twój runner; klucz modelu z sekretów
+      - run: python3 .claude/skills/ai-evals/scripts/eval_gate.py check wyniki.jsonl --budget-usd 5 --report eval-gate.md
+      - if: always()
+        run: cat eval-gate.md >> "$GITHUB_STEP_SUMMARY"
+```
+
 ## 2. Progi z rozrzutu
 1. Uruchom bazę (obecną wersję) n = 3–5 razy [praktyka]; zapisz minimum, maksimum, średnią.
 2. Próg bezwzględny = dolna granica rozrzutu minus margines uzgodniony z zespołem (nie okrągła liczba „na oko”).

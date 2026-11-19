@@ -51,6 +51,10 @@ blokować merge.
 9. **Bramka w CI.** Szybki podzbiór (smoke) na każdy PR, pełny zestaw nocą lub przy zmianie modelu, promptu, narzędzi.
    Próg ustaw względem **linii bazowej z rozrzutem** (powtórz bazę 3–5 razy), nie „na oko”; regresja = spadek poza
    przedział szumu. Zmiana progu tylko świadomie, z zapisem. Szczegóły: `references/ci-i-ruch.md`.
+   Gotowe narzędzie (**uruchom**, nie przepisuj): `python3 .claude/skills/ai-evals/scripts/eval_gate.py baseline`
+   liczy z 3–5 przebiegów obecnej wersji rozrzut i próg (`--margin` ustala zespół), a `check` ocenia przebieg
+   kandydata: wypuść / zbadaj / wstrzymaj (kod 1 blokuje merge; także porażka zadania regresyjnego i koszt ponad
+   `--budget-usd`). Czyta wyniki w JSON Lines, modelu nie uruchamia.
 10. **Koszt i wariancja.** Policz koszt przebiegu (przypadki × próby × kandydaci × sędzia) przed uruchomieniem;
     tani model do triażu, pełny zestaw tylko przy zmianie. 0% sukcesów w wielu próbach to zwykle zepsute zadanie lub
     grader, nie niezdolny agent. Czytaj transkrypty porażek — to najszybsza diagnoza.
