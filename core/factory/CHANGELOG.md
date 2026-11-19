@@ -3,6 +3,13 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [20.2.0] — 2026-11-19
+### Added
+- **tf:** tokens and time next to the cost of a task and a session (#343)
+- **tf:** visual check of UI changes and a system diff in the PR (#340)
+### Fixed
+- **pack-it:** route AI assistant questions to the right skills (#341)
+
 ## [20.1.0] — 2026-11-19
 ### Added
 - **core:** mcp-runner — MCP tools through a cheap agent, no API keys (#339)
