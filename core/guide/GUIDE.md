@@ -205,6 +205,10 @@ machine without your credentials.
 - **The rules:** the cheapest sufficient model for the task and escalation only after a failure (the `core-cost-control`
   skill); you do not change the session's model in the middle of a task, because that wipes the cache; with a long
   context the `context_guard` hook suggests a checkpoint and a new session.
+- **MCP servers cost in every request.** Jira, Confluence and APIs with a token the agent uses through a script
+  (the `core-api-scripts` skill: `api.py search` finds the operation, one script prints only the result, writes are
+  a dry run until you approve them). Set `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` in the environment and keep
+  MCP only where it gives what the API does not (e.g. Figma design context).
 - **Paid skill evaluations** (`.tf/factory/skill_gate.py <skill> --model …`) you run consciously — the gate without a
   model is free.
 

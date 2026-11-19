@@ -121,7 +121,8 @@ Practice:
   consent). You measure the effect by the cost per successful task, not by the number of tokens.
 - **MCP servers cost in every turn:** every connected server adds the definitions of all its tools to
   every request. Connect only the servers needed in this project, choose ones with a small number of universal
-  tools (the "search + execute" pattern), and when it is known which command to run — a CLI instead of MCP.
+  tools (the "search + execute" pattern), and when it is known which command to run — a CLI instead of MCP. Jira,
+  Confluence and APIs with a token through a script instead of MCP tools: core-api-scripts.
 - A broad repo scan (git history, a dependency graph, an inventory) you commission to a cheaper model, and the heavy work is done by a CLI
   outside the context; a strong model only to deepen one flow. Packing the whole repo into one file is an ad hoc
   look at foreign code, not a standing practice.
