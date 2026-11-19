@@ -22,7 +22,7 @@ musi mieć w „Odblokowuje” cięcia tej zmiany (TSK), których wymaga; cięci
 (`US-02`, `FR-007`) albo weryfikację. To samokontrola planu cięć; `decision_record.py check` i REL-008 w ci_for_sdlc
 sprawdzają ją tak samo.
 
-| Cięcie | Rodzaj | Wydanie | Flaga | Wartość | Wymagania | Odblokowuje | Pliki | Weryfikacja |
+| Slice | Kind | Release | Flag | Value | Requirements | Unblocks | Files | Verification |
 |---|---|---|---|---|---|---|---|---|
 | TSK-1 | fundament | R1 | — | (fundament) `config/build.json` z polem `deployedAt` jest gotowy do odczytu przez serwer | — | TSK-2 | `scripts/build-info.js`, `package.json`, `.gitignore` | `npm run build && node -e “const b=require('./config/build.json');if(!b.deployedAt)process.exit(1)”` → exit 0; `npm test` → 0 |
 | TSK-2 | cięcie | R1 | show_last_deployed | użytkownik może zobaczyć datę ostatniego wdrożenia w stopce strony | — | — | `src/page.js`, `src/server.js`, `config/flags.prod.json`, `config/flags.test.json`, `test/page.test.js` | `npm test` → 0; manualne: GET `/` z `show_last_deployed: {enabled:true, rollout:100}` → stopka zawiera datę z `config/build.json` |

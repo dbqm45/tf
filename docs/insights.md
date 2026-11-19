@@ -115,29 +115,6 @@ separate directory keeps the source tree readable: `packs/` is domain knowledge,
   had on offer is added once (manifest: `offered`); one removed by a person does not come back. A manifest from before
   modes: all overlays were on offer, modes were not.
 
-### Talos (`mode-talos`): a "story → PR" automaton on demand
-Guide: `modes/mode-talos/GUIDE.md` (in a project `factory/packs/mode-talos/GUIDE.md`).
-A mode switched on only by a person: `claude --agent talos` (the agent works only in it) or
-`/talos-story-run <story> [--auto] [--budget USD]` in any persona. The skill has `disable-model-invocation`, so the
-model will not start the automaton itself; and that is why Talos reads `SKILL.md` with the Read tool (a skill with this
-field cannot be loaded into an agent through `skills`).
-- **Flow:** story intake (acceptance criteria or questions/STOP) → a plan of ≤5 vertical slices (each merged and
-  working) → plan approval by a person (`--auto` skips it) → per slice: red test → code → verification → scope review
-  (`scope-reviewer`, fresh context) → commit → one PR.
-- **KISS:** edge cases, ideas and risks outside the criteria go to `parked.md`, and their list to the PR description,
-  not to the code. `scope-reviewer` points out out-of-scope code to roll back.
-- **Cost:** no default budget, but always the cheapest sufficient executor, reading once, conditional phases
-  (documentation, security review, architect) only with a reason, at most 2 repair attempts per gate. `--budget` is a
-  hard STOP checked after each slice (`run_report.py status`).
-- **Files:** `tmp/talos/runs/<date>-<slug>/` (since 5.58.5; earlier `.claude/runs/`, which is a protected path in
-  Claude Code; `status`/`finish` still read the old directories): `story.md`, `plan.md` (resume state), `parked.md`,
-  `report.md`; the directory is ignored by git (`.gitignore` with `*`).
-- **Report:** `run_report.py finish` (a script of the `talos-story-run` skill) sums the transcripts of the session and
-  subagents since the start of the run: time, tokens (input, output, cache read and write 5 min / 1 h), cost by the
-  `config.yaml` price list, models and agents. The script computes it, not the model, so the report costs no tokens
-  beyond pasting a dozen or so lines of output. The cost is an estimate from the API price list (with a subscription:
-  the equivalent).
-
 ### Agent teams (`mode-team`)
 An opt-in mode (`tf add mode-team`) for an experimental Claude Code feature: a persona leads 3-5 team members who write
 to each other directly and share a task list. The flag `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is switched by
@@ -203,7 +180,7 @@ in the repo. A workflow runs as `/<name>`, so its name differs from the skill na
   result concerns external things, so it does not go into the factory: without `--out` the tool asks for a target
   directory, and rejects a directory inside the factory repository. Both tools exist only in the factory and do not go
   into projects.
-- `python3 tools/flow_compare.py prepare|report flows.json …`: comparing flows (plan mode, talos, mode-pdi) on the same
+- `python3 tools/flow_compare.py prepare|report flows.json …`: comparing flows (plan mode, the `/tf` loop, mode-pdi) on the same
   tickets: anonymized diffs for blind rating, a report with cost, time, code and artifacts; the protocol is in
   `docs/evals/protokol-porownania-przeplywow.md`.
 

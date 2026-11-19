@@ -16,5 +16,5 @@
     "max_cost_usd": 0.8,
     "max_duration_s": 240
   },
-  "notes": "Regresja PRB-33 (A6, 2026-11-05 próba 4): `run_report.py start --task TSK-1` bez `--change CHG-3` zgadywał pierwszą zmianę z planów; Talos wylądował na złej (CHG-1). Fix: tf #145 wymaga `--change`. Przebieg: `CHG-3-delivery-20261105T215304Z`."
+  "notes": "Regresja PRB-33 (A6, 2026-11-05 próba 4): `run_report.py start --task TSK-1` bez `--change CHG-3` zgadywał pierwszą zmianę z planów; pętla tf wylądowała na złej (CHG-1). Fix: tf #145 wymaga `--change`. Przebieg: `CHG-3-delivery-20261105T215304Z`."
 }

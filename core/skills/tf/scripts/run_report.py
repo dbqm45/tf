@@ -407,7 +407,7 @@ def task_contexts(project: Path, task: str) -> list[dict]:
         if task not in header_tasks(front):
             continue
         row = plan_row(body, task)
-        flag = next((v for k, v in row.items() if k.lower() in ("flag", "flaga") and v not in EMPTY_CELL), None)   # pl: sprzed 14.x
+        flag = next((v for k, v in row.items() if k.lower() == "flag" and v not in EMPTY_CELL), None)
         release, flags = plan.parent / "release.yaml", []
         if release.is_file():
             try:
@@ -458,7 +458,7 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
             print(f"✗ {task} is in the change plans: {keys}. Give `--change CHG-n` to choose one.")
             return 2
         ctx = matches[0]
-        value = next((v for k, v in ctx["row"].items() if k.lower() in ("value", "wartość") and v not in EMPTY_CELL), "")
+        value = next((v for k, v in ctx["row"].items() if k.lower() == "value" and v not in EMPTY_CELL), "")
         title = title or (f"{task}: {value}" if value else task)
         story = task_story(task, ctx, story)
         cut, key = ctx, f"{ctx['change']}-{task}"

@@ -190,8 +190,8 @@ def main() -> int:
 
         # A multi-file source: the hit points to a specific file
         multi = root / "multi.txt"
-        multi.write_text("<!-- plik: https://example.org/a.asciidoc -->\n" + "Wstęp do specyfikacji modułu.\n" * 8
-                         + "<!-- plik: https://example.org/b.asciidoc -->\n" + "Moduł z polem bliskie_unikalne_pole.\n"
+        multi.write_text("<!-- file: https://example.org/a.asciidoc -->\n" + "Wstęp do specyfikacji modułu.\n" * 8
+                         + "<!-- file: https://example.org/b.asciidoc -->\n" + "Moduł z polem bliskie_unikalne_pole.\n"
                          + "Dalszy opis modułu.\n" * 8, encoding="utf-8")
         kb.ingest(reg[1]["id"], root, file=multi)
         hits = kb.search("bliskie_unikalne_pole", root)

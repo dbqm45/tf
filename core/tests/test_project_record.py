@@ -144,7 +144,7 @@ def resume_tests() -> list[str]:
         g("commit", "-q", "-m", "start")
         run(root, "wip", "start", "Eksport zamówień", "--by", "ola")
         run(root, "--hook-snapshot", "koniec sesji")
-        if "różni się od punktu kontrolnego" in run(root, "--hook-session").stdout:
+        if "differs from the checkpoint" in run(root, "--hook-session").stdout:
             fails.append("resume: a drift warning although the repo state has not changed")
         (root / "a.txt").write_text("2")
         g("commit", "-q", "-am", "zmiana spoza sesji")
@@ -176,7 +176,7 @@ def main() -> int:
         artifact(root, "05-plan/test-plan.md", artifact="test-plan", phase="plan",
                  inputs="[docs/project/03-requirements/requirements.md]")
         chk = run(root, "check")
-        if chk.returncode != 0 or "brak głównego" in chk.stdout + chk.stderr or "test-plan" not in (root / "docs/project/README.md").read_text():
+        if chk.returncode != 0 or "no main artifact" in chk.stdout + chk.stderr or "test-plan" not in (root / "docs/project/README.md").read_text():
             fails.append(f"test plan as a plan-phase artifact: {chk.stdout[-200:]}")
         artifact(root, "07-review/2026-09-27-retro.md", artifact="review", phase="review",
                  _body="# Retro\n## TL;DR\nWiem że zespół napewno zdąży.\n## Otwarte pytania\n## Przekazanie\n- Dla: ewa\n")
@@ -247,7 +247,7 @@ def main() -> int:
                   "- **E2** > „Kara to 2% za tydzień.” — L4\n"
                   "## S2 — input/notatki.md\n"
                   "- **E3** > „Planista blokuje specjalistów na etapy.” — L1\n"
-                  "- **E4** > „Urlop wyklucza przydział.” — L2 [wzmianka]\n")
+                  "- **E4** > „Urlop wyklucza przydział.” — L2 [mention]\n")
         (dom / "corpus.md").write_text(corpus)
         area = "# Obszary\n## TL;DR\nok\n## Obszary\n### A1 — Przydział\n- **Dowody:** E1, E2, E3\n"
         (dom / "areas.md").write_text(area)
@@ -260,9 +260,9 @@ def main() -> int:
         (dom / "areas.md").write_text(area.replace("E1, E2, E3", "E1, E2, E4"))
         if run(root, "evidence").returncode == 0:
             fails.append("evidence: an area below the threshold (a mention and one source) was not detected")
-        (dom / "corpus.md").write_text(corpus.replace("[wzmianka]", "[mention]"))
+        (dom / "corpus.md").write_text(corpus.replace("[mention]", "[unverified]"))
         if run(root, "evidence").returncode == 0:
-            fails.append("evidence: the [mention] tag (14.x) does not count toward the threshold like the old [wzmianka]")
+            fails.append("evidence: the [unverified] tag does not count toward the threshold like [mention]")
         (dom / "corpus.md").write_text(corpus)
         (dom / "areas.md").write_text(area.replace("E1, E2, E3", "E1, E3") + "- **Wskazany przez człowieka:** tak\n")
         r = run(root, "evidence")

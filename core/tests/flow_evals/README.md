@@ -81,7 +81,7 @@ Reguły sędziego N17 (pdi §8.3, wiersz 368):
 ## Czego **NIE** mierzymy
 
 - Izolacji sieci (to mierzy Z8a — `src/pdi/phase_sandbox.py` w pdi).
-- Jakości cięć Talosa (to mierzą skill evals `talos-story-run` i ci_for_sdlc Z8c-2).
+- Jakości cięć pętli `/tf` (to mierzą skill evals `tf` i ci_for_sdlc Z8c-2).
 - Wartości biznesowej artefaktu — mierzymy zgodność z decyzjami zmiany, nie trafność pomysłu.
 
 ## Źródła (odczyt 2026-11-06)

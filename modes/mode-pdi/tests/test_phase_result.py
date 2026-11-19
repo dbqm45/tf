@@ -43,7 +43,7 @@ def main() -> int:
     # R-2: PDI-PROGRESS lines: ignored, JSON at the end
     stdout = "\n".join([
         'PDI-PROGRESS: {"phase":"intent","status":"started"}',
-        'PDI-PROGRESS: {"phase":"intent","status":"in_progress","message":"czyta plik"}',
+        'PDI-PROGRESS: {"phase":"intent","status":"in_progress","message":"reads file"}',
         json.dumps({"change": "CHG-1", "phase": "intent", "status": "waiting_gate",
                     "cost_usd": 0.42, "gate": "B1", "persona": "maja"}),
     ])
@@ -127,7 +127,7 @@ def main() -> int:
     stdout = "\n".join([
         'PDI-PROGRESS: {"phase":"intent","status":"started"}',
         'nie linia postępu',
-        'PDI-PROGRESS: {"phase":"intent","status":"in_progress","message":"czyta plik"}',
+        'PDI-PROGRESS: {"phase":"intent","status":"in_progress","message":"reads file"}',
         'PDI-PROGRESS: {"phase":"intent","status":"done","cost_usd":0.4}',
         json.dumps({"status": "done", "change": "CHG-1", "phase": "intent", "cost_usd": 0.4}),
     ])
@@ -146,23 +146,23 @@ def main() -> int:
 
     # ── derived metrics ──────────────────────────────────────────────────────
 
-    # M-1: files_read counts unique files from the "czyta plik <path>" (pl) / "reads file <path>" messages
+    # M-1: files_read counts unique files from the "reads file <path>" messages
     rows = [
         {"phase": "intent", "status": "started"},
-        {"phase": "intent", "status": "in_progress", "message": "czyta plik docs/project/changes/CHG-1/intent.md"},
-        {"phase": "intent", "status": "in_progress", "message": "czyta plik docs/project/changes/CHG-1/intent.md"},
-        {"phase": "intent", "status": "in_progress", "message": "czyta plik docs/project/changes/CHG-1/plan.md"},
-        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/spec.md"},   # 14.x
+        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/intent.md"},
+        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/intent.md"},
+        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/plan.md"},
+        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/spec.md"},
         {"phase": "intent", "status": "in_progress", "message": "uruchamia polecenie"},
         {"phase": "intent", "status": "done", "cost_usd": 0.4},
     ]
-    check(pr.files_read(rows) == 3, f"M-1: files_read {pr.files_read(rows)} ≠ 3 (Polish and English messages)")
+    check(pr.files_read(rows) == 3, f"M-1: files_read {pr.files_read(rows)} ≠ 3")
 
-    # M-2: denials_count counts messages with the "odmowa narzędzia" (pl) / "tool denied" prefix
+    # M-2: denials_count counts messages with the "tool denied" prefix
     rows = [
-        {"phase": "delivery", "status": "in_progress", "message": "odmowa narzędzia Bash: not in allow"},
-        {"phase": "delivery", "status": "in_progress", "message": "tool denied Write: locked path"},   # 14.x
-        {"phase": "delivery", "status": "in_progress", "message": "czyta plik x"},
+        {"phase": "delivery", "status": "in_progress", "message": "tool denied Bash: not in allow"},
+        {"phase": "delivery", "status": "in_progress", "message": "tool denied Write: locked path"},
+        {"phase": "delivery", "status": "in_progress", "message": "reads file x"},
     ]
     check(pr.denials_count(rows) == 2, f"M-2: denials {pr.denials_count(rows)} ≠ 2")
 

@@ -181,11 +181,11 @@ def check_polish(name: str) -> tuple[list[str], list[str]]:
         return [], ["no Polish linter — skipped"]
     targets = [str(d / "SKILL.md")] + ([str(d / "references")] if (d / "references").is_dir() else [])
     r = subprocess.run([sys.executable, str(LINT), *targets], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
-    m = re.search(r"(?:high|wysokich): (\d+)", r.stdout)   # pl: sprzed 14.x
+    m = re.search(r"high: (\d+)", r.stdout)
     high = int(m.group(1)) if m else 0
     lines = [ln for ln in r.stdout.splitlines() if "[" in ln and "|" in ln]
     if high:
-        return [f"{high} high-priority Polish language remarks, e.g. {next((l for l in lines if '|HIGH]' in l or '|WYSOKI]' in l), '')}"], []
+        return [f"{high} high-priority Polish language remarks, e.g. {next((l for l in lines if '|HIGH]' in l), '')}"], []
     return [], ([f"{len(lines)} low/medium-priority remarks (polish_lint)"] if lines else [])
 
 

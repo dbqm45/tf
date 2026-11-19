@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests of .tf/factory/freshness.py: skill review deadlines (metadata.review) and [niezweryfikowane] ([unverified]) markers."""
+"""Tests of .tf/factory/freshness.py: skill review deadlines (metadata.review) and [unverified] markers."""
 import datetime as dt
 import importlib.util
 import json
@@ -61,20 +61,20 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as t:
         root = Path(t)
-        skill(root, "eng-stary", "2026-09-30", "Fakt [niezweryfikowane]. Drugi [niezweryfikowane: brak źródła].")
+        skill(root, "eng-stary", "2026-09-30", "Fakt [unverified]. Drugi [unverified: no source].")
         skill(root, "eng-wkrotce", "2026-11-10")
         skill(root, "eng-aktualny", "2027-06-01")
         skill(root, "eng-bez-daty", None)
         skill(root, "eng-zla-data", "jutro")
         ref = root / ".claude" / "skills" / "eng-aktualny" / "references"
         ref.mkdir()
-        (ref / "a.md").write_text("Liczba [niezweryfikowane]. Number [unverified].\n", encoding="utf-8")
+        (ref / "a.md").write_text("Liczba [unverified]. Number [unverified].\n", encoding="utf-8")
         rows = {r["skill"]: r for r in fr.scan(root, TODAY)}
         check({k: v["status"] for k, v in rows.items()} == {
             "eng-stary": "overdue", "eng-wkrotce": "soon", "eng-aktualny": "ok", "eng-bez-daty": "missing",
             "eng-zla-data": "invalid"}, f"FR-3: states overdue / <=30 days / ok / missing / bad format: {rows}")
         check(rows["eng-stary"]["unverified"] == 2 and rows["eng-aktualny"]["unverified"] == 2,
-              f"FR-4: counts [niezweryfikowane] in SKILL.md and references/: {rows}")
+              f"FR-4: counts [unverified] in SKILL.md and references/: {rows}")
 
         r = subprocess.run([sys.executable, str(SCRIPT), "--root", str(root), "--today", "2026-10-17", "--json"],
                            capture_output=True, text=True)

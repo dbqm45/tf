@@ -144,8 +144,8 @@
   "offline": "2026-11-18"
  },
  "ddd-es-simulation": {
-  "fingerprint": "ea1befed11fa2a2e",
-  "offline": "2026-11-18"
+  "fingerprint": "534b078d3b01f2bd",
+  "offline": "2026-11-19"
  },
  "ddd-event-storming": {
   "fingerprint": "164fb39660ff8ff5",
@@ -188,8 +188,8 @@
   "offline": "2026-11-18"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "9f12ab2665484983",
-  "offline": "2026-11-18"
+  "fingerprint": "718efe24b1de0b3b",
+  "offline": "2026-11-19"
  },
  "eng-continuous-delivery": {
   "fingerprint": "30fd5bfb0c93bd4a",
@@ -236,8 +236,8 @@
   "offline": "2026-11-18"
  },
  "eng-repo-readiness": {
-  "fingerprint": "af2a1ec37547551b",
-  "offline": "2026-11-18"
+  "fingerprint": "3dabe4579a25f96d",
+  "offline": "2026-11-19"
  },
  "eng-tech-debt-audit": {
   "fingerprint": "baad1154ff8b8f21",

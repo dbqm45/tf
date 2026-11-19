@@ -26,7 +26,7 @@ tasks: [TSK-57, TSK-58]
 ---
 # Plan zmiany CHG-12
 
-| Cięcie | Wydanie | Flaga | Wartość | Pliki | Weryfikacja |
+| Slice | Release | Flag | Value | Files | Verification |
 |---|---|---|---|---|---|
 | TSK-57 | R1 | payment-retry | klient ponawia nieudaną płatność | src/payments/retry.ts | `npm test -- retry` |
 | TSK-58 | R1 | payment-retry | brak podwójnego obciążenia | src/payments/charge.ts | `npm test -- charge` |
@@ -264,11 +264,11 @@ def main() -> int:
         check("TSK-58" in story and "brak podwójnego obciążenia" in story and "R1" in story
               and "Klient nie może ponowić" in story and "docs/project/changes/CHG-12" in story,
               f"R-16: ticket.md from the plan row and the change intent: {story[:600]}")
-        # R-16b: English plan template (mode-pdi 4c-x) — the columns `Flag` i `Value` give the flag and the title like the Polish ones.
+        # R-16b: a second change from the plan template (mode-pdi) — the columns `Flag` and `Value` give the flag and the title.
         chg_en = proj / "docs" / "project" / "changes" / "CHG-14"
         chg_en.mkdir(parents=True)
         (chg_en / "plan.md").write_text(PLAN_MD.replace("change: CHG-12", "change: CHG-14").replace("TSK-57, TSK-58", "TSK-61")
-                                        .split("| Cięcie")[0] + "| Slice | Release | Flag | Value | Files | Verification |\n"
+                                        .split("| Slice")[0] + "| Slice | Release | Flag | Value | Files | Verification |\n"
                                         "|---|---|---|---|---|---|\n| TSK-61 | R1 | card-retry | the customer retries a card | "
                                         "src/card.ts | `npm test` |\n", encoding="utf-8")
         r = run(["start", "--task", "TSK-61"], proj, cfg)

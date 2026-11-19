@@ -15,7 +15,7 @@ source_reported_at: 2026-10-30
 
 ## Cięcia
 
-| TSK | Opis | Wydanie | Flaga |
+| TSK | Opis | Release | Flag |
 |---|---|---|---|
 | TSK-1 | Generowanie `config/build.json` w kroku wdrożenia | R1 | brak (budowa) |
 | TSK-2 | Stopka pokazuje datę z `config/build.json` za flagą `show_last_deployed` | R1 | show_last_deployed |

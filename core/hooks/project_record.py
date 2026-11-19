@@ -143,7 +143,7 @@ def language_warnings(rec: Path) -> list[str]:
             rel = f.relative_to(rec).as_posix()
             if rel == "README.md" or rel.startswith(("exports/", "archive/")) or rel.endswith("corpus.md"):
                 continue   # the evidence bank holds verbatim quotes — we do not correct them
-            issues = [i for i in mod.lint_file(f) if i["priority"] in ("HIGH", "MEDIUM", "WYSOKI", "ŚREDNI")]   # pl: sprzed 14.x
+            issues = [i for i in mod.lint_file(f) if i["priority"] in ("HIGH", "MEDIUM")]
             if issues:
                 first = issues[0]
                 out.append(f"{rel}: {len(issues)} language remarks (e.g. l.{first['line']}: {first['fragment']} → "
@@ -365,7 +365,7 @@ def report(root: Path, out: Path | None) -> Path:
 
 def from_template(name: str) -> str:
     today = f"{date.today():%Y-%m-%d}"
-    return (TEMPLATES / name).read_text(encoding="utf-8").replace("<YYYY-MM-DD>", today).replace("<RRRR-MM-DD>", today)
+    return (TEMPLATES / name).read_text(encoding="utf-8").replace("<YYYY-MM-DD>", today)
 
 
 def init(root: Path) -> Path:
@@ -479,9 +479,8 @@ def wip_start(root: Path, goal: str, slug: str | None, by: str) -> Path:
     now = f"{datetime.now():%Y-%m-%d %H:%M}"
     branch = git(root, "branch", "--show-current") or "—"
     text = from_template("wip.md").replace("<slug>", slug)
-    for en, pl, value in (("<who>", "<kto>", by), ("<goal>", "<cel>", goal), ("<YYYY-MM-DD HH:MM>", "<RRRR-MM-DD GG:MM>", now),
-                          ("<branch>", "<gałąź>", branch)):   # pl: szablony sprzed 14.x
-        text = text.replace(en, value).replace(pl, value)
+    for placeholder, value in (("<who>", by), ("<goal>", goal), ("<YYYY-MM-DD HH:MM>", now), ("<branch>", branch)):
+        text = text.replace(placeholder, value)
     path.write_text(text, encoding="utf-8")
     log(root, by, "meta", f"Work in progress started: {goal} (.tf/wip/{slug}.md)")
     write_index(root)
@@ -612,7 +611,7 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
 
 SRC_RE = re.compile(r"^##\s+(S\d+)\s+[—-]\s+(.+?)\s*$", re.M)
 ENTRY_RE = re.compile(r"^-\s+\*\*(E\d+)\*\*\s*>\s*[„\"“](.+?)[”\"“]\s*[—-]\s*([^\[\n]*?)\s*((?:\[[^\]]*\]\s*)*)$", re.M)
-WEAK_TAGS = ("mention", "superseded", "unverified", "wzmianka", "zastąpiony", "niezweryfikowany")   # pl: sprzed 14.x
+WEAK_TAGS = ("mention", "superseded", "unverified")
 
 
 def _norm(text: str) -> str:
@@ -654,7 +653,7 @@ def evidence(root: Path) -> tuple[list[str], list[str], dict]:
         frags = [f for f in re.split(r"\[(?:…|\.\.\.)\]|…", e["quote"]) if len(f.strip()) >= 3]
         nsrc = _norm(src)
         missing = [f for f in frags if _norm(f) not in nsrc]
-        if missing and not {"unverified", "niezweryfikowany"} & set(e["tags"]):
+        if missing and "unverified" not in e["tags"]:
             errors.append(f"{eid}: the quote does not appear verbatim in {e['path']}: \"{missing[0].strip()[:60]}\"")
             continue
         m = re.fullmatch(r"L(\d+)(?:\s*-\s*L?(\d+))?", e["loc"])

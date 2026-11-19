@@ -130,7 +130,7 @@ def main() -> int:
             "ewa", "B2", "docs/project/changes/CHG-12/requirements.md"), f"R-1: faza → persona, bramka, artefakt: {r.stdout}{r.stderr}")
         text = p.get("prompt", "")
         check("CHG-12" in text and "requirements.md" in text and "docs/project/changes/CHG-12" in text
-              and "without interaction" in text and "Pytania do bramki" in text and "decision_record.py check" in text,
+              and "without interaction" in text and "Gate questions" in text and "decision_record.py check" in text,
               f"R-2: the prompt says what to do and where, with no questions to a human: {text[:500]}")
         check("decision_record.py check --change CHG-12" in text,
               f"R-2b: check of the current change only — old artifacts of other changes do not block the phase: {text[-600:]}")
@@ -302,7 +302,7 @@ def main() -> int:
 
         # --- gate request ---
         req = repo / "docs" / "project" / "changes" / "CHG-12" / "requirements.md"
-        req.write_text("---\nartifact: requirements\n---\n# Wymagania\n\n## Pytania do bramki\n- Limit ponowień: 3 czy 5?\n"
+        req.write_text("---\nartifact: requirements\n---\n# Wymagania\n\n## Gate questions\n- Limit ponowień: 3 czy 5?\n"
                        "- Czy płatności BLIK też?\n\n## Inne\n- nie pytanie\n", encoding="utf-8")
         srv = HTTPServer(("127.0.0.1", 0), Catch)
         threading.Thread(target=srv.serve_forever, daemon=True).start()
@@ -330,7 +330,7 @@ def main() -> int:
         pl_en = json.loads((Catch.got[-1] if Catch.got else {}).get("body") or b"{}").get("payload", {})
         check(r.returncode == 0 and pl_en.get("questions") == ["Retry limit: 3 or 5?"],
               f"G-3b: pytania z `## Gate questions`: {pl_en}")
-        req.write_text("---\nartifact: requirements\n---\n# Wymagania\n\n## Pytania do bramki\n- Limit ponowień: 3 czy 5?\n"
+        req.write_text("---\nartifact: requirements\n---\n# Wymagania\n\n## Gate questions\n- Limit ponowień: 3 czy 5?\n"
                        "- Czy płatności BLIK też?\n\n## Inne\n- nie pytanie\n", encoding="utf-8")
         gate_schema = json.loads((FIX / "event.schema.json").read_text(encoding="utf-8"))["$defs"]["gate_requested"]
         review_props = gate_schema["properties"].get("second_review", {}).get("properties", {})
@@ -644,7 +644,7 @@ if sys.argv[1:3] == ["pr", "create"]:
 
         req = d / "requirements.md"
         req.write_text("---\nartifact: requirements\nphase: requirements\nstatus: proposed\nchange: CHG-12\n---\n"
-                       "# Wymagania\n\n## Pytania do bramki\n\n- czy CONFIG/build.json zostaje w repo?? — adresat: PO\n"
+                       "# Wymagania\n\n## Gate questions\n\n- czy CONFIG/build.json zostaje w repo?? — adresat: PO\n"
                        "- Jaki limit eksportu?\n", encoding="utf-8")
         r = run(["run", "--change", "CHG-12", "--phase", "requirements"], repo, **env)
         res = jl(r) or {}
@@ -666,7 +666,7 @@ if sys.argv[1:3] == ["pr", "create"]:
 
         plan = d / "plan.md"
         original = plan.read_text(encoding="utf-8")
-        plan.write_text(original + "\n## Pytania do bramki\n\n- Czy config/build.json zostaje w repo?\n"
+        plan.write_text(original + "\n## Gate questions\n\n- Czy config/build.json zostaje w repo?\n"
                         "- Czy TSK-2 idzie za flagą? (adresat: PO)\n", encoding="utf-8")
         n = len(log.read_text().splitlines()) if log.is_file() else 0
         r = run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, **env)

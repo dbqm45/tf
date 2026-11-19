@@ -17,7 +17,6 @@ import datetime
 import hashlib
 import json
 import os
-import re
 import subprocess
 import sys
 
@@ -63,7 +62,7 @@ def diff(old: dict, new: dict) -> dict:
     modified = sorted(p for p in set(of) & set(nf) if of[p] != nf[p])
     ot, nt = old.get("tests", {}), new["tests"]
     tests = sorted(p for p in set(ot) | set(nt) if ot.get(p) != nt.get(p))
-    ob = {re.sub(r" \(pliki\)$", " (files)", b["name"]): b["hash"] for b in old.get("batches", [])}   # pl: sprzed 14.x
+    ob = {b["name"]: b["hash"] for b in old.get("batches", [])}
     nb = {b["name"]: b["hash"] for b in new["batches"]}
     changed = sorted(set(added) | set(removed) | set(modified))
     return {"refresh": sorted(n for n in nb if ob.get(n) != nb[n]),

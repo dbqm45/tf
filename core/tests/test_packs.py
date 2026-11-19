@@ -242,10 +242,10 @@ def main() -> int:
 
         # the language section in CLAUDE.local.md
         md_p = p / "CLAUDE.local.md"
-        md_p.write_text("x\n<!-- team-factory:begin -->\n## Zespół\n### Język\n- stare\n<!-- team-factory:end -->\n")
+        md_p.write_text("x\n<!-- team-factory:begin -->\n## Agent team\n### Language\n- stare\n<!-- team-factory:end -->\n")
         changed = pm.write_language_lines(md_p, pm.load_yaml(p / ".tf" / "factory" / "config.yaml"), p)
         txt = md_p.read_text()
-        check(changed and "- stare" not in txt and "in the language the human writes in" in txt and "### Language\n" in txt and "### Język" not in txt and txt.startswith("x\n"),
+        check(changed and "- stare" not in txt and "in the language the human writes in" in txt and "### Language\n" in txt and txt.startswith("x\n"),
               f"P-18: replacing the language section in the factory block: {txt}")
 
     # Company pack (org_defaults): the organization's defaults between the engine and the project.

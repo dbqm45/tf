@@ -99,7 +99,7 @@ Przekroczenie = sygnał do profilowania, nie blokada.
 | Zegar serwera przesunięty | `since` z `Date.now()` w UTC; poza zakresem (jak reszta aplikacji) |
 | Flaga prod włączona przez pomyłkę | test E-05A, etap rolloutu z właścicielem |
 
-## Pytania do bramki
+## Gate questions
 - Właściciel aplikacji sdlc-proba: kto jest właścicielem flagi `deploy_counter` (decyduje o przejściu etapów rolloutu) i czy `remove_by: 2027-02-28` w release.yaml (propozycja Tomasza) jest właściwą datą usunięcia flagi?
 - Właściciel aplikacji sdlc-proba: jakie kryterium wyjścia z etapu `test` przed włączeniem na prod (propozycja w release.yaml: min. 3 dni na test, zero błędów 5xx w logu serwera i liczba zgodna z `/deployments` w spot-checku)?
 

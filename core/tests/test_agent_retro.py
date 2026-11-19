@@ -60,13 +60,13 @@ def make(root: Path, with_git: bool = True) -> None:
         "| 2026-10-16 10:00 | claude | delivery | Added the export endpoint |\n"
         "| 2026-10-16 11:00 | claude | delivery | The migration failed in CI, rolled back |\n", encoding="utf-8")
     (arch / "20261016-formularz.md").write_text(
-        "---\ntask: formularz\nupdated: 2026-10-16 12:00\n---\n# Formularz\n\n## Pułapki i ślepe uliczki\n"
+        "---\ntask: formularz\nupdated: 2026-10-16 12:00\n---\n# Formularz\n\n## Pitfalls and dead ends\n"
         "- Vitest w trybie watch zawiesza hook — uruchamiaj z --run.\n\n## Otwarte pytania\n", encoding="utf-8")
     (arch / "20261015-logowanie.md").write_text(   # 14.x: English checkpoint section name
         "---\ntask: logowanie\nupdated: 2026-10-15 12:00\n---\n# Logowanie\n\n## Pitfalls and dead ends\n"
         "- The OAuth mock keeps state between tests — reset it in afterEach.\n\n## Open questions\n", encoding="utf-8")
     (arch / "20260901-stary.md").write_text(
-        "---\ntask: stary\nupdated: 2026-09-01 12:00\n---\n# Stary\n\n## Pułapki i ślepe uliczki\n- Stara pułapka.\n",
+        "---\ntask: stary\nupdated: 2026-09-01 12:00\n---\n# Stary\n\n## Pitfalls and dead ends\n- Stara pułapka.\n",
         encoding="utf-8")
     (proj / "lessons.md").write_text(
         "# Lekcje\n\n## Wykonanie i weryfikacja\n"
@@ -123,7 +123,7 @@ def main() -> int:
         by_file = {x["file"].rsplit("/", 1)[-1]: x["text"] for x in traps}
         check(len(traps) == 2 and "Vitest" in by_file.get("20261016-formularz.md", "")
               and "OAuth mock" in by_file.get("20261015-logowanie.md", ""),
-              f"AR-7: traps from checkpoints in the window (a section in Polish and in English): {traps}")
+              f"AR-7: traps from checkpoints in the window (the section in two checkpoints): {traps}")
         les = d.get("lessons", [])
         check(les == ["Uruchamiaj Vitest z --run w hookach"], f"AR-8: existing lessons (rules) for detecting repeats: {les}")
         if shutil.which("git"):
@@ -151,7 +151,7 @@ def main() -> int:
         (retro / "20261001-retro.json").write_text(json.dumps({
             "date": "2026-10-01", "window": {"since": "2026-09-20", "until": "2026-10-01"},
             "evidence": [{"key": "tier:ola-frontend:za niski"}, {"key": "hint-missed:fe-css"}, {"key": "rework:src/old.ts"}],
-            "decisions": {"tier:ola-frontend:za niski": "tak", "hint-missed:fe-css": "nie", "rework:src/old.ts": "tak"}}),
+            "decisions": {"tier:ola-frontend:za niski": "yes", "hint-missed:fe-css": "no", "rework:src/old.ts": "yes"}}),
             encoding="utf-8")
         d = json.loads(run(root, "--json").stdout or "{}")
         keys = {e.get("key") for e in d.get("evidence", [])}
@@ -176,13 +176,13 @@ def main() -> int:
         data = json.loads(saved.read_text(encoding="utf-8")) if saved.is_file() else {}
         check(r.returncode == 0 and data.get("window", {}).get("until") == "2026-10-17" and data.get("evidence")
               and data.get("decisions") == {}, f"AR-19: --save writes the retrospective JSON from the --until day: {r.stdout}{r.stderr}")
-        r = run(root, "--decide", "tier:ola-frontend:za niski=tak", "--decide", "trap:x=może")
+        r = run(root, "--decide", "tier:ola-frontend:za niski=yes", "--decide", "trap:x=może")
         data = json.loads(saved.read_text(encoding="utf-8")) if saved.is_file() else {}
         check(r.returncode == 2 and data.get("decisions") == {}, f"AR-20: a bad decision → code 2, nothing saved: {r.stdout}{r.stderr}")
-        r = run(root, "--decide", "tier:ola-frontend:za niski=tak", "--decide", "hint-ignored:tool-nx=później")
+        r = run(root, "--decide", "tier:ola-frontend:za niski=yes", "--decide", "hint-ignored:tool-nx=later")
         data = json.loads(saved.read_text(encoding="utf-8")) if saved.is_file() else {}
-        check(r.returncode == 0 and data.get("decisions") == {"tier:ola-frontend:za niski": "tak",
-                                                              "hint-ignored:tool-nx": "później"},
+        check(r.returncode == 0 and data.get("decisions") == {"tier:ola-frontend:za niski": "yes",
+                                                              "hint-ignored:tool-nx": "later"},
               f"AR-21: --decide records the human's decisions in the retrospective file: {data.get('decisions')} {r.stderr}")
         run(root, "--save")
         data = json.loads(saved.read_text(encoding="utf-8")) if saved.is_file() else {}
@@ -209,7 +209,7 @@ def main() -> int:
             "date": "2026-10-10", "window": {"since": "2026-10-01", "until": "2026-10-10"},
             "evidence": [{"key": same["key"], "text": same["text"]},
                          {"key": other["key"], "text": other["text"] + " (inne zdarzenie)"}],
-            "decisions": {same["key"]: "tak"}}), encoding="utf-8")
+            "decisions": {same["key"]: "yes"}}), encoding="utf-8")
         d = json.loads(run(root, "--json").stdout or "{}")
         tr = d.get("trend", {})
         rec = {x["key"] for x in tr.get("recurring", [])}

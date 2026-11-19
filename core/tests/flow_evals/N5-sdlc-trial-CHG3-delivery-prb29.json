@@ -24,5 +24,5 @@
       "cięcia nie powstały, bo wymóg bezpieczeństwa z release.yaml nie jest spełniony"
     ]
   },
-  "notes": "Negatywne odwzorowanie PRB-29 (A6, CHG-3 delivery próba 1–2, 2026-11-05): phase_run.py uruchamia Talosa, a kontener fazy nie ma semgrep. Fix pdi #147 — po nim zadanie powinno kiedyś przejść; dziś pełni rolę regresji."
+  "notes": "Negatywne odwzorowanie PRB-29 (A6, CHG-3 delivery próba 1–2, 2026-11-05): phase_run.py uruchamia pętlę tf, a kontener fazy nie ma semgrep. Fix pdi #147 — po nim zadanie powinno kiedyś przejść; dziś pełni rolę regresji."
 }

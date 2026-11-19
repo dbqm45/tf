@@ -207,9 +207,8 @@ def main() -> int:
         write(repo, {"svc/billing/invoice.py": (repo / "svc/billing/invoice.py").read_text(encoding="utf-8").replace(
             "    if not lines:", "    if len(lines) < 2:\n        log('too few')")})
         rp = (rep / "report.md").read_text(encoding="utf-8")
-        # a refresh marker from before 14.x (in Polish) is also replaced, not duplicated
         write(rep, {"report.md": rp.replace("## Domeny\n", "## Domeny\n- Sprawdzenie liczby pozycji — `svc/billing/invoice.py:4`\n")
-                    .replace("Incremental refresh:", "Odświeżenie przyrostowe:")})
+})
         r = run("recon_refresh.py", "prep", str(repo), cwd=d)
         task = rep / "raw/refresh/billing.md"
         body = task.read_text(encoding="utf-8") if task.exists() else ""
@@ -223,7 +222,7 @@ def main() -> int:
         check(any("changed" in ln and "Sprawdzenie liczby pozycji" in ln for ln in r.stdout.splitlines()),
               f"RF-31: a description with evidence on a changed code line on the list to check: {r.stdout[-900:]}")
         rp = (rep / "report.md").read_text(encoding="utf-8")
-        check(sum(ln.startswith("Incremental refresh:") for ln in rp.splitlines()) == 1 and "Odświeżenie przyrostowe:" not in rp,
+        check(sum(ln.startswith("Incremental refresh:") for ln in rp.splitlines()) == 1,
               f"RF-21: one line with the refresh date after another finish: {rp[:500]}")
 
         # evidence with a quote that is no longer in the code: finish shows the line, apply fixes it and finishes right away

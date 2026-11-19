@@ -9,7 +9,7 @@ Searching for already verified facts before starting new research (cheaper than 
 Searches:
 - verification tables in docs/project/archive/research/*.md (verdicts `confirmed` / `partial` / `unconfirmed` / `contradicted` at the start of
   a row; the former letters P / C / N / S too; the date from the file name YYYYMMDD-…),
-- "## Źródła" sections in skills (.claude/skills/*/SKILL.md and references/*.md; the date from "odczyt YYYY-MM-DD" in the line).
+- "## Sources" sections in skills (.claude/skills/*/SKILL.md and references/*.md; the date from "accessed YYYY-MM-DD" in the line).
 Re-check an old or unconfirmed finding in the sources (the researcher agent); save new verification tables
 in docs/project/archive/research/ so the next search finds them. Standard library only.
 """
@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parents[2]
 VERDICT = {"confirmed": "confirmed", "partial": "partial", "unconfirmed": "unconfirmed", "contradicted": "contradicted",
            "P": "confirmed", "C": "partial", "N": "unconfirmed", "S": "contradicted"}   # letters P/C/N/S — tables from before 14.x
 LINE_VERDICT = re.compile(r"^\s*[-*]\s*(confirmed|partial|unconfirmed|contradicted|P|C|N|S)\b")
-DATE_IN_LINE = re.compile(r"(?:accessed|odczyt)[^0-9]{0,12}(\d{4}-\d{2}-\d{2})")   # pl: sprzed 14.x — „odczyt”
+DATE_IN_LINE = re.compile(r"accessed[^0-9]{0,12}(\d{4}-\d{2}-\d{2})")
 
 
 def keys(terms: list[str]) -> list[str]:
@@ -69,7 +69,7 @@ def skill_sources(root: Path, ks: list[str]) -> list[dict]:
         inside = False
         for i, line in enumerate(lines, 1):
             if line.startswith("## "):
-                inside = line.strip().startswith(("## Sources", "## Źródła"))   # pl: sprzed 14.x — „## Źródła”
+                inside = line.strip().startswith("## Sources")
                 continue
             if inside and line.strip() and matches(line, ks):
                 d = DATE_IN_LINE.search(line)

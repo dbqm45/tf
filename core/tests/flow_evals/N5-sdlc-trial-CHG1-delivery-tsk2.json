@@ -22,5 +22,5 @@
       "żadne cięcie nie powtarza pracy innego"
     ]
   },
-  "notes": "Happy path CHG-1 delivery drugiego cięcia (TSK-2). Fixture jak TSK-1 (plan.md ma oba cięcia); w realnym przebiegu Talos powinien odgałęzić TSK-2 od pdi/CHG-1-delivery po publikacji TSK-1."
+  "notes": "Happy path CHG-1 delivery drugiego cięcia (TSK-2). Fixture jak TSK-1 (plan.md ma oba cięcia); w realnym przebiegu pętla tf powinna odgałęzić TSK-2 od pdi/CHG-1-delivery po publikacji TSK-1."
 }

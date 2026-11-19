@@ -168,18 +168,18 @@ def main() -> int:
                       and saved.is_file() and "linia-150-" in saved.read_text(encoding="utf-8"),
                       f"O-34: long --verify output -> the beginning and the end on screen, all of it in a file: {r.stdout[-400:]}")
 
-        block = ("moje zasady\n\n<!-- team-factory:begin -->\n## Zespół agentów (team factory)\n\n### Komendy\n"
+        block = ("moje zasady\n\n<!-- team-factory:begin -->\n## Agent team (team factory)\n\n### Commands\n"
                  "- Test: `npm test` · Lint: `npm run lint` · Typecheck: `npm run typecheck` · Build: `npm run build`\n"
-                 "  (dostosuj do swojego projektu — wykonawcy używają ich do weryfikacji)\n\n### Stack\n- x\n"
+                 "  (adapt to your project — executors use them for verification)\n\n### Stack\n- x\n"
                  "<!-- team-factory:end -->\nna końcu\n")
         p = make(base, "md", {"pyproject.toml": "[tool.pytest.ini_options]\n[tool.ruff]\n", "uv.lock": "",
                               "CLAUDE.local.md": block})
         r = run(p, "--yes")
         md = (p / "CLAUDE.local.md").read_text(encoding="utf-8")
         check("Test: `uv run pytest`" in md and "Lint: `uv run ruff check .`" in md and "npm" not in md
-              and "dostosuj do swojego projektu" not in md and md.startswith("moje zasady\n") and md.endswith("na końcu\n")
+              and "adapt to your project" not in md and md.startswith("moje zasady\n") and md.endswith("na końcu\n")
               and "### Stack\n- x" in md and "CLAUDE.local.md" in r.stdout,
-              f"O-26: the project's commands in the 'Komendy' section of the factory block, the rest of the file unchanged: {md}")
+              f"O-26: the project's commands in the 'Commands' section of the factory block, the rest of the file unchanged: {md}")
         p = make(base, "nomd", {"pyproject.toml": "[tool.pytest.ini_options]\n", "CLAUDE.md": "# moje\n"})
         run(p, "--yes")
         check((p / "CLAUDE.md").read_text() == "# moje\n" and not (p / "CLAUDE.local.md").exists(),
@@ -200,13 +200,11 @@ def main() -> int:
         check("Test: `uv run pytest`" in out and "npm" not in out and "### Stack" in out,
               f"O-28: an update keeps the commands written by tf onboard: {out}")
         out = keep(fresh.replace("### Stack\n- x", "### Stack\n- nowe"), block) if keep else ""
-        check("npm test" in out and "dostosuj do swojego projektu" in out and "- nowe" in out,
-              f"O-29: an unadapted section (with the 'dostosuj' note) is replaced with the current one: {out}")
-        en = block.replace("### Komendy", "### Commands").replace(
-            "dostosuj do swojego projektu — wykonawcy używają ich do weryfikacji", "adapt to your project — executors use them for verification")
-        out = keep(fresh.replace("### Stack\n- x", "### Stack\n- nowe"), en) if keep else ""
-        check("dostosuj do swojego projektu" in out and "- nowe" in out and "adapt to your project" not in out,
-              f"O-29b: the English factory template ('adapt to your project') is also replaced: {out}")
+        check("npm test" in out and "adapt to your project" in out and "- nowe" in out,
+              f"O-29: an unadapted section (with the 'adapt to your project' note) is replaced with the current one: {out}")
+        out = keep(fresh.replace("`npm test`", "`pnpm test`"), block) if keep else ""
+        check("pnpm test" in out and "`npm test`" not in out,
+              f"O-29b: the template commands come from the new block, not the old template: {out}")
         check(keep and keep(fresh, "bez bloku") == fresh, "O-30: the first write of the block unchanged")
 
         # private installation: the files from tf onboard stay local, the working tree clean (the /tf loop requires it)

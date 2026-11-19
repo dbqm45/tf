@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests of the factory tool `tools/flow_compare.py` (comparing flows — talos, mode-pdi, the plan mode alone — on the same
+"""Tests of the factory tool `tools/flow_compare.py` (comparing flows — the /tf loop, mode-pdi, the plan mode alone — on the same
 tickets: anonymized diffs for blind grading and a report with measures). python3 tests/test_flow_compare.py"""
 import json
 import subprocess
@@ -68,7 +68,7 @@ def main() -> int:
         manifest = {"repo": str(repo), "base": "main", "baseline": "plan", "tickets": [
             {"id": "T-1", "runs": [
                 {"flow": "plan", "branch": "plan/T-1", "cost_usd": 6.0, "minutes": 20},
-                {"flow": "talos", "branch": "story/T-1", "cost_usd": 14.0, "minutes": 45},
+                {"flow": "tf", "branch": "story/T-1", "cost_usd": 14.0, "minutes": 45},
                 {"flow": "pdi", "branch": "pdi/T-1", "cost_usd": 72.0, "minutes": 210}]}]}
         mf = t / "flows.json"
         mf.write_text(json.dumps(manifest))
@@ -77,9 +77,9 @@ def main() -> int:
         diffs = sorted(p.name for p in (out / "T-1").glob("*.diff")) if (out / "T-1").is_dir() else []
         key = json.loads((out / "key.json").read_text()) if (out / "key.json").is_file() else {}
         check(r.returncode == 0 and diffs == ["A.diff", "B.diff", "C.diff"] and set(key.get("T-1", {}).values()) ==
-              {"plan", "talos", "pdi"}, f"F-1: prepare gives A/B/C diffs and a separate key: {r.stdout}{r.stderr} {diffs} {key}")
+              {"plan", "tf", "pdi"}, f"F-1: prepare gives A/B/C diffs and a separate key: {r.stdout}{r.stderr} {diffs} {key}")
         body = "".join((out / "T-1" / d).read_text() for d in diffs)
-        check("story/T-1" not in body and "pdi/T-1" not in body and "talos" not in body,
+        check("story/T-1" not in body and "pdi/T-1" not in body and "tf" not in body,
               "F-2: the diffs do not reveal the flow (branch names, flow names)")
         check((out / "T-1" / "ocena.json").is_file() and "kryteria" in (out / "T-1" / "ocena.json").read_text(),
               "F-3: a grading template with criteria for the grader next to the diffs")
@@ -87,22 +87,22 @@ def main() -> int:
 
         inv = {v: k for k, v in key.get("T-1", {}).items()}
         verdicts = {"T-1": {inv["plan"]: {"score": 7, "mergeable": True},
-                            inv["talos"]: {"score": 8, "mergeable": True},
+                            inv["tf"]: {"score": 8, "mergeable": True},
                             inv["pdi"]: {"score": 8, "mergeable": False}}}
         (out / "oceny.json").write_text(json.dumps(verdicts))
         rep = t / "report.md"
         r = run("report", str(mf), "--key", str(out / "key.json"), "--verdicts", str(out / "oceny.json"),
                 "--out", str(rep), cwd=t)
         text = rep.read_text() if rep.is_file() else ""
-        check(r.returncode == 0 and "| talos |" in text and "| pdi |" in text and "| plan |" in text,
+        check(r.returncode == 0 and "| tf |" in text and "| pdi |" in text and "| plan |" in text,
               f"F-5: a report with a row per flow: {r.stdout}{r.stderr} {text[:400]}")
         row = next((l for l in text.splitlines() if l.startswith("| pdi |")), "")
         check("270" in row and "100" in row and "12,0×" in row and "2" in row,
               f"F-6: pdi: artifacts 270, code 100 (src + tests), cost 12,0× the baseline, 2 commits: {row}")
-        row = next((l for l in text.splitlines() if l.startswith("| talos |")), "")
+        row = next((l for l in text.splitlines() if l.startswith("| tf |")), "")
         check("1,75" in row and "8" in row and "| yes |" in row,
-              f"F-7: talos: cost per point 14/8 = 1,75 USD, grade 8, ready to merge: {row}")
-        check("Verdict" in text and "talos" in text.split("Verdict", 1)[1][:200],
+              f"F-7: tf: cost per point 14/8 = 1,75 USD, grade 8, ready to merge: {row}")
+        check("Verdict" in text and "tf" in text.split("Verdict", 1)[1][:200],
               f"F-8: verdict: the best grade among the merge-ready ones, the cheaper on a tie: {text[-400:]}")
         check("Files:" in text and "flows.json" in text, "F-9: the report declares the data source (claims_check)")
         r = run("report", str(mf), "--key", str(out / "key.json"), "--out", str(t / "bez.md"), cwd=t)

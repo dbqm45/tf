@@ -393,7 +393,7 @@ def detect(root: Path) -> dict:
     findings += dx_findings
 
     high = [f for f in findings if f[1] == "high"]
-    no_runner = any("no test runner" in f[2] or "runnera testów" in f[2] for f in findings)   # pl: sprzed 14.x
+    no_runner = any("no test runner" in f[2] for f in findings)
     verdict = "critical" if (no_runner or len(high) >= 3) else ("needs-attention" if findings and any(
         f[1] in ("high", "medium") for f in findings) else "healthy")
     findings.sort(key=lambda f: SEV_ORDER[f[1]])

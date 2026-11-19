@@ -21,19 +21,19 @@ CODE = {
 RULES = """# Reguły z kart modułów
 Złożone skryptem z `modules/*.json`; reguły przekrojowe i mapowania dopisuje synteza poniżej.
 
-## billing (szczegóły: modules/billing.md)
-- Faktura bez pozycji jest odrzucana. `src/billing/invoice.py:3-4` "raise ValueError" (pewność: test)
-- Kwota faktury to suma pozycji. `src/billing/invoice.py:5` (pewność: kod)
+## billing (details: modules/billing.md)
+- Faktura bez pozycji jest odrzucana. `src/billing/invoice.py:3-4` "raise ValueError" (confidence: test)
+- Kwota faktury to suma pozycji. `src/billing/invoice.py:5` (confidence: kod)
 
 ## Reguły przekrojowe
-- Stawka VAT jest stała [założenie: nie znaleziono konfiguracji]
+- Stawka VAT jest stała [assumption: nie znaleziono konfiguracji]
 """
 REQUIREMENTS = """# Wymagania odtworzone z kodu
 
 ## Faktury
-- System odrzuca fakturę bez pozycji — `tests/test_invoice.py:1` (pewność: test)
-- Korekta faktury zmniejsza należność — `src/billing/model.py:1`, `src/billing/invoice.py:5` (pewność: do potwierdzenia)
-- Faktura ma numer nadawany przez system księgowy [pytanie] — skąd numeracja?
+- System odrzuca fakturę bez pozycji — `tests/test_invoice.py:1` (confidence: test)
+- Korekta faktury zmniejsza należność — `src/billing/model.py:1`, `src/billing/invoice.py:5` (confidence: do potwierdzenia)
+- Faktura ma numer nadawany przez system księgowy [question] — skąd numeracja?
 """
 DOMAIN = """# Domena
 
@@ -92,12 +92,12 @@ def main() -> int:
         cross = rules[2] if len(rules) > 2 else {}
         check(cross.get("section") == "Reguły przekrojowe" and cross.get("module") is None
               and cross.get("status") == "assumption" and cross.get("evidence") == [],
-              f"E-4: a cross-cutting rule without evidence with the [założenie] marker: {cross}")
+              f"E-4: a cross-cutting rule without evidence with the [assumption] marker: {cross}")
         two = reqs[1] if len(reqs) > 1 else {}
         check(two.get("text") == "Korekta faktury zmniejsza należność" and len(two.get("evidence", [])) == 2
               and two.get("confidence") == "do potwierdzenia" and two.get("section") == "Faktury",
               f"E-5: a requirement with two pieces of evidence and confidence: {two}")
-        check((reqs[2] if len(reqs) > 2 else {}).get("status") == "question", f"E-6: [pytanie] → status question: {reqs[-1:]}")
+        check((reqs[2] if len(reqs) > 2 else {}).get("status") == "question", f"E-6: [question] → status question: {reqs[-1:]}")
         rows = [d for d in dom if d.get("cells")]
         check(len(rows) == 2 and rows[0]["cells"].get("Termin") == "korekta" and rows[0]["cells"].get("Nazwa w kodzie") == "CreditNote"
               and rows[0]["evidence"][0]["verified"] is True,

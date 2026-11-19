@@ -75,7 +75,7 @@ def main() -> int:
         check(r.returncode == 0 and rv.get("verdict") == "pass" and rv.get("at") and rv.get("note") == "bez ustaleń krytycznych",
               f"PN-2: the reviewer's verdict recorded in task.json (verdict, time, note): {r.stdout} {rv}")
         r = call(p, TASK, "stage", "IMP-1", "pr")
-        check(r.returncode != 0 and "spec-reviewer" in r.stdout and "security-reviewer" not in r.stdout.split("brakuje", 1)[-1],
+        check(r.returncode != 0 and "spec-reviewer" in r.stdout and "security-reviewer" not in r.stdout.split("missing:", 1)[-1],
               f"PN-3: one verdict is not enough — the refusal names only the missing reviewer: {r.stdout}")
         call(p, TASK, "review", "IMP-1", "spec-reviewer", "fail", "--note", "AC-1 bez testu kwoty 45 zł")
         r = call(p, TASK, "stage", "IMP-1", "pr")

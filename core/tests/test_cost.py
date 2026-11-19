@@ -79,7 +79,7 @@ def main() -> int:
               "prompt_cache": {"hit_ratio": 0.91, "warm": False, "requests": 5},
               "cost": {"total_cost_usd": 0.4234}, "rate_limits": {"five_hour": {"used_percentage": 85}}}
     out = run([str(HOOKS / "statusline.py")], stdin=json.dumps(sample)).stdout
-    if not all(x in out for x in ("Opus · high", "⚠ kontekst 60% 120k", "cache 91% zimny", "$0.42", "⚠ 5h 85%")):
+    if not all(x in out for x in ("Opus · high", "⚠ context 60% 120k", "cache 91% cold", "$0.42", "⚠ 5h 85%")):
         fails.append(f"statusline: {out!r}")
     total += 1
     r = run([str(HOOKS / "statusline.py")], stdin="not json")

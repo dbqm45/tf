@@ -8,9 +8,9 @@ Change log conforming to the pdi 0.3.0 contract (contract/change.schema.json; fr
       creates docs/project/changes/CHG-12/ with intent.md, plan.md, decisions.md and release.yaml (templates next to the script)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py check [--change CHG-n]
       checks artifact headers and decision entries in docs/project/changes/*/, and release.yaml — against the contract schema
-      and for consistency: mvp.release among the lines, TSK in a single line and matching plan.md (tasks, the Wydanie and Flaga columns),
+      and for consistency: mvp.release among the lines, TSK in a single line and matching plan.md (tasks, the Release and Flag columns),
       flag with stages (rollout) and a removal date (remove_by), flag TSKs in the lines; in plan.md the cut-plan self-check
-      (a foundation whose „Odblokowuje” points to a TSK of this change, a cut with a requirement ID or verification — like REL-008)
+      (a foundation whose „Unblocks” points to a TSK of this change, a cut with a requirement ID or verification — like REL-008)
       a factory task folder (with `task.json`, without `intent.md`, e.g. cut task CHG-12-TSK-57) is skipped — its
       files are not change artifacts
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision add CHG-12 --statement "…" --why "…" \
@@ -28,7 +28,7 @@ Change log conforming to the pdi 0.3.0 contract (contract/change.schema.json; fr
       --id DEC-41 [--by pdi] [--date YYYY-MM-DD] [--why "…"] [--answers FILE]
       a decision from the pdi inbox (gate.decided, inputs of the sdlc-phase.yml template) as an entry with a number and sent: yes;
       a repeat with the same number appends nothing; --answers: JSON [{question, answer}] — the human's answers to
-      questions from `## Gate questions` (formerly `## Pytania do bramki`; pdi contract 0.12.0, field answers), in the entry as `question`/`answer` pairs
+      questions from `## Gate questions` (pdi contract 0.12.0, field answers), in the entry as `question`/`answer` pairs
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision import CHG-12 --json FILE
       decisions of the change from the pdi register (links.chg; JSON list {id, statement, why, decided_at, decided_by, kind,
       source_kind, drafted_by, answers?}) as entries with a number, sent: yes and origin: pdi; a decision whose number
@@ -519,20 +519,16 @@ def validate(v, s: dict, at: str) -> list[str]:
     return errs
 
 
-PLAN_COLUMNS = ("wydanie", "flaga", "rodzaj", "wartość", "wymagania", "odblokowuje", "weryfikacja")   # pdi contract
-# English column headers (template since 4c-x, like ci_for_sdlc connectors/repo.ts) → internal keys.
-# pl: sprzed 14.x — polskie nagłówki zostają przyjmowane.
-COLUMN_ALIASES = {"kind": "rodzaj", "release": "wydanie", "flag": "flaga", "flags": "flaga", "value": "wartość",
-                  "requirements": "wymagania", "requirement": "wymagania", "unblocks": "odblokowuje",
-                  "verification": "weryfikacja"}
+PLAN_COLUMNS = ("release", "flag", "kind", "value", "requirements", "unblocks", "verification")   # pdi contract
+# Column headers (the template, like ci_for_sdlc connectors/repo.ts) → the keys above.
+COLUMN_ALIASES = {"flags": "flag", "requirement": "requirements"}
 FOUNDATION = re.compile(r"^(fundament|foundation|f|f-\d+)$", re.I)   # jak REL-008 w ci_for_sdlc (connectors/repo.ts)
 FOUNDATION_VALUE = re.compile(r"^\((fundament|foundation)\)", re.I)
 REQUIREMENT_ID = re.compile(r"\b[A-Z][A-Z0-9]*-\d+\b")
 # Architect sections in plan.md (N20 and Z7b-1a; pdi contract 0.12.0 — a human reads plan.md, a machine reads release.yaml).
-# pl: sprzed 14.x — „Rozważone opcje”, „Opcja”, „Cele zmiany”.
-OPTIONS_HEADING = re.compile(r"^##+\s+(?:Options considered|Rozwa[zż]one opcje)\b", re.M | re.I)
-OPTION_ENTRY = re.compile(r"^###+\s+(?:Option|Opcja)\b", re.M)
-TARGETS_HEADING = re.compile(r"^##+\s+(?:Change targets|Cele zmiany)\b", re.M | re.I)
+OPTIONS_HEADING = re.compile(r"^##+\s+Options considered\b", re.M | re.I)
+OPTION_ENTRY = re.compile(r"^###+\s+Option\b", re.M)
+TARGETS_HEADING = re.compile(r"^##+\s+Change targets\b", re.M | re.I)
 
 
 def plan_columns(text: str) -> dict:
@@ -544,7 +540,7 @@ def plan_columns(text: str) -> dict:
             continue
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
         low = [COLUMN_ALIASES.get(c.lower(), c.lower()) for c in cells]
-        if "wydanie" in low or "flaga" in low or "odblokowuje" in low:
+        if "release" in low or "flag" in low or "unblocks" in low:
             cols = {k: low.index(k) for k in PLAN_COLUMNS if k in low}
             continue
         if cols and cells and KEY.match(cells[0]):
@@ -555,10 +551,10 @@ def plan_columns(text: str) -> dict:
 
 def check_plan(d: Path) -> list[str]:
     """Cut-plan self-check (core-delivery-lifecycle cut-plan.md), the same as REL-008 in ci_for_sdlc: a foundation
-    with „Odblokowuje” pointing to the cuts of this change; a cut with a requirement ID or verification (when the plan has „Wymagania”).
+    with „Unblocks” pointing to the cuts of this change; a cut with a requirement ID or verification (when the plan has „Requirements”).
 
     From contract 0.12.0 (Z7b-1a, DZ6, DZ7, N20) a plan with a status other than `draft` must also have a section
-    `## Rozważone opcje` with at least two options (`### Opcja ...`) and a `## Cele zmiany` section (`targets`).
+    `## Options considered` with at least two options (`### Option ...`) and a `## Change targets` section (`targets`).
     A `draft` plan is an architect's sketch — not yet approved at B3, so we do not require these sections.
     """
     plan = d / "plan.md"
@@ -570,20 +566,20 @@ def check_plan(d: Path) -> list[str]:
     known = set(rows) | set(h["tasks"] if isinstance(h.get("tasks"), list) else [h["tasks"]] if h.get("tasks") else [])
     errs = []
     for t, row in rows.items():
-        if FOUNDATION.match(row.get("rodzaj") or "") or FOUNDATION_VALUE.match(row.get("wartość") or ""):
-            unblocks = REQUIREMENT_ID.findall(row.get("odblokowuje") or "")
+        if FOUNDATION.match(row.get("kind") or "") or FOUNDATION_VALUE.match(row.get("value") or ""):
+            unblocks = REQUIREMENT_ID.findall(row.get("unblocks") or "")
             if not unblocks:
-                errs.append(f"plan.md: {t} — foundation without „Unblocks” (Odblokowuje: the cuts of this change it unblocks); "
+                errs.append(f"plan.md: {t} — foundation without „Unblocks” (the cuts of this change it unblocks); "
                             "without it this is layered work: remove it or merge it into the first cut that needs it")
             for u in unblocks:
                 if u not in known:
-                    errs.append(f"plan.md: {t} — „Unblocks” (Odblokowuje) lists {u}, but {u} is not a cut of this change")
-        elif "wymagania" in row and not REQUIREMENT_ID.findall(row["wymagania"] or "") and not row.get("weryfikacja"):
-            errs.append(f"plan.md: {t} — cut without a requirement ID in „Requirements” (Wymagania) and without verification")
+                    errs.append(f"plan.md: {t} — „Unblocks” lists {u}, but {u} is not a cut of this change")
+        elif "requirements" in row and not REQUIREMENT_ID.findall(row["requirements"] or "") and not row.get("verification"):
+            errs.append(f"plan.md: {t} — cut without a requirement ID in „Requirements” and without verification")
     status = (h.get("status") or "").strip().lower() if isinstance(h.get("status"), str) else ""
     if status and status != "draft":
         if not OPTIONS_HEADING.search(text):
-            errs.append("plan.md: no „## Options considered” (Rozważone opcje) section (N20): the architect lists at least two options "
+            errs.append("plan.md: no „## Options considered” section (N20): the architect lists at least two options "
                         "considered, with pros, cons and cost, plus the choice and the reason")
         else:
             options = OPTION_ENTRY.findall(text)
@@ -591,7 +587,7 @@ def check_plan(d: Path) -> list[str]:
                 errs.append(f"plan.md: „## Options considered” has {len(options)} options — N20 needs at least two "
                             "(headings `### Option A`, `### Option B`); a plan with one option gets a finding before B3")
         if not TARGETS_HEADING.search(text):
-            errs.append("plan.md: no „## Change targets (targets)” (Cele zmiany) section (Z7b-1a, DZ7): the architect records "
+            errs.append("plan.md: no „## Change targets (targets)” section (Z7b-1a, DZ7): the architect records "
                         "coverage and mutation targets for the changed code (N4), and eval thresholds for an AI product")
     return errs
 
@@ -644,11 +640,11 @@ def check_release(d: Path) -> list[str]:
                 x for x in (f"only in release.yaml: {', '.join(only_rel)}" if only_rel else "",
                             f"only in plan.md: {', '.join(only_plan)}" if only_plan else "") if x))
         for t, row in plan_columns(text).items():
-            if "wydanie" in row and row["wydanie"] != line_of.get(t):
-                errs.append(f"plan.md: {t} — column „Release” (Wydanie) is {row['wydanie'] or 'empty'}, in release.yaml "
+            if "release" in row and row["release"] != line_of.get(t):
+                errs.append(f"plan.md: {t} — column „Release” is {row['release'] or 'empty'}, in release.yaml "
                             f"{line_of.get(t) or 'no line'}")
-            if "flaga" in row and row["flaga"] != flag_of.get(t):
-                errs.append(f"plan.md: {t} — column „Flag” (Flaga) is {row['flaga'] or 'empty'}, in release.yaml "
+            if "flag" in row and row["flag"] != flag_of.get(t):
+                errs.append(f"plan.md: {t} — column „Flag” is {row['flag'] or 'empty'}, in release.yaml "
                             f"{flag_of.get(t) or 'no flag'}")
     return errs
 

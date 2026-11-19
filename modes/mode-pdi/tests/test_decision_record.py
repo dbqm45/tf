@@ -40,7 +40,7 @@ flags:
       - { stage: "10%", min_days: 7, exit: "odzyskane >= 15%, duplikaty = 0" }
       - { stage: "100%" }
 """
-PLAN_ROWS = """| Cięcie | Wydanie | Flaga | Wartość | Pliki | Weryfikacja |
+PLAN_ROWS = """| Slice | Release | Flag | Value | Files | Verification |
 |---|---|---|---|---|---|
 | TSK-57 | R1 | payment-retry | ponowienie płatności | | |
 | TSK-58 | R1 | payment-retry | brak podwójnego obciążenia | | |
@@ -169,12 +169,12 @@ def main() -> int:
             r = run(["check"], tmp)
             check(r.returncode != 0, f"D-13 check detects: {label} ({r.stdout.strip()[:200]})")
     with tempfile.TemporaryDirectory() as tmp:
-        # A plan in a status other than draft (Z7b-1a, DZ6, DZ7, N20) must have the "Rozważone opcje" (Options considered) and "Cele zmiany" (Change targets) sections.
+        # A plan in a status other than draft (Z7b-1a, DZ6, DZ7, N20) must have the "Options considered" and "Change targets" sections.
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-1" / "plan.md",
               "artifact: plan\nphase: plan\nstatus: accepted\nversion: 2\nauthor: x\ncreated: 2026-10-23\n"
               "updated: 2026-10-24\ninputs: [docs/project/changes/CHG-1/intent.md]\nchange: CHG-1\nsource: PRB-3\n"
               "tasks: [TSK-57, TSK-58]",
-              "## Rozważone opcje\n\n### Opcja A\n\n### Opcja B\n\n## Cele zmiany (targets)\n\n")
+              "## Options considered\n\n### Option A\n\n### Option B\n\n## Change targets (targets)\n\n")
         r = run(["check"], tmp)
         check(r.returncode == 0, f"D-14: a valid plan (contract example) passes: {r.stdout}{r.stderr}")
         r = run(["check"], Path(tmp) / "docs")
@@ -257,7 +257,7 @@ def main() -> int:
         dec = repo / "docs" / "project" / "changes" / "CHG-12" / "decisions.md"
         add = ["decision", "add", "CHG-12"]
         plan = repo / "docs" / "project" / "changes" / "CHG-12" / "plan.md"
-        plan.write_text(plan.read_text(encoding="utf-8").rstrip("\n") + "\n\n| Cięcie | Wartość |\n|---|---|\n| TSK-57 | ponowienie płatności |\n",
+        plan.write_text(plan.read_text(encoding="utf-8").rstrip("\n") + "\n\n| Slice | Value |\n|---|---|\n| TSK-57 | ponowienie płatności |\n",
                         encoding="utf-8")
         fadd = add[:3] + ["--statement", "Błędy płatności pokazują kontakt do wsparcia.", "--why", "Ustalone ze wsparciem.",
                           "--kind", "product", "--by", "Ann", "--drafted-by", "human"]
@@ -330,14 +330,14 @@ def main() -> int:
         check(r.returncode != 0 and needle in r.stdout and "release.yaml" in r.stdout,
               f"R-5 check wykrywa: {label} ({r.stdout.strip()[:300]})")
     r = release_case(RELEASE_OK, rows=PLAN_ROWS.replace("| TSK-59 | R2 |", "| TSK-59 | R1 |"))
-    check(r.returncode != 0 and "TSK-59" in r.stdout and "Wydanie" in r.stdout,
-          f"R-6: kolumna „Wydanie” w plan.md niezgodna z release.yaml: {r.stdout}")
+    check(r.returncode != 0 and "TSK-59" in r.stdout and "Release" in r.stdout,
+          f"R-6: kolumna „Release” w plan.md niezgodna z release.yaml: {r.stdout}")
     r = release_case(RELEASE_OK, rows=PLAN_ROWS.replace("| TSK-58 | R1 | payment-retry |", "| TSK-58 | R1 | — |"))
-    check(r.returncode != 0 and "TSK-58" in r.stdout and "Flaga" in r.stdout,
-          f"R-7: kolumna „Flaga” w plan.md niezgodna z release.yaml: {r.stdout}")
-    # Self-check of the cut plan (core-delivery-lifecycle cut-plan.md) = REL-008 in ci_for_sdlc: a foundation with "Odblokowuje" (Unblocks),
-    # a cut with a requirement or verification. Columns as in the template: Rodzaj (Kind), Wymagania (Requirements), Odblokowuje (Unblocks).
-    plan_head = ("| Cięcie | Rodzaj | Wydanie | Flaga | Wartość | Wymagania | Odblokowuje | Pliki | Weryfikacja |\n|"
+    check(r.returncode != 0 and "TSK-58" in r.stdout and "Flag" in r.stdout,
+          f"R-7: kolumna „Flag” w plan.md niezgodna z release.yaml: {r.stdout}")
+    # Self-check of the cut plan (core-delivery-lifecycle cut-plan.md) = REL-008 in ci_for_sdlc: a foundation with "Unblocks",
+    # a cut with a requirement or verification. Columns as in the template: Kind, Requirements, Unblocks.
+    plan_head = ("| Slice | Kind | Release | Flag | Value | Requirements | Unblocks | Files | Verification |\n|"
                  + "---|" * 9 + "\n")
     rows_ok = plan_head + (
         "| TSK-57 | fundament | R1 | payment-retry | (fundament) klucz idempotencji jest gotowy | | TSK-58 | | test klucza |\n"
@@ -345,23 +345,23 @@ def main() -> int:
         "| TSK-59 | cięcie | R2 | — | użytkownik widzi historię prób | US-03 | — | | |\n"
         "| TSK-60 | cięcie | R2 | | użytkownik dostaje powiadomienie | | — | | test powiadomienia |\n")
     r = release_case(RELEASE_OK, rows=rows_ok)
-    check(r.returncode == 0, f"P-1: a plan with the Rodzaj, Wymagania, Odblokowuje columns and a correct self-check passes: {r.stdout}")
+    check(r.returncode == 0, f"P-1: a plan with the Kind, Requirements, Unblocks columns and a correct self-check passes: {r.stdout}")
     bad_plan = {
-        "foundation without Odblokowuje": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
-                                      "TSK-57", "Odblokowuje"),
-        "Odblokowuje outside the plan": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | TSK-99 | | test klucza |"),
-                                    "TSK-99", "Odblokowuje"),
+        "foundation without Unblocks": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
+                                      "TSK-57", "Unblocks"),
+        "Unblocks outside the plan": (rows_ok.replace("| | TSK-58 | | test klucza |", "| | TSK-99 | | test klucza |"),
+                                    "TSK-99", "Unblocks"),
         "foundation recognized by outcome": (rows_ok.replace("| TSK-57 | fundament |", "| TSK-57 | |")
                                         .replace("| | TSK-58 | | test klucza |", "| | | | test klucza |"),
-                                        "TSK-57", "Odblokowuje"),
-        "cut without a requirement and verification": (rows_ok.replace("| US-03 | — | | |", "| | — | | |"), "TSK-59", "Wymagania"),
-        "foundation only in the Rodzaj column": (rows_ok.replace("(fundament) klucz idempotencji", "klucz idempotencji")
+                                        "TSK-57", "Unblocks"),
+        "cut without a requirement and verification": (rows_ok.replace("| US-03 | — | | |", "| | — | | |"), "TSK-59", "Requirements"),
+        "foundation only in the Kind column": (rows_ok.replace("(fundament) klucz idempotencji", "klucz idempotencji")
                                                .replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
-                                               "TSK-57", "Odblokowuje"),
-        "foundation in the Kind column": (rows_ok.replace("| Cięcie | Rodzaj |", "| Cięcie | Kind |")
+                                               "TSK-57", "Unblocks"),
+        "foundation in the KIND column (case-insensitive header)": (rows_ok.replace("| Slice | Kind |", "| Slice | KIND |")
                                        .replace("(fundament) klucz idempotencji", "klucz idempotencji")
                                        .replace("| | TSK-58 | | test klucza |", "| | — | | test klucza |"),
-                                       "TSK-57", "Odblokowuje"),
+                                       "TSK-57", "Unblocks"),
     }
     for label, (rows, who, needle) in bad_plan.items():
         r = release_case(RELEASE_OK, rows=rows)
@@ -373,7 +373,7 @@ def main() -> int:
               "change: CHG-2\ntasks: [TSK-1, TSK-2]", "# Plan\n\n" + plan_head
               + "| TSK-1 | fundament | R1 | — | (fundament) schemat | | | | |\n| TSK-2 | cięcie | R1 | — | x | US-1 | | | |\n")
         r = run(["check"], tmp)
-        check(r.returncode != 0 and "TSK-1" in r.stdout and "Odblokowuje" in r.stdout,
+        check(r.returncode != 0 and "TSK-1" in r.stdout and "Unblocks" in r.stdout,
               f"P-3: the plan self-check also works without release.yaml: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         run(["change", "new", "CHG-3"], tmp)
@@ -390,14 +390,14 @@ def main() -> int:
         r = run(["check"], tmp)
         check(r.returncode == 0, f"R-8: zmiana sprzed G1.1 (bez release.yaml) nadal przechodzi: {r.stdout}")
 
-    # Z7b-1a (DZ6, DZ7, N20): a non-draft plan needs the "Rozważone opcje" (Options considered, ≥2) and "Cele zmiany" (Change targets) sections.
+    # Z7b-1a (DZ6, DZ7, N20): a non-draft plan needs the "Options considered" (≥2) and "Change targets" sections.
     head_accepted = ("artifact: plan\nphase: plan\nstatus: accepted\nversion: 1\ncreated: 2026-10-23\n"
                      "updated: 2026-10-23\nchange: CHG-5\ntasks: [TSK-1]")
     head_draft = ("artifact: plan\nphase: plan\nstatus: draft\nversion: 1\ncreated: 2026-10-23\n"
                   "updated: 2026-10-23\nchange: CHG-5\ntasks: [TSK-1]")
-    body_two = "## Rozważone opcje\n\n### Opcja A\nPlusy.\n### Opcja B\nPlusy.\n\n## Cele zmiany (targets)\n\n"
-    body_one = "## Rozważone opcje\n\n### Opcja A\nPlusy.\n\n## Cele zmiany (targets)\n\n"
-    body_no_targets = "## Rozważone opcje\n\n### Opcja A\nPlusy.\n### Opcja B\nPlusy.\n\n"
+    body_two = "## Options considered\n\n### Option A\nPlusy.\n### Option B\nPlusy.\n\n## Change targets (targets)\n\n"
+    body_one = "## Options considered\n\n### Option A\nPlusy.\n\n## Change targets (targets)\n\n"
+    body_no_targets = "## Options considered\n\n### Option A\nPlusy.\n### Option B\nPlusy.\n\n"
     with tempfile.TemporaryDirectory() as tmp:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted, body_two)
         r = run(["check"], tmp)
@@ -409,15 +409,15 @@ def main() -> int:
               f"Z-2: a plan with one option gets a finding: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted,
-              "## Cele zmiany (targets)\n\n")
+              "## Change targets (targets)\n\n")
         r = run(["check"], tmp)
-        check(r.returncode != 0 and "Rozważone opcje" in r.stdout,
-              f"Z-3: a plan without the Rozważone opcje section gets a finding: {r.stdout}")
+        check(r.returncode != 0 and "Options considered" in r.stdout,
+              f"Z-3: a plan without the Options considered section gets a finding: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_accepted, body_no_targets)
         r = run(["check"], tmp)
-        check(r.returncode != 0 and "Cele zmiany" in r.stdout,
-              f"Z-4: plan bez sekcji „Cele zmiany” dostaje ustalenie: {r.stdout}")
+        check(r.returncode != 0 and "Change targets" in r.stdout,
+              f"Z-4: plan bez sekcji „Change targets” dostaje ustalenie: {r.stdout}")
     with tempfile.TemporaryDirectory() as tmp:
         # A draft (`draft`) need not have the new sections — the architect adds them before the status moves on.
         write(Path(tmp) / "docs" / "project" / "changes" / "CHG-5" / "plan.md", head_draft, "")

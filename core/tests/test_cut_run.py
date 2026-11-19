@@ -28,7 +28,7 @@ tasks: [TSK-57, TSK-58, TSK-59]
 ---
 # Plan zmiany CHG-12
 
-| Cięcie | Wydanie | Flaga | Wartość | Pliki | Weryfikacja |
+| Slice | Release | Flag | Value | Files | Verification |
 |---|---|---|---|---|---|
 | TSK-57 | R1 | payment-retry | klient ponawia nieudaną płatność | src/retry.py | `pytest -k retry` |
 | TSK-58 | R1 | payment-retry | brak podwójnego obciążenia | src/charge.py | `pytest -k charge` |

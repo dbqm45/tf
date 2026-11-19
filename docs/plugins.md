@@ -4,12 +4,10 @@ Status: 2026-10-21. Facts about plugins come from the code.claude.com documentat
 `/en/plugins/*`, `/en/sub-agents`, `/en/skills`, `/en/hooks`, `/en/plugin-evals`). What the documentation does not say
 I mark [unverified]. This document supports a human decision; there is no code yet.
 
-**Human decision (2026-10-21): we are not building a plugin export.** Talos stays the `mode-talos` mode, installed by
-`tf` as before. The analysis stays as the rationale for the decision.
+**Human decision (2026-10-21): we are not building a plugin export.** The factory is installed by `tf` as before. The
+analysis stays as the rationale for the decision.
 
 ## Conclusion
-- **The `mode-talos` mode: yes, as an export.** It fits the plugin model with almost no loss. Two small changes in the
-  mode itself are needed, useful even without a plugin.
 - **Overlays: not as a whole, for now.** Personas and roles are built in the project from the core and all overlays at
   once (`build.py`). A plugin is static files, so that assembly would fall apart. What is feasible is exporting just an
   overlay's skills (a "skill library"), with the limitations described below.
@@ -22,7 +20,7 @@ I mark [unverified]. This document supports a human decision; there is no code y
 |---|---|---|
 | Components | `skills/`, `agents/`, `hooks/hooks.json`, `.mcp.json`, `bin/` (on the Bash `PATH`), `settings.json`, `output-styles/`, `workflows/`, manifest `.claude-plugin/plugin.json` (only `name` is required) | `/en/plugins/manifest-reference` |
 | Agents | ignored fields: `permissionMode`, `hooks`, `mcpServers`, `initialPrompt`; these work, among others: `model`, `effort`, `maxTurns`, `tools`, `disallowedTools`, `skills`, `omitClaudeMd`, `isolation` | `/en/plugins/components#agents` |
-| Main session agent | `claude --agent talos` finds the agent from the plugin by name alone (`<plugin>:talos` on a collision); the plugin's `settings.json` can set `agent` | `/en/sub-agents`, `/en/plugins/components#default-settings` |
+| Main session agent | `claude --agent <name>` finds the agent from the plugin by name alone (`<plugin>:<name>` on a collision); the plugin's `settings.json` can set `agent` | `/en/sub-agents`, `/en/plugins/components#default-settings` |
 | Settings | only `agent` and `subagentStatusLine` work, the rest (including `permissions`) is rejected | `/en/plugins/components#default-settings` |
 | Permission for a script | a skill can approve its own script: `allowed-tools: Bash(${CLAUDE_SKILL_DIR}/scripts/… *)` | `/en/skills` |
 | `CLAUDE.md` | `CLAUDE.md` in a plugin is not loaded; instructions only through a skill | `/en/plugins/manifest-reference` |
@@ -35,18 +33,6 @@ I mark [unverified]. This document supports a human decision; there is no code y
 | Validation | `claude plugin validate <directory> --strict` (no model); `claude plugin eval`: paid model calls | `/en/plugins/cli-reference`, `/en/plugin-evals` |
 
 ## What we lose, element by element
-### `mode-talos`
-| Mode element | In a plugin | Change |
-|---|---|---|
-| agent `talos` (`main_only`, `Agent(…)` list) | works: `claude --agent talos` | none |
-| skill `talos-story-run` (`disable-model-invocation`) | works: `/talos-story-run` | none |
-| path `.claude/skills/talos-story-run/scripts/run_report.py` | different path in a plugin | the skill and agent point to the script through `${CLAUDE_SKILL_DIR}/scripts/run_report.py`; the agent reads the skill; the path in the agent is substituted by the export |
-| permission from the mode's `settings.json` | rejected | `allowed-tools` in the skill; with `claude --agent talos` the skill is not invoked, so a consent prompt would appear the first time [unverified: whether `allowed-tools` works when the skill is read with the Read tool; probably not] |
-| prices from `factory/config.yaml` | the file does not exist without the factory | `run_report.py` with a fallback price list next to the script |
-| `tmp/talos/runs/` ignored by the core | without the core nobody ignores it | `run_report.py start` creates `tmp/talos/runs/.gitignore` with `*`, which works everywhere (since 5.58.5; older clones may have `.claude/runs/.gitignore`) |
-| executors `scout`, `scope-reviewer`, `quick-fixer`, `architect`, `security-reviewer`, `researcher` | these are core agents | variant A: the plugin requires an installed factory; variant B: the plugin contains copies of these agents (then names `<plugin>:scout` etc.) [unverified: whether `Agent(…)` accepts names from the plugin namespace] |
-| core hooks (TDD, path protection) | without the factory they are absent | without the factory Talos loses the hook's TDD guard; the TDD from the skill content remains |
-
 ### Overlays (`pack-*`)
 - **Personas and roles:** in a project they are built from the roles, facets, working agreement, report contract,
   consultant table and routing of all installed overlays, in the project's working language. A plugin could carry only
@@ -56,7 +42,7 @@ I mark [unverified]. This document supports a human decision; there is no code y
   - `skill_hint` hook suggestions;
   - the quality gate and the versioned registry;
   - references to skills of other overlays, checked today by `workspace.py refs`.
-- **Context cost:** the description of every skill from a plugin is in context on every turn, and `pack-it` has 124
+- **Context cost:** the description of every skill from a plugin is in context on every turn, and `pack-it` has 142
   skills. The factory limits this with visibility by stack; a plugin does not.
 
 ### The core
@@ -69,18 +55,12 @@ I mark [unverified]. This document supports a human decision; there is no code y
 1. **Public repository.** A marketplace is a `.claude-plugin/marketplace.json` file with plugin names and descriptions.
    In a public repo `tf` reveals what the project is, much like the README, which you do not want for now. Options: a
    separate private repo for the marketplace, or a local-only export (`--plugin-dir`), with no publication.
-2. **Talos with the factory or standalone** (variant A or B above). A is simpler and has no agent copies; B gives Talos
-   to everyone but duplicates 6 core agents.
-3. **Plugin name:** e.g. `tf-talos` (it cannot start with `claude-`).
-4. **Cloud sessions do not load plugins from repository settings**: installing `tf` is still needed there.
+2. **Plugin name:** e.g. `tf-skills` (it cannot start with `claude-`).
+3. **Cloud sessions do not load plugins from repository settings**: installing `tf` is still needed there.
 
 ## Proposed steps (after the decision)
-1. **Making `mode-talos` standalone** (useful even without a plugin):
-   - a fallback price list in `run_report.py`;
-   - `tmp/talos/runs/.gitignore` created by the script;
-   - a script path relative to the skill directory.
-2. **`tools/plugin_export.py --mode mode-talos`:** builds `dist/plugins/<id>/` (manifest, agent, skill), checks the
-   export with `claude plugin validate --strict` and adds a test to CI. The `claude plugin eval` evaluations are paid,
-   so only with consent.
-3. **Publication** according to the decision on risk 1.
-4. **Later, separately:** exporting just an overlay's skills, with a warning about context cost for large overlays.
+1. **`tools/plugin_export.py`:** builds `dist/plugins/<id>/` (manifest, skills) from an overlay, checks the export with
+   `claude plugin validate --strict` and adds a test to CI. The `claude plugin eval` evaluations are paid, so only with
+   consent.
+2. **Publication** according to the decision on risk 1.
+3. **Exporting just an overlay's skills** comes with a warning about context cost for large overlays.

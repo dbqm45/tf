@@ -95,7 +95,7 @@ def main() -> int:
 
         phase = SCRIPT.parent / "phase_run.py"
         (d / "design.md").write_text((FIX / "design.md").read_text(encoding="utf-8")
-                                     + "\n## Pytania do bramki\n- Czy błąd częściowy ma osobny ekran?\n", encoding="utf-8")
+                                     + "\n## Gate questions\n- Czy błąd częściowy ma osobny ekran?\n", encoding="utf-8")
         r = run(["gate", "request", "--change", "CHG-12", "--phase", "design", "--dry-run"], repo, script=phase)
         try:
             ev = json.loads(r.stdout).get("would_send", {})

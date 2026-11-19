@@ -39,7 +39,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SOON_DAYS = 30
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 REVIEW_RE = re.compile(r"^  review:[ \t]*(.*?)[ \t]*$", re.M)
-UNVERIFIED = ("[unverified", "[niezweryfikowane")   # pl: sprzed 14.x
+UNVERIFIED = ("[unverified",)
 
 DEFAULT_POLICY = {
     "default_months": 12,

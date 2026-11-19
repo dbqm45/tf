@@ -5,7 +5,7 @@ in decisions.md, cuts without proof of verifiability). For N2 the second subcomm
 
   python3 .claude/skills/pdi-decisions/scripts/second_review.py artifact --change CHG-n --phase P [--dry-run]
       reads docs/project/changes/CHG-n/<artifact>, sends the reviewer prompt (rubric N17, temperature 0), parses
-      JSON against the schema, attaches a `## Przegląd drugim modelem` section to the artifact and writes the sidecar
+      JSON against the schema, attaches a `## Second-model review` section to the artifact and writes the sidecar
       docs/project/changes/CHG-n/.review/<phase>.json with the result (status, provider, model, same_vendor, cost_usd,
       input_tokens, output_tokens, findings, run_at)
   python3 .claude/skills/pdi-decisions/scripts/second_review.py comments --pr <n> --input FILE [--dry-run]
@@ -42,7 +42,6 @@ from typing import Any
 KEY = re.compile(r"^[A-Z][A-Z0-9]+-[0-9]+$")
 CHANGES = Path("docs") / "project" / "changes"
 SECTION = "## Second-model review"
-SECTION_PL = "## Przegląd drugim modelem"   # pl: sprzed 14.x — stara sekcja, zastępowana przy ponownym przeglądzie
 UNTRUSTED_OPEN = "<untrusted>"
 UNTRUSTED_CLOSE = "</untrusted>"
 UNTRUSTED_NEUTRAL = "</untrusted_>"
@@ -386,7 +385,7 @@ def _section_meta(meta: dict[str, Any]) -> str:
 
 
 def append_section(artifact: Path, findings: list[dict[str, Any]], meta: dict[str, Any]) -> None:
-    """Attaches (or replaces) the `## Przegląd drugim modelem` section — idempotently."""
+    """Attaches (or replaces) the `## Second-model review` section — idempotently."""
     lines = [f"\n\n{SECTION}"]
     if meta.get("status") != "ok":
         # A missing review must not look like a review with no findings (N1: never a quiet "passed").
@@ -404,7 +403,7 @@ def append_section(artifact: Path, findings: list[dict[str, Any]], meta: dict[st
         lines += [_section_meta(meta), "", "- no blocking findings"]
     body = artifact.read_text(encoding="utf-8")
     # remove the old section from the heading to the end of the file or to the next `## `
-    pattern = re.compile(rf"\n+(?:{re.escape(SECTION)}|{re.escape(SECTION_PL)})[\s\S]*?(?=\n## |\Z)")
+    pattern = re.compile(rf"\n+{re.escape(SECTION)}[\s\S]*?(?=\n## |\Z)")
     body = pattern.sub("", body).rstrip() + "\n"
     artifact.write_text(body + "\n".join(lines) + "\n", encoding="utf-8")
 

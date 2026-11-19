@@ -31,7 +31,7 @@ def project(tmp: Path) -> Path:
     (chg / "requirements.md").write_text(
         "---\nartifact: requirements\nchange: CHG-12\nstatus: proposed\n---\n# Wymagania\n"
         "- FR-1: użytkownik wgrywa plik CSV.\n- FR-2: system pokazuje liczbę wgranych stacji.\n\n"
-        "## Pytania do bramki\n- Limit rozmiaru pliku?\n", encoding="utf-8")
+        "## Gate questions\n- Limit rozmiaru pliku?\n", encoding="utf-8")
     return tmp
 
 

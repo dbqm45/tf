@@ -19,7 +19,7 @@ Sources (no source → an entry in „missing”, not an error):
 - .tf/logs/usage.jsonl (log_usage hook): tokens, models, skills and the „Tier: za niski/za wysoki” signal per agent,
 - .tf/logs/skill-hints.jsonl (skill_hint hook): hints vs. skills actually used in the session,
 - docs/project/journal.md: entries from the window, those with a problem signal highlighted,
-- .tf/wip/*.md and .tf/wip/archive/*.md: „Pułapki i ślepe uliczki” (pitfalls and dead ends) sections of checkpoints from the window,
+- .tf/wip/*.md and .tf/wip/archive/*.md: „Pitfalls and dead ends” sections of checkpoints from the window,
 - docs/project/lessons.md: existing rules (a repeat → a proposal for CLAUDE.md),
 - .tf/logs/hook-blocks.jsonl (protective hooks): blocks and consent prompts per hook — the agent retries a rejected action,
 - git: commits from the window, WIP commits, reverts, `fix` fixes of files changed earlier by `feat` in this window,
@@ -44,7 +44,7 @@ PROBLEM = re.compile(r"błąd|błęd|porażk|cofn|revert|nie zadziała|nie dzia�
                      r"\bpitfall|\bretr(?:y|ied)|\bfix(?:ed)? again|\bhung\b|\bhangs?\b|\bescalat|\bexceeded|"
                      r"could not", re.I)   # 14.x: the journal is written in English
 JOURNAL_ROW = re.compile(r"^\|\s*(\d{4}-\d{2}-\d{2})[^|]*\|\s*([^|]*)\|\s*([^|]*)\|\s*(.*?)\s*\|\s*$")
-TRAPS_HEADS = ("## Pitfalls and dead ends", "## Pułapki i ślepe uliczki")   # pl: sprzed 14.x
+TRAPS_HEAD = "## Pitfalls and dead ends"
 
 
 # `Rework-Cause` values from before the translation (stage 4) in older commits — counted as their equivalents.
@@ -136,7 +136,7 @@ def traps(proj: Path, since: dt.date, until: dt.date, root: Path) -> list[dict]:
         text = f.read_text(encoding="utf-8", errors="replace")
         m = re.search(r"^updated:\s*(\S+)", text, re.M) or re.search(r"^started:\s*(\S+)", text, re.M)
         d = day(m.group(1)) if m else None
-        head = next((h for h in TRAPS_HEADS if h in text), None)
+        head = TRAPS_HEAD if TRAPS_HEAD in text else None
         if not d or not since <= d <= until or not head:
             continue
         body = text.split(head, 1)[1].split("\n## ", 1)[0]
@@ -306,8 +306,8 @@ def evidence(d: dict) -> list[dict]:
     return ev
 
 
-DECISIONS = ("yes", "no", "later", "tak", "nie", "później")   # pl: sprzed 14.x (tak|nie|później)
-YES, NO = ("yes", "tak"), ("no", "nie")
+DECISIONS = ("yes", "no", "later")
+YES, NO = ("yes",), ("no",)
 RETRO_DIR = Path("docs") / "project" / "archive" / "retro"
 
 

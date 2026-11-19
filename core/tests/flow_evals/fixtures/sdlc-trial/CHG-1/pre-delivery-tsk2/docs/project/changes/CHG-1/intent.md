@@ -51,7 +51,7 @@ Wyższy koszt wariantu A jest uzasadniony tym, że jako jedyny rozwiązuje probl
 - Commit hash ani wersja semantyczna w widoku strony.
 - Środowisko testowe — flaga na `test` jest opcjonalna dla dewelopera, nie jest częścią R1.
 
-## Pytania do bramki
+## Gate questions
 
 - [właściciel] Czy `config/build.json` powinien być gitignorowany i generowany wyłącznie przez skrypt
   wdrożenia (`uv run sdlc deploy`), czy dopuszczalne jest commitowanie go z datą budowania lokalnego

@@ -57,7 +57,7 @@ też to tu tym w we więc z za ze że żeby co ten tej tego temu tych tę the an
 a an be by or as at it this that from
 """.split())
 HEADING = re.compile(r"^\s*(#{1,6}|={1,6})\s+\S")
-FILE_MARK = re.compile(r"^<!-- (?:file|plik): (\S+) -->$")   # pl: sprzed 14.x (cache z „plik:”)
+FILE_MARK = re.compile(r"^<!-- file: (\S+) -->$")
 MAX_BYTES = 20_000_000
 BOT_WALL = re.compile(r"pardon our interruption|just a moment\.\.\.|attention required! \| cloudflare|verify you are human|"
                       r"made us think you were a bot|enable javascript and cookies to continue", re.I)
