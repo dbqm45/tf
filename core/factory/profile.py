@@ -7,6 +7,9 @@ Team cost profile — one switch between price and quality.
   python3 .tf/factory/profile.py quality --dry-run
   python3 .tf/factory/profile.py economy --team-only   # without changes in .claude/settings.local.json
 
+With a list of approved models (`models_approved`, see model_check.py) a profile that would use a model outside the
+list is refused (exit code 1, nothing saved).
+
 A profile (.tf/config/config.yaml → profiles) does two things:
 1. overrides the model and effort of the tiers (fast/std/deep), so after a rebuild all agents and personas get
    new models — roles still point to a tier, not a model;
@@ -73,6 +76,23 @@ def effective_tiers(cfg: dict, name: str) -> dict:
     return tiers
 
 
+def approved_violations(name: str, session: bool) -> list[str]:
+    """Models of the profile `name` outside the approved list (`models_approved`, model_check.py); empty without a list."""
+    path = Path(__file__).resolve().parent / "model_check.py"
+    if not path.is_file():
+        return []
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("tf_model_check", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.profile_violations(ROOT, name, session=session)
+    except Exception as e:  # noqa: BLE001 — a failed check does not take profile switching away
+        print(f"⚠ models_approved could not be checked ({str(e).splitlines()[0][:120] if str(e) else type(e).__name__}) — "
+              "run: python3 .tf/factory/model_check.py")
+        return []
+
+
 def show(cfg: dict) -> int:
     state = read_json(PROFILE_FILE)
     active = state.get("profile") or cfg.get("default_profile")
@@ -103,6 +123,12 @@ def main(argv: list[str]) -> int:
     if name not in profiles:
         print(f"✗ No profile „{name}”. Available: {', '.join(profiles)}")
         return 2
+    blocked = approved_violations(name, session=not tiers_only)
+    if blocked:
+        print(f"✗ Profile „{name}” uses a model outside the approved list (models_approved) — nothing was changed:")
+        for b in blocked:
+            print(f"  • {b}")
+        return 1
 
     state = read_json(PROFILE_FILE)
     prev_set: dict = state.get("settings") or {}

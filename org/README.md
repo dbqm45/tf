@@ -18,6 +18,7 @@ zmieniasz rzadko. Ten katalog nie trafia do projektów: to zestaw do przygotowan
 | `pack.yaml` → `org_defaults.config.autonomy.triage` | ścieżki, które `tf risk` zawsze oznacza do przeglądu człowieka |
 | `pack.yaml` → `org_defaults.config.work`, `default_profile`, `commit_language.new_repo` | limity `tf work`, profil kosztów, język commitów w nowym repozytorium (język rozmowy nie jest ustawieniem) |
 | `pack.yaml` → `org_defaults.config.task.allowed_modes` | tryby zadania dozwolone w firmie; styl pracy osoby (`tf style`) wybiera tylko spośród nich |
+| `pack.yaml` → `org_defaults.config.models_approved` | modele dozwolone w firmie (alias albo identyfikator, opcjonalnie `until`); zespół i projekt mogą listę tylko zawęzić. Sprawdza `model_check.py` (`tf doctor`), `profile.py` odmawia profilu spoza listy, hook `model_guard` blokuje delegację z takim modelem. Bez listy nic się nie zmienia |
 | `pack.yaml` → `org_defaults.operations.tracker` | tracker, prefiksy kluczy zgłoszeń, pole Jiry z kryteriami (bez adresu i tokenu) |
 | `analyzers/<firma>-standards/rules.yaml` | standardy sprawdzane **bez modelu** (`tf analyze`): zakazane API i importy, wymagane nagłówki, nazwy plików |
 | `semgrep.yml` | reguły semgrep w skanie każdego kawałka pętli `/tf` |
@@ -102,7 +103,8 @@ Powstaje `pack-acme-backend`, który wymaga `pack-acme`. Ma ten sam układ co na
 `team_defaults` (zamiast `org_defaults`) i prefiks skilli `backend-`. Wpisujesz tylko to, czym zespół różni się od firmy.
 - **Kolejność warstw:** silnik ← firma ← zespół ← projekt ← osoba. `tf config show` pokazuje źródło każdej wartości.
 - **Granice:** zespół, projekt i osoba tylko zaostrzają politykę autonomii firmy; dozwolone tryby zadania
-  (`task.allowed_modes`) to przecięcie warstw — nikt niżej nie przywróci trybu, który firma zabrała. Inne wartości
+  (`task.allowed_modes`) i zatwierdzone modele (`models_approved`) to przecięcie warstw — nikt niżej nie przywróci
+  trybu ani modelu, który firma zabrała. Inne wartości
   (limity `tf work`, profil kosztów, języki) zespół zmienia dla swoich projektów.
 - **Tracker:** prefiksy zgłoszeń zespołu zastępują prefiksy firmy; typ i pola przychodzą z firmy.
 - **Sprawdzenie:** `python3 tools/workspace.py check --packs pack-it,pack-acme,pack-acme-backend --pack-dir

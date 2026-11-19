@@ -51,6 +51,10 @@ block a merge.
 9. **The CI gate.** A fast subset (smoke) on every PR, the full suite nightly or on a change of the model, the prompt, the tools.
    Set the threshold against **a baseline with its spread** (repeat the baseline 3–5 times), not "by eye"; a regression = a drop outside
    the noise interval. Change the threshold only deliberately, with a record. Details: `references/ci-and-traffic.md`.
+   A ready tool (**run** it, do not rewrite it): `python3 .claude/skills/ai-evals/scripts/eval_gate.py baseline` computes
+   the spread and the threshold from 3–5 runs of the current version (the team sets `--margin`), and `check` judges
+   a candidate run: release / investigate / hold (exit code 1 blocks the merge; also on a failed regression task and on
+   cost over `--budget-usd`). It reads results as JSON Lines and runs no model.
 10. **Cost and variance.** Compute the cost of a run (cases × trials × candidates × judge) before launching it;
     a cheap model for triage, the full suite only on a change. 0% successes over many trials is usually a broken task or
     grader, not an incapable agent. Read the transcripts of failures — that is the fastest diagnosis.

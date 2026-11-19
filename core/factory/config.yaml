@@ -334,6 +334,21 @@ models_checked: "2026-11-14"
 models_current: {fable: claude-fable-5-2, opus: claude-opus-5-5, sonnet: claude-sonnet-5-5, haiku: claude-haiku-5-5}
 models_legacy: [claude-fable-5-1, claude-fable-5, claude-opus-5, claude-opus-4-8, claude-sonnet-5, claude-haiku-4-5]
 
+# Approved models (optional; empty = no restriction, as before). An organization lists the models it allows — for data,
+# region or contract reasons — in the company pack (`org_defaults.config`), the team pack or `.tf/config/config.yaml`;
+# a lower layer can only narrow the list of a higher one. A key is an alias (haiku, sonnet, opus, fable) or a full
+# identifier; the two are linked through `models_current`, so approving an identifier covers its alias only while the
+# alias points to it. `until` (YYYY-MM-DD) ends an approval; the other fields are a description for people.
+#   models_approved:
+#     source: "AI policy 2026-11"
+#     models:
+#       haiku: {provider: anthropic, regions: [eu], data: [public, internal], contract: "DPA 2026-03"}
+#       claude-sonnet-5-5: {until: "2027-06-30"}
+# With a list: `model_check.py` (also `tf doctor`) reports a tier or a session setting of the active profile outside the
+# list as an error, `profile.py` refuses such a profile, and the `model_guard` hook denies a delegation that names such
+# a model. The model of the session chosen by hand (`/model`) is outside the factory's control.
+models_approved: {}
+
 # ─────────────────────────────────────────────────────────────
 #  Skill composition
 #  Skills are independent and belong to DIMENSIONS (by name prefix). A persona combines

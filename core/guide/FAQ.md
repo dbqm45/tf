@@ -103,6 +103,7 @@ Scripts that Claude Code runs at events, independently of the model's decisions:
 - `guard_bash` — dangerous shell commands;
 - `guard_paths` — files with secrets;
 - `cleanroom_guard` — information isolation between agents;
+- `model_guard` — a delegation names only an approved model (works only with a `models_approved` list);
 - `tdd_guard` — code only after a red test;
 - `quality_gate` — with `.claude/quality-gate.json` a turn and a subagent do not finish with red tests (the test
   lock: `test_lock.py`);

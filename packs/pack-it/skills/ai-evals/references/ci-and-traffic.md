@@ -12,6 +12,37 @@ Contents: 1. The CI gate · 2. Thresholds from the spread · 3. Cost · 4. Offli
 A change of the model, the harness version, the prompt, a tool description or the schema triggers the full suite. The same model in a different
 harness gives different results, so after a swap you measure from scratch.
 
+### The ready gate: `scripts/eval_gate.py`
+The script runs no model. Your eval runner writes the results as JSON Lines, one line per trial:
+`{"id": "refund-17", "passed": true, "layer": "regression", "cost_usd": 0.012, "trial": 2}` (`id` and `passed` are
+required; `layer: regression` marks a task of the regression dataset; several lines with the same `id` are repeated trials).
+
+```bash
+# once, and after every change of the dataset: a baseline from 3–5 runs of the current version → evals/baseline.json (commit it)
+python3 .claude/skills/ai-evals/scripts/eval_gate.py baseline base1.jsonl base2.jsonl base3.jsonl --margin 0.02
+# in CI, after the candidate run
+python3 .claude/skills/ai-evals/scripts/eval_gate.py check results.jsonl --budget-usd 5 --report eval-gate.md
+```
+
+| Verdict | When | Exit code |
+|---|---|---|
+| hold | success below the threshold (the lower bound of the spread − the margin), a failed task of the regression layer, cost over the budget | 1 |
+| investigate | success below the lower bound of the spread but inside the margin; a task stable in the baseline failed; the task set differs from the baseline; a budget given but results without cost | 0 (`--strict`: 1) |
+| release | everything else | 0 |
+
+An empty or broken results file is exit code 2, not "0 failures". `--json` gives the machine result (verdict, success,
+threshold, baseline spread, pass^k, pass@k, cost, regressions, reasons), e.g. as evidence at a release gate. The margin and
+every change of it are recorded like a decision (who, why, until when). A sketch of the step in GitHub Actions (pin the
+actions to a full commit SHA — ops-ci-cd):
+
+```yaml
+      - uses: actions/checkout@<full commit SHA>
+      - run: ./scripts/run-evals.sh --suite smoke --out results.jsonl      # your runner; the model key from secrets
+      - run: python3 .claude/skills/ai-evals/scripts/eval_gate.py check results.jsonl --budget-usd 5 --report eval-gate.md
+      - if: always()
+        run: cat eval-gate.md >> "$GITHUB_STEP_SUMMARY"
+```
+
 ## 2. Thresholds from the spread
 1. Run the baseline (the current version) n = 3–5 times [practice]; record the minimum, the maximum, the mean.
 2. The absolute threshold = the lower bound of the spread minus a margin agreed with the team (not a round number "by eye").
