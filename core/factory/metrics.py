@@ -11,7 +11,8 @@ Counts from git (main line, `--first-parent`, without `chore(release)` and rever
 - changes and accepted changes — accepted = merged and not reverted within N days (`--revert-days`, default 7);
   changes younger than N days are "in progress" and do not enter the percentage;
 - revert rate — the main quality indicator;
-- rework causes from the `Rework-Cause:` trailer (spec-gap, agent-error, requirement-change, unknown; former Polish values as aliases);
+- rework causes from the `Rework-Cause:` trailer (spec-gap, agent-error, requirement-change, unknown; any other value,
+  including the pre-19.0.0 Polish ones in old commits, counts as unknown);
 - token cost from `.tf/logs/usage.jsonl` (price list `prices_usd_per_mtok`) and the cost of an accepted change — without human labor;
 - from PR history (`gh pr list`, when available): median time from PR opening to merge and the number of commits per PR.
 The number of changes by itself is not a goal — it is easy to inflate. Report: `.tf/reports/metrics.md` and `metrics.json`.
@@ -48,9 +49,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CAUSES = ("spec-gap", "agent-error", "requirement-change", "unknown")
-# Values from before the translation (stage 4) in older commits — counted as their equivalents.
-CAUSE_ALIASES = {"luka-specyfikacji": "spec-gap", "blad-agenta": "agent-error", "zmiana-wymagan": "requirement-change",
-                 "nieznana": "unknown"}
 RELEASE = re.compile(r"^chore\(release\)")
 REVERT_SUBJECT = re.compile(r'^(Revert "|revert(\([^)]*\))?!?:)')
 REVERTS_SHA = re.compile(r"This reverts commit ([0-9a-f]{7,40})")
@@ -130,8 +128,7 @@ def _window(commits: list[dict], start: datetime, end: datetime, reverts: dict, 
     causes: dict[str, int] = {}
     for c in changes:
         for v in CAUSE_RE.findall(c["body"]):
-            v = CAUSE_ALIASES.get(v.lower(), v.lower())
-            v = v if v in CAUSES else "unknown"
+            v = v.lower() if v.lower() in CAUSES else "unknown"
             causes[v] = causes.get(v, 0) + 1
     cost = None
     if usage is not None:

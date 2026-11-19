@@ -16,8 +16,8 @@ CHANGES = Path("docs") / "project" / "changes"
 LESSON = ("**Sprawdzaj limit dobowy na granicy doby** — Kontekst: opłaty za postój, fees.py · Zamiast tego: test "
           "z postojem przez północ · Dotyczy: realizacja")
 FINDING = "usunięta asercja testu limitu przy końcu doby"
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi "
-        "45 zł.\n\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi "
+        "45 zł.\n\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
 
 
 def call(project: Path, script: Path, *args: str) -> subprocess.CompletedProcess:
@@ -95,11 +95,11 @@ def main() -> int:
         # important review findings: no closing without a control
         p = Path(t) / "findings"
         new_task(p)
-        r1 = call(p, TASK, "finding", "IMP-1", "add", FINDING, "--slice", "K1")
+        r1 = call(p, TASK, "finding", "IMP-1", "add", FINDING, "--slice", "S1")
         r2 = call(p, TASK, "finding", "IMP-1", "add", "code outside the criteria in msg.py")
         fs = task(p).get("findings") or []
         check(r1.returncode == 0 and r2.returncode == 0 and [f.get("id") for f in fs] == ["F1", "F2"]
-              and fs[0].get("text") == FINDING and fs[0].get("slice") == "K1" and fs[0].get("at") and "F1" in r1.stdout,
+              and fs[0].get("text") == FINDING and fs[0].get("slice") == "S1" and fs[0].get("at") and "F1" in r1.stdout,
               f"CL-7: important findings recorded in the task with an id, slice and date: {r1.stdout} {fs}")
         r = call(p, TASK, "close", "IMP-1")
         check(r.returncode == 1 and "F1" in r.stdout and "F2" in r.stdout and "finding IMP-1 control" in r.stdout
@@ -175,12 +175,12 @@ def main() -> int:
         new_task(p)
         lessons = p / "docs" / "project" / "lessons.md"
         lessons.parent.mkdir(parents=True, exist_ok=True)
-        old = ("# Lekcje projektu\n\n## Wykonanie i weryfikacja\n\n- 2026-01-01 **Stara lekcja** — Kontekst: x · Zamiast "
+        old = ("# Lekcje projektu\n\n## Execution and verification\n\n- 2026-01-01 **Stara lekcja** — Kontekst: x · Zamiast "
                "tego: y\n\n## Powłoka i narzędzia\n\n- 2026-01-02 **Inna** — Kontekst: x · Zamiast tego: y\n")
         lessons.write_text(old, encoding="utf-8")
         call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna")
         text = lessons.read_text(encoding="utf-8")
-        check(text.count("## Wykonanie i weryfikacja") == 1 and "## Powłoka i narzędzia" in text
+        check(text.count("## Execution and verification") == 1 and "## Powłoka i narzędzia" in text
               and text.index(LESSON) < text.index("Stara lekcja") < text.index("## Powłoka") and "Inna" in text,
               f"CL-30: the lesson goes under the existing heading, above older entries; the rest of the file is unchanged: {text}")
 
@@ -228,22 +228,22 @@ def main() -> int:
         call(p, TASK, "mode", "IMP-1", "auto")
         (p / CHANGES / "IMP-1" / "spec.md").write_text(SPEC, encoding="utf-8")
         call(p, rs, "flag", d, "none", "--reason", "no flag, because the change is in configuration")
-        call(p, rs, "step", d, "K1", "R1", "code", "run")
-        r = call(p, rs, "step", d, "K1", "R1", "scope", "fail")
-        check(r.returncode == 2 and "finding" in r.stdout and "K1" in r.stdout and not task(p).get("findings"),
+        call(p, rs, "step", d, "S1", "R1", "code", "run")
+        r = call(p, rs, "step", d, "S1", "R1", "scope", "fail")
+        check(r.returncode == 2 and "finding" in r.stdout and "S1" in r.stdout and not task(p).get("findings"),
               f"CL-25: `zakres fail` bez zapisanego ustalenia → odmowa z poleceniem: {r.returncode} {r.stdout}")
-        r = call(p, rs, "finding", d, "K1", FINDING)
+        r = call(p, rs, "finding", d, "S1", FINDING)
         fs = task(p).get("findings") or []
-        check(r.returncode == 0 and len(fs) == 1 and fs[0].get("slice") == "K1" and fs[0].get("round") == 1
+        check(r.returncode == 0 and len(fs) == 1 and fs[0].get("slice") == "S1" and fs[0].get("round") == 1
               and fs[0].get("text") == FINDING,
               f"CL-26: run_state.py finding records the finding with the slice and round: {r.returncode} {r.stdout} {fs}")
-        r = call(p, rs, "step", d, "K1", "R1", "scope", "fail")
+        r = call(p, rs, "step", d, "S1", "R1", "scope", "fail")
         check(r.returncode == 0, f"CL-27: po zapisie ustalenia `zakres fail` przechodzi: {r.returncode} {r.stdout}")
-        call(p, rs, "step", d, "K1", "R2", "code", "run")
-        r = call(p, rs, "step", d, "K1", "R2", "scope", "fail")
+        call(p, rs, "step", d, "S1", "R2", "code", "run")
+        r = call(p, rs, "step", d, "S1", "R2", "scope", "fail")
         check(r.returncode == 2 and "finding" in r.stdout,
               f"CL-28: the second round requires its own finding: {r.returncode} {r.stdout}")
-        r = call(p, rs, "step", d, "K1", "R2", "scope", "pass")
+        r = call(p, rs, "step", d, "S1", "R2", "scope", "pass")
         check(r.returncode == 0, f"CL-29: `zakres pass` does not require a finding: {r.returncode} {r.stdout}")
 
     for f in fails:

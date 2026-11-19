@@ -13,9 +13,8 @@ File format (no artifact header — the file's state is kept by task.json):
   ## Out of scope          what the story does not cover (or "none, because …")
   ## Open questions        a question without which work cannot start carries the marker [blocking]
 
-A criterion may also take several lines under a `### AC-1` heading. Keywords and sections are in English; the former Polish ones
-(Zakładając / Mając, Gdy / Kiedy, Wtedy; Kryteria, Bez zmian, Poza zakresem, Otwarte pytania, [blokuje]) the script
-accepts through release 14.x, and the migration rewrites them in open tasks.
+A criterion may also take several lines under a `### AC-1` heading. Keywords and sections are in English (the Polish ones
+from before 14.x are rewritten in open tasks by the 14.0.0 and 19.0.0 migrations); the criterion text may be in any language.
 
 Rules — structural, no model:
   SPEC-001 no `AC-n` criteria · SPEC-002 a criterion without a Given, When or Then part · SPEC-003 duplicated
@@ -52,22 +51,22 @@ os.environ.setdefault("PYTHONUTF8", "1")
 
 CHANGES = Path("docs") / "project" / "changes"
 KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
-SECTIONS = {"criteria": ("kryteria", "kryteria akceptacji", "acceptance criteria", "criteria"),
-            "unchanged": ("bez zmian", "unchanged"),
-            "out": ("poza zakresem", "out of scope"),
-            "questions": ("otwarte pytania", "open questions")}
+SECTIONS = {"criteria": ("acceptance criteria", "criteria"),
+            "unchanged": ("unchanged",),
+            "out": ("out of scope",),
+            "questions": ("open questions",)}
 LABEL = {"unchanged": "Unchanged", "out": "Out of scope"}
 AC_START = re.compile(r"^\s*(?:[-*]\s+|#{3,6}\s+)?\**(AC-\d+)\**\s*[:—–-]?\s*(.*)$")
-GIVEN = re.compile(r"\b(zakładając|zakladajac|mając|majac|przy założeniu|given)\b", re.I)
-WHEN = re.compile(r"\b(gdy|kiedy|when)\b", re.I)
-THEN = re.compile(r"\b(wtedy|then)\b", re.I)
+GIVEN = re.compile(r"\b(given)\b", re.I)
+WHEN = re.compile(r"\b(when)\b", re.I)
+THEN = re.compile(r"\b(then)\b", re.I)
 NEXT_ACTION = re.compile(r"\b(a następnie|następnie|potem|oraz|po czym|and then|after that|afterwards)\b", re.I)
 WEAK = re.compile(r"\b(poprawnie|prawidłowo|właściwie|odpowiednio|dobrze|sprawnie|bez problemu|bez problemów|zgodnie z oczekiwani\w+|"
                   r"działa|działają|correctly|properly|successfully|as expected|works|work fine|is fine)\b", re.I)
 CONCRETE = re.compile(r"\d|[\"„“”'`«»]")       # a number or a quoted value — the result can be compared in a test
 PLACEHOLDER = re.compile(r"<[^<>\n]{2,}>")
 NONE_ONLY = re.compile(r"^(brak|nie dotyczy|none|n/a|-|—)[.!]?$", re.I)
-BLOCKING = re.compile(r"\[(blokuje|blocking)\]", re.I)
+BLOCKING = re.compile(r"\[blocking\]", re.I)
 # a result describing forbidden behavior: a refusal, a block, an error, "nie …" (SPEC-009, warning only)
 NEGATIVE = re.compile(r"\b(nie|odmaw\w*|odmow\w*|odrzuc\w*|blokuj\w*|zablok\w*|błęd\w*|zabron\w*|brak\w*|"
                       r"not|no|never|cannot|rejects?|rejected|denie[sd]|deny|error|forbidden|blocked)\b", re.I)

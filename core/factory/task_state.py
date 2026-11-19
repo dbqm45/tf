@@ -104,7 +104,6 @@ CARD = Path(".tf") / "config" / "operations.json"   # the project's operations c
 PANEL = ("security-reviewer", "spec-reviewer")   # reviewer panel at full weight (step H11, decision D11)
 LESSONS = Path("docs") / "project" / "lessons.md"
 LESSON_HEAD = "Execution and verification"        # category of lessons recorded when a task is closed
-LESSON_HEADS = (LESSON_HEAD, "Wykonanie i weryfikacja")   # the old heading (lessons.md from before 14.x) matches too
 BASES = ("origin/main", "main", "origin/master", "master")
 DEPLOY_STATES = {"ok": "the smoke test is green", "red": "the smoke test is red — waits for a rollback decision",
                  "rolled-back": "rolled back by the human's decision"}
@@ -113,7 +112,7 @@ STAGES = ("intake", "spec", "plan", "implementation", "review", "pr", "deploy", 
 WEIGHTS = ("light", "normal", "full")
 MODES = ("plan", "normal", "auto")
 PDI_KEY = re.compile(r"[A-Z][A-Z0-9]+-[0-9]+")   # key of a pdi change and cut (CHG-12, TSK-57)
-SLICE = re.compile(r"[KS][1-9][0-9]?")   # S<n>; K<n> — tasks from before 14.0.0
+SLICE = re.compile(r"S[1-9][0-9]?")   # S<n> (K<n> of tasks from before 14.0.0: migrated in 19.0.0)
 SLICE_STATES = ("planned", "implemented", "blocked")
 GATED = STAGES[STAGES.index("review"):]   # stages a task with an unverified slice does not enter
 ACTOR = re.compile(r"(human|process):[\w.@-]+|[\w.-]+/[\w.-]+")
@@ -180,7 +179,7 @@ def sha256(path: Path) -> str | None:
         return None
 
 
-TICKED = re.compile(rb"(?m)^(\s*-\s*)\[[xX]\](\s*[KS]\d+\b)")
+TICKED = re.compile(rb"(?m)^(\s*-\s*)\[[xX]\](\s*S\d+\b)")
 
 
 def approval_sha(path: Path) -> str | None:
@@ -624,7 +623,7 @@ def add_lesson(root: Path, key: str, lesson: str) -> bool:
         return False
     entry = f"- {now()[:10]} {lesson} · Task: {key}"
     lines = text.rstrip("\n").split("\n")
-    at = next((i for i, ln in enumerate(lines) if re.fullmatch(rf"##\s+(?:{'|'.join(map(re.escape, LESSON_HEADS))})\s*", ln, re.I)), None)
+    at = next((i for i, ln in enumerate(lines) if re.fullmatch(rf"##\s+{re.escape(LESSON_HEAD)}\s*", ln, re.I)), None)
     if at is None:
         lines += ["", f"## {LESSON_HEAD}", "", entry]
     elif at + 1 < len(lines) and not lines[at + 1].strip():

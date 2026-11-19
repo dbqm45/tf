@@ -344,7 +344,7 @@ def security_section(run_dir: Path) -> list[str]:
         rel = f.parent.relative_to(sec)
         m = ATTEMPT.fullmatch(rel.name)
         group = rel.parent if m else rel
-        return [(int(p[1:]) if re.fullmatch(r"[KS]\d+", p) else 0, p) for p in group.parts], int(m.group(1)) if m else 0
+        return [(int(p[1:]) if re.fullmatch(r"S\d+", p) else 0, p) for p in group.parts], int(m.group(1)) if m else 0
 
     found = sorted(sec.glob("**/summary.md"), key=key)
     if not found:
@@ -352,7 +352,7 @@ def security_section(run_dir: Path) -> list[str]:
     lines, last_group = ["## Security"], None
     for f in found:
         body = f.read_text(encoding="utf-8").splitlines()
-        if body and body[0].startswith(("## Security", "## Bezpieczeństwo")):
+        if body and body[0].startswith("## Security"):
             body = body[1:]
         rel = f.parent.relative_to(sec)
         m = ATTEMPT.fullmatch(rel.name)
@@ -518,9 +518,8 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
     w = task_state(project, "weight", key, "--apply")   # weight: the factory's proposal from the issue content, with a reason (step E2)
     if w is not None and w.returncode == 0 and w.stdout.strip():
         lines = [ln.strip() for ln in w.stdout.splitlines() if ln.strip()]
-        head = re.split(r"\b(?:weight|waga) ", lines[0], maxsplit=1)[-1].split(" · ", 1)[0]   # tf task weight: both languages
-        why = next((re.split(r"^(?:reason|powód): ", ln, maxsplit=1)[1] for ln in lines
-                    if re.match(r"(?:reason|powód): ", ln)), "")
+        head = re.split(r"\bweight ", lines[0], maxsplit=1)[-1].split(" · ", 1)[0]   # the first line of tf task weight
+        why = next((re.split(r"^reason: ", ln, maxsplit=1)[1] for ln in lines if re.match(r"reason: ", ln)), "")
         print(f"Weight: {head}" + (f" — {why}" if why else "")
               + f" (a higher weight: run_state.py weight {(WORK / key).as_posix()} --set <weight>)", file=sys.stderr)
     try:   # preview: build the dashboard and open it (options in .claude/tf.json); a cut run (--task) does not open it

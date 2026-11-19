@@ -41,8 +41,7 @@ from functools import lru_cache
 from pathlib import Path
 
 RULE_MAX = 200
-SKIP_SECTIONS = ("obecny system", "ograniczenia", "do decyzji o stacku", "otwarte pytania", "przekazanie",
-                 "current system", "constraints", "for the stack decision", "open questions", "handoff")   # en: 14.x
+SKIP_SECTIONS = ("current system", "constraints", "for the stack decision", "open questions", "handoff")
 
 # (category, pattern, case-sensitive, quality sections only)
 LEAK_PATTERNS = [
@@ -74,7 +73,7 @@ SUBJECTS = DETERMINERS | {"i", "we", "you", "he", "she", "it", "they", "user", "
                           "użytkownik", "klient", "system", "się"}
 FILLERS = DETERMINERS | {"to", "do", "na", "w", "we", "z", "ze", "o", "for", "with", "of", "on", "in", "into",
                          "it", "them", "ją", "go", "je", "jej", "jego", "ich", "swój", "swoją", "swoje", "is", "are"}
-UNIT_DAYS = [(r"^dni|^dzie|^dnia|^day", 1.0), (r"^tydz|^tyg|^week|^wk", 5.0), (r"^mies|^month", 21.0)]   # en: 14.x
+UNIT_DAYS = [(r"^day", 1.0), (r"^week|^wk", 5.0), (r"^month", 21.0)]
 
 
 def sections(text: str):
@@ -102,12 +101,8 @@ def sections(text: str):
     return out
 
 
-SECTION_EN = {"reguła": "business rule", "poza zakresem": "out of scope"}   # English section names (14.x)
-
-
 def section_lines(rows, needle: str):
-    needles = (needle, SECTION_EN.get(needle, needle))
-    return [(n, l) for n, h, l in rows if any(x in h for x in needles)]
+    return [(n, l) for n, h, l in rows if needle in h]
 
 
 def is_placeholder(line: str) -> bool:
@@ -126,14 +121,14 @@ def readiness(text: str, rows) -> dict:
         u["kind"] == "gwt" and u["then"] and u["action"] for s in file_stories(text) for u in ac_units(s["ac"]))
     if not gwt:
         missing.append("a story with Given/When/Then criteria for the main flow")
-    rule = [l.strip() for _, l in section_lines(rows, "reguła") if l.strip() and not is_placeholder(l)]
+    rule = [l.strip() for _, l in section_lines(rows, "business rule") if l.strip() and not is_placeholder(l)]
     first = rule[0] if rule else ""
     one_sentence = (first and len(first) <= RULE_MAX and first.endswith(".") and "TODO" not in first.upper()
                     and not re.search(r"[.!?]\s+[A-ZĄĆĘŁŃÓŚŹŻ]", first[:-1]))
     if not one_sentence:
         missing.append(f"\"Business rule\" in one sentence (≤ {RULE_MAX} characters, ending with a period, no TODO)")
-    out_of_scope = [l for _, l in section_lines(rows, "poza zakresem") if re.match(r"\s*[-*]\s+\S", l) and not is_placeholder(l)]
-    out_of_scope += [l for _, _, l in rows if re.match(r"\s*[-*]\s*(?:poza zakresem|out of scope)\s*:\s*[^…<\s]", l, re.I)]
+    out_of_scope = [l for _, l in section_lines(rows, "out of scope") if re.match(r"\s*[-*]\s+\S", l) and not is_placeholder(l)]
+    out_of_scope += [l for _, _, l in rows if re.match(r"\s*[-*]\s*out of scope\s*:\s*[^…<\s]", l, re.I)]
     if not out_of_scope:
         missing.append("\"Out of scope\" with at least one item")
     score = 4 - len(missing)
@@ -145,7 +140,7 @@ def leaks(rows) -> list:
     for n, heading, line in rows:
         if any(s in heading for s in SKIP_SECTIONS):
             continue
-        quality = "jakoś" in heading or "jakos" in heading or "quality" in heading   # en: 14.x
+        quality = "quality" in heading
         for cat, pat, case, only_quality in LEAK_PATTERNS:
             if only_quality and not quality:
                 continue
@@ -167,9 +162,9 @@ def mvp_check(brief_text: str) -> dict:
         m = re.search(label + r"[^:\n]*:\s*(\d+(?:[.,]\d+)?)\s*([A-Za-ząćęłńóśźżĄĆĘŁŃÓŚŹŻ]+)", brief_text, re.I)
         return to_days(m.group(1), m.group(2)) if m else None
 
-    budget = find(r"(?:budżet czasu|time budget)")   # en: 14.x
-    estimate = find(r"(?:szacunek|estimate)")
-    ack = bool(re.search(r"(?:koszt potwierdzony|cost acknowledged)\s*:\s*[^\s<…]", brief_text, re.I))
+    budget = find(r"time budget")
+    estimate = find(r"estimate")
+    ack = bool(re.search(r"cost acknowledged\s*:\s*[^\s<…]", brief_text, re.I))
     res = {"budget_days": budget, "estimate_days": estimate, "too_big": None, "acknowledged": ack, "warning": None}
     if budget is None:
         res["warning"] = "the brief has no MVP time budget — agree on it with the human (\"MVP time budget: N weeks\")"

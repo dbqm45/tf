@@ -18,14 +18,14 @@ In the "Obecny system" section you may name technologies (you are describing wha
 - who joins the list: a) an employee, b) reception on someone's behalf as well → recommendation: a (a smaller blast radius);
 - what happens when the room is freed: a) a notification and 30 min to confirm, b) an automatic booking →
   recommendation: a (b changes the allocation rule — a bigger risk);
-- I don't know → to "Otwarte pytania" (→ the office manager).
+- I don't know → to "Open questions" (→ the office manager).
 **Result (a fragment):**
 ```
 - FR-014: An employee can join the waiting list for a taken room slot. Priority: must. Change: new
 - FR-003: An employee can cancel a booking. Priority: must. Change: changed (cancellation frees the slot for the list)
 ## Preserved behavior
 - a booking without a waiting list works as today; booking limits per person unchanged
-## Reguła biznesowa
+## Business rule
 A freed slot goes to the first person on the list who confirms it within 30 minutes of the notification.
 ```
 
@@ -36,7 +36,7 @@ Counterarguments to choose from:
 2. editing the content breaks the link to the source text — record whether the flashcard keeps a reference to the source;
 3. rejected suggestions may return on the next generation — do we remember rejections?
 4. no counterargument.
-The result is recorded under the FR as "Challenge: …"; a new need from the conversation goes to "Otwarte pytania", not to the FR.
+The result is recorded under the FR as "Challenge: …"; a new need from the conversation goes to "Open questions", not to the FR.
 
 ## An example of an empty CRUD
 **Input:** "The user adds, browses, edits and deletes recipes."

@@ -25,7 +25,7 @@ in the project. The model's memory comes last and only for stable knowledge.
 - **[assumption]** — a conclusion from the available data; add how to confirm it.
 - **[unverified]** — a fact from memory that cannot be checked now (e.g. no network); add the risk.
 - **I don't know** — when there is no basis even for an assumption; propose who or what will give the answer.
-The scripts also accept the older Polish markers ([założenie], [niezweryfikowane], [pytanie]) in existing documents.
+The scripts read only these English markers; updating to 19.0.0 rewrote the older Polish ones in the project record.
 
 ## Signals that an answer may be made up
 - A very specific name (flag, option, method) that did not appear in any file or source you read.

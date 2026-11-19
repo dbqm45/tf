@@ -201,7 +201,7 @@ machine without your credentials.
   and `metrics.json`: the share of reverted changes, accepted and pending changes, the cost per accepted change, the
   median PR time (from `gh`, unless `--no-gh`) and the causes of fixes. The factory itself adds the cause of a fix in
   the commit that fixes an earlier change, in the `Rework-Cause:` footer (`spec-gap`, `agent-error`, `requirement-change`,
-  `unknown`; the older Polish values in past commits count as their equivalents) — you do not have to remember it.
+  `unknown`; from 19.0.0 the older Polish values in past commits count as `unknown`) — you do not have to remember it.
 - **The rules:** the cheapest sufficient model for the task and escalation only after a failure (the `core-cost-control`
   skill); you do not change the session's model in the middle of a task, because that wipes the cache; with a long
   context the `context_guard` hook suggests a checkpoint and a new session.

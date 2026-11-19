@@ -264,7 +264,7 @@ def main() -> int:
         if shutil.which("git"):
             git(root, "init", "-q", "-b", "main")
             commit(root, {"a.py": "1\n"}, "feat: a", "2026-10-12T10:00:00")
-            for i, cause in enumerate(("agent-error", "blad-agenta", "spec-gap")):   # old value → alias
+            for i, cause in enumerate(("agent-error", "agent-error", "spec-gap", "blad-agenta")):   # the last: pre-19.0.0
                 commit(root, {"a.py": f"{i + 2}\n"}, f"fix: a {i}\n\nRework-Cause: {cause}", f"2026-10-1{3 + i}T10:00:00")
         d = json.loads(run(root, "--json").stdout or "{}")
         ev = {e["key"]: e for e in d.get("evidence", [])}
@@ -277,6 +277,8 @@ def main() -> int:
             check(ev.get("rework-cause:agent-error", {}).get("n") == 2
                   and ev.get("rework-cause:spec-gap", {}).get("n") == 1,
                   f"AR-38: fix causes from the Rework-Cause trailer: {sorted(ev)}")
+            check(ev.get("rework-cause:blad-agenta", {}).get("n") == 1,
+                  f"AR-38b: the pre-19.0.0 Polish value is no longer mapped to agent-error: {sorted(ev)}")
             check("rework-cause:agent-error" in sug and "rework-cause:spec-gap" not in sug,
                   f"AR-39: a proposal at ≥2 fixes with the same cause: {sorted(sug)}")
         md = run(root).stdout

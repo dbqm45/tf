@@ -68,8 +68,8 @@ def build(repo: Path) -> None:
     commit(repo, "feat: add export (#1)", d(13))
     bad = commit(repo, "feat: add import (#2)", d(11))
     commit(repo, f'Revert "feat: add import (#2)"\n\nThis reverts commit {bad}.', d(10))
-    commit(repo, "fix: correct totals\n\nRework-Cause: luka-specyfikacji", d(9))
-    commit(repo, "fix: rounding\n\nRework-Cause: cokolwiek", d(8))
+    commit(repo, "fix: correct totals\n\nRework-Cause: spec-gap", d(9))
+    commit(repo, "fix: rounding\n\nRework-Cause: luka-specyfikacji", d(8))   # a pre-19.0.0 value: not mapped
     commit(repo, "feat: fresh change", d(2))
 
 
@@ -98,8 +98,8 @@ def main() -> int:
         # M-2: reverts — import reverted within 7 days; fresh (2 days) in progress, outside the denominator
         if (cur["reverted"], cur["pending"], cur["accepted"]) != (1, 1, 3) or abs(cur["revert_rate"] - 0.25) > 1e-9:
             fails.append(f"M-2: reverted 1, in progress 1, accepted 3, revert rate 1/4: {cur}")
-        # M-3: rework causes from the trailer; an unknown value → unknown
-        if cur["rework_causes"] != {"spec-gap": 1, "unknown": 1}:   # the former Polish value → alias
+        # M-3: rework causes from the trailer; an unknown value (also a former Polish one) → unknown
+        if cur["rework_causes"] != {"spec-gap": 1, "unknown": 1}:
             fails.append(f"M-3: Rework-Cause: {cur['rework_causes']}")
         # M-4: cost from usage.jsonl in the window; cost of an accepted change = cost / accepted; a mark for no human work
         if abs((cur["cost_usd"] or 0) - 2.0) > 1e-9 or abs((cur["cost_per_accepted"] or 0) - 2.0 / 3) > 1e-9 \

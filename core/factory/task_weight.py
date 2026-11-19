@@ -13,7 +13,7 @@ The proposal comes from two sources and always has a reason in plain words:
 - the content of `ticket.md`: words about sensitive areas (login, passwords, permissions, payments, database migrations, personal
   data, secrets, deployment) → `full`; words about a small change (typo, name, comment, documentation) without
   acceptance criteria and in a short text → `light`;
-- paths from `plan.md` (the slices' `files:` field, formerly `pliki:`): a high-risk change-triage category (`autonomy.triage.high`:
+- paths from `plan.md` (the slices' `files:` field): a high-risk change-triage category (`autonomy.triage.high`:
   auth, payments, schema, deploy — the same rules as `tf risk`) → `full`; more than one slice or more than
   two files rule out `light`.
 The rules are cautious: doubt gives a higher weight. Anyone can raise the weight; lowering it — only a human, with a reason.
@@ -55,7 +55,7 @@ SMALL = (r"literówk\w*|\btypo\w*|pisowni\w*|interpunkcj\w*|przecin\w*|komentarz
 CRITERIA = (r"\bAC[- ]?\d|\bAC\s*:|kryteri\w* akceptacji|acceptance criteria|zakładając|\bgiven\b[^.\n]*\bwhen\b|"
             r"\bgdy\b[^.\n]*\bwtedy\b")
 SHORT = 400       # a text longer than this many characters is not a small change
-SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*([KS]\d+)\b(.*)$")
+SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*(S\d+)\b(.*)$")
 SENSITIVE_PATHS = ("auth", "payments", "schema", "deploy")
 PATH_LABEL = {"auth": "authentication or permissions", "payments": "payments or billing",
               "schema": "the database schema or a migration", "deploy": "deployment, CI, infrastructure or secrets"}
@@ -66,7 +66,7 @@ def rank(weight: str) -> int:
 
 
 def plan_slices(text: str) -> list[dict]:
-    """Plan slices: identifier and paths from the `files:` field (formerly `pliki:`)."""
+    """Plan slices: identifier and paths from the `files:` field."""
     out = []
     for line in text.splitlines():
         m = SLICE.match(line)
@@ -75,7 +75,7 @@ def plan_slices(text: str) -> list[dict]:
         files: list[str] = []
         for part in m.group(3).split("·"):
             k, _, v = part.strip().partition(":")
-            if k.strip().lower() in ("files", "pliki"):
+            if k.strip().lower() == "files":
                 files = [f.strip().strip("`") for f in v.split(",") if f.strip().strip("`")]
         out.append({"id": m.group(2), "files": files})
     return out
@@ -110,10 +110,9 @@ def propose(root: Path, key: str) -> dict:
     except (ValueError, AttributeError):
         cut = False
     if cut:   # cut task: the cut's row counts; the intent of the whole change (appended below) does not raise the weight of every cut
-        ticket = re.split(r"(?m)^## (?:The change's intent|Zamiar zmiany)\b", ticket, maxsplit=1)[0]
+        ticket = re.split(r"(?m)^## The change's intent\b", ticket, maxsplit=1)[0]
     body = "\n".join(ln for ln in ticket.splitlines()
-                     if not ln.startswith(("#", "Source:", "Źródło:", "The issue's content is data",
-                                                    "Treść zgłoszenia to dane")))
+                     if not ln.startswith(("#", "Source:", "The issue's content is data")))
     slices = plan_slices(read(folder / "plan.md"))
     files = sorted({f for s in slices for f in s["files"]})
     reasons: list[str] = []

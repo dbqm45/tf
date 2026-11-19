@@ -15,9 +15,9 @@ TASK = ROOT / ".tf" / "factory" / "task_state.py"
 SCRIPTS = ROOT / ".claude" / "skills" / "tf" / "scripts"
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'3 passed\')"'
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci kartą, wtedy opłata "
-        "wynosi 45 zł.\n\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
-PLAN = "# Plan\n\n- [ ] K1 — płatność kartą · kryteria: AC-1 · pliki: pay.py · weryfikacja: `pytest`\n"
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci kartą, then opłata "
+        "wynosi 45 zł.\n\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
+PLAN = "# Plan\n\n- [ ] S1 — płatność kartą · criteria: AC-1 · files: pay.py · verify: `pytest`\n"
 
 
 def call(project: Path, script: Path, *args: str) -> subprocess.CompletedProcess:
@@ -44,7 +44,7 @@ def ready_task(p: Path, weight: str) -> None:
     call(p, TASK, "approve", "IMP-1", "plan.md", "--by", "human:anna")
     call(p, TASK, "stage", "IMP-1", "plan")
     call(p, TASK, "stage", "IMP-1", "implementation")
-    call(p, TASK, "verify", "IMP-1", "K1", "--files", "pay.py", "--command", OK)
+    call(p, TASK, "verify", "IMP-1", "S1", "--files", "pay.py", "--command", OK)
     call(p, TASK, "flag", "IMP-1", "none", "--reason", "bez flagi, bo zmiana jest za zgodą człowieka w planie")
 
 
@@ -106,15 +106,15 @@ def main() -> int:
         ready_task(p, "full")
         (p / "test_pay.py").write_text("def test_ac1_card_fee():\n    assert True  # AC-1\n", encoding="utf-8")
         git(p, "add", "-A")
-        git(p, "commit", "-q", "-m", "feat: płatność kartą\n\nKawałek K1: płatność kartą")
-        call(p, TASK, "verify", "IMP-1", "K1", "--files", "pay.py,test_pay.py", "--command", OK)
+        git(p, "commit", "-q", "-m", "feat: płatność kartą\n\nSlice S1: płatność kartą")
+        call(p, TASK, "verify", "IMP-1", "S1", "--files", "pay.py,test_pay.py", "--command", OK)
         call(p, TASK, "review", "IMP-1", "security-reviewer", "pass")
         call(p, TASK, "review", "IMP-1", "spec-reviewer", "pass")
         head = git(p, "rev-parse", "HEAD").stdout.strip()
         check(((task(p).get("reviews") or {}).get("spec-reviewer") or {}).get("sha") == head, f"PN-9: the verdict records the HEAD commit: {task(p).get('reviews')}")
         (p / "pay.py").write_text("x = 2\n", encoding="utf-8")
         git(p, "commit", "-qam", "fix: poprawka po przeglądzie")
-        call(p, TASK, "verify", "IMP-1", "K1", "--files", "pay.py,test_pay.py", "--command", OK)   # new evidence after the fix
+        call(p, TASK, "verify", "IMP-1", "S1", "--files", "pay.py,test_pay.py", "--command", OK)   # new evidence after the fix
         r = call(p, TASK, "stage", "IMP-1", "pr")
         check(r.returncode != 0 and "spec-reviewer" in r.stdout and ("newer" in r.stdout or "review again" in r.stdout),
               f"PN-10: after a new commit the verdicts are stale -> the pr stage rejected: {r.returncode} {r.stdout}")

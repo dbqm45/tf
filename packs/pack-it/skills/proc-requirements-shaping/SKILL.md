@@ -26,11 +26,11 @@ Whether it is worth building at all (outcome, opportunities, experiments) — pr
 
 ## Setting: the MVP time budget
 The only "MVP too big" threshold is the **time budget from the brief**, not a constant from this skill. At the start of the session ask
-the human and record it in `01-discovery/brief.md`, in the "Ograniczenia" section (Constraints):
+the human and record it in `01-discovery/brief.md`, in the "Constraints" section:
 ```
-- Budżet czasu MVP: 3 tygodnie            # MVP time budget; set by the human (e.g. 4 weeks after hours, 2 team sprints)
-- Szacunek przepływu MVP: 5 tygodni       # MVP flow estimate; after phase 3, with a justification
-- Koszt potwierdzony: 2026-10-10, właściciel produktu przyjmuje 5 tygodni   # cost acknowledged; only when the estimate > the budget
+- MVP time budget: 3 weeks               # set by the human (e.g. 4 weeks after hours, 2 team sprints)
+- MVP flow estimate: 5 weeks             # after phase 3, with a justification
+- Cost acknowledged: 2026-10-10, the product owner accepts 5 weeks   # only when the estimate > the budget
 ```
 Give both values in the same convention (working days, weeks, months). The number of user steps
 and the number of integrations before the first value are **signals for a conversation**, not thresholds.
@@ -55,7 +55,7 @@ confirmation → recording. You run the question rounds per core-plan-interview 
    - replace an integration with a manual action or a file import;
    - one user instead of teams and roles;
    - one platform instead of web and a mobile app.
-   A longer schedule is allowed only as a conscious decision: a "Koszt potwierdzony" line with a date and a person.
+   A longer schedule is allowed only as a conscious decision: a "Cost acknowledged" line with a date and a person.
    Brownfield: the smallest change that proves an improvement and the blast radius (what else it touches).
    Change mode (the log `docs/project/changes/CHG-n/`): the MVP outcome with a metric (threshold, horizon) goes to `mvp`
    in the change's `release.yaml`, and the cuts from "out of scope for the MVP" go to the R2 line.
@@ -95,7 +95,7 @@ confirmation → recording. You run the question rounds per core-plan-interview 
 Check and name every gap together with its consequence:
 - [ ] access established;
 - [ ] a business rule in one sentence (or a consciously recorded CRUD);
-- [ ] the MVP flow within the time budget or "Koszt potwierdzony" recorded;
+- [ ] the MVP flow within the time budget or "Cost acknowledged" recorded;
 - [ ] "Poza zakresem" has at least one item;
 - [ ] (brownfield) it is recorded which behavior stays unchanged.
 The human may accept a gap — it then goes to "Otwarte pytania" with an addressee and the note "blocks: yes/no".
@@ -134,9 +134,9 @@ not a description of a screen? Is "Poza zakresem" explicit? Are the open questio
 - FR-001: A learner can paste text of up to 10 thousand characters and get flashcard suggestions. Priority: must
   Challenge: suggestions from a long text are too generic → a length limit and a source preview on the flashcard.
 - FR-002: A learner can accept, edit or reject each suggestion. Priority: must
-## Reguła biznesowa
+## Business rule
 A flashcard suggestion enters the deck only after the learner accepts it, and accepted ones enter the review schedule.
-## Poza zakresem
+## Out of scope
 - PDF import · deck sharing · a custom review algorithm
 ## Guardrail goals
 - the source text does not remain in the logs

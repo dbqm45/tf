@@ -91,14 +91,8 @@ def parse(path: Path) -> tuple[dict | None, str]:
     return meta, m.group(2)
 
 
-# Section names: English (since 14.x) and the former Polish — both recognized, templates use the English one.
-SECTION_NAMES = {"Przekazanie": ("Handoff", "Przekazanie"), "Otwarte pytania": ("Open questions", "Otwarte pytania"),
-                 "Następna czynność": ("Next step", "Następna czynność"), "Kroki": ("Steps", "Kroki")}
-
-
 def section(body: str, name: str) -> str | None:
-    names = "|".join(re.escape(n) for n in SECTION_NAMES.get(name, (name,)))
-    m = re.search(rf"^##\s+(?:{names})\s*$(.*?)(?=^##\s|\Z)", body, re.M | re.S)
+    m = re.search(rf"^##\s+{re.escape(name)}\s*$(.*?)(?=^##\s|\Z)", body, re.M | re.S)
     return m.group(1).strip() if m else None
 
 
@@ -188,9 +182,9 @@ def check(root: Path) -> tuple[list[str], list[str]]:
                 errors.append(f"{rel}: empty TL;DR section")
             elif len([l for l in tldr.splitlines() if l.strip()]) > 12:
                 warnings.append(f"{rel}: TL;DR longer than ~10 lines — shorten it (every next agent reads it)")
-            handoff = section(it["body"], "Przekazanie")
+            handoff = section(it["body"], "Handoff")
             if handoff is None and status != "superseded":
-                errors.append(f"{rel}: no \"## Handoff\" section (formerly \"## Przekazanie\")")
+                errors.append(f"{rel}: no \"## Handoff\" section")
             elif handoff is not None and status in ("proposed", "accepted") and (
                     re.search(r"<[^>]+>", handoff) or re.search(r":\*?\*?\s*…\s*$", handoff, re.M)):
                 errors.append(f"{rel}: Handoff has unfilled template fields (<…> or …)")
@@ -245,7 +239,7 @@ def summary(root: Path) -> dict:
     items = [i for i in artifacts(rec) if i["meta"] and i["meta"].get("phase") in PHASE_DIR]
     live = [i for i in items if i["meta"].get("status") not in ("superseded", "rejected")]
     current = max(live, key=lambda i: phase_index(i["meta"]["phase"]), default=None)
-    with_handoff = [i for i in live if section(i["body"], "Przekazanie")]
+    with_handoff = [i for i in live if section(i["body"], "Handoff")]
     latest = max(with_handoff, key=lambda i: (i["meta"].get("updated", ""), phase_index(i["meta"]["phase"]),
                                              i["path"].stat().st_mtime), default=None)
     return {
@@ -274,9 +268,9 @@ def build_index(root: Path) -> str:
     if wips:
         lines += ["", "## Work in progress", "", "| Task | Status | Updated | Next step |", "|---|---|---|---|"]
         lines += [f"| [{title(w['body'], w['slug'])}](wip/{w['slug']}.md) | {w['meta'].get('status', 'active')} | "
-                  f"{w['meta'].get('updated', '')} | {first_line(section(w['body'], 'Następna czynność'))} |" for w in wips]
+                  f"{w['meta'].get('updated', '')} | {first_line(section(w['body'], 'Next step'))} |" for w in wips]
     if s["latest"]:
-        handoff = section(s["latest"]["body"], "Przekazanie")
+        handoff = section(s["latest"]["body"], "Handoff")
         if handoff:
             lines += ["", f"## Latest handoff — from [{s['latest']['rel']}]({s['latest']['rel']})", "", handoff]
     rows = journal_rows(rec, 5)
@@ -301,7 +295,7 @@ def status_text(root: Path, compact: bool = False) -> str:
     if s["to_accept"]:
         out.append("For a human to accept: " + ", ".join(i["rel"] for i in s["to_accept"]))
     if s["latest"]:
-        handoff = section(s["latest"]["body"], "Przekazanie") or ""
+        handoff = section(s["latest"]["body"], "Handoff") or ""
         h = [l for l in handoff.splitlines() if l.strip()][: 4 if compact else 20]
         if h:
             out.append(f"Latest handoff ({s['latest']['rel']}):")
@@ -345,7 +339,7 @@ def report(root: Path, out: Path | None) -> Path:
                       "|---|---|---|---|---|---|---|", *rows]
     questions = []
     for it in ordered:
-        q = section(it["body"], "Otwarte pytania") if it["meta"].get("status") not in ("superseded", "rejected") else None
+        q = section(it["body"], "Open questions") if it["meta"].get("status") not in ("superseded", "rejected") else None
         for l in (q or "").splitlines():
             l = l.strip()
             if l.startswith(("- [ ]", "- ", "* ")) and not l.startswith("- [x]") and "…" not in l:
@@ -465,7 +459,7 @@ def wip_items(root: Path, statuses: tuple = WIP_ACTIVE) -> list[dict]:
 
 
 def unchecked(body: str) -> list[str]:
-    steps = section(body, "Kroki") or ""
+    steps = section(body, "Steps") or ""
     return [l.strip()[6:].strip() for l in steps.splitlines() if l.strip().startswith("- [ ]")]
 
 
@@ -506,10 +500,6 @@ def wip_set_status(root: Path, slug: str, status: str, by: str) -> Path:
     log(root, by, "meta", f"Work in progress {slug}: {status}")
     write_index(root)
     return path
-
-
-# Event names from core/settings.json (Polish hook arguments from before 14.x) → English entry in the snapshot.
-EVENT_NAMES = {"koniec sesji": "session end", "kompaktowanie kontekstu": "context compaction"}
 
 
 def snapshot(root: Path, event: str) -> int:
@@ -562,7 +552,7 @@ def stop_reminder(root: Path, data: dict) -> str | None:
 
 def repo_drift(root: Path, body: str) -> str | None:
     """Drift of the current repo from the state recorded by the snapshot (branch, commit); None when consistent or no data."""
-    m = re.search(r"^- (?:Branch|Gałąź): (.+?) · (?:last commit|ostatni commit): (\S+)", body, re.M)
+    m = re.search(r"^- Branch: (.+?) · last commit: (\S+)", body, re.M)
     if not m or m.group(2) == "—":
         return None
     saved_branch, saved_commit = m.group(1).strip(), m.group(2)
@@ -588,7 +578,7 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
     out = []
     for it in wip_items(root):
         m, body = it["meta"], it["body"]
-        nxt = first_line(section(body, "Następna czynność"))
+        nxt = first_line(section(body, "Next step"))
         todo = unchecked(body)
         out.append(f"Work in progress [{m.get('status', 'active')}]: .tf/wip/{it['slug']}.md — "
                    f"{title(body, it['slug'])} (updated {m.get('updated', '?')}, steps to do: {len(todo)})")
@@ -665,16 +655,16 @@ def evidence(root: Path) -> tuple[list[str], list[str], dict]:
     areas = rec / "02-domain" / "areas.md"
     if areas.exists():
         _, body = parse(areas)
-        main_part = re.split(r"^##\s+(?:Candidates below the threshold|Kandydaci poniżej progu)", body, flags=re.M)[0]
+        main_part = re.split(r"^##\s+Candidates below the threshold", body, flags=re.M)[0]
         for m in re.finditer(r"^###\s+(A\d+)\b(.*?)(?=^###\s|^##\s|\Z)", main_part, re.M | re.S):
             aid, block = m.group(1), m.group(2)
-            ids = re.findall(r"E\d+", (re.search(r"(?:Evidence|Dowody):\*?\*?(.*)", block) or [None, ""])[1])
+            ids = re.findall(r"E\d+", (re.search(r"Evidence:\*?\*?(.*)", block) or [None, ""])[1])
             unknown = [i for i in ids if i not in entries]
             if unknown:
                 errors.append(f"areas.md {aid}: unknown evidence {unknown}")
             strong = [i for i in ids if i in entries and not any(t.startswith(WEAK_TAGS) for t in entries[i]["tags"])]
             sources = {entries[i]["source"] for i in strong}
-            user = re.search(r"(?:Named by the human|Wskazany przez człowieka):\*?\*?\s*(?:yes|tak)", block, re.I)
+            user = re.search(r"Named by the human:\*?\*?\s*yes", block, re.I)
             if len(strong) < 3 or len(sources) < 2:
                 msg = f"areas.md {aid}: {len(strong)} strong quotes from {len(sources)} sources (threshold: 3 from 2)"
                 (warnings if user else errors).append(msg + (" — named by the human" if user else " — move it to \"Candidates below the threshold\""))
@@ -701,7 +691,7 @@ def main(argv: list[str]) -> int:
         try:
             i = args.index("--hook-snapshot")
             event = args[i + 1] if len(args) > i + 1 else "hook"
-            snapshot(root, EVENT_NAMES.get(event, event))
+            snapshot(root, event)
         except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("project_record", e)
         return 0

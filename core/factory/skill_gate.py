@@ -203,7 +203,7 @@ def check_refs(name: str) -> list[str]:
         return []
     r = subprocess.run([sys.executable, str(GROUND), str(SKILLS / name), "--warn"], capture_output=True, text=True, encoding="utf-8", errors="replace",
                        timeout=120, env={**__import__("os").environ, "CLAUDE_PROJECT_DIR": str(ROOT)})
-    return [ln[2:] for ln in r.stdout.splitlines() if ln.startswith("⚠ ") and "odwołania:" not in ln and "references:" not in ln][:5]
+    return [ln[2:] for ln in r.stdout.splitlines() if ln.startswith("⚠ ") and "references:" not in ln][:5]
 
 
 # ───────────── model evaluation (paid) ─────────────

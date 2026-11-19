@@ -20,7 +20,7 @@ def run(root: Path, *args: str, stdin: str = "") -> subprocess.CompletedProcess:
 def artifact(root: Path, rel: str, **fields) -> Path:
     meta = {"artifact": "brief", "phase": "discovery", "status": "proposed", "version": "1", "author": "ewa",
             "created": "2026-09-27", "updated": "2026-09-27", "inputs": "[]"} | fields
-    body = fields.pop("_body", "# Brief\n## TL;DR\nKrótko o wyniku.\n## Otwarte pytania\n- [ ] Pytanie → PO\n## Przekazanie\n- Dla: tomasz\n")
+    body = fields.pop("_body", "# Brief\n## TL;DR\nKrótko o wyniku.\n## Open questions\n- [ ] Pytanie → PO\n## Handoff\n- Dla: tomasz\n")
     p = root / "docs" / "project" / rel
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text("---\n" + "\n".join(f"{k}: {v}" for k, v in meta.items() if not k.startswith("_")) + "\n---\n" + body)
@@ -53,7 +53,7 @@ def wip_tests() -> list[str]:
             fails.append("wip start should not overwrite an existing checkpoint")
         (root / "app.ts").write_text("x")
         before = wip.stat().st_mtime
-        run(root, "--hook-snapshot", "koniec sesji")
+        run(root, "--hook-snapshot", "session end")
         body = wip.read_text()
         if "event: session end" not in body or (git_ok and "`app.ts`" not in body) or wip.stat().st_mtime != before:
             fails.append("snapshot: missing automatic state, app.ts file or a changed modification time")
@@ -78,7 +78,7 @@ EN_BODY = "# Brief\n## TL;DR\nShort result.\n## Open questions\n- [ ] Question f
 
 def english_tests() -> list[str]:
     """14.x syntax in English: Handoff / Open questions sections, a Steps / Next step checkpoint, domain areas
-    (Evidence, Named by the human, Candidates below the threshold); the Polish names keep working."""
+    (Evidence, Named by the human, Candidates below the threshold). (The Polish names from before 14.x are rewritten by the 19.0.0 migration.)"""
     fails = []
     with tempfile.TemporaryDirectory() as d:
         root = Path(d)
@@ -89,7 +89,7 @@ def english_tests() -> list[str]:
             fails.append(f"EN-1: an artifact with ## Handoff and ## Open questions passes check: {chk.stdout[-300:]}")
         artifact(root, "01-discovery/brief.md", _body=EN_BODY.replace("For: tomasz", "**For:** <persona>"))
         if run(root, "check").returncode == 0:
-            fails.append("EN-2: an unfilled ## Handoff detected like the old Przekazanie")
+            fails.append("EN-2: an unfilled ## Handoff detected")
         artifact(root, "01-discovery/brief.md", _body=EN_BODY)
         run(root, "report")
         exports = list((root / "docs/project/exports").glob("report-*.md"))
@@ -101,8 +101,8 @@ def english_tests() -> list[str]:
             fails.append(f"EN-4: wip start: {r.stdout[-200:]}")
         else:
             body = wip.read_text()
-            body = re.sub(r"(?ms)^## (Kroki|Steps)\b.*?(?=^## )", "## Steps\n- [ ] 1. Callback test ← next\n\n", body)
-            body = re.sub(r"(?ms)^## (Następna czynność|Next step)\b.*?(?=^## )", "## Next step\nWrite the callback test in auth.spec.ts\n\n", body)
+            body = re.sub(r"(?ms)^## Steps\b.*?(?=^## )", "## Steps\n- [ ] 1. Callback test ← next\n\n", body)
+            body = re.sub(r"(?ms)^## Next step\b.*?(?=^## )", "## Next step\nWrite the callback test in auth.spec.ts\n\n", body)
             wip.write_text(body)
             s = run(root, "--hook-session").stdout
             if "Write the callback test" not in s:
@@ -143,7 +143,7 @@ def resume_tests() -> list[str]:
         g("add", "a.txt")
         g("commit", "-q", "-m", "start")
         run(root, "wip", "start", "Eksport zamówień", "--by", "ola")
-        run(root, "--hook-snapshot", "koniec sesji")
+        run(root, "--hook-snapshot", "session end")
         if "differs from the checkpoint" in run(root, "--hook-session").stdout:
             fails.append("resume: a drift warning although the repo state has not changed")
         (root / "a.txt").write_text("2")
@@ -179,25 +179,25 @@ def main() -> int:
         if chk.returncode != 0 or "no main artifact" in chk.stdout + chk.stderr or "test-plan" not in (root / "docs/project/README.md").read_text():
             fails.append(f"test plan as a plan-phase artifact: {chk.stdout[-200:]}")
         artifact(root, "07-review/2026-09-27-retro.md", artifact="review", phase="review",
-                 _body="# Retro\n## TL;DR\nWiem że zespół napewno zdąży.\n## Otwarte pytania\n## Przekazanie\n- Dla: ewa\n")
+                 _body="# Retro\n## TL;DR\nWiem że zespół napewno zdąży.\n## Open questions\n## Handoff\n- Dla: ewa\n")
         chk = run(root, "check")
         lint = SCRIPT.parent.parent / "skills" / "txt-polish-correctness" / "scripts" / "polish_lint.py"   # pack-editorial-pl
         if chk.returncode != 0 or (lint.exists() and "language remarks" not in chk.stdout):
             fails.append(f"check: a language warning for an artifact in Polish: {chk.stdout[-300:]}")
         (root / "docs/project/07-review/2026-09-27-retro.md").unlink()
         artifact(root, "08-operations/2026-10-03-review-utrzymania.md", artifact="operations-review", phase="operations",
-                 _body="# Przegląd utrzymania\n## TL;DR\nTrzy łatki wdrożone.\n## Otwarte pytania\n## Przekazanie\n- Dla: piotr\n")
+                 _body="# Przegląd utrzymania\n## TL;DR\nTrzy łatki wdrożone.\n## Open questions\n## Handoff\n- Dla: piotr\n")
         chk = run(root, "check")
         idx = (root / "docs/project/README.md").read_text() if (root / "docs/project/README.md").exists() else ""
         if chk.returncode != 0 or "Operations" not in idx:
             fails.append(f"phase 9 (operations, 08-operations/) as a record artifact: {chk.stdout[-300:]}")
         (root / "docs/project/08-operations/2026-10-03-review-utrzymania.md").unlink()
         bad = [
-            ("missing TL;DR", dict(_body="# X\n## Przekazanie\n- Dla: a\n")),
+            ("missing TL;DR", dict(_body="# X\n## Handoff\n- Dla: a\n")),
             ("wrong phase vs directory", dict(phase="plan")),
             ("nonexistent input", dict(inputs="[docs/project/nie-ma.md]")),
             ("nieznany status", dict(status="done")),
-            ("unfilled handoff", dict(_body="# X\n## TL;DR\nok\n## Przekazanie\n- **Dla:** <persona>\n")),
+            ("unfilled handoff", dict(_body="# X\n## TL;DR\nok\n## Handoff\n- **Dla:** <persona>\n")),
             ("superseded without superseded_by", dict(status="superseded")),
         ]
         for name, fields in bad:
@@ -222,7 +222,7 @@ def main() -> int:
         # of a task does not rebuild README (the loop would leave an untracked file) and the file does not reach the index
         chg = root / "docs/project/changes/T-20261113-limit"
         chg.mkdir(parents=True)
-        (chg / "plan.md").write_text("# Plan: limit dobowy\n\n- [ ] K1 — limit\n", encoding="utf-8")
+        (chg / "plan.md").write_text("# Plan: limit dobowy\n\n- [ ] S1 — limit\n", encoding="utf-8")
         (root / "docs/project/README.md").unlink()
         run(root, "--hook-index", stdin=json.dumps({"tool_input": {"file_path": str(chg / "plan.md")}}))
         if (root / "docs/project/README.md").exists():
@@ -249,7 +249,7 @@ def main() -> int:
                   "- **E3** > „Planista blokuje specjalistów na etapy.” — L1\n"
                   "- **E4** > „Urlop wyklucza przydział.” — L2 [mention]\n")
         (dom / "corpus.md").write_text(corpus)
-        area = "# Obszary\n## TL;DR\nok\n## Obszary\n### A1 — Przydział\n- **Dowody:** E1, E2, E3\n"
+        area = "# Obszary\n## TL;DR\nok\n## Obszary\n### A1 — Przydział\n- **Evidence:** E1, E2, E3\n"
         (dom / "areas.md").write_text(area)
         if run(root, "evidence").returncode != 0:
             fails.append("evidence: a valid bank and area " + run(root, "evidence").stdout[-200:])
@@ -264,7 +264,7 @@ def main() -> int:
         if run(root, "evidence").returncode == 0:
             fails.append("evidence: the [unverified] tag does not count toward the threshold like [mention]")
         (dom / "corpus.md").write_text(corpus)
-        (dom / "areas.md").write_text(area.replace("E1, E2, E3", "E1, E3") + "- **Wskazany przez człowieka:** tak\n")
+        (dom / "areas.md").write_text(area.replace("E1, E2, E3", "E1, E3") + "- **Named by the human:** yes\n")
         r = run(root, "evidence")
         if r.returncode != 0 or "named by the human" not in r.stdout:
             fails.append("evidence: an area named by the human should give a warning, not an error")

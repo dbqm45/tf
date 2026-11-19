@@ -198,17 +198,18 @@ def main() -> int:
         reg = {x["id"]: x for x in map(json.loads, (tfd / "register" / "items.jsonl").read_text().splitlines())}
         check(reg[hi]["status"] == "resolved", f"A-6: odhaczenie w raporcie → resolved w rejestrze: {reg[hi]}")
         check(newid in reg and reg[newid]["status"] == "open", f"A-6: nowe ustalenie w rejestrze: {reg}")
-        # A-6b: a report from before 14.x (Polish headings) — ticks and history carry over to the new report
+        # A-6b: ticks and history are read from the previous report; the Polish headings from before 14.x are not (the 19.0.0 migration rewrites them)
         import importlib.util
         spec = importlib.util.spec_from_file_location("ctf_analyze_t", ANALYZE)
         an = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(an)
         old = ("## Rekomendowane działania\n\n- [x] SEC-abc123 — x (a.py:1) — high\n  notatka\n\n"
                "## Historia analiz\n\n- 2026-11-01 · abc1234 · ustaleń: 1\n")
-        items = an.parse_actions(old)
+        new = old.replace("## Rekomendowane działania", "## Recommended actions").replace("## Historia analiz", "## Analysis history")
+        items = an.parse_actions(new)
         check(len(items) == 1 and items[0]["checked"] and items[0]["notes"] == ["  notatka"]
-              and an.history(old) == ["- 2026-11-01 · abc1234 · ustaleń: 1"],
-              f"A-6b: the Polish headings of the old report are read: {items} {an.history(old)}")
+              and an.history(new) == ["- 2026-11-01 · abc1234 · ustaleń: 1"] and an.parse_actions(old) == [] and an.history(old) == [],
+              f"A-6b: the report headings are read in English only: {items} {an.history(new)}")
 
         # A-7 cache i --since
         counter.write_text("0")

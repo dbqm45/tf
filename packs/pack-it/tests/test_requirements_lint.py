@@ -26,22 +26,22 @@ Trzy wymagania konieczne.
 |---|---|---|---|
 | US-01 | Jako uczący się… | Given wklejony tekst When proszę o fiszki Then widzę 5–15 propozycji | must |
 
-## Reguła biznesowa
+## Business rule
 Propozycja fiszki trafia do talii dopiero po akceptacji uczącego się, a zaakceptowane wchodzą do harmonogramu powtórek.
 
-## Atrybuty jakości
+## Quality attributes
 | Atrybut | Scenariusz | Priorytet |
 |---|---|---|
 | wydajność | uczący się widzi propozycje w ciągu 10 s dla tekstu do 10 tys. znaków | H |
 
-## Obecny system
+## Current system
 Dziś działa moduł logowania na Supabase z tabelą users (FK do profiles).
 
-## Poza zakresem MVP
+## Out of scope (MVP)
 - import PDF
 - współdzielenie talii
 
-## Otwarte pytania
+## Open questions
 - [ ] Czy limit tekstu wystarczy? → właściciel produktu
 """
 
@@ -100,9 +100,9 @@ Kryteria akceptacji:
 """
 
 BRIEF = """# Brief
-## Ograniczenia
-- Budżet czasu MVP: {budget}
-- Szacunek przepływu MVP: {estimate}
+## Constraints
+- MVP time budget: {budget}
+- MVP flow estimate: {estimate}
 {ack}
 """
 
@@ -131,19 +131,19 @@ def main() -> int:
     out = run({"r.md": GOOD}, "r.md", "--json")
     r = json.loads(out.stdout or "{}")
     check(out.returncode == 0 and r.get("readiness", {}).get("score") == 4 and not r.get("leaks"),
-          f"valid requirements → readiness 4/4, no leaks (the 'Obecny system' section skipped), code 0: {out.returncode} {out.stdout[-300:]}")
+          f"valid requirements → readiness 4/4, no leaks (the 'Current system' section skipped), code 0: {out.returncode} {out.stdout[-300:]}")
 
-    en = GOOD.replace("## Reguła biznesowa", "## Business rule").replace("## Poza zakresem MVP", "## Out of scope (MVP)")
-    out = run({"r.md": en}, "r.md", "--json")
+    pl = GOOD.replace("## Business rule", "## Reguła biznesowa").replace("## Out of scope (MVP)", "## Poza zakresem MVP")
+    out = run({"r.md": pl}, "r.md", "--json")
     r = json.loads(out.stdout or "{}")
-    check(out.returncode == 0 and r.get("readiness", {}).get("score") == 4,
-          f"the 'Business rule' and 'Out of scope' sections (14.x) count towards readiness: {out.stdout[-300:]}")
+    check(r.get("readiness", {}).get("score") == 2,
+          f"the Polish section names from before 14.x no longer count (the 19.0.0 migration rewrites them): {out.stdout[-300:]}")
 
     en = GOOD + "\n## Handoff\n- For: tomasz — the export goes through the REST endpoint in Spring Boot and Kafka\n"
     out = run({"r.md": en}, "r.md", "--json")
     r = json.loads(out.stdout or "{}")
     check(out.returncode == 0 and not r.get("leaks"),
-          f"the '## Handoff' section (14.x) skipped like the former 'Przekazanie': {out.stdout[-300:]}")
+          f"the '## Handoff' section skipped: {out.stdout[-300:]}")
 
     out = run({"r.md": LEAKY}, "r.md", "--json")
     r = json.loads(out.stdout or "{}")
@@ -157,7 +157,7 @@ def main() -> int:
     check(out.returncode == 1 and "r.md:" in out.stdout and "dostawca" in out.stdout,
           f"text output: file:line — category: {out.stdout[-300:]}")
 
-    thin = "# Wymagania\n## TL;DR\nNic.\n## Reguła biznesowa\nTODO\n"
+    thin = "# Wymagania\n## TL;DR\nNic.\n## Business rule\nTODO\n"
     out = run({"r.md": thin}, "r.md", "--json")
     r = json.loads(out.stdout or "{}")
     rd = r.get("readiness", {})
@@ -169,26 +169,26 @@ def main() -> int:
     r = json.loads(out.stdout or "{}")
     check(r.get("readiness", {}).get("score") == 3, f"a rule longer than one sentence (>200 characters) does not count: {out.stdout[-200:]}")
 
-    out = run({"r.md": GOOD, "b.md": BRIEF.format(budget="3 tygodnie", estimate="5 tygodni", ack="")},
+    out = run({"r.md": GOOD, "b.md": BRIEF.format(budget="3 weeks", estimate="5 weeks", ack="")},
               "r.md", "--brief", "b.md", "--json")
     r = json.loads(out.stdout or "{}")
     check(out.returncode == 1 and r.get("mvp", {}).get("too_big") is True,
           f"an estimate above the brief's budget without a cost confirmation → MVP too big, code 1: {out.stdout[-300:]}")
 
-    out = run({"r.md": GOOD, "b.md": BRIEF.format(budget="3 tygodnie", estimate="5 tygodni",
-                                                   ack="- Koszt potwierdzony: 2026-10-10, właściciel produktu przyjmuje 5 tygodni")},
+    out = run({"r.md": GOOD, "b.md": BRIEF.format(budget="3 weeks", estimate="5 weeks",
+                                                   ack="- Cost acknowledged: 2026-10-10, właściciel produktu przyjmuje 5 tygodni")},
               "r.md", "--brief", "b.md", "--json")
     r = json.loads(out.stdout or "{}")
     check(out.returncode == 0 and r.get("mvp", {}).get("too_big") is True and r["mvp"].get("acknowledged") is True,
           f"MVP above the budget with a recorded cost confirmation → code 0: {out.stdout[-300:]}")
 
-    out = run({"r.md": GOOD, "b.md": BRIEF.format(budget="4 tygodnie", estimate="10 dni", ack="")},
+    out = run({"r.md": GOOD, "b.md": BRIEF.format(budget="4 weeks", estimate="10 days", ack="")},
               "r.md", "--brief", "b.md", "--json")
     r = json.loads(out.stdout or "{}")
     check(out.returncode == 0 and r.get("mvp", {}).get("too_big") is False,
           f"10 days in a 4-week budget → fits (units converted): {out.stdout[-300:]}")
 
-    out = run({"r.md": GOOD, "b.md": "# Brief\n## Ograniczenia\n- Zespół: 1 osoba\n"}, "r.md", "--brief", "b.md", "--json")
+    out = run({"r.md": GOOD, "b.md": "# Brief\n## Constraints\n- Zespół: 1 osoba\n"}, "r.md", "--brief", "b.md", "--json")
     r = json.loads(out.stdout or "{}")
     check(out.returncode == 0 and r.get("mvp", {}).get("budget_days") is None and r["mvp"].get("warning"),
           f"a brief without a time budget → a 'set the budget' warning, not an error: {out.stdout[-300:]}")
@@ -200,7 +200,7 @@ def main() -> int:
           and not r["stories"][0].get("findings") and r["stories"][0].get("scenarios") == 1,
           f"KS-1: a story from a table (Given/When/Then on one line) without remarks, --strict → code 0: {out.returncode} {out.stdout[-400:]}")
 
-    mixed = GOOD.replace("## Reguła biznesowa", STORY_BLOCKS + "\n## Reguła biznesowa")
+    mixed = GOOD.replace("## Business rule", STORY_BLOCKS + "\n## Business rule")
     out = run({"r.md": mixed}, "r.md", "--json")
     r = json.loads(out.stdout or "{}")
     by_id = {s["id"]: {f["rule"] for f in s.get("findings", [])} for s in r.get("stories", [])}

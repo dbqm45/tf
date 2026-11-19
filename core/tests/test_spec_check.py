@@ -15,22 +15,22 @@ TASK = ROOT / ".tf" / "factory" / "task_state.py"
 CTF = ROOT / ".tf" / "factory" / "tf.py"
 CHANGES = Path("docs") / "project" / "changes"
 
-GOOD = """# Specyfikacja: Limit dobowy
+GOOD = """# Spec: Limit dobowy
 
-## Kryteria
+## Acceptance criteria
 
-- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi 45 zł.
-- AC-2: Zakładając postój 25 godzin i 1 minutę, gdy kierowca płaci, wtedy opłata to 45 zł i stawka za drugą dobę.
+- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi 45 zł.
+- AC-2: Given postój 25 godzin i 1 minutę, when kierowca płaci, then opłata to 45 zł i stawka za drugą dobę.
 
-## Bez zmian
+## Unchanged
 
 - Pierwsze 30 minut jest bezpłatne.
 
-## Poza zakresem
+## Out of scope
 
 - Abonamenty.
 
-## Otwarte pytania
+## Open questions
 
 - Czy limit dotyczy też motocykli?
 """
@@ -85,58 +85,58 @@ def main() -> int:
         r = run(p, SCRIPT, "check", "PROJ-1")
         check(r.returncode == 2 and "spec.md" in r.stdout, f"SP-1: no file → code 2 with the file name: {r.returncode} {r.stdout}")
         r = verdict(GOOD)
-        check(r.returncode == 0 and "2" in r.stdout, f"SP-2: a valid spec in Polish → code 0, number of criteria: {r.stdout}{r.stderr}")
+        check(r.returncode == 0 and "2" in r.stdout, f"SP-2: a valid spec (English syntax, Polish content) → code 0, number of criteria: {r.stdout}{r.stderr}")
         r = verdict(GOOD_EN)
         check(r.returncode == 0, f"SP-3: in English, a criterion over three lines, “none, because…”: {r.stdout}{r.stderr}")
 
-        r = verdict(GOOD.replace(", wtedy opłata wynosi 45 zł", ""))
+        r = verdict(GOOD.replace(", then opłata wynosi 45 zł", ""))
         check(r.returncode == 1 and "SPEC-002" in r.stdout and "AC-1" in r.stdout and "5" in r.stdout,
               f"SP-4: a criterion without Wtedy → SPEC-002 with the identifier and line number: {r.stdout}")
         r = verdict(GOOD.replace("- AC-2:", "- AC-1:"))
         check(r.returncode == 1 and "SPEC-003" in r.stdout, f"SP-5: a repeated identifier → SPEC-003: {r.stdout}")
-        r = verdict(GOOD.replace("gdy kierowca płaci, wtedy opłata wynosi", "gdy kierowca płaci i gdy wyjeżdża, wtedy opłata wynosi"))
-        check(r.returncode == 1 and "SPEC-004" in r.stdout, f"SP-6: two “gdy” in a criterion → SPEC-004: {r.stdout}")
+        r = verdict(GOOD.replace("when kierowca płaci, then opłata wynosi", "when kierowca płaci and when wyjeżdża, then opłata wynosi"))
+        check(r.returncode == 1 and "SPEC-004" in r.stdout, f"SP-6: two “when” in a criterion → SPEC-004: {r.stdout}")
         r = verdict(GOOD.replace("- Pierwsze 30 minut jest bezpłatne.\n", ""))
         check(r.returncode == 1 and "SPEC-005" in r.stdout and "Unchanged" in r.stdout, f"SP-7: an empty section → SPEC-005 with the name: {r.stdout}")
-        r = verdict(GOOD.replace("## Poza zakresem\n\n- Abonamenty.\n\n", ""))
+        r = verdict(GOOD.replace("## Out of scope\n\n- Abonamenty.\n\n", ""))
         check(r.returncode == 1 and "SPEC-005" in r.stdout and "Out of scope" in r.stdout, f"SP-8: a missing section → SPEC-005: {r.stdout}")
         r = verdict(GOOD.replace("- Abonamenty.", "- brak"))
         check(r.returncode == 1 and "SPEC-005" in r.stdout, f"SP-9: a bare “brak” without a reason → SPEC-005: {r.stdout}")
         r = verdict(GOOD.replace("- Abonamenty.", "- brak, bo historyjka zmienia tylko wartość limitu"))
         check(r.returncode == 0, f"SP-10: “brak, bo …” passes: {r.stdout}")
-        r = verdict(GOOD.replace("- Czy limit dotyczy też motocykli?", "- [blokuje] Czy limit dotyczy też motocykli?"))
+        r = verdict(GOOD.replace("- Czy limit dotyczy też motocykli?", "- [blocking] Czy limit dotyczy też motocykli?"))
         check(r.returncode == 1 and "SPEC-006" in r.stdout, f"SP-11: a blocking question → SPEC-006: {r.stdout}")
-        r = verdict(GOOD.replace("## Kryteria", "## Kryteria\n\nTu nic nie ma.").replace("- AC-1:", "- ").replace("- AC-2:", "- "))
+        r = verdict(GOOD.replace("## Acceptance criteria", "## Acceptance criteria\n\nTu nic nie ma.").replace("- AC-1:", "- ").replace("- AC-2:", "- "))
         check(r.returncode == 1 and "SPEC-001" in r.stdout, f"SP-12: no AC-n criteria → SPEC-001: {r.stdout}")
         # content rules in the core (without the pack-it overlay): an unverifiable outcome and a second action
-        r = verdict(GOOD.replace("wtedy opłata wynosi 45 zł", "wtedy system działa poprawnie"))
+        r = verdict(GOOD.replace("then opłata wynosi 45 zł", "then system działa poprawnie"))
         check(r.returncode == 1 and "SPEC-008" in r.stdout and "AC-1" in r.stdout and "poprawnie" in r.stdout,
               f"SP-24: a weak outcome (“działa poprawnie”) → SPEC-008 with the word: {r.stdout}")
-        r = verdict(GOOD.replace("wtedy opłata wynosi 45 zł", "wtedy opłata 45 zł jest naliczona poprawnie"))
+        r = verdict(GOOD.replace("then opłata wynosi 45 zł", "then opłata 45 zł jest naliczona poprawnie"))
         check(r.returncode == 0, f"SP-25: an outcome with a concrete value passes despite the word “poprawnie”: {r.stdout}")
         r = verdict(GOOD_EN.replace("Then the fee is 45 PLN", "Then everything works as expected"))
         check(r.returncode == 1 and "SPEC-008" in r.stdout, f"SP-26: a weak outcome in English → SPEC-008: {r.stdout}")
-        r = verdict(GOOD.replace("gdy kierowca płaci, wtedy opłata wynosi", "gdy kierowca płaci, a następnie wyjeżdża, wtedy opłata wynosi"))
-        check(r.returncode == 1 and "SPEC-004" in r.stdout, f"SP-27: “a następnie” in the Gdy part is a second action → SPEC-004: {r.stdout}")
-        mixed = (GOOD.replace("# Specyfikacja:", "# Spec:").replace("## Kryteria", "## Acceptance criteria")
-                 .replace("## Bez zmian", "## Unchanged").replace("## Poza zakresem", "## Out of scope")
-                 .replace("## Otwarte pytania", "## Open questions").replace("Zakładając", "Given")
-                 .replace(", gdy", ", when").replace(", wtedy", ", then"))
+        r = verdict(GOOD.replace("when kierowca płaci, then opłata wynosi", "when kierowca płaci, a następnie wyjeżdża, then opłata wynosi"))
+        check(r.returncode == 1 and "SPEC-004" in r.stdout, f"SP-27: “a następnie” in the When part is a second action → SPEC-004: {r.stdout}")
+        mixed = (GOOD.replace("# Spec:", "# Spec:").replace("## Acceptance criteria", "## Acceptance criteria")
+                 .replace("## Unchanged", "## Unchanged").replace("## Out of scope", "## Out of scope")
+                 .replace("## Open questions", "## Open questions").replace("Given", "Given")
+                 .replace(", when", ", when").replace(", then", ", then"))
         r = verdict(mixed)
-        check(r.returncode == 0, f"SP-30: English syntax with Polish content (after the 14.0.0 migration) passes: {r.stdout}")
+        check(r.returncode == 0, f"SP-30: English syntax with Polish content passes: {r.stdout}")
         r = verdict(mixed.replace("- Czy limit", "- [blocking] Czy limit"))
         check(r.returncode == 1 and "SPEC-006" in r.stdout, f"SP-31: znacznik [blocking] blokuje start: {r.stdout}")
-        r = verdict(GOOD.replace("Zakładając postój 12 godzin, gdy", "Zakładając postój 12 godzin oraz kartę mieszkańca, gdy"))
-        check(r.returncode == 0, f"SP-28: a conjunction in the Zakładając part is not a second action: {r.stdout}")
+        r = verdict(GOOD.replace("Given postój 12 godzin, when", "Given postój 12 godzin oraz kartę mieszkańca, when"))
+        check(r.returncode == 0, f"SP-28: a conjunction in the Given part is not a second action: {r.stdout}")
         # SPEC-009: a warning (not an error) when no criterion describes disallowed behaviour
         r = verdict(GOOD)
         check(r.returncode == 0 and "SPEC-009" in r.stdout and "⚠" in r.stdout,
               f"SP-29: only positive criteria → warning SPEC-009, code 0: {r.stdout}")
-        NEG = GOOD.replace("\n\n## Bez zmian", "\n- AC-3: Zakładając nieopłacony postój, gdy kierowca podjeżdża do wyjazdu, "
-                           "wtedy szlaban się nie otwiera.\n\n## Bez zmian")
+        NEG = GOOD.replace("\n\n## Unchanged", "\n- AC-3: Given nieopłacony postój, when kierowca podjeżdża do wyjazdu, "
+                           "then szlaban się nie otwiera.\n\n## Unchanged")
         r = verdict(NEG)
         check(r.returncode == 0 and "SPEC-009" not in r.stdout, f"SP-30: a negative criterion (“nie otwiera”) → no warning: {r.stdout}")
-        r = verdict(NEG.replace("wtedy szlaban się nie otwiera", "wtedy system odmawia wyjazdu z komunikatem „Opłać postój”"))
+        r = verdict(NEG.replace("then szlaban się nie otwiera", "then system odmawia wyjazdu z komunikatem „Opłać postój”"))
         check(r.returncode == 0 and "SPEC-009" not in r.stdout, f"SP-31: a refusal as the outcome → no warning: {r.stdout}")
         r = verdict(GOOD_EN.replace("Then the fee is 45 PLN", "Then the fee is 45 PLN\n\n### AC-2\nGiven an unpaid stay\n"
                                     "When the driver reaches the exit\nThen the barrier does not open"))
@@ -181,7 +181,7 @@ def main() -> int:
         run(p, TASK, "start", "PROJ-2", "--title", "Bez specyfikacji")
         r = run(p, TASK, "stage", "PROJ-2", "implementation")
         check(r.returncode == 0, f"SP-21: a task without spec.md works as before: {r.stdout}")
-        spec.write_text(GOOD.replace(", wtedy opłata wynosi 45 zł", ""), encoding="utf-8")
+        spec.write_text(GOOD.replace(", then opłata wynosi 45 zł", ""), encoding="utf-8")
         r = run(p, TASK, "stage", "PROJ-1", "implementation", "--force")
         check(r.returncode == 0, f"SP-22: --force skips the spec gate: {r.stdout}")
 

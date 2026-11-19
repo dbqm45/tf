@@ -15,7 +15,7 @@ Jev decision model whether the indicated lines CONFIRM the sentence the referenc
 Confidence ≥0.8 → verdict; lower → „do przejrzenia przez człowieka” ("for human review"). Contradicting and non-confirming count as problems.
 The path is looked up relative to the document's directory, its parent directories and the project directory. Skips code blocks,
 URLs, patterns with <…>, *, {…}, $ and paths marked in the same line as planned („(new)”, „(to be
-created)”, „(planned)”, „[plan]”; also the old „(nowy)”, „(do utworzenia)”). For project documents (reports, artifacts, README), not for examples in skills.
+created)”, „(planned)”, „[plan]”; in a Polish document also „(nowy)”, „(do utworzenia)”). For project documents (reports, artifacts, README), not for examples in skills.
 """
 from __future__ import annotations
 

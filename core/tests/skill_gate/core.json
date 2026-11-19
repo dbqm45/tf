@@ -4,7 +4,7 @@
   "offline": "2026-11-18"
  },
  "core-agent-retro": {
-  "fingerprint": "1f11e6621eaf858b",
+  "fingerprint": "437b05ff8b24adff",
   "offline": "2026-11-19"
  },
  "core-agent-security": {
@@ -36,7 +36,7 @@
   "offline": "2026-11-18"
  },
  "core-grounding": {
-  "fingerprint": "22fc42d93b2b1748",
+  "fingerprint": "927c34c0aacdadfe",
   "offline": "2026-11-19"
  },
  "core-knowledge": {
@@ -52,8 +52,8 @@
   "offline": "2026-11-18"
  },
  "core-project-record": {
-  "fingerprint": "4d02f02b10642073",
-  "offline": "2026-11-18"
+  "fingerprint": "5ea0ea047ca72b9e",
+  "offline": "2026-11-19"
  },
  "core-semver": {
   "fingerprint": "e0c532fbf3f9fef5",
@@ -80,7 +80,7 @@
   "offline": "2026-11-17"
  },
  "tf": {
-  "fingerprint": "9549a019ceab137e",
+  "fingerprint": "32f547b70c1e6ccd",
   "offline": "2026-11-19"
  }
 }

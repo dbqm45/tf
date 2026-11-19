@@ -12,8 +12,8 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory
 TASK = ROOT / ".tf" / "factory" / "task_state.py"
 GUARD = ROOT / ".claude" / "hooks" / "guard_paths.py"
 CHANGES = Path("docs") / "project" / "changes"
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi 45 zł.\n"
-        "\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi 45 zł.\n"
+        "\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
 
 
 def tf(project: Path, *args: str):
@@ -50,7 +50,7 @@ def main() -> int:
         tf(p, "mode", "PROJ-1", "auto")          # the test is about file protection, not plan approval (normal mode, step E3)
         folder = p / CHANGES / "PROJ-1"
         (folder / "spec.md").write_text(SPEC, encoding="utf-8")
-        (folder / "plan.md").write_text("# Plan\n- [ ] K1 — limit\n", encoding="utf-8")
+        (folder / "plan.md").write_text("# Plan\n- [ ] S1 — limit\n", encoding="utf-8")
         (p / "tests").mkdir()
         (p / "tests" / "test_fees.py").write_text("def test_ac1_limit():  # AC-1\n    assert True\n", encoding="utf-8")
         (p / "src.py").write_text("x = 1\n", encoding="utf-8")
@@ -76,7 +76,7 @@ def main() -> int:
 
         # files that only the script writes
         for rel in (f"{CHANGES.as_posix()}/PROJ-1/task.json", f"{CHANGES.as_posix()}/INDEX.md",
-                    f"{CHANGES.as_posix()}/PROJ-1/evidence/K1-1.json"):
+                    f"{CHANGES.as_posix()}/PROJ-1/evidence/S1-1.json"):
             d, why = guard(p, "Write", rel)
             check(d == "ask" and "tf task" in why, f"O-8: {rel} is written only by `tf task` → ask: {d} {why}")
 

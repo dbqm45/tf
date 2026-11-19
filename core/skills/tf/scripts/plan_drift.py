@@ -19,7 +19,7 @@ import re
 import subprocess
 import sys
 
-SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*([KS]\d+)\b(.*)$")
+SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*(S\d+)\b(.*)$")
 TEST = re.compile(r"(^|/)(tests?|__tests__|e2e|spec)/|\.(test|spec)\.|(^|/)test_[^/]*\.py$|_test\.(py|go)$|"
                   r"(Test|Tests)\.(java|cs)$")
 
@@ -33,7 +33,7 @@ def parse_plan(text: str) -> list[dict]:
         files = []
         for part in m.group(3).split("·"):
             k, _, v = part.strip().partition(":")
-            if k.strip().lower() in ("files", "pliki"):
+            if k.strip().lower() == "files":
                 files = [f.strip().strip("`") for f in v.split(",") if f.strip()]
         out.append({"id": m.group(2), "done": m.group(1).lower() == "x", "files": files})
     return out

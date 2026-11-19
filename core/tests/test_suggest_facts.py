@@ -91,10 +91,10 @@ def main() -> int:
         res_dir = root / "docs" / "project" / "archive" / "research"
         res_dir.mkdir(parents=True)
         (res_dir / "20261017-archetypy-zrodla.md").write_text(
-            "# Weryfikacja\n## Geografia\n- P (iso.org): ISO 19112:2019 (wyd. 2, zastąpiło 2003) — gazetteer.\n"
-            "- N: przynależność Geographic Boundary do Vol. 1.\n- C: eIDAS 910/2014 — pieczęć elektroniczna i podpis.\n",
+            "# Weryfikacja\n## Geografia\n- confirmed (iso.org): ISO 19112:2019 (wyd. 2, zastąpiło 2003) — gazetteer.\n"
+            "- unconfirmed: przynależność Geographic Boundary do Vol. 1.\n- partial: eIDAS 910/2014 — pieczęć elektroniczna i podpis.\n",
             encoding="utf-8")
-        (res_dir / "20250101-stare.md").write_text("- P: ISO 19112:2003 — stare wydanie.\n", encoding="utf-8")
+        (res_dir / "20250101-stare.md").write_text("- confirmed: ISO 19112:2003 — stare wydanie.\n", encoding="utf-8")
         (res_dir / "20261018-en.md").write_text("- contradicted (ietf.org): RFC 9999 — ISO 19112 cytowane błędnie.\n",
                                                 encoding="utf-8")
         sk = root / ".claude" / "skills" / "sec-x"
@@ -110,7 +110,7 @@ def main() -> int:
         check(r.returncode == 0 and ("20261017-archetypy-zrodla.md", "confirmed") in by and ("SKILL.md", "skill-source") in by
               and not any("Treść o ISO" in h["text"] for h in hits),
               f"F-1: verification tables and the skills' “Sources” sections, with a verdict; the skill's content outside the sources skipped: {hits}")
-        check(("20261018-en.md", "contradicted") in by, f"F-1b: a verdict as a word (14.x) next to the old letters P/C/N/S: {by}")
+        check(("20261018-en.md", "contradicted") in by, f"F-1b: a verdict as a word: {by}")
         old = [h for h in hits if h["file"].endswith("20250101-stare.md")]
         new = [h for h in hits if h["file"].endswith("20261017-archetypy-zrodla.md")]
         check(old and old[0]["stale"] is True and new and new[0]["stale"] is False and new[0]["date"] == "2026-10-17",

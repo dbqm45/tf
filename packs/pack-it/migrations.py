@@ -1,26 +1,36 @@
 """Project data migrations of the pack-it overlay (called by the core `migrations.migrate_values` on update).
 
 14.x: legacy dossier (`eng-legacy-dossier`) in English syntax — sections, finding and recommendation fields, `State:`,
-the rules table. The name and value maps come from the skill (`dossier_check.ALIASES`, `VALUE_ALIASES`)."""
+the rules table. The name and value maps live here (until 19.0.0 the skill's `dossier_check.py` also read them)."""
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
 
-def _dossier_maps(root: Path) -> tuple[dict, dict] | None:
-    """Dossier name and value maps from the installed eng-legacy-dossier skill (pack-it); without the skill — None."""
-    f = root / ".claude" / "skills" / "eng-legacy-dossier" / "scripts" / "dossier_check.py"
-    if not f.is_file():
-        return None
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("tf_dossier_check", f)
-    mod = importlib.util.module_from_spec(spec)
-    try:
-        spec.loader.exec_module(mod)
-        return dict(mod.ALIASES), dict(mod.VALUE_ALIASES)
-    except Exception:   # noqa: BLE001 — a broken skill does not stop the update
-        return None
+# Pre-14.x dossiers (in Polish): section, field and value names → English (`dossier_check.py` reads only English since 19.0.0).
+ALIASES = {
+    "Moduły": "Modules", "Przepływy": "Flows", "Słownik": "Glossary",
+    "Stan i kandydaci do refaktoru": "State and refactoring candidates", "Pytania otwarte": "Open questions",
+    "Ograniczenia": "Limitations", "Po co": "Purpose", "Odpowiedzialności": "Responsibilities",
+    "Wejścia i wyjścia": "Inputs and outputs", "Reguły biznesowe": "Business rules", "Dane": "Data",
+    "Zależności": "Dependencies", "Pułapki": "Pitfalls", "Testy": "Tests", "Pytania": "Questions",
+    "Podsumowanie": "Summary", "Zakres i metoda": "Scope and method", "Kryteria oceny": "Assessment criteria",
+    "Ustalenia": "Findings", "Mocne strony": "Strengths", "Do dalszego zbadania": "To investigate",
+    "Docelowe zasady": "Target principles", "Rekomendacje": "Recommendations", "Roadmapa": "Roadmap",
+    "Kryteria sukcesu": "Success criteria",
+    "Obszar": "Area", "Kategoria": "Category", "Stan obecny": "Current state", "Stan oczekiwany": "Expected state",
+    "Luka": "Gap", "Dowód": "Evidence", "Wpływ": "Impact", "Dotyczy": "Addresses", "Decyzja": "Decision",
+    "Priorytet": "Priority", "Wysiłek": "Effort", "Ryzyko": "Risk", "Weryfikacja": "Verification",
+}
+VALUE_ALIASES = {
+    "potwierdzony problem": "confirmed problem", "ryzyko": "risk", "niespójność": "inconsistency",
+    "możliwość poprawy": "improvement", "preferencja": "preference", "bez zmian": "no change",
+    "dokumentacja": "documentation", "konfiguracja": "configuration",
+    "refaktoryzacja przyrostowa": "incremental refactoring", "refaktoryzacja strukturalna": "structural refactoring",
+    "przeprojektowanie": "redesign", "kod": "code", "do weryfikacji": "to verify",
+    "zielony": "green", "żółty": "yellow", "czerwony": "red",
+}
 
 
 def _dossier_text(text: str, names: dict, values: dict) -> str:
@@ -57,9 +67,6 @@ def _dossier_text(text: str, names: dict, values: dict) -> str:
 
 def _dossiers(root: Path, dry: bool) -> list[str]:
     """Existing legacy dossiers (files with the `<!-- legacy-dossier` marker) in 14.x syntax."""
-    maps = _dossier_maps(root)
-    if maps is None:
-        return []
     out = []
     for f in sorted((root / "docs" / "project").rglob("*.md")) if (root / "docs" / "project").is_dir() else []:
         try:
@@ -68,7 +75,7 @@ def _dossiers(root: Path, dry: bool) -> list[str]:
             continue
         if not text.startswith("<!-- legacy-dossier"):
             continue
-        new = _dossier_text(text, *maps)
+        new = _dossier_text(text, ALIASES, VALUE_ALIASES)
         if new != text:
             out.append(f.relative_to(root).as_posix())
             if not dry:

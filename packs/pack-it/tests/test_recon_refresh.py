@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests of eng-codebase-mapping/scripts/recon_refresh.py: refreshing the reconstruction in two steps without a model —
 prep (the manifest diff, a copy of the cards, orders for the executors with the diff, comment-only changes without orders,
-recomputing shifted lines) and finish (cards → .md, rules.md, the Moduły section, a list of
+recomputing shifted lines) and finish (cards → .md, rules.md, the Modules section, a list of
 places with the old description, the final check, the manifest). python3 .claude/tests/test_recon_refresh.py"""
 import json
 import subprocess
@@ -35,29 +35,29 @@ Fakturowanie (`svc/billing/invoice.py:1`).
 ## Stack
 | Obszar | Ustalenie | Dowód |
 |---|---|---|
-| Język | Python 3 [założenie] | — |
-| Framework | brak [założenie] | — |
-| Dane | brak [niezweryfikowane] | — |
-| Build | brak [założenie] | — |
-| Testy | brak [niezweryfikowane] | — |
-| CI | brak [niezweryfikowane] | — |
-| Konfiguracja | stała w kodzie | `svc/billing/tax.py:1` |
-## Moduły
+| Language | Python 3 [assumption] | — |
+| Framework | brak [assumption] | — |
+| Data | brak [unverified] | — |
+| Build | brak [assumption] | — |
+| Tests | brak [unverified] | — |
+| CI | brak [unverified] | — |
+| Configuration | stała w kodzie | `svc/billing/tax.py:1` |
+## Modules
 - (wstawia recon_cards)
-## Domeny
+## Domains
 - Fakturowanie — `svc/billing/invoice.py:1`
 - Faktura bez pozycji jest odrzucana przez system — `svc/billing/tax.py:1`
-## Wymagania
+## Requirements
 - Pusta faktura jest odrzucana kodem 422; dotyczy faktur sprzedaży i korekt, wystawianych ręcznie w panelu oraz automatycznie z zamówień sklepu, także po imporcie z systemu księgowego — `svc/billing/invoice.py:4`
-## Reguły
+## Rules
 - VAT 23% — `svc/billing/tax.py:1`
-## Standardy
-- [niezweryfikowane] snake_case
-## Ryzyka
+## Standards
+- [unverified] snake_case
+## Risks
 - Brak testów — `svc/billing/invoice.py:1`
-## Pytania
-- [pytanie] Czy VAT zależy od kraju?
-## Czego nie sprawdzono
+## Questions
+- [question] Czy VAT zależy od kraju?
+## Not checked
 - Wdrożenie.
 """
 
@@ -133,7 +133,7 @@ def main() -> int:
                   for ln in out.splitlines()),
               f"RF-30: a description similar to the changed card rule on the list, with the new rule content: {out[-900:]}")
         check("- billing:" in (rep / "report.md").read_text(encoding="utf-8") and (rep / "modules/billing.md").exists()
-              and (rep / "rules.md").exists(), "RF-7: the Moduły section, the cards' .md and rules.md assembled")
+              and (rep / "rules.md").exists(), "RF-7: the Modules section, the cards' .md and rules.md assembled")
         check("Final check:" in out and len(out.splitlines()) <= 60, f"RF-8: a concise check summary: {out[-600:]}")
 
         # after the description fix the check passes and the manifest gets the new state
@@ -153,7 +153,7 @@ def main() -> int:
         write(repo, {"svc/billing/tax.py": "# stawki\n# VAT\n# PL\n# 2026\nRATE = 0.23\n"})
         rp = (rep / "report.md").read_text(encoding="utf-8")
         write(rep, {"report.md": rp.replace("- VAT 23% — `svc/billing/tax.py:1`", '- VAT 23% — `svc/billing/tax.py:1` "RATE = 0.23"')
-                    .replace("| Konfiguracja | stała w kodzie | `svc/billing/tax.py:1` |", "| Konfiguracja | stała w kodzie | `svc/billing/tax.py:5` |")})
+                    .replace("| Configuration | stała w kodzie | `svc/billing/tax.py:1` |", "| Configuration | stała w kodzie | `svc/billing/tax.py:5` |")})
         moved = dict(new, rules=[new["rules"][0], dict(BILLING["rules"][1], evidence="svc/billing/tax.py:5")])
         write(rep, {"modules/billing.json": json.dumps(moved, ensure_ascii=False)})
         r = run("recon_refresh.py", "finish", str(repo), cwd=d)
@@ -207,7 +207,7 @@ def main() -> int:
         write(repo, {"svc/billing/invoice.py": (repo / "svc/billing/invoice.py").read_text(encoding="utf-8").replace(
             "    if not lines:", "    if len(lines) < 2:\n        log('too few')")})
         rp = (rep / "report.md").read_text(encoding="utf-8")
-        write(rep, {"report.md": rp.replace("## Domeny\n", "## Domeny\n- Sprawdzenie liczby pozycji — `svc/billing/invoice.py:4`\n")
+        write(rep, {"report.md": rp.replace("## Domains\n", "## Domains\n- Sprawdzenie liczby pozycji — `svc/billing/invoice.py:4`\n")
 })
         r = run("recon_refresh.py", "prep", str(repo), cwd=d)
         task = rep / "raw/refresh/billing.md"
@@ -227,7 +227,7 @@ def main() -> int:
 
         # evidence with a quote that is no longer in the code: finish shows the line, apply fixes it and finishes right away
         bad = '- Pusta lista pozycji jest odrzucana — `svc/billing/invoice.py:4` "if not lines:"'
-        write(rep, {"report.md": rp.replace("## Reguły\n", "## Reguły\n" + bad + "\n")})
+        write(rep, {"report.md": rp.replace("## Rules\n", "## Rules\n" + bad + "\n")})
         n = (rep / "report.md").read_text(encoding="utf-8").split("\n").index(bad) + 1
         r = run("recon_refresh.py", "finish", str(repo), cwd=d)
         check(r.returncode == 1 and f"report.md:{n}" in r.stdout and bad in r.stdout,

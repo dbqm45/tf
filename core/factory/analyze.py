@@ -291,9 +291,9 @@ def load_json(p: Path) -> dict:
 
 # ───────────── report and merging ─────────────
 
-# Report section headers: English (since 14.x) and the former Polish — both read when merging with the previous report.
-ACTIONS = ("## Recommended actions", "## Rekomendowane działania")
-HISTORY = ("## Analysis history", "## Historia analiz")
+# Report section headers, read when merging with the previous report.
+ACTIONS = ("## Recommended actions",)
+HISTORY = ("## Analysis history",)
 ITEM = re.compile(r"^- \[( |x|X)\] ([A-Z0-9]+-[0-9a-f]{6})\b")
 
 

@@ -27,7 +27,7 @@ def new_task(project: Path, key: str, plan: bool = True) -> Path:
     folder = project / CHANGES / key
     (folder / "ticket.md").write_text("# Eksport sesji\n\nJako operator chcę eksport sesji do pliku.\n", encoding="utf-8")
     if plan:
-        (folder / "plan.md").write_text("# Plan\n- [ ] K1 — eksport · pliki: export.py\n", encoding="utf-8")
+        (folder / "plan.md").write_text("# Plan\n- [ ] S1 — eksport · files: export.py\n", encoding="utf-8")
         tf(project, "artifact", key, "plan.md", "--stage", "plan", "--by", "process:tf", "--inputs", "ticket.md")
     return folder
 
@@ -105,7 +105,7 @@ def main() -> int:
         tf(p, "start", "CHG-12-TSK-57", "--title", "TSK-57: ponowienie płatności", "--change", "CHG-12", "--cut", "TSK-57")
         folder = p / CHANGES / "CHG-12-TSK-57"
         (folder / "ticket.md").write_text("# TSK-57\n\nCięcie TSK-57 zmiany CHG-12.\n", encoding="utf-8")
-        (folder / "plan.md").write_text("# Plan\n- [ ] K1 — ponowienie · pliki: pay.py\n", encoding="utf-8")
+        (folder / "plan.md").write_text("# Plan\n- [ ] S1 — ponowienie · files: pay.py\n", encoding="utf-8")
         tf(p, "artifact", "CHG-12-TSK-57", "plan.md", "--stage", "plan", "--by", "process:tf", "--inputs", "ticket.md")
         tf(p, "weight", "CHG-12-TSK-57", "--set", "full")
         r = tf(p, "stage", "CHG-12-TSK-57", "implementation")

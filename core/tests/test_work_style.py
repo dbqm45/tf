@@ -23,10 +23,10 @@ RUN_STATE, REPORT = SCRIPTS / "run_state.py", SCRIPTS / "run_report.py"
 GUARD = ROOT / ".claude" / "hooks" / "guard_bash.py"
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'3 passed\')"'
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci kartą, wtedy opłata "
-        "wynosi 45 zł.\n\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
-PLAN = ("# Plan\n\n- [ ] K1 — płatność kartą · kryteria: AC-1 · pliki: pay.py\n"
-        "- [ ] K2 — paragon · kryteria: AC-1 · pliki: receipt.py\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci kartą, then opłata "
+        "wynosi 45 zł.\n\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
+PLAN = ("# Plan\n\n- [ ] S1 — płatność kartą · criteria: AC-1 · files: pay.py\n"
+        "- [ ] S2 — paragon · criteria: AC-1 · files: receipt.py\n")
 
 
 def load(path: Path, name: str):
@@ -191,20 +191,20 @@ def main() -> int:
         run(s, prefs, RUN_STATE, "flag", d, "none", "--reason", "bez flagi, bo zmiana jest za zgodą człowieka w planie")
         run(s, prefs, RUN_STATE, "stage", d, "plan")
         run(s, prefs, RUN_STATE, "approve", d)
-        run(s, prefs, RUN_STATE, "step", d, "K1", "R1", "test", "run")
+        run(s, prefs, RUN_STATE, "step", d, "S1", "R1", "test", "run")
         (s / "pay.py").write_text("FEE = 45\n", encoding="utf-8")
         (s / "test_pay.py").write_text("def test_ac1_card_fee():  # AC-1\n    assert True\n", encoding="utf-8")
-        run(s, prefs, RUN_STATE, "verify", d, "K1", "--files", "pay.py,test_pay.py", "--command", OK)
-        r = run(s, prefs, RUN_STATE, "done", d, "K1", "--message", "feat(pay): card payment")
-        check(r.returncode == 0 and "STOP" in r.stdout and "proceed" in r.stdout and "Next: K2" not in r.stdout,
+        run(s, prefs, RUN_STATE, "verify", d, "S1", "--files", "pay.py,test_pay.py", "--command", OK)
+        r = run(s, prefs, RUN_STATE, "done", d, "S1", "--message", "feat(pay): card payment")
+        check(r.returncode == 0 and "STOP" in r.stdout and "proceed" in r.stdout and "Next: S2" not in r.stdout,
               f"WS-11: after a slice the step-by-step style stops the run until the human consents: {r.returncode} {r.stdout}{r.stderr}")
         (s / "receipt.py").write_text("R = 1\n", encoding="utf-8")
-        r = run(s, prefs, RUN_STATE, "verify", d, "K2", "--files", "receipt.py,test_pay.py", "--command", OK)
+        r = run(s, prefs, RUN_STATE, "verify", d, "S2", "--files", "receipt.py,test_pay.py", "--command", OK)
         check(r.returncode != 0 and "proceed" in r.stdout + r.stderr,
               f"WS-11: the next slice rejected before consent: {r.returncode} {r.stdout}{r.stderr}")
         r = run(s, prefs, RUN_STATE, "proceed", d)
-        check(r.returncode == 0 and "Next: K2" in r.stdout, f"WS-11: proceed lifts the hold: {r.stdout}{r.stderr}")
-        r = run(s, prefs, RUN_STATE, "verify", d, "K2", "--files", "receipt.py,test_pay.py", "--command", OK)
+        check(r.returncode == 0 and "Next: S2" in r.stdout, f"WS-11: proceed lifts the hold: {r.stdout}{r.stderr}")
+        r = run(s, prefs, RUN_STATE, "verify", d, "S2", "--files", "receipt.py,test_pay.py", "--command", OK)
         check(r.returncode == 0, f"WS-11: after consent the next slice goes on: {r.returncode} {r.stdout}{r.stderr}")
     for f in fails:
         print(f"✗ {f}")

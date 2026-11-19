@@ -56,7 +56,7 @@ Required sections (except an ADR, the journal and the register):
 - **the content** per the phase template (short; details and long tables → a separate file next to it and a link).
 - **`## Open questions`** — with an addressee ("→ product owner").
 - **`## Handoff`** — for whom (persona/role), what they are to do, which sections to read, what NOT to do, the "done" criteria.
-The scripts still recognise the older Polish names (`## Otwarte pytania`, `## Przekazanie`) in existing artifacts.
+The scripts read only these English names; updating to 19.0.0 rewrote the older Polish ones in existing artifacts.
 
 ## Statuses and acceptance
 `draft` (in progress) → `proposed` (ready for review) → `accepted` (**the human accepted it**) → `superseded` (replaced, with `superseded_by`).

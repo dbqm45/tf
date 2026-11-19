@@ -956,7 +956,7 @@ def main(argv: list[str]) -> int:
             if not sys.stdin.isatty():
                 print("\nRun again with --yes to apply (no terminal to confirm in).")
                 return 1
-            if input("\nApply the update? [y/N] ").strip().lower() not in ("t", "tak", "y", "yes"):
+            if input("\nApply the update? [y/N] ").strip().lower() not in ("y", "yes"):
                 print("Aborted — nothing was changed.")
                 return 1
         code, msg = preflight(ROOT, "python3 .tf/factory/update.py --yes")

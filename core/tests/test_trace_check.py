@@ -15,9 +15,9 @@ TASK = ROOT / ".tf" / "factory" / "task_state.py"
 CTF = ROOT / ".tf" / "factory" / "tf.py"
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'2 passed\')"'
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi 45 zł.\n"
-        "- AC-2: Zakładając postój 30 minut, gdy kierowca płaci, wtedy opłata wynosi 0 zł.\n"
-        "\n## Bez zmian\n\n- Stawka godzinowa.\n\n## Poza zakresem\n\n- Abonamenty.\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi 45 zł.\n"
+        "- AC-2: Given postój 30 minut, when kierowca płaci, then opłata wynosi 0 zł.\n"
+        "\n## Unchanged\n\n- Stawka godzinowa.\n\n## Out of scope\n\n- Abonamenty.\n")
 
 
 def run(project: Path, script: Path, *args: str):
@@ -70,8 +70,8 @@ def main() -> int:
         sha1 = git(p, "rev-parse", "--short", "HEAD")
         write(p, ".tf/logs/tdd-red.jsonl", json.dumps({"at": "2026-11-13T10:00:00+00:00", "tests": ["tests/test_fees.py"],
                                                        "command": "pytest"}) + "\n")
-        run(p, TASK, "verify", "PROJ-1", "K1", "--files", "src/fees.py,tests/test_fees.py", "--command", OK)
-        ev = json.loads((p / CHANGES / "PROJ-1" / "evidence" / "K1-1.json").read_text(encoding="utf-8"))
+        run(p, TASK, "verify", "PROJ-1", "S1", "--files", "src/fees.py,tests/test_fees.py", "--command", OK)
+        ev = json.loads((p / CHANGES / "PROJ-1" / "evidence" / "S1-1.json").read_text(encoding="utf-8"))
         check(ev.get("red_tests") == {"tests/test_fees.py": "2026-11-13T10:00:00+00:00"},
               f"TR-15: the slice evidence carries the red test record from the TDD hook log: {ev.get('red_tests')}")
 
@@ -96,7 +96,7 @@ def main() -> int:
         rows = {x["criterion"]: x for x in data.get("rows", [])}
         check(r.returncode == 0 and data.get("ok") is True
               and rows.get("AC-1", {}).get("tests") == ["tests/test_fees.py:1"] and rows["AC-1"].get("commit") == sha1
-              and rows["AC-1"].get("slice") == "K1" and rows["AC-1"].get("evidence") == "verified",
+              and rows["AC-1"].get("slice") == "S1" and rows["AC-1"].get("evidence") == "verified",
               f"TR-5: the full AC-1 trace: test, commit, slice, evidence state: {r.stdout[:400]}{r.stderr}")
         check(rows.get("AC-1", {}).get("red") is True and rows.get("AC-2", {}).get("red") is False,
               f"TR-16: the trace says whether the test was seen as red: {rows.get('AC-1')} {rows.get('AC-2')}")
@@ -107,13 +107,13 @@ def main() -> int:
         git(p, "add", "-A")
         git(p, "commit", "-qm", "test: free")
         sha2 = git(p, "rev-parse", "--short", "HEAD")
-        run(p, TASK, "verify", "PROJ-1", "K2", "--files", "tests/test_free.py", "--command", OK)
+        run(p, TASK, "verify", "PROJ-1", "S2", "--files", "tests/test_free.py", "--command", OK)
         r = run(p, SCRIPT, "PROJ-1", "--md")
         lines = [ln for ln in r.stdout.splitlines() if ln.startswith("| AC-")]
         check("Red before the code" in r.stdout and "| yes |" in lines[0] and "not recorded" in lines[1],
               f"TR-17: the table has the column 'Red before the code': {r.stdout}")
-        check(r.returncode == 0 and len(lines) == 2 and sha1 in lines[0] and "K1" in lines[0] and "verified" in lines[0]
-              and sha2 in lines[1] and "tests/test_free.py" in lines[1] and "K2" in lines[1],
+        check(r.returncode == 0 and len(lines) == 2 and sha1 in lines[0] and "S1" in lines[0] and "verified" in lines[0]
+              and sha2 in lines[1] and "tests/test_free.py" in lines[1] and "S2" in lines[1],
               f"TR-7: --md gives a criterion → test → commit → evidence table: {r.stdout}")
         r = run(p, SCRIPT, "PROJ-1")
         check(r.returncode == 0 and "2/2" in r.stdout, f"TR-8: text: all criteria have a test: {r.stdout}")

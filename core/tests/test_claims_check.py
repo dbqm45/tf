@@ -22,7 +22,7 @@ DOC = f"""# Raport pomiaru
 Koszt pomiaru wyniósł 21,07 USD (`docs/evals/raport.jsonl`).
 Skuteczność wzrosła o 30% po zmianie opisu.
 Według źródła https://example.org/raport czas odpowiedzi spadł o 120 ms.
-Szacunek: 40% użytkowników nie zauważy zmiany [założenie].
+Szacunek: 40% użytkowników nie zauważy zmiany [assumption].
 Bramka uruchomiona 2026-02-30 na gałęzi roboczej.
 Stan na {TOMORROW}: wszystkie testy przechodzą (`pytest -q`).
 
@@ -76,7 +76,7 @@ def main() -> int:
         check("report.md:9" in out and "30%" in out and "WARNING" in out.upper(),
               f"C-6: a number without a source in a paragraph -> a warning: {out}")
         check("report.md:8" not in out and "report.md:10" not in out and "report.md:11" not in out,
-              f"C-7: numbers with a source (path, URL) and marked [założenie] with no remarks: {out}")
+              f"C-7: numbers with a source (path, URL) and marked [assumption] with no remarks: {out}")
         check("99%" not in out, f"C-8: code blocks skipped: {out}")
         r = run(["czysty.md"], d)
         check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"), f"C-9: a clean document -> OK, code 0: {r.stdout}")

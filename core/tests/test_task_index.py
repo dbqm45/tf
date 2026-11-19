@@ -73,7 +73,7 @@ def main() -> int:
         check("tf status" in note and "OLD-1" not in note and "|" not in note,
               f"I-3: an existing index becomes a constant note pointing to `tf status`, without task rows: {note}")
         call(p, TASK, "stage", "PROJ-2", "spec")
-        call(p, TASK, "slice", "PROJ-2", "K1", "planned", "--title", "limit")
+        call(p, TASK, "slice", "PROJ-2", "S1", "planned", "--title", "limit")
         check((p / CHANGES / "INDEX.md").read_text(encoding="utf-8") == note,
               "I-4: further task writes no longer change INDEX.md")
         git(p, "add", "-A")
