@@ -154,6 +154,20 @@
           ["szablon\\w*", "nowe (typy|rodzaje) pytań", "odłożon\\w+"]
         ]
       }
+    },
+    {
+      "id": "bramka-ci-narzedzie-prog-z-bazy",
+      "expect": "trigger",
+      "prompt": "Mamy wyniki ewaluacji asystenta w plikach JSONL: trzy przebiegi obecnej wersji i jeden przebieg kandydata po zmianie promptu. Jak z tego policzyć próg dla CI i zdecydować, czy blokować merge, bez pisania własnego skryptu? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["eval_gate\\.py"],
+          ["baseline"],
+          ["margines\\w*", "margin", "--margin"],
+          ["hold", "investigate", "wstrzyma\\w+", "kod\\w* wyjścia", "exit code"]
+        ],
+        "none": ["próg 100% dla wszystkich ewaluacji", "jedno uruchomienie wystarczy do blokady"]
+      }
     }
   ]
 }
