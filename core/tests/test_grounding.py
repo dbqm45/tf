@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy mechanizmów przeciw zmyślaniu: grounding_check (odwołania w dokumentach) i context_guard (długi kontekst)."""
+"""Tests of the anti-fabrication mechanisms: grounding_check (references in documents) and context_guard (long context)."""
 import json
 import os
 import subprocess
@@ -26,20 +26,21 @@ def main() -> int:
         (root / "docs").mkdir()
         doc = root / "docs" / "r.md"
         doc.write_text("# R\n- `src/app.ts:2` i `src/app.ts:9`\n- `python3 tools/build.py`\n- `src/new.ts` (do utworzenia)\n"
-                       "- [ok](../src/app.ts) [zły](../src/x.ts) https://example.com/a.md\n- `docs/project/wip/<nazwa>.md`\n"
-                       "```\n`src/w-bloku.ts`\n```\n- `ddd-deep-modeling/test-zmiennosci`\n")
+                       "- [ok](../src/app.ts) [bad](../src/x.ts) https://example.com/a.md\n- `docs/project/wip/<nazwa>.md`\n"
+                       "```\n`src/w-bloku.ts`\n```\n- `ddd-deep-modeling/test-zmiennosci`\n"
+                       "- `src/later.ts` (to be created)\n- `src/next.ts` (new)\n- `src/maybe.ts` (planned)\n")
         r = run([str(CHECK), str(doc)], env)
         out = r.stdout
-        # 1. wykryte dokładnie: zły numer linii, brak tools/build.py, brak ../src/x.ts
-        if r.returncode != 1 or "plik ma 3 linii" not in out or "tools/build.py" not in out or "../src/x.ts" not in out:
-            fails.append(f"grounding_check: nie wykrył błędnych odwołań: {out}")
-        # 2. pominięte: planowane, wzorce, blok kodu, identyfikatory niebędące ścieżkami
-        if any(x in out for x in ("src/new.ts", "<nazwa>", "w-bloku", "test-zmiennosci", "example.com")):
-            fails.append(f"grounding_check: fałszywe alarmy: {out}")
-        # 3. tryb --warn: kod 0
+        # 1. detected exactly: a wrong line number, a missing tools/build.py, a missing ../src/x.ts
+        if r.returncode != 1 or "the file has 3 lines" not in out or "tools/build.py" not in out or "../src/x.ts" not in out:
+            fails.append(f"grounding_check: did not detect the broken references: {out}")
+        # 2. skipped: planned ones, patterns, a code block, identifiers that are not paths
+        if any(x in out for x in ("src/new.ts", "src/later.ts", "src/next.ts", "src/maybe.ts", "<nazwa>", "w-bloku", "test-zmiennosci", "example.com")):
+            fails.append(f"grounding_check: false alarms: {out}")
+        # 3. the --warn mode: code 0
         if run([str(CHECK), str(doc), "--warn"], env).returncode != 0:
-            fails.append("grounding_check --warn powinien kończyć się kodem 0")
-        # 4–7. context_guard: progi raz na sesję, mocne ostrzeżenie, wyłączenie
+            fails.append("grounding_check --warn should exit with code 0")
+        # 4–7. context_guard: thresholds once per session, a strong warning, disabling
         tr = root / "t.jsonl"
         def usage(k):
             tr.write_text(json.dumps({"type": "user", "message": {"content": "x"}}) + "\n" + json.dumps(
@@ -48,20 +49,20 @@ def main() -> int:
         inp = json.dumps({"session_id": "s1", "transcript_path": str(tr)})
         usage(50)
         if run([str(GUARD)], env, inp).stdout.strip():
-            fails.append("context_guard: ostrzeżenie poniżej progu")
+            fails.append("context_guard: a warning below the threshold")
         usage(120)
         first, second = run([str(GUARD)], env, inp).stdout, run([str(GUARD)], env, inp).stdout
-        if "120 tys." not in first or second.strip():
-            fails.append(f"context_guard: próg 100k — oczekiwane jedno ostrzeżenie: {first!r} / {second!r}")
+        if "120k" not in first or second.strip():
+            fails.append(f"context_guard: the 100k threshold — one warning expected: {first!r} / {second!r}")
         usage(160)
-        if "UWAGA" not in run([str(GUARD)], env, inp).stdout:
-            fails.append("context_guard: brak mocnego ostrzeżenia przy 150k+")
+        if "WARNING" not in run([str(GUARD)], env, inp).stdout:
+            fails.append("context_guard: no strong warning at 150k+")
         if run([str(GUARD)], {**env, "CLAUDE_CONTEXT_WARN_K": "0"}, json.dumps({"session_id": "s2", "transcript_path": str(tr)})).stdout.strip():
-            fails.append("context_guard: CLAUDE_CONTEXT_WARN_K=0 powinno wyłączać")
+            fails.append("context_guard: CLAUDE_CONTEXT_WARN_K=0 should disable it")
     total = 7
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów mechanizmów rzetelności")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} integrity mechanism tests")
     return 1 if fails else 0
 
 

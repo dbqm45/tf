@@ -28,6 +28,33 @@
       }
     },
     {
+      "id": "branded-bigint-en",
+      "expect": "trigger",
+      "prompt": "In src/domain/money.ts amounts are of type number, and the customer ID and order ID are both string and we keep mixing them up. How do we model this in TypeScript? Answer briefly.",
+      "files": {
+        "src/domain/money.ts": "export type Money = { amount: number; currency: string };\nexport type CustomerId = string;\nexport type OrderId = string;\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "bigint"
+          ],
+          [
+            "brand",
+            "markowan",
+            "nominal"
+          ],
+          [
+            "private constructor",
+            "static of",
+            "obiekt\\w* wartości",
+            "Money\\.of",
+            "value objects?"
+          ]
+        ]
+      }
+    },
+    {
       "id": "ts6-migracja",
       "expect": "trigger",
       "prompt": "Przechodzimy na TypeScript 6 i tsc zgłasza TS5101 oraz TS5011 przy tsconfig.json. Co zmienić w konfiguracji? Odpowiedz zwięźle.",

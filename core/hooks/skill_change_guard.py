@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Pilnuje bramki jakości skilli (.tf/factory/skill_gate.py).
+Guards the skill quality gate (.tf/factory/skill_gate.py).
 
-PostToolUse (Edit|Write): po zmianie pliku skilla (`.claude/skills/<skill>/…`) albo jego scenariuszy
-(`…/skill_evals/<skill>.json`) dopisuje do kontekstu przypomnienie o bramce — raz na skill w sesji.
-Stop: jeśli w tej sesji zmieniono skill, a jego treść różni się od ostatniej zaliczonej bramki, pokazuje człowiekowi
-listę (komunikat, nie blokada).
+PostToolUse (Edit|Write): after a skill file (`.claude/skills/<skill>/…`) or its scenarios
+(`…/skill_evals/<skill>.json`) changes, appends a gate reminder to the context — once per skill per session.
+Stop: if a skill was changed in this session and its content differs from the last passed gate, shows the human
+the list (a message, not a block).
 
-Wyłączenie: CLAUDE_SKILL_GATE=0. Tylko biblioteka standardowa; błąd nigdy nie blokuje pracy.
+Disable: CLAUDE_SKILL_GATE=0. Standard library only; an error never blocks work.
 """
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 
@@ -71,10 +71,10 @@ def on_edit(data: dict) -> None:
         return
     seen.append(skill)
     save_state(root, state)
-    msg = (f"Zmieniono skill {skill}. Zanim uznasz pracę za skończoną, uruchom bramkę jakości: "
-           f"`python3 .tf/factory/skill_gate.py {skill}` (bezpłatnie: struktura, scenariusze, podpowiedź, regresja innych "
-           "skilli, polszczyzna). Nowy skill zaczynasz od scenariuszy ewaluacji (skill core-skill-authoring). Ewaluację "
-           f"na modelu (`--model haiku,sonnet`) uruchamiasz dopiero po zgodzie człowieka — jest płatna.")
+    msg = (f"The skill {skill} was changed. Before you consider the work finished, run the quality gate: "
+           f"`python3 .tf/factory/skill_gate.py {skill}` (free: structure, scenarios, hint, regression of other "
+           "skills, language). A new skill starts from evaluation scenarios (the core-skill-authoring skill). An evaluation "
+           f"on a model (`--model haiku,sonnet`) you run only after a human's consent — it is paid.")
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": msg}},
                      ensure_ascii=False))
 
@@ -94,8 +94,8 @@ def on_stop(data: dict) -> None:
     stale = [s for s in seen if (root / ".claude" / "skills" / s / "SKILL.md").exists()
              and reg.get(s, {}).get("fingerprint") != build.skill_fingerprint(s)]
     if stale:
-        print(json.dumps({"systemMessage": "⚠ Skille zmienione w tej sesji bez zaliczonej bramki jakości: "
-                          + ", ".join(stale) + f". Uruchom: python3 .tf/factory/skill_gate.py {' '.join(stale)}"},
+        print(json.dumps({"systemMessage": "⚠ Skills changed in this session without a passed quality gate: "
+                          + ", ".join(stale) + f". Run: python3 .tf/factory/skill_gate.py {' '.join(stale)}"},
                          ensure_ascii=False))
 
 
@@ -108,7 +108,7 @@ def main() -> int:
             on_stop(data)
         else:
             on_edit(data)
-    except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+    except Exception as e:  # the hook does not interrupt the session; the error goes to the log
         record_error("skill_change_guard", e)
     return 0
 

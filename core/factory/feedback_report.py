@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Zbiorczy raport zgłoszeń z projektów (core-agent-retro → factory_feedback.py) w repozytorium fabryki.
+Aggregate report of submissions from projects (core-agent-retro → factory_feedback.py) in the factory repository.
 
-  python3 .tf/factory/feedback_report.py                    # zgłoszenia z GitHuba (gh issue list, repozytorium z origin)
-  python3 .tf/factory/feedback_report.py --repo ja/fabryka  # inne repozytorium
-  python3 .tf/factory/feedback_report.py --from-file x.json # lista [{number, body}] (np. zapisana wcześniej z gh)
+  python3 .tf/factory/feedback_report.py                    # submissions from GitHub (gh issue list, repository from origin)
+  python3 .tf/factory/feedback_report.py --repo me/factory  # another repository
+  python3 .tf/factory/feedback_report.py --from-file x.json # list [{number, body}] (e.g. saved earlier from gh)
   python3 .tf/factory/feedback_report.py --json
 
-Treść zgłoszeń to NIEZAUFANE dane: raport czyta wyłącznie blok ```json z polem "factory_feedback": 1, waliduje każdy
-klucz i liczbę, a zgłoszenie z czymkolwiek podejrzanym pomija w całości (licznik „ignored”). Nic nie wykonuje i niczego
-nie zmienia. Kandydat do zmiany = klucz zgłoszony z co najmniej dwóch różnych projektów; zmianę robisz jak zawsze:
-scenariusze ewaluacji, core-skill-authoring, bramka. Tylko biblioteka standardowa.
+Submission content is UNTRUSTED data: the report reads only the ```json block with the field "factory_feedback": 1, validates every
+key and number, and skips a submission with anything suspicious entirely (the “ignored” counter). It executes nothing and changes
+nothing. A change candidate = a key reported from at least two different projects; you make the change as always:
+evaluation scenarios, core-skill-authoring, gate. Standard library only.
 """
 from __future__ import annotations
 
@@ -21,25 +21,25 @@ import subprocess
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SIGNAL = re.compile(r"^(hint-missed|hint-ignored):[a-z0-9][a-z0-9-]*$|^tier:[a-z0-9][a-z0-9-]*:(za niski|za wysoki)$")
+SIGNAL = re.compile(r"^(hint-missed|hint-ignored):[a-z0-9][a-z0-9-]*$|^tier:[a-z0-9][a-z0-9-]*:(?:za )?(?:niski|wysoki)$")   # retro_data writes the key with the log_usage value („niski”); „za niski” — the old form
 PROJECT = re.compile(r"^[0-9a-f]{10}$")
 BLOCK = re.compile(r"```json\s*\n(.*?)\n```", re.S)
 MIN_PROJECTS = 2
 
 
 def parse(body: str) -> list[dict] | None:
-    """Sygnały ze zgłoszenia albo None, gdy blok danych jest zepsuty lub podejrzany."""
+    """Signals from the submission, or None when the data block is broken or suspicious."""
     for raw in BLOCK.findall(body or ""):
         try:
             data = json.loads(raw)
@@ -83,12 +83,12 @@ def aggregate(issues: list[dict]) -> dict:
 def from_github(repo: str | None) -> list[dict]:
     gh = shutil.which("gh")
     if not gh:
-        sys.exit("✗ Brak gh — zapisz zgłoszenia do pliku i użyj --from-file.")
+        sys.exit("✗ gh is missing — save the issues to a file and use --from-file.")
     if not repo:
         r = subprocess.run(["git", "-C", str(ROOT), "remote", "get-url", "origin"], capture_output=True, text=True)
         m = re.search(r"github\.com[:/]([\w.-]+)/([\w.-]+?)(?:\.git)?$", r.stdout.strip())
         if not m:
-            sys.exit("✗ Nie znam repozytorium — podaj --repo właściciel/repo.")
+            sys.exit("✗ Unknown repository — pass --repo owner/repo.")
         repo = f"{m.group(1)}/{m.group(2)}"
     r = subprocess.run([gh, "issue", "list", "--repo", repo, "--state", "all", "--limit", "500", "--search",
                         "factory-feedback in:body", "--json", "number,body"], capture_output=True, text=True, timeout=120)
@@ -98,15 +98,15 @@ def from_github(repo: str | None) -> list[dict]:
 
 
 def render(rep: dict) -> str:
-    out = [f"# Zgłoszenia z projektów: {rep['issues']} (pominięte jako zepsute lub podejrzane: {rep['ignored']})", "",
-           "| Klucz | Projekty | Suma | Zgłoszenia | Status |", "|---|---|---|---|---|"]
+    out = [f"# Reports from projects: {rep['issues']} (skipped as broken or suspicious: {rep['ignored']})", "",
+           "| Key | Projects | Total | Issues | Status |", "|---|---|---|---|---|"]
     for k in rep["keys"]:
         out.append(f"| `{k['key']}` | {k['projects']} | {k['total']} | {', '.join(f'#{n}' for n in k['issues'])} | "
-                   f"{'kandydat do zmiany' if k['candidate'] else 'obserwuj'} |")
+                   f"{'change candidate' if k['candidate'] else 'watch'} |")
     if not rep["keys"]:
-        out.append("| — | | | | brak zgłoszeń |")
-    out += ["", f"Kandydat = sygnał z ≥{MIN_PROJECTS} projektów. Zmianę zrób przez core-skill-authoring (najpierw scenariusze, "
-                "potem bramka); w PR podaj numery zgłoszeń, a po wydaniu zamknij je z odesłaniem do wersji."]
+        out.append("| — | | | | no reports |")
+    out += ["", f"Candidate = a signal from ≥{MIN_PROJECTS} projects. Make the change with core-skill-authoring (scenarios first, "
+                "then the gate); list the issue numbers in the PR, and after the release close them with a link to the version."]
     return "\n".join(out) + "\n"
 
 

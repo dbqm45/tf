@@ -1,61 +1,61 @@
 # Focus Management
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state as of 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / trade-offs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/focus-management (Den Odell, aktualizacja 2 października 2025).
+Source: frontendpatterns.dev/focus-management (Den Odell, updated 2 October 2025).
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Accessibility
-- **Poziom:** Beginner
-- **Przykłady:** React, Vue
+- **Category:** Accessibility
+- **Level:** Beginner
+- **Examples:** React, Vue
 
 ## TLDR
 
-„Move focus programmatically after route changes, modal opens, and dynamic content updates so
-keyboard users always know where they are.”
+"Move focus programmatically after route changes, modal opens, and dynamic content updates so
+keyboard users always know where they are."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state as of 2026, corrections to the source)
 
-- **Natywny `<dialog>` + `showModal()`** sam przenosi fokus do dialogu (lub elementu z `autofocus`), blokuje tło
-  (top layer, reszta strony inert), zamyka się Escape i przywraca fokus po zamknięciu — preferuj go zamiast
-  ręcznego zarządzania z przykładów (focus-trap.md).
-- Po nawigacji SPA: fokus na `<h1>` nowego widoku (`tabindex="-1"`) + aktualizacja `document.title`; routery
-  czasem robią to same (Angular/React Router nie — trzeba dodać).
-- Przykład „usunięcie z listy” używa `setTimeout(…, 0)` — w React 19 czytelniej: `flushSync` albo efekt po
-  aktualizacji listy; w Angularze `afterNextRender`.
-- Kolory skip linku i obramowania fokusu bierz z tokenów (fe-css); wskaźnik fokusu z kontrastem ≥ 3:1 (1.4.11),
-  niezasłonięty przez przyklejone nagłówki (2.4.11, WCAG 2.2) — wcag-levels.md.
-- Przykład „Focus trap wewnątrz dialogu” ma pełną wersję w focus-trap.md.
+- **The native `<dialog>` + `showModal()`** moves focus into the dialog by itself (or to the element with `autofocus`), blocks the background
+  (the top layer, the rest of the page is inert), closes with Escape and restores focus after closing — prefer it to
+  the manual management from the examples (focus-trap.md).
+- After SPA navigation: focus on the `<h1>` of the new view (`tabindex="-1"`) + an update of `document.title`; routers
+  sometimes do this themselves (Angular/React Router do not — it has to be added).
+- The "removing from a list" example uses `setTimeout(…, 0)` — in React 19 it is clearer: `flushSync` or an effect after
+  the list update; in Angular `afterNextRender`.
+- Take the skip link and focus outline colours from tokens (fe-css); a focus indicator with contrast ≥ 3:1 (1.4.11),
+  not hidden by sticky headers (2.4.11, WCAG 2.2) — wcag-levels.md.
+- The "Focus trap inside a dialog" example has a full version in focus-trap.md.
 
 ## Problem
 
-- Otwarcie modala nie przenosi fokusu — użytkownik zostaje na przycisku pod nakładką.
-- Nawigacja na nową stronę (SPA) zostawia fokus na klikniętym linku — trzeba przejść przez 30+
-  elementów, żeby dotrzeć do nowej treści.
-- Usunięcie elementu z listy gubi fokus albo przeskakuje do paska adresu przeglądarki.
-- Rozwinięcie akordeonu zostawia fokus na triggerze, nie na nowo pokazanej treści.
+- Opening a modal does not move focus — the user stays on the button under the overlay.
+- Navigating to a new page (SPA) leaves focus on the clicked link — you have to go through 30+
+  elements to reach the new content.
+- Removing an element from a list loses focus or jumps to the browser's address bar.
+- Expanding an accordion leaves focus on the trigger, not on the newly shown content.
 
-## Rozwiązanie
+## Solution
 
-Zasada podstawowa: **przenieś fokus programowo**, gdy interfejs zmienia się w sposób wpływający na
-następną interakcję użytkownika.
+The basic rule: **move focus programmatically** when the interface changes in a way that affects
+the user's next interaction.
 
-**Kluczowe praktyki:**
-- Otwarcie modala → przenieś fokus do niego.
-- Zamknięcie modala → przywróć fokus na element, który go otworzył.
-- Nawigacja SPA → skieruj fokus na nagłówek nowej strony.
-- Usunięcie elementu z listy → przenieś fokus na następny element (albo poprzedni, jeśli usunięty był
-  ostatni).
-- Ważne powiadomienia → rozważ przeniesienie fokusu (albo live region — patrz `live-regions.md`).
+**Key practices:**
+- Opening a modal → move focus into it.
+- Closing a modal → restore focus to the element that opened it.
+- SPA navigation → direct focus to the heading of the new page.
+- Removing an element from a list → move focus to the next element (or the previous one, if the removed one was
+  the last).
+- Important notifications → consider moving focus (or a live region — see `live-regions.md`).
 
-**Podejście techniczne:** `element.focus()` do programowego przenoszenia; `tabindex="-1"` na
-elementach, które mają być fokusowalne programowo, ale nie przez Tab (nagłówki, kontenery);
-zapamiętanie wcześniej fokusowanego elementu przed otwarciem nakładki.
+**The technical approach:** `element.focus()` for programmatic moving; `tabindex="-1"` on
+elements that should be focusable programmatically but not with Tab (headings, containers);
+remembering the previously focused element before opening an overlay.
 
-## Przykłady kodu
+## Code examples
 
-### Zarządzanie fokusem w modalu — Web Components
+### Focus management in a modal — Web Components
 
 ```javascript
 class Modal extends HTMLElement {
@@ -93,7 +93,7 @@ class Modal extends HTMLElement {
 customElements.define('modal-dialog', Modal);
 ```
 
-### Zarządzanie fokusem w modalu — React
+### Focus management in a modal — React
 
 ```javascript
 import { useEffect, useRef } from 'react';
@@ -122,7 +122,7 @@ function Modal({ isOpen, onClose, children }) {
 }
 ```
 
-### Zarządzanie fokusem w modalu — Vue
+### Focus management in a modal — Vue
 
 ```vue
 <script setup>
@@ -158,7 +158,7 @@ watch(isModalOpen, async (isOpen) => {
 </template>
 ```
 
-### Fokus po zmianie trasy (React Router)
+### Focus after a route change (React Router)
 
 ```javascript
 import { useEffect, useRef } from 'react';
@@ -203,7 +203,7 @@ function App() {
 </style>
 ```
 
-### Fokus po usunięciu elementu z listy
+### Focus after removing an element from a list
 
 ```javascript
 function TodoList({ items, onDelete }) {
@@ -231,7 +231,7 @@ function TodoList({ items, onDelete }) {
 }
 ```
 
-### Focus trap wewnątrz dialogu
+### Focus trap inside a dialog
 
 ```javascript
 function Dialog({ children }) {
@@ -264,7 +264,7 @@ function Dialog({ children }) {
 }
 ```
 
-### Stylowanie widocznego fokusu
+### Styling a visible focus
 
 ```css
 *:focus-visible {
@@ -273,30 +273,30 @@ function Dialog({ children }) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Użytkownicy klawiatury pozostają zorientowani — logiczne przeniesienie fokusu.
-- Zgodność z WCAG 2.4.3 (Focus Order) — to nie jest opcjonalne wymaganie.
-- Czytniki ekranu ogłaszają zawartość, gdy fokus się do niej przenosi.
-- Modale stają się realnie użyteczne dla użytkowników klawiatury.
-- Konsystentne wzorce budują „mięśniową pamięć” u użytkowników korzystających z wielu podobnych
-  aplikacji.
+- Keyboard users stay oriented — a logical move of focus.
+- Conformance with WCAG 2.4.3 (Focus Order) — this is not an optional requirement.
+- Screen readers announce the content when focus moves to it.
+- Modals become really usable for keyboard users.
+- Consistent patterns build "muscle memory" in users who use many similar
+  applications.
 
-## Wady / tradeoffs
+## Disadvantages / trade-offs
 
-- **Nieprawidłowe umieszczenie fokusu jest gorsze niż jego brak** — dezorientuje bardziej niż
-  pozostawienie domyślnego zachowania.
-- Określenie „prawidłowego” celu fokusu wymaga starannego przemyślenia dla każdego przypadku.
-- Asynchroniczne aktualizacje DOM komplikują proces — element, do którego chcesz przenieść fokus,
-  może jeszcze nie istnieć w momencie wywołania `.focus()`.
-- `tabindex="-1"` na nagłówkach/kontenerach myli programistów nieznających tego wzorca.
-- Różne czytniki ekranu (NVDA, JAWS, VoiceOver) ogłaszają zmiany fokusu w subtelnie różny sposób.
-- Wskaźniki fokusu wymagają balansu — zbyt subtelne zawodzą użytkowników słabowidzących.
-- Nawigacja wstecz/naprzód przeglądarki **nie powinna** przenosić fokusu, jeśli zawartość się nie
-  zmieniła.
-- Zbyt agresywne zarządzanie fokusem (przenoszenie go za często/bez potrzeby) jest irytujące.
+- **Incorrect focus placement is worse than none** — it disorients more than
+  leaving the default behaviour.
+- Determining the "correct" focus target requires careful thought for each case.
+- Asynchronous DOM updates complicate the process — the element you want to move focus to
+  may not exist yet at the moment `.focus()` is called.
+- `tabindex="-1"` on headings/containers confuses developers unfamiliar with this pattern.
+- Different screen readers (NVDA, JAWS, VoiceOver) announce focus changes in subtly different ways.
+- Focus indicators require balance — too subtle ones fail users with low vision.
+- The browser's back/forward navigation **should not** move focus if the content has not
+  changed.
+- Too aggressive focus management (moving it too often/without need) is irritating.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Keyboard Navigation](keyboard-navigation.md) — Accessibility
 - [Focus Trap](focus-trap.md) — Accessibility
@@ -305,10 +305,10 @@ function Dialog({ children }) {
 - [Managing Focus — WAI-ARIA — W3C](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/)
 - [Accessible Focus Indicators — W3C](https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Stosuj **zawsze**, gdy Twój UI ma modale, SPA-routing, listy z usuwaniem elementów albo dynamicznie
-pokazywaną treść (akordeony) — to nie jest opcjonalny „dodatek”, to wymóg WCAG 2.4.3. Uważaj na
-przesadę: nie przenoś fokusu przy **każdej** zmianie DOM (np. przy nawigacji wstecz/naprzód
-przeglądarki bez realnej zmiany treści) — nadmiarowe, nieuzasadnione przenoszenie fokusu jest samo w
-sobie wadą dostępności (patrz „Wady” wyżej), nie tylko brak zarządzania fokusem.
+Apply it **always** when your UI has modals, SPA routing, lists with element removal or dynamically
+shown content (accordions) — this is not an optional "extra", it is a WCAG 2.4.3 requirement. Beware of
+overdoing it: do not move focus on **every** DOM change (e.g. on the browser's back/forward navigation
+without a real content change) — excessive, unjustified moving of focus is in itself
+an accessibility defect (see "Disadvantages" above), not only a lack of focus management.

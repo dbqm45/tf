@@ -17,6 +17,21 @@
       }
     },
     {
+      "id": "iso27001-soa-zakres-en",
+      "expect": "trigger",
+      "prompt": "An enterprise customer demands ISO 27001 certification within a year. Where do we start and what does the road to certification look like? Answer briefly.",
+      "checks": {
+        "all": [
+          ["zakres", "scope"],
+          ["Statement of Applicability", "SoA", "deklaracj\\w* stosowania"],
+          ["93"],
+          ["audyt\\w* wewn", "internal audit", "przegl\\w* zarządz", "management review"],
+          ["robocz\\w*[^.]{0,40}(nie ocen|przygotow)", "nie (jest )?ocen\\w* zgodności", "draft\\w*[^.]{0,40}(not (assess|certif)|prepar)", "(does not|doesn.t|not) assess compliance", "readiness (is )?not"]
+        ],
+        "none": ["114 kontroli (w|z) 2022", "114 controls (in|from|of) (the )?2022"]
+      }
+    },
+    {
       "id": "soc2-typ2-mapowanie",
       "expect": "trigger",
       "prompt": "Mamy ISO 27001, a klienci z USA pytają o SOC 2. Czym różni się typ I od II i jak nie robić wszystkiego od zera drugi raz? Odpowiedz zwięźle.",

@@ -1,132 +1,132 @@
 ---
 name: ops-release-engineering
-description: Użyj przy sposobie wydania — rolling, blue/green, canary z wycofaniem, feature flagi, GitOps, migracje bazy w CD.
+description: Use for the release method — rolling, blue/green, canary with rollback, feature flags, database migrations in CD.
 metadata:
-  przeglad: "2027-04-09"
-  katalog: "Użyj przy wyborze i konfiguracji sposobu wydania — rolling, blue/green, canary z bramkami metryk i automatycznym wycofaniem, feature flagi z datą usunięcia, GitOps (Argo CD, Flux), migracje bazy w CD (expand–contract), środowiska podglądu dla PR. Nie do samej budowy pipeline'u (ops-ci-cd) ani zasad trunk-based i DORA (eng-continuous-delivery)."
-  slowa: "sposób wydania, wdrożenie stopniowe, canary, blue/green, rolling, wycofanie, rollback, feature flaga, za flagą, etapy flagi, etapy udostępniania, procent klientów, najpierw pracownicy, potem wszyscy, przejście etapu, kryterium wyjścia, release.yaml, data usunięcia flagi, dark launch, GitOps, Argo CD, Flux, expand contract"
+  review: "2027-04-09"
+  catalog: "Use for choosing and configuring the release method — rolling, blue/green, canary with metric gates and automatic rollback, feature flags with a removal date, GitOps (Argo CD, Flux), database migrations in CD (expand–contract), preview environments for PRs. Not for building the pipeline itself (ops-ci-cd) or trunk-based and DORA rules (eng-continuous-delivery)."
+  keywords: "sposób wydania, wdrożenie stopniowe, canary, blue/green, rolling, wycofanie, rollback, feature flaga, za flagą, etapy flagi, etapy udostępniania, procent klientów, najpierw pracownicy, potem wszyscy, przejście etapu, kryterium wyjścia, release.yaml, data usunięcia flagi, dark launch, GitOps, Argo CD, Flux, expand contract, release method, progressive delivery, feature flag, behind a flag, flag stages, rollout stages, percentage of customers, employees first, then everyone, stage transition, exit criterion, flag removal date"
 ---
 
-# Inżynieria wydań
+# Release engineering
 
-Cel: wydanie jest nudne. Każda zmiana ma ograniczony zasięg (blast radius), mierzalne kryterium sukcesu i drogę
-powrotu szybszą niż naprawa.
+Goal: a release is boring. Every change has a limited reach (blast radius), a measurable success criterion and a way
+back that is faster than a fix.
 
-## 1. Wybór strategii
-| Strategia | Kiedy | Uwagi |
+## 1. Choosing a strategy
+| Strategy | When | Notes |
 |---|---|---|
-| rolling | zmiany rutynowe, usługi bezstanowe, zgodne wstecz | tanio; wycofanie jest wolne (kolejny rolling) |
-| blue/green | ścieżki krytyczne (płatności, logowanie), gdy potrzebny natychmiastowy powrót | sprawdź nieaktywne środowisko **przed** przełączeniem ruchu; koszt podwójnej infrastruktury |
-| canary | gdy staging nie odtwarza produkcji (ruch, dane, integracje) | wymaga metryk per wersja i automatycznej decyzji |
-| feature flag / dark launch | oddzielenie wdrożenia od włączenia funkcji | każda flaga ma właściciela, datę usunięcia i etapy w `release.yaml` |
-Wybierasz według trzech pytań: jakie ryzyko akceptujemy, jak szybko musimy wrócić, jak dobrze umiemy zweryfikować wersję.
+| rolling | routine changes, stateless services, backward compatible | cheap; rollback is slow (another rolling) |
+| blue/green | critical paths (payments, login), when an immediate return is needed | check the inactive environment **before** switching traffic; the cost of double infrastructure |
+| canary | when staging does not reproduce production (traffic, data, integrations) | needs per-version metrics and an automatic decision |
+| feature flag / dark launch | separating deployment from enabling a feature | every flag has an owner, a removal date and stages in `release.yaml` |
+You choose by three questions: what risk we accept, how fast we must get back, how well we can verify the version.
 
-## 2. Canary z bramkami
-- Drabina ruchu, np. 1–5% → 10% → 25% → 50% → 100%, z czasem obserwacji na każdym kroku (np. 10–15 minut na pierwszym).
-- Bramki z metryk wersji kanarkowej względem stabilnej, np. odsetek błędów < 0,1% i p99 < 200 ms (progi dobierasz do
-  SLO usługi — ops-sre-incidents). Przekroczenie = **automatyczne** wycofanie, bez czekania na człowieka.
-- Narzędzia: Argo Rollouts, Flagger (Kubernetes), wagi ruchu w load balancerze lub service mesh. Lustrzany ruch
-  (shadowing) pozwala sprawdzić wersję bez wpływu na użytkowników.
-- Mierz, oprócz DORA: częstość wycofań i czas od wykrycia do wycofania.
+## 2. Canary with gates
+- A traffic ladder, e.g. 1–5% → 10% → 25% → 50% → 100%, with an observation time at every step (e.g. 10–15 minutes at the first).
+- Gates from the metrics of the canary version against the stable one, e.g. error rate < 0.1% and p99 < 200 ms (you pick thresholds to fit
+  the service's SLO — ops-sre-incidents). Exceeding them = **automatic** rollback, without waiting for a human.
+- Tools: Argo Rollouts, Flagger (Kubernetes), traffic weights in the load balancer or service mesh. Mirrored traffic
+  (shadowing) lets you check a version without affecting users.
+- Measure, in addition to DORA: rollback frequency and the time from detection to rollback.
 
-Flaga ma tę samą drabinę co canary, tyle że po użytkownikach: etapy (`internal` → `10%` → `100%`) zapisane
-w planie wydania `release.yaml` (`flags[].rollout`), każdy z kryterium wyjścia z metryk („odzyskane ≥ 15%,
-duplikaty = 0”) i minimalnym czasem (`min_days`), do tego `owner` i `remove_by`. Przejście etapu zatwierdza
-człowiek, gdy kryterium jest spełnione i minął minimalny czas — nie „na wyczucie”.
+A flag has the same ladder as a canary, only by users: the stages (`internal` → `10%` → `100%`) recorded
+in the release plan `release.yaml` (`flags[].rollout`), each with an exit criterion from metrics ("recovered ≥ 15%,
+duplicates = 0") and a minimum time (`min_days`), plus `owner` and `remove_by`. A human approves the stage transition
+when the criterion is met and the minimum time has passed — not "by feel".
 
 ## 3. GitOps
-- Stan docelowy (manifesty, wersje obrazów, konfiguracja) w Git; kontroler (Argo CD, Flux) uzgadnia z nim klaster
-  i cofa ręczne zmiany (drift). Wycofanie = `git revert`.
-- Polityki (bezpieczeństwo, zasoby, zgodność) sprawdzane w PR, zanim zmiana trafi do klastra. Zmiany niskiego ryzyka
-  mogą się scalać automatycznie, wysokiego — z akceptacją człowieka.
-- Promocja między środowiskami przez Git (PR ze zmianą wersji), nie przez ręczne `kubectl apply`.
-- Sekrety nie w postaci jawnej: SOPS, Sealed Secrets albo zewnętrzny menedżer (Vault, External Secrets).
-- Wcześnie zdecyduj: jedno repozytorium konfiguracji czy osobne per zespół; jak wygląda ścieżka dev → staging → prod.
+- The target state (manifests, image versions, configuration) in Git; a controller (Argo CD, Flux) reconciles the cluster with it
+  and reverts manual changes (drift). Rollback = `git revert`.
+- Policies (security, resources, compliance) checked in the PR before the change reaches the cluster. Low-risk changes
+  may merge automatically, high-risk ones — with human approval.
+- Promotion between environments through Git (a PR with the version change), not through a manual `kubectl apply`.
+- Secrets not in plain form: SOPS, Sealed Secrets or an external manager (Vault, External Secrets).
+- Decide early: one configuration repository or separate ones per team; what the dev → staging → prod path looks like.
 
-## 4. Migracje bazy w ciągłym dostarczaniu
-- **Expand–contract w osobnych wydaniach:** (1) dodaj nową kolumnę/tabelę i zapisuj do obu, (2) przełącz odczyty,
-  (3) usuń stare. Nigdy zmiana schematu i zmiana aplikacji, która jej wymaga, w jednym wdrożeniu.
-- Każda migracja działa z **dwiema** wersjami aplikacji naraz (stara i nowa chodzą równolegle podczas wdrożenia)
-  i jest idempotentna.
-- W CI linter DDL blokuje operacje blokujące tabelę (np. `CREATE INDEX` bez `CONCURRENTLY` w PostgreSQL).
-- Migracje dużych tabel testuj na danych o rozmiarze produkcyjnym (be-database).
+## 4. Database migrations in continuous delivery
+- **Expand–contract in separate releases:** (1) add the new column/table and write to both, (2) switch reads,
+  (3) remove the old ones. Never a schema change and the application change that needs it in one deployment.
+- Every migration works with **two** application versions at once (the old and the new run in parallel during the deployment)
+  and is idempotent.
+- In CI a DDL linter blocks table-locking operations (e.g. `CREATE INDEX` without `CONCURRENTLY` in PostgreSQL).
+- Test migrations of large tables on production-sized data (be-database).
 
-## 5. Środowiska podglądu (preview)
-- Środowisko per PR: izolowane, tworzone automatycznie, z obowiązkowym czasem życia i usuwaniem po zamknięciu PR.
-- Dane syntetyczne lub zamaskowane, osobne sekrety, brak portów zarządzania z internetu (ops-iac-terraform).
-- Środowisko testów wydajności może być mniejsze niż produkcja, ale tworzone na żądanie, nie stałe.
+## 5. Preview environments
+- An environment per PR: isolated, created automatically, with a mandatory lifetime and deletion when the PR is closed.
+- Synthetic or masked data, separate secrets, no management ports from the internet.
+- The performance test environment may be smaller than production, but created on demand, not permanent.
 
-## 6. Konfiguracja jako część wydania
-Wydanie to kod **i** konfiguracja: flagi, ConfigMapy, sekrety, zmienne środowiskowe, wersja modelu AI. Zmieniasz je
-w tym samym PR, promujesz tą samą ścieżką i wycofujesz razem. Aplikacja bez wymaganej konfiguracji nie zgłasza
-gotowości, więc wydanie zatrzymuje się samo (ops-kubernetes, sekcja 4).
+## 6. Configuration as part of the release
+A release is code **and** configuration: flags, ConfigMaps, secrets, environment variables, the AI model version. You change them
+in the same PR, promote them along the same path and roll them back together. An application without the required configuration does not report
+readiness, so the release stops on its own (ops-kubernetes, section 4).
 
-## 6a. Wycofanie przećwiczone, nie założone
-Plan wycofania, którego nikt nie wykonał, zwykle zawodzi wtedy, gdy jest potrzebny.
-- **Ćwicz regularnie** (np. raz na kwartał i po zmianie pipeline'u): wycofanie na stagingu lub w canary, z pomiarem
-  czasu od decyzji do przywrócenia.
-- Warunki, które sprawdzasz: poprzedni obraz **wciąż jest w rejestrze** (polityka retencji nie kasuje ostatnich N wydań
-  produkcyjnych — przypięte digestem); migracje bazy zgodne z poprzednią wersją (sekcja 4); pipeline nadal umie wdrożyć
-  starą wersję; konfiguracja i flagi wracają razem z kodem (sekcja 6).
-- Zmiany nieodwracalne (usunięcie kolumny, migracja danych, zmiana formatu wiadomości) oznacz w PR — dla nich ścieżką
-  powrotu jest naprawa w przód lub odtworzenie z kopii (ops-sre-incidents), co trzeba wiedzieć **przed** wydaniem.
+## 6a. Rollback rehearsed, not assumed
+A rollback plan that nobody has executed usually fails exactly when it is needed.
+- **Rehearse regularly** (e.g. once a quarter and after a pipeline change): a rollback on staging or in a canary, measuring
+  the time from the decision to restoration.
+- Conditions you check: the previous image **is still in the registry** (the retention policy does not delete the last N production
+  releases — pinned by digest); database migrations compatible with the previous version (section 4); the pipeline can still deploy
+  the old version; configuration and flags go back together with the code (section 6).
+- Mark irreversible changes (dropping a column, a data migration, a message format change) in the PR — for them the way
+  back is a fix forward or a restore from backup (ops-sre-incidents), which you must know **before** the release.
 
-## 6b. Zmiana awaryjna na produkcji
-Ręczna zmiana bywa konieczna w incydencie, ale bez zapisu tworzy dryf: następne wdrożenie ją cofnie albo nowa maszyna
-jej nie dostanie.
-- Robisz ją świadomie: zapis w dzienniku incydentu (kto, co, dlaczego), w GitOps — jawne wstrzymanie samonaprawy dla
-  tego zasobu, inaczej narzędzie od razu cofnie zmianę.
-- Ta sama zmiana trafia do repozytorium (kod, IaC, manifest) **w ciągu jednego dnia roboczego**; potem wznawiasz
-  synchronizację. Zasada: co istnieje na produkcji, istnieje w kontroli wersji.
-- Wykrywanie dryfu (ops-iac-terraform, GitOps) i tak złapie zmiany zapomniane.
+## 6b. An emergency change in production
+A manual change is sometimes necessary in an incident, but without a record it creates drift: the next deployment reverts it or a new machine
+does not get it.
+- You make it deliberately: a record in the incident log (who, what, why), in GitOps — an explicit pause of self-healing for
+  that resource, otherwise the tool reverts the change immediately.
+- The same change goes into the repository (code, IaC, manifest) **within one working day**; then you resume
+  synchronization. The rule: what exists in production exists in version control.
+- Drift detection (GitOps) will catch forgotten changes anyway.
 
-## 6c. Pierwsze wdrożenie (sprint zero)
-Wdrożenie MVP robisz zaraz po szkielecie, nie po funkcjach — to tani test platformy i całej ścieżki do produkcji.
-1. **Wejście:** decyzja o platformie (stack-decision, ADR) i stack. Plan w trybie tylko do odczytu, do akceptacji.
-2. **Plan zawiera:** kroki automatyczne z właścicielem (agent / człowiek); konta i usługi do ręcznego założenia;
-   listę sekretów (nazwy i miejsce docelowe — bez wartości); dokładne polecenia wdrożenia dla wybranego wariantu
-   platformy (warianty tej samej platformy mają różne polecenia — sprawdź wobec wersji CLI z projektu); sprawdzenie
-   końcowe (publiczny adres, logi, healthcheck).
-3. **Przed wdrożeniem** agent sprawdza, na jakie konto i projekt jest zalogowane CLI (`whoami` / `auth status`
-   danego narzędzia) i pokazuje to człowiekowi.
-4. Zatwierdzony plan zapisz w `docs/project/06-delivery/deploy-plan.md` — odpowiedź na „co miało się stać”, gdy
-   przebieg się rozjedzie, i wejście do kolejnych kroków.
-5. **W trakcie:** agent nie robi kroków spoza planu (odstępstwo = stop i pytanie); sekrety wprowadza człowiek;
-   wdrożenie produkcyjne zatwierdza człowiek (sekcja 7).
+## 6c. The first deployment (sprint zero)
+You do the MVP deployment right after the skeleton, not after the features — it is a cheap test of the platform and the whole path to production.
+1. **Input:** the platform decision (stack-decision, ADR) and the stack. The plan in read-only mode, for approval.
+2. **The plan contains:** automatic steps with an owner (agent / human); accounts and services to be created manually;
+   a list of secrets (names and target location — without values); exact deployment commands for the chosen platform
+   variant (variants of the same platform have different commands — check against the CLI version from the project); a final
+   check (public address, logs, healthcheck).
+3. **Before the deployment** the agent checks which account and project the CLI is logged in to (`whoami` / `auth status`
+   of the given tool) and shows it to the human.
+4. Save the approved plan in `docs/project/06-delivery/deploy-plan.md` — the answer to "what was supposed to happen" when
+   the run goes off track, and the input to the next steps.
+5. **During:** the agent does not take steps outside the plan (a deviation = stop and ask); a human enters the secrets;
+   a human approves the production deployment (section 7).
 
-## 7. Agent a wydania
-Agent przygotowuje zmianę (manifest, konfigurację rolloutu, PR w repozytorium GitOps) i opis bramek. Nie promuje
-wersji na produkcję i nie wyłącza automatycznego wycofania bez zgody człowieka.
-Numer wydania i tag `vX.Y.Z` liczy wg SemVer skryptem z core-semver. Opublikowanego tagu ani obrazu z pełną wersją
-nie nadpisuje; poprawka to nowa wersja.
+## 7. The agent and releases
+The agent prepares the change (manifest, rollout configuration, a PR in the GitOps repository) and a description of the gates. It does not promote
+a version to production and does not disable automatic rollback without a human's consent.
+It computes the release number and the `vX.Y.Z` tag according to SemVer with the script from core-semver. It does not overwrite a published tag or an image with a full version;
+a fix is a new version.
 
-## Przykład
-**Sytuacja:** nowy ranking w `search-api`; staging nie ma prawdziwego ruchu, SLO: błędy < 0,1%, p99 < 200 ms.
-**Wynik:** canary w Argo Rollouts, PR w repozytorium GitOps, promocję zatwierdza człowiek.
-- Drabina: 5% (15 min) → 25% (10 min) → 50% (10 min) → 100%; analiza w tle od pierwszego kroku.
-- Bramki z Prometheusa dla `track="canary"`: `result[0] < 0.001` (5xx) i `< 0.2` s (p99), `failureLimit: 2`.
-- Trzeci nieudany pomiar = automatyczne wycofanie do stabilnej wersji, bez czekania na dyżurnego.
-- Obraz przypięty digestem, `revisionHistoryLimit: 5`; mierzysz czas od wykrycia do wycofania.
+## Example
+**Situation:** a new ranking in `search-api`; staging has no real traffic, SLO: errors < 0.1%, p99 < 200 ms.
+**Result:** a canary in Argo Rollouts, a PR in the GitOps repository, a human approves the promotion.
+- Ladder: 5% (15 min) → 25% (10 min) → 50% (10 min) → 100%; background analysis from the first step.
+- Gates from Prometheus for `track="canary"`: `result[0] < 0.001` (5xx) and `< 0.2` s (p99), `failureLimit: 2`.
+- The third failed measurement = automatic rollback to the stable version, without waiting for the on-call engineer.
+- The image pinned by digest, `revisionHistoryLimit: 5`; you measure the time from detection to rollback.
 
-Więcej przykładów: `references/przyklady.md`.
+More examples: `references/examples.md`.
 
-## Checklista
-- [ ] strategia dobrana do ryzyka i wymaganej szybkości powrotu
-- [ ] bramki canary z progów SLO i automatyczne wycofanie
-- [ ] flagi z właścicielem, datą usunięcia i etapami (kryterium wyjścia, minimalny czas) w `release.yaml`
-- [ ] migracje expand–contract, zgodne z dwiema wersjami aplikacji, linter DDL w CI
-- [ ] środowiska podglądu z czasem życia
-- [ ] pierwsze wdrożenie: zatwierdzony plan w repo, konto CLI sprawdzone, sekrety wprowadził człowiek
-- [ ] wycofanie przećwiczone (czas zmierzony), poprzednie obrazy zachowane w rejestrze
-- [ ] zmiany awaryjne odtworzone w repozytorium, samonaprawa GitOps wznowiona
+## Checklist
+- [ ] strategy matched to the risk and the required speed of return
+- [ ] canary gates from SLO thresholds and automatic rollback
+- [ ] flags with an owner, a removal date and stages (exit criterion, minimum time) in `release.yaml`
+- [ ] expand–contract migrations, compatible with two application versions, a DDL linter in CI
+- [ ] preview environments with a lifetime
+- [ ] first deployment: approved plan in the repo, CLI account checked, secrets entered by a human
+- [ ] rollback rehearsed (time measured), previous images kept in the registry
+- [ ] emergency changes reproduced in the repository, GitOps self-healing resumed
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 1, lekcja 5 (pierwsze wdrożenie z agentem w trybie planowania) — materiał
-  szkoleniowy (dostęp 2026-10-09); opisane własnymi słowami.
+## Sources
+- 10xDevs course, ed. 3 (2026), module 1, lesson 5 (the first deployment with an agent in planning mode) — training
+  material (accessed 2026-10-09); described in our own words.
 - [Mastering the Blast Radius: Progressive Delivery in Modern DevOps](https://devops.com/mastering-the-blast-radius-deployment-without-fear-progressive-delivery-in-modern-devops/)
 - [Software Deployment Strategies for Enterprise Teams](https://devops.com/software-deployment-strategies-for-enterprise-teams-a-scenario-based-guide-to-choosing-the-right-approach/)
 - [GitOps in 2026: Why Pull Requests Are Taking Over Cloud Operations](https://devops.com/gitops-in-2026-why-pull-requests-are-taking-over-cloud-operations/)
 - [From Legacy to GitOps: A Roadmap for Enterprise Modernization](https://devops.com/from-legacy-to-gitops-a-roadmap-for-enterprise-modernization/)
 - [Avoiding Database Migration Pitfalls with Continuous Software Delivery](https://devops.com/avoiding-database-migration-pitfalls-with-continuous-software-delivery/)
 - [Ephemeral Environments are Better for Scaling Your Tests](https://devops.com/ephemeral-environments-are-better-for-scaling-your-tests/)
-- [10 Minor DevOps Mistakes That Can Cause Major Production Issues](https://medium.com/coinmonks/10-minor-devops-mistakes-that-can-cause-major-production-issues-191d141e7686) — Pawan Natekar, 2026 (nieprzećwiczone wycofanie, ręczne zmiany na produkcji)
+- [10 Minor DevOps Mistakes That Can Cause Major Production Issues](https://medium.com/coinmonks/10-minor-devops-mistakes-that-can-cause-major-production-issues-191d141e7686) — Pawan Natekar, 2026 (unrehearsed rollback, manual changes in production)

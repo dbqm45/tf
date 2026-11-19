@@ -1,59 +1,59 @@
 # Output Encoding
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/output-encoding.
+Source: frontendpatterns.dev/output-encoding.
 
-## Metadane
+## Metadata
 
-Kategoria: Security. Poziom: Advanced. Frameworki: React, Vue, Svelte, Native Web. Autor: Den Odell.
-Data aktualizacji: 17 czerwca 2026.
+Category: Security. Level: Advanced. Frameworks: React, Vue, Svelte, Native Web. Author: Den Odell.
+Last updated: 17 June 2026.
 
 ## TLDR
 
-Output encoding zapewnia, że dane użytkownika renderują się jako inertny tekst, kodując je dla
-dokładnego kontekstu, w którym lądują — polegaj na auto-escape frameworku dla typowych przypadków,
-traktuj każdy escape hatch jako świadomą decyzję wspieraną sanityzacją.
+Output encoding ensures that user data renders as inert text by encoding it for
+the exact context in which it lands — rely on the framework's auto-escape for typical cases,
+treat every escape hatch as a deliberate decision backed by sanitization.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Angular: interpolacja `{{ }}` i wiązania właściwości escapują/sanityzują automatycznie; escape hatch to
+- Angular: `{{ }}` interpolation and property bindings escape/sanitize automatically; the escape hatch is
   `bypassSecurityTrustHtml` — fw-angular.
-- **Wiązania URL** (`href={authorUrl}`) nie chronią przed `javascript:` we wszystkich frameworkach (React tylko
-  ostrzega) — waliduj schemat (`new URL(u).protocol` ∈ `http:`/`https:`), zanim zbindujesz URL od użytkownika.
-- Kontekst `<script>` z `JSON.stringify` jest bezpieczny tylko po dodatkowym escapowaniu `<` (np. `\u003c`), bo
-  `</script>` w danych zamyka blok — lepiej przekazuj dane przez `data-*` lub `<script type="application/json">`
-  czytany przez `textContent`.
+- **URL bindings** (`href={authorUrl}`) do not protect against `javascript:` in all frameworks (React only
+  warns) — validate the scheme (`new URL(u).protocol` ∈ `http:`/`https:`) before you bind a URL from a user.
+- The `<script>` context with `JSON.stringify` is safe only after additionally escaping `<` (e.g. `\u003c`), because
+  `</script>` in the data closes the block — it is better to pass data through `data-*` or a `<script type="application/json">`
+  read through `textContent`.
 
 ## Problem
 
-Aplikacja przechowuje dane wejściowe użytkownika (np. nazwę profilu) bez kodowania. Gdy ta
-zawartość trafia do DOM-u w nieodpowiednim kontekście, może być interpretowana jako kod wykonalny
-zamiast tekstu — np. `<img src=x onerror="fetch(...)">` jest parsowane jako element HTML, a
-handler `onerror` uruchamia się automatycznie. Stored XSS pojawia się wielokrotnie, dla każdego
-użytkownika oglądającego stronę.
+The application stores user input (e.g. a profile name) without encoding. When this
+content reaches the DOM in an inappropriate context, it can be interpreted as executable code
+instead of text — e.g. `<img src=x onerror="fetch(...)">` is parsed as an HTML element, and
+the `onerror` handler runs automatically. Stored XSS fires repeatedly, for every
+user viewing the page.
 
-Różne konteksty niosą różne zagrożenia:
-- w treści HTML: `<` otwiera tag,
-- w atrybutach: `"` przerywa cudzysłów,
-- w skryptach inline: `</script>` kończy blok,
-- w URL-ach: `&` i `#` zmieniają strukturę zapytania.
+Different contexts carry different threats:
+- in HTML content: `<` opens a tag,
+- in attributes: `"` breaks the quotation,
+- in inline scripts: `</script>` ends the block,
+- in URLs: `&` and `#` change the structure of the query.
 
-## Rozwiązanie
+## Solution
 
-Koduj dane użytkownika dla konkretnego kontekstu docelowego **przed** renderowaniem:
+Encode user data for the specific target context **before** rendering:
 
-1. **Kontekst HTML body:** `<` → `&lt;`, `>` → `&gt;`, `&` → `&amp;`.
-2. **Kontekst atrybutów:** dodatkowo koduj cudzysłowy.
-3. **Kontekst JavaScript:** użyj `JSON.stringify` zamiast konkatenacji.
-4. **Kontekst URL:** stosuj `encodeURIComponent`.
+1. **HTML body context:** `<` → `&lt;`, `>` → `&gt;`, `&` → `&amp;`.
+2. **Attribute context:** additionally encode quotes.
+3. **JavaScript context:** use `JSON.stringify` instead of concatenation.
+4. **URL context:** apply `encodeURIComponent`.
 
-Nowoczesne frameworki (React, Vue, Svelte) kodują domyślnie interpolacje tekstowe i wiązania
-atrybutów. „Escape hatches” (`dangerouslySetInnerHTML`, `v-html`, `{@html}`, `innerHTML`) omijają
-kodowanie całkowicie — używaj ich wyłącznie z zaufanym HTML-em, wcześniej oczyszczonym przez
+Modern frameworks (React, Vue, Svelte) encode text interpolations and attribute
+bindings by default. "Escape hatches" (`dangerouslySetInnerHTML`, `v-html`, `{@html}`, `innerHTML`) bypass
+encoding completely — use them only with trusted HTML, cleaned beforehand by
 DOMPurify.
 
-## Przykłady kodu
+## Code examples
 
 ### React
 
@@ -143,7 +143,7 @@ class CommentCard extends HTMLElement {
 customElements.define('comment-card', CommentCard);
 ```
 
-### Helper context-aware
+### A context-aware helper
 
 ```javascript
 // Escape for HTML body and attribute contexts.
@@ -170,42 +170,42 @@ function inlineScript(message) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Neutralizuje XSS na granicy renderowania — dane użytkownika są zawsze traktowane jako tekst.
-- Działa jako ostatnia linia obrony, nawet gdy walidacja upstream zawiedzie.
-- Auto-escape we frameworkach robi bezpieczną ścieżkę domyślną.
-- Kodowanie kontekstowe pokrywa wszystkie powierzchnie (treść HTML, atrybuty, skrypty inline, URL-e).
-- Zapobiega stored XSS — jeden niekodowany rekord nie wykonuje się wielokrotnie dla wielu
-  odwiedzających.
-- Integruje się z warstwami defense-in-depth, jak CSP i dedykowany sanitizer.
-- Wbudowane API przeglądarki (`textContent`, `encodeURIComponent`) działają bez zależności.
+- Neutralizes XSS at the rendering boundary — user data is always treated as text.
+- Works as the last line of defence, even when upstream validation fails.
+- Auto-escape in frameworks makes the safe path the default.
+- Context-specific encoding covers all surfaces (HTML content, attributes, inline scripts, URLs).
+- Prevents stored XSS — a single unencoded record does not execute repeatedly for many
+  visitors.
+- Integrates with defense-in-depth layers such as CSP and a dedicated sanitizer.
+- Built-in browser APIs (`textContent`, `encodeURIComponent`) work without dependencies.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Prawidłowość zależy od kontekstu — kodowanie dla HTML w kontekście URL albo skryptu nie chroni.
-- Podwójne kodowanie duplikuje dane: `<` staje się `&amp;lt;` i wyświetla się dosłownie.
-- Ręcznie napisane kodery HTML mogą pomijać edge case'y (atrybuty bez cudzysłowów, adresy
-  `javascript:`) — biblioteka jest bezpieczniejsza.
-- Escape hatches (`dangerouslySetInnerHTML`, `v-html`, `{@html}`, `innerHTML`) niewidocznie omijają
-  kodowanie.
-- HTML z rzeczywistymi tagami wymaga dedykowanego sanitizera (DOMPurify), nie samego kodowania.
-- Kodowanie nie zastępuje sanityzacji wejścia ani CSP — poleganie wyłącznie na nim pozostawia
-  system kruchy.
-- Przegląd dużych baz kodu w poszukiwaniu niedokodowanych pól jest żmudny.
+- Correctness depends on the context — encoding for HTML in a URL or script context does not protect.
+- Double encoding duplicates data: `<` becomes `&amp;lt;` and is displayed literally.
+- Hand-written HTML encoders can miss edge cases (unquoted attributes, `javascript:`
+  URLs) — a library is safer.
+- Escape hatches (`dangerouslySetInnerHTML`, `v-html`, `{@html}`, `innerHTML`) invisibly bypass
+  encoding.
+- HTML with real tags requires a dedicated sanitizer (DOMPurify), not encoding alone.
+- Encoding does not replace input sanitization or CSP — relying on it alone leaves
+  the system fragile.
+- Reviewing large codebases for under-encoded fields is tedious.
 
-## Powiązane wzorce
+## Related patterns
 
 - Input Sanitization — Security (`input-sanitization.md`)
 - Trusted Types — Security (`trusted-types.md`)
 - Content Security Policy (CSP) — Security (`content-security-policy.md`)
-- Zewnętrzne: [Output Encoding / XSS Prevention — OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html),
+- External: [Output Encoding / XSS Prevention — OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html),
   [Character encodings in HTML — Wikipedia](https://en.wikipedia.org/wiki/Character_encodings_in_HTML),
   [XSS — OWASP](https://owasp.org/www-community/attacks/xss/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Jeśli używasz React/Vue/Svelte przez standardową interpolację (`{body}`, `{{ body }}`) — **auto-
-escape frameworka już to robi za Ciebie**, nie musisz nic dodawać. Sprawdzaj świadomie wyłącznie
-miejsca z escape hatchem (`dangerouslySetInnerHTML`, `v-html`, `{@html}`, `innerHTML`) — to jest
-jedyne miejsce, gdzie ten wzorzec wymaga Twojej aktywnej uwagi, nie każda linijka renderu.
+If you use React/Vue/Svelte through standard interpolation (`{body}`, `{{ body }}`) — **the framework's
+auto-escape already does this for you**, you do not need to add anything. Deliberately check only the
+places with an escape hatch (`dangerouslySetInnerHTML`, `v-html`, `{@html}`, `innerHTML`) — that is
+the only place where this pattern requires your active attention, not every line of the render.

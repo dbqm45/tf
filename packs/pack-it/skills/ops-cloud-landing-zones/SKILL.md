@@ -1,119 +1,119 @@
 ---
 name: ops-cloud-landing-zones
-description: Użyj przy projekcie fundamentu chmury dla wielu zespołów — landing zone, konta i subskrypcje, sieć hub-spoke, account vending.
+description: Use for designing a cloud foundation for many teams — landing zone, accounts and subscriptions, hub-spoke network, account vending.
 metadata:
-  przeglad: "2027-04-17"
-  widocznosc: nazwa
-  katalog: "Użyj, gdy projektujesz lub porządkujesz fundament chmury dla wielu zespołów (AWS, Azure, GCP) — czym jest landing zone, hierarchia kont, subskrypcji i projektów oraz środowiska, federacja tożsamości i SSO, topologia sieci (hub-and-spoke, transit gateway, Virtual WAN, Shared VPC), konta logów i narzędzi, guardrails zapobiegawcze i wykrywające, tagowanie i alokacja kosztów, account vending i subscription vending w IaC, bazowe konfiguracje per typ obciążenia, wersjonowanie i rozwój landing zone. Wynik to dokument projektowy i lista decyzji. Nie do samych kontroli bezpieczeństwa w chmurze (sec-cloud-security), modułów Terraform (ops-iac-terraform), optymalizacji kosztów (ops-finops), platformy dla deweloperów (ops-platform-engineering) ani przenoszenia obciążeń (ops-cloud-migration)."
-  slowa: "wprowadzanie zmian w landing zone, zmiany dotykają wielu istniejących subskrypcji i kont, aktualizacja landing zone, nowa wersja landing zone, wersjonowanie fundamentu chmury, rollout zmian na wszystkie konta, zmiana fundamentu chmury, setki istniejących subskrypcji, setki kont, landing zone, zmiany w landing zone, wersjonowanie landing zone, aktualizacja landing zone, wdrażanie zmian na wiele subskrypcji, dryf kont, fundament chmury, cloud foundation, Control Tower, Landing Zone Accelerator, Azure landing zones, Cloud Adoption Framework, account vending, subscription vending, hierarchia kont, organizacja AWS, grupy zarządzania, foldery GCP, hub and spoke, transit gateway, Virtual WAN, Shared VPC, konto logów, guardrails, SCP, tagowanie, alokacja kosztów, nowe konto dla zespołu, wiele zespołów w chmurze, SSO chmura"
+  review: "2027-04-17"
+  visibility: name
+  catalog: "Use when you design or put in order a cloud foundation for many teams (AWS, Azure, GCP) — what a landing zone is, the hierarchy of accounts, subscriptions and projects, and environments, identity federation and SSO, network topology (hub-and-spoke, transit gateway, Virtual WAN, Shared VPC), log and tooling accounts, preventive and detective guardrails, tagging and cost allocation, account vending and subscription vending in IaC, baseline configurations per workload type, versioning and evolving the landing zone. The result is a design document and a decision list. Not for the cloud security controls themselves (sec-cloud-security), Terraform modules, cost optimization (ops-finops), the developer platform (ops-platform-engineering) or moving workloads (ops-cloud-migration)."
+  keywords: "wprowadzanie zmian w landing zone, zmiany dotykają wielu istniejących subskrypcji i kont, aktualizacja landing zone, nowa wersja landing zone, wersjonowanie fundamentu chmury, rollout zmian na wszystkie konta, zmiana fundamentu chmury, setki istniejących subskrypcji, setki kont, landing zone, zmiany w landing zone, wersjonowanie landing zone, aktualizacja landing zone, wdrażanie zmian na wiele subskrypcji, dryf kont, fundament chmury, cloud foundation, Control Tower, Landing Zone Accelerator, Azure landing zones, Cloud Adoption Framework, account vending, subscription vending, hierarchia kont, organizacja AWS, grupy zarządzania, foldery GCP, hub and spoke, transit gateway, Virtual WAN, Shared VPC, konto logów, guardrails, SCP, tagowanie, alokacja kosztów, nowe konto dla zespołu, wiele zespołów w chmurze, SSO chmura, introducing changes in a landing zone, changes touch many existing subscriptions and accounts, landing zone update, new landing zone version, cloud foundation versioning, rolling out changes to all accounts, cloud foundation change, hundreds of existing subscriptions, hundreds of accounts, changes in a landing zone, landing zone versioning, deploying changes to many subscriptions, account drift, account hierarchy, AWS organization, management groups, GCP folders, log account, tagging, cost allocation, new account for a team, many teams in the cloud, cloud SSO"
 ---
 
-# Landing zone: fundament chmury dla wielu zespołów
+# Landing zone: a cloud foundation for many teams
 
-Landing zone to wstępnie skonfigurowane, zautomatyzowane środowisko wielokontowe: hierarchia, tożsamość, sieć,
-logowanie, guardrails i proces zakładania nowych kont. Ten skill opisuje **strukturę i automatykę fundamentu**.
-Treść kontroli bezpieczeństwa (szyfrowanie, CSPM, break-glass, benchmarki) to sec-cloud-security; moduły i stan
-Terraform to ops-iac-terraform; optymalizacja rachunku to ops-finops. Wynik: `docs/project/04-architecture/landing-zone.md`
-(core-project-record) z projektem i listą decyzji (format niżej). Niczego nie wdrażasz: zmiany w chmurze idą jako plan
-(`terraform plan`, tryb audytu, okno zmian) i wchodzą po akceptacji człowieka.
+A landing zone is a preconfigured, automated multi-account environment: the hierarchy, identity, network,
+logging, guardrails and the process for creating new accounts. This skill describes **the structure and automation of the foundation**.
+The content of security controls (encryption, CSPM, break-glass, benchmarks) is sec-cloud-security;
+optimizing the bill is ops-finops. Result: `docs/project/04-architecture/landing-zone.md`
+(core-project-record) with the design and a decision list (format below). You deploy nothing: changes in the cloud go as a plan
+(`terraform plan`, audit mode, a change window) and go in after a human's approval.
 
-## Procedura
-1. **Zakres i wybór wzorca.** Ile zespołów, chmur, regionów, wymogów regulacyjnych, kto utrzymuje fundament
-   (zespół platformy: ops-platform-engineering). Dobierz punkt wyjścia, nie buduj od zera:
-   - AWS: **AWS Control Tower** (landing zone, kontrole, Account Factory); rozszerzenia: Account Factory for Terraform
-     i **Landing Zone Accelerator on AWS**; wariant w pełni własny tylko przy wymogach, których to nie pokrywa.
-   - Azure: **Azure landing zones** w Cloud Adoption Framework (platform landing zone + application landing zones,
-     implementacje referencyjne w Bicep i Terraform).
-   - GCP: **Google Cloud enterprise foundations blueprint** (dawniej security foundations blueprint) z Terraform.
-   Nazwy produktów i blueprintów zmieniają się; potwierdź w dokumentacji dostawcy (core-source-research).
-2. **Hierarchia i środowiska.** Organizacja → grupy (OU, grupy zarządzania, foldery) → konta, subskrypcje, projekty.
-   Granica konta jest granicą uprawnień, limitów i rachunku, więc **jedno obciążenie × jedno środowisko = jedno konto**
-   (produkcja osobno od nieprodukcji). Grupy wg *polityk*, nie wg organigramu firmy (reorganizacje zmieniają
-   organigram, polityki zostają). Typowy układ: `platform` (logi, bezpieczeństwo, sieć, tożsamość, narzędzia),
-   `workloads` (prod, nonprod), `sandbox` (budżet, auto-sprzątanie), `suspended`. Konto zarządzające organizacji
-   bez obciążeń. Głębokość drzewa minimalna (limity głębokości: sprawdź u dostawcy).
-3. **Tożsamość.** Jedno źródło prawdy (IdP firmowy) → federacja SSO (AWS IAM Identity Center, Microsoft Entra ID,
-   Cloud Identity / Workforce Identity Federation) → grupy mapowane na role per konto. Role standardowe: admin
-   platformy, deweloper, tylko odczyt, audyt. Użytkownicy lokalni w kontach zabronieni guardrailem. MFA, PAM
-   i break-glass: sec-zero-trust-identity i sec-cloud-security; tożsamości maszyn i OIDC w CI: ops-secrets-identities.
-4. **Sieć.** Plan adresacji (CIDR) z rejestrem **zanim** powstanie pierwsza sieć: zachodzące zakresy blokują
-   późniejsze łączenie, a zmiana to migracja. Topologie:
-   - **hub-and-spoke**: centralny hub z zaporą, DNS i łączem do on-premises; sieci obciążeń jako spoke. Realizacja:
-     AWS Transit Gateway, Azure Virtual WAN lub hub VNet, GCP hub project z peeringiem lub NCC [niezweryfikowane: aktualne limity];
-   - **Shared VPC** (GCP; w AWS odpowiednik to VPC sharing przez RAM): jedna sieć udostępniana projektom/kontom
-     obciążeń, zarządzana centralnie;
-   - **sieć per obciążenie** bez huba: prostsza, gdy obciążeń jest mało i niewiele łączą.
-   Zapisz: kto jest właścicielem huba, centralny czy rozproszony egress, rozwiązywanie nazw (DNS prywatny),
-   koszt transferu między strefami i regionami (ops-finops). Segmentacja i prywatne punkty końcowe: sec-cloud-security.
-5. **Logi i narzędzia centralne.** Osobne konta/projekty: **log archive** (tylko zapis, retencja, ochrona przed
-   usunięciem) i **security tooling** (CSPM, wykrywanie; delegowany administrator). Trail/ustawienia diagnostyczne
-   włączone *przez fundament*, nie przez zespoły. Co dokładnie logować i jak wykrywać: sec-cloud-security,
-   ops-security-operations; telemetria aplikacji: ops-observability.
-6. **Guardrails jako polityki.** Dwa rodzaje, oba w projekcie:
-   - **zapobiegawcze** (preventive): SCP, Azure Policy z efektem Deny, Organization Policy — blokują akcję;
-   - **wykrywające** (detective): reguły Config, Azure Policy z Audit, CSPM — zgłaszają niezgodność.
-   Zasada: blokada tylko tam, gdzie nie ma uprawnionego wyjątku (np. wyłączenie logów audytowych); reszta wykrywanie
-   z właścicielem i terminem. Każdy guardrail wchodzi w **trybie audytu** (zwykle 2–4 tygodnie [przykład]), potem
-   blokada. Wyjątki: rejestr z właścicielem i datą wygaśnięcia. Zawartość listy guardrails: sec-cloud-security.
-7. **Tagowanie i koszty.** Minimalny zestaw tagów wymuszany polityką: `team`, `env`, `project`, `cost-center`,
-   `data-class`, `expires` (dla tymczasowych). Tag kosztowy aktywowany w narzędziu rozliczeń; konto/subskrypcja
-   jest *pierwszym* wymiarem alokacji, tagi drugim. Model: showback najpierw, chargeback gdy dane są wiarygodne.
-   Budżety i anomalie, sprzątanie: ops-finops.
-8. **Vending kont.** Nowe konto/subskrypcja powstaje z żądania (PR do pliku YAML/HCL lub formularz → PR), nie
-   z konsoli. Wejście: nazwa, właściciel, środowisko, typ obciążenia, centrum kosztów, CIDR z rejestru. Wyjście:
-   konto we właściwej grupie, role SSO, budżet i alerty, tagi, połączenie z hubem, baseline, osobne pole
-   tożsamości dla pipeline'u (OIDC). Realizacja: Account Factory for Terraform / customizations, Azure subscription
-   vending (moduł referencyjny), projekt factory w GCP. Moduły i stan: ops-iac-terraform. Czas od żądania do
-   użyteczności konta jest metryką fundamentu (cel [przykład]: < 1 dzień roboczy).
-9. **Bazy per typ obciążenia (golden baselines).** Mała liczba profili, np. `web-app`, `data-platform`, `batch`,
-   `regulated`; każdy to zestaw: sieć, role, polityki, logi, backup, budżet. Wybór profilu przy vendingu. Nie
-   mnóż profili: nowy powstaje dopiero po trzecim powtórzonym wyjątku.
-10. **Rozwój i wersje.** Landing zone jest produktem: backlog, właściciel, wersje (SemVer: core-semver; zmiana
-    guardrailu blokującego = major dla konsumentów). Zmiany wdrażane falami (konta testowe → sandbox → nonprod →
-    prod), z notą zmian i planem wycofania. Pomiar dryfu (konta poza bazą) i migracja kont do nowej wersji
-    to stały proces. Konta zastane: ops-cloud-migration (relokacja do hierarchii).
-11. **Zapis.** Dokument projektowy + lista decyzji; każda decyzja: pytanie, wybór, odrzucone opcje, właściciel,
-    data przeglądu. Wynik `proposed` do akceptacji człowieka.
+## Procedure
+1. **Scope and choice of pattern.** How many teams, clouds, regions, regulatory requirements, who maintains the foundation
+   (the platform team: ops-platform-engineering). Choose a starting point, do not build from scratch:
+   - AWS: **AWS Control Tower** (landing zone, controls, Account Factory); extensions: Account Factory for Terraform
+     and **Landing Zone Accelerator on AWS**; a fully custom variant only for requirements these do not cover.
+   - Azure: **Azure landing zones** in the Cloud Adoption Framework (platform landing zone + application landing zones,
+     reference implementations in Bicep and Terraform).
+   - GCP: **Google Cloud enterprise foundations blueprint** (formerly the security foundations blueprint) with Terraform.
+   Product and blueprint names change; confirm in the vendor's documentation (core-source-research).
+2. **Hierarchy and environments.** Organization → groups (OUs, management groups, folders) → accounts, subscriptions, projects.
+   The account boundary is the boundary of permissions, limits and the bill, so **one workload × one environment = one account**
+   (production separate from non-production). Groups by *policies*, not by the company org chart (reorganizations change
+   the org chart, policies stay). A typical layout: `platform` (logs, security, network, identity, tools),
+   `workloads` (prod, nonprod), `sandbox` (budget, auto-cleanup), `suspended`. The organization's management account
+   without workloads. Minimal tree depth (depth limits: check with the vendor).
+3. **Identity.** One source of truth (the company IdP) → SSO federation (AWS IAM Identity Center, Microsoft Entra ID,
+   Cloud Identity / Workforce Identity Federation) → groups mapped to roles per account. Standard roles: platform
+   admin, developer, read-only, audit. Local users in accounts forbidden by a guardrail. MFA, PAM
+   and break-glass: sec-zero-trust-identity and sec-cloud-security; machine identities and OIDC in CI: ops-secrets-identities.
+4. **Network.** An addressing plan (CIDR) with a registry **before** the first network is created: overlapping ranges block
+   later interconnection, and a change is a migration. Topologies:
+   - **hub-and-spoke**: a central hub with a firewall, DNS and the link to on-premises; workload networks as spokes. Implementation:
+     AWS Transit Gateway, Azure Virtual WAN or a hub VNet, a GCP hub project with peering or NCC [unverified: current limits];
+   - **Shared VPC** (GCP; in AWS the counterpart is VPC sharing through RAM): one network shared with workload
+     projects/accounts, managed centrally;
+   - **a network per workload** without a hub: simpler when there are few workloads and they connect little.
+   Record: who owns the hub, centralized or distributed egress, name resolution (private DNS),
+   the cost of transfer between zones and regions (ops-finops). Segmentation and private endpoints: sec-cloud-security.
+5. **Central logs and tools.** Separate accounts/projects: **log archive** (write-only, retention, protection against
+   deletion) and **security tooling** (CSPM, detection; a delegated administrator). Trails/diagnostic settings
+   enabled *by the foundation*, not by the teams. What exactly to log and how to detect: sec-cloud-security,
+   ops-security-operations; application telemetry: ops-observability.
+6. **Guardrails as policies.** Two kinds, both in the design:
+   - **preventive**: SCP, Azure Policy with the Deny effect, Organization Policy — they block the action;
+   - **detective**: Config rules, Azure Policy with Audit, CSPM — they report non-compliance.
+   Principle: blocking only where there is no legitimate exception (e.g. disabling audit logs); the rest is detection
+   with an owner and a deadline. Every guardrail goes in in **audit mode** (usually 2–4 weeks [example]), then
+   blocking. Exceptions: a register with an owner and an expiry date. The content of the guardrail list: sec-cloud-security.
+7. **Tagging and costs.** A minimal tag set enforced by policy: `team`, `env`, `project`, `cost-center`,
+   `data-class`, `expires` (for temporary ones). The cost tag activated in the billing tool; the account/subscription
+   is the *first* allocation dimension, tags the second. Model: showback first, chargeback when the data is reliable.
+   Budgets and anomalies, cleanup: ops-finops.
+8. **Account vending.** A new account/subscription is created from a request (a PR to a YAML/HCL file or a form → PR), not
+   from the console. Input: name, owner, environment, workload type, cost center, CIDR from the registry. Output:
+   an account in the right group, SSO roles, a budget and alerts, tags, a connection to the hub, the baseline, a separate
+   identity field for the pipeline (OIDC). Implementation: Account Factory for Terraform / customizations, Azure subscription
+   vending (the reference module), the project factory in GCP. The time from request to
+   a usable account is a foundation metric (target [example]: < 1 working day).
+9. **Baselines per workload type (golden baselines).** A small number of profiles, e.g. `web-app`, `data-platform`, `batch`,
+   `regulated`; each is a set: network, roles, policies, logs, backup, budget. The profile is chosen at vending. Do not
+   multiply profiles: a new one is created only after the third repeated exception.
+10. **Evolution and versions.** The landing zone is a product: a backlog, an owner, versions (SemVer: core-semver; a change of
+    a blocking guardrail = a major for consumers). Changes rolled out in waves (test accounts → sandbox → nonprod →
+    prod), with a change note and a rollback plan. Measuring drift (accounts outside the baseline) and migrating accounts to the new version
+    is an ongoing process. Existing accounts: ops-cloud-migration (relocation into the hierarchy).
+11. **Record.** A design document + a decision list; each decision: the question, the choice, the rejected options, the owner,
+    the review date. The result is `proposed` for a human's approval.
 
-## Format listy decyzji
-| ID | Decyzja | Wybór | Odrzucone | Właściciel | Przegląd |
+## Decision list format
+| ID | Decision | Choice | Rejected | Owner | Review |
 |---|---|---|---|---|---|
 
-## Przykład
-**Sytuacja:** „Mamy 20 zespołów, AWS jako główna chmura, mały Azure dla jednej aplikacji. Konta zakłada się mailem do admina.”
-**Wynik** (fragment, liczby [przykład]):
+## Example
+**Situation:** "We have 20 teams, AWS as the main cloud, a small Azure for one application. Accounts are created by emailing the admin."
+**Result** (a fragment, numbers [example]):
 
-| ID | Decyzja | Wybór | Odrzucone | Właściciel | Przegląd |
+| ID | Decision | Choice | Rejected | Owner | Review |
 |---|---|---|---|---|---|
-| D-01 | Punkt wyjścia AWS | Control Tower + Account Factory for Terraform | własny skrypt Organizations (koszt utrzymania) | platforma | 2027-04 |
-| D-04 | Sieć | Transit Gateway, hub z zaporą, CIDR z rejestru /16 per środowisko | peering każdy z każdym (rośnie kwadratowo) | sieci | 2027-04 |
-| D-07 | Guardrail wyłączenia logów | preventive (SCP), bez wyjątków | detective (za późno) | bezpieczeństwo | rocznie |
-| D-09 | Tagi | `team`, `env`, `cost-center`; brak = odmowa w vendingu | wymóg ręczny w wiki | finanse | 2027-01 |
+| D-01 | AWS starting point | Control Tower + Account Factory for Terraform | a custom Organizations script (maintenance cost) | platform | 2027-04 |
+| D-04 | Network | Transit Gateway, hub with a firewall, CIDR from the registry /16 per environment | full-mesh peering (grows quadratically) | networks | 2027-04 |
+| D-07 | Guardrail on disabling logs | preventive (SCP), no exceptions | detective (too late) | security | yearly |
+| D-09 | Tags | `team`, `env`, `cost-center`; missing = refusal in vending | a manual requirement in the wiki | finance | 2027-01 |
 
-Azure: osobny przypadek, bez pełnej platformy do 3 aplikacji; wchodzi pod ten sam IdP i rejestr CIDR.
+Azure: a separate case, without a full platform up to 3 applications; it goes under the same IdP and CIDR registry.
 
-## Pułapki
-- Fundament budowany „w pełni” przed pierwszym obciążeniem: zacznij od minimalnego rdzenia i pierwszego klienta.
-- Guardrails od razu w trybie blokady: zespoły omijają je lub tracą zaufanie do platformy.
-- Konta ręczne obok vendingu: nie obejmie ich baseline ani rozliczenie.
-- Rozjazd wersji: 40 kont na 5 wersjach baseline'u; mierz i migruj.
+## Pitfalls
+- A foundation built "in full" before the first workload: start from a minimal core and the first customer.
+- Guardrails in blocking mode right away: teams bypass them or lose trust in the platform.
+- Manual accounts next to vending: neither the baseline nor billing will cover them.
+- Version skew: 40 accounts on 5 baseline versions; measure and migrate.
 
-## Checklista
-- [ ] punkt wyjścia wybrany i nazwa produktu sprawdzona w dokumentacji
-- [ ] hierarchia wg polityk, granica konta = obciążenie × środowisko, konto zarządzające puste
-- [ ] SSO z jednego IdP, brak użytkowników lokalnych
-- [ ] rejestr CIDR przed pierwszą siecią; topologia i właściciel huba zapisani
-- [ ] konta log archive i security tooling, logi włączone przez fundament
-- [ ] guardrails: rodzaj (zapobiegawczy/wykrywający), tryb audytu, rejestr wyjątków
-- [ ] tagi wymuszane, alokacja kosztów po koncie i tagach
-- [ ] vending z IaC, metryka czasu do konta, profile bazowe
-- [ ] wersjonowanie i fale wdrażania zmian fundamentu
+## Checklist
+- [ ] starting point chosen and the product name checked in the documentation
+- [ ] hierarchy by policies, account boundary = workload × environment, management account empty
+- [ ] SSO from one IdP, no local users
+- [ ] CIDR registry before the first network; topology and hub owner recorded
+- [ ] log archive and security tooling accounts, logs enabled by the foundation
+- [ ] guardrails: kind (preventive/detective), audit mode, exception register
+- [ ] tags enforced, cost allocation by account and tags
+- [ ] vending with IaC, a time-to-account metric, baseline profiles
+- [ ] versioning and rollout waves for foundation changes
 
-## Źródła
-- AWS Control Tower, Account Factory, Landing Zone Accelerator on AWS — dokumentacja AWS; kontrole preventive (SCP), detective
-  (Config), proactive (CloudFormation hooks) potwierdzone wyszukiwaniem 2026-10-17, strony dokumentacji niedostępne bezpośrednio
-- Microsoft Learn: Cloud Adoption Framework, Azure landing zones (platform i application landing zones, subscription
-  vending); wyszukiwanie 2026-10-17
-- Google Cloud: enterprise foundations blueprint, organizacja folderów, Shared VPC, topologia hub-and-spoke
-  (docs.cloud.google.com/architecture); wyszukiwanie 2026-10-17
-- Limity (głębokość grup, liczba spoke'ów, peering) [niezweryfikowane]; sprawdź przed projektem.
+## Sources
+- AWS Control Tower, Account Factory, Landing Zone Accelerator on AWS — AWS documentation; preventive (SCP), detective
+  (Config), proactive (CloudFormation hooks) controls confirmed by search 2026-10-17, documentation pages not directly reachable
+- Microsoft Learn: Cloud Adoption Framework, Azure landing zones (platform and application landing zones, subscription
+  vending); search 2026-10-17
+- Google Cloud: enterprise foundations blueprint, folder organization, Shared VPC, hub-and-spoke topology
+  (docs.cloud.google.com/architecture); search 2026-10-17
+- Limits (group depth, number of spokes, peering) [unverified]; check before the design.

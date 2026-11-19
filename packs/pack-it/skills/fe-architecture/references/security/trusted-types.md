@@ -1,61 +1,61 @@
 # Trusted Types
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/trusted-types.
+Source: frontendpatterns.dev/trusted-types.
 
-## Metadane
+## Metadata
 
-Kategoria: Security. Poziom: Advanced. Technologia: Native web (Browser APIs). Autor: Den Odell.
-Data aktualizacji: 22 czerwca 2026.
+Category: Security. Level: Advanced. Technology: Native web (Browser APIs). Author: Den Odell.
+Last updated: 22 June 2026.
 
 ## TLDR
 
-Trusted Types API przeglądarki wymusza, żeby niebezpieczne sinki DOM (np. `innerHTML`) przyjmowały
-tylko typowane, przepuszczone przez audytowaną politykę obiekty (`TrustedHTML` itp.), nie surowe
-stringi — eliminuje DOM-based XSS na źródle.
+The browser's Trusted Types API enforces that dangerous DOM sinks (e.g. `innerHTML`) accept
+only typed objects passed through an audited policy (`TrustedHTML` etc.), not raw
+strings — it eliminates DOM-based XSS at the source.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Wsparcie: Chromium od dawna; w 2025–2026 dołączają pozostałe silniki (Safari 26, Firefox) — sprawdź Baseline dla
-  swojej publiczności. Bez wsparcia enforcement jest po prostu ignorowany — Trusted Types to warstwa dodatkowa.
-- Nagłówek `Report-To` jest przestarzały — używaj `Reporting-Endpoints` + `report-to` w CSP.
-- Angular obsługuje Trusted Types natywnie (polityki `angular`, `angular#bundler`) — fw-angular. W React `dangerouslySetInnerHTML`
-  przyjmuje `TrustedHTML` z polityki.
-- Polityka `default` to siatka bezpieczeństwa dla bibliotek trzecich — loguj jej użycia, żeby je stopniowo usuwać.
+- Support: Chromium for a long time; in 2025–2026 the other engines are joining (Safari 26, Firefox) — check Baseline for
+  your audience. Without support, enforcement is simply ignored — Trusted Types is an additional layer.
+- The `Report-To` header is deprecated — use `Reporting-Endpoints` + `report-to` in the CSP.
+- Angular supports Trusted Types natively (the `angular`, `angular#bundler` policies) — fw-angular. In React `dangerouslySetInnerHTML`
+  accepts `TrustedHTML` from a policy.
+- The `default` policy is a safety net for third-party libraries — log its uses so that you can gradually remove them.
 
 ## Problem
 
-Podatności typu DOM-based XSS powstają, gdy niezaufany string trafia do „sinka” DOM, który
-interpretuje go jako kod. Klasyczny przykład: `element.innerHTML = userInput`. Inne niebezpieczne
-sinki: `outerHTML`, `document.write`, `insertAdjacentHTML`, `script.src`, `eval`, `iframe.srcdoc`.
+DOM-based XSS vulnerabilities arise when an untrusted string reaches a DOM "sink" that
+interprets it as code. The classic example: `element.innerHTML = userInput`. Other dangerous
+sinks: `outerHTML`, `document.write`, `insertAdjacentHTML`, `script.src`, `eval`, `iframe.srcdoc`.
 
-Dwa problematyczne aspekty:
-1. Takie błędy wyglądają niewinnie (zwykłe przypisania) i łatwo omijają code review.
-2. Niebezpieczne sinki są rozproszone po całej bazie kodu; sanityzacja bywa zapominana i
-   niekonsystentna między miejscami.
+Two problematic aspects:
+1. Such bugs look innocent (ordinary assignments) and easily slip past code review.
+2. Dangerous sinks are scattered across the whole codebase; sanitization is often forgotten and
+   inconsistent between places.
 
-## Rozwiązanie
+## Solution
 
-Trusted Types zmienia domyślne zachowanie przeglądarki — niebezpieczne sinki przestają akceptować
-zwykłe stringi i wymagają specjalnych, typowanych obiektów: `TrustedHTML`, `TrustedScript`,
-`TrustedScriptURL`. Obiekty te można tworzyć **tylko** przez audytowaną politykę, zdefiniowaną raz
-przez `trustedTypes.createPolicy()`.
+Trusted Types changes the browser's default behaviour — dangerous sinks stop accepting
+plain strings and require special, typed objects: `TrustedHTML`, `TrustedScript`,
+`TrustedScriptURL`. These objects can be created **only** through an audited policy, defined once
+with `trustedTypes.createPolicy()`.
 
-Włączenie: nagłówek `Content-Security-Policy: require-trusted-types-for 'script'`.
+Enabling: the `Content-Security-Policy: require-trusted-types-for 'script'` header.
 
-## Przykłady kodu
+## Code examples
 
-### Włączenie enforcement
+### Enabling enforcement
 
 ```
 Content-Security-Policy: require-trusted-types-for 'script'
 Content-Security-Policy: trusted-types sanitize default;
 ```
 
-Po włączeniu: `element.innerHTML = '<b>hi</b>'` wyrzuca `TypeError`.
+After enabling: `element.innerHTML = '<b>hi</b>'` throws a `TypeError`.
 
-### Tworzenie polityki (native web)
+### Creating a policy (native web)
 
 ```javascript
 import DOMPurify from 'dompurify';
@@ -64,15 +64,15 @@ const sanitizer = trustedTypes.createPolicy('sanitize', {
   createHTML: (input) => DOMPurify.sanitize(input),
 });
 
-// Zwraca TrustedHTML, nie string
+// Returns TrustedHTML, not a string
 const safe = sanitizer.createHTML(userInput);
-element.innerHTML = safe; // Zaakceptowane: sanityzowane przez politykę
+element.innerHTML = safe; // Accepted: sanitized by the policy
 
-// Zwykły string jest odrzucony
-element.innerHTML = userInput; // TypeError: wymaga TrustedHTML
+// A plain string is rejected
+element.innerHTML = userInput; // TypeError: requires TrustedHTML
 ```
 
-### Polityka domyślna
+### The default policy
 
 ```javascript
 trustedTypes.createPolicy('default', {
@@ -94,48 +94,48 @@ Reporting-Endpoints: csp-endpoint="https://example.com/csp-reports"
 Content-Security-Policy-Report-Only: require-trusted-types-for 'script'; report-to csp-endpoint
 ```
 
-## Zalety
+## Advantages
 
-- Eliminuje podatności XSS na źródle, nie pozwalając przekazać niezasanityzowanego stringa do
-  chronionego sinka.
-- Centralizuje sanityzację w jednej, audytowanej polityce, zamiast rozproszonych, niespójnych
-  wywołań w całym kodzie.
-- Przesuwa wychwytywanie błędu z produkcji na `TypeError` już w trakcie developmentu.
-- Warstwuje się z CSP i output encoding dla defense-in-depth.
-- Report-only mode pozwala zmierzyć realną ekspozycję na produkcyjnych danych przed wymuszeniem.
+- Eliminates XSS vulnerabilities at the source by not allowing an unsanitized string to be passed to
+  a protected sink.
+- Centralizes sanitization in one audited policy, instead of scattered, inconsistent
+  calls across the code.
+- Moves catching the bug from production to a `TypeError` already during development.
+- Layers with CSP and output encoding for defense-in-depth.
+- Report-only mode lets you measure the real exposure on production data before enforcing.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Wsparcie przeglądarek długo ograniczało się do Chromium; inne silniki dołączają dopiero w 2025–2026.
-- Wymaga refaktoringu istniejącego kodu — każde niebezpieczne przypisanie musi przejść przez
-  politykę.
-- Biblioteki trzecich stron piszące do `innerHTML` wewnętrznie mogą się łamać pod enforcement.
-- Zbyt permisywna polityka `default` jest zagrożeniem samym w sobie — może otworzyć dziurę, którą
-  miała zamykać.
-- Chroni tylko chronione sinki; nie łapie XSS przez `javascript:` URL w atrybutach czy przez
-  wstrzyknięcie stylów (style injection).
-- Enforcement zależy od poprawnie wysyłanych nagłówków CSP — błąd konfiguracji cicho wyłącza
-  ochronę.
-- Tworzenie polityk dodaje złożoność operacyjną.
-- Trusted Types gwarantuje tylko, że treść przeszła przez politykę — błędna implementacja
-  `createHTML` może i tak zatwierdzić niebezpieczny markup.
+- Browser support was limited to Chromium for a long time; other engines are joining only in 2025–2026.
+- Requires refactoring existing code — every dangerous assignment must go through
+  a policy.
+- Third-party libraries that write to `innerHTML` internally can break under enforcement.
+- An overly permissive `default` policy is a threat in itself — it can open the hole it
+  was meant to close.
+- It protects only the protected sinks; it does not catch XSS through a `javascript:` URL in attributes or through
+  style injection.
+- Enforcement depends on correctly sent CSP headers — a configuration error silently turns off
+  the protection.
+- Creating policies adds operational complexity.
+- Trusted Types guarantees only that the content passed through a policy — a faulty implementation of
+  `createHTML` can still approve dangerous markup.
 
-## Powiązane wzorce
+## Related patterns
 
 - Content Security Policy (CSP) — Security (`content-security-policy.md`)
 - Output Encoding — Security (`output-encoding.md`)
 - Input Sanitization — Security (`input-sanitization.md`)
-- Zewnętrzne: [Trusted Types API — MDN](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API),
-  [Specyfikacja Trusted Types — GitHub](https://w3c.github.io/trusted-types/dist/spec/),
+- External: [Trusted Types API — MDN](https://developer.mozilla.org/en-US/docs/Web/API/Trusted_Types_API),
+  [The Trusted Types specification — GitHub](https://w3c.github.io/trusted-types/dist/spec/),
   [XSS Prevention with Trusted Types — web.dev](https://web.dev/trusted-types/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Wprowadź Trusted Types w aplikacjach, gdzie DOM-based XSS jest realnym ryzykiem — duża baza kodu z
-wielu miejscami pisania do `innerHTML`/podobnych sinków, zwłaszcza z wielu zespołów naraz, gdzie
-sanityzacja „w każdym miejscu z osobna” już się rozjechała. **Nie** traktuj tego jako pierwszy krok
-— to jest wzorzec dopełniający Input Sanitization i Output Encoding, nie ich zamiennik; jeśli
-projekt nie ma jeszcze podstawowej sanityzacji/kodowania poukładanych, Trusted Types tylko dodadzą
-`TypeError`-y bez realnej korzyści, dopóki tamten fundament nie jest gotowy. Sprawdź wsparcie
-przeglądarek dla docelowej publiczności przed enforcement na produkcji — dla części użytkowników
-(starsze Safari/Firefox) ochrona po prostu nie zadziała, więc nie licz na nią jako jedyną warstwę.
+Introduce Trusted Types in applications where DOM-based XSS is a real risk — a large codebase with
+many places writing to `innerHTML`/similar sinks, especially from many teams at once, where
+"in each place separately" sanitization has already drifted apart. Do **not** treat it as the first step
+— it is a pattern that complements Input Sanitization and Output Encoding, not their replacement; if
+the project does not yet have basic sanitization/encoding in order, Trusted Types will only add
+`TypeError`s without real benefit until that foundation is ready. Check browser
+support for the target audience before enforcing in production — for some users
+(older Safari/Firefox) the protection simply will not work, so do not count on it as the only layer.

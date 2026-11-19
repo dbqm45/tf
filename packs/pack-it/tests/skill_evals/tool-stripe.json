@@ -26,6 +26,32 @@
       }
     },
     {
+      "id": "jednorazowa-platnosc-checkout-en",
+      "expect": "trigger",
+      "prompt": "We’re adding one-time card payments to our shop through Stripe. Which API should we use and how do we confirm that an order has been paid? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "Checkout Session\\w*|checkout\\.sessions"
+          ],
+          [
+            "webhook\\w*"
+          ],
+          [
+            "checkout\\.session\\.completed|async_payment_succeeded|payment_status"
+          ],
+          [
+            "payment_method_types",
+            "dynamiczn\\w* metod",
+            "ui_mode",
+            "payment_method_configurations",
+            "dynamic payment methods?",
+            "dynamic methods"
+          ]
+        ]
+      }
+    },
+    {
       "id": "payment-method-types-karta",
       "expect": "trigger",
       "prompt": "W kodzie integracji Stripe mamy payment_method_types: ['card'] i Card Element na froncie. Czy to dobrze? Odpowiedz zwięźle.",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy próby scenariusza symulacji ES (es_probe.py) z atrapą modelu zamiast `claude -p`: python3 tests/test_es_probe.py"""
+"""Tests of the ES simulation scenario probe (es_probe.py) with a model stub instead of `claude -p`: python3 tests/test_es_probe.py"""
 import json
 import os
 import subprocess
@@ -18,11 +18,11 @@ log = os.environ.get("FAKE_LOG")
 if log:
     with open(log, "a", encoding="utf-8") as fh:
         fh.write(json.dumps({"system": sysp, "prompt": prompt}) + "\n")
-if "Oceniasz PROWADZENIE" in sysp:
+if "You assess how the session was RUN" in sysp:
     print(json.dumps({"result": "# Debrief\nFacylitator zderzył sprzeczność.", "total_cost_usd": 0.02}))
     sys.exit(0)
 pid = re.search(r"\(id: (\w+)\)", prompt).group(1)
-now = prompt.split("Facylitator mówi teraz", 1)[-1] if "Facylitator mówi teraz" in prompt else prompt
+now = prompt.split("The facilitator says now", 1)[-1] if "The facilitator says now" in prompt else prompt
 reply = {"persona": pid, "dialogue": "", "stickies": [], "memory": "", "anecdote_used": None}
 if pid == "it":
     print(json.dumps({"result": "nie wiem, co powiedzieć", "total_cost_usd": 0.01}))
@@ -78,7 +78,7 @@ def main() -> int:
         root = Path(d)
         fake = root / "fake_model.py"
         fake.write_text(FAKE, encoding="utf-8")
-        probe = root / "proba.json"
+        probe = root / "trial.json"
         probe.write_text(json.dumps(PROBE, ensure_ascii=False), encoding="utf-8")
         log = root / "calls.jsonl"
 
@@ -86,42 +86,54 @@ def main() -> int:
         sd = root / "docs/training/es-sim/p1"
         rep = sd / "probe-report.md"
         text = rep.read_text(encoding="utf-8") if rep.exists() else ""
-        check(r.returncode == 1 and rep.exists(), f"EP-1: niespełnione oczekiwanie → kod 1 i raport: rc={r.returncode} {r.stderr[-400:]}")
+        check(r.returncode == 1 and rep.exists(), f"EP-1: an unmet expectation → code 1 and a report: rc={r.returncode} {r.stderr[-400:]}")
         check("✓" in text and "18% wizyt przepada" in text and "✗" in text and "rabat za miot" in text,
-              f"EP-2: raport z oczekiwaniami spełnionymi i nie: {text[:900]}")
+              f"EP-2: a report with met and unmet expectations: {text[:900]}")
         check(any("kiedy wizyta jest zakończona" in ln and "✓" in ln for ln in text.splitlines()),
-              f"EP-3: sprzeczność zderzona (hot spot): {text[:900]}")
+              f"EP-3: contradiction confronted (hot spot): {text[:900]}")
         check(any("pytanie do całej sali" in ln and "✓" in ln for ln in text.splitlines())
               and any("pytana po imieniu" in ln and "✓" in ln for ln in text.splitlines()),
               f"EP-4: zachowania z kart sprawdzone: {text[:900]}")
         state = json.loads((sd / "state.json").read_text(encoding="utf-8")) if (sd / "state.json").exists() else {}
         check(state.get("round") == 4 and len(list((sd / "rounds/01").glob("*.reply.json"))) == 6,
-              f"EP-5: 4 rundy, odpowiedzi 6 osób w rundzie 1: {state.get('round')}")
-        check(any("wariant dnia wyłączony" in ln and "pominięte" in ln and "✗" not in ln for ln in text.splitlines())
-              and "## Oczekiwania (4/5)" in text,
-              f"EP-13: oczekiwanie pominięte przy wskazanym wariancie dnia, nie liczy się do wyniku: {text[:900]}")
-        check("niepoprawny JSON: 4" in text, f"EP-6: brak JSON od jednej osoby w 4 rundach policzony: {text[:900]}")
-        check("0,27 USD" in text and "0,27 USD" in r.stdout, f"EP-7: koszt (25 wywołań + coach): {r.stdout[-400:]}")
+              f"EP-5: 4 rounds, replies of 6 people in round 1: {state.get('round')}")
+        check(any("wariant dnia wyłączony" in ln and "skipped" in ln and "✗" not in ln for ln in text.splitlines())
+              and "## Expectations (4/5)" in text,
+              f"EP-13: the expectation skipped for the given day variant, does not count towards the result: {text[:900]}")
+        check("invalid JSON: 4" in text, f"EP-6: missing JSON from one person counted over 4 rounds: {text[:900]}")
+        check("0.27 USD" in text and "0.27 USD" in r.stdout, f"EP-7: cost (25 calls + coach): {r.stdout[-400:]}")
         calls = [json.loads(ln) for ln in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
-        part = [c for c in calls if "Oceniasz PROWADZENIE" not in c["system"]]
-        check(part and all("Zapisz ten JSON" not in c["prompt"] and '"persona"' in c["prompt"] for c in part),
-              "EP-8: uczestnik dostaje kontrakt JSON bez polecenia zapisu pliku (bez narzędzi)")
+        part = [c for c in calls if "You assess how the session was RUN" not in c["system"]]
+        check(part and all("Save this JSON" not in c["prompt"] and '"persona"' in c["prompt"] for c in part),
+              "EP-8: the participant gets the JSON contract without a file-write command (without tools)")
         check((sd / "debrief.md").exists() and "Debrief" in (sd / "debrief.md").read_text(encoding="utf-8"),
-              "EP-9: coach zapisał debrief")
-        check(len(r.stdout.splitlines()) <= 40, f"EP-10: zwięzłe wyjście: {len(r.stdout.splitlines())} linii")
+              "EP-9: the coach saved the debrief")
+        check(len(r.stdout.splitlines()) <= 40, f"EP-10: concise output: {len(r.stdout.splitlines())} lines")
 
         r = run(root, fake, "--variant", "pelna", "--probe", str(probe), "--id", "p2", "--budget-usd", "0.05", "--coach", "none")
         st = json.loads((root / "docs/training/es-sim/p2/state.json").read_text(encoding="utf-8"))
-        check(r.returncode == 3 and "budżet" in r.stdout.lower() and st.get("round") == 1
+        check(r.returncode == 3 and "budget" in r.stdout.lower() and st.get("round") == 1
               and not (root / "docs/training/es-sim/p2/debrief.md").exists(),
-              f"EP-11: przekroczony budżet zatrzymuje próbę po rundzie: rc={r.returncode} {r.stdout[-300:]}")
+              f"EP-11: an exceeded budget stops the probe after the round: rc={r.returncode} {r.stdout[-300:]}")
 
         r = run(root, fake, "--variant", "pelna", "--probe", str(root / "brak.json"), "--id", "p3")
-        check(r.returncode == 2, f"EP-12: brak pliku próby → 2: {r.returncode}")
+        check(r.returncode == 2, f"EP-12: missing probe file → 2: {r.returncode}")
+
+    # the write command is removed from the prompt; the bad-JSON message is counted in the transcript
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("es_probe", SCRIPT)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    new = "kontrakt\n\nSave this JSON to the file `docs/x/a.reply.json` and reply with one word: ok.\n"
+    arr = "kontrakt\n\nSave the array to the file `docs/x/a.reply.json` and reply: ok.\n"
+    check(mod.WRITE_FILE.sub("|", new) == "kontrakt|" and mod.WRITE_FILE.sub("|", arr) == "kontrakt|",
+          "EP-14: the file-write command removed from the prompt")
+    tr = "> problem: a: missing or invalid JSON — x\n> problem: b: missing or invalid JSON; y\n"
+    check(tr.count(mod.BAD_JSON) == 2, "EP-15: bad JSON counted in the transcript")
 
     for f in fails:
         print("✗", f)
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów es_probe")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of es_probe")
     return 1 if fails else 0
 
 

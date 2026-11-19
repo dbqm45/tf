@@ -1,42 +1,42 @@
 # Single Responsibility
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/single-responsibility.
+Source: frontendpatterns.dev/single-responsibility.
 
-Uwaga: ogólna definicja jest już w `../principles.md`. Ten plik dodaje to, co konkretnie
-wnosi strona frontendpatterns.dev: pełny przykład „before/after” rozbicia komponentu na jednostki
-o jednej odpowiedzialności.
+Note: the general definition is already in `../principles.md`. This file adds what
+the frontendpatterns.dev page specifically contributes: a full "before/after" example of splitting a component into units
+with a single responsibility.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Fundamentals
-- **Poziom:** Beginner
-- **Przykłady:** React
-- **Data aktualizacji:** September 22, 2025
-- **Autor:** Den Odell
+- **Category:** Fundamentals
+- **Level:** Beginner
+- **Examples:** React
+- **Last updated:** September 22, 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Give each function, component, and module one job describable in a single sentence without using 'and'.”
+"Give each function, component, and module one job describable in a single sentence without using 'and'."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Test „jednego zdania bez «i»” jest agnostyczny; ogólne SRP — eng-design-principles, nazewnictwo — eng-clean-code.
-- Kopiowanie danych z serwera do lokalnego stanu formularza przez `useEffect` (przykład „Po”) to znany antywzorzec
-  React — lepiej zainicjować formularz kluczem (`key={user.id}`) albo osobnym komponentem formularza.
+- The "one sentence without 'and'" test is agnostic; general SRP — eng-design-principles, naming — eng-clean-code.
+- Copying server data into a form's local state through `useEffect` (the "After" example) is a known React anti-pattern
+  — it is better to initialize the form with a key (`key={user.id}`) or a separate form component.
 
 ## Problem
 
-„Kitchen sink components” — komponenty łączące naraz pobieranie danych, walidację, formatowanie dat, logikę autoryzacji i renderowanie wielu sekcji UI. Utrudnia to testowanie, współpracę zespołową i debugowanie — zmiana jednej odpowiedzialności wymaga przebrnięcia przez wszystkie inne.
+"Kitchen sink components" — components that combine data fetching, validation, date formatting, authorization logic and rendering of many UI sections all at once. This hinders testing, teamwork and debugging — changing one responsibility requires wading through all the others.
 
-## Rozwiązanie
+## Solution
 
-Każdy element kodu (funkcja, komponent, moduł) powinien mieć jedną odpowiedzialność, opisywalną w jednym zdaniu bez słowa „i”. Rozdziel pobieranie danych od walidacji, formatowania i logiki dostępu — każda z tych rzeczy zmienia się z innego powodu i w innym czasie.
+Every element of code (function, component, module) should have one responsibility, describable in one sentence without the word "and". Separate data fetching from validation, formatting and access logic — each of these changes for a different reason and at a different time.
 
-## Przykłady kodu
+## Code examples
 
-### Przed: wiele odpowiedzialności naraz
+### Before: many responsibilities at once
 
 ```javascript
 // ❌ Everything crammed into one component
@@ -95,7 +95,7 @@ function UserProfile({ userId }) {
 }
 ```
 
-### Po: jedna odpowiedzialność na jednostkę kodu
+### After: one responsibility per unit of code
 
 ```javascript
 // ✅ Hook: data fetching only
@@ -181,7 +181,7 @@ function UserProfile({ userId, currentUserId }) {
 }
 ```
 
-### Na poziomie funkcji
+### At the function level
 
 ```javascript
 // ❌ Fetching AND transforming
@@ -214,25 +214,25 @@ const rawUser = await fetchUser(userId);
 const user = transformUser(rawUser);
 ```
 
-## Zalety
+## Advantages
 
-- Natychmiastowa przejrzystość — zrozumienie celu każdego pliku zajmuje sekundy.
-- Proste testowanie — pojedyncza odpowiedzialność, bez złożonego setupu mocków.
-- Zawarte (nierozprzestrzeniające się) zmiany — modyfikacja walidacji nie wpływa na resztę kodu.
-- Faktyczne ponowne użycie — funkcja formatująca datę działa wszędzie, niezależnie od kontekstu.
-- Szybsze debugowanie — błąd formatowania daty oznacza sprawdzenie jednego, konkretnego pliku.
-- Praca równoległa — zespoły mogą pracować na różnych odpowiedzialnościach bez konfliktów w tych samych plikach.
+- Immediate clarity — understanding the purpose of each file takes seconds.
+- Simple testing — a single responsibility, without a complex mock setup.
+- Contained (non-spreading) changes — modifying the validation does not affect the rest of the code.
+- Actual reuse — a date formatting function works everywhere, regardless of context.
+- Faster debugging — a date formatting bug means checking one specific file.
+- Parallel work — teams can work on different responsibilities without conflicts in the same files.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Więcej plików — zwiększona nawigacja i liczba importów do zarządzania.
-- Trudniejszy do śledzenia przepływ — zrozumienie „co się dzieje” wymaga przejścia przez więcej miejsc.
-- Subiektywne granice — co dokładnie znaczy „jedna odpowiedzialność” bywa dyskusyjne w praktyce.
-- Łatwo przesadzić — ryzyko „trójliniowej funkcji w osobnym pliku” (nadmierne rozdrobnienie bez realnego zysku).
-- Koszt onboardingu — nowe osoby w zespole muszą nauczyć się konwencji podziału, zanim się w niej odnajdą.
-- Wymaga wyrównania zespołu — bez ustalonych, spisanych granic, podział będzie niekonsekwentny między różnymi osobami.
+- More files — more navigation and more imports to manage.
+- A flow that is harder to follow — understanding "what is going on" requires going through more places.
+- Subjective boundaries — what exactly "one responsibility" means can be debatable in practice.
+- Easy to overdo — the risk of "a three-line function in a separate file" (excessive fragmentation without real gain).
+- Onboarding cost — new people on the team must learn the splitting convention before they find their way in it.
+- Requires team alignment — without agreed, written-down boundaries, the split will be inconsistent between different people.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Separation of Concerns](separation-of-concerns.md) — Fundamentals.
 - [Presentational vs. Container](../components/presentational-vs-container.md) — Components.
@@ -240,8 +240,8 @@ const user = transformUser(rawUser);
 - SOLID Principles — Wikipedia.
 - Clean Code Principles — freeCodeCamp.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Stosuj ten test wprost: jeśli opis funkcji/komponentu potrzebuje słowa „i” („pobiera dane **i** je formatuje **i** waliduje”), to jest sygnał do rozbicia — dokładnie tak, jak formułuje to TLDR tej strony.
+Apply this test directly: if the description of a function/component needs the word "and" ("fetches the data **and** formats it **and** validates it"), that is a signal to split it — exactly as the TLDR of this page puts it.
 
-Nie doprowadzaj tego do granicy absurdu — funkcja trzyliniowa nie musi mieć własnego pliku/modułu, jeśli nigdzie indziej nie jest reużywana i nie ma osobnego powodu do zmiany. Rozbijaj tam, gdzie odpowiedzialności realnie zmieniają się w różnym czasie/z różnych przyczyn, nie mechanicznie przy każdej okazji (patrz też krytyka nadużywania rozdrobnienia w eng-design-principles).
+Do not take it to the point of absurdity — a three-line function does not need its own file/module if it is not reused anywhere else and has no separate reason to change. Split where responsibilities really change at different times/for different reasons, not mechanically at every opportunity (see also the critique of overusing fragmentation in eng-design-principles).

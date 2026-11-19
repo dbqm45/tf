@@ -1,87 +1,87 @@
 ---
 name: ux-design-leadership
-description: Użyj przy strategii i prowadzeniu designu w organizacji — dojrzałość UX, metryki (HEART, SUS), struktura zespołu, DesignOps, ścieżki kariery, ROI.
+description: Use for strategy and leading design in an organization — UX maturity, metrics (HEART, SUS), team structure, DesignOps, career paths, ROI.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj, gdy prowadzisz lub budujesz funkcję designu/UX w organizacji (Head of Design, UX Strategist, DesignOps) — ocena dojrzałości UX (model NN/g, sześć etapów), wizja i strategia designu powiązane z wynikami biznesowymi, metryki UX (HEART, Goals-Signals-Metrics, SUS, skuteczność zadań), struktura zespołu designu (scentralizowana, wbudowana, hybrydowa) i kompromisy, budowa DesignOps i ResearchOps (narzędzia, procesy, standardy, rytuały jak krytyka projektu), ścieżki kariery i rekrutacja projektantów, zarządzanie jakością i dostępnością, budżet i argumenty ROI dla zarządu, rytm pracy z produktem i inżynierią; artefakty ux-maturity.md i design-strategy.md. Nie do struktury zespołów inżynierskich ogólnie (proc-team-topologies), metryk produktowych i wyboru, co budować (proc-product-discovery), poziomów inżynierów frontendu (fe-engineering-levels), praktyki architekta (arch-architect-practice), planowania i metod badań (ux-research-methods), budowy biblioteki komponentów (ux-design-systems) ani techniki dostępności (ux-accessibility)."
-  slowa: "head of design, szef designu, dyrektor UX, UX strategist, strategia designu, wizja designu, dojrzałość UX, UX maturity, jak przekonać zarząd do UX, ROI designu, budżet na design, metryki UX, HEART, SUS, NPS to za mało, mierzenie UX, zespół designerów, ilu projektantów, scentralizowany zespół designu, designerzy w zespołach, hybryda, DesignOps, ResearchOps, krytyka projektu, rytuały designu, ścieżka kariery projektanta, rekrutacja projektanta, ocena projektantów, jakość designu, governance, współpraca z produktem i inżynierią, design bez wpływu"
+  review: "2027-10-17"
+  catalog: "Use when you lead or build the design/UX function in an organization (Head of Design, UX Strategist, DesignOps) — UX maturity assessment (the NN/g model, six stages), a design vision and strategy tied to business outcomes, UX metrics (HEART, Goals-Signals-Metrics, SUS, task success), the structure of the design team (centralized, embedded, hybrid) and trade-offs, building DesignOps and ResearchOps (tools, processes, standards, rituals such as design critique), career paths and hiring designers, managing quality and accessibility, budget and ROI arguments for the board, the rhythm of work with product and engineering; the artifacts ux-maturity.md and design-strategy.md. Not for the structure of engineering teams in general (proc-team-topologies), product metrics and choosing what to build (proc-product-discovery), frontend engineer levels (fe-engineering-levels), the architect's practice (arch-architect-practice), research planning and methods (ux-research-methods), building a component library (ux-design-systems) or accessibility technique (ux-accessibility)."
+  keywords: "head of design, szef designu, dyrektor UX, UX strategist, strategia designu, wizja designu, dojrzałość UX, UX maturity, jak przekonać zarząd do UX, ROI designu, budżet na design, metryki UX, HEART, SUS, NPS to za mało, mierzenie UX, zespół designerów, ilu projektantów, scentralizowany zespół designu, designerzy w zespołach, hybryda, DesignOps, ResearchOps, krytyka projektu, rytuały designu, ścieżka kariery projektanta, rekrutacja projektanta, ocena projektantów, jakość designu, governance, współpraca z produktem i inżynierią, design bez wpływu, design director, design strategy, design vision, convince the board about UX, design ROI, design budget, UX metrics, measuring UX, design team, how many designers, centralized design team, embedded designers, hybrid, design critique, design rituals, designer career path, hiring designers, assessing designers, design quality, working with product and engineering, design without impact"
 ---
 
-# Przywództwo w designie — od oceny dojrzałości do rytmu pracy
+# Design leadership — from the maturity assessment to the rhythm of work
 
-Cel: funkcja designu, która ma wpływ na wyniki biznesowe i da się ją **zmierzyć, zorganizować i obronić budżetowo**.
-Zaczynasz od stanu faktycznego, nie od ideału: ocena dojrzałości dyktuje, co robić najpierw. Skill daje
-procedurę dla osoby prowadzącej design; techniki pracy zespołu (badania, system komponentów, dostępność) mają swoje
-skille.
+Goal: a design function that affects business outcomes and can be **measured, organized and defended in the budget**.
+You start from the actual state, not from the ideal: the maturity assessment dictates what to do first. The skill gives
+a procedure for the person leading design; the team's work techniques (research, component system, accessibility) have their own
+skills.
 
-## Procedura
-1. **Diagnoza dojrzałości.** Oceń organizację modelem NN/g (`references/dojrzalosc-i-metryki.md`): sześć etapów
-   (od „nieobecny” do „kierowany użytkownikiem”) wg czterech czynników — strategia, kultura, proces, wyniki.
-   Model nie jest listą do odhaczenia po kolei: wskaż etap **na czynnik** i dowód (kto decyduje o priorytetach,
-   czy jest budżet, czy badania poprzedzają decyzje). Wynik: `docs/project/01-discovery/ux-maturity.md`.
-2. **Cel i ograniczenia.** Zapytaj sponsora o 1–3 wyniki biznesowe, na które design ma wpłynąć (np. spadek
-   rezygnacji w onboardingu, mniej kontaktów do wsparcia). Bez tego strategia jest listą życzeń.
-3. **Wizja i strategia.** Jedna strona: wizja (jak wygląda doświadczenie za 2–3 lata), 3–5 filarów, dla każdego
-   wynik biznesowy, inicjatywa, metryka i właściciel; czego **nie** robimy. Zapis: `design-strategy.md`.
-   Wybór, co budować, i drzewo szans — proc-product-discovery; tu tylko powiązanie designu z wynikami.
-4. **Metryki.** Dla każdego filaru ramka HEART (Happiness, Engagement, Adoption, Retention, Task success) w
-   procesie Goals → Signals → Metrics; wybierz tylko kategorie istotne (zwykle 2–3 na produkt). Do ankiet SUS,
-   do zachowań skuteczność i czas zadania. Metryka bez progu i właściciela nie jest metryką
-   (`references/dojrzalosc-i-metryki.md`). Samo NPS nie wskazuje, co poprawić.
-5. **Struktura zespołu.** Dobierz model do dojrzałości i liczby zespołów produktowych (tabela w
-   `references/organizacja-i-dojrzalosc-zespolu.md`): scentralizowany, wbudowany albo hybrydowy. Decyzja zapisana
-   jako ADR (kontekst, opcje, kompromisy, kiedy wrócimy). Zespoły inżynierskie i prawo Conwaya — proc-team-topologies.
-6. **DesignOps i ResearchOps.** Zacznij od największego tarcia (np. brak jednego narzędzia, chaos w plikach, brak
-   rekrutacji uczestników), nie od pełnej struktury: narzędzia i licencje, onboarding projektantów, standardy
-   plików i przekazania, rytuały (krytyka projektu co tydzień, przegląd jakości przed wydaniem, demo), budżet.
-   Metody badań — ux-research-methods; biblioteka komponentów — ux-design-systems.
-7. **Kariera i rekrutacja.** Ścieżka z poziomami i kryteriami zachowań (rzemiosło, wpływ, przywództwo), dwie
-   ścieżki: ekspercka i menedżerska; rekrutacja z zadaniem opartym na realnym problemie i jedną rubryką dla
-   wszystkich kandydatów. Analogia dla inżynierii: fe-engineering-levels.
-8. **Jakość i dostępność.** Bramki jakości w procesie (przegląd projektu przed przekazaniem, kontrola dostępności,
-   zgodność wdrożenia z projektem) z jednym właścicielem. Technika dostępności — ux-accessibility.
-9. **Budżet i argument ROI.** Zarządowi pokazujesz: koszt braku (kontakty do wsparcia, rezygnacje, poprawki po
-   wdrożeniu), koszt zespołu i oczekiwany efekt z **zakresem** niepewności, nie jedną liczbą. Dane własne firmy
-   przed benchmarkami zewnętrznymi; liczby cudze oznacz źródłem i datą.
-10. **Rytm z produktem i inżynierią.** Wspólny cykl: planowanie kwartalne z wynikami (nie z listą ekranów),
-    odkrywanie wyprzedzające budowę o 1–2 iteracje, przegląd projektu z inżynierią przed końcem projektowania,
-    wspólny przegląd metryk po wydaniu. Rytuały zapisane w jednym miejscu.
+## Procedure
+1. **Maturity diagnosis.** Assess the organization with the NN/g model (`references/maturity-and-metrics.md`): six stages
+   (from "absent" to "user-driven") by four factors — strategy, culture, process, outcomes.
+   The model is not a list to tick off in order: point out the stage **per factor** and the evidence (who decides the priorities,
+   is there a budget, does research precede decisions). Result: `docs/project/01-discovery/ux-maturity.md`.
+2. **Goal and constraints.** Ask the sponsor about 1–3 business outcomes design is to influence (e.g. a drop in
+   onboarding churn, fewer support contacts). Without this the strategy is a wish list.
+3. **Vision and strategy.** One page: the vision (what the experience looks like in 2–3 years), 3–5 pillars, for each
+   a business outcome, an initiative, a metric and an owner; what we do **not** do. Record: `design-strategy.md`.
+   Choosing what to build and the opportunity tree — proc-product-discovery; here only the link between design and outcomes.
+4. **Metrics.** For each pillar the HEART frame (Happiness, Engagement, Adoption, Retention, Task success) in
+   the Goals → Signals → Metrics process; choose only the relevant categories (usually 2–3 per product). For surveys SUS,
+   for behaviours task success and task time. A metric without a threshold and an owner is not a metric
+   (`references/maturity-and-metrics.md`). NPS alone does not show what to fix.
+5. **Team structure.** Match the model to the maturity and the number of product teams (the table in
+   `references/team-organization-and-maturity.md`): centralized, embedded or hybrid. The decision is recorded
+   as an ADR (context, options, trade-offs, when we will revisit). Engineering teams and Conway's law — proc-team-topologies.
+6. **DesignOps and ResearchOps.** Start from the biggest friction (e.g. no single tool, chaos in files, no
+   participant recruitment), not from the full structure: tools and licences, onboarding designers, file
+   and handoff standards, rituals (design critique every week, a quality review before release, a demo), budget.
+   Research methods — ux-research-methods; component library — ux-design-systems.
+7. **Career and hiring.** A path with levels and behaviour criteria (craft, impact, leadership), two
+   tracks: expert and managerial; hiring with a task based on a real problem and one rubric for
+   all candidates. The analogy for engineering: fe-engineering-levels.
+8. **Quality and accessibility.** Quality gates in the process (a design review before handoff, an accessibility check,
+   implementation matching the design) with one owner. Accessibility technique — ux-accessibility.
+9. **Budget and the ROI argument.** You show the board: the cost of absence (support contacts, churn, fixes after
+   release), the cost of the team and the expected effect with a **range** of uncertainty, not one number. The company's own data
+   before external benchmarks; mark other people's numbers with a source and a date.
+10. **Rhythm with product and engineering.** A shared cycle: quarterly planning with outcomes (not with a list of screens),
+    discovery running 1–2 iterations ahead of building, a design review with engineering before the end of design,
+    a shared metrics review after release. The rituals recorded in one place.
 
-Wynik: `ux-maturity.md` (diagnoza), `design-strategy.md` (strategia, metryki, struktura, plan 90 dni). TL;DR i
-Przekazanie wg core-project-record; pierwsza linia: `Design leadership: <organizacja> — etap <czynnik:etap,…>`.
+Result: `ux-maturity.md` (diagnosis), `design-strategy.md` (strategy, metrics, structure, a 90-day plan). TL;DR and
+Handoff by core-project-record; the first line: `Design leadership: <organization> — stage <factor:stage,…>`.
 
-## Przykład
-Wejście: „Fintech, 180 osób w produkcie; 12 projektantów w 6 zespołach, każdy robi po swojemu; zarząd pyta o sens
-inwestycji.”
-Wynik (fragment `design-strategy.md`):
+## Example
+Input: "A fintech, 180 people in product; 12 designers in 6 teams, each works their own way; the board asks whether
+the investment makes sense."
+Result (a fragment of `design-strategy.md`):
 
 ```markdown
-Design leadership: fintech — strategia: proces:3 kultura:2 strategia:2 wyniki:2 (etapy NN/g)
-Filary: (1) onboarding bez tarcia → wynik: aktywacja z 41% do 55% w 2 kwartały
-Metryki (HEART): Adoption = aktywacja konta w 7 dni; Task success = ukończenie weryfikacji bez wsparcia
-(cel ≥ 85%); Happiness = SUS ≥ 75 (średnia SUS w badanych produktach to 68, czyli ok. 50. percentyl).
-Struktura: hybryda — projektanci w zespołach produktowych, szef designu jako linia zarządzania; 1 osoba DesignOps.
-Pierwsze 90 dni: wspólny plik biblioteki, krytyka co czwartek, rubryka rekrutacji; budżet: 1 etat DesignOps.
+Design leadership: fintech — strategy: process:3 culture:2 strategy:2 outcomes:2 (NN/g stages)
+Pillars: (1) frictionless onboarding → outcome: activation from 41% to 55% in 2 quarters
+Metrics (HEART): Adoption = account activation in 7 days; Task success = completing the verification without support
+(target ≥ 85%); Happiness = SUS ≥ 75 (the average SUS in studied products is 68, i.e. about the 50th percentile).
+Structure: hybrid — designers in product teams, the head of design as the management line; 1 DesignOps person.
+The first 90 days: a shared library file, critique every Thursday, a hiring rubric; budget: 1 DesignOps FTE.
 ```
 
-## Checklista
-- [ ] ocena dojrzałości na czterech czynnikach z dowodami; nie traktowana jak lista do odhaczenia
-- [ ] strategia powiązana z 1–3 wynikami biznesowymi, z listą rzeczy, których nie robimy
-- [ ] metryki HEART w układzie Goals-Signals-Metrics z progiem i właścicielem
-- [ ] decyzja o strukturze zespołu zapisana jako ADR z kompromisami
-- [ ] DesignOps zaczyna od największego tarcia; rytuały i bramki jakości mają właściciela
-- [ ] argument ROI z przedziałem niepewności i źródłami; [niezweryfikowane] oznaczone
+## Checklist
+- [ ] a maturity assessment on four factors with evidence; not treated as a list to tick off
+- [ ] a strategy tied to 1–3 business outcomes, with a list of things we do not do
+- [ ] HEART metrics in the Goals-Signals-Metrics layout with a threshold and an owner
+- [ ] the team structure decision recorded as an ADR with trade-offs
+- [ ] DesignOps starts from the biggest friction; rituals and quality gates have an owner
+- [ ] an ROI argument with an uncertainty range and sources; [unverified] marked
 
-## Materiały dodatkowe
-- `references/dojrzalosc-i-metryki.md` — etapy NN/g, HEART, SUS, szablon ramki metryk; czytaj przy diagnozie i metrykach.
-- `references/organizacja-i-dojrzalosc-zespolu.md` — struktury zespołu, DesignOps, kariera, ROI; czytaj przy projekcie organizacji.
+## Additional materials
+- `references/maturity-and-metrics.md` — the NN/g stages, HEART, SUS, a metrics frame template; read for the diagnosis and metrics.
+- `references/team-organization-and-maturity.md` — team structures, DesignOps, career, ROI; read when designing the organization.
 
-## Źródła
-- NN/g, *UX Maturity Model* (nngroup.com/consulting/ux-maturity-assessment/ i artykuły o etapach 1–5), dostęp
-  2026-10-17: sześć etapów (absent, limited, emergent, structured, integrated, user-driven), cztery czynniki
-  (strategy, culture, process, outcomes). Opis etapu 6 według źródeł wtórnych [niezweryfikowane].
-- Rodden, Hutchinson, Fu, *Measuring the User Experience on a Large Scale* (Google, CHI 2010) — HEART i
-  Goals-Signals-Metrics; potwierdzone przez źródła wtórne, oryginału nie otwarto (dostęp 2026-10-17).
-- MeasuringU (Sauro, Lewis), SUS: średnia 68 ≈ 50. percentyl (dostęp 2026-10-17).
-- Futurice, *DesignOps — small team starter guide* — opis modeli i ryzyka hybrydy (dostęp 2026-10-17).
-Opisane własnymi słowami.
+## Sources
+- NN/g, *UX Maturity Model* (nngroup.com/consulting/ux-maturity-assessment/ and articles on stages 1–5), accessed
+  2026-10-17: six stages (absent, limited, emergent, structured, integrated, user-driven), four factors
+  (strategy, culture, process, outcomes). The description of stage 6 according to secondary sources [unverified].
+- Rodden, Hutchinson, Fu, *Measuring the User Experience on a Large Scale* (Google, CHI 2010) — HEART and
+  Goals-Signals-Metrics; confirmed by secondary sources, the original was not opened (accessed 2026-10-17).
+- MeasuringU (Sauro, Lewis), SUS: an average of 68 ≈ the 50th percentile (accessed 2026-10-17).
+- Futurice, *DesignOps — small team starter guide* — a description of the models and the risks of a hybrid (accessed 2026-10-17).
+Described in our own words.

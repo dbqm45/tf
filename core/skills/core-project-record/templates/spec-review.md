@@ -4,28 +4,28 @@ phase: requirements
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: [03-requirements/requirements.md]
 ---
-# Przegląd specyfikacji: <nazwa>
+# Specification review: <name>
 
 ## TL;DR
-<Werdykt: ZABLOKOWANE / GOTOWE DO PLANU — liczba ustaleń blokujących, poważnych i drobnych, ile zamkniętych.>
+<Verdict: BLOCKED / READY FOR THE PLAN — the number of blocking, major and minor findings, how many are closed.>
 
 ## Panel
-| Recenzent | Zadanie | Model |
+| Reviewer | Task | Model |
 |---|---|---|
-| przeciwnik | dziury, sprzeczności, niesprawdzalne wymagania | |
-| operator | awarie, częściowe zapisy, współbieżność, ponowienia | |
-| wykonawca | czy da się zbudować i sprawdzić testem | |
+| adversary | holes, contradictions, uncheckable requirements | |
+| operator | failures, partial writes, concurrency, retries | |
+| implementer | whether it can be built and checked with a test | |
 
-Niezależność: <recenzenci w osobnych kontekstach, ten sam dostawca modeli — zgodność to słabszy dowód niż przegląd ludzi>.
+Independence: <reviewers in separate contexts, the same model vendor — agreement is weaker evidence than a review by people>.
 
-## Ustalenia
-| ID | Waga | Kto wskazał | Wymaganie | Problem (scenariusz) | Zamknięcie (REQ / DEC / odrzucone: powód) |
+## Findings
+| ID | Weight | Raised by | Requirement | Problem (scenario) | Closure (REQ / DEC / rejected: reason) |
 |---|---|---|---|---|---|
-| F1 | blokujące | przeciwnik, operator | REQ-… | | |
+| F1 | blocking | adversary, operator | REQ-… | | |
 
-## Rozbieżności do decyzji człowieka
-<Ustalenie, stanowiska recenzentów, decyzja i uzasadnienie.>
+## Divergences for the human's decision
+<The finding, the reviewers' positions, the decision and the rationale.>

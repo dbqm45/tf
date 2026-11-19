@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy .tf/factory/cost_stats.py: okresy, udział modeli, koszt USD i PLN (kurs średni NBP, tabela A), skuteczność,
-ocena drogo/tanio (pasmo kontrolne, warianty „wszystko na Opusie” i „bez cache”)."""
+"""Tests of .tf/factory/cost_stats.py: periods, model share, cost in USD and PLN (the NBP mid rate, table A), effectiveness,
+an expensive/cheap assessment (a control band, the 'everything on Opus' and 'no cache' variants)."""
 import datetime as dt
 import importlib.util
 import json
@@ -57,16 +57,16 @@ def main() -> int:
 
     t = dt.datetime(2026, 10, 17, 12, tzinfo=dt.timezone.utc)
     check((cs.period_key(t, "day"), cs.period_key(t, "week"), cs.period_key(t, "month")) == ("2026-10-17", "2026-W42", "2026-10"),
-          "CS-1: klucze okresów: dzień, tydzień ISO, miesiąc")
+          "CS-1: period keys: day, ISO week, month")
 
     c = cs.record_cost(rec("x", "s", "main", {"claude-opus-5-5": 1000}, inp=1000, out=1000, cr=1_000_000), PRICES)
-    check(abs(c["usd"] - 0.224) < 1e-9, f"CS-2: koszt rekordu = wejście + wyjście + odczyt cache wg cennika: {c}")
+    check(abs(c["usd"] - 0.224) < 1e-9, f"CS-2: a record's cost = input + output + cache read per the price list: {c}")
     c = cs.record_cost(rec("x", "s", "main", {"claude-opus-5-5": 750, "claude-haiku-5-5": 250}, out=1000), PRICES)
     check(abs(c["usd"] - (750 * 20 + 250 * 0.5) / 1e6) < 1e-12 and abs(c["tokens"]["opus"] - 750) < 1e-9,
-          f"CS-3: tokeny rekordu dzielone między modele proporcjonalnie do wyjścia: {c}")
+          f"CS-3: a record's tokens split between models in proportion to the output: {c}")
     a = cs.record_cost(rec("x", "s", "main", {"claude-haiku-4-5": 1000}, out=1000), PRICES)["usd"]
     b = cs.record_cost(rec("x", "s", "main", {"claude-haiku-5-5": 1000}, out=1000), PRICES)["usd"]
-    check(abs(a - 0.005) < 1e-12 and abs(b - 0.0005) < 1e-12, f"CS-4: cena dokładnego modelu ma pierwszeństwo przed rodziną: {a} {b}")
+    check(abs(a - 0.005) < 1e-12 and abs(b - 0.0005) < 1e-12, f"CS-4: the exact model's price takes precedence over the family's: {a} {b}")
 
     records = [rec("2026-10-05T10:00:00+00:00", "s1", "main", {"claude-opus-5-5": 2000}, inp=1000, out=2000, cr=500_000),
                rec("2026-10-06T10:00:00+00:00", "s1", "x-frontend", {"claude-sonnet-5-5": 4000}, inp=2000, out=4000,
@@ -77,28 +77,28 @@ def main() -> int:
     check(set(per) == {"2026-W41", "2026-W42"} and w41.get("sessions") == 1 and w41.get("runs") == 2
           and w41.get("output") == 6000 and abs(sum(w41.get("models_pct", {}).values()) - 100) < 0.01
           and w41["models_pct"]["opus"] > w41["models_pct"]["sonnet"],
-          f"CS-5: agregacja per tydzień — sesje, uruchomienia, tokeny, udział modeli w %: {per}")
+          f"CS-5: aggregation per week — sessions, runs, tokens, the model share in %: {per}")
     check(w41["usd_all_opus"] > w41["usd"] and w41["usd_no_cache"] > w41["usd"] and w41.get("tier_low") == 1
-          and 0 < w41.get("cache_pct", 0) < 100, f"CS-6: warianty „wszystko na Opusie” i „bez cache”, sygnały tieru, % cache: {w41}")
+          and 0 < w41.get("cache_pct", 0) < 100, f"CS-6: the 'everything on Opus' and 'no cache' variants, tier signals, cache %: {w41}")
 
-    check(cs.parse_nbp(NBP) == (3.6512, "201/A/NBP/2026", "2026-10-16"), "CS-7: kurs średni z odpowiedzi NBP (tabela A)")
+    check(cs.parse_nbp(NBP) == (3.6512, "201/A/NBP/2026", "2026-10-16"), "CS-7: the mid rate from the NBP response (table A)")
     with tempfile.TemporaryDirectory() as d:
         cache = Path(d)
         r = cs.usd_pln(cache, now=t, fetch=lambda: NBP)
         check(r and r["rate"] == 3.6512 and r["table"] == "201/A/NBP/2026" and not r.get("stale"),
-              f"CS-8: kurs pobrany i zapamiętany: {r}")
+              f"CS-8: the rate fetched and cached: {r}")
         r = cs.usd_pln(cache, now=t + dt.timedelta(hours=1), fetch=lambda: (_ for _ in ()).throw(OSError("offline")))
-        check(r and r["rate"] == 3.6512 and not r.get("stale"), f"CS-8b: w ciągu dnia z pamięci: {r}")
+        check(r and r["rate"] == 3.6512 and not r.get("stale"), f"CS-8b: within the day from the cache: {r}")
         r = cs.usd_pln(cache, now=t + dt.timedelta(days=3), fetch=lambda: (_ for _ in ()).throw(OSError("offline")))
-        check(r and r["rate"] == 3.6512 and r.get("stale") is True, f"CS-8c: bez sieci ostatni znany kurs, oznaczony: {r}")
-        r = cs.usd_pln(Path(d) / "pusty", now=t, fetch=lambda: (_ for _ in ()).throw(OSError("offline")))
-        check(r is None, f"CS-8d: bez sieci i pamięci brak kursu: {r}")
+        check(r and r["rate"] == 3.6512 and r.get("stale") is True, f"CS-8c: without a network the last known rate, marked: {r}")
+        r = cs.usd_pln(Path(d) / "empty", now=t, fetch=lambda: (_ for _ in ()).throw(OSError("offline")))
+        check(r is None, f"CS-8d: without a network and a cache no rate: {r}")
         r = cs.usd_pln(cache, now=t, fetch=lambda: NBP, override=4.0)
-        check(r and r["rate"] == 4.0 and r["source"] == "ręczny", f"CS-8e: kurs podany ręcznie: {r}")
+        check(r and r["rate"] == 4.0 and r["source"] == "manual", f"CS-8e: a manually given rate: {r}")
 
-    check(cs.band([10, 11, 9, 10, 30])[-1] == "drogo" and cs.band([10, 11, 9, 10, 10.5])[-1] == "w normie"
-          and cs.band([10, 11, 2, 10, 10.5])[2] == "tanio" and cs.band([10, 30])[-1] == "za mało danych",
-          f"CS-9: pasmo kontrolne mediana ± 3·MAD: {cs.band([10, 11, 9, 10, 30])}")
+    check(cs.band([10, 11, 9, 10, 30])[-1] == "expensive" and cs.band([10, 11, 9, 10, 10.5])[-1] == "normal"
+          and cs.band([10, 11, 2, 10, 10.5])[2] == "cheap" and cs.band([10, 30])[-1] == "too little data",
+          f"CS-9: the control band median +/- 3*MAD: {cs.band([10, 11, 9, 10, 30])}")
 
     if shutil.which("git"):
         with tempfile.TemporaryDirectory() as d:
@@ -110,7 +110,7 @@ def main() -> int:
             commit(repo, "src/b.ts", "feat(web): add b", "2026-10-14T11:00:00")
             ch = cs.changes(repo, "week")
             check(ch.get("2026-W41") == {"changes": 2, "rework": 1} and ch.get("2026-W42") == {"changes": 1, "rework": 0},
-                  f"CS-10: zmiany feat/fix i praca od nowa per tydzień z gita: {ch}")
+                  f"CS-10: feat/fix changes and rework per week from git: {ch}")
             log = repo / "usage.jsonl"
             log.write_text("".join(json.dumps(r) + "\n" for r in records), encoding="utf-8")
             r = subprocess.run([sys.executable, str(SCRIPT), "--period", "week", "--log", str(log), "--repo-root", str(repo),
@@ -122,24 +122,24 @@ def main() -> int:
             p41 = {p["period"]: p for p in out.get("periods", [])}.get("2026-W41", {})
             check(r.returncode == 0 and out.get("rate", {}).get("rate") == 4.0 and abs(p41.get("pln", 0) - p41.get("usd", 0) * 4) < 1e-9
                   and p41.get("changes") == 2 and abs(p41.get("rework_pct", 0) - 50) < 1e-9 and p41.get("usd_per_change"),
-                  f"CS-11: CLI --json — PLN z kursu, zmiany, praca od nowa, koszt na zmianę: {r.stdout[:600]}{r.stderr[-400:]}")
+                  f"CS-11: CLI --json — PLN from the rate, changes, rework, cost per change: {r.stdout[:600]}{r.stderr[-400:]}")
             r = subprocess.run([sys.executable, str(SCRIPT), "--period", "week", "--log", str(log), "--repo-root", str(repo),
                                 "--usd-pln", "4"], capture_output=True, text=True, timeout=60)
-            check(r.returncode == 0 and "PLN" in r.stdout and "Udział modeli" in r.stdout and "kurs" in r.stdout.lower()
-                  and "Drogo czy tanio" in r.stdout, f"CS-12: raport markdown: {r.stdout[:800]}{r.stderr[-300:]}")
+            check(r.returncode == 0 and "PLN" in r.stdout and "Model share" in r.stdout and "rate" in r.stdout.lower()
+                  and "Expensive or cheap" in r.stdout, f"CS-12: markdown report: {r.stdout[:800]}{r.stderr[-300:]}")
 
             commit(repo, "src/c.ts", "feat(web): add c", "2026-10-15T15:00:00")
             r = subprocess.run([sys.executable, str(SCRIPT), "--period", "week", "--log", str(log), "--repo-root", str(repo),
                                 "--usd-pln", "4", "--json"], capture_output=True, text=True, timeout=60)
             out = json.loads(r.stdout or "{}")
             per2 = {p["period"]: p for p in out.get("periods", [])}
-            check(out.get("gap") and per2.get("2026-W42", {}).get("band") == "dane niepełne"
+            check(out.get("gap") and per2.get("2026-W42", {}).get("band") == "incomplete data"
                   and per2.get("2026-W42", {}).get("incomplete") is True and not per2.get("2026-W41", {}).get("incomplete"),
-                  f"CS-13: okres z luką w logach oznaczony jako niepełny i wyłączony z oceny: {per2}")
+                  f"CS-13: a period with a gap in the logs marked as incomplete and excluded from the assessment: {per2}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów cost_stats")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} cost_stats tests")
     return 1 if fails else 0
 
 

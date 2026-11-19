@@ -1,7 +1,7 @@
-# Adaptery domeny w Angularze — przetestowane
+# Domain adapters in Angular — tested
 
-Wersja dla **Angular 22**: skompilowana `ngc` 22.2 (TypeScript 6.0, `strictTemplates`). Import `../domain/archetypes`
-to kod z `lang-typescript/references/domain-building-blocks.md` (warstwa domeny bez zależności od Angulara).
+The version for **Angular 22**: compiled with `ngc` 22.2 (TypeScript 6.0, `strictTemplates`). The `../domain/archetypes` import
+is the code from `lang-typescript/references/domain-building-blocks.md` (the domain layer without a dependency on Angular).
 
 ```ts
 import { Component, LOCALE_ID, Pipe, PipeTransform, Service, computed, inject, input, signal } from '@angular/core';
@@ -13,20 +13,20 @@ import {
   BlockRequestState, CalendarView, FeatureType, Money, Party, TimeSlot, displayName, validateFeature,
 } from '../domain/archetypes';
 
-// ── Pipe: formatowanie Money w jednym miejscu (standalone domyślnie od v19) ─────
+// ── Pipe: formatting Money in one place (standalone by default since v19) ─────
 @Pipe({ name: 'money' })
 export class MoneyPipe implements PipeTransform {
   private readonly locale = inject(LOCALE_ID);
 
   transform(value: Money | null | undefined): string {
     if (!value) return '';
-    // Number() wystarcza do WYŚWIETLENIA; obliczenia zawsze na Money (bigint).
+    // Number() is enough for DISPLAY; calculations always on Money (bigint).
     return new Intl.NumberFormat(this.locale, { style: 'currency', currency: value.currency })
       .format(Number(value.minor) / 100);
   }
 }
 
-// ── Signal Forms (stabilne od v22): walidacja z ograniczeń cechy produktu (dane z API) ─
+// ── Signal Forms (stable since v22): validation from product feature constraints (data from the API) ─
 @Component({
   selector: 'app-feature-field',
   imports: [FormField],
@@ -51,7 +51,7 @@ export class FeatureFieldComponent {
   });
 }
 
-// ── Reactive Forms (v14+): ta sama reguła domenowa jako ValidatorFn — dla istniejących formularzy ─
+// ── Reactive Forms (v14+): the same domain rule as a ValidatorFn — for existing forms ─
 export function featureValidator(feature: FeatureType): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const error = validateFeature(feature, String(control.value ?? ''));
@@ -59,7 +59,7 @@ export function featureValidator(feature: FeatureType): ValidatorFn {
   };
 }
 
-// ── Krawędź: DTO z API → read model domeny ───────────────────────────────────
+// ── Edge: DTO from the API → domain read model ───────────────────────────────
 interface CalendarDto {
   resourceId: string;
   free: { from: string; to: string }[];
@@ -76,14 +76,14 @@ export function toCalendarView(dto: CalendarDto): CalendarView {
   };
 }
 
-// ── Store dostępności (v22: @Service + httpResource) ─────────────────────────
+// ── Availability store (v22: @Service + httpResource) ────────────────────────
 @Service()
 export class ResourceAvailabilityStore {
   private readonly http = inject(HttpClient);
   private readonly resourceId = signal<string | undefined>(undefined);
   private readonly _request = signal<BlockRequestState>({ kind: 'idle' });
 
-  /** Read model: przeładowuje się sam przy zmianie resourceId; status: idle/loading/resolved/error. */
+  /** Read model: reloads itself when resourceId changes; status: idle/loading/resolved/error. */
   readonly calendar = httpResource<CalendarView>(
     () => {
       const id = this.resourceId();
@@ -98,7 +98,7 @@ export class ResourceAvailabilityStore {
     this.resourceId.set(resourceId);
   }
 
-  /** Komenda: bez optymistycznej aktualizacji — to zasób, o który się konkuruje; 409 to normalny wynik. */
+  /** Command: no optimistic update — this is a contended resource; 409 is a normal result. */
   async block(resourceId: string, slot: TimeSlot): Promise<void> {
     this._request.set({ kind: 'pending', slot });
     try {
@@ -109,8 +109,8 @@ export class ResourceAvailabilityStore {
       this._request.set({ kind: 'blocked', slot });
     } catch (err) {
       const reason = err instanceof HttpErrorResponse && err.status === 409
-        ? 'Termin został właśnie zajęty'
-        : 'Nie udało się zablokować terminu';
+        ? 'The slot has just been taken'
+        : 'Could not block the slot';
       this._request.set({ kind: 'rejected', slot, reason });
     } finally {
       this.calendar.reload();
@@ -118,14 +118,14 @@ export class ResourceAvailabilityStore {
   }
 }
 
-// ── Komponent wariantów Party (OnPush domyślnie od v22) ──────────────────────
+// ── Party variant component (OnPush by default since v22) ────────────────────
 @Component({
   selector: 'app-party-card',
   template: `
     <h3>{{ name() }}</h3>
     @switch (party().kind) {
-      @case ('person') { <span class="badge">Osoba</span> }
-      @case ('organization') { <span class="badge">Organizacja</span> }
+      @case ('person') { <span class="badge">Person</span> }
+      @case ('organization') { <span class="badge">Organization</span> }
     }
     <ul>
       @for (role of party().roles; track role) { <li>{{ role }}</li> }
@@ -138,25 +138,25 @@ export class PartyCardComponent {
 }
 ```
 
-## Starsze wersje (sprawdź wersję projektu)
-| W kodzie v22 | Angular 19–21 | Angular 17–18 |
+## Older versions (check the project's version)
+| In v22 code | Angular 19–21 | Angular 17–18 |
 |---|---|---|
-| `@Service()` | `@Injectable({ providedIn: 'root' })` | jak obok |
-| `httpResource(..., { parse })` | eksperymentalne w 19–21 — w kodzie produkcyjnym raczej serwis z `HttpClient` + `signal`/`toSignal` | serwis z `HttpClient` + `toSignal` |
-| Signal Forms (`form`, `validate`, `[formField]`) | 21: eksperymentalne; ≤20: brak → `featureValidator` (Reactive Forms) | `featureValidator` |
-| brak `standalone: true` | ≥19 jak obok | **dopisz** `standalone: true` |
-| OnPush domyślnie | dopisz `changeDetection: ChangeDetectionStrategy.OnPush` | jak obok |
+| `@Service()` | `@Injectable({ providedIn: 'root' })` | same as the column to the left |
+| `httpResource(..., { parse })` | experimental in 19–21 — in production code rather a service with `HttpClient` + `signal`/`toSignal` | a service with `HttpClient` + `toSignal` |
+| Signal Forms (`form`, `validate`, `[formField]`) | 21: experimental; ≤20: absent → `featureValidator` (Reactive Forms) | `featureValidator` |
+| no `standalone: true` | ≥19 same as the column to the left | **add** `standalone: true` |
+| OnPush by default | add `changeDetection: ChangeDetectionStrategy.OnPush` | same as the column to the left |
 
-Wariant sprzed v22 (Reactive Forms, `@Injectable`, `HttpClient` + signals) był skompilowany `ngc` 19 ze `strictTemplates`.
+The pre-v22 variant (Reactive Forms, `@Injectable`, `HttpClient` + signals) was compiled with `ngc` 19 with `strictTemplates`.
 
-## Jak z tego korzystać
-- **Formularz cech produktu** (archetyp Product): dla każdej cechy z API typu produktu `<app-feature-field [feature]="f" />`
-  (Signal Forms) albo `new FormControl('', { nonNullable: true, validators: featureValidator(f) })` (Reactive Forms).
-  Nowa cecha w backendzie = zero zmian w kodzie formularza.
-- **Kwota w formularzu** (Money): w kontrolce string wpisany przez użytkownika, konwersja `Money.of(...)` przy wysyłce;
-  przy wielu formularzach z kwotą — własna kontrolka (`FormValueControl` / `ControlValueAccessor`).
-- **Rezerwacja** (Availability): `store.select(id)` ładuje kalendarz (`store.calendar.value()`, `.isLoading()`, `.error()`);
-  przycisk zablokowany przy `store.isPending()`; `request().kind === 'rejected'` → komunikat w regionie `aria-live`.
-  Bez optymistycznego „zarezerwowano”; po komendzie `calendar.reload()`.
-- **Konfigurator**: `computed(() => optionStates(all, picked(), rules))` — opcje z `disabledBecause` wyszarzone z podpowiedzią.
-- **NgRx / SignalStore**: te same funkcje domenowe w reducerach/`computed` — domena nie zależy od biblioteki stanu.
+## How to use it
+- **A product features form** (the Product archetype): for each feature from the product type API `<app-feature-field [feature]="f" />`
+  (Signal Forms) or `new FormControl('', { nonNullable: true, validators: featureValidator(f) })` (Reactive Forms).
+  A new feature in the backend = zero changes in the form code.
+- **An amount in a form** (Money): in the control the string typed by the user, conversion `Money.of(...)` on submit;
+  with many forms with an amount — a custom control (`FormValueControl` / `ControlValueAccessor`).
+- **A reservation** (Availability): `store.select(id)` loads the calendar (`store.calendar.value()`, `.isLoading()`, `.error()`);
+  the button disabled while `store.isPending()`; `request().kind === 'rejected'` → a message in an `aria-live` region.
+  No optimistic "reserved"; after the command `calendar.reload()`.
+- **A configurator**: `computed(() => optionStates(all, picked(), rules))` — options with `disabledBecause` greyed out with a hint.
+- **NgRx / SignalStore**: the same domain functions in reducers/`computed` — the domain does not depend on the state library.

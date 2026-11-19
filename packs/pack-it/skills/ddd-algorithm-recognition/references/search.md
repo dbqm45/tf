@@ -1,9 +1,9 @@
-# Wyszukiwanie, podobieństwo, czas rzeczywisty
+# Search, similarity, real time
 
-| id | Pytanie dopasowania | Sygnały | Pułapki |
+| id | Matching question | Signals | Pitfalls |
 |---|---|---|---|
-| **inverted-index** | wyszukiwanie pełnotekstowe po dokumentach? | „szukaj w opisach”, filtrowanie po słowach | wyszukiwarka/indeks bazy; odmiana słów (polski!) |
-| **approximate-string-match** | literówki, prawie takie same nazwy? | „Kowalski/Kowalsky”, deduplikacja kontrahentów | porównanie wszystkich par to n² → najpierw blokowanie (grupowanie po kluczu) |
-| **lcs / diff** | różnice między wersjami tekstu/listy? | historia zmian, porównanie umów | — |
-| **lsh / vector-similarity** | podobieństwo semantyczne, rekomendacje? | „podobne produkty”, „podobne zgłoszenia” | kompromis trafność ↔ opóźnienie; indeks wektorowy zamiast pełnego przeglądu |
-| **edf / fixed-priority** | twarde terminy zadań okresowych, wywłaszczanie? | systemy sterowania, SLA w ms | inwersja priorytetów; EDF niestabilny przy przeciążeniu |
+| **inverted-index** | full-text search over documents? | "search in descriptions", filtering by words | a search engine/database index; word inflection (Polish!) |
+| **approximate-string-match** | typos, almost identical names? | "Kowalski/Kowalsky", deduplicating counterparties | comparing all pairs is n² → first blocking (grouping by a key) |
+| **lcs / diff** | differences between versions of a text/list? | change history, comparing contracts | — |
+| **lsh / vector-similarity** | semantic similarity, recommendations? | "similar products", "similar tickets" | a trade-off between accuracy ↔ latency; a vector index instead of a full scan |
+| **edf / fixed-priority** | hard deadlines of periodic tasks, preemption? | control systems, SLA in ms | priority inversion; EDF is unstable under overload |

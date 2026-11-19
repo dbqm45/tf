@@ -1,64 +1,64 @@
 ---
 name: ops-ci-cd
-description: Użyj przy pipeline'ach CI/CD (GitHub Actions i inne) — tworzenie, naprawa, cache buildów, wdrożenia, bezpieczeństwo.
+description: Use for CI/CD pipelines (GitHub Actions and others) — creating, fixing, build caching, deployments, security.
 metadata:
-  przeglad: "2027-04-10"
-  katalog: "Użyj przy tworzeniu i naprawie pipeline'ów CI/CD (GitHub Actions i podobne), strategii wdrożeń, cache'owaniu buildów, bezpieczeństwie pipeline'u, composite action i reusable workflow, diffie PR w CI i bramce werdyktu przeglądu AI. Nie do pisania Dockerfile (ops-docker) ani commitów (core-git-workflow)."
+  review: "2027-04-10"
+  catalog: "Use when creating and fixing CI/CD pipelines (GitHub Actions and similar), for deployment strategies, build caching, pipeline security, composite actions and reusable workflows, the PR diff in CI and the AI review verdict gate. Not for writing a Dockerfile (ops-docker) or commits (core-git-workflow)."
 ---
 
 # CI/CD
 
-## Struktura pipeline'u
-`lint → typecheck → test → build → (skan bezpieczeństwa) → deploy staging → testy dymne → deploy produkcja (z akceptacją)`
-- Szybkie kroki najpierw (fail fast). Niezależne joby równolegle.
-- Ten sam artefakt (obraz z digestem) przechodzi przez wszystkie środowiska — nie budujesz ponownie dla produkcji.
+## Pipeline structure
+`lint → typecheck → test → build → (security scan) → deploy staging → smoke tests → deploy production (with approval)`
+- Fast steps first (fail fast). Independent jobs in parallel.
+- The same artifact (an image with a digest) goes through all environments — you do not rebuild it for production.
 
-## GitHub Actions — bezpieczeństwo
-1. `permissions:` na poziomie workflow ustaw minimalnie (`contents: read`), rozszerzaj per job.
-2. Akcje zewnętrzne przypinaj do pełnego SHA commita, nie do tagu.
-3. Chmura przez OIDC (`id-token: write`) zamiast długotrwałych kluczy w sekretach.
-4. `pull_request_target` i `workflow_run` z kodem z forka = ryzyko — nie uruchamiaj w nich niezaufanego kodu.
-5. Nie interpoluj `${{ github.event.* }}` (tytuły PR, gałęzie) bezpośrednio w `run:` — przekaż przez `env:`.
-6. Sekrety tylko w jobach, które ich potrzebują; środowisko `production` z wymaganą akceptacją.
-7. Instalacja zależności `npm ci --ignore-scripts` (lub allowlista skryptów) w jobie **bez** sekretów publikacji
-   i wdrożenia. Token publikacji paczek nie istnieje w CI — publikacja przez trusted publishing (OIDC) z `--provenance`.
-8. Ruch wychodzący z runnerów ograniczony do rejestrów i usług, których pipeline potrzebuje (np. harden-runner na
-   GitHub Actions, reguły sieci na runnerach własnych). Złośliwy skrypt instalacyjny nie wyśle wtedy sekretów.
-9. Skanery i lintery to też kod z zewnątrz: przypinaj je do SHA i digestu obrazu (w 2026 podmieniono Trivy przez akcje).
-10. Agent AI w CI nie działa z prawem zapisu ani z sekretami na niezaufanym wejściu (PR z forka, treść issue) —
-    core-agent-security. Zależności i incydenty z paczkami — ops-supply-chain-security.
+## GitHub Actions — security
+1. Set `permissions:` at the workflow level to the minimum (`contents: read`), widen per job.
+2. Pin external actions to the full commit SHA, not to a tag.
+3. The cloud through OIDC (`id-token: write`) instead of long-lived keys in secrets.
+4. `pull_request_target` and `workflow_run` with code from a fork = a risk — do not run untrusted code in them.
+5. Do not interpolate `${{ github.event.* }}` (PR titles, branches) directly in `run:` — pass it through `env:`.
+6. Secrets only in the jobs that need them; the `production` environment with required approval.
+7. Install dependencies with `npm ci --ignore-scripts` (or an allowlist of scripts) in a job **without** publishing
+   and deployment secrets. A package publishing token does not exist in CI — publishing through trusted publishing (OIDC) with `--provenance`.
+8. Outbound traffic from runners limited to the registries and services the pipeline needs (e.g. harden-runner on
+   GitHub Actions, network rules on self-hosted runners). A malicious install script then cannot send out the secrets.
+9. Scanners and linters are also external code: pin them to the SHA and the image digest (in 2026 Trivy was swapped through its actions).
+10. An AI agent in CI does not run with write permission or with secrets on untrusted input (a PR from a fork, the content of an issue) —
+    core-agent-security. Dependencies and incidents with packages — ops-supply-chain-security.
 
-## Wydajność
-- Cache zależności (`actions/setup-node` z `cache: npm`, cache warstw Dockera).
-- `concurrency:` z `cancel-in-progress: true` dla PR.
-- Uruchamiaj tylko to, co się zmieniło (`paths:` filtry) w monorepo.
+## Performance
+- Dependency cache (`actions/setup-node` with `cache: npm`, Docker layer cache).
+- `concurrency:` with `cancel-in-progress: true` for PRs.
+- Run only what changed (`paths:` filters) in a monorepo.
 
-## Wielokrotne użycie i diff w PR
-- Powtarzalny krok (agent AI, skan) w wielu repo → **composite action** (`action.yml` z `runs.using: composite`);
-  cały proces → reusable workflow. Zacznij lokalnie w `.github/actions/<nazwa>/`, do osobnego repo wydziel dopiero
-  przy drugim konsumencie; konsument przypina `uses: org/akcja@<pełny-SHA>`.
-- W composite action każdy krok `run` ma jawne `shell:`; skrypty akcji wołasz przez `${{ github.action_path }}`;
-  `inputs` od konsumenta traktujesz jak niezaufane (do `env:`, nigdy wprost w `run:`).
-- Diff PR wymaga `actions/checkout` z `fetch-depth: 0` (albo dociągnięcia bazy) — płytki klon daje pusty diff.
-- Wartości wielolinijkowej (diff, raport) nie zapisuj do `$GITHUB_OUTPUT` jako `klucz=$(…)` — psuje się na nowej
-  linii. Użyj ogranicznika (`klucz<<EOF` … `EOF`) dla treści, w której ogranicznik nie wystąpi; treść dowolną (diff,
-  wynik modelu) zapisz do pliku i przekaż ścieżkę — tak zaleca dokumentacja GitHub.
-- Workflow, który commituje na gałąź PR: `[skip ci]` w temacie i krok-strażnik pomijający commity bota. Przegląd PR
-  przez AI z bramką werdyktu: przykład 4 w `references/przyklady.md` i `.claude/skills/core-git-workflow/references/przeglad-ai-w-ci.md`.
+## Reuse and the diff in a PR
+- A repeated step (an AI agent, a scan) in many repos → **a composite action** (`action.yml` with `runs.using: composite`);
+  a whole process → a reusable workflow. Start locally in `.github/actions/<name>/`, move it to a separate repo only
+  with the second consumer; the consumer pins `uses: org/action@<full-SHA>`.
+- In a composite action every `run` step has an explicit `shell:`; you call the action's scripts through `${{ github.action_path }}`;
+  you treat `inputs` from the consumer as untrusted (into `env:`, never directly in `run:`).
+- A PR diff requires `actions/checkout` with `fetch-depth: 0` (or fetching the base) — a shallow clone gives an empty diff.
+- Do not write a multi-line value (a diff, a report) to `$GITHUB_OUTPUT` as `key=$(…)` — it breaks on a new
+  line. Use a delimiter (`key<<EOF` … `EOF`) for content in which the delimiter will not occur; write arbitrary content (a diff,
+  model output) to a file and pass the path — that is what the GitHub documentation recommends.
+- A workflow that commits to the PR branch: `[skip ci]` in the subject and a guard step that skips the bot's commits. An AI PR review
+  with a verdict gate: example 4 in `references/examples.md` and `.claude/skills/core-git-workflow/references/ai-review-in-ci.md`.
 
-## Wdrożenia
-- Strategia z szybkim rollbackiem: blue/green, canary lub rolling z healthcheckami; wybór, bramki canary, GitOps
-  i migracje expand–contract — ops-release-engineering.
-- Build i wdrożenie na osobnych tożsamościach; skan sekretów jako ostatnie zabezpieczenie po hookach lokalnych —
-  ops-secrets-identities. Manifesty Kubernetes walidowane w CI — ops-kubernetes.
-- Każde wdrożenie produkcyjne: kto, co (SHA), kiedy — widoczne w historii.
+## Deployments
+- A strategy with a fast rollback: blue/green, canary or rolling with healthchecks; the choice, canary gates, GitOps
+  and expand–contract migrations — ops-release-engineering.
+- Build and deployment on separate identities; secret scanning as the last safeguard after the local hooks —
+  ops-secrets-identities. Kubernetes manifests validated in CI — ops-kubernetes.
+- Every production deployment: who, what (SHA), when — visible in the history.
 
-## Weryfikacja
-`actionlint` (jeśli dostępny); sprawdź składnię YAML; w PR opisz, jak pipeline przetestowano.
+## Verification
+`actionlint` (if available); check the YAML syntax; in the PR describe how the pipeline was tested.
 
-## Przykład
-**Sytuacja:** „Dodaj CI na każdy PR w repo Node.” **Wynik** (`.github/workflows/ci.yml`, skrót; do tego
-`concurrency` z `cancel-in-progress: true`):
+## Example
+**Situation:** "Add CI on every PR in a Node repo." **Result** (`.github/workflows/ci.yml`, abridged; plus
+`concurrency` with `cancel-in-progress: true`):
 ```yaml
 on: pull_request
 permissions: { contents: read }
@@ -66,13 +66,13 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@<pełny-SHA> # v4
+      - uses: actions/checkout@<full-SHA> # v4
       - run: npm ci --ignore-scripts && npm run lint && npm run typecheck && npm test && npm run build
 ```
-Więcej przykładów: `references/przyklady.md`.
+More examples: `references/examples.md`.
 
-## Źródła
-- GitHub Docs: „Creating a composite action”, „Workflow commands — multiline strings” (`GITHUB_OUTPUT` z ogranicznikiem),
-  „Metadata syntax” (`runs.steps[*].shell` wymagane przy `run`) — repozytorium github/docs, dostęp 2026-10-10;
-  `anthropics/claude-code-action`, `action.yml` (`claude_args`, `structured_output`; dostęp 2026-10-10).
-- Kurs 10xDevs, ed. 3 (2026), moduł 5, lekcja 3 (composite action, przegląd AI w CI) — materiał szkoleniowy (dostęp 2026-10-09).
+## Sources
+- GitHub Docs: "Creating a composite action", "Workflow commands — multiline strings" (`GITHUB_OUTPUT` with a delimiter),
+  "Metadata syntax" (`runs.steps[*].shell` required with `run`) — the github/docs repository, accessed 2026-10-10;
+  `anthropics/claude-code-action`, `action.yml` (`claude_args`, `structured_output`; accessed 2026-10-10).
+- The 10xDevs course, ed. 3 (2026), module 5, lesson 3 (composite action, AI review in CI) — training material (accessed 2026-10-09).

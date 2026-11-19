@@ -1,51 +1,53 @@
 ---
 name: tool-nx
-description: Użyj przy monorepo Nx — projekty i biblioteki, tagi i granice modułów, generatory, cache, affected, release, migrate.
+description: Use for an Nx monorepo — projects and libraries, tags and module boundaries, generators, cache, affected, release, migrate.
+disable-model-invocation: true
 metadata:
-  przeglad: "2027-01-17"
-  katalog: "Użyj w monorepo Nx — struktura projektów i bibliotek, tagi i granice modułów, generatory, zadania i cache, affected, nx release, migracje (nx migrate). Także przy odwzorowaniu granic kontekstów DDD na biblioteki Nx. Nie do konwencji frameworka (fw-*) ani języka (lang-*)."
+  status: "inactive"  # measurement 2026-11-16: docs/inactive-skills.md
+  review: "2027-01-17"
+  catalog: "Use in an Nx monorepo — project and library structure, tags and module boundaries, generators, tasks and cache, affected, nx release, migrations (nx migrate). Also when mapping DDD bounded contexts onto Nx libraries. Not for framework conventions (fw-*) or language conventions (lang-*)."
 ---
 
 # Nx (monorepo)
 
-## Zasady
-1. **Aplikacje są cienkie, logika w bibliotekach.** Aplikacja składa trasy i konfigurację; kod funkcji, domeny i UI żyje w `libs/`.
-2. **Tagi i granice modułów są obowiązkowe.** Każdy projekt ma tagi co najmniej w dwóch osiach:
-   `scope:<obszar>` (kontekst/domena) i `type:<rodzaj>` (feature, ui, data-access, domain, util). Reguła
-   `@nx/enforce-module-boundaries` (ESLint) pilnuje dozwolonych zależności — nie wyłączaj jej komentarzem.
-3. **Uruchamiaj tylko to, co zmienione:** `nx affected -t lint test build` lokalnie i w CI; `nx run-many` tylko świadomie.
-4. **Cache jest kontraktem:** zadania deterministyczne, poprawne `inputs`/`outputs` w `targetDefaults` lub w pluginach;
-   zadanie czytające niezadeklarowane pliki = błędny cache.
-5. **Zadania wnioskowane przez pluginy** (`nx.json → plugins`) zamiast ręcznego kopiowania targetów do każdego `project.json`.
-6. **Generatory zamiast kopiowania:** `nx g @nx/angular:library …` (albo generator własny w repo) — spójne tagi i struktura.
-7. **Migracje przez `nx migrate`:** `npx nx migrate latest` → przegląd `migrations.json` → `npx nx migrate --run-migrations`;
-   podnosi Nx i powiązane frameworki razem (np. Angular). Nie mieszaj ręcznych bumpów wersji z migracjami.
-8. **Wydania:** `nx release` (wersjonowanie, changelog z Conventional Commits — core-conventional-commits, publikacja).
-9. **Graf projektu** (`nx graph`) to pierwsze źródło prawdy o zależnościach przy analizie architektury.
+## Rules
+1. **Applications are thin, logic lives in libraries.** An application composes routes and configuration; feature, domain and UI code lives in `libs/`.
+2. **Tags and module boundaries are mandatory.** Every project has tags in at least two axes:
+   `scope:<area>` (context/domain) and `type:<kind>` (feature, ui, data-access, domain, util). The
+   `@nx/enforce-module-boundaries` rule (ESLint) guards the allowed dependencies — do not disable it with a comment.
+3. **Run only what changed:** `nx affected -t lint test build` locally and in CI; `nx run-many` only deliberately.
+4. **The cache is a contract:** deterministic tasks, correct `inputs`/`outputs` in `targetDefaults` or in plugins;
+   a task that reads undeclared files = a wrong cache.
+5. **Tasks inferred by plugins** (`nx.json → plugins`) instead of copying targets by hand into every `project.json`.
+6. **Generators instead of copying:** `nx g @nx/angular:library …` (or the repo's own generator) — consistent tags and structure.
+7. **Migrations through `nx migrate`:** `npx nx migrate latest` → review `migrations.json` → `npx nx migrate --run-migrations`;
+   it upgrades Nx and the related frameworks together (e.g. Angular). Do not mix manual version bumps with migrations.
+8. **Releases:** `nx release` (versioning, a changelog from Conventional Commits — core-conventional-commits, publishing).
+9. **The project graph** (`nx graph`) is the first source of truth about dependencies when analysing the architecture.
 
-## Pojęcia domenowe w Nx
-| Pojęcie | Odwzorowanie w Nx |
+## Domain concepts in Nx
+| Concept | Mapping in Nx |
 |---|---|
-| **moduł / bounded context** | grupa bibliotek z tagiem `scope:<kontekst>`; zależności między kontekstami tylko przez biblioteki publiczne (np. `type:api`) |
-| **krawędź modułu (mały interfejs)** | biblioteka `type:api`/`feature` z wąskim `index.ts`; reszta kontekstu niedostępna dla innych `scope:` |
-| **warstwa domeny** | biblioteka `type:domain` — bez zależności od frameworka i od `data-access` |
-| **repozytorium / port** | interfejs w `type:domain`, implementacja w `type:data-access` |
-| **read model / UI** | `type:data-access` (stan, zapytania) + `type:ui` (komponenty prezentacyjne) |
-| **Shared Kernel** | biblioteka `scope:shared` — minimalna, z właścicielem, zmiany konsultowane |
-| **ACL** | biblioteka `type:data-access` w kontekście odbiorcy tłumacząca kontrakt obcego kontekstu |
+| **module / bounded context** | a group of libraries with the tag `scope:<context>`; dependencies between contexts only through public libraries (e.g. `type:api`) |
+| **module edge (small interface)** | a `type:api`/`feature` library with a narrow `index.ts`; the rest of the context is unavailable to other `scope:`s |
+| **domain layer** | a `type:domain` library — no dependency on the framework or on `data-access` |
+| **repository / port** | an interface in `type:domain`, the implementation in `type:data-access` |
+| **read model / UI** | `type:data-access` (state, queries) + `type:ui` (presentational components) |
+| **Shared Kernel** | a `scope:shared` library — minimal, with an owner, changes consulted |
+| **ACL** | a `type:data-access` library in the consumer's context that translates the contract of a foreign context |
 
-`depConstraints` (`onlyDependOnLibsWithTags`) w `eslint.config.mjs` odwzorowuje tabelę: `type:domain` zależy tylko od
-`domain`/`util`, a `scope:<kontekst>` tylko od siebie i `scope:shared`.
+`depConstraints` (`onlyDependOnLibsWithTags`) in `eslint.config.mjs` maps the table: `type:domain` depends only on
+`domain`/`util`, and `scope:<context>` only on itself and `scope:shared`.
 
-## Zależne od wersji
-| Wersja | Co się zmieniło |
+## Version-dependent
+| Version | What changed |
 |---|---|
-| 21 | punkt odniesienia: zadania wnioskowane przez pluginy, `nx release`, Terminal UI |
-| 22 | cache w bazie danych obowiązkowy (`NX_DISABLE_DB` usunięte); `createNodes` v1 wycofane na rzecz `createNodesV2`; usunięte stare wersjonowanie `nx release`; npm bez wymuszania `--legacy-peer-deps`; eksperymentalne wsparcie Maven, plugin `@nx/dotnet` |
-| 23 | minimalny Node 22 LTS; operator `...` w targetach rozszerza odziedziczone `targetDefaults` zamiast je zastępować; migracje „agentowe” (generator, prompt lub hybryda); sandboxing zadań (weryfikacja odczytów/zapisów względem inputs/outputs); Vitest wydzielony do `@nx/vitest`; usunięte m.in. generatory Angular NgRx i `move`; `@nx/dotnet` stabilny |
-| 23.1 | wsparcie Angular 22 (Angular 19 już niewspierany), TypeScript 6 (TS 7 obok TS 6, bo brak API programistycznego w TS 7); `targetDefaults` jako uporządkowana tablica z filtrami; ESLint 9 wymagany; raporty wydajności po każdym uruchomieniu |
+| 21 | baseline: tasks inferred by plugins, `nx release`, Terminal UI |
+| 22 | database cache mandatory (`NX_DISABLE_DB` removed); `createNodes` v1 deprecated in favour of `createNodesV2`; old `nx release` versioning removed; npm without forcing `--legacy-peer-deps`; experimental Maven support, the `@nx/dotnet` plugin |
+| 23 | minimum Node 22 LTS; the `...` operator in targets extends the inherited `targetDefaults` instead of replacing them; "agentic" migrations (generator, prompt or hybrid); task sandboxing (verifying reads/writes against inputs/outputs); Vitest split out into `@nx/vitest`; removed, among others, the Angular NgRx generators and `move`; `@nx/dotnet` stable |
+| 23.1 | support for Angular 22 (Angular 19 no longer supported), TypeScript 6 (TS 7 alongside TS 6, because TS 7 has no programmatic API); `targetDefaults` as an ordered array with filters; ESLint 9 required; performance reports after every run |
 
-## Checklista
-- [ ] każdy projekt ma tagi `scope:` i `type:`; lint granic przechodzi
-- [ ] CI używa `nx affected` i zdalnego cache
-- [ ] aktualizacje przez `nx migrate`, nie ręczne bumpy
+## Checklist
+- [ ] every project has `scope:` and `type:` tags; the boundaries lint passes
+- [ ] CI uses `nx affected` and a remote cache
+- [ ] upgrades through `nx migrate`, not manual bumps

@@ -28,6 +28,36 @@
       }
     },
     {
+      "id": "routing-cache-en",
+      "expect": "trigger",
+      "prompt": "We have 8 vLLM pods behind a plain Kubernetes Service and users complain that subsequent messages in the same conversation respond slowly, even though the GPU isn't overloaded. Why is that and what should we change? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "kv cache",
+            "cache kv",
+            "prefix"
+          ],
+          [
+            "llm-d",
+            "inference extension",
+            "endpoint picker",
+            "cache-aware|świadom\\w* cache|prefix.cache routing",
+            "cache.aware"
+          ],
+          [
+            "round.robin"
+          ],
+          [
+            "autoskal\\w*[^.]{0,40}(kolejk|opóźnie)|nie po CPU|rozdziel\\w*[^.]{0,30}prefill",
+            "autoscal\\w*[^.]{0,40}(queue|latenc)",
+            "not (on|by|based on) CPU",
+            "(separate|disaggregat\\w*)[^.]{0,30}prefill"
+          ]
+        ]
+      }
+    },
+    {
       "id": "budzet-vram",
       "expect": "trigger",
       "prompt": "Chcę postawić model 70 mld parametrów w 16 bitach na własnych GPU do czatu z długimi rozmowami. Jak policzyć, ile pamięci potrzeba i jakie metryki obserwować? Odpowiedz zwięźle.",

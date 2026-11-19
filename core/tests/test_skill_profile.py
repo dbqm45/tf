@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy .tf/factory/skill_profile.py: widoczność opisów skilli (skillOverrides) dopasowana do projektu."""
+"""Tests of .tf/factory/skill_profile.py: skill description visibility (skillOverrides) fitted to the project."""
 import importlib.util
 import json
 import subprocess
@@ -22,14 +22,14 @@ def skill(root: Path, name: str, manual: bool = False) -> None:
     d = root / ".claude" / "skills" / name
     d.mkdir(parents=True)
     extra = "disable-model-invocation: true\n" if manual else ""
-    (d / "SKILL.md").write_text(f"---\nname: {name}\ndescription: Użyj przy {name}.\n{extra}---\n# {name}\n")
+    (d / "SKILL.md").write_text(f"---\nname: {name}\ndescription: Use for {name}.\n{extra}---\n# {name}\n")
 
 
-NAME_ONLY = ("dom-", "sec-", "ai-", "ux-")   # prefiksy „sama nazwa” deklarowane w teście przez nakładkę
+NAME_ONLY = ("dom-", "sec-", "ai-", "ux-")   # 'name only' prefixes declared in the test by a pack
 
 
 def with_pack(p: Path) -> None:
-    """Fabryka w projekcie testowym: packs.py, config.yaml i nakładka z prefiksami „sama nazwa”."""
+    """The factory in a test project: packs.py, config.yaml and a pack with 'name only' prefixes."""
     import shutil
     (p / ".tf" / "factory").mkdir(parents=True, exist_ok=True)
     for f in ("packs.py", "config.yaml"):
@@ -44,10 +44,10 @@ def with_pack(p: Path) -> None:
 def project(base: Path, name: str, stack: list[str] | None) -> Path:
     p = base / name
     with_pack(p)
-    for s in ("eng-testing", "lang-python", "fw-angular", "dom-ev-charging", "core-factory-update", "moj-skill"):
+    for s in ("eng-testing", "lang-python", "fw-angular", "dom-demo-orders", "core-factory-update", "moj-skill"):
         skill(p, s, manual=s == "core-factory-update")
     files = {f".claude/skills/{s}/SKILL.md": "x" for s in
-             ("eng-testing", "lang-python", "fw-angular", "dom-ev-charging", "core-factory-update")}
+             ("eng-testing", "lang-python", "fw-angular", "dom-demo-orders", "core-factory-update")}
     (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "1.0.0", "files": files}))
     if stack is not None:
         (p / ".claude" / "hooks").mkdir()
@@ -67,46 +67,46 @@ def main() -> int:
             fails.append(msg)
 
     d = lambda name, stack, *a, **k: sp.desired(name, stack, *a, **{"name_only": NAME_ONLY, **k})
-    check(sp.desired("dom-ev-charging", set()) == "on", "SP-0: rdzeń bez nakładek nie ukrywa żadnego wymiaru")
+    check(sp.desired("dom-demo-orders", set()) == "on", "SP-0: the core without packs hides no dimension")
     check(d("fw-angular", {"fw-angular"}) == "on" and d("lang-java", set()) == "name-only"
-          and d("dom-ev-charging", set()) == "name-only" and d("eng-testing", set()) == "on",
-          "SP-1: technologie wg wykrytego stacku, dom-* tylko nazwa (prefiks z nakładki), reszta z opisem")
-    check(d("lang-java", None) == "on", "SP-1b: stack nieznany (wykrywanie nie zadziałało) → technologie z opisem")
+          and d("dom-demo-orders", set()) == "name-only" and d("eng-testing", set()) == "on",
+          "SP-1: technologies per the detected stack, dom-* name only (a prefix from a pack), the rest with a description")
+    check(d("lang-java", None) == "on", "SP-1b: unknown stack (detection did not work) -> technologies with a description")
 
     with tempfile.TemporaryDirectory() as t:
         p = Path(t)
         skill(p, "eng-rzadki")
         md = p / ".claude" / "skills" / "eng-rzadki" / "SKILL.md"
-        md.write_text(md.read_text().replace("description:", "metadata:\n  widocznosc: nazwa\ndescription:"))
+        md.write_text(md.read_text().replace("description:", "metadata:\n  visibility: name\ndescription:"))
         check(sp.desired("eng-rzadki", set(), sp.marked_name_only(md)) == "name-only",
-              "SP-1c: autor skilla oznacza go „metadata.widocznosc: nazwa” → sama nazwa")
+              "SP-1c: the skill's author marks it 'metadata.visibility: name' -> name only")
 
     check(d("ux-research-methods", set()) == "name-only" and d("sec-cryptography-pki", set()) == "name-only"
-          and d("ai-evals", set()) == "name-only", "SP-1d: wymiary specjalistyczne (ux-, sec-, ai-) domyślnie tylko nazwa")
+          and d("ai-evals", set()) == "name-only", "SP-1d: specialist dimensions (ux-, sec-, ai-) are name only by default")
     check(d("ux-research-methods", set(), describe=("ux-",)) == "on" and d("ai-evals", set(), describe=("ux-",)) == "name-only",
-          "SP-1e: --describe ux- włącza opis całego wymiaru w projekcie")
+          "SP-1e: --describe ux- turns on the description of the whole dimension in the project")
 
     want = {"eng-testing": "on", "lang-java": "name-only", "dom-x": "name-only"}
     s, m, kept = sp.plan({"model": "sonnet"}, want, {})
     check(s == {"model": "sonnet", "skillOverrides": {"lang-java": "name-only", "dom-x": "name-only"}}
           and m == {"lang-java": "name-only", "dom-x": "name-only"} and kept == [],
-          f"SP-2: pierwsze uruchomienie zapisuje tylko odstępstwa od „on”, reszta ustawień zostaje: {s} {m}")
+          f"SP-2: the first run writes only deviations from 'on', the rest of the settings stay: {s} {m}")
 
     s, m, kept = sp.plan({"skillOverrides": {"eng-testing": "off"}}, want, {})
     check(s["skillOverrides"].get("eng-testing") == "off" and kept == ["eng-testing"],
-          f"SP-3: ręczne ustawienie użytkownika zostaje: {s} {kept}")
+          f"SP-3: a user's manual setting stays: {s} {kept}")
 
     s, m, kept = sp.plan({"skillOverrides": {"dom-x": "name-only"}}, want, {"lang-java": "name-only", "dom-x": "name-only"})
     check("lang-java" not in s["skillOverrides"] and "lang-java" in kept and m.get("lang-java") == "name-only",
-          f"SP-4: użytkownik usunął wpis fabryki → nie wraca przy kolejnym uruchomieniu: {s} {m} {kept}")
+          f"SP-4: the user removed a factory entry -> it does not come back on the next run: {s} {m} {kept}")
 
     s, m, kept = sp.plan({"skillOverrides": {"lang-java": "name-only"}}, {"lang-java": "on"}, {"lang-java": "name-only"})
     check("lang-java" not in s.get("skillOverrides", {}) and m == {} and kept == [],
-          f"SP-5: technologia pojawiła się w projekcie → wpis fabryki usunięty (opis wraca): {s} {m}")
+          f"SP-5: the technology appeared in the project -> the factory entry removed (the description returns): {s} {m}")
 
     s, m, kept = sp.plan({"skillOverrides": {"stary": "name-only", "cudzy": "off"}}, {}, {"stary": "name-only"})
     check(s["skillOverrides"] == {"cudzy": "off"} and m == {},
-          f"SP-6: skill usunięty z fabryki → jego wpis znika, cudze zostają: {s}")
+          f"SP-6: a skill removed from the factory -> its entry disappears, others' stay: {s}")
 
     with tempfile.TemporaryDirectory() as t:
         base = Path(t)
@@ -114,23 +114,23 @@ def main() -> int:
         sp.apply(p)
         st = json.loads((p / ".claude" / "settings.local.json").read_text())
         ov = st.get("skillOverrides", {})
-        check(ov == {"dom-ev-charging": "name-only"},
-              f"SP-7: bez detect_stack technologie zostają z opisem, ręczne skille i własne pominięte: {ov}")
+        check(ov == {"dom-demo-orders": "name-only"},
+              f"SP-7: without detect_stack technologies keep their description, manual and own skills skipped: {ov}")
         man = json.loads((p / ".claude" / "factory-manifest.json").read_text())
-        check(man.get("skill_overrides") == {"dom-ev-charging": "name-only"} and man.get("version") == "1.0.0",
-              f"SP-8: manifest pamięta wpisy fabryki i zachowuje resztę: {man}")
+        check(man.get("skill_overrides") == {"dom-demo-orders": "name-only"} and man.get("version") == "1.0.0",
+              f"SP-8: the manifest remembers the factory entries and keeps the rest: {man}")
 
         p = project(base, "python", ["lang-python"])
         (p / ".claude" / "settings.local.json").write_text(json.dumps({"permissions": {"allow": ["Bash(ls)"]}}))
         r = subprocess.run([sys.executable, str(SCRIPT), str(p), "--dry-run"], capture_output=True, text=True)
         st = json.loads((p / ".claude" / "settings.local.json").read_text())
         check(r.returncode == 0 and "skillOverrides" not in st and "fw-angular" in r.stdout,
-              f"SP-9: --dry-run pokazuje plan i nic nie zapisuje: {r.stdout}{r.stderr}")
+              f"SP-9: --dry-run shows the plan and writes nothing: {r.stdout}{r.stderr}")
         r = subprocess.run([sys.executable, str(SCRIPT), str(p)], capture_output=True, text=True)
         st = json.loads((p / ".claude" / "settings.local.json").read_text())
-        check(r.returncode == 0 and st.get("skillOverrides") == {"fw-angular": "name-only", "dom-ev-charging": "name-only"}
+        check(r.returncode == 0 and st.get("skillOverrides") == {"fw-angular": "name-only", "dom-demo-orders": "name-only"}
               and st.get("permissions") == {"allow": ["Bash(ls)"]},
-              f"SP-10: wykryty Python → lang-python z opisem, Angular tylko nazwa, uprawnienia nietknięte: {st}")
+              f"SP-10: detected Python -> lang-python with a description, Angular name only, permissions untouched: {st}")
 
     with tempfile.TemporaryDirectory() as t:
         p = project(Path(t), "ux", None)
@@ -143,35 +143,35 @@ def main() -> int:
         st = json.loads((p / ".claude" / "settings.local.json").read_text())
         man = json.loads(man_p.read_text())
         check(r.returncode == 0 and "ux-research-methods" not in st.get("skillOverrides", {})
-              and man.get("skill_describe") == ["ux-"], f"SP-13: --describe zapisany w manifeście, ux- z opisem: {st} {man}")
+              and man.get("skill_describe") == ["ux-"], f"SP-13: --describe saved in the manifest, ux- with a description: {st} {man}")
         sp.apply(p)
         st = json.loads((p / ".claude" / "settings.local.json").read_text())
         check("ux-research-methods" not in st.get("skillOverrides", {}),
-              f"SP-14: kolejne uruchomienie (np. aktualizacja) pamięta --describe z manifestu: {st}")
+              f"SP-14: the next run (e.g. an update) remembers --describe from the manifest: {st}")
 
-    # Instalacja i aktualizacja (install.py) ustawiają widoczność same i szanują ręczne zmiany. Instalator jest
-    # w repozytorium fabryki (core/factory/install.py) — źródło bierzemy z manifestu projektu, w którym działa test.
+    # Install and update (install.py) set visibility themselves and respect manual changes. The installer is
+    # in the factory repository (core/factory/install.py) — we take the source from the manifest of the project the test runs in.
     try:
         src = Path(json.loads((ROOT / ".claude" / "factory-manifest.json").read_text())["source"])
     except (OSError, ValueError, KeyError):
         src = None
     installer = src / "core" / "factory" / "install.py" if src else None
     if not (installer and installer.is_file()):
-        print("ℹ SP-11/12 pominięte: brak repozytorium fabryki (source w manifeście)")
+        print("ℹ SP-11/12 skipped: no factory repository (source in the manifest)")
     else:
         with tempfile.TemporaryDirectory() as t:
             p = Path(t) / "projekt"
             p.mkdir()
             (p / "pyproject.toml").write_text('[project]\nname = "x"\nrequires-python = ">=3.12"\n')
-            inst = [sys.executable, str(installer), str(p), "--yes", "--packs", "pack-it,pack-ev"]
+            inst = [sys.executable, str(installer), str(p), "--yes", "--packs", "pack-it"]
             r = subprocess.run(inst, capture_output=True, text=True)
             st = json.loads((p / ".claude" / "settings.local.json").read_text()) if r.returncode == 0 else {}
             ov = st.get("skillOverrides", {})
             man = json.loads((p / ".claude" / "factory-manifest.json").read_text()) if r.returncode == 0 else {}
             check(r.returncode == 0 and ov.get("fw-angular") == "name-only" and "lang-python" not in ov
-                  and ov.get("sec-cryptography-pki") == "name-only" and "dom-ev-ocpi" not in ov
+                  and ov.get("sec-cryptography-pki") == "name-only"
                   and man.get("skill_overrides") == ov and "skill visibility" in r.stdout,
-                  f"SP-11: instalacja dopasowuje widoczność do projektu (Python): {ov} {r.stdout[-400:]}{r.stderr[-400:]}")
+                  f"SP-11: installation fits visibility to the project (Python): {ov} {r.stdout[-400:]}{r.stderr[-400:]}")
             st.setdefault("skillOverrides", {})["fw-angular"] = "on"
             (p / ".claude" / "settings.local.json").write_text(json.dumps(st))
             subprocess.run([sys.executable, str(SCRIPT), str(p), "--describe", "ux-"], capture_output=True, text=True)
@@ -181,11 +181,11 @@ def main() -> int:
             man = json.loads((p / ".claude" / "factory-manifest.json").read_text())
             check(r.returncode == 0 and st.get("skillOverrides", {}).get("fw-angular") == "on"
                   and man.get("skill_overrides", {}).get("fw-angular") == "name-only" and man.get("skill_describe") == ["ux-"],
-                  f"SP-12: aktualizacja zachowuje ręczną zmianę i pamięć fabryki: {st.get('skillOverrides')} {r.stderr[-300:]}")
+                  f"SP-12: an update keeps the manual change and the factory's memory: {st.get('skillOverrides')} {r.stderr[-300:]}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów skill_profile")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} skill_profile tests")
     return 1 if fails else 0
 
 

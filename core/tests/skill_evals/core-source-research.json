@@ -20,6 +20,28 @@
       }
     },
     {
+      "id": "stan-biblioteki-en",
+      "expect": "trigger",
+      "prompt": "I want to know what's been happening with the zod library lately: new versions, what people report in issues and on forums, whether the project is healthy. How should I approach it, which sources should I use and how should I present the result? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "30 dni|30 days"
+          ],
+          [
+            "pierwotn|primary"
+          ],
+          [
+            "stan na|data odniesienia|data źródła|datą",
+            "as of",
+            "reference date",
+            "source date",
+            "dated"
+          ]
+        ]
+      }
+    },
+    {
       "id": "sprzeczne-zrodla",
       "expect": "trigger",
       "prompt": "Piszę raport o narzędziu CI. Mam wpis na blogu dostawcy z liczbami wydajności, trzy artykuły powtarzające tę samą historię o awarii i jedno issue opiekunów, które jej przeczy. Jak to uczciwie przedstawić? Odpowiedz zwięźle.",

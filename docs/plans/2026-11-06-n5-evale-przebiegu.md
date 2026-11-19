@@ -1,7 +1,7 @@
 # Plan: N5 — evale przebiegu dla personas/skilli/modelu/promptów faz (2026-11-06)
 
 Krok **N5** z pdi `docs/plan-zespol-jednoosobowy.md` §8.3, w granicach **DZ13**
-([decyzje pdi](../../../pdi/docs/decyzje.md)): na start 20 prawdziwych zadań z `dbqm45/sdlc-proba` i `dbqm45/sprintdeck`,
+([decyzje pdi](../../../pdi/docs/decyzje.md)): na start 20 prawdziwych zadań z `dbqm45/sdlc-trial` i `dbqm45/sprintdeck`,
 budżet jednego uruchomienia ustalony w tf; rozbudowa do ok. 200 po pierwszych wynikach. Reguły sędziego **N17** idą
 w tym samym PR (ten sam kontrakt). Stan wyjściowy: pdi `main` `7048263` (kontrakt 0.11.0), tf 5.58.7,
 A6 zaliczone 2026-11-06.
@@ -51,7 +51,7 @@ z datą odczytu 2026-11-06 i jednoznaczne odwołanie do kodu, gdzie je wykorzyst
 Jedno zadanie = **migawka produktu w commicie** × **stan folderu zmiany przed fazą** × **faza do uruchomienia**
 × **sprawdzenia**. Krok po kroku:
 
-1. **Setup fixture** (read-only): runner klonuje produkt (`sdlc-proba` albo `sprintdeck`) do katalogu
+1. **Setup fixture** (read-only): runner klonuje produkt (`sdlc-trial` albo `sprintdeck`) do katalogu
    tymczasowego i `git checkout <product_sha>`; podmienia folder `docs/project/changes/<CHG-n>/` na migawkę
    zadania (plik `before/` → `docs/project/changes/<CHG-n>/`). Z1 jest w `decisions.md` migawki.
 2. **Uruchomienie fazy**: runner wywołuje `modes/mode-pdi/skills/pdi-decisions/scripts/phase_run.py run
@@ -165,13 +165,13 @@ tar czf /tmp/pdi-runs-N5.tgz -C /Users/kamil/pdi-decisions/runs \
 ```json
 {
   "id": "N5-sdlc-proba-CHG3-delivery-prb29",
-  "repo": "sdlc-proba",
+  "repo": "sdlc-trial",
   "product_sha": "abcdef1",
   "phase": "delivery",
   "change": "CHG-3",
   "budget_usd": 1.0,
   "type": "negative",
-  "before_dir": "fixtures/sdlc-proba/CHG-3/pre-delivery-prb29/",
+  "before_dir": "fixtures/sdlc-trial/CHG-3/pre-delivery-prb29/",
   "expect": {
     "status": "failed",
     "error": "any_of:kod *,permission_denied,missing_input",

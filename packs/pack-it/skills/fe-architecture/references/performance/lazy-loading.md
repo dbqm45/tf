@@ -1,49 +1,49 @@
 # Lazy Loading
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/lazy-loading.
+Source: frontendpatterns.dev/lazy-loading.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Performance
-- **Poziom:** Advanced
-- **Przykłady frameworków:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 30 listopada 2025
-- **Autor:** Den Odell
+- **Category:** Performance
+- **Level:** Advanced
+- **Framework examples:** React, Vue, Svelte, Native web
+- **Last updated:** 30 November 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Defer loading of images, components, and data until they're needed, reducing initial load time and
-saving bandwidth.”
+"Defer loading of images, components, and data until they're needed, reducing initial load time and
+saving bandwidth."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Nie ładuj leniwie obrazu LCP (hero, powyżej zgięcia)** — `loading="lazy"` na nim pogarsza LCP. Dla hero:
-  `fetchpriority="high"` (i ewentualnie `<link rel="preload" as="image">`). Poprawiono przykład niżej.
-- Core Web Vitals = LCP, INP, CLS (FCP to metryka pomocnicza) — fe-web-platform (`.claude/skills/fe-web-platform/references/core-web-vitals.md`).
-- Angular: `@defer` w szablonie i `loadComponent` w routingu (fw-angular). Iframe też wspiera `loading="lazy"`.
-- Własny Intersection Observer dla `<img>` jest zbędny — natywne `loading="lazy"` ma pełne wsparcie.
-- Przykłady Svelte to składnia Svelte 4 (`export let`, `$:`, `on:click`, `<svelte:component>`); w Svelte 5: `$props()`,
-  `$state`, `$derived`, `onclick`, komponent dynamiczny renderujesz wprost (`<Comp />`).
+- **Do not lazy-load the LCP image (hero, above the fold)** — `loading="lazy"` on it worsens LCP. For the hero:
+  `fetchpriority="high"` (and possibly `<link rel="preload" as="image">`). The example below has been corrected.
+- Core Web Vitals = LCP, INP, CLS (FCP is an auxiliary metric) — fe-web-platform (`.claude/skills/fe-web-platform/references/core-web-vitals.md`).
+- Angular: `@defer` in the template and `loadComponent` in routing (fw-angular). Iframes also support `loading="lazy"`.
+- A custom Intersection Observer for `<img>` is unnecessary — native `loading="lazy"` has full support.
+- The Svelte examples are Svelte 4 syntax (`export let`, `$:`, `on:click`, `<svelte:component>`); in Svelte 5: `$props()`,
+  `$state`, `$derived`, `onclick`, you render a dynamic component directly (`<Comp />`).
 
 ## Problem
 
-Strony ładują zasoby przed ich realną potrzebą. Przykład ze źródła: strona ładowania pobiera
-JavaScript dla panelu admina, analityki, ustawień i 47 obrazów poniżej fałdy, choć użytkownik chce
-tylko sekcji hero — autor szacuje, że 80% pakietu JS to kod, którego użytkownik nigdy nie dotyka.
-Parsing na urządzeniach mobilnych trwa 2–3× dłużej; obrazy poniżej fałdy zużywają pasmo i pamięć bez
-potrzeby.
+Pages load resources before they are really needed. An example from the source: a landing page downloads
+JavaScript for the admin panel, analytics, settings and 47 images below the fold, although the user wants
+only the hero section — the author estimates that 80% of the JS bundle is code the user never touches.
+Parsing on mobile devices takes 2–3× longer; images below the fold use bandwidth and memory
+needlessly.
 
-## Rozwiązanie
+## Solution
 
-„Don't load resources until users actually need them.” Dla JavaScriptu: dynamiczny `import()` do
-podziału pakietu — komponenty tras ładowane przy nawigacji, ciężkie funkcje (biblioteki wykresów)
-odłożone. Dla obrazów: atrybut `loading="lazy"` albo Intersection Observer. Dla skryptów trzecich:
-`async`/`defer` albo ładowanie po interakcji użytkownika. Połącz z preloadingiem na hover, żeby
-zniwelować odczuwalne opóźnienie przy nawigacji.
+"Don't load resources until users actually need them." For JavaScript: a dynamic `import()` to
+split the bundle — route components loaded on navigation, heavy features (chart libraries)
+deferred. For images: the `loading="lazy"` attribute or an Intersection Observer. For third-party scripts:
+`async`/`defer` or loading after user interaction. Combine it with preloading on hover to
+cancel out the perceived delay on navigation.
 
-## Przykłady kodu
+## Code examples
 
 ### Component Lazy Loading — React
 
@@ -170,7 +170,7 @@ function Dashboard({ user }) {
 }
 ```
 
-### Image Lazy Loading — natywny atrybut
+### Image Lazy Loading — the native attribute
 
 ```html
 <!-- Hero (LCP): NOT lazy — load eagerly with high priority -->
@@ -226,44 +226,44 @@ function ProductCard({ product }) {
 </script>
 ```
 
-## Zalety
+## Advantages
 
-- Initial bundle drastycznie mniejszy — użytkownik pobiera tylko to, co potrzebne na start.
-- Czas do interaktywności spada; różnica między 50KB a 500KB decyduje o rezygnacji użytkownika
-  mobilnego.
-- Użytkownicy bez dostępu premium/adminowego nie pobierają kodu, którego nie użyją.
-- Obrazy poniżej fałdy ładują się na żądanie, oszczędzając pasmo.
-- Metryki ładowania (FCP, LCP) się poprawiają; z wymiarami obrazów także CLS.
-- Efektywność cache się poprawia — zmiana rzadko używanej funkcji nie unieważnia cache popularnych
-  ścieżek.
+- A drastically smaller initial bundle — the user downloads only what is needed at the start.
+- Time to interactive drops; the difference between 50KB and 500KB decides whether a mobile user
+  gives up.
+- Users without premium/admin access do not download code they will not use.
+- Images below the fold load on demand, saving bandwidth.
+- Loading metrics (FCP, LCP) improve; with image dimensions, CLS too.
+- Cache efficiency improves — a change to a rarely used feature does not invalidate the cache of popular
+  paths.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Pierwsza nawigacja na trasę z lazy loadingiem pokazuje spinner — może wydawać się wolniejsza niż
-  tradycyjny SPA bez podziału.
-- Każda granica lazy loading wymaga stanu ładowania i fallback UI.
-- Obsługa błędów się komplikuje — błędy sieci wymagają retry i error boundaries.
-- Debugowanie między fragmentami trudniejsze (osobne source mapy, przerywane stack trace).
-- Leniwe obrazy powodują przeskoki layoutu, jeśli nie ustawisz jawnej `width`/`height`.
-- Bez preloadingu kliknięcie „czuje się” wolne — połącz z prefetchem na hover.
-- Nieprawidłowe granice podziału mogą przypadkowo zduplikować współdzielone zależności — sprawdzaj
+- The first navigation to a lazily loaded route shows a spinner — it may seem slower than
+  a traditional SPA without splitting.
+- Every lazy loading boundary requires a loading state and a fallback UI.
+- Error handling gets more complicated — network errors require retry and error boundaries.
+- Debugging across chunks is harder (separate source maps, broken stack traces).
+- Lazy images cause layout shifts if you do not set an explicit `width`/`height`.
+- Without preloading a click "feels" slow — combine it with a prefetch on hover.
+- Incorrect split boundaries can accidentally duplicate shared dependencies — check the
   bundle analyzer.
-- Modale/szuflady, których użytkownik oczekuje natychmiast, nie współpracują dobrze z lazy loadingiem.
+- Modals/drawers that the user expects immediately do not work well with lazy loading.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Code Splitting](../performance/code-splitting.md) — Performance.
 - Lazy Loading — web.dev.
-- `React.lazy` — dokumentacja React.
-- Async Components — dokumentacja Vue.
-- Dynamic Imports — dokumentacja Svelte.
+- `React.lazy` — the React documentation.
+- Async Components — the Vue documentation.
+- Dynamic Imports — the Svelte documentation.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj dla komponentów tras, obrazów poniżej fałdy i funkcji używanych tylko przez część
-użytkowników. **Nie** stosuj do elementów, których użytkownik oczekuje natychmiast (modal otwierany
-z głównej akcji, kluczowy widget powyżej fałdy) — spinner w takim miejscu psuje wrażenie bardziej,
-niż zyskujesz na initial bundle; to przykład, gdzie fundament „Performance” i fundament „Resilience”
-(nie zaskakuj użytkownika stanem ładowania w oczekiwanym miejscu) mogą wejść w konflikt — rozstrzygaj
-na korzyść tego, co użytkownik faktycznie odczuje jako szybsze, nie tego, co jest mniejsze w bundle
-analyzerze.
+Use it for route components, images below the fold and features used only by some
+users. Do **not** apply it to elements the user expects immediately (a modal opened
+from the main action, a key widget above the fold) — a spinner in such a place spoils the impression more
+than you gain on the initial bundle; this is an example where the "Performance" foundation and the "Resilience" foundation
+(do not surprise the user with a loading state in an expected place) can come into conflict — decide
+in favour of what the user will actually perceive as faster, not what is smaller in the bundle
+analyzer.

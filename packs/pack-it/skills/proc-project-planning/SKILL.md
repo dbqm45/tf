@@ -1,120 +1,120 @@
 ---
 name: proc-project-planning
-description: Użyj przy planie projektu dla sponsora i wyborze modelu cyklu życia (kaskadowy, V, Agile) — karta projektu, koszt i termin jako przedziały, ryzyka.
+description: Use for a project plan for the sponsor and a lifecycle model — a project charter, cost and schedule as ranges, risks.
 metadata:
-  przeglad: "2027-10-03"
-  katalog: "Użyj przy planowaniu projektu przed startem lub przy ponownym planowaniu — cel i miara sukcesu, zakres i „poza zakresem”, szacowanie kosztu i terminu jako przedziałów (stożek niepewności, klasa referencyjna, szacunek trzypunktowy), budżet z zapasem na ryzyka, zasoby i role (RACI), interesariusze i komunikacja, rejestr ryzyk, kamienie milowe, finansowanie etapami, reakcja na opóźnienie (prawo Brooksa), dobór modelu cyklu życia (kaskadowy, V, spiralny, Agile, DevOps, pętla AI-native). Nie do prognozy przepustowości zespołu z danych (proc-agile), decyzji, co budować (proc-product-discovery), szacunków technicznych architekta (arch-architect-practice) ani kosztów chmury (ops-finops)."
-  slowa: "plan projektu, model cyklu życia, model V, model kaskadowy, waterfall, model spiralny, harmonogram, budżet projektu, ile to będzie kosztować, kiedy będzie gotowe, termin, kamienie milowe, rejestr ryzyk, karta projektu, sponsor, kierownik projektu, szacowanie projektu, opóźniony projekt, dołożyć ludzi"
+  review: "2027-10-03"
+  catalog: "Use when planning a project before the start or when re-planning — the goal and the success measure, scope and 'out of scope', estimating cost and schedule as ranges (the cone of uncertainty, a reference class, a three-point estimate), a budget with a reserve for risks, resources and roles (RACI), stakeholders and communication, a risk register, milestones, staged funding, responding to a delay (Brooks's law), choosing a lifecycle model (waterfall, V, spiral, Agile, DevOps, an AI-native loop). Not for forecasting team throughput from data (proc-agile), deciding what to build (proc-product-discovery), the architect's technical estimates (arch-architect-practice) or cloud costs (ops-finops)."
+  keywords: "plan projektu, model cyklu życia, model V, model kaskadowy, waterfall, model spiralny, harmonogram, budżet projektu, ile to będzie kosztować, kiedy będzie gotowe, termin, kamienie milowe, rejestr ryzyk, karta projektu, sponsor, kierownik projektu, szacowanie projektu, opóźniony projekt, dołożyć ludzi, project plan, lifecycle model, V-model, waterfall model, spiral model, schedule, project budget, how much will it cost, when will it be ready, deadline, milestones, risk register, project charter, project manager, project estimation, delayed project, add more people"
 ---
 
-# Planowanie projektu
+# Project planning
 
-Plan projektu odpowiada sponsorowi na pytania **po co, co, za ile, do kiedy, kto i co może pójść źle** — z jawną
-niepewnością. Backlog, iteracje i prognozy z przepustowości są w proc-agile; tu jest rama, w której zespół pracuje.
-Artefakt: `docs/project/01-discovery/project-plan.md` (szablon w core-project-record). Do zatwierdzenia sponsor dostaje
-**kartę projektu** (project charter, PMI): jedna strona z celem, zakresem i poza zakresem, terminem i kosztem jako
-przedziałami, kamieniami milowymi, największymi ryzykami, sponsorem i uprawnieniami kierownika. Decyzje o budżecie, terminie
-i zakresie podejmuje człowiek (bramka B1 w core-delivery-lifecycle); agent przygotowuje warianty i liczby.
+A project plan answers the sponsor's questions **why, what, for how much, by when, who and what can go wrong** — with explicit
+uncertainty. The backlog, iterations and forecasts from throughput are in proc-agile; here is the frame the team works within.
+The artifact: `docs/project/01-discovery/project-plan.md` (a template in core-project-record). For approval the sponsor gets
+a **project charter** (PMI): one page with the goal, scope and out of scope, schedule and cost as
+ranges, milestones, the biggest risks, the sponsor and the project manager's authority. Decisions about budget, schedule
+and scope are made by a human (gate B1 in core-delivery-lifecycle); the agent prepares options and numbers.
 
-## Zasady
-1. **Cel i miara sukcesu przed zakresem.**
-   - Wynik biznesowy z miarą, np. „80% rezerwacji bez telefonu do recepcji w 3 miesiące od startu”, a nie lista funkcji.
-   - Zakres zawsze z sekcją **„poza zakresem”**.
-   - Ograniczenia (budżet, data, regulacje) zapisujesz jako dane wejściowe, nie jako szacunek.
-2. **Szacunek to przedział z datą i poziomem pewności, nigdy jedna liczba.**
-   - Podawaj P50 i P80, np. „P50: 11 tygodni, P80: 15 tygodni, stan na 2026-10-03”.
-   - **Stożek niepewności** (McConnell): na etapie pomysłu szacunek może się mylić od 0,25× do 4×, a zawęża się
-     dopiero z decyzjami (zakres, wymagania, szkielet działający end-to-end).
-   - Na etapie pomysłu zamiast liczby punktowej proponujesz najpierw tanie odkrywanie, które zawęzi przedział.
-3. **Najpierw widok z zewnątrz, potem od środka.**
-   - Prognozowanie klasą referencyjną (Flyvbjerg):
-     1. wybierz klasę podobnych, zakończonych projektów;
-     2. ustal rozkład ich wyników (koszt i czas: plan względem rzeczywistości);
-     3. umieść swój projekt w tym rozkładzie.
-   - Dopiero potem rozbijasz pracę na części i szacujesz je trzema punktami.
-   - Projekty IT mają **gruby ogon przekroczeń**: w badaniu 5392 projektów rozkład był potęgowy, z nielicznymi
-     przekroczeniami wielokrotnymi. Suma szacunków części zaniża wynik.
-4. **Szacunek trzypunktowy** (konwencja PERT) dla części:
-   - wartość oczekiwana E = (O + 4M + P) / 6, odchylenie σ ≈ (P − O) / 6;
-   - sumuj wartości E, nie „najbardziej prawdopodobne” M, bo rozkłady są prawoskośne;
-   - przedział z sumy wariancji zakłada niezależność części, więc jest za wąski — koryguj go klasą referencyjną.
-   - Przykład liczbowy: `references/szacowanie.md`.
-5. **Koszt całkowity:**
-   - ludzie × czas × stawka;
-   - środowiska i chmura (ops-finops), licencje;
-   - modele AI dla zespołu agentów (core-cost-control);
-   - **utrzymanie po wydaniu** (faza 9 w core-delivery-lifecycle), co najmniej na pierwszy rok;
-   - podaj źródło stawek i założenia.
-6. **Rezerwy jawne i osobne:**
-   - na ryzyka zidentyfikowane (z rejestru, wyliczona z P × skutek);
-   - kierownicza na nieznane, w dyspozycji sponsora.
-   - Nie chowasz zapasu w szacunkach części.
-7. **Kamienie milowe są sprawdzalne:**
-   - opisujesz je wynikiem („szkielet end-to-end działa na środowisku testowym”, „pilotaż z 2 salami”),
-     a nie procentem wykonania;
-   - pierwszy kamień to szkielet i sprawdzenie największego ryzyka (spike).
-8. **Finansowanie etapami:**
-   - przykład etapów: odkrywanie → prototyp (alfa) → wersja z prawdziwymi użytkownikami (beta) → produkcja
-     (wzór GOV.UK Service Manual);
-   - po każdym etapie sponsor decyduje: kontynuacja, zmiana, stop;
-   - prototyp z alfy wolno wyrzucić.
-9. **Rejestr ryzyk:**
-   - zapis przyczyna → zdarzenie → skutek;
-   - prawdopodobieństwo i wpływ (1–5), reakcja, właściciel, **sygnał wczesny**, status;
-   - reakcje na zagrożenie: unikaj, ograniczaj, przenieś, akceptuj (z rezerwą); na szansę: wykorzystaj, wzmocnij, współdziel;
-   - przegląd przy każdym kamieniu milowym (proces wg ISO 31000: kontekst → identyfikacja, analiza, ocena → postępowanie →
-     monitorowanie → raportowanie).
-10. **Ludzie i role:**
-    - realna dostępność osób (urlopy, inne projekty);
-    - **RACI** z jednym „A” na decyzję;
-    - interesariusze z planem komunikacji: kto, co, jak często, jakim kanałem;
-    - decyzje biznesowe i prawne mają właściciela po stronie człowieka.
-11. **Opóźnienie:**
-    - **prawo Brooksa** — dołożenie ludzi do spóźnionego projektu zwykle go opóźnia (wdrożenie nowych osób, więcej
-      komunikacji);
-    - proponujesz kolejno: cięcie zakresu (MVP, priorytety), przesunięcie terminu, usunięcie przeszkód;
-    - dodanie ludzi tylko do pracy dającej się wydzielić, z kosztem wdrożenia w planie.
-12. **Plan żyje:**
-    - prognozę aktualizujesz danymi z realizacji (przepustowość — proc-agile) przy każdym kamieniu milowym;
-    - odchylenie poza przedział P80 to decyzja sponsora, nie cicha zmiana;
-    - nowa wersja planu = nowa akceptacja (core-project-record).
+## Rules
+1. **The goal and the success measure before scope.**
+   - A business outcome with a measure, e.g. "80% of bookings without a call to reception within 3 months of launch", not a list of features.
+   - Scope always comes with an **"out of scope"** section.
+   - You record constraints (budget, date, regulations) as inputs, not as an estimate.
+2. **An estimate is a range with a date and a confidence level, never a single number.**
+   - Give P50 and P80, e.g. "P50: 11 weeks, P80: 15 weeks, as of 2026-10-03".
+   - **The cone of uncertainty** (McConnell): at the idea stage an estimate can be off by from 0.25× to 4×, and it narrows
+     only with decisions (scope, requirements, a skeleton working end-to-end).
+   - At the idea stage, instead of a point number you first propose cheap discovery that will narrow the range.
+3. **The outside view first, then the inside view.**
+   - Reference class forecasting (Flyvbjerg):
+     1. pick a class of similar, completed projects;
+     2. establish the distribution of their outcomes (cost and time: plan versus reality);
+     3. place your project in that distribution.
+   - Only then do you break the work into parts and estimate them with three points.
+   - IT projects have a **fat tail of overruns**: in a study of 5392 projects the distribution was a power law, with a few
+     overruns of many times. The sum of the estimates of the parts understates the result.
+4. **A three-point estimate** (the PERT convention) for the parts:
+   - the expected value E = (O + 4M + P) / 6, the deviation σ ≈ (P − O) / 6;
+   - sum the E values, not the "most likely" M, because the distributions are right-skewed;
+   - a range from the sum of variances assumes the parts are independent, so it is too narrow — correct it with the reference class.
+   - A numerical example: `references/estimation.md`.
+5. **Total cost:**
+   - people × time × rate;
+   - environments and cloud (ops-finops), licences;
+   - AI models for the agent team (core-cost-control);
+   - **maintenance after release** (phase 9 in core-delivery-lifecycle), at least for the first year;
+   - state the source of the rates and the assumptions.
+6. **Explicit, separate reserves:**
+   - for identified risks (from the register, computed as P × impact);
+   - a management reserve for the unknown, at the sponsor's disposal.
+   - You do not hide a buffer in the estimates of the parts.
+7. **Milestones are verifiable:**
+   - you describe them by an outcome ("the end-to-end skeleton works in the test environment", "a pilot with 2 rooms"),
+     not by a percentage complete;
+   - the first milestone is the skeleton and checking the biggest risk (a spike).
+8. **Staged funding:**
+   - example stages: discovery → prototype (alpha) → a version with real users (beta) → production
+     (the GOV.UK Service Manual pattern);
+   - after each stage the sponsor decides: continue, change, stop;
+   - the prototype from alpha may be thrown away.
+9. **The risk register:**
+   - the record is cause → event → impact;
+   - probability and impact (1–5), response, owner, **early signal**, status;
+   - responses to a threat: avoid, mitigate, transfer, accept (with a reserve); to an opportunity: exploit, enhance, share;
+   - a review at every milestone (the process per ISO 31000: context → identification, analysis, evaluation → treatment →
+     monitoring → reporting).
+10. **People and roles:**
+    - the real availability of people (leave, other projects);
+    - **RACI** with one "A" per decision;
+    - stakeholders with a communication plan: who, what, how often, through which channel;
+    - business and legal decisions have an owner on the human side.
+11. **Delay:**
+    - **Brooks's law** — adding people to a late project usually delays it further (onboarding new people, more
+      communication);
+    - you propose in order: cutting scope (MVP, priorities), moving the date, removing obstacles;
+    - adding people only for work that can be separated out, with the onboarding cost in the plan.
+12. **The plan is alive:**
+    - you update the forecast with data from delivery (throughput — proc-agile) at every milestone;
+    - a deviation beyond the P80 range is a decision for the sponsor, not a quiet change;
+    - a new version of the plan = a new approval (core-project-record).
 
-## Model cyklu życia — dobór do projektu
-| Model | Kiedy pasuje | Ryzyko, gdy nie pasuje |
+## Lifecycle model — matching it to the project
+| Model | When it fits | The risk when it does not fit |
 |---|---|---|
-| kaskadowy (sekwencyjny) | wymagania stałe i znane z góry, odbiór całości (umowa, przetarg), dużo dokumentacji wymaganej z zewnątrz | zmiana wymagań w trakcie jest droga; błędy wychodzą dopiero przy testach |
-| model V | wymagana weryfikacja i walidacja każdego poziomu oraz **identyfikowalność** wymaganie → projekt → test (urządzenia medyczne, motoryzacja, lotnictwo) | ciężki przy niepewnych wymaganiach; łącz go z krótkimi iteracjami wewnątrz poziomów |
-| spiralny (Boehm) | duży, nowatorski projekt z wysokim ryzykiem: każda pętla zaczyna się od analizy ryzyka i prototypu | narzut analizy przy małym projekcie |
-| przyrostowy / iteracyjny, Agile (Scrum, Kanban) | wymagania się zmieniają, liczy się szybka informacja zwrotna od użytkowników (proc-agile) | bez celu i ram budżetu łatwo o niekończący się zakres |
-| prototypowanie (RAD) | interfejs i przepływy trzeba sprawdzić z użytkownikami, zanim powstanie właściwy produkt | prototyp przechodzi na produkcję bez przepisania |
-| DevOps / ciągłe dostarczanie | produkt żyje długo i zmienia się często; ten sam zespół buduje i utrzymuje (eng-continuous-delivery) | wymaga automatyzacji testów i wdrożeń od pierwszego kroku |
-| pętla AI-native | agenci piszą kod szybciej niż ludzie przeglądają: artefakt po każdym etapie, plan przed kodem, ewaluacje, przegląd PR przez AI (core-delivery-lifecycle) | bez artefaktów i bramek tracisz ślad audytowy i kontrolę |
+| waterfall (sequential) | requirements are fixed and known up front, the whole is accepted at once (a contract, a tender), a lot of documentation required from outside | a change of requirements midway is expensive; errors surface only at testing |
+| the V-model | verification and validation of every level are required, along with **traceability** requirement → design → test (medical devices, automotive, aviation) | heavy with uncertain requirements; combine it with short iterations inside the levels |
+| spiral (Boehm) | a large, novel project with high risk: every loop starts with a risk analysis and a prototype | the analysis overhead on a small project |
+| incremental / iterative, Agile (Scrum, Kanban) | requirements change, fast feedback from users matters (proc-agile) | without a goal and a budget frame, scope easily becomes endless |
+| prototyping (RAD) | the interface and flows must be checked with users before the actual product is built | the prototype moves to production without a rewrite |
+| DevOps / continuous delivery | the product lives long and changes often; the same team builds and maintains it (eng-continuous-delivery) | requires automated tests and deployments from the first step |
+| an AI-native loop | agents write code faster than people review it: an artifact after every stage, a plan before code, evaluations, AI review of PRs (core-delivery-lifecycle) | without artifacts and gates you lose the audit trail and control |
 
-Modele się łączy: np. model V na poziomie wymagań i testów akceptacyjnych systemu regulowanego, a wewnątrz iteracje
-z ciągłym dostarczaniem. Normy branżowe (np. IEC 62304 dla oprogramowania urządzeń medycznych) wymagają zwykle
-udokumentowanego procesu i identyfikowalności, a nie konkretnego modelu — sprawdź wymagania normy dla projektu.
+Models are combined: e.g. the V-model at the level of requirements and system acceptance tests of a regulated system, and inside it iterations
+with continuous delivery. Industry standards (e.g. IEC 62304 for medical device software) usually require
+a documented process and traceability, not a specific model — check the standard's requirements for the project.
 
-## Granice
-- Jak zespół planuje sprinty, tnie historyjki i prognozuje z przepustowości: proc-agile; wiele zespołów: proc-safe.
-- Co budować i po co (hipotezy, metryki produktu, priorytety funkcji): proc-product-discovery.
-- Szacunki pojemności systemu i decyzje architektoniczne: arch-system-design, arch-architect-practice.
+## Boundaries
+- How a team plans sprints, cuts stories and forecasts from throughput: proc-agile; many teams: proc-safe.
+- What to build and why (hypotheses, product metrics, feature priorities): proc-product-discovery.
+- System capacity estimates and architectural decisions: arch-system-design, arch-architect-practice.
 
-## Checklista
-- [ ] cel z miarą sukcesu; zakres z „poza zakresem”; ograniczenia jako dane wejściowe
-- [ ] koszt i termin jako P50/P80 z datą; źródło: klasa referencyjna + szacunek części
-- [ ] rezerwa na ryzyka i rezerwa kierownicza osobno
-- [ ] kamienie milowe ze sprawdzalnym kryterium; pierwszy = szkielet + największe ryzyko
-- [ ] rejestr ryzyk z właścicielami i sygnałami wczesnymi
-- [ ] RACI z jednym A; plan komunikacji; decyzje do podjęcia przez sponsora wypisane
+## Checklist
+- [ ] the goal with a success measure; scope with "out of scope"; constraints as inputs
+- [ ] cost and schedule as P50/P80 with a date; the source: a reference class + an estimate of the parts
+- [ ] a risk reserve and a management reserve, separately
+- [ ] milestones with a verifiable criterion; the first = the skeleton + the biggest risk
+- [ ] a risk register with owners and early signals
+- [ ] RACI with one A; a communication plan; the decisions for the sponsor to make listed
 
-## Źródła
-- PMI, *PMBOK Guide — Eighth Edition* i *The Standard for Project Management* (listopad 2025): 6 zasad, 7 obszarów
-  wyników — pmi.org/standards/pmbok; PMI: karta projektu, reakcje na ryzyka — pmi.org/learning/library
-- S. McConnell, stożek niepewności — construx.com/books/the-cone-of-uncertainty (dostęp 2026-10-03)
-- B. Flyvbjerg, prognozowanie klasą referencyjną (PMI Learning Library); B. Flyvbjerg i in., rozkład przekroczeń
-  kosztów 5392 projektów IT — arxiv.org/abs/2210.01573
-- B. W. Boehm, „A Spiral Model of Software Development and Enhancement”, IEEE Computer, 1988; V-Modell XT
-- GAO-20-195G *Cost Estimating and Assessment Guide* (2020): 12 kroków szacunku, rezerwy — gao.gov
-- ISO 31000:2018 (proces zarządzania ryzykiem); GOV.UK Service Manual (etapy discovery, alpha, beta, live)
+## Sources
+- PMI, *PMBOK Guide — Eighth Edition* and *The Standard for Project Management* (November 2025): 6 principles, 7 performance
+  domains — pmi.org/standards/pmbok; PMI: the project charter, risk responses — pmi.org/learning/library
+- S. McConnell, the cone of uncertainty — construx.com/books/the-cone-of-uncertainty (accessed 2026-10-03)
+- B. Flyvbjerg, reference class forecasting (PMI Learning Library); B. Flyvbjerg et al., the distribution of cost
+  overruns of 5392 IT projects — arxiv.org/abs/2210.01573
+- B. W. Boehm, "A Spiral Model of Software Development and Enhancement", IEEE Computer, 1988; V-Modell XT
+- GAO-20-195G *Cost Estimating and Assessment Guide* (2020): the 12 steps of an estimate, reserves — gao.gov
+- ISO 31000:2018 (the risk management process); GOV.UK Service Manual (the discovery, alpha, beta, live stages)
 - F. P. Brooks, *The Mythical Man-Month* (1975)
-Opisane własnymi słowami.
+Described in our own words.

@@ -41,6 +41,58 @@
       }
     },
     {
+      "id": "sql-injection-gdzie-jeszcze-en",
+      "expect": "trigger",
+      "prompt": "A pentester found a SQL injection in the /reports endpoint: the sort column from a parameter ended up in an ORDER BY concatenated from a string. We fixed that one place. How do we make sure the rest of the code doesn’t contain the same bug? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "przyczyn\\w* (źródłow|pierwotn)",
+            "wzorzec\\w*",
+            "uogóln\\w*",
+            "root cause",
+            "(bug|vulnerability|flaw) (pattern|class)",
+            "pattern\\w*",
+            "generali[sz]\\w*"
+          ],
+          [
+            "źródł\\w*[^\\n]{0,60}(ujści|sink)",
+            "source[^\\n]{0,30}sink",
+            "przepływ\\w* danych",
+            "taint",
+            "data[- ]flow"
+          ],
+          [
+            "Semgrep",
+            "CodeQL",
+            "grep",
+            "ripgrep"
+          ],
+          [
+            "triaż\\w*",
+            "fałszyw\\w*",
+            "przejrz\\w* (każde|trafie)",
+            "triage\\w*",
+            "false positive\\w*",
+            "review\\w* (each|every|the) (hit|match|result|finding)s?",
+            "manual(ly)? review"
+          ],
+          [
+            "reguł\\w*[^\\n]{0,60}(CI|pipeline|regresj)",
+            "test\\w* regresj",
+            "blokuj\\w* nowe",
+            "rule\\w*[^\\n]{0,60}(CI|pipeline|regression)",
+            "regression test\\w*",
+            "block\\w* new"
+          ]
+        ],
+        "none": [
+          "wystarczy (naprawić|poprawić) (to jedno|ten jeden)",
+          "enough to (fix|patch) (just )?(this|that|the) (one|single)"
+        ]
+      }
+    },
+    {
       "id": "deserializacja-wiele-repo",
       "expect": "trigger",
       "prompt": "Po incydencie z deserializacją niezaufanych danych w jednej usłudze w Javie musimy sprawdzić pozostałe 40 repozytoriów firmy. Jak to zrobić systematycznie, a nie na oko? Odpowiedz zwięźle.",

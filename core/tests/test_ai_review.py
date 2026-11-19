@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Testy przeglądu PR przez AI w CI (core-git-workflow, scripts/ai_review.py, templates/ai-review.yml): instalacja
-workflow, właściwości bezpieczeństwa YAML, krok werdyktu (status i komentarz zbiorczy) z atrapą `gh`, obejście
-etykietą, REVIEW.md ze szkicu rekonstrukcji. python3 .claude/tests/test_ai_review.py"""
+"""Tests of the AI PR review in CI (core-git-workflow, scripts/ai_review.py, templates/ai-review.yml): installing the
+workflow, the YAML security properties, the verdict step (status and summary comment) with a `gh` stub, the bypass
+by label, REVIEW.md from the reconstruction draft. python3 .claude/tests/test_ai_review.py"""
 import json
 import os
 import re
@@ -14,7 +14,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hoo
 SCRIPT = ROOT / ".claude" / "skills" / "core-git-workflow" / "scripts" / "ai_review.py"
 try:
     import yaml
-except ImportError:   # dołączona kopia PyYAML (.tf/factory/_vendor)
+except ImportError:   # the bundled PyYAML copy (.tf/factory/_vendor)
     sys.path.insert(0, str(ROOT / ".tf" / "factory" / "_vendor"))
     import yaml
 
@@ -81,98 +81,98 @@ def main() -> int:
         path = repo / ".github" / "workflows" / "ai-review.yml"
         text = path.read_text(encoding="utf-8") if path.is_file() else ""
         check(r.returncode == 0 and text and "REVIEW.md" in r.stdout and "review-md" in r.stdout,
-              f"AR-1: install zapisuje workflow i mówi, jak założyć brakujący REVIEW.md: {r.stdout}{r.stderr}")
+              f"AR-1: install writes the workflow and says how to create a missing REVIEW.md: {r.stdout}{r.stderr}")
         wf = yaml.safe_load(text) if text else {}
         on = wf.get(True) or wf.get("on") or {}
         jobs = wf.get("jobs", {})
         check(wf.get("permissions") == {} and set(jobs) == {"review", "override"},
-              f"AR-2: permissions: {{}} na górze, joby review i override: {wf.get('permissions')} {list(jobs)}")
+              f"AR-2: permissions: {{}} at the top, the review and override jobs: {wf.get('permissions')} {list(jobs)}")
         rv = jobs.get("review", {})
         check(rv.get("permissions") == {"contents": "read", "pull-requests": "write", "statuses": "write"}
               and jobs.get("override", {}).get("permissions") == {"statuses": "write"},
-              f"AR-3: minimalne uprawnienia jobów: {rv.get('permissions')} {jobs.get('override', {}).get('permissions')}")
+              f"AR-3: minimal permissions of the jobs: {rv.get('permissions')} {jobs.get('override', {}).get('permissions')}")
         check("head.repo.full_name == github.repository" in rv.get("if", "")
               and "head.repo.full_name == github.repository" in jobs.get("override", {}).get("if", "")
               and "'ai-review'" in rv.get("if", ""),
-              f"AR-4: blokada forka i warunek etykiety ai-review: {rv.get('if')}")
+              f"AR-4: the fork block and the ai-review label condition: {rv.get('if')}")
         uses = re.findall(r"^\s*(?:-\s*)?uses:\s*(\S+)", text, re.M)
         check(uses and all(re.fullmatch(r"[\w.-]+/[\w.-]+@[0-9a-f]{40}", u) for u in uses),
-              f"AR-5: akcje przypięte do pełnych SHA: {uses}")
+              f"AR-5: actions pinned to full SHAs: {uses}")
         runs = [s.get("run", "") for j in jobs.values() for s in j.get("steps", [])]
-        check(runs and all("${{" not in r_ for r_ in runs), "AR-6: żadnego ${{ … }} w run: (dane PR tylko przez env)")
+        check(runs and all("${{" not in r_ for r_ in runs), "AR-6: no ${{ ... }} in run: (PR data only through env)")
         co = next((s for s in rv.get("steps", []) if "actions/checkout" in str(s.get("uses"))), {})
         check(co.get("with", {}).get("fetch-depth") == 0 and "github.event.pull_request.number" in str(wf.get("concurrency"))
-              and rv.get("timeout-minutes"), f"AR-7: fetch-depth 0, concurrency per PR, limit czasu: {co} {wf.get('concurrency')}")
+              and rv.get("timeout-minutes"), f"AR-7: fetch-depth 0, concurrency per PR, a time limit: {co} {wf.get('concurrency')}")
         ai = next((s for s in rv.get("steps", []) if "claude-code-action" in str(s.get("uses"))), {})
         args = str(ai.get("with", {}).get("claude_args", ""))
-        check("--json-schema" in args and "--max-turns" in args and "werdykt" in args and "REVIEW.md" in str(ai.get("with", {}).get("prompt"))
+        check("--json-schema" in args and "--max-turns" in args and "verdict" in args and "REVIEW.md" in str(ai.get("with", {}).get("prompt"))
               and "ANTHROPIC_API_KEY" in str(ai.get("with", {}).get("anthropic_api_key")),
-              f"AR-8: agent zwraca JSON wg schematu, z limitem tur, według REVIEW.md: {ai}")
+              f"AR-8: the agent returns JSON per a schema, with a turn limit, per REVIEW.md: {ai}")
         check(set(on.get("pull_request", {}).get("types", [])) >= {"opened", "synchronize", "labeled", "unlabeled"},
-              f"AR-9: zdarzenia PR z etykietami: {on}")
+              f"AR-9: PR events with labels: {on}")
 
-        script, env = step_script(wf, "review", "Werdykt, status i komentarz")
-        check(set(env) >= {"OUT", "OVERRIDE", "SHA", "PR", "GH_TOKEN"}, f"AR-10: krok werdyktu dostaje dane przez env: {env}")
+        script, env = step_script(wf, "review", "Verdict, status and comment")
+        check(set(env) >= {"OUT", "OVERRIDE", "SHA", "PR", "GH_TOKEN"}, f"AR-10: the verdict step gets data through env: {env}")
         base = {"SHA": "a" * 40, "PR": "7", "OVERRIDE": "false", "GH_TOKEN": "x"}
         cases = {
-            "ODRZUCONE": ("failure", json.dumps({"werdykt": "ODRZUCONE", "podsumowanie": "luka", "ustalenia": [
-                {"waga": "krytyczne", "plik": "src/a.py", "linia": 3, "opis": "SQL z konkatenacji"}]})),
-            "ZATWIERDZONE": ("success", json.dumps({"werdykt": "ZATWIERDZONE", "podsumowanie": "ok", "ustalenia": []})),
-            "WYMAGA_UWAGI": ("success", json.dumps({"werdykt": "WYMAGA_UWAGI", "podsumowanie": "drobne", "ustalenia": []})),
-            "brak JSON": ("failure", ""),
-            "zły werdykt": ("failure", json.dumps({"werdykt": "OK"})),
+            "REJECTED": ("failure", json.dumps({"verdict": "REJECTED", "summary": "luka", "findings": [
+                {"severity": "critical", "file": "src/a.py", "line": 3, "description": "SQL z konkatenacji"}]})),
+            "APPROVED": ("success", json.dumps({"verdict": "APPROVED", "summary": "ok", "findings": []})),
+            "NEEDS_ATTENTION": ("success", json.dumps({"verdict": "NEEDS_ATTENTION", "summary": "minor", "findings": []})),
+            "no JSON": ("failure", ""),
+            "bad verdict": ("failure", json.dumps({"verdict": "OK"})),
         }
         for label, (want, out) in cases.items():
             res, calls = run_step(script, Path(tmp), {**base, "OUT": out})
             st = status_of(calls)
             check(res.returncode == 0 and st.get("state") == want and st.get("context") == "ai-review/verdict",
-                  f"AR-11 werdykt {label} → {want}: {st} {res.stderr[-300:]}")
-        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["ODRZUCONE"][1]})
+                  f"AR-11 verdict {label} -> {want}: {st} {res.stderr[-300:]}")
+        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["REJECTED"][1]})
         posted = [c for c in calls if any(a.endswith("/issues/7/comments") for a in c) and "--method" in c and "POST" in c]
         body = " ".join(" ".join(c) for c in posted)
-        check(posted and "<!-- AI-REVIEW-REPORT -->" in body and "ODRZUCONE" in body and "src/a.py:3" in body,
-              f"AR-12: komentarz zbiorczy ze znacznikiem, werdyktem i ustaleniem plik:linia: {calls}")
+        check(posted and "<!-- AI-REVIEW-REPORT -->" in body and "REJECTED" in body and "src/a.py:3" in body,
+              f"AR-12: a summary comment with the marker, the verdict and a file:line finding: {calls}")
         old = json.dumps([{"id": 55, "body": "<!-- AI-REVIEW-REPORT -->\nstary"}])
-        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["ZATWIERDZONE"][1]}, comments=old)
+        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["APPROVED"][1]}, comments=old)
         check(any("PATCH" in c and any(a.endswith("/issues/comments/55") for a in c) for c in calls)
               and not any("POST" in c and any(a.endswith("/comments") for a in c) for c in calls),
-              f"AR-13: istniejący komentarz bota jest aktualizowany, nie dublowany: {calls}")
-        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["ODRZUCONE"][1], "OVERRIDE": "true"})
+              f"AR-13: an existing bot comment is updated, not duplicated: {calls}")
+        res, calls = run_step(script, Path(tmp), {**base, "OUT": cases["REJECTED"][1], "OVERRIDE": "true"})
         st = status_of(calls)
-        check(st.get("state") == "success" and "obejście" in st.get("description", ""),
-              f"AR-14: obejście etykietą → zielony status z opisem: {st}")
-        oscript, oenv = step_script(wf, "override", "Obejście etykietą")
+        check(st.get("state") == "success" and "label override" in st.get("description", ""),
+              f"AR-14: a bypass by label -> a green status with a description: {st}")
+        oscript, oenv = step_script(wf, "override", "Label override")
         res, calls = run_step(oscript, Path(tmp), {"SHA": "b" * 40, "ACTION": "labeled", "GH_TOKEN": "x"})
         st = status_of(calls)
         check(res.returncode == 0 and st.get("state") == "success" and st.get("context") == "ai-review/verdict"
-              and set(oenv) >= {"SHA", "ACTION"}, f"AR-15: job obejścia ustawia zielony status bez przeglądu: {st}")
+              and set(oenv) >= {"SHA", "ACTION"}, f"AR-15: the bypass job sets a green status without a review: {st}")
         res, calls = run_step(oscript, Path(tmp), {"SHA": "b" * 40, "ACTION": "unlabeled", "GH_TOKEN": "x"})
-        check(status_of(calls).get("state") == "pending", f"AR-16: zdjęcie obejścia → pending: {status_of(calls)}")
+        check(status_of(calls).get("state") == "pending", f"AR-16: removing the bypass -> pending: {status_of(calls)}")
 
         r = run(["install"], repo)
-        check(r.returncode == 1 and "istnieje" in r.stdout + r.stderr, f"AR-17: bez --force nie nadpisuje: {r.stdout}")
+        check(r.returncode == 1 and "already exists" in r.stdout + r.stderr, f"AR-17: without --force it does not overwrite: {r.stdout}")
         r = run(["install", "--force", "--all-prs"], repo)
         wf2 = yaml.safe_load(path.read_text(encoding="utf-8"))
         check(r.returncode == 0 and "'ai-review'" not in wf2["jobs"]["review"]["if"]
               and "head.repo.full_name == github.repository" in wf2["jobs"]["review"]["if"],
-              f"AR-18: --all-prs bez warunku etykiety, blokada forka zostaje: {wf2['jobs']['review']['if']}")
+              f"AR-18: --all-prs without the label condition, the fork block stays: {wf2['jobs']['review']['if']}")
 
         draft = repo / "docs" / "project" / "00-reconstruction" / "REVIEW.draft.md"
         r = run(["review-md"], repo)
-        check(r.returncode == 1 and "REVIEW.draft.md" in r.stdout + r.stderr, f"AR-19: brak szkicu → 1: {r.stdout}")
+        check(r.returncode == 1 and "REVIEW.draft.md" in r.stdout + r.stderr, f"AR-19: no draft -> 1: {r.stdout}")
         draft.parent.mkdir(parents=True)
         draft.write_text("# Zasady przeglądu PR\n## Ważne\n- reguła\n", encoding="utf-8")
         r = run(["review-md"], repo)
         check(r.returncode == 0 and (repo / "REVIEW.md").read_text(encoding="utf-8") == draft.read_text(encoding="utf-8"),
-              f"AR-20: review-md kopiuje zatwierdzony szkic do REVIEW.md: {r.stdout}{r.stderr}")
+              f"AR-20: review-md copies the approved draft to REVIEW.md: {r.stdout}{r.stderr}")
         r = run(["review-md"], repo)
-        check(r.returncode == 1 and "istnieje" in r.stdout + r.stderr, f"AR-21: REVIEW.md nie jest nadpisywany: {r.stdout}")
+        check(r.returncode == 1 and "already exists" in r.stdout + r.stderr, f"AR-21: REVIEW.md is not overwritten: {r.stdout}")
         r = run(["install", "--force"], repo)
-        check(r.returncode == 0 and "review-md" not in r.stdout, f"AR-22: z REVIEW.md install nie podpowiada review-md: {r.stdout}")
+        check(r.returncode == 0 and "review-md" not in r.stdout, f"AR-22: with REVIEW.md install does not suggest review-md: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów przeglądu PR przez AI w CI")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} AI PR review in CI tests")
     return 1 if fails else 0
 
 

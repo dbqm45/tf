@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Raport zużycia tokenów per agent i model na podstawie .tf/logs/usage.jsonl.
+Token usage report per agent and model, based on .tf/logs/usage.jsonl.
 
-  python3 .tf/factory/cost_report.py            # całość
-  python3 .tf/factory/cost_report.py --days 7   # ostatnie 7 dni
-  python3 .tf/factory/cost_report.py --delegation   # koszt delegowania wg klasy zadania (delegation.jsonl)
+  python3 .tf/factory/cost_report.py            # everything
+  python3 .tf/factory/cost_report.py --days 7   # last 7 days
+  python3 .tf/factory/cost_report.py --delegation   # delegation cost by task class (delegation.jsonl)
 
-Pokazuje też dobór tierów: którzy wykonawcy byli eskalowani na mocniejszy model albo zgłaszali w raporcie
-„Tier: za niski/za wysoki” — z podpowiedzią, gdzie zmienić domyślny tier.
+Also shows tier selection: which executors were escalated to a stronger model or reported in the report
+„Tier: za niski/za wysoki” (tier too low/too high) — with a hint where to change the default tier.
 
-Ceny ustaw w .tf/config/config.yaml → prices_usd_per_mtok (bez nich raport pokazuje same tokeny).
+Set prices in .tf/config/config.yaml → prices_usd_per_mtok (without them the report shows tokens only).
 """
 from __future__ import annotations
 
@@ -21,19 +21,19 @@ from datetime import datetime, timedelta, timezone
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 try:
     import yaml
-except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
+except ImportError:  # bundled PyYAML copy (.tf/factory/_vendor)
     sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
     import yaml
 
@@ -44,7 +44,7 @@ DELEG_LOG = ROOT / ".tf" / "logs" / "delegation.jsonl"
 
 
 def _tf_config(root: Path) -> dict:
-    """Konfiguracja fabryki: domyślna silnika z nadpisaniami projektu (.tf/config/config.yaml) — packs.load_config."""
+    """Factory configuration: the engine default with project overrides (.tf/config/config.yaml) — packs.load_config."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("tf_packs_cfg", root / ".tf" / "factory" / "packs.py")
     mod = importlib.util.module_from_spec(spec)
@@ -67,19 +67,19 @@ def dominant(models: dict) -> str | None:
 
 
 def where_tier(agent: str, cfg: dict) -> str:
-    """Gdzie zmienić domyślny tier agenta: rola persony albo agent wspólny."""
+    """Where to change an agent's default tier: a persona role or a shared agent."""
     if agent in (cfg.get("shared_agents") or {}):
         return f".tf/config/config.yaml → shared_agents.{agent}.tier"
     if "-" in agent:
         role = agent.split("-", 1)[1]
         if (ROOT / ".tf" / "config" / "roles" / f"{role}.yaml").exists():
-            return f".tf/config/roles/{role}.yaml → tier (albo parametr model przy delegowaniu)"
+            return f".tf/config/roles/{role}.yaml → tier (or the model parameter when delegating)"
     return ".tf/config/config.yaml → tiers / persona model_tier"
 
 
 def tier_advice(records: list[dict], cfg: dict) -> list[str]:
-    """Samoocena zespołu z danych: eskalacje (ten sam agent w jednej sesji na mocniejszym modelu) i linie
-    „Tier: za niski/za wysoki” z raportów wykonawców."""
+    """Team self-assessment from the data: escalations (the same agent in one session on a stronger model) and lines
+    „Tier: za niski/za wysoki” from executor reports."""
     stats = defaultdict(lambda: {"runs": 0, "escalated": 0, "low": 0, "high": 0})
     last: dict[tuple, int] = {}
     for r in sorted(records, key=lambda r: r.get("ts", "")):
@@ -103,10 +103,10 @@ def tier_advice(records: list[dict], cfg: dict) -> list[str]:
         up = (s["escalated"] + s["low"]) / s["runs"]
         down = s["high"] / s["runs"]
         if up >= 0.3:
-            out.append(f"• {agent}: w {s['escalated'] + s['low']}/{s['runs']} zadań model był za słaby (eskalacje: "
-                       f"{s['escalated']}, „Tier: za niski”: {s['low']}) — podnieś domyślny tier: {where_tier(agent, cfg)}.")
+            out.append(f"• {agent}: in {s['escalated'] + s['low']}/{s['runs']} tasks the model was too weak (escalations: "
+                       f"{s['escalated']}, „Tier: too low”: {s['low']}) — raise the default tier: {where_tier(agent, cfg)}.")
         elif down >= 0.3:
-            out.append(f"• {agent}: w {s['high']}/{s['runs']} zadań wykonawca ocenił model jako za mocny — obniż tier: "
+            out.append(f"• {agent}: in {s['high']}/{s['runs']} tasks the executor rated the model as too strong — lower the tier: "
                        f"{where_tier(agent, cfg)}.")
     return out
 
@@ -119,8 +119,8 @@ def record_cost(r: dict, prices: dict) -> float | None:
 
 
 def delegation_summary(deleg: list[dict], usage: list[dict], prices: dict) -> list[dict]:
-    """Delegowania wg klasy zadania (linia „Klasa: …” briefu): liczba, ile połączono z zużyciem wykonawcy
-    (agent_id z SubagentStop), mediany tokenów, kosztu, długości briefu i raportu. Klasa None = brief bez klasy."""
+    """Delegations by task class (the brief's „Klasa: …” line): count, how many were joined with executor usage
+    (agent_id from SubagentStop), medians of tokens, cost, brief length and report. Class None = brief without a class."""
     by_id = {r["agent_id"]: r for r in usage if r.get("event") == "SubagentStop" and r.get("agent_id")}
     groups: dict = defaultdict(list)
     for d in deleg:
@@ -161,29 +161,29 @@ def read_jsonl(path: Path, since: datetime | None) -> list[dict]:
 def print_delegation(rows: list[dict]) -> None:
     def fmt(v, spec):
         return format(v, spec) if v is not None else "—"
-    print(f"{'klasa':<14}{'n':>4}{'z logiem':>9}{'tok. (med.)':>13}{'USD (med.)':>12}{'USD suma':>10}{'brief':>7}{'raport':>8}")
+    print(f"{'class':<14}{'n':>4}{'with log':>9}{'tok. (med.)':>13}{'USD (med.)':>12}{'USD sum':>10}{'brief':>7}{'report':>8}")
     print("─" * 77)
     for r in rows:
-        print(f"{r['klass'] or '(bez klasy)':<14}{r['n']:>4}{r['joined']:>9}{fmt(r['median_tokens'], ',.0f'):>13}"
+        print(f"{r['klass'] or '(no class)':<14}{r['n']:>4}{r['joined']:>9}{fmt(r['median_tokens'], ',.0f'):>13}"
               f"{fmt(r['median_usd'], '.3f'):>12}{fmt(r['total_usd'], '.2f'):>10}{fmt(r['median_brief'], '.0f'):>7}"
               f"{fmt(r['median_result'], '.0f'):>8}")
     print("─" * 77)
-    print("Klasy wg core-cost-control §0; „z logiem” = połączone z zużyciem wykonawcy (SubagentStop po agent_id).\n"
-          "Porównuj koszt klasy z tym, co sesja zapłaciłaby sama (czytanie tych plików w jej kontekście) — "
-          "klasa droga przy krótkim raporcie i małym briefie to kandydat do robienia samemu.")
+    print("Classes per core-cost-control §0; „with log” = joined with the executor's usage (SubagentStop by agent_id).\n"
+          "Compare the cost of a class with what the session would pay itself (reading these files in its own context) — "
+          "an expensive class with a short report and a small brief is a candidate to do yourself.")
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--days", type=int, default=0)
     ap.add_argument("--log", type=Path, default=LOG)
-    ap.add_argument("--delegation", action="store_true", help="koszt delegowania wg klasy zadania")
+    ap.add_argument("--delegation", action="store_true", help="delegation cost by task class")
     ap.add_argument("--delegation-log", type=Path, default=DELEG_LOG)
     args = ap.parse_args()
 
     if args.delegation:
         if not args.delegation_log.exists():
-            print(f"Brak logu {args.delegation_log} — pojawi się po pierwszym wywołaniu narzędzia Agent z hookiem log_usage.")
+            print(f"No log {args.delegation_log} — it appears after the first Agent tool call with the log_usage hook.")
             return 0
         cfg = _tf_config(ROOT)
         since = datetime.now(timezone.utc) - timedelta(days=args.days) if args.days else None
@@ -192,7 +192,7 @@ def main() -> int:
         return 0
 
     if not args.log.exists():
-        print(f"Brak logu {args.log} — uruchom kilka sesji z hookiem log_usage.")
+        print(f"No log {args.log} — run a few sessions with the log_usage hook.")
         return 0
     cfg = _tf_config(ROOT)
     prices = cfg.get("prices_usd_per_mtok") or {}
@@ -237,19 +237,19 @@ def main() -> int:
               f"{(f'{c:.2f}' if c is not None else '—'):>9}")
         avg_out = a["output"] / max(a["runs"], 1)
         if fam in ("opus", "fable", "mythos") and avg_out < 1500 and a["runs"] >= 3:
-            tips.append(f"• {name}: drogi model, a średnio tylko {avg_out:.0f} tokenów wyjścia/zadanie — rozważ tier std/fast.")
+            tips.append(f"• {name}: expensive model, but on average only {avg_out:.0f} output tokens/task — consider tier std/fast.")
         if read_total > 200_000 and hit < 50:
-            tips.append(f"• {name}: niski cache hit ({hit:.0f}%) — sprawdź, czy prompt/skille nie zmieniają się między wywołaniami.")
+            tips.append(f"• {name}: low cache hit ({hit:.0f}%) — check that the prompt/skills do not change between calls.")
         if a["runs"] >= 3 and read_total / a["runs"] > 150_000:
-            tips.append(f"• {name}: ~{read_total / a['runs'] / 1000:.0f}k tokenów wejścia na zadanie — węższe briefy, więcej pracy dla scout.")
+            tips.append(f"• {name}: ~{read_total / a['runs'] / 1000:.0f}k input tokens per task — narrower briefs, more work for scout.")
     print("─" * 85)
-    print(f"Szacowany koszt: {'$%.2f' % total_usd if prices else '— (uzupełnij prices_usd_per_mtok w config.yaml)'}")
+    print(f"Estimated cost: {'$%.2f' % total_usd if prices else '— (fill in prices_usd_per_mtok in config.yaml)'}")
     if tips:
-        print("\nWskazówki:")
+        print("\nTips:")
         print("\n".join(tips))
     advice = tier_advice(records, cfg)
     if advice:
-        print("\nDobór tierów (eskalacje i samoocena wykonawców):")
+        print("\nTier choice (escalations and executor self-assessment):")
         print("\n".join(advice))
     return 0
 

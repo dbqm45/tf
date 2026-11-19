@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
 """
-Szablon hooka PostToolUse (Write|Edit): lokalne bramki jakości po edycji pliku przez agenta.
+PostToolUse hook template (Write|Edit): local quality gates after the agent edits a file.
 
-Kopiujesz go do projektu (np. `.claude/hooks/post_edit_checks.py`) i rejestrujesz w `.claude/settings.json` projektu
-dopiero za zgodą człowieka (skill eng-local-quality-gates). Bramki opisuje `.claude/quality-gates.json`:
+You copy it into the project (e.g. `.claude/hooks/post_edit_checks.py`) and register it in the project's `.claude/settings.json`
+only with the human's consent (skill eng-local-quality-gates). The gates are described by `.claude/quality-gates.json`:
 
   {
     "max_lines": 40,
     "checks": [
       {"name": "eslint", "glob": "src/**/*.{ts,tsx}", "cmd": "npx eslint --fix {file}", "timeout": 15},
-      {"name": "testy powiązane", "glob": "src/billing/**/*.ts", "cmd": "npx vitest related {file} --run",
+      {"name": "related tests", "glob": "src/billing/**/*.ts", "cmd": "npx vitest related {file} --run",
        "timeout": 30, "env": {"AI_AGENT": "1"}}
     ]
   }
 
-  glob     wzorzec ścieżki względem katalogu projektu (`**` = dowolne katalogi, `{a,b}` = warianty); może być listą
-  cmd      polecenie bez powłoki (napis dzielony jak w shellu albo lista); `{file}` = ścieżka edytowanego pliku
-  timeout  limit jednego sprawdzenia w sekundach (domyślnie 20); env, name, max_lines — opcjonalne
+  glob     a path pattern relative to the project directory (`**` = any directories, `{a,b}` = variants); may be a list
+  cmd      a command without a shell (a string split like in a shell, or a list); `{file}` = the path of the edited file
+  timeout  the limit of a single check in seconds (default 20); env, name, max_lines — optional
 
-Działanie: brak pliku konfiguracji albo brak pasującego wzorca → nic. Porażka sprawdzenia → kod 2 i końcówka wyjścia
-na stderr (Claude Code przekazuje ją agentowi). Przekroczony limit, brak programu, zła konfiguracja → kod 0 i komunikat
-(hook nie blokuje z własnej winy). Cały hook kończy się sam po CLAUDE_QG_DEADLINE sekund (domyślnie 50) — ustaw
-`timeout` hooka w settings.json wyżej (np. 60). CLAUDE_QUALITY_GATES=off wyłącza hook.
+Behaviour: no config file or no matching pattern → nothing. A failed check → code 2 and the tail of the output
+on stderr (Claude Code passes it to the agent). Exceeded limit, missing program, bad config → code 0 and a message
+(the hook does not block through its own fault). The whole hook ends by itself after CLAUDE_QG_DEADLINE seconds (default 50) — set the hook's
+`timeout` in settings.json higher (e.g. 60). CLAUDE_QUALITY_GATES=off disables the hook.
 
-Użycie ręczne (sprawdzenie konfiguracji, nic nie uruchamia):
+Manual use (config check, runs nothing):
   python3 post_edit_checks.py --dry-run src/billing/invoice.ts [--json]
-Kody wyjścia: 0 — OK / nic do zrobienia; 2 — sprawdzenie nie przeszło (tryb hooka); 1 — zła konfiguracja (--dry-run).
-Tylko biblioteka standardowa Pythona 3.9+, bez sieci.
+Exit codes: 0 — OK / nothing to do; 2 — a check failed (hook mode); 1 — bad configuration (--dry-run).
+Python 3.9+ standard library only, no network.
 """
 from __future__ import annotations
 
@@ -52,12 +52,12 @@ CONFIG = Path(".claude") / "quality-gates.json"
 EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
 DEFAULT_TIMEOUT = 20.0
 DEFAULT_MAX_LINES = 40
-MAX_CHARS = 8000          # stderr dla agenta — krótko, żeby nie zalać kontekstu
+MAX_CHARS = 8000          # stderr for the agent — short, so as not to flood the context
 _current: dict = {"proc": None}
 _t0 = time.monotonic()
 
 
-# ───────────── limit całego hooka ─────────────
+# ───────────── limit of the whole hook ─────────────
 
 def deadline_seconds() -> float:
     try:
@@ -83,12 +83,12 @@ def kill(proc) -> None:
 
 
 def start_deadline() -> None:
-    """Hook kończy się sam (kod 0) przed limitem Claude Code — zabity proces daje niejasny błąd hooka."""
+    """The hook ends by itself (code 0) before the Claude Code limit — a killed process gives an unclear hook error."""
     def fire():
         kill(_current["proc"])
         try:
-            msg = (f"Bramki po edycji przerwane po {deadline_seconds():.0f} s (CLAUDE_QG_DEADLINE). Sprawdzenia "
-                   "są za wolne na hook po edycji — zawęź je albo przenieś do pre-commit.")
+            msg = (f"Post-edit gates stopped after {deadline_seconds():.0f} s (CLAUDE_QG_DEADLINE). The checks "
+                   "are too slow for a post-edit hook — narrow them or move them to pre-commit.")
             sys.stdout.write(json.dumps({"systemMessage": msg}, ensure_ascii=False) + "\n")
             sys.stdout.flush()
         finally:
@@ -134,23 +134,23 @@ def matches(rel: str, globs) -> bool:
 
 
 def load_config(root: Path) -> dict | None:
-    """None — brak pliku; ValueError — zła konfiguracja."""
+    """None — no file; ValueError — bad configuration."""
     path = root / CONFIG
     if not path.is_file():
         return None
     cfg = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(cfg, dict) or not isinstance(cfg.get("checks"), list):
-        raise ValueError("brak listy „checks”")
+        raise ValueError("missing \"checks\" list")
     for i, c in enumerate(cfg["checks"]):
         if not isinstance(c, dict) or not c.get("glob") or not c.get("cmd"):
-            raise ValueError(f"sprawdzenie nr {i + 1} bez „glob” albo „cmd”")
+            raise ValueError(f"check #{i + 1} has no \"glob\" or \"cmd\"")
     return cfg
 
 
 def split_cmd(cmd) -> list[str]:
     if isinstance(cmd, list):
         return [str(x) for x in cmd]
-    if os.name == "nt":  # ścieżki z \ — tryb nie-POSIX, cudzysłowy zdejmujemy sami
+    if os.name == "nt":  # paths with \ — non-POSIX mode, we strip the quotes ourselves
         return [t[1:-1] if len(t) > 1 and t[0] == t[-1] == '"' else t for t in shlex.split(cmd, posix=False)]
     return shlex.split(cmd)
 
@@ -179,17 +179,17 @@ def relative(root: Path, file_path: str) -> str | None:
 def tail(text: str, max_lines: int) -> str:
     lines = text.rstrip().splitlines()
     cut = lines[-max_lines:]
-    head = [f"… (pominięto {len(lines) - len(cut)} linii)"] if len(lines) > len(cut) else []
+    head = [f"… ({len(lines) - len(cut)} lines skipped)"] if len(lines) > len(cut) else []
     return "\n".join(head + cut)
 
 
 def run_check(check: dict, rel: str, root: Path, max_lines: int) -> tuple[str, str]:
-    """→ (stan, szczegóły); stan: ok | fail | timeout | missing."""
+    """→ (state, details); state: ok | fail | timeout | missing."""
     argv = build_argv(check, rel)
     exe = shutil.which(argv[0], path=os.environ.get("PATH")) or (
         str(root / argv[0]) if (root / argv[0]).is_file() else None)
     if not exe:
-        return "missing", f"nie znaleziono programu „{argv[0]}”"
+        return "missing", f"program not found: \"{argv[0]}\""
     limit = min(float(check.get("timeout", DEFAULT_TIMEOUT)), max(0.5, remaining() - 0.5))
     env = {**os.environ, **{str(k): str(v) for k, v in (check.get("env") or {}).items()}}
     kwargs = {"start_new_session": True} if os.name != "nt" else {}
@@ -197,20 +197,20 @@ def run_check(check: dict, rel: str, root: Path, max_lines: int) -> tuple[str, s
         proc = subprocess.Popen([exe, *argv[1:]], cwd=str(root), env=env, stdin=subprocess.DEVNULL,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs)
     except OSError as e:
-        return "missing", f"nie udało się uruchomić „{argv[0]}”: {e}"
+        return "missing", f"could not run \"{argv[0]}\": {e}"
     _current["proc"] = proc
     try:
         out, _ = proc.communicate(timeout=limit)
     except subprocess.TimeoutExpired:
         kill(proc)
         proc.communicate()
-        return "timeout", f"przekroczony limit {limit:.0f} s"
+        return "timeout", f"time limit of {limit:.0f} s exceeded"
     finally:
         _current["proc"] = None
     text = out.decode("utf-8", errors="replace")
     if proc.returncode == 0:
         return "ok", ""
-    return "fail", f"kod {proc.returncode}\n{tail(text, int(check.get('max_lines', max_lines)))}"
+    return "fail", f"exit code {proc.returncode}\n{tail(text, int(check.get('max_lines', max_lines)))}"
 
 
 def hook(data: dict) -> int:
@@ -222,7 +222,7 @@ def hook(data: dict) -> int:
     try:
         cfg = load_config(root)
     except (ValueError, OSError) as e:
-        print(json.dumps({"systemMessage": f"Bramki po edycji pominięte: błąd w {CONFIG.as_posix()} ({e})."},
+        print(json.dumps({"systemMessage": f"Post-edit gates skipped: error in {CONFIG.as_posix()} ({e})."},
                          ensure_ascii=False))
         return 0
     if not cfg:
@@ -239,20 +239,20 @@ def hook(data: dict) -> int:
         if state == "fail":
             failed.append(f"✗ {label(check)} — {detail}")
         elif state == "timeout":
-            notes.append(f"⏱ {label(check)}: {detail} — za wolne na hook po edycji; zawęź albo przenieś do pre-commit")
+            notes.append(f"⏱ {label(check)}: {detail} — too slow for a post-edit hook; narrow it or move it to pre-commit")
         elif state == "missing":
-            notes.append(f"? {label(check)}: {detail} — popraw {CONFIG.as_posix()}")
+            notes.append(f"? {label(check)}: {detail} — fix {CONFIG.as_posix()}")
     if failed:
-        msg = (f"Bramka po edycji nie przeszła dla {rel}:\n\n" + "\n\n".join(failed + notes) +
-               "\n\nPopraw przyczynę w kodzie, nie wyłączaj sprawdzenia ani testu. Format, import, typ — popraw od "
-               "razu. Test logiki pada po 1–2 próbach poprawki → przerwij i zbadaj przyczynę (eng-debugging).")
+        msg = (f"Post-edit gate failed for {rel}:\n\n" + "\n\n".join(failed + notes) +
+               "\n\nFix the cause in the code; do not disable the check or the test. Format, import, type — fix it "
+               "right away. A logic test still fails after 1–2 fix attempts → stop and investigate the cause (eng-debugging).")
         if len(msg) > MAX_CHARS:
-            msg = "… (początek pominięty)\n" + msg[-MAX_CHARS:]
+            msg = "… (beginning skipped)\n" + msg[-MAX_CHARS:]
         sys.stderr.write(msg + "\n")
         sys.stderr.flush()
         return 2
     if notes:
-        text = f"Bramki po edycji ({rel}) — uwagi:\n" + "\n".join(notes)
+        text = f"Post-edit gates ({rel}) — notes:\n" + "\n".join(notes)
         print(json.dumps({"systemMessage": text, "hookSpecificOutput": {
             "hookEventName": "PostToolUse", "additionalContext": text}}, ensure_ascii=False))
     return 0
@@ -274,9 +274,9 @@ def dry_run(args: list[str]) -> int:
     if as_json:
         print(json.dumps({"file": rel, "checks": found}, ensure_ascii=False, indent=2))
     elif not found:
-        print(f"Brak sprawdzeń dla {rel or '(wszystkie)'}.")
+        print(f"No checks for {rel or '(all)'}.")
     else:
-        print(f"Sprawdzenia dla {rel or '(wszystkie)'}:")
+        print(f"Checks for {rel or '(all)'}:")
         for c in found:
             print(f"- {c['name']}: {' '.join(shlex.quote(a) for a in c['argv'])} (limit {c['timeout']:.0f} s)")
     return 0
@@ -296,8 +296,8 @@ def main(argv: list[str]) -> int:
         return 0
     try:
         return hook(data)
-    except Exception as e:  # błąd hooka nie blokuje pracy agenta
-        print(json.dumps({"systemMessage": f"Bramki po edycji: błąd hooka ({type(e).__name__}: {e})."},
+    except Exception as e:  # a hook error does not block the agent's work
+        print(json.dumps({"systemMessage": f"Post-edit gates: hook error ({type(e).__name__}: {e})."},
                          ensure_ascii=False))
         return 0
 

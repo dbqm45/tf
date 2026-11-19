@@ -24,6 +24,33 @@
       }
     },
     {
+      "id": "koszt-wiersza-en",
+      "expect": "trigger",
+      "prompt": "I’m measuring coupling between the Billing and Orders modules. A shared database transaction spans both modules, and the order status is compared as the number 3 on both sides. How do I break this down into rows and calculate the degree and cost? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "kolejność",
+            "execution",
+            "order of execution|execution order|ordering|sequence"
+          ],
+          [
+            "wartość|value"
+          ],
+          [
+            "znaczenie|meaning",
+            "convention"
+          ],
+          [
+            "log2|logarytm|liczba miejsc|miejsc w kodzie",
+            "logarithm\\w*",
+            "number of (places|locations|sites|occurrences)",
+            "(places|locations|sites) in (the )?code"
+          ]
+        ]
+      }
+    },
+    {
       "id": "interpretacja-pasm",
       "expect": "trigger",
       "prompt": "W raporcie sprzężeń między dwoma kontekstami większość wierszy jest w paśmie dynamicznym (wspólna transakcja, dwa magazyny, które muszą się zgadzać). Co to oznacza dla granicy i co zrobić? Odpowiedz zwięźle.",

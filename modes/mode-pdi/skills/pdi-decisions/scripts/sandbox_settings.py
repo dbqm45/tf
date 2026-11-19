@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-"""Ustawienia sandboxu Claude Code dla persony fazy uruchamianej przez pdi (krok Z8a pdi, decyzja DZ9).
+"""Claude Code sandbox settings for a phase persona run by pdi (pdi step Z8a, decision DZ9).
 
   python3 .claude/skills/pdi-decisions/scripts/sandbox_settings.py [--nested] [--root .]
-      wypisuje JSON ustawień: sandbox poleceń Bash (failIfUnavailable, bez wyjścia poza sandbox), lista hostów sieci,
-      zakaz czytania sekretów z domu, zmienne z tokenami niewidoczne dla poleceń w sandboxie.
+      prints the settings JSON: a Bash command sandbox (failIfUnavailable, no escape outside the sandbox), a list of network hosts,
+      a ban on reading secrets from home, token variables invisible to commands in the sandbox.
 
-Workflow `sdlc-phase.yml` zapisuje wynik jako ustawienia zarządzane (`/etc/claude-code/managed-settings.json`) i
-podaje go `claude` przez `--settings` (`PDI_CLAUDE_SETTINGS` w `phase_run.py run`), więc `.claude/settings.json`
-produktu nie poluzuje ograniczeń. pdi w trybie lokalnym (`PDI_DISPATCH=local`) używa tych samych kluczy w kontenerze
-(`pdi.phase_sandbox.claude_settings`) i dodaje `--nested` (`enableWeakerNestedSandbox`: sandbox w nieuprzywilejowanym
-kontenerze). Hosty: `api.anthropic.com`, rejestry pakietów według plików w katalogu głównym repo, `semgrep.dev` (reguły
-skanera) i `PDI_DISPATCH_ALLOW_HOSTS` (po przecinku, `*.domena` dozwolone). Kod wyjścia: 0 — w porządku, 2 — złe
-wywołanie.
+The `sdlc-phase.yml` workflow writes the result as managed settings (`/etc/claude-code/managed-settings.json`) and
+passes it to `claude` via `--settings` (`PDI_CLAUDE_SETTINGS` in `phase_run.py run`), so the product's `.claude/settings.json`
+does not loosen the restrictions. pdi in local mode (`PDI_DISPATCH=local`) uses the same keys in the container
+(`pdi.phase_sandbox.claude_settings`) and adds `--nested` (`enableWeakerNestedSandbox`: a sandbox in an unprivileged
+container). Hosts: `api.anthropic.com`, package registries according to the files in the repo root, `semgrep.dev` (scanner
+rules) and `PDI_DISPATCH_ALLOW_HOSTS` (comma-separated, `*.domain` allowed). Exit code: 0 — OK, 2 — bad
+invocation.
 """
 import argparse
 import json
@@ -65,9 +65,9 @@ def settings(allowed: list[str], *, nested: bool) -> dict:
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(description="Ustawienia sandboxu Claude Code dla persony fazy (JSON na stdout).")
-    ap.add_argument("--root", default=".", help="katalog repo produktu (domyślnie bieżący)")
-    ap.add_argument("--nested", action="store_true", help="sandbox w nieuprzywilejowanym kontenerze (pdi lokalnie)")
+    ap = argparse.ArgumentParser(description="Claude Code sandbox settings for a phase persona (JSON on stdout).")
+    ap.add_argument("--root", default=".", help="product repo folder (default: current)")
+    ap.add_argument("--nested", action="store_true", help="sandbox in an unprivileged container (pdi locally)")
     a = ap.parse_args(argv)
     allowed = hosts(Path(a.root), os.environ.get("PDI_DISPATCH_ALLOW_HOSTS") or "")
     print(json.dumps(settings(allowed, nested=a.nested), ensure_ascii=False, indent=2))

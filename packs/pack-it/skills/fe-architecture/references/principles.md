@@ -1,106 +1,106 @@
-# Fundamenty i zasady architektury frontendowej
+# Foundations and principles of frontend architecture
 
-> **Spis treści:** Sześć fundamentów (frontendpatterns.dev) · Ogólne zasady architektoniczne (Hrynkevych) · Model mentalny „trzech odpowiedzialności”… · Przewodniki frontendpatterns.dev do decyzji…
+> **Contents:** Six foundations (frontendpatterns.dev) · General architectural principles (Hrynkevych) · The "three responsibilities" mental model… · frontendpatterns.dev guides for multi-factor decisions…
 
-Źródła: frontendpatterns.dev/foundations („Core Principles — core principles that shape how we
-build for the web”), artykuł Mykhaila Hrynkevycha „Frontend Architecture”, dev.to/playfulprogramming
-„The Grand Unifying Architecture of Frontend”.
+Sources: frontendpatterns.dev/foundations ("Core Principles — core principles that shape how we
+build for the web"), Mykhailo Hrynkevych's article "Frontend Architecture", dev.to/playfulprogramming
+"The Grand Unifying Architecture of Frontend".
 
-## Sześć fundamentów (frontendpatterns.dev)
+## Six foundations (frontendpatterns.dev)
 
-1. **Accessibility as a Foundation** — dostępność nie jest dodatkiem na końcu, jest fundamentem, na
-   którym stoi resztę decyzji UI (semantyka, focus management, ARIA, klawiatura) — fe-web-platform
+1. **Accessibility as a Foundation** — accessibility is not an add-on at the end, it is the foundation on
+   which the rest of the UI decisions stand (semantics, focus management, ARIA, keyboard) — fe-web-platform
    (`references/accessibility/`).
-2. **Component-Driven Architecture** — UI budowane z izolowanych, reużywalnych komponentów jako
-   podstawowa jednostka organizacji kodu, niezależnie od konkretnego frameworka.
-3. **Logical Separation of Concerns** — rozdzielenie prezentacji, logiki biznesowej i dostępu do
-   danych na wyraźne, niezależnie testowalne warstwy.
-4. **Performance as a Foundation** — wydajność projektowana od początku (code splitting, lazy
-   loading, memoization), nie optymalizowana post-hoc jako „naprawa” na końcu.
-5. **Resilience by Design** — aplikacja z założenia radzi sobie z błędami sieci, wolnym backendem,
-   częściową awarią (error boundaries, retry, loading states), nie zakłada happy path.
-6. **The Progressive Enhancement Mindset** — podstawowa funkcjonalność działa bez JS/przy
-   ograniczeniach; JS/CSS *wzbogacają* doświadczenie, nie są warunkiem, żeby cokolwiek działało.
+2. **Component-Driven Architecture** — UI built from isolated, reusable components as
+   the basic unit of code organization, independent of a specific framework.
+3. **Logical Separation of Concerns** — separating presentation, business logic and data
+   access into distinct, independently testable layers.
+4. **Performance as a Foundation** — performance designed from the start (code splitting, lazy
+   loading, memoization), not optimized post hoc as a "fix" at the end.
+5. **Resilience by Design** — the application is designed to cope with network errors, a slow backend,
+   partial failure (error boundaries, retry, loading states); it does not assume the happy path.
+6. **The Progressive Enhancement Mindset** — the basic functionality works without JS/under
+   constraints; JS/CSS *enhance* the experience, they are not a condition for anything to work.
 
-**Reguła stosowania:** te sześć fundamentów **nie są opcjonalne przy dużych projektach** — dotyczą
-każdej decyzji niezależnie od wybranego stylu architektury (`architecture-styles.md`) czy skali
-projektu. Mały, prosty frontend (np. bezframeworkowy skrypt) wciąż powinien mieć dostępne
-formularze, wciąż powinien obsłużyć błąd `fetch()`, wciąż powinien mieć sensowny `loading state` —
-„prosty” nie znaczy „bez fundamentów”.
+**Rule of application:** these six foundations **are not optional in large projects** — they apply to
+every decision regardless of the chosen architecture style (`architecture-styles.md`) or the scale of the
+project. A small, simple frontend (e.g. a frameworkless script) should still have accessible
+forms, should still handle a `fetch()` error, should still have a sensible `loading state` —
+"simple" does not mean "without foundations".
 
-## Ogólne zasady architektoniczne (Hrynkevych)
+## General architectural principles (Hrynkevych)
 
-- **Separation of Concerns (SoC)** — izolacja prezentacji od logiki, reguł biznesowych od
-  infrastruktury; zwiększa testowalność i czytelność.
-- **Wysoka spójność (cohesion), niskie powiązanie (coupling)** — spójność: logika, która razem się
-  zmienia, powinna mieszkać razem; powiązanie: minimalna liczba zależności między niezależnymi
-  częściami.
-- **Enkapsulacja** — ukrywanie szczegółów implementacji za dobrze zdefiniowanym interfejsem,
-  zwłaszcza w komponentach wielokrotnego użytku i hookach — konsument nie powinien znać wnętrza.
-- **DRY / KISS / YAGNI** — definicje, granice (kiedy DRY szkodzi) i rozstrzyganie konfliktów między nimi są w
-  eng-design-principles; tu tylko przypomnienie, że w UI YAGNI najczęściej łamie się przedwczesną memoizacją,
-  podziałem kodu „na zapas” i abstrakcją komponentu przed drugim użyciem.
-- **Skalowalność horyzontalna, nie wertykalna** — architektura powinna rosnąć po
-  feature/module/zespole (dodanie nowego modułu = dodanie nowego katalogu, nie rozrost jednego
-  istniejącego pliku), nie przez ciągłe dokładanie kodu do tych samych, coraz większych plików.
+- **Separation of Concerns (SoC)** — isolating presentation from logic, business rules from
+  infrastructure; it increases testability and readability.
+- **High cohesion, low coupling** — cohesion: logic that changes together
+  should live together; coupling: the minimal number of dependencies between independent
+  parts.
+- **Encapsulation** — hiding implementation details behind a well-defined interface,
+  especially in reusable components and hooks — the consumer should not know the internals.
+- **DRY / KISS / YAGNI** — the definitions, the limits (when DRY does harm) and resolving conflicts between them are in
+  eng-design-principles; here only a reminder that in UI YAGNI is most often broken by premature memoization,
+  code splitting "just in case" and a component abstraction before the second use.
+- **Horizontal, not vertical scalability** — the architecture should grow by
+  feature/module/team (adding a new module = adding a new directory, not growing one
+  existing file), not by constantly adding code to the same, ever larger files.
 
-**Cele architektury frontendowej wg tego samego artykułu:** wyraźne rozgraniczenie domeny
-biznesowej, skalowalność kodu, ułatwienie współpracy zespołowej, wsparcie dla wydajności/
-dostępności/odporności, umożliwienie bezpiecznej ewolucji oprogramowania bez tarcia.
+**The goals of frontend architecture according to the same article:** a clear delineation of the business
+domain, code scalability, easier team collaboration, support for performance/
+accessibility/resilience, enabling safe evolution of the software without friction.
 
-## Model mentalny „trzech odpowiedzialności” (framework-agnostyczny)
+## The "three responsibilities" mental model (framework-agnostic)
 
-Z artykułu „The Grand Unifying Architecture of Frontend” — teza: niezależnie od filozofii
-implementacji (SPA, MPA, HTMX, LiveView, Server Components, Sync Engines), **każde** rozwiązanie
-frontendowe adresuje te same trzy, trwałe odpowiedzialności:
+From the article "The Grand Unifying Architecture of Frontend" — the thesis: regardless of the implementation
+philosophy (SPA, MPA, HTMX, LiveView, Server Components, Sync Engines), **every** frontend
+solution addresses the same three lasting responsibilities:
 
-1. **Navigation (klient)** — przeglądarka zarządza orkiestracją na podstawie URL; JavaScript daje
-   kontrolę na poziomie root'a, niezależnie od tego, czy to SPA czy wymiana fragmentów HTML.
-2. **Content (serwer)** — serwer jest autorytatywnym źródłem markupu albo danych JSON, uruchamianym
-   przez żądania nawigacyjne zainicjowane przez klienta.
-3. **Affordances (klient)** — lokalny stan UI, praca w toku (in-progress), optimistic updates —
-   szybki feedback dla użytkownika bez czekania na round-trip do serwera.
+1. **Navigation (client)** — the browser manages orchestration based on the URL; JavaScript gives
+   control at the root level, regardless of whether it is an SPA or an exchange of HTML fragments.
+2. **Content (server)** — the server is the authoritative source of markup or JSON data, triggered
+   by navigation requests initiated by the client.
+3. **Affordances (client)** — local UI state, work in progress (in-progress), optimistic updates —
+   fast feedback for the user without waiting for a round trip to the server.
 
-**Wzorzec przepływu:** navigation (klient) → content (serwer) → affordances (klient). Zapis
-(write) „podróżuje w górę” jako navigation; odczyt (read) „płynie w dół” jako content. **Ta
-asymetria zapobiega konfliktującym, stateful systemom** po obu stronach — jeśli klient i serwer są
-oba „właścicielami” tego samego stanu bez jasnego podziału ról, to jest źródło błędów
-synchronizacji, nie tylko niewygoda.
+**Flow pattern:** navigation (client) → content (server) → affordances (client). A write
+"travels up" as navigation; a read "flows down" as content. **This
+asymmetry prevents conflicting, stateful systems** on both sides — if the client and the server are
+both "owners" of the same state without a clear division of roles, that is a source of
+synchronization bugs, not just an inconvenience.
 
-**Gdzie w spektrum leżą różne podejścia:**
-- **HTMX** — minimalna logika klienta, serwer odpowiada ciężkim HTML-em.
-- **LiveView** — rozszerzone możliwości serwera z trwałymi (persistent) sesjami.
-- **React SPA** — dominacja logiki klienckiej, komunikacja przez JSON API.
-- **Server Components** — jawne, trójwarstwowe rozdzielenie (osobno navigation/content/affordances).
-- **Sync Engines** — replikowane lokalne magazyny danych z optimistic overlay.
+**Where different approaches lie on the spectrum:**
+- **HTMX** — minimal client logic, the server responds with heavy HTML.
+- **LiveView** — extended server capabilities with persistent sessions.
+- **React SPA** — client logic dominates, communication through a JSON API.
+- **Server Components** — an explicit, three-layer separation (navigation/content/affordances separately).
+- **Sync Engines** — replicated local data stores with an optimistic overlay.
 
-**Wniosek praktyczny:** różnice między konkurencyjnymi podejściami to głównie **wybór transportu i
-trade-off efektywności**, nie fundamentalna różnica w tym, co system musi zrobić. Przy ocenie
-nowego frameworka/podejścia — zapytaj, jak konkretnie rozdziela te trzy odpowiedzialności, zamiast
-oceniać go w oderwaniu od tego modelu.
+**Practical conclusion:** the differences between competing approaches are mainly **a choice of transport and
+an efficiency trade-off**, not a fundamental difference in what the system must do. When assessing
+a new framework/approach — ask how specifically it separates these three responsibilities, instead of
+assessing it in isolation from this model.
 
-**Uwaga techniczna z artykułu (Solid 2.0, jako ilustracja, nie jako wymóg ogólny):** unikanie
-hydration mismatch poprzez „single hydration” — treść jest kluczowana przez wywołanie funkcji
-serwerowej, która ją wyprodukowała; nieaktualne odpowiedzi failują walidację wersji; komponent
-kliencki „claim'uje” węzeł wyrenderowany po stronie serwera tylko raz. To konkretny mechanizm
-realizujący model trzech odpowiedzialności bez konfliktu klient/serwer o ten sam węzeł DOM.
+**A technical note from the article (Solid 2.0, as an illustration, not as a general requirement):** avoiding
+hydration mismatch through "single hydration" — content is keyed by the call of the server
+function that produced it; stale responses fail version validation; a client
+component "claims" a node rendered on the server only once. This is a concrete mechanism
+implementing the three responsibilities model without a client/server conflict over the same DOM node.
 
-## Przewodniki frontendpatterns.dev do decyzji wieloczynnikowych (zewnętrzne)
+## frontendpatterns.dev guides for multi-factor decisions (external)
 
-Indeks 11 przewodników z frontendpatterns.dev/guides (Den Odell) — punkty wejścia, gdy pytanie brzmi „które z kilku
-podejść i dlaczego”, a nie „jak zaimplementować jedną rzecz”. Treść przewodników nie jest skopiowana — przy potrzebie
-czytaj oryginał.
+An index of 11 guides from frontendpatterns.dev/guides (Den Odell) — entry points when the question is "which of several
+approaches and why", not "how to implement one thing". The content of the guides is not copied — when needed,
+read the original.
 
-| Przewodnik (`/guides/…`) | Zakres decyzji | Lokalny odpowiednik |
+| Guide (`/guides/…`) | Scope of the decision | Local equivalent |
 |---|---|---|
-| accessible-interaction-playbook | interakcje działające dla myszy, klawiatury, dotyku i czytnika ekranu | fe-web-platform `accessibility/` |
-| building-with-progressive-enhancement | warstwowanie funkcji: baza bez JS, wzbogacenia stopniowo | fundament 6 wyżej |
+| accessible-interaction-playbook | interactions that work for mouse, keyboard, touch and screen reader | fe-web-platform `accessibility/` |
+| building-with-progressive-enhancement | layering features: a base without JS, enhancements gradually | foundation 6 above |
 | choosing-css-strategy | CSS Modules vs utility-first vs CSS-in-JS vs BEM | fe-css |
-| choosing-a-frontend-framework | kryteria wyboru frameworka | arch-tech-selection |
+| choosing-a-frontend-framework | criteria for choosing a framework | arch-tech-selection |
 | choosing-a-networking-style-for-realtime-apps | WebSocket vs SSE vs long polling | fe-web-platform |
-| choosing-a-state-management-approach | stan lokalny / kontekst / store / stan serwera | fsd-screaming-architecture.md |
-| designing-component-apis | przewidywalne, trudne do złego użycia API komponentów | components/props-and-attributes.md, components/compound-components.md |
-| managing-ai-response-states | spójny przepływ stanów UI czatu AI | ai-chat-ui/ |
-| managing-async-ux-states | idle/loading/error/success dla operacji asynchronicznych | resilience/loading-state.md |
-| securing-frontend-data-flows | CSP, CSRF, tokeny, kodowanie jako jedna strategia | security/ |
-| testing-confidence-ladder | poziom testów vs pewność vs koszt | eng-testing, testing/component-testing.md |
+| choosing-a-state-management-approach | local state / context / store / server state | fsd-screaming-architecture.md |
+| designing-component-apis | predictable component APIs that are hard to misuse | components/props-and-attributes.md, components/compound-components.md |
+| managing-ai-response-states | a consistent flow of AI chat UI states | ai-chat-ui/ |
+| managing-async-ux-states | idle/loading/error/success for asynchronous operations | resilience/loading-state.md |
+| securing-frontend-data-flows | CSP, CSRF, tokens, encoding as one strategy | security/ |
+| testing-confidence-ladder | test level vs confidence vs cost | eng-testing, testing/component-testing.md |

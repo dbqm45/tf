@@ -1,16 +1,16 @@
-# Klocki domenowe w Go — przetestowane przykłady
+# Domain building blocks in Go — tested examples
 
-> **Spis treści:** go.mod · money/money.go · money/money_test.go · availability/availability.go · availability/availability_test.go
+> **Contents:** go.mod · money/money.go · money/money_test.go · availability/availability.go · availability/availability_test.go
 
-Moduł sprawdzony 2026-10-23: `gofmt -l` (bez uwag), `go vet ./...` i `go test ./...` na go1.22.0 i go1.27.3
-(dyrektywa `go 1.22` — przykłady działają w całym zakresie skilla). Pliki skopiowane bez zmian.
+Module checked 2026-10-23: `gofmt -l` (no findings), `go vet ./...` and `go test ./...` on go1.22.0 and go1.27.3
+(the `go 1.22` directive — the examples work across the whole range of the skill). Code from the tested project; only comments and message strings were translated to English (after translation: `gofmt -l` clean, `go vet` and `go test ./...` pass, go1.24.7).
 
-## Spis treści
+## Contents
 - go.mod
-- money/money.go — obiekt wartości (kwota)
+- money/money.go — value object (amount)
 - money/money_test.go
-- availability/availability.go — identyfikator, błędy odrzucenia, warianty stanu, zdarzenia, agregat, port repozytorium
-- availability/availability_test.go — test tabelaryczny, errors.Is / errors.As
+- availability/availability.go — identifier, rejection errors, state variants, events, aggregate, repository port
+- availability/availability_test.go — table-driven test, errors.Is / errors.As
 
 ## go.mod
 ```go
@@ -21,7 +21,7 @@ go 1.22
 
 ## money/money.go
 ```go
-// Package money: kwota jako obiekt wartości — jednostki minimalne (grosze) w int64, waluta w typie.
+// Package money: an amount as a value object — minor units (grosze) in int64, the currency in the type.
 package money
 
 import (
@@ -29,21 +29,21 @@ import (
 	"fmt"
 )
 
-var ErrCurrencyMismatch = errors.New("money: różne waluty")
+var ErrCurrencyMismatch = errors.New("money: different currencies")
 
 type Currency string
 
 const PLN Currency = "PLN"
 
-// Money jest porównywalne (==) i niezmienne: pola nieeksportowane, operacje zwracają nową wartość.
+// Money is comparable (==) and immutable: unexported fields, operations return a new value.
 type Money struct {
-	minor    int64 // grosze, centy
+	minor    int64 // grosze, cents
 	currency Currency
 }
 
 func New(minor int64, c Currency) (Money, error) {
 	if c == "" {
-		return Money{}, errors.New("money: brak waluty")
+		return Money{}, errors.New("money: missing currency")
 	}
 	return Money{minor: minor, currency: c}, nil
 }
@@ -87,17 +87,17 @@ func TestAdd(t *testing.T) {
 	}
 	eur, _ := New(100, "EUR")
 	if _, err := a.Add(eur); !errors.Is(err, ErrCurrencyMismatch) {
-		t.Fatalf("chcę ErrCurrencyMismatch, mam %v", err)
+		t.Fatalf("want ErrCurrencyMismatch, got %v", err)
 	}
 	if x, _ := New(500, PLN); x != (Money{minor: 500, currency: PLN}) {
-		t.Fatal("Money ma być porównywalne ==")
+		t.Fatal("Money must be comparable with ==")
 	}
 }
 ```
 
 ## availability/availability.go
 ```go
-// Package availability: agregat dostępności zasobu z maszyną stanów, wynikiem operacji i zdarzeniami.
+// Package availability: a resource availability aggregate with a state machine, an operation result and events.
 package availability
 
 import (
@@ -106,27 +106,27 @@ import (
 	"time"
 )
 
-// ResourceID — identyfikator jako typ nazwany, nie goły string.
+// ResourceID — an identifier as a named type, not a bare string.
 type ResourceID string
 
-// Odrzucenia biznesowe — błędy wartownicze; wywołujący sprawdza errors.Is.
+// Business rejections — sentinel errors; the caller checks errors.Is.
 var (
-	ErrSlotTaken = errors.New("availability: termin zajęty")
-	ErrDisabled  = errors.New("availability: zasób wyłączony")
+	ErrSlotTaken = errors.New("availability: slot taken")
+	ErrDisabled  = errors.New("availability: resource disabled")
 )
 
-// ConflictError niesie szczegóły odrzucenia; Unwrap pozwala na errors.Is(err, ErrSlotTaken).
+// ConflictError carries the rejection details; Unwrap allows errors.Is(err, ErrSlotTaken).
 type ConflictError struct {
 	Resource  ResourceID
 	BlockedBy string
 }
 
 func (e *ConflictError) Error() string {
-	return fmt.Sprintf("zasób %s zajęty przez %s", e.Resource, e.BlockedBy)
+	return fmt.Sprintf("resource %s taken by %s", e.Resource, e.BlockedBy)
 }
 func (e *ConflictError) Unwrap() error { return ErrSlotTaken }
 
-// state — warianty jako interfejs z metodą nieeksportowaną (zamknięty zbiór w pakiecie).
+// state — variants as an interface with an unexported method (a set closed within the package).
 type state interface{ isState() }
 
 type Free struct{}
@@ -137,7 +137,7 @@ func (Free) isState()     {}
 func (Blocked) isState()  {}
 func (Disabled) isState() {}
 
-// Event — zdarzenia w czasie przeszłym.
+// Event — events in the past tense.
 type Event interface{ isEvent() }
 
 type ResourceBlocked struct {
@@ -148,7 +148,7 @@ type ResourceBlocked struct {
 
 func (ResourceBlocked) isEvent() {}
 
-// ResourceAvailability — agregat: stan prywatny, zmiana tylko metodami biznesowymi.
+// ResourceAvailability — the aggregate: private state, changed only through business methods.
 type ResourceAvailability struct {
 	id      ResourceID
 	state   state
@@ -169,17 +169,17 @@ func (r *ResourceAvailability) Block(by string, at time.Time) error {
 		return nil
 	case Blocked:
 		if s.By == by {
-			return nil // idempotentnie
+			return nil // idempotent
 		}
 		return &ConflictError{Resource: r.id, BlockedBy: s.By}
 	case Disabled:
 		return ErrDisabled
 	default:
-		panic(fmt.Sprintf("nieobsłużony stan %T", s)) // błąd programisty, nie odrzucenie biznesowe
+		panic(fmt.Sprintf("unhandled state %T", s)) // a programmer error, not a business rejection
 	}
 }
 
-// PullEvents oddaje zdarzenia do publikacji (np. przez outbox) i czyści listę.
+// PullEvents hands out the events for publishing (e.g. through an outbox) and clears the list.
 func (r *ResourceAvailability) PullEvents() []Event {
 	ev := r.events
 	r.events = nil
@@ -188,7 +188,7 @@ func (r *ResourceAvailability) PullEvents() []Event {
 
 func (r *ResourceAvailability) Version() int { return r.version }
 
-// Repository — port w pakiecie domeny; adapter (SQL) w infrastrukturze.
+// Repository — a port in the domain package; the adapter (SQL) in the infrastructure.
 type Repository interface {
 	Get(id ResourceID) (*ResourceAvailability, error)
 	Save(r *ResourceAvailability, expectedVersion int) error
@@ -213,33 +213,33 @@ func TestBlock(t *testing.T) {
 		by      string
 		wantErr error
 	}{
-		{"wolny → zablokowany", func(*ResourceAvailability) {}, "anna", nil},
-		{"zajęty przez kogoś innego", func(r *ResourceAvailability) { _ = r.Block("jan", now) }, "anna", ErrSlotTaken},
-		{"ponownie przez tę samą osobę", func(r *ResourceAvailability) { _ = r.Block("anna", now) }, "anna", nil},
-		{"wyłączony", func(r *ResourceAvailability) { r.state = Disabled{} }, "anna", ErrDisabled},
+		{"free → blocked", func(*ResourceAvailability) {}, "anna", nil},
+		{"taken by someone else", func(r *ResourceAvailability) { _ = r.Block("jan", now) }, "anna", ErrSlotTaken},
+		{"again by the same person", func(r *ResourceAvailability) { _ = r.Block("anna", now) }, "anna", nil},
+		{"disabled", func(r *ResourceAvailability) { r.state = Disabled{} }, "anna", ErrDisabled},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := New("sala-1")
+			r := New("room-1")
 			tc.setup(r)
 			err := r.Block(tc.by, now)
 			if !errors.Is(err, tc.wantErr) {
-				t.Fatalf("Block() = %v, chcę %v", err, tc.wantErr)
+				t.Fatalf("Block() = %v, want %v", err, tc.wantErr)
 			}
 		})
 	}
 }
 
 func TestConflictDetails(t *testing.T) {
-	r := New("sala-1")
+	r := New("room-1")
 	_ = r.Block("jan", time.Now())
 	err := r.Block("anna", time.Now())
 	var ce *ConflictError
 	if !errors.As(err, &ce) || ce.BlockedBy != "jan" {
-		t.Fatalf("chcę ConflictError z BlockedBy=jan, mam %v", err)
+		t.Fatalf("want ConflictError with BlockedBy=jan, got %v", err)
 	}
 	if got := len(r.PullEvents()); got != 1 {
-		t.Fatalf("zdarzeń: %d, chcę 1", got)
+		t.Fatalf("events: %d, want 1", got)
 	}
 }
 ```

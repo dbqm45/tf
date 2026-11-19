@@ -31,6 +31,41 @@
       }
     },
     {
+      "id": "model-otwarty-k6-en",
+      "expect": "trigger",
+      "prompt": "We have a public orders API, with about 200 orders per minute at peak. I'm writing a test in k6 — a constant number of VUs or something else? How do I set thresholds so that CI fails on a regression? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "arrival",
+            "model otwarty",
+            "open model",
+            "otwart",
+            "open workload"
+          ],
+          [
+            "niezerow",
+            "non-zero",
+            "kod wyjścia",
+            "exit code"
+          ],
+          [
+            "ukry.{0,30}spowolnieni",
+            "coordinated omission",
+            "zamkni.{0,10}model",
+            "ukrywa\\w* regresj",
+            "zmniejsza\\w* tempo",
+            "spowalnia.{0,40}(żądań|tempo)",
+            "hid\\w*.{0,30}slow\\w*",
+            "closed.{0,10}model",
+            "hides? (the )?regressions?",
+            "reduc\\w* (the )?(request )?rate",
+            "slows? (down )?.{0,40}(requests|rate)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "rodzaje-ci-wycieki",
       "expect": "trigger",
       "prompt": "Chcę dodać test wydajnościowy do CI i osobno sprawdzić, czy aplikacja nie ma wycieków pamięci. Jakie rodzaje testów wybrać do każdego celu i jak długo je puszczać? Odpowiedz zwięźle.",

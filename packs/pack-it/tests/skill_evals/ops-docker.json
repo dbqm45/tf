@@ -27,6 +27,38 @@
       }
     },
     {
+      "id": "hardening-runtime-en",
+      "expect": "trigger",
+      "prompt": "How should I run a web application container so that, after a break-in through a vulnerability in the app, it's hard for the attacker to download and launch a coin miner or a backdoor? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "read-only",
+            "tylko do odczytu",
+            "read-only (root )?(file ?system|fs)"
+          ],
+          [
+            "cap-drop",
+            "no-new-privileges"
+          ],
+          [
+            "distroless",
+            "bez powłoki",
+            "169\\.254|imds|egress|ruch wychodz",
+            "(no|without) (a )?shell",
+            "egress",
+            "outbound (traffic|connections?)"
+          ],
+          [
+            "169\\.254|metadan|IRSA|Workload Identity|IMDSv2|tożsamoś\\w* obciąż",
+            "instance metadata",
+            "metadata",
+            "identity (of )?(the )?workload"
+          ]
+        ]
+      }
+    },
+    {
       "id": "multistage-secret",
       "expect": "trigger",
       "prompt": "Mój Dockerfile dla Node ma jeden etap, FROM node:latest i ARG NPM_TOKEN używany w npm install. Jak go poprawić? Odpowiedz zwięźle.",

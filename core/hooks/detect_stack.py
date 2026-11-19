@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Wykrywa stack projektu (wersje frameworków i języków) i porównuje go z wersjami, na których oparte są skille.
+Detects the project stack (framework and language versions) and compares it with the versions the skills are based on.
 
-  python3 .claude/hooks/detect_stack.py [KATALOG_PROJEKTU]      # raport tekstowy
-  python3 .claude/hooks/detect_stack.py --json [KATALOG]        # raport JSON (dla agentów/CI)
-  python3 .claude/hooks/detect_stack.py --latest [KATALOG]      # + najnowsze wersje z rejestru npm (sieć)
-  python3 .claude/hooks/detect_stack.py --hook                  # tryb hooka SessionStart: tylko gdy jest coś do zrobienia
+  python3 .claude/hooks/detect_stack.py [PROJECT_DIR]         # text report
+  python3 .claude/hooks/detect_stack.py --json [DIR]            # JSON report (for agents/CI)
+  python3 .claude/hooks/detect_stack.py --latest [DIR]      # + latest versions from the npm registry (network)
+  python3 .claude/hooks/detect_stack.py --hook                  # SessionStart hook mode: only when there is something to do
 
-Źródła wersji: node_modules/<pakiet>/package.json → package-lock.json → zakres w package.json;
-Java: pom.xml / build.gradle(.kts) / .java-version; Python: requires-python w pyproject.toml / .python-version;
-pakiety PyPI: uv.lock / poetry.lock / pylock.toml / requirements*.txt / pyproject.toml. Wersję skilla opisuje plik skill.meta.json obok SKILL.md.
-Tylko biblioteka standardowa — działa bez instalowania pakietów.
+Version sources: node_modules/<package>/package.json → package-lock.json → the range in package.json;
+Java: pom.xml / build.gradle(.kts) / .java-version; Python: requires-python in pyproject.toml / .python-version;
+PyPI packages: uv.lock / poetry.lock / pylock.toml / requirements*.txt / pyproject.toml. A skill's version is described by skill.meta.json next to SKILL.md.
+Standard library only — works without installing packages.
 """
 from __future__ import annotations
 
@@ -25,8 +25,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 
@@ -39,12 +39,12 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 HOOKS_DIR = Path(__file__).resolve().parent
 CLAUDE_DIR = HOOKS_DIR.parent
 SKILLS_DIR = CLAUDE_DIR / "skills"
-REGISTRY = SKILLS_DIR / "core-stack-sync" / "references" / "technologies.json"   # rdzeń (format, wpisy własne)
-PACKS_DIR = CLAUDE_DIR.parent / ".tf" / "factory" / "packs"    # nakładki dokładają rejestry: .tf/factory/packs/<id>/technologies.json
+REGISTRY = SKILLS_DIR / "core-stack-sync" / "references" / "technologies.json"   # core (format, own entries)
+PACKS_DIR = CLAUDE_DIR.parent / ".tf" / "factory" / "packs"    # overlays add registries: .tf/factory/packs/<id>/technologies.json
 
 
 def registry_entries() -> list[dict]:
-    """Technologie do wykrywania: rejestr rdzenia + rejestry zainstalowanych nakładek (ta sama technologia — pierwszy wpis)."""
+    """Technologies to detect: the core registry + the registries of installed overlays (the same technology — first entry wins)."""
     out, seen = [], set()
     files = [REGISTRY, *sorted(PACKS_DIR.glob("*/technologies.json"))] if PACKS_DIR.is_dir() else [REGISTRY]
     for f in files:
@@ -55,7 +55,7 @@ def registry_entries() -> list[dict]:
     return out
 
 
-# ───────────── wersje ─────────────
+# ───────────── versions ─────────────
 
 def parse_version(text: str | None) -> tuple[int, ...] | None:
     if not text:
@@ -71,7 +71,7 @@ def fmt(v: tuple[int, ...] | None) -> str:
 
 
 def cmp_at(project: tuple[int, ...], ref: tuple[int, ...]) -> int:
-    """Porównuje z dokładnością wersji referencyjnej ('22' → major, '6.0' → major.minor)."""
+    """Compares at the precision of the reference version ('22' → major, '6.0' → major.minor)."""
     n = len(ref)
     a = tuple(project[:n]) + (0,) * (n - len(project[:n]))
     return (a > ref) - (a < ref)
@@ -175,7 +175,7 @@ def kotlin_present(root: Path) -> tuple[str | None, str]:
 
 
 def go_version(root: Path) -> tuple[str | None, str]:
-    """Dyrektywa `go` w go.mod (minimalna wersja języka modułu), nie `toolchain` (narzędzie do budowania)."""
+    """The `go` directive in go.mod (the module's minimum language version), not `toolchain` (the build tool)."""
     if not (root / "go.mod").exists():
         return None, ""
     m = re.search(r"^go\s+([\d.]+)\s*$", _read(root / "go.mod"), re.M)
@@ -183,8 +183,8 @@ def go_version(root: Path) -> tuple[str | None, str]:
 
 
 def dotnet_version(root: Path, web: bool = False) -> tuple[str | None, str]:
-    """Najwyższa platforma `netX.Y` / `netcoreappX.Y` z plików *.csproj (do 3 poziomów, bez bin/ i obj/);
-    `web` — tylko projekty z Sdk="Microsoft.NET.Sdk.Web" (ASP.NET Core). Sam netstandard → wersja nieznana."""
+    """The highest platform `netX.Y` / `netcoreappX.Y` from *.csproj files (up to 3 levels, excluding bin/ and obj/);
+    `web` — only projects with Sdk="Microsoft.NET.Sdk.Web" (ASP.NET Core). netstandard alone → version unknown."""
     found, best, src = False, None, ""
     for pattern in ("*.csproj", "*/*.csproj", "*/*/*.csproj"):
         for f in sorted(root.glob(pattern)):
@@ -212,7 +212,7 @@ def _read(path: Path) -> str:
 
 
 def python_version(root: Path) -> tuple[str | None, str]:
-    """Dolna granica requires-python (składnia, której wolno używać) → .python-version (interpreter deweloperski)."""
+    """The lower bound of requires-python (the syntax that may be used) → .python-version (the development interpreter)."""
     m = re.search(r'^\s*requires-python\s*=\s*["\']\s*(?:>=|~=|==)\s*([\d.]+)', _read(root / "pyproject.toml"), re.M)
     if m:
         return m.group(1), "pyproject.toml requires-python"
@@ -226,7 +226,7 @@ def python_version(root: Path) -> tuple[str | None, str]:
 
 
 def pypi_version(root: Path, pkg: str) -> tuple[str | None, str]:
-    """Wersja pakietu PyPI: uv.lock / poetry.lock / pylock.toml → requirements*.txt → specyfikator w pyproject.toml."""
+    """PyPI package version: uv.lock / poetry.lock / pylock.toml → requirements*.txt → the specifier in pyproject.toml."""
     for lock in ("uv.lock", "poetry.lock", "pylock.toml"):
         m = re.search(rf'name\s*=\s*"{re.escape(pkg)}"\s*\nversion\s*=\s*"([^"]+)"', _read(root / lock))
         if m:
@@ -290,7 +290,7 @@ def detect(root: Path, tech: dict) -> tuple[bool, str | None, str]:
 
 def latest_npm(pkg: str) -> str | None:
     try:
-        npm = shutil.which("npm")          # Windows: npm.cmd — samo "npm" bez powłoki nie zostanie znalezione
+        npm = shutil.which("npm")          # Windows: npm.cmd — plain "npm" without a shell will not be found
         if not npm:
             return None
         out = subprocess.run([npm, "view", pkg, "version"], stdin=subprocess.DEVNULL, capture_output=True,
@@ -336,7 +336,7 @@ def analyze(root: Path, with_latest: bool = False) -> dict:
                 item["latest"] = latest_npm(tech["detect"]["npm"][0])
         found.append(item)
 
-    # ograniczenia między skillami (np. Angular 22 wymaga TypeScript 6.0.x)
+    # constraints between skills (e.g. Angular 22 requires TypeScript 6.0.x)
     by_skill = {f["skill"]: f for f in found}
     constraints = []
     for f in found:
@@ -364,41 +364,41 @@ def analyze(root: Path, with_latest: bool = False) -> dict:
 
 
 LABEL = {
-    "OK": "✓ zgodny",
-    "SKILL_OUTDATED": "↑ skill starszy niż projekt — zaktualizuj skill (core-stack-sync)",
-    "PROJECT_OLDER": "↓ projekt starszy niż zakres skilla — stosuj tylko funkcje dostępne w tej wersji",
-    "MISSING_SKILL": "+ brak skilla — rozważ utworzenie (build.py new-skill)",
-    "NO_META": "? skill bez skill.meta.json — nie wiadomo, na jakiej wersji się opiera",
-    "UNKNOWN_VERSION": "? nie udało się ustalić wersji w projekcie",
+    "OK": "✓ compatible",
+    "SKILL_OUTDATED": "↑ skill older than the project — update the skill (core-stack-sync)",
+    "PROJECT_OLDER": "↓ project older than the skill's range — use only features available in this version",
+    "MISSING_SKILL": "+ no skill — consider creating one (build.py new-skill)",
+    "NO_META": "? skill without skill.meta.json — unknown which version it is based on",
+    "UNKNOWN_VERSION": "? could not determine the version in the project",
 }
 
 
 def to_text(r: dict) -> str:
-    lines = [f"Stack projektu: {r['project']}"]
+    lines = [f"Project stack: {r['project']}"]
     for t in r["technologies"]:
         based = f" | skill: {t.get('skill_min_supported', '?')}–{t['skill_based_on']}" if t.get("skill_based_on") else ""
-        latest = f" | najnowsza: {t['latest']}" if t.get("latest") else ""
+        latest = f" | latest: {t['latest']}" if t.get("latest") else ""
         lines.append(f"  {t['technology']:<12} {str(t['project_version'] or '-'):<14} ({t['source']}){based}{latest}")
         lines.append(f"    {t['skill']}: {LABEL[t['status']]}")
     for c in r["constraints"]:
         mark = "✓" if c["ok"] else ("✗" if c["ok"] is False else "?")
-        lines.append(f"  {mark} {c['from']} wymaga {c['skill']} {c['requires']} (w projekcie: {c['project_version'] or 'brak'})")
-    lines.append(f"Sugerowany stack persony: {', '.join(r['suggested_stack']) or '—'}")
+        lines.append(f"  {mark} {c['from']} requires {c['skill']} {c['requires']} (in the project: {c['project_version'] or 'none'})")
+    lines.append(f"Suggested persona stack: {', '.join(r['suggested_stack']) or '—'}")
     return "\n".join(lines)
 
 
 def to_hook(r: dict) -> str:
     if not r["actions_needed"]:
         return ""
-    lines = ["Wykryto stack projektu, który wymaga uwagi przy korzystaniu ze skilli:"]
+    lines = ["The project's stack needs attention when using skills:"]
     for t in r["technologies"]:
         if t["status"] != "OK":
             lines.append(f"- {t['technology']} {t['project_version'] or ''} → {t['skill']}: {LABEL[t['status']]}"
-                         + (f" (skill opisuje {t.get('skill_min_supported')}–{t.get('skill_based_on')})" if t.get("skill_based_on") else ""))
+                         + (f" (the skill covers {t.get('skill_min_supported')}–{t.get('skill_based_on')})" if t.get("skill_based_on") else ""))
     for c in r["constraints"]:
         if c["ok"] is False:
-            lines.append(f"- Niezgodność: {c['from']} wymaga {c['skill']} {c['requires']}, a projekt ma {c['project_version']}.")
-    lines.append("Przed pracą w tych obszarach zastosuj skill core-stack-sync (nie aktualizuj zależności projektu bez prośby użytkownika).")
+            lines.append(f"- Mismatch: {c['from']} requires {c['skill']} {c['requires']}, and the project has {c['project_version']}.")
+    lines.append("Before working in these areas apply the core-stack-sync skill (do not update the project's dependencies without the user's request).")
     return "\n".join(lines)
 
 
@@ -406,7 +406,7 @@ def main(argv: list[str]) -> int:
     args = [a for a in argv[1:] if not a.startswith("--")]
     flags = {a for a in argv[1:] if a.startswith("--")}
     if "--hook" in flags:
-        import threading                    # hook kończy się sam przed limitem Claude Code (10 s), z kodem 0
+        import threading                    # the hook ends on its own before the Claude Code limit (10 s), with exit code 0
         timer = threading.Timer(float(os.environ.get("CLAUDE_HOOK_DEADLINE", "7") or 7), lambda: os._exit(0))
         timer.daemon = True
         timer.start()
@@ -417,7 +417,7 @@ def main(argv: list[str]) -> int:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or ".")
         try:
             out = to_hook(analyze(root))
-        except Exception as e:  # hook nigdy nie może zablokować startu sesji
+        except Exception as e:  # a hook must never block session start
             record_error("detect_stack", e)
             return 0
         if out:

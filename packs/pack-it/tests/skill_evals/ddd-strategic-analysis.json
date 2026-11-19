@@ -20,6 +20,25 @@
       }
     },
     {
+      "id": "cynefin-bottom-up-en",
+      "expect": "trigger",
+      "prompt": "We have a new product in an unknown market, the experts disagree with each other, and there's a lot of 'we don't know'. Should we analyze top-down through processes or differently? How do we justify it? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "cynefin"
+          ],
+          [
+            "bottom-up"
+          ],
+          [
+            "probe|zrób i sprawdź|eksperym|prototyp|spike",
+            "try[- ]and[- ]see|experiment\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "rezerwacja-zdolnosc",
       "expect": "trigger",
       "prompt": "W systemie rezerwacji mamy osobno „rezerwację aut” i „rezerwację sal”. Czy to dobre cięcie kontekstów i według czego wyznaczać granice? Odpowiedz zwięźle.",

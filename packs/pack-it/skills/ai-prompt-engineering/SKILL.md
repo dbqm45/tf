@@ -1,91 +1,91 @@
 ---
 name: ai-prompt-engineering
-description: Użyj przy pisaniu i poprawianiu promptów — struktura, tagi XML, przykłady few-shot, myślenie, długi kontekst, szablony i wersje, układ pod cache, migracja modelu.
+description: Use for writing and improving prompts — structure, XML tags, few-shot examples, thinking, long context, templates and versions, a cache-friendly layout, model migration.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj, gdy piszesz, poprawiasz lub przenosisz prompt systemowy albo szablon promptu dla modelu — struktura (rola, kontekst, zadanie, ograniczenia, format wyjścia, przykłady), tagi XML, dobór przykładów few-shot, łańcuch myślenia i rozszerzone lub adaptacyjne myślenie oraz kiedy go nie używać, prefill i structured outputs, układ długiego kontekstu (dokumenty na górze, pytanie na końcu), szablony i wersjonowanie promptów (rejestr), układ przyjazny cache (stały prefiks), regresja promptu przez ewaluacje, migracja promptu na nowszy model, typowe błędy (niejednoznaczność, sprzeczne instrukcje, nadmierne ograniczenia). Nie do kontraktu wyjścia, SDK i pętli narzędziowej (eng-llm-features), budowy zbiorów i graderów (ai-evals), reguł cache i doboru modelu (core-cost-control) ani instrukcji dla agenta-programisty (core-agent-instructions)."
-  slowa: "prompt, prompt systemowy, prompt engineering, inżynieria promptów, few-shot, przykłady w prompcie, tagi xml, chain of thought, łańcuch myślenia, extended thinking, adaptive thinking, prefill, długi kontekst, szablon promptu, wersjonowanie promptów, rejestr promptów, prompt caching, stały prefiks, migracja promptu, model ignoruje instrukcję, sprzeczne instrukcje, poprawić prompt"
+  review: "2027-04-17"
+  catalog: "Use when you write, improve or port a system prompt or a prompt template for a model — structure (role, context, task, constraints, output format, examples), XML tags, choosing few-shot examples, chain of thought and extended or adaptive thinking and when not to use it, prefill and structured outputs, the layout of a long context (documents at the top, the question at the end), templates and prompt versioning (a registry), a cache-friendly layout (a fixed prefix), prompt regression through evaluations, migrating a prompt to a newer model, typical mistakes (ambiguity, contradictory instructions, excessive constraints). Not for the output contract, the SDK and the tool loop (eng-llm-features), building sets and graders (ai-evals), cache rules and model choice (core-cost-control) or instructions for the coding agent (core-agent-instructions)."
+  keywords: "prompt, prompt systemowy, prompt engineering, inżynieria promptów, few-shot, przykłady w prompcie, tagi xml, chain of thought, łańcuch myślenia, extended thinking, adaptive thinking, prefill, długi kontekst, szablon promptu, wersjonowanie promptów, rejestr promptów, prompt caching, stały prefiks, migracja promptu, model ignoruje instrukcję, sprzeczne instrukcje, poprawić prompt, system prompt, examples in the prompt, xml tags, long context, prompt template, prompt versioning, prompt registry, fixed prefix, prompt migration, the model ignores an instruction, contradictory instructions, improve the prompt"
 ---
 
-# Inżynieria promptów
+# Prompt engineering
 
-Prompt to kod z niedeterministycznym wykonawcą: zmienia się go hipotezą i sprawdza pomiarem. Zanim zaczniesz,
-miej kryterium sukcesu i sposób jego sprawdzenia (`ai-evals`); bez tego „poprawa” jest wrażeniem. Nie każda porażka
-jest problemem promptu — czasem pomaga zmiana modelu, schematu wyjścia lub narzędzia (**eng-llm-features**, kontrakt
-wyjścia i SDK). Nazwy modeli i parametrów API sprawdzasz w dokumentacji dostawcy (core-grounding); dla Claude:
-wbudowany w Claude Code skill `claude-api` (aktualizuje go Anthropic). Stan z 2026-10-20 i szczegóły: `references/techniki-i-migracja.md`.
+A prompt is code with a nondeterministic executor: you change it with a hypothesis and check it with a measurement. Before you start,
+have a success criterion and a way to check it (`ai-evals`); without it an "improvement" is an impression. Not every failure
+is a prompt problem — sometimes a change of the model, the output schema or the tool helps (**eng-llm-features**, the output
+contract and the SDK). You check the names of models and API parameters in the provider's documentation (core-grounding); for Claude:
+the `claude-api` skill built into Claude Code (Anthropic updates it). The state of 2026-10-20 and the details: `references/techniques-and-migration.md`.
 
-## Procedura
-1. **Zdiagnozuj, co się psuje**, na 5–10 konkretnych złych wyjściach: zła treść, zły format, pominięta instrukcja,
-   nadgorliwość, halucynacja. Każdy objaw ma inną poprawkę (tabela niżej). Bez przykładów porażek nie zaczynaj.
-2. **Ułóż strukturę** (kolejność od stałego do zmiennego): rola i cel → kontekst (dlaczego) → zadanie → ograniczenia
-   → format wyjścia → przykłady → dane wejściowe. Rola w jednym zdaniu wystarcza. Instrukcja z powodem („nie używaj
-   wielokropka, bo tekst czyta syntezator mowy”) działa lepiej niż goły zakaz.
-3. **Oddziel części tagami XML**, gdy prompt miesza instrukcje, kontekst, przykłady i dane: `<instructions>`,
-   `<context>`, `<example>` w `<examples>`, `<document>`. Spójne nazwy tagów w całym prompcie; dane użytkownika zawsze w tagu,
-   żeby model nie wziął ich za polecenia (core-agent-security).
-4. **Powiedz, co ma być, a nie czego nie ma.** Zamiast „bez markdownu” → „odpowiedź w zwykłych akapitach”. Konkretny
-   format wyjścia z opisem; gdy kod czyta wynik, użyj structured outputs ze schematem, nie prośby w prompcie.
-5. **Przykłady (few-shot):** 3–5, **trafne** (jak prawdziwe wejścia), **zróżnicowane** (w tym brzegowe, żeby model nie
-   złapał niezamierzonego wzorca), w tagach `<example>`. Przykład ustawia wzorzec bardzo silnie — jeśli wszystkie
-   zaczynają się tak samo, odpowiedzi też. Przykłady do promptu bierz z puli rozłącznej ze zbiorem ewaluacji.
-6. **Myślenie.** Zadania wieloetapowe, matematyka, analiza: włącz myślenie modelu (adaptacyjne, sterowane parametrem
-   `effort`; starsze modele: rozszerzone z budżetem) albo poproś o rozumowanie przed odpowiedzią i wynik w osobnym
-   tagu `<answer>`. **Nie używaj** przy prostej ekstrakcji, klasyfikacji i formatowaniu — dodaje koszt i opóźnienie
-   bez zysku; sprawdź ewaluacją, czy poprawia wynik.
-7. **Długi kontekst (20 tys. tokenów i więcej):** dokumenty na górze, każdy w `<document>` z `<source>`; instrukcje i
-   pytanie **na końcu**; przy gęstych dokumentach poproś najpierw o wypisanie cytatów istotnych dla pytania.
-8. **Układ pod cache:** część stała (instrukcje, narzędzia, przykłady, dokumenty) na początku, zmienna (data, dane
-   użytkownika, pytanie) na końcu. Cache pasuje po dokładnym prefiksie w kolejności narzędzia → system → wiadomości;
-   znacznik czasu lub identyfikator użytkownika w prefiksie zeruje trafienia. Zasady, minimalne długości i ceny: core-cost-control i `references/techniki-i-migracja.md`.
-9. **Szablony i wersje.** Prompt w pliku lub rejestrze, nie sklejany stringami po kodzie: szablon z nazwanymi
-   zmiennymi, wersja (SemVer lub data), opis zmiany, przypięty model. Zmianę wersji zawsze przepuszczasz przez zestaw
-   regresyjny (`ai-evals`); cykl życia w produkcji: ai-mlops.
-10. **Jedna zmiana na raz.** Zmień jedną rzecz, uruchom ewaluację na tych samych przypadkach, porównaj z poprzednią
-    wersją; zapisz wynik w opisie zmiany. Zmiana prompt + model naraz nie mówi, co zadziałało.
-11. **Migracja na nowszy model:** przeczytaj przewodnik migracji dostawcy, uruchom stary prompt na nowym modelu **bez
-    zmian** i zmierz; usuń obejścia (prefill, agresywne CRITICAL/MUST, ręczny budżet myślenia, prośby o „więcej starań”),
-    bo nowsze modele silniej słuchają promptu i bywają nadgorliwe; potem dopiero tuning.
+## Procedure
+1. **Diagnose what breaks** on 5–10 concrete bad outputs: wrong content, a wrong format, a skipped instruction,
+   overeagerness, a hallucination. Each symptom has a different fix (the table below). Without examples of failures do not start.
+2. **Lay out the structure** (the order from fixed to variable): the role and the goal → the context (why) → the task → the constraints
+   → the output format → examples → the input data. A role in one sentence is enough. An instruction with a reason ("do not use
+   an ellipsis, because the text is read by a speech synthesizer") works better than a bare ban.
+3. **Separate the parts with XML tags** when the prompt mixes instructions, context, examples and data: `<instructions>`,
+   `<context>`, `<example>` in `<examples>`, `<document>`. Consistent tag names across the whole prompt; user data always in a tag,
+   so that the model does not take it for instructions (core-agent-security).
+4. **Say what should be, not what should not.** Instead of "no markdown" → "the answer in plain paragraphs". A concrete
+   output format with a description; when code reads the result, use structured outputs with a schema, not a request in the prompt.
+5. **Examples (few-shot):** 3–5, **relevant** (like real inputs), **diverse** (including edge ones, so that the model does not
+   pick up an unintended pattern), in `<example>` tags. An example sets the pattern very strongly — if all of them
+   start the same way, so will the answers. Take the examples for the prompt from a pool disjoint from the evaluation set.
+6. **Thinking.** Multi-step tasks, mathematics, analysis: turn on the model's thinking (adaptive, steered by the `effort`
+   parameter; older models: extended with a budget) or ask for reasoning before the answer and the result in a separate
+   `<answer>` tag. **Do not use it** for simple extraction, classification and formatting — it adds cost and latency
+   without gain; check with an evaluation whether it improves the result.
+7. **Long context (20 thousand tokens and more):** documents at the top, each in `<document>` with `<source>`; the instructions and
+   the question **at the end**; with dense documents ask first for the quotes relevant to the question to be listed.
+8. **A layout for the cache:** the fixed part (instructions, tools, examples, documents) at the beginning, the variable one (the date, user
+   data, the question) at the end. The cache matches on the exact prefix in the order tools → system → messages;
+   a timestamp or a user identifier in the prefix zeroes the hits. Rules, minimum lengths and prices: core-cost-control and `references/techniques-and-migration.md`.
+9. **Templates and versions.** The prompt in a file or a registry, not glued together from strings across the code: a template with named
+   variables, a version (SemVer or a date), a change description, a pinned model. You always run a version change through the regression
+   set (`ai-evals`); the lifecycle in production: ai-mlops.
+10. **One change at a time.** Change one thing, run the evaluation on the same cases, compare with the previous
+    version; record the result in the change description. A prompt + model change at once does not tell what worked.
+11. **Migrating to a newer model:** read the provider's migration guide, run the old prompt on the new model **without
+    changes** and measure; remove the workarounds (prefill, aggressive CRITICAL/MUST, a manual thinking budget, requests for "more effort"),
+    because newer models follow the prompt more strongly and tend to be overeager; only then tuning.
 
-## Objaw → poprawka
-| Objaw | Zwykła przyczyna | Poprawka |
+## Symptom → fix
+| Symptom | Usual cause | Fix |
 |---|---|---|
-| ignoruje instrukcję | ginie w długim prompcie, sprzeczność | przenieś na początek lub koniec, usuń konflikt, podaj powód |
-| zmienny format | opis zamiast schematu | structured outputs lub przykład |
-| zbyt dosłowny / zbyt gorliwy | zakazy, wielkie litery, „zawsze” | normalny ton, powód zamiast nacisku |
-| odpowiedzi jak przykłady | jeden wzorzec w przykładach | zróżnicuj, zmniejsz liczbę |
-| gubi szczegóły w dokumentach | pytanie na górze, brak tagów | dokumenty na górze, pytanie na końcu, cytaty |
-| wolno i drogo | myślenie przy prostym zadaniu | najpierw tańszy model i niższy effort, potem prompt |
-| pewna odpowiedź bez podstaw | presja, by odpowiedzieć zawsze | pozwól na „nie wiem”, cytaty przed wnioskami (core-grounding) |
-| wynik minimalny, „generyczny” | ogólna prośba; nowe modele robią dokładnie to, o co proszono | napisz zakres i ambicję wprost („pełna wersja, wykraczająca poza podstawy”) |
-| dwie instrukcje się wykluczają | prompt rósł latami | priorytety wprost lub usuń jedną |
+| ignores an instruction | gets lost in a long prompt, a contradiction | move it to the beginning or the end, remove the conflict, give a reason |
+| a variable format | a description instead of a schema | structured outputs or an example |
+| too literal / too eager | bans, capital letters, "always" | a normal tone, a reason instead of pressure |
+| answers like the examples | one pattern in the examples | diversify, reduce the number |
+| loses details in documents | the question at the top, no tags | documents at the top, the question at the end, quotes |
+| slow and expensive | thinking on a simple task | first a cheaper model and a lower effort, then the prompt |
+| a confident answer without basis | pressure to always answer | allow "I don't know", quotes before conclusions (core-grounding) |
+| a minimal, "generic" result | a general request; new models do exactly what was asked | write the scope and the ambition explicitly ("a full version, going beyond the basics") |
+| two instructions exclude each other | the prompt grew over years | explicit priorities or remove one |
 
-## Przykład
-**Wejście:** prompt klasyfikujący zgłoszenia, 1 800 tokenów, data i imię klienta w pierwszej linii, „MUSISZ ZAWSZE
-zwrócić JSON”, 30 błędnych etykiet na 200 przypadków, cache nie trafia.
-**Wynik:**
-- stały prefiks (instrukcje, 4 zróżnicowane `<example>`, definicje kategorii) na początku; data i `<ticket>` z treścią zgłoszenia na końcu → cache działa;
-- `MUSISZ ZAWSZE JSON` → structured outputs ze schematem (enum kategorii); w prompcie jedno zdanie o kategoriach brzegowych z powodem;
-- brak myślenia (klasyfikacja), tańszy model; wersja `zgloszenia-klasyfikator@1.3.0`, opis zmiany;
-- ewaluacja 200 przypadków przed i po: 170/200 → 186/200 (85% → 93%); regresyjny zestaw bez nowych porażek.
+## Example
+**Input:** a ticket classification prompt, 1,800 tokens, the date and the customer's first name in the first line, "YOU MUST ALWAYS
+return JSON", 30 wrong labels out of 200 cases, the cache does not hit.
+**Result:**
+- a fixed prefix (instructions, 4 diverse `<example>`, category definitions) at the beginning; the date and `<ticket>` with the ticket content at the end → the cache works;
+- `YOU MUST ALWAYS JSON` → structured outputs with a schema (an enum of categories); in the prompt one sentence about the edge categories with a reason;
+- no thinking (classification), a cheaper model; the version `ticket-classifier@1.3.0`, a change description;
+- an evaluation of 200 cases before and after: 170/200 → 186/200 (85% → 93%); the regression set without new failures.
 
-## Checklista
-- [ ] kryterium sukcesu i zestaw przypadków przed zmianą; objawy opisane na przykładach
-- [ ] struktura: rola, kontekst z powodem, zadanie, ograniczenia pozytywnie, format, przykłady 3–5 zróżnicowanych
-- [ ] dane i dokumenty w tagach XML; długi kontekst: dokumenty na górze, pytanie na końcu
-- [ ] myślenie tylko tam, gdzie ewaluacja pokazuje zysk; format wyjścia przez schemat, nie prefill
-- [ ] stały prefiks na początku, zmienne na końcu; brak czasu i identyfikatorów w prefiksie
-- [ ] szablon z wersją, przypięty model, zmiana przepuszczona przez ewaluacje, jedna zmiana naraz
-- [ ] migracja: stary prompt bez zmian na nowym modelu, usunięte obejścia, dopiero potem tuning
+## Checklist
+- [ ] a success criterion and a set of cases before the change; symptoms described with examples
+- [ ] structure: role, context with a reason, task, constraints stated positively, format, 3–5 diverse examples
+- [ ] data and documents in XML tags; long context: documents at the top, the question at the end
+- [ ] thinking only where the evaluation shows a gain; the output format through a schema, not prefill
+- [ ] the fixed prefix at the beginning, variables at the end; no time and identifiers in the prefix
+- [ ] a template with a version, a pinned model, the change run through the evaluations, one change at a time
+- [ ] migration: the old prompt unchanged on the new model, workarounds removed, only then tuning
 
-## Źródła
-- Anthropic, „Prompting best practices” (platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, odczyt 2026-10-17):
-  przykłady 3–5, trafne i zróżnicowane w `<example>`; tagi XML; dokumenty na górze, pytanie na końcu (do ok. 30% poprawy w testach); adaptive thinking i `effort`; prefill na ostatniej turze nieobsługiwany od modeli 4.6; łagodzenie agresywnego języka.
-- Anthropic, „Prompt engineering overview” (ta sama domena, odczyt 2026-10-17): kryteria sukcesu i ewaluacje przed promptowaniem.
-- Anthropic, „Prompting Claude Opus 5.5”, „… Sonnet 5.5”, „… Haiku 5.5”, „Reduce hallucinations”, „Increase output
-  consistency” (platform.claude.com, odczyt 2026-10-20): effort i `max_tokens` w modelach 5.5, wczesne kończenie pracy
-  agenta, prawo do „nie wiem”, structured outputs zamiast prośby o format.
-- Anthropic, „Prompt caching” (platform.claude.com/docs/en/build-with-claude/prompt-caching, odczyt 2026-10-17): kolejność prefiksu, TTL 5 min i 1 godz., unieważnianie.
-- OpenAI, przewodnik promptowania (developers.openai.com/api/docs/guides/prompting) — wyniki wyszukiwania z 2026-10-17: rola w wiadomości systemowej, przykłady w blokach, cache po prefiksie; strona nie została otwarta bezpośrednio [niezweryfikowane]. Przypinanie wersji modelu — zalecenie znane z drugiego źródła [niezweryfikowane].
+## Sources
+- Anthropic, "Prompting best practices" (platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices, read 2026-10-17):
+  3–5 examples, relevant and diverse in `<example>`; XML tags; documents at the top, the question at the end (up to approx. 30% improvement in tests); adaptive thinking and `effort`; prefill on the last turn unsupported since the 4.6 models; softening aggressive language.
+- Anthropic, "Prompt engineering overview" (the same domain, read 2026-10-17): success criteria and evaluations before prompting.
+- Anthropic, "Prompting Claude Opus 5.5", "… Sonnet 5.5", "… Haiku 5.5", "Reduce hallucinations", "Increase output
+  consistency" (platform.claude.com, read 2026-10-20): effort and `max_tokens` in the 5.5 models, the agent ending work
+  early, the right to "I don't know", structured outputs instead of a request for a format.
+- Anthropic, "Prompt caching" (platform.claude.com/docs/en/build-with-claude/prompt-caching, read 2026-10-17): the prefix order, TTL 5 min and 1 hour, invalidation.
+- OpenAI, the prompting guide (developers.openai.com/api/docs/guides/prompting) — search results from 2026-10-17: the role in the system message, examples in blocks, the cache by prefix; the page was not opened directly [unverified]. Pinning the model version — a recommendation known from a second source [unverified].
 
-Opisane własnymi słowami.
+Described in our own words.

@@ -1,7 +1,7 @@
 **Test-driven (TDD)**
-- Kod produkcyjny piszesz dopiero po teście, który NIE przechodzi z właściwego powodu: najpierw test, uruchomienie
-  (czerwony), potem minimalny kod (zielony), na końcu refaktoryzacja. Pilnuje tego hook `tdd_guard`.
-- Przy błędzie najpierw test odtwarzający błąd. Jeden test = jedno zachowanie, opisane przez publiczne API.
-- Oczekiwane wartości bierzesz ze specyfikacji i przykładów, nie z kodu. Testów nie osłabiasz, nie usuwasz ani nie
-  wyłączasz, żeby „przeszło”.
-- W raporcie podajesz dowód czerwonego testu (polecenie i fragment porażki) i zielonego.
+- You write production code only after a test that FAILS for the right reason: first the test, a run (red), then the
+  minimal code (green), finally refactoring. The `tdd_guard` hook enforces this.
+- With a bug, first a test reproducing the bug. One test = one behaviour, described through the public API.
+- You take expected values from the specification and examples, not from the code. You do not weaken, delete or
+  disable tests to make them "pass".
+- In the report you give the evidence of the red test (the command and a fragment of the failure) and of the green one.

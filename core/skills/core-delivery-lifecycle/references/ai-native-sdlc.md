@@ -1,191 +1,191 @@
-# Cykl życia AI-native — pętla z artefaktami i bramkami
+# The AI-native lifecycle — a loop with artifacts and gates
 
-> **Spis treści:** 1. Co się zmienia · 2. Łańcuch artefaktów w fabryce · 3. Sześć etapów — co robi agent, co człowiek, co mierzyć · 4. Praktyki etapu Build i Test · 5. Ciągłe ewaluacje konfiguracji agenta · 6. Etap Deploy — agent do bramki produkcyjnej i ani kroku… · 7. Etap Maintain — pasma kontrolne zamiast ciągłego… · 8. Źródło prawdy przy istniejących narzędziach · 9. Ustawienia zarządzane w organizacjach regulowanych · 10. Kolejność wdrażania w zespole · 11. AI-DLC (AWS) — słownik i rytuały · 12. Antywzorce · 13. Refinement, osąd i miary autonomii
+> **Contents:** 1. What changes · 2. The chain of artifacts in the factory · 3. Six stages — what the agent does, what the human does,… · 4. Build and Test stage practices · 5. Continuous evaluations of the agent configuration · 6. The Deploy stage — the agent up to the production gate… · 7. The Maintain stage — control bands instead of constant… · 8. The source of truth with existing tools · 9. Managed settings in regulated organisations · 10. The rollout order in a team · 11. AI-DLC (AWS) — glossary and rituals · 12. Anti-patterns · 13. Refinement, judgement and autonomy measures
 
-Na podstawie „The AI-Native SDLC Playbook” (Anthropic, 21.08.2026) i kursu Anthropic Academy o tym samym tytule
-oraz „AI-Driven Development Life Cycle” (AWS, 31.07.2025). Opisane własnymi słowami i odwzorowane na mechanizmy
-fabryki.
+Based on "The AI-Native SDLC Playbook" (Anthropic, 21.08.2026) and the Anthropic Academy course of the same title, and
+"AI-Driven Development Life Cycle" (AWS, 31.07.2025). Described in our own words and mapped to the factory's mechanisms.
 
-## 1. Co się zmienia
-- **Wąskie gardło się przesuwa.** Gdy agenci piszą kod w godziny, najwolniejsze stają się etapy obok budowania:
-  planowanie, przegląd i testy, wdrożenie, utrzymanie. Usprawniasz je, a nie samo pisanie kodu.
-- **Kontrole budowane pod ludzi przestają pasować.** Ręczny przegląd każdej linii nie nadąża za diffem pisanym przez
-  agentów. Cele kontroli zostają, zmienia się sposób ich egzekwowania: warstwy przeglądu przez agentów, hooki
-  i reguły działające w chwili, gdy agent działa, a człowiek przy kodzie krytycznym i regulowanym.
-- **Z linii robi się pętla.** Każdy etap kończy się **artefaktem zapisanym w repozytorium**, a następny zaczyna od
-  jego przeczytania. Ciąg commitów jest jednocześnie śladem audytowym: kto o co prosił, co agent wytworzył, kto
-  zatwierdził.
-- **Człowiek zostaje nad pętlą.** Odpowiada za każdą decyzję wymagającą osądu; jego uwaga przenosi się na bramki
-  i na to, co agent oznaczył, zamiast zaczynać każdy etap od zera.
+## 1. What changes
+- **The bottleneck moves.** When agents write code in hours, the stages around building become the slowest: planning,
+  review and tests, deployment, maintenance. You improve those, not the writing of code itself.
+- **Controls built for people stop fitting.** A manual review of every line cannot keep up with a diff written by
+  agents. The goals of the controls stay, the way they are enforced changes: layers of review by agents, hooks and rules
+  acting at the moment the agent acts, and a human at critical and regulated code.
+- **The line becomes a loop.** Every stage ends with **an artifact saved in the repository**, and the next one starts by
+  reading it. The sequence of commits is at the same time the audit trail: who asked for what, what the agent produced,
+  who approved.
+- **The human stays above the loop.** They are accountable for every decision that needs judgement; their attention
+  moves to the gates and to what the agent flagged, instead of starting every stage from scratch.
 
-## 2. Łańcuch artefaktów w fabryce
-| Etap (playbook) | Artefakt w playbooku | Odpowiednik w fabryce | Kto zatwierdza |
+## 2. The chain of artifacts in the factory
+| Stage (playbook) | Artifact in the playbook | Equivalent in the factory | Who approves |
 |---|---|---|---|
-| Plan — zamiar | `intent.md`: co, po co, ograniczenia, kryteria sukcesu | `01-discovery/brief.md` (projekt) albo krótki brief zmiany; plan projektu `project-plan.md` | właściciel produktu (B1) |
-| Design — wymagania i projekt razem | `spec.md` z zasadami organizacji jako skille; zastrzeżenia oznaczone dla właścicieli polityk | `03-requirements/requirements.md` + `04-architecture/` (ADR, model zagrożeń, `privacy.md`) | właściciel produktu, właściciele polityk (B2, B3) |
-| Build — plan przed kodem | `plan.md`: pliki, kolejność, testy — przed kodem | `05-plan/plan.md` (cięcia) + sekcja **Plan kroku** w `06-delivery/NNN-*.md`, zatwierdzona przed kodem | inżynier / człowiek |
-| Test — pętla weryfikacji | diff z testami, dowód w transkrypcie | TDD (`tdd_guard`), polecenia weryfikacji w rolach, raport kroku z wynikiem poleceń | automatycznie + przegląd |
-| Deploy — przegląd i bramka | PR z ustaleniami przeglądu | PR, `/code-review`, security-reviewer, `07-review/` | człowiek (B4, B5) |
-| Maintain — domknięcie pętli | zapis incydentu → nowy `intent.md` | `08-operations/` → nowy brief zmiany wraca do etapu Plan | właściciel usługi (B6) |
+| Plan — intent | `intent.md`: what, what for, constraints, success criteria | `01-discovery/brief.md` (a project) or a short change brief; the project plan `project-plan.md` | the product owner (B1) |
+| Design — requirements and design together | `spec.md` with the organisation's rules as skills; reservations flagged for the policy owners | `03-requirements/requirements.md` + `04-architecture/` (ADR, threat model, `privacy.md`) | the product owner, the policy owners (B2, B3) |
+| Build — a plan before the code | `plan.md`: files, order, tests — before the code | `05-plan/plan.md` (slices) + the **Step plan** section in `06-delivery/NNN-*.md`, approved before the code | the engineer / the human |
+| Test — the verification loop | a diff with tests, evidence in the transcript | TDD (`tdd_guard`), verification commands in the roles, the step report with the commands' output | automatically + review |
+| Deploy — review and the gate | a PR with the review findings | the PR, `/code-review`, security-reviewer, `07-review/` | the human (B4, B5) |
+| Maintain — closing the loop | an incident record → a new `intent.md` | `08-operations/` → a new change brief goes back to the Plan stage | the service owner (B6) |
 
-Zasada z playbooka: **nic nie jest implementowane bez zaakceptowanego planu.** Gdy realizacja odchodzi od planu,
-plan aktualizujesz w tym samym commicie co kod.
+The playbook's rule: **nothing is implemented without an accepted plan.** When delivery departs from the plan, you
+update the plan in the same commit as the code.
 
-## 3. Sześć etapów — co robi agent, co człowiek, co mierzyć
-| Etap | Agent | Człowiek | Mechanizm fabryki | Miara wyprzedzająca | Miara opóźniona |
+## 3. Six stages — what the agent does, what the human does, what to measure
+| Stage | Agent | Human | Factory mechanism | Leading measure | Lagging measure |
 |---|---|---|---|---|---|
-| Plan | dopytuje (zakres, użytkownicy, ograniczenia, kryteria sukcesu) i zapisuje zamiar | zatwierdza zamiar | core-plan-interview, core-problem-routing; planowanie projektu (pack-it: proc-project-planning) | czas od pierwszej rozmowy do zatwierdzonego briefu | odsetek briefów, które przeszły dalej bez przeróbki |
-| Design | pisze wymagania i projekt z zasadami organizacji (skille), oznacza zastrzeżenia | rozstrzyga zastrzeżenia z właścicielami polityk | skille domeny, architektury, prywatności i testów od specyfikacji (pack-it: ddd-*, arch-*, arch-privacy-compliance, qa-spec-first-testing) | czas od briefu do zatwierdzonych wymagań | zmiany wymagań po rozpoczęciu realizacji |
-| Build | w trybie planowania czyta kod bez zmian, proponuje plan; po akceptacji realizuje; równoległe sesje w osobnych worktree | zatwierdza plan, steruje | `CLAUDE.md`, skille, hooki, wykonawcy (subagenci) | odsetek zmian scalonych po pierwszym podejściu; czas od planu do scalenia | liczba poprawek na zmianę; zgodność diffu z planem |
-| Test | sam sprawdza swoją pracę (testy, build, zrzuty ekranu) i iteruje, aż przejdzie | ocenia zachowanie | `tdd_guard`, jedno polecenie weryfikacji, ewaluacje | odsetek zmian agenta zielonych w CI za pierwszym razem | czas przeglądu PR; wskaźnik nieudanych zmian |
-| Deploy | przegląda PR wg `REVIEW.md`, poprawia uwagi na swoich PR; w CI zadania wymagające oceny (triaż porażki buildu, szkic changelogu) | zatwierdza scalenie i wdrożenie | core-git-workflow, skille CI/CD i wydań (pack-it: ops-ci-cd, ops-release-engineering), ochrona gałęzi | czas do pierwszego przeglądu; uwagi rozwiązane bez ręcznej zmiany kodu | defekty i podatności, które przeszły na produkcję |
-| Maintain | diagnozuje naruszenie pasma kontrolnego, pisze brief zmiany z dowodami | triaż i zatwierdzenie | `scripts/control_band.py`, skille SRE i triażu zgłoszeń (pack-it: ops-sre-incidents, proc-issue-triage) | czas od naruszenia do briefu w kolejce | powtórzenia incydentów tej samej klasy |
+| Plan | asks (scope, users, constraints, success criteria) and records the intent | approves the intent | core-plan-interview, core-problem-routing; project planning (pack-it: proc-project-planning) | time from the first conversation to an approved brief | the share of briefs that moved on without rework |
+| Design | writes the requirements and the design with the organisation's rules (skills), flags reservations | settles the reservations with the policy owners | domain, architecture, privacy and spec-first test skills (pack-it: ddd-*, arch-*, arch-privacy-compliance, qa-spec-first-testing) | time from the brief to approved requirements | requirement changes after delivery started |
+| Build | in plan mode reads the code without changes, proposes a plan; after acceptance delivers; parallel sessions in separate worktrees | approves the plan, steers | `CLAUDE.md`, skills, hooks, executors (subagents) | the share of changes merged on the first attempt; time from the plan to the merge | the number of fixes per change; agreement of the diff with the plan |
+| Test | checks its own work (tests, build, screenshots) and iterates until it passes | judges the behaviour | `tdd_guard`, one verification command, evaluations | the share of the agent's changes green in CI the first time | PR review time; the change failure rate |
+| Deploy | reviews the PR per `REVIEW.md`, addresses remarks on its PRs; in CI tasks that need judgement (triage of a build failure, a changelog draft) | approves the merge and the deployment | core-git-workflow, CI/CD and release skills (pack-it: ops-ci-cd, ops-release-engineering), branch protection | time to the first review; remarks resolved without a manual code change | defects and vulnerabilities that reached production |
+| Maintain | diagnoses a control band violation, writes a change brief with evidence | triage and approval | `scripts/control_band.py`, SRE and issue triage skills (pack-it: ops-sre-incidents, proc-issue-triage) | time from the violation to a brief in the queue | repeated incidents of the same class |
 
-Miary DORA (częstotliwość wdrożeń, czas realizacji zmiany, wskaźnik nieudanych zmian, czas przywrócenia): skill
-ciągłego dostarczania (pack-it: eng-continuous-delivery).
+DORA measures (deployment frequency, lead time for changes, change failure rate, time to restore): the continuous
+delivery skill (pack-it: eng-continuous-delivery).
 
-## 4. Praktyki etapu Build i Test
-- **Tryb planowania jako start.** Agent czyta kod i proponuje plan bez zmian w plikach; plan ma być na tyle jasny,
-  żeby wykonał go ktoś, kto nie zna kodu.
-- **`CLAUDE.md` jako wiedza instytucjonalna.** Polecenia, konwencje, architektura, częste błędy. `/init` daje wersję
-  startową, zespół ją utrzymuje jak kod. **Gdy agent popełni ten sam błąd drugi raz, poprawka trafia do `CLAUDE.md`**
-  (za zgodą człowieka; lekcje projektu: core-project-record).
-- **Skille i hooki.** Skille niosą zasady (bezpieczeństwo, konwencje API, marka) i działają w trakcie pisania. Hooki
-  to warstwa deterministyczna: blokada chronionych ścieżek, formatowanie i lint po edycji, sekrety poza diffem.
-- **Pętla weryfikacji.** Agent ma jedno polecenie sprawdzające (np. `make test`), iteruje, aż przejdzie, a dowód
-  (dosłowny wynik testów, log buildu, różnica zrzutów) jest w transkrypcie przed przeglądem.
-- **Poprawka błędu.** Najpierw czerwony test odtwarzający błąd, potem poprawka **bez zmieniania tego testu**. W fabryce
-  pilnuje tego `tdd_guard`: reguły A–B (kod po czerwonym teście) i C (ostrzeżenie lub blokada przy osłabieniu testu:
-  mniej asercji, usunięty test, dopisane pominięcie; `CLAUDE_TDD_WEAKEN=warn|ask|deny|off`).
-- **Równoległe sesje i subagenci.** Niezależne zadania w osobnych worktree gita; powtarzalne zadania jako subagenci
-  z własnym kontekstem (w fabryce wykonawcy person).
+## 4. Build and Test stage practices
+- **Plan mode as the start.** The agent reads the code and proposes a plan without changing files; the plan should be
+  clear enough for someone who does not know the code to carry out.
+- **`CLAUDE.md` as institutional knowledge.** Commands, conventions, architecture, frequent mistakes. `/init` gives a
+  starting version, the team maintains it like code. **When the agent makes the same mistake a second time, the fix goes
+  into `CLAUDE.md`** (with the human's consent; project lessons: core-project-record).
+- **Skills and hooks.** Skills carry the rules (security, API conventions, the brand) and act while writing. Hooks are
+  the deterministic layer: blocking protected paths, formatting and lint after an edit, secrets kept out of the diff.
+- **The verification loop.** The agent has one checking command (e.g. `make test`), iterates until it passes, and the
+  evidence (the literal test output, the build log, a screenshot diff) is in the transcript before the review.
+- **A bug fix.** First a red test reproducing the bug, then the fix **without changing that test**. In the factory
+  `tdd_guard` enforces this: rules A–B (code after a red test) and C (a warning or a block when a test is weakened: fewer
+  assertions, a deleted test, an added skip; `CLAUDE_TDD_WEAKEN=warn|ask|deny|off`).
+- **Parallel sessions and subagents.** Independent tasks in separate git worktrees; repeatable tasks as subagents with
+  their own context (in the factory, the personas' executors).
 
-## 5. Ciągłe ewaluacje konfiguracji agenta
-Zmiana modelu, `CLAUDE.md`, skilla albo hooka może pogorszyć pracę agenta tak samo jak zmiana kodu pogarsza aplikację.
-- Zbierz **20–50 prawdziwych zadań** z oczekiwanym wynikiem i zapisz każde jako scenariusz: polecenie + sprawdzenia
-  dopuszczalnego zachowania.
-- Uruchamiaj zestaw bez interakcji według harmonogramu i przy każdej zmianie `CLAUDE.md`, skilli i hooków.
-- **Każdy incydent produkcyjny staje się stałym scenariuszem** (obok testu regresyjnego w kodzie).
-- Scenariusze, które przestały rozróżniać dobre i złe odpowiedzi (bo modele się poprawiły), wymieniasz.
-- W fabryce: skille mają scenariusze w `tests/skill_evals/` (bramka `skill_gate.py`, płatny przebieg tylko za zgodą
-  człowieka); workflow `team-factory` uruchamia testy bez modelu przy zmianach w `.claude/` i `.tf/factory/`.
-- **Własny prompt lub agent w produkcie albo w CI** (przegląd PR, triaż zgłoszeń) ewaluujesz macierzą
-  *przypadki × kandydaci* (prompty, modele, konfiguracje), np. narzędziem typu promptfoo: jeden plik z promptami,
-  kandydatami i przypadkami z asercjami. Trzy rodzaje asercji:
-  1. strukturalna — wynik to poprawny JSON zgodny ze schematem, na którym stoi bramka;
-  2. sędzia LLM — drugi model ocenia treść wg opisanego kryterium („wskazuje wstrzyknięcie SQL w linii X”);
-  3. kod — twardy warunek (np. ocena ≤ 3 dla diffu z podłożonym błędem).
-  W każdej komórce macierzy: zaliczone/niezaliczone, koszt i czas.
-- Przypadki to diffy z **podłożonymi, znanymi błędami** oraz diffy czyste (kontrola fałszywych alarmów). Domyślnie
-  jeden niezaliczony przypadek = czerwony przebieg; luzowanie progu tylko świadomie i z zapisem.
-- Zestaw przechodzi każda zmiana promptu, modelu i kryteriów — wyłapuje cichą regresję (lepiej łapie błąd A,
-  przestał łapać B). Wybór tańszego lub droższego modelu opierasz na macierzy, nie na jednym PR.
+## 5. Continuous evaluations of the agent configuration
+A change of the model, `CLAUDE.md`, a skill or a hook can worsen the agent's work just as a code change worsens an
+application.
+- Collect **20–50 real tasks** with an expected result and record each as a scenario: a prompt + checks of acceptable
+  behaviour.
+- Run the set non-interactively on a schedule and at every change of `CLAUDE.md`, skills and hooks.
+- **Every production incident becomes a permanent scenario** (next to the regression test in the code).
+- Scenarios that stopped telling good and bad answers apart (because the models improved) you replace.
+- In the factory: skills have scenarios in `tests/skill_evals/` (the `skill_gate.py` gate, a paid run only with the
+  human's consent); the `team-factory` workflow runs the tests without a model on changes in `.claude/` and `.tf/factory/`.
+- **Your own prompt or agent in the product or in CI** (PR review, issue triage) you evaluate with a *cases × candidates*
+  matrix (prompts, models, configurations), e.g. with a tool like promptfoo: one file with prompts, candidates and cases
+  with assertions. Three kinds of assertions:
+  1. structural — the output is valid JSON matching the schema the gate relies on;
+  2. an LLM judge — a second model judges the content per a described criterion ("points to an SQL injection on line X");
+  3. code — a hard condition (e.g. a score ≤ 3 for a diff with a planted bug).
+  In every cell of the matrix: passed/failed, cost and time.
+- The cases are diffs with **planted, known bugs** and clean diffs (a false alarm check). By default one failed case = a
+  red run; loosening the threshold only consciously and with a record.
+- Every change of the prompt, the model and the criteria goes through the set — it catches a silent regression (it
+  catches bug A better, it stopped catching B). You base the choice of a cheaper or more expensive model on the matrix,
+  not on one PR.
 
-## 6. Etap Deploy — agent do bramki produkcyjnej i ani kroku dalej
-- **Przegląd PR przez AI** (core-git-workflow): zasady przeglądu w `REVIEW.md` w katalogu głównym repozytorium,
-  przebiegi „błędy i logika”, „bezpieczeństwo”, „zgodność ze specyfikacją i planem”, waga każdego ustalenia,
-  comiesięczne strojenie (ocena trafności, limit drobiazgów, wykluczenie kodu generowanego i tego, co sprawdza CI).
-- **Rozdział obowiązków:** agent nie zatwierdza własnego kodu; scalenie do gałęzi głównej wymaga zatwierdzenia
-  człowieka (ochrona gałęzi). Decyzje zostają w historii PR jako ślad audytowy.
-- **Hooki jako bramki zatwierdzenia:** hook może zapytać człowieka i wstrzymać akcję (np. wdrożenie produkcyjne
-  wymaga imiennego zatwierdzenia).
-- **Agent w CI:** uruchamiany bez interakcji do zadań wymagających oceny, w piaskownicy, z poświadczeniami
-  o najmniejszym zakresie (core-agent-security; pack-it: ops-ci-cd).
+## 6. The Deploy stage — the agent up to the production gate and not a step further
+- **An AI review of the PR** (core-git-workflow): the review rules in `REVIEW.md` in the repository root, the passes
+  "bugs and logic", "security", "agreement with the specification and the plan", a severity for every finding, monthly
+  tuning (an assessment of accuracy, a limit on nitpicks, excluding generated code and what CI checks).
+- **Separation of duties:** the agent does not approve its own code; merging into the main branch needs a human's
+  approval (branch protection). The decisions stay in the PR history as the audit trail.
+- **Hooks as approval gates:** a hook can ask the human and hold an action (e.g. a production deployment needs a named
+  approval).
+- **An agent in CI:** run non-interactively for tasks that need judgement, in a sandbox, with least-scope credentials
+  (core-agent-security; pack-it: ops-ci-cd).
 
-## 7. Etap Maintain — pasma kontrolne zamiast ciągłego patrzenia
-- **Wykrywanie deterministyczne:** skrypt liczy średnią i odchylenie standardowe metryki (np. odsetek porażek testów,
-  odsetek 5xx, czas cyklu PR) i stosuje reguły Western Electric — `scripts/control_band.py`.
-- **Poziomy reakcji w konfiguracji pod kontrolą wersji** (propozycja playbooka):
+## 7. The Maintain stage — control bands instead of constant watching
+- **Deterministic detection:** a script computes the mean and the standard deviation of a metric (e.g. the test failure
+  rate, the 5xx rate, the PR cycle time) and applies the Western Electric rules — `scripts/control_band.py`.
+- **Reaction levels in a configuration under version control** (the playbook's proposal):
 
-  | Poziom | Warunek (domyślnie w skrypcie) | Reakcja |
+  | Level | Condition (the script's default) | Reaction |
   |---|---|---|
-  | log | 4 z 5 punktów poza 1σ albo 8 po jednej stronie średniej | tylko zapis |
-  | diagnose | 2 z 3 punktów poza 2σ | agent diagnozuje **tylko do odczytu** |
-  | act | punkt poza 3σ | agent może działać: otworzyć PR albo uruchomić wcześniej zatwierdzony runbook |
+  | log | 4 of 5 points beyond 1σ or 8 on one side of the mean | a record only |
+  | diagnose | 2 of 3 points beyond 2σ | the agent diagnoses **read-only** |
+  | act | a point beyond 3σ | the agent may act: open a PR or run a previously approved runbook |
 
-- Agent zapisuje **brief zmiany** z dowodami anomalii, proponowanym wynikiem, systemami, których dotyczy, i pytaniami.
-  Brief przechodzi normalną pętlę od etapu Plan, a zmiana — normalny przegląd PR.
-- Okresowe skany bezpieczeństwa: ustalenie wąskie → poprawka i PR; szerokie → brief zmiany. Każda wydana poprawka
-  dodaje scenariusz ewaluacji.
-- Uprawnienia i ustawienia zarządzane blokują agentowi nieautoryzowany dostęp do produkcji; wywołania, ustalenia
-  i triaż mają znacznik czasu.
+- The agent writes **a change brief** with the evidence of the anomaly, the proposed outcome, the systems concerned and
+  questions. The brief goes through the normal loop from the Plan stage, and the change — through the normal PR review.
+- Periodic security scans: a narrow finding → a fix and a PR; a broad one → a change brief. Every released fix adds an
+  evaluation scenario.
+- Permissions and managed settings block the agent's unauthorised access to production; calls, findings and triage have
+  a timestamp.
 
-## 8. Źródło prawdy przy istniejących narzędziach
-Gdy firma ma Jirę, ServiceNow albo narzędzie do wymagań, nazwij jedno źródło prawdy:
-- **repozytorium** — artefakty markdown są wiążące, narzędzie zewnętrzne odwołuje się do commitów;
-- **narzędzie zewnętrzne** — markdown to kopia robocza, a konektor (MCP) zapisuje ustalenia z powrotem;
-- **minimum: powiązanie** — oba miejsca trzymają odnośniki do siebie (np. klucz zgłoszenia w nagłówku artefaktu).
-Szczegóły dla dziennika projektu: core-project-record.
+## 8. The source of truth with existing tools
+When the company has Jira, ServiceNow or a requirements tool, name one source of truth:
+- **the repository** — the markdown artifacts are binding, the external tool refers to commits;
+- **the external tool** — the markdown is a working copy, and a connector (MCP) writes the findings back;
+- **the minimum: a link** — both places keep references to each other (e.g. the issue key in the artifact's header).
+Details for the project record: core-project-record.
 
-## 9. Ustawienia zarządzane w organizacjach regulowanych
-Zespół platformowy wdraża nienegocjowalne kontrole przez ustawienia zarządzane Claude Code (`managed-settings.json`
-przez plik, MDM albo konsolę; mają pierwszeństwo przed ustawieniami użytkownika i projektu, poza nielicznymi
-wyjątkami bezpieczeństwa). Kategorie z playbooka:
-- odmowy uprawnień (sekrety, dowolny ruch wychodzący);
-- wymuszona piaskownica (izolacja systemu plików i sieci);
-- zatwierdzenia tylko przez hooki dla chronionych akcji;
-- zarządzane serwery MCP i lista dozwolonych wtyczek, skilli i agentów;
-- minimalne wersje (odmowa startu na niezatwierdzonym modelu).
-Nazwy kluczy sprawdzasz w dokumentacji (code.claude.com/docs/en/managed-settings) dla swojej wersji Claude Code —
-nie zgadujesz ich (core-grounding). Fabryka instaluje się tylko lokalnie w projekcie i nie zmienia tych ustawień.
+## 9. Managed settings in regulated organisations
+The platform team deploys non-negotiable controls through Claude Code managed settings (`managed-settings.json` via a
+file, MDM or the console; they take precedence over user and project settings, except for a few security exceptions).
+The playbook's categories:
+- permission denials (secrets, arbitrary outbound traffic);
+- an enforced sandbox (isolation of the file system and the network);
+- approvals only through hooks for protected actions;
+- managed MCP servers and an allowlist of plugins, skills and agents;
+- minimum versions (refusing to start on an unapproved model).
+You check the key names in the documentation (code.claude.com/docs/en/managed-settings) for your Claude Code version —
+you do not guess them (core-grounding). The factory installs only locally in the project and does not change these settings.
 
-## 10. Kolejność wdrażania w zespole
-Playbook dzieli zmianę na 12 modułowych „zagrań” w pięciu poziomach zależności. Zaczyna się od ręcznego
-uruchamiania każdego etapu, a kończy pętlą, w której zaakceptowany artefakt uruchamia następną bramkę.
+## 10. The rollout order in a team
+The playbook splits the change into 12 modular "plays" on five dependency levels. It starts with running every stage by
+hand and ends with a loop in which an accepted artifact triggers the next gate.
 
-| Poziom | Zagranie | Stan w fabryce |
+| Level | Play | State in the factory |
 |---|---|---|
-| 1 (bez zależności) | zapis zamiaru, `CLAUDE.md`, skille, pętla weryfikacji, hooki, tryb planowania | jest: brief, `CLAUDE.md`, skille rdzenia i nakładek, `tdd_guard` i hooki bezpieczeństwa, core-plan-interview |
-| 2 | subagenci (wymaga `CLAUDE.md`), ewaluacje (wymaga `CLAUDE.md` i pętli weryfikacji) | jest: wykonawcy person; ewaluacje skilli; brak zestawu zadań projektu |
-| 3 | wymagania i projekt (zamiar + skille), przegląd PR (ewaluacje + subagenci) | jest: fazy 2–4; przegląd PR — `REVIEW.md` do założenia w projekcie |
-| 4 | CI/CD (przegląd PR + hooki) | częściowo: workflow `team-factory`, skill CI/CD (pack-it: ops-ci-cd) |
-| 5 | domknięcie pętli (CI/CD + zamiar) | faza 9, `control_band.py`; automatyczne uruchamianie agenta — decyzja człowieka |
+| 1 (no dependencies) | recording the intent, `CLAUDE.md`, skills, the verification loop, hooks, plan mode | present: the brief, `CLAUDE.md`, core and pack skills, `tdd_guard` and the security hooks, core-plan-interview |
+| 2 | subagents (needs `CLAUDE.md`), evaluations (need `CLAUDE.md` and the verification loop) | present: the personas' executors; skill evaluations; no set of project tasks |
+| 3 | requirements and design (intent + skills), PR review (evaluations + subagents) | present: phases 2–4; PR review — `REVIEW.md` to be created in the project |
+| 4 | CI/CD (PR review + hooks) | partly: the `team-factory` workflow, the CI/CD skill (pack-it: ops-ci-cd) |
+| 5 | closing the loop (CI/CD + intent) | phase 9, `control_band.py`; starting the agent automatically — the human's decision |
 
-## 11. AI-DLC (AWS) — słownik i rytuały
-- **Wzorzec:** agent tworzy plan → zadaje pytania → człowiek waliduje → dopiero wtedy agent realizuje; to samo przy
-  każdej czynności cyklu. W fabryce: core-plan-interview i bramki.
-- **Fazy:** Inception (zamiar → wymagania), Construction (architektura, model domeny, kod, testy), Operations
-  (infrastruktura jako kod, wdrożenia pod nadzorem zespołu). Kontekst przechodzi z fazy do fazy przez artefakty
-  w repozytorium.
-- **Mob Elaboration / Mob Construction:** cały zespół w jednej sesji waliduje pytania i propozycje agenta —
-  wymagania (Elaboration) albo decyzje techniczne (Construction). Dobre przy nowym produkcie i decyzjach
-  trudnych do odwrócenia; w fabryce: warsztat z facylitacją (pack-it: ddd-facilitation) i przegląd planu przez kilka osób.
-- **Bolt** (cykl godzin lub dni zamiast sprintu) i **Unit of Work** (zamiast epiki) — przy pracy z agentami
-  krótsze cykle i mniejsze partie (pack-it: eng-continuous-delivery).
+## 11. AI-DLC (AWS) — glossary and rituals
+- **The pattern:** the agent creates a plan → asks questions → the human validates → only then the agent delivers; the
+  same at every activity of the cycle. In the factory: core-plan-interview and the gates.
+- **Phases:** Inception (intent → requirements), Construction (architecture, domain model, code, tests), Operations
+  (infrastructure as code, deployments under the team's supervision). The context passes from phase to phase through
+  artifacts in the repository.
+- **Mob Elaboration / Mob Construction:** the whole team in one session validates the agent's questions and proposals —
+  requirements (Elaboration) or technical decisions (Construction). Good for a new product and decisions that are hard
+  to reverse; in the factory: a facilitated workshop (pack-it: ddd-facilitation) and a plan review by several people.
+- **Bolt** (a cycle of hours or days instead of a sprint) and **Unit of Work** (instead of an epic) — when working with
+  agents, shorter cycles and smaller batches (pack-it: eng-continuous-delivery).
 
-## 12. Antywzorce
-- Etapy bez zapisanego artefaktu — informacja ginie między etapami.
-- Słaba pętla weryfikacji — niesprawdzony kod trafia do przeglądu człowieka.
-- Ewaluacje, które się zestarzały i nie rozróżniają już dobrych odpowiedzi.
-- Bramki zatwierdzenia bez śladu audytowego.
-- Sekrety w kontekście agenta (core-agent-security).
-- Nienastrojony przegląd przez AI, który zasypuje zespół drobiazgami.
+## 12. Anti-patterns
+- Stages without a saved artifact — information gets lost between stages.
+- A weak verification loop — unchecked code reaches the human's review.
+- Evaluations that went stale and no longer tell good answers apart.
+- Approval gates without an audit trail.
+- Secrets in the agent's context (core-agent-security).
+- An untuned AI review that buries the team in nitpicks.
 
-## 13. Refinement, osąd i miary autonomii
-- **Wykonawca opowiada rozwiązanie własnymi słowami** przed implementacją (problem, zachowanie, sposób, ryzyka,
-  podjęte decyzje), a właściciel sprawdza zgodność z zamiarem — człowiek nie jest tylko przekaźnikiem między agentami.
-  Makiety z istniejących komponentów i systemu projektowego przed kodem to test wspólnego rozumienia (sprawdź, czy
-  nie przemycają nowych decyzji produktowych).
-- **Osąd nie ucieka do kroków:** refinement kończy się zgłoszeniem napisanym przez człowieka dla człowieka, nie
-  wygenerowanym opisem ani promptem. Jeśli nikt nie umie wyjaśnić, jak praca zostanie zrobiona, refinement nie jest
-  skończony. Pogłębiony przegląd (wspólne testowanie, przejście przez rozwiązanie z grupą) tylko powyżej progów
-  wielkości zmiany i obszaru ryzyka, nie przy każdym PR. Miary przepływu: rozmiar PR, czas do pierwszego przeglądu,
-  liczba otwartych PR na osobę.
-- **Miary autonomii** (odsetek scalonych PR autorstwa agenta, godziny przeglądu człowieka na zmianę, czas zadania od
-  początku do końca) to miary aktywności. Jako cel są podatne na Goodharta, bo agent wypełni każdy licznik.
-  Raportujesz je tylko **w parze z miarą wyniku**: odsetek defektów, które dotarły do użytkownika, odsetek nieudanych
-  zmian, koszt zmiany, czas od zamiaru do produkcji, ruch metryki biznesowej. Gdy poprawia się tylko jedna z pary,
-  cel jest niespełniony. Dane z systemów źródłowych (repo, CI, incydenty), nie z samooceny. Kokpit:
-  pack-it: eng-continuous-delivery.
-Źródła: Pragmatic Coders, „Refinement with AI…” (2026-10-01); A. Honchar, „Agentic SDLC: Strategic Reading List”
-(2026-05-27); J. Wąsowski, „SDD Factory OKRs” (2026-10-21); progi i odsetki z artykułów [niezweryfikowane].
+## 13. Refinement, judgement and autonomy measures
+- **The executor tells the solution back in their own words** before the implementation (the problem, the behaviour, the
+  approach, the risks, the decisions made), and the owner checks it against the intent — the human is not just a relay
+  between agents. Mock-ups from existing components and the design system before the code are a test of shared
+  understanding (check that they do not smuggle in new product decisions).
+- **Judgement does not escape into the steps:** refinement ends with an issue written by a human for a human, not a
+  generated description or a prompt. If nobody can explain how the work will be done, refinement is not finished. A
+  deeper review (testing together, walking through the solution with a group) only above thresholds of change size and
+  risk area, not at every PR. Flow measures: PR size, time to the first review, the number of open PRs per person.
+- **Autonomy measures** (the share of merged PRs authored by an agent, the human's review hours per change, the task time
+  from start to end) are activity measures. As a target they are prone to Goodhart, because the agent will fill any
+  counter. You report them only **paired with an outcome measure**: the share of defects that reached the user, the
+  change failure rate, the cost of a change, the time from intent to production, the movement of a business metric. When
+  only one of the pair improves, the goal is not met. Data from the source systems (repo, CI, incidents), not from
+  self-assessment. A dashboard: pack-it: eng-continuous-delivery.
+Sources: Pragmatic Coders, "Refinement with AI…" (2026-10-01); A. Honchar, "Agentic SDLC: Strategic Reading List"
+(2026-05-27); J. Wąsowski, "SDD Factory OKRs" (2026-10-21); thresholds and shares from the articles [unverified].
 
-## Źródła
-- Anthropic, L. Claxton, „The AI-Native SDLC Playbook”, 21.08.2026 — claude.com/blog/the-ai-native-sdlc-playbook
-- Anthropic Academy, kurs „AI-Native SDLC Playbook” (14 lekcji) — academy.claude.com/courses/ai-native-sdlc-playbook
-- AWS, Raja SP, „AI-Driven Development Life Cycle: Reimagining Software Engineering”, 31.07.2025 —
+## Sources
+- Anthropic, L. Claxton, "The AI-Native SDLC Playbook", 21.08.2026 — claude.com/blog/the-ai-native-sdlc-playbook
+- Anthropic Academy, the course "AI-Native SDLC Playbook" (14 lessons) — academy.claude.com/courses/ai-native-sdlc-playbook
+- AWS, Raja SP, "AI-Driven Development Life Cycle: Reimagining Software Engineering", 31.07.2025 —
   aws.amazon.com/blogs/devops/ai-driven-development-life-cycle
-- Kurs 10xDevs, ed. 3 (2026), moduł 5, lekcja 3 (ewaluacje agenta przeglądu) — materiał szkoleniowy (dostęp 2026-10-09);
-  promptfoo (pakiet npm 0.124.1 sprawdzony 2026-10-10: plik `promptfooconfig.yaml`, asercje `is-json`, `llm-rubric`,
-  `javascript`, próg `PROMPTFOO_PASS_RATE_THRESHOLD`) — promptfoo.dev/docs
-- Claude Code: managed settings, Code Review (`REVIEW.md`), GitHub Actions, hooks — code.claude.com/docs (dostęp 2026-10-04)
+- The 10xDevs course, ed. 3 (2026), module 5, lesson 3 (evaluations of a review agent) — training material (accessed
+  2026-10-09); promptfoo (the npm package 0.124.1 checked 2026-10-10: the `promptfooconfig.yaml` file, the assertions
+  `is-json`, `llm-rubric`, `javascript`, the threshold `PROMPTFOO_PASS_RATE_THRESHOLD`) — promptfoo.dev/docs
+- Claude Code: managed settings, Code Review (`REVIEW.md`), GitHub Actions, hooks — code.claude.com/docs (accessed 2026-10-04)

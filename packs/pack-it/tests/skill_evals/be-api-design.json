@@ -37,6 +37,45 @@
       }
     },
     {
+      "id": "idempotencja-platnosci-en",
+      "expect": "trigger",
+      "prompt": "The POST /payments endpoint initiates a transfer, and the mobile client retries the request after a timeout. How do we ensure two transfers are not created and what should we return on a retry? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "Idempotency-Key",
+            "klucz\\w* idempoten",
+            "idempoten\\w* keys?"
+          ],
+          [
+            "409",
+            "422",
+            "ta sama odpowied",
+            "zapisan\\w* (odpowied|wynik)",
+            "stored response",
+            "same response",
+            "replay"
+          ],
+          [
+            "inn\\w* (body|treś|payload|dane|ciał)",
+            "różn\\w* (body|treś|payload|ciał)",
+            "hash\\w* (ciał|body|żądani)",
+            "request_hash",
+            "mismatch",
+            "fingerprint",
+            "skrót",
+            "(different|differing|changed) (body|payload|content|request)",
+            "hash\\w* (of )?the (body|request|payload)",
+            "(body|payload|content|request)\\w* (differs?|is different|changed|mismatch\\w*)"
+          ],
+          [
+            "Problem Details",
+            "9457"
+          ]
+        ]
+      }
+    },
+    {
       "id": "paginacja-kolekcji",
       "expect": "trigger",
       "prompt": "Wystawiamy GET /orders z milionami rekordów i wieloma filtrami. Jak zrobić paginację i sortowanie, żeby nikt nie obciążył bazy? Odpowiedz zwięźle.",

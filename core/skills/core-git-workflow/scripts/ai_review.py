@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Przegląd PR przez AI w CI (skill core-git-workflow, references/przeglad-ai-w-ci.md).
+PR review by AI in CI (skill core-git-workflow, references/ai-review-in-ci.md).
 
   python3 .claude/skills/core-git-workflow/scripts/ai_review.py install [--force] [--all-prs]
-      zapisuje .github/workflows/ai-review.yml z szablonu obok skryptu: przegląd PR z etykietą ai-review
-      (--all-prs: każdego PR z tego repo), werdykt jako status ai-review/verdict, jeden komentarz zbiorczy,
-      obejście etykietą ai-review-override; istniejącego pliku nie nadpisuje bez --force
-  python3 .claude/skills/core-git-workflow/scripts/ai_review.py review-md [--from PLIK] [--force]
-      zatwierdzony szkic zasad (domyślnie docs/project/00-reconstruction/REVIEW.draft.md z rekonstrukcji z kodu)
-      → REVIEW.md w katalogu głównym; istniejącego REVIEW.md nie nadpisuje bez --force
+      writes .github/workflows/ai-review.yml from the template next to the script: review of PRs with the ai-review label
+      (--all-prs: every PR in this repo), the verdict as the ai-review/verdict status, one summary comment,
+      bypass with the ai-review-override label; does not overwrite an existing file without --force
+  python3 .claude/skills/core-git-workflow/scripts/ai_review.py review-md [--from FILE] [--force]
+      the approved draft of the rules (default docs/project/00-reconstruction/REVIEW.draft.md from the reconstruction from code)
+      → REVIEW.md in the root directory; does not overwrite an existing REVIEW.md without --force
 
-Szkic zatwierdza człowiek — polecenie review-md uruchamiasz po jego zgodzie. Kod wyjścia: 0 — zapisane,
-1 — odmowa (plik istnieje, brak szkicu), 2 — złe wywołanie. Tylko biblioteka standardowa Pythona 3.9+.
+A human approves the draft — you run the review-md command after their consent. Exit code: 0 — written,
+1 — refusal (file exists, no draft), 2 — bad call. Standard library only, Python 3.9+.
 """
 from __future__ import annotations
 
@@ -31,36 +31,36 @@ ALL_IF = "      github.event.action != 'labeled' && github.event.action != 'unla
 
 def install(force: bool, all_prs: bool) -> int:
     if WORKFLOW.exists() and not force:
-        print(f"✗ {WORKFLOW} już istnieje — nie nadpisuję (--force, jeśli to celowe)")
+        print(f"✗ {WORKFLOW} already exists — not overwriting it (use --force if this is intended)")
         return 1
     text = TEMPLATE.read_text(encoding="utf-8")
     if all_prs:
-        assert LABEL_IF in text, "szablon: brak warunku etykiety"
+        assert LABEL_IF in text, "template: the label condition is missing"
         text = text.replace(LABEL_IF, ALL_IF)
     WORKFLOW.parent.mkdir(parents=True, exist_ok=True)
     WORKFLOW.write_text(text, encoding="utf-8")
-    who = "każdego PR z tego repozytorium" if all_prs else "PR z etykietą ai-review"
-    print(f"✓ {WORKFLOW} — przegląd {who}. Ustaw sekret ANTHROPIC_API_KEY i w ochronie gałęzi wymagaj statusu "
-          "ai-review/verdict; obejście: etykieta ai-review-override (dodaje człowiek).")
+    who = "every PR from this repository" if all_prs else "PRs with the ai-review label"
+    print(f"✓ {WORKFLOW} — reviews {who}. Set the ANTHROPIC_API_KEY secret and require the "
+          "ai-review/verdict status in branch protection; override: the ai-review-override label (a human adds it).")
     if not Path("REVIEW.md").is_file():
-        hint = (f"zatwierdzony szkic z rekonstrukcji: `ai_review.py review-md` ({DRAFT})" if DRAFT.is_file()
-                else "szablon: .claude/skills/core-git-workflow/references/review-md.md; po rekonstrukcji z kodu "
-                     "`ai_review.py review-md` przenosi zatwierdzony szkic")
-        print(f"⚠ brak REVIEW.md — przegląd użyje przebiegów domyślnych. Zasady: {hint}")
+        hint = (f"the approved draft from the reconstruction: `ai_review.py review-md` ({DRAFT})" if DRAFT.is_file()
+                else "template: .claude/skills/core-git-workflow/references/review-md.md; after reconstruction from the code, "
+                     "`ai_review.py review-md` moves the approved draft")
+        print(f"⚠ no REVIEW.md — the review will use the default passes. Rules: {hint}")
     return 0
 
 
 def review_md(src: str | None, force: bool) -> int:
     draft = Path(src) if src else DRAFT
     if not draft.is_file():
-        print(f"✗ brak szkicu {draft} — powstaje w rekonstrukcji z kodu (REVIEW.draft.md) albo podaj --from PLIK")
+        print(f"✗ no draft {draft} — it is made in reconstruction from the code (REVIEW.draft.md), or give --from FILE")
         return 1
     target = Path("REVIEW.md")
     if target.exists() and not force:
-        print(f"✗ {target} już istnieje — nie nadpisuję (--force, jeśli człowiek zatwierdził zmianę)")
+        print(f"✗ {target} already exists — not overwriting it (use --force if a human approved the change)")
         return 1
     shutil.copyfile(draft, target)
-    print(f"✓ {target} ← {draft}. Zmiany zasad dalej przez PR, jak zmiany kodu.")
+    print(f"✓ {target} ← {draft}. Change the rules later through a PR, like code changes.")
     return 0
 
 

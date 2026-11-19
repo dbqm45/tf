@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Kopie kontraktu pdi w tf: przypięte do wersji, generowane z tagu wydania, nigdy edytowane ręcznie.
+Copies of the pdi contract in tf: pinned to a version, generated from a release tag, never edited by hand.
 
   python3 tools/sync_contract.py sync  [--pin tools/pdi-contract.json] [--source DIR]
-      pobiera pliki z tagu contract-v<wersja> w repo z przypięcia (albo z katalogu DIR = katalog contract/)
-      i zapisuje je we wszystkich miejscach z przypięcia; pliki z version_files dostają numer wersji
+      fetches files from the tag contract-v<version> in the repo from the pin (or from the directory DIR = the contract/ directory)
+      and writes them to all the places from the pin; files from version_files get the version number
   python3 tools/sync_contract.py check [--pin …] [--source DIR]
-      porównuje kopie bajt w bajt ze źródłem; kod 1 i lista rozjazdów, gdy coś się różni
+      compares the copies byte by byte with the source; exit 1 and a list of mismatches when something differs
 
-Aktualizacja kontraktu: zmień "version" w przypięciu, uruchom sync, testy, PR. Kod wyjścia: 0 — zgodne/zapisane,
-1 — rozjazd albo brak pliku w źródle, 2 — złe przypięcie lub wywołanie. Tylko biblioteka standardowa.
+Updating the contract: change "version" in the pin, run sync, tests, PR. Exit code: 0 — consistent/written,
+1 — a mismatch or a file missing in the source, 2 — a bad pin or invocation. Standard library only.
 """
 from __future__ import annotations
 
@@ -34,12 +34,12 @@ def load_pin(path: Path) -> dict:
     try:
         pin = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as e:
-        raise PinError(f"nie mogę odczytać przypięcia {path}: {e}") from e
+        raise PinError(f"cannot read pin {path}: {e}") from e
     extra = set(pin) - KEYS
     if extra or not {"repo", "version", "files"} <= set(pin):
-        raise PinError(f"{path}: klucze {sorted(KEYS)} (nieznane: {sorted(extra)})")
+        raise PinError(f"{path}: keys {sorted(KEYS)} (unknown: {sorted(extra)})")
     if not isinstance(pin["files"], dict) or not all(isinstance(v, list) and v for v in pin["files"].values()):
-        raise PinError(f"{path}: files to mapa plik kontraktu → lista miejsc w repo")
+        raise PinError(f"{path}: files must map a contract file → list of places in the repo")
     return pin
 
 
@@ -49,7 +49,7 @@ def fetch(pin: dict, name: str, source: Path | None) -> bytes | None:
         return f.read_bytes() if f.is_file() else None
     url = RAW.format(repo=pin["repo"], version=pin["version"], name=name)
     try:
-        with urllib.request.urlopen(url, timeout=30) as r:  # noqa: S310 — stały adres GitHuba z przypięcia
+        with urllib.request.urlopen(url, timeout=30) as r:  # noqa: S310 — a fixed GitHub address from the pin
             return r.read()
     except urllib.error.HTTPError as e:
         if e.code == 404:
@@ -75,34 +75,34 @@ def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("cmd", choices=["sync", "check"])
     ap.add_argument("--pin", type=Path, default=PIN)
-    ap.add_argument("--source", type=Path, help="katalog contract/ zamiast pobierania z tagu (testy, praca bez sieci)")
+    ap.add_argument("--source", type=Path, help="contract/ directory instead of fetching from the tag (tests, offline work)")
     a = ap.parse_args(argv)
     try:
         pin = load_pin(a.pin)
     except PinError as e:
         print(f"✗ {e}")
         return 2
-    # ścieżki w przypięciu tf są względem katalogu głównego repo; inne przypięcie (testy) — względem swojego katalogu
+    # paths in the tf pin are relative to the repo root; another pin (tests) — relative to its own directory
     base = ROOT if a.pin.resolve() == PIN else a.pin.resolve().parent
-    where = a.source or f"tag contract-v{pin['version']} w {pin['repo']}"
+    where = a.source or f"tag contract-v{pin['version']} in {pin['repo']}"
     want, missing = expected(pin, a.source, base)
     if missing:
-        print(f"✗ brak w źródle ({where}): {', '.join(missing)}")
+        print(f"✗ missing in source ({where}): {', '.join(missing)}")
         return 1
     if a.cmd == "sync":
         for path, data in want.items():
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(data)
-        print(f"✓ zapisano {len(want)} kopii kontraktu {pin['version']} ({where})")
+        print(f"✓ wrote {len(want)} copies of contract {pin['version']} ({where})")
         return 0
     bad = [str(p.relative_to(base)) for p, data in want.items() if not p.is_file() or p.read_bytes() != data]
     if bad:
-        print(f"✗ kopie różne od kontraktu {pin['version']} ({where}) — nie edytuj ich ręcznie, uruchom "
+        print(f"✗ copies differ from contract {pin['version']} ({where}) — do not edit them by hand, run "
               f"`python3 tools/sync_contract.py sync`:")
         for b in bad:
             print(f"  - {b}")
         return 1
-    print(f"✓ {len(want)} kopii zgodnych z kontraktem {pin['version']} ({where})")
+    print(f"✓ {len(want)} copies match contract {pin['version']} ({where})")
     return 0
 
 

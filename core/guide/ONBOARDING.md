@@ -1,72 +1,71 @@
-# Onboarding: pierwsza instalacja fabryki
+# Onboarding: the first installation of the factory
 
-Ten plik prowadzi od zera do działającej fabryki w projekcie. Codzienna praca: `PRZEWODNIK.md`, częste pytania:
-`FAQ.md` (oba trafiają przy instalacji do `.tf/factory/` w projekcie).
+This file takes you from zero to a working factory in a project. Daily work: `GUIDE.md`, frequent questions:
+`FAQ.md` (both go to `.tf/factory/` in the project at installation).
 
-## 1. Raz na komputerze: polecenie `tf`
-Potrzebny jest Python 3 i git.
+## 1. Once per computer: the `tf` command
+You need Python 3 and git.
 
 ```bash
-git clone <adres repozytorium fabryki> ~/tools/tf
+git clone <factory repository address> ~/tools/tf
 python3 ~/tools/tf/core/factory/tf.py --install-launcher
 ```
 
-- Skrypt kopiuje `tf` do `~/.local/bin` (inny katalog: `--bin <katalog>`; w Windows powstaje też `tf.cmd`).
-- W `tf` zapisuje adres repozytorium: z `--repo <url>`, ze zmiennej `TF_REPO` albo z `origin` klonu.
-- `~/.local/bin` musi być w `PATH`.
-- `tf` uruchamia kod z tego repozytorium, więc wskaż tylko takie, któremu ufasz.
+- The script copies `tf` to `~/.local/bin` (another directory: `--bin <directory>`; on Windows `tf.cmd` is also created).
+- It records the repository address in `tf`: from `--repo <url>`, from the `TF_REPO` variable or from the clone's `origin`.
+- `~/.local/bin` must be in `PATH`.
+- `tf` runs code from that repository, so point it only at one you trust.
 
-## 2. W projekcie: instalacja
+## 2. In the project: installation
 ```bash
-cd ~/projects/moja-aplikacja
+cd ~/projects/my-app
 tf
 ```
 
-Bez fabryki w projekcie `tf` instaluje najnowsze wydanie (najwyższy tag `vX.Y.Z`). Przy pierwszej instalacji pyta o:
-- język pracy (rozmowa, dokumentacja; domyślnie `pl`);
-- język commitów i PR (domyślnie `en`);
-- nakładki (`pack-*`) i tryby (`mode-*`).
+Without the factory in the project, `tf` installs the latest release (the highest `vX.Y.Z` tag). At the first
+installation it asks about packs (`pack-*`) and modes (`mode-*`). It does not ask about the language: agents answer in
+the language you write in and write documents for you in it; commits follow the language of the repository's history
+(in a new repository, English). Do you write in Polish? Add `pack-editorial-pl` (correctness and style of Polish).
 
-Wymagane nakładki i nakładka języka (dla `pl`: `pack-editorial-pl`) dochodzą same. Na koniec instalator składa
-agentów (`.tf/factory/build.py`).
+Required packs are added automatically. At the end the installer builds
+the agents (`.tf/factory/build.py`).
 
-Bez pytań, na przykład w skrypcie:
+Without questions, for example in a script:
 
 ```bash
-tf install --packs pack-it,pack-docs --language pl --commit-language en --yes
+tf install --packs pack-it,pack-docs,pack-editorial-pl --yes
 ```
 
-Podgląd bez zmian: `python3 ~/tools/tf/core/factory/install.py --dry-run`.
+A preview without changes: `python3 ~/tools/tf/core/factory/install.py --dry-run`.
 
-## 3. Prywatnie czy zespołowo
-| | Prywatnie (domyślnie) | Zespołowo (`tf install --shared`) |
+## 3. Private or team
+| | Private (default) | Team (`tf install --shared`) |
 |---|---|---|
-| Ustawienia i hooki | `.claude/settings.local.json` | `.claude/settings.json` |
-| Zasady | `CLAUDE.local.md` | `CLAUDE.md` |
-| Git | nic nie trafia do repozytorium; ścieżki fabryki w `.git/info/exclude` (`--gitignore`: w `.gitignore`) | fabryka commitowana z projektem, do tego workflow CI |
+| Settings and hooks | `.claude/settings.local.json` | `.claude/settings.json` |
+| Rules | `CLAUDE.local.md` | `CLAUDE.md` |
+| Git | nothing goes into the repository; the factory's paths in `.git/info/exclude` (`--gitignore`: in `.gitignore`) | the factory committed with the project, plus a CI workflow |
 
-Prywatnie — gdy fabryka jest tylko Twoim narzędziem. Zespołowo — gdy ma działać u wszystkich i w CI.
+Private — when the factory is only your tool. Team — when it is to work for everyone and in CI.
 
-## 4. Pierwsze uruchomienie
-1. W katalogu projektu uruchom `claude` i zaakceptuj zaufanie do folderu. Bez tego hooki i uprawnienia nie
-   działają.
-2. Sprawdź instalację: `tf doctor` (naprawa: `tf doctor --fix`), lista nakładek i trybów: `tf list`.
-3. Wybierz personę z `.claude/catalog.md` i uruchom ją: `claude --agent <nazwa>`. Dalej: `.tf/factory/PRZEWODNIK.md`.
+## 4. The first run
+1. In the project directory run `claude` and accept trust in the folder. Without that, hooks and permissions do not
+   work.
+2. Check the installation: `tf doctor` (repair: `tf doctor --fix`), the list of packs and modes: `tf list`.
+3. Choose a persona from `.claude/catalog.md` and run it: `claude --agent <name>`. Next: `.tf/factory/GUIDE.md`.
 
-## 5. Sesje w chmurze (claude.ai/code)
-- Hooki fabryki działają tylko w sesji uruchomionej w katalogu repozytorium projektu.
-- Fabryka musi być w repozytorium (`--shared`) albo instalowana w skrypcie startowym środowiska.
-- Sesja z kilkoma repozytoriami albo z katalogu nadrzędnego nie wczytuje hooków (nie ma komunikatów startowych).
-  Testy i bramki uruchamiasz wtedy ręcznie.
+## 5. Cloud sessions (claude.ai/code)
+- The factory's hooks work only in a session started in the project repository's directory.
+- The factory must be in the repository (`--shared`) or installed in the environment's setup script.
+- A session with several repositories or from a parent directory does not load the hooks (there are no start messages).
+  You then run tests and gates by hand.
 
-## 6. Potem
-| Polecenie | Co robi |
+## 6. Later
+| Command | What it does |
 |---|---|
-| `tf` | aktualizacja (`tf update --check` — co się zmieni, bez zmian) |
-| `tf add <id>` / `tf remove <id>` | dodanie lub usunięcie nakładki albo trybu |
-| `tf language <kod>` / `tf commit-language <kod>` | zmiana języków |
-| `python3 .tf/factory/update.py --rollback` | powrót do poprzedniej wersji |
+| `tf` | an update (`tf update --check` — what will change, without changes) |
+| `tf add <id>` / `tf remove <id>` | adding or removing a pack or a mode |
+| `python3 .tf/factory/update.py --rollback` | going back to the previous version |
 
-Pliki fabryki aktualizacja nadpisuje (jak `node_modules`) — zmiany wprowadzasz w repo fabryki; Twoje pliki i ustawienia
-w `.tf/config/config.yaml` zostają. Wszystkie
-opcje: `python3 ~/tools/tf/core/factory/install.py --help` i `tf --help`.
+An update overwrites the factory's files (like `node_modules`) — you make changes in the factory repo; your files and
+settings in `.tf/config/config.yaml` stay. All
+options: `python3 ~/tools/tf/core/factory/install.py --help` and `tf --help`.

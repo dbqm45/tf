@@ -20,6 +20,30 @@
       }
     },
     {
+      "id": "test-na-slepo-en",
+      "expect": "trigger",
+      "prompt": "We want to check whether our split into modules handles business changes well, e.g. in terms of margin per project. How do we run such a test so that the requirements aren’t tailored to our architecture? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "na ślepo|blind|bez wglądu|nie widzia|nie znał|nie zna architektur",
+            "blind\\w*",
+            "without (seeing|access|insight|knowing|knowledge)",
+            "(has|had|does|did)(n'?t| not) (see|seen|know|known)",
+            "unaware of (the )?architecture"
+          ],
+          [
+            "lokaln",
+            "local\\w*",
+            "contained"
+          ],
+          [
+            "brief"
+          ]
+        ]
+      }
+    },
+    {
       "id": "porownanie-dekompozycji",
       "expect": "trigger",
       "prompt": "Mamy dwa warianty podziału systemu na konteksty. Jak uczciwie porównać, który lepiej przyjmie przyszłe zmiany biznesowe? Odpowiedz zwięźle.",

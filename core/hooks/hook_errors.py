@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Dziennik błędów hooków: hook nie przerywa sesji przy własnym błędzie, ale błąd zostaje zapisany.
+Hook error log: a hook does not interrupt the session on its own error, but the error is recorded.
 
-  from hook_errors import record      # w hooku: except Exception as e: record("nazwa_hooka", e)
-  python3 .claude/hooks/hook_errors.py --summary [--days 7]   # podsumowanie (woła je `tf doctor`)
+  from hook_errors import record      # in a hook: except Exception as e: record("nazwa_hooka", e)
+  python3 .claude/hooks/hook_errors.py --summary [--days 7]   # summary (called by `tf doctor`)
 
-Wpis w `<projekt>/.tf/logs/hook-errors.jsonl`: czas, hook, typ wyjątku, miejsce (plik:linia najgłębszej ramki),
-komunikat przycięty do 200 znaków. Bez treści wejścia hooka (może zawierać kod i dane). Dziennik ma najwyżej
-MAX_BYTES — po przekroczeniu zostaje nowsza połowa. `record` nigdy nie rzuca wyjątku: dziennik ma pomagać, a nie
-dokładać awarii. Tylko biblioteka standardowa.
+An entry in `<project>/.tf/logs/hook-errors.jsonl`: time, hook, exception type, location (file:line of the deepest frame),
+message truncated to 200 characters. No hook input content (it may contain code and data). The log has at most
+MAX_BYTES — after exceeding it the newer half is kept. `record` never raises: the log is meant to help, not to
+add failures. Standard library only.
 """
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ from pathlib import Path
 
 MAX_BYTES = 256_000
 LOG = Path(".tf") / "logs" / "hook-errors.jsonl"
+BLOCKS = Path(".tf") / "logs" / "hook-blocks.jsonl"   # hook blocks (time, hook, decision) — no content
 
 
 def _log_path() -> Path:
@@ -29,7 +30,7 @@ def _log_path() -> Path:
 
 
 def record(hook: str, exc: BaseException) -> None:
-    """Zapisz błąd hooka; nigdy nie rzuca."""
+    """Record a hook error; never raises."""
     try:
         frames = traceback.extract_tb(exc.__traceback__) if exc.__traceback__ else []
         where = f"{Path(frames[-1].filename).name}:{frames[-1].lineno}" if frames else "?"
@@ -48,12 +49,31 @@ def record(hook: str, exc: BaseException) -> None:
                     break
                 keep.append(line)
             p.write_text("\n".join(reversed(keep)) + "\n", encoding="utf-8")
-    except Exception:  # noqa: BLE001 — dziennik błędów nie może sam wywrócić hooka
+    except Exception:  # noqa: BLE001 — the error log must not itself break the hook
+        return None
+
+
+def _append(p: Path, entry: dict) -> None:
+    p.parent.mkdir(parents=True, exist_ok=True)
+    with p.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    if p.stat().st_size > MAX_BYTES:
+        lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+        p.write_text("\n".join(lines[len(lines) // 2:]) + "\n", encoding="utf-8")
+
+
+def record_block(hook: str, decision: str) -> None:
+    """Record a hook block (`deny` or `ask`): time, hook, decision — no command, path or content. From this
+    log `metrics.py --after-update` counts blocks before and after a factory update. Never raises."""
+    try:
+        _append(Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".") / BLOCKS,
+                {"ts": round(time.time(), 3), "hook": str(hook)[:40], "decision": str(decision)[:10]})
+    except Exception:  # noqa: BLE001
         return None
 
 
 def summary(days: int = 7) -> str:
-    """Jedna linia dla `tf doctor` albo pusty napis, gdy w oknie nie było błędów."""
+    """One line for `tf doctor`, or an empty string when there were no errors in the window."""
     p = _log_path()
     if not p.is_file():
         return ""
@@ -68,12 +88,12 @@ def summary(days: int = 7) -> str:
     if not hooks:
         return ""
     top = ", ".join(f"{k} ×{v}" for k, v in hooks.most_common(5))
-    return (f"⚠ błędy hooków w ostatnich {days} dniach: {sum(hooks.values())} — {top}. Hooki nie przerwały pracy, "
-            f"ale ich ochrona mogła nie zadziałać; szczegóły: {LOG.as_posix()}")
+    return (f"⚠ hook errors in the last {days} days: {sum(hooks.values())} — {top}. The hooks did not stop the work, "
+            f"but their protection may not have worked; details: {LOG.as_posix()}")
 
 
 def main(argv: list[str]) -> int:
-    for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „⚠”, „×” — zawsze UTF-8
+    for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know „⚠”, „×” — always UTF-8
         try:
             _stream.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, ValueError):

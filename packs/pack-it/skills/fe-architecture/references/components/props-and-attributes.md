@@ -1,40 +1,40 @@
 # Props and Attributes
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/props-and-attributes.
+Source: frontendpatterns.dev/props-and-attributes.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Components
-- **Poziom:** Beginner
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** September 26, 2025
-- **Autor:** Den Odell
+- **Category:** Components
+- **Level:** Beginner
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** September 26, 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Pass data into components through props to create flexible, reusable building blocks configured from the outside.”
+"Pass data into components through props to create flexible, reusable building blocks configured from the outside."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Odpowiedniki API wejść: React props; Vue `defineProps`/`defineEmits`; Svelte 5 `$props()`; Angular (fw-angular)
-  `input()`/`input.required()`/`output()`/`model()`; Web Components — atrybuty (stringi) + właściwości JS.
-- Gdy boolowskich wariantów przybywa, zamiast kolejnych flag użyj unii (`variant: 'primary' | 'danger'`) albo
-  kompozycji (children/sloty/compound components — components/compound-components.md).
-- Przykład Web Components poprawiony: `label` z atrybutu trafiał do `innerHTML` (XSS) — teraz `textContent`.
-- Przykłady Svelte to składnia Svelte 4 (`export let`, `$:`, `on:click`, `<slot>`); w Svelte 5: `$props()`, `$state`,
-  `$derived`, `$effect`, atrybuty `onclick`, snippety zamiast slotów.
+- Equivalents of the input API: React props; Vue `defineProps`/`defineEmits`; Svelte 5 `$props()`; Angular (fw-angular)
+  `input()`/`input.required()`/`output()`/`model()`; Web Components — attributes (strings) + JS properties.
+- When boolean variants multiply, instead of more flags use a union (`variant: 'primary' | 'danger'`) or
+  composition (children/slots/compound components — components/compound-components.md).
+- The Web Components example corrected: `label` from an attribute went into `innerHTML` (XSS) — now `textContent`.
+- The Svelte examples are Svelte 4 syntax (`export let`, `$:`, `on:click`, `<slot>`); in Svelte 5: `$props()`, `$state`,
+  `$derived`, `$effect`, `onclick` attributes, snippets instead of slots.
 
 ## Problem
 
-Bez propsów powstaje wiele niemal identycznych duplikatów komponentów (`SubmitButton.tsx`, `CancelButton.tsx` itd.) z zahardkodowanymi wartościami wewnątrz. Testowanie staje się trudne, bo nie da się podać innych danych z zewnątrz — trzeba edytować sam komponent.
+Without props, many almost identical duplicates of components appear (`SubmitButton.tsx`, `CancelButton.tsx` etc.) with values hard-coded inside. Testing becomes hard, because you cannot supply different data from the outside — you have to edit the component itself.
 
-## Rozwiązanie
+## Solution
 
-Przekazuj dane z zewnątrz przez propsy, zamiast wkodowywać je w komponent. Propsy mogą być stringami, liczbami, obiektami, tablicami, funkcjami (callbackami). Ustawiaj sensowne wartości domyślne i używaj TypeScript, żeby kontrakt komponentu był jawny i sprawdzany statycznie.
+Pass data in from the outside through props, instead of hard-coding it into the component. Props can be strings, numbers, objects, arrays, functions (callbacks). Set sensible default values and use TypeScript, so that the component's contract is explicit and statically checked.
 
-## Przykłady kodu
+## Code examples
 
 ### React — Basic Props
 
@@ -172,7 +172,7 @@ function Button({ label, onClick, disabled = false, variant = 'primary' }: Butto
 }
 ```
 
-### Props z children
+### Props with children
 
 ```javascript
 function Card({ title, footer, children }) {
@@ -190,27 +190,27 @@ function Card({ title, footer, children }) {
 </Card>
 ```
 
-## Zalety
+## Advantages
 
-- Jeden komponent, nieskończona liczba konfiguracji/zastosowań.
-- Testowanie staje się proste — podajesz różne propsy, sprawdzasz różne wyjścia.
-- Komponenty da się ponownie użyć w różnych projektach bez modyfikacji.
-- Kompatybilność z narzędziami typu Storybook (każda kombinacja propsów = osobna „story”).
-- TypeScript łapie błędy typów propsów na etapie kompilacji, nie w runtime.
-- Logika konfiguracji jest scentralizowana w jednym miejscu (definicji propsów), nie rozproszona po kopiach komponentu.
+- One component, an unlimited number of configurations/uses.
+- Testing becomes simple — you supply different props, you check different outputs.
+- Components can be reused in different projects without modification.
+- Compatibility with tools like Storybook (every combination of props = a separate "story").
+- TypeScript catches prop type errors at compile time, not at runtime.
+- The configuration logic is centralized in one place (the props definition), not scattered across copies of the component.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- „Eksplozja propsów” — komponent z czasem może wymagać wielu, wielu właściwości.
-- Warunkowa logika renderowania w zależności od kombinacji propsów kumuluje się.
-- Prop drilling — przekazywanie danych przez wiele warstw komponentów pośrednich, które sam ich nie używają.
-- Wartości domyślne mogą maskować błędy (brakujący, wymagany prop przechodzi niezauważony).
-- Boolowskie propsy (`disabled`, `active`, `loading`...) w dużej liczbie są trudne do czytania w wywołaniu komponentu.
-- Spreading propsów (`{...rest}`) gubi precyzyjne typowanie tego, co faktycznie jest przekazywane.
-- Atrybuty Web Components obsługują natywnie tylko stringi — złożone dane (obiekty, funkcje) wymagają właściwości JS (`set onClick`), nie atrybutów HTML.
-- Duża liczba propsów/kombinacji oznacza eksponencjalną liczbę scenariuszy do przetestowania.
+- "Props explosion" — over time a component may require many, many properties.
+- Conditional rendering logic depending on combinations of props accumulates.
+- Prop drilling — passing data through many layers of intermediate components that do not use it themselves.
+- Default values can mask errors (a missing, required prop goes unnoticed).
+- Boolean props (`disabled`, `active`, `loading`...) in large numbers are hard to read in the component call.
+- Spreading props (`{...rest}`) loses precise typing of what is actually passed.
+- Web Components attributes natively support only strings — complex data (objects, functions) requires JS properties (`set onClick`), not HTML attributes.
+- A large number of props/combinations means an exponential number of scenarios to test.
 
-## Powiązane wzorce
+## Related patterns
 
 - [ARIA Roles and Attributes](fe-web-platform/references/accessibility/aria-roles-and-attributes.md) — Accessibility.
 - [Semantic HTML](fe-web-platform/references/accessibility/semantic-html.md) — Fundamentals.
@@ -219,8 +219,8 @@ function Card({ title, footer, children }) {
 - Props — Vue docs.
 - Props — Svelte docs.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj propsów do każdej wartości, która może się różnić między użyciami komponentu — to jest dosłownie podstawa architektury komponentowej (patrz „Component-Driven Architecture” w `../principles.md`), nie opcjonalna technika.
+Use props for every value that can differ between uses of the component — this is literally the foundation of component architecture (see "Component-Driven Architecture" in `../principles.md`), not an optional technique.
 
-Gdy liczba propsów zaczyna rosnąć bez końca (10+, wiele boolowskich flag kombinowanych ze sobą) — to sygnał, że komponent robi za wiele naraz; rozważ rozbicie na mniejsze komponenty (patrz [Single Responsibility](../fundamentals/single-responsibility.md)) albo grupowanie powiązanych propsów w jeden obiekt konfiguracyjny, zamiast dodawać kolejny płaski prop.
+When the number of props starts to grow endlessly (10+, many boolean flags combined with each other) — that is a signal that the component does too much at once; consider splitting it into smaller components (see [Single Responsibility](../fundamentals/single-responsibility.md)) or grouping related props into one configuration object, instead of adding yet another flat prop.

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""B1a: polityka autonomii w hooku guard_bash — nazwane typy operacji z poziomem z konfiguracji.
+"""B1a: the autonomy policy in the guard_bash hook — named operation types with a level from the configuration.
 
 python3 tests/test_autonomy_policy.py
 
-Typy operacji, o które hook pyta człowieka (ASK), mają nazwy (`dependency_add`, `prod_command`, `destructive_sql`,
-`infra_change`, `publish`, `git_push`, `persistence`, `data_upload`, `sudo`). Poziom z `autonomy.operations`
-w `.tf/factory/config.yaml` i `.tf/config/config.yaml`: `confirm` (pytaj) albo `deny` (blokuj). Projekt może tylko
-zaostrzać (decyzja człowieka 2026-11-10, D1): rozluźnienie jest ignorowane, a `--check-policy` je zgłasza. Lista
-DENY rdzenia jest stała.
+The operation types the hook asks a human about (ASK) have names (`dependency_add`, `prod_command`, `destructive_sql`,
+`infra_change`, `publish`, `git_push`, `persistence`, `data_upload`, `sudo`). The level from `autonomy.operations`
+in `.tf/factory/config.yaml` and `.tf/config/config.yaml`: `confirm` (ask) or `deny` (block). A project can only
+tighten (the human's decision of 2026-11-10, D1): loosening is ignored, and `--check-policy` reports it. The core
+DENY list is fixed.
 """
 import json
 import os
@@ -37,6 +37,13 @@ def project(t: Path, name: str, yaml: str | None) -> Path:
     return d
 
 
+def org_pack(d: Path, body: str) -> None:
+    """A company pack with `org_defaults` among the project's installed packs."""
+    f = d / ".tf" / "factory" / "packs" / "pack-firma" / "pack.yaml"
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text("id: pack-firma\nversion: 0.1.0\ntitle: Firma\norg_defaults:\n" + body, encoding="utf-8")
+
+
 def main() -> int:
     fails = []
     with tempfile.TemporaryDirectory() as tmp:
@@ -45,23 +52,29 @@ def main() -> int:
         strict = project(t, "strict", "autonomy:\n  operations:\n    dependency_add: deny\n    git_push: deny\n")
         loose = project(t, "loose", "autonomy:\n  operations:\n    prod_command: full\n    destructive_sql: allow\n"
                                     "    nieznany_typ: deny\n")
+        org = project(t, "org", None)
+        org_pack(org, "  config:\n    autonomy:\n      operations:\n        git_push: deny\n")
+        org_loose = project(t, "org-loose", "autonomy:\n  operations:\n    git_push: confirm\n")
+        org_pack(org_loose, "  config:\n    autonomy:\n      operations:\n        git_push: deny\n")
         cases = [
-            # A-1: bez polityki projektu — zachowanie jak dotąd
+            # A-7: the organisation's policy (a company pack) tightens; the project cannot loosen it
+            (org, "git push origin feat/x", "deny"), (org_loose, "git push origin feat/x", "deny"),
+            # A-1: without a project policy — behaviour as before
             (plain, "npm install left-pad", "ask"), (plain, "git push origin feat/x", "ask"),
             (plain, "psql -c 'DROP TABLE users'", "ask"), (plain, "npm test", "none"),
-            # A-2: projekt zaostrza — confirm → deny
+            # A-2: the project tightens — confirm -> deny
             (strict, "npm install left-pad", "deny"), (strict, "git push origin feat/x", "deny"),
             (strict, "psql -c 'DROP TABLE users'", "ask"),
-            # A-3: projekt próbuje rozluźnić — bez skutku (D1)
+            # A-3: the project tries to loosen — no effect (D1)
             (loose, "kubectl get pods --context prod", "ask"), (loose, "psql -c 'DROP TABLE users'", "ask"),
-            # A-4: lista DENY rdzenia stała w każdym projekcie
+            # A-4: the core DENY list is fixed in every project
             (plain, "rm -rf /", "deny"), (loose, "git push --force origin main", "deny"),
         ]
         for proj, cmd, want in cases:
             got = run(cmd, proj)
             if got != want:
-                fails.append(f"{proj.name}: `{cmd}` → {want}, jest {got}")
-        # A-5: --check-policy zgłasza rozluźnienia i nieznane typy, kod 1; poprawna polityka — kod 0
+                fails.append(f"{proj.name}: `{cmd}` -> {want}, got {got}")
+        # A-5: --check-policy reports loosening and unknown types, code 1; a valid policy — code 0
         bad = subprocess.run([sys.executable, str(HOOK), "--check-policy"], env={**os.environ, "CLAUDE_PROJECT_DIR": str(loose)},
                              capture_output=True, text=True, timeout=20)
         good = subprocess.run([sys.executable, str(HOOK), "--check-policy"], env={**os.environ, "CLAUDE_PROJECT_DIR": str(strict)},
@@ -70,14 +83,14 @@ def main() -> int:
         if bad.returncode != 1 or "prod_command" not in out or "destructive_sql" not in out or "nieznany_typ" not in out \
                 or good.returncode != 0:
             fails.append(f"A-5: --check-policy: {bad.returncode} {out[:400]} / {good.returncode} {good.stdout[:200]}")
-    # A-6: domyślne poziomy opisane w konfiguracji silnika (dokumentacja polityki w jednym miejscu)
+    # A-6: the default levels described in the engine configuration (the policy documentation in one place)
     cfg = (ROOT / ".tf" / "factory" / "config.yaml").read_text(encoding="utf-8")
     if "autonomy:" not in cfg or "operations:" not in cfg or "dependency_add: confirm" not in cfg:
-        fails.append("A-6: .tf/factory/config.yaml opisuje autonomy.operations z wartościami domyślnymi")
+        fails.append("A-6: .tf/factory/config.yaml describes autonomy.operations with default values")
     for f in fails:
         print(f"✗ {f}")
-    total = 13
-    print(f"{'✓' if not fails else '✗'} polityka autonomii: {total - len(fails)}/{total}")
+    total = 15
+    print(f"{'✓' if not fails else '✗'} autonomy policy: {total - len(fails)}/{total}")
     return 1 if fails else 0
 
 

@@ -1,11 +1,11 @@
-# Grafy: sieci, trasy, grupy
+# Graphs: networks, routes, groups
 
-| id | Pytanie dopasowania | Sygnały | To nie to, jeśli… | Pułapki |
+| id | Matching question | Signals | It is not this if… | Pitfalls |
 |---|---|---|---|---|
-| **shortest-path** | najtańsza/najkrótsza droga między punktami? | trasa, dojazd, koszt przejścia, „najszybciej dotrzeć” | trzeba odwiedzić wiele punktów → `tsp-vrp` | ujemne wagi psują Dijkstrę (Bellman-Ford) |
-| **minimum-spanning-tree** | połączyć wszystko najmniejszym kosztem? | sieć, okablowanie, „połącz wszystkie lokalizacje” | liczy się droga z A do B → `shortest-path` | MST nie minimalizuje odległości między parami |
-| **tsp-vrp** | objazd wielu punktów (jeden/wiele pojazdów, okna czasowe)? | kurier, serwisant, trasa dnia, flota | kolejność wynika z zależności → `graph-order` | NP-trudne; solver/heurystyki (2-opt, OR-Tools) |
-| **union-find** | czy rzeczy łączą się w rozłączne grupy (przechodnio)? | „powiązane”, duplikaty klientów, wyspy, klastry | grupy mają być zbalansowane → `graph-partition` | tylko łączenie; rozłączanie wymaga przeliczenia |
-| **graph-partition** | podział na części o podobnej wielkości z minimum powiązań między nimi? | podział zespołów, shardowanie, podział modułów | — | NP-trudne; heurystyki (METIS); to też heurystyka granic modułów |
-| **graph-coloring** | przypisać sloty/kolory tak, by sąsiedzi (konflikty) się różnili? | plan zajęć, egzaminy, „nie w tym samym czasie” | konflikty są przedziałami czasu → `interval-scheduling` | NP-trudne; heurystyki (DSATUR) |
-| **vertex-cover / clique** | najmniejszy zbiór pilnujący wszystkich powiązań / grupa wzajemnie powiązanych? | kontrola, audyt każdej relacji, „wszyscy się znają” | — | NP-trudne; zwykle aproksymacja |
+| **shortest-path** | the cheapest/shortest path between points? | a route, getting there, the cost of a passage, "get there fastest" | many points have to be visited → `tsp-vrp` | negative weights break Dijkstra (Bellman-Ford) |
+| **minimum-spanning-tree** | connect everything at the lowest cost? | a network, cabling, "connect all locations" | the path from A to B counts → `shortest-path` | an MST does not minimize the distance between pairs |
+| **tsp-vrp** | a round of many points (one/many vehicles, time windows)? | a courier, a service technician, the day's route, a fleet | the order follows from dependencies → `graph-order` | NP-hard; a solver/heuristics (2-opt, OR-Tools) |
+| **union-find** | do things join into disjoint groups (transitively)? | "related", duplicate customers, islands, clusters | the groups have to be balanced → `graph-partition` | joining only; splitting requires recomputation |
+| **graph-partition** | a division into parts of similar size with a minimum of connections between them? | dividing teams, sharding, dividing modules | — | NP-hard; heuristics (METIS); this is also a heuristic for module boundaries |
+| **graph-coloring** | assign slots/colours so that neighbours (conflicts) differ? | a class timetable, exams, "not at the same time" | the conflicts are time intervals → `interval-scheduling` | NP-hard; heuristics (DSATUR) |
+| **vertex-cover / clique** | the smallest set watching all the connections / a group of mutually connected ones? | control, an audit of every relationship, "everyone knows each other" | — | NP-hard; usually approximation |

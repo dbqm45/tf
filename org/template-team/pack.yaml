@@ -1,0 +1,43 @@
+# {{TITLE}} team pack: the standards and defaults of one team, on top of the company pack pack-{{ORG}}.
+# Fill in the fields marked TODO; the rest works as is. Guide: README.md next to this file.
+id: pack-{{COMPANY}}
+version: 0.1.0
+title: "{{TITLE}}"
+description: "TODO: one sentence in English — team standards and defaults for {{TITLE}} projects."
+content_language: pl
+default: false
+requires:
+  core: "{{CORE_RANGE}}"
+  # The company pack — installed together with this one (tf install --pack-dir <company repo> --pack-dir <team repo>).
+  packs: [pack-{{ORG}}]
+optional_packs: [pack-it]
+
+facets:
+  - {prefix: {{PREFIX}}, order: 55, name: team standards, question: "how the {{TITLE}} team writes, reviews and ships code"}
+
+# Team standards in every persona and for the agents that review changes (next to the company standards).
+contributes:
+  personas:
+    core_skills: [{{PREFIX}}standards]
+  agents:
+    security-reviewer:
+      skills: [{{PREFIX}}standards]
+
+# Team defaults: engine ← company (pack-{{ORG}}) ← this section ← project ← person. Same keys as the company org_defaults.
+# The team can only tighten the company autonomy policy and only narrow the allowed modes (task.allowed_modes);
+# the other values (limits, cost profile, languages) replace the company values in the team's projects.
+# Write only what makes the team differ from the company — the rest comes from the company pack.
+team_defaults:
+  config:
+    # TODO: example — a team that never publishes packages itself and approves every plan (remove what you do not need):
+    # autonomy:
+    #   operations:
+    #     publish: deny
+    # task:
+    #   allowed_modes: [plan, normal]
+    # Team cost profile: economy | balanced | quality.
+    default_profile: balanced     # TODO: or remove it, then the company profile applies
+  operations:
+    tracker:
+      # TODO: the team's issue key prefixes; they replace the company prefixes in the team's projects, e.g. {BE: jira}
+      prefixes: {TODO: jira}

@@ -1,17 +1,17 @@
-# Nakładka UX: badania z użytkownikami, przepływy i stany, architektura informacji, treści, UI i system projektowy,
-# dostępność, service design.
+# UX overlay: user research, flows and states, information architecture, content, UI and design system,
+# accessibility, service design.
 id: pack-ux
 version: 1.0.1
 title: UX
 description: User experience team — research, flows, information architecture, content, visual design and design systems, accessibility, service design.
-content_language: pl
+content_language: en
 requires:
-  core: ">=3.0.0 <10.0.0"
-# Role UX korzystają też ze skilli IT (proces, wymagania, testy eksploracyjne, front) — bez pack-it są pomijane.
+  core: ">=3.0.0 <21.0.0"
+# UX roles also use IT skills (process, requirements, exploratory testing, front end) — without pack-it they are skipped.
 optional_packs: [pack-it, pack-docs, pack-editorial-pl]
 
 facets:
-  - {prefix: ux-, order: 30, name: doświadczenie użytkownika, question: "kogo i po co projektujemy — badania, treść, wygląd, dostępność i usługa, zanim powstanie interfejs"}
+  - {prefix: ux-, order: 30, name: user experience, question: "who we design for and why — research, content, look, accessibility and the service, before the interface exists"}
 
 freshness:
   skills: {ux-accessibility: 6}
@@ -21,15 +21,15 @@ skill_visibility:
 
 contributes:
   roles:
-    product-compliance:          # rola z pack-it (Maja): dostępność jako wymiar zgodności produktu
+    product-compliance:          # role from pack-it (Maja): accessibility as a dimension of product compliance
       skills: [ux-accessibility]
 
 consultants:
   ux-consult-design:
     tier: std
-    description: Konsultant UX — przepływy i stany ekranów, architektura informacji, treści interfejsu, wygląd i system projektowy. Tylko odpowiedź, bez zmian w plikach.
+    description: UX consultant — screen flows and states, information architecture, interface copy, look and the design system. Answer only, no file changes.
     skills: [ux-feature-design, ux-information-architecture, ux-content-design, ux-visual-design, ux-design-systems]
   ux-consult-accessibility:
     tier: std
-    description: Konsultant UX — dostępność (WCAG 2.2, EN 301 549, Europejski Akt o Dostępności) i badania z użytkownikami. Tylko odpowiedź, bez zmian w plikach.
+    description: UX consultant — accessibility (WCAG 2.2, EN 301 549, the European Accessibility Act) and research with users. Answer only, no file changes.
     skills: [ux-accessibility, ux-research-methods]

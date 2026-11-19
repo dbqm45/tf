@@ -24,6 +24,34 @@
       }
     },
     {
+      "id": "config-rollout-en",
+      "expect": "trigger",
+      "prompt": "I deployed a new version of the app that requires changing the API address in a ConfigMap. The pods are running and the rolling update went through, but the app crashes on the first call. How do I prevent this? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "configmapgenerator",
+            "secretgenerator",
+            "sum\\w* kontroln|checksum|hash",
+            "checksum annotation",
+            "config(map)? hash"
+          ],
+          [
+            "tym samym (pr|pull request|commicie|repozytorium|wdrożeniu)",
+            "same (pr|pull request|commit)",
+            "razem z (kodem|obrazem|wersją obrazu)[^.]{0,60}(pr\\b|repozytor|gitops)",
+            "(same|single|one) (PR|pull request|commit|repo\\w*|release)",
+            "together with (the )?(code|image)",
+            "alongside (the )?(code|image)"
+          ],
+          [
+            "readiness|gotowo",
+            "ready\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "liveness-pdb",
       "expect": "trigger",
       "prompt": "Robię manifest Deploymentu dla usługi produkcyjnej zależnej od bazy danych. Jak ustawić sondy, repliki i zabezpieczenie przed przerwą przy aktualizacji węzłów? Odpowiedz zwięźle.",

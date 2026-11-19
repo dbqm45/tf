@@ -17,6 +17,25 @@
       }
     },
     {
+      "id": "flaky-config-en",
+      "expect": "trigger",
+      "prompt": "In e2e/order.spec.ts tests sometimes fail in CI. How should I set up playwright.config.ts: retries, reporting of flaky tests and trace, so as not to hide them? Answer briefly.",
+      "files": {
+        "e2e/order.spec.ts": "import { test, expect } from '@playwright/test';\ntest('TC-014: suma', async ({ page }) => {\n  await page.goto('/');\n  await expect(page.getByRole('status')).toHaveText('Suma: 190,00 zł');\n});\n",
+        "playwright.config.ts": "import { defineConfig } from '@playwright/test';\nexport default defineConfig({ testDir: 'e2e' });\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "failOnFlakyTests"
+          ],
+          [
+            "on-first-retry"
+          ]
+        ]
+      }
+    },
+    {
       "id": "only-changed-zegar",
       "expect": "trigger",
       "prompt": "W e2e/order.spec.ts chcę w PR uruchamiać tylko testy dotknięte zmianą i testować z ustalonym zegarem. Jakie flagi i API Playwrighta do tego użyć? Odpowiedz zwięźle.",

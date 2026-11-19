@@ -1,84 +1,84 @@
 ---
 name: be-auth-security
-description: Użyj przy uwierzytelnianiu i autoryzacji — sesje, tokeny, OAuth/OIDC, hasła, walidacja, OWASP.
+description: Use for authentication and authorization — sessions, tokens, OAuth/OIDC, passwords, validation, OWASP.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy uwierzytelnianiu, autoryzacji, sesjach i tokenach (kradzież i odtwarzanie, rotacja, unieważnianie), OAuth/OIDC (PKCE, zgody, device code), hasłach, sekretach, walidacji wejścia, deserializacji, panelach administracyjnych i przeglądzie bezpieczeństwa backendu (OWASP). Nie do konfiguracji sieci i chmury (ops-iac-terraform) ani zależności (ops-supply-chain-security)."
+  review: "2027-10-17"
+  catalog: "Use for authentication, authorization, sessions and tokens (theft and replay, rotation, revocation), OAuth/OIDC (PKCE, consents, device code), passwords, secrets, input validation, deserialization, admin panels and the backend security review (OWASP). Not for network and cloud configuration or dependencies (ops-supply-chain-security)."
 ---
 
-# Auth i bezpieczeństwo backendu
+# Auth and backend security
 
-## Uwierzytelnianie
-- Nie pisz własnej kryptografii ani własnego systemu logowania, jeśli projekt ma bibliotekę/IdP.
-- Hasła: argon2id (lub bcrypt z kosztem ≥ 12). Nigdy MD5/SHA-* bez soli i rozciągania.
-- Rate limiting i opóźnienia dla logowania, resetu hasła, OTP. Jednakowy komunikat dla „zły login” i „złe hasło”.
-- MFA chroni logowanie, ale **nie chroni skradzionej sesji**: napastnicy kupują ciasteczka i tokeny wykradzione przez
-  złośliwe oprogramowanie i odtwarzają je bez logowania. Dlatego liczy się projekt sesji i tokenów.
+## Authentication
+- Do not write your own cryptography or your own login system if the project has a library/IdP.
+- Passwords: argon2id (or bcrypt with a cost ≥ 12). Never MD5/SHA-* without a salt and stretching.
+- Rate limiting and delays for login, password reset, OTP. The same message for "wrong login" and "wrong password".
+- MFA protects the login, but **it does not protect a stolen session**: attackers buy cookies and tokens stolen by
+  malware and replay them without logging in. That is why the design of sessions and tokens matters.
 
-## Sesje i tokeny
-- Ciasteczka sesji `HttpOnly; Secure; SameSite=Lax` (lub `Strict`), rotacja ID po zalogowaniu, sesje w magazynie
-  po stronie serwera, żeby dało się je unieważnić.
-- Access token krótki (≤ 15 min); weryfikuj `alg`, `iss`, `aud`, `exp` — **`aud` ściśle**: token wydany dla jednej usługi
-  nie działa w innej.
-- Refresh token z rotacją; ponowne użycie już zużytego refresh tokenu = kradzież → unieważnij całą rodzinę tokenów.
-- Zmiana hasła, MFA lub e-maila unieważnia wszystkie sesje i refresh tokeny użytkownika. Operacja „wyloguj wszędzie”
-  to jedno wywołanie API, przećwiczone przed incydentem.
-- Limit bezczynności i limit bezwzględny sesji; ponowne uwierzytelnienie (step-up) przed operacjami wrażliwymi: zmiana
-  e-maila lub MFA, wypłata, uprawnienia, eksport danych.
-- Tam, gdzie się da, wiąż token z urządzeniem lub kluczem (DPoP, mTLS między usługami, DBSC w przeglądarce).
-Szczegóły i sygnały nadużyć: `references/tokeny-sesje-oauth.md`.
+## Sessions and tokens
+- Session cookies `HttpOnly; Secure; SameSite=Lax` (or `Strict`), rotating the ID after login, sessions in a store
+  on the server side, so that they can be revoked.
+- A short access token (≤ 15 min); verify `alg`, `iss`, `aud`, `exp` — **`aud` strictly**: a token issued for one service
+  does not work in another.
+- A refresh token with rotation; reuse of an already used refresh token = theft → revoke the whole token family.
+- A change of the password, MFA or email revokes all of the user's sessions and refresh tokens. The "log out everywhere" operation
+  is one API call, rehearsed before an incident.
+- An idle limit and an absolute session limit; re-authentication (step-up) before sensitive operations: changing
+  the email or MFA, a payout, permissions, data export.
+- Where possible, bind the token to a device or a key (DPoP, mTLS between services, DBSC in the browser).
+Details and abuse signals: `references/tokens-sessions-oauth.md`.
 
 ## OAuth / OIDC
-- Authorization Code + **PKCE** dla każdego klienta; redirect URI zarejestrowane i porównywane dokładnie (bez wzorców,
-  bez dowolnego portu loopback dla klienta poufnego).
-- Identyfikator klienta publicznego nie jest dowodem tożsamości — napastnik użyje identyfikatora znanej aplikacji.
-- Zakresy (scopes) minimalne; lista dozwolonych zakresów per klient; zgoda administratora dla zakresów wysokiego ryzyka
-  (poczta, pliki, katalog). Użytkownik widzi i może cofnąć zgody.
-- Przepływ device code **wyłączony**, chyba że klient naprawdę go potrzebuje (urządzenie bez klawiatury) — to dziś
-  popularna metoda phishingu, która omija MFA.
-- **Zdalny serwer MCP** to serwer zasobów OAuth: OAuth 2.1 z PKCE, odkrywanie serwera autoryzacji z metadanych,
-  rejestracja klienta przez Client ID Metadata Documents (Dynamic Client Registration przestarzałe), walidacja
-  odbiorcy tokenu i `iss` — `references/tokeny-sesje-oauth.md` §7.
+- Authorization Code + **PKCE** for every client; redirect URIs registered and compared exactly (no patterns,
+  no arbitrary loopback port for a confidential client).
+- A public client's identifier is not proof of identity — an attacker will use the identifier of a known application.
+- Minimal scopes; a list of allowed scopes per client; admin consent for high-risk scopes
+  (mail, files, the directory). The user sees the consents and can revoke them.
+- The device code flow **disabled**, unless the client really needs it (a device without a keyboard) — it is a
+  popular phishing method today that bypasses MFA.
+- **A remote MCP server** is an OAuth resource server: OAuth 2.1 with PKCE, authorization server discovery from metadata,
+  client registration through Client ID Metadata Documents (Dynamic Client Registration deprecated), validation of
+  the token audience and `iss` — `references/tokens-sessions-oauth.md` §7.
 
-## Autoryzacja
-- Sprawdzana na serwerze **per zasób i per akcja** (nie tylko „czy zalogowany”). Najczęstszy błąd: IDOR — `GET /invoices/{id}` bez sprawdzenia właściciela.
-- Domyślnie odmowa (deny by default); uprawnienia w jednym module, nie rozsiane po kontrolerach.
-- Wybór modelu (RBAC, ABAC, ReBAC, PBAC, DAC, MAC) i macierz testów autoryzacji: `references/modele-autoryzacji.md`.
-- Konta usług: jedna tożsamość na usługę, własne poświadczenia o minimalnym zakresie; nigdy wspólny superużytkownik bazy.
-- Panel administracyjny i endpointy zarządzania: osobny host, SSO z MFA, dostęp z VPN/sieci firmowej — nie z internetu.
-  Uprawnienia administracyjne nadawane na czas (just-in-time) i zapisywane w logu audytowym.
+## Authorization
+- Checked on the server **per resource and per action** (not only "is logged in"). The most common bug: IDOR — `GET /invoices/{id}` without checking the owner.
+- Deny by default; permissions in one module, not scattered across controllers.
+- Choosing the model (RBAC, ABAC, ReBAC, PBAC, DAC, MAC) and an authorization test matrix: `references/authorization-models.md`.
+- Service accounts: one identity per service, its own credentials with a minimal scope; never a shared database superuser.
+- The admin panel and management endpoints: a separate host, SSO with MFA, access from a VPN/the company network — not from the internet.
+  Admin permissions granted just in time and recorded in the audit log.
 
-## Wejście i wyjście
-- Walidacja schematem na granicy; limity rozmiaru body i plików.
-- SQL tylko parametryzowany (be-database). Komendy systemowe bez interpolacji wejścia.
-- **Deserializacja:** nigdy nie zamieniaj niezaufanych danych w obiekty natywne (Java `ObjectInputStream`, podobne
-  mechanizmy w innych językach i frameworkach). Tylko formaty danych (JSON) ze schematem albo allowlista klas.
-  Przykłady ataków bez logowania: SolarWinds Web Help Desk (Java), React2Shell (protokół React Server Components).
-- Upload: whitelist typów (sprawdzaj zawartość, nie rozszerzenie), losowe nazwy, przechowywanie poza webroot.
-- SSRF: żądania do URL-i od użytkownika tylko przez allowlistę hostów; blokuj adresy wewnętrzne i metadane chmury
+## Input and output
+- Schema validation at the boundary; body and file size limits.
+- SQL only parameterized (be-database). System commands without interpolating input.
+- **Deserialization:** never turn untrusted data into native objects (Java `ObjectInputStream`, similar
+  mechanisms in other languages and frameworks). Only data formats (JSON) with a schema or an allowlist of classes.
+  Examples of attacks without login: SolarWinds Web Help Desk (Java), React2Shell (the React Server Components protocol).
+- Upload: a whitelist of types (check the content, not the extension), random names, storage outside the webroot.
+- SSRF: requests to user-supplied URLs only through a host allowlist; block internal addresses and cloud metadata
   (`169.254.169.254`).
 
-## Sekrety
-- Tylko ze zmiennych środowiskowych / menedżera sekretów. Nigdy w repo, logach, komunikatach błędów ani odpowiedziach API.
-- Wykrycie sekretu w repo = rotacja sekretu, nie tylko usunięcie z pliku.
+## Secrets
+- Only from environment variables / a secrets manager. Never in the repo, logs, error messages or API responses.
+- A secret found in the repo = rotating the secret, not just removing it from the file.
 
-## Logowanie zdarzeń bezpieczeństwa
-Loguj: logowania (sukces/porażka), wydanie i odświeżenie tokenu (klient, zakresy, IP, ASN, user agent), zgody OAuth,
-zmiany uprawnień, reset hasła i MFA — bez haseł, tokenów i pełnych danych osobowych. Retencja na tyle długa, żeby
-odpowiedzieć na pytanie „czy ktoś miał dostęp” (ops-observability).
+## Logging security events
+Log: logins (success/failure), token issue and refresh (client, scopes, IP, ASN, user agent), OAuth consents,
+permission changes, password and MFA resets — without passwords, tokens and full personal data. Retention long enough to
+answer the question "did someone have access" (ops-observability).
 
-## Nagłówki
-`Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, CORS z jawną listą originów (nigdy `*` z credentials).
+## Headers
+`Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, CORS with an explicit list of origins (never `*` with credentials).
 
-Pełna checklista przed wydaniem API (uwierzytelnianie, JWT z ustalonym algorytmem i JWKS, transport i HSTS, XXE
-i „billion laughs”, upload przez podpisany URL, nagłówki odpowiedzi, CI/CD, monitorowanie):
-`references/checklista-bezpieczenstwa-api.md`.
+The full checklist before an API release (authentication, JWT with a fixed algorithm and JWKS, transport and HSTS, XXE
+and "billion laughs", upload through a signed URL, response headers, CI/CD, monitoring):
+`references/api-security-checklist.md`.
 
-## Checklista przeglądu
-- [ ] każdy nowy endpoint ma sprawdzenie autoryzacji per zasób + test na 403
-- [ ] tokeny: krótkie, `aud` sprawdzane, rotacja refresh z wykrywaniem ponownego użycia, unieważnianie po zmianie poświadczeń
-- [ ] OAuth: PKCE, dokładne redirect URI, minimalne zakresy, device code wyłączony bez potrzeby
-- [ ] brak deserializacji niezaufanych danych do obiektów natywnych
-- [ ] panel admina i endpointy zarządzania niedostępne z internetu
-- [ ] brak sekretów w diffie i logach; zdarzenia bezpieczeństwa logowane
-- [ ] walidacja wejścia i limity; zależności bez znanych krytycznych CVE (ops-supply-chain-security)
+## Review checklist
+- [ ] every new endpoint has a per-resource authorization check + a test for 403
+- [ ] tokens: short, `aud` checked, refresh rotation with reuse detection, revocation after a credential change
+- [ ] OAuth: PKCE, exact redirect URIs, minimal scopes, device code disabled when not needed
+- [ ] no deserialization of untrusted data into native objects
+- [ ] the admin panel and management endpoints not reachable from the internet
+- [ ] no secrets in the diff and logs; security events logged
+- [ ] input validation and limits; dependencies without known critical CVEs (ops-supply-chain-security)

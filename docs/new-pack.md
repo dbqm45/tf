@@ -1,54 +1,90 @@
-# Nowa nakładka lub tryb
+# New overlay or mode
 
-Przewodnik dla autora fabryki (repozytorium tf). Pełna lista kluczy `pack.yaml` i plików nakładki należy do
-publicznego API: `core/factory/PUBLIC_API.md`.
+A guide for the factory author (the tf repository). The full list of `pack.yaml` keys and overlay files belongs to the
+public API: `core/factory/PUBLIC_API.md`.
 
-## Nakładka czy tryb
-- **Nakładka** (`packs/pack-<nazwa>/`, `id: pack-<nazwa>`) — wiedza dziedzinowa: skille, role, persony,
-  konsultanci. Instalowana, gdy projekt jej potrzebuje.
-- **Tryb** (`modes/mode-<nazwa>/`, `id: mode-<nazwa>`, `kind: mode`) — sposób pracy włączany przez człowieka:
-  agent sesji głównej, skill procesowy, skrypty, uprawnienia, przewodnik `GUIDE.md`.
-Ten sam format i loader; instalator sprawdza, że `kind: mode` leży w `modes/`, a nakładka w `packs/`.
+## Overlay or mode
+- **Overlay** (`packs/pack-<name>/`, `id: pack-<name>`): domain knowledge: skills, roles, personas, consultants.
+  Installed when the project needs it.
+- **Mode** (`modes/mode-<name>/`, `id: mode-<name>`, `kind: mode`): a way of working switched on by a person: a main
+  session agent, a process skill, scripts, permissions, a `GUIDE.md` guide.
+The same format and loader; the installer checks that `kind: mode` lives in `modes/` and an overlay in `packs/`.
 
-W sesji Claude Code uruchomionej w repo tf prowadzi przez to skill `tf-new-pack` (`.claude/skills/tf-new-pack/`,
-nie trafia do projektów): dopytuje o zakres, prefiks, zależności i role, proponuje scenariusze, woła generator
-i bramki.
+In a Claude Code session started in the tf repo, the `tf-new-pack` skill leads you through this
+(`.claude/skills/tf-new-pack/`, it does not go into projects): it asks about scope, prefix, dependencies and roles,
+proposes scenarios, and calls the generator and the gates.
 
-## Szkielet jednym poleceniem
+## A skeleton with one command
 ```
-python3 tools/workspace.py new-pack <nazwa> [--kind pack|mode] [--prefix abc-] [--title "…"] [--description "…"]
-                                    [--skill abc-nazwa] [--role nazwa-roli] [--no-check]
+python3 tools/workspace.py new-pack <name> [--kind pack|mode] [--prefix abc-] [--title "…"] [--description "…"]
+                                    [--skill abc-name] [--role role-name] [--no-check]
 ```
-Tworzy:
-- `pack.yaml` z wersją `0.1.0`, `default: false`, `requires.core` od bieżącej wersji rdzenia do następnego MAJOR
-  i jednym wymiarem (`facets`) z prefiksem;
-- szkielet skilla `skills/<prefiks>…/SKILL.md` i scenariuszy `tests/skill_evals/<skill>.json`;
-- opcjonalnie rolę `roles/<rola>.yaml` z tym skillem; dla trybu `GUIDE.md`;
-- wpis w macierzy CI (`.github/workflows/factory-checks.yml`, przed `all`).
+Creates:
+- `pack.yaml` with version `0.1.0`, `default: false`, `requires.core` from the current core version to the next MAJOR,
+  and one dimension (`facets`) with the prefix;
+- a skeleton of the skill `skills/<prefix>…/SKILL.md` and of the scenarios `tests/skill_evals/<skill>.json`;
+- optionally a role `roles/<role>.yaml` with that skill; for a mode, `GUIDE.md`;
+- an entry in the CI matrix (`.github/workflows/factory-checks.yml`, before `all`).
 
-Potem uruchamia `workspace.py check --packs <id>` i `refs` i wypisuje listę do zrobienia (bez `--no-check`).
-Istniejący katalog, zajęty prefiks, zła nazwa albo skill spoza prefiksu → kod 2 bez zmian na dysku.
-**Szkielet scenariuszy celowo nie przechodzi bramki** (`skill_gate.py --status` i trafienia podpowiedzi), dopóki
-nie powstaną prawdziwe scenariusze i treść.
+Then it runs `workspace.py check --packs <id>` and `refs` and prints a to-do list (unless `--no-check`).
+An existing directory, a taken prefix, a bad name or a skill outside the prefix → exit code 2 with no changes on disk.
+**The scenario skeleton deliberately fails the gate** (`skill_gate.py --status` and hint hits) until real scenarios
+and content exist.
 
-## Kolejność pracy
-1. **Zakres i granice** — jakie pytania ma obsłużyć nakładka i które należą do istniejących skilli (sprawdź
-   `python3 tools/workspace.py assemble --packs all` i `.claude/catalog.md` w workspace).
-2. **Prefiks** — krótki, jeden na nakładkę lub wymiar (`facets`); nie może kolidować z rdzeniem ani inną nakładką.
-   `order` ustawia kolejność wymiarów na liście skilli.
-3. **Zależności** — `requires.packs` (nakładka nie działa bez innej) albo `optional_packs` (odwołania pomijane,
-   gdy nakładki nie ma). Tylko do tych nakładek wolno odwoływać się z treści skilli — pilnuje tego `refs`.
-4. **Scenariusze przed treścią** (core-skill-authoring): 2× trigger z luką, 1× no-trigger z sąsiadem.
-5. **Treść skilli**, role i persony (`roles/`, `personas/`); przy wielu rzadko używanych skillach rozważ
-   `skill_visibility.name_only_prefixes` — opis nie zabiera budżetu listy skilli.
-6. **Bramki** w workspace: `python3 factory/skill_gate.py <skill>` i `--hints` (także na `--packs all`), potem
+## Order of work
+1. **Scope and boundaries**: which questions the overlay should handle and which belong to existing skills (check
+   `python3 tools/workspace.py assemble --packs all` and `.claude/catalog.md` in the workspace).
+2. **Prefix**: short, one per overlay or dimension (`facets`); it must not collide with the core or another overlay.
+   `order` sets the order of dimensions in the skill list.
+3. **Dependencies**: `requires.packs` (the overlay does not work without another) or `optional_packs` (references are
+   skipped when the overlay is absent). Skill content may refer only to those overlays; `refs` enforces this.
+4. **Scenarios before content** (core-skill-authoring): 2× trigger with a gap, 1× no-trigger with a neighbor.
+5. **Skill content**, roles and personas (`roles/`, `personas/`); with many rarely used skills consider
+   `skill_visibility.name_only_prefixes`: the description does not take budget from the skill list.
+6. **Gates** in the workspace: `python3 factory/skill_gate.py <skill>` and `--hints` (also on `--packs all`), then
    `python3 tools/workspace.py sync-gate --out .work/<id>`.
-7. **Sprawdzenie**: `python3 tools/workspace.py check --packs <id>`, `check --packs all`, `refs`; PR z tytułem
+7. **Verification**: `python3 tools/workspace.py check --packs <id>`, `check --packs all`, `refs`; a PR titled
    `feat(<id>): …`.
 
-## Wersjonowanie
-- Wersję rdzenia i CHANGELOG liczy workflow wydania z Conventional Commits (`docs/RELEASING.md`). Wersji nakładki
-  (`version` w `pack.yaml`) nic nie podbija automatycznie — zmieniasz ją ręcznie według SemVer [zalecenie, nie
-  reguła sprawdzana w CI]: nowy skill lub rola — MINOR, zmiana nazwy albo usunięcie skilla, roli lub persony —
-  MAJOR z wpisem w `factory/migrations.py` (zmiana nazwy skilla jako MAJOR — decyzja z 2026-10-21).
-- `requires.core` zawęża zakres, gdy nakładka zaczyna używać funkcji nowszego rdzenia.
+## An overlay outside the factory repository
+An overlay can live in another repository (e.g. domain knowledge together with its sources). The contract is the same
+as in `packs/`: `pack.yaml` with `kind` and an id prefix (`pack-`/`mode-`), `requires.core`, scenarios and the gate
+registry in `tests/`.
+- Installation in a project: `install.py --pack-dir <directory|git address> --add <id>` (or `update.py`/`tf` with these
+  flags). The source is a directory with `pack.yaml`, a directory with `*/pack.yaml`, or a git repository
+  (`#<tag|branch>`; without it the latest `vX.Y.Z` tag, and without tags the default branch). The manifest (and the
+  team lock) remembers the source in `pack_dirs`, so an update downloads the overlay again; `--drop-pack-dir <source>`
+  forgets it.
+- The installer refuses when the id is taken by a factory overlay, when the source is gone while an overlay from it is
+  selected (give the new `--pack-dir` location), and when `skill_audit.py` reports a high weight in the overlay's
+  skills.
+- Checking together with the factory: `python3 tools/workspace.py check --packs pack-it,<id> --pack-dir <directory>`
+  (workspace `.work/<overlays>+ext`); `sync-gate --out <that workspace> --pack-dir <directory>` writes the gate results
+  to `<directory>/tests/skill_gate/<id>.json`.
+
+## A company overlay
+Standards and defaults of one organization: a separate set in the `org/` directory (generator
+`org/new_org_pack.py`, template `org/template/`, guide `org/README.md`). A company overlay is an ordinary overlay with
+the `org_defaults` key:
+- `config`: organization defaults between the engine and the project (`autonomy`, `tiers`, `profiles`,
+  `default_profile`, `work`, `loop`, `steps`, `task`, `commit_language`); read by `build.py`, `guard_bash` (the
+  autonomy policy still only tightens), `tf risk`, `tf work` and `tf config show` (the "organization" source);
+- `operations.tracker`: the default tracker, prefixes and `fields` of the operations card; without an address (`url`).
+At most one overlay with `org_defaults` per project; a key outside the list is a `build.py check` error with no effect.
+The rules module from `tier0.rules` is run by the core scanner `.tf/factory/rules_scan.py`; the overlay's `semgrep.yml`
+goes to `.tf/factory/packs/<id>/` and into the loop-slice scan.
+
+## Versioning
+- The core version and CHANGELOG are computed by the release workflow from Conventional Commits (`docs/RELEASING.md`).
+  Nothing bumps an overlay's version (`version` in `pack.yaml`) automatically: you change it by hand following SemVer
+  [a recommendation, not a rule checked in CI]: a new skill or role is a MINOR, renaming or removing a skill, role or
+  persona is a MAJOR with an entry in `factory/migrations.py` (renaming a skill as a MAJOR is a decision from
+  2026-10-21).
+- `requires.core` narrows the range when the overlay starts using features of a newer core.
+
+## Project data migrations
+When a new overlay version changes the format of files that its skills assume in the project (e.g. headers of a
+document checked by a script), add `packs/<id>/migrations.py` with a function `migrate_values(root, dry) -> list[str]`:
+it returns the changed paths, with `dry=True` it writes nothing, and a repeated call after migration returns an empty
+list. The installer copies the file to `.tf/factory/packs/<id>/`, and the core's `migrations.migrate_values` calls it
+on update; the core does not name overlay skills. Example: `packs/pack-it/migrations.py` (legacy dossier).

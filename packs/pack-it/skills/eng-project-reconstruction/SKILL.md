@@ -1,121 +1,121 @@
 ---
 name: eng-project-reconstruction
-description: Użyj, gdy z samego kodu trzeba odtworzyć, czym jest projekt — stack, moduły, domeny, wymagania, reguły, standardy — raport z dowodami.
+description: Use when you must reconstruct from the code alone what a project is — stack, modules, domains, rules, evidence.
 metadata:
-  przeglad: "2027-04-23"
-  katalog: "Użyj, gdy trzeba z samego repozytorium (duże, stare, wiele języków, bez dokumentacji) odtworzyć opis projektu: stack, moduły, domeny i słownik, wymagania z testów i walidacji, reguły biznesowe, standardy faktycznie stosowane w kodzie, ryzyka, pytania do ludzi — raport w docs/project/00-reconstruction/ z dowodem plik:linia przy każdym twierdzeniu, szkice CLAUDE.md i REVIEW.md ze standardów, odświeżanie przyrostowe po zmianach (manifest z hashami), wersja HTML do czytania. Najpierw skrypty bez modelu (spis i partie w budżecie, graf, historia gita, standardy, schemat bazy), potem karty modułów tańszym modelem, synteza mocniejszym, kontrola dowodów skryptem. Nie do opisu architektury przed refaktorem z oceną i roadmapą (eng-legacy-dossier), samej mapy i wpływu zmiany (eng-codebase-mapping), długu (eng-tech-debt-audit) ani pełnego audytu z bezpieczeństwem (eng-code-audit)."
-  slowa: "rekonstrukcja projektu, odtworzyć z kodu, z samego kodu, czym jest ten projekt, przejąłem repozytorium, przejęte repo, duże repozytorium, bez dokumentacji, raport o projekcie, opis projektu, stack projektu, domeny z kodu, wymagania z kodu, wymagania z testów, reguły biznesowe z kodu, standardy z kodu, konwencje zespołu, których zespół przestrzega, agent ma pisać tak samo, CLAUDE.md z kodu, REVIEW.md, słownik domeny z kodu, odświeżyć raport, zaktualizować raport, zmieniło się kilkadziesiąt plików, maister, automat ma znać projekt, kontekst dla agenta, raport w przeglądarce, raport HTML, pokazać raport zarządowi"
+  review: "2027-04-23"
+  catalog: "Use when you must reconstruct a project description from the repository alone (large, old, many languages, no documentation): the stack, modules, domains and glossary, requirements from tests and validation, business rules, standards actually applied in the code, risks, questions for people — a report in docs/project/00-reconstruction/ with file:line evidence for every claim, CLAUDE.md and REVIEW.md drafts from the standards, incremental refresh after changes (a manifest with hashes), an HTML version for reading. First scripts without a model (an inventory and batches within a budget, a graph, git history, standards, the database schema), then module cards with a cheaper model, synthesis with a stronger one, evidence checking with a script. Not for describing the architecture before a refactor with an assessment and a roadmap (eng-legacy-dossier), the map and change impact alone (eng-codebase-mapping), debt (eng-tech-debt-audit) or a full audit with security (eng-code-audit)."
+  keywords: "rekonstrukcja projektu, odtworzyć z kodu, z samego kodu, czym jest ten projekt, przejąłem repozytorium, przejęte repo, duże repozytorium, bez dokumentacji, raport o projekcie, opis projektu, stack projektu, domeny z kodu, wymagania z kodu, wymagania z testów, reguły biznesowe z kodu, standardy z kodu, konwencje zespołu, których zespół przestrzega, agent ma pisać tak samo, CLAUDE.md z kodu, REVIEW.md, słownik domeny z kodu, odświeżyć raport, zaktualizować raport, zmieniło się kilkadziesiąt plików, maister, automat ma znać projekt, kontekst dla agenta, raport w przeglądarce, raport HTML, pokazać raport zarządowi, project reconstruction, reconstruct from code, from the code alone, what this project is, I took over a repository, inherited repo, large repository, no documentation, project report, project description, project stack, domains from code, requirements from code, requirements from tests, business rules from code, standards from code, team conventions, which the team follows, the agent should write the same way, CLAUDE.md from code, domain glossary from code, refresh the report, update the report, dozens of files changed, the automaton should know the project, context for the agent, report in the browser, HTML report, show the report to the board"
 ---
 
-# Rekonstrukcja projektu z kodu
+# Reconstructing a project from code
 
-Cel: z samego repozytorium powstaje raport, który człowiek czyta w kwadrans, a agent (np. automat historyjek) czyta
-przy każdej zmianie. Kod jest źródłem prawdy, każde twierdzenie ma dowód `plik:linia` albo oznaczenie
-[założenie] / [niezweryfikowane] / [pytanie] (core-grounding). Nic w kodzie nie zmieniasz.
+Goal: from the repository alone a report is produced that a human reads in a quarter of an hour and an agent (e.g. a story automaton) reads
+on every change. The code is the source of truth, every claim has `file:line` evidence or the marker
+[assumption] / [unverified] / [question] (core-grounding). You change nothing in the code.
 
-**Taniej niż „przeczytaj repo”:** model nigdy nie czyta całego repozytorium. Najpierw liczą skrypty (zero tokenów),
-model dostaje streszczenia i partie w budżecie; najtańszy wystarczający model na krok (core-cost-control).
-Skrypty leżą w `.claude/skills/eng-codebase-mapping/scripts/`; niżej podaję same nazwy.
+**Cheaper than "read the repo":** the model never reads the whole repository. First the scripts compute (zero tokens),
+the model gets summaries and batches within a budget; the cheapest sufficient model per step (core-cost-control).
+The scripts are in `.claude/skills/eng-codebase-mapping/scripts/`; below I give only the names.
 
-## Procedura
-0. **Zakres i budżet.** Commit HEAD, zakres (całość albo katalogi), budżet USD od człowieka. `repo_inventory.py
-   <repo>` podaje tokeny i partie — szacunek kosztu (partie × cennik modelu kart) pokaż przed startem. Plan przebiegu
-   z polami do odhaczenia w `docs/project/00-reconstruction/plan.md` — po przerwie wznawiasz od niego.
-1. **Spis bez modelu, jednym poleceniem:** `recon_scan.py <repo> --out docs/project/00-reconstruction/raw` —
-   inwentarz i partie, graf, historia, standardy z idiomami, schemat bazy do `raw/*.json`, na ekran streszczenie.
-   Czytasz streszczenie; po szczegóły sięgasz do konkretnego pliku JSON, nie uruchamiasz skanów osobno.
-2. **Karty modułów** — zawsze wykonawcy na najtańszym modelu (Haiku), także w małym repozytorium: partia
-   z `raw/inventory.json` = jedno zadanie, równolegle (drobne partie łącz po kilka w jedno zadanie). Główny model
-   nie czyta plików źródłowych partii; wykonawca zapisuje kartę do pliku i odpowiada jedną linią. Wszystkich
-   wykonawców uruchamiasz w jednej wiadomości, na pierwszym planie (bez pracy w tle), i czekasz na ich odpowiedzi —
-   nie odpytujesz katalogu `modules/` w pętli (każde sprawdzenie to tura z pełnym kontekstem). Prompt ze stałym
-   początkiem (`references/prompt-karty.md`) i zmienną końcówką (lista plików partii) — wspólny prefiks trafia
-   w cache. Wynik: JSON wg `references/karta-modulu.json` w `modules/<moduł>.json`.
-   Wykonawca sam przepuszcza swoją kartę przez `recon_cards.py` (karta → `modules/<moduł>.md`, dowody względne wobec
-   partii poprawione) i `recon_check.py` i poprawia złe dowody. Po wszystkich kartach `recon_check.py modules/ --repo
-   <repo>`; kartę ze złym dowodem zwracasz wykonawcy raz (nie poprawiasz jej sam), potem eskalacja na mocniejszy model.
-3. **Domeny i słownik** (mocniejszy model, wejście: karty + graf): subdomeny, konteksty, słownik termin → `plik:linia`,
-   rozjazdy nazw kod ↔ biznes (ddd-legacy-modernization, ddd-strategic-analysis).
-4. **Wymagania i reguły:** `recon_cards.py modules/ --repo <repo> --rules` składa `rules.md` z reguł kart bez
-   modelu; reguły przekrojowe i ograniczenia ze `schema.json` dopisujesz pod nagłówkiem `## Reguły przekrojowe`
-   (ponowne składanie go zachowuje). Wymagania z testów (nazwy, asercje),
-   walidacji i endpointów z kart; każde
-   z pewnością: `test` (jest test) / `kod` (tylko kod) / `do potwierdzenia`. Mapowanie (błąd → kod HTTP, lista błędów
-   domenowych, wartości enuma) wypisujesz w całości, łącznie z przypadkiem domyślnym i kodem sukcesu.
-5. **Standardy:** sygnał z `standards_scan` (udział, przykłady, wyjątki) → reguła po obejrzeniu przykładów. Plik na
-   obszar w `standards/` + `standards/INDEX.md`. Udział < 70% to nie standard, tylko „mieszane” z wyjątkami.
-   Sygnały `idiomy testów` i `idiomy kodu` oceniasz w obrębie miejsca, którego dotyczą (testy danej warstwy,
-   kontrolery, agregaty), nie wobec wszystkich plików. Standard testów podaje z przykładem `plik:linia`: rodzaj testu
-   na warstwę (np. test web, test repozytorium, integracyjny), bibliotekę dublerów, strukturę przypadków (podtesty,
-   tabela, parametry), dane testowe (buildery, fixtures). Standard kodu: idiomy sygnatur, hermetyzacji i kontrolerów,
-   czasy życia w rejestracji DI. Sygnał `układ` (pakiety według funkcji czy warstw) daje standard „gdzie kłaść nowy
-   kod” z przykładami katalogów i wyjątkami.
-6. **Raport** `report.md` wg `references/raport.md`; sekcję Moduły wstawia `recon_cards.py modules/ --repo <repo>
-   --into report.md` (nie przepisujesz jej; szczegóły modułów są w `modules/*.md`) + szkice `CLAUDE.draft.md` i `REVIEW.draft.md`
-   (`references/szkice.md`) — do zatwierdzenia przez człowieka, nie wpisujesz ich sam do `CLAUDE.md`. Po zgodzie
-   `python3 .claude/skills/core-git-workflow/scripts/ai_review.py review-md` przenosi szkic do `REVIEW.md` (zasady
-   przeglądu PR przez AI w CI: `ai_review.py install`).
-7. **Kontrola:** `recon_check.py docs/project/00-reconstruction --repo <repo> --final` — zero złych dowodów,
-   wszystkie sekcje, twierdzenia bez dowodu oznaczone, tabela stacku z wymaganymi wierszami (z wersjami, CI, testami
-   i konfiguracją; wiersz CI wskazuje plik pipeline'u, jeśli taki jest w repo), każdy moduł z kart wymieniony
-   w sekcji Moduły i z aktualnym `modules/<moduł>.md`. Raport kosztu przebiegu (core-cost-control), potem
+## Procedure
+0. **Scope and budget.** The HEAD commit, the scope (everything or directories), a USD budget from the human. `repo_inventory.py
+   <repo>` gives tokens and batches — show the cost estimate (batches × the card model's price list) before the start. A run plan
+   with fields to tick off in `docs/project/00-reconstruction/plan.md` — after a break you resume from it.
+1. **An inventory without a model, with one command:** `recon_scan.py <repo> --out docs/project/00-reconstruction/raw` —
+   the inventory and batches, the graph, the history, standards with idioms, the database schema to `raw/*.json`, a summary on screen.
+   You read the summary; for details you go to the specific JSON file, you do not run the scans separately.
+2. **Module cards** — always workers on the cheapest model (Haiku), also in a small repository: a batch
+   from `raw/inventory.json` = one task, in parallel (join small batches a few at a time into one task). The main model
+   does not read the batches' source files; the worker writes the card to a file and answers with one line. You launch all
+   the workers in one message, in the foreground (no background work), and wait for their answers —
+   you do not poll the `modules/` directory in a loop (every check is a turn with the full context). A prompt with a fixed
+   beginning (`references/prompt-cards.md`) and a variable ending (the list of the batch's files) — the shared prefix hits
+   the cache. The result: JSON per `references/module-card.json` in `modules/<module>.json`.
+   The worker itself runs its card through `recon_cards.py` (card → `modules/<module>.md`, evidence relative to
+   the batch corrected) and `recon_check.py` and fixes bad evidence. After all the cards `recon_check.py modules/ --repo
+   <repo>`; you return a card with bad evidence to the worker once (you do not fix it yourself), then escalation to a stronger model.
+3. **Domains and glossary** (a stronger model, input: the cards + the graph): subdomains, contexts, a glossary term → `file:line`,
+   name mismatches code ↔ business (ddd-legacy-modernization, ddd-strategic-analysis).
+4. **Requirements and rules:** `recon_cards.py modules/ --repo <repo> --rules` assembles `rules.md` from the cards' rules without
+   a model; cross-cutting rules and constraints from `schema.json` you add under the heading `## Cross-cutting rules`
+   (reassembling keeps it). Requirements from tests (names, assertions),
+   validation and endpoints from the cards; each
+   with a confidence: `test` (there is a test) / `code` (code only) / `to confirm`. A mapping (error → HTTP code, a list of domain
+   errors, enum values) you write out in full, including the default case and the success code.
+5. **Standards:** a signal from `standards_scan` (share, examples, exceptions) → a rule after looking at the examples. A file per
+   area in `standards/` + `standards/INDEX.md`. A share < 70% is not a standard, only "mixed" with exceptions.
+   The signals `test idioms` and `code idioms` you assess within the place they concern (the tests of a given layer,
+   controllers, aggregates), not against all files. The test standard gives, with a `file:line` example: the kind of test
+   per layer (e.g. a web test, a repository test, an integration test), the test double library, the case structure (subtests,
+   a table, parameters), test data (builders, fixtures). The code standard: idioms of signatures, encapsulation and controllers,
+   lifetimes in the DI registration. The `layout` signal (packages by feature or by layer) gives the standard "where to put new
+   code" with examples of directories and exceptions.
+6. **The report** `report.md` per `references/report.md`; the Modules section is inserted by `recon_cards.py modules/ --repo <repo>
+   --into report.md` (you do not rewrite it; module details are in `modules/*.md`) + the drafts `CLAUDE.draft.md` and `REVIEW.draft.md`
+   (`references/sketches.md`) — for a human to approve, you do not write them into `CLAUDE.md` yourself. After approval
+   `python3 .claude/skills/core-git-workflow/scripts/ai_review.py review-md` moves the draft to `REVIEW.md` (the rules of
+   PR review by AI in CI: `ai_review.py install`).
+7. **Control:** `recon_check.py docs/project/00-reconstruction --repo <repo> --final` — zero bad evidence,
+   all sections, claims without evidence marked, the stack table with the required rows (with versions, CI, tests
+   and configuration; the CI row points to the pipeline file, if there is one in the repo), every module from the cards listed
+   in the Modules section and with a current `modules/<module>.md`. A report of the run's cost (core-cost-control), then
    `recon_manifest.py write <repo> --out docs/project/00-reconstruction/manifest.json --budget-tokens N --cost-usd X`.
-   **Eksport JSON** dla narzędzi (np. kontrola wymagań jako „stan obecny”): `recon_export.py
-   docs/project/00-reconstruction --repo <repo>` → `reconstruction.json` — reguły, wymagania i słownik z tych samych
-   plików, dowody rozbite na plik i linie z `verified`, pewność, stan (dowód / założenie / pytanie), moduły z kart,
-   commit z manifestu i stały identyfikator pozycji z treści (śledzenie między odświeżeniami). Bez modelu.
-8. **Wersja do czytania (opcjonalnie):** jedna strona HTML z `report.md` (spis treści, tabele, dowody jako tekst).
-   Gdy sesja ma narzędzie Artifact — prywatna strona, udostępnia ją człowiek; bez niego plik
-   `report.html` obok. Źródłem prawdy zostaje Markdown; strona to widok, po odświeżeniu generujesz ją od nowa.
+   **JSON export** for tools (e.g. requirements control as the "current state"): `recon_export.py
+   docs/project/00-reconstruction --repo <repo>` → `reconstruction.json` — rules, requirements and the glossary from the same
+   files, evidence split into file and lines with `verified`, confidence, state (evidence / assumption / question), modules from the cards,
+   the commit from the manifest and a stable item identifier from the content (tracking between refreshes). Without a model.
+8. **A reading version (optional):** one HTML page from `report.md` (a table of contents, tables, evidence as text).
+   When the session has the Artifact tool — a private page, the human shares it; without it a
+   `report.html` file next to it. Markdown remains the source of truth; the page is a view, after a refresh you generate it anew.
 
-## Wynik
+## Result
 `docs/project/00-reconstruction/`: `plan.md`, `raw/`, `modules/*.json`, `domain.md`, `requirements.md`, `rules.md`,
-`standards/` z `INDEX.md`, `report.md`, `CLAUDE.draft.md`, `REVIEW.draft.md`, `manifest.json`
-(commit bazowy, partie i pliki z hashem sha256, budżet partii, data, koszt), `reconstruction.json` (eksport, format
-`reconstruction-export.schema.json` obok skryptu — kopia `reconstruction.schema.json` z kontraktu pdi;
-`recon_refresh.py finish` odświeża go razem z manifestem),
-opcjonalnie `report.html`.
+`standards/` with `INDEX.md`, `report.md`, `CLAUDE.draft.md`, `REVIEW.draft.md`, `manifest.json`
+(the base commit, batches and files with a sha256 hash, the batch budget, the date, the cost), `reconstruction.json` (the export, format
+`reconstruction-export.schema.json` next to the script — a copy of `reconstruction.schema.json` from the pdi contract;
+`recon_refresh.py finish` refreshes it together with the manifest),
+optionally `report.html`.
 
-## Odświeżanie przyrostowe
-Cel: kilka tur głównego modelu. Pierwsze polecenie to `prep` (bez wstępnego `git status` i `ls`); kodu partii nie
-czytasz sam, skanów i kopii nie robisz ręcznie.
-1. `recon_refresh.py prep <repo>`: diff z manifestem i poprzednie wersje plików z gita. Zmiany tylko w komentarzach
-   i pustych liniach nie dostają zleceń; numery linii dowodów w kartach i dokumentach są przeliczone. Do tego kopia
-   kart do `raw/cards-prev/`, zlecenia `raw/refresh/<karta>.md` z diffem zmienionych plików, lista plików bez karty.
-   Bez zleceń `prep` sam uruchamia `finish` — przechodzisz do kroku 4. Ponad połowa plików zmieniona → pełny przebieg.
-2. Wykonawcy (Haiku) w jednej wiadomości, na pierwszym planie; każdy dostaje jedno zdanie: „Wykonaj zlecenie
-   z <ścieżka>”. Wykonawca aktualizuje starą kartę (tylko zmienione pliki) i sam sprawdza dowody.
-3. `recon_refresh.py finish <repo>`: karty → `.md`, `rules.md`, sekcja Moduły, data i commit odświeżenia w nagłówku
-   raportu, zmienione reguły kart (stara → nowa), miejsca do sprawdzenia z pełną treścią linii (stary znacznik, dowód
-   w zmienionej linii kodu, opis podobny do zmienionej reguły; też w `raw/refresh/STALE.md`), dowody przesunięte przez
-   zmianę kodu poprawione samoczynnie, `recon_check --final`, a gdy przechodzi — nowy manifest.
-4. Poprawki z wydruku `finish` w jednej wiadomości, bez czytania plików (chyba że linia z listy nie wystarcza): linie
-   oznaczone „z karty” poprawiasz w `modules/<karta>.json`, pozostałe zapisujesz (Write) do `raw/refresh/fixes.md`
-   jako bloki `@@ plik:linia` z nową treścią linii (pusty blok usuwa linię) i w tej samej wiadomości uruchamiasz
-   `recon_refresh.py apply <repo>` — zamienia linie i od razu uruchamia `finish`. Bez heredoc i `sed -i`. Opis
-   usuniętej reguły zamieniasz na zdanie o stanie obecnym („… nie jest już sprawdzane”), nie kasujesz go; pusty blok
-   tylko dla powtórzeń. Streszczenie, które podaje tylko część zmienionej reguły (np. dolną granicę bez nowej
-   górnej), uzupełniasz o stan obecny. Miejsce zostawiasz, gdy opisuje stan obecny w całości. Do tego wymagania ze
-   zmienionych testów.
-   Kontrola przeszła → kończysz.
-5. Odpowiedź końcowa: do 5 linii — co się zmieniło w opisie, wynik kontroli.
+## Incremental refresh
+Goal: a few turns of the main model. The first command is `prep` (without a preliminary `git status` and `ls`); you do not read
+the batches' code yourself, you do not do scans and copies manually.
+1. `recon_refresh.py prep <repo>`: a diff against the manifest and the previous versions of files from git. Changes only in comments
+   and blank lines get no tasks; the line numbers of evidence in the cards and documents are recalculated. In addition a copy
+   of the cards to `raw/cards-prev/`, tasks `raw/refresh/<card>.md` with the diff of the changed files, a list of files without a card.
+   With no tasks `prep` itself runs `finish` — you go to step 4. More than half of the files changed → a full run.
+2. Workers (Haiku) in one message, in the foreground; each gets one sentence: "Carry out the task
+   from <path>". The worker updates the old card (only the changed files) and checks the evidence itself.
+3. `recon_refresh.py finish <repo>`: cards → `.md`, `rules.md`, the Modules section, the refresh date and commit in the report
+   header, changed card rules (old → new), places to check with the full line content (an old marker, evidence
+   in a changed code line, a description similar to a changed rule; also in `raw/refresh/STALE.md`), evidence shifted by
+   a code change corrected automatically, `recon_check --final`, and when it passes — a new manifest.
+4. Fixes from the `finish` printout in one message, without reading files (unless a line from the list is not enough): lines
+   marked "from card" you fix in `modules/<card>.json`, the others you write (Write) to `raw/refresh/fixes.md`
+   as `@@ file:line` blocks with the new line content (an empty block deletes the line) and in the same message you run
+   `recon_refresh.py apply <repo>` — it replaces the lines and immediately runs `finish`. No heredoc and no `sed -i`. The description
+   of a removed rule you replace with a sentence about the current state ("… is no longer checked"), you do not delete it; an empty block
+   only for repetitions. A summary that gives only part of a changed rule (e.g. the lower bound without the new
+   upper one) you complete with the current state. You leave a place when it describes the current state in full. In addition requirements from
+   the changed tests.
+   The control passed → you finish.
+5. The final answer: up to 5 lines — what changed in the description, the control result.
 
-## Zasady
-- **Kontekst głównego modelu jest drogi:** każda tura czyta go od nowa. Pełne wyniki zostają w plikach, model czyta
-  streszczenia i karty; pliki piszesz jednym zapisem, skrypty uruchamiasz jednym poleceniem. Kod źródłowy otwierasz
-  tylko, żeby sprawdzić konkretny dowód (fragment pliku, nie cały plik).
-- **Dowód albo oznaczenie** — bez wyjątków; cytat przy dowodzie musi się zgadzać z kodem (sprawdza `recon_check`).
-- **Czego nie widać, to nie istnieje w raporcie:** DI, refleksja, kolejki, wywołania HTTP między usługami, konfiguracja
-  zewnętrzna → „Czego nie sprawdzono” i pytania do ludzi.
-- **Bez sieci i bez uruchamiania kodu** repozytorium; sekretów z plików nie cytujesz (core-agent-security).
-- **Budżet to STOP:** po partii, która go przekracza, zatrzymujesz się z raportem częściowym i planem dalszych partii.
+## Rules
+- **The main model's context is expensive:** every turn reads it anew. Full results stay in files, the model reads
+  summaries and cards; you write files with one write, you run scripts with one command. You open source code
+  only to check a specific piece of evidence (a fragment of a file, not the whole file).
+- **Evidence or a marker** — no exceptions; the quote with the evidence must match the code (`recon_check` checks it).
+- **What is not visible does not exist in the report:** DI, reflection, queues, HTTP calls between services, external
+  configuration → "Not checked" and questions for people.
+- **No network and no running of the repository's code**; you do not quote secrets from files (core-agent-security).
+- **The budget is a STOP:** after the batch that exceeds it, you stop with a partial report and a plan for the further batches.
 
-## Przykład
-Repo 400 tys. linii (Java + Go, 2012). `repo_inventory --budget-tokens 60000` → 38 partii, ~2,2 mln tokenów; szacunek
-podany człowiekowi, zgoda na 6 USD. Skrypty kroku 1 w kilka minut; 38 kart na Haiku równolegle; 3 karty wróciły po
-`recon_check` (zły cytat), jedna eskalowana. Standard „błędy przez wyjątki domenowe” — 81% klas serwisów, wyjątki
-w `legacy/` → wpis z wyjątkami. Raport: 14 reguł z testem, 9 „do potwierdzenia”, 6 pytań; szkic `REVIEW.md` z 5 regułami.
+## Example
+A repo of 400 thousand lines (Java + Go, 2012). `repo_inventory --budget-tokens 60000` → 38 batches, ~2.2 million tokens; the estimate
+given to the human, approval for 6 USD. The step 1 scripts in a few minutes; 38 cards on Haiku in parallel; 3 cards came back after
+`recon_check` (a wrong quote), one escalated. The standard "errors through domain exceptions" — 81% of service classes, exceptions
+in `legacy/` → an entry with exceptions. The report: 14 rules with a test, 9 "to confirm", 6 questions; a `REVIEW.md` draft with 5 rules.
 
-## Źródła
-- Claude Code — subagenci, prompt caching, koszt: dokumentacja code.claude.com i platform.claude.com.
-- Zasada dowodu i oznaczeń: core-grounding; koszt i dobór modelu: core-cost-control.
+## Sources
+- Claude Code — subagents, prompt caching, cost: the code.claude.com and platform.claude.com documentation.
+- The evidence and marker rule: core-grounding; cost and model choice: core-cost-control.

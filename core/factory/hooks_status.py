@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Czy hooki fabryki działały przy ostatnich commitach — porównanie śladów hooków w .tf/logs z historią git.
+Did the factory hooks run on the latest commits — compares hook traces in .tf/logs with the git history.
 
-  python3 .tf/factory/hooks_status.py              # jedna linia: aktywne / nieaktywne / brak hooków
+  python3 .tf/factory/hooks_status.py              # one line: active / inactive / no hooks
   python3 .tf/factory/hooks_status.py --json       # {"active": true|false|null, "last_log", "after_commits", "first_after"}
   --root <repozytorium>
 
-Ślady hooków: wpisy `ts` w .tf/logs/skill-hints.jsonl (każde polecenie) i usage.jsonl (koniec sesji). Commit
-później niż godzinę po ostatnim śladzie nie ma pokrycia w logach; od dwóch takich commitów hooki uznajemy za nieaktywne
-(jeden to zwykle bieżąca sesja przed zapisem). Typowa przyczyna: sesja w chmurze z kilkoma repozytoriami albo sesja
-uruchomiona z katalogu nadrzędnego — hooki z .claude/settings.json się nie wczytują, więc nie działają tdd_guard,
-ochrona ścieżek ani logi kosztów. Wynik jest informacją (kod 0), nie błędem. Tylko biblioteka standardowa.
+Hook traces: `ts` entries in .tf/logs/skill-hints.jsonl (every command) and usage.jsonl (end of session). A commit
+made more than an hour after the last trace has no coverage in the logs; from two such commits the hooks are treated as inactive
+(one is usually the current session before it is saved). Typical cause: a cloud session with several repositories or a session
+started from a parent directory — the hooks from .claude/settings.json are not loaded, so tdd_guard,
+path protection and cost logs do not work. The result is information (exit code 0), not an error. Standard library only.
 """
 from __future__ import annotations
 
@@ -20,14 +20,14 @@ import os
 import subprocess
 import sys
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -73,7 +73,7 @@ def commit_times(root: Path) -> list[dt.datetime]:
 
 
 def status(root: Path) -> dict:
-    if os.environ.get("CI") or not has_hooks(root):   # w CI nie ma sesji Claude Code, więc nie ma czego sprawdzać
+    if os.environ.get("CI") or not has_hooks(root):   # there is no Claude Code session in CI, so there is nothing to check
         return {"active": None, "last_log": None, "after_commits": 0, "first_after": None}
     last = last_log(root)
     after = sorted(t for t in commit_times(root) if last is None or t > last + GRACE)
@@ -83,13 +83,13 @@ def status(root: Path) -> dict:
 
 def line(s: dict) -> str:
     if s["active"] is None:
-        return "· hooki fabryki: brak hooków w .claude/settings.json albo CI — nic do sprawdzenia"
+        return "· factory hooks: no hooks in .claude/settings.json, or CI. Nothing to check"
     if s["active"]:
-        return "✓ hooki fabryki: aktywne (ślady w .tf/logs pokrywają ostatnie commity)"
-    since = f"po ostatnim śladzie hooków ({s['last_log'][:16]})" if s["last_log"] else "bez żadnego śladu hooków w .tf/logs"
-    return (f"⚠ hooki fabryki prawdopodobnie nieaktywne: {s['after_commits']} commitów {since} — tdd_guard, ochrona "
-            "ścieżek i logi kosztów nie działają. Uruchamiaj testy i bramki ręcznie; następną sesję w chmurze zacznij "
-            "z jednym repozytorium (README: Sesja w chmurze).")
+        return "✓ factory hooks: active (traces in .tf/logs cover the recent commits)"
+    since = f"after the last hook trace ({s['last_log'][:16]})" if s["last_log"] else "with no hook trace in .tf/logs"
+    return (f"⚠ factory hooks are probably not active: {s['after_commits']} commits {since}. tdd_guard, path "
+            "protection and cost logs do not work. Run the tests and gates by hand. Start the next cloud session "
+            "with one repository (README: Cloud session).")
 
 
 def main(argv: list[str]) -> int:

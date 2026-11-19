@@ -27,6 +27,35 @@
       }
     },
     {
+      "id": "zlozonosc-cyklomatyczna-en",
+      "expect": "trigger",
+      "prompt": "The validate() function has a huge switch and lots of ifs with && and ||. At what cyclomatic complexity should we split it and how do we count it? How do we enforce this in ESLint? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "\\b10\\b|McCabe"
+          ],
+          [
+            "complexity"
+          ],
+          [
+            "strażnicz|guard|wczesn\\w+ powrót|tabel\\w+|mapa|polimorfizm",
+            "guard (clause|statement)\\w*|early (return|exit)\\w*|lookup table|table[- ]driven|\\bmap\\b|polymorphism|strategy"
+          ],
+          [
+            "domyśln\\w*[^.]{0,20}20",
+            "testy? charakteryz",
+            "testami charakteryz",
+            "refactor:",
+            "osobn\\w+ commi",
+            "default[^.]{0,20}20",
+            "characteri[sz]ation tests?",
+            "separate commit"
+          ]
+        ]
+      }
+    },
+    {
       "id": "null-jako-znaczenie",
       "expect": "trigger",
       "prompt": "Mam metodę findDiscount(customer), która zwraca null, gdy klienta nie ma, a inne metody przyjmują null jako 'użyj domyślnego'. Jak to uporządkować? Odpowiedz zwięźle.",

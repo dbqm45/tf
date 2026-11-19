@@ -33,6 +33,40 @@
       }
     },
     {
+      "id": "wynik-rezerwacji-bledy-en",
+      "expect": "trigger",
+      "prompt": "I'm writing a reservation service in Go. How do I return a result from the Reserve method — success or rejection (slot taken, resource disabled) — so the caller can tell these cases apart and handle them? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "errors\\.Is",
+            "errors\\.As"
+          ],
+          [
+            "var Err\\w+\\s*=\\s*errors\\.New",
+            "sentinel",
+            "błęd\\w* wartownik"
+          ],
+          [
+            "%w",
+            "opakow\\w*",
+            "wrap"
+          ],
+          [
+            "typ\\w* błędu",
+            "type \\w+Error struct",
+            "Error\\(\\) string",
+            "error types?",
+            "custom errors?"
+          ]
+        ],
+        "none": [
+          "panic\\([^)]*\\)\\s*(dla|przy|gdy) (odrzuce|termin|konflikt)",
+          "panic\\([^)]*\\)\\s*(for|on|when|if) (reject|slot|conflict|taken)"
+        ]
+      }
+    },
+    {
       "id": "kwota-i-identyfikator",
       "expect": "trigger",
       "prompt": "Jak w Go zamodelować kwotę pieniężną i identyfikator klienta, żeby nie dało się ich pomylić z gołym stringiem albo float64 i żeby niepoprawna wartość nie powstała? Odpowiedz zwięźle.",

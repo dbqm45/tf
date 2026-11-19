@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Krok 1 rekonstrukcji jednym poleceniem, bez modelu: repo_inventory, code_graph, git_territory, standards_scan
-i schema_scan zapisują pełne wyniki JSON do --out, a na ekran trafia tylko zwięzłe streszczenie (≤ 60 linii).
-Model czyta streszczenie, a po szczegóły sięga do plików JSON. To oszczędza tury i kontekst głównego modelu.
+Reconstruction step 1 in a single command, without a model: repo_inventory, code_graph, git_territory, standards_scan
+and schema_scan write full JSON results to --out, and only a concise summary (≤ 60 lines) goes to the screen.
+The model reads the summary and reaches for the JSON files for details. This saves turns and the main model's context.
 
   python3 recon_scan.py <repo> --out docs/project/00-reconstruction/raw
-  python3 recon_scan.py <repo> --out <dir> --budget-tokens 60000   # budżet partii jawnie
+  python3 recon_scan.py <repo> --out <dir> --budget-tokens 60000   # explicit batch budget
 
-Budżet partii domyślnie: 12000 tokenów dla repo < 150 tys. tokenów kodu (partia ≈ pakiet, karta na pakiet),
-60000 dla większych. Bez gita historia jest pominięta. Kod wyjścia: 0 — w porządku, 2 — złe wywołanie.
+Default batch budget: 12000 tokens for repos < 150k tokens of code (batch ≈ package, one card per package),
+60000 for larger ones. Without git the history is skipped. Exit code: 0 — OK, 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -59,7 +59,7 @@ def main(argv: list[str]) -> int:
         elif repo is None:
             repo = a
     if not repo or not out or not os.path.isdir(repo) or (budget is not None and not str(budget).isdigit()):
-        print(f"✗ użycie: recon_scan.py <repo> --out <katalog> [--budget-tokens N] (jest: {argv})", file=sys.stderr)
+        print(f"✗ usage: recon_scan.py <repo> --out <dir> [--budget-tokens N] (got: {argv})", file=sys.stderr)
         return 2
     os.makedirs(out, exist_ok=True)
     inv = run_json("repo_inventory.py", repo, "--budget-tokens", str(budget or 60000))
@@ -76,40 +76,40 @@ def main(argv: list[str]) -> int:
 
     L = []
     if inv:
-        langs = [f"{x['language']} ({x['files']} plików, {x.get('test_files', 0)} testów)" for x in inv.get("languages", [])]
-        L.append("Języki: " + short(langs, 6))
-        L.append("Pliki budowania: " + (short([b["file"] for b in inv.get("build_files", [])], 8) or "brak"))
+        langs = [f"{x['language']} ({x['files']} files, {x.get('test_files', 0)} tests)" for x in inv.get("languages", [])]
+        L.append("Languages: " + short(langs, 6))
+        L.append("Build files: " + (short([b["file"] for b in inv.get("build_files", [])], 8) or "none"))
         batches = inv.get("batches", [])
-        L.append(f"Partie ({len(batches)}, budżet {inv.get('budget_tokens')} tokenów, razem "
-                 f"{inv.get('totals', {}).get('tokens')} tokenów): "
+        L.append(f"Batches ({len(batches)}, budget {inv.get('budget_tokens')} tokens, total "
+                 f"{inv.get('totals', {}).get('tokens')} tokens): "
                  + short([f"{b['name']} ({len(b['files'])})" for b in batches], 20))
     ci = sorted({os.path.relpath(p, repo).replace(os.sep, "/") for pat in CI_FILES for p in glob.glob(os.path.join(repo, pat))})
-    L.append("CI: " + (", ".join(ci) if ci else "brak plików pipeline'u"))
+    L.append("CI: " + (", ".join(ci) if ci else "no pipeline files"))
     g = results["graph.json"]
     if g:
-        L.append("Wejścia: " + short([e["file"] for e in g.get("entry_points", [])], 5))
-        L.append("Huby: " + short([f"{h['file']} (in {h['in']})" for h in g.get("hubs", [])], 5))
+        L.append("Entry points: " + short([e["file"] for e in g.get("entry_points", [])], 5))
+        L.append("Hubs: " + short([f"{h['file']} (in {h['in']})" for h in g.get("hubs", [])], 5))
         cyc = g.get("cycles") or {}
         n = sum(len(v) for v in cyc.values()) if isinstance(cyc, dict) else len(cyc)
-        L.append(f"Cykle: {n}")
+        L.append(f"Cycles: {n}")
     t = results["territory.json"]
     if t:
-        L.append(f"Historia: {t.get('commits')} commitów od {t.get('since')}; hotspoty: "
+        L.append(f"History: {t.get('commits')} commits since {t.get('since')}; hotspots: "
                  + short([h["path"] for h in t.get("hotspots", [])], 5))
     else:
-        L.append("Historia: pominięta (historia: brak gita)" if not is_git else "Historia: błąd git_territory")
+        L.append("History: skipped (history: no git)" if not is_git else "History: git_territory error")
     sc = results["schema.json"]
     if sc:
-        L.append("Tabele: " + (short([x["name"] for x in sc.get("tables", [])], 15) or "brak"))
+        L.append("Tables: " + (short([x["name"] for x in sc.get("tables", [])], 15) or "none"))
     st = results["standards.json"]
     if st:
-        L.append("Narzędzia: " + (short([f"{x['tool']} ({x['file']})" for x in st.get("tools", [])], 8) or "brak"))
-        sig = [s for s in st.get("signals", []) if s["share"] >= 50 or s["area"].startswith(("idiomy", "układ"))]
+        L.append("Tools: " + (short([f"{x['tool']} ({x['file']})" for x in st.get("tools", [])], 8) or "none"))
+        sig = [s for s in st.get("signals", []) if s["share"] >= 50 or s["area"].startswith(("idioms", "layout"))]
         sig.sort(key=lambda s: (-s["count"], s["area"]))
-        L.append(f"Standardy (sygnały ≥ 50%, idiomy i układ; {len(sig)} z {len(st.get('signals', []))}):")
+        L.append(f"Standards (signals ≥ 50%, idioms and layout; {len(sig)} of {len(st.get('signals', []))}):")
         L += [f"  {s['area']} · {s['language']} · {s['rule']}: {s['count']}/{s['total']} = {s['share']}%"
               for s in sig[:25]]
-    L.append(f"Pełne wyniki: {out}/ ({', '.join(n for n, d in results.items() if d is not None)})")
+    L.append(f"Full results: {out}/ ({', '.join(n for n, d in results.items() if d is not None)})")
     print("\n".join(L[:60]))
     return 0
 

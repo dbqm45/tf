@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy automatycznej aktualizacji fabryki (update.py --auto, kopia i --rollback, tryb auto z hooka i z CI)."""
+"""Factory automatic update tests (update.py --auto, backup and --rollback, auto mode from the hook and from CI)."""
 import importlib.util
 import json
 import os
@@ -45,19 +45,19 @@ def auto_switch_tests(up, check) -> None:
         p = project(base, "prywatny")
         code, msg = up.set_auto(p, True, env=env)
         check(code == 0 and manifest(p).get("auto_update") is True and "enabled" in msg,
-              f"AU-1: --auto on w trybie prywatnym → flaga w manifeście: {code} {msg}")
+              f"AU-1: --auto on in private mode -> the flag in the manifest: {code} {msg}")
         code, msg = up.set_auto(p, False, env=env)
         check(code == 0 and manifest(p).get("auto_update") is False and "disabled" in msg,
-              f"AU-2: --auto off → flaga wyłączona: {code} {msg}")
+              f"AU-2: --auto off -> the flag turned off: {code} {msg}")
 
         for name, src in (("katalog", str(base)), ("przypiety", GIT_SRC + "#main"), ("brak", None)):
             p = project(base, f"zle-{name}", source=src)
             code, msg = up.set_auto(p, True, env=env)
             check(code == 2 and not manifest(p).get("auto_update") and "git" in msg,
-                  f"AU-3: źródło {name} (nie repozytorium git z tagami wydań) → odmowa: {code} {msg}")
+                  f"AU-3: source {name} (not a git repository with release tags) -> refusal: {code} {msg}")
         p = project(base, "env", source=str(base))
         code, _ = up.set_auto(p, True, env={**env, "TEAM_FACTORY": GIT_SRC})
-        check(code == 0, "AU-4: źródło git ze zmiennej TEAM_FACTORY wystarcza")
+        check(code == 0, "AU-4: a git source from the TEAM_FACTORY variable is enough")
 
         p = project(base, "zespolowy", mode="shared")
         wf = p / ".github" / "workflows" / "team-factory-update.yml"
@@ -65,23 +65,23 @@ def auto_switch_tests(up, check) -> None:
         text = wf.read_text() if wf.is_file() else ""
         check(code == 0 and GIT_SRC in text and "schedule" in text
               and "Allow GitHub Actions to create and approve pull requests" in msg,
-              f"AU-5: --auto on w trybie zespołowym → workflow ze źródłem i instrukcja ustawienia repo: {code} {msg}")
+              f"AU-5: --auto on in team mode -> a workflow with the source and an instruction for the repo setting: {code} {msg}")
         code, msg = up.set_auto(p, False, env=env)
-        check(code == 0 and not wf.exists(), f"AU-6: --auto off w trybie zespołowym usuwa workflow: {code} {msg}")
+        check(code == 0 and not wf.exists(), f"AU-6: --auto off in team mode removes the workflow: {code} {msg}")
 
         bare = base / "bez-manifestu"
         bare.mkdir()
-        check(up.set_auto(bare, True, env=env)[0] == 2, "AU-7: brak manifestu → odmowa")
+        check(up.set_auto(bare, True, env=env)[0] == 2, "AU-7: no manifest -> refusal")
 
-    # Instalator zachowuje flagę przy aktualizacji (manifest jest przepisywany od nowa). Instalator jest
-    # w repozytorium fabryki (core/factory/install.py) — źródło bierzemy z manifestu projektu, w którym działa test.
+    # The installer keeps the flag on update (the manifest is rewritten from scratch). The installer is
+    # in the factory repository (core/factory/install.py) — we take the source from the manifest of the project the test runs in.
     try:
         fsrc = Path(json.loads((ROOT / ".claude" / "factory-manifest.json").read_text())["source"])
     except (OSError, ValueError, KeyError):
         fsrc = None
     installer = fsrc / "core" / "factory" / "install.py" if fsrc else None
     if not (installer and installer.is_file()):
-        print("ℹ AU-8 pominięty: brak repozytorium fabryki (source w manifeście)")
+        print("ℹ AU-8 skipped: no factory repository (source in the manifest)")
         return
     with tempfile.TemporaryDirectory() as t:
         p = Path(t) / "projekt"
@@ -93,7 +93,7 @@ def auto_switch_tests(up, check) -> None:
         (p / ".claude" / "factory-manifest.json").write_text(json.dumps(man))
         r = subprocess.run(inst + ["--update"], capture_output=True, text=True)
         check(r.returncode == 0 and manifest(p).get("auto_update") is True,
-              f"AU-8: aktualizacja zachowuje flagę auto_update w manifeście: {r.stderr[-300:]}")
+              f"AU-8: an update keeps the auto_update flag in the manifest: {r.stderr[-300:]}")
 
 
 def sha(data: bytes) -> str:
@@ -102,7 +102,7 @@ def sha(data: bytes) -> str:
 
 
 def installed(base: Path, name: str, files: dict[str, str], version: str = "2.0.0") -> Path:
-    """Projekt z plikami fabryki zapisanymi w manifeście (ścieżka → treść)."""
+    """A project with factory files recorded in the manifest (path -> content)."""
     p = project(base, name, version=version)
     man = manifest(p)
     for rel, text in files.items():
@@ -119,16 +119,16 @@ def backup_rollback_tests(up, check) -> None:
         p = installed(base, "kopia", {".claude/hooks/a.py": "a1", ".claude/skills/s/SKILL.md": "s1",
                                       ".tf/factory/x.py": "x1"})
         (p / ".claude" / "settings.local.json").write_text('{"v": 1}')
-        (p / ".tf" / "factory" / "x.py.factory-new").write_text("x-stare-nowe")    # już przed aktualizacją
+        (p / ".tf" / "factory" / "x.py.factory-new").write_text("x-stare-nowe")    # already before the update
         old_man = manifest(p)
         bdir = up.backup(p)
         meta = json.loads((bdir / "backup.json").read_text()) if (bdir / "backup.json").is_file() else {}
         check(bdir.parent == p / ".tf" / "backup" and meta.get("version") == "2.0.0"
               and (bdir / ".claude" / "hooks" / "a.py").read_text() == "a1"
               and (bdir / ".claude" / "settings.local.json").is_file(),
-              f"AB-1: kopia plików fabryki, ustawień i manifestu z backup.json: {bdir} {meta}")
+              f"AB-1: a backup of the factory files, settings and manifest with backup.json: {bdir} {meta}")
 
-        # „aktualizacja”: zmiana pliku, nowy plik fabryki (nietknięty i zmieniony przez użytkownika), nowe .factory-new
+        # "update": a changed file, a new factory file (untouched and changed by the user), new .factory-new
         man = manifest(p)
         man["version"] = "2.1.0"
         (p / ".claude" / "hooks" / "a.py").write_text("a2")
@@ -144,35 +144,35 @@ def backup_rollback_tests(up, check) -> None:
         code, msg = up.rollback(p)
         check(code == 0 and manifest(p) == old_man and (p / ".claude" / "hooks" / "a.py").read_text() == "a1"
               and json.loads((p / ".claude" / "settings.local.json").read_text()) == {"v": 1},
-              f"AB-2: --rollback przywraca pliki, ustawienia i manifest: {code} {msg}")
+              f"AB-2: --rollback restores the files, settings and manifest: {code} {msg}")
         check(not (p / ".claude" / "hooks" / "nowy.py").exists()
               and (p / ".claude" / "hooks" / "ruszony.py").read_text() == "r-moje",
-              "AB-3: rollback usuwa pliki dodane przez aktualizację, ale nie te zmienione przez użytkownika")
+              "AB-3: rollback removes the files added by the update, but not those changed by the user")
         check(not (p / ".claude" / "skills" / "s" / "SKILL.md.factory-new").exists()
               and (p / ".tf" / "factory" / "x.py.factory-new").exists(),
-              "AB-4: rollback usuwa nowe .factory-new, zostawia te sprzed aktualizacji")
-        check("2.0.0" in msg and "2.1.0" in msg, f"AB-5: komunikat rollbacku podaje wersje: {msg}")
+              "AB-4: rollback removes the new .factory-new, keeps those from before the update")
+        check("2.0.0" in msg and "2.1.0" in msg, f"AB-5: the rollback message gives the versions: {msg}")
 
-        other = p / ".tf" / "backup" / "20200101-000000"      # kopia usuniętych plików z install.py
+        other = p / ".tf" / "backup" / "20200101-000000"      # a backup of files removed by install.py
         other.mkdir()
         for i in range(4):
             up.backup(p, now=1_700_000_000 + i)
         kept = [b for b in (p / ".tf" / "backup").iterdir() if (b / "backup.json").is_file()]
-        check(len(kept) == 3 and other.exists(), f"AB-6: zostają 3 ostatnie kopie, inne katalogi nietknięte: {kept}")
+        check(len(kept) == 3 and other.exists(), f"AB-6: the last 3 backups remain, other directories untouched: {kept}")
 
         empty = installed(base, "bez-kopii", {".tf/factory/x.py": "x"})
-        check(up.rollback(empty)[0] == 2, "AB-7: rollback bez kopii → odmowa")
+        check(up.rollback(empty)[0] == 2, "AB-7: rollback without a backup -> refusal")
 
 
 def release_filter_tests(up, check) -> None:
     tags = ["v2.0.0", "v2.0.1", "v2.1.0", "v2.1.0-rc.1", "v3.0.0", "v1.9.9", "nightly"]
     check(up.auto_target(tags, "2.0.0") == ("2.1.0", "3.0.0"),
-          f"AR-1: cel to najwyższy PATCH/MINOR tej samej wersji głównej, MAJOR osobno: {up.auto_target(tags, '2.0.0')}")
+          f"AR-1: the target is the highest PATCH/MINOR of the same major version, MAJOR separately: {up.auto_target(tags, '2.0.0')}")
     check(up.auto_target(tags, "2.0.0", skip=["2.1.0"]) == ("2.0.1", "3.0.0"),
-          "AR-2: wersja pominięta po nieudanych testach nie jest celem")
-    check(up.auto_target(tags, "2.1.0") == (None, "3.0.0"), "AR-3: brak nowszego PATCH/MINOR → tylko informacja o MAJOR")
-    check(up.auto_target(["v2.0.0"], "2.0.0") == (None, None), "AR-4: nic nowego")
-    check(up.auto_target(tags, "3.0.0") == (None, None), "AR-5: starsze wydania nie są celem")
+          "AR-2: a version skipped after failed tests is not the target")
+    check(up.auto_target(tags, "2.1.0") == (None, "3.0.0"), "AR-3: no newer PATCH/MINOR -> only the MAJOR information")
+    check(up.auto_target(["v2.0.0"], "2.0.0") == (None, None), "AR-4: nothing new")
+    check(up.auto_target(tags, "3.0.0") == (None, None), "AR-5: older releases are not the target")
 
 
 FAKE_INSTALLER = '''import hashlib, json, shutil, sys
@@ -208,14 +208,14 @@ def git(cwd: Path, *args: str) -> None:
 
 
 def factory_repo(base: Path, name: str, releases: list[tuple[str, str, bool]], workflow: bool = False) -> str:
-    """Repozytorium fabryki (bare) z wydaniami (wersja, treść testu po instalacji, czy zawiera zły skill);
-    `workflow` — wydania niosą też plik w .github/workflows/ (treść „wf <wersja>”)."""
+    """A factory repository (bare) with releases (version, the content of the post-install test, whether it contains a bad skill);
+    `workflow` — the releases also carry a file in .github/workflows/ (content "wf <version>")."""
     work = base / f"{name}-work"
     (work / "core" / "factory").mkdir(parents=True)
     git(work, "init", "-q")
     log = ""
     for version, test, bad in releases:
-        log = f"## [{version}]\n- zmiana w {version}\n\n" + log
+        log = f"## [{version}]\n- change in {version}\n\n" + log
         (work / "core" / "factory" / "VERSION").write_text(version + "\n")
         (work / "core" / "factory" / "CHANGELOG.md").write_text(log)
         (work / "core" / "factory" / "install.py").write_text(FAKE_INSTALLER)
@@ -261,49 +261,49 @@ def auto_run_tests(up, check) -> None:
         check(r.get("status") == "installed" and r.get("from") == "2.0.0" and r.get("to") == "2.1.0"
               and r.get("major") == "3.0.0" and manifest(p)["version"] == "2.1.0"
               and (p / ".claude" / "hooks" / "f.py").read_text() == "2.1.0",
-              f"AA-1: automat instaluje najwyższe PATCH/MINOR, MAJOR tylko zgłasza: {r}")
+              f"AA-1: the automaton installs the highest PATCH/MINOR, only reports MAJOR: {r}")
         check([e.get("status") for e in log(p)] == ["installed"] and manifest(p).get("auto_update") is True
               and any((b / "backup.json").is_file() for b in (p / ".tf" / "backup").glob("*")),
-              f"AA-2: wpis w update.jsonl, flaga zachowana, kopia przed instalacją: {log(p)}")
+              f"AA-2: an entry in update.jsonl, the flag kept, a backup before installing: {log(p)}")
         msgs = "\n".join(up.pending_messages(p))
-        check("2.0.0 → 2.1.0" in msgs and "zmiana w 2.1.0" in msgs and "3.0.0" in msgs,
-              f"AA-3: komunikat w następnej sesji — wersje, zmiany i informacja o MAJOR: {msgs}")
-        check(up.pending_messages(p) == [], "AA-4: komunikat pokazany raz")
+        check("2.0.0 → 2.1.0" in msgs and "change in 2.1.0" in msgs and "3.0.0" in msgs,
+              f"AA-3: a message in the next session — versions, changes and the MAJOR information: {msgs}")
+        check(up.pending_messages(p) == [], "AA-4: the message shown once")
 
         off = auto_project(base, "wylaczony", src, on=False)
-        check(up.auto_run(off, env=env).get("status") == "off", "AA-5: bez --auto on automat nic nie robi")
-        locked = auto_project(base, "zablokowany", src)
+        check(up.auto_run(off, env=env).get("status") == "off", "AA-5: without --auto on the automaton does nothing")
+        locked = auto_project(base, "blocked", src)
         (locked / ".tf" / "logs").mkdir(parents=True)
         (locked / ".tf" / "logs" / "update.lock").write_text("123")
         check(up.auto_run(locked, env=env).get("status") == "locked" and manifest(locked)["version"] == "2.0.0",
-              "AA-6: świeża blokada (trwa inna instalacja) → nic nie robi")
+              "AA-6: a fresh lock (another installation in progress) -> does nothing")
 
         src = factory_repo(base, "fab-zle-testy", [("2.0.1", PASS, False), ("2.1.0", FAIL, False)])
-        p = auto_project(base, "testy", src)
+        p = auto_project(base, "tests", src)
         r = up.auto_run(p, env=env)
         check(r.get("status") == "tests_failed" and manifest(p)["version"] == "2.0.0"
               and (p / ".claude" / "hooks" / "f.py").read_text() == "2.0.0"
               and (p / ".claude" / "tests" / "test_po.py").read_text() == PASS
               and "test_po.py" in str(r.get("failed")),
-              f"AA-7: czerwone testy po instalacji → przywrócenie poprzedniej wersji: {r}")
+              f"AA-7: red tests after installing -> the previous version restored: {r}")
         msgs = "\n".join(up.pending_messages(p))
-        check("2.1.0" in msgs and "skipped" in msgs, f"AA-8: przypomnienie o pominiętej wersji: {msgs}")
+        check("2.1.0" in msgs and "skipped" in msgs, f"AA-8: a reminder about the skipped version: {msgs}")
         r = up.auto_run(p, env=env)
         check(r.get("status") == "installed" and r.get("to") == "2.0.1",
-              f"AA-9: wersja z czerwonymi testami pominięta, automat bierze następną: {r}")
+              f"AA-9: the version with red tests skipped, the automaton takes the next one: {r}")
 
         src = factory_repo(base, "fab-audyt", [("2.0.1", PASS, True)])
         p = auto_project(base, "audyt", src)
         r = up.auto_run(p, env=env)
         check(r.get("status") == "audit_blocked" and "curl-pipe-shell" in str(r.get("findings"))
               and manifest(p)["version"] == "2.0.0" and not (p / ".tf" / "backup").exists(),
-              f"AA-10: ustalenie wysokiej wagi w audycie → stop bez zmian: {r}")
+              f"AA-10: a high-severity audit finding -> stop with no changes: {r}")
 
         src = factory_repo(base, "fab-moje", [("2.0.1", PASS, False)])
         p = auto_project(base, "moje", src)
         (p / ".claude" / "hooks" / "f.py").write_text("moja zmiana")
         r = up.auto_run(p, env=env)
-        check(r.get("status") == "installed", f"AA-11: lokalnie zmieniony plik nie blokuje automatu: {r}")
+        check(r.get("status") == "installed", f"AA-11: a locally changed file does not block the automaton: {r}")
 
 
 def start_tests(up, check) -> None:
@@ -321,11 +321,11 @@ def start_tests(up, check) -> None:
         msg = up.start_auto(p, env=env, cache_dir=cache, now=1000, spawn=spawn)
         check(msg and "2.0.0 → 2.0.1" in msg and "background" in msg and len(calls) == 1
               and "--auto-run" in calls[0][0] and Path(calls[0][1]) == p,
-              f"AN-1: start sesji uruchamia automat w tle i mówi o tym: {msg} {calls}")
+              f"AN-1: session start runs the automaton in the background and says so: {msg} {calls}")
         check(up.start_auto(p, env=env, cache_dir=cache, now=2000, spawn=spawn) is None and len(calls) == 1,
-              "AN-2: najwyżej raz na dobę")
+              "AN-2: at most once a day")
         check(up.start_auto(p, env=env, cache_dir=cache, now=1000 + 86401, spawn=spawn) and len(calls) == 2,
-              "AN-3: po dobie ponownie")
+              "AN-3: again after a day")
 
         off = auto_project(base, "wyl", src, on=False)
         shared = auto_project(base, "zesp", src)
@@ -335,37 +335,37 @@ def start_tests(up, check) -> None:
         locked = auto_project(base, "blok", src)
         (locked / ".tf" / "logs").mkdir(parents=True)
         (locked / ".tf" / "logs" / "update.lock").write_text("1")
-        for name, proj, e in (("wyłączony", off, env), ("zespołowy (robi to CI)", shared, env),
-                              ("trwa instalacja", locked, env), ("CTF_UPDATE_CHECK=0", p, {**env, "CTF_UPDATE_CHECK": "0"})):
+        for name, proj, e in (("disabled", off, env), ("team mode (CI does it)", shared, env),
+                              ("installation in progress", locked, env), ("CTF_UPDATE_CHECK=0", p, {**env, "CTF_UPDATE_CHECK": "0"})):
             n = len(calls)
             check(up.start_auto(proj, env=e, cache_dir=base / f"c-{proj.name}", now=1000, spawn=spawn) is None
-                  and len(calls) == n, f"AN-4: {name} → automat nie startuje")
+                  and len(calls) == n, f"AN-4: {name} -> the automaton does not start")
         newest = auto_project(base, "aktualny", factory_repo(base, "fab-stara", [("2.0.0", PASS, False)]))
         n = len(calls)
         check(up.start_auto(newest, env=env, cache_dir=cache, now=1000, spawn=spawn) is None and len(calls) == n,
-              "AN-5: brak nowego wydania → cisza")
+              "AN-5: no new release -> silence")
 
-        # CLI --auto-run: update.py z projektu instaluje w swoim projekcie
+        # CLI --auto-run: update.py from the project installs into its own project
         cli = auto_project(base, "cli", src)
         for f in ("update.py", "skill_audit.py"):
             shutil.copy(ROOT / ".tf" / "factory" / f, cli / ".tf" / "factory" / f)
         r = subprocess.run([sys.executable, str(cli / ".tf" / "factory" / "update.py"), "--auto-run"], capture_output=True,
                            text=True, cwd=base)
         check(r.returncode == 0 and manifest(cli)["version"] == "2.0.1",
-              f"AN-6: `update.py --auto-run` instaluje w projekcie, w którym leży: {r.stdout[-300:]} {r.stderr[-300:]}")
+              f"AN-6: `update.py --auto-run` installs into the project it lives in: {r.stdout[-300:]} {r.stderr[-300:]}")
 
-        # hook startu sesji pokazuje wynik poprzedniego przebiegu (także przy wyłączonym sprawdzaniu sieci)
+        # the session start hook shows the result of the previous run (also with the network check disabled)
         hook = [sys.executable, str(ROOT / ".claude" / "hooks" / "update_notice.py")]
         r = subprocess.run(hook, input="{}", capture_output=True, text=True,
                            env={**env, "CLAUDE_PROJECT_DIR": str(cli), "CTF_UPDATE_CHECK": "0", "HOME": str(base)})
-        check("2.0.0 → 2.0.1" in r.stdout, f"AN-7: hook pokazuje wynik automatu z poprzedniej sesji: {r.stdout[-300:]}")
+        check("2.0.0 → 2.0.1" in r.stdout, f"AN-7: the hook shows the automaton's result from the previous session: {r.stdout[-300:]}")
 
 
 CI_IGNORE = ".claude/factory-manifest.json\n.tf/backup/\n.tf/logs/\n*.factory-new\n"
 
 
 def ci_project(base: Path, name: str, workflow: bool = False) -> Path:
-    """Projekt w trybie zespołowym, jak go widzi CI po checkout: fabryka 2.0.0 w repo, bez manifestu (gitignore)."""
+    """A project in team mode as CI sees it after checkout: factory 2.0.0 in the repo, without the manifest (gitignore)."""
     p = base / name
     files = {".tf/factory/VERSION": "2.0.0\n", ".claude/hooks/f.py": "2.0.0", ".claude/tests/test_po.py": PASS,
              ".gitignore": CI_IGNORE}
@@ -400,13 +400,13 @@ def ci_tests(check) -> None:
         p = ci_project(base, "ci", workflow=True)
         r, out, body = run_ci(p, src)
         check(r.returncode == 0 and "version=2.1.0" in out and (p / ".claude" / "hooks" / "f.py").read_text() == "2.1.0",
-              f"AC-1: --ci instaluje najwyższe PATCH/MINOR i zapisuje wersję do $GITHUB_OUTPUT: {out!r} "
+              f"AC-1: --ci installs the highest PATCH/MINOR and writes the version to $GITHUB_OUTPUT: {out!r} "
               f"{r.stdout[-400:]} {r.stderr[-400:]}")
-        check("2.0.0 → 2.1.0" in body and "zmiana w 2.1.0" in body and "3.0.0" in body,
-              f"AC-2: opis PR — wersje, zmiany i informacja o MAJOR: {body[:600]}")
+        check("2.0.0 → 2.1.0" in body and "change in 2.1.0" in body and "3.0.0" in body,
+              f"AC-2: the PR description — versions, changes and the MAJOR information: {body[:600]}")
         check((p / ".github" / "workflows" / "team-factory-update.yml").read_text() == "wf 2.0.0"
               and ".github/workflows/team-factory-update.yml" in body,
-              f"AC-3: workflow przywrócony (GITHUB_TOKEN go nie wypchnie), opis PR mówi, co przenieść ręcznie: {body[-400:]}")
+              f"AC-3: the workflow restored (GITHUB_TOKEN will not push it), the PR description says what to move by hand: {body[-400:]}")
 
         p = ci_project(base, "ci-moje")
         (p / ".claude" / "hooks" / "f.py").write_text("moja zmiana")
@@ -414,23 +414,23 @@ def ci_tests(check) -> None:
         r, out, body = run_ci(p, src)
         check(r.returncode == 0 and "version=2.1.0" in out and ".claude/hooks/f.py" in body
               and (p / ".claude" / "hooks" / "f.py").read_text() == "moja zmiana",
-              f"AC-4: plik zmieniony w projekcie zostaje, opis PR wymienia go do ręcznego scalenia: {body[-400:]} "
+              f"AC-4: a file changed in the project stays, the PR description lists it for a manual merge: {body[-400:]} "
               f"{r.stdout[-300:]}")
 
         p = ci_project(base, "ci-aktualny")
         r, out, body = run_ci(p, factory_repo(base, "fab-major", [("2.0.0", PASS, False), ("3.0.0", PASS, False)]))
         check(r.returncode == 0 and "version=" not in out and "3.0.0" in r.stdout,
-              f"AC-5: brak nowego PATCH/MINOR → bez PR, MAJOR tylko zgłoszony: {out!r} {r.stdout[-300:]}")
+              f"AC-5: no new PATCH/MINOR -> no PR, MAJOR only reported: {out!r} {r.stdout[-300:]}")
 
         p = ci_project(base, "ci-testy")
         r, out, body = run_ci(p, factory_repo(base, "fab-testy", [("2.0.0", PASS, False), ("2.0.1", FAIL, False)]))
         check(r.returncode == 1 and "version=" not in out and "test_po.py" in r.stdout,
-              f"AC-6: czerwone testy po instalacji → job czerwony, bez PR: {out!r} {r.stdout[-300:]}")
+              f"AC-6: red tests after installing -> a red job, no PR: {out!r} {r.stdout[-300:]}")
 
         p = ci_project(base, "ci-audyt")
         r, out, body = run_ci(p, factory_repo(base, "fab-audyt", [("2.0.0", PASS, False), ("2.0.1", PASS, True)]))
         check(r.returncode == 1 and "version=" not in out and "curl-pipe-shell" in r.stdout,
-              f"AC-7: ustalenie wysokiej wagi w audycie → job czerwony, bez PR: {r.stdout[-300:]}")
+              f"AC-7: a high-severity audit finding -> a red job, no PR: {r.stdout[-300:]}")
 
         p = ci_project(base, "ci-build")
         (p / ".tf" / "factory" / "build.py").write_text(FAIL)
@@ -438,18 +438,18 @@ def ci_tests(check) -> None:
         git(p, "commit", "-qm", "build")
         r, out, body = run_ci(p, factory_repo(base, "fab-build", [("2.0.0", PASS, False), ("2.0.1", PASS, False)]))
         check(r.returncode == 1 and "version=" not in out and "build.py" in r.stdout,
-              f"AC-8: czerwone `build.py check` → job czerwony, bez PR: {r.stdout[-300:]}")
+              f"AC-8: red `build.py check` -> a red job, no PR: {r.stdout[-300:]}")
 
 
 def lock_tests(check) -> None:
-    """Klon instalacji zespołowej z commitowanym `.claude/factory-lock.json`: plik fabryki, który poprzednia aktualizacja
-    zostawiła w starszej treści niż `.tf/factory/VERSION`, ma w locku swój skrót — --ci bierze bazę z locka i go aktualizuje,
-    zamiast odtwarzać manifest z czystej instalacji wersji z VERSION (który brałby ten plik za zmieniony przez projekt)."""
+    """A clone of a team installation with a committed `.claude/factory-lock.json`: a factory file that the previous update
+    left in older content than `.tf/factory/VERSION` has its hash in the lock — --ci takes the base from the lock and updates it,
+    instead of recreating the manifest from a clean install of the VERSION version (which would take that file for one changed by the project)."""
     with tempfile.TemporaryDirectory() as d:
         base = Path(d)
         src = factory_repo(base, "fab-lock", [("2.0.0", PASS, False), ("2.1.0", PASS, False)])
         p = ci_project(base, "ci-lock")
-        (p / ".claude" / "hooks" / "f.py").write_text("1.9.0")          # starsza treść po poprzedniej aktualizacji
+        (p / ".claude" / "hooks" / "f.py").write_text("1.9.0")          # older content after the previous update
         lock = {"version": "2.0.0", "packs": [], "language": "pl", "commit_language": "en", "offered": [],
                 "files": {".claude/hooks/f.py": sha(b"1.9.0"), ".claude/tests/test_po.py": sha(PASS.encode())}}
         (p / ".claude" / "factory-lock.json").write_text(json.dumps(lock))
@@ -458,12 +458,12 @@ def lock_tests(check) -> None:
         r, out, body = run_ci(p, src)
         check(r.returncode == 0 and "version=2.1.0" in out and (p / ".claude" / "hooks" / "f.py").read_text() == "2.1.0"
               and not (p / ".claude" / "hooks" / "f.py.factory-new").exists(),
-              f"AC-9: --ci z lockiem aktualizuje plik w treści z locka, bez *.factory-new: {out!r} "
+              f"AC-9: --ci with a lock updates a file in the lock's content, without *.factory-new: {out!r} "
               f"{(p / '.claude' / 'hooks' / 'f.py').read_text()!r} {r.stdout[-400:]} {r.stderr[-300:]}")
-        check("factory-lock.json" in r.stdout, f"AC-10: --ci mówi, że baza aktualizacji pochodzi z locka: {r.stdout[-400:]}")
-        check(".claude/hooks/f.py" not in body, f"AC-11: plik z locka nie trafia do „zmienionych w projekcie”: {body[-400:]}")
+        check("factory-lock.json" in r.stdout, f"AC-10: --ci says the update base comes from the lock: {r.stdout[-400:]}")
+        check(".claude/hooks/f.py" not in body, f"AC-11: a file from the lock does not land in 'changed in the project': {body[-400:]}")
 
-        p = ci_project(base, "ci-lock-moje")                             # zmiana projektu po locku nadal zostaje
+        p = ci_project(base, "ci-lock-moje")                             # a project change made after the lock still stays
         lock["files"][".claude/hooks/f.py"] = sha(b"2.0.0")
         (p / ".claude" / "factory-lock.json").write_text(json.dumps(lock))
         (p / ".claude" / "hooks" / "f.py").write_text("moja zmiana")
@@ -472,7 +472,7 @@ def lock_tests(check) -> None:
         r, out, body = run_ci(p, src)
         check(r.returncode == 0 and (p / ".claude" / "hooks" / "f.py").read_text() == "moja zmiana"
               and ".claude/hooks/f.py" in body,
-              f"AC-12: z lockiem plik zmieniony w projekcie zostaje i trafia do opisu PR: {body[-400:]} {r.stdout[-300:]}")
+              f"AC-12: with a lock a file changed in the project stays and lands in the PR description: {body[-400:]} {r.stdout[-300:]}")
 
 
 def main() -> int:
@@ -494,7 +494,7 @@ def main() -> int:
     lock_tests(check)
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów automatycznej aktualizacji")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} automatic update tests")
     return 1 if fails else 0
 
 

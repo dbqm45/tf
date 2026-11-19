@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Schemat danych z kodu (rekonstrukcja projektu, model domeny): tabele, kolumny, ograniczenia i powiązania z migracji SQL
-(w tym Flyway `V*__*.sql`) oraz z encji JPA (`@Entity`) i EF Core (`DbSet<T>`, atrybuty) — każde z miejscem plik:linia.
-Ograniczenia (NOT NULL, UNIQUE, CHECK, długość, walidacja) to kandydaci na reguły biznesowe. Tylko biblioteka
-standardowa; kodu nie uruchamia.
+Data schema from code (project reconstruction, domain model): tables, columns, constraints and relations from SQL migrations
+(including Flyway `V*__*.sql`) and from JPA entities (`@Entity`) and EF Core (`DbSet<T>`, attributes) — each with a file:line location.
+Constraints (NOT NULL, UNIQUE, CHECK, length, validation) are candidates for business rules. Standard library
+only; it does not run the code.
 
-  python3 schema_scan.py <repo>          # tekst
-  python3 schema_scan.py <repo> --json   # pełny wynik
+  python3 schema_scan.py <repo>          # text
+  python3 schema_scan.py <repo> --json   # full result
 
-Zgrubnie: parser SQL czyta CREATE TABLE i ALTER TABLE ADD COLUMN/CONSTRAINT, nie wykonuje migracji; Liquibase XML/YAML
-i ORM-y bez adnotacji (np. konfiguracja Fluent API) — do unknowns.
+Roughly: the SQL parser reads CREATE TABLE and ALTER TABLE ADD COLUMN/CONSTRAINT, it does not execute migrations; Liquibase XML/YAML
+and ORMs without annotations (e.g. Fluent API configuration) — to unknowns.
 """
 from __future__ import annotations
 
@@ -43,7 +43,7 @@ def line_of(text: str, pos: int) -> int:
 
 
 def split_top(body: str) -> list[tuple[str, int]]:
-    """Elementy listy w nawiasie CREATE TABLE rozdzielone przecinkami na poziomie 0, z przesunięciem w tekście."""
+    """Items of the CREATE TABLE parenthesised list separated by commas at level 0, with the offset in the text."""
     out, depth, start = [], 0, 0
     for i, ch in enumerate(body):
         if ch == "(":
@@ -194,14 +194,14 @@ def scan(root: str) -> dict:
 
 
 def render(r: dict) -> str:
-    L = [f"Tabele i encje: {len(r['tables'])}; kandydaci na reguły: {len(r['rules'])}"]
+    L = [f"Tables and entities: {len(r['tables'])}; rule candidates: {len(r['rules'])}"]
     for t in r["tables"]:
         refs = f" → {', '.join(t['references'])}" if t["references"] else ""
         L.append(f"  - {t['name']} ({t['source']}, {t['at']}){refs}: " +
                  ", ".join(c["name"] + (f" [{'; '.join(c['constraints'])}]" if c["constraints"] else "") for c in t["columns"]))
-    L.append("Reguły (ograniczenia) z miejscem:")
+    L.append("Rules (constraints) with location:")
     L += [f"  - {x['table']}: {x['rule']} — {x['at']}" for x in r["rules"]]
-    L.append("Ograniczenia to kandydaci na reguły biznesowe — potwierdź znaczenie w kodzie i u ludzi.")
+    L.append("Constraints are candidates for business rules. Confirm their meaning in the code and with people.")
     return "\n".join(L)
 
 
@@ -212,7 +212,7 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 0
     if len(args) != 1 or not os.path.isdir(args[0]):
-        print(f"✗ podaj katalog repozytorium (jest: {args})", file=sys.stderr)
+        print(f"✗ give a repository directory (got: {args})", file=sys.stderr)
         return 2
     r = scan(args[0])
     print(json.dumps(r, ensure_ascii=False, indent=2) if as_json else render(r))

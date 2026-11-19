@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
 """
-Stop / SubagentStop: bramka jakości — tura nie kończy się z czerwonym buildem i testami („prompt prosi, hook pilnuje”).
+Stop / SubagentStop: quality gate — a turn does not end with a red build and tests ("the prompt asks, the hook enforces").
 
-Działa tylko z konfiguracją projektu `.claude/quality-gate.json` (fabryka nie zna poleceń projektu):
+Works only with the project configuration `.claude/quality-gate.json` (the factory does not know the project's commands):
   {"command": "npm test", "watch": ["src/", "test/"], "timeout": 600, "max_blocks": 3}
-- `command` — build i testy (napis albo lista argumentów, bez powłoki), uruchamiane pod blokadą test_lock.py;
-- `watch` — ścieżki, których zmiana uruchamia bramkę (domyślnie całe repozytorium);
-- `timeout` — sekundy; przekroczenie to wynik czerwony;
-- `max_blocks` — po tylu blokadach tego samego stanu kodu bramka przepuszcza z komunikatem dla człowieka (ochrona
-  przed pętlą, domyślnie 3).
-Polecenie biegnie tylko, gdy zmienił się kod w `watch` względem HEAD (odcisk diffu i nowych plików); po zielonym
-przebiegu ten sam odcisk nie uruchamia testów drugi raz. Świadomie czerwona partia (TDD, test przed kodem): plik
-`.claude/quality-gate.expected-red` z powodem — bramka przepuszcza; usuń go po partii. `QG_GATE_DISABLE=1` wyłącza
-bramkę (np. w `.claude/settings.local.json`). Stan: `.tf/logs/quality-gate.json`. Tylko biblioteka standardowa.
+- `command` — build and tests (a string or an argument list, no shell), run under the test_lock.py lock;
+- `watch` — paths whose change triggers the gate (default: the whole repository);
+- `timeout` — seconds; exceeding it is a red result;
+- `max_blocks` — after this many blocks of the same code state the gate lets it through with a message for the human (protection
+  against a loop, default 3).
+The command runs only when code in `watch` changed relative to HEAD (a fingerprint of the diff and new files); after a green
+run the same fingerprint does not run the tests a second time. A deliberately red batch (TDD, test before code): the file
+`.claude/quality-gate.expected-red` with a reason — the gate lets it through; delete it after the batch. `QG_GATE_DISABLE=1` disables
+the gate (e.g. in `.claude/settings.local.json`). State: `.tf/logs/quality-gate.json`. Standard library only.
+The agent gets long command output as its beginning and end; the whole of the last run is in
+`.tf/logs/quality-gate-output.txt`.
+
+  python3 .claude/hooks/quality_gate.py --status [--quiet-ok]   # whether the gate works and why not (tf doctor, session start)
 """
 from __future__ import annotations
 
@@ -33,7 +37,27 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
         pass
 
 HERE = Path(__file__).resolve().parent
-TAIL = 3000
+HEAD, TAIL = 1000, 2000   # this many characters of the output start and end go to the agent
+OUTPUT = "quality-gate-output.txt"
+
+
+def clip(out: str, saved: str) -> str:
+    """Output for the agent: short in full, long as a beginning and end with a note of how much was omitted and where
+    the whole is. The first error is often at the start of the log and the summary at the end — the end alone loses the cause."""
+    if len(out) <= HEAD + TAIL:
+        return out
+    return (out[:HEAD] + f"\n… [skipped {len(out) - HEAD - TAIL} characters; full output: {saved}] …\n" + out[-TAIL:])
+
+
+def save_output(root: Path, name: str, out: str) -> str:
+    """Saves the full output of the last run in .tf/logs/ and returns the relative path (a write error does not interrupt)."""
+    rel = f".tf/logs/{name}"
+    try:
+        (root / ".tf" / "logs").mkdir(parents=True, exist_ok=True)
+        (root / rel).write_text(out, encoding="utf-8")
+    except OSError:
+        pass
+    return rel
 
 
 def _lock():
@@ -49,8 +73,9 @@ def git(root: Path, *args: str) -> bytes:
 
 
 def fingerprint(root: Path, watch: list[str]) -> str | None:
-    """Odcisk zmian w `watch` względem HEAD; None, gdy nic się nie zmieniło."""
-    paths = ["--", *watch] if watch else []
+    """Fingerprint of changes in `watch` relative to HEAD; None when nothing changed. Task files (`docs/project/changes/`,
+    written by `tf task` after each step) are not a code change and do not trigger the gate."""
+    paths = ["--", *(watch or ["."]), ":(exclude)docs/project/changes"]
     diff = git(root, "diff", "HEAD", "--binary", *paths)
     new = git(root, "ls-files", "--others", "--exclude-standard", *paths).decode(errors="replace").split()
     if not diff and not new:
@@ -72,7 +97,7 @@ def load_state(path: Path) -> dict:
 
 
 def run(root: Path, cmd, timeout: float) -> tuple[bool | None, str]:
-    """(zielone?, koniec wyjścia); None = blokada testów zajęta."""
+    """(green?, output trimmed to the beginning and end); None = the test lock is busy. Full output: .tf/logs/."""
     argv = shlex.split(cmd) if isinstance(cmd, str) else list(cmd)
     with _lock().held(root) as ok:
         if not ok:
@@ -88,8 +113,10 @@ def run(root: Path, cmd, timeout: float) -> tuple[bool | None, str]:
             except (OSError, AttributeError):
                 proc.kill()
             out, _ = proc.communicate()
-            return False, f"przekroczony limit czasu {timeout:g} s\n" + (out or "")[-TAIL:]
-    return proc.returncode == 0, (out or "")[-TAIL:]
+            saved = save_output(root, OUTPUT, out or "")
+            return False, f"przekroczony limit czasu {timeout:g} s\n" + clip(out or "", saved)
+    saved = save_output(root, OUTPUT, out or "")
+    return proc.returncode == 0, clip(out or "", saved)
 
 
 def decide(root: Path, data: dict) -> dict | None:
@@ -110,17 +137,17 @@ def decide(root: Path, data: dict) -> dict | None:
         return None
     marker = root / ".claude" / "quality-gate.expected-red"
     if marker.is_file():
-        print(f"bramka jakości: zadeklarowana czerwona partia — {marker.read_text(encoding='utf-8').strip()[:200]}",
+        print(f"quality gate: a declared red batch — {marker.read_text(encoding='utf-8').strip()[:200]}",
               file=sys.stderr)
         return None
     max_blocks = int(cfg.get("max_blocks", 3))
     red = state.get("red") or {}
     if red.get("fp") == fp and red.get("count", 0) >= max_blocks:
-        return {"systemMessage": f"Bramka jakości: testy wciąż czerwone po {max_blocks} próbach na tym samym stanie "
-                                 f"kodu — przepuszczam, decyzja należy do człowieka (`{cfg['command']}`)."}
+        return {"systemMessage": f"Quality gate: the tests are still red after {max_blocks} attempts on the same state of "
+                                 f"the code — letting it through, the decision is a human's (`{cfg['command']}`)."}
     ok, tail = run(root, cfg["command"], float(cfg.get("timeout", 600)))
     if ok is None:
-        print("bramka jakości: inne testy tego repozytorium trwają (blokada zajęta) — pomijam", file=sys.stderr)
+        print("quality gate: other tests of this repository are running (the lock is taken) — skipping", file=sys.stderr)
         return None
     state_path.parent.mkdir(parents=True, exist_ok=True)
     if ok:
@@ -129,14 +156,68 @@ def decide(root: Path, data: dict) -> dict | None:
     count = red.get("count", 0) + 1 if red.get("fp") == fp else 1
     state_path.write_text(json.dumps({"green": state.get("green"), "red": {"fp": fp, "count": count}}),
                           encoding="utf-8")
-    who = "podagenta" if data.get("hook_event_name") == "SubagentStop" else "tury"
+    who = "the subagent" if data.get("hook_event_name") == "SubagentStop" else "the turn"
     return {"decision": "block",
-            "reason": f"Bramka jakości: `{cfg['command']}` nie przechodzi — popraw przed zakończeniem {who} "
-                      f"(próba {count}/{max_blocks}). Jeśli czerwony test jest zamierzony (TDD), zapisz powód w "
-                      f".claude/quality-gate.expected-red.\n--- koniec wyjścia ---\n{tail}"}
+            "reason": f"Quality gate: `{cfg['command']}` does not pass — fix it before ending {who} "
+                      f"(attempt {count}/{max_blocks}). If the red test is intended (TDD), write the reason in "
+                      f".claude/quality-gate.expected-red.\n--- output (full: .tf/logs/{OUTPUT}) ---\n{tail}"}
+
+
+OFF = "The factory will not block red tests."
+
+
+def _disabled_by(root: Path, env) -> str | None:
+    """Where the QG_GATE_DISABLE=1 switch comes from: the session environment or the project settings file."""
+    for name in ("settings.local.json", "settings.json"):
+        try:
+            cfg = json.loads((root / ".claude" / name).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if str((cfg.get("env") or {}).get("QG_GATE_DISABLE", "")) == "1":
+            return f"in .claude/{name}"
+    return "in the session environment" if env.get("QG_GATE_DISABLE") == "1" else None
+
+
+def gate_status(root: Path, env=None) -> tuple[str, str]:
+    """Gate state in plain language: (state, message). States: on, expected-red, disabled, no-config, invalid,
+    no-command. Runs nothing."""
+    env = os.environ if env is None else env
+    where = _disabled_by(root, env)
+    if where:
+        return "disabled", (f"⚠ Quality gate disabled by the variable QG_GATE_DISABLE=1 ({where}). {OFF} "
+                            "To turn it on: remove this variable.")
+    cfg_path = root / ".claude" / "quality-gate.json"
+    hint = 'To turn it on: tf onboard --yes (it detects the test command) or write it in this file, e.g. {"command": "npm test"}.'
+    if not cfg_path.is_file():
+        return "no-config", f"⚠ Quality gate disabled: no .claude/quality-gate.json file. {OFF} {hint}"
+    try:
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        cfg = None
+    if not isinstance(cfg, dict):
+        return "invalid", (f"⚠ Quality gate disabled: the file .claude/quality-gate.json is not valid JSON. "
+                           f"{OFF} Fix the file.")
+    if not cfg.get("command"):
+        return "no-command", (f"⚠ Quality gate disabled: .claude/quality-gate.json lacks the \"command\" field. "
+                              f"{OFF} {hint}")
+    command = cfg["command"] if isinstance(cfg["command"], str) else " ".join(map(str, cfg["command"]))
+    marker = root / ".claude" / "quality-gate.expected-red"
+    if marker.is_file():
+        try:
+            reason = marker.read_text(encoding="utf-8").strip()[:200]
+        except OSError:
+            reason = ""
+        return "expected-red", ("⚠ Quality gate lets red tests through: the file .claude/quality-gate.expected-red"
+                                + (f" ({reason})" if reason else "") + ". Remove it when the batch is done.")
+    return "on", f"✓ Quality gate on: `{command}`."
 
 
 def main() -> int:
+    if "--status" in sys.argv[1:]:   # tf doctor and session start: one sentence about the gate state, always exit 0
+        state, text = gate_status(Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve())
+        if state != "on" or "--quiet-ok" not in sys.argv[1:]:
+            print(text)
+        return 0
     try:
         data = json.load(sys.stdin)
     except ValueError:
@@ -144,8 +225,8 @@ def main() -> int:
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     try:
         out = decide(root, data)
-    except Exception as e:  # noqa: BLE001 — bramka nie może wywrócić sesji
-        print(f"bramka jakości: błąd ({e}) — pomijam", file=sys.stderr)
+    except Exception as e:  # noqa: BLE001 — the gate must not break the session
+        print(f"quality gate: error ({e}) — skipping", file=sys.stderr)
         return 0
     if out:
         print(json.dumps(out, ensure_ascii=False))

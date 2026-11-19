@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-Moduł `observability` tf analyze, piętro 0 (bez modelu): podstawy obserwowalności usług HTTP (ops-observability).
+The `observability` module of tf analyze, tier 0 (no model): the basics of HTTP service observability (ops-observability).
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines on stdout (contract: .tf/factory/analyze.py)
 
-Reguły:
-- `no-health-endpoint` — w repozytorium jest punkt startowy usługi (Express, Fastify, Koa, NestJS, Hono, FastAPI,
-  Flask, Spring Boot), ale nigdzie nie ma trasy `health`/`healthz`/`livez`/`readyz`/`ready`/`ping`, Actuatora ani
-  `@nestjs/terminus` — orkiestrator nie odróżni usługi żywej od zawieszonej; zgłaszane przy punkcie startowym;
-- `no-correlation-id` — usługa loguje, ale nigdzie nie ma identyfikatora żądania ani śledzenia (`x-request-id`,
-  `correlation id`, `traceparent`, OpenTelemetry, `pino-http`, MDC) — logów jednego żądania nie da się połączyć;
-- `print-instead-of-logger` — `console.*` albo `print` w pliku usługi (importuje framework HTTP albo jest route
-  handlerem Next.js) zamiast loggera z poziomem i polami;
-- `swallowed-error` — pusta obsługa błędu bez komentarza: w JS/TS każdy pusty `catch {}` i `.catch(() => {})`,
-  w Pythonie, Javie i Kotlinie tylko szeroki wyjątek (gołe `except`, `Exception`, `BaseException`, `Throwable`) —
-  błąd znika bez logu i bez ponowienia (pusty blok z komentarzem i wąski, nazwany wyjątek to świadoma decyzja).
-Sprawdzenie na poziomie repozytorium (trasa health, identyfikator) obejmuje wszystkie usługi naraz. Testy, skrypty
-w `scripts/`, dokumentacja i fixtures są pomijane. Znalezienie = „sprawdź”. Tylko biblioteka standardowa.
+Rules:
+- `no-health-endpoint` — the repository has a service entry point (Express, Fastify, Koa, NestJS, Hono, FastAPI,
+  Flask, Spring Boot), but nowhere is there a `health`/`healthz`/`livez`/`readyz`/`ready`/`ping` route, Actuator or
+  `@nestjs/terminus` — the orchestrator cannot tell a live service from a hung one; reported at the entry point;
+- `no-correlation-id` — the service logs, but nowhere is there a request or trace identifier (`x-request-id`,
+  `correlation id`, `traceparent`, OpenTelemetry, `pino-http`, MDC) — the logs of one request cannot be joined;
+- `print-instead-of-logger` — `console.*` or `print` in a service file (it imports an HTTP framework or is a Next.js route
+  handler) instead of a logger with a level and fields;
+- `swallowed-error` — empty error handling without a comment: in JS/TS every empty `catch {}` and `.catch(() => {})`,
+  in Python, Java and Kotlin only a broad exception (bare `except`, `Exception`, `BaseException`, `Throwable`) —
+  the error disappears without a log and without a retry (an empty block with a comment and a narrow, named exception are a deliberate decision).
+The repository-level check (health route, identifier) covers all services at once. Tests, scripts
+in `scripts/`, documentation and fixtures are skipped. A finding = "check it". Standard library only.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) has no "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -61,7 +61,7 @@ LOGGING = re.compile(r"""\b(?:winston|pino|bunyan|log4js|structlog|loguru|slf4j|
                      r"""\blogger\.(?:info|warn|error|debug)\s*\(""", re.M)
 PRINT = re.compile(r"^\s*(?:console\.(?:log|info|debug|warn|error|trace)|print)\s*\(", re.M)
 EMPTY_CATCH = re.compile(r"\bcatch\s*(?:\([^)]*\))?\s*\{\s*\}|\.catch\s*\(\s*(?:\(\s*\w*\s*\)|\w+)\s*=>\s*\{\s*\}\s*\)")
-# Java/Kotlin i Python: tylko szeroki wyjątek — pusta obsługa wąskiego, nazwanego wyjątku to zwykle świadomy idiom.
+# Java/Kotlin and Python: only a broad exception — empty handling of a narrow, named exception is usually a deliberate idiom.
 JAVA_EMPTY_CATCH = re.compile(r"\bcatch\s*\(\s*(?:final\s+)?(?:java\.lang\.)?(?:Exception|Throwable|RuntimeException)"
                               r"\s+\w+\s*\)\s*\{\s*\}|\bcatch\s*\(\s*\w+\s*:\s*(?:Exception|Throwable)\s*\)\s*\{\s*\}")
 PY_EXCEPT_PASS = re.compile(r"^(\s*)except(?:\s*\(?\s*(?:Exception|BaseException)\s*\)?(?:\s+as\s+\w+)?)?[ \t]*:[ \t]*"
@@ -76,7 +76,7 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
          suggestion: str, confidence: float = 0.6) -> None:
     print(json.dumps({"rule": rule, "title": title, "file": rel, "line": line, "snippet": snippet.strip()[:160],
                       "severity": severity, "confidence": confidence, "evidence": evidence,
-                      "basis": "ops-observability (logi strukturalne, korelacja), ops-sre-incidents (sondy, SLO)",
+                      "basis": "ops-observability (structured logs, correlation), ops-sre-incidents (probes, SLO)",
                       "suggestion": suggestion}, ensure_ascii=False))
 
 
@@ -127,16 +127,16 @@ def scan(root: Path, files: list[str]) -> None:
             text = code[rel]
             if not has_health:
                 emit("no-health-endpoint", rel, line_of(text, m.start()), text.splitlines()[line_of(text, m.start()) - 1],
-                     "usługa bez endpointu health", "średnia",
-                     "punkt startowy usługi; w repozytorium brak trasy health/livez/readyz, Actuatora i terminus",
-                     "dodaj `/livez` (proces żyje) i `/readyz` (zależności gotowe) i podepnij je pod sondy "
-                     "orkiestratora")
+                     "service without a health endpoint", "medium",
+                     "service entry point; the repository has no health/livez/readyz route, no Actuator and no terminus",
+                     "add `/livez` (the process is alive) and `/readyz` (dependencies are ready) and wire them to the "
+                     "orchestrator's probes")
             if logs and not has_corr:
                 emit("no-correlation-id", rel, line_of(text, m.start()), text.splitlines()[line_of(text, m.start()) - 1],
-                     "logi bez identyfikatora żądania", "średnia",
-                     "usługa loguje, ale w repozytorium brak x-request-id, traceparent, OpenTelemetry i podobnych",
-                     "nadaj identyfikator żądania w middleware (przyjmij `traceparent`/`x-request-id` albo "
-                     "wygeneruj), dołączaj go do każdego logu i przekazuj dalej")
+                     "logs without a request ID", "medium",
+                     "the service logs, but the repository has no x-request-id, traceparent, OpenTelemetry or similar",
+                     "assign a request ID in middleware (accept `traceparent`/`x-request-id` or "
+                     "generate one), add it to every log line and pass it on")
     for rel, text in code.items():
         ext = Path(rel).suffix.lower()
         if SERVICE.search(text) or (ext in JS_EXT and NEXT_ROUTE.search(rel)):
@@ -145,20 +145,20 @@ def scan(root: Path, files: list[str]) -> None:
                     continue
                 ln = line_of(text, m.start())
                 emit("print-instead-of-logger", rel, ln, text.splitlines()[ln - 1],
-                     "console/print zamiast loggera w kodzie usługi", "niska",
-                     "wyjście bez poziomu, pól i identyfikatora żądania; trudne do filtrowania i alertów",
-                     "użyj loggera strukturalnego (pino, winston, logging/structlog, SLF4J) z polami zamiast "
-                     "sklejania tekstu")
+                     "console/print instead of a logger in service code", "low",
+                     "output with no level, fields or request ID; hard to filter and alert on",
+                     "use a structured logger (pino, winston, logging/structlog, SLF4J) with fields instead of "
+                     "concatenated text")
         pats = [PY_EXCEPT_PASS] if ext == ".py" else [JAVA_EMPTY_CATCH] if ext in (".java", ".kt") else [EMPTY_CATCH]
         for pat in pats:
             for m in pat.finditer(text):
                 if ext == ".py" and (m.group(2) or m.group(3)):
                     continue
                 ln = line_of(text, m.start(1) if ext == ".py" else m.start())
-                emit("swallowed-error", rel, ln, text.splitlines()[ln - 1], "połknięty błąd", "średnia",
-                     "pusta obsługa wyjątku bez komentarza — błąd znika bez logu, metryki i ponowienia",
-                     "zaloguj błąd z kontekstem i przekaż dalej albo obsłuż; jeśli pominięcie jest zamierzone, "
-                     "opisz dlaczego w komentarzu", confidence=0.8)
+                emit("swallowed-error", rel, ln, text.splitlines()[ln - 1], "swallowed error", "medium",
+                     "empty exception handler with no comment: the error disappears with no log, metric or retry",
+                     "log the error with context and rethrow it, or handle it; if ignoring it is intended, "
+                     "explain why in a comment", confidence=0.8)
 
 
 def main() -> int:

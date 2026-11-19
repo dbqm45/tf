@@ -1,109 +1,109 @@
 ---
 name: ai-research-methods
-description: Użyj przy badaniu i walidacji modelu ML — baseline, wyciek danych (podział losowy, czasowy, grupowy), wynik offline vs po wdrożeniu, seedy, metryki, raport.
+description: Use for researching and validating an ML model — baseline, data leakage (random, temporal, group split), offline vs post-deployment result, seeds, metrics, report.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj, gdy trzeba przejść od pytania badawczego lub hipotezy AI/ML do wyniku, który da się obronić — ujęcie problemu i mocny prosty baseline, projekt eksperymentu (kontrolowane zmienne, ablacje, seedy, średnia ± rozrzut, ostrożność przy wielokrotnych porównaniach), podziały danych i wyciek (czasowe, grupowe, higiena zbioru testowego, kontaminacja benchmarków), metryka zgodna z decyzją, budżet obliczeń i skalowanie od pilotażu, reprodukowalność (konfiguracja, kod, wersje danych, środowisko), przegląd literatury i krytyczne czytanie artykułów, od artykułu do prototypu produktowego, walidacja offline→online, raport badawczy z wynikami negatywnymi i ograniczeniami, przegląd etyczny danych; artefakt docs/project/02-domain/experiment-NAZWA.md. Nie do ewaluacji funkcji LLM i agentów (ai-evals), ogólnej statystyki i eksperymentów produktowych (data-analysis), dostrajania modelu (ai-fine-tuning), narzędzi śledzenia eksperymentów i rejestru (ai-mlops) ani szukania faktów w sieci (core-source-research)."
-  slowa: "badania ML, research scientist, applied scientist, hipoteza, eksperyment ML, baseline, ablacja, seedy, wariancja między uruchomieniami, średnia i odchylenie, czy nowy model jest lepszy, wyciek danych, data leakage, podział czasowy, podział grupowy, zbiór testowy, kontaminacja benchmarku, dobór metryki, pilotaż, skalowanie eksperymentu, reprodukowalność, powtarzalność wyników, przegląd literatury, czytanie artykułów, replikacja, z artykułu do produktu, offline online, raport z badania, wyniki negatywne, metoda nie zadziałała, nie poprawiła wyniku, jak zapisać badanie, metoda z artykułu, ograniczenia badania, etyka danych, model zastępczy, surrogate model, symulator, algorytm genetyczny, optymalizacja na modelu, najlepszy projekt wg modelu, rejestr hipotez, wracamy do tych samych pomysłów, claude science, literatura naukowa, bazy naukowe, publikacje z chemii lub biologii, doi, notatnik do odtworzenia wyniku"
+  review: "2027-04-17"
+  catalog: "Use when you need to go from an AI/ML research question or hypothesis to a result that can be defended — framing the problem and a strong simple baseline, experiment design (controlled variables, ablations, seeds, mean ± spread, caution with multiple comparisons), data splits and leakage (temporal, group, test-set hygiene, benchmark contamination), a metric aligned with the decision, a compute budget and scaling from a pilot, reproducibility (configuration, code, data versions, environment), a literature review and critical reading of papers, from a paper to a product prototype, offline→online validation, a research report with negative results and limitations, an ethical review of the data; artifact docs/project/02-domain/experiment-NAME.md. Not for evaluating LLM features and agents (ai-evals), general statistics and product experiments (data-analysis), fine-tuning a model (ai-fine-tuning), experiment tracking tools and the registry (ai-mlops) or searching for facts on the web (core-source-research)."
+  keywords: "badania ML, research scientist, applied scientist, hipoteza, eksperyment ML, baseline, ablacja, seedy, wariancja między uruchomieniami, średnia i odchylenie, czy nowy model jest lepszy, wyciek danych, data leakage, podział czasowy, podział grupowy, zbiór testowy, kontaminacja benchmarku, dobór metryki, pilotaż, skalowanie eksperymentu, reprodukowalność, powtarzalność wyników, przegląd literatury, czytanie artykułów, replikacja, z artykułu do produktu, offline online, raport z badania, wyniki negatywne, metoda nie zadziałała, nie poprawiła wyniku, jak zapisać badanie, metoda z artykułu, ograniczenia badania, etyka danych, model zastępczy, surrogate model, symulator, algorytm genetyczny, optymalizacja na modelu, najlepszy projekt wg modelu, rejestr hipotez, wracamy do tych samych pomysłów, claude science, literatura naukowa, bazy naukowe, publikacje z chemii lub biologii, doi, notatnik do odtworzenia wyniku, ML research, hypothesis, ML experiment, ablation, seeds, variance between runs, mean and deviation, is the new model better, temporal split, group split, test set, benchmark contamination, metric choice, pilot, scaling an experiment, reproducibility, repeatability of results, literature review, reading papers, replication, from paper to product, research report, negative results, the method did not work, did not improve the result, how to write up a study, method from a paper, study limitations, data ethics, simulator, genetic algorithm, optimization on a model, best design according to the model, hypothesis register, we keep coming back to the same ideas, scientific literature, scientific databases, chemistry or biology publications, notebook to reproduce a result"
 ---
 
-# Badania AI/ML — od hipotezy do wyniku, który się obroni
+# AI/ML research — from a hypothesis to a result that will hold up
 
-Wynik „model B jest lepszy” ma wartość tylko wtedy, gdy ktoś inny może go powtórzyć i wskazać, co go podważa.
-Skill prowadzi przez cały cykl badawczy. Zostawia sąsiadom ich zadania: ewaluację funkcji LLM i agentów (**ai-evals**),
-statystykę i testy A/B produktu (**data-analysis**, `.claude/skills/data-analysis/references/statystyka.md`,
-`.claude/skills/data-analysis/references/eksperymenty-zaawansowane.md`), dostrajanie (**ai-fine-tuning**), narzędzia
-śledzenia eksperymentów (**ai-mlops**) i badanie faktów w sieci (**core-source-research**).
+The result "model B is better" has value only when someone else can repeat it and point to what undermines it.
+The skill guides you through the whole research cycle. It leaves its neighbours their tasks: evaluating LLM features and agents (**ai-evals**),
+statistics and product A/B tests (**data-analysis**, `.claude/skills/data-analysis/references/statistics.md`,
+`.claude/skills/data-analysis/references/advanced-experiments.md`), fine-tuning (**ai-fine-tuning**), experiment
+tracking tools (**ai-mlops**) and researching facts on the web (**core-source-research**).
 
-## Procedura
-1. **Pytanie i decyzja.** Zapisz hipotezę falsyfikowalnie („dodanie cechy X podnosi PR-AUC o ≥ 1 pkt na danych z
-   kwartału Q”), decyzję, którą wynik zmieni, i kryterium porażki. Bez kryterium porażki każdy wynik „coś pokazuje”.
-2. **Literatura przed kodem** (`references/literatura-i-prototyp.md`). Sprawdź, czy ktoś już to zrobił i czy
-   zreplikowano wynik. Ustalenie artykułu = twierdzenie + dowód + warunki. Fakty z sieci zbieraj wg **core-source-research**.
-   Projekt z wiedzą spoza informatyki (biologia, chemia, medycyna, materiały): przegląd w Claude Science lub bazach
-   dziedzinowych prowadzi człowiek, do repo wraca zapis dowodu z DOI, wersją, datą dostępu i odtwarzalnym notatnikiem
-   (`references/literatura-i-prototyp.md`).
-3. **Mocny prosty baseline najpierw.** Reguła, regresja logistyczna, drzewo, ostatnia wartość, najczęstsza klasa
-   albo istniejący system. Strojony baseline (tyle prób, co kandydat) jest uczciwym punktem odniesienia; kandydat
-   bijący słaby baseline niczego nie dowodzi. Jeśli prosty model wystarcza do decyzji, badanie kończy się tutaj.
-4. **Podział danych i wyciek — przed pierwszym treningiem** (`references/wyciek-i-podzialy.md`). Podział wynika z
-   tego, jak model będzie użyty: przyszłość nie wpływa na przeszłość (podział czasowy), ta sama jednostka (klient,
-   pacjent, dokument) nie trafia po obu stronach (podział grupowy). Przetwarzanie wstępne (skalowanie, imputacja,
-   selekcja cech, kodowanie) uczysz tylko na treningu. **Zbiór testowy ogląda się raz**, na końcu; strojenie idzie
-   na walidacji. Zbiór testowy użyty do wyboru jest już zbiorem walidacyjnym.
-5. **Metryka zgodna z decyzją.** Metryka wynika z kosztu błędów i sposobu użycia (precision@k przy ograniczonej
-   liczbie interwencji, kalibracja przy progach, koszt fałszywego alarmu), a nie z tego, co raportuje benchmark.
-   Jedna metryka główna ustalona **przed** eksperymentem, reszta pomocnicza; wyniki w podgrupach, nie tylko średnia.
-6. **Projekt eksperymentu.** Zmieniasz jedną rzecz naraz; dane, podziały, budżet strojenia i metryka są identyczne
-   dla wszystkich wariantów. **Ablacje**: usuń po jednym elemencie nowej metody i pokaż, który wnosi zysk.
-   Sprawdź też kontrolę negatywną (np. etykiety pomieszane — wynik ma spaść do losowego; jeśli nie, jest wyciek).
-7. **Seedy i wariancja.** Pojedynczy przebieg to jedna próbka z rozkładu. Powtórz każdy wariant na ≥ 5 seedach
-   [założenie — liczba zależy od rozrzutu; zacznij od 5 i zwiększ, gdy przedziały się nakładają] i raportuj
-   **średnia ± odchylenie (albo przedział ufności)**, zapisując, co się zmieniało: inicjalizacja, kolejność danych,
-   podział, hiperparametry. Źródła zmienności obejmują też wybór podziału danych, nie tylko seed
-   (Bouthillier i in. 2021). Różnicę mniejszą od rozrzutu uznaj za nierozstrzygniętą.
-8. **Istotność i wielokrotne porównania.** Porównuj **sparowanie** (ten sam podział i te same przykłady): test
-   parowany, bootstrap różnicy, McNemar dla klasyfikacji. Podaj wielkość efektu i przedział, nie tylko p. Przy
-   wielu wariantach, metrykach lub zbiorach popraw liczbę porównań (Bonferroni, Holm) albo nazwij je eksploracyjnymi;
-   liczba prób strojenia i „podglądania” wyników trafia do raportu. Wybór testu: Dror i in. 2018;
-   rachunek: **data-analysis**.
-9. **Budżet obliczeń i skalowanie.** Przed dużym przebiegiem policz koszt (GPU-godziny × warianty × seedy).
-   Pilotaż na małym modelu lub podzbiorze: czy pipeline działa, czy metryka reaguje, jaki jest rozrzut. Wniosków z
-   małej skali nie przenoś na dużą bez sprawdzenia trendu na 2–3 rozmiarach [założenie — ranking metod bywa niestabilny].
-10. **Reprodukowalność.** Dla każdego przebiegu zapisz: commit kodu, konfigurację (hiperparametry, seedy), wersję
-    i skrót danych oraz podziału, środowisko (biblioteki, sprzęt), komendę uruchomienia. Śledzenie i rejestr
-    (MLflow, DVC) to **ai-mlops**. Lista kontrolna: `references/raport-i-szablon.md`.
-11. **Od artykułu i wyniku do produktu** (`references/literatura-i-prototyp.md`). Prototyp na własnych danych, nie na
-    benchmarku; walidacja offline (dane historyczne, podział czasowy), potem online (shadow, A/B — **data-analysis**
-    i **ai-evals**, krok 8). Różnica offline↔online jest wynikiem: zapisz ją i jej przyczynę.
-12. **Etyka danych.** Przed użyciem sprawdź pochodzenie i licencję danych, zgody, dane osobowe i szczególne
-    (**arch-privacy-compliance**), reprezentatywność i ryzyko szkód dla grup; kontaminację benchmarków i nadużycia.
-12a. **Model zastępczy w pętli optymalizacji i rejestr hipotez** — optymalizacja na modelu wyszukuje jego błędy,
-    więc zwycięzcę sprawdzasz prawdziwym symulatorem lub eksperymentem i raportujesz obie liczby; hipotezy jako graf
-    z werdyktami i warunkiem ponownego otwarcia (`references/optymalizacja-i-hipotezy.md`).
-13. **Raport** `docs/project/02-domain/experiment-<nazwa>.md` wg `references/raport-i-szablon.md`: hipoteza, metoda,
-    wyniki z rozrzutem, **wyniki negatywne**, ograniczenia, decyzja. Wynik negatywny jest wartościowy:
-    oszczędza następnym ślepe zaułki, ale tylko gdy opisano warunki, w których go uzyskano.
+## Procedure
+1. **Question and decision.** Write the hypothesis in a falsifiable way ("adding feature X raises PR-AUC by ≥ 1 pt on data from
+   quarter Q"), the decision the result will change, and the failure criterion. Without a failure criterion every result "shows something".
+2. **Literature before code** (`references/literature-and-prototype.md`). Check whether someone has already done it and whether
+   the result was replicated. A paper's finding = claim + evidence + conditions. Collect facts from the web per **core-source-research**.
+   A project with knowledge from outside computer science (biology, chemistry, medicine, materials): the review in Claude Science or domain
+   databases is run by a human; what comes back to the repo is a record of the evidence with a DOI, version, access date and a reproducible notebook
+   (`references/literature-and-prototype.md`).
+3. **A strong simple baseline first.** A rule, logistic regression, a tree, the last value, the most frequent class
+   or the existing system. A tuned baseline (as many trials as the candidate) is a fair reference point; a candidate
+   beating a weak baseline proves nothing. If a simple model is enough for the decision, the study ends here.
+4. **Data split and leakage — before the first training** (`references/leakage-and-splits.md`). The split follows from
+   how the model will be used: the future does not influence the past (temporal split), the same unit (customer,
+   patient, document) does not land on both sides (group split). Preprocessing (scaling, imputation,
+   feature selection, encoding) is fitted on the training set only. **The test set is looked at once**, at the end; tuning is done
+   on validation. A test set used for selection is already a validation set.
+5. **A metric aligned with the decision.** The metric follows from the cost of errors and the way of use (precision@k with a limited
+   number of interventions, calibration with thresholds, the cost of a false alarm), not from what a benchmark reports.
+   One primary metric fixed **before** the experiment, the rest auxiliary; results in subgroups, not only the mean.
+6. **Experiment design.** You change one thing at a time; the data, splits, tuning budget and metric are identical
+   for all variants. **Ablations**: remove the elements of the new method one at a time and show which one brings the gain.
+   Also check a negative control (e.g. shuffled labels — the result must drop to random; if it does not, there is leakage).
+7. **Seeds and variance.** A single run is one sample from a distribution. Repeat each variant on ≥ 5 seeds
+   [assumption — the number depends on the spread; start with 5 and increase when the intervals overlap] and report
+   **mean ± deviation (or a confidence interval)**, recording what varied: initialization, data order,
+   split, hyperparameters. The sources of variability also include the choice of the data split, not only the seed
+   (Bouthillier et al. 2021). Treat a difference smaller than the spread as inconclusive.
+8. **Significance and multiple comparisons.** Compare **paired** (the same split and the same examples): a paired
+   test, a bootstrap of the difference, McNemar for classification. Give the effect size and an interval, not only p. With
+   many variants, metrics or datasets, correct for the number of comparisons (Bonferroni, Holm) or call them exploratory;
+   the number of tuning trials and of "peeks" at the results goes into the report. Choosing the test: Dror et al. 2018;
+   the calculation: **data-analysis**.
+9. **Compute budget and scaling.** Before a large run, compute the cost (GPU-hours × variants × seeds).
+   A pilot on a small model or a subset: does the pipeline work, does the metric respond, what is the spread. Do not carry conclusions from
+   a small scale over to a large one without checking the trend on 2–3 sizes [assumption — the ranking of methods is often unstable].
+10. **Reproducibility.** For every run record: the code commit, the configuration (hyperparameters, seeds), the version
+    and hash of the data and the split, the environment (libraries, hardware), the run command. Tracking and the registry
+    (MLflow, DVC) are **ai-mlops**. Checklist: `references/report-and-template.md`.
+11. **From a paper and a result to a product** (`references/literature-and-prototype.md`). A prototype on your own data, not on the
+    benchmark; offline validation (historical data, temporal split), then online (shadow, A/B — **data-analysis**
+    and **ai-evals**, step 8). The offline↔online difference is a result: record it and its cause.
+12. **Data ethics.** Before use, check the origin and licence of the data, consents, personal and special-category data
+    (**arch-privacy-compliance**), representativeness and the risk of harm to groups; benchmark contamination and misuse.
+12a. **A surrogate model in an optimization loop and a hypothesis register** — optimization on a model searches out its errors,
+    so you check the winner with the real simulator or an experiment and report both numbers; hypotheses as a graph
+    with verdicts and a condition for reopening (`references/optimization-and-hypotheses.md`).
+13. **Report** `docs/project/02-domain/experiment-<name>.md` per `references/report-and-template.md`: hypothesis, method,
+    results with spread, **negative results**, limitations, decision. A negative result is valuable:
+    it saves the next people from dead ends, but only when the conditions under which it was obtained are described.
 
-## Przykład
-[przykład — liczby ilustracyjne, nie z pomiaru]
-**Wejście:** model odejść klientów (churn), baseline: regresja logistyczna, PR-AUC 0,41; nowy gradient boosting
-z 14 cechami czasowymi daje 0,46 w jednym przebiegu z losowym podziałem 80/20 (kilka wierszy na klienta).
-**Wynik:**
-- podział zmieniony na czasowy + grupowy (trening: miesiące 1–9, test: 10–12, klient tylko po jednej stronie);
-  baseline spada do 0,34, nowy model do 0,37 — wcześniejszy wynik zawyżał wyciek;
-- 5 seedów × 2 podziały: baseline 0,34 ± 0,01, nowy 0,37 ± 0,02; różnica 0,03, przedział bootstrapu różnicy
-  sparowanej [0,01; 0,05] — poprawa jest, ale mniejsza niż deklarowane 5 pkt;
-- ablacja: 11 z 14 cech nic nie wnosi; trzy cechy „liczba kontaktów z supportem” dają cały zysk;
-- 12 wariantów porównano → próg Bonferroniego 0,05/12 ≈ 0,004; efekt nadal wyraźny dla wariantu z trzema cechami;
-- raport `experiment-churn-gb.md`: werdykt „pilotaż shadow”, ograniczenie „dane z jednego kraju”, wynik negatywny
-  „pozostałe 11 cech bez efektu”.
+## Example
+[example — illustrative numbers, not from a measurement]
+**Input:** a customer churn model, baseline: logistic regression, PR-AUC 0.41; a new gradient boosting
+with 14 temporal features gives 0.46 in one run with a random 80/20 split (several rows per customer).
+**Result:**
+- the split changed to temporal + group (training: months 1–9, test: 10–12, a customer on one side only);
+  the baseline drops to 0.34, the new model to 0.37 — the earlier result was inflated by leakage;
+- 5 seeds × 2 splits: baseline 0.34 ± 0.01, new 0.37 ± 0.02; difference 0.03, the bootstrap interval of the paired
+  difference [0.01; 0.05] — there is an improvement, but smaller than the claimed 5 pts;
+- ablation: 11 of the 14 features add nothing; three features "number of contacts with support" give the whole gain;
+- 12 variants were compared → Bonferroni threshold 0.05/12 ≈ 0.004; the effect is still clear for the variant with three features;
+- report `experiment-churn-gb.md`: verdict "shadow pilot", limitation "data from one country", negative result
+  "the remaining 11 features have no effect".
 
-## Checklista
-- [ ] hipoteza falsyfikowalna, kryterium porażki i decyzja zapisane przed eksperymentem
-- [ ] literatura sprawdzona, twierdzenia artykułów odróżnione od dowodów
-- [ ] mocny prosty baseline z takim samym budżetem strojenia
-- [ ] podział czasowy/grupowy, przetwarzanie uczone tylko na treningu, zbiór testowy użyty raz
-- [ ] metryka główna zgodna z decyzją wybrana przed wynikami; wyniki w podgrupach
-- [ ] ablacje i kontrola negatywna; zmieniana jedna rzecz naraz
-- [ ] ≥ 5 seedów, średnia ± rozrzut, porównanie sparowane, korekta wielokrotnych porównań
-- [ ] budżet obliczeń policzony, pilotaż przed dużym przebiegiem
-- [ ] commit, konfiguracja, wersja danych i środowisko zapisane
-- [ ] etyka i licencje danych sprawdzone; raport z wynikami negatywnymi i ograniczeniami
+## Checklist
+- [ ] a falsifiable hypothesis, the failure criterion and the decision recorded before the experiment
+- [ ] literature checked, papers' claims distinguished from evidence
+- [ ] a strong simple baseline with the same tuning budget
+- [ ] temporal/group split, preprocessing fitted on training only, test set used once
+- [ ] primary metric aligned with the decision chosen before the results; results in subgroups
+- [ ] ablations and a negative control; one thing changed at a time
+- [ ] ≥ 5 seeds, mean ± spread, paired comparison, correction for multiple comparisons
+- [ ] compute budget calculated, a pilot before a large run
+- [ ] commit, configuration, data version and environment recorded
+- [ ] data ethics and licences checked; a report with negative results and limitations
 
-## Źródła
-- Bouthillier i in., „Accounting for Variance in Machine Learning Benchmarks”, MLSys 2021 (arXiv 2103.03098,
-  odczyt 2026-10-17): zmienność od próbkowania danych, inicjalizacji i wyboru hiperparametrów jest niedoszacowana;
-  rekomendacje porównywania.
-- Pineau i in., „Improving Reproducibility in Machine Learning Research”, JMLR 22(164), 2021 (arXiv 2003.12206,
-  odczyt 2026-10-17): program reprodukowalności NeurIPS 2019 z listą kontrolną, polityką kodu i wyzwaniem replikacji.
-  Treść pozycji listy: [niezweryfikowane] w tym środowisku.
-- Kapoor, Narayanan, „Leakage and the reproducibility crisis in machine-learning-based science”, Patterns 4(9),
-  2023 (odczyt 2026-10-17): wyciek w 17 dziedzinach i 294 pracach, osiem typów wycieku.
-- Henderson i in., „Deep Reinforcement Learning That Matters”, AAAI 2018 (odczyt 2026-10-17): wynik zależy od
-  seedów i liczby prób, wniosek o testach istotności i rzetelnym raportowaniu.
-- Dror i in., „The Hitchhiker’s Guide to Testing Statistical Significance in NLP”, ACL 2018 (odczyt 2026-10-17):
-  protokół doboru testu istotności; przegląd ACL/TACL 2017 wykazał pomijanie lub błędne użycie testów.
-- Liczba 5 seedów, progi pilotażu i przenoszenie wniosków ze skali to praktyka autorów skilla [założenie].
+## Sources
+- Bouthillier et al., "Accounting for Variance in Machine Learning Benchmarks", MLSys 2021 (arXiv 2103.03098,
+  accessed 2026-10-17): variability from data sampling, initialization and hyperparameter choice is underestimated;
+  recommendations for comparing.
+- Pineau et al., "Improving Reproducibility in Machine Learning Research", JMLR 22(164), 2021 (arXiv 2003.12206,
+  accessed 2026-10-17): the NeurIPS 2019 reproducibility programme with a checklist, a code policy and a replication challenge.
+  Content of the checklist items: [unverified] in this environment.
+- Kapoor, Narayanan, "Leakage and the reproducibility crisis in machine-learning-based science", Patterns 4(9),
+  2023 (accessed 2026-10-17): leakage in 17 fields and 294 papers, eight types of leakage.
+- Henderson et al., "Deep Reinforcement Learning That Matters", AAAI 2018 (accessed 2026-10-17): the result depends on
+  seeds and the number of trials, a conclusion about significance tests and honest reporting.
+- Dror et al., "The Hitchhiker’s Guide to Testing Statistical Significance in NLP", ACL 2018 (accessed 2026-10-17):
+  a protocol for choosing a significance test; a review of ACL/TACL 2017 showed tests being omitted or misused.
+- The number of 5 seeds, the pilot thresholds and carrying conclusions across scale are the skill authors' practice [assumption].
 
-Opisane własnymi słowami.
+Described in our own words.

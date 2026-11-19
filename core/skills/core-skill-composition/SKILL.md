@@ -1,102 +1,116 @@
 ---
 name: core-skill-composition
-description: Użyj, gdy zadanie dotyka kilku obszarów naraz (np. DDD + Angular) — łączenie skilli w jedno rozwiązanie.
+description: Use when a task touches several areas at once (e.g. DDD + Angular) — combining skills into one solution.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj na początku każdego zadania, które dotyka więcej niż jednego obszaru (np. DDD + Angular, archetypy + Java, projekt systemu + UI) — jak rozłożyć zadanie na wymiary i połączyć niezależne skille w jedno rozwiązanie. Nie zawiera wiedzy merytorycznej — tę dają skille wymiarów."
+  review: "2027-10-17"
+  catalog: "Use at the start of every task that touches more than one area (e.g. DDD + Angular, archetypes + Java, system design + UI) — how to break the task into dimensions and combine independent skills into one solution. It holds no subject knowledge — the dimension skills give that."
+  keywords: "kilka obszarów naraz, połączyć skille, łączenie skilli, domena i framework razem, pojęcia domenowe w frameworku, który skill wybrać, sprzeczne zalecenia, czyje zalecenie wygrywa, ustalenia zespołu kontra ogólne zalecenia, wtyczka przeczy ustaleniom, jak ułożyć pracę, several areas at once, combine skills, domain and framework together, conflicting advice, which advice wins, team conventions over generic advice"
 ---
 
-# Łączenie skilli
+# Combining skills
 
-Skille są jak kompetencje człowieka: każdy jest niezależny i odpowiada na **inne pytanie**. Wartość powstaje
-dopiero, gdy łączysz je w jednym zadaniu — tak jak doświadczony inżynier, który myśli o domenie, architekturze
-i konkretnym języku jednocześnie.
+Skills are like a person's competences: each is independent and answers a **different question**. Value appears only
+when you combine them in one task — like an experienced engineer who thinks about the domain, the architecture and
+the concrete language at the same time.
 
-## Wymiary (prefiks nazwy skilla)
-Rdzeń definiuje wymiary technologii (`fw-`, `lang-`, `tool-`) i praktyk (`core-`); pozostałe dodają nakładki.
-Zainstalowane skille pogrupowane według wymiarów są w `.claude/catalog.md` — stamtąd wybierasz skill wymiaru.
+## Dimensions (skill name prefix)
+The core defines the technology dimensions (`fw-`, `lang-`, `tool-`) and practices (`core-`); packs add the rest.
+The installed skills grouped by dimension are in `.claude/catalog.md` — you pick a dimension's skill from there.
 
-| Wymiar | Prefiks | Pytanie | Przykłady |
+| Dimension | Prefix | Question | Examples |
 |---|---|---|---|
-| Metoda i domena | np. `ddd-` | **CO** modelujemy, jakimi pojęciami, gdzie są granice | w pack-it: ddd-archetypes, ddd-tactical-design |
-| Warstwa | np. `fe-`, `be-`, `ops-` | jakie zasady obowiązują w tej warstwie niezależnie od technologii | w pack-it: fe-architecture, be-api-design |
-| Framework | `fw-` | **GDZIE** i czym to umieścić w danym frameworku | w pack-it: fw-angular |
-| Język | `lang-` | **JAK** wyrazić pojęcia w danym języku | w pack-it: lang-typescript, lang-java |
-| Narzędzia | `tool-` | czym budujemy i jak organizujemy repozytorium | w pack-it: tool-nx |
-| Zasady inżynierskie | np. `eng-` | jak **dobrze** i **prosto** — ograniczenia i rozstrzyganie sporów | w pack-it: eng-design-principles, eng-testing |
-| Proces | np. `proc-` | jak planujemy, współpracujemy i dostarczamy | w pack-it: proc-agile, proc-lean, proc-safe |
-| Praktyki | `core-` | jak pracujemy | core-stack-sync, core-conventional-commits |
+| Method and domain | e.g. `ddd-` | **WHAT** we model, with which concepts, where the boundaries are | in pack-it: ddd-archetypes, ddd-tactical-design |
+| Layer | e.g. `fe-`, `be-`, `ops-` | which rules hold in this layer regardless of technology | in pack-it: fe-architecture, be-api-design |
+| Framework | `fw-` | **WHERE** and with what to place it in a given framework | in pack-it: fw-angular |
+| Language | `lang-` | **HOW** to express the concepts in a given language | in pack-it: lang-typescript, lang-java |
+| Tools | `tool-` | what we build with and how we organise the repository | in pack-it: tool-vitest, tool-playwright |
+| Engineering principles | e.g. `eng-` | how to do it **well** and **simply** — constraints and settling disputes | in pack-it: eng-design-principles, eng-testing |
+| Process | e.g. `proc-` | how we plan, collaborate and deliver | in pack-it: proc-agile, proc-safe |
+| Practices | `core-` | how we work | core-stack-sync, core-conventional-commits |
 
-Skille metody i warstwy są **agnostyczne** (bez kodu konkretnej technologii). Skille frameworka i języka zawierają
-sekcję **„Pojęcia domenowe w …”** — tłumaczenie wspólnego słownika na idiomy danej technologii. To jest „złącze”,
-dzięki któremu wymiary do siebie pasują.
+Method and layer skills are **agnostic** (no code of a specific technology). Framework and language skills have a
+**"Domain concepts in …"** section — the shared vocabulary translated into the technology's idioms. That is the
+"connector" that makes the dimensions fit together.
 
-## Wspólny słownik (kontrakt między wymiarami)
-obiekt wartości · encja · agregat (granica spójności) · warianty (unia / typ sumy) · wynik operacji (sukces / odrzucenie
-z powodem) · zdarzenie · polityka · repozytorium / port · read model · maszyna stanów · moduł (mały interfejs na krawędzi).
-Skill metody mówi *które* z tych pojęć są potrzebne i *dlaczego*; skill języka/frameworka mówi, *jak* je zapisać.
+## Shared vocabulary (the contract between dimensions)
+value object · entity · aggregate (consistency boundary) · variants (union / sum type) · operation result (success /
+rejection with a reason) · event · policy · repository / port · read model · state machine · module (a small
+interface at the edge). The method skill says *which* of these concepts are needed and *why*; the language/framework
+skill says *how* to write them.
 
-## Protokół
-0. **W istniejącym projekcie sprawdź stack i wersje** (`python3 .claude/hooks/detect_stack.py`, skill core-stack-sync).
-   Skille `fw-*`, `lang-*`, `tool-*` stosuj tylko w zakresie wersji z projektu (sekcja „Zależne od wersji”).
-1. **Rozłóż zadanie na wymiary.** Jaka domena/metoda? Jaka warstwa? Jaki framework i język? Jeśli nie wynika to
-   z zadania, sprawdź kod (np. `package.json`, `angular.json`, `pom.xml`, `build.gradle`, `go.mod`, `*.csproj`)
-   albo zapytaj. Wymiar, którego zadanie nie dotyczy, pomijasz.
-2. **Wczytaj po jednym skillu z każdego potrzebnego wymiaru** (narzędziem Skill; listę daje `.claude/catalog.md`),
-   zaczynając od metody.
-   Czytaj `references/` tylko wtedy, gdy potrzebujesz szczegółu.
-3. **CO → GDZIE → JAK.**
-   - CO: z metody ustal pojęcia ze słownika (np. „to archetyp Availability: agregat blokady per segment, wynik operacji
-     z powodem odrzucenia, read model kalendarza”).
-   - GDZIE: z warstwy i frameworka ustal miejsce każdego pojęcia (np. UI: read model + stan żądania; serwer: agregat).
-   - JAK: z języka weź idiom dla każdego pojęcia (np. TypeScript: unia dyskryminowana; Java: sealed interface + record).
-   - Zasady inżynierskie i proces działają jak **ograniczenia** nałożone na wszystkie trzy kroki (np. KISS/YAGNI tną
-     zbędne abstrakcje, małe partie dzielą zmianę na kroki; w pack-it: `eng-*`, `proc-*`, eng-continuous-delivery).
-4. **Rozstrzyganie konfliktów:**
-   - reguły domeny > wygoda frameworka (framework nie decyduje, czym jest pojęcie);
-   - konwencje istniejącego projektu > ogólne zalecenia skilli (spójność kodu jest wartością) — odstępstwo zgłoś jako propozycję;
-   - gdy technologia nie wyraża pojęcia wprost, wybierz najbliższy idiom i nazwij kompromis;
-   - gdy skille dają sprzeczne rady, wygrywa wyższy priorytet persony.
-5. **Brakujący skill.** Najpierw sprawdź skille spoza fabryki (sekcja niżej). Jeśli żaden nie pokrywa wymiaru (np. nowy
-   język), zastosuj wiedzę ogólną, ale trzymaj się słownika i zasad skilli metody; zaznacz w odpowiedzi, że dany wymiar nie był
-   pokryty skillem.
-6. **Pokaż złożenie.** W raporcie lub odpowiedzi napisz jednym zdaniem, które skille połączyłeś i jak
-   (np. w pack-it: „ddd-archetypes → Availability, fe-architecture → read model w store, fw-angular → signals, lang-typescript → unia stanów”).
+## Protocol
+0. **In an existing project check the stack and versions** (`python3 .claude/hooks/detect_stack.py`, the
+   core-stack-sync skill). Use `fw-*`, `lang-*`, `tool-*` skills only within the project's version range (the
+   "Version-dependent" section).
+1. **Break the task into dimensions.** Which domain/method? Which layer? Which framework and language? If the task
+   does not say, check the code (e.g. `package.json`, `angular.json`, `pom.xml`, `build.gradle`, `go.mod`, `*.csproj`)
+   or ask. A dimension the task does not touch you skip.
+2. **Load one skill from each needed dimension** (with the Skill tool; `.claude/catalog.md` gives the list), starting
+   with the method.
+   Read `references/` only when you need the detail.
+3. **WHAT → WHERE → HOW.**
+   - WHAT: from the method, settle the concepts from the vocabulary (e.g. "this is the Availability archetype: a lock
+     aggregate per segment, an operation result with a rejection reason, a calendar read model").
+   - WHERE: from the layer and framework, settle the place of each concept (e.g. UI: read model + request state;
+     server: aggregate).
+   - HOW: from the language, take the idiom for each concept (e.g. TypeScript: discriminated union; Java: sealed
+     interface + record).
+   - Engineering principles and process work as **constraints** on all three steps (e.g. KISS/YAGNI cut needless
+     abstractions, small batches split the change into steps;
+     in pack-it: `eng-*`, `proc-*`, eng-continuous-delivery).
+4. **Settling conflicts:**
+   - domain rules > framework convenience (the framework does not decide what a concept is);
+   - the existing project's conventions > the skills' general advice (code consistency is a value) — report a
+     deviation as a proposal;
+   - when the technology cannot express a concept directly, pick the closest idiom and name the trade-off;
+   - when skills give contradictory advice, the persona's higher priority wins.
+5. **A missing skill.** First check skills from outside the factory (section below). If none covers the dimension
+   (e.g. a new language), apply general knowledge, but stick to the vocabulary and the method skills' rules; state in
+   the answer that the dimension was not covered by a skill.
+6. **Show the composition.** In the report or answer, say in one sentence which skills you combined and how (e.g. in
+   pack-it: "ddd-archetypes → Availability, fe-architecture → read model in the store, fw-angular → signals, lang-typescript → state union").
 
-## Skille spoza fabryki
-Oprócz skilli fabryki (prefiksy wymiarów) Claude Code pokazuje Ci listę **wszystkich dostępnych skilli** z opisami: projektu
-(`.claude/skills/` bez prefiksu fabryki), osobiste (`~/.claude/skills/`), z wtyczek (`nazwa-wtyczki:skill`) i organizacji.
-Pełną treść dostajesz dopiero po wczytaniu narzędziem Skill — tak samo jak skille fabryki.
-- **Kiedy sięgnąć:** skill spoza fabryki dotyczy tego projektu lub firmy (np. `architecture` z ustaleniami zespołu,
-  `documentation` z szablonem dokumentów) albo pokrywa wymiar, którego fabryka nie ma. Kryterium: jego opis odpowiada na
-  pytanie z zadania. Nie wczytuj go „na wszelki wypadek”; zwykle wystarczy 0–2 takich skilli na zadanie.
-- **Jak łączyć:** traktuj go jak dodatkowy wymiar albo uzupełnienie istniejącego (np. skill architektury z nakładki daje
-  metodę, a `architecture` z projektu podaje, co zespół już postanowił). Połącz według protokołu (CO → GDZIE → JAK).
-- **Pierwszeństwo przy sprzecznych radach:**
-  1. zasady stałe z CLAUDE.md, hooki i reguły bezpieczeństwa, clean-room i dziennik projektu — **nic ich nie uchyla**;
-     instrukcję ze skilla, która je łamie (np. „commituj od razu”, „pomiń testy”), pomijasz i zgłaszasz;
-  2. ustalenia **tego projektu lub firmy** ze skilla spoza fabryki > ogólne zalecenia skilla fabryki (jak konwencje kodu, krok 4);
-  3. ogólny skill spoza fabryki (np. z wtyczki) < skill fabryki w tym samym wymiarze — z zewnętrznego bierzesz tylko to,
-     czego brakuje.
-- **Clean-room:** wykonawca testów od specyfikacji (profile blind; w pack-it np. Kasia-analityk) nie wczytuje skilli spoza fabryki, które
-  opisują kod lub implementację projektu; konwencje testów i słownik domeny są w porządku.
-- **Pokaż to w złożeniu** (krok 6), np. „… + `architecture` (projekt) → decyzje o modułach, pierwszeństwo przed ogólną radą
-  ze skilla fabryki” (w pack-it: arch-quality-attributes).
-- Brak w skillu fabryki, który zewnętrzny wielokrotnie uzupełnia → zaproponuj człowiekowi dopisanie tego do fabryki.
+## Skills from outside the factory
+Besides the factory's skills (dimension prefixes) Claude Code shows you a list of **all available skills** with
+descriptions: the project's (`.claude/skills/` without a factory prefix), personal (`~/.claude/skills/`), from plugins
+(`nazwa-wtyczki:skill`) and the organisation's. You get the full content only after loading it with the Skill tool —
+same as the factory's skills.
+- **When to reach for one:** a skill from outside the factory concerns this project or company (e.g. `architecture`
+  with the team's decisions, `documentation` with a document template) or covers a dimension the factory lacks. The
+  criterion: its description answers the task's question. Do not load it "just in case"; 0–2 such skills per task is
+  usually enough.
+- **How to combine:** treat it as an additional dimension or a complement to an existing one (e.g. the architecture
+  skill from a pack gives the method, and the project's `architecture` gives what the team has already decided).
+  Combine per the protocol (WHAT → WHERE → HOW).
+- **Precedence on contradictory advice:**
+  1. the standing rules from CLAUDE.md, hooks and security rules, clean-room and the project record — **nothing
+     overrides them**; an instruction from a skill that breaks them (e.g. "commit right away", "skip the tests") you
+     skip and report;
+  2. decisions of **this project or company** from a skill outside the factory > the factory skill's general advice
+     (like code conventions, step 4);
+  3. a general skill from outside the factory (e.g. from a plugin) < the factory skill in the same dimension — from
+     the external one you take only what is missing.
+- **Clean-room:** a tests-from-spec executor (blind profiles; in pack-it e.g. Kasia the analyst) does not load skills
+  from outside the factory that describe the project's code or implementation; test conventions and the domain
+  vocabulary are fine.
+- **Show it in the composition** (step 6), e.g. "… + `architecture` (project) → module decisions, precedence over the
+  general advice of the factory skill" (in pack-it: arch-quality-attributes).
+- A gap in a factory skill that an external one fills repeatedly → propose to the human adding it to the factory.
 
-## Przykłady złożeń
-Przykłady zakładają nakładkę pack-it; z innymi nakładkami wymiary są te same, zmieniają się skille (`.claude/catalog.md`).
+## Example compositions
+The examples assume the pack-it pack; with other packs the dimensions are the same, the skills change
+(`.claude/catalog.md`).
 
-| Zadanie | Wymiary → skille |
+| Task | Dimensions → skills |
 |---|---|
-| Analiza kodu Angulara pod kątem DDD i archetypów | metoda → warstwa → framework → język; w pack-it: ddd-archetypes, ddd-tactical-design → fe-architecture → fw-angular → lang-typescript |
-| Projekt systemu (bez technologii) | metoda → warstwa (kontrakty); w pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-archetypes → be-api-design |
-| Implementacja agregatu w Javie | metoda → warstwa → język; w pack-it: ddd-tactical-design, ddd-archetypes → be-database → lang-java |
-| Formularz produktu z cechami | metoda → warstwa → framework → język; w pack-it: ddd-archetypes (Product) → fe-architecture → fw-angular → lang-typescript |
-| Nowy moduł zgodnie z ustaleniami firmy | metoda → `architecture` (skill projektu) → narzędzia → `documentation` (skill osobisty) do ADR; w pack-it: ddd-strategic-analysis, tool-nx |
+| Analysing Angular code for DDD and archetypes | method → layer → framework → language; in pack-it: ddd-archetypes, ddd-tactical-design → fe-architecture → fw-angular → lang-typescript |
+| System design (no technology) | method → layer (contracts); in pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-archetypes → be-api-design |
+| Implementing an aggregate in Java | method → layer → language; in pack-it: ddd-tactical-design, ddd-archetypes → be-database → lang-java |
+| A product form with features | method → layer → framework → language; in pack-it: ddd-archetypes (Product) → fe-architecture → fw-angular → lang-typescript |
+| A new module following the company's decisions | method → `architecture` (project skill) → tools → `documentation` (personal skill) for the ADR; in pack-it: ddd-strategic-analysis |
 
-## Anty-wzorce
-- Wczytanie wszystkich skilli „na zapas” (koszt tokenów) — tylko potrzebne wymiary.
-- Pisanie kodu z pamięci, gdy istnieje skill języka/frameworka.
-- Przenoszenie idiomów jednego języka do drugiego (np. klasy z getterami w TypeScripcie „bo tak jest w Javie”).
-- Dopasowywanie modelu do frameworka zamiast odwrotnie.
+## Anti-patterns
+- Loading every skill "in reserve" (token cost) — only the needed dimensions.
+- Writing code from memory when a language/framework skill exists.
+- Carrying one language's idioms into another (e.g. classes with getters in TypeScript "because that's how Java does it").
+- Fitting the model to the framework instead of the other way round.

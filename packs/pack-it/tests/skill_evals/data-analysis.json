@@ -27,6 +27,34 @@
       }
     },
     {
+      "id": "porownanie-grup-skosne-en",
+      "expect": "trigger",
+      "prompt": "I have order amounts from two sales channels (skewed distribution, about 300 orders each) and I want to check whether channel B is better. Which test should I use and what else should I report besides the p-value? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "mann.?whitney|manna.?whitney"
+          ],
+          [
+            "wielkość efektu|effect size|cohen|przedzia\\w+ ufności|confidence interval",
+            "effect[- ]size|Cliff|rank-biserial|Hodges"
+          ],
+          [
+            "mediana|median"
+          ],
+          [
+            "Holm",
+            "Benjamini",
+            "Bonferroni",
+            "(wiel\\w+|wielokrotn\\w+) porówna\\w+[^.]{0,60}korekt",
+            "p-hacking",
+            "multiple (comparisons?|testing)[^.]{0,60}(correct\\w*|adjust\\w*)",
+            "(correct\\w*|adjust\\w*)[^.]{0,60}multiple (comparisons?|testing)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "spadek-konwersji",
       "expect": "trigger",
       "prompt": "Konwersja spadła po zmianie cennika i zarząd chce wiedzieć dlaczego. Ogólna konwersja spadła, ale wydaje mi się, że w większości segmentów wzrosła. Jak do tego podejść? Odpowiedz zwięźle.",

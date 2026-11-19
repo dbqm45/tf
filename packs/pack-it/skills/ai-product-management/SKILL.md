@@ -1,91 +1,91 @@
 ---
 name: ai-product-management
-description: Użyj przy decyzji o funkcji AI w produkcie — czy AI, kryteria akceptacji jako ewaluacje, koszt zadania, ryzyka, UX niepewności, wdrożenie etapowe.
+description: Use for deciding on an AI feature in a product — whether AI, acceptance criteria as evals, cost per task, risks, uncertainty UX, staged rollout.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj, gdy jako product manager lub właściciel produktu planujesz funkcję opartą na AI (LLM, ML) — czy AI jest właściwym narzędziem (reguła, klasyczny ML czy LLM; koszt błędów i kto go ponosi), ramowanie przez wynik i kryteria akceptacji zapisane jako ewaluacje (poprzeczka jakości, tolerancja na typ błędu, przykłady dobrych i złych wyników), cele jakości, opóźnienia i kosztu na zadanie z ekonomią jednostkową, kup, zbuduj czy użyj API, potrzeby danych, rejestr ryzyk (halucynacje, uprzedzenia, bezpieczeństwo, prywatność, prompt injection), UX niepewności i człowiek w pętli, wdrożenie etapowe (offline, dogfooding, beta, A/B), metryki produktowe a modelowe, monitoring po starcie, komunikacja z interesariuszami, sekcja PRD dla funkcji AI. Nie do odkrywania wyniku i priorytetyzacji (proc-product-discovery), PRD i MVP (proc-requirements-shaping), metody ewaluacji (ai-evals), tekstów w interfejsie (ux-content-design), klasyfikacji prawnej AI Act (ai-governance-compliance) ani wyboru architektury technicznej (arch-ai-solutions)."
-  slowa: "funkcja AI, czy użyć AI, product manager AI, AI PM, wymagania dla AI, kryteria akceptacji AI, koszt na zapytanie, unit economics, koszt tokenów, kup czy zbuduj model, halucynacje ryzyko, człowiek w pętli, niepewność modelu, pokazać pewność, wdrożenie funkcji AI, beta AI, dogfooding, model się myli, asystent AI w produkcie, copilot, PRD funkcji AI, czy reguły wystarczą, komunikacja z zarządem o AI, czy warto użyć AI, AI czy zwykłe reguły, funkcja AI sama zatwierdza, kiedy AI ma sens, bezpiecznie wypuścić funkcję AI, wypuścić AI do klientów, model może się mylić, pokazać użytkownikom błędy modelu, prototyp AI, wdrożyć asystenta"
+  review: "2027-04-17"
+  catalog: "Use when as a product manager or product owner you plan a feature based on AI (LLM, ML) — whether AI is the right tool (a rule, classical ML or an LLM; the cost of errors and who bears it), framing by outcome and acceptance criteria written as evals (a quality bar, tolerance per error type, examples of good and bad results), quality, latency and cost-per-task goals with unit economics, buy, build or use an API, data needs, a risk register (hallucinations, bias, safety, privacy, prompt injection), uncertainty UX and human in the loop, staged rollout (offline, dogfooding, beta, A/B), product versus model metrics, monitoring after launch, communication with stakeholders, a PRD section for an AI feature. Not for discovering the outcome and prioritization (proc-product-discovery), the PRD and MVP (proc-requirements-shaping), the evaluation method (ai-evals), interface copy (ux-content-design), the legal AI Act classification (ai-governance-compliance) or choosing the technical architecture (arch-ai-solutions)."
+  keywords: "funkcja AI, czy użyć AI, product manager AI, AI PM, wymagania dla AI, kryteria akceptacji AI, koszt na zapytanie, unit economics, koszt tokenów, kup czy zbuduj model, halucynacje ryzyko, człowiek w pętli, niepewność modelu, pokazać pewność, wdrożenie funkcji AI, beta AI, dogfooding, model się myli, asystent AI w produkcie, copilot, PRD funkcji AI, czy reguły wystarczą, komunikacja z zarządem o AI, czy warto użyć AI, AI czy zwykłe reguły, funkcja AI sama zatwierdza, kiedy AI ma sens, bezpiecznie wypuścić funkcję AI, wypuścić AI do klientów, model może się mylić, pokazać użytkownikom błędy modelu, prototyp AI, wdrożyć asystenta, AI feature, whether to use AI, requirements for AI, AI acceptance criteria, cost per request, token cost, buy or build a model, hallucination risk, human in the loop, model uncertainty, show confidence, rolling out an AI feature, the model is wrong, AI assistant in the product, AI feature PRD, are rules enough, communicating with the board about AI, is it worth using AI, AI or plain rules, the AI feature approves by itself, when AI makes sense, safely release an AI feature, release AI to customers, the model can be wrong, show users the model's errors, AI prototype, roll out an assistant"
 ---
 
-# Zarządzanie produktem z AI
+# Product management with AI
 
-Funkcja AI różni się od zwykłej tym, że **odpowiedź bywa błędna z natury**, a jakość jest rozkładem, nie wartością.
-Zadanie PM-a: ustalić, czy AI jest tu uzasadnione, zapisać „dość dobrze” w sposób mierzalny, policzyć koszt i
-zaprojektować życie z błędami. Czego **nie** robi ten skill: wynik i priorytety to **proc-product-discovery**, szkielet
-PRD i budżet MVP to **proc-requirements-shaping**, metodę ewaluacji (zbiory, graderzy, CI) daje **ai-evals**.
+An AI feature differs from an ordinary one in that **the answer is sometimes wrong by nature**, and quality is a distribution, not a value.
+The PM's job: establish whether AI is justified here, write down "good enough" in a measurable way, compute the cost and
+design life with errors. What this skill does **not** do: the outcome and priorities are **proc-product-discovery**, the PRD skeleton
+and the MVP budget are **proc-requirements-shaping**, the evaluation method (datasets, graders, CI) is given by **ai-evals**.
 
-## Procedura
-1. **Czy AI?** Zacznij od najprostszego narzędzia, które zamyka problem (`references/decyzje-i-ekonomia.md`):
-   reguła deterministyczna, gdy logikę da się zapisać; klasyczny ML, gdy są etykiety i stały kształt danych; LLM,
-   gdy wejście jest otwartym tekstem, a wyjście wymaga rozumienia lub generowania. Test: „co się stanie, gdy
-   model się pomyli, i **kto to poniesie**?” — klient, pracownik czy firma. Wysoki koszt błędu bez możliwości
-   weryfikacji = nie AI albo AI tylko jako propozycja dla człowieka.
-2. **Wynik, nie model.** Zapisz wynik biznesowy z miarą (proc-product-discovery) i zadanie użytkownika; model jest
-   środkiem. Wskaż, co użytkownik robi dziś i ile to kosztuje — to punkt odniesienia dla modelu.
-3. **Kryteria akceptacji jako ewaluacje.** Zamiast „model odpowiada poprawnie” zapisz:
-   - **zbiór ewaluacyjny** (N przypadków z prawdziwych zgłoszeń, w tym brzegowe i adwersaryjne) i właściciela zbioru;
-   - **poprzeczkę jakości** na metrykę, np. „≥ 90% odpowiedzi zgodnych ze źródłem”;
-   - **tolerancję na typ błędu**: błędy nierówne (fałszywe zatwierdzenie zwrotu ≠ fałszywe odrzucenie); każdy typ ma
-     własny limit, także „0 w kategorii X”;
-   - **po 3–5 przykładów dobrego i złego wyniku** oraz wyniku granicznego, uzgodnione z ekspertem dziedziny.
-   Jak zbudować zbiór, graderów i bramkę — **ai-evals**. Bez zbioru funkcja nie wchodzi do zakresu.
-4. **Cele jakości, opóźnienia i kosztu.** Ustal razem: jakość (krok 3), opóźnienie (p50/p95 do pierwszego i ostatniego
-   tokenu, budżet czasu użytkownika) i **koszt na udane zadanie** (nie na zapytanie: uwzględnij ponowienia, kontekst,
-   sędziego, człowieka sprawdzającego). Zestaw z przychodem lub kosztem dzisiejszego procesu (unit economics:
-   `references/decyzje-i-ekonomia.md`). Cele się wykluczają — zapisz, który ustępuje.
-5. **Kup, zbuduj czy API.** Kolejność prób: gotowy produkt → API modelu z własnym promptem i kontekstem → dostrojenie
-   → własny model. Każdy kolejny szczebel ma sens dopiero po zmierzonej luce na poprzednim. Decyzję techniczną
-   i architekturę podaje **arch-ai-solutions**; PM dostarcza kryteria: dane, koszt, opóźnienie, zależność od dostawcy.
-6. **Dane.** Jakie dane są potrzebne (przykłady, etykiety, treści do wyszukiwania), czy je mamy, kto jest ich
-   właścicielem, czy wolno ich użyć do tego celu, jak świeże. Brak danych na zbiór ewaluacyjny to blokada, nie ryzyko.
-7. **Rejestr ryzyk** (`references/ryzyka-i-ux.md`): halucynacje, uprzedzenia, bezpieczeństwo treści, prywatność,
-   prompt injection, uzależnienie od dostawcy, drift. Każde: scenariusz, skutek, prawdopodobieństwo, środek, właściciel.
-   Klasę regulacyjną (AI Act) i obowiązki ustala **ai-governance-compliance**; PM wpisuje wynik do rejestru.
-8. **UX niepewności i człowiek w pętli** (`references/ryzyka-i-ux.md`): ustaw oczekiwania („to propozycja”), pokaż
-   źródła lub pewność tylko tam, gdzie jest skalibrowana, zaprojektuj wyjście awaryjne (fallback bez AI), łatwą
-   korektę i zbieranie sygnałów z poprawek do zbioru ewaluacyjnego. Teksty: **ux-content-design**.
-9. **Wdrożenie etapowe.** Ewaluacja offline (bramka) → dogfooding wewnętrzny → beta z wąską grupą i wyłącznikiem →
-   A/B lub shadow na części ruchu → pełne wdrożenie. Samo stopniowe zwiększanie ruchu nie zastępuje A/B ani shadow:
-   potrzebne jest porównanie z grupą kontrolną na metryce produktowej. Przejście wymaga kryterium zapisanego z góry. Kill switch i
-   plan wycofania gotowe przed betą (ops-release-engineering).
-10. **Metryki.** Dwie warstwy: **produktowe** (ukończenie zadania, retencja, czas oszczędzony, eskalacje do człowieka —
-    to one decydują) i **modelowe** (zgodność, odsetek odrzuceń, halucynacje wg ewaluacji — diagnostyka). Dobra metryka
-    modelu bez ruchu metryki produktowej to nie sukces. Dodaj metryki ochronne: koszt, skargi, bezpieczeństwo.
-11. **Po starcie.** Monitoruj ruch próbkami i alertami (ai-evals, ops-observability), przeglądaj porażki co tydzień,
-    nowe porażki dodawaj do zbioru, a zmianę modelu lub promptu traktuj jak wydanie przez tę samą bramkę.
-12. **Komunikacja.** Interesariuszom powiedz wprost: co model robi dobrze, czego nie robi, jak często się myli
-    (liczba z ewaluacji z datą), co dzieje się przy błędzie, co kosztuje. Bez obietnic „100%” i bez „AI wszystko
-    załatwi”. Jedna strona z trzema blokami: potrafi / nie potrafi / nie wiemy jeszcze.
-13. **Zapis.** Sekcja funkcji AI w `docs/project/03-requirements/requirements.md` albo `ai-feature-brief.md`
-    (szablon: `references/szablon-sekcji-prd.md`; core-project-record). Decyzję o wdrożeniu podejmuje człowiek.
+## Procedure
+1. **Whether AI?** Start with the simplest tool that closes the problem (`references/decisions-and-economics.md`):
+   a deterministic rule, when the logic can be written down; classical ML, when there are labels and a fixed data shape; an LLM,
+   when the input is open text, and the output requires understanding or generation. Test: "what happens when
+   the model is wrong, and **who bears it**?" — the customer, an employee or the company. A high cost of error without the possibility
+   of verification = not AI, or AI only as a proposal for a human.
+2. **The outcome, not the model.** Write down the business outcome with a measure (proc-product-discovery) and the user's task; the model is
+   a means. Show what the user does today and how much it costs — that is the reference point for the model.
+3. **Acceptance criteria as evals.** Instead of "the model answers correctly" write down:
+   - **an evaluation set** (N cases from real tickets, including edge and adversarial ones) and the owner of the set;
+   - **a quality bar** per metric, e.g. "≥ 90% of answers consistent with the source";
+   - **tolerance per error type**: errors are unequal (a false approval of a refund ≠ a false rejection); each type has
+     its own limit, including "0 in category X";
+   - **3–5 examples each of a good and a bad result** and of a borderline result, agreed with a domain expert.
+   How to build the set, the graders and the gate — **ai-evals**. Without a set the feature does not go into scope.
+4. **Quality, latency and cost goals.** Set them together: quality (step 3), latency (p50/p95 to the first and last
+   token, the user's time budget) and **cost per successful task** (not per request: include retries, context,
+   the judge, the human checking). Compare with the revenue or the cost of today's process (unit economics:
+   `references/decisions-and-economics.md`). The goals conflict — write down which one gives way.
+5. **Buy, build or API.** The order of attempts: a ready product → a model API with your own prompt and context → fine-tuning
+   → your own model. Each next rung makes sense only after a measured gap on the previous one. The technical decision
+   and the architecture come from **arch-ai-solutions**; the PM supplies the criteria: data, cost, latency, vendor dependency.
+6. **Data.** What data is needed (examples, labels, content for retrieval), whether we have it, who
+   owns it, whether it may be used for this purpose, how fresh it is. Missing data for the evaluation set is a blocker, not a risk.
+7. **Risk register** (`references/risks-and-ux.md`): hallucinations, bias, content safety, privacy,
+   prompt injection, vendor dependency, drift. Each: a scenario, an effect, a probability, a measure, an owner.
+   The regulatory class (AI Act) and the obligations are established by **ai-governance-compliance**; the PM enters the result in the register.
+8. **Uncertainty UX and human in the loop** (`references/risks-and-ux.md`): set expectations ("this is a proposal"), show
+   sources or confidence only where it is calibrated, design an emergency exit (a fallback without AI), easy
+   correction and collecting signals from corrections into the evaluation set. Copy: **ux-content-design**.
+9. **Staged rollout.** Offline evaluation (a gate) → internal dogfooding → a beta with a narrow group and a kill switch →
+   A/B or shadow on part of the traffic → full rollout. Gradually increasing traffic alone does not replace A/B or shadow:
+   a comparison with a control group on a product metric is needed. A transition requires a criterion written down in advance. The kill switch and
+   the rollback plan are ready before the beta (ops-release-engineering).
+10. **Metrics.** Two layers: **product** (task completion, retention, time saved, escalations to a human —
+    these decide) and **model** (consistency, refusal rate, hallucinations per the evaluation — diagnostics). A good model
+    metric without a movement of the product metric is not a success. Add guardrail metrics: cost, complaints, safety.
+11. **After launch.** Monitor traffic with samples and alerts (ai-evals, ops-observability), review failures every week,
+    add new failures to the set, and treat a change of the model or the prompt as a release through the same gate.
+12. **Communication.** Tell stakeholders plainly: what the model does well, what it does not do, how often it is wrong
+    (a number from the evaluation with a date), what happens on an error, what it costs. No promises of "100%" and no "AI will
+    handle everything". One page with three blocks: can / cannot / we do not know yet.
+13. **Record.** The AI feature section in `docs/project/03-requirements/requirements.md` or `ai-feature-brief.md`
+    (template: `references/prd-section-template.md`; core-project-record). A human makes the rollout decision.
 
-## Przykład
-**Wejście:** sklep chce, żeby AI zatwierdzała zwroty bez udziału obsługi (3 000 zgłoszeń/mies., 4 min pracy każde).
-**Wynik (sekcja briefu):**
-- Czy AI: reguły pokrywają 60% (zwrot w 14 dni, brak śladów użycia); reszta to opisy tekstowe → LLM tylko dla tej części;
-- koszt błędu: fałszywe zatwierdzenie = strata towaru (firma), fałszywe odrzucenie = skarga (klient); limity:
-  fałszywe zatwierdzenia ≤ 1%, odrzucenia ≤ 5% [przykład];
-- tryb: model proponuje, człowiek zatwierdza zwroty > 200 zł, poniżej — automat po okresie próbnym;
-- zbiór: 300 zgłoszeń z archiwum + 30 adwersaryjnych, po 4 przykłady dobre/złe/graniczne;
-- cele: p95 < 6 s, koszt ≤ 0,15 zł na zgłoszenie wobec 4 min pracy [przykład];
-- etapy: offline → dogfooding (obsługa, 2 tyg.) → beta 10% ruchu z kill switchem → A/B; metryka produktowa: czas
-  rozpatrzenia, odsetek ponownych kontaktów; ochronna: wartość błędnie zatwierdzonych zwrotów.
+## Example
+**Input:** a shop wants AI to approve returns without the support team (3,000 tickets/month, 4 min of work each).
+**Result (a brief section):**
+- Whether AI: rules cover 60% (a return within 14 days, no signs of use); the rest are text descriptions → an LLM only for that part;
+- the cost of an error: a false approval = loss of goods (the company), a false rejection = a complaint (the customer); limits:
+  false approvals ≤ 1%, rejections ≤ 5% [example];
+- mode: the model proposes, a human approves returns > 200 PLN, below that — automatic after a trial period;
+- set: 300 tickets from the archive + 30 adversarial ones, 4 good/bad/borderline examples each;
+- goals: p95 < 6 s, cost ≤ 0.15 PLN per ticket against 4 min of work [example];
+- stages: offline → dogfooding (the support team, 2 weeks) → a beta at 10% of traffic with a kill switch → A/B; product metric: the
+  handling time, the share of repeat contacts; guardrail: the value of wrongly approved returns.
 
-## Checklista
-- [ ] uzasadnione, dlaczego nie reguła; koszt błędu i jego nosiciel nazwani
-- [ ] kryteria akceptacji jako ewaluacje: zbiór, poprzeczka, tolerancja na typ błędu, przykłady dobre i złe
-- [ ] jakość, opóźnienie i koszt na udane zadanie razem; wskazane, co ustępuje
-- [ ] dane: dostępność, prawo użycia, właściciel; rejestr ryzyk z właścicielami; klasa regulacyjna od ai-governance-compliance
-- [ ] UX: oczekiwania, fallback bez AI, korekta użytkownika wraca do zbioru
-- [ ] etapy z kryteriami przejścia, kill switch; metryki produktowe ponad modelowymi
-- [ ] komunikat dla interesariuszy: potrafi / nie potrafi / nie wiemy; zapis w docs/project/
+## Checklist
+- [ ] justified why not a rule; the cost of an error and who bears it named
+- [ ] acceptance criteria as evals: a set, a bar, tolerance per error type, good and bad examples
+- [ ] quality, latency and cost per successful task together; stated which one gives way
+- [ ] data: availability, the right to use it, the owner; a risk register with owners; the regulatory class from ai-governance-compliance
+- [ ] UX: expectations, a fallback without AI, user corrections go back into the set
+- [ ] stages with transition criteria, a kill switch; product metrics above model metrics
+- [ ] a message for stakeholders: can / cannot / we do not know; a record in docs/project/
 
-## Źródła
-- Microsoft, „Guidelines for Human-AI Interaction” (HAX Toolkit, microsoft.com/en-us/haxtoolkit/ai-guidelines, odczyt 2026-10-17):
-  18 wytycznych w czterech fazach (początek interakcji, w trakcie, gdy AI się myli, z czasem). Pełnej listy tytułów nie
-  odczytano [niezweryfikowane].
-- Google PAIR, „People + AI Guidebook” (pair.withgoogle.com/guidebook, strona główna nieosiągalna z tego środowiska
-  2026-10-17; rozdziały Mental Models, Explainability + Trust, Feedback + Control, Errors + Graceful Failure potwierdzone
-  wyszukiwaniem tego dnia; treść rozdziałów Explainability i Feedback [niezweryfikowane]).
-- Etapy wdrożenia, struktura rejestru ryzyk i szablon sekcji PRD to praktyka autorów skilla [założenie].
-Opisane własnymi słowami.
+## Sources
+- Microsoft, "Guidelines for Human-AI Interaction" (HAX Toolkit, microsoft.com/en-us/haxtoolkit/ai-guidelines, read 2026-10-17):
+  18 guidelines in four phases (initially, during interaction, when AI is wrong, over time). The full list of titles was not
+  read [unverified].
+- Google PAIR, "People + AI Guidebook" (pair.withgoogle.com/guidebook, the home page unreachable from this environment
+  2026-10-17; the chapters Mental Models, Explainability + Trust, Feedback + Control, Errors + Graceful Failure confirmed
+  by a search that day; the content of the Explainability and Feedback chapters [unverified]).
+- The rollout stages, the structure of the risk register and the PRD section template are the practice of the skill's authors [assumption].
+Described in our own words.

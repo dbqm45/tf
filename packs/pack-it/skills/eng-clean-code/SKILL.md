@@ -1,70 +1,70 @@
 ---
 name: eng-clean-code
-description: Użyj przy czytelności kodu w dowolnym języku — nazwy, funkcje, komentarze, obsługa błędów, zapachy, małe refaktoryzacje.
+description: Use for code readability — names, functions, comments, error handling, smells, small refactorings.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj przy pisaniu, przeglądzie i refaktoryzacji kodu w dowolnym języku — nazewnictwo, funkcje, komentarze, obsługa błędów, zapachy kodu i bezpieczne refaktoryzacje małymi krokami. Nie do zasad architektonicznych (eng-design-principles) ani idiomów konkretnego języka (lang-*)."
-  slowa: "null jako znaczenie, zwracanie null, czytelność, nazwy zmiennych, długa funkcja, refaktoryzacja, Optional, Null Object"
+  review: "2027-10-09"
+  catalog: "Use when writing, reviewing and refactoring code in any language — naming, functions, comments, error handling, code smells and safe refactorings in small steps. Not for architectural principles (eng-design-principles) or the idioms of a specific language (lang-*)."
+  keywords: "null jako znaczenie, zwracanie null, czytelność, nazwy zmiennych, długa funkcja, refaktoryzacja, Optional, Null Object, czysty kod, połknięty wyjątek, pusty catch, błąd tylko zalogowany, sukces mimo błędu, clean code, swallowed exception, empty catch, log and continue, null as meaning, returning null, readability, variable names, long function, refactoring, error only logged, success despite an error"
 ---
 
-# Czysty kod i refaktoryzacja
+# Clean code and refactoring
 
-## Nazwy
-- Nazwa mówi **co i po co**, językiem domeny (ubiquitous language): `blockResource`, nie `process`, `handleData`, `doStuff`.
-- Bez skrótów i szumu (`Manager`, `Helper`, `Util`, `Data`, `Info`) — jeśli pasuje tylko taka nazwa, odpowiedzialność jest niejasna.
-- Wartości logiczne jako pytania (`isAvailable`, `hasRole`); kolekcje w liczbie mnogiej; jednostki w nazwie, gdy typ ich nie niesie.
+## Names
+- A name says **what and what for**, in the language of the domain (ubiquitous language): `blockResource`, not `process`, `handleData`, `doStuff`.
+- No abbreviations and no noise (`Manager`, `Helper`, `Util`, `Data`, `Info`) — if only such a name fits, the responsibility is unclear.
+- Booleans as questions (`isAvailable`, `hasRole`); collections in the plural; units in the name when the type does not carry them.
 
-## Funkcje
-- Robią jedną rzecz na jednym poziomie abstrakcji; długość to sygnał, nie reguła (> ~30 linii → sprawdź).
-- Mało parametrów (≤ 3); więcej → obiekt parametrów / obiekt wartości. Brak parametrów-flag (`save(true)`) → dwie funkcje.
-- Rozdziel polecenia (zmieniają stan) od zapytań (zwracają dane) — CQS.
-- Wczesny powrót zamiast głębokich zagnieżdżeń.
-- **Złożoność cyklomatyczna** (liczba niezależnych ścieżek: 1 + punkty decyzji `if`, pętle, `case`, `&&`, `||`, `?:`):
-  powyżej ok. 10 na funkcję (próg McCabe'a) — dziel. Sposoby: klauzule strażnicze, wydzielenie funkcji, tabela lub mapa
-  zamiast długiego `switch`, polimorfizm zamiast `switch` po typie powtarzanego w wielu miejscach. W lincie: reguła ESLint
-  `complexity` (domyślny próg 20 — ustaw niższy) albo złożoność kognitywna z SonarJS (domyślnie 15), w Javie Sonar
-  lub Checkstyle `CyclomaticComplexity`. Liczba przypadków testowych rośnie razem ze złożonością (qa-test-design).
-- **Nie przekazuj `null`** jako znaczenia („brak klienta”, „użyj domyślnego”): osobna funkcja lub przeciążenie, obiekt
-  pusty (Null Object), pusta kolekcja zamiast `null`, typ opcjonalny. W TS `strict` (w tym `strictNullChecks`),
-  `null`/`undefined` sprawdzane raz na granicy (wejście API, odczyt z bazy), w Javie `Optional` tylko jako typ zwracany.
+## Functions
+- They do one thing at one level of abstraction; length is a signal, not a rule (> ~30 lines → check).
+- Few parameters (≤ 3); more → a parameter object / a value object. No flag parameters (`save(true)`) → two functions.
+- Separate commands (they change state) from queries (they return data) — CQS.
+- An early return instead of deep nesting.
+- **Cyclomatic complexity** (the number of independent paths: 1 + decision points `if`, loops, `case`, `&&`, `||`, `?:`):
+  above about 10 per function (McCabe's threshold) — split it. Ways: guard clauses, extracting a function, a table or a map
+  instead of a long `switch`, polymorphism instead of a `switch` on type repeated in many places. In the linter: the ESLint rule
+  `complexity` (default threshold 20 — set it lower) or cognitive complexity from SonarJS (default 15), in Java Sonar
+  or Checkstyle `CyclomaticComplexity`. The number of test cases grows together with the complexity (qa-test-design).
+- **Do not pass `null`** as a meaning ("no customer", "use the default"): a separate function or an overload, an empty
+  object (Null Object), an empty collection instead of `null`, an optional type. In TS `strict` (including `strictNullChecks`),
+  `null`/`undefined` checked once at the boundary (API input, a database read), in Java `Optional` only as a return type.
 
-## Komentarze
-- Kod mówi *co*, komentarz *dlaczego* (decyzja, ograniczenie, link do ADR/issue). Zakomentowany kod usuwamy.
-- Publiczne API dokumentuj (kontrakt, wyjątki, jednostki).
+## Comments
+- The code says *what*, the comment *why* (a decision, a constraint, a link to an ADR/issue). We delete commented-out code.
+- Document the public API (the contract, exceptions, units).
 
-## Błędy
-- Nie połykaj wyjątków; nie zwracaj `null` jako sygnału błędu — typ opcjonalny lub wynik operacji.
-- Komunikat błędu mówi, co się stało i co zrobić; bez danych wrażliwych.
-- Błąd operacji z efektem ubocznym (zapis, płatność, wysyłka) nie kończy się odpowiedzią sukcesu; logowanie to nie
-  obsługa. `catch → log → return ok` to **połknięty błąd** — klient myśli, że się udało (OWASP Top 10:2025, A10
-  Mishandling of Exceptional Conditions; diagnoza: eng-debugging).
+## Errors
+- Do not swallow exceptions; do not return `null` as an error signal — an optional type or an operation result.
+- An error message says what happened and what to do; without sensitive data.
+- An error of an operation with a side effect (a write, a payment, a send) does not end with a success response; logging is not
+  handling. `catch → log → return ok` is a **swallowed error** — the client thinks it succeeded (OWASP Top 10:2025, A10
+  Mishandling of Exceptional Conditions; diagnosis: eng-debugging).
 
-## Zapachy → refaktoryzacje (małymi krokami, testy zielone po każdym)
-| Zapach | Refaktoryzacja |
+## Smells → refactorings (in small steps, tests green after each)
+| Smell | Refactoring |
 |---|---|
-| długa funkcja | wydziel funkcję; zamień pętlę na potok |
-| powtórzona reguła biznesowa | przenieś do jednego miejsca (obiekt wartości, polityka) |
-| długa lista parametrów, zbitki danych | obiekt parametrów / obiekt wartości |
-| obsesja typów prostych (kwota jako liczba) | obiekt wartości |
-| `switch` po typie w wielu miejscach | polimorfizm / warianty / polityka |
-| zazdrość o dane (metoda używa cudzych pól) | przenieś metodę |
-| rozproszona zmiana (jedna zmiana → wiele plików) | zbierz odpowiedzialność w jednym module |
-| pole-flaga stanu | maszyna stanów / osobne pojęcia |
-| powtarzalny problem strukturalny (fabryki, warianty, warstwy, powiadomienia) | wzorzec z eng-design-patterns — najpierw jego lżejsza forma |
-| martwy kod | usuń (historia jest w git) |
+| long function | extract a function; replace a loop with a pipeline |
+| a repeated business rule | move it to one place (a value object, a policy) |
+| a long parameter list, data clumps | a parameter object / a value object |
+| primitive obsession (an amount as a number) | a value object |
+| `switch` on type in many places | polymorphism / variants / a policy |
+| feature envy (a method uses another object's fields) | move the method |
+| shotgun surgery (one change → many files) | gather the responsibility in one module |
+| a state flag field | a state machine / separate concepts |
+| a recurring structural problem (factories, variants, layers, notifications) | a design pattern — its lighter form first |
+| dead code | delete it (the history is in git) |
 
-## Jak refaktoryzować
-1. Testy charakteryzujące, jeśli ich brak. 2. Jeden krok naraz. 3. Refaktor w osobnym commicie (`refactor:`), bez zmiany zachowania.
-4. Najpierw zrób zmianę łatwą, potem zrób łatwą zmianę.
+## How to refactor
+1. Characterization tests, if they are missing. 2. One step at a time. 3. The refactor in a separate commit (`refactor:`), without a change in behaviour.
+4. First make the change easy, then make the easy change.
 
-## Przykład
-**Sytuacja:** review `process(data, owner: string | null, notify: boolean)` — zagnieżdżone `if`, `null` znaczy „system”.
-**Wynik:** nazwa z domeny `blockResource(resourceId, ownerId)`; flaga → osobne `blockResourceAndNotify`; `null` →
-`blockResourceBySystem(resourceId)`; wczesny powrót zamiast trzech poziomów `if`. Każdy krok osobno, testy zielone,
-commit `refactor:`; zmianę zwracanego `boolean` na wynik operacji (CQS) proponujesz w osobnym PR.
-Więcej przykładów: `references/przyklady.md`.
+## Example
+**Situation:** a review of `process(data, owner: string | null, notify: boolean)` — nested `if`s, `null` means "the system".
+**Result:** a name from the domain `blockResource(resourceId, ownerId)`; the flag → a separate `blockResourceAndNotify`; `null` →
+`blockResourceBySystem(resourceId)`; an early return instead of three levels of `if`. Each step separately, tests green,
+a `refactor:` commit; you propose changing the returned `boolean` to an operation result (CQS) in a separate PR.
+More examples: `references/examples.md`.
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 3, lekcja 5 (połknięte błędy) — materiał szkoleniowy (dostęp 2026-10-09).
-- OWASP Top 10:2025, kategoria A10 (nazwa jak w arch-threat-modeling).
-Opisane własnymi słowami.
+## Sources
+- The 10xDevs course, ed. 3 (2026), module 3, lesson 5 (swallowed errors) — training material (accessed 2026-10-09).
+- OWASP Top 10:2025, category A10 (the name as in arch-threat-modeling).
+Described in our own words.

@@ -1,90 +1,90 @@
-# Modele renderowania: CSR, SSR, SSG, ISR, hydratacja, RSC
+# Rendering models: CSR, SSR, SSG, ISR, hydration, RSC
 
-Mechanizm (jak działa) i decyzja (kiedy który). Połączone z importu: frontend-developer `senior.md` (Virtual DOM,
-SSR, hydratacja, RSC) i frontend-architect (modele renderowania per trasa). Fazy przeglądarki (CRP, event loop) i
-metryki (LCP/INP/CLS) — fe-web-platform (`.claude/skills/fe-web-platform/references/rendering-pipeline.md`, `.claude/skills/fe-web-platform/references/core-web-vitals.md`).
+The mechanism (how it works) and the decision (when to use which). Merged from the import: frontend-developer `senior.md` (Virtual DOM,
+SSR, hydration, RSC) and frontend-architect (rendering models per route). Browser phases (CRP, event loop) and
+metrics (LCP/INP/CLS) — fe-web-platform (`.claude/skills/fe-web-platform/references/rendering-pipeline.md`, `.claude/skills/fe-web-platform/references/core-web-vitals.md`).
 
-## Reaktywność i aktualizacja DOM
+## Reactivity and DOM updates
 
-Frameworki różnią się tym, **jak** ustalają, co zmienić w DOM:
+Frameworks differ in **how** they determine what to change in the DOM:
 
-| Model | Przykłady | Jak działa | Konsekwencje |
+| Model | Examples | How it works | Consequences |
 |---|---|---|---|
-| Virtual DOM + reconciliation | React, Preact, Vue (z kompilatorem optymalizującym) | render do drzewa obiektów → diff z poprzednim → minimalne mutacje DOM | koszt renderu komponentu ≠ koszt zmiany DOM; ważne klucze list i czystość renderu |
-| Sygnały / drobnoziarnista reaktywność | Angular (signals, zoneless), Solid, Svelte 5 (runes), Vue Vapor | zależności śledzone per wartość; zmiana aktualizuje tylko zależne węzły | brak diffu całego poddrzewa; pułapki: odczyt sygnału poza kontekstem reaktywnym |
-| Kompilacja do imperatywnych aktualizacji | Svelte, Vue Vapor | kompilator generuje kod mutujący konkretne węzły | mały runtime; logika reaktywności widoczna w kompilatorze |
+| Virtual DOM + reconciliation | React, Preact, Vue (with an optimizing compiler) | render into an object tree → diff with the previous one → minimal DOM mutations | the cost of rendering a component ≠ the cost of changing the DOM; list keys and render purity matter |
+| Signals / fine-grained reactivity | Angular (signals, zoneless), Solid, Svelte 5 (runes), Vue Vapor | dependencies tracked per value; a change updates only the dependent nodes | no diff of the whole subtree; pitfalls: reading a signal outside a reactive context |
+| Compilation to imperative updates | Svelte, Vue Vapor | the compiler generates code that mutates specific nodes | a small runtime; the reactivity logic visible in the compiler |
 
-**Reconciliation (VDOM) — reguły wspólne:** inny typ elementu na tej samej pozycji → cała gałąź wymieniana; ten sam
-typ → aktualizowane zmienione atrybuty/dzieci; listy porównywane po **kluczu**. Niestabilny klucz (np. indeks w
-sortowanej/filtrowanej liście) powoduje zbędne odmontowania i utratę stanu (wartość inputu, fokus). Odróżniaj
-„komponent się przerenderował” (praca JS, diff) od „DOM się zmienił” (commit) — to dwa różne koszty.
-Odpowiednik w Angularze: `@for (…; track item.id)` — ta sama rola co `key`.
+**Reconciliation (VDOM) — common rules:** a different element type at the same position → the whole branch is replaced; the same
+type → the changed attributes/children are updated; lists are compared by **key**. An unstable key (e.g. an index in
+a sorted/filtered list) causes unnecessary unmounts and loss of state (input value, focus). Distinguish
+"the component re-rendered" (JS work, diff) from "the DOM changed" (commit) — these are two different costs.
+The equivalent in Angular: `@for (…; track item.id)` — the same role as `key`.
 
-## Tryby renderowania
+## Rendering modes
 
-- **CSR (client-side)** — serwer wysyła prawie pusty HTML i bundle; UI powstaje w przeglądarce. Szybki TTFB,
-  wolne pierwsze wyświetlenie treści (FCP/LCP czekają na pobranie i wykonanie JS); słabsze SEO.
-- **SSR (server-side, na żądanie)** — serwer renderuje pełny HTML per żądanie; treść widać od razu, ale strona
-  jest nieinteraktywna do końca hydratacji. Streaming SSR (wysyłanie HTML kawałkami przy granicach
-  Suspense / `@defer`) skraca czas do pierwszej treści.
-- **SSG (w czasie budowania)** — HTML generowany raz; najtańszy w serwowaniu (CDN). Dla treści rzadko zmiennej.
-- **ISR / rewalidacja** — statyczne strony odświeżane w tle po czasie lub na żądanie (tag/ścieżka). Dla treści z CMS.
-- **Hydratacja** — framework „podpina się” pod HTML z serwera: odtwarza stan i podłącza obsługę zdarzeń bez
-  budowania DOM od zera. **Hydration mismatch** — HTML z serwera różni się od pierwszego renderu klienta
-  (`Date.now()`, `Math.random()`, odczyt `window`/`localStorage`, locale/strefa czasowa) → ostrzeżenia, migotanie,
-  a w najgorszym razie ponowny render klienta. Wartości zależne od klienta ustawiaj po hydratacji.
-- **Warianty ograniczające koszt hydratacji:** częściowa/„wyspowa” (Astro islands — interaktywne tylko wyspy),
-  **przyrostowa** (Angular `@defer` z `hydrate on …`, stabilna od v20 — fragment hydratuje się przy wejściu w
-  viewport/interakcji), **resumability** (Qwik — bez ponownego wykonania na kliencie), selektywna (React —
-  priorytet dla części, z którą użytkownik wchodzi w interakcję). Angular dodatkowo odtwarza zdarzenia
-  kliknięte przed hydratacją (event replay).
-- **Luka między „widzę” a „mogę kliknąć”** — w czystym SSR użytkownik może kliknąć przycisk, zanim ma podłączony
-  handler. Dawniej mierzone jako TTI (metryka wycofana z Lighthouse); dziś objaw widać w INP i w długich zadaniach
-  hydratacji. Progressive enhancement (formularze działające bez JS) zamyka tę lukę.
+- **CSR (client-side)** — the server sends an almost empty HTML and the bundle; the UI is built in the browser. Fast TTFB,
+  slow first display of content (FCP/LCP wait for the JS to download and execute); weaker SEO.
+- **SSR (server-side, on request)** — the server renders the full HTML per request; the content is visible at once, but the page
+  is not interactive until hydration finishes. Streaming SSR (sending HTML in chunks at
+  Suspense / `@defer` boundaries) shortens the time to the first content.
+- **SSG (at build time)** — HTML generated once; the cheapest to serve (CDN). For content that rarely changes.
+- **ISR / revalidation** — static pages refreshed in the background after a time or on demand (tag/path). For content from a CMS.
+- **Hydration** — the framework "attaches" to the HTML from the server: it restores the state and wires up event handling without
+  building the DOM from scratch. **Hydration mismatch** — the HTML from the server differs from the client's first render
+  (`Date.now()`, `Math.random()`, reading `window`/`localStorage`, locale/time zone) → warnings, flicker,
+  and in the worst case a client re-render. Set client-dependent values after hydration.
+- **Variants that limit the cost of hydration:** partial/"island" (Astro islands — only the islands are interactive),
+  **incremental** (Angular `@defer` with `hydrate on …`, stable since v20 — a fragment hydrates on entering the
+  viewport/on interaction), **resumability** (Qwik — no re-execution on the client), selective (React —
+  priority for the part the user interacts with). Angular additionally replays events
+  clicked before hydration (event replay).
+- **The gap between "I can see it" and "I can click it"** — in pure SSR the user may click a button before its handler
+  is attached. Formerly measured as TTI (a metric withdrawn from Lighthouse); today the symptom shows in INP and in long hydration
+  tasks. Progressive enhancement (forms that work without JS) closes this gap.
 
 ## React Server Components (RSC)
 
-- Komponenty wykonywane **wyłącznie na serwerze** (lub w czasie budowania); ich kod i zależności **nie trafiają**
-  do bundla klienta. W SSR te same komponenty renderują się na serwerze **i** są hydratowane na kliencie; w RSC —
-  tylko na serwerze.
-- Mogą bezpośrednio czytać bazę/sekrety (nie wyciekają do klienta — o ile nie przekażesz ich w propsach do
-  komponentu klienckiego; props przechodzące granicę są serializowane i widoczne).
-- `"use client"` oznacza **granicę**: od niej w dół zwykły model (hydratacja, stan, efekty). Trzymaj granice nisko
-  (liście drzewa), żeby jak najwięcej zostało na serwerze.
-- **Server Actions / Functions** (`"use server"`) to publiczne endpointy — waliduj wejście i autoryzuj każde
-  wywołanie jak zwykłe API (be-auth-security).
-- Ekosystem: Next.js App Router, React Router 7 (RSC eksperymentalnie). Model ten jest specyficzny dla Reacta;
-  koncepcyjnie realizuje podział „navigation / content / affordances” z `principles.md`.
+- Components executed **only on the server** (or at build time); their code and dependencies **do not end up**
+  in the client bundle. In SSR the same components render on the server **and** are hydrated on the client; in RSC —
+  only on the server.
+- They can read the database/secrets directly (these do not leak to the client — as long as you do not pass them in props to
+  a client component; props crossing the boundary are serialized and visible).
+- `"use client"` marks a **boundary**: from there down, the usual model (hydration, state, effects). Keep the boundaries low
+  (the leaves of the tree), so that as much as possible stays on the server.
+- **Server Actions / Functions** (`"use server"`) are public endpoints — validate the input and authorize every
+  call like a regular API (be-auth-security).
+- Ecosystem: Next.js App Router, React Router 7 (RSC experimentally). This model is specific to React;
+  conceptually it implements the "navigation / content / affordances" split from `principles.md`.
 
-## Decyzja: który model per trasa
+## Decision: which model per route
 
-Wybór nie jest globalny — meta-frameworki (Next.js, Nuxt, SvelteKit, React Router 7, Angular SSR z trasami
-serwerowymi `RenderMode.Server | Prerender | Client`) pozwalają dobrać model **per trasa**.
+The choice is not global — meta-frameworks (Next.js, Nuxt, SvelteKit, React Router 7, Angular SSR with server
+routes `RenderMode.Server | Prerender | Client`) let you choose the model **per route**.
 
-| Model | Kiedy powstaje HTML | Kiedy wybrać |
+| Model | When the HTML is produced | When to choose it |
 |---|---|---|
-| CSR/SPA | w przeglądarce | aplikacje za logowaniem, gdzie SEO i pierwszy paint są drugorzędne |
-| SSR | na serwerze, per żądanie | treść spersonalizowana, często zmienna, ważne SEO |
-| SSG / prerender | w czasie budowania | marketing, dokumentacja, blog |
-| ISR / rewalidacja | statycznie + odświeżanie w tle | katalog produktów, treść z CMS |
-| RSC (+ streaming) | serwer, bez JS dla części nieinteraktywnych | duże drzewa głównie do czytania, ciężkie zależności (markdown, formatowanie) |
+| CSR/SPA | in the browser | applications behind a login, where SEO and the first paint are secondary |
+| SSR | on the server, per request | personalized, frequently changing content, SEO matters |
+| SSG / prerender | at build time | marketing, documentation, blog |
+| ISR / revalidation | statically + background refresh | product catalogue, content from a CMS |
+| RSC (+ streaming) | server, without JS for the non-interactive parts | large mostly-read trees, heavy dependencies (markdown, formatting) |
 
-Przykład: strona produktowa z CMS — ISR; panel użytkownika — SSR lub CSR; strona główna/marketing — SSG.
+Example: a product page from a CMS — ISR; the user panel — SSR or CSR; the home page/marketing — SSG.
 
-**Obliczenia przy danych, nie przy użytkowniku.** SSR na brzegu (edge) bez rozproszonej bazy wykonuje kilka zapytań
-przez pół świata i bywa wolniejszy niż render w regionie bazy. Wzorzec: brzeg serwuje statyczną skorupę strony
-z cache, a dynamiczne części są strumieniowane z funkcji w regionie danych (np. Partial Prerendering w Next.js).
-Zanim przeniesiesz render na brzeg, zmierz czas do pierwszego bajtu z zapytaniami do bazy, nie bez nich. Status
-konkretnych produktów brzegowych u dostawców zmienia się — sprawdź w ich dokumentacji z datą.
+**Compute near the data, not near the user.** SSR at the edge without a distributed database runs several queries
+across half the world and can be slower than a render in the database's region. The pattern: the edge serves a static page shell
+from the cache, and the dynamic parts are streamed from a function in the data's region (e.g. Partial Prerendering in Next.js).
+Before you move rendering to the edge, measure the time to first byte with the database queries, not without them. The status
+of specific edge products at the providers changes — check their documentation, with a date.
 
-**Alternatywa MPA 2026:** zwykła aplikacja wielostronicowa + cross-document View Transitions + Speculation Rules
-(prefetch/prerender) daje płynne przejścia bez routera klienta — rozważ dla serwisów treściowych
+**The MPA alternative in 2026:** a plain multi-page application + cross-document View Transitions + Speculation Rules
+(prefetch/prerender) gives smooth transitions without a client router — consider it for content sites
 (routing/client-side-routing.md).
 
-## Checklista
+## Checklist
 
-- [ ] Model renderowania wybrany per trasa, z uzasadnieniem (SEO, personalizacja, częstotliwość zmian)
-- [ ] Brak wartości niedeterministycznych w pierwszym renderze (brak hydration mismatch)
-- [ ] Granice `"use client"` / `@defer` / wysp możliwie nisko w drzewie
-- [ ] Server Actions/endpointy walidują i autoryzują wejście
-- [ ] Wpływ zmierzony (LCP/INP, rozmiar JS) — fe-web-platform
+- [ ] The rendering model chosen per route, with a justification (SEO, personalization, frequency of change)
+- [ ] No non-deterministic values in the first render (no hydration mismatch)
+- [ ] `"use client"` / `@defer` / island boundaries as low in the tree as possible
+- [ ] Server Actions/endpoints validate and authorize the input
+- [ ] Impact measured (LCP/INP, JS size) — fe-web-platform

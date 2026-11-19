@@ -15,6 +15,25 @@
       }
     },
     {
+      "id": "claude-md-puchnie-en",
+      "expect": "trigger",
+      "prompt": "Our CLAUDE.md is 420 lines long: at the top a project description and team values, then the entire tsconfig pasted in and rules like “write clean code”, and the ban on logging customer data sits on line 380. The agent still breaks the API error format. How should we tidy up this file? Answer briefly.",
+      "checks": {
+        "all": [
+          ["200"],
+          ["intencj", "sprawdzaln", "konkretn\\w* zachowan", "weryfikowaln", "intent", "verifiable", "testable", "checkable", "concrete behavio\\w*"],
+          ["na gór", "na począt", "pierwsz\\w* (linia|linie|sekcj|miejsc)", "przenieś\\w*.{0,40}(gór|począt)", "at the top", "at the (very )?(start|beginning)", "first (line|lines|section|place)", "mov\\w*.{0,40}(top|start|beginning)"],
+          ["@tsconfig", "odnośnik", "odwołan", "wskaż\\w* plik", "import\\w* @", "referencj", "reference", "link\\w* to", "point\\w* (to )?(the )?file", "pointer"]
+        ]
+      }
+    },
+    {
+      "id": "nieaktualne-wpisy-po-refaktorze",
+      "expect": "trigger",
+      "prompt": "Po refaktorze przenieśliśmy kod z lib/ do src/ i usunęliśmy skrypt npm typecheck, a CLAUDE.md dalej każe agentowi patrzeć do lib/core.py i uruchamiać npm run typecheck. Jak wychwycić takie nieaktualne wpisy w plikach instrukcji i co z nimi zrobić? Odpowiedz zwięźle.",
+      "checks": {"all": [["instructions_lint"], ["nieaktualn", "nie ma takiej", "nie istnieje"], ["popraw", "usuń", "zaktualizuj"]]}
+    },
+    {
       "id": "monorepo-pliki-w-modulach",
       "expect": "trigger",
       "prompt": "Mamy monorepo z pakietami api, web i cli. Agent w pakiecie cli trzeci raz użył console.log zamiast naszego loggera, mimo że reguła jest w głównym CLAUDE.md, który ma już 300 linii. Gdzie powinny mieszkać zasady pakietu i jak to ułożyć? Odpowiedz zwięźle.",

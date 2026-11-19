@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """
-Moduł `i18n` tf analyze, piętro 0 (bez modelu): tekst i formatowanie, które omijają umiędzynarodowienie (eng-i18n).
+The `i18n` module of tf analyze, tier 0 (no model): text and formatting that bypass internationalisation (eng-i18n).
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines on stdout (contract: .tf/factory/analyze.py)
 
-Reguły:
-- `hardcoded-ui-text` — tekst w JSX/TSX, Vue, Svelte albo szablonie Angulara oraz w atrybutach `placeholder`,
-  `title`, `aria-label`, `alt`, `label` poza funkcją tłumaczącą. Tylko w projekcie, który już używa biblioteki
-  tłumaczeń (i18next, react-intl/FormatJS, next-intl, vue-i18n, ngx-translate, `@angular/localize`, Lingui,
-  svelte-i18n) — wtedy tekst poza nią jest przeoczeniem, a nie decyzją. Elementy z atrybutem `i18n` (Angular) są
-  pomijane;
+Rules:
+- `hardcoded-ui-text` — text in JSX/TSX, Vue, Svelte or an Angular template and in the attributes `placeholder`,
+  `title`, `aria-label`, `alt`, `label` outside the translation function. Only in a project that already uses a translation
+  library (i18next, react-intl/FormatJS, next-intl, vue-i18n, ngx-translate, `@angular/localize`, Lingui,
+  svelte-i18n) — then text outside it is an oversight, not a decision. Elements with the `i18n` attribute (Angular) are
+  skipped;
 - `locale-less-format` — `toLocaleDateString()`, `toLocaleTimeString()`, `toLocaleString()`,
-  `new Intl.DateTimeFormat()`/`NumberFormat()` bez locale w projekcie z biblioteką tłumaczeń (język aplikacji może
-  się różnić od języka przeglądarki) albo z SSR (Next.js, Nuxt, SvelteKit, Remix, Astro, Angular SSR — serwer
-  i przeglądarka formatują inaczej, rozjazd hydracji); w zwykłej SPA locale przeglądarki to zwykle właściwy wybór;
-- `money-without-intl` — w komponencie UI kwota z `toFixed(…)` sklejona z walutą (`zł`, `PLN`, `€`, `$`…)
-  zamiast `Intl.NumberFormat` z `style: "currency"` (separator dziesiętny, pozycja symbolu, odstęp).
-We Vue sprawdzany jest tylko blok `<template>`.
-Znalezienie = „sprawdź”. Testy, historie (stories) i dokumentacja są pomijane. Tylko biblioteka standardowa.
+  `new Intl.DateTimeFormat()`/`NumberFormat()` without a locale in a project with a translation library (the application's language may
+  differ from the browser's language) or with SSR (Next.js, Nuxt, SvelteKit, Remix, Astro, Angular SSR — the server
+  and the browser format differently, a hydration mismatch); in a plain SPA the browser's locale is usually the right choice;
+- `money-without-intl` — in a UI component, an amount from `toFixed(…)` glued to a currency (`zł`, `PLN`, `€`, `$`…)
+  instead of `Intl.NumberFormat` with `style: "currency"` (decimal separator, symbol position, spacing).
+In Vue only the `<template>` block is checked.
+A finding = "check it". Tests, stories and documentation are skipped. Standard library only.
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) has no "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -63,18 +63,18 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
          confidence: float = 0.6) -> None:
     print(json.dumps({"rule": rule, "title": title, "file": rel, "line": line,
                       "snippet": " ".join(snippet.split())[:160], "severity": severity, "confidence": confidence,
-                      "evidence": "statyczna analiza kodu", "basis": "eng-i18n (teksty w katalogu, formatowanie Intl)",
+                      "evidence": "static code analysis", "basis": "eng-i18n (texts in a catalog, Intl formatting)",
                       "suggestion": suggestion}, ensure_ascii=False))
 
 
 def blank(text: str, pattern: str, flags=re.S | re.I) -> str:
-    """Zamienia dopasowania na spacje z zachowaniem nowych linii (numery linii zostają)."""
+    """Replaces matches with spaces, keeping newlines (line numbers stay)."""
     return re.sub(pattern, lambda m: re.sub(r"[^\n]", " ", m.group(0)), text, flags=flags)
 
 
 def template_part(rel: str, text: str) -> str:
     ext = Path(rel).suffix.lower()
-    if ext == ".vue":       # tylko blok <template>; <script>, <style> i bloki własne (<route>, <i18n>) to nie UI
+    if ext == ".vue":       # only the <template> block; <script>, <style> and custom blocks (<route>, <i18n>) are not UI
         start, end = re.search(r"<template\b[^>]*>", text), text.rfind("</template>")
         if not start or end < start.end():
             return re.sub(r"[^\n]", " ", text)
@@ -88,7 +88,7 @@ def template_part(rel: str, text: str) -> str:
 def scan_text_nodes(rel: str, text: str) -> None:
     src = template_part(rel, text)
     src = blank(src, r"<!--.*?-->|\{/\*.*?\*/\}")
-    stack: list[tuple[str, bool]] = []          # (element, i18n) — otwarte elementy, do pomijania treści
+    stack: list[tuple[str, bool]] = []          # (element, i18n) — open elements, for skipping content
     for m in TAG.finditer(src):
         closing, name, attrs = m.group(1), m.group(2), m.group(3) or ""
         selfclose = attrs.rstrip().endswith("/")
@@ -104,37 +104,37 @@ def scan_text_nodes(rel: str, text: str) -> None:
                 if re.search(rf"(?:^|\s)i18n-{a.group(1)}\b", attrs) or not WORD.search(a.group(2)):
                     continue
                 ln = src.count("\n", 0, m.start()) + 1
-                emit("hardcoded-ui-text", rel, ln, m.group(0), f"tekst atrybutu `{a.group(1)}` poza tłumaczeniem",
-                     "niska", "przenieś tekst do katalogu tłumaczeń i użyj funkcji `t(…)`/`$t(…)`/potoku `translate`")
+                emit("hardcoded-ui-text", rel, ln, m.group(0), f"`{a.group(1)}` attribute text outside translation",
+                     "low", "move the text to the translation catalog and use `t(…)`/`$t(…)` or the `translate` pipe")
         nxt = src.find("<", m.end())
         if nxt < 0:
             continue
         run = src[m.end():nxt]
         if any(e in SKIP_ELEMENTS or i18n for e, i18n in stack):
             continue
-        if src[m.end():m.end() + 1] == "(":           # generyk w TS: useState<string>(…)
+        if src[m.end():m.end() + 1] == "(":           # a TS generic: useState<string>(…)
             continue
         literal = re.sub(r"\{\{.*?\}\}|\{(?:[^{}]|\{[^{}]*\})*\}", " ", run, flags=re.S)
-        if re.search(r"[;=(){}]|=>|&&|\|\|", literal):  # to kod, nie tekst elementu
+        if re.search(r"[;=(){}]|=>|&&|\|\|", literal):  # this is code, not the element's text
             continue
         if WORD.search(literal):
             ln = src.count("\n", 0, m.end() + len(run) - len(run.lstrip())) + 1
-            emit("hardcoded-ui-text", rel, ln, literal.strip(), "tekst interfejsu poza tłumaczeniem", "niska",
-                 "przenieś tekst do katalogu tłumaczeń i użyj funkcji `t(…)`/`$t(…)`/potoku `translate` "
-                 "albo atrybutu `i18n`")
+            emit("hardcoded-ui-text", rel, ln, literal.strip(), "UI text outside translation", "low",
+                 "move the text to the translation catalog and use `t(…)`/`$t(…)`, the `translate` pipe "
+                 "or the `i18n` attribute")
 
 
 def scan_formats(rel: str, text: str, locale_matters: bool, ui: bool) -> None:
     for i, line in enumerate(text.splitlines()):
         m = LOCALE_LESS.search(line) if locale_matters else None
         if m:
-            emit("locale-less-format", rel, i + 1, line, f"formatowanie bez locale: {m.group(0).lstrip('.')}",
-                 "średnia", "podaj locale użytkownika jawnie, np. `toLocaleDateString(locale)` albo "
+            emit("locale-less-format", rel, i + 1, line, f"formatting without a locale: {m.group(0).lstrip('.')}",
+                 "medium", "pass the user's locale explicitly, e.g. `toLocaleDateString(locale)` or "
                  "`new Intl.DateTimeFormat(locale, …)`", confidence=0.8)
         if ui and TOFIXED.search(line) and CURRENCY.search(TOFIXED.sub(" ", line)):
-            emit("money-without-intl", rel, i + 1, line, "kwota z toFixed sklejona z walutą", "średnia",
-                 "użyj `new Intl.NumberFormat(locale, { style: \"currency\", currency })`; kwoty licz w groszach "
-                 "lub typem dziesiętnym", confidence=0.7)
+            emit("money-without-intl", rel, i + 1, line, "amount from toFixed glued to a currency", "medium",
+                 "use `new Intl.NumberFormat(locale, { style: \"currency\", currency })`; compute amounts in minor units (cents) "
+                 "or with a decimal type", confidence=0.7)
 
 
 def list_files(root: Path) -> list[str]:
@@ -167,7 +167,7 @@ def scan(root: Path, files: list[str]) -> None:
     files = [f.replace(os.sep, "/") for f in files]
     deps = manifests(root, files)
     i18n = bool(I18N_LIBS.search(deps))
-    locale_matters = i18n or bool(SSR.search(deps))   # w samej SPA locale przeglądarki to zwykle właściwy wybór
+    locale_matters = i18n or bool(SSR.search(deps))   # in a plain SPA the browser's locale is usually the right choice
     for rel in files:
         p = root / rel
         ext = p.suffix.lower()

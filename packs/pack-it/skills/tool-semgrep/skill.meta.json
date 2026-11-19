@@ -3,7 +3,7 @@
   "based_on": "1.182",
   "min_supported": "1.50",
   "verified": "2026-10-24",
-  "verified_with": "semgrep 1.50.0, 1.100.0 i 1.182.1 z PyPI (reguły i testy z references/reguly-i-testy.md uruchomione, --baseline-commit sprawdzone w repozytorium git)",
+  "verified_with": "semgrep 1.50.0, 1.100.0 i 1.182.1 z PyPI (reguły i testy z references/rules-and-tests.md uruchomione, --baseline-commit sprawdzone w repozytorium git)",
   "sources": [
     "https://pypi.org/project/semgrep/",
     "https://github.com/semgrep/semgrep/blob/develop/LICENSE",

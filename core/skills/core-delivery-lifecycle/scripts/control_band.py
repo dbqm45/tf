@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Pasma kontrolne dla metryk produkcji i procesu (faza 9 — utrzymanie). Wykrywanie jest deterministyczne;
-model jest wołany dopiero wtedy, gdy ten skrypt zwróci poziom wyższy niż „ok”.
+Control bands for production and process metrics (phase 9 — maintenance). Detection is deterministic;
+the model is called only when this script returns a level higher than „ok”.
 
-  python3 control_band.py metryka.csv --baseline 30 [--column nazwa] [--side both|upper|lower] [--format json|text]
+  python3 control_band.py metric.csv --baseline 30 [--column name] [--side both|upper|lower] [--format json|text]
 
-Wejście: CSV z nagłówkiem (domyślnie pierwsza kolumna liczbowa) albo jedna liczba w wierszu. Pierwsze N punktów
-(--baseline) to linia bazowa: z niej średnia i odchylenie standardowe. Reguły Western Electric sprawdzane są na
-punktach po linii bazowej:
-  1. punkt poza 3σ                                → poziom act      (agent może działać: PR, zatwierdzony runbook)
-  2. 2 z 3 kolejnych poza 2σ po tej samej stronie → poziom diagnose (agent diagnozuje tylko do odczytu)
-  3. 4 z 5 kolejnych poza 1σ po tej samej stronie → poziom log      (tylko zapis)
-  4. 8 kolejnych po jednej stronie średniej       → poziom log
---side upper: liczą się tylko wzrosty (np. odsetek błędów 5xx), lower — tylko spadki (np. odsetek udanych wdrożeń).
-Poziomy i progi to propozycja z „The AI-Native SDLC Playbook” (Anthropic, 2026); zmień je w konfiguracji projektu.
-Kod wyjścia: 0 — wynik policzony, 2 — błędne dane (np. zerowe odchylenie linii bazowej). Tylko biblioteka standardowa.
+Input: CSV with a header (by default the first numeric column) or one number per line. The first N points
+(--baseline) are the baseline: mean and standard deviation come from it. Western Electric rules are checked on
+the points after the baseline:
+  1. a point outside 3σ                           → level act      (the agent may act: PR, approved runbook)
+  2. 2 of 3 consecutive outside 2σ on one side   → level diagnose (the agent diagnoses read-only)
+  3. 4 of 5 consecutive outside 1σ on one side   → level log      (write only)
+  4. 8 consecutive on one side of the mean       → level log
+--side upper: only increases count (e.g. the share of 5xx errors), lower — only decreases (e.g. the share of successful deployments).
+The levels and thresholds are a proposal from „The AI-Native SDLC Playbook” (Anthropic, 2026); change them in the project configuration.
+Exit code: 0 — result computed, 2 — bad data (e.g. zero standard deviation of the baseline). Standard library only.
 """
 from __future__ import annotations
 
@@ -27,8 +27,8 @@ from pathlib import Path
 
 TIER_OF_RULE = {1: "act", 2: "diagnose", 3: "log", 4: "log"}
 ORDER = ["ok", "log", "diagnose", "act"]
-RULE_TEXT = {1: "punkt poza 3σ", 2: "2 z 3 kolejnych poza 2σ po tej samej stronie",
-             3: "4 z 5 kolejnych poza 1σ po tej samej stronie", 4: "8 kolejnych po jednej stronie średniej"}
+RULE_TEXT = {1: "a point outside 3σ", 2: "2 of 3 consecutive points outside 2σ on the same side",
+             3: "4 of 5 consecutive points outside 1σ on the same side", 4: "8 consecutive points on one side of the mean"}
 
 
 def read_values(path: Path, column: str | None) -> list[float]:
@@ -47,7 +47,7 @@ def read_values(path: Path, column: str | None) -> list[float]:
 
 
 def counts(side: str, z: float) -> int:
-    """+1 / -1 dla strony, którą liczymy; 0 dla strony ignorowanej."""
+    """+1 / -1 for the side we count; 0 for the ignored side."""
     s = 1 if z > 0 else -1 if z < 0 else 0
     if side == "upper" and s < 0 or side == "lower" and s > 0:
         return 0
@@ -57,11 +57,11 @@ def counts(side: str, z: float) -> int:
 def evaluate(values: list[float], baseline: int, side: str = "both") -> dict:
     base = values[:baseline]
     if len(base) < 2:
-        raise ValueError("linia bazowa musi mieć co najmniej 2 punkty")
+        raise ValueError("the baseline must have at least 2 points")
     mean = statistics.fmean(base)
     sd = statistics.pstdev(base)
     if sd == 0:
-        raise ValueError("odchylenie standardowe linii bazowej wynosi 0 — wydłuż linię bazową albo zmień metrykę")
+        raise ValueError("the standard deviation of the baseline is 0 — make the baseline longer or change the metric")
     pts = values[baseline:]
     z = [(v - mean) / sd for v in pts]
     violations = []
@@ -69,7 +69,7 @@ def evaluate(values: list[float], baseline: int, side: str = "both") -> dict:
     def add(rule: int, i: int) -> None:
         if not any(v["rule"] == rule and v["index"] == baseline + i for v in violations):
             violations.append({"rule": rule, "index": baseline + i, "value": pts[i], "z": round(z[i], 2),
-                               "opis": RULE_TEXT[rule]})
+                               "description": RULE_TEXT[rule]})
 
     for i, zi in enumerate(z):
         if counts(side, zi) and abs(zi) > 3:
@@ -90,9 +90,9 @@ def evaluate(values: list[float], baseline: int, side: str = "both") -> dict:
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(description="Pasma kontrolne metryki (reguły Western Electric).")
+    ap = argparse.ArgumentParser(description="Control bands for a metric (Western Electric rules).")
     ap.add_argument("file", type=Path)
-    ap.add_argument("--baseline", type=int, required=True, help="liczba pierwszych punktów tworzących linię bazową")
+    ap.add_argument("--baseline", type=int, required=True, help="number of first points that make the baseline")
     ap.add_argument("--column")
     ap.add_argument("--side", choices=["both", "upper", "lower"], default="both")
     ap.add_argument("--format", choices=["json", "text"], default="json")
@@ -103,9 +103,9 @@ def main(argv: list[str]) -> int:
         print(json.dumps({"error": str(e)}, ensure_ascii=False))
         return 2
     if a.format == "text":
-        print(f"poziom: {result['tier']} · średnia {result['mean']} · σ {result['sd']} · punkty {result['evaluated']}")
+        print(f"tier: {result['tier']} · mean {result['mean']} · σ {result['sd']} · points {result['evaluated']}")
         for v in result["violations"]:
-            print(f"  reguła {v['rule']} ({v['opis']}): punkt {v['index']}, wartość {v['value']}, z = {v['z']}")
+            print(f"  rule {v['rule']} ({v['description']}): point {v['index']}, value {v['value']}, z = {v['z']}")
     else:
         print(json.dumps(result, ensure_ascii=False))
     return 0

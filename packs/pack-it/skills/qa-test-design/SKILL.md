@@ -1,63 +1,63 @@
 ---
 name: qa-test-design
-description: Użyj przy projekcie przypadków i planu testów — klasy równoważności, brzegi, tablice decyzyjne, stany, ryzyko.
+description: Use when designing test cases and a test plan — equivalence classes, boundaries, decision tables, states, risk.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj przy projektowaniu przypadków testowych i planu testów w dowolnej technologii — klasy równoważności, wartości brzegowe, tablice decyzyjne, przejścia stanów, testy parami, testowanie oparte na ryzyku, dobór poziomu testu, format przypadku z oczekiwanym wynikiem i jego źródłem. Nie do pisania kodu testów (tool-*)."
-  slowa: "strategia testów dla całego projektu, projekt prawie bez testów, od czego zacząć testy, co ma się znaleźć w strategii testów, aplikacja z AI, asystent AI w aplikacji, awarie poza modelem, przypadki testowe dla agenta, text-to-SQL, integracja z Google Drive, paginacja w testach, endpoint listy z paginacją, test sprawdza tylko pierwszą pozycję, dane wielu najemców w testach"
+  review: "2027-10-09"
+  catalog: "Use when designing test cases and a test plan in any technology — equivalence classes, boundary values, decision tables, state transitions, pairwise tests, risk-based testing, choosing the test level, the format of a case with the expected result and its source. Not for writing test code (tool-*)."
+  keywords: "strategia testów dla całego projektu, projekt prawie bez testów, od czego zacząć testy, co ma się znaleźć w strategii testów, aplikacja z AI, asystent AI w aplikacji, awarie poza modelem, przypadki testowe dla agenta, text-to-SQL, integracja z Google Drive, paginacja w testach, endpoint listy z paginacją, test sprawdza tylko pierwszą pozycję, dane wielu najemców w testach, test strategy for the whole project, a project with almost no tests, where to start with tests, what a test strategy should contain, an application with AI, an AI assistant in the app, failures outside the model, test cases for an agent, Google Drive integration, pagination in tests, a list endpoint with pagination, the test checks only the first item, multi-tenant data in tests"
 ---
 
-# Projektowanie testów
+# Test design
 
-## Techniki — kiedy której użyć
-| Technika | Kiedy | Jak |
+## Techniques — when to use which
+| Technique | When | How |
 |---|---|---|
-| **Klasy równoważności** | dane wejściowe z zakresami/kategoriami | podziel na klasy poprawne i niepoprawne; jeden przypadek na klasę |
-| **Wartości brzegowe** | każdy zakres i próg („od 10 sztuk”) | testuj **granicę, tuż pod i tuż nad** (9, 10, 11) oraz min/max/0/pusty |
-| **Tablica decyzyjna** | kilka warunków daje różne wyniki (rabaty, uprawnienia) | kolumna = kombinacja warunków → oczekiwana akcja; usuń niemożliwe kombinacje |
-| **Przejścia stanów** | obiekt ma stany (rezerwacja, zamówienie, blokada z archetypu Availability) | diagram stanów → test każdego dozwolonego przejścia **i** niedozwolonego (powinno zostać odrzucone) |
-| **Testy parami (pairwise)** | wiele parametrów konfiguracji (przeglądarka × rola × język) | zestaw pokrywający każdą parę wartości zamiast pełnego iloczynu |
-| **Scenariusze / przypadki użycia** | przepływy użytkownika end-to-end | ścieżka główna + alternatywne + błędów |
-| **Zgadywanie błędów** | uzupełnienie powyższych | puste wartości, duplikaty, znaki specjalne, strefy czasowe, współbieżność, podwójne kliknięcie, utrata sieci |
-| **Brzeg stronicowania i izolacji** | listy z limitem strony, dane wielu najemców | liczba wyników równa limitowi strony → sprawdź następną stronę; dane testowe: więcej rekordów niż jedna strona, rekordy drugiego najemcy, przypadek odmowy dostępu; asercja na **całym** zbiorze wyliczonym z niezależnie zasianych danych, nie na statusie i pierwszym wierszu |
+| **Equivalence classes** | input data with ranges/categories | split into valid and invalid classes; one case per class |
+| **Boundary values** | every range and threshold ("from 10 units") | test **the boundary, just below and just above** (9, 10, 11) and min/max/0/empty |
+| **Decision table** | several conditions give different results (discounts, permissions) | a column = a combination of conditions → the expected action; remove impossible combinations |
+| **State transitions** | an object has states (a reservation, an order, a lock from the Availability archetype) | a state diagram → test every allowed transition **and** a disallowed one (it should be rejected) |
+| **Pairwise tests** | many configuration parameters (browser × role × language) | a set covering every pair of values instead of the full product |
+| **Scenarios / use cases** | end-to-end user flows | the main path + alternative + error paths |
+| **Error guessing** | a supplement to the above | empty values, duplicates, special characters, time zones, concurrency, a double click, network loss |
+| **Pagination and isolation edge** | lists with a page limit, multi-tenant data | the number of results equal to the page limit → check the next page; test data: more records than one page, records of a second tenant, an access-denied case; an assertion on the **whole** set computed from independently seeded data, not on the status and the first row |
 
-## Priorytet — testowanie oparte na ryzyku
-Ryzyko = **wpływ** (pieniądze, dane, bezpieczeństwo, reputacja) × **prawdopodobieństwo** (złożoność, nowość, historia błędów).
-Wysokie ryzyko → więcej technik, niższe poziomy testów, testy mutacyjne; niskie → pojedynczy test ścieżki głównej.
+## Priority — risk-based testing
+Risk = **impact** (money, data, security, reputation) × **probability** (complexity, novelty, bug history).
+High risk → more techniques, lower test levels, mutation tests; low → a single test of the main path.
 
-## Poziom testu — „jak najniżej, jak najtaniej”
-| Co sprawdzasz | Poziom |
+## The test level — "as low as possible, as cheap as possible"
+| What you check | Level |
 |---|---|
-| reguła biznesowa, obliczenie, walidacja, przejście stanu | **jednostkowy** (logika domeny, bez frameworka) |
-| współpraca z bazą, kolejką, zewnętrznym API | **integracyjny** (prawdziwe zależności, np. kontenery testowe) |
-| zgodność kontraktu między usługami/frontem a API | **kontraktowy** |
-| komponent UI z interakcją | **komponentowy** (np. przeglądarka w Vitest) |
-| krytyczna ścieżka użytkownika przez cały system | **e2e** (nieliczne) |
-| wygląd | **wizualny** (zrzuty ekranu), dostępność — **automatycznie (axe) + ręcznie** |
-Ten sam przypadek nie powinien być testowany na wszystkich poziomach — wybierz najniższy, który go wiarygodnie sprawdza.
+| a business rule, a calculation, validation, a state transition | **unit** (domain logic, no framework) |
+| cooperation with a database, queue, external API | **integration** (real dependencies, e.g. test containers) |
+| contract conformance between services/the front end and the API | **contract** |
+| a UI component with interaction | **component** (e.g. a browser in Vitest) |
+| a critical user path through the whole system | **e2e** (few) |
+| appearance | **visual** (screenshots), accessibility — **automatic (axe) + manual** |
+The same case should not be tested at all levels — pick the lowest one that checks it reliably.
 
-## Format przypadku testowego
-| ID | Wymaganie | Technika | Warunki wstępne | Kroki / wejście | **Oczekiwany wynik** | **Źródło wyniku** | Poziom | Priorytet |
+## The test case format
+| ID | Requirement | Technique | Preconditions | Steps / input | **Expected result** | **Source of the result** | Level | Priority |
 |---|---|---|---|---|---|---|---|---|
-| TC-014 | H1-AC2 | wartości brzegowe | koszyk pusty | 10 szt. × 20,00 zł | 190,00 zł (rabat 5%) | requirements.md: „od 10 sztuk włącznie 5%” | jednostkowy | H |
-Kolumna **Źródło wyniku** jest obowiązkowa (qa-spec-first-testing). Brak źródła = otwarte pytanie, nie zgadywanie.
+| TC-014 | H1-AC2 | boundary values | an empty cart | 10 pcs × PLN 20.00 | PLN 190.00 (5% discount) | requirements.md: "from 10 units inclusive 5%" | unit | H |
+The **Source of the result** column is mandatory (qa-spec-first-testing). No source = an open question, not guessing.
 
-## Wymagania niefunkcjonalne (minimum)
-- **Dostępność**: automatyczny skan (axe) + ręcznie klawiatura, fokus, czytnik ekranu dla kluczowych ścieżek.
-- **Wydajność**: test dymny czasów odpowiedzi dla scenariuszy (H,H) z arch-quality-attributes.
-- **Bezpieczeństwo**: walidacja wejścia, autoryzacja per zasób (test na 403 dla cudzego zasobu), brak danych wrażliwych w odpowiedziach.
+## Non-functional requirements (the minimum)
+- **Accessibility**: an automatic scan (axe) + manually the keyboard, focus, a screen reader for key paths.
+- **Performance**: a smoke test of response times for the (H,H) scenarios from arch-quality-attributes.
+- **Security**: input validation, authorization per resource (a test for 403 on someone else's resource), no sensitive data in responses.
 
-Strategia i plan testów (weryfikacja vs walidacja, czarna/biała/szara skrzynka, dymne, sanity, regresja, UAT, model V
-i praca zwinna, kryteria wejścia i wyjścia, raport z testów, analiza ucieczek defektów): `references/strategia-i-plan-testow.md`.
-Testy wydajnościowe: qa-performance-testing.
-Aplikacja z AI (narzędzia modelu, integracje, text-to-SQL): poza ewaluacjami modelu dziewięć klas awarii, które nie
-są winą modelu, z testem do każdej — `references/aplikacja-ai-poza-modelem.md`.
+The strategy and the test plan (verification vs validation, black/white/grey box, smoke, sanity, regression, UAT, the V-model
+and agile work, entry and exit criteria, the test report, defect escape analysis): `references/test-strategy-and-plan.md`.
+Performance tests: qa-performance-testing.
+An AI application (model tools, integrations, text-to-SQL): besides model evals, nine classes of failure that are not
+the model's fault, with a test for each — `references/ai-application-beyond-the-model.md`.
 
-## Wynik
-`docs/project/05-plan/test-plan.md` (szablon core-project-record): zakres, ryzyka, techniki, poziomy, przypadki (lub link do
-pliku z przypadkami), kryteria wejścia/wyjścia, podział na testy automatyczne i ręczne.
+## Output
+`docs/project/05-plan/test-plan.md` (the core-project-record template): scope, risks, techniques, levels, cases (or a link to
+the file with the cases), entry/exit criteria, the split into automated and manual tests.
 
-Projekt bez testów albo z testami „tam, gdzie łatwo”: najpierw **strategia testów projektu**
-(`docs/project/05-plan/test-strategy.md`, szablon `templates/test-strategy.md`, procedura
-`references/strategia-testow-projektu.md`) — wywiad z człowiekiem, mapa ryzyk ze źródłami, fazy wdrażania, bramki,
-przepisy, wykluczenia. Plan testów zmiany korzysta z niej i na końcu ją uzupełnia.
+A project with no tests or with tests "where it is easy": first the **project test strategy**
+(`docs/project/05-plan/test-strategy.md`, the template `templates/test-strategy.md`, the procedure
+`references/project-test-strategy.md`) — an interview with the human, a risk map with sources, rollout phases, gates,
+recipes, exclusions. The change's test plan draws on it and updates it at the end.

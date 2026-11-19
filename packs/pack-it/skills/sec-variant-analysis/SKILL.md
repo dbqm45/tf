@@ -1,59 +1,59 @@
 ---
 name: sec-variant-analysis
-description: Użyj po znalezieniu podatności, by znaleźć jej warianty w kodzie — przyczyna, wzorzec źródło→ujście, grep/Semgrep/CodeQL, triaż trafień, reguła w CI.
+description: Use after finding a vulnerability, to find its variants in the code — cause, source→sink pattern, grep/Semgrep/CodeQL, hit triage, a CI rule.
 metadata:
-  przeglad: "2027-10-23"
-  katalog: "Użyj, gdy znaleziono jedną podatność (pentest, zgłoszenie, incydent, przegląd) i trzeba sprawdzić, czy ten sam błąd nie występuje gdzie indziej — w tym repozytorium albo w wielu repozytoriach firmy: przyczyna i klasa (CWE), uogólnienie do wzorca źródło → ujście na kilku poziomach, wyszukiwanie od najtańszego (grep, Semgrep, CodeQL, w tym wiele repozytoriów naraz), triaż każdego trafienia z osiągalnością i ekspozycją, naprawa u źródła wspólnym bezpiecznym API, reguła z testami w CI blokująca nowe wystąpienia, raport z liczbami. Nie do programu skanerów i terminów napraw (sec-appsec-devsecops), modelu zagrożeń (arch-threat-modeling), obsługi incydentu (ops-security-operations) ani analizy podejrzanego pliku (sec-malware-analysis)."
-  slowa: "analiza wariantów, variant analysis, gdzie jeszcze jest ten błąd, ten sam błąd w innych miejscach, podobne podatności, znaleźliśmy podatność, pentester znalazł, po incydencie sprawdzić resztę kodu, wszystkie repozytoria, reguła semgrep na ten błąd, zapytanie codeql, źródło i ujście, taint, przepływ danych, sql injection w innych miejscach, deserializacja w innych usługach"
+  review: "2027-10-23"
+  catalog: "Use when one vulnerability has been found (pentest, report, incident, review) and you must check whether the same bug occurs elsewhere — in this repository or in many of the company's repositories: cause and class (CWE), generalization to a source → sink pattern at several levels, search from the cheapest (grep, Semgrep, CodeQL, including many repositories at once), triage of every hit with reachability and exposure, a fix at the root through a shared safe API, a rule with tests in CI blocking new occurrences, a report with numbers. Not for the scanner program and fix deadlines (sec-appsec-devsecops), the threat model (arch-threat-modeling), incident handling (ops-security-operations) or analysis of a suspicious file (sec-malware-analysis)."
+  keywords: "analiza wariantów, variant analysis, gdzie jeszcze jest ten błąd, ten sam błąd w innych miejscach, podobne podatności, znaleźliśmy podatność, pentester znalazł, po incydencie sprawdzić resztę kodu, wszystkie repozytoria, reguła semgrep na ten błąd, zapytanie codeql, źródło i ujście, taint, przepływ danych, sql injection w innych miejscach, deserializacja w innych usługach, where else is this bug, the same bug in other places, similar vulnerabilities, we found a vulnerability, a pentester found, check the rest of the code after an incident, all repositories, semgrep rule for this bug, codeql query, source and sink, data flow, sql injection in other places, deserialization in other services"
 ---
 
-# Analiza wariantów podatności
+# Vulnerability variant analysis
 
-Cel: jedna znaleziona podatność zamienia się w znalezione **wszystkie** jej wystąpienia i w regułę, która nie
-wpuści następnych. Naprawa tylko zgłoszonego miejsca zostawia zwykle rodzeństwo błędu w kodzie. Tylko w kodzie,
-który jest Twój albo do którego masz zgodę (core-agent-security).
+Goal: one vulnerability found turns into **all** of its occurrences found and into a rule that will not
+let the next ones in. Fixing only the reported place usually leaves the bug's siblings in the code. Only in code
+that is yours or for which you have permission (core-agent-security).
 
-## Procedura
-1. **Zrozum znaleziony błąd**: skąd przychodzi niezaufana dana (źródło), gdzie robi szkodę (ujście), której
-   kontroli brakuje (walidacja, parametryzacja, uprawnienie), jaki jest warunek wykorzystania. Nazwij klasę CWE
-   (np. CWE-89 wstrzyknięcie SQL, CWE-502 deserializacja niezaufanych danych).
-2. **Uogólnij do wzorca** na trzech poziomach, od wąskiego do szerokiego:
-   - **ten sam kod** — to samo wywołanie, skopiowane fragmenty, ta sama funkcja pomocnicza;
-   - **to samo ujście** — każde miejsce, gdzie dane z wejścia docierają do tego ujścia inną drogą;
-   - **ta sama klasa** — inne ujścia tej samej kategorii (np. każde sklejanie SQL, każde `ORDER BY` z wejścia,
-     każda deserializacja formatu z typami).
-3. **Szukaj od najtańszego**: grep/ripgrep po nazwach ujść i funkcji → Semgrep (wzorzec składniowy, tryb taint
-   ze źródłami, ujściami i sanitizerami) → CodeQL (przepływ danych między funkcjami i plikami). Zapisz każde
-   zapytanie i liczbę trafień — zbyt wiele trafień to sygnał do zawężenia, zero przy szerokim wzorcu — do
-   sprawdzenia, czy wzorzec w ogóle działa (uruchom go na znanym, naprawionym miejscu w historii gita).
-4. **Zakres**: inne repozytoria (wspólne biblioteki, skopiowany kod, szablony projektów), stare gałęzie wydań
-   wspierane przez firmę. Wiele repozytoriów: ten sam skrypt i reguły po wszystkich klonach albo analiza wielu
-   repozytoriów naraz w CodeQL. Lista repozytoriów i wersji — od człowieka.
-5. **Triaż każdego trafienia**: czy dane są osiągalne z niezaufanego wejścia, czy po drodze jest kontrola, jaka
-   jest ekspozycja usługi (internet, sieć wewnętrzna, tylko administrator). Wynik: prawdziwe / fałszywe /
-   niepewne, z `plik:linia` i uzasadnieniem. Niepewne sprawdza człowiek albo test.
-6. **Naprawa u źródła**: jedno bezpieczne API lub funkcja pomocnicza (np. lista dozwolonych pól sortowania,
-   bezpieczny deserializator) zamiast łatki w każdym miejscu; kolejność napraw i terminy według
-   sec-appsec-devsecops (`.claude/skills/sec-appsec-devsecops/references/triaz-i-sla.md`).
-7. **Zapobieganie**: reguła (Semgrep albo CodeQL) z testami — przykład podatny i poprawny — w CI na diffie PR,
-   blokująca nowe wystąpienia; szablon w `references/regula-z-testami.md`, rzemiosło reguły (precyzja, autofix,
-   testy CodeQL) — tool-semgrep. Wniosek w `docs/project/lessons.md`.
-8. **Raport**: klasa i wzorzec, zapytania, liczby (trafienia / prawdziwe / fałszywe / niepewne), lista z
-   `plik:linia`, naprawy i reguły, czego nie sprawdzono.
+## Procedure
+1. **Understand the bug found**: where the untrusted data comes from (source), where it does harm (sink), which
+   control is missing (validation, parameterization, authorization), what the exploitation condition is. Name the CWE class
+   (e.g. CWE-89 SQL injection, CWE-502 deserialization of untrusted data).
+2. **Generalize to a pattern** at three levels, from narrow to broad:
+   - **the same code** — the same call, copied fragments, the same helper function;
+   - **the same sink** — every place where input data reaches this sink by another path;
+   - **the same class** — other sinks of the same category (e.g. every SQL concatenation, every `ORDER BY` from input,
+     every deserialization of a format with types).
+3. **Search from the cheapest**: grep/ripgrep for sink and function names → Semgrep (a syntactic pattern, taint mode
+   with sources, sinks and sanitizers) → CodeQL (data flow between functions and files). Record every
+   query and the number of hits — too many hits is a signal to narrow down, zero with a broad pattern — a reason to
+   check whether the pattern works at all (run it on a known, fixed place in the git history).
+4. **Scope**: other repositories (shared libraries, copied code, project templates), old release branches
+   supported by the company. Many repositories: the same script and rules across all clones, or analysis of many
+   repositories at once in CodeQL. The list of repositories and versions — from a human.
+5. **Triage of every hit**: is the data reachable from untrusted input, is there a control on the way, what is
+   the exposure of the service (internet, internal network, administrator only). Result: true / false /
+   uncertain, with `file:line` and a justification. Uncertain ones are checked by a human or a test.
+6. **Fix at the root**: one safe API or helper function (e.g. an allowlist of sort fields,
+   a safe deserializer) instead of a patch in every place; the order of fixes and the deadlines according to
+   sec-appsec-devsecops (`.claude/skills/sec-appsec-devsecops/references/triage-and-sla.md`).
+7. **Prevention**: a rule (Semgrep or CodeQL) with tests — a vulnerable and a correct example — in CI on the PR diff,
+   blocking new occurrences; template in `references/rule-with-tests.md`, rule craft (precision, autofix,
+   CodeQL tests) — tool-semgrep. The lesson in `docs/project/lessons.md`.
+8. **Report**: class and pattern, queries, numbers (hits / true / false / uncertain), a list with
+   `file:line`, fixes and rules, what was not checked.
 
-## Przykład
-Pentest: wstrzyknięcie SQL w `/reports` — parametr `sort` trafiał do `ORDER BY` sklejanego ze stringa (CWE-89).
-Wzorzec: dane z żądania → nazwa kolumny lub kierunek w SQL (tu parametryzacja nie działa, potrzebna lista
-dozwolonych wartości). Szukanie: `rg -n "ORDER BY|order_by\(|\.extra\(|\.raw\("` → 41 trafień; reguła Semgrep
-w trybie taint (źródło: parametry żądania, ujście: `cursor.execute`, `raw`, `extra`) → 12; triaż → 3 prawdziwe
-(`/reports`, `/invoices/export`, `/admin/users`), 8 fałszywych (stałe), 1 niepewne (dane z kolejki). Naprawa:
-funkcja `sort_clause(field, direction)` z listą dozwolonych pól, użyta w 4 miejscach. Reguła z testami w CI
-blokuje nowe przypadki; te same reguły uruchomione w 2 innych repozytoriach — 1 trafienie, prawdziwe.
+## Example
+Pentest: SQL injection in `/reports` — the `sort` parameter went into an `ORDER BY` concatenated from a string (CWE-89).
+Pattern: request data → a column name or direction in SQL (parameterization does not work here, an allowlist
+of values is needed). Search: `rg -n "ORDER BY|order_by\(|\.extra\(|\.raw\("` → 41 hits; a Semgrep rule
+in taint mode (source: request parameters, sink: `cursor.execute`, `raw`, `extra`) → 12; triage → 3 true
+(`/reports`, `/invoices/export`, `/admin/users`), 8 false (constants), 1 uncertain (data from a queue). Fix:
+the function `sort_clause(field, direction)` with an allowlist of fields, used in 4 places. The rule with tests in CI
+blocks new cases; the same rules run in 2 other repositories — 1 hit, true.
 
-## Źródła
-- MITRE CWE, cwe.mitre.org — klasy słabości (dostęp 2026-10-23).
-- Semgrep, dokumentacja: tryb taint i testowanie reguł (`semgrep --test`), semgrep.dev/docs (dostęp 2026-10-23).
-- GitHub, dokumentacja CodeQL: zapytania przepływu danych i analiza wariantów w wielu repozytoriach,
-  docs.github.com/code-security/codeql-for-vs-code (dostęp 2026-10-23).
-- Inspiracja tematem: Trail of Bits, skill `variant-analysis` (licencja CC BY-SA 4.0 — treści nie przejęto).
-Opisane własnymi słowami.
+## Sources
+- MITRE CWE, cwe.mitre.org — weakness classes (accessed 2026-10-23).
+- Semgrep, documentation: taint mode and rule testing (`semgrep --test`), semgrep.dev/docs (accessed 2026-10-23).
+- GitHub, CodeQL documentation: data flow queries and variant analysis across many repositories,
+  docs.github.com/code-security/codeql-for-vs-code (accessed 2026-10-23).
+- Topic inspiration: Trail of Bits, skill `variant-analysis` (CC BY-SA 4.0 licence — no content was taken over).
+Described in our own words.

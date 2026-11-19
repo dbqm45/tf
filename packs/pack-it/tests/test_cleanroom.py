@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy clean-room dla projektantów testów: python3 tests/test_cleanroom.py"""
+"""Clean-room tests for the test designers: python3 tests/test_cleanroom.py"""
 import json
 import os
 import subprocess
@@ -38,7 +38,7 @@ CASES = [
     (QA, "Glob", {"pattern": "src/**/*.ts"}, "none"),
     (QA, "Bash", {"command": "cat src/pricing.ts"}, "deny"),
     ("plugin:kasia-qa-analyst", "Read", {"file_path": "src/pricing.ts"}, "deny"),
-    # profil blind (allowlist) — generator wymagań na ślepo
+    # blind profile (allowlist) — a blind requirements generator
     ("blind-analyst", "Read", {"file_path": "docs/project/02-domain/_blind/brief.md"}, "none"),
     ("blind-analyst", "Read", {"file_path": f"{ROOT}/docs/project/02-domain/_blind/competitors.md"}, "none"),
     ("blind-analyst", "Read", {"file_path": "docs/project/02-domain/context-map.md"}, "deny"),
@@ -51,15 +51,15 @@ CASES = [
     ("blind-analyst", "WebFetch", {"url": "https://example.com"}, "deny"),
     ("blind-analyst", "Write", {"file_path": "docs/project/02-domain/_blind/requirements.md"}, "none"),
     ("ewa-blind-analyst", "Read", {"file_path": "src/app.ts"}, "deny"),
-    # profil es-sim — uczestnicy symulacji widzą tylko prompty rund
+    # es-sim profile — the simulation participants see only the round prompts
     ("es-participant", "Read", {"file_path": "docs/training/es-sim/2026-09-27-a/rounds/01/recepcja.prompt.md"}, "none"),
     ("es-room", "Read", {"file_path": "docs/training/es-sim/2026-09-27-a/rounds/03/room.prompt.md"}, "none"),
-    ("es-participant", "Read", {"file_path": ".claude/skills/ddd-es-simulation/scenarios/weterynaria/brief.md"}, "deny"),
+    ("es-participant", "Read", {"file_path": ".claude/skills/ddd-es-simulation/scenarios/veterinary/brief.md"}, "deny"),
     ("es-participant", "Read", {"file_path": "docs/training/es-sim/2026-09-27-a/state.json"}, "deny"),
     ("es-room", "Read", {"file_path": "docs/project/02-domain/corpus.md"}, "deny"),
     ("es-room", "Grep", {"pattern": "sprzeczn"}, "deny"),
-    ("es-coach", "Read", {"file_path": ".claude/skills/ddd-es-simulation/scenarios/weterynaria/brief.md"}, "none"),
-    # inni agenci — bez zmian
+    ("es-coach", "Read", {"file_path": ".claude/skills/ddd-es-simulation/scenarios/veterinary/brief.md"}, "none"),
+    # other agents — unchanged
     ("kasia-qa-automation", "Read", {"file_path": "src/pricing.ts"}, "none"),
     ("filip-frontend", "Grep", {"pattern": "x"}, "none"),
     ("", "Read", {"file_path": "src/pricing.ts"}, "none"),
@@ -84,8 +84,8 @@ def main() -> int:
         got = run(agent, tool, ti)
         if got != want:
             fails += 1
-            print(f"✗ {agent or '(główny)'} {tool} {ti}: oczekiwano {want}, jest {got}")
-    print(f"{'✓' if not fails else '✗'} {len(CASES) - fails}/{len(CASES)} testów clean-room")
+            print(f"✗ {agent or '(main)'} {tool} {ti}: expected {want}, got {got}")
+    print(f"{'✓' if not fails else '✗'} {len(CASES) - fails}/{len(CASES)} clean-room tests")
     return 1 if fails else 0
 
 

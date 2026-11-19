@@ -1,98 +1,100 @@
 ---
 name: eng-design-patterns
-description: Użyj przy projekcie i review, gdy kusi wzorzec GoF — diagnoza symptom → wzorzec, kiedy nie, lżejsze formy w TS.
+description: Use when a GoF pattern tempts you in a project or review — diagnosis symptom → pattern, when not, lighter forms.
+disable-model-invocation: true
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj, gdy projektujesz lub refaktoryzujesz kod i rozważasz wzorzec GoF albo oceniasz jego użycie w review — diagnoza „symptom → wzorzec”, kiedy NIE używać, klasyfikacja, 22 wzorce (fabryki, budowniczy, adapter, dekorator, pełnomocnik, obserwator, stan, strategia, odwiedzający…) z lżejszymi formami w TS. Nie do zasad SOLID/KISS (eng-design-principles) ani building blocks DDD (ddd-tactical-design)."
-  slowa: "role object, obiekt roli, ta sama osoba w wielu rolach, klient i dostawca, extension object, obiekt rozszerzenia, flagi isCustomer, klasa Person z polami null, każda rola ma inne dane"
+  status: "inactive"  # measurement 2026-11-16: docs/inactive-skills.md
+  review: "2027-10-17"
+  catalog: "Use when you design or refactor code and consider a GoF pattern, or assess its use in a review — the \"symptom → pattern\" diagnosis, when NOT to use one, the classification, 22 patterns (factories, builder, adapter, decorator, proxy, observer, state, strategy, visitor…) with lighter forms in TS. Not for the SOLID/KISS principles (eng-design-principles) or DDD building blocks (ddd-tactical-design)."
+  keywords: "role object, obiekt roli, ta sama osoba w wielu rolach, klient i dostawca, extension object, obiekt rozszerzenia, flagi isCustomer, klasa Person z polami null, każda rola ma inne dane, the same person in many roles, customer and supplier, isCustomer flags, Person class with null fields, each role has different data"
 ---
 
-# Wzorce projektowe (GoF)
+# Design patterns (GoF)
 
-Wzorzec to odpowiedź na **rozpoznany, powtarzający się problem** — nie cel sam w sobie. Zaczynaj od nazwania problemu
-w kodzie; jeśli go nie umiesz nazwać (zmienność, która się powtarza, bolesne sprzężenie, wybuch podklas), wzorca nie
-potrzebujesz. Prostszy kod wygrywa remis (`references/krytyka-i-pulapki.md`).
+A pattern is an answer to **a recognized, recurring problem** — not a goal in itself. Start by naming the problem
+in the code; if you cannot name it (variation that recurs, painful coupling, an explosion of subclasses), you do not
+need a pattern. Simpler code wins a tie (`references/critique-and-pitfalls.md`).
 
-## Jak pracować
-1. **Nazwij problem, nie wzorzec**: co wymaga edycji w wielu miejscach? który `switch` rośnie? co jest trudne do testu?
-2. **Zawęź kategorią**: tworzenie obiektów → kreacyjne; statyczny kształt i składanie → strukturalne; przepływ w czasie
-   → behawioralne (`references/podstawy.md`).
-3. **Dobierz kandydata** z tabeli niżej i przeczytaj jego plik — zwłaszcza „Kiedy NIE używać”.
-4. **Wybierz najlżejszą formę**, jaką daje język (funkcja, closure, unia, generator, moduł), zanim sięgniesz po
-   hierarchię klas z podręcznika.
-5. **W review** proponuj wzorzec tylko przy wskazanym, powtarzającym się problemie; w uwadze podaj problem, koszt
-   i prostszą alternatywę (format uwag — eng-design-principles).
+## How to work
+1. **Name the problem, not the pattern**: what requires edits in many places? which `switch` keeps growing? what is hard to test?
+2. **Narrow it down by category**: creating objects → creational; static shape and composition → structural; flow over time
+   → behavioral (`references/basics.md`).
+3. **Pick a candidate** from the table below and read its file — especially "When NOT to use".
+4. **Choose the lightest form** the language offers (a function, a closure, a union, a generator, a module) before you reach for
+   a textbook class hierarchy.
+5. **In a review** propose a pattern only for an identified, recurring problem; in the comment give the problem, the cost
+   and a simpler alternative (comment format — eng-design-principles).
 
-## Symptom → kandydat
-| Symptom w kodzie | Kandydat | Najpierw sprawdź lżejsze |
+## Symptom → candidate
+| Symptom in the code | Candidate | Check the lighter one first |
 |---|---|---|
-| `new` konkretnej klasy wewnątrz logiki, `switch` po typie przy tworzeniu | Metoda wytwórcza | funkcja fabrykująca |
-| elementy muszą pochodzić z jednej „rodziny” (kraj, platforma, motyw) | Fabryka abstrakcyjna | mapa `Record<Rodzina, Kit>` |
-| konstruktor z wieloma opcjami, obiekt składany warunkowo, walidacja całości | Budowniczy | obiekt opcji z domyślnymi |
-| kopiowanie obiektu bez znajomości klasy, z prywatnym stanem | Prototyp | `structuredClone`, niezmienność |
-| „musi być jedna instancja” | Singleton (ostrożnie) | moduł ES, zakres DI |
-| cudze API nie pasuje do naszego portu | Adapter | funkcja mapująca |
-| klasy = iloczyn dwóch cech (`CsvRevenue`, `PdfRevenue`…) | Most | kompozycja jednego wymiaru |
-| element i grupa elementów, drzewo dowolnej głębokości | Kompozyt | unia + rekurencja |
-| retry/cache/log/metryki w różnych kombinacjach | Dekorator | funkcja wyższego rzędu, middleware |
-| wywołujący koordynuje 4 moduły w ustalonej kolejności | Fasada | funkcja przypadku użycia |
-| dziesiątki tysięcy obiektów powtarzają te same dane (zmierzone) | Pyłek | — |
-| leniwa inicjalizacja, uprawnienia, cache przed istniejącą usługą | Pełnomocnik | `??=`, `Map`, `if` |
-| „obsłuż albo przekaż dalej”, zmienny skład kroków | Łańcuch zobowiązań | tablica funkcji |
-| akcje do kolejki, dziennika, cofania | Polecenie | closure w mapie |
-| przechodzenie po stronicowanym API/drzewie bez ujawniania struktury | Iterator | generator, `Symbol.iterator` |
-| komponenty UI znają się nawzajem „każdy z każdym” | Mediator | kontener/store stanu |
-| cofnij/wersje przy prywatnym stanie | Pamiątka | historia niezmiennych stanów |
-| wielu odbiorców zmiany, zbiór zmienny w runtime | Obserwator | `EventTarget`, RxJS, sygnały |
-| ten sam `switch (status)` w wielu metodach | Stan | unia dyskryminowana + `switch` |
-| `switch` wybierający wariant algorytmu/reguły | Strategia | funkcja jako parametr |
-| kilka klas z prawie identycznym procesem | Metoda szablonowa | funkcja szkieletu + obiekt kroków |
-| nowe operacje na stabilnym zbiorze typów węzłów | Odwiedzający | unia + funkcja ze `switch` |
-| ten sam byt jest klientem, dostawcą, pracownikiem; flagi `isX` i dane ról w jednej klasie | Obiekt roli (spoza GoF) | osobny obiekt lub agregat roli wskazujący rdzeń |
-| interfejsy potrzebne tylko części klientów, dokładane przez inne moduły | Obiekt rozszerzenia (spoza GoF) | mapa rozszerzeń po kluczu |
+| `new` of a concrete class inside logic, a `switch` on type at creation | Factory Method | a factory function |
+| elements must come from one "family" (country, platform, theme) | Abstract Factory | a `Record<Family, Kit>` map |
+| a constructor with many options, an object assembled conditionally, validation of the whole | Builder | an options object with defaults |
+| copying an object without knowing its class, with private state | Prototype | `structuredClone`, immutability |
+| "there must be one instance" | Singleton (carefully) | an ES module, a DI scope |
+| a third-party API does not fit our port | Adapter | a mapping function |
+| classes = the product of two traits (`CsvRevenue`, `PdfRevenue`…) | Bridge | composition of one dimension |
+| an element and a group of elements, a tree of arbitrary depth | Composite | a union + recursion |
+| retry/cache/log/metrics in various combinations | Decorator | a higher-order function, middleware |
+| the caller coordinates 4 modules in a fixed order | Facade | a use case function |
+| tens of thousands of objects repeat the same data (measured) | Flyweight | — |
+| lazy initialization, permissions, a cache in front of an existing service | Proxy | `??=`, `Map`, `if` |
+| "handle it or pass it on", a variable set of steps | Chain of Responsibility | an array of functions |
+| actions for a queue, a log, undo | Command | a closure in a map |
+| traversing a paginated API/a tree without exposing the structure | Iterator | a generator, `Symbol.iterator` |
+| UI components know each other "everyone with everyone" | Mediator | a state container/store |
+| undo/versions with private state | Memento | a history of immutable states |
+| many recipients of a change, a set that varies at runtime | Observer | `EventTarget`, RxJS, signals |
+| the same `switch (status)` in many methods | State | a discriminated union + `switch` |
+| a `switch` choosing a variant of an algorithm/rule | Strategy | a function as a parameter |
+| several classes with an almost identical process | Template Method | a skeleton function + a steps object |
+| new operations on a stable set of node types | Visitor | a union + a function with a `switch` |
+| the same entity is a customer, a supplier, an employee; `isX` flags and role data in one class | Role Object (outside GoF) | a separate role object or aggregate pointing to the core |
+| interfaces needed only by some clients, added by other modules | Extension Object (outside GoF) | a map of extensions by key |
 
-Pary łatwe do pomylenia (rozstrzyga motywacja, nie kształt): Dekorator/Pełnomocnik, Strategia/Stan, Adapter/Most/Fasada,
-Łańcuch/Dekorator, Mediator/Fasada — sekcje „Powiązania” w plikach wzorców.
+Pairs that are easy to confuse (the motivation decides, not the shape): Decorator/Proxy, Strategy/State, Adapter/Bridge/Facade,
+Chain/Decorator, Mediator/Facade — the "Relations" sections in the pattern files.
 
-## Kiedy NIE sięgać po wzorzec
-- Jest jeden wariant i brak konkretnego drugiego na horyzoncie (YAGNI).
-- Prosty warunek lub funkcja jest krótsza i równie jasna.
-- Mechanizm frameworka już to robi (DI, middleware, interceptory, store, sygnały) — nie dubluj.
-- Struktura wzorca jest widoczna, a problemu, który miała rozwiązać, nie ma.
-- `@dekorator` w TS to mechanizm języka, nie wzorzec Dekorator.
+## When NOT to reach for a pattern
+- There is one variant and no concrete second one on the horizon (YAGNI).
+- A simple condition or function is shorter and just as clear.
+- A framework mechanism already does it (DI, middleware, interceptors, a store, signals) — do not duplicate it.
+- The pattern's structure is visible, but the problem it was meant to solve is not there.
+- `@decorator` in TS is a language mechanism, not the Decorator pattern.
 
-## Granice z sąsiednimi skillami
-- **eng-design-principles** — *dlaczego* (SOLID, KISS, kompozycja > dziedziczenie, rozstrzyganie konfliktów);
-  ten skill — *jaki kształt* w kodzie.
-- **eng-clean-code** — zapachy kodu i bezpieczne kroki refaktoryzacji; przejście na wzorzec rób małymi krokami
+## Boundaries with neighbouring skills
+- **eng-design-principles** — *why* (SOLID, KISS, composition > inheritance, resolving conflicts);
+  this skill — *what shape* in the code.
+- **eng-clean-code** — code smells and safe refactoring steps; make the move to a pattern in small steps
   (eng-behavior-preserving-refactoring).
-- **ddd-tactical-design** — polityka (= Strategia nazwana językiem biznesu), specyfikacja (= Kompozyt warunków),
-  fabryka agregatu, maszyna stanów, zdarzenia; tam decydujesz o modelu, tu o technice.
-- **ddd-archetypes** — archetypy to poziom modelu biznesowego, nie wzorce GoF.
-- **fe-architecture** — wzorce UI (compound components, stany ładowania, granice błędów).
-- **lang-typescript** — idiomy, którymi realizujesz lżejsze formy (unie, generatory, `satisfies`, `#pola`, `using`).
+- **ddd-tactical-design** — a policy (= a Strategy named in the business language), a specification (= a Composite of conditions),
+  an aggregate factory, a state machine, events; there you decide about the model, here about the technique.
+- **ddd-archetypes** — archetypes are the level of the business model, not GoF patterns.
+- **fe-architecture** — UI patterns (compound components, loading states, error boundaries).
+- **lang-typescript** — the idioms with which you implement the lighter forms (unions, generators, `satisfies`, `#fields`, `using`).
 
-## Materiały (czytaj tylko potrzebny plik)
-- `references/podstawy.md` — gdy trzeba wyjaśnić, czym jest wzorzec, czym różni się od algorytmu/biblioteki,
-  klasyfikacja i mapa „wzorce w repozytorium”.
-- `references/krytyka-i-pulapki.md` — przed zaproponowaniem wzorca w review/refaktorze; tabela lżejszych form w TS,
-  sygnały nadużycia.
-- `references/katalog.md` — gdy wybierasz między kilkoma kandydatami: 22 wzorce z „jednym zdaniem” i „kiedy NIE”.
-- `references/poza-gof.md` — obiekt roli (Role Object) i obiekt rozszerzenia (Extension Object) z katalogów PLoP.
-- `references/kreacyjne/{factory-method,abstract-factory,builder,prototype,singleton}.md`
-- `references/strukturalne/{adapter,bridge,composite,decorator,facade,flyweight,proxy}.md`
-- `references/behawioralne/{chain-of-responsibility,command,iterator,mediator,memento,observer,state,strategy,template-method,visitor}.md`
-  — pełny opis wzorca: problem, uczestnicy, kiedy używać, koszty, powiązania, forma idiomatyczna w TS, przykład,
-  pułapki. Przykłady (30 bloków) kompilują się w TS 6.0.3 i 7.0.2 (`strict`, `noUncheckedIndexedAccess`,
-  `exactOptionalPropertyTypes`, `erasableSyntaxOnly`) i uruchamiają w Node 22 przez usuwanie typów — bez `enum`
-  i parameter properties.
+## Materials (read only the file you need)
+- `references/basics.md` — when you need to explain what a pattern is, how it differs from an algorithm/a library,
+  the classification and the "patterns in the repository" map.
+- `references/critique-and-pitfalls.md` — before proposing a pattern in a review/refactoring; the table of lighter forms in TS,
+  signals of overuse.
+- `references/catalog.md` — when you choose between several candidates: 22 patterns with "one sentence" and "when NOT".
+- `references/beyond-gof.md` — Role Object and Extension Object from the PLoP catalogs.
+- `references/creational/{factory-method,abstract-factory,builder,prototype,singleton}.md`
+- `references/structural/{adapter,bridge,composite,decorator,facade,flyweight,proxy}.md`
+- `references/behavioral/{chain-of-responsibility,command,iterator,mediator,memento,observer,state,strategy,template-method,visitor}.md`
+  — the full description of a pattern: the problem, the participants, when to use it, the costs, the relations, the idiomatic form in TS, an example,
+  the pitfalls. The examples (30 blocks) compile in TS 6.0.3 and 7.0.2 (`strict`, `noUncheckedIndexedAccess`,
+  `exactOptionalPropertyTypes`, `erasableSyntaxOnly`) and run in Node 22 through type stripping — without `enum`
+  and parameter properties.
 
-## Checklista
-- [ ] Problem nazwany konkretnie i występuje co najmniej drugi raz (nie „na przyszłość”)
-- [ ] Sprawdzona lżejsza forma w języku / mechanizm frameworka
-- [ ] Przeczytane „Kiedy NIE używać” wybranego wzorca
-- [ ] Liczba nowych typów proporcjonalna do zysku; nazwy z domeny, nie z nazwy wzorca
-- [ ] Reguły biznesowe zostały w domenie (polityki, specyfikacje), nie w warstwie technicznej
+## Checklist
+- [ ] The problem is named concretely and occurs at least a second time (not "for the future")
+- [ ] A lighter form in the language / a framework mechanism has been checked
+- [ ] "When NOT to use" of the chosen pattern has been read
+- [ ] The number of new types is proportional to the gain; names from the domain, not from the pattern's name
+- [ ] Business rules stayed in the domain (policies, specifications), not in the technical layer
 
-Źródła: katalog GoF (Gamma, Helm, Johnson, Vlissides, 1994) i refactoring.guru — opisy przeredagowane własnymi
-słowami, przykłady kodu napisane od nowa.
+Sources: the GoF catalog (Gamma, Helm, Johnson, Vlissides, 1994) and refactoring.guru — descriptions rewritten in our own
+words, code examples written from scratch.

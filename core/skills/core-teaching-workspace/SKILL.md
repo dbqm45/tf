@@ -1,88 +1,94 @@
 ---
 name: core-teaching-workspace
-description: Użyj na polecenie człowieka do nauki tematu przez wiele sesji w katalogu-warsztacie — lekcje, ściągi, postępy.
+description: Use on the human's command to learn a topic over many sessions in a workshop directory — lessons, cheat sheets, progress.
 metadata:
-  przeglad: "2027-10-10"
-  katalog: "Użyj tylko na polecenie człowieka (`/core-teaching-workspace`) — nauka jednego tematu przez wiele sesji w katalogu-warsztacie (misja, źródła, lekcje HTML, ściągi, zapisy postępów), np. wdrożenie w nowy stack lub kod projektu. Nie do jednorazowego wyjaśnienia ani badania źródeł bez nauki (core-source-research)."
-argument-hint: "[temat] | następna lekcja"
+  review: "2027-10-10"
+  catalog: "Use only on the human's command (`/core-teaching-workspace`) — learning one topic over many sessions in a workshop directory (mission, sources, HTML lessons, cheat sheets, progress records), e.g. onboarding into a new stack or the project's code. Not for a one-off explanation or for researching sources without learning (core-source-research)."
+argument-hint: "[topic] | next lesson"
 disable-model-invocation: true
 ---
 
-# Warsztat nauki
+# Learning workshop
 
-Nauka jednego tematu przez wiele sesji, które się na sobie budują. Ciągłość daje **katalog**, nie historia rozmowy:
-nowa sesja w tym samym katalogu + „następna lekcja” = kontynuacja kursu.
+Learning one topic over many sessions that build on each other. Continuity comes from the **directory**, not the
+conversation history: a new session in the same directory + "next lesson" = the course continues.
 
-## Gdzie
-Domyślnie `docs/learning/<temat>/` w projekcie; jeśli człowiek nie chce tego commitować — ścieżka do `.git/info/exclude`
-albo osobny katalog poza repo. Przed pisaniem sprawdź, że pliki trafiają tam, gdzie trzeba (nie do `~/.claude`).
+## Where
+By default `docs/learning/<temat>/` in the project; if the human does not want to commit it — a path in
+`.git/info/exclude` or a separate directory outside the repo. Before writing, check that the files go where they
+should (not into `~/.claude`).
 
-| Plik | Zawartość |
+| File | Contents |
 |---|---|
-| `MISSION.md` | **po co** człowiek się uczy — pierwszy plik, steruje wszystkimi lekcjami |
-| `RESOURCES.md` | sprawdzone źródła: **Wiedza** (dokumentacja, książki) i **Mądrość** (społeczności), każde z jednym zdaniem „do czego”; sekcja `Luki` |
-| `lessons/NNNN-nazwa.html` | jedna lekcja = jedna sesja = jedna nowa umiejętność |
-| `reference/*.html` | ściągi do wracania: składnia, algorytmy, słownik pojęć |
-| `learning-records/NNNN-nazwa.md` | zapisy postępów w stylu ADR |
-| `assets/` | wspólne komponenty: arkusz stylów, quiz, symulator |
-| `NOTES.md` | preferencje ucznia |
+| `MISSION.md` | **why** the human is learning — the first file, it steers every lesson |
+| `RESOURCES.md` | vetted sources: **Knowledge** (documentation, books) and **Wisdom** (communities), each with one sentence on "what for"; a `Luki` section |
+| `lessons/NNNN-nazwa.html` | one lesson = one session = one new skill |
+| `reference/*.html` | cheat sheets to come back to: syntax, algorithms, a glossary |
+| `learning-records/NNNN-nazwa.md` | ADR-style progress records |
+| `assets/` | shared components: stylesheet, quiz, simulator |
+| `NOTES.md` | the learner's preferences |
 
-## Procedura
-**Pierwsza sesja (pusty katalog):** nie zaczynaj od lekcji. Najpierw rozmowa o misji, aż `MISSION.md` ma: konkretny cel
-(„wdrożyć się w moduł rozliczeń i robić review w 3 tygodnie”, nie „poznać X”), co będzie umiał (obserwowalne), ograniczenia,
-co poza zakresem. Zapytaj też wprost, co już umie — inaczej poziom pierwszej lekcji to zgadywanie. Potem źródła, potem lekcja 1.
-**Kolejne sesje:** przeczytaj misję, zapisy postępów i `assets/`; wybierz następny krok w **strefie najbliższego rozwoju**
-(trudne, ale osiągalne); napisz lekcję.
+## Procedure
+**First session (empty directory):** do not start with a lesson. First talk about the mission until `MISSION.md` has:
+a concrete goal ("onboard into the billing module and do reviews within 3 weeks", not "learn X"), what they will be
+able to do (observable), constraints, what is out of scope. Also ask directly what they already know — otherwise the
+level of the first lesson is guesswork. Then sources, then lesson 1.
+**Later sessions:** read the mission, the progress records and `assets/`; pick the next step in the **zone of
+proximal development** (hard but reachable); write the lesson.
 
-## Lekcja
-- Krótka (jedno posiedzenie), powiązana z misją, daje jedną konkretną umiejętność.
-- **Nie ufaj własnej pamięci**: każde twierdzenie ma link do źródła z `RESOURCES.md`; lekcja poleca jedno główne źródło do
-  samodzielnego przeczytania. Lekcja bez przypisów = sygnał zmyślenia. Przy kodzie projektu źródłem jest sam kod (plik:linia).
-- Najpierw wiedza (tu trudność przeszkadza), potem ćwiczenie z natychmiastową informacją zwrotną (tu trudność pomaga):
-  **przypominanie z pamięci**, **rozłożenie w czasie**, **przeplatanie** pokrewnych tematów. Cel to trwałe zapamiętanie,
-  nie chwilowa płynność, która daje złudzenie opanowania.
-- Quiz: odpowiedzi tej samej długości, kolejność losowana **przy wyświetlaniu** (modele mają skłonność do stawiania
-  poprawnej odpowiedzi na pierwszym miejscu).
-- Buduj z `assets/` (wspólny arkusz stylów od pierwszej lekcji); nowy element wielokrotnego użytku trafia do `assets/`.
-  Bez bibliotek z CDN bez przypiętej wersji (skill dokumentacji z pack-docs: docs-tech-writing, diagramy-i-prezentacje.md).
-- Linki do poprzednich lekcji i ściąg; przypomnienie, że można dopytać agenta.
+## Lesson
+- Short (one sitting), tied to the mission, gives one concrete skill.
+- **Do not trust your own memory**: every claim links to a source from `RESOURCES.md`; the lesson recommends one main
+  source to read on one's own. A lesson without footnotes = a sign of fabrication. For project code the source is
+  the code itself (file:line).
+- Knowledge first (here difficulty gets in the way), then practice with immediate feedback (here difficulty helps):
+  **retrieval practice**, **spacing**, **interleaving** related topics. The goal is lasting retention, not momentary
+  fluency that gives an illusion of mastery.
+- Quiz: answers of the same length, order shuffled **at display time** (models tend to put the correct answer first).
+- Build from `assets/` (a shared stylesheet from the first lesson); a new reusable element goes to `assets/`. No CDN
+  libraries without a pinned version (the documentation skill from pack-docs: docs-tech-writing,
+  diagrams-and-presentations.md).
+- Links to previous lessons and cheat sheets; a reminder that the learner can ask the agent follow-up questions.
 
-## Zapis postępu (`learning-records/`)
-Jedno–trzy zdania: co jest już umiane i dlaczego to zmienia następne lekcje. Piszesz, gdy: uczeń **pokazał** zrozumienie
-(zadanie, odpowiedź — samo „było omówione” nie wystarcza), zadeklarował wcześniejszą wiedzę (z głębokością), poprawiono
-błędne przekonanie, zmieniła się misja (po zgodzie, z aktualizacją `MISSION.md`). Stary zapis oznaczasz „zastąpiony przez
-NNNN”, nie usuwasz.
+## Progress record (`learning-records/`)
+One to three sentences: what is already known and why it changes the next lessons. You write one when: the learner
+**showed** understanding (a task, an answer — "it was covered" is not enough), declared prior knowledge (with depth),
+a misconception was corrected, the mission changed (after agreement, with an update to `MISSION.md`). An old record
+is marked "superseded by NNNN", not deleted.
 
-## Diagnoza, powtórki i koniec kursu
-- **Przed lekcją 1:** krótka diagnoza (5–8 pytań od łatwych do trudnych, w stylu core-plan-interview), wynik jako pierwszy
-  zapis w `learning-records/`. Bez niej poziom lekcji to zgadywanie, a lekcje zakładają nieobjaśniony żargon.
-- **Quiz to bramka:** następna lekcja dopiero po zaliczeniu ćwiczeń poprzedniej; po porażce — krótkie powtórzenie
-  innym przykładem, nie ta sama lekcja.
-- **Powtórki:** skill nie ma kalendarza. Prowadź w `NOTES.md` listę „do powtórki” z datami (np. po 1, 3, 7 i 14 dniach);
-  na starcie sesji najpierw zaległe powtórki (przypominanie z pamięci), potem nowa lekcja.
-- **Zbuduj, potem rozłóż** (gdy agent dostarczył rozwiązanie w nowym dla ucznia obszarze): tryb wyjaśniania, jeden
-  koncept naraz — „dlaczego tak”, „co się zepsuje, gdy zmienię X”, „kiedy to zły wybór”; po każdym kroku pytanie
-  sprawdzające, dalej dopiero po poprawnej odpowiedzi. Temat zamknięty, gdy uczeń bez podpowiedzi odpowie na jedno
-  pytanie o logikę, kompromis albo objaw błędu. Zatwierdzenie zmiany, której uczeń nie umie obronić, to sygnał, że
-  nauki nie było. W badaniu Anthropic (2026, 52 programistów) grupa z AI wypadła gorzej w teście zrozumienia, a wyniki
-  utrzymywali ci, którzy po wygenerowaniu kodu dopytywali o jego działanie albo pytali o pojęcia.
-- **Fiszki po wartościowej sesji:** 3–5 par pytanie–odpowiedź (odpowiedź 2–3 zdania, pytania o zastosowanie, nie
-  definicje) dopisane do listy „do powtórki” w `NOTES.md`.
-- **Tryb domyślny zamiast dyscypliny:** w Claude Code styl odpowiedzi `Explanatory` (bloki „Insight” z uzasadnieniem
-  decyzji) albo `Learning` (dodatkowo zostawia uczniowi do napisania fragmenty z decyzją projektową, oznaczone
-  `TODO(human)`) — przełączenie `/output-style <styl>` lub `/config`.
-- **Kiedy przestać dokładać lekcje:** misja osiągnięta albo kolejne lekcje nie dają nowej umiejętności z misji → zaproponuj
-  przejście do praktyki (zadanie w projekcie, review z mentorem) i zapisz to w `learning-records/`.
-- Lekcje płytkie lub zbyt krótkie → najpierw mocniejszy model lub wyższy wysiłek rozumowania, dopiero potem zmiana
-  instrukcji. Domeny o precyzyjnej notacji (sekwencje, polecenia, wzory) sprawdzaj w źródle szczególnie dokładnie.
+## Diagnosis, reviews and the end of the course
+- **Before lesson 1:** a short diagnosis (5–8 questions from easy to hard, in the style of core-plan-interview), the
+  result as the first record in `learning-records/`. Without it the lesson level is guesswork, and lessons assume
+  unexplained jargon.
+- **The quiz is a gate:** the next lesson only after passing the previous lesson's exercises; after a failure — a
+  short recap with a different example, not the same lesson.
+- **Reviews:** the skill has no calendar. Keep a "to review" list with dates in `NOTES.md` (e.g. after 1, 3, 7 and 14
+  days); at the start of a session first the overdue reviews (retrieval practice), then the new lesson.
+- **Build, then take apart** (when the agent delivered a solution in an area new to the learner): explanation mode,
+  one concept at a time — "why this way", "what breaks when I change X", "when is this a bad choice"; after each step a
+  checking question, moving on only after a correct answer. The topic is closed when the learner, without hints,
+  answers one question about the logic, a trade-off or a failure symptom. Approving a change the learner cannot
+  defend is a sign that no learning happened. In an Anthropic study (2026, 52 programmers) the group with AI did
+  worse on a comprehension test, and the results held for those who, after generating code, asked how it works or
+  asked about the concepts.
+- **Flashcards after a valuable session:** 3–5 question–answer pairs (answer 2–3 sentences, questions about
+  application, not definitions) added to the "to review" list in `NOTES.md`.
+- **A default mode instead of discipline:** in Claude Code the `Explanatory` output style ("Insight" blocks with the
+  rationale for decisions) or `Learning` (it also leaves the learner fragments with a design decision to write,
+  marked `TODO(human)`) — switch with `/output-style <styl>` or `/config`.
+- **When to stop adding lessons:** the mission is achieved or further lessons give no new skill from the mission →
+  propose moving to practice (a task in the project, a review with a mentor) and record it in `learning-records/`.
+- Shallow or too short lessons → first a stronger model or higher reasoning effort, only then a change of
+  instructions. Domains with precise notation (sequences, commands, formulas) — check them in the source especially
+  carefully.
 
-## Pytania wymagające doświadczenia
-Spróbuj odpowiedzieć, ale wskaż społeczność (forum, grupa, kanał zespołu, osoba z zespołu), gdzie da się to sprawdzić
-w praktyce — chyba że uczeń zapisał w `NOTES.md`, że nie chce.
+## Questions that need experience
+Try to answer, but point to a community (a forum, a group, a team channel, a person on the team) where it can be
+checked in practice — unless the learner wrote in `NOTES.md` that they do not want that.
 
-## Źródło
-Anthropic, „How AI assistance impacts the formation of coding skills” (anthropic.com/research, 2026-01-29) i Claude Code
-„Output styles” (code.claude.com/docs/en/output-styles), dostęp 2026-10-10; kurs 10xDevs, ed. 3 (2026), lekcja 1.3
-(nauka z AI) — materiał szkoleniowy (dostęp 2026-10-09).
-[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), skill `teach` (formaty MISSION, RESOURCES, LEARNING-RECORD);
-opis: [aihero.dev](https://www.aihero.dev/skills-teach). Opisane własnymi słowami.
+## Source
+Anthropic, "How AI assistance impacts the formation of coding skills" (anthropic.com/research, 2026-01-29) and Claude
+Code "Output styles" (code.claude.com/docs/en/output-styles), accessed 2026-10-10; the 10xDevs course, ed. 3 (2026),
+lesson 1.3 (learning with AI) — training material (accessed 2026-10-09).
+[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), the `teach` skill (MISSION, RESOURCES,
+LEARNING-RECORD formats); description: [aihero.dev](https://www.aihero.dev/skills-teach). Described in our own words.

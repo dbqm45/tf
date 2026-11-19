@@ -23,6 +23,31 @@
       }
     },
     {
+      "id": "breaking-dto-en",
+      "expect": "trigger",
+      "prompt": "I removed the isReserved field from ResourceDto in the booking module and added blockade.state in its place. What should the commit message look like so that the release tool computes the version correctly? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "\\)!:|\\w!:"
+          ],
+          [
+            "BREAKING CHANGE:"
+          ],
+          [
+            "MAJOR"
+          ],
+          [
+            "rozkazując|imperative|72 znak|≤ ?72|Refs:|dwa commity|osobn\\w* commit",
+            "imperative",
+            "72 char\\w*",
+            "two commits",
+            "separate commits?"
+          ]
+        ]
+      }
+    },
+    {
       "id": "zly-typ-commit",
       "expect": "trigger",
       "prompt": "Ostatni commit w mojej gałęzi ma typ feat, a to była poprawka błędu. Jak to naprawić — rebase interaktywny, amend, a może coś innego? Odpowiedz zwięźle.",

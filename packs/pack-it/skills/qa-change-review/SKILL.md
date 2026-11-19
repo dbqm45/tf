@@ -1,131 +1,131 @@
 ---
 name: qa-change-review
-description: Użyj przy przeglądzie planu przed kodem albo kodu względem planu — dryf, waga, triaż, werdykt.
+description: Use when reviewing a plan before code or code against the plan — drift, severity, triage, verdict.
 metadata:
-  przeglad: "2027-10-10"
-  katalog: "Użyj, gdy trzeba sprawdzić plan kroku, zanim agent zacznie kodować (spójność, ugruntowanie w repo, weryfikacja ryzykownych twierdzeń, wymiary, werdykt), albo implementację względem zatwierdzonego planu po fazie lub przed scaleniem (trzy zbiory plików, dryf, nadmiar i braki, bezpieczeństwo i wzorce, kryteria), a potem przejść ustalenia z człowiekiem (macierz waga × wpływ, triaż z decyzjami, zapis jako lekcja). Nie do procesu PR i konfiguracji przeglądu przez usługę lub CI (core-git-workflow), samego bezpieczeństwa (agent security-reviewer), czytelności kodu bez planu (eng-clean-code) ani przepytywania człowieka przed planem (core-plan-interview), ani przeglądu specyfikacji wymagań przed planem — panel niezależnych recenzentów (core-delivery-lifecycle)."
-  slowa: "przegląd planu, sprawdź plan, review planu, czy plan zadziała, przegląd implementacji, zgodność z planem, dryf od planu, implementacja vs plan, przed scaleniem, ustalenia przeglądu, triaż ustaleń, co naprawić teraz, werdykt przeglądu, agent zrobił coś innego niż w planie, pliki spoza planu"
+  review: "2027-10-10"
+  catalog: "Use when you must check a step plan before the agent starts coding (consistency, grounding in the repo, verification of risky claims, dimensions, verdict), or an implementation against the approved plan after a phase or before merge (three sets of files, drift, excess and gaps, security and patterns, criteria), and then walk through the findings with the human (a severity × impact matrix, triage with decisions, recording as a lesson). Not for the PR process and configuring review through a service or CI (core-git-workflow), security alone (the security-reviewer agent), code readability without a plan (eng-clean-code), interviewing the human before a plan (core-plan-interview), or reviewing a requirements specification before a plan — a panel of independent reviewers (core-delivery-lifecycle)."
+  keywords: "przegląd planu, sprawdź plan, review planu, czy plan zadziała, przegląd implementacji, zgodność z planem, dryf od planu, implementacja vs plan, przed scaleniem, ustalenia przeglądu, triaż ustaleń, co naprawić teraz, werdykt przeglądu, agent zrobił coś innego niż w planie, pliki spoza planu, plan review, review the plan, will the plan work, implementation review, conformance to the plan, drift from the plan, implementation vs plan, before merge, review findings, findings triage, what to fix now, review verdict, the agent did something different than the plan, files outside the plan"
 ---
 
-# Przegląd zmiany względem planu
+# Reviewing a change against the plan
 
-Zły plan kosztuje godziny pracy, przegląd planu — minuty. **Przegląd planu** pyta „czy ten plan zadziała?”,
-**przegląd implementacji** — „czy zbudowaliśmy to, co zaplanowaliśmy, i czy da się to bezpiecznie scalić?”.
-Agent przygotowuje raport i prowadzi triaż; werdykt i decyzje należą do człowieka. Ustaleń nie szuka się na siłę:
-dobry plan lub kod daje krótki raport.
+A bad plan costs hours of work, a plan review costs minutes. A **plan review** asks "will this plan work?",
+an **implementation review** asks "did we build what we planned, and can it be merged safely?".
+The agent prepares the report and runs the triage; the verdict and the decisions belong to the human. Findings are not hunted
+for: a good plan or good code gives a short report.
 
-## Wejście
-- Raport kroku `docs/project/06-delivery/NNN-*.md` z planem (stan końcowy, poza zakresem, fazy, kryteria)
-  i sekcją „Postęp” (szablon `delivery` w core-project-record).
-- Badanie lub przeramowanie obok raportu kroku, jeśli powstały.
-- `docs/project/lessons.md` — ustalenie łamiące zapisaną lekcję ma wyższą wagę.
-- Wcześniejszy raport przeglądu → wznów od triażu (ustalenia z decyzją `OCZEKUJE`).
+## Input
+- The step report `docs/project/06-delivery/NNN-*.md` with the plan (end state, out of scope, phases, criteria)
+  and the "Progress" section (the `delivery` template in core-project-record).
+- A study or reframing next to the step report, if they exist.
+- `docs/project/lessons.md` — a finding that breaks a recorded lesson has a higher severity.
+- An earlier review report → resume from triage (findings with the decision `PENDING`).
 
-## Tryb A — przegląd planu (przed kodem)
-1. **Spójność wewnętrzna** (tu jest najwięcej trafień):
-   - sprzeczność — ograniczenie opisane na górze, a ignorowane w fazach; punkt „poza zakresem” wraca w fazie;
-   - obietnica bez fazy — kryterium stanu końcowego, którego żadna faza nie buduje;
-   - złamany kontrakt — faza B potrzebuje identyfikatora lub pola, którego wynik fazy A nie zwraca; decyzja,
-     którą wykonawca musiałby zgadnąć;
-   - „Postęp” ↔ fazy — każde kryterium ma swój wiersz, pola wyboru są tylko w „Postępie”.
-2. **Ugruntowanie** (sam, bez wykonawców): istnienie co najmniej 5 ścieżek z planu, `grep` nazw funkcji i kluczy,
-   zgodność TL;DR z treścią. Wynik jedną linią, np. `Ugruntowanie: 5/5 ścieżek, 3/3 symbole, TL;DR zgodne z planem`.
-3. **Weryfikacja w kodzie** (pomijana w trybie szybkim): 3–5 najbardziej ryzykownych twierdzeń planu → jeden
-   wykonawca (np. `scout`) z trzema zadaniami: potwierdź lub obal każde twierdzenie z `plik:linia`; znajdź innych
-   wywołujących zmieniane funkcje (zasięg, którego plan nie zna); sprawdź, czy istniejący kod już rozwiązuje to,
-   co plan buduje od nowa.
-4. **Wymiary:**
-   - zgodność ze stanem końcowym — czy wszystkie kryteria mogą przejść, a cel mimo to nie zostać osiągnięty?
-   - oszczędność — czy cel jest osiągalny bez tej fazy; abstrakcja „na zapas”; zmiany „przy okazji”;
-   - dopasowanie do architektury — nowy wzorzec obok istniejącego, kierunek zależności, „refaktoruj według potrzeb”;
-   - ślepe plamy — ścieżki błędów, wycofanie, koszt, zmiana wartości domyślnych, testy, granice bezpieczeństwa;
-   - wykonalność — konkretne ścieżki i polecenia weryfikacji, brak TODO.
-5. **Werdykt:** **gotowy** / **do poprawy** (konkretne poprawki planu) / **do przemyślenia** (problem z podejściem —
-   wróć do badania lub przeramowania).
+## Mode A — plan review (before code)
+1. **Internal consistency** (this is where most hits are):
+   - contradiction — a constraint described at the top and ignored in the phases; an "out of scope" item that returns in a phase;
+   - a promise without a phase — an end-state criterion that no phase builds;
+   - a broken contract — phase B needs an identifier or field that the result of phase A does not return; a decision
+     the implementer would have to guess;
+   - "Progress" ↔ phases — every criterion has its own row, checkboxes only in "Progress".
+2. **Grounding** (on your own, without implementers): the existence of at least 5 paths from the plan, a `grep` of function names and keys,
+   the TL;DR matching the content. The result in one line, e.g. `Grounding: 5/5 paths, 3/3 symbols, TL;DR consistent with the plan`.
+3. **Verification in code** (skipped in fast mode): the 3–5 riskiest claims of the plan → one
+   implementer (e.g. `scout`) with three tasks: confirm or refute each claim with `file:line`; find the other
+   callers of the functions being changed (a reach the plan does not know about); check whether existing code already solves what
+   the plan builds from scratch.
+4. **Dimensions:**
+   - conformance to the end state — can all the criteria pass and the goal still not be achieved?
+   - economy — is the goal achievable without this phase; an abstraction "just in case"; changes "while we're at it";
+   - fit to the architecture — a new pattern next to an existing one, the direction of dependencies, "refactor as needed";
+   - blind spots — error paths, rollback, cost, a change of defaults, tests, security boundaries;
+   - feasibility — concrete paths and verification commands, no TODOs.
+5. **Verdict:** **ready** / **needs fixing** (concrete plan fixes) / **needs rethinking** (a problem with the approach —
+   go back to the study or reframing).
 
-## Tryb B — przegląd implementacji (po fazie albo przed scaleniem)
-1. **Zakres z gita:** commity od zatwierdzenia planu (`git log --since`, `git diff <baza>...HEAD --stat`) i trzy
-   zbiory plików: w planie i w diffie (sprawdź treść) · w diffie bez planu (**NADMIAR** — zmiana nieplanowana) ·
-   w planie bez diffu (**BRAK**). Główna sesja trzyma plan i listę plików, nie ich treść.
-2. **Dwa niezależne przebiegi** (równolegle, w osobnych kontekstach):
-   - **dryf** — dla każdej planowanej zmiany: ZGODNE / DRYF / BRAK / NADMIAR, z cytatem planu i `plik:linia`;
-   - **bezpieczeństwo, jakość, wzorce** — wstrzyknięcia, sekrety, autoryzacja na granicach; N+1 i brak
-     stronicowania; obsługa błędów na granicach zewnętrznych, wyścigi; destrukcyjne operacje na danych bez ścieżki
-     migracji; porównanie z 1–2 podobnymi plikami w repo (tylko istotne różnice; przy ≤ 3 plikach krótko).
-3. **Kryteria:** uruchom polecenia automatyczne z planu i pokaż wynik dosłownie. Kryterium ręczne odhaczone
-   w „Postępie” bez śladu w diffie → ustalenie „odhaczone bez sprawdzenia”.
-4. **Kolejność czytania diffu dla człowieka:** zakres → granice ryzyka (auth, zapis danych, migracje, API
-   zewnętrzne, konfiguracja) → lokalne wzorce → testy (czy test złapałby błąd, którego chcemy uniknąć; zielony test
-   agenta to informacja, nie dowód — qa-spec-first-testing).
-5. **Wymiary:** zgodność z planem · dyscyplina zakresu · bezpieczeństwo i jakość · architektura · spójność wzorców
-   · kryteria sukcesu. Plan definiuje, co znaczy „przetestowane” — nie oceniasz tego, czego nie obiecał, a jego
-   „poza zakresem” nie jest rozrostem zakresu.
-6. **Werdykt:** **zatwierdzone** / **wymaga uwagi** / **odrzucone** (każde krytyczne niezaliczenie wymiaru).
+## Mode B — implementation review (after a phase or before merge)
+1. **Scope from git:** the commits since the plan was approved (`git log --since`, `git diff <base>...HEAD --stat`) and three
+   sets of files: in the plan and in the diff (check the content) · in the diff without the plan (**EXCESS** — an unplanned change) ·
+   in the plan without a diff (**GAP**). The main session holds the plan and the file list, not their content.
+2. **Two independent passes** (in parallel, in separate contexts):
+   - **drift** — for every planned change: MATCH / DRIFT / GAP / EXCESS, with a quote from the plan and `file:line`;
+   - **security, quality, patterns** — injections, secrets, authorization at the boundaries; N+1 and missing
+     pagination; error handling at external boundaries, races; destructive data operations without a migration
+     path; a comparison with 1–2 similar files in the repo (only significant differences; with ≤ 3 files, briefly).
+3. **Criteria:** run the automatic commands from the plan and show the result verbatim. A manual criterion ticked off
+   in "Progress" with no trace in the diff → the finding "ticked off without checking".
+4. **The order of reading the diff for the human:** scope → risk boundaries (auth, data writes, migrations, external
+   APIs, configuration) → local patterns → tests (would the test catch the error we want to avoid; the agent's green test
+   is information, not proof — qa-spec-first-testing).
+5. **Dimensions:** conformance to the plan · scope discipline · security and quality · architecture · consistency of patterns
+   · success criteria. The plan defines what "tested" means — you do not assess what it did not promise, and its
+   "out of scope" is not scope creep.
+6. **Verdict:** **approved** / **needs attention** / **rejected** (any critical failure of a dimension).
 
-## Ustalenie
-`ID · waga · wpływ · wymiar · miejsce · szczegół z dowodem · poprawka`
-- **Waga** — jak źle, jeśli zignorujemy: krytyczne / ostrzeżenie / obserwacja.
-- **Wpływ** — jak trudna decyzja: niski (poprawka oczywista i lokalna) / średni (prawdziwy kompromis) /
-  wysoki (szeroki zasięg: dane, kontrakt, produkt). Waga i wpływ są niezależne.
-- **Miejsce** — `plik:linia` albo sekcja planu.
-- Domyślnie jedna poprawka. Dwie tylko przy prawdziwym kompromisie; wtedy każda ma: podejście · mocną stronę ·
-  koszt · pewność · czego nie sprawdzono, i dokładnie jedna jest rekomendowana.
-- Najwyżej 10 ustaleń — podobne scal („6 plików łamie konwencję nazw” = jedno ustalenie). Sekret opisujesz bez
-  wartości.
+## Finding
+`ID · severity · impact · dimension · place · detail with evidence · fix`
+- **Severity** — how bad if we ignore it: critical / warning / observation.
+- **Impact** — how hard the decision is: low (the fix is obvious and local) / medium (a real trade-off) /
+  high (wide reach: data, contract, product). Severity and impact are independent.
+- **Place** — `file:line` or a section of the plan.
+- By default one fix. Two only with a real trade-off; then each has: approach · strength ·
+  cost · confidence · what was not checked, and exactly one is recommended.
+- At most 10 findings — merge similar ones ("6 files break the naming convention" = one finding). You describe a secret without
+  its value.
 
-## Macierz waga × wpływ (heurystyka)
-| Waga \ wpływ | niski | średni | wysoki |
+## Severity × impact matrix (heuristic)
+| Severity \ impact | low | medium | high |
 |---|---|---|---|
-| krytyczne | napraw teraz | napraw ostrożnie | zatrzymaj się, zawęź poprawkę |
-| ostrzeżenie | napraw albo pomiń | zależy od kontekstu | zwykle wymaga planowania |
-| obserwacja | zwykle pomiń | notatka albo lekcja | sprawdź, czy problem nie występuje w wielu miejscach |
+| critical | fix now | fix carefully | stop, narrow the fix |
+| warning | fix or skip | depends on context | usually needs planning |
+| observation | usually skip | a note or a lesson | check whether the problem occurs in many places |
 
-## Triaż (po kolei, od krytycznych)
-Dla każdego ustalenia człowiek wybiera decyzję:
-- **napraw teraz** — pokaż przed/po, potwierdź, minimalna zmiana;
-- **napraw inaczej** — podejście człowieka;
-- **pomiń**;
-- **akceptuj ryzyko** — z uzasadnieniem;
-- **odrzuć** — ustalenie błędne, z uzasadnieniem;
-- **zapisz jako lekcję** — wpis do `docs/project/lessons.md` wstępnie wypełniony z ustalenia (kontekst = miejsce,
-  problem = szczegół); regułę i zakres uzupełnia człowiek (format lekcji: core-project-record). Potem **zawsze**
-  pytanie „zastosować też poprawkę w kodzie?” — nie decydujesz za człowieka.
-Nie każde ustalenie trzeba naprawić. Po każdej decyzji aktualizuj zapisany raport.
+## Triage (one by one, starting with the critical ones)
+For each finding the human picks a decision:
+- **fix now** — show before/after, confirm, a minimal change;
+- **fix differently** — the human's approach;
+- **skip**;
+- **accept the risk** — with a justification;
+- **reject** — the finding is wrong, with a justification;
+- **record as a lesson** — an entry in `docs/project/lessons.md` pre-filled from the finding (context = place,
+  problem = detail); the human completes the rule and the scope (lesson format: core-project-record). Then **always**
+  the question "apply the fix in the code too?" — you do not decide for the human.
+Not every finding has to be fixed. After each decision, update the saved report.
 
-## Zapis
-- `docs/project/07-review/<data>-przeglad-planu-<krok>.md` albo `…-przeglad-impl-<krok>[-fN].md`, szablon
-  `review` (core-project-record) z kolumnami Wpływ i Decyzja oraz linią „Ugruntowanie”.
-- Decyzje: `OCZEKUJE` / `NAPRAWIONE` / `POMINIĘTE` / `RYZYKO PRZYJĘTE` / `ODRZUCONE` / `LEKCJA`.
-- Poprawki odłożone → „Otwarte pytania” raportu kroku.
-- Większa zmiana: zapisz raport, daj człowiekowi przeczytać go spokojnie, triaż w kolejnej rozmowie.
-- Ten sam wzorzec w CI (werdykt jako bramka workflow, komentarze inline): core-git-workflow,
-  `.claude/skills/core-git-workflow/references/przeglad-ai-w-ci.md`.
+## Recording
+- `docs/project/07-review/<date>-plan-review-<step>.md` or `…-impl-review-<step>[-fN].md`, the
+  `review` template (core-project-record) with the Impact and Decision columns and a "Grounding" line.
+- Decisions: `PENDING` / `FIXED` / `SKIPPED` / `RISK_ACCEPTED` / `REJECTED` / `LESSON`.
+- Deferred fixes → the step report's "Open questions".
+- A larger change: save the report, let the human read it in peace, triage in the next conversation.
+- The same pattern in CI (the verdict as a workflow gate, inline comments): core-git-workflow,
+  `.claude/skills/core-git-workflow/references/ai-review-in-ci.md`.
 
-## Przykład
-**Sytuacja:** przegląd implementacji kroku „zapis zaakceptowanych fiszek”, faza 2. Trzy zbiory: 6 plików zgodnych,
-NADMIAR `src/lib/format.ts` (helper dla zaplanowanego kodu), BRAK — żaden.
-**Raport (fragment):**
+## Example
+**Situation:** an implementation review of the step "saving accepted flashcards", phase 2. Three sets: 6 files matching,
+EXCESS `src/lib/format.ts` (a helper for planned code), GAP — none.
+**Report (excerpt):**
 ```
-Ugruntowanie: 6/6 ścieżek, 4/4 symbole, TL;DR zgodne z planem · npm test → 48 passed
-| ID | Waga | Wpływ | Wymiar | Miejsce | Ustalenie | Decyzja |
-| F1 | krytyczne | niski | bezpieczeństwo | api/cards/save.ts:18 | endpoint zapisu omija wspólny strażnik autoryzacji | NAPRAWIONE |
-| F2 | obserwacja | wysoki | spójność | db/schema.ts:40 | nowa nazwa statusu w bazie (front, backend, dane historyczne) | POMINIĘTE (notatka) |
-| F3 | ostrzeżenie | niski | wzorce | actions/deck.ts:12 | ręczne sprawdzanie userId zamiast strażnika | LEKCJA + NAPRAWIONE |
-Werdykt: wymaga uwagi → po triażu zatwierdzone
+Grounding: 6/6 paths, 4/4 symbols, TL;DR consistent with the plan · npm test → 48 passed
+| ID | Severity | Impact | Dimension | Place | Finding | Decision |
+| F1 | critical | low | security | api/cards/save.ts:18 | the save endpoint bypasses the shared authorization guard | FIXED |
+| F2 | observation | high | consistency | db/schema.ts:40 | a new status name in the database (frontend, backend, historical data) | SKIPPED (note) |
+| F3 | warning | low | patterns | actions/deck.ts:12 | a manual userId check instead of the guard | LESSON + FIXED |
+Verdict: needs attention → after triage approved
 ```
-Więcej (przegląd planu, dobry plan bez ustaleń): `references/przyklady.md`.
+More (plan review, a good plan with no findings): `references/examples.md`.
 
-## Checklista
-- [ ] tryb wybrany (plan / implementacja); wejście przeczytane, lekcje uwzględnione
-- [ ] plan: spójność, ugruntowanie (linia z liczbami), ryzykowne twierdzenia sprawdzone w kodzie, wymiary
-- [ ] implementacja: trzy zbiory plików, dryf i bezpieczeństwo osobno, kryteria uruchomione, wynik dosłownie
-- [ ] każde ustalenie z wagą, wpływem, miejscem i dowodem; najwyżej 10
-- [ ] triaż z decyzją człowieka przy każdym ustaleniu; lekcja zawsze z pytaniem o poprawkę
-- [ ] raport w `07-review/`; werdykt należy do człowieka
+## Checklist
+- [ ] mode chosen (plan / implementation); input read, lessons taken into account
+- [ ] plan: consistency, grounding (a line with numbers), risky claims checked in code, dimensions
+- [ ] implementation: three sets of files, drift and security separately, criteria run, result verbatim
+- [ ] every finding with severity, impact, place and evidence; at most 10
+- [ ] triage with the human's decision for every finding; a lesson always with the question about the fix
+- [ ] the report in `07-review/`; the verdict belongs to the human
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 2, lekcje 2–3 (przegląd planu, przegląd implementacji, triaż) i moduł 5,
-  lekcja 3 (przegląd w CI) — materiał szkoleniowy (dostęp 2026-10-09).
-- Google Engineering Practices, „What to look for in a code review” — google.github.io/eng-practices (dostęp 2026-10-10).
-- Konwencje fabryki: core-project-record (raport kroku, „Postęp”, lekcje), core-git-workflow (PR, `REVIEW.md`).
-Opisane własnymi słowami.
+## Sources
+- The 10xDevs course, ed. 3 (2026), module 2, lessons 2–3 (plan review, implementation review, triage) and module 5,
+  lesson 3 (review in CI) — training material (accessed 2026-10-09).
+- Google Engineering Practices, "What to look for in a code review" — google.github.io/eng-practices (accessed 2026-10-10).
+- Factory conventions: core-project-record (the step report, "Progress", lessons), core-git-workflow (PR, `REVIEW.md`).
+Described in our own words.

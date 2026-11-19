@@ -1,38 +1,40 @@
 #!/usr/bin/env python3
 """
-Bramka TDD: kod produkcyjny dopiero po czerwonym teście. Tylko biblioteka standardowa; błąd hooka nigdy nie blokuje.
+TDD gate: production code only after a red test. Standard library only; a hook error never blocks.
 
-Śledzi osobno każdy kontekst (sesja główna i każdy subagent) w `.tf/logs/tdd-state.json`:
-  - PostToolUse Edit|Write   — edycja pliku testów;
-  - PostToolUse / PostToolUseFailure Bash — uruchomienie testów i jego wynik (czerwony / zielony);
-  - PreToolUse Edit|Write    — edycja pliku produkcyjnego: sprawdza regułę.
+A red run after a test edit leaves a durable entry in `.tf/logs/tdd-red.jsonl` (test files, time) — from it
+`tf task verify` and `tf trace` take the answer to "was the test red before the code".
+It tracks each context separately (the main session and each subagent) in `.tf/logs/tdd-state.json`:
+  - PostToolUse Edit|Write   — a test file edit;
+  - PostToolUse / PostToolUseFailure Bash — a test run and its result (red / green);
+  - PreToolUse Edit|Write    — a production file edit: checks the rule.
 
-Reguły:
-  A. Pierwsza edycja kodu produkcyjnego w danym kontekście wymaga: edycji testu, a PO NIEJ uruchomienia testów, które
-     NIE przeszły (czerwony test — dowód, że test sprawdza brakujące zachowanie). Test, który od razu przeszedł,
-     niczego nie dowodzi — wyjątek: test charakteryzujący przed refaktoryzacją, oznaczony w pliku testu słowem
-     „charakteryz…”/„characteriz…” (np. qa-spec-first-testing w pack-it).
-  B. Później: po CLAUDE_TDD_MAX_EDITS (domyślnie 12) edycjach kodu produkcyjnego bez nowej edycji testu — następne
-     zachowanie wymaga następnego testu.
-  C. Osłabienie testu: edycja pliku testów, która zmniejsza liczbę asercji lub testów albo dopisuje pominięcie
-     (skip, xfail, @Disabled, xit…). Tryb CLAUDE_TDD_WEAKEN: warn (domyślnie: ostrzeżenie dla człowieka i kontekst dla modelu, bez blokady),
-     ask (decyduje człowiek), deny (blokada), off. Przenoszenie asercji przy refaktoryzacji testów też wywoła regułę —
-     dlatego domyślnie tylko ostrzega.
-  D. Zapis przez powłokę: guard_bash przed wykonaniem stosuje regułę A/B do celów zapisu (`>`, tee, sed -i, cp/mv…);
-     po wykonaniu Bash migawka `git status` (timeout 1,5 s, po przekroczeniu wyłączona do końca sesji; tylko ścieżki,
-     mtime i rozmiar, bez treści) zgłasza plik produkcyjny zmieniony bez czerwonego testu (np. skrypt z pliku).
-     CLAUDE_TDD_BASH=off wyłącza obie kontrole.
-  E. Pętla: ta sama porażka testów (skrót sha1 identyfikatorów testów i typu wyjątku) LOOP_AT razy z rzędu → kontekst
-     „zmień podejście albo eskaluj model”, bez blokady; zielony wynik albo inna porażka zeruje licznik.
-  F. Pliki chronione: po każdym Bash migawka (ścieżka, mtime, rozmiar — bez treści) `.claude/settings*.json`,
-     `.claude/cleanroom.json`, `.claude/hooks/`, `.git/hooks/`, `.git/config` i plików z sekretami w katalogu głównym
-     (wzorce guard_paths) → zmiana = kontekst „zatrzymaj się i powiedz człowiekowi” + komunikat dla człowieka. Działa
-     także przy CLAUDE_TDD=off; wyłącza CLAUDE_GUARD_CHANGES=off. Wykrywa po fakcie, nie zapobiega (to robi piaskownica
-     Bash); zmiana narzędziem Edit/Write (przeszła guard_paths) i pojedyncze `git …` na `.git/config` nie alarmują.
+Rules:
+  A. The first production code edit in a given context requires: a test edit, and AFTER it a run of tests that
+     did NOT pass (a red test — proof that the test checks the missing behavior). A test that passed right away
+     proves nothing — exception: a characterization test before refactoring, marked in the test file with the word
+     „charakteryz…”/„characteriz…” (e.g. qa-spec-first-testing in pack-it).
+  B. Later: after CLAUDE_TDD_MAX_EDITS (default 12) production code edits without a new test edit — the next
+     behavior requires the next test.
+  C. Weakening a test: a test file edit that reduces the number of assertions or tests, or adds a skip
+     (skip, xfail, @Disabled, xit…). Mode CLAUDE_TDD_WEAKEN: warn (default: a warning for the human and context for the model, no block),
+     ask (the human decides), deny (block), off. Moving assertions while refactoring tests also triggers the rule —
+     that is why by default it only warns.
+  D. A write through the shell: before execution guard_bash applies rule A/B to write targets (`>`, tee, sed -i, cp/mv…);
+     after Bash runs, a `git status` snapshot (timeout 1.5 s, once exceeded disabled until the end of the session; paths only,
+     mtime and size, no content) reports a production file changed without a red test (e.g. a script from a file).
+     CLAUDE_TDD_BASH=off disables both checks.
+  E. Loop: the same test failure (a sha1 digest of the test ids and the exception type) LOOP_AT times in a row → the context
+     "change approach or escalate the model", no block; a green result or a different failure resets the counter.
+  F. Protected files: after each Bash, a snapshot (path, mtime, size — no content) of `.claude/settings*.json`,
+     `.claude/cleanroom.json`, `.claude/hooks/`, `.git/hooks/`, `.git/config` and files with secrets in the root directory
+     (guard_paths patterns) → a change = the context "stop and tell the human" + a message for the human. It works
+     also with CLAUDE_TDD=off; CLAUDE_GUARD_CHANGES=off disables it. It detects after the fact and does not prevent (the Bash sandbox
+     does that); a change by the Edit/Write tool (which passed guard_paths) and a single `git …` on `.git/config` do not alarm.
 
-Tryb (zmienna środowiskowa CLAUDE_TDD): strict (domyślnie: blokada z wyjaśnieniem dla agenta), ask (decyduje człowiek),
-off (wyłączone — np. spike, prototyp). Pliki nieobjęte: testy, konfiguracja, style i szablony, dokumentacja, `.claude/`,
-`.tf/factory/`, wygenerowane katalogi; dodatkowe wzorce w CLAUDE_TDD_EXEMPT (oddzielone przecinkami, np. "src/migrations/*").
+Mode (environment variable CLAUDE_TDD): strict (default: a block with an explanation for the agent), ask (the human decides),
+off (disabled — e.g. a spike, a prototype). Files not covered: tests, configuration, styles and templates, documentation, `.claude/`,
+`.tf/factory/`, generated directories; extra patterns in CLAUDE_TDD_EXEMPT (comma-separated, e.g. "src/migrations/*").
 """
 from __future__ import annotations
 
@@ -48,9 +50,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
+        return None
+try:
+    from hook_errors import record_block  # block to .tf/logs/hook-blocks.jsonl (warning after an update)
+except ImportError:
+    def record_block(hook: str, decision: str) -> None:
         return None
 
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
@@ -71,7 +78,7 @@ TEST_CMD_RE = re.compile(
     r"\b((npm|pnpm|yarn|bun)( run)? (test|test:\S+)|npx (vitest|jest|playwright test|mocha)|vitest|jest|mocha"
     r"|pytest|python3? -m (pytest|unittest)|mvnw? (\S+ )*(test|verify)|gradlew? (\S+ )*test|go test|cargo test"
     r"|dotnet test|nx (test|run-many|affected)\b[^\n]*test|ng test|deno test|rspec|phpunit|tox)\b"
-    # Testy jako samodzielne skrypty: python3 tests/test_x.py, py -3 .claude\tests\test_x.py, pętla po tests/test_*.py.
+    # Tests as standalone scripts: python3 tests/test_x.py, py -3 .claude\tests\test_x.py, a loop over tests/test_*.py.
     r"|\b(python3?|py)(\s+-\S+)*\s+[\"']?([^\s\"';|&]*[/\\])?(test_[^\s/\\\"';|&]*|[^\s/\\\"';|&]+_test)\.py\b"
     r"|\bfor\s+\w+\s+in\s+[^;\n]*\btest_\*[^;\n]*\.py\b")
 FAIL_RE = re.compile(r"\b(FAIL(ED)?|failing|failures?: [1-9]|[1-9]\d* (failed|failing)|AssertionError|"
@@ -123,14 +130,14 @@ def ctx_key(data: dict) -> str:
 
 
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
-# „Czerwony”, który nie wykonał żadnej asercji (brak plików testów, błąd składni w teście, zła konfiguracja runnera).
+# A "red" that executed no assertion (no test files, a syntax error in the test, a bad runner configuration).
 INVALID_RED_RE = re.compile(
     r"No test files found|No tests found|no tests ran|collected 0 items|\b0 tests? (?:passed|ran|run)\b|"
     r"No tests were executed|Transform failed with \d+ error|\[PARSE_ERROR\]|Your test suite must contain at least one test|"
     r"^(?:E\s+)?\s*(?:SyntaxError|ParseError|IndentationError)\b|"
     r"\.(?:test|spec)\.[cm]?[jt]sx?\(\d+,\d+\): error TS\d+|"
     r"Cannot find module '[^']*\.(?:test|spec)(?:\.[cm]?[jt]sx?)?'", re.I | re.M)
-# Brak testowanego modułu lub funkcji to poprawny czerwony („jeszcze tego nie ma”).
+# A missing module or function under test is a valid red ("it does not exist yet").
 VALID_MISSING_RE = re.compile(
     r"Cannot find module '(?![^']*\.(?:test|spec)\b)[^']+'|"
     r"Failed to (?:load|resolve) (?:url|import) [\"']?(?![^\s\"']*\.(?:test|spec)\.)[^\s\"']+|"
@@ -167,13 +174,14 @@ def bash_failed(data: dict) -> bool:
 
 def deny(reason: str) -> None:
     mode = os.environ.get("CLAUDE_TDD", "strict").lower()
+    record_block("tdd_guard", "ask" if mode == "ask" else "deny")
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
                                              "permissionDecision": "ask" if mode == "ask" else "deny",
                                              "permissionDecisionReason": reason}}, ensure_ascii=False))
 
 
 def weakening(tool: str, inp: dict, root: Path, path: str) -> list[str]:
-    """Co osłabia test w tej edycji: mniej asercji, mniej testów, nowe pominięcie."""
+    """What weakens a test in this edit: fewer assertions, fewer tests, a new skip."""
     pairs: list[tuple[str, str]] = []
     if tool == "Edit":
         pairs = [(str(inp.get("old_string") or ""), str(inp.get("new_string") or ""))]
@@ -188,11 +196,11 @@ def weakening(tool: str, inp: dict, root: Path, path: str) -> list[str]:
     new = "\n".join(b for _, b in pairs)
     found = []
     if len(ASSERT_RE.findall(new)) < len(ASSERT_RE.findall(old)):
-        found.append(f"mniej asercji ({len(ASSERT_RE.findall(old))} → {len(ASSERT_RE.findall(new))})")
+        found.append(f"fewer assertions ({len(ASSERT_RE.findall(old))} → {len(ASSERT_RE.findall(new))})")
     if len(TESTDEF_RE.findall(new)) < len(TESTDEF_RE.findall(old)):
-        found.append("usunięty test")
+        found.append("a removed test")
     if len(SKIP_RE.findall(new)) > len(SKIP_RE.findall(old)):
-        found.append("dopisane pominięcie testu (skip/xfail/disabled)")
+        found.append("an added test skip (skip/xfail/disabled)")
     return found
 
 
@@ -203,15 +211,27 @@ def weaken_check(tool: str, inp: dict, root: Path, path: str) -> None:
     found = weakening(tool, inp, root, path)
     if not found:
         return
-    reason = (f"TDD: ta edycja może osłabić test {path}: {', '.join(found)}. Testów nie osłabiasz, żeby przeszły — "
-              "popraw kod albo uzasadnij zmianę testu (zmienione wymaganie, refaktoryzacja testu bez utraty sprawdzeń).")
+    reason = (f"TDD: this edit may weaken the test {path}: {', '.join(found)}. You do not weaken tests to make them pass — "
+              "fix the code or justify the test change (a changed requirement, a test refactor without losing checks).")
     if mode in ("ask", "deny"):
+        record_block("tdd_guard", mode)
         print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": mode,
                                                  "permissionDecisionReason": reason}}, ensure_ascii=False))
-    else:   # warn: ostrzeżenie dla człowieka i kontekst dla modelu, bez decyzji o uprawnieniach
+    else:   # warn: a warning for the human and context for the model, with no permission decision
         print(json.dumps({"systemMessage": reason,
                           "hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": reason}},
                          ensure_ascii=False))
+
+
+def log_red(root: Path, tests: list, command: str) -> None:
+    """A durable "these tests were red" entry (`.tf/logs/tdd-red.jsonl`): after a test edit the run did not pass on
+    assertions. `tf task verify` moves the slice's file entries into the evidence, and `tf trace` shows them in the criterion trace."""
+    import datetime as dt
+    p = root / ".tf" / "logs" / "tdd-red.jsonl"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    row = {"at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "tests": tests, "command": command[:200]}
+    with p.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
 def ctx_state(state: dict, key: str) -> dict:
@@ -222,14 +242,14 @@ def ctx_state(state: dict, key: str) -> dict:
 
 
 def may_start(s: dict) -> bool:
-    """Reguła A spełniona: czerwony po edycji testu albo zielony oznaczonego testu charakteryzującego."""
+    """Rule A satisfied: red after a test edit, or green for a marked characterization test."""
     red_after_test = s["test_edit"] >= 0 and s["red"] > s["test_edit"]
     green_after_test = s["test_edit"] >= 0 and s["green"] > s["test_edit"] and s["red"] < s["test_edit"]
     return red_after_test or (green_after_test and s["marked"])
 
 
 def gate(s: dict, path: str) -> str | None:
-    """Reguły A i B dla zmiany pliku produkcyjnego (Edit albo zapis przez Bash); None = dozwolone."""
+    """Rules A and B for a production file change (Edit or a write through Bash); None = allowed."""
     if not s["started"]:
         if may_start(s):
             s["started"] = True
@@ -237,24 +257,24 @@ def gate(s: dict, path: str) -> str | None:
         green_after_test = s["test_edit"] >= 0 and s["green"] > s["test_edit"] and s["red"] < s["test_edit"]
         if green_after_test and not s["green_warned"]:
             s["green_warned"] = True
-            return ("TDD: nowy test od razu PRZESZEDŁ, więc niczego nie dowodzi. Popraw test tak, żeby sprawdzał "
-                    "brakujące zachowanie i nie przechodził (czerwony z właściwego powodu), uruchom go i dopiero "
-                    "wtedy pisz kod. Jeśli to test charakteryzujący przed refaktoryzacją, oznacz go w pliku testu "
-                    "jako [charakteryzujący].")
-        return (f"TDD: zanim zmienisz kod produkcyjny ({path}), napisz test opisujący oczekiwane zachowanie "
-                "(przy błędzie: test odtwarzający błąd), uruchom testy i pokaż, że ten test NIE przechodzi "
-                "z właściwego powodu. Potem minimalny kod → zielony → refaktoryzacja. Wyjątki: "
-                "konfiguracja, style, dokumentacja; spike — człowiek ustawia CLAUDE_TDD=off.")
+            return ("TDD: the new test PASSED at once, so it proves nothing. Fix the test so that it checks "
+                    "the missing behaviour and fails (red for the right reason), run it, and only "
+                    "then write the code. If it is a characterization test before a refactor, mark it in the test file "
+                    "as [characterization].")
+        return (f"TDD: before you change production code ({path}), write a test describing the expected behaviour "
+                "(for a bug: a test reproducing the bug), run the tests and show that this test does NOT pass "
+                "for the right reason. Then minimal code → green → refactor. Exceptions: "
+                "configuration, styles, docs; a spike — a human sets CLAUDE_TDD=off.")
     limit = int(os.environ.get("CLAUDE_TDD_MAX_EDITS", "12") or 12)
     if s["prod_since_test"] >= limit:
-        return (f"TDD: {s['prod_since_test']} zmian kodu produkcyjnego bez nowego testu. Następne zachowanie = "
-                "następny test: dopisz test (czerwony), potem kod. Jeśli to tylko refaktoryzacja przy zielonych "
-                "testach, uruchom testy i dopisz/zaktualizuj test, który ją zabezpiecza.")
+        return (f"TDD: {s['prod_since_test']} production code changes without a new test. The next behaviour = "
+                "the next test: add a test (red), then the code. If it is only a refactor with green "
+                "tests, run the tests and add/update the test that guards it.")
     return None
 
 
 def bash_pre(data: dict, paths: list[str]) -> str | None:
-    """Dla guard_bash: zapis plików produkcyjnych przez polecenie powłoki podlega tym samym regułom co Edit."""
+    """For guard_bash: writing production files through a shell command is subject to the same rules as Edit."""
     if os.environ.get("CLAUDE_TDD", "strict").lower() == "off" or not paths:
         return None
     root = root_of(data)
@@ -266,12 +286,12 @@ def bash_pre(data: dict, paths: list[str]) -> str | None:
     return reason
 
 
-SNAP_MAX = 300   # tyle plików produkcyjnych naraz zmienionych w drzewie roboczym śledzimy; więcej → kontrola wyłączona
+SNAP_MAX = 300   # we track this many production files changed at once in the working tree; more → the check is disabled
 
 
 def bash_changes(root: Path, state: dict, data: dict) -> list[str]:
-    """Pliki produkcyjne zmienione od poprzedniego polecenia (git status + mtime i rozmiar, bez treści).
-    Pierwsze wywołanie w sesji tylko zapisuje stan wyjściowy. Timeout albo brak gita → wyłączone do końca sesji."""
+    """Production files changed since the previous command (git status + mtime and size, no content).
+    The first call in a session only records the baseline state. Timeout or no git → disabled until the end of the session."""
     if not (root / ".git").exists():
         return []
     snap = state.setdefault("snap:" + str(data.get("session_id") or "?"), {})
@@ -291,7 +311,7 @@ def bash_changes(root: Path, state: dict, data: dict) -> list[str]:
             continue
         if len(e) < 4:
             continue
-        skip = e[0] in "RC"   # przy zmianie nazwy następny wpis to stara ścieżka
+        skip = e[0] in "RC"   # on a rename the next entry is the old path
         path = e[3:]
         if is_production(path):
             try:
@@ -312,7 +332,7 @@ def bash_changes(root: Path, state: dict, data: dict) -> list[str]:
 
 GUARD_FILES = (".claude/settings.json", ".claude/settings.local.json", ".claude/cleanroom.json", ".git/config")
 GUARD_DIRS = (".claude/hooks", ".git/hooks")
-GUARD_MAX = 200   # tyle plików chronionych najwyżej śledzimy (stat, bez treści)
+GUARD_MAX = 200   # we track at most this many protected files (stat, no content)
 GIT_ONLY_RE = re.compile(r"^\s*git\s[^;&|`$()<>\n]*$")
 
 
@@ -329,7 +349,7 @@ def _secret_res():
 
 
 def guarded_snapshot(root: Path) -> dict:
-    """Ścieżka → [mtime_ns, rozmiar] plików chronionych i plików z sekretami w katalogu głównym; treści nie czyta."""
+    """Path → [mtime_ns, size] of protected files and files with secrets in the root directory; does not read content."""
     paths = [root / f for f in GUARD_FILES]
     for d in GUARD_DIRS:
         try:
@@ -355,8 +375,8 @@ def guarded_snapshot(root: Path) -> dict:
 
 
 def guard_changes(root: Path, state: dict, data: dict) -> list[str]:
-    """Reguła F: pliki chronione i z sekretami zmienione od poprzedniego polecenia. Pierwsze wywołanie w sesji tylko
-    zapisuje stan wyjściowy; pojedyncze polecenie `git …` może zmienić `.git/config` (push -u, branch)."""
+    """Rule F: protected files and files with secrets changed since the previous command. The first call in a session only
+    records the baseline state; a single `git …` command may change `.git/config` (push -u, branch)."""
     key = "guard:" + str(data.get("session_id") or "?")
     prev, cur = state.get(key), guarded_snapshot(root)
     state[key] = cur
@@ -368,18 +388,18 @@ def guard_changes(root: Path, state: dict, data: dict) -> list[str]:
             continue
         if p == ".git/config" and GIT_ONLY_RE.match(str((data.get("tool_input") or {}).get("command") or "")):
             continue
-        changed.append(f"{p} ({'nowy' if p not in prev else 'usunięty' if p not in cur else 'zmieniony'})")
+        changed.append(f"{p} ({'new' if p not in prev else 'deleted' if p not in cur else 'changed'})")
     return changed
 
 
 def guard_note(root: Path, state: dict, data: dict) -> dict:
-    """Wyjście reguły F (kontekst dla modelu i komunikat dla człowieka) albo {}; tylko ścieżki, bez treści."""
+    """Output of rule F (context for the model and a message for the human) or {}; paths only, no content."""
     if os.environ.get("CLAUDE_GUARD_CHANGES", "on").lower() == "off":
         return {}
     event, tool = data.get("hook_event_name"), data.get("tool_name") or ""
     if event == "PostToolUse" and tool in ("Edit", "Write", "MultiEdit"):
         key = "guard:" + str(data.get("session_id") or "?")
-        if isinstance(state.get(key), dict):   # zmiana narzędziem przeszła guard_paths — nowy stan wyjściowy
+        if isinstance(state.get(key), dict):   # a change by the tool passed guard_paths — a new baseline state
             state[key] = guarded_snapshot(root)
         return {}
     if not (event in ("PostToolUse", "PostToolUseFailure") and tool == "Bash"):
@@ -388,10 +408,10 @@ def guard_note(root: Path, state: dict, data: dict) -> dict:
     if not changed:
         return {}
     names = ", ".join(changed[:8])
-    return {"context": (f"[tdd_guard] Polecenie zmieniło pliki chronione lub z sekretami: {names}. Zatrzymaj się i "
-                        "powiedz człowiekowi, co je zmieniło i dlaczego; nie czytaj ich treści i nie cofaj zmian "
-                        "człowieka (core-agent-security)."),
-            "human": f"⚠ tdd_guard: polecenie Bash zmieniło pliki chronione: {names} — sprawdź, czy to zamierzone."}
+    return {"context": (f"[tdd_guard] A command changed protected files or files with secrets: {names}. Stop and "
+                        "tell a human what changed them and why; do not read their content and do not undo a human's "
+                        "changes (core-agent-security)."),
+            "human": f"⚠ tdd_guard: a Bash command changed protected files: {names} — check whether that was intended."}
 
 
 FAIL_ID_RES = [
@@ -405,8 +425,8 @@ LOOP_AT = 3
 
 
 def same_failure(s: dict, text: str) -> str:
-    """Odcisk porażki = skrót (id padających testów + typy wyjątków); w stanie tylko skrót. Co LOOP_AT powtórzeń
-    tego samego odcisku z rzędu → podpowiedź zmiany podejścia (bez blokady)."""
+    """Failure fingerprint = a digest (ids of failing tests + exception types); only the digest is kept in the state. Every LOOP_AT repetitions
+    of the same fingerprint in a row → a hint to change approach (no block)."""
     ids = sorted({m for r in FAIL_ID_RES for m in r.findall(text)})
     exc = sorted(set(EXC_RE.findall(text)))
     if not ids and not exc:
@@ -417,9 +437,9 @@ def same_failure(s: dict, text: str) -> str:
     s["fail_fp"] = fp
     if s["fail_n"] % LOOP_AT:
         return ""
-    return (f"[tdd_guard] Ta sama porażka {s['fail_n']}. raz z rzędu (ten sam test i typ błędu) — zmień podejście "
-            "albo eskaluj model (core-cost-control): nazwij, co nie zadziałało, sprawdź założenie o przyczynie, "
-            "zamiast kolejnej podobnej poprawki.")
+    return (f"[tdd_guard] The same failure {s['fail_n']} times in a row (the same test and error type) — change the approach "
+            "or escalate the model (core-cost-control): name what did not work, check the assumption about the cause, "
+            "instead of another similar fix.")
 
 
 def emit(event: str, notes: list[str], guard: dict) -> None:
@@ -437,8 +457,8 @@ def main() -> int:
         root = root_of(data)
         event = data.get("hook_event_name")
         state = load(root)
-        guard = guard_note(root, state, data)   # reguła F działa też przy CLAUDE_TDD=off
-    except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        guard = guard_note(root, state, data)   # rule F also works with CLAUDE_TDD=off
+    except Exception as e:  # the hook does not interrupt the session; the error goes to the log
         record_error("tdd_guard", e)
         return 0
     if os.environ.get("CLAUDE_TDD", "strict").lower() == "off":
@@ -446,7 +466,7 @@ def main() -> int:
             if str(event).startswith("PostToolUse"):
                 emit(event, [], guard)
                 save(root, state)
-        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("tdd_guard", e)
         return 0
     try:
@@ -461,25 +481,29 @@ def main() -> int:
             if TEST_CMD_RE.search(str(inp.get("command") or "")):
                 if bash_failed(data):
                     s["red"] = s["seq"]
+                    if not red_without_assertion(data) and s.get("tests"):
+                        log_red(root, s.pop("tests"), str(inp.get("command") or ""))
                     if red_without_assertion(data):
-                        notes.append("[tdd_guard] To uruchomienie nie wykonało asercji (brak plików testów, błąd "
-                                     "składni albo konfiguracji runnera) — to nie jest czerwony test. Napraw "
-                                     "uruchomienie i zobacz test padający na brakującym zachowaniu, zanim napiszesz "
-                                     "kod produkcyjny.")
+                        notes.append("[tdd_guard] This run executed no assertions (no test files, a syntax error "
+                                     "or a runner configuration error) — that is not a red test. Fix "
+                                     "the run and see a test failing on the missing behaviour before you write "
+                                     "production code.")
                     notes.append(same_failure(s, response_text(data)))
                 else:
                     s["green"] = s["seq"]
                     s["fail_fp"], s["fail_n"] = None, 0
+                    s.pop("tests", None)
             if os.environ.get("CLAUDE_TDD_BASH", "on").lower() != "off":
                 changed = bash_changes(root, state, data)
                 if changed and not (s["started"] or may_start(s)):
-                    notes.append(f"[tdd_guard] TDD: polecenie zmieniło kod produkcyjny bez czerwonego testu: "
-                                 f"{', '.join(changed[:5])}. Jeśli to zmiana z tego polecenia, cofnij ją albo najpierw "
-                                 "napisz test i pokaż, że nie przechodzi. Zmian człowieka nie cofaj.")
+                    notes.append(f"[tdd_guard] TDD: a command changed production code without a red test: "
+                                 f"{', '.join(changed[:5])}. If the change came from this command, undo it or first "
+                                 "write a test and show that it fails. Do not undo a human's changes.")
             emit(event, notes, guard)
         elif event == "PostToolUse" and tool in ("Edit", "Write", "MultiEdit") and path:
             if is_test(path):
                 s["test_edit"], s["prod_since_test"] = s["seq"], 0
+                s["tests"] = ([t for t in s.get("tests", []) if t != path] + [path])[-20:]   # for the red-test entry
                 try:
                     s["marked"] = s["marked"] or bool(MARK_RE.search((root / path).read_text(encoding="utf-8",
                                                                                                 errors="ignore")))
@@ -488,7 +512,7 @@ def main() -> int:
             elif is_production(path):
                 s["prod_since_test"] += 1
                 snap = state.get("snap:" + str(data.get("session_id") or "?"))
-                if isinstance(snap, dict) and isinstance(snap.get("files"), dict):   # zmiana przez Edit przeszła bramkę
+                if isinstance(snap, dict) and isinstance(snap.get("files"), dict):   # a change by Edit passed the gate
                     try:
                         st = (root / path).stat()
                         snap["files"][path] = [st.st_mtime_ns, st.st_size]
@@ -505,8 +529,8 @@ def main() -> int:
                 return 0
         s["ts"] = int(time.time())
         save(root, state)
-    except Exception as e:  # błąd strażnika nie blokuje edycji (fałszywa blokada byłaby gorsza), ale w tym
-        record_error("tdd_guard", e)  # wywołaniu TDD nie zostało sprawdzone — dziennik i tf doctor to pokazują
+    except Exception as e:  # a guard error does not block the edit (a false block would be worse), but in this
+        record_error("tdd_guard", e)  # call TDD was not checked — the log and tf doctor show this
     return 0
 
 

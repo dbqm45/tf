@@ -1,46 +1,46 @@
-# Plan zmiany {CHG}
+# Plan of change {CHG}
 
-Cięcia (TSK) — każde daje wartość samo i kończy się weryfikacją. Klucze cięć dopisz też do `tasks` w nagłówku,
-a linię wydania (R1 = MVP) i flagę — do `release.yaml` (te same wartości co w kolumnach poniżej).
+Cuts (TSK) — each delivers value on its own and ends with verification. Also add the cut keys to `tasks` in the header,
+and the release line (R1 = MVP) and the flag — to `release.yaml` (the same values as in the columns below).
 
-Rodzaj: „cięcie” (wartość: „użytkownik może …”) albo „fundament” (wartość: „(fundament) … jest gotowe”). Fundament
-musi mieć w „Odblokowuje” cięcia tej zmiany (TSK), których wymaga; cięcie — dosłowne ID wymagań w „Wymagania”
-(`US-02`, `FR-007`) albo weryfikację. To samokontrola planu cięć; `decision_record.py check` i REL-008 w ci_for_sdlc
-sprawdzają ją tak samo.
+Kind: "slice" (value: "the user can …") or "foundation" (value: "(foundation) … is ready"). A foundation
+must list in "Unblocks" the cuts of this change (TSK) that need it; a slice — literal requirement IDs in "Requirements"
+(`US-02`, `FR-007`) or a verification. This is the cut plan's self-check; `decision_record.py check` and REL-008 in ci_for_sdlc
+check it the same way.
 
-| Cięcie | Rodzaj | Wydanie | Flaga | Wartość | Wymagania | Odblokowuje | Pliki | Weryfikacja |
+| Slice | Kind | Release | Flag | Value | Requirements | Unblocks | Files | Verification |
 |---|---|---|---|---|---|---|---|---|
-| TSK-? | cięcie | R1 | — | użytkownik może … | US-? | — | | <polecenie i oczekiwany wynik> |
+| TSK-? | slice | R1 | — | the user can … | US-? | — | | <command and expected result> |
 
-## Rozważone opcje
+## Options considered
 
-Co najmniej dwie opcje z plusami, minusami i kosztem; wskaż wybór i powód (N20; `arch-tech-selection` §3). Odrzucone
-opcje trafiają do uzasadnienia decyzji B3 i karty bramki (N11). `decision_record.py check` odrzuca plan z jedną
-opcją.
+At least two options with pros, cons and cost; state the choice and the reason (N20; `arch-tech-selection` §3). Rejected
+options go into the justification of decision B3 and the gate card (N11). `decision_record.py check` rejects a plan with one
+option.
 
-### Opcja A — <nazwa>
+### Option A — <name>
 
-- Plusy: …
-- Minusy: …
-- Koszt: … (nauka, złożoność, utrzymanie)
+- Pros: …
+- Cons: …
+- Cost: … (learning, complexity, maintenance)
 
-### Opcja B — <nazwa>
+### Option B — <name>
 
-- Plusy: …
-- Minusy: …
-- Koszt: …
+- Pros: …
+- Cons: …
+- Cost: …
 
-**Wybór:** Opcja <A/B> — <powód odwołujący się do czynników z `arch-quality-attributes` i do domeny>.
+**Choice:** Option <A/B> — <a reason referring to factors from `arch-quality-attributes` and to the domain>.
 
-## Cele zmiany (`targets`)
+## Change targets (`targets`)
 
-Mierzalne progi, które zmiana musi spełnić przed B4 (Z7b-1, DZ7). Architekt proponuje je tutaj, człowiek
-zatwierdza na B3; sprawdza ci_for_sdlc (Z7b-1b). Te same wartości wpisz do `release.yaml` pod kluczem `targets` —
-ten dokument jest dla człowieka, plik YAML dla maszyn. Dla produktu AI progi ewaluacji są obowiązkowe (DZ7).
+Measurable thresholds the change must meet before B4 (Z7b-1, DZ7). The architect proposes them here, the human
+approves them at B3; ci_for_sdlc checks them (Z7b-1b). Write the same values into `release.yaml` under the `targets` key —
+this document is for the human, the YAML file for machines. For an AI product evaluation thresholds are mandatory (DZ7).
 
-| Nazwa                      | Rodzaj      | Próg       | Narzędzie | Uzasadnienie (czynnik / ryzyko)          |
+| Name                       | Kind        | Threshold  | Tool      | Justification (factor / risk)             |
 |----------------------------|-------------|------------|-----------|-------------------------------------------|
-| pokrycie zmienionych linii | coverage    | >= 90%     | …         | … (N4)                                    |
-| mutacje zmienionego kodu   | mutation    | >= 70%     | …         | StrykerJS (JS/TS) albo mutmut (Python); N4|
-| p95 dla ścieżki X          | performance | <= 400ms   | …         | wynika z SLO 99,5% w 28 dni (opcjonalnie) |
-| <nazwa ewaluacji>          | evaluation  | >= <wynik> | <zestaw>  | **wymagane dla produktu AI (DZ7)**         |
+| changed-line coverage      | coverage    | >= 90%     | …         | … (N4)                                    |
+| mutations of changed code  | mutation    | >= 70%     | …         | StrykerJS (JS/TS) or mutmut (Python); N4  |
+| p95 for path X             | performance | <= 400ms   | …         | follows from an SLO of 99.5% in 28 days (optional) |
+| <evaluation name>          | evaluation  | >= <score> | <dataset> | **required for an AI product (DZ7)**      |

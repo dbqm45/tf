@@ -1,63 +1,63 @@
 ---
 name: ddd-model-stress-test
-description: Użyj przy teście rozszerzalności modelu wzdłuż metryki biznesowej — wymagania na ślepo, wpływ na moduły.
+description: Use for testing a model's extensibility along a business metric — blind requirements, impact on modules.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj, by sprawdzić rozszerzalność modelu/dekompozycji wzdłuż metryki biznesowej — brief bez rozwiązania, wymagania generowane „na ślepo” (agent bez wglądu w architekturę), ocena wpływu na moduły, porównanie dekompozycji. Nie do zbierania wymagań od klienta ani pomiaru sprzężeń w kodzie (ddd-connascence-analysis)."
-  slowa: "czy model wytrzyma przyszłe wymagania, rozszerzalność, nowe wymagania, porównanie dekompozycji, wpływ zmian na moduły"
+  review: "2027-10-17"
+  catalog: "Use to check the extensibility of a model/decomposition along a business metric — a brief without a solution, requirements generated \"blind\" (an agent without insight into the architecture), an assessment of the impact on modules, a comparison of decompositions. Not for gathering requirements from a client or measuring coupling in code (ddd-connascence-analysis)."
+  keywords: "czy model wytrzyma przyszłe wymagania, rozszerzalność, nowe wymagania, porównanie dekompozycji, wpływ zmian na moduły, will the model withstand future requirements, extensibility, new requirements, comparison of decompositions, impact of changes on modules"
 ---
 
-# Test obciążeniowy modelu („potrząśnij modelem”)
+# Model stress test ("shake the model")
 
-Pytanie: **ile modułów musi się zmienić, gdy biznes zechce poprawić swoją metrykę?** Dobra dekompozycja przyjmuje typowe
-zmiany lokalnie. Test ma sens tylko wtedy, gdy wymagania wymyśla ktoś, kto **nie widział architektury** — wymagania
-pisane ze znajomością modułów pasują do nich z konstrukcji i niczego nie dowodzą.
+The question: **how many modules must change when the business wants to improve its metric?** A good decomposition absorbs typical
+changes locally. The test makes sense only when the requirements are invented by someone who **has not seen the architecture** — requirements
+written with knowledge of the modules fit them by construction and prove nothing.
 
-## Przebieg
-1. **Metryka** — od człowieka, dosłownie (np. „marża na projekcie”, „czas od zamówienia do dostawy”). Nigdy jej nie wymyślaj.
-   Metrykę opisaną rozwiązaniem („szybsze API”) przeformułuj z człowiekiem na liczbę biznesową. Bramka.
-2. **Brief biznesowy** (główny wątek) → `docs/project/02-domain/_blind/brief.md`. Opowieść o **działalności**: co firma robi i dla kogo,
-   gdzie zarabia i ryzykuje, reguły gry, co już umie, słownik, skala. Materiały techniczne (mapa kontekstów, moduły) czytasz jako
-   źródło wiedzy o biznesie, ale ich **formę usuwasz**: `references/business-brief.md`. Dwa testy przed wydaniem: lustra
-   i niezmienności. Bramka.
-3. *(opcjonalnie)* **Przegląd konkurencji** → `docs/project/02-domain/_blind/competitors.md` (`references/competitor-digest.md`); sieć tylko za zgodą.
-4. **Wymagania na ślepo** — agent `blind-analyst` (świeży kontekst, tylko Read; hook `cleanroom_guard.py` w profilu `blind`
-   pozwala mu czytać wyłącznie `docs/project/02-domain/_blind/**`). Dostaje: metrykę, ścieżki do briefu/przeglądu, liczbę wymagań.
-   W briefie dla niego **nie podawaj** nazw modułów ani ścieżek spoza `02-domain/_blind/`. Wynik → `02-domain/_blind/requirements.md`.
-   Bramka: człowiek zatwierdza i **zamraża** zbiór.
-5. **Ocena wpływu** (dopiero teraz architektura) → `docs/project/02-domain/stress/<metryka>.md` (`references/change-impact.md`).
+## Flow
+1. **Metric** — from the human, verbatim (e.g. "margin per project", "time from order to delivery"). Never invent it.
+   A metric described by a solution ("a faster API") you reformulate with the human into a business number. Gate.
+2. **Business brief** (the main thread) → `docs/project/02-domain/_blind/brief.md`. A story about the **business**: what the company does and for whom,
+   where it earns and takes risks, the rules of the game, what it can already do, the vocabulary, the scale. You read technical materials (the context map, modules) as
+   a source of knowledge about the business, but you **remove their form**: `references/business-brief.md`. Two tests before release: the mirror test
+   and the invariance test. Gate.
+3. *(optional)* **Competitor review** → `docs/project/02-domain/_blind/competitors.md` (`references/competitor-digest.md`); the network only with consent.
+4. **Blind requirements** — the `blind-analyst` agent (a fresh context, Read only; the `cleanroom_guard.py` hook in the `blind` profile
+   lets it read only `docs/project/02-domain/_blind/**`). It gets: the metric, the paths to the brief/review, the number of requirements.
+   In the brief for it **do not give** module names or paths outside `02-domain/_blind/`. Result → `02-domain/_blind/requirements.md`.
+   Gate: the human approves and **freezes** the set.
+5. **Impact assessment** (only now the architecture) → `docs/project/02-domain/stress/<metric>.md` (`references/change-impact.md`).
 
-## Wymaganie z generatora
-- **Prośba** („co gdyby biznes chciał…”), **Mechanizm** (łańcuch przyczynowy do metryki), **Podstawa** (fakt z briefu lub wpis
-  z przeglądu). Bez podstawy → odrzuć albo oznacz `ambitne:`.
-- Zakaz słownictwa rozwiązań i przewidywania, co się zmieni w systemie.
-- Różne dźwignie (reguły, oferta, ceny, presja zewnętrzna) i różna ambicja; z przeglądu konkurencji najwyżej 1/3 wymagań.
-- Braki w materiale generator zgłasza zamiast zgadywać.
+## A requirement from the generator
+- **Request** ("what if the business wanted…"), **Mechanism** (the causal chain to the metric), **Basis** (a fact from the brief or an entry
+  from the review). Without a basis → reject it or mark it `ambitious:`.
+- A ban on solution vocabulary and on predicting what will change in the system.
+- Different levers (rules, offer, prices, external pressure) and different ambition; at most 1/3 of the requirements from the competitor review.
+- The generator reports gaps in the material instead of guessing.
 
-## Wynik i użycie
-- Rozkład klas: **lokalne** (0–1 modułów) · **rozproszone** (≥ 2) · **nowy moduł** (wygrywa z pozostałymi).
-- Ten sam zamrożony zbiór można puścić przeciw **innej** dekompozycji (powtarzasz tylko krok 5) — to uczciwe porównanie
-  wariantów granic (ddd-strategic-analysis) i dowód do ADR.
-- Bez ocen „dobrze/źle” — raport pokazuje, gdzie model się napina; decyzję podejmuje człowiek.
+## Result and use
+- The distribution of classes: **local** (0–1 modules) · **distributed** (≥ 2) · **new module** (wins over the others).
+- The same frozen set can be run against **another** decomposition (you repeat only step 5) — this is a fair comparison of
+  boundary variants (ddd-strategic-analysis) and evidence for an ADR.
+- No "good/bad" judgements — the report shows where the model strains; the human makes the decision.
 
-## Szczelność izolacji
-Hook pilnuje plików, ale nie treści, którą agent dostaje inaczej: **brief w wywołaniu** (tylko metryka i ścieżki), `CLAUDE.md`
-projektu (ładowany każdemu agentowi — nie opisuj w nim modułów) i sam brief (test lustra). Generator uruchamiaj zawsze jako
-podagenta — w głównym wątku izolacja nie działa.
+## Isolation tightness
+The hook guards files, but not content the agent gets in other ways: **the brief in the call** (only the metric and the paths), the project's `CLAUDE.md`
+(loaded for every agent — do not describe the modules in it) and the brief itself (the mirror test). Always run the generator as
+a subagent — in the main thread the isolation does not work.
 
-## Koszt
-Brief i przegląd konkurencji robisz raz i używasz dla wielu metryk; generator na modelu std; inwentarz zdolności modułów zapisz
-raz (`02-domain/stress/modules.md`) i używaj ponownie.
+## Cost
+You make the brief and the competitor review once and use them for many metrics; the generator on the std model; write the inventory of module capabilities
+once (`02-domain/stress/modules.md`) and reuse it.
 
-## Przykład
-**Sytuacja:** „Software house, moduły `oferty`, `projekty`, `czas-pracy`, `fakturowanie`. Metryka zarządu: marża na projekcie.”
-**Wynik** (8 wymagań na ślepo, zamrożone; fragment raportu):
+## Example
+**Situation:** "A software house, modules `offers`, `projects`, `time-tracking`, `invoicing`. The board's metric: margin per project."
+**Result** (8 blind requirements, frozen; a fragment of the report):
 
-| Wymaganie | Zmienione moduły | Klasa | Dlaczego |
+| Requirement | Changed modules | Class | Why |
 |---|---|---|---|
-| W-1 alert przy 80% budżetu godzin | projekty | lokalne | godziny tylko odczytywane |
-| W-3 rezerwa na ryzyko w ryczałcie | oferty, fakturowanie | rozproszone | zmienia wycenę i fakturę końcową |
-| W-7 premia od marży dla kierownika | 0 (+1 nowy) | nowy moduł | brak naturalnego miejsca |
+| R-1 alert at 80% of the hours budget | projects | local | hours only read |
+| R-3 risk reserve in a fixed price | offers, invoicing | distributed | changes the quote and the final invoice |
+| R-7 margin bonus for the manager | 0 (+1 new) | new module | no natural place |
 
-Rozkład: lokalne 3 · rozproszone 4 · nowy moduł 1. Bez ocen — decyzja człowieka.
-Więcej przykładów: `references/przyklady.md`.
+Distribution: local 3 · distributed 4 · new module 1. No judgements — the human's decision.
+More examples: `references/examples.md`.

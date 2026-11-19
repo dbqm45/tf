@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy drogi powrotnej do fabryki: factory_feedback.py (zgłoszenie z projektu) i feedback_report.py (zbiorczy raport)."""
+"""Tests of the return path to the factory: factory_feedback.py (a report from a project) and feedback_report.py (the aggregate report)."""
 import json
 import os
 import subprocess
@@ -35,8 +35,10 @@ def project(base: Path, source: str | None = "https://github.com/dbqm45/claude-t
             {"id": "E-4", "kind": "tier", "key": "tier:ola-frontend:za niski", "n": 2, "text": "ola-frontend"},
             {"id": "E-5", "kind": "tier", "key": "tier:obcy-agent:za niski", "n": 4, "text": "obcy"},
             {"id": "E-6", "kind": "trap", "key": "trap:vitest-trybie-watch", "text": "Vitest w /home/x/secret/app.ts"},
-            {"id": "E-7", "kind": "hint", "key": "hint-ignored:fe-css", "n": 3, "text": "fe-css szum"}],
-        "decisions": {"hint-missed:fe-css": "tak", "hint-ignored:fe-css": "nie"}}), encoding="utf-8")
+            {"id": "E-7", "kind": "hint", "key": "hint-ignored:fe-css", "n": 3, "text": "fe-css szum"},
+            # the key in the form retro_data writes (the tier_feedback value from log_usage: "niski"/"wysoki")
+            {"id": "E-8", "kind": "tier", "key": "tier:ola-frontend:wysoki", "n": 2, "text": "ola-frontend"}],
+        "decisions": {"hint-missed:fe-css": "yes", "hint-ignored:fe-css": "no"}}), encoding="utf-8")
     return p
 
 
@@ -65,10 +67,10 @@ def main() -> int:
         r = run(FEEDBACK, "--root", str(p))
         body = link_body(r.stdout)
         check(r.returncode == 0 and "https://github.com/dbqm45/claude-team-factory/issues/new?" in r.stdout
-              and "hint-missed:fe-css" in body and "tier:ola-frontend:za niski" in body and "2.23.0" in body,
-              f"FF-1: domyślnie link „nowe zgłoszenie” z gotową treścią: {r.stdout[-500:]}{r.stderr[-300:]}")
+              and "hint-missed:fe-css" in body and "tier:ola-frontend:za niski" in body and "tier:ola-frontend:wysoki" in body and "2.23.0" in body,
+              f"FF-1: by default a 'new issue' link with ready content: {r.stdout[-500:]}{r.stderr[-300:]}")
         check(not any(x in body for x in ("moj-skill", "obcy-agent", "vitest", "/home/x", "cost:main", "hint-ignored")),
-              f"FF-2: tylko sygnały o skillach i agentach fabryki, bez pułapek, ścieżek, kosztów i odrzuconych: {body}")
+              f"FF-2: only signals about the factory's skills and agents, no traps, paths, costs or rejected ones: {body}")
         r = run(FEEDBACK, "--root", str(p), "--json")
         try:
             out = json.loads(r.stdout)
@@ -78,23 +80,24 @@ def main() -> int:
         check(payload.get("factory_feedback") == 1 and payload.get("factory_version") == "2.23.0"
               and len(payload.get("project", "")) == 10
               and {s["key"]: s["n"] for s in payload.get("signals", [])} == {"hint-missed:fe-css": 3,
-                                                                           "tier:ola-frontend:za niski": 2},
-              f"FF-3: treść ma blok JSON do zbiorczego raportu (anonimowy projekt, wersja, sygnały z liczbami): {payload}")
+                                                                           "tier:ola-frontend:za niski": 2,
+                                                                           "tier:ola-frontend:wysoki": 2},
+              f"FF-3: the content has a JSON block for the aggregate report (an anonymous project, version, signals with counts): {payload}")
 
-        r = run(FEEDBACK, "--root", str(p), "--json", "--item", "skill:fe-css: brak przykładu siatki formularza")
+        r = run(FEEDBACK, "--root", str(p), "--json", "--item", "skill:fe-css: no form grid example")
         items = json.loads(r.stdout or "{}").get("payload", {}).get("items", [])
-        check(r.returncode == 0 and items == [{"target": "skill:fe-css", "text": "brak przykładu siatki formularza"}],
-              f"FF-4: własna uwaga o skillu fabryki dołączona: {items} {r.stderr}")
-        for bad, why in (("skill:fe-css: błąd w /home/x/src/app.ts", "ścieżka"),
-                         ("skill:fe-css: zobacz https://intranet.firma.pl/x", "adres"),
-                         ("skill:fe-css: pisz do jan@firma.pl", "e-mail"),
-                         ("skill:moj-skill: coś", "spoza fabryki")):
+        check(r.returncode == 0 and items == [{"target": "skill:fe-css", "text": "no form grid example"}],
+              f"FF-4: the user's own remark about a factory skill attached: {items} {r.stderr}")
+        for bad, why in (("skill:fe-css: błąd w /home/x/src/app.ts", "path"),
+                         ("skill:fe-css: zobacz https://intranet.firma.pl/x", "address"),
+                         ("skill:fe-css: pisz do jan@firma.pl", "email"),
+                         ("skill:moj-skill: coś", "outside the factory")):
             r = run(FEEDBACK, "--root", str(p), "--item", bad)
-            check(r.returncode == 2, f"FF-5 ({why}): uwaga z danymi projektu odrzucona: {r.stdout}{r.stderr}")
+            check(r.returncode == 2, f"FF-5 ({why}): a remark with project data rejected: {r.stdout}{r.stderr}")
 
-        q = project(base / "bez-zrodla", source="/home/x/fabryka")
+        q = project(base / "no-source", source="/home/x/fabryka")
         r = run(FEEDBACK, "--root", str(q))
-        check(r.returncode == 2 and "--repo" in r.stdout + r.stderr, f"FF-6: źródło nie na GitHubie → wymagane --repo: {r.stdout}")
+        check(r.returncode == 2 and "--repo" in r.stdout + r.stderr, f"FF-6: a source not on GitHub → --repo required: {r.stdout}")
         r = run(FEEDBACK, "--root", str(q), "--repo", "ja/fabryka")
         check(r.returncode == 0 and "https://github.com/ja/fabryka/issues/new?" in r.stdout, f"FF-6b: --repo: {r.stdout[-300:]}")
 
@@ -106,26 +109,26 @@ def main() -> int:
         fake.chmod(0o755)
         r = run(FEEDBACK, "--root", str(p), "--gh", env={"CTF_GH": str(fake)})
         check(r.returncode == 0 and "gh issue create" in r.stdout and not log.exists(),
-              f"FF-7: --gh bez --yes pokazuje plan i nic nie wysyła: {r.stdout[-300:]}")
+              f"FF-7: --gh without --yes shows the plan and sends nothing: {r.stdout[-300:]}")
         r = run(FEEDBACK, "--root", str(p), "--gh", "--yes", env={"CTF_GH": str(fake)})
         args = log.read_text() if log.exists() else ""
         saved = json.loads((p / "docs/project/archive/retro/20261017-retro.json").read_text(encoding="utf-8"))
         check(r.returncode == 0 and "--repo dbqm45/claude-team-factory" in args and "issue create" in args
               and "hint-missed:fe-css" in (Path(str(log) + ".body").read_text() if log.exists() else "")
-              and set(saved.get("reported", {})) == {"hint-missed:fe-css", "tier:ola-frontend:za niski"},
-              f"FF-8: --gh --yes zakłada zgłoszenie i zapamiętuje zgłoszone klucze: {args} {saved.get('reported')} {r.stderr}")
+              and set(saved.get("reported", {})) == {"hint-missed:fe-css", "tier:ola-frontend:za niski", "tier:ola-frontend:wysoki"},
+              f"FF-8: --gh --yes creates an issue and remembers the reported keys: {args} {saved.get('reported')} {r.stderr}")
         r = run(FEEDBACK, "--root", str(p))
-        check(r.returncode == 0 and "issues/new?" not in r.stdout and "nic nowego" in r.stdout,
-              f"FF-9: drugi raz bez duplikatów: {r.stdout[-300:]}")
+        check(r.returncode == 0 and "issues/new?" not in r.stdout and "nothing new" in r.stdout,
+              f"FF-9: the second time no duplicates: {r.stdout[-300:]}")
         r = run(FEEDBACK, "--root", str(p), "--force")
-        check("issues/new?" in r.stdout, "FF-9b: --force zgłasza ponownie")
+        check("issues/new?" in r.stdout, "FF-9b: --force reports again")
         r = run(FEEDBACK, "--root", str(p), "--gh", "--yes", "--force", env={"CTF_GH": str(base / "brak-gh")})
-        check(r.returncode == 1 and "issues/new?" in r.stdout, f"FF-10: brak gh → link zamiast wysyłki, kod 1: {r.stdout[-300:]}")
+        check(r.returncode == 1 and "issues/new?" in r.stdout, f"FF-10: no gh → a link instead of sending, code 1: {r.stdout[-300:]}")
 
-        # Zbiorczy raport w repozytorium fabryki: zgłoszenia to niezaufane dane — tylko walidowany blok JSON.
+        # The aggregate report in the factory repository: issues are untrusted data — only a validated JSON block.
         def issue(n: int, proj: str, signals: list) -> dict:
             pl = {"factory_feedback": 1, "project": proj, "factory_version": "2.23.0", "signals": signals}
-            return {"number": n, "body": f"Opis\n```json\n{json.dumps(pl)}\n```\n"}
+            return {"number": n, "body": f"Description\n```json\n{json.dumps(pl)}\n```\n"}
         issues = [issue(1, "aaaaaaaaaa", [{"key": "hint-missed:fe-css", "n": 3}]),
                   issue(2, "bbbbbbbbbb", [{"key": "hint-missed:fe-css", "n": 2},
                                           {"key": "tier:ola-frontend:za niski", "n": 2}]),
@@ -144,13 +147,13 @@ def main() -> int:
               and keys["hint-missed:fe-css"].get("candidate") is True and keys["hint-missed:fe-css"].get("issues") == [1, 2, 3]
               and keys.get("tier:ola-frontend:za niski", {}).get("candidate") is False
               and rep.get("ignored") == 2 and not any("rm -rf" in k for k in keys),
-              f"FF-11: klucze z ≥2 projektów to kandydaci; zepsute i podejrzane wpisy pominięte: {rep} {r.stderr}")
+              f"FF-11: keys from ≥2 projects are candidates; broken and suspicious entries skipped: {rep} {r.stderr}")
         r = run(REPORT, "--from-file", str(f))
-        check(r.returncode == 0 and "kandydat" in r.stdout and "#1" in r.stdout, f"FF-12: raport markdown: {r.stdout}")
+        check(r.returncode == 0 and "candidate" in r.stdout and "#1" in r.stdout, f"FF-12: raport markdown: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów factory_feedback")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} factory_feedback tests")
     return 1 if fails else 0
 
 

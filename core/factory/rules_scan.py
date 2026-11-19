@@ -1,0 +1,181 @@
+#!/usr/bin/env python3
+"""
+Declarative rules scanner for `tf analyze` (tier 0, no model and no network): standards written in a YAML file instead of
+a script. The analysis module sets the `tier0.rules: rules.yaml` field in `analyzer.yaml` — then analyze.py runs this
+scanner instead of `tier0.script`. A company overlay supplies only the rules and examples for the gate; scanner fixes
+arrive with a factory update.
+
+  python3 .tf/factory/rules_scan.py --rules <rules.yaml> --root <repo> [--files a,b]   # JSON Lines on stdout
+
+Rule format (the `rules` list):
+  id          lowercase letters, digits and “-” (e.g. no-print)           — required
+  title       short description of the violation                       — required
+  files       path patterns (`**` any directories, `*` within a name)  — default all files
+  exclude     path patterns to skip
+  forbid      regular expression forbidden in a line — a finding on every matching line
+  require     regular expression required in the file (or in the first `head` lines) — a finding at line 1 when absent
+  head        number of lines for `require` (default the whole file)
+  severity    critical | high | medium | low (default medium)
+  suggestion  what to do;  basis — the rule's source (e.g. a company document)
+Exactly one of `forbid` and `require`. An invalid rule → exit code 2 and a description on stderr, no partial result.
+Skipped: dependencies and build output (node_modules, dist, build, .venv…), factory files (.tf/, .claude/), binary
+files and files larger than 1 MB. Standard library only + PyYAML (system or bundled in .tf/factory/_vendor).
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓” — always UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes also write and read UTF-8
+
+try:
+    import yaml
+except ImportError:  # bundled PyYAML copy (licencja MIT, .tf/factory/_vendor/yaml/LICENSE)
+    sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
+    import yaml
+
+SEVERITY = ("critical", "high", "medium", "low")
+SKIP_DIRS = {"node_modules", ".git", "dist", "build", "coverage", ".venv", "venv", "__pycache__", ".tf", ".claude",
+             ".next", "target", "_vendor", "vendor", "third_party"}
+MAX_BYTES = 1_000_000
+ID_RE = re.compile(r"[a-z0-9][a-z0-9-]*")
+
+
+class RuleError(ValueError):
+    pass
+
+
+def glob_re(pattern: str) -> re.Pattern:
+    """Path pattern → expression: `**/` any directories (including none), `**` anything, `*` and `?` within one segment."""
+    out, i = "", 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out, i = out + "(?:.*/)?", i + 3
+        elif pattern.startswith("**", i):
+            out, i = out + ".*", i + 2
+        elif pattern[i] == "*":
+            out, i = out + "[^/]*", i + 1
+        elif pattern[i] == "?":
+            out, i = out + "[^/]", i + 1
+        else:
+            out, i = out + re.escape(pattern[i]), i + 1
+    return re.compile(out + r"\Z")
+
+
+def load_rules(path: Path) -> list[dict]:
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError) as e:
+        raise RuleError(f"{path}: cannot load the rules ({e})") from e
+    rules = data.get("rules") if isinstance(data, dict) else None
+    if not isinstance(rules, list):
+        raise RuleError(f"{path}: no `rules` list")
+    out, seen = [], set()
+    for n, r in enumerate(rules, 1):
+        if not isinstance(r, dict):
+            raise RuleError(f"rule {n}: not a mapping")
+        rid = str(r.get("id") or "")
+        where = f"rule {rid or n}"
+        if not ID_RE.fullmatch(rid):
+            raise RuleError(f"{where}: id — lowercase letters, digits and \"-\" (got {rid!r})")
+        if rid in seen:
+            raise RuleError(f"{where}: duplicate id")
+        seen.add(rid)
+        if not r.get("title"):
+            raise RuleError(f"{where}: no title")
+        if bool(r.get("forbid")) == bool(r.get("require")):
+            raise RuleError(f"{where}: give exactly one of forbid and require")
+        sev = r.get("severity", "medium")
+        if sev not in SEVERITY:
+            raise RuleError(f"{where}: severity — {' | '.join(SEVERITY)} (got {sev!r})")
+        try:
+            pattern = re.compile(str(r.get("forbid") or r.get("require")))
+        except re.error as e:
+            raise RuleError(f"{where}: invalid regular expression ({e})") from e
+        head = r.get("head")
+        if head is not None and (not isinstance(head, int) or head < 1):
+            raise RuleError(f"{where}: head — number of lines ≥ 1")
+        out.append({**r, "id": rid, "severity": sev, "_re": pattern, "_mode": "forbid" if r.get("forbid") else "require",
+                    "_files": [glob_re(g) for g in (r.get("files") or ["**"])],
+                    "_exclude": [glob_re(g) for g in (r.get("exclude") or [])]})
+    return out
+
+
+def repo_files(root: Path) -> list[str]:
+    out = []
+    for p in sorted(root.rglob("*")):
+        rel = p.relative_to(root)
+        if any(part in SKIP_DIRS for part in rel.parts[:-1]) or not p.is_file():
+            continue
+        out.append(rel.as_posix())
+    return out
+
+
+def read_text(p: Path) -> str | None:
+    try:
+        if p.stat().st_size > MAX_BYTES:
+            return None
+        data = p.read_bytes()
+    except OSError:
+        return None
+    if b"\0" in data[:4096]:
+        return None
+    return data.decode("utf-8", errors="replace")
+
+
+def finding(r: dict, rel: str, line: int, snippet: str) -> dict:
+    evidence = snippet if r["_mode"] == "forbid" else f"pattern {r['_re'].pattern!r} not found" + (
+        f" in the first {r['head']} lines" if r.get("head") else "")
+    return {"rule": r["id"], "title": r["title"], "file": rel, "line": line, "snippet": snippet[:200],
+            "severity": r["severity"], "confidence": 1.0, "evidence": evidence,
+            "basis": r.get("basis") or "rule from rules.yaml", "suggestion": r.get("suggestion") or ""}
+
+
+def scan(rules: list[dict], root: Path, files: list[str]) -> list[dict]:
+    out = []
+    for rel in files:
+        wanted = [r for r in rules if any(g.match(rel) for g in r["_files"]) and not any(g.match(rel) for g in r["_exclude"])]
+        if not wanted:
+            continue
+        text = read_text(root / rel)
+        if text is None:
+            continue
+        lines = text.splitlines()
+        for r in wanted:
+            if r["_mode"] == "forbid":
+                out += [finding(r, rel, i, line.strip()) for i, line in enumerate(lines, 1) if r["_re"].search(line)]
+            elif not r["_re"].search("\n".join(lines[:r["head"]] if r.get("head") else lines)):
+                out.append(finding(r, rel, 1, lines[0].strip() if lines else ""))
+    return out
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description="Declarative rules of tf analyze (rules.yaml) — JSON Lines on stdout")
+    ap.add_argument("--rules", required=True)
+    ap.add_argument("--root", required=True)
+    ap.add_argument("--files", default=None)
+    a = ap.parse_args(argv)
+    root = Path(a.root).resolve()
+    try:
+        rules = load_rules(Path(a.rules))
+    except RuleError as e:
+        print(f"✗ {e}", file=sys.stderr)
+        return 2
+    files = [f for f in (a.files or "").split(",") if f] if a.files is not None else repo_files(root)
+    files = [f for f in files if not any(part in SKIP_DIRS for part in Path(f).parts[:-1])]
+    for f in scan(rules, root, files):
+        print(json.dumps(f, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

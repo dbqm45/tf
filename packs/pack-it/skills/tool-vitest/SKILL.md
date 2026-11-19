@@ -1,59 +1,60 @@
 ---
 name: tool-vitest
-description: Użyj przy testach w Vitest — struktura, tabele przykładów, dublery, kontrolowany czas, tryb przeglądarki, Stryker.
+description: Use for tests in Vitest — structure, tables of examples, test doubles, controlled time, browser mode, Stryker.
 metadata:
-  przeglad: "2027-01-09"
-  katalog: "Użyj przy testach jednostkowych, integracyjnych i komponentowych w Vitest — struktura testów, tabele przykładów, dublery (vi.fn, vi.when), kontrolowany czas, projekty, tryb przeglądarki, pokrycie, testy mutacyjne ze Strykerem, migracje wersji. Nie do zasad wyroczni (qa-spec-first-testing) ani Jest (tool-jest)."
+  review: "2027-01-09"
+  catalog: "Use for unit, integration and component tests in Vitest — test structure, tables of examples, test doubles (vi.fn, vi.when), controlled time, projects, browser mode, coverage, mutation testing with Stryker, version migrations. Not for oracle rules (qa-spec-first-testing) or Jest (tool-jest)."
+  keywords: "Vitest, vi.fn, vi.when, vi.mock, stub, atrapa, zaślepka, dubler testowy, port, clearMocks, restoreMocks, mockReset, kontrolowany czas, sztuczne zegary, tryb przeglądarki, test.each, tabela przykładów, Stryker, mutanty, spec.ts, test double, fake timers, controlled time, browser mode, examples table, mutation testing"
 ---
 
 # Vitest
 
-## Zasady
-1. **Tabela przykładów ze specyfikacji** (`it.each`) z ID przypadku i komentarzem, skąd oczekiwana wartość; granice: pod/na/nad.
-2. **Test najpierw i czerwony** — uruchom `vitest` w trybie watch; nowy test ma paść z właściwego powodu (qa-spec-first-testing).
-3. **Logika domeny bez frameworka i DOM** — środowisko `node`; DOM/komponenty w **trybie przeglądarki** (prawdziwa przeglądarka)
-   zamiast jsdom, gdy liczy się zachowanie UI.
-4. **Dublery na granicach (porty), nie wewnątrz modułu:** fake > stub (`vi.when(...).calledWith(...).thenReturn(...)`) > mock.
-   `vi.mock` modułów własnych tylko wyjątkowo — sygnał złego podziału zależności.
-5. **Czas:** `vi.useFakeTimers()` + `vi.setSystemTime(...)`, przywracanie w `afterEach(() => vi.useRealTimers())`.
-6. **Znany defekt:** `it.fails('TC-020 (BUG-7): …')` — test pozostaje ze specyfikacji; oczekiwanie zmienia tylko nowe źródło.
-7. **Właściwości** (fast-check) dla obliczeń i niezmienników.
+## Rules
+1. **A table of examples from the specification** (`it.each`) with the case ID and a comment on where the expected value comes from; boundaries: below/at/above.
+2. **The test first and red** — run `vitest` in watch mode; a new test must fail for the right reason (qa-spec-first-testing).
+3. **Domain logic without a framework and DOM** — the `node` environment; DOM/components in **browser mode** (a real browser)
+   instead of jsdom, when UI behavior matters.
+4. **Test doubles at the boundaries (ports), not inside a module:** fake > stub (`vi.when(...).calledWith(...).thenReturn(...)`) > mock.
+   `vi.mock` of your own modules only exceptionally — a sign of a bad split of dependencies.
+5. **Time:** `vi.useFakeTimers()` + `vi.setSystemTime(...)`, restored in `afterEach(() => vi.useRealTimers())`.
+6. **A known defect:** `it.fails('TC-020 (BUG-7): …')` — the test stays as it is in the specification; only a new source changes the expectation.
+7. **Properties** (fast-check) for calculations and invariants.
 
-## Wzorce (sprawdzone: Vitest 5.0, fast-check 4, Chromium)
+## Patterns (verified: Vitest 5.0, fast-check 4, Chromium)
 ```ts
 import { describe, it, expect, vi } from 'vitest';
 import fc from 'fast-check';
 
-describe('H1-AC2 rabat ilościowy', () => {       // źródło: requirements.md „od 10 sztuk włącznie 5%”
+describe('H1-AC2 quantity discount', () => {       // source: requirements.md "5% from 10 pieces inclusive"
   it.each([
     { id: 'TC-013', qty: 9,  expected: 18000 },
     { id: 'TC-014', qty: 10, expected: 19000 },
     { id: 'TC-015', qty: 11, expected: 20900 },
-  ])('$id: $qty szt. × 20,00 zł = $expected gr', ({ qty, expected }) => {
+  ])('$id: $qty pcs × 20.00 PLN = $expected gr', ({ qty, expected }) => {
     expect(orderTotal(2000, qty)).toBe(expected);
   });
 });
 
-it('suma części = kwota', () => {
+it('sum of parts = amount', () => {
   fc.assert(fc.property(fc.integer({ min: 0, max: 1e6 }), fc.integer({ min: 1, max: 50 }), (total, parts) => {
     expect(splitEvenly(total, parts).reduce((a, b) => a + b, 0)).toBe(total);
   }));
 });
 
-it('H3-AC1: kurs z portu', () => {
+it('H3-AC1: exchange rate from the port', () => {
   const rates = vi.fn<(c: string) => number>();
   vi.when(rates, { onUnmatched: 'throw' }).calledWith('EUR').thenReturn(4.25);   // Vitest 5
   expect(priceIn(42500, 'EUR', rates)).toBe(10000);
 });
 ```
-Komponent w przeglądarce:
+A component in the browser:
 ```ts
 import { page } from 'vitest/browser';
-await page.getByRole('button', { name: 'Dodaj' }).click();
-await expect.element(page.getByRole('status', { name: 'Liczba' })).toHaveTextContent('1');
+await page.getByRole('button', { name: 'Add' }).click();
+await expect.element(page.getByRole('status', { name: 'Count' })).toHaveTextContent('1');
 ```
 ```ts
-// vitest.config.ts — projekty zamiast workspace; dostawca przeglądarki jako obiekt
+// vitest.config.ts — projects instead of workspace; the browser provider as an object
 import { playwright } from '@vitest/browser-playwright';
 export default defineConfig({ test: { projects: [
   { test: { name: 'unit', include: ['src/**/*.spec.ts'] } },
@@ -61,40 +62,40 @@ export default defineConfig({ test: { projects: [
       browser: { enabled: true, provider: playwright(), instances: [{ browser: 'chromium' }] } } },
 ] } });
 ```
-Plik konfiguracji w ESM: `"type": "module"` w package.json albo `vitest.config.mts`.
-Zestawy (qa-regression): `vitest --changed origin/main`, `--project unit`, `--shard`.
+A configuration file in ESM: `"type": "module"` in package.json or `vitest.config.mts`.
+Suites (qa-regression): `vitest --changed origin/main`, `--project unit`, `--shard`.
 
-## Testy mutacyjne (Stryker)
-`@stryker-mutator/core` 10 z **`testRunner: "command"`** (`"commandRunner": { "command": "npx vitest run" }`) działa z Vitest 5
-(sprawdzone: wynik 93,55%, przeżyły mutant `quantity < 1 → <= 1` wskazał brak testu dla 1 sztuki).
-`@stryker-mutator/vitest-runner` 10 z Vitest 5 **zgłosił 0% (wszystkie mutanty przeżyły) — to fałszywy wynik**; przy wyniku
-0% lub podejrzanie 100% najpierw sprawdź, czy runner w ogóle aktywuje mutanty. Mutuj logikę domeny (`mutate`), nie całe repo.
-- Zawężenie: `npx stryker run --mutate "src/discount.ts:1-40"` (plik albo zakres linii) i `--incremental` (wyniki
-  w `reports/stryker-incremental.json` przyspieszają kolejne uruchomienie z tą flagą) — przed merge, nie po
-  każdym commicie. `--mutate` na plik bez testów kończy się błędem „brak testów” (chyba że `--allowEmpty`) — celuj
-  w moduły z testami.
-- Wynik dla agenta: reporter `json` (`reports/mutation/mutation.json`) obok `html`; Stryker 10 nie ma reportera
-  markdown w rdzeniu. Przeżyłe mutanty oceniasz pojedynczo (qa-spec-first-testing: „Przeżyły mutant — decyzja”).
-- Konfiguracje z `@stryker-mutator/vitest-runner` z materiałów i blogów nie przenoś na Vitest 5 — zostaje runner `command`.
-- Testy powiązane z edytowanym plikiem: `vitest related <plik> --run` (podkomenda); w środowisku agenta (zmienna
-  `AI_AGENT`) Vitest 5 domyślnie używa reportera `minimal` i nie włącza watch — bramki lokalne: eng-local-quality-gates.
+## Mutation tests (Stryker)
+`@stryker-mutator/core` 10 with **`testRunner: "command"`** (`"commandRunner": { "command": "npx vitest run" }`) works with Vitest 5
+(verified: a result of 93.55%, the surviving mutant `quantity < 1 → <= 1` pointed to a missing test for 1 piece).
+`@stryker-mutator/vitest-runner` 10 with Vitest 5 **reported 0% (all mutants survived) — that is a false result**; with a result of
+0% or a suspicious 100%, first check whether the runner activates the mutants at all. Mutate the domain logic (`mutate`), not the whole repo.
+- Narrowing: `npx stryker run --mutate "src/discount.ts:1-40"` (a file or a line range) and `--incremental` (results
+  in `reports/stryker-incremental.json` speed up the next run with this flag) — before a merge, not after
+  every commit. `--mutate` on a file without tests ends with a "no tests" error (unless `--allowEmpty`) — aim
+  at modules that have tests.
+- The result for the agent: the `json` reporter (`reports/mutation/mutation.json`) alongside `html`; Stryker 10 has no markdown
+  reporter in the core. You assess surviving mutants one by one (qa-spec-first-testing: "A surviving mutant — decision").
+- Do not carry configurations with `@stryker-mutator/vitest-runner` from materials and blogs over to Vitest 5 — the `command` runner stays.
+- Tests related to the edited file: `vitest related <file> --run` (a subcommand); in the agent environment (the variable
+  `AI_AGENT`) Vitest 5 uses the `minimal` reporter by default and does not enable watch — local gates: eng-local-quality-gates.
 
-## Zależne od wersji
-| Wersja | Co się zmieniło |
+## Version-dependent
+| Version | What changed |
 |---|---|
-| 3.0 | punkt odniesienia: `workspace`, tryb przeglądarki eksperymentalny, `vi.fn`/`vi.spyOn`, `it.each`, `it.fails`, `--changed` |
-| 3.2 | `projects` zamiast pliku `workspace` (stary sposób wycofywany) |
-| 4.0 | tryb przeglądarki stabilny; dostawcy jako obiekty z paczek `@vitest/browser-playwright`/`-webdriverio`/`-preview`, import `vitest/browser`; `workspace` usunięte → `projects`; `coverage.all` usunięte (ustaw `coverage.include`); `poolOptions` spłaszczone do opcji głównych; reporter `basic` usunięty |
-| 5.0 | Node ≥ 22.12, Vite ≥ 6.4; `clearMocks: true` domyślnie (historia wywołań czyszczona przed każdym testem); `vi.when(...)` do warunkowych stubów (także z `using`); ścisłe lokatory w trybie przeglądarki; wyniki reporterów domyślnie w katalogu `.vitest`; Stryker: używaj runnera `command` |
+| 3.0 | baseline: `workspace`, experimental browser mode, `vi.fn`/`vi.spyOn`, `it.each`, `it.fails`, `--changed` |
+| 3.2 | `projects` instead of the `workspace` file (the old way being deprecated) |
+| 4.0 | browser mode stable; providers as objects from the `@vitest/browser-playwright`/`-webdriverio`/`-preview` packages, the `vitest/browser` import; `workspace` removed → `projects`; `coverage.all` removed (set `coverage.include`); `poolOptions` flattened to top-level options; the `basic` reporter removed |
+| 5.0 | Node ≥ 22.12, Vite ≥ 6.4; `clearMocks: true` by default (call history cleared before every test); `vi.when(...)` for conditional stubs (also with `using`); strict locators in browser mode; reporter output in the `.vitest` directory by default; Stryker: use the `command` runner |
 
-## Checklista
-- [ ] ID przypadku w nazwie, oczekiwanie ze źródła, test był czerwony
-- [ ] brak `vi.mock` własnych modułów bez uzasadnienia; dublery tylko na portach
-- [ ] fałszywy zegar przywracany; brak prawdziwej sieci
-- [ ] mutation score modułów krytycznych mierzony i wiarygodny (nie 0%)
+## Checklist
+- [ ] the case ID in the name, the expectation from the source, the test was red
+- [ ] no `vi.mock` of your own modules without justification; test doubles only on ports
+- [ ] the fake clock restored; no real network
+- [ ] the mutation score of critical modules measured and credible (not 0%)
 
-## Źródła
-- Stryker 10.0 `stryker run --help` i schemat opcji (`--mutate` z zakresem linii, `--incremental`, `--allowEmpty`,
-  reportery, domyślne ścieżki raportów); Vitest 5.0.3 `--help` i kod (`related`, reporter `minimal`/`agent`) — sprawdzone 2026-10-10.
-- Kurs 10xDevs, ed. 3 (2026), moduł 3, lekcja 2 (testy mutacyjne z agentem) — materiał szkoleniowy (dostęp 2026-10-09);
-  stanowisko fabryki o runnerze `command` zostaje (patrz `skill.meta.json`).
+## Sources
+- Stryker 10.0 `stryker run --help` and the option schema (`--mutate` with a line range, `--incremental`, `--allowEmpty`,
+  reporters, default report paths); Vitest 5.0.3 `--help` and code (`related`, the `minimal`/`agent` reporter) — verified 2026-10-10.
+- The 10xDevs course, ed. 3 (2026), module 3, lesson 2 (mutation testing with an agent) — training material (accessed 2026-10-09);
+  the factory's position on the `command` runner stays (see `skill.meta.json`).

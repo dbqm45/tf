@@ -1,94 +1,94 @@
 ---
 name: sec-detection-engineering
-description: Użyj przy projektowaniu i testowaniu reguł wykrywania — Sigma jako kod, pokrycie ATT&CK, jakość alertów, purple team, polowanie na zagrożenia.
+description: Use for designing and testing detection rules — Sigma as code, ATT&CK coverage, alert quality, purple team, threat hunting.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj, gdy trzeba zaprojektować, napisać, przetestować i utrzymać wykrywanie ataków — cykl życia reguły (hipoteza, źródło danych, reguła, test symulacją, wdrożenie, strojenie, wycofanie), detection-as-code (Sigma, repo, CI), mapa pokrycia MITRE ATT&CK i analiza luk, jakość alertu (trafność, budżet szumu, kontekst, runbook), ćwiczenia purple team (Atomic Red Team, Caldera), podstawy polowania na zagrożenia, metryki (czas do wykrycia, pokrycie, fałszywe alarmy). Nie do obsługi SIEM, EDR, SOAR i reagowania na incydent (ops-security-operations), ogólnych alertów aplikacji (ops-observability), modelu zagrożeń funkcji (arch-threat-modeling) ani analizy próbek malware (sec-malware-analysis)."
-  slowa: "reguła wykrywania, detection engineering, detection as code, Sigma, pokrycie ATT&CK, MITRE ATT&CK, Navigator, luki w wykrywaniu, fałszywe alarmy, zmęczenie alertami, strojenie reguł, purple team, red team, emulacja przeciwnika, Atomic Red Team, Caldera, threat hunting, polowanie na zagrożenia, hipoteza, czas do wykrycia, MTTD, hunting, testy reguł, SIEM reguła"
+  review: "2027-04-17"
+  catalog: "Use when you must design, write, test and maintain attack detection — the rule lifecycle (hypothesis, data source, rule, simulation test, deployment, tuning, retirement), detection-as-code (Sigma, repo, CI), a MITRE ATT&CK coverage map and gap analysis, alert quality (precision, noise budget, context, runbook), purple team exercises (Atomic Red Team, Caldera), threat hunting basics, metrics (time to detect, coverage, false positives). Not for operating the SIEM, EDR, SOAR and incident response (ops-security-operations), general application alerts (ops-observability), a feature threat model (arch-threat-modeling) or malware sample analysis (sec-malware-analysis)."
+  keywords: "reguła wykrywania, detection engineering, detection as code, Sigma, pokrycie ATT&CK, MITRE ATT&CK, Navigator, luki w wykrywaniu, fałszywe alarmy, zmęczenie alertami, strojenie reguł, purple team, red team, emulacja przeciwnika, Atomic Red Team, Caldera, threat hunting, polowanie na zagrożenia, hipoteza, czas do wykrycia, MTTD, hunting, testy reguł, SIEM reguła, detection rule, ATT&CK coverage, detection gaps, false positives, alert fatigue, rule tuning, adversary emulation, hypothesis, time to detect, rule tests, SIEM rule"
 ---
 
-# Inżynieria wykrywania (detection engineering, purple team)
+# Detection engineering (purple team)
 
-Granica: **ops-security-operations** obsługuje SIEM, EDR, SOAR i incydenty (telemetria, triaż, reagowanie). Ten skill
-dotyczy **projektowania i testowania wykrywania**: skąd wiadomo, że reguła łapie technikę i że da się ją utrzymać.
-Ogólne alerty o awarii: ops-observability. Co może pójść źle w projekcie: arch-threat-modeling. Reguły z analizy
-próbki: sec-malware-analysis. Szczegóły, szablon reguły i metryki: `references/reguly-i-metryki.md`.
+Boundary: **ops-security-operations** operates the SIEM, EDR, SOAR and incidents (telemetry, triage, response). This skill
+concerns **designing and testing detection**: how we know that a rule catches a technique and that it can be maintained.
+General outage alerts: ops-observability. What can go wrong in the project: arch-threat-modeling. Rules from analysing
+a sample: sec-malware-analysis. Details, the rule template and metrics: `references/rules-and-metrics.md`.
 
-## Procedura (cykl życia reguły)
-1. **Hipoteza.** Skąd wiemy, że to ważne: raport o zagrożeniu, incydent własny, technika ATT&CK istotna dla naszej branży
-   i stosu. Zapisz: „Jeśli napastnik zrobi [technika], zobaczymy [obserwowalny ślad] w [źródle]”.
-2. **Źródło danych.** Czy telemetria istnieje, jest kompletna i parsowana (pola, opóźnienie, retencja)? Bez źródła
-   reguła jest ozdobą; wynik tego kroku bywa zadaniem „włącz logowanie”, a nie regułą.
-3. **Reguła.** Format Sigma (niżej), jedna reguła na jedno zachowanie; warunek na zachowaniu, nie na nazwie narzędzia.
-   Zapisz znane fałszywe alarmy (`falsepositives`) i poziom (`level`).
-4. **Test.** Pozytywny: symulacja techniki w laboratorium lub na stagingu (Atomic Red Team) albo nagrane zdarzenia —
-   alert musi się pojawić. Negatywny: zdarzenia z normalnej pracy z ostatnich dni — alertów ma być mało.
-5. **Wdrożenie** przez PR i CI; najpierw tryb obserwacji (bez wezwania dyżurnego), potem produkcyjny.
-6. **Strojenie.** Wyjątki dla znanych dobrych zachowań dodajesz wąsko (konto, ścieżka, host), nie osłabiasz warunku.
-7. **Wycofanie.** Reguła bez trafień i bez testu od kwartału, albo ciągle ignorowana → popraw, połącz lub usuń (`status: deprecated`).
+## Procedure (the rule lifecycle)
+1. **Hypothesis.** How we know it matters: a threat report, our own incident, an ATT&CK technique relevant to our industry
+   and stack. Record: "If an attacker does [technique], we will see [an observable trace] in [the source]".
+2. **Data source.** Does the telemetry exist, is it complete and parsed (fields, latency, retention)? Without a source
+   the rule is a decoration; the result of this step is sometimes a "turn on logging" task, not a rule.
+3. **Rule.** The Sigma format (below), one rule per behaviour; the condition on the behaviour, not on the tool name.
+   Record the known false positives (`falsepositives`) and the level (`level`).
+4. **Test.** Positive: a simulation of the technique in a lab or on staging (Atomic Red Team) or recorded events —
+   the alert must appear. Negative: events from normal work from the last few days — there should be few alerts.
+5. **Deployment** through a PR and CI; first observation mode (without paging the on-call), then production.
+6. **Tuning.** You add exceptions for known good behaviours narrowly (account, path, host), you do not weaken the condition.
+7. **Retirement.** A rule with no hits and no test for a quarter, or constantly ignored → fix, merge or remove it (`status: deprecated`).
 
 ## Detection-as-code (Sigma)
-- Sigma to otwarty, niezależny od dostawcy format reguł w YAML. Wymagane pola: `title`, `logsource`, `detection`
-  z `condition`. Zalecane: `id` (UUID), `status`, `description`, `references`, `author`, `date`, `tags`
-  (np. `attack.t1059.001`), `falsepositives`, `level`. Wartości `status` i `level` — `references/reguly-i-metryki.md`.
-- Repozytorium: reguły w katalogach wg źródła, przegląd w PR, właściciel, historia zmian jako dziennik decyzji.
-- CI: (1) walidacja składni i schematu, (2) konwersja do zapytania docelowego SIEM-a (pySigma, `sigma convert`;
-  pipeline mapujący pola), (3) test na zdarzeniach pozytywnych i negatywnych, (4) kontrola obowiązkowych pól
-  (`id`, `level`, `falsepositives`, tag ATT&CK). Czerwony test blokuje scalenie.
-- Reguły korelacyjne (wiele zdarzeń w czasie) opisuje osobna specyfikacja Sigma; zacznij od reguł pojedynczych.
+- Sigma is an open, vendor-independent rule format in YAML. Required fields: `title`, `logsource`, `detection`
+  with `condition`. Recommended: `id` (UUID), `status`, `description`, `references`, `author`, `date`, `tags`
+  (e.g. `attack.t1059.001`), `falsepositives`, `level`. The values of `status` and `level` — `references/rules-and-metrics.md`.
+- Repository: rules in directories by source, review in a PR, an owner, the change history as a decision log.
+- CI: (1) syntax and schema validation, (2) conversion to the target SIEM query (pySigma, `sigma convert`;
+  a field-mapping pipeline), (3) a test on positive and negative events, (4) a check of mandatory fields
+  (`id`, `level`, `falsepositives`, an ATT&CK tag). A red test blocks the merge.
+- Correlation rules (many events over time) are described by a separate Sigma specification; start with single rules.
 
-## Pokrycie ATT&CK i analiza luk
-1. Zbierz tagi `attack.tNNNN` z reguł i wygeneruj warstwę ATT&CK Navigator.
-2. Oddziel trzy stany techniki: **brak telemetrii**, **jest telemetria bez reguły**, **jest reguła przetestowana**.
-   Sama obecność reguły z tagiem nie jest pokryciem; reguła nieprzetestowana liczy się jako „niepotwierdzona”.
-3. Priorytet luk: techniki używane przez grupy atakujące naszą branżę (wywiad o zagrożeniach), nasz stos i aktywa,
-   koszt wykrycia; nie dąż do 100% mapy (bez sensu i bez kosztu-efektu).
-4. Wersję ATT&CK podaj w warstwie i w raporcie; matryca zmienia się dwa razy do roku, a identyfikatory bywają zastępowane.
+## ATT&CK coverage and gap analysis
+1. Collect the `attack.tNNNN` tags from the rules and generate an ATT&CK Navigator layer.
+2. Separate three states of a technique: **no telemetry**, **telemetry without a rule**, **a tested rule**.
+   The mere presence of a rule with a tag is not coverage; an untested rule counts as "unconfirmed".
+3. Gap priority: techniques used by groups attacking our industry (threat intelligence), our stack and assets,
+   the cost of detection; do not aim for a 100% map (pointless and not cost-effective).
+4. State the ATT&CK version in the layer and in the report; the matrix changes twice a year, and identifiers are sometimes replaced.
 
-## Jakość alertu
-Alert ma: ważność, kontekst (host, konto, polecenie, proces nadrzędny), kroki triażu i **link do runbooka**, właściciela.
-- **Trafność** = prawdziwe alarmy / wszystkie alarmy; mierz per reguła. **Budżet szumu**: ustal, ile alertów na analityka
-  na zmianę jest znośne [przykład: 20], i nowa reguła musi się w nim mieścić albo zastąpić inną.
-- Reguła z trafnością poniżej progu ustalonego z SOC trafia do strojenia lub zmienia się w polowanie (bez alertu).
+## Alert quality
+An alert has: severity, context (host, account, command, parent process), triage steps and **a link to the runbook**, an owner.
+- **Precision** = true alarms / all alarms; measure per rule. **Noise budget**: set how many alerts per analyst
+  per shift are bearable [example: 20], and a new rule must fit within it or replace another one.
+- A rule with precision below the threshold agreed with the SOC goes to tuning or turns into a hunt (without an alert).
 
 ## Purple team
-Ćwiczenie wspólne ofensywy i obrony: wykonujemy technikę, sprawdzamy, czy alert się pojawił, i poprawiamy.
-- **Tylko za pisemną zgodą właściciela systemów, w uzgodnionym zakresie** (cele, okno czasowe, kontakt awaryjny,
-  zakaz szkód); najlepiej laboratorium lub staging. Zespół SOC wie o ćwiczeniu albo ma zasady rozpoznania symulacji.
-- Plan emulacji: lista technik z ATT&CK dla wybranego przeciwnika, dla każdej: oczekiwany ślad, oczekiwany alert,
-  sposób sprzątania. Narzędzia: Atomic Red Team (małe testy per technika, z krokiem sprzątania), MITRE Caldera (platforma
-  emulacji; używaj wersji ≥ 5.1.0 po łatce CVE-2025-27364, nie wystawiaj do internetu).
-- Wynik per technika: wykryto / zarejestrowano bez alertu / brak śladu → zadania: telemetria, reguła, strojenie.
-  Powtórz test po poprawce (regresja).
+A joint exercise of offence and defence: we execute a technique, check whether the alert appeared, and fix it.
+- **Only with the written consent of the systems' owner, within an agreed scope** (targets, a time window, an emergency contact,
+  a ban on damage); preferably a lab or staging. The SOC team knows about the exercise or has rules for recognizing the simulation.
+- The emulation plan: a list of ATT&CK techniques for the chosen adversary, for each: the expected trace, the expected alert,
+  the cleanup method. Tools: Atomic Red Team (small tests per technique, with a cleanup step), MITRE Caldera (an emulation
+  platform; use version ≥ 5.1.0 after the CVE-2025-27364 patch, do not expose it to the internet).
+- The result per technique: detected / logged without an alert / no trace → tasks: telemetry, rule, tuning.
+  Repeat the test after the fix (regression).
 
-## Polowanie na zagrożenia (podstawy)
-Polowanie jest sterowane hipotezą, nie alertem: pytanie, zapytanie, analiza wyników (długi ogon, rzadkie wartości,
-anomalie względem linii bazowej). Wynik: znalezisko (→ incydent, ops-security-operations), nowa reguła z kroku 3
-procedury albo luka w telemetrii. Zapisz hipotezę, zapytanie, zakres czasu i wynik, także negatywny.
+## Threat hunting (basics)
+Hunting is driven by a hypothesis, not by an alert: a question, a query, analysis of the results (the long tail, rare values,
+anomalies against a baseline). The result: a finding (→ an incident, ops-security-operations), a new rule from step 3
+of the procedure or a telemetry gap. Record the hypothesis, the query, the time range and the result, including a negative one.
 
-## Metryki
-Czas do wykrycia (od wykonania techniki w teście do alertu), pokrycie przetestowane techniki / priorytetowe techniki,
-odsetek fałszywych alarmów, odsetek reguł z testem i runbookiem, wiek reguł bez przeglądu. Metryki to kierunek, nie cel
-sam w sobie (nie nagradzaj liczby reguł).
+## Metrics
+Time to detect (from executing the technique in a test to the alert), coverage tested techniques / priority techniques,
+the false positive rate, the share of rules with a test and a runbook, the age of rules without review. Metrics are a direction, not a goal
+in themselves (do not reward the number of rules).
 
-## Przykład
-**Wejście:** „Raport o grupie atakującej naszą branżę opisuje uruchamianie PowerShella z zakodowanym poleceniem (T1059.001).”
-**Wynik** (fragment karty reguły): hipoteza: `powershell.exe` z `-enc` uruchomiony przez proces Office; źródło: zdarzenia
-tworzenia procesu z linią poleceń (sprawdzone: jest na stacjach, brak na serwerach → zadanie telemetrii); test
-pozytywny: atomic T1059.001 na maszynie laboratoryjnej, alert po [przykład: 40 s]; test negatywny: 7 dni zdarzeń,
-[przykład: 3 trafienia, wszystkie z narzędzia do inwentaryzacji → wyjątek po ścieżce]; `level: high`, `falsepositives`
-uzupełnione, runbook podlinkowany, tag `attack.t1059.001`.
+## Example
+**Input:** "A report on a group attacking our industry describes launching PowerShell with an encoded command (T1059.001)."
+**Result** (a fragment of the rule card): hypothesis: `powershell.exe` with `-enc` launched by an Office process; source: process
+creation events with the command line (checked: present on workstations, missing on servers → a telemetry task); positive
+test: atomic T1059.001 on a lab machine, alert after [example: 40 s]; negative test: 7 days of events,
+[example: 3 hits, all from the inventory tool → an exception by path]; `level: high`, `falsepositives`
+filled in, runbook linked, tag `attack.t1059.001`.
 
-## Checklista
-- [ ] hipoteza z technika ATT&CK i sprawdzone źródło danych
-- [ ] reguła Sigma z `id`, `level`, `falsepositives`, tagiem; w repo, przez PR
-- [ ] test pozytywny (symulacja) i negatywny (normalny ruch) w CI
-- [ ] alert z kontekstem i runbookiem; trafność mierzona
-- [ ] pokrycie z rozróżnieniem „jest reguła” i „przetestowana”; podana wersja ATT&CK
-- [ ] purple team tylko za zgodą, w zakresie, ze sprzątaniem
+## Checklist
+- [ ] a hypothesis with an ATT&CK technique and a checked data source
+- [ ] a Sigma rule with `id`, `level`, `falsepositives`, a tag; in the repo, through a PR
+- [ ] a positive test (simulation) and a negative one (normal traffic) in CI
+- [ ] an alert with context and a runbook; precision measured
+- [ ] coverage distinguishing "a rule exists" from "tested"; the ATT&CK version stated
+- [ ] purple team only with consent, within scope, with cleanup
 
-## Źródła
-- [Sigma Rules Specification 2.1.0](https://github.com/SigmaHQ/sigma-specification) (odczyt 2026-10-17); [pySigma i sigma-cli](https://github.com/SigmaHQ/pySigma)
-- [MITRE ATT&CK, wydania danych STIX](https://github.com/mitre-attack/attack-stix-data/releases): v20.0 (odczyt 2026-10-17, rok wydania [niezweryfikowane])
-- [Atomic Red Team](https://github.com/redcanaryco/atomic-red-team) (MIT); [MITRE Caldera](https://github.com/mitre/caldera) (Apache-2.0; ≥ 5.1.0 po CVE-2025-27364), odczyt 2026-10-17
-Opisane własnymi słowami.
+## Sources
+- [Sigma Rules Specification 2.1.0](https://github.com/SigmaHQ/sigma-specification) (read 2026-10-17); [pySigma and sigma-cli](https://github.com/SigmaHQ/pySigma)
+- [MITRE ATT&CK, STIX data releases](https://github.com/mitre-attack/attack-stix-data/releases): v20.0 (read 2026-10-17, release year [unverified])
+- [Atomic Red Team](https://github.com/redcanaryco/atomic-red-team) (MIT); [MITRE Caldera](https://github.com/mitre/caldera) (Apache-2.0; ≥ 5.1.0 after CVE-2025-27364), read 2026-10-17
+Described in our own words.

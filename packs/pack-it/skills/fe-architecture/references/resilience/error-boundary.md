@@ -1,53 +1,53 @@
 # Error Boundary
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/error-boundary.
+Source: frontendpatterns.dev/error-boundary.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Resilience
-- **Poziom:** Advanced
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 29 października 2025
-- **Autor:** Den Odell
+- **Category:** Resilience
+- **Level:** Advanced
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** 29 October 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Catch render errors in a boundary component that displays a fallback UI instead of crashing the
-entire application.”
+"Catch render errors in a boundary component that displays a fallback UI instead of crashing the
+entire application."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Odpowiedniki: React — nadal komponent klasowy (lub `react-error-boundary`); w React 19 dodatkowo
-  `createRoot(el, { onCaughtError, onUncaughtError })` do raportowania. Vue `onErrorCaptured`/`app.config.errorHandler`.
-  Svelte 5 — `<svelte:boundary onerror>` z snippetem `failed` (przykład Svelte niżej łapie tylko globalne `error`
-  i nie jest prawdziwą granicą). Angular (fw-angular) — globalny `ErrorHandler`, lokalnie `@defer … @error` i
-  status `error` w `resource`.
-- `react-error-boundary` udostępnia `useErrorBoundary().showBoundary(err)` — tak przekazuje się błąd z kodu
-  asynchronicznego do granicy (resilience/error-handling.md).
-- Przykłady Svelte to składnia Svelte 4; w Svelte 5: `$props()`, `$state`, `onclick`, `<svelte:boundary>` (granica błędów
-  i — z `await` w komponentach — ładowania).
+- Equivalents: React — still a class component (or `react-error-boundary`); in React 19 additionally
+  `createRoot(el, { onCaughtError, onUncaughtError })` for reporting. Vue `onErrorCaptured`/`app.config.errorHandler`.
+  Svelte 5 — `<svelte:boundary onerror>` with a `failed` snippet (the Svelte example below catches only the global `error`
+  and is not a real boundary). Angular (fw-angular) — a global `ErrorHandler`, locally `@defer … @error` and
+  the `error` status in `resource`.
+- `react-error-boundary` provides `useErrorBoundary().showBoundary(err)` — this is how an error is passed from asynchronous
+  code to the boundary (resilience/error-handling.md).
+- The Svelte examples are Svelte 4 syntax; in Svelte 5: `$props()`, `$state`, `onclick`, `<svelte:boundary>` (a boundary for errors
+  and — with `await` in components — for loading).
 
 ## Problem
 
-Nieobsłużone błędy JavaScript (błąd w kodzie, źle sformatowane dane z API, wyjątek z biblioteki)
-propagują się przez drzewo komponentów aż do korzenia, gdzie cała aplikacja się wywraca — użytkownik
-widzi czarny/pusty ekran zamiast czegokolwiek użytecznego. Autor: „I've seen users lose entire forms
-because an unrelated chart component failed to render.”
+Unhandled JavaScript errors (a bug in the code, badly formatted data from the API, an exception from a library)
+propagate through the component tree up to the root, where the whole application crashes — the user
+sees a black/empty screen instead of anything useful. The author: "I've seen users lose entire forms
+because an unrelated chart component failed to render."
 
-## Rozwiązanie
+## Solution
 
-Error Boundary działa jak blok try/catch dla drzewa komponentów — owija część interfejsu w
-komponent, który przechwytuje błędy renderowania swoich dzieci i pokazuje fallback UI. Rekomendowana
-strategia warstwowa: jedna granica na poziomie roota jako siatka bezpieczeństwa, plus osobne,
-bardziej szczegółowe granice wokół ryzykownych, izolowanych funkcji.
+An Error Boundary works like a try/catch block for a component tree — it wraps part of the interface in
+a component that catches the rendering errors of its children and shows a fallback UI. The recommended
+layered strategy: one boundary at the root level as a safety net, plus separate,
+more detailed boundaries around risky, isolated features.
 
-**Ważne ograniczenie:** granice błędów przechwytują **tylko** błędy renderowania, metod cyklu życia i
-konstruktorów — **nie** obejmują obsługi zdarzeń (`onClick` itd.), kodu asynchronicznego ani
-odrzuconych Promise'ów. Te wymagają tradycyjnego try/catch (patrz `error-handling.md`).
+**An important limitation:** error boundaries catch **only** errors from rendering, lifecycle methods and
+constructors — they do **not** cover event handlers (`onClick` etc.), asynchronous code or
+rejected Promises. Those require a traditional try/catch (see `error-handling.md`).
 
-## Przykłady kodu
+## Code examples
 
 ### Basic Error Boundary — React
 
@@ -250,29 +250,29 @@ function ErrorFallback({ error, resetErrorBoundary }) {
 </ErrorBoundary>
 ```
 
-## Zalety
+## Advantages
 
-- Aplikacja pozostaje częściowo funkcjonalna — użytkownik nadal ma nawigację i nieuszkodzone
-  komponenty.
-- Użytkownik widzi użyteczny komunikat zamiast pustego ekranu.
-- Awaria jest zawarta w konkretnej, ograniczonej części interfejsu.
-- Automatyczne logowanie błędów przy integracji z monitoringiem (np. Sentry).
-- Przyciski „Try again” umożliwiają odzyskanie bez odświeżania całej strony.
-- Można rozdzielić komunikat: przyjazny dla użytkownika, szczegółowy stack trace dla developera.
+- The application remains partly functional — the user still has the navigation and the undamaged
+  components.
+- The user sees a useful message instead of an empty screen.
+- The failure is contained in a specific, limited part of the interface.
+- Automatic error logging when integrated with monitoring (e.g. Sentry).
+- "Try again" buttons allow recovery without refreshing the whole page.
+- The message can be split: friendly for the user, a detailed stack trace for the developer.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Przechwytują tylko błędy renderowania/cyklu życia — event handlery, kod async i odrzucenia
-  Promise wymagają zwykłego try/catch osobno.
-- W React wymagają komponentu klasowego (biblioteka `react-error-boundary` pozwala tego uniknąć).
-- Ogólne „coś poszło nie tak” może **maskować** błąd zamiast pomóc go naprawić — potrzebne
-  szczegółowe logowanie po stronie deva.
-- Rozmieszczenie jest trudne: zbyt mało granic → łączne awarie; zbyt wiele → wszechobecny fallback UI.
-- Reset bez naprawy przyczyny błędu może natychmiast doprowadzić do powtórzenia tego samego błędu.
-- W trakcie developmentu warto czasem **wyłączyć** granice błędów, żeby błędy były widoczne przy
-  testowaniu, nie po cichu łapane.
+- They catch only rendering/lifecycle errors — event handlers, async code and Promise
+  rejections require an ordinary try/catch separately.
+- In React they require a class component (the `react-error-boundary` library lets you avoid this).
+- A generic "something went wrong" can **mask** the error instead of helping to fix it — detailed
+  logging on the dev side is needed.
+- Placement is hard: too few boundaries → combined failures; too many → fallback UI everywhere.
+- A reset without fixing the cause of the error can immediately lead to the same error repeating.
+- During development it is sometimes worth **turning off** error boundaries, so that errors are visible during
+  testing, not silently caught.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Error Handling](./error-handling.md) — Resilience
 - [Async Boundary](./async-boundary.md) — Resilience
@@ -282,10 +282,10 @@ function ErrorFallback({ error, resetErrorBoundary }) {
 - [Error Handling (Svelte)](https://svelte.dev/docs/svelte#onerror)
 - [react-error-boundary Library](https://github.com/bvaughn/react-error-boundary)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj **zawsze** przynajmniej na poziomie roota aplikacji — to jest minimalna, tania siatka
-bezpieczeństwa. Dodawaj granularne granice wokół konkretnych, ryzykownych widgetów (wykresy,
-integracje trzecich stron), gdzie awaria jednego elementu nie powinna zabrać ze sobą reszty strony.
-**Nie** próbuj łapać nią błędów sieciowych/async — to jest zadanie dla `error-handling.md`/`retry.md`,
-Error Boundary rozwiązuje inny problem (crash renderowania), nie failed fetch.
+Use it **always**, at least at the application root level — this is the minimal, cheap safety
+net. Add granular boundaries around specific, risky widgets (charts,
+third-party integrations), where the failure of one element should not take the rest of the page down with it.
+Do **not** try to catch network/async errors with it — that is the job of `error-handling.md`/`retry.md`;
+an Error Boundary solves a different problem (a rendering crash), not a failed fetch.

@@ -1,147 +1,147 @@
 # Staff / Senior Staff Frontend Engineer
 
-> **Spis treści:** Architektura na skalę wielu zespołów · Developer Experience (DevEx) · Standardy obowiązujące całą organizację · Komunikacja biznesowa i ROI · Podsumowanie — czym różni się Staff od Principal
+> **Contents:** Architecture at the scale of many teams · Developer Experience (DevEx) · Standards binding the whole organization · Business communication and ROI · Summary — how Staff differs from Principal
 
-Poziom: odpowiedzialność wykracza poza jedno repo/jeden zespół — decyzje wpływają na **wiele zespołów albo
-całą domenę frontendową firmy**. Soczewka: **wiele zespołów, jedna organizacja**.
+Level: responsibility goes beyond one repo/one team — decisions affect **many teams or
+the company's whole frontend domain**. Lens: **many teams, one organization**.
 
-## Architektura na skalę wielu zespołów
+## Architecture at the scale of many teams
 
-**Micro-frontends** — definicja, warianty integracji i kompromisy: fe-architecture
-(`.claude/skills/fe-architecture/references/architecture-styles.md`); granice zespołów: proc-team-topologies. Na poziomie Staff istotne jest dodatkowo:
-- **Kontraktowanie granic między zespołami** — micro-frontends rozwiązują problem organizacyjny
-  (niezależne wdrożenia wielu zespołów) kosztem problemu technicznego (współdzielony runtime, duplikacja
-  zależności, konsystencja UX) — decyzja o wdrożeniu tego stylu jest w praktyce decyzją **organizacyjną**
-  (Conwayowskie odwzorowanie struktury zespołów na strukturę systemu), nie czysto techniczną; Staff musi
-  umieć tę decyzję uzasadnić biznesowo, nie tylko technicznie (patrz „Komunikacja biznesowa” niżej).
-- **Koszt utrzymania** — każda dodatkowa granica (repo, deployment, wersja frameworka) to koszt na zawsze,
-  nie jednorazowy — decyzja o rozbiciu monolitu na micro-frontends powinna mieć jasno nazwany próg bólu
-  (np. „czas wdrożenia jednego zespołu blokowany przez inny”), którego rozwiązanie uzasadnia ten koszt.
+**Micro-frontends** — definition, integration variants and trade-offs: fe-architecture
+(`.claude/skills/fe-architecture/references/architecture-styles.md`); team boundaries: proc-team-topologies. At the Staff level what additionally matters is:
+- **Contracting the boundaries between teams** — micro-frontends solve an organizational problem
+  (independent deployments of many teams) at the cost of a technical problem (a shared runtime, duplicated
+  dependencies, UX consistency) — the decision to adopt this style is in practice an **organizational** decision
+  (a Conway-style mapping of the team structure onto the system structure), not a purely technical one; a Staff engineer must
+  be able to justify this decision in business terms, not only technical ones (see "Business communication" below).
+- **Maintenance cost** — every extra boundary (repo, deployment, framework version) is a cost forever,
+  not a one-off — a decision to split a monolith into micro-frontends should have a clearly named pain threshold
+  (e.g. "one team's deployment time blocked by another"), whose resolution justifies this cost.
 
 ### Design Systems
 
-Współdzielona biblioteka komponentów UI, tokenów projektowych (kolory, spacing, typografia) i wzorców
-interakcji, używana przez wiele zespołów/aplikacji w organizacji — techniczna realizacja konsystencji
-marki i UX na skalę firmy.
+A shared library of UI components, design tokens (colours, spacing, typography) and interaction
+patterns, used by many teams/applications in the organization — the technical implementation of brand
+and UX consistency at company scale.
 
-- **Design tokens** — najniższy poziom abstrakcji: wartości (`color.primary.500`, `spacing.md`) oddzielone
-  od tego, **gdzie** są używane, zwykle jako źródło prawdy generujące CSS custom properties / zmienne
-  Sass / obiekty JS dla wielu platform (web, mobile) z jednego miejsca — zmiana marki (rebranding) staje
-  się zmianą wartości tokenów, nie przeszukiwaniem kodu każdej aplikacji.
-- **Poziomy komponentów** (terminologia zbliżona do Atomic Design, używana pragmatycznie, nie dogmatycznie):
-  prymitywy (Button, Input) → komponenty złożone (Card, Modal, złożone Form) → wzorce/szablony stron.
-  Design System zwykle odpowiada tylko za dwa pierwsze poziomy — szablony stron zostają odpowiedzialnością
-  zespołu produktowego (patrz Feature-Sliced Design — fe-architecture `.claude/skills/fe-architecture/references/fsd-screaming-architecture.md`).
-- **Governance** — kto może dodać/zmienić komponent w Design Systemie i jak zespoły produktowe zgłaszają
-  potrzebę nowego komponentu/wariantu, to w praktyce ten sam model **tight-loose** opisany w `devex.md` —
-  API i wygląd komponentu bazowego to zwykle „tight” (wspólny standard), sposób jego użycia w konkretnym
-  widoku zostaje „loose” (decyzja zespołu produktowego).
-- **Ryzyko: Design System jako wąskie gardło** — jeśli jedyny zespół mogący zmieniać komponent staje się
-  centralnym punktem kolejki dla wszystkich innych zespołów, System zaczyna szkodzić tempu, które miał
-  poprawić — częste rozwiązania: model współwłasności (kontrybucje zespołów produktowych z review
-  centralnego zespołu), jasny SLA na review kontrybucji, albo rozbicie na warstwy (core niezmieniany
-  szeroko + warstwa kompozycyjna, którą zespoły produktowe mogą swobodnie rozszerzać).
-- **Techniczna strona tokenów i stylów** (warstwy `@layer`, motywy, izolacja) — fe-css; dostępność komponentów
-  (WCAG AA jako „definition of done”) — fe-web-platform.
-- **Dokumentacja i „living style guide”** — Design System bez żywej, zawsze aktualnej dokumentacji
-  (Storybook lub odpowiednik) w praktyce nie jest używany — zespoły produktowe kopiują kod ze starszych
-  miejsc w kodzie zamiast sięgać po System, bo nie wiedzą, co jest dostępne.
+- **Design tokens** — the lowest level of abstraction: values (`color.primary.500`, `spacing.md`) separated
+  from **where** they are used, usually as a source of truth generating CSS custom properties / Sass
+  variables / JS objects for many platforms (web, mobile) from one place — a brand change (rebranding) becomes
+  a change of token values, not a search through the code of every application.
+- **Component levels** (terminology close to Atomic Design, used pragmatically, not dogmatically):
+  primitives (Button, Input) → composite components (Card, Modal, a complex Form) → page patterns/templates.
+  A Design System is usually responsible only for the first two levels — page templates remain the responsibility
+  of the product team (see Feature-Sliced Design — fe-architecture `.claude/skills/fe-architecture/references/fsd-screaming-architecture.md`).
+- **Governance** — who can add/change a component in the Design System and how product teams report
+  the need for a new component/variant is in practice the same **tight-loose** model described in `devex.md` —
+  the API and appearance of a base component are usually "tight" (a shared standard), the way it is used in a particular
+  view stays "loose" (the product team's decision).
+- **Risk: the Design System as a bottleneck** — if the only team able to change a component becomes
+  the central queueing point for all the other teams, the System starts to harm the pace it was meant to
+  improve — common solutions: a co-ownership model (contributions from product teams with review by the
+  central team), a clear SLA for reviewing contributions, or splitting into layers (a core not changed
+  widely + a composition layer that product teams can extend freely).
+- **The technical side of tokens and styles** (`@layer` layers, themes, isolation) — fe-css; component accessibility
+  (WCAG AA as the "definition of done") — fe-web-platform.
+- **Documentation and a "living style guide"** — a Design System without living, always current documentation
+  (Storybook or an equivalent) is in practice not used — product teams copy code from older
+  places in the codebase instead of reaching for the System, because they do not know what is available.
 
-### Wewnętrzne frameworki i toolingi
+### Internal frameworks and tooling
 
-Na poziomie Staff decyzja o standaryzacji toolingu (bundler, framework testowy, monorepo tooling) dla wielu
-zespołów naraz ma inny profil ryzyka niż wybór w jednym repo — błąd jest **mnożony** przez liczbę zespołów,
-które muszą go później migrować.
+At the Staff level a decision to standardize tooling (bundler, test framework, monorepo tooling) for many
+teams at once has a different risk profile from a choice in one repo — a mistake is **multiplied** by the number of teams
+that later have to migrate it.
 
-- **Vite** — dev server na natywnych modułach ESM (bez bundlowania całej aplikacji na starcie — szybki start
-  niezależnie od rozmiaru projektu); od Vite 8 do budowania produkcyjnego używa **Rolldown** (Rust) zamiast
-  Rollup + esbuild. Domyślny wybór dla nowych projektów (także Angular CLI buduje przez esbuild/Vite), głównie dzięki
-  szybkości pętli deweloperskiej (koszt DevEx — `devex.md`, „flow efficiency”).
-- **Nx** — monorepo z grafem zależności, granicami modułów (lint), generatorami, cache i remote cache — tool-nx.
-- **Turborepo** — narzędzie do zarządzania monorepo z **cache'owaniem zadań** (build/test/lint) — zadanie
-  ponownie uruchamiane tylko, gdy zmieniły się jego realne wejścia (kod, zależności), z możliwością
-  cache'u współdzielonego przez zespół/CI (remote cache), nie tylko lokalnie. Kluczowe dla monorepo z wielu
-  zespołów, bo bez tego czas CI rośnie liniowo z liczbą pakietów, nawet gdy zmienił się tylko jeden.
-- **Rspack** — bundler kompatybilny z ekosystemem/API Webpacka, ale napisany w Rust — pozycjonowany jako
-  droga migracji dla dużych, istniejących projektów na Webpacku, które chcą zysku prędkości bez przepisania
-  konfiguracji od zera (w przeciwieństwie do przejścia na Vite, które zwykle wymaga innego modelu
-  konfiguracji).
-- **Reguła wyboru na poziomie Staff:** koszt migracji istniejących zespołów na nowy tooling musi być
-  jawnie policzony i skomunikowany **przed** decyzją, nie odkryty po fakcie — to jest bezpośrednie
-  zastosowanie zasady DevEx „zdiagnozuj tarcie przed wyborem narzędzia” (`devex.md`) na poziomie
-  infrastruktury, nie procesu.
+- **Vite** — a dev server on native ESM modules (without bundling the whole application at startup — a fast start
+  regardless of project size); since Vite 8 it uses **Rolldown** (Rust) for production builds instead of
+  Rollup + esbuild. The default choice for new projects (Angular CLI also builds through esbuild/Vite), mainly thanks to
+  the speed of the development loop (a DevEx cost — `devex.md`, "flow efficiency").
+- **Nx** — a monorepo with a dependency graph, module boundaries (lint), generators, cache and remote cache.
+- **Turborepo** — a monorepo management tool with **task caching** (build/test/lint) — a task is
+  re-run only when its real inputs (code, dependencies) have changed, with the option of
+  a cache shared by the team/CI (remote cache), not only locally. Key for a monorepo of many
+  teams, because without it CI time grows linearly with the number of packages, even when only one has changed.
+- **Rspack** — a bundler compatible with the Webpack ecosystem/API, but written in Rust — positioned as
+  a migration path for large, existing Webpack projects that want the speed gain without rewriting
+  the configuration from scratch (unlike moving to Vite, which usually requires a different configuration
+  model).
+- **The selection rule at the Staff level:** the cost of migrating existing teams to new tooling must be
+  explicitly calculated and communicated **before** the decision, not discovered after the fact — this is a direct
+  application of the DevEx rule "diagnose the friction before choosing a tool" (`devex.md`) at the level of
+  infrastructure, not process.
 
-### Redukcja długu technicznego na skalę wielu zespołów
+### Reducing technical debt at the scale of many teams
 
-Dług techniczny na poziomie Staff to zwykle nie „ten jeden plik trzeba zrefaktoryzować”, a **systemowy
-wzorzec** powtarzający się w wielu repo (przestarzała wersja frameworka używana przez 10 zespołów, brak
-wspólnego standardu testowania). Podejścia praktyczne:
-- **Strangler fig** (wzorzec migracyjny; bezpieczny refaktor — eng-behavior-preserving-refactoring) — stopniowe zastępowanie starego
-  systemu nowym przy zachowaniu działania całości, zamiast big-bang rewrite.
-- **Budżet na dług techniczny** jako jawna, negocjowana część capacity zespołu (np. 20% sprintu), nie
-  zadanie robione „gdy jest czas” (które w praktyce nigdy nie nadchodzi).
-- **Automatyzacja migracji** (codemody, skrypty transformujące AST) dla zmian powtarzalnych w wielu repo —
-  na skalę wielu zespołów ręczna migracja repo-po-repo nie skaluje się czasowo.
+Technical debt at the Staff level is usually not "this one file needs refactoring" but a **systemic
+pattern** repeated in many repos (an outdated framework version used by 10 teams, no
+shared testing standard). Practical approaches:
+- **Strangler fig** (a migration pattern; safe refactoring — eng-behavior-preserving-refactoring) — gradually replacing the old
+  system with a new one while keeping the whole working, instead of a big-bang rewrite.
+- **A technical debt budget** as an explicit, negotiated part of the team's capacity (e.g. 20% of a sprint), not
+  a task done "when there is time" (which in practice never comes).
+- **Migration automation** (codemods, AST-transforming scripts) for repetitive changes across many repos —
+  at the scale of many teams, manual repo-by-repo migration does not scale in time.
 
 ## Developer Experience (DevEx)
 
-Pełna treść w `devex.md` (tego skilla) — definicja, metryki FLOW/DORA, antywzorce, 9 praktyk poprawy, model
-AI-readiness, plan wdrożenia. Na poziomie Staff to zwykle pierwszy poziom z realnym mandatem do
-**wdrażania** zmian DevEx dla wielu zespołów (nie tylko zgłaszania bólu we własnym).
+The full content is in `devex.md` (of this skill) — definition, FLOW/DORA metrics, anti-patterns, 9 improvement practices, the
+AI-readiness model, the rollout plan. Staff is usually the first level with a real mandate to
+**roll out** DevEx changes for many teams (not only report the pain in one's own).
 
-## Standardy obowiązujące całą organizację
+## Standards binding the whole organization
 
-### Dostępność (WCAG)
+### Accessibility (WCAG)
 
-Poziomy A/AA/AAA, WCAG 2.2 i wymogi prawne (European Accessibility Act od 06.2025, ADA) — fe-web-platform
-(`.claude/skills/fe-web-platform/references/accessibility/wcag-levels.md`); wzorce — tamże, `accessibility/`. Na poziomie Staff chodzi o
-**standard organizacji**: **AA jako domyślny wymóg** każdego nowego komponentu design systemu i „definition of
-done” funkcji (nie cel aspiracyjny), lint a11y i testy automatyczne w CI każdego repo, okresowe testy manualne z
-czytnikiem ekranu, AAA selektywnie na krytycznych ścieżkach (płatność, bezpieczeństwo).
+The A/AA/AAA levels, WCAG 2.2 and legal requirements (European Accessibility Act since 06.2025, ADA) — fe-web-platform
+(`.claude/skills/fe-web-platform/references/accessibility/wcag-levels.md`); patterns — same place, `accessibility/`. At the Staff level this is about
+**the organization's standard**: **AA as the default requirement** of every new design system component and the "definition of
+done" of a feature (not an aspirational goal), an a11y lint and automated tests in the CI of every repo, periodic manual tests with
+a screen reader, AAA selectively on critical paths (payment, security).
 
-### Bezpieczeństwo na poziomie organizacji: XSS, CSRF, CSP
+### Security at the organization level: XSS, CSRF, CSP
 
-Definicje i wzorce implementacyjne — fe-architecture (`references/security/`), strona serwerowa — be-auth-security.
-Na poziomie Staff kluczowe jest **wymuszenie praktyk jako standardu wielu zespołów**, nie tylko ich znajomość:
+Definitions and implementation patterns — fe-architecture (`references/security/`), the server side — be-auth-security.
+At the Staff level the key is **enforcing the practices as a standard for many teams**, not only knowing them:
 
-- **XSS** (reflected, stored, DOM-based): zakaz `innerHTML`/`dangerouslySetInnerHTML`/`bypassSecurityTrust*` z
-  niesanityzowanymi danymi wymuszony **regułą lint w każdym repo** (i Trusted Types, gdzie to możliwe), jeden
-  zatwierdzony sanitizer dla całej organizacji. Treść od modeli AI traktowana jak dane od użytkownika.
-- **CSRF**: wspólny klient HTTP dodający token, `SameSite` + prefiks `__Host-` na ciasteczkach sesji, sprawdzanie
-  Fetch Metadata po stronie serwera — jeden standard zamiast rozwiązań per zespół.
-- **CSP**: wdrażana etapami — najpierw `Content-Security-Policy-Report-Only` ze zbieraniem raportów, potem
-  wymuszanie; docelowo strict CSP (nonce + `strict-dynamic`). Bez etapu report-only ryzykujesz zepsucie produkcji
-  przez nieprzewidziane, legalne źródło.
-- Zależności: SCA/aktualizacje (Renovate/Dependabot) i SRI dla zasobów z obcych CDN jako polityka, nie inicjatywa.
+- **XSS** (reflected, stored, DOM-based): a ban on `innerHTML`/`dangerouslySetInnerHTML`/`bypassSecurityTrust*` with
+  unsanitized data enforced by **a lint rule in every repo** (and Trusted Types where possible), one
+  approved sanitizer for the whole organization. Content from AI models treated like user data.
+- **CSRF**: a shared HTTP client adding the token, `SameSite` + the `__Host-` prefix on session cookies, checking
+  Fetch Metadata on the server side — one standard instead of per-team solutions.
+- **CSP**: rolled out in stages — first `Content-Security-Policy-Report-Only` with report collection, then
+  enforcement; ultimately strict CSP (nonce + `strict-dynamic`). Without the report-only stage you risk breaking production
+  through an unforeseen, legitimate source.
+- Dependencies: SCA/updates (Renovate/Dependabot) and SRI for resources from third-party CDNs as a policy, not an initiative.
 
-### i18n (internacjonalizacja)
+### i18n (internationalization)
 
-Techniczne zasady (ICU, liczba mnoga, `Intl`, RTL) — fe-web-platform (`.claude/skills/fe-web-platform/references/i18n.md`). Decyzja Staff:
-**jedna biblioteka i format komunikatów dla wszystkich aplikacji**, wspólny proces tłumaczeń (TMS, klucze z
-kontekstem dla tłumacza), pseudolokalizacja w CI; i18n planowana jako praca architektoniczna od początku, bo
-retrofit w wielu repo kosztuje wielokrotnie więcej.
+Technical rules (ICU, plurals, `Intl`, RTL) — fe-web-platform (`.claude/skills/fe-web-platform/references/i18n.md`). The Staff decision:
+**one library and message format for all applications**, a shared translation process (TMS, keys with
+context for the translator), pseudolocalization in CI; i18n planned as architectural work from the start, because
+a retrofit across many repos costs many times more.
 
-## Komunikacja biznesowa i ROI
+## Business communication and ROI
 
-Na poziomie Staff decyzje techniczne (przebudowa architektury, migracja frameworka, inwestycja w Design
-System) muszą być **uzasadnione komuś, kto nie czyta kodu** — zwykle produktowo/biznesowo. Praktyczne
-zasady:
+At the Staff level technical decisions (an architecture rebuild, a framework migration, an investment in a Design
+System) must be **justified to someone who does not read code** — usually in product/business terms. Practical
+rules:
 
-- **Tłumacz koszt techniczny na metrykę, którą biznes już śledzi** — nie „ten kod jest brzydki”, ale „ten
-  dług techniczny wydłuża lead time nowych funkcji o X dni/sprint” (patrz metryki DORA/FLOW w `devex.md`) —
-  to jest wspólny język, w którym decyzja staje się policzalna, nie subiektywna.
-- **ROI inwestycji technicznej** — dla dużej inwestycji (migracja, nowy Design System, refaktor) podaj:
-  koszt (osobo-czas, ryzyko przerwy w delivery w trakcie), oczekiwaną korzyść (mierzalna — szybszy
-  deployment, mniej incydentów, krótszy onboarding), i **horyzont czasowy zwrotu** — decyzja bez tych
-  trzech elementów jest trudna do porównania z alternatywnym użyciem tego samego budżetu czasu zespołu.
-- **Nie każda decyzja techniczna wymaga uzasadnienia biznesowego** — rozróżnienie z modelu tight-loose
-  (`devex.md`): decyzje w ramach „loose” (styl kodu, wybór biblioteki lokalnej dla jednego zespołu) nie
-  wymagają eskalacji biznesowej; decyzje „tight” (wpływające na wiele zespołów/budżet/harmonogram) wymagają
-  — umiejętność rozpoznania, która decyzja jest którą, jest sama częścią kompetencji Staff.
+- **Translate a technical cost into a metric the business already tracks** — not "this code is ugly" but "this
+  technical debt lengthens the lead time of new features by X days/sprint" (see the DORA/FLOW metrics in `devex.md`) —
+  this is the shared language in which a decision becomes calculable, not subjective.
+- **The ROI of a technical investment** — for a large investment (a migration, a new Design System, a refactor) give:
+  the cost (person-time, the risk of a delivery interruption along the way), the expected benefit (measurable — faster
+  deployment, fewer incidents, shorter onboarding), and **the payback time horizon** — a decision without these
+  three elements is hard to compare with an alternative use of the same budget of team time.
+- **Not every technical decision requires a business justification** — the distinction from the tight-loose model
+  (`devex.md`): decisions within "loose" (code style, choice of a local library for one team) do not
+  require business escalation; "tight" decisions (affecting many teams/budget/schedule) do
+  — the ability to recognize which decision is which is itself part of the Staff competency.
 
-## Podsumowanie — czym różni się Staff od Principal
+## Summary — how Staff differs from Principal
 
-Staff działa **w granicach jednej organizacji/firmy**, choć wpływa na wiele zespołów. Gdy horyzont decyzji
-wykracza poza jedną firmę (wpływ na standardy branżowe, platformy na skalę milionów zewnętrznych
-użytkowników, pozycjonowanie technologiczne firmy na rynku) — to już soczewka Principal, patrz
+Staff acts **within one organization/company**, although it affects many teams. When the horizon of a decision
+goes beyond one company (influence on industry standards, platforms at the scale of millions of external
+users, the company's technological positioning in the market) — that is already the Principal lens, see
 `principal.md`.

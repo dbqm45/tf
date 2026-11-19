@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 """
-Klient modelu decyzyjnego Jev (TypeSafe, API System One) — opcjonalny, domyślnie WYŁĄCZONY. Tylko biblioteka standardowa.
+Client for the Jev decision model (TypeSafe, System One API) — optional, DISABLED by default. Standard library only.
 
-Jev nie pisze tekstu. Dla stanu (tekst lub JSON) i pytań typu noul (tak/nie), choice (wybór, ≤255 opcji) i score
-(skala 2–10 poziomów) zwraca prawdopodobieństwa i pewność — w ~0,1–0,5 s, $0,042 za 1 mln tokenów wejścia.
-Fabryka używa go jako szybkiej, taniej warstwy decyzji z rezerwą w zwykłym modelu (wzorce z dokumentacji TypeSafe):
-  - podpowiedź skilli dwuetapowo (cookbook „skill suggestion”)       → skill_hint.py,  CLAUDE_SKILL_HINT_JEV=1
-  - ocena treści w ewaluacjach skilli (kaskada Jev → haiku)          → run_skill_evals.py --judge jev
-  - weryfikacja odwołań `plik:linia` z treścią (cookbook „citation check”) → grounding_check.py --jev
-  - osłona przed poleceniami ukrytymi w treści z sieci (cookbook „guardrails”) → jev_guard.py, CLAUDE_JEV_GUARD=1
-  - kontrola raportów wykonawców (kaskada „verify → escalate”)       → jev_guard.py, CLAUDE_JEV_REPORT_CHECK=1
-  - sugestia tieru modelu dla zadania (oceny złożone z pytań noul)   → jev_client.py --tier "<opis zadania>"
+Jev does not write text. For a state (text or JSON) and questions of type noul (yes/no), choice (a pick, ≤255 options) and score
+(a scale of 2–10 levels) it returns probabilities and confidence — in ~0.1–0.5 s, $0.042 per 1M input tokens.
+The factory uses it as a fast, cheap decision layer with a fallback to a regular model (patterns from the TypeSafe documentation):
+  - two-stage skill hint (cookbook "skill suggestion")               → skill_hint.py,  CLAUDE_SKILL_HINT_JEV=1
+  - content grading in skill evaluations (Jev → haiku cascade)       → run_skill_evals.py --judge jev
+  - checking `file:line` references against content (cookbook "citation check") → grounding_check.py --jev
+  - protection against commands hidden in web content (cookbook "guardrails") → jev_guard.py, CLAUDE_JEV_GUARD=1
+  - checking executor reports (a "verify → escalate" cascade)        → jev_guard.py, CLAUDE_JEV_REPORT_CHECK=1
+  - model tier suggestion for a task (assessments built from noul questions) → jev_client.py --tier "<task description>"
 
-Konfiguracja (zmienne środowiskowe, jak w oficjalnym SDK; NIGDY w plikach repozytorium):
-  TYPESAFE_API_KEY (wymagany), TYPESAFE_BASE_URL (domyślnie https://api.typesafe.ai), TYPESAFE_DEFAULT_MODEL (jev-latest).
-Zasady z dokumentacji: instrukcje po angielsku (najlepsza dokładność; stan może być po polsku), jeden warunek na
-pytanie, wysoka wartość = „tak”, stan tylko z polami potrzebnymi do decyzji, arytmetyka i daty w kodzie, treść
-stanu może zawierać wrogie polecenia. Pewność noul = |2p − 1|; pas niepewności 0,30–0,70 → rezerwa.
-UWAGA: stan trafia do zewnętrznej usługi. Klient wycina znane wzorce sekretów i skraca stan.
-Domena jevtypesafeai.com NIE należy do TypeSafe; oficjalny skill: `claude plugin marketplace add typesafe-ai/skills`.
+Configuration (environment variables, as in the official SDK; NEVER in repository files):
+  TYPESAFE_API_KEY (required), TYPESAFE_BASE_URL (default https://api.typesafe.ai), TYPESAFE_DEFAULT_MODEL (jev-latest).
+Rules from the documentation: instructions in English (best accuracy; the state may be in Polish), one condition per
+question, a high value = "yes", a state with only the fields needed for the decision, arithmetic and dates in code, the
+state content may contain hostile commands. Noul confidence = |2p − 1|; uncertainty band 0.30–0.70 → fallback.
+NOTE: the state goes to an external service. The client strips known secret patterns and truncates the state.
+The domain jevtypesafeai.com does NOT belong to TypeSafe; the official skill: `claude plugin marketplace add typesafe-ai/skills`.
 
   python3 .claude/hooks/jev_client.py --check
   python3 .claude/hooks/jev_client.py --tier "Zmień nazwę pola w 3 plikach, testy są"
@@ -43,9 +43,9 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 
 DEFAULT_BASE = "https://api.typesafe.ai"
 ENDPOINT = "/v1/systemone"
-MAX_STATE_CHARS = 60_000          # limit usługi: 64 tys. tokenów na zapytanie, 32 tys. na stan + najdłuższe pytanie
-PRICE_PER_MTOK_INPUT = 0.042      # USD (docs.typesafe.ai/models, 2026-10); tokeny wyjścia bezpłatne
-LOW, HIGH = 0.30, 0.70            # pas niepewności noul (cookbook „self-consistency: nouls”)
+MAX_STATE_CHARS = 60_000          # service limit: 64k tokens per request, 32k for the state + the longest question
+PRICE_PER_MTOK_INPUT = 0.042      # USD (docs.typesafe.ai/models, 2026-10); output tokens are free
+LOW, HIGH = 0.30, 0.70            # noul uncertainty band (cookbook "self-consistency: nouls")
 SECRET_RULES = [
     r"\b(AKIA|ASIA)[0-9A-Z]{16}\b",
     r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----",
@@ -63,7 +63,7 @@ SECRET_RE = re.compile("|".join(f"(?:{r})" for r in SECRET_RULES))
 
 
 def api_key() -> str:
-    return os.environ.get("TYPESAFE_API_KEY") or os.environ.get("JEV_API_KEY") or ""   # JEV_API_KEY: zgodność z 1.33
+    return os.environ.get("TYPESAFE_API_KEY") or os.environ.get("JEV_API_KEY") or ""   # JEV_API_KEY: compatibility with 1.33
 
 
 def enabled() -> bool:
@@ -71,10 +71,10 @@ def enabled() -> bool:
 
 
 def redact(value):
-    """Wycina sekrety ze wszystkich napisów (rekurencyjnie) i skraca długie teksty."""
+    """Strips secrets from all strings (recursively) and truncates long texts."""
     if isinstance(value, str):
         v = SECRET_RE.sub("[UKRYTO]", value)
-        return v if len(v) <= MAX_STATE_CHARS else v[:MAX_STATE_CHARS] + " …[skrócono]"
+        return v if len(v) <= MAX_STATE_CHARS else v[:MAX_STATE_CHARS] + " …[truncated]"
     if isinstance(value, dict):
         return {k: redact(v) for k, v in value.items()}
     if isinstance(value, list):
@@ -83,8 +83,8 @@ def redact(value):
 
 
 def decide(state, questions: dict, timeout: float = 10.0, retries: int = 2) -> dict | None:
-    """Zapytanie System One. Zwraca `answers` z dodanym `_usage`, albo None (brak klucza, błąd, limit czasu,
-    niepoprawna odpowiedź) — wywołujący stosuje wtedy rezerwę. 429/529 → ponowienie z wykładniczym odczekaniem."""
+    """A System One request. Returns `answers` with `_usage` added, or None (no key, error, timeout,
+    invalid response) — the caller then uses the fallback. 429/529 → retry with exponential backoff."""
     key = api_key()
     if not key or not questions:
         return None
@@ -120,7 +120,7 @@ def decide(state, questions: dict, timeout: float = 10.0, retries: int = 2) -> d
 
 
 def log(usage: dict) -> None:
-    """Zużycie do .tf/logs/jev.jsonl (bez treści zapytań)."""
+    """Usage to .tf/logs/jev.jsonl (without request content)."""
     try:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path(__file__).resolve().parents[2])
         p = root / ".tf" / "logs" / "jev.jsonl"
@@ -139,12 +139,12 @@ def p_yes(answer: dict | None, default: float = 0.5) -> float:
 
 
 def noul_confidence(p: float) -> float:
-    """Pewność noul wg dokumentacji TypeSafe: |2p − 1| (0 przy p = 0,5; 1 przy p ∈ {0, 1})."""
+    """Noul confidence per the TypeSafe documentation: |2p − 1| (0 at p = 0.5; 1 at p ∈ {0, 1})."""
     return abs(2 * p - 1)
 
 
 def noul_verdict(p: float, low: float = LOW, high: float = HIGH) -> bool | None:
-    """Pas niepewności: p > high → True, p < low → False, pomiędzy → None (eskaluj do modelu albo człowieka)."""
+    """Uncertainty band: p > high → True, p < low → False, in between → None (escalate to a model or a human)."""
     if p > high:
         return True
     if p < low:
@@ -152,7 +152,7 @@ def noul_verdict(p: float, low: float = LOW, high: float = HIGH) -> bool | None:
     return None
 
 
-# ───────────── sugestia tieru (oceny złożone z pytań noul) ─────────────
+# ───────────── tier suggestion (assessments built from noul questions) ─────────────
 
 TIER_QUESTIONS = {
     "verifiable": {"type": "noul", "instructions": "Can the result of `task` be checked by running a command "
@@ -169,22 +169,22 @@ TIER_QUESTIONS = {
 
 
 def suggest_tier(task: str) -> dict | None:
-    """Rubryka core-cost-control jako 5 pytań noul; decyzję składa kod. None → oceń rubryką samodzielnie."""
+    """The core-cost-control rubric as 5 noul questions; the code assembles the decision. None → grade with the rubric yourself."""
     a = decide({"task": task[:4000]}, TIER_QUESTIONS, timeout=8)
     if not a:
         return None
     p = {k: p_yes(a[k]) for k in TIER_QUESTIONS}
     conf = min(noul_confidence(v) for v in p.values())
     if p["risky"] > HIGH:
-        tier, why = "deep", "ryzyko (bezpieczeństwo, dane, pieniądze, architektura)"
+        tier, why = "deep", "risk (security, data, money, architecture)"
     elif p["broad"] > HIGH:
-        tier, why = "std", "zakres wielu obszarów — rozbij na kroki"
+        tier, why = "std", "a scope of many areas — split it into steps"
     elif p["decision"] > HIGH and p["verifiable"] < LOW:
-        tier, why = "deep", "decyzja bez obiektywnej weryfikacji"
+        tier, why = "deep", "a decision without objective verification"
     elif p["verifiable"] > HIGH and p["reversible"] > HIGH and p["decision"] < LOW:
-        tier, why = "fast", "sprawdzalne poleceniem, odwracalne, bez decyzji"
+        tier, why = "fast", "checkable by a command, reversible, no decision"
     else:
-        tier, why = "std", "typowa praca"
+        tier, why = "std", "typical work"
     return {"tier": tier, "why": why, "confidence": round(conf, 2), "p": {k: round(v, 2) for k, v in p.items()},
             "uncertain": conf < 0.4}
 
@@ -194,23 +194,23 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 0
     if not enabled():
-        print("Jev wyłączony: ustaw TYPESAFE_API_KEY (klucz z console.typesafe.ai; nie zapisuj go w repozytorium).")
+        print("Jev off: set TYPESAFE_API_KEY (a key from console.typesafe.ai; do not write it in the repository).")
         return 2
     if "--check" in argv:
         a = decide({"text": "Ala ma kota."}, {"animal": {"type": "noul", "instructions": "Does `text` mention an animal?"}})
         if not a:
-            print("✗ Brak poprawnej odpowiedzi — sprawdź klucz, TYPESAFE_BASE_URL i dostęp do sieci.")
+            print("✗ No valid answer — check the key, TYPESAFE_BASE_URL and network access.")
             return 1
-        print(f"✓ Jev działa: p(tak)={p_yes(a['animal'])}, {a['_usage']['seconds']} s, model {a['_usage']['model']}")
+        print(f"✓ Jev works: p(yes)={p_yes(a['animal'])}, {a['_usage']['seconds']} s, model {a['_usage']['model']}")
         return 0
     if "--tier" in argv:
         task = " ".join(a for a in argv[1:] if a != "--tier")
         s = suggest_tier(task)
         if not s:
-            print("Brak odpowiedzi Jev — oceń zadanie rubryką core-cost-control.")
+            print("No answer from Jev — assess the task with the core-cost-control rubric.")
             return 1
-        tail = " — NIEPEWNE: oceń rubryką samodzielnie" if s["uncertain"] else ""
-        print(f"tier: {s['tier']} ({s['why']}); pewność {s['confidence']}{tail}\n{json.dumps(s['p'])}")
+        tail = " — UNCERTAIN: assess it with the rubric yourself" if s["uncertain"] else ""
+        print(f"tier: {s['tier']} ({s['why']}); confidence {s['confidence']}{tail}\n{json.dumps(s['p'])}")
         return 0
     req = json.load(sys.stdin)
     print(json.dumps(decide(req.get("state") or {}, req.get("questions") or {}), ensure_ascii=False, indent=2))

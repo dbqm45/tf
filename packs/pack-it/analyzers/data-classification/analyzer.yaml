@@ -1,9 +1,9 @@
 name: data-classification
 prefix: DATA
-title: Klasyfikacja danych osobowych
-description: pola z danymi osobowymi bez klasy (migracje SQL, Prisma, Django, SQLAlchemy, TypeORM, JPA) oraz dane osobowe w logach i w wywołaniach analityki — szkic inwentarza danych
+title: Personal data classification
+description: personal data fields without a class (SQL migrations, Prisma, Django, SQLAlchemy, TypeORM, JPA) and personal data in logs and in analytics calls — a draft of the data inventory
 version: 0.1.0
-przeglad: "2027-05-10"
+review: "2027-05-10"
 skills: [arch-privacy-compliance, data-engineering, ops-observability]
 applies_when:
   files_any: ["**/*.sql", "**/*.prisma", "**/*.py", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.java", "**/*.kt"]

@@ -1,0 +1,483 @@
+<title>Map of the tf factory</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a building cross-section: the core is the foundation, above it the company, team, project and your own floors; beside it the bricks (overlays, modes), below the work belt. */
+:root{
+  --bg:#f3f4f2; --paper:#ffffff; --ink:#1d2421; --muted:#5b6661; --line:#cdd4cf;
+  --core:#24564a; --core-soft:#dcebe5; --pack:#2f5f8a; --pack-soft:#dde8f2;
+  --plan:#a3620c; --plan-soft:#fbf0dc; --guard:#7a3b52; --guard-soft:#f3e2e8;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141917; --paper:#1c2320; --ink:#e6ebe8; --muted:#9aa7a1; --line:#34403b;
+  --core:#7cc4ae; --core-soft:#1f3630; --pack:#8db8e0; --pack-soft:#1d2c3a;
+  --plan:#e8a64a; --plan-soft:#33270f; --guard:#e09ab2; --guard-soft:#38202a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141917; --paper:#1c2320; --ink:#e6ebe8; --muted:#9aa7a1; --line:#34403b;
+  --core:#7cc4ae; --core-soft:#1f3630; --pack:#8db8e0; --pack-soft:#1d2c3a;
+  --plan:#e8a64a; --plan-soft:#33270f; --guard:#e09ab2; --guard-soft:#38202a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:1080px;margin:0 auto;padding-block:40px 64px;display:grid;gap:56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(2rem,5vw,3rem);font-weight:700}
+h2{font-size:1.6rem;font-weight:700}
+h3{font-size:1.05rem;font-weight:700}
+p{margin:0}
+.lead{max-width:65ch;color:var(--muted);font-size:1.08rem}
+code,.mono{font-family:var(--mono);font-size:.86em}
+.head{display:grid;gap:14px}
+.eyebrow{font:500 .75rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+section{display:grid;gap:20px}
+section>header{display:grid;gap:8px}
+section>header p{max-width:68ch;color:var(--muted)}
+
+/* legend */
+.legend{display:flex;flex-wrap:wrap;gap:10px 20px;font-size:.9rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.sw{width:22px;height:14px;border-radius:3px;border:2px solid var(--core);background:var(--core-soft)}
+.sw.pk{border-color:var(--pack);background:var(--pack-soft)}
+.sw.pl{border:2px dashed var(--plan);background:var(--plan-soft)}
+.sw.gd{border-color:var(--guard);background:var(--guard-soft)}
+.pill{display:inline-block;font:600 .68rem var(--mono);letter-spacing:.06em;text-transform:uppercase;
+  padding:2px 7px;border-radius:99px;vertical-align:middle;white-space:nowrap}
+.pill.now{background:var(--core-soft);color:var(--core)}
+.pill.plan{background:var(--plan-soft);color:var(--plan)}
+
+/* whole diagram */
+.whole{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:12px}
+.whole svg{display:block;width:100%;min-width:760px;height:auto}
+.w-col{font:600 12px var(--mono);letter-spacing:.08em;fill:var(--muted)}
+.w-h{font:700 16px var(--display);fill:var(--ink)}
+.w-h2{font:600 15px var(--body);fill:var(--ink)}
+.w-s{font:400 13.5px var(--body);fill:var(--ink)}
+.w-xs{font:400 12px var(--body);fill:var(--ink)}
+.w-lab{font:500 12px var(--mono);fill:var(--muted)}
+.w-sm{font-size:11px}
+.w-box{fill:var(--paper);stroke:var(--line);stroke-width:2}
+.w-core{fill:var(--core-soft);stroke:var(--core);stroke-width:2}
+.w-pack{fill:var(--pack-soft);stroke:var(--pack);stroke-width:2}
+.w-plan{fill:var(--plan-soft);stroke:var(--plan);stroke-width:2;stroke-dasharray:6 4}
+.w-guard{fill:var(--guard-soft);stroke:var(--guard);stroke-width:2}
+.w-gtext{fill:var(--guard)}
+.w-dev{fill:var(--bg);stroke:var(--ink);stroke-width:2}
+.w-line{fill:none;stroke:var(--muted);stroke-width:2}
+.w-back{stroke:var(--core);stroke-dasharray:5 4}
+.w-dash{stroke:var(--guard);stroke-width:2;stroke-dasharray:3 4}
+.w-arrowhead{fill:var(--muted)}
+
+/* building cross-section */
+.building{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:24px;align-items:stretch}
+.floors{display:grid;gap:8px;position:relative}
+.floor{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:start;
+  background:var(--paper);border:2px solid var(--line);border-radius:6px;padding:14px 16px}
+.floor.planned{border:2px dashed var(--plan);background:var(--plan-soft)}
+.floor.core{border-color:var(--core);background:var(--core-soft);border-width:3px}
+.floor .name{display:grid;gap:6px}
+.floor .name b{font-family:var(--display);font-size:1.15rem}
+.floor .what{display:grid;gap:6px;min-width:0}
+.floor .what p{color:var(--ink)}
+.floor .where{font:400 .8rem var(--mono);color:var(--muted);overflow-wrap:anywhere}
+.roof{font:500 .8rem var(--mono);color:var(--muted);text-align:center;letter-spacing:.06em;text-transform:uppercase;padding-bottom:2px}
+.rule{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;align-items:stretch}
+.rule svg{width:28px;height:100%}
+.rule .rtxt{display:grid;align-content:space-between;gap:16px;font-size:.92rem}
+.rule .rtxt div{display:grid;gap:4px}
+.rule .rtxt b{font-family:var(--display)}
+.rule .rtxt span{color:var(--muted)}
+
+/* bricks */
+.bricks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.brickset{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:16px;display:grid;gap:12px;align-content:start}
+.brickset>p{color:var(--muted);font-size:.93rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--pack);background:var(--pack-soft);border-radius:4px;padding:6px 10px;font-size:.88rem;display:grid;gap:2px;min-width:0}
+.chip b{font-family:var(--mono);font-size:.82rem;font-weight:500;color:var(--pack)}
+.chip.core{border-color:var(--core);background:var(--core-soft)}
+.chip.core b{color:var(--core)}
+.chip.planned{border-style:dashed;border-color:var(--plan);background:var(--plan-soft)}
+.chip.planned b{color:var(--plan)}
+
+/* work belt */
+.belt-wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:20px}
+.belt{display:grid;grid-template-columns:repeat(7,minmax(108px,1fr));gap:0;min-width:760px}
+.step{display:grid;gap:6px;justify-items:center;text-align:center;position:relative;padding:0 6px}
+.step .dot{width:44px;height:44px;border-radius:50%;border:2px solid var(--core);background:var(--core-soft);
+  display:grid;place-items:center;font:600 .9rem var(--mono);color:var(--core);position:relative;z-index:1}
+.step:not(:last-child)::after{content:"";position:absolute;top:22px;left:calc(50% + 22px);right:calc(-50% + 22px);height:2px;background:var(--core)}
+.step b{font-family:var(--display);font-size:.98rem}
+.step span{font-size:.82rem;color:var(--muted)}
+.guards{margin-top:18px;min-width:760px;border:2px solid var(--guard);background:var(--guard-soft);border-radius:6px;padding:10px 14px;
+  display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;font-size:.86rem}
+.guards strong{font-family:var(--display);color:var(--guard)}
+
+/* styles and modes */
+.styles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.style{border:2px dashed var(--plan);background:var(--plan-soft);border-radius:6px;padding:16px;display:grid;gap:10px;align-content:start}
+.style.now{border:2px solid var(--core);background:var(--core-soft)}
+.style .who{font-style:italic;color:var(--muted)}
+.style ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:.93rem}
+.modes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.mode{background:var(--paper);border:2px solid var(--core);border-radius:6px;padding:12px 14px;display:grid;gap:4px;align-content:start}
+.mode b{font-family:var(--mono);font-weight:500;color:var(--core);font-size:.9rem}
+.mode span{font-size:.9rem}
+
+/* table */
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:.92rem}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 .75rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+tr:last-child td{border-bottom:0}
+td:first-child{font-family:var(--display);font-weight:700;white-space:nowrap}
+.foot{color:var(--muted);font-size:.88rem;max-width:70ch}
+
+@media (max-width:820px){
+  .building{grid-template-columns:minmax(0,1fr)}
+  .rule{display:none}
+  .bricks,.styles{grid-template-columns:minmax(0,1fr)}
+  .modes{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:520px){
+  .floor{grid-template-columns:minmax(0,1fr);gap:8px}
+  .modes{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+
+<main>
+  <div class="head">
+    <div class="eyebrow">The tf factory · as of 16 November 2026</div>
+    <h1>Map of the tf factory</h1>
+    <p class="lead">The factory installs a team of AI agents for Claude Code in your project. The agents come with ready knowledge,
+      fixed rules and guards that make sure the rules are not broken. This page shows what the factory is made of,
+      what you can adjust in it and how the work flows. Some things already work, some are planned.</p>
+    <div class="legend" aria-label="Legend">
+      <span><i class="sw"></i>factory core, working</span>
+      <span><i class="sw pk"></i>add-on bricks, working</span>
+      <span><i class="sw pl"></i>planned, not there yet</span>
+      <span><i class="sw gd"></i>guards (enforce the rules)</span>
+    </div>
+  </div>
+
+  <section aria-labelledby="s0">
+    <header>
+      <h2 id="s0">The whole on one picture</h2>
+      <p>On the left, the settings stacked in floors. In the middle, the agents you work with and the bricks that add knowledge to them.
+        On the right, the path of a task from ticket to pull request. At the bottom, the guards that enforce the rules at every step.
+        The following sections describe each part in detail.</p>
+    </header>
+    <div class="whole">
+      <svg viewBox="0 0 1000 620" role="img" aria-labelledby="wt wd">
+        <title id="wt">The tf factory as a whole</title>
+        <desc id="wd">Settings floors: you, project, team, company and core configure the agents in the project. The developer assigns tasks to the agents. Overlays and modes add knowledge to the agents. The agents run the task: ticket, facts and plan, test, code, review, pull request, after which a human decides. Tools without a model write reports. Guards watch every step.</desc>
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="w-arrowhead"/>
+          </marker>
+        </defs>
+
+        <text x="30" y="34" class="w-col">SETTINGS</text>
+        <text x="390" y="34" class="w-col">AGENTS AND BRICKS</text>
+        <text x="690" y="34" class="w-col">TASK PATH</text>
+
+        <!-- settings floors -->
+        <rect x="30" y="60" width="300" height="54" rx="5" class="w-box"/>
+        <text x="46" y="84" class="w-h">You</text><text x="46" y="103" class="w-s">work style (tf style), preferences</text>
+        <rect x="30" y="124" width="300" height="54" rx="5" class="w-box"/>
+        <text x="46" y="148" class="w-h">Project</text><text x="46" y="167" class="w-s">own personas, skills, limits</text>
+        <rect x="30" y="188" width="300" height="54" rx="5" class="w-box"/>
+        <text x="46" y="212" class="w-h">Team</text><text x="46" y="231" class="w-s">team standards above the company</text>
+        <rect x="30" y="252" width="300" height="54" rx="5" class="w-box"/>
+        <text x="46" y="276" class="w-h">Company</text><text x="46" y="295" class="w-s">bans, code rules, Jira, costs</text>
+        <rect x="30" y="316" width="300" height="64" rx="5" class="w-core"/>
+        <text x="46" y="342" class="w-h">Core</text><text x="46" y="362" class="w-s">engine, /tf loop, rules, costs</text>
+        <line x1="14" y1="376" x2="14" y2="66" class="w-line" marker-end="url(#ar)"/>
+        <text x="30" y="410" class="w-s">Each floor adjusts the factory</text>
+        <text x="30" y="428" class="w-s">within the limits of the floor below.</text>
+
+        <!-- developer -->
+        <rect x="390" y="60" width="240" height="64" rx="5" class="w-dev"/>
+        <text x="406" y="86" class="w-h">Developer</text>
+        <text x="406" y="108" class="w-s">/tf, ticket number, conversation</text>
+
+        <!-- agents -->
+        <rect x="390" y="170" width="240" height="170" rx="5" class="w-core"/>
+        <text x="406" y="198" class="w-h">Agents in the project</text>
+        <text x="406" y="226" class="w-s">personas: Jan, Ola, Kasia…</text>
+        <text x="406" y="250" class="w-s">step executors</text>
+        <text x="406" y="274" class="w-s">skills with knowledge and procedures</text>
+        <text x="406" y="298" class="w-s">model matched to the step</text>
+        <text x="406" y="322" class="w-s">(the cheapest that can do it)</text>
+
+        <!-- bricks -->
+        <rect x="390" y="400" width="115" height="92" rx="5" class="w-pack"/>
+        <text x="402" y="424" class="w-h">Overlays</text>
+        <text x="402" y="446" class="w-xs">IT, UX, documents,</text>
+        <text x="402" y="462" class="w-xs">Polish language, company,</text>
+        <text x="402" y="478" class="w-xs">your domain</text>
+        <rect x="515" y="400" width="115" height="92" rx="5" class="w-pack"/>
+        <text x="527" y="424" class="w-h">Modes</text>
+        <text x="527" y="446" class="w-xs">agent team,</text>
+        <text x="527" y="462" class="w-xs">decisions in pdi;</text>
+        <text x="527" y="478" class="w-xs">on demand</text>
+
+        <!-- task path -->
+        <rect x="690" y="60" width="270" height="42" rx="5" class="w-box"/><text x="706" y="86" class="w-h2">Jira ticket or description</text>
+        <rect x="690" y="122" width="270" height="42" rx="5" class="w-box"/><text x="706" y="148" class="w-h2">Facts and plan</text>
+        <rect x="690" y="184" width="270" height="42" rx="5" class="w-box"/><text x="706" y="210" class="w-h2">Test, then code</text>
+        <rect x="690" y="246" width="270" height="42" rx="5" class="w-box"/><text x="706" y="272" class="w-h2">Review and company standards</text>
+        <rect x="690" y="308" width="270" height="42" rx="5" class="w-core"/><text x="706" y="334" class="w-h2">Pull request</text>
+        <line x1="825" y1="102" x2="825" y2="120" class="w-line" marker-end="url(#ar)"/>
+        <line x1="825" y1="164" x2="825" y2="182" class="w-line" marker-end="url(#ar)"/>
+        <line x1="825" y1="226" x2="825" y2="244" class="w-line" marker-end="url(#ar)"/>
+        <line x1="825" y1="288" x2="825" y2="306" class="w-line" marker-end="url(#ar)"/>
+
+        <rect x="690" y="400" width="270" height="92" rx="5" class="w-pack"/>
+        <text x="706" y="424" class="w-h">Tools without a model</text>
+        <text x="706" y="446" class="w-xs">tf analyze: project and standards review</text>
+        <text x="706" y="462" class="w-xs">tf risk: change risk</text>
+        <text x="706" y="478" class="w-xs">result: checklist reports, no cost</text>
+
+        <!-- arrows between columns -->
+        <path d="M330 215 C 360 215, 360 240, 388 240" class="w-line" marker-end="url(#ar)"/>
+        <text x="360" y="204" class="w-lab w-sm" text-anchor="middle">configure</text>
+        <line x1="510" y1="124" x2="510" y2="168" class="w-line" marker-end="url(#ar)"/>
+        <text x="518" y="152" class="w-lab">assigns</text>
+        <line x1="447" y1="400" x2="447" y2="342" class="w-line" marker-end="url(#ar)"/>
+        <line x1="572" y1="400" x2="572" y2="342" class="w-line" marker-end="url(#ar)"/>
+        <text x="509.5" y="376" class="w-lab w-sm" text-anchor="middle">add knowledge</text>
+        <path d="M630 230 C 660 230, 660 205, 688 205" class="w-line" marker-end="url(#ar)"/>
+        <text x="636" y="254" class="w-lab">run</text>
+        <path d="M960 329 H 982 V 46 H 510 V 58" class="w-line w-back" marker-end="url(#ar)"/>
+        <text x="992" y="190" class="w-lab w-sm" transform="rotate(90 992 190)" text-anchor="middle">human decision</text>
+
+        <!-- guards -->
+        <rect x="390" y="530" width="570" height="64" rx="5" class="w-guard"/>
+        <text x="406" y="556" class="w-h w-gtext">Guards at every step</text>
+        <text x="406" y="578" class="w-xs">dangerous commands · secrets · code without a test · red tests · long context · skill hint</text>
+        <line x1="510" y1="528" x2="510" y2="494" class="w-dash"/>
+        <line x1="825" y1="528" x2="825" y2="494" class="w-dash"/>
+
+        <!-- legend -->
+        <rect x="30" y="470" width="18" height="12" rx="2" class="w-core"/><text x="56" y="481" class="w-xs">core and its parts</text>
+        <rect x="30" y="494" width="18" height="12" rx="2" class="w-pack"/><text x="56" y="505" class="w-xs">bricks and tools</text>
+        <rect x="30" y="518" width="18" height="12" rx="2" class="w-plan"/><text x="56" y="529" class="w-xs">planned</text>
+        <rect x="30" y="542" width="18" height="12" rx="2" class="w-guard"/><text x="56" y="553" class="w-xs">guards</text>
+      </svg>
+    </div>
+  </section>
+
+  <section aria-labelledby="s1">
+    <header>
+      <h2 id="s1">Structure: the foundation and the settings floors</h2>
+      <p>The factory is easiest to imagine as a building. The core is the foundation, the same for everyone. Each floor above
+        adjusts the factory for a narrower group: the whole company, one team, one project and finally you.
+        A floor can add something of its own or tighten the rules, but it cannot break them. If the company has banned
+        something, no team or developer can unblock it.</p>
+    </header>
+    <div class="building">
+      <div class="floors">
+        <div class="roof">narrowest scope · decides last</div>
+        <div class="floor">
+          <div class="name"><b>You</b><span class="pill now">working</span></div>
+          <div class="what">
+            <p>Your way of working: whether the agent acts on its own, asks for consent at every step, or just talks. Plus
+              the default task mode and your shortcuts. It applies to all your projects and does not go into the repository.</p>
+            <div class="where">tf style · ~/.tf/preferences.yaml · .tf/config/me.yaml (this project only)</div>
+            <div class="where">also: CLAUDE.local.md, .claude/settings.local.json, working and commit language</div>
+          </div>
+        </div>
+        <div class="floor">
+          <div class="name"><b>Project</b><span class="pill now">working</span></div>
+          <div class="what">
+            <p>Settings of one repository: own personas, roles and skills, limits for unattended work, and the overlays and modes
+              chosen for this project.</p>
+            <div class="where">.tf/config/config.yaml · .tf/config/personas/ · .claude/skills/</div>
+          </div>
+        </div>
+        <div class="floor">
+          <div class="name"><b>Team</b><span class="pill now">working</span></div>
+          <div class="what">
+            <p>Standards and settings shared by the repositories of one team, above the company standards: its own code rules,
+              ticket prefixes, tools. A team can only tighten the company's bans and narrow the allowed work modes.</p>
+            <div class="where">overlay pack-&lt;company&gt;-&lt;team&gt; · generator: org/new_org_pack.py &lt;company&gt; --team &lt;team&gt;</div>
+          </div>
+        </div>
+        <div class="floor">
+          <div class="name"><b>Company</b><span class="pill now">working</span></div>
+          <div class="what">
+            <p>Standards of the whole organization: what the agent must not do (e.g. publish), what always goes to human
+              review, automatically checked code rules, Jira and ticket prefixes, a cost profile.</p>
+            <div class="where">overlay pack-&lt;company&gt; from the company's own repository · generator org/new_org_pack.py</div>
+          </div>
+        </div>
+        <div class="floor core">
+          <div class="name"><b>Core</b><span class="pill now">working</span></div>
+          <div class="what">
+            <p>The foundation: the engine that builds the agents, installs and updates the factory, runs the work loop
+              <code>/tf</code>, counts costs and keeps the project journal. Plus 21 skills with work rules and the guards
+              (hooks) that work regardless of the model's decisions.</p>
+            <div class="where">.tf/factory/ · .claude/hooks/ · .claude/skills/core-*</div>
+          </div>
+        </div>
+        <div class="roof">common to everyone</div>
+      </div>
+      <div class="rule" aria-hidden="true">
+        <svg viewBox="0 0 28 400" preserveAspectRatio="none">
+          <defs>
+            <marker id="up" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--core)"/>
+            </marker>
+          </defs>
+          <line x1="14" y1="392" x2="14" y2="10" stroke="var(--core)" stroke-width="2.5" marker-end="url(#up)"/>
+        </svg>
+        <div class="rtxt">
+          <div><b>Adjustment</b><span>Each floor above changes the settings of the floor below, but only within its limits.</span></div>
+          <div><b>Limits</b><span>A ban from a lower floor applies to all the higher ones. Only the company can switch off
+            the security, grounding and TDD skills.</span></div>
+          <div><b>Preview</b><span><code>tf config show</code> shows for every value which floor it comes from.</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s2">
+    <header>
+      <h2 id="s2">Bricks: what you add to the foundation</h2>
+      <p>On every floor you can add ready-made bricks. An overlay brings knowledge of one domain together with personas, that is
+        agents with a specific specialization. A mode changes the way of working and is switched on only when needed.
+        Bricks are added with <code>tf add</code> and removed with <code>tf remove</code>.</p>
+    </header>
+    <div class="bricks">
+      <div class="brickset">
+        <h3>Factory overlays</h3>
+        <p>Knowledge and personas of a given domain.</p>
+        <div class="chips">
+          <div class="chip"><b>pack-it</b>engineering: architecture, backend, frontend, DevOps, security, AI, testing · 20 personas</div>
+          <div class="chip"><b>pack-ux</b>design: research, flows, design systems, accessibility</div>
+          <div class="chip"><b>pack-docs</b>documentation: README, API, ADR, guides</div>
+          <div class="chip"><b>pack-editorial-pl</b>Polish proofreading, persona Stefan</div>
+        </div>
+      </div>
+      <div class="brickset">
+        <h3>Overlays from outside the factory</h3>
+        <p>Your own bricks from a separate repository.</p>
+        <div class="chips">
+          <div class="chip"><b>pack-&lt;company&gt;</b>company standards and settings</div>
+          <div class="chip"><b>pack-&lt;company&gt;-&lt;team&gt;</b>team standards above the company</div>
+          <div class="chip"><b>pack-&lt;domain&gt;</b>e.g. banking, logistics; installed with <code>--pack-dir</code></div>
+        </div>
+      </div>
+      <div class="brickset">
+        <h3>Work modes on demand</h3>
+        <p>They change the way of working, not the knowledge.</p>
+        <div class="chips">
+          <div class="chip"><b>mode-team</b>a team of 3-5 agents who write to each other and share a task list</div>
+          <div class="chip"><b>mode-pdi</b>decisions and the change cycle recorded in one source (pdi)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s3">
+    <header>
+      <h2 id="s3">How work on a task goes</h2>
+      <p>You type <code>/tf</code> and a ticket number. The factory takes the task from the ticket to a finished pull request.
+        Each step is done by an agent matched to the task, the cheapest one that can handle it. Underneath, the guards
+        work all the time.</p>
+    </header>
+    <div class="belt-wrap" role="img" aria-label="Work steps: ticket, facts, plan, test, code, review, pull request; guards underneath">
+      <div class="belt">
+        <div class="step"><div class="dot">1</div><b>Ticket</b><span>a Jira number or a plain-text description</span></div>
+        <div class="step"><div class="dot">2</div><b>Facts</b><span>what is in the repository, which versions</span></div>
+        <div class="step"><div class="dot">3</div><b>Plan</b><span>files, order, tests; written before the code</span></div>
+        <div class="step"><div class="dot">4</div><b>Test</b><span>first a test that fails</span></div>
+        <div class="step"><div class="dot">5</div><b>Code</b><span>only now, until the test passes</span></div>
+        <div class="step"><div class="dot">6</div><b>Review</b><span>scope, risk, security, company standards</span></div>
+        <div class="step"><div class="dot">7</div><b>Pull request</b><span>description, evidence, human decision</span></div>
+      </div>
+      <div class="guards">
+        <strong>Guards</strong>
+        <span>dangerous commands</span><span>files with secrets</span><span>code without a test</span>
+        <span>red tests at the end</span><span>secrets in saved files</span><span>long context</span>
+        <span>hints for the right skill</span>
+      </div>
+    </div>
+    <div class="modes">
+      <div class="mode"><b>Plan mode</b><span>the agent stops at the plan; you write the code or assign it later</span></div>
+      <div class="mode"><b>normal mode</b><span>code is written after you approve the plan</span></div>
+      <div class="mode"><b>Auto mode</b><span>the agent goes on without approval, but not for large changes</span></div>
+      <div class="mode"><b>tf work</b><span>unattended work with a cost limit, in a separate copy of the repository</span></div>
+    </div>
+    <p class="foot">You choose the mode for each task: <code>tf task mode &lt;KEY&gt; plan|normal|auto</code>. Alongside the loop
+      there are also tools with no model and no cost: <code>tf analyze</code> (review of the project and company standards)
+      and <code>tf risk</code> (change risk assessment).</p>
+  </section>
+
+  <section aria-labelledby="s4">
+    <header>
+      <h2 id="s4">Your work style <span class="pill now">working</span></h2>
+      <p>Every developer works differently. A style is a ready set of settings on the "You" floor that sets several switches
+        at once: <code>tf style autonomous</code>, <code>tf style step-by-step</code> albo <code>tf style conversation</code>.
+        A single task can still get a different mode. The style works within the limits set by the company and project.</p>
+    </header>
+    <div class="styles">
+      <div class="style now">
+        <h3><code>autonomous</code></h3>
+        <p class="who">"Let it run by itself, show me the result."</p>
+        <ul>
+          <li>Auto mode by default, if the company allows it</li>
+          <li>a question pauses only the slice of work that depends on it</li>
+          <li>a report at the end, cost limits apply</li>
+        </ul>
+      </div>
+      <div class="style now">
+        <h3><code>step-by-step</code></h3>
+        <p class="who">"I want to see and approve every step."</p>
+        <ul>
+          <li>normal mode: code only after the plan is approved</li>
+          <li>a stop after every slice of work</li>
+          <li>the plan and changes to review before the next step</li>
+        </ul>
+      </div>
+      <div class="style now">
+        <h3><code>conversation</code></h3>
+        <p class="who">"I prefer to talk and decide what next myself."</p>
+        <ul>
+          <li>the task ends at the plan</li>
+          <li>code only when you change the task mode</li>
+          <li>then approval after every slice of work</li>
+          <li>Claude Code in planning mode: even an ordinary conversation does not change files without approval</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="s5">
+    <header>
+      <h2 id="s5">Who sets what</h2>
+      <p>A cheat sheet: where the settings of each floor live, who changes them, and whether they go into the project repository.</p>
+    </header>
+    <div class="tbl">
+      <table>
+        <thead><tr><th>Floor</th><th>Who changes it</th><th>Where</th><th>In the project repository</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Core</td><td>factory maintainers</td><td>the factory repository, in the project <code>.tf/factory/</code></td><td>with a team installation</td><td><span class="pill now">working</span></td></tr>
+          <tr><td>Company</td><td>the company standards team</td><td>the company repository (<code>pack-&lt;company&gt;</code>)</td><td>with a team installation</td><td><span class="pill now">working</span></td></tr>
+          <tr><td>Team</td><td>the team lead</td><td>the team repository (<code>pack-&lt;company&gt;-&lt;team&gt;</code>)</td><td>with a team installation</td><td><span class="pill now">working</span></td></tr>
+          <tr><td>Project</td><td>the project team</td><td><code>.tf/config/</code>, <code>.claude/skills/</code></td><td>yes, like ordinary code</td><td><span class="pill now">working</span></td></tr>
+          <tr><td>You</td><td>you (<code>tf style</code>)</td><td><code>~/.tf/preferences.yaml</code>, <code>.tf/config/me.yaml</code>, <code>*.local</code> files</td><td>never</td><td><span class="pill now">working</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot">You install the factory privately (nothing goes into the repository, everyone installs it themselves) or
+      as a team (<code>--shared</code>, the factory is committed together with the project). Addresses and tokens, e.g. for Jira, never
+      live in overlays, only in environment variables. The plan for the team and personal layers: <code>docs/todo.md</code>,
+      the section "Warstwy zespołu i preferencji osoby" (team and personal preference layers).</p>
+  </section>
+</main>

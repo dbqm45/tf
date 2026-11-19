@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Triaż zgłoszenia z pdi (F3) — tryb mode-pdi. Procedura triażu: skill proc-issue-triage; ten skrypt sprawdza wejście
-i składa rekomendację w stanach pdi (kontrakt 0.13.0, R7).
+Triage of a pdi report (F3) — mode-pdi. The triage procedure: skill proc-issue-triage; this script checks the input
+and assembles a recommendation in pdi states (contract 0.13.0, R7).
 
   python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py check <prb.json>
-      zgłoszenie PRB w JSON wobec contract/problem.schema.json (kopia obok skryptu); triaż tylko dla stanów
+      a PRB report in JSON against contract/problem.schema.json (a copy next to the script); triage only for the states
       new, clarifying, ready_for_triage
   python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py recommend <prb.json> --status S --rationale "…" […]
       S: clarifying (--question … ×n) · accepted (--brief "…", --executor agent|human) · rejected (--reason R
-      [--note "…"], przy out_of_scope_recorded --out-of-scope-file .out-of-scope/<pojęcie>.md) · parked
+      [--note "…"], with out_of_scope_recorded --out-of-scope-file .out-of-scope/<concept>.md) · parked
       (--return-when "…") · duplicate (--duplicate-of PRB-n); opcjonalnie --category bug|enhancement,
-      --observation "…" i --evidence "…" (dowody: obserwacja albo wniosek AI), --out PLIK
-      JSON rekomendacji (triage-recommendation.schema.json obok skryptu) z tf_state z tabeli mapowania kontraktu.
+      --observation "…" and --evidence "…" (evidence: an observation or an AI conclusion), --out FILE
+      recommendation JSON (triage-recommendation.schema.json next to the script) with tf_state from the contract's mapping table.
 
-Rekomendacja nie zmienia zgłoszenia: decyzję podejmuje człowiek w pdi, a zmianę (CHG) tworzy pdi po przyjęciu.
-Kod wyjścia: 0 — w porządku, 1 — błędy (z podpowiedzią), 2 — złe wywołanie.
+A recommendation does not change the report: a human makes the decision in pdi, and the change (CHG) is created by pdi after acceptance.
+Exit code: 0 — OK, 1 — errors (with a hint), 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -25,13 +25,13 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from decision_record import validate  # noqa: E402  (ten sam walidator podzbioru JSON Schema co dla release.yaml)
+from decision_record import validate  # noqa: E402  (the same JSON Schema subset validator as for release.yaml)
 
 CONTRACT = "0.13.0"
 PROBLEM_SCHEMA = HERE / "problem.schema.json"                  # kopia z kontraktu pdi (tools/pdi-contract.json)
 RECOMMENDATION_SCHEMA = HERE / "triage-recommendation.schema.json"   # kopia z kontraktu pdi (tools/pdi-contract.json)
 TRIAGE_INPUT = ("new", "clarifying", "ready_for_triage")
-# Tabela „Stany zgłoszenia i mapowanie na tf” z contract/README.md (R7).
+# The table „Stany zgłoszenia i mapowanie na tf” (report states and mapping to tf) from contract/README.md (R7).
 TF_STATE = {"clarifying": "needs-info", "rejected": "wontfix", "duplicate": "wontfix", "parked": "needs-triage"}
 REASONS = ("out_of_strategy", "works_as_designed", "cost_disproportionate", "already_exists", "out_of_scope_recorded",
            "other")
@@ -41,16 +41,16 @@ def load(path: str) -> tuple[dict | None, list[str]]:
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
     except OSError as e:
-        return None, [f"nie mogę odczytać {path}: {e}"]
+        return None, [f"cannot read {path}: {e}"]
     except ValueError as e:
-        return None, [f"niepoprawny JSON w {path}: {e}"]
-    return (data, []) if isinstance(data, dict) else (None, [f"{path}: oczekiwano obiektu JSON (zgłoszenie PRB)"])
+        return None, [f"invalid JSON in {path}: {e}"]
+    return (data, []) if isinstance(data, dict) else (None, [f"{path}: expected a JSON object (a PRB problem)"])
 
 
 def check_problem(data: dict) -> list[str]:
-    errs = [f"schemat kontraktu: {e}" for e in validate(data, json.loads(PROBLEM_SCHEMA.read_text(encoding="utf-8")), "")]
+    errs = [f"contract schema: {e}" for e in validate(data, json.loads(PROBLEM_SCHEMA.read_text(encoding="utf-8")), "")]
     if not errs and data["status"] not in TRIAGE_INPUT:
-        errs.append(f"status '{data['status']}' — triaż już był (decyzja należy do pdi); triaż tylko dla: "
+        errs.append(f"status '{data['status']}' — already triaged (the decision belongs to pdi); triage only for: "
                     f"{', '.join(TRIAGE_INPUT)}")
     return errs
 
@@ -58,47 +58,47 @@ def check_problem(data: dict) -> list[str]:
 def build(prb: dict, a) -> tuple[dict, list[str]]:
     errs = []
     if a.status not in ("clarifying", "accepted", "rejected", "parked", "duplicate"):
-        errs.append(f"--status '{a.status}' — rekomendacja to clarifying, accepted, rejected, parked albo duplicate "
-                    "(new i ready_for_triage to stany wejścia)")
+        errs.append(f"--status '{a.status}' — the recommendation is clarifying, accepted, rejected, parked or duplicate "
+                    "(new and ready_for_triage are input states)")
     rec = {"problem": prb["id"], "contract_version": CONTRACT, "recommended_status": a.status,
            "tf_state": "ready-for-human" if a.executor == "human" else TF_STATE.get(a.status, "ready-for-agent"),
            "rationale": (a.rationale or "").strip(), "drafted_by": "ai"}
     if not rec["rationale"]:
-        errs.append("brak --rationale (uzasadnienie rekomendacji dla PO)")
+        errs.append("no --rationale (the reason for the recommendation, for the PO)")
     if a.status == "parked":
         rec["tf_labels"] = ["deferred"]
     if a.category or prb.get("category"):
         rec["category"] = a.category or prb["category"]
     if a.status == "clarifying":
         if not a.question:
-            errs.append("clarifying wymaga pytań do zgłaszającego: --question \"…\" (konkretne, nie „podaj więcej”)")
+            errs.append("clarifying needs questions for the reporter: --question \"…\" (specific, not „tell us more”)")
         rec["questions"] = a.question
     if a.status == "accepted":
         if not (a.brief or "").strip():
-            errs.append("accepted wymaga briefu dla wykonawcy: --brief \"…\" (format z proc-issue-triage)")
+            errs.append("accepted needs a brief for the executor: --brief \"…\" (format from proc-issue-triage)")
         rec.update(brief=a.brief, executor=a.executor or "agent")
     if a.status == "rejected":
         if not a.reason:
-            errs.append(f"rejected wymaga powodu: --reason {'|'.join(REASONS)}")
+            errs.append(f"rejected needs a reason: --reason {'|'.join(REASONS)}")
         elif a.reason not in REASONS:
-            errs.append(f"--reason '{a.reason}' spoza listy kontraktu: {', '.join(REASONS)}")
+            errs.append(f"--reason '{a.reason}' is not in the contract list: {', '.join(REASONS)}")
         rec["rejection_reason"] = a.reason
         if a.note:
             rec["rejection_note"] = a.note
         if a.reason == "out_of_scope_recorded":
             f = a.out_of_scope_file
             if not f or not Path(f).is_file() or not f.startswith(".out-of-scope/"):
-                errs.append("out_of_scope_recorded wymaga istniejącego wpisu: --out-of-scope-file .out-of-scope/<pojęcie>.md")
+                errs.append("out_of_scope_recorded needs an existing entry: --out-of-scope-file .out-of-scope/<concept>.md")
             rec["out_of_scope_file"] = f
     if a.status == "parked":
         if not a.return_when:
-            errs.append("parked wymaga progu powrotu: --return-when \"…\" (np. 3 nowe zgłoszenia albo incydent)")
+            errs.append("parked needs a return threshold: --return-when \"…\" (e.g. 3 new problems or an incident)")
         rec["return_when"] = a.return_when
     if a.status == "duplicate":
         if not a.duplicate_of:
-            errs.append("duplicate wymaga oryginału: --duplicate-of PRB-n")
+            errs.append("duplicate needs the original: --duplicate-of PRB-n")
         elif a.duplicate_of == prb["id"]:
-            errs.append(f"--duplicate-of {a.duplicate_of} — zgłoszenie nie jest duplikatem samego siebie")
+            errs.append(f"--duplicate-of {a.duplicate_of} — a problem cannot duplicate itself")
         rec["duplicate_of"] = a.duplicate_of
     evidence = [{"text": t, "epistemic_status": "observation"} for t in a.observation or []]
     evidence += [{"text": t, "epistemic_status": "ai_inference"} for t in a.evidence or []]
@@ -106,7 +106,7 @@ def build(prb: dict, a) -> tuple[dict, list[str]]:
         rec["evidence"] = evidence
     rec = {k: v for k, v in rec.items() if v is not None}
     if not errs:
-        errs = [f"schemat rekomendacji: {e}" for e in
+        errs = [f"recommendation schema: {e}" for e in
                 validate(rec, json.loads(RECOMMENDATION_SCHEMA.read_text(encoding="utf-8")), "")]
     return rec, errs
 
@@ -138,7 +138,7 @@ def main(argv: list[str]) -> int:
         for e in errs:
             print(f"✗ {a.prb}: {e}")
         if not errs:
-            print(f"✓ {prb['id']} ({prb['status']}) — zgodne z kontraktem pdi {CONTRACT}, gotowe do triażu")
+            print(f"✓ {prb['id']} ({prb['status']}) — matches pdi contract {CONTRACT}, ready for triage")
         return 1 if errs else 0
     rec, errs = build(prb, a)
     if errs:

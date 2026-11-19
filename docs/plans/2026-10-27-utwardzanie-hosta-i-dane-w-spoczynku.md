@@ -8,10 +8,10 @@ i owasp.org niedostępne z sandboxu — szczegóły jako [niezweryfikowane] w se
 ## TL;DR
 Dwie luki w pack-it, obie jako nowe pliki `references/` z krótkim odesłaniem w SKILL.md (SKILL.md nie rośnie
 o całą treść):
-1. `ops-security-operations/references/utwardzanie-hosta.md` — utwardzanie systemu serwera (Linux, krótko Windows):
+1. `ops-security-operations/references/host-hardening.md` — utwardzanie systemu serwera (Linux, krótko Windows):
    procedura od linii bazowej (CIS Benchmark, poziom 1) przez usługi, SSH, konta, zaporę hosta, audyt, łatki
    automatyczne, po sprawdzenie skanerem i dryf konfiguracji. Sekcja 5 SKILL.md dostaje punkt „Utwardzanie”.
-2. `sec-cryptography-pki/references/dane-w-spoczynku.md` — klasyfikacja danych (klasy → wymagane zabezpieczenia),
+2. `sec-cryptography-pki/references/data-at-rest.md` — klasyfikacja danych (klasy → wymagane zabezpieczenia),
    warstwy szyfrowania w spoczynku (dysk/wolumen, baza, pole, kopie) i przed czym każda chroni, klucze (KMS,
    kopertowe), cykl życia danych i bezpieczne usuwanie (NIST SP 800-88, crypto-erase). Procedura SKILL.md pkt 1
    odsyła do pliku.

@@ -1,142 +1,142 @@
-# Archetyp General Assignment — mapper (zadania, zasoby, przydział z ograniczeniami)
+# The General Assignment archetype — mapper (tasks, resources, assignment with constraints)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Heurystyka czy solver · Optymalizacja a symulacja — dwa moduły · Rekomendacja czy decyzja wiążąca · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Heuristic or solver · Optimization vs simulation — two modules · Recommendation or binding decision · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania, w których trzeba wybrać, **które** zadania/zlecenia/projekty zrealizować i **którymi** zasobami, gdy
-zasoby mają różne cechy, a zadania różne wymagania i wartość (specjaliści do projektów, pojazdy do zleceń, sale do zajęć,
-maszyny do zamówień), na model optymalizacji. Ręczne `if`-y i sortowanie „po wartości” dają przypadkowe wyniki. Efekt:
-przydział jako **czysta funkcja** — testowalna przykładami i gotowa do symulacji „co jeśli”. Protokół wspólny: `SKILL.md` →
-„Mapper — wspólny protokół”.
+It turns requirements in which you must choose **which** tasks/orders/projects to carry out and **with which** resources, when
+the resources have different features and the tasks different requirements and value (specialists for projects, vehicles for orders, rooms for classes,
+machines for orders), into an optimization model. Manual `if`s and sorting "by value" give random results. The effect:
+assignment as **a pure function** — testable with examples and ready for "what if" simulation. The common protocol: `SKILL.md` →
+"Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy trzeba wybrać podzbiór zadań i dopasować do nich zasoby o różnych cechach tak, by zmaksymalizować
-wartość przy ograniczonej pojemności?* Tak → pasuje. Pytanie brzmi tylko „czy zasób jest wolny?” → Availability.
+## Fit test
+**The core question:** *do you need to choose a subset of tasks and match resources with different features to them so as to maximize
+value with limited capacity?* Yes → it fits. The question is only "is the resource free?" → Availability.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „kogo przydzielić do projektu”, „który pojazd do zlecenia” | ✅ |
-| zasoby różnią się cechami (kompetencje, ładowność, wyposażenie) | ✅ |
-| „nie starczy dla wszystkich — które zadania wziąć?” | ✅ |
-| „ile zyskamy, zatrudniając jeszcze jedną osobę?” | ✅ symulacja |
-| „czy sala jest wolna we wtorek?”, podwójne rezerwacje | ❌ → Availability |
-| „w jakiej kolejności etapy, co równolegle?” | ❌ → Planning |
-| „kto pierwszy w kolejce po zwolnione miejsce” | ❌ → Waitlist |
-| „które opcje produktu wolno łączyć” | ❌ → Configurator |
-| „przypisz zgłoszenie dyżurnemu wg grafiku” | ⚠️ graniczny |
+| "whom to assign to the project", "which vehicle for the order" | ✅ |
+| resources differ in features (competences, load capacity, equipment) | ✅ |
+| "there is not enough for everyone — which tasks to take?" | ✅ |
+| "how much will we gain by hiring one more person?" | ✅ simulation |
+| "is the room free on Tuesday?", double bookings | ❌ → Availability |
+| "in what order the stages, what in parallel?" | ❌ → Planning |
+| "who is first in the queue for a released place" | ❌ → Waitlist |
+| "which product options may be combined" | ❌ → Configurator |
+| "assign a ticket to the person on duty according to the rota" | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Przypisanie wg prostej reguły* (round-robin, grafik) — czy istnieje **wybór z konfliktem wartości** (nie wszystko się zmieści,
-  zasoby nie są wymienne)? Nie → reguła/polityka; tak → General assignment.
-- *Harmonogram z czasem* — kolejność i zależności to Planning; kto wykona etap — General assignment; zajęcie w czasie — Availability.
+**Borderline cases:**
+- *Assignment by a simple rule* (round-robin, rota) — is there **a choice with a value conflict** (not everything will fit,
+  resources are not interchangeable)? No → a rule/policy; yes → General assignment.
+- *A schedule with time* — order and dependencies are Planning; who performs a stage — General assignment; occupation in time — Availability.
 
-## Model (istota)
-| Element | Istota |
+## Model (the essence)
+| Element | Essence |
 |---|---|
-| **Wymiar pojemności** (capacity dimension) | pojedynczy dostępny zasób o określonych cechach („programista Java senior”, „ciężarówka 12 t w poniedziałek”) |
-| **Wymiar wagi** (weight dimension) | wymaganie zadania, które **jest spełniane przez** określony wymiar pojemności — predykat „czy ten zasób spełnia to wymaganie” |
-| **Item** | zadanie z nazwą, **wartością** (zysk, priorytet) i łączną wagą (listą wymagań); zadania bez wymagań są brane **zawsze** |
-| **Całkowita pojemność** | zbiór dostępnych zasobów |
-| **Rozwiązanie** | wielowymiarowy **problem plecakowy**: podzbiór zadań o maksymalnej łącznej wartości, gdzie każde wymaganie wybranego zadania przypisano do **innego**, pasującego zasobu. Wynik: wartość, wybrane zadania, przypisanie zadanie → zasoby |
-| **Kolejność rozważania** | parametr (np. malejąco po wartości) |
+| **Capacity dimension** | a single available resource with defined features ("senior Java developer", "12 t truck on Monday") |
+| **Weight dimension** | a requirement of a task that **is satisfied by** a defined capacity dimension — the predicate "does this resource satisfy this requirement" |
+| **Item** | a task with a name, a **value** (profit, priority) and a total weight (a list of requirements); tasks without requirements are taken **always** |
+| **Total capacity** | the set of available resources |
+| **Solution** | a multidimensional **knapsack problem**: a subset of tasks with maximum total value, where each requirement of a chosen task is assigned to a **different**, matching resource. The result: value, chosen tasks, the assignment task → resources |
+| **Order of consideration** | a parameter (e.g. descending by value) |
 
-Klasa problemu **transformacja/obliczenia** (ddd-deep-modeling): czysta funkcja, łatwa do testowania przykładami i do
-symulacji „co jeśli” (co zyskamy, zatrudniając jeszcze jedną osobę).
+The problem class **transformation/computation** (ddd-deep-modeling): a pure function, easy to test with examples and to
+simulate "what if" (what will we gain by hiring one more person).
 
-## Heurystyka czy solver
-| Sytuacja | Silnik |
+## Heuristic or solver
+| Situation | Engine |
 |---|---|
-| mało zadań i zasobów, wynik „wystarczająco dobry”, szybka odpowiedź | **heurystyka zachłanna** (sortuj po wartości/gęstości, bierz, co pasuje) |
-| średnia skala, potrzebne optimum | programowanie dynamiczne / przeszukiwanie z odcięciami |
-| duża skala, wiele ograniczeń (koszty, preferencje, limity), wymagana optymalność | **solver MIP** (programowanie całkowitoliczbowe) |
-| wartość zależy od pary zadanie–zasób (koszt dojazdu, dopasowanie) | problem przydziału ważonego / MIP |
+| few tasks and resources, a "good enough" result, a fast answer | **a greedy heuristic** (sort by value/density, take what fits) |
+| medium scale, the optimum needed | dynamic programming / search with pruning |
+| large scale, many constraints (costs, preferences, limits), optimality required | **a MIP solver** (integer programming) |
+| the value depends on the task–resource pair (travel cost, fit) | the weighted assignment problem / MIP |
 
-Silnik wymienny za jednym interfejsem — zacznij od najprostszego, zmierz jakość przykładami.
+An interchangeable engine behind one interface — start with the simplest, measure quality with examples.
 
-## Optymalizacja a symulacja — dwa moduły
-| Moduł | Rola |
+## Optimization vs simulation — two modules
+| Module | Role |
 |---|---|
-| **Optymalizacja** | generyczny silnik: elementy z wartością i wymaganiami, pojemności jako wymiary z predykatem „czy spełnia”; nic nie wie o projektach ani ludziach. Łatwy do testowania przykładami z podręcznika |
-| **Symulacja** | adapter domenowy: mapuje projekty, wymagania kompetencyjne i dostępność ludzi na elementy i pojemności, a wynik — z powrotem na język biznesu |
+| **Optimization** | a generic engine: elements with value and requirements, capacities as dimensions with the predicate "does it satisfy"; it knows nothing about projects or people. Easy to test with textbook examples |
+| **Simulation** | a domain adapter: it maps projects, competence requirements and people's availability onto elements and capacities, and the result — back into the language of the business |
 
-- Typowe pytania wsparcia decyzji jako dwie symulacje **przed/po**: „ile zyskamy, zatrudniając/kupując dodatkową zdolność?”,
-  „co się stanie z zyskiem, jeśli przeniesiemy osobę między projektami?”. **Różnica wartości = odpowiedź.**
-- Pułapka implementacyjna: przy tablicach **programowania dynamicznego** nie wypełniaj wszystkich komórek **tym samym** obiektem
-  mutowalnym — każda komórka potrzebuje własnej instancji.
+- Typical decision support questions as two **before/after** simulations: "how much will we gain by hiring/buying additional capability?",
+  "what will happen to the profit if we move a person between projects?". **The difference in value = the answer.**
+- An implementation pitfall: with **dynamic programming** tables do not fill all cells with **the same** mutable
+  object — each cell needs its own instance.
 
-## Rekomendacja czy decyzja wiążąca
-Wynik przydziału to domyślnie **rekomendacja** (plan, symulacja) — nic nie blokuje. Gdy staje się **decyzją wiążącą**, osobny
-krok zatwierdzenia woła **Availability**, które **blokuje** zasoby; konflikt blokady (ktoś zajął zasób w międzyczasie) → ponowne
-przeliczenie. General assignment planuje, Availability blokuje.
+## Recommendation or binding decision
+The result of the assignment is by default **a recommendation** (a plan, a simulation) — it blocks nothing. When it becomes **a binding decision**, a separate
+approval step calls **Availability**, which **blocks** the resources; a block conflict (someone took the resource in the meantime) → a new
+computation. General assignment plans, Availability blocks.
 
-## Pytania
-**A — decyzje standardowe:**
-- Co jest „wartością” zadania dla biznesu? **Czy wartość zależy od przydzielonego zasobu?**
-- Jakie cechy zasobu decydują o dopasowaniu? **Czy jeden zasób może obsłużyć kilka wymagań?**
-- Czy przydział jest **planem** (symulacja), czy **decyzją wiążącą** (wtedy Availability blokuje zasoby)?
-- Jak często przeliczamy i czy wynik musi być **optymalny**, czy wystarczy **dobry**?
-- Czy zadanie można zrealizować **częściowo** (część wymagań), czy wszystko albo nic?
+## Questions
+**A — standard decisions:**
+- What is the "value" of a task for the business? **Does the value depend on the assigned resource?**
+- Which resource features decide the match? **Can one resource handle several requirements?**
+- Is the assignment **a plan** (a simulation) or **a binding decision** (then Availability blocks the resources)?
+- How often do we recompute, and must the result be **optimal**, or is **good** enough?
+- Can a task be carried out **partially** (some of the requirements), or all or nothing?
 
-**B — luki** (przykłady):
-- zadania obowiązkowe (umowa, kara) niezależnie od wartości? · preferencje/zakazy (ta osoba nie z tym klientem)?
-- stabilność: czy przeliczenie może przetasować ogłoszony przydział? · remisy między równymi wynikami?
-- dlaczego zadanie odpadło (wyjaśnienie)? · zasoby częściowo dostępne (pół etatu)?
+**B — gaps** (examples):
+- mandatory tasks (a contract, a penalty) regardless of value? · preferences/bans (this person not with that customer)?
+- stability: may a recomputation reshuffle an announced assignment? · ties between equal results?
+- why a task was dropped (an explanation)? · partially available resources (half-time)?
 
-## Kroki mapowania
-1. **Zasoby → wymiary pojemności** — lista zasobów z cechami istotnymi dla dopasowania; źródło dostępności (Availability).
-2. **Wymagania → wymiary wagi** — dla każdego wymagania predykat „spełnia” (np. poziom ≥ senior, ładowność ≥ 10 t).
-3. **Zadania → items** — nazwa, wartość (skąd), wymagania; zadania obowiązkowe i bez wymagań.
-4. **Reguły dopasowania** — jeden zasób = jedno wymaganie? częściowa realizacja? preferencje i zakazy.
-5. **Silnik** — heurystyka / DP / MIP wg tabeli; kolejność rozważania jako parametr; kryterium „dość dobre”.
-6. **Moduły** — granica optymalizacja (generyczna) / symulacja (adapter domenowy); scenariusze przed/po.
-7. **Status wyniku** — rekomendacja czy decyzja; punkt zatwierdzenia i wywołanie Availability; obsługa konfliktu.
+## Mapping steps
+1. **Resources → capacity dimensions** — the list of resources with the features relevant to matching; the source of availability (Availability).
+2. **Requirements → weight dimensions** — for each requirement a "satisfies" predicate (e.g. level ≥ senior, load capacity ≥ 10 t).
+3. **Tasks → items** — name, value (where from), requirements; mandatory tasks and tasks without requirements.
+4. **Matching rules** — one resource = one requirement? partial fulfilment? preferences and bans.
+5. **Engine** — heuristic / DP / MIP per the table; the order of consideration as a parameter; the "good enough" criterion.
+6. **Modules** — the boundary optimization (generic) / simulation (domain adapter); before/after scenarios.
+7. **Result status** — a recommendation or a decision; the approval point and the call to Availability; conflict handling.
 
-## Decyzje do kontroli (R/A/X)
-definicja wartości · wartość zależna od zasobu · predykaty dopasowania · jeden zasób — jedno czy wiele wymagań ·
-częściowa realizacja · zadania obowiązkowe · silnik (heurystyka/DP/MIP) i kryterium jakości · kolejność rozważania ·
-częstotliwość przeliczeń i stabilność · rekomendacja vs decyzja wiążąca · remisy.
+## Decisions to check (R/A/X)
+the definition of value · value depending on the resource · matching predicates · one resource — one or many requirements ·
+partial fulfilment · mandatory tasks · the engine (heuristic/DP/MIP) and the quality criterion · the order of consideration ·
+recomputation frequency and stability · recommendation vs binding decision · ties.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model General Assignment: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Wymiary pojemności — | Zasób | Cechy | Dostępność |
-## Wymiary wagi       — | Wymaganie | Predykat „spełnia” |
-## Items              — | Zadanie | Wartość (reguła) | Wymagania | Obowiązkowe |
-## Silnik             — heurystyka/DP/MIP, kolejność, kryterium jakości
-## Moduły             — optymalizacja / symulacja; scenariusze przed/po
-## Status wyniku      — rekomendacja/decyzja, zatwierdzenie, blokada, konflikt
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), parametry polityk zmiennych, granice z Availability/Planning
+# General Assignment model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Capacity dimensions — | Resource | Features | Availability |
+## Weight dimensions  — | Requirement | "Satisfies" predicate |
+## Items              — | Task | Value (rule) | Requirements | Mandatory |
+## Engine             — heuristic/DP/MIP, order, quality criterion
+## Modules            — optimization / simulation; before/after scenarios
+## Result status      — recommendation/decision, approval, block, conflict
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), variable policy parameters, boundaries with Availability/Planning
 ```
 
-## Wzorce i pułapki
-- Sortowanie „po wartości” bez sprawdzenia dopasowania to przypadkowe wyniki — jeśli heurystyka, to jawnie nazwana.
-- Silnik znający „projekty” i „programistów” — nietestowalny przykładami; domena tylko w **symulacji**.
-- Przydział od razu blokujący zasoby uniemożliwia „co jeśli” — blokada dopiero po zatwierdzeniu.
-- **Poza archetypem:** „kto może zatwierdzić przydział?” i „czy wolno przenieść osobę z projektu klienta X?” — autoryzacja
-  i polityki (warstwa aplikacji). Polityki zmienne (waga wartości, lista zakazów) przychodzą jako **parametry** silnika.
+## Patterns and pitfalls
+- Sorting "by value" without checking the match gives random results — if it is a heuristic, name it explicitly.
+- An engine that knows "projects" and "developers" — not testable with examples; the domain only in the **simulation**.
+- An assignment that blocks resources immediately makes "what if" impossible — the block only after approval.
+- **Outside the archetype:** "who may approve the assignment?" and "may a person be moved from customer X's project?" — authorization
+  and policies (the application layer). Variable policies (the value weight, the ban list) come as **parameters** of the engine.
 
-## Kontrola jakości
-- [ ] zasoby i wymagania zmapowane; predykaty „spełnia” jednoznaczne
-- [ ] wartość zadania zdefiniowana (i czy zależy od zasobu)
-- [ ] silnik dobrany uzasadnieniem (skala, optymalność); kolejność rozważania jako parametr
-- [ ] rozdział optymalizacja/symulacja; co najmniej jeden scenariusz przed/po
-- [ ] rozstrzygnięte: rekomendacja czy decyzja, gdzie blokada Availability
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] resources and requirements mapped; "satisfies" predicates unambiguous
+- [ ] the task value defined (and whether it depends on the resource)
+- [ ] the engine chosen with a justification (scale, optimality); the order of consideration as a parameter
+- [ ] the optimization/simulation split; at least one before/after scenario
+- [ ] settled: a recommendation or a decision, where the Availability block happens
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Firma remontowa ma 5 ekip (różne uprawnienia: gaz, elektryka, dekarstwo). Co tydzień jest więcej zleceń
-niż ekip. Chcemy brać zlecenia o największej marży. Czy opłaca się wyszkolić drugą ekipę gazową?”
+## Example (shortened)
+**Input:** "A renovation company has 5 crews (different permits: gas, electrical, roofing). Every week there are more orders
+than crews. We want to take the orders with the highest margin. Is it worth training a second gas crew?"
 
 ```markdown
-## Wymiary pojemności | ekipa_A | gaz, elektryka | grafik (Availability) | … |
-## Wymiary wagi       | uprawnienie_gaz | ekipa ma „gaz” | uprawnienie_dach | ekipa ma „dekarstwo” |
-## Items              | remont_łazienki_12 | marża 8 000 PLN | gaz + elektryka | nie |
-## Silnik — ≤ 30 zleceń/tydzień: DP, optimum (A)
-## Symulacja — przed: 5 ekip → 41 000 PLN; po: + gaz dla ekipy_C → 47 500 PLN; różnica 6 500 PLN/tydz. vs koszt szkolenia
-## Decyzje
-| jedna ekipa = jedno zlecenie w tygodniu? | X → zapytano: „To zależy” → parametr `max_zleceń_na_ekipę` z polityki operacyjnej (A) |
-| wynik = rekomendacja; kierownik zatwierdza → blokada ekip w Availability | A |
-| zlecenia gwarancyjne obowiązkowe | X → hot spot |
+## Capacity dimensions | crew_A | gas, electrical | rota (Availability) | … |
+## Weight dimensions  | gas_permit | the crew has "gas" | roof_permit | the crew has "roofing" |
+## Items              | bathroom_renovation_12 | margin 8,000 PLN | gas + electrical | no |
+## Engine — ≤ 30 orders/week: DP, optimum (A)
+## Simulation — before: 5 crews → 41,000 PLN; after: + gas for crew_C → 47,500 PLN; difference 6,500 PLN/week vs the training cost
+## Decisions
+| one crew = one order per week? | X → asked: "It depends" → parameter `max_orders_per_crew` from the operational policy (A) |
+| result = recommendation; the manager approves → crews blocked in Availability | A |
+| warranty orders mandatory | X → hot spot |
 ```

@@ -1,56 +1,56 @@
 # Client-Side Routing
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/client-side-routing.
+Source: frontendpatterns.dev/client-side-routing.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Routing
-- **Poziom:** Intermediate
-- **Przykłady frameworków:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 14 grudnia 2025
-- **Autor:** Den Odell
+- **Category:** Routing
+- **Level:** Intermediate
+- **Framework examples:** React, Vue, Svelte, Native web
+- **Last updated:** 14 December 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Intercept navigation to swap views without full page reloads, managing browser history and scroll
-position for a seamless single-page experience.”
+"Intercept navigation to swap views without full page reloads, managing browser history and scroll
+position for a seamless single-page experience."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Błąd w przykładzie React poprawiony:** `useNavigate()` wywołane poza `<BrowserRouter>` rzuca wyjątek — hook
-  działa tylko w komponencie pod routerem. W React Router 7 importuj z `react-router` (pakiet `react-router-dom`
-  jest tylko re-eksportem); „tryb frameworka” daje loadery/akcje per trasa.
-- Vanilla: `e.target.matches('a')` nie łapie kliknięć w elementy wewnątrz linku — użyj `e.target.closest('a')` i
-  pomijaj kliknięcia z modyfikatorami (Ctrl/Cmd/Shift, środkowy przycisk), `target="_blank"`, `download` i linki
-  do innych originów. Poprawiono.
-- **Navigation API** (`navigation.addEventListener('navigate', e => e.intercept({ handler }))`) — nowoczesny
-  następca ręcznego `pushState` + `popstate` + przechwytywania kliknięć; w 2026 dostępne we wszystkich głównych
-  silnikach (sprawdź Baseline dla swojej publiczności), z History API jako fallback.
-- Po zmianie trasy przenieś fokus na nagłówek i zaktualizuj `document.title` (fe-web-platform,
-  `.claude/skills/fe-web-platform/references/accessibility/focus-management.md`); animacje przejść — View Transitions API.
-- Alternatywa dla SPA przy treściach: MPA + cross-document View Transitions + Speculation Rules (prerender) daje
-  płynność bez routera klienta (rendering-models.md).
-- Svelte: `svelte-routing` to biblioteka niszowa — standardem jest routing plikowy SvelteKit. Angular: `provideRouter`,
-  guardy funkcyjne, `withComponentInputBinding()`, `loadComponent` (fw-angular).
+- **A bug in the React example corrected:** `useNavigate()` called outside `<BrowserRouter>` throws an exception — the hook
+  works only in a component under the router. In React Router 7 import from `react-router` (the `react-router-dom` package
+  is only a re-export); "framework mode" gives loaders/actions per route.
+- Vanilla: `e.target.matches('a')` does not catch clicks on elements inside a link — use `e.target.closest('a')` and
+  skip clicks with modifiers (Ctrl/Cmd/Shift, the middle button), `target="_blank"`, `download` and links
+  to other origins. Corrected.
+- **Navigation API** (`navigation.addEventListener('navigate', e => e.intercept({ handler }))`) — the modern
+  successor of manual `pushState` + `popstate` + click interception; in 2026 available in all major
+  engines (check Baseline for your audience), with the History API as a fallback.
+- After a route change move focus to the heading and update `document.title` (fe-web-platform,
+  `.claude/skills/fe-web-platform/references/accessibility/focus-management.md`); transition animations — the View Transitions API.
+- An alternative to an SPA for content: MPA + cross-document View Transitions + Speculation Rules (prerender) gives
+  smoothness without a client router (rendering-models.md).
+- Svelte: `svelte-routing` is a niche library — the standard is SvelteKit's file-based routing. Angular: `provideRouter`,
+  functional guards, `withComponentInputBinding()`, `loadComponent` (fw-angular).
 
 ## Problem
 
-Każde kliknięcie linku wyzwala pełny reload strony: biały błysk, przeskok scrolla na górę, utrata
-danych formularza, zatrzymanie odtwarzanego wideo, zapadnięcie rozwiniętych akordeonów. Użytkownicy
-tracą pracę, klikając link przed zapisaniem zmian. Każda nawigacja wymaga też własnego wskaźnika
-ładowania całej strony.
+Every link click triggers a full page reload: a white flash, the scroll jumping to the top, loss of
+form data, a playing video stopping, expanded accordions collapsing. Users
+lose work by clicking a link before saving changes. Every navigation also requires its own whole-page
+loading indicator.
 
-## Rozwiązanie
+## Solution
 
-Zatrzymaj pełne ładowanie stron — użyj History API do zmiany URL bez rzeczywistej nawigacji
-przeglądarki, wymieniając tylko fragment treści, który faktycznie się zmienia. Przechwytuj kliknięcia
-linków, wywołuj `pushState` do aktualizacji URL i renderuj nowy komponent trasy; na przycisk „wstecz”
-słuchaj `popstate` i renderuj poprzednią trasę. To zachowuje stan formularza, pozycję scrolla,
-rozwinięte menu i trwające multimedia.
+Stop full page loads — use the History API to change the URL without real browser
+navigation, swapping only the fragment of content that actually changes. Intercept link
+clicks, call `pushState` to update the URL and render the new route component; for the "back" button
+listen to `popstate` and render the previous route. This preserves form state, the scroll position,
+expanded menus and ongoing media.
 
-## Przykłady kodu
+## Code examples
 
 ### React
 
@@ -220,37 +220,37 @@ window.addEventListener('hashchange', () => {
 });
 ```
 
-## Zalety
+## Advantages
 
-- Natychmiastowa nawigacja, bez białego błysku i wskaźników ładowania całej strony.
-- Stan UI przetrwa nawigację — dane formularza, scroll, trwające multimedia.
-- Możliwość animowanych przejść między widokami.
-- Mniejsze obciążenie serwera (pobieranie danych, nie pełnych stron HTML).
-- Precyzyjna kontrola nad guardami, nawigacją i hookami przejść (np. `beforeEnter`).
+- Instant navigation, without a white flash and whole-page loading indicators.
+- UI state survives navigation — form data, scroll, ongoing media.
+- The possibility of animated transitions between views.
+- A smaller server load (fetching data, not full HTML pages).
+- Precise control over guards, navigation and transition hooks (e.g. `beforeEnter`).
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Wymaga JavaScriptu — bez niego całość się nie rusza.
-- Wymaga konfiguracji serwera (bezpośrednie wejście na URL musi zwrócić aplikację, nie 404).
-- Komplikacje SEO — crawlery mogą nie wykonywać JS.
-- Ręczne zarządzanie pamięcią — trzeba pilnować czyszczenia listenerów przy unmount.
-- Ręczna obsługa scrolla i fokusu (przeglądarka robi to automatycznie przy pełnym ładowaniu).
-- „History quirks if you mix up `pushState` and `replaceState`, creating confusing back-button
-  behavior.”
+- Requires JavaScript — without it nothing moves.
+- Requires server configuration (a direct visit to a URL must return the application, not a 404).
+- SEO complications — crawlers may not execute JS.
+- Manual memory management — you have to make sure listeners are cleaned up on unmount.
+- Manual handling of scroll and focus (the browser does this automatically on a full load).
+- "History quirks if you mix up `pushState` and `replaceState`, creating confusing back-button
+  behavior."
 
-## Powiązane wzorce
+## Related patterns
 
 - History API — MDN.
-- React Router — dokumentacja.
-- Vue Router — dokumentacja.
-- SvelteKit Routing — dokumentacja Svelte.
+- React Router — documentation.
+- Vue Router — documentation.
+- SvelteKit Routing — the Svelte documentation.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Client-side routing to fundament każdego SPA — używaj go zawsze, gdy budujesz aplikację
-komponentową z wieloma widokami. **Nie** traktuj go jako oczywistego wyboru dla treści głównie
-statycznej/dokumentowej, gdzie SEO i pierwsze wyrenderowanie liczą się bardziej niż płynność
-przejść między podstronami — tam pełne przeładowania (albo SSR/SSG, patrz
-`../rendering-models.md`, sekcja „Modele renderowania”) bywają lepszym
-wyborem. Pamiętaj też o konfiguracji serwera (fallback do `index.html` dla każdej ścieżki) — bez
-tego bezpośrednie wejście na głęboki URL po prostu nie zadziała.
+Client-side routing is the foundation of every SPA — use it whenever you build a component
+application with many views. Do **not** treat it as the obvious choice for mostly
+static/documentation content, where SEO and the first render count more than smooth
+transitions between subpages — there full reloads (or SSR/SSG, see
+`../rendering-models.md`, the "Rendering models" section) are often the better
+choice. Also remember the server configuration (a fallback to `index.html` for every path) — without
+it a direct visit to a deep URL simply will not work.

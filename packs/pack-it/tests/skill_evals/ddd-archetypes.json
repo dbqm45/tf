@@ -14,6 +14,18 @@
       }
     },
     {
+      "id": "saldo-punktow-en",
+      "expect": "trigger",
+      "prompt": "I'm modelling a loyalty program: points are earned and spent, some expire after 12 months, and the customer asks “why is my balance what it is?”. How should I model it and how should I handle points credited by mistake? Answer briefly.",
+      "checks": {
+        "all": [
+          ["accounting|księgow", "accounting|bookkeeping|ledger"],
+          ["transakcj\\w+.{0,60}(zapis|konta)|zapis\\w+.{0,40}(debet|kredyt)|podwójn\\w+ zapis", "transactions?.{0,60}(entr(y|ies)|accounts?)", "debit|credit", "double.entry"],
+          ["odwróc|storn|reversal", "nie edytuj|nie usuwa", "revers\\w+", "(do not|don.t|never) (edit|delete|update)", "compensat\\w+"]
+        ]
+      }
+    },
+    {
       "id": "lista-rezerwowa",
       "expect": "trigger",
       "prompt": "Kurs ma 20 miejsc. Gdy ktoś rezygnuje, następna osoba z listy rezerwowej ma 24 h na potwierdzenie, a stali klienci mają pierwszeństwo. Jak to zamodelować, żeby nie kończyło się na ORDER BY data_wpisu? Odpowiedz zwięźle.",

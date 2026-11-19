@@ -1,137 +1,137 @@
 ---
 name: ddd-event-storming
-description: Użyj przy Event Stormingu (Big Picture, Process, Design Level) — przygotowanie, prowadzenie, zapis.
+description: Use for Event Storming (Big Picture, Process, Design Level) — preparation, facilitation, write-up.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy planowaniu, prowadzeniu i zapisie sesji Event Storming — Big Picture, Process Level, Design Level — oraz przy przejściu od wyników sesji do architektury. Nie do technik pracy z ludźmi i językiem (ddd-facilitation) ani szczegółów implementacji agregatów (ddd-tactical-design)."
+  review: "2027-10-17"
+  catalog: "Use when planning, running and writing up an Event Storming session — Big Picture, Process Level, Design Level — and when moving from the session's results to architecture. Not for techniques of working with people and language (ddd-facilitation) or details of implementing aggregates (ddd-tactical-design)."
 ---
 
 # Event Storming
 
-Event Storming to wspólne modelowanie na osi czasu zdarzeń domenowych. Zdarzenia są „ciastem pizzy”:
-reszta notacji to dodatki, które kładziesz dopiero wtedy, gdy pomagają odpowiedzieć na pytanie sesji.
-To odmiana ModelStormingu — celem jest wspólne zrozumienie, a nie ładny diagram.
+Event Storming is joint modelling of domain events on a timeline. The events are the "pizza dough":
+the rest of the notation are toppings that you add only when they help answer the session's question.
+It is a variant of ModelStorming — the goal is shared understanding, not a pretty diagram.
 
-## 1. Zanim zaczniesz: po co ta sesja?
-Ustal jedno pytanie, na które sesja ma odpowiedzieć, i wybierz format:
+## 1. Before you start: what is this session for?
+Settle one question the session is to answer, and choose the format:
 
-| Format | Pytanie sesji | Kogo zaprosić | Co wychodzi |
+| Format | Session question | Whom to invite | What comes out |
 |---|---|---|---|
-| **Big Picture** | Jak działa cały biznes / duży obszar? Gdzie boli? Gdzie są granice? | szeroko: biznes + IT; „ci, co mają pytania, i ci, co mają odpowiedzi” | oś czasu, zdarzenia przełomowe, hot spoty, kandydaci na konteksty, priorytety problemów |
-| **Process Level** | Jak dokładnie działa ten jeden proces? | eksperci procesu + zespół | proces w pełnej gramatyce (komendy, polityki, read modele), reguły, pytania |
-| **Design Level** | Jak to zbudować w tym kontekście? | zespół + ekspert dziedziny | agregaty/ograniczenia, zdarzenia, komendy → gotowe do implementacji |
-| Value Driven | Gdzie powstaje i ginie wartość? | biznes | wartość +/- na osi, value stream |
-| UX Driven | Co widzi i czuje użytkownik? | produkt, UX | read modele / ekrany na osi, momenty frustracji |
-| Retro | Co się naprawdę wydarzyło (incydent, projekt)? | zespół | oś zdarzeń, przyczyny, szanse |
-| Onboarding | Jak wprowadzić nowe osoby w domenę? | nowi + weterani | wspólna mapa jako materiał startowy |
+| **Big Picture** | How does the whole business / a large area work? Where does it hurt? Where are the boundaries? | broadly: business + IT; "those who have questions and those who have answers" | a timeline, pivotal events, hot spots, context candidates, problem priorities |
+| **Process Level** | How exactly does this one process work? | process experts + the team | the process in full grammar (commands, policies, read models), rules, questions |
+| **Design Level** | How do we build this in this context? | the team + a domain expert | aggregates/constraints, events, commands → ready for implementation |
+| Value Driven | Where is value created and lost? | business | value +/- on the timeline, value stream |
+| UX Driven | What does the user see and feel? | product, UX | read models / screens on the timeline, moments of frustration |
+| Retro | What really happened (an incident, a project)? | the team | an event timeline, causes, opportunities |
+| Onboarding | How do we introduce new people to the domain? | newcomers + veterans | a shared map as starting material |
 
-Najpierw rób **Big Picture**, jeśli nie wiesz, gdzie jesteście (patrz ddd-strategic-analysis → Cynefin).
+Do **Big Picture** first if you do not know where you are (see ddd-strategic-analysis → Cynefin).
 
-## 2. Notacja — kolory i gramatyka
+## 2. Notation — colours and grammar
 
-| Element | Kolor | Zapis |
+| Element | Colour | Notation |
 |---|---|---|
-| Zdarzenie domenowe | pomarańczowy | czas przeszły, język biznesu: „Zamówienie zostało opłacone” |
-| Hot spot | różowy/fioletowy (neon) | pytanie, konflikt, ryzyko, „nie wiemy” |
-| Aktor | mała żółta | osoba/rola/dział |
-| System zewnętrzny | szeroka różowa | system IT, dostawca |
-| Szansa | zielona | pomysł na usprawnienie |
-| Wartość | mała czerwona/zielona | utrata / zysk wartości |
-| Komenda | niebieska | intencja/decyzja: „Opłać zamówienie” |
-| Polityka | liliowa | „Kiedy X, wtedy Y” — reakcja na zdarzenie |
-| Read model | zielona | informacja potrzebna do podjęcia decyzji |
-| Agregat / ograniczenie | duża żółta | reguła, która może odrzucić komendę |
+| Domain event | orange | past tense, business language: "Order was paid" |
+| Hot spot | pink/purple (neon) | a question, conflict, risk, "we do not know" |
+| Actor | small yellow | a person/role/department |
+| External system | wide pink | an IT system, a supplier |
+| Opportunity | green | an idea for an improvement |
+| Value | small red/green | loss / gain of value |
+| Command | blue | an intention/decision: "Pay for the order" |
+| Policy | lilac | "When X, then Y" — a reaction to an event |
+| Read model | green | information needed to make a decision |
+| Aggregate / constraint | large yellow | a rule that can reject a command |
 
-**Gramatyka Process Level** (każdy krok musi się „domknąć”):
-`Aktor + Read model → Komenda → System/Agregat → Zdarzenie → Polityka → Komenda → …`
-Każde zdarzenie albo uruchamia politykę, albo kończy ścieżkę, albo aktualizuje read model. Luka w łańcuchu = hot spot.
+**Process Level grammar** (every step must "close"):
+`Actor + Read model → Command → System/Aggregate → Event → Policy → Command → …`
+Every event either triggers a policy, or ends a path, or updates a read model. A gap in the chain = a hot spot.
 
-**Design Level**: `Komenda → Agregat (niezmienniki) → Zdarzenie(a)`; zdarzenie odrzucenia też jest zdarzeniem.
+**Design Level**: `Command → Aggregate (invariants) → Event(s)`; a rejection event is also an event.
 
-**Wprowadzaj notację stopniowo** — na starcie tylko pomarańczowe zdarzenia i hot spoty. Aktorów i systemy
-dodawaj po uporządkowaniu osi, komendy/polityki/read modele dopiero na poziomie procesu. Legenda wisi na
-ścianie i rośnie razem z sesją. Cała notacja od razu = uczestnicy dyskutują o kolorach zamiast o biznesie.
+**Introduce the notation gradually** — at the start only orange events and hot spots. Add actors and systems
+after ordering the timeline, commands/policies/read models only at the process level. The legend hangs on the
+wall and grows with the session. The whole notation at once = participants discuss colours instead of the business.
 
-## 3. Big Picture — przebieg
-1. **Chaotyczna eksploracja** — każdy sam pisze zdarzenia (czas przeszły) i przykleja mniej więcej w czasie. Bez dyskusji, bez poprawiania innych. Ilość > jakość.
-2. **Porządkowanie osi (enforce the timeline)** — usuwamy duplikaty, łączymy synonimy (ale synonimy to sygnał dla języka — zapisz!), ustawiamy kolejność, zaznaczamy ścieżki równoległe.
-3. **Zdarzenia przełomowe (pivotal events)** — zob. §4. Dzielą oś na rozdziały.
-4. **Swimlanes** — poziome tory, gdy procesy biegną równolegle albo gdy odpowiedzialność przechodzi między działami/aktorami. Tor = „czyja to historia”. Rozgałęzienie procesu → osobne tory od punktu decyzji.
-5. **Ludzie i systemy** — kto/co powoduje zdarzenia; gdzie przechodzi odpowiedzialność.
-6. **Opowieść (walkthrough)** — ktoś z uczestników opowiada przebieg od lewej do prawej; każde „eee… to zależy” to hot spot. Pomaga też **czytanie od końca** (reverse narrative): „co musiało się stać, żeby to zdarzenie mogło nastąpić?” — wyłapuje brakujące zdarzenia.
-7. **Problemy i szanse** — hot spoty i zielone kartki; potem **głosowanie kropkami** na najważniejsze problemy.
-8. **Wyłaniające się konteksty** — obrysuj obszary o spójnym języku i odpowiedzialności (zob. ddd-strategic-analysis).
+## 3. Big Picture — the flow
+1. **Chaotic exploration** — everyone writes events on their own (past tense) and sticks them roughly in time order. No discussion, no correcting others. Quantity > quality.
+2. **Enforcing the timeline** — we remove duplicates, merge synonyms (but synonyms are a signal about language — write them down!), set the order, mark parallel paths.
+3. **Pivotal events** — see §4. They split the timeline into chapters.
+4. **Swimlanes** — horizontal lanes, when processes run in parallel or when responsibility passes between departments/actors. A lane = "whose story this is". A branching process → separate lanes from the decision point.
+5. **People and systems** — who/what causes the events; where responsibility passes.
+6. **Walkthrough** — one of the participants narrates the flow from left to right; every "uhh… it depends" is a hot spot. **Reading from the end** (reverse narrative) also helps: "what must have happened for this event to occur?" — it catches missing events.
+7. **Problems and opportunities** — hot spots and green notes; then **dot voting** on the most important problems.
+8. **Emerging contexts** — outline areas with a coherent language and responsibility (see ddd-strategic-analysis).
 
-### Pytania kluczowe (rozgałęziające)
-Zbieraj pytania, które biznes zadaje **w wielu miejscach procesu** i od których zależy, którędy pójdzie proces
-(„Czy klient jest zweryfikowany?”, „Czy mamy wolne zasoby w tym terminie?”, „Czy przekroczono limit?”).
-Każde takie pytanie to kandydat na: read model, politykę, osobną zdolność (capability) lub osobny kontekst,
-który „jest właścicielem odpowiedzi”. Wypisz je listą z miejscami, w których padają.
+### Key (branching) questions
+Collect the questions the business asks **in many places of the process** and on which depends which way the process goes
+("Is the customer verified?", "Do we have free resources on this date?", "Has the limit been exceeded?").
+Each such question is a candidate for: a read model, a policy, a separate capability or a separate context
+that "owns the answer". List them with the places where they come up.
 
-## 4. Zdarzenia przełomowe (pivotal events)
-Zdarzenie przełomowe to takie, po którym „świat jest inny”: zmienia się odpowiedzialność, obowiązują inne reguły,
-pojawiają się nowi aktorzy, sprawa staje się trudno odwracalna.
-Przykład: „Upload zdjęcia rozpoczęty”, „Zdjęcie otagowane”, „Miniatura wygenerowana” to kroki; przełomowe jest
-„**Zdjęcie zostało opublikowane**” — od tej chwili widzą je inni, obowiązują inne reguły (moderacja, prawa autorskie).
-Test: czy biznes świętuje / raportuje to zdarzenie? czy po nim zmienia się właściciel sprawy? czy trudno je cofnąć?
-Zdarzenia przełomowe są naturalnymi granicami rozdziałów osi i częstymi granicami kontekstów.
+## 4. Pivotal events
+A pivotal event is one after which "the world is different": responsibility changes, other rules apply,
+new actors appear, the matter becomes hard to reverse.
+Example: "Photo upload started", "Photo tagged", "Thumbnail generated" are steps; the pivotal one is
+"**Photo was published**" — from that moment others see it, other rules apply (moderation, copyright).
+Test: does the business celebrate / report this event? does the owner of the matter change after it? is it hard to undo?
+Pivotal events are natural boundaries of the timeline's chapters and frequent boundaries of contexts.
 
-## 5. As-is, to-be i punkt startu
-- **Znamy proces (nic nie odkrywamy na nowo)** — postaw dwa zdarzenia graniczne **Begin** i **End** (np. „Zgłoszenie
-  przyjęte” … „Sprawa zamknięta”) i wypełnij przestrzeń między nimi stanem **as-is**. Potem, osobną warstwą
-  (inny kolor/tor), modeluj **to-be** i zaznacz różnice. Granice chronią przed rozlewaniem się sesji.
-- **Nic nie wiemy — odkrywamy, badamy** — nie wymuszaj Begin/End. Najpierw ustal kilka **zdarzeń przełomowych**
-  jako rusztowanie, a dopiero potem dopisuj zdarzenia między nimi.
+## 5. As-is, to-be and the starting point
+- **We know the process (we are not discovering anything anew)** — place two boundary events **Begin** and **End** (e.g. "Request
+  received" … "Case closed") and fill the space between them with the **as-is** state. Then, as a separate layer
+  (a different colour/lane), model the **to-be** and mark the differences. The boundaries keep the session from spilling over.
+- **We know nothing — we are discovering, exploring** — do not force Begin/End. First settle a few **pivotal events**
+  as scaffolding, and only then add the events between them.
 
-## 6. Od sesji do architektury
-| Element z sesji | Co zwykle z niego wynika |
+## 6. From the session to architecture
+| Element from the session | What usually follows from it |
 |---|---|
-| zdarzenia przełomowe, zmiana języka, swimlanes | granice kontekstów/modułów |
-| polityka „kiedy X, to Y” | handler zdarzenia, saga / proces menedżer (długie procesy) |
-| read model | strona odczytu (CQRS), projekcja, zapytanie |
-| komenda | metoda serwisu aplikacyjnego / endpoint na krawędzi modułu |
-| ograniczenie na żółtej kartce | niezmiennik agregatu → granica spójności |
-| system zewnętrzny | ACL albo Open Host Service (ddd-context-mapping) |
-| hot spot | pytanie do eksperta, spike, ryzyko w backlogu |
-| pytanie kluczowe | read model / osobna zdolność / kontekst będący właścicielem odpowiedzi |
+| pivotal events, a change of language, swimlanes | context/module boundaries |
+| a policy "when X, then Y" | an event handler, a saga / process manager (long processes) |
+| read model | the read side (CQRS), a projection, a query |
+| command | an application service method / an endpoint at the module edge |
+| a constraint on a yellow note | an aggregate invariant → a consistency boundary |
+| external system | an ACL or an Open Host Service (ddd-context-mapping) |
+| hot spot | a question for an expert, a spike, a risk in the backlog |
+| key question | a read model / a separate capability / a context that owns the answer |
 
-## 6a. Formalny zapis procesu (BPMN, EPC)
-Event Storming służy odkrywaniu; gdy proces trzeba przekazać precyzyjnie (wiele ról i systemów, wymogi audytu,
-silnik procesów), zapisz go po warsztacie:
-- **BPMN 2.0**: zdarzenia (start, pośrednie, koniec), czynności, bramki (wyłączna XOR, równoległa AND, inkluzywna OR,
-  zdarzeniowa), tory (pools/lanes) dla ról i systemów, przepływ wiadomości między uczestnikami. Mapowanie
-  z warsztatu: zdarzenie domenowe → zdarzenie lub wynik czynności, komenda → czynność, polityka → bramka lub
-  zdarzenie pośrednie, aktor → tor.
-- **EPC** (łańcuch procesów sterowany zdarzeniami): naprzemiennie zdarzenie → funkcja → zdarzenie, z łącznikami
-  AND/OR/XOR; spotykany w organizacjach używających ARIS i SAP.
-- Prosty przepływ bez wielu ról: Mermaid `flowchart` (docs-tech-writing, `diagramy-i-prezentacje.md`).
-Diagram procesu nie zastępuje modelu domeny — reguły i niezmienniki zostają w agregatach i politykach.
+## 6a. Formal process notation (BPMN, EPC)
+Event Storming serves discovery; when a process must be handed over precisely (many roles and systems, audit requirements,
+a process engine), write it down after the workshop:
+- **BPMN 2.0**: events (start, intermediate, end), activities, gateways (exclusive XOR, parallel AND, inclusive OR,
+  event-based), pools/lanes for roles and systems, message flow between participants. Mapping
+  from the workshop: domain event → an event or the result of an activity, command → an activity, policy → a gateway or an
+  intermediate event, actor → a lane.
+- **EPC** (event-driven process chain): alternating event → function → event, with
+  AND/OR/XOR connectors; found in organisations that use ARIS and SAP.
+- A simple flow without many roles: Mermaid `flowchart` (docs-tech-writing, `diagrams-and-presentations.md`).
+A process diagram does not replace the domain model — rules and invariants stay in aggregates and policies.
 
-## 7. Jak prowadzisz to jako agent (bez fizycznej ściany)
-Jesteś facylitatorem: **pytasz i zapisujesz**, a wiedzę i decyzje dają ludzie. Sesja idzie przez 5 faz:
-kontekst sesji → zdarzenia → komendy i polityki → agregaty → konteksty i mapa. Wczytujesz kartę **tylko bieżącej
-fazy** z `references/fazy-agenta.md`, tam też jest protokół tury.
-- **Tablica:** `python3 .claude/skills/ddd-event-storming/scripts/es_board.py init --id RRRR-MM-DD-<temat> --topic … --question …`,
-  potem `add`/`edit`/`move`/`undo`/`resolve`. Dziennik zdarzeń jest w `docs/project/02-domain/event-storming/<id>/`,
-  a `show` zapisuje `board.md` wg `references/board-template.md`. Skrypt odrzuca kartkę późniejszej fazy
-  (mieszanie poziomów).
-- **Jedna tura to jedno pytanie albo jeden mały ruch.** Własne propozycje oznaczasz **[propozycja]** i dodajesz po
-  zgodzie. **Nie wymyślasz faktów biznesowych**: każde założenie to hot spot.
-- **Koniec fazy:** `check` musi być bez luk, a luki stają się pytaniami lub hot spotami, nie Twoimi domysłami.
-  O przejściu do następnej fazy decyduje człowiek.
-- **Agregaty i mapa kontekstów:** w tych późnych krokach błędy modelu się kumulują. Przed zgodą człowieka zleć
-  przegląd w świeżym kontekście (wykonawca tylko do odczytu, szczegóły w karcie fazy). Mapa kontekstów to ADR.
-- Na bieżąco wyłapujesz sygnały językowe (ddd-facilitation), zadajesz pytania modelujące (ddd-deep-modeling)
-  i aktualizujesz słownik `docs/project/02-domain/glossary.md`.
+## 7. How you run it as an agent (without a physical wall)
+You are the facilitator: **you ask and you write down**, while people provide the knowledge and decisions. The session goes through 5 phases:
+session context → events → commands and policies → aggregates → contexts and map. You load the card **of the current
+phase only** from `references/agent-phases.md`, where the turn protocol also is.
+- **Board:** `python3 .claude/skills/ddd-event-storming/scripts/es_board.py init --id YYYY-MM-DD-<topic> --topic … --question …`,
+  then `add`/`edit`/`move`/`undo`/`resolve`. The event log is in `docs/project/02-domain/event-storming/<id>/`,
+  and `show` writes `board.md` according to `references/board-template.md`. The script rejects a note of a later phase
+  (mixing levels).
+- **One turn is one question or one small move.** You mark your own proposals **[proposal]** and add them after
+  consent. **You do not invent business facts**: every assumption is a hot spot.
+- **End of a phase:** `check` must be without gaps, and the gaps become questions or hot spots, not your guesses.
+  The human decides about moving on to the next phase.
+- **Aggregates and the context map:** in these late steps model errors accumulate. Before the human's consent, commission
+  a review in a fresh context (a read-only implementer, details in the phase card). The context map is an ADR.
+- As you go, you catch language signals (ddd-facilitation), ask modelling questions (ddd-deep-modeling)
+  and update the glossary `docs/project/02-domain/glossary.md`.
 
-## Materiały dodatkowe
-- `references/session-scripts.md` — scenariusze minutowe sesji Big Picture / Process / Design, przygotowanie sali, wersja zdalna.
-- `references/board-template.md` — szablon zapisu tablicy w Markdown + Mermaid.
-- `references/fazy-agenta.md` — sesja prowadzona przez agenta: protokół tury i karty 5 faz (kryteria wyjścia, bramki).
-- `scripts/es_board.py` — tablica sesji: dziennik zdarzeń z cofnięciem, kontrola struktury fazy, zapis Markdown.
+## Additional materials
+- `references/session-scripts.md` — minute-by-minute scripts of Big Picture / Process / Design sessions, room preparation, the remote version.
+- `references/board-template.md` — a template for writing up the board in Markdown + Mermaid.
+- `references/agent-phases.md` — a session run by the agent: the turn protocol and the cards of the 5 phases (exit criteria, gates).
+- `scripts/es_board.py` — the session board: an event log with undo, a check of the phase structure, a Markdown write-up.
 
-## Wejście z tablicy (zdjęcie, eksport)
-Gdy dostajesz zdjęcie lub eksport ściany: czytaj **przepływ po torach** (numerowane kroki z typem kartki w nawiasie), zdarzenia
-przełomowe i hot spoty jako indeksy do kroków, niepewność jawnie (`[nieczytelne]`), bramka z losową próbką kartek.
-Procedura i format: ddd-discovery-intake → `.claude/skills/ddd-discovery-intake/references/board-reading.md`. Na Big Picture dopuszczalne są tylko zdarzenia i hot spoty —
-inne typy kartek to sygnał mieszania poziomów (samokontrola w ddd-facilitation).
+## Input from a board (a photo, an export)
+When you get a photo or an export of the wall: read **the flow along the lanes** (numbered steps with the note type in brackets), pivotal
+events and hot spots as indexes to the steps, uncertainty explicitly (`[illegible]`), a gate with a random sample of notes.
+Procedure and format: ddd-discovery-intake → `.claude/skills/ddd-discovery-intake/references/board-reading.md`. At Big Picture only events and hot spots are allowed —
+other note types are a signal of mixing levels (self-check in ddd-facilitation).

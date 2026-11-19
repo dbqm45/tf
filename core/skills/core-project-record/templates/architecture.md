@@ -4,17 +4,17 @@ phase: architecture
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: [docs/project/04-architecture/stack-decision.md]
 ---
-# Architektura: <nazwa>
+# Architecture: <name>
 
 ## TL;DR
-## Widok kontekstu (C4 poziom 1) i kontenerów (poziom 2)
-<Mermaid lub opis: systemy, użytkownicy, kontenery, przepływy>
-## Moduły i ich granice (↔ konteksty DDD)
-## Kluczowe przepływy
-## Decyzje (linki do ADR)
-## Otwarte pytania
-## Przekazanie
+## Context view (C4 level 1) and containers (level 2)
+<Mermaid or a description: systems, users, containers, flows>
+## Modules and their boundaries (↔ DDD contexts)
+## Key flows
+## Decisions (links to ADRs)
+## Open questions
+## Handoff

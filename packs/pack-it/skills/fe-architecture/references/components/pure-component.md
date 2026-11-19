@@ -1,42 +1,42 @@
 # Pure Component
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/pure-component.
+Source: frontendpatterns.dev/pure-component.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Components
-- **Poziom:** Beginner
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** September 26, 2025
-- **Autor:** Den Odell
+- **Category:** Components
+- **Level:** Beginner
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** September 26, 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Build components that produce the same output for the same inputs with no side effects, enabling memoization and predictable testing.”
+"Build components that produce the same output for the same inputs with no side effects, enabling memoization and predictable testing."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **React Compiler** (stabilny od 2025, React 19) automatycznie memoizuje komponenty i wartości — w projektach z
-  kompilatorem ręczne `React.memo`/`useCallback` są zwykle zbędne; czystość renderu jest wtedy **warunkiem**
-  poprawnej kompilacji. Odpowiedniki czystych obliczeń: Vue `computed`, Svelte 5 `$derived`, Angular `computed()`
+- **React Compiler** (stable since 2025, React 19) automatically memoizes components and values — in projects with
+  the compiler, manual `React.memo`/`useCallback` are usually unnecessary; render purity is then a **condition** for
+  correct compilation. Equivalents of pure computations: Vue `computed`, Svelte 5 `$derived`, Angular `computed()`
   + `OnPush`/zoneless (fw-angular).
-- „Fetch w `useEffect`” to minimum; lepsza jest warstwa danych/loader (resilience/async-boundary.md).
-- Przykład Web Components poprawiony z `innerHTML` na `textContent`.
-- Przykłady Vue w Options API (`data`, `mounted`) — w nowym kodzie Composition API (`<script setup>`).
-- Przykłady Svelte to składnia Svelte 4 (`export let`, `$:`, `on:click`, `<slot>`); w Svelte 5: `$props()`, `$state`,
-  `$derived`, `$effect`, atrybuty `onclick`, snippety zamiast slotów.
+- "Fetch in `useEffect`" is the minimum; a data layer/loader is better (resilience/async-boundary.md).
+- The Web Components example corrected from `innerHTML` to `textContent`.
+- The Vue examples are in the Options API (`data`, `mounted`) — in new code the Composition API (`<script setup>`).
+- The Svelte examples are Svelte 4 syntax (`export let`, `$:`, `on:click`, `<slot>`); in Svelte 5: `$props()`, `$state`,
+  `$derived`, `$effect`, `onclick` attributes, snippets instead of slots.
 
 ## Problem
 
-Komponenty renderujące różne wyniki dla identycznych propsów (odczyt aktualnego czasu podczas renderu, odczyt globalnego stanu, wywołania analityczne w trakcie renderowania). To uniemożliwia memoizację, powoduje niestabilne testy i warunki wyścigu.
+Components rendering different results for identical props (reading the current time during render, reading global state, analytics calls during rendering). This makes memoization impossible, causes flaky tests and race conditions.
 
-## Rozwiązanie
+## Solution
 
-Buduj czyste funkcje komponentów: identyczne propsy → identyczne wyjście, zero efektów ubocznych podczas renderu. Efekty uboczne (fetch, subskrypcje, analytics) przenieś do `useEffect` (albo odpowiednika we frameworku), nie do ciała funkcji renderującej.
+Build pure component functions: identical props → identical output, zero side effects during render. Move side effects (fetch, subscriptions, analytics) to `useEffect` (or the framework's equivalent), not into the body of the render function.
 
-## Przykłady kodu
+## Code examples
 
 ### React
 
@@ -109,7 +109,7 @@ customElements.define('pure-greeting', PureGreeting);
 
 ### Pure vs impure
 
-**Impure (unikać) — odczytuje stan zewnętrzny podczas renderu:**
+**Impure (avoid) — reads external state during render:**
 
 ```javascript
 function ImpureTimestamp({ prefix }) {
@@ -118,7 +118,7 @@ function ImpureTimestamp({ prefix }) {
 }
 ```
 
-**Pure (preferować) — czas jest propem, wyjście przewidywalne:**
+**Pure (prefer) — the time is a prop, the output is predictable:**
 
 ```javascript
 function PureTimestamp({ prefix, time }) {
@@ -126,21 +126,21 @@ function PureTimestamp({ prefix, time }) {
 }
 ```
 
-### Aktualizacje niemutujące (immutable)
+### Non-mutating (immutable) updates
 
 ```javascript
 const UserDisplay = React.memo(({ user }) => <div>{user.name}</div>);
 
-// Mutacja — ta sama referencja, brak re-rendera
+// Mutation — the same reference, no re-render
 user.name = 'Bob';
 <UserDisplay user={user} />
 
-// Immutable — nowa referencja, re-render następuje
+// Immutable — a new reference, a re-render happens
 const updated = { ...user, name: 'Bob' };
 <UserDisplay user={updated} />
 ```
 
-### Testowanie memoizacji
+### Testing memoization
 
 ```javascript
 test('memoized component skips re-render with same props', () => {
@@ -161,9 +161,9 @@ test('memoized component skips re-render with same props', () => {
 });
 ```
 
-### Efekty uboczne w Effects, nie w renderze
+### Side effects in Effects, not in render
 
-**Unikać — fetch synchroniczny podczas renderu powoduje zduplikowane wywołania:**
+**Avoid — a synchronous fetch during render causes duplicated calls:**
 
 ```javascript
 function BadProfile({ userId }) {
@@ -172,7 +172,7 @@ function BadProfile({ userId }) {
 }
 ```
 
-**Preferować — fetch w `useEffect`, render pozostaje czysty:**
+**Prefer — fetch in `useEffect`, the render stays pure:**
 
 ```javascript
 function GoodProfile({ userId }) {
@@ -184,7 +184,7 @@ function GoodProfile({ userId }) {
 }
 ```
 
-### Stabilne referencje callbacków
+### Stable callback references
 
 ```javascript
 function TodoList({ todos }) {
@@ -200,25 +200,25 @@ const TodoItem = React.memo(({ todo, onToggle }) => (
 ));
 ```
 
-## Zalety
+## Advantages
 
-- Zachowanie przewidywalne — identyczne propsy zawsze dają identyczne wyjście.
-- Memoizacja rzeczywiście działa — `React.memo` (i odpowiedniki) skutecznie pomijają zbędne re-rendery.
-- Testowanie proste — tylko propsy na wejściu i asercja na wyjściu, bez mockowania efektów.
-- Reużywalność lepsza — komponent bez zewnętrznych zależności działa wszędzie.
-- Timing bugs znikają — efekty przeniesione do `useEffect` dają kontrolę nad momentem wykonania.
-- Bezpieczny dla concurrent rendering — React może renderować wielokrotnie bez duplikowania efektów ubocznych.
+- Predictable behaviour — identical props always give identical output.
+- Memoization really works — `React.memo` (and its equivalents) effectively skip unnecessary re-renders.
+- Simple testing — only props on the input and an assertion on the output, without mocking effects.
+- Better reusability — a component without external dependencies works everywhere.
+- Timing bugs disappear — effects moved to `useEffect` give control over the moment of execution.
+- Safe for concurrent rendering — React can render many times without duplicating side effects.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Efekty uboczne muszą wyjść z ciała renderu — fetch, subskrypcje, analytics zawsze do `useEffect`/odpowiednika.
-- Memoizacja ma swój koszt (overhead porównania) — dla szybko zmieniających się propsów koszt może przewyższyć korzyść.
-- Shallow comparison ma granice — zmiana `user.name` bez zmiany referencji obiektu `user` nie wywoła re-rendera.
-- Callbacki przekazywane jako propsy potrzebują `useCallback` — inline funkcje tworzą nową referencję przy każdym renderze, unieważniając memoizację dziecka.
-- Nie wszystko może być czyste — imperatywne API (np. focus, scroll) z natury mają efekt uboczny.
-- Profiluj przed optymalizacją — `React.memo` „na wszelki wypadek” wszędzie dodaje niepotrzebny narzut porównań.
+- Side effects must leave the render body — fetch, subscriptions, analytics always go to `useEffect`/its equivalent.
+- Memoization has its cost (comparison overhead) — for rapidly changing props the cost can exceed the benefit.
+- Shallow comparison has limits — a change of `user.name` without changing the reference of the `user` object will not trigger a re-render.
+- Callbacks passed as props need `useCallback` — inline functions create a new reference on every render, invalidating the child's memoization.
+- Not everything can be pure — imperative APIs (e.g. focus, scroll) by nature have a side effect.
+- Profile before optimizing — `React.memo` everywhere "just in case" adds unnecessary comparison overhead.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Memoization](../performance/memoization.md) — Performance.
 - `React.memo` — React docs.
@@ -226,8 +226,8 @@ const TodoItem = React.memo(({ todo, onToggle }) => (
 - Reactive Declarations — Svelte docs.
 - Pure Functions — Wikipedia.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Trzymaj komponenty czyste **domyślnie** — to nie jest optymalizacja opcjonalna, to warunek, żeby memoizacja/concurrent rendering w ogóle miały sens, i żeby testy były deterministyczne.
+Keep components pure **by default** — this is not an optional optimization, it is the condition for memoization/concurrent rendering to make sense at all, and for tests to be deterministic.
 
-Nie owijaj każdego komponentu w `React.memo` „na wszelki wypadek” bez zmierzonego problemu wydajnościowego — koszt porównania propsów bywa większy niż koszt samego re-renderu dla prostych komponentów; to klasyczna premature optimization (patrz YAGNI w `../principles.md`). Najpierw zmierz, potem memoizuj tam, gdzie realnie boli.
+Do not wrap every component in `React.memo` "just in case" without a measured performance problem — the cost of comparing props can be greater than the cost of the re-render itself for simple components; this is classic premature optimization (see YAGNI in `../principles.md`). First measure, then memoize where it really hurts.

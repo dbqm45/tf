@@ -1,17 +1,49 @@
 #!/usr/bin/env python3
 """
-tf — the team factory command: install, update, packs, languages, health check (standard library only).
+tf — the team factory command: install, update, packs, health check (standard library only).
 
   cd ~/projects/my-app
   tf                          # no factory → install the latest release; installed → update (.tf/factory/update.py)
-  tf install [options]        # install (options go to install.py: --packs, --language, --commit-language, --shared…)
+  tf install [options]        # install (options go to install.py: --packs, --shared…)
   tf update [options]         # update (options go to update.py: --check, --yes, --source…)
-  tf add <pack> [<pack>…]     # add packs or modes (e.g. tf add pack-ev, tf add mode-talos)
+  tf add <pack> [<pack>…]     # add packs or modes (e.g. tf add pack-ux, tf add mode-team)
   tf remove <pack> [<pack>…]  # remove packs (their files go to .tf/backup/)
-  tf list                     # installed packs and modes, languages, what the source offers
-  tf language <code>          # working language (conversation, documentation); pl installs pack-editorial-pl
-  tf commit-language <code>   # language of commit messages, PR titles and descriptions
-  tf doctor [--fix]           # check the install: core/pack versions, required packs, language pack, agents, renames
+  tf list                     # installed packs and modes, what the source offers
+  tf doctor [--fix]           # check the install: core/pack versions, required packs, agents, renames
+                              # and whether the quality gate is on (.claude/quality-gate.json)
+  tf onboard [--yes] [--verify] [--dry-run] [--json]
+                              # prepare the repository: detect test/lint/type/build commands, write verify.sh, the
+                              # readiness report (.tf/reports/readiness.md) and the commands in the instructions file,
+                              # turn the quality gate on; --verify runs the verification once (.tf/factory/onboard.py)
+  tf new skill <name> "<description>" [--role <role>]
+                              # your own skill from the template, with a scenario file (.tf/factory/build.py new-skill)
+  tf skill check <name>       # quality gate of a skill: structure, scenarios, audit (.tf/factory/skill_gate.py)
+  tf skill audit <directory>  # security audit of a skill, before you use a foreign one (.tf/factory/skill_audit.py)
+  tf uninstall [--dry-run] [--yes] [--force]   # remove the factory from this project (keeps your files; --force removes
+                              # them too); backup in ~/.tf/backups/
+  tf style [<name>] [--here]  # your work style: autonomous | step-by-step | conversation; no name — show the current one;
+                              # saved in ~/.tf/preferences.yaml (all your projects) or, with --here, .tf/config/me.yaml
+  tf config show [<key>]      # merged configuration and where each value comes from (factory or project);
+                              # `tf config show steps`: who runs each /tf loop step, with model and effort
+  tf task start <KEY> --title "<title>" | stage <KEY> <stage> | status <KEY>
+  tf task start <CHG>-<TSK> --title "<title>" --change <CHG> --cut <TSK>   # task of a pdi change cut
+  tf task freeze <KEY> <file> --by human:<id> | reopen <KEY> <file> --by human:<id> --reason "<why>"
+  tf status [--json] [--open] [--all] # open tasks (--all: closed ones too): stage, slices with current evidence, files to refresh, what waits for you;
+                              # --open builds the live view (.tf/runs/dashboard.html) and opens it in the browser
+  tf spec new <KEY> | check <KEY> [--json]   # task specification (spec.md): template, readiness check
+  tf trace <KEY> [--base <branch>] [--md|--json]   # criterion → test → commit → evidence
+  tf task flag <KEY> set <key> [--remove-by YYYY-MM-DD] | none --reason "<why>" | allow <env> --by human:<id>
+  tf flag check <KEY> [--base <branch>] [--json]   # the task's feature flag is on outside the test environment only by human decision
+  tf task weight <KEY> [--apply | --set light|normal|full [--by human:<id> --reason "<why>"]]   # task weight: proposal with a reason; lowering is a human decision
+  tf task deployed <KEY> [--version X] | --rolled-back --by human:<id>   # after deployment: run the smoke test from the operations card, record the result; a red result asks whether to roll back
+  tf task finding <KEY> add "<finding>" | control F1 "<control>"   # important review findings and the control that will catch each next time
+  tf task close <KEY> [--lesson "<lesson>" --by human:<id>]   # close a merged task; refuses with an open rollback decision or a finding without a control
+  tf task mode <KEY> [plan|normal|auto]   # who approves: plan stops after the plan, normal waits for the human's approval of the plan, auto does not
+                              # one place per task: docs/project/changes/<KEY>/task.json and the task index
+                              # (.tf/factory/task_state.py)
+  tf work --once --budget <USD> [--key <KEY>] [--dry-run]
+                              # unattended: one task in Auto mode (light or normal weight) through the /tf loop in its
+                              # own worktree (.tf/worktrees/<KEY>) with a spending limit; never merges (.tf/factory/work.py)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
   tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
                               # modular project review → .tf/reports/<module>.md with a checklist (.tf/factory/analyze.py)
@@ -21,9 +53,6 @@ tf — the team factory command: install, update, packs, languages, health check
   tf metrics [--weeks N] [--revert-days N] [--no-gh]
                               # factory effectiveness: revert rate, cost per accepted change, cycle time,
                               # rework causes → .tf/reports/metrics.md (.tf/factory/metrics.py)
-  tf standard [--json] [--strict] [--only a,b]
-                              # repository standard in one result: install, project journal, agent instruction
-                              # files, repo readiness, hook traces (.tf/factory/standard.py)
   tf --repo <url>             # another factory repository (also <url>#branch-or-tag)
 
 Install the launcher once, from a factory clone or from a project that already has the factory:
@@ -48,14 +77,14 @@ import re
 import subprocess
 import sys
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 import tempfile
 from pathlib import Path
 
@@ -177,38 +206,6 @@ def run_build() -> int:
     return r.returncode
 
 
-def set_language(kind: str, code: str, repo: str | None) -> int:
-    """`kind`: language | commit_language. Language with a pack missing in the project goes through the installer."""
-    if not need_project():
-        return 2
-    pm = project_module("packs")
-    cfg = pm.load_config(Path.cwd())
-    langs = cfg.get("languages") or {}
-    if code not in langs:
-        print(f"✗ Unknown language '{code}'. Available: {', '.join(langs)}")
-        return 2
-    root = Path.cwd()
-    current = pm.load_settings(root, cfg)
-    flag = "--" + kind.replace("_", "-")
-    installed = pm.installed_packs(root)
-    if kind == "language":
-        need = (langs[code] or {}).get("pack")
-        if need and need not in installed:
-            print(f"ℹ Language {code} needs {need} — installing it.")
-            return update(repo, [flag, code])
-        old_pack = (langs.get(current["language"]) or {}).get("pack")
-        if old_pack and old_pack != need and old_pack in installed and sys.stdin.isatty():
-            if input(f"Remove {old_pack} (tools for {current['language']})? [y/N] ").strip().lower() in ("y", "yes"):
-                return update(repo, [flag, code, "--remove", old_pack])
-    pm.save_settings(root, **{kind: code})
-    settings = pm.load_settings(root, cfg)
-    for name in ("CLAUDE.local.md", "CLAUDE.md"):
-        if pm.write_language_lines(root / name, cfg, settings):
-            print(f"✓ {name}: language section updated")
-    print(f"✓ {kind.replace('_', ' ')}: {current[kind]} → {code}")
-    return run_build()
-
-
 def cmd_list() -> int:
     if not need_project():
         return 2
@@ -227,6 +224,162 @@ def cmd_list() -> int:
     return r.returncode
 
 
+PROJECT_TF = Path(".tf") / "factory" / "tf.py"
+
+
+def is_launcher() -> bool:
+    """This file is the launcher (a copy in ~/.local/bin), not the engine's tf.py in .tf/factory/ nor in the factory clone."""
+    return Path(__file__).resolve().parent.name != "factory"
+
+
+def refresh_launcher() -> None:
+    """After a project update the launcher adopts the project engine's tf.py (keeping the repo address) so that it knows
+    the new commands. It does nothing when this is not the launcher or the project has no .tf/factory/tf.py."""
+    if not is_launcher() or not PROJECT_TF.is_file():
+        return
+    me = Path(__file__).resolve()
+    text = PROJECT_TF.read_text(encoding="utf-8")
+    text = re.sub(r"^REPO = .*$", lambda m: f"REPO = {REPO!r}", text, count=1, flags=re.M)
+    try:
+        if text != me.read_text(encoding="utf-8"):
+            me.write_text(text, encoding="utf-8")
+            print(f"✓ Launcher {me} updated to the project's factory version")
+    except OSError as e:
+        print(f"⚠ Could not update the launcher {me}: {e} — run: python3 .tf/factory/tf.py --install-launcher")
+
+
+def engine(script: str, args: list[str]) -> int:
+    """Run a script of the project's engine (.tf/factory/) with the given arguments."""
+    if not need_project():
+        return 2
+    return subprocess.run([sys.executable, str((Path(".tf") / "factory") / script), *args]).returncode
+
+
+def cmd_config_show(key: str | None) -> int:
+    """Merged configuration and where each top-level key comes from: factory default, organization pack or project."""
+    packs = project_module("packs")
+    root = Path.cwd()
+    own_path = root / ".tf" / "config" / "config.yaml"
+    own = packs.load_yaml(own_path) if own_path.is_file() else {}
+    layers = packs.config_layers(root) if hasattr(packs, "config_layers") else []
+    org = next((d for label, d in layers if "org_defaults" in label), {})   # company overlay
+    team = next((d for label, d in layers if "team_defaults" in label), {})   # team overlay
+    person = next((d for label, d in layers if label.endswith("(person)")), {})   # preferencje osoby (tf style)
+    cfg = packs.load_config(root)
+    if key == "steps" and cfg.get("steps"):     # steps of the /tf loop with model and effort after the cost profile is applied
+        full = project_module("build").load_config()
+        print(f"# /tf loop steps (cost profile: {full.get('_profile')}). To change: steps in .tf/config/config.yaml, "
+              "then python3 .tf/factory/build.py")
+        print(f"{'step':<16} {'what':<38} {'who':<18} {'tier':<5} {'model':<8} effort")
+        for sid, step in full["steps"].items():
+            tier = full["tiers"].get(step.get("tier"), {})
+            print(f"{sid:<16} {step.get('label', ''):<38} {step.get('who', ''):<18} {step.get('tier', ''):<5} "
+                  f"{tier.get('model', '?'):<8} {tier.get('effort', '?')}")
+        return 0
+    if key is not None:
+        if key not in cfg:
+            print(f"✗ No key \"{key}\". List of keys: tf config show")
+            return 2
+        print(json.dumps(cfg[key], ensure_ascii=False, indent=2))
+        return 0
+    print("# Factory configuration. You put your own values in .tf/config/config.yaml. An update does not touch them.")
+    for k in sorted(cfg):
+        shown = json.dumps(cfg[k], ensure_ascii=False)
+        shown = shown if len(shown) <= 70 else shown[:67] + "…"
+        src = ("person" if k in person else "project" if k in own else "team" if k in team
+               else "organisation" if k in org else "factory")
+        print(f"{k:<28} {src:<12} {shown}")
+    for w in (packs.work_style(root).get("warnings") or []) if hasattr(packs, "work_style") else []:
+        print(f"⚠ personal preferences: {w}")
+    print("# The full value of one key: tf config show <key>")
+    return 0
+
+
+def cmd_style(rest: list[str]) -> int:
+    """A person's work style: show or save in ~/.tf/preferences.yaml (--here: .tf/config/me.yaml, outside the repository)."""
+    here = "--here" in rest
+    names = [a for a in rest if a != "--here"]
+    packs = project_module("packs")
+    root = Path.cwd()
+    if not hasattr(packs, "work_style"):
+        print("✗ The engine in .tf/factory/ does not know work styles. Update the factory: tf update")
+        return 2
+    styles = packs.load_config(root).get("styles") or {}
+    if not names:
+        ws = packs.work_style(root)
+        print(f"Work style: {ws.get('style') or 'none (project settings)'}")
+        for m in packs.apply_style_permissions(root) if hasattr(packs, "apply_style_permissions") else []:
+            print(f"• {m}")
+        print(f"  default task mode: {ws['default_mode']} (allowed: {', '.join(ws['allowed_modes'])})")
+        print(f"  a question pauses only its own slice: {'yes' if ws['blocked_slices'] else 'no'}")
+        print(f"  human approval after each slice: {'yes' if ws['confirm_each_slice'] else 'no'}")
+        for w in ws.get("warnings") or []:
+            print(f"⚠ {w}")
+        print(f"To change: tf style <{'|'.join(styles)}> [--here]")
+        return 0
+    if len(names) != 1 or names[0] not in styles:
+        print(f"✗ Unknown style \"{' '.join(names)}\". Choose from: {', '.join(styles)}")
+        return 2
+    path = root / ".tf" / "config" / "me.yaml" if here else packs.preferences_path()
+    data = packs.load_yaml(path) if path.is_file() else {}
+    data = {**(data if isinstance(data, dict) else {}), "style": names[0]}
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(packs.yaml.safe_dump(data, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    if here:
+        ensure_excluded(root, ".tf/config/me.yaml")
+    ws = packs.work_style(root)
+    perm_msgs = packs.apply_style_permissions(root) if hasattr(packs, "apply_style_permissions") else []
+    print(f"✓ style {names[0]} saved in {path if not here else '.tf/config/me.yaml'}. Default task mode: "
+          f"{ws['default_mode']}, approval after each slice: {'yes' if ws['confirm_each_slice'] else 'no'}")
+    for m in perm_msgs:
+        print(f"• {m}")
+    for w in ws.get("warnings") or []:
+        print(f"⚠ {w}")
+    return 0
+
+
+def ensure_excluded(root: Path, rel: str) -> None:
+    """A person's file does not go to the repository: an entry in .git/info/exclude, if git does not ignore it yet."""
+    try:
+        if subprocess.run(["git", "-C", str(root), "check-ignore", "-q", rel], capture_output=True).returncode == 0:
+            return
+        top = subprocess.run(["git", "-C", str(root), "rev-parse", "--git-path", "info/exclude"], capture_output=True,
+                             text=True)
+        if top.returncode != 0:
+            return
+        exclude = (root / top.stdout.strip()).resolve()
+        exclude.parent.mkdir(parents=True, exist_ok=True)
+        old = exclude.read_text(encoding="utf-8") if exclude.is_file() else ""
+        exclude.write_text(old + ("" if old.endswith("\n") or not old else "\n") + rel + "\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
+def instructions_summary(lint: Path) -> str:
+    """One line about the project's instruction files (CLAUDE.md, AGENTS.md…): checks with remarks or “no remarks”."""
+    try:
+        r = subprocess.run([sys.executable, str(lint), "--root", ".", "--json"], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=120)
+        files = json.loads(r.stdout).get("files") or []
+    except (OSError, ValueError, subprocess.SubprocessError, AttributeError):
+        return "⚠ instructions: could not compute the instruction file report"
+    if not files:
+        return "• instructions: the project has no CLAUDE.md or AGENTS.md file"
+    notes = []
+    for f in files:
+        bad = [f"{c['id']} ({len(c.get('findings') or []) or c.get('verdict')})" for c in f.get("checks") or []
+               if c.get("verdict") in ("WARN", "ERROR")]
+        if bad:
+            try:
+                name = Path(f["path"]).resolve().relative_to(Path.cwd().resolve()).as_posix()
+            except ValueError:
+                name = f["path"]
+            notes.append(f"{name}: {', '.join(bad)}")
+    if not notes:
+        return f"✓ instructions: {len(files)} file(s), no findings"
+    return ("⚠ instructions: " + "; ".join(notes) + f"\n  details: python3 {lint.as_posix()} --root .")
+
+
 def cmd_doctor(fix: bool, repo: str | None) -> int:
     """Install health: build check (versions, required packs, references), renames from core migrations."""
     if not need_project():
@@ -239,13 +392,34 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
     out = r.stdout
     print("\n".join(ln for ln in out.splitlines() if not ln.startswith("⚠ skill ")) or "?")
     hook_log = Path(".claude") / "hooks" / "hook_errors.py"
-    if hook_log.is_file():   # błędy hooków z ostatnich 7 dni — informacja, nie zmienia wyniku doctora
+    if hook_log.is_file():   # hook errors from the last 7 days — information, does not change the doctor result
         h = subprocess.run([sys.executable, str(hook_log), "--summary", "--days", "7"], capture_output=True, text=True,
                            encoding="utf-8", errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if h.stdout.strip():
             print(h.stdout.strip())
+    models = Path(".tf") / "factory" / "model_check.py"
+    if models.is_file():   # model names in the configuration (step H20) — information, does not change the doctor result
+        m = subprocess.run([sys.executable, str(models)], capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
+        if m.stdout.strip():
+            print(m.stdout.strip())
+    health = Path(".tf") / "factory" / "metrics.py"
+    if health.is_file():   # degradation after a factory update (step H29, D13) — a warning only, exit code unchanged
+        u = subprocess.run([sys.executable, str(health), "--after-update"], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
+        if u.stdout.startswith("⚠"):
+            print(u.stdout.strip())
+    lint = Path(".claude") / "skills" / "core-agent-instructions" / "scripts" / "instructions_lint.py"
+    if lint.is_file():   # the project's instruction files card (step H21) — information, does not change the doctor result
+        print(instructions_summary(lint))
+    gate = Path(".claude") / "hooks" / "quality_gate.py"
+    if gate.is_file():   # whether the quality gate works (a plain-language message) — information, does not change the result
+        g = subprocess.run([sys.executable, str(gate), "--status"], capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
+        if g.stdout.strip():
+            print(g.stdout.strip())
     missing = sorted(set(re.findall(r"tf add (pack-[a-z0-9-]+)", out)))
-    stale = "nieaktualne" in out or "nieaktualny" in out
+    stale = "stale" in out or "stale" in out
     if fix and stale:
         run_build()
     if fix and missing:
@@ -280,11 +454,11 @@ def main(argv: list[str]) -> int:
             print(f"✗ Usage: tf {cmd} <pack> [<pack>…]")
             return 2
         return update(repo or REPO or None, [f"--{cmd}", ",".join(rest)]) if need_project() else 2
-    if cmd in ("language", "commit-language"):
-        if len(rest) != 1:
-            print(f"✗ Usage: tf {cmd} <code>")
-            return 2
-        return set_language(cmd.replace("-", "_"), rest[0], repo or REPO or None)
+    if cmd in ("language", "commit-language"):   # 12.0.0: language without settings, as in Claude
+        print(f"ℹ tf {cmd} is no longer needed: there is no language setting. The agents answer in the language you "
+              "write in and write your documents in it; commit messages follow the repository's history (git log; a new "
+              "repository: English, or commit_language.new_repo in the config).")
+        return 2
     if cmd == "list":
         return cmd_list()
     if cmd == "doctor":
@@ -298,25 +472,87 @@ def main(argv: list[str]) -> int:
         if not need_project():
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "risk_triage.py"), *rest]).returncode
+    if cmd == "new":
+        if len(rest) < 3 or rest[0] != "skill":
+            print('✗ Usage: tf new skill <name> "<description>" [--role <role>] [--name-only]\n'
+                  '  e.g. tf new skill app-invoices "Use for corrective invoices — numbering, tax rates. Not for payments."')
+            return 2
+        return engine("build.py", ["new-skill", *rest[1:]])
+    if cmd == "skill":
+        scripts = {"check": "skill_gate.py", "audit": "skill_audit.py"}
+        if len(rest) < 2 or rest[0] not in scripts:
+            print("✗ Usage: tf skill check <name> [--model haiku,sonnet --yes]   # quality gate (model runs cost money)\n"
+                  "         tf skill audit <skill directory>                     # security audit, before using a foreign skill")
+            return 2
+        return engine(scripts[rest[0]], rest[1:])
+    if cmd == "config":
+        if not rest or rest[0] != "show" or len(rest) > 2:
+            print("✗ Usage: tf config show [<key>]")
+            return 2
+        return cmd_config_show(rest[1] if len(rest) == 2 else None) if need_project() else 2
+    if cmd == "uninstall":
+        return engine("uninstall.py", rest) if need_project() else 2
+    if cmd == "style":
+        return cmd_style(rest) if need_project() else 2
+    if cmd == "task":
+        return engine("task_state.py", rest)
+    if cmd == "status":
+        if "--open" in rest:          # build the live view and open it in the browser, then print the list
+            rest = [a for a in rest if a != "--open"]
+            view = Path(".claude") / "skills" / "tf" / "scripts" / "run_state.py"
+            if need_project() and view.is_file():
+                subprocess.run([sys.executable, str(view), "dashboard", "--open"])
+        return engine("task_state.py", ["list", *rest])
+    if cmd == "spec":
+        return engine("spec_check.py", rest)
+    if cmd == "trace":
+        return engine("trace_check.py", rest)
+    if cmd == "flag":
+        if not rest or rest[0] != "check":
+            print("✗ Usage: tf flag check <KEY> [--base <branch>] [--json]   (set the flag with: tf task flag <KEY> set <key>)")
+            return 2
+        return engine("flag_check.py", rest)
+    if cmd == "onboard":
+        if not need_project():
+            return 2
+        return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "onboard.py"), *rest]).returncode
+    if cmd == "work":
+        return engine("work.py", rest)
     if cmd == "metrics":
         if not need_project():
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "metrics.py"), *rest]).returncode
-    if cmd == "standard":
-        if not need_project():
-            return 2
-        return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "standard.py"), *rest]).returncode
     if cmd not in (None, "install", "update"):
+        if is_launcher() and PROJECT_TF.is_file():   # a command newer than the launcher — the project engine knows it
+            return subprocess.run([sys.executable, str(PROJECT_TF), *argv[1:]]).returncode
         print(f"✗ Unknown command '{cmd}'.\n{__doc__}")
         return 2
     if MANIFEST.exists() and cmd != "install":
-        return update(repo or REPO or None, rest)
+        rc = update(repo or REPO or None, rest)
+        if rc == 0:
+            refresh_launcher()
+            sync_style_permissions()
+        return rc
     repo = repo or REPO
     if not repo:
         print("✗ The factory repository URL is unknown. Pass --repo <url>, set TF_REPO or install the launcher:\n"
               "  python3 core/factory/tf.py --install-launcher --repo https://github.com/<you>/tf.git")
         return 2
-    return install(repo, rest)
+    rc = install(repo, rest)
+    if rc == 0 and MANIFEST.exists():
+        sync_style_permissions()
+    return rc
+
+
+def sync_style_permissions() -> None:
+    """After install and update: the Claude Code permission mode from the person's work style in this project (e.g. `plan` for
+    `conversation`) — a style set once in ~/.tf/preferences.yaml works in every project after `tf update`."""
+    try:
+        packs = project_module("packs")
+        for m in packs.apply_style_permissions(Path.cwd()) if hasattr(packs, "apply_style_permissions") else []:
+            print(f"• {m}")
+    except Exception as e:  # noqa: BLE001 — the installation succeeded; the style is an extra
+        print(f"⚠ work style: could not sync the Claude Code permission mode ({e})")
 
 
 if __name__ == "__main__":

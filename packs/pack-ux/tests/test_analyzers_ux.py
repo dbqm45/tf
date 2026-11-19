@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Moduł tf analyze z pack-ux (accessibility): obecny po instalacji i przechodzi bramkę na swoich zestawach
-testowych. python3 .claude/tests/test_analyzers_ux.py"""
+"""The tf analyze module from pack-ux (accessibility): present after installation and passes the gate on its own
+test sets. python3 .claude/tests/test_analyzers_ux.py"""
 import subprocess
 import sys
 from pathlib import Path
@@ -15,14 +15,14 @@ def main() -> int:
     for name in ("accessibility",):
         total += 2
         if not (MODS / name / "analyzer.yaml").is_file():
-            fails.append(f"U-1: moduł {name} zainstalowany w .tf/factory/analyzers/")
+            fails.append(f"U-1: module {name} installed in .tf/factory/analyzers/")
         r = subprocess.run([sys.executable, str(ANALYZE), "gate", "--module", name], cwd=ROOT, capture_output=True,
                            text=True, encoding="utf-8", errors="replace", timeout=300)
-        if not (r.returncode == 0 and r.stdout.startswith("Werdykt: OK")):
-            fails.append(f"U-2: moduł {name} przechodzi bramkę: {r.stdout}{r.stderr}")
+        if not (r.returncode == 0 and r.stdout.startswith("Verdict: OK")):
+            fails.append(f"U-2: module {name} passes the gate: {r.stdout}{r.stderr}")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów modułów analizy pack-ux")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the pack-ux analyzer modules")
     return 1 if fails else 0
 
 

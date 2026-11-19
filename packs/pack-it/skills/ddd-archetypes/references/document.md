@@ -1,190 +1,190 @@
-# Archetyp Document — mapper (dokumenty, wersje, obieg, retencja)
+# The Document archetype — mapper (documents, versions, workflow, retention)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania o **dokumentach** (umowa, protokół, faktura jako plik, zgoda, załącznik) na model, w którym dokument
-logiczny, jego niezmienne wersje, egzemplarze w formatach, dystrybucja i dyspozycja po terminie to osobne pojęcia.
-Efekt: da się udowodnić, co dokładnie i kiedy zostało zapisane lub wysłane, i wiadomo, jak długo to przechowywać.
-Protokół wspólny (pytania, „To zależy”, kontrola R/A/X, zapis): `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements about **documents** (an agreement, a protocol, an invoice as a file, a consent, an attachment) into a model in which the logical
+document, its immutable versions, copies in formats, distribution and disposition after the deadline are separate concepts.
+The effect: you can prove what exactly was recorded or sent and when, and you know how long to keep it.
+The common protocol (questions, "It depends", the R/A/X check, recording): `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy trzeba udowodnić, CO dokładnie zostało zapisane, uzgodnione lub wysłane i kiedy — i jak długo to przechowywać?*
-Tak → pasuje. Plik jest tylko załącznikiem bez wartości dowodowej i bez terminu przechowywania → wystarczy pole w innym agregacie.
+## Fit test
+**The core question:** *do you need to prove WHAT exactly was recorded, agreed or sent and when — and how long to keep it?*
+Yes → it fits. The file is only an attachment with no evidential value and no retention deadline → a field in another aggregate is enough.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „musimy pokazać, jaką wersję umowy podpisał klient” | ✅ |
-| wersje, numeracja, „kto i kiedy zmienił”, zatwierdzanie | ✅ |
-| podpis, pieczęć, znacznik czasu, skrót pliku jako dowód | ✅ |
-| przechowywanie przez N lat, potem usunięcie lub przekazanie do archiwum | ✅ |
-| wysłano kontrahentowi / klientowi; kto otrzymał którą wersję | ✅ |
-| wstrzymanie usuwania przy sporze lub kontroli | ✅ |
-| „jakie zobowiązania wynikają z umowy?” (strony, terminy, warunki) | ❌ → Agreement (`agreement.md`); dokument jest nośnikiem |
-| „jaka jest kwota na fakturze i jak ją zaksięgować?” | ❌ → Accounting; dokument nie jest źródłem prawdy stanu |
-| README, ADR, runbook w repozytorium | ❌ → docs-tech-writing |
-| tożsamość i uprawnienia do czytania | ❌ autoryzacja (warstwa aplikacji) |
-| wyszukiwanie pełnotekstowe, OCR | ⚠️ graniczny |
+| "we must show which version of the agreement the customer signed" | ✅ |
+| versions, numbering, "who changed it and when", approval | ✅ |
+| a signature, a seal, a timestamp, a file hash as evidence | ✅ |
+| keeping for N years, then deletion or transfer to an archive | ✅ |
+| sent to a counterparty / customer; who received which version | ✅ |
+| suspending deletion during a dispute or an inspection | ✅ |
+| "what obligations follow from the agreement?" (parties, deadlines, terms) | ❌ → Agreement (`agreement.md`); the document is the carrier |
+| "what is the amount on the invoice and how to post it?" | ❌ → Accounting; the document is not the source of truth for state |
+| README, ADR, runbook in the repository | ❌ → docs-tech-writing |
+| identity and read permissions | ❌ authorization (the application layer) |
+| full-text search, OCR | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Zwykły załącznik do zgłoszenia* — jeśli nikt nie pyta o wersję, integralność ani termin, to nie ten archetyp.
-- *Treść zobowiązań vs plik* — reguły i terminy umowy żyją w Agreement; Document pilnuje, który plik jest dowodem której wersji.
-- *Dane z formularza* — gdy ważne jest „co klient zobaczył i zatwierdził”, zamroź wersję treści jako dokument; sam formularz
-  nie jest dokumentem.
+**Borderline cases:**
+- *An ordinary attachment to a ticket* — if nobody asks about the version, integrity or a deadline, it is not this archetype.
+- *The content of obligations vs the file* — the rules and deadlines of the agreement live in Agreement; Document guards which file is the evidence of which version.
+- *Form data* — when "what the customer saw and approved" matters, freeze the version of the content as a document; the form itself
+  is not a document.
 
-## Model (istota)
-Poniższy podział to wniosek modelowy fabryki; źródła w sekcji „Źródła” potwierdzają tylko to, co tam opisano.
-### Dokument, wersja, egzemplarz
-- **Document** (zasób informacyjny) — byt logiczny: identyfikator, typ (umowa, protokół, zgoda), klasyfikacja, powiązania
-  z faktem biznesowym. Nie ma treści; wskazuje wersje. Obejmuje też nośniki inne niż tekst (zdjęcie, nagranie, e-mail).
-- **DocumentVersion** — **niezmienna** treść: numer, autor, czas utworzenia, status (robocza, zatwierdzona, zastąpiona),
-  skrót treści. Zmiana = nowa wersja, nigdy edycja; poprzednia pozostaje dostępna. Numeracja to polityka (kolejna liczba,
-  główna.poboczna), nie data.
-- **Rendition** (egzemplarz) — konkretny plik tej samej wersji w jakimś formacie: edytowalny, PDF, PDF/A do długiego przechowywania.
-  Format długoterminowy jest decyzją retencyjną: wersja zatwierdzona dostaje rendycję archiwalną.
-- **Record** (rekord) — wersja zamrożona w roli dowodu: nie zmienia się, ma kontekst (sprawa, fakt biznesowy, kto i po co).
-  Rekord ma wiarygodny charakter, gdy da się wykazać jego autentyczność, rzetelność, integralność i użyteczność — te
-  cztery cechy to dobra lista kontrolna wymagań (nie schemat danych).
+## Model (the essence)
+The breakdown below is the factory's modelling conclusion; the sources in the "Sources" section confirm only what is described there.
+### Document, version, copy
+- **Document** (an information resource) — a logical entity: an identifier, a type (agreement, protocol, consent), a classification, links
+  to a business fact. It has no content; it points to versions. It also covers media other than text (a photo, a recording, an e-mail).
+- **DocumentVersion** — **immutable** content: a number, an author, a creation time, a status (draft, approved, superseded),
+  a content hash. A change = a new version, never an edit; the previous one stays available. Numbering is a policy (the next number,
+  major.minor), not a date.
+- **Rendition** (copy) — a specific file of the same version in some format: editable, PDF, PDF/A for long-term retention.
+  The long-term format is a retention decision: an approved version gets an archival rendition.
+- **Record** — a version frozen in the role of evidence: it does not change, it has a context (a case, a business fact, who and why).
+  A record is trustworthy when its authenticity, reliability, integrity and usability can be demonstrated — these
+  four characteristics are a good checklist of requirements (not a data schema).
 
-### Dowody integralności
-- **IntegrityEvidence** — skrót treści (hash) zapisany osobno od pliku; opcjonalnie pieczęć elektroniczna, znacznik czasu,
-  podpis. Poziom (zwykły, zaawansowany, kwalifikowany) i dostawca to **parametr polityki** zależny od typu dokumentu i
-  ryzyka, nie stała w archetypie. Dowód należy do wersji, nie do dokumentu; po migracji formatu dowód liczy się na nowo albo
-  zachowuje się go razem z oryginałem. Skutki prawne poziomów ocenia prawnik.
+### Integrity evidence
+- **IntegrityEvidence** — a content hash stored separately from the file; optionally an electronic seal, a timestamp,
+  a signature. The level (simple, advanced, qualified) and the provider are a **policy parameter** depending on the document type and
+  the risk, not a constant in the archetype. The evidence belongs to the version, not to the document; after a format migration the evidence is recomputed or
+  kept together with the original. The legal effects of the levels are assessed by a lawyer.
 
-### Dystrybucja i dyspozycja
-- **Distribution** — fakt przekazania konkretnej wersji (i rendycji) konkretnej stronie (→ Party): kanał, czas, potwierdzenie.
-  Pozwala odpowiedzieć „kto dostał którą wersję”. Odwołanie lub zastąpienie wersji nie kasuje historii dystrybucji.
-- **Disposition** — co z dokumentem po terminie: usunięcie, przekazanie do archiwum, ekspertyza. Wynika z reguły retencji
-  zastosowanej do dokumentu, nie z ręcznej decyzji pliku.
+### Distribution and disposition
+- **Distribution** — the fact of handing over a specific version (and rendition) to a specific party (→ Party): channel, time, acknowledgement.
+  It lets you answer "who got which version". Revoking or superseding a version does not erase the distribution history.
+- **Disposition** — what happens to the document after the deadline: deletion, transfer to an archive, appraisal. It follows from the retention rule
+  applied to the document, not from a manual decision on the file.
 
-### Retencja
-- **RetentionRule** — klasyfikacja (kategoria dokumentu) → okres i dyspozycja. Reguła to dane, wersjonowana, z datą
-  obowiązywania; dokument zapisuje, którą regułę zastosowano.
-- **Termin liczony od zdarzenia, nie od utworzenia** — zwykle od zakończenia sprawy. Przykład z administracji PL: klasyfikacja
-  według JRWA, kategoria archiwalna A (wieczyście), B z liczbą lat albo BE z liczbą lat (po okresie ekspertyza archiwalna);
-  okres liczy się od 1 stycznia roku następnego po zakończeniu sprawy. Samo „B” bez liczby jest niepoprawne.
-  Dla firm prywatnych okresy wynikają z innych przepisów (podatkowe, rachunkowe, pracownicze) — do potwierdzenia przez prawnika.
-- **LegalHold** (wstrzymanie usunięcia) — osobny byt: powód, zakres (dokumenty, sprawy), zakładający, okres; dopóki trwa,
-  disposition jest zablokowana mimo upływu terminu. To własny wniosek modelowy, nie element normy; wstrzymanie zdejmuje się jawnie.
+### Retention
+- **RetentionRule** — a classification (a document category) → a period and a disposition. The rule is data, versioned, with an effective
+  date; the document records which rule was applied.
+- **The deadline is counted from an event, not from creation** — usually from the closing of the case. An example from Polish public administration: classification
+  according to JRWA (the uniform list of file categories), archival category A (permanently), B with a number of years or BE with a number of years (after the period an archival appraisal);
+  the period is counted from 1 January of the year following the closing of the case. A bare "B" without a number is incorrect.
+  For private companies the periods follow from other regulations (tax, accounting, employment) — to be confirmed by a lawyer.
+- **LegalHold** (suspension of deletion) — a separate entity: a reason, a scope (documents, cases), who placed it, a period; while it lasts,
+  disposition is blocked even though the deadline has passed. This is our own modelling conclusion, not an element of the standard; a hold is lifted explicitly.
 
-### Powiązanie z faktem biznesowym
-Dokument wskazuje fakt (`umowa → Agreement`, `faktura → Accounting`, `zgoda → Party`), ale **nie jest źródłem prawdy stanu**.
-Stan zobowiązania, salda i uprawnień trzymają właściwe archetypy; dokument jest ich dowodem. Rozbieżność plik–stan to
-sygnał do wyjaśnienia, nie do cichej korekty.
+### The link to a business fact
+The document points to a fact (`agreement → Agreement`, `invoice → Accounting`, `consent → Party`), but **it is not the source of truth for state**.
+The state of the obligation, the balances and the permissions are kept by the appropriate archetypes; the document is their evidence. A file–state discrepancy is
+a signal to investigate, not to correct silently.
 
-## Pytania
-**A — decyzje standardowe:**
-- Które typy dokumentów obejmujemy i które z nich są rekordami (dowodami), a które roboczymi?
-- Kto i kiedy zamraża wersję (zatwierdzenie, podpis, wysyłka)? Czy po zamrożeniu dopuszczamy tylko nowe wersje?
-- Jaki poziom dowodu integralności dla którego typu (skrót, pieczęć, znacznik czasu, podpis)? Kto jest dostawcą?
-- Format długoterminowy (np. PDF/A) — dla jakich typów i kiedy powstaje rendycja?
-- Jaka klasyfikacja i okres retencji per typ; od jakiego zdarzenia liczymy termin?
-- Co robi disposition po terminie (usunąć, zarchiwizować, ekspertyza) i kto zatwierdza?
+## Questions
+**A — standard decisions:**
+- Which document types do we cover, and which of them are records (evidence) and which drafts?
+- Who freezes a version and when (approval, signature, sending)? After freezing, do we allow only new versions?
+- What level of integrity evidence for which type (hash, seal, timestamp, signature)? Who is the provider?
+- The long-term format (e.g. PDF/A) — for which types and when is the rendition created?
+- What classification and retention period per type; from which event do we count the deadline?
+- What does disposition do after the deadline (delete, archive, appraisal) and who approves it?
 
-**B — luki** (przykłady): wstrzymanie usunięcia przy sporze? · dystrybucja do wielu odbiorców z potwierdzeniem? · tajemnica
-i klasyfikacja dostępu (→ autoryzacja)? · migracja formatu po latach a ważność podpisu? · dokument papierowy zeskanowany
-(oryginał vs kopia)? · zgody RODO a retencja (→ Party)? · anonimizacja treści przy zachowaniu rekordu?
+**B — gaps** (examples): suspending deletion during a dispute? · distribution to many recipients with acknowledgement? · confidentiality
+and access classification (→ authorization)? · format migration after years vs signature validity? · a scanned paper document
+(original vs copy)? · GDPR consents vs retention (→ Party)? · anonymizing the content while keeping the record?
 
-## Kroki mapowania
-1. **Typy dokumentów** — rzeczowniki z wymagań (umowa, protokół, aneks) → typ i klasyfikacja; oddziel dokument od faktu biznesowego.
-2. **Wersje** — kiedy powstaje nowa, numeracja, statusy, kto zatwierdza.
-3. **Rendycje** — formaty i moment tworzenia formatu archiwalnego.
-4. **Dowody integralności** — poziom per typ jako parametr polityki.
-5. **Dystrybucja** — komu, którą wersję, jakim kanałem, z potwierdzeniem czy bez.
-6. **Retencja** — reguła, zdarzenie startowe, okres, disposition; wersjonowanie reguł.
-7. **LegalHold** — czy potrzebny, kto zakłada i zdejmuje.
-8. **Powiązanie z faktem** — do którego archetypu odsyła dokument; kierunek zależności.
+## Mapping steps
+1. **Document types** — nouns from the requirements (agreement, protocol, amendment) → a type and a classification; separate the document from the business fact.
+2. **Versions** — when a new one is created, numbering, statuses, who approves.
+3. **Renditions** — formats and the moment the archival format is created.
+4. **Integrity evidence** — the level per type as a policy parameter.
+5. **Distribution** — to whom, which version, through which channel, with or without acknowledgement.
+6. **Retention** — the rule, the start event, the period, the disposition; rule versioning.
+7. **LegalHold** — is it needed, who places and lifts it.
+8. **The link to the fact** — which archetype the document refers to; the direction of the dependency.
 
-## Decyzje do kontroli (R/A/X)
-typy i rekordy · moment zamrożenia · numeracja wersji · poziom dowodu per typ · format archiwalny · zdarzenie startu retencji ·
-okres i disposition · legal hold · dystrybucja i potwierdzenie · migracja formatu · powiązanie z faktem biznesowym.
+## Decisions to check (R/A/X)
+types and records · the moment of freezing · version numbering · the evidence level per type · the archival format · the retention start event ·
+the period and disposition · legal hold · distribution and acknowledgement · format migration · the link to the business fact.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Document: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Typy dokumentów    — | Typ | Klasyfikacja | Rekord? | Fakt biznesowy (archetyp) |
-## Wersje i rendycje  — | Typ | Numeracja | Statusy | Moment zamrożenia | Formaty |
-## Dowody integralności — | Typ | Skrót | Pieczęć/znacznik/podpis (poziom) | Parametr polityki |
-## Dystrybucja        — | Typ | Odbiorca (Party) | Kanał | Potwierdzenie |
-## Retencja           — | Klasyfikacja | Okres | Zdarzenie startu | Disposition | Reguła (wersja) |
-## Wstrzymania (legal hold) — | Powód | Zakres | Kto zakłada/zdejmuje |
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), przypadki brzegowe, parametry polityk zmiennych
+# Document model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Document types     — | Type | Classification | Record? | Business fact (archetype) |
+## Versions and renditions — | Type | Numbering | Statuses | Moment of freezing | Formats |
+## Integrity evidence — | Type | Hash | Seal/timestamp/signature (level) | Policy parameter |
+## Distribution       — | Type | Recipient (Party) | Channel | Acknowledgement |
+## Retention          — | Classification | Period | Start event | Disposition | Rule (version) |
+## Holds (legal hold) — | Reason | Scope | Who places/lifts |
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), edge cases, variable policy parameters
 ```
 
-## Wzorce i pułapki
-- **Nadpisywanie pliku pod tą samą nazwą** — traci dowód. Każda zmiana to nowa wersja; zatwierdzona jest niezmienna.
-- **Dokument jako źródło prawdy stanu** — „kwota z PDF-a” zamiast z Accounting, „termin z umowy” zamiast z Agreement. Dokument
-  dokumentuje; stan pochodzi z właściwego archetypu.
-- **Retencja liczona od daty utworzenia pliku** — termin biegnie od zdarzenia (zakończenie sprawy, koniec roku obrachunkowego).
-- **Hash razem z plikiem w jednym polu bez wersji algorytmu** — zapisz algorytm i datę; algorytmy się starzeją.
-- **Usuwanie po terminie bez sprawdzenia wstrzymań** — disposition zawsze pyta o aktywne LegalHold.
-- **Format edytowalny jako archiwum** — dla długiego przechowywania osobna rendycja w formacie przeznaczonym do archiwizacji.
-- **Poza archetypem:** „kto może zobaczyć umowę?” (autoryzacja), „co z niej wynika?” (Agreement), „jak ją zaksięgować?”
-  (Accounting). Dokumentacja techniczna w repozytorium to docs-tech-writing.
-- **Polityki zmienne jako parametry:** poziom podpisu i okres retencji zależne od typu i kraju → archetyp dostaje gotowe wartości.
-- **Obieg to nie redagowanie:** redagowanie (edycja treści, wersje robocze, komentarze, współpraca) i obieg
-  (kto zatwierdza, w jakiej kolejności, terminy, eskalacje) to dwa modele o innych regułach i zdarzeniach. Obieg
-  operuje na **konkretnej wersji**: zmiana treści w trakcie akceptacji tworzy nową wersję i zwykle restartuje obieg
-  (decyzja A). Status „w akceptacji” w tabeli dokumentu miesza oba modele. Obieg wielu dokumentów to proces
-  (`activity-process.md`), a nie pole dokumentu.
+## Patterns and pitfalls
+- **Overwriting a file under the same name** — loses the evidence. Every change is a new version; an approved one is immutable.
+- **The document as the source of truth for state** — "the amount from the PDF" instead of from Accounting, "the deadline from the agreement" instead of from Agreement. The document
+  documents; the state comes from the appropriate archetype.
+- **Retention counted from the file creation date** — the deadline runs from an event (closing of the case, the end of the financial year).
+- **A hash together with the file in one field without the algorithm version** — record the algorithm and the date; algorithms age.
+- **Deleting after the deadline without checking holds** — disposition always asks about active LegalHolds.
+- **An editable format as the archive** — for long-term retention a separate rendition in a format intended for archiving.
+- **Outside the archetype:** "who may see the agreement?" (authorization), "what follows from it?" (Agreement), "how to post it?"
+  (Accounting). Technical documentation in the repository is docs-tech-writing.
+- **Variable policies as parameters:** the signature level and the retention period depending on the type and the country → the archetype gets ready values.
+- **Workflow is not editing:** editing (changing the content, drafts, comments, collaboration) and workflow
+  (who approves, in what order, deadlines, escalations) are two models with different rules and events. The workflow
+  operates on **a specific version**: changing the content during approval creates a new version and usually restarts the workflow
+  (decision A). An "in approval" status in the document table mixes both models. A workflow of many documents is a process
+  (`activity-process.md`), not a document field.
 
-## Kontrola jakości
-- [ ] dokument, wersja, rendycja, dystrybucja i dyspozycja to osobne pojęcia
-- [ ] wersja zatwierdzona jest niezmienna; zmiana to nowa wersja
-- [ ] dowód integralności należy do wersji; poziom jako parametr polityki
-- [ ] retencja z klasyfikacją, zdarzeniem startu, okresem i disposition; kategorie A/B/BE poprawnie (B i BE z liczbą lat)
-- [ ] legal hold rozstrzygnięty (jest lub jawnie nie jest potrzebny)
-- [ ] dokument odsyła do faktu biznesowego, nie jest źródłem prawdy stanu
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] document, version, rendition, distribution and disposition are separate concepts
+- [ ] an approved version is immutable; a change is a new version
+- [ ] integrity evidence belongs to the version; the level as a policy parameter
+- [ ] retention with a classification, a start event, a period and a disposition; categories A/B/BE correct (B and BE with a number of years)
+- [ ] legal hold settled (it exists or it is explicitly not needed)
+- [ ] the document refers to the business fact, it is not the source of truth for state
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Firma usługowa zawiera umowy i spisuje protokoły odbioru z podpisami obu stron. Umowy mają aneksy. Klient
-dostaje podpisaną wersję e-mailem. Dokumenty trzymamy 10 lat od zakończenia umowy [przykład]. Przy sporze nic nie można usuwać.”
+## Example (shortened)
+**Input:** "A service company concludes agreements and draws up acceptance protocols with the signatures of both parties. Agreements have amendments. The customer
+gets the signed version by e-mail. We keep documents for 10 years from the end of the agreement [example]. During a dispute nothing may be deleted."
 
 ```markdown
-## Mapowanie pojęć
-| umowa, protokół | Document (typy) + klasyfikacja | fakt biznesowy: umowa → Agreement |
-| aneks | nowa DocumentVersion tego samego Document albo osobny Document powiązany | decyzja (A) |
-| podpisana wersja | Record = zamrożona DocumentVersion + IntegrityEvidence | niezmienna |
-| e-mail do klienta | Distribution (wersja, odbiorca z Party, kanał) | pozwala wykazać, co wysłano |
-| 10 lat | RetentionRule (start: zakończenie umowy) | [przykład] |
-| spór | LegalHold | blokuje disposition |
-## Dowody integralności — umowa: skrót + podpis (poziom: parametr polityki, A); protokół: skrót + znacznik czasu
-## Retencja — umowa | 10 lat [przykład] | zakończenie umowy | usunięcie po akceptacji | reguła v1
-## Decyzje
-| retencja 10 lat od zakończenia | R |
-| aneks jako wersja czy osobny dokument | A: osobny dokument powiązany z umową |
-| poziom podpisu | A: „To zależy” od wartości umowy → parametr |
-| format archiwalny | X → hot spot (PDF/A?) |
-## Niezmapowane pojęcia — termin płatności z umowy (→ Agreement), faktura za usługę (→ Accounting), klient (→ Party)
+## Concept mapping
+| agreement, protocol | Document (types) + classification | business fact: agreement → Agreement |
+| amendment | a new DocumentVersion of the same Document or a separate linked Document | decision (A) |
+| signed version | Record = a frozen DocumentVersion + IntegrityEvidence | immutable |
+| e-mail to the customer | Distribution (version, recipient from Party, channel) | lets you demonstrate what was sent |
+| 10 years | RetentionRule (start: end of the agreement) | [example] |
+| dispute | LegalHold | blocks disposition |
+## Integrity evidence — agreement: hash + signature (level: policy parameter, A); protocol: hash + timestamp
+## Retention — agreement | 10 years [example] | end of the agreement | deletion after approval | rule v1
+## Decisions
+| retention 10 years from the end | R |
+| amendment as a version or a separate document | A: a separate document linked to the agreement |
+| signature level | A: "It depends" on the value of the agreement → parameter |
+| archival format | X → hot spot (PDF/A?) |
+## Unmapped concepts — the payment deadline from the agreement (→ Agreement), the invoice for the service (→ Accounting), the customer (→ Party)
 ```
 
-## Źródła
-Odczyt 2026-10-17.
-- Hay, „Enterprise Model Patterns: Describing the World (UML Version)”, Technics Publications, 2011 (ISBN 978-1-935504-05-4) —
-  bierzemy: rozdział „Documents and other Information Resources” obejmuje zasoby informacyjne, ich relacje, pojęcia, dystrybucję
-  i dispositions oraz media (zdjęcia, nagrania, e-maile). Ranga: pierwotne (opis wydawcy).
-- ISO 15489-1:2016, „Records management — Concepts and principles” — bierzemy: cztery cechy wiarygodnego rekordu (autentyczność,
-  rzetelność, integralność, użyteczność) jako listę kontrolną. Ranga: pierwotne (iso.org).
-- ISO 16175-1:2020 i ISO 16175-2:2020 — bierzemy: tylko wskazanie aktualnych części jako dalszej lektury (treści nie opisujemy). Część 2 bywa opisywana jako specyfikacja techniczna (TS) — bez zastrzeżenia nie cytować jej jako normy;
-  część 3 (2010) wycofana. Ranga: pierwotne, zweryfikowane częściowo.
-- MoReq2010 (DLM Forum, 2011) — bierzemy: tylko wskazanie jako dalszej lektury; aktualność [niezweryfikowane] (następcy nie znaleziono).
-  Ranga: pierwotne.
-- ISO 19005-4:2020 (PDF/A-4, na bazie ISO 32000-2) — bierzemy: format przeznaczony do długiego przechowywania; wcześniejsze części
-  -1 (2005), -2 (2011), -3 (2012). Ranga: pierwotne (iso.org).
-- Rozporządzenie (UE) 2024/1183 z 11.04.2024 zmieniające eIDAS 910/2014 (w życiu od 20.05.2024) — bierzemy: kontekst dla pieczęci
-  elektronicznej, znacznika czasu i poziomów podpisu (zwykły, zaawansowany, kwalifikowany), bez numerów artykułów. Ranga: wtórne.
-  Skutki prawne do potwierdzenia przez prawnika, nie porada.
-- Rozporządzenie Prezesa Rady Ministrów z 18.01.2011 w sprawie instrukcji kancelaryjnej, JRWA i instrukcji archiwalnej (Dz.U. 2011
-  nr 14 poz. 67) — bierzemy: klasyfikacja JRWA, kategorie A, B + lata, BE + lata, liczenie od 1 stycznia roku następnego po
-  zakończeniu sprawy. Ranga: pierwotne (ELI; status „obowiązujący”, zmiany [niezweryfikowane]). Dotyczy administracji; dla firm
-  prywatnych — kontekst do potwierdzenia przez prawnika.
-- Obieg a redagowanie dokumentu — na podstawie programu szkolenia „DDD — zaawansowane techniki
-  modelowania i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21); opisane własnymi słowami.
+## Sources
+Accessed 2026-10-17.
+- Hay, "Enterprise Model Patterns: Describing the World (UML Version)", Technics Publications, 2011 (ISBN 978-1-935504-05-4) —
+  we take: the chapter "Documents and other Information Resources" covers information resources, their relationships, concepts, distribution
+  and dispositions, as well as media (photos, recordings, e-mails). Rank: primary (the publisher's description).
+- ISO 15489-1:2016, "Records management — Concepts and principles" — we take: the four characteristics of a trustworthy record (authenticity,
+  reliability, integrity, usability) as a checklist. Rank: primary (iso.org).
+- ISO 16175-1:2020 and ISO 16175-2:2020 — we take: only the indication of the current parts as further reading (we do not describe the content). Part 2 is sometimes described as a technical specification (TS) — do not cite it as a standard without that caveat;
+  part 3 (2010) withdrawn. Rank: primary, partly verified.
+- MoReq2010 (DLM Forum, 2011) — we take: only the indication as further reading; currency [unverified] (no successor found).
+  Rank: primary.
+- ISO 19005-4:2020 (PDF/A-4, based on ISO 32000-2) — we take: a format intended for long-term retention; earlier parts
+  -1 (2005), -2 (2011), -3 (2012). Rank: primary (iso.org).
+- Regulation (EU) 2024/1183 of 11.04.2024 amending eIDAS 910/2014 (in force since 20.05.2024) — we take: the context for the electronic
+  seal, the timestamp and the signature levels (simple, advanced, qualified), without article numbers. Rank: secondary.
+  Legal effects to be confirmed by a lawyer, not advice.
+- Rozporządzenie Prezesa Rady Ministrów (the Regulation of the Prime Minister) of 18.01.2011 on the office instruction, JRWA and the archival instruction (Dz.U. 2011
+  No. 14 item 67) — we take: the JRWA classification, categories A, B + years, BE + years, counting from 1 January of the year following
+  the closing of the case. Rank: primary (ELI; status "in force", amendments [unverified]). It concerns public administration; for private
+  companies — context to be confirmed by a lawyer.
+- Workflow vs editing of a document — based on the programme of the training "DDD — zaawansowane techniki
+  modelowania i archetypy" (DDD — advanced modelling techniques and archetypes; Bottega IT Minds, material from a human, 2026-10-21); described in our own words.
 
-Rozdział na dokument, wersję, rendycję, dystrybucję i dyspozycję w tej postaci, dowody integralności jako parametr polityki oraz
-LegalHold to wnioski modelowe fabryki, nie tezy autorów ani norm.
-Opisane własnymi słowami; treść książek i norm nie była cytowana.
+The breakdown into document, version, rendition, distribution and disposition in this form, integrity evidence as a policy parameter, and
+LegalHold are the factory's modelling conclusions, not theses of the authors or the standards.
+Described in our own words; the content of books and standards was not quoted.

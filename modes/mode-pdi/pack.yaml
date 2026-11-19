@@ -1,20 +1,20 @@
-# Tryb pdi: decyzje w jednym źródle — dziennik zmiany (docs/project/changes/CHG-n/) zgodny z kontraktem pdi 0.3.0
-# i zapis decyzji do rejestru pdi przez MCP. Opcjonalny; bez niego fabryka działa jak dotąd.
+# pdi mode: decisions in one source — the change log (docs/project/changes/CHG-n/) conforming to the pdi 0.3.0 contract
+# and a decision record written to the pdi register over MCP. Optional; without it the factory works as before.
 # Przewodnik: GUIDE.md (w projekcie: .tf/factory/packs/mode-pdi/).
 id: mode-pdi
 kind: mode
 version: 0.9.0
 title: pdi decisions
 description: Decisions in one source with pdi — per-change journal (docs/project/changes/CHG-n/) following the pdi contract, decision recording through the pdi MCP server, phases started by the pdi gate inbox (sdlc-phase workflow), and control bands on ShipScope PROD metrics sending metric.breached to pdi (metric-watch workflow); opt-in.
-content_language: pl
+content_language: en
 default: false
 requires:
-  core: ">=5.6.0 <10.0.0"
-optional_packs: [pack-it]   # persony faz (phase_run.py) i procedura triażu PRB (proc-issue-triage); bez pack-it tryb działa
+  core: ">=5.6.0 <21.0.0"
+optional_packs: [pack-it]   # phase personas (phase_run.py) and the PRB triage procedure (proc-issue-triage); without pack-it the mode still works
 
 facets:
-  - {prefix: pdi-, order: 195, name: decyzje pdi, question: "jak zapisać decyzję o zmianie w jednym źródle (repo + rejestr pdi)"}
+  - {prefix: pdi-, order: 195, name: pdi decisions, question: "how to record a decision about a change in one source (repo + pdi register)"}
 
 contributes:
   personas:
-    core_skills: [pdi-decisions]   # każda persona zapisuje decyzje o zmianie tak samo
+        core_skills: [pdi-decisions]   # every persona records decisions about a change the same way

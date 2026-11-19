@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Kontrola dowodów w raporcie z kodu (rekonstrukcja projektu, mapa kodu, dossier): każde `plik:linia` musi wskazywać
-istniejący plik i linię, a cytat podany przy dowodzie musi się znaleźć w kodzie (±2 linie). Wypunktowania bez dowodu
-i bez oznaczenia [założenie] / [niezweryfikowane] / [pytanie] są zgłaszane jako twierdzenia bez dowodu.
+Evidence check in a report built from code (project reconstruction, code map, dossier): every `file:line` must point to
+an existing file and line, and the quote given with the evidence must be found in the code (±2 lines). Bullets without
+evidence and without a [assumption] / [unverified] / [question] mark are reported as claims without evidence.
 
-  python3 recon_check.py <plik.md|katalog> [--repo DIR] [--json]
-  python3 recon_check.py docs/project/00-reconstruction/report.md --final   # też sekcje raportu i 0 twierdzeń bez dowodu
+  python3 recon_check.py <file.md|directory> [--repo DIR] [--json]
+  python3 recon_check.py docs/project/00-reconstruction/report.md --final   # also report sections and 0 claims without evidence
 
---final sprawdza też:
-- tabelę w sekcji „Stack” z wierszami Język, Framework, Dane, Build, Testy, CI, Konfiguracja (każdy wiersz z dowodem
-  albo oznaczeniem); gdy w repo są pliki pipeline'u (np. .github/workflows/), wiersz CI musi wskazać któryś z nich;
-- to, że sekcja „Moduły” wymienia każdy moduł z kart `modules/*.json` leżących obok raportu, a każda karta ma aktualny
-  `modules/<karta>.md` z `recon_cards.py` (skrót treści karty w pierwszej linii).
+--final also checks:
+- the table in the "Stack" section with the rows Language, Framework, Data, Build, Tests, CI, Configuration (each row with
+  evidence or a mark); when the repo has pipeline files (e.g. .github/workflows/), the CI row must point to one of them;
+- that the "Modules" section lists every module from the `modules/*.json` cards next to the report, and every card has a
+  current `modules/<card>.md` from `recon_cards.py` (a digest of the card content in the first line).
 
-Dowód: `ścieżka:linia` albo `ścieżka:od-do`; cytat w "…" albo „…” w tym samym wierszu, po dowodzie.
-Kod wyjścia: 0 — w porządku, 1 — złe dowody (albo braki przy --final), 2 — złe wywołanie.
+Evidence: `path:line` or `path:from-to`; a quote in "…" or „…” in the same row, after the evidence.
+Exit code: 0 — OK, 1 — bad evidence (or gaps with --final), 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -27,15 +27,15 @@ import sys
 
 REF = re.compile(r"`?((?:[\w.@-]+/)*[\w.@-]+\.[A-Za-z0-9]+):(\d+)(?:-(\d+))?`?")
 QUOTE = re.compile(r"\"([^\"]{3,})\"|„([^”]{3,})”")
-MARK = re.compile(r"\[(założenie|niezweryfikowane|pytanie)[^\]]*\]", re.I)
-SECTIONS = ("TL;DR", "Stack", "Moduły", "Domeny", "Wymagania", "Reguły", "Standardy", "Ryzyka", "Pytania",
-            "Czego nie sprawdzono")
-NO_EVIDENCE_SECTIONS = ("Pytania", "Czego nie sprawdzono")   # tu wypunktowania z natury nie mają dowodu
-STACK_ROWS = ("Język", "Framework", "Dane", "Build", "Testy", "CI", "Konfiguracja")   # wymagane wiersze tabeli stacku
+MARK = re.compile(r"\[(assumption|unverified|question)[^\]]*\]", re.I)
+SECTIONS = ("TL;DR", "Stack", "Modules", "Domains", "Requirements", "Rules", "Standards", "Risks", "Questions",
+            "Not checked")
+NO_EVIDENCE_SECTIONS = ("Questions", "Not checked")   # bullets here have no evidence by nature
+STACK_ROWS = ("Language", "Framework", "Data", "Build", "Tests", "CI", "Configuration")   # required rows of the stack table
 CI_FILES = (".github/workflows/*.yml", ".github/workflows/*.yaml", ".gitlab-ci.yml", "Jenkinsfile",
             "azure-pipelines.yml", ".circleci/config.yml", "bitbucket-pipelines.yml", ".travis.yml", ".drone.yml",
             ".buildkite/pipeline.yml")
-CARD_MARK = re.compile(r"^<!-- karta: \S+ sha256:([0-9a-f]{12}) -->")
+CARD_MARK = re.compile(r"^<!-- card: \S+ sha256:([0-9a-f]{12}) -->")
 
 
 def norm(s: str) -> str:
@@ -46,14 +46,14 @@ def md_files(path: str) -> list[str]:
     if os.path.isdir(path):
         out = []
         for dp, dn, fn in os.walk(path):
-            dn[:] = [x for x in dn if x != "raw"]   # raw/: wyniki skanów i zlecenia robocze, nie dokumentacja
+            dn[:] = [x for x in dn if x != "raw"]   # raw/: scan results and work orders, not documentation
             out += [os.path.join(dp, f) for f in fn if f.endswith(".md")]
         return sorted(out)
     return [path]
 
 
 def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[dict], list[str], list[tuple], str]:
-    """Dowody, złe dowody, twierdzenia bez dowodu, nagłówki, wiersze tabeli stacku (nazwa, linia), tekst sekcji Moduły."""
+    """Evidence, bad evidence, claims without evidence, headings, stack table rows (name, line), the Modules section text."""
     refs, bad, unsupported, sections, section = 0, [], [], [], ""
     stack_rows, modules_text, row_at = [], [], None
     with open(md, encoding="utf-8") as fh:
@@ -79,26 +79,26 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
             src = cache[path]
             where = f"{md}:{i}"
             if src is None:
-                bad.append({"ref": ref, "at": where, "problem": "brak pliku"})
+                bad.append({"ref": ref, "at": where, "problem": "no such file"})
                 continue
             if not (1 <= a <= b <= len(src)):
-                bad.append({"ref": ref, "at": where, "problem": f"linia poza plikiem ({len(src)})"})
+                bad.append({"ref": ref, "at": where, "problem": f"line outside the file ({len(src)})"})
                 continue
             q = QUOTE.search(line[m.end():])
             if q:
                 quote = norm(q.group(1) or q.group(2))
                 lo, hi = max(1, a - 2), min(len(src), b + 2)
                 if quote not in norm(" ".join(src[lo - 1:hi])):
-                    bad.append({"ref": ref, "at": where, "problem": f"cytat nie pasuje do linii {lo}–{hi}"})
+                    bad.append({"ref": ref, "at": where, "problem": f"quote does not match lines {lo}–{hi}"})
         bullet = re.match(r"^\s*([-*]|\d+\.)\s+(.*)", line)
         if bullet and not found and not MARK.search(line) and not any(section.startswith(s) for s in NO_EVIDENCE_SECTIONS):
             unsupported.append({"at": f"{md}:{i}", "text": bullet.group(2).strip()})
-        if section.startswith("Moduły"):
+        if section.startswith("Modules"):
             modules_text.append(line)
         if section.startswith("Stack") and line.lstrip().startswith("|"):
             cells = [c.strip() for c in line.strip().strip("|").split("|")]
             if all(re.fullmatch(r":?-{3,}:?", c) for c in cells if c):
-                if stack_rows:   # wiersz nad separatorem to nagłówek tabeli
+                if stack_rows:   # the row above the separator is the table header
                     stack_rows.pop()
                     if row_at is not None:
                         unsupported[:] = [u for u in unsupported if u["at"] != row_at]
@@ -112,13 +112,13 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
 
 
 def ci_files(repo: str) -> list[str]:
-    """Pliki pipeline'u CI w repo (ścieżki względne)."""
+    """CI pipeline files in the repo (relative paths)."""
     found = {os.path.relpath(p, repo).replace(os.sep, "/") for pat in CI_FILES for p in glob.glob(os.path.join(repo, pat))}
     return sorted(found)
 
 
 def stale_cards(md: str) -> list[str]:
-    """Karty `modules/*.json` bez `modules/<karta>.md` albo z .md wygenerowanym ze starszej treści karty."""
+    """`modules/*.json` cards without `modules/<card>.md` or with an .md generated from older card content."""
     d = os.path.join(os.path.dirname(md), "modules")
     stale = []
     for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
@@ -137,7 +137,7 @@ def stale_cards(md: str) -> list[str]:
 
 
 def module_names(md: str) -> list[str]:
-    """Nazwy modułów z kart `modules/*.json` obok raportu (pole `module`)."""
+    """Module names from the `modules/*.json` cards next to the report (the `module` field)."""
     d = os.path.join(os.path.dirname(md), "modules")
     names = []
     for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
@@ -166,7 +166,7 @@ def main(argv: list[str]) -> int:
         else:
             paths.append(a)
     if not paths or not all(os.path.exists(p) for p in paths) or not os.path.isdir(repo):
-        print(f"✗ podaj istniejący plik lub katalog raportu i --repo (jest: {paths}, repo {repo})", file=sys.stderr)
+        print(f"✗ give an existing report file or directory and --repo (got: {paths}, repo {repo})", file=sys.stderr)
         return 2
     cache, refs, bad, uns, sections = {}, 0, [], [], []
     stack_missing, modules_missing, cards_stale, ci_unreferenced = [], [], [], []
@@ -181,7 +181,7 @@ def main(argv: list[str]) -> int:
                 ci_row = next((line for name, line in rows if name.lower().startswith("ci")), None)
                 if ci_row is not None and repo_ci and not any(f in ci_row for f in repo_ci):
                     ci_unreferenced += repo_ci
-            if final and any(h.startswith("Moduły") for h in s):
+            if final and any(h.startswith("Modules") for h in s):
                 modules_missing += [m for m in module_names(md) if m not in mods]
                 cards_stale += stale_cards(md)
     missing = [s for s in SECTIONS if not any(h.startswith(s) for h in sections)] if final else []
@@ -193,21 +193,21 @@ def main(argv: list[str]) -> int:
     if as_json:
         print(json.dumps(out, ensure_ascii=False, indent=2))
     else:
-        print(f"Dowody: {refs}, złe: {len(bad)}, twierdzenia bez dowodu: {len(uns)}"
-              + (f", brak sekcji: {', '.join(missing)}" if missing else ""))
+        print(f"Evidence: {refs}, bad: {len(bad)}, claims without evidence: {len(uns)}"
+              + (f", missing sections: {', '.join(missing)}" if missing else ""))
         if stack_missing:
-            print(f"  ✗ stack: brak wierszy: {', '.join(stack_missing)} (tabela w sekcji Stack)")
+            print(f"  ✗ stack: missing rows: {', '.join(stack_missing)} (table in the Stack section)")
         if ci_unreferenced:
-            print(f"  ✗ CI: w repo są pliki pipeline'u, wiersz CI nie wskazuje żadnego: {', '.join(ci_unreferenced)}")
+            print(f"  ✗ CI: the repo has pipeline files, but the CI row points to none of them: {', '.join(ci_unreferenced)}")
         if modules_missing:
-            print(f"  ✗ moduły bez wpisu w sekcji Moduły: {', '.join(modules_missing)}")
+            print(f"  ✗ modules with no entry in the Modules section: {', '.join(modules_missing)}")
         if cards_stale:
-            print(f"  ✗ karty bez aktualnego .md (recon_cards.py): {', '.join(cards_stale)}")
+            print(f"  ✗ cards without an up-to-date .md (recon_cards.py): {', '.join(cards_stale)}")
         for b in bad:
             print(f"  ✗ {b['at']}: `{b['ref']}` — {b['problem']}")
         for u in uns[:30]:
-            print(f"  {'✗' if final else '⚠'} {u['at']}: bez dowodu — {u['text'][:100]}")
-        print(("✗" if failed else "✓") + (" raport końcowy" if final else " dowody"))
+            print(f"  {'✗' if final else '⚠'} {u['at']}: no evidence — {u['text'][:100]}")
+        print(("✗" if failed else "✓") + (" final report" if final else " evidence"))
     return 1 if failed else 0
 
 

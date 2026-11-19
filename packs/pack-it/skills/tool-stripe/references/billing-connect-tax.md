@@ -1,86 +1,86 @@
-# Billing, Connect i Stripe Tax
+# Billing, Connect and Stripe Tax
 
-Spis treści: 1. Billing · 2. Rozliczanie za zużycie · 3. Connect · 4. Stripe Tax · 5. Treasury · Źródła
+Contents: 1. Billing · 2. Usage-based billing · 3. Connect · 4. Stripe Tax · 5. Treasury · Sources
 
-## 1. Billing (subskrypcje)
-- Model przychodu cykliczny (subskrypcje, miejsca, zużycie) → Billing API, a nie własna pętla odnowień na
-  PaymentIntents (Billing robi odnowienia, ponowienia i windykację).
-- Front: Checkout z `mode: 'subscription'` (pierwsza płatność, okres próbny, proporcje); samodzielna zmiana planu,
-  anulowanie i zmiana karty przez portal klienta (Customer Portal).
-- **Katalog:** jeden produkt na plan (Starter, Pro, Enterprise), kilka cen tylko dla wariantów tego samego planu
-  (miesięczna i roczna, waluty). Nazwa produktu trafia na pozycje faktury. Obiekt `plan` jest przestarzały — `Price`.
-- **Webhooki wymagane:** cykl życia (`customer.subscription.*`, `invoice.paid`, `invoice.payment_failed`) oraz ryzyko
-  (`charge.dispute.created`, `charge.refunded`, `radar.early_fraud_warning.created`); `customer.updated`, gdy trzymasz
-  lokalną kopię danych klienta. Subskrybuj tylko zdarzenia, na które reagujesz.
-- Zdarzenie mapujesz na rekord aplikacji przez identyfikator obiektu Stripe (np. subskrypcji), a `metadata` tylko jako
-  wyjście awaryjne.
-- Przy każdej odpowiedzi o Billing wspomnij o podatku (sekcja 4). Mechanika niezależna od dostawcy:
+## 1. Billing (subscriptions)
+- A recurring revenue model (subscriptions, seats, usage) → the Billing API, not your own renewal loop on
+  PaymentIntents (Billing does renewals, retries and dunning).
+- Front end: Checkout with `mode: 'subscription'` (the first payment, a trial period, proration); self-service plan change,
+  cancellation and card change through the customer portal (Customer Portal).
+- **Catalog:** one product per plan (Starter, Pro, Enterprise), several prices only for variants of the same plan
+  (monthly and annual, currencies). The product name goes onto invoice lines. The `plan` object is deprecated — `Price`.
+- **Webhooks required:** the lifecycle (`customer.subscription.*`, `invoice.paid`, `invoice.payment_failed`) and risk
+  (`charge.dispute.created`, `charge.refunded`, `radar.early_fraud_warning.created`); `customer.updated` when you keep
+  a local copy of customer data. Subscribe only to the events you react to.
+- You map an event to an application record through a Stripe object identifier (e.g. of the subscription), and `metadata` only as
+  an emergency fallback.
+- In every answer about Billing mention tax (section 4). Provider-independent mechanics:
   be-billing-subscriptions.
 
-## 2. Rozliczanie za zużycie
-Według Stripe nowe integracje rozliczania za zużycie idą do **Metronome** (pomiar, wycena, kontrakty, kredyty
-przedpłacone, podgląd zużycia). **Billing Meters** zostają dla prostego „płać za użycie”, które już działa na nich,
-albo gdy cena za zużycie musi współpracować z Connect, Adaptive Pricing lub Workflows. Opłata stała albo za miejsce
-plus zużycie: opłata zostaje w subskrypcji Stripe, Metronome rozlicza tylko zużycie (klient Metronome tworzony
-z identyfikatorem klienta Stripe). Nie anuluj istniejącej subskrypcji przy dodawaniu zużycia.
+## 2. Usage-based billing
+According to Stripe, new usage-based billing integrations go to **Metronome** (metering, pricing, contracts, prepaid
+credits, a usage preview). **Billing Meters** stay for a simple "pay for use" that already runs on them,
+or when the usage price has to work with Connect, Adaptive Pricing or Workflows. A fixed or per-seat fee
+plus usage: the fee stays in the Stripe subscription, Metronome bills only the usage (the Metronome customer is created
+with the Stripe customer identifier). Do not cancel an existing subscription when adding usage.
 
-## 3. Connect (platformy i marketplace'y)
-- **Accounts v2** (`POST /v2/core/accounts`); nie twórz kont przez `type: 'express' | 'custom' | 'standard'` (v1).
-- Trzy niezależne wymiary konta: dostęp do panelu (`dashboard`), kto płaci opłaty Stripe
-  (`defaults.responsibilities.fees_collector`), kto pokrywa ujemne saldo (`losses_collector`).
+## 3. Connect (platforms and marketplaces)
+- **Accounts v2** (`POST /v2/core/accounts`); do not create accounts through `type: 'express' | 'custom' | 'standard'` (v1).
+- Three independent dimensions of an account: access to the dashboard (`dashboard`), who pays Stripe fees
+  (`defaults.responsibilities.fees_collector`), who covers a negative balance (`losses_collector`).
 
-| Model | `dashboard` | opłaty / straty | Typ obciążenia |
+| Model | `dashboard` | fees / losses | Charge type |
 |---|---|---|---|
-| marketplace, usługi na żądanie, platforma subskrypcji | `express` | `application` / `application` | destination |
-| SaaS z płatnościami, sklep jak Shopify, platforma AI/API | `full` | `stripe` / `stripe` | direct |
-| crowdfunding (wstrzymanie i wypłata), koszyk wielu sprzedawców | `express` | `application` / `application` | separate charges and transfers |
-| white label (tylko zaawansowani) | `none` | `application` / `application` | destination lub direct |
+| marketplace, on-demand services, a subscription platform | `express` | `application` / `application` | destination |
+| SaaS with payments, a shop like Shopify, an AI/API platform | `full` | `stripe` / `stripe` | direct |
+| crowdfunding (hold and payout), a multi-seller cart | `express` | `application` / `application` | separate charges and transfers |
+| white label (advanced only) | `none` | `application` / `application` | destination or direct |
 
-- **Kto jest właścicielem relacji z klientem?** Sprzedawcy prowadzą własny biznes → direct (sprzedawca jest stroną
-  sprzedaży). Platforma prowadzi checkout → destination. Jedna płatność dzielona na wielu → separate charges
+- **Who owns the customer relationship?** Sellers run their own business → direct (the seller is the party to
+  the sale). The platform runs the checkout → destination. One payment split among many → separate charges
   and transfers.
-- **Prowizja:** `application_fee_amount` tylko przy direct i destination; przy separate charges and transfers
-  przelewasz mniej, niż pobrano.
-- **Gotowość:** przed płatnością sprawdź status możliwości v2: merchant —
+- **Fee:** `application_fee_amount` only with direct and destination; with separate charges and transfers
+  you transfer less than was collected.
+- **Readiness:** before a payment, check the v2 capability status: merchant —
   `configuration.merchant.capabilities.card_payments.status`, recipient —
-  `configuration.recipient.capabilities.stripe_balance.stripe_transfers.status` (`active`); nie `charges_enabled`
-  ani `payouts_enabled`. Zmiany śledź webhookami kont.
-- Konta odbiorców (marketplace) bez konfiguracji merchant; subskrypcje na kontach połączonych przez konfigurację
-  customer v2 i `customer_account`, bez osobnego klienta v1.
-- **Komponenty osadzone:** `account_onboarding`, `notification_banner` (zawsze), `account_management`; onboarding
-  osadzony albo przez linki kont, nie przez API.
-- **Zakazane połączenia:** `losses_collector: "stripe"` z destination lub separate; `application_fee_amount`
-  z separate; panel `express` z `losses_collector: "stripe"`. `dashboard: "none"` tylko na wyraźne żądanie white label.
+  `configuration.recipient.capabilities.stripe_balance.stripe_transfers.status` (`active`); not `charges_enabled`
+  or `payouts_enabled`. Track changes with account webhooks.
+- Recipient accounts (marketplace) without a merchant configuration; subscriptions on connected accounts through the customer
+  v2 configuration and `customer_account`, without a separate v1 customer.
+- **Embedded components:** `account_onboarding`, `notification_banner` (always), `account_management`; onboarding
+  embedded or through account links, not through the API.
+- **Forbidden combinations:** `losses_collector: "stripe"` with destination or separate; `application_fee_amount`
+  with separate; an `express` dashboard with `losses_collector: "stripe"`. `dashboard: "none"` only on an explicit white label request.
 
 ## 4. Stripe Tax
-- **Kolejność:** adres siedziby w ustawieniach podatkowych (bez niego status `pending` i brak obliczeń) → rejestracja
-  dla każdej jurysdykcji, w której firma już jest zarejestrowana → `automatic_tax: { enabled: true }` na Checkout,
-  subskrypcji, fakturze lub Payment Link.
-- **Pułapka nr 1:** `automatic_tax` bez aktywnej rejestracji w jurysdykcji klienta pobiera zero podatku bez błędu.
-  Sprawdź rejestracje (Tax Registrations API) i testowe obliczenie; patrz na `taxability_reason`, nie na kwotę.
-  `not_collecting` oznacza brak rejestracji albo kod `txcd_00000000` (nieopodatkowany) na produkcie — sprawdź oba.
-- `automatic_tax` nie łączy się z ręcznymi `tax_rates` na tym samym obiekcie — usuń je najpierw (dla wielu subskrypcji
-  narzędzie migracji podatków Stripe).
-- **Kod podatkowy produktu** (`txcd_…`) bierz z listy Stripe (Tax Codes API), nigdy z pamięci; nie domyślny ogólny kod
-  usług elektronicznych dla sprzedaży w USA. Kandydatów pokaż, wybór potwierdza człowiek. Kod na produkcie,
-  `tax_behavior` na cenie.
-- **PaymentIntents bez Checkout:** brak `automatic_tax`; tworzysz obliczenie podatku, kwotę Intentu bierzesz z niego
-  i zapisujesz transakcję podatkową po płatności (inaczej sprzedaż nie trafi do raportów).
-- **B2B i odwrotne obciążenie:** zbieraj numer podatkowy (`tax_id_collection` w Checkout); bez niego sprzedaż
-  transgraniczna B2B liczy się jak B2C.
-- **Rejestracja w Stripe nie jest rejestracją w urzędzie** — tylko zapisem, gdzie firma już jest zarejestrowana.
-  Nie rozstrzygasz obowiązku rejestracji ani schematu VAT UE; to doradca podatkowy. VAT i OSS ogólnie:
+- **Order:** the head office address in the tax settings (without it the status is `pending` and there are no calculations) → a registration
+  for every jurisdiction where the company is already registered → `automatic_tax: { enabled: true }` on Checkout,
+  a subscription, an invoice or a Payment Link.
+- **Pitfall no. 1:** `automatic_tax` without an active registration in the customer's jurisdiction collects zero tax without an error.
+  Check the registrations (the Tax Registrations API) and a test calculation; look at `taxability_reason`, not at the amount.
+  `not_collecting` means no registration or the code `txcd_00000000` (non-taxable) on the product — check both.
+- `automatic_tax` does not combine with manual `tax_rates` on the same object — remove them first (for many subscriptions
+  Stripe's tax migration tool).
+- **The product tax code** (`txcd_…`) take from Stripe's list (the Tax Codes API), never from memory; not the default general code
+  for electronic services for sales in the USA. Show the candidates, a human confirms the choice. The code on the product,
+  `tax_behavior` on the price.
+- **PaymentIntents without Checkout:** no `automatic_tax`; you create a tax calculation, take the Intent amount from it
+  and record the tax transaction after payment (otherwise the sale will not reach the reports).
+- **B2B and reverse charge:** collect the tax number (`tax_id_collection` in Checkout); without it cross-border B2B
+  sales are counted as B2C.
+- **A registration in Stripe is not a registration with the tax office** — only a record of where the company is already registered.
+  You do not decide on the obligation to register or on the EU VAT scheme; that is for a tax adviser. VAT and OSS in general:
   be-billing-subscriptions.
-- Piaskownica ma osobne ustawienia i rejestracje; przed pierwszą prawdziwą płatnością dodaj rejestracje w produkcji.
-  Monitoring progów działa tylko na transakcjach produkcyjnych.
-- Connect: najpierw ustal (z doradcą), kto rozlicza podatek — platforma czy konto połączone — i ustaw
+- The sandbox has separate settings and registrations; before the first real payment add the registrations in production.
+  Threshold monitoring works only on production transactions.
+- Connect: first establish (with an adviser) who settles the tax — the platform or the connected account — and set
   `automatic_tax.liability`.
 
 ## 5. Treasury
-Konta finansowe w nowych integracjach: v2 Financial Accounts API (`/v2/core/vault/financial_accounts`); v1 Treasury
-tylko w istniejących integracjach.
+Financial accounts in new integrations: the v2 Financial Accounts API (`/v2/core/vault/financial_accounts`); v1 Treasury
+only in existing integrations.
 
-## Źródła
-stripe/ai, plik skills/stripe-best-practices/references/{billing,connect,tax,treasury}.md, commit 1bcd18a (2026-10-21),
-MIT. Opisane własnymi słowami; nazwy pól, zdarzeń i parametrów przepisane ze źródła. Rekomendacja Metronome to
-stanowisko dostawcy.
+## Sources
+stripe/ai, file skills/stripe-best-practices/references/{billing,connect,tax,treasury}.md, commit 1bcd18a (2026-10-21),
+MIT. Described in our own words; names of fields, events and parameters copied from the source. The Metronome recommendation is
+the provider's position.

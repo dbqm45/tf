@@ -1,0 +1,217 @@
+{
+  "question": {
+    "co": "I cannot start, because the task is missing information I would otherwise have to guess.",
+    "potrzeba": "Answers to the questions listed below — one sentence for each is enough.",
+    "question": "Will you answer these questions now?",
+    "opcje": [
+      {
+        "opcja": "I answer now",
+        "skutek": "the factory adds the answers to the task and moves on",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Pause the task",
+        "skutek": "the task is saved and waits; nothing changes in the code"
+      }
+    ],
+    "potem": "After the answers the factory returns to the task from the place where it paused."
+  },
+  "split": {
+    "co": "The task is too big for one change or combines several independent things.",
+    "potrzeba": "A choice of which part to start with — a proposed split is below.",
+    "question": "Which part should be done first?",
+    "opcje": [
+      {
+        "opcja": "The first part of the proposal",
+        "skutek": "the factory does it as a separate task and records the others for later",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Another split",
+        "skutek": "you give your own split, the factory starts with the part you name"
+      },
+      {
+        "opcja": "Everything at once",
+        "skutek": "a bigger change, harder to check; the factory shows the plan and asks for your consent"
+      }
+    ],
+    "potem": "After your choice the factory creates a task for the chosen part and starts with the plan."
+  },
+  "source": {
+    "co": "I do not have the task's content: the issue could not be read or nothing was given.",
+    "potrzeba": "The task's content pasted in the conversation or a connection to the issue tracker.",
+    "question": "How do you want to give the task's content?",
+    "opcje": [
+      {
+        "opcja": "I paste the content",
+        "skutek": "the factory starts right away, from the pasted text",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "I will connect the issue tracker",
+        "skutek": "after connecting, the factory reads the issue itself; until then the task waits"
+      }
+    ],
+    "potem": "When the content is available, the factory creates the task and says how it assessed it."
+  },
+  "plan-approval": {
+    "co": "The plan is ready and waits for your consent — without it the factory does not change the code.",
+    "potrzeba": "Reading the plan and a decision: consent or remarks.",
+    "question": "Do you accept the plan?",
+    "opcje": [
+      {
+        "opcja": "Yes, start",
+        "skutek": "the factory records your consent and starts the changes in the code",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Fix the plan",
+        "skutek": "you give remarks, the factory fixes the plan and shows it again"
+      },
+      {
+        "opcja": "Do not do this task",
+        "skutek": "the task is saved, the code stays unchanged"
+      }
+    ],
+    "potem": "After your consent the factory carries out the plan step by step and shows the progress in the preview."
+  },
+  "tests": {
+    "co": "The tests fail despite two repair attempts.",
+    "potrzeba": "A decision on what next — the test results and what has already been checked are below.",
+    "question": "How should this part of the task be handled?",
+    "opcje": [
+      {
+        "opcja": "Try another way",
+        "skutek": "the factory proposes another solution for this part and tries again",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "I change the requirement",
+        "skutek": "you give the corrected requirement, the factory adjusts the tests and the code"
+      },
+      {
+        "opcja": "Abandon the task",
+        "skutek": "the finished parts stay, the rest waits for you"
+      }
+    ],
+    "potem": "After your decision the factory returns to this part of the task; the earlier parts stay unchanged."
+  },
+  "scan": {
+    "co": "The security check found a problem that could not be removed in two attempts.",
+    "potrzeba": "A decision about the problem found — the description and the place in the code are below.",
+    "question": "What should be done with the problem found?",
+    "opcje": [
+      {
+        "opcja": "Fix it another way",
+        "skutek": "the factory tries another solution and repeats the check",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "It is a false alarm",
+        "skutek": "you give a reason, the factory records an exception with your signature and moves on"
+      },
+      {
+        "opcja": "Abandon the task",
+        "skutek": "this part does not go into the code; the rest waits for you"
+      }
+    ],
+    "potem": "After your decision the factory repeats the security check before it saves this part."
+  },
+  "budget": {
+    "co": "The task's cost exceeded the agreed limit.",
+    "potrzeba": "Consent to further cost or a decision to finish — the cost so far and what is left to do are below.",
+    "question": "Should the work continue despite exceeding the limit?",
+    "opcje": [
+      {
+        "opcja": "Finish with what is done",
+        "skutek": "the finished parts go to review, the rest is recorded as not done",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Raise the limit",
+        "skutek": "you give a new limit, the factory finishes the task"
+      }
+    ],
+    "potem": "After your decision the factory either finishes the task or closes it with a report of what is left."
+  },
+  "environment": {
+    "co": "The repository or the tools are not ready for work.",
+    "potrzeba": "Preparing what is listed below — for example saving your own changes or installing a tool.",
+    "question": "Will you prepare it now?",
+    "opcje": [
+      {
+        "opcja": "I will prepare it and let you know",
+        "skutek": "the factory starts from the same place when you confirm",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Pause the task",
+        "skutek": "nothing changes; the task waits"
+      }
+    ],
+    "potem": "After your confirmation the factory checks readiness once more and moves on."
+  },
+  "dependency": {
+    "co": "The task needs a new library or a version of it that is too fresh to add without your decision.",
+    "potrzeba": "A decision about this library — the name, the version and the reason are below.",
+    "question": "Should this library be added?",
+    "opcje": [
+      {
+        "opcja": "Use an older version or wait",
+        "skutek": "the factory takes a version that has passed the waiting period, or pauses this part",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "Add it anyway",
+        "skutek": "the library is added, and your consent is recorded in the change description"
+      },
+      {
+        "opcja": "Do it without it",
+        "skutek": "the factory looks for a solution without a new library"
+      }
+    ],
+    "potem": "After your decision the factory returns to this part of the task."
+  },
+  "contract": {
+    "co": "The task needs a decision that changes the agreement with others: a public API, a data structure or a business rule.",
+    "potrzeba": "Your decision — the variants and their consequences are below.",
+    "question": "Which variant should be chosen?",
+    "opcje": [
+      {
+        "opcja": "A backward-compatible variant",
+        "skutek": "the existing behaviour stays, the new one is added next to it",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "A backward-incompatible change",
+        "skutek": "other users of this part have to adapt; the factory describes this in the change"
+      },
+      {
+        "opcja": "Pause until it is settled",
+        "skutek": "the task waits until the decision is made outside the factory"
+      }
+    ],
+    "potem": "After your decision the factory adds it to the task and corrects the plan."
+  },
+  "permissions": {
+    "co": "This step is reserved for a human: it concerns production, publishing or turning a feature on outside the test environment.",
+    "potrzeba": "That you perform this step yourself or explicitly agree to it.",
+    "question": "Who will perform this step?",
+    "opcje": [
+      {
+        "opcja": "I will do it myself",
+        "skutek": "the factory gives the exact command and waits for the result",
+        "rekomendowana": true
+      },
+      {
+        "opcja": "I agree, do it",
+        "skutek": "the factory performs the step and records your consent"
+      },
+      {
+        "opcja": "Not now",
+        "skutek": "the task ends without this step"
+      }
+    ],
+    "potem": "After the step is performed the factory closes the task with a report."
+  }
+}

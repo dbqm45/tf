@@ -23,6 +23,28 @@
       }
     },
     {
+      "id": "przeglad-atam-en",
+      "expect": "trigger",
+      "prompt": "In a month we are making a big change to the payments architecture and I want to do a lightweight architecture review. How should I run it and what should the report contain? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "wrażliwo",
+            "sensitivity",
+            "sensitiv\\w*"
+          ],
+          [
+            "kompromis",
+            "trade-?off"
+          ],
+          [
+            "ryzyk",
+            "risk"
+          ]
+        ]
+      }
+    },
+    {
       "id": "decyzja-i-komunikacja",
       "expect": "trigger",
       "prompt": "Zespół co miesiąc wraca do dyskusji, czy wydzielać serwis płatności. Jak podjąć i zakomunikować decyzję architektoniczną, żeby się utrwaliła? Odpowiedz zwięźle.",

@@ -1,112 +1,108 @@
 ---
 name: ai-evals
-description: Użyj przy ewaluacji funkcji LLM i agentów — zbiory danych, graderzy, sędzia LLM, pass@k i pass^k, bramka w CI, ewaluacje online.
+description: Use for evaluating LLM features and agents — datasets, graders, an LLM judge, pass@k and pass^k, a CI gate, online evals.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj, gdy trzeba zmierzyć jakość funkcji z LLM lub agenta, a nie tylko napisać pierwszą macierz testów — rozwój sterowany ewaluacjami, projekt zbiorów (złoty, regresyjny, przypadki brzegowe, adwersaryjne, próbki z ruchu, kontaminacja), rodzaje graderów (kod, sędzia LLM z rubryką i kalibracją do ocen ludzi, przegląd ludzki), ocena wyniku i trajektorii agenta, pass@k kontra pass^k, ewaluacje offline i online (A/B, shadow), bramka w CI z progami i alertem regresji, koszt i wariancja ewaluacji, format raportu. Nie do podstawowej macierzy promptfoo, schematu wyjścia i limitów pętli (eng-llm-features), ewaluacji skilli Claude (core-skill-authoring) ani wyroczni testów kodu (qa-spec-first-testing)."
-  slowa: "ewaluacje, evals, eval, zbiór testowy, golden set, sędzia llm, llm-as-a-judge, rubryka, kalibracja sędziego, zgodność z ludźmi, pass@k, pass^k, niespójny agent, trajektoria agenta, regresja jakości, bramka w ci, próg jakości, a/b test, shadow, ewaluacja online, kontaminacja, wariancja ewaluacji, raport z ewaluacji, jak mierzyć jakość agenta, czy wynik jest dobry, trafność systemu, klasa większościowa, punkt odniesienia, wyrocznia, ramię ślepe, wybór najlepszej konfiguracji, przetestowane konfiguracje, siatka parametrów, przetasowane etykiety, zaraportować wynik, ślady z produkcji, regresja ze śladów, dryf sędziego"
+  review: "2027-04-17"
+  catalog: "Use when you must measure the quality of an LLM feature or an agent, not just write the first test matrix — eval-driven development, dataset design (golden, regression, edge cases, adversarial, traffic samples, contamination), grader types (code, an LLM judge with a rubric and calibration to human ratings, human review), assessing an agent's outcome and trajectory, pass@k versus pass^k, offline and online evals (A/B, shadow), a CI gate with thresholds and a regression alert, eval cost and variance, the report format. Not for the basic promptfoo matrix, the output schema and loop limits (eng-llm-features), evals of Claude skills (core-skill-authoring) or code test oracles (qa-spec-first-testing)."
+  keywords: "ewaluacje, evals, eval, zbiór testowy, golden set, sędzia llm, llm-as-a-judge, rubryka, kalibracja sędziego, zgodność z ludźmi, pass@k, pass^k, niespójny agent, trajektoria agenta, regresja jakości, bramka w ci, próg jakości, a/b test, shadow, ewaluacja online, kontaminacja, wariancja ewaluacji, raport z ewaluacji, jak mierzyć jakość agenta, czy wynik jest dobry, trafność systemu, klasa większościowa, punkt odniesienia, wyrocznia, ramię ślepe, wybór najlepszej konfiguracji, przetestowane konfiguracje, siatka parametrów, przetasowane etykiety, zaraportować wynik, ślady z produkcji, regresja ze śladów, dryf sędziego, evaluations, test set, llm judge, rubric, judge calibration, human agreement, inconsistent agent, agent trajectory, quality regression, ci gate, quality threshold, online evaluation, contamination, eval variance, eval report, how to measure agent quality, is the result good, system accuracy, majority class, baseline, oracle, blind arm, choosing the best configuration, tested configurations, parameter grid, shuffled labels, report the result, production traces, regression from traces, judge drift, drugi model ocenia odpowiedzi, model ocenia model, ocena od 1 do 5, czy można ufać sędziemu, a second model grades answers, model grading a model, 1-5 rating, can we trust the judge"
 ---
 
-# Ewaluacje funkcji LLM i agentów
+# Evaluating LLM features and agents
 
-Podstawową macierz (przypadki × kandydaci, asercje, podłożone błędy) daje **eng-llm-features** §8; ten skill zaczyna się
-tam, gdzie pierwsza macierz przestaje wystarczać: zbiory rosną, ocena jest subiektywna, agent bywa niespójny, a wynik ma
-blokować merge.
+The basic matrix (cases × candidates, assertions, planted errors) comes from **eng-llm-features** §8; this skill starts
+where the first matrix stops being enough: the datasets grow, the assessment is subjective, the agent is sometimes inconsistent, and the result must
+block a merge.
 
-## Procedura
-1. **Zacznij od porażek, nie od teorii.** Zapisz 20–50 prostych zadań z prawdziwych błędów (zgłoszenia, kolejka
-   supportu, ręczne próby). To dobry start; zbiór rośnie z każdą nową porażką. Każde zadanie: wejście, kryterium
-   sukcesu, rozwiązanie wzorcowe. Dwóch ekspertów powinno dojść do tego samego werdyktu — inaczej zadanie jest niejasne.
-   Kryterium sukcesu jest konkretne, mierzalne, osiągalne i trafne (np. „F1 ≥ 0,85 na zbiorze testowym”, nie „dobra
-   jakość”); miękkie cechy (ton, spójność) mierzysz skalą z opisem poziomów. Więcej przypadków z oceną automatyczną
-   daje więcej niż kilka ocenianych ręcznie.
-2. **Warstwy zbioru** (`references/zbiory-i-graderzy.md`): *złoty* (wzorcowe, małe, ręcznie sprawdzone), *regresyjny*
-   (naprawione błędy; oczekiwane ok. 100%), *brzegowy* (puste, za długie, niejednoznaczne, w obcym języku),
-   *adwersaryjny* (wstrzyknięcia, próby obejścia), *próbki z ruchu* (zanonimizowane, odświeżane). Dla każdego
-   zachowania dodaj przypadki, w których ma wystąpić, **i** takie, w których nie ma (inaczej optymalizujesz jednostronnie).
-3. **Kontaminacja i wyciek.** Zbioru ewaluacyjnego nie wklejasz do promptu, przykładów few-shot ani danych
-   strojenia; przykłady do promptu bierzesz z osobnej puli. Publiczne benchmarki mogą być w danych modelu — dla
-   decyzji produktowych liczy się własny zbiór.
-4. **Dobierz gradera** (od najtańszego): kod (dokładne dopasowanie, schemat, test jednostkowy, stan w bazie) →
-   sędzia LLM (nuans, ton, zgodność z faktami) → człowiek (kalibracja i próbki). Reguła: *deterministyczny, gdzie się
-   da; LLM, gdzie trzeba; człowiek do walidacji*.
-5. **Sędzia LLM — zbuduj i skalibruj.** Rubryka z opisem każdego poziomu, **jeden wymiar na sędziego**, opcja
-   „nieznane / za mało danych”, inny model niż generujący, wynik w ustalonym formacie, **uzasadnienie przed oceną**
-   (sędzia z włączonym myśleniem albo pole `reason` przed werdyktem w schemacie). Kalibracja: 30–50 przykładów
-   ocenionych przez ludzi, zgodność liczysz (odsetek zgodnych albo kappa Cohena [próg ustal z zespołem]), rozbieżności
-   czytasz i poprawiasz rubrykę. Bez tego sędzia jest nieznanym instrumentem. Potem sędzia żyje jak kod: zgodność
-   uzasadnień (nie tylko etykiet), próg dryfu z rozrzutu ludzi, zmiana rubryki za zgodą człowieka z wersją do wycofania
-   (`references/zbiory-i-graderzy.md` §5–7).
-6. **Agent: wynik czy trajektoria.** Podstawą jest **wynik** (stan środowiska po przebiegu: rezerwacja istnieje w
-   bazie, testy przechodzą), bo sztywne sprawdzanie ścieżki karze poprawne, inne rozwiązania. Trajektorię (wywołania
-   narzędzi, liczba kroków, koszt) sprawdzasz osobno: limity, zakazane narzędzia, diagnoza porażek. Dla zadań
-   wieloetapowych przyznawaj punkty częściowe. Każdą próbę uruchamiaj w czystym środowisku.
-7. **Powtórz próby i wybierz metrykę.** Agent jest niedeterministyczny, więc `k` prób na zadanie.
-   **pass@k** = szansa na co najmniej jeden sukces w k próbach (rośnie z k; gdy wystarczy jedno dobre
-   rozwiązanie). **pass^k** = szansa, że wszystkie k prób się uda (maleje z k; gdy liczy się spójność, np. obsługa klienta).
-   Skuteczność 75% na próbę daje pass^3 ≈ 42%.
-8. **Offline, potem online.** Offline: zbiór przed wdrożeniem, bramka. Online (po wdrożeniu): shadow (nowa wersja
-   liczy równolegle, użytkownik jej nie widzi), A/B na części ruchu z metryką biznesową, próbki do ręcznego
-   przeglądu i nowe porażki z ruchu wracają do zbioru. Wzorzec i progi: `references/ci-i-ruch.md`.
-9. **Bramka w CI.** Szybki podzbiór (smoke) na każdy PR, pełny zestaw nocą lub przy zmianie modelu, promptu, narzędzi.
-   Próg ustaw względem **linii bazowej z rozrzutem** (powtórz bazę 3–5 razy), nie „na oko”; regresja = spadek poza
-   przedział szumu. Zmiana progu tylko świadomie, z zapisem. Szczegóły: `references/ci-i-ruch.md`.
-   Gotowe narzędzie (**uruchom**, nie przepisuj): `python3 .claude/skills/ai-evals/scripts/eval_gate.py baseline`
-   liczy z 3–5 przebiegów obecnej wersji rozrzut i próg (`--margin` ustala zespół), a `check` ocenia przebieg
-   kandydata: wypuść / zbadaj / wstrzymaj (kod 1 blokuje merge; także porażka zadania regresyjnego i koszt ponad
-   `--budget-usd`). Czyta wyniki w JSON Lines, modelu nie uruchamia.
-10. **Koszt i wariancja.** Policz koszt przebiegu (przypadki × próby × kandydaci × sędzia) przed uruchomieniem;
-    tani model do triażu, pełny zestaw tylko przy zmianie. 0% sukcesów w wielu próbach to zwykle zepsute zadanie lub
-    grader, nie niezdolny agent. Czytaj transkrypty porażek — to najszybsza diagnoza.
-11. **Interpretuj wynik między granicami** (`references/pulapki-pomiaru.md`): stała klasa większościowa, ramię ślepe
-    (bez kontekstu), wyrocznia (złoty fragment); ramiona z tymi samymi stałymi, jedna zmienna naraz. Konfigurację
-    wybierasz na zbiorze doboru, wynik raportujesz z odłożonego testu; kontrola na przetasowanych etykietach.
-    Nowe reguły oceny puszczasz na zapisanych śladach (z wersją promptu i polityki), bez ponownego uruchamiania agenta.
-12. **Raport** w stałym formacie (niżej), z manifestem pary model + harness. Sygnał gotowości to odsetek zadań
-    zaliczonych w całości, średnia kryteriów tylko jako diagnostyka; klasyfikator decyzji testujesz przetasowaniem opcji
-    i progiem per decyzja; agenta odpowiadającego liczbami — użytecznością z karą (`references/pulapki-pomiaru.md`
-    §10–12). Saturacja (zbiór zdaje ~100% i nie
-    odróżnia wersji) → dodaj trudniejsze zadania.
+## Procedure
+1. **Start from failures, not from theory.** Write down 20–50 simple tasks from real errors (bug reports, the support
+   queue, manual attempts). That is a good start; the dataset grows with every new failure. Each task: an input, a success
+   criterion, a reference solution. Two experts should reach the same verdict — otherwise the task is unclear.
+   The success criterion is specific, measurable, achievable and relevant (e.g. "F1 ≥ 0.85 on the test set", not "good
+   quality"); soft traits (tone, consistency) you measure with a scale with described levels. More cases with automated grading
+   give more than a few graded by hand.
+2. **Dataset layers** (`references/datasets-and-graders.md`): *golden* (reference, small, checked by hand), *regression*
+   (fixed bugs; expected approx. 100%), *edge* (empty, too long, ambiguous, in a foreign language),
+   *adversarial* (injections, bypass attempts), *traffic samples* (anonymized, refreshed). For every
+   behaviour add cases where it should occur **and** cases where it should not (otherwise you optimize one-sidedly).
+3. **Contamination and leakage.** You do not paste the eval dataset into the prompt, the few-shot examples or the tuning
+   data; examples for the prompt come from a separate pool. Public benchmarks may be in the model's data — for
+   product decisions your own dataset is what counts.
+4. **Choose the grader** (from the cheapest): code (exact match, a schema, a unit test, the state in the database) →
+   an LLM judge (nuance, tone, factual consistency) → a human (calibration and samples). The rule: *deterministic where
+   possible; an LLM where necessary; a human for validation*.
+5. **An LLM judge — build and calibrate it.** A rubric with a description of every level, **one dimension per judge**, an option
+   "unknown / not enough data", a different model than the generating one, the result in a fixed format, **reasoning before the score**
+   (a judge with thinking turned on or a `reason` field before the verdict in the schema). Calibration: 30–50 examples
+   rated by humans, you compute the agreement (the share of agreeing ratings or Cohen's kappa [set the threshold with the team]), you read the disagreements
+   and fix the rubric. Without this the judge is an unknown instrument. After that the judge lives like code: agreement
+   of reasoning (not only labels), a drift threshold from the human spread, a rubric change with a human's approval and a version to roll back to
+   (`references/datasets-and-graders.md` §5–7).
+6. **Agent: outcome or trajectory.** The basis is the **outcome** (the state of the environment after the run: the booking exists in
+   the database, the tests pass), because rigidly checking the path penalizes correct, different solutions. The trajectory (tool
+   calls, the number of steps, the cost) you check separately: limits, forbidden tools, failure diagnosis. For multi-step
+   tasks award partial credit. Run every trial in a clean environment.
+7. **Repeat trials and choose the metric.** An agent is non-deterministic, so `k` trials per task.
+   **pass@k** = the chance of at least one success in k trials (grows with k; when one good
+   solution is enough). **pass^k** = the chance that all k trials succeed (falls with k; when consistency matters, e.g. customer service).
+   A 75% success rate per trial gives pass^3 ≈ 42%.
+8. **Offline, then online.** Offline: the dataset before deployment, the gate. Online (after deployment): shadow (the new version
+   computes in parallel, the user does not see it), A/B on part of the traffic with a business metric, samples for manual
+   review, and new failures from traffic return to the dataset. The pattern and thresholds: `references/ci-and-traffic.md`.
+9. **The CI gate.** A fast subset (smoke) on every PR, the full suite nightly or on a change of the model, the prompt, the tools.
+   Set the threshold against **a baseline with its spread** (repeat the baseline 3–5 times), not "by eye"; a regression = a drop outside
+   the noise interval. Change the threshold only deliberately, with a record. Details: `references/ci-and-traffic.md`.
+10. **Cost and variance.** Compute the cost of a run (cases × trials × candidates × judge) before launching it;
+    a cheap model for triage, the full suite only on a change. 0% successes over many trials is usually a broken task or
+    grader, not an incapable agent. Read the transcripts of failures — that is the fastest diagnosis.
+11. **Interpret the result between bounds** (`references/measurement-pitfalls.md`): a constant majority class, a blind arm
+    (without context), an oracle (the golden passage); arms with the same constants, one variable at a time. You choose the configuration
+    on a selection set, you report the result from a held-out test; a control on shuffled labels.
+    New grading rules you run on recorded traces (with the prompt and policy version), without re-running the agent.
+12. **Report** in a fixed format (below), with a manifest of the model + harness pair. The readiness signal is the share of tasks
+    passed in full, the mean of criteria only as diagnostics; a decision classifier you test by shuffling the options
+    and with a per-decision threshold; an agent answering with numbers — by utility with a penalty (`references/measurement-pitfalls.md`
+    §10–12). Saturation (the dataset passes ~100% and does not
+    distinguish versions) → add harder tasks.
 
-## Format raportu
+## Report format
 ```
-Ewaluacja: <funkcja> | zbiór: <nazwa, N zadań, data> | kandydat vs baza: <model/prompt>
-Metryki: sukces <x%> (baza <y%>), pass^3 <..>, koszt/przebieg <..>, czas <..>
-Rozrzut bazy: <min–max z n powtórzeń> | Werdykt: wypuść / wstrzymaj / zbadaj
-Regresje: <zadanie → przyczyna>; Nowe porażki do zbioru: <lista>
+Evaluation: <feature> | dataset: <name, N tasks, date> | candidate vs baseline: <model/prompt>
+Metrics: success <x%> (baseline <y%>), pass^3 <..>, cost/run <..>, time <..>
+Baseline spread: <min–max from n repetitions> | Verdict: release / hold / investigate
+Regressions: <task → cause>; New failures for the dataset: <list>
 ```
 
-## Przykład
-**Wejście:** agent wsparcia zwrotów, 40 zadań z kolejki supportu, 4 powtórzenia, wynik 75% na próbę.
-**Wynik:**
-- grader wyniku: kod sprawdza stan zamówienia w bazie testowej (zwrot utworzony, kwota ≤ zamówienie);
-  sędzia LLM tylko dla tonu odpowiedzi, skalibrowany na 40 ocenach ludzi (zgodność 85%, rubryka poprawiona raz);
-- pass^4 = 0,75⁴ ≈ 32% → dla klienta zbyt niska spójność, mimo 75% średniej; pass@4 ≈ 99,6%;
-- baza powtórzona 4 razy: 72–78% → próg regresji w CI to 68%, nie 75%;
-- raport: werdykt „wstrzymaj”, 3 nowe porażki z transkryptów dodane do zbioru regresyjnego.
+## Example
+**Input:** a refunds support agent, 40 tasks from the support queue, 4 repetitions, a result of 75% per trial.
+**Result:**
+- the outcome grader: code checks the order state in the test database (refund created, amount ≤ order);
+  an LLM judge only for the tone of the answer, calibrated on 40 human ratings (agreement 85%, the rubric fixed once);
+- pass^4 = 0.75⁴ ≈ 32% → too low consistency for the customer, despite the 75% average; pass@4 ≈ 99.6%;
+- the baseline repeated 4 times: 72–78% → the regression threshold in CI is 68%, not 75%;
+- the report: the verdict "hold", 3 new failures from transcripts added to the regression dataset.
 
-## Checklista
-- [ ] zbiór startowy z prawdziwych porażek, warstwy opisane, przypadki „ma” i „nie ma wystąpić”
-- [ ] zbiór oddzielony od promptu i przykładów (kontaminacja)
-- [ ] kryteria sukcesu mierzalne; grader najtańszy z możliwych; sędzia LLM z rubryką, opcją „nieznane”, uzasadnieniem przed oceną i kalibracją do ocen ludzi
-- [ ] agent: ocena wyniku, trajektoria osobno, czyste środowisko, k prób, wybrane pass@k lub pass^k
-- [ ] linia bazowa z rozrzutem; próg w CI wyprowadzony z niej; smoke na PR, pełny zestaw okresowo
-- [ ] koszt policzony przed uruchomieniem; transkrypty porażek przeczytane
-- [ ] awarie poza modelem (UI, sesja, narzędzia, integracje, izolacja, koszty) w planie testów — qa-test-design
-- [ ] wynik między granicami (klasa większościowa, ramię ślepe, wyrocznia); konfiguracja wybrana poza zbiorem testowym
-- [ ] ruch online (shadow, A/B) zasila zbiór; raport w stałym formacie z manifestem model + harness
+## Checklist
+- [ ] a starting dataset from real failures, the layers described, "should" and "should not occur" cases
+- [ ] the dataset separated from the prompt and the examples (contamination)
+- [ ] success criteria measurable; the cheapest possible grader; an LLM judge with a rubric, an "unknown" option, reasoning before the score and calibration to human ratings
+- [ ] agent: outcome grading, the trajectory separately, a clean environment, k trials, pass@k or pass^k chosen
+- [ ] a baseline with its spread; the CI threshold derived from it; smoke on PRs, the full suite periodically
+- [ ] the cost computed before launching; the failure transcripts read
+- [ ] failures outside the model (UI, session, tools, integrations, isolation, costs) in the test plan — qa-test-design
+- [ ] the result between bounds (majority class, blind arm, oracle); the configuration chosen outside the test set
+- [ ] online traffic (shadow, A/B) feeds the dataset; the report in a fixed format with a model + harness manifest
 
-## Źródła
-- Anthropic Engineering, „Demystifying evals for AI agents” (2026-01-09, odczyt 2026-10-17): zadanie, próba, transkrypt,
-  wynik; graderzy kodowi, modelowi i ludzcy; pass@k i pass^k (przykład 75% → ok. 42% dla 3 prób); 20–50 zadań z
-  prawdziwych porażek; ocena wyniku zamiast ścieżki; opcja „Unknown” i osobny sędzia na wymiar; saturacja.
-- Anthropic, „Create strong empirical evaluations / Define success criteria and build evaluations”
-  (platform.claude.com/docs/en/test-and-evaluate/develop-tests, odczyt 2026-10-20, strona bez daty): kryteria SMART, zadaniowość,
-  automatyzacja, objętość ponad jakość pojedynczego przypadku, przypadki brzegowe, inny model jako sędzia, rozumowanie sędziego przed oceną.
-- OpenAI, przewodnik po ewaluacjach (platform.openai.com/docs/guides/evals) — [niezweryfikowane]: strona nieosiągalna
-  z tego środowiska 2026-10-17; z niej pochodzi tylko ogólna zasada „ewaluacje przy każdym wydaniu”, bez szczegółów API.
+## Sources
+- Anthropic Engineering, "Demystifying evals for AI agents" (2026-01-09, accessed 2026-10-17): task, trial, transcript,
+  outcome; code, model and human graders; pass@k and pass^k (the example 75% → approx. 42% for 3 trials); 20–50 tasks from
+  real failures; grading the outcome instead of the path; the "Unknown" option and a separate judge per dimension; saturation.
+- Anthropic, "Create strong empirical evaluations / Define success criteria and build evaluations"
+  (platform.claude.com/docs/en/test-and-evaluate/develop-tests, accessed 2026-10-20, an undated page): SMART criteria, task-specificity,
+  automation, volume over the quality of a single case, edge cases, a different model as the judge, the judge's reasoning before the score.
+- OpenAI, the evals guide (platform.openai.com/docs/guides/evals) — [unverified]: the page was unreachable
+  from this environment on 2026-10-17; only the general principle "evals on every release" comes from it, without API details.
 - F. Khan (2026-08-26), A. Punnen (2026-08-18), Netflix Tech Blog (2026-09-04, 2026-10), J. Wąsowski (2026-10-22) —
-  pułapki pomiaru, regresja ze śladów, cykl życia sędziego, bramka zmiany harnessu; liczby autorów [niezweryfikowane].
-- Progi kappa, rozmiar próbki kalibracji (30–50) i reguła „3–5 powtórzeń bazy” to praktyka autorów skilla [założenie].
+  measurement pitfalls, regression from traces, the judge lifecycle, the harness change gate; the authors' numbers [unverified].
+- The kappa thresholds, the calibration sample size (30–50) and the "3–5 baseline repetitions" rule are the skill authors' practice [assumption].
 
-Opisane własnymi słowami.
+Described in our own words.

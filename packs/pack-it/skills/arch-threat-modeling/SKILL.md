@@ -1,103 +1,103 @@
 ---
 name: arch-threat-modeling
-description: Użyj przy modelu zagrożeń funkcji lub integracji — DFD z granicami zaufania, STRIDE, PASTA, ocena ryzyka, OWASP Top 10.
+description: Use for a threat model of a feature or integration — a DFD with trust boundaries, STRIDE, PASTA, risk assessment.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy projektowaniu funkcji, usługi lub integracji i przy zmianie granic zaufania — model zagrożeń (DFD z granicami zaufania, powierzchnia ataku, STRIDE per element, PASTA dla krytycznych procesów), ocena i kwantyfikacja ryzyka, decyzje o ryzyku, OWASP Top 10:2025. Nie do przeglądu konkretnego diffu (security-reviewer) ani reagowania na incydent (ops-security-operations)."
-  slowa: "obrona w głąb, defence in depth, defense in depth, warstwy obrony, warstwy zabezpieczeń, blast radius, wyciek danych, atak, zagrożenie, ryzyko, ryzyko rezydualne, czy ochrona się opłaca, koszt zabezpieczeń, FAIR, prawdopodobieństwo i strata, oszacować ryzyko liczbowo, ryzyko liczbowo zamiast wysokie średnie, czy warto wydać na ochronę, ochrona przed wyciekiem danych klientów"
+  review: "2027-10-17"
+  catalog: "Use when designing a feature, service or integration and when trust boundaries change — the threat model (a DFD with trust boundaries, the attack surface, STRIDE per element, PASTA for critical processes), risk assessment and quantification, risk decisions, OWASP Top 10:2025. Not for reviewing a specific diff (security-reviewer) or responding to an incident (ops-security-operations)."
+  keywords: "obrona w głąb, defence in depth, defense in depth, warstwy obrony, warstwy zabezpieczeń, blast radius, wyciek danych, atak, zagrożenie, ryzyko, ryzyko rezydualne, czy ochrona się opłaca, koszt zabezpieczeń, FAIR, prawdopodobieństwo i strata, oszacować ryzyko liczbowo, ryzyko liczbowo zamiast wysokie średnie, czy warto wydać na ochronę, ochrona przed wyciekiem danych klientów, threat model, layers of defence, security layers, data leak, attack, threat, risk, residual risk, is protection worth it, cost of security, likelihood and loss, quantify risk, numeric risk instead of high medium, is it worth spending on protection, protecting customer data from leaks, STRIDE, trust boundaries"
 ---
 
-# Modelowanie zagrożeń
+# Threat modelling
 
-Cztery pytania (A. Shostack): **Co budujemy? Co może pójść źle? Co z tym zrobimy? Czy dobrze to zrobiliśmy?**
-Model zagrożeń robi się przy projekcie, nie po wdrożeniu, i aktualizuje przy zmianach. Wynik to plik
-`docs/project/04-architecture/threat-model.md` (core-project-record), a nie rozmowa.
+Four questions (A. Shostack): **What are we building? What can go wrong? What are we going to do about it? Did we do a good job?**
+A threat model is made during design, not after deployment, and updated with changes. The result is the file
+`docs/project/04-architecture/threat-model.md` (core-project-record), not a conversation.
 
-## Kiedy (wyzwalacze)
-Nowa usługa lub integracja zewnętrzna; nowy punkt wejścia (endpoint publiczny, webhook, upload, kolejka od partnera);
-zmiana uwierzytelniania, sesji, uprawnień lub kryptografii; nowa kategoria danych (osobowe, płatnicze, zdrowotne);
-nowy agent AI z narzędziami (core-agent-security). Drobna zmiana bez nowych przepływów → aktualizacja istniejącego
-modelu w review, bez nowego warsztatu.
+## When (triggers)
+A new service or external integration; a new entry point (a public endpoint, a webhook, an upload, a queue from a partner);
+a change of authentication, sessions, permissions or cryptography; a new data category (personal, payment, health);
+a new AI agent with tools (core-agent-security). A small change without new flows → an update of the existing
+model in the review, without a new workshop.
 
-## Procedura
-1. **Zakres i cel.** Co jest w modelu, co poza nim; aktywa (dane, pieniądze, reputacja, dostępność) i kto je chroni.
-   Wymagania bezpieczeństwa z `requirements.md` i atrybutów jakości (arch-quality-attributes).
-2. **Diagram przepływu danych (DFD)** w Mermaid: byty zewnętrzne (użytkownik, partner, IdP), procesy (usługi, funkcje),
-   magazyny danych, przepływy z etykietą (co płynie, protokół) i **granice zaufania** (internet | DMZ | sieć aplikacji |
-   dane | konto chmurowe | przeglądarka). Każde przecięcie granicy to kandydat na zagrożenie.
-3. **Powierzchnia ataku**: lista punktów wejścia i wyjścia (logowanie, panele admina, wyszukiwanie, formularze, API,
-   pliki, integracje, kanały operacyjne i monitoringu), każdy z: kto ma dostęp (anonim / użytkownik / admin / usługa),
-   jakie dane przyjmuje, jaka kontrola. Najpierw to, co dostępne z internetu, i kod krytyczny (auth, krypto, uprawnienia).
-4. **STRIDE per element** — dla każdego elementu DFD pytania z tabeli niżej. Zapisz zagrożenie jako scenariusz:
-   „Napastnik [kto] może [co] przez [jak], bo [brak kontroli], skutek: [aktywo]”.
-5. **Ocena ryzyka** (sekcja niżej) i **decyzja** dla każdego zagrożenia: *ograniczyć* (kontrola + test), *wyeliminować*
-   (usunąć funkcję lub przepływ), *przenieść* (dostawca, ubezpieczenie, umowa), *zaakceptować*. Akceptacja ryzyka
-   i przeniesienie to decyzje człowieka z właścicielem i datą przeglądu — agent je proponuje, nie podejmuje.
-6. **Kontrole do backlogu i testów**: każde ograniczenie ma zadanie i test nadużycia (abuse case), np. „użytkownik B
-   pobiera fakturę użytkownika A → 404”. Trafiają do planu (core-project-record) i do qa-test-design.
-7. **Weryfikacja**: czy każdy przepływ przez granicę zaufania ma zagrożenia S/T/I, czy każdy magazyn danych ma I/T/D,
-   czy każda warstwa obrony (sieć, tożsamość, host, aplikacja, dane, łańcuch dostaw, wykrywanie, reagowanie) ma
-   kontrolę albo zapisaną decyzję (`references/warstwy-obrony.md`), czy każda decyzja ma właściciela.
-   Model `proposed` → akceptacja człowieka.
+## Procedure
+1. **Scope and goal.** What is in the model, what is outside it; the assets (data, money, reputation, availability) and who protects them.
+   The security requirements from `requirements.md` and the quality attributes (arch-quality-attributes).
+2. **A data flow diagram (DFD)** in Mermaid: external entities (a user, a partner, an IdP), processes (services, functions),
+   data stores, flows with a label (what flows, the protocol) and **trust boundaries** (internet | DMZ | application network |
+   data | cloud account | browser). Every boundary crossing is a threat candidate.
+3. **The attack surface**: a list of entry and exit points (login, admin panels, search, forms, APIs,
+   files, integrations, operational and monitoring channels), each with: who has access (anonymous / user / admin / service),
+   what data it accepts, what control. First what is reachable from the internet, and critical code (auth, crypto, permissions).
+4. **STRIDE per element** — for every DFD element the questions from the table below. Record a threat as a scenario:
+   "An attacker [who] can [what] through [how], because [the missing control], consequence: [the asset]".
+5. **Risk assessment** (the section below) and a **decision** for every threat: *mitigate* (a control + a test), *eliminate*
+   (remove the feature or the flow), *transfer* (a provider, insurance, a contract), *accept*. Accepting a risk
+   and transferring it are a human's decisions with an owner and a review date — the agent proposes them, it does not make them.
+6. **Controls for the backlog and tests**: every mitigation has a task and an abuse case test, e.g. "user B
+   downloads user A's invoice → 404". They go into the plan (core-project-record) and to qa-test-design.
+7. **Verification**: does every flow across a trust boundary have S/T/I threats, does every data store have I/T/D,
+   does every defence layer (network, identity, host, application, data, supply chain, detection, response) have
+   a control or a recorded decision (`references/defense-layers.md`), does every decision have an owner.
+   A `proposed` model → a human's acceptance.
 
-## STRIDE per element (wg Microsoft / Shostack)
-| Element DFD | S podszycie | T manipulacja | R wyparcie | I ujawnienie | D odmowa usługi | E podniesienie uprawnień |
+## STRIDE per element (after Microsoft / Shostack)
+| DFD element | S spoofing | T tampering | R repudiation | I information disclosure | D denial of service | E elevation of privilege |
 |---|---|---|---|---|---|---|
-| byt zewnętrzny | ✓ | | ✓ | | | |
-| proces | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| magazyn danych | | ✓ | (✓ logi audytowe) | ✓ | ✓ | |
-| przepływ danych | | ✓ | | ✓ | ✓ | |
-| Kontrola typowa | uwierzytelnianie | integralność (podpis, MAC, walidacja) | log audytowy, podpis | szyfrowanie, autoryzacja, minimalizacja | limity, izolacja, autoskalowanie z górnym limitem | autoryzacja, najmniejsze uprawnienia |
+| external entity | ✓ | | ✓ | | | |
+| process | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| data store | | ✓ | (✓ audit logs) | ✓ | ✓ | |
+| data flow | | ✓ | | ✓ | ✓ | |
+| Typical control | authentication | integrity (a signature, a MAC, validation) | an audit log, a signature | encryption, authorization, minimization | limits, isolation, autoscaling with an upper limit | authorization, least privilege |
 
-## PASTA — gdy liczy się wpływ na biznes
-Siedem etapów, prowadzonych od celów biznesu: (1) cele biznesowe i bezpieczeństwa, (2) zakres techniczny,
-(3) dekompozycja aplikacji (DFD), (4) analiza zagrożeń (kto i po co atakuje — dane o realnych atakach w branży),
-(5) analiza podatności i słabych punktów, (6) modelowanie ataków (drzewa ataków), (7) analiza ryzyka i wpływu.
-Stosuj dla procesów krytycznych (płatności, rozliczenia, dane medyczne) i gdy decyzję podejmuje biznes; na co dzień
-wystarcza STRIDE.
+## PASTA — when the business impact matters
+Seven stages, driven from the business goals: (1) business and security goals, (2) the technical scope,
+(3) application decomposition (a DFD), (4) threat analysis (who attacks and why — data on real attacks in the industry),
+(5) vulnerability and weakness analysis, (6) attack modelling (attack trees), (7) risk and impact analysis.
+Apply it to critical processes (payments, settlements, medical data) and when the business makes the decision; day to day
+STRIDE is enough.
 
-## Ocena i kwantyfikacja ryzyka
-- **Jakościowo (domyślnie)**: prawdopodobieństwo (dostępność z internetu, wymagane uprawnienia, złożoność, czy jest
-  gotowy exploit) × wpływ (dane, pieniądze, dostępność, zakres) w skali 1–3 lub 1–5. Ryzyko = iloczyn; próg akcji
-  zapisany w ADR.
-- **Ilościowo (dla decyzji budżetowych)**: FAIR — częstość zdarzeń strat × wielkość straty, podane jako przedziały
-  (min, najbardziej prawdopodobne, max) i symulacja Monte Carlo. Wynik: roczna strata w przedziale, porównywalna
-  z kosztem kontroli. Liczby z danych (incydenty, branża), a nie z intuicji jednej osoby.
-- Ryzyko po kontroli (rezydualne) zapisujesz osobno — to ono idzie do akceptacji.
+## Risk assessment and quantification
+- **Qualitatively (by default)**: likelihood (reachability from the internet, the required permissions, complexity, whether there is
+  a ready exploit) × impact (data, money, availability, scope) on a 1–3 or 1–5 scale. Risk = the product; the action threshold
+  recorded in an ADR.
+- **Quantitatively (for budget decisions)**: FAIR — loss event frequency × loss magnitude, given as ranges
+  (min, most likely, max) and a Monte Carlo simulation. Result: the annual loss in a range, comparable
+  with the cost of the control. Numbers from data (incidents, the industry), not from one person's intuition.
+- You record the risk after the control (residual) separately — that is what goes to acceptance.
 
-## Klasy błędów do sprawdzenia — OWASP Top 10:2025
+## Error classes to check — OWASP Top 10:2025
 A01 Broken Access Control · A02 Security Misconfiguration · A03 Software Supply Chain Failures (ops-supply-chain-security)
-· A04 Cryptographic Failures (ops-secrets-identities, `kryptografia-i-pki.md`) · A05 Injection · A06 Insecure Design (ten
+· A04 Cryptographic Failures (ops-secrets-identities, `cryptography-and-pki.md`) · A05 Injection · A06 Insecure Design (this
 skill) · A07 Authentication Failures (be-auth-security) · A08 Software or Data Integrity Failures · A09 Security Logging
-and Alerting Failures (ops-security-operations) · A10 Mishandling of Exceptional Conditions (fail closed, bez wycieku
-szczegółów w błędach). Dla API: OWASP API Top 10 w be-api-design.
+and Alerting Failures (ops-security-operations) · A10 Mishandling of Exceptional Conditions (fail closed, no leaking of
+details in errors). For APIs: the OWASP API Top 10 in be-api-design.
 
-## Szablon pliku `threat-model.md`
-Nagłówek artefaktu (core-project-record) + sekcje: Zakres i aktywa · DFD (Mermaid) · Powierzchnia ataku (tabela) ·
-Zagrożenia (ID, element, STRIDE, scenariusz, prawdopodobieństwo, wpływ, ryzyko, decyzja, kontrola, test, właściciel) ·
-Ryzyka zaakceptowane (kto, do kiedy) · Założenia · Otwarte pytania · Przekazanie.
+## Template of the `threat-model.md` file
+The artifact header (core-project-record) + sections: Scope and assets · DFD (Mermaid) · Attack surface (a table) ·
+Threats (ID, element, STRIDE, scenario, likelihood, impact, risk, decision, control, test, owner) ·
+Accepted risks (who, until when) · Assumptions · Open questions · Handoff.
 
-## Przykład
-**Sytuacja:** „Operator płatności wysyła potwierdzenia wpłat na nasz webhook; po nim zamówienie idzie do wysyłki.”
-**Wynik** (fragment `threat-model.md`, skala 1–3):
+## Example
+**Situation:** "A payment operator sends payment confirmations to our webhook; after it the order goes to shipping."
+**Result** (a fragment of `threat-model.md`, a 1–3 scale):
 
-| ID | Element | STRIDE | Scenariusz | R | Decyzja i kontrola | Test nadużycia |
+| ID | Element | STRIDE | Scenario | R | Decision and control | Abuse case test |
 |---|---|---|---|---|---|---|
-| Z-1 | operator → webhook | S | Napastnik wysyła fałszywe potwierdzenie, bo nie sprawdzamy nadawcy; skutek: towar bez zapłaty | 9 | ograniczyć: podpis (MAC) | brak podpisu → 401, stan bez zmian |
-| Z-2 | operator → webhook | T | Powtórzenie podpisanego żądania; skutek: podwójne księgowanie | 4 | ograniczyć: deduplikacja po id | to samo żądanie 2× → 1 efekt |
+| T-1 | operator → webhook | S | An attacker sends a fake confirmation, because we do not verify the sender; consequence: goods without payment | 9 | mitigate: a signature (MAC) | no signature → 401, state unchanged |
+| T-2 | operator → webhook | T | Replaying a signed request; consequence: double booking | 4 | mitigate: deduplication by id | the same request 2× → 1 effect |
 
-Więcej przykładów: `references/przyklady.md`.
+More examples: `references/examples.md`.
 
-## Checklista
-- [ ] DFD z granicami zaufania i etykietami przepływów
-- [ ] każdy punkt wejścia z internetu na liście powierzchni ataku
-- [ ] STRIDE dla każdego elementu przecinającego granicę
-- [ ] każde zagrożenie z decyzją; akceptacje z właścicielem i datą (tylko człowiek)
-- [ ] kontrole w backlogu i testy nadużyć w planie testów
+## Checklist
+- [ ] a DFD with trust boundaries and flow labels
+- [ ] every entry point from the internet on the attack surface list
+- [ ] STRIDE for every element crossing a boundary
+- [ ] every threat with a decision; acceptances with an owner and a date (only a human)
+- [ ] controls in the backlog and abuse case tests in the test plan
 
-## Źródła
+## Sources
 - A. Shostack, *Threat Modeling: Designing for Security* (2014); [OWASP Threat Modeling Process](https://owasp.org/www-community/Threat_Modeling_Process),
   [OWASP Attack Surface Analysis Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Attack_Surface_Analysis_Cheat_Sheet.html)
 - PASTA — T. UcedaVélez, M. Morana, *Risk Centric Threat Modeling* (2015); FAIR — J. Freund, J. Jones, *Measuring and Managing Information Risk* (2014)
 - [OWASP Top 10:2025](https://owasp.org/Top10/2025/); [roadmap.sh — DevSecOps](https://roadmap.sh/devsecops)
-Opisane własnymi słowami.
+Described in our own words.

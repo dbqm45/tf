@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Hook UserPromptSubmit: ostrzega, gdy kontekst sesji robi się długi — jedna z przyczyn pomyłek i zmyśleń.
+UserPromptSubmit hook: warns when the session context gets long — one cause of mistakes and fabrications.
 
-Rozmiar kontekstu bierze z ostatniej odpowiedzi modelu w transkrypcie (input + odczyt i zapis cache). Po
-przekroczeniu progu dopisuje do kontekstu krótką instrukcję: zapisać punkt kontrolny i zaproponować człowiekowi
-`/compact` z instrukcją albo nową sesję. Każdy próg zgłasza raz na sesję; gdy kontekst spadnie (np. po
-kompaktowaniu), licznik się zeruje.
+It takes the context size from the last model response in the transcript (input + cache read and write). After
+a threshold is crossed it appends a short instruction to the context: save a checkpoint and propose to the human
+`/compact` with instructions, or a new session. Each threshold is reported once per session; when the context drops (e.g. after
+compaction), the counter resets.
 
-Progi w tysiącach tokenów: CLAUDE_CONTEXT_WARN_K (domyślnie 100) i 1,5 × próg (mocne ostrzeżenie).
-Wyłączenie: CLAUDE_CONTEXT_WARN_K=0. Tylko biblioteka standardowa; błąd nigdy nie blokuje polecenia.
+Thresholds in thousands of tokens: CLAUDE_CONTEXT_WARN_K (default 100) and 1.5 × the threshold (strong warning).
+Disable: CLAUDE_CONTEXT_WARN_K=0. Standard library only; an error never blocks the command.
 """
 from __future__ import annotations
 
@@ -19,8 +19,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 
@@ -30,7 +30,7 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
     except (AttributeError, ValueError):
         pass
 
-TAIL_BYTES = 400_000   # ostatnia odpowiedź modelu jest na końcu transkryptu; nie czytamy całego pliku
+TAIL_BYTES = 400_000   # the last model response is at the end of the transcript; we do not read the whole file
 
 
 def context_tokens(transcript: Path) -> int:
@@ -54,14 +54,14 @@ def context_tokens(transcript: Path) -> int:
 
 def message(level: int, k: int) -> str:
     if level == 2:
-        return (f"UWAGA (context_guard): kontekst tej sesji ma ok. {k} tys. tokenów — dużo. Rośnie ryzyko pomyłek, "
-                "zapominania wcześniejszych ustaleń i zmyśleń. Zanim zrobisz cokolwiek dalej: zapisz punkt kontrolny "
-                "(core-project-record: kroki, następna czynność, ustalenia z rozmowy) i zaproponuj użytkownikowi nową "
-                "sesję od punktu kontrolnego albo `/compact` z instrukcją, co zachować. Fakty podawaj tylko sprawdzone "
-                "w tej chwili (core-grounding), nie z pamięci wcześniejszej części rozmowy.")
-    return (f"context_guard: kontekst tej sesji ma ok. {k} tys. tokenów. Przy dłuższej pracy zapisz punkt kontrolny "
-            "i rozważ z użytkownikiem `/compact` z instrukcją albo nową sesję; eksplorację wielu plików zlecaj "
-            "subagentom. Ważne fakty sprawdzaj ponownie, zamiast polegać na wcześniejszej części rozmowy.")
+        return (f"WARNING (context_guard): this session's context is about {k}k tokens — a lot. The risk of mistakes, "
+                "forgetting earlier agreements and fabrication grows. Before doing anything else: write a checkpoint "
+                "(core-project-record: steps, next action, agreements from the conversation) and propose to the user a new "
+                "session from the checkpoint or `/compact` with an instruction on what to keep. State only facts checked "
+                "right now (core-grounding), not from memory of the earlier part of the conversation.")
+    return (f"context_guard: this session's context is about {k}k tokens. For longer work write a checkpoint "
+            "and consider with the user `/compact` with an instruction or a new session; delegate exploring many files "
+            "to subagents. Re-check important facts instead of relying on the earlier part of the conversation.")
 
 
 def main() -> int:
@@ -86,10 +86,10 @@ def main() -> int:
             print(message(level, tokens // 1000))
         if level != last:
             state[session] = level
-            state = dict(list(state.items())[-200:])   # tylko ostatnie sesje
+            state = dict(list(state.items())[-200:])   # only the latest sessions
             state_p.parent.mkdir(parents=True, exist_ok=True)
             state_p.write_text(json.dumps(state), encoding="utf-8")
-    except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+    except Exception as e:  # the hook does not interrupt the session; the error goes to the log
         record_error("context_guard", e)
     return 0
 

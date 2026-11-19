@@ -44,6 +44,65 @@
       }
     },
     {
+      "id": "prompt-dlugie-dokumenty-en",
+      "expect": "trigger",
+      "prompt": "I paste 8 long contracts (about 100k tokens) into the prompt and ask about the contractual penalty clauses, but the model loses details. How should I structure such a prompt? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "na (górze|początku|początek)",
+            "przed pytaniem",
+            "dokumenty (na )?pierwsz\\w+",
+            "najpierw dokument",
+            "at the top",
+            "documents? (go )?first",
+            "before the (question|query)",
+            "long (documents?|data) (first|at the top)"
+          ],
+          [
+            "pytani\\w+ (na|u) (końc|dole)",
+            "na końcu",
+            "query at the end",
+            "pytanie na koniec",
+            "questions? (at|on) the (end|bottom)",
+            "at the end",
+            "at the bottom"
+          ],
+          [
+            "<document",
+            "tag\\w* XML",
+            "znacznik\\w* XML",
+            "XML",
+            "XML tags?",
+            "<documents?>"
+          ],
+          [
+            "cytat\\w*",
+            "wyciągnij fragmenty",
+            "quotes",
+            "najpierw wypisz",
+            "quotes?",
+            "extract\\w* (the )?(relevant )?(quotes|passages|excerpts)",
+            "first (list|extract|write out)"
+          ],
+          [
+            "(popraw|lepsz|zysk)[^.]{0,40}30 ?%",
+            "30 ?%[^.]{0,40}(popraw|lepsz)",
+            "jedn\\w+ (rzecz|zmian\\w+) na raz",
+            "(improv|better)[^.]{0,40}30 ?%",
+            "30 ?%[^.]{0,40}(improv|better)",
+            "one (thing|change) at a time"
+          ]
+        ],
+        "none": [
+          "pytanie przed dokumentami",
+          "zawsze wrzuć wszystko jednym zdaniem",
+          "question before (the )?documents",
+          "always (put|cram|stuff) everything (in|into) one sentence"
+        ]
+      }
+    },
+    {
       "id": "prompt-cache-i-wersje",
       "expect": "trigger",
       "prompt": "Mamy w kodzie kilka promptów systemowych sklejanych stringami, z datą i imieniem użytkownika na początku. Rachunek za API rośnie, a po każdej poprawce nie wiemy, czy nie zepsuła innych przypadków. Jak to uporządkować? Odpowiedz zwięźle.",

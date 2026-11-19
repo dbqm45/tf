@@ -4,11 +4,11 @@ phase: meta
 status: accepted
 version: 1
 author: system
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: []
 ---
-# Rejestr decyzji
+# Decision register
 
-| ID | Data | Decyzja | Uzasadnienie (1 zdanie) | Status | Autor | Szczegóły |
+| ID | Date | Decision | Rationale (1 sentence) | Status | Author | Details |
 |---|---|---|---|---|---|---|

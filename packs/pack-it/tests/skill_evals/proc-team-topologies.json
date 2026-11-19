@@ -22,6 +22,27 @@
       }
     },
     {
+      "id": "typy-zespolow-en",
+      "expect": "trigger",
+      "prompt": "We have a team that handles CI, Kubernetes and monitoring for 10 product teams, and it's swamped with requests. How should we redesign it organizationally? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "platform"
+          ],
+          [
+            "X-as-a-Service",
+            "self-service",
+            "samoobsług",
+            "self[- ]serv\\w*"
+          ],
+          [
+            "stream-aligned|strumieni|obciążenie poznawcze|cognitive"
+          ]
+        ]
+      }
+    },
+    {
       "id": "conway",
       "expect": "trigger",
       "prompt": "Mamy monolit, a chcemy przejść na moduły o wyraźnych granicach. Jak ułożyć zespoły, żeby architektura rzeczywiście taka wyszła? Odpowiedz zwięźle.",

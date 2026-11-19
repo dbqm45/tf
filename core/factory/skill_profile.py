@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-Dopasowuje widoczność opisów skilli fabryki do projektu (ustawienie Claude Code `skillOverrides`).
+Adjusts the visibility of factory skill descriptions to the project (the Claude Code `skillOverrides` setting).
 
-  python3 .tf/factory/skill_profile.py              # zastosuj w bieżącym projekcie
-  python3 .tf/factory/skill_profile.py --dry-run    # pokaż plan, nic nie zapisuj
-  python3 .tf/factory/skill_profile.py <projekt>
-  python3 .tf/factory/skill_profile.py --describe ux-,sec-   # w tym projekcie te wymiary z opisem (zapamiętane w manifeście)
+  python3 .tf/factory/skill_profile.py              # apply in the current project
+  python3 .tf/factory/skill_profile.py --dry-run    # show the plan, write nothing
+  python3 .tf/factory/skill_profile.py <project>
+  python3 .tf/factory/skill_profile.py --describe ux-,sec-   # in this project these dimensions with a description (remembered in the manifest)
 
-Po co: Claude Code trzyma listę skilli w budżecie ~1% okna kontekstu; po przepełnieniu usuwa opisy najrzadziej
-używanych skilli, więc każdy nowy skill wypychałby opisy innych. Tu opis na liście dostają skille potrzebne w tym
-projekcie, a reszta jest widoczna jako sama nazwa (`name-only`) — model nadal może je wywołać, a hook `skill_hint`
-podpowiada je z opisem, gdy polecenie ich dotyczy. Reguły:
-  - technologie (`fw-`, `lang-`, `tool-`): opis tylko dla wykrytych przez `.claude/hooks/detect_stack.py`
-    (gdy wykrywanie nie zadziała — wszystkie z opisem, jak dotąd);
-  - wymiary specjalistyczne wskazane przez nakładki (`skill_visibility.name_only_prefixes` w pack.yaml, np. `sec-`,
-    `ai-`, `ux-` — persony znają je ze swojego promptu) i skille oznaczone przez autora `metadata.widocznosc: nazwa`:
-    sama nazwa, chyba że projekt włączy wymiar przez `--describe` (np. zespół UX pracuje nimi na co dzień);
-  - pozostałe skille fabryki: opis.
-Zmieniane są tylko wpisy, które zapisała fabryka (pamięta je manifest, klucz `skill_overrides`). Twoje ustawienia
-w `skillOverrides` — także usunięcie wpisu fabryki — mają pierwszeństwo. Własnych skilli ani skilli uruchamianych
-tylko ręcznie (`disable-model-invocation: true`) skrypt nie dotyka. Zapis: `.claude/settings.local.json`.
-Uruchamiają go instalacja i aktualizacja; ręcznie — po zmianie stacku. Tylko biblioteka standardowa.
+Why: Claude Code keeps the skill list in a budget of ~1% of the context window; on overflow it removes the descriptions of the least
+used skills, so every new skill would push out the descriptions of others. Here the skills needed in this
+project get a description in the list, and the rest is visible as the name only (`name-only`) — the model can still call them, and the `skill_hint` hook
+suggests them with a description when the command concerns them. Rules:
+  - technologies (`fw-`, `lang-`, `tool-`): description only for those detected by `.claude/hooks/detect_stack.py`
+    (when detection fails — all with a description, as before);
+  - specialist dimensions indicated by overlays (`skill_visibility.name_only_prefixes` in pack.yaml, e.g. `sec-`,
+    `ai-`, `ux-` — personas know them from their prompt) and skills marked by the author `metadata.visibility: name`:
+    the name only, unless the project enables a dimension via `--describe` (e.g. a UX team works with them daily);
+  - the remaining factory skills: description.
+Only the entries the factory wrote are changed (the manifest remembers them, key `skill_overrides`). Your settings
+in `skillOverrides` — including removal of a factory entry — take precedence. The script does not touch your own skills or skills run
+manually only (`disable-model-invocation: true`). Written to: `.claude/settings.local.json`.
+The installer and update run it; manually — after a stack change. Standard library only.
 """
 from __future__ import annotations
 
@@ -30,29 +30,29 @@ import re
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 STACK_PREFIXES = ("fw-", "lang-", "tool-")
-NAME_ONLY_PREFIXES: tuple[str, ...] = ()   # rdzeń: brak; nakładki dokładają swoje (name_only_prefixes)
+NAME_ONLY_PREFIXES: tuple[str, ...] = ()   # core: none; overlays add their own (name_only_prefixes)
 
 
 def pack_name_only(root: Path) -> tuple[str, ...]:
-    """Prefiksy „sama nazwa” z zainstalowanych nakładek (.tf/factory/packs.py)."""
+    """“Name only” prefixes from installed overlays (.tf/factory/packs.py)."""
     try:
         spec = importlib.util.spec_from_file_location("tf_packs_sp", root / ".tf" / "factory" / "packs.py")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         cfg = mod.compose(root, mod.load_config(root))
         return tuple(cfg["skill_visibility"]["name_only_prefixes"])
-    except Exception:  # brak fabryki w projekcie albo uszkodzony pack.yaml — bez prefiksów nakładek
+    except Exception:  # no factory in the project or a broken pack.yaml — no overlay prefixes
         return ()
 MANIFEST = Path(".claude") / "factory-manifest.json"
 SETTINGS = Path(".claude") / "settings.local.json"
@@ -60,9 +60,9 @@ SETTINGS = Path(".claude") / "settings.local.json"
 
 def desired(name: str, stack: set[str] | None, marked: bool = False, describe: tuple[str, ...] = (),
             name_only: tuple[str, ...] = NAME_ONLY_PREFIXES) -> str:
-    """Widoczność skilla: "on" (nazwa i opis) albo "name-only". `stack=None` — stack nieznany;
-    `marked` — autor oznaczył skill `metadata.widocznosc: nazwa` (rzadko potrzebny, znajduje go skill_hint);
-    `describe` — prefiksy wymiarów, które projekt chce mieć z opisem."""
+    """Skill visibility: "on" (name and description) or "name-only". `stack=None` — stack unknown;
+    `marked` — the author marked the skill `metadata.visibility: name` (rarely needed, skill_hint finds it);
+    `describe` — dimension prefixes the project wants with a description."""
     if describe and name.startswith(tuple(describe)):
         return "on"
     if marked or (name_only and name.startswith(name_only)):
@@ -73,18 +73,18 @@ def desired(name: str, stack: set[str] | None, marked: bool = False, describe: t
 
 
 def plan(settings: dict, want: dict[str, str], managed: dict[str, str]) -> tuple[dict, dict[str, str], list[str]]:
-    """Nowe ustawienia, nowy zapis fabryki (tylko wartości ≠ "on") i lista skilli z ręcznym ustawieniem użytkownika."""
+    """New settings, the new factory record (only values ≠ "on") and the list of skills with a manual user setting."""
     out = dict(settings)
     ov = dict(settings.get("skillOverrides") or {})
     new_managed, kept = {}, []
     for name in sorted(set(want) | set(managed)):
         cur, ours = ov.get(name, "on"), managed.get(name, "on")
-        if cur != ours:                                   # ktoś zmienił wpis fabryki albo ustawił własny
+        if cur != ours:                                   # someone changed the factory entry or set their own
             kept.append(name)
             if ours != "on":
                 new_managed[name] = ours
             continue
-        target = want.get(name, "on")                     # skill usunięty z fabryki → wpis fabryki znika
+        target = want.get(name, "on")                     # skill removed from the factory → the factory entry disappears
         if target == "on":
             ov.pop(name, None)
         else:
@@ -106,11 +106,11 @@ def manual_only(skill_md: Path) -> bool:
 
 
 def marked_name_only(skill_md: Path) -> bool:
-    return bool(re.search(r"^\s+widocznosc:\s*[\"']?nazwa[\"']?\s*$", _front(skill_md), re.M))
+    return bool(re.search(r"^\s+visibility:\s*[\"']?name[\"']?\s*$", _front(skill_md), re.M))
 
 
 def factory_skills(root: Path, manifest: dict) -> list[str]:
-    """Skille fabryki w projekcie (z manifestu); bez manifestu — wszystkie skille w .claude/skills (repo fabryki)."""
+    """Factory skills in the project (from the manifest); without a manifest — all skills in .claude/skills (the factory repo)."""
     files = manifest.get("files")
     if files:
         names = {m.group(1) for f in files if (m := re.match(r"\.claude/skills/([^/]+)/SKILL\.md$", f))}
@@ -121,7 +121,7 @@ def factory_skills(root: Path, manifest: dict) -> list[str]:
 
 
 def detect_stack(root: Path) -> set[str] | None:
-    """Skille technologii wykryte w projekcie; None, gdy wykrywania nie da się uruchomić."""
+    """Technology skills detected in the project; None when detection cannot be run."""
     path = root / ".claude" / "hooks" / "detect_stack.py"
     if not path.is_file():
         return None
@@ -130,7 +130,7 @@ def detect_stack(root: Path) -> set[str] | None:
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
         return set(mod.analyze(root).get("suggested_stack") or [])
-    except Exception:                                    # błąd wykrywania nie może zepsuć instalacji
+    except Exception:                                    # a detection error must not break the installation
         return None
 
 
@@ -142,7 +142,7 @@ def read_json(path: Path) -> dict:
 
 
 def apply(root: Path, dry: bool = False, describe: list[str] | None = None) -> dict:
-    """`describe=None` — wymiary z opisem z manifestu (`skill_describe`); lista — nowa wartość do zapamiętania."""
+    """`describe=None` — dimensions with a description from the manifest (`skill_describe`); a list — the new value to remember."""
     root = root.resolve()
     man_p, set_p = root / MANIFEST, root / SETTINGS
     manifest, settings = read_json(man_p), read_json(set_p)

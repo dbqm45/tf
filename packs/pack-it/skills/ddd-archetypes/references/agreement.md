@@ -1,173 +1,173 @@
-# Archetyp Agreement — mapper (umowy, warunki, aneksy, zamówienia)
+# The Agreement archetype — mapper (agreements, terms, amendments, orders)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania o **wzajemnych zobowiązaniach stron** (umowa, warunki, aneks, zamówienie, oferta) na model z umową
-jako bytem o tożsamości, warunkami obowiązującymi w czasie i zamówieniami składanymi na jej podstawie. Efekt: da się
-odpowiedzieć na pytanie „co obowiązywało w dniu X i co wiedzieliśmy o tym w dniu Y”, a aneks jest nową wersją warunków,
-a nie nadpisaniem pól. Protokół wspólny (pytania, „To zależy”, kontrola R/A/X, zapis): `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements about **mutual obligations of parties** (an agreement, terms, an amendment, an order, a quote) into a model with the agreement
+as an entity with an identity, terms in force over time and orders placed on its basis. The effect: you can
+answer the question "what was in force on day X and what did we know about it on day Y", and an amendment is a new version of the terms,
+not an overwrite of fields. The common protocol (questions, "It depends", the R/A/X check, recording): `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy strony przyjmują wzajemne zobowiązania na warunkach, które obowiązują w określonym czasie
-i mogą się zmieniać?* Tak → pasuje. Jednorazowy koszyk bez warunków i bez historii zmian → wystarczy zamówienie
-(patrz niżej), bez pełnej umowy.
+## Fit test
+**The core question:** *do the parties take on mutual obligations on terms that are in force for a defined time
+and may change?* Yes → it fits. A one-off cart with no terms and no change history → an order is enough
+(see below), without a full agreement.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „umowa serwisowa”, „aneks zmienia cenę od 1 dnia miesiąca” | ✅ |
-| „warunki obowiązują od–do”, „jaka stawka obowiązywała w marcu?” | ✅ |
-| „zamówienia w ramach umowy ramowej”, „zamówienie z pozycjami i statusem” | ✅ |
-| „oferta ważna 14 dni, po akceptacji staje się umową” | ✅ (oferta → umowa) |
-| „jak policzyć cenę wg cennika i rabatu” | ❌ → Pricing |
-| „rozliczenie płatności, salda, faktury” | ❌ → Accounting |
-| „skan umowy, podpis, wersja pliku” | ❌ → Document (`document.md`) |
-| „kim jest strona, jakie ma role” | ❌ → Party |
-| „rezerwacja sali na termin” | ⚠️ graniczny |
-| „kontrakt na instrumencie finansowym” | ⚠️ graniczny |
+| "a service agreement", "an amendment changes the price from the 1st day of the month" | ✅ |
+| "the terms are in force from–to", "what rate was in force in March?" | ✅ |
+| "orders under a framework agreement", "an order with items and a status" | ✅ |
+| "a quote valid for 14 days, after acceptance it becomes an agreement" | ✅ (quote → agreement) |
+| "how to compute the price from the price list and the discount" | ❌ → Pricing |
+| "settling payments, balances, invoices" | ❌ → Accounting |
+| "a scan of the agreement, a signature, a file version" | ❌ → Document (`document.md`) |
+| "who the party is, what roles it has" | ❌ → Party |
+| "booking a room for a date" | ⚠️ borderline |
+| "a contract on a financial instrument" | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Rezerwacja jako umowa?* — liczy się tylko „czy termin wolny” → Availability. Gdy rezerwacja ma warunki (kara,
-  cennik, zmiany w czasie), umowa opisuje zobowiązanie, a Availability blokuje zasób.
-- *Instrumenty finansowe* — Contract w finansach (Fowler, rozdz. „Trading” i „Derivative Contracts”) to osobna,
-  specjalistyczna rodzina; ten plik jej nie rozstrzyga, potwierdź z ekspertem.
+**Borderline cases:**
+- *A booking as an agreement?* — only "is the slot free" matters → Availability. When the booking has terms (a penalty,
+  a price list, changes over time), the agreement describes the obligation, and Availability blocks the resource.
+- *Financial instruments* — a Contract in finance (Fowler, the chapters "Trading" and "Derivative Contracts") is a separate,
+  specialist family; this file does not settle it, confirm with an expert.
 
-## Model (istota)
-Łańcuch pojęć (nazwy podrozdziałów rozdz. 4 Silverstona): **zapotrzebowanie (requirement) → zapytanie (request) → oferta
-(quote) → umowa (agreement) → zamówienia na podstawie umowy (agreement to orders)**. Nie każdy etap jest potrzebny;
-zacznij od tych, o których mówią wymagania.
+## Model (the essence)
+A chain of concepts (the section names of Silverston's ch. 4): **requirement → request → quote
+→ agreement → orders on the basis of the agreement (agreement to orders)**. Not every stage is needed;
+start with the ones the requirements mention.
 
-- **Umowa (Agreement)** — tożsamość, **strony w rolach** (Party: np. zleceniodawca, wykonawca; role z Party, nie flagi),
-  rodzaj, status, forma czynności, okres obowiązywania całości.
-- **Pozycje umowy (agreement items)** — co jest przedmiotem (produkt, usługa, zakres); odwołanie do Product, nie kopia.
-- **Warunki (agreement terms)** — typ warunku + wartość + **okres obowiązywania**. Warunek jest danymi, nie kodem:
-  termin płatności, kara, czas reakcji serwisu.
-- **Ustalenia cenowe (agreement pricing)** — umowa **wskazuje** cennik, stawkę lub parametry; liczy je Pricing.
-- **Zamówienie (order)** — jedno zobowiązanie: pozycje, strony, korekty (adjustments), status i warunki. Może wskazywać
-  umowę; wtedy bierze jej warunki **z dnia zamówienia** (kopia lub odwołanie do wersji — decyzja).
-- **Umowa ramowa vs zamówienie** — własny wniosek: umowa ramowa ustala warunki wspólne i nie rodzi wykonania sama
-  z siebie; każde zamówienie to osobne zobowiązanie z własnym statusem i cyklem.
+- **Agreement** — an identity, **parties in roles** (Party: e.g. the principal, the contractor; roles from Party, not flags),
+  a kind, a status, the form of the legal act, the period of validity of the whole.
+- **Agreement items** — what is the subject (a product, a service, a scope); a reference to Product, not a copy.
+- **Terms (agreement terms)** — a term type + a value + **a period of validity**. A term is data, not code:
+  a payment deadline, a penalty, a service response time.
+- **Pricing arrangements (agreement pricing)** — the agreement **points to** a price list, a rate or parameters; Pricing computes them.
+- **Order** — one obligation: items, parties, adjustments, a status and terms. It may point to
+  an agreement; then it takes its terms **as of the order date** (a copy or a reference to the version — a decision).
+- **Framework agreement vs order** — our own conclusion: a framework agreement sets common terms and does not give rise to execution
+  by itself; each order is a separate obligation with its own status and life cycle.
 
-### Czas: okres obowiązywania i aneksy
-- Warunek ma **zakres dat obowiązywania** (od–do). To wzorzec Effectivity / Temporal Property (Fowler, eaaDev): wartość
-  zależna od daty.
-- **Aneks = nowa wersja warunku z datą skutku**, a nie edycja. Stara wersja zostaje; kończy się dniem przed datą skutku.
-- **Odtworzenie stanu na dzień**: zapytanie „warunki umowy U w dniu D” zwraca wersje, których zakres obejmuje D.
-- **Drugi zakres dat** (bitemporalność): oprócz „kiedy obowiązuje” zapisujemy „**kiedy zapisano**”. Aneks wsteczny
-  nie niszczy wtedy wcześniejszej wiedzy systemu, a spór rozstrzygają dwa pytania: *co obowiązywało w dniu D*
-  i *co system wiedział w dniu W*.
+### Time: the period of validity and amendments
+- A term has **a range of validity dates** (from–to). This is the Effectivity / Temporal Property pattern (Fowler, eaaDev): a value
+  that depends on the date.
+- **An amendment = a new version of a term with an effective date**, not an edit. The old version stays; it ends on the day before the effective date.
+- **Reconstructing the state as of a day**: the query "the terms of agreement U on day D" returns the versions whose range covers D.
+- **A second date range** (bitemporality): besides "when it is in force" we record "**when it was recorded**". A backdated amendment
+  then does not destroy the system's earlier knowledge, and a dispute is settled by two questions: *what was in force on day D*
+  and *what did the system know on day W*.
 
-### Status i reguły
-- **Status** — wzorzec przekrojowy (Silverston Vol. 3: rozdział Status): umowa i zamówienie mają typ statusu, wartość
-  i datę nadania; dozwolone przejścia to reguła, nie struktura.
-- **Reguły biznesowe** (Silverston Vol. 3: Business Rules; Arlow & Neustadt mają archetyp Rule) — „aneks wymaga
-  akceptacji dwóch stron” liczy warstwa polityk i woła archetyp.
-- **Forma czynności** — atrybut umowy (pisemna, dokumentowa, elektroniczna). Kontekst prawny do potwierdzenia przez
-  prawnika: forma dokumentowa (art. 77² KC, od 8.09.2016), forma elektroniczna z kwalifikowanym podpisem
-  (art. 78¹ KC). Archetyp zapisuje wybraną formę; **czy czynność jest ważna**, ocenia prawnik, nie model.
+### Status and rules
+- **Status** — a cross-cutting pattern (Silverston Vol. 3: the Status chapter): an agreement and an order have a status type, a value
+  and an assignment date; the allowed transitions are a rule, not structure.
+- **Business rules** (Silverston Vol. 3: Business Rules; Arlow & Neustadt have the Rule archetype) — "an amendment requires
+  the acceptance of both parties" is computed by the policy layer, which calls the archetype.
+- **The form of the legal act** — an attribute of the agreement (written, documentary, electronic). The legal context to be confirmed by
+  a lawyer: the documentary form (art. 77² KC, the Polish Civil Code, from 8.09.2016), the electronic form with a qualified signature
+  (art. 78¹ KC). The archetype records the chosen form; **whether the act is valid** is assessed by a lawyer, not by the model.
 
-## Pytania
-**A — decyzje standardowe:**
-- Czy jest **umowa ramowa**, czy tylko pojedyncze zamówienia? Czy zamówienie musi wskazywać umowę?
-- Czy aneks może działać **wstecz** i czy potrzebny **drugi zakres dat** (kiedy zapisano)?
-- Czy zamówienie **kopiuje** warunki w chwili złożenia, czy wskazuje wersję umowy?
-- Jakie **statusy** i przejścia ma umowa, aneks, zamówienie? Kto zatwierdza (poza archetypem)?
+## Questions
+**A — standard decisions:**
+- Is there a **framework agreement**, or only individual orders? Must an order point to an agreement?
+- Can an amendment act **retroactively**, and is a **second date range** (when it was recorded) needed?
+- Does an order **copy** the terms at the moment it is placed, or point to a version of the agreement?
+- What **statuses** and transitions do the agreement, the amendment and the order have? Who approves (outside the archetype)?
 
-**B — luki** (przykłady): wypowiedzenie · automatyczne przedłużenie · kilka aneksów o tej samej dacie skutku · umowa
-wielostronna · limity wartości zamówień w umowie ramowej · cesja.
+**B — gaps** (examples): termination · automatic renewal · several amendments with the same effective date · a multi-party
+agreement · limits on order values in a framework agreement · assignment (cession).
 
-## Kroki mapowania
-1. **Zobowiązanie** — umowa trwała czy zamówienie jednorazowe; czy jest umowa ramowa.
-2. **Strony i role** — kto, w jakiej roli (odesłanie do Party; role jako dane).
-3. **Pozycje i warunki** — co jest przedmiotem; które warunki jako typ + wartość + okres.
-4. **Cena** — ustalenia w umowie; liczy Pricing.
-5. **Czas** — okres obowiązywania, aneksy jako wersje, data skutku, ewentualny drugi zakres dat.
-6. **Zamówienia** — powiązanie z umową, dziedziczenie warunków.
-7. **Status** — stany i przejścia jako reguły; zdarzenia zmiany.
-8. **Integracje** — Pricing, Accounting (skutki finansowe), Availability, Product, Document.
+## Mapping steps
+1. **The obligation** — a lasting agreement or a one-off order; is there a framework agreement.
+2. **Parties and roles** — who, in what role (a reference to Party; roles as data).
+3. **Items and terms** — what is the subject; which terms as type + value + period.
+4. **Price** — arrangements in the agreement; Pricing computes.
+5. **Time** — the period of validity, amendments as versions, the effective date, a possible second date range.
+6. **Orders** — the link to the agreement, inheriting terms.
+7. **Status** — states and transitions as rules; change events.
+8. **Integrations** — Pricing, Accounting (financial effects), Availability, Product, Document.
 
-## Decyzje do kontroli (R/A/X)
-umowa ramowa vs zamówienia · aneks wsteczny · drugi zakres dat · kopia vs odwołanie do wersji warunków · statusy
-i przejścia · etap oferty · kto zatwierdza aneks · wypowiedzenie · forma czynności.
+## Decisions to check (R/A/X)
+framework agreement vs orders · a backdated amendment · the second date range · a copy vs a reference to a version of the terms · statuses
+and transitions · the quote stage · who approves an amendment · termination · the form of the legal act.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Agreement: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Umowy              — | Rodzaj | Strony i role (→ Party) | Pozycje | Forma czynności | Okres | Ramowa? |
-## Warunki w czasie   — | Typ warunku | Wartość/parametr | Obowiązuje od–do | Zapisano od–do (opcjonalnie) |
-## Aneksy             — | Aneks | Co zmienia | Data skutku | Wstecz? | Zatwierdza (poza archetypem) |
-## Zamówienia i statusy — | Zamówienie | Umowa | Warunki: kopia/odwołanie | Status | Przejście |
-## Integracje          — | Zdarzenie | Z / do archetypu | Reakcja |
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), przypadki brzegowe, parametry polityk zmiennych
+# Agreement model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Agreements         — | Kind | Parties and roles (→ Party) | Items | Form of the legal act | Period | Framework? |
+## Terms over time    — | Term type | Value/parameter | In force from–to | Recorded from–to (optional) |
+## Amendments         — | Amendment | What it changes | Effective date | Backdated? | Approves (outside the archetype) |
+## Orders and statuses — | Order | Agreement | Terms: copy/reference | Status | Transition |
+## Integrations        — | Event | From / to archetype | Reaction |
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), edge cases, variable policy parameters
 ```
 
-## Wzorce i pułapki
-- **Nadpisanie warunku aneksem** — ginie historia; spór „jaka stawka była w marcu” jest nierozstrzygalny. Wersja z datą
-  skutku zamiast `UPDATE`.
-- **Jedna data** („ważne do”) przy aneksach wstecznych — bez drugiego zakresu dat nie odróżnisz „obowiązywało” od
-  „wtedy wiedzieliśmy”. Dodaj go tylko, gdy wymagania dopuszczają korekty wsteczne lub spory o stan.
-- **Cena jako logika w umowie** — umowa wskazuje cennik i parametry; liczy Pricing.
-- **Umowa jako plik** — skan i podpis to Document; umowa ma warunki i status niezależnie od pliku.
-- **Zamówienie dziedziczące warunki „na żywo”** — późniejszy aneks zmieni stare zamówienie; zdecyduj: kopia czy
-  wersja z dnia zamówienia.
-- **Autoryzacja poza archetypem**: „kto zatwierdza aneks” liczy warstwa polityk; archetyp pilnuje struktury (okresy
-  jednego typu warunku bez nakładania).
-- **Oferta to nie zamówienie:** oferta to propozycja jednej strony z terminem ważności, wersjami i negocjacją;
-  nie rezerwuje zasobów i nikogo nie wiąże do akceptacji. Zamówienie to zobowiązanie z realizacją, płatnością
-  i reklamacją. „Zamówienie ze statusem oferta” miesza dwa cykle życia i dwa zestawy reguł. Akceptacja oferty to
-  zdarzenie przełomowe, które **tworzy** zamówienie albo umowę z warunkami skopiowanymi z zaakceptowanej wersji.
-- **Zakup to nie zamówienie:** zamówienie wyraża, czego klient chce; zakup (transakcja sprzedaży) to fakt rozliczenia,
-  czyli płatność, faktura i przeniesienie własności (Accounting). Jedno zamówienie bywa realizowane kilkoma zakupami
-  lub dostawami, a zakup w sklepie stacjonarnym nie ma zamówienia. Wspólna tabela `orders` ze statusem `paid` ukrywa te
-  różnice.
+## Patterns and pitfalls
+- **Overwriting a term with an amendment** — the history is lost; the dispute "what was the rate in March" cannot be settled. A version with an effective
+  date instead of `UPDATE`.
+- **One date** ("valid to") with backdated amendments — without a second date range you will not distinguish "was in force" from
+  "what we knew then". Add it only when the requirements allow backdated corrections or disputes about the state.
+- **Price as logic in the agreement** — the agreement points to a price list and parameters; Pricing computes.
+- **The agreement as a file** — the scan and the signature are Document; the agreement has terms and a status independently of the file.
+- **An order inheriting terms "live"** — a later amendment will change an old order; decide: a copy or
+  the version as of the order date.
+- **Authorization outside the archetype**: "who approves an amendment" is computed by the policy layer; the archetype guards the structure (periods
+  of one term type without overlap).
+- **A quote is not an order:** a quote is one party's proposal with a validity deadline, versions and negotiation;
+  it does not reserve resources and binds no one to accept. An order is an obligation with fulfilment, payment
+  and complaints. "An order with the status quote" mixes two life cycles and two sets of rules. Accepting a quote is
+  a pivotal event that **creates** an order or an agreement with the terms copied from the accepted version.
+- **A purchase is not an order:** an order expresses what the customer wants; a purchase (a sales transaction) is the fact of settlement,
+  i.e. payment, an invoice and the transfer of ownership (Accounting). One order is sometimes fulfilled by several purchases
+  or deliveries, and a purchase in a brick-and-mortar shop has no order. A shared `orders` table with a `paid` status hides these
+  differences.
 
-## Kontrola jakości
-- [ ] strony występują w rolach z Party, bez flag
-- [ ] każdy warunek ma typ, wartość i okres obowiązywania; okresy tego samego typu się nie nakładają
-- [ ] aneks jest nową wersją z datą skutku; da się odtworzyć stan na dzień
-- [ ] decyzja o drugim zakresie dat (kiedy zapisano) podjęta jawnie
-- [ ] granice wskazane (Pricing, Accounting, Document, Availability); forma czynności tylko jako atrybut
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] the parties appear in roles from Party, without flags
+- [ ] every term has a type, a value and a period of validity; periods of the same type do not overlap
+- [ ] an amendment is a new version with an effective date; the state as of a day can be reconstructed
+- [ ] the decision about the second date range (when it was recorded) taken explicitly
+- [ ] the boundaries indicated (Pricing, Accounting, Document, Availability); the form of the legal act only as an attribute
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Firma serwisowa: umowa serwisowa z klientem na 24 miesiące, stawka za godzinę i czas reakcji. Aneksy
-zmieniają stawkę i zakres od wskazanej daty, czasem wstecz. Klient zamawia wizyty w ramach umowy. Klient twierdzi, że
-w marcu stawka wynosiła 100, my mamy 120.” [przykład]
+## Example (shortened)
+**Input:** "A service company: a service agreement with a customer for 24 months, an hourly rate and a response time. Amendments
+change the rate and the scope from an indicated date, sometimes retroactively. The customer orders visits under the agreement. The customer claims that
+in March the rate was 100, we have 120." [example]
 
 ```markdown
-## Mapowanie pojęć
-| umowa serwisowa | Agreement (ramowa) | warunki trwają dłużej niż jedna wizyta |
-| stawka, czas reakcji | Agreement terms (typ + wartość + okres) | zmieniają się aneksami |
-| wizyta zamówiona | Order na podstawie umowy | osobne zobowiązanie ze statusem |
-## Aneksy — | A1 | stawka 100 → 120 | od 1 kwietnia | wstecz: nie | zatwierdza: polityka (poza archetypem) |
-## Warunki w czasie — | stawka | 100 | 1 stycznia–31 marca | zapisano: od podpisania |
-                       | stawka | 120 | od 1 kwietnia | zapisano: od A1 |
-## Spór o stan — na dzień 15 marca → 100; przy aneksie wstecznym drugi zakres dat pokaże, co system wiedział
-## Decyzje — umowa ramowa (R) · aneks jako wersja (R) · drugi zakres dat (A: „To zależy” — tylko dla aneksów wstecznych)
-   · zamówienie: kopia warunków w chwili złożenia (X → zapytaj)
-## Niezmapowane pojęcia — wyliczenie kwoty za wizytę (→ Pricing) · faktura i płatność (→ Accounting) · skan z podpisem
-   (→ Document) · klient (→ Party)
+## Concept mapping
+| service agreement | Agreement (framework) | the terms last longer than one visit |
+| rate, response time | Agreement terms (type + value + period) | they change with amendments |
+| ordered visit | Order on the basis of the agreement | a separate obligation with a status |
+## Amendments — | A1 | rate 100 → 120 | from 1 April | backdated: no | approves: policy (outside the archetype) |
+## Terms over time — | rate | 100 | 1 January–31 March | recorded: from signing |
+                      | rate | 120 | from 1 April | recorded: from A1 |
+## Dispute about the state — as of 15 March → 100; with a backdated amendment the second date range will show what the system knew
+## Decisions — framework agreement (R) · amendment as a version (R) · second date range (A: "It depends" — only for backdated amendments)
+   · order: a copy of the terms at the moment it is placed (X → ask)
+## Unmapped concepts — computing the amount for a visit (→ Pricing) · invoice and payment (→ Accounting) · scan with a signature
+   (→ Document) · customer (→ Party)
 ```
 
-## Źródła
-Odczyt 2026-10-17.
-- **Silverston, „The Data Model Resource Book, Vol. 1, Revised Edition”, Wiley, ISBN 978-0-471-38023-8** (marzec 2001,
-  zastępuje wydanie z 1997) — nazwy podrozdziałów rozdz. 4 „Ordering Products” (potwierdzone wtórnie, spisem
-  treści O'Reilly); treści rozdziałów nie weryfikowano.
-- **Silverston & Agnew, „The Data Model Resource Book, Vol. 3: Universal Patterns for Data Modeling”, Wiley 2009,
-  ISBN 978-0-470-17845-4** — tytuły rozdziałów Status i Business Rules (numeracja niepewna); pierwotne.
-- **Fowler, „Analysis Patterns: Reusable Object Models”, Addison-Wesley** (rok 1996/1997) — tytuły rozdz. 9 „Trading”
-  i 10 „Derivative Contracts”; tylko do wskazania granicy (instrumenty finansowe).
-- **Fowler, martinfowler.com/eaaDev: Temporal Property, Effectivity, Audit Log** — szkice z 2004 roku, autor ich nie
-  aktualizuje (pierwotne, nieaktualizowane). Nazwy wzorców; opis drugiego zakresu dat jest naszym wnioskiem modelowym.
-- **Arlow & Neustadt, „Enterprise Patterns and MDA”, Addison-Wesley, ISBN 0-321-11230-X** (rok: źródła sprzeczne
-  2003/2004) — wyłącznie nazwy archetypów Order i Rule; treści nie weryfikowano (wtórne).
-- **Kodeks cywilny, art. 77² (forma dokumentowa, od 8.09.2016; ustawa z 10.07.2015, Dz.U. 2015 poz. 1311), art. 77³
-  (dokument), art. 78¹ (forma elektroniczna)** — kontekst prawny z komentarza (wtórne); do potwierdzenia przez prawnika.
-- Oferta a zamówienie i zakup a zamówienie — na podstawie programu szkolenia „DDD — zaawansowane techniki
-  modelowania i archetypy” (Bottega IT Minds, materiał od człowieka, 2026-10-21); opisane własnymi słowami.
+## Sources
+Accessed 2026-10-17.
+- **Silverston, "The Data Model Resource Book, Vol. 1, Revised Edition", Wiley, ISBN 978-0-471-38023-8** (March 2001,
+  replaces the 1997 edition) — the section names of ch. 4 "Ordering Products" (confirmed secondarily, by the O'Reilly table
+  of contents); the content of the chapters was not verified.
+- **Silverston & Agnew, "The Data Model Resource Book, Vol. 3: Universal Patterns for Data Modeling", Wiley 2009,
+  ISBN 978-0-470-17845-4** — the chapter titles Status and Business Rules (numbering uncertain); primary.
+- **Fowler, "Analysis Patterns: Reusable Object Models", Addison-Wesley** (year 1996/1997) — the titles of ch. 9 "Trading"
+  and 10 "Derivative Contracts"; only to mark the boundary (financial instruments).
+- **Fowler, martinfowler.com/eaaDev: Temporal Property, Effectivity, Audit Log** — drafts from 2004, the author does not
+  update them (primary, not updated). The pattern names; the description of the second date range is our modelling conclusion.
+- **Arlow & Neustadt, "Enterprise Patterns and MDA", Addison-Wesley, ISBN 0-321-11230-X** (year: the sources contradict each other,
+  2003/2004) — only the names of the Order and Rule archetypes; the content was not verified (secondary).
+- **Kodeks cywilny (the Polish Civil Code), art. 77² (documentary form, from 8.09.2016; the act of 10.07.2015, Dz.U. 2015 item 1311), art. 77³
+  (document), art. 78¹ (electronic form)** — the legal context from a commentary (secondary); to be confirmed by a lawyer.
+- Quote vs order and purchase vs order — based on the programme of the training "DDD — zaawansowane techniki
+  modelowania i archetypy" (DDD — advanced modelling techniques and archetypes; Bottega IT Minds, material from a human, 2026-10-21); described in our own words.
 
-Reszta (umowa ramowa vs zamówienie, kopia vs odwołanie do wersji warunków, drugi zakres dat, reguły i pułapki) to
-nasze wnioski modelowe, nieprzypisane autorom. Opisane własnymi słowami; treść książek i norm nie była cytowana.
+The rest (framework agreement vs order, a copy vs a reference to a version of the terms, the second date range, rules and pitfalls) are
+our modelling conclusions, not attributed to the authors. Described in our own words; the content of books and standards was not quoted.

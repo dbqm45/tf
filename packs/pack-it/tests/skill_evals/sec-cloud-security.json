@@ -17,6 +17,21 @@
       }
     },
     {
+      "id": "baza-konta-guardrails-en",
+      "expect": "trigger",
+      "prompt": "We have 15 AWS accounts, and some teams click around in the console. How should we lay out the account structure and guardrails so that nobody turns off logging or makes a bucket public? Answer briefly.",
+      "checks": {
+        "all": [
+          ["\\bSCP\\b", "service control polic"],
+          ["management account|konto zarządzając|konto główne|master", "nie obejmuj\\w* konta|nie dotycz\\w* konta", "(does ?n.t|does not) (apply|affect) (to )?(the )?(management )?account"],
+          ["Block Public Access", "blokad\\w* publicznego dostępu"],
+          ["log archive|konto logów|osobn\\w* konto \\w* log|CloudTrail"],
+          ["Access Analyzer", "CreateAccessKey", "CreateUser", "Checkov", "Conftest"]
+        ],
+        "none": ["SCP nadaje uprawnienia", "SCP przyznaje uprawnienia", "SCPs? (grants?|gives?) permissions?"]
+      }
+    },
+    {
       "id": "multicloud-logi-i-klucze",
       "expect": "trigger",
       "prompt": "Firma ma AWS, Azure i GCP. Jaki minimalny zestaw logowania i zasad dla kluczy dostępowych wymusić we wszystkich trzech chmurach? Odpowiedz zwięźle.",

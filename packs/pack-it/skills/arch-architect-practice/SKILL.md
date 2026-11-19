@@ -1,112 +1,112 @@
 ---
 name: arch-architect-practice
-description: Użyj przy pracy architekta poza techniką — decyzje, test odporności przed zapisaniem (adwokat diabła), komunikacja, szacowanie, ATAM, arc42/C4/ADR, TOGAF.
+description: Use for an architect's work beyond technology — decisions (devil's advocate), communication, estimation, ATAM, arc42/C4/ADR.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj przy pracy architekta poza samą techniką — poziomy architektury, podejmowanie i komunikowanie decyzji, szacowanie, przegląd architektury (ATAM), upraszczanie, dokumentacja (arc42, C4, ADR), coaching, ramy korporacyjne (TOGAF, ITIL). Nie do atrybutów jakości (arch-quality-attributes) ani wyboru stacku (arch-tech-selection)."
-  slowa: "decyzja architektoniczna, zakomunikować decyzję, utrwalić decyzję, wracamy do tej samej dyskusji, ADR, rekord decyzji, przegląd architektury, ATAM, arc42, C4, interesariusze architektury, szacowanie architekta"
+  review: "2027-10-09"
+  catalog: "Use for an architect's work beyond technology alone — architecture levels, making and communicating decisions, estimation, architecture review (ATAM), simplification, documentation (arc42, C4, ADR), coaching, enterprise frameworks (TOGAF, ITIL). Not for quality attributes (arch-quality-attributes) or stack selection (arch-tech-selection)."
+  keywords: "decyzja architektoniczna, zakomunikować decyzję, utrwalić decyzję, wracamy do tej samej dyskusji, ADR, rekord decyzji, przegląd architektury, ATAM, arc42, C4, interesariusze architektury, szacowanie architekta, architectural decision, communicate a decision, record a decision, we keep coming back to the same discussion, decision record, architecture review, architecture stakeholders, architect estimation, devil's advocate, pre-mortem"
 ---
 
-# Praktyka architekta
+# The architect's practice
 
-Architekt odpowiada za decyzje, które są drogie do zmiany, i za to, żeby zespół je rozumiał i stosował. Kod piszesz
-o tyle, o ile trzeba, żeby decyzje były osadzone w rzeczywistości (prototyp, szkielet, przegląd).
+The architect is responsible for decisions that are expensive to change, and for the team understanding and applying them. You write code
+as much as needed for the decisions to be grounded in reality (a prototype, a skeleton, a review).
 
-## Poziomy architektury
-| Poziom | Zakres | Typowe pytania | Wynik |
+## Architecture levels
+| Level | Scope | Typical questions | Result |
 |---|---|---|---|
-| **aplikacja** | wnętrze jednego systemu: moduły, warstwy, wzorce | jak podzielić kod, gdzie granice modułów, jak testować | struktura modułów, ADR, fitness functions (eng-*, ddd-tactical-design) |
-| **rozwiązanie** | kilka systemów dla jednej potrzeby biznesowej | jak systemy się integrują, przepływ danych, technologie | architektura rozwiązania, mapa kontekstów, kontrakty (ddd-context-mapping, be-api-design) |
-| **przedsiębiorstwo** | cała organizacja: zdolności biznesowe, portfel systemów | które systemy rozwijać, wygaszać, łączyć; standardy | mapy zdolności i aplikacji, zasady, mapa drogowa (`references/ramy-korporacyjne.md`) |
-Zadanie zawsze nazywa poziom — inaczej rozmowa o „architekturze” miesza wnętrze modułu ze strategią firmy.
+| **application** | the inside of one system: modules, layers, patterns | how to split the code, where the module boundaries are, how to test | the module structure, ADRs, fitness functions (eng-*, ddd-tactical-design) |
+| **solution** | several systems for one business need | how the systems integrate, data flow, technologies | the solution architecture, a context map, contracts (ddd-context-mapping, be-api-design) |
+| **enterprise** | the whole organization: business capabilities, the system portfolio | which systems to develop, retire, merge; standards | capability and application maps, principles, a roadmap (`references/corporate-frameworks.md`) |
+A task always names the level — otherwise a conversation about "architecture" mixes the inside of a module with the company strategy.
 
-## Oczekiwania wobec architekta (wg Richardsa i Forda)
-Podejmuje decyzje architektoniczne (i prowadzi do nich, zamiast dyktować technologie); stale analizuje architekturę
-i jej dryf; śledzi trendy i ocenia je krytycznie; pilnuje zgodności z decyzjami (automatycznie, fitness functions);
-zna różne technologie powierzchownie i kilka głęboko; zna domenę biznesu; ma umiejętności interpersonalne; rozumie
-organizację i jej politykę (bez tego najlepsza decyzja nie zostanie wdrożona).
+## Expectations of an architect (after Richards and Ford)
+Makes architectural decisions (and leads to them, instead of dictating technologies); continuously analyses the architecture
+and its drift; follows trends and assesses them critically; keeps compliance with the decisions (automatically, fitness functions);
+knows many technologies superficially and a few deeply; knows the business domain; has interpersonal skills; understands
+the organization and its politics (without this the best decision will not be implemented).
 
-## Decyzje
-1. **Czy to decyzja architektoniczna?** Dotyczy struktury, atrybutów jakości, zależności, interfejsów lub technik
-   budowy i jest kosztowna do odwrócenia. Odwracalne szczegóły zostaw zespołowi.
-2. **Czynniki**: scenariusze atrybutów jakości, ograniczenia (budżet, termin, kompetencje, regulacje), istniejące
-   decyzje (ADR) i dane, nie opinie. Brak faktów → researcher lub spike, nie domysł.
-3. **Opcje**: co najmniej dwie realne plus „nic nie zmieniać”; dla każdej kompromisy wprost (co zyskujemy, co
-   tracimy). Nie ma rozwiązania najlepszego, jest najmniej złe dla tych czynników.
-4. **Odwracalność**: przy remisie wybierz łatwiejsze do zmiany; drogie decyzje odkładaj do ostatniego odpowiedzialnego
-   momentu, ale przygotuj to, co potrzebne do ich podjęcia.
-5. **Zapis**: ADR z kontekstem, opcjami i konsekwencjami (docs-tech-writing); akceptuje człowiek (core-project-record).
-6. **Komunikacja**: decyzję tłumaczysz trzem odbiorcom — zespołowi (co robić inaczej i dlaczego), biznesowi (koszt,
-   ryzyko, termin, w jego języku), operacjom (co zmienia się w utrzymaniu). Uzasadnienie „dlaczego” jest ważniejsze
-   niż „co”.
-7. **Test odporności decyzji (przeciw przytakiwaniu).** Model dopasowuje ocenę do tego, w co człowiek już wierzy.
-   Zanim zapiszesz rekomendację, przepuść lidera przez trzy soczewki — sam, w tej samej sesji:
-   - **adwokat diabła:** 3–5 konkretnych słabości, ukrytych kosztów i trybów awarii *tej* opcji w *tym* projekcie
-     (nazwy, limity, liczby — nie kategorie);
-   - **pre-mortem:** „minęło 3–6 miesięcy, decyzja okazała się porażką” — krótka narracja o błędnych założeniach;
-   - **nieznane niewiadome:** 3–5 klas ryzyka spoza oceny (zgodność, kopie zapasowe, wyjście od dostawcy, status
-     beta, zależność od innych zespołów).
-   Wynik każdej soczewki: akceptuję ryzyko / zapisuję jako znane ograniczenie (w rejestrze ryzyk ze źródłem —
-   która soczewka je ujawniła) / zmieniam wybór. Pytaj „dlaczego X to zły wybór dla Y”, nie „czy X pasuje do Y”.
-   Gdy w wielu decyzjach test nigdy nic nie zmienia, stał się rytuałem. Szczegóły i przykład:
-   `references/test-odpornosci-decyzji.md`.
-Anty-wzorce: decyzja odkładana bez końca w oczekiwaniu na pełną informację; „architektura z wieży” bez kontaktu
-z kodem; ta sama dyskusja co miesiąc, bo decyzja nie została zapisana.
+## Decisions
+1. **Is it an architectural decision?** It concerns the structure, quality attributes, dependencies, interfaces or construction
+   techniques and is costly to reverse. Leave reversible details to the team.
+2. **Factors**: quality attribute scenarios, constraints (budget, deadline, skills, regulations), existing
+   decisions (ADRs) and data, not opinions. No facts → a researcher or a spike, not a guess.
+3. **Options**: at least two real ones plus "change nothing"; for each the trade-offs explicitly (what we gain, what we
+   lose). There is no best solution, there is the least bad one for these factors.
+4. **Reversibility**: in a tie choose the one easier to change; postpone expensive decisions to the last responsible
+   moment, but prepare what is needed to make them.
+5. **Record**: an ADR with the context, options and consequences (docs-tech-writing); a human accepts it (core-project-record).
+6. **Communication**: you explain the decision to three audiences — the team (what to do differently and why), the business (cost,
+   risk, deadline, in its language), operations (what changes in maintenance). The justification "why" matters more
+   than "what".
+7. **A decision resilience test (against sycophancy).** A model adjusts its assessment to what the human already believes.
+   Before you record a recommendation, run the leader through three lenses — yourself, in the same session:
+   - **devil's advocate:** 3–5 concrete weaknesses, hidden costs and failure modes of *this* option in *this* project
+     (names, limits, numbers — not categories);
+   - **pre-mortem:** "3–6 months have passed, the decision turned out a failure" — a short narrative about the wrong assumptions;
+   - **unknown unknowns:** 3–5 classes of risk outside the assessment (compliance, backups, exit from the provider, beta
+     status, dependence on other teams).
+   The result of each lens: I accept the risk / I record it as a known limitation (in the risk register with the source —
+   which lens revealed it) / I change the choice. Ask "why is X a bad choice for Y", not "does X fit Y".
+   When across many decisions the test never changes anything, it has become a ritual. Details and an example:
+   `references/decision-resilience-test.md`.
+Anti-patterns: a decision postponed forever while waiting for full information; "ivory tower architecture" without contact
+with the code; the same discussion every month, because the decision was not recorded.
 
-## Upraszczanie i równowaga
-- Pytania przy każdej propozycji: dlaczego to lepsze od alternatyw, czy da się prościej, jaki jest koszt budowy,
-  utrzymania i operacji, czy ten przypadek brzegowy uzasadnia koszt?
-- Złożoność nie jest dowodem kompetencji. Technologia wybrana, bo jest nowa, a nie dlatego, że rozwiązuje problem,
-  to dług (eng-design-principles: drabina minimalizmu, YAGNI).
-- Równowaga: szybkość kontra jakość, innowacja kontra stabilność — świadoma decyzja z zapisanym długiem
-  (eng-tech-debt-audit), nie milcząca zgoda.
+## Simplification and balance
+- Questions for every proposal: why is it better than the alternatives, can it be simpler, what is the cost of building,
+  maintenance and operations, does this edge case justify the cost?
+- Complexity is not proof of competence. A technology chosen because it is new, not because it solves the problem,
+  is debt (eng-design-principles: the minimalism ladder, YAGNI).
+- Balance: speed vs quality, innovation vs stability — a conscious decision with recorded debt
+  (eng-tech-debt-audit), not silent consent.
 
-## Szacowanie i ocena
-- **Szacowanie**: przedziały (optymistycznie / najbardziej prawdopodobnie / pesymistycznie), rozbicie na części,
-  porównanie z podobnymi wykonanymi zadaniami, jawne założenia i niewiadome; największe niewiadome zamieniasz w spike.
-  Prognozowanie przepływem: proc-agile.
-- **Ocena architektury (lekki przegląd w stylu ATAM)**: (1) cele biznesowe i scenariusze jakości z priorytetami,
-  (2) prezentacja architektury i decyzji, (3) dla każdego ważnego scenariusza: które decyzje go wspierają, gdzie są
-  **punkty wrażliwości** (jedna decyzja silnie wpływa na atrybut), **kompromisy** (decyzja poprawia jeden atrybut
-  kosztem innego) i **ryzyka**, (4) raport z ryzykami i rekomendacjami. Okresowo i przed dużą zmianą; ciągłe
-  sprawdzanie przez fitness functions (arch-quality-attributes).
+## Estimation and assessment
+- **Estimation**: ranges (optimistic / most likely / pessimistic), breaking down into parts,
+  comparison with similar completed tasks, explicit assumptions and unknowns; you turn the biggest unknowns into a spike.
+  Flow-based forecasting: proc-agile.
+- **Architecture assessment (a lightweight ATAM-style review)**: (1) business goals and quality scenarios with priorities,
+  (2) a presentation of the architecture and decisions, (3) for every important scenario: which decisions support it, where the
+  **sensitivity points** are (one decision strongly affects an attribute), the **trade-offs** (a decision improves one attribute
+  at the cost of another) and the **risks**, (4) a report with risks and recommendations. Periodically and before a large change; continuous
+  checking through fitness functions (arch-quality-attributes).
 
-## Dokumentacja architektury
-- **ADR** dla decyzji (docs-tech-writing) — najważniejszy dokument, bo zapisuje „dlaczego”.
-- **Model C4** dla widoków: kontekst (system i otoczenie), kontenery (aplikacje i magazyny danych), komponenty (w razie
-  potrzeby); poziom kodu zwykle zbędny. Diagram jako kod w repo (docs-tech-writing, `diagramy-i-prezentacje.md`).
-- **arc42** jako szablon dokumentu architektury (cele, ograniczenia, kontekst, strategia rozwiązania, widoki, koncepcje
-  przekrojowe, decyzje, wymagania jakości, ryzyka, słownik) — wypełniasz tylko sekcje, które ktoś przeczyta.
-- Dokumentacja żyje w repo i jest aktualizowana z kodem; to, co da się wygenerować (grafy zależności —
-  eng-codebase-mapping, referencja API), generujesz.
-- **Model jako źródło, diagramy jako widoki:** elementy i relacje C4 opisane raz w tekstowym modelu w repo (np.
-  Structurizr DSL, LikeC4 albo eksport z narzędzia), a widoki dla różnych odbiorców generowane z niego zamiast osobno
-  rysowanych diagramów. Zmiana w PR modyfikuje model, CI renderuje widoki. **Kontrola dryfu w CI:** relacje z modelu
-  porównane z faktycznymi zależnościami (graf importów, wywołania między usługami, IaC); relacja w kodzie bez
-  odpowiednika w modelu i odwrotnie to ustalenie do przeglądu. ADR wskazuje elementy modelu, których dotyczy. Agent
-  czyta model, nie obrazki diagramów. Wersje narzędzi sprawdź przed wyborem (core-grounding).
+## Architecture documentation
+- An **ADR** for decisions (docs-tech-writing) — the most important document, because it records the "why".
+- The **C4 model** for views: context (the system and its surroundings), containers (applications and data stores), components (if
+  needed); the code level is usually unnecessary. A diagram as code in the repo (docs-tech-writing, `diagrams-and-presentations.md`).
+- **arc42** as the architecture document template (goals, constraints, context, solution strategy, views, cross-cutting
+  concepts, decisions, quality requirements, risks, glossary) — you fill in only the sections someone will read.
+- The documentation lives in the repo and is updated with the code; what can be generated (dependency graphs —
+  eng-codebase-mapping, the API reference), you generate.
+- **The model as the source, diagrams as views:** the C4 elements and relations described once in a text model in the repo (e.g.
+  Structurizr DSL, LikeC4 or an export from a tool), and views for different audiences generated from it instead of separately
+  drawn diagrams. A change in a PR modifies the model, CI renders the views. **Drift control in CI:** the relations from the model
+  compared with the actual dependencies (the import graph, calls between services, IaC); a relation in the code without
+  a counterpart in the model and vice versa is a finding for review. An ADR points to the model elements it concerns. The agent
+  reads the model, not the diagram images. Check the tool versions before choosing (core-grounding).
 
-## Doradztwo i coaching
-- Przegląd projektów i PR pod kątem decyzji architektonicznych, nie stylu (od tego są lintery).
-- Pytania zamiast gotowych odpowiedzi tam, gdzie zespół ma się czegoś nauczyć; gotowa odpowiedź tam, gdzie liczy się czas
-  lub ryzyko.
-- Wiedza architekta skaluje się przez standardy w kodzie (generatory, szablony, reguły granic — tool-nx), przykłady
-  referencyjne i warsztaty, nie przez bycie wąskim gardłem każdej decyzji (fe-engineering-levels, proc-team-topologies).
+## Advice and coaching
+- Review designs and PRs for architectural decisions, not style (that is what linters are for).
+- Questions instead of ready answers where the team is to learn something; a ready answer where time
+  or risk counts.
+- The architect's knowledge scales through standards in code (generators, templates, boundary rules), reference
+  examples and workshops, not through being the bottleneck of every decision (fe-engineering-levels, proc-team-topologies).
 
-## Checklista
-- [ ] poziom architektury nazwany; decyzja architektoniczna odróżniona od szczegółu
-- [ ] ≥ 2 opcje z kompromisami, czynniki z danych, odwracalność oceniona
-- [ ] lider przeszedł test odporności (adwokat diabła, pre-mortem, nieznane niewiadome); wynik każdej soczewki zapisany
-- [ ] ADR i komunikat dla zespołu, biznesu i operacji
-- [ ] szacunek w przedziałach z założeniami; spike dla największej niewiadomej
-- [ ] widoki C4 i dokumenty w repo, aktualizowane z kodem
+## Checklist
+- [ ] the architecture level named; an architectural decision distinguished from a detail
+- [ ] ≥ 2 options with trade-offs, factors from data, reversibility assessed
+- [ ] the leader passed the resilience test (devil's advocate, pre-mortem, unknown unknowns); each lens's result recorded
+- [ ] an ADR and a message for the team, the business and operations
+- [ ] an estimate in ranges with assumptions; a spike for the biggest unknown
+- [ ] C4 views and documents in the repo, updated with the code
 
-## Źródła
-- M. Richards, N. Ford, *Fundamentals of Software Architecture* (2. wyd. 2025) — oczekiwania wobec architekta,
-  decyzje; N. Ford i in., *Building Evolutionary Architectures* — fitness functions
-- SEI (R. Kazman i in.) — ATAM; S. Brown — [C4 model](https://c4model.com/); [arc42](https://arc42.org/)
+## Sources
+- M. Richards, N. Ford, *Fundamentals of Software Architecture* (2nd ed. 2025) — expectations of an architect,
+  decisions; N. Ford et al., *Building Evolutionary Architectures* — fitness functions
+- SEI (R. Kazman et al.) — ATAM; S. Brown — [C4 model](https://c4model.com/); [arc42](https://arc42.org/)
 - InfoQ, [Driving Architectural Simplicity](https://www.infoq.com/articles/driving-architectural-simplicity/);
   [roadmap.sh — Software Architect](https://roadmap.sh/software-architect)
-- Kurs 10xDevs, ed. 3 (2026), moduł 1, lekcja 5 (przeciwdziałanie przytakiwaniu modelu przy decyzjach) — materiał
-  szkoleniowy (dostęp 2026-10-09).
-Opisane własnymi słowami.
+- The 10xDevs course, ed. 3 (2026), module 1, lesson 5 (countering model sycophancy in decisions) — training
+  material (accessed 2026-10-09).
+Described in our own words.

@@ -23,6 +23,30 @@
       }
     },
     {
+      "id": "canary-bramki-en",
+      "expect": "trigger",
+      "prompt": "I want to deploy a new version of the payments service as a canary with automatic rollback. How do I lay out the traffic steps and gates? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "argo rollouts|flagger"
+          ],
+          [
+            "1.{0,3}5 ?%|10 ?%.{0,20}25 ?%"
+          ],
+          [
+            "automatyczn\\w+ wycofa|auto.?rollback|automatycznie",
+            "automatic(ally)? roll\\w*",
+            "rolls? back automatically"
+          ],
+          [
+            "p99|odsetek błędów|slo",
+            "error (rate|ratio|percentage)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "expand-contract",
       "expect": "trigger",
       "prompt": "Muszę zmienić nazwę kolumny w dużej tabeli PostgreSQL bez przestoju, a aplikacja wdrażana jest rolling update. Jak rozłożyć migrację na wydania? Odpowiedz zwięźle.",

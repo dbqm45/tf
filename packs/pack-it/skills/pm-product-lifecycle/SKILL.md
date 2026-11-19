@@ -1,48 +1,48 @@
 ---
 name: pm-product-lifecycle
-description: Użyj przy etapie życia produktu lub modułu — wzrost, dojrzałość, schyłek; decyzja przedłużyć, zastąpić, utrzymać lub wycofać; plan wycofania z klientami.
+description: Use for the life stage of a product or module — growth, maturity, decline; a decision to extend, replace, maintain or retire; a retirement plan with customers.
 metadata:
-  przeglad: "2027-10-23"
-  katalog: "Użyj, gdy produkt, plan cenowy albo moduł przestaje rosnąć lub kosztuje więcej, niż daje — rozpoznanie etapu cyklu życia (wprowadzenie, wzrost, dojrzałość, schyłek) z danych, wybór ruchu (inwestować, przedłużyć życie, zastąpić, utrzymać bez rozwoju, wycofać) z kryteriami decyzji go/no-go, plan wycofania: kolejność interesariuszy, komunikat dla klientów, harmonogram (zapowiedź, koniec sprzedaży, koniec wsparcia, wyłączenie), migracja i eksport danych, umowy i prawo, checklista z właścicielami. Nie do technicznego wycofania wersji API (be-api-design), wydań i flag funkcji (ops-release-engineering), metryk SaaS (pm-saas-metrics) ani wyboru nowych funkcji (proc-product-discovery)."
-  slowa: "cykl życia produktu, produkt przestał rosnąć, rynek nasycony, schyłek produktu, wycofać produkt, wyłączyć moduł, wygaszenie produktu, sunset, end of life, koniec wsparcia, koniec sprzedaży, mało kto używa, utrzymanie kosztuje, zastąpić produkt, przedłużyć życie produktu, migracja klientów, ogłoszenie wycofania"
+  review: "2027-10-23"
+  catalog: "Use when a product, a pricing plan or a module stops growing or costs more than it gives — recognising the lifecycle stage (introduction, growth, maturity, decline) from data, choosing a move (invest, extend life, replace, maintain without development, retire) with go/no-go decision criteria, a retirement plan: the order of stakeholders, a message to customers, a schedule (announcement, end of sale, end of support, shutdown), migration and data export, contracts and law, a checklist with owners. Not for technical retirement of an API version (be-api-design), releases and feature flags (ops-release-engineering), SaaS metrics or choosing new features (proc-product-discovery)."
+  keywords: "cykl życia produktu, produkt przestał rosnąć, rynek nasycony, schyłek produktu, wycofać produkt, wyłączyć moduł, wygaszenie produktu, sunset, end of life, koniec wsparcia, koniec sprzedaży, mało kto używa, utrzymanie kosztuje, zastąpić produkt, przedłużyć życie produktu, migracja klientów, ogłoszenie wycofania, product lifecycle, the product stopped growing, saturated market, product decline, retire a product, switch off a module, product sunset, end of support, end of sale, hardly anyone uses it, maintenance costs too much, replace a product, extend a product's life, customer migration, retirement announcement, shut down a module, sunset a feature, retire a product, few customers use it, costs to maintain, end of life"
 ---
 
-# Cykl życia produktu i wycofanie
+# Product lifecycle and retirement
 
-Cel: decyzja o produkcie lub module oparta na danych, a gdy zapada „wycofać” — wyłączenie bez zaskoczenia
-klientów, bez utraty ich danych i bez złamania umów. Decyduje człowiek; ty dajesz dane, opcje i plan.
+Goal: a decision about a product or module based on data, and when the decision is "retire" — a shutdown without surprising
+customers, without losing their data and without breaking contracts. A human decides; you provide data, options and a plan.
 
-## Procedura
-1. **Etap z danych**, nie z wrażenia: trend przychodu i liczby aktywnych klientów (12–24 mies.), retencja kohort,
-   udział w przychodzie, koszt utrzymania (ludzie, infrastruktura, wsparcie), presja cenowa konkurencji.
-   Etapy: wprowadzenie → wzrost → dojrzałość (wzrost spowalnia, rynek nasycony, konkurencja ceną) → schyłek
-   (spadek klientów i przychodu).
-2. **Ruchy do wyboru** — porównaj co najmniej trzy z kosztem, ryzykiem i wpływem na klientów:
-   - **inwestować dalej** — gdy wzrost ma przyczynę, którą umiemy wzmocnić;
-   - **przedłużyć życie** — nowi użytkownicy (segment, kraj), nowe zastosowania, częstsze użycie u obecnych;
-   - **zastąpić** — nowy produkt lub moduł przejmuje klientów (migracja jako projekt);
-   - **utrzymać bez rozwoju** — tylko poprawki i bezpieczeństwo, koszt minimalny, przychód zbierany do końca;
-   - **wycofać** — gdy koszt i ryzyko (bezpieczeństwo, zależności bez wsparcia) przewyższają wartość.
-3. **Go/no-go dla wycofania** — kryteria w `references/wycofanie.md` (użycie, przychód, koszt, umowy, zastępstwo,
-   wpływ na kluczowych klientów); wynik zapisany jako decyzja z datą (core-project-record).
-4. **Plan wycofania** — harmonogram, kolejność interesariuszy, komunikat, migracja, checklista z właścicielami:
-   `references/wycofanie.md`. Kolejność ludzi i plan komunikacji wg pm-stakeholders.
-5. **Prawo i umowy** — umowy z klientami i SLA, regulamin, eksport i usunięcie danych (RODO), przy usługach
-   chmurowych prawo klienta do zmiany dostawcy i przeniesienia danych (Data Act) — z arch-eu-product-law.
-6. **Po wyłączeniu** — zmierz: ilu klientów przeszło na zamiennik, ilu odeszło, zgłoszenia do wsparcia,
-   oszczędność kosztów; wnioski do dziennika projektu.
+## Procedure
+1. **The stage from data**, not from an impression: the trend of revenue and of the number of active customers (12–24 months), cohort retention,
+   share of revenue, cost of maintenance (people, infrastructure, support), competitors' price pressure.
+   Stages: introduction → growth → maturity (growth slows, the market is saturated, competition on price) → decline
+   (customers and revenue fall).
+2. **Moves to choose from** — compare at least three with cost, risk and impact on customers:
+   - **keep investing** — when growth has a cause we know how to strengthen;
+   - **extend life** — new users (a segment, a country), new uses, more frequent use among current ones;
+   - **replace** — a new product or module takes over the customers (migration as a project);
+   - **maintain without development** — only fixes and security, minimal cost, revenue collected to the end;
+   - **retire** — when cost and risk (security, dependencies without support) outweigh the value.
+3. **Go/no-go for retirement** — the criteria in `references/rollback.md` (usage, revenue, cost, contracts, a replacement,
+   impact on key customers); the result recorded as a decision with a date (core-project-record).
+4. **Retirement plan** — a schedule, the order of stakeholders, a message, migration, a checklist with owners:
+   `references/rollback.md`. The order of people and the communication plan per pm-stakeholders.
+5. **Law and contracts** — customer contracts and SLAs, terms of service, data export and deletion (GDPR), for cloud
+   services the customer's right to switch provider and move data (Data Act) — with arch-eu-product-law.
+6. **After the shutdown** — measure: how many customers moved to the replacement, how many left, support tickets,
+   cost savings; lessons to the project log.
 
-## Przykład
-Moduł raportów: 4% klientów aktywnych miesięcznie, 1 etat utrzymania, biblioteka wykresów bez wsparcia od roku.
-Opcje: utrzymać (koszt 1 etatu, ryzyko bezpieczeństwa), zastąpić eksportem do arkusza + szablonem w narzędziu BI,
-wycofać bez zamiennika. Rekomendacja: zastąpić. Kryteria go: 3 z 5 największych klientów modułu akceptują
-zamiennik w rozmowach, umowy nie gwarantują modułu. Harmonogram: dzień 0 — zespół wsparcia i opiekunowie
-klientów; dzień 7 — rozmowy z kluczowymi klientami; dzień 14 — ogłoszenie w produkcie i e-mail; dzień 14 —
-koniec udostępniania nowym klientom; dzień 104 — wyłączenie (90 dni od ogłoszenia), eksport danych dostępny
-do dnia 134, potem usunięcie.
+## Example
+A reports module: 4% of customers active monthly, 1 FTE of maintenance, a chart library without support for a year.
+Options: maintain (the cost of 1 FTE, a security risk), replace with an export to a spreadsheet + a template in a BI tool,
+retire without a replacement. Recommendation: replace. Go criteria: 3 of the 5 largest customers of the module accept
+the replacement in conversations, the contracts do not guarantee the module. Schedule: day 0 — the support team and account
+managers; day 7 — conversations with key customers; day 14 — an in-product announcement and an email; day 14 —
+end of availability to new customers; day 104 — shutdown (90 days after the announcement), data export available
+until day 134, then deletion.
 
-## Źródła
-- T. Levitt, „Exploit the Product Life Cycle”, *Harvard Business Review* (1965) — etapy i sposoby przedłużania
-  życia produktu.
-- Rozporządzenie (UE) 2023/2854 (Data Act), rozdział VI — zmiana dostawcy usług przetwarzania danych.
-Opisane własnymi słowami.
+## Sources
+- T. Levitt, "Exploit the Product Life Cycle", *Harvard Business Review* (1965) — the stages and ways of extending
+  a product's life.
+- Regulation (EU) 2023/2854 (Data Act), Chapter VI — switching between data processing service providers.
+Described in our own words.

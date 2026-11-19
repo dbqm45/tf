@@ -1,27 +1,27 @@
 ---
 task: <slug>
 status: active
-by: <kto>
-started: <RRRR-MM-DD GG:MM>
-updated: <RRRR-MM-DD GG:MM>
-branch: <gałąź>
+by: <who>
+started: <YYYY-MM-DD HH:MM>
+updated: <YYYY-MM-DD HH:MM>
+branch: <branch>
 ---
-# <cel>
+# <goal>
 
-## Cel i kryterium „gotowe”
-<!-- 1–3 zdania: co ma działać i jak to sprawdzisz (polecenie, test). -->
+## Goal and the "done" criterion
+<!-- 1–3 sentences: what has to work and how you will check it (a command, a test). -->
 
-## Kroki
-<!-- Odhaczaj zaraz po zakończeniu kroku i dopisz dowód (test, polecenie, commit). Następny krok oznacz „← następny”. -->
-- [ ] 1. … ← następny
+## Steps
+<!-- Tick right after finishing a step and add the evidence (a test, a command, a commit). Mark the next step "← next". -->
+- [ ] 1. … ← next
 
-## Następna czynność
-<!-- Jedna konkretna czynność, od której zacznie kolejna sesja: plik, funkcja, polecenie. -->
+## Next step
+<!-- One concrete action the next session starts from: a file, a function, a command. -->
 
-## Ustalenia z rozmowy
-<!-- Decyzje i odpowiedzi człowieka, których nie ma jeszcze w artefaktach. Format: RRRR-MM-DD — ustalenie. -->
+## Agreements from the conversation
+<!-- The human's decisions and answers that are not yet in the artifacts. Format: YYYY-MM-DD — agreement. -->
 
-## Pułapki i ślepe uliczki
-<!-- Co nie zadziałało i dlaczego, żeby kolejna sesja nie próbowała drugi raz. -->
+## Pitfalls and dead ends
+<!-- What did not work and why, so the next session does not try a second time. -->
 
-## Otwarte pytania
+## Open questions

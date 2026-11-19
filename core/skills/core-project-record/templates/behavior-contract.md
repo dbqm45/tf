@@ -4,31 +4,31 @@ phase: delivery
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: []
 ---
-# Kontrakt zachowania: <jednostka refaktoryzowana>
+# Behaviour contract: <unit being refactored>
 
 ## TL;DR
-<Co zmieniamy (idiom z → do), co zamrożono, wynik (zielone / luki).>
+<What we change (idiom from → to), what is frozen, the result (green / gaps).>
 
-## Zamrożone
-- **Scenariusze i DSL:** <ścieżki plików>
-- **Publiczny kontrakt:** <sygnatury, zdarzenia, DTO, rodzaj odrzucenia>
-- **Granica spójności:** <co ładowane i zapisywane atomowo, wersje/blokady>
+## Frozen
+- **Scenarios and DSL:** <file paths>
+- **Public contract:** <signatures, events, DTOs, the kind of rejection>
+- **Consistency boundary:** <what is loaded and saved atomically, versions/locks>
 
-## Rejestr asercji
-| Asercja oryginalna | Asercja w DSL | Czego już nie rozróżnia | Dlaczego to akceptowalne |
+## Assertion register
+| Original assertion | Assertion in the DSL | What it no longer distinguishes | Why that is acceptable |
 |---|---|---|---|
 
-## Kroki i commity
-| Krok | Commit | Wynik testów |
+## Steps and commits
+| Step | Commit | Test result |
 |---|---|---|
 
-## Luki pokrycia i ukryte defekty
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <persona>
-- **Zadanie:** <przegląd / kolejna jednostka>
-- **Przeczytaj:** TL;DR, Rejestr asercji
+## Coverage gaps and hidden defects
+## Open questions
+## Handoff
+- **For:** <persona>
+- **Task:** <a review / the next unit>
+- **Read:** TL;DR, Assertion register

@@ -27,6 +27,34 @@
       }
     },
     {
+      "id": "stryker-0-procent-en",
+      "expect": "trigger",
+      "prompt": "In src/discount.spec.ts (Vitest 5) I want to use Stryker for mutation testing. Which runner should I pick and what should I do when the result is 0%? Answer briefly.",
+      "files": {
+        "src/discount.spec.ts": "import { it, expect } from 'vitest';\nit('TC-014: 10 szt.', () => { expect(19000).toBe(19000); });\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "testRunner.{0,25}command",
+            "command runner",
+            "runner.{0,10}command",
+            "\"command\""
+          ],
+          [
+            "fałszyw",
+            "false",
+            "nie aktywuje",
+            "wszystkie mutanty przeżyły",
+            "podejrzan",
+            "suspicious",
+            "all (the )?mutants (have )?survived",
+            "(isn'?t|is not|not) (being )?(activated|applied|picked up)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "vi-when-clearmocks",
       "expect": "trigger",
       "prompt": "W src/rates.spec.ts (Vitest 5) potrzebuję stuba kursu walut z portu, który rzuca błąd dla niezdefiniowanych argumentów. Jak to zapisać i co zmieniło się w clearMocks? Odpowiedz zwięźle.",

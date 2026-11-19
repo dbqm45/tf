@@ -3,7 +3,7 @@
   "based_on": "9.1",
   "min_supported": "8",
   "verified": "2026-10-03",
-  "verified_with": "pytest 9.1.1 + pytest-asyncio 1.4.0 + hypothesis 6.168.3 na CPython 3.14.8 (wszystkie przykłady z references/przyklady.md uruchomione)",
+  "verified_with": "pytest 9.1.1 + pytest-asyncio 1.4.0 + hypothesis 6.168.3 na CPython 3.14.8 (wszystkie przykłady z references/examples.md uruchomione)",
   "constraints": {
     "9": {"lang-python": ">=3.10"}
   },

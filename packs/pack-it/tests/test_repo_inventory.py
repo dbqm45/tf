@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy eng-codebase-mapping/scripts/repo_inventory.py: języki, pliki budowania, wykluczenia, moduły i partie
-według budżetu tokenów (krok spisu rekonstrukcji projektu). python3 .claude/tests/test_repo_inventory.py"""
+"""Tests of eng-codebase-mapping/scripts/repo_inventory.py: languages, build files, exclusions, modules and batches
+by token budget (the inventory step of the project reconstruction). python3 .claude/tests/test_repo_inventory.py"""
 import json
 import subprocess
 import sys
@@ -58,42 +58,42 @@ def main() -> int:
         repo = Path(d)
         write(repo, REPO)
         r = run(str(repo), "--json", "--budget-tokens", "1500")
-        check(r.returncode == 0, f"I-1: działa: {r.stderr[-300:]}")
+        check(r.returncode == 0, f"I-1: runs: {r.stderr[-300:]}")
         inv = json.loads(r.stdout) if r.returncode == 0 else {}
         langs = {x["language"]: x for x in inv.get("languages", [])}
-        check({"Java", "TypeScript", "Go", "Python"} <= set(langs), f"I-2: języki: {sorted(langs)}")
+        check({"Java", "TypeScript", "Go", "Python"} <= set(langs), f"I-2: languages: {sorted(langs)}")
         check(langs.get("Java", {}).get("files") == 2 and langs.get("Java", {}).get("test_files") == 1,
               f"I-3: Java 2 produkcyjne + 1 test: {langs.get('Java')}")
-        check(langs.get("Go", {}).get("files") == 1, f"I-4: Go bez wygenerowanego i vendor: {langs.get('Go')}")
+        check(langs.get("Go", {}).get("files") == 1, f"I-4: Go without generated code and vendor: {langs.get('Go')}")
         build = {(b["file"], b["kind"]) for b in inv.get("build_files", [])}
         check({("pom.xml", "maven"), ("billing/pom.xml", "maven"), ("web/package.json", "npm"),
                ("svc/go.mod", "go"), ("big/pyproject.toml", "python")} <= build, f"I-5: pliki budowania: {sorted(build)}")
         ex = {e["path"]: e["reason"] for e in inv.get("excluded", [])}
-        check(ex.get("web/node_modules") == "zależności" and ex.get("vendor") == "zależności", f"I-6: vendor: {ex}")
-        check(ex.get("svc/api.pb.go") == "wygenerowany" and ex.get("web/dist") == "wynik budowania",
+        check(ex.get("web/node_modules") == "dependencies" and ex.get("vendor") == "dependencies", f"I-6: vendor: {ex}")
+        check(ex.get("svc/api.pb.go") == "generated" and ex.get("web/dist") == "build output",
               f"I-7: wygenerowane i build: {ex}")
         mods = {m["path"] for m in inv.get("modules", [])}
-        check({"billing", "web", "svc", "big"} <= mods, f"I-8: moduły z plików budowania: {sorted(mods)}")
+        check({"billing", "web", "svc", "big"} <= mods, f"I-8: modules from build files: {sorted(mods)}")
         batches = inv.get("batches", [])
         check(batches and all(b["tokens"] <= 1500 or len(b["files"]) == 1 for b in batches),
-              f"I-9: partie w budżecie (albo pojedynczy duży plik): {[(b['name'], b['tokens']) for b in batches]}")
+              f"I-9: batches within the budget (or a single large file): {[(b['name'], b['tokens']) for b in batches]}")
         names = [b["name"] for b in batches]
         check(any(n.startswith("big/pkg/a") for n in names) and any(n.startswith("big/pkg/b") for n in names),
-              f"I-10: moduł ponad budżet dzielony na podkatalogi: {names}")
+              f"I-10: a module over the budget split into subdirectories: {names}")
         in_batches = {f for b in batches for f in b["files"]}
         check("billing/src/test/java/a/InvoiceTest.java" not in in_batches and "web/dist/bundle.min.js" not in in_batches,
-              "I-11: partie bez testów i plików wykluczonych")
-        check("scripts/tool.py" in in_batches, f"I-12: plik poza modułem trafia do partii: {sorted(in_batches)}")
+              "I-11: batches without tests and excluded files")
+        check("scripts/tool.py" in in_batches, f"I-12: a file outside a module goes into a batch: {sorted(in_batches)}")
         check(inv.get("totals", {}).get("tokens", 0) > 0 and inv["totals"].get("files", 0) == len(in_batches),
               f"I-13: sumy: {inv.get('totals')}")
         r = run(str(repo))
-        check(r.returncode == 0 and "Partie" in r.stdout and "Java" in r.stdout, f"I-14: tekst: {r.stdout[:300]}")
+        check(r.returncode == 0 and "Batches" in r.stdout and "Java" in r.stdout, f"I-14: tekst: {r.stdout[:300]}")
         r = run(str(repo / "nie-ma"))
-        check(r.returncode == 2, "I-15: brak katalogu → kod 2")
+        check(r.returncode == 2, "I-15: missing directory → code 2")
 
     for f in fails:
         print("✗", f)
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów repo_inventory")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of repo_inventory")
     return 1 if fails else 0
 
 

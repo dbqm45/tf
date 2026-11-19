@@ -7,12 +7,13 @@ Updates the team factory in this project, like a software update (standard libra
   python3 .tf/factory/update.py --yes                        # no question (e.g. in a script)
   python3 .tf/factory/update.py --source <source>            # set the source (remembered in the manifest)
   python3 .tf/factory/update.py --yes --accept-audit         # apply despite high-severity skill audit findings
+  python3 .tf/factory/update.py --full-check                 # all factory tests here, in parallel (also after an update)
   python3 .tf/factory/update.py --rollback                   # go back to the state before the last update (copy in .tf/backup/)
   python3 .tf/factory/update.py --auto on|off                # automatic PATCH/MINOR releases (session start hook or a PR workflow)
   python3 .tf/factory/update.py --auto-run                   # one automatic run (the session start hook runs it in the background)
   python3 .tf/factory/update.py --ci --source <git URL>      # CI run (the team-factory-update workflow opens a PR from it)
   python3 .tf/factory/update.py --packs a,b|all|none         # change packs (also --add x, --remove y); same version is re-applied
-  python3 .tf/factory/update.py --language pl --commit-language en   # change languages; same version is re-applied
+  python3 .tf/factory/update.py --pack-dir <dir|git URL> --add <pack>   # a pack from outside the factory (remembered)
 Before updating, the skills of the new version are audited (`skill_audit.py` from the INSTALLED version, not the
 downloaded one): high-severity findings stop an update with `--yes` and need explicit confirmation interactively.
 
@@ -36,24 +37,24 @@ import re
 import subprocess
 import sys
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 import tempfile
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]          # katalog projektu (.tf/factory/ leży w projekcie)
+ROOT = Path(__file__).resolve().parents[2]          # project directory (.tf/factory/ lives inside the project)
 MANIFEST = ROOT / ".claude" / "factory-manifest.json"
 
 
 def _semver():
-    """Moduł SemVer ze skilla core-semver (precedencja wg semver.org, także wersje przedpremierowe)."""
+    """The SemVer module from the core-semver skill (precedence per semver.org, including prerelease versions)."""
     import importlib.util
     p = Path(__file__).resolve().parents[2] / ".claude" / "skills" / "core-semver" / "scripts" / "semver.py"
     if not p.exists():
@@ -69,7 +70,7 @@ def vtuple(v: str) -> tuple[int, ...]:
 
 
 def newer_than(a: str, b: str) -> int:
-    """1, gdy a > b; -1, gdy a < b; 0, gdy równe — wg SemVer 2.0.0 (rezerwa: same liczby X.Y.Z)."""
+    """1 when a > b; -1 when a < b; 0 when equal — per SemVer 2.0.0 (fallback: plain X.Y.Z numbers)."""
     sv = _semver()
     try:
         if sv:
@@ -85,12 +86,12 @@ def is_git(src: str) -> bool:
 
 
 def normalize(src: str) -> str:
-    """Ścieżkę lokalną zamienia na bezwzględną (liczoną od bieżącego katalogu), adres git zostawia bez zmian."""
+    """Turns a local path into an absolute one (counted from the current directory), leaves a git address unchanged."""
     return src if is_git(src) else str(Path(src).expanduser().resolve())
 
 
 def release_tags(url: str, timeout: float | None = None) -> list[str] | None:
-    """Tagi wydań `vX.Y.Z` w repozytorium (bez przedpremierowych); None przy błędzie."""
+    """Release tags `vX.Y.Z` in the repository (without prereleases); None on error."""
     try:
         r = subprocess.run(["git", "ls-remote", "--tags", "--refs", url, "v*"], capture_output=True, text=True,
                            timeout=timeout, env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
@@ -102,7 +103,7 @@ def release_tags(url: str, timeout: float | None = None) -> list[str] | None:
 
 
 def latest_tag(url: str, timeout: float | None = None) -> str | None:
-    """Najwyższy tag wydania `vX.Y.Z` w repozytorium; None, gdy brak tagów lub błąd."""
+    """The highest release tag `vX.Y.Z` in the repository; None when there are no tags or on error."""
     tags = release_tags(url, timeout)
     if not tags:
         return None
@@ -111,8 +112,8 @@ def latest_tag(url: str, timeout: float | None = None) -> str | None:
 
 
 def auto_target(tags: list[str], current: str, skip=()) -> tuple[str | None, str | None]:
-    """(cel automatu, najwyższe nowsze wydanie MAJOR): cel to najwyższe wydanie PATCH/MINOR nowsze niż `current`
-    w tej samej wersji głównej, z pominięciem wersji z `skip`; MAJOR automat tylko zgłasza."""
+    """(the auto-update target, the highest newer MAJOR release): the target is the highest PATCH/MINOR release newer than `current`
+    within the same major version, skipping versions from `skip`; the auto-updater only reports MAJOR."""
     from functools import cmp_to_key
     key = cmp_to_key(newer_than)
     versions = [t[1:] for t in tags if re.fullmatch(r"v\d+\.\d+\.\d+", t)]
@@ -123,30 +124,50 @@ def auto_target(tags: list[str], current: str, skip=()) -> tuple[str | None, str
 
 
 def installer_of(new: Path) -> Path:
-    """Instalator w pobranej wersji fabryki (core/factory/install.py)."""
+    """The installer in the downloaded factory version (core/factory/install.py)."""
     return new / "core" / "factory" / "install.py"
 
 
-def fetch(src: str, tmp: Path) -> Path:
-    """Zwraca katalog główny nowej wersji fabryki (zawierający core/factory/install.py).
+META_PATHS = ("/core/factory/VERSION", "/core/factory/CHANGELOG.md", "/core/factory/install.py")
 
-    Z repozytorium git bez `#ref` pobiera najnowsze wydanie (tag vX.Y.Z), a bez tagów — domyślną gałąź."""
+
+def _sparse_clone(url: str, ref: str, dest: Path) -> bool:
+    """Only the META_PATHS files (version and changelog for --check): without downloading the whole repository."""
+    cmd = ["git", "clone", "--depth", "1", "--quiet", "--filter=blob:none", "--no-checkout"] + \
+        (["--branch", ref] if ref else []) + [url, str(dest)]
+    if subprocess.run(cmd, capture_output=True, text=True).returncode != 0:
+        return False
+    for step in (["sparse-checkout", "set", "--no-cone", *META_PATHS], ["checkout", "--quiet"]):
+        if subprocess.run(["git", "-C", str(dest), *step], capture_output=True, text=True).returncode != 0:
+            return False
+    return (dest / "core" / "factory" / "VERSION").is_file()
+
+
+def fetch(src: str, tmp: Path, meta_only: bool = False) -> Path:
+    """Returns the root directory of the new factory version (containing core/factory/install.py).
+
+    From a git repository without `#ref` it fetches the latest release (tag vX.Y.Z), and without tags — the default branch.
+    `meta_only` (for --check): only the version, changelog and installer — the rest of the repository is not fetched; when git
+    does not support partial fetch, it fetches everything as before."""
     if is_git(src):
         url, _, ref = src.partition("#")
         if not ref:
             ref = latest_tag(url) or ""
             print(f"ℹ Latest release: {ref} (unreleased changes: {url}#main)." if ref
                   else "ℹ The repository has no vX.Y.Z release tags — fetching the default branch.")
-        cmd = ["git", "clone", "--depth", "1", "--quiet"] + (["--branch", ref] if ref else []) + [url, str(tmp / "repo")]
-        r = subprocess.run(cmd, capture_output=True, text=True)
-        if r.returncode != 0:
-            sys.exit(f"✗ Could not fetch {src}:\n{r.stderr.strip()}")
-        base = tmp / "repo"
+        if meta_only and _sparse_clone(url, ref, tmp / "meta"):
+            base = tmp / "meta"
+        else:
+            cmd = ["git", "clone", "--depth", "1", "--quiet"] + (["--branch", ref] if ref else []) + [url, str(tmp / "repo")]
+            r = subprocess.run(cmd, capture_output=True, text=True)
+            if r.returncode != 0:
+                sys.exit(f"✗ Could not fetch {src}:\n{r.stderr.strip()}")
+            base = tmp / "repo"
     else:
         p = Path(src).expanduser().resolve()
         if p.is_file() and p.suffix == ".zip":
             with zipfile.ZipFile(p) as z:
-                for name in z.namelist():                      # ochrona przed ścieżkami spoza katalogu (zip slip)
+                for name in z.namelist():                      # protection against paths outside the directory (zip slip)
                     if name.startswith("/") or ".." in Path(name).parts:
                         sys.exit(f"✗ Suspicious path in the archive: {name}")
                 z.extractall(tmp / "zip")
@@ -164,12 +185,12 @@ def fetch(src: str, tmp: Path) -> Path:
     return new
 
 
-CHECK_EVERY = 86400            # notice: źródło pytane najwyżej raz na dobę
-RETRY_FAILED = 3600            # po nieudanym pytaniu (brak sieci) — ponownie po godzinie
+CHECK_EVERY = 86400            # notice: the source is queried at most once a day
+RETRY_FAILED = 3600            # after a failed query (no network) — again after an hour
 
 
 def available_version(src: str, timeout: float = 5) -> str | None:
-    """Wersja dostępna w źródle bez pobierania całej fabryki; None, gdy nieznana lub źródło przypięte do `#ref`."""
+    """The version available in the source without downloading the whole factory; None when unknown or the source is pinned to `#ref`."""
     if is_git(src):
         url, _, ref = src.partition("#")
         if ref:
@@ -191,10 +212,10 @@ def available_version(src: str, timeout: float = 5) -> str | None:
 
 def notice(root: Path, env: dict | None = None, cache_dir: Path | None = None, now: float | None = None,
            timeout: float = 5) -> str | None:
-    """Komunikat o nowszym wydaniu fabryki dla projektu `root` albo None (hook SessionStart: update_notice.py).
+    """A message about a newer factory release for project `root`, or None (SessionStart hook: update_notice.py).
 
-    Źródło jak przy aktualizacji (TEAM_FACTORY, potem `source` z manifestu); wynik pytania zapamiętany na dobę
-    w katalogu podręcznym użytkownika, wspólnym dla projektów. CTF_UPDATE_CHECK=0 wyłącza. Nigdy nie rzuca wyjątku."""
+    The source as for an update (TEAM_FACTORY, then `source` from the manifest); the query result is remembered for a day
+    in the user's cache directory, shared across projects. CTF_UPDATE_CHECK=0 disables it. Never raises an exception."""
     import time
     env = os.environ if env is None else env
     try:
@@ -237,7 +258,7 @@ def notice(root: Path, env: dict | None = None, cache_dir: Path | None = None, n
         return (f"New team factory version available: {latest} (installed {current}){major}. "
                 "What changed: python3 .tf/factory/update.py --check · update: python3 .tf/factory/update.py "
                 "(or /core-factory-update).")
-    except Exception:  # komunikat jest dodatkiem — nigdy nie psuje startu sesji
+    except Exception:  # the message is an extra — it never breaks the session start
         return None
 
 
@@ -256,7 +277,7 @@ def changelog_since(new: Path, current: str) -> str:
 
 
 def audit_new(new_root: Path) -> tuple[int, list[str]]:
-    """Audyt skilli pobranej wersji narzędziem z wersji zainstalowanej (pobrane narzędzie mogłoby kłamać)."""
+    """Audit of the downloaded version's skills with the tool from the installed version (the downloaded tool could lie)."""
     import importlib.util
     tool = Path(__file__).resolve().parent / "skill_audit.py"
     skill_dirs = [d for d in [new_root / "core" / "skills", *sorted((new_root / "packs").glob("*/skills")),
@@ -292,9 +313,9 @@ def _factory_new(root: Path, rels) -> list[str]:
 
 
 def backup(root: Path, now: float | None = None) -> Path:
-    """Pełna kopia przed aktualizacją: pliki z manifestu, ustawienia, CLAUDE.md, .gitignore i manifest, do
-    `.tf/backup/<data>-v<wersja>/` ze znacznikiem `backup.json`. Zostają 3 ostatnie takie kopie
-    (katalogi bez znacznika — pliki usunięte przez instalator — nie są ruszane)."""
+    """A full copy before the update: files from the manifest, settings, CLAUDE.md, .gitignore and the manifest, into
+    `.tf/backup/<date>-v<version>/` with a `backup.json` marker. The last 3 such copies are kept
+    (directories without the marker — files removed by the installer — are not touched)."""
     import shutil
     import time
     manifest = json.loads((root / ".claude" / "factory-manifest.json").read_text(encoding="utf-8"))
@@ -323,8 +344,8 @@ PREFLIGHT_FILES = (".claude/settings.json", ".claude/factory-manifest.json", "CL
 
 
 def unwritable(root: Path) -> list[str]:
-    """Istniejące ścieżki, do których aktualizacja pisze, a zapis się nie udaje (np. piaskownica Bash agenta).
-    Sprawdza próbnym plikiem tymczasowym w katalogu i otwarciem pliku do dopisania — bez zmiany treści."""
+    """Existing paths the update writes to where writing fails (e.g. the agent's Bash sandbox).
+    Checks with a temporary trial file in the directory and by opening the file for append — without changing content."""
     bad = []
     for rel in PREFLIGHT_DIRS:
         d = root / rel
@@ -348,7 +369,7 @@ def unwritable(root: Path) -> list[str]:
 
 
 def preflight(root: Path, command: str) -> tuple[int, str]:
-    """Przed pierwszym zapisem: gdy czegoś nie da się zapisać, przerwij, zamiast zostawić instalację w połowie."""
+    """Before the first write: when something cannot be written, abort instead of leaving the installation half-done."""
     bad = unwritable(root)
     if not bad:
         return 0, ""
@@ -358,8 +379,8 @@ def preflight(root: Path, command: str) -> tuple[int, str]:
 
 
 def rollback(root: Path) -> tuple[int, str]:
-    """`--rollback`: wraca do stanu z ostatniej kopii. Pliki dodane przez aktualizację usuwa tylko, gdy ich nie
-    zmieniałeś; usuwa też `.factory-new` powstałe przy aktualizacji."""
+    """`--rollback`: returns to the state from the last copy. It removes files added by the update only when you did not
+    change them; it also removes the `.factory-new` files created during the update."""
     import shutil
     base = root / BACKUP_DIR
     copies = sorted(d for d in base.iterdir() if (d / "backup.json").is_file()) if base.is_dir() else []
@@ -398,9 +419,9 @@ WORKFLOW_TEMPLATE = (Path(".tf") / "factory") / "templates" / "team-factory-upda
 
 
 def set_auto(root: Path, on: bool, env: dict | None = None) -> tuple[int, str]:
-    """`--auto on|off`: tryb prywatny — flaga `auto_update` w manifeście (instaluje hook startu sesji); tryb zespołowy —
-    workflow `.github/workflows/team-factory-update.yml` (cotygodniowy PR) i ta sama flaga. Źródło musi być
-    repozytorium git bez `#ref` — automat instaluje wyłącznie wydania (tagi vX.Y.Z)."""
+    """`--auto on|off`: private mode — the `auto_update` flag in the manifest (installs the session-start hook); team mode —
+    the `.github/workflows/team-factory-update.yml` workflow (a weekly PR) and the same flag. The source must be a
+    git repository without `#ref` — the auto-updater installs releases only (tags vX.Y.Z)."""
     env = os.environ if env is None else env
     man_p = root / ".claude" / "factory-manifest.json"
     if not man_p.is_file():
@@ -439,7 +460,7 @@ def set_auto(root: Path, on: bool, env: dict | None = None) -> tuple[int, str]:
 LOG = Path(".tf") / "logs" / "update.jsonl"
 SEEN = Path(".tf") / "logs" / "update.seen"
 LOCK = Path(".tf") / "logs" / "update.lock"
-LOCK_STALE = 3600              # blokada starsza niż godzina to ślad po przerwanym przebiegu
+LOCK_STALE = 3600              # a lock older than an hour is a trace of an interrupted run
 SKIP_STATUSES = ("tests_failed", "install_failed", "audit_blocked")
 
 
@@ -478,9 +499,9 @@ def _lock(root: Path, now: float) -> bool:
 
 
 def auto_run(root: Path, env: dict | None = None, now: float | None = None, timeout: float = 20) -> dict:
-    """Jeden przebieg automatu (tryb prywatny, w tle ze startu sesji): najwyższe wydanie PATCH/MINOR → audyt skilli →
-    kopia → instalator → testy fabryki; czerwone testy lub błąd instalatora → powrót do kopii i pominięcie wersji.
-    Wynik (poza „nic nowego”) trafia do `.tf/logs/update.jsonl`; pokazuje go `pending_messages`."""
+    """One auto-update run (private mode, in the background from session start): the highest PATCH/MINOR release → skill audit →
+    copy → installer → factory tests; red tests or an installer error → return to the copy and skip the version.
+    The result (other than “nothing new”) goes to `.tf/logs/update.jsonl`; `pending_messages` shows it."""
     import time
     env = os.environ if env is None else env
     now = time.time() if now is None else now
@@ -538,18 +559,52 @@ def _auto_run(root: Path, manifest: dict, env, now: float, timeout: float) -> di
     return done("installed", notes=notes, factory_new=_factory_new(root, man.get("files", {})))
 
 
-def _run_tests(root: Path) -> list[str]:
-    """Testy fabryki w projekcie (`.claude/tests/test_*.py`); zwraca nazwy czerwonych."""
-    failed = []
-    for test in sorted((root / ".claude" / "tests").glob("test_*.py")):
-        try:
-            res = subprocess.run([sys.executable, str(test)], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=600)
-            ok = res.returncode == 0
-        except subprocess.TimeoutExpired:
-            ok = False
-        if not ok:
-            failed.append(test.name)
-    return failed
+def _one_test(root: Path, test: Path) -> tuple[str, bool, str]:
+    try:
+        res = subprocess.run([sys.executable, str(test)], cwd=root, capture_output=True, text=True, encoding="utf-8",
+                             errors="replace", timeout=600)
+        return test.name, res.returncode == 0, (res.stdout.strip().splitlines() or ["?"])[-1]
+    except subprocess.TimeoutExpired:
+        return test.name, False, "przekroczono 600 s"
+
+
+def run_tests(root: Path, workers: int | None = None, report=None) -> list[str]:
+    """Factory tests in the project (`.claude/tests/test_*.py`) in parallel (each runs in a separate temporary directory);
+    returns the names of the red ones. Measurement 2026-11-16: 99 tests in sequence 518 s, in 8 threads 177 s."""
+    import concurrent.futures as cf
+    tests = sorted((root / ".claude" / "tests").glob("test_*.py"))
+    workers = workers or max(2, min(8, (os.cpu_count() or 2) * 2))
+    with cf.ThreadPoolExecutor(workers) as ex:
+        results = list(ex.map(lambda t: _one_test(root, t), tests))
+    for name, ok, last in results:
+        if report:
+            report(name, ok, last)
+    return [name for name, ok, _ in results if not ok]
+
+
+_run_tests = run_tests
+
+
+def quick_check(root: Path) -> list[str]:
+    """A quick check after an update (a few seconds instead of the full factory tests, which passed in the release CI):
+    the engine scripts and hooks compile, `build.py check` passes. Returns problems."""
+    problems = []
+    for d in (root / ".tf" / "factory", root / ".claude" / "hooks"):
+        for f in sorted(d.rglob("*.py")) if d.is_dir() else []:
+            if "_vendor" in f.parts:
+                continue
+            try:
+                compile(f.read_text(encoding="utf-8"), str(f), "exec")   # without writing .pyc
+            except (SyntaxError, ValueError, OSError) as e:
+                problems.append(f"{f.relative_to(root).as_posix()}: {e}")
+    build = root / ".tf" / "factory" / "build.py"
+    if build.is_file():
+        r = subprocess.run([sys.executable, str(build), "check"], cwd=root, capture_output=True, text=True,
+                           encoding="utf-8", errors="replace", timeout=600)
+        if r.returncode != 0:
+            tail = [ln for ln in (r.stdout + r.stderr).splitlines() if ln.strip()][-3:]
+            problems.append("build.py check: " + " | ".join(tail))
+    return problems
 
 
 PR_BODY = Path(".tf") / "logs" / "update-pr.md"
@@ -560,8 +615,8 @@ FACTORY_LOCK = Path(".claude") / "factory-lock.json"
 
 
 def lock_manifest(root: Path) -> dict | None:
-    """Baza aktualizacji z commitowanego `.claude/factory-lock.json` (instalacja zespołowa, wersja ≥ 5.58.3): wersja,
-    nakładki i skróty plików fabryki takie, jakie są w repozytorium. None, gdy locka nie ma albo jest nieczytelny."""
+    """Update base from the committed `.claude/factory-lock.json` (team installation, version ≥ 5.58.3): the version,
+    overlays and factory file hashes as they are in the repository. None when there is no lock or it is unreadable."""
     try:
         lock = json.loads((root / FACTORY_LOCK).read_text(encoding="utf-8"))
     except (OSError, ValueError):
@@ -573,10 +628,10 @@ def lock_manifest(root: Path) -> dict | None:
 
 
 def _ci_manifest(root: Path, src: str) -> dict:
-    """Manifest dla CI. W trybie zespołowym jest w .gitignore, więc po checkout go nie ma. Bazą jest wtedy commitowany
-    `.claude/factory-lock.json` (skróty plików tak, jak są w repozytorium — także tych, które poprzednia aktualizacja
-    pominęła). Bez locka (instalacje sprzed 5.58.3) manifest odtwarza instalator wersji z `.tf/factory/VERSION`
-    (tag v<wersja>) uruchomiony na pustym katalogu — to zakłada, że pliki projektu mają dokładnie tę wersję."""
+    """The manifest for CI. In team mode it is in .gitignore, so it is absent after checkout. The base is then the committed
+    `.claude/factory-lock.json` (file hashes as they are in the repository — including those the previous update
+    skipped). Without the lock (installations from before 5.58.3) the manifest is recreated by the installer of the version from `.tf/factory/VERSION`
+    (tag v<version>) run on an empty directory — this assumes the project files have exactly that version."""
     man_p = root / ".claude" / "factory-manifest.json"
     if man_p.is_file():
         return json.loads(man_p.read_text(encoding="utf-8"))
@@ -617,9 +672,9 @@ def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
 
 
 def ci_run(root: Path, src: str, env: dict | None = None) -> int:
-    """Tryb zespołowy w CI (workflow team-factory-update): najwyższe wydanie PATCH/MINOR → audyt skilli → instalator
-    → testy fabryki i `.tf/factory/build.py check`. Zielone → opis PR w `.tf/logs/update-pr.md` i `version=X`
-    w `$GITHUB_OUTPUT` (workflow otwiera PR); czerwone → kod 1 (czerwony job to powiadomienie), bez PR."""
+    """Team mode in CI (the team-factory-update workflow): the highest PATCH/MINOR release → skill audit → installer
+    → factory tests and `.tf/factory/build.py check`. Green → PR description in `.tf/logs/update-pr.md` and `version=X`
+    in `$GITHUB_OUTPUT` (the workflow opens the PR); red → exit code 1 (a red job is the notification), no PR."""
     env = os.environ if env is None else env
     if not is_git(src) or "#" in src:
         print("✗ --ci needs the git URL of the factory repository without #ref (releases are vX.Y.Z tags).")
@@ -697,15 +752,15 @@ def ci_run(root: Path, src: str, env: dict | None = None) -> int:
 
 
 def _spawn(cmd: list[str], cwd: Path) -> None:
-    """Proces odłączony od sesji: przeżywa koniec hooka (limit czasu hooka to kilkanaście sekund)."""
+    """A process detached from the session: it survives the end of the hook (the hook's time limit is a dozen or so seconds)."""
     kw = {"creationflags": 0x00000008 | 0x00000200} if os.name == "nt" else {"start_new_session": True}
     subprocess.Popen(cmd, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **kw)
 
 
 def start_auto(root: Path, env: dict | None = None, cache_dir: Path | None = None, now: float | None = None,
                timeout: float = 5, spawn=None) -> str | None:
-    """Hook startu sesji (tryb prywatny z `--auto on`): najwyżej raz na dobę sprawdza wydania i, gdy jest nowe
-    PATCH/MINOR, uruchamia `update.py --auto-run` w tle. Zwraca komunikat dla człowieka albo None. Nigdy nie rzuca."""
+    """Session-start hook (private mode with `--auto on`): checks releases at most once a day and, when there is a new
+    PATCH/MINOR, runs `update.py --auto-run` in the background. Returns a message for the human or None. Never raises."""
     import time
     env = os.environ if env is None else env
     try:
@@ -749,12 +804,12 @@ def start_auto(root: Path, env: dict | None = None, cache_dir: Path | None = Non
         return (f"Installing the team factory update {current} → {target} in the background (PATCH/MINOR, backup "
                 "and tests); it takes effect in the next session, where the result is shown. To turn off: "
                 "python3 .tf/factory/update.py --auto off")
-    except Exception:  # automat jest dodatkiem — nigdy nie psuje startu sesji
+    except Exception:  # the auto-updater is an extra — it never breaks the session start
         return None
 
 
 def pending_messages(root: Path) -> list[str]:
-    """Komunikaty o przebiegach automatu, których człowiek jeszcze nie widział (pokazywane raz, przy starcie sesji)."""
+    """Messages about auto-update runs the human has not seen yet (shown once, at session start)."""
     entries = _log(root)
     seen_p = root / SEEN
     try:
@@ -795,7 +850,8 @@ def pending_messages(root: Path) -> list[str]:
     return out
 
 
-PASS_THROUGH = ("--packs", "--add", "--remove", "--language", "--commit-language")   # → instalator nowej wersji
+PASS_THROUGH = ("--packs", "--add", "--remove",   # → the new version's installer
+                "--pack-dir", "--drop-pack-dir")
 
 
 def main(argv: list[str]) -> int:
@@ -851,18 +907,23 @@ def main(argv: list[str]) -> int:
     src = normalize(src)
 
     with tempfile.TemporaryDirectory(prefix="tf-update-") as t:
-        new = fetch(src, Path(t))
+        new = fetch(src, Path(t), meta_only=bool(opts.get("--check")))
         new_version = (new / "core" / "factory" / "VERSION").read_text(encoding="utf-8").strip() \
             if (new / "core" / "factory" / "VERSION").exists() else "0.0.0"
         print(f"Installed version: {current}   available: {new_version}   (source: {src})")
         newer = newer_than(new_version, current) > 0
-        if passthrough:                       # zmiana nakładek albo języka — ta sama wersja też się nakłada
-            print("ℹ Changing packs or languages: " + " ".join(passthrough))
+        if passthrough:                       # overlay change — the same version is also applied
+            print("ℹ Changing packs: " + " ".join(passthrough))
         if not newer and not opts.get("--force") and not passthrough:
             if newer_than(new_version, current) < 0:
                 print("ℹ The source has an older version than the installed one — doing nothing (force: --force).")
             else:
                 print("✓ You are up to date. (To re-apply the same version: --force.)")
+            if opts.get("--full-check"):
+                print("\nFactory tests in this project:")
+                failed = run_tests(ROOT, report=lambda name, ok, last: print(
+                    f"  {last}" if ok else f"  ✗ {name} — run `python3 .claude/tests/{name}` to see the details"))
+                return 1 if failed else 0
             return 0
         notes = changelog_since(new, current)
         if notes:
@@ -895,7 +956,7 @@ def main(argv: list[str]) -> int:
             if not sys.stdin.isatty():
                 print("\nRun again with --yes to apply (no terminal to confirm in).")
                 return 1
-            if input("\nApply the update? [y/N] ").strip().lower() not in ("t", "tak", "y", "yes"):
+            if input("\nApply the update? [y/N] ").strip().lower() not in ("y", "yes"):
                 print("Aborted — nothing was changed.")
                 return 1
         code, msg = preflight(ROOT, "python3 .tf/factory/update.py --yes")
@@ -909,10 +970,16 @@ def main(argv: list[str]) -> int:
         if r.returncode != 0:
             return r.returncode
     print("\nCheck after the update:")
-    for test in sorted((ROOT / ".claude" / "tests").glob("test_*.py")):
-        res = subprocess.run([sys.executable, str(test)], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
-        print(("  " + (res.stdout.strip().splitlines() or ["?"])[-1]) if res.returncode == 0
-              else f"  ✗ {test.name} — run `python3 .claude/tests/{test.name}` to see the details")
+    if opts.get("--full-check"):
+        run_tests(ROOT, report=lambda name, ok, last: print(
+            f"  {last}" if ok else f"  ✗ {name} — run `python3 .claude/tests/{name}` to see the details"))
+    else:
+        problems = quick_check(ROOT)
+        for p in problems:
+            print(f"  ✗ {p}")
+        print("  ✓ engine scripts and hooks compile, build.py check passes" if not problems else
+              "  ✗ the installation needs attention — undo: python3 .tf/factory/update.py --rollback")
+        print("  (factory tests passed in the release CI; run them here: python3 .tf/factory/update.py --full-check)")
     print("Done. If Claude Code is open, restart it so it loads the new skills and agents.")
     return 0
 

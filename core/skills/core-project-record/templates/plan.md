@@ -4,37 +4,38 @@ phase: plan
 status: draft
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: [docs/project/04-architecture/stack-decision.md, docs/project/03-requirements/requirements.md]
-cel_sekwencji: <szybkie wydanie | sygnał z rynku | jakość | prostota | nauka>
-glowne_ryzyko: <decyzje | czas | przepustowość | zewnętrzne | umiejętności | brak>
+cel_sekwencji: <fast release | market signal | quality | simplicity | learning>
+glowne_ryzyko: <decisions | time | throughput | external | skills | none>
 ---
-# Plan realizacji: <nazwa>
+# Delivery plan: <name>
 
 ## TL;DR
-<Liczba pozycji (F/S), gwiazda przewodnia, pierwsza gotowa pozycja, kluczowe zależności i blokady.>
+<The number of items (F/S), the north star, the first ready item, key dependencies and blockers.>
 
-## Gwiazda przewodnia
-<Najmniejszy przepływ end-to-end, który dowodzi tezy produktu — jednym zdaniem, z ID pozycji.>
-## Inwentarz repozytorium
-| Warstwa | Stan (obecna / częściowa / brak) | Dowód (plik) |
+## North star
+<The smallest end-to-end flow that proves the product thesis — in one sentence, with the item ID.>
+## Repository inventory
+| Layer | State (present / partial / missing) | Evidence (file) |
 |---|---|---|
-## Pozycje (fundamenty F-NN i cięcia pionowe S-NN — zasady: `.claude/skills/core-delivery-lifecycle/references/plan-ciec.md`)
+## Items (foundations F-NN and vertical slices S-NN — rules: `.claude/skills/core-delivery-lifecycle/references/cut-plan.md`)
+<!-- Column names stay as they are: decision_record.py and the pdi contract read them. -->
 | ID | Identyfikator zmiany | Wynik (użytkownik może …) | Wymagania | Warunki wstępne | Odblokowuje (F) | Równolegle z | Wykonawca | Status |
 |---|---|---|---|---|---|---|---|---|
-## Niewiadome blokujące
-| Pytanie | Właściciel | Blokuje (tak/nie) | Pozycje |
+## Blocking unknowns
+| Question | Owner | Blocks (yes/no) | Items |
 |---|---|---|---|
-## Spike'i
-## Odłożone
-- <pozycja — dlaczego>
-## Zrobione
-| ID | Wynik | Data | Raport kroku |
+## Spikes
+## Postponed
+- <item — why>
+## Done
+| ID | Result | Date | Step report |
 |---|---|---|---|
 
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <persona realizująca>
-- **Zadanie:** <rekomendowana pozycja — jedna>
-- **Przeczytaj:** TL;DR, Gwiazda przewodnia, wiersz rekomendowanej pozycji
+## Open questions
+## Handoff
+- **For:** <the delivering persona>
+- **Task:** <the recommended item — one>
+- **Read:** TL;DR, North star, the row of the recommended item

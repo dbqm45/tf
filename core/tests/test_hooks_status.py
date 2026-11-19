@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy .tf/factory/hooks_status.py: czy hooki fabryki działały w ostatnich commitach (log vs historia git)."""
+"""Tests of .tf/factory/hooks_status.py: whether the factory hooks ran in the latest commits (the log vs the git history)."""
 import json
 import os
 import subprocess
@@ -26,7 +26,7 @@ def commit(repo: Path, name: str, date: str):
     git(repo, "commit", "-q", "-m", f"feat: {name}", date=date)
 
 
-NO_CI = {k: v for k, v in os.environ.items() if k != "CI"}   # testy działają też w GitHub Actions (CI=true)
+NO_CI = {k: v for k, v in os.environ.items() if k != "CI"}   # the tests also run in GitHub Actions (CI=true)
 
 
 def run(*args):
@@ -55,7 +55,7 @@ def main() -> int:
         (repo / ".claude" / "settings.json").write_text(json.dumps({"hooks": {"SessionEnd": []}}), encoding="utf-8")
         log = repo / ".tf" / "logs" / "skill-hints.jsonl"
         log.write_text(json.dumps({"ts": "2026-10-18T10:00:00+00:00"}) + "\n", encoding="utf-8")
-        commit(repo, "a", "2026-10-18T10:30:00+00:00")           # w ciągu godziny od logu — w porządku
+        commit(repo, "a", "2026-10-18T10:30:00+00:00")           # within an hour of the log — fine
 
         r = run("--root", str(repo), "--json")
         s = json.loads(r.stdout)
@@ -66,40 +66,40 @@ def main() -> int:
         r = run("--root", str(repo), "--json")
         s = json.loads(r.stdout)
         check(s["active"] is False and s["after_commits"] == 2, f"H2 luka: {s}")
-        check(s["last_log"].startswith("2026-10-18T10:00"), f"H2 ostatni log: {s}")
+        check(s["last_log"].startswith("2026-10-18T10:00"), f"H2 the last log: {s}")
         r = run("--root", str(repo))
-        check(r.returncode == 0 and "nieaktywne" in r.stdout and "2 commit" in r.stdout and "jednym repozytorium"
+        check(r.returncode == 0 and "not active" in r.stdout and "2 commit" in r.stdout and "one repository"
               in r.stdout, f"H2 tekst: {r.stdout}")
 
-        # jeden commit po luce to jeszcze nie sygnał (bieżąca sesja mogła nie zapisać SessionEnd)
+        # a single commit after a gap is not yet a signal (the current session may not have written SessionEnd)
         log.write_text(json.dumps({"ts": "2026-10-18T12:30:00+00:00"}) + "\n", encoding="utf-8")
         s = json.loads(run("--root", str(repo), "--json").stdout)
-        check(s["active"] is True and s["after_commits"] == 1, f"H3 jeden commit: {s}")
+        check(s["active"] is True and s["after_commits"] == 1, f"H3 one commit: {s}")
 
-        # jev.jsonl (pisany też przez testy) nie liczy się jako ślad hooków
+        # jev.jsonl (also written by tests) does not count as a trace of the hooks
         log.unlink()
         (repo / ".tf" / "logs" / "jev.jsonl").write_text(json.dumps({"ts": "2026-10-18T15:00:00"}) + "\n")
         s = json.loads(run("--root", str(repo), "--json").stdout)
-        check(s["active"] is False and s["last_log"] is None and s["after_commits"] == 3, f"H4 bez logów hooków: {s}")
+        check(s["active"] is False and s["last_log"] is None and s["after_commits"] == 3, f"H4 without hook logs: {s}")
 
-        # w CI nie ma sesji Claude Code ani logów — bez ostrzeżenia
+        # in CI there are no Claude Code sessions or logs — no warning
         env = {**os.environ, "CI": "true"}
         r = subprocess.run([sys.executable, str(SCRIPT), "--root", str(repo), "--json"], capture_output=True, text=True,
                            timeout=60, env=env, stdin=subprocess.DEVNULL)
         check(json.loads(r.stdout)["active"] is None, f"H7 CI: {r.stdout}")
 
-        # repozytorium bez hooków w settings.json: nic do sprawdzania
+        # a repository without hooks in settings.json: nothing to check
         (repo / ".claude" / "settings.json").write_text("{}", encoding="utf-8")
         s = json.loads(run("--root", str(repo), "--json").stdout)
-        check(s["active"] is None, f"H5 bez hooków: {s}")
+        check(s["active"] is None, f"H5 without hooks: {s}")
 
     r = subprocess.run([sys.executable, str(CHECK), "-k", "nic_takiego"], capture_output=True, text=True, timeout=900,
                        encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, cwd=ROOT, env=NO_CI)
-    check("hooki fabryki" in r.stdout, f"H6 krok w check.py: {r.stdout[-500:]}")
+    check("factory hooks" in r.stdout, f"H6 a step in check.py: {r.stdout[-500:]}")
 
     for f in fails:
         print("✗", f)
-    print(f"{total - len(fails)}/{total} testów hooks_status zielonych")
+    print(f"{total - len(fails)}/{total} hooks_status tests green")
     return 1 if fails else 0
 
 

@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Profil kosztów zespołu — jeden przełącznik między ceną a jakością.
+Team cost profile — one switch between price and quality.
 
-  python3 .tf/factory/profile.py                 # aktywny profil, modele tierów i ustawienia sesji
-  python3 .tf/factory/profile.py oszczedny       # przełącz (też: zrownowazony, jakosc)
-  python3 .tf/factory/profile.py jakosc --dry-run
-  python3 .tf/factory/profile.py oszczedny --tylko-zespol   # bez zmian w .claude/settings.local.json
+  python3 .tf/factory/profile.py                 # the active profile, tier models and session settings
+  python3 .tf/factory/profile.py economy       # switch (also: balanced, quality)
+  python3 .tf/factory/profile.py quality --dry-run
+  python3 .tf/factory/profile.py economy --team-only   # without changes in .claude/settings.local.json
 
-Profil (.tf/config/config.yaml → profiles) robi dwie rzeczy:
-1. nadpisuje model i effort tierów (fast/std/deep), więc po przebudowaniu wszyscy agenci i persony dostają
-   nowe modele — role dalej wskazują tier, nie model;
-2. ustawia sesję w `.claude/settings.local.json` (osobisty plik, poza gitem): effortLevel, autoCompactWindow
-   i advisorModel (doradca: mocniejszy model, którego Claude sam wzywa przy trudnych decyzjach).
+A profile (.tf/config/config.yaml → profiles) does two things:
+1. overrides the model and effort of the tiers (fast/std/deep), so after a rebuild all agents and personas get
+   new models — roles still point to a tier, not a model;
+2. sets the session in `.claude/settings.local.json` (a personal file, outside git): effortLevel, autoCompactWindow
+   and advisorModel (the advisor: a stronger model that Claude itself calls on hard decisions).
 
-Wybór zapisuje w `.claude/factory-profile.json`. Klucze ustawione przez poprzedni profil usuwa tylko wtedy, gdy
-mają wciąż wartość, którą profil wpisał — Twoich własnych ustawień nie rusza.
-Zmiana działa od nowej sesji (`/clear` albo ponowne uruchomienie `claude`); zmiana modelu w trakcie sesji kasuje cache.
+The choice is saved in `.claude/factory-profile.json`. Keys set by the previous profile are removed only if
+they still hold the value the profile wrote — your own settings are not touched.
+The change takes effect from a new session (`/clear` or restarting `claude`); changing the model mid-session clears the cache.
 """
 from __future__ import annotations
 
@@ -24,14 +24,14 @@ import subprocess
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -42,7 +42,7 @@ MANAGED = ("effortLevel", "autoCompactWindow", "advisorModel", "model")
 
 
 def _tf_config(root: Path) -> dict:
-    """Konfiguracja fabryki: domyślna silnika z nadpisaniami projektu (.tf/config/config.yaml) — packs.load_config."""
+    """Factory configuration: the engine default with project overrides (.tf/config/config.yaml) — packs.load_config."""
     import importlib.util
     spec = importlib.util.spec_from_file_location("tf_packs_cfg", root / ".tf" / "factory" / "packs.py")
     mod = importlib.util.module_from_spec(spec)
@@ -52,7 +52,7 @@ def _tf_config(root: Path) -> dict:
 def load_cfg() -> dict:
     try:
         import yaml
-    except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
+    except ImportError:  # bundled copy of PyYAML (.tf/factory/_vendor)
         sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
         import yaml
     return _tf_config(ROOT) or {}
@@ -62,7 +62,7 @@ def read_json(p: Path) -> dict:
     try:
         return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
     except json.JSONDecodeError:
-        sys.exit(f"✗ {p.relative_to(ROOT)} nie jest poprawnym JSON-em — popraw go ręcznie i spróbuj ponownie")
+        sys.exit(f"✗ {p.relative_to(ROOT)} is not valid JSON — fix it by hand and try again")
 
 
 def effective_tiers(cfg: dict, name: str) -> dict:
@@ -73,36 +73,26 @@ def effective_tiers(cfg: dict, name: str) -> dict:
     return tiers
 
 
-def unapproved(cfg: dict, name: str) -> list[str]:
-    """Modele profilu `name` spoza listy zatwierdzonych (approved_models) — .tf/factory/models_policy.py."""
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("tf_models_policy_profile", ROOT / ".tf" / "factory" / "models_policy.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    errors, _ = mod.check(cfg, name, mod.project_state(ROOT)[2])
-    return errors
-
-
 def show(cfg: dict) -> int:
     state = read_json(PROFILE_FILE)
     active = state.get("profile") or cfg.get("default_profile")
     local = read_json(LOCAL_SETTINGS)
-    print(f"Aktywny profil: {active}" + ("" if PROFILE_FILE.exists() else " (domyślny)"))
+    print(f"Active profile: {active}" + ("" if PROFILE_FILE.exists() else " (default)"))
     for name, prof in (cfg.get("profiles") or {}).items():
         mark = "→" if name == active else " "
-        print(f" {mark} {name:<13} {prof.get('opis', '')}")
-    print("\nTiery w aktywnym profilu:")
+        print(f" {mark} {name:<13} {prof.get('description', '')}")
+    print("\nTiers in the active profile:")
     for tier, t in effective_tiers(cfg, active).items():
-        print(f"  {tier:<5} {t.get('model', '?'):<7} effort {t.get('effort') or 'domyślny modelu'}")
-    print("\nSesja (.claude/settings.local.json): " +
-          (", ".join(f"{k}={local[k]}" for k in MANAGED if k in local) or "brak ustawień profilu"))
+        print(f"  {tier:<5} {t.get('model', '?'):<7} effort {t.get('effort') or 'model default'}")
+    print("\nSession (.claude/settings.local.json): " +
+          (", ".join(f"{k}={local[k]}" for k in MANAGED if k in local) or "no profile settings"))
     return 0
 
 
 def main(argv: list[str]) -> int:
     cfg = load_cfg()
     args = [a for a in argv[1:] if not a.startswith("--")]
-    dry, tiers_only = "--dry-run" in argv, "--tylko-zespol" in argv
+    dry, tiers_only = "--dry-run" in argv, "--team-only" in argv
     if "--help" in argv or "-h" in argv:
         print(__doc__)
         return 0
@@ -111,16 +101,8 @@ def main(argv: list[str]) -> int:
     name = args[0]
     profiles = cfg.get("profiles") or {}
     if name not in profiles:
-        print(f"✗ Nie ma profilu „{name}”. Dostępne: {', '.join(profiles)}")
+        print(f"✗ No profile „{name}”. Available: {', '.join(profiles)}")
         return 2
-
-    blocked = unapproved(cfg, name)
-    if blocked:
-        print(f"✗ Profil „{name}” używa modeli spoza listy approved_models — nie przełączam:")
-        for b in blocked:
-            print(f"  ✗ {b}")
-        print("  Zmień listę w .tf/config/config.yaml albo wybierz inny profil (python3 .tf/factory/models_policy.py).")
-        return 1
 
     state = read_json(PROFILE_FILE)
     prev_set: dict = state.get("settings") or {}
@@ -128,25 +110,25 @@ def main(argv: list[str]) -> int:
     local = read_json(LOCAL_SETTINGS)
     new_local = dict(local)
     changes = []
-    for k, v in prev_set.items():                      # sprzątanie po poprzednim profilu
+    for k, v in prev_set.items():                      # cleaning up after the previous profile
         if k not in want and new_local.get(k) == v:
             new_local.pop(k)
-            changes.append(f"  − {k} (ustawił poprzedni profil)")
+            changes.append(f"  − {k} (set by the previous profile)")
     for k, v in want.items():
         if new_local.get(k) != v:
             if k in local and local.get(k) != prev_set.get(k):
-                changes.append(f"  ~ {k}: {local[k]} → {v} (nadpisuję Twoją wartość)")
+                changes.append(f"  ~ {k}: {local[k]} → {v} (overwriting your value)")
             else:
                 changes.append(f"  + {k} = {v}")
             new_local[k] = v
 
     tiers = effective_tiers(cfg, name)
-    print(f"Profil: {name} — {profiles[name].get('opis', '')}")
-    print("Tiery: " + ", ".join(f"{t} → {v.get('model')}{'/' + v['effort'] if v.get('effort') else ''}"
+    print(f"Profile: {name} — {profiles[name].get('description', '')}")
+    print("Tiers: " + ", ".join(f"{t} → {v.get('model')}{'/' + v['effort'] if v.get('effort') else ''}"
                                 for t, v in tiers.items()))
-    print("Sesja (.claude/settings.local.json):" + ("\n" + "\n".join(changes) if changes else " bez zmian"))
+    print("Session (.claude/settings.local.json):" + ("\n" + "\n".join(changes) if changes else " no changes"))
     if dry:
-        print("(--dry-run: nic nie zapisano)")
+        print("(--dry-run: nothing saved)")
         return 0
 
     if new_local != local:
@@ -157,12 +139,12 @@ def main(argv: list[str]) -> int:
                             encoding="utf-8")
     r = subprocess.run([sys.executable, str(ROOT / ".tf" / "factory" / "build.py")], cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0:
-        print("⚠ build.py zgłosił problemy:\n" + r.stdout[-1500:] + r.stderr[-500:])
+        print("⚠ build.py reported problems:\n" + r.stdout[-1500:] + r.stderr[-500:])
         return 1
-    print("✓ Agenci przebudowani. Zmiana działa od nowej sesji (`/clear` albo ponowne `claude`).")
+    print("✓ Agents rebuilt. The change works from a new session (`/clear` or a new `claude` start).")
     if want.get("advisorModel"):
-        print("  Doradca (advisor) działa tylko przez API Anthropic (nie Bedrock/Vertex/Foundry) i zużywa dodatkowe "
-              "tokeny przy każdej konsultacji; `/advisor off` wyłącza go w bieżącej sesji.")
+        print("  The advisor works only through the Anthropic API (not Bedrock/Vertex/Foundry) and uses extra "
+              "tokens for each consultation; `/advisor off` turns it off in the current session.")
     return 0
 
 

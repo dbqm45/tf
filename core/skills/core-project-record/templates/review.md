@@ -4,22 +4,22 @@ phase: review
 status: proposed
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: []
 ---
-# Przegląd: <rodzaj — plan kroku / implementacja / bezpieczeństwo / architektura / retro>
+# Review: <kind — step plan / implementation / security / architecture / retro>
 
 ## TL;DR
-<Werdykt (np. gotowy / do poprawy; zatwierdzone / wymaga uwagi / odrzucone), liczba ustaleń według wagi, co blokuje.>
-Ugruntowanie: <np. 5/5 ścieżek, 3/3 symbole, TL;DR zgodne z planem — przy przeglądzie planu lub implementacji>
-## Ustalenia
-| # | Waga | Wpływ | Ustalenie | Dowód (plik:linia / źródło) | Rekomendacja | Decyzja |
+<Verdict (e.g. ready / needs fixing; approved / needs attention / rejected), the number of findings by weight, what blocks.>
+Grounding: <e.g. 5/5 paths, 3/3 symbols, TL;DR consistent with the plan — for a plan or implementation review>
+## Findings
+| # | Weight | Impact | Finding | Evidence (file:line / source) | Recommendation | Decision |
 |---|---|---|---|---|---|---|
-> Waga: krytyczne / ostrzeżenie / obserwacja. Wpływ: niski / średni / wysoki (pack-it: qa-change-review).
-> Decyzja: OCZEKUJE / NAPRAWIONE / POMINIĘTE / RYZYKO PRZYJĘTE / ODRZUCONE / LEKCJA.
-## Decyzje człowieka vs propozycje AI
-| Propozycja agenta | Decyzja człowieka | Dlaczego |
+> Weight: critical / warning / observation. Impact: low / medium / high (pack-it: qa-change-review).
+> Decision: PENDING / FIXED / SKIPPED / RISK_ACCEPTED / REJECTED / LESSON.
+## Human decisions vs AI proposals
+| Agent's proposal | Human's decision | Why |
 |---|---|---|
-## Otwarte pytania
-## Przekazanie
+## Open questions
+## Handoff

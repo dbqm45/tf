@@ -44,6 +44,58 @@
       }
     },
     {
+      "id": "porownanie-modeli-seedy-en",
+      "expect": "trigger",
+      "prompt": "Our new classification model gets 91.3% on the test set and the old one 90.8%. We ran each of them once. The team wants to announce that the new one is better. How do we compare them rigorously? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "seed\\w*",
+            "ziarn\\w+",
+            "powtórze\\w+",
+            "kilka uruchomie\\w+",
+            "wielokrotn\\w+",
+            "repeat\\w*|multiple runs|several runs|many runs|re-?run\\w*|run.{0,20}(several|multiple|many) times"
+          ],
+          [
+            "±",
+            "odchyleni\\w+",
+            "rozrzut",
+            "wariancj\\w+",
+            "przedzia\\w+ ufności",
+            "standard deviation|\\bstd\\b|spread|variance|confidence interval|error bars"
+          ],
+          [
+            "parow\\w+",
+            "bootstrap",
+            "McNemar",
+            "test istotności",
+            "istotno\\w+ statystyczn\\w+",
+            "ten sam podział",
+            "te same (dane|podziały)",
+            "paired",
+            "significance test",
+            "statistical(ly)? significan\\w*",
+            "same (split|data|splits|folds)"
+          ],
+          [
+            "baseline",
+            "punkt odniesienia",
+            "prost\\w+ model",
+            "linia bazowa",
+            "simple model",
+            "reference point"
+          ]
+        ],
+        "none": [
+          "0,5 pkt to wystarczająca różnica",
+          "jedno uruchomienie wystarczy",
+          "0[.,]5 (pts?|pp|points?|percentage points?) (is|are) (a )?(sufficient|enough)",
+          "(a )?(single|one) run (is )?(enough|sufficient)|(single|one) run suffices"
+        ]
+      }
+    },
+    {
       "id": "wyciek-podzial-czasowy",
       "expect": "trigger",
       "prompt": "Trenujemy model przewidujący odejście klientów. Wynik w walidacji to AUC 0,97, ale po wdrożeniu pilotażowym wyszło około 0,70. Dane podzieliliśmy losowo 80/20, w danych jest po kilka wierszy na klienta. Co poszło nie tak i jak to naprawić? Odpowiedz zwięźle.",

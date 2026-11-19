@@ -4,27 +4,27 @@ phase: operations
 status: proposed
 version: 1
 author: <agent>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: []
 ---
-# Przegląd utrzymania: <okres>
+# Maintenance review: <period>
 
 ## TL;DR
-<Stan SLO, otwarte błędy według wagi, wdrożone łatki, zaplanowane aktualizacje, funkcje do wycofania; decyzje dla człowieka.>
+<The state of the SLOs, open bugs by weight, patches deployed, planned updates, features to retire; decisions for the human.>
 
-## Niezawodność (SLO, incydenty, budżet błędów)
-## Zgłoszenia i błędy
-| Kategoria | Nowe | Zamknięte | Otwarte (najstarsze) | Uwagi |
+## Reliability (SLOs, incidents, error budget)
+## Issues and bugs
+| Category | New | Closed | Open (oldest) | Notes |
 |---|---|---|---|---|
-## Bezpieczeństwo i łatki
-| Komponent | Podatność / wydanie | Waga | Termin | Status |
+## Security and patches
+| Component | Vulnerability / release | Weight | Deadline | Status |
 |---|---|---|---|---|
-## Aktualizacje zależności i wersje kończące wsparcie
-| Zależność | Obecna | Docelowa | Koniec wsparcia obecnej | Plan |
+## Dependency updates and end-of-support versions
+| Dependency | Current | Target | End of support of the current one | Plan |
 |---|---|---|---|---|
-## Wycofywanie funkcji
-## Koszty (chmura, modele, licencje)
-## Otwarte pytania
-## Przekazanie
-- **Dla:** <persona>
+## Retiring features
+## Costs (cloud, models, licences)
+## Open questions
+## Handoff
+- **For:** <persona>

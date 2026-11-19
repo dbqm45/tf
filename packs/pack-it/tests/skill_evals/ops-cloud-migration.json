@@ -19,6 +19,23 @@
       }
     },
     {
+      "id": "strategie-7r-en",
+      "expect": "trigger",
+      "prompt": "We have 150 applications in a server room and need to move them to the cloud. How do we assess the portfolio and pick a strategy for each? Answer briefly.",
+      "checks": {
+        "all": [
+          ["rehost"],
+          ["replatform"],
+          ["retire"],
+          ["retain"],
+          ["zależno\\w+|dependenc\\w+|grawitacj\\w+ danych|data gravity|licencj\\w+", "licen[sc]\\w+"],
+          ["relocate|\\b7R\\b"],
+          ["pełn\\w* cykl\\w* biznes|koniec miesiąca|z obserwacji|najtańsz\\w* strategi", "full business cycles?", "month-?end", "end of (the )?month", "from observation", "observed", "cheapest strateg\\w+"]
+        ],
+        "none": ["tylko lift and shift dla wszystkich", "only lift and shift for (all|everyone|everything)"]
+      }
+    },
+    {
       "id": "cutover-bazy",
       "expect": "trigger",
       "prompt": "Przenosimy bazę produkcyjną 4 TB do chmury, a okno przestoju to maksymalnie 30 minut. Jak zaplanować przełączenie i wycofanie? Odpowiedz zwięźle.",

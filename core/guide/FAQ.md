@@ -1,99 +1,150 @@
 # FAQ
 
-Codzienna praca: `.tf/factory/PRZEWODNIK.md`.
+Daily work: `.tf/factory/GUIDE.md`.
 
-## Czym jest fabryka?
-Zestaw do pracy z agentami Claude Code. Instaluje w projekcie persony (agentów, z którymi rozmawiasz), ich
-wykonawców, skille z wiedzą i procedurami, hooki pilnujące zasad (TDD, sekrety, bezpieczne polecenia) i skrypty,
-które robią mechaniczną pracę bez tokenów. Składa się z rdzenia, nakładek dziedzinowych (`pack-*`) i trybów pracy
-na żądanie (`mode-*`).
+## What is the factory?
+A kit for working with Claude Code agents. It installs in a project personas (the agents you talk to), their
+executors, skills with knowledge and procedures, hooks that enforce rules (TDD, secrets, safe commands) and scripts
+that do mechanical work without tokens. It consists of the core, domain packs (`pack-*`) and working modes on
+request (`mode-*`).
 
-## Jak dodać fabrykę do projektu?
-W katalogu projektu uruchom `tf` (albo `python3 <fabryka>/core/factory/install.py`). Przy pierwszej instalacji
-wybierasz język pracy, język commitów oraz nakładki i tryby.
-- **Prywatnie** (domyślnie): nic nie trafia do repozytorium. Ustawienia są w `.claude/settings.local.json`, zasady
-  w `CLAUDE.local.md`, a ścieżki fabryki w `.git/info/exclude`.
-- **Zespołowo** (`--shared`): fabryka jest commitowana razem z projektem. Ustawienia są w `.claude/settings.json`,
-  zasady w `CLAUDE.md`, do tego workflow CI.
+## How do I add the factory to a project?
+In the project directory run `tf` (or `python3 <fabryka>/core/factory/install.py`). At the first installation
+you choose packs and modes. You do not set a language: agents answer in the language you write in.
+- **Private** (default): nothing goes into the repository. The settings are in `.claude/settings.local.json`, the rules
+  in `CLAUDE.local.md`, and the factory's paths in `.git/info/exclude`.
+- **Team** (`--shared`): the factory is committed together with the project. The settings are in `.claude/settings.json`,
+  the rules in `CLAUDE.md`, plus a CI workflow.
 
-Potem uruchom raz `claude` w katalogu projektu i zaakceptuj zaufanie do folderu. Bez tego hooki i uprawnienia
-nie działają.
+A private installation does not travel through `git clone`: everyone installs the factory themselves, and CI and cloud
+sessions do not have it. A repository with `AGENTS.md` and without `CLAUDE.md` needs the line `@AGENTS.md` in
+`CLAUDE.local.md`. Both topics: `.tf/factory/GUIDE.md`, the section "Private and team installation".
 
-## Jak zaktualizować fabrykę?
-- `tf update --check` pokazuje, czy jest nowa wersja i co się zmieni, niczego nie zmieniając.
-- `tf` (albo `python3 .tf/factory/update.py`) aktualizuje.
+Then run `claude` once in the project directory and accept trust in the folder. Without that, hooks and permissions
+do not work.
 
-Przed aktualizacją skille nowej wersji przechodzą audyt narzędziem z wersji zainstalowanej. Pliki fabryki w
-projekcie są jak `node_modules`: aktualizacja je nadpisuje, więc zmiany wprowadzasz w repo fabryki i aktualizujesz.
-Twoje pliki (własne skille, persony, role, `CLAUDE.local.md`) zostają; w `.tf/config/config.yaml` zostają Twoje
-ustawienia, a nowe klucze dochodzą na końcu. Powrót: `python3 .tf/factory/update.py --rollback`.
+## How do I update the factory?
+- `tf update --check` shows whether there is a new version and what will change, without changing anything.
+- `tf` (or `python3 .tf/factory/update.py`) updates.
 
-## Czy aktualizacje mogą działać same?
-Tak: `python3 .tf/factory/update.py --auto on` (wyłączenie: `--auto off`). Automatycznie wchodzą tylko wydania PATCH
-i MINOR. Wydanie MAJOR, które zmienia publiczne API fabryki, wymaga Twojej decyzji.
+After an update the factory runs a quick check (the engine's scripts and hooks compile, `build.py check` passes) —
+a few seconds. The factory's full tests passed in the release CI; in the project you run them with
+`python3 .tf/factory/update.py --full-check` (in parallel, a few minutes).
 
-## Jak dodać albo usunąć nakładkę lub tryb?
-- `tf add <id>` i `tf remove <id>`. Usunięte pliki trafiają do `.tf/backup/`.
-- Lista dostępnych i zainstalowanych: `tf list`.
-- Domyślna nakładka lub tryb, które pojawią się w nowej wersji, dochodzą przy aktualizacji raz. Usunięte przez
-  Ciebie nie wracają.
+Before an update the new version's skills go through an audit with the tool from the installed version. The factory's
+files in the project are like `node_modules`: an update overwrites them, so you make changes in the factory repo and
+update. Your files (your own skills, personas, roles, `CLAUDE.local.md`) stay; in `.tf/config/config.yaml` your
+settings stay, and new keys are added at the end. Going back: `python3 .tf/factory/update.py --rollback`.
 
-## Który model i ile to kosztuje?
-- Role mają tiery: `fast` (Haiku), `std` (Sonnet), `deep` (Opus).
-- Profil zespołu przestawia je jednym poleceniem: `python3 .tf/factory/profile.py oszczedny|zrownowazony|jakosc`.
-- Koszt mierzysz poleceniem `python3 .tf/factory/cost_report.py --days 7`, a pasek stanu pokazuje koszt bieżącej sesji.
+## Can updates run by themselves?
+Yes: `python3 .tf/factory/update.py --auto on` (to turn it off: `--auto off`). Only PATCH and MINOR releases go in
+automatically. A MAJOR release, which changes the factory's public API, needs your decision.
 
-Funkcje płatne z natury (ewaluacje skilli na modelu, agent teams) uruchamiasz świadomie.
+## How do I add or remove a pack or a mode?
+- `tf add <id>` and `tf remove <id>`. Removed files go to `.tf/backup/`.
+- The list of available and installed ones: `tf list`.
+- A default pack or mode that appears in a new version is added once at an update. The ones you removed do not
+  come back.
 
-## Czym są hooki fabryki?
-Skrypty uruchamiane przez Claude Code przy zdarzeniach, niezależnie od decyzji modelu:
-- `guard_bash` — groźne polecenia powłoki;
-- `guard_paths` — pliki z sekretami;
-- `cleanroom_guard` — izolacja informacji między agentami;
-- `model_guard` — delegacja z modelem spoza listy `approved_models` (działa tylko, gdy lista jest ustawiona);
-- `tdd_guard` — kod dopiero po czerwonym teście;
-- `quality_gate` — z `.claude/quality-gate.json` tura i podagent nie kończą się z czerwonymi testami (blokada
-  testów: `test_lock.py`);
-- `scan_secrets` — sekrety w zapisanych plikach;
-- `skill_hint` — podpowiedzi skilli;
-- `context_guard` — ostrzeżenie o długim kontekście;
-- `log_usage` — zapis zużycia;
-- `update_notice` — informacja o nowym wydaniu.
+## How do I add the company's settings?
+The standards and default settings of the whole organisation live in one **company pack** in the company's own
+repository. You make it once, then install it in every project. The full guide, including generating it from the
+company's documents (e.g. Confluence) with the `org/standards_from_docs.py` script, which checks quotes without a model:
+`org/README.md` in the factory repository.
+1. **The skeleton.** In a clone of the factory repository (the output directory must be outside it):
+   ```
+   python3 org/new_org_pack.py <company> --out <directory> --title "Company name"
+   ```
+2. **Fill in the `TODO` fields** (`grep -rn TODO <directory>`; a description of every field: `README.md` in the pack):
+   - `pack.yaml` → `org_defaults.config`: agent operations blocked in the company (`autonomy.operations`, tightening
+     only), paths always for a human review (`autonomy.triage`), `tf work` limits (`work`), the cost profile,
+     languages;
+   - `pack.yaml` → `org_defaults.operations.tracker`: the tracker, issue key prefixes, the Jira field with criteria;
+   - rules checkable with a pattern (`analyzers/<company>-standards/rules.yaml`, with examples in `fixtures/`): they work
+     without a model in `tf analyze`; semgrep rules — `semgrep.yml`, used in the `/tf` loop's scan;
+   - the standards skill (`skills/<company>-standards/`): only findings that need judgement — first the scenarios
+     in `tests/skill_evals/`, then the content;
+   - `settings.json`: Claude Code permissions for the whole company.
+3. **Check** in the factory repository: `python3 tools/workspace.py check --packs pack-it,pack-<company> --pack-dir
+   <directory>`.
+4. **Publish** the directory as the company's git repository (with `vX.Y.Z` version tags).
+5. **Install it in a project:** `tf install --pack-dir <company repository address> --add pack-<company>`. `tf update`
+   then fetches new versions of the pack.
 
-Strażnicy blokują akcję także wtedy, gdy sam hook zawiedzie. Stan hooków: `python3 .tf/factory/hooks_status.py`.
+**A team** has its own pack above the company one: `python3 org/new_org_pack.py <company> --team <team> --out <directory>`
+(the team's standards, rules and issue prefixes; it only tightens the company's prohibitions). Installation in the
+team's project: `tf install --pack-dir <company repo> --pack-dir <team repo> --add pack-<company>-<team>`.
 
-## Dlaczego agent pyta o zgodę na polecenie?
-Uprawnienia są celowo wąskie: agent bez pytania uruchamia tylko polecenia z listy `allow` w ustawieniach. Polecenie,
-którego używasz często, dopisz do `allow` w `.claude/settings.local.json`. Zasady i tryby uprawnień opisuje skill
-`core-agent-security`.
+`tf config show` shows the company's values (the source "organisation", for a team "team"). A project overrides them in
+`.tf/config/config.yaml` and `.tf/config/operations.json`; it will not loosen a prohibition from the company's autonomy
+policy. The pack contains no addresses or tokens (Jira, Confluence): Jira takes the address and credentials from the
+variables `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN` (or `JIRA_TOKEN`), and live access to Confluence is a
+connection (an MCP server) in Claude Code.
 
-## Agent podał nieprawdziwy fakt — co robić?
-Poproś o źródło. Zasada fabryki to fakt z pliku, polecenia albo źródła z datą, a czego nie sprawdzono — ze
-znacznikiem [założenie]. Powtarzającą się pomyłkę zapisz w `docs/project/lessons.md`, żeby następne sesje jej
-unikały.
+## How do I set my way of working with the agent?
+`tf style autonomous` (the agent goes by itself, a report at the end), `tf style step-by-step` (you approve the plan and
+every slice of work) or `tf style conversation` (the task ends at the plan, and Claude Code starts in plan mode, so
+an ordinary conversation also does not change files without your consent). The style applies in
+all your projects; only in the current one: `--here`. It does not go into the repository and does not change other
+people's work. The company, the team or the project sets the limits: a style will not turn on a mode they do not allow
+(`task.allowed_modes`), nor loosen the autonomy policy's prohibitions. Details: `.tf/factory/GUIDE.md`, the section
+"What can I set".
 
-## Co to jest `.tf/` i `tf analyze`?
-`tf init` zakłada w projekcie katalog `.tf/` — jedno miejsce na wyniki pracy fabryki: `reports/` (raporty analiz),
-`register/` (rejestr pracy), `cache/`, `logs/`, `runs/`, `backup/`; każdy katalog ma `README.md`, co w nim jest i czy
-można go usunąć. W instalacji prywatnej cały `.tf/` jest w `.git/info/exclude`, w zespołowej do `.gitignore` trafiają
-tylko katalogi odtwarzalne. `tf analyze` uruchamia moduły przeglądu (`tf analyze --list`) i dla każdego pisze
-`.tf/reports/<moduł>.md` z listą działań do odhaczania; ponowna analiza zachowuje odhaczenia i notatki, oznacza
-to, co wygląda na naprawione, i dopisuje nowe ustalenia na końcu. Na razie działają tylko skrypty (piętro 0), bez
-modelu i bez kosztu; moduły dokładają nakładki albo własny katalog `.tf/analyzers/`.
+## Which model, and how much does it cost?
+- Roles have tiers: `fast` (Haiku), `std` (Sonnet), `deep` (Opus).
+- The team profile switches them with one command: `python3 .tf/factory/profile.py economy|balanced|quality`.
+- You measure the cost with `python3 .tf/factory/cost_report.py --days 7`, and the status line shows the cost of the
+  current session.
 
-## Jak odinstalować fabrykę?
-Polecenia odinstalowania nie ma. Instalator zapisuje w `.claude/factory-manifest.json` listę wszystkich swoich
-plików (`files`). Usuń:
-- te pliki;
-- blok między `<!-- team-factory:begin -->` a `<!-- team-factory:end -->` w `CLAUDE.local.md` albo `CLAUDE.md`;
-- blok `# team-factory:begin` … `# team-factory:end` w `.git/info/exclude` albo `.gitignore`;
-- wpisy fabryki w `.claude/settings.local.json` albo `.claude/settings.json`;
-- sam manifest.
+Features that are paid by nature (skill evaluations on a model, agent teams) you run consciously.
 
-Kopie z aktualizacji leżą w `.tf/backup/`.
+## What are the factory's hooks?
+Scripts that Claude Code runs at events, independently of the model's decisions:
+- `guard_bash` — dangerous shell commands;
+- `guard_paths` — files with secrets;
+- `cleanroom_guard` — information isolation between agents;
+- `tdd_guard` — code only after a red test;
+- `quality_gate` — with `.claude/quality-gate.json` a turn and a subagent do not finish with red tests (the test
+  lock: `test_lock.py`);
+- `scan_secrets` — secrets in saved files;
+- `skill_hint` — skill hints (without frameworks and languages outside the project's stack);
+- `context_guard` — a warning about a long context;
+- `log_usage` — recording usage;
+- `update_notice` — information about a new release.
 
-## Gdzie czytać dalej?
-- `.claude/catalog.md` — persony, role i skille tej instalacji.
-- `.tf/factory/packs/<id>/GUIDE.md` — przewodniki trybów (np. `mode-talos`, `mode-team`).
-- `.tf/factory/PUBLIC_API.md` — co jest publicznym API fabryki i jak są numerowane wersje.
-- `.tf/factory/CHANGELOG.md` — co zmieniło się w kolejnych wersjach.
+The guards block an action also when the hook itself fails. The state of the hooks: `python3 .tf/factory/hooks_status.py`.
+
+## Why does the agent ask for consent to a command?
+The permissions are deliberately narrow: without asking, the agent runs only the commands from the `allow` list in the
+settings. A command you use often you add to `allow` in `.claude/settings.local.json`. The rules and the permission
+modes are described by the `core-agent-security` skill.
+
+## The agent gave a false fact — what do I do?
+Ask for the source. The factory's rule is a fact from a file, a command or a dated source, and what was not checked —
+with the [assumption] marker. A recurring mistake you record in `docs/project/lessons.md`, so that the next sessions
+avoid it.
+
+## What are `.tf/` and `tf analyze`?
+`tf init` creates the `.tf/` directory in the project — one place for the factory's work results: `reports/` (analysis
+reports), `register/` (the work register), `cache/`, `logs/`, `runs/`, `backup/`; every directory has a `README.md` on
+what is in it and whether it can be deleted. In a private installation the whole `.tf/` is in `.git/info/exclude`, in a
+team one only the reproducible directories go to `.gitignore`. `tf analyze` runs the review modules (`tf analyze --list`)
+and for each one writes `.tf/reports/<module>.md` with a list of actions to tick off; a repeated analysis keeps the ticks
+and notes, marks what looks fixed and adds new findings at the end. For now only scripts work (floor 0), without a
+model and without cost; modules are added by packs or by your own `.tf/analyzers/` directory.
+
+## How do I uninstall the factory?
+`tf uninstall --dry-run` shows what will be removed and changed. `tf uninstall --yes` removes:
+- the factory's files recorded in the manifest (the engine, skills, hooks, tests) and the generated files (agents, the catalog);
+- the factory's block in `CLAUDE.local.md` or `CLAUDE.md` and in `.git/info/exclude` or `.gitignore`;
+- the factory's entries in the Claude Code settings (your permissions and hooks stay) and the permission mode set by a style.
+
+Your files stay: your own skills, `.tf/config/`, the work results in `.tf/`. `--force` removes them too. The command
+never touches `docs/project/` or the project's code. Before a change it saves a copy in `~/.tf/backups/<project>-<date>.zip`
+(restoring: `unzip -o <file> -d <project>`).
+
+## Where to read next?
+- `.claude/catalog.md` — the personas, roles and skills of this installation.
+- `.tf/factory/packs/<id>/GUIDE.md` — the modes' guides (e.g. `mode-pdi`, `mode-team`).
+- `.tf/factory/PUBLIC_API.md` — what is the factory's public API and how versions are numbered.
+- `.tf/factory/CHANGELOG.md` — what changed in successive versions.

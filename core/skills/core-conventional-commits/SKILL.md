@@ -1,101 +1,101 @@
 ---
 name: core-conventional-commits
-description: Użyj przy commit message i tytule PR (Conventional Commits) — typy, poprawa złego typu w commicie, zakres, BREAKING CHANGE, bump SemVer, changelog.
+description: Use for a commit message and a PR title (Conventional Commits) — types, fixing a wrong type, BREAKING CHANGE, SemVer.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy pisaniu, przeglądzie i parsowaniu commit message oraz tytułów PR wg Conventional Commits 1.0.0 — typy, zakres, !, BREAKING CHANGE, stopki, revert, bump SemVer, changelog z historii (nx release). Nie do strategii gałęzi i PR (core-git-workflow) ani treści CHANGELOG pisanego ręcznie (skill dokumentacji, pack-docs)."
-  slowa: "komunikat commita, commit message, wiadomość commita, opis commita, tytuł PR, BREAKING CHANGE, feat, fix, chore, commitlint, narzędzie do wydań, policzyło wersję, wersja z commitów, usunąłem pole z DTO, zmiana łamiąca w commicie, semantic-release, release-please"
+  review: "2027-10-17"
+  catalog: "Use when writing, reviewing and parsing commit messages and PR titles per Conventional Commits 1.0.0 — types, scope, !, BREAKING CHANGE, footers, revert, the SemVer bump, a changelog from history (nx release). Not for the branch and PR strategy (core-git-workflow) or the content of a hand-written CHANGELOG (the documentation skill, pack-docs)."
+  keywords: "komunikat commita, commit message, wiadomość commita, opis commita, tytuł PR, BREAKING CHANGE, feat, fix, chore, commitlint, narzędzie do wydań, policzyło wersję, wersja z commitów, usunąłem pole z DTO, zmiana łamiąca w commicie, semantic-release, release-please, PR title, commit type, wrong commit type, breaking change in a commit, version from commits, removed a field from a DTO, zrób commit, zacommituj zmiany, make a commit, commit these changes"
 ---
 
 # Conventional Commits 1.0.0
 
 ## Format
 ```
-<typ>[(<zakres>)][!]: <opis>
+<type>[(<scope>)][!]: <description>
 
-[treść — dlaczego, nie co; akapity oddzielone pustą linią]
+[body — why, not what; paragraphs separated by a blank line]
 
-[stopki: Token: wartość  lub  Token #wartość]
+[footers: Token: value  or  Token #value]
 ```
-- **Typ** obowiązkowy; **zakres** opcjonalny, w nawiasie — część kodu.
-- **Opis** zaraz po `: `; w trybie rozkazującym, **po angielsku**, bez kropki, ≤ 72 znaki.
-- **Treść** po jednej pustej linii; **stopki** po kolejnej pustej linii. Tokeny stopek z łącznikami zamiast spacji
-  (`Reviewed-by`, `Refs`); wyjątek: `BREAKING CHANGE`.
-- Wielkość liter nie ma znaczenia dla narzędzi, **z wyjątkiem** `BREAKING CHANGE` (zawsze wielkimi; `BREAKING-CHANGE`
-  to synonim). W repo trzymaj jedną konwencję (u nas: typ małymi literami).
+- **Type** required; **scope** optional, in parentheses — a part of the code.
+- **Description** right after `: `; in the imperative mood, **in the repository's commit language** (from `git log`; English in a new repo), no full stop, ≤ 72 characters.
+- **Body** after one blank line; **footers** after another blank line. Footer tokens with hyphens instead of spaces
+  (`Reviewed-by`, `Refs`); the exception: `BREAKING CHANGE`.
+- Letter case does not matter to tools, **except** `BREAKING CHANGE` (always upper case; `BREAKING-CHANGE`
+  is a synonym). Keep one convention in the repo (ours: the type in lower case).
 
-## Typy
-| typ | kiedy | SemVer |
+## Types
+| type | when | SemVer |
 |---|---|---|
-| `feat` | nowa funkcjonalność dla użytkownika (MUST) | MINOR |
-| `fix` | poprawka błędu (MUST) | PATCH |
-| `perf` | poprawa wydajności bez zmiany zachowania | PATCH* |
-| `refactor` | zmiana struktury bez zmiany zachowania | — |
-| `test` | tylko testy | — |
-| `docs` | tylko dokumentacja | — |
-| `style` | formatowanie bez wpływu na znaczenie | — |
-| `build` | system budowania, zależności | — |
-| `ci` | konfiguracja CI | — |
-| `chore` | pozostałe prace utrzymaniowe | — |
-| `revert` | wycofanie commita(ów) | zależnie od wycofanego |
+| `feat` | a new feature for the user (MUST) | MINOR |
+| `fix` | a bug fix (MUST) | PATCH |
+| `perf` | a performance improvement without a change of behaviour | PATCH* |
+| `refactor` | a change of structure without a change of behaviour | — |
+| `test` | only tests | — |
+| `docs` | only documentation | — |
+| `style` | formatting with no effect on meaning | — |
+| `build` | the build system, dependencies | — |
+| `ci` | CI configuration | — |
+| `chore` | other maintenance work | — |
+| `revert` | reverting commit(s) | depends on the reverted one |
 
-\* zależnie od konfiguracji narzędzia do wydań. Spec wymaga tylko `feat` i `fix`; pozostałe typy to konwencja
-(`@commitlint/config-conventional`) — lista jest otwarta, trzymaj się przyjętej w repo.
+\* depending on the configuration of the release tool. The spec requires only `feat` and `fix`; the other types are a convention
+(`@commitlint/config-conventional`) — the list is open, stick to the one adopted in the repo.
 
-## Zakres
-- Zakres spójny z architekturą: w monorepo Nx — **nazwa projektu Nx** (lub wartość tagu `scope:`), poza Nx — moduł
-  lub kontekst DDD. Nigdy nazwisko autora.
-- Przed pierwszym commitem w cudzym repo sprawdź `git log` — jeśli repo nadało zakresowi inne znaczenie (np. klucz
-  zadania), trzymaj się go.
+## Scope
+- A scope consistent with the architecture: in an Nx monorepo — **the Nx project name** (or the value of the `scope:` tag), outside Nx — a module
+  or a DDD context. Never the author's name.
+- Before the first commit in someone else's repo check `git log` — if the repo gave the scope a different meaning (e.g. a task
+  key), stick to it.
 
 ## Breaking changes
-- `!` przed dwukropkiem: `feat(api)!: remove v1 endpoints` — stopka wtedy opcjonalna, a opis mówi o zmianie.
-- albo stopka: `BREAKING CHANGE: <co i jak migrować>`.
-- Każdy breaking change oznacza **MAJOR**, niezależnie od typu. We wczesnej fazie projektu też oznaczaj (FAQ spec).
+- `!` before the colon: `feat(api)!: remove v1 endpoints` — the footer is then optional, and the description describes the change.
+- or the footer: `BREAKING CHANGE: <co i jak migrować>`.
+- Every breaking change means **MAJOR**, regardless of the type. Mark it in the early phase of a project too (spec FAQ).
 
 ## SemVer, changelog, nx release
-| Commity od ostatniego wydania | Bump |
+| Commits since the last release | Bump |
 |---|---|
-| tylko `fix` (i ew. `perf`) | PATCH |
-| co najmniej jeden `feat` | MINOR |
-| `!` lub `BREAKING CHANGE` w dowolnym | MAJOR |
+| only `fix` (and possibly `perf`) | PATCH |
+| at least one `feat` | MINOR |
+| `!` or `BREAKING CHANGE` in any | MAJOR |
 
-`nx release` (pack-it: tool-nx) wylicza wersję i changelog z historii (także per projekt, po zakresie/ścieżkach); podobnie
-semantic-release, release-please. Walidacja: commitlint w hooku `commit-msg`. Dlatego format to **kontrakt**, nie estetyka.
-Numer liczy `python3 .claude/skills/core-semver/scripts/semver.py next`. Zasady SemVer (faza 0.y.z, wersje
-przedpremierowe, publiczne API, wycofywanie) opisuje core-semver.
+`nx release` computes the version and the changelog from history (also per project, by scope/paths); similarly
+semantic-release, release-please. Validation: commitlint in the `commit-msg` hook. That is why the format is a **contract**, not aesthetics.
+The number is computed by `python3 .claude/skills/core-semver/scripts/semver.py next`. The SemVer rules (the 0.y.z phase, pre-release
+versions, the public API, deprecation) are described in core-semver.
 
-## Zasady praktyczne
-- Jeden commit = jedna logiczna zmiana; pasują dwa typy → dwa commity.
-- Referencje do zadań w stopce (`Refs: PROJ-123`), nie w opisie.
+## Practical rules
+- One commit = one logical change; two types fit → two commits.
+- References to tasks in a footer (`Refs: PROJ-123`), not in the description.
 
-## Ślad zmiany w stopkach (`Change:`, `Flag:`)
-Gdy praca należy do zmiany albo cięcia z kluczem (`CHG-12`, `TSK-57`, klucz Jiry), każdy commit ma stopkę
-`Change: <klucz>` — po niej narzędzia do śledzenia wydań łączą commit z cięciem, a cięcie ze zmianą. Commit cięcia
-za flagą dostaje też `Flag: <klucz-flagi>`:
+## The trace of a change in footers (`Change:`, `Flag:`)
+When the work belongs to a change or a slice with a key (`CHG-12`, `TSK-57`, a Jira key), every commit has the footer
+`Change: <klucz>` — through it release tracking tools link the commit to the slice, and the slice to the change. A commit of a slice
+behind a flag also gets `Flag: <klucz-flagi>`:
 ```
 feat(payments): retry failed payment
 
 Change: TSK-57
 Flag: payment-retry
 ```
-- Klucz w kształcie `[A-Z][A-Z0-9]+-[0-9]+`; kilka kluczy po przecinku (`Change: TSK-57, TSK-58`). Klucz bierzesz
-  z planu zmiany albo od człowieka, nie wymyślasz.
-- Hook `commit-msg` sprawdza nagłówek, stopki i — na gałęzi z kluczem w nazwie (`story/tsk-57-…`) — wymaga
-  `Change:` z tym kluczem. Instalacja na żądanie człowieka (katalog hooków gita jest chroniony):
-  `python3 .claude/skills/core-conventional-commits/scripts/commit_msg.py install`; cudzego hooka nie nadpisuje,
-  tylko podaje linię do dopisania. Ręcznie: `commit_msg.py check <plik-wiadomości>`.
-- Przy squash merge tytuł PR = finalny commit, więc tytuł PR też w tym formacie; przy squashu maintainer może
-  uporządkować komunikaty kontrybutorów.
-- Revert: spec go nie definiuje — konwencja projektu (u nas typ `revert` + `Refs: <sha>`).
+- A key shaped like `[A-Z][A-Z0-9]+-[0-9]+`; several keys separated by commas (`Change: TSK-57, TSK-58`). You take the key
+  from the change plan or from the human, you do not make it up.
+- The `commit-msg` hook checks the header, the footers and — on a branch with a key in its name (`story/tsk-57-…`) — requires
+  `Change:` with that key. Installation at the human's request (the git hooks directory is protected):
+  `python3 .claude/skills/core-conventional-commits/scripts/commit_msg.py install`; it does not overwrite someone else's hook,
+  it only gives the line to add. By hand: `commit_msg.py check <plik-wiadomości>`.
+- With a squash merge the PR title = the final commit, so the PR title is in this format too; on a squash the maintainer can
+  tidy up the contributors' messages.
+- Revert: the spec does not define it — a project convention (ours: the `revert` type + `Refs: <sha>`).
 
-## Poprawianie złego typu
-Spec sugeruje `git rebase -i` przed mergem — **tu niedostępne** (brak trybu interaktywnego). Zamiast tego:
-- ostatni, **niewypchnięty** commit i użytkownik wyraźnie prosi → `git commit --amend`;
-- głębiej w historii lub już opublikowane → nie przepisuj historii; zgłoś użytkownikowi (commit korygujący albo ręczny rebase);
-- domyślnie: kolejna zmiana w nowym, poprawnie sklasyfikowanym commicie.
+## Fixing a wrong type
+The spec suggests `git rebase -i` before the merge — **not available here** (no interactive mode). Instead:
+- the last, **unpushed** commit and the user explicitly asks → `git commit --amend`;
+- deeper in history or already published → do not rewrite history; tell the user (a corrective commit or a manual rebase);
+- by default: the next change in a new, correctly classified commit.
 
-## Przykłady
+## Examples
 ```
 feat(booking): block resource for selected time slot
 fix(pricing): round partner discount to minor units
@@ -119,15 +119,15 @@ revert: let us never again speak of the noodle incident
 Refs: 676104e, a215868
 ```
 
-## Indeks references
-- Czytaj `references/specyfikacja-i-faq.md`, gdy potrzebujesz dosłownego brzmienia 16 reguł (MUST/SHOULD/MAY), FAQ
-  specyfikacji albo parsowania commitów (regex, polecenia `git log`).
+## References index
+- Read `references/specification-and-faq.md` when you need the literal wording of the 16 rules (MUST/SHOULD/MAY), the
+  specification's FAQ or commit parsing (regex, `git log` commands).
 
-## Checklista
-- [ ] Typ dobrany wg tabeli; jeden commit = jedna zmiana.
-- [ ] Zakres = nazwa projektu Nx / modułu (albo konwencja repo z `git log`).
-- [ ] Opis po angielsku, tryb rozkazujący, bez kropki, ≤ 72 znaki.
-- [ ] Breaking change oznaczony `!` lub `BREAKING CHANGE:` z instrukcją migracji.
-- [ ] Referencje do zadań w stopkach.
+## Checklist
+- [ ] The type chosen from the table; one commit = one change.
+- [ ] Scope = the Nx project / module name (or the repo's convention from `git log`).
+- [ ] The description in the repo's commit language, imperative mood, no full stop, ≤ 72 characters.
+- [ ] A breaking change marked with `!` or `BREAKING CHANGE:` with migration instructions.
+- [ ] References to tasks in footers.
 
-Źródło: conventionalcommits.org/en/v1.0.0 (CC BY 3.0) — treść opisana własnymi słowami, cytaty reguł w references.
+Source: conventionalcommits.org/en/v1.0.0 (CC BY 3.0) — content described in our own words, rule quotes in references.

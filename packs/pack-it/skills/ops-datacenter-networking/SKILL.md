@@ -1,91 +1,91 @@
 ---
 name: ops-datacenter-networking
-description: Użyj przy sieci centrum danych — fabryka leaf-spine, BGP, VXLAN i EVPN, automatyzacja i zmiany w sieci.
+description: Use for data center networking — leaf-spine fabric, BGP, VXLAN and EVPN, network automation and changes.
 metadata:
-  przeglad: "2027-04-17"
-  widocznosc: nazwa
-  katalog: "Użyj przy projekcie i zmianach sieci centrum danych lub kampusu — fabryka leaf-spine (Clos) i oversubscription, underlay (eBGP, OSPF, IS-IS), overlay VXLAN z EVPN, BGP dla operatorów (wybór trasy, communities, filtry, limity prefiksów, RPKI), ECMP i domeny awarii, automatyzacja (źródło prawdy, generowanie konfiguracji, CI, okna zmian), zapory na brzegu, telemetria, planowanie pojemności, metoda diagnozy. Wynik to projekt fabryki i plan zmiany. Nie do diagnozy hosta Linux (ops-linux-networking), polityki segmentacji i zaufania (sec-zero-trust-identity) ani sieci w chmurze jako kodu (ops-iac-terraform)."
-  slowa: "leaf spine, fabryka sieciowa, centrum danych, datacenter, bgp, vxlan, evpn, underlay, overlay, ecmp, oversubscription, przełączniki, switch, router, netbox, automatyzacja sieci, okno zmian, rpki, prefix list, telemetria sieciowa, pojemność łączy, firewall brzegowy, sieć kampusowa"
+  review: "2027-04-17"
+  visibility: name
+  catalog: "Use for the design of and changes to a data center or campus network — the leaf-spine (Clos) fabric and oversubscription, underlay (eBGP, OSPF, IS-IS), VXLAN overlay with EVPN, BGP for operators (route selection, communities, filters, prefix limits, RPKI), ECMP and failure domains, automation (source of truth, configuration generation, CI, change windows), edge firewalls, telemetry, capacity planning, a diagnosis method. The result is a fabric design and a change plan. Not for diagnosing a Linux host (ops-linux-networking), segmentation and trust policy (sec-zero-trust-identity) or cloud networking as code."
+  keywords: "leaf spine, fabryka sieciowa, centrum danych, datacenter, bgp, vxlan, evpn, underlay, overlay, ecmp, oversubscription, przełączniki, switch, router, netbox, automatyzacja sieci, okno zmian, rpki, prefix list, telemetria sieciowa, pojemność łączy, firewall brzegowy, sieć kampusowa, network fabric, data center, switches, network automation, change window, network telemetry, link capacity, edge firewall, campus network"
 ---
 
-# Sieć centrum danych: projekt fabryki i plan zmiany
+# Data center networking: the fabric design and the change plan
 
-Wynik: **projekt fabryki** (topologia, adresacja, routing, overlay, domeny awarii) i **plan zmiany** (kroki, weryfikacja,
-wycofanie). Zmiany na prawdziwych urządzeniach agent tylko proponuje: diff konfiguracji, dry-run i okno zmian,
-wdrożenie po zgodzie człowieka. Diagnoza pojedynczego hosta (ss, dig, curl, TLS): ops-linux-networking.
-Polityka segmentacji (kto z kim): sec-zero-trust-identity. Sieć chmurowa jako kod: ops-iac-terraform.
+Result: **a fabric design** (topology, addressing, routing, overlay, failure domains) and **a change plan** (steps, verification,
+rollback). The agent only proposes changes on real devices: a configuration diff, a dry-run and a change window,
+deployment after a human's consent. Diagnosing a single host (ss, dig, curl, TLS): ops-linux-networking.
+Segmentation policy (who talks to whom): sec-zero-trust-identity.
 
-## Procedura projektu
-1. **Wymagania**: liczba szaf i serwerów, prędkość portów (np. 2x25G), ruch wschód-zachód vs północ-południe,
-   docelowa skala za 3 lata, cele dostępności (ops-sre-incidents), wymagania L2 (migracja VM, legacy).
-2. **Topologia leaf-spine (Clos)**: każdy leaf łączy się z każdym spine; serwery tylko do leaf. Liczysz
-   **oversubscription** = suma pasma portów serwerowych leafa ÷ suma pasma uplinków [przykład: 48x25G w dół,
-   6x100G w górę → 1200:600 = 2:1]. Wartość docelową dobierasz do obciążenia (storage i AI: 1:1; ogólne: 2:1–3:1
-   [założenie]). Liczba spine'ów = liczba uplinków leafa; skalowanie: dodanie spine'a lub pionu (pod/super-spine).
-3. **Underlay**: routed L3 do szafy, bez rozciągania L2 między leafami. Domyślnie **eBGP** z unikalnym ASN
-   na leaf (lub na parę) i wspólnym ASN spine'ów, zgodnie z RFC 7938 (Informational, 2016) — ma prostszy model
-   niż IGP+iBGP i dobre filtrowanie. Alternatywa: OSPF lub IS-IS (mniejsze skale, zespół zna IGP), wtedy BGP
-   tylko dla overlay. Sesje na adresach łączy (point-to-point /31 lub unnumbered), BFD dla szybkiego wykrycia awarii.
-4. **Overlay**: VXLAN (RFC 7348, Informational) jako enkapsulacja, **EVPN** (RFC 7432, rozszerzenie dla overlay:
-   RFC 8365) jako płaszczyzna kontrolna zamiast flood-and-learn. Decyzje: model L2VNI/L3VNI, anycast gateway,
-   symmetric IRB, multihoming (ESI/EVPN-LAG zamiast MLAG, jeśli sprzęt wspiera), obsługa BUM, MTU
-   (+50 B nagłówków VXLAN [niezweryfikowane] — jumbo na całej ścieżce). Numerów VNI, RD i RT nie wymyślasz ręcznie:
-   schemat z źródła prawdy.
-5. **ECMP i domeny awarii**: kilka równorzędnych ścieżek, hashowanie po 5-krotce; nierówny hash i elephant flows to
-   typowe przyczyny nierównomiernych uplinków. Domena awarii = co traci ruch przy awarii leafa, spine'a, pary
-   leafów, pionu, zasilania, zmiany konfiguracji. Zasada: utrata jednego spine'a nie przekracza budżetu pasma
-   (policz N-1). Limit maksymalnej liczby ścieżek i prefiksów sprawdź w specyfikacji sprzętu.
-6. **Brzeg i zapory**: łącze do internetu/WAN na osobnych leafach brzegowych (border), zapora stanowa między strefami,
-   ruch wschód-zachód w overlay filtrowany politykami zdefiniowanymi w sec-zero-trust-identity; tu tylko mechanika
-   (VRF, route leaking z filtrami, service chaining).
-7. **Pojemność i telemetria**: wykorzystanie uplinków (p95 i szczyt), drop i błędy portów, liczba tras/MAC w tablicach
-   vs limit ASIC, tempo wzrostu → termin rozbudowy (alert przy 60–70% [przykład]). Streaming telemetry
-   (gNMI/OpenConfig, push co sekundy-dziesiątki sekund) zamiast SNMP polling tam, gdzie sprzęt pozwala;
-   flow logs (IPFIX/sFlow) do analizy ruchu; stos metryk: ops-observability.
+## Design procedure
+1. **Requirements**: the number of racks and servers, port speed (e.g. 2x25G), east-west vs north-south traffic,
+   the target scale in 3 years, availability targets (ops-sre-incidents), L2 requirements (VM migration, legacy).
+2. **Leaf-spine (Clos) topology**: every leaf connects to every spine; servers only to leaves. You compute
+   **oversubscription** = the sum of the leaf's server port bandwidth ÷ the sum of uplink bandwidth [example: 48x25G down,
+   6x100G up → 1200:600 = 2:1]. You choose the target value for the workload (storage and AI: 1:1; general: 2:1–3:1
+   [assumption]). The number of spines = the number of leaf uplinks; scaling: adding a spine or a tier (pod/super-spine).
+3. **Underlay**: routed L3 to the rack, no stretching of L2 between leaves. By default **eBGP** with a unique ASN
+   per leaf (or per pair) and a shared spine ASN, per RFC 7938 (Informational, 2016) — it has a simpler model
+   than IGP+iBGP and good filtering. Alternative: OSPF or IS-IS (smaller scales, the team knows IGP), then BGP
+   only for the overlay. Sessions on link addresses (point-to-point /31 or unnumbered), BFD for fast failure detection.
+4. **Overlay**: VXLAN (RFC 7348, Informational) as the encapsulation, **EVPN** (RFC 7432, the extension for overlays:
+   RFC 8365) as the control plane instead of flood-and-learn. Decisions: the L2VNI/L3VNI model, anycast gateway,
+   symmetric IRB, multihoming (ESI/EVPN-LAG instead of MLAG, if the hardware supports it), BUM handling, MTU
+   (+50 B of VXLAN headers [unverified] — jumbo along the whole path). You do not invent VNI, RD and RT numbers by hand:
+   the scheme comes from the source of truth.
+5. **ECMP and failure domains**: several equal paths, hashing on the 5-tuple; uneven hashing and elephant flows are
+   typical causes of unbalanced uplinks. Failure domain = what loses traffic on a failure of a leaf, a spine, a leaf
+   pair, a tier, power, a configuration change. Principle: losing one spine does not exceed the bandwidth budget
+   (compute N-1). Check the maximum number of paths and prefixes in the hardware specification.
+6. **Edge and firewalls**: the internet/WAN link on separate border leaves, a stateful firewall between zones,
+   east-west traffic in the overlay filtered by policies defined in sec-zero-trust-identity; here only the mechanics
+   (VRF, route leaking with filters, service chaining).
+7. **Capacity and telemetry**: uplink utilization (p95 and peak), port drops and errors, the number of routes/MACs in the tables
+   vs the ASIC limit, the growth rate → the expansion date (alert at 60–70% [example]). Streaming telemetry
+   (gNMI/OpenConfig, push every few seconds to tens of seconds) instead of SNMP polling where the hardware allows;
+   flow logs (IPFIX/sFlow) for traffic analysis; the metrics stack: ops-observability.
 
-## BGP dla operatorów — minimum
-- **Wybór trasy** (RFC 4271, w skrócie): najwyższy weight/local-pref → najkrótszy AS-path → origin → najniższe MED →
-   eBGP przed iBGP → najniższy koszt IGP → router-id. Kolejność dokładną sprawdź w dokumentacji dostawcy.
-- **Communities** oznaczają pochodzenie i intencję (np. „z DC”, „nie eksportuj”); ich znaczenie jest w źródle prawdy.
-- **Filtry zawsze**: import i eksport przez prefix-list/policy; bez polityki sesja eBGP nic nie wymienia (RFC 8212
-  [niezweryfikowane]). **Limit prefiksów** (`maximum-prefix`) na każdej sesji z ostrzeżeniem i odcięciem.
-- **RPKI route origin validation** (RFC 6811): stany Valid / Invalid / NotFound; odrzucaj Invalid na sesjach
-  tranzytowych, ROA dla własnych prefiksów utrzymuj aktualne. Dotyczy brzegu internetowego, nie fabryki.
-- Zmiana polityki BGP na brzegu = wysokie ryzyko: najpierw porównanie tras przed/po (`show` + diff), potem okno zmian.
+## BGP for operators — the minimum
+- **Route selection** (RFC 4271, in short): highest weight/local-pref → shortest AS-path → origin → lowest MED →
+   eBGP before iBGP → lowest IGP cost → router-id. Check the exact order in the vendor's documentation.
+- **Communities** mark origin and intent (e.g. "from the DC", "do not export"); their meaning is in the source of truth.
+- **Filters always**: import and export through a prefix-list/policy; without a policy an eBGP session exchanges nothing (RFC 8212
+  [unverified]). **A prefix limit** (`maximum-prefix`) on every session with a warning and a cut-off.
+- **RPKI route origin validation** (RFC 6811): states Valid / Invalid / NotFound; reject Invalid on transit
+  sessions, keep the ROAs for your own prefixes up to date. This concerns the internet edge, not the fabric.
+- A change of BGP policy at the edge = high risk: first a before/after route comparison (`show` + diff), then a change window.
 
-## Automatyzacja i zmiany
-- **Źródło prawdy** (np. NetBox, wg dokumentacji NetBox Labs system do modelowania urządzeń, połączeń i IP):
-  intencja w danych, konfiguracja **generowana** z szablonów (Jinja, Ansible, Nornir), nie pisana ręcznie na urządzeniu.
-- **CI dla zmian sieciowych**: PR do repo → lint danych i szablonów → wygenerowana konfiguracja i diff → test
-  w emulacji/labie (Containerlab, Batfish do analizy konfiguracji [niezweryfikowane]) → przegląd → wdrożenie
-  falami (jeden leaf → para → szafa → reszta) z automatyczną weryfikacją stanu (sesje BGP, trasy, ping między VTEP).
-- **Okno zmian**: cel, zakres, kroki z czasem, kryteria „stop”, **wycofanie** przetestowane (rollback do ostatniej
-  konfiguracji lub `commit confirmed`), kontakt dyżurny, zamrożenie innych zmian. Zmiana awaryjna: ops-release-engineering.
-- Dryf: konfiguracja z urządzeń porównywana cyklicznie ze źródłem prawdy; ręczne zmiany to incydent procesowy.
+## Automation and changes
+- **Source of truth** (e.g. NetBox, per the NetBox Labs documentation a system for modelling devices, connections and IPs):
+  the intent in data, the configuration **generated** from templates (Jinja, Ansible, Nornir), not written by hand on the device.
+- **CI for network changes**: a PR to the repo → lint of data and templates → generated configuration and diff → a test
+  in emulation/a lab (Containerlab, Batfish for configuration analysis [unverified]) → review → deployment
+  in waves (one leaf → a pair → a rack → the rest) with automatic state verification (BGP sessions, routes, ping between VTEPs).
+- **Change window**: goal, scope, timed steps, "stop" criteria, a tested **rollback** (rollback to the last
+  configuration or `commit confirmed`), the on-call contact, a freeze of other changes. An emergency change: ops-release-engineering.
+- Drift: the configuration from the devices compared periodically with the source of truth; manual changes are a process incident.
 
-## Metoda diagnozy
-Od objawu do warstwy: fizyka (optyka, błędy CRC) → łącze/LAG → sesje underlay → trasy → overlay (VTEP, EVPN route
-type 2/3/5) → polityki/zapora → aplikacja. Porównaj z drugą, zdrową ścieżką; jedna zmiana naraz; oś czasu.
-Host na końcu ścieżki: ops-linux-networking.
+## Diagnosis method
+From the symptom to the layer: physical (optics, CRC errors) → link/LAG → underlay sessions → routes → overlay (VTEP, EVPN route
+type 2/3/5) → policies/firewall → application. Compare with a second, healthy path; one change at a time; a timeline.
+The host at the end of the path: ops-linux-networking.
 
-## Przykład
-**Wejście:** 40 szaf, 2x25G na serwer, 20 serwerów w szafie, ruch głównie wschód-zachód, cel 3:1.
-**Wynik** [przykład]: leaf na szafę (2 leafy w parze), w dół 20x2x25G = 1000G na szafę → po 500G na leaf; uplinki
-4x100G = 400G → oversubscription 1,25:1 — lepiej niż cel, więc 4 spine'y wystarczą; N-1 (3 spine'y) → 300G = 1,67:1,
-nadal ≤ 3:1. Underlay eBGP (RFC 7938), overlay EVPN-VXLAN, jumbo MTU 9216 [założenie]. Plan zmiany: wdrożenie
-falami, wycofanie przez `commit confirmed`, weryfikacja sesji BGP i tras po każdej fali.
+## Example
+**Input:** 40 racks, 2x25G per server, 20 servers per rack, mostly east-west traffic, a 3:1 target.
+**Result** [example]: a leaf per rack (2 leaves in a pair), downstream 20x2x25G = 1000G per rack → 500G per leaf; uplinks
+4x100G = 400G → oversubscription 1.25:1 — better than the target, so 4 spines are enough; N-1 (3 spines) → 300G = 1.67:1,
+still ≤ 3:1. Underlay eBGP (RFC 7938), overlay EVPN-VXLAN, jumbo MTU 9216 [assumption]. Change plan: deployment
+in waves, rollback through `commit confirmed`, verification of BGP sessions and routes after every wave.
 
-## Checklista
-- [ ] oversubscription policzona i zestawiona z celem, także w stanie N-1
-- [ ] underlay uzasadniony (eBGP wg RFC 7938 lub IGP), BFD, brak L2 między leafami
-- [ ] overlay: EVPN jako control plane, MTU, multihoming, numeracja ze źródła prawdy
-- [ ] BGP: filtry import/eksport, limity prefiksów, RPKI na brzegu
-- [ ] konfiguracja generowana ze źródła prawdy, diff i test w CI przed oknem zmian
-- [ ] plan zmiany z falami, kryteriami stop i przetestowanym wycofaniem; wdrożenie za zgodą człowieka
-- [ ] telemetria i alerty pojemności; granice z sąsiednimi skillami zachowane
+## Checklist
+- [ ] oversubscription computed and compared with the target, also in the N-1 state
+- [ ] underlay justified (eBGP per RFC 7938 or IGP), BFD, no L2 between leaves
+- [ ] overlay: EVPN as the control plane, MTU, multihoming, numbering from the source of truth
+- [ ] BGP: import/export filters, prefix limits, RPKI at the edge
+- [ ] configuration generated from the source of truth, diff and test in CI before the change window
+- [ ] a change plan with waves, stop criteria and a tested rollback; deployment with a human's consent
+- [ ] telemetry and capacity alerts; boundaries with neighbouring skills kept
 
-## Źródła
-- IETF RFC 7938, „Use of BGP for Routing in Large-Scale Data Centers”, Informational, sierpień 2016 (datatracker.ietf.org, dostęp 2026-10-17)
-- IETF RFC 7348 (VXLAN, Informational, 2014; trwają prace nad następcą draft-ietf-nvo3-rfc7348bis, stan 2025-12), RFC 7432 i RFC 8365 (EVPN), RFC 4271 (BGP-4), RFC 6811 (RPKI origin validation), RFC 8212 — numery i daty bez ponownego sprawdzenia treści [niezweryfikowane]
-- NetBox Labs — dokumentacja NetBox jako network source of truth (netboxlabs.com/docs, dostęp 2026-10-17)
-Opisane własnymi słowami.
+## Sources
+- IETF RFC 7938, "Use of BGP for Routing in Large-Scale Data Centers", Informational, August 2016 (datatracker.ietf.org, accessed 2026-10-17)
+- IETF RFC 7348 (VXLAN, Informational, 2014; work on a successor draft-ietf-nvo3-rfc7348bis ongoing, as of 2025-12), RFC 7432 and RFC 8365 (EVPN), RFC 4271 (BGP-4), RFC 6811 (RPKI origin validation), RFC 8212 — numbers and dates without rechecking the content [unverified]
+- NetBox Labs — NetBox documentation as a network source of truth (netboxlabs.com/docs, accessed 2026-10-17)
+Described in our own words.

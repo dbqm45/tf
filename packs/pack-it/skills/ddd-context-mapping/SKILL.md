@@ -1,99 +1,99 @@
 ---
 name: ddd-context-mapping
-description: Użyj przy relacjach i integracji kontekstów — mapa kontekstów (OHS, ACL, Conformist), treść zdarzeń integracyjnych i kopia danych u odbiorcy.
+description: Use for relations and integration between contexts — a context map (OHS, ACL, Conformist), integration events.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj przy projektowaniu relacji i integracji między kontekstami — mapa kontekstów (Open Host Service, ACL, Published Language, Conformist i in.), serwisy krawędziowe vs wewnętrzne, zdarzenia integracyjne (notification, event-carried state transfer). Nie do wyznaczania samych granic (ddd-strategic-analysis) ani modelu wewnątrz kontekstu (ddd-tactical-design)."
-  slowa: "relacja z zewnętrznym systemem, obcy model przecieka do naszego, zewnętrzny system z kiepskim modelem, relacja na mapie kontekstów, ten sam dostawca w kilku systemach, różne ID w CRM i ERP, tożsamość między kontekstami, mapowanie kluczy, każdy dział liczy metrykę inaczej, identyfikator pojęcia"
+  review: "2027-10-09"
+  catalog: "Use when designing relations and integration between contexts — a context map (Open Host Service, ACL, Published Language, Conformist and others), edge vs internal services, integration events (notification, event-carried state transfer). Not for drawing the boundaries themselves (ddd-strategic-analysis) or the model inside a context (ddd-tactical-design)."
+  keywords: "relacja z zewnętrznym systemem, obcy model przecieka do naszego, zewnętrzny system z kiepskim modelem, relacja na mapie kontekstów, ten sam dostawca w kilku systemach, różne ID w CRM i ERP, tożsamość między kontekstami, mapowanie kluczy, każdy dział liczy metrykę inaczej, identyfikator pojęcia, relation with an external system, a foreign model leaks into ours, an external system with a poor model, a relation on the context map, the same supplier in several systems, different IDs in CRM and ERP, identity between contexts, key mapping, every department computes a metric differently, concept identifier, anti-corruption layer, ACL wobec biblioteki, warstwa antykorupcyjna, izolacja zależności, biblioteka npm za adapterem, test izolacji, ACL around a library, dependency isolation, library behind an adapter"
 ---
 
-# Mapa kontekstów i integracja
+# Context map and integration
 
-Mapa kontekstów to jeden z najważniejszych artefaktów: pokazuje, kto od kogo zależy i jak modele się tłumaczą.
-Rób kilka małych map pod konkretne pytania zamiast jednej gigantycznej.
+The context map is one of the most important artifacts: it shows who depends on whom and how the models translate.
+Make several small maps for specific questions instead of one gigantic one.
 
-## Relacje zespołów
-- **Upstream / downstream** — zmiany u dostawcy (upstream) wpływają na odbiorcę (downstream), odwrotnie nie.
-- **Wzajemna zależność** — oba zespoły muszą dowozić razem.
-- **Niezależność** — zmiany jednego nie wpływają na drugi.
+## Team relations
+- **Upstream / downstream** — changes at the supplier (upstream) affect the consumer (downstream), not the other way round.
+- **Mutual dependency** — both teams have to deliver together.
+- **Independence** — the changes of one do not affect the other.
 
-## Wzorce — kiedy który
-| Wzorzec | Kiedy wybrać | Koszt / ryzyko |
+## Patterns — when to use which
+| Pattern | When to choose it | Cost / risk |
 |---|---|---|
-| **Open Host Service (OHS)** | upstream ma wielu odbiorców; zamiast integracji szytych na miarę udostępnia jeden stabilny, udokumentowany protokół (API, zdarzenia) | trzeba utrzymywać kontrakt i wersjonowanie; kontrakt **nie może** być wewnętrznym modelem wystawionym na zewnątrz |
-| **Published Language** | wspólny, dobrze opisany format wymiany (często razem z OHS; np. standardy branżowe, schematy zdarzeń) | zmiany języka wymagają uzgodnień |
-| **Anti-Corruption Layer (ACL)** | downstream chroni swój model przed obcym (legacy, zewnętrzny dostawca, subdomena generic) | warstwa tłumaczeń do utrzymania; opłaca się dla core domain |
-| **Conformist** | downstream przyjmuje model upstream wprost, bo nie ma wpływu, a model jest „wystarczająco dobry” | tracisz własny język; nie dla core domain |
-| **Customer / Supplier** | upstream uwzględnia potrzeby downstream w planowaniu; wynegocjowane zobowiązania | wymaga dojrzałej współpracy i budżetu po stronie dostawcy |
-| **Partnership** | dwa konteksty zależne od siebie, planowane razem | silne sprzężenie organizacyjne |
-| **Shared Kernel** | mały, jawnie uzgodniony wspólny fragment modelu/kodu | każda zmiana wymaga konsultacji; trzymaj minimalny |
-| **Separate Ways** | integracja kosztuje więcej, niż daje | możliwe dublowanie funkcji |
-| **Big Ball of Mud** | oznacz obszar bez spójnego modelu, żeby jego bałagan nie „przeciekał” | izoluj ACL-em |
+| **Open Host Service (OHS)** | the upstream has many consumers; instead of tailor-made integrations it exposes one stable, documented protocol (an API, events) | the contract and versioning have to be maintained; the contract **must not** be the internal model exposed to the outside |
+| **Published Language** | a shared, well-described exchange format (often together with OHS; e.g. industry standards, event schemas) | changes to the language require agreement |
+| **Anti-Corruption Layer (ACL)** | the downstream protects its model from a foreign one (legacy, an external supplier, a generic subdomain) | a translation layer to maintain; it pays off for the core domain |
+| **Conformist** | the downstream adopts the upstream model directly, because it has no influence and the model is "good enough" | you lose your own language; not for the core domain |
+| **Customer / Supplier** | the upstream takes the downstream's needs into account in planning; negotiated commitments | requires mature cooperation and budget on the supplier's side |
+| **Partnership** | two contexts dependent on each other, planned together | strong organizational coupling |
+| **Shared Kernel** | a small, explicitly agreed shared fragment of the model/code | every change requires consultation; keep it minimal |
+| **Separate Ways** | integration costs more than it gives | possible duplication of features |
+| **Big Ball of Mud** | mark an area without a coherent model, so that its mess does not "leak" | isolate it with an ACL |
 
-Heurystyka: konteksty core → chroń ACL-em albo bądź upstreamem z OHS; generic → konformizm lub ACL do gotowca.
+A heuristic: core contexts → protect with an ACL or be the upstream with an OHS; generic → conformism or an ACL to a ready-made solution.
 
-**ACL wobec biblioteki lub SDK** (nie tylko innego kontekstu): obiekt wartości domeny jako jedyne miejsce wiedzy
-o kształcie zależności + wąski port w języku domeny + adapter owijający bibliotekę. Kryterium ukończenia jest
-sprawdzalne: `rg -l "from '<pakiet>'"` zwraca wyłącznie pliki katalogu adaptera. Egzekwujesz je regułą w CI
-(dependency-cruiser `forbidden`, ESLint `no-restricted-imports`, ArchUnit), nie pamięcią — szablony:
-`.claude/skills/ddd-legacy-modernization/references/szablony-regul.md`. Szczególnie groźny przeciek: biblioteka
-serwerowa w paczce klienta.
+**An ACL towards a library or an SDK** (not only another context): a domain value object as the only place of knowledge
+about the shape of the dependency + a narrow port in the domain language + an adapter wrapping the library. The completion criterion is
+checkable: `rg -l "from '<package>'"` returns only files of the adapter directory. You enforce it with a rule in CI
+(dependency-cruiser `forbidden`, ESLint `no-restricted-imports`, ArchUnit), not with memory — templates:
+`.claude/skills/ddd-legacy-modernization/references/rule-templates.md`. A particularly dangerous leak: a server
+library in the client bundle.
 
-## Serwisy krawędziowe i wewnętrzne
-- **Serwis krawędziowy** (na granicy kontekstu/modułu): fasada lub serwis aplikacyjny, endpoint API, publikator zdarzeń
-  integracyjnych. Tłumaczy język zewnętrzny na wewnętrzny, pilnuje autoryzacji, transakcji i idempotencji, orkiestruje
-  scenariusz. Jest **cienki i stabilny** — inne konteksty rozmawiają **wyłącznie** z krawędzią (to jest ich OHS).
-- **Serwis wewnętrzny**: serwisy domenowe, polityki, agregaty — logika w głębi modelu. Może się dowolnie zmieniać,
-  bo nikt z zewnątrz od niego nie zależy.
-- Dąż do **modułów głębokich**: mały, stabilny interfejs na krawędzi i dużo zachowania pod spodem. Przykład: kontekst
-  dostępności wystawia tylko `zablokuj / zwolnij / wyłącz` zasób w czasie, a cała złożoność segmentów czasu i blokad
-  jest w środku (ddd-archetypes).
-- Sygnały błędu: inne moduły wołają serwisy wewnętrzne albo repozytoria; krawędź zwraca encje domenowe zamiast DTO/zdarzeń;
-  logika biznesowa „wycieka” do kontrolera.
+## Edge and internal services
+- **An edge service** (at the boundary of a context/module): a facade or an application service, an API endpoint, a publisher of integration
+  events. It translates the external language into the internal one, takes care of authorization, transactions and idempotency, orchestrates
+  the scenario. It is **thin and stable** — other contexts talk **only** to the edge (this is their OHS).
+- **An internal service**: domain services, policies, aggregates — the logic deep in the model. It can change freely,
+  because nobody from the outside depends on it.
+- Aim for **deep modules**: a small, stable interface at the edge and a lot of behaviour underneath. An example: the availability
+  context exposes only `block / release / disable` a resource in time, and the whole complexity of time segments and locks
+  is inside (ddd-archetypes).
+- Error signals: other modules call internal services or repositories; the edge returns domain entities instead of DTOs/events;
+  business logic "leaks" into the controller.
 
-## Zdarzenia między kontekstami
-Rozróżniaj **zdarzenie domenowe** (wewnętrzne, pełny język kontekstu, może się zmieniać) od **zdarzenia integracyjnego**
-(publiczne, na krawędzi, w Published Language, wersjonowane).
+## Events between contexts
+Distinguish a **domain event** (internal, the full language of the context, can change) from an **integration event**
+(public, at the edge, in the Published Language, versioned).
 
-| Styl | Co niesie | Zalety | Wady | Kiedy |
+| Style | What it carries | Advantages | Disadvantages | When |
 |---|---|---|---|---|
-| **Event notification** | „coś się stało” + identyfikator | minimalne sprzężenie, prosty | odbiorca musi dopytać źródło; trudno śledzić przepływ z wielu zdarzeń | odbiorca potrzebuje tylko sygnału |
-| **Event-carried state transfer** | zdarzenie + stan potrzebny odbiorcom | odbiorca działa, gdy źródło leży; brak zapytań zwrotnych; mniejsze opóźnienia | duplikacja danych, spójność ostateczna, ewolucja schematu | odbiorca potrzebuje lokalnej kopii danych do własnych decyzji |
-| **Event sourcing** | zdarzenia są źródłem prawdy stanu | pełny audyt, odtwarzanie stanu | złożoność, ewolucja zdarzeń | audyt/historia to wartość biznesowa |
+| **Event notification** | "something happened" + an identifier | minimal coupling, simple | the consumer has to query the source; hard to trace a flow from many events | the consumer needs only a signal |
+| **Event-carried state transfer** | the event + the state the consumers need | the consumer works when the source is down; no callback queries; lower latency | data duplication, eventual consistency, schema evolution | the consumer needs a local copy of the data for its own decisions |
+| **Event sourcing** | events are the source of truth of the state | a full audit, state reconstruction | complexity, event evolution | audit/history is a business value |
 
-Zasady dla **event-carried state transfer**: wysyłaj tylko dane potrzebne odbiorcom (nie cały agregat), wersjonuj schemat,
-odbiorca buduje własny read model i akceptuje spójność ostateczną, obsługa jest idempotentna i odporna na kolejność
-(numer wersji/sekwencji), źródło pozostaje jedynym właścicielem danych.
+Rules for **event-carried state transfer**: send only the data the consumers need (not the whole aggregate), version the schema,
+the consumer builds its own read model and accepts eventual consistency, handling is idempotent and resilient to ordering
+(a version/sequence number), the source remains the only owner of the data.
 
-## Gwarancje dostarczenia
-- Zapis stanu i zdarzenia w jednej transakcji → **outbox**; dostarczanie co najmniej raz → **idempotentni odbiorcy**.
-- Procesy przez wiele kontekstów → saga / proces menedżer z jawnymi krokami kompensacji.
-- Zanim zamienisz wywołanie synchroniczne na wiadomość: czy wywołujący używa wyniku? czy ktoś czyta efekt od razu? komenda czy
-  zdarzenie? Kolejność nie jest gwarantowana. Asynchroniczność usuwa sprzężenie czasowe, nie logiczne.
-  Pełna procedura, atomowość i testy: be-messaging-outbox.
+## Delivery guarantees
+- Writing the state and the event in one transaction → an **outbox**; at-least-once delivery → **idempotent consumers**.
+- Processes across many contexts → a saga / a process manager with explicit compensation steps.
+- Before you replace a synchronous call with a message: does the caller use the result? does someone read the effect right away? a command or
+  an event? Ordering is not guaranteed. Asynchrony removes temporal coupling, not logical coupling.
+  The full procedure, atomicity and tests: be-messaging-outbox.
 
-## Weryfikacja relacji pomiarem
-Relację z mapy można sprawdzić pomiarem connascence (ddd-connascence-analysis) — przed kodem na kontraktach (stopnie jako przedziały),
-po kodzie na kodzie (rozstrzyga kod). OHS/Published Language powinny dawać głównie sprzężenie statyczne słabe (nazwa, typ);
-sprzężenia dynamiczne przez granicę (wspólna transakcja, dane, które muszą się zgadzać) = granica przecieka.
+## Verifying a relation by measurement
+A relation from the map can be checked by measuring connascence (ddd-connascence-analysis) — before the code on the contracts (degrees as ranges),
+after the code on the code (the code decides). OHS/Published Language should give mainly weak static coupling (name, type);
+dynamic coupling across the boundary (a shared transaction, data that must agree) = the boundary leaks.
 
-## Tożsamość między kontekstami: pojęcie a rzecz
-- **Pojęcia** (klasy, właściwości, metryki jak „przychód”) mają stały identyfikator w przestrzeni autorów słownika
-  i jedną definicję z właścicielem.
-- **Rzeczy** (dostawca, zamówienie) dostają identyfikator wybijany regułą z klucza biznesowego: jedna rzecz = jeden
-  identyfikator mimo wielu rekordów w systemach (tablica mapowania kluczy).
-- Dane zostają u właścicieli kontekstów; wspólna jest tylko tożsamość, nie kopia danych.
-- Reguła wybijania identyfikatorów żyje w specyfikacji i wspólnej bibliotece, nie w jednym narzędziu (data-engineering).
-Źródło: S. Banerjee, „The Spine of the Context Fabric…” (2026-10-13).
+## Identity between contexts: a concept versus a thing
+- **Concepts** (classes, properties, metrics like "revenue") have a stable identifier in the namespace of the glossary's authors
+  and one definition with an owner.
+- **Things** (a supplier, an order) get an identifier minted by a rule from the business key: one thing = one
+  identifier despite many records in systems (a key mapping table).
+- The data stays with the context owners; only the identity is shared, not a copy of the data.
+- The identifier minting rule lives in the specification and a shared library, not in one tool (data-engineering).
+Source: S. Banerjee, "The Spine of the Context Fabric…" (2026-10-13).
 
-## Zapis wyniku (`docs/project/02-domain/context-map.md`)
+## Recording the result (`docs/project/02-domain/context-map.md`)
 ```mermaid
 flowchart LR
-  Sprzedaz[Sprzedaż - core] -- "OHS / PL: OrderPlaced v1" --> Magazyn[Magazyn]
-  Platnosci[Płatności - generic, zewn.] -- "ACL" --> Sprzedaz
+  Sales[Sales - core] -- "OHS / PL: OrderPlaced v1" --> Warehouse[Warehouse]
+  Payments[Payments - generic, ext.] -- "ACL" --> Sales
 ```
-Pod diagramem tabela: relacja, wzorzec, upstream/downstream, kontrakt (API/zdarzenia + wersja), właściciel, uzasadnienie.
+Under the diagram a table: the relation, the pattern, upstream/downstream, the contract (API/events + version), the owner, the justification.
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 4, lekcja 5 (ACL wobec biblioteki, kryterium „pakiet tylko w adapterze”) —
-  materiał szkoleniowy (dostęp 2026-10-09); opisane własnymi słowami.
+## Sources
+- The 10xDevs course, ed. 3 (2026), module 4, lesson 5 (an ACL towards a library, the criterion "the package only in the adapter") —
+  training material (accessed 2026-10-09); described in our own words.

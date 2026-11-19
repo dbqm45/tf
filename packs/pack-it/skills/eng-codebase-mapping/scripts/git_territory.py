@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
 """
-Terytorium kodu z historii gita — co się zmienia, co zmienia się razem, kto zmieniał, gdzie są hotspoty.
+Code territory from git history — what changes, what changes together, who changed it, where the hotspots are.
 
-  python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py                    # 12 mies., top 10
-  python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --all --depth 3     # wszystkie sekcje
+  python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py                    # 12 months, top 10
+  python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --all --depth 3     # all sections
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --cochange --max-files 30 --json
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --authors src/billing
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --hotspots --top 20
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --bus-factor --since 24.months
 
-Sekcje:
-- zawsze: ranking katalogów (na głębokości --depth) i plików wg liczby commitów; pliki, których już nie ma
-  w `git ls-files`, oznaczone jako usunięte (historia mówi o przeszłości);
-- --by-quarter: ranking katalogów per kwartał (stałe centrum vs kampania zmian);
-- --cochange: pary katalogów i plików zmieniane w tych samych commitach (commity > --max-files plików pominięte,
-  bo masowy refaktor skleja niezwiązane pliki) oraz huby — pliki zmieniane razem z wieloma obszarami;
-- --authors <ścieżka>: kontrybutorzy obszaru bez botów i bez commitów, których autorem jest agent AI
-  (commit człowieka z trailerem Co-Authored-By agenta zostaje); wypisuje tylko nazwę autora, bez e-maili;
-- --hotspots: zmiany × linie niepuste (proxy złożoności) dla bieżących plików, plus maks. głębokość wcięć;
-- --bus-factor: ryzyko „jednej osoby” per katalog (głębokość --depth, obszary z ≥ --min-commits commitami ludzi):
-  bus factor = najmniej osób, które razem mają ponad 50% commitów obszaru; aktywni = osoby z commitem w obszarze
-  w ostatnich --active-days dniach przed datą HEAD. Ryzyko: krytyczne (nikt aktywny), wysokie (bus factor 1),
-  umiarkowane (2), niskie (≥ 3). Bez botów i agentów AI, tylko nazwy autorów; nie wchodzi do --all.
-Szum odfiltrowany domyślnie: lockfile'e, snapshoty, dist/build, pliki generowane i zminifikowane, tłumaczenia,
-.env*. Własne wzorce: --exclude <regex> (wiele razy). Commity botów (dependabot, renovate, github-actions, „[bot]”)
-nie wchodzą do żadnej sekcji; commity agentów AI wchodzą do terytorium, ale nie do listy kontrybutorów.
+Sections:
+- always: a ranking of directories (at --depth) and files by commit count; files no longer in `git ls-files`
+  are marked as removed (history speaks of the past);
+- --by-quarter: a ranking of directories per quarter (a steady core vs a campaign of changes);
+- --cochange: pairs of directories and files changed in the same commits (commits > --max-files files are skipped,
+  because a mass refactor glues unrelated files together) and hubs — files changed together with many areas;
+- --authors <path>: contributors of an area without bots and without commits authored by an AI agent
+  (a human commit with an agent's Co-Authored-By trailer stays); prints only the author name, no e-mails;
+- --hotspots: changes × non-blank lines (a complexity proxy) for current files, plus max. indentation depth;
+- --bus-factor: "single person" risk per directory (at --depth, areas with ≥ --min-commits human commits):
+  bus factor = the fewest people who together hold over 50% of the area's commits; active = people with a commit in the
+  area in the last --active-days days before the HEAD date. Risk: critical (nobody active), high (bus factor 1),
+  moderate (2), low (≥ 3). Without bots and AI agents, author names only; not part of --all.
+Noise filtered by default: lockfiles, snapshots, dist/build, generated and minified files, translations,
+.env*. Custom patterns: --exclude <regex> (repeatable). Bot commits (dependabot, renovate, github-actions, "[bot]")
+enter no section; AI agent commits enter the territory but not the contributor list.
 
-Kod wyjścia: 0 — wynik wypisany; 2 — katalog nie jest repozytorium git, błąd gita lub złe argumenty.
-Tylko odczyt historii (`git log`, `git ls-files`, `git rev-parse`); biblioteka standardowa, bez sieci.
+Exit code: 0 — result printed; 2 — the directory is not a git repository, a git error or bad arguments.
+History is read only (`git log`, `git ls-files`, `git rev-parse`); standard library, no network.
 """
 from __future__ import annotations
 
@@ -63,7 +63,7 @@ def git(repo: Path, *args: str) -> str:
     r = subprocess.run(["git", "-c", "core.fsmonitor=false", "-c", "core.quotepath=off", "-C", str(repo), *args],
                        capture_output=True, text=True, encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL)
     if r.returncode != 0:
-        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)}: kod {r.returncode}")
+        raise RuntimeError(r.stderr.strip() or f"git {' '.join(args)}: exit code {r.returncode}")
     return r.stdout
 
 
@@ -119,7 +119,7 @@ def complexity(path: Path) -> tuple[int, int] | None:
     return len(lines), depth
 
 
-RISK_ORDER = {"krytyczne": 0, "wysokie": 1, "umiarkowane": 2, "niskie": 3}
+RISK_ORDER = {"critical": 0, "high": 1, "moderate": 2, "low": 3}
 
 
 def bus_factor(commits: list[dict], depth: int, min_commits: int, active_days: int, head_date: str) -> list[dict]:
@@ -146,7 +146,7 @@ def bus_factor(commits: list[dict], depth: int, min_commits: int, active_days: i
             if covered * 2 > total:
                 break
         active = sum(p["last"] >= since_active for p in people.values())
-        risk = "krytyczne" if not active else "wysokie" if bf == 1 else "umiarkowane" if bf == 2 else "niskie"
+        risk = "critical" if not active else "high" if bf == 1 else "moderate" if bf == 2 else "low"
         out.append({"path": d, "commits": total, "people": len(people), "bus_factor": bf, "top_author": ranked[0][0],
                     "top_share": round(ranked[0][1]["commits"] / total, 2), "active": active, "risk": risk})
     return sorted(out, key=lambda x: (RISK_ORDER[x["risk"]], -x["commits"], x["path"]))
@@ -189,7 +189,7 @@ def analyse(a) -> dict:
             "max_files": a.max_files, "skipped_large_commits": skipped,
             "dir_pairs": [{"a": x, "b": y, "commits": n} for (x, y), n in dpairs.most_common(a.top)],
             "file_pairs": [{"a": x, "b": y, "commits": n,
-                            "share": round(n / min(file_c[x], file_c[y]), 2)}   # n / rzadziej zmieniany plik pary
+                            "share": round(n / min(file_c[x], file_c[y]), 2)}   # n / the less often changed file of the pair
                            for (x, y), n in fpairs.most_common() if n >= 2][:a.top],
             "hubs": [{"path": f, "areas": len(p), "alive": f in alive}
                      for f, p in sorted(partners.items(), key=lambda kv: (-len(kv[1]), kv[0])) if len(p) >= 1][:a.top],
@@ -227,67 +227,67 @@ def table(head: list[str], rows: list[list]) -> list[str]:
 
 
 def to_text(r: dict) -> str:
-    out = [f"# Terytorium: {r['repo']}", "",
-           f"HEAD {r['head']} ({r['head_date'][:10]}) · okno: od {r['since']} · commity: {r['commits']} "
-           f"(pominięte boty: {r['skipped_bot_commits']}) · głębokość katalogów: {r['depth']}", "", "## Katalogi"]
-    out += table(["katalog", "commity"], [[f"`{d['path']}`", d["commits"]] for d in r["dirs"]])
-    out += ["", "## Pliki"]
-    out += table(["plik", "commity", "istnieje"], [[f"`{f['path']}`", f["commits"], "tak" if f["alive"] else "USUNIĘTY"]
+    out = [f"# Territory: {r['repo']}", "",
+           f"HEAD {r['head']} ({r['head_date'][:10]}) · window: since {r['since']} · commits: {r['commits']} "
+           f"(skipped bots: {r['skipped_bot_commits']}) · directory depth: {r['depth']}", "", "## Directories"]
+    out += table(["directory", "commits"], [[f"`{d['path']}`", d["commits"]] for d in r["dirs"]])
+    out += ["", "## Files"]
+    out += table(["file", "commits", "exists"], [[f"`{f['path']}`", f["commits"], "yes" if f["alive"] else "DELETED"]
                                                     for f in r["files"]])
     if "quarters" in r:
-        out += ["", "## Kwartały"]
+        out += ["", "## Quarters"]
         for q, rows in r["quarters"].items():
             out.append(f"- {q}: " + ", ".join(f"`{x['path']}` ({x['commits']})" for x in rows[:5]))
     if "cochange" in r:
         co = r["cochange"]
-        out += ["", f"## Współzmiany (pominięte commity > {co['max_files']} plików: {co['skipped_large_commits']})",
-                "", "Pary katalogów:"]
-        out += table(["A", "B", "commity"], [[f"`{p['a']}`", f"`{p['b']}`", p["commits"]] for p in co["dir_pairs"]])
-        out += ["", "Pary plików (udział = wspólne / zmiany rzadszego pliku; ≥ 0,8 → ciasna para, ukryta umowa):"]
-        out += table(["A", "B", "commity", "udział"], [[f"`{p['a']}`", f"`{p['b']}`", p["commits"], p["share"]]
+        out += ["", f"## Co-changes (skipped commits > {co['max_files']} files: {co['skipped_large_commits']})",
+                "", "Directory pairs:"]
+        out += table(["A", "B", "commits"], [[f"`{p['a']}`", f"`{p['b']}`", p["commits"]] for p in co["dir_pairs"]])
+        out += ["", "File pairs (share = shared / changes of the less changed file; ≥ 0.8 → tight pair, hidden contract):"]
+        out += table(["A", "B", "commits", "share"], [[f"`{p['a']}`", f"`{p['b']}`", p["commits"], p["share"]]
                                                         for p in co["file_pairs"]])
-        out += ["", "Huby (zmieniane razem z wieloma obszarami):"]
-        out += table(["plik", "obszary"], [[f"`{h['path']}`", h["areas"]] for h in co["hubs"]])
+        out += ["", "Hubs (changed together with many areas):"]
+        out += table(["file", "areas"], [[f"`{h['path']}`", h["areas"]] for h in co["hubs"]])
     if "authors" in r:
-        out += ["", f"## Kontrybutorzy `{r['authors_path']}` (bez botów i agentów; kogo zapytać, nie właściciele)"]
-        out += table(["autor", "commity", "ostatnio"], [[x["name"], x["commits"], x["last"]] for x in r["authors"]])
+        out += ["", f"## Contributors `{r['authors_path']}` (no bots or agents; who to ask, not owners)"]
+        out += table(["author", "commits", "last"], [[x["name"], x["commits"], x["last"]] for x in r["authors"]])
     if "bus_factor" in r:
         bf = r["bus_factor"]
-        out += ["", f"## Bus factor (obszary z ≥ {bf['min_commits']} commitami ludzi; aktywni: commit w ostatnich "
-                    f"{bf['active_days']} dniach przed HEAD; bus factor = najmniej osób z > 50% commitów)"]
-        out += table(["obszar", "commity", "osoby", "bus factor", "główny autor", "udział", "aktywni", "ryzyko"],
+        out += ["", f"## Bus factor (areas with ≥ {bf['min_commits']} human commits; active: a commit in the last "
+                    f"{bf['active_days']} days before HEAD; bus factor = fewest people with > 50% of commits)"]
+        out += table(["area", "commits", "people", "bus factor", "top author", "share", "active", "risk"],
                      [[f"`{x['path']}`", x["commits"], x["people"], x["bus_factor"], x["top_author"], x["top_share"],
                        x["active"], x["risk"]] for x in bf["areas"]])
     if "hotspots" in r:
-        out += ["", "## Hotspoty (zmiany × linie niepuste)"]
-        out += table(["plik", "commity", "linie", "maks. wcięcie", "wynik"],
+        out += ["", "## Hotspots (changes × non-blank lines)"]
+        out += table(["file", "commits", "lines", "max indent", "score"],
                      [[f"`{h['path']}`", h["commits"], h["nloc"], h["max_indent"], h["score"]] for h in r["hotspots"]])
     return "\n".join(out)
 
 
 def main(argv: list[str]) -> int:
-    ap = argparse.ArgumentParser(description="Terytorium kodu z historii gita (tylko odczyt). Kod wyjścia: 0 wynik, "
-                                             "2 brak repozytorium git / błąd gita / złe argumenty.")
-    ap.add_argument("--repo", default=".", help="katalog repozytorium (domyślnie bieżący)")
-    ap.add_argument("--since", default="12.months", help="okno historii dla git log --since (domyślnie 12.months)")
-    ap.add_argument("--top", type=int, default=10, help="liczba pozycji w rankingach (domyślnie 10)")
-    ap.add_argument("--depth", type=int, default=2, help="głębokość katalogów w rankingu (domyślnie 2)")
-    ap.add_argument("--exclude", action="append", default=[], help="dodatkowy regex szumu (wiele razy)")
-    ap.add_argument("--by-quarter", action="store_true", help="ranking katalogów per kwartał")
-    ap.add_argument("--cochange", action="store_true", help="pary współzmian i huby")
-    ap.add_argument("--max-files", type=int, default=30, help="pomijaj commity z większą liczbą plików przy współzmianach")
-    ap.add_argument("--authors", metavar="ŚCIEŻKA", help="kontrybutorzy obszaru (bez botów i agentów AI)")
-    ap.add_argument("--hotspots", action="store_true", help="hotspoty: zmiany × linie niepuste")
-    ap.add_argument("--bus-factor", action="store_true", help="ryzyko jednej osoby per katalog (bez botów i agentów AI)")
-    ap.add_argument("--min-commits", type=int, default=5, help="z --bus-factor: minimum commitów ludzi w obszarze (domyślnie 5)")
-    ap.add_argument("--active-days", type=int, default=90, help="z --bus-factor: okno aktywności przed datą HEAD (domyślnie 90)")
-    ap.add_argument("--all", action="store_true", help="wszystkie sekcje poza --authors i --bus-factor")
-    ap.add_argument("--json", action="store_true", help="wynik w JSON")
+    ap = argparse.ArgumentParser(description="Code territory from git history (read only). Exit code: 0 result, "
+                                             "2 no git repository / git error / bad arguments.")
+    ap.add_argument("--repo", default=".", help="repository directory (default: current)")
+    ap.add_argument("--since", default="12.months", help="history window for git log --since (default 12.months)")
+    ap.add_argument("--top", type=int, default=10, help="number of items in rankings (default 10)")
+    ap.add_argument("--depth", type=int, default=2, help="directory depth in the ranking (default 2)")
+    ap.add_argument("--exclude", action="append", default=[], help="extra noise regex (repeatable)")
+    ap.add_argument("--by-quarter", action="store_true", help="directory ranking per quarter")
+    ap.add_argument("--cochange", action="store_true", help="co-change pairs and hubs")
+    ap.add_argument("--max-files", type=int, default=30, help="skip commits with more files than this in co-changes")
+    ap.add_argument("--authors", metavar="PATH", help="contributors of an area (no bots or AI agents)")
+    ap.add_argument("--hotspots", action="store_true", help="hotspots: changes × non-blank lines")
+    ap.add_argument("--bus-factor", action="store_true", help="single-person risk per directory (no bots or AI agents)")
+    ap.add_argument("--min-commits", type=int, default=5, help="with --bus-factor: minimum human commits in an area (default 5)")
+    ap.add_argument("--active-days", type=int, default=90, help="with --bus-factor: activity window before the HEAD date (default 90)")
+    ap.add_argument("--all", action="store_true", help="all sections except --authors and --bus-factor")
+    ap.add_argument("--json", action="store_true", help="output as JSON")
     a = ap.parse_args(argv)
     try:
         res = analyse(a)
     except (RuntimeError, OSError, re.error) as e:
-        print(f"błąd: {e}", file=sys.stderr)
+        print(f"error: {e}", file=sys.stderr)
         return 2
     print(json.dumps(res, ensure_ascii=False, indent=2) if a.json else to_text(res))
     return 0

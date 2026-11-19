@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Testy trybów (`modes/mode-*`) w instalatorze: wykrycie obok nakładek, instalacja domyślnego trybu, nowe domyślne
-przy aktualizacji (manifest `offered`), świadomie usunięte nie wracają, walidacja `kind` ↔ katalog i prefiks.
+"""Tests of the modes (`modes/mode-*`) in the installer: detection next to overlays, installation of the default mode, new defaults
+on update (the manifest `offered`), deliberately removed ones do not come back, `kind` ↔ directory and prefix validation.
 python3 tests/test_modes.py
 
-Instalator działa na kopii rdzenia w tymczasowym źródle fabryki ze sztucznymi nakładkami i trybami."""
+The installer works on a copy of the core in a temporary factory source with artificial overlays and modes."""
 import json
 import shutil
 import subprocess
@@ -28,8 +28,8 @@ def item(src: Path, folder: str, pid: str, prefix: str, default: bool, kind: str
                               f"facets:\n  - {{prefix: {prefix}, order: 900, name: {pid}, question: \"{pid}\"}}\n")
     name = prefix + "run"
     write(base / "skills" / name / "SKILL.md",
-          f"---\nname: {name}\ndescription: Użyj przy {pid}.\nmetadata:\n  katalog: \"Użyj przy {pid}. Nie do niczego.\"\n"
-          f"  przeglad: 2099-01-01\n---\n# {name}\n")
+          f"---\nname: {name}\ndescription: Użyj przy {pid}.\nmetadata:\n  catalog: \"Użyj przy {pid}. Nie do niczego.\"\n"
+          f"  review: 2099-01-01\n---\n# {name}\n")
 
 
 def source(base: Path) -> Path:
@@ -64,20 +64,20 @@ def main() -> int:
         base = Path(t)
         src = source(base)
 
-        # pierwsza instalacja: domyślne nakładki i tryby; tryb ląduje jak nakładka
+        # first install: the default overlays and modes; a mode lands like an overlay
         p = base / "nowy"
         p.mkdir()
         r = install(src, p)
         m = manifest(p)
         check(r.returncode == 0 and sorted(m.get("packs", {})) == ["mode-x", "pack-d"],
-              f"M-1: domyślny tryb z modes/ instalowany przy pierwszej instalacji: {m.get('packs')} {r.stdout[-800:]}")
+              f"M-1: the default mode from modes/ installed on the first install: {m.get('packs')} {r.stdout[-800:]}")
         check((p / ".tf" / "factory" / "packs" / "mode-x" / "pack.yaml").is_file()
-              and (p / ".claude" / "skills" / "xx-run" / "SKILL.md").is_file(), "M-2: pliki trybu na miejscu")
+              and (p / ".claude" / "skills" / "xx-run" / "SKILL.md").is_file(), "M-2: the mode's files in place")
         check(sorted(m.get("offered", [])) == ["mode-x", "pack-a", "pack-d"],
-              f"M-3: manifest zapisuje, co było w ofercie: {m.get('offered')}")
+              f"M-3: the manifest records what was on offer: {m.get('offered')}")
 
-        # aktualizacja instalacji sprzed trybów (manifest bez `offered`): dochodzą nowe domyślne tryby,
-        # nie dochodzą domyślne nakładki, które projekt już mógł odrzucić
+        # updating an install from before the modes (a manifest without `offered`): new default modes arrive,
+        # default overlays that the project may already have rejected do not
         old = base / "stary"
         old.mkdir()
         install(src, old, "--packs", "pack-a")
@@ -87,31 +87,31 @@ def main() -> int:
         r = install(src, old)
         m = manifest(old)
         check(sorted(m.get("packs", {})) == ["mode-x", "pack-a"],
-              f"M-4: stary manifest → nowy domyślny tryb dochodzi, pack-d nie: {m.get('packs')} {r.stdout[-800:]}")
-        check("mode-x" in r.stdout, f"M-5: komunikat o nowym elemencie: {r.stdout[-800:]}")
+              f"M-4: an old manifest → the new default mode arrives, pack-d does not: {m.get('packs')} {r.stdout[-800:]}")
+        check("mode-x" in r.stdout, f"M-5: a message about the new item: {r.stdout[-800:]}")
 
-        # świadomie usunięty tryb nie wraca przy kolejnej aktualizacji
+        # a deliberately removed mode does not come back on the next update
         install(src, old, "--remove", "mode-x")
         r = install(src, old)
         check(sorted(manifest(old).get("packs", {})) == ["pack-a"],
-              f"M-6: usunięty tryb nie wraca: {manifest(old).get('packs')} {r.stdout[-500:]}")
+              f"M-6: a removed mode does not come back: {manifest(old).get('packs')} {r.stdout[-500:]}")
 
-        # nowy domyślny tryb w kolejnej wersji fabryki dochodzi do istniejącej instalacji
+        # a new default mode in the next factory version reaches an existing install
         item(src, "modes", "mode-y", "yy-", True, "mode")
         r = install(src, old)
         check(sorted(manifest(old).get("packs", {})) == ["mode-y", "pack-a"],
-              f"M-7: nowy domyślny tryb dochodzi przy aktualizacji: {manifest(old).get('packs')} {r.stdout[-500:]}")
+              f"M-7: a new default mode arrives on update: {manifest(old).get('packs')} {r.stdout[-500:]}")
 
-        # jawne --packs przy aktualizacji wygrywa z dodawaniem domyślnych
+        # an explicit --packs on update wins over adding the defaults
         item(src, "modes", "mode-z", "zz-", True, "mode")
         install(src, old, "--packs", "pack-a")
         check(sorted(manifest(old).get("packs", {})) == ["pack-a"],
-              f"M-8: --packs bez dopisywania domyślnych: {manifest(old).get('packs')}")
+              f"M-8: --packs without adding the defaults: {manifest(old).get('packs')}")
 
-        # walidacja: tryb bez kind albo z prefiksem nakładki, nakładka z kind: mode → błąd, nic nie zapisane
-        for folder, pid, kind, label in (("modes", "mode-bad", None, "tryb bez kind: mode"),
-                                         ("modes", "pack-zle", "mode", "tryb bez prefiksu mode-"),
-                                         ("packs", "pack-tryb", "mode", "nakładka z kind: mode")):
+        # validation: a mode without kind or with an overlay prefix, an overlay with kind: mode → an error, nothing written
+        for folder, pid, kind, label in (("modes", "mode-bad", None, "a mode without kind: mode"),
+                                         ("modes", "pack-zle", "mode", "a mode without the mode- prefix"),
+                                         ("packs", "pack-tryb", "mode", "an overlay with kind: mode")):
             bad = base / f"src-{pid}"
             shutil.copytree(src, bad)
             item(bad, folder, pid, "qq-", False, kind)
@@ -119,11 +119,11 @@ def main() -> int:
             q.mkdir()
             r = install(bad, q)
             check(r.returncode == 2 and pid in r.stdout and not manifest(q),
-                  f"M-9: {label} → kod 2 z nazwą elementu: {r.returncode} {r.stdout[-400:]}")
+                  f"M-9: {label} → code 2 with the item name: {r.returncode} {r.stdout[-400:]}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów trybów")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} mode tests")
     return 1 if fails else 0
 
 

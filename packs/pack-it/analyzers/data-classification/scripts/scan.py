@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """
-Moduł `data-classification` tf analyze, piętro 0 (bez modelu): szkic inwentarza danych osobowych i pilnowanie,
-żeby pole osobowe nie powstawało bez klasy (arch-privacy-compliance, references/lad-danych.md).
+The `data-classification` module of tf analyze, tier 0 (no model): a draft of the personal data inventory and a guard
+that a personal field is not created without a class (arch-privacy-compliance, references/data-governance.md).
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines on stdout (contract: .tf/factory/analyze.py)
 
-Reguły:
-- `pii-field-unclassified` — pole o nazwie typowej dla danych osobowych (e-mail, telefon, PESEL, IBAN, data
-  urodzenia, imię, nazwisko, adres, IP, dokument tożsamości, zdrowie; nazwy angielskie i polskie, camelCase
-  i snake_case) w migracji SQL, `schema.prisma`, modelu Django/SQLAlchemy, encji TypeORM lub JPA, bez znacznika klasy
-  (komentarz `pii`, `confidential`, `klasa:` itp. w tej samej linii albo w liniach komentarza lub adnotacji tuż nad
-  polem, `COMMENT ON COLUMN … 'pii'`) i bez wiersza w tabeli inwentarza (`docs/**/data-inventory*.md`,
+Rules:
+- `pii-field-unclassified` — a field with a name typical of personal data (email, phone, PESEL (the Polish national ID number), IBAN, date
+  of birth, first name, last name, address, IP, identity document, health; English and Polish names, camelCase
+  and snake_case) in an SQL migration, `schema.prisma`, a Django/SQLAlchemy model, a TypeORM or JPA entity, without a class marker
+  (a comment `pii`, `confidential`, `klasa:` (Polish for "class:") etc. on the same line or in the comment or annotation lines right above
+  the field, `COMMENT ON COLUMN … 'pii'`) and without a row in the inventory table (`docs/**/data-inventory*.md`,
   `docs/**/privacy.md`, `docs/**/inwentarz*.md`);
-- `pii-in-logs` — logger, `console.*` albo `print` z identyfikatorem osobowym w argumentach;
-- `pii-to-analytics` — wywołanie narzędzia analityki z identyfikatorem osobowym.
-W argumentach liczą się wyrażenia, a nie treść napisów (interpolacje `${…}` i f-stringi tak). Wywołania funkcji
-maskujących lub skracających (`mask…`, `hash…`, `hmac…`, `redact…`, `pseudonym…`) nie są zgłaszane. To heurystyka:
-nazwa pola nie dowodzi, że są w nim dane osobowe, a pole o niewinnej nazwie (`notes`, `payload`) może je mieć.
-Znalezienie = „sprawdź i nadaj klasę”. Testy i dokumentacja są pomijane. Tylko biblioteka standardowa.
+- `pii-in-logs` — a logger, `console.*` or `print` with a personal identifier in the arguments;
+- `pii-to-analytics` — a call to an analytics tool with a personal identifier.
+In the arguments, expressions count, not the content of strings (interpolations `${…}` and f-strings do). Calls of masking
+or truncating functions (`mask…`, `hash…`, `hmac…`, `redact…`, `pseudonym…`) are not reported. This is a heuristic:
+a field name does not prove that it holds personal data, and a field with an innocent name (`notes`, `payload`) may hold it.
+A finding = "check it and assign a class". Tests and documentation are skipped. Standard library only.
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) has no "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -43,7 +43,7 @@ TEST_OR_DOC = re.compile(r"(^|/)(tests?|__tests__|e2e|fixtures|spec|examples?|do
 JS_EXT = {".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts"}
 CODE_EXT = JS_EXT | {".py", ".java", ".kt"}
 
-# Nazwy po normalizacji (małe litery, bez `_` i `-`): angielskie i polskie.
+# Names after normalisation (lower case, without `_` and `-`): English and Polish.
 PII = {
     "email", "emailaddress", "mail", "phone", "phonenumber", "telephone", "mobile", "mobilephone", "mobilenumber",
     "telefon", "nrtelefonu", "numertelefonu", "pesel", "iban", "accountnumber", "bankaccount", "nrkonta",
@@ -92,11 +92,11 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
          suggestion: str) -> None:
     print(json.dumps({"rule": rule, "title": title, "file": rel, "line": line, "snippet": snippet.strip()[:160],
                       "severity": severity, "confidence": 0.5 if rule == "pii-field-unclassified" else 0.6,
-                      "evidence": evidence, "basis": "RODO art. 5 ust. 1 lit. c i f, art. 25, art. 30, art. 32",
+                      "evidence": evidence, "basis": "GDPR Art. 5(1)(c) and (f), Art. 25, Art. 30, Art. 32",
                       "suggestion": suggestion}, ensure_ascii=False))
 
 
-# ---- pola w schematach i modelach -------------------------------------------------------------------------------
+# ---- fields in schemas and models ------------------------------------------------------------------------------
 
 def marked(lines: list[str], i: int) -> bool:
     if MARK.search(lines[i]):
@@ -110,7 +110,7 @@ def marked(lines: list[str], i: int) -> bool:
 
 
 def schema_fields(rel: str, text: str) -> list[tuple[int, str]]:
-    """(indeks linii, nazwa pola) dla plików ze schematem albo modelem danych."""
+    """(line index, field name) for files with a schema or a data model."""
     lines, out, ext = text.splitlines(), [], Path(rel).suffix.lower()
     if ext == ".sql":
         in_table = False
@@ -173,7 +173,7 @@ def inventory_names(root: Path) -> set[str]:
     return names
 
 
-# ---- logi i analityka -------------------------------------------------------------------------------------------
+# ---- logs and analytics ----------------------------------------------------------------------------------------
 
 def call_args(text: str, start: int) -> str:
     depth, i = 1, start
@@ -184,7 +184,7 @@ def call_args(text: str, start: int) -> str:
 
 
 def expressions(args: str) -> str:
-    """Argumenty bez treści napisów; interpolacje `${…}` i pola f-stringów zostają."""
+    """Arguments without the content of strings; `${…}` interpolations and f-string fields stay."""
     kept: list[str] = []
 
     def repl(m: re.Match) -> str:
@@ -196,27 +196,27 @@ def expressions(args: str) -> str:
         return " "
 
     rest = STRING.sub(repl, args)
-    inner = STRING.sub(" ", " ".join(kept))  # napisy zagnieżdżone w interpolacji to też tylko tekst
+    inner = STRING.sub(" ", " ".join(kept))  # strings nested in an interpolation are also just text
     return MASKED.sub(" ", rest + " " + inner)
 
 
 def scan_calls(rel: str, text: str) -> None:
     for pat, rule, title, sev, sugg in (
-            (LOG_CALL, "pii-in-logs", "dane osobowe w logu", "wysoka",
-             "loguj identyfikator techniczny albo pseudonim (HMAC) zamiast danej; logi z danymi osobowymi mają "
-             "klasę zbioru i retencję"),
-            (ANALYTICS_CALL, "pii-to-analytics", "dane osobowe wysyłane do analityki", "wysoka",
-             "wysyłaj pseudonim (HMAC) albo agregat; dostawca analityki to procesor z umową powierzenia")):
+            (LOG_CALL, "pii-in-logs", "personal data in a log", "high",
+             "log a technical identifier or a pseudonym (HMAC) instead of the data; logs with personal data "
+             "get a dataset class and a retention period"),
+            (ANALYTICS_CALL, "pii-to-analytics", "personal data sent to analytics", "high",
+             "send a pseudonym (HMAC) or an aggregate; the analytics vendor is a processor and needs a data processing agreement")):
         for m in pat.finditer(text):
             expr = expressions(call_args(text, m.end()))
             hits = sorted({t for t in re.findall(r"[A-Za-z_]\w*", expr) if is_pii(t)})
             if hits:
                 line = text[:m.start()].count("\n")
                 emit(rule, rel, line + 1, text.splitlines()[line], f"{title}: {', '.join(hits)}", sev,
-                     f"identyfikator osobowy w argumentach wywołania: {', '.join(hits)}", sugg)
+                     f"personal identifier in the call arguments: {', '.join(hits)}", sugg)
 
 
-# ---- przebieg ---------------------------------------------------------------------------------------------------
+# ---- run -------------------------------------------------------------------------------------------------------
 
 def list_files(root: Path) -> list[str]:
     top = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=root, capture_output=True, text=True,
@@ -253,10 +253,10 @@ def scan(root: Path, files: list[str]) -> None:
         lines = text.splitlines()
         for i, name in schema_fields(rel, text):
             if is_pii(name) and not marked(lines, i) and norm(name) not in inventory | commented:
-                emit("pii-field-unclassified", rel, i + 1, lines[i], f"pole z danymi osobowymi bez klasy: {name}",
-                     "średnia", "nazwa pola typowa dla danych osobowych; brak znacznika klasy i wpisu w inwentarzu",
-                     "nadaj klasę przy polu (komentarz `pii` lub adnotacja) i dopisz wiersz do "
-                     "docs/project/04-architecture/data-inventory.md (klasa, cel, retencja, właściciel)")
+                emit("pii-field-unclassified", rel, i + 1, lines[i], f"personal data field without a class: {name}",
+                     "medium", "the field name is typical for personal data; no class marker and no inventory entry",
+                     "give the field a class (a `pii` comment or an annotation) and add a row to "
+                     "docs/project/04-architecture/data-inventory.md (class, purpose, retention, owner)")
         if Path(rel).suffix.lower() in CODE_EXT:
             scan_calls(rel, text)
 

@@ -1,145 +1,145 @@
 ---
 name: core-grounding
-description: Użyj, gdy pytasz, czy podana wersja, flaga, data lub liczba jest prawdziwa albo asystent może zmyślać (długi dokument, rozmowa) — źródło, „nie wiem”.
+description: Use when you ask whether a version, flag, date or number is real, or the assistant may be making things up — a source, "I don't know".
 metadata:
-  przeglad: "2027-10-10"
-  katalog: "Użyj przy każdej odpowiedzi, raporcie i artefakcie, które zawierają fakty o kodzie, wersjach, API, poleceniach, liczbach lub źródłach — klasy twierdzeń i sposób ich sprawdzenia, miejsca, w których modele najczęściej zmyślają, higiena kontekstu, samosprawdzenie i skrypt sprawdzający odwołania. Nie do procedury badania źródeł zewnętrznych (core-source-research) ani testów kodu (skille testów, pack-it)."
-  slowa: "wynik skryptu, liczba z narzędzia, przepisać liczbę z wyniku, halucynacje, zmyślanie, nie zgaduj, czy to prawda, kolega twierdzi, podobno istnieje, czy taka opcja istnieje, sprawdź fakty, źródło, pewność, wymyślona flaga, nieistniejące API, za długi kontekst, model się myli, weryfikacja odpowiedzi, liczby w raporcie, dokładnie N wywołań, tylko w jednym miejscu, ile razy wywoływana, zużyty kontekst, pamięć automatyczna, podsumowanie długiego dokumentu, streszczenie umowy lub regulaminu, notatka z dokumentu, najpierw cytaty, niczego spoza dokumentu, z podanych materiałów, agent powtarza ustalenia, łata wokół czerwonego testu, długa sesja, skąd wiem że to prawda, czy to nie wymysł, asystent zmyśla, przyznać że nie wie, mówi pewnym tonem a zgaduje, dopisał coś od siebie, streszczenie długiego dokumentu, czy ta flaga istnieje, sprawdzić liczby przed wpisaniem do dokumentacji, sprawdzić liczby w raporcie, czy procenty się zgadzają, raport z pomiaru przed oddaniem, liczby bez źródła, data w przyszłości, zweryfikować liczby z odpowiedzi, data wydania, liczby przed wpisaniem do dokumentacji"
+  review: "2027-10-10"
+  catalog: "Use for every answer, report and artifact that contains facts about code, versions, APIs, commands, numbers or sources — classes of claims and how to check them, the places where models make things up most often, context hygiene, self-check and a script that checks references. Not for the procedure of researching external sources (core-source-research) or code tests (the testing skills, pack-it)."
+  keywords: "wynik skryptu, liczba z narzędzia, przepisać liczbę z wyniku, halucynacje, zmyślanie, nie zgaduj, czy to prawda, kolega twierdzi, podobno istnieje, czy taka opcja istnieje, sprawdź fakty, źródło, pewność, wymyślona flaga, nieistniejące API, za długi kontekst, model się myli, weryfikacja odpowiedzi, liczby w raporcie, dokładnie N wywołań, tylko w jednym miejscu, ile razy wywoływana, zużyty kontekst, pamięć automatyczna, podsumowanie długiego dokumentu, streszczenie umowy lub regulaminu, notatka z dokumentu, najpierw cytaty, niczego spoza dokumentu, z podanych materiałów, agent powtarza ustalenia, łata wokół czerwonego testu, długa sesja, skąd wiem że to prawda, czy to nie wymysł, asystent zmyśla, przyznać że nie wie, mówi pewnym tonem a zgaduje, dopisał coś od siebie, streszczenie długiego dokumentu, czy ta flaga istnieje, sprawdzić liczby przed wpisaniem do dokumentacji, sprawdzić liczby w raporcie, czy procenty się zgadzają, raport z pomiaru przed oddaniem, liczby bez źródła, data w przyszłości, zweryfikować liczby z odpowiedzi, data wydania, liczby przed wpisaniem do dokumentacji, hallucinations, making things up, is this true, does this flag exist, check the facts, made-up API, numbers in a report, I don't know, quotes first, long context, used-up context, nie zmyślał, nieistniejące wersje i flagi, ścieżki plików, których nie ma, łamie przyjęte ograniczenie, sygnały zużytego kontekstu, długa sesja, potwierdzić twierdzenie, fałszywe założenie w pytaniu, pamięć to twierdzenie z dnia zapisu, wcześniejsze ustalenie z notatek, liczba z pamięci, versions and flags that do not exist, paths that do not exist, signals of a used-up context, false assumption in the question, memory is a claim from the day it was written, is that true, a colleague claims, does this option exist, supposedly exists, made-up option, made-up flag, non-existent API, verify the claim, check the facts, hallucination, how do I enable it"
 ---
 
-# Ugruntowanie odpowiedzi — jak nie zmyślać
+# Grounding answers — how not to make things up
 
-Model zmyśla najczęściej wtedy, gdy:
-- odpowiada z pamięci zamiast ze sprawdzenia;
-- czuje presję, żeby odpowiedzieć zawsze;
-- pracuje w długim kontekście pełnym nieudanych prób.
+A model makes things up most often when:
+- it answers from memory instead of from a check;
+- it feels pressure to always answer;
+- it works in a long context full of failed attempts.
 
-Ten skill usuwa te trzy przyczyny. Dwie części działają mechanicznie i nie zależą od modelu:
-- hook `context_guard` ostrzega przed zbyt długim kontekstem;
-- skrypt `scripts/grounding_check.py` sprawdza, czy odwołania w dokumentach istnieją.
+This skill removes those three causes. Two parts work mechanically and do not depend on the model:
+- the `context_guard` hook warns about a context that is too long;
+- the `scripts/grounding_check.py` script checks whether the references in documents exist.
 
-## 1. Każde twierdzenie ma klasę i dowód
-| Klasa | Przykład | Dowód przed napisaniem |
+## 1. Every claim has a class and evidence
+| Class | Example | Evidence before writing |
 |---|---|---|
-| **o tym repozytorium** | „funkcja X waliduje Y”, „plik Z istnieje”, „test przechodzi” | przeczytany plik (`plik:linia`), wynik polecenia w tej sesji |
-| **aktualny fakt zewnętrzny** | wersja, zgodność wersji, flaga CLI, opcja konfiguracji, nazwa pakietu, cena, termin prawny, CVE | źródło pierwotne z datą (core-source-research), `--help`, `npm view <pakiet> version`, dokumentacja wersji projektu |
-| **wiedza stała** | jak działa B-drzewo, czym jest idempotencja | wystarczy wiedza — ale bez konkretnych liczb i nazw, których nie sprawdziłeś |
-| **wniosek lub ocena** | „to pewnie przez cache”, „wariant B będzie tańszy” | oznacz: **[założenie]** albo **[ocena]**, z tym, jak to sprawdzić |
+| **about this repository** | "function X validates Y", "file Z exists", "the test passes" | a file you read (`plik:linia`), the output of a command in this session |
+| **a current external fact** | a version, version compatibility, a CLI flag, a configuration option, a package name, a price, a legal deadline, a CVE | a primary source with a date (core-source-research), `--help`, `npm view <pakiet> version`, the documentation for the project's version |
+| **stable knowledge** | how a B-tree works, what idempotency is | knowledge is enough — but without specific numbers and names you did not check |
+| **a conclusion or assessment** | "it's probably the cache", "option B will be cheaper" | mark it: **[assumption]** or **[assessment]**, with how to check it |
 
-Twierdzenia bez dowodu nie podajesz jako faktu. Do wyboru:
-- sprawdź je;
-- oznacz jako założenie;
-- pomiń.
+A claim without evidence you do not give as a fact. The choices:
+- check it;
+- mark it as an assumption;
+- leave it out.
 
-## 2. „Nie wiem” jest poprawną odpowiedzią
-- Gdy nie da się sprawdzić (brak dostępu, brak źródła, brak czasu), mówisz to wprost: czego nie wiesz i jak to
-  ustalić. Wymyślona, ale wiarygodnie brzmiąca odpowiedź jest gorsza niż „nie wiem”.
-- Nie zgadujesz nazw: metod, endpointów, flag, kluczy konfiguracji, pakietów, plików, zmiennych środowiska.
-  Nieistniejąca nazwa pakietu to też ryzyko bezpieczeństwa (podszywające się paczki — skill łańcucha dostaw, pack-it: ops-supply-chain-security).
-- Pytanie zawiera fałszywe założenie (np. pyta o flagę, która nie istnieje)? Mówisz, że tego nie znalazłeś. Pokazujesz, gdzie szukałeś, i nie dopasowujesz odpowiedzi do pytania.
+## 2. "I don't know" is a correct answer
+- When it cannot be checked (no access, no source, no time), you say so plainly: what you do not know and how to
+  find out. A made-up but plausible-sounding answer is worse than "I don't know".
+- You do not guess names: of methods, endpoints, flags, configuration keys, packages, files, environment variables.
+  A non-existent package name is also a security risk (impersonating packages — the supply chain skill, pack-it: ops-supply-chain-security).
+- The question contains a false assumption (e.g. it asks about a flag that does not exist)? You say you did not find it. You show where you looked, and you do not fit the answer to the question.
 
-## 3. Miejsca, w których modele zmyślają najczęściej — sprawdzaj zawsze
-Wersje i zgodność wersji · nazwy API, metod i opcji · flagi CLI · nazwy pakietów · ścieżki i nazwy plików
-w repozytorium · numery (porty, limity, kody błędów, CVE, RFC, artykuły ustaw) · daty i terminy · cytaty
-i przypisanie źródeł · wynik polecenia, którego nie uruchomiłeś · zachowanie kodu, którego nie przeczytałeś ·
-liczby w szacunkach (pokaż rachunek). Szczegóły i polecenia sprawdzające: `references/sprawdzanie.md`.
+## 3. Where models make things up most often — always check
+Versions and version compatibility · names of APIs, methods and options · CLI flags · package names · paths and file names
+in the repository · numbers (ports, limits, error codes, CVEs, RFCs, articles of law) · dates and deadlines · quotes
+and attribution of sources · the output of a command you did not run · the behaviour of code you did not read ·
+numbers in estimates (show the calculation). Details and checking commands: `references/checking.md`.
 
-### Twierdzenia strukturalne o kodzie
-„Dokładnie 4 wywołania”, „tylko w module X”, „zawsze przez Y”, „interfejs ma 54 metody” — modele liczą to najsłabiej,
-a czytelnik raportu bierze na wiarę. Im pewniej wygląda liczba, tym bardziej ją sprawdź:
-1. wypisz wszystkie takie twierdzenia z raportu (mapy, analizy, planu refaktoru);
-2. każde sprawdź narzędziem strukturalnym (`ast-grep -p '<wzorzec>' -l <język> --json`, „znajdź odwołania” w LSP,
-   kompilator) — werdykt: potwierdzone / doprecyzowane / obalone, z `plik:linia`;
-3. każde **zero** z narzędzia strukturalnego potwierdź zwykłym `rg -n '<tekst>'` — zero może znaczyć zły wzorzec;
-4. poprawka w miejscu ze śladem („150 (raport: 145)”) i tabela „Weryfikacja twierdzeń”: twierdzenie → werdykt →
-   dowód → metoda. Wniosków i rankingu przy tej okazji nie przepisujesz — rozbieżność opisujesz jako „do decyzji”.
-5. **Wynik skryptu lub narzędzia to też twierdzenie.** Zanim przepiszesz liczbę do raportu, sprawdź w kodzie
-   największą pozycję (największy cykl, hub) i jedną losową — przeczytaj `plik:linia`, który ją tworzy. W pomiarze
-   fabryki (2026-10-18) błąd szkicu skryptu („cykl runtime 242 plików”, w rzeczywistości domykany importami typów)
-   powtórzyli wszyscy agenci, którzy z niego korzystali; agent bez skryptu policzył poprawnie.
+### Structural claims about code
+"Exactly 4 calls", "only in module X", "always through Y", "the interface has 54 methods" — models count these worst,
+and the reader of the report takes them on trust. The more certain a number looks, the more you check it:
+1. list all such claims in the report (maps, analyses, a refactoring plan);
+2. check each with a structural tool (`ast-grep -p '<wzorzec>' -l <język> --json`, "find references" in an LSP,
+   the compiler) — verdict: confirmed / refined / refuted, with `plik:linia`;
+3. confirm every **zero** from a structural tool with a plain `rg -n '<tekst>'` — a zero can mean a wrong pattern;
+4. a fix in place with a trace ("150 (report: 145)") and a "Claim verification" table: claim → verdict →
+   evidence → method. You do not rewrite the conclusions and the ranking on this occasion — you describe a discrepancy as "to decide".
+5. **The output of a script or tool is also a claim.** Before you copy a number into a report, check in the code
+   the largest item (the largest cycle, a hub) and one random one — read the `plik:linia` that produces it. In a factory
+   measurement (2026-10-18) an error of a draft script ("a runtime cycle of 242 files", in reality closed by type imports)
+   was repeated by all the agents that used it; the agent without the script counted correctly.
 
-## 4. Długie dokumenty: najpierw cytaty, potem wnioski
-Przy analizie długiego materiału (specyfikacja, logi, transkrypcja, regulamin):
-1. Wypisz dosłowne cytaty z miejscem (plik:linia, sekcja), które odpowiadają na pytanie.
-2. Dopiero na ich podstawie wyciągaj wnioski.
-3. Wniosek bez cytatu wycofaj albo oznacz jako założenie.
+## 4. Long documents: quotes first, conclusions after
+When analysing long material (a specification, logs, a transcript, terms and conditions):
+1. List the literal quotes with their place (file:line, section) that answer the question.
+2. Only on their basis draw conclusions.
+3. Withdraw a conclusion without a quote or mark it as an assumption.
 
-**Weryfikacja cytatami po napisaniu** (tekst dla innych: raport, notatka prawna, opis zmiany): po szkicu przejdź
-twierdzenie po twierdzeniu i do każdego znajdź cytat z materiału. Twierdzenie bez cytatu usuń, a w jego miejscu zostaw
-`[]` — czytelnik widzi, że coś wycięto, i może dopytać.
+**Verification with quotes after writing** (text for others: a report, a legal note, a change description): after the draft go
+claim by claim and find a quote from the material for each. Remove a claim without a quote, and in its place leave
+`[]` — the reader sees that something was cut and can ask.
 
-**Tylko z podanych materiałów** — gdy zadanie tego wymaga (przepisy, umowa, wymagania klienta, analiza wywiadów):
-wiedza ogólna służy do zrozumienia pytania, nie jako źródło twierdzeń; czego materiały nie obejmują, nazywasz luką.
-Fabryka włącza ten tryb konsultantom i rolom z `grounding: sources-only` (`.tf/config/config.yaml`, `sources_only_note`).
+**Only from the given materials** — when the task requires it (regulations, a contract, customer requirements, interview analysis):
+general knowledge serves to understand the question, not as a source of claims; what the materials do not cover you name as a gap.
+The factory turns this mode on for consultants and roles with `grounding: sources-only` (`.tf/config/config.yaml`, `sources_only_note`).
 
-Ten sam wzorzec stosuje ddd-discovery-intake z pack-it (bank cytatów z kontrolą `evidence`).
+The same pattern is used by ddd-discovery-intake from pack-it (a bank of quotes with an `evidence` check).
 
-## 5. Higiena kontekstu
-Jakość odpowiedzi spada, gdy kontekst się wypełnia, i gdy jest w nim dużo nieudanych prób.
-- **Jedno zadanie — jeden kontekst.** Nowe, niezwiązane zadanie zaczynasz od czystej sesji (`/clear`). Wracasz
-  od punktu kontrolnego (core-project-record), a nie od długiej historii.
-- **Dwie nieudane poprawki tego samego** → zatrzymaj się. Zapisz w punkcie kontrolnym, co nie działa i dlaczego.
-  Potem zacznij od nowa z lepszym poleceniem.
-- **Eksploracja w subagencie** (`scout`, `Explore`): czytanie wielu plików zostaje w jego kontekście, do ciebie
-  wraca wynik.
-- **Wczytuj tylko potrzebne skille i sekcje** — TL;DR i Przekazanie zamiast całych artefaktów.
-- **Kompaktowanie:** decyzje i ustalenia muszą być w plikach, zanim kontekst zostanie streszczony (CLAUDE.md
-  mówi, co zachować).
-- **Sygnały zużytego kontekstu** (zachowanie, nie liczba tokenów): powtarzasz ustalenia jako nowe odkrycia; podajesz
-  ścieżki lub polecenia, których nie ma; łamiesz przyjęte ograniczenie; łatasz wokół czerwonego testu zamiast wrócić
-  do przyczyny; podsumowania rosną, decyzji ubywa. **Dwa sygnały naraz → decyzja, nie kolejna próba:** `/compact`
-  (kierunek dobry), cofnięcie ostatniego kroku (`/rewind`), `/clear` (koniec zadania), nowa sesja od punktu kontrolnego.
-- **Polecenie kompakcji:** `/compact Zachowaj: decyzje, ścieżki plików, wykonane polecenia i wyniki, status testów,
-  ograniczenia, otwarte ryzyka. Usuń: nieudane próby, powtórzone logi, porzucone hipotezy. Następny krok: <jedno>.`
-- **Pamięć to twierdzenie z dnia zapisu.** Wpis automatycznej pamięci (`~/.claude/projects/<projekt>/memory/`) albo
-  wcześniejszy artefakt (mapa, research) to punkt wyjścia, nie prawda: przed użyciem sprawdź w kodzie, a nieaktualne
-  twierdzenie koryguj jawnie w raporcie. Reguły wiążące zespół trzymasz w repo (core-agent-instructions), nie w pamięci.
-- Hook `context_guard` ostrzega, gdy kontekst przekroczy próg (domyślnie 100 tys. i 150 tys. tokenów). Na
-  ostrzeżenie odpowiadasz zapisem punktu kontrolnego i propozycją nowej sesji albo `/compact` z instrukcją.
+## 5. Context hygiene
+The quality of answers drops when the context fills up, and when there are many failed attempts in it.
+- **One task — one context.** A new, unrelated task you start from a clean session (`/clear`). You come back
+  from a checkpoint (core-project-record), not from a long history.
+- **Two failed fixes of the same thing** → stop. Write down in the checkpoint what does not work and why.
+  Then start again with a better instruction.
+- **Exploration in a subagent** (`scout`, `Explore`): reading many files stays in its context, you get back
+  the result.
+- **Load only the skills and sections you need** — TL;DR and Handoff instead of whole artifacts.
+- **Compaction:** decisions and findings must be in files before the context is summarised (CLAUDE.md
+  says what to keep).
+- **Signals of a used-up context** (behaviour, not a number of tokens): you repeat findings as new discoveries; you give
+  paths or commands that do not exist; you break an agreed constraint; you patch around a red test instead of going back
+  to the cause; summaries grow, decisions shrink. **Two signals at once → a decision, not another attempt:** `/compact`
+  (the direction is good), undoing the last step (`/rewind`), `/clear` (the task is over), a new session from the checkpoint.
+- **The compaction command:** `/compact Keep: decisions, file paths, commands run and their results, test status,
+  constraints, open risks. Drop: failed attempts, repeated logs, abandoned hypotheses. Next step: <jedno>.`
+- **Memory is a claim from the day it was written.** An automatic memory entry (`~/.claude/projects/<projekt>/memory/`) or
+  an earlier artifact (a map, research) is a starting point, not the truth: before using it check it in the code, and correct an outdated
+  claim openly in the report. Rules binding the team you keep in the repo (core-agent-instructions), not in memory.
+- The `context_guard` hook warns when the context crosses a threshold (by default 100 thousand and 150 thousand tokens). You answer
+  the warning by saving a checkpoint and proposing a new session or `/compact` with an instruction.
 
-## 6. Samosprawdzenie przed oddaniem
-Przed odpowiedzią z faktami, raportem kroku albo artefaktem:
-1. Wypisz w myślach twierdzenia faktograficzne. Każde musi mieć dowód z sekcji 1. Bez dowodu: sprawdź, oznacz
-   albo usuń.
-2. Twierdzenia o stanie („testy przechodzą”, „plik istnieje”, „wersja X obsługuje Y”) podaj z dowodem: polecenie
-   i wynik, `plik:linia`, źródło z datą.
-3. Dla dokumentów: `python3 .claude/skills/core-grounding/scripts/grounding_check.py <plik.md>`. Skrypt
-   sprawdza, czy ścieżki, odwołania `plik:linia` i lokalne linki istnieją. Z `--jev` (opcjonalnie, klucz
-   TYPESAFE_API_KEY) sprawdza też, czy wskazane linie **potwierdzają** zdanie, przy którym stoi odwołanie.
-   - Sprzeczne i niepotwierdzające odwołania popraw.
-   - Niepewne przejrzyj sam.
-   Liczby i daty: `python3 .claude/skills/core-grounding/scripts/claims_check.py <plik.md|katalog>` — pierwsza linia
-   to `Werdykt: OK | OSTRZEŻENIA | BŁĘDY`.
-   - Błąd: procent niezgodny z ułamkiem w zapisie `X/Y (Z%)`, nieistniejąca data, data stanu z przyszłości — popraw.
-   - Ostrzeżenie: liczba z jednostką (%, USD, ms…) bez śladu pochodzenia w tej linii — dopisz polecenie, ścieżkę,
-     link albo [założenie]; raport oparty na jednym pliku danych deklaruje go raz (linia „Pliki:” ze ścieżką pliku danych w backtickach).
-4. W diffie szukasz trzech typowych klas błędów modelu: kod poprawny składniowo, ale zły semantycznie (zgubiona
-   transakcja, ponowienie, przypadek brzegowy); test utrwalający implementację zamiast zachowania; decyzja ze środka
-   długiej rozmowy pominięta na rzecz nowszego kontekstu.
-5. Przy ważnych decyzjach (architektura, bezpieczeństwo, prawo) niech wynik oceni ktoś bez twojego kontekstu:
-   security-reviewer, `/code-review` albo drugi wykonawca. Autor nie ocenia własnej pracy.
-6. **Decyzja trudna do odwrócenia, odpowiedź bez źródła do sprawdzenia:** zadaj to samo pytanie 2–3 razy
-   niezależnie (osobni wykonawcy, ten sam brief — best-of-N). Rozbieżne odpowiedzi to sygnał zmyślenia: zostaje
-   tylko to, co się powtarza i ma dowód; reszta wraca jako pytanie. Kosztuje N przebiegów — tylko przy takich
-   decyzjach. Tańszy wariant: oddaj odpowiedź do sprawdzenia twierdzenie po twierdzeniu (iteracyjne doprecyzowanie).
+## 6. Self-check before handing over
+Before an answer with facts, a step report or an artifact:
+1. List the factual claims in your head. Each must have evidence from section 1. Without evidence: check, mark
+   or remove.
+2. Give claims about state ("tests pass", "the file exists", "version X supports Y") with evidence: a command
+   and its output, `plik:linia`, a source with a date.
+3. For documents: `python3 .claude/skills/core-grounding/scripts/grounding_check.py <plik.md>`. The script
+   checks whether paths, `plik:linia` references and local links exist. With `--jev` (optional, the key
+   TYPESAFE_API_KEY) it also checks whether the indicated lines **confirm** the sentence the reference stands in.
+   - Fix conflicting and non-confirming references.
+   - Review the uncertain ones yourself.
+   Numbers and dates: `python3 .claude/skills/core-grounding/scripts/claims_check.py <plik.md|katalog>` — the first line
+   is `Verdict: OK | WARNINGS | ERRORS`.
+   - An error: a percentage that does not match the fraction in the `X/Y (Z%)` notation, a date that does not exist, a state date in the future — fix it.
+   - A warning: a number with a unit (%, USD, ms…) without a trace of its origin on that line — add a command, a path,
+     a link or [assumption]; a report based on one data file declares it once (a "Files:" line with the data file's path in backticks).
+4. In the diff you look for three typical classes of model errors: code that is syntactically correct but semantically wrong (a lost
+   transaction, a retry, an edge case); a test that pins the implementation instead of the behaviour; a decision from the middle
+   of a long conversation skipped in favour of newer context.
+5. For important decisions (architecture, security, law) let someone without your context assess the result:
+   security-reviewer, `/code-review` or a second executor. The author does not assess their own work.
+6. **A decision that is hard to reverse, an answer with no source to check:** ask the same question 2–3 times
+   independently (separate executors, the same brief — best-of-N). Diverging answers are a signal of making things up: only
+   what repeats and has evidence stays; the rest goes back as a question. It costs N runs — only for such
+   decisions. A cheaper variant: hand the answer over to be checked claim by claim (iterative refinement).
 
-## Checklista
-- [ ] fakty o repo poparte przeczytanym plikiem lub poleceniem z tej sesji
-- [ ] wersje, flagi, API, pakiety, liczby i daty sprawdzone u źródła albo oznaczone jako niezweryfikowane
-- [ ] wnioski oznaczone **[założenie]** / **[ocena]**; „nie wiem” tam, gdzie nie da się sprawdzić
-- [ ] długi materiał: cytaty przed wnioskami; tekst dla innych zweryfikowany cytatami (wycięte twierdzenia jako `[]`)
-- [ ] kontekst: zadanie w czystej sesji, eksploracja w subagencie, ostrzeżenie `context_guard` obsłużone
-- [ ] liczby i wyłączności o kodzie („dokładnie N”, „tylko tu”) sprawdzone narzędziem strukturalnym, zera potwierdzone `rg`
-- [ ] `grounding_check.py` bez błędów dla oddawanych dokumentów
+## Checklist
+- [ ] facts about the repo backed by a file you read or a command from this session
+- [ ] versions, flags, APIs, packages, numbers and dates checked at the source or marked as unverified
+- [ ] conclusions marked **[assumption]** / **[assessment]**; "I don't know" where it cannot be checked
+- [ ] long material: quotes before conclusions; text for others verified with quotes (cut claims as `[]`)
+- [ ] context: the task in a clean session, exploration in a subagent, the `context_guard` warning handled
+- [ ] numbers and exclusivity claims about code ("exactly N", "only here") checked with a structural tool, zeros confirmed with `rg`
+- [ ] `grounding_check.py` without errors for the documents handed over
 
-## Źródła
-- Anthropic — „Reduce hallucinations” (prawo do „nie wiem”, cytaty jako podstawa, weryfikacja przez cytaty,
-  weryfikacja wieloprzebiegowa, ograniczenie do podanych materiałów), platform.claude.com, sprawdzone 2026-10-20
-- Anthropic — „Best practices for Claude Code” (wypełniony kontekst obniża jakość, `/clear` między zadaniami,
-  subagenci do eksploracji, weryfikacja zamiast deklaracji)
-- Claude Code — „How Claude remembers your project” (code.claude.com/docs/en/memory, dostęp 2026-10-10): pamięć
-  automatyczna w `~/.claude/projects/<projekt>/memory/`, `MEMORY.md` ładowany do 200 linii lub 25 KB.
-- ast-grep 0.50.0 — `ast-grep run --help` (flagi `-p`, `-l`, `--json`), sprawdzone 2026-10-10.
-- Kurs 10xDevs, ed. 3 (2026), lekcje 3.1 i 3.3 (klasy błędów, sygnały zużytego kontekstu), moduł 4, lekcje 3–4
-  (weryfikacja twierdzeń strukturalnych) — materiał szkoleniowy (dostęp 2026-10-09).
-Opisane własnymi słowami.
+## Sources
+- Anthropic — "Reduce hallucinations" (the right to "I don't know", quotes as the basis, verification through quotes,
+  multi-run verification, restriction to the given materials), platform.claude.com, checked 2026-10-20
+- Anthropic — "Best practices for Claude Code" (a full context lowers quality, `/clear` between tasks,
+  subagents for exploration, verification instead of declaration)
+- Claude Code — "How Claude remembers your project" (code.claude.com/docs/en/memory, accessed 2026-10-10): automatic
+  memory in `~/.claude/projects/<projekt>/memory/`, `MEMORY.md` loaded up to 200 lines or 25 KB.
+- ast-grep 0.50.0 — `ast-grep run --help` (the flags `-p`, `-l`, `--json`), checked 2026-10-10.
+- The 10xDevs course, ed. 3 (2026), lessons 3.1 and 3.3 (classes of errors, signals of a used-up context), module 4, lessons 3–4
+  (verifying structural claims) — training material (accessed 2026-10-09).
+Described in our own words.

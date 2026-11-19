@@ -34,6 +34,38 @@
       }
     },
     {
+      "id": "modernizacja-typow-en",
+      "expect": "trigger",
+      "prompt": "In src/billing/money.py (Python 3.14, mypy --strict) the amounts are floats, and the generic Result is built with TypeVar and Optional/Union from typing. How do I modernize this? Answer briefly.",
+      "files": {
+        "src/billing/money.py": "from typing import Generic, Optional, TypeVar, Union\n\nT = TypeVar('T')\n\nclass Result(Generic[T]):\n    def __init__(self, value: Optional[T] = None, error: Union[str, None] = None):\n        self.value = value\n        self.error = error\n\ndef add(a: float, b: float) -> float:\n    return a + b\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "Decimal"
+          ],
+          [
+            "class \\w+\\[T",
+            "def \\w+\\[T",
+            "\\[T\\]",
+            "PEP 695",
+            "type \\w+ ="
+          ],
+          [
+            "\\| None",
+            "X \\| Y",
+            "T \\| None"
+          ],
+          [
+            "quantize",
+            "ROUND_HALF",
+            "assert_never"
+          ]
+        ]
+      }
+    },
+    {
       "id": "bez-plikow-nowy-serwis",
       "expect": "trigger",
       "prompt": "Zakładamy nowy serwis w Pythonie 3.14. Jak ułożyć projekt: zależności i lockfile, lint i formatowanie, sprawdzanie typów? Odpowiedz zwięźle.",

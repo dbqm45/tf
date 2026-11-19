@@ -1,0 +1,47 @@
+# {{TITLE}} rules checked without a model. A rule that a pattern can express goes here, not into the skill:
+# the script points to the violation with file and line, and the agent does not have to read the rule in every session.
+# Fields: id, title, files, exclude, forbid (pattern banned in a line) or require (pattern required in the file,
+# with head: N — within the first N lines), severity (critical | high | medium | low), suggestion, basis.
+# After every change add a violation example to fixtures/violations and its expected finding to expected.json.
+# Group the rules by area (UI, API, data, releases) and narrow them to the area's directories with `files`: for a change
+# to the look alone the scanner does not report API rules.
+rules:
+  # ── shared ──
+  # TODO: example — replace it with a company rule or remove it (together with its example in fixtures/).
+  - id: przyklad-print
+    title: print instead of the logger
+    files: ["**/*.py"]
+    exclude: ["tests/**", "scripts/**"]
+    forbid: '^\s*print\('
+    severity: low
+    suggestion: "TODO: name of the company logger"
+    basis: "TODO: company document and date"
+
+  # More examples (uncomment and adapt):
+  # ── UI ──
+  # - id: ui-hardcoded-color
+  #   title: hard-coded colour instead of a token
+  #   files: ["src/components/**", "src/**/*.css", "src/**/*.scss"]
+  #   forbid: '#[0-9a-fA-F]{6}\b'
+  #   severity: low
+  #   suggestion: use a token from the component library
+  # ── API ──
+  # - id: api-path-without-version
+  #   title: endpoint without a version in the path
+  #   files: ["src/api/**"]
+  #   forbid: '@(Get|Post|Put|Patch|Delete)\(.(?!/v[0-9])'
+  #   severity: medium
+  #   suggestion: the path starts with /v<number>
+  # ── data ──
+  # - id: banned-import
+  #   title: import of the old payments module
+  #   files: ["src/**"]
+  #   forbid: 'from legacy_billing|require\(.legacy-billing'
+  #   severity: high
+  #   suggestion: use billing.v2
+  # - id: license-header
+  #   title: missing licence header
+  #   files: ["src/**/*.py", "src/**/*.ts"]
+  #   require: 'Copyright {{TITLE}}'
+  #   head: 5
+  #   severity: low

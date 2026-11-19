@@ -3,6 +3,293 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [20.1.0] — 2026-11-19
+### Added
+- **core:** mcp-runner — MCP tools through a cheap agent, no API keys (#339)
+
+## [20.0.0] — 2026-11-19
+### Breaking
+- English-only readers, trailers, slice ids and hook events (4l) (#337)
+### Fixed
+- **install:** restore missing .tf/factory and hook files on update (#338)
+
+## [19.0.0] — 2026-11-19
+### Breaking
+- drop Polish reader aliases with a 19.0.0 project migration (4k) (#336)
+
+## [18.2.0] — 2026-11-17
+### Added
+- **core:** accept English section names in the project record (3c) (#300)
+
+## [18.1.0] — 2026-11-17
+### Added
+- **core:** English skill content support and pilot translation of core-stack-sync (#296)
+
+## [18.0.0] — 2026-11-17
+### Breaking
+- English project record syntax and artifact file names (#295)
+
+## [17.0.0] — 2026-11-17
+### Breaking
+- English legacy dossier syntax and review decision labels (#294)
+
+## [16.0.0] — 2026-11-17
+### Breaking
+- English scan result lines and reconstruction report syntax (#293)
+
+## [15.0.0] — 2026-11-17
+### Breaking
+- English plan and spec syntax with migration of open tasks (#292)
+
+## [14.0.0] — 2026-11-17
+### Breaking
+- English verdicts of factory checks, analyze register and facts (#291)
+
+## [13.0.0] — 2026-11-17
+### Breaking
+- conversation language without settings, like Claude (#290)
+
+## [12.0.0] — 2026-11-17
+### Breaking
+- English value sets in packs, pdi journal, AI review and verdicts (#289)
+
+## [11.0.0] — 2026-11-17
+### Breaking
+- English task, loop and config values with project data migration (#288)
+
+## [10.31.0] — 2026-11-16
+### Added
+- **core:** tf uninstall and faster factory updates (#285)
+
+## [10.30.0] — 2026-11-16
+### Added
+- **org:** company standards from documents with script-checked quotes (#284)
+
+## [10.29.0] — 2026-11-16
+### Added
+- **core:** team layer between company and project, with team pack generator (#283)
+
+## [10.28.0] — 2026-11-16
+### Added
+- **core:** personal work style layer and hint accuracy for backend repos (#282)
+
+## [10.27.0] — 2026-11-16
+### Added
+- **core:** skill hints skip frameworks and languages outside the project stack (#281)
+
+## [10.26.0] — 2026-11-16
+### Added
+- **core:** company standards checked without the model and split by area (#280)
+
+## [10.25.0] — 2026-11-16
+### Added
+- **core:** company pack with organization defaults and a fill-in template (#279)
+
+## [10.24.0] — 2026-11-16
+### Added
+- **core:** retrospective reads hook blocks and Rework-Cause trailers (#278)
+
+## [10.23.0] — 2026-11-16
+### Added
+- **core:** disable skills that add nothing over the model, fix agent-PR routing (#275)
+
+## [10.22.1] — 2026-11-15
+### Fixed
+- **core:** let tf work write code and find its run state (#272)
+
+## [10.22.0] — 2026-11-15
+### Added
+- **core:** add tf work --once for unattended task runs (#271)
+
+## [10.21.0] — 2026-11-15
+### Added
+- **core:** close a slice with one run_state.py done command (#270)
+
+## [10.20.1] — 2026-11-15
+### Fixed
+- **core:** stop before pushing when the repository has no remote (#269)
+
+## [10.20.0] — 2026-11-15
+### Added
+- **core:** require a reviewer panel before a full-weight PR (#268)
+
+## [10.19.0] — 2026-11-15
+### Added
+- **core:** warn when quality drops after a factory update (#267)
+
+## [10.18.0] — 2026-11-15
+### Added
+- **packs:** retire pack-ev, EV knowledge moved to ev-intelligence (#266)
+
+## [10.17.0] — 2026-11-15
+### Added
+- **core:** install packs from outside packs/ (--pack-dir) (#264)
+
+## [10.16.1] — 2026-11-15
+### Fixed
+- **core:** launcher tf zna nowe polecenia silnika i odświeża się (#263)
+
+## [10.16.0] — 2026-11-15
+### Added
+- **pack-it:** code mode w procedurze ai-agents (#262)
+
+## [10.15.0] — 2026-11-15
+### Added
+- **core:** ostrzeżenie SPEC-009 o braku kryterium negatywnego w tf spec check (#261)
+
+## [10.14.0] — 2026-11-15
+### Added
+- **pack-it:** skill qa-formal-methods i plan luk K1–K10 (#260)
+- **core:** flag stale entries in agent instruction files (#258)
+### Fixed
+- **core:** tick a slice only after a recorded scope review (#259)
+
+## [10.13.0] — 2026-11-14
+### Added
+- **core:** check model names, fingerprint usage logs, show noise band (#257)
+
+## [10.12.0] — 2026-11-14
+### Added
+- **core:** close a task only when merged and findings are covered (#255)
+
+## [10.11.0] — 2026-11-14
+### Added
+- **core:** check the deployment with a smoke test from the card (#254)
+
+## [10.10.0] — 2026-11-14
+### Added
+- **core:** build the pull request description by script (#253)
+- **core:** read a Jira ticket by script instead of by the model (#252)
+
+## [10.9.0] — 2026-11-14
+### Added
+- **core:** let a question block one slice instead of the whole run (#250)
+
+## [10.8.1] — 2026-11-14
+### Fixed
+- **core:** stop rewriting the task list file on every task write (#249)
+
+## [10.8.0] — 2026-11-14
+### Added
+- **core:** label review findings and let the script keep the round limit (#248)
+
+## [10.7.0] — 2026-11-14
+### Added
+- **core:** show what waits for the human in tf status and the live view (#247)
+
+## [10.6.0] — 2026-11-14
+### Added
+- **core:** let a task belong to a pdi change cut (#245)
+
+## [10.5.0] — 2026-11-14
+### Added
+- **core:** keep the model assignment of loop steps in the configuration (#244)
+
+## [10.4.1] — 2026-11-14
+### Fixed
+- **core:** name the stop codes in the loop skill and warn about untagged tests (#243)
+
+## [10.4.0] — 2026-11-14
+### Added
+- **core:** give every stop a plain-language message with one question (#242)
+
+## [10.3.0] — 2026-11-14
+### Added
+- **core:** add task modes, recorded plan approval and stop codes (#241)
+
+## [10.2.0] — 2026-11-14
+### Added
+- **core:** let the factory choose the task weight and guard its effects (#240)
+
+## [10.1.1] — 2026-11-14
+### Fixed
+- **core:** keep a task record on every STOP and always review slice scope (#239)
+
+## [10.1.0] — 2026-11-14
+### Added
+- **core:** recognise the /tf input and its source without a tool name (#238)
+
+## [10.0.0] — 2026-11-14
+### Breaking
+- **core:** move the task loop into the core as /tf and remove Talos (#237)
+
+## [9.33.0] — 2026-11-13
+### Added
+- **core:** add a feature flag per task with a human gate outside test (#236)
+
+## [9.32.0] — 2026-11-13
+### Added
+- **core:** trace each acceptance criterion to its test and evidence (#235)
+- **core:** flag untestable outcomes and second actions in the spec check (#234)
+
+## [9.31.0] — 2026-11-13
+### Added
+- **core:** protect the task specification and frozen files from edits (#233)
+
+## [9.30.0] — 2026-11-13
+### Added
+- **core:** check the task specification before planning (#232)
+
+## [9.29.1] — 2026-11-13
+### Fixed
+- **core:** keep task files out of the project journal index (#231)
+
+## [9.29.0] — 2026-11-13
+### Added
+- **core:** add tf status and show tasks on the Talos dashboard (#230)
+
+## [9.28.0] — 2026-11-13
+### Added
+- **talos:** keep story runs in the task folder with evidence per slice (#229)
+
+## [9.27.0] — 2026-11-13
+### Added
+- **core:** track task files, their inputs and approval in tf task (#228)
+
+## [9.26.0] — 2026-11-13
+### Added
+- **core:** add slices with evidence to tf task (#227)
+
+## [9.25.0] — 2026-11-13
+### Added
+- **core:** add tf task with one state file and an index per task (#226)
+
+## [9.24.0] — 2026-11-13
+### Added
+- **core:** return the head and tail of long gate output (#225)
+
+## [9.23.0] — 2026-11-13
+### Added
+- **core:** add a gated wide search for options to problem routing (#223)
+
+## [9.22.2] — 2026-11-13
+### Fixed
+- **talos:** stop asking for consent on the factory's own steps (#221)
+
+## [9.22.1] — 2026-11-13
+### Fixed
+- **core:** keep the working tree clean after tf onboard (#219)
+
+## [9.22.0] — 2026-11-13
+### Added
+- **core:** add tf commands for own skills and config show (#218)
+
+## [9.21.0] — 2026-11-13
+### Added
+- **core:** make lint and types block through verify.sh in onboard (#217)
+
+## [9.20.0] — 2026-11-13
+### Added
+- **core:** add tf onboard to detect commands and turn the gate on (#216)
+
+## [9.19.0] — 2026-11-13
+### Added
+- **core:** report a disabled quality gate in doctor and at start (#215)
+
+## [9.18.0] — 2026-11-12
+### Added
+- **talos:** record run state and open a live dashboard on start (#211)
+
 ## [9.17.0] — 2026-11-10
 ### Added
 - **pack-it:** add React form guidance with a shared schema (#210)

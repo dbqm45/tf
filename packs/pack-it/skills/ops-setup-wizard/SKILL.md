@@ -1,56 +1,56 @@
 ---
 name: ops-setup-wizard
-description: Użyj, gdy człowiek musi ręcznie skonfigurować klucze w panelach lub sekrety CI — interaktywny skrypt bash.
+description: Use when a human must set up keys in dashboards or CI secrets by hand — an interactive bash script.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj, gdy człowiek musi ręcznie przejść procedurę, której agent nie może lub nie powinien wykonać — klucze i konta w panelach usług zewnętrznych, sekrety CI, jednorazowa migracja lub przełączenie. Agent pisze interaktywny skrypt bash (kreator), człowiek go uruchamia, sekrety omijają kontekst modelu. Nie do kroków, które agent zrobi sam, ani decyzji architektonicznych."
+  review: "2027-04-17"
+  catalog: "Use when a human must go through a procedure by hand that the agent cannot or should not perform — keys and accounts in the dashboards of external services, CI secrets, a one-time migration or switchover. The agent writes an interactive bash script (a wizard), the human runs it, the secrets bypass the model's context. Not for steps the agent will do itself, nor for architectural decisions."
 ---
 
-# Kreator konfiguracji (skrypt dla człowieka)
+# Setup wizard (a script for a human)
 
-Kreator to skrypt bash, który prowadzi człowieka krok po kroku: otwiera właściwą stronę, mówi, co kliknąć i skopiować,
-przyjmuje wartość, zapisuje ją tam, gdzie trzeba (`.env`, sekret lub zmienna GitHub Actions), pyta o potwierdzenie przed
-nieodwracalnym krokiem i pokazuje postęp. **Agent go pisze, ale nigdy nie uruchamia** — klucze wpisuje człowiek, bez echa,
-więc nie trafiają do kontekstu modelu (o ile nikt nie wklei ich do rozmowy — ostrzeż przed tym).
+A wizard is a bash script that leads a human step by step: it opens the right page, says what to click and copy,
+takes the value, saves it where needed (`.env`, a GitHub Actions secret or variable), asks for confirmation before
+an irreversible step and shows progress. **The agent writes it, but never runs it** — the human types the keys, without echo,
+so they do not reach the model's context (unless someone pastes them into the conversation — warn against that).
 
-Szablon: `scripts/kreator.template.sh` (postęp z szacunkiem czasu, potwierdzenia, otwieranie URL także w WSL, ukryty wpis
-sekretów, idempotentny zapis do `.env` z prawami 600, `gh secret`/`gh variable` przez stdin, podsumowanie z listą rzeczy
-do zrobienia ręcznie). Bibliotekę nad znacznikiem `### ETAPY ###` zostawiasz bez zmian — piszesz tylko etapy.
+Template: `scripts/wizard.template.sh` (progress with a time estimate, confirmations, opening a URL also in WSL, hidden input of
+secrets, an idempotent write to `.env` with permissions 600, `gh secret`/`gh variable` through stdin, a summary with a list of things
+to do by hand). You leave the library above the `### ETAPY ###` marker unchanged — you write only the stages.
 
-## Procedura
-1. **Zakres z repozytorium, nie z pytań.** Przeczytaj `.env.example`, nazwy kluczy w `.env*` (bez wartości — zasada
-   stała), `docker-compose*`, konfigurację frameworka, `.github/workflows/*` (każde `secrets.X` i `vars.X` to wartość, którą
-   kreator musi wytworzyć). Przy migracji: stan obecny, stan docelowy i nieodwracalne kroki między nimi.
-2. **Lista etapów do zatwierdzenia** — w kolejności zależności. Dla każdej wartości: skąd człowiek ją weźmie, dokąd trafi,
-   czy jest tajna:
-   | Kto potrzebuje | Cel |
+## Procedure
+1. **The scope from the repository, not from questions.** Read `.env.example`, the key names in `.env*` (without values — a standing
+   rule), `docker-compose*`, the framework configuration, `.github/workflows/*` (every `secrets.X` and `vars.X` is a value the
+   wizard must produce). For a migration: the current state, the target state and the irreversible steps between them.
+2. **A list of stages for approval** — in dependency order. For each value: where the human will get it, where it will go,
+   whether it is secret:
+   | Who needs it | Target |
    |---|---|
-   | tylko lokalny development | `.env` |
-   | CI, wartość tajna | sekret GitHub |
-   | CI, wartość jawna | zmienna GitHub |
-   | development i CI | `.env` + sekret |
-   | nic (sama czynność: przełącznik, zmiana planu) | nigdzie |
-   Człowiek może dodać, usunąć lub przestawić etapy.
-3. **Ścieżka w każdym etapie**: URL i dokładna droga („Panel → Developers → API keys → Reveal → skopiuj”). Nie znasz
-   aktualnego wyglądu panelu lub polecenia → sprawdź dokumentację (`researcher`) albo zapytaj; **nie wymyślaj kroków**.
-4. **Napisz kreator**: skopiuj szablon do `scripts/` (jednorazowy) albo w miejsce wskazane przez człowieka. Jeden etap =
-   jedna czynność mieszcząca się na ekranie. Najpierw `open_url`, potem `ask`/`ask_secret`; `ask_secret` dla wszystkiego,
-   co tajne; `write_env` dla każdej zapisywanej wartości; `set_secret` tylko dla tego, czego CI naprawdę używa; `confirm`
-   przed każdym nieodwracalnym krokiem. Ustaw `TOTAL_STAGES`.
-5. **Sprawdź statycznie**: `bash -n`, `shellcheck` (jeśli jest), `chmod +x`. Prześledź: każda wartość z kroku 2 jest
-   pobierana i trafia tam, gdzie miała; każda nazwa w `set_secret` zgadza się z `secrets.*` w workflow. Nie uruchamiasz
-   (otwiera przeglądarkę i czeka na człowieka).
-6. **Przekaż**: jak uruchomić; `.env` jest w `.gitignore`. Kreator jednorazowy usuwa się po użyciu; powtarzalny (wdrożenie
-   nowej osoby) — commit i link w README, zamiast instrukcji do przeklejania.
+   | local development only | `.env` |
+   | CI, a secret value | a GitHub secret |
+   | CI, a public value | a GitHub variable |
+   | development and CI | `.env` + a secret |
+   | nothing (just an action: a toggle, a plan change) | nowhere |
+   The human may add, remove or reorder stages.
+3. **The path in every stage**: the URL and the exact route ("Dashboard → Developers → API keys → Reveal → copy"). You do not know
+   the current look of the dashboard or the command → check the documentation (`researcher`) or ask; **do not invent steps**.
+4. **Write the wizard**: copy the template to `scripts/` (one-time) or to the place the human indicates. One stage =
+   one action that fits on the screen. First `open_url`, then `ask`/`ask_secret`; `ask_secret` for everything
+   secret; `write_env` for every saved value; `set_secret` only for what CI really uses; `confirm`
+   before every irreversible step. Set `TOTAL_STAGES`.
+5. **Check statically**: `bash -n`, `shellcheck` (if available), `chmod +x`. Trace: every value from step 2 is
+   collected and goes where it should; every name in `set_secret` matches `secrets.*` in the workflow. You do not run it
+   (it opens a browser and waits for the human).
+6. **Hand over**: how to run it; `.env` is in `.gitignore`. A one-time wizard is deleted after use; a repeatable one (onboarding
+   a new person) — a commit and a link in the README, instead of instructions to copy and paste.
 
-## Zasady bezpieczeństwa
-- Hook i tak blokuje agentowi odczyt `.env*`; kreator nie wypisuje sekretów na ekran ani do logów.
-- Wartości do `gh` idą przez stdin, nie w argumentach (argumenty widać w liście procesów).
-- Żadnych `curl | sh` ani pobierania skryptów w kreatorze; instalację narzędzi opisujesz jako krok ręczny. <!-- audit-ok: opis ataku, nie polecenie -->
-- Kreator zna tylko stan repozytorium, nie stan usługi zewnętrznej: etap, który mógł już zostać zrobiony (konto, klucz),
-  pyta „masz już?” i pozwala pominąć; podsumowanie wymienia rzeczy pominięte i do zrobienia ręcznie.
-- Ponowne uruchomienie podstawia zapisane wartości jako domyślne; nie ma „cofnij” — przerwij (Ctrl-C) i uruchom ponownie.
+## Security rules
+- A hook blocks the agent from reading `.env*` anyway; the wizard does not print secrets to the screen or to logs.
+- Values for `gh` go through stdin, not in arguments (arguments are visible in the process list).
+- No `curl | sh` and no downloading of scripts in the wizard; you describe installing tools as a manual step. <!-- audit-ok: describes an attack, not a command -->
+- The wizard knows only the state of the repository, not the state of the external service: a stage that may already be done (an account, a key)
+  asks "do you already have it?" and allows skipping; the summary lists the skipped things and those to do by hand.
+- A rerun fills in the saved values as defaults; there is no "undo" — interrupt (Ctrl-C) and run it again.
 
-## Źródło
-[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), skill `wizard`; opis:
-[aihero.dev](https://www.aihero.dev/skills-wizard). Procedura opisana własnymi słowami, szablon napisany od nowa.
+## Source
+[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), the `wizard` skill; description:
+[aihero.dev](https://www.aihero.dev/skills-wizard). The procedure described in our own words, the template written from scratch.

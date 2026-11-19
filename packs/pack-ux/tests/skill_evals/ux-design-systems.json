@@ -16,6 +16,44 @@
       }
     },
     {
+      "id": "warstwy-tokenow-motywy-en",
+      "expect": "trigger",
+      "prompt": "We're building a design system for three products and we want a dark theme and a second brand. How should we layer the tokens and name them so we don't end up with a mess? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "prymityw",
+            "primitive",
+            "referencyjn",
+            "reference"
+          ],
+          [
+            "semantyczn",
+            "semantic"
+          ],
+          [
+            "komponentow",
+            "component token",
+            "component[- ](level )?token\\w*",
+            "component"
+          ],
+          [
+            "alias",
+            "odwołuj",
+            "referencj",
+            "wskazuj",
+            "referenc\\w*",
+            "point(s|ing)? to"
+          ]
+        ],
+        "none": [
+          "wystarczy (jedna|jedn\\w+) warstw",
+          "(one|a single|1) layer (is |will be )?(enough|sufficient)",
+          "one layer (will do|suffices)"
+        ]
+      }
+    },
+    {
       "id": "dtcg-style-dictionary",
       "expect": "trigger",
       "prompt": "Chcemy wyeksportować tokeny z Figmy do kodu w standardowym formacie i budować z nich CSS oraz zmienne na iOS i Androida. Co to jest DTCG i czym zbudować taki potok? Odpowiedz zwięźle.",

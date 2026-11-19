@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-PreToolUse (Bash): twarda bramka dla poleceń powłoki — działa niezależnie od decyzji modelu,
-również w subagentach. DENY = blokada, ASK = wymagana zgoda człowieka.
-Uzupełnia (nie zastępuje) reguły permissions w settings.json.
+PreToolUse (Bash): hard gate for shell commands — works independently of the model's decision,
+also in subagents. DENY = block, ASK = human approval required.
+Complements (does not replace) the permissions rules in settings.json.
 """
 import importlib.util
 import json
@@ -14,9 +14,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
+        return None
+try:
+    from hook_errors import record_block  # block to .tf/logs/hook-blocks.jsonl (warning after an update)
+except ImportError:
+    def record_block(hook: str, decision: str) -> None:
         return None
 
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
@@ -26,53 +31,53 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
         pass
 
 DENY = [
-    (r"\brm\s+-[a-zA-Z]*(rf|fr)[a-zA-Z]*\s+(/|/\*|~/?|\$HOME/?|\.\.?/?|\*)(\s|$)", "rm -rf na katalogu głównym/domowym/bieżącym"),
+    (r"\brm\s+-[a-zA-Z]*(rf|fr)[a-zA-Z]*\s+(/|/\*|~/?|\$HOME/?|\.\.?/?|\*)(\s|$)", "rm -rf on the root/home/current directory"),
     (r"--no-preserve-root", "rm --no-preserve-root"),
-    (r"\bgit\s+push\b.*(\s--force(?!-with-lease)|\s-f\b|\s\+\S+)", "git push --force (użyj --force-with-lease po zgodzie człowieka)"),
+    (r"\bgit\s+push\b.*(\s--force(?!-with-lease)|\s-f\b|\s\+\S+)", "git push --force (use --force-with-lease after a human's consent)"),
     (r"\b(curl|wget)\b[^|;&]*\|\s*(sudo\s+)?(sh|bash|zsh|python3?|py|node)\b", "pobieranie i wykonywanie skryptu z sieci (curl | sh)"),
-    (r"(^|[;&|]\s*)(printenv|env)\s*($|[;&|>])", "wypisywanie wszystkich zmiennych środowiskowych (mogą zawierać sekrety)"),
+    (r"(^|[;&|]\s*)(printenv|env)\s*($|[;&|>])", "printing all environment variables (they may contain secrets)"),
     (r"\b(cat|less|more|head|tail|bat|strings|xxd|base64|cp|scp|rsync|source|\.)\s+[^;&|]*"
      r"(\.env(?!\.(example|sample|template))\b|id_rsa|id_ed25519|\.pem\b|\.p12\b|\.aws/credentials|/secrets?/|"
      r"\.ssh/|\.git-credentials|\.kube/config|\.docker/config\.json|\.config/gh/hosts)",
-     "odczyt pliku z sekretami"),
-    # Wzorce z analiz ataków (Huntress: ClickFix, fałszywe instrukcje AI, React2Shell, axios) — core-agent-security
+     "reading a file with secrets"),
+    # Patterns from attack analyses (Huntress: ClickFix, fake AI instructions, React2Shell, axios) — core-agent-security
     (r"\bbase64\s+(-d|-D|--decode)\b[^;&]*\|\s*(sudo\s+)?(sh|bash|zsh|python3?|py|node|perl)\b",
-     "dekodowanie base64 i wykonanie w powłoce (typowe dla ClickFix)"),
+     "decoding base64 and running it in a shell (typical of ClickFix)"),
     (r"\b(sh|bash|zsh)\s+(-c\s+)?[\"']?\$\(\s*(curl|wget)\b|<\(\s*(curl|wget)\b",
-     "pobieranie i wykonywanie skryptu z sieci (sh -c \"$(curl …)\")"),
+     "downloading and running a script from the network (sh -c \"$(curl …)\")"),
     (r"\b(iwr|irm|invoke-webrequest|invoke-restmethod)\b[^;&]*\|\s*(iex|invoke-expression)\b|"
      r"\b(iex|invoke-expression)\s*\(?\s*\(?\s*(iwr|irm|new-object\s+net\.webclient)",
-     "pobieranie i wykonywanie skryptu PowerShell z sieci (irm | iex)"),
-    (r"\bmshta(\.exe)?\s+\S", "mshta (uruchamianie HTA — typowe dla ClickFix)"),
+     "downloading and running a PowerShell script from the network (irm | iex)"),
+    (r"\bmshta(\.exe)?\s+\S", "mshta (running HTA — typical of ClickFix)"),
     (r"169\.254\.169\.254|metadata\.google\.internal|100\.100\.100\.200",
-     "dostęp do usługi metadanych chmury (poświadczenia instancji)"),
-    (r"\bhistory\s+-c\b|\bunset\s+HISTFILE\b|HISTFILE=/dev/null", "kasowanie historii powłoki (zacieranie śladów)"),
-    (r"\bchattr\s+(-R\s+)?\+[a-zA-Z]*i", "chattr +i (blokowanie plików przed usunięciem — technika trwałości)"),
+     "access to the cloud metadata service (instance credentials)"),
+    (r"\bhistory\s+-c\b|\bunset\s+HISTFILE\b|HISTFILE=/dev/null", "clearing the shell history (covering tracks)"),
+    (r"\bchattr\s+(-R\s+)?\+[a-zA-Z]*i", "chattr +i (locking files against deletion — a persistence technique)"),
     (r"\bterraform\s+(destroy|apply\b.*-auto-approve)", "terraform destroy / apply -auto-approve"),
-    (r"\bmkfs(\.\w+)?\b|\bdd\s+[^;&|]*of=/dev/", "operacje na urządzeniach blokowych"),
+    (r"\bmkfs(\.\w+)?\b|\bdd\s+[^;&|]*of=/dev/", "operations on block devices"),
     (r"\bchmod\s+(-R\s+)?0?777\b", "chmod 777"),
     (r":\(\)\s*\{\s*:\|:&\s*\};:", "fork bomb"),
-    # opcje gita uruchamiające dowolny program: git_exec_option() (po tokenach, bez komunikatów commita)
+    # git options that run an arbitrary program: git_exec_option() (by tokens, ignoring commit messages)
 ]
 
 # Typy operacji polityki autonomii (B1a, `autonomy.operations` w .tf/factory/config.yaml i .tf/config/config.yaml):
-# domyślnie „confirm” (zgoda człowieka); projekt może tylko zaostrzyć do „deny” (decyzja człowieka 2026-11-10, D1).
+# default "confirm" (human approval); a project may only tighten to "deny" (human decision 2026-11-10, D1).
 ASK = [
     (r"\bsudo\b", "sudo", "sudo"),
     (r"\bgit\s+(reset\s+--hard|clean\s+-[a-zA-Z]*f|push\b)", "git reset --hard / clean -f / push", "git_push"),
-    (r"\bterraform\s+(apply|import|state\s+(rm|mv))\b", "zmiana stanu infrastruktury", "infra_change"),
-    (r"\b(kubectl\s+(delete|apply|scale|rollout)|helm\s+(install|upgrade|uninstall|rollback))\b", "zmiana w klastrze Kubernetes",
+    (r"\bterraform\s+(apply|import|state\s+(rm|mv))\b", "a change to the infrastructure state", "infra_change"),
+    (r"\b(kubectl\s+(delete|apply|scale|rollout)|helm\s+(install|upgrade|uninstall|rollback))\b", "a change in a Kubernetes cluster",
      "infra_change"),
-    (r"\b(npm|pnpm|yarn)\s+publish\b|\bdocker\s+push\b", "publikacja paczki/obrazu", "publish"),
-    (r"\b(DROP\s+(DATABASE|TABLE|SCHEMA)|TRUNCATE\s+TABLE?)\b", "destrukcyjne SQL", "destructive_sql"),
-    (r"\b(curl|wget)\b.*(\s-d\s*@|--data(-binary)?\s*@|\s-T\s|--upload-file|-F\s+\S+=@|--post-file)", "wysyłanie pliku na zewnątrz",
+    (r"\b(npm|pnpm|yarn)\s+publish\b|\bdocker\s+push\b", "publishing a package/image", "publish"),
+    (r"\b(DROP\s+(DATABASE|TABLE|SCHEMA)|TRUNCATE\s+TABLE?)\b", "destructive SQL", "destructive_sql"),
+    (r"\b(curl|wget)\b.*(\s-d\s*@|--data(-binary)?\s*@|\s-T\s|--upload-file|-F\s+\S+=@|--post-file)", "sending a file outside",
      "data_upload"),
     (r"\bcrontab\b(?!\s+-l\b)|\bsystemctl\s+(--user\s+)?(enable|link)\b|\blaunchctl\s+(load|bootstrap)\b|"
      r"(LaunchAgents|LaunchDaemons|/etc/cron\.|/etc/systemd/|\.config/systemd/)",
-     "trwałość: cron, usługa systemd lub LaunchAgent", "persistence"),
+     "persistence: cron, a systemd service or a LaunchAgent", "persistence"),
     (r"\b(npm\s+(i|install|add)|pnpm\s+(add|i|install)|yarn\s+add|bun\s+add)\b(\s+-{1,2}[\w-]+(=\S+)?)*\s+[@\w][^\s;&|]*",
-     "dodanie lub zmiana zależności (łańcuch dostaw)", "dependency_add"),
-    (r"\b(kubectl|helm|terraform|aws|gcloud|az)\b.*\b(prod|production|prd)\b", "polecenie dotyczące PRODUKCJI", "prod_command"),
+     "adding or changing a dependency (supply chain)", "dependency_add"),
+    (r"\b(kubectl|helm|terraform|aws|gcloud|az)\b.*\b(prod|production|prd)\b", "a command touching PRODUCTION", "prod_command"),
 ]
 OPERATIONS = sorted({op for _, _, op in ASK})
 LEVELS = {"confirm": 1, "deny": 2}
@@ -83,8 +88,8 @@ def _project_root() -> Path:
 
 
 def load_policy(root: Path | None = None) -> tuple[dict, list[str]]:
-    """Poziom każdego typu operacji i ostrzeżenia. Konfiguracja silnika i projektu może tylko zaostrzać: wartość
-    słabsza niż „confirm” (np. full, allow) albo nieznany typ jest ignorowany i zgłaszany w ostrzeżeniach."""
+    """Level of each operation type, and warnings. Engine and project configuration may only tighten: a value
+    weaker than "confirm" (e.g. full, allow) or an unknown type is ignored and reported in the warnings."""
     root = root or _project_root()
     levels, warns = {op: "confirm" for op in OPERATIONS}, []
     packs_py = next((c for c in (root / ".tf" / "factory" / "packs.py", Path(__file__).resolve().parents[2] / ".tf" / "factory"
@@ -95,21 +100,23 @@ def load_policy(root: Path | None = None) -> tuple[dict, list[str]]:
         spec = importlib.util.spec_from_file_location("tf_packs_guard", packs_py)
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        sources = [root / ".tf" / "factory" / "config.yaml", root / ".tf" / "config" / "config.yaml"]
-        for src in sources:
-            if not src.is_file():
-                continue
-            ops = ((mod.load_yaml(src) or {}).get("autonomy") or {}).get("operations") or {}
+        if hasattr(mod, "config_layers"):     # engine ← company ← team ← project ← person
+            layers = mod.config_layers(root)
+        else:
+            layers = [(str(s), mod.load_yaml(s)) for s in (root / ".tf" / "factory" / "config.yaml",
+                                                           root / ".tf" / "config" / "config.yaml") if s.is_file()]
+        for src, data in layers:
+            ops = ((data or {}).get("autonomy") or {}).get("operations") or {}
             for op, val in ops.items():
                 val = str(val).strip().lower()
                 if op not in levels:
-                    warns.append(f"{src}: nieznany typ operacji `{op}` (znane: {', '.join(OPERATIONS)})")
+                    warns.append(f"{src}: unknown operation type `{op}` (known: {', '.join(OPERATIONS)})")
                 elif val not in LEVELS:
-                    warns.append(f"{src}: `{op}: {val}` ignorowane — polityka może tylko zaostrzać (confirm albo deny)")
+                    warns.append(f"{src}: `{op}: {val}` ignored — a policy can only tighten (confirm or deny)")
                 elif LEVELS[val] > LEVELS[levels[op]]:
                     levels[op] = val
-    except Exception as e:   # błąd konfiguracji nigdy nie rozluźnia — zostają wartości domyślne
-        warns.append(f"nie udało się wczytać polityki autonomii: {e}")
+    except Exception as e:   # a configuration error never loosens — defaults remain
+        warns.append(f"could not load the autonomy policy: {e}")
     return levels, warns
 
 
@@ -119,15 +126,15 @@ GIT_GLOBAL_OPTS = re.compile(
 
 
 def normalize(cmd: str) -> str:
-    """`git -C dir push -f` i `git -c a=b reset --hard` to te same operacje co bez opcji globalnych — wzorce widzą
-    podkomendę zaraz po `git`."""
+    """`git -C dir push -f` and `git -c a=b reset --hard` are the same operations as without global options — the patterns see
+    the subcommand right after `git`."""
     return GIT_GLOBAL_OPTS.sub("git", cmd)
 
 
-# Zapis plików przez powłokę (D-012): te same reguły co Edit/Write — guard_paths (sekrety, konfiguracja zabezpieczeń)
-# i tdd_guard (kod produkcyjny po czerwonym teście). Rozpoznaje przekierowania, tee, sed/perl -i, cp/mv/install oraz
-# open(…,'w') / Path(…).write_text / writeFileSync w kodzie podanym w poleceniu. Skrypt uruchomiony z pliku nie jest
-# sprawdzany przed wykonaniem — po wykonaniu zmianę kodu zgłasza tdd_guard (git status).
+# File writes through the shell (D-012): the same rules as Edit/Write — guard_paths (secrets, security configuration)
+# and tdd_guard (production code after a red test). Recognizes redirections, tee, sed/perl -i, cp/mv/install and
+# open(…,'w') / Path(…).write_text / writeFileSync in code given in the command. A script run from a file is not
+# checked before execution — after execution tdd_guard reports the code change (git status).
 REDIRECT = re.compile(r"[();|]*(&?>>?\|?)")
 NO_TARGET = re.compile(r"^(/dev/(null|std(out|err)|tty|fd/\d+)|&?\d*)$")
 HEREDOC = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_]\w*)\1")
@@ -153,8 +160,8 @@ def strip_heredocs(cmd: str) -> str:
     return "\n".join(out)
 
 
-# git push/fetch/pull działają poza piaskownicą Bash (sandbox.excludedCommands) — te opcje uruchamiają dowolny program.
-# Sprawdzane po tokenach, nie po tekście: nazwa opcji w komunikacie commita (-m '…', heredoc) to dane.
+# git push/fetch/pull run outside the Bash sandbox (sandbox.excludedCommands) — these options run an arbitrary program.
+# Checked by tokens, not by text: an option name in a commit message (-m '…', heredoc) is data.
 GIT_EXEC_OPT = re.compile(r"--(upload-pack|receive-pack|exec)\b")
 GIT_EXEC_RAW = re.compile(r"\bgit\b[^;&|]*\s--(upload-pack|receive-pack|exec)\b")
 CODE_RUNNERS = re.compile(r"\b(sh|bash|zsh|dash|ksh|fish|eval|source|python3?|py|perl|ruby|node)\b")
@@ -167,7 +174,7 @@ def git_exec_option(cmd: str) -> bool:
             if line.strip() == end:
                 end = None
             elif keep:
-                lines.append(line)   # heredoc dla powłoki lub interpretera to kod, nie dane
+                lines.append(line)   # a heredoc for a shell or interpreter is code, not data
             continue
         lines.append(line)
         m = HEREDOC.search(line)
@@ -190,7 +197,7 @@ def git_exec_option(cmd: str) -> bool:
             runner = True
         if seen_git and GIT_EXEC_OPT.match(t):
             return True
-        # kod w argumencie: sh -c "git …", podstawienie $(…) lub `…` w cudzysłowie
+        # code in an argument: sh -c "git …", a $(…) or `…` substitution in quotes
         if (runner or "$(" in t or "`" in t) and GIT_EXEC_RAW.search(t):
             return True
         seen_git = seen_git or name == "git"
@@ -208,7 +215,7 @@ def tokens(cmd: str) -> list[str]:
 
 
 def write_targets(cmd: str) -> list[str]:
-    """Ścieżki, które polecenie może zapisać (bez wykonywania i bez czytania plików)."""
+    """Paths the command may write (without executing and without reading files)."""
     found = [m for r in INLINE_WRITES for m in r.findall(cmd)]
     segments, cur, redirect_next = [], [], False
     for t in tokens(cmd):
@@ -222,9 +229,9 @@ def write_targets(cmd: str) -> list[str]:
             redirect_next = True
             continue
         if t in ("<", "<<", "<<<", "<<-", ">&", "<&") or re.fullmatch(r"\d*[<>]&?\d*-?", t):
-            redirect_next = t.startswith(">")   # operand wejścia albo deskryptor — nie jest celem zapisu
+            redirect_next = t.startswith(">")   # an input operand or a descriptor — not a write target
             if not redirect_next:
-                cur.append("\0")               # następny token to operand, pomiń
+                cur.append("\0")               # the next token is an operand, skip it
             continue
         if t and all(c in ";&|()" for c in t):
             segments.append(cur)
@@ -304,10 +311,10 @@ def check_writes(data: dict, cmd: str) -> None:
         inside = full == root or full.startswith(root.rstrip(os.sep) + os.sep)
         norm = (os.path.relpath(full, root) if inside else full).replace("\\", "/")
         if paths.SECRET_PATHS.search(norm) and not paths.SAFE_ENV.search(norm):
-            decide("deny", f"Zablokowano: zapis do pliku z sekretami ({t}). Używaj zmiennych środowiskowych i plików "
-                           "*.example; zmianę sekretów robi człowiek.")
+            decide("deny", f"Blocked: writing to a file with secrets ({t}). Use environment variables and "
+                           "*.example files; a human changes secrets.")
         if paths.GUARDRAILS.search(norm):
-            decide("ask", f"Wymaga zgody: zapis przez powłokę do konfiguracji zabezpieczeń lub .git ({t}).")
+            decide("ask", f"Needs consent: a shell write to the safeguards' configuration or .git ({t}).")
         if inside and "$" not in norm:
             production.append(norm)
     mode = os.environ.get("CLAUDE_TDD", "strict").lower()
@@ -317,11 +324,13 @@ def check_writes(data: dict, cmd: str) -> None:
     production = [p for p in production if tdd.is_production(p)]
     reason = tdd.bash_pre(data, production) if production else None
     if reason:
-        decide("ask" if mode == "ask" else "deny", reason + " Zapis przez powłokę (sed -i, >, tee, cp…) podlega tej "
-                                                             "samej bramce co Edit.")
+        decide("ask" if mode == "ask" else "deny", reason + " A shell write (sed -i, >, tee, cp…) goes through the "
+                                                             "same gate as Edit.")
 
 
 def decide(decision: str, reason: str) -> None:
+    if decision in ("deny", "ask"):
+        record_block("guard_bash", decision)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
@@ -349,29 +358,29 @@ def main() -> None:
         sys.exit(0)
     ti = data.get("tool_input") if isinstance(data, dict) else None
     cmd = ti.get("command") if isinstance(ti, dict) else None
-    if not cmd or not isinstance(cmd, str):   # dane spoza formatu Claude Code: decyzja, nie awaria (onFailure: block)
+    if not cmd or not isinstance(cmd, str):   # data outside the Claude Code format: a decision, not a failure (onFailure: block)
         sys.exit(0)
     cmd = normalize(cmd)
     for pattern, reason in DENY:
         if re.search(pattern, cmd, re.IGNORECASE):
-            decide("deny", f"Zablokowano: {reason}. Jeśli to konieczne, poproś człowieka o wykonanie ręczne.")
+            decide("deny", f"Blocked: {reason}. If it is necessary, ask a human to run it by hand.")
     if git_exec_option(cmd):
-        decide("deny", "Zablokowano: opcja gita uruchamiająca dowolny program (--upload-pack, --receive-pack, "
-                       "--exec). Jeśli to konieczne, poproś człowieka o wykonanie ręczne.")
+        decide("deny", "Blocked: a git option that runs any program (--upload-pack, --receive-pack, "
+                       "--exec). If it is necessary, ask a human to run it by hand.")
     try:
         check_writes(data, cmd)
-    except Exception as e:  # błąd rozpoznawania zapisu nigdy nie blokuje (decide kończy proces przez SystemExit — nie łapiemy go)
+    except Exception as e:  # a write-detection error never blocks (decide ends the process via SystemExit — we do not catch it)
         record_error("guard_bash", e)
     hits = [(reason, op) for pattern, reason, op in ASK if re.search(pattern, cmd, re.IGNORECASE)]
     if hits:
         levels, _ = load_policy()
         for reason, op in hits:
             if levels.get(op) == "deny":
-                decide("deny", f"Zablokowano przez politykę autonomii projektu ({op}: deny): {reason}. "
-                               f"Poproś człowieka o wykonanie ręczne.")
+                decide("deny", f"Blocked by the project's autonomy policy ({op}: deny): {reason}. "
+                               f"Ask a human to run it by hand.")
         reason, op = hits[0]
-        decide("ask", f"Wymaga zgody ({op}): {reason}.")
-    sys.exit(0)  # brak decyzji → normalny przepływ uprawnień
+        decide("ask", f"Needs consent ({op}): {reason}.")
+    sys.exit(0)  # no decision → normal permission flow
 
 
 if __name__ == "__main__":

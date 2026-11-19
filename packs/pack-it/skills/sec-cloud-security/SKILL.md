@@ -1,107 +1,107 @@
 ---
 name: sec-cloud-security
-description: Użyj przy bezpieczeństwie chmury AWS, Azure, GCP — model współdzielonej odpowiedzialności, guardrails kont, logi, CSPM i CNAPP, CIS, baseline.
+description: Use for AWS, Azure, GCP cloud security — the shared responsibility model, account guardrails, logs, CSPM and CNAPP, CIS, baseline.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj przy projekcie lub przeglądzie bezpieczeństwa chmury publicznej (AWS, Azure, GCP) — współdzielona odpowiedzialność (IaaS, PaaS, SaaS), struktura kont, subskrypcji i projektów z guardrails (SCP, Azure Policy, Organization Policy), tożsamość bez długich kluczy, segmentacja sieci i prywatne punkty końcowe, szyfrowanie z kluczami klienta, klasyfikacja danych, baseline logowania, CSPM, CNAPP i CIEM, benchmarki CIS, kontenery w chmurze, polityki jako kod, gotowość na incydent. Wynik to dokument baseline i mapowanie kontroli. Nie do samego Terraform (ops-iac-terraform), RBAC i NetworkPolicy (ops-kubernetes), OIDC w CI i sekretów (ops-secrets-identities), zero trust i tożsamości ludzi (sec-zero-trust-identity), kosztów (ops-finops) ani obsługi incydentu (ops-security-operations)."
-  slowa: "bezpieczeństwo chmury, cloud security, baseline chmury, landing zone, współdzielona odpowiedzialność, shared responsibility, SCP, Azure Policy, Organization Policy, guardrails, publiczny bucket, CloudTrail, Activity Log, Cloud Audit Logs, CSPM, CNAPP, CIEM, CIS Benchmark, prywatny endpoint, private link, VPC, VNet, klucze klienta, CMK, KMS, Checkov, Conftest, break-glass, mapowanie kontroli, multi-cloud, audyt chmury"
+  review: "2027-04-17"
+  catalog: "Use when designing or reviewing the security of a public cloud (AWS, Azure, GCP) — shared responsibility (IaaS, PaaS, SaaS), the structure of accounts, subscriptions and projects with guardrails (SCP, Azure Policy, Organization Policy), identity without long-lived keys, network segmentation and private endpoints, encryption with customer keys, data classification, a logging baseline, CSPM, CNAPP and CIEM, CIS benchmarks, containers in the cloud, policies as code, incident readiness. The result is a baseline document and a control mapping. Not for Terraform itself, RBAC and NetworkPolicy (ops-kubernetes), OIDC in CI and secrets (ops-secrets-identities), zero trust and human identities (sec-zero-trust-identity), costs (ops-finops) or incident handling (ops-security-operations)."
+  keywords: "bezpieczeństwo chmury, cloud security, baseline chmury, landing zone, współdzielona odpowiedzialność, shared responsibility, SCP, Azure Policy, Organization Policy, guardrails, publiczny bucket, CloudTrail, Activity Log, Cloud Audit Logs, CSPM, CNAPP, CIEM, CIS Benchmark, prywatny endpoint, private link, VPC, VNet, klucze klienta, CMK, KMS, Checkov, Conftest, break-glass, mapowanie kontroli, multi-cloud, audyt chmury, cloud baseline, public bucket, private endpoint, customer keys, control mapping, cloud audit"
 ---
 
-# Bezpieczeństwo chmury: baseline i mapowanie kontroli
+# Cloud security: baseline and control mapping
 
-Wynik pracy: plik `docs/project/04-architecture/cloud-security-baseline.md` (core-project-record) z dwiema częściami:
-**baseline** (co obowiązuje każde konto, subskrypcję i projekt) oraz **mapowanie kontroli** (kontrola → AWS / Azure / GCP
-→ jak wymuszana → jak weryfikowana → właściciel). Tabelę wyjściową i odpowiedniki usług daje
-`references/mapowanie-kontroli.md`. Ten skill niczego nie wdraża: zmiany w chmurze przechodzą przez
-ops-iac-terraform i akceptację człowieka.
+The output: the file `docs/project/04-architecture/cloud-security-baseline.md` (core-project-record) with two parts:
+**the baseline** (what applies to every account, subscription and project) and **the control mapping** (control → AWS / Azure / GCP
+→ how it is enforced → how it is verified → owner). The output table and the service equivalents are given in
+`references/control-mapping.md`. This skill deploys nothing: changes in the cloud go through
+IaC with a plan in the PR and a human's approval.
 
-## Procedura
-1. **Zakres i typy usług.** Spisz używane chmury i usługi, każdą oznacz IaaS / PaaS / SaaS. Dostawca odpowiada
-   za bezpieczeństwo *chmury* (obiekty fizyczne, hipernadzorca; w PaaS także system i środowisko uruchomieniowe),
-   klient za bezpieczeństwo *w chmurze*. Zawsze po stronie klienta: dane, tożsamości i uprawnienia, konfiguracja
-   usług. Im bliżej IaaS, tym więcej po stronie klienta (system, łatki, sieć hosta). Zapisz granicę per usługa.
-2. **Struktura i guardrails.** Hierarchia: organizacja → grupy (OU, grupy zarządzania, foldery) → konta, subskrypcje
-   lub projekty osobno dla: produkcji, nieprodukcji, logów (konto tylko do zapisu i odczytu przez bezpieczeństwo),
-   narzędzi bezpieczeństwa i sieci współdzielonej. Guardrails zapobiegawcze na górze hierarchii:
-   - AWS: **SCP** (Service Control Policies) w Organizations. Ograniczają maksymalne uprawnienia, niczego nie nadają
-     i **nie obejmują konta zarządzającego** (management account), więc nie uruchamiaj w nim obciążeń.
-   - Azure: **Azure Policy** (efekty Audit, Deny, DeployIfNotExists) przypisana do grupy zarządzania, plus RBAC.
-   - GCP: **Organization Policy** (ograniczenia, np. `constraints/iam.disableServiceAccountKeyCreation`,
+## Procedure
+1. **Scope and service types.** List the clouds and services in use, mark each as IaaS / PaaS / SaaS. The provider is responsible
+   for the security *of the cloud* (physical facilities, the hypervisor; in PaaS also the operating system and the runtime),
+   the customer for security *in the cloud*. Always on the customer's side: data, identities and permissions, the configuration
+   of services. The closer to IaaS, the more on the customer's side (the operating system, patches, the host network). Record the boundary per service.
+2. **Structure and guardrails.** The hierarchy: organization → groups (OUs, management groups, folders) → accounts, subscriptions
+   or projects, separately for: production, non-production, logs (an account write-only, read by security),
+   security tools and the shared network. Preventive guardrails at the top of the hierarchy:
+   - AWS: **SCP** (Service Control Policies) in Organizations. They limit the maximum permissions, grant nothing
+     and **do not cover the management account**, so do not run workloads in it.
+   - Azure: **Azure Policy** (the Audit, Deny, DeployIfNotExists effects) assigned to a management group, plus RBAC.
+   - GCP: **Organization Policy** (constraints, e.g. `constraints/iam.disableServiceAccountKeyCreation`,
      `constraints/storage.publicAccessPrevention`).
-   Typowe guardrails: zakaz wyłączania logów audytowych, zakaz opuszczenia organizacji, ograniczenie regionów,
-   zakaz publicznego dostępu do magazynów, wymóg szyfrowania. Wprowadzaj w trybie audytu, potem blokady.
-3. **Tożsamość.** Ludzie przez SSO z MFA odpornym na phishing (szczegóły: sec-zero-trust-identity). Obciążenia bez
-   długotrwałych kluczy: role (AWS IAM roles), managed identity (Azure), konta usług z dołączeniem tożsamości
-   (GCP); zewnętrzne systemy i CI przez federację OIDC (ops-secrets-identities). Wyłącz tworzenie kluczy
-   kont usług. Uprawnienia na czas (just-in-time), przegląd nieużywanych (IAM Access Analyzer, Entra Permissions
-   Management lub odpowiednik, IAM Recommender). **Break-glass**: 2 konta awaryjne poza SSO, hasło w sejfie
-   dzielonym na dwie osoby, MFA sprzętowe, alarm przy każdym logowaniu, test co kwartał [przykład].
-4. **Sieć.** Osobne sieci (VPC, VNet) per środowisko, podsieci publiczne tylko dla load balancerów i bram; bazy
-   i usługi wewnętrzne bez publicznych adresów. Do usług PaaS prywatne punkty końcowe (AWS PrivateLink / VPC
-   endpoints, Azure Private Endpoint, GCP Private Service Connect) i wyłączony dostęp publiczny usługi. Egress
-   domyślnie zamknięty, z allowlistą (zapora lub proxy) i kontrolą metadanych instancji (AWS: IMDSv2 wymagane,
-   ustawienie domyślne konta dla nowych instancji). Zarządzanie bez otwartych SSH i RDP z internetu (SSM,
-   Bastion, IAP). Ochrona przed eksfiltracją przez API: GCP VPC Service Controls, polityki punktów końcowych AWS.
-5. **Dane.** Klasyfikacja (publiczne, wewnętrzne, poufne, regulowane) w tagu zasobu; klasa decyduje o kluczu,
-   lokalizacji i retencji. Szyfrowanie w spoczynku jest dziś domyślne w większości usług; **klucze zarządzane przez
-   klienta** (KMS, Key Vault, Cloud KMS) włącz dla klas poufnych i regulowanych, z osobnym właścicielem klucza,
-   rotacją i zakazem usunięcia bez karencji. Publiczne magazyny: AWS S3 Block Public Access na koncie i w SCP,
-   Azure wyłączony anonimowy dostęp do kontenerów, GCP Public Access Prevention. Kopie zapasowe w osobnym
-   koncie z blokadą usuwania (immutability). Dane osobowe: arch-privacy-compliance.
-6. **Logowanie i wykrywanie.** Dziennik audytowy płaszczyzny zarządzania zawsze, do osobnego konta logów,
-   z retencją i ochroną przed usunięciem:
-   - AWS **CloudTrail**: historia zdarzeń to 90 dni zdarzeń zarządzania na region; trail organizacji (wszystkie konta
-     i regiony), walidacja integralności plików, zdarzenia danych (S3, Lambda) dla zasobów poufnych.
-   - Azure **Activity Log**: 90 dni domyślnie; ustawienie diagnostyczne do Log Analytics i konta magazynu.
-   - GCP **Cloud Audit Logs**: Admin Activity zawsze włączone i niewyłączalne; **Data Access** domyślnie wyłączone
-     (wyjątek BigQuery: [niezweryfikowane]), więc włącz dla projektów z danymi poufnymi.
-   Do tego logi przepływów sieci, DNS, bilansowanie obciążenia i logi usług danych. Reguły wykrywania i obsługa
-   alertów: ops-security-operations; telemetria aplikacji: ops-observability.
-7. **Postura.** Skrót CSPM: ciągłe sprawdzanie konfiguracji względem benchmarku (AWS Security Hub, Microsoft Defender
-   for Cloud, Google Security Command Center, Prowler). **CIEM**: analiza uprawnień i nadmiarowych dostępów.
-   **CWPP**: ochrona obciążeń (maszyny, kontenery, funkcje). **CNAPP**: platforma łącząca CSPM, CIEM, CWPP,
-   skan IaC i kontekst (ścieżki ataku); to kategoria rynkowa Gartnera, zakres zależy od dostawcy
-   [niezweryfikowane: oficjalna definicja]. Od dostawcy CNAPP wymagaj: pokrycia wszystkich kont, ścieżek ataku z kontekstem
-   (ekspozycja + uprawnienia + podatność), eksportu wyników, a nie tylko panelu. Benchmarki: CIS Foundations
-   (osobne dla AWS, Azure, GCP), AWS Foundational Security Best Practices, Microsoft cloud security benchmark.
-   Numer wersji CIS sprawdź przed użyciem. Każde odstępstwo ma właściciela i datę.
-8. **Kontenery i Kubernetes.** Zarządzany klaster ze sterowaniem prywatnym lub ograniczonym zakresem adresów,
-   tożsamość podów (IRSA / EKS Pod Identity, Azure Workload Identity, GKE Workload Identity), rejestr prywatny ze
-   skanem i podpisami, węzły z minimalnym systemem i auto-aktualizacją. RBAC, NetworkPolicy i Pod Security: ops-kubernetes; obrazy:
+   Typical guardrails: a ban on disabling audit logs, a ban on leaving the organization, a restriction of regions,
+   a ban on public access to storage, a requirement for encryption. Introduce them in audit mode, then the blocks.
+3. **Identity.** People through SSO with phishing-resistant MFA (details: sec-zero-trust-identity). Workloads without
+   long-lived keys: roles (AWS IAM roles), managed identity (Azure), service accounts with identity attachment
+   (GCP); external systems and CI through OIDC federation (ops-secrets-identities). Disable the creation of service account
+   keys. Just-in-time permissions, a review of unused ones (IAM Access Analyzer, Entra Permissions
+   Management or an equivalent, IAM Recommender). **Break-glass**: 2 emergency accounts outside SSO, the password in a vault
+   split between two people, hardware MFA, an alarm on every login, a test every quarter [example].
+4. **Network.** Separate networks (VPC, VNet) per environment, public subnets only for load balancers and gateways; databases
+   and internal services without public addresses. Private endpoints to PaaS services (AWS PrivateLink / VPC
+   endpoints, Azure Private Endpoint, GCP Private Service Connect) and the service's public access disabled. Egress
+   closed by default, with an allowlist (a firewall or a proxy) and control of the instance metadata (AWS: IMDSv2 required,
+   the account default setting for new instances). Management without SSH and RDP open to the internet (SSM,
+   Bastion, IAP). Protection against exfiltration through APIs: GCP VPC Service Controls, AWS endpoint policies.
+5. **Data.** Classification (public, internal, confidential, regulated) in a resource tag; the class decides the key,
+   location and retention. Encryption at rest is the default today in most services; enable **customer-managed
+   keys** (KMS, Key Vault, Cloud KMS) for the confidential and regulated classes, with a separate key owner,
+   rotation and a ban on deletion without a waiting period. Public storage: AWS S3 Block Public Access on the account and in an SCP,
+   Azure anonymous access to containers disabled, GCP Public Access Prevention. Backups in a separate
+   account with a deletion lock (immutability). Personal data: arch-privacy-compliance.
+6. **Logging and detection.** The management plane audit log always, to a separate log account,
+   with retention and protection against deletion:
+   - AWS **CloudTrail**: the event history is 90 days of management events per region; an organization trail (all accounts
+     and regions), log file integrity validation, data events (S3, Lambda) for confidential resources.
+   - Azure **Activity Log**: 90 days by default; a diagnostic setting to Log Analytics and a storage account.
+   - GCP **Cloud Audit Logs**: Admin Activity always enabled and cannot be disabled; **Data Access** disabled by default
+     (the BigQuery exception: [unverified]), so enable it for projects with confidential data.
+   On top of that, network flow logs, DNS, load balancing and data service logs. Detection rules and alert
+   handling: ops-security-operations; application telemetry: ops-observability.
+7. **Posture.** CSPM in short: continuous checking of the configuration against a benchmark (AWS Security Hub, Microsoft Defender
+   for Cloud, Google Security Command Center, Prowler). **CIEM**: analysis of permissions and excessive access.
+   **CWPP**: protection of workloads (machines, containers, functions). **CNAPP**: a platform combining CSPM, CIEM, CWPP,
+   an IaC scan and context (attack paths); it is a Gartner market category, the scope depends on the vendor
+   [unverified: the official definition]. From a CNAPP vendor require: coverage of all accounts, attack paths with context
+   (exposure + permissions + vulnerability), an export of results, not just a dashboard. Benchmarks: CIS Foundations
+   (separate for AWS, Azure, GCP), AWS Foundational Security Best Practices, Microsoft cloud security benchmark.
+   Check the CIS version number before use. Every deviation has an owner and a date.
+8. **Containers and Kubernetes.** A managed cluster with a private control plane or a limited address range,
+   pod identity (IRSA / EKS Pod Identity, Azure Workload Identity, GKE Workload Identity), a private registry with
+   scanning and signatures, nodes with a minimal operating system and auto-update. RBAC, NetworkPolicy and Pod Security: ops-kubernetes; images:
    ops-docker.
-9. **Polityki jako kod.** Kolejność: skaner IaC (**Checkov**) → polityki własne w **OPA / Conftest** (Rego na planie
-   Terraform w JSON) → guardrails w chmurze jako ostatnia linia. Ta sama reguła ma jedno źródło; bramki w PR:
-   ops-iac-terraform. Dryf i ręczne zmiany w konsoli zgłasza CSPM.
-10. **Gotowość na incydent.** Przed incydentem: konto forensyczne (odizolowane), migawki dowodowe, uprawnienia
-    zespołu reagowania z góry nadane na czas, scenariusze: wyciek klucza, zainfekowana instancja, publiczny bucket,
-    przejęte konto root / globalnego administratora. Procedury: ops-security-operations. Koszt logów: ops-finops.
-11. **Zapis i weryfikacja.** Wypełnij tabelę mapowania. Każda kontrola ma sposób sprawdzenia (zapytanie CSPM, test
-    polityki, przegląd). Wynik `proposed` → akceptacja człowieka; wyjątki od baseline tylko decyzją człowieka.
+9. **Policies as code.** The order: an IaC scanner (**Checkov**) → your own policies in **OPA / Conftest** (Rego on the Terraform
+   plan in JSON) → guardrails in the cloud as the last line. The same rule has one source; gates in the PR:
+   the IaC plan. Drift and manual changes in the console are reported by CSPM.
+10. **Incident readiness.** Before an incident: a forensic account (isolated), evidence snapshots, the response team's
+    permissions granted in advance on a just-in-time basis, scenarios: a leaked key, an infected instance, a public bucket,
+    a taken-over root / global administrator account. Procedures: ops-security-operations. The cost of logs: ops-finops.
+11. **Record and verification.** Fill in the mapping table. Every control has a way of checking it (a CSPM query, a policy
+    test, a review). The result `proposed` → a human's approval; exceptions to the baseline only by a human's decision.
 
-## Przykład
-**Sytuacja:** „15 kont AWS i 2 subskrypcje Azure, deweloperzy mają klucze dostępowe, bucket z fakturami był publiczny.”
-**Wynik** (fragment mapowania, liczby [przykład]):
+## Example
+**Situation:** "15 AWS accounts and 2 Azure subscriptions, developers have access keys, the bucket with invoices was public."
+**Result** (a fragment of the mapping, numbers [example]):
 
-| Kontrola | AWS | Azure | Wymuszenie | Weryfikacja | Właściciel |
+| Control | AWS | Azure | Enforcement | Verification | Owner |
 |---|---|---|---|---|---|
-| K-03 brak publicznych magazynów | S3 Block Public Access | zakaz anonimowego dostępu do kontenerów | SCP + Azure Policy (Deny) | CSPM, 0 wyników krytycznych | platforma |
-| K-07 brak długich kluczy | role + federacja SSO | managed identity | SCP zakazuje `iam:CreateAccessKey` | raport poświadczeń, 0 kluczy > 90 dni | tożsamość |
-| K-11 logi audytowe | trail organizacji do konta logów | Activity Log → Log Analytics | SCP zakazuje `cloudtrail:StopLogging` | alarm przy zatrzymaniu | bezpieczeństwo |
+| K-03 no public storage | S3 Block Public Access | a ban on anonymous access to containers | SCP + Azure Policy (Deny) | CSPM, 0 critical findings | platform |
+| K-07 no long-lived keys | roles + SSO federation | managed identity | an SCP forbids `iam:CreateAccessKey` | credential report, 0 keys > 90 days | identity |
+| K-11 audit logs | an organization trail to the log account | Activity Log → Log Analytics | an SCP forbids `cloudtrail:StopLogging` | an alarm on stopping | security |
 
-Plan: audyt 2 tygodnie → blokada; wyjątki z datą wygaśnięcia.
+Plan: audit for 2 weeks → block; exceptions with an expiry date.
 
-## Checklista
-- [ ] każda usługa oznaczona IaaS / PaaS / SaaS, granica odpowiedzialności zapisana
-- [ ] struktura kont z kontem logów; guardrails na górze hierarchii, najpierw tryb audytu
-- [ ] brak długotrwałych kluczy; break-glass przetestowany; uprawnienia na czas
-- [ ] prywatne punkty końcowe, egress z allowlistą, zero SSH i RDP z internetu
-- [ ] klasyfikacja danych, klucze klienta dla klas poufnych, publiczny dostęp zablokowany
-- [ ] logi audytowe do osobnego konta; Data Access w GCP włączone tam, gdzie trzeba
-- [ ] CSPM i benchmark z wersją; odstępstwa z właścicielem i datą
-- [ ] polityki jako kod w PR; mapowanie kontroli z metodą weryfikacji
+## Checklist
+- [ ] every service marked IaaS / PaaS / SaaS, the responsibility boundary recorded
+- [ ] an account structure with a log account; guardrails at the top of the hierarchy, audit mode first
+- [ ] no long-lived keys; break-glass tested; just-in-time permissions
+- [ ] private endpoints, egress with an allowlist, zero SSH and RDP from the internet
+- [ ] data classification, customer keys for the confidential classes, public access blocked
+- [ ] audit logs to a separate account; Data Access in GCP enabled where needed
+- [ ] CSPM and a benchmark with a version; deviations with an owner and a date
+- [ ] policies as code in the PR; a control mapping with a verification method
 
-## Źródła
-- AWS: Organizations SCP, CloudTrail, S3 (aktualizacja domyślnych ustawień bucketów: 2023-04-05), IMDSv2 jako domyślne (2024-03); sprawdzone wyszukiwaniem 2026-10-17, strony dokumentacji niedostępne bezpośrednio
-- Google Cloud: Audit Logs, Organization Policy (security foundations blueprint), CIS GCP Foundation v5.0.0 (CIS, czerwiec 2026)
-- Microsoft: Azure Policy, Activity Log (90 dni), Private Link, Microsoft cloud security benchmark (MCSB v1)
-- Checkov, Conftest i OPA — dokumentacje projektów; definicje CNAPP, CSPM, CIEM, CWPP: Gartner (pośrednio) [niezweryfikowane]
+## Sources
+- AWS: Organizations SCP, CloudTrail, S3 (the update of the default bucket settings: 2023-04-05), IMDSv2 as the default (2024-03); checked by search 2026-10-17, the documentation pages not directly accessible
+- Google Cloud: Audit Logs, Organization Policy (security foundations blueprint), CIS GCP Foundation v5.0.0 (CIS, June 2026)
+- Microsoft: Azure Policy, Activity Log (90 days), Private Link, Microsoft cloud security benchmark (MCSB v1)
+- Checkov, Conftest and OPA — the projects' documentation; definitions of CNAPP, CSPM, CIEM, CWPP: Gartner (indirectly) [unverified]

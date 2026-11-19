@@ -1,121 +1,145 @@
 ---
 name: core-problem-routing
-description: Użyj, gdy problem opisano zwykłym tekstem — rozpoznanie wymiarów, dobór skilli i person, doraźny zespół, forma wyniku.
+description: Use when a problem is described in plain text — recognising the dimensions, choosing skills and personas, an ad hoc team.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj, gdy dostajesz problem opisany zwykłym tekstem i nie wiadomo, kto i jak ma się nim zająć — rozpoznanie wymiarów, dobór skilli i person z katalogu, zestawienie doraźnego zespołu, wybór formy wyniku (rekomendacja, plan, rozwiązanie krok po kroku). Nie do samej wiedzy merytorycznej (skille wymiarów) ani łączenia skilli w jednej odpowiedzi (core-skill-composition)."
-  slowa: "od czego zacząć, kogo zaangażować, dobierz zespół, skład zespołu, podejście do problemu, nie wiem jak się do tego zabrać, nikt u nas nie zna protokołów, kogo zaangażować z innej dziedziny"
-argument-hint: "[opis problemu]"
+  review: "2027-10-17"
+  catalog: "Use when you get a problem described in plain text and it is unclear who should handle it and how — recognising the dimensions, choosing skills and personas from the catalog, putting together an ad hoc team, choosing the form of the result (a recommendation, a plan, a step-by-step solution). Not for the subject knowledge itself (the dimension skills) or for combining skills in one answer (core-skill-composition)."
+  keywords: "od czego zacząć, kogo zaangażować, dobierz zespół, skład zespołu, podejście do problemu, nie wiem jak się do tego zabrać, nikt u nas nie zna protokołów, kogo zaangażować z innej dziedziny, przeoczymy lepszą drogę, oczywiste pomysły, szerokie szukanie opcji, pułapka w decyzji, where to start, who to involve, pick a team, team composition, how to approach this problem, broad search for options, obvious ideas, trap in a decision, decyzja trudna do odwrócenia, sprzeczne kompromisy, kto powinien to ocenić, jak przedstawić wynik, forma wyniku, hard-to-reverse decision, conflicting trade-offs, who should assess this, how to present the result"
+argument-hint: "[problem description]"
 ---
 
-# Dobór zespołu i podejścia do problemu
+# Choosing the team and the approach to a problem
 
-Procedura dyspozytora nakładki (persona z `dispatcher: true`, np. Maja w pack-it, Iwona w pack-ev). Źródło prawdy o tym,
-co zespół potrafi: **`.claude/catalog.md`** (generowany — zainstalowane nakładki, skille wg wymiarów i nakładek, persony
-z wykonawcami, agenci wspólni, konsultanci nakładek). Czytasz go zamiast wszystkich skilli; skill wczytujesz dopiero wtedy,
-gdy go wybrałeś. Dobierasz **tylko to, co jest w katalogu** — nie zakładaj, że jakaś nakładka jest zainstalowana.
+The dispatcher procedure of a pack (a persona with `dispatcher: true`, e.g. Maja in pack-it or the dispatcher of a domain pack). The source of truth about
+what the team can do: **`.claude/catalog.md`** (generated — installed packs, skills by dimension and pack, personas
+with executors, shared agents, pack consultants). You read it instead of all the skills; you load a skill only once
+you have chosen it. You choose **only what is in the catalog** — do not assume any pack is installed.
 
-## 1. Zrozum problem (2–5 zdań, zanim cokolwiek dobierzesz)
-- **Co jest problemem, a co objawem?** Parafraza z celem i kryterium sukcesu („kiedy uznamy, że jest rozwiązany?”).
-- **Ograniczenia:** czas, ludzie/zespoły, ryzyko, czego nie wolno (np. „bez zamrażania kodu”), wersje, budżet.
-- **Rodzaj pytania:** decyzja (co wybrać) · plan (jak przejść z A do B) · diagnoza (dlaczego nie działa) · wykonanie (zrób).
-- Luki, które zmieniają odpowiedź → **1–3 pytania** z wartością domyślną (bramka — core-plan-interview). Człowiek niedostępny →
-  przyjmij domyślne i wypisz je jako założenia. Stan repo sprawdzaj sam (`detect_stack.py`, `scout`), nie pytaj o to człowieka.
+## 1. Understand the problem (2–5 sentences, before you choose anything)
+- **What is the problem and what is a symptom?** A paraphrase with the goal and the success criterion ("when do we consider it solved?").
+- **Constraints:** time, people/teams, risk, what is not allowed (e.g. "no code freeze"), versions, budget.
+- **Kind of question:** a decision (what to choose) · a plan (how to get from A to B) · a diagnosis (why it does not work) · execution (do it).
+- Gaps that change the answer → **1–3 questions** with a default value (a gate — core-plan-interview). The human unavailable →
+  take the defaults and list them as assumptions. Check the state of the repo yourself (`detect_stack.py`, `scout`), do not ask the human about it.
 
-## 2. Rozłóż na wymiary (katalog)
-Katalog grupuje skille wg wymiaru (prefiks nazwy) i podaje nakładkę. Dla każdego wymiaru z katalogu zadaj pytanie: *czy problem
-ma tę składową?* Wymiaru, którego nie ma w katalogu, nie ma w projekcie. Typowe sygnały:
-| Sygnał w opisie | Wymiar w katalogu | Przykładowe skille (nakładka) |
+## 2. Break it down into dimensions (the catalog)
+The catalog groups skills by dimension (the name prefix) and gives the pack. For each dimension in the catalog ask: *does the problem
+have this component?* A dimension that is not in the catalog is not in the project. Typical signals:
+| Signal in the description | Dimension in the catalog | Example skills (pack) |
 |---|---|---|
-| wersje, migracja, aktualizacja bibliotek | `tool-`, `fw-`, `lang-` (sekcje „Zależne od wersji”) + core-stack-sync | pack-it: tool-nx, fw-angular, ops-dependency-upgrades |
-| wiele zespołów, własność, koordynacja, priorytety, przepływ pracy | `proc-` | pack-it: proc-team-topologies, proc-agile, proc-lean, proc-safe |
-| co budować, metryki sukcesu, A/B, pomysł → wymagania (PRD), za duże MVP, zgłoszenia i backlog, plan dla sponsora | `proc-` | pack-it: proc-product-discovery, proc-requirements-shaping, proc-issue-triage, proc-project-planning |
-| podział na domeny/moduły, zależności między nimi, reguły biznesowe, pojęcia domeny, DDD na starym kodzie | `ddd-`, `dom-` | pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-connascence-analysis, ddd-legacy-modernization; pack-ev: `dom-ev-*` |
-| decyzja technologiczna, projekt systemu od wymagań, atrybuty jakości, praca architekta (arc42/C4, ATAM) | `arch-` | pack-it: arch-system-design (podobne systemy: `.claude/skills/arch-system-design/references/przyklady-projektow.md`), arch-tech-selection, arch-quality-attributes, arch-architect-practice |
-| model zagrożeń, RODO, wielu klientów w jednym SaaS, przepisy UE dla produktu z AI | `arch-` | pack-it: arch-threat-modeling, arch-privacy-compliance, arch-multi-tenancy, arch-eu-product-law |
-| API, baza, uwierzytelnianie, kolejki, subskrypcje i płatności cykliczne | `be-` | pack-it: be-api-design, be-database, be-auth-security, be-messaging-outbox, be-billing-subscriptions |
-| UI, struktura frontendu, style, API przeglądarki, SEO | `fe-` | pack-it: fe-architecture, fe-css, fe-web-platform, fe-engineering-levels |
-| przepływ użytkownika, stany ekranów, makieta, test użyteczności, teksty interfejsu, dostępność, system projektowy | `ux-` | pack-ux: ux-feature-design, ux-accessibility, ux-design-systems (persona Natalia) |
-| „bez przestojów / bez freeze”, wydania, gałęzie, CI/CD | `eng-`, `ops-` + core-git-workflow | pack-it: eng-continuous-delivery, ops-ci-cd, ops-release-engineering |
-| ryzyko regresji, testy, test wydajnościowy, przegląd planu przed kodem albo kodu względem planu | `qa-`, `eng-` | pack-it: qa-regression, qa-performance-testing, qa-change-review, eng-testing, eng-behavior-preserving-refactoring |
-| nieznany kod, wpływ zmiany, dług, co refaktoryzować najpierw (Strangler, Mikado), pełny audyt kodu | `eng-` | pack-it: eng-codebase-mapping, eng-tech-debt-audit, eng-refactor-planning, eng-code-audit |
-| objaw + gotowa poprawka od zgłaszającego, „to na pewno X”; błąd bez oczywistej przyczyny | `eng-` | pack-it: eng-debugging (`.claude/skills/eng-debugging/references/przeramowanie.md`) |
-| wolny kod, algorytm, kształt interfejsu modułu, wiele języków i rynków, repo gotowe dla agentów, hooki i pre-commit | `eng-` | pack-it: eng-algorithms-data-structures, eng-module-depth, eng-i18n, eng-repo-readiness, eng-local-quality-gates |
-| wdrożenia, Kubernetes, SLO, awarie, dyżury, koszty chmury, serwer i sieć (DNS, TLS, SSH), własne modele na GPU | `ops-` | pack-it: ops-kubernetes, ops-sre-incidents, ops-finops, ops-linux-networking, ops-ai-inference (persona Piotr) |
-| ręczna konfiguracja usług, klucze, sekrety CI, migracja krok po kroku dla człowieka | `ops-` | pack-it: ops-setup-wizard |
-| bezpieczeństwo: podejrzana paczka, sekrety, incydent, SIEM, zgodność (SOC 2, ISO 27001) | `sec-`, `ops-` + core-agent-security | pack-it: ops-supply-chain-security, ops-secrets-identities, ops-security-operations |
-| funkcja lub agent z LLM w naszym kodzie, RAG, ewaluacje, AI Act | `ai-`, `eng-` | pack-it: eng-llm-features, ai-agents, ai-rag, ai-evals, ai-governance-compliance |
-| potok danych, ETL/ELT, jakość danych; pytanie do danych, raport, statystyka | `data-` | pack-it: data-engineering, data-analysis (persona Zofia) |
-| diagramy, strona z wyjaśnieniem, prezentacja, README, ADR, runbook | `docs-` | pack-docs: docs-tech-writing |
-| tekst po polsku do korekty lub redakcji | `txt-` | pack-editorial-pl: txt-polish-correctness, txt-polish-style |
+| versions, migration, library updates | `tool-`, `fw-`, `lang-` ("Version-dependent" sections) + core-stack-sync | pack-it: fw-angular, ops-dependency-upgrades |
+| many teams, ownership, coordination, priorities, flow of work | `proc-` | pack-it: proc-team-topologies, proc-agile, proc-safe |
+| what to build, success metrics, A/B, an idea → requirements (PRD), an MVP that is too big, issues and the backlog, a plan for the sponsor | `proc-` | pack-it: proc-product-discovery, proc-requirements-shaping, proc-issue-triage, proc-project-planning |
+| splitting into domains/modules, dependencies between them, business rules, domain concepts, DDD on old code | `ddd-`, `dom-` | pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-connascence-analysis, ddd-legacy-modernization; domain pack: `dom-*` |
+| a technology decision, system design from requirements, quality attributes, the architect's work (arc42/C4, ATAM) | `arch-` | pack-it: arch-system-design (similar systems: `.claude/skills/arch-system-design/references/project-examples.md`), arch-tech-selection, arch-quality-attributes, arch-architect-practice |
+| threat model, GDPR, many customers in one SaaS, EU law for a product with AI | `arch-` | pack-it: arch-threat-modeling, arch-privacy-compliance, arch-multi-tenancy, arch-eu-product-law |
+| API, database, authentication, queues, subscriptions and recurring payments | `be-` | pack-it: be-api-design, be-database, be-auth-security, be-messaging-outbox, be-billing-subscriptions |
+| UI, frontend structure, styles, browser APIs, SEO | `fe-` | pack-it: fe-architecture, fe-css, fe-web-platform, fe-engineering-levels |
+| user flow, screen states, a mock-up, a usability test, interface copy, accessibility, a design system | `ux-` | pack-ux: ux-feature-design, ux-accessibility, ux-design-systems (persona Natalia) |
+| "no downtime / no freeze", releases, branches, CI/CD | `eng-`, `ops-` + core-git-workflow | pack-it: eng-continuous-delivery, ops-ci-cd, ops-release-engineering |
+| regression risk, tests, a performance test, reviewing a plan before the code or the code against the plan | `qa-`, `eng-` | pack-it: qa-regression, qa-performance-testing, qa-change-review, eng-testing, eng-behavior-preserving-refactoring |
+| unknown code, the impact of a change, debt, what to refactor first (Strangler, Mikado), a full code audit | `eng-` | pack-it: eng-codebase-mapping, eng-tech-debt-audit, eng-refactor-planning, eng-code-audit |
+| a symptom + a ready fix from the reporter, "it's definitely X"; a bug without an obvious cause | `eng-` | pack-it: eng-debugging (`.claude/skills/eng-debugging/references/reframing.md`) |
+| slow code, an algorithm, the shape of a module interface, many languages and markets, a repo ready for agents, hooks and pre-commit | `eng-` | pack-it: eng-module-depth, eng-i18n, eng-repo-readiness, eng-local-quality-gates |
+| deployments, Kubernetes, SLO, outages, on-call, cloud costs, server and network (DNS, TLS, SSH), own models on GPUs | `ops-` | pack-it: ops-kubernetes, ops-sre-incidents, ops-finops, ops-linux-networking, ops-ai-inference (persona Piotr) |
+| manual configuration of services, keys, CI secrets, a step-by-step migration for a human | `ops-` | pack-it: ops-setup-wizard |
+| security: a suspicious package, secrets, an incident, SIEM, compliance (SOC 2, ISO 27001) | `sec-`, `ops-` + core-agent-security | pack-it: ops-supply-chain-security, ops-secrets-identities, ops-security-operations |
+| a feature or agent with an LLM in our code, RAG, evaluations, the AI Act | `ai-`, `eng-` | pack-it: eng-llm-features, ai-agents, ai-rag, ai-evals, ai-governance-compliance |
+| a data pipeline, ETL/ELT, data quality; a question to the data, a report, statistics | `data-` | pack-it: data-engineering, data-analysis (persona Zofia) |
+| diagrams, an explainer page, a presentation, README, ADR, runbook | `docs-` | pack-docs: docs-tech-writing |
+| Polish text to proofread or edit | `txt-` | pack-editorial-pl: txt-polish-correctness, txt-polish-style |
 
-Skille praktyk (`core-`) są zawsze zainstalowane:
-| Sygnał w opisie | Skill |
+Practice skills (`core-`) are always installed:
+| Signal in the description | Skill |
 |---|---|
-| cały projekt od pomysłu do oprogramowania gotowego do wdrożenia; czy to jest gotowe do produkcji | core-delivery-lifecycle |
-| „co nowego / co się dzieje”, stan projektu, opinie społeczności | core-source-research (+ `researcher` do faktów) |
-| plan lub pomysł do przepytania przed startem | core-plan-interview |
-| CLAUDE.md / AGENTS.md: napisać, odchudzić, przejrzeć, rozbić na moduły | core-agent-instructions |
-| praca agenta bez nadzoru (`claude -p`, /goal, sandbox, rutyna), podejrzane polecenia z treści | core-async-delegation, core-agent-security |
-| gałęzie, PR, przegląd PR przez AI, konflikty | core-git-workflow |
-| nauka tematu przez wiele sesji, wdrożenie w nowy stack | core-teaching-workspace (tylko na polecenie `/core-teaching-workspace`) |
-Wybierz **najmniejszy zestaw**: zwykle 3–6 skilli, po jednym na wymiar.
-**Skille spoza katalogu:** przejrzyj też listę dostępnych skilli, którą pokazuje Claude Code (projekt, `~/.claude/skills`,
-wtyczki). Skill z ustaleniami tego projektu lub firmy (np. `architecture`, `documentation`) dołącz do zestawu i oznacz
-„(spoza fabryki)” — w briefie dla wykonawcy też. Pierwszeństwo przy sprzecznościach: core-skill-composition.
-Wymiar bez żadnego skilla → „luka” (fakty dobierze `researcher`; na stałe — propozycja nowego skilla albo nakładki,
-która go ma).
+| a whole project from an idea to software ready to deploy; is this ready for production | core-delivery-lifecycle |
+| "what's new / what's going on", the state of a project, community opinions | core-source-research (+ `researcher` for facts) |
+| a plan or idea to interview before starting | core-plan-interview |
+| CLAUDE.md / AGENTS.md: write, slim down, review, split into modules | core-agent-instructions |
+| unsupervised agent work (`claude -p`, /goal, sandbox, routine), suspicious commands from content | core-async-delegation, core-agent-security |
+| branches, PRs, PR review by AI, conflicts | core-git-workflow |
+| learning a topic over many sessions, onboarding to a new stack | core-teaching-workspace (only on the `/core-teaching-workspace` command) |
+Choose the **smallest set**: usually 3–6 skills, one per dimension.
+**Skills outside the catalog:** also look through the list of available skills that Claude Code shows (the project, `~/.claude/skills`,
+plugins). A skill with the conventions of this project or company (e.g. `architecture`, `documentation`) add to the set and mark
+"(outside the factory)" — in the executor's brief too. Precedence in conflicts: core-skill-composition.
+A dimension without any skill → a "gap" (facts are found by `researcher`; permanently — a proposal for a new skill or a pack
+that has it).
 
-## 3. Dobierz wykonawców — od najtańszego
-1. **Istniejąca persona pasuje w całości** (katalog: skille wiodące, nakładka) → poleć ją człowiekowi (`claude --agent <persona>`)
-   albo, jeśli masz jej wykonawcę w zespole, deleguj do `<persona>-<rola>`.
-2. **Potrzebne połączenie wiedzy kilku person** → **doraźny zespół**: po jednym wykonawcy na perspektywę; gdy żadna persona nie ma
-   właściwego zestawu, użyj `specialist` z listą skilli w briefie (wczyta je sam) — to persona „na chwilę”.
-3. **Decyzja trudna do odwrócenia / sprzeczne kompromisy** → `specialist-deep` albo `architect` (Opus) tylko do oceny opcji.
-4. **Fakty zewnętrzne** (wersje, zgodność, EOL, changelogi) → `researcher` (tani), nigdy z pamięci.
-5. **Problem przecina dziedziny nakładek** (np. backend z pack-it przy protokole ładowania z pack-ev) → pytanie do
-   **konsultanta** tej nakładki (katalog: „Konsultanci nakładek”, np. `ev-consult-protocols` w pack-ev, `it-consult-backend`
-   w pack-it). Konsultant tylko odpowiada ze źródłem i nie zmienia plików; wywołuje go persona w sesji głównej, nie wykonawca —
-   wykonawca zgłasza potrzebę w raporcie. Dłuższa praca w innej dziedzinie → osobna sesja persony tej nakładki i pytanie
-   w `docs/project/questions.md`.
-Równoległe perspektywy wywołuj w **jednej wiadomości** (osobne konteksty = niezależne spojrzenia). Brief dla każdego: problem,
-ograniczenia, założenia, lista skilli do wczytania, pytanie, na które ma odpowiedzieć, format raportu (≤ 20 linii).
+## 3. Choose the executors — cheapest first
+1. **An existing persona fits completely** (catalog: leading skills, pack) → recommend it to the human (`claude --agent <persona>`)
+   or, if you have its executor in the team, delegate to `<persona>-<rola>`.
+2. **The knowledge of several personas has to be combined** → an **ad hoc team**: one executor per perspective; when no persona has
+   the right set, use `specialist` with the list of skills in the brief (it loads them itself) — a persona "for a moment".
+3. **A decision that is hard to reverse / conflicting trade-offs** → `specialist-deep` or `architect` (Opus) only to assess the options.
+4. **External facts** (versions, compatibility, EOL, changelogs) → `researcher` (cheap), never from memory.
+5. **The problem crosses the domains of packs** (e.g. a backend from pack-it with a protocol from a domain pack) → a question to the
+   **consultant** of that pack (catalog: "Pack consultants", e.g. `it-consult-backend` in pack-it, the consultants
+   of a domain pack). A consultant only answers with a source and does not change files; the persona calls it in the main session, not the executor —
+   the executor reports the need in its report. Longer work in another domain → a separate session of that pack's persona and a question
+   in `docs/project/questions.md`.
+Call parallel perspectives in **one message** (separate contexts = independent views). The brief for each: the problem,
+constraints, assumptions, the list of skills to load, the question it has to answer, the report format (≤ 20 lines).
 
-## 4. Wybierz formę wyniku
-| Forma | Kiedy | Zawartość |
+### Broad search for options — when the obvious answers are not enough
+An expensive mode (5–8 executors), so a gate first. You start it at the human's request or when all three answers
+are "yes": the problem is open (several sensible paths, not one canonical one) · a mistake is costly or hard to
+undo · the human did not ask for a quick, standard answer. Otherwise you give an ordinary recommendation.
+1. **Generation without judging.** 3–5 `specialist` executors in one message, on the cheapest model (the `model`
+   parameter of the Agent tool). Each gets the problem, the constraints and **one frame** from the table. The instruction: 4–6 short
+   ideas, no assessment and no ranking; skip the three most obvious answers. The executors do not see each other's results.
+2. **Assessment separately, after the ideas are collected.** You group them by mechanism, not by wording. You assess feasibility
+   and fit with the success criterion. **Traps** — ideas that look good but have a hidden cost or do not
+   scale — you list separately, each with a one-sentence reason. Ten variants of one assumption is not breadth.
+3. **Deepening the 2–3 best** (`specialist-deep` for a decision that is hard to reverse): how it works, the risk that
+   everything depends on, the first step. You end with your own position and point to a choice that is not obvious but
+   feasible — a "pick one" list without a position is not a result.
+
+| Frame | Instruction for the executor |
+|---|---|
+| inversion | How do you guarantee failure? Invert every answer. |
+| removed assumption | Name what everyone treats as fixed (the database, the framework, the request–response model) and assume it does not exist. |
+| attacker | How would a competitor or an attacker break the obvious solution? Turn that into ideas. |
+| on-call at 3 a.m. | What design makes sure nobody is woken up after an outage? |
+| zero budget | One hour, no money: the simplest version that does what matters most. |
+| auditor | What has to be provable, traceable or refusable? |
+
+## 4. Choose the form of the result
+| Form | When | Contents |
 |---|---|---|
-| **Rekomendacja** | decyzja, niepewność, kilka dróg | 2–3 opcje z kompromisami · rekomendacja z warunkami, kiedy zmienić zdanie · ryzyka |
-| **Plan** | przejście z A do B, wiele osób | fazy z celem i kryterium wyjścia · kto (zespół/rola) · zależności i kolejność · kamienie milowe · ryzyka i plan B |
-| **Rozwiązanie krok po kroku** | wykonanie jest jasne | kroki z poleceniami i weryfikacją po każdym · punkty kontrolne · wycofanie |
-Nie wskazano → rekomendacja + plan (najczęściej to, czego człowiek potrzebuje). Zawsze: **założenia**, **co sprawdzić najpierw**
-(tanie testy hipotez), **czego nie wiemy**.
+| **Recommendation** | a decision, uncertainty, several paths | 2–3 options with trade-offs · a recommendation with the conditions for changing your mind · risks · after a broad search also the traps with a reason |
+| **Plan** | getting from A to B, many people | phases with a goal and an exit criterion · who (team/role) · dependencies and order · milestones · risks and plan B |
+| **Step-by-step solution** | the execution is clear | steps with commands and a verification after each · checkpoints · rollback |
+Not specified → a recommendation + a plan (most often what the human needs). Always: **assumptions**, **what to check first**
+(cheap tests of hypotheses), **what we do not know**.
 
-**Nośnik — co człowiek zrozumie najszybciej** (od najprostszego, który wystarczy):
-| Treść | Nośnik |
+**The medium — what the human will understand fastest** (from the simplest that is enough):
+| Content | Medium |
 |---|---|
-| krótka odpowiedź, decyzja | tekst: wynik w pierwszym zdaniu, krótkie zdania, stałe terminy |
-| porównanie opcji, macierz | tabela |
-| przepływ, zależności, architektura, stany | diagram Mermaid w Markdown |
-| wynik zależny od parametrów (koszt, obciążenie, progi, algorytm) | jednorazowa strona HTML z suwakami lub polami — człowiek sprawdza warianty sam |
+| a short answer, a decision | text: the result in the first sentence, short sentences, consistent terms |
+| a comparison of options, a matrix | a table |
+| a flow, dependencies, architecture, states | a Mermaid diagram in Markdown |
+| a result that depends on parameters (cost, load, thresholds, an algorithm) | a one-off HTML page with sliders or fields — the human checks the variants themselves |
 
-Jednorazowy plik zapisujesz w `.claude/scratch/` (ignorowany przez git) i podajesz ścieżkę. Strona działa bez sieci:
-kod w pliku, bez skryptów z zewnątrz i bez wysyłania danych; dane wrażliwe zostają poza nią (core-agent-security).
-Po zrozumieniu plik można usunąć — trwały wynik trafia do `docs/project/` jako tekst, tabela lub diagram.
+You save a one-off file in `.claude/scratch/` (ignored by git) and give the path. The page works without a network:
+code in the file, no external scripts and no sending data; sensitive data stays out of it (core-agent-security).
+After it is understood the file can be deleted — a lasting result goes to `docs/project/` as text, a table or a diagram.
 
-## 5. Synteza i zapis
-- Połącz raporty; sprzeczności między perspektywami pokaż wprost (to zwykle najcenniejsza część).
-- **Kontrola spójności przed oddaniem:** czy rekomendacja nie łamie własnych założeń lub twierdzeń (np. „nie da się mieć dwóch
-  wersji pakietu” obok „zainstaluj obie wersje przez alias”)? Czy fakty wersyjne pochodzą ze skilla, repo albo `researcher`?
-- **Założenie-zawias:** nazwij jedno–dwa założenia, od których zależy cały plan, jak je tanio sprawdzić i **wariant B**, gdy okażą się fałszywe.
-- Wynik do człowieka w języku pracy projektu (sekcja „Język”); po polsku — skill poprawności polszczyzny, jeśli jest
-  w katalogu (pack-editorial-pl: txt-polish-correctness).
-  Dłuższy dokument → `docs/project/` (plan: `05-plan/`, decyzja: ADR) wg core-project-record, status `proposed`.
-- Na końcu **skład zespołu**, który zadziałał: persony/skille. Jeśli połączenie było nowe i przyda się znowu → zaproponuj
-  plik `.tf/config/personas/<nazwa>.yaml` (zmiana w `.tf/factory/` wymaga zgody człowieka).
+## 5. Synthesis and recording
+- Combine the reports; show conflicts between perspectives openly (that is usually the most valuable part).
+- **A consistency check before handing over:** does the recommendation break its own assumptions or claims (e.g. "you cannot have two
+  versions of a package" next to "install both versions through an alias")? Do the version facts come from a skill, the repo or `researcher`?
+- **The hinge assumption:** name one or two assumptions the whole plan depends on, how to check them cheaply and a **plan B** if they turn out false.
+- The result for the human in the human's language (the conversation rule in the project's instructions); in Polish — the Polish correctness skill, if it is
+  in the catalog (pack-editorial-pl: txt-polish-correctness).
+  A longer document → `docs/project/` (a plan: `05-plan/`, a decision: an ADR) per core-project-record, status `proposed`.
+- At the end the **team composition** that worked: personas/skills. If the combination was new and will be useful again → propose
+  a file `.tf/config/personas/<nazwa>.yaml` (a change in `.tf/factory/` needs the human's consent).
 
-## Checklista
-- [ ] problem sparafrazowany, kryterium sukcesu i ograniczenia nazwane; założenia wypisane
-- [ ] wymiary z katalogu przejrzane; wybrane skille (3–6) i uzasadnienie; luki nazwane
-- [ ] wykonawcy od najtańszego, tylko z katalogu; fakty zewnętrzne przez `researcher`; inna dziedzina → konsultant nakładki
-- [ ] forma wyniku i nośnik dobrane (tekst, tabela, diagram, jednorazowy HTML w `.claude/scratch/`); opcje z kompromisami, ryzyka, co sprawdzić najpierw
-- [ ] skład zespołu podany; ewentualna propozycja stałej persony
+## Checklist
+- [ ] the problem paraphrased, the success criterion and constraints named; assumptions listed
+- [ ] the catalog's dimensions reviewed; the chosen skills (3–6) and the rationale; gaps named
+- [ ] executors cheapest first, only from the catalog; external facts through `researcher`; another domain → the pack's consultant
+- [ ] broad search only after the gate; generation and assessment separated; traps listed separately; your own position at the end
+- [ ] the form of the result and the medium chosen (text, a table, a diagram, a one-off HTML in `.claude/scratch/`); options with trade-offs, risks, what to check first
+- [ ] the team composition given; possibly a proposal for a permanent persona

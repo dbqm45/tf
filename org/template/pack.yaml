@@ -1,0 +1,63 @@
+# {{TITLE}} company pack: the organization's standards, rules and defaults for every project with the factory.
+# Fill in the fields marked TODO; the rest works as is. Guide: README.md next to this file.
+id: pack-{{COMPANY}}
+version: 0.1.0
+title: "{{TITLE}}"
+description: "TODO: one sentence in English — company standards and defaults for {{TITLE}} projects."
+content_language: pl
+default: false
+requires:
+  core: "{{CORE_RANGE}}"
+# Factory packs that the company skills refer to. Without them the references are just text.
+optional_packs: [pack-it]
+
+facets:
+  - {prefix: {{PREFIX}}, order: 50, name: company standards, question: "how {{TITLE}} writes, reviews and ships code"}
+
+# Company standards in every persona and for the agents that review changes.
+contributes:
+  personas:
+    core_skills: [{{PREFIX}}standards]
+  agents:
+    security-reviewer:
+      skills: [{{PREFIX}}standards]
+      prompt: |
+        Also check the change against the {{TITLE}} standards (skill {{PREFIX}}standards, "Security" section).
+
+# Organization defaults: they apply in every project with this pack, and a project may override them in .tf/config/.
+# Engine ← this section ← project. A project can have at most one pack with org_defaults.
+org_defaults:
+  config:
+    # Autonomy policy. The organization can only tighten: confirm (ask) → deny (block).
+    # Types: dependency_add, prod_command, destructive_sql, infra_change, publish, git_push, persistence, data_upload, sudo.
+    autonomy:
+      operations:
+        publish: confirm            # TODO: deny if agents never publish packages
+        destructive_sql: confirm    # TODO: deny if agents have no database access
+      # Change risk rules (tf risk): paths a person at the company always reviews.
+      triage:
+        high:
+          TODO-company-area:
+            - '(^|/)TODO-directory/'
+    # Unsupervised work (tf work --once): spending limits in USD.
+    work:
+      budget_usd: 5                 # TODO: limit for one run
+      task_budget_usd: 20           # TODO: limit for all runs of one task
+    # Task modes allowed at the company (tf task mode, a person's work style: tf style). Without `auto` nobody at the
+    # company can turn on the mode in which the agent goes ahead without a person approving the plan.
+    task:
+      allowed_modes: [plan, normal, auto]   # TODO: remove auto if the company requires a person to approve every plan
+    # Cost profile: economy | balanced | quality.
+    default_profile: balanced
+    # Commit language in a NEW company repository (no history). The conversation language is not a setting — agents
+    # reply in the language the person writes in; in a repository with history, commits follow `git log`.
+    commit_language: {new_repo: en}
+  operations:
+    # Issue tracker. The Jira address and token do NOT go here: everyone sets the variables JIRA_BASE_URL, JIRA_EMAIL,
+    # JIRA_API_TOKEN (or JIRA_TOKEN) in their own environment.
+    tracker:
+      type: jira                    # TODO: jira | linear | github | …
+      prefixes: {TODO: jira}        # TODO: issue key prefixes, e.g. {ABC: jira, OPS: jira}
+      # TODO: the Jira field with acceptance criteria, if they are not in the issue description (uncomment and set the field id):
+      # fields:
+      #   acceptance: customfield_10042

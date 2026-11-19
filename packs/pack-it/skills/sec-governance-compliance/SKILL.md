@@ -1,94 +1,94 @@
 ---
 name: sec-governance-compliance
-description: Użyj przy ISO 27001, SOC 2, NIST CSF lub PCI DSS — dobór ram, zakres, macierz kontroli, dowody, audyt wewnętrzny i certyfikujący.
+description: Use for ISO 27001, SOC 2, NIST CSF or PCI DSS — choosing frameworks, scope, a control matrix, evidence, internal and certification audits.
 metadata:
-  przeglad: "2027-04-17"
-  katalog: "Użyj, gdy firma musi wykazać bezpieczeństwo ramami lub audytem — dobór ram wg motywu (klient, regulacja, sektor), ISO/IEC 27001:2022 (klauzule 4–10, Załącznik A, deklaracja stosowania), NIST CSF 2.0 (sześć funkcji z Govern), SOC 2 (kryteria Trust Services, typ I i II), PCI DSS v4.0.1, definicja zakresu, mapowanie jednej kontroli na wiele ram, hierarchia polityk i standardów, zbieranie dowodów i ciągła zgodność, audyt wewnętrzny, przebieg audytu certyfikującego, typowe luki. Wynik: macierz kontroli i plan gotowości do audytu. Nie do RODO i DPIA (arch-privacy-compliance), AI Act (ai-governance-compliance), procesu ryzyka i akceptacji ryzyka (sec-risk-management), obsługi incydentów i podatności (ops-security-operations) ani modelu zagrożeń (arch-threat-modeling). Nie jest poradą prawną ani oceną zgodności."
-  slowa: "ISO 27001, 27001, ISMS, SZBI, deklaracja stosowania, SoA, Załącznik A, SOC 2, SOC2, typ II, Trust Services Criteria, NIST CSF, CSF 2.0, PCI DSS, certyfikacja, certyfikat bezpieczeństwa, audyt bezpieczeństwa, audyt zewnętrzny, audyt wewnętrzny, gotowość do audytu, macierz kontroli, mapowanie kontroli, polityka bezpieczeństwa, dowody dla audytora, ciągła zgodność, compliance, kwestionariusz klienta, wymóg klienta enterprise, framework bezpieczeństwa"
+  review: "2027-04-17"
+  catalog: "Use when a company must demonstrate security through frameworks or an audit — choosing a framework by motive (customer, regulation, sector), ISO/IEC 27001:2022 (clauses 4–10, Annex A, the Statement of Applicability), NIST CSF 2.0 (six functions with Govern), SOC 2 (Trust Services Criteria, Type I and II), PCI DSS v4.0.1, defining the scope, mapping one control onto many frameworks, the hierarchy of policies and standards, collecting evidence and continuous compliance, the internal audit, the course of a certification audit, typical gaps. Result: a control matrix and an audit readiness plan. Not for RODO (GDPR) and DPIA (arch-privacy-compliance), the AI Act (ai-governance-compliance), the risk process and risk acceptance (sec-risk-management), handling incidents and vulnerabilities (ops-security-operations) or a threat model (arch-threat-modeling). Not legal advice or a conformity assessment."
+  keywords: "ISO 27001, 27001, ISMS, SZBI, deklaracja stosowania, SoA, Załącznik A, SOC 2, SOC2, typ II, Trust Services Criteria, NIST CSF, CSF 2.0, PCI DSS, certyfikacja, certyfikat bezpieczeństwa, audyt bezpieczeństwa, audyt zewnętrzny, audyt wewnętrzny, gotowość do audytu, macierz kontroli, mapowanie kontroli, polityka bezpieczeństwa, dowody dla audytora, ciągła zgodność, compliance, kwestionariusz klienta, wymóg klienta enterprise, framework bezpieczeństwa, statement of applicability, Annex A, Type II, certification, security certificate, security audit, external audit, internal audit, audit readiness, control matrix, control mapping, security policy, evidence for the auditor, continuous compliance, customer questionnaire, enterprise customer requirement, security framework"
 ---
 
-# Ramy zgodności i audyt bezpieczeństwa (ISO 27001, SOC 2, NIST CSF, PCI DSS)
+# Compliance frameworks and security audits (ISO 27001, SOC 2, NIST CSF, PCI DSS)
 
-**Rola agenta:** przygotowuje dobór ram, zakres, macierz kontroli, listę dowodów i plan gotowości. **Zgodności nie
-stwierdza** — robi to audytor, a interpretację przepisów prawnik. Nie jest to porada prawna. Artefakt:
-`docs/project/04-architecture/compliance.md` (core-project-record). RODO — **arch-privacy-compliance**; AI Act i ISO 42001 —
-**ai-governance-compliance**; proces ryzyka i akceptacje — **sec-risk-management**; incydenty i podatności —
-**ops-security-operations** (jego `.claude/skills/ops-security-operations/references/zgodnosc.md` to skrót; tu pełna procedura).
+**The agent's role:** it prepares the choice of frameworks, the scope, the control matrix, the list of evidence and the readiness plan. **It does not
+determine compliance** — the auditor does that, and a lawyer interprets the law. This is not legal advice. Artifact:
+`docs/project/04-architecture/compliance.md` (core-project-record). RODO (GDPR) — **arch-privacy-compliance**; the AI Act and ISO 42001 —
+**ai-governance-compliance**; the risk process and acceptances — **sec-risk-management**; incidents and vulnerabilities —
+**ops-security-operations** (its `.claude/skills/ops-security-operations/references/compliance.md` is a summary; here is the full procedure).
 
-## Procedura
-1. **Motyw, nie moda.** Zapisz, kto i czego żąda: klient (umowa, kwestionariusz), regulacja (NIS2, DORA — prawnik), sektor
-   (karty płatnicze), zarząd (porządek). Motyw wskazuje ramę:
-   | Motyw | Zwykle | Uwaga |
+## Procedure
+1. **A motive, not a fashion.** Record who demands what: a customer (a contract, a questionnaire), a regulation (NIS2, DORA — a lawyer), a sector
+   (payment cards), the board (putting things in order). The motive points to the framework:
+   | Motive | Usually | Note |
    |---|---|---|
-   | klienci w UE i przetargi, certyfikat | ISO 27001 | certyfikat jednostki akredytowanej |
-   | klienci SaaS z USA | SOC 2 | raport audytora, nie certyfikat |
-   | przetwarzasz lub wpływasz na dane kart | PCI DSS | obowiązek umowny wobec acquirera/marek |
-   | brak wymogu, chcesz uporządkować | NIST CSF 2.0 | dobrowolna, bez certyfikacji |
-   Nie zbieraj ram „na zapas”: jedna rama jako szkielet, reszta przez mapowanie (krok 5).
-2. **Zakres (scope)** — najtańsza dźwignia. Zapisz: produkty i usługi, lokalizacje, systemy, ludzie, dostawcy w łańcuchu,
-   wyłączenia z uzasadnieniem. Zakres zbyt wąski nie spełni oczekiwań klienta, zbyt szeroki mnoży dowody. Dla PCI
-   zmniejszaj zakres tokenizacją i segmentacją.
-3. **Rama szkieletowa** — fakty i pułapki w `references/ramy.md`. Skrót stanu na 2026-10-17:
-   - **ISO/IEC 27001:2022** — klauzule 4–10 (kontekst, przywództwo, planowanie z oceną ryzyka, wsparcie, działanie,
-     ocena skuteczności z audytem wewnętrznym i przeglądem zarządzania, doskonalenie) plus **Załącznik A: 93 kontrole
-     w 4 tematach** (organizacyjne 37, ludzkie 8, fizyczne 14, technologiczne 34). Kontrole wybiera ocena ryzyka;
-     **Deklaracja stosowania (SoA)** zestawia każdą kontrolę: stosowana / nie, uzasadnienie, status.
-   - **NIST CSF 2.0** (luty 2024) — sześć funkcji: Govern, Identify, Protect, Detect, Respond, Recover; Govern jest nowa.
-   - **SOC 2** — kryteria Trust Services: Security obowiązkowe, opcjonalnie Availability, Processing Integrity,
-     Confidentiality, Privacy. **Typ I** — projekt kontroli w dniu; **typ II** — skuteczność w okresie (zwykle 6–12 mies.).
-   - **PCI DSS v4.0.1** — jedyna obowiązująca wersja; wymagania przyszłościowe obowiązują od 2025-03-31.
-4. **Hierarchia dokumentów**: polityka (co i dlaczego, zatwierdza zarząd, 1–2 strony) → standard (obowiązkowe
-   parametry, np. MFA dla kont uprzywilejowanych) → procedura (jak, krok po kroku) → dowód (zapis wykonania). Polityka
-   bez standardu i dowodu jest dekoracją; procedura bez polityki nie ma mandatu.
-5. **Macierz kontroli** — jeden rejestr dla organizacji, nie lista na audyt. Pola: ID kontroli, opis działania,
-   właściciel, system, częstotliwość, dowód (źródło, ścieżka), **mapowanie wiele-do-wielu** (A.5.15, CC6.1, CSF PR.AA,
-   PCI 8.x). Jedna kontrola „MFA odporne na phishing dla administratorów” spełnia kilka ram. Szablon: `references/macierz-i-plan.md`.
-6. **Analiza luk** względem ramy szkieletowej: dla każdej kontroli status (działa i jest dowód / działa bez dowodu /
-   do wdrożenia / nie dotyczy). Luka to zadanie z właścicielem i terminem; wyjątek idzie do akceptacji ryzyka
-   (**sec-risk-management**), nie jest „po cichu” pomijany.
-7. **Dowody i ciągła zgodność.** Dowód ma datę, źródło i autora; automatyczny (eksport IAM, wyniki CI, historia PR,
-   skany) bije zrzut ekranu. Kontrola działająca tylko przed audytem nie przejdzie SOC 2 typu II ani audytu nadzoru.
-   Harmonogram: przeglądy dostępów, testy odtworzenia, szkolenia, przegląd dostawców — kalendarz z właścicielem.
-8. **Audyt wewnętrzny i przegląd zarządzania** przed zewnętrznym: niezależny od właściciela kontroli, według
-   planu programu audytów; ustalenia jako niezgodności z działaniem korygującym. ISO wymaga obu.
-9. **Audyt zewnętrzny** — przebieg i przygotowanie w `references/macierz-i-plan.md`: ISO — etap 1 (dokumentacja) i etap 2
-   (wdrożenie), potem audyty nadzoru w cyklu certyfikacji [niezweryfikowane: długość cyklu i częstość ustala jednostka];
-   SOC 2 — okres obserwacji, potem raport; PCI — ocena (QSA lub samoocena wg poziomu).
-10. **Wynik** do `compliance.md`: motyw → zakres → rama → macierz → luki → plan gotowości (data, właściciele, dowody)
-    → decyzje dla człowieka. Na górze: „Robocze przygotowanie, nie ocena zgodności; zatwierdza: [CISO/audytor]”.
+   | customers in the EU and tenders, a certificate | ISO 27001 | a certificate from an accredited body |
+   | SaaS customers from the USA | SOC 2 | an auditor's report, not a certificate |
+   | you process or affect card data | PCI DSS | a contractual obligation towards the acquirer/the brands |
+   | no requirement, you want to put things in order | NIST CSF 2.0 | voluntary, without certification |
+   Do not collect frameworks "just in case": one framework as the backbone, the rest through mapping (step 5).
+2. **The scope** — the cheapest lever. Record: products and services, locations, systems, people, vendors in the chain,
+   exclusions with a justification. A scope too narrow will not meet the customer's expectations, one too broad multiplies the evidence. For PCI
+   reduce the scope with tokenization and segmentation.
+3. **The backbone framework** — facts and pitfalls in `references/frameworks.md`. A summary of the state as of 2026-10-17:
+   - **ISO/IEC 27001:2022** — clauses 4–10 (context, leadership, planning with risk assessment, support, operation,
+     performance evaluation with the internal audit and the management review, improvement) plus **Annex A: 93 controls
+     in 4 themes** (organizational 37, people 8, physical 14, technological 34). The controls are chosen by the risk assessment;
+     the **Statement of Applicability (SoA)** lists every control: applied / not, the justification, the status.
+   - **NIST CSF 2.0** (February 2024) — six functions: Govern, Identify, Protect, Detect, Respond, Recover; Govern is new.
+   - **SOC 2** — Trust Services Criteria: Security mandatory, optionally Availability, Processing Integrity,
+     Confidentiality, Privacy. **Type I** — the design of the controls on a date; **Type II** — effectiveness over a period (usually 6–12 months).
+   - **PCI DSS v4.0.1** — the only version in force; the future-dated requirements apply from 2025-03-31.
+4. **The document hierarchy**: a policy (what and why, approved by the board, 1–2 pages) → a standard (mandatory
+   parameters, e.g. MFA for privileged accounts) → a procedure (how, step by step) → evidence (a record of execution). A policy
+   without a standard and evidence is decoration; a procedure without a policy has no mandate.
+5. **The control matrix** — one register for the organization, not a list for the audit. Fields: control ID, a description of how it works,
+   owner, system, frequency, evidence (source, path), **many-to-many mapping** (A.5.15, CC6.1, CSF PR.AA,
+   PCI 8.x). One control "phishing-resistant MFA for administrators" satisfies several frameworks. Template: `references/matrix-and-plan.md`.
+6. **A gap analysis** against the backbone framework: for each control a status (works and there is evidence / works without evidence /
+   to be implemented / not applicable). A gap is a task with an owner and a deadline; an exception goes to risk acceptance
+   (**sec-risk-management**), it is not skipped "quietly".
+7. **Evidence and continuous compliance.** Evidence has a date, a source and an author; automatic evidence (an IAM export, CI results, PR history,
+   scans) beats a screenshot. A control that works only before the audit will not pass SOC 2 Type II or a surveillance audit.
+   The schedule: access reviews, restore tests, training, vendor reviews — a calendar with an owner.
+8. **The internal audit and the management review** before the external one: independent of the control owner, according to
+   the audit programme plan; findings as nonconformities with corrective action. ISO requires both.
+9. **The external audit** — its course and preparation in `references/matrix-and-plan.md`: ISO — stage 1 (documentation) and stage 2
+   (implementation), then surveillance audits in the certification cycle [unverified: the cycle length and frequency are set by the body];
+   SOC 2 — the observation period, then the report; PCI — the assessment (a QSA or a self-assessment according to the level).
+10. **The result** in `compliance.md`: motive → scope → framework → matrix → gaps → readiness plan (date, owners, evidence)
+    → decisions for a human. At the top: "Working preparation, not a conformity assessment; approved by: [CISO/auditor]".
 
-## Typowe luki
-Zakres bez dostawców · polityki skopiowane z szablonu i nieznane zespołom · SoA bez uzasadnień · dowody zbierane
-w tygodniu audytu · brak właściciela kontroli · przeglądy dostępów „zrobione”, bez zapisu · audyt wewnętrzny
-wykonuje autor kontroli · wyjątki bez daty wygaśnięcia · zgodność mylona z bezpieczeństwem (kontrola istnieje na papierze).
+## Typical gaps
+A scope without vendors · policies copied from a template and unknown to the teams · an SoA without justifications · evidence collected
+in the audit week · no control owner · access reviews "done", without a record · the internal audit
+performed by the author of the control · exceptions without an expiry date · compliance confused with security (the control exists on paper).
 
-## Przykład
-Wejście: „SaaS B2B (40 osób, AWS). Dwóch klientów z UE żąda ISO 27001, jeden z USA SOC 2. Rok na działanie.”
+## Example
+Input: "A B2B SaaS (40 people, AWS). Two customers from the EU demand ISO 27001, one from the USA SOC 2. A year to act."
 
-Wynik (fragment) [przykład]:
-- Motyw: umowy klientów. Szkielet: ISO 27001 (certyfikat dla UE), SOC 2 typu II przez mapowanie, nie osobny projekt.
-- Zakres: produkt X, konta AWS prod i staging, zespół inżynierii i wsparcia; poza zakresem biuro (praca zdalna, uzasadnione).
-- Macierz: K-014 „Przegląd dostępów AWS co kwartał” → A.5.18, CC6.2, PR.AA; dowód: eksport IAM + zgłoszenie z podpisem; właściciel: CTO.
-- Plan: m1 zakres i ryzyka; m2–4 luki i polityki; m5–6 dowody zbierane automatycznie; m7 audyt wewnętrzny i przegląd
-  zarządzania; m8 etap 1 i 2; SOC 2 typ I w m8, okres typu II od m9.
+Result (a fragment) [example]:
+- Motive: customer contracts. Backbone: ISO 27001 (a certificate for the EU), SOC 2 Type II through mapping, not a separate project.
+- Scope: product X, the AWS prod and staging accounts, the engineering and support team; out of scope the office (remote work, justified).
+- Matrix: K-014 "AWS access review every quarter" → A.5.18, CC6.2, PR.AA; evidence: an IAM export + a ticket with a signature; owner: the CTO.
+- Plan: m1 scope and risks; m2–4 gaps and policies; m5–6 evidence collected automatically; m7 internal audit and management
+  review; m8 stage 1 and 2; SOC 2 Type I in m8, the Type II period from m9.
 
-## Checklista
-- [ ] motyw i rama szkieletowa zapisane; reszta ram przez mapowanie
-- [ ] zakres z wyłączeniami i dostawcami; zatwierdzony przez kierownictwo
-- [ ] hierarchia: polityka → standard → procedura → dowód
-- [ ] macierz kontroli z właścicielem, dowodem i mapowaniem; SoA z uzasadnieniami (ISO)
-- [ ] luki jako zadania; wyjątki do akceptacji ryzyka
-- [ ] kalendarz kontroli okresowych i dowody automatyczne
-- [ ] audyt wewnętrzny niezależny; przegląd zarządzania
-- [ ] zapis „nie ocena zgodności, nie porada prawna” i zatwierdzający
+## Checklist
+- [ ] the motive and the backbone framework recorded; the other frameworks through mapping
+- [ ] the scope with exclusions and vendors; approved by management
+- [ ] the hierarchy: policy → standard → procedure → evidence
+- [ ] a control matrix with an owner, evidence and mapping; an SoA with justifications (ISO)
+- [ ] gaps as tasks; exceptions to risk acceptance
+- [ ] a calendar of periodic controls and automatic evidence
+- [ ] an independent internal audit; a management review
+- [ ] the statement "not a conformity assessment, not legal advice" and the approver
 
-## Materiały dodatkowe
-- `references/ramy.md` — ISO 27001, NIST CSF 2.0, SOC 2, PCI DSS: struktura, wersje, daty, pułapki; czytaj przy doborze i analizie luk.
-- `references/macierz-i-plan.md` — szablon macierzy kontroli, plan gotowości do audytu, przebieg audytów; czytaj przy tworzeniu `compliance.md`.
+## Additional materials
+- `references/frameworks.md` — ISO 27001, NIST CSF 2.0, SOC 2, PCI DSS: structure, versions, dates, pitfalls; read it when choosing and for the gap analysis.
+- `references/matrix-and-plan.md` — the control matrix template, the audit readiness plan, the course of audits; read it when creating `compliance.md`.
 
-## Źródła
-- ISO/IEC 27001:2022 oraz Amendment 1:2024 (klimat) — iso.org; liczby kontroli wg serwisów wtórnych (Sprinto, Presencis), dostęp 2026-10-17 [niezweryfikowane u źródła].
-- NIST Cybersecurity Framework 2.0 (luty 2024) — nist.gov/cyberframework; sześć funkcji wg źródeł wtórnych, dostęp 2026-10-17.
-- AICPA, *2017 Trust Services Criteria with Revised Points of Focus – 2022* — aicpa-cima.com; wg źródeł wtórnych, dostęp 2026-10-17.
-- PCI SSC, PCI DSS v4.0.1 (opublikowany 2024-06-11) — pcisecuritystandards.org; daty wg źródeł wtórnych, dostęp 2026-10-17.
-Opisane własnymi słowami; nie jest poradą prawną.
+## Sources
+- ISO/IEC 27001:2022 and Amendment 1:2024 (climate) — iso.org; control counts per secondary services (Sprinto, Presencis), accessed 2026-10-17 [unverified at the source].
+- NIST Cybersecurity Framework 2.0 (February 2024) — nist.gov/cyberframework; six functions per secondary sources, accessed 2026-10-17.
+- AICPA, *2017 Trust Services Criteria with Revised Points of Focus – 2022* — aicpa-cima.com; per secondary sources, accessed 2026-10-17.
+- PCI SSC, PCI DSS v4.0.1 (published 2024-06-11) — pcisecuritystandards.org; dates per secondary sources, accessed 2026-10-17.
+Described in our own words; not legal advice.

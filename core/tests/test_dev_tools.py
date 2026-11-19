@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy narzędzi oszczędzających tokeny: .tf/factory/check.py (pętla CI), build.py new-skill (rozszerzenia),
-.tf/factory/finish.py (zamknięcie zadania do commita, bez pushu)."""
+"""Tests of the token-saving tools: .tf/factory/check.py (the CI loop), build.py new-skill (extensions),
+.tf/factory/finish.py (closing a task up to a commit, without a push)."""
 import importlib.util
 import json
 import re
@@ -39,20 +39,20 @@ def main() -> int:
     # ── A: check.py ──
     with tempfile.TemporaryDirectory() as t:
         r0 = Path(t)
-        stub(r0 / ".tf" / "factory" / "build.py", "print('ostrzeżenie: x'); print('✓ OK')")
-        stub(r0 / ".tf" / "factory" / "skill_gate.py", "print('✓ skilli: 3, do przejścia przez bramkę: 0')")
-        stub(r0 / "tests" / "test_ok.py", "print('✓ 2/2 testów ok')")
-        stub(r0 / "tests" / "test_bad.py", "print('✗ coś się zepsuło w kroku 7'); print('✗ 0/1 testów bad'); sys.exit(1)")
-        stub(r0 / "tests" / "run_skill_evals.py", "print('✓ pliki scenariuszy: 3, błędów: 0')")
+        stub(r0 / ".tf" / "factory" / "build.py", "print('warning: x'); print('✓ OK')")
+        stub(r0 / ".tf" / "factory" / "skill_gate.py", "print('✓ skills: 3, to pass through the gate: 0')")
+        stub(r0 / "tests" / "test_ok.py", "print('✓ 2/2 tests ok')")
+        stub(r0 / "tests" / "test_bad.py", "print('✗ something broke in step 7'); print('✗ 0/1 tests bad'); sys.exit(1)")
+        stub(r0 / "tests" / "run_skill_evals.py", "print('✓ scenario files: 3, errors: 0')")
         r = run([ROOT / ".tf" / "factory" / "check.py", "--root", r0])
         lines = r.stdout.strip().splitlines()
-        check(r.returncode == 1 and "coś się zepsuło w kroku 7" in r.stdout and "test_bad.py" in r.stdout
-              and "2/2 testów ok" not in r.stdout and "ostrzeżenie" not in r.stdout and lines and lines[-1].startswith("✗"),
-              f"A-1: błąd z szczegółami, zielone tylko jako liczba, ostatnia linia to werdykt: {r.stdout}{r.stderr}")
-        check(re.search(r"testy\D+1/2", r.stdout) is not None and "dziennik" in r.stdout and "pominięto" in r.stdout,
-              f"A-2: podsumowanie testów (zielone/wszystkie) i pominięte kroki bez skryptów: {r.stdout}")
+        check(r.returncode == 1 and "something broke in step 7" in r.stdout and "test_bad.py" in r.stdout
+              and "2/2 tests ok" not in r.stdout and "warning" not in r.stdout and lines and lines[-1].startswith("✗"),
+              f"A-1: the error with details, green only as a number, the last line is the verdict: {r.stdout}{r.stderr}")
+        check(re.search(r"tests\D+1/2", r.stdout) is not None and "project record" in r.stdout and "skipped" in r.stdout,
+              f"A-2: the tests summary (green/all) and the skipped steps without scripts: {r.stdout}")
         r = run([ROOT / ".tf" / "factory" / "check.py", "--root", r0, "-k", "ok"])
-        check(r.returncode == 0 and r.stdout.strip().splitlines()[-1].startswith("✓"), f"A-3: -k zawęża testy: {r.stdout}")
+        check(r.returncode == 0 and r.stdout.strip().splitlines()[-1].startswith("✓"), f"A-3: -k narrows the tests: {r.stdout}")
         r = run([ROOT / ".tf" / "factory" / "check.py", "--root", r0, "--json"])
         try:
             d = json.loads(r.stdout)
@@ -61,27 +61,27 @@ def main() -> int:
         check(d.get("ok") is False and any(s["name"] == "tests/test_bad.py" and not s["ok"] for s in d.get("steps", [])),
               f"A-4: --json: {r.stdout[:300]}")
 
-    # Podpowiedzi wszystkich skilli naraz: nowy skill nie może „podkraść” podpowiedzi starszemu (krok check.py).
+    # The hints of all skills at once: a new skill must not "steal" the hint from an older one (a check.py step).
     r = run([ROOT / ".tf" / "factory" / "skill_gate.py", "--hints"], cwd=ROOT)
-    check(r.returncode == 0 and "podpowiedzi" in r.stdout and r.stdout.strip().splitlines()[-1].startswith("✓"),
-          f"A-5: skill_gate --hints sprawdza trafienia hooka dla scenariuszy wszystkich skilli: {r.stdout[-300:]}{r.stderr[-300:]}")
+    check(r.returncode == 0 and "hints" in r.stdout and r.stdout.strip().splitlines()[-1].startswith("✓"),
+          f"A-5: skill_gate --hints checks the hook hits for the scenarios of all skills: {r.stdout[-300:]}{r.stderr[-300:]}")
     with tempfile.TemporaryDirectory() as t:
         r0 = Path(t)
-        stub(r0 / ".tf" / "factory" / "skill_gate.py", "print('✗ #x: hook nie podpowie skilla'); print('✗ podpowiedzi: 1 skill'); sys.exit(1)"
+        stub(r0 / ".tf" / "factory" / "skill_gate.py", "print('✗ #x: the hook will not hint the skill'); print('✗ hints: 1 skill'); sys.exit(1)"
              if True else "")
         r = run([ROOT / ".tf" / "factory" / "check.py", "--root", r0])
-        check(r.returncode == 1 and "podpowiedzi wszystkich skilli" in r.stdout, f"A-6: krok podpowiedzi w check.py: {r.stdout}")
+        check(r.returncode == 1 and "hints of all skills" in r.stdout, f"A-6: the hints step in check.py: {r.stdout}")
 
-    # ── B: build.py new-skill — termin przeglądu, słowa, --role, --name-only ──
+    # ── B: build.py new-skill — review deadline, words, --role, --name-only ──
     with tempfile.TemporaryDirectory() as t:
         root = Path(t) / "f"
         shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns(".git", "logs", "__pycache__", "*.zip"))
         r = run([root / ".tf" / "factory" / "build.py", "new-skill", "core-demo-x", "Użyj przy demo. Nie do niczego (core-grounding).",
-                 "--role", "nie-ma-takiej"], cwd=root)
+                 "--role", "no-such-role"], cwd=root)
         check(r.returncode == 2 and not (root / ".claude" / "skills" / "core-demo-x").exists(),
-              f"B-1: nieznana rola → kod 2, nic nie utworzone: {r.stdout}{r.stderr}")
+              f"B-1: an unknown role → code 2, nothing created: {r.stdout}{r.stderr}")
         role_files = sorted(root.glob(".tf/factory/packs/*/roles/*.yaml")) or sorted(root.glob(".tf/config/roles/*.yaml"))
-        if not role_files:                     # sam rdzeń: rola projektu do testu wpięcia
+        if not role_files:                     # the core only: a project role for the wiring test
             (root / ".tf" / "config" / "roles").mkdir(parents=True, exist_ok=True)
             (root / ".tf" / "config" / "roles" / "demo.yaml").write_text(
                 "name: demo\ntitle: Demo\ntier: std\ntriggers: demo\nidentity: demo\ntools: [Read]\nskills: [core-grounding]\n",
@@ -92,14 +92,14 @@ def main() -> int:
                  "--role", role_file.stem, "--name-only"], cwd=root)
         md = (root / ".claude" / "skills" / "core-demo-x" / "SKILL.md")
         text = md.read_text(encoding="utf-8") if md.exists() else ""
-        m = re.search(r"^  przeglad: \"(\d{4}-\d{2}-\d{2})\"$", text, re.M)
+        m = re.search(r"^  review: \"(\d{4}-\d{2}-\d{2})\"$", text, re.M)
         role = role_file.read_text(encoding="utf-8")
-        check(r.returncode == 0 and m and "  widocznosc: nazwa" in text and re.search(r"^  slowa: \"", text, re.M)
+        check(r.returncode == 0 and m and "  visibility: name" in text and re.search(r"^  keywords: \"", text, re.M)
               and re.search(r"^skills: \[.*\bcore-demo-x\]$", role, re.M),
-              f"B-2: termin przeglądu, słowa, widoczność i wpięcie do roli: {r.stdout[-300:]}{r.stderr[-300:]}\n{text[:400]}")
+              f"B-2: review deadline, words, visibility and wiring into the role: {r.stdout[-300:]}{r.stderr[-300:]}\n{text[:400]}")
         fr = run([root / ".tf" / "factory" / "freshness.py", "--root", root, "--json"])
         rows = {x["skill"]: x["status"] for x in json.loads(fr.stdout or "{}").get("skills", [])}
-        check(rows.get("core-demo-x") == "ok", f"B-3: termin przeglądu poprawny dla freshness.py: {rows.get('core-demo-x')}")
+        check(rows.get("core-demo-x") == "ok", f"B-3: the review deadline is valid for freshness.py: {rows.get('core-demo-x')}")
 
     # ── C: finish.py ──
     if shutil.which("git"):
@@ -107,7 +107,7 @@ def main() -> int:
             repo = Path(t) / "repo"
             repo.mkdir()
             git(repo, "init", "-q", "-b", "main")
-            git(repo, "config", "user.name", "t")          # runner CI nie ma globalnej tożsamości gita
+            git(repo, "config", "user.name", "t")          # the CI runner has no global git identity
             git(repo, "config", "user.email", "t@t")
             git(repo, "config", "commit.gpgsign", "false")
             (repo / "a.txt").write_text("a\n")
@@ -124,10 +124,10 @@ def main() -> int:
             check(r.returncode == 2 and n == "1", f"C-1: na main odmowa: {r.stdout}{r.stderr}")
             git(repo, "checkout", "-q", "-b", "feature")
             bad = Path(t) / "bad.txt"
-            bad.write_text("zła treść\n")
+            bad.write_text("bad content\n")
             r = run([fin, "--root", repo, "--message", bad, "--no-check"])
             check(r.returncode == 1 and git(repo, "rev-list", "--count", "HEAD").stdout.strip() == "1",
-                  f"C-2: zła treść commita → kod 1, bez commita: {r.stdout}{r.stderr}")
+                  f"C-2: bad commit content → code 1, no commit: {r.stdout}{r.stderr}")
             (repo / ".env").write_text("SECRET=1\n")
             r = run([fin, "--root", repo, "--message", msg, "--no-check"])
             check(r.returncode == 2 and ".env" in r.stdout + r.stderr, f"C-3: plik .env w zmianach → odmowa: {r.stdout}{r.stderr}")
@@ -140,13 +140,13 @@ def main() -> int:
             last = git(repo, "log", "-1", "--format=%s").stdout.strip()
             check(r.returncode == 0 and last == "feat(x): add b" and "git push -u origin feature" in r.stdout
                   and git(repo, "status", "--porcelain").stdout.strip() == "",
-                  f"C-5: commit z treścią z pliku, polecenie pushu wypisane, nie wykonane: {r.stdout}{r.stderr} {last}")
+                  f"C-5: a commit with content from a file, the push command printed, not executed: {r.stdout}{r.stderr} {last}")
             r = run([fin, "--root", repo, "--message", msg, "--no-check"])
-            check(r.returncode == 0 and "nic do commita" in r.stdout, f"C-6: brak zmian → nic do commita: {r.stdout}")
+            check(r.returncode == 0 and "nothing to commit" in r.stdout, f"C-6: no changes → nothing to commit: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów narzędzi")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tool tests")
     return 1 if fails else 0
 
 

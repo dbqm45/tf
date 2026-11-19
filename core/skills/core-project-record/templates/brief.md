@@ -3,36 +3,36 @@ artifact: brief
 phase: discovery
 status: draft
 version: 1
-author: <agent lub osoba>
-created: <RRRR-MM-DD>
-updated: <RRRR-MM-DD>
+author: <agent or person>
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 inputs: []
 ---
-# Brief: <nazwa>
+# Brief: <name>
 
 ## TL;DR
-<Problem w 1 zdaniu. Dla kogo. Jaki wynik uznamy za sukces. Najważniejsze ograniczenie.>
+<The problem in 1 sentence. For whom. What result we will consider a success. The most important constraint.>
 
-## Problem i kontekst
-## Użytkownicy i interesariusze
-## Cele i miary sukcesu
-| Cel (główny / drugorzędny / ochronny) | Miara | Wartość docelowa |
+## Problem and context
+## Users and stakeholders
+## Goals and success measures
+| Goal (primary / secondary / guardrail) | Measure | Target value |
 |---|---|---|
-## Zakres
-- W zakresie: …
-- Poza zakresem: …
-## Ograniczenia
-<czas, budżet, zespół i jego kompetencje, istniejące systemy, regulacje, hosting>
-- Budżet czasu MVP: <N tygodni — ustala człowiek; próg „MVP za duże” w skillu wymagań, pack-it: proc-requirements-shaping>
-- Szacunek przepływu MVP: <N tygodni, uzasadnienie>
-## Typ projektu
-<greenfield | brownfield (stack wykryty: detect_stack.py)>
+## Scope
+- In scope: …
+- Out of scope: …
+## Constraints
+<time, budget, the team and its skills, existing systems, regulations, hosting>
+- MVP time budget: <N weeks — set by the human; the "MVP too big" threshold in the requirements skill, pack-it: proc-requirements-shaping>
+- MVP flow estimate: <N weeks, rationale>
+## Project type
+<greenfield | brownfield (stack detected: detect_stack.py)>
 
-## Otwarte pytania
-- [ ] … → <adresat>
+## Open questions
+- [ ] … → <addressee>
 
-## Przekazanie
-- **Dla:** <persona/rola analizy domeny lub autor wymagań>
-- **Zadanie:** …
-- **Przeczytaj:** TL;DR, Cele, Ograniczenia
-- **Gotowe, gdy:** …
+## Handoff
+- **For:** <the domain analysis persona/role or the requirements author>
+- **Task:** …
+- **Read:** TL;DR, Goals, Constraints
+- **Done when:** …

@@ -1,28 +1,28 @@
-# Agent teams (`mode-team`) — zespół agentów na żądanie
+# Agent teams (`mode-team`) — a team of agents on demand
 
-Persona prowadzi zespół 3–5 członków (wykonawców fabryki), którzy piszą do siebie bezpośrednio i biorą zadania ze
-wspólnej listy. To funkcja eksperymentalna Claude Code i jest znacznie droższa od zwykłego delegowania do subagentów,
-dlatego tryb nie instaluje się domyślnie, a flagę włączasz sam.
+A persona leads a team of 3–5 teammates (the factory's executors) who write to each other directly and take tasks from a
+shared list. It is an experimental Claude Code feature and it is much more expensive than ordinary delegation to subagents,
+so the mode is not installed by default, and you turn the flag on yourself.
 
-## Kiedy
-- **Pasuje:** role muszą wymieniać ustalenia i spierać się w trakcie — przegląd z kilku stron, debugowanie
-  z konkurencyjnymi hipotezami, zmiana przez kilka warstw z uzgadnianiem kontraktu.
-- **Nie pasuje:** zadania po kolei, edycja tych samych plików, praca bez nadzoru (`claude -p` nie tworzy zespołu).
-  Wtedy wystarczą subagenci persony.
+## When
+- **Fits:** roles must exchange findings and argue along the way — a review from several sides, debugging
+  with competing hypotheses, a change across several layers with agreeing on a contract.
+- **Does not fit:** tasks one after another, editing the same files, unattended work (`claude -p` does not create a team).
+  Then the persona's subagents are enough.
 
-## Jak
-1. `tf add mode-team` — instalacja trybu.
-2. `python3 .claude/skills/team-session/scripts/team_switch.py on` — flaga w `.claude/settings.local.json`
-   (tylko u Ciebie); działa od następnej sesji.
-3. Nowa sesja interaktywna z personą, np. `claude --agent kuba`, potem `/team-session <zadanie>`.
-   Persona sprawdza, czy zespół ma sens, i pyta o skład i limit kosztu.
-4. Po sesji: `team_switch.py off`. Z włączoną flagą podagent nazwany przez Claude startuje jako członek zespołu
-   także wtedy, gdy nikt o zespół nie prosił.
+## How
+1. `tf add mode-team` — installs the mode.
+2. `python3 .claude/skills/team-session/scripts/team_switch.py on` — the flag in `.claude/settings.local.json`
+   (only for you); it works from the next session.
+3. A new interactive session with a persona, e.g. `claude --agent kuba`, then `/team-session <task>`.
+   The persona checks whether a team makes sense and asks about the composition and the cost limit.
+4. After the session: `team_switch.py off`. With the flag on, a subagent named by Claude starts as a teammate
+   even when nobody asked for a team.
 
-## Na co uważać
-- Koszt rośnie z liczbą członków; zmierzysz go `python3 .tf/factory/cost_report.py --days 1`.
-- Każdy plik powinien mieć jednego właściciela — dwóch członków nadpisuje sobie zmiany.
-- Jeden zespół na sesję; `/resume` nie przywraca członków zespołu.
-- Pytania o uprawnienia członków pojawiają się w Twojej sesji; częste polecenia dopisz do `allow` przed startem.
+## What to watch out for
+- The cost grows with the number of teammates; you measure it with `python3 .tf/factory/cost_report.py --days 1`.
+- Every file should have one owner — two teammates overwrite each other's changes.
+- One team per session; `/resume` does not restore teammates.
+- Teammates' permission questions appear in your session; add frequent commands to `allow` before the start.
 
-Szczegóły przebiegu: `.claude/skills/team-session/SKILL.md`.
+Details of the run: `.claude/skills/team-session/SKILL.md`.

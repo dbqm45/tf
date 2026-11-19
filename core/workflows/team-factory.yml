@@ -45,9 +45,3 @@ jobs:
         run: python3 .tf/factory/skill_audit.py .claude/skills
       - name: Skille zmienione po bramce jakości (bez modelu; ewaluacja na modelu tylko ręcznie, za zgodą)
         run: python3 .tf/factory/skill_gate.py --status --strict
-      # Standard repozytorium: instalacja, dziennik docs/project/, pliki instrukcji, gotowość repo. Krok informuje
-      # i nie blokuje; żeby blokował, usuń `continue-on-error` (a z `--strict` także ostrzeżenia). Ten workflow rusza
-      # tylko przy zmianie plików fabryki — kontrolę na każdym PR dodaj do własnego CI tym samym poleceniem.
-      - name: Standard repozytorium (informacyjnie)
-        run: python3 .tf/factory/standard.py
-        continue-on-error: true

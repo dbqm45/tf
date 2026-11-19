@@ -1,164 +1,164 @@
 ---
 name: core-async-delegation
-description: Użyj, gdy agent ma pracować bez nadzoru (claude -p, /goal, sandbox, rutyna) — kontrakt, bramki, przegląd.
+description: Use when an agent is to work unsupervised (claude -p, /goal, sandbox, routine) — a contract, gates, review.
 metadata:
-  przeglad: "2027-10-09"
-  katalog: "Użyj, gdy oddajesz zadanie agentowi, który działa bez człowieka przy ekranie — zdalna kontrola lokalnej sesji z telefonu, sandbox w chmurze (zamknięty laptop), rutyna lub przebieg według harmonogramu, wykonanie zatwierdzonego planu przez claude -p albo /goal — kwalifikacja zadania, wybór trybu kontroli, kontrakt przed startem (cel, zakres, setup, sieć, MCP, sekrety, stop, budżet), polityka wykonania planu bez pytań (bramki w fazach, celowe zepsucie, najwyżej 2 próby naprawy, blok STOP, commit na zielono, raport), monitorowanie i przegląd po. Nie do pętli recenzji i uprawnień agenta (core-agent-security), faz projektu (core-delivery-lifecycle), punktu kontrolnego sesji (core-project-record) ani doboru modelu (core-cost-control)."
-  slowa: "bez nadzoru, w tle, w nocy, zamknięty laptop, odejść od komputera, z telefonu, remote control, sandbox w chmurze, claude code on the web, codex cloud, rutyna, harmonogram, routine, claude -p, headless, /goal, delegacja, zlecić agentowi, agent sam wykona plan, praca asynchroniczna, nocny agent, agent poprawia własne prompty i skille, pętla samodoskonalenia, agent sam commituje zmiany, granice dla agenta, uprawnienia rutyny"
+  review: "2027-10-09"
+  catalog: "Use when you hand a task to an agent that works without a human at the screen — remote control of a local session from a phone, a cloud sandbox (laptop closed), a routine or scheduled run, executing an approved plan with claude -p or /goal — qualifying the task, choosing the control mode, a contract before the start (goal, scope, setup, network, MCP, secrets, stop, budget), a policy for executing a plan without questions (gates in phases, deliberate breakage, at most 2 repair attempts, a STOP block, commit on green, a report), monitoring and the review afterwards. Not for the review loop and agent permissions (core-agent-security), project phases (core-delivery-lifecycle), a session checkpoint (core-project-record) or choosing a model (core-cost-control)."
+  keywords: "bez nadzoru, w tle, w nocy, zamknięty laptop, odejść od komputera, z telefonu, remote control, sandbox w chmurze, claude code on the web, codex cloud, rutyna, harmonogram, routine, claude -p, headless, /goal, delegacja, zlecić agentowi, agent sam wykona plan, praca asynchroniczna, nocny agent, agent poprawia własne prompty i skille, pętla samodoskonalenia, agent sam commituje zmiany, granice dla agenta, uprawnienia rutyny, unsupervised, in the background, overnight, closed laptop, from my phone, cloud sandbox, schedule, delegate to an agent, agent executes the plan alone, asynchronous work, overnight agent, self-improvement loop, routine permissions, kontrakt przed startem, warunek gotowe, warunek stopu, limit tur, budżet przebiegu, najwyżej 2 próby naprawy, nie osłabiaj testu, blok STOP, raport końcowy, koniec tury to raport, zapowiedź kolejnego kroku, warunek postępu, aż będzie dobrze, dwie tury bez poprawy, przebieg cykliczny, codzienna rutyna, przegląd zgłoszeń, uprawnienia rosną z dowodem, zielony przebieg bez wartości, ta sama próba w kółko, polecenie na noc, wykonanie planu bez pytań, contract before the start, stop condition, turn limit, at most 2 repair attempts, end of turn is a report, progress condition, recurring run, permissions grow with evidence"
 ---
 
-# Delegacja pracy agentowi bez nadzoru
+# Delegating work to an unsupervised agent
 
-Kontrola nie znika, tylko zmienia miejsce: **konfigurujesz przed startem, monitorujesz wybiórczo, oceniasz po
-zakończeniu.** Zielony przebieg znaczy tylko „infrastruktura nie padła”, nie „zadanie zrobione”. Im mniej patrzysz
-na przebieg na żywo, tym ciaśniej środowisko musi wymuszać zakres — izolacja plików i sieci jest warunkiem
-autonomii, nie przeszkodą.
+Control does not disappear, it moves: **you configure before the start, monitor selectively, assess after
+it ends.** A green run means only "the infrastructure did not fall over", not "the task is done". The less you watch
+the run live, the tighter the environment has to enforce the scope — isolation of files and network is a precondition
+of autonomy, not an obstacle.
 
-## 1. Czy to zadanie do oddania
-Tak, gdy wszystkie są prawdziwe:
-- warunek „gotowe” sprawdzi polecenie lub lista kontrolna (testy, plik, raport), nie gust;
-- zakres plików da się nazwać (edytuj / tylko czytaj / nie dotykaj);
-- nie wymaga decyzji produktowych na żywo ani dostępu do produkcji;
-- sekrety da się ograniczyć do zera albo do krótkotrwałych, bez prawa zapisu;
-- wynik jest odwracalny: gałąź lub szkic PR, nigdy merge ani wdrożenie.
+## 1. Is this a task to hand over
+Yes, when all of these are true:
+- the "done" condition is checked by a command or a checklist (tests, a file, a report), not by taste;
+- the scope of files can be named (edit / read only / do not touch);
+- it does not require live product decisions or access to production;
+- secrets can be reduced to zero or to short-lived ones, without write rights;
+- the result is reversible: a branch or a draft PR, never a merge or a deployment.
 
-Dobre: aktualizacja planu testów, porządki w dokumentacji, drobna poprawka setupu, wycinek backlogu z planem,
-przegląd zaległych zgłoszeń. Złe: „napraw produkcję”, „zdecyduj, jak ma działać rabat”.
+Good: updating a test plan, tidying documentation, a small setup fix, a slice of the backlog with a plan,
+reviewing pending issues. Bad: "fix production", "decide how the discount should work".
 
-## 2. Tryb kontroli — pytanie „kiedy człowiek odzyskuje kontrolę?”
-| Tryb | Gdzie działa agent | Co kontrolujesz | Pasuje do | Główne ryzyko |
+## 2. The control mode — the question "when does the human get control back?"
+| Mode | Where the agent runs | What you control | Fits | Main risk |
 |---|---|---|---|---|
-| **zdalna kontrola lokalnej sesji** (Remote Control w Claude Code, SSH + `tmux`, relay typu Happy) | Twoja maszyna lub VPS | samą sesję, z innego urządzenia | krótka poprawka, diagnoza, dokończenie pracy | bezpieczeństwo maszyny po Twojej stronie; relay = dodatkowa strona zaufania |
-| **sandbox w chmurze** (Claude Code on the web, Codex Cloud) | zarządzany kontener | setup, sieć, MCP, sekrety, zakres | ograniczone zadanie do PR przy zamkniętym laptopie | źle przygotowane środowisko, za szerokie uprawnienia |
-| **rutyna / przebieg cykliczny** (harmonogram, zdarzenie, API) | chmura lub serwer | wyzwalacz, warunek stopu, budżet, kryteria sukcesu | raport, przegląd zaległości, kontrola po wydaniu | zielony bez wartości, koszt, duplikaty, zapętlenie |
-| **agent proaktywny** (sam pisze do użytkownika: skrót, przypomnienie) | chmura lub serwer | rytm i listę tematów (ustawia użytkownik), klasy danych w wiadomościach, akcje zakazane nawet za zgodą | poranny skrót, przypomnienie o terminie | wyciek w wiadomości, szum, koszt ciągłego sprawdzania (sprawdzaj co kilka godzin) |
+| **remote control of a local session** (Remote Control in Claude Code, SSH + `tmux`, a relay like Happy) | your machine or a VPS | the session itself, from another device | a short fix, a diagnosis, finishing work | the machine's security is on your side; a relay = an extra party to trust |
+| **cloud sandbox** (Claude Code on the web, Codex Cloud) | a managed container | setup, network, MCP, secrets, scope | a bounded task up to a PR with the laptop closed | a badly prepared environment, permissions too broad |
+| **routine / recurring run** (schedule, event, API) | cloud or a server | the trigger, the stop condition, the budget, the success criteria | a report, a review of the backlog, a check after a release | green without value, cost, duplicates, looping |
+| **proactive agent** (writes to the user on its own: a digest, a reminder) | cloud or a server | the rhythm and the list of topics (set by the user), data classes in messages, actions forbidden even with consent | a morning digest, a deadline reminder | a leak in a message, noise, the cost of constant checking (check every few hours) |
 
-Problem tylko z interfejsem (telefon, inna sieć) → lokalny agent + zdalna kontrola. Chcesz odciąć agenta od
-swojego katalogu domowego, kluczy i sieci → sandbox albo osobny VPS. Funkcje tych produktów (plany kont, wersje,
-limity, cache) zmieniają się szybko — przed wdrożeniem w zespole sprawdź dokumentację dostawcy.
+A problem only with the interface (a phone, another network) → a local agent + remote control. You want to cut the agent off from
+your home directory, keys and network → a sandbox or a separate VPS. The features of these products (account plans, versions,
+limits, cache) change quickly — before rolling it out in a team check the vendor's documentation.
 
-## 3. Kontrakt przed startem
-Każda linia to decyzja, którą i tak podejmiesz — lepiej przed startem niż po pierwszej porażce. Część trafia do
-konfiguracji środowiska (setup, sieć, sekrety), reszta do polecenia:
-1. **cel i warunek „gotowe”** — sprawdzalny;
-2. **zakres** — pliki do edycji, pliki tylko do odczytu, czego nie robić (kod produkcyjny, merge, push na `main`);
-3. **setup** — zależności instalowane skryptem startowym, nie „w trakcie”; narzędzia z obrazu bazowego wypisane jawnie;
-4. **sieć** — allowlista hostów; często wyłączona po setupie, więc „doinstaluj pakiet w trakcie” się nie uda;
-5. **MCP i konfiguracja** — tylko to, co środowisko widzi przy starcie (np. `.mcp.json` w repo); profil lokalny
-   użytkownika jest w chmurze niewidoczny;
-6. **sekrety** — żadnych produkcyjnych ani z prawem zapisu; minimalny zakres i czas życia;
-7. **stop i budżet** — limit tur i kosztu (`claude -p … --max-budget-usd <kwota>`), czas;
-8. **kryteria przeglądu** — z góry: diff tylko w zakresie, raport z założeniami i niepewnościami, brak prośby
-   o szersze uprawnienia.
+## 3. The contract before the start
+Each line is a decision you will make anyway — better before the start than after the first failure. Part goes into
+the environment configuration (setup, network, secrets), the rest into the instruction:
+1. **goal and the "done" condition** — checkable;
+2. **scope** — files to edit, read-only files, what not to do (production code, merge, push to `main`);
+3. **setup** — dependencies installed by the startup script, not "along the way"; tools from the base image listed explicitly;
+4. **network** — an allowlist of hosts; often turned off after setup, so "install a package along the way" will not work;
+5. **MCP and configuration** — only what the environment sees at start (e.g. `.mcp.json` in the repo); the user's local
+   profile is invisible in the cloud;
+6. **secrets** — no production ones and none with write rights; minimal scope and lifetime;
+7. **stop and budget** — a limit of turns and cost (`claude -p … --max-budget-usd <kwota>`), time;
+8. **review criteria** — up front: the diff only within the scope, a report with assumptions and uncertainties, no request
+   for broader permissions.
 
-Szablon do wypełnienia, przykład i wariant „dry run”: `references/kontrakt-delegacji.md`.
+A template to fill in, an example and a "dry run" variant: `references/delegation-contract.md`.
 
-## 4. Wykonanie planu bez człowieka
-Gdy delegujesz zatwierdzony plan kroku (core-delivery-lifecycle, core-project-record), agent dostaje politykę
-zamiast pytań:
-- **Zakaz pytań do użytkownika.** Niejednoznaczność → wariant zachowawczy (mniej plików, mniejsza zmiana zachowania,
-  najbliżej litery planu), zapisany w raporcie.
-- **„Nie da się w zakresie” to poprawny wynik:** STOP i zgłoszenie, nie obejście granicy (core-agent-security §4).
-- **Przed startem** sprawdza, że każde polecenie weryfikacji z planu da się uruchomić; brak = STOP w tej fazie.
-- **Rozjazd z planem:** drobny (przeniesiony plik, nowa nazwa) → dostosuj i zapisz `ADAPT: …`; strukturalny (brak
-  zależności, inna architektura, brak wyniku poprzedniej fazy) → STOP. W wątpliwości — strukturalny.
-- **Bramki fazy, od najtańszej:** polecenia z planu → pliki fazy dodane do indeksu po nazwie → **celowe zepsucie**
-  dla nowych testów (pack-it: qa-spec-first-testing) → pełne testy, lint, typy → commit. Po każdej bramce linia
-  `BRAMKA <nazwa>: PASS` albo `FAIL (<skrót>, próba k/2)` — oceniający `/goal` widzi tylko transkrypt.
-- **Najwyżej 2 próby naprawy na bramkę;** trzecia porażka = STOP. Testu, asercji ani reguły lint nie osłabia.
-- **Warunek postępu, nie „aż będzie dobrze”.** Cel `/goal` to liczba z narzędzia (wynik Lighthouse, liczba
-  zielonych testów, czas p95). Obok limitu tur: każda tura poprawia co najmniej jedną zmierzoną metrykę; dwie tury
-  bez poprawy = STOP. To samo polecenie po raz trzeci bez zmiany wyniku = STOP.
-- **Commit tylko na zielono** (core-conventional-commits), pliki po nazwie; brudne pliki spoza fazy wypisuje,
-  nie dodaje; bez `--no-verify` i `--amend`; padający hook przed commitem = porażka bramki.
-- Weryfikacji ręcznej nie odhacza — lista dla człowieka na końcu. Stan postępu tylko w planie (pierwszy
-  nieodhaczony punkt = miejsce wznowienia).
-- Na końcu **raport**: fazy z SHA, adaptacje, niepewności, lista weryfikacji ręcznej, propozycja przeglądu
-  w świeżym kontekście.
+## 4. Executing a plan without a human
+When you delegate an approved step plan (core-delivery-lifecycle, core-project-record), the agent gets a policy
+instead of questions:
+- **No questions to the user.** Ambiguity → the conservative option (fewer files, a smaller change of behaviour,
+  closest to the letter of the plan), written in the report.
+- **"Not possible within the scope" is a correct result:** STOP and a report, not getting around the boundary (core-agent-security §4).
+- **Before the start** it checks that every verification command from the plan can be run; missing = STOP in that phase.
+- **Divergence from the plan:** minor (a moved file, a new name) → adapt and write `ADAPT: …`; structural (a missing
+  dependency, a different architecture, no result of the previous phase) → STOP. When in doubt — structural.
+- **Phase gates, cheapest first:** the commands from the plan → the phase's files added to the index by name → **deliberate breakage**
+  for new tests (pack-it: qa-spec-first-testing) → full tests, lint, types → commit. After each gate the line
+  `GATE <nazwa>: PASS` or `FAIL (<skrót>, attempt k/2)` — the `/goal` evaluator sees only the transcript.
+- **At most 2 repair attempts per gate;** the third failure = STOP. It does not weaken a test, an assertion or a lint rule.
+- **A progress condition, not "until it's good".** The `/goal` target is a number from a tool (a Lighthouse score, the number of
+  green tests, p95 time). Next to the turn limit: every turn improves at least one measured metric; two turns
+  without improvement = STOP. The same command a third time without a change in the result = STOP.
+- **Commit only on green** (core-conventional-commits), files by name; dirty files outside the phase it lists,
+  does not add; no `--no-verify` or `--amend`; a hook failing before the commit = a gate failure.
+- It does not tick off manual verification — a list for the human at the end. The progress state only in the plan (the first
+  unticked item = the place to resume).
+- At the end a **report**: phases with SHAs, adaptations, uncertainties, the manual verification list, a proposal of a review
+  in a fresh context.
 
-Format bloku STOP, raportu i polecenie `/goal` do skopiowania: `references/polityka-wykonania.md`.
+The format of the STOP block, the report and a `/goal` command to copy: `references/execution-policy.md`.
 
-**Koniec tury to raport, nie ukończenie.** Nowsze modele (Opus 5.5) w długim zadaniu kończą czasem turę samym
-tekstem — podsumowaniem z zapowiedzią kolejnego kroku. Pętla, która uznaje to za koniec, zatrzymuje pracę w połowie:
-- części zadania trzymasz na liście (plan z polami do odhaczenia, lista zadań); otwarte pozycje bez nazwanej blokady
-  → krótka wiadomość „otwarte: <pozycje>; kontynuuj, a przy blokadzie napisz, co blokuje”;
-- warunek „gotowe” sprawdza ktoś inny niż wykonawca (`/goal` z małym modelem oceniającym, bramka w CI);
-- działający proces w tle albo podagent = zadanie trwa; czekasz na jego wynik;
-- w orkiestracji kilku agentów podaj budżet czasu („ile zostało”) — w testach Anthropic zespoły kończyły szybciej
-  przy podobnej jakości (platform.claude.com, „Prompting Claude Opus 5.5”, 2026-10-20).
+**The end of a turn is a report, not completion.** Newer models (Opus 5.5) in a long task sometimes end a turn with text alone
+— a summary announcing the next step. A loop that takes this as the end stops the work halfway:
+- you keep the parts of the task on a list (a plan with checkboxes, a task list); open items without a named blocker
+  → a short message "open: <pozycje>; continue, and if blocked write what blocks you";
+- the "done" condition is checked by someone other than the executor (`/goal` with a small evaluator model, a gate in CI);
+- a running background process or a subagent = the task continues; you wait for its result;
+- in an orchestration of several agents give a time budget ("how much is left") — in Anthropic's tests teams finished faster
+  at similar quality (platform.claude.com, "Prompting Claude Opus 5.5", 2026-10-20).
 
-## 5. Rutyny i przebiegi cykliczne
-- Kontrakt mocniejszy niż przy jednym przebiegu: **cel, warunek stopu, zakres** (repo, etykiety, katalogi),
-  **limit kosztu** (iteracje, czas, budżet), **kryteria sukcesu** i **kryteria porażki** (kiedy zielony status
-  techniczny nadal jest porażką — np. raport bez nowych pozycji, ten sam wniosek co wczoraj).
-- Idempotencja: przebieg sprawdza, co już zrobił poprzedni (raport z dziś istnieje → aktualizuje, nie dubluje).
-- Wyzwalacz to zdarzenie, które ma znaczenie, albo rozsądny rytm — nie „co 5 minut na wszelki wypadek”.
-- Pętla, która sama iteruje do akceptacji recenzenta, nie trafia do harmonogramu (core-agent-security §5a).
-- **Uprawnienia rosną z dowodem.** Drabina: tylko odczyt → szkic w pliku → zmiany na gałęzi lub w worktree → szkic
-  działania zewnętrznego (draft PR, szkic komentarza) → działanie po zgodzie człowieka → automat tylko dla działań
-  niskiego ryzyka, z logiem i drogą wycofania. Szczebel wyżej dopiero po serii przebiegów bez przekroczenia zakresu,
-  a każdy nowy szczebel dostaje nową regułę weryfikacji. Uprawnienia rutyny przeglądasz przy każdym nowym narzędziu
-  i co miesiąc.
-- **Dwa tryby wyniku:** *cisza* (krótka aktualizacja stanu, gdy nic się nie zmieniło) i *uwaga* (raport, gdy coś
-  wymaga człowieka). Ta sama blokada w dwóch kolejnych przebiegach = eskalacja do człowieka, nie kolejne ponowienie.
-- **Przegląd trafności** liczy trafne pozycje, fałszywe alarmy i przeoczenia, a nie tylko to, co rutyna znalazła.
-- **Pętla samodoskonalenia** (agent poprawia własne prompty, skille, hooki): nie ma zapisu do polityki uprawnień,
-  piaskownicy, tożsamości ani zestawu ewaluacji — te leżą w osobnym repo lub są tylko do odczytu. Zmianę przyjmuje
-  wynik na odłożonym zbiorze i człowiek, nie sama pętla (pack-it: ai-evals, bramka zmiany harnessu).
-- `/loop` żyje w sesji i wygasa po 7 dniach (code.claude.com/docs/en/scheduled-tasks, „Seven-day expiry”, odczyt
-  2026-10-29); praca, która ma przeżyć sesję, idzie do rutyny w chmurze.
-- Typowe porażki są nudne: godziny prób pobrania z zablokowanego hosta, drugi podobny raport, łatanie objawu
-  zamiast przyczyny, gałąź, której nikt nie umie scalić.
+## 5. Routines and recurring runs
+- A stronger contract than for a single run: **goal, stop condition, scope** (repo, labels, directories),
+  **a cost limit** (iterations, time, budget), **success criteria** and **failure criteria** (when a green technical
+  status is still a failure — e.g. a report without new items, the same conclusion as yesterday).
+- Idempotency: a run checks what the previous one already did (today's report exists → it updates it, does not duplicate it).
+- The trigger is an event that matters, or a sensible rhythm — not "every 5 minutes just in case".
+- A loop that iterates on its own until the reviewer accepts does not go into a schedule (core-agent-security §5a).
+- **Permissions grow with evidence.** The ladder: read only → a draft in a file → changes on a branch or in a worktree → a draft
+  of an external action (a draft PR, a draft comment) → an action after the human's consent → automation only for low-risk
+  actions, with a log and a way back. A rung up only after a series of runs without exceeding the scope,
+  and each new rung gets a new verification rule. You review a routine's permissions with every new tool
+  and every month.
+- **Two result modes:** *silence* (a short state update when nothing changed) and *attention* (a report when something
+  needs a human). The same blocker in two consecutive runs = escalation to a human, not another retry.
+- **An accuracy review** counts accurate items, false alarms and misses, not only what the routine found.
+- **A self-improvement loop** (the agent improves its own prompts, skills, hooks): it has no write access to the permission policy,
+  the sandbox, the identity or the evaluation set — those live in a separate repo or are read only. A change is accepted by
+  the result on a held-out set and by a human, not by the loop itself (pack-it: ai-evals, the harness change gate).
+- `/loop` lives in the session and expires after 7 days (code.claude.com/docs/en/scheduled-tasks, "Seven-day expiry", read
+  2026-10-29); work that has to outlive the session goes to a cloud routine.
+- Typical failures are boring: hours of attempts to fetch from a blocked host, a second similar report, patching a symptom
+  instead of the cause, a branch nobody can merge.
 
-## 6. Monitorowanie
-Telefon to panel kontrolny, nie miejsce na przegląd diffu. Sprawdzasz: czy przeszedł setup, czy blokada sieci,
-MCP lub sekretu nie zatrzymała pracy, czy agent nie rozszerza zakresu. Decyzja: kontynuuj / doprecyzuj /
-zatrzymaj / zostaw do przeglądu.
-- **Inwentarz przebiegów:** każda rutyna i przebieg ma właściciela (kto uruchomił), zakres uprawnień i sposób
-  zatrzymania. Przegląd inwentarza razem z przeglądem uprawnień (§5).
-- **Zapis, którego agent nie przepisze:** log wywołań narzędzi i ruchu sieciowego zbierany poza procesem agenta.
-  Transkrypt agenta to jego relacja, nie niezależny dowód.
-- **Wyłącznik bez współpracy agenta:** zatrzymanie przez platformę (anulowanie przebiegu, odebranie tokenu, zatrzymanie
-  kontenera), a nie prośba do agenta, żeby przestał.
+## 6. Monitoring
+A phone is a control panel, not a place to review a diff. You check: whether the setup passed, whether a network,
+MCP or secret block stopped the work, whether the agent is widening the scope. The decision: continue / clarify /
+stop / leave for review.
+- **An inventory of runs:** every routine and run has an owner (who started it), a permission scope and a way to
+  stop it. The inventory review goes together with the permissions review (§5).
+- **A record the agent cannot rewrite:** a log of tool calls and network traffic collected outside the agent's process.
+  The agent's transcript is its account, not independent evidence.
+- **A kill switch without the agent's cooperation:** stopping through the platform (cancelling the run, revoking the token, stopping
+  the container), not asking the agent to stop.
 
-## 7. Przegląd po
-Przy komputerze: diff, logi, testy i raport wobec kryteriów z kontraktu — nie wobec zielonego statusu. Zmiany
-w zakresie i bramki z dowodem → przegląd w świeżym kontekście i decyzja człowieka o scaleniu. Na końcu jedno zdanie
-do dziennika projektu: co musi się zmienić, żeby ten tryb był bezpieczny dla zespołu (core-project-record).
+## 7. The review afterwards
+At the computer: the diff, logs, tests and the report against the contract's criteria — not against the green status. Changes
+within the scope and gates with evidence → a review in a fresh context and the human's decision on merging. At the end one sentence
+for the project record: what has to change for this mode to be safe for the team (core-project-record).
 
-## Przykład
-**Sytuacja:** „Po zmianie limitów subskrypcji chcę, żeby agent w sandboxie uzupełnił plan testów modułu płatności,
-a ja zamknę laptopa.”
+## Example
+**Situation:** "After the change of subscription limits I want the agent in a sandbox to complete the test plan of the payments module,
+and I'll close the laptop."
 
-**Wynik (polecenie + konfiguracja):**
+**Result (instruction + configuration):**
 ```text
-/goal Gotowe, gdy docs/test-plans/payments.md ma scenariusze nowych limitów subskrypcji
-(min. przekroczenie, równy limit, zmiana planu w trakcie okresu) i krótki raport luk.
-Zakres: edytuj tylko docs/test-plans/payments.md; src/modules/payments/** tylko czytaj. Bez merge i push na main.
-Setup: npm ci w skrypcie startowym. Sieć: wyłączona po setupie. MCP: tylko .mcp.json z repo.
-Sekrety: brak. Stop: po raporcie albo po 20 turach; budżet ustalony w konfiguracji.
-Przegląd: diff dotyczy tylko planu testów; raport wymienia założenia i niepewności; brak prośby o sekrety.
+/goal Done when docs/test-plans/payments.md has scenarios for the new subscription limits
+(min. over the limit, exactly at the limit, a plan change mid-period) and a short gap report.
+Scope: edit only docs/test-plans/payments.md; src/modules/payments/** read only. No merge or push to main.
+Setup: npm ci in the startup script. Network: off after setup. MCP: only .mcp.json from the repo.
+Secrets: none. Stop: after the report or after 20 turns; budget set in the configuration.
+Review: the diff covers only the test plan; the report lists assumptions and uncertainties; no request for secrets.
 ```
-Tryb: sandbox (laptop zamknięty, zadanie bez sekretów). Rano: diff tylko w jednym pliku, raport z 2 niepewnościami
-→ przegląd i PR. Wniosek do dziennika: „do sandboxa potrzebny jest dostęp tylko do odczytu do specyfikacji limitów”.
+Mode: sandbox (laptop closed, a task without secrets). In the morning: a diff in only one file, a report with 2 uncertainties
+→ review and a PR. A conclusion for the record: "the sandbox needs read-only access to the limits specification".
 
-Więcej: `references/kontrakt-delegacji.md` (szablon, dry run), `references/polityka-wykonania.md` (STOP, raport).
+More: `references/delegation-contract.md` (template, dry run), `references/execution-policy.md` (STOP, report).
 
-## Checklista
-- [ ] zadanie przechodzi kwalifikację z §1 (sprawdzalne, nazwany zakres, bez produkcji i sekretów, odwracalne)
-- [ ] tryb wybrany pytaniem „kiedy odzyskuję kontrolę”
-- [ ] kontrakt: cel, zakres, setup, sieć, MCP, sekrety, stop, budżet, kryteria przeglądu
-- [ ] przy planie: zakaz pytań, wariant zachowawczy, bramki z liniami werdyktu, ≤2 próby, STOP, commit na zielono
-- [ ] rutyna: kryteria porażki mimo zielonego statusu, idempotencja, limit kosztu
-- [ ] przegląd po wobec kontraktu; wniosek zapisany w dzienniku
+## Checklist
+- [ ] the task passes the qualification from §1 (checkable, a named scope, no production and no secrets, reversible)
+- [ ] the mode chosen with the question "when do I get control back"
+- [ ] the contract: goal, scope, setup, network, MCP, secrets, stop, budget, review criteria
+- [ ] with a plan: no questions, the conservative option, gates with verdict lines, ≤2 attempts, STOP, commit on green
+- [ ] a routine: failure criteria despite a green status, idempotency, a cost limit
+- [ ] the review afterwards against the contract; the conclusion written in the record
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 5, lekcja 5 (praca asynchroniczna i zdalna) oraz skill kursu do autonomicznego
-  wykonania planu z lekcji 5 — materiał szkoleniowy (dostęp 2026-10-09).
-- `claude --help`, Claude Code 2.1.296 (sprawdzone 2026-10-10): `--max-budget-usd` (tylko z `--print`),
+## Sources
+- The 10xDevs course, ed. 3 (2026), module 5, lesson 5 (asynchronous and remote work) and the course's skill for the autonomous
+  execution of a plan from lesson 5 — training material (accessed 2026-10-09).
+- `claude --help`, Claude Code 2.1.296 (checked 2026-10-10): `--max-budget-usd` (only with `--print`),
   `--allowedTools`, `--permission-mode` (`acceptEdits`, `auto`, `bypassPermissions`, `manual`, `dontAsk`, `plan`),
-  `--remote-control`, `--json-schema`. Opcja `--max-turns` nie jest wypisana w pomocy [niezweryfikowane].
-- Anthropic: „Claude Code on the web”, „Remote Control”, „Routines”; OpenAI: „Codex Cloud environments” — wg kursu,
-  nieotwierane bezpośrednio [niezweryfikowane szczegóły: plany kont, wersje minimalne, limity, cache].
+  `--remote-control`, `--json-schema`. The `--max-turns` option is not listed in the help [unverified].
+- Anthropic: "Claude Code on the web", "Remote Control", "Routines"; OpenAI: "Codex Cloud environments" — according to the course,
+  not opened directly [unverified details: account plans, minimum versions, limits, cache].
 
-Opisane własnymi słowami.
+Described in our own words.

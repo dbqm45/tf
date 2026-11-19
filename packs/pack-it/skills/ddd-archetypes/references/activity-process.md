@@ -1,153 +1,153 @@
-# Archetyp Activity / Process — mapper (procedury, czynności, zlecenia pracy)
+# The Activity / Process archetype — mapper (procedures, activities, work orders)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania o **pracy** (przegląd, naprawa, wdrożenie, obsługa zgłoszenia) na model, który rozdziela procedurę
-(jak praca powinna przebiegać) od wykonania (co faktycznie zrobiono, kto, kiedy, z jakim wynikiem). Efekt: da się
-odpowiedzieć „czy zrobiono zgodnie z procedurą?”, rozliczyć czas pracy i odtworzyć przebieg, zamiast trzymać wszystko
-w jednym polu `status`. Protokół wspólny: `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements about **work** (an inspection, a repair, a rollout, handling a ticket) into a model that separates the procedure
+(how the work should proceed) from the execution (what was actually done, by whom, when, with what result). The effect: you can
+answer "was it done according to the procedure?", account for working time and reconstruct the course of events, instead of keeping everything
+in one `status` field. The common protocol: `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy trzeba odróżnić, JAK praca powinna przebiegać (procedura, wzorzec) od tego, co FAKTYCZNIE
-zrobiono, kto, kiedy i z jakim wynikiem?* Tak → pasuje. Jeśli liczy się tylko, kiedy praca ma się odbyć → Planning.
+## Fit test
+**The core question:** *do you need to distinguish HOW the work should proceed (the procedure, the template) from what was ACTUALLY
+done, by whom, when and with what result?* Yes → it fits. If only when the work is to take place matters → Planning.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „procedura / checklista / instrukcja”, „zgodnie z procedurą” | ✅ specyfikacja czynności |
-| „zlecenie pracy”, „kto wykonał, kiedy, z jakim wynikiem” | ✅ wykonanie |
-| „czas pracy na zleceniu”, „wielu wykonawców, role” | ✅ przypisania i rejestracja czasu |
-| „zawieszone / przerwane / porzucone zlecenie” | ✅ stany wykonania |
-| „harmonogram, równoległe poziomy, ścieżka krytyczna” | ❌ → Planning (`planning.md`) |
-| „kolejka oczekujących na zwolnione miejsce” | ❌ → Waitlist |
-| „kto ma wykonać, by koszt był minimalny” | ❌ → General assignment |
-| „na czym pracujemy, w jakim stanie jest urządzenie” | ❌ → `resource-service.md` |
-| „silnik workflow / Camunda / kolejka zadań” | ❌ technika, nie model domeny |
-| „proces zatwierdzania z wieloma ścieżkami” | ⚠️ graniczny |
+| "procedure / checklist / instruction", "according to the procedure" | ✅ activity specification |
+| "work order", "who performed it, when, with what result" | ✅ execution |
+| "working time on the order", "many performers, roles" | ✅ assignments and time tracking |
+| "a suspended / interrupted / abandoned order" | ✅ execution states |
+| "schedule, parallel levels, critical path" | ❌ → Planning (`planning.md`) |
+| "a queue of those waiting for a released place" | ❌ → Waitlist |
+| "who should perform it so the cost is minimal" | ❌ → General assignment |
+| "what we are working on, what state the device is in" | ❌ → `resource-service.md` |
+| "workflow engine / Camunda / task queue" | ❌ a technique, not a domain model |
+| "an approval process with many paths" | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Proces zatwierdzania* — jeśli tylko zmienia stan dokumentu, wystarczy maszyna stanów; jeśli ma procedurę, wykonawców
-  i czas, to Activity.
-- *Harmonogram vs wykonanie* — plan mówi, **kiedy ma** być zrobione; wykonanie, **co zrobiono**. Plan i wykonanie to dwa
-  byty (patrz niżej plan i protokół); terminy z planu nie nadpisują faktów.
-- *Reguły decyzyjne wewnątrz kroku* — decyzje to osobna notacja i osobny moduł, nie część czynności.
+**Borderline cases:**
+- *An approval process* — if it only changes the state of a document, a state machine is enough; if it has a procedure, performers
+  and time, it is Activity.
+- *Schedule vs execution* — the plan says **when** something is to be done; the execution, **what was done**. The plan and the execution are two
+  entities (see the plan and the protocol below); dates from the plan do not overwrite facts.
+- *Decision rules inside a step* — decisions are a separate notation and a separate module, not part of the activity.
 
-## Model (istota)
-Rozumowanie modelowe fabryki; źródła w `## Źródła` potwierdzają tylko wskazane tam fakty.
+## Model (the essence)
+The factory's modelling reasoning; the sources in `## Sources` confirm only the facts indicated there.
 
-- **Specyfikacja czynności (procedura) vs faktyczna czynność** — procedura ma kroki, strukturę (czynność złożona z kroków)
-  i **wersję**; wykonanie wskazuje wersję, wg której przebiegało. To nasz wniosek z konwencji typ/egzemplarz; literatura
-  wzorców (Hay) ma rozdziały o procedurach i czynnościach, ale treści rozdziałów nie przypisujemy `[założenie]`.
-- **Łańcuch pracy** (nazwy pojęć za modelami danych Silverstona): zapotrzebowanie na pracę (work requirement) → zlecenie lub
-  wykonanie pracy (work effort) → przypisanie stron z rolami (Work Effort Party Assignment) → rejestracja czasu
-  (Work Effort Time Tracking). Zapotrzebowanie mówi **czego potrzeba**, wykonanie **co zrobiono**; jedno zapotrzebowanie
-  może dać wiele wykonań i odwrotnie.
-- **Akcja proponowana vs wykonana** — Fowler (rozdz. 8) rozdziela „Proposed and Implemented Action”, a także „Completed
-  and Abandoned Actions” oraz „Suspension”. W naszym modelu: stany `zaproponowana → rozpoczęta → zawieszona ⇄ rozpoczęta →
-  zakończona | porzucona`, każde przejście jako zdarzenie z czasem i osobą.
-- **Plan i protokół** — rozdz. 8 Fowlera zawiera także „Plan” i „Protocol”. Rozumiemy je tak: plan to zamierzona sekwencja
-  działań, protokół to wzorzec postępowania, wg którego plan powstaje. Harmonogramowanie to Planning.
-- **Odpowiedzialność między stronami** — kto za co odpowiada wobec kogo (rozdz. 2 Fowlera nosi tytuł „Accountability”).
-  Rola wykonawcy w czynności to relacja ze stroną (Party), a nie atrybut tekstowy; uprawnienia pozostają poza archetypem.
-- **Rejestracja czasu** — czas pracy to osobne wpisy (kto, od–do, zlecenie), nie pole `godziny`. Sumy i koszty liczy
+- **Activity specification (procedure) vs the actual activity** — the procedure has steps, a structure (an activity composed of steps)
+  and **a version**; the execution points to the version it followed. This is our conclusion from the type/instance convention; the pattern
+  literature (Hay) has chapters on procedures and activities, but we do not attribute the chapters' content `[assumption]`.
+- **The work chain** (concept names after Silverston's data models): the work requirement → the work order or
+  work execution (work effort) → the assignment of parties with roles (Work Effort Party Assignment) → time tracking
+  (Work Effort Time Tracking). The requirement says **what is needed**, the execution **what was done**; one requirement
+  may yield many executions and vice versa.
+- **Proposed vs implemented action** — Fowler (ch. 8) separates "Proposed and Implemented Action", as well as "Completed
+  and Abandoned Actions" and "Suspension". In our model: the states `proposed → started → suspended ⇄ started →
+  completed | abandoned`, each transition as an event with a time and a person.
+- **Plan and protocol** — Fowler's ch. 8 also contains "Plan" and "Protocol". We understand them this way: a plan is an intended sequence
+  of actions, a protocol is the pattern of conduct by which a plan is created. Scheduling is Planning.
+- **Accountability between parties** — who is responsible for what towards whom (Fowler's ch. 2 is titled "Accountability").
+  The performer's role in an activity is a relationship with a party (Party), not a text attribute; permissions stay outside the archetype.
+- **Time tracking** — working time is separate entries (who, from–to, the order), not an `hours` field. Totals and costs are computed by
   Accounting / Pricing.
-- **Wynik kroku** — wynik jest danymi wykonania (ocena, pomiar, uwaga), z typem zdefiniowanym w specyfikacji kroku.
+- **Step result** — the result is execution data (a rating, a measurement, a remark), with a type defined in the step specification.
 
-**Dobór notacji** (kiedy co):
+**Choosing the notation** (when what):
 
-| Notacja | Kiedy | Uwaga |
+| Notation | When | Note |
 |---|---|---|
-| BPMN 2.0.2 (OMG, styczeń 2014) | proces o znanym z góry przebiegu | ISO/IEC 19510:2013 odpowiada wg OMG wersji 2.0.1 |
-| CMMN 1.1 (OMG, grudzień 2016) | sprawa, przebieg zależy od decyzji ludzi | nie wymuszaj sekwencji |
-| DMN 1.5 (OMG, formal/24-01-01, 2024) | decyzje i reguły (tablice decyzyjne) | DMN 1.6 była w beta (wrzesień 2024); stan na 2026 `[niezweryfikowane]` |
+| BPMN 2.0.2 (OMG, January 2014) | a process with a course known in advance | ISO/IEC 19510:2013 corresponds, according to OMG, to version 2.0.1 |
+| CMMN 1.1 (OMG, December 2016) | a case, the course depends on people's decisions | do not force a sequence |
+| DMN 1.5 (OMG, formal/24-01-01, 2024) | decisions and rules (decision tables) | DMN 1.6 was in beta (September 2024); status in 2026 `[unverified]` |
 
-- **Wzorce przepływu sterowania** (van der Aalst i in. 2003) służą jako **lista kontrolna przypadków**: równoległość,
-  synchronizacja, wybór, anulowanie. Dla każdego kroku zapytaj, czy któryś z nich występuje i jak wpływa na stany.
-- **Silnik workflow to technika**: model domeny opisuje czynności i stany; silnik jest wyborem wdrożeniowym.
+- **Control-flow patterns** (van der Aalst et al. 2003) serve as **a checklist of cases**: parallelism,
+  synchronization, choice, cancellation. For each step ask whether any of them occurs and how it affects the states.
+- **A workflow engine is a technique**: the domain model describes activities and states; the engine is an implementation choice.
 
-## Pytania
-**A — decyzje standardowe:**
-- Czy istnieje **procedura** (kroki, wersja)? Kto ją zmienia i czy wykonania pamiętają wersję?
-- Skąd bierze się praca: zapotrzebowanie, zgłoszenie, harmonogram? Jedno zlecenie – jedno wykonanie, czy wiele?
-- Jakie **stany** ma wykonanie (zawieszone, porzucone, wznowione)? Kto i z jakim uzasadnieniem je zmienia?
-- Jakie **role** wykonawców i czy jeden krok ma wielu wykonawców?
-- Czy rejestrujemy **czas pracy** i na jakim poziomie (zlecenie, krok)?
-- Jak przebieg: znany z góry (BPMN), zależny od decyzji ludzi (CMMN), czy sterowany regułami (DMN)?
+## Questions
+**A — standard decisions:**
+- Is there a **procedure** (steps, version)? Who changes it, and do executions remember the version?
+- Where does the work come from: a requirement, a ticket, a schedule? One order – one execution, or many?
+- What **states** does the execution have (suspended, abandoned, resumed)? Who changes them and with what justification?
+- What performer **roles**, and does one step have many performers?
+- Do we track **working time**, and at what level (order, step)?
+- What course: known in advance (BPMN), dependent on people's decisions (CMMN), or driven by rules (DMN)?
 
-**B — luki** (przykłady):
-- czynności równoległe i synchronizacja · anulowanie kroku w toku · powtarzanie kroku · zmiana procedury w trakcie
-  wykonania · wynik negatywny kroku (co dalej) · czynność złożona zakończona częściowo · poprawki po zakończeniu (reopen) ·
-  załączniki/dowody · audyt zmian · terminy i eskalacje (parametr, nie logika archetypu).
+**B — gaps** (examples):
+- parallel activities and synchronization · cancelling a step in progress · repeating a step · changing the procedure during
+  execution · a negative step result (what next) · a composite activity completed partially · corrections after completion (reopen) ·
+  attachments/evidence · change audit · deadlines and escalations (a parameter, not the archetype's logic).
 
-## Kroki mapowania
-1. **Rozdziel** procedurę (specyfikację) od wykonania; ustal wersjonowanie.
-2. **Struktura procedury** — kroki, kolejność, typy wyników; czynność złożona z kroków.
-3. **Źródło pracy** — zapotrzebowanie → zlecenie; relacje 1–N.
-4. **Stany wykonania** — proponowana, rozpoczęta, zawieszona, zakończona, porzucona; zdarzenia przejść.
-5. **Strony i role** — przypisania z rolą i okresem (styk z Party); kto odpowiada.
-6. **Czas pracy** — wpisy czasu; odesłanie sum do Accounting.
-7. **Przypadki przepływu** — przejdź listę: równoległość, synchronizacja, wybór, anulowanie.
-8. **Granice** — Planning (terminy), General assignment (kto), resource-service (na czym), silnik (technika).
+## Mapping steps
+1. **Separate** the procedure (the specification) from the execution; settle versioning.
+2. **The procedure's structure** — steps, order, result types; an activity composed of steps.
+3. **The source of the work** — requirement → order; 1–N relationships.
+4. **Execution states** — proposed, started, suspended, completed, abandoned; transition events.
+5. **Parties and roles** — assignments with a role and a period (the interface with Party); who is responsible.
+6. **Working time** — time entries; refer the totals to Accounting.
+7. **Flow cases** — go through the list: parallelism, synchronization, choice, cancellation.
+8. **Boundaries** — Planning (dates), General assignment (who), resource-service (on what), the engine (technique).
 
-## Decyzje do kontroli (R/A/X)
-Wersjonowanie procedury · liczba wykonań na zlecenie · lista stanów i przejść · zawieszenie/porzucenie · role wykonawców ·
-poziom rejestracji czasu · wynik negatywny kroku · zmiana procedury w trakcie · notacja (BPMN/CMMN/DMN) · ponowne otwarcie.
+## Decisions to check (R/A/X)
+Procedure versioning · the number of executions per order · the list of states and transitions · suspension/abandonment · performer roles ·
+the level of time tracking · a negative step result · changing the procedure mid-way · the notation (BPMN/CMMN/DMN) · reopening.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Activity / Process: <obszar>
-## Procedury             — | Procedura | Wersja | Kroki (kolejność) | Typ wyniku kroku |
-## Wykonania             — | Zlecenie | Procedura (wersja) | Źródło (zapotrzebowanie) | Stany |
-## Stany i przejścia     — | Stan | Zdarzenie | Następny stan | Kto / uzasadnienie |
-## Przypisania i czas    — | Wykonanie | Strona | Rola | Okres | Wpis czasu |
-## Przypadki przepływu   — | Przypadek (równoległość / synchronizacja / wybór / anulowanie) | Gdzie | Reguła |
-## Mapowanie pojęć       — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Integracje            — | Zdarzenie | Z / do archetypu | Reakcja |
-## Decyzje (R/A/X)       — | Decyzja | Źródło |
-## Uwagi                 — założenia (X), notacja, parametry polityk zmiennych, [niezweryfikowane]
+# Activity / Process model: <area>
+## Procedures            — | Procedure | Version | Steps (order) | Step result type |
+## Executions            — | Order | Procedure (version) | Source (requirement) | States |
+## States and transitions — | State | Event | Next state | Who / justification |
+## Assignments and time  — | Execution | Party | Role | Period | Time entry |
+## Flow cases            — | Case (parallelism / synchronization / choice / cancellation) | Where | Rule |
+## Concept mapping       — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Integrations          — | Event | From / to archetype | Reaction |
+## Decisions (R/A/X)     — | Decision | Source |
+## Notes                 — assumptions (X), notation, variable policy parameters, [unverified]
 ```
 
-## Wzorce i pułapki
-- Jedno pole `status` i jedno pole `wykonawca` zamiast zdarzeń i przypisań: tracisz historię, zawieszenia i role.
-- Procedura edytowana „w miejscu” – stare wykonania tracą punkt odniesienia. Wersjonuj lub kopiuj kroki do wykonania.
-- Mieszanie planu z wykonaniem: przesunięty termin nie zmienia faktu, że krok zrobiono wcześniej lub później.
-- Zakładanie, że każdy proces jest sekwencją; sprawy z decyzjami ludzi (CMMN) wymagają stanów, nie sztywnej kolejności.
-- Silnik workflow jako model domeny: stany silnika nie są pojęciami biznesu; nazwy kroków powinny być z języka eksperta.
-- Reguły („jeśli wynik < próg, to powtórz”) wpisane na stałe w czynność – to polityka zmienna, przekaż jako parametr.
-- Autoryzacja „kto może zatwierdzić krok” – poza archetypem; archetyp zapisuje, kto to zrobił.
+## Patterns and pitfalls
+- One `status` field and one `performer` field instead of events and assignments: you lose history, suspensions and roles.
+- A procedure edited "in place" – old executions lose their point of reference. Version it or copy the steps into the execution.
+- Mixing the plan with the execution: a moved date does not change the fact that the step was done earlier or later.
+- Assuming that every process is a sequence; cases with people's decisions (CMMN) require states, not a rigid order.
+- A workflow engine as the domain model: the engine's states are not business concepts; step names should come from the expert's language.
+- Rules ("if the result < threshold, then repeat") hard-coded into the activity – that is a variable policy, pass it as a parameter.
+- Authorization "who may approve a step" – outside the archetype; the archetype records who did it.
 
-## Kontrola jakości
-- [ ] procedura rozdzielona od wykonania; wersja zapisana w wykonaniu
-- [ ] stany wykonania obejmują zawieszenie i porzucenie, z przejściami jako zdarzeniami
-- [ ] przypisania stron mają rolę i okres; czas pracy jest osobnymi wpisami
-- [ ] przejrzano przypadki przepływu (równoległość, synchronizacja, wybór, anulowanie)
-- [ ] granice z Planning, General assignment i `resource-service.md` opisane
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] the procedure separated from the execution; the version recorded in the execution
+- [ ] execution states include suspension and abandonment, with transitions as events
+- [ ] party assignments have a role and a period; working time is separate entries
+- [ ] the flow cases reviewed (parallelism, synchronization, choice, cancellation)
+- [ ] the boundaries with Planning, General assignment and `resource-service.md` described
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** `[przykład]` „Przegląd techniczny pojazdu wg procedury z checklistą (hamulce, światła, emisja spalin).
-Diagnosta wykonuje przegląd; każdy punkt dostaje wynik pozytywny lub negatywny; rejestrujemy czas pracy diagnosty.”
+## Example (shortened)
+**Input:** `[example]` "A vehicle's technical inspection according to a procedure with a checklist (brakes, lights, exhaust emissions).
+The inspector performs the inspection; each item gets a positive or negative result; we track the inspector's working time."
 
 ```markdown
-## Procedury — | przegląd osobowy | v3 | hamulce → światła → spaliny (kolejność dowolna) | pozytywny/negatywny + uwaga |
-## Wykonania — | przegląd pojazdu X | przegląd osobowy v3 | zgłoszenie klienta | proponowana → rozpoczęta → zakończona |
-## Przypisania i czas — | przegląd X | diagnosta A | wykonawca | 10:00–10:40 | wpis czasu 40 min |
-## Przypadki przepływu — wybór: wynik negatywny hamulców → przegląd zakończony z werdyktem negatywnym (X → zapytaj,
-   czy kontynuować pozostałe punkty) · anulowanie: klient odjeżdża w trakcie → porzucona z uzasadnieniem
-## Niezmapowane — cena przeglądu (→ Pricing) · stanowisko kontrolne (→ resource-service / Availability) ·
-   termin wizyty (→ Availability / Planning)
-## Decyzje — wersja procedury zapisana w wykonaniu (R) · czas na poziomie zlecenia (X, małe) ·
-   skutek wyniku negatywnego (X → zapytaj)
+## Procedures — | passenger car inspection | v3 | brakes → lights → exhaust (any order) | positive/negative + remark |
+## Executions — | inspection of vehicle X | passenger car inspection v3 | customer request | proposed → started → completed |
+## Assignments and time — | inspection X | inspector A | performer | 10:00–10:40 | time entry 40 min |
+## Flow cases — choice: negative brake result → inspection completed with a negative verdict (X → ask
+   whether to continue the remaining items) · cancellation: the customer drives away mid-way → abandoned with a justification
+## Unmapped — the inspection price (→ Pricing) · the inspection bay (→ resource-service / Availability) ·
+   the visit date (→ Availability / Planning)
+## Decisions — procedure version recorded in the execution (R) · time at the order level (X, small) ·
+   the effect of a negative result (X → ask)
 ```
 
-## Źródła
-Odczyt 2026-10-17.
-- D. Hay, „Data Model Patterns: Conventions of Thought”, Dorset House 1996 — **książka; spis potwierdzony w katalogu bibliotecznym**; potwierdzony jest rozdział „Procedures and Activities”. ISBN w źródłach sprzeczne, nie podajemy. Rozróżnienia „specyfikacja vs faktyczna czynność” w treści rozdziału nie potwierdzono `[założenie]` z konwencji typ/egzemplarz. W „Enterprise Model Patterns” (Technics Publications, ISBN 978-1-935504-05-4, rok 2011 potwierdzony częściowo) rozdz. 7 „Activities” dotyczy definiowania czynności i ich podziału.
-- L. Silverston, „The Data Model Resource Book”, Vol. 1 Revised Edition, Wiley 2001, ISBN 978-0-471-38023-8 — **książka; spis potwierdzony w O'Reilly (wtórnie)**; potwierdzone częściowo pojęcia: work requirement, work effort, Work Effort Party Assignment, Work Effort Time Tracking.
-- M. Fowler, „Analysis Patterns: Reusable Object Models”, Addison-Wesley 1997 (autor podaje 1996), ISBN 0-201-89542-0 — **książka; spis potwierdzony u wydawcy (InformIT)**; tytuły: rozdz. 8 „Planning” (Proposed and Implemented Action, Completed and Abandoned Actions, Suspension, Plan, Protocol), rozdz. 2 „Accountability”. Treść wzorców opisana własnymi słowami i interpretacją fabryki.
-- OMG, BPMN 2.0.2 (formal, styczeń 2014); ISO/IEC 19510:2013 odpowiada wg OMG wersji 2.0.1 — **norma/specyfikacja, pierwotne**; wersja i zastosowanie; samej specyfikacji nie czytano, pojęcia to wiedza ogólna.
-- OMG, CMMN 1.1 (grudzień 2016) — **pierwotne**; wersja.
-- OMG, DMN 1.5 (formal/24-01-01, 2024) — **pierwotne, potwierdzone częściowo**; wersja 1.6 w beta od września 2024, jej stan w 2026 niepotwierdzony.
-- W. M. P. van der Aalst, A. H. M. ter Hofstede, B. Kiepuszewski, A. P. Barros, „Workflow Patterns”, Distributed and Parallel Databases 14(1), 5–51, 2003 — **pierwotne (artykuł)**; wzorce sterowania jako lista kontrolna. Rozszerzenie listy w 2006 i perspektywy danych/zasobów potwierdzone częściowo.
+## Sources
+Accessed 2026-10-17.
+- D. Hay, "Data Model Patterns: Conventions of Thought", Dorset House 1996 — **a book; table of contents confirmed in a library catalog**; the chapter "Procedures and Activities" is confirmed. The ISBNs in the sources contradict each other, we do not give one. The distinction "specification vs actual activity" in the chapter's content was not confirmed `[assumption]` from the type/instance convention. In "Enterprise Model Patterns" (Technics Publications, ISBN 978-1-935504-05-4, year 2011 partly confirmed) ch. 7 "Activities" concerns defining activities and their breakdown.
+- L. Silverston, "The Data Model Resource Book", Vol. 1 Revised Edition, Wiley 2001, ISBN 978-0-471-38023-8 — **a book; table of contents confirmed at O'Reilly (secondary)**; partly confirmed concepts: work requirement, work effort, Work Effort Party Assignment, Work Effort Time Tracking.
+- M. Fowler, "Analysis Patterns: Reusable Object Models", Addison-Wesley 1997 (the author gives 1996), ISBN 0-201-89542-0 — **a book; table of contents confirmed at the publisher (InformIT)**; titles: ch. 8 "Planning" (Proposed and Implemented Action, Completed and Abandoned Actions, Suspension, Plan, Protocol), ch. 2 "Accountability". The content of the patterns described in our own words and with the factory's interpretation.
+- OMG, BPMN 2.0.2 (formal, January 2014); ISO/IEC 19510:2013 corresponds, according to OMG, to version 2.0.1 — **a standard/specification, primary**; the version and its use; the specification itself was not read, the concepts are general knowledge.
+- OMG, CMMN 1.1 (December 2016) — **primary**; the version.
+- OMG, DMN 1.5 (formal/24-01-01, 2024) — **primary, partly confirmed**; version 1.6 in beta since September 2024, its status in 2026 not confirmed.
+- W. M. P. van der Aalst, A. H. M. ter Hofstede, B. Kiepuszewski, A. P. Barros, "Workflow Patterns", Distributed and Parallel Databases 14(1), 5–51, 2003 — **primary (an article)**; control patterns as a checklist. The extension of the list in 2006 and the data/resource perspectives partly confirmed.
 
-Opisane własnymi słowami; treść książek i norm nie była cytowana.
+Described in our own words; the content of books and standards was not quoted.

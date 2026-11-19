@@ -19,7 +19,7 @@ def main() -> int:
     skill = ROOT / ".claude" / "skills" / "pdi-decisions"
     script = ".claude/skills/pdi-decisions/scripts/decision_record.py"
     text = (skill / "SKILL.md").read_text(encoding="utf-8") if (skill / "SKILL.md").is_file() else ""
-    check(text and script in text and (ROOT / script).is_file(), "P-1: skill i skrypt zainstalowane, ścieżka w skillu")
+    check(text and script in text and (ROOT / script).is_file(), "P-1: skill and script installed, path in the skill")
     check(all((skill / "templates" / f"{n}.md").is_file() for n in ("intent", "plan", "decisions")),
           "P-2: szablony intent, plan, decisions przy skillu")
     allow = []
@@ -31,20 +31,20 @@ def main() -> int:
     agents = ROOT / ".claude" / "agents" / "_generated"
     personas = [p for p in agents.rglob("*.md") if p.parent.name not in ("shared", "consult") and p.stem == p.parent.name]
     check(personas == [] or all("pdi-decisions" in p.read_text(encoding="utf-8") for p in personas),
-          "P-4: skill pdi-decisions u każdej persony")
+          "P-4: pdi-decisions skill on every persona")
     check((ROOT / ".tf" / "factory" / "packs" / "mode-pdi" / "GUIDE.md").is_file(), "P-5: przewodnik trybu w projekcie")
     runner = ".claude/skills/pdi-decisions/scripts/phase_run.py"
     check((ROOT / runner).is_file() and runner in text and (skill / "templates" / "sdlc-phase.yml").is_file(),
-          "P-6: skrypt faz uruchamianych przez pdi i szablon workflow przy skillu, ścieżka w skillu")
+          "P-6: script for pdi-run phases and workflow template next to the skill, path in the skill")
     check(any(runner in a for a in allow), "P-7: uprawnienie dla skryptu faz")
     watch = ".claude/skills/pdi-decisions/scripts/metric_watch.py"
     check((ROOT / watch).is_file() and watch in text and (skill / "templates" / "metric-watch.yml").is_file(),
-          "P-8: skrypt pasm kontrolnych i szablon workflow przy skillu, ścieżka w skillu")
+          "P-8: control-band script and workflow template next to the skill, path in the skill")
     check(any(watch in a for a in allow), "P-9: uprawnienie dla skryptu pasm kontrolnych")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów trybu pdi")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of mode pdi")
     return 1 if fails else 0
 
 

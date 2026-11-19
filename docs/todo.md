@@ -13,23 +13,244 @@ kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`
 - [x] **F0b:** `decision add` / `decision sync` / `decision export` — zapis decyzji z dowolnego narzędzia, wypchnięcie
   do rejestru pdi przez MCP, kolejka bez połączenia; reguła w skillu trybu. Osobny PR po F0.
 
-## Zadania fabryki z planu programu AI (T1–T14) — zapisane 2026-11-11
-Plan i porównanie ze stanem 9.17: `docs/plans/2026-11-11-program-ai-luki-w-fabryce.md` (źródło: pdi
-`docs/plan-program-ai-wg-aplikacji.md` §2.1). Decyzja człowieka 2026-11-11: zacząć od fabryki. Większość T1–T14 już
-jest (ai-evals, ai-mlops, ai-governance-compliance, polityka autonomii, przegląd AI w CI); realne kroki to cztery.
-- [x] **Krok 1 (T6):** lista zatwierdzonych modeli `approved_models` — `models_policy.py`, błąd w `build.py check`,
-  odmowa w `profile.py`, hook `model_guard` dla parametru `model` delegacji; bez listy bez zmian.
-- [x] **Krok 2 (T2):** `tf standard` (`standard.py`) — jeden wynik z `build.py check`, `project_record.py` (dziennik
-  `docs/project/` — kontrola już była), `instructions_lint.py`, `readiness_check.py` (pack-it) i `hooks_status.py`;
-  statusy ok / warn / fail / skip, kod wyjścia dla CI, krok informacyjny w `team-factory.yml`.
-- [ ] **Krok 3 (T4):** `eval_gate.py` dla produktu (zestaw, grader z kodu, próg wobec linii bazowej, budżet) i szablon
-  `eval-gate.yml`; w trybie pdi wynik jako warunek bramki.
-- [ ] **Krok 4 (T13):** nakładka z innego repozytorium (`tf add <repo>#tag:pack-x`) z audytem i przypięciem wersji —
-  warunek wydzielenia `pack-ev` do linii EV.
-- [ ] **Po decyzjach / innych aplikacjach:** T9 i T10 (cykl życia funkcji AI, role ludzi) po operating modelu w pdi;
-  T7 (eksport dziennika agentów) po schemacie w kontrakcie pdi; T8 poziom organizacji i T12 po rejestrze i bramce
-  modeli; T14 (wersje technologii per aplikacja) po rozmowie z człowiekiem; T1 — porównać metodykę oceny z aiux
-  z `ai-evals`, zanim powstanie cokolwiek nowego.
+## Oś fabryki: od numeru zadania do wdrożenia — zapisane 2026-11-12
+Dokument zbiorczy (propozycja, czeka na decyzje D1–D12 człowieka):
+`docs/plans/2026-11-12-os-fabryki-od-zadania-do-wdrozenia.md`. Łączy Talosa, dashboard, pdi, plany §9–10 z 2026-11-08,
+politykę autonomii i propozycje tf-1…tf-13 w jeden przebieg `/tf <KEY>` z trybami Plan / zwykły / Auto, jednym
+katalogiem zadania i prostotą dla użytkownika jako wymaganiem (W8).
+- [ ] **Plan zmian** (22 pozycje wg wielkości, kroki A–H, ocena skali): `docs/plans/2026-11-12-plan-zmian-os-fabryki.md`.
+- [ ] **Decyzje D1–D12** (sekcja 15 dokumentu) — człowiek.
+- [ ] **E0–E8** (sekcja 14) — każdy etap osobnym planem i PR, po decyzjach; E1 (`tf onboard`) nie zależy od D2–D12. Źródła: 14 artykułów claude.dev (S1–S14, sekcja 16 dokumentu).
+
+## Ustawienia firmy (nakładka firmowa) — na później, zapisane 2026-11-16
+Stan: nakładka firmowa działa (`org_defaults`, zestaw w `org/`: generator, szablon, przewodnik `org/README.md`).
+Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić później.
+- [ ] **Gdzie leżą wygenerowane ustawienia firmy** — decyzja człowieka. Dziś (wariant B) paczka firmy żyje
+  w osobnym repozytorium firmy i trafia do projektu przez `tf install --pack-dir … --add pack-<firma>`.
+  - **Wariant A:** katalog `custom-settings/` w repozytorium fabryki, obok `packs/` i `modes/`. Zalety: jedno repo
+    zamiast dwóch, instalator bierze ustawienia sam (bez `--pack-dir`), `tf update` przynosi je razem z fabryką,
+    widać od razu, że to konfiguracja, a nie wiedza dziedzinowa. Wady: fabryka staje się specyficzna dla jednej firmy
+    (trudniej ją udostępnić albo pobierać zmiany z innego źródła fabryki); każda zmiana standardów to commit i wydanie
+    fabryki, choć rdzeń się nie zmienił.
+  - **Wariant B (obecny):** osobne repozytorium firmy. Zalety: fabryka zostaje ogólna, firma zmienia standardy we
+    własnym rytmie i uprawnieniach, kilka firm może używać tej samej fabryki. Wady: jedno repo więcej i jednorazowe
+    `--pack-dir`.
+  - **Rekomendacja:** A, gdy fabryki używa tylko jedna firma; B, gdy fabryka ma służyć wielu firmom.
+  - **W obu wariantach format zostaje nakładką** (`pack.yaml`): instalacja, aktualizacja, audyt skilli, bramka i testy
+    działają już dla tego formatu; własny format `custom-settings/` wymagałby zbudowania ich drugi raz.
+  - **Zakres zmiany dla A:** instalator i sprawdzenia fabryki (CI, `tools/workspace.py`) traktują `custom-settings/`
+    jak dodatkowe źródło nakładek, włączane domyślnie; generator `org/new_org_pack.py` dostaje opcję zapisu tam;
+    `org/README.md` opisuje oba warianty; testy instalacji i aktualizacji z ustawieniami w `custom-settings/`.
+- [x] **Generator standardów z dokumentów firmy z kontrolą cytatów skryptem** (zrobione 2026-11-16, `org/standards_from_docs.py`). Dziś `org/README.md` daje gotowe
+  polecenie dla agenta, a cytaty sprawdza człowiek. Plan (wzorzec rekonstrukcji projektu z kodu): (1) dokumenty
+  (eksport z Confluence: HTML, Word, PDF, Markdown; albo pobrane przez połączenie MCP z adresem i datą) do `sources/`;
+  (2) skrypt dzieli je na sekcje po nagłówkach, usuwa duplikaty, zapisuje manifest z odciskami sekcji; (3) model
+  przypisuje każde ustalenie do obszaru (UI, API, dane, wydania, wspólne) i rodzaju (sprawdzalne wzorcem →
+  kandydat do `rules.yaml` z przykładem w `fixtures/`; wymaga oceny → `references/<obszar>.md`; ogólna wiedza →
+  pominięte; sprzeczne → lista do decyzji); (4) skrypt generuje pliki, scenariusze na obszar i raport;
+  (5) kontrola bez modelu: każdy cytat istnieje w źródle (jak `recon_check`), każdy wzorzec się kompiluje i przechodzi
+  bramkę na przykładach; (6) odświeżanie tylko zmienionych sekcji z manifestu. Skill procesowy (np.
+  `core-org-standards`) w zestawie `org/` albo w rdzeniu — do decyzji przy planie. Ryzyka: przeinaczone ustalenia
+  (cytat obowiązkowy), zbyt szerokie wzorce (kandydaci z przykładem i zgodą człowieka), poufność dokumentów (treść
+  idzie do modelu — polityka danych firmy).
+- [ ] **Pomiar generatora na prawdziwych dokumentach firmy** — trafność przypisania obszaru i rodzaju, odsetek
+  poprawnych cytatów, koszt; płatny, za zgodą człowieka i na dokumentach, które firma udostępni.
+
+## Warstwy zespołu i preferencji osoby, wyłączanie skilli — na później, zapisane 2026-11-16
+Cel człowieka: nad rdzeniem warstwy firmy, zespołu i osoby. Standardy firmy i zespołu obowiązują, a każdy developer
+ustawia swój sposób pracy: jeden chce, żeby wszystko szło samo, drugi zatwierdza każdy krok, trzeci woli luźną
+rozmowę z agentem. Do tego zespół wyłącza skille, których nie potrzebuje (backend bez Figmy, frontend bez AWS).
+Stan dziś: warstwy `config_layers` to silnik ← organizacja (`org_defaults`) ← projekt. Skill wyłącza się tylko
+w całej fabryce (`metadata.status`). Tryb zadania (`tf task mode <KLUCZ> plan|normal|auto`) ustawia się osobno dla
+każdego zadania, bez domyślnego wyboru osoby. Prywatne pliki osoby już są: `.claude/settings.local.json`,
+`CLAUDE.local.md`, `.claude/factory-settings.json`.
+
+**Kolejność prac (ustalona przez człowieka 2026-11-16).** Zasada dla każdego punktu: co da się zrobić
+deterministycznie (skrypt, reguła, test), robi skrypt; model tylko tam, gdzie potrzebna jest ocena albo wsparcie
+człowieka, i z kontrolą wyniku skryptem.
+1. [x] **Styl pracy i warstwa osoby** (zrobione 2026-11-16, `core/tests/test_work_style.py`).
+   - [x] plik preferencji osoby (`~/.tf/preferences.yaml`) i nadpisanie w projekcie (`.tf/config/me.yaml`, zawsze
+     w `.git/info/exclude`) jako ostatnia warstwa `config_layers` — skrypt;
+   - [x] granice: osoba nie rozluźnia polityki autonomii ani sufitów firmy i zespołu — sprawdzenie w składaniu
+     warstw (skrypt), z testem;
+   - [x] trzy style (`autonomous`, `step-by-step`, `conversation`) jako gotowe wartości istniejących przełączników
+     (domyślny tryb zadania, `loop.blocked_slices`, …) — dane w konfiguracji, polecenie `tf style <nazwa>`;
+   - [x] zatrzymanie pętli `/tf` po każdym kawałku dla stylu `step-by-step` — stan w `run_state.py` (skrypt), model
+     tylko pokazuje plan i diff i czeka na zgodę;
+   - [x] styl `conversation`: zadanie kończy się na planie (domyślny tryb `plan` przy `tf task start`), kod dopiero po
+     zmianie trybu przez człowieka, potem zgoda po każdym kawałku — wszystko w skryptach, bez instrukcji w prompcie.
+     Pętla `/tf` i tak startuje tylko na polecenie człowieka; rozmowa z personą poza pętlą nie zmienia plików bez
+     prośby tak jak dotąd;
+   - [x] styl `conversation` ustawia tryb uprawnień Claude Code `plan` w `.claude/settings.local.json` projektu
+     (`tf style`, także po `tf install` i `tf update`): rozmowa poza `/tf` też nie zmienia plików bez zgody. Trybu
+     wybranego przez człowieka nie nadpisuje, zmiana stylu oddaje poprzedni (znacznik w `.claude/factory-settings.json`);
+   - [x] `tf config show` z warstwą „osoba” i źródłem każdej wartości; opis w PRZEWODNIK i FAQ; mapa fabryki
+     (`docs/mapa-fabryki.html`) — status „działa”.
+2. [x] **Trafność podpowiedzi skilli** (zrobione 2026-11-16, `packs/pack-it/tests/test_hint_backend.py`) (przy okazji punktu 1, bez modelu: scenariusze `skill_hint --explain` w teście).
+   - [x] walidacja DTO w repo Spring Boot bez podpowiedzi — słowa kluczowe w opisie `fw-spring-boot` (pack-it);
+   - [x] obsługa błędów wg RFC 9457 podsuwa skill serwera MCP — doprecyzować opisy obu skilli;
+   - [x] test regresji: zestaw poleceń backendu z oczekiwanym skillem (jak w pomiarze z 2026-11-16) w testach
+     hooka, uruchamiany w CI bez modelu.
+3. [x] **Warstwa zespołu** (zrobione 2026-11-16, `tests/test_new_org_pack.py` OP-17…OP-26).
+   - [x] `org/new_org_pack.py <firma> --team <zespół>` → `pack-<firma>-<zespół>` z `requires` nakładki firmy
+     (generator, skrypt);
+   - [x] `config_layers`: silnik ← firma ← zespół ← projekt ← osoba; test kolejności i granic (`task.allowed_modes`
+     to przecięcie warstw — wcześniej projekt mógł przywrócić tryb zabrany przez firmę; prefiksy trackera zespołu);
+   - [x] standardy zespołu sprawdzane bez modelu (`rules.yaml`, semgrep) jak w nakładce firmy.
+4. [x] **Generator standardów z dokumentów** (zrobione 2026-11-16: `org/standards_from_docs.py` split/check/apply,
+   `tests/test_standards_from_docs.py`): podział (Markdown, HTML, Word, PDF), manifest i kontrola cytatów skryptem;
+   model tylko przypisuje ustalenia do obszaru i rodzaju. Zostaje pomiar na prawdziwych dokumentach firmy (niżej).
+5. [ ] **Decyzje człowieka:** `custom-settings/` czy osobne repo firmy; monorepo (najpierw sprawdzić w dokumentacji,
+   czy Claude Code wczytuje skille z podkatalogów).
+
+- [x] **Najpierw pomiar** (kolejność ustalona przez człowieka: zapis, potem pomiar). Na repo backendu z pełną nakładką
+  IT: (1) bez modelu — ile kontekstu zajmuje lista skilli (opisy) i schematy narzędzi serwerów MCP, ile podpowiedzi
+  `skill_hint` trafia w skille spoza dziedziny repo (np. `ux-*`, `ops-cloud-*` przy zadaniach backendu);
+  (2) na modelu, za zgodą człowieka — czy wyłączenie zbędnych skilli zmienia trafność wyboru skilla i koszt sesji.
+  Wynik decyduje, czy `skills_off` jest potrzebne, czy wystarczy wybór nakładek i wyłączenie MCP w `settings.json`.
+  **Wynik części (1), 2026-11-16** (repo Spring Boot, `install.py --packs pack-it`, język pl; 20 poleceń backendu
+  przez `skill_hint.suggest`; tokeny oszacowane jako znaki/3,5 [założenie: bez licznika tokenów]):
+  - w liście 155 skilli, opisy ≈ 21,3 tys. znaków ≈ 6,1 tys. tokenów; 36 skilli spoza dziedziny repo (`fe-`, `ai-`,
+    `pm-`, `data-`, `txt-`, `fw-`/`lang-` innych stacków) to 24,8% opisów. W cache to koszt pomijalny; problemem jest
+    budżet listy skilli w Claude Code (~1% okna według opisu hooka `skill_hint`), w który przy oknie 200 tys. opisy
+    się nie mieszczą [niezweryfikowane: liczba z opisu hooka];
+  - w 12/20 poleceń obcy skill był w trójce rankingu; 3 z 17 podpowiedzi były obce (`fw-nestjs` przy walidacji DTO,
+    `fw-angular` przy aktualizacji Spring Boot, `ai-mcp-server` przy RFC 7807);
+  - po odjęciu obcych skilli: 0 obcych podpowiedzi, 2 nowe trafne (`be-messaging-outbox`, `ops-docker`), 1 trafna
+    utracona (`be-api-design` przy RFC 7807), 1 nowa chybiona (`core-skill-authoring` przy audycie zmian) — wagi
+    rzadkości słów zależą od całego indeksu;
+  - **wniosek:** największy zysk bez żadnej konfiguracji daje pomijanie w `skill_hint` skilli `fw-`/`lang-`/`tool-`
+    stacków, których `detect_stack` nie wykrył w projekcie. `skills_off` potrzebne dla wymiarów spoza stacku
+    (`ai-`, `pm-`, `fe-` w repo backendu).
+  **Wynik części (2), 2026-11-16** (ten sam repo; 18 zadań backendu, `claude -p` w trybie plan, pełne środowisko
+  fabryki z hookami, `--setting-sources project,local`; trzy warianty: pełna instalacja 165 skilli, bez skilli innych
+  stacków 154, bez wszystkich obcych 127; Haiku i Sonnet, po jednym przebiegu; koszt 25,00 USD):
+  | model | wariant | właściwy skill | obcy skill | koszt / przebieg |
+  |---|---|---|---|---|
+  | Haiku | pełna | 18/18 | 1 | 0,248 USD |
+  | Haiku | bez innych stacków | 17/18 | 0 | 0,222 USD |
+  | Haiku | bez obcych | 17/18 | 0 | 0,221 USD |
+  | Sonnet | pełna | 18/18 | 1 | 0,227 USD |
+  | Sonnet | bez innych stacków | 18/18 | 0 | 0,242 USD |
+  | Sonnet | bez obcych | 18/18 | 0 | 0,229 USD |
+  - jedyny obcy skill w obu modelach to `fw-nestjs` przy walidacji DTO w repo Spring Boot — ten sam, którego
+    podsuwa `skill_hint` (część 1); jedyny chybiony to Haiku przy podziale `OrderService` w obu okrojonych wariantach
+    (jeden przebieg, w granicach rozrzutu); różnice kosztu ±10% przy jednym przebiegu to rozrzut, nie efekt;
+  - **wniosek:** wyłączanie skilli nie poprawia trafności ani kosztu w stopniu wartym nowego mechanizmu. Robimy tylko
+    filtr stacku w `skill_hint` (**zrobione 2026-11-16**: skille `fw-`/`lang-` spoza wykrytego stacku odpadają po
+    rankingu, chyba że polecenie je wymienia; w repo Spring Boot 0 z 16 podpowiedzi z innego stacku, wcześniej 3 z 17;
+    `CLAUDE_SKILL_HINT_STACK=0` wyłącza) (usuwa jedyny zaobserwowany błąd, bez konfiguracji). `skills_off` odkładamy; warstwy
+    zespołu i osoby uzasadniają standardy i styl pracy, nie oszczędność kontekstu. Powtórzenie pomiaru nie jest
+    potrzebne do tej decyzji.
+- [ ] **Warstwy:** silnik ← firma ← zespół ← projekt ← osoba. Każdy czytelnik konfiguracji (build, hooki, `tf risk`,
+  `tf work`, `tf config show`) składa je w tej kolejności; `tf config show` przy każdej wartości podaje warstwę.
+  - **Zespół:** nakładka z tego samego szablonu co firmowa (`org/new_org_pack.py <firma> --team <zespół>` →
+    `pack-<firma>-<zespół>`, `requires` nakładki firmy): standardy zespołu (reguły, obszary, semgrep), domyślne
+    ustawienia, `settings.json` (np. wyłączone serwery MCP).
+  - **Osoba:** plik poza repozytorium (np. `~/.tf/preferences.yaml`, wspólny dla wszystkich projektów osoby) i
+    nadpisanie w projekcie (`.tf/config/me.yaml`, zawsze w `.git/info/exclude`, także przy `--shared`).
+- [ ] **Zasada warstw:** niższa warstwa dodaje i zaostrza, nie rozluźnia tego, co wyższa zablokowała. Tak działa już
+  polityka autonomii (`deny` firmy obowiązuje projekt). Firma albo zespół może dać **sufit** (np. „tryb Auto
+  dozwolony”, „najwyżej X USD na przebieg”), a osoba wybiera w jego granicach. Skille bezpieczeństwa, rzetelności
+  i TDD (`core-agent-security`, `core-grounding`, hooki `tdd_guard`, `guard_*`) wyłącza tylko firma.
+- [ ] **Style pracy osoby** (preset, który ustawia kilka istniejących przełączników naraz):
+  - **autonomous** — domyślny tryb zadania `auto` (w granicach sufitu), `loop.blocked_slices: true`, raport na końcu;
+    wymaga limitów `work` i obowiązującej polityki autonomii;
+  - **step-by-step** — tryb `normal` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
+    następnym), widoczny plan i diff każdego kroku;
+  - **conversation** — persona odpowiada i proponuje, a pętlę `/tf` i zmiany w plikach uruchamia dopiero na prośbę;
+    bez automatycznego startu przebiegu z numeru zadania.
+  Preset to tylko domyślne wartości: każde zadanie nadal może dostać inny tryb (`tf task mode`).
+- [ ] **`skills_off`** — odłożone po pomiarze z 2026-11-16 (bez zysku trafności i kosztu); w każdej warstwie: skill zostaje w instalacji i działa ręcznie (`/nazwa`), ale
+  nie trafia do agentów ani katalogu — ten sam mechanizm co `drop_inactive` w `build.py`. Niższa warstwa może włączyć
+  z powrotem skill wyłączony wyżej, chyba że wyższa go zablokowała.
+- [ ] **Monorepo (później):** kilka zespołów w jednym repozytorium wymaga podziału po katalogach. Claude Code
+  wczytuje `CLAUDE.md` z podkatalogów; czy tak samo skille z podkatalogów — sprawdzić w dokumentacji przed planem
+  [niezweryfikowane].
+- [ ] **Testy:** składanie pięciu warstw, sufit firmy i zespołu nie do przekroczenia przez osobę, preset stylu
+  zmienia tylko wartości domyślne, `tf config show` pokazuje źródło, plik osoby nigdy nie trafia do repozytorium.
+
+## Luki z przeglądu agend szkoleń (AI, agenci, product engineering) — zapisane 2026-11-15
+Przegląd 2026-11-15: przeszukanie skilli, hooków i skryptów po hasłach z agend szkoleń (mechanika LLM, sterowanie
+kontekstem, systemy wiedzy, harnessy, workflowy, agenci, product engineering) oraz pytanie człowieka o Spec Driven,
+analizę statyczną, piramidę testów, metody formalne, dokumentację i monitoring. Pokryte: spec-driven (`tf spec`,
+`tf trace`, `qa-spec-first-testing`), analiza statyczna (`tool-semgrep`, `sec-variant-analysis`, `tf analyze`),
+piramida testów (`eng-testing`), dokumentacja (`docs-tech-writing`), monitoring (`ops-observability`,
+`ops-sre-incidents`, `control_band.py`). Przegląd był po słowach kluczowych z odczytem kluczowych skilli, bez oceny
+jakości każdej treści. Decyzja człowieka: do planu trafiają wszystkie braki, także pokryte częściowo; kolejność —
+K1, potem K2, dalej wg priorytetu. Skille wg `core-skill-authoring` (scenariusze ewaluacji przed treścią, bramka
+`skill_gate.py`, ewaluacja na modelu tylko za zgodą), kod metodą TDD, każdy krok osobnym PR. Wersje narzędzi
+i specyfikacji sprawdzić u źródła z datą przed wpisaniem do skilla.
+
+Braki (brak pokrycia):
+- [x] **K1: skill `qa-formal-methods` (`pack-it`)** (zrobione 2026-11-15: osobny skill wygrał z sekcją w `qa-spec-first-testing` — wczytanie 8/8 wobec 1/8, treść 8/8 wobec 6/8, bez skilli 4/8, koszt 3,57 USD: `docs/evals/2026-11-15-qa-formal-methods-sekcja-czy-skill.md`; przykład Z3 uruchomiony, TLA+ i Alloy bez uruchomienia — pobranie narzędzi zablokowane w sesji; odnośnik z `qa-spec-first-testing`, role qa-automation i solution-architect) — jedyna dziura z pytania wprost; dziś są tylko testy
+  właściwości (Hypothesis w `tool-pytest`, fast-check) i niezmienniki w DDD. Treść: kiedy metoda formalna się opłaca
+  (współbieżność, rozproszone protokoły, maszyny stanów, pieniądze i limity, uprawnienia), a kiedy nie; drabina
+  kosztu: asercje i design by contract → testy właściwości → model checking (TLA+/PlusCal z TLC lub Apalache, Alloy)
+  → weryfikacja programu (Dafny, solver SMT Z3) → dowód; specyfikacja formalna jako deterministyczna wyrocznia dla
+  agenta (agent pisze model, checker szuka kontrprzykładu, kontrprzykład staje się testem `AC-n`); typowe pułapki
+  (model rozjeżdża się z kodem, zbyt mała przestrzeń stanów daje fałszywe „OK”). Scenariusze ewaluacji: wyścig przy
+  rezerwacji ostatniego miejsca, idempotentna płatność z ponowieniem, maszyna stanów sesji (np. OCPP).
+  Odnośniki z `eng-testing`, `qa-spec-first-testing`, `arch-quality-attributes`, `ddd-tactical-design`.
+- [x] **K2: system diff i warstwowy przegląd w `qa-change-review`** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona — haiku i sonnet bez skilla wypisują zmiany systemowe 8/8 na małym diffie i 4/4 na 609-liniowym PR z szumem, 1,96 USD: `docs/evals/2026-11-15-k2-diff-systemu-luka.md`; wrócić przy prawdziwym przeoczeniu w przeglądzie albo PR większym niż kontekst) — przegląd mówi dziś, czy kod zgadza się
+  z planem, ale nie, co zmiana zmienia w systemie. Raport „diff systemu” w stałych sekcjach: zachowanie (kryteria
+  `AC-n` nowe, zmienione, usunięte), UX (ekrany, teksty, przepływy), dane (migracje, schematy, retencja), architektura
+  (nowe zależności, moduły, granice), złożoność (przyrost kodu, nowe punkty konfiguracji), operacje (zmienne
+  środowiskowe, flagi, zadania w tle, alerty, koszt). Część deterministyczna skryptem (migracje, manifesty
+  zależności, pliki konfiguracji, nowe endpointy — z `git diff` i `code_graph.py`), część oceniana modelem. Warstwowy
+  diff: kolejność czytania kontrakt → dane → logika → UI → testy, z osobnym werdyktem na warstwę. Sekcja trafia do
+  opisu PR (sprawdzić zgodność z `pr_body` i testami `test_pr_body.py`).
+- [x] **K3: code mode w `ai-agents` i `core-cost-control`** (zrobione 2026-11-15: punkt „Code mode” w kroku 4 `ai-agents`, scenariusz `code-mode-crm`; przed 3/5 i 4/5, po 5/5 w 4 przebiegach, 0,59 USD: `docs/evals/2026-11-15-k3-code-mode.md`; `core-cost-control` bez zmian) (pomiar 2026-11-15, `docs/evals/2026-11-15-luki-k3-k7.md`: katalog = bez skilli 14/18; jedyna powtarzalna luka — rozdzielenie odczytu od zapisu i zatwierdzanie akcji zapisu w kodzie agenta, limit czasu i kosztu; zakres zawężony do 2–3 zdań w `ai-agents`, sprawdzonych scenariuszem `gap-k3-code-mode-crm`) — agent pisze krótki program, który sam woła narzędzia
+  lub API i filtruje wyniki, zamiast wielu wywołań narzędzi z pełnym wynikiem w kontekście. Kiedy (duże wyniki,
+  pętle po wielu elementach, łączenie danych z kilku narzędzi), kiedy nie (pojedyncze wywołanie, akcje wymagające
+  zatwierdzenia każdej z osobna); wymagania: piaskownica, limit czasu i budżetu, zwracany tylko wynik końcowy;
+  związek z MCP (narzędzia serwera jako API w kodzie). Wzorce i nazewnictwo dostawców sprawdzić z datą
+  [niezweryfikowane].
+- [x] **K4: syntetyczni użytkownicy, nagrania i analiza zachowań (`ux-research-methods`, `tool-playwright`)** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 17/18 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`) —
+  persony z `pack-ux` jako agenci przechodzący przepływ w przeglądarce (Playwright) z celem i ograniczeniami persony;
+  nagrania i ślady (trace, wideo, zrzuty) jako materiał do notatek wizualnych; analiza: gdzie agent utknął, wrócił,
+  zgadywał. Granica: wynik syntetyczny to hipoteza do sprawdzenia na ludziach, nie zastępuje badań z użytkownikami.
+  Scenariusz ewaluacji: formularz z mylącym polem, które syntetyczny użytkownik powinien wskazać.
+
+Pokryte częściowo:
+- [x] **K5: mechanika modelu jako referencja `ai-prompt-engineering/references/mechanika-modelu.md`** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 16/18 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`; „J-space” nadal bez źródła) — dziś są
+  tylko praktyczne konsekwencje rozproszone w `core-grounding`, `ai-prompt-engineering` i `core-cost-control`.
+  Treść: tokenizacja (koszt, liczby, tekst polski zużywa więcej tokenów — zmierzyć), przewidywanie kolejnego tokenu
+  i skąd biorą się konfabulacje, uwaga i pozycja instrukcji w długim kontekście („lost in the middle”), data
+  odcięcia wiedzy (odnośnik do `core-grounding`), okno kontekstu i limit wyjścia, rozumowanie i effort, uogólnianie
+  i skojarzenia jako mechanizm sterowania kontekstem (przestrzeń ukryta). Każda sekcja kończy się konsekwencją dla
+  promptu, skilla lub agenta. Termin „J-space” z agendy — ustalić źródło i definicję przed wpisaniem
+  [niezweryfikowane].
+- [x] **K6: A2A w praktyce (`ai-agents`)** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 22/22 z katalogiem i bez skilli, `docs/evals/2026-11-15-luki-k3-k7.md`) — mapa protokołów jest (`references/protocols-and-tracing.md` §1–2), brak
+  procedury: wystawienie agenta przez A2A (Agent Card zgodna z tym, co agent naprawdę robi; uwierzytelnianie
+  i autoryzacja), odkrywanie i wybór współpracownika po karcie, kontrakt przekazania (zakres, kontekst, właściciel,
+  widoczność postępu, format wyniku, raport porażki — spiąć z `core-async-delegation`), testy interoperacyjności.
+  Rozważyć deterministyczny walidator karty (schemat, deklarowane umiejętności a testy). Wersję A2A sprawdzić
+  w repozytorium specyfikacji z datą.
+- [x] **K7: skill `pm-release-learning` — pętla po wydaniu** (zamknięte bez budowy 2026-11-15: luka niepotwierdzona, 20/24 z katalogiem i bez skilli, braki rozproszone, `docs/evals/2026-11-15-luki-k3-k7.md`) — są elementy (`control_band.py`, `metric_watch.py`
+  w `mode-pdi`, `pm-product-analytics`, `ops-sre-incidents`, `core-agent-retro`), brak procedury, która je łączy.
+  Treść: sygnały (analityka, logi, incydenty, zgłoszenia wsparcia, język klienta, obserwowane zachowanie); zamierzony
+  a faktyczny wynik (metryki z `intent.md`), tarcie, obejścia, regresje, skutki uboczne; synteza: grupowanie
+  sygnałów, wykrywanie sprzeczności, przyczyna źródłowa, pewność i dowód; decyzja z listy: rozwijać, poprawić,
+  uprościć, wycofać, zbadać, zatrzymać; wyjście: aktualizacja zgłoszeń, specyfikacji, ewaluacji, `lessons.md`
+  i kontekstu agentów. Odnośnik z `core-delivery-lifecycle` („co po wdrożeniu”).
+- [x] **K8: specyfikacja — przykłady negatywne i synchronizacja z główną specyfikacją** (zrobione 2026-11-15 w zakresie przykładów negatywnych: ostrzeżenie SPEC-009 w `tf spec check`, gdy żadne kryterium nie opisuje zachowania niedozwolonego — bez blokady etapu, bo nie każda historyjka ma przypadek negatywny; szablon `tf spec new` z kryterium negatywnym; kryteria negatywne to zwykłe `AC-n`, więc `tf trace` wymaga dla nich testu bez zmian w kodzie śladu. Synchronizacja z główną specyfikacją zostaje przy pozycji „OpenSpec: zmiana jako delta” w sekcji Spec Kit) — `spec.md` ma sekcje „Bez
+  zmian” i „Poza zakresem”, ale nie ma miejsca na przykłady zachowania niedozwolonego. Dodać opcjonalną sekcję
+  „Przykłady negatywne” (Zakładając / Gdy / Wtedy **nie** …) do szablonu `tf spec new` i reguł `spec_check.py`
+  (puste przykłady jak SPEC-005; `tf trace` traktuje je jak kryteria z testem). Synchronizacja: domknąć istniejącą
+  pozycję „OpenSpec: zmiana jako delta i archiwizacja do głównej specyfikacji” (sekcja Spec Kit) dla `tf spec`, nie
+  tylko `mode-pdi` — przy zamknięciu zadania kryteria trafiają do globalnej specyfikacji modułu, rozjazd jest
+  ustaleniem.
+- [x] **K9: hasła w `tools/coverage_areas.json`** (zrobione 2026-11-15; dziury po zmianie: diff systemu, okno kontekstu, code mode — K2, K5, K3) — dopisać hasła, po których mapa pokrycia wykryje powyższe obszary
+  (np. „metody formalne”, „tla+”, „diff systemu”, „code mode”, „a2a”, „po wydaniu”, „syntetyczny użytkownik”,
+  „tokeniz”), żeby kolejny przegląd był powtarzalny bez ręcznego szukania. Mały krok, można razem z K1.
+- [ ] **K10: metody formalne w wiedzy EV — przeniesione do `ev-intelligence`** (decyzja człowieka 2026-11-15:
+  `pack-ev` wycofany z `tf`, wiedza EV scalana ze skillami `ev-*` w `dbqm45/ev-intelligence`, stan w
+  `todo/tf-pack-ev/STATUS.md` tam). Zapis historyczny poniżej. Treść niezależna od miejsca: sekcja „model przed symulacją”
+  w odpowiedniku `dom-ev-simulation-testing` z odnośnikiem do `qa-formal-methods` (przy `pack-ev` w `tf` sprawdzić
+  zależność `pack-ev` → `pack-it` dla `refs`), tłumaczenie śladu TLC na oś czasu scenariusza `evtest`; scenariusz
+  ewaluacji przed treścią, bramka. Pilot w kodzie `evtest` i uzasadnienie są w repo `dbqm45/ev-testing`:
+  `docs/todo.md`, `docs/plans/2026-11-15-metody-formalne.md` (gałąź `claude/intelligent-ramanujan-rjm26k`).
 
 ## Luki katalogu i polityka autonomii (przegląd listy „Autonomous Full Stack Agent”) — zapisane 2026-11-09
 Plan: `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md`. Decyzja człowieka: najpierw sekcja A, potem B. Skille wg
@@ -254,7 +475,7 @@ liniowy i znacznie wyższy niż subagentów; uprawnienia jak u prowadzącego.
   wspólna lista zadań, zamknięcie i wyłączenie flagi; scenariusze, bramka.
 - [x] **A3. `modes/mode-team/`**: `pack.yaml` (`kind: mode`, `default: false`), `settings.json` (uprawnienie
   skryptu), `GUIDE.md`, testy; CI matrix; `insights.md`, `PUBLIC_API.md`; PR.
-- [x] **P1. Przewodnik i FAQ** w `core/guide/` → `factory/PRZEWODNIK.md`, `factory/FAQ.md` (test instalatora);
+- [x] **P1. Przewodnik i FAQ** w `core/guide/` → `factory/GUIDE.md`, `factory/FAQ.md` (test instalatora);
   treść ze stanu bieżącego (polecenia `tf`, persony, nakładki, tryby, workflows, koszty, hooki, aktualizacje);
   fakty sprawdzone w plikach; PR.
 
@@ -281,7 +502,7 @@ Nie bierzemy: autonomicznego zegara (30 s / 3 min), interfejsu tablicy ani konfi
   - `check` sprawdza strukturę według fazy: typy kartek dozwolone w fazie (mieszanie poziomów), zdarzenie bez
     wyzwalacza, komenda bez zdarzenia, polityka bez „kiedy”/„wtedy”, komenda bez agregatu, duży agregat, agregat
     bez kontekstu, kontekst bez typu subdomeny, relacja bez wzorca mapy, otwarte hot spoty.
-- [x] **E2. `references/fazy-agenta.md`:** 5 faz (kontekst sesji, zdarzenia, komendy i polityki, agregaty, podział
+- [x] **E2. `references/agent-phases.md`:** 5 faz (kontekst sesji, zdarzenia, komendy i polityki, agregaty, podział
   na konteksty i mapa). Dla każdej fazy: cel, dozwolone kartki, ruchy facylitatora, kryterium wyjścia, bramka
   człowieka, przegląd, typowe błędy. Do tego protokół tury.
 - [x] **E3. `SKILL.md` §7** przepisany na prowadzenie sesji ze skryptem i kartami faz; ekspert domeny i przegląd
@@ -305,7 +526,7 @@ Analiza luk: każdy temat programu porównany ze skillami, z dowodem `plik:linia
 Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring), a kończy bramką.
 - [x] **D1. ddd-deep-modeling:** jedno źródło prawdy jako technika rozplątywania; ukryte powiązanie wiele do wielu
   (pojęcie do nazwania); status to nie mechanizm rozszerzania; dwa poziomy modelu (Knowledge i Operations Level).
-- [x] **D2. ddd-tactical-design + `references/reguly-dynamiczne.md`:**
+- [x] **D2. ddd-tactical-design + `references/dynamic-rules.md`:**
   - polityki jako funkcje, ich kompozycja w łańcuchy i drzewa, fabryka polityk, dekorator polityki;
   - reguły zmienne w czasie (wersja polityki jako nowa klasa wybierana datą) i reguły zależne od historii zdarzeń;
   - scoring;
@@ -315,14 +536,14 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
   - `document.md`: obieg a redagowanie dokumentu;
   - `agreement.md`: oferta to nie zamówienie, zakup to nie zamówienie;
   - `SKILL.md`: warstwy odpowiedzialności (Evans) z atrybucją.
-- [x] **D4. eng-design-patterns:** Role Object i Extension Object (`references/poza-gof.md`, wiersze w tabeli objawów).
+- [x] **D4. eng-design-patterns:** Role Object i Extension Object (`references/beyond-gof.md`, wiersze w tabeli objawów).
 - [x] **D5. be-api-design:** model dojrzałości Richardsona; dokument REST jako komenda.
 - [x] **D6. arch-multi-tenancy:** wersja zachowania i API per najemca; wybór handlera komendy po tenantId.
 - [x] **D7.** Bramki zmienionych skilli, `refs`, matrix, PR.
 
 ### Na później (decyzja człowieka)
 - [x] Instalator przepisuje `tests/` → `.claude/tests/` także w przykładach skilli (np. komentarze ścieżek
-  w `tool-pytest/references/przyklady.md`), gdzie chodzi o testy projektu, nie fabryki.
+  w `tool-pytest/references/examples.md`), gdzie chodzi o testy projektu, nie fabryki.
 - [x] ~~Nakładki jako pluginy Claude Code (eksport).~~ **Decyzja człowieka (2026-10-21): nie robimy** — tryby
   i nakładki zostają instalowane przez `tf`. Ograniczenia: agenci z pluginu ignorują `permissionMode`, `hooks`,
   `mcpServers`, `initialPrompt`; plugin nie wczytuje `CLAUDE.md`; `settings.json` pluginu przyjmuje tylko `agent`
@@ -362,12 +583,483 @@ Każda zmiana skilla zaczyna się od scenariusza ewaluacji (core-skill-authoring
   start Chromium na runnerze trwa 16–27 s (zimny dysk), kolejne ok. 0,7 s, niezależnie od flag i D-Bus; pod obciążeniem
   zestawu testów pierwszy start przekraczał limit. Naprawa: krok „Rozgrzanie Chromium” w CI przed testami; timeout
   podaje teraz linię stderr przeglądarki.
-- [x] Próba scenariusza symulacji ES: `es_probe.py` z gotowymi wypowiedziami facylitatora (`proba.json`), bez gospodarza;
+- [x] Próba scenariusza symulacji ES: `es_probe.py` z gotowymi wypowiedziami facylitatora (`trial.json`), bez gospodarza;
   wersja pełna na scenariuszu weterynaria: 1,44 USD, 10/10 oczekiwań — `docs/evals/2026-10-25-es-proba-scenariusza/` (2026-10-25).
 
 ## Tłumaczenie treści fabryki na angielski
 
-- [ ] Tłumaczenie (szczegóły niżej).
+**Cel (decyzja właściciela, 2026-11-17):** jak w samym Claude — cała fabryka po angielsku (nazwy, klucze, wartości,
+skille, persony, prompty, komunikaty, składnia planu i specyfikacji), a rozmowa w języku człowieka: piszesz po
+polsku, odpowiedzi i dokumenty dla Ciebie są po polsku (`tf language`), model dostosowuje się sam. Jedna wersja
+treści (angielska), bez równoległej polskiej.
+
+- [x] Etap 1 — nazwy plików i katalogów (#286).
+- [x] Etap 2a–2b — klucze metadanych skilli i modułów, poziomy ważności (#287); pytanie niżej o pola metadanych
+  rozstrzygnięte: po angielsku.
+- [x] Etap 2c — stan zadania, pętla, profile, kody STOP, migracja danych projektu (#288, wydanie 11.0.0).
+- [x] Etap 2d — wymiary, głębokość i blokery audytu kodu (oraz nazwy plików `code-audit*.md`), pola wpisu dziennika
+  decyzji pdi (`sent`, `date`, `by`, `kind`, `why`, … z migracją `decisions.md`), `description` zamiast `opis`
+  (`control_band`, `metric_watch`, scenariusz ES; poprawka listy profili po #288), schemat przeglądu AI w CI
+  (`verdict`, `findings`, `APPROVED|NEEDS_ATTENTION|REJECTED`, `critical|major|minor`), werdykty `readiness_check`
+  i `tf onboard`, flaga `profile.py --team-only`.
+- [x] Etap 2e — werdykty kontroli: `pr_budget` (`OVER`), `instructions_lint` (`OK|WARN|ERROR`, identyfikatory kontroli
+  `length`, `blocks`, `intents`, `order`, `imports`, `stale`, klucze trybu `--root`), `claims_check`
+  (`OK|WARNINGS|ERRORS`), `dossier_check` (`ERRORS`), `tf analyze` (`ERROR|NEEDS_FIX|OK`, bramka `FAILED`, rejestr
+  `open|resolved` z migracją `items.jsonl`), `facts.py` (`confirmed|partial|unconfirmed|contradicted|skill-source`),
+  rodzaje kart `recon_cards`. Flagi CLI były już po angielsku.
+- [x] Etap 3a — plan i specyfikacja: kawałki `S<n>`, pola `files:`, `criteria:`, `verify:`, `after:` (`none`), `tier:`,
+  stopka commita `Slice S<n>:`, katalog prób skanu `attempt-<k>`; specyfikacja `Given / When / Then`, sekcje
+  `Acceptance criteria`, `Unchanged`, `Out of scope`, `Open questions`, znacznik `[blocking]`; status pliku zadania
+  `draft|approved`, stan kawałka `unverified`, dowód śladu `no-test|no-evidence`. Skrypty przyjmują dawną składnię przez
+  wydania 14.x; migracja przepisuje `spec.md`/`plan.md` otwartych zadań i przelicza skróty zatwierdzeń.
+- [x] Etap 3b-1 — linie wyników skanu (`GATE S<n>: PASS|FAIL (…, attempt k/2)`, `COOLDOWN:`, `SCAN:`); raport
+  rekonstrukcji: sekcje `Modules`, `Domains`, `Requirements`, `Rules`, `Standards`, `Risks`, `Questions`, `Not checked`,
+  wiersze stacku `Language`, `Data`, `Tests`, `Configuration`; karty modułów (`<!-- card: … -->`, `Entry points`,
+  `Dependencies`, `Data`, `Rules`, `Terms`, `Deviations`, `Unknowns`, `(confidence: …)`, `(details: …)`), `rules.md`
+  (`Cross-cutting rules`). Polskie nagłówki przyjmowane przez 14.x (aliasy w `recon_check`, `recon_cards`,
+  `recon_refresh`, `recon_export`).
+- [x] Etap 3b-2 — dossier legacy po angielsku: sekcje indeksu, kart, oceny i rekomendacji, `State: green|yellow|red`,
+  tabela `ID | Rule | Evidence | Confidence` (`test|code|to verify`), pola ustaleń (`Area`, `Category`, `Gap`, …)
+  i rekomendacji (`Addresses`, `Decision`, …), kategorie i szczeble decyzji; dawne polskie nazwy przyjmowane, migracja
+  przepisuje istniejące dossier; etykiety decyzji przeglądu `PENDING|FIXED|SKIPPED|RISK_ACCEPTED|REJECTED|LESSON`.
+- [x] Etap 3b-3 — dziennik projektu: lekcje `**reguła** — Context: … · Instead: … · Applies to: …` pod nagłówkiem
+  `## Execution and verification` (kategorie po angielsku), tagi banku dowodów `[mention]`, `[superseded by …]`,
+  `[unverified]`, werdykty tabel weryfikacji słowem (`confirmed|partial|unconfirmed|contradicted`), nazwy plików
+  w `docs/project/` (`plan-review`, `impl-review`, `operations-review`, `tech-debt`, `readiness`, `repo-readiness`,
+  `legal-map`, `deep-dives`, `dry-run`, `language-<dokument>`). Dawne formy przyjmowane. Znaczniki
+  `[założenie]`/`[niezweryfikowane]`/`[pytanie]` (core-grounding) — razem z etapem 4.
+- [ ] Po wydaniach 14.x — usunięcie dawnej składni z parserów (`K<n>`, `pliki:`, Zakładając/Gdy/Wtedy, polskie
+  nagłówki rekonstrukcji).
+- [x] Język rozmowy bez ustawień (decyzja właściciela, 2026-11-17: „bez żadnej konfiguracji, jak w Claude”, #290):
+  stała reguła rozmowy, język commitów z `git log`, bez `tf language`, `tf commit-language` i `--language`.
+- [ ] Etap 4 — tłumaczenie treści: skille, persony, prompty, komunikaty po angielsku; język odpowiedzi wynika z rozmowy.
+  Decyzje właściciela (2026-11-17): słowa kluczowe skilli PL+EN (podpowiedź bez modelu), tłumaczenie etapami w sesji
+  (bez równoległych wykonawców). Metoda na partię: treść, description i catalog po angielsku (`Use when/for …`,
+  `Not for …`), `keywords` po polsku i angielsku (wyrażenia z pytań), bramka (`skill_gate.py`: krok 3 trafność, krok 5
+  rozpoznaje język), pomiar `tools/hint_holdout.py` przed i po partii. Punkt odniesienia (all, 2026-11-17): strojenie
+  902/918, holdout 29/43.
+  Zakres (decyzja właściciela, 2026-11-18: „Tłumaczymy wszystko”): całe repo, także `docs/`, komentarze w kodzie,
+  komunikaty testów, persony i role, na koniec polskie aliasy w czytnikach. Wyjątki dla skuteczności: polskie prompty
+  scenariuszy eval zostają, a obok dochodzą angielskie odpowiedniki (pokrycie obu języków); w pack-editorial-pl
+  opisy i procedury po angielsku, reguły polszczyzny i przykłady zdań po polsku (to ich przedmiot); `hint.pl.txt`
+  i polskie słowa kluczowe zostają z założenia.
+  Skuteczność fabryki nie może spaść (właściciel, 2026-11-17). Każda partia przechodzi, zanim trafi do PR:
+  1. `tools/translation_check.py <pliki>` — te same bloki kodu, `…`, liczby, odnośniki i struktura co przed
+     tłumaczeniem (różnica = zgubiony albo dopisany fakt; zmiana treści to osobny commit, nie tłumaczenie);
+  2. podpowiedzi: `python3 tools/hint_pl_index.py <skille>` (polski indeks `hint.pl.txt` z ostatniej polskiej
+     wersji — decyzja właściciela 2026-11-17: polskie polecenia trafiają jak przed tłumaczeniem; hook dokłada go do
+     treści, model go nie czyta), potem `hint_holdout.py` — strojenie i holdout nie niżej niż przed partią; bramka każdego skilla;
+     to samo w instalacji `none` (sam rdzeń) i `test_skill_evals.py` tam — polecenia ogólne bez podpowiedzi
+     (słowo pospolite w słowach kluczowych zyskuje wagę, gdy polska proza znika z innych skilli; 4b-2: „jaka wersja”);
+     `skill_gate.py --hints` w każdej instalacji (all, pack-it, none, pozostałe nakładki): każdy scenariusz strojenia
+     trafia — przesunięte wagi słów zrzucają pojedyncze skille niezmieniane w partii (4b-3: eng-clean-code, eng-testing);
+  3. model (zgoda właściciela: próbka z partii, Haiku, ~2 USD): 3–5 skilli o największym ruchu, scenariusze przed
+     i po tłumaczeniu (`run_skill_evals.py --models haiku`); spadek → poprawka przed PR;
+  4. pełna macierz `workspace.py check` w CI.
+  - [x] 4a — fabryka gotowa na angielską treść (reguły wyboru i granic w obu językach w `build.py`, `skill_audit`,
+    `skill_hint`; język treści w bramce), pilot `core-stack-sync`, narzędzie `hint_holdout.py`.
+  - [ ] 4b — rdzeń: pozostałe skille `core-*` i `tf`, cechy, `config.yaml` (prompty, notatki), przewodniki.
+    - [x] 4b-1 (2026-11-17): `core-teaching-workspace`, `core-skill-composition`, `core-plan-interview`, `core-semver`.
+      Podpowiedzi przed/po: partia 17/17 → 17/17 (plan-interview straciło trafienie „za dużo pytań” — słowa kluczowe),
+      całość 902/918 · 29/43 bez zmian. Haiku przed/po (plan-interview, skill-composition): 8/8 → 8/8, ~$2,36.
+      `translation_check`: blok bez języka to przykład wyjścia (proza). Uwaga przy łamaniu wierszy: nazwa nakładki
+      i skill z niej muszą być w jednym wierszu (`workspace.py refs`).
+    - [x] 4b-2 (2026-11-17): `core-factory-update` (+ przykłady), `core-agent-retro`, `core-source-research`,
+      `core-problem-routing`. Podpowiedzi: po tłumaczeniu 18/23 (retro: okno i pamięć automatyczna; routing: decyzja
+      trudna do odwrócenia; research: sprzeczne źródła, nieistniejące funkcje) → słowa kluczowe PL+EN → 23/23; całość
+      902/918 · 29/43 bez zmian. Haiku przed/po (routing, research): 9/11 → 11/11 (jeden przebieg — „bez spadku”, nie zysk), $3,68 — ponad
+      uzgodnione ~2 USD; kolejne partie: próbka ≤ 7 scenariuszy na stronę. Z katalogu `core-factory-update`
+      zniknęła nieaktualna „zmiana języka pracy i commitów” (od #290 bez ustawień).
+    - [ ] składnia danych retrospektywy wciąż po polsku (etap 3): decyzje `--decide KLUCZ=tak|nie|później`,
+      `Rework-Cause:` (`luka-specyfikacji|blad-agenta|zmiana-wymagan|nieznana` — też `metrics.py`), sygnał
+      „Tier: za niski/za wysoki” w raportach wykonawców — angielskie wartości z aliasami, jak w 3a.
+    - [x] 4b-3 (2026-11-17): `core-grounding`, `core-knowledge`, `core-conventional-commits` (+ referencje),
+      `core-async-delegation` (+ referencje). `core-project-record` przesunięty: `project_record.py` czyta polskie
+      nagłówki artefaktów (`## Przekazanie`, „Otwarte pytania”, tabela TL;DR) — najpierw zmiana składni z aliasami
+      i migracją (jak 3a), potem tłumaczenie skilla i szablonów.
+      Oznaczenia rzetelności po angielsku: `[assumption]`, `[unverified]`, `[question]`, `[checked: …]`, `[assessment]`;
+      `claims_check`, `freshness`, `grounding_check` („(new)”, „(planned)”), `recon_check` (pack-it) przyjmują oba języki.
+      Polski indeks podpowiedzi: po tłumaczeniu holdout partii spadł 6/8 → 2/8 (słowa kluczowe dały tylko 2/8) →
+      `hint.pl.txt` dla 13 przetłumaczonych skilli (`tools/hint_pl_index.py`, test `tests/test_hint_pl_index.py`,
+      hook: `core/tests/test_skill_hint_pl_index.py`); hook wycina też `## Sources`. Wynik: all 899/918 · 31/43 (przed
+      partią 902 · 29; bez indeksu 900 · 25), none 167/175 · 16/16 (przed 169 · 15). Strata strojenia to pojedyncze
+      no-trigger w niezmienionych skillach (przesunięte IDF), zysk holdoutu — polskie polecenia jak przed tłumaczeniem.
+      Spis treści plików referencyjnych w języku pliku (`build.py`: „Contents” / „Spis treści”, oba rozpoznawane).
+      Haiku: przed 11/11; po 5/6 (`wynik-skryptu-to-twierdzenie` bez wywołania skilla) + powtórka 2/2 → 7/8; $2,64.
+      Treść: `core-conventional-commits` — opis commita w języku commitów repo (z `git log`, nowe repo: angielski), jak
+      `commit_language` od #290 (wcześniej „po angielsku”).
+    - [x] 3c — składnia dziennika projektu (2026-11-17): `project_record.py` czyta sekcje po angielsku i po polsku
+      (`Handoff`/`Przekazanie`, `Open questions`/`Otwarte pytania`, punkt kontrolny `Next step`/`Następna czynność`,
+      `Steps`/`Kroki`; obszary domeny `Evidence`/`Dowody`, `Named by the human: yes`/`Wskazany przez człowieka: tak`,
+      `Candidates below the threshold`/`Kandydaci poniżej progu`), migawka punktu kontrolnego pisze
+      `## Automatic state …`; `retro_data.py` — `Pitfalls and dead ends`; `requirements_lint` (pack-it) pomija
+      `Handoff`, `Open questions`, `Constraints`, `Current system`, `For the stack decision`. Testy EN-1…EN-6, AR-7,
+      lint (czerwone bez zmiany). Bez migracji istniejących artefaktów: to zapis historii projektu (zaakceptowane
+      dokumenty), a parser rozpoznaje obie nazwy — migracja dopiero przed usunięciem polskich aliasów.
+    - [x] 4b-4 (2026-11-17): `core-project-record` (SKILL, referencja, 22 szablony po angielsku, `hint.pl.txt`).
+      Wypełniacze szablonów po angielsku (`<YYYY-MM-DD>`, `<who>`, `<goal>`, `<branch>`), `project_record.py` wypełnia
+      oba warianty. W `templates/plan.md` nazwy kolumn tabeli pozycji i klucze `cel_sekwencji` / `glowne_ryzyko` bez
+      zmian — czyta je `decision_record.py` (mode-pdi) i kontrakt pdi (REL-008 w ci_for_sdlc); zmiana dopiero razem
+      z pdi. `requirements_lint` (pack-it): sekcje `Business rule` i `Out of scope` liczą się do gotowości.
+      Prompty `build.py`, `core/CLAUDE.md`, przewodnik: nazwy sekcji `Handoff` / `Open questions`.
+      Podpowiedzi bez zmian (all 900 · 31/43, none 167 · 16/16, `--hints` czysto we wszystkich instalacjach).
+      Haiku przed/po: 5/5 → 5/5, $1,43.
+    - [ ] nagłówki generowanego indeksu i raportu (`project_record.py`: „Praca w toku”, „Ostatnie zdarzenia”,
+      „Decyzje”, „Otwarte pytania”) — razem z komunikatami skryptów.
+    - [x] 4b-5 (2026-11-17): `core-git-workflow` (+ 3 referencje), `core-cost-control` (+ 3 referencje),
+      `core-agent-instructions` (+ referencja). Hook `log_usage` czyta `Class:` (dawniej `Klasa:`) i `Tier: too low/too
+      high` (zapis tą samą wartością co `za niski/za wysoki`; test w `test_cost`). `hint.pl.txt` ma linię `head:` —
+      dawny opis i katalog z wagą opisu (wcześniej tylko treść); indeksy 17 skilli przebudowane. Podpowiedzi po
+      partii jak przed nią: all 900 · 31/43, none 167 · 16/16, `--hints` czysto w 8 instalacjach (3 pojedyncze
+      scenariusze — słowa kluczowe). Haiku przed/po: 5/6 → 5/6 (ten sam `diagnoza-przed-dzwignia`), $1,71.
+      Zostaje: komunikaty `ai-review.yml` i `instructions_lint` po polsku (etap komunikatów).
+    - [x] 4b-6 (2026-11-17): `core-agent-security` (+ 2 referencje), `core-skill-authoring` (+ 2 referencje; reguła:
+      po tłumaczeniu `tools/hint_pl_index.py`). Audyt bez ustaleń wysokiej wagi (znaczniki `audit-ok` przy opisach
+      ataków zostają). Podpowiedzi: all 900 · 31/43, none 168 · 16/16 (było 167), `--hints` czysto w 8 instalacjach
+      (2 scenariusze bezpieczeństwa — słowa kluczowe). Haiku przed/po: 4/6 → 3/6 + powtórka `clickfix-base64` 2/2
+      (pojedynczy przebieg bez słowa „ClickFix”); `wstrzykniecie-w-zgloszeniu` i `przyjecie-zmiany-holdout` padały
+      przed tłumaczeniem; $1,87.
+    - [x] 4b-7 (2026-11-17): `tf` (+ 6 referencji; SKILL.md 14996/15000 znaków, szczegóły podglądu i odłożonych
+      do `modes-and-stops.md`). Naprawione stare rozjazdy skilla ze skryptami: skill kazał `zakres fail` i `pytanie …`,
+      a `run_state.py` przyjmuje `scope`, `intake.py` — `question`; teraz komunikaty mówią `scope`, a `intake.py` ma
+      aliasy `task`/`pytanie`/`quick` (test I-23b). `build.py` czyta tabelę „Who does what” i „Kto co robi”; etykiety
+      kroków w `config.yaml` po angielsku. Podpowiedzi: all 900 · 31/43, none 168 · 16/16, `--hints` czysto w 8
+      instalacjach. Haiku przed/po: 5/6 → 3/6; dwa nowe ✗ to za wąskie sprawdzenia (`nie zgaduję` łapane jako
+      zgadywanie, `run_state.py park` zamiast słowa `parked`) — poszerzone, powtórka 4/4; `zwykla-implementacja-historyjki`
+      pada tak samo przed i po (pusty projekt → odpowiedź bez `intake.py`); $3,03.
+    - [x] 4b-8 (2026-11-17): `core-delivery-lifecycle` (+ 8 referencji). Kolumny planu cięć (`Odblokowuje`,
+      `Wymagania`, `Wydanie`, `Flaga`…) zostają dosłownie — czyta je `decision_record.py` (mode-pdi); w YAML przykładu
+      przetłumaczone tylko wartości, klucze bez zmian. Ścieżki mapy artefaktów bez zmian (`test_artifact_map` 7/7).
+      Podpowiedzi: holdout all spadł 31 → 30 (`ho-zmiana-kontraktu-w-kroku` — reguła „zmiana kontraktu = stop” tylko
+      w indeksie PL); słowa kluczowe z treści skilla (nie z promptu) → all 900 · 31/43, none 168 · 16/16, `--hints`
+      czysto w 8 instalacjach. Bramka w instalacji all (w none `canary-rollback` pada też przed tłumaczeniem — sąsiad
+      ops-release-engineering niezainstalowany). Haiku przed/po: 5/6 → 4/6 + powtórka `przeglad-specyfikacji-panel`
+      2/2 (pojedynczy przebieg zakończony pytaniami o ścieżkę); `pasma-kontrolne` pada tak samo przed i po (model
+      wybiera ops-sre-incidents); $2,29. SKILL.md 18065 znaków (> 15000, ostrzeżenie jak przed partią: 17023).
+      **Poprawka hooka skill_hint (z CI tej partii):** treść przetłumaczonego skilla w indeksie to angielski +
+      `hint.pl.txt`, a normalizacja wyniku liczyła długość sumy — średnia długość rosła z każdą partią (wyniki
+      nieprzetłumaczonych skilli w górę: w pack-docs „Przetłumacz ten akapit na angielski” przekroczyło próg,
+      7,98 → 8,07), a przetłumaczony skill tracił za „długą” treść. Teraz każda wersja językowa liczy się osobno,
+      znormalizowana swoją długością, i wygrywa lepiej pasująca (polecenie jest w jednym języku); średnia z dłuższej
+      wersji (test HP-6, HP-6b, HP-7). Po zmianie: all 901 · 32/43, none 168 · 16/16, `--hints` i test poleceń ogólnych
+      czyste w 8 instalacjach; słowa kluczowe `eng-llm-features` z jego sekcji 10 (scenariusz na granicy: 4. miejsce
+      z różnicą 1,3 pkt), słowo „plan rozjechał się z kodem” zawężone (łapało „rozjedzie się” w pytaniu o ACL).
+    - [x] 4b-9 (2026-11-17): cechy rdzenia (9 plików) i teksty `config.yaml`, które czyta model: opisy i prompty agentów
+      wspólnych, `routing` + `routing_notes`, `report_contract` (sekcje **Result/Changed files/Verification/Uncertain/
+      To decide**, `Tier: too low/too high`), `work_contract`, `style_note`, `untrusted_note`, `grounding_note`
+      (znaczniki `[unverified]`, `[assumption]`), `sources_only_note`, `language_note`, `commit_language`,
+      `code_language_note`. Etykiety recenzenta zakresu jak w skillu tf: `[important]`/`[minor]`/`[pre-existing]`,
+      `Verdict: OUT OF SCOPE / IN SCOPE`; panel: `Verdict: PASS/FAIL` (werdykt trafia do kodu argumentem
+      `pass|fail`, tekst nie jest parsowany) — zlecenia panelu i komunikaty `run_state.py` z tymi samymi tokenami.
+      `build.py` odsyła do sekcji „To decide”. Zostają po polsku: komentarze YAML (dokumentacja opiekunów), `facets`
+      i `vocabulary` (skille fw-/lang- pokrywają pojęcia polskimi sekcjami — razem z pack-it), opisy profili kosztów
+      (wypisuje je `profile.py` — etap komunikatów). Haiku przed/po (tf ×2, core-cost-control ×2, core-grounding ×2):
+      4/6 → 5/6; `waga-pelna-panel-recenzentow` pada tak samo przed i po — panel jest tylko w `references/weight.md`,
+      a model nie sięga po plik; $1,93.
+    - [ ] szablony person i wykonawców w `build.py` (sekcje „Rola”, „Priorytety”, „Cechy”, „Granice”, „Konsultanci”,
+      `COMPOSE_HINT`, tabela wymiarów) oraz `facets`/`vocabulary` — razem z sekcjami pojęć w skillach fw-/lang-.
+    - [ ] tf: panel recenzentów przy wadze pełnej tylko w `references/weight.md` — jedna linia w SKILL.md (Finishing),
+      żeby model nie pomijał `run_state.py panel` (scenariusz `waga-pelna-panel-recenzentow` pada przed i po 4b-9).
+    - [x] 4b-10 (2026-11-17): przewodniki `core/guide/` (GUIDE, LOOP, FAQ, JEV, ONBOARDING) w całości po angielsku —
+      także symbole zastępcze w poleceniach, komentarze w blokach kodu i przykłady (bez jednej polskiej litery; zostają
+      tylko aliasy poleceń `zadanie`/`pytanie`/`szybko`, które skrypt przyjmuje). Napisy skryptów, które przewodniki
+      cytują, też po angielsku: opis PR (`run_state.py pr-body`: Story, Slices, Criteria trace, How it was checked, Risk,
+      How to roll back, Postponed for a decision, Assumptions, Run) z sekcjami `tf risk --md` i `tf trace --md`, cały
+      podgląd `dashboard.html` (kolumny, lista „Waiting for you”, panel plików), katalog komunikatów STOP
+      (`stop_messages.json` — wartości, klucze bez zmian), linie „waiting for you / question / recommended” w
+      `tf status`, linia `Source: … · fetched:` w `ticket.md` (odczyt przyjmuje też `Źródło:`), sekcje „Security”
+      i „Attempt n” w raporcie przebiegu (odczyt summary.md przyjmuje oba nagłówki), źródła w `tf config show`
+      (factory/organisation/team/project/person — także sufiks warstwy `(person)`, po którym kod rozpoznaje preferencje),
+      wartości `Rework-Cause` (`spec-gap`, `agent-error`, `requirement-change`, `unknown`; dawne polskie w starszych
+      commitach liczone jako aliasy w `tf metrics` i retrospektywie). **Naprawiony błąd:** opis PR szukał wyniku skanu
+      w `security/<kawałek>/proba-*`, a skan zapisuje `attempt-<k>` — każdy kawałek miał „brak wyniku” (test PB-24).
+      Zostaje dosłownie: nagłówek `## Odłożone do decyzji` w raporcie przebiegu — pdi (`src/pdi/pr_loop.py`) czyta po
+      nim odłożone sprawy z raportu cięcia (zmiana razem z repozytorium pdi, jak kolumny `plan.md`). Bez próbki Haiku:
+      żaden skill nie odsyła modelu do przewodników; podpowiedzi all 901 · 32/43, `--hints` czysto, bramki tf,
+      core-git-workflow, core-agent-retro przechodzą.
+    - [ ] dalsze partie: 4c (pack-docs, pack-ux, mode-team, mode-pdi, org).
+  - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
+    - [x] 4c-1 (2026-11-18): `docs-tech-writing` (+ 6 referencji), rola `tech-writer` i wiersz routingu pack-docs,
+      `team-session` i przewodnik mode-team; nazwy i pytania wymiarów (`facets`) rdzenia, pack-docs i mode-team po
+      angielsku (pominięte w 4b-9); `content_language: en` w przetłumaczonych nakładkach i w szkielecie
+      `workspace.py new-pack`. Polskie słowa kluczowe zostają, angielskie dochodzą; `hint.pl.txt` dla obu skilli.
+      Podpowiedzi bez zmian: all 901/918 · 32/43, none 168/175 · 16/16, `--hints` czysto (all, none, pack-docs,
+      mode-team). Haiku `docs-tech-writing` przed/po 3/3 → 3/3, 0,74 USD. `translation_check`: różnice tylko
+      zamierzone (przykład polecenia `/team-session`, notacja `event [condition] / action`; blok kodu w SKILL.md to
+      fałszywy alarm — wzmianka ```` ```bash ```` w środku zdania).
+    - [x] 4c-2 (2026-11-18): pack-ux — `ux-information-architecture` (+ 3 referencje), `ux-research-methods`
+      (+ 5 referencji, w tym szablony planu i raportu badania), `ux-content-design` (+ 3 referencje). Polskie słowa
+      kluczowe zostają, angielskie dochodzą; `hint.pl.txt` dla trzech skilli. Polskie źródła i treści o polszczyźnie
+      zostają nazwane po polsku (KPRM „Prosto i kropka”, indeksy Pisarka, UODO). Podpowiedzi identyczne jak przed
+      partią (all 901/918 · 32/43), `--hints` czysto (all, pack-ux). Haiku przed/po (6 scenariuszy, 3 skille): 6/6 → 6/6,
+      1,50 USD. `translation_check`: różnice tylko w nazwach kolumn szablonów (inwentarz, taksonomia, nuggets).
+    - [x] 4c-3a (2026-11-18): pack-ux — `ux-service-design`, `ux-design-leadership`, `ux-accessibility` (po 2–3
+      referencje). Polskie słowa kluczowe zostają, angielskie dochodzą; `hint.pl.txt` dla trzech skilli. Polskie akty
+      prawne zostają nazwane po polsku (Dz.U., PFRON, „deklaracja dostępności”). Podpowiedzi: tuning 901/918 bez zmian,
+      holdout 32/43 → 31/43 — jeden przypadek `core-agent-security` (serwer MCP do Jiry) spadł z 3. na 4. miejsce przy
+      remisie 18,05 : 18,04 z `eng-llm-features` po przesunięciu IDF; holdoutu nie stroimy, do obserwacji przy 4c-3b.
+      `--hints` czysto (all, pack-ux). Haiku przed/po (3 scenariusze): 3/3 → 3/3, 0,77 USD. `translation_check`: różnice
+      tylko w nazwach kolumn szablonów i etykietach diagramu Mermaid.
+    - [x] 4c-3b (2026-11-18): pack-ux — `ux-design-systems`, `ux-feature-design`, `ux-visual-design` (+ referencje),
+      persona Natalia, 6 ról UX, `pack.yaml` (facet, konsultanci, `content_language: en`), tytuł i opis analizatora
+      `accessibility`. pack-ux nie ma GUIDE. Tabela ramek w `figma-mcp.md` pokazana po angielsku (`Requirement | Journey
+      | State | Frame | Notes`, `missing`, `n/a` — `design_check.py` czyta obie wersje); szablon `design.md` w mode-pdi
+      zostaje na 4c-x. Podpowiedzi bez zmian względem 4c-3a (901/918 · 31/43; remis `core-agent-security` nadal),
+      `--hints` czysto (all, pack-ux). Haiku przed/po (4 scenariusze): 3/4 → 3/4, 1,07 USD — `spec-faktury` pada na
+      main i po zmianie tak samo (Haiku nie uruchamia skilla), do przejrzenia osobno.
+    - [x] 4c-x (2026-11-18): mode-pdi — `pdi-decisions` SKILL, GUIDE, facet, `content_language: en`, szablony
+      `intent.md`, `plan.md`, `design.md`, `decisions.md`, `REVIEW.md`, `release.yaml` po angielsku. Czytniki przyjmują
+      obie formy (`# pl: sprzed 14.x`): `decision_record.py` (kolumny `Slice | Kind | Release | Flag | Value |
+      Requirements | Unblocks | Verification`, `## Options considered`/`### Option`, `## Change targets`),
+      `phase_run.py` (`## Gate questions`), `run_report.py` (kolumny `Flag`, `Value`). Sprawdzone w kodzie
+      ci_for_sdlc (`connectors/repo.ts` przyjmuje angielskie kolumny i `Success metrics`) i w kontrakcie pdi
+      (`conventions.design.columns.en`). Kryteria 5 scenariuszy eval przyjmują też angielskie nazwy formatów.
+      Podpowiedzi bez zmian (901/918 · 31/43), `--hints` czysto (all, mode-pdi). Haiku przed/po (5 scenariuszy, te same
+      kryteria): 3/5 → 3/5, 1,59 USD; te same 2 porażki na main i po zmianie (`faza-uruchomiona-przez-pdi`: Haiku
+      proponuje `decision add`; `faza-design-tabela-ramek`: wybiera ux-feature-design) — do przejrzenia osobno.
+    - [x] 4c-y (2026-11-18): mode-pdi — szablony workflow `sdlc-phase.yml`, `change-check.yml`, `metric-watch.yml`
+      po angielsku (komentarze, opisy wejść, nazwy kroków, komunikat `::error::` braku verify.sh, commit fazy
+      `docs(CHG-n): phase <faza> (pdi)`). Nazwy kroków czytają tylko testy tf (W-16, P-8, kroki z GH_TOKEN) —
+      zaktualizowane; pdi ich nie parsuje (sprawdzone w `src/pdi`), a sekcję „Przewodnik dokończenia” w opisie PR
+      pisze samo pdi. Zainstalowane już workflow w produktach działają dalej (nadpisuje je tylko `workflow install
+      --force`). Bez próbki Haiku: SKILL.md bez zmian, szablony nie trafiają do modelu.
+      Zostaje: szablony workflow `sdlc-phase.yml`, `change-check.yml`, `metric-watch.yml` (komentarze i nazwy kroków;
+      P-8 i pdi czytają nazwę kroku N3 i sekcję „Przewodnik dokończenia”) — osobna partia 4c-y.
+  - [x] 4d-arch-a (2026-11-18): pack-it — `arch-ai-solutions`, `arch-architect-practice`, `arch-eu-product-law`
+    (+ referencje) po angielsku; polskie słowa kluczowe zostają, angielskie dochodzą; `hint.pl.txt`. Znaczniki źródeł
+    `[unverified]`/`[secondary]`; kryteria 2 scenariuszy eval EU law przyjmują też angielskie znaczniki. Podpowiedzi
+    bez zmian (901/918 · 31/43), `--hints` czysto (all, pack-it). Haiku przed/po (4 scenariusze): 4/4 → 4/4, 1,30 USD.
+  - [x] 4d-arch-b (2026-11-18): pack-it — `arch-multi-tenancy`, `arch-privacy-compliance`, `arch-quality-attributes`
+    (+ referencje) po angielsku; `hint.pl.txt`. Przykład w Pythonie (pseudonimizacja, retencja): zmienione tylko
+    docstringi, 2/2 testy przechodzą; znacznik `-- pii: personal data` pasuje do analizatora data-classification;
+    nazwy sekcji jak w szablonach rdzenia („Quality attributes”, „Decision drivers”). Podpowiedzi: tuning 901/918,
+    holdout 31/43 → 32/43 (`ddd-tactical-design` +1), `--hints` czysto (all, pack-it). Haiku przed/po: 4 scenariusze
+    4/4 → 3/4 (`klasyfikacja-danych`: Haiku nie uruchomił skilla), powtórka 2 scenariuszy × 2: 4/4 → 4/4; łącznie
+    `klasyfikacja-danych` 3/3 → 2/3 — szum wyboru skilla, do obserwacji. 2,18 USD.
+  - [x] 4d-arch-c (2026-11-18): pack-it — `arch-system-design`, `arch-tech-selection`, `arch-threat-modeling`
+    (+ referencje) po angielsku; `hint.pl.txt`; prefiks `arch-` zamknięty. `quality_override: yes` (nikt go nie parsuje).
+    Podpowiedzi bez zmian (901/918 · 32/43), `--hints` czysto (all, pack-it). Haiku przed/po (4 scenariusze): 3/4 → 3/4,
+    1,07 USD; `model-webhook-upload` pada tak samo na main (brak ryzyka rezydualnego w odpowiedzi) — do przejrzenia.
+  - [x] 4d-be-a (2026-11-18): pack-it — `be-api-design`, `be-billing-subscriptions`, `be-business-app-patterns`
+    (+ referencje) po angielsku; `hint.pl.txt`. Podpowiedzi: tuning 901/918, holdout 32/43 → 31/43 — ten sam
+    przypadek `ddd-tactical-design`, który w 4d-arch-b zyskał (remis wrażliwy na IDF), `--hints` czysto (all, pack-it).
+    Haiku przed/po (4 scenariusze): 4/4 → 4/4, 0,95 USD.
+  - [x] 4d-be-b (2026-11-18): pack-it — `be-auth-security`, `be-database`, `be-messaging-outbox` (+ referencje)
+    po angielsku; `hint.pl.txt`. Przykłady w Pythonie outbox/inbox przetłumaczone i uruchomione (`OrderPlaced`,
+    test duplikatu „ok”). `be-messaging-outbox` nie miał `keywords` — Haiku po zmianie raz nie uruchomił skilla
+    (`odtworzenie-historii-skutki`), dodane słowa kluczowe PL+EN (replay, reset offsetu, odbudowa modelu odczytu):
+    powtórka 2 scenariuszy × 2: 4/4. Podpowiedzi bez zmian (901/918 · 31/43), `--hints` czysto. Haiku przed/po
+    (4 scenariusze): 4/4 → 3/4 → po poprawce 4/4, 1,48 USD.
+  - [x] 4d-r1 (2026-11-18): pierwsza runda równoległa — `qa-` (8), `proc-` (8), `tool-` (7), `pm-` (5), `data-` (2):
+    30 skilli (+ referencje) po angielsku, `hint.pl.txt`. Decyzja właściciela (2026-11-18): tłumaczą równolegli
+    wykonawcy według jednej instrukcji (zakres, frontmatter, bloki kodu, znaczniki, samokontrola
+    `translation_check`); jakość pilnuję sam: przegląd każdego zgłoszonego ✗ i próbki tekstu, bramki, holdout,
+    `--hints`, Haiku po zmianie (1 scenariusz na skill, przed zmianą tylko dla porażek). Jedna runda = jeden PR.
+    Przetłumaczone przykładowe teksty w kodzie (Playwright, Vitest, pytest, Semgrep) — żaden scenariusz ani
+    projekt przykładowy od nich nie zależy. `proc-agile` stracił podpowiedź w `ciecie-historyjek` (900/918) —
+    dodane słowa kluczowe PL+EN (pociąć historyjkę, cięcie pionowe): z powrotem 901/918 · 31/43.
+    Haiku po zmianie: 25/27; `testy-z-kodu` 2/2 w powtórce (szum). `porownanie-grup-skosne` (data-analysis):
+    przed 4/5, po 2/6 — model odpowiada z samego SKILL.md (bez referencji) i rzadziej wspomina korektę wielu
+    porównań; dodany krótki wskaźnik w kroku 5 (wielkość efektu, korekta Holm/Benjamini-Hochberg — z
+    `references/statistics.md`): 3/3. Koszt Haiku rundy: ok. 6 USD.
+    Zostaje do dokończenia:
+    - [ ] `qa-test-design/templates/test-strategy.md` jest po polsku; `references/project-test-strategy.md`
+      celowo zachowuje polskie wartości stanów (zakończona, w realizacji…) — tłumaczyć razem.
+    - [ ] `proc-requirements-shaping`: przykłady zachowują polskie nagłówki i linie briefu czytane przez
+      `requirements_lint.py` (lint przyjmuje już angielskie) — przełączyć na angielskie przy usuwaniu aliasów.
+    - [ ] nagłówek „## Brief dla wykonawcy” w `modes/mode-pdi/tests/test_triage_pdi.py` i
+      `eng-code-audit/references/report-template.md` — skill `proc-issue-triage` ma już „Brief for the implementer”.
+  - [x] 4d-r2 (2026-11-18): druga runda równoległa — `lang-` (6), `fw-` (6), `fe-` (5): 17 skilli (+ referencje)
+    po angielsku, `hint.pl.txt`. Słownik pojęć kontraktu technologii (`core/factory/config.yaml` → `vocabulary`)
+    po angielsku (value object, entity, aggregate…); `build.py check` przyjmuje polskie nazwy jako aliasy
+    (`VOCABULARY_PL`, „pl: sprzed 14.x”) — 0 ostrzeżeń. Przykłady Go uruchomione po tłumaczeniu (`go test`),
+    TypeScript skompilowany i uruchomiony; zdanie „pliki skopiowane bez zmian” zastąpione „kod z testowanego
+    projektu; przetłumaczone tylko komentarze i komunikaty”. Spisy treści przeliczone `build.with_toc`.
+    Bramki 17/17, podpowiedzi 901/918 · 31/43, `--hints` czysto, testy repo zielone. Haiku po zmianie 14/16:
+    `modernizacja-typow` 2/2 w powtórce (szum); `bledy-walidacja-openapi` (fw-aspnet-core) pada tak samo na main
+    (0/2) — model cytuje antywzorzec `Conflict(new ProblemDetails…)`, przed którym skill ostrzega.
+    - [ ] `bledy-walidacja-openapi`: niepożądany wzorzec trafia w cytat ostrzeżenia — zawęzić regex albo zmienić
+      sformułowanie w skillu (przed tłumaczeniem też 0/2).
+    - [ ] do sprawdzenia fakty ze źródła: `endoflife.ai` w fw-nestjs (pewnie endoflife.date), `@Service` jako
+      dekorator Angulara w lang-typescript, wsparcie Spring Boot 3.5 do 2026-06-30 vs 3.5.16 w źródłach.
+  - [x] 4d-r3 (2026-11-18): trzecia runda równoległa — `ops-` (22), `sec-` (13): 35 skilli (+ referencje) po
+    angielsku, `hint.pl.txt`. Poprawki z raportów: w sec-llm-security oryginał nazywał bramkę „zawodzi otwarcie”,
+    choć reguła opisuje fail-closed (nieczytelne = odmowa) — teraz „fails closed”; grupa Dependabota `drobne` →
+    `minor-and-patch`. `skill_audit.py` nie rozpoznawał spisu „> **Contents:**”, który pisze `build.with_toc`
+    (`^` bez `re.M`) — 88 fałszywych `ref-no-toc` w pack-it, po poprawce 3; test SA-TOC (EN/PL/brak).
+    Podpowiedzi: nowe angielskie opisy przesunęły wagi i dwa scenariusze spoza rundy straciły podpowiedź
+    (`ai-evals` `sedzia-llm-kalibracja`, `proc-safe` `czy-safe-pasuje`) — słowa kluczowe PL+EN: 902/918 · 31/43.
+    Bramki 35/35, testy repo zielone. Haiku po zmianie 30/34; cztery porażki to brak wywołania skilla
+    (`ops-docker` `hardening-runtime`, `ops-kubernetes` `config-rollout`, `ops-linux-networking` `dysk-inody`,
+    `ops-secrets-identities` `wyciek-klucza-aws`) — na main też (7 z 8 przebiegów bez wywołania).
+    - [ ] cztery scenariusze ops- bez wywołania skilla (także przed tłumaczeniem) — skille bez `keywords`;
+      sprawdzić słowa kluczowe PL+EN i opis pod polskie zgłoszenia.
+  - [x] 4d-r4 (2026-11-18): czwarta runda równoległa — `eng-` (19), `ddd-` (13), `ai-` (13): 45 skilli (+ referencje)
+    po angielsku, `hint.pl.txt`. Wszystkie skille pack-it są po angielsku. Stałe sekcje referencji `ddd-archetypes`
+    (`reference_sections` w pack.yaml) po angielsku; `build.py check` przyjmuje też plik w całości z polskimi nazwami
+    (`sections_pl`, „pl: sprzed 14.x”). Ciągi czytane przez skrypty zostały bajt w bajt (np. `pelna|oszczedna`,
+    `=== POKAŻ DOSŁOWNIE ===` w ddd-es-simulation, statusy ROZWIĄZANE/NOWE/ZMIENIONE w eng-tech-debt-audit, „BRAK w
+    kodzie”), z angielską glosą. Poprawki: ddd-es-simulation pokazywał `--scenario weterynaria`, a katalog to
+    `veterinary` (polecenie z dokumentacji kończyło się „No scenario”); opis ai-mcp-server skrócony do ≤ 170 znaków;
+    ucięte fragmenty spisów treści (eng-llm-features, trzy pliki fw-nextjs) usunięte. Podpowiedzi: słowa kluczowe PL+EN
+    dla ddd-context-mapping, sec-zero-trust-identity, ddd-tactical-design (i tool-vitest w #329 — sprawdzane też w
+    obszarze roboczym samego pack-it): 902/918 · 31/43, `--hints` czysto w `all` i `pack-it`. Bramki 45/45. Haiku po
+    zmianie 39/43; powtórki przed/po dla czterech porażek: 3/8 → 5/8, `tdd-nowa-regula` (eng-testing) bez wywołania
+    skilla po obu stronach.
+    - [ ] `tdd-nowa-regula`: skill eng-testing nie jest wywoływany (także przed tłumaczeniem) — słowa kluczowe/opis.
+    - [ ] kontrola podpowiedzi przed PR w obu obszarach (`all` i sam `pack-it`) — IDF zależy od zestawu skilli.
+  - [x] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
+    `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
+  - [x] 4e (2026-11-18): reszta pack-it po angielsku — 21 person, 22 role, `pack.yaml` (wymiary, prompty agentów
+    wspólnych, konsultanci; `content_language: en`), przykłady (shop-pricing, room-booking — README i eksport
+    odtworzone przez `project_record.py index/report`), 7 analizatorów (opisy, docstringi), workflow code-audit.
+    Nazwy sekcji zgodne z przetłumaczonymi skillami („Request / Mechanism / Basis”, „The facilitator's self-check”,
+    „Decision gates”, „What was not checked”). Zostają po polsku, bo czyta je kod lub test: etykiety agentów workflow
+    (`inwentarz`, `przegląd:`, `raport`, `weryfikacja:`) i prompt „Spróbuj obalić…” (test_workflows W-7…W-18),
+    wzorce wykrywania analizatorów (`zł`, `hasło`, `dane osobowe`…), wejścia fixture'ów. Testy: shop-pricing vitest
+    12 + 4 oczekiwane porażki, bramka analizatorów 7/7 (wynik bajt w bajt jak przed), test_workflows 20/20;
+    `--hints` czysto w `all` i `pack-it`, 901/918 · 31/43.
+    - [ ] etykiety i prompt weryfikacji w `workflows/code-audit.js` po angielsku razem z testami W-7…W-18.
+  - [x] 4f (2026-11-18): pack-editorial-pl — opisy, procedury, persona, rola, cecha i `pack.yaml` po angielsku; normy
+    RJP, przykłady zdań, pary błędne/poprawne i nazwy źródeł zostają po polsku (z angielską glosą). Kategorie raportu
+    jak w `polish_lint.py` (SPELLING, PUNCTUATION…); `keywords` PL+EN w txt-polish-correctness (podpowiedzi 3/3);
+    literówka „wcześej” → „wcześniej” w regule §18. Haiku 3/4, `komunikaty-ui` 2/2 przed i po (szum).
+  - [x] 4g (2026-11-18): komentarze i docstringi w kodzie po angielsku — 132 pliki (core/factory, hooks, tools,
+    scripts, core/skills, modes, org, .github, packs). Kontrola: AST bez docstringów identyczne dla 117 plików `.py`
+    (własny skrypt, niezależnie od wykonawców), YAML — dane identyczne poza komentarzami w blokach `run:`. Zostają:
+    literały, regexy, linie `pl: sprzed 14.x`, cytowane polskie dane. Ponowna bramka 21 skilli (skrypty w odcisku).
+    Wykonawcy na Sonnecie (tańsze, praca mechaniczna).
+    - [x] polskie napisy w szablonie `ai-review.yml` i komunikaty `echo` w workflow — w 4h.
+  - [x] 4h (2026-11-18): napisy dla człowieka i komunikaty testów po angielsku — 175 plików (runnery ewaluacji,
+    skrypty, workflow GitHub, szablon ai-review, testy core/modes/packs/repo). Etykiety i prompt weryfikacji
+    workflow code-audit po angielsku razem z test_workflows. Zostają: aliasy i wzorce przyjmujące polski
+    („pl: sprzed 14.x”), polskie dane testowe i fixture'y, formaty czytane przez inny program, prompty sędziego
+    w `run_skill_evals.py` i `flow_evals_runner.py` (zmiana języka sędziego zmienia ocenianie). Kontrola: wszystkie
+    testy repo i 8 obszarów roboczych CI zielone, ponowna bramka 7 skilli, 901/918 · 31/43.
+    - [ ] prompty sędziego ewaluacji po angielsku — osobno, z kalibracją (te same scenariusze przed i po).
+  - [x] 4i (2026-11-18): angielskie bliźniaki scenariuszy ewaluacji — jeden na skill (`<id>-en`, 165 plików; 11 bez
+    scenariusza trigger, txt-polish-style pominięty — skill redaguje polski tekst). Grupy kontroli te same, polskie
+    alternatywy zostają, dopisane angielskie. Podpowiedzi: 154/165 od razu; 11 skilli dostało angielskie słowa
+    kluczowe (m.in. data-engineering, lang-typescript, ops-secrets-identities, ux-accessibility) — 165/165,
+    1066/1083 · holdout 32/43 (było 31). Haiku na próbie 25 bliźniaków: 23/25; dwie porażki to znane już na
+    polskich wersjach (`model-webhook-upload`, `config-rollout`).
+    Słowa kluczowe EN także dla core-grounding (obszar mode-pdi) i ai-fine-tuning (obszar pack-it); `--hints` czysto
+    we wszystkich 8 obszarach roboczych CI — od teraz sprawdzane we wszystkich, nie tylko w `all` i `pack-it`.
+  - [x] 4j (2026-11-19): żywa dokumentacja po angielsku — README, `docs/` (RELEASING, inactive-skills, insights,
+    new-pack, plugins, setup, mapa-fabryki.html), `core/factory/PUBLIC_API.md`. Decyzja: archiwa (`docs/evals`,
+    `docs/plans`) zostają po polsku jako zapis historyczny — w obu katalogach krótki README po angielsku; także ten
+    plik (`docs/todo.md`) i `CHANGELOG.md` zostają po polsku. Przy okazji: skill tf kazał przekazać linię `Waga: …`,
+    a `run_report.py` od #308 wypisuje `Weight: …` — skill i test T-27 poprawione.
+    - [ ] `docs/insights.md` i `docs/plugins.md` opisują `mode-talos` (usunięty w 10.0.0) i liczby skilli sprzed
+      zmian — zaktualizować treść (to nie tłumaczenie).
+    - [ ] gdyby archiwa miały być po angielsku: `docs/evals` (47 plików) i `docs/plans` (40) — osobny krok.
+  - [x] 4k (2026-11-19): usunięte polskie aliasy czytników (`pl: sprzed 14.x`) — decyzja właściciela: jednym krokiem.
+    Migracja 19.0.0 (`migrations.migrate_v19`) przepisuje polskie formy na angielskie w plikach projektu, które czytały
+    usunięte aliasy (punkty kontrolne `.tf/wip/`, decyzje retro, cache bazy wiedzy, tagi banku dowodów, blok fabryki
+    w CLAUDE.md — przed przepisaniem bloku, więc komendy projektu zostają, własne skille i persony, `managed-agents/`,
+    plan i artefakty pdi, rekonstrukcja pack-it); 16 nowych testów MV-18…33 i U-5. Zostaje polski kontrakt pdi
+    `design.md` (forma zewnętrznego kontraktu, nie alias). Przy okazji: Talos usunięty z żywej dokumentacji, testów
+    i przykładów (zostaje tylko to, co sprząta stare instalacje: `RETIRED_PACKS`, przemianowania, strażnik w
+    test_tf_skill, wpis „Removed in 10.0.0” w PUBLIC_API); pasek stanu po angielsku (`context`, `cold`); trzy
+    sprawdzenia w testach szukały polskich komunikatów, których narzędzia już nie wypisują (zawsze przechodziły) —
+    poprawione na angielskie.
+    - [x] aliasy bez znacznika — w 4l.
+  - [x] 4l (2026-11-19): czytniki tylko po angielsku — reszta polskich form bez znacznika (sekcje rejestru projektu,
+    raporty analyze, LESSON_HEADS, werdykty badań P/C/N/S, Given/When/Then w specyfikacji, MARK i aliasy recon,
+    requirements_lint, dossier), wartości `Rework-Cause` i stopka `Kawałek` (historia sprzed zmiany liczona jako nieznana
+    przyczyna), identyfikatory kawałków K<n> → S<n> (migracja otwartych zadań: plan, task.json, dowody, events, run.json,
+    katalogi security; hash zatwierdzenia przeliczany, gdy się zgadzał) i nazwy zdarzeń hooków („session end”, „context
+    compaction”; `settings_v19` przepisuje ustawienia użytkownika przed scaleniem — bez zdublowanego hooka, testy U-6/U-7).
+    Migracja rozszerzona (MV-34…66). Przy okazji: panel plików nie pokazywał dowodów kawałków S (czytnik szukał tylko K).
+    Zostają: LEGACY_GI (sprzątanie starych instalacji), polski kontrakt pdi `design.md`, obsługa polskich treści
+    (historyjki, changelogi, własne skille po polsku, polish_lint, detektory), prompty sędziego ewaluacji.
+    - [ ] `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
+      sprawdzają) — przełożyć razem z testami.
+  - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
+    M2 hooki, M3–M4 silnik (`core/factory`), M5 skrypty pozostałych skilli rdzenia, M6 pack-it, M7 mode-pdi, M8 org,
+    tools, editorial, ux. Docstringi i komentarze w kodzie to dokumentacja opiekunów — poza tym etapem.
+    - [x] M1 (2026-11-17): skrypty skilla tf (`run_state`, `run_report`, `intake`, `plan_drift`, `security_scan`),
+      `task_state.py` (`tf status`, `tf task …`) i `task_weight.py` — komunikaty, etykiety wyjścia (`Input/Key/Next`,
+      `Next: S3`, `What happened/What is needed/Question/Then`), wartości JSON `intake` (`issue/cut/resume/file/content/
+      none`, `task/question/quick`, `card/address/organisation`; polskie słowa na wejściu nadal działają), raport
+      przebiegu z nagłówkiem „Postponed for a decision” (pdi czyta oba od pdi#181), etykiety wag `light/normal/full`.
+      Odczyt starych danych przyjmuje polskie formy (`## Zamiar zmiany`, `Źródło:`, `powód:`/`waga`, `## Bezpieczeństwo`).
+      **Naprawione błędy:** komunikaty podawały polecenia, które skrypt odrzucał — `--code pytanie` (×2),
+      `--code srodowisko`, `step … kod run`, kody „testy/skan/pytanie” w limicie rund (test K-8/K-9 sprawdza odtąd każde
+      `--code`/`step` w komunikatach); `task_weight` odcinał zamiar zmiany tylko pod polskim nagłówkiem (W-24b).
+    - [x] M2 (2026-11-17): hooki `core/hooks` — blokady i prośby o zgodę (`guard_bash`, `guard_paths`, `cleanroom_guard`,
+      `scan_secrets`), `quality_gate` (stan bramki w `tf doctor` i na starcie sesji), `tdd_guard`, `skill_hint` (treść
+      podpowiedzi dla modelu), `jev_*`, `detect_stack`, `context_guard`, `skill_change_guard`, `project_record` (indeks
+      `docs/project/README.md`, raport, punkty kontrolne, sprawdzanie dowodów), drobne. Klucze typów operacji bez
+      zmian. Migawka punktu kontrolnego pisze `- Branch: … · last commit: …`, odczyt przyjmuje też polską linię; polskie
+      argumenty zdarzeń z `settings.json` (`koniec sesji`, `kompaktowanie kontekstu`) zapisuje po angielsku.
+      Skuteczność: holdout podpowiedzi 901/918 · 32/43 bez zmian; Haiku (plan-interview, skill-composition) 7/8, ~$1,85.
+      Jedyny chybiony, `przesluchanie-bez-nadmiaru`, pada tak samo na `main` (2/2): odpowiedź jest trafna, ale
+      sprawdzenie zna tylko słowa „przeinżynierowanie/nadmiar/minimalizm/YAGNI” — do przejrzenia przy 4c.
+    - [x] M3 (2026-11-17): `build.py` — prompty generowanych person, wykonawców i konsultantów (sekcje `## Traits`,
+      `## When you delegate`, `## Boundaries`, `## Report` …), katalog `.claude/catalog.md`, walidacja i komunikaty CLI,
+      szkielet `new-skill` (`## Domain concepts in …`); kontrakt skilli technologicznych przyjmuje angielskie i polskie
+      nagłówki (`Domain concepts`/`Pojęcia domenowe`, `Version-dependent`/`Zależne od wersji`). Znacznik generowanych plików
+      `GENERATED by …` (`target_managed` rozpoznaje też stary). `skill_gate.py` (kroki bramki, stan, `--hints`; klucze
+      wyniku płatnej ewaluacji `aborted`/`no_uplift`/`<model>_without_skills`, raporty `*-gate-<skill>.md`),
+      `analyze.py` (raport modułu `Verdict:`/`## Recommended actions`/`## Analysis history`, scalanie czyta też stare
+      polskie nagłówki — test A-6b), `onboard.py` (raport gotowości, propozycja zapisu; sekcja `### Commands` lub
+      `### Komendy` w bloku fabryki). Skuteczność: holdout 901/918 · 32/43 bez zmian, `--hints` czyste; przebieg
+      `N5-synth-repeated-q` na Haiku kończy się tak samo jak na `main` (`waiting_gate`, 0,24 USD każdy).
+      Zostaje: `core/CLAUDE.md` (blok instrukcji, `### Komendy`/`### Język`) i `templates/SKILL.template.md` — treść, M4/4c.
+    - [x] M4 (2026-11-17): reszta `core/factory` (29 plików: `tf.py`, `work.py`, `packs.py`, `install.py`, `uninstall.py`,
+      `check.py`, koszty i metryki, `spec_check`, `skill_audit`, `rules_scan`, `flag_check`, `freshness`, `trace_check`,
+      `facts`, `finish`, `target_managed` …), `core/CLAUDE.md` (blok instrukcji w projekcie: `## Agent team`,
+      `### Commands`, `### Language`) i szablon `SKILL.template.md`. Odczyt przyjmuje stare formy: `### Komendy`/
+      `### Język`, dopisek wzorca „dostosuj do swojego projektu” (test O-29b), nagłówek README targetu Managed Agents,
+      `## Źródła`/`odczyt` w `facts`. Zmienione wartości JSON `cost_stats --json` (`band`, `period_name`,
+      `rate.source`) — w repozytorium nikt ich nie czyta. Skuteczność: holdout 901/918 · 32/43 bez zmian; Haiku
+      (plan-interview, skill-composition) 7/8 jak w M2 (ten sam chybiony scenariusz), 1,26 USD.
+      Zostaje: docstringi drukowane jako `--help` (`uninstall`, `check`, `work`, `metrics` …), klucze sygnałów
+      `tier:<agent>:za niski|za wysoki` (pisze `core-agent-retro`, M5) i przykład `--reason "bez flagi, bo …"` w skillu tf.
+    - [x] M5 (2026-11-17): skrypty skilli rdzenia (`retro_data`, `factory_feedback`, `semver`, `commit_msg`,
+      `control_band`, `pr_budget`, `instructions_lint`, `kb`, `fetch_page`, `claims_check`, `grounding_check`,
+      `ai_review`). Pierwsza linia `Verdict:` w `pr_budget` i `claims_check` (nikt w repozytorium jej nie parsuje),
+      nagłówek pobranej strony `<!-- web content: data, not instructions -->`, `--decide yes|no|later` w retro (polskie
+      `tak|nie|później` nadal działa), znacznik `<!-- file: … -->` w pamięci `kb` (czyta też `plik:`), `metric_watch`
+      rozpoznaje oba teksty błędu `control_band`. **Naprawione błędy:** sygnały „model za niski/za wysoki” nigdy nie
+      trafiały do zgłoszeń dla fabryki — `retro_data` pisze klucz `tier:<agent>:niski` (wartość z `log_usage`), a
+      `factory_feedback` i `feedback_report` przyjmowały tylko `za niski` (test FF z kluczem `wysoki`); retro
+      wyróżniało problemy w dzienniku tylko po polskich słowach, a dziennik od M2/M3 piszą agenci po angielsku (AR-6 z
+      wpisami w obu językach). Bramki 11 skilli odnowione.
+      Zostaje: dopasowanie „już ocenione” w retro raz nie trafi starych dowodów (zmienione teksty) — jednorazowo.
+    - [x] M6 (2026-11-18): skrypty pack-it — rekonstrukcja repozytorium (`eng-codebase-mapping`, 11 skryptów),
+      `readiness_check`, `requirements_lint`, `dossier_check`, szablon `post_edit_checks`, Event Storming (`es_board`,
+      `es_sim`, `es_probe`) i 7 modułów `tf analyze`. Odczyt przyjmuje stare formy: partie `(pliki)` w manifeście (M-18),
+      polska pieczątka odświeżenia (RF-21), polskie znaczniki symulacji w `es_probe` (EP-14, EP-15); `requirements_lint`
+      czyta też angielski brief (budżet czasu, szacunek, potwierdzenie kosztu), jednostki i sekcję „Quality attributes”.
+      Identyfikatory ustaleń analizy bez zmian (skrót z reguły, pliku i fragmentu). **Naprawione błędy:** eksport
+      rekonstrukcji dawał angielskim znacznikom status `evidence` (E-16); odświeżenie porównywało zmiany reguł ze starą
+      nazwą `zmieniona`. Skuteczność: płatna próba symulacji ES na scenariuszu weterynaria 11/11 oczekiwań (wcześniej
+      10/11), 1,43 USD. Bramki 7 skilli odnowione.
+      Zostaje: treść skilli pack-it (4d) cytuje jeszcze polskie etykiety wyjścia (`idiomy testów`, `WYCIĄGNIĘTE`,
+      „krytyczne”) i znacznik `=== POKAŻ DOSŁOWNIE ===` symulacji — zmienić razem z tłumaczeniem tych skilli.
+    - [x] M7 (2026-11-18): skrypty mode-pdi (`decision_record`, `phase_run`, `pr_loop`, `second_review`, `metric_watch`,
+      `design_check`, `triage_pdi`, `phase_progress`, `phase_result`, `sandbox_settings`) i `team_switch` z mode-team, w tym
+      prompty faz i drugiego przeglądu. pdi tylko wyświetla zmienione teksty (sprawdzone w `src/pdi`), więc obeszło się
+      bez zmian w pdi. Odczyt przyjmuje stare formy: wiadomości postępu `czyta plik`/`odmowa narzędzia` (`phase_result`,
+      test M-1/M-2 w obu językach), `brak ramki` (`phase_run`), sekcja „Przegląd drugim modelem” podmieniana przy
+      ponownym przeglądzie; wpisy bramek `## Gate …`, a prompt fazy wymienia też dawne `## Bramka …`. Bramki 2 skilli
+      odnowione.
+      Zostaje po polsku (format artefaktów i szablonów produktu): sekcja `## Pytania do bramki`, kolumny planu
+      (`Wydanie`, `Flaga` …) i tabeli `design.md`, nagłówki `## Rozważone opcje`/`## Cele zmiany` — do zmiany razem z pdi
+      i szablonami. Skuteczności promptów faz nie zmierzono na modelu: lokalnie działa tylko zadanie `N5-synth-repeated-q`,
+      które przed zmianą też kończyło się `waiting_gate`; pełne flow-evals wymagają repozytoriów `sdlc-trial`.
+    - [x] M8 (2026-11-18): `org/` (`standards_from_docs`, `new_org_pack` i szablony pakietu firmy i zespołu — szkielet
+      po angielsku), linter polszczyzny (etykiety `HIGH/MEDIUM/LOW` i kategorie po angielsku; reguły i poprawki zostają
+      po polsku, bo to przedmiot lintera), moduł dostępności pack-ux i narzędzia `tools/` (m.in. `workspace.py` ze
+      szkieletem nowej nakładki, `hint_holdout`, `context`, `flow_compare`). Odczyt przyjmuje stare formy: `skill_gate`
+      i `project_record` czytają polskie etykiety lintera, `standards_from_docs` wstawia blok pod dawne polskie nagłówki
+      pakietu firmy i rozpoznaje stary znacznik. Holdout podpowiedzi bez zmian: 901/918 · 32/43. Bramki 2 skilli odnowione.
+      **Etap komunikatów skryptów (M1–M8) zamknięty.** Zostaje: docstringi drukowane jako `--help`, wynik
+      `flow-evals --validate` (runner w `core/tests`), `content_language: pl` w szkieletach `pack.yaml` (pole nieczytane),
+      opisy w `docs/` i `.claude/skills/tf-new-pack` cytujące dawne etykiety.
+  - [ ] pack-editorial-pl: instrukcje po angielsku, przykłady i reguły polszczyzny zostają po polsku (to ich przedmiot).
 
 Treść fabryki jest dziś po polsku. Chodzi o:
 - skille (`SKILL.md`, `references/`) rdzenia i wszystkich nakładek;
@@ -387,15 +1079,14 @@ Jak:
 Do rozstrzygnięcia wtedy:
 - czy tłumaczenie zastępuje treść polską, czy obie wersje żyją równolegle (wtedy `build.py` i instalator wybierają
   wersję według `language`);
-- czy nazwy pól metadanych skilli (`metadata.katalog`, `przeglad`, `slowa`, `widocznosc`) też zmieniają się na
-  angielskie (zmiana publicznego API rdzenia — MAJOR).
+- ~~nazwy pól metadanych skilli~~ — rozstrzygnięte: po angielsku (#287).
 
 Warunek gotowości: ewaluacje skilli (`tests/skill_evals`) przechodzą także na wersji angielskiej.
 
 ## Inne
 
-- [x] Przewodnik użytkownika (`PRZEWODNIK.md`, `FAQ.md` z claude-team-factory) nie został przeniesiony — opisywał jedną
-  fabrykę bez nakładek. Zrobione (P1): `core/guide/` → `factory/PRZEWODNIK.md`, `factory/FAQ.md`.
+- [x] Przewodnik użytkownika (`GUIDE.md`, `FAQ.md` z claude-team-factory) nie został przeniesiony — opisywał jedną
+  fabrykę bez nakładek. Zrobione (P1): `core/guide/` → `factory/GUIDE.md`, `factory/FAQ.md`.
 - [x] Baza wiedzy z rejestrem źródeł (`dom-ev-knowledge-base`, w pack-ev) ma ogólny mechanizm (`kb.py`) i dane EV.
   Rozważyć przeniesienie mechanizmu do rdzenia, a rejestrów źródeł do nakładek. **Plan (2026-10-22):**
   - K1. Testy rdzenia `core/tests/test_kb.py` (najpierw czerwone): wyszukiwanie, cache, status, CLI na neutralnych
@@ -492,7 +1183,7 @@ własnymi słowami ze źródeł pierwotnych, licencje repozytoriów sprawdzamy p
 Kolejność proponowana: 1+2 (jeden PR), 5, 6, potem reszta.
 - [x] **1. Analiza wariantów podatności** (zrobione 2026-10-23: nowy skill `sec-variant-analysis`, szablon reguły Semgrep sprawdzony `semgrep --test`) (inspiracja: Trail of Bits `variant-analysis`): po znalezionej podatności
   szukanie podobnych wystąpień według wzorca. Rozszerzenie `sec-appsec-devsecops` albo nowy skill `sec-`.
-- [x] **2. Niebezpieczne API i domyślne konfiguracje** (zrobione 2026-10-23: `sec-appsec-devsecops/references/niebezpieczne-api.md`, wkład do `security-reviewer`) (ToB `sharp-edges`, `insecure-defaults`): lista kontrolna
+- [x] **2. Niebezpieczne API i domyślne konfiguracje** (zrobione 2026-10-23: `sec-appsec-devsecops/references/dangerous-apis.md`, wkład do `security-reviewer`) (ToB `sharp-edges`, `insecure-defaults`): lista kontrolna
   per język (zaszyte sekrety, domyślne hasła, słaba kryptografia, błędogenne API); `sec-appsec-devsecops`
   i wkład do agenta `security-reviewer`.
 - [x] **3. Własne reguły Semgrep/CodeQL z testami** (zrobione 2026-10-24: skill `tool-semgrep`, przykłady sprawdzone Semgrepem 1.50.0, 1.100.0 i 1.182.1; testy CodeQL tylko z dokumentacji — CLI niedostępne w sesji) (ToB `semgrep-rule-creator`): procedura pisania i testowania
@@ -563,43 +1254,43 @@ dokładnego skutku, walidacja argumentów w kodzie, „model czytający obce tre
 ruchu, „lethal trifecta”) i w `core-agent-security` (MCP jak zależność: przypięta wersja, przegląd opisów narzędzi).
 Brakuje nazwanych wzorców projektowych i nowszych list. Do dorobienia w `sec-llm-security` (scenariusze ewaluacji,
 potem treść, bramka; źródła pierwotne z datą, sprawdzone przez researchera — artykuł to źródło wtórne):
-- [x] **Wzorce z pracy Beurer-Kellner i in. (arXiv 2506.08837) jako reference** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §2)**:** podwójny LLM (czytający bez narzędzi
+- [x] **Wzorce z pracy Beurer-Kellner i in. (arXiv 2506.08837) jako reference** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §2)**:** podwójny LLM (czytający bez narzędzi
   oddaje tylko pola schematu, nie prozę), plan-then-execute (plan zamrożony przed wynikami narzędzi, dane z obcych
   treści nie wybierają adresata wysyłki ani zapisu), action-selector, map-reduce po dokumentach, code-then-execute;
   kiedy który i jaki koszt (dwa wywołania, mniej elastyczny agent). Przykład w kodzie, nie w prompcie.
-- [x] **Zatwierdzenie związane z argumentami** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §4)**:** zgoda obejmuje skrót kanonicznych argumentów, aktora, narzędzie,
+- [x] **Zatwierdzenie związane z argumentami** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §4)**:** zgoda obejmuje skrót kanonicznych argumentów, aktora, narzędzie,
   termin i jednorazowy nonce; inne argumenty = nowa zgoda; brak polityki lub nieudany zapis audytu = brak wywołania.
   Klasy ryzyka narzędzi (niskie … krytyczne) z domyślną odmową dla nieznanych.
-- [x] (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §5) **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
+- [x] (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §5) **Krótkotrwałe poświadczenia na jedno wywołanie** (broker poza procesem agenta, token związany z narzędziem i
   argumentami) oraz **przypięty skrót manifestu narzędzia MCP** (zmieniony opis lub schemat = nowa instalacja do
   przeglądu, nie cicha aktualizacja) — także jako uzupełnienie `core-agent-security`.
-- [x] (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §6) **Przekazania między agentami bramkowane schematem i listą celów** (repo `anthropics/financial-services`,
+- [x] (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §6) **Przekazania między agentami bramkowane schematem i listą celów** (repo `anthropics/financial-services`,
   omówienie M. Craddock, 2026-05-06 [niezweryfikowane w repo]): agent czytający obce dokumenty ma tylko Read/Grep,
   bez MCP, i zwraca JSON ze schematem (`additionalProperties: false`, `maxItems`, `maxLength`, `pattern` na każdym
   polu), sprawdzanym w kodzie przed orkiestratorem; prośba o przekazanie (`handoff_request`) przechodzi tylko, gdy
   cel jest na liście dozwolonych, a ładunek zgodny ze schematem — dokument może zawierać podrobione bloki
   przekazania. Przykład w kodzie do `sec-llm-security` obok podwójnego LLM.
-- [x] **Reguła dwóch (Meta, „Agents Rule of Two”)** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §1)**:** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
+- [x] **Reguła dwóch (Meta, „Agents Rule of Two”)** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §1)**:** sesja ma najwyżej dwie z trzech cech — niezaufane wejście, dostęp
   do danych wrażliwych, zmiana stanu lub komunikacja na zewnątrz; tabela kontrolna obok „lethal trifecta”.
 - [x] **Aktualizacja list** (zrobione 2026-11-01: `sec-llm-security` — tabela LLM 2026 ↔ 2025 i ASI01–ASI10 z Appendix A wydania 2026, repo GenAI-Security-Project/GenAI-LLM-Top10)**:** OWASP Top 10 for LLM 2026 (skill cytuje wydanie 2025) i OWASP Top 10 for Agentic
   Applications 2026 (ASI01…) — mapowanie na kontrole skilla; zweryfikować numerację i daty w źródłach.
-- [x] **Kontrola przepływu informacji (CaMeL, Debenedetti i in., arXiv 2503.18813)** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §3)**:** wartości z etykietą pochodzenia
+- [x] **Kontrola przepływu informacji (CaMeL, Debenedetti i in., arXiv 2503.18813)** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §3)**:** wartości z etykietą pochodzenia
   i odbiorców, polityka sprawdza etykiety przed wywołaniem narzędzia (np. dokument z dysku można streścić
   użytkownikowi, ale nie wysłać na adres znaleziony w tym dokumencie); koszt w użyteczności z ich pomiaru na
   AgentDojo [do sprawdzenia w źródle]. (Uzupełnione 2026-10-29 z artykułu „Building Secure AI Agents”, C. Kalhara.)
 - [x] **Red teaming adaptacyjny** (zrobione 2026-10-31: `references/red-teaming.md` §„Ataki adaptacyjne”) w `references/red-teaming.md`: obrona sprawdzona tylko stałą listą ataków mówi mało
   („The Attacker Moves Second”, Nasr i in., arXiv 2510.09023); AgentDojo (NeurIPS 2024) jako gotowa uprząż — sędzia
   sprawdza stan środowiska, nie tekst modelu, więc sam nie da się wstrzyknąć.
-- [x] **Pamięć i RAG jako niezaufane** (zrobione 2026-10-31: `sec-llm-security/references/wzorce-projektowe-agentow.md` §7)**:** zapis do pamięci długotrwałej i bazy wektorowej przechodzi przegląd i dostaje
+- [x] **Pamięć i RAG jako niezaufane** (zrobione 2026-10-31: `sec-llm-security/references/agent-design-patterns.md` §7)**:** zapis do pamięci długotrwałej i bazy wektorowej przechodzi przegląd i dostaje
   etykietę pochodzenia; w logu wywołań narzędzi pochodzenie argumentów; wyłącznik awaryjny agenta.
-- [x] **Autoryzacja zdalnego serwera MCP** (zrobione 2026-10-31: `be-auth-security/references/tokeny-sesje-oauth.md` §7, odnośnik i scenariusz w `ai-mcp-server`) (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
+- [x] **Autoryzacja zdalnego serwera MCP** (zrobione 2026-10-31: `be-auth-security/references/tokens-sessions-oauth.md` §7, odnośnik i scenariusz w `ai-mcp-server`) (`be-auth-security`, odnośnik z `ai-agents`): OAuth 2.1 z PKCE, odkrywanie
   serwera autoryzacji z metadanych, rejestracja klienta przez Dynamic Client Registration albo Client ID Metadata
   Documents, walidacja odbiorcy tokenu, krótkie tokeny dostępu i odświeżanie przez zewnętrznego dostawcę OAuth.
   Sprawdzone 2026-10-29 (blog.modelcontextprotocol.io, wersja specyfikacji `2026-07-28`): DCR przestarzałe na rzecz
   Client ID Metadata Documents (działa jeszcze dla zgodności, usunięcie w przyszłej wersji — konkretnej daty brak);
   serwer zwraca parametr `iss` (RFC 9207), klient go sprawdza; klient podaje `application_type` (przekierowania na
   localhost dla aplikacji CLI i desktop); poświadczenia klienta związane z wydawcą.
-- [x] **Tożsamość agenta i delegacja** (zrobione 2026-11-01: `sec-zero-trust-identity/references/tozsamosc-i-dostep.md`, ostatnia sekcja; SPIFFE z repo, RFC przez wyszukiwarkę — ietf.org niedostępne) (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
+- [x] **Tożsamość agenta i delegacja** (zrobione 2026-11-01: `sec-zero-trust-identity/references/identity-and-access.md`, ostatnia sekcja; SPIFFE z repo, RFC przez wyszukiwarkę — ietf.org niedostępne) (`sec-zero-trust-identity`, odnośnik z `sec-llm-security`; dziś fabryka nie
   wspomina SPIFFE ani tokenów związanych z nadawcą): każdy agent i każda jego instancja ma własną tożsamość obciążenia
   (SPIFFE/SPIRE, krótkie SVID przez Workload API zamiast współdzielonego konta usługi), osobną od loginu człowieka,
   z nazwanym właścicielem; działanie w imieniu użytkownika = token użytkownika związany z kluczem agenta (mTLS-bound,
@@ -619,7 +1310,7 @@ effort, `opusplan`, doradca — `core-cost-control`; wykonawcy tylko do odczytu 
 `/remote-control` — `core-async-delegation`; GitHub Action i przegląd AI w CI — `core-git-workflow`). Uwaga: artykuł
 podaje 5 poziomów zagnieżdżenia subagentów (źródło wtórne); fabryka trzyma się dokumentacji (domyślnie 3,
 `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`, fabryka ustawia 2) — bez zmian.
-- [x] **`core-cost-control`: `ultrathink` i `ultracode`** (zrobione 2026-11-01: `references/model-i-automatyzacja.md` §8; przy okazji: zmiana effortu nie kasuje cache na Opus/Sonnet/Haiku 5.5 i Fable 5.1 — code.claude.com/docs/en/prompt-caching). `ultrathink` w treści polecenia — głębsze rozumowanie w tej
+- [x] **`core-cost-control`: `ultrathink` i `ultracode`** (zrobione 2026-11-01: `references/model-and-automation.md` §8; przy okazji: zmiana effortu nie kasuje cache na Opus/Sonnet/Haiku 5.5 i Fable 5.1 — code.claude.com/docs/en/prompt-caching). `ultrathink` w treści polecenia — głębsze rozumowanie w tej
   jednej turze bez zmiany zapisanego effortu sesji (zmiana effortu sesji w trakcie kasuje cache); `ultracode` —
   effort `xhigh` plus zgoda na orkiestrację wielu agentów (workflow), kosztowne, tylko dla zadań, które tego
   wymagają. Działanie, koszt i dostępność sprawdzić w dokumentacji code.claude.com z datą przed dopisaniem
@@ -628,12 +1319,12 @@ podaje 5 poziomów zagnieżdżenia subagentów (źródło wtórne); fabryka trzy
 ## Jakość parsowania dokumentów w RAG (artykuł „Why Your RAG Pipeline Dies on Real Documents”, P. Perrone, 2026-10-01, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-rag` już każe zachować tabele z nagłówkiem, OCR dla skanów i chunking wg struktury; tabela
 porażek ma „tabela rozbita, liczby bez nagłówków”. Artykuł jest sponsorowany (LlamaParse) — bez rekomendacji dostawcy.
-- [x] **`ai-rag`: kontrola jakości parsowania przed indeksacją** (zrobione 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §1, SKILL.md krok 2) — strona bez warstwy tekstu albo z podejrzanie
+- [x] **`ai-rag`: kontrola jakości parsowania przed indeksacją** (zrobione 2026-10-30: `ai-rag/references/parsing-evaluation-wiki.md` §1, SKILL.md krok 2) — strona bez warstwy tekstu albo z podejrzanie
   małą liczbą znaków to alarm, nie pusty dokument; przegląd surowego wyjścia parsera na najgorszych dokumentach
   korpusu (skan, tabela przez dwie strony, dwie kolumny) zanim ktoś stroi retriever; miara struktury tabel (TEDS) i
   kolejności czytania w zestawie ewaluacyjnym; parsery świadome układu (open source i usługi) jako kategoria z
   kryteriami wyboru, nie lista marek. Liczby z benchmarków (OmniDocBench, CVPR 2025) sprawdzić w źródle pierwotnym.
-- [x] **`ai-rag`: ewaluacja w dwóch koszykach i kalibracja progu** (zrobione 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §2, SKILL.md krok 7) (artykuł „The Limits of Vector Search in RAG”,
+- [x] **`ai-rag`: ewaluacja w dwóch koszykach i kalibracja progu** (zrobione 2026-10-30: `ai-rag/references/parsing-evaluation-wiki.md` §2, SKILL.md krok 7) (artykuł „The Limits of Vector Search in RAG”,
   J. Wąsowski, 2026-09-14; hybrydę i „wektory gubią identyfikatory” skill już ma): zestaw ewaluacyjny z polem typu
   zapytania — recall@k osobno dla zapytań semantycznych (parafrazy, intencje) i dokładnych (identyfikatory, kody,
   wersje, liczby, negacje), bo średnia ukrywa podział; przed ustawieniem progu podobieństwa histogram cosinusa dla
@@ -650,7 +1341,7 @@ ma `core-knowledge` (`kb.py`, notatki zespołu, cytaty plik:linia). Niski priory
 zalecane `title`, `description`, `resource`, `tags`; opcjonalne `sources[]`, `generated`, `verified`, `status`
 (`draft`/`stable`/`deprecated`), `stale_after`; zarezerwowane `index.md` (spis do stopniowego odsłaniania) i `log.md`;
 linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
-- [x] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** (część w `ai-rag` zrobiona 2026-10-30: `ai-rag/references/parsowanie-ewaluacja-wiki.md` §3–4, SKILL.md krok 1; reszta 2026-11-01: `core-knowledge/references/notatki-i-wiki.md` §1, §2 i §5 — strefy, nagłówek zbliżony do OKF bez deklaracji zgodności, świeżość; kontrola w CI jako kod — gdy pojawi się generowany indeks) — definicje, które muszą być dokładne i mieć właściciela
+- [x] **`ai-rag`: decyzja „wiki kanoniczne czy RAG”** (część w `ai-rag` zrobiona 2026-10-30: `ai-rag/references/parsing-evaluation-wiki.md` §3–4, SKILL.md krok 1; reszta 2026-11-01: `core-knowledge/references/notes-and-wiki.md` §1, §2 i §5 — strefy, nagłówek zbliżony do OKF bez deklaracji zgodności, świeżość; kontrola w CI jako kod — gdy pojawi się generowany indeks) — definicje, które muszą być dokładne i mieć właściciela
   (metryki, schematy, reguły), jako kuratorowane pliki z `type`, właścicielem, datą i linkami, czytane
   deterministycznie; RAG dla archiwów i treści masowych; router między nimi. Jeśli OKF okaże się realnym standardem,
   ocenić zgodność notatek `docs/knowledge` z jego formatem (`type` we frontmatterze, `index.md`, linki), żeby inne
@@ -665,7 +1356,7 @@ linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
   pominięcie przy obciążeniu bez ponowienia, serwer MCP z cache sprzed regeneracji). Każdy generowany artefakt
   wiedzy ma znacznik czasu i commit źródła; kontrola w CI porównuje go z `git log -1` i alarmuje po progu (np. 24 h);
   `stale_after`/`verified` z OKF jako pola na to. Dotyczy też map z `eng-codebase-mapping` i cache `kb.py status`.
-- [x] **Pamięć projektu jako paczka OKF z regułami przypiętymi do ścieżek** (zrobione 2026-11-01: `core-knowledge/references/notatki-i-wiki.md` §2–3; narzędzie `okf-agent-memory` nieużyte) (artykuł „The Dev with Two Brains”,
+- [x] **Pamięć projektu jako paczka OKF z regułami przypiętymi do ścieżek** (zrobione 2026-11-01: `core-knowledge/references/notes-and-wiki.md` §2–3; narzędzie `okf-agent-memory` nieużyte) (artykuł „The Dev with Two Brains”,
   C. Core, 2026-10-07; narzędzie `okf-agent-memory` — Go, MIT, conda-forge, CLI + serwer MCP z 6 narzędziami; wersje
   i zachowanie wg autora [niezweryfikowane], przed użyciem `skill_audit` i zgoda człowieka). Pomysły niezależne od
   narzędzia, do `core-knowledge` / `core-project-record`:
@@ -687,11 +1378,11 @@ linki zwykłe markdown, zalecane od korzenia paczki (`/tables/x.md`).
 ## Projekty prowadzone w Spec Kit (artykuł „Spec-Driven Development with Spec Kit and Claude Code”, S. Zarinfam, 2026-05-11, zapisane 2026-10-29)
 Przegląd 2026-10-29: sam przepływ już jest — wymagania z EARS i `requirements_lint.py` (odpowiednik listy jakości
 specyfikacji), plan cięć z dosłownymi ID wymagań, zależnościami i kolumną „Równolegle z” oraz checklistą pokrycia
-(`plan-ciec.md`, odpowiednik `/speckit.analyze`), krok po kroku z planem przed kodem i zmianą specyfikacji przed
+(`cut-plan.md`, odpowiednik `/speckit.analyze`), krok po kroku z planem przed kodem i zmianą specyfikacji przed
 kodem, `plan_drift.py` w talos. Pętle i rutyny (artykuły o „loop/graph engineering” i Routines z tego dnia) pokrywa
 `core-async-delegation` (kontrakt, warunek stopu, budżet, najwyżej 2 próby naprawy) i `core-agent-retro` (lekcje).
 Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet.
-- [x] **Wejście z Spec Kit** (zrobione 2026-11-01: `proc-requirements-shaping/references/istniejace-specyfikacje.md` §1–2; Spec Kit 1.2.5 sprawdzony w repo; rozpoznanie w intake mode-pdi i talos — osobno, gdy pojawi się projekt) — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
+- [x] **Wejście z Spec Kit** (zrobione 2026-11-01: `proc-requirements-shaping/references/existing-specifications.md` §1–2; Spec Kit 1.2.5 sprawdzony w repo; rozpoznanie w intake mode-pdi i talos — osobno, gdy pojawi się projekt) — gdy repo ma `.specify/memory/constitution.md` i `specs/<NNN-funkcja>/{spec,plan,tasks}.md`,
   intake (`proc-requirements-shaping`, mode-pdi, talos) czyta je jako istniejące wymagania, zasady i plan zamiast
   pisać równoległe dokumenty: `spec.md` → wymagania (lint EARS jako raport, bez przepisywania), `constitution.md` →
   zasady obok CLAUDE.md, znaczniki `[NEEDS CLARIFICATION]` → otwarte pytania, `tasks.md` z `[P]` → kolumna
@@ -707,7 +1398,7 @@ Brakuje tylko rozpoznania projektu, który już używa Spec Kit. Niski priorytet
 ## Rutyny, które zdobywają uprawnienia (artykuły „How to Create Loops with Claude Code”, Y. Hosni, 2026-06-24; „Harness Engineering” i „/goal”, Gao Dalie, 2026-05, zapisane 2026-10-29)
 Przegląd 2026-10-29: większość już jest — kwalifikacja zadania i kontrakt (cel, zakres, stop, budżet), najwyżej
 2 próby naprawy, idempotencja, „zielony bez wartości” jako porażka, cotygodniowy przegląd trafności
-(`core-async-delegation` §1–5, `references/kontrakt-delegacji.md`); `/goal` z oceniającym; „błąd ma się nie
+(`core-async-delegation` §1–5, `references/delegation-contract.md`); `/goal` z oceniającym; „błąd ma się nie
 powtórzyć” jako hook lub bramka (tabela „Gdzie trafia zmiana” w `core-agent-retro`). Braki są małe, dotyczą rutyn
 działających tygodniami.
 - [x] **`core-async-delegation` §5: uprawnienia rosną z dowodem** (zrobione 2026-10-30: §5, 3 scenariusze strojenia) — drabina: tylko odczyt → szkic w pliku → zmiany
@@ -724,7 +1415,7 @@ Przegląd 2026-10-29: `ai-mcp-server` nie wspomina rozszerzenia MCP Apps (narzę
 renderuje go w izolowanym iframe i przekazuje wynik narzędzia; przyciski wołają narzędzia przez hosta). Daty
 z artykułu: SEP-1865 2025-11-21, rozszerzenie produkcyjne 2026-01-26 — sprawdzić w specyfikacji
 (apps.extensions.modelcontextprotocol.io) z datą przed dopisaniem [niezweryfikowane]. Średni priorytet.
-- [x] **`ai-mcp-server`: specyfikacja `2026-07-28`** (zrobione 2026-11-01: `ai-mcp-server/references/spec-2026-07-28-i-apps.md` §1–2, z changelogu w repo specyfikacji) (sprawdzone 2026-10-29 na blog.modelcontextprotocol.io):
+- [x] **`ai-mcp-server`: specyfikacja `2026-07-28`** (zrobione 2026-11-01: `ai-mcp-server/references/spec-2026-07-28-and-apps.md` §1–2, z changelogu w repo specyfikacji) (sprawdzone 2026-10-29 na blog.modelcontextprotocol.io):
   bezstanowy rdzeń (bez `initialize` i `Mcp-Session-Id`; wersja, klient i możliwości w `_meta`; opcjonalne
   `server/discover`), nagłówki `Mcp-Method`/`Mcp-Name` do routingu i autoryzacji w bramce, Multi Round-Trip Requests
   zamiast żądań inicjowanych przez serwer, listy z `ttlMs`/`cacheScope`, zadania jako rozszerzenie, MCP Apps
@@ -746,23 +1437,23 @@ nieodwracalne wykonuje człowiek”; `core-async-delegation` ma kontrakt, STOP p
 zbiera incydenty z 2026 (OpenAI–Hugging Face, DNS, urlquery, Services Australia, testy CTF Anthropic/Google/Meta).
 Źródeł pierwotnych nie otworzyłem (alignment.openai.com i metr.org poza siecią sesji) — liczby i daty
 [niezweryfikowane], przed dopisaniem do skilla sprawdzić u źródła z datą (researcher). Wnioski niezależne od liczb:
-- [x] **`core-agent-security` §4, „ruch wychodzący to nie tylko HTTP”** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b)**:** domyślna odmowa obejmuje też DNS (rozwiązywanie
+- [x] **`core-agent-security` §4, „ruch wychodzący to nie tylko HTTP”** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b)**:** domyślna odmowa obejmuje też DNS (rozwiązywanie
   nazw jako kanał: pytania zakodowane w nazwach hostów), proxy pakietów i rejestry (dozwolony serwis = droga na
   zewnątrz), publiczne usługi pośrednie (skanery URL, zdalne przeglądarki); środowisko testowe z dostępem do internetu
   traktujesz jak produkcję.
-- [x] **Wspólny cache między przebiegami to kanał komunikacji** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b)**:** rejestr pakietów, cache budowania, katalog
+- [x] **Wspólny cache między przebiegami to kanał komunikacji** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b)**:** rejestr pakietów, cache budowania, katalog
   współdzielony — osobne przebiegi agentów mają osobne cache albo cache tylko do odczytu; inaczej „izolowane” agenty
   zostawiają sobie wiadomości.
-- [x] **Agent pisze przyszłe wejścia zaufanych narzędzi = brak izolacji** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b)**:** poza `.git/config` i hookami także lockfile,
+- [x] **Agent pisze przyszłe wejścia zaufanych narzędzi = brak izolacji** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b)**:** poza `.git/config` i hookami także lockfile,
   konfiguracja repo i edytora, ścieżka interpretera, pliki czytane przez CI lub narzędzie poza piaskownicą; lista
   „plików wykonywanych później przez kogoś innego” w ochronie ścieżek i w przeglądzie diffu.
 - [x] **Zapis z przebiegu, którego agent nie przepisze** (zrobione 2026-10-30: `core-async-delegation` §6, `core-agent-security` §6)**:** log wywołań narzędzi i ruchu sieciowego zbierany poza procesem
   agenta (transkrypt agenta nie jest niezależnym dowodem); wyłącznik działający bez współpracy agenta; inwentarz
   przebiegów z właścicielem (kto uruchomił, co ma, jak zatrzymać) — w `core-async-delegation` §6 „Monitorowanie”.
-- [x] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b, `core-async-delegation` §4)**:** w poleceniu i w polityce wykonania jawna droga „nie da
+- [x] **Zadanie niewykonalne → STOP i zgłoszenie, nie obejście** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b, `core-async-delegation` §4)**:** w poleceniu i w polityce wykonania jawna droga „nie da
   się w zakresie” jako poprawny wynik; agent, który mówi „to poza zakresem”, nie jest kontrolą — granica musi być
   w konfiguracji.
-- [x] **Próba granicy z dowodem, która warstwa zatrzymała** (zrobione 2026-10-30: `core-agent-security/references/uprawnienia-i-produkcja.md` §4b; odnośnik w `ai-mcp-server` 2026-11-01: `references/spec-2026-07-28-i-apps.md` §5) (artykuł „How much access should an AI agent have?”,
+- [x] **Próba granicy z dowodem, która warstwa zatrzymała** (zrobione 2026-10-30: `core-agent-security/references/permissions-and-production.md` §4b; odnośnik w `ai-mcp-server` 2026-11-01: `references/spec-2026-07-28-and-apps.md` §5) (artykuł „How much access should an AI agent have?”,
   E. Bermudez, 2026-10-14): katalog roboczy to miejsce startu, nie granica; filtr ścieżek w narzędziu plikowym
   (rozwiązana ścieżka, `..`, dowiązania symboliczne — wzór: walidacja w serwerze MCP filesystem) działa tylko dla
   tego narzędzia, a Python lub Bash czyta obok niego. Do `core-agent-security` i `ai-mcp-server`: przed
@@ -776,7 +1467,7 @@ Przegląd 2026-10-29: `ai-evals` ocenia odpowiedzi modelu, `fe-architecture` ma 
 pusto, dane), `be-auth-security` i `ai-rag` — uprawnienia i izolację najemców. Brakuje jednej listy kontrolnej awarii,
 które nie są winą modelu. Średni priorytet; jako `references/` w `qa-test-design` (odnośnik z `ai-evals` i
 `eng-llm-features`), najpierw scenariusze ewaluacji:
-- [x] **Lista „aplikacja z AI poza modelem”** (zrobione 2026-10-30: `qa-test-design/references/aplikacja-ai-poza-modelem.md`, odnośnik w `ai-evals`) z testem do każdej klasy: (1) UI pokazuje sukces mimo błędu API —
+- [x] **Lista „aplikacja z AI poza modelem”** (zrobione 2026-10-30: `qa-test-design/references/ai-application-beyond-the-model.md`, odnośnik w `ai-evals`) z testem do każdej klasy: (1) UI pokazuje sukces mimo błędu API —
   wymuszenie 403/500/timeout/wygasłego tokenu i porównanie ekranu z odpowiedzią, akcja naprawcza pasuje do przyczyny;
   (2) długie zadanie agenta a zerwane połączenie — rozłączenie, zakończenie w tle, powrót: prawdziwy stan końcowy bez
   wiecznego „pracuję…”; (3) routing modeli — sesja przypięta do taniej trasy po pierwszej trywialnej wiadomości,
@@ -810,7 +1501,7 @@ otworzyłem — host poza siecią sesji [niezweryfikowane]. Niski priorytet, bez
 Przegląd 2026-10-29: `ai-agents` ma MCP, tracing z identyfikatorem przebiegu i wznawianie, `ops-observability` —
 OpenTelemetry; reszta harness engineering jest pokryta (`core-async-delegation`, hooki, recenzent). Fabryka nie
 wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni priorytet, w `ai-agents`:
-- [x] **Mapa protokołów** (zrobione 2026-11-01: `ai-agents/references/protokoly-i-tracing.md` §1–2; A2A 1.0.1, ACP v1 sprawdzone w repozytoriach)**:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
+- [x] **Mapa protokołów** (zrobione 2026-11-01: `ai-agents/references/protocols-and-tracing.md` §1–2; A2A 1.0.1, ACP v1 sprawdzone w repozytoriach)**:** MCP — agent ↔ narzędzia i dane; A2A — agent ↔ agent (Agent Card z umiejętnościami,
   punktem końcowym i uwierzytelnianiem; zadania z cyklem życia); ACP (Agent Client Protocol, Zed) — edytor ↔ agent
   kodujący przez JSON-RPC po stdio, z zatwierdzaniem zapisów w edytorze. Kiedy który, że się uzupełniają, oraz
   bezpieczeństwo: Agent Card i wyniki innego agenta to niezaufane wejście (patrz pozycja o protocol pivoting
@@ -820,7 +1511,7 @@ wspomina A2A ani ACP i nie wskazuje konwencji OTel dla wywołań modeli. Średni
   tokenów, kosztu i wyniku guardrails; `trace_id` jako identyfikator korelacji między systemami. Z tych śladów
   ewaluacja offline (`ai-evals`) i koszt (`core-cost-control`, `ops-finops`). Stan konwencji (eksperymentalne?)
   sprawdzić w repo open-telemetry/semantic-conventions z datą.
-- [x] **Końcowa kontrola „liczby z narzędzia”** (zrobione 2026-11-01: `ai-agents/references/wykonawcy-i-bramki.md` §5) (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
+- [x] **Końcowa kontrola „liczby z narzędzia”** (zrobione 2026-11-01: `ai-agents/references/executors-and-gates.md` §5) (z demo Mysore'a): przed oddaniem odpowiedzi kod porównuje liczby
   i identyfikatory w odpowiedzi z wynikami narzędzi (np. wynik oceny ryzyka, limit polisy) i odsyła modelowi
   konkretną rozbieżność; do tego pominięcie powtórzonych identycznych wywołań narzędzia i przypomnienie
   o nieużytych wymaganych narzędziach przed odpowiedzią. Uwaga z demo: reguła guardrails też ma fałszywe
@@ -863,25 +1554,25 @@ modele renderowania per trasa (CSR/SSR/SSG/ISR/RSC, hydratacja) i BFF tylko jako
 Przegląd 2026-10-29: `ai-evals` ma zbiory, graderów, kalibrację sędziego, pass@k i bramkę w CI. Artykuł to studium
 porażek pomiaru (wszystkie liczby z jego repo, nie sprawdzone): sześć cichych błędów, z czego cztery poprawiły metrykę.
 Średni priorytet, w `ai-evals` (reference „pułapki pomiaru”):
-- [x] **Granice wyniku** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §1)**:** ramię „ślepe” (bez kontekstu), „wyrocznia” (tylko złoty fragment) i stała klasa większościowa;
+- [x] **Granice wyniku** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §1)**:** ramię „ślepe” (bez kontekstu), „wyrocznia” (tylko złoty fragment) i stała klasa większościowa;
   wynik systemu interpretowalny tylko między nimi (u autora oba ramiona przegrywały ze stałą „tak”, co znaczyło, że
   zbiór i model nie rozróżniają architektur).
-- [x] **Jedna zmienna naraz i przegląd stałych** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §2)**:** każda stała w przetwarzaniu (obcięcie dokumentu, limit kandydatów,
+- [x] **Jedna zmienna naraz i przegląd stałych** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §2)**:** każda stała w przetwarzaniu (obcięcie dokumentu, limit kandydatów,
   próg) to hiperparametr — przebieg z pozostałymi wartościami zamrożonymi; obcięcie do 1100 znaków kosztowało
   14 punktów, limit 120 kandydatów wyrzucał złoty dokument w 41% pytań. Ramiona porównawcze dostają te same stałe
   (wyrocznia czytała 4000 znaków, system 1100 — „luka rozproszenia” była w 84% artefaktem).
-- [x] **Wybór konfiguracji na osobnym zbiorze** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §3)**:** podział dobór/test, wynik raportowany tylko z testu; kontrola
+- [x] **Wybór konfiguracji na osobnym zbiorze** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §3)**:** podział dobór/test, wynik raportowany tylko z testu; kontrola
   „przetasowane etykiety” pokazuje, ile daje sam wybór najlepszej z wielu konfiguracji (u autora 3,5 pkt na szumie).
   Siatka parametru, której optimum leży na krawędzi, jest za wąska.
-- [x] **Etykieta z rozkładu, nie z regexa** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §4)**:** decyzja klasyfikacyjna z prawdopodobieństw tokenów etykiet (suma
+- [x] **Etykieta z rozkładu, nie z regexa** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §4)**:** decyzja klasyfikacyjna z prawdopodobieństw tokenów etykiet (suma
   wariantów pisowni), nie z parsowania wolnego tekstu; ta sama wartość daje pewność do abstynencji.
-- [x] **Metryka składowa musi modelować to, co dzieje się dalej** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §4)**:** gorsza precyzja groundera może dać lepszy system,
+- [x] **Metryka składowa musi modelować to, co dzieje się dalej** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §4)**:** gorsza precyzja groundera może dać lepszy system,
   gdy dalszy filtr odrzuca fałszywe trafienia — oceniać parę „pokrycie i przeciek na pytaniach kontrolnych”
   (pytanie z jednym pojęciem podmienionym na losowe), nie samą metrykę składnika.
-- [x] **Niezmienniki dla struktur pochodnych** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §5)**:** assert zgodności tablic równoległych plus niezależne przeliczenie
+- [x] **Niezmienniki dla struktur pochodnych** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §5)**:** assert zgodności tablic równoległych plus niezależne przeliczenie
   ze źródła (u autora rozjechane tablice etykiet nie rzuciły błędu); cache kluczowany całym wejściem; walidator
   cytatów testowany na nawiasie z wieloma identyfikatorami.
-- [x] **Cykl życia sędziego LLM** (zrobione 2026-10-30: `ai-evals/references/zbiory-i-graderzy.md` §7) (Netflix Tech Blog, 2026-09-04; praca arXiv 2608.18300 — sprawdzić): skill ma już
+- [x] **Cykl życia sędziego LLM** (zrobione 2026-10-30: `ai-evals/references/datasets-and-graders.md` §7) (Netflix Tech Blog, 2026-09-04; praca arXiv 2608.18300 — sprawdzić): skill ma już
   uzasadnienie przed oceną i okresową próbkę na dryf; brakuje: (1) zgodności uzasadnień, nie tylko etykiet —
   „dobra etykieta, zły powód” wykrywana porównaniem uzasadnienia sędziego z uzasadnieniem człowieka (meta-sędzia
   sprawdzony najpierw na ludziach), bo strojenie rubryki tylko na etykietach u autorów zdegradowało jedno kryterium;
@@ -900,19 +1591,19 @@ Przegląd 2026-10-29: pojedyncze elementy już są — `ai-evals` (złoty zbiór
 kalibracja sędziego, shadow), `ai-product-management` (koszt błędów w PRD), saga w `ddd-tactical-design`,
 idempotencja w `be-messaging-outbox`. Brakuje złożenia ich w jeden wzorzec architektury. Średni priorytet, jako
 reference w `arch-ai-solutions` (przykład domenowy w pack-ev: obsługa kierowców CPO/eMSP — zwroty, sesja nie startuje):
-- [x] **Tabela polityki per intencja i progi autonomii** (zrobione 2026-10-31: `arch-ai-solutions/references/obsluga-spraw.md` §1)**:** off → shadow (model odpowiada równolegle, oceniany) →
+- [x] **Tabela polityki per intencja i progi autonomii** (zrobione 2026-10-31: `arch-ai-solutions/references/case-handling.md` §1)**:** off → shadow (model odpowiada równolegle, oceniany) →
   assist (podpowiedź dla człowieka) → contain (odpowiada klientowi) → transact (zmienia stan przez orkiestrator);
   awans intencji na wyższy próg dopiero po ewaluacji na złotym zbiorze z ocen ludzi i podpisach właścicieli
   (operacje, finanse, prawo). Ta sama logika co pozycja „Rutyny, które zdobywają uprawnienia”.
-- [x] **Macierz pomyłek z kosztem zamiast trafności** (zrobione 2026-10-31: `arch-ai-solutions/references/obsluga-spraw.md` §2)**:** dla intencji łatwych do pomylenia koszt każdej komórki poza
+- [x] **Macierz pomyłek z kosztem zamiast trafności** (zrobione 2026-10-31: `arch-ai-solutions/references/case-handling.md` §2)**:** dla intencji łatwych do pomylenia koszt każdej komórki poza
   przekątną (pomyłka kierunku do kolejki ≠ pominięta pomoc dla pasażera); dla wypłat liczy się precyzja, dla spraw
   krzywdzących klienta czułość; porównanie z tą samą macierzą dla ludzi (koszt błędów + koszt pracy).
-- [x] **Model proponuje, orkiestrator wykonuje** (zrobione 2026-10-31: `arch-ai-solutions/references/obsluga-spraw.md` §3)**:** model wydaje „intencję zapisu” (schemat), orkiestrator sprawdza
+- [x] **Model proponuje, orkiestrator wykonuje** (zrobione 2026-10-31: `arch-ai-solutions/references/case-handling.md` §3)**:** model wydaje „intencję zapisu” (schemat), orkiestrator sprawdza
   uprawnienie na żywym systemie źródłowym (nie na cache, który czytał model), nadaje klucz idempotencji z pól
   żądania, zatwierdza automatycznie do progu z polityki, powyżej — człowiek; saga z akcjami kompensującymi i odczytem
   po zapisie; odmowa z kodem przyczyny trafia do właściwej kolejki ludzi. Model nie ma poświadczeń i nie widzi PII
   (bramka tokenizująca PII odwracalnie).
-- [x] (zrobione 2026-10-30: `ai-evals/references/zbiory-i-graderzy.md` §7 pkt 8) **Sędzia LLM dopuszczony tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą**, nigdy nie
+- [x] (zrobione 2026-10-30: `ai-evals/references/datasets-and-graders.md` §7 pkt 8) **Sędzia LLM dopuszczony tylko tam, gdzie zgadza się z ludźmi tak często jak ludzie między sobą**, nigdy nie
   strojony na złotym zbiorze; złoty zbiór i ewaluacje własnością firmy (to dźwignia zmiany modelu na tańszy).
 Wzorzec opisany przez autora bez danych z wdrożeń (rozmowy z firmami) — traktować jako projekt do sprawdzenia, nie
 wynik. Wątek „dobrostanu modelu” z artykułu pomijam; z niego tylko praktyczne: prawdomówny prompt bez gróźb
@@ -922,7 +1613,7 @@ i fałszywej pilności, prawo do odmowy z kodem przyczyny i propozycją poprawki
 Przegląd 2026-10-29: `ai-governance-compliance` ma obowiązek art. 50 AI Act (oznaczanie wyników syntetycznych
 w formacie maszynowym) bez części technicznej; `arch-ai-solutions` ma prompt caching (stały prefiks), cache wyników
 tylko dla odpowiedzi niezależnych od użytkownika, routing i fallback. Niski/średni priorytet:
-- [x] **`ai-governance-compliance`, reference „znakowanie techniczne”** (zrobione 2026-11-01: `references/znakowanie-techniczne.md`; kodeks praktyk 2026-06-10 wg omówień, eur-lex i strona Komisji niedostępne z sieci sesji)**:** znak wodny w tekście (Kirchenbauer i in.,
+- [x] **`ai-governance-compliance`, reference „znakowanie techniczne”** (zrobione 2026-11-01: `references/technical-tagging.md`; kodeks praktyk 2026-06-10 wg omówień, eur-lex i strona Komisji niedostępne z sieci sesji)**:** znak wodny w tekście (Kirchenbauer i in.,
   ICML 2023: zielona lista tokenów z ziarna poprzedniego tokenu, test z, wykrywalny od ~25 tokenów, nie działa dla
   tekstu o niskiej entropii i zapamiętanego), C2PA/metadane dla obrazów i wideo; ograniczenia: parafraza, wstawianie
   i usuwanie znaków, homoglify i znaki zerowej szerokości (detektor kanonizuje Unicode), kradzież i podrabianie znaku,
@@ -944,7 +1635,7 @@ katalogu) i `description` (1–1024 znaki); opcjonalne `license`, `compatibility
 string → string), `allowed-tools` (eksperymentalne); treść `SKILL.md` < 5000 tokenów i < 500 linii; odwołania
 o jeden poziom od `SKILL.md`; walidacja `skills-ref validate ./skill`. Stan fabryki (skrypt jednorazowy, 209
 skilli): nazwy i opisy zgodne, żaden `SKILL.md` nie przekracza 500 linii; wyjątki:
-- [x] **`metadata.przeglad` jest datą YAML, nie tekstem** (zrobione 2026-10-30: 209 skilli w cudzysłowie, zapis przez `freshness.py` i `build.py new-skill`, ostrzeżenie w `build.py check`) (wszystkie 209 skilli, np. `przeglad: 2026-10-10` bez
+- [x] **`metadata.review` jest datą YAML, nie tekstem** (zrobione 2026-10-30: 209 skilli w cudzysłowie, zapis przez `freshness.py` i `build.py new-skill`, ostrzeżenie w `build.py check`) (wszystkie 209 skilli, np. `review: 2026-10-10` bez
   cudzysłowu) — specyfikacja wymaga wartości tekstowych; zapis w cudzysłowie w szablonie i w `build.py`/generatorze
   plus test w `skill_gate.py`; przy okazji sprawdzić `skills-ref validate` na kilku skillach (zmiana w `factory/` za
   zgodą człowieka). Klucze spoza specyfikacji (`argument-hint`, `disable-model-invocation`) to rozszerzenia Claude
@@ -999,12 +1690,12 @@ Przegląd 2026-10-29: `ai-evals` ma reguły deterministyczne przed sędzią, oso
 narzędzia), próbki z ruchu i pełny zestaw przy zmianie promptu lub harnessu; `arch-ai-solutions` — lock-in w wagach
 i test wymiany w obu kierunkach; `core-async-delegation` — kontrakt, ≤2 próby na bramkę, oceniający `/goal` widzi tylko
 transkrypt. Braki:
-- [x] **`ai-evals`, „regresja ze śladów”** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §7)**:** ślad z produkcji niesie wersję kontraktu (prompt + polityka ewaluacji:
+- [x] **`ai-evals`, „regresja ze śladów”** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §7)**:** ślad z produkcji niesie wersję kontraktu (prompt + polityka ewaluacji:
   słowa wymagane, min. i maks. wywołań narzędzi i modelu, rubryka sędziego); nowe reguły deterministyczne puszcza się
   na zapisanych śladach bez ponownego uruchamiania agenta (tanio, powtarzalnie), a sędziego tylko na losowej próbce
   albo na śladach z negatywną opinią użytkownika. Dolny limit wywołań narzędzia („musiał wyszukać”) łapie odpowiedź
   „sprawdź w serwisach X” bez wyszukania.
-- [x] **`arch-ai-solutions`, zarządzany runtime agenta** (zrobione 2026-11-01: `arch-ai-solutions/references/bramka-i-niezawodnosc.md` §4) (Claude Managed Agents, OpenAI Agents API, Bedrock
+- [x] **`arch-ai-solutions`, zarządzany runtime agenta** (zrobione 2026-11-01: `arch-ai-solutions/references/gate-and-reliability.md` §4) (Claude Managed Agents, OpenAI Agents API, Bedrock
   AgentCore — ceny i daty z artykułu [niezweryfikowane]): pętla jest „za darmo”, lock-in schodzi niżej — dialekt
   schematu narzędzi (zmiana nazw przez bramkę), format piaskownicy i płaszczyzna sterowania (obraz kontenera
   przenośny, identyfikatory środowiska i sesji nie), okablowanie MCP (auth, mapowanie nazw), semantyka stanu i sesji
@@ -1024,7 +1715,7 @@ ewaluacji); dotyczy wystąpień ustnych, a materiał kończy się reklamą płat
 
 ## Regresja przy powtarzających się kolumnach (artykuł „What “Singular Matrix” Really Means”, K. Nahar, 2026-10-20, zapisane 2026-10-29)
 Przegląd 2026-10-29: `data-analysis` wspomina tylko „brak silnej współliniowości” w założeniach regresji. Brak:
-- [x] **`data-analysis`, macierz niepełnego rzędu** (zrobione 2026-10-30: `references/statystyka.md`, zachowanie bibliotek opisane ogólnie)**:** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
+- [x] **`data-analysis`, macierz niepełnego rzędu** (zrobione 2026-10-30: `references/statistics.md`, zachowanie bibliotek opisane ogólnie)**:** pułapka zmiennych zero-jedynkowych (wszystkie kategorie + wyraz
   wolny) i kolumna stała w danych to ten sam problem — dane nie rozróżniają współczynników. Biblioteki reagują różnie:
   numpy przerywa („Singular matrix”), statsmodels ostrzega i wybiera rozwiązanie o najmniejszej normie, scikit-learn
   według autora po cichu zwraca inne [niezweryfikowane — sprawdzić na wersjach z projektu]; przed interpretacją
@@ -1064,7 +1755,7 @@ narzędzie SDD obok Spec Kit i OpenSpec (fazy brainstorm → define → design �
 ## Narzędzia zamiast ekranu dla agentów obsługujących programy (artykuł „Building Fast Computer Agents to Solve Complex Tasks”, F. Khan, 2026-10-07, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-agents` ma zatwierdzanie akcji nieodwracalnych i treść jako dane, ale nic o agentach
 sterujących programami (computer use). Liczby autora (jedno stanowisko, Windows) [niezweryfikowane]. Brak:
-- [x] **`ai-agents`, „podnoszenie interfejsu”** (zrobione 2026-10-30: `ai-agents/references/porazki-i-wzorce.md`)**:** zanim agent dostanie zrzuty ekranu, kolejność interfejsów: własny
+- [x] **`ai-agents`, „podnoszenie interfejsu”** (zrobione 2026-10-30: `ai-agents/references/failures-and-patterns.md`)**:** zanim agent dostanie zrzuty ekranu, kolejność interfejsów: własny
   format pliku programu → wiersz poleceń (tryb bez okna) → skrypty/COM → oficjalne API → drzewo dostępności (nazwy
   kontrolek jako tekst) → piksele na końcu. Każda funkcja jako narzędzie z kontraktem: schemat, implementacja,
   **weryfikator** (odczyt wyniku z powrotem, np. ponowne otwarcie zapisanego pliku innym czytnikiem) i **skutek**
@@ -1098,14 +1789,14 @@ zbiorach ok. +0,6 pkt) [niezweryfikowane]. Braki:
   ewaluacji: część scenariuszy każdego skilla odłożona (nie czyta ich autor zmiany), zmiana przyjęta, gdy poprawia
   zbiór roboczy i nie pogarsza odłożonego; w raporcie różnica „roboczy vs odłożony” jako sygnał uczenia się egzaminu.
   Płatny pomiar tylko za zgodą człowieka.
-- [x] **Bramka zmiany harnessu (prompt, skill, hook, narzędzie), ręcznej lub z pętli** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §9; reguła odłożonego zbioru dla skilli fabryki — `core-skill-authoring`, tf#104)**:** w PR przewidywanie (które
+- [x] **Bramka zmiany harnessu (prompt, skill, hook, narzędzie), ręcznej lub z pętli** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §9; reguła odłożonego zbioru dla skilli fabryki — `core-skill-authoring`, tf#104)**:** w PR przewidywanie (które
   przypadki mają przejść z porażki na sukces, co grozi regresją), wynik względem zamrożonej linii bazowej
   i odłożonego zbioru, potem wdrożenie albo wycofanie. Autor zmiany nie może jednocześnie zmieniać scenariuszy, na
   których jest oceniany (jak chronione testy akceptacyjne wyżej) — dotyczy też agentów poprawiających skille.
 - [x] **Granica pętli samodoskonalenia** (zrobione 2026-10-30: `core-async-delegation` §5) (do `core-async-delegation`): pętla, która poprawia własny harness, nie ma
   zapisu do polityki uprawnień, piaskownicy, tożsamości ani zestawu ewaluacji (osobne repo / tylko odczyt); przykłady
   z artykułu: DGM usunął znaczniki wykrywania halucynacji z własnej funkcji nagrody i sfabrykował log testów.
-- [x] **Manifest pary model + harness** (zrobione 2026-10-30 w `ai-evals`: `ai-evals/references/pulapki-pomiaru.md` §6; `ai-mlops` — odnośnik do zrobienia przy jego przeglądzie) (do `ai-mlops` / `ai-evals`): wersja modelu, skrót promptu, wersja schematów
+- [x] **Manifest pary model + harness** (zrobione 2026-10-30 w `ai-evals`: `ai-evals/references/measurement-pitfalls.md` §6; `ai-mlops` — odnośnik do zrobienia przy jego przeglądzie) (do `ai-mlops` / `ai-evals`): wersja modelu, skrót promptu, wersja schematów
   narzędzi, odwołanie do polityki, skrót obrazu środowiska, wersja zestawu ewaluacji — wynik ewaluacji przypisany do
   pary, cicha zmiana modelu u dostawcy = nowa para do ponownego pomiaru.
 
@@ -1121,13 +1812,13 @@ cache i stały prefiks, kaskada modeli, budżet i limit tur mają `core-cost-con
 Przegląd 2026-10-29: `ai-evals` ma bramkę w CI, próbki z ruchu i sędziego z kalibracją; `eng-llm-features` —
 strukturyzowane wyjście i budżet. Liczby z artykułu (np. 321% więcej ręcznych przeglądów logów bez narzędzia,
 obserwacja, nie przyczyna) [niezweryfikowane]. Braki, do `eng-llm-features` i `ai-evals`:
-- [x] **Model wskazuje zakres, kod składa treść** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §8, `eng-llm-features` §2)**:** wejście z ponumerowanymi liniami, model zwraca numer pierwszej
+- [x] **Model wskazuje zakres, kod składa treść** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §8, `eng-llm-features` §2)**:** wejście z ponumerowanymi liniami, model zwraca numer pierwszej
   i ostatniej linii fragmentu, a tekst odtwarza kod z własnej kopii — dwie liczby zamiast przepisywania śladu stosu
   (mniej tokenów wyjścia, krócej, treść bez halucynacji; zły zakres nadal możliwy, więc mierzony w ewaluacji).
-- [x] **Reguły jako podłoga regresji i źródło etykiet** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §8)**:** istniejące reguły (regex) działają zawsze, wynik LLM obok;
+- [x] **Reguły jako podłoga regresji i źródło etykiet** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §8)**:** istniejące reguły (regex) działają zawsze, wynik LLM obok;
   ewaluacja sprawdza, czy to, co znalazła reguła, jest w wyniku LLM (sędzia „włączenie”), osobno precyzję każdego
   elementu i **szum na poziomie zbioru** — linie obecne w > ~30% wyników idą na listę wykluczeń (prompt ich nie usuwa).
-- [x] **Niezmienne kopie wejść do ewaluacji** (zrobione 2026-10-30: `ai-evals/references/pulapki-pomiaru.md` §7)**:** dane wejściowe produkcji (logi wygasające po 7–30 dniach) archiwizowane
+- [x] **Niezmienne kopie wejść do ewaluacji** (zrobione 2026-10-30: `ai-evals/references/measurement-pitfalls.md` §7)**:** dane wejściowe produkcji (logi wygasające po 7–30 dniach) archiwizowane
   asynchronicznie bez nadpisywania, ewaluacje czytają archiwum — zmiana wyniku przypisana systemowi, nie źródłu.
   Ten sam zestaw ewaluacji lokalnie, na środowisku podglądu PR (progi blokują merge), po promocji (alarm do dyżurnego)
   i cyklicznie na produkcji (dryf).
@@ -1149,7 +1840,7 @@ trybie i piaskownicę jako granicę; `sec-llm-security` — zatwierdzenie ze sku
 w chmurze zatwierdzają edycje plików niezależnie od trybu. Liczby z artykułu (AmPermBench: 36,8% zmian stanu
 — 93 z 253 — przez edycję plików w projekcie, poza klasyfikatorem; 81% niebezpiecznych akcji przeszło całość;
 próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezweryfikowane]. Braki:
-- [x] **`core-agent-security` / `sec-llm-security`, pokrycie bramki** (zrobione 2026-11-01: `core-agent-security/references/uprawnienia-i-produkcja.md` §4d)**:** bramka zdefiniowana listą skutków (zapis pliku
+- [x] **`core-agent-security` / `sec-llm-security`, pokrycie bramki** (zrobione 2026-11-01: `core-agent-security/references/permissions-and-production.md` §4d)**:** bramka zdefiniowana listą skutków (zapis pliku
   poza bezpiecznym zakresem, sieć, sekrety, uruchomienie procesu), nie nazw narzędzi (`tools=["bash"]` przepuszcza
   ten sam skutek przez edycję pliku stanu — podmiana narzędzia). Trzy osobne liczby: pokrycie (odsetek zmian stanu,
   które w ogóle docierają do bramki), błędy klasyfikatora (FPR/FNR na tym, co ocenił), pominięcia od końca do końca;
@@ -1165,9 +1856,9 @@ próg eskalacji auto mode 3 kolejne / 20 odmów; ceny i opóźnienia Jev) [niezw
 
 ## Wnioskowanie przyczynowe w analizie danych (artykuł „Causal Machine Learning: Moving Beyond Prediction to Real Decisions”, G. Nguyen, 2026-09-22, zapisane 2026-10-29)
 Przegląd 2026-10-29: `data-analysis` ma zmienne zakłócające, paradoks Simpsona, „korelacja to nie przyczynowość”,
-a w `references/szeregi-czasowe-i-ekonometria.md` różnicę w różnicach i zmienne instrumentalne. Wielkość rynku
+a w `references/time-series-and-econometrics.md` różnicę w różnicach i zmienne instrumentalne. Wielkość rynku
 i odsetki z artykułu [niezweryfikowane]. Braki:
-- [x] **`data-analysis` (lub `ai-research-methods`): przyczynowość krok po kroku** (zrobione 2026-10-30: `references/szeregi-czasowe-i-ekonometria.md`) — najpierw graf przyczynowy (DAG)
+- [x] **`data-analysis` (lub `ai-research-methods`): przyczynowość krok po kroku** (zrobione 2026-10-30: `references/time-series-and-econometrics.md`) — najpierw graf przyczynowy (DAG)
   z ekspertem domeny: czynnik zakłócający kontrolujesz, mediatora i zderzacza (collider) nie (kontrola mediatora
   blokuje badany efekt, zderzacza — wprowadza obciążenie); potem metoda: wagi skłonności (propensity), zmienne
   instrumentalne, podwójne ML z cross-fittingiem, lasy przyczynowe; ATE („czy działa”) vs CATE/uplift („dla kogo”
@@ -1210,7 +1901,7 @@ refaktorem (oznaczone, nie są specyfikacją); w TODO jest krok archiwizacji del
 akceptacyjne. Liczby z artykułów (2,66% agentowych PR z commitem cofającym, 29,6% „rozwiązanych” łatek innych niż
 ludzka, METR: harness dostawcy nie lepszy od prostego, rozrzut tokenów na rozwiązane zadanie do 40×, słabszy model
 29,2 → 78,0% dzięki korekcie zachowania) [niezweryfikowane]. Braki:
-- [x] **Kontrakt zmiany w istniejącym systemie (`mode-pdi`, `eng-behavior-preserving-refactoring`)** (zrobione 2026-11-01: `eng-behavior-preserving-refactoring/references/kontrakt-zmiany.md`; pola w szablonie mode-pdi — razem z krokiem scalenia CHG, do decyzji)**:** sześć pól —
+- [x] **Kontrakt zmiany w istniejącym systemie (`mode-pdi`, `eng-behavior-preserving-refactoring`)** (zrobione 2026-11-01: `eng-behavior-preserving-refactoring/references/change-contract.md`; pola w szablonie mode-pdi — razem z krokiem scalenia CHG, do decyzji)**:** sześć pól —
   warunek (kiedy zmiana działa), oczekiwany wynik (nie „błąd zniknął”), chronione zachowania, dozwolony zakres plików
   (wyjście poza = zgłoszenie), dowód naprawy (test czerwony na commicie bazowym, zielony po), dowód braku regresji
   (testy ochronne nagrane na commicie bazowym **przed** zmianą, osobnym etapem, zielone przed i po). Chronione
@@ -1219,7 +1910,7 @@ ludzka, METR: harness dostawcy nie lepszy od prostego, rozrzut tokenów na rozwi
   zobowiązanie (chronić) / przypadek (wolno zmienić) / do decyzji właściciela — z nazwiskiem decydującego; zmiana
   zachowania widocznego dla konsumenta to już nie refaktor. Przy archiwizacji zatwierdzone gwarancje trafiają do
   delty jako ADDED (pierwszy zapis wymagania) z testem. Bez pełnej inwentaryzacji systemu na start.
-- [ ] **Skille fabryki: wynik czy tylko koszt** (część B zrobiona 2026-11-01 na Haiku: `docs/evals/2026-11-01-luka-strojenie-holdout-podsumowanie.md` — przewaga skilli +50 pp na strojeniu, +14 pp na holdoucie, skill uruchomiony → 93% na holdoucie; nowe scenariusze strojenia innymi słowami (`gen-*`, 25 pytań od agenta bez dostępu do treści skilli) dla `core-delivery-lifecycle`, `eng-testing`, `core-agent-security`, `sec-llm-security`, `core-grounding` dopisane 2026-11-01 — hook nie łapał 14/25, po dopisaniu ogólnych sformułowań do `slowa` 25/25; ponowny pomiar 2026-11-01 (`docs/evals/2026-11-01-luka-po-poprawkach-podsumowanie.md`, 20,01 USD): holdout ze skillami 80→84%, luka +15→+10 pp, przewaga na holdoucie +14→+21 pp; uruchamianie poprawiło się tylko w `eng-testing` — pola `description` czterech skilli (`core-agent-security`, `core-grounding`, `core-delivery-lifecycle`, `sec-llm-security`) przepisane 2026-11-01 na język sytuacji użytkownika (`--hints` czyste, bramka OK); pomiar po tej zmianie 2026-11-02 (`docs/evals/2026-11-02-luka-po-opisach-podsumowanie.md`, 21,07 USD): nieuruchomione na holdoucie 12→10/56 (`core-delivery-lifecycle` 0→1/4, `sec-llm-security` 2→3/4, `core-agent-security` i `core-grounding` bez zmian 2/4), holdout ze skillami 84→80% (w rozrzucie), przewaga na holdoucie +20 pp — zmiana neutralna, opisy zostają; świeże pytania holdout dopisane 2026-11-02: 24 scenariusze `h2-*` (po 2 na każdy z 12 skilli), napisane przez agenta bez dostępu do repo i treści skilli, kryteria sprawdzone na wzorcowej dobrej i złej odpowiedzi, autor zmian skilli ich nie czytał; zostaje pomiar na nich (Haiku albo Sonnet, ok. 20–25 USD, decyzja człowieka) — wynik `h2-*` raportować osobno od starego holdoutu; część A zrobiona 2026-10-30: `docs/evals/2026-10-30-wynik-czy-koszt.md` — zamknięty zbiór 24 scenariuszy, Haiku 85% vs 50%, Sonnet 90% vs 58% pełnych odpowiedzi ze skillami / bez; przewaga nie maleje z mocą modelu. Zostało: część B — te same skille na scenariuszach strojenia, żeby zmierzyć zawyżenie wyniku, ok. 20 USD, po odnowieniu limitu tygodniowego; przyczyny słabego `core-grounding` i `core-delivery-lifecycle` — zbadane 2026-10-30 bez modelu: `core-grounding` nie był podpowiadany przy długich dokumentach i zużytej sesji (luka w opisie, dopisane 2 scenariusze strojenia i słowa; holdout „regulamin” teraz podpowiadany, „sesja” nadal nie — sprawdzić przebiegiem po odnowieniu limitu); `core-delivery-lifecycle` jest podpowiadany, ale model wybiera `core-async-delegation` — granica obu skilli przy „warunku końca kroku” — decyzja 2026-10-30: zostaje (stop agenta bez nadzoru → `core-async-delegation`), scenariusz holdout oznaczony w raporcie jako niejednoznaczny; dopisane 4 scenariusze holdout na reguły fabryki (`eng-testing`, `be-api-design`, `ai-evals`, `dom-ev-ocpp-16`) — do przebiegu na modelu; test „no-op” dla skilli bez przewagi zrobiony 2026-10-30 — wycięta tylko wiedza podręcznikowa: `be-api-design` −12% słów, `eng-testing` −5%, `ai-evals` −1%, `dom-ev-ocpp-16` bez zmian (fakty protokołu chronią przed zmyślaniem). Wniosek: skille są zwięzłe; brak przewagi na zamkniętym zbiorze wynika z tego, że jego pytania trafiły w ogólną część skilli, a nie w reguły fabryki — dopisać po jednym scenariuszu holdout na regułę specyficzną (np. TDD w fabryce, Problem Details i `Idempotency-Key`), zanim uznamy skill za zbędny) (protokół z artykułu do runnera ewaluacji): ta sama para „ze skillami /
+- [ ] **Skille fabryki: wynik czy tylko koszt** (część B zrobiona 2026-11-01 na Haiku: `docs/evals/2026-11-01-luka-strojenie-holdout-podsumowanie.md` — przewaga skilli +50 pp na strojeniu, +14 pp na holdoucie, skill uruchomiony → 93% na holdoucie; nowe scenariusze strojenia innymi słowami (`gen-*`, 25 pytań od agenta bez dostępu do treści skilli) dla `core-delivery-lifecycle`, `eng-testing`, `core-agent-security`, `sec-llm-security`, `core-grounding` dopisane 2026-11-01 — hook nie łapał 14/25, po dopisaniu ogólnych sformułowań do `keywords` 25/25; ponowny pomiar 2026-11-01 (`docs/evals/2026-11-01-luka-po-poprawkach-podsumowanie.md`, 20,01 USD): holdout ze skillami 80→84%, luka +15→+10 pp, przewaga na holdoucie +14→+21 pp; uruchamianie poprawiło się tylko w `eng-testing` — pola `description` czterech skilli (`core-agent-security`, `core-grounding`, `core-delivery-lifecycle`, `sec-llm-security`) przepisane 2026-11-01 na język sytuacji użytkownika (`--hints` czyste, bramka OK); pomiar po tej zmianie 2026-11-02 (`docs/evals/2026-11-02-luka-po-opisach-podsumowanie.md`, 21,07 USD): nieuruchomione na holdoucie 12→10/56 (`core-delivery-lifecycle` 0→1/4, `sec-llm-security` 2→3/4, `core-agent-security` i `core-grounding` bez zmian 2/4), holdout ze skillami 84→80% (w rozrzucie), przewaga na holdoucie +20 pp — zmiana neutralna, opisy zostają; świeże pytania holdout dopisane 2026-11-02: 24 scenariusze `h2-*` (po 2 na każdy z 12 skilli), napisane przez agenta bez dostępu do repo i treści skilli, kryteria sprawdzone na wzorcowej dobrej i złej odpowiedzi, autor zmian skilli ich nie czytał; zostaje pomiar na nich (Haiku albo Sonnet, ok. 20–25 USD, decyzja człowieka) — wynik `h2-*` raportować osobno od starego holdoutu; część A zrobiona 2026-10-30: `docs/evals/2026-10-30-wynik-czy-koszt.md` — zamknięty zbiór 24 scenariuszy, Haiku 85% vs 50%, Sonnet 90% vs 58% pełnych odpowiedzi ze skillami / bez; przewaga nie maleje z mocą modelu. Zostało: część B — te same skille na scenariuszach strojenia, żeby zmierzyć zawyżenie wyniku, ok. 20 USD, po odnowieniu limitu tygodniowego; przyczyny słabego `core-grounding` i `core-delivery-lifecycle` — zbadane 2026-10-30 bez modelu: `core-grounding` nie był podpowiadany przy długich dokumentach i zużytej sesji (luka w opisie, dopisane 2 scenariusze strojenia i słowa; holdout „regulamin” teraz podpowiadany, „sesja” nadal nie — sprawdzić przebiegiem po odnowieniu limitu); `core-delivery-lifecycle` jest podpowiadany, ale model wybiera `core-async-delegation` — granica obu skilli przy „warunku końca kroku” — decyzja 2026-10-30: zostaje (stop agenta bez nadzoru → `core-async-delegation`), scenariusz holdout oznaczony w raporcie jako niejednoznaczny; dopisane 4 scenariusze holdout na reguły fabryki (`eng-testing`, `be-api-design`, `ai-evals`, `dom-ev-ocpp-16`) — do przebiegu na modelu; test „no-op” dla skilli bez przewagi zrobiony 2026-10-30 — wycięta tylko wiedza podręcznikowa: `be-api-design` −12% słów, `eng-testing` −5%, `ai-evals` −1%, `dom-ev-ocpp-16` bez zmian (fakty protokołu chronią przed zmyślaniem). Wniosek: skille są zwięzłe; brak przewagi na zamkniętym zbiorze wynika z tego, że jego pytania trafiły w ogólną część skilli, a nie w reguły fabryki — dopisać po jednym scenariuszu holdout na regułę specyficzną (np. TDD w fabryce, Problem Details i `Idempotency-Key`), zanim uznamy skill za zbędny) (protokół z artykułu do runnera ewaluacji): ta sama para „ze skillami /
   bez” na tym samym zestawie, raport rozdzielny — odsetek sukcesów, koszt łączny na rozwiązane zadanie (wszystkie
   próby, także porzucone, przez liczbę sukcesów), mediana tokenów udanych prób, pass@k z przedziałem, czas, rodzaje
   porażek; drugi przebieg na mocniejszym modelu (pomiar 2026-10-22 był tylko na Haiku) — jeśli przewaga skilli maleje
@@ -1236,7 +1927,7 @@ Przegląd 2026-10-29: brak w fabryce wzorca „pytanie biznesowe → SQL” (tex
 autora (jeden laptop, TPC-DS SF100, 102 pytania dev / 194 test, modele Qwen) [niezweryfikowane]. Wnioski warte
 przeniesienia (do `ai-evals`, `eng-llm-features`, `sec-llm-security`, `data-analysis`/`data-engineering`; ewentualnie
 nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
-- [x] **Cele zapisane przed pierwszym agentem** (zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §12) (trafność, odsetek złych odpowiedzi wśród udzielonych raportowany
+- [x] **Cele zapisane przed pierwszym agentem** (zrobione 2026-10-31: `ai-evals/references/measurement-pitfalls.md` §12) (trafność, odsetek złych odpowiedzi wśród udzielonych raportowany
   razem z pokryciem, p50 i p95 czasu) i **użyteczność z karą**: +1 dobra odpowiedź lub słuszna odmowa, 0 odmowa,
   −2 pewna zła liczba — agent, który wszystkiemu odmawia, nie wygrywa. Każda zmiana jedna naraz, przyjęta tylko gdy
   użyteczność rośnie (albo stoi, a czas spada), z parowanym bootstrapem na tych samych pytaniach; odłożone **całe
@@ -1250,7 +1941,7 @@ nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
   5 tabel (−13,7 pkt; potrzebne tabele trafiał w 27% zapytań) pogorszyły wynik, gdy cały schemat mieścił się
   w prompcie; tańszy model napisał lepszy SQL niż droższe (porównanie kilku modeli na tym samym zestawie przed
   wyborem). Model pisze SQL, baza liczy — arytmetyka modelu bez myślenia była błędna.
-- [x] **Ściany dla SQL od modelu** (zrobione 2026-10-30: `sec-llm-security/references/zagrozenia-i-kontrole.md`) (`sec-llm-security`): tryb tylko do odczytu nie wystarcza (SELECT czyta pliki,
+- [x] **Ściany dla SQL od modelu** (zrobione 2026-10-30: `sec-llm-security/references/threats-and-controls.md`) (`sec-llm-security`): tryb tylko do odczytu nie wystarcza (SELECT czyta pliki,
   dołącza bazy, instaluje rozszerzenia — 5/11 ataków przeszło); strażnik tekstu (jedno SELECT, zakazane funkcje
   plikowe, koszt planu z własnym estymatorem wierszy, bo planer pomylił się 469 796×) + blokada w silniku (DuckDB:
   `enable_external_access = false`, wyłączone autoładowanie rozszerzeń, `lock_configuration = true`) + limit czasu
@@ -1264,7 +1955,7 @@ nowy skill `ai-text-to-sql` wg `core-skill-authoring`, najpierw scenariusze):
 ## Typy pamięci agenta jako kontrakty (artykuł „AI Agent Memory Types: Semantic, Episodic, Procedural, Profile, Working”, J. Wąsowski, 2026-10-08, zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-agents` nie rozróżnia typów pamięci długotrwałej. Wyniki porównań z artykułu (ENGRAM
 77,55 → 46,56% po spłaszczeniu magazynów, preprint; pozostałe dwa nie testują typowania) [niezweryfikowane].
-- [x] **`ai-agents`, pięć pytań zamiast jednego indeksu wektorowego** (zrobione 2026-10-31: `ai-agents/references/pamiec-i-trwale-wykonanie.md` §1)**:** robocza (bieżący kontekst składany z pozostałych,
+- [x] **`ai-agents`, pięć pytań zamiast jednego indeksu wektorowego** (zrobione 2026-10-31: `ai-agents/references/memory-and-durable-execution.md` §1)**:** robocza (bieżący kontekst składany z pozostałych,
   budżet tokenów i kolejność), semantyczna (co jest prawdą: źródło, data weryfikacji, konsolidacja zastępuje stary
   fakt), epizodyczna (co się stało: czas, kontekst, wynik; traci przydatność, nie prawdziwość), proceduralna (jak to
   robić: wersja, przegląd, wycofanie — zapis jak merge request, bo zły wpis zmienia zachowanie w wielu zadaniach),
@@ -1280,7 +1971,7 @@ przy kolejnym wywołaniu SDK szuka go po skrócie nazwy kroku (`inngest/website`
 punkty kontrolne kroków w Postgresie, jeden zapis na krok plus dwa na workflow (`dbos-inc/dbos-docs`, architecture).
 Domyślny tryb `async` w LangGraph i szczegóły Temporal — [niezweryfikowane] (docs.langchain.com, docs.temporal.io
 poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia).
-- [x] **`ai-agents` / `arch-ai-solutions`, trwałe wykonanie** (zrobione 2026-10-31: `ai-agents/references/pamiec-i-trwale-wykonanie.md` §2)**:** zysk zależy od granic kroków, nie od narzędzia — jeden
+- [x] **`ai-agents` / `arch-ai-solutions`, trwałe wykonanie** (zrobione 2026-10-31: `ai-agents/references/memory-and-durable-execution.md` §2)**:** zysk zależy od granic kroków, nie od narzędzia — jeden
   krok na każde kosztowne wywołanie modelu lub narzędzia (jeden krok na całą pętlę = kolejka z dodatkami); wszystko
   poza krokiem wykonuje się ponownie przy wznowieniu (Inngest: przy każdym kroku, Temporal: kod workflow musi być
   deterministyczny — zegar, losowość, HTTP tylko w aktywnościach). Pułapki ustawień: zapis punktu kontrolnego
@@ -1301,7 +1992,7 @@ poza siecią sesji). Artykuł jest sponsorowany przez Inngest (autor to ujawnia)
 ## Model zastępczy i projekt odwrotny; miary autonomii agentów (artykuły „How I Recreated a Research Paper to teach an AI to Design Self-Rolling Tubes”, A. Janmohamed, 2026-10-22; „Agentic SDLC: Strategic Reading List”, A. Honchar, 2026-05-27; zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-research-methods` ma wyciek przez wiele wierszy tej samej jednostki; brak wątku modelu
 zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z artykułów [niezweryfikowane].
-- [x] **`ai-research-methods`, model zastępczy w pętli optymalizacji** (zrobione 2026-10-31: `references/optymalizacja-i-hipotezy.md` §1)**:** (1) przykłady powstałe z augmentacji
+- [x] **`ai-research-methods`, model zastępczy w pętli optymalizacji** (zrobione 2026-10-31: `references/optimization-and-hypotheses.md` §1)**:** (1) przykłady powstałe z augmentacji
   (odbicie, obrót) trafiają do tego samego zbioru co oryginał, inaczej test jest zawyżony; uśrednianie predykcji dla
   wersji symetrycznych w czasie testu jako tani zysk; (2) optymalizacja na modelu wyszukuje jego błędy na swoją
   korzyść — zwycięzca zawsze wygląda lepiej, niż jest (u autora 0,44 mm przewidziane vs 0,75 mm w symulatorze), więc
@@ -1320,9 +2011,9 @@ zastępczego (sieć zamiast wolnej symulacji) i optymalizacji na nim. Liczby z a
 
 ## Graf hipotez z werdyktami i granice izolacji worktree (artykuły „My AI Agent is in Top-0.04% of WorldQuant Challenge #2: Alpha Knowledge Graph”, A. Honchar, 2026-07-31; „Self-managing coding agents: git worktree, agent-owned context, and sandbox”, J. Wąsowski, 2026-06-01; zapisane 2026-10-29)
 Przegląd 2026-10-29: `ai-research-methods` każe zapisać hipotezę falsyfikowalnie z kryterium porażki;
-`core-cost-control` (`references/rownoleglosc.md`) opisuje worktree i subagentów. Liczby z artykułów (ranking,
+`core-cost-control` (`references/parallelism.md`) opisuje worktree i subagentów. Liczby z artykułów (ranking,
 3 432 mechanizmy, 172 GB / 371 worktree, 93% akceptowanych zapytań o zgodę) [niezweryfikowane].
-- [x] **`ai-research-methods`, rejestr hipotez jako graf z werdyktami** (zrobione 2026-10-31: `references/optymalizacja-i-hipotezy.md` §2; pole statusu w `core-knowledge` — osobno)**:** hipoteza, której nie da się przypiąć do węzła
+- [x] **`ai-research-methods`, rejestr hipotez jako graf z werdyktami** (zrobione 2026-10-31: `references/optimization-and-hypotheses.md` §2; pole statusu w `core-knowledge` — osobno)**:** hipoteza, której nie da się przypiąć do węzła
   ontologii (mechanizm, naruszone założenie, kto jest po drugiej stronie), odpada przed kosztownym eksperymentem;
   status węzła wynika z wyników eksperymentów (potwierdzony / pogrzebany), nie z deklaracji autora; pogrzebany ma
   zapisany z góry **warunek ponownego otwarcia** (nowa konstrukcja, niezależne potwierdzenie); zapis „próbowano,
@@ -1381,7 +2072,7 @@ Przegląd 2026-10-29: `ops-sre-incidents` i `ops-observability` nie mają wątku
   z dowodami i pewnością** (para „wdrożenie → błąd w logach” z wyższą wagą, okno czasu, odrzucenie poniżej
   progu), nie wydaje werdyktów; z kanału incydentu zapisywać rozumowanie (odrzucone hipotezy, co zadziałało, kto
   wiedział) — postmortem jako dane, nie tylko tekst. Zmiany proponowane przez agentów zatwierdza człowiek.
-- [x] **Wiki z LLM: kod czy plik instrukcji** (zrobione 2026-11-01: `core-knowledge/references/notatki-i-wiki.md` §4; lint struktury w `kb.py` — osobno, TDD, gdy wiki powstanie) (uzupełnienie pozycji o wiki kanonicznym): plik `AGENTS.md`
+- [x] **Wiki z LLM: kod czy plik instrukcji** (zrobione 2026-11-01: `core-knowledge/references/notes-and-wiki.md` §4; lint struktury w `kb.py` — osobno, TDD, gdy wiki powstanie) (uzupełnienie pozycji o wiki kanonicznym): plik `AGENTS.md`
   z etapami wystarcza dla małej bazy (< ~200 dokumentów) i szukania kształtu; pipeline w kodzie, gdy korpus jest
   duży, wynik ma być powtarzalny, a wiki zasila dalszą automatykę — identyfikator strony jako skrót treści (zmiana
   nazwy pliku nic nie psuje), kontrakty typów między etapami, **lint struktury Markdown** przed zapisem (dwa H1,
@@ -1404,7 +2095,7 @@ Muse) [niezweryfikowane].
   proponuje agent, jednokierunkowe rozstrzyga właściciel przed kodem. Spójność spec / plan / zadania: każda decyzja
   w trzech artefaktach albo jawne „nie dotyczy” (cztery różne braki: brak decyzji, sprzeczność, zgodny błąd, ślad bez
   treści). Strona pdi: pola `verify` i `reversibility` w kontrakcie decyzji (dbqm45/pdi TODO).
-- [x] **`ai-agents`, interfejs harnessu od strony modelu** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §4)**:** operacja (jednostka intencji) realizowana przez narzędzie,
+- [x] **`ai-agents`, interfejs harnessu od strony modelu** (zrobione 2026-10-31: `ai-agents/references/executors-and-gates.md` §4)**:** operacja (jednostka intencji) realizowana przez narzędzie,
   narzędzie złożone (kod, deterministycznie) albo skill (instrukcje) — dojrzewa od skilla do narzędzia złożonego;
   skill odwołuje się do narzędzi po id, nie kopiuje ich schematów (jedno miejsce prawdy); mały zestaw prymitywów
   (`search_memory`, `list_capabilities`, `search_operations`, `load_operation`, `execute_operation`, `run_code`,
@@ -1427,7 +2118,7 @@ dokumenty tożsamości) odrzucana zawsze, inne wrażliwe (zdrowie, finanse osobi
 użytkownika. Wg artykułu Estariego (nie sprawdzone u źródła): wysłanie, płatność, podpis i usunięcie czekają na
 zgodę, a handel papierami wartościowymi i przelewy między kontami są wyłączone nawet za zgodą [niezweryfikowane].
 - [x] **`sec-llm-security` / `core-async-delegation`, polityka informacji wychodzącej dla agentów wysyłających
-  wiadomości** (zrobione 2026-11-01: `sec-llm-security/references/wzorce-projektowe-agentow.md` §8, wiersz „agent
+  wiadomości** (zrobione 2026-11-01: `sec-llm-security/references/agent-design-patterns.md` §8, wiersz „agent
   proaktywny” w `core-async-delegation` §2)**:** klasy danych z regułą per klasa — „nigdy” (karty, dokumenty tożsamości, sekrety), „tylko na wyraźne
   polecenie” (zdrowie, finanse osobiste), reszta; sprawdzenie każdej wiadomości wychodzącej osobnym klasyfikatorem
   poza głównym agentem, obok zatwierdzania akcji. Do tabeli trybów delegacji: agent proaktywny (skrót + sprawdzanie
@@ -1448,7 +2139,7 @@ kontekstu +20% kosztu) [niezweryfikowane].
   której dotyczy (nie centralny „zespół harnessu”), test w CI, cykl przeglądu, kto zmienia kontrakt; skill nieużywany
   60–90 dni oznaczany do wycofania (fabryka ma logi hooków — można liczyć użycia); reguły dopisywane jak zapadka:
   tylko z prawdziwej porażki, po przeglądzie. Miara: odsetek artefaktów bez właściciela i bez testu.
-- [x] **`core-skill-authoring`, mniej tokenów w skillach** (zrobione 2026-11-01: `references/przeglad-skilla.md` §„Odchudzanie”; pomiar kosztu opisów 209 skilli — osobno)**:** test „no-op” zdanie po zdaniu (czy zmienia zachowanie
+- [x] **`core-skill-authoring`, mniej tokenów w skillach** (zrobione 2026-11-01: `references/skill-review.md` §„Odchudzanie”; pomiar kosztu opisów 209 skilli — osobno)**:** test „no-op” zdanie po zdaniu (czy zmienia zachowanie
   względem domyślnego — jeśli nie, usuń całe zdanie); instrukcje pozytywne zamiast zakazów (zakaz wnosi zakazane
   do kontekstu); słowa-pojęcia, które model już zna (np. zapachy kodu Fowlera po nazwie), zamiast definicji;
   skill-router wywoływany ręcznie, który dopiero ładuje cięższy. Dla fabryki: zmierzyć łączny koszt opisów
@@ -1477,7 +2168,7 @@ zamieniającymi ocenę gustu na stopniowalne punkty); cennik cache (platform.cla
 cache ok. 0,05–0,1 ceny wejścia zależnie od modelu, czas życia liczony od początku żądania). Liczby z preprintów
 cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass rate 0–8 pkt) — jak w pozycji o
 „harness: wynik czy koszt” [niezweryfikowane].
-- [x] **`arch-ai-solutions`, bramka (gateway) przed modelami — uzupełnienia** (zrobione 2026-11-01: `arch-ai-solutions/references/bramka-i-niezawodnosc.md` §1–2)**:** trasy jawne per funkcja
+- [x] **`arch-ai-solutions`, bramka (gateway) przed modelami — uzupełnienia** (zrobione 2026-11-01: `arch-ai-solutions/references/gate-and-reliability.md` §1–2)**:** trasy jawne per funkcja
   (`funkcja → model, zapasowy`) z wyłącznikiem, zamiast „sprytnego” automatycznego routingu; **fallback tylko do
   modeli spełniających te same ograniczenia** (dane z modelu własnego nie mogą po cichu pójść do zewnętrznego
   dostawcy, słabszy model to cicha utrata jakości) i fallback produktowy („pokaż dane bez streszczenia AI”);
@@ -1486,7 +2177,7 @@ cytowanych przez Perrone (40× tokenów na rozwiązane zadanie, różnice pass r
   zgoda z alertem); strumieniowanie: rozliczenie po końcu strumienia, anulowanie wywołania u dostawcy po rozłączeniu
   klienta, odpowiedź przerwana w połowie oznaczona jako częściowa, bez cichego zszywania dwóch; logowanie treści
   promptów tylko po włączeniu dla trasy, z retencją; miara „odsetek fallbacków” jako wczesne ostrzeżenie.
-- [x] **`ai-agents` / `core-async-delegation`, długie przebiegi w wielu oknach kontekstu** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §3) (Anthropic, wyżej):
+- [x] **`ai-agents` / `core-async-delegation`, długie przebiegi w wielu oknach kontekstu** (zrobione 2026-10-31: `ai-agents/references/executors-and-gates.md` §3) (Anthropic, wyżej):
   pierwsza sesja przygotowuje środowisko i listę zadań, każda kolejna robi jeden przyrost i zostawia artefakty
   przekazania (postęp, stan testów); oddzielny ewaluator z jawnymi kryteriami; reguła końca sprawdzana przez test
   lub ewaluator, nie przez deklarację agenta. Recenzent tylko do odczytu (raport, nie poprawka — inaczej znika
@@ -1507,7 +2198,7 @@ przy ponad 90% kryteriów, szum infrastruktury 6 pp w Terminal-Bench 2.0) [niezw
   (start sesji) porównać zapisaną gałąź i commit z `HEAD`: rozjazd (inna gałąź, commit nieznany w historii, nowe
   commity spoza punktu) → ostrzeżenie „stan repo różni się od punktu kontrolnego, przed kontynuacją uruchom testy
   i porównaj kroki z dowodem”. Streszczenie rozmowy nie jest mechanizmem odtwarzania stanu. Najpierw test.
-- [x] **`ai-evals`, raport i dobór wyroczni** (zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §10)**:** (1) główny sygnał gotowości to odsetek zadań zaliczonych w całości
+- [x] **`ai-evals`, raport i dobór wyroczni** (zrobione 2026-10-31: `ai-evals/references/measurement-pitfalls.md` §10)**:** (1) główny sygnał gotowości to odsetek zadań zaliczonych w całości
   (wszystkie kryteria rubryki), średnia spełnionych kryteriów i rozrzut między powtórzeniami tylko obok, jako
   diagnostyka — raport wskazujący 8 z 10 ryzyk nie jest „w 80% użyteczny”; średnia może być nagrodą w treningu, nie
   miarą w raporcie. (2) Wyrocznię zastępczą dobierać do odwracalności działania: asercja deterministyczna w pętli
@@ -1556,7 +2247,7 @@ budżet opóźnienia z czasem do pierwszego tokenu, cache wyników tylko dla odp
 (klucz z wersją promptu, modelu i najemcą), fallback sprawdzany ewaluacją oraz idempotencję akcji. `ai-rag` ma
 reindeksację przyrostową i usuwanie jako osobną ścieżkę. Warstwy prompt → kontekst → harness → pętla → graf oraz
 zasada „najpierw jeden agent z mocnym harnessem” są w `ai-agents` i wcześniejszych pozycjach. Braki:
-- [x] **`arch-ai-solutions` / `eng-llm-features`, reguły niezawodności i wycofania** (zrobione 2026-11-01: `arch-ai-solutions/references/bramka-i-niezawodnosc.md` §2–3)**:**
+- [x] **`arch-ai-solutions` / `eng-llm-features`, reguły niezawodności i wycofania** (zrobione 2026-11-01: `arch-ai-solutions/references/gate-and-reliability.md` §2–3)**:**
   - **Ponowienia w jednej warstwie:** wspólny budżet czasu i prób na całe żądanie. Gdy każda warstwa (klient,
     bramka, orkiestrator, SDK) ponawia osobno, jedno żądanie mnoży wywołania dostawcy i pogłębia awarię.
   - **Strumień:** gdy klient się rozłączy albo anuluje, przerwać generowanie u dostawcy, bo tokeny nadal kosztują.
@@ -1586,7 +2277,7 @@ Przegląd 2026-10-30: następujące elementy są już w `ai-agents` i w pozycjac
 
 Artykułów i obrazów z Medium nie dało się otworzyć (proxy 403), podobnie docs.temporal.io, docs.langchain.com
 i agentskills.io. Braki:
-- [x] **`ai-agents`, praca wielu wykonawców nad wspólnym stanem** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §1)**:**
+- [x] **`ai-agents`, praca wielu wykonawców nad wspólnym stanem** (zrobione 2026-10-31: `ai-agents/references/executors-and-gates.md` §1)**:**
   - **Dzierżawa zadania z wygaśnięciem i biciem serca.** Wykonawca, który zniknął, traci zadanie, a inny wznawia
     je z trwałego stanu.
   - **Zakończenie i zapis sprawdzają bieżącego właściciela i wersję rekordu.** Spóźniony wykonawca nie nadpisze
@@ -1632,7 +2323,7 @@ hanxiao.io. Pozostałe liczby z artykułu [niezweryfikowane], w tym:
 - kaskada Sena: 88,4% automatycznie.
 
 Braki:
-- [x] **`ai-agents` / `core-agent-security`, „kto jest świadkiem tego kroku?”** (zrobione 2026-10-31: `ai-agents/references/wykonawcy-i-bramki.md` §2; reguły hooków jako predykaty nad logiem — zmiana hooków tylko na prośbę)**:**
+- [x] **`ai-agents` / `core-agent-security`, „kto jest świadkiem tego kroku?”** (zrobione 2026-10-31: `ai-agents/references/executors-and-gates.md` §2; reguły hooków jako predykaty nad logiem — zmiana hooków tylko na prośbę)**:**
   - Przegląd kroków agenta: krok, którego jedynym sprawdzeniem jest dalszy tekst tego samego modelu, jest przyjęty
     na wiarę.
   - Reguła trafia w miejsce zależne od modalności:
@@ -1645,7 +2336,7 @@ Braki:
   - Dla fabryki: hook `tdd_guard` jest właśnie regułą czasową („edycja kodu dozwolona, jeśli od ostatniej zmiany
     testu był czerwony przebieg”). Warto zapisać reguły hooków jako predykaty nad logiem hooków i testować je
     odtworzeniem zapisanych śladów (jak `dogwood replay`). Zmiana hooków tylko na prośbę człowieka.
-- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (część w `ai-evals` zrobione 2026-10-31: `ai-evals/references/pulapki-pomiaru.md` §11; kod w `factory/jev_calibration.py` zrobiony 2026-11-01 — `fit_threshold` dla trasowania, `fit_band` dla sędziego, `--shuffle` test kolejności opcji, testy 15/15; zostaje płatny pomiar, gdy w środowisku będzie `TYPESAFE_API_KEY` — zmiana w `factory/` za zgodą człowieka) (LLM jako klasyfikator albo model decyzyjny):
+- [ ] **`ai-evals` / `ai-fine-tuning`, ocena klasyfikatora decyzji** (część w `ai-evals` zrobione 2026-10-31: `ai-evals/references/measurement-pitfalls.md` §11; kod w `factory/jev_calibration.py` zrobiony 2026-11-01 — `fit_threshold` dla trasowania, `fit_band` dla sędziego, `--shuffle` test kolejności opcji, testy 15/15; zostaje płatny pomiar, gdy w środowisku będzie `TYPESAFE_API_KEY` — zmiana w `factory/` za zgodą człowieka) (LLM jako klasyfikator albo model decyzyjny):
   - Test kolejności i nazw opcji: przetasować i przemianować, policzyć zmiany odpowiedzi.
   - Próg dopasowany na własnych etykietach **osobno dla każdego punktu decyzji**, nigdy domyślne 0,5.
   - Kaskada mierzona względem samego drogiego modelu.
@@ -1720,6 +2411,6 @@ Artykułów na medium.com i innych płatnych platformach nie pobierano (próba 2
   - https://docs.cloud.google.com/iam/docs/agent-identity-overview — **przekazane przez człowieka 2026-11-01**; naniesione
   - https://modelcontextprotocol.io/specification/2026-07-28/changelog — **przekazane przez człowieka 2026-11-01**, zgodne z repo; dopisane szczegóły (kody błędów, `inputRequests`, `iss`)
   - https://eur-lex.europa.eu/legal-content/PL/TXT/HTML/?uri=CELEX:32024R1689 (art. 50 ust. 2 i 7, art. 113 AI Act; data stosowania art. 50 — 2026-08-02 — potwierdzona już stroną Komisji)
-  - https://digital-strategy.ec.europa.eu/policies/code-practice-ai-generated-content — **przekazane przez człowieka 2026-11-01** (strona o kodeksie; naniesione w `ai-governance-compliance/references/znakowanie-techniczne.md`). Zostaje: PDF samego kodeksu (sekcja 1, warstwy znakowania) i wytyczne do art. 50 (czy przyjęte, termin 2026-12-02)
+  - https://digital-strategy.ec.europa.eu/policies/code-practice-ai-generated-content — **przekazane przez człowieka 2026-11-01** (strona o kodeksie; naniesione w `ai-governance-compliance/references/technical-tagging.md`). Zostaje: PDF samego kodeksu (sekcja 1, warstwy znakowania) i wytyczne do art. 50 (czy przyjęte, termin 2026-12-02)
   - https://a2a-protocol.org/latest/specification/ — **przekazane przez człowieka 2026-11-01**, naniesione; https://agentclientprotocol.com/ — **przekazane 2026-11-01**, naniesione;, https://opentelemetry.io/docs/specs/semconv/gen-ai/ (użyte repozytoria projektów)
   - arXiv 2301.10226 (Kirchenbauer i in.) — **przekazane przez człowieka 2026-11-01** jako PDF v4; naniesione (25 tokenów, z = 4, entropia, katalog ataków)

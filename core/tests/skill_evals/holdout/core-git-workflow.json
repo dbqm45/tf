@@ -1,0 +1,37 @@
+{
+  "skill": "core-git-workflow",
+  "scenarios": [
+    {
+      "id": "ho-pr-agenta-sciezki-chronione",
+      "expect": "trigger",
+      "prompt": "Agent otworzył PR zmieniający pliki w .github/workflows i w module płatności. CI jest zielone i ktoś proponuje automatyczny merge. Co ustawić w procesie, żeby to było rozsądne?",
+      "checks": {
+        "all": [
+          [
+            "CODEOWNERS",
+            "właściciel\\w*",
+            "owner approval",
+            "akceptacj\\w* właściciela"
+          ],
+          [
+            "etykiet\\w*",
+            "trailer",
+            "oznaczon\\w*",
+            "label\\w*",
+            "mark\\w* as agent"
+          ],
+          [
+            "nie (może|mógł) zmieni\\w*",
+            "którego agent nie",
+            "osobn\\w* (ścieżk|repozytori)",
+            "separate (path|repo)",
+            "agent cannot (change|modify)",
+            "osobn\\w* PR",
+            "oddzieln\\w* PR",
+            "CI odrzuca"
+          ]
+        ]
+      }
+    }
+  ]
+}

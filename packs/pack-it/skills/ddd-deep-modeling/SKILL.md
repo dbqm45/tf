@@ -1,102 +1,102 @@
 ---
 name: ddd-deep-modeling
-description: Użyj przy modelowaniu pojęć domeny — relacja wiele do wielu, typy definiowane przez administratora, status, Being/Behaving/Becoming, 5 why, klasyfikacja.
+description: Use for modeling domain concepts — many-to-many, types defined by an administrator, status, Being/Behaving/Becoming.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy odkrywaniu i doprecyzowaniu pojęć modelu — pytania modelujące Being/Behaving/Becoming, 5 why, klasyfikacja problemu (CRUD, transformacja, prezentacja, integracja, konkurencja o zasoby), modelowanie przez przykłady. Nie do granic kontekstów (ddd-strategic-analysis) ani wzorców implementacyjnych (ddd-tactical-design)."
-  slowa: "poziom wiedzy, poziom operacji, knowledge level, rodzaje definiowane przez administratora, typ i egzemplarz, relacja wiele do wielu, ukryte pojęcie, jedno źródło prawdy, single source of truth, status zamiast pojęcia, administrator definiuje nowe rodzaje, rozdzielić w modelu domeny"
+  review: "2027-10-17"
+  catalog: "Use for discovering and refining the concepts of a model — Being/Behaving/Becoming modeling questions, 5 why, problem classification (CRUD, transformation, presentation, integration, competition for resources), modeling by examples. Not for context boundaries (ddd-strategic-analysis) or implementation patterns (ddd-tactical-design)."
+  keywords: "poziom wiedzy, poziom operacji, knowledge level, rodzaje definiowane przez administratora, typ i egzemplarz, relacja wiele do wielu, ukryte pojęcie, jedno źródło prawdy, single source of truth, status zamiast pojęcia, administrator definiuje nowe rodzaje, rozdzielić w modelu domeny, operations level, kinds defined by an administrator, type and instance, many-to-many relationship, hidden concept, status instead of a concept, administrator defines new kinds, separate in the domain model"
 ---
 
-# Głębokie modelowanie
+# Deep modeling
 
-**Model głęboki** pomaga zrozumieć i uprościć problem — nie tylko go odwzorowuje. Model to nie schemat bazy
-danych: schemat przechowuje stan, model niesie zachowanie i reguły. Schemat wymyślony za wcześnie utrwala
-niezrozumienie domeny na miesiące.
+A **deep model** helps understand and simplify the problem — it does not just reflect it. A model is not a database
+schema: a schema stores state, a model carries behaviour and rules. A schema invented too early fixes a
+misunderstanding of the domain for months.
 
-## Pytania modelujące — trzy perspektywy
-Dla każdego ważnego pojęcia przejdź przez trzy perspektywy. Odpowiedzi od razu mówią, jaki element modelu powstaje.
+## Modeling questions — three perspectives
+For every important concept, go through three perspectives. The answers immediately tell you which model element emerges.
 
-### Being — czym to jest (struktura)
-- Jakie informacje opisują to pojęcie? **Ile** ich jest (krotność: jedna, wiele, zero)? **Jakiego typu** (liczba, kwota, okres, jednostka)?
-- Jaki zakres wartości jest dopuszczalny? Co jest obowiązkowe?
-- Czy dwa egzemplarze z takimi samymi danymi to **to samo**? — tak → obiekt wartości; nie, liczy się tożsamość → encja.
-- Czy liczba ma jednostkę albo walutę? → obiekt wartości (Quantity, Money), a nie „goła” liczba.
+### Being — what it is (structure)
+- What information describes this concept? **How much** of it is there (multiplicity: one, many, zero)? **Of what type** (number, amount, period, unit)?
+- What range of values is allowed? What is mandatory?
+- Are two instances with the same data **the same thing**? — yes → a value object; no, identity counts → an entity.
+- Does the number have a unit or a currency? → a value object (Quantity, Money), not a "bare" number.
 
-### Behaving — jak się zachowuje (zmiana)
-- **Kto** to zmienia? **Dlaczego** — jaki jest powód biznesowy zmiany? Jaki jest **skutek** zmiany i kogo dotyczy?
-- **Jak często** się zmienia? Czy kilka osób zmienia to **jednocześnie**? → konkurencja o zasoby, wielkość agregatu.
-- Czy zmianę można **powtórzyć** (np. dwa razy to samo polecenie)? → idempotencja.
-- Czy zmianę można **wycofać**? Jak — usunięciem, korektą, stornem, kompensacją? Kto może wycofać?
-- Jakie reguły mogą zmianę **odrzucić**? → niezmienniki, polityki.
-- **5 why** — pytaj „dlaczego?” aż dojdziesz do prawdziwej potrzeby biznesowej:
-  „Trzeba zmienić status faktury” → dlaczego? → „bo klient zapłacił” → dlaczego to ważne? → „bo wtedy zwalniamy towar” →
-  … → prawdziwe zdarzenie to „Płatność zaksięgowana”, a regułą jest „zwolnij towar po zaksięgowaniu płatności”.
+### Behaving — how it behaves (change)
+- **Who** changes it? **Why** — what is the business reason for the change? What is the **effect** of the change and whom does it concern?
+- **How often** does it change? Do several people change it **at the same time**? → competition for resources, aggregate size.
+- Can the change be **repeated** (e.g. the same command twice)? → idempotency.
+- Can the change be **reversed**? How — by deletion, correction, reversal entry, compensation? Who can reverse it?
+- What rules can **reject** the change? → invariants, policies.
+- **5 why** — ask "why?" until you reach the real business need:
+  "The invoice status has to be changed" → why? → "because the customer paid" → why is that important? → "because then we release the goods" →
+  … → the real event is "Payment posted", and the rule is "release the goods after the payment is posted".
 
-### Becoming — w co się zmienia (zmiana istoty)
-- Czy to pojęcie w pewnym momencie **staje się czymś innym**? (lead → klient, oferta → umowa, rezerwacja → wypożyczenie, szkic → opublikowany dokument)
-- Czy ta przemiana jest **łatwo odwracalna**? Trudno odwracalna → zdarzenie przełomowe, często inny model/kontekst, inne reguły.
-- Czy po przemianie obowiązują inne reguły, inni aktorzy, inne dane? → rozdziel modele zamiast jednej klasy z flagami.
-- Stany z różnymi dozwolonymi operacjami → maszyna stanów (jawne przejścia) zamiast pola „status”.
+### Becoming — what it turns into (change of essence)
+- Does this concept at some point **become something else**? (lead → customer, offer → contract, reservation → rental, draft → published document)
+- Is this transformation **easily reversible**? Hard to reverse → a pivotal event, often a different model/context, different rules.
+- After the transformation, do different rules, different actors, different data apply? → separate the models instead of one class with flags.
+- States with different allowed operations → a state machine (explicit transitions) instead of a "status" field.
 
-## Klasyfikacja problemu → sposób modelowania
-Zanim zaprojektujesz, nazwij klasę problemu. Każda wymaga innego podejścia.
+## Problem classification → way of modeling
+Before you design, name the problem class. Each one requires a different approach.
 
-**Najpierw test zmienności — podaj go w odpowiedzi:** *czy dane, na podstawie których podejmujemy decyzję, może
-w tej samej chwili zmienić inne żądanie?* Tak → konkurencja o zasoby (atomowość, agregat). Nie → CRUD albo obliczenie
-z walidacją. **Klasę wyznacza skutek operacji dla stanu systemu, nie liczba reguł:** obliczenie, którego wynik tylko
-zapisujemy, to CRUD z polityką; bogata walidacja danych z żądania nie zmienia klasy. Tabela niżej to sygnały
-pomocnicze; gdy przeczą testowi, rozstrzyga test.
+**First the volatility test — state it in the answer:** *can the data on which we base the decision be changed
+at the same moment by another request?* Yes → competition for resources (atomicity, aggregate). No → CRUD or a calculation
+with validation. **The class is determined by the effect of the operation on the system's state, not by the number of rules:** a calculation whose result we only
+store is CRUD with a policy; rich validation of the request data does not change the class. The table below shows auxiliary
+signals; when they contradict the test, the test decides.
 
-| Klasa | Sygnały pomocnicze | Podejście |
+| Class | Auxiliary signals | Approach |
 |---|---|---|
-| **CRUD** | formularze, proste walidacje, brak reguł między danymi | nie przemodelowuj; prosta warstwa danych, ewentualnie polityki walidacji |
-| **Transformacja / obliczenia** | „policz”, „wyceń”, „wyznacz”, dużo reguł, deterministyczny wynik | czyste funkcje, polityki/strategie, obiekty wartości na wejściu i wyjściu, testy na przykładach |
-| **Prezentacja** | „pokaż”, „zestawienie”, „raport”, łączenie wielu źródeł | read modele, projekcje (CQRS), bez logiki biznesowej |
-| **Integracja** | inny system, inny język, inne tempo zmian | ACL / Open Host, tłumaczenie, idempotencja, outbox (ddd-context-mapping) |
-| **Konkurencja o zasoby** | „nie może być dwa razy”, limity, rezerwacje, współbieżność | agregat wokół niezmiennika, dobór ziarnistości blokad, archetyp dostępności (ddd-archetypes) |
+| **CRUD** | forms, simple validations, no rules between data | do not over-model; a simple data layer, possibly validation policies |
+| **Transformation / calculations** | "calculate", "price", "determine", many rules, a deterministic result | pure functions, policies/strategies, value objects at the input and output, tests on examples |
+| **Presentation** | "show", "summary", "report", combining many sources | read models, projections (CQRS), no business logic |
+| **Integration** | another system, another language, another pace of change | ACL / Open Host, translation, idempotency, outbox (ddd-context-mapping) |
+| **Competition for resources** | "cannot happen twice", limits, reservations, concurrency | an aggregate around an invariant, choosing the granularity of locks, the availability archetype (ddd-archetypes) |
 
-Jeden obszar biznesowy zwykle zawiera kilka klas — rozdziel je, zamiast budować jeden „model do wszystkiego”.
+One business area usually contains several classes — separate them instead of building one "model for everything".
 
-Sygnały mocne i słabe, sygnały z makiet UI, pułapki, ścieżka dedukcji i typowe kombinacje: `references/problem-classes.md`.
-Gdy obliczenie wygląda na znany problem (kolejność, przydział, pakowanie) → ddd-algorithm-recognition.
+Strong and weak signals, signals from UI mock-ups, pitfalls, the deduction path and typical combinations: `references/problem-classes.md`.
+When a calculation looks like a known problem (ordering, assignment, packing) → ddd-algorithm-recognition.
 
-## Kiedy CRUD wystarczy
-Brak reguł między polami, brak współbieżnych zmian, brak przemian istoty, zmiany nie wywołują skutków w innych
-obszarach. Wtedy głęboki model to koszt bez zysku. Sygnał, że CRUD przestał wystarczać: pojawiają się flagi,
-pole „status” z warunkami w wielu miejscach, powtarzające się `if` w serwisach, konflikty przy równoczesnych zmianach.
-Przy polu „status” zacznij od **5 why** (sekcja Behaving): pytaj, po co zmienia się status, aż dojdziesz do zdarzenia
-biznesowego; dopiero potem decyduj o maszynie stanów.
+## When CRUD is enough
+No rules between fields, no concurrent changes, no transformations of essence, changes do not cause effects in other
+areas. Then a deep model is a cost without a gain. A signal that CRUD is no longer enough: flags appear,
+a "status" field with conditions in many places, repeated `if` statements in services, conflicts with simultaneous changes.
+With a "status" field, start with **5 why** (the Behaving section): ask why the status changes until you reach the business
+event; only then decide on a state machine.
 
-## Rozplątywanie modelu
-Gdy fakty się rozjeżdżają albo każda potrzeba dostaje nową wartość statusu, sięgnij po jedną z czterech technik
-z `references/rozplatywanie.md`:
-- **Jedno źródło prawdy:** każdy fakt ma jednego właściciela, a reszta wskazuje go identyfikatorem albo odświeża
-  kopię zdarzeniem.
-- **Ukryte pojęcie w relacji wiele do wielu:** nazwij je, np. lekarz ↔ przychodnia to Zatrudnienie z datami
-  i warunkami.
-- **Status to nie mechanizm rozszerzania:** inne dane, reguły i cykl życia oznaczają osobne pojęcie albo rolę.
-- **Dwa poziomy modelu:** poziom wiedzy (typy i reguły definiowane przez biznes) i poziom operacji (egzemplarze,
-  które wskazują swój typ).
+## Untangling the model
+When facts drift apart or every need gets a new status value, reach for one of the four techniques
+in `references/untangling.md`:
+- **A single source of truth:** every fact has one owner, and the rest point to it by an identifier or refresh
+  a copy with an event.
+- **A hidden concept in a many-to-many relationship:** name it, e.g. doctor ↔ clinic is an Employment (*Zatrudnienie*) with dates
+  and conditions.
+- **Status is not an extension mechanism:** different data, rules and life cycle mean a separate concept or role.
+- **Two levels of the model:** the knowledge level (types and rules defined by the business) and the operations level (instances
+  that point to their type).
 
-## Modelowanie przez przykłady
-- Każdą regułę opisz **konkretnym przykładem** z liczbami i datami (Given / When / Then), razem z **kontrprzykładem**.
-- Przykłady brzegowe: zero, jeden, wiele; granice dat; równoczesne działania; wycofanie.
-- Przykłady od eksperta są lepsze niż Twoje; Twoje oznaczaj jako **[propozycja]**.
+## Modeling by examples
+- Describe every rule with a **concrete example** with numbers and dates (Given / When / Then), together with a **counterexample**.
+- Edge examples: zero, one, many; date boundaries; simultaneous actions; reversal.
+- Examples from the expert are better than yours; mark yours as **[proposal]**.
 
-## Karta pojęcia (zapis w `docs/project/02-domain/concepts/<pojecie>.md`)
+## Concept card (recorded in `docs/project/02-domain/concepts/<concept>.md`)
 ```markdown
-# <Pojęcie> (kontekst: <nazwa>)
-Definicja: …
-Being: dane, krotność, typy, tożsamość (encja / obiekt wartości)
-Behaving: kto zmienia, dlaczego, skutek, częstotliwość, współbieżność, powtarzalność, odwracalność
-Becoming: w co się zmienia, czy odwracalnie, zdarzenie przełomowe
-Niezmienniki: …
-Klasa problemu: CRUD | transformacja | prezentacja | integracja | konkurencja o zasoby — pewność: wysoka/średnia/niska; ścieżka dedukcji: …
-Dowody: id cytatów z banku (ddd-discovery-intake) albo [propozycja]
-Przykłady (Given/When/Then) i kontrprzykłady: …
-Otwarte pytania (hot spoty): …
+# <Concept> (context: <name>)
+Definition: …
+Being: data, multiplicity, types, identity (entity / value object)
+Behaving: who changes it, why, effect, frequency, concurrency, repeatability, reversibility
+Becoming: what it turns into, whether reversibly, pivotal event
+Invariants: …
+Problem class: CRUD | transformation | presentation | integration | competition for resources — confidence: high/medium/low; deduction path: …
+Evidence: ids of quotes from the bank (ddd-discovery-intake) or [proposal]
+Examples (Given/When/Then) and counterexamples: …
+Open questions (hot spots): …
 ```
 
-## Ciągłe dojrzewanie modelu
-Model ewoluuje razem z wiedzą (knowledge crunching). Ewolucja „na ślepo” utyka w lokalnym optimum — co jakiś czas
-wróć do pytań podstawowych i sprawdź, czy nowe przypadki nie wymagają przemodelowania, a nie kolejnego `if`.
+## Continuous maturing of the model
+The model evolves together with knowledge (knowledge crunching). "Blind" evolution gets stuck in a local optimum — from time to time
+go back to the basic questions and check whether the new cases require remodeling, not another `if`.

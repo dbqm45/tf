@@ -1,76 +1,78 @@
 ---
 name: eng-algorithms-data-structures
-description: Użyj, gdy liczy się wydajność kodu — złożoność, dobór struktur danych (TS, Java), techniki algorytmów, grafy, LRU.
+description: Use when code performance matters — complexity, choosing data structures, algorithm techniques, graphs, LRU.
+disable-model-invocation: true
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy kodzie, w którym liczy się wydajność albo poprawność algorytmu — złożoność (O, czas, pamięć), dobór struktury danych w TS i Javie, wzorce rozwiązywania (dwa wskaźniki, okno, przedziały, top-k, BFS/DFS), techniki (rekurencja, nawroty, programowanie dynamiczne, zachłanne), drzewa i grafy. Nie do rozpoznawania problemu w domenie (ddd-algorithm-recognition)."
+  status: "inactive"  # measured 2026-11-16: docs/inactive-skills.md
+  review: "2027-10-17"
+  catalog: "Use for code where the performance or the correctness of an algorithm matters — complexity (O, time, memory), choosing a data structure in TS and Java, solving patterns (two pointers, window, intervals, top-k, BFS/DFS), techniques (recursion, backtracking, dynamic programming, greedy), trees and graphs. Not for recognizing a problem in the domain (ddd-algorithm-recognition)."
 ---
 
-# Algorytmy i struktury danych w codziennym kodzie
+# Algorithms and data structures in everyday code
 
-W kodzie produkcyjnym zwykle **wybierasz** gotową strukturę lub algorytm z biblioteki, a nie piszesz go od zera.
-Liczy się to, żeby wiedzieć, ile co kosztuje, i rozpoznać, kiedy pętla w pętli zamieni 1000 rekordów w milion
-operacji. Klasyczny problem ukryty w wymaganiach biznesowych (harmonogram, przydział, trasy): ddd-algorithm-recognition.
+In production code you usually **choose** a ready structure or algorithm from a library, rather than writing it from scratch.
+What matters is knowing what each thing costs and recognizing when a loop inside a loop turns 1000 records into a million
+operations. A classic problem hidden in business requirements (a schedule, an assignment, routes): ddd-algorithm-recognition.
 
-## Złożoność — jak liczyć
-- Notacja O opisuje wzrost kosztu względem rozmiaru wejścia n (najgorszy przypadek, chyba że napisano inaczej);
-  Θ — dokładny rząd, Ω — dolne ograniczenie. Stałe i niższe składniki pomijasz, ale **w praktyce stałe mają
-  znaczenie** dla małego n.
-- Typowe klasy: O(1) stała, O(log n) logarytmiczna (dzielenie przestrzeni na pół), O(n) liniowa, O(n log n)
-  (dobre sortowanie), O(n²) (pętla w pętli), O(2ⁿ) wykładnicza (wszystkie podzbiory), O(n!) (wszystkie permutacje).
-  Przy n = 10⁶: O(n log n) ≈ 2·10⁷ operacji — ułamek sekundy; O(n²) = 10¹² — godziny.
-- Liczenie: pętle zagnieżdżone mnożą się, kolejne dodają; rekurencja — liczba wywołań × praca w wywołaniu (np. dziel
-  na pół i scalaj liniowo → O(n log n)); **ukryte pętle**: `includes`, `indexOf`, `filter` w pętli, `contains` na liście,
-  zapytanie do bazy w pętli (N+1 — be-database).
-- **Pamięć** liczy się tak samo (dodatkowe tablice, stos rekurencji). **Amortyzacja**: dopisywanie do tablicy
-  dynamicznej to zwykle O(1), czasem O(n) przy powiększeniu — średnio O(1).
+## Complexity — how to count it
+- O notation describes the growth of the cost relative to the input size n (the worst case, unless stated otherwise);
+  Θ — the exact order, Ω — a lower bound. You drop constants and lower-order terms, but **in practice constants
+  matter** for a small n.
+- Typical classes: O(1) constant, O(log n) logarithmic (splitting the space in half), O(n) linear, O(n log n)
+  (good sorting), O(n²) (a loop inside a loop), O(2ⁿ) exponential (all subsets), O(n!) (all permutations).
+  At n = 10⁶: O(n log n) ≈ 2·10⁷ operations — a fraction of a second; O(n²) = 10¹² — hours.
+- Counting: nested loops multiply, consecutive ones add up; recursion — the number of calls × the work per call (e.g. split
+  in half and merge linearly → O(n log n)); **hidden loops**: `includes`, `indexOf`, `filter` in a loop, `contains` on a list,
+  a database query in a loop (N+1 — be-database).
+- **Memory** is counted the same way (extra arrays, the recursion stack). **Amortization**: appending to a dynamic
+  array is usually O(1), sometimes O(n) on growth — O(1) on average.
 
-## Dobór struktury danych
-| Potrzeba | Struktura | TS / JS | Java | Koszt typowych operacji |
+## Choosing a data structure
+| Need | Structure | TS / JS | Java | Cost of typical operations |
 |---|---|---|---|---|
-| lista z dostępem po indeksie | tablica dynamiczna | `Array` | `ArrayList` | dostęp O(1), dopisanie na końcu O(1)*, wstawienie w środku O(n) |
-| wyszukiwanie po kluczu | tablica mieszająca | `Map` (nie zwykły obiekt dla dynamicznych kluczy) | `HashMap` | O(1) średnio |
-| unikalność, „czy było” | zbiór mieszający | `Set` | `HashSet` | O(1) średnio |
-| kolejka FIFO | kolejka / deque | tablica z indeksem głowy albo biblioteka (`shift()` jest O(n)) | `ArrayDeque` | O(1) |
-| stos LIFO | stos | `Array` z `push`/`pop` | `ArrayDeque` | O(1) |
-| zawsze najmniejszy / największy, top-k | kopiec (kolejka priorytetowa) | biblioteka (brak w standardzie) | `PriorityQueue` | wstawienie i zdjęcie O(log n), podgląd O(1) |
-| klucze posortowane, zakresy, „najbliższy większy” | drzewo zrównoważone | biblioteka albo posortowana tablica z wyszukiwaniem binarnym | `TreeMap`, `TreeSet` | O(log n) |
-| lista z częstym wstawianiem w znanym miejscu | lista wiązana | rzadko potrzebna | `LinkedList` (zwykle wolniejsza od `ArrayList` przez pamięć podręczną procesora) | wstawienie O(1) przy węźle, dostęp O(n) |
-| prefiksy tekstu (podpowiedzi) | trie | biblioteka / własna | biblioteka | O(długość słowa) |
-| grupy połączonych elementów | zbiory rozłączne (union-find) | własna (kilkanaście linii) | własna | prawie O(1) |
-Konkretne implementacje i ich właściwości sprawdź dla swojej wersji (lang-typescript, lang-java). W bazie danych
-odpowiednikiem wyboru struktury jest indeks (B-drzewo, hash, GIN — be-database).
+| a list with access by index | dynamic array | `Array` | `ArrayList` | access O(1), append at the end O(1)*, insert in the middle O(n) |
+| lookup by key | hash table | `Map` (not a plain object for dynamic keys) | `HashMap` | O(1) on average |
+| uniqueness, "has it been seen" | hash set | `Set` | `HashSet` | O(1) on average |
+| FIFO queue | queue / deque | an array with a head index or a library (`shift()` is O(n)) | `ArrayDeque` | O(1) |
+| LIFO stack | stack | `Array` with `push`/`pop` | `ArrayDeque` | O(1) |
+| always the smallest / largest, top-k | heap (priority queue) | a library (none in the standard) | `PriorityQueue` | insert and remove O(log n), peek O(1) |
+| sorted keys, ranges, "the nearest greater" | balanced tree | a library or a sorted array with binary search | `TreeMap`, `TreeSet` | O(log n) |
+| a list with frequent insertion at a known place | linked list | rarely needed | `LinkedList` (usually slower than `ArrayList` because of the CPU cache) | insert O(1) at a node, access O(n) |
+| text prefixes (suggestions) | trie | a library / your own | a library | O(word length) |
+| groups of connected elements | disjoint sets (union-find) | your own (a dozen or so lines) | your own | almost O(1) |
+Check the specific implementations and their properties for your version (lang-typescript, lang-java). In a database
+the counterpart of choosing a structure is an index (B-tree, hash, GIN — be-database).
 
-## Sortowanie i wyszukiwanie w praktyce
-- Używaj sortowania z biblioteki: `Array.prototype.sort` jest stabilne (od ES2019), ale **bez komparatora sortuje
-  jako tekst** (`[10, 9, 1]` → `[1, 10, 9]`) — zawsze podawaj komparator; `toSorted` nie mutuje. W Javie sortowanie
-  obiektów jest stabilne (TimSort), tablic typów prostych — nie musi być (nie ma to znaczenia dla liczb).
-- Wyszukiwanie binarne tylko na posortowanych danych; błędy „o jeden” i przepełnienie środka w językach z liczbami
-  stałej szerokości (`mid = lo + (hi − lo) / 2`).
-- Częste wyszukiwanie w liście → zamień na `Map`/`Set` raz (O(n)) zamiast `find` w pętli (O(n²)).
-- Zamiast sortować całość dla k największych — kopiec rozmiaru k (O(n log k)) albo wybór k-tego (średnio O(n)).
+## Sorting and searching in practice
+- Use the library sort: `Array.prototype.sort` is stable (since ES2019), but **without a comparator it sorts
+  as text** (`[10, 9, 1]` → `[1, 10, 9]`) — always pass a comparator; `toSorted` does not mutate. In Java sorting
+  objects is stable (TimSort), sorting arrays of primitive types does not have to be (it does not matter for numbers).
+- Binary search only on sorted data; off-by-one errors and overflow of the midpoint in languages with fixed-width
+  numbers (`mid = lo + (hi − lo) / 2`).
+- Frequent lookup in a list → convert it to a `Map`/`Set` once (O(n)) instead of `find` in a loop (O(n²)).
+- Instead of sorting everything for the k largest — a heap of size k (O(n log k)) or selecting the k-th (O(n) on average).
 
-## Poprawność
-- Dla nietrywialnego algorytmu zapisz **niezmiennik** (co jest prawdą na początku każdego obrotu pętli) i warunki
-  brzegowe: pusty zbiór, jeden element, duplikaty, wartości ujemne, przepełnienie.
-- Testy oparte na właściwościach (fast-check, jqwik) porównujące z prostą, oczywiście poprawną wersją (np. sortowanie
-  biblioteczne, przeszukanie siłowe) na losowych danych (qa-spec-first-testing).
-- Rekurencja: głębokość stosu ograniczona (w JS ok. kilku–kilkunastu tysięcy ramek, zależnie od silnika) — dla dużych
-  danych wersja iteracyjna z jawnym stosem.
+## Correctness
+- For a non-trivial algorithm write down the **invariant** (what is true at the start of each loop iteration) and the edge
+  cases: an empty set, one element, duplicates, negative values, overflow.
+- Property-based tests (fast-check, jqwik) that compare against a simple, obviously correct version (e.g. the library
+  sort, a brute-force search) on random data (qa-spec-first-testing).
+- Recursion: the stack depth is limited (in JS approx. a few to a dozen or so thousand frames, depending on the engine) — for large
+  data an iterative version with an explicit stack.
 
-## Więcej
-- Wzorce rozwiązywania problemów i techniki projektowania algorytmów: `references/wzorce-i-techniki.md`.
-- Drzewa, grafy i struktury zaawansowane: `references/drzewa-i-grafy.md`.
+## More
+- Problem-solving patterns and algorithm design techniques: `references/patterns-and-techniques.md`.
+- Trees, graphs and advanced structures: `references/trees-and-graphs.md`.
 
-## Checklista przeglądu
-- [ ] złożoność pętli i zapytań oszacowana dla realnego n (także ukryte pętle i N+1)
-- [ ] struktura danych dobrana do operacji (Map/Set zamiast wyszukiwania w liście)
-- [ ] sortowanie z komparatorem; brak mutacji, gdzie nie trzeba
-- [ ] warunki brzegowe i niezmienniki; test właściwości dla nietrywialnej logiki
-- [ ] rekurencja ograniczona albo iteracyjna
+## Review checklist
+- [ ] the complexity of loops and queries estimated for a realistic n (also hidden loops and N+1)
+- [ ] the data structure matched to the operations (Map/Set instead of searching a list)
+- [ ] sorting with a comparator; no mutation where it is not needed
+- [ ] edge cases and invariants; a property test for non-trivial logic
+- [ ] recursion bounded or iterative
 
-## Źródła
-- T. Cormen i in., *Introduction to Algorithms*; S. Skiena, *The Algorithm Design Manual*; specyfikacja ECMAScript
-  (`Array.prototype.sort`), dokumentacja Java Collections
+## Sources
+- T. Cormen et al., *Introduction to Algorithms*; S. Skiena, *The Algorithm Design Manual*; the ECMAScript specification
+  (`Array.prototype.sort`), the Java Collections documentation
 - [roadmap.sh — Data Structures and Algorithms](https://roadmap.sh/datastructures-and-algorithms)
-Opisane własnymi słowami.
+Described in our own words.

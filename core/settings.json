@@ -33,6 +33,7 @@
       "Bash(docker build *)",
       "Bash(python3 .tf/factory/build.py *)",
       "Bash(python3 .tf/factory/cost_report.py *)",
+      "Bash(python3 .tf/factory/risk_triage.py *)",
       "Bash(python3 .tf/factory/hint_report.py *)",
       "Bash(python3 .claude/hooks/detect_stack.py *)",
       "Bash(python3 .claude/hooks/project_record.py *)",
@@ -42,7 +43,14 @@
       "Bash(python3 .tf/factory/skill_gate.py *)",
       "Bash(python3 .tf/factory/skill_audit.py *)",
       "Bash(python3 .claude/hooks/jev_client.py --tier *)",
-      "Bash(python3 .claude/skills/core-semver/scripts/semver.py *)"
+      "Bash(python3 .claude/skills/core-semver/scripts/semver.py *)",
+      "Bash(python3 .claude/skills/tf/scripts/intake.py *)",
+      "Bash(python3 .claude/skills/tf/scripts/run_report.py *)",
+      "Bash(python3 .claude/skills/tf/scripts/run_state.py *)",
+      "Bash(python3 .claude/skills/tf/scripts/plan_drift.py *)",
+      "Bash(python3 .claude/skills/tf/scripts/security_scan.py *)",
+      "Bash(python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py *)",
+      "Bash(./verify.sh *)"
     ],
     "ask": [
       "Bash(git push *)",
@@ -113,19 +121,6 @@
             ],
             "timeout": 10,
             "onFailure": "block"
-          }
-        ]
-      },
-      {
-        "matcher": "Agent|Task",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3",
-            "args": [
-              "${CLAUDE_PROJECT_DIR}/.claude/hooks/model_guard.py"
-            ],
-            "timeout": 10
           }
         ]
       },
@@ -269,7 +264,7 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/project_record.py",
               "--hook-snapshot",
-              "koniec sesji"
+              "session end"
             ],
             "timeout": 10
           }
@@ -318,7 +313,7 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/project_record.py",
               "--hook-snapshot",
-              "kompaktowanie kontekstu"
+              "context compaction"
             ],
             "timeout": 10
           }

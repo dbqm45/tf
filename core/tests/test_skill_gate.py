@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Testy bramki jakości skilli (skill_gate, new-skill, build check, hook skill_change_guard)."""
+"""Tests of the skill quality gate (skill_gate, new-skill, build check, the skill_change_guard hook)."""
 import importlib.util
 import json
 import os
@@ -31,7 +31,20 @@ def load(path: Path, name: str):
 def main() -> int:
     fails, total = [], 0
 
-    # ── bramka na kopii fabryki ──
+    # -- content language: an English skill does not go through the Polish linter; selection rules and boundaries in both languages --
+    gate_mod = load(ROOT / ".tf" / "factory" / "skill_gate.py", "g_lang")
+    total += 1
+    en = "---\nname: x\n---\n# Title\nUse the ledger when you post. The flag is `zażółć` in code only.\n```\nżółw ćma\n```\n"
+    pl = "---\nname: x\nmetadata:\n  keywords: \"księga, zaksięgować\"\n---\n# Tytuł\nUżyj księgi przy księgowaniu. Zażółć gęślą jaźń.\n"
+    if gate_mod.content_language(en) != "en" or gate_mod.content_language(pl) != "pl":
+        fails.append(f"content language: en={gate_mod.content_language(en)} pl={gate_mod.content_language(pl)} (without the heading and code)")
+    b_mod = load(ROOT / ".tf" / "factory" / "build.py", "b_lang")
+    total += 1
+    if b_mod.boundary("Use for invoices. Not for payments") != ("Use for invoices.", " Not for ", "payments") \
+            or b_mod.boundary("Użyj przy fakturach. Nie do płatności")[1] != " Nie do ":
+        fails.append("skill boundaries: ' Not for ' and ' Nie do ' recognised the same way")
+
+    # -- the gate on a copy of the factory --
     with tempfile.TemporaryDirectory() as d:
         root = Path(d) / "f"
         shutil.copytree(ROOT, root, ignore=shutil.ignore_patterns("__pycache__", "logs", ".git", "*.zip", "docs"))
@@ -41,15 +54,15 @@ def main() -> int:
         r = run([gate, "core-grounding", "--fast"], cwd=root)
         reg = load(root / ".tf" / "factory" / "build.py", "b_copy").gate_registry()
         if r.returncode != 0 or "fingerprint" not in reg.get("core-grounding", {}):
-            fails.append(f"gate: istniejący skill powinien przejść i trafić do rejestru — {r.stdout[-600:]}")
+            fails.append(f"gate: an existing skill should pass and land in the registry — {r.stdout[-600:]}")
 
         total += 1
         p = root / ".claude" / "skills" / "core-grounding" / "SKILL.md"
         p.write_text(p.read_text() + "\nZmiana.\n")
         st = run([gate, "--status"], cwd=root).stdout
         chk = run([str(root / ".tf" / "factory" / "build.py"), "check"], cwd=root).stdout
-        if "core-grounding" not in st or "zmieniony po bramce" not in st or "core-grounding: zmieniony po ostatniej bramce" not in chk:
-            fails.append(f"gate: zmiana skilla nie wykryta — {st[-300:]} / {chk[-300:]}")
+        if "core-grounding" not in st or "changed after the gate" not in st or "core-grounding: changed after the last gate" not in chk:
+            fails.append(f"gate: a skill change not detected — {st[-300:]} / {chk[-300:]}")
 
         total += 1
         r = run([str(root / ".tf" / "factory" / "build.py"), "new-skill", "core-demo-gate", "Użyj przy demo. Nie do niczego innego."], cwd=root)
@@ -57,7 +70,7 @@ def main() -> int:
                    if (d / "skill_evals" / "core-demo-gate.json").exists()), root / "tests" / "skill_evals" / "core-demo-gate.json")
         g = run([gate, "core-demo-gate", "--fast"], cwd=root)
         if not ev.exists() or g.returncode == 0 or "TODO" not in g.stdout:
-            fails.append(f"new-skill: brak szkieletu scenariuszy albo bramka przepuściła TODO — {g.stdout[-400:]}")
+            fails.append(f"new-skill: no scenario skeleton, or the gate let a TODO through — {g.stdout[-400:]}")
 
         total += 1
         sess = {"session_id": "s1", "hook_event_name": "PostToolUse", "tool_input": {"file_path": str(p)}}
@@ -69,7 +82,7 @@ def main() -> int:
         if "skill_gate.py core-grounding" not in first or second.strip() or "core-grounding" not in stop:
             fails.append(f"skill_change_guard: {first[:120]!r} / {second!r} / {stop!r}")
 
-    # 5. każda runda ewaluacji ma własny raport (bez mieszania wyników kilku rund)
+    # 5. each evaluation round has its own report (no mixing of results of several rounds)
     total += 1
     with tempfile.TemporaryDirectory() as d:
         g = load(ROOT / ".tf" / "factory" / "skill_gate.py", "gate_mod")
@@ -77,19 +90,19 @@ def main() -> int:
         first = g.report_path(out, "x")
         first.with_suffix(".jsonl").write_text("{}\n")
         second = g.report_path(out, "x")
-        if first == second or not second.name.endswith("-bramka-x-2.md"):
+        if first == second or not second.name.endswith("-gate-x-2.md"):
             fails.append(f"report_path: {first.name} / {second.name}")
 
-    # 6. B4: scenariusze zaliczane bez skilli to ostrzeżenie kroku 8, nie błąd
+    # 6. B4: scenarios that pass without skills are a step-8 warning, not an error
     total += 1
     g = load(ROOT / ".tf" / "factory" / "skill_gate.py", "gate_mod")
-    warns = g.paid_warnings({"haiku": "5/5", "bez_wkladu": ["a", "b"]})
+    warns = g.paid_warnings({"haiku": "5/5", "no_uplift": ["a", "b"]})
     if len(warns) != 1 or "a, b" not in warns[0] or g.paid_warnings({"haiku": "5/5"}):
-        fails.append(f"paid_warnings: ostrzeżenie tylko przy scenariuszach zaliczanych bez skilli: {warns}")
+        fails.append(f"paid_warnings: a warning only for scenarios that pass without skills: {warns}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów bramki skilli")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} skill gate tests")
     return 1 if fails else 0
 
 

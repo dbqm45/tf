@@ -1,69 +1,69 @@
 ---
 name: arch-quality-attributes
-description: Użyj przy atrybutach jakości — scenariusze, kompromisy, fitness functions, dobór stylu architektury.
+description: Use for quality attributes — scenarios, trade-offs, fitness functions, choosing an architecture style.
 metadata:
-  przeglad: "2027-10-17"
-  katalog: "Użyj przy ustalaniu czynników architektonicznych — scenariusze atrybutów jakości (wydajność, dostępność, bezpieczeństwo, modyfikowalność…), ograniczenia, priorytetyzacja (drzewo użyteczności), kompromisy, fitness functions i dobór stylu architektury (modularny monolit, mikroserwisy, zdarzenia). Nie do wyboru konkretnych technologii (arch-tech-selection)."
+  review: "2027-10-17"
+  catalog: "Use when establishing architectural drivers — quality attribute scenarios (performance, availability, security, modifiability…), constraints, prioritization (the utility tree), trade-offs, fitness functions and choosing an architecture style (modular monolith, microservices, events). Not for choosing specific technologies (arch-tech-selection)."
 ---
 
-# Atrybuty jakości i style architektury
+# Quality attributes and architecture styles
 
-Architekturę wyznaczają **czynniki (drivers)**: najważniejsze atrybuty jakości, ograniczenia i kluczowe funkcje.
-Bez nich wybór technologii to gust.
+The architecture is determined by **drivers**: the most important quality attributes, constraints and key functions.
+Without them, choosing a technology is a matter of taste.
 
-## Scenariusz atrybutu jakości (zapis w requirements.md)
-`źródło → bodziec → (środowisko) → artefakt → odpowiedź → miara`, np.
-„100 użytkowników jednocześnie rezerwuje salę w szczycie → system przyjmuje żądania → p95 < 300 ms, 0 podwójnych rezerwacji”.
-Scenariusz bez miary nie jest scenariuszem („system ma być szybki”).
+## A quality attribute scenario (recorded in requirements.md)
+`source → stimulus → (environment) → artifact → response → measure`, e.g.
+"100 users book a room at the same time at peak → the system accepts the requests → p95 < 300 ms, 0 double bookings".
+A scenario without a measure is not a scenario ("the system must be fast").
 
-Atrybuty do przejrzenia (ISO 25010, skrót): wydajność, dostępność/niezawodność, bezpieczeństwo, modyfikowalność,
-testowalność, skalowalność, użyteczność i dostępność (a11y), interoperacyjność, przenośność, koszt utrzymania, zgodność z przepisami.
-Scenariusz dostępności lub wydajności zapisuj od razu jako SLI i SLO (stosunek dobrych zdarzeń, próg, okno czasu), a zobowiązania
-wobec klientów jako SLA luźniejsze od SLO — ops-sre-incidents, `.claude/skills/ops-sre-incidents/references/sli-slo-sla.md`.
+Attributes to review (ISO 25010, abbreviated): performance, availability/reliability, security, modifiability,
+testability, scalability, usability and accessibility (a11y), interoperability, portability, maintenance cost, regulatory compliance.
+Record an availability or performance scenario straight away as an SLI and an SLO (the ratio of good events, a threshold, a time window), and commitments
+to customers as an SLA looser than the SLO — ops-sre-incidents, `.claude/skills/ops-sre-incidents/references/sli-slo-sla.md`.
 
-## Priorytety — drzewo użyteczności
-Każdy scenariusz: **(ważność dla biznesu, trudność techniczna)** w skali H/M/L. Architekturę kształtują scenariusze **(H,H)** —
-3–5 sztuk. Reszta to wymagania do spełnienia „zwykłymi” środkami.
+## Priorities — the utility tree
+Every scenario: **(importance for the business, technical difficulty)** on an H/M/L scale. The architecture is shaped by the **(H,H)** scenarios —
+3–5 of them. The rest are requirements to meet with "ordinary" means.
 
-## Kompromisy
-Nazwij je jawnie w ADR: np. spójność natychmiastowa ↔ dostępność, wydajność ↔ modyfikowalność (cache, denormalizacja),
-bezpieczeństwo ↔ użyteczność. **Punkt wrażliwości** = decyzja, od której zależy atrybut; **punkt kompromisu** = decyzja
-wpływająca na kilka atrybutów w przeciwnych kierunkach.
+## Trade-offs
+Name them explicitly in an ADR: e.g. immediate consistency ↔ availability, performance ↔ modifiability (cache, denormalization),
+security ↔ usability. A **sensitivity point** = a decision an attribute depends on; a **trade-off point** = a decision
+affecting several attributes in opposite directions.
 
-## Style architektury — domyślnie najprostszy
-| Styl | Kiedy | Koszt |
+## Architecture styles — the simplest by default
+| Style | When | Cost |
 |---|---|---|
-| **Modularny monolit** (domyślny) | jeden zespół lub kilka, konteksty jako moduły z granicami (ddd-context-mapping, tool-nx) | niski; granice pilnowane testami architektury |
-| Mikroserwisy | niezależne wdrażanie/skalowanie kontekstów, wiele autonomicznych zespołów (proc-team-topologies), różne wymagania niezawodności | wysoki: sieć, spójność ostateczna, obserwowalność, platforma |
-| Architektura zdarzeniowa | integracja wielu kontekstów, reakcje asynchroniczne, audyt | złożoność śledzenia przepływów |
-| Serverless / BaaS | nieregularny ruch, mały zespół, generyczne subdomeny | uzależnienie od dostawcy, limity |
-Pełniejszy katalog (warstwy, klient–serwer, SOA, peer-to-peer, mikrojądro, tablica, publish–subscribe, potoki
-i filtry, MVC/MVVM) z sygnałami złego wyboru: `references/katalog-stylow.md`.
-Architektura danych (ACID, CAP i PACELC, spójność ostateczna, rodzaje baz NoSQL, OLTP vs OLAP, hurtownie, ETL/ELT,
-CDC, przetwarzanie wsadowe i strumieniowe): `references/architektura-danych.md`.
-Słownik wzorców chmurowych (44 wzorce z mapą na skille fabryki) i wybór platformy uruchomieniowej (PaaS, funkcje,
-kontenery, Kubernetes, maszyny): `references/wzorce-chmurowe.md`.
-Przejście monolit → usługi rób dopiero, gdy konkretny scenariusz (H,H) tego wymaga — wydzielaj po granicach kontekstów.
+| **Modular monolith** (default) | one team or a few, contexts as modules with boundaries (ddd-context-mapping) | low; boundaries guarded by architecture tests |
+| Microservices | independent deployment/scaling of contexts, many autonomous teams (proc-team-topologies), different reliability requirements | high: the network, eventual consistency, observability, a platform |
+| Event-driven architecture | integrating many contexts, asynchronous reactions, audit | the complexity of tracing flows |
+| Serverless / BaaS | irregular traffic, a small team, generic subdomains | provider dependency, limits |
+A fuller catalogue (layers, client–server, SOA, peer-to-peer, microkernel, blackboard, publish–subscribe, pipes
+and filters, MVC/MVVM) with signals of a bad choice: `references/style-catalog.md`.
+Data architecture (ACID, CAP and PACELC, eventual consistency, kinds of NoSQL databases, OLTP vs OLAP, warehouses, ETL/ELT,
+CDC, batch and stream processing): `references/data-architecture.md`.
+A glossary of cloud patterns (44 patterns with a map to the factory's skills) and choosing a runtime platform (PaaS, functions,
+containers, Kubernetes, machines): `references/cloud-patterns.md`.
+Move from a monolith to services only when a specific (H,H) scenario requires it — split along context boundaries.
 
 ## Fitness functions
-Zamień kluczowe atrybuty na automatyczne testy w CI: lint granic modułów, budżet wydajności (p95 w teście obciążeniowym),
-budżet rozmiaru paczki frontu, skan zależności, test odtworzenia po awarii. Architektura, której nikt nie sprawdza, dryfuje.
-Modyfikowalność da się zmierzyć: raport wpływu zmian dla metryki biznesowej (ddd-model-stress-test — ile wymagań zmienia 0–1 moduł)
-oraz profil sprzężeń krytycznych granic (ddd-connascence-analysis — pasmo dynamiczne nie rośnie między wydaniami).
+Turn the key attributes into automated tests in CI: a module boundary lint, a performance budget (p95 in a load test),
+a frontend bundle size budget, a dependency scan, a restore-after-failure test. An architecture nobody checks drifts.
+Modifiability can be measured: a change impact report for a business metric (ddd-model-stress-test — how many requirements change 0–1 modules)
+and a coupling profile of critical boundaries (ddd-connascence-analysis — the dynamic band does not grow between releases).
 
-## Wynik
-Sekcja „Atrybuty jakości” w `03-requirements/requirements.md`, „Czynniki decyzyjne” w `04-architecture/stack-decision.md`,
-styl i kompromisy w ADR (core-project-record).
+## Result
+The "Quality attributes" section in `03-requirements/requirements.md`, "Decision drivers" in `04-architecture/stack-decision.md`,
+the style and trade-offs in an ADR (core-project-record).
 
-## Przykład
-**Sytuacja:** „System rezerwacji sal ma być szybki i niezawodny — spisz wymagania jakościowe.”
-**Wynik** (scenariusze z miarą i priorytetem):
+## Example
+**Situation:** "The room booking system must be fast and reliable — write down the quality requirements."
+**Result** (scenarios with a measure and a priority):
 
-| ID | Scenariusz | Priorytet |
+| ID | Scenario | Priority |
 |---|---|---|
-| QA-1 | 100 pracowników rezerwuje w szczycie 8:45–9:15 → API przyjmuje żądania → p95 < 300 ms | (H,H) |
-| QA-2 | 2 osoby rezerwują ten sam slot w tej samej sekundzie → 0 podwójnych rezerwacji | (H,H) |
-| QA-3 | użytkownik otwiera kalendarz → SLO 99,5% udanych żądań w oknie 30 dni | (H,M) |
+| QA-1 | 100 employees book at the 8:45–9:15 peak → the API accepts the requests → p95 < 300 ms | (H,H) |
+| QA-2 | 2 people book the same slot in the same second → 0 double bookings | (H,H) |
+| QA-3 | a user opens the calendar → an SLO of 99.5% successful requests in a 30-day window | (H,M) |
 
-Styl: modularny monolit. Fitness functions: test obciążeniowy z progiem p95 dla QA-1, test współbieżny (50 prób → 1 sukces) dla QA-2.
-Więcej przykładów: `references/przyklady.md`.
+Style: a modular monolith. Fitness functions: a load test with a p95 threshold for QA-1, a concurrency test (50 attempts → 1 success) for QA-2.
+More examples: `references/examples.md`.

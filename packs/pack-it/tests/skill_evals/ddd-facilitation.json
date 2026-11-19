@@ -2,7 +2,7 @@
   "skill": "ddd-facilitation",
   "scenarios": [
     {
-      "id": "slowa-sygnaly",
+      "id": "keywords-sygnaly",
       "expect": "trigger",
       "prompt": "W rozmowie z ekspertem ciągle słyszę „zmieniono status” i „zaktualizowano rekord”. Jak dopytywać, żeby wydobyć język biznesu i go utrwalić? Odpowiedz zwięźle.",
       "checks": {
@@ -15,6 +15,32 @@
           ],
           [
             "zdarzeni|co się wydarzyło"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "keywords-sygnaly-en",
+      "expect": "trigger",
+      "prompt": "In a conversation with the expert I keep hearing “status changed” and “record updated”. How do I probe to bring out the business language and capture it? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "clean questions|czyste pytania|jaki to rodzaj|co jeszcze o|co dzieje się tuż przed",
+            "what kind of (a )?\\w+ is",
+            "what else about",
+            "what happens (right )?before"
+          ],
+          [
+            "słownik|glossary|ubiquitous|wszędobylsk|wszechobecn",
+            "vocabulary",
+            "dictionary",
+            "shared language"
+          ],
+          [
+            "zdarzeni|co się wydarzyło",
+            "events?",
+            "what happened"
           ]
         ]
       }

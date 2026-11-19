@@ -23,6 +23,38 @@
       }
     },
     {
+      "id": "szkielet-z-generatora-en",
+      "expect": "trigger",
+      "prompt": "We have an accepted stack decision (SvelteKit + TypeScript). The repo already has CLAUDE.md, a .claude/ directory and docs/project/. Set up the application skeleton so that none of our files are lost. How do I do it step by step? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "oficjaln\\w* generator|sv create|create-\\w+|generator\\w* projektu",
+            "official generator",
+            "project generator",
+            "scaffold\\w* (tool|generator)"
+          ],
+          [
+            "\\.scaffold|katalog\\w* tymczasow|polityk\\w* konflikt|istniejący wygrywa",
+            "temporary (dir|folder)",
+            "conflict polic\\w+",
+            "existing (files? )?wins?"
+          ],
+          [
+            "kod\\w* wyjścia|zatrzym|stop|nie dopisuj",
+            "exit code",
+            "halt",
+            "abort",
+            "do not (append|overwrite)"
+          ]
+        ],
+        "none": [
+          "skopiuj pliki z pamięci",
+          "copy (the )?files from memory"
+        ]
+      }
+    },
+    {
       "id": "audyt-istniejacego-repo",
       "expect": "trigger",
       "prompt": "Przejmujemy repo z API w Express (czysty JavaScript, bez TypeScriptu). Czy agenci mogą w nim od jutra bezpiecznie pracować? Co sprawdzić, w jakiej kolejności i jaki ma być wynik? Odpowiedz zwięźle.",

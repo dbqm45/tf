@@ -1,17 +1,17 @@
-"""Postęp fazy — zamiana zdarzeń stream-JSON Claude Code na linie `run.progress` (kontrakt pdi 0.11.0).
+"""Phase progress — converting Claude Code stream-JSON events into `run.progress` lines (pdi contract 0.11.0).
 
-phase_run.py wywołuje `claude --print --output-format stream-json --verbose` i strumieniuje zdarzenia tego
-strumienia na stdout jako linie z prefiksem `PDI-PROGRESS: {json}` (jedna linia = jeden słownik). pdi po
-stronie hosta łapie te linie (dispatch_local) i zapisuje obok logu jako `.progress.jsonl`.
+phase_run.py calls `claude --print --output-format stream-json --verbose` and streams the events of that
+stream to stdout as lines with the prefix `PDI-PROGRESS: {json}` (one line = one dict). pdi on the
+host side picks up these lines (dispatch_local) and saves them next to the log as `.progress.jsonl`.
 
-Każda linia postępu ma `phase` i `status` (jak w `run_progress`); opcjonalnie `change`, `cost_usd`,
-`budget_usd`, `message`, `url`. Do `message` **nigdy** nie trafia pełny wejściowy ładunek narzędzia
-(prompt, treść pliku, polecenie powłoki, decyzje, sekrety) — tylko krótki opis typu „czyta plik <ścieżka>”,
-„uruchamia polecenie”, „używa narzędzia <nazwa>”. Znaki sterujące poza tabulatorem są zamieniane na
-spację; linia dłuższa niż 200 znaków jest obcinana.
+Each progress line has `phase` and `status` (as in `run_progress`); optionally `change`, `cost_usd`,
+`budget_usd`, `message`, `url`. The full tool input payload **never** goes into `message`
+(prompt, file content, shell command, decisions, secrets) — only a short description such as "reads file <path>",
+"runs a command", "uses tool <name>". Control characters other than tab are replaced with a
+space; a line longer than 200 characters is truncated.
 
-Źródło zachowania `stream-json` i kształtu zdarzeń: code.claude.com/docs/en/cli-reference,
-code.claude.com/docs/en/headless, code.claude.com/docs/en/agent-sdk/typescript (odczyt 2026-11-06).
+Source of the `stream-json` behavior and event shapes: code.claude.com/docs/en/cli-reference,
+code.claude.com/docs/en/headless, code.claude.com/docs/en/agent-sdk/typescript (read 2026-11-06).
 """
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ _CTRL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 
 
 def sanitize(text: Any) -> str:
-    """Jeden wiersz z `text`: bez znaków sterujących i wielokrotnych spacji, przycięty do MESSAGE_MAX."""
+    """One row from `text`: without control characters and repeated spaces, trimmed to MESSAGE_MAX."""
     if text is None:
         return ""
     if not isinstance(text, str):
@@ -39,7 +39,7 @@ def sanitize(text: Any) -> str:
 
 
 def rel_path(path: Any) -> str:
-    """Ścieżka pliku do wiadomości: względna od klonu produktu, bez ścieżek absolutnych hosta."""
+    """File path for a message: relative to the product clone, without the host's absolute paths."""
     if not isinstance(path, str) or not path:
         return ""
     normalized = path.replace("\\", "/")
@@ -54,7 +54,7 @@ def rel_path(path: Any) -> str:
 
 
 def _mcp_pretty(name: str) -> str:
-    """mcp__serwer__narzędzie → serwer/narzędzie; inaczej name."""
+    """mcp__server__tool → server/tool; otherwise name."""
     if name.startswith("mcp__"):
         parts = name.split("__", 2)
         if len(parts) == 3:
@@ -63,33 +63,33 @@ def _mcp_pretty(name: str) -> str:
 
 
 def tool_use_message(name: str, tool_input: Any) -> str:
-    """Krótki opis wywołania narzędzia bez wrzucania wejścia (poza krótką ścieżką pliku)."""
+    """A short description of a tool call without dumping the input (except a short file path)."""
     if not isinstance(tool_input, dict):
         tool_input = {}
     if name == "Read":
-        return sanitize(f"czyta plik {rel_path(tool_input.get('file_path', ''))}")
+        return sanitize(f"reads file {rel_path(tool_input.get('file_path', ''))}")
     if name in ("Edit", "Write", "NotebookEdit"):
-        return sanitize(f"pisze plik {rel_path(tool_input.get('file_path', ''))}")
+        return sanitize(f"writes file {rel_path(tool_input.get('file_path', ''))}")
     if name == "Bash":
-        return "uruchamia polecenie"
+        return "runs a command"
     if name == "Grep":
         path = tool_input.get("path") or ""
-        return sanitize(f"szuka wzorca w {rel_path(path)}" if path else "szuka wzorca")
+        return sanitize(f"searches for a pattern in {rel_path(path)}" if path else "searches for a pattern")
     if name == "Glob":
-        return "szuka plików"
+        return "searches for files"
     if name in ("WebFetch", "WebSearch"):
-        return "pobiera dane z sieci"
+        return "fetches data from the web"
     if name == "Task":
         kind = tool_input.get("subagent_type") or ""
-        return sanitize(f"uruchamia agenta {kind}" if kind else "uruchamia agenta")
+        return sanitize(f"starts agent {kind}" if kind else "starts an agent")
     if name == "TodoWrite":
-        return "aktualizuje listę zadań"
-    pretty = _mcp_pretty(name) if name else "nieznane"
-    return sanitize(f"używa narzędzia {pretty}")
+        return "updates the task list"
+    pretty = _mcp_pretty(name) if name else "unknown"
+    return sanitize(f"uses tool {pretty}")
 
 
 def result_text(result: Any) -> str:
-    """Tekst odpowiedzi persony z końcowego zdarzenia stream-JSON — obsługuje {type, text} i str."""
+    """The persona's response text from the final stream-JSON event — handles {type, text} and str."""
     if isinstance(result, dict):
         text = result.get("text")
         return text if isinstance(text, str) else ""
@@ -99,11 +99,11 @@ def result_text(result: Any) -> str:
 
 
 class ProgressRelay:
-    """Zamiana strumienia zdarzeń stream-JSON na linie `run.progress`.
+    """Converting a stream of stream-JSON events into `run.progress` lines.
 
-    - `handle(event)` zwraca listę linii postępu dla jednego zdarzenia (0, 1 albo 2).
-    - Po końcu strumienia `last_result` ma końcowe zdarzenie `result` (albo None).
-    - `emit_final(status=…)` daje linię `done`/`failed`/`waiting_gate` na koniec, z `cost_usd` z `last_result`.
+    - `handle(event)` returns the list of progress lines for one event (0, 1 or 2).
+    - After the stream ends `last_result` holds the final `result` event (or None).
+    - `emit_final(status=…)` gives a `done`/`failed`/`waiting_gate` line at the end, with `cost_usd` from `last_result`.
     """
 
     def __init__(
@@ -150,11 +150,11 @@ class ProgressRelay:
             subtype = event.get("subtype")
             if subtype == "init" and not self._started:
                 self._started = True
-                return [self._row(status="started", message="persona startuje")]
+                return [self._row(status="started", message="persona starting")]
             if subtype == "permission_denied":
                 tool = event.get("tool_name") or "?"
                 reason = event.get("reason") or ""
-                msg = f"odmowa narzędzia {tool}" + (f": {reason}" if reason else "")
+                msg = f"tool denied {tool}" + (f": {reason}" if reason else "")
                 return [self._row(status="in_progress", message=msg)]
             return []
         if etype == "assistant":
@@ -179,7 +179,7 @@ class ProgressRelay:
                 return []
             for block in content:
                 if isinstance(block, dict) and block.get("type") == "tool_result" and block.get("is_error"):
-                    return [self._row(status="in_progress", message="błąd wyniku narzędzia")]
+                    return [self._row(status="in_progress", message="tool result error")]
             return []
         if etype == "result":
             self.last_result = event
@@ -187,9 +187,9 @@ class ProgressRelay:
         return []
 
     def emit_final(self, *, status: str, message: Optional[str] = None) -> dict:
-        """Końcowa linia postępu (z kosztem z `last_result`, gdy jest)."""
+        """The final progress line (with the cost from `last_result`, when present)."""
         if status not in STATUSES:
-            raise ValueError(f"status {status!r} spoza {', '.join(STATUSES)}")
+            raise ValueError(f"status {status!r} is not one of {', '.join(STATUSES)}")
         cost: Optional[float] = None
         if isinstance(self.last_result, dict):
             raw = self.last_result.get("total_cost_usd")
@@ -205,7 +205,7 @@ def events_to_progress(
     change: Optional[str] = None,
     budget_usd: Optional[float] = None,
 ) -> tuple[list[dict], Optional[dict]]:
-    """Cały strumień → (lista linii postępu, końcowy event `result` albo None). Pomocniczo w testach."""
+    """The whole stream → (list of progress lines, the final `result` event or None). A helper for tests."""
     relay = ProgressRelay(phase=phase, change=change, budget_usd=budget_usd)
     out: list[dict] = []
     for event in events:
@@ -214,7 +214,7 @@ def events_to_progress(
 
 
 def is_valid_progress(row: Any) -> bool:
-    """Sprawdza, czy słownik ma kształt linii `run.progress` (bez wymagania pól opcjonalnych)."""
+    """Checks whether a dict has the shape of a `run.progress` line (without requiring the optional fields)."""
     if not isinstance(row, dict):
         return False
     if not isinstance(row.get("phase"), str) or not row["phase"]:
@@ -233,7 +233,7 @@ def is_valid_progress(row: Any) -> bool:
 
 
 def format_line(row: dict) -> str:
-    """Linia postępu do wypisania na stdout fazy: `PDI-PROGRESS: {json}` w jednej linii."""
+    """A progress line to print to the phase's stdout: `PDI-PROGRESS: {json}` on one line."""
     import json as _json
 
     return PREFIX + _json.dumps(row, ensure_ascii=False, separators=(",", ":"))

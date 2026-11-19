@@ -1,93 +1,93 @@
 ---
 name: arch-eu-product-law
-description: Użyj, gdy trzeba ustalić, które przepisy UE dotyczą budowy produktu cyfrowego z AI — Data Act, PLD, mapa obowiązków z terminami i sąsiednie akty.
+description: Use when the EU rules for a digital product with AI must be established — Data Act, PLD, obligations with deadlines.
 metadata:
-  przeglad: "2027-01-18"
-  katalog: "Użyj, gdy trzeba ustalić, które przepisy UE dotyczą budowy produktu cyfrowego (SaaS, aplikacja webowa lub mobilna, oprogramowanie z AI) i od kiedy — pytania kwalifikujące (dane osobowe, AI, produkt z elementami cyfrowymi, zmiana dostawcy, sektor finansowy, usługa z listy EAA), mapa obowiązków z aktem, artykułem, datą stosowania i datą sprawdzenia, miejsce w kodzie; tematy bez osobnego skilla: Data Act (zmiana dostawcy chmury i SaaS, opłaty za zmianę i transfer danych, eksport danych), PLD (odpowiedzialność za wadliwe oprogramowanie). Kieruje do sąsiadów: RODO i DPIA → arch-privacy-compliance, NIS2, DORA i CRA → sec-eu-regulations, AI Act → ai-governance-compliance, EAA i WCAG → ux-accessibility. Poza zakresem fabryki (notatki w references/poza-zakresem-fabryki.md): DSA, prawa konsumenta, KSeF, ViDA. Nie jest poradą prawną; decyzje podejmuje prawnik lub IOD."
-  slowa: "które przepisy UE dotyczą, jakie przepisy nas dotyczą, mapa obowiązków prawnych, prawo UE dla SaaS, prawo UE dla oprogramowania z AI, zgodność produktu z prawem, Data Act, akt w sprawie danych, zmiana dostawcy chmury, zmiana dostawcy SaaS, przeniesienie danych do konkurencji, opłaty za eksport danych, egress, PLD, odpowiedzialność za produkt, wadliwe oprogramowanie"
+  review: "2027-01-18"
+  catalog: "Use when you must establish which EU rules apply to building a digital product (SaaS, a web or mobile application, software with AI) and from when — qualifying questions (personal data, AI, a product with digital elements, switching providers, the financial sector, a service on the EAA list), a map of obligations with the act, article, application date and check date, the place in the code; topics without a separate skill: the Data Act (switching cloud and SaaS providers, switching and data transfer charges, data export), the PLD (liability for defective software). It routes to the neighbours: GDPR and DPIA → arch-privacy-compliance, NIS2, DORA and CRA → sec-eu-regulations, AI Act → ai-governance-compliance, EAA and WCAG → ux-accessibility. Outside the factory's scope (notes in references/outside-factory-scope.md): DSA, consumer law, KSeF, ViDA. It is not legal advice; a lawyer or the DPO makes the decisions."
+  keywords: "które przepisy UE dotyczą, jakie przepisy nas dotyczą, mapa obowiązków prawnych, prawo UE dla SaaS, prawo UE dla oprogramowania z AI, zgodność produktu z prawem, Data Act, akt w sprawie danych, zmiana dostawcy chmury, zmiana dostawcy SaaS, przeniesienie danych do konkurencji, opłaty za eksport danych, egress, PLD, odpowiedzialność za produkt, wadliwe oprogramowanie, which EU rules apply, which regulations apply to us, map of legal obligations, EU law for SaaS, EU law for AI software, product legal compliance, switching cloud provider, switching SaaS provider, moving data to a competitor, data export charges, product liability, defective software"
 ---
 
-# Prawo UE dla produktu cyfrowego — mapa obowiązków
+# EU law for a digital product — a map of obligations
 
-**Rola agenta:** przygotowuje wstępną mapę przepisów i obowiązków dla produktu, z artykułem, terminem, źródłem
-i miejscem w kodzie. **To nie jest porada prawna** — mapa idzie do prawnika lub IOD, który decyduje o kwalifikacji.
-Każdy fakt ma datę sprawdzenia; czego nie potwierdzono w tekście aktu, oznaczasz [niezweryfikowane] albo [wtórne].
+**The agent's role:** it prepares a preliminary map of the rules and obligations for the product, with the article, the deadline, the source
+and the place in the code. **This is not legal advice** — the map goes to a lawyer or the DPO, who decides on the qualification.
+Every fact has a check date; what was not confirmed in the text of the act, you mark [unverified] or [secondary].
 
-**Zakres:** fabryka IT zajmuje się prawem tylko w zakresie budowy oprogramowania, także z AI. DSA, prawa konsumenta
-(odstąpienie, przycisk odstąpienia), KSeF i ViDA są poza zakresem — dawne notatki w
-`references/poza-zakresem-fabryki.md`; pytania o nie kierujesz do prawnika, księgowości lub właściciela produktu.
+**Scope:** the IT factory deals with law only within the scope of building software, also with AI. The DSA, consumer law
+(withdrawal, the withdrawal button), KSeF and ViDA are outside the scope — the former notes are in
+`references/outside-factory-scope.md`; you direct questions about them to a lawyer, accounting or the product owner.
 
-## 1. Pytania kwalifikujące (najpierw, zanim wymienisz akty)
-Odpowiedzi bierzesz z kodu i dokumentów projektu (`scout`), o resztę pytasz człowieka:
+## 1. Qualifying questions (first, before you list acts)
+You take the answers from the project's code and documents (`scout`), you ask the human about the rest:
 
-| # | Pytanie | „Tak” włącza |
+| # | Question | "Yes" brings in |
 |---|---|---|
-| Q1 | Przetwarzacie dane osobowe? | RODO → arch-privacy-compliance |
-| Q2 | Produkt używa lub udostępnia AI (czat, generowanie treści, scoring)? | AI Act → ai-governance-compliance |
-| Q3 | Sprzedajecie oprogramowanie lub urządzenie instalowane u klienta (nie czysty SaaS)? | CRA → sec-eu-regulations; PLD |
-| Q4 | Jesteście dostawcą chmury lub SaaS, z którego klient może przejść do konkurencji? | Data Act (zmiana dostawcy) |
-| Q5 | Sektor finansowy albo usługa krytyczna (NIS2)? | DORA, NIS2 → sec-eu-regulations |
-| Q6 | Produkt to sklep, bankowość, e-book, bilety lub inna usługa z listy EAA? | EAA → ux-accessibility |
+| Q1 | Do you process personal data? | GDPR → arch-privacy-compliance |
+| Q2 | Does the product use or provide AI (chat, content generation, scoring)? | AI Act → ai-governance-compliance |
+| Q3 | Do you sell software or a device installed at the customer's (not pure SaaS)? | CRA → sec-eu-regulations; PLD |
+| Q4 | Are you a cloud or SaaS provider from which the customer can move to a competitor? | Data Act (switching providers) |
+| Q5 | The financial sector or a critical service (NIS2)? | DORA, NIS2 → sec-eu-regulations |
+| Q6 | Is the product a shop, banking, an e-book, tickets or another service on the EAA list? | EAA → ux-accessibility |
 
-PLD dotyczy praktycznie każdego oprogramowania wprowadzanego do obrotu w ramach działalności (także SaaS).
+The PLD applies to practically all software placed on the market in the course of business (also SaaS).
 
-## 2. Mapa aktów (stan na 2026-10-18, PLD 2026-10-20, źródła wtórne — szczegóły w `references/akty-i-obowiazki.md`)
+## 2. Map of acts (as of 2026-10-18, PLD 2026-10-20, secondary sources — details in `references/acts-and-obligations.md`)
 
-| Akt | Kiedy dotyczy | Termin | Skill |
+| Act | When it applies | Deadline | Skill |
 |---|---|---|---|
-| Data Act, rozp. (UE) 2023/2854 | dostawca usług przetwarzania danych (chmura, SaaS): zmiana dostawcy, eksport danych | stosowanie 12.09.2025 [niezweryfikowane]; opłaty za zmianę obniżone do kosztów bezpośrednich, od 12.01.2027 zakaz (art. 29) [wtórne] | ten |
-| PLD, dyr. (UE) 2024/2853 | oprogramowanie jako produkt, odpowiedzialność bez winy za szkodę | transpozycja do 9.12.2026; produkty wprowadzone do obrotu po tej dacie; w PL projekt UC163 (konsultacje zakończone 22.09.2026, ryzyko opóźnienia) [wtórne] | ten |
-| RODO 2016/679 | dane osobowe | od 25.05.2018 | arch-privacy-compliance |
-| AI Act 2024/1689 po rozp. 2026/1744 | systemy AI | wg skilla; art. 50 [niezweryfikowane] | ai-governance-compliance |
-| CRA 2024/2847, NIS2, DORA | produkty z elementami cyfrowymi; sektory kluczowe; finanse | CRA: zgłaszanie od 11.09.2026, reszta 11.12.2027 | sec-eu-regulations |
-| EAA, dyr. 2019/882 | wybrane produkty i usługi B2C | od 28.06.2025 | ux-accessibility |
+| Data Act, Reg. (EU) 2023/2854 | a provider of data processing services (cloud, SaaS): switching providers, data export | application 12.09.2025 [unverified]; switching charges reduced to direct costs, from 12.01.2027 a ban (Art. 29) [secondary] | this one |
+| PLD, Dir. (EU) 2024/2853 | software as a product, no-fault liability for damage | transposition by 9.12.2026; products placed on the market after that date; in PL draft UC163 (consultation closed 22.09.2026, risk of delay) [secondary] | this one |
+| GDPR 2016/679 | personal data | from 25.05.2018 | arch-privacy-compliance |
+| AI Act 2024/1689 after Reg. 2026/1744 | AI systems | per the skill; Art. 50 [unverified] | ai-governance-compliance |
+| CRA 2024/2847, NIS2, DORA | products with digital elements; essential sectors; finance | CRA: reporting from 11.09.2026, the rest 11.12.2027 | sec-eu-regulations |
+| EAA, Dir. 2019/882 | selected B2C products and services | from 28.06.2025 | ux-accessibility |
 
-Tabela jest punktem startu, nie wynikiem: przed oddaniem mapy każdą datę i artykuł, z których wynika obowiązek,
-sprawdza `researcher` w EUR-Lex lub ISAP (`python3 .tf/factory/facts.py`, jeśli projekt prowadzi bazę faktów).
+The table is a starting point, not a result: before the map is handed over, `researcher` checks every date and article an obligation
+follows from in EUR-Lex or ISAP (`python3 .tf/factory/facts.py`, if the project keeps a fact base).
 
-## 3. Procedura
-1. **Kwalifikacja:** odpowiedzi na Q1–Q6 z dowodem (plik, dokument) albo z odpowiedzi człowieka.
-2. **Rola w każdym akcie:** dostawca, producent, podmiot stosujący, importer — obowiązki zależą od roli.
-3. **Mapa obowiązków:** jeden wiersz = jeden obowiązek: akt i artykuł · obowiązek · od kiedy · data sprawdzenia
-   i źródło · miejsce w kodzie lub procesie (np. eksport danych, informacja o AI w interfejsie) · właściciel · status.
-4. **Sąsiedzi:** RODO, AI Act, NIS2/DORA/CRA i EAA tylko wymieniasz i oddajesz do ich skilli — nie powtarzasz ich treści.
-5. **Luki w kodzie:** obowiązki, które wymagają funkcji (eksport danych w formacie do przeniesienia, informacja
-   o zmianie dostawcy), idą jako zadania do backlogu z kryterium akceptacji.
-6. **Pytania do prawnika:** kwalifikacje niepewne (np. „czy jesteśmy dostawcą usługi przetwarzania danych w rozumieniu
-   Data Act?”) wypisujesz osobno; tematy spoza zakresu fabryki też trafiają na tę listę.
-7. Zapis: `docs/project/04-architecture/<data>-mapa-prawna.md` (core-project-record) z datą przeglądu.
+## 3. Procedure
+1. **Qualification:** answers to Q1–Q6 with evidence (a file, a document) or from the human's answer.
+2. **The role in each act:** provider, manufacturer, deployer, importer — the obligations depend on the role.
+3. **Map of obligations:** one row = one obligation: act and article · obligation · from when · check date
+   and source · place in the code or process (e.g. data export, AI information in the interface) · owner · status.
+4. **Neighbours:** you only list GDPR, the AI Act, NIS2/DORA/CRA and the EAA and hand them to their skills — you do not repeat their content.
+5. **Gaps in the code:** obligations that require features (data export in a portable format, information
+   about switching providers) go as tasks to the backlog with an acceptance criterion.
+6. **Questions for a lawyer:** uncertain qualifications (e.g. "are we a provider of a data processing service within the meaning of
+   the Data Act?") you list separately; topics outside the factory's scope also go on this list.
+7. Record: `docs/project/04-architecture/<date>-legal-map.md` (core-project-record) with a review date.
 
-## Zasady
-- Fakty tego skilla pochodzą ze źródeł wtórnych: na początku pracy przypomnij człowiekowi o sprawdzeniu ich w EUR-Lex
-  i ISAP (lista: `docs/project/archive/research/20261018-prawo-ue-produkt.md`) i podaj, które pozycje mapy od nich zależą.
-- Fakt prawny bez źródła i daty nie trafia do mapy jako pewny; źródło wtórne oznaczasz [wtórne].
-- Termin, który już minął, opisujesz jako obowiązujący — z pytaniem, czy produkt go spełnia.
-- Dyrektywa działa przez ustawę krajową: podaj stan transpozycji w PL albo [niezweryfikowane].
-- Wyłączenia (mikroprzedsiębiorstwa, małe firmy) sprawdzasz w tekście aktu, nie zakładasz.
-- Wymiar „prawo” w audycie kodu (eng-code-audit) wykonuje `maja-product-compliance` wg tego skilla.
+## Rules
+- This skill's facts come from secondary sources: at the start of work remind the human to check them in EUR-Lex
+  and ISAP (list: `docs/project/archive/research/20261018-prawo-ue-produkt.md`) and say which map items depend on them.
+- A legal fact without a source and a date does not go into the map as certain; you mark a secondary source [secondary].
+- A deadline that has already passed you describe as in force — with the question whether the product meets it.
+- A directive works through a national law: give the transposition state in PL or [unverified].
+- You check exemptions (microenterprises, small companies) in the text of the act, you do not assume them.
+- The "law" dimension in a code audit (eng-code-audit) is performed by `maja-product-compliance` per this skill.
 
-## Przykład
-**Sytuacja:** „SaaS B2B z Polski: asystent AI generuje raporty z danych klienta, klienci mogą przenieść dane do innego
-dostawcy. Które przepisy UE nas dotyczą?”
-**Wynik (skrót mapy, nie porada prawna — do weryfikacji przez prawnika):**
-- Q1 tak, Q2 tak, Q3 nie (czysty SaaS), Q4 tak, Q5 nie, Q6 nie [do potwierdzenia].
-- Data Act (2023/2854): zmiana dostawcy i eksport danych od 12.09.2025 [niezweryfikowane]; opłaty za zmianę
-  tylko koszty bezpośrednie, od 12.01.2027 zakaz (art. 29) [wtórne].
-- PLD (2024/2853): odpowiedzialność za wadliwe oprogramowanie, także SaaS i model AI w produkcie, dla produktów
-  wprowadzonych po 9.12.2026; w PL projekt UC163 w toku [wtórne]. W kodzie: ślad wersji i aktualizacji
-  bezpieczeństwa, dokumentacja na wypadek domniemania wady.
-- AI Act: obowiązek przejrzystości treści generowanych przez AI (art. 50) — termin [niezweryfikowane] → ai-governance-compliance.
-- RODO (dane klienta w promptach, procesor modelu) → arch-privacy-compliance.
-- Luki w kodzie: brak pełnego eksportu danych klienta w `app/settings/export` (zadanie do backlogu).
+## Example
+**Situation:** "A B2B SaaS from Poland: an AI assistant generates reports from customer data, customers can move data to another
+provider. Which EU rules apply to us?"
+**Result (an abbreviated map, not legal advice — for verification by a lawyer):**
+- Q1 yes, Q2 yes, Q3 no (pure SaaS), Q4 yes, Q5 no, Q6 no [to be confirmed].
+- Data Act (2023/2854): switching providers and data export from 12.09.2025 [unverified]; switching charges
+  only direct costs, from 12.01.2027 a ban (Art. 29) [secondary].
+- PLD (2024/2853): liability for defective software, also SaaS and an AI model in the product, for products
+  placed on the market after 9.12.2026; in PL draft UC163 in progress [secondary]. In the code: a trace of versions and security
+  updates, documentation in case of a presumption of defect.
+- AI Act: the transparency obligation for AI-generated content (Art. 50) — deadline [unverified] → ai-governance-compliance.
+- GDPR (customer data in prompts, the model processor) → arch-privacy-compliance.
+- Gaps in the code: no full export of customer data in `app/settings/export` (a backlog task).
 
-## Checklista
-- [ ] Q1–Q6 odpowiedziane z dowodem lub odpowiedzią człowieka
-- [ ] rola produktu w każdym akcie nazwana
-- [ ] każdy obowiązek: akt, artykuł, od kiedy, data sprawdzenia, źródło, miejsce w kodzie lub procesie
-- [ ] [niezweryfikowane] / [wtórne] tam, gdzie brak tekstu aktu; stan transpozycji dyrektyw w PL
-- [ ] RODO, AI Act, NIS2/DORA/CRA, EAA przekazane do sąsiednich skilli
-- [ ] pytania do prawnika i zadania do backlogu wypisane; zastrzeżenie „nie jest poradą prawną”
+## Checklist
+- [ ] Q1–Q6 answered with evidence or the human's answer
+- [ ] the product's role in each act named
+- [ ] every obligation: act, article, from when, check date, source, place in the code or process
+- [ ] [unverified] / [secondary] where the act's text is missing; the transposition state of directives in PL
+- [ ] GDPR, AI Act, NIS2/DORA/CRA, EAA handed to the neighbouring skills
+- [ ] questions for a lawyer and backlog tasks listed; the disclaimer "not legal advice"
 
-## Źródła
-Tekstów aktów w EUR-Lex i ISAP nie udało się odczytać w sesji (proxy 403, 2026-10-18); daty i artykuły z komentarzy
-kancelarii i serwisów branżowych, dostęp 2026-10-18 — lista w `references/akty-i-obowiazki.md`. Opisane własnymi słowami.
+## Sources
+The texts of the acts in EUR-Lex and ISAP could not be read in the session (proxy 403, 2026-10-18); dates and articles from commentaries
+by law firms and industry sites, accessed 2026-10-18 — the list in `references/acts-and-obligations.md`. Described in our own words.

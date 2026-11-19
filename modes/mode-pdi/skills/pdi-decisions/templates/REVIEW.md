@@ -1,25 +1,25 @@
-# Zasady przeglądu PR
+# PR review rules
 
-Szablon z tf (mode-pdi, pętla PR N2; wzór: `core-git-workflow/references/review-md.md`). Czyta go przegląd AI PR-ów
-cięć talosa (`pr_loop.py review`) i człowiek jako checklistę. Dopasuj zakres do produktu, a zmianę tego pliku
-przejdź tak jak zmianę kodu — przez PR.
+A template from tf (mode-pdi, the PR loop N2; pattern: `core-git-workflow/references/review-md.md`). It is read by the AI review of the cuts'
+PRs (`pr_loop.py review`) and by the human as a checklist. Adjust the scope to the product, and take a change to this file
+through the same path as a code change — through a PR.
 
-## Zakres
-Przeglądaj zmiany kodu, testów i konfiguracji w diffie PR. Pomijaj: kod generowany, lockfile, zmiany samego
-formatowania i wszystko, co sprawdza CI (lint, typy, pokrycie, skan bezpieczeństwa z `change-check.yml`).
+## Scope
+Review the changes of code, tests and configuration in the PR diff. Skip: generated code, lockfiles, formatting-only
+changes and everything CI checks (lint, types, coverage, the security scan from `change-check.yml`).
 
-## Przebiegi
-1. **Błędy i logika** — warunki brzegowe, obsługa błędów, zgodność z testami i kryteriami cięcia.
-2. **Bezpieczeństwo** — autoryzacja, walidacja wejścia, sekrety, dane osobowe w logach.
-3. **Zgodność** — z planem cięcia (`docs/project/changes/CHG-n/plan.md`), wymaganiami (`requirements.md`) i
-   decyzjami zmiany (`decisions.md`); to, co plan wyłączył („Poza zakresem”), nie jest brakiem.
+## Passes
+1. **Bugs and logic** — edge conditions, error handling, consistency with the tests and the cut's criteria.
+2. **Security** — authorization, input validation, secrets, personal data in logs.
+3. **Conformance** — with the cut plan (`docs/project/changes/CHG-n/plan.md`), the requirements (`requirements.md`) and
+   the change's decisions (`decisions.md`); what the plan excluded ("Out of scope") is not a gap.
 
-## Waga ustaleń
-- **Krytyczne** (`critical`) — blokuje scalenie (błąd danych, luka bezpieczeństwa, złamanie kontraktu).
-- **Ważne** (`important`) — do poprawy w tym PR.
-- **Drobne** (`minor`) — najwyżej 3 na PR; trafiają do listy w PR, bez poprawki.
-Przy każdym ustaleniu: plik i linia, co jest nie tak, dlaczego, propozycja poprawki. Najwyżej 10 ustaleń.
-Uwaga, która wymagałaby zmiany decyzji zmiany, ma odwołanie do niej (np. `CHG-4/D2`) — rozstrzyga człowiek.
+## Finding severity
+- **Critical** (`critical`) — blocks the merge (a data bug, a security hole, a broken contract).
+- **Important** (`important`) — to fix in this PR.
+- **Minor** (`minor`) — at most 3 per PR; they go to a list in the PR, without a fix.
+For every finding: the file and line, what is wrong, why, a proposed fix. At most 10 findings.
+A comment that would require changing a change's decision refers to it (e.g. `CHG-4/D2`) — the human decides.
 
-## Czego nie robisz
-Nie zatwierdzasz PR i nie oceniasz stylu, który pilnuje formatter. Pytania o wymagania kierujesz do człowieka.
+## What you do not do
+You do not approve the PR and you do not judge style the formatter enforces. Questions about requirements go to the human.
