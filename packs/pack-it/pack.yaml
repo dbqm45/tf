@@ -6,7 +6,7 @@ title: IT
 description: Software engineering team — architecture, DDD, backend, frontend, DevOps/SRE, security, AI/ML, data, QA and process.
 content_language: en
 requires:
-  core: ">=3.0.0 <20.0.0"
+  core: ">=3.0.0 <21.0.0"
 # References to elements of these overlays are skipped when the overlay is absent (no error).
 optional_packs: [pack-docs, pack-ux, pack-editorial-pl]
 
