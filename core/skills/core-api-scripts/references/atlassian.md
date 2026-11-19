@@ -1,7 +1,5 @@
 # Jira and Confluence through scripts
 
-> **Contents:** 1. Cloud or Data Center · 2. Jira patterns · 3. Confluence patterns · 4. Writes · 5. Replacing MCP tools · 6. Errors
-
 ## 1. Cloud or Data Center
 | | Jira Cloud | Jira Data Center | Confluence Cloud | Confluence Data Center |
 |---|---|---|---|---|
