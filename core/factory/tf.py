@@ -15,6 +15,10 @@ tf — the team factory command: install, update, packs, health check (standard 
                               # prepare the repository: detect test/lint/type/build commands, write verify.sh, the
                               # readiness report (.tf/reports/readiness.md) and the commands in the instructions file,
                               # turn the quality gate on; --verify runs the verification once (.tf/factory/onboard.py)
+  tf addon list | add <name|path|git URL> | remove <name> | sync | check [--base <ref>]
+                              # add-ons: independent packages in .tf/addons/<name>/ the factory uses through a
+                              # contract (addon.yaml); e.g. tf addon add dna (.tf/factory/addons.py)
+  tf learn [<name>]           # run the add-ons' `learn` (e.g. project knowledge) and wire the result in
   tf new skill <name> "<description>" [--role <role>]
                               # your own skill from the template, with a scenario file (.tf/factory/build.py new-skill)
   tf skill check <name>       # quality gate of a skill: structure, scenarios, audit (.tf/factory/skill_gate.py)
@@ -418,6 +422,12 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
                            errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if g.stdout.strip():
             print(g.stdout.strip())
+    addons_py = Path(".tf") / "factory" / "addons.py"
+    if addons_py.is_file() and (Path(".tf") / "addons").is_dir():   # dodatki — informacja, nie zmienia wyniku
+        a = subprocess.run([sys.executable, str(addons_py), "list"], capture_output=True, text=True, encoding="utf-8",
+                           errors="replace")
+        if a.stdout.strip():
+            print(a.stdout.strip())
     missing = sorted(set(re.findall(r"tf add (pack-[a-z0-9-]+)", out)))
     stale = "stale" in out or "stale" in out
     if fix and stale:
@@ -518,6 +528,10 @@ def main(argv: list[str]) -> int:
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "onboard.py"), *rest]).returncode
     if cmd == "work":
         return engine("work.py", rest)
+    if cmd == "addon":
+        return engine("addons.py", rest)
+    if cmd == "learn":
+        return engine("addons.py", ["learn", *rest])
     if cmd == "metrics":
         if not need_project():
             return 2

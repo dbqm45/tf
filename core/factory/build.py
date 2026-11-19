@@ -1300,6 +1300,11 @@ def cmd_build():
               f"{TARGETS['managed-agents'].relative_to(ROOT)}/ — nothing was sent; plan and upload: "
               "python3 .tf/factory/build.py managed-apply [--yes]")
     errors, warnings = validate()
+    try:   # add-ons (.tf/addons/): wire their output in; a broken add-on never fails the build
+        import addons as addons_mod  # noqa: E402
+        warnings += addons_mod.sync(ROOT, quiet=True)
+    except Exception as e:  # noqa: BLE001
+        warnings.append(f"add-ons not synced: {e}")
     for w in warnings:
         print(f"  ⚠ {w}")
     for e in errors:

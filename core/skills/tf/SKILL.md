@@ -67,8 +67,8 @@ prints `Input`, `Key`, `Tracker` and `Next`; you do what stands in `Next` (every
 `run_state.py stage <katalog> intake [--auto]`. Check whether it can be done without guessing: **who, what, why**;
 **acceptance criteria** checkable with a test; **scope** (what we do not do). The repository's state is collected by `scout`
 (a list of `plik:linia`, without whole files).
-- **Knowledge about the project:** read `docs/project/00-reconstruction/standards/INDEX.md` and `domain.md`, if they exist —
-  the standards apply in the plan and the code; open a standard when a slice concerns it.
+- **Knowledge about the project:** `docs/project/00-reconstruction/standards/INDEX.md`, `domain.md` and add-on
+  guidelines (`references/addons.md`, with `check` in stage 3), if they exist, apply in the plan and code.
 - No acceptance criteria → up to 3 questions to the human; with `--auto` → STOP with those questions.
 - **The shape of the story**, when the lint is installed (pack-it):
   `python3 .claude/skills/proc-requirements-shaping/scripts/requirements_lint.py --story docs/project/changes/<KEY>/ticket.md`.

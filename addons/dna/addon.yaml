@@ -5,6 +5,7 @@ title: Project knowledge for writing code like the team
 description: >-
   Learns the project's stack with exact versions, its standards and its code conventions, and writes them as
   guidelines in out/ for the factory to use. Everything lives in this directory; removing it detaches the add-on.
+keep: [dna.yaml]
 provides:
   context: out/INDEX.md
   plan: out/knowledge.json

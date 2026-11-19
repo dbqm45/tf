@@ -5,7 +5,11 @@ Podstawa: rozmowa z człowiekiem z 2026-11-18/19 (decyzje w sekcji 2) i przeglą
 
 **Stan (2026-11-19):** A1 i A2 zrobione w `addons/dna/` 0.1.0 (szkielet, kontrakt, `learn | verify | status`,
 rozpoznanie stacku i wersji, polecenia, narzędzia; 21 testów, job CI `addon-dna`). Kolejność zmieniona: A1–A2 przed
-A0, bo działają samodzielnie (`python3 addons/dna/dna.py learn --root <repo>`) i nie ruszają rdzenia. Następny: A0.
+A0, bo działają samodzielnie (`python3 addons/dna/dna.py learn --root <repo>`) i nie ruszają rdzenia.
+A0 zrobione w zakresie podstawowym: `core/factory/addons.py` (`tf addon list|add|remove|sync|check|run`, `tf learn`),
+synchronizacja przy `build.py`, informacja w `tf doctor`, wpięcie w skill `tf` (`references/addons.md`); testy
+`tests/test_addons.py`. Z A0 zostało: `refresh` przy starcie sesji (hook) i opcja dodatku w kreatorze `tf install`.
+Następny: A3 (dokumentacja oficjalna dla wersji).
 
 ## 1. Cel
 

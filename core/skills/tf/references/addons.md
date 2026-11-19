@@ -1,0 +1,30 @@
+# Add-ons in the /tf loop
+
+Add-ons are independent packages in `.tf/addons/<name>/` (for example project knowledge: stack versions, standards,
+building blocks, exemplar files). The factory uses them through a fixed contract (`addon.yaml`, contract 1); the core
+knows no add-on by name. List: `python3 .tf/factory/addons.py list --json`.
+
+## Taking in the story and the plan
+- An add-on's context file (`provides.context`) is already imported in the instructions file; its rules
+  (`provides.rules`) are in `.claude/rules/addon-<name>-*.md` and load for the matching paths.
+- For each add-on whose row in `list --json` has `plan` (a path): `scout` reads it together with the story and
+  returns the exemplar file for the kind of change (an existing, recent, similar place in the code), the building
+  blocks to use (components, tokens, services, helpers) and the decisions that apply to the slice's paths.
+- The plan names, per slice, the exemplar and the building blocks it follows (in the slice's value text, e.g.
+  `… (exemplar: src/invoices/InvoiceList.tsx; blocks: Stack, Table, apiClient)`). The plan line format stays as in
+  SKILL.md.
+- Writing code: a decision of strength `hard` holds always (in changed lines of an existing file too); `soft` holds in
+  new files and gives way to the style of the surrounding code in an existing file; with no decision, follow the
+  exemplar. Code outside the task's scope you do not adapt; you note it in the PR description.
+- The add-on's facts (versions) beat the model's memory: use the API of the version listed.
+
+## The gate (stage 3, after green tests)
+`python3 .tf/factory/addons.py check --base <gałąź domyślna> --json` runs every add-on's `check`:
+- exit 1 (some add-on blocks) → the gate's FAIL; the add-on's `report` is the input of the next attempt (the same two
+  rounds as for the scan);
+- an add-on that fails to run (exit other than 0/1) does not block; note it in the report;
+- no add-on with `check` → nothing to do.
+
+## When something is wrong
+`tf doctor` lists add-ons and their problems (another contract, a broken `addon.yaml`). A broken add-on is skipped,
+never fatal. `tf learn` rebuilds the add-ons' output; `tf addon sync` wires it in again.
