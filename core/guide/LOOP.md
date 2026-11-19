@@ -173,6 +173,17 @@ rollback step from the operations card (`.tf/config/operations.json`, the `deplo
 steps); without it, it gives `git revert` of the merge commit, and for a task with a flag it starts with turning the
 flag off.
 
+**A visual check of UI changes — only when it is worth it.** For backend work nothing changes: no screenshots, no section in
+the PR. When the plan or the diff touches UI files (templates, components, styles) in a visible way (at least two UI files,
+or about thirty changed UI lines, or a criterion about a screen, button, form, message …; thresholds: `visual_check` in
+`.tf/config/config.yaml`; a light task needs the criterion), the loop takes screenshots of the affected screens before the
+first slice and after the last (`ui_snap.py`, local headless Chromium/Chrome/Edge, only `localhost`, nothing installed and
+no keys), looks at them against the acceptance criteria and writes the verdict per criterion. A mismatch is a red result
+(back to the slice). The PR gets a `## Visual check` section (identical / changed / mismatches), the dashboard shows the
+before/after pairs. No browser or no dev server: the PR says "skipped" and why. You force it with `--visual` or switch it
+off with `--no-visual` in the `/tf` command. `tf onboard` writes the `preview` part of the operations card (`url`, `start`,
+`routes`) for a web frontend. The screenshots stay in `.tf/runs/<KEY>/screens/`, outside git.
+
 **After the merge.** The operations card has a deployment part (`deploy`), which `tf onboard` creates: `smoke` (the
 smoke test command), `rollback` and `rollback_minutes` (how to roll back and how long it takes), `approval` (what the
 human approves), `logs` (the logs command). After a deployment you run `tf task deployed <KEY> [--version X]`: the

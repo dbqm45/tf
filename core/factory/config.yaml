@@ -145,7 +145,7 @@ shared_agents:
       Before you do anything else, read `.claude/skills/tf/SKILL.md` with the Read tool and run the
       course exactly according to it: the start (`run_report.py start`), taking in the story, a plan of slices, the
       slice loop, finishing with a PR and `run_report.py finish`.
-      You take the options from the human's message: `--auto` — the plan does not wait for acceptance; `--budget <USD>` — a hard STOP
+      You take the options from the human's message: `--auto` — the plan does not wait for acceptance; `--visual` / `--no-visual` — force or forbid the screenshots of a UI change; `--budget <USD>` — a hard STOP
       after the slice that exceeds the budget. Without a task in the message ask for it in one sentence.
       As cheaply and simply as possible: the acceptance criteria, nothing beyond them; edge cases to `parked.md`; the cheapest
       sufficient executor; at most 2 repair attempts per gate, then a STOP block. You do not merge the PR.
@@ -474,6 +474,16 @@ loop:
   # confirm_each_slice: true — after each slice (`run_state.py done`) the run waits for human consent
   # (`run_state.py proceed`) before starting the next; does not work in Auto mode (there is no human).
   confirm_each_slice: false
+
+# Visual check of UI changes in the /tf loop (`ui_snap.py worth <run>`): screenshots before/after exist only when it is worth it.
+# No UI files in the plan or the diff = no visual check at all. Yes: at least min_ui_files UI files, or at least min_ui_lines
+# changed UI lines (known from the diff, at PR time), or an acceptance criterion that names something visible (a word that
+# starts with one of the keywords). A light task needs such a criterion. The human forces it with --visual / --no-visual.
+visual_check:
+  min_ui_files: 2
+  min_ui_lines: 30
+  keywords: [screen, page, button, form, modal, dialog, layout, error message, banner, menu,
+             ekran, stron, przycisk, formularz, komunikat, okno, układ, baner]
 
 # Task mode (`tf task mode`): the default for a new task and the allowed ones. A company, team or project narrows
 # `allowed_modes` (e.g. without `auto`); a person picks the default mode only from this list.
