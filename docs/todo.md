@@ -945,6 +945,14 @@ treści (angielska), bez równoległej polskiej.
     polskich wersjach (`model-webhook-upload`, `config-rollout`).
     Słowa kluczowe EN także dla core-grounding (obszar mode-pdi) i ai-fine-tuning (obszar pack-it); `--hints` czysto
     we wszystkich 8 obszarach roboczych CI — od teraz sprawdzane we wszystkich, nie tylko w `all` i `pack-it`.
+  - [x] 4j (2026-11-19): żywa dokumentacja po angielsku — README, `docs/` (RELEASING, inactive-skills, insights,
+    new-pack, plugins, setup, mapa-fabryki.html), `core/factory/PUBLIC_API.md`. Decyzja: archiwa (`docs/evals`,
+    `docs/plans`) zostają po polsku jako zapis historyczny — w obu katalogach krótki README po angielsku; także ten
+    plik (`docs/todo.md`) i `CHANGELOG.md` zostają po polsku. Przy okazji: skill tf kazał przekazać linię `Waga: …`,
+    a `run_report.py` od #308 wypisuje `Weight: …` — skill i test T-27 poprawione.
+    - [ ] `docs/insights.md` i `docs/plugins.md` opisują `mode-talos` (usunięty w 10.0.0) i liczby skilli sprzed
+      zmian — zaktualizować treść (to nie tłumaczenie).
+    - [ ] gdyby archiwa miały być po angielsku: `docs/evals` (47 plików) i `docs/plans` (40) — osobny krok.
     - [ ] `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
       sprawdzają) — przełożyć razem z testami.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
