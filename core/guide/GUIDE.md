@@ -95,6 +95,7 @@ Shared agents, available to every persona:
 - `scout` (cheap code search);
 - `quick-fixer` (small changes);
 - `researcher` (current facts from sources);
+- `mcp-runner` (MCP tools — Jira, Confluence, Figma — through a cheap model, a short answer back);
 - `architect` (decisions, analysis only);
 - `security-reviewer` (a review of sensitive changes);
 - `scope-reviewer` (whether the diff goes beyond the plan);
@@ -205,6 +206,10 @@ machine without your credentials.
 - **The rules:** the cheapest sufficient model for the task and escalation only after a failure (the `core-cost-control`
   skill); you do not change the session's model in the middle of a task, because that wipes the cache; with a long
   context the `context_guard` hook suggests a checkpoint and a new session.
+- **MCP servers (Jira, Confluence, Figma…)** — connect them as usual (OAuth login, no keys). The agent does not call
+  their tools in the main session: the cheap `mcp-runner` agent calls them, keeps the large results (JSON lists, page
+  bodies, design context) in its own context or in `.tf/cache/mcp/`, and returns a short answer. Writes through MCP
+  (a new issue, a status change, a page edit) wait for your approval of the list of changes.
 - **Paid skill evaluations** (`.tf/factory/skill_gate.py <skill> --model …`) you run consciously — the gate without a
   model is free.
 

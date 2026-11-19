@@ -60,7 +60,10 @@ Running from the command line: `claude -p "<zadanie>" --max-budget-usd <kwota> -
 - **MCP:** the tool definitions of every connected server go into every request. A server with dozens
   of tools costs even when you do not use it. Choose servers with a few universal tools (search for
   an operation + execute), turn off unused ones before the session (not during it — that clears the cache), and operations with a known
-  command do through a CLI (explicit, they stay in the history).
+  command do through a CLI (explicit, they stay in the history). The results cost more than the definitions: the main
+  session delegates MCP calls to the `mcp-runner` agent (a cheap model, its own context), which returns a short answer
+  and leaves large results in `.tf/cache/mcp/` (Anthropic, "Code execution with MCP", 2025: intermediate results
+  stay outside the model's context).
 - **Context drift** (symptoms in `SKILL.md` §6): the middle of a long input gets less attention, and similar but
   irrelevant fragments act as distractors — that is why quality drops before the window fills up. The reaction: a
   checkpoint (core-project-record) → a new session → the plan and progress → the phase from the beginning. Two failed fixes of the same

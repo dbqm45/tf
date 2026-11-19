@@ -20,8 +20,8 @@
   "offline": "2026-11-18"
  },
  "core-cost-control": {
-  "fingerprint": "0ea427e97bc8d3e6",
-  "offline": "2026-11-18"
+  "fingerprint": "e50aa74fb8a10089",
+  "offline": "2026-11-19"
  },
  "core-delivery-lifecycle": {
   "fingerprint": "06e00fffbc362d33",
@@ -80,7 +80,7 @@
   "offline": "2026-11-17"
  },
  "tf": {
-  "fingerprint": "32f547b70c1e6ccd",
+  "fingerprint": "1638f0cce31a0774",
   "offline": "2026-11-19"
  }
 }

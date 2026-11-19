@@ -12,6 +12,9 @@ of frames: ux-accessibility; tokens and components: ux-design-systems.
   go to review. An agent's draft is easy to mistake for a finished design — that is why it is not the default.
 
 ## Procedure (mode A)
+The Figma tools are called by the `mcp-runner` agent (a cheap model): steps 1–2 and the screenshots in its context, the
+frame inventory (names, `node-id`, a one-line description) back in the answer; a design context needed for code goes to
+`.tf/cache/mcp/figma-<node-id>.md`, and the main session reads only the parts it implements.
 1. **File and session.** From the link `figma.com/design/<fileKey>/…` take the `fileKey`; create a Figma server session for the file
    (a server requirement: a session before other file tools).
 2. **Frame inventory.** `get_metadata` (pages and top-level frames: names, `node-id`); `get_screenshot` for a frame
