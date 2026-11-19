@@ -27,7 +27,7 @@ musi mieć w „Odblokowuje” cięcia tej zmiany (TSK), których wymaga; cięci
 (`US-02`, `FR-007`) albo weryfikację. To samokontrola planu cięć; `decision_record.py check` i REL-008 w ci_for_sdlc
 sprawdzają ją tak samo.
 
-| Cięcie | Rodzaj | Wydanie | Flaga | Wartość | Wymagania | Odblokowuje | Pliki | Weryfikacja |
+| Slice | Kind | Release | Flag | Value | Requirements | Unblocks | Files | Verification |
 |---|---|---|---|---|---|---|---|---|
 | TSK-1 | cięcie | R1 | deploy_counter | użytkownik może zobaczyć na stronie głównej, ile wdrożeń środowiska było w ostatnich 7 dniach | US-01, FR-001, FR-002, FR-003, FR-004, FR-005, NF-001, NF-002, NF-003, NF-004, NF-005, NF-006 | — | `src/deployments.js`, `src/server.js`, `src/page.js`, `config/flags.test.json`, `config/flags.prod.json`, `test/deployments.test.js`, `test/page.test.js`, `test/server.test.js`, `test/server-errors.test.js`, `test/flags.test.js` | `npm test` → 0 (testy E-01A…E-05B napisane najpierw, czerwone przed kodem); `npm run lint` → 0; test wydajnościowy: 10 000 wdrożeń, flaga on → p95 `GET /` < 200 ms (sygnał, nie blokada); `config/flags.prod.json` → `deploy_counter.enabled == false` |
 
@@ -48,7 +48,7 @@ Po etapie 100%: PR usuwający flagę przed `remove_by`.
 ## Poza zakresem MVP (kandydaci do R2, bez planowania teraz)
 Rozróżnienie udane/nieudane, wykres/trend, konfigurowalne okno, nowy endpoint (intent.md, CHG-3/D2).
 
-## Pytania do bramki
+## Gate questions
 - Właściciel aplikacji sdlc-proba: kto jest właścicielem flagi `deploy_counter` (decyduje o przejściu etapów rolloutu) i czy `remove_by: 2027-02-28` w release.yaml (propozycja Tomasza) jest właściwą datą usunięcia flagi?
 - Właściciel aplikacji sdlc-proba: jakie kryterium wyjścia z etapu `test` przed włączeniem na prod (propozycja w release.yaml: min. 3 dni na test, zero błędów 5xx w logu serwera i liczba zgodna z `/deployments` w spot-checku)?
 

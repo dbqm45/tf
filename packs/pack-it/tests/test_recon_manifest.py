@@ -97,19 +97,17 @@ def main() -> int:
         d2 = json.loads(r.stdout) if r.returncode == 0 else {}
         check("svc" in d2.get("new_batches", []) and "svc" in d2.get("refresh", []), f"M-14: a new batch to do: {d2}")
         check(d2.get("removed_batches") == [], f"M-15: removed batches: {d2.get('removed_batches')}")
-        # a manifest from before 14.x: a batch of loose files with the suffix "(pliki)" is the same batch as "(files)"
+        # a batch of loose files has the suffix "(files)"; the same batch in the next diff
         repo2, out3 = Path(d) / "repo2", Path(d) / "m3.json"
         write(repo2, {"pkg/x.py": "x = 1\n" * 200, "pkg/sub/y.py": "y = 1\n" * 200})
         r = run("write", str(repo2), "--out", str(out3), "--budget-tokens", "100")
         m3 = json.loads(out3.read_text(encoding="utf-8")) if out3.is_file() else {}
         names = [b["name"] for b in m3.get("batches", [])]
-        m3["batches"] = [{**b, "name": b["name"].replace(" (files)", " (pliki)")} for b in m3.get("batches", [])]
-        out3.write_text(json.dumps(m3), encoding="utf-8")
         r = run("diff", str(repo2), "--manifest", str(out3), "--json")
         d3 = json.loads(r.stdout) if r.returncode == 0 else {}
         check("pkg (files)" in names and d3.get("removed_batches") == [] and d3.get("new_batches") == []
               and "pkg (files)" in d3.get("unchanged", []),
-              f"M-18: old manifest with a '(pliki)' batch = the same batch: {names} {d3}")
+              f"M-18: a '(files)' batch is the same batch in the next diff: {names} {d3}")
 
         r = run("diff", str(repo), "--manifest", str(Path(d) / "nie-ma.json"))
         check(r.returncode == 2, "M-16: missing manifest → code 2")

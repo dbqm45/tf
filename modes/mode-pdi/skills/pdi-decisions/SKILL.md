@@ -80,7 +80,7 @@ When you were run this way:
 1. Nobody will answer questions: you do not ask the human and you do not wait for consent. You work only within the phase's scope, in
    the artifact from the command (`requirements.md`, `plan.md`…), header `status: proposed`.
 2. What you cannot settle without a human, you do not guess: a list in the artifact's `## Gate questions` section (a question
-   with the addressee in the line) — it goes to the pdi inbox together with the gate. Older artifacts have `## Pytania do bramki`; both are read.
+   with the addressee in the line) — it goes to the pdi inbox together with the gate.
 3. You do not record decisions (`decision add`) — they will be made at the gate in pdi. The workflow opens the PR. The `## Gate …` entries (in older changes `## Bramka …`)
    in `decisions.md` (the outcome and the justification from pdi, `decision gate --why`, the answers to questions as pairs
    `- question:` / `- answer:` from `--answers`) and the decisions from the pdi register (`origin: pdi`, `decision import`)

@@ -2,6 +2,7 @@
 """The 11.0.0 value migration (`migrations.migrate_values`): Polish identifiers of the task state, the loop and the configuration
 in the project data → English. Tasks (`task.json`), runs (`run.json`), the project and personal configuration,
 the cost profile; the descriptive content (titles, reasons) unchanged. python3 .claude/tests/test_migrate_values.py"""
+import hashlib
 import importlib.util
 import json
 import sys
@@ -156,6 +157,104 @@ def main() -> int:
         check(plan == ["x.txt"] and not (p / "x.txt").exists(), f"MV-16: dry — the pack migration is visible, nothing written: {plan}")
         check(mig.migrate_values(p, dry=False) == ["x.txt"] and (p / "x.txt").read_text() == "ok",
               "MV-17: the pack migration done; another pack's error does not stop it")
+
+    # 19.0.0: project files that the readers read in the Polish form from before 14.x → the English form
+    with tempfile.TemporaryDirectory() as t:
+        p = Path(t)
+
+        def put(rel: str, text: str) -> Path:
+            f = p / rel
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_text(text, encoding="utf-8")
+            return f
+
+        wip = put(".tf/wip/login.md", "---\nupdated: 2026-11-01\n---\n## Pułapki i ślepe uliczki\n- Pułapki i ślepe uliczki: cache\n")
+        retro = put("docs/project/archive/retro/20261101-retro.json",
+                    json.dumps({"date": "2026-11-01", "decisions": {"a": "tak", "b": "nie", "c": "później", "d": "yes"},
+                                "evidence": [{"key": "a", "text": "tak, nie"}]}, ensure_ascii=False, indent=1) + "\n")
+        doc = "<!-- plik: https://x.org/a.pdf -->\ntekst plik: zostaje\n<!-- file: https://x.org/b.pdf -->\nb\n"
+        put(".claude/knowledge/src-1/doc.txt", doc)
+        meta = put(".claude/knowledge/src-1/meta.json", json.dumps({"id": "src-1", "sha256": hashlib.sha256(doc.encode()).hexdigest(),
+                                                                    "bytes": len(doc.encode())}, indent=1))
+        corpus = put("docs/project/02-domain/corpus.md",
+                     "## S1 — notes/a.md\n- **E1** > „to tylko [wzmianka] w cytacie” — l. 3 [wzmianka]\n"
+                     "- **E2** > „dwa” — l. 4 [Zastąpiony] [ważne]\n- **E3** > „trzy” — l. 5 [niezweryfikowany]\n")
+        md = put("CLAUDE.md", "# Mój projekt\n\n### Komendy\nmoje\n\n<!-- team-factory:begin -->\n## Agent team\n### Komendy\n"
+                              "- Test: `make t` (dostosuj do swojego projektu)\n\n### Język\n- po polsku\n<!-- team-factory:end -->\n")
+        put(".claude/factory-manifest.json", json.dumps({"files": {".claude/skills/tf/SKILL.md": "x"}}))
+        own = put(".claude/skills/fw-own/SKILL.md", "# fw-own\n\n## Pojęcia domenowe w Pythonie\n| encja | x |\n\n"
+                                                    "## Zależne od wersji\n- 3.12 [niezweryfikowane]\n\n## Źródła\n"
+                                                    "- docs.python.org (odczyt 2026-10-01)\n\n## Dalej\n- odczyt zostaje\n")
+        own_ref = put(".claude/skills/fw-own/references/a.md", "## Źródła\n- x (odczyt 2026-10-02)\n")
+        factory_skill = put(".claude/skills/tf/SKILL.md", "## Źródła\n- [niezweryfikowane] (odczyt 2026-10-03)\n")
+        persona = put(".tf/config/personas/ola.yaml", "description: Analityczka. Uruchom przez `claude --agent ola`, gdy trzeba.\n")
+        ma_readme = put("managed-agents/README.md", "# Managed Agents — wygenerowane przez fabrykę\n\nPliki…\n")
+        ma_agent = put("managed-agents/agents/ola.md",
+                       "---\n# WYGENEROWANO przez .tf/factory/build.py — nie edytuj ręcznie. Source: x\nname: ola\n---\n"
+                       "WYGENEROWANO przez .tf/factory/build.py — treść\n")
+        plan = put("docs/project/changes/CHG-1/plan.md",
+                   "---\nartifact: plan\ntasks: [TSK-1]\n---\n| Cięcie | Rodzaj | Wydanie | Flaga | Wartość | Wymagania | Odblokowuje "
+                   "| Weryfikacja |\n|---|---|---|---|---|---|---|---|\n| TSK-1 | fundament | R1 | f-1 | wydanie | US-1 | TSK-2 | x |\n\n"
+                   "## Rozważone opcje\n### Opcja A\n### Opcja B\n## Cele zmiany\n- pokrycie\n\n## Pytania do bramki\n- Czy?\n")
+        req = put("docs/project/changes/CHG-1/requirements.md", "## Przegląd drugim modelem\n- ok\n\n## Uwagi\n- Pytania do bramki zostają\n")
+        rec = "docs/project/00-reconstruction/"
+        report = put(rec + "report.md", "# Report\nCommit abc\n\nOdświeżenie przyrostowe: 2026-10-01 · commit abc\n")
+        rules = put(rec + "rules.md", "## Billing (szczegóły: modules/billing.md)\n- Limit [pytanie: czy?] (pewność: kod) "
+                                      "[założenie] [Niezweryfikowane]\n")
+        manifest = put(rec + "manifest.json", json.dumps({"commit": "abc", "batches": [{"name": "src (pliki)", "hash": "1"},
+                                                                                       {"name": "lib", "hash": "2"}]}, indent=2))
+        remap = put(rec + "raw/remap.json", json.dumps({"manifest": hashlib.sha256(manifest.read_bytes()).hexdigest(), "files": {}}))
+        untouched = {f: f.read_bytes() for f in (factory_skill,)}
+        plan_dry = mig.migrate_v19(p, dry=True)
+        check(len(plan_dry) == 15 and "Pułapki" in wip.read_text(encoding="utf-8"),
+              f"MV-18: 19.0.0 dry — lists the files, writes nothing: {plan_dry}")
+        mig.migrate_values(p, dry=False)
+        check(wip.read_text(encoding="utf-8").endswith("## Pitfalls and dead ends\n- Pułapki i ślepe uliczki: cache\n"),
+              "MV-19: checkpoint — the traps heading in English, the content unchanged")
+        rj = json.loads(retro.read_text(encoding="utf-8"))
+        check(rj["decisions"] == {"a": "yes", "b": "no", "c": "later", "d": "yes"} and rj["evidence"][0]["text"] == "tak, nie",
+              f"MV-20: retro decisions yes/no/later, the evidence text unchanged: {rj}")
+        new_doc = "<!-- file: https://x.org/a.pdf -->\ntekst plik: zostaje\n<!-- file: https://x.org/b.pdf -->\nb\n"
+        mj = json.loads(meta.read_text(encoding="utf-8"))
+        check((p / ".claude/knowledge/src-1/doc.txt").read_text(encoding="utf-8") == new_doc
+              and mj["sha256"] == hashlib.sha256(new_doc.encode()).hexdigest() and mj["bytes"] == len(new_doc.encode()),
+              f"MV-21: kb cache — the file marker and the hash in meta.json: {mj}")
+        check(corpus.read_text(encoding="utf-8") == "## S1 — notes/a.md\n- **E1** > „to tylko [wzmianka] w cytacie” — l. 3 [mention]\n"
+              "- **E2** > „dwa” — l. 4 [superseded] [ważne]\n- **E3** > „trzy” — l. 5 [unverified]\n",
+              f"MV-22: corpus.md — the entry tags, the quote unchanged: {corpus.read_text(encoding='utf-8')}")
+        c = md.read_text(encoding="utf-8")
+        check(c.startswith("# Mój projekt\n\n### Komendy\nmoje\n") and "### Commands\n- Test: `make t` (adapt to your project)" in c
+              and "### Language\n- po polsku" in c, f"MV-23: CLAUDE.md — the factory block only: {c}")
+        o = own.read_text(encoding="utf-8")
+        check("## Domain concepts in Pythonie" in o and "## Version-dependent" in o and "[unverified]" in o
+              and "## Sources\n- docs.python.org (accessed 2026-10-01)" in o and "- odczyt zostaje" in o
+              and own_ref.read_text(encoding="utf-8") == "## Sources\n- x (accessed 2026-10-02)\n",
+              f"MV-24: an own skill — sections, [unverified], „accessed” only in Sources: {o}")
+        check(all(f.read_bytes() == b for f, b in untouched.items()), "MV-25: a factory-installed skill is left to the installer")
+        check(persona.read_text(encoding="utf-8") == "description: Analityczka. Run with `claude --agent ola`, gdy trzeba.\n",
+              f"MV-26: an own persona — the launch hint: {persona.read_text(encoding='utf-8')}")
+        a = ma_agent.read_text(encoding="utf-8")
+        check(ma_readme.read_text(encoding="utf-8").startswith("# Managed Agents — generated by the factory\n\nPliki")
+              and a.startswith("---\n# GENERATED by .tf/factory/build.py — do not edit by hand. Source: x\n")
+              and a.endswith("---\nWYGENEROWANO przez .tf/factory/build.py — treść\n"),
+              f"MV-27: managed-agents — the README head and the marker in the header only: {a}")
+        pl = plan.read_text(encoding="utf-8")
+        check("| Slice | Kind | Release | Flag | Value | Requirements | Unblocks | Verification |" in pl
+              and "| TSK-1 | fundament | R1 | f-1 | wydanie |" in pl and "## Options considered\n### Option A\n### Option B\n"
+              "## Change targets\n" in pl and "## Gate questions\n- Czy?" in pl, f"MV-28: pdi plan.md — columns and headings: {pl}")
+        check(req.read_text(encoding="utf-8") == "## Second-model review\n- ok\n\n## Uwagi\n- Pytania do bramki zostają\n",
+              "MV-29: pdi artifact — the second-review heading; the text unchanged")
+        check(report.read_text(encoding="utf-8").endswith("\nIncremental refresh: 2026-10-01 · commit abc\n")
+              and rules.read_text(encoding="utf-8") == "## Billing (details: modules/billing.md)\n- Limit [question: czy?] "
+              "(confidence: kod) [assumption] [unverified]\n", f"MV-30: reconstruction — the stamp and the marks: "
+              f"{rules.read_text(encoding='utf-8')}")
+        mf = json.loads(manifest.read_text(encoding="utf-8"))
+        check([b["name"] for b in mf["batches"]] == ["src (files)", "lib"]
+              and json.loads(remap.read_text())["manifest"] == hashlib.sha256(manifest.read_bytes()).hexdigest(),
+              f"MV-31: the reconstruction manifest — batch names; the refresh mark follows the manifest: {mf}")
+        check(mig.migrate_values(p, dry=False) == [] and mig.migrate_v19(p, dry=True) == [], "MV-32: migrating again changes nothing")
+        installer = mig.claude_md_v19("x\n<!-- team-factory:begin -->\n### Komendy\n- a\n<!-- team-factory:end -->\n")
+        check("### Commands\n- a" in installer, "MV-33: the installer's helper for the factory block")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} value migration tests")

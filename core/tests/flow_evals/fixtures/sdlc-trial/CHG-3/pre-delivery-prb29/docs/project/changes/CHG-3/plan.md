@@ -15,7 +15,7 @@ source_reported_at: 2026-11-04
 
 ## Cięcia
 
-| TSK | Opis | Wydanie | Flaga |
+| TSK | Opis | Release | Flag |
 |---|---|---|---|
 | TSK-A | Fundament modułu płatności | R1 | brak |
 | TSK-B | Integracja z providerem | R1 | payments_v2 |

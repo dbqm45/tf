@@ -123,6 +123,16 @@ def main() -> int:
         r = install(src, proj)
         check(r.returncode == 0 and not factory_new(proj) and "You changed these factory files" not in r.stdout,
               f"U-4: an update of a clean install without *.factory-new: {factory_new(proj)} {r.stdout[-500:]}")
+        # U-5 (19.0.0): a factory block from before 14.x — the project's commands under „### Komendy” survive the update
+        import re
+        md = proj / "CLAUDE.md"
+        old = re.sub(r"### Commands\n.*?(?=\n### )", "### Komendy\n- Test: `make proj-test`\n", md.read_text(encoding="utf-8"),
+                     count=1, flags=re.S)
+        md.write_text(old, encoding="utf-8")
+        r = install(src, proj)
+        new = md.read_text(encoding="utf-8")
+        check("### Komendy" in old and "### Commands\n- Test: `make proj-test`" in new and "Komendy" not in new,
+              f"U-5: the Polish commands subsection migrated before the block is rewritten: {new[:800]}")
 
         # L-1..L-3: a team install has a committed lock (without local data), a private one does not
         lock = json.loads((proj / LOCK).read_text(encoding="utf-8")) if (proj / LOCK).exists() else {}

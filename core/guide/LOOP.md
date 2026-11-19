@@ -238,5 +238,5 @@ which slice to resume. After your decision ask for a resume and give the run dir
 `plan.md` is where it continues. The cost report is written also after a STOP.
 
 Details of the course: `.claude/skills/tf/SKILL.md` (in the factory's sources:
-`core/skills/tf/SKILL.md`); the mechanism: `docs/insights.md` in the factory repository, the sections
-on modes and on Talos (that was the loop's name up to version 9.33).
+`core/skills/tf/SKILL.md`); the mechanism: `docs/insights.md` in the factory repository, the section
+on modes.

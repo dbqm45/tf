@@ -5,7 +5,7 @@ report in plain language and turns on the quality gate.
 
   tf onboard                 # proposal and a question for consent (without a terminal: the proposal only)
   tf onboard --yes           # write without asking: verify.sh, .claude/quality-gate.json, .tf/reports/readiness.md
-                             # and the commands in the "Komendy" section of the instructions file (CLAUDE.md / CLAUDE.local.md)
+                             # and the commands in the "Commands" section of the instructions file (CLAUDE.md / CLAUDE.local.md)
   tf onboard --yes --verify  # after writing, runs verification once and says whether it passes
   tf onboard --dry-run       # proposal only, writes nothing
   tf onboard --json          # detection result for scripts, writes nothing
@@ -46,7 +46,7 @@ MAX_BLOCKING = 5
 VERIFY = "./verify.sh"
 VERIFY_KINDS = ("lint", "typecheck", "test")   # order in verify.sh: from the fastest check
 MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"   # as in install.py
-COMMANDS = re.compile(r"(### (?:Commands|Komendy)\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
+COMMANDS = re.compile(r"(### Commands\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
 LABELS = {"test": "Test", "lint": "Lint", "typecheck": "Typecheck", "build": "Build"}
 
 
@@ -332,7 +332,7 @@ def commands_line(det: dict, verify: bool) -> str:
 
 
 def with_commands(text: str, line: str) -> str:
-    """Replaces the content of the "Komendy" subsection in the factory block; a file without the block or without the subsection stays unchanged."""
+    """Replaces the content of the "Commands" subsection in the factory block; a file without the block or without the subsection stays unchanged."""
     start = text.find(MARK_BEGIN)
     end = text.find(MARK_END, start)
     if start < 0 or end < 0:

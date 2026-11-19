@@ -7,7 +7,7 @@ Export of a code reconstruction to JSON (for tools, e.g. ci_for_sdlc as the "cur
 
 An item = a bullet or a table row: `id` (kind + a digest of the content without evidence — stable when lines shift),
 `text`, `section`, `module` (rules from a module section), `evidence` [{path, line, line_end[, verified]}], `quote`,
-`confidence` (from "(confidence: …)", formerly "(pewność: …)"), `status` (evidence | assumption | unverified | question), `cells` (a table row:
+`confidence` (from "(confidence: …)"), `status` (evidence | assumption | unverified | question), `cells` (a table row:
 header → value), `source` (file:line in the reconstruction directory). With `--repo` each evidence has `verified`: the file and lines
 exist and the item's quote matches the code ±2 lines (like `recon_check.py`). Format: reconstruction-export.schema.json.
 
@@ -29,10 +29,9 @@ sys.path.insert(0, HERE)
 from recon_check import MARK, QUOTE, REF, norm  # noqa: E402  (the same evidence format as the check)
 
 SOURCES = (("rules", "rules.md"), ("requirements", "requirements.md"), ("domain", "domain.md"))
-CONFIDENCE = re.compile(r"\(\s*(?:confidence|pewność):?\s*([^)]+?)\s*\)", re.I)
-STATUS = {"assumption": "assumption", "unverified": "unverified", "question": "question",
-          "założenie": "assumption", "niezweryfikowane": "unverified", "pytanie": "question"}   # pl: sprzed 14.x
-MODULE_HEAD = re.compile(r"^(.+?)\s+\((?:details|szczegóły): modules/[^)]+\)$")
+CONFIDENCE = re.compile(r"\(\s*confidence:?\s*([^)]+?)\s*\)", re.I)
+STATUS = {"assumption": "assumption", "unverified": "unverified", "question": "question"}
+MODULE_HEAD = re.compile(r"^(.+?)\s+\(details: modules/[^)]+\)$")
 
 
 def refs(text: str) -> list:

@@ -70,14 +70,14 @@ def main() -> int:
     # ── error_lines_from_log ─────────────────────────────────────────────────
     log = "\n".join([
         "$ git status",
-        "# błąd: Talos nie zostawił gałęzi story/*",
+        "# błąd: pętla tf nie zostawiła gałęzi story/*",
         "$ git push",
         "  ✗ test_fetch_page.py",
         "✗ pdi: coś padło",
         "# koniec: failed",
     ])
     lines = e.error_lines_from_log(log)
-    check(len(lines) == 4 and any("Talos" in l for l in lines) and any("koniec" in l for l in lines),
+    check(len(lines) == 4 and any("pętla tf" in l for l in lines) and any("koniec" in l for l in lines),
           f"E-1: {lines}")
 
     # ── render_decisions_md ──────────────────────────────────────────────────

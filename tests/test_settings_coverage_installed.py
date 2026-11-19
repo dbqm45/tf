@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Test of the permission coverage (`.claude/tests/test_settings_coverage.py`, PRB-32) in an installed project outside the
-factory tree: checks the installed `.claude/settings*.json` against the installed `talos-story-run` and `pdi-decisions`
+factory tree: checks the installed `.claude/settings*.json` against the installed `tf` and `pdi-decisions`
 skills, and without them skips the check with a clear message (instead of looking for `core/settings.json`).
 python3 tests/test_settings_coverage_installed.py"""
 import json

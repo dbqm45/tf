@@ -41,9 +41,6 @@ reference_sections:
     skip: [layers.md]
     sections: ["Fit test", "Model (the essence)", "Questions", "Mapping steps", "Decisions to check (R/A/X)",
                "Result format", "Patterns and pitfalls", "Quality check", "Example (shortened)"]
-    # pl: sprzed 14.x — a file that uses the Polish section names throughout also passes
-    sections_pl: ["Test dopasowania", "Model (istota)", "Pytania", "Kroki mapowania", "Decyzje do kontroli (R/A/X)",
-                  "Format wyniku", "Wzorce i pułapki", "Kontrola jakości", "Przykład (skrócony)"]
 
 # Added to this overlay's personas and executors (on top of the core's always_skills).
 always_skills: [eng-design-principles]

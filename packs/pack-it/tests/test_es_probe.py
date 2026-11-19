@@ -119,17 +119,17 @@ def main() -> int:
         r = run(root, fake, "--variant", "pelna", "--probe", str(root / "brak.json"), "--id", "p3")
         check(r.returncode == 2, f"EP-12: missing probe file → 2: {r.returncode}")
 
-    # backward compatibility (pl: sprzed 14.x): the Polish write command in the prompt and the Polish bad-JSON message
+    # the write command is removed from the prompt; the bad-JSON message is counted in the transcript
     import importlib.util
     spec = importlib.util.spec_from_file_location("es_probe", SCRIPT)
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
-    old = "kontrakt\n\nZapisz ten JSON do pliku `docs/x/a.reply.json` i odpowiedz jednym słowem: ok.\n"
     new = "kontrakt\n\nSave this JSON to the file `docs/x/a.reply.json` and reply with one word: ok.\n"
-    check(mod.WRITE_FILE.sub("|", old) == "kontrakt|" and mod.WRITE_FILE.sub("|", new) == "kontrakt|",
-          "EP-14: the file-write command removed from the prompt in Polish and in English")
-    tr = "> problem: a: brak lub niepoprawny JSON — x\n> problem: b: missing or invalid JSON; y\n"
-    check(sum(tr.count(m) for m in mod.BAD_JSON) == 2, "EP-15: bad JSON counted in the old and the new transcript")
+    arr = "kontrakt\n\nSave the array to the file `docs/x/a.reply.json` and reply: ok.\n"
+    check(mod.WRITE_FILE.sub("|", new) == "kontrakt|" and mod.WRITE_FILE.sub("|", arr) == "kontrakt|",
+          "EP-14: the file-write command removed from the prompt")
+    tr = "> problem: a: missing or invalid JSON — x\n> problem: b: missing or invalid JSON; y\n"
+    check(tr.count(mod.BAD_JSON) == 2, "EP-15: bad JSON counted in the transcript")
 
     for f in fails:
         print("✗", f)

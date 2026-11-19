@@ -44,10 +44,8 @@ BEGIN_MD, END_MD = "<!-- from-docs:begin (org/standards_from_docs.py apply — d
     "<!-- from-docs:end -->"
 BEGIN_YAML, END_YAML = "  # from-docs:begin (org/standards_from_docs.py apply — do not edit by hand)", \
     "  # from-docs:end"
-OLD_BEGIN = {BEGIN_MD: "<!-- from-docs:begin (org/standards_from_docs.py apply — nie edytuj ręcznie) -->",  # pl: sprzed 14.x
-             BEGIN_YAML: "  # from-docs:begin (org/standards_from_docs.py apply — nie edytuj ręcznie)"}
-STANDARDS_H = ("## Standards", "## Ustalenia")                                   # pl: sprzed 14.x
-COMMON_H = ("## Common to every change", "## Wspólne dla każdej zmiany")         # pl: sprzed 14.x
+STANDARDS_H = "## Standards"
+COMMON_H = "## Common to every change"
 
 
 def rules_scan():
@@ -302,8 +300,6 @@ def pack_paths(pack: Path) -> tuple[Path | None, Path | None]:
 
 
 def strip_block(text: str, begin: str, end: str) -> str:
-    if begin not in text and OLD_BEGIN.get(begin, begin) in text:
-        begin = OLD_BEGIN[begin]                       # block written by an older version (in Polish)
     if begin in text and end in text:
         head, rest = text.split(begin, 1)
         tail = rest.split(end, 1)[1]
@@ -507,15 +503,13 @@ def cmd_check(pack: Path) -> int:
 
 # ───────────── apply ─────────────
 
-def put_block(text: str, anchor: str | tuple[str, ...], block: str, begin: str, end: str) -> str:
+def put_block(text: str, anchor: str, block: str, begin: str, end: str) -> str:
     """Block from the documents right after the `anchor` line (replaces the previous one); an empty block removes the previous one."""
     text = strip_block(text, begin, end)
     if not block:
         return text
-    anchors = (anchor,) if isinstance(anchor, str) else anchor   # the first is the current heading, the rest are former headings
-    anchor = anchors[0]
     lines = text.split("\n")
-    at = next((i for i, ln in enumerate(lines) if ln.strip() in anchors), None)
+    at = next((i for i, ln in enumerate(lines) if ln.strip() == anchor), None)
     chunk = [begin, block.rstrip("\n"), end]
     if at is None:
         return text.rstrip("\n") + "\n\n" + anchor + "\n" + "\n".join(chunk) + "\n"
@@ -552,7 +546,7 @@ def cmd_apply(pack: Path) -> int:
         path = skill / "references" / f"{area}.md"
         if not path.is_file() and not by_area[area]:
             continue
-        text = path.read_text(encoding="utf-8") if path.is_file() else f"# {area}\n\n{STANDARDS_H[0]}\n"
+        text = path.read_text(encoding="utf-8") if path.is_file() else f"# {area}\n\n{STANDARDS_H}\n"
         write_if_changed(path, put_block(text, STANDARDS_H, "\n".join(by_area[area]), BEGIN_MD, END_MD))
     sk = skill / "SKILL.md"
     write_if_changed(sk, put_block(sk.read_text(encoding="utf-8"), COMMON_H,

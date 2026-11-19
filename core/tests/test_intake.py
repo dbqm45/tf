@@ -22,7 +22,7 @@ tasks: [{tasks}]
 ---
 # Plan zmiany {change}
 
-| Cięcie | Wydanie | Flaga | Wartość | Pliki | Weryfikacja |
+| Slice | Release | Flag | Value | Files | Verification |
 |---|---|---|---|---|---|
 {rows}
 """

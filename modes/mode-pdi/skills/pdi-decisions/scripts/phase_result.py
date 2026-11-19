@@ -26,9 +26,9 @@ from typing import Any
 PREFIX = "PDI-PROGRESS: "
 # Statuses that `cmd_run` prints (phase_run.py); `dry_run` comes from `--dry-run`.
 STATUSES = ("waiting_gate", "done", "failed", "dry_run")
-# Wiadomości postępu z phase_progress.py; oba języki (pl: sprzed 14.x).
-_READ_FILE = re.compile(r"\b(?:czyta plik|reads file|reading file)\s+(?P<path>\S+)")
-_DENIAL = re.compile(r"\b(?:odmowa narzędzia|tool denied|tool denial|denied tool)\b")
+# Progress messages from phase_progress.py.
+_READ_FILE = re.compile(r"\b(?:reads file|reading file)\s+(?P<path>\S+)")
+_DENIAL = re.compile(r"\b(?:tool denied|tool denial|denied tool)\b")
 
 
 def _strip_progress(stdout: str) -> str:

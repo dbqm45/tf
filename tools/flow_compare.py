@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Factory tool: a comparison of workflows (e.g. plan mode alone, talos, mode-pdi) on the same tickets.
+Factory tool: a comparison of workflows (e.g. plan mode alone, the /tf loop, mode-pdi) on the same tickets.
 
   python3 tools/flow_compare.py prepare flows.json --out <dir> [--seed N]
       anonymized run diffs (<ticket>/A.diff, B.diff…) and the grading template ocena.json for the grader;
@@ -11,7 +11,7 @@ Factory tool: a comparison of workflows (e.g. plan mode alone, talos, mode-pdi) 
       tie the cheaper one
 
 flows.json: {"repo": PATH, "base": "main", "baseline": "plan",
-             "tickets": [{"id": "T-1", "runs": [{"flow": "talos", "branch": "story/x", "cost_usd": 14.0,
+             "tickets": [{"id": "T-1", "runs": [{"flow": "tf", "branch": "story/x", "cost_usd": 14.0,
                                                    "minutes": 45}, …]}]}
 oceny.json (from the blind grader, by letters): {"T-1": {"A": {"score": 8, "mergeable": true, "uwagi": "…"}, …}}
 Artifacts are counted with the same patterns as pr_budget.py (core-delivery-lifecycle). Protocol:

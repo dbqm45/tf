@@ -47,9 +47,8 @@ COACH_SYS = ("You assess how the session was RUN, not the domain content. Input:
              "whether the facilitator confronted the deliberate contradictions · one quote. Also, because this is a scenario "
              "trial: whether the persona cards and the contradictions worked as the brief describes. Return only the debrief "
              "in Markdown.")
-WRITE_FILE = re.compile(r"\n*(?:Save (?:this JSON|the array) to the file `[^`]+` and reply(?: with one word)?: ok\.|"
-                        r"Zapisz (?:ten JSON|tablicę) do pliku `[^`]+` i odpowiedz(?: jednym słowem)?: ok\.)\s*$")  # pl: sprzed 14.x
-BAD_JSON = ("missing or invalid JSON", "brak lub niepoprawny JSON")   # pl: sprzed 14.x
+WRITE_FILE = re.compile(r"\n*Save (?:this JSON|the array) to the file `[^`]+` and reply(?: with one word)?: ok\.\s*$")
+BAD_JSON = "missing or invalid JSON"
 
 
 def sim(env: dict, *args: str) -> str:
@@ -153,7 +152,7 @@ def main() -> int:
         cost, calls = cost + c_usd, calls + 1
         (sd / "debrief.md").write_text(debrief, encoding="utf-8")
     checks = evaluate(st, transcript, probe.get("expect", {}))
-    bad_json = sum(transcript.count(m) for m in BAD_JSON)
+    bad_json = transcript.count(BAD_JSON)
     silent = [p for p in st["present"]
               if not any((r.get("replies", {}).get(p, {}) or {}).get("dialogue", "").strip() for r in st["rounds"])]
     counted = [ok for ok, _, _ in checks if ok is not None]

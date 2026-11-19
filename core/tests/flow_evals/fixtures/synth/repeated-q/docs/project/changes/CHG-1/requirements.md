@@ -17,6 +17,6 @@ source_reported_at: 2026-10-30
 
 **must** — stopka pokazuje datę; stan błędu: brak `config/build.json` → `—`.
 
-## Pytania do bramki
+## Gate questions
 
 - Czy flaga ma być on/off per odwiedzający czy globalna? (ta sama Q jest rozstrzygnięta w CHG-1/D2)

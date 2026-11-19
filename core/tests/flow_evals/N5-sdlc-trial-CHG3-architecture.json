@@ -17,7 +17,7 @@
     "run": true,
     "rubric": "rubrics/architecture.md",
     "requirements": [
-      "plan.md ma tabelę cięć ze słupkami Wydanie i Flaga",
+      "plan.md ma tabelę cięć ze słupkami Release i Flag",
       "release.yaml ma flagę deploy_counter z rolloutem (off na prod na start — CHG-3/D2 answers)",
       "ADR wymienia decyzje CHG-3/D1 i CHG-3/D2 i wyjaśnia, jak ograniczają architekturę",
       "nie powtarza pytań rozstrzygniętych w D2 (rolling window 7x24h, kryteria porażki)"

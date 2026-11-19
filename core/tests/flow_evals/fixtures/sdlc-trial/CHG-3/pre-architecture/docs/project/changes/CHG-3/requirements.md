@@ -207,6 +207,6 @@ przyjmuje `since` jako argument, żeby test mógł zamrozić czas.
 Poza zakresem (z intent.md i CHG-3/D2): rozróżnienie udane/nieudane, nowy endpoint, wykres/trend, konfigurowalne okno,
 autoryzacja widoczności, zmiany zapisu wdrożeń i schematu bazy, włączenie flagi na prod.
 
-## Pytania do bramki
+## Gate questions
 - Właściciel aplikacji sdlc-proba: P-01 — czy przy `?env=` innym niż bieżące środowisko etykieta licznika ma podawać nazwę środowiska (np. „Wdrożenia w ostatnich 7 dniach (prod): N"), czy zostaje dosłowny tekst ze zgłoszenia, a nieznane `?env=` liczy dla środowiska domyślnego (propozycja z FR-003)?
 - Właściciel aplikacji sdlc-proba: P-02 — jaki maksymalny czas odpowiedzi `GET /` (z licznikiem) uznajemy za próg porażki, skoro decyzje CHG-3/D2 nie podają liczby (np. p95 poniżej 200 ms przy 10 000 wdrożeń w bazie)?

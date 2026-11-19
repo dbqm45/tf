@@ -336,8 +336,7 @@ facets:
   - {prefix: tf,    order: 950, name: delivery,        question: "how to take a task from the ticket to the PR (the factory loop, the /tf command)"}
 
 # Concept vocabulary — a contract that every skill with `contract: true` must cover
-# (the "## Domain concepts in …" section with a concept → idiom mapping). Polish names (from before 14.x) are accepted by
-# build.py check as aliases (VOCABULARY_PL).
+# (the "## Domain concepts in …" section with a concept → idiom mapping).
 vocabulary:
   - value object
   - entity

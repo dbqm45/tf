@@ -9,7 +9,7 @@ Change phases run by pdi (mode-pdi, F4): the persona works without interaction a
       runs the persona: claude --print --agent <persona> --permission-mode acceptEdits [--max-budget-usd N]
       [--settings $PDI_CLAUDE_SETTINGS];
       JSON {status: waiting_gate | done | failed, …}; exit code 0 — waiting for a gate or done, 1 — error;
-      delivery does not start when `## Gate questions` (formerly `## Pytania do bramki`) in plan.md has a question without an answer in decisions.md, and an artifact
+      delivery does not start when `## Gate questions` in plan.md has a question without an answer in decisions.md, and an artifact
       that repeats a question already settled in decisions.md ends the phase with the error `repeated_question` (Z1, PRB-3)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
@@ -53,7 +53,6 @@ SCRIPTS = ".claude/skills/pdi-decisions/scripts"
 CONTRACT_VERSION = "0.13.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Gate questions"
-QUESTIONS_PL = "Pytania do bramki"   # pl: sprzed 14.x — artefakty z polskim nagłówkiem
 # Second review (N1, DZ12): a sidecar from second_review.py next to the phase artifact; the phases we look for one in.
 SECOND_REVIEW_PHASES = ("requirements", "architecture")
 SECOND_REVIEW_DIR = ".review"
@@ -246,7 +245,7 @@ def build_prompt(a) -> dict:
         f"First read the change log {d}/ (intent.md, plan.md, decisions.md and whatever is already there) and "
         f"`.claude/skills/pdi-decisions/SKILL.md`.",
         f"The `## Gate …` entries (in older changes `## Bramka …`) in {d}/decisions.md are human decisions from pdi gates and they are binding: do "
-        f"not challenge them. A question from `## Gate questions` (in older artifacts `## Pytania do bramki`) in earlier artifacts that such an entry answers "
+        f"not challenge them. A question from `## Gate questions` in earlier artifacts that such an entry answers "
         f"is settled: in your artifact, record the outcome with a reference to the entry (e.g. {a.change}/D2) and do "
         f"not ask it again.",
         *decisions_block(a.change),
@@ -407,13 +406,13 @@ def cmd_run(a) -> int:
 
 
 def questions_in(path: Path) -> list[str]:
-    """Rows of the list from the `## Gate questions` section (or `## Pytania do bramki`) of the artifact."""
+    """Rows of the list from the `## Gate questions` section of the artifact."""
     if not path.is_file():
         return []
     out, inside = [], False
     for line in path.read_text(encoding="utf-8").splitlines():
         if line.startswith("## "):
-            inside = line[3:].strip() in (QUESTIONS, QUESTIONS_PL)
+            inside = line[3:].strip() == QUESTIONS
         elif inside and line.startswith("- ") and line[2:].strip():
             out.append(line[2:].strip())
     return out
@@ -432,7 +431,7 @@ def design_problems(path: Path) -> list[str]:
     if len(missing) < 2 or any(r["status"] == "linked" for r in rows):
         return problems   # with a Figma file every missing row is a separate matter for the designer
     # With no frame at all in the file it is one decision (provide a file or stay without frames), not a question per row (CHG-4).
-    rest = [p for p in problems if ": no frame — " not in p and ": brak ramki — " not in p]   # pl: sprzed 14.x
+    rest = [p for p in problems if ": no frame — " not in p]
     n = len(missing)
     listed = ", ".join(f"{r['requirement']} {r['state']}" for r in missing)
     grouped = (f"Frames: {n} design.md rows have no frame ({listed}) and the Figma file has no frames at all — "

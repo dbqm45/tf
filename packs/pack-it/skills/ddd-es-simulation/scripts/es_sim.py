@@ -107,7 +107,7 @@ def cmd_init(a) -> None:
     save(state)
     # A ready introduction for the facilitator — the host shows it verbatim and does not read brief.md (it holds the hidden knowledge).
     brief = (SKILL / "scenarios" / a.scenario / "brief.md").read_text(encoding="utf-8")
-    m = re.search(r"^##\s+(?:Domain|Domena)\s*\n(.*?)(?=^##\s|\Z)", brief, re.M | re.S)  # pl: sprzed 14.x
+    m = re.search(r"^##\s+Domain\s*\n(.*?)(?=^##\s|\Z)", brief, re.M | re.S)
     title = re.search(r"^#\s+(.+)$", brief, re.M)
     who = "\n".join(f"| {ps[p]['meta'].get('imie', p)} | {ps[p]['meta'].get('rola', '')} |" for p in present)
     absent = ", ".join(f"{ps[p]['meta'].get('imie', p)} ({ps[p]['meta'].get('rola', '')})" for p in ps if p not in present) or "—"
@@ -115,9 +115,8 @@ def cmd_init(a) -> None:
              f"**{title.group(1) if title else a.scenario}**\n\n{m.group(1).strip() if m else ''}\n\n"
              f"| In the room | Role |\n|---|---|\n{who}\n\nJoin when invited: {absent}\n\n"
              "**Goal:** Event Storming Big Picture: a timeline of business events, hot spots and pivotal events.\n\n"
-             # polecenia w nawiasach: nazwy z SKILL.md (pl), dopóki skill jest po polsku — pl: sprzed 14.x
-             "**You facilitate.** Write what you would say in the room. Commands: `invite <name>` (`zaproś`) · "
-             "`pivotal ev_…` (`przełomowe`) · `board` (`tablica`) · `coach` · `end` (`koniec`).")
+             "**You facilitate.** Write what you would say in the room. Commands: `invite <name>` · "
+             "`pivotal ev_…` · `board` · `coach` · `end`.")
     print(json.dumps({"id": sid, "variant": a.variant, "present": present,
                       "absent": [p for p in ps if p not in present], "dir": str(d.relative_to(root()))},
                      ensure_ascii=False))

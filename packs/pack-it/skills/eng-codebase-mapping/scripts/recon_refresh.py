@@ -59,7 +59,6 @@ SLASH = {"cs", "java", "go", "js", "jsx", "ts", "tsx", "mjs", "cjs", "kt", "kts"
          "cc", "cpp", "hpp", "m", "dart", "php", "groovy", "gradle", "proto", "scss", "less", "sql"}
 HASH = {"py", "rb", "sh", "bash", "yml", "yaml", "toml", "r", "pl", "ex", "exs", "properties"}
 STAMP = "Incremental refresh:"
-STAMPS = (STAMP, "Odświeżenie przyrostowe:")   # pl: sprzed 14.x
 
 
 def code_skeleton(text: str, path: str) -> str | None:
@@ -197,9 +196,9 @@ def stamp(repo: str, rel_dir: str, n_files: int) -> None:
         return
     with open(path, encoding="utf-8") as fh:
         lines = fh.read().split("\n")
-    if n_files == 0 and any(ln.startswith(STAMPS) for ln in lines):
+    if n_files == 0 and any(ln.startswith(STAMP) for ln in lines):
         return
-    for i in [i for i, ln in enumerate(lines) if ln.startswith(STAMPS)][::-1]:
+    for i in [i for i, ln in enumerate(lines) if ln.startswith(STAMP)][::-1]:
         del lines[i - 1 if i and lines[i - 1] == "" else i:i + 1]
     dirty = subprocess.run(["git", "-C", repo, "status", "--porcelain", "--untracked-files=no", "--", ".",
                             f":(exclude){rel_dir}"], capture_output=True, text=True).stdout.strip()

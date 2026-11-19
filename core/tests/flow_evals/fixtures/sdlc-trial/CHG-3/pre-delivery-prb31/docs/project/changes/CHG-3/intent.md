@@ -77,7 +77,7 @@ licznik pokazuje inną liczbę niż `/deployments` dla tego samego środowiska i
 - Kod: `src/deployments.js`, `src/server.js`, `src/page.js`, `src/flags.js`, `config/flags.{test,prod}.json`.
 - Odczyt `/deployments` (istniejący, bez zmian); wcześniejsza zmiana CHG-1 (inny temat, brak zależności znanej z repo).
 
-## Pytania do bramki
+## Gate questions
 - Właściciel aplikacji sdlc-proba: co oznacza „ostatnie 7 dni" — 7 × 24 h wstecz od chwili wyświetlenia strony (UTC) czy 7 dni kalendarzowych, i czy liczą się wszystkie wdrożenia ze środowiska, czy tylko udane?
 - Właściciel aplikacji sdlc-proba: kiedy ta zmiana jest porażką, nawet jeśli licznik działa (np. strona wolniejsza niż próg, liczba rozbieżna z /deployments, widoczna publicznie na prod)?
 - Właściciel aplikacji sdlc-proba: czy licznik ma być widoczny każdemu odwiedzającemu, czy wystarczy, że widzi go właściciel (np. tylko na test, na prod po włączeniu flagi)?

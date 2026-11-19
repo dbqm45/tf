@@ -72,7 +72,7 @@ def main() -> int:
     check(any("scout" in e for e in build.steps_errors(bad)), "K-7: the same executor with two tiers → error")
     check(build.steps_errors(base) == [], f"K-8: the default configuration without errors: {build.steps_errors(base)}")
 
-    # the “Kto co robi” (who does what) table in the skill matches the configuration; a mismatch is an error
+    # the “Who does what” table in the skill matches the configuration; a mismatch is an error
     text = SKILL.read_text(encoding="utf-8")
     check(build.steps_table_errors(base, text) == [], f"K-9: the table in the skill matches `steps`: {build.steps_table_errors(base, text)}")
     row = next(ln for ln in text.splitlines() if "`scope-reviewer`" in ln and ln.startswith("|") and "std" in ln)

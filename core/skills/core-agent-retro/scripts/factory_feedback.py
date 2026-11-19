@@ -60,7 +60,7 @@ def signals(retro: dict, skills: set, agents: set, force: bool) -> list[dict]:
     for e in retro.get("evidence", []):
         k = e.get("key", "")
         m = SIGNAL.match(k)
-        if not m or dec.get(k) in ("no", "nie") or (k in sent and not force):   # pl: sprzed 14.x (nie)
+        if not m or dec.get(k) == "no" or (k in sent and not force):
             continue
         if (m.group(2) and m.group(2) not in skills) or (m.group(3) and m.group(3) not in agents):
             continue

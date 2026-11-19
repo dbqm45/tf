@@ -101,7 +101,7 @@ Data wyświetlana w formacie ISO `RRRR-MM-DD`. Szczegóły: pytanie P-02 w bramc
 | NF-001 | Eskapowanie wartości `deployed_at` w HTML | musi | R1 |
 | NF-002 | Format wyświetlania: ISO `RRRR-MM-DD` | musi | R1 |
 
-## Pytania do bramki
+## Gate questions
 
 - [właściciel] P-01: Czy `config/build.json` ma być gitignorowany i generowany wyłącznie przez krok wdrożenia (`uv run sdlc deploy`), czy dopuszczalne jest commitowanie go z datą lokalnego budowania jako placeholdera dla dewelopera? (przeniesione z intent.md; wpływa na FR-001 i środowisko lokalne)
 - [właściciel] P-02: Jaki format wyświetlania daty jest oczekiwany dla użytkownika: ISO `RRRR-MM-DD` (jak w pliku) czy data sformatowana po polsku, np. „30 paź 2026"? (wpływa na NF-002 i implementację `renderPage`)

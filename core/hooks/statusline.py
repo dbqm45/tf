@@ -2,7 +2,7 @@
 """
 Claude Code status line: model and effort, context fill, cache, session cost, limits — with no model tokens.
 
-  Opus · high │ kontekst 42% 84k │ cache 91% │ $0.42 │ 5h 23%
+  Opus · high │ context 42% 84k │ cache 91% │ $0.42 │ 5h 23%
 
 Warns (⚠) when the context exceeds the CLAUDE_CONTEXT_WARN_K threshold (default 100k — the same as the
 context_guard hook), when the cache is cold (the next turn will read the whole history without a discount) and when a limit is near.
@@ -42,11 +42,11 @@ def line(d: dict) -> str:
         except ValueError:
             warn_k = 100
         mark = "⚠ " if warn_k > 0 and used >= warn_k * 1000 else ""
-        parts.append(f"{mark}kontekst {pct if pct is not None else '?'}% {fmt_k(used)}".rstrip())
+        parts.append(f"{mark}context {pct if pct is not None else '?'}% {fmt_k(used)}".rstrip())
 
     pc = d.get("prompt_cache") or {}
     if pc.get("hit_ratio") is not None:
-        cold = " zimny" if pc.get("warm") is False and pc.get("requests") else ""
+        cold = " cold" if pc.get("warm") is False and pc.get("requests") else ""
         parts.append(f"cache {round(100 * pc['hit_ratio'])}%{cold}")
     elif cu.get("cache_read_input_tokens") is not None and used:
         parts.append(f"cache {round(100 * (cu.get('cache_read_input_tokens') or 0) / used)}%")

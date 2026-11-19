@@ -4,8 +4,8 @@
   "offline": "2026-11-18"
  },
  "core-agent-retro": {
-  "fingerprint": "5e6c940a6bde1050",
-  "offline": "2026-11-18"
+  "fingerprint": "1f11e6621eaf858b",
+  "offline": "2026-11-19"
  },
  "core-agent-security": {
   "fingerprint": "110baa18a92fe27e",
@@ -40,8 +40,8 @@
   "offline": "2026-11-19"
  },
  "core-knowledge": {
-  "fingerprint": "a5c870c270c89296",
-  "offline": "2026-11-18"
+  "fingerprint": "4e458dbafd80423b",
+  "offline": "2026-11-19"
  },
  "core-plan-interview": {
   "fingerprint": "8145e696299e8262",
@@ -80,7 +80,7 @@
   "offline": "2026-11-17"
  },
  "tf": {
-  "fingerprint": "29782351b20052e0",
+  "fingerprint": "9549a019ceab137e",
   "offline": "2026-11-19"
  }
 }

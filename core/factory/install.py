@@ -508,16 +508,24 @@ def drop_legacy_blocks(text: str, marks: list[tuple[str, str]]) -> str:
     return text
 
 
-COMMANDS_SECTION = re.compile(r"(### (?:Commands|Komendy)\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
-COMMANDS_DEFAULT_HINTS = ("adapt to your project", "dostosuj do swojego projektu")   # pl: sprzed 14.x
+def load_migrations():
+    """The core migrations module (.tf/factory/migrations.py) of the factory being installed."""
+    spec = importlib.util.spec_from_file_location("tf_migrations", CORE / "factory" / "migrations.py")
+    mig = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mig)
+    return mig
+
+
+COMMANDS_SECTION = re.compile(r"(### Commands\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
+COMMANDS_DEFAULT_HINT = "adapt to your project"
 
 
 def keep_commands(section: str, old: str) -> str:
     """An update keeps the project's commands in the "Commands" subsection (entered by `tf onboard` or by a human).
-    A subsection with the note "dostosuj do swojego projektu" is a factory template — it is replaced like the rest of the block."""
+    A subsection with the note "adapt to your project" is a factory template — it is replaced like the rest of the block."""
     start = old.find(MARK_BEGIN)
     mine = COMMANDS_SECTION.search(old, start) if start >= 0 else None
-    if not mine or any(h in mine.group(2) for h in COMMANDS_DEFAULT_HINTS):
+    if not mine or COMMANDS_DEFAULT_HINT in mine.group(2):
         return section
     return COMMANDS_SECTION.sub(lambda m: m.group(1) + mine.group(2), section, count=1)
 
@@ -906,7 +914,7 @@ def _main(argv: list[str], tmp: Path) -> int:
     # rules: private → CLAUDE.local.md, team → CLAUDE.md; a section between markers, replaced on update
     md_p = dst_root / ("CLAUDE.md" if shared else "CLAUDE.local.md")
     md_old = md_p.read_text(encoding="utf-8") if md_p.exists() else ""
-    md_base = drop_legacy_blocks(md_old, LEGACY_MARKS)
+    md_base = load_migrations().claude_md_v19(drop_legacy_blocks(md_old, LEGACY_MARKS))   # 19.0.0: Polish subsections
     section = keep_commands(claude_md_section(py, dst_root, cfg), md_base)
     plan.write(md_p, with_block(md_base, MARK_BEGIN, MARK_END, section, update or md_base != md_old),
                f"{md_p.name} (factory section)")
@@ -968,9 +976,7 @@ def _main(argv: list[str], tmp: Path) -> int:
     for m in plan.merged:
         print(f"  ~ {m}")
     if not dry and update:     # self-correction of the project's own files after renames in the core (.tf/factory/migrations.py)
-        spec = importlib.util.spec_from_file_location("tf_migrations", CORE / "factory" / "migrations.py")
-        mig = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mig)
+        mig = load_migrations()
         for c in mig.apply(dst_root, dry=False):
             print(f"  ✓ migrated: {c}")
         for c in mig.migrate_values(dst_root, dry=False) if hasattr(mig, "migrate_values") else []:

@@ -99,8 +99,8 @@ def main() -> int:
                                                 encoding="utf-8")
         sk = root / ".claude" / "skills" / "sec-x"
         sk.mkdir(parents=True)
-        (sk / "SKILL.md").write_text("---\nname: sec-x\n---\n# X\nTreść o ISO 19112 poza źródłami.\n## Źródła\n"
-                                     "- ISO 19112:2019 (iso.org, odczyt 2026-10-10) — schemat gazetteera.\n", encoding="utf-8")
+        (sk / "SKILL.md").write_text("---\nname: sec-x\n---\n# X\nTreść o ISO 19112 poza źródłami.\n## Sources\n"
+                                     "- ISO 19112:2019 (iso.org, accessed 2026-10-10) — schemat gazetteera.\n", encoding="utf-8")
         r = run([ROOT / ".tf" / "factory" / "facts.py", "--root", root, "--today", "2026-10-17", "--json", "ISO", "19112"])
         try:
             hits = json.loads(r.stdout)
@@ -109,7 +109,7 @@ def main() -> int:
         by = {(h["file"].split("/")[-1], h["verdict"]) for h in hits}
         check(r.returncode == 0 and ("20261017-archetypy-zrodla.md", "confirmed") in by and ("SKILL.md", "skill-source") in by
               and not any("Treść o ISO" in h["text"] for h in hits),
-              f"F-1: verification tables and the skills' “Źródła” sections, with a verdict; the skill's content outside the sources skipped: {hits}")
+              f"F-1: verification tables and the skills' “Sources” sections, with a verdict; the skill's content outside the sources skipped: {hits}")
         check(("20261018-en.md", "contradicted") in by, f"F-1b: a verdict as a word (14.x) next to the old letters P/C/N/S: {by}")
         old = [h for h in hits if h["file"].endswith("20250101-stare.md")]
         new = [h for h in hits if h["file"].endswith("20261017-archetypy-zrodla.md")]

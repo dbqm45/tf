@@ -573,8 +573,8 @@ def write_language_lines(path: Path, cfg: dict, root: Path) -> bool:
     a, b = text.index(MARK_BEGIN), text.index(MARK_END)
     block = text[a:b]
     body = "### Language\n" + "\n".join(language_lines(cfg, root)) + "\n"
-    head = next((h for h in ("### Language\n", "### Język\n") if h in block), None)   # pl: sprzed 14.x
-    if head:
+    head = "### Language\n"
+    if head in block:
         i = block.index(head)
         j = block.find("\n### ", i + 1)
         new_block = block[:i] + body + (block[j + 1:] if j >= 0 else "")

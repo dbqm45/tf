@@ -38,7 +38,7 @@ def project(base: Path, source: str | None = "https://github.com/dbqm45/claude-t
             {"id": "E-7", "kind": "hint", "key": "hint-ignored:fe-css", "n": 3, "text": "fe-css szum"},
             # the key in the form retro_data writes (the tier_feedback value from log_usage: "niski"/"wysoki")
             {"id": "E-8", "kind": "tier", "key": "tier:ola-frontend:wysoki", "n": 2, "text": "ola-frontend"}],
-        "decisions": {"hint-missed:fe-css": "tak", "hint-ignored:fe-css": "nie"}}), encoding="utf-8")
+        "decisions": {"hint-missed:fe-css": "yes", "hint-ignored:fe-css": "no"}}), encoding="utf-8")
     return p
 
 
