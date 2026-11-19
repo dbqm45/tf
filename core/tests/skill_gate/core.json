@@ -11,10 +11,6 @@
   "fingerprint": "110baa18a92fe27e",
   "offline": "2026-11-18"
  },
- "core-api-scripts": {
-  "fingerprint": "f9443c070ba3c7f6",
-  "offline": "2026-11-19"
- },
  "core-async-delegation": {
   "fingerprint": "4020332750c1e8d0",
   "offline": "2026-11-18"
@@ -24,7 +20,7 @@
   "offline": "2026-11-18"
  },
  "core-cost-control": {
-  "fingerprint": "43157d4f52474353",
+  "fingerprint": "e50aa74fb8a10089",
   "offline": "2026-11-19"
  },
  "core-delivery-lifecycle": {
@@ -84,7 +80,7 @@
   "offline": "2026-11-17"
  },
  "tf": {
-  "fingerprint": "32f547b70c1e6ccd",
+  "fingerprint": "1638f0cce31a0774",
   "offline": "2026-11-19"
  }
 }

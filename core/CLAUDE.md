@@ -27,6 +27,8 @@
   (`.tf/wip/`) and the human's decisions from this session.
 - Cost (skill core-cost-control): you pick an executor with the cheapest model that will pass verification (the `model` parameter
   of the Agent tool), and escalate after a failure. You do not change the session's model or effort mid-task, because that clears the cache.
+- MCP tools (Jira, Confluence, Figma…) you call through the `mcp-runner` agent (a cheap model): its big results stay in its
+  context or in `.tf/cache/mcp/`, and you get a short answer. A write through MCP only after the human approves the list of changes.
 
 ## Standing rules
 - Do not read: `node_modules/`, `dist/`, `build/`, `coverage/`, lockfiles (searching for a specific package with `grep` is fine), `.env*` files.
