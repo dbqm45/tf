@@ -953,6 +953,19 @@ treści (angielska), bez równoległej polskiej.
     - [ ] `docs/insights.md` i `docs/plugins.md` opisują `mode-talos` (usunięty w 10.0.0) i liczby skilli sprzed
       zmian — zaktualizować treść (to nie tłumaczenie).
     - [ ] gdyby archiwa miały być po angielsku: `docs/evals` (47 plików) i `docs/plans` (40) — osobny krok.
+  - [x] 4k (2026-11-19): usunięte polskie aliasy czytników (`pl: sprzed 14.x`) — decyzja właściciela: jednym krokiem.
+    Migracja 19.0.0 (`migrations.migrate_v19`) przepisuje polskie formy na angielskie w plikach projektu, które czytały
+    usunięte aliasy (punkty kontrolne `.tf/wip/`, decyzje retro, cache bazy wiedzy, tagi banku dowodów, blok fabryki
+    w CLAUDE.md — przed przepisaniem bloku, więc komendy projektu zostają, własne skille i persony, `managed-agents/`,
+    plan i artefakty pdi, rekonstrukcja pack-it); 16 nowych testów MV-18…33 i U-5. Zostaje polski kontrakt pdi
+    `design.md` (forma zewnętrznego kontraktu, nie alias). Przy okazji: Talos usunięty z żywej dokumentacji, testów
+    i przykładów (zostaje tylko to, co sprząta stare instalacje: `RETIRED_PACKS`, przemianowania, strażnik w
+    test_tf_skill, wpis „Removed in 10.0.0” w PUBLIC_API); pasek stanu po angielsku (`context`, `cold`); trzy
+    sprawdzenia w testach szukały polskich komunikatów, których narzędzia już nie wypisują (zawsze przechodziły) —
+    poprawione na angielskie.
+    - [ ] aliasy bez znacznika (SECTION_NAMES w project_record, analyze.py, LESSON_HEADS w task_state, `pliki`
+      w plan_drift/task_weight, litery P/C/N/S w facts, MARK w claims_check/recon_check, HEADING_ALIASES/ROW_ALIASES,
+      requirements_lint, CAUSE_ALIASES w retro_data, LEGACY_GI w install) — usunąć z regułami migracji.
     - [ ] `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
       sprawdzają) — przełożyć razem z testami.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
