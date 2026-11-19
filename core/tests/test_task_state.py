@@ -14,8 +14,8 @@ SCRIPT = ROOT / ".tf" / "factory" / "task_state.py"
 CTF = ROOT / ".tf" / "factory" / "tf.py"
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'8 passed\')"'
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi "
-        "{limit} zł.\n\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi "
+        "{limit} zł.\n\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
 RED = f'{sys.executable} -c "print(\'FAILED test_x\'); raise SystemExit(3)"'
 
 
@@ -134,67 +134,67 @@ def main() -> int:
         (p / "src").mkdir()
         (p / "src" / "fees.py").write_text("CAP = 4000\n", encoding="utf-8")
         run(p, "start", "EV-1", "--title", "Dowody")
-        r = run(p, "slice", "EV-1", "K1", "planned", "--title", "limit 45 zł")
-        check(r.returncode == 0 and states("EV-1") == {"K1": "planned"}, f"TS-20: slice planned: {r.stdout}{states('EV-1')}")
-        run(p, "slice", "EV-1", "K1", "implemented")
-        check(states("EV-1") == {"K1": "unverified"}, f"TS-21: done without evidence is unverified: {states('EV-1')}")
-        r = run(p, "verify", "EV-1", "K1", "--command", OK, "--files", "src/fees.py")
-        ev = p / CHANGES / "EV-1" / "evidence" / "K1-1.json"
+        r = run(p, "slice", "EV-1", "S1", "planned", "--title", "limit 45 zł")
+        check(r.returncode == 0 and states("EV-1") == {"S1": "planned"}, f"TS-20: slice planned: {r.stdout}{states('EV-1')}")
+        run(p, "slice", "EV-1", "S1", "implemented")
+        check(states("EV-1") == {"S1": "unverified"}, f"TS-21: done without evidence is unverified: {states('EV-1')}")
+        r = run(p, "verify", "EV-1", "S1", "--command", OK, "--files", "src/fees.py")
+        ev = p / CHANGES / "EV-1" / "evidence" / "S1-1.json"
         e = json.loads(ev.read_text(encoding="utf-8")) if ev.is_file() else {}
         check(r.returncode == 0 and e.get("command") == OK and e.get("exit_code") == 0 and e.get("at")
-              and len((e.get("files") or {}).get("src/fees.py", "")) == 64 and e.get("slice") == "K1",
-              f"TS-22: evidence in evidence/K1-1.json: command, exit code, time, file hashes: {r.stdout}{r.stderr}{e}")
-        check(states("EV-1") == {"K1": "verified"}, f"TS-23: green evidence on the current files -> verified: {states('EV-1')}")
+              and len((e.get("files") or {}).get("src/fees.py", "")) == 64 and e.get("slice") == "S1",
+              f"TS-22: evidence in evidence/S1-1.json: command, exit code, time, file hashes: {r.stdout}{r.stderr}{e}")
+        check(states("EV-1") == {"S1": "verified"}, f"TS-23: green evidence on the current files -> verified: {states('EV-1')}")
         (p / "src" / "fees.py").write_text("CAP = 4500\n", encoding="utf-8")
         r = run(p, "status", "EV-1")
-        check(states("EV-1") == {"K1": "unverified"} and "changed" in r.stdout and "K1" in r.stdout,
+        check(states("EV-1") == {"S1": "unverified"} and "changed" in r.stdout and "S1" in r.stdout,
               f"TS-24: a file change after the evidence -> unverified, with a reason: {r.stdout}")
         r = run(p, "stage", "EV-1", "review")
-        check(r.returncode == 1 and "K1" in r.stdout and task(p, "EV-1")["stage"] == "intake",
+        check(r.returncode == 1 and "S1" in r.stdout and task(p, "EV-1")["stage"] == "intake",
               f"TS-25: review rejected when a slice is not verified: {r.returncode} {r.stdout}")
-        r = run(p, "verify", "EV-1", "K1", "--command", RED, "--files", "src/fees.py")
-        e2 = json.loads((ev.parent / "K1-2.json").read_text(encoding="utf-8")) if (ev.parent / "K1-2.json").is_file() else {}
-        log = p / ".tf" / "runs" / "EV-1" / "K1-2.log"
+        r = run(p, "verify", "EV-1", "S1", "--command", RED, "--files", "src/fees.py")
+        e2 = json.loads((ev.parent / "S1-2.json").read_text(encoding="utf-8")) if (ev.parent / "S1-2.json").is_file() else {}
+        log = p / ".tf" / "runs" / "EV-1" / "S1-2.log"
         check(r.returncode == 1 and e2.get("exit_code") == 3 and log.is_file() and "FAILED test_x" in log.read_text(encoding="utf-8")
               and "FAILED test_x" in r.stdout,
               f"TS-37: verify runs the command itself: the real exit code in the evidence, the output in .tf/runs/: {r.returncode} {r.stdout}{e2}")
-        check(states("EV-1") == {"K1": "red"} and ev.is_file() and (ev.parent / "K1-2.json").is_file(),
+        check(states("EV-1") == {"S1": "red"} and ev.is_file() and (ev.parent / "S1-2.json").is_file(),
               f"TS-26: red evidence -> red; the previous evidence stays, the new one gets the next number: {states('EV-1')}")
-        run(p, "verify", "EV-1", "K1", "--command", OK, "--files", "src/fees.py")
+        run(p, "verify", "EV-1", "S1", "--command", OK, "--files", "src/fees.py")
         r = run(p, "stage", "EV-1", "review")
         check(r.returncode == 0 and task(p, "EV-1")["stage"] == "review", f"TS-27: review allowed after green evidence: {r.stdout}")
         (p / "src" / "fees.py").unlink()
-        check(states("EV-1") == {"K1": "unverified"}, f"TS-28: a file deleted after the evidence -> unverified: {states('EV-1')}")
+        check(states("EV-1") == {"S1": "unverified"}, f"TS-28: a file deleted after the evidence -> unverified: {states('EV-1')}")
 
         (p / "src" / "cli.py").write_text("x = 1\n", encoding="utf-8")
         run(p, "start", "EV-2", "--title", "Blokada")
-        r = run(p, "slice", "EV-2", "K1", "blocked", "--reason", "czeka na decyzję o stawce")
-        check(states("EV-2") == {"K1": "blocked"} and run(p, "stage", "EV-2", "review").returncode == 1
+        r = run(p, "slice", "EV-2", "S1", "blocked", "--reason", "czeka na decyzję o stawce")
+        check(states("EV-2") == {"S1": "blocked"} and run(p, "stage", "EV-2", "review").returncode == 1
               and "czeka na decyzję" in run(p, "status", "EV-2").stdout,
               f"TS-29: a blocked slice with a reason holds back the review: {r.stdout}{states('EV-2')}")
-        r = run(p, "verify", "EV-2", "K2", "--command", OK)
+        r = run(p, "verify", "EV-2", "S2", "--command", OK)
         check(r.returncode == 2 and "--files" in r.stdout, f"TS-30: evidence without files rejected: {r.returncode} {r.stdout}")
-        r = run(p, "verify", "EV-2", "K2", "--command", OK, "--files", "../poza.py")
+        r = run(p, "verify", "EV-2", "S2", "--command", OK, "--files", "../poza.py")
         check(r.returncode == 2 and not (p / CHANGES / "EV-2" / "evidence").exists(), f"TS-31: a file outside the project rejected: {r.stdout}")
-        r = run(p, "verify", "EV-2", "K2", "--command", OK, "--files", "src/nie-ma.py")
+        r = run(p, "verify", "EV-2", "S2", "--command", OK, "--files", "src/nie-ma.py")
         check(r.returncode == 2 and "nie-ma.py" in r.stdout, f"TS-32: a nonexistent file rejected: {r.stdout}")
         r = run(p, "slice", "EV-2", "X1", "planned")
         check(r.returncode == 2, f"TS-33: a bad slice identifier rejected: {r.returncode} {r.stdout}")
-        r = run(p, "slice", "EV-2", "K3", "gotowe")
+        r = run(p, "slice", "EV-2", "S3", "gotowe")
         check(r.returncode == 2 and "implemented" in r.stdout, f"TS-34: unknown slice state -> list of states: {r.stdout}")
         run(p, "start", "EV-3", "--title", "Bez kawałków")
         check(run(p, "stage", "EV-3", "review").returncode == 0, "TS-35: a task without slices moves on to review")
-        r = run(p, "verify", "EV-3", "K1", "--command", OK, "--files", "src/cli.py")
-        check(r.returncode == 0 and states("EV-3") == {"K1": "verified"}, f"TS-36: verify creates the slice if it did not exist: {r.stdout}")
-        r = run(p, "verify", "EV-3", "K2", "--files", "src/cli.py")
+        r = run(p, "verify", "EV-3", "S1", "--command", OK, "--files", "src/cli.py")
+        check(r.returncode == 0 and states("EV-3") == {"S1": "verified"}, f"TS-36: verify creates the slice if it did not exist: {r.stdout}")
+        r = run(p, "verify", "EV-3", "S2", "--files", "src/cli.py")
         check(r.returncode == 2 and "quality-gate.json" in r.stdout, f"TS-38: no --command and no gate -> nothing to run: {r.stdout}")
         (p / ".claude").mkdir(exist_ok=True)
         (p / ".claude" / "quality-gate.json").write_text(json.dumps({"command": OK}), encoding="utf-8")
-        r = run(p, "verify", "EV-3", "K2", "--files", "src/cli.py")
-        e3 = json.loads((p / CHANGES / "EV-3" / "evidence" / "K2-1.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
-        check(r.returncode == 0 and e3.get("command") == OK and states("EV-3").get("K2") == "verified",
+        r = run(p, "verify", "EV-3", "S2", "--files", "src/cli.py")
+        e3 = json.loads((p / CHANGES / "EV-3" / "evidence" / "S2-1.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
+        check(r.returncode == 0 and e3.get("command") == OK and states("EV-3").get("S2") == "verified",
               f"TS-39: without --command verify runs the quality gate command: {r.stdout}{r.stderr}")
-        r = run(p, "verify", "EV-3", "K2", "--command", OK, "--exit", "0", "--files", "src/cli.py")
+        r = run(p, "verify", "EV-3", "S2", "--command", OK, "--exit", "0", "--files", "src/cli.py")
         check(r.returncode == 2, f"TS-40: the exit code cannot be declared (--exit rejected): {r.returncode}")
 
         # C3: task files — who generated and approved them, what they were built from, whether they are still current
@@ -208,7 +208,7 @@ def main() -> int:
         run(p, "start", "AR-1", "--title", "Pliki zadania")
         folder = p / CHANGES / "AR-1"
         (folder / "spec.md").write_text(SPEC.format(limit=45), encoding="utf-8")
-        (folder / "plan.md").write_text("# Plan\n- [ ] K1\n", encoding="utf-8")
+        (folder / "plan.md").write_text("# Plan\n- [ ] S1\n", encoding="utf-8")
         r = run(p, "artifact", "AR-1", "spec.md", "--stage", "spec", "--by", "tf/1.0.0")
         a = task(p, "AR-1").get("artifacts", {}).get("spec.md", {})
         check(r.returncode == 0 and a.get("stage") == "spec" and a.get("generated", {}).get("by") == "tf/1.0.0"
@@ -278,15 +278,15 @@ def main() -> int:
               f"TS-53: list shows the task with its stage and title: {r.stdout}{r.stderr}")
         (q / "src").mkdir(exist_ok=True)
         (q / "src" / "a.py").write_text("a = 1\n", encoding="utf-8")
-        run(q, "verify", "PROJ-9", "K1", "--command", OK, "--files", "src/a.py")
-        run(q, "slice", "PROJ-9", "K2", "planned")
+        run(q, "verify", "PROJ-9", "S1", "--command", OK, "--files", "src/a.py")
+        run(q, "slice", "PROJ-9", "S2", "planned")
         r = run(q, "list", "--json")
         try:
             rows = {x["key"]: x for x in json.loads(r.stdout)}
         except (ValueError, KeyError, TypeError):
             rows = {}
         row = rows.get("PROJ-9", {})
-        check(row.get("stage") == "intake" and row.get("slices") == {"K1": "verified", "K2": "planned"}
+        check(row.get("stage") == "intake" and row.get("slices") == {"S1": "verified", "S2": "planned"}
               and row.get("verified") == 1 and row.get("stale") == [],
               f"TS-54: list --json: stage, slice states, number verified: {r.stdout[:300]}{r.stderr}")
         (q / "src" / "a.py").write_text("a = 2\n", encoding="utf-8")

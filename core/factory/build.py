@@ -553,7 +553,7 @@ def render_worker(persona: dict, role: dict, cfg: dict, traits: dict) -> tuple[s
 ## Writing to docs/project/
 If the brief assigns you an artifact in `docs/project/`, write it by `core-project-record` (TL;DR ≤ 10 lines, `Open questions`,
 `Handoff`) and run `python3 .claude/hooks/project_record.py check`. The orchestrator makes the entries in the journal and the decision register.
-When reading inputs, start from the TL;DR and the `Handoff` section (formerly "Przekazanie").
+When reading inputs, start from the TL;DR and the `Handoff` section.
 
 ## Boundaries
 - You work in your domain. A task that goes beyond it you describe in the report (the "To decide" section).

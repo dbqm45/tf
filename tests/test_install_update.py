@@ -133,6 +133,25 @@ def main() -> int:
         new = md.read_text(encoding="utf-8")
         check("### Komendy" in old and "### Commands\n- Test: `make proj-test`" in new and "Komendy" not in new,
               f"U-5: the Polish commands subsection migrated before the block is rewritten: {new[:800]}")
+        # U-6 (19.0.0): settings with the Polish snapshot hook arguments — after the update exactly one snapshot hook per event,
+        # with the English argument (the old argument would otherwise not match and the hook would be added a second time)
+        def snapshot_args(settings: Path) -> dict:
+            data = json.loads(settings.read_text(encoding="utf-8"))
+            return {ev: [h["args"][-1] for e in data.get("hooks", {}).get(ev, []) for h in e.get("hooks", [])
+                         if any(str(a).endswith("project_record.py") for a in h.get("args") or [])
+                         and "--hook-snapshot" in h.get("args")] for ev in ("SessionEnd", "PreCompact")}
+
+        def polish(settings: Path) -> None:
+            text = settings.read_text(encoding="utf-8")
+            settings.write_text(text.replace('"session end"', '"koniec sesji"').replace('"context compaction"',
+                                                                                       '"kompaktowanie kontekstu"'), encoding="utf-8")
+        shared_set = proj / ".claude" / "settings.json"
+        polish(shared_set)
+        old_args = snapshot_args(shared_set)
+        r = install(src, proj)
+        check(old_args == {"SessionEnd": ["koniec sesji"], "PreCompact": ["kompaktowanie kontekstu"]}
+              and snapshot_args(shared_set) == {"SessionEnd": ["session end"], "PreCompact": ["context compaction"]},
+              f"U-6: one snapshot hook per event with the English argument after the update: {old_args} → {snapshot_args(shared_set)}")
 
         # L-1..L-3: a team install has a committed lock (without local data), a private one does not
         lock = json.loads((proj / LOCK).read_text(encoding="utf-8")) if (proj / LOCK).exists() else {}
@@ -146,6 +165,11 @@ def main() -> int:
         subprocess.run(["git", "init", "-q"], cwd=priv, check=True)
         install(src, priv, "--packs", "pack-a")
         check(not (priv / LOCK).exists(), "L-3: a private install does not write a lock")
+        local_set = priv / ".claude" / "settings.local.json"
+        polish(local_set)
+        install(src, priv)
+        check(snapshot_args(local_set) == {"SessionEnd": ["session end"], "PreCompact": ["context compaction"]},
+              f"U-7: the same in a private install (settings.local.json): {snapshot_args(local_set)}")
 
         # C-1..C-4: a clone of a team install (without the manifest and ignored files), a new source version
         clone = Path(t) / "clone"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Tests of eng-codebase-mapping/scripts/recon_cards.py: a module card (JSON) → modules/<card>.md with file:line evidence,
-a card content digest and a proposal of the report's "Moduły" section. python3 .claude/tests/test_recon_cards.py"""
+a card content digest and a proposal of the report's "Modules" section. python3 .claude/tests/test_recon_cards.py"""
 import hashlib
 import json
 import subprocess
@@ -76,12 +76,12 @@ def main() -> int:
         check(r.returncode == 0 and out.get("bad") == [] and out.get("unsupported") == [] and out.get("refs") == 4,
               f"C-6: the .md from the card passes recon_check: {r.stdout[-500:]}")
 
-        # the Moduły section proposal: purpose, key elements, a link to the .md, evidence
+        # the Modules section proposal: purpose, key elements, a link to the .md, evidence
         r = run("recon_cards.py", str(mods), "--summary", cwd=d)
         line = next((ln for ln in r.stdout.splitlines() if ln.startswith("- billing:")), "")
         check("Wystawia i koryguje faktury" in line and "POST /invoices" in line and "CreditNote" in line
               and "(details: modules/billing.md)" in line and "`services/billing/api.py:4`" in line,
-              f"C-7: an entry for the Moduły section: {r.stdout[-500:]}")
+              f"C-7: an entry for the Modules section: {r.stdout[-500:]}")
 
         # with no change in the card a second run does not change the file; a bad card → code 1, the other cards are still produced
         before = md_path.read_text(encoding="utf-8") if md_path.exists() else None
@@ -125,26 +125,26 @@ def main() -> int:
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
         check(r.returncode == 0 and out.get("bad") == [] and out.get("unsupported") == [], f"C-14: rules.md passes recon_check: {r.stdout[-400:]}")
 
-        # --rules again: the "## Reguły przekrojowe" section added by the synthesis stays
+        # --rules again: the "## Cross-cutting rules" section added by the synthesis stays
         with open(rules_md, "a", encoding="utf-8") as fh:
-            fh.write("\n## Reguły przekrojowe\n- [niezweryfikowane] Mapowanie błędów obejmuje cały system.\n")
+            fh.write("\n## Cross-cutting rules\n- [unverified] Mapowanie błędów obejmuje cały system.\n")
         r = run("recon_cards.py", str(mods), "--repo", str(repo), "--rules", cwd=d)
         txt = rules_md.read_text(encoding="utf-8")
-        check(txt.count("## Reguły przekrojowe") == 1 and "Mapowanie błędów obejmuje cały system." in txt and "## billing" in txt,
+        check(txt.count("## Cross-cutting rules") == 1 and "Mapowanie błędów obejmuje cały system." in txt and "## billing" in txt,
               f"C-17: --rules keeps the cross-cutting rules: {txt[-400:]}")
 
-        # --into: the report's "## Moduły" section replaced with entries from the cards (the rest of the report unchanged)
+        # --into: the report's "## Modules" section replaced with entries from the cards (the rest of the report unchanged)
         rep = mods.parent / "report.md"
-        rep.write_text("# R\n## Stack\nx\n## Moduły\n- stary wpis\n## Domeny\ny\n", encoding="utf-8")
+        rep.write_text("# R\n## Stack\nx\n## Modules\n- stary wpis\n## Domains\ny\n", encoding="utf-8")
         r = run("recon_cards.py", str(mods), "--repo", str(repo), "--into", str(rep), cwd=d)
         txt = rep.read_text(encoding="utf-8")
-        mod_part = txt.split("## Moduły", 1)[-1].split("## Domeny")[0]
+        mod_part = txt.split("## Modules", 1)[-1].split("## Domains")[0]
         check(r.returncode == 0 and "stary wpis" not in txt and "- billing: Wystawia" in mod_part and "- vet:" in mod_part
-              and txt.startswith("# R\n## Stack\nx\n## Moduły\n") and txt.rstrip().endswith("## Domeny\ny"),
-              f"C-15: the Moduły section from the cards: {txt[:700]}")
+              and txt.startswith("# R\n## Stack\nx\n## Modules\n") and txt.rstrip().endswith("## Domains\ny"),
+              f"C-15: the Modules section from the cards: {txt[:700]}")
         rep.write_text("# R\n## Stack\nx\n", encoding="utf-8")
         r = run("recon_cards.py", str(mods), "--into", str(rep), cwd=d)
-        check(r.returncode == 1 and "no „## Modules” section" in r.stdout, f"C-16: a report without the Moduły section: rc={r.returncode} {r.stdout[-200:]}")
+        check(r.returncode == 1 and "no „## Modules” section" in r.stdout, f"C-16: a report without the Modules section: rc={r.returncode} {r.stdout[-200:]}")
 
     # --prev: old cards versus new → places in the documentation that may describe the pre-change state
     with tempfile.TemporaryDirectory() as d:

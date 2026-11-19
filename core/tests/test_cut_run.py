@@ -155,15 +155,15 @@ def main() -> int:
         r = script(p, cfg, "run_state.py", "spec", d, "new")
         check(r.returncode == 0 and (doc / "spec.md").is_file(), f"C-12: the cut's specification template: {r.returncode} {r.stdout} {r.stderr}")
         (doc / "spec.md").write_text(
-            "# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając nieudaną płatność, gdy klient wybiera ponowienie, wtedy "
-            "płatność jest ponawiana raz.\n\n## Bez zmian\n\n- Udana płatność nie jest ponawiana.\n\n## Poza zakresem\n\n"
+            "# Spec\n\n## Acceptance criteria\n\n- AC-1: Given nieudaną płatność, when klient wybiera ponowienie, then "
+            "płatność jest ponawiana raz.\n\n## Unchanged\n\n- Udana płatność nie jest ponawiana.\n\n## Out of scope\n\n"
             "- Płatności cykliczne.\n", encoding="utf-8")
         r = script(p, cfg, "run_state.py", "spec", d)
         check(r.returncode == 0, f"C-13: the cut's specification passes the check: {r.returncode} {r.stdout} {r.stderr}")
-        (doc / "plan.md").write_text("# Plan: TSK-57\n\n- [ ] K1 — ponowienie płatności · kryteria: AC-1 · pliki: src/retry.py, "
-                                     "tests/test_retry.py · weryfikacja: `pytest -k retry`\n", encoding="utf-8")
+        (doc / "plan.md").write_text("# Plan: TSK-57\n\n- [ ] S1 — ponowienie płatności · criteria: AC-1 · files: src/retry.py, "
+                                     "tests/test_retry.py · verify: `pytest -k retry`\n", encoding="utf-8")
         r = script(p, cfg, "run_state.py", "stage", d, "plan")
-        r2 = script(p, cfg, "run_state.py", "step", d, "K1", "R1", "test", "run")
+        r2 = script(p, cfg, "run_state.py", "step", d, "S1", "R1", "test", "run")
         check(r.returncode == 0 and r2.returncode == 0,
               f"C-14: a full-weight cut in Auto mode goes from the plan to a slice without human consent: "
               f"{r.returncode} {r.stdout} {r.stderr} | {r2.returncode} {r2.stdout} {r2.stderr}")
@@ -173,14 +173,14 @@ def main() -> int:
         (p / "tests").mkdir()
         (p / "tests" / "test_retry.py").write_text("def test_ac_1_retry():   # AC-1\n    assert True\n", encoding="utf-8")
         git(p, "add", "src/retry.py", "tests/test_retry.py")
-        git(p, "commit", "-q", "-m", "feat(payments): retry a failed payment\n\nKawałek K1: ponowienie płatności\n\n"
+        git(p, "commit", "-q", "-m", "feat(payments): retry a failed payment\n\nSlice S1: ponowienie płatności\n\n"
                                      "Change: TSK-57\nFlag: payment-retry")
-        r = script(p, cfg, "run_state.py", "verify", d, "K1", "--files", "src/retry.py,tests/test_retry.py", "--command", OK)
-        ev = sorted((doc / "evidence").glob("K1-*.json")) if (doc / "evidence").is_dir() else []
+        r = script(p, cfg, "run_state.py", "verify", d, "S1", "--files", "src/retry.py,tests/test_retry.py", "--command", OK)
+        ev = sorted((doc / "evidence").glob("S1-*.json")) if (doc / "evidence").is_dir() else []
         check(r.returncode == 0 and len(ev) == 1, f"C-15: verification evidence of the cut's slice: {r.returncode} {r.stdout} {r.stderr}")
-        script(p, cfg, "run_state.py", "step", d, "K1", "R1", "scope", "pass")   # scope review before tick
-        r = script(p, cfg, "run_state.py", "tick", d, "K1")
-        check(r.returncode == 0 and "- [x] K1" in (doc / "plan.md").read_text(encoding="utf-8"),
+        script(p, cfg, "run_state.py", "step", d, "S1", "R1", "scope", "pass")   # scope review before tick
+        r = script(p, cfg, "run_state.py", "tick", d, "S1")
+        check(r.returncode == 0 and "- [x] S1" in (doc / "plan.md").read_text(encoding="utf-8"),
               f"C-16: tick ticks off a slice with evidence: {r.returncode} {r.stdout} {r.stderr}")
         r = script(p, cfg, "run_state.py", "trace", d, "--base", "pdi/CHG-12-delivery")
         check(r.returncode == 0 and "AC-1" in r.stdout, f"C-17: the cut's criteria trace: {r.returncode} {r.stdout} {r.stderr}")
@@ -216,7 +216,7 @@ def main() -> int:
         old.mkdir(parents=True)
         (old / "run.json").write_text(json.dumps({"slug": "tsk-1", "started_at": "2026-11-01T10:00:00+00:00",
                                                   "change": "CHG-1", "task": "TSK-1"}), encoding="utf-8")
-        r = script(p, cfg, "run_state.py", "verify", str(old), "K1", "--files", "a.py")
+        r = script(p, cfg, "run_state.py", "verify", str(old), "S1", "--files", "a.py")
         check(r.returncode != 0 and "start the cut again" in r.stdout + r.stderr and "/tf TSK-1" in r.stdout + r.stderr,
               f"C-23: a run without a task -> the 'start the cut again' message: {r.returncode} {r.stdout} {r.stderr}")
 

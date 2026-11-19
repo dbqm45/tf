@@ -268,9 +268,9 @@ def main() -> int:
         check(not [c for c in log_of(log) if c[0] in ("npm", "pip-audit")], f"N-2: audit not run: {log_of(log)}")
         check(v.get("skipped") and "package.json" in v["skipped"][0] and "without dependencies" in v["skipped"][0],
               f"N-3: the verdict says the audit was skipped (manifest without dependencies): {v.get('skipped')}")
-        r = run("scan", "--out", str(nout), "--slice", "K1", "--attempt", "1", cwd=nd)
+        r = run("scan", "--out", str(nout), "--slice", "S1", "--attempt", "1", cwd=nd)
         summary = (nout / "attempt-1" / "summary.md").read_text(encoding="utf-8") if (nout / "attempt-1" / "summary.md").is_file() else ""
-        check(r.returncode == 0 and "GATE K1: PASS" in r.stdout and "dependency audit skipped" in r.stdout.lower()
+        check(r.returncode == 0 and "GATE S1: PASS" in r.stdout and "dependency audit skipped" in r.stdout.lower()
               and "dependency audit skipped" in summary.lower() and "without dependencies" in summary,
               f"N-4: the scan line and summary.md mention the skipped audit: {r.stdout} | {summary}")
         for section in ("dependencies", "devDependencies", "optionalDependencies", "peerDependencies"):
@@ -330,18 +330,18 @@ def main() -> int:
         # after a fix -> PASS and a report of findings below the threshold in the run directory
         write(repo, "src/orders.py", 'q = "SELECT * FROM o WHERE id=%s" % user_id  # SQLI\n')
         out = repo / ".claude" / "runs" / "r2" / "security"
-        r = run("scan", "--out", str(out), "--slice", "K2", "--attempt", "1", cwd=repo)
+        r = run("scan", "--out", str(out), "--slice", "S2", "--attempt", "1", cwd=repo)
         fb = (out / "feedback.md").read_text(encoding="utf-8") if (out / "feedback.md").is_file() else ""
-        check(r.returncode == 1 and "GATE K2: FAIL" in r.stdout and "attempt 1/2" in r.stdout
+        check(r.returncode == 1 and "GATE S2: FAIL" in r.stdout and "attempt 1/2" in r.stdout
               and "fake.sql-injection src/orders.py:1" in r.stdout, f"L-1: FAIL of attempt 1 with rule and location: {r.stdout}")
         check("fake.sql-injection" in fb and "src/orders.py:1" in fb, f"L-2: finding saved for the next attempt: {fb}")
         check("STOP" not in r.stdout, f"L-3: no STOP yet after attempt 1: {r.stdout}")
-        r = run("scan", "--out", str(out), "--slice", "K2", "--attempt", "2", cwd=repo)
-        check(r.returncode == 1 and "STOP — K2" in r.stdout and "Reason:" in r.stdout and "src/orders.py:1" in r.stdout,
+        r = run("scan", "--out", str(out), "--slice", "S2", "--attempt", "2", cwd=repo)
+        check(r.returncode == 1 and "STOP — S2" in r.stdout and "Reason:" in r.stdout and "src/orders.py:1" in r.stdout,
               f"L-4: FAIL of attempt 2 -> STOP block: {r.stdout}")
         write(repo, "src/orders.py", 'q = db.execute("SELECT * FROM o WHERE id=?", (user_id,))\n')
-        r = run("scan", "--out", str(out), "--slice", "K2", "--attempt", "2", cwd=repo)
-        check(r.returncode == 0 and "GATE K2: PASS" in r.stdout and "STOP" not in r.stdout,
+        r = run("scan", "--out", str(out), "--slice", "S2", "--attempt", "2", cwd=repo)
+        check(r.returncode == 0 and "GATE S2: PASS" in r.stdout and "STOP" not in r.stdout,
               f"L-5: PASS after the fix: {r.returncode} {r.stdout}")
         summary = (out / "attempt-2" / "summary.md").read_text(encoding="utf-8") if (out / "attempt-2" / "summary.md").is_file() else ""
         check(summary.startswith("## Security") and "PASS" in summary, f"L-6: summary.md for the run report: {summary[:200]}")

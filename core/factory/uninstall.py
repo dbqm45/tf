@@ -246,7 +246,7 @@ def main(argv: list[str]) -> int:
         if not sys.stdin.isatty():
             print("Run again with --yes to uninstall (no terminal to confirm). Nothing changed.")
             return 1
-        if input("Uninstall? [y/N] ").strip().lower() not in ("t", "tak", "y", "yes"):   # t/tak: Polish answers are still accepted
+        if input("Uninstall? [y/N] ").strip().lower() not in ("y", "yes"):
             print("Stopped. Nothing changed.")
             return 1
     zipped = backup(root, p)

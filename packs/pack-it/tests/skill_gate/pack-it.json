@@ -188,7 +188,7 @@
   "offline": "2026-11-18"
  },
  "eng-codebase-mapping": {
-  "fingerprint": "718efe24b1de0b3b",
+  "fingerprint": "4cf9d501377f3e00",
   "offline": "2026-11-19"
  },
  "eng-continuous-delivery": {
@@ -212,8 +212,8 @@
   "offline": "2026-11-18"
  },
  "eng-legacy-dossier": {
-  "fingerprint": "95db09c1099990ab",
-  "offline": "2026-11-18"
+  "fingerprint": "fb58631d12691f75",
+  "offline": "2026-11-19"
  },
  "eng-llm-features": {
   "fingerprint": "86089272b700492a",
@@ -444,8 +444,8 @@
   "offline": "2026-11-18"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "5c6a85dc2f13e691",
-  "offline": "2026-11-18"
+  "fingerprint": "2c8c408162600f51",
+  "offline": "2026-11-19"
  },
  "proc-safe": {
   "fingerprint": "c8aa8367ca5259d0",
@@ -484,8 +484,8 @@
   "offline": "2026-11-18"
  },
  "qa-test-design": {
-  "fingerprint": "0196c845665caa97",
-  "offline": "2026-11-18"
+  "fingerprint": "4dcc53348cfe38e0",
+  "offline": "2026-11-19"
  },
  "sec-appsec-devsecops": {
   "fingerprint": "00beffb178f12e1d",

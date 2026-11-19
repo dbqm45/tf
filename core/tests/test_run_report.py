@@ -45,7 +45,7 @@ change: CHG-12
 ## Problem
 Klient nie może ponowić nieudanej płatności i porzuca zamówienie.
 
-## Poza zakresem
+## Out of scope
 - płatności cykliczne
 """
 
@@ -135,7 +135,7 @@ def main() -> int:
         r = run(["start", "Zły klucz", "--key", "proj 1", "--story", "x"], proj, cfg)
         check(r.returncode == 2 and not (proj / ".tf" / "runs" / "proj 1").exists(),
               f"R-27: key outside the pattern rejected, nothing is created: {r.returncode} {r.stdout}")
-        (pdoc / "plan.md").write_text("# Plan\n- [x] K1 — limit\n- [ ] K2 — druga doba\n", encoding="utf-8")
+        (pdoc / "plan.md").write_text("# Plan\n- [x] S1 — limit\n- [ ] S2 — druga doba\n", encoding="utf-8")
         prun = proj / ".tf" / "runs" / "PROJ-123"
         r = run(["finish", str(prun)], proj, Path(t) / "cfg-pusty")
         rep = (pdoc / "report.md").read_text(encoding="utf-8") if (pdoc / "report.md").is_file() else ""
@@ -148,7 +148,7 @@ def main() -> int:
         run_dir = proj / ".tf" / "runs" / "cuts" / "2026-10-21-test"
         run_dir.mkdir(parents=True)
         (run_dir / "run.json").write_text(json.dumps({"slug": "test", "started_at": "2026-10-21T10:00:00+00:00"}))
-        (run_dir / "plan.md").write_text("# Plan\n- [x] K1 import\n- [x] K2 walidacja\n- [ ] K3 raport\n")
+        (run_dir / "plan.md").write_text("# Plan\n- [x] S1 import\n- [x] S2 walidacja\n- [ ] S3 raport\n")
         (run_dir / "parked.md").write_text("# Odłożone\n- duplikaty CDR — do decyzji\n- strefy czasowe — do decyzji\n")
         slug = re.sub(r"[^A-Za-z0-9]", "-", str(proj.resolve()))
         sess = cfg / "projects" / slug / "S1.jsonl"
@@ -205,7 +205,7 @@ def main() -> int:
         cut_dir.mkdir(parents=True)
         (cut_dir / "run.json").write_text(json.dumps({"slug": "cut", "started_at": "2026-10-21T10:00:00+00:00",
                                                       "change": "CHG-90", "task": "TSK-90"}))
-        (cut_dir / "plan.md").write_text("# Plan\n- [ ] K1 a\n- [ ] K2 b\n")
+        (cut_dir / "plan.md").write_text("# Plan\n- [ ] S1 a\n- [ ] S2 b\n")
         r = run(["finish", str(cut_dir), "--json"], proj, cfg)
         try:
             got = json.loads(r.stdout).get("plan")
@@ -217,28 +217,28 @@ def main() -> int:
         import shutil as _sh
         _sh.rmtree(proj / "docs" / "project" / "changes" / "CHG-90", ignore_errors=True)
 
-        # the "Security" section from the slice scans' summary.md (security_scan.py --out <run>/security/K<n>)
-        sec = run_dir / "security" / "K2"
+        # the "Security" section from the slice scans' summary.md (security_scan.py --out <run>/security/S<n>)
+        sec = run_dir / "security" / "S2"
         sec.mkdir(parents=True)
         (sec / "summary.md").write_text("## Security\n\nScan: PASS (blocking: 0, below the threshold: 1, scan errors: 0).\n\n"
                                         "Below the threshold:\n- r.note src/a.py:3 (note) — nitpick\n", encoding="utf-8")
         run(["finish", str(run_dir)], proj, cfg)
         md = (run_dir / "report.md").read_text(encoding="utf-8")
-        check(md.count("## Security") == 1 and "### K2" in md and "r.note src/a.py:3" in md
+        check(md.count("## Security") == 1 and "### S2" in md and "r.note src/a.py:3" in md
               and "no scan result" not in md, f"R-15: security section from the scan result: {md[-400:]}")
-        # every slice attempt (security/K<n>/attempt-<k>/summary.md): FAIL with findings, then PASS — in attempt order
+        # every slice attempt (security/S<n>/attempt-<k>/summary.md): FAIL with findings, then PASS — in attempt order
         for k, body in ((1, "Scan: FAIL (blocking: 1, below the threshold: 0, scan errors: 0).\n\nBelow the threshold: none.\n\n"
                             "Blocking and errors:\n- node-sqlite-sql-from-string src/deployments.js:14 (CWE-89, warning)\n"),
                         (2, "Scan: PASS (blocking: 0, below the threshold: 0, scan errors: 0).\n\nBelow the threshold: none.\n")):
-            (sec.parent / "K1" / f"attempt-{k}").mkdir(parents=True)
-            (sec.parent / "K1" / f"attempt-{k}" / "summary.md").write_text("## Security\n\n" + body, encoding="utf-8")
-        (sec.parent / "K1" / "feedback.md").write_text("# Security scan\n\n- no blocking findings\n", encoding="utf-8")
+            (sec.parent / "S1" / f"attempt-{k}").mkdir(parents=True)
+            (sec.parent / "S1" / f"attempt-{k}" / "summary.md").write_text("## Security\n\n" + body, encoding="utf-8")
+        (sec.parent / "S1" / "feedback.md").write_text("# Security scan\n\n- no blocking findings\n", encoding="utf-8")
         run(["finish", str(run_dir)], proj, cfg)
         md = (run_dir / "report.md").read_text(encoding="utf-8")
-        i = {k: md.find(k) for k in ("### K1", "#### Attempt 1", "node-sqlite-sql-from-string src/deployments.js:14",
-                                     "#### Attempt 2", "### K2")}
+        i = {k: md.find(k) for k in ("### S1", "#### Attempt 1", "node-sqlite-sql-from-string src/deployments.js:14",
+                                     "#### Attempt 2", "### S2")}
         check(all(v >= 0 for v in i.values()) and list(i.values()) == sorted(i.values()) and md.count("## Security") == 1
-              and md.count("### K1") == 1 and "Scan: FAIL" in md, f"R-15a: all slice attempts in the report: {i} {md[-900:]}")
+              and md.count("### S1") == 1 and "Scan: FAIL" in md, f"R-15a: all slice attempts in the report: {i} {md[-900:]}")
 
         # status: one line for the budget check after every slice (little context), without writing report.md
         (run_dir / "report.md").unlink()
@@ -341,7 +341,7 @@ def main() -> int:
         rdir = repo / ".tf" / "runs" / "cuts" / "2026-11-03-nested"
         rdir.mkdir(parents=True)
         (rdir / "run.json").write_text(json.dumps({"slug": "nested", "started_at": "2026-11-03T10:00:00+00:00"}))
-        (rdir / "plan.md").write_text("# Plan\n- [x] K1 lista\n")
+        (rdir / "plan.md").write_text("# Plan\n- [x] S1 lista\n")
         (rdir / "parked.md").write_text("# Odłożone\n")
         cfg2 = Path(t) / "cfg2"
         ws_slug = re.sub(r"[^A-Za-z0-9]", "-", str(ws.resolve()))

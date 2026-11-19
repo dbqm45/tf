@@ -101,7 +101,7 @@ def read_progress(stdout: str) -> list[dict]:
 
 
 def files_read(rows: list[dict]) -> int:
-    """Number of unique files read by the persona in the stream (by the message „czyta plik <ścieżka>")."""
+    """Number of unique files read by the persona in the stream (by the message „reads file <path>")."""
     seen: set[str] = set()
     for row in rows:
         msg = row.get("message") if isinstance(row, dict) else None

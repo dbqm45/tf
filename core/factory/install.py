@@ -905,9 +905,10 @@ def _main(argv: list[str], tmp: Path) -> int:
     if user_has_statusline():
         src_set.pop("statusLine", None)
     set_p = dst_root / (".claude/settings.json" if shared else ".claude/settings.local.json")
-    cur = json.loads(set_p.read_text(encoding="utf-8")) if set_p.exists() else {}
+    cur_raw = json.loads(set_p.read_text(encoding="utf-8")) if set_p.exists() else {}
+    cur = load_migrations().settings_v19(cur_raw)   # 19.0.0: English hook event names, before the merge (no duplicate)
     merged = apply_python(merge_settings(src_set, cur), py) if cur else src_set
-    if merged != cur:
+    if merged != cur_raw:
         plan.write(set_p, json.dumps(merged, ensure_ascii=False, indent=2) + "\n",
                    f"{set_p.relative_to(dst_root)} (factory permissions and hooks)")
 

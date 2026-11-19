@@ -13,9 +13,9 @@ ROOT = next((p for p in Path(__file__).resolve().parents if (p / REL).is_file())
 SCRIPT = ROOT / REL if ROOT else None
 
 PLAN = """# Plan
-- [x] K1 — eksport CSV · kryteria: test_export_csv · pliki: src/export/csv.py, tests/test_export.py · weryfikacja: `pytest -q` · kto: std
-- [x] K2 — przycisk w UI · kryteria: e2e · pliki: web/src/export/ · weryfikacja: `npm test` · kto: std
-- [ ] K3 — limit rozmiaru · kryteria: test_limit · pliki: src/export/limits.py · weryfikacja: `pytest -q` · kto: std
+- [x] S1 — eksport CSV · criteria: test_export_csv · files: src/export/csv.py, tests/test_export.py · verify: `pytest -q` · kto: std
+- [x] S2 — przycisk w UI · criteria: e2e · files: web/src/export/ · verify: `npm test` · kto: std
+- [ ] S3 — limit rozmiaru · criteria: test_limit · files: src/export/limits.py · verify: `pytest -q` · kto: std
 """
 
 
@@ -67,11 +67,11 @@ def main() -> int:
         check(r.returncode == 0, f"P-1: it works: {r.stdout}{r.stderr}")
         out = json.loads(r.stdout) if r.returncode == 0 else {}
         sl = {s["id"]: s for s in out.get("slices", [])}
-        check(set(sl) == {"K1", "K2", "K3"} and sl["K1"]["done"] and not sl["K3"]["done"], f"P-2: slices and state: {sl}")
-        check(sorted(sl.get("K1", {}).get("touched", [])) == ["src/export/csv.py", "tests/test_export.py"],
-              f"P-3: the files of slice K1 in the diff: {sl.get('K1')}")
-        check(sl.get("K2", {}).get("touched") == ["web/src/export/Button.tsx"], f"P-4: a directory in the plan covers the files: {sl.get('K2')}")
-        check(sl.get("K3", {}).get("missing") == ["src/export/limits.py"], f"P-5: untouched plan files: {sl.get('K3')}")
+        check(set(sl) == {"S1", "S2", "S3"} and sl["S1"]["done"] and not sl["S3"]["done"], f"P-2: slices and state: {sl}")
+        check(sorted(sl.get("S1", {}).get("touched", [])) == ["src/export/csv.py", "tests/test_export.py"],
+              f"P-3: the files of slice S1 in the diff: {sl.get('S1')}")
+        check(sl.get("S2", {}).get("touched") == ["web/src/export/Button.tsx"], f"P-4: a directory in the plan covers the files: {sl.get('S2')}")
+        check(sl.get("S3", {}).get("missing") == ["src/export/limits.py"], f"P-5: untouched plan files: {sl.get('S3')}")
         check(out.get("unplanned") == ["src/util/helpers.py"],
               f"P-6: changes outside the plan (without .tf/): {out.get('unplanned')}")
         check(out.get("coverage") == 75 and out.get("tests_changed") == 1, f"P-7: plan coverage 3/4 and tests: {out}")
@@ -91,7 +91,7 @@ def main() -> int:
         git(repo, "commit", "-qm", "docs(task): record")
         r = run(str(repo / ".tf" / "runs" / key), "--base", "main", "--json", cwd=repo)
         out = json.loads(r.stdout) if r.returncode == 0 else {}
-        check(r.returncode == 0 and {s["id"] for s in out.get("slices", [])} == {"K1", "K2", "K3"},
+        check(r.returncode == 0 and {s["id"] for s in out.get("slices", [])} == {"S1", "S2", "S3"},
               f"P-10: a plan from the task directory: {r.returncode} {r.stdout[:200]}{r.stderr}")
         check(out.get("unplanned") == ["src/util/helpers.py"] and out.get("coverage") == 75,
               f"P-11: task files (docs/project/changes/) outside the comparison: {out.get('unplanned')} {out.get('coverage')}")

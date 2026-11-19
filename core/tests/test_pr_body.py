@@ -16,12 +16,12 @@ SCRIPTS = ROOT / ".claude" / "skills" / "tf" / "scripts"
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'3 passed\')"'
 RED = f'{sys.executable} -c "print(\'FAILED test_x\'); raise SystemExit(3)"'
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi "
-        "45 zł.\n\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi "
+        "45 zł.\n\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
 PLAN = ("# Plan: Limit dobowy\n\n"
-        "- [ ] K1 — limit dobowy · kryteria: AC-1 · pliki: fees.py · weryfikacja: `pytest`\n"
-        "- [ ] K2 — komunikat o limicie · pliki: msg.py\n\n"
-        "- **[założenie]** doba liczy się od północy czasu lokalnego\n")
+        "- [ ] S1 — limit dobowy · criteria: AC-1 · files: fees.py · verify: `pytest`\n"
+        "- [ ] S2 — komunikat o limicie · files: msg.py\n\n"
+        "- **[assumption]** doba liczy się od północy czasu lokalnego\n")
 ROLLBACK = "Wdróż poprzednią wersję: ./deploy.sh --previous (ok. 5 minut)"
 ORDER = ("## Story", "## Slices", "## Criteria trace", "## How it was checked", "## Risk", "## How to roll back",
          "## Postponed for a decision", "## Assumptions")
@@ -62,13 +62,13 @@ def new_run(project: Path, weight: str = "normal") -> str:
 
 
 def slice_done(project: Path, d: str) -> None:
-    """K1: a change, green evidence, a commit with the slice footer, ticking off."""
+    """S1: a change, green evidence, a commit with the slice footer, ticking off."""
     (project / "fees.py").write_text("x = 2\n", encoding="utf-8")
-    call(project, TASK, "verify", "IMP-1", "K1", "--files", "fees.py", "--command", OK)
+    call(project, TASK, "verify", "IMP-1", "S1", "--files", "fees.py", "--command", OK)
     git(project, "add", "fees.py")
-    git(project, "commit", "-q", "-m", "feat(fees): add the daily cap\n\nKawałek K1: limit dobowy")
-    call(project, SCRIPTS / "run_state.py", "step", d, "K1", "R1", "scope", "pass")
-    call(project, SCRIPTS / "run_state.py", "tick", d, "K1")
+    git(project, "commit", "-q", "-m", "feat(fees): add the daily cap\n\nSlice S1: limit dobowy")
+    call(project, SCRIPTS / "run_state.py", "step", d, "S1", "R1", "scope", "pass")
+    call(project, SCRIPTS / "run_state.py", "tick", d, "S1")
 
 
 def body(project: Path) -> str:
@@ -117,16 +117,16 @@ def main() -> int:
               and "docs/project/changes/IMP-1" in story,
               f"PB-3: story: title, key, ticket source and task directory: {story}")
         pieces = section(text, "## Slices")
-        check("K1" in pieces and "feat(fees): add the daily cap" in pieces and "K2" in pieces
+        check("S1" in pieces and "feat(fees): add the daily cap" in pieces and "S2" in pieces
               and "komunikat o limicie" in pieces,
-              f"PB-4: slices from the plan, with a commit with the 'Kawałek K1' footer next to the done one: {pieces}")
+              f"PB-4: slices from the plan, with a commit with the 'Slice S1' footer next to the done one: {pieces}")
         how = section(text, "## How it was checked")
-        check("K1" in how and how.count("3 passed") == 1 and "exit code 0" in how and "evidence/K1-1.json" in how
+        check("S1" in how and how.count("3 passed") == 1 and "exit code 0" in how and "evidence/S1-1.json" in how
               and OK.split(" -c ")[1][:12] in how,
-              f"PB-5: How it was checked: the command (without its output), the exit code and the evidence file of slice K1: {how}")
-        check("K2" in how and "no verification evidence" in how,
+              f"PB-5: How it was checked: the command (without its output), the exit code and the evidence file of slice S1: {how}")
+        check("S2" in how and "no verification evidence" in how,
               f"PB-6: a slice without evidence is named explicitly: {how}")
-        check(r.stdout.count("K2") >= 1 and "no evidence" in r.stdout,
+        check(r.stdout.count("S2") >= 1 and "no evidence" in r.stdout,
               f"PB-7: the missing evidence is also in the command's message: {r.stdout}")
         risk = section(text, "## Risk")
         check("normal" in risk and "Change risk" in risk and "fees.py" not in section(text, "## How to roll back"),
@@ -136,19 +136,19 @@ def main() -> int:
               f"PB-9: without a card and without a flag: git revert and the recorded reason for no flag: {back}")
         check("none" in section(text, "## Postponed for a decision"),
               f"PB-10: nothing postponed -> 'none': {section(text, '## Postponed for a decision')}")
-        check("- **[założenie]** doba liczy się od północy" in section(text, "## Assumptions"),
+        check("- **[assumption]** doba liczy się od północy" in section(text, "## Assumptions"),
               f"PB-11: assumptions from the plan go into the description: {section(text, '## Assumptions')}")
         check("AC-1" in section(text, "## Criteria trace"),
               f"PB-12: criteria trace from the specification: {section(text, '## Criteria trace')}")
 
         # red evidence, a postponed item, an operations card with a rollback step, the scan verdict, the plan_drift result
         (p / "msg.py").write_text("x = 3\n", encoding="utf-8")
-        call(p, TASK, "verify", "IMP-1", "K2", "--files", "msg.py", "--command", RED)
+        call(p, TASK, "verify", "IMP-1", "S2", "--files", "msg.py", "--command", RED)
         call(p, rs, "park", d, "Abonamenty — czy limit ich dotyczy")
         card = p / ".tf" / "config" / "operations.json"
         card.parent.mkdir(parents=True, exist_ok=True)
         card.write_text(json.dumps({"deploy": {"rollback": ROLLBACK}}, ensure_ascii=False), encoding="utf-8")
-        sec = p / ".tf" / "runs" / "IMP-1" / "security" / "K1"
+        sec = p / ".tf" / "runs" / "IMP-1" / "security" / "S1"
         sec.mkdir(parents=True)
         (sec / "verdict.json").write_text(json.dumps({"status": "PASS", "blocking": [], "other": [], "errors": []}),
                                           encoding="utf-8")
@@ -156,17 +156,17 @@ def main() -> int:
         r = call(p, rs, "pr-body", d, "--base", "main")
         text = body(p)
         how = section(text, "## How it was checked")
-        check(r.returncode == 0 and "K2" in how and "red" in how and "exit code 3" in how,
+        check(r.returncode == 0 and "S2" in how and "red" in how and "exit code 3" in how,
               f"PB-13: a slice's red evidence is named explicitly: {how}")
         check("PASS" in how and "plan_drift" in how and "pass" in how,
               f"PB-14: the security scan verdict and the plan_drift result are in 'How it was checked': {how}")
         # PB-24: the slice scan saves attempts in security/<slice>/attempt-<k>/ (security_scan.py) — the description takes the last one
         for k, status in ((1, "PASS"), (2, "FAIL")):
-            att = p / ".tf" / "runs" / "IMP-1" / "security" / "K2" / f"attempt-{k}"
+            att = p / ".tf" / "runs" / "IMP-1" / "security" / "S2" / f"attempt-{k}"
             att.mkdir(parents=True)
             (att / "verdict.json").write_text(json.dumps({"status": status, "blocking": [], "other": [], "errors": []}),
                                               encoding="utf-8")
-        k2 = [ln for ln in section(body_after(p, rs, d), "## How it was checked").splitlines() if "**K2**" in ln]
+        k2 = [ln for ln in section(body_after(p, rs, d), "## How it was checked").splitlines() if "**S2**" in ln]
         check(k2 and k2[0].rstrip().endswith("FAIL"),
               f"PB-24: the scan verdict from the last attempt-<k> (security_scan.py): {k2}")
         back = section(text, "## How to roll back")

@@ -264,7 +264,7 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/project_record.py",
               "--hook-snapshot",
-              "koniec sesji"
+              "session end"
             ],
             "timeout": 10
           }
@@ -313,7 +313,7 @@
             "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/project_record.py",
               "--hook-snapshot",
-              "kompaktowanie kontekstu"
+              "context compaction"
             ],
             "timeout": 10
           }

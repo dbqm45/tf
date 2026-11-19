@@ -20,7 +20,7 @@ and the dashboard generator. The state is written by the script, not the model �
   python3 .claude/skills/tf/scripts/run_state.py finding <run-directory> S2 "<important review finding>" [--round R]
   python3 .claude/skills/tf/scripts/run_state.py verify <run-directory> S2 --files <file>[,<file>…]
         [--command "<command>"] [--timeout <s>]
-  python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> K2
+  python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> S2
   python3 .claude/skills/tf/scripts/run_state.py park <run-directory> "<matter for a decision>"
   python3 .claude/skills/tf/scripts/run_state.py block <run-directory> S2 --question "<question for the human>"
   python3 .claude/skills/tf/scripts/run_state.py answer <run-directory> S2 "<answer>" --by human:<id>
@@ -82,7 +82,7 @@ to `task.json` (intake → intake, plan → plan, slices → implementation, pr 
 instead of `sed`, `>>` and a heredoc in the shell, which Claude Code asks the human about (measurement E0, 2026-11-13).
 
 `block`, `answer` and `next` work with the `loop.blocked_slices` switch (`.tf/config/config.yaml`, off
-by default): a question blocks only its own slice (`block`), the script says which slice can be done next (`Next: K3`
+by default): a question blocks only its own slice (`block`), the script says which slice can be done next (`Next: S3`
 or `Next: STOP`, when none is independent), and `answer` records the human's answer and unblocks the slice.
 Slice dependencies are recorded by the plan (`· after: S1`, `· after: none`; without a note — after the previous one), questions and answers —
 the task's `events.jsonl` (one entry per line: `at`, `type` — `question`
@@ -148,8 +148,8 @@ BARE_STAGE = {"intake": "intake", "spec": "intake", "plan": "plan", "implementat
               "review": "slices", "pr": "pr", "deploy": "done", "closed": "done"}   # a task without a run
 PROOF_STATE = {"verified": "done", "red": "fail", "blocked": "fail", "planned": "todo"}
 _TASK_API = None
-SLICE = re.compile(r"^\s*- \[([ xX])\]\s+([KS]\d+)\s*[—-]\s*(.+)$")   # S<n>; S<n> — plans from before 14.0.0
-SLICE_ID = r"[KS]\d+"
+SLICE = re.compile(r"^\s*- \[([ xX])\]\s+(S\d+)\s*[—-]\s*(.+)$")   # S<n> (K<n> from before 14.0.0: migrated in 19.0.0)
+SLICE_ID = r"S\d+"
 MAX_TEXT = 40000
 MAX_RUNS = 40
 MAX_ROUNDS = 2      # rounds of one slice without a human decision (the first attempt and one repair); then a STOP block
@@ -758,7 +758,7 @@ def slice_files(project: Path, key: str, slice_id: str) -> list[str]:
 def commit_message(message: str, slice_id: str, value: str, footers: list[str]) -> str:
     """Title and body from `--message`; appends `Slice S<n>: <value>` and missing footers (the last paragraph)."""
     text = message.strip().replace("\r\n", "\n")
-    if not re.search(rf"^(?:Slice|Kawałek) {re.escape(slice_id)}:", text, re.M):
+    if not re.search(rf"^Slice {re.escape(slice_id)}:", text, re.M):
         title, _, rest = text.partition("\n")
         text = f"{title}\n\nSlice {slice_id}: {value}" + (f"\n{rest.strip(chr(10))}" if rest.strip() else "")
     missing = [f for f in footers if not re.search(rf"^{re.escape(f.split(':', 1)[0])}:", text, re.M)]
@@ -850,7 +850,7 @@ def cmd_proceed(run_dir: Path, project: Path) -> int:
 
 
 # ---- questions and slice dependencies (step F3, the loop.blocked_slices switch) ---------------------------------
-NO_DEPS = ("none", "brak", "-", "—", "–", "nic")
+NO_DEPS = ("none", "-", "—", "–")
 HUMAN = re.compile(r"human:[\w.@-]+")
 
 
@@ -905,9 +905,9 @@ def plan_with_deps(text: str) -> list[dict]:
         deps: list[str] | None = None
         for part in parts[1:]:
             k, _, v = part.partition(":")
-            if k.strip().lower() in ("after", "po"):
+            if k.strip().lower() == "after":
                 names = [x.strip().strip("`") for x in v.split(",") if x.strip()]
-                deps = [] if any(n.lower() in NO_DEPS for n in names) else [n.upper() for n in names if re.fullmatch(r"[KkSs]\d+", n)]
+                deps = [] if any(n.lower() in NO_DEPS for n in names) else [n.upper() for n in names if re.fullmatch(r"[Ss]\d+", n)]
         if deps is None:                                       # without a note: after the previous slice
             deps = [out[-1]["id"]] if out else []
         out.append({"id": m.group(2), "checked": m.group(1) != " ", "value": parts[0], "deps": deps})
@@ -1038,7 +1038,7 @@ def cmd_next(run_dir: Path, project: Path) -> int:
 # --- the PR description assembled from the task files (step G2) -------------------------------------------------------------------
 WEIGHT_EN = {"light": "light", "normal": "normal", "full": "full"}
 CARD = Path(".tf") / "config" / "operations.json"
-ASSUMPTION = re.compile(r"\[(zało[żz]eni|assumption)", re.I)
+ASSUMPTION = re.compile(r"\[assumption", re.I)
 BASES = ("origin/main", "main", "origin/master", "master")
 
 
@@ -1070,7 +1070,8 @@ def pick_base(project: Path, base: str | None) -> str | None:
 
 
 def slice_commits(project: Path, base: str) -> dict[str, str]:
-    """A slice → the newest commit with the footer „Slice S<n>” (or the old „Kawałek S<n>”) on the branch (hash and title)."""
+    """A slice → the newest commit with the footer „Slice S<n>” on the branch (hash and title). Commits from before 19.0.0
+    with the footer „Kawałek K<n>” are history and are not mapped."""
     try:
         r = subprocess.run(["git", "-C", str(project), "log", "--format=%h%x1f%s%x1f%b%x1e", f"{base}..HEAD"],
                            capture_output=True, text=True, timeout=30)
@@ -1080,7 +1081,7 @@ def slice_commits(project: Path, base: str) -> dict[str, str]:
     for rec in (r.stdout.split("\x1e") if r.returncode == 0 else []):
         parts = rec.strip("\n").split("\x1f")
         if len(parts) == 3:
-            for k in re.findall(r"^(?:Slice|Kawałek) ([KS]\d+)\b", parts[2], re.M):
+            for k in re.findall(r"^Slice (S\d+)\b", parts[2], re.M):
                 out.setdefault(k, f"{parts[0]} {parts[1]}")
     return out
 
@@ -1089,7 +1090,7 @@ def last_evidence(docs: Path) -> dict[str, tuple[str, dict]]:
     """A slice → (relative path, content) of the latest evidence `evidence/S<n>-<m>.json`."""
     best: dict[str, tuple[int, Path]] = {}
     for f in docs.glob("evidence/*-*.json"):
-        m = re.fullmatch(r"([KS]\d+)-(\d+)\.json", f.name)
+        m = re.fullmatch(r"(S\d+)-(\d+)\.json", f.name)
         if m and int(m.group(2)) >= best.get(m.group(1), (0, f))[0]:
             best[m.group(1)] = (int(m.group(2)), f)
     out = {}
@@ -1151,7 +1152,7 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
     base_args = ["--base", found] if found else []
 
     ticket = read_text(docs / "ticket.md") or ""
-    source = next((ln for ln in ticket.splitlines() if ln.startswith(("Source:", "Źródło:"))), None)
+    source = next((ln for ln in ticket.splitlines() if ln.startswith("Source:")), None)
     out = ["## Story", "", f"**{as_data(meta.get('title') or task.get('title') or key, 200)}** ({code_span(key)})", ""]
     if source:
         out.append(f"- {as_data(source, 300)}")
@@ -1341,7 +1342,7 @@ def evidence_items(docs: Path) -> list[dict]:
     """The latest evidence of every slice (evidence/S<n>-<m>.json): a green dot when the exit code is 0."""
     last: dict[int, tuple[int, Path]] = {}
     for f in docs.glob("evidence/*-*.json"):
-        m = re.fullmatch(r"K(\d+)-(\d+)\.json", f.name)
+        m = re.fullmatch(r"S(\d+)-(\d+)\.json", f.name)
         if m and int(m.group(2)) >= last.get(int(m.group(1)), (0, f))[0]:
             last[int(m.group(1))] = (int(m.group(2)), f)
     out = []
@@ -1361,7 +1362,7 @@ def code_items(run_dir: Path, proofs: list[dict]) -> list[dict]:
     """The code files of every slice — from the last verification evidence, so also those the agent did not mention."""
     project, out = run_dir.resolve().parents[2], []
     for proof in proofs:
-        m = re.match(r"evidence/([KS]\d+)-", proof["name"])
+        m = re.match(r"evidence/(S\d+)-", proof["name"])
         try:
             files = json.loads(proof["text"]).get("files") or {}
         except (ValueError, AttributeError):

@@ -13,8 +13,8 @@ SCRIPT = ROOT / ".tf" / "factory" / "flag_check.py"
 TASK = ROOT / ".tf" / "factory" / "task_state.py"
 ONBOARD = ROOT / ".tf" / "factory" / "onboard.py"
 CHANGES = Path("docs") / "project" / "changes"
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi 45 zł.\n"
-        "\n## Bez zmian\n\n- Stawka godzinowa.\n\n## Poza zakresem\n\n- Abonamenty.\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi 45 zł.\n"
+        "\n## Unchanged\n\n- Stawka godzinowa.\n\n## Out of scope\n\n- Abonamenty.\n")
 CARD = {"flags": {"file": "config/flags.json", "envs": ["test", "qa", "prod"], "test_env": "test"}}
 
 

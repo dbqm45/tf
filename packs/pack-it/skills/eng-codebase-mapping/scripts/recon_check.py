@@ -27,27 +27,15 @@ import sys
 
 REF = re.compile(r"`?((?:[\w.@-]+/)*[\w.@-]+\.[A-Za-z0-9]+):(\d+)(?:-(\d+))?`?")
 QUOTE = re.compile(r"\"([^\"]{3,})\"|„([^”]{3,})”")
-MARK = re.compile(r"\[(assumption|unverified|question|założenie|niezweryfikowane|pytanie)[^\]]*\]", re.I)
+MARK = re.compile(r"\[(assumption|unverified|question)[^\]]*\]", re.I)
 SECTIONS = ("TL;DR", "Stack", "Modules", "Domains", "Requirements", "Rules", "Standards", "Risks", "Questions",
             "Not checked")
 NO_EVIDENCE_SECTIONS = ("Questions", "Not checked")   # bullets here have no evidence by nature
 STACK_ROWS = ("Language", "Framework", "Data", "Build", "Tests", "CI", "Configuration")   # required rows of the stack table
-# Reports from before 14.x: Polish section and stack row headings accepted as English equivalents.
-HEADING_ALIASES = {"Moduły": "Modules", "Domeny": "Domains", "Wymagania": "Requirements", "Reguły": "Rules",
-                   "Standardy": "Standards", "Ryzyka": "Risks", "Pytania": "Questions", "Czego nie sprawdzono": "Not checked"}
-ROW_ALIASES = {"język": "Language", "dane": "Data", "testy": "Tests", "konfiguracja": "Configuration"}
-
-
-def canon(heading: str) -> str:
-    """Section heading in its English form (Polish from a pre-14.x report → the equivalent)."""
-    for pl, en in HEADING_ALIASES.items():
-        if heading.startswith(pl):
-            return en + heading[len(pl):]
-    return heading
 CI_FILES = (".github/workflows/*.yml", ".github/workflows/*.yaml", ".gitlab-ci.yml", "Jenkinsfile",
             "azure-pipelines.yml", ".circleci/config.yml", "bitbucket-pipelines.yml", ".travis.yml", ".drone.yml",
             ".buildkite/pipeline.yml")
-CARD_MARK = re.compile(r"^<!-- (?:card|karta): \S+ sha256:([0-9a-f]{12}) -->")
+CARD_MARK = re.compile(r"^<!-- card: \S+ sha256:([0-9a-f]{12}) -->")
 
 
 def norm(s: str) -> str:
@@ -73,7 +61,7 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
     for i, line in enumerate(lines, 1):
         h = re.match(r"^#{1,6}\s+(.*)", line)
         if h:
-            section = canon(h.group(1).strip())
+            section = h.group(1).strip()
             sections.append(section)
             continue
         found = [m for m in REF.finditer(line) if not re.match(r"https?$", m.group(1).split("/")[0])]
@@ -115,7 +103,7 @@ def check_file(md: str, repo: str, cache: dict) -> tuple[int, list[dict], list[d
                     if row_at is not None:
                         unsupported[:] = [u for u in unsupported if u["at"] != row_at]
                 continue
-            stack_rows.append((ROW_ALIASES.get(cells[0].lower(), cells[0]), line))
+            stack_rows.append((cells[0], line))
             row_at = None
             if not found and not MARK.search(line):
                 row_at = f"{md}:{i}"

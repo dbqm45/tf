@@ -235,7 +235,7 @@ def inject(report: str, lines: list[str]) -> int:
     except OSError:
         print(f"✗ {report}: no report file")
         return 1
-    m = re.search(r"^## (?:Modules|Moduły)[^\n]*\n", text, re.M)
+    m = re.search(r"^## Modules[^\n]*\n", text, re.M)
     if not m:
         print(f"✗ {report}: no „## Modules” section")
         return 1
@@ -305,7 +305,7 @@ def main(argv: list[str]) -> int:
         try:
             with open(path, encoding="utf-8") as fh:
                 old = fh.read()
-            m = re.search(r"^## (?:Cross-cutting rules|Reguły przekrojowe)", old, re.M)   # the synthesis section stays on reassembly
+            m = re.search(r"^## Cross-cutting rules", old, re.M)   # the synthesis section stays on reassembly
             keep = "\n" + old[m.start():] if m else ""
         except OSError:
             pass

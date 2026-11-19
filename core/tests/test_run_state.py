@@ -15,8 +15,8 @@ SCRIPT = ROOT / REL
 REPORT = SCRIPT.with_name("run_report.py")
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'8 passed\')"'
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi 45 zł.\n"
-        "\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi 45 zł.\n"
+        "\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
 RED = f'{sys.executable} -c "print(\'FAILED test_x\'); raise SystemExit(3)"'
 
 
@@ -75,29 +75,29 @@ def main() -> int:
               f"S-1b: without a plan the intake stage: {o.get('stage')} {o.get('slices')}")
 
         # S-2: plan with slices → plan stage, then ticking → slices
-        (doc / "plan.md").write_text("# Plan\n- [ ] K1 — sortowanie rosnące · kryteria: t\n- [ ] K2 — malejące · kryteria: t\n"
-                                   "- [ ] K3 — po dacie · kryteria: t\n", encoding="utf-8")
+        (doc / "plan.md").write_text("# Plan\n- [ ] S1 — sortowanie rosnące · criteria: t\n- [ ] S2 — malejące · criteria: t\n"
+                                   "- [ ] S3 — po dacie · criteria: t\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
         o = one()
-        check(o.get("stage") == "plan" and [s["id"] for s in o["slices"]] == ["K1", "K2", "K3"],
+        check(o.get("stage") == "plan" and [s["id"] for s in o["slices"]] == ["S1", "S2", "S3"],
               f"S-2a: plan with slices → plan stage: {o.get('stage')}")
         (proj / "sort.py").write_text("ASC = True\n", encoding="utf-8")     # a ticked slice has evidence (step C4)
-        run(SCRIPT, ["verify", str(d), "K1", "--files", "sort.py", "--command", OK], proj, cfg)
-        (doc / "plan.md").write_text("# Plan\n- [x] K1 — sortowanie rosnące · kryteria: t\n- [ ] K2 — malejące · kryteria: t\n"
-                                   "- [ ] K3 — po dacie · kryteria: t\n", encoding="utf-8")
+        run(SCRIPT, ["verify", str(d), "S1", "--files", "sort.py", "--command", OK], proj, cfg)
+        (doc / "plan.md").write_text("# Plan\n- [x] S1 — sortowanie rosnące · criteria: t\n- [ ] S2 — malejące · criteria: t\n"
+                                   "- [ ] S3 — po dacie · criteria: t\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
         o = one()
         check(o.get("stage") == "slices" and [s["state"] for s in o["slices"]] == ["done", "cur", "todo"],
-              f"S-2b: ticked K1 → slices, K2 current: {o.get('stage')} {[s['state'] for s in o['slices']]}")
+              f"S-2b: ticked S1 → slices, S2 current: {o.get('stage')} {[s['state'] for s in o['slices']]}")
 
         # S-3: step records rounds; earlier stages get pass, a new round after a failed gate
-        r = run(SCRIPT, ["step", str(d), "K2", "R1", "verify", "fail"], proj, cfg)
+        r = run(SCRIPT, ["step", str(d), "S2", "R1", "verify", "fail"], proj, cfg)
         meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
         check(r.returncode == 0 and meta["current"]["rounds"][0] == {"test": "pass", "code": "pass", "verify": "fail",
                                                                   "scan": "todo", "scope": "todo"},
               f"S-3a: R1 verify fail, test and code pass by default: {r.stdout} {r.stderr} {meta.get('current')}")
-        run(SCRIPT, ["step", str(d), "K2", "R2", "code", "run"], proj, cfg)
-        run(SCRIPT, ["step", str(d), "K2", "R2", "scan", "run"], proj, cfg)
+        run(SCRIPT, ["step", str(d), "S2", "R2", "code", "run"], proj, cfg)
+        run(SCRIPT, ["step", str(d), "S2", "R2", "scan", "run"], proj, cfg)
         meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
         r2 = meta["current"]["rounds"][1]
         check(len(meta["current"]["rounds"]) == 2 and r2["test"] == "pass" and r2["code"] == "pass"
@@ -105,20 +105,20 @@ def main() -> int:
               f"S-3b: R2 counted from the start, verify before scan = pass: {r2}")
         check(meta.get("stage") == "slices" and "updated_at" in meta, f"S-3c: step ustawia stage slices: {meta.get('stage')}")
         o = one()
-        check(o.get("cur", {}).get("k") == "K2" and len(o["cur"]["rounds"]) == 2
+        check(o.get("cur", {}).get("k") == "S2" and len(o["cur"]["rounds"]) == 2
               and o["cur"]["rounds"][0]["verify"] == "fail",
               f"S-3d: dashboard after step (no manual refresh): {o.get('cur')}")
 
         # S-4: a new slice starts from R1
-        run(SCRIPT, ["step", str(d), "K3", "R1", "test", "run"], proj, cfg)
+        run(SCRIPT, ["step", str(d), "S3", "R1", "test", "run"], proj, cfg)
         meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
-        check(meta["current"]["k"] == "K3" and len(meta["current"]["rounds"]) == 1,
+        check(meta["current"]["k"] == "S3" and len(meta["current"]["rounds"]) == 1,
               f"S-4: a new slice resets the rounds: {meta['current']}")
 
         # S-5: invalid input → code 2 and a message, run.json unchanged
         before = (d / "run.json").read_text(encoding="utf-8")
-        bad = [["step", str(d), "K2", "R1", "verify", "zielony"], ["step", str(d), "K2", "R1", "lint", "run"],
-               ["step", str(d), "K2", "verify", "run"], ["stage", str(d), "needs"], ["stage", str(d), "nie-ma"],
+        bad = [["step", str(d), "S2", "R1", "verify", "zielony"], ["step", str(d), "S2", "R1", "lint", "run"],
+               ["step", str(d), "S2", "verify", "run"], ["stage", str(d), "needs"], ["stage", str(d), "nie-ma"],
                ["stage", str(d), "slices", "--needs", "stop"]]
         codes = [run(SCRIPT, a, proj, cfg).returncode for a in bad]
         check(all(c == 2 for c in codes)
@@ -126,20 +126,20 @@ def main() -> int:
               f"S-5: invalid input rejected without a write: {codes}")
 
         # S-6: STOP — needs stage with a reason; current slice = fail, STOP file in the panel
-        (d / "security" / "K2" / "proba-2").mkdir(parents=True)
-        (d / "security" / "K2" / "proba-2" / "summary.md").write_text("## Bezpieczeństwo\nWerdykt: FAIL\n", encoding="utf-8")
-        run(SCRIPT, ["step", str(d), "K2", "R2", "scan", "fail"], proj, cfg)
-        r = run(SCRIPT, ["stage", str(d), "needs", "--needs", "stop", "--code", "scan", "--reason", "Scan red after 2 attempts (K2)."],
+        (d / "security" / "S2" / "proba-2").mkdir(parents=True)
+        (d / "security" / "S2" / "proba-2" / "summary.md").write_text("## Security\nVerdict: FAIL\n", encoding="utf-8")
+        run(SCRIPT, ["step", str(d), "S2", "R2", "scan", "fail"], proj, cfg)
+        r = run(SCRIPT, ["stage", str(d), "needs", "--needs", "stop", "--code", "scan", "--reason", "Scan red after 2 attempts (S2)."],
                 proj, cfg)
         o = one()
         names = [i["name"] for g in o.get("files", []) for i in g["items"]]
         check(r.returncode == 0 and o.get("stage") == "needs" and o.get("needs") == "stop"
               and "red" in (o.get("stopText") or "") and "STOP" in names
-              and "security/K2/proba-2/summary.md" in names,
+              and "security/S2/proba-2/summary.md" in names,
               f"S-6a: STOP with a reason and the files in the panel: {o.get('stage')} {o.get('needs')} {names}")
-        check([s["state"] for s in o["slices"]][1] == "fail", f"S-6b: slice K2 in STOP = fail: {o['slices']}")
+        check([s["state"] for s in o["slices"]][1] == "fail", f"S-6b: slice S2 in STOP = fail: {o['slices']}")
         # after the human's decision the next step resumes the run
-        run(SCRIPT, ["step", str(d), "K2", "R3", "test", "run"], proj, cfg)
+        run(SCRIPT, ["step", str(d), "S2", "R3", "test", "run"], proj, cfg)
         meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
         check(meta.get("stage") == "slices" and "needs" not in meta and "stop_text" not in meta
               and len(meta["current"]["rounds"]) == 3,
@@ -179,7 +179,7 @@ def main() -> int:
         check(isinstance(meta.get("usage"), dict) and "sonnet" in meta["usage"]["models"]
               and o.get("models") == ["sonnet"] and o.get("cost") is not None,
               f"S-8b: cost and models from transcripts saved in run.json: {meta.get('usage')}")
-        run(SCRIPT, ["step", str(d), "K2", "R1", "test", "run"], proj, cfg)   # refresh without computing cost
+        run(SCRIPT, ["step", str(d), "S2", "R1", "test", "run"], proj, cfg)   # refresh without computing cost
         check(one().get("cost") == o.get("cost"), "S-8c: a refresh after step keeps the remembered cost")
 
         # S-9: HTML safety — file content with </script> does not escape the data block
@@ -226,8 +226,8 @@ def main() -> int:
         doc = proj / CHANGES / d.name
         plan = doc / "plan.md"
         head = plan.read_text(encoding="utf-8")
-        plan.write_text(head + "- [ ] K1 — limit 45 zł · kryteria: AC1 · pliki: fees.py\n"
-                               "- [ ] K2 — druga doba · kryteria: AC3 · pliki: fees.py\n", encoding="utf-8")
+        plan.write_text(head + "- [ ] S1 — limit 45 zł · criteria: AC1 · files: fees.py\n"
+                               "- [ ] S2 — druga doba · criteria: AC3 · files: fees.py\n", encoding="utf-8")
         (proj / "fees.py").write_text("LIMIT = 45\n", encoding="utf-8")
 
         def task():
@@ -252,23 +252,23 @@ def main() -> int:
         check(r.returncode == 0 and "AC-1" in r.stdout, f"P-2: finished spec → code 0: {r.returncode} {r.stdout}{r.stderr}")
 
         # evidence before ticking (step C4): tick passes only for a slice verified by `verify`
-        r = run(SCRIPT, ["tick", str(d), "K1"], proj, cfg)
+        r = run(SCRIPT, ["tick", str(d), "S1"], proj, cfg)
         check(r.returncode != 0 and "verify" in r.stdout + r.stderr and plan.read_text(encoding="utf-8").count("[x]") == 0,
               f"V-1: tick without evidence rejected, plan unchanged: {r.returncode} {r.stdout}{r.stderr}")
-        r = run(SCRIPT, ["verify", str(d), "K1", "--files", "fees.py", "--command", RED], proj, cfg)
+        r = run(SCRIPT, ["verify", str(d), "S1", "--files", "fees.py", "--command", RED], proj, cfg)
         check(r.returncode == 1 and "FAILED test_x" in r.stdout, f"V-2: verify with a red command → code 1 and output: {r.returncode} {r.stdout}")
-        r = run(SCRIPT, ["verify", str(d), "K1", "--files", "fees.py", "--command", OK], proj, cfg)
-        check(r.returncode == 0 and (doc / "evidence" / "K1-2.json").is_file(),
+        r = run(SCRIPT, ["verify", str(d), "S1", "--files", "fees.py", "--command", OK], proj, cfg)
+        check(r.returncode == 0 and (doc / "evidence" / "S1-2.json").is_file(),
               f"V-3: verify saves evidence in the task directory: {r.returncode} {r.stdout}{r.stderr}")
-        review_pass(d, "K1")   # scope review result before tick (without changing the stage that later tests check)
-        r = run(SCRIPT, ["tick", str(d), "K1"], proj, cfg)
+        review_pass(d, "S1")   # scope review result before tick (without changing the stage that later tests check)
+        r = run(SCRIPT, ["tick", str(d), "S1"], proj, cfg)
         text = plan.read_text(encoding="utf-8")
-        check(r.returncode == 0 and "- [x] K1 — limit 45 zł" in text and "- [ ] K2 — druga doba" in text
+        check(r.returncode == 0 and "- [x] S1 — limit 45 zł" in text and "- [ ] S2 — druga doba" in text
               and text.startswith(head), f"T-1: tick ticks only the given slice, the rest of the file unchanged: {r.stdout}{r.stderr}{text[-200:]}")
-        r = run(SCRIPT, ["tick", str(d), "K1"], proj, cfg)
+        r = run(SCRIPT, ["tick", str(d), "S1"], proj, cfg)
         check(r.returncode == 0 and plan.read_text(encoding="utf-8") == text, f"T-2: a repeated tick changes nothing: {r.stdout}{r.stderr}")
-        r = run(SCRIPT, ["tick", str(d), "K7"], proj, cfg)
-        check(r.returncode != 0 and "K7" in (r.stdout + r.stderr) and plan.read_text(encoding="utf-8") == text,
+        r = run(SCRIPT, ["tick", str(d), "S7"], proj, cfg)
+        check(r.returncode != 0 and "S7" in (r.stdout + r.stderr) and plan.read_text(encoding="utf-8") == text,
               f"T-3: unknown slice → error with its name, file unchanged: {r.returncode} {r.stdout}{r.stderr}")
         parked = d / "parked.md"
         before = parked.read_text(encoding="utf-8")
@@ -288,25 +288,25 @@ def main() -> int:
         check(r.returncode == 2 and "git" in r.stdout, f"TRC-1: trace outside git → code 2 with an explanation: {r.returncode} {r.stdout}{r.stderr}")
 
         # changing a file after the evidence invalidates it; the run stage goes to task.json; to PR only with verified slices
-        run(SCRIPT, ["verify", str(d), "K2", "--files", "fees.py", "--command", OK], proj, cfg)
+        run(SCRIPT, ["verify", str(d), "S2", "--files", "fees.py", "--command", OK], proj, cfg)
         (proj / "fees.py").write_text("LIMIT = 50\n", encoding="utf-8")
-        r = run(SCRIPT, ["tick", str(d), "K2"], proj, cfg)
-        check(r.returncode != 0 and "- [ ] K2" in plan.read_text(encoding="utf-8"),
+        r = run(SCRIPT, ["tick", str(d), "S2"], proj, cfg)
+        check(r.returncode != 0 and "- [ ] S2" in plan.read_text(encoding="utf-8"),
               f"V-4: file changed after the evidence → tick rejected: {r.returncode} {r.stdout}{r.stderr}")
         run(SCRIPT, ["stage", str(d), "plan"], proj, cfg)
         check(task().get("stage") == "plan", f"V-5a: stage plan trafia do task.json: {task().get('stage')}")
         inputs = sorted((task().get("artifacts", {}).get("plan.md", {}).get("inputs") or {}))
         check(inputs == ["spec.md", "ticket.md"], f"P-3: stage plan records what the plan was built from: {inputs}")
-        run(SCRIPT, ["step", str(d), "K2", "R1", "test", "run"], proj, cfg)
+        run(SCRIPT, ["step", str(d), "S2", "R1", "test", "run"], proj, cfg)
         check(task().get("stage") == "implementation", f"V-5b: first step → implementation: {task().get('stage')}")
         r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
         meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
-        check(r.returncode == 2 and meta.get("stage") != "pr" and task().get("stage") == "implementation" and "K2" in r.stdout,
+        check(r.returncode == 2 and meta.get("stage") != "pr" and task().get("stage") == "implementation" and "S2" in r.stdout,
               f"V-6a: pr stage rejected with an unverified slice: {r.returncode} {r.stdout} {meta.get('stage')}")
         r = run(SCRIPT, ["step", str(d), "PR", "plan_drift", "pass"], proj, cfg)
         check(r.returncode == 2 and json.loads((d / "run.json").read_text(encoding="utf-8")).get("stage") != "pr",
               f"V-6b: step PR also does not enter the pr stage without evidence: {r.returncode} {r.stdout}")
-        for k in ("K1", "K2"):
+        for k in ("S1", "S2"):
             run(SCRIPT, ["verify", str(d), k, "--files", "fees.py", "--command", OK], proj, cfg)
         # feature flag (step D4): a task with a spec does not enter the pr stage without a flag or a reason for its absence
         r = run(SCRIPT, ["stage", str(d), "pr"], proj, cfg)
@@ -340,20 +340,20 @@ def main() -> int:
         old.mkdir(parents=True)
         (old / "run.json").write_text(json.dumps({"slug": "stary", "title": "Stary przebieg",
                                                   "started_at": "2026-10-01T10:00:00+00:00"}), encoding="utf-8")
-        (old / "plan.md").write_text("# Plan\n- [ ] K1 — stara lista · pliki: a.py\n", encoding="utf-8")
-        r = run(SCRIPT, ["tick", str(old), "K1"], proj, cfg)
-        check(r.returncode == 0 and "- [x] K1" in (old / "plan.md").read_text(encoding="utf-8"),
+        (old / "plan.md").write_text("# Plan\n- [ ] S1 — stara lista · files: a.py\n", encoding="utf-8")
+        r = run(SCRIPT, ["tick", str(old), "S1"], proj, cfg)
+        check(r.returncode == 0 and "- [x] S1" in (old / "plan.md").read_text(encoding="utf-8"),
               f"V-7a: old run — tick without evidence as before: {r.returncode} {r.stdout}{r.stderr}")
         r = run(SCRIPT, ["trace", str(old)], proj, cfg)
         check(r.returncode == 2 and "old layout" in r.stdout, f"TRC-2: trace in an old run → code 2: {r.returncode} {r.stdout}")
-        r = run(SCRIPT, ["verify", str(old), "K1", "--files", "fees.py", "--command", OK], proj, cfg)
+        r = run(SCRIPT, ["verify", str(old), "S1", "--files", "fees.py", "--command", OK], proj, cfg)
         check(r.returncode == 2 and not (old / "evidence").exists(),
               f"V-7b: verify in an old run → code 2 with an explanation: {r.returncode} {r.stdout}")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
         rs = runs_json((proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
         slugs = {x.get("slug") for x in rs}
         new = next((x for x in rs if x.get("slug") != "stary"), {})
-        check("stary" in slugs and len(rs) == 2 and [s["id"] for s in new.get("slices", [])] == ["K1", "K2"]
+        check("stary" in slugs and len(rs) == 2 and [s["id"] for s in new.get("slices", [])] == ["S1", "S2"]
               and any(i["name"] == "ticket.md" for g in new.get("files", []) for i in g["items"]),
               f"V-8: an old and a new run on one page, the new one with a plan and ticket.md: {slugs} {new.get('slices')}")
 
@@ -367,19 +367,19 @@ def main() -> int:
               f"D-1: the card knows the directories and the task stage: {new.get('dir')} {new.get('taskDir')} {new.get('taskStage')}")
         check("ticket.md" in durable and "plan.md" in durable and "parked.md" in working,
               f"D-2: the files panel splits files into persistent and working directory: {grp}")
-        check(any(n.startswith("evidence/K1-") for v in grp.values() for n in v),
+        check(any(n.startswith("evidence/S1-") for v in grp.values() for n in v),
               f"D-3: the slice's latest evidence in the files panel: {grp}")
         old_o = next((x for x in rs if x.get("slug") == "stary"), {})
         check(old_o.get("dir") == ".tf/runs/cuts/2026-10-01-stary" and not old_o.get("taskDir"),
               f"D-4: an old run points to its own directory: {old_o.get('dir')}")
-        review_pass(d, "K2")
-        run(SCRIPT, ["tick", str(d), "K2"], proj, cfg)
+        review_pass(d, "S2")
+        run(SCRIPT, ["tick", str(d), "S2"], proj, cfg)
         (proj / "fees.py").write_text("LIMIT = 55\n", encoding="utf-8")
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
         html = (proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8")
         new = next((x for x in runs_json(html) if x.get("slug") != "stary"), {})
         st = {s["id"]: s["state"] for s in new.get("slices", [])}
-        check(st == {"K1": "stale", "K2": "stale"} and all(s.get("proof") == "unverified" for s in new["slices"]),
+        check(st == {"S1": "stale", "S2": "stale"} and all(s.get("proof") == "unverified" for s in new["slices"]),
               f"D-5: a ticked slice with a changed file has state stale: {new.get('slices')}")
         check(".chip.stale" in html and "r.slices.map" in html and "r.dir" in html,
               "D-6: the template draws the slice bar, stale state and directory from run data")
@@ -389,13 +389,13 @@ def main() -> int:
         env = {**os.environ, "CLAUDE_PROJECT_DIR": str(proj)}
         subprocess.run([sys.executable, str(ts), "start", "PROJ-7", "--title", "Eksport faktur"], cwd=proj, env=env,
                        capture_output=True, text=True, timeout=60)
-        subprocess.run([sys.executable, str(ts), "verify", "PROJ-7", "K1", "--files", "fees.py", "--command", OK],
+        subprocess.run([sys.executable, str(ts), "verify", "PROJ-7", "S1", "--files", "fees.py", "--command", OK],
                        cwd=proj, env=env, capture_output=True, text=True, timeout=60)
         run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
         rs = runs_json((proj / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
         bare = next((x for x in rs if x.get("key") == "PROJ-7"), {})
         check(len(rs) == 3 and bare.get("title") == "Eksport faktur" and bare.get("stage") == "intake"
-              and bare.get("taskStage") == "intake" and [(s["id"], s["state"]) for s in bare.get("slices", [])] == [("K1", "done")],
+              and bare.get("taskStage") == "intake" and [(s["id"], s["state"]) for s in bare.get("slices", [])] == [("S1", "done")],
               f"D-7: a task without a run has a card with stage and slices: {len(rs)} {bare.get('stage')} {bare.get('slices')}")
 
     # task weight in the loop (step E2): the factory assigns a weight and says why; the script enforces the effects
@@ -413,17 +413,17 @@ def main() -> int:
               and "human" in r.stdout,
               f"W-1: run_state weight assigns full weight, gives the reason and effect: {r.returncode} {r.stdout}{r.stderr}")
         (proj / CHANGES / "LOG-1" / "spec.md").write_text(SPEC, encoding="utf-8")
-        (proj / CHANGES / "LOG-1" / "plan.md").write_text("# Plan\n- [ ] K1 — reset · pliki: reset.py\n", encoding="utf-8")
+        (proj / CHANGES / "LOG-1" / "plan.md").write_text("# Plan\n- [ ] S1 — reset · files: reset.py\n", encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d), "plan", "--auto"], proj, cfg)
         check(r.returncode == 0, f"W-2: a plan for a full-weight task can be saved: {r.stdout}{r.stderr}")
-        r = run(SCRIPT, ["step", str(d), "K1", "R1", "test", "run"], proj, cfg)
+        r = run(SCRIPT, ["step", str(d), "S1", "R1", "test", "run"], proj, cfg)
         meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
         check(r.returncode == 2 and "approve LOG-1 plan.md" in r.stdout and "STOP" in r.stdout
               and meta.get("stage") == "plan",
               f"W-3: full weight with --auto — slice loop rejected with an explanation, stage unchanged: {r.returncode} {r.stdout}")
         subprocess.run([sys.executable, str(ts), "approve", "LOG-1", "plan.md", "--by", "human:anna"], cwd=proj, env=env,
                        capture_output=True, text=True, timeout=60)
-        r = run(SCRIPT, ["step", str(d), "K1", "R1", "test", "run"], proj, cfg)
+        r = run(SCRIPT, ["step", str(d), "S1", "R1", "test", "run"], proj, cfg)
         check(r.returncode == 0, f"W-4: after the human approves the plan the loop starts: {r.stdout}{r.stderr}")
 
         run(REPORT, ["start", "Literówka w README", "--key", "TYP-1", "--story",
@@ -432,7 +432,7 @@ def main() -> int:
         r = run(SCRIPT, ["weight", str(d2)], proj, cfg)
         check(r.returncode == 0 and "light" in r.stdout and "no spec.md" in r.stdout,
               f"W-5: typo → light weight with effect: {r.stdout}{r.stderr}")
-        (proj / CHANGES / "TYP-1" / "plan.md").write_text("# Plan\n- [ ] K1 — literówka · pliki: README.md\n", encoding="utf-8")
+        (proj / CHANGES / "TYP-1" / "plan.md").write_text("# Plan\n- [ ] S1 — literówka · files: README.md\n", encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d2), "plan"], proj, cfg)
         check(r.returncode == 0 and not (proj / CHANGES / "TYP-1" / "spec.md").exists(),
               f"W-6: light weight — the run's plan stage without spec.md: {r.returncode} {r.stdout}{r.stderr}")
@@ -447,7 +447,7 @@ def main() -> int:
         d3 = proj / ".tf" / "runs" / "REG-1"
         (proj / CHANGES / "REG-1" / "spec.md").write_text(SPEC, encoding="utf-8")
         (proj / CHANGES / "REG-1" / "plan.md").write_text(
-            "# Plan\n- [ ] K1 — limit · pliki: fees.py, db/migrations/0008_limit.sql\n", encoding="utf-8")
+            "# Plan\n- [ ] S1 — limit · files: fees.py, db/migrations/0008_limit.sql\n", encoding="utf-8")
         r = run(SCRIPT, ["stage", str(d3), "plan"], proj, cfg)
         w = json.loads((proj / CHANGES / "REG-1" / "task.json").read_text(encoding="utf-8")).get("weight")
         check(r.returncode == 0 and w == "full" and "full" in r.stdout and "db/migrations/0008_limit.sql" in r.stdout,
@@ -470,36 +470,36 @@ def main() -> int:
         r = run(SCRIPT, ["stage", str(d4), "intake", "--plan"], proj, cfg)
         check(r.returncode == 0 and t4().get("mode") == "plan", f"T-2: stage --plan records Plan mode: {r.stdout} {t4().get('mode')}")
         (proj / CHANGES / "EXP-1" / "spec.md").write_text(SPEC, encoding="utf-8")
-        (proj / CHANGES / "EXP-1" / "plan.md").write_text("# Plan\n- [ ] K1 — eksport · pliki: export.py\n", encoding="utf-8")
+        (proj / CHANGES / "EXP-1" / "plan.md").write_text("# Plan\n- [ ] S1 — eksport · files: export.py\n", encoding="utf-8")
         run(SCRIPT, ["stage", str(d4), "plan"], proj, cfg)
-        r = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
+        r = run(SCRIPT, ["step", str(d4), "S1", "R1", "test", "run"], proj, cfg)
         check(r.returncode == 2 and "Plan" in r.stdout and json.loads((d4 / "run.json").read_text(encoding="utf-8")).get("stage") == "plan",
               f"T-3: Plan mode does not enter the slice loop: {r.returncode} {r.stdout}")
         r = run(SCRIPT, ["mode", str(d4), "normal"], proj, cfg)
-        r2 = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
+        r2 = run(SCRIPT, ["step", str(d4), "S1", "R1", "test", "run"], proj, cfg)
         check(r.returncode == 0 and t4().get("mode") == "normal" and r2.returncode == 2 and "approve" in r2.stdout,
               f"T-4: after switching to normal mode the loop waits for the human's approval: {r.stdout} | {r2.returncode} {r2.stdout}")
         r = run(SCRIPT, ["approve", str(d4)], proj, cfg, {"GIT_AUTHOR_NAME": "Anna Nowak"})
         art = (t4().get("artifacts") or {}).get("plan.md") or {}
         who = (art.get("verified") or [{}])[-1].get("by", "")
-        r2 = run(SCRIPT, ["step", str(d4), "K1", "R1", "test", "run"], proj, cfg)
+        r2 = run(SCRIPT, ["step", str(d4), "S1", "R1", "test", "run"], proj, cfg)
         check(r.returncode == 0 and art.get("status") == "approved" and who.startswith("human:") and r2.returncode == 0,
               f"T-5: approve records the human's approval of the plan and the loop starts: {r.stdout}{r.stderr} {who} | {r2.stdout}")
         # criterion identifier in the test already at slice verification (measurement after E3: appended in a separate commit)
         (proj / "export.py").write_text("ROWS = 1\n", encoding="utf-8")
         (proj / "tests").mkdir(exist_ok=True)
         (proj / "tests" / "test_export.py").write_text("def test_export():\n    assert True\n", encoding="utf-8")
-        r = run(SCRIPT, ["verify", str(d4), "K1", "--files", "export.py,tests/test_export.py", "--command", OK], proj, cfg)
+        r = run(SCRIPT, ["verify", str(d4), "S1", "--files", "export.py,tests/test_export.py", "--command", OK], proj, cfg)
         check(r.returncode == 0 and "⚠" in r.stdout and "AC-" in r.stdout and "tests/test_export.py" in r.stdout
               and "before the slice's commit" in r.stdout,
               f"A-1: verify warns when the slice's test has no criterion identifier: {r.returncode} {r.stdout}")
         (proj / "tests" / "test_export.py").write_text("def test_ac1_export():  # AC-1\n    assert True\n", encoding="utf-8")
-        r = run(SCRIPT, ["verify", str(d4), "K1", "--files", "export.py,tests/test_export.py", "--command", OK], proj, cfg)
+        r = run(SCRIPT, ["verify", str(d4), "S1", "--files", "export.py,tests/test_export.py", "--command", OK], proj, cfg)
         check(r.returncode == 0 and "⚠" not in r.stdout, f"A-2: with an identifier in the test, no warning: {r.stdout}")
-        r = run(SCRIPT, ["verify", str(d4), "K1", "--files", "export.py", "--command", OK], proj, cfg)
+        r = run(SCRIPT, ["verify", str(d4), "S1", "--files", "export.py", "--command", OK], proj, cfg)
         check(r.returncode == 0 and "⚠" in r.stdout and "no test file" in r.stdout,
               f"A-3: verify warns when there is no test among the slice's files: {r.stdout}")
-        r = run(SCRIPT, ["verify", str(d2), "K1", "--files", "README.md", "--command", OK], proj, cfg)
+        r = run(SCRIPT, ["verify", str(d2), "S1", "--files", "README.md", "--command", OK], proj, cfg)
         check("⚠" not in r.stdout, f"A-4: a task without a spec (light weight) — no criteria warning: {r.stdout}")
 
         run(REPORT, ["start", "Import sesji", "--key", "IMP-1", "--story", "Jako operator chcę import sesji z pliku."],

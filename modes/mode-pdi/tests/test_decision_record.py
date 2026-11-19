@@ -119,7 +119,7 @@ def main() -> int:
             folder.mkdir(parents=True)
             (folder / "task.json").write_text('{"schema": 1, "key": "%s"}\n' % key, encoding="utf-8")
             for name in ("ticket.md", "plan.md", "spec.md", "report.md"):
-                (folder / name).write_text(f"# {name}\n\n- [ ] K1 — coś\n", encoding="utf-8")
+                (folder / name).write_text(f"# {name}\n\n- [ ] S1 — coś\n", encoding="utf-8")
         r = run(["check"], repo)
         check(r.returncode == 0 and "ticket.md" not in r.stdout,
               f"D-7a: check skips task folders (task.json without intent.md): {r.returncode} {r.stdout}{r.stderr}")

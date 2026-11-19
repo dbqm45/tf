@@ -11,7 +11,7 @@ Checks:
   „zmierzono”, „uruchomiono” — "as of", "accessed", "downloaded", "measured", "run"),
 - warning: a number with a unit (%, pp, USD, zł, EUR, ms, s, min, h, GB, MB, razy) in a text line without a trace of
   origin in the same line — a `command` or a `path`, a link, a URL, file:line, „źródło” (source), „wg”/„według” (per),
-  [assumption], [unverified] (also the old [założenie], [niezweryfikowane]), a footnote [^n]; a document with a data source declaration („Pliki:”, „Dane:”,
+  [assumption], [unverified], a footnote [^n]; a document with a data source declaration („Pliki:”, „Dane:”,
   „Źródło danych:” or „surowe wyniki w” right before a `path`, also mid-sentence) has it for all numbers.
 Skips code blocks, headings and — for warnings — table rows (a table's source usually stands above it).
 First line of the result: „Werdykt: OK | WARNINGS | ERRORS” (verdict). Exit code: 1 on errors (with --strict also on
@@ -33,7 +33,7 @@ CLAIM = re.compile(r"(?<![\w.])\d+(?:[.,]\d+)?\s*(%|pp\b|p\.p\.|USD\b|zł\b|PLN\
                    r"|razy\b|times\b|×)", re.I)
 DOC_SOURCE = re.compile(r"(?<![\w])(pliki|dane|źródło danych|surowe wyniki(?: w)?|files|data|data source|raw results(?: in)?)\s*\**\s*:?\s*\**\s*`[^`]+`", re.I)
 SOURCE = re.compile(r"`[^`]+`|https?://|\]\([^)]+\)|\b[\w./-]+\.\w+:\d+|źródł\w*|\bwg\b|według|\bsources?\b|according to"
-                    r"|\[(?:założenie|niezweryfikowane|assumption|unverified)\]|\[\^[^\]]+\]", re.I)
+                    r"|\[(?:assumption|unverified)\]|\[\^[^\]]+\]", re.I)
 
 
 def check_text(text: str, label: str, today: dt.date) -> tuple[list[str], list[str]]:

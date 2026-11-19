@@ -101,20 +101,20 @@ def main() -> int:
               f"Z-8: after the run resumes the task does not wait: {r.stdout} {meta}")
 
         # a slice blocked by a question also waits for a human
-        call(p, cfg, TASK, "slice", "IMP-1", "K2", "blocked", "--reason", "nie wiadomo, czy limit dotyczy abonamentów")
+        call(p, cfg, TASK, "slice", "IMP-1", "S2", "blocked", "--reason", "nie wiadomo, czy limit dotyczy abonamentów")
         r = call(p, cfg, TASK, "list")
         w = rows(p, cfg).get("IMP-1", {}).get("waiting") or [{}]
-        check("waiting for you" in r.stdout and "K2" in r.stdout and "abonamentów" in r.stdout
-              and w[0].get("kind") == "slice" and w[0].get("slice") == "K2",
+        check("waiting for you" in r.stdout and "S2" in r.stdout and "abonamentów" in r.stdout
+              and w[0].get("kind") == "slice" and w[0].get("slice") == "S2",
               f"Z-9: a blocked slice is on the waiting list with the reason: {r.stdout} {w}")
 
         # the files panel: the slice's code files from the verification evidence
-        call(p, cfg, TASK, "verify", "IMP-1", "K1", "--files", "fees.py", "--command", OK)
+        call(p, cfg, TASK, "verify", "IMP-1", "S1", "--files", "fees.py", "--command", OK)
         call(p, cfg, SCRIPTS / "run_state.py", "dashboard", "--no-cost")
         card = next((x for x in runs_json((p / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
                      if x.get("key") == "IMP-1"), {})
         code = next((g for g in card.get("files", []) if g.get("grp", "").startswith("The slices' code")), {})
-        item = next((i for i in code.get("items", []) if i.get("name") == "K1 · fees.py"), {})
+        item = next((i for i in code.get("items", []) if i.get("name") == "S1 · fees.py"), {})
         check("LIMIT = 45" in item.get("text", ""),
               f"Z-10: the files panel has a code group with the slice's files (from the evidence): {[g.get('grp') for g in card.get('files', [])]}")
 

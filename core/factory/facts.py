@@ -8,7 +8,7 @@ Searching for already verified facts before starting new research (cheaper than 
 
 Searches:
 - verification tables in docs/project/archive/research/*.md (verdicts `confirmed` / `partial` / `unconfirmed` / `contradicted` at the start of
-  a row; the former letters P / C / N / S too; the date from the file name YYYYMMDD-…),
+  a row; the date from the file name YYYYMMDD-…),
 - "## Sources" sections in skills (.claude/skills/*/SKILL.md and references/*.md; the date from "accessed YYYY-MM-DD" in the line).
 Re-check an old or unconfirmed finding in the sources (the researcher agent); save new verification tables
 in docs/project/archive/research/ so the next search finds them. Standard library only.
@@ -32,9 +32,7 @@ sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache_
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-VERDICT = {"confirmed": "confirmed", "partial": "partial", "unconfirmed": "unconfirmed", "contradicted": "contradicted",
-           "P": "confirmed", "C": "partial", "N": "unconfirmed", "S": "contradicted"}   # letters P/C/N/S — tables from before 14.x
-LINE_VERDICT = re.compile(r"^\s*[-*]\s*(confirmed|partial|unconfirmed|contradicted|P|C|N|S)\b")
+LINE_VERDICT = re.compile(r"^\s*[-*]\s*(confirmed|partial|unconfirmed|contradicted)\b")
 DATE_IN_LINE = re.compile(r"accessed[^0-9]{0,12}(\d{4}-\d{2}-\d{2})")
 
 
@@ -57,7 +55,7 @@ def research(root: Path, ks: list[str]) -> list[dict]:
                 continue
             v = LINE_VERDICT.match(line)
             out.append({"file": f.relative_to(root).as_posix(), "line": i, "text": line.strip().lstrip("-* ").strip(),
-                        "verdict": VERDICT[v.group(1)] if v else "—", "date": date})
+                        "verdict": v.group(1) if v else "—", "date": date})
     return out
 
 

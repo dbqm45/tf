@@ -425,7 +425,7 @@ feature_flags:
   auto: true
 
 # The /tf loop. blocked_slices: true — a question blocks only its own slice (`run_state.py block`), and the loop does in the
-# meantime the slices that do not depend on it (dependencies are recorded by the plan: `· po: K1`, `· po: brak`); STOP only when
+# meantime the slices that do not depend on it (dependencies are recorded by the plan: `· after: S1`, `· after: none`); STOP only when
 # no slice is independent. false (default, until measured) — every question is a STOP block, as before.
 loop:
   blocked_slices: false

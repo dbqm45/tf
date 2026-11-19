@@ -14,13 +14,13 @@ TASK = ROOT / ".tf" / "factory" / "task_state.py"
 SCRIPTS = ROOT / ".claude" / "skills" / "tf" / "scripts"
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'3 passed\')"'
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi "
-        "45 zł.\n\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi "
+        "45 zł.\n\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
 PLAN = ("# Plan: Limit dobowy\n\n"
-        "- [ ] K1 — limit dobowy · kryteria: AC-1 · pliki: fees.py · weryfikacja: `pytest`\n"
-        "- [ ] K2 — komunikat o limicie · pliki: msg.py · po: brak\n"
-        "- [ ] K3 — tłumaczenie komunikatu · pliki: i18n.py\n"
-        "- [ ] K4 — raport limitów · pliki: report.py · po: K1\n")
+        "- [ ] S1 — limit dobowy · criteria: AC-1 · files: fees.py · verify: `pytest`\n"
+        "- [ ] S2 — komunikat o limicie · files: msg.py · after: none\n"
+        "- [ ] S3 — tłumaczenie komunikatu · files: i18n.py\n"
+        "- [ ] S4 — raport limitów · files: report.py · after: S1\n")
 QUESTION = "Czy limit dotyczy też abonamentów?"
 
 
@@ -83,66 +83,66 @@ def main() -> int:
         d = new_run(p)
 
         # the switch off (default): the loop works as before — a question is a STOP block
-        r = call(p, rs, "block", d, "K1", "--question", QUESTION)
+        r = call(p, rs, "block", d, "S1", "--question", QUESTION)
         check(r.returncode == 2 and "loop.blocked_slices" in r.stdout and "--code question" in r.stdout
-              and not events(p) and (task(p).get("slices") or {}).get("K1", {}).get("state") != "blocked",
+              and not events(p) and (task(p).get("slices") or {}).get("S1", {}).get("state") != "blocked",
               f"WE-1: without the switch `block` refuses and points to STOP with the code question: {r.returncode} {r.stdout}")
-        call(p, rs, "step", d, "K1", "R1", "test", "run")
+        call(p, rs, "step", d, "S1", "R1", "test", "run")
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
         check(r.returncode == 0, f"WE-2: without the switch STOP with the code question passes as before: {r.returncode} {r.stdout}")
-        call(p, rs, "step", d, "K1", "R1", "test", "run")
+        call(p, rs, "step", d, "S1", "R1", "test", "run")
 
         switch(p, True)
         # STOP with a question about the current slice when an independent slice exists → a refusal with a `block` hint
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
-        check(r.returncode == 2 and "block" in r.stdout and "K2" in r.stdout and "--task" in r.stdout,
+        check(r.returncode == 2 and "block" in r.stdout and "S2" in r.stdout and "--task" in r.stdout,
               f"WE-3: with the switch a STOP with a question about one slice is rejected when there is something else to do: {r.returncode} {r.stdout}")
-        r = call(p, rs, "block", d, "K1", "--question", QUESTION)
+        r = call(p, rs, "block", d, "S1", "--question", QUESTION)
         ev = events(p)
-        check(r.returncode == 0 and "Next: K2" in r.stdout and task(p)["slices"]["K1"].get("state") == "blocked"
-              and task(p)["slices"]["K1"].get("reason") == QUESTION,
-              f"WE-4: block blocks only K1 and points to the independent slice K2: {r.returncode} {r.stdout} {task(p).get('slices')}")
-        check(len(ev) == 1 and ev[0].get("type") == "question" and ev[0].get("slice") == "K1"
+        check(r.returncode == 0 and "Next: S2" in r.stdout and task(p)["slices"]["S1"].get("state") == "blocked"
+              and task(p)["slices"]["S1"].get("reason") == QUESTION,
+              f"WE-4: block blocks only S1 and points to the independent slice S2: {r.returncode} {r.stdout} {task(p).get('slices')}")
+        check(len(ev) == 1 and ev[0].get("type") == "question" and ev[0].get("slice") == "S1"
               and ev[0].get("text") == QUESTION and ev[0].get("by") == "process:tf" and ev[0].get("at"),
               f"WE-5: pytanie zapisane w events.jsonl zadania (kto, kiedy, co): {ev}")
         r = call(p, TASK, "list")
-        check("waiting for you" in r.stdout and "K1" in r.stdout and QUESTION in r.stdout,
+        check("waiting for you" in r.stdout and "S1" in r.stdout and QUESTION in r.stdout,
               f"WE-6: the blocked slice's question is on the 'waiting for you' list: {r.stdout}")
 
-        # order by dependencies: K3 (without a suffix) depends on K2, K4 depends on the blocked K1
-        done(p, d, "K2", "msg.py")
+        # order by dependencies: S3 (without a suffix) depends on S2, S4 depends on the blocked S1
+        done(p, d, "S2", "msg.py")
         r = call(p, rs, "next", d)
-        check(r.returncode == 0 and "Next: K3" in r.stdout, f"WE-7: after K2 comes K3 (it depends on the previous one): {r.stdout}")
-        done(p, d, "K3", "i18n.py")
+        check(r.returncode == 0 and "Next: S3" in r.stdout, f"WE-7: after S2 comes S3 (it depends on the previous one): {r.stdout}")
+        done(p, d, "S3", "i18n.py")
         r = call(p, rs, "next", d)
         check(r.returncode == 0 and "Next: STOP" in r.stdout and QUESTION in r.stdout and "--code question" in r.stdout
-              and "K4" in r.stdout,
-              f"WE-8: when nothing independent is left (K4 waits for K1) → STOP with a list of questions: {r.stdout}")
+              and "S4" in r.stdout,
+              f"WE-8: when nothing independent is left (S4 waits for S1) → STOP with a list of questions: {r.stdout}")
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION)
         check(r.returncode == 0, f"WE-9: STOP with a question passes when there is no slice left to do: {r.returncode} {r.stdout}")
 
         # the human's answer unblocks the slice
-        r = call(p, rs, "answer", d, "K1", "Nie, tylko postój jednorazowy")
-        check(r.returncode == 2 and "human:" in r.stdout and task(p)["slices"]["K1"].get("state") == "blocked",
+        r = call(p, rs, "answer", d, "S1", "Nie, tylko postój jednorazowy")
+        check(r.returncode == 2 and "human:" in r.stdout and task(p)["slices"]["S1"].get("state") == "blocked",
               f"WE-10: the answer is recorded with the human's identifier (--by human:<id>): {r.returncode} {r.stdout}")
-        r = call(p, rs, "answer", d, "K1", "Nie, tylko postój jednorazowy", "--by", "human:anna")
+        r = call(p, rs, "answer", d, "S1", "Nie, tylko postój jednorazowy", "--by", "human:anna")
         ev = events(p)
-        check(r.returncode == 0 and "Next: K1" in r.stdout and task(p)["slices"]["K1"].get("state") != "blocked"
+        check(r.returncode == 0 and "Next: S1" in r.stdout and task(p)["slices"]["S1"].get("state") != "blocked"
               and len(ev) == 2 and ev[1].get("type") == "answer" and ev[1].get("by") == "human:anna"
-              and ev[1].get("text") == "Nie, tylko postój jednorazowy" and ev[1].get("slice") == "K1",
-              f"WE-11: answer unblocks K1, records the answer and points to it as the next one: {r.returncode} {r.stdout} {ev}")
+              and ev[1].get("text") == "Nie, tylko postój jednorazowy" and ev[1].get("slice") == "S1",
+              f"WE-11: answer unblocks S1, records the answer and points to it as the next one: {r.returncode} {r.stdout} {ev}")
         r = call(p, TASK, "list")
         check("waiting for you" not in r.stdout, f"WE-12: after the answer nothing waits: {r.stdout}")
 
-    # a plan without dependencies: slices go in order, so a question in K1 stops the run as before
+    # a plan without dependencies: slices go in order, so a question in S1 stops the run as before
     with tempfile.TemporaryDirectory() as t:
         p = Path(t) / "proj"
-        d = new_run(p, PLAN.replace(" · po: brak", "").replace(" · po: K1", ""))
+        d = new_run(p, PLAN.replace(" · after: none", "").replace(" · after: S1", ""))
         switch(p, True)
-        call(p, rs, "step", d, "K1", "R1", "test", "run")
-        r = call(p, rs, "block", d, "K1", "--question", QUESTION)
+        call(p, rs, "step", d, "S1", "R1", "test", "run")
+        r = call(p, rs, "block", d, "S1", "--question", QUESTION)
         check(r.returncode == 0 and "Next: STOP" in r.stdout and "--code question" in r.stdout,
-              f"WE-13: a plan without 'po:' suffixes — a question in K1 leaves nothing to do: {r.stdout}")
+              f"WE-13: a plan without 'po:' suffixes — a question in S1 leaves nothing to do: {r.stdout}")
         # a question about the whole task: STOP right away, without blocking a slice
         r = call(p, rs, "stage", d, "needs", "--needs", "stop", "--code", "question", "--reason", QUESTION, "--task")
         check(r.returncode == 0, f"WE-14: `--task` (a question about the whole task) lets STOP through: {r.returncode} {r.stdout}")

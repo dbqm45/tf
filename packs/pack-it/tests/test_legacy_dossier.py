@@ -10,7 +10,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents
             if (p / ".claude" / "skills" / "eng-legacy-dossier" / "scripts" / "dossier_check.py").is_file())
 SCRIPT = ROOT / ".claude" / "skills" / "eng-legacy-dossier" / "scripts" / "dossier_check.py"
 
-INDEX = """<!-- legacy-dossier -->
+PL_INDEX = """<!-- legacy-dossier -->
 # Teczka systemu: fakturowanie
 System: fakturowanie · Commit: abc1234 · Data: 2026-10-17
 
@@ -40,7 +40,7 @@ Wystawienie faktury: kontroler → serwis → repozytorium.
 Bez modułu raportów.
 """
 
-MODULE = """<!-- legacy-dossier:module -->
+PL_MODULE = """<!-- legacy-dossier:module -->
 # Moduł: faktury
 Stan: żółty — zaokrąglenia w dwóch miejscach
 
@@ -76,7 +76,7 @@ Wystawia faktury.
 """
 
 
-ASSESS = """<!-- legacy-dossier:assessment -->
+PL_ASSESS = """<!-- legacy-dossier:assessment -->
 # Architecture Assessment — fakturowanie
 
 ## Podsumowanie
@@ -114,7 +114,7 @@ Wpływ: brak potwierdzonego
 - stan w serwisach
 """
 
-RECS = """<!-- legacy-dossier:recommendations -->
+PL_RECS = """<!-- legacy-dossier:recommendations -->
 # Architecture Recommendations & Roadmap — fakturowanie
 
 ## Docelowe zasady
@@ -143,6 +143,18 @@ Faza A: REC-001. Faza C: REC-002.
 ## Kryteria sukcesu
 - brak importów pod prąd w nx graph
 """
+
+
+def _english(text: str) -> str:
+    """A Polish dossier from before 14.x in the English syntax — through the pack-it migration (the checker reads only English)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("ld_pack_migrations", ROOT / ".tf" / "factory" / "packs" / "pack-it" / "migrations.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod._dossier_text(text, mod.ALIASES, mod.VALUE_ALIASES)
+
+
+INDEX, MODULE, ASSESS, RECS = (_english(t) for t in (PL_INDEX, PL_MODULE, PL_ASSESS, PL_RECS))
 
 
 def run(d: Path, *args: str) -> subprocess.CompletedProcess:
@@ -187,7 +199,7 @@ def main() -> int:
     check(r.returncode == 1 and r.stdout.startswith("legacy-dossier-check: ERRORS") and "marker" in r.stdout,
           f"DC-2: no marker in README.md → error: {r.stdout}")
 
-    r = case(INDEX.replace("## Słownik", "## Inne"))
+    r = case(INDEX.replace("## Glossary", "## Inne"))
     check(r.returncode == 1 and "Glossary" in r.stdout, f"DC-3: a missing index section → error: {r.stdout}")
 
     r = case(module=None)
@@ -200,16 +212,16 @@ def main() -> int:
     r = case(module=MODULE.replace("src/Invoice.java:3", "src/Brak.java:3"))
     check(r.returncode == 1 and "src/Brak.java" in r.stdout, f"DC-6: evidence points to a nonexistent file → error: {r.stdout}")
 
-    r = case(module=MODULE.replace("| — | do weryfikacji |", "| — | kod |"))
+    r = case(module=MODULE.replace("| — | to verify |", "| — | code |"))
     check(r.returncode == 1 and "R-FAK-02" in r.stdout, f"DC-7: a rule without evidence and with confidence 'kod' → error: {r.stdout}")
 
     r = case(module=MODULE.replace("R-FAK-02", "R-FAK-01"))
     check(r.returncode == 1 and "R-FAK-01" in r.stdout and "duplicated" in r.stdout, f"DC-8: a repeated rule ID → error: {r.stdout}")
 
-    r = case(module=MODULE.replace("Stan: żółty — zaokrąglenia w dwóch miejscach\n", ""))
+    r = case(module=MODULE.replace("State: yellow — zaokrąglenia w dwóch miejscach\n", ""))
     check(r.returncode == 1 and "State" in r.stdout, f"DC-9: a module card without the Stan field → error: {r.stdout}")
 
-    r = case(module=MODULE.replace("| kod |", "| chyba |"))
+    r = case(module=MODULE.replace("| code |", "| chyba |"))
     check(r.returncode == 1 and "chyba" in r.stdout, f"DC-10: unknown confidence → error: {r.stdout}")
 
     r = case(module=MODULE.replace("src/Invoice.java:3", "src/Invoice.java:2-3"))
@@ -234,24 +246,24 @@ def main() -> int:
         data = {}
     check(data.get("status") == "OK" and data.get("findings") == 2 and data.get("recommendations") == 2,
           f"DC-14: a full audit (inventory + assessment + recommendations) → OK: {r.stdout}")
-    r = case(assess=ASSESS.replace("Kategoria: preferencja", "Kategoria: drobiazg"), recs=RECS)
+    r = case(assess=ASSESS.replace("Category: preference", "Category: drobiazg"), recs=RECS)
     check(r.returncode == 1 and "drobiazg" in r.stdout, f"DC-15: an unknown finding category → error: {r.stdout}")
-    r = case(assess=ASSESS.replace("Dowód: src/Invoice.java:3", "Dowód: —"), recs=RECS)
+    r = case(assess=ASSESS.replace("Evidence: src/Invoice.java:3", "Evidence: —"), recs=RECS)
     check(r.returncode == 1 and "ARCH-001" in r.stdout and "evidence" in r.stdout.lower(),
           f"DC-16: a confirmed problem without evidence → error: {r.stdout}")
-    r = case(assess=ASSESS, recs=RECS.replace("Dotyczy: ARCH-002", "Dotyczy: ARCH-099"))
+    r = case(assess=ASSESS, recs=RECS.replace("Addresses: ARCH-002", "Addresses: ARCH-099"))
     check(r.returncode == 1 and "ARCH-099" in r.stdout, f"DC-17: a recommendation for a nonexistent finding → error: {r.stdout}")
-    r = case(assess=ASSESS, recs=RECS.replace("Dotyczy: ARCH-001", "Dotyczy: ARCH-002"))
+    r = case(assess=ASSESS, recs=RECS.replace("Addresses: ARCH-001", "Addresses: ARCH-002"))
     check(r.returncode == 1 and "ARCH-001" in r.stdout, f"DC-18: a confirmed problem without a recommendation → error: {r.stdout}")
-    r = case(assess=ASSESS, recs=RECS.replace("Priorytet: P1", "Priorytet: pilne"))
+    r = case(assess=ASSESS, recs=RECS.replace("Priority: P1", "Priority: pilne"))
     check(r.returncode == 1 and "pilne" in r.stdout, f"DC-19: unknown priority → error: {r.stdout}")
-    r = case(assess=ASSESS.replace("## Mocne strony", "## Inne"), recs=RECS)
+    r = case(assess=ASSESS.replace("## Strengths", "## Inne"), recs=RECS)
     check(r.returncode == 1 and "Strengths" in r.stdout, f"DC-20: an assessment without strengths → error: {r.stdout}")
     r = case(recs=RECS)
     check(r.returncode == 1 and "assessment.md" in r.stdout, f"DC-21: recommendations without assessment.md → error: {r.stdout}")
-    r = case(assess=ASSESS.replace("Luka: zmiana w aplikacji psuje bibliotekę\n", ""), recs=RECS)
+    r = case(assess=ASSESS.replace("Gap: zmiana w aplikacji psuje bibliotekę\n", ""), recs=RECS)
     check(r.returncode == 1 and "Gap" in r.stdout, f"DC-22: a finding without the Luka field → error: {r.stdout}")
-    r = case(assess=ASSESS, recs=RECS.replace("Decyzja: dokumentacja", "Decyzja: przeprojektowanie"))
+    r = case(assess=ASSESS, recs=RECS.replace("Decision: documentation", "Decision: redesign"))
     check(r.returncode == 1 and "preference" in r.stdout and "REC-002" in r.stdout,
           f"DC-23: a redesign justified by preference alone → error: {r.stdout}")
 
@@ -262,7 +274,7 @@ def main() -> int:
     spec.loader.exec_module(mig)
     with tempfile.TemporaryDirectory() as t:
         d = Path(t)
-        make(d, assess=ASSESS, recs=RECS)
+        make(d, PL_INDEX, PL_MODULE, assess=PL_ASSESS, recs=PL_RECS)
         target = d / "docs" / "project" / "04-architecture" / "legacy-dossier"
         target.parent.mkdir(parents=True)
         (d / "dossier").rename(target)
