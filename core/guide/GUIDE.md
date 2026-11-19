@@ -192,6 +192,11 @@ machine without your credentials.
   configuration and the engine refer to an unknown or older model. The current models are in `models_current`, the
   allowed older ones in `models_legacy`, the check date in `models_checked` (the engine's configuration; your own model
   pins in `.tf/config/config.yaml`). A date older than 90 days is a reminder to check the names and the price list.
+- **Approved models (optional):** when the organization allows only some models, list them under `models_approved`
+  (in the company pack, the team pack or `.tf/config/config.yaml`; a lower layer only narrows the list). Then
+  `model_check.py` reports a tier or a session setting of the active profile outside the list, `profile.py` refuses
+  a profile that needs such a model, and the `model_guard` hook denies a delegation that names one. Without the
+  list nothing changes. The model you choose for the session yourself (`/model`) is not checked.
 - **After a factory update:** `python3 .tf/factory/metrics.py --after-update` (also in `tf doctor` and in the
   `tf metrics` report) compares the window after the last update with a window of the same length before it: the share
   of reverted changes, hook blocks (`.tf/logs/hook-blocks.jsonl` — the time, the hook and the decision, without content)

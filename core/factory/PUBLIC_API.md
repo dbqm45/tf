@@ -110,7 +110,10 @@ Deprecation works like this:
   `before`, `after`, `warnings`, `notes`, `rollback`) and the log `.tf/logs/hook-blocks.jsonl` (`ts`, `hook`,
   `decision`) written by `hook_errors.record_block` from the hooks that block.
 - `model_check.py [--json] [--today YYYY-MM-DD]` (also in `tf doctor`, exit code 1 on error): configuration keys
-  `models_current`, `models_legacy`, `models_checked`; the field `harness` (`claude_code`, `factory`, `packs`, `files`)
+  `models_current`, `models_legacy`, `models_checked` and the optional `models_approved` (`source`, `models` with
+  `until`; also in `org_defaults.config` and `team_defaults.config`, a lower layer only narrows; result fields
+  `approved`, `approved_expired`, `usage`, `profile`; used by `profile.py`, which refuses a profile outside the list,
+  and by the `model_guard` hook on `Agent|Task`, off without a list); the field `harness` (`claude_code`, `factory`, `packs`, `files`)
   in the entries of `.tf/logs/usage.jsonl`; the column "Noise band" and the note "(within the noise band)" in the
   `run_skill_evals.py` report.
 - An overlay's references to elements of `optional_packs` overlays that are not installed are skipped without an error.

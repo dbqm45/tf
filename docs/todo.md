@@ -22,6 +22,23 @@ katalogiem zadania i prostotą dla użytkownika jako wymaganiem (W8).
 - [ ] **Decyzje D1–D12** (sekcja 15 dokumentu) — człowiek.
 - [ ] **E0–E8** (sekcja 14) — każdy etap osobnym planem i PR, po decyzjach; E1 (`tf onboard`) nie zależy od D2–D12. Źródła: 14 artykułów claude.dev (S1–S14, sekcja 16 dokumentu).
 
+## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
+Plan: `docs/plans/2026-11-19-bramka-ewaluacji-i-zatwierdzone-modele.md` (źródło: pdi
+`docs/plan-program-ai-wg-aplikacji.md` §2.1, zadania T4 i T6). Zasada z decyzji człowieka 2026-11-19: tylko to, co
+rozszerza fabrykę i niczego w niej nie zmienia, dopóki ktoś tego nie włączy.
+- [x] **Bramka ewaluacji dla CI** (`packs/pack-it/skills/ai-evals/scripts/eval_gate.py`): próg z rozrzutu 3–5
+  przebiegów obecnej wersji, werdykt release / investigate / hold, budżet kosztu, raport. Bez modelu i bez sieci.
+- [x] **Lista zatwierdzonych modeli** (`models_approved`): rozszerzenie `model_check.py`, odmowa w `profile.py`, hook
+  `model_guard` przy delegacji; warstwy firma → zespół → projekt tylko zawężają. Bez listy zachowanie jak dotąd.
+- [ ] **Model sesji wybrany ręcznie (`/model`)** jest poza kontrolą fabryki — to rola bramki modeli (pdi: DI Model
+  Gateway). Do rozważenia: ostrzeżenie na starcie sesji, gdy `model` z ustawień jest spoza listy.
+- [ ] **`model_check.py` nie czyta identyfikatorów z warstwy firmy i zespołu** (kontrola nazw `claude-…` patrzy na
+  silnik i projekt; lista zatwierdzonych już czyta wszystkie warstwy). Drobne, osobna zmiana.
+- [ ] **`tf standard`** (jedno polecenie „czy repo spełnia standard”, wersja z 9.17) — odłożone: najpierw porównanie
+  z `tf status`, `tf task check` i standardami firmowymi (`tf analyze`), żeby nie powstało drugie polecenie o tym samym.
+- [ ] **Pola opisu modelu** (`provider`, `regions`, `data`, `contract`) są dziś tylko dla ludzi. Gdy powstanie
+  rejestr AI (pdi: DI AI Registry), uzgodnić z nim format, zamiast rozwijać własny.
+
 ## Ustawienia firmy (nakładka firmowa) — na później, zapisane 2026-11-16
 Stan: nakładka firmowa działa (`org_defaults`, zestaw w `org/`: generator, szablon, przewodnik `org/README.md`).
 Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić później.
