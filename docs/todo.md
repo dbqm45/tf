@@ -963,9 +963,16 @@ treści (angielska), bez równoległej polskiej.
     test_tf_skill, wpis „Removed in 10.0.0” w PUBLIC_API); pasek stanu po angielsku (`context`, `cold`); trzy
     sprawdzenia w testach szukały polskich komunikatów, których narzędzia już nie wypisują (zawsze przechodziły) —
     poprawione na angielskie.
-    - [ ] aliasy bez znacznika (SECTION_NAMES w project_record, analyze.py, LESSON_HEADS w task_state, `pliki`
-      w plan_drift/task_weight, litery P/C/N/S w facts, MARK w claims_check/recon_check, HEADING_ALIASES/ROW_ALIASES,
-      requirements_lint, CAUSE_ALIASES w retro_data, LEGACY_GI w install) — usunąć z regułami migracji.
+    - [x] aliasy bez znacznika — w 4l.
+  - [x] 4l (2026-11-19): czytniki tylko po angielsku — reszta polskich form bez znacznika (sekcje rejestru projektu,
+    raporty analyze, LESSON_HEADS, werdykty badań P/C/N/S, Given/When/Then w specyfikacji, MARK i aliasy recon,
+    requirements_lint, dossier), wartości `Rework-Cause` i stopka `Kawałek` (historia sprzed zmiany liczona jako nieznana
+    przyczyna), identyfikatory kawałków K<n> → S<n> (migracja otwartych zadań: plan, task.json, dowody, events, run.json,
+    katalogi security; hash zatwierdzenia przeliczany, gdy się zgadzał) i nazwy zdarzeń hooków („session end”, „context
+    compaction”; `settings_v19` przepisuje ustawienia użytkownika przed scaleniem — bez zdublowanego hooka, testy U-6/U-7).
+    Migracja rozszerzona (MV-34…66). Przy okazji: panel plików nie pokazywał dowodów kawałków S (czytnik szukał tylko K).
+    Zostają: LEGACY_GI (sprzątanie starych instalacji), polski kontrakt pdi `design.md`, obsługa polskich treści
+    (historyjki, changelogi, własne skille po polsku, polish_lint, detektory), prompty sędziego ewaluacji.
     - [ ] `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
       sprawdzają) — przełożyć razem z testami.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
