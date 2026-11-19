@@ -23,7 +23,8 @@ PLAN = ("# Plan: Limit dobowy\n\n"
         "- [ ] S2 — komunikat o limicie · files: msg.py\n\n"
         "- **[assumption]** doba liczy się od północy czasu lokalnego\n")
 ROLLBACK = "Wdróż poprzednią wersję: ./deploy.sh --previous (ok. 5 minut)"
-ORDER = ("## Story", "## Slices", "## Criteria trace", "## How it was checked", "## Risk", "## How to roll back",
+ORDER = ("## Story", "## Slices", "## Criteria trace", "## How it was checked", "## System diff", "## Risk",
+         "## How to roll back",
          "## Postponed for a decision", "## Assumptions")
 
 
@@ -250,6 +251,48 @@ def main() -> int:
         r = call(p, rs, "pr-body", str(old))
         check(r.returncode == 2 and not (old / "pr-body.md").exists(),
               f"PB-21: a run without a task -> refusal with code 2: {r.returncode} {r.stdout}")
+
+    # the "Visual check" section exists only for UI work that is worth it: absent for a backend change, a trivial UI touch
+    # and --no-visual; skipped (never silent) when it is worth it and nothing was recorded; counts when recorded
+    with tempfile.TemporaryDirectory() as t:
+        p = Path(t) / "proj"
+        d = new_run(p)
+        slice_done(p, d)
+        text = body_after(p, rs, d)
+        check("Visual check" not in text, "PB-31: a backend change has no Visual check section at all")
+        plan = p / CHANGES / "IMP-1" / "plan.md"
+        plan.write_text(PLAN.replace("files: fees.py", "files: fees.py, src/app/home.component.html"), encoding="utf-8")
+        check("Visual check" not in body_after(p, rs, d), "PB-32: one UI file below the threshold: still no section")
+        plan.write_text(PLAN.replace("files: fees.py", "files: a.component.html, b.component.html"), encoding="utf-8")
+        text = body_after(p, rs, d)
+        vis = section(text, "## Visual check")
+        check("- skipped:" in vis and "not applicable" not in vis
+              and text.find("## How it was checked") < text.find("## Visual check") < text.find("## Risk"),
+              f"PB-33: two UI files and no record: skipped, between How it was checked and Risk: {vis}")
+        r = call(p, rs, "stage", d, "slices", "--no-visual")
+        check(r.returncode == 0 and json.loads((Path(d) / "run.json").read_text(encoding="utf-8")).get("visual") == "off",
+              f"PB-34a: --no-visual is recorded in run.json: {r.stdout}{r.stderr}")
+        check("Visual check" not in body_after(p, rs, d), "PB-34: --no-visual removes the section")
+        call(p, rs, "stage", d, "slices", "--visual")
+        screens = p / ".tf" / "runs" / "IMP-1" / "screens"
+        screens.mkdir()
+        (screens / "check.md").write_text("Skipped: no browser in this environment\n", encoding="utf-8")
+        vis = section(body_after(p, rs, d), "## Visual check")
+        check("- skipped: no browser in this environment" in vis, f"PB-35: the recorded reason is shown: {vis}")
+        (screens / "compare.md").write_text(
+            "# Visual comparison\n\n| route | viewport | result | before | after |\n|---|---|---|---|---|\n"
+            "| / | 1280x800 | changed | screens/before/index@1280x800.png | screens/after/index@1280x800.png |\n"
+            "| /login | 1280x800 | identical | screens/before/login@1280x800.png | screens/after/login@1280x800.png |\n"
+            "| /about | 1280x800 | identical | screens/before/about@1280x800.png | screens/after/about@1280x800.png |\n",
+            encoding="utf-8")
+        (screens / "check.md").write_text("- AC-1 · / @1280x800 — heading is blue — **matches**\n"
+                                          "- AC-2 · /login @1280x800 — no button — **does not match**\n", encoding="utf-8")
+        vis = section(body_after(p, rs, d), "## Visual check")
+        check("2 identical" in vis and "1 changed" in vis and "1 match" in vis and "1 mismatch" in vis
+              and ".tf/runs/IMP-1/screens" in vis, f"PB-36: counts and the screenshots path: {vis}")
+        (screens / "check.md").unlink()
+        vis = section(body_after(p, rs, d), "## Visual check")
+        check("check.md" in vis and "not checked" in vis, f"PB-37: screenshots without a check are named: {vis}")
 
     for f in fails:
         print(f"✗ {f}")

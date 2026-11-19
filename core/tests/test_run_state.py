@@ -4,6 +4,7 @@ python3 .claude/tests/test_run_state.py"""
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -157,6 +158,48 @@ def main() -> int:
         check(o.get("stage") == "done" and o.get("pr") == 41 and o.get("auto") is True and o.get("effort") == "high"
               and any(i["name"] == "report.md" for g in o["files"] for i in g["items"]),
               f"S-7b: done z PR, auto, effort i raportem: {o.get('stage')} {o.get('pr')}")
+
+        # S-7c: the visual check (screenshots in screens/) goes to the dashboard data; a run without screens has no block
+        check("visual" not in one(), f"S-7c: a run without screens/ has no visual data: {one().get('visual')}")
+        scr = d / "screens"
+        for label, files in (("before", ("index@1280x800.png", "login@1280x800.png")),
+                             ("after", ("index@1280x800.png", "login@1280x800.png"))):
+            (scr / label).mkdir(parents=True)
+            for f in files:
+                (scr / label / f).write_bytes(b"\x89PNG\r\n\x1a\n" + label.encode() + (b"x" if f.startswith("login") and label == "after" else b""))
+            (scr / label / "index.json").write_text(json.dumps({"label": label, "shots": [
+                {"route": "/" if f.startswith("index") else "/login", "viewport": "1280x800", "file": f}
+                for f in files]}), encoding="utf-8")
+        (scr / "compare.md").write_text("# Visual comparison\n\n| route | viewport | result | before | after |\n|---|---|---|---|---|\n"
+                                        "| / | 1280x800 | changed | screens/before/index@1280x800.png | screens/after/index@1280x800.png |\n"
+                                        "| /login | 1280x800 | identical | screens/before/login@1280x800.png | screens/after/login@1280x800.png |\n",
+                                        encoding="utf-8")
+        (scr / "check.md").write_text("# Visual check\n\n- AC-1 · / @1280x800 — the heading is blue — **matches**\n"
+                                      "- AC-2 · /login @1280x800 — the button is missing — **does not match**\n", encoding="utf-8")
+        run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
+        v = one().get("visual") or {}
+        items = {(i["route"], i["viewport"]): i for i in v.get("items", [])}
+        check(v.get("state") == "done" and v.get("counts", {}).get("changed") == 1 and v.get("mismatches") == 1
+              and items.get(("/", "1280x800"), {}).get("verdict") == "matches"
+              and items.get(("/login", "1280x800"), {}).get("verdict") == "does not match"
+              and items.get(("/", "1280x800"), {}).get("status") == "changed",
+              f"S-7d: visual data: totals, status and verdict per screen: {v}")
+        html = dash.read_text(encoding="utf-8")
+        check(f"{d.name}/screens/before/index@1280x800.png" in html and f"{d.name}/screens/after/login@1280x800.png" in html
+              and ".." not in " ".join(i["before"] for i in v.get("items", [])),
+              "S-7e: the page carries relative image paths inside the runs directory")
+        r = run(SCRIPT, ["stage", str(d), "done", "--no-visual"], proj, cfg)
+        run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
+        meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
+        check(r.returncode == 0 and meta.get("visual") == "off" and "visual" not in one(),
+              f"S-7g: --no-visual is recorded and removes the dashboard block: {r.stdout}{r.stderr}")
+        meta.pop("visual", None)
+        (d / "run.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+        (scr / "check.md").write_text("Skipped: no browser here\n", encoding="utf-8")
+        run(SCRIPT, ["dashboard", "--no-cost"], proj, cfg)
+        v = one().get("visual") or {}
+        check(v.get("state") == "skipped" and v.get("reason") == "no browser here", f"S-7f: a skipped visual check: {v}")
+        shutil.rmtree(scr)
 
         # S-8: cost from transcripts, remembered in run.json (dashboard without --no-cost); missing transcripts do no harm
         r = run(SCRIPT, ["dashboard"], proj, cfg)

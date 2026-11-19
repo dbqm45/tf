@@ -7,7 +7,7 @@ and the dashboard generator. The state is written by the script, not the model �
   python3 .claude/skills/tf/scripts/run_state.py mode <run-directory> [plan|normal|auto]   # the task's mode
   python3 .claude/skills/tf/scripts/run_state.py approve <run-directory>                   # the human's consent to the plan
   python3 .claude/skills/tf/scripts/run_state.py message <code> [--json]                   # the stop message for the human
-        [--reason "<STOP reason>"] [--pr N] [--auto] [--effort low|medium|high]
+        [--reason "<STOP reason>"] [--pr N] [--auto] [--visual|--no-visual] [--effort low|medium|high]
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> S2 R1 verify fail
   python3 .claude/skills/tf/scripts/run_state.py step <katalog-przebiegu> PR plan_drift run
   python3 .claude/skills/tf/scripts/run_state.py spec <katalog-przebiegu> [new]
@@ -122,6 +122,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import run_report  # noqa: E402
+import ui_snap  # noqa: E402  (UI file patterns live there, in one place)
 
 STAGES = ("intake", "plan", "slices", "pr", "needs", "done")
 STEPS = ("test", "code", "verify", "scan", "scope")
@@ -476,7 +477,7 @@ def criterion_hints(project: Path, run_dir: Path, meta: dict, files: str) -> lis
 
 def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, pr: int | None, auto: bool,
               effort: str | None, project: Path, plan_mode: bool = False, code: str | None = None,
-              whole_task: bool = False) -> int:
+              whole_task: bool = False, visual: str | None = None) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
@@ -532,6 +533,8 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
                 meta["stop_text"] = reason.strip()
     if pr is not None:
         meta["pr"] = pr
+    if visual:                                      # the human's choice in the /tf command: on | off (`ui_snap.py worth` obeys it)
+        meta["visual"] = visual
     if auto:
         meta["auto"] = True
     if plan_mode:
@@ -1141,6 +1144,87 @@ def engine_md(project: Path, name: str, *args: str) -> str | None:
     return "\n".join(f"**{ln.lstrip('# ').strip()}**" if ln.startswith("#") else ln for ln in text.splitlines())
 
 
+# ---- the visual check: screenshots in <run>/screens/ (ui_snap.py), the agent's verdicts in screens/check.md ----------
+VISUAL_RESULTS = ("identical", "changed", "only before", "only after")
+VISUAL_SKIP = re.compile(r"^\s*(?:[-*]\s*)?Skipped:\s*(.+)$", re.I | re.M)
+VISUAL_VERDICT = re.compile(r"\*\*(matches|does not match)\*\*", re.I)
+VISUAL_REF = re.compile(r"(/[^\s@`]*)\s*@(\d+x\d+)")
+
+
+def visual_check(run_dir: Path, docs: Path, project: Path, base: str | None | bool, rel_to: Path | None = None) -> dict | None:
+    """The state of the visual check, or None = it does not exist for this task (backend work, a trivial UI touch, the
+    human's --no-visual): no section, no dashboard block. Otherwise a dict: state `skipped` (with `reason`) | `done`
+    (with `counts`, `mismatches`, `matches`, `items`, `dir`). `base`: the base branch; False = the plan only (no git)."""
+    screens = run_dir / "screens"
+    meta = load(run_dir) or {}
+    if meta.get("visual") == "off":
+        return None
+    check_text = read_text(screens / "check.md") or ""
+    compare_text = read_text(screens / "compare.md") or ""
+    skip = VISUAL_SKIP.search(check_text)
+    if skip:
+        return {"state": "skipped", "reason": as_data(skip.group(1), 300)}
+    if not compare_text:
+        if base is False and not screens.is_dir():
+            return None
+        res = ui_snap.worth(run_dir, project, base)
+        if not res["yes"]:
+            return None
+        return {"state": "skipped", "reason": "the change is worth a visual check (" + as_data("; ".join(res["reasons"]), 200)
+                                              + ") but none was recorded (`screens/` is missing)"}
+    rows = {}
+    for ln in compare_text.splitlines():
+        cells = [c.strip() for c in ln.strip().strip("|").split("|")]
+        if len(cells) == 5 and cells[2] in VISUAL_RESULTS:
+            rows[(cells[0], cells[1])] = cells[2]
+    verdicts: dict[tuple, str] = {}
+    matches = mismatches = 0
+    for ln in check_text.splitlines():
+        v = VISUAL_VERDICT.search(ln)
+        if not v:
+            continue
+        bad = v.group(1).lower() != "matches"
+        matches, mismatches = matches + (not bad), mismatches + bad
+        for ref in VISUAL_REF.findall(ln):
+            if bad or verdicts.get(ref) != "does not match":
+                verdicts[ref] = "does not match" if bad else "matches"
+    base_dir = os.path.relpath(run_dir.resolve(), (rel_to or project).resolve()).replace(os.sep, "/")
+    items = []
+    idx = {lb: ui_snap._load_index(run_dir, lb) for lb in ("before", "after")}
+    for key in sorted(rows):
+        b, a = idx["before"].get(key), idx["after"].get(key)
+        items.append({"route": key[0], "viewport": key[1], "status": rows[key],
+                      "before": f"{base_dir}/screens/before/{b['file']}" if b and "file" in b else None,
+                      "after": f"{base_dir}/screens/after/{a['file']}" if a and "file" in a else None,
+                      "verdict": verdicts.get(key, "not checked")})
+    counts = {r: sum(1 for x in rows.values() if x == r) for r in VISUAL_RESULTS}
+    return {"state": "done", "counts": counts, "matches": matches, "mismatches": mismatches, "items": items,
+            "checked": bool(check_text.strip()), "dir": f"{base_dir}/screens"}
+
+
+def visual_section(vis: dict | None, project: Path, run_dir: Path) -> list[str]:
+    """The `## Visual check` section of the PR description."""
+    if not vis:
+        return []                      # no UI work worth a visual check: the section does not exist
+    out = ["", "## Visual check", ""]
+    if vis["state"] == "skipped":
+        return out + [f"- skipped: {vis['reason']}"]
+    try:
+        shown = (run_dir / "screens").resolve().relative_to(project.resolve()).as_posix() + "/"
+    except ValueError:
+        shown = str(run_dir / "screens") + "/"
+    c = vis["counts"]
+    out.append(f"- screens compared: {sum(c.values())} — {c['identical']} identical, {c['changed']} changed, "
+               f"{c['only before']} only before, {c['only after']} only after (screenshots: `{shown}`, outside git)")
+    if not vis["checked"]:
+        out.append("- **not checked**: `screens/check.md` is missing — the screenshots were not compared with the acceptance criteria")
+    else:
+        n = vis["mismatches"]
+        out.append(f"- looked at against the criteria: {vis['matches']} match, {n} {'mismatch' if n == 1 else 'mismatches'}"
+                   + (" — **red result**" if n else ""))
+    return out
+
+
 def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple[str, list[str]]:
     """The PR description and the list of slices without green evidence."""
     key, docs = meta["key"], run_report.docs_dir(run_dir, meta)
@@ -1208,6 +1292,12 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
     out += [f"- Agreement with the plan (`plan_drift`): {drift if drift in STATES else 'not recorded'}",
             f"- The evidence is in `{rel_docs}/evidence/` (in this PR); the full command output stays outside the repository."]
 
+    out += visual_section(visual_check(run_dir, docs, project, found or None), project, run_dir)
+
+    sysdiff = (engine_md(project, "system_diff.py", "--md", *base_args) or "").splitlines()
+    out += ["", "## System diff", ""]
+    out += [ln for ln in sysdiff if ln.strip() and not ln.startswith("**System diff")] or \
+        ["- The system diff could not be computed (`system_diff.py`)."]
     out += ["", "## Risk", "", f"- The task's weight: {WEIGHT_EN.get(task.get('weight'), 'not recorded')}", ""]
     out.append(engine_md(project, "risk_triage.py", "--md", *base_args) or "- The risk triage could not be computed (`tf risk`).")
 
@@ -1457,7 +1547,7 @@ def update_usage(run_dir: Path, meta: dict, project: Path) -> None:
     write_run(run_dir, meta)
 
 
-def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
+def run_object(run_dir: Path, project: Path, costs: bool, rel_to: Path | None = None) -> dict | None:
     meta = load(run_dir)
     if meta is None:
         return None
@@ -1496,6 +1586,10 @@ def run_object(run_dir: Path, project: Path, costs: bool) -> dict | None:
     if stage == "pr":
         obj["prSteps"] = {"drift": pr_steps.get("drift", "todo"), "pr": pr_steps.get("pr", "todo")}
     obj["files"] = file_groups(run_dir, meta, stage, needs, parked)
+    if (run_dir / "screens").is_dir():     # the visual check: relative paths to the screenshots (from the dashboard file)
+        vis = visual_check(run_dir, run_report.docs_dir(run_dir, meta), project, False, rel_to or project / run_report.WORK)
+        if vis:
+            obj["visual"] = vis
     return obj
 
 
@@ -1583,8 +1677,9 @@ def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) 
     root = project / run_report.RUNS                # the old cut layout (no longer created): the history stays in the preview
     work = project / run_report.WORK                # the tasks' working directories: .tf/runs/<KEY>/
     runs = []
+    target = out or (work / "dashboard.html")
     for d in sorted({*root.glob("*/run.json"), *work.glob("*/run.json")}):
-        obj = run_object(d.parent, project, costs)
+        obj = run_object(d.parent, project, costs, target.parent)
         if obj:
             runs.append(obj)
     seen = {r["key"] for r in runs}
@@ -1596,7 +1691,6 @@ def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) 
     html = TEMPLATE.read_text(encoding="utf-8")
     data = json.dumps(runs[:MAX_RUNS], ensure_ascii=False).replace("</", "<\\/")
     html = html.replace("/*RUNS_JSON*/[]", data, 1).replace("/*GENERATED*/", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    target = out or (work / "dashboard.html")
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_suffix(".tmp")
     tmp.write_text(html, encoding="utf-8")
@@ -1658,6 +1752,10 @@ def main(argv: list[str]) -> int:
     s.add_argument("--pr", type=int, default=None)
     s.add_argument("--auto", action="store_true")
     s.add_argument("--plan", dest="plan_mode", action="store_true")
+    s.add_argument("--visual", dest="visual", action="store_const", const="on", default=None,
+                   help="force the visual check (screenshots before/after), recorded in run.json")
+    s.add_argument("--no-visual", dest="visual", action="store_const", const="off",
+                   help="no visual check, even for a UI change")
     s.add_argument("--code", default=None)
     s.add_argument("--task", dest="whole_task", action="store_true",
                    help="the question concerns the whole task, not one slice (with the loop.blocked_slices switch)")
@@ -1739,7 +1837,7 @@ def main(argv: list[str]) -> int:
     project = Path.cwd()
     if args.cmd == "stage":
         return cmd_stage(Path(args.run_dir), args.stage, args.needs, args.reason, args.pr, args.auto, args.effort,
-                         project, plan_mode=args.plan_mode, code=args.code, whole_task=args.whole_task)
+                         project, plan_mode=args.plan_mode, code=args.code, whole_task=args.whole_task, visual=args.visual)
     if args.cmd == "step":
         return cmd_step(Path(args.run_dir), args.target, args.rest, project)
     if args.cmd == "flag":

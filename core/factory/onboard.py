@@ -213,6 +213,26 @@ def detect_smoke(root: Path) -> str | None:
     return None
 
 
+FRAMEWORK_PORTS = (("@angular/core", 4200), ("next", 3000), ("react-scripts", 3000), ("nuxt", 3000), ("astro", 4321),
+                   ("@sveltejs/kit", 5173), ("vite", 5173))   # the dev server's default port (the same list is in ui_snap.py)
+
+
+def detect_preview(root: Path) -> dict | None:
+    """Where the web frontend's dev server answers, for the visual check of the /tf loop (`ui_snap.py`): the address
+    from the framework's default port, the start command from the dev/start/serve script. None when it is not a web frontend."""
+    pkg = _json(root / "package.json")
+    deps = {**(pkg.get("devDependencies") or {}), **(pkg.get("dependencies") or {})}
+    port = next((p for name, p in FRAMEWORK_PORTS if name in deps), None)
+    if port is None:
+        return None
+    scripts = pkg.get("scripts") if isinstance(pkg.get("scripts"), dict) else {}
+    pm = next((n for lock, n in (("pnpm-lock.yaml", "pnpm"), ("yarn.lock", "yarn"), ("bun.lock", "bun"),
+                                 ("bun.lockb", "bun")) if (root / lock).is_file()), "npm")
+    name = next((n for n in ("dev", "start", "serve") if isinstance(scripts.get(n), str)), None)
+    start = "" if name is None else (f"{pm} start" if name == "start" and pm == "npm" else f"{pm} run {name}")
+    return {"url": f"http://localhost:{port}", "start": start, "routes": ["/"]}
+
+
 def uses_verify(root: Path, det: dict) -> bool:
     """Whether the gate runs verify.sh: it is already in the repository or can be generated (not on Windows)."""
     return os.name != "nt" and ((root / "verify.sh").is_file() or "test" in det["commands"])
@@ -318,6 +338,13 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
                    + (f"`{smoke}` (detected)" if smoke else "not detected — write the command in `smoke`")
                    + "; fill in `rollback` (how to roll back a deployment) and `rollback_minutes` (how long it takes), `approval` "
                      "(what a human approves) and `logs` (the logs command). Without `smoke` the factory stops at the merge.")
+    preview = detect_preview(root) if isinstance(known, dict) and "preview" not in known else None
+    if preview:                           # the visual check of UI changes: where to take the screenshots (ui_snap.py)
+        added["preview"] = preview
+        say.append(f"• .tf/config/operations.json — the operations card, the visual check part (`preview`): "
+                   f"`{preview['url']}`" + (f", started with `{preview['start']}`" if preview["start"] else
+                                           " (no dev/start/serve script: write the command in `start`)")
+                   + "; fill in `routes` with the screens that matter (the default is `/`).")
     if added:
         files[card] = json.dumps({**known, **added}, ensure_ascii=False, indent=1) + "\n"
     files[root / ".tf" / "reports" / "readiness.md"] = report(det, verify)

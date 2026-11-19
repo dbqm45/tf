@@ -245,6 +245,36 @@ def main() -> int:
             check("verify.sh" not in excl and ".claude/quality-gate.json" in excl,
                   f"O-33: a file already tracked by git does not go into the ignore entries: {excl}")
 
+        # the operations card gets a `preview` entry (for the visual check) only for a web frontend
+        for name, pkg, url, start in (
+                ("vite", {"scripts": {"dev": "vite", "test": "vitest run"}, "devDependencies": {"vite": "^5"}},
+                 "http://localhost:5173", "npm run dev"),
+                ("ng", {"scripts": {"start": "ng serve", "test": "ng test"}, "dependencies": {"@angular/core": "^17"}},
+                 "http://localhost:4200", "npm start")):
+            p = make(base, f"web-{name}", {"package.json": pkg})
+            r = run(p, "--yes")
+            try:
+                prev = json.loads((p / ".tf" / "config" / "operations.json").read_text(encoding="utf-8")).get("preview")
+            except (OSError, ValueError):
+                prev = None
+            check(prev == {"url": url, "start": start, "routes": ["/"]}, f"O-40: preview entry for {name}: {prev} {r.stdout[-200:]}")
+        p = make(base, "web-card", {"package.json": {"scripts": {"dev": "vite"}, "devDependencies": {"vite": "^5"}},
+                                    ".tf/config/operations.json": {"flags": {"file": None}, "deploy": {"smoke": "x"},
+                                                                   "tracker": {"type": "jira"}}})
+        run(p, "--yes")
+        card = json.loads((p / ".tf" / "config" / "operations.json").read_text(encoding="utf-8"))
+        check(card.get("tracker") == {"type": "jira"} and card.get("deploy") == {"smoke": "x"} and "preview" in card,
+              f"O-41: an existing card keeps its keys and gets the missing preview: {card}")
+        card["preview"]["url"] = "http://localhost:9999"
+        (p / ".tf" / "config" / "operations.json").write_text(json.dumps(card), encoding="utf-8")
+        run(p, "--yes")
+        card = json.loads((p / ".tf" / "config" / "operations.json").read_text(encoding="utf-8"))
+        check(card["preview"]["url"] == "http://localhost:9999", f"O-42: an existing preview entry is not overwritten: {card}")
+        p = make(base, "not-web", {"package.json": NODE})
+        run(p, "--yes")
+        card = json.loads((p / ".tf" / "config" / "operations.json").read_text(encoding="utf-8"))
+        check("preview" not in card, f"O-43: a project that is not a web frontend gets no preview entry: {card}")
+
         # tf onboard passes its arguments to the script in the project
         p = make(base, "tf", {"package.json": NODE, "package-lock.json": "{}",
                               ".claude/factory-manifest.json": {"version": "1.0.0"}})

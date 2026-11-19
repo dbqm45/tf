@@ -96,6 +96,18 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
 .rcap.bad{border-left-color:var(--bad);background:var(--bad-bg)}
 .striplbl{font-size:10.5px;color:var(--muted);margin-right:2px}
 .rcap b{color:var(--text);font-weight:500}
+.vis{margin:0 0 14px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+.vis h4{margin:0 0 6px}
+.vis .strip{margin:4px 0 8px}
+.vis .why{color:var(--muted);font-size:12px}
+.vgrid{display:flex;flex-direction:column;gap:10px}
+.vrow{border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.vrow.bad{border-color:var(--bad);background:var(--bad-bg)}
+.vrow .vh{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:5px;display:flex;gap:8px;flex-wrap:wrap}
+.vpair{display:flex;gap:8px;flex-wrap:wrap}
+.vpair figure{margin:0}
+.vpair figcaption{font-size:10.5px;color:var(--dim);margin-bottom:2px}
+.vpair img{display:block;max-width:240px;width:100%;height:auto;border:1px solid var(--line);border-radius:4px;background:#fff}
 .plusrow{display:flex;gap:4px;margin:0 0 8px}
 .plusrow .chip{padding:2px 8px;font-size:10.5px;color:var(--accent);border:1px dashed var(--accent)}
 .why{font-size:12px;margin:2px 0 8px}
@@ -229,6 +241,27 @@ function sliceStrip(r){
 }
 const filesFor = r => r.files;
 
+/* the visual check: only relative paths inside the runs directory (no "..", no scheme, no leading slash) */
+const safeRel = p => typeof p === "string" && p !== "" && !/(^|[\\/])\.\.([\\/]|$)/.test(p) && !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(p) && !/^[\\/]/.test(p);
+function shot(label, p){
+  if (!safeRel(p)) return `<figure><figcaption>${esc(label)}</figcaption><span class="why">none</span></figure>`;
+  const u = encodeURI(p);
+  return `<figure><figcaption>${esc(label)}</figcaption><a href="${esc(u)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(u)}" alt="${esc(label)}"></a></figure>`;
+}
+function visualHtml(r){
+  const v = r.visual; if (!v) return "";
+  if (v.state !== "done") return `<div class="vis"><h4>Visual check</h4><span class="why">${v.state==="skipped"?"skipped: "+esc(v.reason||""):"not applicable: the change does not touch the user interface"}</span></div>`;
+  const c = v.counts || {};
+  const chips = [["identical", c.identical, "done"], ["changed", c.changed, c.changed ? "cur" : "todo"],
+                 ["only before", c["only before"], c["only before"] ? "stale" : "todo"], ["only after", c["only after"], c["only after"] ? "stale" : "todo"],
+                 ["matches", v.matches, "done"], ["mismatches", v.mismatches, v.mismatches ? "fail" : "todo"]]
+    .map(([l, n, cls]) => `<span class="chip ${cls}" title="${esc(l)}: ${esc(n||0)}">${esc(l)} ${esc(n||0)}</span>`).join("");
+  const rows = (v.items || []).map(i => `<div class="vrow ${i.verdict==="does not match"?"bad":""}">
+      <div class="vh"><span>${esc(i.route)}</span><span>${esc(i.viewport)}</span><span>${esc(i.status)}</span><span>${esc(i.verdict)}</span></div>
+      <div class="vpair">${shot("before", i.before)}${shot("after", i.after)}</div></div>`).join("");
+  return `<div class="vis"><h4>Visual check</h4><div class="strip">${chips}</div>${v.checked===false?`<div class="why">screens/check.md is missing: the screenshots were not compared with the criteria.</div>`:""}<div class="vgrid">${rows}</div></div>`;
+}
+
 /* ===== RENDER ===== */
 const STATE_PL = {pass:"passed", run:"in progress", fail:"failed", todo:"not run yet"};
 const STATE_K = {pass:"committed", run:"in progress", fail:"gate failed", todo:"queued"};
@@ -321,7 +354,7 @@ function renderFiles(){
   let next = "";
   if (r.stage==="needs"&&r.needs==="stop") next = `<div class="nextbox stop">${r.stopNeed?`<b>What is needed:</b> ${esc(r.stopNeed)}<br>`:""}${r.stopQuestion?`<b>Question:</b> ${esc(r.stopQuestion)}<br>${(r.stopOptions||[]).map((o,i)=>`${i+1}. ${esc(o.opcja)} — ${esc(o.skutek)}${o.rekomendowana?" (recommended)":""}`).join("<br>")}<br>`:""}<b>What next:</b> answer in the session; the factory will resume from ${esc(r.cur?r.cur.k:"the place where it stopped")}.<span class="cmd">claude --agent tf  →  "resume ${esc(runDir(r))}"</span></div>`;
   if (r.stage==="needs"&&r.needs==="plan") next = `<div class="nextbox"><b>What next:</b> read the plan and accept it or raise remarks in the conversation. Without acceptance it will not move to the code.</div>`;
-  $("#content").innerHTML = next + `<h4>${esc(it.name)}</h4><pre></pre>`;
+  $("#content").innerHTML = next + visualHtml(r) + `<h4>${esc(it.name)}</h4><pre></pre>`;
   $("#content pre").textContent = it.text;
 }
 function closeDrawer(){ sel=null; renderBoard(); $("#drawer").classList.remove("open"); $("#drawer").setAttribute("aria-hidden","true"); $("#scrim").classList.remove("on"); }

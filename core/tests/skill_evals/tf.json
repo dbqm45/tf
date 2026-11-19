@@ -127,6 +127,24 @@
       "expect": "no-trigger",
       "neighbor": "core-delivery-lifecycle",
       "prompt": "Prowadzimy nowy produkt od pomysłu do wdrożenia z agentami AI. Jakie fazy, bramki człowieka i persony przewidzieć?"
+    },
+    {
+      "id": "zmiana-ekranu-zrzuty",
+      "expect": "trigger",
+      "prompt": "Zrealizuj historyjkę: jako użytkownik chcę zobaczyć na ekranie logowania czerwony komunikat o błędnym haśle pod polem hasła. Zmiana dotyczy dwóch komponentów Angulara. Jak sprawdzisz, że ekran wygląda jak trzeba?",
+      "checks": {"all": [["ui_snap", "zrzut", "screenshot"], ["przed", "before"]]}
+    },
+    {
+      "id": "zmiana-ekranu-zrzuty-en",
+      "expect": "trigger",
+      "prompt": "Implement this story: as a user I want a red error message under the password field on the login screen. The change touches two Angular components. How will you check that the screen looks right?",
+      "checks": {"all": [["ui_snap", "screenshot"], ["before"]]}
+    },
+    {
+      "id": "zmiana-backendu-bez-zrzutow",
+      "expect": "trigger",
+      "prompt": "Zaimplementuj historyjkę: jako operator chcę, żeby endpoint /api/sessions zwracał pole duration w sekundach. Zmiana dotyczy tylko kontrolera i serwisu w Pythonie.",
+      "checks": {"all": [["run_report\\.py", "intake\\.py", "spec\\.md"]], "none": ["ui_snap\\.py capture"]}
     }
   ]
 }
