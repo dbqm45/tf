@@ -50,6 +50,8 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf risk [--base <branch>] [--md|--json]
                               # change risk triage of this branch: what a human must review (advisory)
                               # (.tf/factory/risk_triage.py)
+  tf diff [--base <branch>] [--md|--json]
+                              # system diff of this branch: what it touches beyond code lines (.tf/factory/system_diff.py)
   tf metrics [--weeks N] [--revert-days N] [--no-gh]
                               # factory effectiveness: revert rate, cost per accepted change, cycle time,
                               # rework causes → .tf/reports/metrics.md (.tf/factory/metrics.py)
@@ -472,6 +474,10 @@ def main(argv: list[str]) -> int:
         if not need_project():
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "risk_triage.py"), *rest]).returncode
+    if cmd == "diff":
+        if not need_project():
+            return 2
+        return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "system_diff.py"), *rest]).returncode
     if cmd == "new":
         if len(rest) < 3 or rest[0] != "skill":
             print('✗ Usage: tf new skill <name> "<description>" [--role <role>] [--name-only]\n'

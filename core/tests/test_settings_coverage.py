@@ -53,6 +53,8 @@ REQUIRED = [
     "python3 .claude/skills/tf/scripts/run_report.py finish .tf/runs/PROJ-1",
     "python3 .claude/skills/tf/scripts/plan_drift.py .tf/runs/PROJ-1 --base main",
     "python3 .claude/skills/tf/scripts/security_scan.py scan --slice S1 --attempt 1",
+    "python3 .claude/skills/tf/scripts/ui_snap.py worth .tf/runs/PROJ-1 --base main",
+    "python3 .claude/skills/tf/scripts/ui_snap.py capture .tf/runs/PROJ-1 --label before --start",
     "python3 .claude/skills/tf/scripts/run_state.py verify .tf/runs/PROJ-1 S1 --files src/a.py",
     "python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base main",
     # a pdi script called at the end of the architecture/design phase (decision_record.py check — in the phase_run.py prompt)

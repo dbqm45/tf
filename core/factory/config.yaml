@@ -145,7 +145,7 @@ shared_agents:
       Before you do anything else, read `.claude/skills/tf/SKILL.md` with the Read tool and run the
       course exactly according to it: the start (`run_report.py start`), taking in the story, a plan of slices, the
       slice loop, finishing with a PR and `run_report.py finish`.
-      You take the options from the human's message: `--auto` — the plan does not wait for acceptance; `--budget <USD>` — a hard STOP
+      You take the options from the human's message: `--auto` — the plan does not wait for acceptance; `--visual` / `--no-visual` — force or forbid the screenshots of a UI change; `--budget <USD>` — a hard STOP
       after the slice that exceeds the budget. Without a task in the message ask for it in one sentence.
       As cheaply and simply as possible: the acceptance criteria, nothing beyond them; edge cases to `parked.md`; the cheapest
       sufficient executor; at most 2 repair attempts per gate, then a STOP block. You do not merge the PR.
@@ -449,6 +449,31 @@ steps:
   decision:        {label: "a decision that is hard to reverse", who: architect, tier: deep}
   security: {label: "auth, secrets, IaC, CI", who: security-reviewer, tier: deep}
 
+# System diff (tf diff, the "System diff" section of the PR description): path patterns (regular expressions) of the
+# categories of what a change touches beyond code lines. A file belongs to the first matching category in the order
+# tests, deps, data, api, ops, ui, config, docs; the rest of `source` is behavior. A project overrides or adds patterns
+# of a category in .tf/config/config.yaml (a list replaces the engine's list).
+system_diff:
+  tests: ['(^|/)(tests?|__tests__|spec)/', '(^|/)test_[^/]*\.py$', '_test\.(py|go)$', '\.(test|spec)\.[cm]?[jt]sx?$',
+          'Tests?\.(java|kt|cs)$']
+  deps: ['(^|/)(package\.json|package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|requirements[^/]*\.txt|poetry\.lock|pyproject\.toml|Pipfile(\.lock)?|uv\.lock|go\.(mod|sum)|Cargo\.(toml|lock)|pom\.xml|build\.gradle(\.kts)?|gradle\.lockfile|Gemfile(\.lock)?|composer\.(json|lock))$', '\.csproj$']
+  lockfiles: ['(^|/)(package-lock\.json|npm-shrinkwrap\.json|pnpm-lock\.yaml|yarn\.lock|poetry\.lock|Pipfile\.lock|uv\.lock|go\.sum|Cargo\.lock|gradle\.lockfile|Gemfile\.lock|composer\.lock)$']
+  data: ['(^|/)(migrations?|alembic|flyway|liquibase|db/migrate)/', '\.sql$', '(^|/)schema\.(prisma|rb)$', '(^|/)prisma/schema\.prisma$',
+         '\.entity\.(ts|java|cs|kt)$', '(^|/)entities/']
+  api: ['(^|/)(openapi|swagger)[^/]*\.(json|ya?ml)$', '\.(graphqls?|gql|proto)$', '(^|/)schema\.graphql$',
+        '(Controller|Resource)\.(java|kt|cs|ts|js|py)$', '\.controller\.[jt]s$', '(^|/)(controllers?|routes?)/', '\.routes?\.[jt]sx?$']
+  ops: ['^\.github/', '(^|/)\.gitlab-ci\.ya?ml$', '(^|/)Jenkinsfile$', '(^|/)Dockerfile', '(^|/)docker-compose[^/]*\.ya?ml$',
+        '\.tf$', '(^|/)(terraform|helm|k8s|kubernetes|infra|deploy)/', '(^|/)(deploy|release)[^/]*\.(sh|ps1)$', '(^|/)Procfile$']
+  ui: ['\.(tsx|jsx|vue|svelte|html|css|scss|sass|less)$', '\.component\.[a-z]+$', '(^|/)(components|templates|views|pages)/',
+       '(^|/)(locales?|i18n|translations?|lang)/[^/]*\.(json|po|ya?ml|properties)$']
+  i18n: ['(^|/)(locales?|i18n|translations?|lang)/[^/]*\.json$']
+  config: ['(^|/)\.env($|\.)', '(^|/)config/[^/]*\.(ya?ml|json|toml|ini)$', '(^|/)appsettings[^/]*\.json$',
+           '(^|/)application[^/]*\.(ya?ml|properties)$']
+  env_example: ['(^|/)\.env\.(example|sample|template)$']
+  docs: ['\.(md|rst|adoc)$', '(^|/)docs/', '(^|/)LICENSE[^/]*$']
+  adr: ['(^|/)(adr|ADR|decisions)/', '(^|/)ADR-?\d+']
+  source: ['\.(py|js|jsx|ts|tsx|mjs|cjs|java|kt|kts|cs|go|rs|rb|php|swift|scala|c|cc|cpp|h|hpp|sh|ps1)$']
+
 # Feature flags (step D of the run axis). auto: true — the factory itself manages the story's flag: asks a human for a name,
 # creates the flag in the first slice, hides new behavior behind it and does not let the task into a PR without a flag or
 # a recorded reason for its absence. auto: false — you add flags yourself (in code, in an external service…): the factory
@@ -464,6 +489,16 @@ loop:
   # confirm_each_slice: true — after each slice (`run_state.py done`) the run waits for human consent
   # (`run_state.py proceed`) before starting the next; does not work in Auto mode (there is no human).
   confirm_each_slice: false
+
+# Visual check of UI changes in the /tf loop (`ui_snap.py worth <run>`): screenshots before/after exist only when it is worth it.
+# No UI files in the plan or the diff = no visual check at all. Yes: at least min_ui_files UI files, or at least min_ui_lines
+# changed UI lines (known from the diff, at PR time), or an acceptance criterion that names something visible (a word that
+# starts with one of the keywords). A light task needs such a criterion. The human forces it with --visual / --no-visual.
+visual_check:
+  min_ui_files: 2
+  min_ui_lines: 30
+  keywords: [screen, page, button, form, modal, dialog, layout, error message, banner, menu,
+             ekran, stron, przycisk, formularz, komunikat, okno, układ, baner]
 
 # Task mode (`tf task mode`): the default for a new task and the allowed ones. A company, team or project narrows
 # `allowed_modes` (e.g. without `auto`); a person picks the default mode only from this list.
