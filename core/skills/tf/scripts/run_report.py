@@ -311,12 +311,30 @@ def fmt_tokens(n: int) -> str:
     return f"{n:,}".replace(",", " ")
 
 
+def token_totals(models: dict) -> dict:
+    """Tokens of all models: input, output, cache read, cache write (5 min + 1 h) and the total."""
+    out = {"input": 0, "output": 0, "cache_read": 0, "cache_write": 0}
+    for t in (models or {}).values():
+        out["input"] += t.get("input", 0)
+        out["output"] += t.get("output", 0)
+        out["cache_read"] += t.get("cache_read", 0)
+        out["cache_write"] += t.get("cache_write_5m", 0) + t.get("cache_write_1h", 0)
+    out["total"] = sum(out.values())
+    return out
+
+
+def tokens_line(tok: dict) -> str:
+    return (f"{fmt_tokens(tok['total'])} in total (input {fmt_tokens(tok['input'])}, output {fmt_tokens(tok['output'])}, "
+            f"cache read {fmt_tokens(tok['cache_read'])}, cache write {fmt_tokens(tok['cache_write'])})")
+
+
 def report_md(slug: str, rep: dict) -> str:
     mins, secs = divmod(rep["duration_s"], 60)
     lines = [f"# Run report: {slug}", "",
              f"- Time: {int(mins)} min {int(secs)} s (from the start to the model's last answer)",
              (f"- Cost: {rep['usage_missing']} — the pdi phase result gives the run's cost" if rep.get("usage_missing")
               else f"- Cost: {rep['cost_usd']:.4f} USD (an estimate from the API price list; with a subscription — an equivalent)"),
+             f"- Tokens: {tokens_line(token_totals(rep['models']))}",
              f"- Model requests: {rep['requests']} · models: {', '.join(rep['model_ids']) or '—'}",
              f"- Plan: {rep['plan']['done']}/{rep['plan']['total']} slices · postponed for a decision: {rep['parked']}",
              f"- Transcripts: {rep.get('transcripts') or '—'}", "",
@@ -564,7 +582,8 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
            "plan": plan_progress(run_dir, committed_pieces(project, meta)), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir),
            "security": security_section(run_dir), "usage_missing": usage_missing}
     if status:   # budget check after a slice: one line, no report written
-        print(f"cost: {rep['cost_usd']:.4f} USD · time: {rep['duration_s'] // 60} min · plan: "
+        print(f"cost: {rep['cost_usd']:.4f} USD · tokens: {fmt_tokens(token_totals(rep['models'])['total'])} · "
+              f"time: {rep['duration_s'] // 60} min · plan: "
               f"{rep['plan']['done']}/{rep['plan']['total']} · postponed: {rep['parked']}")
         return 0
     md = report_md(meta.get("slug") or run_dir.name, rep)

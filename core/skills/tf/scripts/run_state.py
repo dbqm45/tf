@@ -1324,8 +1324,11 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
     out += ["", "## Assumptions", "", *([f"- {n}" for n in notes] or ["- no recorded assumptions"])]
     usage = meta.get("usage") if isinstance(meta.get("usage"), dict) else None
     if usage and isinstance(usage.get("cost_usd"), (int, float)):
+        tok = usage.get("tokens") if isinstance(usage.get("tokens"), dict) else None
         out += ["", "## Run", "", f"- The cost so far: {usage['cost_usd']:.2f} USD (an estimate from the API price list), "
-                f"time: {usage.get('minutes', '?')} min. The full report: `report.md` in the task directory."]
+                f"time: {usage.get('minutes', '?')} min"
+                + (f", tokens: {run_report.tokens_line(tok)}" if tok else "")
+                + ". The full report: `report.md` in the task directory."]
     out += ["", "_The description was assembled by the `run_state.py pr-body` script from the task's files._"]
     return "\n".join(out) + "\n", missing
 
@@ -1529,7 +1532,7 @@ def normalize_rounds(cur: dict) -> list[dict]:
 def update_usage(run_dir: Path, meta: dict, project: Path) -> None:
     """Cost, time and models from the transcripts (run_report.collect), stored in run.json (`usage`). A finished run
     with an already computed cost is not computed again. Missing transcripts are not an error — the card will not show the cost."""
-    if meta.get("stage") == "done" and isinstance(meta.get("usage"), dict):
+    if meta.get("stage") == "done" and isinstance(meta.get("usage"), dict) and "tokens" in meta["usage"]:
         return
     since = run_report.parse_ts(meta.get("started_at", ""))
     if since is None:
@@ -1543,6 +1546,7 @@ def update_usage(run_dir: Path, meta: dict, project: Path) -> None:
     models = data["models"]
     meta["usage"] = {"cost_usd": round(sum(t.get("_cost", 0.0) for t in models.values()), 4),
                      "minutes": max(0, round((data["last"] - since).total_seconds() / 60)),
+                     "tokens": run_report.token_totals(models), "requests": data["requests"],
                      "models": sorted(models), "at": now_iso()}
     write_run(run_dir, meta)
 
@@ -1576,6 +1580,7 @@ def run_object(run_dir: Path, project: Path, costs: bool, rel_to: Path | None = 
                            for o in (stop_message(meta.get("stop_code")) or {}).get("opcje") or []],
            "slices": out_slices, "parked": len(parked), "parkedList": parked,
            "cost": usage.get("cost_usd"), "min": usage.get("minutes"), "models": usage.get("models") or [],
+           "tokens": usage.get("tokens") if isinstance(usage.get("tokens"), dict) else None,
            "started": meta.get("started_at", ""),
            "dir": run_dir.resolve().relative_to(project.resolve()).as_posix()
            if run_dir.resolve().is_relative_to(project.resolve()) else str(run_dir),

@@ -184,6 +184,8 @@ def main() -> int:
                   f"R-11: plan progress and number of parked items: {rep.get('plan')} {rep.get('parked')}")
         md = (run_dir / "report.md").read_text(encoding="utf-8") if (run_dir / "report.md").exists() else ""
         check("opus" in md and "haiku" in md and "USD" in md and "2/3" in md, f"R-12: report.md: {md[:400]}")
+        check("- Tokens: " in md and "input" in md.split("- Tokens: ", 1)[-1].split("\n", 1)[0],
+              f"R-12b: report.md gives the total tokens with the split: {md[:600]}")
         check("## Security" in md and "no scan result" in md, f"R-14: without a scan the section says it is missing: {md[-300:]}")
 
         # R-11a: a slice with a commit counts as done even when the loop did not tick it in plan.md (CHG-4, 2026-11-07:

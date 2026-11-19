@@ -185,7 +185,8 @@ machine without your credentials.
   - `balanced` — the default: Haiku for mechanics, Sonnet day to day, Opus for expensive mistakes;
   - `quality` — a higher effort and an Opus advisor.
 - **Measurement:** `python3 .tf/factory/cost_report.py --days 7` (usage per agent and model from `.tf/logs/usage.jsonl`);
-  the status line shows the session's cost and how full the context is. Every entry in `usage.jsonl` has a harness
+  the status line shows the session's cost, time and tokens and how full the context is; every `/tf` task shows its
+  cost, time and tokens on the dashboard, in `report.md` and in the PR description. Every entry in `usage.jsonl` has a harness
   fingerprint (the `harness` field: the versions of Claude Code, the factory and the packs, a hash of the installed
   files), so costs from different factory versions can be separated.
 - **Model names and prices:** `python3 .tf/factory/model_check.py` (also in `tf doctor`) checks whether the
