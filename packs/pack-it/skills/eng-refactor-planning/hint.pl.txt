@@ -1,0 +1,54 @@
+head: Użyj, gdy decydujesz, co refaktoryzować, w jakiej kolejności i jak (za duża klasa, przepisać od nowa czy nie) — kandydaci, intencja z historii, dopasowanie skali, odwracalne ścieżki, ranking. Użyj, gdy raport długu, lista hotspotów albo skarga „ta klasa jest za duża” ma się stać planem refaktoryzacji, o którym decyduje człowiek — lista problemów i klasyfikacja KANDYDATÓW, obecny kształt opisany archetypami (Transaction Script, Table Module, Domain Model), intencja z ADR-ów i archeologii gita (świadome ograniczenie a przypadkowa złożoność), dopasowanie skali (zostaje / guard zamiast przebudowy / przebudowa), odwracalne ścieżki (Strangler Fig, Branch by Abstraction, Mikado), ranking 2–3 opcji, weryfikacja twierdzeń strukturalnych przez ast-grep i rg, potem plan w fazach. Nie do samego audytu długu (eng-tech-debt-audit), dowodu zachowania zachowania w trakcie wykonania (eng-behavior-preserving-refactoring) ani przeprojektowania pojęć domeny (ddd-legacy-modernization).
+# Planowanie refaktoryzacji — opcje do decyzji człowieka
+
+„Zrefaktoryzuj to” zostawia trzy niewiadome: docelowy kształt, historię (czy dziwny fragment to kaprys, czy nośna decyzja?) i drogę
+powrotu, gdy coś pójdzie źle. Ten skill zamienia ustalenia w opcje z rankingiem; człowiek wybiera jedną; dopiero wtedy powstaje plan.
+
+**Etapy, każdy w osobnej sesji:** eksploracja (tylko odczyt, zapisuje `research.md`) → człowiek czyta → decyzja i plan → implementacja.
+Eksploracja nigdy nie zmienia kodu i nie kończy się „to co, robię?”; kończy się raportem i pytaniem, którą opcję realizujemy. Prośba
+„zaplanuj i od razu zmień” dostaje najpierw raport z eksploracji.
+
+## Procedura — eksploracja
+1. **Lista problemów.** Wypisz każdy problem z wejścia (audyt długu, hotspoty, skarga), niezależnie od etykiety. Ustalenia z wejścia są
+   dowodem — nie wyprowadzaj ich od nowa. **KANDYDAT** tylko wtedy, gdy poprawka zmienia strukturę kodu; brak testu czy dokumentacji to
+   wejście do wykonalności. Jeśli prawdziwą poprawką jest przeprojektowanie pojęć biznesowych (dwa znaczenia „klienta”) → stop
+   i odesłanie do ddd-legacy-modernization.
+2. **Trzy badania na kandydata** jako równoległe zadania tylko do odczytu; każde stwierdzenie oznaczone **dowód / wniosek / niewiadoma**
+   z `plik:linia`:
+   - **obecny kształt** — gdzie żyje logika, co się miesza, jakie abstrakcje już są; opis na spektrum archetypów Transaction Script →
+     Table Module → Domain Model z warstwą usług (np. „przerośnięty transaction script”);
+   - **intencja** — najpierw ADR-y i dokumenty projektowe, potem archeologia gita (`git log -L`, `git blame`). Werdykt: **świadome
+     ograniczenie**, **przypadkowa złożoność** albo niewiadoma. Liczba commitów-poprawek mechanizmu jest dowodem: zero poprawek przez lata
+     to stabilność. Złożoność istotna zostaje, przypadkowa jest usuwana;
+   - **wykonalność** — abstrakcja do użycia lub utworzenia; zasięg zmiany (z wejścia, inaczej
+     `python3 .claude/skills/eng-codebase-mapping/scripts/code_graph.py <repo> --impact <plik>`, liczby potwierdzone `rg`); istniejące
+     strażniki i testy (sprawdź konfigurację CI); pierwszy krok wstępny.
+3. **Dopasuj skalę:** mały moduł, prosta logika → **zostaje**; świadome ograniczenie → **guard zamiast przebudowy** (tani deterministyczny
+   test łamiący się przy dryfie, reguła lintera/ast-grep w CI, walidacja generatora; kształt bez zmian; jeden revert cofa); przypadkowa
+   złożoność o rosnącym koszcie (hotspot = złożoność × częstość zmian) → **przebudowa** odwracalną ścieżką. Najpierw spłacaj najwyższe „odsetki”.
+4. **Odwracalna ścieżka** dla każdej przebudowy: **Strangler Fig** (nowy kod na krawędzi, zachowanie przenoszone plasterkami, data
+   wygaszenia starego), **Branch by Abstraction** (abstrakcja nad punktem styku, klienci przełączani commit po commicie, testy kontraktowe
+   dla obu, główna gałąź zawsze wydawalna, bez długiej gałęzi), **Mikado** (cel w ramie czasowej, każde pęknięcie zapisane jako
+   prerekwizyt, **cofnij** wszystko, rozwiązuj od liści, commit na każdy). Przepisanie od zera — odrzucone: gubi wiedzę z poprawek.
+5. **Ranking.** 2–3 najmocniejsze opcje: obecny → docelowy kształt, dlaczego tu, zasięg, szkic ścieżki, pierwszy prerekwizyt. Potem
+   **Rozważone i odrzucone**, po jednym zdaniu powodu.
+6. **Weryfikacja twierdzeń strukturalnych** osobnym przejściem: każda liczba dostaje wzorzec `ast-grep`; każde zero potwierdzone `rg`;
+   poprawki w miejscu jako `5 (raport: 4)` — ślad zostaje. Weryfikacja **nie zmienia rankingu** ani werdyktów intencji — rozbieżność
+   zapisana „do decyzji na etapie planu”.
+7. **Zapisz** `docs/project/<step>/research.md` (front matter `status: exploration`, `last_updated`, `tags: [refactor-opportunities]`,
+   `verified_at_commit`) i zakończ pytaniem „którą opcję realizujemy?”.
+
+## Procedura — decyzja i plan
+- Rozmowa według core-plan-interview, pierwsze pytanie: „którą opcję realizujemy?”. Nowy dowód w trakcie planowania to osobne pytanie.
+- Plan to wąski plaster: jedna opcja, ewentualnie plus tani guard. Najpierw test charakteryzujący na widocznym szwie. Fazy jako osobne
+  odwracalne commity, najtańsze i najbardziej samodzielne najpierw (guard pierwszy), każda z kryteriami weryfikacji automatycznej i ręcznej.
+- **Mechanizm wchodzi na zielono, egzekwowanie włączane osobno:** nowa walidacja domyślnie wyłączona, potem włączana per warstwa osobnym
+  commitem, z uzasadnioną listą wyjątków.
+- Sekcja **Czego NIE robimy**. Kilka opcji po kilka tygodni → kampania faz z własnym eksploruj → planuj → implementuj. Plan czyta ktoś
+  ze świeżym kontekstem. Wykonanie i dowód zachowania: eng-behavior-preserving-refactoring.
+
+## Przykład
+Audyt `billing/export` (7 ustaleń). Zapis wsadowy pozycyjny: `git log -L` pokazuje commit z 2021 „9× szybciej na koniec miesiąca” i 0
+poprawek → świadome ograniczenie → guard (test z wartownikami). Dekoratory pomijające `list_corrections()`: 3 incydenty, hotspot →
+ranking #1, walidacja generatora wyłączona, potem włączana per warstwa. Podział `InvoiceExporter.py` (2400 linii) → odrzucony, rzadko
+się zmienia. Weryfikacja: `33 (raport: 31)` metod, `5 (raport: 4)` wywołań — ranking bez zmian. Koniec: „Którą opcję realizujemy?”.
