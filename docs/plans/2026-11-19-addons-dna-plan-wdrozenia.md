@@ -8,6 +8,11 @@ Podstawa: rozmowa z człowiekiem z 2026-11-18/19 (decyzje w sekcji 2) i przeglą
 Confluence czyta agent przez MCP sesji (`provides.pending`, kopie z nagłówkiem `Source:`/`Fetched:`), tak jak fabryka
 czyta Jirę bez skryptu; skrypt nie łączy się z Confluence. Kawałki A7–A8 poniżej dotyczą teraz dodatku `standards`.
 
+**Pomiar learn (2026-11-20):** `tf learn` i `tf addon refresh` zapisują czas skryptów per dodatek do
+`.tf/logs/addons.jsonl` (skrypty: 0 tokenów); praca w sesji, którą zostawiają (MCP, tani model), idzie do jednego
+podagenta z linią `Class: addon`, więc jej tokeny i koszt liczy istniejący hook `log_usage.py`. `tf addon report`
+składa obie części dla ostatniego `learn` (`--all`: każdego).
+
 **Stan (2026-11-19):** A1 i A2 zrobione w `addons/dna/` 0.1.0 (szkielet, kontrakt, `learn | verify | status`,
 rozpoznanie stacku i wersji, polecenia, narzędzia; 21 testów, job CI `addon-dna`). Kolejność zmieniona: A1–A2 przed
 A0, bo działają samodzielnie (`python3 addons/dna/dna.py learn --root <repo>`) i nie ruszają rdzenia.

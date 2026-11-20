@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 — 2026-11-20
+- pending.json asks for all items in one subagent on the cheapest model briefed "Class: addon", so the factory
+  counts their tokens and cost (`tf addon report`).
+
 ## 0.3.0 — 2026-11-20
 - Sources from the factory's configuration: `addons.standards.sources.<name>` in the company pack
   (`org_defaults.config`), the team pack (`team_defaults.config`) or the project's config, passed by the factory in
