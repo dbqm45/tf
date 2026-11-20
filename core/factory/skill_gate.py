@@ -50,6 +50,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SKILLS = ROOT / ".claude" / "skills"
+PLUGIN_SKILLS = ROOT / ".tf" / "plugin" / "skills"   # factory mode (install --layout plugin): the factory's SKILL.md live here
+
+
+def skill_dir(name: str) -> Path:
+    """The directory with the skill's SKILL.md: the factory plugin first, then .claude/skills (your own skills)."""
+    return PLUGIN_SKILLS / name if (PLUGIN_SKILLS / name / "SKILL.md").is_file() else SKILLS / name
+
+
+def all_skills() -> list[str]:
+    return sorted({p.parent.name for base in (PLUGIN_SKILLS, SKILLS) for p in base.glob("*/SKILL.md")})
 TESTS = ROOT / "tests" if (ROOT / "tests" / "run_skill_evals.py").exists() else ROOT / ".claude" / "tests"
 EVALS = TESTS / "skill_evals"
 REGISTRY = ROOT / "tests" / "skill_gate.json" if (ROOT / "tests" / "run_skill_evals.py").exists() \
@@ -176,7 +186,7 @@ def content_language(text: str) -> str:
 
 
 def check_polish(name: str) -> tuple[list[str], list[str]]:
-    d = SKILLS / name
+    d = skill_dir(name)
     if content_language((d / "SKILL.md").read_text(encoding="utf-8", errors="replace")) == "en":
         return [], []                      # English content — the Polish linter does not apply
     if not LINT.exists():
@@ -193,7 +203,7 @@ def check_polish(name: str) -> tuple[list[str], list[str]]:
 
 def check_audit(name: str) -> tuple[list[str], list[str]]:
     audit = load_module(ROOT / ".tf" / "factory" / "skill_audit.py", "skill_audit")
-    rep = audit.audit_skill(SKILLS / name)
+    rep = audit.audit_skill(skill_dir(name))
     errs = [f"[{f['severity']}] {f['code']} — {f['file']}:{f['line']}: {f['message']}" for f in rep["findings"]
             if f["severity"] in ("high", "medium")]
     warns = [f"{f['code']} — {f['message']}" for f in rep["findings"] if f["severity"] == "low"]
@@ -203,7 +213,7 @@ def check_audit(name: str) -> tuple[list[str], list[str]]:
 def check_refs(name: str) -> list[str]:
     if not GROUND.exists():
         return []
-    r = subprocess.run([sys.executable, str(GROUND), str(SKILLS / name), "--warn"], capture_output=True, text=True, encoding="utf-8", errors="replace",
+    r = subprocess.run([sys.executable, str(GROUND), str(skill_dir(name)), "--warn"], capture_output=True, text=True, encoding="utf-8", errors="replace",
                        timeout=120, env={**__import__("os").environ, "CLAUDE_PROJECT_DIR": str(ROOT)})
     return [ln[2:] for ln in r.stdout.splitlines() if ln.startswith("⚠ ") and "references:" not in ln][:5]
 
@@ -269,7 +279,7 @@ def paid_warnings(summary: dict) -> list[str]:
 
 def gate(name: str, args) -> bool:
     print(f"\n━━ Gate: {name}")
-    if not (SKILLS / name / "SKILL.md").exists():
+    if not (skill_dir(name) / "SKILL.md").exists():
         print(f"✗ there is no .claude/skills/{name}/SKILL.md")
         return False
     failed = False
@@ -331,7 +341,7 @@ def gate(name: str, args) -> bool:
 def status(strict: bool = False) -> int:
     reg = read_registry()
     rows = []
-    for d in sorted(p.parent.name for p in SKILLS.glob("*/SKILL.md")):
+    for d in all_skills():
         rec = reg.get(d)
         if not rec:
             state = "no gate"
@@ -412,7 +422,7 @@ def suggest(name: str, apply: bool) -> int:
     if not apply:
         print(f"Add: python3 .tf/factory/skill_gate.py --suggest {name} --apply (then the gate: python3 .tf/factory/skill_gate.py {name})")
         return 0
-    md = SKILLS / name / "SKILL.md"
+    md = skill_dir(name) / "SKILL.md"
     text = md.read_text(encoding="utf-8")
     m = re.search(r'^  keywords: "(.*)"$', text, re.M)
     if m:
@@ -427,7 +437,7 @@ def suggest(name: str, apply: bool) -> int:
 def hints_all() -> int:
     """Gate step 3 for all skills at once: a "trigger" scenario that the hook does not suggest is an error."""
     misses, narrow, n = [], 0, 0
-    for d in sorted(p.parent.name for p in SKILLS.glob("*/SKILL.md")):
+    for d in all_skills():
         if not (EVALS / f"{d}.json").exists():
             continue
         _, _, sc = check_scenarios(d)
@@ -443,7 +453,7 @@ def hints_all() -> int:
 
 def changed() -> list[str]:
     reg = read_registry()
-    return [d for d in sorted(p.parent.name for p in SKILLS.glob("*/SKILL.md"))
+    return [d for d in all_skills()
             if reg.get(d, {}).get("fingerprint") != fingerprint(d)]
 
 
