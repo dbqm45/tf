@@ -387,16 +387,28 @@ def run_command(root: Path, command: str, timeout: float) -> tuple[int, str]:
 RELATED_MAX = 200   # more slice files than this: the full command (as in the quality_gate.py hook)
 
 
-def expand_related(template, files: list[str]) -> list[str]:
-    """argv of the gate's `related` command (the same rule as in the quality_gate.py hook): the token `{files}` becomes
-    the files as separate arguments, `{files,}` inside a token — the files joined with commas. No shell."""
-    argv = []
-    for token in (shlex.split(template) if isinstance(template, str) else [str(t) for t in template]):
-        if token == "{files}":
-            argv.extend(files)
-        else:
-            argv.append(token.replace("{files,}", ",".join(files)).replace("{files}", " ".join(files)))
-    return argv
+def gate_hook(root: Path):
+    """The quality gate hook as a module — the one implementation of the `related` placeholders. None without the hook."""
+    path = root / ".claude" / "hooks" / "quality_gate.py"
+    if not path.is_file():
+        return None
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_quality_gate", path)
+    mod = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(mod)
+    except Exception:  # noqa: BLE001 — a broken hook: the full command runs
+        return None
+    return mod
+
+
+def expand_related(template, files: list[str], root: Path | None = None) -> list[str] | None:
+    """argv of the gate's `related` command, by the hook's rule (`{files}`, `{tests}`, `{dirs}`, `{classes}`, a comma
+    joins); None when a placeholder gives nothing or the hook is missing — then the full command runs."""
+    hook = gate_hook(root) if root is not None else None
+    if hook is None:
+        return None
+    return hook.expand_related(template, files, root)
 
 
 def gate_command(root: Path, files: list[str], full: bool) -> tuple[str | None, bool]:
@@ -408,8 +420,9 @@ def gate_command(root: Path, files: list[str], full: bool) -> tuple[str | None, 
         cfg = {}
     cfg = cfg if isinstance(cfg, dict) else {}
     related, gate = cfg.get("related"), cfg.get("command")
-    if related and not full and len(files) <= RELATED_MAX:
-        return shlex.join(expand_related(related, files)), True
+    argv = expand_related(related, files, root) if related and not full and len(files) <= RELATED_MAX else None
+    if argv:
+        return shlex.join(argv), True
     if not gate:
         return None, False
     return (gate if isinstance(gate, str) else shlex.join(map(str, gate))), False

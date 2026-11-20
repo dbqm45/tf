@@ -204,6 +204,8 @@ def main() -> int:
         argv_py = "import json, sys; print(json.dumps(sys.argv[1:]))"
         related = f'{sys.executable} -c "{argv_py}" related {{files}} --files={{files,}}'
         (p / ".claude" / "quality-gate.json").write_text(json.dumps({"command": OK, "related": related}), encoding="utf-8")
+        (p / ".claude" / "hooks").mkdir(parents=True, exist_ok=True)   # the placeholders' one implementation is the hook
+        shutil.copy(ROOT / ".claude" / "hooks" / "quality_gate.py", p / ".claude" / "hooks" / "quality_gate.py")
         r = run(p, "verify", "EV-3", "S3", "--files", "src/cli.py,src/b.py")
         e4 = json.loads((p / CHANGES / "EV-3" / "evidence" / "S3-1.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
         log = (p / e4["log"]).read_text(encoding="utf-8") if e4.get("log") else ""
