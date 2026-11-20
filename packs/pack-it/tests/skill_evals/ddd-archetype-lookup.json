@@ -1,0 +1,68 @@
+{
+  "skill": "ddd-archetype-lookup",
+  "scenarios": [
+    {
+      "id": "przeszukaj-sklep",
+      "expect": "trigger",
+      "prompt": "Przejrzyj nasz kod w src/ i powiedz, gdzie w projekcie warto zastosować archetypy biznesowe, a gdzie nie. Odpowiedz zwięźle, z plikami i liniami.",
+      "files": {
+        "src/orders/Order.java": "package orders;\npublic class Order {\n    private double totalPrice;\n    private String currency;\n    public double promo() { return totalPrice * 0.9; }\n}\n",
+        "src/money/Money.java": "package money;\nimport java.math.BigDecimal;\nimport java.util.Currency;\npublic record Money(BigDecimal amount, Currency currency) {}\n",
+        "src/loyalty/Points.sql": "UPDATE members SET points = points + 10 WHERE id = ?;\n",
+        "src/basket/BasketItem.java": "public class BasketItem { int quantity; void add(int q) { quantity += q; } }\n"
+      },
+      "checks": {
+        "all": [
+          ["Order\\.java:\\d+", "Order\\.java.{0,20}(linia|line)"],
+          ["Money\\.java|już (jest|istnieje)|already (modelled|exists)|istniejąc\\w+ (typ|klas)\\w* Money"],
+          ["księg|ledger|wpis\\w*|transakcj\\w+|saldo"],
+          ["nie pasuje|not a fit|koszyk\\w*.{0,60}(nie|bez)|BasketItem.{0,80}(nie|pomi)"]
+        ],
+        "none": ["BasketItem.{0,60}(ledger|księg)"]
+      }
+    },
+    {
+      "id": "archetype-lookup-en",
+      "expect": "trigger",
+      "prompt": "Scan this repo for archetype opportunities: where would a proper money type, a ledger or party roles fix our model? Rank them and keep it short.",
+      "files": {
+        "app/billing.py": "def charge(customer, amount: float, currency: str):\n    customer.balance += amount\n",
+        "app/company.py": "class Company:\n    is_supplier = False\n    is_customer = True\n"
+      },
+      "checks": {
+        "all": [
+          ["billing\\.py:\\d+", "company\\.py:\\d+"],
+          ["float"],
+          ["role", "part(y|ies)"],
+          ["first|order of change|then|→|1\\."]
+        ]
+      }
+    },
+    {
+      "id": "model-jednego-wymagania",
+      "expect": "no-trigger",
+      "neighbor": "ddd-archetypes",
+      "prompt": "Wymaganie: każdy workspace dostaje 10 000 kredytów API miesięcznie, doładowania ważne rok, niewykorzystane miesięczne przepadają. Jak zamodelować to saldo? Odpowiedz zwięźle."
+    },
+    {
+      "id": "mapa-nieznanego-kodu",
+      "expect": "no-trigger",
+      "neighbor": "eng-codebase-mapping",
+      "prompt": "Dostałem nieznane repozytorium. Pokaż mi punkty wejścia, warstwy z importów i moduły-węzły, zanim zacznę zmiany. Odpowiedz zwięźle."
+    },
+    {
+      "id": "edge-brak-kodu",
+      "expect": "trigger",
+      "prompt": "Sprawdź projekt pod kątem archetypów — gdzie możemy ich użyć? Odpowiedz zwięźle.",
+      "files": {
+        "README.md": "# Pomysł na aplikację\nNa razie tylko notatki, kodu jeszcze nie ma.\n"
+      },
+      "checks": {
+        "all": [
+          ["brak kodu|nie ma kodu|0 (plików|code files)|no code|nie znalaz\\w+|ścieżk\\w+|katalog\\w*|gdzie (jest|leży)"]
+        ],
+        "none": ["\\.(java|py|ts):\\d+"]
+      }
+    }
+  ]
+}

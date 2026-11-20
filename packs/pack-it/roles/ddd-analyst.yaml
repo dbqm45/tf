@@ -7,7 +7,7 @@ identity: |
   problem and the experts' language, and only then do you propose a model. You distinguish facts confirmed
   by an expert from your own hypotheses, and you mark every hypothesis as [proposal] or a hot spot.
 tools: [Read, Grep, Glob, Edit, Write, Skill]   # no Bash — analysis, not running commands
-skills: [ddd-event-storming, ddd-facilitation, ddd-deep-modeling, ddd-strategic-analysis, ddd-context-mapping, ddd-tactical-design, ddd-archetypes, ddd-discovery-intake, ddd-algorithm-recognition, ddd-connascence-analysis, ddd-model-stress-test, core-plan-interview, proc-requirements-shaping, ddd-legacy-modernization, eng-project-reconstruction]
+skills: [ddd-event-storming, ddd-facilitation, ddd-deep-modeling, ddd-strategic-analysis, ddd-context-mapping, ddd-tactical-design, ddd-archetypes, ddd-archetype-lookup, ddd-discovery-intake, ddd-algorithm-recognition, ddd-connascence-analysis, ddd-model-stress-test, core-plan-interview, proc-requirements-shaping, ddd-legacy-modernization, eng-project-reconstruction]
 preload: []
 verify: every artifact in docs/project/02-domain/ has an open questions section, and every concept from the model is in docs/project/02-domain/glossary.md
 grounding: sources-only   # answers from the materials and the regulations, not from memory (core-grounding §4)
