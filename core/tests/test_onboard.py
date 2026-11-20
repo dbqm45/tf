@@ -107,6 +107,9 @@ def main() -> int:
         want = "npm test" if os.name == "nt" else "./verify.sh"
         check(r.returncode == 0 and gate.is_file() and json.loads(gate.read_text()).get("command") == want,
               f"O-11: --yes writes the verification command to the gate ({want}): {r.stdout}{r.stderr}")
+        npmrc = (p / ".npmrc").read_text(encoding="utf-8") if (p / ".npmrc").is_file() else ""
+        check("min-release-age=7" in npmrc and "version cooldown" in r.stdout,
+              f"O-11b: --yes also writes the package manager's version cooldown (N10): {npmrc!r} {r.stdout}")
         text = report.read_text(encoding="utf-8") if report.is_file() else ""
         check(all(h in text for h in ("## What is there", "## What is missing", "## What the factory blocks", "## When a human should look")),
               f"O-12: the readiness report has fixed sections: {text[:300]}")
