@@ -47,6 +47,8 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf task mode <KEY> [plan|normal|auto]   # who approves: plan stops after the plan, normal waits for the human's approval of the plan, auto does not
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
+  tf code [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin) and its settings; a plain
+                              # `claude` in the project loads nothing from the factory (install --layout plugin)
   tf work --once --budget <USD> [--key <KEY>] [--dry-run]
                               # unattended: one task in Auto mode (light or normal weight) through the /tf loop in its
                               # own worktree (.tf/worktrees/<KEY>) with a spending limit; never merges (.tf/factory/work.py)
@@ -388,10 +390,55 @@ def instructions_summary(lint: Path) -> str:
     return ("⚠ instructions: " + "; ".join(notes) + f"\n  details: python3 {lint.as_posix()} --root .")
 
 
+PLUGIN_DIR = Path(".tf") / "plugin"
+
+
+def factory_layout() -> str:
+    """`plugin` — the factory lives in .tf/plugin/ and only a factory session (tf code) loads it; else `default`."""
+    try:
+        return json.loads(MANIFEST.read_text(encoding="utf-8")).get("layout") or "default"
+    except (OSError, ValueError, AttributeError):
+        return "default"
+
+
+def claude_command() -> list[str]:
+    import shlex
+    return shlex.split(os.environ.get("TF_CLAUDE") or "claude")
+
+
+def cmd_code(rest: list[str]) -> int:
+    """Factory session: `claude --plugin-dir .tf/plugin --settings .tf/plugin/session-settings.json <rest>`."""
+    if not need_project():
+        return 2
+    if factory_layout() != "plugin":
+        print("ℹ This project has the default layout (factory files in .claude/, loaded by every session) — starting "
+              "claude as usual. The factory mode needs the plugin layout (install.py --layout plugin); moving existing "
+              "installs comes with a later factory update.", file=sys.stderr)
+        cmd = [*claude_command(), *rest]
+    else:
+        plugin, settings = PLUGIN_DIR.resolve(), (PLUGIN_DIR / "session-settings.json").resolve()
+        missing = [str(x) for x in (plugin / ".claude-plugin" / "plugin.json", settings) if not x.is_file()]
+        if missing:
+            print(f"✗ The factory plugin is incomplete (missing: {', '.join(missing)}) — run `tf doctor --fix` "
+                  "(or `tf` to update), then `tf code` again.")
+            return 2
+        cmd = [*claude_command(), "--plugin-dir", str(plugin), "--settings", str(settings), *rest]
+    try:
+        return subprocess.run(cmd).returncode
+    except FileNotFoundError:
+        print("✗ The `claude` command (Claude Code) is not in PATH.")
+        return 127
+    except KeyboardInterrupt:
+        return 130
+
+
 def cmd_doctor(fix: bool, repo: str | None) -> int:
     """Install health: build check (versions, required packs, references), renames from core migrations."""
     if not need_project():
         return 2
+    if factory_layout() == "plugin":
+        print("ℹ Layout: plugin (.tf/plugin/) — start the factory with `tf code`; a plain `claude` in this project "
+              "loads nothing from the factory.")
     mig = project_module("migrations")
     changes = mig.apply(Path.cwd(), dry=not fix)
     for c in changes:
@@ -534,6 +581,8 @@ def main(argv: list[str]) -> int:
         if not need_project():
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "onboard.py"), *rest]).returncode
+    if cmd == "code":
+        return cmd_code(rest)
     if cmd == "work":
         return engine("work.py", rest)
     if cmd == "cooldown":   # the version cooldown the /tf loop requires; --fix writes the missing settings
