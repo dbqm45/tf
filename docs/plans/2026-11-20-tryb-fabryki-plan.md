@@ -108,7 +108,8 @@ Do T5 nic się nie zmienia u użytkowników, bo nowy układ jest tylko opcją.
     uruchomienie skryptu startowego w prawdziwym środowisku chmurowym z instalacją zespołową [niezweryfikowane].
   - **Persony:** `tf code --agent <persona>` działa bez przedrostka (`--agent burak` uruchamia agenta wtyczki `tfx:burak`).
   - **Izolacja:** plan `2026-11-20-poziomy-izolacji.md` już kładzie ustawienia sandboxa do `session-settings.json`.
-- **Widoczność skilli wtyczki — do decyzji właściciela.** Claude Code 2.1.325 nie stosuje `skillOverrides` do skilli
+- **Widoczność skilli wtyczki — rozstrzygnięte 2026-11-20: zostaje Claude Code (decyzja właściciela).** Fabryka nie skraca
+  opisów we wtyczce; listę przy przepełnieniu przycina sam Claude Code. Claude Code 2.1.325 nie stosuje `skillOverrides` do skilli
   z wtyczki: sprawdzone klucze `tfx:nazwa`, `nazwa` i `nazwa@tfx` w `--settings` i w `.claude/settings.local.json`
   zostawiają opis widoczny, a ten sam wpis dla skilla z `.claude/skills/` go ukrywa. Do wyboru:
   - zostawić skrót listy skilli samemu Claude Code (budżet ~1% kontekstu wg opisu w `core/factory/skill_profile.py`: przy przepełnieniu sam usuwa opisy
