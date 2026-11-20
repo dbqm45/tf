@@ -1,107 +1,108 @@
 ---
 name: core-semver
-description: Use for a version number (SemVer) — public API, a major/minor/patch bump, 0.y.z, pre-release versions.
+description: Use when picking the next version number of something you release — bump kind, 0.y.z vs 1.0.0, pre-releases, deprecation, computed by semver.py.
 metadata:
-  review: "2027-10-09"
-  catalog: "Use when you assign or check the version number of anything you release (a library, package, API, CLI, application, image, IaC module, the factory itself) — declaring the public API, which changes need major/minor/patch, the 0.y.z phase and the 1.0.0 release, pre-release versions and metadata, version order, deprecation, a release without changing a published version; the semver.py script computes the version without guessing. Not for the commit message format (core-conventional-commits) or the deployment strategy (the release skill, pack-it)."
-  keywords: "semver, wersjonowanie, numer wersji, podbić wersję, major, minor, patch, wersja 1.0.0, 0.x, beta, rc, alpha, wydanie, release, tag v1.2.3, zmiana niezgodna wstecz, breaking change, przestarzałe, deprecated, następne wydanie, kolejność wersji, od jakiej wersji zacząć, version number, next version, version order, which version to start from"
+  review: "2027-11-20"
+  catalog: "Use when you assign or verify the version of anything the team releases (a library, an HTTP API, a CLI, an application or service, an IaC module, a container image, the factory itself) — what counts as public API, which change is major/minor/patch, the 0.y.z phase and the move to 1.0.0, pre-release labels and their ordering, build metadata, deprecation before removal, a release whose artifact did not change, a mistaken release, the changelog and version file in step, and the semver.py script that computes and checks the number. Not for the format of commit messages (core-conventional-commits), the deployment strategy of a release (the release skill, pack-it) or raising the project's own dependency versions (core-stack-sync)."
+  keywords: "jaka wersja, następna wersja, numer wersji, podbić wersję, podbicie wersji, major minor patch, wersjonowanie semantyczne, semver, SemVer 2.0.0, wersja 1.0.0, kiedy 1.0.0, od jakiej wersji zacząć, wersja 0.1.0, faza 0.y.z, wersja przedpremierowa, pre-release, rc, beta, alpha, kolejność wersji, metadane builda, zmiana niezgodna wstecz, breaking change, przestarzała funkcja, deprecated, wycofanie funkcji, usunięcie funkcji, publiczne API, PUBLIC_API, tag wersji, tag v1.2.3, changelog a wersja, plik VERSION, wydanie bez zmian, paczka się nie zmieniła, automat wydań podbija wersję, semantic-release wersja, błędne wydanie, cofnąć wydanie, wersja obrazu, wersja modułu terraform, next version, version number, bump the version, which version, start at 0.1.0, when to release 1.0.0, prerelease ordering, build metadata, backward compatible, backward incompatible, deprecate then remove, public API, release tag, changelog version mismatch, release without changes, semver.py"
 ---
 
-# Semantic versioning (SemVer 2.0.0)
+# Version numbers — classify the change, let the script compute
 
-A version number is a promise to the user. MAJOR.MINOR.PATCH says whether an update can break something:
-- **MAJOR** — a backward-incompatible change;
-- **MINOR** — a new backward-compatible feature;
-- **PATCH** — a backward-compatible fix.
+A version number is a promise about compatibility **relative to a declared public API**. You classify what
+changed in that API, take the most severe change, and compute the number with the script — never by hand.
 
-**A script computes** the number, not the model's memory:
-`python3 .claude/skills/core-semver/scripts/semver.py bump|next|compare|valid|check-changelog`.
-
-## 1. Public API first
-Without a declared public API compatibility cannot be judged (rule 1). Write it down in the README or in a
-`PUBLIC_API.md` file before you assign 1.0.0. What usually belongs to it depends on the product type (details:
-`references/public-api.md`):
-
-| Product | Public API |
+Script (run it, do not read it): `python3 .claude/skills/core-semver/scripts/semver.py`
+| Call | What it gives |
 |---|---|
-| library | exported functions, classes, types, exceptions, the minimal runtime version (Node, Java) |
-| HTTP API | paths, methods, request and response fields, status codes, error format, authentication |
-| CLI | commands, flags, exit codes, output format read by scripts |
-| application or service | configuration (variables, keys), integration contracts, events, a data schema someone reads |
-| IaC module, container image | input and output variables, ports, mount points, environment variables |
+| `valid 1.0.0-rc.1+b.5` | exit 0 = valid, 1 = invalid with the reason |
+| `compare A B` / `sort V…` | precedence (-1/0/1) or an ascending list; build metadata ignored |
+| `bump 2.4.1 major\|minor\|patch` | 3.0.0 / 2.5.0 / 2.4.2 |
+| `bump 1.2.3 pre --id rc` → `bump 1.2.4-rc.1 pre` → `bump 1.2.4-rc.2 release` | 1.2.4-rc.1 → 1.2.4-rc.2 → 1.2.4 |
+| `next [--since vX.Y.Z] [--path P] [--current V]` | bump suggested from commits since the last `vX.Y.Z` tag: `!` or `BREAKING CHANGE` → major, `feat` → minor, `fix`/`perf` → patch; in 0.y.z a breaking change → minor and everything else → patch. No tag → exit 2, pass `--current` |
+| `check-changelog CHANGELOG.md [--version-file VERSION] [--strict-from V]` | `## [X.Y.Z]` headings valid, newest first, no repeats, newest = version file; from `--strict-from` the sections must fit the bump (Breaking/Removed → major, Added/Deprecated → at least minor). Exit 1 on problems |
 
-Internal details (private functions, code layout, log contents) are not part of the public API.
+## Procedure
+1. **Public API written down.** README or `PUBLIC_API.md` lists what users may rely on. Without it a number means
+   nothing — write the list first. What counts per product type: `references/public-api.md`.
+2. **Last released version.** The newest `vX.Y.Z` tag, the version file and the top changelog entry. If they disagree,
+   stop and reconcile them before computing anything.
+3. **Did the artifact change?** Commit types describe intent and can be wrong; the shipped content cannot. Compare the
+   files that go into the package since the tag: `git diff --name-only v1.4.0..HEAD -- src/ package.json` or
+   `npm pack --dry-run` (image: the Dockerfile and its inputs; module: its `.tf` files).
+   - nothing shipped changed → **no release**, even with `feat:` commits (CI, tests, docs only);
+   - shipped files changed but only `chore:`/`docs:` commits → warn the human, the classification is probably wrong.
+4. **Classify each change** (table below) and take the most severe one. Incompatible means: some existing correct use
+   stops working, or silently behaves differently, without the user changing anything.
+5. **Compute** with `bump` (or `next` as a cross-check against the commits) — the higher of your classification and
+   `next` wins; explain a difference.
+6. **Update every place that carries the number together:** version file(s), the changelog (new entry on top),
+   install snippets in docs. Run `check-changelog` with `--version-file`.
+7. **Tag** `vX.Y.Z` (the tag carries `v`, the version itself does not), push and publish — **only after the human
+   agrees**. Never move a tag, never republish an existing number.
 
-## 2. Which bump
+## Which part to raise
 | Change in the public API | Bump |
 |---|---|
-| removal, renaming, a change of type or meaning, a new **required** input field, narrowing the accepted values, a change of default behaviour, raising the minimal runtime version | **MAJOR** (minor and patch → 0) |
-| a new feature, an optional parameter, a new field in the response, marking an element deprecated, a significant internal improvement | **MINOR** (patch → 0) |
-| a bug fix without a contract change, a backward-compatible security patch, a dependency update without an API change | **PATCH** |
-| only documentation, tests, CI, refactoring without a behaviour change | no release, or PATCH if you release |
+| Incompatible: removed/renamed element, new required input, stricter validation, changed error type or status, removal of something deprecated | **major** (minor and patch reset to 0) |
+| New compatible functionality: new export, optional parameter, new endpoint or field; **marking something deprecated** | **minor** (patch reset to 0) |
+| Compatible bug fix, compatible security fix, dependency update with no API change | **patch** |
+| Refactor, tests, CI, docs with no behaviour change | no release (or patch if you ship anyway) |
 
-- Several changes in one release: the **most serious** decides.
-- A fix of a bug someone relies on (it changes the observable behaviour of the contract) is MAJOR, unless the
-  behaviour was explicitly described as a bug.
-- With Conventional Commits: `python3 …/semver.py next` computes the bump from the last `vX.Y.Z` tag (`!` and
-  `BREAKING CHANGE` → major, `feat` → minor, `fix`/`perf` → patch). Check the result against the table above,
-  because a commit can be mislabelled.
+- **Deprecation then removal:** mark in a minor (warning, replacement, docs), keep it through at least one minor,
+  remove in the next major. "Deprecated" alone never forces a major; the removal always does.
+- **A fix people depend on:** if the "wrong" behaviour was documented or widely relied on, changing it is incompatible
+  — judge against the declared API, not against intent.
+- **Mistaken release** (an incompatible change shipped as minor/patch): do not rewrite it. Release a new version that
+  restores compatibility, and note in the changelog which version was faulty. The incompatible change waits for a major.
 
-## 3. The 0.y.z phase and the 1.0.0 release
-- A new project starts at **0.1.0**. In the 0.y.z phase anything may change (rule 4).
-  - The factory's convention: an incompatible change → minor, the rest → patch. That is how `semver.py next` computes it.
-- You release **1.0.0** when the product runs in production, someone relies on it, or you care about backward
-  compatibility (FAQ). From 1.0.0 the public API is a commitment. Releasing 1.0.0 is the human's decision; the agent
-  proposes it.
+## The 0.y.z phase and 1.0.0
+- A new project starts at **0.1.0**. While the major is 0 the API may change at any time and users are warned.
+- Factory convention in 0.y.z (also what `next` does): incompatible → minor, everything else → patch.
+- Move to **1.0.0** when the thing runs in production, other people or systems depend on it, or you already care about
+  backward compatibility. 1.0.0 is the human's decision: you propose it with reasons, they decide.
+- From 1.0.0 onwards the table above applies strictly.
 
-## 4. Pre-release versions and metadata
-- Pre-release: `1.4.0-alpha.1`, `1.4.0-beta.2`, `1.4.0-rc.1`. They have lower precedence than `1.4.0`.
-  - Number with a number after the dot (`rc.2`, not `rc2`), because `rc.10 > rc.9`, while `rc10 < rc9` (lexical
-    comparison).
-  - The next one: `semver.py bump 1.4.0-rc.1 pre` → `1.4.0-rc.2`; the release: `bump … release` → `1.4.0`.
-- Build metadata: `1.4.0+sha.5114f85`. It **does not affect** the order; do not use it to tell releases apart.
-- Check the order with the script (`semver.py sort …`). An example from the specification:
-  1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-alpha.beta < 1.0.0-beta < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0.
+## Pre-releases and build metadata
+- A pre-release appends `-label`: `2.0.0-beta.1`. It ranks **below** `2.0.0` and signals "not stable yet".
+- Identifiers are compared one by one, left to right: numbers numerically, text in ASCII order, a number below text,
+  and a longer list wins when all earlier parts are equal. So `alpha` < `alpha.1` < `beta` < `beta.2` < `beta.11` < `rc.1` < release.
+- Always separate the counter with a dot: `rc.9` < `rc.10` numerically, but `rc10` sorts **before** `rc9` (text comparison).
+- Flow: `bump X pre --id rc` repeatedly, then `bump … release`. Never publish two different builds under one pre-release label.
+- Build metadata after `+` (`2.0.0+sha.5f3c1e`) is ignored for ordering: `2.0.0+a` and `2.0.0+b` are the same version.
+  Never use it to tell releases apart.
 
-## 5. Release
-1. Establish the last released version: the `vX.Y.Z` tag, the version file (`package.json`, `pom.xml`, `VERSION`),
-   the CHANGELOG.
-2. Classify the changes (section 2), compute the number with the script.
-3. Update **every** place with the number at once: the version file, the CHANGELOG (newest entry on top, sections:
-   Added, Changed, Deprecated, Removed, Fixed, Breaking), the installation docs.
-4. `semver.py check-changelog CHANGELOG.md --version-file <plik>` — format, order and agreement with the version file.
-5. The tag `v1.2.3` (the `v` prefix is a tag convention; the version itself is `1.2.3`). Creating the tag,
-   `git push`, publishing the package or image only **after the human's consent**.
+## Edge cases
+- **Monorepo:** each published package has its own version and tags (`pkg@1.2.0` or per-path `next --path`).
+- **URL version** (`/v1/…`) of an HTTP API is a separate decision (be-api-design); `/v2` normally comes with a major.
+- **Container images:** the full `1.4.2` tag is immutable; moving tags (`1`, `1.4`, `latest`) only move forward
+  within compatible versions.
+- **Our dependencies:** this skill is about what we release; raising the project's dependencies is core-stack-sync.
+- **Commit format** for automatic bumps: core-conventional-commits.
 
-Rules:
-- **A commit can be wrong about the intent, the diff cannot.** Before an automatic release check whether the files
-  that go into the artifact changed since the last tag: `git diff --name-only v1.2.3..HEAD -- <ścieżki artefaktu>`
-  (`npm pack --dry-run` shows the list of files in an npm package). No changes = no release, even with `feat:`; a
-  change of files with only `chore:`/`docs:` = a warning for the human, not a silent skip.
-- **You never change a released version** (rule 3): you do not move the tag and do not publish again under the same
-  number. A new version fixes a bug in a release.
-- **An accidental incompatible change in a minor:** release a new minor that restores compatibility. Describe the
-  faulty version in the CHANGELOG and inform the users (FAQ).
-- **Deprecation:** first a minor with a "deprecated" marker, a description of the replacement and documentation.
-  Removal only in the next major, after at least one minor with the warning.
-- Monorepo: each package has its own version (`nx release`).
-- The API version number in the URL (`/v1/`) is a separate decision (the API design skill, pack-it: be-api-design).
-  A change `/v1` → `/v2` usually goes with a major of the package or service.
-- You do not raise the project's **dependency** versions without the human's request (core-stack-sync). This skill
-  is about the version number of what you release.
+## Example
+Library at **2.4.1**. Since `v2.4.1`: an optional `timeout` parameter added to `fetch()`, and `legacyFetch()` —
+deprecated in 2.3.0 — removed.
+1. `git diff --name-only v2.4.1..HEAD -- src/` lists two source files → the artifact changed.
+2. Optional parameter → minor; removal of a deprecated function → major. The most severe wins: **major**.
+3. `python3 .claude/skills/core-semver/scripts/semver.py bump 2.4.1 major` → `3.0.0` (not 2.5.0: the earlier
+   deprecation was the minor; the removal is the major).
+4. CHANGELOG: `## [3.0.0]` with `### Removed — legacyFetch() (use fetch())` and `### Added — fetch(timeout)`; VERSION = 3.0.0;
+   `check-changelog CHANGELOG.md --version-file VERSION` passes.
+5. "Ready to tag `v3.0.0` and publish — shall I?" Tag only after a yes.
+
+Ordering check: `sort 2.0.0-rc.10 2.0.0-rc.9 2.0.0 2.0.0-beta 2.0.0+sha.abc` →
+`2.0.0-beta < 2.0.0-rc.9 < 2.0.0-rc.10 < 2.0.0 = 2.0.0+sha.abc`.
 
 ## Checklist
-- [ ] public API written down (README or PUBLIC_API.md)
-- [ ] the most serious change classified; the number computed with `semver.py`, not from memory
-- [ ] 0.y.z until the first stable version; 1.0.0 with the human's consent
-- [ ] all version files and the CHANGELOG agree (`semver.py check-changelog`)
-- [ ] no released version was changed; tag and publication with the human's consent
+- [ ] public API written down (README or `PUBLIC_API.md`; the factory's own: `.tf/factory/PUBLIC_API.md`)
+- [ ] the artifact really changed; the most severe change classified; the number computed by `semver.py`
+- [ ] 0.y.z until the first stable API; 1.0.0 proposed, decided by the human
+- [ ] version file(s) and changelog agree (`check-changelog` passes)
+- [ ] no released version altered; tag, push and publication only after the human's consent
 
 ## Sources
-- Semantic Versioning 2.0.0, semver.org (CC BY 3.0 licence; accessed 2026-10-03): rules 1–11, FAQ, the official
-  regular expression (in `scripts/semver.py`).
-- Conventional Commits 1.0.0 (mapping types to the bump — core-conventional-commits).
-- The 10xDevs course, ed. 3 (2026), module 5, lesson 4 (versioning without manual bumping) — training material
-  (accessed 2026-10-09).
-
-Described in our own words.
+- Semantic Versioning 2.0.0 and its FAQ — https://semver.org/spec/v2.0.0.html (accessed 2026-11-20). Rules restated
+  in our own words; no specification text is quoted.
+- Conventional Commits 1.0.0, mapping of commit types to bumps — https://www.conventionalcommits.org/en/v1.0.0/ (accessed 2026-11-20).
+- `npm pack --dry-run` lists the files a package would contain — npm CLI docs, https://docs.npmjs.com/cli/commands/npm-pack (accessed 2026-11-20).

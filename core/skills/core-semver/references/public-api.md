@@ -1,53 +1,78 @@
-# Public API and the kind of bump — detailed cases
+# Public API per product type and bump cases
 
-The general rule: a change is **backward-incompatible** (MAJOR) if an existing, correct way of using it stops working
-or starts working differently without a change on the user's side.
+Contents: 1. What is public API · 2. Library · 3. HTTP API · 4. CLI · 5. Application or service configuration and events ·
+6. IaC module and container image · 7. Where to write it down
 
-## Library (TypeScript, JavaScript, Java)
-| Change | Bump | Notes |
+The rule for every row: **incompatible** = an existing, correct use stops working or silently changes behaviour with
+no change on the user's side → major. New compatible capability → minor. Compatible correction → patch.
+
+## 1. What is public API
+| Product | Public (versioned) | Not public |
 |---|---|---|
-| a new exported function or class | MINOR | |
-| a new optional parameter at the end | MINOR | in Java an overload instead of changing the signature |
-| a new required parameter or a changed order | MAJOR | |
-| narrowing the input type (`string \| number` → `string`) | MAJOR | the user's code stops compiling |
-| widening the result type (`string` → `string \| null`) | MAJOR | the user must handle a new case |
-| widening the input type, narrowing the result type | MINOR | compatible |
-| a new field in the result object | MINOR | unless the type is "exact" or checked by structural equality |
-| a new variant in a union or enum returned to the user | MAJOR | a `switch` without `default` stops being exhaustive |
-| a change of the thrown exception class | MAJOR | |
-| raising the minimal version of Node, Java, a browser | MAJOR | |
-| removing an export, even an undocumented one someone uses | MAJOR if it was in the public API; otherwise check whether it was importable | hence explicit `exports` in package.json |
-| marking `@deprecated` | MINOR | with a description of the replacement |
+| Library | exported functions, classes, types, thrown exception classes, minimum runtime/language version | internal modules, file layout, private helpers |
+| HTTP API | paths, methods, request and response fields, status codes, error body format, authentication | handler code, database schema behind it |
+| CLI | commands, flags, exit codes, output that scripts parse (`--json`, CSV) | wording meant for humans, colours |
+| Application / service | configuration keys and environment variables, published events, data others read | internal logs, UI layout (unless contracted) |
+| IaC module / image | input variables, outputs, exposed ports, mounts, environment variables, entrypoint | internal resource names that nothing references |
 
-## HTTP API
+## 2. Library
 | Change | Bump |
 |---|---|
-| a new endpoint, a new optional query parameter, a new field in the response | MINOR |
-| a new required request field, removing or renaming a field, a type change | MAJOR |
-| a change of the status code or error format the client reacts to | MAJOR |
-| stricter validation (e.g. a shorter length limit) | MAJOR |
-| a new enum value in the response | MAJOR, unless the contract announces unknown values |
-| a change of rate limits without a contract change | PATCH (with an announcement) |
+| new exported function or type | minor |
+| new optional trailing parameter with a safe default | minor |
+| new required parameter, reordered parameters | major |
+| accepts a wider input type (e.g. `string` → `string \| URL`) | minor |
+| accepts a narrower input type | major |
+| returns a narrower type | minor |
+| returns a wider type (e.g. may now return `null`, a new union member, a new enum value) | major |
+| throws a different exception class for the same situation | major — callers' `catch` blocks stop matching |
+| raised minimum runtime (Node 18 → 20, Python 3.9 → 3.11) | major |
+| `@deprecated` with the replacement documented | minor |
+| internal refactor, faster implementation, same results | patch (or no release) |
 
-## CLI
-- A new command or flag → MINOR.
-- Removing or changing a flag, a change of exit codes → MAJOR.
-- A change of the output format read by scripts (JSON, columns) → MAJOR. A change of text for humans → PATCH.
+## 3. HTTP API
+| Change | Bump |
+|---|---|
+| new endpoint, new optional query parameter, new response field | minor |
+| new required request field, stricter validation of existing input | major |
+| removed, renamed or retyped field | major |
+| changed status code or error body format | major |
+| new value in a response enum | major, unless the contract says clients must tolerate unknown values (then minor) |
+| changed rate limit with no contract change | patch, announced in advance |
 
-## Application, service, configuration
-- A new optional environment variable with a safe default → MINOR.
-- Renaming a variable or a new required one → MAJOR. A transition period with the old name as an alias allows a
-  MINOR with deprecation.
-- A database migration that needs operator action → MAJOR. An automatic, backward-compatible migration → MINOR or
-  PATCH.
-- Events and messages: a new optional field → MINOR; removal or a change of meaning → MAJOR
-  (pack-it: be-messaging-outbox, contract tests).
+The `/v1` → `/v2` path segment is a separate choice (be-api-design); a new path version normally accompanies a major.
 
-## IaC module and container image
-- Module: a new variable with a default → MINOR; a change that destroys and recreates a resource → MAJOR.
-- Image: a tag with the full version is immutable. Moving tags (`1`, `1.4`, `latest`) you move only forward, within
-  compatibility.
+## 4. CLI
+| Change | Bump |
+|---|---|
+| new command or new flag | minor |
+| removed or renamed flag, changed meaning of a flag, changed exit code | major |
+| changed format of machine-read output | major |
+| reworded human-oriented messages | patch |
 
-## The factory (claude-team-factory)
-The factory's public API is described in `.tf/factory/PUBLIC_API.md`. The release procedure and the CHANGELOG checks
-are there too.
+## 5. Application or service configuration and events
+| Change | Bump |
+|---|---|
+| new optional environment variable with a safe default | minor |
+| renamed or newly required variable | major — or minor if the old name stays as a deprecated alias |
+| data migration needing operator action | major |
+| automatic, compatible migration | minor or patch |
+| new optional field in a published event | minor |
+| removed event field or changed meaning of a field | major |
+
+## 6. IaC module and container image
+| Change | Bump |
+|---|---|
+| new input variable with a default, new output | minor |
+| change that destroys and recreates an existing resource on apply | major |
+| removed input or output | major |
+| image: new optional environment variable | minor |
+| image: changed port, mount path or entrypoint | major |
+
+Image tags: the full version tag (`1.4.2`) never changes once pushed. Convenience tags (`1`, `1.4`, `latest`) move only
+forward, and only to versions compatible with what they pointed to.
+
+## 7. Where to write it down
+- In a project: a "Public API" section in README or a `PUBLIC_API.md` file next to it — one list, kept with the code.
+- The factory itself: `.tf/factory/PUBLIC_API.md` (kept in the factory repository's core/factory directory).
+- Anything not on the list may change in a patch; anything on it follows the tables above.
