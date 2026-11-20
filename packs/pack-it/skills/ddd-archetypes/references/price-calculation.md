@@ -23,6 +23,10 @@
   - lowest or highest of alternatives.
 - **Price list**: a set of calculators with an effective window and a version number. Any change creates a new version;
   older versions remain.
+- **Rate set (scenario)**: a named, internally consistent set of input values valid at one instant — exchange rates,
+  index values, energy prices, assumed cost increases. Each value is *sourced* (a feed and the field in it), *computed*
+  from other values of the same set (a cross rate) or *entered* by a person. Calculations run against a chosen set:
+  the official one, or a what-if ("diesel +15%"). Computed values are cached and invalidated when an input changes.
 - **Price result**: money plus a **breakdown** — each component, the parameters used, the price list version.
 
 ## Rules

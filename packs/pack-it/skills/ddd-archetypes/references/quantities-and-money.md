@@ -10,7 +10,9 @@
 ## Core shape
 - **Unit**: symbol, name, **dimension** (mass, volume, length, duration, count, …). The unit set is extensible as data
   (a custom "crate of 24" or "pallet" unit), not an enum frozen in code.
-- **Quantity** = exact decimal amount + unit.
+- **Quantity** = exact decimal amount + unit. Record the amount and unit as given at capture; convert on read.
+- **Compound unit**: base units with signed integer powers (kWh, m³/h, EUR/kg, km/h). Conversion reuses the base-unit
+  factors raised to their powers.
 - **Money** = exact decimal amount + ISO 4217 currency code. The currency knows its minor-unit digits: JPY 0, EUR 2,
   KWD/BHD 3 (ISO 4217 list, iso.org, accessed 2026-11-20). Store as a decimal type or an integer count of minor units.
 - **Ratio** (interest rate, tax rate, discount percentage) is its own dimensionless type — not money, not a quantity.
@@ -26,7 +28,9 @@
 - Operations on money: negate, abs, min/max, sign checks (`isNegative`, `isZero`), division that returns the remainder,
   and **allocation by weights** whose parts always sum back to the original — the leftover minor units go to a stated
   part (first, last, largest).
-- Conversion inside one dimension (kg ↔ g, h ↔ min) is a fixed factor table on the units.
+- Conversion inside one dimension (kg ↔ g, h ↔ min) is a fixed factor table on the units; a chain of factors reaches
+  indirect targets, and tests cover round trips. Offset scales (°C ↔ °F) are not a factor — a conversion function.
+- Calendar units (month, year) have no fixed length; never convert them by a constant — use dates.
 - Conversion that depends on the product (box ↔ pieces, litres ↔ kg through density) is product data, never a unit rule.
 - Currency conversion stores, on each converted amount, the rate used (pair, value, instant, source, kind) so a report
   can be reproduced. Past events use the rate valid at the event, never "today's rate".
@@ -49,6 +53,7 @@
 ## Traps
 - `double price` plus a separate `currency` string, rounding scattered over services and views.
 - Value and unit as two loose strings (`"12"`, `"kg"`).
+- The unit in the field name (`weight_kg`, `duration_min`) — input in another unit is converted by hand or silently wrong.
 - Splitting 100.00 into 3 × 33.33 and losing 0.01; the parts must sum to the total.
 - Tax rounded per line in one place and per total in another — two different invoice totals.
 - Treating a percentage as money ("10 EUR off" vs "10% off" typed the same).

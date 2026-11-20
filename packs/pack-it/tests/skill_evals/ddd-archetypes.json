@@ -158,6 +158,51 @@
       }
     },
     {
+      "id": "wyniki-badan-wody",
+      "expect": "trigger",
+      "prompt": "Laboratorium wodociągów zapisuje wyniki próbek: chlor, mętność, obecność bakterii. Najpierw jest szybki test w terenie, potem wynik z laboratorium; czasem czujnik się myli. Jak zamodelować wyniki, żeby alarm nie odpalał się z testu terenowego i żeby dało się wyjaśnić korektę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "metod\\w+"
+          ],
+          [
+            "wstępn\\w+|tentative|niepotwierdzon\\w+|status\\w*.{0,40}(zaakceptowan|potwierdzon)"
+          ],
+          [
+            "odrzuc\\w+|reject\\w*|nie (usuwa|kasuj|nadpisuj)\\w*"
+          ],
+          [
+            "czas\\w* (pobrania|próbki|zapisu|wprowadzenia)|recorded|dwa (czasy|znaczniki)|kiedy (pobrano|zapisano)"
+          ]
+        ],
+        "none": [
+          "UPDATE\\s+\\w+\\s+SET\\s+\\w*value"
+        ]
+      }
+    },
+    {
+      "id": "kody-dostawcow-duplikaty",
+      "expect": "trigger",
+      "prompt": "Po przejęciu konkurenta mamy dwa katalogi części i dwie bazy klientów. Dostawcy przysyłają cenniki ze swoimi kodami części, a część klientów jest zdublowana. Jak zamodelować identyfikatory i scalanie duplikatów, żeby stare numery na fakturach dalej działały? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "schemat\\w*|wystawc\\w+|scheme|issuer|przestrze\\w+ (nazw|identyfikator)"
+          ],
+          [
+            "unikaln\\w+.{0,60}(schemat|wystawc|w obrębie)|\\(\\s*schemat\\w*\\s*,\\s*wartoś|scheme\\s*\\+\\s*value"
+          ],
+          [
+            "przekier\\w+|forward\\w*|merged.?into|scalon\\w+ (do|w)|wycofan\\w+ rekord|retire"
+          ]
+        ],
+        "none": [
+          "(usuń|usuwamy|skasuj) (duplikat|stary rekord)\\w*\\s*(i|,)?\\s*(gotowe|koniec)"
+        ]
+      }
+    },
+    {
       "id": "edge-brak-wymagan",
       "expect": "trigger",
       "prompt": "Zmapuj nasz pomysł na program lojalnościowy na archetyp księgi (salda punktów). Odpowiedz zwięźle.",

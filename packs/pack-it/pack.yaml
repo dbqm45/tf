@@ -1,7 +1,7 @@
 # IT overlay: software engineering — architecture, DDD, backend, frontend, operations, security, AI, data,
 # testing and process. The personas and roles of this overlay build software in any domain.
 id: pack-it
-version: 1.3.0
+version: 1.4.0
 title: IT
 description: Software engineering team — architecture, DDD, backend, frontend, DevOps/SRE, security, AI/ML, data, QA and process.
 content_language: en

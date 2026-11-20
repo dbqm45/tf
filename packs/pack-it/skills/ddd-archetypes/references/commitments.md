@@ -24,6 +24,11 @@
 - **Order** (intent) ≠ **sale/purchase** (settlement: payment, invoice, transfer of ownership). One order may be settled
   by several deliveries or payments; a cash-counter sale has no order.
 
+- **Portfolio**: a group of contracts or orders defined by a **filter** (by counterparty, product, region, end date)
+  with aggregate behaviour — total exposure, value under a rate set, renewals due. A contract belongs to many
+  portfolios; membership follows from the filter, never from manual tagging. Computing it on demand or keeping it
+  maintained is an implementation choice hidden from its users.
+
 ## Rules
 - Price arrangements point to price lists or parameters; computation stays in price calculation.
 - A framework contract fixes common terms and triggers no delivery by itself; each order is a distinct obligation with its

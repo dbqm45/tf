@@ -17,11 +17,27 @@
   - **party assignments** — who, in which role, for which period;
   - **time entries** — who, from–to, against which work item. Never a single `hours` field; summing and costing
     belong to the value ledger and price calculation.
+- **Intended vs performed work**: two records, not one with two dates. The intended work item lives in plans; its time,
+  performers and place can be set in any order. The performed record is created when work starts. The link is optional
+  both ways — plans are dropped, and unplanned work happens. Rebooking a missed intention creates a new intended item.
+- **Plan**: references to intended work items with dependencies between the references. One item may appear in several
+  plans (a maintenance plan and a shutdown plan); a plan may replace others (split, merge, supersede).
+- **Resource claim**: intended work *reserves*, performed work *consumes*. A **general** claim names a kind ("one
+  certified welder, 4 h"); it is later resolved into a **specific** claim (Nowak, Tuesday 8–12). Durable resources are
+  claimed for time, consumables by quantity (drawn from a stock holding, see value ledger).
 - **Execution states**: proposed, started, suspended ↔ resumed, completed, abandoned. Each transition is an event with
   time, actor and justification.
 - **Step result**: execution data typed by the step definition.
 
 ## Rules
+- **Completed ≠ successful**: completion says the work was carried out as intended; whether it achieved its aim is a
+  separate outcome, recorded as an observation linked to the work (observations and measurements).
+- **Abandoned** is final; a temporary stop is a **suspension** record with a period (it stays as history after resuming).
+  Holding an intended item postpones its start.
+- Procedures (templates) generate plans or child work items; skilled work may deviate from the template's order —
+  record the deviation, do not forbid it.
+- Checks that need information not yet known (which specific technician) are lazy: accept the record, show an open
+  consistency issue, resolve later; checks that are easy at capture time are enforced at once.
 - Plan and execution are separate: moving a planned date does not change when work actually happened.
 - Choose a notation by the nature of the work (OMG specifications, omg.org, accessed 2026-11-20):
   - predictable flow → **BPMN 2.0**;
@@ -48,6 +64,8 @@
 - A `status` column plus `hours_spent` on the work order.
 - Editing the checklist template and silently changing last year's inspection records.
 - Planned and actual dates in the same field.
+- Unplanned work forced to get a fake plan entry; a suspension recorded as abandon-and-recreate.
+- "Completed" read as "fixed" — no outcome recorded, so repeated failures stay invisible.
 - A BPMN engine's process model treated as the domain model.
 
 ## Worked example

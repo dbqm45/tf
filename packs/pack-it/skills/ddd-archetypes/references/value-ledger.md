@@ -15,6 +15,12 @@
 - **Entry**: account, signed amount (or debit/credit), `recorded_at` (when written; immutable, now), `effective_at`
   (when it counts; may be earlier for a backdated correction), optional validity window (from / until), optional link to
   the entry it offsets.
+- **Summary account**: groups other accounts for reporting and answers balance and statement queries over all their
+  entries. Entries are posted only to leaf accounts. Grouping is a tree, or a graph without cycles when one account
+  belongs to several reports — then an entry reachable twice is counted once.
+- **Corresponding accounts**: two parties keep their own account of the same holding (our receivable, their payable;
+  our record of a bank account, the bank's statement). They stay two accounts with their own entries and are
+  **reconciled** — matched exactly or within a tolerance (dates, fees).
 - **Posting rule**: a composable condition on an event, rules choosing target accounts, an amount computation, a priority.
   A new fee, levy or reserve is new configuration, not new code.
 
@@ -32,6 +38,12 @@
   priority, pro-rata or manual — usually a parameter.
 - **Idempotency**: the source event id is stored on the transaction with a unique constraint, so the same event never
   accrues twice.
+- Memo / tracking entries may be one-sided (they are excluded from the zero-sum check), but value never moves between a
+  tracking account and a real one.
+- Several reporting cuts for one entry (by customer and by cost type): prefer an attribute on the entry plus a report
+  account defined by a filter; add real accounts only where the flow itself must be tracked (who still owes what).
+- Specialise by domain names: stock is a *holding* per item × location and a *movement* is a balanced transaction whose
+  entries all carry the same item; expected stock (ordered, not yet received) lives in parallel holdings.
 - Optimistic version locking is needed only on accounts where a limit is enforced (no negative, overdraft).
 - The ledger enforces structural numeric limits only; "may this person transfer days?" is authorisation outside.
 
@@ -51,6 +63,8 @@
 ## Traps
 - `points` column updated in place; corrections that overwrite; no answer to "why is my balance X".
 - One account aggregate loading thousands of entries to post one more.
+- Our record and the bank's (or partner's) record modelled as one account — differences cannot be reconciled or shown.
+- Overlapping summary accounts summed by hand — shared entries counted twice.
 - Expiry implemented as `WHERE expires_at > now()` — the lost value disappears from reports.
 - A retried message accrues twice because there is no unique source event id.
 - Only one timestamp — a backdated correction then falsifies "what did we show the customer last week".
