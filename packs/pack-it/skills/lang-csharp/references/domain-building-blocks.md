@@ -5,10 +5,11 @@
 The domain is a **neighbourhood tool library** (the same one as in the Java, TypeScript and Go skills): members
 borrow tools; a tool is on the shelf, lent or withdrawn.
 
-**Verification status:** written 2026-11-20 in an environment without a .NET SDK — this version has **not been
-compiled or run** [unverified]. Before relying on it run `dotnet test` on `net8.0` and `net10.0` with
-`TreatWarningsAsErrors` and `dotnet format --verify-no-changes`. Only C# 12 features are used (primary constructors in
-classes, collection expressions), so the same code should build on .NET 8 and .NET 10.
+**Verification status:** checked 2026-11-20 with SDK 8.0.134 and 10.0.115 (Ubuntu 24.04 packages): `dotnet test`
+on `net8.0` and `net10.0` (6 tests each) with `TreatWarningsAsErrors` (0 warnings) and
+`dotnet format --verify-no-changes`. The test project references `Microsoft.NET.Test.Sdk` 18.12.0, `xunit` 2.9.3 and
+`xunit.runner.visualstudio` 3.1.5. Only C# 12 features are used (primary constructors in classes, collection
+expressions), so the same code builds on .NET 8 and .NET 10.
 
 Files:
 - ToolLibrary.Lending.csproj — the domain project, no dependency on ASP.NET or EF Core

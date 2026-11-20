@@ -35,7 +35,7 @@ metadata:
 `POST /tools/{id}/loans` with `LoanRequest([Required, RegularExpression(@"^[msc]-\d{4}$")] string MemberId)`:
 200 with `LoanResponse`, 404 for an unknown tool, 409 as `application/problem+json` for "lent to m-0042"
 and "withdrawn", 400 from validation for `MemberId = "x"`, the `LendTool` operation in `/openapi/v1.json`. The code and 5
-integration tests (not compiled since the 2026-11-20 rewrite): `references/minimal-api.md`.
+integration tests (checked 2026-11-20 with `dotnet test` on .NET 10): `references/minimal-api.md`.
 
 ## Version-dependent
 Thresholds checked by compilation 2026-10-23 (net8.0 and net10.0 from the SDK; net9.0 with reference packages from NuGet).

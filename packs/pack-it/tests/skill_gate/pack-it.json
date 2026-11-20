@@ -276,7 +276,7 @@
   "offline": "2026-11-20"
  },
  "fw-aspnet-core": {
-  "fingerprint": "549494b1bd713738",
+  "fingerprint": "cc29e69d31ac3718",
   "offline": "2026-11-20"
  },
  "fw-nestjs": {
@@ -296,7 +296,7 @@
   "offline": "2026-11-18"
  },
  "lang-csharp": {
-  "fingerprint": "6809e74ccaa5bd67",
+  "fingerprint": "ec48c156aa359fb9",
   "offline": "2026-11-20"
  },
  "lang-go": {
