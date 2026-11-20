@@ -2,6 +2,7 @@
 """Tests of the skill evaluation runner and the scenario files (no model, with a claude stub): python3 tests/test_skill_evals.py"""
 import importlib.util
 import json
+import shutil
 import os
 import stat
 import sys
@@ -46,6 +47,17 @@ print(json.dumps({"type": "result", "subtype": "success", "result": "Użyj nagł
 PROTOCOL_TESTS = 8
 
 
+
+
+def link_or_copy(src: Path, dst: Path) -> None:
+    """A symbolic link, or a copy where the system refuses links (Windows without the developer mode: WinError 1314)."""
+    try:
+        dst.symlink_to(src, target_is_directory=src.is_dir())   # link-ok
+    except OSError:
+        if src.is_dir():
+            shutil.copytree(src, dst, symlinks=True)
+        else:
+            shutil.copy2(src, dst)
 def protocol_tests() -> list[str]:
     """Closed test set (holdout) and the "result or cost" report protocol."""
     fails = []
@@ -373,7 +385,7 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as d:
         proj = Path(d)
         (proj / ".claude").mkdir()
-        (proj / ".claude" / "skills").symlink_to(ev.SKILLS)
+        link_or_copy(ev.SKILLS, proj / ".claude" / "skills")
         env = {**os.environ, "CLAUDE_PROJECT_DIR": str(proj)}
         env.pop("CLAUDE_SKILL_HINT_LOG_PROMPT", None)
         hooks = ev.ROOT / ".claude" / "hooks"

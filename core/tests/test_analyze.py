@@ -10,6 +10,17 @@ import tempfile
 from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "tf.py").is_file())
+
+
+def link_or_copy(src: Path, dst: Path) -> None:
+    """A symbolic link, or a copy where the system refuses links (Windows without the developer mode: WinError 1314)."""
+    try:
+        dst.symlink_to(src, target_is_directory=src.is_dir())   # link-ok
+    except OSError:
+        if src.is_dir():
+            shutil.copytree(src, dst, symlinks=True)
+        else:
+            shutil.copy2(src, dst)
 ANALYZE = ROOT / ".tf" / "factory" / "analyze.py"
 TF = ROOT / ".tf" / "factory" / "tf.py"
 
@@ -64,11 +75,11 @@ def make_project(t: Path, mode="private") -> Path:
     (repo / ".tf" / "factory").mkdir(parents=True)   # the factory engine without pack modules — core tests do not depend on the set of packs
     for item in (ROOT / ".tf" / "factory").iterdir():
         if item.name != "analyzers":
-            (repo / ".tf" / "factory" / item.name).symlink_to(item)
+            link_or_copy(item, repo / ".tf" / "factory" / item.name)
     sk = ROOT / ".claude" / "skills" / "core-grounding"
     if sk.is_dir():
         (repo / ".claude" / "skills").mkdir()
-        (repo / ".claude" / "skills" / "core-grounding").symlink_to(sk)
+        link_or_copy(sk, repo / ".claude" / "skills" / "core-grounding")
     (repo / "src").mkdir()
     (repo / "src" / "a.py").write_text("x = 1\n# TODO-SEC HIGH token\n# TODO-SEC minor\n")
     (repo / "src" / "b.py").write_text("y = 2\n")
