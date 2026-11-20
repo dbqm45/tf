@@ -27,6 +27,19 @@ jobs:
       - name: pdi contract copies match the release tag (tools/pdi-contract.json)
         run: python3 tools/sync_contract.py check
 
+  addons:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Dodatki (addons/*) — niezależne od rdzenia i od siebie
+        run: for t in addons/*/tests/test_*.py; do python3 "$t" || exit 1; done
+
   workspace:
     runs-on: ubuntu-latest
     timeout-minutes: 30

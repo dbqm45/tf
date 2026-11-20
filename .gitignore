@@ -6,3 +6,5 @@ __pycache__/
 !.env.example
 .claude/settings.local.json
 .claude/logs/
+addons/*/out/
+addons/*/cache/

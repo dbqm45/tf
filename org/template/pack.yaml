@@ -28,6 +28,20 @@ contributes:
 # Engine ← this section ← project. A project can have at most one pack with org_defaults.
 org_defaults:
   config:
+    # Add-ons for every project (optional). The standards add-on reads the company's standards skills from a git
+    # repository and the Confluence pages they link to (through the session's MCP tool) and turns them into rules
+    # the agents load; `install: true` makes `tf learn` install it where it is missing. Sources are keyed by name:
+    # a team pack adds its own, a project turns one off with `enabled: false` in .tf/config/config.yaml.
+    # addons:
+    #   standards:
+    #     install: true
+    #     sources:
+    #       {{COMPANY}}:
+    #         git: https://github.com/TODO-org/TODO-standards.git   # repository with the standards skills
+    #         ref: v1.0.0                                            # tag or branch
+    #         dir: skills                                            # where the skills are in it
+    #   dna:
+    #     install: true
     # Autonomy policy. The organization can only tighten: confirm (ask) → deny (block).
     # Types: dependency_add, prod_command, destructive_sql, infra_change, publish, git_push, persistence, data_upload, sudo.
     autonomy:

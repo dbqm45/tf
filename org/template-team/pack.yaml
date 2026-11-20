@@ -29,6 +29,14 @@ contributes:
 # Write only what makes the team differ from the company — the rest comes from the company pack.
 team_defaults:
   config:
+    # Optional: the team's own standards next to the company's (the sources add up by name):
+    # addons:
+    #   standards:
+    #     sources:
+    #       {{COMPANY}}:                # a name of your choice; the team pack id works well
+    #         git: https://github.com/TODO-org/TODO-team-standards.git
+    #         dir: skills
+    #         scope: be                     # fe | be | mutual (default: from the skill name)
     # TODO: example — a team that never publishes packages itself and approves every plan (remove what you do not need):
     # autonomy:
     #   operations:

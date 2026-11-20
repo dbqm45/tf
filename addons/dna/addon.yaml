@@ -1,0 +1,21 @@
+name: dna
+version: 0.9.0
+contract: 1
+title: Project knowledge for writing code like the team
+description: >-
+  Learns what the project's code is — stack with exact versions, official docs of those versions, UI building
+  blocks, styling, exemplar files — and writes it as guidelines in out/ for the factory. Agreed rules come from a
+  decisions add-on (e.g. standards) when one is installed. Everything lives in this directory; removing it detaches it.
+keep: [dna.yaml]
+consumes: [decisions]
+provides:
+  context: out/INDEX.md
+  context_extra: [out/docs-index.md]
+  rules: out/rules
+  plan: out/knowledge.json
+  learn: "dna.py learn"
+  refresh: "dna.py refresh --quiet"
+  verify: "dna.py verify"
+  status: "dna.py status"
+  docs: "dna.py docs query {tech} {query}"
+  check: "dna.py check --base {base} --json"

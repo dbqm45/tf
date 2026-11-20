@@ -28,7 +28,8 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 TIER_RE = re.compile(r"Tier:\**\s*(?:za\s+)?(niski|wysoki|too\s+low|too\s+high)", re.I)
 TIER_EN = {"too low": "niski", "too high": "wysoki"}   # 14.x: signal in English, recorded with the same value
 KLASA_RE = re.compile(r"^[\s*_`>#-]*(?:Klasa|Class)\s*:[\s*_`]*([^\s—–,.;:*_`-]+)", re.I | re.M)
-CLASSES = ("reading", "parallel", "review", "mechanical", "decision", "other")   # core-cost-control §0
+CLASSES = ("reading", "parallel", "review", "mechanical", "decision", "other",   # core-cost-control §0
+           "addon")   # work an add-on left for the session (tf addon report counts it)
 # A brief in Polish („Klasa: Przegląd”) — the same class; the log entry is always in English.
 PL_CLASSES = {"czytanie": "reading", "rownolegle": "parallel", "przeglad": "review", "mechaniczna": "mechanical",
               "decyzja": "decision", "inne": "other"}

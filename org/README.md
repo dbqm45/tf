@@ -93,6 +93,16 @@ wymienia tylko je — agent przypisuje tylko zmiany, `check` wskazuje ustalenia,
 Koszt modelu to jedno przypisanie sekcji (krok 3); zależy od objętości dokumentów [założenie: nie mierzono na
 dokumentach firmy]. Ten sam proces działa dla nakładki zespołu (`--team`).
 
+## Standardy ze skilli przez dodatek `standards`
+Gdy firma ma już skille standardów (w repozytorium git, z odnośnikami do Confluence), nie przepisujesz ich do
+nakładki. W `pack.yaml` → `org_defaults.config.addons.standards` podajesz URL repozytorium (`sources.<nazwa>.git`,
+`ref`, `dir`) i `install: true`. W każdym projekcie z nakładką `tf learn` sam instaluje dodatek, klonuje repozytorium,
+czyta skille i podlinkowane strony (Confluence czyta agent przez MCP sesji, akapity bez list — tani model w sesji ze
+sprawdzeniem cytatu) i zapisuje reguły w `.claude/rules/addon-standards-*.md`. Nakładka zespołu dokłada swoje źródła
+pod własną nazwą (`team_defaults.config.addons.standards.sources.<zespół>`); projekt wyłącza źródło przez
+`addons.standards.sources.<nazwa>.enabled: false` w `.tf/config/config.yaml`. Wartości i ich pochodzenie pokazuje
+`tf config show addons`. Szczegóły: `addons/standards/README.md` w repozytorium fabryki.
+
 ## Nakładka zespołu
 Gdy zespoły w firmie pracują inaczej (np. backend ma własne zasady API i migracji, a frontend bibliotekę komponentów),
 każdy zespół dostaje nakładkę ponad firmową:
