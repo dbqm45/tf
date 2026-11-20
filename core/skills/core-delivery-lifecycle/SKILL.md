@@ -1,161 +1,163 @@
 ---
 name: core-delivery-lifecycle
-description: Use when you ask about a project's stage, readiness before code or a release, approving a transition — phases, gates.
+description: Use when taking a project from idea to production and maintenance with AI agents — phases 0-9, human gates B1-B6, artifacts, cut plan, readiness, measures.
 metadata:
-  review: "2027-10-09"
-  catalog: "Use when a project is to go from an idea to software ready for deployment — the order of phases, the personas and skills of the phases, entry and exit criteria, gates approved by the human, the definition of \"production ready\", maintenance after the release (patches, updates, retiring features, metric control bands), the delivery process with AI agents (the artifact loop, a plan before the code, evaluations of the agent configuration, an AI review of the PR, stage measures), the shortened path for small projects and a dry run. Not for the content of a single phase (dimension skills from the packs: domain, architecture, tests, operations — the list in .claude/catalog.md)."
-  keywords: "przegląd specyfikacji, czy specyfikacja ma dziury, sprawdzenie wymagań przed planem, panel recenzentów specyfikacji, mapa artefaktów, jakie dokumenty w której fazie, gdzie zapisać dokument, plan cięć, kolejność cięć, fundament, od czego zacząć realizację, gwiazda przewodnia, cykl życia oprogramowania, SDLC, AI-native, proces z agentami AI, przebudować proces wytwarzania, przeglądy nie nadążają, pętla, metryki procesu, pasma kontrolne, Western Electric, AI-DLC, od pomysłu do produkcji, utrzymanie po wydaniu, refinement z agentami, opis zadania wygenerowany przez AI, odsetek PR napisanych przez agentów, miary autonomii agentów, pół roku pracy z agentami, na jakim etapie jesteśmy, co musi być gotowe przed kodowaniem, co ma być gotowe przed wydaniem, kto zatwierdza przejście dalej, gotowe do wydania, co po wdrożeniu, kiedy projekt jest skończony, praca etapami z agentem, kiedy człowiek sprawdza agenta, czy spełnia to co zamawiał klient, warunki przed wydaniem, podzielić pracę agenta na etapy, patrzeć agentowi na ręce, zadania po kolei zamiast wszystkiego naraz, zmiana kontraktu w trakcie kroku, plan niezgodny z zastanym kodem, nie dokręcaj kodu kolejnymi poleceniami, stan końcowy się zmienia, specification review, does the spec have holes, a panel of spec reviewers, artifact map, which documents in which phase, where to save a document, cut plan, slice order, foundation, where to start delivery, north star, software development lifecycle, process with AI agents, rebuild the delivery process, reviews cannot keep up, process metrics, control bands, from idea to production, maintenance after release, share of PRs written by agents, agent autonomy measures, which stage are we at, what must be ready before coding, what must be ready before release, who approves moving on, ready for release, what after deployment, when is the project finished, working in stages with an agent, when does the human check the agent, does it meet what the client ordered, split agent work into stages, a contract change during a step, the plan no longer matches the code"
+  review: "2027-11-20"
+  catalog: "Use when you need to know which stage a project is at, what must exist before coding or a release, who approves moving on, how to run AI agents in phases with personas, what happens post-deployment, where each project document goes (artifact map), how to order delivery (cut plan, release lines, flags), how to review a spec with a panel, run a factory dry run or build an AI-native loop (plan before code, agent evals, AI PR review, control bands, paired measures). Not for the content of one phase (pack dimension skills), an end-of-stage agent retrospective (core-agent-retro), a canary rollback (ops-release-engineering) or one incident (ops-sre-incidents)."
+  keywords: "na jakim etapie jesteśmy, fazy projektu, etapy projektu, cykl życia projektu, od pomysłu do produkcji, od pomysłu do wdrożenia, kto zatwierdza dalszy krok, kto odbiera, bramki człowieka, akceptacja etapu, co musi być gotowe przed kodem, zanim programiści ruszą, gotowość do wydania, przegląd gotowości, kryteria wydania, makiety i połowa backendu, agenci AI prowadzą projekt, praca z agentami w etapach, kiedy człowiek patrzy agentowi na ręce, kto wdraża na produkcję, po wdrożeniu, projekt naprawdę skończony, utrzymanie po wdrożeniu, łatki bezpieczeństwa, aktualizacje zależności, wycofywanie funkcji, ścieżka skrócona, mały projekt, które etapy pominąć, plan faz, walking skeleton, plan cięć, cięcia pionowe, fundamenty, niewiadome blokujące, gwiazda przewodnia, od którego cięcia zacząć realizację, plan wydania, linie wydania, MVP, release.yaml, wdrażanie za flagą, przegląd specyfikacji, dziury w specyfikacji, próba fabryki, dry run, kod od agentów szybszy niż przeglądy, plan przed kodem, ewaluacje agenta, REVIEW.md, pasma kontrolne, pogorszenie metryk produkcji, udział agentów w pull requestach, refinement z agentami, refinement kończy się opisem z AI, sukces mierzony odsetkiem agentów, budżet artefaktów w PR, mapa artefaktów, gdzie zapisać dokument, dokumenty fazy architektury, project phases, who approves the next stage, idea to production, release readiness, human gates, shortened path, which stages can be skipped, share of PRs by agents"
 ---
 
-# The delivery cycle — from an idea to production
+# Delivery lifecycle with AI agents — phases, gates, artifacts
 
-The working model: **agents lead and execute, the human approves and is accountable.** The factory takes a project
-through all the phases, but at the gates (B1–B6) it stops for the human's decision. The gates are mandatory, not a
-courtesy. The agent does not set `accepted` and does not deploy to production itself (core-project-record).
+Agents lead and execute; the human is the product owner, approves at fixed gates and stays accountable. Every phase
+ends with a file in `docs/project/…`, not a chat message. This skill says **which phase, what it produces, who
+approves**; the content of a phase lives in the packs' dimension skills.
 
-Every phase ends with an artifact in `docs/project/` (core-project-record), not just an answer in the conversation.
-Every phase can be a separate session of a different persona. The next session starts with
-`python3 .claude/hooks/project_record.py status`, the TL;DR and the Handoff section.
+## Operating rules
+- Gates are mandatory. An agent never marks an artifact as accepted and never deploys to production; it prepares, the
+  human approves.
+- Each phase may be a separate session or persona. A new session starts from `python3 .claude/hooks/project_record.py
+  status`, the TL;DR and the Handoff of the last artifact; `project_record.py report` summarises the record.
+- Open business or legal questions get an addressee and a date — never a guess.
+- A change to an accepted artifact is a new version with a new acceptance; decisions go to `decisions.md`, progress to
+  the journal.
+- Human-only work (accounts, secrets, domains, contracts, payments, real-user tests, legal and business decisions, pen
+  tests with written scope consent, the production deployment, unrequested dependency bumps) goes into the phase plan as
+  dated tasks for the human.
 
-## Who leads
-- **The start**: the pack's dispatcher (a persona with `dispatcher: true`, e.g. pack-it: `claude --agent maja`). It
-  interviews (core-plan-interview), assesses the scale and the risk, chooses the path (full or shortened) and records
-  the phase plan with personas in `01-discovery/brief.md` (the "Phase plan" section). Without a dispatcher: core-problem-routing.
-- **The phases**: the human starts the persona named in the Handoff of the previous phase. The persona does the tasks
-  itself (core-cost-control §0).
-- **The human**: the product owner and the approver. Answers open questions, accepts at the gates, provides accounts,
-  secrets and access, starts the production deployment.
+## Start: choose the path and write the phase plan
+1. The pack's dispatcher persona (`dispatcher: true`, e.g. `claude --agent maja` in pack-it) interviews the human, estimates
+   scale and risk and picks the **full** or **shortened** path. Without a dispatcher: core-problem-routing.
+2. It writes `01-discovery/brief.md` with a **Phase plan** section: phases, the persona for each, the gates, the human's
+   tasks. With a budget or a deadline also `01-discovery/project-plan.md` (P50/P80 ranges of cost and date, milestones,
+   risk register; proc-project-planning).
+3. The human starts the persona named in the last Handoff; personas do their own tasks (core-cost-control §0).
+   Staffing with skill names: `references/pack-staffing.md`.
 
 ## Phases
-The table gives roles and skill dimensions; the installed packs provide the personas and skills (`.claude/catalog.md`).
-You choose the staffing for the problem; a question outside its own field the persona asks a consultant from another pack.
+| # | Phase | Main outputs | Directory | Gate |
+|---|---|---|---|---|
+| 0 | Intake | brief with phase plan; project plan with P50/P80 when needed | `01-discovery/` | — |
+| 1 | Product discovery | hypotheses, success metrics, user flows, mock-ups, product risks | `01-discovery/` | B1 |
+| 2 | Domain | glossary, domain events, bounded contexts, context map, contradictions | `02-domain/` | — |
+| 3 | Requirements | acceptance criteria as examples, quality attributes as scenarios, priorities, personal data flagged; spec review | `03-requirements/` | B2 |
+| 4 | Architecture | stack decision, C4, ADRs, threat model, estimates, data/deploy/observability strategy, privacy doc for personal data | `04-architecture/` | — |
+| 5 | Plan | cut plan (walking skeleton first), `release.yaml`, test plan | `05-plan/` | B3 |
+| 6 | Delivery | per step: code, tests, review, step report `06-delivery/NNN-<slug>.md`; CI green from step one | `06-delivery/` | — |
+| 7 | Release preparation | environments as code, security review, regression and performance tests, runbook, readiness review | `06-delivery/`, `07-review/` | B4 |
+| 8 | Release and observation | human deploys, staged rollout with SLO gates, flags removed by date, retro and lessons | `07-review/` | B5 |
+| 9 | Maintenance | periodic operations review, fixes, patches, updates, retirements | `08-operations/` | B6 |
 
-| # | Phase | Directory | Role | Skill dimension | Output ("done" criterion) |
-|---|---|---|---|---|---|
-| 0 | Intake and phase plan | `01-discovery/` | dispatcher | core-problem-routing, core-plan-interview, project planning | a brief with the problem, goal, users, scope and "out of scope", constraints (budget, deadline, regulations), the path and the phase plan; with a budget and a deadline a project plan (`project-plan.md`: cost and deadline as P50/P80 ranges, milestones, a risk register) |
-| 1 | Product discovery | `01-discovery/` | product/UX designer | product discovery, feature UX design | hypotheses and success metrics, flows and states, mock-ups of key screens, product risks; what to check with real users |
-| 2 | Domain | `02-domain/` | domain analyst | domain: Event Storming, strategic split, context map | a glossary, events and processes, contexts and the context map, contradictions and questions for the expert |
-| 3 | Requirements | `03-requirements/` | domain analyst + product/UX designer | tactical model, spec-first tests, quality attributes | requirements with acceptance criteria (examples), quality requirements as scenarios, priorities; personal data listed at the requirements it concerns |
-| 4 | Architecture | `04-architecture/` | solution architect | architecture: system, stack, quality attributes, threats, privacy | the stack decision, the architecture document (C4), ADRs, the threat model, estimates, the data, deployment and observability strategy; with personal data `privacy.md` (inventory, legal bases, retention, the DPIA decision) |
-| 5 | Plan | `05-plan/` | solution architect + test designer | continuous delivery, test design, plan review | vertical slices in order (an end-to-end skeleton as the first step) per `references/cut-plan.md` (foundations with the `Odblokowuje` field, the north star, blocking unknowns); the release plan `release.yaml` (R1 = MVP with an outcome and a metric, lines R2…, flags with rollout stages and a removal date); a test plan with risks, executors |
-| 6 | Delivery | `06-delivery/` | implementer per stack + test designer | language, framework, server and UI, tests; core-git-workflow, change review | for every step: code, tests, review, step report; the CI pipeline green from the first step |
-| 7 | Release preparation | `06-delivery/`, `07-review/` | DevOps/SRE + security-reviewer + test designer | operations: CI/CD, containers, IaC, releases, observability, supply chain, secrets | environments as code, deployment to the test environment, security review, regression and performance tests, a runbook, the readiness review (`references/production-readiness.md`) |
-| 8 | Release and observation | `07-review/` | **the human** deploys; DevOps/SRE prepares and observes | operations: releases, SRE; core-semver | a gradual deployment through the stages from `release.yaml` (every move to the next flag stage is gate B5) with SLO gates, observation after the release, removing flags by `remove_by`, a retrospective and lessons |
-| 9 | Maintenance | `08-operations/` | DevOps/SRE + implementer + test designer | SRE, triage, debugging, dependency updates, regression, costs | a periodic maintenance review (`operations-review.md`), bug fixes with a regression test, security patches on time, updates before the end of support, retiring features, costs |
-
-Example (pack-it): Maja → Natalia (pack-ux) → Ewa → Tomasz → Tomasz + Kasia → the executor per stack + Kasia → Piotr.
-Staffing with skills: `references/pack-staffing.md` (a domain pack: its `GUIDE.md`).
-
-Documentation is written along the way: the README and how to run it from phase 6, the runbook in phase 7
-(pack-docs: docs-tech-writing). Language correction before handing to people (pack-editorial-pl: Stefan, txt-polish-correctness).
-
-## Working with agents — a loop, not a line
-When agents write code in hours, planning, review, deployment and maintenance become the slow parts — that is where you
-improve the process (`references/ai-native-sdlc.md`, based on the Anthropic playbook and AWS AI-DLC):
-- **Every stage ends with an artifact in the repository**, and the next one starts by reading it. The chain: brief
-  (intent) → requirements and architecture (specification) → plan → diff with tests → PR with review findings → a
-  maintenance record that comes back as a new change brief. The sequence of commits is the audit trail.
-- **Nothing without an accepted plan:** a delivery step starts with a plan in plan mode (files, order, tests), recorded
-  in the step report before the code; a deviation = an update of the plan in the same commit.
-- **The agent checks its own work** with one verification command before a human sees it; a bug fix starts with a red
-  test that the agent does not weaken (`tdd_guard`, rules A–C).
-- **Evaluations of the agent configuration** (real tasks with an expected result) at every change of `CLAUDE.md`,
-  skills, hooks and the model; every incident adds a scenario.
-- **The agent does everything up to the production gate and nothing past it:** an AI review of the PR per `REVIEW.md`;
-  the human approves merging and deployment, the agent does not approve its own code.
-- **Maintenance through control bands** (`scripts/control_band.py`): deterministic detection, a graded reaction
-  (a record → a read-only diagnosis → a PR or an approved runbook).
-- **An agent mistake repeated a second time** → the fix goes into `CLAUDE.md` (with the human's consent).
+Pack-it staffing: Maja → Natalia → Ewa → Tomasz → Tomasz + Kasia → executors + Kasia → Piotr.
 
 ## Human gates
-| Gate | After phase | The human approves | Without approval |
+| Gate | After | The human approves | Without approval |
 |---|---|---|---|
-| **B1** Scope | 0–1 | the problem, goal, success metrics, scope and "out of scope", budget | further work only as `draft` |
-| **B2** Requirements | 3 | requirements and acceptance criteria, quality requirements, priorities | the architecture marked "based on a proposal" |
-| **B3** Architecture | 4–5 | the stack, key ADRs, the threat model, the maintenance cost, the plan | delivery does not start (except a skeleton to verify a risk, with consent) |
-| **B4** Readiness | 7 | the result of the readiness review, risks accepted consciously, the decision "we release / we do not release" | no release |
-| **B5** Release | 8 | starting the production deployment, every move to the next rollout stage from `release.yaml` (the exit criterion met and the minimum time passed) and a possible rollback | the agent only prepares |
-| **B6** Maintenance | 9 (periodically) | fix priorities, patch deadlines, updates to perform, features to retire, the maintenance budget | proposals wait; critical patches per the arrangement with the human |
+| B1 Scope | 0–1 | problem, goal, success metrics, scope and out-of-scope, budget | further work is only a draft |
+| B2 Requirements | 3 | requirements, acceptance criteria, priorities | architecture is marked "based on proposal" |
+| B3 Architecture | 4–5 | stack, key ADRs, threat model, maintenance cost, the plan | no delivery, except a risk-checking skeleton with consent |
+| B4 Readiness | 7 | readiness review result, consciously accepted risks, release or no release | no release |
+| B5 Release | 8 | start of production deployment; each move to the next rollout stage once its exit criterion is met and the minimum time has passed; rollback | the agent only prepares |
+| B6 Maintenance | 9, periodic | fix priorities, patch deadlines, updates, retirements, budget | proposals wait; critical patches follow the prior arrangement |
 
-Between the gates the human answers open questions. The agent does not guess business or legal decisions; it records
-them as a question with an addressee. Every change of an accepted artifact is a new version and a new acceptance.
+## Shortened path
+Allowed when: one team, a few screens or endpoints, no sensitive data or regulation, easy rollback.
+- Phases 0–1 merge; phase 2 is skipped (a short glossary goes into the brief); phases 3–5 are one document.
+- B1, B2 and B3 become one acceptance. **B4 and B5 always stay**, with a minimum readiness review (the points marked
+  "minimum" in `references/production-readiness.md`).
 
-## Phase 9 — maintenance
-A release does not end the project. Maintenance is a steady rhythm, not a reaction to failures:
-- **The cycle:** a maintenance review every week or every sprint (`08-operations/<data>-operations-review.md`, the
-  `operations-review` template) — SLOs and incidents, issues by severity, patches, updates, costs, features to retire.
-  You check metrics (the 5xx rate, test failures, PR cycle time) with control bands:
-  `python3 .claude/skills/core-delivery-lifecycle/scripts/control_band.py metryka.csv --baseline 30 --side upper`.
-  The human approves the review's decisions (**B6**).
-- **Issues:** review and categories; a bug → the cause → a red regression test → the fix → a release as in phases
-  7–8, at the scale of a fix (the shortened path; B4 and B5 stay).
-- **Security patches:** a critical vulnerability in a component exposed to the outside has a fast path with an exception
-  from the cooldown (the supply-chain skill). The human sets the deadline.
-- **Dependency updates:** minor ones regularly, major ones before the end of support, one at a time and with a plan.
-  The agent does not bump dependencies unasked — the maintenance review contains proposals for approval.
-- **Retiring features and the end of life of the system:** the human's decision; the course in `references/maintenance.md`.
+## Delivery rules
+1. **Walking skeleton first:** the thinnest flow through every layer and the pipeline, deployed to a test environment,
+   before any feature depth.
+2. **Risk first:** prototypes and spikes for the riskiest assumptions before B3.
+3. **Tests come from acceptance criteria**, written before or alongside the code by a test designer who does not see
+   the implementation (qa-spec-first-testing).
+4. **Every step ends with a pass/fail command** whose output the agent shows as evidence in the step report.
+5. **The author does not judge their own work:** review in a fresh context — `/code-review`, the security-reviewer agent
+   for risky areas.
+6. **No silent scope change:** a new requirement during delivery goes back to phase 3 as a new requirements version.
+7. **Replan when reality contradicts the plan.** If an assumption the plan rests on is false (a module, interface,
+   data shape or permission model missing or different), the agent stops coding, writes in the step report what the
+   plan assumed, what it found and what that changes, offers options and waits for the human; the plan is updated
+   first. A small difference that touches no interface or end state goes under **Deviations** and work goes on.
+8. **Plan effort scales with risk:** each step report starts with a **Step plan**; a one-line change needs one line, a
+   migration or security change needs alternatives and a rollback.
+9. **Cheap models** for search and mechanical edits, strong ones for architecture and security; **state lives in
+   files**; end-of-stage cost and causes: `.tf/factory/cost_stats.py`, core-agent-retro.
 
-## The shortened path (a small project, low risk)
-Criteria: one team, a few screens or endpoints, no sensitive data and no regulations, an easy rollback.
-Phases 0–1 together in one brief, phase 2 skipped (the glossary in the brief), 3–5 in one document (requirements with
-examples + a short architecture + the plan), gates B1+B2+B3 as one acceptance. **B4 and B5 always stay**, and the
-readiness review in the shortened version (the sections marked "minimum" in `production-readiness.md`).
+## Phase 5: cut plan and release plan
+`05-plan/plan.md` orders the work into **foundations** `F-NN` (enabling work that must name what it unblocks) and
+**vertical slices** `S-NN` (a result a user can see, tied to a requirement ID). The first slice is the thinnest end-to-end
+flow (**North star**); items depending on an open question with blocks=yes are **blocked**; never "the whole data model
+first". Release lines (R1 = MVP with an outcome metric) and flags with rollout stages go to `05-plan/release.yaml`
+(or `changes/CHG-n/release.yaml`); phase 8 follows those stages and every stage move is B5. Method, column names,
+statuses and self-check: `references/cut-plan.md`.
 
-## Rules of the course
-- **The skeleton first**: the first delivery step goes through all the layers and the pipeline up to the test
-  environment. Deployment problems come out in the first week, not in the last.
-- **The risk first**: the least certain elements (an external integration, performance, a new technology) you check
-  with a prototype before B3 or in the first steps.
-- **Tests from the requirements**: test cases from the acceptance criteria are written before the code or in parallel
-  (the test designer in a clean room), not from the code.
-- **A measurable end of a step**: a delivery step ends with a command that gives a "passes / fails" result (tests from
-  the acceptance criteria, build, lint). For a longer step the human can set `/goal` with such a condition,
-  e.g. `/goal step 3 tests pass (npm test exits with code 0), other tests unchanged, or stop after 30 turns`.
-  The judging model sees only the conversation, so the agent shows the command's output instead of writing "it works".
-  After it passes comes a review in a fresh context (`/code-review` or security-reviewer), because the author does not
-  judge their own work.
-- **No silent scope changes**: a new requirement during delivery goes back to phase 3 as a new version.
-- **A contract change during a step = stop.** A small difference (another file name, another export) you adjust and
-  record in "Deviations". When the end state or the contract surface changes (the assumed model is missing, two
-  authentication paths instead of one, a product decision is needed, 10 modules instead of 3 files), stop and show
-  "Expected / Found / Why it matters" with a choice: adjust and continue · skip · stop and fix the plan.
-  Do not tighten the code with further commands.
-- **A step plan sized to the risk:** the more files and the higher the risk, the more careful the plan and its review
-  (the change-review skill); a simple change with a clear scope is plan → delivery, without research as a ritual.
-- **Cost**: cheap models for searching and mechanical changes, expensive ones for architecture and the security review.
-  At the end of a stage: cost and time from `.tf/factory/cost_stats.py`, causes and proposed changes from core-agent-retro.
-- **The state always in files**: an interrupted session leaves `draft` and the Handoff. `project_record.py report` gives
-  the human one file with the project's state.
+## Reviews and readiness
+- **Spec review** after phase 3, before the cut plan, when agents will build it, the change is large or touches
+  permissions, money, data or schema: 2–3 reviewers in fresh contexts (adversary, operator, executor), findings with
+  severity; the gate passes when blocking and serious ones are closed with a trace. Report `03-requirements/spec-review.md`;
+  method `references/spec-review.md`.
+- **Readiness review** before B4: `07-review/<date>-readiness.md`, each point met (with evidence: a CI run link, report,
+  command output) / not met / risk accepted (who, fix-by date). "Tests pass" without CI evidence is an assumption.
+  Verdict ready / ready with accepted risks / not ready. Checklist: `references/production-readiness.md`.
+- **Dry run** of the factory on a small real project: `07-review/<date>-dry-run.md`, `references/dry-run.md`.
 
-## What the factory will not do by itself
-Business, legal and risk decisions; tests with real users; creating accounts, domains, payments and contracts;
-providing secrets; penetration tests without written consent to the scope; the production deployment; bumping
-dependencies unasked. All of this is in the phase plan as tasks for the human with a deadline.
+## Phase 9: maintenance
+- A periodic operations review (weekly or per sprint, template `operations-review`) in
+  `08-operations/<date>-operations-review.md`: SLOs, incidents, issues by severity (proc-issue-triage), patches,
+  dependency updates (ops-dependency-upgrades), costs, retirements. Metrics go under control bands.
+- Bug: cause → red regression test → fix → release on the shortened path.
+- A critical vulnerability in an exposed component gets a fast path exempt from the dependency cooldown
+  (ops-supply-chain-security); the human sets the deadline. Minor updates regularly, majors before end of support, one at
+  a time; the agent only proposes.
+- Retiring a feature is the human's decision based on usage data: announce it with a date and a transition path,
+  deprecate in a minor version, remove in a major one, delete code and data per the retention policy. Shutting down the
+  whole system is a mini-project with B1 and B5 (data export/archive/delete, user notice, infrastructure and cost).
+  More: `references/maintenance.md`.
 
-## More
-- The artifact map (phase → file → who writes → skill → who reads, what to skip in a small project): `references/artifact-map.md`.
-- The definition of "production ready" and the readiness review: `references/production-readiness.md`.
-- A dry run on a small project (how to check whether the factory delivers): `references/dry-run.md`.
-- Retiring features and shutting down the system (phase 9): `references/maintenance.md`.
-- The specification review before the plan (a panel of 2–3 independent reviewers, a gate): `references/spec-review.md`.
-- The cut plan — the order of items, foundations, unknowns, self-check: `references/cut-plan.md`.
-- The AI-native loop: artifacts, measures of every stage, evaluations, PR review, control bands, the source of truth,
-  managed settings, AI-DLC, refinement with the solution told back and autonomy measures paired with an outcome measure:
-  `references/ai-native-sdlc.md`.
+## AI-native loop
+When agents code faster than people review, test and deploy, rebuild controls as artifacts, hooks and agent review
+layers, with a human on critical code: intent → spec → plan → diff + tests → PR + review → maintenance record →
+new brief; nothing is implemented without an accepted plan; the agent verifies itself with one command; configuration
+changes (CLAUDE.md, skills, hooks, model) are evaluated on real cases; AI review follows `REVIEW.md`, a human merges;
+autonomy measures are reported only next to outcome measures. Detail: `references/ai-native-sdlc.md`.
+
+Scripts (run them, do not read them):
+- `python3 .claude/skills/core-delivery-lifecycle/scripts/control_band.py metric.csv --baseline 30 --side upper` —
+  Western Electric rules on a metric (`--column C`, `--side both|upper|lower`, `--format json|text`): a point beyond 3σ →
+  **act** (PR or approved runbook); 2 of 3 beyond 2σ on one side → **diagnose** read-only; 4 of 5 beyond 1σ or 8 in a row
+  on one side of the mean → **log**. Exit 2 on bad data (e.g. zero baseline deviation).
+- `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base main [--json]` — whether artifacts drown the
+  code in a PR (defaults: artifacts ≤50% of added lines, one artifact ≤600 lines, a plan ≤300; config
+  `.claude/pr-budget.json`). First line `Werdykt: OK | OVER`, exit 1 when over.
+
+## Where documents go
+Every artifact, its directory, author persona and what a small project may skip: `references/artifact-map.md`
+(e.g. `04-architecture/stack-decision.md`, ADRs, `threat-model.md`, `privacy.md`, `erd.md`; the OpenAPI contract lives in
+the code repository).
+
+## Example
+"Small internal report builder, three screens, one team, no sensitive data, easy rollback — what can we skip?" →
+shortened path: one brief covers phases 0–1 with a glossary, one document for requirements, architecture and plan, a
+single B1–B3 acceptance; delivery starts with a walking skeleton; **B4** (minimum readiness review with CI evidence) and
+**B5** (the human deploys) stay.
+
+"Mock-ups, half a backend, the client changes requirements weekly — where are we?" → code was started before B2: delivery
+(6) is running without accepted requirements (3) and architecture (4). Freeze new features, write the current
+requirements as version 1, the product owner approves B2, then B3; each later change is a new requirements version.
 
 ## Checklist
-- [ ] the path (full or shortened) and the phase plan recorded in the brief after phase 0
-- [ ] every phase finished with an artifact with a TL;DR, open questions and a Handoff
-- [ ] gates B1–B6 approved by the human and recorded in `decisions.md`
-- [ ] an end-to-end skeleton as the first delivery step
-- [ ] a readiness review before the release, risks accepted explicitly
-- [ ] an agent retrospective (core-agent-retro) and lessons after the release
-- [ ] after the release: a periodic maintenance review with the human's decisions (B6)
+- [ ] path chosen; brief with Phase plan, personas, gates, the human's dated tasks; every phase ends with a file
+- [ ] gates B1–B3 (or one combined acceptance) passed before delivery; B4 and B5 never skipped
+- [ ] walking skeleton first; every step ends with a pass/fail command and its output
+- [ ] plan contradictions stopped the step and updated the plan; small ones logged as Deviations
+- [ ] readiness review with evidence per point; the human deployed; flags have owners and removal dates
+- [ ] maintenance: periodic operations review, control bands, retirements decided by the human
 
 ## Sources
-- Factory conventions: core-project-record
-- Google SRE — Production Readiness Review; J. Humble, D. Farley, *Continuous Delivery*; A. Cockburn — walking skeleton
-- GOV.UK Service Manual — the live and retirement stages (shutting down a service)
-- The 10xDevs course, ed. 3 (2026), module 2, lessons 1–2 (the cut plan, stopping the implementation) — training material (accessed 2026-10-09)
-- Anthropic, "The AI-Native SDLC Playbook" (21.08.2026) and the Anthropic Academy course; AWS, "AI-Driven Development Life Cycle" (31.07.2025)
-Described in our own words.
+- A. Cockburn, *Crystal Clear* (2004) — walking skeleton; J. Humble, D. Farley, *Continuous Delivery* (2010).
+- Google, *Site Reliability Engineering* (2016) — production readiness, SLOs; GOV.UK Service Manual, live and retirement
+  phases [unverified: page titles].
+- Anthropic, "The AI-Native SDLC Playbook" (2026-08-21); AWS, "AI-Driven Development Life Cycle" (2025-07-31).
+- Western Electric, *Statistical Quality Control Handbook* (1956) — control chart rules.
