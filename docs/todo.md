@@ -3,6 +3,29 @@
 Odhaczone pozycje są zrobione (`- [x]`). Źródła faktów: dokumentacja code.claude.com i platform.claude.com pobrana
 2026-10-20.
 
+## Przepisanie historii repo i usunięcie atrybucji — zapisane 2026-11-20
+Prośba człowieka (2026-11-20). Pliki repo są już czyste (bez nazw kursu, szkolenia i przepisanych materiałów),
+ale stare commity, tagi i PR-y nadal je zawierają. Kolejność: po scaleniu wszystkich partii czyszczenia i licencji,
+najlepiej po zmianie repo na prywatne.
+- [ ] **Kopia zapasowa:** `git clone --mirror` całego repo przed jakąkolwiek zmianą historii; przechowywana poza GitHubem.
+- [ ] **Przepisanie historii** (`git filter-repo`): usunąć z wszystkich commitów treść i wzmianki o kursie, szkoleniu
+  i przepisanych materiałach (stare wersje skilli, `hint.pl.txt`, CHANGELOG, `docs/`), z listą ścieżek i wzorców
+  (`--replace-text`, `--path`) sprawdzoną najpierw na kopii.
+- [ ] **Usunięcie atrybucji Claude z historii:** linie `Co-Authored-By: Claude …` i `Claude-Session: …` w wiadomościach
+  commitów (`--message-callback`), a w opisach PR-ów i wydań: „Generated with Claude Code”, linki do sesji.
+- [ ] **Usunięcie atrybucji w plikach repo:** wzmianki o udziale Claude jako autora lub współautora (np. przypisy,
+  stopki, opisy „napisane przez Claude”). Odwołania funkcjonalne do Claude Code jako narzędzia, na którym działa
+  fabryka, zostają.
+- [ ] **Nowe commity bez atrybucji:** wyłączyć dopisywanie atrybucji w ustawieniach Claude Code (`attribution`
+  w `settings.json`) i w instrukcjach sesji, żeby nie wracała.
+- [ ] **Skutki do obsłużenia:** zmienią się wszystkie SHA. Trzeba odtworzyć tagi i wydania (v1…v20+), zaktualizować
+  odwołania do commitów w `docs/` i CHANGELOG. Stare commity nadal będą w refach PR-ów (`refs/pull/*`) i w cache
+  GitHuba, więc do ich usunięcia potrzebne jest zgłoszenie do GitHub Support. Forki i klony zachowają starą historię.
+  Na koniec force-push wszystkich gałęzi i tagów, za wyraźną zgodą człowieka.
+- [ ] **Uwaga prawna:** usunięcie atrybucji nie zmienia tego, kto faktycznie tworzył kod. Ochrona fabryki opiera się
+  na umowie licencyjnej i poufności, nie na wpisach w historii. Przed wykonaniem tego punktu warto skonsultować go
+  z prawnikiem IP.
+
 ## Najpierw: jedno źródło decyzji — zapis decyzji z różnych narzędzi (F0, po resecie limitu, 2026-10-23)
 Cel: decyzje podejmowane w różnych narzędziach (sesje Claude Code, tf, pdi, później inne) zapisywane w jednym
 źródle prawdy, jako część większego workflow AI SDLC; tf musi umieć je wypchnąć i zapisać zgodnie ze wspólnym
