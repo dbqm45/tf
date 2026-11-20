@@ -6,6 +6,7 @@
   python3 dna.py status [--root <repo>] [--out <dir>]   # what out/ holds, when it was built
   python3 dna.py docs query <tech> "<topic>" [--version <v>] [--max-chars N] [--json]
                                                         # official docs of the project's version (local index)
+  python3 dna.py check [--base <ref>] [--json]          # the change against the guidelines; exit 1 = blocking
 
 --root: the repository to learn (default: the git top level of the current directory).
 --out: the output directory (default: out/ next to this file). --cache: fetched sources (default: cache/ here).
@@ -44,7 +45,7 @@ except ImportError:  # the factory ships PyYAML in .tf/factory/_vendor; outside 
     print("dna: PyYAML is required (pip install pyyaml)", file=sys.stderr)
     sys.exit(2)
 
-from lib import code, detect, docs, emit, verify  # noqa: E402
+from lib import check, code, detect, docs, emit, verify  # noqa: E402
 
 
 def _version() -> str:
@@ -185,9 +186,31 @@ def cmd_docs(out: Path, cache: Path, args: list[str], version: str | None, max_c
     return code
 
 
+def cmd_check(root: Path, out: Path, base: str, as_json: bool) -> int:
+    try:
+        k = json.loads((out / "knowledge.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        print("dna check: no guidelines yet — run: dna.py learn", file=sys.stderr)
+        return 0
+    try:
+        res = check.check(root, k, base)
+    except RuntimeError as e:
+        print(f"dna check: {e}", file=sys.stderr)
+        return 2
+    blocking = [f for f in res["findings"] if f["severity"] == "block"]
+    if as_json:
+        print(json.dumps(res, ensure_ascii=False, indent=2))
+    else:
+        for f in res["findings"]:
+            mark = "✗" if f["severity"] == "block" else "⚠"
+            print(f"{mark} {f['file']}:{f['line']} [{f['rule']}, {f['strength']}] {f['message']} → {f['suggestion']}")
+        print(res["summary"])
+    return 1 if blocking else 0
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="dna.py", description=__doc__.split("\n")[1])
-    ap.add_argument("command", choices=["learn", "verify", "status", "docs"])
+    ap.add_argument("command", choices=["learn", "verify", "status", "docs", "check"])
     ap.add_argument("args", nargs="*")
     ap.add_argument("--root", type=Path)
     ap.add_argument("--out", type=Path, default=ADDON / "out")
@@ -196,6 +219,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--version")
     ap.add_argument("--max-chars", type=int, default=6000)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--base", default="HEAD")
     args = ap.parse_args(argv)
     out, cache = args.out.resolve(), args.cache.resolve()
     if args.command == "docs":
@@ -204,6 +228,8 @@ def main(argv: list[str]) -> int:
     if not root.is_dir():
         print(f"dna: not a directory: {root}", file=sys.stderr)
         return 2
+    if args.command == "check":
+        return cmd_check(root, out, args.base, args.json)
     if args.command == "learn":   # DNA_OFFLINE=1: no network (tests, air-gapped machines)
         offline = args.offline or os.environ.get("DNA_OFFLINE") == "1"
         return cmd_learn(root, out, online=not offline, cache=cache)

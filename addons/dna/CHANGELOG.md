@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 — 2026-11-20
+- `dna.py check [--base <ref>] [--json]` (`lib/check.py`, `provides.check`): added lines of the change (untracked
+  files included) against the guidelines, by the balance rule — hard findings (a deprecated component) block
+  everywhere, soft ones (raw element where the design system has a component, value that has a token, duplicate of a
+  catalog component, import form different from the code, styling method rare or absent in the code) block in new
+  files and warn in existing ones. Exit 1 when a finding blocks; the factory's `/tf` gate runs it after green tests.
+
 ## 0.3.0 — 2026-11-20
 - UI catalog (`lib/code.py`), counted in the code with `path:line` evidence: design-system components (stack
   design-system packages, workspace UI packages, `design_system.packages` in dna.yaml) ordered by importing files,

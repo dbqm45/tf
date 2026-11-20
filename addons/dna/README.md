@@ -14,6 +14,7 @@ python3 dna.py learn --root <repository>     # build out/
 python3 dna.py verify --root <repository>    # check out/ against the contract
 python3 dna.py status --root <repository>    # what out/ holds
 python3 dna.py docs query react "useTransition"   # official docs of the project's version (local index)
+python3 dna.py check --base main             # the change against the guidelines; exit 1 = blocking
 ```
 
 `learn` reaches the network only for documentation (`--offline` or `DNA_OFFLINE=1` to stop it): package registries
@@ -22,7 +23,7 @@ version; the question asked in `docs query` never leaves the machine.
 
 In a project the add-on sits in `.tf/addons/dna/`; `--root` defaults to the git top level of the current directory.
 
-## What 0.3.0 knows
+## What 0.4.0 knows
 
 | Area | Source | Version from |
 |---|---|---|
@@ -61,5 +62,5 @@ repository. The Markdown is generated from `knowledge.json` and must not be edit
 
 - Nothing here imports from the factory (`core/`, `packs/`, `modes/`, `tools/`); the tests check it.
 - Standard library and PyYAML only.
-- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py` (also the `addon-dna` job in CI).
+- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py`, `tests/test_check.py` (also the `addon-dna` job in CI).
 - Version by SemVer in `addon.yaml`; changes in `CHANGELOG.md`.

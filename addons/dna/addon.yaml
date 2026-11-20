@@ -1,5 +1,5 @@
 name: dna
-version: 0.3.0
+version: 0.4.0
 contract: 1
 title: Project knowledge for writing code like the team
 description: >-
@@ -15,3 +15,4 @@ provides:
   verify: "dna.py verify"
   status: "dna.py status"
   docs: "dna.py docs query {tech} {query}"
+  check: "dna.py check --base {base} --json"

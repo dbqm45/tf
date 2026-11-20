@@ -18,7 +18,12 @@ A5 częściowo zrobione (`dna` 0.3.0, 2026-11-20): katalog UI (komponenty design
 w kodzie, własne komponenty z oznaczeniem `@deprecated`, tokeny, pliki motywu, sposób stylowania), `out/rules/ui.md`
 i `out/catalog/ui.md`. Sprawdzone na publicznym projekcie Next.js + MUI (`devias-io/material-kit-react`): MUI 7.1.1,
 `sx` w 94% plików, import `import Stack from '@mui/material/Stack'`, 2,4 s. Z A5 zostało: wzorce na rodzaj zmiany
-(`exemplars.json`) i konwencje spoza UI. Następny: A6 (`check` diffu wobec katalogu) albo reszta A5.
+(`exemplars.json`) i konwencje spoza UI. A6 zrobione (`dna` 0.4.0): `check` diffu wg reguły równowagi
+(twarde: wycofany komponent; miękkie: surowy element, wartość z tokenem, duplikat komponentu, forma importu, sposób
+stylowania), wpięte w bramkę `/tf` przez `provides.check`; sprawdzone na `devias-io/material-kit-react`
+(wychwycone `<button>`, inny import, `style={{}}` przy `sx` w 94%). Ponawianie z raportem (2 rundy) daje istniejąca
+pętla `/tf`. Następny: reszta A5 (wzorce na rodzaj zmiany), A7–A8 (ustalenia ze źródeł) albo A4 (pomiar — wymaga
+repo pilotażowego).
 
 ## 1. Cel
 
