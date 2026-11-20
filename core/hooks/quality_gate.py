@@ -8,7 +8,9 @@ Works only with the project configuration `.claude/quality-gate.json` (the facto
 - `command` — build and tests (a string or an argument list, no shell), run under the test_lock.py lock;
 - `related` — optional: the tests related to the changed files only (a string or an argument list, no shell). The token
   `{files}` expands into the changed files as separate arguments; `{files,}` inside a token is replaced with the files joined
-  with commas (`npx nx affected -t test --files={files,}`, `npx vitest related --run {files}`). With `related` the gate runs
+  with commas; `{dirs}` gives the directories of the changed source files. The factory knows no test tool: the command
+  for the project's stack is chosen in the project (the /tf loop proposes one). A placeholder that gives nothing → the
+  full `command`. With `related` the gate runs
   it instead of `command` — in a big repository (an Nx monorepo) the whole suite on every turn is the bottleneck. The
   changed files are the ones the fingerprint sees (changed relative to HEAD and new, within `watch`) that still exist;
   when only deletions remain or there are more than RELATED_MAX files, the gate runs the full `command`;
@@ -31,6 +33,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import shlex
 import signal
 import subprocess
@@ -105,15 +108,42 @@ def changed_files(root: Path, watch: list[str]) -> list[str]:
     return sorted({n for n in names.split("\0") if n and (root / n).is_file()})
 
 
-def expand_related(template, files: list[str]) -> list[str]:
-    """argv of the `related` command: the token `{files}` becomes the files as separate arguments, `{files,}` inside
-    a token — the files joined with commas (and `{files}` inside a longer token — joined with spaces). No shell."""
-    argv = []
+CODE_EXT = {".py", ".go", ".rs", ".java", ".kt", ".cs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".rb", ".php", ".swift",
+            ".c", ".cc", ".cpp", ".h", ".hpp", ".scala", ".ex", ".exs", ".dart", ".vue", ".svelte"}
+PLACEHOLDER = re.compile(r"\{(files|dirs)(,?)\}")
+
+
+def placeholder_values(root: Path | None, files: list[str], kind: str) -> list[str]:
+    """`files` — the changed files; `dirs` — the directories of the changed source files (`./pkg/a`; `.` for the root).
+    Nothing here knows a test tool: the project's command (chosen for its stack) decides what to do with them."""
+    if kind == "files":
+        return files
+    return sorted({("./" + Path(f).parent.as_posix()) if Path(f).parent.as_posix() != "." else "."
+                   for f in files if Path(f).suffix in CODE_EXT})
+
+
+def expand_related(template, files: list[str], root: Path | None = None) -> list[str] | None:
+    """argv of the `related` command. A token that is exactly `{files}` or `{dirs}` becomes separate arguments; with a
+    comma (`{files,}`) or inside a longer token — the values joined with commas (spaces without the comma). None when a
+    placeholder gives nothing (e.g. only non-code files changed for `{dirs}`) — then the full command runs. No shell."""
+    argv, cache = [], {}
+
+    def values(kind: str) -> list[str]:
+        if kind not in cache:
+            cache[kind] = placeholder_values(root, files, kind)
+        return cache[kind]
+
     for token in (shlex.split(template) if isinstance(template, str) else [str(t) for t in template]):
-        if token == "{files}":
-            argv.extend(files)
-        else:
-            argv.append(token.replace("{files,}", ",".join(files)).replace("{files}", " ".join(files)))
+        m = PLACEHOLDER.fullmatch(token)
+        if m and not m.group(2):
+            if not values(m.group(1)):
+                return None
+            argv.extend(values(m.group(1)))
+            continue
+        for m in PLACEHOLDER.finditer(token):
+            if not values(m.group(1)):
+                return None
+        argv.append(PLACEHOLDER.sub(lambda m: ("," if m.group(2) else " ").join(values(m.group(1))), token))
     return argv
 
 
@@ -122,8 +152,9 @@ def gate_command(root: Path, cfg: dict) -> list[str] | str:
     related = cfg.get("related")
     if related:
         files = changed_files(root, list(cfg.get("watch") or []))
-        if files and len(files) <= RELATED_MAX:
-            return expand_related(related, files)
+        argv = expand_related(related, files, root) if files and len(files) <= RELATED_MAX else None
+        if argv:
+            return argv
     return cfg["command"]
 
 
@@ -259,7 +290,8 @@ def gate_status(root: Path, env=None) -> tuple[str, str]:
         related = related if isinstance(related, str) else " ".join(map(str, related))
         return "on", (f"✓ Quality gate on: `{related}` for the changed files (`related`), "
                       f"the full `{command}` when there are none to pass (only deletions) or too many.")
-    return "on", f"✓ Quality gate on: `{command}`."
+    return "on", (f"✓ Quality gate on: `{command}` — the whole suite on every check; for speed add `related` (only the "
+                  "tests of the changed files, a command for this project's stack — the /tf loop proposes one).")
 
 
 def main() -> int:

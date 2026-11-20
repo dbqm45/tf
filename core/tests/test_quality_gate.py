@@ -221,6 +221,11 @@ def main() -> int:
     check(qg.expand_related(["npx", "vitest", "related", "--run", "{files}"], files[1:])
           == ["npx", "vitest", "related", "--run", "libs/ui/c.ts"], "R-0c: an argument-list template")
 
+    # R-0d..e: {dirs} — the directories of the changed source files (neutral: no test tool is known to the factory)
+    check(qg.expand_related("go test {dirs}", ["pkg/tariff/tariff.go", "README.md", "main.go"]) == ["go", "test", ".", "./pkg/tariff"],
+          "R-0d: {dirs} -> the directories of the changed source files only ('.' for the root)")
+    check(qg.expand_related("run {dirs}", ["README.md"]) is None, "R-0e: a placeholder with nothing -> None (the full command)")
+
     rcfg = {**cfg, "related": f"{sys.executable} related.py {{files}} --files={{files,}}"}
     with tempfile.TemporaryDirectory() as t:
         repo = setup(Path(t) / "r", rcfg)
@@ -272,7 +277,8 @@ def main() -> int:
               and "will not block red tests" in r.stdout, f"S-1: no configuration -> disabled, with the reason and the effect: {r.stdout}{r.stderr}")
         repo = setup(Path(t) / "s2", cfg)
         r = status(repo)
-        check(r.returncode == 0 and "gate on" in r.stdout and "check.py" in r.stdout and "disabled" not in r.stdout,
+        check(r.returncode == 0 and "gate on" in r.stdout and "check.py" in r.stdout and "disabled" not in r.stdout
+              and "related" in r.stdout,
               f"S-2: a configuration with a command -> enabled, with the command: {r.stdout}{r.stderr}")
         r = status(repo, "--quiet-ok")
         check(r.returncode == 0 and r.stdout.strip() == "", f"S-3: --quiet-ok is silent when the gate works: {r.stdout!r}")
