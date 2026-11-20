@@ -22,7 +22,7 @@ version; the question asked in `docs query` never leaves the machine.
 
 In a project the add-on sits in `.tf/addons/dna/`; `--root` defaults to the git top level of the current directory.
 
-## What 0.2.0 knows
+## What 0.3.0 knows
 
 | Area | Source | Version from |
 |---|---|---|
@@ -34,6 +34,7 @@ In a project the add-on sits in `.tf/addons/dna/`; `--root` defaults to the git 
 | .NET | `*.csproj`, `*.fsproj` | `packages.lock.json` or `Version` |
 | Commands | `package.json` scripts, `pyproject.toml`, build tools, `Makefile` | — |
 | Tooling | prettier, eslint, biome, stylelint, ruff, editorconfig, golangci-lint, checkstyle | — |
+| UI building blocks | imports, exports and styles in the code (`lib/code.py`) | — |
 | Documentation | installed npm package; npm tarball and PyPI description of the exact version; `registry/docs-sources.yaml` | the stack facts above |
 
 Many npm packages ship only a short README that points to a website; for those, add the official, version-specific
@@ -48,6 +49,8 @@ and listed in `coverage.md`.
 |---|---|
 | `out/knowledge.json` | the canonical record; schema in `schema/knowledge.schema.json` |
 | `out/INDEX.md` | ≤ 15 lines for the agent's permanent context |
+| `out/rules/ui.md` | rule with `paths` for UI files: components to use, import form, styling, tokens, theme |
+| `out/catalog/ui.md` | full UI catalog with evidence |
 | `out/docs-index.md` | ≤ 8 KB: technology@version → topics, for the permanent context |
 | `out/coverage.md` | sources read and not read, notes (e.g. several versions of one library) |
 
@@ -58,5 +61,5 @@ repository. The Markdown is generated from `knowledge.json` and must not be edit
 
 - Nothing here imports from the factory (`core/`, `packs/`, `modes/`, `tools/`); the tests check it.
 - Standard library and PyYAML only.
-- Tests: `python3 tests/test_dna.py` and `python3 tests/test_docs.py` (also the `addon-dna` job in CI).
+- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py` (also the `addon-dna` job in CI).
 - Version by SemVer in `addon.yaml`; changes in `CHANGELOG.md`.

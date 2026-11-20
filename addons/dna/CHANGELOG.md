@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 — 2026-11-20
+- UI catalog (`lib/code.py`), counted in the code with `path:line` evidence: design-system components (stack
+  design-system packages, workspace UI packages, `design_system.packages` in dna.yaml) ordered by importing files,
+  with the import form the code uses; own shared components imported by ≥ 2 files, `@deprecated` ones marked;
+  tokens (CSS custom properties with use counts, SCSS variables in variables/tokens files, DTCG); theme files; the
+  styling method as shares of styled files (CSS Modules, styled/emotion, `sx`, Tailwind, inline, plain CSS).
+- `out/rules/ui.md` (rule with `paths` for UI files, ≤ 40 lines; the factory copies it to `.claude/rules/`) and
+  `out/catalog/ui.md` (full lists); a line about it in `INDEX.md`; `provides.rules` in addon.yaml.
+- Type imports (`import type`, inline `type X`, `…Props`) are not counted as components.
+
 ## 0.2.1 — 2026-11-20
 - Typings of the locked version: `@types/<pkg>` from the lockfile next to the library (installed or from the npm
   registry); only its declarations are indexed.

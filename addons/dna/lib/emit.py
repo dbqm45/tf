@@ -48,6 +48,9 @@ def render_index(k: dict) -> str:
             and i.get("status") in ("accepted", "auto-accepted") and i["scope"]["paths"] == ["**"]]
     for d in hard[: max(0, INDEX_MAX_LINES - len(lines) - 3)]:
         lines.append(f"- [hard] {d['title']} ({d['id']})")
+    if any(i.get("data", {}).get("topic") == "ui-component" for i in items):
+        lines.append("- UI: use the project's components and tokens before writing your own; the UI rules load for UI "
+                     "files, full list in `catalog/ui.md` here.")
     if _docs(items):
         lines.append("- API of these versions, not from memory: `docs-index.md` here; query: "
                      "`python3 .tf/addons/dna/dna.py docs query <tech> \"<topic>\"`")
@@ -98,11 +101,90 @@ def render_coverage(k: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+UI_PATHS = ["**/*.tsx", "**/*.jsx", "**/*.vue", "**/*.svelte", "**/*.css", "**/*.scss", "**/*.less"]
+RULES_MAX_LINES = 40
+
+
+def _of(items, topic):
+    return [i for i in items if i.get("data", {}).get("topic") == topic]
+
+
+def render_ui_rules(k: dict) -> str:
+    items = k["items"]
+    comps = _of(items, "ui-component")
+    ds = [c for c in comps if c["data"]["origin"] == "design-system"]
+    own = [c for c in comps if c["data"]["origin"] == "own" and not c["data"].get("deprecated")]
+    old = [c for c in comps if c["data"].get("deprecated")]
+    styling = sorted(_of(items, "styling"), key=lambda i: -i["data"]["share"])
+    tokens = _of(items, "token")
+    themes = _of(items, "theme")
+    lines = ["---", "paths:"] + [f'  - "{p}"' for p in UI_PATHS] + ["---", "", "# UI building blocks (dna)", ""]
+    if ds:
+        pkgs = sorted({c["data"]["package"] for c in ds})
+        lines.append(f"- Use components from {', '.join(f'`{p}`' for p in pkgs)} before writing your own. Most used: "
+                     + ", ".join(f"`{c['data']['name']}`" for c in ds[:15]) + ".")
+        lines.append(f"- Import them the way the code does, e.g. `{ds[0]['data']['import']}`.")
+    if own:
+        lines.append("- The project's shared components: "
+                     + ", ".join(f"`{c['data']['name']}` ({c['data']['path']})" for c in own[:8]) + ".")
+    if old:
+        lines.append("- Deprecated, do not use in new code: "
+                     + ", ".join(f"`{c['data']['name']}` ({c['data']['path']})" for c in old[:8]) + ".")
+    if styling:
+        top = styling[0]["data"]
+        rest = ", ".join(f"{s['data']['method']} {s['data']['share']}%" for s in styling[1:4])
+        lines.append(f"- Styling: write styles the way the code does — {top['method']} in {top['share']}% of styled "
+                     f"files" + (f" (also: {rest})" if rest else "") + ".")
+    if tokens:
+        where = sorted({i["evidence"][0].rsplit(":", 1)[0] for i in tokens})[:5]
+        lines.append(f"- Tokens: {len(tokens)} defined in {', '.join(f'`{w}`' for w in where)}. A value that has a token "
+                     "is written as the token (names and values: `catalog/ui.md`).")
+    if themes:
+        lines.append("- Theme: " + ", ".join(f"`{t['data']['path']}`" for t in themes[:4]) + ".")
+    lines.append("- Full catalog with evidence: `.tf/addons/dna/out/catalog/ui.md`.")
+    return "\n".join(lines[:RULES_MAX_LINES]) + "\n"
+
+
+def render_ui_catalog(k: dict) -> str:
+    items = k["items"]
+    comps = _of(items, "ui-component")
+    lines = ["# UI catalog (dna)", "", f"Generated {k['generated']}. Counted in the code; evidence `path:line`.", ""]
+    ds = [c for c in comps if c["data"]["origin"] == "design-system"]
+    if ds:
+        lines += ["## Design-system components (by importing files)", "", "| Component | Import | Files | Example |",
+                  "|---|---|---|---|"]
+        lines += [f"| {c['data']['name']} | `{c['data']['import']}` | {c['data']['files']} | {c['evidence'][0]} |"
+                  for c in ds[:200]]
+        lines.append("")
+    own = [c for c in comps if c["data"]["origin"] == "own"]
+    if own:
+        lines += ["## Own shared components", "", "| Component | Defined in | Files | Status |", "|---|---|---|---|"]
+        lines += [f"| {c['data']['name']} | {c['evidence'][0]} | {c['data']['files']} | "
+                  f"{'deprecated' if c['data'].get('deprecated') else 'in use'} |" for c in own[:200]]
+        lines.append("")
+    tokens = _of(items, "token")
+    if tokens:
+        lines += ["## Tokens", "", "| Token | Value | Uses | Defined in |", "|---|---|---|---|"]
+        lines += [f"| `{t['data']['name']}` | `{str(t['data']['value'])[:60]}` | {t['data'].get('uses', '')} | "
+                  f"{t['evidence'][0]} |" for t in tokens[:300]]
+        lines.append("")
+    styling = sorted(_of(items, "styling"), key=lambda i: -i["data"]["share"])
+    if styling:
+        lines += ["## Styling", "", "| Method | Share | Files | Examples |", "|---|---|---|---|"]
+        lines += [f"| {s['data']['method']} | {s['data']['share']}% | {s['data']['files']}/{s['data']['of']} | "
+                  f"{', '.join(s['evidence'])} |" for s in styling]
+        lines.append("")
+    return "\n".join(lines)
+
+
 def render(k: dict) -> dict[str, str]:
     """File name in out/ -> content."""
     files = {"INDEX.md": render_index(k), "coverage.md": render_coverage(k)}
     if _docs(k["items"]):
         files["docs-index.md"] = render_docs_index(k)
+    if any(i.get("data", {}).get("topic") in ("ui-component", "token", "styling") for i in k["items"]):
+        files["rules/ui.md"] = render_ui_rules(k)
+        files["catalog/ui.md"] = render_ui_catalog(k)
     return files
 
 
@@ -110,4 +192,5 @@ def write(k: dict, out: Path):
     out.mkdir(parents=True, exist_ok=True)
     (out / "knowledge.json").write_text(json.dumps(k, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     for name, text in render(k).items():
+        (out / name).parent.mkdir(parents=True, exist_ok=True)
         (out / name).write_text(text, encoding="utf-8")

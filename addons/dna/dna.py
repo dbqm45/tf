@@ -44,7 +44,7 @@ except ImportError:  # the factory ships PyYAML in .tf/factory/_vendor; outside 
     print("dna: PyYAML is required (pip install pyyaml)", file=sys.stderr)
     sys.exit(2)
 
-from lib import detect, docs, emit, verify  # noqa: E402
+from lib import code, detect, docs, emit, verify  # noqa: E402
 
 
 def _version() -> str:
@@ -73,6 +73,13 @@ def build(root: Path, today: str | None = None, online: bool = False, cache: Pat
     today = today or dt.date.today().isoformat()
     found = detect.detect(root, ADDON / "registry")
     items, coverage = found["items"], found["coverage"]
+    config = {}
+    if (ADDON / "dna.yaml").is_file():
+        config = yaml.safe_load((ADDON / "dna.yaml").read_text(encoding="utf-8")) or {}
+    blocks, cov = code.ui(root, items, config)
+    items += blocks
+    coverage["read"] += cov["read"]
+    coverage["skipped"] += cov["skipped"]
     facts, cov = docs.build(root, items, ADDON / "registry", cache or ADDON / "cache", online, today, docs_opts)
     items += facts
     coverage["read"] += [s for s in cov["read"] if s not in coverage["read"]]
@@ -84,7 +91,7 @@ def build(root: Path, today: str | None = None, online: bool = False, cache: Pat
         "commit": _commit(root),
         "items": items,
         "coverage": coverage,
-        "layers": {"stack": True, "docs": bool(facts)},
+        "layers": {"stack": True, "ui": bool(blocks), "docs": bool(facts)},
     }
 
 

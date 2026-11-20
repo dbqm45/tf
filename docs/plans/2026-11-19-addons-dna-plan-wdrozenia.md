@@ -13,8 +13,12 @@ A3 zrobione (`dna` 0.2.0, 2026-11-20): zainstalowana paczka, tarball npm i opis 
 źródła z `registry/docs-sources.yaml`, indeks BM25, `docs query`, `out/docs-index.md`. Sprawdzone na prawdziwym
 rejestrze npm (`react@18.3.1`, `@tanstack/react-query@5.51.1`): wiele paczek ma tylko krótki README z odnośnikiem do
 strony, więc wartość dla takich technologii zależy od wpisów w `docs-sources.yaml` (jeszcze pusty — każdy adres do
-sprawdzenia przed dodaniem) i od typów z `@types/*` (jeszcze nie pobierane). Następny: A4 (pomiar) albo uzupełnienie
-`docs-sources.yaml` dla stacku repo pilotażowego.
+sprawdzenia przed dodaniem) i od typów z `@types/*` (jeszcze nie pobierane). Dodane 0.2.1: typy z `@types/*` wersji z lockfile'a.
+A5 częściowo zrobione (`dna` 0.3.0, 2026-11-20): katalog UI (komponenty design systemu z formą importu używaną
+w kodzie, własne komponenty z oznaczeniem `@deprecated`, tokeny, pliki motywu, sposób stylowania), `out/rules/ui.md`
+i `out/catalog/ui.md`. Sprawdzone na publicznym projekcie Next.js + MUI (`devias-io/material-kit-react`): MUI 7.1.1,
+`sx` w 94% plików, import `import Stack from '@mui/material/Stack'`, 2,4 s. Z A5 zostało: wzorce na rodzaj zmiany
+(`exemplars.json`) i konwencje spoza UI. Następny: A6 (`check` diffu wobec katalogu) albo reszta A5.
 
 ## 1. Cel
 
