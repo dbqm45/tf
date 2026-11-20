@@ -1,5 +1,7 @@
 # HTTP in API practice: caching, negotiation, limits, collections, bulk operations
 
+> **Contents:** 1. HTTP caching · 2. Content negotiation · 3. Rate limits · 4. Collections: pagination, filtering, sorting, search · 5. Bulk and long operations · 6. Retries and idempotency · 7. HATEOAS in practice · 8. REST maturity levels and commands as documents
+
 ## 1. HTTP caching
 - Every `GET` response has a consciously set `Cache-Control`:
   - public, rarely changing data: `public, max-age=…` (for a CDN `s-maxage`);
@@ -59,25 +61,38 @@ resources are cheap and useful. A list of allowed actions in a resource (e.g. `"
 show the right buttons without copying business rules.
 
 ## 8. REST maturity levels and commands as documents
-- **The Richardson maturity model** describes the steps towards REST:
-  - level 0: one endpoint, everything through `POST` (an RPC style over HTTP);
-  - level 1: separate resources with their own addresses;
-  - level 2: HTTP methods and codes according to their semantics (`GET` without effects, `201`, `404`, `409`);
-  - level 3: hypermedia, i.e. the response contains links to the possible next steps (section 7).
+**Richardson maturity model** — a way to describe how much of HTTP an API actually uses, not an exam to pass:
+- **Level 0:** one endpoint, every call is `POST /api` with the operation name in the body. HTTP is only a transport
+  (RPC over HTTP).
+- **Level 1:** separate resources with their own URIs (`/orders/42`, `/customers/7`), still often with one verb.
+- **Level 2:** HTTP methods and status codes with their proper meaning: safe `GET`, `201` with `Location` on create,
+  `404`, `409` on conflict, `412` on a failed precondition. This is the reasonable baseline for most APIs.
+- **Level 3:** hypermedia controls; responses carry links to related resources and to the next possible steps.
+  Take the cheap parts (collection links, a list of allowed actions, section 7); a fully hypermedia-driven client is
+  worth it only when clients really must discover the API at run time.
+- The model has four levels, 0 to 3. Anything called "level 4" is an informal label, not part of the model.
 
-  Most good public APIs aim for level 2 and take only the cheap elements from level 3. The model is a tool
-  for description, not a goal to "pass".
-- **A command as a document:** a business operation that is not a field edit you expose as creating a resource
-  describing the decision, e.g. `POST /complaints/{id}/approvals` with the body `{ "reason": …, "decidedBy": … }`.
-  The response is `201` with `Location` (synchronously) or `202` with a processing status (asynchronously).
-  - The command has an identity, an author, a time and a result, so it can be read, audited, retried idempotently
-    (an `Idempotency-Key` or a client-assigned identifier) and rejected with a reason (`422`).
-  - The resource name comes from the domain language (approval, revocation, correction), not from the table. A `PATCH` changing
-    `status` to `approved` hides the business decision and bypasses its rules.
-  - A withdrawal is another command (e.g. `POST /complaints/{id}/approval-revocations`), not a `DELETE` of history.
-  - On the server side the command document goes to a command handler in the application layer (ddd-tactical-design).
-- Some training materials call designing an API around command documents "level 4" of REST maturity.
-  The Richardson model has levels 0–3, and "level 4" is an informal term.
+**Business actions as resources.** An operation that is not an edit of a field (approve a complaint, cancel an order,
+correct an invoice) and that carries its own data, author, time and outcome is exposed as *creating a resource that
+records the decision*:
+```http
+POST /complaints/123/approvals
+Idempotency-Key: 6f1c...
+If-Match: "v7"
+
+{ "reason": "defect confirmed by service", "decidedBy": "u-55" }
+```
+- Response: `201 Created` with `Location: /complaints/123/approvals/9` when the decision is taken synchronously, or
+  `202 Accepted` with a status resource to poll when processing is asynchronous.
+- The command has an identity, so it can be read back, audited and retried safely (`Idempotency-Key`, or an id chosen
+  by the client and sent with `PUT`). A rule that refuses the decision answers `422` with a problem document
+  (RFC 9457) saying why; a stale `If-Match` version answers `412`.
+- Name the resource after the domain decision (approvals, cancellations, corrections). `PATCH { "status": "approved" }`
+  hides the decision, loses who and why, and lets clients bypass the rules.
+- Undoing a decision is another command, e.g. `POST /complaints/123/approval-revocations`, not `DELETE` on the
+  approval: the history stays.
+- On the server, each such resource maps to a command handler in the application layer (ddd-tactical-design);
+  asynchronous variants and their status resources: `styles-and-communication.md`.
 
 ## Sources
 - [MDN: HTTP caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching), [MDN: Content negotiation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Content_negotiation),
@@ -90,6 +105,4 @@ show the right buttons without copying business rules.
 - L. Richardson, "Justice Will Take Us Millions Of Intricate Moves", QCon 2008 (the talk that introduced
   the levels) and M. Fowler, "Richardson Maturity Model" (martinfowler.com/articles/richardsonMaturityModel.html,
   2010) [unverified: pages unavailable from this session, dates from secondary sources].
-- A command as a document and "level 4" based on the programme of the training "DDD — advanced modelling techniques
-  and archetypes" (Bottega IT Minds, material from the human, 2026-10-21).
 Described in our own words.
