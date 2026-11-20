@@ -157,6 +157,39 @@ class ScanTest(unittest.TestCase):
         self.assertEqual({(f["file"], f["signal"]) for f in data["findings"]},
                          {("shop/tests/test_cards.py", "float-money")})
 
+    def test_fowler_signals(self):
+        put(self.root, {
+            "src/Shipment.java": "class Shipment { BigDecimal weight_kg; int lengthCm; int timeout_ms; }\n",
+            "src/customer.py": "class Customer:\n    legacy_id = None\n    crm_id = None\n",
+            "db/fix.sql": "UPDATE readings SET value = 0.2 WHERE id = 7;\n",
+            "src/lab.ts": "measurement.value = corrected;\nif (measurement.value == 0) {}\n",
+            "src/Http.java": "class Http { int timeout_ms; int retry_secs; String source_id; }\n",
+            "src/units.py": "UNITS = [(\"sq_cm\", \"sq_cm\"), (\"fl_oz\", \"fl_oz\")]\n",
+        })
+        _, data = self.scan_json()
+        got = {(f["signal"], f["file"], f["line"]) for f in data["findings"]}
+        self.assertIn(("unit-in-name", "src/Shipment.java", 1), got)
+        self.assertIn(("external-ids", "src/customer.py", 2), got)
+        self.assertIn(("external-ids", "src/customer.py", 3), got)
+        self.assertIn(("reading-overwrite", "db/fix.sql", 1), got)
+        self.assertIn(("reading-overwrite", "src/lab.ts", 1), got)
+        self.assertNotIn(("reading-overwrite", "src/lab.ts", 2), got)
+        self.assertFalse(any(f["file"] in ("src/Http.java", "src/units.py") for f in data["findings"]), data["findings"])
+        arch = {f["signal"]: f["archetype"] for f in data["findings"]}
+        self.assertEqual(arch["unit-in-name"], "quantities-and-money")
+        self.assertEqual(arch["external-ids"], "identity-and-references")
+        self.assertEqual(arch["reading-overwrite"], "observations-and-measurements")
+
+    def test_fowler_vocabulary(self):
+        put(self.root, {
+            "src/telemetry/SensorReading.kt": "class SensorReading(val threshold: Double) { fun observation() {} }\n",
+            "src/mdm/Dedup.cs": "class Dedup { void MergedInto(Customer golden) {} string Alias; }\n",
+        })
+        _, data = self.scan_json()
+        vocab = {(v["archetype"], v["file"]) for v in data["vocabulary"]}
+        self.assertIn(("observations-and-measurements", "src/telemetry/SensorReading.kt"), vocab)
+        self.assertIn(("identity-and-references", "src/mdm/Dedup.cs"), vocab)
+
     def test_files_filter(self):
         put(self.root, SHOP)
         _, data = self.scan_json("--files", "app/rooms.py")

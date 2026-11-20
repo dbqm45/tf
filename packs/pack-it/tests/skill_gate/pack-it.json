@@ -124,19 +124,11 @@
   "offline": "2026-11-18"
  },
  "ddd-archetype-lookup": {
-  "fingerprint": "2f567e947e3a8a02",
-  "offline": "2026-11-20",
-  "model_previous": {
-   "report": ".tf/logs/evals/2026-11-20-gate-ddd-archetype-lookup.md",
-   "cost": 1.36,
-   "haiku": "5/5",
-   "sonnet": "5/5",
-   "date": "2026-11-20",
-   "note": "for an earlier version of the skill"
-  }
+  "fingerprint": "b4d175fe11b6c4cd",
+  "offline": "2026-11-20"
  },
  "ddd-archetypes": {
-  "fingerprint": "5d283b37d16c0aa0",
+  "fingerprint": "9a9e537f1601fd4a",
   "offline": "2026-11-20"
  },
  "ddd-connascence-analysis": {

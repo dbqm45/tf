@@ -67,6 +67,12 @@ SIGNALS = [
      "remedy": "currency inside the money value object, validated against ISO 4217",
      "patterns": [r"\b(string|str)\s+currency\w*\b", r"\bcurrency\w*\s*\??\s*:\s*(string|str)\b",
                   r"\bcurrency\w*\s+(varchar|char|text)\b"]},
+    {"id": "unit-in-name", "archetype": "quantities-and-money",
+     "title": "the unit encoded in a field name, the value a bare number",
+     "remedy": "a quantity value object (amount + unit); convert on read",
+     "patterns": [r"\b[a-z]\w{2,}?_(kg|mg|lbs?|oz|cm|mm|km|ml|kwh|mwh|wh|pct|percent)\b",
+                  r"\b[a-z]\w*?(Kg|Mg|Lbs|Cm|Mm|Km|Ml|Kwh|Mwh|Pct|Percent)\b"],
+     "case_sensitive": True},
     {"id": "balance-in-place", "archetype": "value-ledger",
      "title": "a balance changed in place, without entries",
      "remedy": "transactions with entries, reversals instead of edits, the balance derived",
@@ -105,6 +111,15 @@ SIGNALS = [
      "remedy": "an address value with a country template; zones as data",
      "patterns": [r"\b(street|city|zip_?code|postal_?code|post_?code|house_?number)\b"],
      "min_distinct": 2, "skip_file": r"address|location|place|geo"},
+    {"id": "external-ids", "archetype": "identity-and-references",
+     "title": "identifiers of other systems as loose columns",
+     "remedy": "identifiers as scheme + value, unique per scheme, never reused",
+     "patterns": [r"\b(legacy|external|old|crm|erp|sap|salesforce|hubspot|supplier|vendor|partner)_?(id|code|number|no)\b"]},
+    {"id": "reading-overwrite", "archetype": "observations-and-measurements",
+     "title": "a recorded reading or result overwritten in place",
+     "remedy": "reject the wrong observation with a link to its correction; keep both",
+     "patterns": [r"\bupdate\s+\w*(reading|measurement|observation|result|sample|metric)s?\s+set\b",
+                  r"\b\w*(reading|measurement|observation)\w*\.(value|result|amount)\s*=(?!=)"]},
     {"id": "type-branch", "archetype": "product-definitions",
      "title": "behaviour branched on a product type literal",
      "remedy": "product definitions and features as data",
@@ -112,7 +127,7 @@ SIGNALS = [
                   r"\bswitch\s*\(\s*[\w.]*(product_?type|item_?type|product_?kind)\b"]},
 ]
 for _s in SIGNALS:
-    _s["compiled"] = [re.compile(p, re.IGNORECASE) for p in _s["patterns"]]
+    _s["compiled"] = [re.compile(p, 0 if _s.get("case_sensitive") else re.IGNORECASE) for p in _s["patterns"]]
     _s["requires"] = re.compile(_s["file_requires"], re.IGNORECASE) if _s.get("file_requires") else None
     _s["skip"] = re.compile(_s["skip_file"], re.IGNORECASE) if _s.get("skip_file") else None
 
@@ -136,6 +151,10 @@ VOCABULARY = {
     "work-execution": {"work_order", "workorder", "timesheet", "job_card", "procedure", "checklist"},
     "commitments": {"contract", "agreement", "amendment", "quote", "quotation", "purchase_order", "framework_agreement"},
     "evidence-documents": {"retention", "legal_hold", "attachment", "signature", "document_version"},
+    "observations-and-measurements": {"measurement", "observation", "sensor", "telemetry", "sensor_reading",
+                                      "meter_reading", "lab_result", "test_result"},
+    "identity-and-references": {"external_id", "legacy_id", "dedup", "deduplicate", "deduplication", "merged_into",
+                                "golden_record", "master_data", "identification_scheme"},
     "production-traceability": {"bill_of_materials", "bom", "recipe", "genealogy", "recall", "traceability",
                                 "production_order"},
 }

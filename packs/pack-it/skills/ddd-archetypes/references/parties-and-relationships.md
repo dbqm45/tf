@@ -15,6 +15,16 @@
   A policy says which roles each party type may hold.
 - **Relationship**: its own entity with identity — *from party + role*, *to party + role*, a type, usually a direction,
   optionally a validity window. Managed separately from the parties it connects.
+- **Relationship types** (configuration, the "knowledge level"): for each type, which party kinds may stand at each end,
+  and optional structure — *must form a tree* (a legal ownership chain), *fixed tiers* (region → area → branch). Party
+  kinds may form a hierarchy; a rule on a broad kind (organisation) applies to every narrower kind (branch). This
+  catalogue is data that changes behaviour, so it gets its own tests.
+- **Scope of a relationship** (optional): what exactly one side has taken on for the other — which products, which
+  territory, up to what volume ("services pumps in the northern region, up to 40 sites"). Scope items are typed per
+  relationship type, not one universal attribute list.
+- **Position** (optional): a party for a job that outlives its holders ("plant safety officer"). Standing
+  responsibilities attach to the position; a person *holds* it through a relationship with a validity window. Use it
+  only when such responsibilities are substantial and holders change; otherwise link people directly.
 - **Contact points**: postal, email, web, phone — each with purposes (billing, delivery, contact) and a lifecycle.
   Usually a separate aggregate keyed by party id.
 
@@ -36,6 +46,7 @@
 
 ## Decisions to settle
 - Merging duplicates (two records of the same company): who decides, what happens to relationships and history?
+  Strategies and identifiers from many issuers → identity and references.
 - History and as-of-date queries ("who was the parent company on 1 June?").
 - Anonymisation that keeps relationships intact.
 - Consent per contact point.
@@ -45,6 +56,7 @@
 - Login, passwords, sessions → identity / be-auth-security.
 - Addresses' meaning and enclosing areas → places and zones (the party side owns *who uses which address for what*).
 - Contracts between parties → commitments.
+- Registered identifiers from several issuers, aliases, duplicate merging → identity and references.
 
 ## Traps
 - A `User` class with `isCustomer`, `isSupplier` flags and nullable company fields.
@@ -52,6 +64,8 @@
   All of them model the role instead of the party.
 - A tax id as primary key; a phone number as identity.
 - `parent_company_id` that cannot express a second, cost-centre hierarchy.
+- Relationship types hard-coded as enums with `if` checks on party kinds — a new structure needs a release.
+- Responsibilities of a job copied onto each new holder by hand.
 
 ## Worked example
 Requirement: a B2B marketplace where companies buy and sell; subsidiaries place orders, the parent pays invoices;
