@@ -720,6 +720,9 @@ def plugin_files(plan: "Plan", dst_root: Path, settings: dict, py: str, version:
     meta = {"name": "tf", "version": version, "description": "Team factory: skills, agents, hooks and rules of the "
             "/tf loop. Loaded only by a factory session (tf code)."}
     plan.copy(None, PLUGIN + "/.claude-plugin/plugin.json", (json.dumps(meta, indent=2) + "\n").encode("utf-8"))
+    market = {"name": "tf-project", "owner": {"name": "team factory"},       # .tf/ as a directory marketplace: the cloud
+              "plugins": [{"name": "tf", "source": "./plugin", "description": meta["description"]}]}   # (tf cloud-setup)
+    plan.copy(None, ".tf/.claude-plugin/marketplace.json", (json.dumps(market, indent=2) + "\n").encode("utf-8"))
     plan.copy(None, PLUGIN + "/hooks/hooks.json",
               (json.dumps({"hooks": hooks}, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     session = {k: v for k, v in settings.items() if k != "hooks"}

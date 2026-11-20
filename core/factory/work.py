@@ -54,7 +54,8 @@ MAX_RUN_USD = 500
 # human's copy — otherwise a task branch (e.g. from someone else's push) would run its own hook or instruction without asking
 CONTROL_FILES = (".claude/settings.json", ".claude/settings.local.json", ".mcp.json", "CLAUDE.md", "CLAUDE.local.md",
                  "AGENTS.md", ".claude/CLAUDE.md", ".claude/rules", ".claude/output-styles", ".claude/hooks",
-                 ".claude/agents", ".claude/skills", ".claude/commands", ".tf/factory", ".tf/config")
+                 ".claude/agents", ".claude/skills", ".claude/commands", ".tf/factory", ".tf/config",
+                 ".tf/plugin")   # factory mode (install --layout plugin): the plugin the agent loads
 INSTRUCTION_NAMES = ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md")     # also nested in project directories
 # environment variables passed to the agent: system, proxy and certificates, Claude authentication; the rest (GitHub,
 # cloud, database tokens) only from the human's list in the TF_WORK_ENV_ALLOW variable
@@ -277,10 +278,18 @@ def prepare_worktree(root: Path, key: str, base: str) -> tuple[Path | None, str]
     return wt, f"copied {copied} factory and task files to the worktree" if copied else ""
 
 
-def agent_command(key: str, budget: str, mode: str) -> list[str]:
+def has_plugin(root: Path) -> bool:
+    """Factory mode (install --layout plugin): the factory lives in .tf/plugin/ and the agent must load it."""
+    return (root / ".tf" / "plugin" / ".claude-plugin" / "plugin.json").is_file()
+
+
+def agent_command(key: str, budget: str, mode: str, wt: Path | None = None, plugin_layout: bool = False) -> list[str]:
     agent = shlex.split(os.environ.get("TF_WORK_AGENT") or "claude")
-    return [*agent, "-p", f"/tf {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode", mode,
-            "--strict-mcp-config"]        # without --mcp-config: no MCP servers from the repository or from configuration
+    plugin = []
+    if wt is not None and plugin_layout:
+        plugin = ["--plugin-dir", str(wt / ".tf" / "plugin"), "--settings", str(wt / ".tf" / "plugin" / "session-settings.json")]
+    return [*agent, *plugin, "-p", f"/tf {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode",
+            mode, "--strict-mcp-config"]   # without --mcp-config: no MCP servers from the repository or from configuration
 
 
 def agent_env() -> dict:
@@ -450,7 +459,7 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
         if dry:
             print(f"• task: {k} — {clean(task.get('title'))}")
             print(f"• worktree: {(root / WORKTREES / k).as_posix()} (branch story/{k.lower()} from {base or 'HEAD'})")
-            print(f"• command: {shlex.join(agent_command(k, budget, mode))}")
+            print(f"• command: {shlex.join(agent_command(k, budget, mode, root / WORKTREES / k, has_plugin(root)))}")
             return 0
         ok, note = claim(root, k, float(cfg.get("lock_hours") or 6))
         if not ok:
@@ -481,7 +490,7 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
             write_log(root, {"key": k, "event": "start", "started": started, "budget_usd": float(budget),
                              "worktree": wt.relative_to(root).as_posix()})   # before the agent: an interruption counts too
             try:
-                code = subprocess.run(agent_command(k, budget, mode), cwd=wt, env=agent_env(),
+                code = subprocess.run(agent_command(k, budget, mode, wt, has_plugin(wt)), cwd=wt, env=agent_env(),
                                       timeout=float(cfg.get("timeout_minutes") or 180) * 60).returncode
             except FileNotFoundError:
                 print("✗ the claude command (Claude Code) is not in PATH")

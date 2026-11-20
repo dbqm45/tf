@@ -49,6 +49,8 @@ tf — the team factory command: install, update, packs, health check (standard 
                               # (.tf/factory/task_state.py)
   tf code [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin) and its settings; a plain
                               # `claude` in the project loads nothing from the factory (install --layout plugin)
+  tf cloud-setup [--apply]    # factory mode in a cloud environment: prints the environment's setup script; --apply
+                              # enables the factory plugin and its session settings in ~/.claude/settings.json
   tf work --once --budget <USD> [--key <KEY>] [--dry-run]
                               # unattended: one task in Auto mode (light or normal weight) through the /tf loop in its
                               # own worktree (.tf/worktrees/<KEY>) with a spending limit; never merges (.tf/factory/work.py)
@@ -432,6 +434,64 @@ def cmd_code(rest: list[str]) -> int:
         return 130
 
 
+def merge_user_settings(cur: dict, session: dict, market: Path) -> dict:
+    """User settings with the factory marketplace and plugin enabled and the factory session settings; your values win
+    (env, status line), permission lists are joined without duplicates."""
+    out = json.loads(json.dumps(cur))
+    out.setdefault("extraKnownMarketplaces", {})["tf-project"] = {"source": {"source": "directory", "path": str(market)}}
+    out.setdefault("enabledPlugins", {})["tf@tf-project"] = True
+    for k, v in (session.get("env") or {}).items():
+        out.setdefault("env", {}).setdefault(k, v)
+    if session.get("statusLine") and "statusLine" not in out:
+        out["statusLine"] = session["statusLine"]
+    for kind in ("allow", "ask", "deny"):
+        add = (session.get("permissions") or {}).get(kind) or []
+        if add:
+            have = out.setdefault("permissions", {}).setdefault(kind, [])
+            have.extend(x for x in add if x not in have)
+    for k, v in session.items():
+        if k not in ("env", "statusLine", "permissions", "hooks", "$schema"):
+            out.setdefault(k, v)
+    return out
+
+
+def cmd_cloud_setup(apply: bool) -> int:
+    """Factory mode in a cloud environment: the session there starts without tf code, so the factory plugin is enabled in
+    the container's user settings (a directory marketplace in .tf/ and enabledPlugins), with the factory session settings."""
+    if not need_project():
+        return 2
+    if factory_layout() != "plugin":
+        print("✗ The factory mode needs the plugin layout (install.py --layout plugin).")
+        return 2
+    market, session_f = Path(".tf").resolve(), PLUGIN_DIR / "session-settings.json"
+    if not (market / ".claude-plugin" / "marketplace.json").is_file() or not session_f.is_file():
+        print("✗ The factory plugin is incomplete — run `tf doctor --fix` (or `tf` to update) first.")
+        return 2
+    if not apply:
+        print("Setup script of the cloud environment (environment settings → setup script). It runs before Claude "
+              "starts and turns the environment into a factory environment; an environment without it stays a plain one.\n"
+              "The factory files must be in the repository (team install, `--shared`), otherwise the cloud clone has none.\n")
+        print(f"if [ -d {Path.cwd().name} ]; then (cd {Path.cwd().name} && python3 .tf/factory/tf.py cloud-setup --apply); fi")
+        return 0
+    try:
+        session = json.loads(session_f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        print(f"✗ {session_f} is not valid JSON — run `tf doctor --fix`.")
+        return 2
+    user = Path.home() / ".claude" / "settings.json"
+    try:
+        cur = json.loads(user.read_text(encoding="utf-8")) if user.is_file() else {}
+    except ValueError:
+        print(f"✗ {user} is not valid JSON — nothing changed.")
+        return 2
+    new = merge_user_settings(cur, session, market)
+    if new != cur:
+        user.parent.mkdir(parents=True, exist_ok=True)
+        user.write_text(json.dumps(new, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"✓ Factory plugin enabled in {user} (marketplace {market}); a Claude session in this environment loads the factory.")
+    return 0
+
+
 def cmd_doctor(fix: bool, repo: str | None) -> int:
     """Install health: build check (versions, required packs, references), renames from core migrations."""
     if not need_project():
@@ -583,6 +643,8 @@ def main(argv: list[str]) -> int:
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "onboard.py"), *rest]).returncode
     if cmd == "code":
         return cmd_code(rest)
+    if cmd == "cloud-setup":
+        return cmd_cloud_setup("--apply" in rest)
     if cmd == "work":
         return engine("work.py", rest)
     if cmd == "cooldown":   # the version cooldown the /tf loop requires; --fix writes the missing settings
