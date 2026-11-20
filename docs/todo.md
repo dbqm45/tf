@@ -526,9 +526,9 @@ Nie bierzemy: autonomicznego zegara (30 s / 3 min), interfejsu tablicy ani konfi
   jako wykonawcy tylko do odczytu; uprawnienie dla skryptu w `pack-it/settings.json`.
 - [x] **E4.** Scenariusze ewaluacji, bramka skilla, `insights.md`, matrix, `refs`, PR.
 
-## DDD — zaawansowane modelowanie (program szkolenia Bottega, część 3)
+## DDD — zaawansowane modelowanie (część 3)
 
-Prośba człowieka (2026-10-21): wyciągnąć z programu szkolenia zagadnienia DDD i uzupełnić skille DDD o brakujące
+Prośba człowieka (2026-10-21): zebrać zagadnienia DDD i uzupełnić skille DDD o brakujące
 elementy na podstawie sprawdzonych źródeł (Evans 2003, Fowler „Analysis Patterns”, Arlow i Neustadt 2004,
 PLoP, GoF, martinfowler.com).
 
