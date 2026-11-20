@@ -117,6 +117,14 @@ PATH_CASES = [
     ("Read", {"file_path": "/elsewhere/dist/app.js"}, "none"),
     ("Edit", {"file_path": "/repo/dist/app.js"}, "none"),
     ("Read", {"file_path": "/repo/package.json"}, "none"),
+    # the sweep archive (core-sweep): agents stay out, a repo-wide search is not blocked
+    ("Read", {"file_path": "/repo/docs/project/archive/sweep/2026-11-20/docs/project/parked.md"}, "deny"),
+    ("Edit", {"file_path": "docs/project/archive/sweep/README.md"}, "deny"),
+    ("Grep", {"pattern": "TODO", "path": "/repo/docs/project/archive/sweep"}, "deny"),
+    ("Glob", {"pattern": "**/archive/sweep/**"}, "deny"),
+    ("Grep", {"pattern": "TODO"}, "none"),
+    ("Glob", {"pattern": "docs/**/*.md"}, "none"),
+    ("Read", {"file_path": "/repo/docs/project/archive/research/20261001-x.md"}, "none"),
 ]
 
 SECRET_CASES = [

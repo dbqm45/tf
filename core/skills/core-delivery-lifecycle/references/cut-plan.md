@@ -1,129 +1,141 @@
-# The cut plan — the order of work before the plan of the first step
+# Cut plan — vertical slices with enabling work (phase 5)
 
-> **Contents:** Two kinds of items · Item fields · Order · Release lines and flags · Slice size (no estimates) · Unknowns — where to settle them · Self-check before saving · Handoff
+> **Contents:** 1. Inputs · 2. Two kinds of item · 3. Choosing the first slice and the order · 4. Table columns (fixed) · 5. Status and blocking unknowns · 6. Slice size · 7. Release lines and flags (`release.yaml`) · 8. Self-check before B3 · 9. Handoff · 10. Example · 11. Sources
 
-The cut plan (`docs/project/05-plan/plan.md`, the `plan` template in core-project-record) answers only these questions:
-what first, what depends on what, what is blocked and what we postpone. It does not choose frameworks, does not design
-the schema and does not list files — the step plan in the `06-delivery/` report does that.
+The cut plan turns accepted requirements (B2) and the architecture into an ordered list of deliverable items in
+`05-plan/plan.md` (template `plan` in core-project-record). Its job is to make the first useful result arrive early
+and to keep every item small enough to review. The method combines the walking skeleton (Cockburn), story mapping
+(Patton) and testing the riskiest assumption first (Ries).
 
-The plan's column names stay in their template form (e.g. `Odblokowuje`, `Wymagania`), because `decision_record.py`
-and the pdi contract read them; below each one has its meaning next to it.
+## 1. Inputs
+- `03-requirements/requirements.md` with requirement IDs and acceptance criteria; the spec review result if one ran.
+- `04-architecture/stack-decision.md` and ADRs.
+- What already exists in the repository — the plan's **Repository inventory** table: each layer (UI, API, domain,
+  storage, pipeline, deployment, observability) marked present / partial / missing with a file as evidence. In a
+  brownfield project this stops the plan from scheduling work that is already done.
 
-## Two kinds of items
-- **S-NN — a slice:** one capability visible to the user, going through all the layers it needs. The result starts with
-  "the user can …". If that sentence cannot be written, it is not a vertical slice.
-- **F-NN — a foundation:** the smallest preparatory work without its own effect for the user. It must have the
-  **`Odblokowuje`** (unblocks) field: a specific S-NN, a specific unknown to settle or a verification path that an S-NN
-  needs. A foundation without `Odblokowuje` is layered work — remove it or fold it into the first slice that needs it.
-- **The limit of a foundation:** it does not finish a whole layer ("the whole data model", "the whole API", "full
-  authentication"). After it is done, at least one S-NN still integrates that layer through a real feature.
-- **A technical element appears in the first slice that needs it.** A foundation makes sense only when without it the
-  first slice cannot be planned, secured or checked.
-- A foundation does not duplicate a layer that the **repository inventory** reports as present. The inventory: frontend,
-  backend/API, data, authentication, deployment, observability — each as present / partial / missing, with a file as
-  evidence (a code map; pack-it: eng-codebase-mapping).
-- A justified "horizontal first" (an integration with a legacy system, a regulatory requirement for the data model, a
-  performance-critical core) is still an F-NN: specific, bounded and pinned to an S-NN.
+## 2. Two kinds of item
+| Kind | ID | What it delivers | Must name |
+|---|---|---|---|
+| Vertical slice | `S-NN` | a behaviour a user (or calling system) can exercise end to end: "the user can …" | at least one real requirement ID (e.g. `FR-007`, `US-02`, `TSK-57`) or, where no ID exists, a verification |
+| Foundation (enabling work) | `F-NN` | something no user sees but slices need: a pipeline, an auth adapter, a schema migration framework | the slices of **this** change it unblocks, in `Odblokowuje (F)` |
 
-## Item fields
-| Field (column) | Rule |
+Rules:
+- A foundation with an empty Unblocks cell is layered work in disguise — drop it or fold it into the first slice that
+  needs it. Unblocks entries must be items of the same change.
+- A foundation is as small as the first slice needs; it grows with later slices, not ahead of them.
+- "Build the whole data model first", "all the endpoints, then all the screens" are layered plans: each slice adds the
+  tables, endpoints and screens its own behaviour needs.
+
+## 3. Choosing the first slice and the order
+1. **North star** (heading kept for the template and the plan check): the thinnest end-to-end flow that proves the
+   product works at all — one user action through every layer, deployed to a test environment. Write it in one
+   sentence with its item ID. It doubles as the walking skeleton.
+2. **Riskiest assumption next:** the item whose failure would change the plan most (an external API, a performance
+   limit, a regulatory constraint) goes as early as dependencies allow, or gets a spike first.
+3. **Dependencies:** an item starts only when its `Warunki wstępne` are done; `Równolegle z` shows what can run at the
+   same time on separate branches.
+4. **Tie-break** when several orders satisfy 1–3: the front-matter key `cel_sekwencji` states what the sequence
+   optimises — `fast release`, `market signal`, `quality`, `simplicity` or `learning` — and the order that serves it
+   best wins. `glowne_ryzyko` (`decisions | time | throughput | external | skills | none`) names the main threat to the
+   plan; it tells you where to put spikes and buffers (e.g. `external` → integrate the third party early behind a stub).
+
+## 4. Table columns (fixed)
+The items table in the template (column names are read by `decision_record.py` and the pdi contract; do not rename them):
+
+`ID` | `Identyfikator zmiany` | `Wynik (użytkownik może …)` | `Wymagania` | `Warunki wstępne` | `Odblokowuje (F)` |
+`Równolegle z` | `Wykonawca` | `Status`, plus `Wydanie` and `Flaga` when a release plan exists.
+
+The mode-pdi plan template uses the English names `Release`, `Flag`, `Unblocks`, `Requirements`, `Verification`.
+The values in `Wydanie`/`Release` and `Flaga`/`Flag` must equal those in `release.yaml`.
+
+Other template sections: **North star**, **Repository inventory**, **Blocking unknowns**, **Spikes**, **Postponed**,
+**Done**, then Open questions and Handoff.
+
+## 5. Status and blocking unknowns
+Status values: `proposed` / `ready` / `blocked` / `in progress` / `done`.
+- `blocked` exactly when the item depends on an open question marked Blocks = yes in **Blocking unknowns**.
+- `ready` only when every precondition is `done` and no blocking unknown points at it.
+
+How to treat an open question:
+| Situation | Action |
 |---|---|
-| `Wynik` (outcome) | S: "the user can …", F: "(foundation) … is ready" |
-| `Identyfikator zmiany` (change identifier) | kebab-case, stable; the name of the branch and of the step report (not `S-01`) |
-| `Wymagania` (requirements) | literal IDs from the requirements (`FR-007`, `US-02`), no paraphrase |
-| `Warunki wstępne` (preconditions) | IDs of other items or a specific external state |
-| `Równolegle z` (in parallel with) | items with no dependency path between them (separate worktrees — core-git-workflow) |
-| Blockers | only external ones (a vendor, a stakeholder's decision); what the team settles itself is an unknown |
-| Unknowns | a question — an owner — blocks: yes/no |
-| Risk | one sentence: why the item stands exactly here in the order |
-| `Wydanie` (release) | the release line: `R1` (MVP), `R2`… — the "Release lines and flags" section |
-| `Flaga` (flag) | the key of the flag behind which the slice is deployed before the decision to expose it, or "—" |
-| `Status` | proposed / ready / blocked / in progress / done |
+| The answer changes what is built, and only a person can give it (business rule, legal, budget) | Blocking unknown with an owner; the dependent items are `blocked` |
+| The answer can be found by trying (does the library handle X, is the API fast enough) | A time-boxed spike in **Spikes**, result recorded, then the item becomes `ready` |
+| A reasonable default exists and is cheap to change later | Proceed with the default, write it in `decisions.md`, Blocks = no |
+| Not needed for the next release line | Move the item to **Postponed** with the reason |
 
-- **Blocked** if and only if at least one unknown has "blocks: yes".
-- **Ready** only when all preconditions are done (or present in the inventory) and there are no blocking unknowns.
+## 6. Slice size
+A slice should be reviewable in one sitting and demonstrable with one acceptance example. Split it when:
+- it contains several user actions that could ship separately (split by workflow step);
+- it mixes the happy path with many error or edge paths (ship the happy path, then the rules one by one);
+- it serves several data variants or user roles that differ in behaviour (one variant first);
+- it carries more than one independent technical risk (separate the risks, or spike one);
+- its requirements are only partly covered (split off the covered part, leave the rest with its own ID).
+Do not split below the point where a slice no longer changes anything a user or caller can observe.
 
-## Order
-1. Foundations in dependency order, then slices — nothing depends on a later item (topological order).
-2. **The north star** — the smallest end-to-end flow that proves the product thesis — as early as the dependencies
-   allow. It does not have to be first.
-3. Ties are settled by the **sequence goal** recorded in the plan:
-   - a fast release → the "must" path first, the rest postponed;
-   - a market signal → the riskiest assumption first;
-   - quality → security and observability foundations are not postponed;
-   - learning → the unknown technology first;
-   - simplicity → the smallest slice first.
-4. An open question that affects the order leaves the affected items blocked — do not presume the answer.
+## 7. Release lines and flags (`release.yaml`)
+Group slices into release lines. **R1 is the MVP**: the North star plus the minimum needed for a measurable outcome.
+Write the plan to `05-plan/release.yaml` (or `changes/CHG-n/release.yaml`):
 
-## Release lines and flags
-- **R1 = MVP:** the north star plus the minimum that gives the outcome from the change's intent (`intent.md`) or from the
-  goals in the brief. It has a named outcome and a metric with a threshold and a horizon ("recovered payments ≥ 25% in
-  30 days") and guardrail metrics. The rest goes to R2…Rn; "Out of MVP scope" from the requirements are candidates for R2.
-- **A flag** when a slice is deployed before the human decides to expose it: an owner, a removal date and rollout stages
-  (internal → percent → 100%), each with an exit criterion and a minimum time.
-- The record: the release plan `release.yaml` next to the cut plan (`05-plan/release.yaml`; a change in the change log:
-  `changes/CHG-n/release.yaml`) in the shape of the pdi 0.4.0 contract:
-  ```yaml
-  change: CHG-12
-  mvp:
-    release: R1
-    outcome: The customer can retry a failed payment without being charged twice
-    metric: { name: recovered_payments, target: ">= 25%", horizon_days: 30 }
-    guardrails: [double_charges = 0]
-  releases:
-    - { id: R1, name: MVP, tasks: [TSK-57, TSK-58] }
-    - { id: R2, tasks: [TSK-59] }
-  flags:
-    - key: payment-retry
-      tasks: [TSK-57, TSK-58]
-      owner: PO Payments
-      remove_by: 2026-12-31
-      rollout:
-        - { stage: internal, min_days: 3, exit: "0 critical bugs" }
-        - { stage: "10%", min_days: 7, exit: "recovered >= 15%, duplicates = 0" }
-        - { stage: "100%" }
-  ```
-  The `Wydanie` and `Flaga` columns in the plan have the same values as `release.yaml`.
+```yaml
+change: CHG-12
+mvp:
+  release: R1
+  outcome: "customers recover failed card payments without contacting support"
+  metric: {name: recovered_payment_rate, target: ">= 30%", horizon_days: 30}
+  guardrails: ["refund rate does not rise", "p95 checkout latency < 800 ms"]
+releases:
+  - {id: R1, name: MVP, tasks: [F-01, S-01, S-02]}
+  - {id: R2, tasks: [S-03, S-04]}
+flags:
+  - key: payment-retry
+    tasks: [S-01, S-02]
+    owner: product-owner
+    remove_by: 2027-03-31
+    rollout:
+      - {stage: internal, min_days: 3, exit: "no P1 defects"}
+      - {stage: "10%", min_days: 7, exit: "metric trend positive, guardrails green"}
+      - {stage: "100%"}
+```
 
-## Slice size (no estimates)
-Slices have a comparable weight. Split a slice when it:
-- covers more than one main user action;
-- combines configuration, the main flow and administration;
-- covers most of the "must" requirements while other slices cover one minor each;
-- has more than one independent risk or unknowns of different owners.
-Split by narrower outcomes (process paths, personas, stages), never by layers. The cut plan has no days, points or
-sizes — the order comes from the dependencies. Cost and deadline for the sponsor: separately, as ranges (project
-planning; pack-it: proc-project-planning).
+- Every slice belongs to exactly one line; a slice sits behind at most one flag.
+- Every flag has an owner, a `remove_by` date and rollout stages (internal → percentage → 100%).
+- Phase 8 follows these stages; each move to the next stage is human gate **B5**.
 
-## Unknowns — where to settle them
-| Kind of unknown | Where |
-|---|---|
-| local, about the code ("is there already a form component?") | the step plan — it checks the repo and decides |
-| external, affects a technical decision (a library, a vendor API, an algorithm) | research before the step plan (core-source-research; pack-it: eng-codebase-mapping) |
-| a suspicious assumption, the problem may be framed wrongly | reframing before the step plan (pack-it: eng-debugging) |
-| no effect on the current slice | "Open questions" or "Postponed" |
-Research makes sense when it blocks a decision — not "just in case".
+## 8. Self-check before B3
+- [ ] The North star is one sentence, names an item, and crosses every layer.
+- [ ] Every `F-NN` has an Unblocks value naming slices of this change.
+- [ ] Every `S-NN` has a real requirement ID or a verification.
+- [ ] No item is `ready` while a precondition is open or a blocking unknown points at it.
+- [ ] Every blocking unknown has an owner; spikes have a time box.
+- [ ] No layered items ("all tables", "all APIs").
+- [ ] Release and Flag cells match `release.yaml`; R1 has an outcome metric with a target and horizon.
+- [ ] Postponed items carry a reason.
 
-## Self-check before saving
-Do not save the plan if any point fails:
-- [ ] every "must" requirement and every story appears in the `Wymagania` field of at least one slice;
-- [ ] every slice has at least one real requirement ID — a new need from the conversation goes to "Open questions" or
-      "Postponed", not into the plan;
-- [ ] the graph has no cycles, every ID from the preconditions exists, the order is topological;
-- [ ] every F-NN has `Odblokowuje`, does not finish a whole layer and does not duplicate a layer present in the inventory;
-- [ ] statuses agree with the unknowns; the table agrees with the item descriptions;
-- [ ] at least one slice is "ready" — if everything is blocked or there are five F and zero ready S, the requirements
-      are not closed or the inventory was misread: go back to phase 3;
-- [ ] the terms "north star" and "riskiest assumption" explained in one sentence at first use (the human does not know
-      the plan's jargon);
-- [ ] R1 has an outcome and a metric (threshold, horizon) from the change's intent; every S-NN in R1 is visible to the user;
-- [ ] every S-NN deployed before the decision to expose it has a flag with an owner, a removal date and stages with an
-      exit criterion; `release.yaml` agrees with the `Wydanie` and `Flaga` columns.
+`decision_record.py` in mode-pdi checks the foundation and requirement rules automatically.
 
-## Handoff
-At the end **one** recommendation of the next step, not a list to choose from: the north star, if ready; otherwise the
-foundation that unblocks it; otherwise the most important unknown to settle; otherwise the ready slice with the most
-dependent items. Before the step plan it is worth reviewing the plan (change review; pack-it: qa-change-review, mode A).
+## 9. Handoff
+The Handoff names **one** recommended next item (the first `ready` one in order), the persona that delivers it and what to
+read (TL;DR, North star, that item's row). Alternatives, if any, go to Open questions — the delivering persona should
+not have to choose.
 
-Source: the 10xDevs course, ed. 3 (2026), module 2, lessons 1–2 (roadmap, unknowns) — training material
-(accessed 2026-10-09); A. Cockburn — walking skeleton. Described in our own words.
+## 10. Example
+14 requirements for a booking app; the payment provider's sandbox terms are not yet confirmed.
+
+| ID | Wynik (użytkownik może …) | Wymagania | Warunki wstępne | Odblokowuje (F) | Status |
+|---|---|---|---|---|---|
+| F-01 | — (pipeline to test env, health check) | — | — | S-01, S-02 | ready |
+| S-01 | see free slots for one resource and book one | FR-001, FR-002 | F-01 | — | proposed |
+| S-02 | cancel own booking | FR-005 | S-01 | — | proposed |
+| F-02 | — (payment adapter stub) | — | S-01 | S-04 | blocked |
+| S-04 | pay a deposit when booking | FR-009 | F-02 | — | blocked |
+
+North star: S-01. Blocking unknown "which payment provider and contract" (owner: product owner, Blocks = yes) → F-02 and
+S-04 are blocked; the rest proceeds.
+
+## 11. Sources
+- Alistair Cockburn, *Crystal Clear* (2004) — walking skeleton.
+- Jeff Patton, *User Story Mapping* (2014) — slicing by user activity, release lines across the map.
+- Eric Ries, *The Lean Startup* (2011) — test the riskiest assumption first.
+- Pete Hodgson, "Feature Toggles (aka Feature Flags)", martinfowler.com (2017) — flag lifecycle and removal.

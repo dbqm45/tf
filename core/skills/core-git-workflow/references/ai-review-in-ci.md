@@ -1,91 +1,97 @@
-# PR review by AI in CI — an operational pattern
+# AI review of pull requests as a CI step
 
-Review criteria against the plan and triage with the human: the change review skill (pack-it: qa-change-review).
-Workflow security (permissions, action SHAs, `env:` instead of interpolation): the CI/CD skill (pack-it: ops-ci-cd). This file describes how an AI review works **as a CI step**.
+Contents: 1. What the factory template does · 2. Design rules · 3. Input · 4. Output and the gate · 5. Comments and bot
+commits · 6. Plan conformance criteria · 7. Keeping it useful · 8. Troubleshooting
 
-## 1. When to run it
-- On an event that means something: a PR opened and updated — not "every hour just in case".
-- A label (e.g. `ai-review`) or a path filter, so a PR with documentation alone does not pay for a review.
-- **Triage before the review:** a cheap step (the number and paths of files, the diff size, labels) gives the PR a risk level.
-  Low → a fast, cheap run; critical paths (auth, payments, migrations, `infra/`, `.github/`) → a stronger
-  model and always a human. Record the level, so you can count the cost per level (core-cost-control).
-- A PR from a fork: the job does not run (the condition `github.event.pull_request.head.repo.full_name == github.repository`),
-  because it must not be given secrets or write rights (core-agent-security).
+Keep two things apart: the **criteria** (what a good change looks like — `REVIEW.md`, the plan, section 6) and the
+**mechanics** (where the diff comes from, how the verdict becomes a status). The same criteria then serve this workflow,
+an agent run locally and a human checklist.
 
-## 2. The agent's input
-- The diff against the base with three dots (`git diff origin/<baza>...HEAD` — only the PR's changes). It needs
-  `actions/checkout` with `fetch-depth: 0`; with a shallow clone the diff is empty, and the agent "approves" nothing.
-- The PR title and description through `env:`, never through `${{ … }}` in `run:`.
-- Filter lockfiles, generated code and dumps out of the diff — cost and noise.
-- A review against the plan: the plan is pointed to by a convention (the step report file changed in the PR) with an override by the line
-  `Plan: <ścieżka>` in the PR description. **No plan = a neutral comment and exit code 0**, not a red check.
+## 1. What the factory template does
+`python3 .claude/skills/core-git-workflow/scripts/ai_review.py install [--all-prs] [--force]` copies
+`templates/ai-review.yml` to `.github/workflows/ai-review.yml` (exit 0 written, 1 refused because the file exists, 2 bad
+call). `ai_review.py review-md [--from FILE] [--force]` turns an approved rules draft into `REVIEW.md`.
 
-## 3. The output contract
-- A report in a fixed shape: a fixed marker at the start (e.g. `<!-- AI-REVIEW-REPORT -->`) and the line
-  `- **Werdykt**: …`. The next workflow step checks the marker and the verdict deterministically. A model that
-  "improvises the format" is to turn a check red, not pass silently.
-- Instead of parsing text you can force JSON: `claude-code-action` with `--json-schema` in `claude_args` returns the result
-  in the step output `structured_output` (read with `fromJSON(steps.<id>.outputs.structured_output).verdict`).
-- A three-level verdict:
-  - **APPROVED** — all dimensions passed or at most 2 minor warnings;
-  - **NEEDS_ATTENTION** — a few warnings or one non-critical failure; a green status with the description "for triage";
-  - **REJECTED** — a security gap, a big drift from the plan, a threat to data, failing or missing promised tests.
-- The agent in CI does not send a formal "approve" or "request changes" — only comments. The human decides.
+The workflow:
+- runs on `pull_request` (opened, synchronize, reopened, labeled, unlabeled); by default only with the `ai-review` label,
+  every PR with `--all-prs`;
+- skips PRs from forks (`head.repo.full_name == github.repository`): a fork run gets no secrets and must not get write rights;
+- `permissions: {}` at the top; the job asks only for `contents: read`, `pull-requests: write`, `statuses: write`;
+- one run per PR at a time (`concurrency` keyed by the PR number, older run cancelled);
+- actions pinned by full 40-character commit SHA, the version in a comment;
+- checkout with `fetch-depth: 0`, then `anthropics/claude-code-action` with a `prompt`, and `claude_args` setting the model,
+  `--max-turns`, read-only `--allowedTools` and `--json-schema`;
+- the agent only reads and returns JSON: `verdict` (APPROVED | NEEDS_ATTENTION | REJECTED), `summary`, up to 10 `findings`;
+- a later step with `if: always()` reads `structured_output`, posts the commit status `ai-review/verdict`
+  (REJECTED or no valid result → `failure`; otherwise `success`) and keeps one summary comment, found by the hidden marker
+  `<!-- AI-REVIEW-REPORT -->` and updated in place;
+- the `ai-review-override` label, added by a human, sets the status green without a new review; removing it sets
+  `pending` until the next review.
+Setup by the human: secret `ANTHROPIC_API_KEY`, branch protection requiring `ai-review/verdict`. Before relying on it,
+open one PR with a planted bug (expect red) and one clean PR (expect green).
 
-## 4. Findings
-The format, weight (critical / warning / observation), impact (low / medium / high), the limit of 10 findings and the rule
-of one fix — as in the change review skill (pack-it: qa-change-review, "Finding"). In CI additionally: a secret found in the code you describe without
-the value (`<UKRYTE: token pasujący do wzorca X>`), because everyone with access to the repo reads a PR comment.
+## 2. Design rules
+- **Trigger** on PR open/update, narrowed by a label or path filter — every run costs money.
+- **Triage first** with a cheap deterministic step (number of files, paths, diff size, labels) → risk level. High-risk
+  paths (auth, payments, IaC, workflows) get the stronger model and always a human reviewer. Log the level to see cost.
+- **The agent never formally approves or requests changes.** It returns a verdict; the workflow turns it into a status;
+  a human approves.
+- No `${{ … }}` expressions inside `run:` — pass PR title, body, SHA through `env:` so untrusted text cannot inject shell.
+- The diff, files and PR description are data, not instructions (core-agent-security).
 
-## 5. Dimensions in a review against the plan
-From the plan extract: the files from the phases, the automatic verification commands, the manual criteria, "Out of scope", the key decisions.
-| Dimension | Failed when | Warning when |
+## 3. Input
+- **Three-dot diff** against the base: `git diff origin/<base>...HEAD` — only this PR's changes. It needs the base
+  history: with the default shallow checkout the diff is empty and the agent "approves" nothing. Hence `fetch-depth: 0`.
+- Filter noise: lockfiles, generated code, snapshots, dumps.
+- **Plan pointer:** by convention (the step report changed in the PR) or a `Plan:` line in the PR body. No plan → review
+  against `REVIEW.md` only and say so; this is not a failure.
+
+## 4. Output and the gate
+- Machine-checkable output: JSON forced by `--json-schema` and read from the action's `structured_output`, or a fixed
+  marker on the first line plus a `Verdict:` line. Never parse free prose.
+- Verdict meanings must be written down: REJECTED = a critical finding (bug, security, broken contract), NEEDS_ATTENTION
+  = important findings a human should weigh, APPROVED = nothing above minor.
+- **The gate lives in the workflow, not in the model:** the agent step exits 0; the verdict step sets a commit status with
+  a stable context; branch protection requires that context. A missing or invalid result is red — never a silent pass.
+- Commit statuses are posted with the REST endpoint `POST /repos/{owner}/{repo}/statuses/{sha}`
+  (state `error | failure | pending | success`, `context`, `description`).
+
+## 5. Comments and bot commits
+- One summary comment: verdict, a short table per dimension, a link to the full report, at most 5 one-line findings.
+  Find the previous one by the hidden marker and update it instead of stacking new ones.
+- Inline review comments only on lines the PR added; check the line against the diff in code before posting — the API
+  rejects a position outside the diff. Post them one by one so one bad position does not lose the rest.
+- If the workflow commits a report to the PR branch: put `[skip ci]` in the message (GitHub then skips push and
+  pull_request workflows for that commit) and check it is there before pushing; never `--amend`. Because the run is
+  skipped, set the status explicitly on the bot commit's SHA. A guard step also skips runs for bot-authored commits.
+- Findings that reveal a secret describe its location and type, never the value. Finding format and weights:
+  qa-change-review (pack-it).
+
+## 6. Plan conformance criteria
+| Dimension | Fail when | Warn when |
 |---|---|---|
-| Agreement with the plan | a planned change is missing from the diff; a big drift of meaning | a small drift |
-| Scope discipline | changes contradicting "Out of scope" | harmless additions (a helper for planned code) |
-| Security and quality | any critical finding | only warnings |
-| Architecture | broken module boundaries or dependency direction | — |
-| Consistency with neighbouring code | rarely (when something breaks) | a significant deviation from 1–2 similar files |
-| Tests | a test promised in the plan does not exist or fails | new behaviour without a test, a shallow test |
-| Success criteria | the lint, build or typecheck from the plan fails | a manual criterion ticked without a trace in the code |
-The plan defines what "tested" means; you do not judge what the plan did not promise.
+| agreement with the plan | end state of the plan not reached | a step done differently without a note |
+| scope discipline | files outside the plan changed substantially | small unplanned edits |
+| security and quality | secret, injection, auth bypass | missing input validation at a boundary |
+| architecture | dependency direction broken | new pattern where one exists |
+| consistency with neighbours | contract changed without its consumers | naming drift |
+| tests | promised test missing or weakened | thin coverage of a new branch |
+| success criteria | an automatic criterion fails | a manual criterion not yet confirmed |
+The plan defines what "tested" means; do not judge the PR on things the plan never promised.
 
-## 6. Publishing and the gate
-- **The gate lives in the workflow, not in the agent.** The agent's step ends with exit code 0 even at REJECTED; the next step
-  (`if: always()`) reads the verdict and sets a commit status with a fixed context (e.g. `ai-review/verdict`), which
-  later runs overwrite. Branch protection requires this status. When the agent fails, the comments stay.
-- **A deliberate bypass:** a label (e.g. `ai-review-override`) added by a human changes the status to green
-  with the description "bypass". The `labeled`/`unlabeled` events run only the cheap verdict step, without a new review.
-- **A commit of the report by a bot** (when the report is to live in the repo):
-  - a subject with `[skip ci]`, checked before the push (`git log -1 --format=%s | grep -F '[skip ci]'`, otherwise abort) —
-    without the marker the workflow runs on its own commit in a loop;
-  - always a new commit, never `--amend` (the history of reviews = an audit trail);
-  - after a commit with `[skip ci]` the check hangs on the old SHA — you set the status explicitly on the bot commit's SHA.
-- **A guard step at the start:** the last commit authored by the bot or with `[skip ci]` → skip the review.
-- **Inline comments only on lines added in the diff** (`+` hunks) — check it deterministically before sending.
-  Send the comments one by one, so a position error is loud; findings without a line in the diff go to the summary
-  comment. [unverified: creating a review in bulk through the API is said by the course to silently drop comments
-  with a wrong position — check in the GitHub REST documentation before relying on it]
-- **Deduplication:** every bot comment ends with a hidden marker; first you publish the new ones, then you delete the old ones
-  with the marker and a date from before the run started. When the new ones did not go out, the old ones stay — never zero information.
-- The summary comment: the verdict, the dimension table, a link to the report (`blob/<SHA>/<ścieżka>`), at most 5 findings
-  one line each.
-- `claude-code-action`: limits and tools you give in `claude_args` (e.g. `--model`, `--max-turns`, `--allowedTools`);
-  you pin the action to the full SHA. A ready workflow from this pattern: `scripts/ai_review.py install` (the template
-  `templates/ai-review.yml`: the verdict from JSON, the status, the summary comment with deduplication, a bypass by label); a skeleton
-  for your own changes (pack-it): `.claude/skills/ops-ci-cd/references/examples.md`, example 4.
+## 7. Keeping it useful
+Once a month: verdicts that humans always override → loosen triage or rules; a bug that passed a green review → a new
+evaluation case and a `REVIEW.md` fix. An untuned reviewer gets ignored within weeks.
 
-## 7. The learning loop
-Every month: where the human only rubber-stamped the AI verdict (wasted attention → the triage can be loosened), and where a bug
-got through a green review (a gap in the criteria → a new case in the evaluation set and a `REVIEW.md` fix).
-Evaluating the review prompt: `.claude/skills/core-delivery-lifecycle/references/ai-native-sdlc.md` §5. The cost and time per PR and per
-triage level on a shared dashboard.
+## 8. Troubleshooting
+| Symptom | Likely cause |
+|---|---|
+| empty review, always APPROVED | shallow clone; diff computed against nothing |
+| status never appears | verdict step not `if: always()`, or `statuses: write` missing |
+| PR stays mergeable despite REJECTED | `ai-review/verdict` not required in branch protection |
+| endless runs after the bot commits | `[skip ci]` missing in the bot commit |
+| fork PR fails on secrets | fork filter missing — forks must be skipped |
 
-## 8. Splitting the review skill
-Keep the assessment criteria (what to compare, how to assess, the shape of findings) in a separate file independent of the tool,
-and the mechanics (where the diff comes from, where the result goes, how to comment) — in the skill or the workflow. The same criteria file is then read by
-`claude-code-action`, your own agent on the SDK and a human as a checklist.
-
-Sources: the 10xDevs course, ed. 3 (2026), module 5, lesson 3 (AI review in CI) — training material (accessed 2026-10-09);
-`anthropics/claude-code-action`, `action.yml` on the `main` branch (the inputs `claude_args`, `classify_inline_comments`,
-the output `structured_output`; accessed 2026-10-10). Described in our own words.
+Sources: GitHub Docs — "REST API endpoints for commit statuses", "Skipping workflow runs", "Security hardening for GitHub
+Actions" (pinning by SHA, untrusted input), docs.github.com; `anthropics/claude-code-action` README (inputs `prompt`,
+`claude_args`, output `structured_output`), github.com.

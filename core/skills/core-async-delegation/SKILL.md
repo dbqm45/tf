@@ -1,164 +1,150 @@
 ---
 name: core-async-delegation
-description: Use when an agent is to work unsupervised (claude -p, /goal, sandbox, routine) — a contract, gates, review.
+description: Use when an agent will work without you watching - cloud sandbox, remote control from a phone, a routine, claude -p or /goal running an approved plan.
 metadata:
-  review: "2027-10-09"
-  catalog: "Use when you hand a task to an agent that works without a human at the screen — remote control of a local session from a phone, a cloud sandbox (laptop closed), a routine or scheduled run, executing an approved plan with claude -p or /goal — qualifying the task, choosing the control mode, a contract before the start (goal, scope, setup, network, MCP, secrets, stop, budget), a policy for executing a plan without questions (gates in phases, deliberate breakage, at most 2 repair attempts, a STOP block, commit on green, a report), monitoring and the review afterwards. Not for the review loop and agent permissions (core-agent-security), project phases (core-delivery-lifecycle), a session checkpoint (core-project-record) or choosing a model (core-cost-control)."
-  keywords: "bez nadzoru, w tle, w nocy, zamknięty laptop, odejść od komputera, z telefonu, remote control, sandbox w chmurze, claude code on the web, codex cloud, rutyna, harmonogram, routine, claude -p, headless, /goal, delegacja, zlecić agentowi, agent sam wykona plan, praca asynchroniczna, nocny agent, agent poprawia własne prompty i skille, pętla samodoskonalenia, agent sam commituje zmiany, granice dla agenta, uprawnienia rutyny, unsupervised, in the background, overnight, closed laptop, from my phone, cloud sandbox, schedule, delegate to an agent, agent executes the plan alone, asynchronous work, overnight agent, self-improvement loop, routine permissions, kontrakt przed startem, warunek gotowe, warunek stopu, limit tur, budżet przebiegu, najwyżej 2 próby naprawy, nie osłabiaj testu, blok STOP, raport końcowy, koniec tury to raport, zapowiedź kolejnego kroku, warunek postępu, aż będzie dobrze, dwie tury bez poprawy, przebieg cykliczny, codzienna rutyna, przegląd zgłoszeń, uprawnienia rosną z dowodem, zielony przebieg bez wartości, ta sama próba w kółko, polecenie na noc, wykonanie planu bez pytań, contract before the start, stop condition, turn limit, at most 2 repair attempts, end of turn is a report, progress condition, recurring run, permissions grow with evidence"
+  review: "2027-11-20"
+  catalog: "Use when work is handed to an agent that runs while nobody watches: deciding whether the task qualifies, choosing where it runs and how you get control back (remote control of a local session, cloud sandbox, scheduled routine), writing the contract before launch (scope, setup script, network, secrets, stop condition, budget, review criteria), the no-questions policy for executing an approved plan with claude -p or /goal (bounded repairs, STOP on structural divergence, verdict lines, report), routines that earn permissions step by step, monitoring with a kill switch outside the agent, and the review afterwards. Not for review loops and agent permissions in general (core-agent-security), project phases (core-delivery-lifecycle), session checkpoints (core-project-record) or model choice and cost per task (core-cost-control)."
+  keywords: "agent bez nadzoru, zlecić agentowi, sandbox w chmurze, zamknąć laptopa, wrócić rano, praca w nocy, nocny przebieg, plan w nocy, claude -p, /goal, rutyna, codzienna rutyna, zadanie cykliczne, harmonogram agenta, telefon, sterować sesją z telefonu, Remote Control, tmux, SSH, skrypt startowy, setup script, allowlist sieci, sekrety, warunek stopu, limit tur, budżet, max-budget-usd, bez pytań, dwie próby naprawy, STOP, raport, uprawnienia rutyny, drabina uprawnień, komentować zgłoszenia, szkic PR, eskalacja, ten sam bloker, pętla samodoskonalenia, agent poprawia swoje prompty, zestaw ewaluacji tylko do odczytu, inwentarz przebiegów, właściciel przebiegu, wyłącznik awaryjny, kill switch, log poza agentem, unattended agent, cloud sandbox, overnight run, routine, scheduled task, remote control, stop condition, turn limit, budget cap, permission ladder, kill switch, run inventory, self-improvement loop"
 ---
 
-# Delegating work to an unsupervised agent
+# Delegating work to an agent nobody watches
 
-Control does not disappear, it moves: **you configure before the start, monitor selectively, assess after
-it ends.** A green run means only "the infrastructure did not fall over", not "the task is done". The less you watch
-the run live, the tighter the environment has to enforce the scope — isolation of files and network is a precondition
-of autonomy, not an obstacle.
+Control is moved, not removed: you decide before the start, look in selectively while it runs, and judge the result
+afterwards. A green run only proves the infrastructure survived; whether the task is done is decided against criteria
+written before the start. The less you watch live, the harder the environment must enforce scope: file and network
+isolation are the precondition of autonomy, not an extra.
 
-## 1. Is this a task to hand over
-Yes, when all of these are true:
-- the "done" condition is checked by a command or a checklist (tests, a file, a report), not by taste;
-- the scope of files can be named (edit / read only / do not touch);
-- it does not require live product decisions or access to production;
-- secrets can be reduced to zero or to short-lived ones, without write rights;
-- the result is reversible: a branch or a draft PR, never a merge or a deployment.
+## 1. Does the task qualify
+All of these must hold:
+- The done condition is checkable by a command or a checklist, not by taste.
+- The file scope can be named: what may be edited, what is read-only, what is off limits.
+- No live product decisions and no production access.
+- Secrets reduce to none, or to short-lived read-only tokens.
+- The outcome is reversible: a branch or draft PR, never a merge or a deploy.
 
-Good: updating a test plan, tidying documentation, a small setup fix, a slice of the backlog with a plan,
-reviewing pending issues. Bad: "fix production", "decide how the discount should work".
+Good fits: updating a test plan, tidying documentation, a small build fix, one backlog slice with an approved plan, issue
+triage. Bad fits: fixing a production outage, deciding business rules. For a bad fit, offer the reduced task that does
+qualify (e.g. "collect logs and draft a diagnosis on a branch", not "fix production").
 
-## 2. The control mode — the question "when does the human get control back?"
-| Mode | Where the agent runs | What you control | Fits | Main risk |
+## 2. Control mode and budget
+The question is: where does the agent run, and when do you get control back?
+
+| Mode | Runs on | You control | Fits | Main risk |
 |---|---|---|---|---|
-| **remote control of a local session** (Remote Control in Claude Code, SSH + `tmux`, a relay like Happy) | your machine or a VPS | the session itself, from another device | a short fix, a diagnosis, finishing work | the machine's security is on your side; a relay = an extra party to trust |
-| **cloud sandbox** (Claude Code on the web, Codex Cloud) | a managed container | setup, network, MCP, secrets, scope | a bounded task up to a PR with the laptop closed | a badly prepared environment, permissions too broad |
-| **routine / recurring run** (schedule, event, API) | cloud or a server | the trigger, the stop condition, the budget, the success criteria | a report, a review of the backlog, a check after a release | green without value, cost, duplicates, looping |
-| **proactive agent** (writes to the user on its own: a digest, a reminder) | cloud or a server | the rhythm and the list of topics (set by the user), data classes in messages, actions forbidden even with consent | a morning digest, a deadline reminder | a leak in a message, noise, the cost of constant checking (check every few hours) |
+| Remote control of a local session (Claude Code Remote Control, SSH + tmux) | Your machine or VPS | Everything you already have there | Short fix, diagnosis, finishing a task away from the desk | The agent sees your home directory, keys and network; a relay is one more trusted party |
+| Cloud sandbox (Claude Code on the web, a managed container) | A fresh container | Setup script, network level, MCP config, secrets, repository scope | A bounded task ending in a PR while the laptop is closed | A badly prepared environment, broad permissions |
+| Routine (scheduled or event-triggered run) | Cloud or CI | Trigger, stop condition, budget, success and failure criteria | Recurring triage, reports, checks | Green runs without value, cost, duplicates, loops |
 
-A problem only with the interface (a phone, another network) → a local agent + remote control. You want to cut the agent off from
-your home directory, keys and network → a sandbox or a separate VPS. The features of these products (account plans, versions,
-limits, cache) change quickly — before rolling it out in a team check the vendor's documentation.
+- Only the interface is the problem (you are on the phone, on another network) -> keep the local session and use remote
+  control. The agent must be cut off from your home directory, keys and network -> sandbox or a separate VPS.
+- Budget is part of the mode: a turn limit, `--max-budget-usd <amount>` (works only with `--print`, i.e. `claude -p`) and a
+  wall-clock limit. An agent that proactively messages people also needs a list of data allowed in messages and actions it
+  must never take, even when asked.
+- Product features, plans and limits change quickly: check the vendor docs before a team rollout.
 
-## 3. The contract before the start
-Each line is a decision you will make anyway — better before the start than after the first failure. Part goes into
-the environment configuration (setup, network, secrets), the rest into the instruction:
-1. **goal and the "done" condition** — checkable;
-2. **scope** — files to edit, read-only files, what not to do (production code, merge, push to `main`);
-3. **setup** — dependencies installed by the startup script, not "along the way"; tools from the base image listed explicitly;
-4. **network** — an allowlist of hosts; often turned off after setup, so "install a package along the way" will not work;
-5. **MCP and configuration** — only what the environment sees at start (e.g. `.mcp.json` in the repo); the user's local
-   profile is invisible in the cloud;
-6. **secrets** — no production ones and none with write rights; minimal scope and lifetime;
-7. **stop and budget** — a limit of turns and cost (`claude -p … --max-budget-usd <kwota>`), time;
-8. **review criteria** — up front: the diff only within the scope, a report with assumptions and uncertainties, no request
-   for broader permissions.
+## 3. Contract before the start
+Every line is a decision that would otherwise be made by the agent. Template and readiness checklist:
+`references/delegation-contract.md`.
+- **Goal and done check** (a command or checklist).
+- **Scope**: edit / read-only / forbidden (production code, merge, push to main).
+- **Setup by a startup script**, not during the run; keep it short and repeatable - changing the setup script, network or
+  secrets usually rebuilds the environment cache.
+- **Network allowlist**; often closed after setup, so installing packages mid-run fails by design.
+- **MCP and configuration**: only what the environment sees (repository `.mcp.json`); your local user profile is not there.
+- **Secrets**: no production ones, none with write rights, minimal scope and lifetime.
+- **Stop and budget**: turn limit, `--max-budget-usd`, time.
+- **Review criteria up front**: diff only within scope, report lists assumptions and uncertainties, no request for broader
+  permissions.
+- **Ambiguity rule**: choose the conservative option and report it; do not ask.
 
-A template to fill in, an example and a "dry run" variant: `references/delegation-contract.md`.
+Placement rule: what the agent must not be able to do is enforced by configuration (startup script, network policy,
+secret store, `--allowedTools`, `--permission-mode`, budget flags). The instruction only says what it should not try.
 
-## 4. Executing a plan without a human
-When you delegate an approved step plan (core-delivery-lifecycle, core-project-record), the agent gets a policy
-instead of questions:
-- **No questions to the user.** Ambiguity → the conservative option (fewer files, a smaller change of behaviour,
-  closest to the letter of the plan), written in the report.
-- **"Not possible within the scope" is a correct result:** STOP and a report, not getting around the boundary (core-agent-security §4).
-- **Before the start** it checks that every verification command from the plan can be run; missing = STOP in that phase.
-- **Divergence from the plan:** minor (a moved file, a new name) → adapt and write `ADAPT: …`; structural (a missing
-  dependency, a different architecture, no result of the previous phase) → STOP. When in doubt — structural.
-- **Phase gates, cheapest first:** the commands from the plan → the phase's files added to the index by name → **deliberate breakage**
-  for new tests (pack-it: qa-spec-first-testing) → full tests, lint, types → commit. After each gate the line
-  `GATE <nazwa>: PASS` or `FAIL (<skrót>, attempt k/2)` — the `/goal` evaluator sees only the transcript.
-- **At most 2 repair attempts per gate;** the third failure = STOP. It does not weaken a test, an assertion or a lint rule.
-- **A progress condition, not "until it's good".** The `/goal` target is a number from a tool (a Lighthouse score, the number of
-  green tests, p95 time). Next to the turn limit: every turn improves at least one measured metric; two turns
-  without improvement = STOP. The same command a third time without a change in the result = STOP.
-- **Commit only on green** (core-conventional-commits), files by name; dirty files outside the phase it lists,
-  does not add; no `--no-verify` or `--amend`; a hook failing before the commit = a gate failure.
-- It does not tick off manual verification — a list for the human at the end. The progress state only in the plan (the first
-  unticked item = the place to resume).
-- At the end a **report**: phases with SHAs, adaptations, uncertainties, the manual verification list, a proposal of a review
-  in a fresh context.
-
-The format of the STOP block, the report and a `/goal` command to copy: `references/execution-policy.md`.
-
-**The end of a turn is a report, not completion.** Newer models (Opus 5.5) in a long task sometimes end a turn with text alone
-— a summary announcing the next step. A loop that takes this as the end stops the work halfway:
-- you keep the parts of the task on a list (a plan with checkboxes, a task list); open items without a named blocker
-  → a short message "open: <pozycje>; continue, and if blocked write what blocks you";
-- the "done" condition is checked by someone other than the executor (`/goal` with a small evaluator model, a gate in CI);
-- a running background process or a subagent = the task continues; you wait for its result;
-- in an orchestration of several agents give a time budget ("how much is left") — in Anthropic's tests teams finished faster
-  at similar quality (platform.claude.com, "Prompting Claude Opus 5.5", 2026-10-20).
+## 4. Executing an approved plan without a human
+Applies to `claude -p "<prompt>" --allowedTools "<list>" --permission-mode acceptEdits --max-budget-usd <amount>` or `/goal`
+running `docs/project/<step>/plan.md`. The first unticked item of the plan's progress section is the resume point. No plan
+file with runnable verification commands -> do not start; ask for one instead of improvising gates. Full policy with all
+line formats (a factory convention): `references/execution-policy.md`.
+- **No questions.** Conservative = fewer files, smaller behaviour change, closest to the plan's letter; record it in the
+  report. "Not possible within scope" is a valid outcome: STOP and report, never work around the boundary.
+- **Before each phase** every verification command in the plan must run; if one cannot, STOP for that phase.
+- **Divergence**: minor (a moved file, a new name) -> adapt and log `ADAPT: <what>`; structural (missing dependency,
+  different architecture, a previous phase's result absent) -> STOP. In doubt, it is structural.
+- **Gates, cheapest first**: the plan's own commands -> stage the phase's files by name -> deliberate breakage of the
+  protected behaviour for new or changed tests -> full tests, lint, types -> commit. After each gate print
+  `GATE <name>: PASS` or `GATE <name>: FAIL (<short>, attempt k/2)`.
+- **Deliberate breakage** (a mutation check): with the files staged, break the behaviour in the working tree, run only that
+  test, expect it to fail, then always restore with `git checkout -- <file>`. A test that stays green on broken code protects
+  nothing: strengthen the assertion. Never commit the breakage.
+- **At most 2 repair attempts per gate**; the third failure is STOP. Never weaken a test, an assertion or a lint rule.
+- **Commit only on green**, Conventional Commits (core-conventional-commits), `git add <files>` by name; unrelated dirty
+  files are listed as `DIRTY (not added): <files>`; no `--no-verify`, no `--amend`; a failing pre-commit hook is a gate
+  failure. Print `COMMIT phase N: <sha>`. Issue ids only if they appear in the plan or conversation.
+- **Progress condition for `/goal`** instead of "until it is good": the target is a number from a tool (score, count of green
+  tests, p95 latency). Each turn must improve at least one measured value; two turns without improvement -> STOP; the same
+  command a third time with an unchanged result -> STOP; plus a turn limit.
+- **The end of a turn is a report, not completion.** Long-running models may end a turn with text announcing the next step.
+  Keep the task's parts as a checkbox list; open items with no blocker get a short "continue or name the blocker" nudge; the
+  done check is made by someone other than the executor (`/goal`'s evaluator, a CI gate). A running background process or
+  subagent means the task is still in progress.
+- **STOP** (`STOP — <STRUCTURAL DIVERGENCE | GATE FAILURE> in phase <N>`) leaves ticked items ticked, leaves work in progress
+  uncommitted, restores any breakage and changes nothing more. A final `REPORT — <step>` is always written, also after STOP.
+  Manual verification items are never ticked by the agent; they go to the report's list for the human.
 
 ## 5. Routines and recurring runs
-- A stronger contract than for a single run: **goal, stop condition, scope** (repo, labels, directories),
-  **a cost limit** (iterations, time, budget), **success criteria** and **failure criteria** (when a green technical
-  status is still a failure — e.g. a report without new items, the same conclusion as yesterday).
-- Idempotency: a run checks what the previous one already did (today's report exists → it updates it, does not duplicate it).
-- The trigger is an event that matters, or a sensible rhythm — not "every 5 minutes just in case".
-- A loop that iterates on its own until the reviewer accepts does not go into a schedule (core-agent-security §5a).
-- **Permissions grow with evidence.** The ladder: read only → a draft in a file → changes on a branch or in a worktree → a draft
-  of an external action (a draft PR, a draft comment) → an action after the human's consent → automation only for low-risk
-  actions, with a log and a way back. A rung up only after a series of runs without exceeding the scope,
-  and each new rung gets a new verification rule. You review a routine's permissions with every new tool
-  and every month.
-- **Two result modes:** *silence* (a short state update when nothing changed) and *attention* (a report when something
-  needs a human). The same blocker in two consecutive runs = escalation to a human, not another retry.
-- **An accuracy review** counts accurate items, false alarms and misses, not only what the routine found.
-- **A self-improvement loop** (the agent improves its own prompts, skills, hooks): it has no write access to the permission policy,
-  the sandbox, the identity or the evaluation set — those live in a separate repo or are read only. A change is accepted by
-  the result on a held-out set and by a human, not by the loop itself (pack-it: ai-evals, the harness change gate).
-- `/loop` lives in the session and expires after 7 days (code.claude.com/docs/en/scheduled-tasks, "Seven-day expiry", read
-  2026-10-29); work that has to outlive the session goes to a cloud routine.
-- Typical failures are boring: hours of attempts to fetch from a blocked host, a second similar report, patching a symptom
-  instead of the cause, a branch nobody can merge.
+- The contract is stricter: goal, stop condition, scope (repository, labels, directories), cost cap (iterations, time,
+  budget), **success and failure criteria**. A green technical status can still be a failure: no new items, the same
+  conclusion as yesterday, an issue left without a recommendation.
+- **Idempotent**: read what the previous run did; today's report exists -> update it, do not add a near-duplicate.
+- Trigger on meaningful events or a sensible rhythm, not "every 5 minutes just in case". Self-iterating review loops are not
+  scheduled (core-agent-security).
+- **Permissions grow with evidence** (least privilege, staged): read-only -> draft in a file -> changes on a branch or
+  worktree -> draft of the external action (draft PR, draft comment) -> the action after human approval -> automatic only for
+  low-risk actions with a log and a rollback. Move one step only after a series of runs without scope overrun; each new step
+  gets its own verification rule. Review routine permissions whenever a tool is added, and monthly.
+- Quiet when nothing changed (a one-line status), a full report when a human is needed. The same blocker in two consecutive
+  runs -> escalate to a human, not another retry. Judge accuracy by counting correct items, false alarms and misses.
+- **Self-improvement loop** (an agent editing its own prompts, skills or hooks): no write access to the permission policy,
+  the sandbox, its identity or the evaluation set (keep that set read-only, ideally in a separate repository). A change is
+  accepted on a held-out result plus a human's approval, never by the loop itself.
+- In-session `/loop` and session-scoped scheduled tasks expire after 7 days; long-lived work goes to a cloud routine.
+- Typical failures are mundane: hours of retries against a blocked host, near-duplicate reports, symptom patches,
+  branches that cannot be merged.
 
-## 6. Monitoring
-A phone is a control panel, not a place to review a diff. You check: whether the setup passed, whether a network,
-MCP or secret block stopped the work, whether the agent is widening the scope. The decision: continue / clarify /
-stop / leave for review.
-- **An inventory of runs:** every routine and run has an owner (who started it), a permission scope and a way to
-  stop it. The inventory review goes together with the permissions review (§5).
-- **A record the agent cannot rewrite:** a log of tool calls and network traffic collected outside the agent's process.
-  The agent's transcript is its account, not independent evidence.
-- **A kill switch without the agent's cooperation:** stopping through the platform (cancelling the run, revoking the token, stopping
-  the container), not asking the agent to stop.
+## 6. Monitoring and stopping
+- The phone is a control panel, not a diff viewer. Check: did setup pass, is the run blocked by network, MCP or a secret,
+  is scope creeping. Decide: continue, clarify, stop, or leave for review.
+- **Inventory of runs**: for each routine and overnight run - owner, permission scope, how to stop it. Review it together
+  with permissions.
+- **Independent record**: tool-call and network logs collected outside the agent process. The transcript is the agent's own
+  account, not evidence.
+- **Kill switch outside the agent**: cancel the run, revoke the token, stop the container through the platform. Asking the
+  agent to stop is not a kill switch.
 
-## 7. The review afterwards
-At the computer: the diff, logs, tests and the report against the contract's criteria — not against the green status. Changes
-within the scope and gates with evidence → a review in a fresh context and the human's decision on merging. At the end one sentence
-for the project record: what has to change for this mode to be safe for the team (core-project-record).
+## 7. Review afterwards
+At a computer: diff, logs, tests and the report against the contract's criteria, not the green status. Within scope and
+with evidenced gates -> a review in a fresh context; a human decides the merge. Add one sentence to the project record on
+what must change before this mode is safe for the team (core-project-record).
 
 ## Example
-**Situation:** "After the change of subscription limits I want the agent in a sandbox to complete the test plan of the payments module,
-and I'll close the laptop."
+"Agent in a cloud sandbox completes the payments test plan overnight."
 
-**Result (instruction + configuration):**
-```text
-/goal Done when docs/test-plans/payments.md has scenarios for the new subscription limits
-(min. over the limit, exactly at the limit, a plan change mid-period) and a short gap report.
-Scope: edit only docs/test-plans/payments.md; src/modules/payments/** read only. No merge or push to main.
-Setup: npm ci in the startup script. Network: off after setup. MCP: only .mcp.json from the repo.
-Secrets: none. Stop: after the report or after 20 turns; budget set in the configuration.
-Review: the diff covers only the test plan; the report lists assumptions and uncertainties; no request for secrets.
 ```
-Mode: sandbox (laptop closed, a task without secrets). In the morning: a diff in only one file, a report with 2 uncertainties
-→ review and a PR. A conclusion for the record: "the sandbox needs read-only access to the limits specification".
-
-More: `references/delegation-contract.md` (template, dry run), `references/execution-policy.md` (STOP, report).
-
-## Checklist
-- [ ] the task passes the qualification from §1 (checkable, a named scope, no production and no secrets, reversible)
-- [ ] the mode chosen with the question "when do I get control back"
-- [ ] the contract: goal, scope, setup, network, MCP, secrets, stop, budget, review criteria
-- [ ] with a plan: no questions, the conservative option, gates with verdict lines, ≤2 attempts, STOP, commit on green
-- [ ] a routine: failure criteria despite a green status, idempotency, a cost limit
-- [ ] the review afterwards against the contract; the conclusion written in the record
+Goal: docs/testing/payments-plan.md covers refunds and partial captures; done = checklist in the plan all ticked
+Scope: edit docs/testing/**; read src/payments/**; forbidden: src/**, merge, push to main
+Setup: startup script installs deps (npm ci); network closed after setup
+Secrets: none
+Stop: 40 turns or $5 (claude -p ... --max-budget-usd 5), whichever first
+Output: branch test-plan/payments + draft PR; report lists assumptions and open questions
+Review: diff only in docs/testing/**, every new case traces to a code path (file:line)
+```
+Morning: the report says `GATE checklist: PASS`, two assumptions about partial-capture limits. You review the draft PR in a
+fresh session and decide the merge.
 
 ## Sources
-- The 10xDevs course, ed. 3 (2026), module 5, lesson 5 (asynchronous and remote work) and the course's skill for the autonomous
-  execution of a plan from lesson 5 — training material (accessed 2026-10-09).
-- `claude --help`, Claude Code 2.1.296 (checked 2026-10-10): `--max-budget-usd` (only with `--print`),
-  `--allowedTools`, `--permission-mode` (`acceptEdits`, `auto`, `bypassPermissions`, `manual`, `dontAsk`, `plan`),
-  `--remote-control`, `--json-schema`. The `--max-turns` option is not listed in the help [unverified].
-- Anthropic: "Claude Code on the web", "Remote Control", "Routines"; OpenAI: "Codex Cloud environments" — according to the course,
-  not opened directly [unverified details: account plans, minimum versions, limits, cache].
-
-Described in our own words.
+- Claude Code docs, "Claude Code on the web" and "Cloud environments", code.claude.com/docs/en/claude-code-on-the-web - accessed 2026-11-20 (setup scripts, network levels, environment cache).
+- Claude Code docs, "Remote Control", code.claude.com/docs/en/remote-control - accessed 2026-11-20.
+- Claude Code docs, "Scheduled tasks", code.claude.com/docs/en/scheduled-tasks - accessed 2026-11-20 ("Seven-day expiry").
+- Claude Code docs, "Run Claude Code programmatically", code.claude.com/docs/en/headless, and `claude --help` of Claude Code 2.1.329 - accessed 2026-11-20 (`--max-budget-usd` only with `--print`, `--permission-mode` values, `--allowedTools`).
+- Anthropic, "Prompting Claude Opus 5.5", platform.claude.com - accessed 2026-10-20 (turns ending with an announcement in long tasks).
+- OWASP GenAI Security Project, "LLM06:2025 Excessive Agency", genai.owasp.org/llmrisk/llm062025-excessive-agency - accessed 2026-11-20 (least privilege, human approval, independent logging).

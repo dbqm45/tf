@@ -1,117 +1,105 @@
-# Scaling an agent's context in a big project
+# Scaling agent instructions — modules, loading, many repositories
 
-> **Contents:** 1. Three kinds of context — three places · 2. Four failures of an overgrown file · 3. The maturity ladder and the signals for moving up · 4. How Claude Code loads instruction files (checked state) · 5. A CLAUDE.md in a module — the pattern and the index in… · 6. A module file or a rule with `paths` · 7. Maintaining and reviewing rules · 8. Many repositories · 9. The result and an example
+> **Contents:** 1. Why one file stops scaling · 2. When to split, and along which line · 3. The module file pattern · 4. How Claude Code loads instruction files · 5. Module file, path-scoped rule or module skill · 6. Maintenance cycle · 7. Ownership of instruction artifacts · 8. Many repositories · 9. Recording the decision (with a worked example)
 
-The question is not "what should the agent know", but "what should it know **now**". Permanent context takes attention from the task.
+## 1. Why one file stops scaling
+Three kinds of material compete for the same file: conventions (always-true rules), reference material (how a
+subsystem works) and procedures (how to do a recurring task). Only conventions belong in an instruction file;
+reference goes to `docs/project/`, procedures to skills, and the root file becomes a table of contents. A file that
+keeps everything pushes the task out of the context, dilutes the rules that matter, goes stale faster than anyone
+reviews it, and makes adherence impossible to check. The middle of a long context is used worst (Liu et al.). Fix
+hygiene first (SKILL.md §1, §4), restructure only after that.
 
-## 1. Three kinds of context — three places
-| Kind | What it is | Where |
-|---|---|---|
-| conventions | how we work, what cannot be seen from the code | `CLAUDE.md` (root + modules), `.claude/rules/` |
-| references | PRDs, plans, research, decisions, code maps | `docs/project/` (core-project-record) — read when needed |
-| procedures | repeatable steps with decision points | skills, commands |
+## 2. When to split, and along which line
+Split along **ownership**, the way code is split between teams (Conway's law), not along size or directory count.
+Signals that a split pays off — each with dated evidence:
+- the root file stays over ~200 non-empty lines after the hygiene pass;
+- the agent repeats the same mistake inside one module (cases with dates);
+- the same reference is pasted into prompts by hand every time;
+- a module has its own deploy, owner or stack.
+Not signals: "the app is big", the number of directories. A young module whose code changes weekly gets no file of its
+own yet — its rules would rot before they help.
+Typical steps: root file + `docs/project/` → module files with an index in the root → a module that owns its docs
+directory as well.
 
-The main `CLAUDE.md` is a table of contents, not an encyclopedia: commands, global conventions, pointers to the rest.
+## 3. The module file pattern
+- First line: what it covers and that the root file applies too ("Rules for `packages/cli`; root `CLAUDE.md` applies.").
+- Only what cannot be inferred: module pitfalls, forbidden APIs, the required logger or client, module commands.
+- No copies of root lines (`instructions_lint.py --root` reports them as `repo.duplicates`).
+- 10–40 lines; more → move it to docs or a skill.
+- The root file gets a section "Modules with their own CLAUDE.md" with one line per file: `path — scope`.
+- The module's owner owns the file; changes go through PRs like code.
 
-## 2. Four failures of an overgrown file
-1. **It crowds out the task** — it takes context that should belong to the current work.
-2. **It dilutes** — when everything is important, nothing is; rules from the middle get lost.
-3. **It rots** — rules age faster than anyone reviews them; an outdated rule does more harm than none.
-4. **It cannot be checked** whether the agent follows it — too many rules for one task.
+## 4. How Claude Code loads instruction files
+From the Claude Code docs "How Claude remembers your project" and "Set up Claude Code in a monorepo or large codebase"
+(code.claude.com, accessed 2026-10-10 — re-check after upgrades).
+- **At start:** `CLAUDE.md` and `CLAUDE.local.md` from the working directory and every parent directory, plus
+  `~/.claude/CLAUDE.md` and the managed (organisation) file, concatenated. The project file may sit at `./CLAUDE.md` or
+  `./.claude/CLAUDE.md`.
+- **On demand:** a `CLAUDE.md` in a subdirectory loads only when the agent reads files there. A session started at the
+  root may plan without the module's rules — start in the module, or point the agent to the file.
+- **Imports:** `@path` expands at start, relative to the importing file, up to 4 levels deep; not inside backticks or
+  code blocks; an import outside the working directory needs one-time approval. Imports do not reduce cost — the
+  imported text counts in full.
+- **`.claude/rules/*.md`:** without `paths` they load at start; with `paths` (a list of globs) only when a matching file
+  is read or edited. `paths` is the only header field read; invalid YAML means the rule loads always.
+- **AGENTS.md:** newer Claude Code reads it only when none of `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`
+  exists — adding a `CLAUDE.local.md` to an AGENTS.md-only repo silently drops it. "Project instructions" in `/config`
+  and `/context` show what was loaded. A `CLAUDE.md` symlinked to `AGENTS.md` works, but git on Windows may check out
+  a text file instead → prefer `@AGENTS.md`. Other tools (Codex, Copilot) read `AGENTS.md` from the tree; their
+  precedence rules are [unverified].
+- **Size:** a warning above the recommended length; files over 4 MiB are skipped.
+- **Auto memory** (`~/.claude/projects/<project>/memory/MEMORY.md`): only the first 200 lines / 25 KB load.
+- **After `/compact`:** the root file is read again; module files and path rules return when a matching file is
+  touched; instructions given only in the conversation are gone.
+- **`claudeMdExcludes`** in `.claude/settings.local.json` skips other teams' directories in a large repo.
 
-The order of repair: hygiene first (cut per the inclusion test in SKILL.md), only then structure (splitting).
+## 5. Module file, path-scoped rule or module skill
+| Choose | When |
+|---|---|
+| module `CLAUDE.md` | rules owned by one directory and its team |
+| `.claude/rules/x.md` with `paths` | a convention kept in one central place, or one that spans scattered files (`**/*.test.ts`, `**/migrations/*.sql`) |
+| module skill | a module procedure needed occasionally (release of the CLI, regenerating a client) |
 
-## 3. The maturity ladder and the signals for moving up
-You move up on demand, not in order and not "just in case".
-1. **Root `CLAUDE.md` + `docs/project/`** — the default; for an MVP and small repos for as long as possible.
-2. **A `CLAUDE.md` in a module + an index in the root** — the module has its own detailed conventions irrelevant to the rest or
-   a separate owner.
-3. **The module's own documentation directory** (the module's plans, decisions) — when a separate team runs it or the work
-   in the module is intensive and long.
+## 6. Maintenance cycle
+Monthly or quarterly, and after every major model release. For each rule ask:
+1. Would the agent break it without the line?
+2. Can the agent derive it from code, linter, types or a hook?
+3. Can a breach be seen in a diff?
+4. Is it still true?
+5. Does it duplicate or contradict another file?
+Write the review date and what was removed or added (the project record). An optional Stop hook may propose fixes to
+the file — as a proposal for the human, never an automatic edit.
 
-Signals for moving up (at least one, with the evidence written in the result):
-- the root above ~200 non-empty lines despite hygiene (the `instructions_lint.py` script);
-- the agent repeats a mistake in a module despite a rule in the root (write down specific cases: the date, the file, what it did);
-- for every piece of work in the module you give the same references by hand;
-- the module has its own deploy, its own owner in CODEOWNERS or a different stack.
-
-The number of directories and the feeling "this is a big application" are **not** a signal. Split by ownership boundaries, not size.
-Do not create a `CLAUDE.md` for a young module that is still changing — a slowly changing file does not hold
-quickly changing facts (file names in motion, numbers, versions).
-
-## 4. How Claude Code loads instruction files (checked state)
-Source: code.claude.com/docs/en/memory and …/large-codebases, accessed 2026-10-10. The behaviour depends on the version —
-when in doubt check `/context` (the "Memory files" list) in the current session.
-- **At start**: `CLAUDE.md` and `CLAUDE.local.md` from the working directory and all directories above it, and also
-  `~/.claude/CLAUDE.md` and the file managed by the organisation. The files are **concatenated**, not overwritten; the one closer to the working
-  directory is read later. The project file can be in `./CLAUDE.md` or `./.claude/CLAUDE.md`.
-- **On demand**: a `CLAUDE.md` from subdirectories loads only when the agent reads files in that subdirectory. Starting
-  the session from the root = the module file may not yet be in context when the agent plans. A critical rule of a module →
-  start the session in the module or point to the file explicitly in the instruction or the subagent's brief.
-- **`@ścieżka` imports**: expanded at start together with the file that contains them; relative paths counted from
-  the file with the import; up to 4 levels of nesting. They organise, but **do not reduce** the context cost. An import
-  in backticks (`` `@README` ``) and in a code block is not executed. An import from outside the working directory
-  needs the human's one-time consent.
-- **`.claude/rules/*.md`**: without a `paths` field they load at start like `.claude/CLAUDE.md`; with a `paths` field
-  (a list of globs) — only when the agent reads or edits a matching file. `paths` is the only field Claude Code
-  reads from a rule's header; invalid YAML = a rule loaded always.
-- **AGENTS.md**: newer versions of Claude Code read `AGENTS.md` themselves, but by default **only when in the working
-  directory and above there is no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md`**. When both files exist, Claude reads
-  only `CLAUDE.md` — which is why the pattern "AGENTS.md as the source of truth, CLAUDE.md with `@AGENTS.md`" works regardless of
-  version and settings. Note: adding your own `CLAUDE.local.md` in a repo based on AGENTS.md turns off reading
-  AGENTS.md (changed in the "Project instructions" setting in `/config`). A link `CLAUDE.md → AGENTS.md` works,
-  but on Windows git may check it out as a plain text file — an import is safer there.
-- **Other tools** (Codex, Copilot): they read `AGENTS.md` from the directory tree; check the details of precedence
-  in their documentation for the version in use [unverified in this session].
-- **Size**: a file above the recommended length gives a warning at start; Claude Code skips a file bigger than
-  4 MiB. Automatic memory (`~/.claude/projects/<projekt>/memory/MEMORY.md`) loads only the first 200 lines or
-  25 KB — those are the machine's notes, not a place for the team's rules.
-- **After `/compact`**: the root `CLAUDE.md` is re-read from disk; module files and rules with `paths` come back
-  only when the agent touches a matching file again. An instruction given only in the conversation disappears.
-- **A monorepo with other people's packages**: `claudeMdExcludes` in `.claude/settings.local.json` (globs on absolute
-  paths) skips the instruction files of directories you do not work in.
-
-## 5. A CLAUDE.md in a module — the pattern and the index in the root
-- The first line: "Only the `<module>` context. Rules for the whole repo: the main CLAUDE.md."
-- Only what cannot be inferred from the root or from the module's code: pitfalls (the real entry point, forbidden
-  APIs, the required logger), anti-patterns, the module's commands (tests, migrations). Zero copies of the root's rules.
-- 10–40 lines; a longer module file is a signal that part of the content is a reference (to `docs/`) or a procedure (to a skill).
-- The root ends with a **"Modules with their own CLAUDE.md"** section: `path — one sentence of scope`. The
-  `instructions_lint.py --root .` script reports a module file outside that index and lines copied from the root.
-- The owner of a module file is the module's owner; changes go through review in a PR like documentation.
-
-## 6. A module file or a rule with `paths`
-| Approach | Where it lives | Loads | When |
-|---|---|---|---|
-| a `CLAUDE.md` in a directory | next to the code | at start from that directory or when the agent reads a file there | the directory's owner keeps their own conventions |
-| a rule `.claude/rules/x.md` with `paths` | centrally in the root | when the agent reads/edits a matching file | all conventions in one place or the same rule for scattered files (e.g. `**/*.test.ts`) |
-| a skill in `<moduł>/.claude/skills/` | in the module | when the task fits the description | a module's procedure (tests, migrations), not a permanent convention |
-
-## 7. Maintaining and reviewing rules
-A review every month or quarter (and after a bigger model release), five questions for each rule:
-1. Would the agent break it without it? (the A/B calibration in SKILL.md, section 6)
-2. Does it follow from the code, the linter, types or a hook? → remove it.
-3. Is it checkable in the diff?
-4. Is it current (do the paths, commands, versions exist)?
-5. Does it duplicate or contradict another rule in another file?
-An entry in the result: the review date, the rules removed and added with a reason. A `Stop` hook that proposes CLAUDE.md
-fixes after a session is an option for mature teams — the proposal goes to the human, not straight into the file.
+## 7. Ownership of instruction artifacts
+Treat instruction files, skills, hooks, tool contracts, permission policies and sensors as owned artifacts, as service
+ownership works for code: each has an owner in the domain (not a central team), a CI check, a review cycle and a named
+person for contract changes. Rules are added from real failures after review, and rarely loosened. Retire skills nobody
+uses (the factory's hook logs show usage). A useful health number: the share of artifacts without an owner or a test.
 
 ## 8. Many repositories
-Three layers, from the simplest:
-1. **Shared rules and skills in one source repo**, versioned (SemVer, core-semver).
-2. **Distribution with updates**: a package → a CLI → a plugin or an MCP server (increasing complexity). Each repo still has
-   its own short `CLAUDE.md` with local agreements. Installer details: `.claude/skills/core-skill-authoring/references/team-distribution.md`.
-3. **Visibility of other repos during work**: generated contracts (OpenAPI, AsyncAPI, protobuf, GraphQL SDL),
-   contract test packages, documentation generated in CI — instead of a meta-repo describing everything by hand
-   (it ages fastest). A snapshot of a whole repo into one file only ad hoc, for one task.
+- Shared rules and skills live in one versioned source repository (core-semver) and are distributed — a package, a CLI,
+  then a plugin or MCP server — while each repo keeps a short local file of its own.
+  Distribution mechanics: `.claude/skills/core-skill-authoring/references/team-distribution.md`.
+- Cross-repo facts come from generated contracts (OpenAPI, AsyncAPI, protobuf, GraphQL SDL), contract-test packages and
+  CI-generated docs, not from a hand-maintained meta-repository. A snapshot of all repos is for one-off analysis only.
 
-## 9. The result and an example
-The result of the structure decision: `docs/project/04-architecture/context-architecture.md` — the rung of the ladder, the signals
-with evidence, an index of instruction files (path — scope — owner), the date of the next review.
+## 9. Recording the decision (with a worked example)
+Write the outcome to `docs/project/04-architecture/context-architecture.md`: the step chosen (§2), the signals with
+evidence, the index (`path — scope — owner`) and the next review date.
 
-Example: a monorepo with the packages `api`, `web`, `cli`; the root 340 lines; the agent used `console.log` 3× in `cli` despite a rule
-in the root. Hygiene: 90 lines duplicating lint and the directory description cut → the root 250. A signal (a repeated mistake in a module
-with three cases) → `packages/cli/CLAUDE.md`, 30 lines (the entry point `src/main.ts`, the logger `src/log.ts`,
-a ban on the global `fetch`), the CLI rules removed from the root → the root 190 lines + the "Modules with their own CLAUDE.md" section.
-`api` and `web` stay on rung 1. A check after a week: 0 new `console.log` in 5 tasks in `cli`.
+Worked example. A repository holds `services/billing` (Go), `services/notify` (TypeScript) and `infra/` (Terraform).
+The root file has 260 non-empty lines after hygiene. Evidence: three PRs in October (2026-10-03, -11, -24) where the
+agent ran `terraform apply` locally in `infra/` instead of opening a plan PR; billing has its own on-call owner; notify
+was created two weeks ago.
+Decision: `infra/CLAUDE.md` (18 lines: "never `apply` locally — plans go through CI", the workspace naming, the
+`make plan ENV=staging` command) and `services/billing/CLAUDE.md` (22 lines: money as integer cents, the idempotency-key
+rule, the required tracing client). No file for `notify` yet. A path rule `.claude/rules/migrations.md` with
+`paths: ["**/migrations/*.sql"]` for the cross-service migration convention. Root file trimmed to 170 lines with a
+"Modules with their own CLAUDE.md" section listing the two files and their owners. Next review: 2027-01-15.
+
+## Sources
+- Anthropic, Claude Code docs: "How Claude remembers your project", "Set up Claude Code in a monorepo or large
+  codebase", "Settings" (code.claude.com, accessed 2026-10-10).
+- Liu et al., "Lost in the Middle: How Language Models Use Long Contexts", arXiv:2307.03172 (2023).
+- M. Conway, "How Do Committees Invent?", Datamation, 1968 (Conway's law).
