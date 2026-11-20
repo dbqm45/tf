@@ -24,10 +24,10 @@ head: Użyj przy ASP.NET Core (.NET 8–10) — Minimal API, ProblemDetails, wal
    (sprawdzone 2026-10-23); na starszych dopisz tę linię.
 
 ## Przykład
-`POST /resources/{id}/block` z `BlockRequest([Required, StringLength(50, MinimumLength = 2)] string By)`:
-200 z `BlockResponse`, 404 dla nieznanego zasobu, 409 jako `application/problem+json` dla „zajęte przez jan”
-i „wyłączony”, 400 z walidacji dla `By = "a"`, operacja `BlockResource` w `/openapi/v1.json`. Kod i 4 testy
-integracyjne: `references/minimal-api.md`.
+`POST /tools/{id}/loans` z `LoanRequest([Required, RegularExpression(@"^[msc]-\d{4}$")] string MemberId)`:
+200 z `LoanResponse`, 404 dla nieznanego narzędzia, 409 jako `application/problem+json` dla „wypożyczone m-0042”
+i „wycofane”, 400 z walidacji dla `MemberId = "x"`, operacja `LendTool` w `/openapi/v1.json`. Kod i 5 testów
+integracyjnych (nieskompilowane od przepisania 2026-11-20): `references/minimal-api.md`.
 
 ## Zależne od wersji
 Progi sprawdzone kompilacją 2026-10-23 (net8.0 i net10.0 z SDK; net9.0 z pakietami referencyjnymi z NuGet).
@@ -57,7 +57,7 @@ Progi sprawdzone kompilacją 2026-10-23 (net8.0 i net10.0 z SDK; net9.0 z pakiet
 
 ## Źródła
 - Microsoft Learn: Minimal APIs, „Handle errors in ASP.NET Core APIs”, „Generate OpenAPI documents”, „What's new in
-  ASP.NET Core 9.0/10.0”, „Integration tests in ASP.NET Core” (dostęp 2026-10-23; zachowanie sprawdzone na
-  przykładzie z `references/minimal-api.md`).
+  ASP.NET Core 9.0/10.0”, „Integration tests in ASP.NET Core” (dostęp 2026-10-23; zachowanie sprawdzone wtedy na
+  wcześniejszej wersji przykładu z `references/minimal-api.md`).
 - RFC 9457 „Problem Details for HTTP APIs”.
 Opisane własnymi słowami.
