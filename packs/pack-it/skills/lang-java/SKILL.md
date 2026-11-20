@@ -25,11 +25,11 @@ metadata:
 | Concept (glossary) | Java idiom |
 |---|---|
 | **value object** | a `record` with validation/normalization in the compact constructor; operations return a new record |
-| **identifier / entity** | `record PartyId(String value)` instead of a bare `String`/`UUID`; an entity = a class with identity and behaviour |
+| **identifier / entity** | `record MemberId(String value)` instead of a bare `String`/`UUID`; an entity = a class with identity and behaviour |
 | **variants** | a `sealed interface` + `record`s; an exhaustive `switch` with patterns (the compiler forces handling of a new variant) |
 | **operation result** | a `sealed interface Result<E, T>` with `Success`/`Failure`, or success/rejection events as the method result |
 | **aggregate** | a `final class` with private state, business methods instead of setters, `version` for optimistic locking, a list of events handed over by `pullEvents()` |
-| **state machine** | the state as a `sealed interface` (e.g. `Free`/`Blocked`/`Disabled`), transitions in a `switch` with `when` guards |
+| **state machine** | the state as a `sealed interface` (e.g. `OnShelf`/`Lent`/`Withdrawn`), transitions in a `switch` with `when` guards |
 | **event** | a past-tense `record` implementing the module's `sealed interface` of events |
 | **policy** | a functional interface/strategy injected by the aggregate factory |
 | **specification** | a `Predicate<T>` with `and/or/negate`, or your own interface with a name in the business language |
@@ -37,8 +37,8 @@ metadata:
 | **read model** | a separate `record` + a query (SQL/projection) that bypasses the aggregate |
 | **module** | a package with a public facade, the rest package-private; architecture tests guard the dependencies |
 
-Tested implementations (Money, Party, Result, TimeSlot, the ResourceAvailability aggregate with a state machine and events,
-a repository port): `references/domain-building-blocks.md`.
+Tested implementations for a tool-lending domain (Money with `split`, typed ids, `Member` variants, Result, LoanPeriod,
+the LendableTool aggregate with a state machine and events, a repository port): `references/domain-building-blocks.md`.
 
 ## Version-dependent
 | Version | Changes relevant to this skill |

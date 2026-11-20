@@ -63,25 +63,26 @@ dla wszystkich modeli.
   (zapytanie do katalogu: tabele z kolumną najemcy bez włączonego RLS).
 
 ## 7. Zachowanie per najemca bez forków
-Gdy klient chce innej reguły (zatwierdzanie, wycena, limity) albo starszej wersji API, nie zakładasz dla niego gałęzi
-ani kopii kodu. Fork każdego klienta mnoży koszt każdej poprawki i każdego wydania. Od najlżejszego:
-- **konfiguracja najemcy:** parametry istniejącej reguły (próg kwoty, liczba akceptujących) w rejestrze najemców,
-  z wersją i audytem zmian;
-- **flaga funkcji per najemca:** włączenie gotowego wariantu (eng-continuous-delivery); flaga ma właściciela i datę
-  usunięcia;
-- **polityka per najemca:** wariant reguły jako polityka (strategia) w domenie, wybierana przez fabrykę po
-  identyfikatorze najemcy i z konfiguracji
-  (`.claude/skills/ddd-tactical-design/references/dynamic-rules.md`). Rdzeń nie zna nazw klientów;
-  `if (tenantId == "ACME")` w logice to fork w przebraniu;
-- **handler komendy per najemca:** gdy różni się cały przebieg, rejestr handlerów wybiera implementację po
-  `tenantId` z kontekstu najemcy, a domyślny handler obsługuje pozostałych. Wariant ma testy jak rdzeń;
-- **wersja API per najemca:** najemca jest przypięty do wersji kontraktu (be-api-design: wersjonowanie) i przechodzi na
-  nową w ustalonym oknie; brama albo adapter tłumaczy starą wersję na nowy model, logika jest jedna.
+Duży klient chce innej reguły (dodatkowy krok zatwierdzenia, inne zaokrąglanie, własne wejście do systemu). Nigdy
+nie odpowiadaj gałęzią ani kopią kodu dla tego klienta: każdą poprawkę i wydanie trzeba by wtedy robić dwa razy.
+Wybierz najlżejszy mechanizm, który pokrywa różnicę:
+1. **Konfiguracja najemcy** — reguła ta sama, różnią się tylko jej parametry (próg zatwierdzenia, liczba
+   zatwierdzających, dni retencji). Wartości w rejestrze najemców, wersjonowane, każda zmiana audytowana.
+2. **Flaga funkcji per najemca** — włącza wariant, który już istnieje w produkcie. Każda flaga ma
+   właściciela i datę usunięcia (albo ADR, że jest stała) (eng-continuous-delivery).
+3. **Polityka per najemca** — inna reguła w domenie jako strategia wybierana przez fabrykę z konfiguracji najemcy
+   (`.claude/skills/ddd-tactical-design/references/dynamic-rules.md`). Rdzeń nie zna nazw klientów:
+   `if (tenantId == "BIGCO")` w logice biznesowej to fork w przebraniu.
+4. **Handler komendy per najemca** — gdy różni się cały przebieg, rejestr przypisuje najemcy (albo jego planowi)
+   implementację handlera, z handlerem domyślnym dla pozostałych. Wariant testujesz tak jak rdzeń.
+5. **Wersja API per najemca** — klient, który jeszcze nie może migrować, zostaje na starszej wersji kontraktu przez
+   uzgodniony okres; adapter na bramie tłumaczy ją na bieżący model, więc logika jest jedna (be-api-design).
 
-Zasady: wariant najemcy to element produktu (nazwany, przetestowany, z właścicielem), a nie wyjątek w kodzie. Gdy
-wariantów jest coraz więcej, sprawdź, czy to nie kilka planów produktu albo osobny kontekst (ddd-strategic-analysis).
-Dostawcy chmury w wytycznych dla SaaS zalecają konfigurację i flagi funkcji zamiast osobnych wersji kodu per klient
-[niezweryfikowane: strony Azure Architecture Center i AWS SaaS Lens niedostępne z tej sesji].
+Zasady: najemca, od którego zależy wybór wariantu, pochodzi z uwierzytelnionego kontekstu najemcy (sekcja 2), nigdy
+z nagłówka ani parametru kontrolowanego przez klienta. Wariant to element produktu (nazwany, przetestowany, z
+właścicielem), nie wyjątek w kodzie. Gdy wariantów przybywa, sprawdź, czy to nie są osobne plany albo osobny
+kontekst ograniczony (ddd-strategic-analysis). Wytyczne chmurowe dla wielu najemców (Azure Architecture Center, AWS
+SaaS Lens) też stawiają konfigurację i flagi ponad wersje kodu per klient [niezweryfikowane: strony nieczytane w tej sesji].
 
 ## Zasady
 - Kontekst najemcy jawny i sprawdzony po stronie serwera na każdej ścieżce; brak kontekstu = błąd, nie „wszyscy”.
@@ -112,5 +113,3 @@ innego klienta.”
 
 ## Źródła
 Opisane własnymi słowami; fakty i daty dostępu w `references/rls-postgresql.md`.
-Sekcja 7 na podstawie programu szkolenia „DDD — zaawansowane techniki modelowania i archetypy” (Bottega IT Minds,
-materiał od człowieka, 2026-10-21).

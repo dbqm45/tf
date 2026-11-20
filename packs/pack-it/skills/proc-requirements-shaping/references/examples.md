@@ -1,56 +1,70 @@
-# Examples and brownfield mode
+# Examples — requirements shaping
 
-## Brownfield mode — what changes in the phases
-| Phase | Greenfield | Brownfield (requirements as a delta) |
+
+## 1. Brownfield: what each phase asks
+| Phase | Greenfield asks | Brownfield asks |
 |---|---|---|
-| Problem | the pain, a person, the moment, the cost today | what exists, who uses it, what hurts, **what must not break** |
-| Access | the login and roles model | the current model; whether the change touches it |
-| MVP | the first flow and an estimate | the smallest change proving an improvement + the blast radius (modules, data, integrations) |
-| Requirements | `FR-NNN … Priority` | as above + `Change: new / changed / kept` |
-| Business rule | one sentence, the empty CRUD test | one sentence about the change of the rule or "no change to the domain rule" |
-| Recording | brief + requirements | additionally "Obecny system" (Current system) and "Preserved behavior" |
+| Problem | whose pain, when, what it costs | what exists, who uses it, what hurts, what must not break |
+| Access | who logs in, roles | the current model and what changes in it |
+| MVP | the first flow within budget | the smallest proof of improvement and its blast radius |
+| Requirements | FR-NNN, stories | the same plus `Change: new|changed|kept` |
+| Business rule | the decision the app makes | how the rule changes, or "no change to the domain rule" |
+| Recording | brief + requirements | plus "Current system" and "Preserved behavior" |
 
-In the "Obecny system" section you may name technologies (you are describing what exists). `requirements_lint.py` does not check it.
+## 2. Brownfield case: a waiting list for a tool-lending app
+**Situation:** neighbours already lend tools through the app; popular tools are always out, and people ask the owner in
+private messages. The change: a waiting list.
 
-## A brownfield example — a waiting list in a booking system
-**Input:** "We have a working room booking system. We want a waiting list for when a room is taken."
-**Grey areas of phase 1 (options with a recommendation):**
-- who joins the list: a) an employee, b) reception on someone's behalf as well → recommendation: a (a smaller blast radius);
-- what happens when the room is freed: a) a notification and 30 min to confirm, b) an automatic booking →
-  recommendation: a (b changes the allocation rule — a bigger risk);
-- I don't know → to "Open questions" (→ the office manager).
-**Result (a fragment):**
+Grey areas offered in phase 3 (with a recommendation):
+- Who may join? a) any member (recommended — simplest) b) only members who returned their last tool on time c) I don't know
+- What happens when the tool comes back? a) the first person gets 24 h to confirm, then the next (recommended)
+  b) everyone is notified, first to click wins c) the owner chooses d) I don't know
+
+Recorded:
+- `FR-007: A member can join the waiting list of a lent tool. Priority: must. Change: new`
+- `FR-003: A member can borrow a free tool for up to 7 days. Priority: must. Change: kept`
+- Business rule: "When a tool is returned, the app offers it to the earliest member on its waiting list for 24 hours
+  before moving to the next one."
+- Preserved behavior: borrowing a free tool works as today; an owner can still block a tool for themselves.
+- Out of scope (MVP): priority for members with good history; waiting lists across several copies of the same tool.
+
+## 3. A challenge round for one FR
+`FR-007: A member can join the waiting list of a lent tool.`
+Question: "What would have to be true for this requirement to do harm?"
+1. one member joins every list and blocks popular tools for everyone else;
+2. the 24-hour hold leaves a returned tool idle on a busy weekend;
+3. owners lose control over who borrows their tools;
+4. none.
+The human picked 1 → recorded under FR-007: "at most 3 active waiting-list places per member" (a new FR, `Priority: nice`).
+
+## 4. Two implementations of a vague adjective
+Requirement: "Notifications about a returned tool must be fast and reliable."
+- Implementation A: send a push message at the moment the return is confirmed; no retry.
+- Implementation B: a job every 15 minutes sends e-mails and retries three times.
+A member would see a difference (seconds vs up to 15 minutes; a lost message vs a retried one), so the requirement is
+silent. Questions on the five classes and the answers recorded:
+
+| Class | Decision | Verification | Owner |
+|---|---|---|---|
+| Scale | up to 200 returns a day | load test in CI | tech lead |
+| Execution mode | the member is notified within 5 minutes of the return | test with a fake clock | product owner |
+| Failure and retries | a failed notification is retried; after 1 hour the owner is told | integration test | tech lead |
+| Permissions | only the member next in line sees the offer | access test | product owner |
+| Migration | existing private-message requests are not converted | review point at release | product owner |
+
+The 5-minute promise is broad and hard to undo once members rely on it → the product owner decides before code.
+
+## 5. Lint output
+Running the lint on a draft with an unfinished business rule, a mechanism in a quality requirement and an estimate over
+budget (brief: budget 3 weeks, estimate 5 weeks, no cost acknowledgement):
+
 ```
-- FR-014: An employee can join the waiting list for a taken room slot. Priority: must. Change: new
-- FR-003: An employee can cancel a booking. Priority: must. Change: changed (cancellation frees the slot for the list)
-## Preserved behavior
-- a booking without a waiting list works as today; booking limits per person unchanged
-## Business rule
-A freed slot goes to the first person on the list who confirms it within 30 minutes of the notification.
-```
-
-## An example of a challenge round (phase 5)
-`FR-002: A learner can accept, edit or reject each suggestion.`
-Counterarguments to choose from:
-1. with 15 suggestions, accepting one by one is tiring — consider "accept all" with a preview;
-2. editing the content breaks the link to the source text — record whether the flashcard keeps a reference to the source;
-3. rejected suggestions may return on the next generation — do we remember rejections?
-4. no counterargument.
-The result is recorded under the FR as "Challenge: …"; a new need from the conversation goes to "Open questions", not to the FR.
-
-## An example of an empty CRUD
-**Input:** "The user adds, browses, edits and deletes recipes."
-**The agent's answer:** "This is an empty CRUD — the application decides nothing on its own. Which shape of a rule fits?
-a recommendation (what to cook from what I have in the fridge) · classification (diet, allergens) · calculation (portions,
-calories, a weekly shopping list) · validation (a recipe without steps will not be published) · or we consciously
-stay with CRUD and I record it as an open question."
-
-## An example of the script output
-```
-$ python3 .claude/skills/proc-requirements-shaping/scripts/requirements_lint.py requirements.md --brief brief.md
 Readiness: 3/4
-  · missing: a story with Given/When/Then criteria for the main flow
-requirements.md:41 — execution location: "server-side" → describe behaviour visible from outside or move it to "For the stack decision"
+  · missing: "Business rule" in one sentence (≤ 200 characters, ending with a period, no TODO)
+docs/project/03-requirements/requirements.md:16 — AC-003 miejsce wykonania: "server-side" → describe behaviour visible from outside or move it to "For the stack decision"
 MVP: estimate 25 days > budget 15 days — cost NOT acknowledged — propose cuts
 ✗ there are blocking problems
 ```
+
+Exit code 1. Fixes: write the business rule as one sentence; rewrite line 16 as "a member learns about a returned tool
+within 5 minutes"; propose cuts or record `- Cost acknowledged: <date>, <who> accepts <how much>` in the brief.

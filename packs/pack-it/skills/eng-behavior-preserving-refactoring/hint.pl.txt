@@ -1,79 +1,72 @@
-head: Użyj przy refaktoryzacji bez zmiany zachowania (legacy, inny paradygmat) — zamrożony kontrakt, równoważność. Użyj przy refaktoryzacji zmieniającej kształt lub idiom kodu bez zmiany zachowania (legacy, wydzielenie rdzenia domeny, zmiana paradygmatu, np. bogaty agregat → decider) — zamrożony kontrakt, testy czterowarstwowe, przepięcie poziomu testów, rejestr asercji, dowód zachowania. Nie do drobnych refaktoryzacji (eng-clean-code) ani projektowania przypadków (qa-test-design).
-# Refaktoryzacja z dowodem zachowania
+head: Użyj, gdy przebudowujesz kod albo zmieniasz jego idiom bez zmiany zachowania lub poprawiasz legacy, na którym polegają inni — zamrożony kontrakt, warstwy testów, dowód. Użyj, gdy istniejący kod zmienia kształt (porządki w legacy, wydzielenie rdzenia domenowego, mutowalny agregat → czysta funkcja decide, masowa zmiana wywołań) i trzeba udowodnić, że zachowanie zostało to samo, albo gdy poprawka błędu lub mała funkcja w starym module nie może zepsuć wywołujących, których nie widzisz — zamrożony kontrakt zachowania, warstwy testów scenariusz/DSL/sterownik, rejestr asercji, commity kroków, wartownicy dla zapisów pozycyjnych, przepisywanie ast-grep z licznikami, kontrakt zmiany w sześciu polach. Nie do drobnych lokalnych refaktoryzacji jednej funkcji (eng-clean-code) ani wyboru przypadków testowych (qa-test-design).
+# Refaktoryzacja, która dowodnie zachowuje zachowanie
 
-Cel: zmienić **jak** kod działa, nie zmieniając **co** robi. Dowód: **te same, niezmienione scenariusze** przechodzą przed i po
-zmianie, uruchamiane na poziomie niezależnym od zmienianego idiomu.
+Refaktoryzacja zmienia kształt, nigdy zachowanie. Praca polega głównie na udowodnieniu tej drugiej części: ustal, co jest zamrożone,
+uniezależnij testy od implementacji, którą wymieniasz, zmieniaj kod małymi krokami z commitami i zgłoś, czego dowód nie obejmuje.
+Gdy zmiana *ma* zmienić zachowanie w module legacy (poprawka, mała funkcja), użyj kontraktu zmiany (`references/change-contract.md`).
 
-## Warunek wstępny
-Testy istnieją i są zielone (to jest punkt odniesienia). Czerwone → stop. Brak testów → najpierw testy charakteryzujące
-(qa-spec-first-testing — oznaczone jako takie), dopiero potem refaktoryzacja. Test charakteryzujący dodajesz tam, gdzie
-zachowanie widać bez edycji chronionego kodu (szew: publiczna funkcja, fasada, zapytanie do bazy), i w kolejności:
-najpierw test istniejącej ścieżki, potem edycja. Wybór, CO refaktoryzować i jaką ścieżką: eng-refactor-planning.
+## Procedura
+1. **Punkt odniesienia.** Uruchom istniejące testy na commicie bazowym.
+   - Czerwona baza → stop. Poproś człowieka o naprawę albo o przyjęcie wymienionych porażek jako bazy; nie refaktoryzuj na czerwonym.
+   - Brak testów na ścieżce, którą ruszasz → najpierw testy charakteryzujące (qa-spec-first-testing), oznaczone jako takie, na szwie
+     osiągalnym bez edycji chronionego kodu (publiczna funkcja, fasada, zapytanie do bazy). Zamrażają dzisiejsze zachowanie *razem
+     z błędami*: to punkt odniesienia, nie specyfikacja.
+2. **Zamroź kontrakt zachowania** — trzy elementy, spisane przed przesunięciem kodu:
+   - **scenariusze i asercje** w języku domeny;
+   - **kontrakt publiczny**: sygnatury, zdarzenia i DTO oraz **rodzaj odrzucenia** — wyjątek, pusty wynik i wartość błędu to trzy różne
+     zachowania, nawet z tym samym powodem;
+   - **granica spójności**: co jest ładowane i zapisywane atomowo, pola wersji/blokady.
+   Każda zmiana tych trzech to już nie refaktoryzacja. Stop, nazwij zmianę, uzyskaj wyraźną zgodę człowieka i zapisz ją w `decisions.md`.
+   Kontrakt trafia do `docs/project/06-delivery/<step>-behavior-contract.md` (szablon: `.claude/skills/core-project-record/templates/behavior-contract.md`).
+3. **Oddziel testy od implementacji** — cztery warstwy testów: scenariusz (given/when/then słowami domeny, nie zmienia się), DSL
+   (czasowniki domenowe i obserwowalne fakty, nie zmienia się), sterownik (tłumaczy wywołania DSL na wywołania systemu — to wymieniasz),
+   system pod testem. Sterowniki wiążą się na **poziomie domeny** (szybko, zależy od idiomu, nie dowodzi równoważności), na **poziomie
+   aplikacji** (fasada albo przypadek użycia — niezależny od idiomu, tu powstaje dowód) i opcjonalnie systemu (HTTP, kolejka).
+   Zasady: brak asercji w sterownikach; sterownik wybierany w jednym miejscu; scenariusze nie tworzą typów implementacji i nie czytają
+   tabel; wiąż się z istniejącą fasadą — wymyślenie nowej zmienia kontrakt.
+4. **Kroki, każdy osobnym commitem, bez squasha** (`test(scope): …` dla kroków tylko z testami, `refactor(scope): …` dla kodu):
+   1. **Przepisz testy** na scenariusz + DSL uruchamiane przez sterownik aplikacyjny. Zmieniają się tylko testy. Każdą przepisaną asercję
+      wpisz do **rejestru asercji**: oryginał → forma DSL → czego już nie rozróżnia → dlaczego to do przyjęcia. Sterownik domenowy
+      i aplikacyjny muszą się zgadzać w każdym scenariuszu.
+   2. **Przełącz implementację**: nowy idiom obok starego, fasada przepięta. Czerwony scenariusz znaczy, że siatka zadziałała: popraw
+      kod albo okablowanie, **nigdy test**. Jeśli się nie da — cofnij do stanu po kroku 1 i zgłoś.
+   3. **Wycofaj stary kod**: sterownik domenowy na nowy rdzeń, stara implementacja usunięta.
+5. **Pułapki**:
+   - **Znika niejawny zapis.** Śledzenie zmian ORM zapisywało mutowalny agregat; niemutowalny stan już nie. Powłoka musi zapisywać
+     jawnie na każdej ścieżce, która zapisywała wcześniej.
+   - **Ukryty defekt naprawiony przypadkiem** to zmiana zachowania: nazwij go i zgłoś protokołem rozbieżności (qa-spec-first-testing).
+   - **Zapisy pozycyjne**: test zapisz → odczytaj → porównaj przechodzi nawet z zamienionymi kolumnami. Użyj wartowników — unikalnych
+     wartości dla każdego pola (`references/examples.md`, przykład 4).
+   - **Nowe strażniki wchodzą wyłączone** (albo jako ostrzeżenie); włączenie to osobny, odwracalny commit — per warstwa, z listą wyjątków
+     i uzasadnieniem.
+6. **Tryb.** Oszczędny (domyślny): dowód tylko na pokrytych ścieżkach, luki pokrycia jako zastrzeżenie. Ścisły (pieniądze, uprawnienia,
+   reguły domeny): dodatkowo próg testów mutacyjnych na zmienianym module i migawka wyników przed/po.
+7. **Raport**: zamrożone elementy, rejestr asercji, commity kroków, luki pokrycia, ukryte defekty, uzyskane zgody.
 
-## Co zamrażamy (kontrakt zachowania — `docs/project/06-delivery/<krok>-behavior-contract.md`)
-1. **Scenariusze i asercje** w języku domeny.
-2. **Publiczny kontrakt:** sygnatury operacji, zwracane zdarzenia i DTO, **rodzaj odrzucenia** — wyjątek, pusty wynik i wynik
-   z błędem to RÓŻNE zachowania.
-3. **Granica spójności:** co jest ładowane i zapisywane atomowo, gdzie są blokady/wersje.
-Każda zmiana któregoś z tych trzech wymaga jawnej zgody człowieka i wpisu w `decisions.md` — to już nie jest refaktoryzacja.
-Zmiana w legacy, która **ma** zmienić zachowanie (naprawa, mała funkcja), a reszta ma zostać: kontrakt zmiany
-(warunek, wynik, chronione zachowania z decyzją, zakres plików, dowód naprawy i braku regresji) —
-`references/change-contract.md`.
+## Zmiana idiomu
+Katalog idiomów i przepis agregat → decider: `references/idioms.md`. Zmiana idiomu wymaga podanego powodu. Ścisły decider zwykle wymaga
+bogatszych zdarzeń — zmiana kontraktu, więc najpierw zgoda.
 
-## Testy w czterech warstwach
-| Warstwa | Zmienia się przy refaktoryzacji? | Rola |
-|---|---|---|
-| **Scenariusz** (given/when/then) | nie | zachowanie w języku domeny |
-| **DSL** (czasowniki domeny, obserwowalne fakty) | nie | słownik testu — bez typów implementacji |
-| **Sterownik** (driver) | tak | tłumaczy DSL na wywołania systemu na wybranym poziomie |
-| **System** (SUT) | tak | zmieniany kod |
-Poziomy wiązania sterownika: **domena** (najszybszy, zależny od idiomu — nie dowodzi równoważności) · **aplikacja** (fasada /
-przypadek użycia — kontraktowy, niezależny od idiomu; **tym poziomem dowodzisz**) · **system** (HTTP/kolejka — opcjonalny).
-Reguły: sterownik bez asercji; wybór sterownika w jednym miejscu (bazowa klasa/fixture scenariusza); scenariusz nie tworzy
-typów implementacji i nie zagląda do tabel bazy; sterownik wiąże się z **istniejącą** fasadą — nie wymyślaj nowej.
+## Masowe przepisywanie struktury
+Do zmiany kształtu wywołania w wielu plikach binarka `ast-grep` (na Linuksie `sg` to polecenie zmiany grupy): podgląd
+`ast-grep run -p '<wzorzec>' -r '<zamiana>' -l <język> <katalog>`, potem `-i`/`--interactive` albo `-U`/`--update-all`; powtarzalna zmiana
+to reguła YAML z `fix` uruchamiana przez `ast-grep scan`. Liczniki w opisie commita (wzorzec źródłowy N → 0, docelowy 0 → N), każde zero
+potwierdzone `rg`, bo niepoprawny wzorzec też daje zero.
 
-## Kroki (osobny commit na każdy krok zmieniający kod — core-git-workflow; nie squashuj)
-1. **Podnieś** — przepisz istniejące testy na scenariusze + DSL i uruchom je przez sterownik aplikacyjny. Zmieniasz tylko testy
-   (`test(scope): …`). Każde przepisanie asercji wpisz do **rejestru asercji**:
-   | Asercja oryginalna | Asercja w DSL | Czego już nie rozróżnia | Dlaczego to akceptowalne |
-   Zgodność sterownika domenowego i aplikacyjnego na tych samych scenariuszach sprawdza wierność przepisania.
-2. **Zamień** — nowy idiom obok starego, przepięcie fasady na nowy kod. Czerwony test = siatka zadziałała: poprawiasz kod
-   lub okablowanie, **nigdy test**. Nie da się zazielenić bez edycji testu → wróć do stanu po kroku 1 (git) i zgłoś.
-3. **Obniż** — sterownik domenowy przepięty na nowy rdzeń (szybkie testy wracają), usuń stary kod.
-
-## Pułapki
-- **Niejawne utrwalanie** (ORM zapisujący zmienione encje sam): po przejściu na niezmienny stan zapis znika — powłoka musi
-  zapisać jawnie. Sprawdź każdą ścieżkę zapisu.
-- **Ukryty defekt:** jeśli nowa implementacja przy okazji naprawia błąd (np. dodany zapis) — nazwij to i zgłoś wg protokołu
-  rozbieżności (qa-spec-first-testing); to zmiana zachowania.
-- Zmiana rodzaju odrzucenia (wyjątek → pusty wynik) „bo ładniej” łamie kontrakt.
-- Testy charakteryzujące utrwalają także błędy — nie traktuj ich jako specyfikacji.
-- **Test okrężny nie chroni zapisu pozycyjnego:** gdy zapis jest pozycyjny (tablica kolumn, argumenty), a odczyt po
-  nazwach, test „zapisz → odczytaj → porównaj” zostaje zielony przy zamienionych kolumnach, a porównanie typów per
-  indeks przepuszcza zamianę sąsiednich pól tego samego typu. Użyj **wartości-wartowników**: każde pole dostaje
-  unikalną wartość, zapis idzie produkcyjną ścieżką, odczyt surowym zapytaniem po nazwach, asercja per nazwa
-  (`references/examples.md`, przykład 4).
-- **Mechanizm na zielono, egzekwowanie osobno:** nowa walidacja lub osłona wchodzi wyłączona (albo w trybie
-  ostrzeżenia); włączenie to osobny, odwracalny commit (np. per warstwa, z listą wyjątków z uzasadnieniem).
-
-## Tryby
-- **Oszczędny** (domyślny): dowód tylko na pokrytych ścieżkach; luki pokrycia wypisane w podsumowaniu jako zastrzeżenie.
-- **Ścisły** (logika krytyczna): dodatkowo próg testów mutacyjnych na zmienianym module i migawka charakteryzująca przed/po.
-
-## Podsumowanie (w raporcie kroku)
-co zamrożono · rejestr asercji · commity kroków · luki pokrycia · wykryte ukryte defekty · zgody na zmiany kontraktu.
-Katalog idiomów i przepisy przejść: `references/idioms.md`.
+## Poprawka w legacy, od którego zależą inni
+Gdy zachowanie *ma* się zmienić, a sąsiedzi nie mogą się zepsuć, opisz zadanie kontraktem zmiany w sześciu polach
+(`references/change-contract.md`): warunek, obserwowalny oczekiwany wynik, **chronione zachowania** (z wywołujących i konsumentów,
+incydentów, gorących plików z `git_territory.py --hotspots`, testów charakteryzujących), **dozwolony zakres plików**, dowód poprawki
+(test czerwony na commicie bazowym, zielony po) i dowód braku regresji (testy ochronne zacommitowane na commicie bazowym przed zmianą).
+Każde chronione zachowanie ma decyzję i właściciela; otwarte pozycje blokują start.
 
 ## Przykład
-**Sytuacja:** agregat `Reservation` (ORM zapisuje sam) ma się stać deciderem; 14 testów domenowych zielonych.
-**Wynik:** kontrakt zamraża scenariusze, `confirm(id, at)`, zdarzenie `ReservationConfirmed` bez nowych pól
-i wyjątek `ReservationExpired`. Commity: (1) `test:` scenariusze + DSL przez fasadę, rejestr asercji
-(`getStatus() === CONFIRMED` → `thenReservationIsConfirmed()`, nie rozróżnia enuma — status widać w DTO);
-(2) `refactor:` `decide(stan, komenda)` obok starego kodu, powłoka zapisuje jawnie; (3) sterownik domenowy na
-`decide`, stary agregat usunięty. Luka: anulowanie bez testu (tryb oszczędny).
-Więcej przykładów: `references/examples.md`.
+Prośba: przepisać agregat `Subscription` na decider i przy okazji zwracać `null` zamiast wyjątku `SubscriptionClosed`. Wynik: baza
+41 testów zielona; kontrakt zamrożony; `null` **zmienia rodzaj odrzucenia** — to zmiana zachowania, osobna decyzja w `decisions.md`;
+commity: przepisanie testów (rejestr: 3 asercje), przełączenie (2 scenariusze czerwone — brak jawnego zapisu po `resume`, dodany),
+usunięcie starego agregatu; raport z luką pokrycia ścieżki odnowienia.
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 4, lekcje 3–4 (szwy i testy charakteryzujące, zapis pozycyjny i osłona,
-  przepisanie ast-grepem) — materiał szkoleniowy (dostęp 2026-10-09); opisane własnymi słowami.
-- M. Feathers, *Working Effectively with Legacy Code* (2004) — szwy i testy charakteryzujące.
+## Sąsiedzi
+Wybór, co i jak refaktoryzować: eng-refactor-planning. Wywołujący: eng-codebase-mapping. Testy charakteryzujące: qa-spec-first-testing.
+Drobne refaktoryzacje: eng-clean-code. Dobór przypadków: qa-test-design. Wymagania dodane przez zmianę: proc-requirements-shaping.
+Commity i gałęzie: core-git-workflow.

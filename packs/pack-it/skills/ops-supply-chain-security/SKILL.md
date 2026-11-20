@@ -1,120 +1,145 @@
 ---
 name: ops-supply-chain-security
-description: Use for the dependency supply chain — lockfile, version cooldown, install scripts, SBOM, taken-over packages.
+description: Use when securing dependencies — lockfiles, release-age cooldown, install scripts, OIDC publishing, audits per ecosystem, SBOM, a compromised package.
 metadata:
-  review: "2027-04-10"
-  catalog: "Use when adding and updating dependencies, reviewing a lockfile, configuring a package manager, publishing packages and for the question \"did a compromised package hit us\" — lockfile and npm ci, a cooldown for new versions, install scripts, provenance, publishing tokens, SBOM, a fast track for patches, the post-incident procedure. Not for the pipeline itself (ops-ci-cd) or application auth (be-auth-security)."
-  keywords: "audyt zależności, audyt podatności zależności, podatności w zależnościach, npm audit, pip-audit, govulncheck, cargo audit, composer audit, CVE w paczkach, lockfile, nowa zależność, przejęta paczka, skompromitowana paczka, typosquatting, slopsquatting, SBOM, paczka wewnętrzna, prywatny rejestr npm, dependency audit, dependency vulnerability audit, vulnerabilities in dependencies, CVE in packages, new dependency, taken-over package, compromised package, internal package, private npm registry"
+  review: "2027-05-20"
+  catalog: "Use when hardening the dependency supply chain — committed lockfiles and frozen installs, a release-age cooldown (npm min-release-age, pnpm minimumReleaseAge, Yarn npmMinimalAgeGate) with exceptions, install-script allowlists, publishing through OIDC trusted publishing with provenance, internal scoped packages, SBOM, vulnerability audits per ecosystem and their prioritisation, pinning scanners, the response to a compromised package, dependency rules for AI agents (slopsquatting). Not for building the CI pipeline itself (ops-ci-cd), routine version upgrades (ops-dependency-upgrades) or the AppSec programme (sec-appsec-devsecops)."
+  keywords: "łańcuch dostaw, bezpieczeństwo zależności, złośliwa paczka, przejęta paczka, skompromitowana paczka, złośliwa wersja, postinstall, skrypty instalacyjne, ignore-scripts, karencja wersji, świeżo opublikowane wersje, minimalny wiek wersji, cooldown, minimumReleaseAge, min-release-age, npmMinimalAgeGate, onlyBuiltDependencies, allowBuilds, lockfile, package-lock, frozen lockfile, npm ci, audyt zależności, audyt podatności, audyt podatności zależności w CI, polecenia audytu, jak czytać wyniki audytu, utonąć w alertach, za dużo alertów, podatności w zależnościach, monorepo Node Python Go Java, npm audit, pip-audit, govulncheck, composer audit, SBOM, CycloneDX, provenance, trusted publishing, publikacja paczki npm, token npm, paczki wewnętrzne, prywatny rejestr, scope npm, .npmrc, slopsquatting, typosquatting, zmyślona paczka, agent dodaje zależność, CISA KEV, supply chain attack, malicious package, compromised dependency, release age, dependency audit, vulnerable dependencies, internal packages, private registry"
 ---
 
-# Software supply chain security
+# Dependency supply chain
 
-A dependency has the same permissions as your code: at install time it runs on the developer's laptop and on the
-CI runner, where npm tokens, SSH keys, cloud credentials and `.env` files are stored. The axios case (March 2026):
-a taken-over maintainer account, a new dependency with a `postinstall` hook, the first infected machines after 89 seconds, the malicious
-versions available for about 3 hours. Details and other cases: `references/cases.md`.
+Most compromises arrive through a legitimate name: a hijacked maintainer account publishes a new version, its install script runs on
+developer machines and CI runners, and steals tokens. The defences below are cheap and layered: if one fails, the next one stops the attack.
+Real incidents and what would have stopped each one: `references/cases.md`.
 
-## 1. Reproducible installation
-- A lockfile in the repository; in CI only `npm ci` / `pnpm install --frozen-lockfile` / `yarn install --immutable`.
-- A human reads the lockfile diff in the PR. **A new transitive dependency** that was not there before is a red flag
-  (in axios it was `plain-crypto-js`) — the pipeline can detect it and require approval.
-- Java: pinned versions (no ranges and no `LATEST`), checksum verification (Gradle `verification-metadata.xml`,
-  Maven with `checksumPolicy=fail`); build plugins are also code that runs on your side.
+## 1. Installation
+- The lockfile is committed. CI installs only from it: `npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`,
+  `pip install --require-hashes -r requirements.txt` (or `uv sync --locked`), `go mod download` with `go.sum`.
+- A human reads the lockfile diff in review. A **new transitive package** in a PR that only bumped a patch version is a warning sign;
+  the pipeline can list added packages and fail on unexpected ones.
+- Java: pinned versions and checksum verification — Gradle dependency verification (`gradle/verification-metadata.xml`),
+  Maven with a failing checksum policy (`--strict-checksums`).
+- The analyzer reports a missing lockfile with the text "ops-supply-chain-security (lockfile in git)".
 
-## 2. A cooldown for new versions
-Malicious versions usually disappear from the registry within hours, so install versions older than 1–3 days.
+## 2. Cooldown — do not install what was published an hour ago
+Malicious versions are usually detected and pulled within hours, so a delay of **1–3 days** removes most of the risk at almost no cost.
 
-| Manager | Setting | Unit | Since version |
-|---|---|---|---|
-| npm | `min-release-age=3` in `.npmrc` | days | npm 11.10 |
-| pnpm | `minimumReleaseAge: 4320` in `pnpm-workspace.yaml`, exceptions `minimumReleaseAgeExclude` | minutes | pnpm 10.16 (from 11 the default is 1440) |
-| Yarn Berry | `npmMinimalAgeGate: 4320` in `.yarnrc.yml`, exceptions `npmPreapprovedPackages` | minutes | Yarn 4.10 |
+| Tool | Setting | Unit / version |
+|---|---|---|
+| npm | `min-release-age=3` in `.npmrc` | days; npm ≥ 11.10 |
+| pnpm | `minimumReleaseAge: 4320` in `pnpm-workspace.yaml`, exceptions in `minimumReleaseAgeExclude` | minutes; pnpm ≥ 10.16, default 1440 since pnpm 11 |
+| Yarn Berry | `npmMinimalAgeGate` in `.yarnrc.yml`, exceptions in `npmPreapprovedPackages` | Yarn ≥ 4.10; check the unit in the docs of your version |
+| Renovate | `minimumReleaseAge: "3 days"` | separate from the package manager |
+| Dependabot | `cooldown: { default-days: 3 }` in `dependabot.yml` | separate from the package manager |
 
-Renovate and Dependabot have their own delay settings — configure them separately.
-
-**The exception: security patches.** A critical vulnerability in an internet-facing component (React2Shell: disclosed
-on 3 December 2025, attacks from 4 December) requires deployment within 24 hours. You let the patch through deliberately via the exception list,
-with a review of the package diff, not by disabling the cooldown for everything.
+**Exception for an urgent patch** (a critical, exploited vulnerability in an internet-facing dependency): one package in the exclude list,
+a review of the package diff (new files, new dependencies, new install scripts) before merge, target within 24 h, a comment with the PR
+and the reviewer, and the exception removed when the version is older than the cooldown. Never switch the cooldown off globally.
 
 ## 3. Install scripts
-- In CI `--ignore-scripts` as a rule. Packages that really need a script (native binaries, e.g. esbuild)
-  are allowed from an allowlist: pnpm `onlyBuiltDependencies` (pnpm 10) or `allowBuilds` (pnpm 11), npm with `@lavamoat/allow-scripts`.
-- Never `curl … | sh` or `iwr … | iex` as an installation step in the repository or CI — download, check the checksum, only then run. <!-- audit-ok: a description of an attack, not a command -->
+- CI: `npm ci --ignore-scripts` (or `ignore-scripts=true` in `.npmrc`), then rebuild only allowlisted packages.
+- pnpm 10 runs no dependency scripts by default; the allowlist is `onlyBuiltDependencies` (pnpm 10) or `allowBuilds` (pnpm 11).
+  Yarn Berry: `enableScripts: false` plus `dependenciesMeta.<pkg>.built: true` for the exceptions.
+- No installers that pipe a download straight into a shell, in pipelines or Dockerfiles; download, verify the checksum or signature, then run.
+- Install dependencies in a job that holds no publish or deploy secrets (ops-ci-cd).
 
 ## 4. Publishing your own packages
-- **Trusted publishing (OIDC) and the removal of classic npm tokens.** In axios OIDC was configured, but a long-lived
-  token still worked, and the malicious versions were published with it.
-- Publish from CI with `--provenance`; consumers check `npm audit signatures`.
-- **Provenance tells you where the package was built, not whether the build was authorized.** In the Mini Shai-Hulud campaign (2026)
-  the attackers used the victims' own workflows and their OIDC tokens (an orphaned commit via a fork bypassed branch protection),
-  so the malicious versions had valid provenance. Therefore: a trusted publisher pinned to a specific workflow file
-  and a protected environment with required approval; publishing never from commits from forks; an alarm on dependencies fetched
-  straight from GitHub (`github:…`, a git URL), especially optional ones.
-- Maintainer accounts: hardware keys or passkeys (WebAuthn) instead of TOTP codes; local publishing tokens only
-  granular and short-lived (npm shortens their default validity to 7 days), classic ones removed.
-- **Internal packages** (also AI artifacts: skills, rules, prompts distributed as a package): the organization scope
-  mapped to the private registry in the repository's `.npmrc` (without a token) — this also protects against a name substitution by a package
-  from the public npm; the read token only from a CI environment variable. External build platforms do not see
-  GitHub secrets — you sync the token separately to their secret store (production and preview). The kind of token for
-  reading GitHub Packages changes from time to time (classic tokens are being phased out) — check the current documentation before rollout.
-- A person with publishing rights is a target of social engineering: the axios maintainer was persuaded during a fake meeting
-  (a forged Slack and Teams) to install a "fix". Publishing rights only in CI, not on a laptop; no installation
-  of software at the request of the other party in a conversation.
+- **Trusted publishing (OIDC)** from CI instead of a stored token; `npm publish --provenance` (automatic with trusted publishing).
+  After the switch, **revoke every old publish token** — a forgotten token bypasses OIDC entirely (see `references/cases.md`).
+- Provenance proves *where* a package was built, not that the release was authorised. Bind the trusted publisher to one workflow file and a
+  protected environment with required approval; publish only from tags in the main repository, never from fork commits;
+  alert on `git+`/`github:` dependencies, which bypass the registry.
+- Consumers verify: `npm audit signatures` (registry signatures and provenance attestations).
+- Maintainer accounts: hardware keys or passkeys for 2FA, granular short-lived tokens, publishing only from CI, and awareness of
+  phishing that imitates the registry ("your 2FA must be reset"). Registries change token rules — check the current npm token types and
+  lifetimes before designing the flow.
 
-## 5. Knowing what you have
-- An SBOM (CycloneDX) generated in CI for every artifact — the answer to "do we have version X?" in minutes, not days.
-- **An audit of known vulnerabilities** in CI and at the start of work in a repo — commands for npm, pnpm, Python, Rust, Go, Ruby,
-  PHP and .NET, CVSS thresholds and reading the results: `references/dependency-audit.md`. You report direct dependencies
-  separately from transitive ones; an ecosystem without a built-in audit (Java, Dart) is "skipped", never "0 findings"; the audit
-  does not fix anything by itself (`npm audit fix` only with consent, with a review of the lockfile diff).
-- Security tools in CI (scanners, linters) are also the supply chain: in the TeamPCP campaign Trivy was swapped through
-  GitHub Actions. Pin them like any action (SHA, image digest) — ops-ci-cd.
-- A dependency scan with malicious code detection (not only known CVEs) in the pipeline.
-- **Scanners without secrets:** the job with the scanner has no write tokens or cloud credentials — the swapped Trivy read
-  secrets from the runner process memory and then performed a normal scan, so that nobody noticed anything. You pin the versions of build
-  tools the same way as the application's dependencies.
-- **Vulnerability priorities:** first what is reachable (package → artifact → image → internet-facing service)
-  and known to be exploited in attacks (e.g. the CISA KEV catalog); a reachability finding has an indicated evidence path.
-  An AI model may explain a finding, but it does not decide whether a vulnerability is exploitable.
+## 5. Inventory and vulnerability audit
+- A **CycloneDX SBOM** per released artifact, generated in CI and stored with it (`@cyclonedx/cyclonedx-npm`, `syft <image> -o cyclonedx-json`).
+  It answers "where do we run version X" during an incident in minutes.
+- Audit per ecosystem — commands and reading the output: `references/dependency-audit.md`.
 
-## 6. After a package compromise is reported
-The step-by-step procedure: `references/dependency-incident.md`. In short: find the version in the lockfiles and in `node_modules`,
-check for traces on the machines that installed during the attack window, **rebuild** the infected machines instead of "cleaning" them,
-rotate every secret reachable from those machines and runners, pin a safe version (`overrides` / `resolutions`).
+| Ecosystem | Command |
+|---|---|
+| npm / pnpm / Yarn | `npm audit --omit=dev`, `pnpm audit`, `yarn npm audit` |
+| Python | `pip-audit -r requirements.txt` |
+| Go | `govulncheck ./...` (reports only vulnerable code that is actually called) |
+| Rust | `cargo audit` |
+| PHP | `composer audit` |
+| .NET | `dotnet list package --vulnerable --include-transitive` |
+| Java, Dart | no built-in audit: OWASP Dependency-Check or `osv-scanner`; without one → **skipped** |
 
-## The agent and dependencies
-- The agent does not add a new dependency without a human's consent (the guard_bash hook asks on `npm install <package>`) and does not raise
-  versions in an existing project on its own initiative.
-- **Slopsquatting:** AI models invent package names that do not exist, and they do it repeatably, so attackers
-  can register those names. You check a package proposed by AI in the registry and the documentation before it enters the project;
-  CI can block new dependencies younger than N days or with a very small number of downloads.
-- Before proposing a new package: the name exactly the same as in the project's documentation (typosquatting), the publisher, the date of the latest
-  version, provenance, the number of transitive dependencies. Fewer dependencies means a smaller attack surface.
+- Report direct and transitive findings separately (a direct one you fix by a bump; a transitive one needs the parent's release or an override).
+- A non-zero exit code means "findings present" — it is information for the report, not a crashed step.
+- A missing tool or a network error → "**not checked**", never "0 findings". Record the date and the tool version.
+- Severity bands from CVSS: critical ≥ 9.0, high ≥ 7.0, medium ≥ 4.0. Priority, though, comes from **reachability** (is the vulnerable
+  function called, is the service exposed) and **known exploitation** (the CISA KEV catalog), not from the score alone.
+- The audit never runs `npm audit fix --force` or similar on its own: fixes go through a reviewed PR (ops-dependency-upgrades).
+- CVE scanning does not find malicious code: add a malicious-package check (`osv-scanner` reports OpenSSF `MAL-` entries).
+- Scanners are third-party code too: pin them by version and digest/SHA and run them without secrets.
+
+## 6. Internal packages (libraries, configs, AI artifacts such as prompts or skills)
+- An organisation scope mapped to the private registry in the committed `.npmrc`: `@acme:registry=https://npm.pkg.github.com`.
+  The mapping also blocks dependency confusion (a public `@acme/…` package can no longer be picked).
+- **No token in the committed file.** CI provides it from the environment (`actions/setup-node` with `registry-url`, `NODE_AUTH_TOKEN`);
+  developers keep it in their user-level `~/.npmrc`. External build platforms (Vercel, Netlify, a Docker build) need the token supplied
+  separately as their own secret.
+
+## 7. A compromised package — the response
+Full procedure: `references/dependency-incident.md`. In short:
+1. Establish the facts from the advisory: affected versions, the publication window, the added packages, what the payload does.
+2. Search lockfiles and SBOMs of all repositories and release branches with `grep` (do not read whole files). The presence of the malicious
+   package's directory in `node_modules` means the install script **has run**.
+3. List the machines and runners that installed during the window.
+4. **Preserve evidence first** (process list, network connections, the file tree), then **rebuild** the machine or runner — do not "clean" it.
+5. **Rotate everything reachable**: registry, GitHub, SSH, cloud keys, `.env` values, browser sessions; then read the access logs for use
+   of the old credentials.
+6. Pin a safe version (`overrides` / `resolutions`), clear the package cache, reinstall with scripts disabled.
+7. Post-mortem: which safeguard from sections 1–4 would have stopped it, and add it. Never "just run `npm update`".
+
+## 8. Rules for AI agents adding dependencies
+- No new dependency without a human's explicit consent; propose it with the reason and the alternative of no dependency.
+- Models invent plausible package names, and attackers register them (**slopsquatting**). Before proposing a package verify: it exists
+  under exactly that name, the publisher and repository, the last release date and history, provenance, download count, and how many
+  transitive packages it brings. An unverifiable name is not proposed.
+- Optional CI rule: fail on a dependency younger than the cooldown or with very few downloads unless it is on an approved list.
+- Agent hooks may ask before `npm install <pkg>` (core-agent-security).
 
 ## Example
-**Situation:** "I heard about the taken-over axios. We have 12 repositories in Node — are we affected?"
-**Result:** an answer based on `grep`, not on reading the lockfiles:
-- `grep -rn 'plain-crypto-js'` in `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock` of all repositories and release
-  branches, plus axios versions 1.14.1 and 0.30.4.
-- The `node_modules/plain-crypto-js` directory on a runner or a laptop = `postinstall` was executed → the machine is compromised.
-- A hit: rebuilding the machines that installed during the attack window, rotating the secrets from them, `overrides` with a safe version.
-- No hits: an entry in the log and a conclusion on what would have stopped the attack (a cooldown, blocking scripts, an alarm on a new package).
+Request: "Set pnpm and npm so we never install freshly published versions."
 
-More examples: `references/examples.md`.
+Result:
+```yaml
+# pnpm-workspace.yaml (pnpm ≥ 10.16)
+minimumReleaseAge: 4320            # minutes = 3 days
+minimumReleaseAgeExclude: []       # urgent patches only, with a diff review; remove after 3 days
+onlyBuiltDependencies: [esbuild]   # pnpm 10; in pnpm 11 use allowBuilds
+```
+```ini
+# .npmrc (npm ≥ 11.10)
+min-release-age=3                  # days
+ignore-scripts=true
+```
+Plus: "Renovate gets its own `minimumReleaseAge: \"3 days\"`. CI installs with `--frozen-lockfile` / `npm ci`. Malicious versions are
+usually pulled within hours, so three days removes most of the risk."
 
-## Checklist
-- [ ] a lockfile in the repo, a "frozen" installation in CI, the lockfile diff reviewed (new transitive packages?)
-- [ ] a cooldown for new versions in the package manager and in Renovate/Dependabot; an exception path for patches
-- [ ] install scripts disabled in CI or from an allowlist
-- [ ] publishing through OIDC with provenance, classic tokens revoked
-- [ ] an SBOM in CI, a malicious code scan, tool actions and images pinned
-- [ ] a vulnerability audit for every ecosystem in the repo (direct separately from transitive, "skipped" instead of "0")
-- [ ] the "did it hit us" procedure known to the team
+More in `references/examples.md`: 1. "did the compromised axios hit us?" across many repositories · 2. a cooldown and a script
+allowlist in pnpm · 3. publishing your own package through OIDC.
+
+## Related skills
+ops-ci-cd · ops-docker · ops-secrets-identities (rotation) · ops-dependency-upgrades · eng-repo-readiness (the dependency audit
+after the skeleton) · core-project-record · core-agent-security · be-auth-security.
 
 ## Sources
-- The 10xDevs course, ed. 3 (2026), module 1 (verification after setting up the skeleton, the dependency audit) and module 5, lesson 4
-  (distributing internal packages in a team) — training material (accessed 2026-10-09); described in our own words.
-- `pip-audit --help` (2.10.1, checked 2026-10-10); Composer 2.4 and `composer audit` —
-  [php.watch](https://php.watch/articles/composer-audit); govulncheck —
-  [pkg.go.dev](https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck); `dotnet list package` —
-  [learn.microsoft.com](https://learn.microsoft.com/dotnet/core/tools/dotnet-list-package) (accessed 2026-10-10).
+- npm Docs: `npm ci`, `npm audit`, `npm audit signatures`, config `min-release-age` and `ignore-scripts`, "Trusted publishing for npm
+  packages", "Generating provenance statements" (docs.npmjs.com), as of 2026-11.
+- pnpm documentation: settings `minimumReleaseAge`, `minimumReleaseAgeExclude`, `onlyBuiltDependencies`, `allowBuilds` (pnpm.io), as of 2026-11.
+- Yarn documentation: `.yarnrc.yml` settings `npmMinimalAgeGate`, `npmPreapprovedPackages`, `enableScripts` (yarnpkg.com), as of 2026-11.
+- Renovate docs `minimumReleaseAge` (docs.renovatebot.com); GitHub Docs, Dependabot options `cooldown` (docs.github.com), as of 2026-11.
+- pip-audit (github.com/pypa/pip-audit); govulncheck (pkg.go.dev/golang.org/x/vuln/cmd/govulncheck); Composer docs, the `audit`
+  command (getcomposer.org/doc/03-cli.md); `dotnet list package` (learn.microsoft.com); cargo-audit (rustsec.org); OWASP
+  Dependency-Check; osv-scanner (google.github.io/osv-scanner), as of 2026-11.
+- Gradle "Verifying dependencies" (docs.gradle.org); Maven `--strict-checksums` (maven.apache.org), as of 2026-11.
+- CycloneDX specification (cyclonedx.org); FIRST CVSS v3.1/v4.0 severity ratings (first.org); CISA Known Exploited Vulnerabilities
+  catalog (cisa.gov), as of 2026-11.

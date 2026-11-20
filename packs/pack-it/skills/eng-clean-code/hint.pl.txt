@@ -1,62 +1,99 @@
-head: Użyj przy czytelności kodu — nazwy, funkcje, komentarze, obsługa błędów, zapachy, małe refaktoryzacje. Użyj przy pisaniu, przeglądzie i refaktoryzacji kodu w dowolnym języku — nazewnictwo, funkcje, komentarze, obsługa błędów, zapachy kodu i bezpieczne refaktoryzacje małymi krokami. Nie do zasad architektonicznych (eng-design-principles) ani idiomów konkretnego języka (lang-*).
-# Czysty kod i refaktoryzacja
+head: Użyj, gdy piszesz, przeglądasz lub refaktoryzujesz kod pod kątem czytelności — nazwy, funkcje, limity złożoności, null jako znaczenie, połknięte błędy, mapa zapachów na refaktoryzacje. Użyj, gdy piszesz, przeglądasz albo refaktoryzujesz kod pod kątem czytelności w dowolnym języku — nazwy z dziedziny, krótkie funkcje na jednym poziomie abstrakcji, parametry-flagi, progi złożoności cyklomatycznej i ich wymuszanie w linterze, null przekazywany lub zwracany jako znaczenie, komentarze mówiące dlaczego, obsługa błędów bez połkniętych wyjątków i bez sukcesu po porażce, mapa zapachów kodu na małe bezpieczne refaktoryzacje i kolejność pracy (najpierw testy charakteryzujące, struktura zmieniana osobno od zachowania). Nie do zasad architektury (eng-design-principles) ani idiomów konkretnego języka (lang-*).
+# Czysty kod — czytelny kod i małe bezpieczne kroki
+
+Celem jest kod, który następna osoba (lub agent) zmienia bez strachu. Każda reguła poniżej skraca czas
+od „co to robi” do „mogę to bezpiecznie zmienić”. Oceniaj kod według tego, a nie liczenia reguł.
+
+## Procedura
+1. **Przeczytaj, zanim ocenisz.** Znajdź słowa dziedziny (zgłoszenia, schemat, etykiety w UI) i wywołujących.
+2. **Nazwij problemy** według sekcji poniżej; dla każdego powiedz, ile kosztuje czytelnika.
+3. **Sprawdź siatkę bezpieczeństwa.** Brak testów wokół kodu → najpierw testy charakteryzujące (utrwal dzisiejsze
+   zachowanie, także dziwne), potem refaktoryzacja. Bez nich nie zmieniasz struktury.
+4. **Małe kroki, zielono po każdym.** Jedna refaktoryzacja naraz (zmiana nazwy, wydzielenie, przeniesienie), testy po każdej.
+5. **Struktura osobno od zachowania.** Refaktoryzacja idzie w osobnym commicie `refactor:` bez zmiany zachowania;
+   poprawka lub funkcja w kolejnym commicie. „Najpierw uczyń zmianę łatwą, potem zrób łatwą zmianę.”
+6. **Zmiany kształtu API** (wynik boolean na typ wyniku, null na typ opcjonalny) w osobnym PR uzgodnionym z wywołującymi.
 
 ## Nazwy
-- Nazwa mówi **co i po co**, językiem domeny (ubiquitous language): `blockResource`, nie `process`, `handleData`, `doStuff`.
-- Bez skrótów i szumu (`Manager`, `Helper`, `Util`, `Data`, `Info`) — jeśli pasuje tylko taka nazwa, odpowiedzialność jest niejasna.
-- Wartości logiczne jako pytania (`isAvailable`, `hasRole`); kolekcje w liczbie mnogiej; jednostki w nazwie, gdy typ ich nie niesie.
+- Nazwa mówi, czym rzecz jest, a gdy to nieoczywiste — po co istnieje, w słowniku dziedziny (`overdueInvoices`, nie `list2`).
+- Słowa-szum (`Manager`, `Helper`, `Util`, `Data`, `Info`, `Processor`) zwykle ukrywają niejasną odpowiedzialność —
+  zapytaj, o czym klasa naprawdę decyduje.
+- Wartości logiczne jako pytania (`isExpired`, `hasAccess`); kolekcje w liczbie mnogiej; jednostka w nazwie, gdy typ jej nie niesie
+  (`timeoutMs`, `priceMinor`).
+- Jedno pojęcie, jedno słowo w całym module.
 
 ## Funkcje
-- Robią jedną rzecz na jednym poziomie abstrakcji; długość to sygnał, nie reguła (> ~30 linii → sprawdź).
-- Mało parametrów (≤ 3); więcej → obiekt parametrów / obiekt wartości. Brak parametrów-flag (`save(true)`) → dwie funkcje.
-- Rozdziel polecenia (zmieniają stan) od zapytań (zwracają dane) — CQS.
-- Wczesny powrót zamiast głębokich zagnieżdżeń.
-- **Złożoność cyklomatyczna** (liczba niezależnych ścieżek: 1 + punkty decyzji `if`, pętle, `case`, `&&`, `||`, `?:`):
-  powyżej ok. 10 na funkcję (próg McCabe'a) — dziel. Sposoby: klauzule strażnicze, wydzielenie funkcji, tabela lub mapa
-  zamiast długiego `switch`, polimorfizm zamiast `switch` po typie powtarzanego w wielu miejscach. W lincie: reguła ESLint
-  `complexity` (domyślny próg 20 — ustaw niższy) albo złożoność kognitywna z SonarJS (domyślnie 15), w Javie Sonar
-  lub Checkstyle `CyclomaticComplexity`. Liczba przypadków testowych rośnie razem ze złożonością (qa-test-design).
-- **Nie przekazuj `null`** jako znaczenia („brak klienta”, „użyj domyślnego”): osobna funkcja lub przeciążenie, obiekt
-  pusty (Null Object), pusta kolekcja zamiast `null`, typ opcjonalny. W TS `strict` (w tym `strictNullChecks`),
-  `null`/`undefined` sprawdzane raz na granicy (wejście API, odczyt z bazy), w Javie `Optional` tylko jako typ zwracany.
+- Funkcja robi jedną rzecz na jednym poziomie abstrakcji. Mniej więcej 30 linii to sygnał, żeby spojrzeć jeszcze raz, nie twarda reguła.
+- Najwyżej ~3 parametry; więcej albo ta sama grupa podróżująca razem → obiekt parametrów lub obiekt wartości.
+- Parametr-flaga (`render(doc, true)`) oznacza dwie funkcje: `renderDraft(doc)`, `renderFinal(doc)`.
+- Rozdział poleceń i zapytań: funkcja albo zmienia stan, albo zwraca informację.
+- Wczesny powrót (klauzule strażnicze) zamiast głębokiego zagnieżdżenia.
+
+## Złożoność
+- Złożoność cyklomatyczna = 1 + liczba punktów decyzji (`if`, `else if`, pętle, `case`, `catch`, `&&`, `||`, `?:`).
+- Dziel powyżej około **10** — próg zaproponowany przez McCabe’a w 1976 r. Każdy punkt decyzji to też kolejny przypadek testowy (qa-test-design).
+- Środki, od najtańszego: klauzule strażnicze; wydzielenie funkcji na grupę gałęzi; tabela lub mapa zamiast długiego `switch`;
+  polimorfizm (strategia/polityka), gdy ten sam switch po typie powtarza się w kilku miejscach.
+- Wymuszaj w linterze, nie w komentarzach z przeglądu:
+  - reguła ESLint `complexity` — domyślne maksimum **20**; ustaw niżej, np. `"complexity": ["error", 10]`;
+  - SonarJS `cognitive-complexity` — domyślny próg 15;
+  - Java: Checkstyle `CyclomaticComplexity`; Python: Ruff/flake8 `C901`.
+  W istniejącym kodzie zacznij od dzisiejszego maksimum i obniżaj limit krokami.
+
+## Null
+- Nie używaj null do przenoszenia znaczenia („brak klienta”, „użyj domyślnego”, „jeszcze nie wczytano”).
+- Zamiast tego:
+  - osobna funkcja lub przeciążenie dla ścieżki „domyślnej”;
+  - Null Object / Special Case (`NoDiscount` z `apply(x) = x`);
+  - pusta kolekcja zamiast null dla „nic nie znaleziono”;
+  - typ opcjonalny (`Optional<T>`, `T | undefined` sprawdzane przez kompilator), gdy brak jest prawdziwą odpowiedzią.
+- Sprawdzaj null i undefined **raz, na granicy** (wejście API, odczyt z bazy, odpowiedź z zewnątrz), wnętrze modułu bez null.
+- TypeScript: `strict` (co najmniej `strictNullChecks`). Java: `Optional` tylko jako typ zwracany.
 
 ## Komentarze
-- Kod mówi *co*, komentarz *dlaczego* (decyzja, ograniczenie, link do ADR/issue). Zakomentowany kod usuwamy.
-- Publiczne API dokumentuj (kontrakt, wyjątki, jednostki).
+- Kod mówi *co*; komentarz mówi *dlaczego*: decyzja, ograniczenie, obejście z linkiem do zgłoszenia lub ADR.
+- Usuń zakomentowany kod — git trzyma historię.
+- Dokumentuj kontrakt publicznego API: wejścia, jednostki, rzucane błędy, efekty uboczne.
 
 ## Błędy
-- Nie połykaj wyjątków; nie zwracaj `null` jako sygnału błędu — typ opcjonalny lub wynik operacji.
-- Komunikat błędu mówi, co się stało i co zrobić; bez danych wrażliwych.
-- Błąd operacji z efektem ubocznym (zapis, płatność, wysyłka) nie kończy się odpowiedzią sukcesu; logowanie to nie
-  obsługa. `catch → log → return ok` to **połknięty błąd** — klient myśli, że się udało (OWASP Top 10:2025, A10
-  Mishandling of Exceptional Conditions; diagnoza: eng-debugging).
+- **Bez połkniętych błędów.** Pusty `catch`, `catch`, który tylko loguje, albo zwraca wartość domyślną, ukrywa porażkę.
+- **Logowanie to nie obsługa.** `catch → log → zwróć sukces` to nadal połknięty błąd.
+- Operacja z efektem ubocznym (zapis, płatność, wysłana wiadomość) nigdy nie zgłasza sukcesu po porażce. Albo obsłuż
+  porażkę naprawdę (ponowienie z limitem, kompensacja, poprawny biznesowo wariant), albo ją przepuść: rzuć ponownie,
+  zwróć błąd/wynik albo zamień na 5xx na granicy HTTP.
+- Obsługa błędów w jednym miejscu na warstwę — granica lub middleware zamienia wyjątek w odpowiedź i wpis w logu.
+- Nie sygnalizuj błędu przez null; użyj wyjątku albo typu wyniku.
+- Komunikaty mówią, co się stało i co czytelnik może zrobić, bez danych wrażliwych (bez SQL, stosu, tokenów, danych osobowych).
+- Ta klasa defektów to w OWASP Top 10:2025 **A10 Mishandling of Exceptional Conditions**.
+- Szukanie przyczyny już połkniętego błędu: eng-debugging.
 
-## Zapachy → refaktoryzacje (małymi krokami, testy zielone po każdym)
+## Zapachy → refaktoryzacje
 | Zapach | Refaktoryzacja |
 |---|---|
-| długa funkcja | wydziel funkcję; zamień pętlę na potok |
-| powtórzona reguła biznesowa | przenieś do jednego miejsca (obiekt wartości, polityka) |
-| długa lista parametrów, zbitki danych | obiekt parametrów / obiekt wartości |
-| obsesja typów prostych (kwota jako liczba) | obiekt wartości |
-| `switch` po typie w wielu miejscach | polimorfizm / warianty / polityka |
-| zazdrość o dane (metoda używa cudzych pól) | przenieś metodę |
-| rozproszona zmiana (jedna zmiana → wiele plików) | zbierz odpowiedzialność w jednym module |
-| pole-flaga stanu | maszyna stanów / osobne pojęcia |
-| powtarzalny problem strukturalny (fabryki, warianty, warstwy, powiadomienia) | wzorzec projektowy — najpierw jego lżejsza forma |
-| martwy kod | usuń (historia jest w git) |
-
-## Jak refaktoryzować
-1. Testy charakteryzujące, jeśli ich brak. 2. Jeden krok naraz. 3. Refaktor w osobnym commicie (`refactor:`), bez zmiany zachowania.
-4. Najpierw zrób zmianę łatwą, potem zrób łatwą zmianę.
+| długa funkcja | wydzielenie funkcji albo potok nazwanych kroków |
+| ta sama reguła biznesowa w kilku miejscach | jedno miejsce: obiekt wartości, polityka, funkcja |
+| długa lista parametrów, zbitki danych | obiekt parametrów |
+| obsesja typów prostych | obiekt wartości (pieniądze w groszach z walutą) |
+| ten sam switch po typie w wielu plikach | polimorfizm, strategia/polityka albo tabela |
+| zazdrość o funkcje | przeniesienie metody do danych |
+| chirurgia śrutówką | zebranie odpowiedzialności w jednym module |
+| pole-flaga stanu | maszyna stanów albo osobne pojęcia |
+| powtarzający się problem struktury | wzorzec projektowy, najlżejsza forma |
+| martwy kod | usuń |
 
 ## Przykład
-**Sytuacja:** review `process(data, owner: string | null, notify: boolean)` — zagnieżdżone `if`, `null` znaczy „system”.
-**Wynik:** nazwa z domeny `blockResource(resourceId, ownerId)`; flaga → osobne `blockResourceAndNotify`; `null` →
-`blockResourceBySystem(resourceId)`; wczesny powrót zamiast trzech poziomów `if`. Każdy krok osobno, testy zielone,
-commit `refactor:`; zmianę zwracanego `boolean` na wynik operacji (CQS) proponujesz w osobnym PR.
+Handler płatności łapie błąd `psp.capture`, loguje go na poziomie info i zwraca `{ status: "captured" }`.
+Odpowiedź: to połknięty błąd — klient dostaje „pobrano”, choć pieniądze nie przeszły, a log to nie obsługa (OWASP A10).
+Usuń `catch` i pozwól błędowi dojść do middleware, które zwraca 502 z komunikatem „Nie udało się pobrać płatności,
+spróbuj ponownie lub użyj innej karty” i loguje kod dostawcy z identyfikatorem korelacji. Jeśli wywołujący musi
+rozgałęzić się po porażce, zwróć `{ ok: false, reason }`. Najpierw test z dostawcą zwracającym błąd; zmiana w osobnym commicie.
+
 Więcej przykładów: `references/examples.md`.
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 3, lekcja 5 (połknięte błędy) — materiał szkoleniowy (dostęp 2026-10-09).
-- OWASP Top 10:2025, kategoria A10 (nazwa jak w arch-threat-modeling).
-Opisane własnymi słowami.
+## Lista kontrolna
+- [ ] nazwy z dziedziny, bez słów-szumu, wartości logiczne jako pytania, jednostki
+- [ ] bez parametrów-flag; ≤ ~3 parametry; wczesne powroty
+- [ ] złożoność ≤ ~10 na funkcję, wymuszona regułą lintera
+- [ ] null bez znaczenia; sprawdzany raz na granicy; ścisłe sprawdzanie null włączone
+- [ ] bez połkniętych błędów, bez sukcesu po nieudanym efekcie ubocznym; komunikaty bez danych wrażliwych
+- [ ] testy charakteryzujące przed zmianą struktury; refaktoryzacja w osobnym commicie `refactor:`

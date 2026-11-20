@@ -4,7 +4,7 @@ description: Use for secrets and machine identities — scanning, rotation, OIDC
 metadata:
   review: "2027-04-17"
   catalog: "Use for secrets and machine identities — an inventory of service accounts, tokens, keys and certificates (owner, scope, expiry), separating the build and deployment identities, secret scanning before commit and in CI, push protection, rotation and clean-up, a cryptography inventory (CBOM). Not for authenticating application users (be-auth-security) or dependencies (ops-supply-chain-security)."
-  keywords: "pushed an AWS key, leaked key, secret in the repo, rotate the key, clean git history, credentials leak"
+  keywords: "skanowanie sekretów, skan sekretów, omijanie hooka, sekrety w workflow, pushed an AWS key, leaked key, secret in the repo, rotate the key, clean git history, credentials leak"
 ---
 
 # Secrets and machine identities

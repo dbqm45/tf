@@ -1,82 +1,93 @@
-head: Użyj przy testach e2e i API w Playwright — lokatory wg ról, asercje z oczekiwaniem, fixtures, trace, flaky w CI. Użyj przy testach e2e i API w Playwright (@playwright/test) — lokatory wg ról, asercje z oczekiwaniem, fixtures, projekty i tagi, migawki dostępności, zegar, trace, sharding, flaky w CI, test agents. Nie do wyboru przypadków (qa-test-design) ani zasad wyroczni (qa-spec-first-testing).
-# Playwright
+head: Użyj przy pisaniu testów e2e lub API w Playwright — lokatory po roli, asercje web-first, izolacja, page.clock, polityka niestabilnych testów w CI, aria snapshoty, agenci testów. Użyj przy pisaniu lub naprawie testów end-to-end i API w @playwright/test: kolejność lokatorów i asercje web-first, izolacja testów i storageState, page.clock i mockowanie sieci, znane defekty (test.fail, test.fixme), playwright.config dla CI (ponowienia jako wykrywacz, failOnFlakyTests, trace on-first-retry, webServer, tagi i --grep, --only-changed, sharding), aria snapshoty i axe, wbudowani agenci planner/generator/healer, różnice wersji 1.44–1.63 oraz generowanie testów E2E przez agenta AI. Nie do wyboru przypadków testowych (qa-test-design), tego, skąd biorą się oczekiwane wartości (qa-spec-first-testing), testów komponentów (tryb przeglądarki tool-vitest) ani utrzymania zestawu regresji (qa-regression).
+# Playwright — testy e2e i API
+
+Wersje: napisane dla 1.63, działa od 1.44; przed użyciem nowszego API sprawdź tabelę niżej. Dowody: `skill.meta.json`.
 
 ## Zasady
-1. **Oczekiwany wynik z przypadku testowego** (TC/AC w nazwie), nigdy „z tego, co pokazuje aplikacja” — qa-spec-first-testing.
-2. **Lokatory jak użytkownik:** `getByRole(…, { name })` > `getByLabel` > `getByText` > `getByTestId`; CSS/XPath tylko w ostateczności.
-   Brak dobrego lokatora wg roli to często **defekt dostępności** — zgłoś go.
-3. **Asercje z oczekiwaniem** (`await expect(locator).toHaveText/ToBeVisible/…`) — nigdy `waitForTimeout` ani ręczne `sleep`.
-4. **Izolacja:** każdy test ma świeży `context`; stan (użytkownik, dane) przygotuj przez API lub `storageState` w projekcie
-   „setup”, nie przez klikanie. Zero zależności między testami.
-5. **Czas pod kontrolą:** `page.clock.setFixedTime(...)` / `page.clock.install()` zamiast prawdziwego zegara.
-6. **Sieć:** zewnętrzne usługi przez `page.route()` (albo HAR); własne API — prawdziwe (to test e2e).
-7. **Mało e2e** — tylko ścieżki krytyczne; reguły biznesowe testuj niżej (qa-test-design).
+1. **Oczekiwane wartości pochodzą z przypadku testowego albo kryterium akceptacji**, nigdy z tego, co aplikacja pokazuje dziś
+   (qa-spec-first-testing). Nazwa testu niesie id: `test('TC-014: suma zamówienia z dostawą', …)`.
+2. **Lokatory w tej kolejności:** `getByRole(rola, { name })` → `getByLabel` → `getByText` → `getByTestId`. CSS i XPath na końcu.
+   Jeśli elementu nie da się znaleźć po roli i dostępnej nazwie, to zwykle **problem z dostępnością** — opisz go zamiast
+   sięgać po selektor CSS.
+3. **Asercje web-first** (`await expect(locator).toHaveText(…)`, `toBeVisible`, `toHaveURL`) same czekają i ponawiają.
+   Nigdy `page.waitForTimeout()` ani stałych uśpień.
+4. **Izolacja:** każdy test dostaje świeży kontekst przeglądarki. Stan przygotuj przez API albo plik `storageState` tworzony
+   w projekcie setup — nie klikaniem przez UI i nie licząc na to, że inny test uruchomił się wcześniej.
+5. **Czas i sieć:** czas kontroluj przez `page.clock` (`setFixedTime`, `install` + `runFor`) — 1.45+. **Zewnętrzne** usługi mockuj
+   przez `page.route()` albo plik HAR (`routeFromHAR`); własne API zostaw prawdziwe.
+6. **Mało testów e2e,** tylko dla krytycznych ścieżek użytkownika. Reguły i obliczenia testuje się niżej (qa-test-design §4).
+7. **Znany defekt:** `test.fail(true, 'BUG-231 zaokrąglanie ceny')` albo `test.fixme()` z linkiem do błędu. Nigdy nie zmieniaj
+   oczekiwanej wartości, żeby test przeszedł.
+8. **Testy API** używają fixture `request` (`request.post('/api/orders', { data })`) — bez przeglądarki.
+9. **Fixture zamiast page objectów** dla wspólnego przygotowania; page object jest w porządku dla długich przepływów, ale asercje zostają w teście.
 
-## Wzorzec (sprawdzony: Playwright 1.63, Chromium)
+## playwright.config.ts dla CI
 ```ts
-import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
-
-test.describe('zamówienie @smoke', () => {
-  test.beforeEach(async ({ page }) => { await page.goto('/'); });
-
-  test('TC-014 H1-AC2: 10 szt. z rabatem 5%', async ({ page }) => {
-    await page.getByLabel('Ilość').fill('10');
-    await page.getByRole('button', { name: 'Przelicz' }).click();
-    await expect(page.getByRole('status')).toHaveText('Suma: 190,00 zł'); // wartość z requirements.md
-  });
-
-  test('struktura strony', async ({ page }) => {
-    await expect(page.getByRole('main')).toMatchAriaSnapshot(`
-      - heading "Zamówienie" [level=1]
-      - spinbutton "Ilość"
-      - button "Przelicz"
-    `);
-  });
-
-  test('dostępność (axe)', async ({ page }) => {
-    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
-  });
-});
-```
-Znany defekt: `test.fail(true, 'BUG-7')` lub `test.fixme()` z linkiem — oczekiwanej wartości nie zmieniaj.
-
-## Konfiguracja (fragmenty)
-```ts
+import { defineConfig, devices } from '@playwright/test';
+const CI = !!process.env.CI;
 export default defineConfig({
-  fullyParallel: true, forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,           // retries wykrywają flaky, nie ukrywają ich
-  failOnFlakyTests: !!process.env.CI,        // (1.52+) np. w zestawie nocnym
-  use: { baseURL: 'http://localhost:4173', trace: 'on-first-retry' },
-  webServer: { command: 'npm run preview', url: 'http://localhost:4173', reuseExistingServer: !process.env.CI },
+  testDir: 'e2e',
+  fullyParallel: true,
+  forbidOnly: CI,                       // zapomniany test.only wywala build
+  retries: CI ? 2 : 0,                  // wykrywacz niestabilności, nie przykrywka
+  failOnFlakyTests: CI,                 // 1.52+: przeszedł przy ponowieniu = przebieg nieudany
+  reporter: CI ? [['blob'], ['github']] : 'html',
+  use: { baseURL: 'http://localhost:3000', trace: 'on-first-retry' },
+  webServer: { command: 'npm run start', url: 'http://localhost:3000', reuseExistingServer: !CI },
+  projects: [
+    { name: 'setup', testMatch: /.*\.setup\.ts/ },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], storageState: 'e2e/.auth/user.json' }, dependencies: ['setup'] },
+  ],
 });
 ```
-Zestawy (qa-regression): tagi w tytule/`{ tag: '@smoke' }` + `--grep @smoke`; PR: `--only-changed=origin/main` (1.46+);
-CI: `--shard=1/4` + `merge-reports`. Page Object tylko gdy upraszcza — preferuj fixtures (`test.extend`) i funkcje pomocnicze.
-Testy API: fixture `request` (`request.post(...)`, `expect(res).toBeOK()`).
+- Niestabilny test to błąd w teście albo aplikacji: otwórz trace (`npx playwright show-trace`), napraw przyczynę, nie zwiększaj ponowień.
+- **Zestawy po tagu:** `test('TC-020: termin dostawy', { tag: '@smoke' }, …)`, uruchamiane przez `npx playwright test --grep @smoke`.
+- **Tylko to, czego dotknął PR:** `npx playwright test --only-changed=origin/main` (1.46+). Na starszych wersjach: uruchom tag `@smoke`
+  plus pliki spec zmienione w diffie (`git diff --name-only origin/main -- e2e`).
+- **Sharding:** `--shard=1/4` na zadanie CI, raporty blob, potem `npx playwright merge-reports --reporter html ./all-blob-reports`.
 
-## Test agents (1.56+)
-`npx playwright init-agents` generuje agentów planner → generator → healer. Traktuj ich wynik jak kod od juniora:
-plan zestawiaj z przypadkami z qa-test-design, a **healer nie może zmieniać oczekiwanych wartości** — tylko lokatory/czekanie.
+## Dostępność
+- `await expect(page.getByRole('main')).toMatchAriaSnapshot(…)` (1.49+) sprawdza drzewo dostępności; snapshoty przeglądaj jak kod.
+- Automatyczny skan: `@axe-core/playwright` (`new AxeBuilder({ page }).analyze()`) plus ręczne przejście klawiaturą.
+- `page.accessibility` usunięto w 1.57 — używaj aria snapshotów albo axe.
 
-Generowanie E2E przez agenta (bramka przed testem, test wzorcowy `seed.spec.ts`, szablon zlecenia, CLI vs MCP, przegląd
-pięciu antywzorców, celowe psucie, sprzątanie danych): `references/e2e-with-agent.md`.
+## Wbudowani agenci testów (1.56+)
+`npx playwright init-agents --loop=claude` (albo `vscode`, `opencode`) dodaje **plannera** (bada aplikację, pisze plan),
+**generatora** (zamienia plan w testy) i **healera** (naprawia padające testy). Ich wynik traktuj jak pull request juniora.
+Healer może poprawiać **lokatory i oczekiwania czasowe**; nigdy nie może zmienić oczekiwanej wartości ani sprawdzanego tekstu — zmienione
+oczekiwanie to sprawa dla właściciela wymagania, nie naprawa.
+
+## Generowanie E2E przez agenta AI
+Zanim poprosisz agenta o testy: wzorcowy spec (`tests/e2e/seed.spec.ts`), spisane konwencje, zlecenie zadania, eksploracja
+przez `playwright-cli`, przegląd antywzorców, sprzątanie danych (afterEach, projekt teardown) i weryfikacja przez celowe zepsucie kodu: `references/e2e-with-agent.md`.
 
 ## Zależne od wersji
 | Wersja | Co się zmieniło |
 |---|---|
-| 1.44 | punkt odniesienia: `getByRole`, `toHaveAccessibleName`, `expect.toPass`, tagi (`{ tag }`), `webServer`, projekty i zależności |
-| 1.45 | API zegara `page.clock` |
-| 1.46 | `--only-changed` (tylko testy dotknięte zmianą w git) |
-| 1.49 | `toMatchAriaSnapshot` (migawki drzewa dostępności); `chromium-headless-shell` domyślnie w trybie headless |
-| 1.52 | `failOnFlakyTests`; `toContainClass` |
-| 1.56 | Playwright Test Agents (`init-agents`: planner, generator, healer) |
-| 1.57 | usunięte `page.accessibility` (używaj migawek aria / axe) |
-| 1.63 | testy komponentów (`@playwright/experimental-ct-*`) wycofywane — komponenty testuj w Vitest (tryb przeglądarki) |
+| 1.44 | minimalna wspierana podstawa |
+| 1.45 | `page.clock` |
+| 1.46 | `--only-changed` |
+| 1.49 | `toMatchAriaSnapshot`; uruchomienia headless domyślnie na Chromium headless shell |
+| 1.52 | `failOnFlakyTests`, `toContainClass` |
+| 1.56 | agenci testów (`init-agents`: planner, generator, healer) |
+| 1.57 | usunięte `page.accessibility` |
+| 1.63 | eksperymentalne testy komponentów (`@playwright/experimental-ct-*`) wygaszane — testy komponentów pisz w trybie przeglądarki Vitest (tool-vitest) |
 
-## Checklista
-- [ ] nazwa zawiera ID przypadku/kryterium, oczekiwanie ma źródło
-- [ ] tylko lokatory wg ról/etykiet; brak `waitForTimeout`
-- [ ] dane i logowanie przez API/`storageState`; test niezależny
-- [ ] trace przy ponowieniu; flaky raportowane, nie ukrywane
-- [ ] test generowany przez agenta przeszedł przegląd pięciu antywzorców i celowe psucie
+## Przykład
+„Test przycisku Przelicz jest niestabilny i używa klasy CSS”:
+
+```ts
+test('TC-031: przeliczenie liczy dostawę', { tag: '@smoke' }, async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-03-02T10:00:00'));   // cennik dostawy zależy od daty
+  await page.goto('/cart');
+  await page.getByLabel('Ilość').fill('10');
+  await page.getByRole('button', { name: 'Przelicz' }).click();     // było: page.locator('.btn-recalc')
+  await expect(page.getByRole('status')).toHaveText('Dostawa: 0,00'); // H4-AC1: darmowa od 100,00
+});
+```
+Jeśli `getByRole('button', { name: 'Przelicz' })` nic nie znajduje, bo „przycisk” to `<div>` z obsługą kliknięcia,
+potraktuj to jako problem z dostępnością.
+
+## Źródła
+- playwright.dev: Release notes, Best practices, Test agents, Aria snapshots, Clock, Test configuration, Test sharding
+  (dostęp 2026-09-27; wersje sprawdzone na @playwright/test 1.63.0, zob. `skill.meta.json`).

@@ -29,7 +29,7 @@
       "id": "niezmiennik-tylko-w-ui",
       "expect": "trigger",
       "accept": ["ddd-tactical-design"],
-      "prompt": "W naszym legacy reguła „sesji generacji nie można sfinalizować, dopóki każda propozycja nie jest zaakceptowana albo odrzucona” jest sprawdzana tylko w UI, a endpoint ufa liczbom z żądania. Jak to naprawić w istniejącym kodzie? Odpowiedz zwięźle.",
+      "prompt": "W naszym legacy reguła „inspekcji terenowej nie można zamknąć, dopóki każdy punkt listy kontrolnej nie jest oznaczony jako spełniony albo niespełniony” jest sprawdzana tylko w UI, a endpoint ufa liczbom z żądania. Jak to naprawić w istniejącym kodzie? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           ["agregat"],
@@ -43,7 +43,7 @@
       "id": "przeciek-biblioteki",
       "expect": "trigger",
       "accept": ["ddd-context-mapping"],
-      "prompt": "Typy biblioteki ts-fsrs siedzą w schemacie bazy, w odpowiedziach API i w propsach komponentów, a konwersja jest skopiowana w trzech miejscach. Jak to odizolować w działającej aplikacji i po czym poznać, że skończyliśmy? Odpowiedz zwięźle.",
+      "prompt": "Typy biblioteki rrule (reguły powtarzania terminów) siedzą w schemacie bazy, w odpowiedziach API i w propsach komponentów, a konwersja jest skopiowana w trzech miejscach. Jak to odizolować w działającej aplikacji i po czym poznać, że skończyliśmy? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           ["ACL|anti-corruption|antykorupc"],

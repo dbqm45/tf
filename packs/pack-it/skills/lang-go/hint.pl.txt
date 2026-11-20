@@ -28,11 +28,11 @@ head: Użyj przy kodzie Go 1.22–1.27 — konwencje, błędy (errors.Is/As), ws
 | **agregat** | wskaźnik na strukturę z prywatnym stanem, metody biznesowe zamiast setterów, `version` do blokady optymistycznej, `PullEvents()` |
 | **warianty** | interfejs z metodą nieeksportowaną (zbiór zamknięty w pakiecie) + `switch v := x.(type)`; `default` z `panic` dla nieobsłużonego wariantu |
 | **wynik operacji** | `(T, error)`; odrzucenia jako błędy wartownicze lub typy błędów z `Unwrap`, rozróżniane `errors.Is` / `errors.As` |
-| **zdarzenie** | struktura w czasie przeszłym (`ResourceBlocked`) implementująca interfejs zdarzeń modułu |
+| **zdarzenie** | struktura w czasie przeszłym (`ToolLent`) implementująca interfejs zdarzeń modułu |
 | **polityka** | interfejs z jedną metodą albo typ funkcji (`type DiscountPolicy func(Order) Money`) wstrzykiwany konstruktorem |
 | **repozytorium** | interfejs (port) w pakiecie domeny operujący na agregatach; adapter SQL w pakiecie infrastruktury |
 | **read model** | osobna struktura i zapytanie SQL omijające agregat |
-| **maszyna stanów** | stan jako warianty (`Free`, `Blocked`, `Disabled`), przejścia w `switch` po typie w metodzie agregatu |
+| **maszyna stanów** | stan jako warianty (`OnShelf`, `Lent`, `Withdrawn`), przejścia w `switch` po typie w metodzie agregatu |
 | **moduł** | pakiet z małym eksportowanym API, reszta nieeksportowana; `internal/` dla granic |
 
 Przetestowane implementacje (kwota, identyfikator, błędy odrzucenia, warianty stanu, agregat ze zdarzeniami, port
@@ -52,10 +52,11 @@ Projekt z dyrektywą starszą niż 1.22 → `detect_stack.py` zgłosi `PROJECT_O
 wersji. Nowsza niż 1.27 → `SKILL_OUTDATED`, aktualizacja wg core-stack-sync.
 
 ## Przykład
-Pytanie: „Reserve ma zwrócić sukces albo odrzucenie (termin zajęty, zasób wyłączony)”. Wynik:
-`func (r *ResourceAvailability) Block(by string, at time.Time) error` — `nil` to sukces; `ErrDisabled`
-(błąd wartowniczy); `*ConflictError{BlockedBy: "jan"}` z `Unwrap() error { return ErrSlotTaken }`. Wywołujący:
-`errors.Is(err, ErrSlotTaken)` → 409, `errors.As(err, &ce)` → komunikat z `ce.BlockedBy`, inny błąd → 500.
+Pytanie: „Reserve ma zwrócić sukces albo odrzucenie (termin zajęty, zasób wyłączony)”. Wynik na domenie wypożyczalni
+narzędzi (rezerwacja = wypożyczenie, zajęty = wypożyczony, wyłączony = wycofany):
+`func (t *Tool) Lend(member MemberID, at time.Time) error` — `nil` to sukces; `ErrWithdrawn`
+(błąd wartowniczy); `*OnLoanError{Borrower: "m-0042"}` z `Unwrap() error { return ErrOnLoan }`. Wywołujący:
+`errors.Is(err, ErrOnLoan)` → 409, `errors.As(err, &onLoan)` → komunikat z `onLoan.Borrower`, inny błąd → 500.
 Pełny kod z testem: `references/domain-building-blocks.md`.
 
 ## Checklista

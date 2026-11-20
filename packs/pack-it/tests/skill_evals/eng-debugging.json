@@ -101,7 +101,7 @@
     {
       "id": "polkniety-blad",
       "expect": "trigger",
-      "prompt": "Użytkownik pisze tylko: „zapis notatki nie działa”. API zwraca 200, ale w bazie nic się nie pojawia, a w logach jest jakiś warn. Jak to zbadać i naprawić? Odpowiedz zwięźle.",
+      "prompt": "Klient pisze tylko: „rezerwacja znika”. POST /bookings zwraca 200, ale w tabeli rezerwacji nic się nie pojawia, a w logach jest jakiś warn. Jak to zbadać i naprawić? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [

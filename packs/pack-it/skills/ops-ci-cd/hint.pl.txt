@@ -1,71 +1,68 @@
-head: Użyj przy pipeline'ach CI/CD (GitHub Actions i inne) — tworzenie, naprawa, cache buildów, wdrożenia, bezpieczeństwo. Użyj przy tworzeniu i naprawie pipeline'ów CI/CD (GitHub Actions i podobne), strategii wdrożeń, cache'owaniu buildów, bezpieczeństwie pipeline'u, composite action i reusable workflow, diffie PR w CI i bramce werdyktu przeglądu AI. Nie do pisania Dockerfile (ops-docker) ani commitów (core-git-workflow).
-# CI/CD
+head: Użyj przy budowie, naprawie lub utwardzaniu pipeline'u CI/CD (GitHub Actions) — kolejność etapów, uprawnienia, przypinanie do SHA, wstrzyknięcia, cache, composite actions, wdrożenie. Użyj przy budowie lub naprawie pipeline'u CI/CD, głównie GitHub Actions — kolejność etapów, utwardzanie workflow (permissions, przypinanie do SHA, OIDC, wstrzyknięcie skryptu, pull_request_target, ruch wychodzący z runnera), cache i concurrency, composite actions i reusable workflows, diff PR i wielolinijkowe wyjścia, commity bota, promocja jednego artefaktu na produkcję, przegląd PR przez AI z bramką werdyktu. Nie do warstw Dockerfile (ops-docker), strategii wydań typu canary czy blue/green (ops-release-engineering) ani przejętej zależności (ops-supply-chain-security).
+# Pipeline'y CI/CD
 
-## Struktura pipeline'u
-`lint → typecheck → test → build → (skan bezpieczeństwa) → deploy staging → testy dymne → deploy produkcja (z akceptacją)`
-- Szybkie kroki najpierw (fail fast). Niezależne joby równolegle.
-- Ten sam artefakt (obraz z digestem) przechodzi przez wszystkie środowiska — nie budujesz ponownie dla produkcji.
+Pipeline to kod, który przy każdym pushu działa z twoimi sekretami. Każdą zmianę workflow traktuj jak zmianę dostępu do produkcji:
+najpierw minimalne uprawnienia, potem szybkość, na końcu wygoda.
 
-## GitHub Actions — bezpieczeństwo
-1. `permissions:` na poziomie workflow ustaw minimalnie (`contents: read`), rozszerzaj per job.
-2. Akcje zewnętrzne przypinaj do pełnego SHA commita, nie do tagu.
-3. Chmura przez OIDC (`id-token: write`) zamiast długotrwałych kluczy w sekretach.
-4. `pull_request_target` i `workflow_run` z kodem z forka = ryzyko — nie uruchamiaj w nich niezaufanego kodu.
-5. Nie interpoluj `${{ github.event.* }}` (tytuły PR, gałęzie) bezpośrednio w `run:` — przekaż przez `env:`.
-6. Sekrety tylko w jobach, które ich potrzebują; środowisko `production` z wymaganą akceptacją.
-7. Instalacja zależności `npm ci --ignore-scripts` (lub allowlista skryptów) w jobie **bez** sekretów publikacji
-   i wdrożenia. Token publikacji paczek nie istnieje w CI — publikacja przez trusted publishing (OIDC) z `--provenance`.
-8. Ruch wychodzący z runnerów ograniczony do rejestrów i usług, których pipeline potrzebuje (np. harden-runner na
-   GitHub Actions, reguły sieci na runnerach własnych). Złośliwy skrypt instalacyjny nie wyśle wtedy sekretów.
-9. Skanery i lintery to też kod z zewnątrz: przypinaj je do SHA i digestu obrazu (w 2026 podmieniono Trivy przez akcje).
-10. Agent AI w CI nie działa z prawem zapisu ani z sekretami na niezaufanym wejściu (PR z forka, treść issue) —
-    core-agent-security. Zależności i incydenty z paczkami — ops-supply-chain-security.
+## 1. Kolejność etapów — szybka porażka
+1. lint i formatowanie → sprawdzanie typów → testy jednostkowe (tanie, w równoległych jobach);
+2. build **raz** → artefakt dostaje niezmienny identyfikator (digest obrazu, suma kontrolna paczki);
+3. skany artefaktu (zależności, obraz, sekrety) → wdrożenie na staging → testy dymne;
+4. produkcja z **tego samego digestu**, za środowiskiem z wymaganymi zatwierdzającymi. Nigdy nie buduj ponownie dla produkcji.
 
-## Wydajność
-- Cache zależności (`actions/setup-node` z `cache: npm`, cache warstw Dockera).
-- `concurrency:` z `cancel-in-progress: true` dla PR.
-- Uruchamiaj tylko to, co się zmieniło (`paths:` filtry) w monorepo.
+Joby niezależne od siebie idą równolegle; `needs:` tylko tam, gdzie wynik jest naprawdę używany.
 
-## Wielokrotne użycie i diff w PR
-- Powtarzalny krok (agent AI, skan) w wielu repo → **composite action** (`action.yml` z `runs.using: composite`);
-  cały proces → reusable workflow. Zacznij lokalnie w `.github/actions/<nazwa>/`, do osobnego repo wydziel dopiero
-  przy drugim konsumencie; konsument przypina `uses: org/akcja@<pełny-SHA>`.
-- W composite action każdy krok `run` ma jawne `shell:`; skrypty akcji wołasz przez `${{ github.action_path }}`;
-  `inputs` od konsumenta traktujesz jak niezaufane (do `env:`, nigdy wprost w `run:`).
-- Diff PR wymaga `actions/checkout` z `fetch-depth: 0` (albo dociągnięcia bazy) — płytki klon daje pusty diff.
-- Wartości wielolinijkowej (diff, raport) nie zapisuj do `$GITHUB_OUTPUT` jako `klucz=$(…)` — psuje się na nowej
-  linii. Użyj ogranicznika (`klucz<<EOF` … `EOF`) dla treści, w której ogranicznik nie wystąpi; treść dowolną (diff,
-  wynik modelu) zapisz do pliku i przekaż ścieżkę — tak zaleca dokumentacja GitHub.
-- Workflow, który commituje na gałąź PR: `[skip ci]` w temacie i krok-strażnik pomijający commity bota. Przegląd PR
-  przez AI z bramką werdyktu: przykład 4 w `references/examples.md` i `.claude/skills/core-git-workflow/references/ai-review-in-ci.md`.
+## 2. Bezpieczeństwo workflow (każda linia to punkt przeglądu)
+1. `permissions: {}` (albo `contents: read`) na górze workflow; w jobie rozszerzaj tylko to, czego ten job potrzebuje.
+2. Akcje zewnętrzne przypięte do pełnego 40-znakowego SHA commita, tag w komentarzu. Tag może przesunąć każdy, kto kontroluje
+   repozytorium akcji; SHA nie. Podbijanie przypięć zostaw Dependabotowi/Renovate.
+3. **Żadnego wstawiania danych zdarzenia do `run:`.** Tytuł PR, nazwy gałęzi, treść issue i komunikaty commitów kontroluje atakujący;
+   w `run:` stają się kodem powłoki (wstrzyknięcie skryptu). Przekazuj je przez `env:` jako zmienną środowiskową w cudzysłowie.
+4. `pull_request_target` i `workflow_run` działają z sekretami repozytorium bazowego i tokenem z zapisem. **Nigdy nie pobierają i nie
+   uruchamiają kodu z forka.** Niezaufany kod idzie do joba `pull_request` bez sekretów; uprzywilejowany job tylko czyta jego artefakty jako dane.
+5. Dostęp do chmury i rejestrów przez OIDC, nie długożyjące klucze w sekretach. Sekrety tylko w jobach, które ich używają;
+   sekrety produkcyjne tylko w chronionym środowisku.
+6. Instalacja zależności w jobie bez sekretów: `npm ci --ignore-scripts`, potem jawny `npm rebuild <pkg>` dla paczki z listy dozwolonych.
+7. Publikacja paczek przez trusted publishing (OIDC) z provenance (`npm publish --provenance`), bez przechowywanego tokenu.
+   Provenance mówi, gdzie paczkę zbudowano, nie że wydanie było zamierzone — przypnij zaufanego wydawcę do jednego pliku workflow
+   i chronionego środowiska. Karencja wersji, allowlista skryptów i procedura incydentu: ops-supply-chain-security.
+8. Ruch wychodzący z runnera ograniczony do potrzebnych hostów (np. harden-runner z `egress-policy: block` i allowlistą).
+9. Skanery, lintery i akcje setup to kod zewnętrzny z dostępem do workspace: przypinaj je przez SHA lub digest obrazu.
+10. Agent AI w CI na niezaufanym wejściu dostaje uprawnienia tylko do odczytu i żadnych sekretów poza własnym kluczem API; komentuje, nie pushuje.
+11. PR z forków nigdy nie dostają sekretów. Na prośbę „po prostu daj sekrety forkom” wyjaśnij ryzyko i zaproponuj bezpieczny podział.
 
-## Wdrożenia
-- Strategia z szybkim rollbackiem: blue/green, canary lub rolling z healthcheckami; wybór, bramki canary, GitOps
-  i migracje expand–contract — ops-release-engineering.
-- Build i wdrożenie na osobnych tożsamościach; skan sekretów jako ostatnie zabezpieczenie po hookach lokalnych —
-  ops-secrets-identities. Manifesty Kubernetes walidowane w CI — ops-kubernetes.
-- Każde wdrożenie produkcyjne: kto, co (SHA), kiedy — widoczne w historii.
+## 3. Szybkość
+- Cache zależności przez akcję setup z kluczem z lockfile.
+- `concurrency` z `cancel-in-progress: true` dla workflow PR (nie dla wdrożeń produkcyjnych).
+- Filtry `paths:` w monorepo; macierz tylko dla wymiarów, które naprawdę się różnią.
 
-## Weryfikacja
-`actionlint` (jeśli dostępny); sprawdź składnię YAML; w PR opisz, jak pipeline przetestowano.
+## 4. Elementy wielokrotnego użytku
+- Powtarzana grupa kroków → **composite action**; cały powtarzany proces → **reusable workflow** (`workflow_call`).
+- Zacznij lokalnie w `.github/actions/<name>/action.yml`; wydziel do wspólnego repozytorium przy drugim konsumencie, który przypina ją przez SHA.
+- W composite action każdy krok `run:` potrzebuje jawnego `shell: bash`; własne skrypty akcji przez `${{ github.action_path }}`.
+- `inputs` to niezaufany tekst: przez `env:`, nigdy wklejane do `run:`.
+- Diff PR wymaga historii: `fetch-depth: 0` (płytki klon daje pusty diff).
+- Wielolinijkowe wartości w `$GITHUB_OUTPUT` wymagają składni z ogranicznikiem (`name<<EOF`, losowy ogranicznik) albo ścieżki do pliku jako wyjścia.
+- Bot commitujący do gałęzi PR: `[skip ci]` w komunikacie **i** krok strażnika, żeby pipeline się nie zapętlił.
+
+## 5. Wdrożenie
+- Metoda (rolling, blue/green, canary, flagi, wycofanie): ops-release-engineering. Pipeline dostarcza jeden niezmienny artefakt.
+- Tożsamość buildu ≠ tożsamość wdrożenia.
+- Loguj każde wdrożenie: kto zatwierdził, jaki SHA i digest, kiedy, na jakie środowisko.
+- Skanowanie sekretów to ostatnia linia, nie plan.
+
+## 6. Przegląd PR przez AI z bramką werdyktu (funkcja fabryki)
+Gotowy workflow: `python3 .claude/skills/core-git-workflow/scripts/ai_review.py install` zapisuje `.github/workflows/ai-review.yml`.
+Przegląda PR z etykietą `ai-review` według `.github/review-criteria.md`, ustawia status `ai-review/verdict`
+(APPROVED / NEEDS_ATTENTION / REJECTED), obejście tylko etykietą `ai-review-override` dodaną przez człowieka.
+Ręcznie: `permissions: {}` na górze, blokada forków, akcje przypięte do SHA, dane PR przez `env:`, werdykt sprawdzany schematem JSON,
+krok `if: always()`, który przy braku werdyktu kończy się porażką.
+
+## 7. Weryfikacja przed oddaniem
+- `actionlint` na każdym zmienionym workflow; co najmniej parsowanie YAML.
+- Przeszukaj diff pod kątem `${{ github.event` w `run:`, `uses: …@v` bez SHA i `pull_request_target` z checkoutem.
+- W opisie PR: jak workflow przetestowano i jakie uprawnienia dodaje.
 
 ## Przykład
-**Sytuacja:** „Dodaj CI na każdy PR w repo Node.” **Wynik** (`.github/workflows/ci.yml`, skrót; do tego
-`concurrency` z `cancel-in-progress: true`):
-```yaml
-on: pull_request
-permissions: { contents: read }
-jobs:
-  checks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@<pełny-SHA> # v4
-      - run: npm ci --ignore-scripts && npm run lint && npm run typecheck && npm test && npm run build
-```
-Więcej przykładów: `references/examples.md`.
-
-## Źródła
-- GitHub Docs: „Creating a composite action”, „Workflow commands — multiline strings” (`GITHUB_OUTPUT` z ogranicznikiem),
-  „Metadata syntax” (`runs.steps[*].shell` wymagane przy `run`) — repozytorium github/docs, dostęp 2026-10-10;
-  `anthropics/claude-code-action`, `action.yml` (`claude_args`, `structured_output`; dostęp 2026-10-10).
-- Kurs 10xDevs, ed. 3 (2026), moduł 5, lekcja 3 (composite action, przegląd AI w CI) — materiał szkoleniowy (dostęp 2026-10-09).
+Nowe repozytorium Node bez CI → workflow z `permissions: {}`, `concurrency`, cache npm, `npm ci --ignore-scripts`, lint, typy, testy, build;
+actionlint bez uwag. Więcej: `references/examples.md`.

@@ -72,25 +72,27 @@ by all models.
   (a catalogue query: tables with a tenant column without RLS enabled).
 
 ## 7. Per-tenant behaviour without forks
-When a customer wants a different rule (approval, pricing, limits) or an older API version, you do not create a branch
-or a copy of the code for them. A fork per customer multiplies the cost of every fix and every release. From the lightest:
-- **tenant configuration:** the parameters of an existing rule (an amount threshold, the number of approvers) in the tenant register,
-  with a version and an audit of changes;
-- **a feature flag per tenant:** enabling a ready variant (eng-continuous-delivery); the flag has an owner and a removal
-  date;
-- **a policy per tenant:** a rule variant as a policy (strategy) in the domain, chosen by a factory by the
-  tenant identifier and from configuration
-  (`.claude/skills/ddd-tactical-design/references/dynamic-rules.md`). The core does not know customer names;
-  `if (tenantId == "ACME")` in the logic is a fork in disguise;
-- **a command handler per tenant:** when the whole flow differs, a handler registry chooses the implementation by
-  `tenantId` from the tenant context, and the default handler serves the others. The variant has tests like the core;
-- **an API version per tenant:** the tenant is pinned to a contract version (be-api-design: versioning) and moves to
-  the new one within an agreed window; a gateway or adapter translates the old version to the new model, the logic is one.
+A big customer wants a different rule (an extra approval step, other rounding, its own onboarding). Never answer
+with a branch or a copy of the code for that customer: every fix and release would then have to be made twice.
+Pick the lightest mechanism that covers the difference:
+1. **Tenant configuration** — the rule is the same, only its parameters differ (approval threshold, number of
+   approvers, retention days). Values live in the tenant register, are versioned and every change is audited.
+2. **Feature flag per tenant** — switches on a variant that already exists in the product. Each flag has an owner
+   and a removal date (or an ADR saying it is permanent) (eng-continuous-delivery).
+3. **Policy per tenant** — a different rule in the domain, implemented as a strategy and picked by a factory from
+   the tenant's configuration (`.claude/skills/ddd-tactical-design/references/dynamic-rules.md`). The core never
+   knows customer names: `if (tenantId == "BIGCO")` in business logic is a fork in disguise.
+4. **Handler per tenant** — when the whole flow differs, a registry maps the tenant (or its plan) to a command
+   handler implementation, with a default handler for everyone else. The variant is tested like the core.
+5. **API version per tenant** — a customer that cannot migrate yet stays on an older contract version for an agreed
+   window; an adapter at the gateway translates it to the current model, so there is still one logic (be-api-design).
 
-Rules: a tenant variant is a product element (named, tested, with an owner), not an exception in the code. When
-there are more and more variants, check whether they are not several product plans or a separate context (ddd-strategic-analysis).
-Cloud providers in their SaaS guidance recommend configuration and feature flags instead of separate code versions per customer
-[unverified: the Azure Architecture Center and AWS SaaS Lens pages unavailable from this session].
+Rules: the tenant used to pick a variant comes from the authenticated tenant context (section 2), never from a header
+or parameter the client controls. A variant is part of the product (named, tested, with an owner), not an exception
+in code. When variants keep multiplying, check whether they are really separate plans or a separate bounded context
+(ddd-strategic-analysis). Cloud multitenancy guidance (Azure Architecture Center, AWS SaaS Lens) also favours
+configuration and feature flags over per-customer code versions [unverified: pages not read in this session].
+
 
 ## Rules
 - The tenant context explicit and checked on the server side on every path; no context = an error, not "everyone".
@@ -121,5 +123,3 @@ of another customer."
 
 ## Sources
 Described in our own words; facts and access dates in `references/rls-postgresql.md`.
-Section 7 based on the programme of the training "DDD — advanced modelling techniques and archetypes" (Bottega IT Minds,
-material from the human, 2026-10-21).
