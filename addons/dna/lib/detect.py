@@ -136,6 +136,20 @@ def _yarn_lock(lock: Path, name: str, spec: str) -> tuple[str, str] | None:
     return None
 
 
+def _js_resolve(lock: Path | None, pkg_dir: Path, name: str, spec: str) -> tuple[str, str] | None:
+    if lock is None:
+        return None
+    pkg_rel = pkg_dir.relative_to(lock.parent).as_posix()
+    pkg_rel = "" if pkg_rel == "." else pkg_rel
+    if lock.name == "package-lock.json":
+        return _npm_lock(lock, pkg_rel, name)
+    if lock.name == "pnpm-lock.yaml":
+        return _pnpm_lock(lock, pkg_rel, name)
+    if lock.name == "yarn.lock":
+        return _yarn_lock(lock, name, spec)
+    return None
+
+
 def _js(root: Path, techs: list[dict], facts: list, coverage: dict):
     manifests = _walk(root, {"package.json"})
     workspaces = []
@@ -159,21 +173,19 @@ def _js(root: Path, techs: list[dict], facts: list, coverage: dict):
                     continue
                 declared_line = _line_of(text, f'"{name}"', text.find(f'"{section}"'))
                 version, evidence = None, [_ev(root, mf, declared_line)]
-                if lock is not None:
-                    pkg_rel = pkg_dir.relative_to(lock.parent).as_posix()
-                    pkg_rel = "" if pkg_rel == "." else pkg_rel
-                    hit = None
-                    if lock.name == "package-lock.json":
-                        hit = _npm_lock(lock, pkg_rel, name)
-                    elif lock.name == "pnpm-lock.yaml":
-                        hit = _pnpm_lock(lock, pkg_rel, name)
-                    elif lock.name == "yarn.lock":
-                        hit = _yarn_lock(lock, name, str(spec))
-                    if hit:
-                        version = hit[0]
-                        evidence.insert(0, _ev(root, lock, _line_of(_read(lock), hit[1])))
+                hit = _js_resolve(lock, pkg_dir, name, str(spec))
+                if hit:
+                    version = hit[0]
+                    evidence.insert(0, _ev(root, lock, _line_of(_read(lock), hit[1])))
                 _stack_fact(facts, tech, "npm", name, version, str(spec), rel_dir, evidence,
                             "lockfile" if version else "manifest-range")
+                types = "@types/" + (name[1:].replace("/", "__") if name.startswith("@") else name)
+                types_spec = next((d[types] for d in (pkg.get(s) or {} for s in
+                                   ("devDependencies", "dependencies")) if types in d), None)
+                types_hit = _js_resolve(lock, pkg_dir, types, str(types_spec)) if types_spec else None
+                if types_hit:   # typings of the same library: the exact API the code is checked against
+                    fact = next(f for f in facts if f["id"] == f"F-STACK-{tech['id']}-{_slug(rel_dir)}")
+                    fact["data"].update({"types_package": types, "types_version": types_hit[0]})
         _js_commands(root, mf, text, pkg, lock, facts)
         engines = (pkg.get("engines") or {}).get("node")
         if engines:

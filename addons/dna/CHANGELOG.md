@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 — 2026-11-20
+- Typings of the locked version: `@types/<pkg>` from the lockfile next to the library (installed or from the npm
+  registry); only its declarations are indexed.
+- `.d.ts` chunks per declaration, also inside namespaces, with the JSDoc above it; the declaration line is the title.
+
 ## 0.2.0 — 2026-11-20
 - Official documentation for the exact versions in the project (`lib/docs.py`): the installed package (no network),
   the npm tarball and the PyPI release description of that version, and sources listed per technology in

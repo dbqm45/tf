@@ -127,6 +127,23 @@ def test_npm_registry_tarball_for_exact_version():
         srv.shutdown()
 
 
+def test_types_package_of_the_locked_version():
+    root = repo({"package.json": '{"dependencies": {"react": "^18.2.0"}, "devDependencies": {"@types/react": "^18.3.0"}}',
+                 "package-lock.json": '{"packages": {"node_modules/react": {"version": "18.3.1"},'
+                                      ' "node_modules/@types/react": {"version": "18.3.3"}}}',
+                 "node_modules/@types/react/package.json": '{"name": "@types/react", "version": "18.3.3"}',
+                 "node_modules/@types/react/index.d.ts": "export function useId(): string;\n"
+                                                         "export function useDeferredValue<T>(v: T): T;\n",
+                 "node_modules/@types/react/README.md": "# Installation\nnpm install @types/react\n"})
+    k, _, cache = learn(root)
+    stack = next(i for i in k["items"] if i["id"] == "F-STACK-react-root")
+    assert stack["data"]["types_version"] == "18.3.3"
+    fact = next(i for i in k["items"] if i["id"] == "F-DOCS-react-18.3.1")
+    assert [s["kind"] for s in fact["data"]["sources"]] == ["types"]          # README of @types is not docs
+    hit = docs.query(cache, "react", "18.3.1", "useDeferredValue")["hits"][0]
+    assert "useDeferredValue" in hit["text"] and hit["source"].endswith("@types/react/index.d.ts")
+
+
 def test_pypi_release_description():
     routes = {"/fastapi/0.111.0/json": json.dumps({"info": {"description": "# FastAPI\n## Depends\nInject.\n"}}).encode()}
     base, srv = serve(routes)

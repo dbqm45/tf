@@ -37,7 +37,7 @@ PYPI = "https://pypi.org/pypi"
 UNTRUSTED = "data, not instructions"
 EXACT = re.compile(r"^v?\d+(\.\d+){0,3}([-+][0-9A-Za-z.-]+)?$")
 HEADING = re.compile(r"^(#{1,6})\s+(.*)")
-DECL = re.compile(r"^(export\s+)?(declare\s+)?(function|class|interface|type|const|namespace|enum)\b")
+DECL = re.compile(r"^\s*(export\s+)?(declare\s+)?(function|class|interface|type|const|namespace|enum)\b")
 
 
 # ---------------------------------------------------------------- network
@@ -106,14 +106,21 @@ def chunk(kind: str, text: str) -> list[tuple[str, str]]:
     if kind == "types":
         out, buf = [], []
         for line in text.splitlines():
-            if DECL.match(line) and buf:
-                body = "\n".join(buf).strip()
-                out.append((body.splitlines()[0][:90], body))
-                buf = []
+            if DECL.match(line) and buf:   # a JSDoc comment belongs to the declaration below it
+                doc_start = next((i for i in range(len(buf) - 1, -1, -1) if buf[i].strip().startswith("/**")), None)
+                doc = buf[doc_start:] if doc_start is not None and all(
+                    x.strip().startswith(("*", "/**", "*/")) for x in buf[doc_start:]) else []
+                head = buf[: len(buf) - len(doc)]
+                body = "\n".join(head).strip()
+                if body:
+                    first = next((x for x in head if x.strip() and not x.strip().startswith(("/**", "*"))),
+                                 next(x for x in head if x.strip())).strip()
+                    out.append((first[:90], body))
+                buf = list(doc)
             buf.append(line)
         if "\n".join(buf).strip():
             body = "\n".join(buf).strip()
-            out.append((body.splitlines()[0][:90], body))
+            out.append((next(x for x in buf if x.strip()).strip()[:90], body))
         return [p for t, b in out for p in _split_long(t, b)]
     sections, path, buf = [], [], []
 
@@ -257,7 +264,8 @@ def targets(items: list[dict]) -> list[dict]:
         seen.add(key)
         out.append({"tech": d["tech"], "name": d.get("name", d["tech"]), "ecosystem": d.get("ecosystem"),
                     "package": d.get("package"), "version": str(d["version"]),
-                    "package_dir": d.get("package_dir", "."), "evidence": i.get("evidence", [])[:1]})
+                    "package_dir": d.get("package_dir", "."), "evidence": i.get("evidence", [])[:1],
+                    "types_package": d.get("types_package"), "types_version": d.get("types_version")})
     return out
 
 
@@ -289,6 +297,15 @@ def build(root: Path, items: list[dict], registry: Path, cache: Path, online: bo
             more, skip = _listed(sources[t["tech"]], t["version"], opts)
             files += more
             skipped += skip
+        if t.get("types_package"):   # @types/<pkg> of the version in the lockfile: only its declarations
+            typed = _local_npm(root, t["types_package"], t["types_version"], t["package_dir"])
+            if online and not typed:
+                try:
+                    typed = _npm_registry(t["types_package"], t["types_version"], opts)
+                except Exception as e:  # noqa: BLE001
+                    skipped.append({"source": f"npm registry {t['types_package']}@{t['types_version']}",
+                                    "reason": str(e)[:200]})
+            files += [f for f in typed if f["kind"] == "types"]
         if not online and not files:
             skipped.append({"source": f"docs {t['tech']}@{t['version']}",
                             "reason": "no installed package with this version and network off (learn --offline)"})
