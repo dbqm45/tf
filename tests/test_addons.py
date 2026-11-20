@@ -174,6 +174,35 @@ def test_dna_by_name_learn_and_wire():
                           capture_output=True).returncode == 0
 
 
+def test_refresh_only_when_inputs_change_and_session_hook():
+    p = project(files={"package.json": '{"dependencies": {"react": "^18.2.0"}}',
+                       "package-lock.json": '{"packages": {"node_modules/react": {"version": "18.3.1"}}}'})
+    assert tf_addon(p, "add", "dna").returncode == 0
+    assert tf_addon(p, "learn").returncode == 0
+    k = p / ".tf" / "addons" / "dna" / "out" / "knowledge.json"
+    before = k.stat().st_mtime_ns
+    assert tf_addon(p, "refresh").returncode == 0
+    assert k.stat().st_mtime_ns == before                                    # nothing changed: nothing rebuilt
+    (p / "package-lock.json").write_text('{"packages": {"node_modules/react": {"version": "18.3.2"}}}')
+    # the SessionStart hook, in the foreground for the test
+    (p / ".tf" / "factory").mkdir(parents=True, exist_ok=True)
+    (p / ".tf" / "factory" / "addons.py").write_text(ADDONS_PY.read_text(encoding="utf-8"), encoding="utf-8")
+    env = {**os.environ, "DNA_OFFLINE": "1", "TF_ADDON_REFRESH_SYNC": "1", "CLAUDE_PROJECT_DIR": str(p)}
+    r = subprocess.run([sys.executable, str(ROOT / "core" / "hooks" / "addons_refresh.py")], cwd=p, env=env,
+                       capture_output=True, text=True)
+    assert r.returncode == 0 and r.stdout == ""
+    assert "React 18.3.2" in (p / ".tf/addons/dna/out/INDEX.md").read_text(encoding="utf-8")
+    assert (p / ".tf" / "logs" / "addons-refresh.log").is_file()
+
+
+def test_session_hook_without_addons_does_nothing():
+    p = project()
+    before = snapshot(p)
+    r = subprocess.run([sys.executable, str(ROOT / "core" / "hooks" / "addons_refresh.py")], cwd=p,
+                       env={**os.environ, "CLAUDE_PROJECT_DIR": str(p)}, capture_output=True, text=True)
+    assert r.returncode == 0 and snapshot(p) == before
+
+
 def test_core_names_no_addon():
     for f in (ROOT / "core").rglob("*"):
         if f.is_file() and f.suffix in (".py", ".md", ".yaml", ".json"):

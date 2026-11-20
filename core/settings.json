@@ -300,6 +300,14 @@
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/update_notice.py"
             ],
             "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/addons_refresh.py"
+            ],
+            "timeout": 10
           }
         ]
       }

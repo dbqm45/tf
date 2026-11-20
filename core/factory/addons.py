@@ -10,6 +10,8 @@ factory uses through a fixed contract (`addon.yaml`, contract 1). The core does 
   tf addon check [--base <ref>] [--json] # each add-on's `check` on the current change; exit 1 when one blocks
   tf addon run <name> <provides-key> [args…]
   tf learn [<name>]                      # each add-on's `learn`, then sync
+  tf addon refresh                       # each add-on's `refresh` (cheap when nothing changed), then sync;
+                                         # the SessionStart hook addons_refresh.py runs it in the background
 
 Contract 1 (`provides` in addon.yaml; every key optional):
   context  — a file read in every session: sync puts one import line `@<path>` in the factory's add-on block of the
@@ -375,6 +377,20 @@ def learn(root: Path, only: str | None) -> int:
     return rc
 
 
+def refresh(root: Path) -> int:
+    rc = 0
+    for a in installed(root):
+        if not a["ok"] or not _provides(a).get("refresh"):
+            continue
+        r = run(root, a, "refresh", capture=True)
+        if r is None or r.returncode not in (0,):
+            rc = 1
+            print(f"⚠ {a['name']}: refresh failed (exit {getattr(r, 'returncode', '?')}): "
+                  f"{(getattr(r, 'stderr', '') or '').strip()[-300:]}")
+    sync(root, quiet=True)
+    return rc
+
+
 def check(root: Path, base: str | None, as_json: bool) -> int:
     results = []
     for a in installed(root):
@@ -442,6 +458,8 @@ def main(argv: list[str]) -> int:
         return 0
     if cmd == "learn":
         return learn(root, rest[0] if rest else None)
+    if cmd == "refresh":
+        return refresh(root)
     if cmd == "check":
         base = rest[rest.index("--base") + 1] if "--base" in rest and rest.index("--base") + 1 < len(rest) else None
         return check(root, base, "--json" in rest)
