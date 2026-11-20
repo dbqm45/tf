@@ -455,6 +455,21 @@ def task_story(task: str, ctx: dict, extra: str | None) -> str:
     return "\n".join(lines)
 
 
+def busy_session(project: Path) -> bool:
+    """Whether the current session (the newest transcript of the project) already holds another /tf task: an earlier
+    `run_report.py start` in it. Old attempts in the context distract the agent — a fresh session per task is cheaper."""
+    for d in transcript_dirs(project):
+        try:
+            newest = max(d.glob("*.jsonl"), key=lambda f: f.stat().st_mtime)
+        except (OSError, ValueError):
+            continue
+        try:
+            return newest.read_text(encoding="utf-8", errors="replace").count("run_report.py start") > 1
+        except OSError:
+            return False
+    return False
+
+
 def cmd_start(title: str | None, story: str | None, project: Path, task: str | None = None,
               change: str | None = None, key: str | None = None, source: str | None = None) -> int:
     cut = None                           # a pdi change cut: the change-plan row the task is created from
@@ -540,6 +555,9 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
         why = next((re.split(r"^reason: ", ln, maxsplit=1)[1] for ln in lines if re.match(r"reason: ", ln)), "")
         print(f"Weight: {head}" + (f" — {why}" if why else "")
               + f" (a higher weight: run_state.py weight {(WORK / key).as_posix()} --set <weight>)", file=sys.stderr)
+    if busy_session(project):
+        print("Tip: this session already holds another task — suggest /clear before this one (the run resumes from its "
+              "files; old attempts in the context distract the agent and cost tokens).", file=sys.stderr)
     try:   # preview: build the dashboard and open it (options in .claude/tf.json); a cut run (--task) does not open it
         import run_state
         uri = run_state.launch(project, open_browser=not cut)
