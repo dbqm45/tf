@@ -10,6 +10,8 @@ factory uses through a fixed contract (`addon.yaml`, contract 1). The core does 
   tf addon check [--base <ref>] [--json] # each add-on's `check` on the current change; exit 1 when one blocks
   tf addon run <name> <provides-key> [args…]
   tf learn [<name>]                      # each add-on's `learn`, then sync
+  tf addon report [--all] [--json]       # what the last learn cost: script time per add-on, and the session work it
+                                         # left (subagents briefed "Class: addon"): tokens, cost; --all: every run
   tf addon refresh                       # each add-on's `refresh` (cheap when nothing changed), then sync;
                                          # the SessionStart hook addons_refresh.py runs it in the background
 
@@ -274,31 +276,27 @@ def _command(a: dict, key: str, base: str | None = None) -> list[str] | None:
     return [str(script), *parts[1:]]
 
 
-def settings(root: Path, name: str) -> dict:
-    """`addons.<name>` merged across the factory's configuration layers ({} without a factory engine)."""
+def config(root: Path) -> dict:
+    """The factory's configuration merged over its layers (packs.py next to this file); {} when it cannot load."""
     try:
         import importlib.util
-        here = Path(__file__).resolve().parent
-        spec = importlib.util.spec_from_file_location("tf_packs_for_addons", here / "packs.py")
+        spec = importlib.util.spec_from_file_location("tf_packs_for_addons", Path(__file__).resolve().parent / "packs.py")
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        return ((mod.load_config(root).get("addons") or {}).get(name)) or {}
+        return mod.load_config(root) or {}
     except Exception:  # noqa: BLE001 — settings are optional; an add-on works without them
         return {}
 
 
+def settings(root: Path, name: str) -> dict:
+    """`addons.<name>` merged across the factory's configuration layers."""
+    return ((config(root).get("addons") or {}).get(name)) or {}
+
+
 def declared(root: Path) -> list[str]:
     """Add-ons the configuration asks for (`addons.<name>.install: true`)."""
-    try:
-        import importlib.util
-        here = Path(__file__).resolve().parent
-        spec = importlib.util.spec_from_file_location("tf_packs_for_addons", here / "packs.py")
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return sorted(n for n, v in (mod.load_config(root).get("addons") or {}).items()
-                      if isinstance(v, dict) and v.get("install") is True and NAME.match(n))
-    except Exception:  # noqa: BLE001
-        return []
+    return sorted(n for n, v in (config(root).get("addons") or {}).items()
+                  if isinstance(v, dict) and v.get("install") is True and NAME.match(n))
 
 
 def _env_for(root: Path, a: dict) -> dict:
@@ -432,6 +430,42 @@ def _order(addons: list[dict]) -> list[dict]:
     return sorted(addons, key=lambda a: "decisions" in (a["meta"].get("consumes") or []))
 
 
+LOG = Path(".tf") / "logs" / "addons.jsonl"
+
+
+def _log(root: Path, record: dict):
+    path = root / LOG
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def _timed(root: Path, addons: list[dict], key: str, event: str) -> tuple[int, list[dict]]:
+    """Run `key` of each add-on, timing it; log one record to .tf/logs/addons.jsonl."""
+    import time
+    from datetime import datetime, timezone
+    rows, rc, t0 = [], 0, time.monotonic()
+    for a in addons:
+        start = time.monotonic()
+        r = run(root, a, key, capture=(key == "refresh"))
+        rows.append({"name": a["name"], "seconds": round(time.monotonic() - start, 2),
+                     "exit": getattr(r, "returncode", None)})
+        if r is None or r.returncode != 0:
+            rc = 1
+            if key == "refresh":
+                print(f"⚠ {a['name']}: refresh failed (exit {getattr(r, 'returncode', '?')}): "
+                      f"{(getattr(r, 'stderr', '') or '').strip()[-300:]}")
+            else:
+                print(f"⚠ {a['name']}: {key} failed (exit {getattr(r, 'returncode', '?')})")
+    sync(root, quiet=True)
+    waiting = {w["addon"]: len(w["items"]) for w in pending(root)}
+    for row in rows:
+        row["pending"] = waiting.get(row["name"], 0)
+    _log(root, {"ts": datetime.now(timezone.utc).isoformat(timespec="seconds"), "event": event,
+                "seconds": round(time.monotonic() - t0, 2), "tokens": 0, "addons": rows})
+    return rc, rows
+
+
 def learn(root: Path, only: str | None) -> int:
     have = {a["name"] for a in installed(root)}
     for name in declared(root):   # rolled out by the company/team/project configuration
@@ -444,29 +478,86 @@ def learn(root: Path, only: str | None) -> int:
     if not targets:
         print("ℹ No installed add-on provides `learn`" + (f" named {only}" if only else "") + " — tf addon list")
         return 2 if only else 0
-    rc = 0
     for a in targets:
         print(f"→ {a['name']}: learn")
-        r = run(root, a, "learn")
-        if r is None or r.returncode != 0:
-            rc = 1
-            print(f"⚠ {a['name']}: learn failed (exit {getattr(r, 'returncode', '?')})")
-    sync(root)
+    rc, rows = _timed(root, targets, "learn", "learn")
+    total = sum(r["seconds"] for r in rows)
+    waiting = sum(r["pending"] for r in rows)
+    print(f"learn: {total:.1f} s of scripts (" + ", ".join(f"{r['name']} {r['seconds']:.1f} s" for r in rows)
+          + "), 0 tokens" + (f"; {waiting} items wait for the session — their tokens and cost: tf addon report"
+                             if waiting else ""))
     return rc
 
 
 def refresh(root: Path) -> int:
-    rc = 0
-    for a in _order(installed(root)):
-        if not a["ok"] or not _provides(a).get("refresh"):
+    targets = [a for a in _order(installed(root)) if a["ok"] and _provides(a).get("refresh")]
+    return _timed(root, targets, "refresh", "refresh")[0] if targets else 0
+
+
+def report(root: Path, every: bool, as_json: bool) -> int:
+    """The last learn (or every run with --all): script time per add-on, and the session work after it — subagents
+    whose brief has the line "Class: addon" (logged by the factory's log_usage hook) — with tokens and cost."""
+    import importlib.util
+    from datetime import datetime
+    runs = []
+    for line in (root / LOG).read_text(encoding="utf-8").splitlines() if (root / LOG).is_file() else []:
+        try:
+            runs.append(json.loads(line))
+        except ValueError:
             continue
-        r = run(root, a, "refresh", capture=True)
-        if r is None or r.returncode not in (0,):
-            rc = 1
-            print(f"⚠ {a['name']}: refresh failed (exit {getattr(r, 'returncode', '?')}): "
-                  f"{(getattr(r, 'stderr', '') or '').strip()[-300:]}")
-    sync(root, quiet=True)
-    return rc
+    learns = [r for r in runs if r.get("event") == "learn"]
+    if not learns:
+        print("ℹ No learn recorded yet (.tf/logs/addons.jsonl) — run: tf learn")
+        return 0
+    spec = importlib.util.spec_from_file_location("tf_cost_report", Path(__file__).resolve().parent / "cost_report.py")
+    cr = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cr)
+    prices = config(root).get("prices_usd_per_mtok") or {}
+    logs = root / ".tf" / "logs"
+    deleg = [d for d in cr.read_jsonl(logs / "delegation.jsonl", None) if (d.get("klass") or "").lower() == "addon"]
+    usage = {u["agent_id"]: u for u in cr.read_jsonl(logs / "usage.jsonl", None)
+             if u.get("event") == "SubagentStop" and u.get("agent_id")}
+    out = []
+    for i, lr in enumerate(learns if every else learns[-1:]):
+        idx = learns.index(lr)
+        start = datetime.fromisoformat(lr["ts"])
+        end = datetime.fromisoformat(learns[idx + 1]["ts"]) if idx + 1 < len(learns) else None
+        later = [r for r in runs if r.get("event") == "refresh" and start < datetime.fromisoformat(r["ts"])
+                 and (end is None or datetime.fromisoformat(r["ts"]) < end)]
+        work = [d for d in deleg if d.get("ts") and start <= datetime.fromisoformat(d["ts"])
+                and (end is None or datetime.fromisoformat(d["ts"]) < end)]
+        used = [usage[d["agent_id"]] for d in work if d.get("agent_id") in usage]
+        tok = {k: sum(u.get(k) or 0 for u in used) for k in ("input", "output", "cache_read", "cache_write")}
+        costs = [cr.record_cost(u, prices) for u in used]
+        cost = sum(c for c in costs if c is not None) if used and all(c is not None for c in costs) else None
+        secs = [d.get("duration_ms") for d in work if d.get("duration_ms")]
+        out.append({"learn_at": lr["ts"], "script_seconds": lr["seconds"],
+                    "addons": {a["name"]: a["seconds"] for a in lr.get("addons", [])},
+                    "pending_after_learn": sum(a.get("pending", 0) for a in lr.get("addons", [])),
+                    "refresh_runs": len(later), "refresh_seconds": round(sum(r["seconds"] for r in later), 2),
+                    "session_agents": len(work), "session_agents_measured": len(used),
+                    "session_seconds": round(sum(secs) / 1000, 1) if secs else None,
+                    "tokens": tok, "tokens_total": sum(tok.values()), "cost_usd": cost,
+                    "prices": bool(prices)})
+    if as_json:
+        print(json.dumps(out, ensure_ascii=False, indent=2))
+        return 0
+    for r in out:
+        print(f"learn {r['learn_at']}")
+        print(f"  scripts: {r['script_seconds']:.1f} s (" + ", ".join(f"{n} {s:.1f} s" for n, s in r["addons"].items())
+              + f"), 0 tokens; later refresh: {r['refresh_runs']}× {r['refresh_seconds']:.1f} s")
+        if r["session_agents"]:
+            t = r["tokens"]
+            print(f"  session work (subagents \"Class: addon\"): {r['session_agents']} "
+                  f"({r['session_agents_measured']} measured)"
+                  + (f", {r['session_seconds']} s" if r["session_seconds"] else "")
+                  + f"; tokens {r['tokens_total']:,} (in {t['input']:,}, out {t['output']:,}, cache read "
+                  f"{t['cache_read']:,}, cache write {t['cache_write']:,})"
+                  + (f"; cost ${r['cost_usd']:.4f}" if r["cost_usd"] is not None else
+                     "; cost: set prices_usd_per_mtok in .tf/config/config.yaml" if not r["prices"] else ""))
+        else:
+            print(f"  session work: none yet ({r['pending_after_learn']} items were waiting after learn)")
+    return 0
 
 
 def check(root: Path, base: str | None, as_json: bool) -> int:
@@ -543,6 +634,8 @@ def main(argv: list[str]) -> int:
         return learn(root, rest[0] if rest else None)
     if cmd == "refresh":
         return refresh(root)
+    if cmd == "report":
+        return report(root, "--all" in rest, "--json" in rest)
     if cmd == "check":
         base = rest[rest.index("--base") + 1] if "--base" in rest and rest.index("--base") + 1 < len(rest) else None
         return check(root, base, "--json" in rest)

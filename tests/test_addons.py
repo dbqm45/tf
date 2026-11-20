@@ -268,6 +268,37 @@ def test_company_pack_rolls_out_standards_by_url():
     assert r.returncode == 0 and not rules.exists()
 
 
+def test_learn_is_measured_and_report_adds_the_session_work():
+    p = project(files={"package.json": '{"dependencies": {"react": "^18.2.0"}}',
+                       "package-lock.json": '{"packages": {"node_modules/react": {"version": "18.3.1"}}}',
+                       ".tf/config/config.yaml": "prices_usd_per_mtok:\n  haiku: {input: 1, output: 5, cache_read: 0.1, "
+                                                 "cache_write: 1.25}\n"})
+    tf_addon(p, "add", "dna")
+    r = tf_addon(p, "learn")
+    assert r.returncode == 0 and "learn: " in r.stdout and "s of scripts (dna " in r.stdout and "0 tokens" in r.stdout
+    rec = json.loads((p / ".tf/logs/addons.jsonl").read_text(encoding="utf-8").splitlines()[-1])
+    assert rec["event"] == "learn" and rec["addons"][0]["name"] == "dna" and rec["addons"][0]["seconds"] >= 0
+    rep = json.loads(tf_addon(p, "report", "--json").stdout)[0]
+    assert rep["session_agents"] == 0 and rep["tokens_total"] == 0
+    # the session work after learn, as the factory's log_usage hook records it
+    import datetime as _dt
+    later = (_dt.datetime.now(_dt.timezone.utc) + _dt.timedelta(seconds=5)).isoformat(timespec="seconds")
+    logs = p / ".tf/logs"
+    (logs / "delegation.jsonl").write_text(
+        json.dumps({"ts": later, "klass": "addon", "agent_id": "a1", "duration_ms": 12000}) + "\n"
+        + json.dumps({"ts": later, "klass": "code", "agent_id": "a2"}) + "\n", encoding="utf-8")
+    (logs / "usage.jsonl").write_text(
+        json.dumps({"ts": later, "event": "SubagentStop", "agent_id": "a1", "models": {"claude-haiku-x": 3},
+                    "input": 10000, "output": 2000, "cache_read": 50000, "cache_write": 0}) + "\n"
+        + json.dumps({"ts": later, "event": "SubagentStop", "agent_id": "a2", "models": {"claude-haiku-x": 1},
+                      "input": 999999, "output": 0, "cache_read": 0, "cache_write": 0}) + "\n", encoding="utf-8")
+    rep = json.loads(tf_addon(p, "report", "--json").stdout)[0]
+    assert rep["session_agents"] == 1 and rep["tokens_total"] == 62000 and rep["session_seconds"] == 12.0
+    assert abs(rep["cost_usd"] - (10000 * 1 + 2000 * 5 + 50000 * 0.1) / 1e6) < 1e-9
+    text = tf_addon(p, "report").stdout
+    assert "tokens 62,000" in text and "cost $0.0250" in text
+
+
 def test_core_names_no_addon():
     for f in (ROOT / "core").rglob("*"):
         if f.is_file() and f.suffix in (".py", ".md", ".yaml", ".json"):
