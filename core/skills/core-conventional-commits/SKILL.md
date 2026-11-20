@@ -1,123 +1,133 @@
 ---
 name: core-conventional-commits
-description: Use when writing, reviewing or parsing a commit message or PR title — Conventional Commits, breaking changes, Change/Flag footers, version bump, commit-msg hook.
+description: Use for a commit message and a PR title (Conventional Commits) — types, fixing a wrong type, BREAKING CHANGE, SemVer.
 metadata:
-  review: "2027-11-20"
-  catalog: "Use when you write, review or classify a commit message or a PR title — Conventional Commits 1.0.0 (type, scope, `!`, body, footers), marking a breaking change, the factory's trace footers `Change:` and `Flag:`, the bump a set of commits implies (PATCH/MINOR/MAJOR), fixing a commit with the wrong type, revert commits, squash-merge PR titles, parsing history, and the commit-msg hook commit_msg.py. Not for the branch and PR strategy (core-git-workflow) or the content of a hand-written CHANGELOG (docs skill, pack-docs)."
-  keywords: "commit message, komunikat commita, wiadomość commita, opis commita, zrób commit, zacommituj zmiany, zacommituj, napisz commit, jak nazwać commit, tytuł PR, tytuł pull requesta, conventional commits, konwencja commitów, typ commita, feat, fix, chore, refactor, scope commita, zakres commita, BREAKING CHANGE, zmiana niezgodna w commicie, wykrzyknik w commicie, stopka commita, trailer, Change:, Flag:, klucz zmiany w commicie, Refs:, zły typ commita, poprawić typ commita, amend, revert commit, squash merge tytuł, hook commit-msg, commitlint, semantic-release, release-please, nx release, jaki bump z commitów, make a commit, commit this, commit the changes, write a commit message, commit message format, PR title, commit type, commit scope, breaking change footer, wrong commit type, fix commit type, revert commit, squash merge title, commit-msg hook, commit footer, trailer, parse commit history"
+  review: "2027-10-17"
+  catalog: "Use when writing, reviewing and parsing commit messages and PR titles per Conventional Commits 1.0.0 — types, scope, !, BREAKING CHANGE, footers, revert, the SemVer bump, a changelog from history (nx release). Not for the branch and PR strategy (core-git-workflow) or the content of a hand-written CHANGELOG (the documentation skill, pack-docs)."
+  keywords: "komunikat commita, commit message, wiadomość commita, opis commita, tytuł PR, BREAKING CHANGE, feat, fix, chore, commitlint, narzędzie do wydań, policzyło wersję, wersja z commitów, usunąłem pole z DTO, zmiana łamiąca w commicie, semantic-release, release-please, PR title, commit type, wrong commit type, breaking change in a commit, version from commits, removed a field from a DTO, zrób commit, zacommituj zmiany, make a commit, commit these changes"
 ---
 
-# Commit messages — Conventional Commits plus the factory's trace footers
+# Conventional Commits 1.0.0
 
-Format of every commit (and of the PR title under squash merge):
+## Format
 ```
-<type>(<scope>)!: <description>
+<type>[(<scope>)][!]: <description>
 
-<body: why, not what>
+[body — why, not what; paragraphs separated by a blank line]
 
-<Footer-Token>: <value>
+[footers: Token: value  or  Token #value]
 ```
-Scope and `!` are optional, body and footers too. The precise rules, the reasons behind the format, the FAQ and
-parsing recipes: `references/specification-and-faq.md`.
+- **Type** required; **scope** optional, in parentheses — a part of the code.
+- **Description** right after `: `; in the imperative mood, **in the repository's commit language** (from `git log`; English in a new repo), no full stop, ≤ 72 characters.
+- **Body** after one blank line; **footers** after another blank line. Footer tokens with hyphens instead of spaces
+  (`Reviewed-by`, `Refs`); the exception: `BREAKING CHANGE`.
+- Letter case does not matter to tools, **except** `BREAKING CHANGE` (always upper case; `BREAKING-CHANGE`
+  is a synonym). Keep one convention in the repo (ours: the type in lower case).
 
-## Writing a message
-1. **Read the repository first:** `git log --format=%s -20` — the language of descriptions, the scopes in use, the
-   types the team uses. Follow them (a Polish history stays Polish; scope = ticket key if that is the local habit).
-   A new repository: English.
-2. **One commit = one logical change.** A bug fix and a new feature in the same work → two commits (`fix`, then `feat`),
-   never one commit with a mixed type.
-3. **Type** (lowercase in this repo; the list is open, only `feat` and `fix` are required by the spec):
-   | Type | When | Bump |
-   |---|---|---|
-   | `feat` | new capability for users | MINOR |
-   | `fix` | bug fix | PATCH |
-   | `perf` | faster, same behaviour | PATCH in most release-tool configs — check yours |
-   | `refactor`, `test`, `docs`, `style`, `build`, `ci`, `chore` | no user-visible change | none |
-   | `revert` | undoes earlier commits (project convention, see below) | depends on what it undoes |
-   The extra types follow `@commitlint/config-conventional`; they are convention, not part of the spec.
-4. **Scope** names a part of the architecture: the Nx project name (or its `scope:` tag) in an Nx monorepo, a module or
-   bounded context elsewhere. Never a person's name.
-5. **Description:** imperative mood ("add", "remove", not "added"), lowercase start, no trailing period, header
-   ≤ 72 characters (a ` (#123)` PR suffix does not count).
-6. **Body** after one blank line: why the change was needed and what it affects.
-7. **Footers** after one blank line, `Token: value`, tokens hyphenated (`Reviewed-by`, `Refs`). Task links go to
-   `Refs: PROJ-123`, not into the description.
-8. **Breaking change** — any incompatible change of the public API, whatever its type, also in early development:
-   - `!` before the colon (`feat(api)!: …`), and/or
-   - footer `BREAKING CHANGE: <what changed and how to migrate>` — exactly uppercase; `BREAKING-CHANGE:` is equivalent.
-   With `!` alone the description must make the break clear; add the footer whenever users need migration steps.
+## Types
+| type | when | SemVer |
+|---|---|---|
+| `feat` | a new feature for the user (MUST) | MINOR |
+| `fix` | a bug fix (MUST) | PATCH |
+| `perf` | a performance improvement without a change of behaviour | PATCH* |
+| `refactor` | a change of structure without a change of behaviour | — |
+| `test` | only tests | — |
+| `docs` | only documentation | — |
+| `style` | formatting with no effect on meaning | — |
+| `build` | the build system, dependencies | — |
+| `ci` | CI configuration | — |
+| `chore` | other maintenance work | — |
+| `revert` | reverting commit(s) | depends on the reverted one |
 
-## Trace footers (factory convention)
-- Work that belongs to a change or slice with a key (`CHG-12`, `TSK-57`, a Jira key): **every** commit carries
-  `Change: TSK-57` (several keys comma-separated: `Change: CHG-12, TSK-57`).
-- A slice behind a feature flag also carries `Flag: payment-retry` (one key, no spaces).
-- Keys come from the change plan or from the human — never invent one.
-- `Change:` and `Flag:` are part of the factory's public API (release tracing reads them).
+\* depending on the configuration of the release tool. The spec requires only `feat` and `fix`; the other types are a convention
+(`@commitlint/config-conventional`) — the list is open, stick to the one adopted in the repo.
 
-## The commit-msg hook
-- Check by hand: `python3 .claude/skills/core-conventional-commits/scripts/commit_msg.py check <message-file>`
-  (exit 0 ok, 1 rejected, 2 bad call).
-- Install: `… commit_msg.py install` — **only when the human asks** (the hooks directory is protected). It writes
-  `commit-msg` into git's hooks directory (respects `core.hooksPath`) and never overwrites a foreign hook: it prints the
-  line to add instead.
-- It enforces: header shape with a lowercase type, any scope, non-empty description ≤ 72 characters with no trailing
-  period; a blank line after the header; `BREAKING CHANGE:`/`BREAKING-CHANGE:` uppercase with a description;
-  `Change:` keys shaped like `TSK-57`; `Flag:` a single token. On a branch whose name contains a key
-  (`story/tsk-57-retry`) the message must contain `Change: TSK-57`. Git's own messages (`Merge …`, `Revert "…"`,
-  `fixup!`, `squash!`, `amend!`) pass unchecked; `#` comment lines and everything below the scissors line are ignored.
+## Scope
+- A scope consistent with the architecture: in an Nx monorepo — **the Nx project name** (or the value of the `scope:` tag), outside Nx — a module
+  or a DDD context. Never the author's name.
+- Before the first commit in someone else's repo check `git log` — if the repo gave the scope a different meaning (e.g. a task
+  key), stick to it.
 
-## Version bump from commits
+## Breaking changes
+- `!` before the colon: `feat(api)!: remove v1 endpoints` — the footer is then optional, and the description describes the change.
+- or the footer: `BREAKING CHANGE: <co i jak migrować>`.
+- Every breaking change means **MAJOR**, regardless of the type. Mark it in the early phase of a project too (spec FAQ).
+
+## SemVer, changelog, nx release
 | Commits since the last release | Bump |
 |---|---|
-| only `fix` (and `perf`, if configured) | PATCH |
+| only `fix` (and possibly `perf`) | PATCH |
 | at least one `feat` | MINOR |
-| at least one `!` or `BREAKING CHANGE` | MAJOR |
-Release tools (`nx release`, semantic-release, release-please) compute version and changelog from this; commitlint in
-the commit-msg hook keeps the input clean. Compute the number itself with
-`python3 .claude/skills/core-semver/scripts/semver.py next`; 0.y.z, pre-releases, public API and deprecation are in core-semver.
+| `!` or `BREAKING CHANGE` in any | MAJOR |
 
-## Fixing a commit with the wrong type
-- Interactive rebase is not available in this agent environment.
-- Last commit, **not pushed**, and the human explicitly asks → `git commit --amend` with the corrected header.
-- Older or already pushed/published → do not rewrite history. Tell the human: a corrective commit, or a manual rebase
-  on their side before merge. Default: put the next change in a new, correctly typed commit.
+`nx release` computes the version and the changelog from history (also per project, by scope/paths); similarly
+semantic-release, release-please. Validation: commitlint in the `commit-msg` hook. That is why the format is a **contract**, not aesthetics.
+The number is computed by `python3 .claude/skills/core-semver/scripts/semver.py next`. The SemVer rules (the 0.y.z phase, pre-release
+versions, the public API, deprecation) are described in core-semver.
 
-## Squash merge, reverts
-- Squash merge: the PR title becomes the final commit, so it follows the same format; maintainers may tidy
-  contributors' titles before merging.
-- Reverts: the spec leaves them open. Here: `revert: <what is undone>` with `Refs: <sha>` (several SHAs comma-separated).
-  Git's generated `Revert "…"` passes the hook unchanged.
+## Practical rules
+- One commit = one logical change; two types fit → two commits.
+- References to tasks in a footer (`Refs: PROJ-123`), not in the description.
 
-## Example
-Removed `isReserved` from `ResourceDto` in the booking module, replaced by `blockade.state`:
+## The trace of a change in footers (`Change:`, `Flag:`)
+When the work belongs to a change or a slice with a key (`CHG-12`, `TSK-57`, a Jira key), every commit has the footer
+`Change: <klucz>` — through it release tracking tools link the commit to the slice, and the slice to the change. A commit of a slice
+behind a flag also gets `Flag: <klucz-flagi>`:
 ```
-refactor(booking)!: replace isReserved with blockade.state
+feat(payments): retry failed payment
 
-Reservation state now lives in one place, so the two flags can no longer disagree.
-
-BREAKING CHANGE: ResourceDto.isReserved is removed; read blockade.state === "reserved" instead.
-Refs: BOOK-88
 Change: TSK-57
+Flag: payment-retry
 ```
-`!` and the footer → MAJOR. Imperative description, header of 58 characters. If the same work also fixed an unrelated bug, that
-goes in a separate `fix(booking): …` commit.
+- A key shaped like `[A-Z][A-Z0-9]+-[0-9]+`; several keys separated by commas (`Change: TSK-57, TSK-58`). You take the key
+  from the change plan or from the human, you do not make it up.
+- The `commit-msg` hook checks the header, the footers and — on a branch with a key in its name (`story/tsk-57-…`) — requires
+  `Change:` with that key. Installation at the human's request (the git hooks directory is protected):
+  `python3 .claude/skills/core-conventional-commits/scripts/commit_msg.py install`; it does not overwrite someone else's hook,
+  it only gives the line to add. By hand: `commit_msg.py check <plik-wiadomości>`.
+- With a squash merge the PR title = the final commit, so the PR title is in this format too; on a squash the maintainer can
+  tidy up the contributors' messages.
+- Revert: the spec does not define it — a project convention (ours: the `revert` type + `Refs: <sha>`).
 
-More shapes:
-- `feat(search): add fuzzy matching for hotel names` → MINOR
-- `fix(payments): round amounts half-even before conversion` + `Refs: PAY-12` → PATCH
-- `perf(reports): stream rows instead of loading the whole table`
-- `chore(deps)!: drop Node 18 support` (bang only, the description says what breaks)
-- `revert: restore the old retry policy` + `Refs: 9f2c1ab, 4e77d03`
+## Fixing a wrong type
+The spec suggests `git rebase -i` before the merge — **not available here** (no interactive mode). Instead:
+- the last, **unpushed** commit and the user explicitly asks → `git commit --amend`;
+- deeper in history or already published → do not rewrite history; tell the user (a corrective commit or a manual rebase);
+- by default: the next change in a new, correctly classified commit.
+
+## Examples
+```
+feat(booking): block resource for selected time slot
+fix(pricing): round partner discount to minor units
+feat!: send an email to the customer when a product is shipped
+refactor(availability)!: replace isReserved flag with blockade state
+
+BREAKING CHANGE: ResourceDto.isReserved removed; read blockade.state instead.
+```
+```
+fix: prevent racing of requests
+
+Introduce a request id and a reference to latest request. Dismiss
+incoming responses other than from latest request.
+
+Reviewed-by: Z
+Refs: #123
+```
+```
+revert: let us never again speak of the noodle incident
+
+Refs: 676104e, a215868
+```
+
+## References index
+- Read `references/specification-and-faq.md` when you need the literal wording of the 16 rules (MUST/SHOULD/MAY), the
+  specification's FAQ or commit parsing (regex, `git log` commands).
 
 ## Checklist
-- [ ] `git log` read: language, scopes, types follow the repository
-- [ ] one logical change per commit; type and scope fit
-- [ ] description imperative, ≤ 72 characters, no period; body says why
-- [ ] breaking change marked (`!` and/or uppercase `BREAKING CHANGE:` with migration)
-- [ ] `Change:` (and `Flag:`) footers when the work has a key; `check` passes
-- [ ] no rewriting of pushed history; amend only unpushed and on request
+- [ ] The type chosen from the table; one commit = one change.
+- [ ] Scope = the Nx project / module name (or the repo's convention from `git log`).
+- [ ] The description in the repo's commit language, imperative mood, no full stop, ≤ 72 characters.
+- [ ] A breaking change marked with `!` or `BREAKING CHANGE:` with migration instructions.
+- [ ] References to tasks in footers.
 
-## Sources
-- Conventional Commits 1.0.0 — https://www.conventionalcommits.org/en/v1.0.0/ (accessed 2026-11-20). Restated in our own words.
-- `@commitlint/config-conventional` type list — https://github.com/conventional-changelog/commitlint (accessed 2026-11-20).
-- Git trailers — https://git-scm.com/docs/git-interpret-trailers (accessed 2026-11-20).
+Source: conventionalcommits.org/en/v1.0.0 (CC BY 3.0) — content described in our own words, rule quotes in references.
