@@ -1,0 +1,89 @@
+head: Użyj, gdy audytujesz dług techniczny repo lub modułu — hotspoty, dziewięć wymiarów, ustalenia z plik:linia, priorytet według częstości zmian, ponowne audyty. Użyj, gdy audytujesz dług techniczny repozytorium lub modułu tak, żeby zespół mógł działać — orientacja według rozmiaru × częstości zmian (hotspoty, współzmiany), dziewięć wymiarów długu, ustalenia z plik:linia, wagą, wysiłkiem i propozycją, wyliczony priorytet, szybkie wygrane, obowiązkowa sekcja „wygląda źle, ale jest dobrze”, tanie i groźne sprzężenie nazwane rodzajem connascence, cykle bez madge (code_graph.py), ponowny audyt ze statusami ROZWIĄZANE/NOWE/ZMIENIONE i stała rutyna higieny architektury (testy architektury, zapadka, cotygodniowe małe PR, chronione weryfikatory). Audyt tylko proponuje i niczego nie przepisuje. Nie do pojedynczej refaktoryzacji (eng-behavior-preserving-refactoring) ani przeglądu jednego PR (eng-design-principles).
+# Audyt długu technicznego — ustalenia, na których zespół może działać
+
+Audyt jest użyteczny, gdy zespół w poniedziałek wybierze trzy pierwsze pozycje, a późniejszy audyt powie, co się zmieniło.
+Dlatego każde ustalenie ma miejsce, wagę, wysiłek i propozycję; kolejność wynika ze wzoru, nie z gustu; a raport mówi,
+co wygląda źle, ale jest dobrze. **Audyt tylko proponuje — niczego nie przepisuje.** Prośba o naprawę w tym samym
+przebiegu → dokończ raport i przekaż wybór do eng-refactor-planning.
+
+## 1. Orientacja (przed oceną)
+1. Przeczytaj README, manifesty, ADR i mapę modułów.
+2. Historia: `git log --oneline -200`, `git log --since=6.months --stat`.
+3. **Hotspoty = złożoność × częstość zmian.** Uruchom
+   `python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --hotspots --cochange`. Każdy czynnik osobno myli:
+   gęsty plik, którego nikt nie dotyka, jest tylko stary; trywialny plik zmieniany co tydzień to zwykle konfiguracja.
+   Jeden tani wskaźnik złożoności liczony jednakowo — iloczyn waży więcej niż wskaźnik.
+4. **Współzmiany czytane dwojako:** ciasna para plików zmienianych zawsze razem = ukryty kontrakt (kandydat na connascence
+   znaczenia lub algorytmu); hub zmieniany z wieloma obszarami = szeroki zasięg. Współzmiany mylą w obie strony: masowe
+   commity sklejają niezwiązane pliki, a brak współzmian nie dowodzi niezależności — np. DTO zamówienia skopiowane ręcznie
+   do API i aplikacji mobilnej nigdy nie zmienia się w jednym commicie i właśnie ta cicha kopia jest długiem do sprawdzenia.
+5. Napisz 1–2 akapity modelu architektury; rozbieżność z README to osobne ustalenie.
+6. Pokaż plan audytu (zakres, moduły, narzędzia) człowiekowi przed startem. Tylko narzędzia, które projekt ma lub które
+   człowiek zatwierdzi — bez globalnych instalacji.
+
+## 2. Ocena — dziewięć wymiarów
+| Wymiar | Czego szukać | Narzędzia (gdy są) |
+|---|---|---|
+| rozpad architektury | cykle, łamane warstwy i granice modułów, pliki > 500 linii, logika powielona w 3+ miejscach, nieużywane abstrakcje, martwy kod | `madge --circular`, dependency-cruiser, `nx graph`, `jdeps`, ArchUnit, `knip`; bez nich `code_graph.py` |
+| niespójność | kilka sposobów na to samo: klienci HTTP, stan, błędy, nazewnictwo | grep, czytanie |
+| typy i kontrakty | `any`, rzutowania, niewalidowane granice, API bez schematu | `tsc --noEmit` ze strict |
+| testy | często zmieniane pliki bez testów, testy związane z implementacją, niestabilne testy | pokrycie, historia CI (qa-regression) |
+| zależności i konfiguracja | znane CVE, nieużywane pakiety, rozrost zmiennych środowiskowych | `npm audit`, `depcheck`, OWASP dependency-check |
+| wydajność | N+1, blokujące I/O, zbędne renderowanie | be-database, fe-architecture |
+| błędy i obserwowalność | połknięte wyjątki, brak logów i metryk na ścieżkach krytycznych | ops-observability |
+| bezpieczeństwo | sekrety w kodzie, brak autoryzacji per zasób, groźne wzorce | be-auth-security |
+| dokumentacja | README i ADR rozjechane z kodem | docs-tech-writing |
+
+Wymiar bez ustaleń: **„nic istotnego”** — nigdy nie wymyślaj długu, żeby wypełnić tabelę.
+
+Cykle bez madge i dependency-cruisera (np. Django + TypeScript, nic nie można instalować):
+`python3 .claude/skills/eng-codebase-mapping/scripts/code_graph.py <repo>`. Oddziela cykle **runtime** (importy na poziomie
+modułu) od cykli zamykanych tylko leniwymi krawędziami — import w funkcji, pod `TYPE_CHECKING` albo import samego typu.
+
+## 3. Waga, wysiłek, priorytet
+- **Waga** według skutku: krytyczna 4 (utrata danych, bezpieczeństwo, awaria), wysoka 3, średnia 2, niska 1.
+- **Wysiłek:** S = godziny (1), M = dni (2), L = tygodnie (4).
+- **Priorytet = waga × częstość zmian ÷ wysiłek**, częstość = commity dotykające pliku w ostatnich 6 miesiącach (minimum 1).
+  Przykłady: 3×25/2 = **37,5**; 4×6/1 = **24**. Dług w kodzie, którego nikt nie dotyka, może poczekać.
+- **Szybkie wygrane** = wysiłek S przy wadze ≥ średnia.
+- **Tanie i groźne sprzężenie.** Sprzężenie mechaniczne pilnowane przez narzędzie — kod generowany odświeżany regeneracją,
+  rozjazd łapany przez kompilator lub CI — ma wagę co najwyżej niską. Groźne jest sprzężenie dynamiczne bez bariery
+  narzędzia: kolejność wywołań, znaczenie wartości na odległość, skopiowany algorytm. Nazwij rodzaj connascence zamiast
+  pisać „tightly coupled”.
+- Etykieta pomocnicza: kwadrant długu (celowy/nieświadomy × rozważny/lekkomyślny, za Fowlerem). Spłacaj najpierw dług o najwyższych odsetkach.
+
+## 4. Raport
+Ścieżka `docs/project/07-review/<data>-tech-debt.md`. Części: podsumowanie (≤ 10 punktów) i model architektury; tabela
+ustaleń (ID, wymiar, plik:linia, waga, wysiłek, priorytet, opis, propozycja) według priorytetu; top 5 ze szkicem zmiany;
+szybkie wygrane; **„wygląda źle, ale jest dobrze”** (obowiązkowe; celowe wybory z dowodem — ADR, `git log -L`, `git blame`,
+opis PR, liczba poprawek mechanizmu; ryzyko celowego ograniczenia zamyka tani strażnik, nie przebudowa; „nie ruszaj”);
+pytania do zespołu.
+
+Znaczniki w kodzie: `debt: <ograniczenie>, <kiedy wrócić>`; znacznik bez warunku powrotu to osobne ustalenie.
+Przykładowy raport: `references/examples.md`.
+
+## 5. Skala i ponowne audyty
+- Ponad ~50 tys. linii lub ponad 5 modułów → jeden wykonawca na moduł według tej samej procedury, potem scalenie i wspólny ranking.
+- **Ponowny audyt** porównuje z poprzednim raportem i oznacza każde ustalenie **ROZWIĄZANE**, **NOWE** albo **ZMIENIONE**.
+
+## 6. Rutyna higieny architektury
+1. **Testy architektury** dla warstw, cykli i rozmiaru plików (import-linter, dependency-cruiser, ArchUnit, Tach) w szybkich
+   bramkach i CI; agent uruchamia je przed „gotowe”.
+2. **Zapadka:** każdy próg zaczyna od obecnego maksimum i tylko spada; wyjątki imiennie, z właścicielem i terminem.
+3. **Rytm co tydzień:** jedno naruszenie → jeden mały PR z refaktoryzacją i przeglądem człowieka.
+4. **Chronione weryfikatory:** progi, listy wyjątków i testy architektury w ścieżkach pod CODEOWNERS i ochroną gałęzi —
+   agent optymalizujący zielone CI inaczej przesunie weryfikator zamiast poprawić kod.
+
+## Przykład
+„60 ustaleń w monolicie, jak uszeregować bez naprawiania kodu, którego nikt nie dotyka?” — częstość zmian z
+`git log --since=6.months` (git_territory.py), waga 1–4 i wysiłek S/M/L, priorytet = waga × częstość ÷ wysiłek; średnie
+ustalenie w nieruszanym pliku z wysiłkiem L: 2×1/4 = 0,5 i czeka; wysokie w pliku zmienianym 25 razy z wysiłkiem M: 37,5
+i prowadzi. Szybkie wygrane osobno; celowe dziwactwa w „wygląda źle, ale jest dobrze”.
+
+## Lista kontrolna
+- [ ] orientacja i plan pokazany przed oceną; tylko zatwierdzone narzędzia
+- [ ] każde ustalenie: plik:linia, waga, wysiłek, priorytet ze wzoru, propozycja
+- [ ] puste wymiary: „nic istotnego”; sprzężenie nazwane rodzajem connascence
+- [ ] sekcja „wygląda źle, ale jest dobrze” z dowodami
+- [ ] ponowny audyt: ROZWIĄZANE / NOWE / ZMIENIONE; znaczniki `debt:` zebrane
+- [ ] nic nie przepisane; wybór refaktoryzacji przekazany do eng-refactor-planning
