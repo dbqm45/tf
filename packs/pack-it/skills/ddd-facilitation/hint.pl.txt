@@ -1,134 +1,142 @@
-head: Użyj przy rozmowie lub warsztacie z ekspertami domeny — techniki facylitacji, język wszechobecny, słowa-sygnały. Użyj przy prowadzeniu rozmowy lub warsztatu z ekspertami domenowymi — techniki facylitacji, budowanie wszędobylskiego języka (ubiquitous language), wyłapywanie słów-sygnałów (status, CRUD), dynamika grupy. Także bramki decyzyjne agenta i samokontrola facylitatora. Nie do przebiegu i notacji Event Stormingu (ddd-event-storming) ani projektowania modelu (ddd-deep-modeling).
-# Facylitacja i wspólny język
+head: Użyj przy prowadzeniu rozmowy lub warsztatu z ekspertami domeny — facylitacja, słowa sygnałowe, czyste pytania, słownik, bramki decyzyjne, model jako zastępczy ekspert. Użyj przy prowadzeniu rozmowy lub warsztatu z ekspertami domeny — postawa facylitatora, tryby myślenia, techniki na zapętlenie, dominację i spory (hot spoty), czyste pytania, słowa sygnałowe (status, czasowniki CRUD, przetworzono, zawsze), budowanie wszechobecnego języka i glossary.md, konfrontacja języka z kodem, model językowy jako zastępczy ekspert (hipotezy do sprawdzenia), bramki decyzyjne dla pytań agenta do człowieka i samoocena facylitatora z 10 antywzorcami. Nie do formatów, notacji i kolorów Event Stormingu (ddd-event-storming) ani projektowania samego modelu (ddd-deep-modeling).
+# Facylitacja — rozmowy i warsztaty z ekspertami domeny
 
-## Rola facylitatora
-- Jesteś właścicielem **procesu**, nie treści. Nie rozstrzygasz sporów merytorycznych — zapisujesz je jako hot spot.
-- Pilnujesz celu sesji i czasu; decydujesz o przejściu do następnego kroku, gdy grupa się zapętla.
-- Najpierw piszemy, potem mówimy — dzięki temu słychać także cichych ekspertów, a nie tylko najgłośniejszych.
-- Ustal na starcie zasady (w duchu Deep Democracy): każdy ma kawałek racji, nikt całej; różnica zdań to informacja, nie problem.
-- Otwieraj **check-inem** (krótko, po ludzku) i zamykaj **check-outem** („co wynosisz z sesji?”).
+Facylitator odpowiada za **proces**, nie za treść. Formaty i notacja Event Stormingu: ddd-event-storming. Zamiana
+ustaleń w model: ddd-deep-modeling.
 
-## Tryby myślenia — nie mieszaj ich
-1. **Dywergencja** — generujemy (chaotyczna eksploracja): bez oceniania.
-2. **Emergencja** — grupujemy, szukamy wzorców, nazywamy (porządkowanie osi, swimlanes).
-3. **Konwergencja** — decydujemy (głosowanie, wybór granic).
-Zapowiadaj głośno, w którym trybie jesteście. Ocena w fazie dywergencji zabija pomysły; generowanie w fazie decyzji zabija czas.
+## 1. Postawa
+- Pilnuj celu i czasu; gdy grupa krąży, nazwij to i idź dalej — spór staje się hot spotem.
+- Najpierw pisz, potem mów: wszyscy piszą w ciszy, potem czytają, więc cisi eksperci są słyszani.
+- Zasady: każdy ma częściowo rację; niezgoda to informacja, a nie problem do stłumienia.
+- Zacznij od check-in (jakie masz oczekiwania?), zakończ check-outem (co zabierasz?).
 
-## Techniki na trudne momenty
-- **Sześć kapeluszy** — gdy dyskusja krąży: wszyscy naraz patrzą z jednej perspektywy (fakty → ryzyka → korzyści → pomysły → emocje → proces), zamiast przerzucać się racjami.
-- **Clean Questions** — pytania, które nie podsuwają odpowiedzi i używają słów rozmówcy:
-  „A jaki to rodzaj X?”, „Co jeszcze o X?”, „Skąd się bierze X?”, „Co dzieje się tuż przed X?”, „A co potem?”,
-  „Co chciałbyś, żeby się wydarzyło?”. Idealne do wydobywania pojęć bez narzucania własnego słownika.
-- **Parking** — wątek ważny, ale nie teraz → kartka na parkingu z właścicielem.
-- **Dominujący uczestnik** — daj mu zadanie (np. opowiadanie walkthrough na końcu), zbieraj głosy rundą.
-- **Eksperci się nie zgadzają** — nie rozstrzygaj. Zapisz obie wersje jako hot spot; często to dwa różne konteksty z tym samym słowem.
+## 2. Tryby myślenia — nazywaj na głos bieżący tryb
+**Dywergencja** (generuj, bez oceniania) → **emergencja** (grupuj, szukaj wzorców, nazywaj) → **konwergencja** (decyduj).
+Mieszanie trybów albo zabija pomysły (ocenianie przy generowaniu), albo zjada czas (generowanie przy decydowaniu).
 
-## Stopniowe wprowadzanie notacji
-Pokazujesz tylko to, czego grupa potrzebuje w danym kroku: najpierw zdarzenia i hot spoty, potem aktorzy i systemy,
-na końcu komendy, polityki i read modele. Nowy element = krótki przykład na ścianie + dopisek w legendzie.
+## 3. Trudne momenty
+| Sytuacja | Ruch |
+|---|---|
+| Dyskusja się zapętla | nazwij tryb; sześć kapeluszy — wszyscy naraz przyjmują tę samą perspektywę (fakty, ryzyka, korzyści, pomysły, uczucia, proces) |
+| Poza tematem, ale ważne | parking lot, każdy punkt z właścicielem |
+| Jedna osoba dominuje | daj jej zadanie (opowiedz przejście przez proces, pilnuj czasu) albo głosujcie po kolei; cichych zaproś po imieniu |
+| Eksperci się nie zgadzają | **nie rozstrzygaj.** Zapisz obie wersje jako hot spot z nazwiskami; to samo słowo często znaczy dwie rzeczy w dwóch kontekstach |
+| Grupa nie zna notacji | wprowadzaj ją etapami: zdarzenia i hot spoty → aktorzy i systemy → polecenia, polityki, modele odczytu; każdy nowy element dostaje przykład na ścianie i wpis w legendzie |
 
-## Uzupełniające techniki — kiedy po nie sięgnąć
-| Technika | Kiedy | Jak łączyć z Event Stormingiem |
+## 4. Czyste pytania (clean questions)
+Neutralne pytania, które używają słów rozmówcy i nie dodają Twoich:
+- „Jaki to rodzaj *X*?”
+- „Co jeszcze o *X*?”
+- „Skąd się bierze *X*?” / „Co dzieje się tuż przed *X*?” / „A co dzieje się potem?”
+- „Co chciałbyś, żeby się wydarzyło?”
+Wydobywają model eksperta zamiast potwierdzać Twój.
+
+## 5. Słowa sygnałowe
+| Usłyszane słowo | Dlaczego podejrzane | Zapytaj |
 |---|---|---|
-| Customer Journey | gdy liczy się doświadczenie klienta | etapy podróży jako tory nad osią zdarzeń |
-| User Story Mapping | gdy trzeba pociąć zakres na wydania | kroki z osi = kręgosłup mapy, historie pod spodem |
-| Impact Mapping | gdy nie jest jasne, po co coś budujemy | cel → aktorzy → wpływ → produkty; weryfikuje sens procesów z osi |
-| Service Blueprint | gdy ważne jest „zaplecze” usługi | frontstage/backstage jako tory, systemy wsparcia pod spodem |
-| C4 | gdy przechodzisz do architektury | konteksty z sesji → kontenery/komponenty |
+| status, stan, zmieniono status | ukrywa kilka cykli życia i zdarzeń | „Co wydarzyło się w biznesie, gdy się zmienił? Kto decyduje? Co wolno w tym stanie?” — każda wartość to kandydat na zdarzenie lub pojęcie |
+| utwórz, zaktualizuj, usuń, zaktualizowano rekord | język bazy danych | „Dlaczego ktoś to zmienia? Jak to nazywacie?” |
+| przetworzono, zsynchronizowano, obsłużono | ukrywa decyzje | „Co jest sprawdzane? Co może pójść źle?” |
+| dane, rekord, obiekt, informacja, menedżer | brak znaczenia biznesowego | „Jakie? Po co?” |
+| zawsze, nigdy, automatycznie | ukryte wyjątki | „Czy zdarzyło się kiedyś, że nie?” |
+| nazwy ekranów, tabel, systemów | rozwiązanie, nie problem | „Gdyby tego systemu nie było, co byłoby potrzebne?” |
 
-## Wszędobylski język (ubiquitous language)
-Jeśli ekspert nie rozumie modelu, projekt od początku idzie w złą stronę. Język jest wspólny dla biznesu, analizy i kodu.
-- Prowadź słownik `docs/project/02-domain/glossary.md`: pojęcie, znaczenie **w danym kontekście**, przykłady, synonimy, konflikty.
-- To samo słowo, różne znaczenia (np. „Klient” w CRM i w Rozliczeniach) → prawdopodobna **granica kontekstu**. Nie ujednolicaj na siłę.
-- Różne słowa, to samo znaczenie → uzgodnij jedno w obrębie kontekstu.
-- Pytaj: „Jak to nazywacie u siebie?”, „Czy X i Y to to samo?”, „Kto używa tego słowa?”.
+## 6. Wszechobecny język i słownik
+- Jedno słowo, dwa znaczenia (*Klient* w CRM i w Rozliczeniach) → prawdopodobnie granica kontekstu; nie ujednolicaj na
+  siłę (ddd-context-mapping). Dwa słowa na jedną rzecz w kontekście → wybierz jedno.
+- Pytaj: „Jak to nazywacie?”, „Czy X i Y to to samo?”, „Kto używa tego słowa?”
+- Plik: `docs/project/02-domain/glossary.md` — po jednym na kontekst, gdy jest ich kilka. Tworzony przy pierwszym
+  ustalonym pojęciu, nie z góry.
+- Wpis: **pojęcie** pogrubione; jedno–dwa zdania, czym *jest* (nie jak jest przechowywane); linia „Unikaj:”
+  z odrzuconymi synonimami. Grupuj pod nagłówkami, gdy to naturalne. Bądź stanowczy — słownik z trzema opcjami nikomu nie pomaga.
+- Tylko pojęcia domenowe tego kontekstu: bez ogólnych słów programistycznych, bez szczegółów implementacji; to nie
+  specyfikacja ani brudnopis. Co jakiś czas usuwaj przeciekłe szczegóły implementacji.
+- Zapisuj pojęcie od razu, gdy jest ustalone, a nie hurtem na końcu.
+- Testuj pojęcie wymyślonymi przypadkami brzegowymi („czy anulowana, a potem przywrócona rezerwacja to ta sama rezerwacja?”),
+  aż jego granica będzie ostra.
+- Konflikt z istniejącym wpisem nazwij od razu; dla mglistego słowa zaproponuj dwa–trzy precyzyjne.
+- **Konfrontuj z kodem:** gdy ktoś opisuje zachowanie, sprawdź kod i zacytuj różnicę (plik:linia). Rozjazd między językiem
+  a kodem blokuje dalsze decyzje, dopóki nie zostanie wyjaśniony.
+- Wpisy pisane przez agenta mają status `proposed` (propozycja), dopóki człowiek ich nie zaakceptuje (core-project-record);
+  wypisz nowe i zmienione wpisy w podsumowaniu sesji.
+- Istniejące repozytorium bez słownika: krótki wywiad z pojęciami-kandydatami wydobytymi z kodu (agregaty, tabele,
+  endpointy), partiami; pełna destylacja: ddd-legacy-modernization.
 
-### Słownik w trakcie projektowania (nie tylko na warsztacie)
-- **Wpis**: pogrubione pojęcie, 1–2 zdania o tym, czym coś **jest** (nie co robi), linia `_Unikaj_: …` z odrzuconymi
-  synonimami. Bądź stanowczy: z kilku słów wybierz jedno. Wpisy grupuj nagłówkami, gdy pojawiają się naturalne grupy.
-- **Tylko pojęcia tego kontekstu** — bez ogólnych pojęć programistycznych (timeout, typ błędu) i bez szczegółów
-  implementacji. Słownik to nie specyfikacja ani brudnopis. Kilka kontekstów → osobny słownik na kontekst + mapa
-  relacji (ddd-context-mapping).
-- **Zapis od razu**, gdy pojęcie się ustali — nie zbiorczo na końcu sesji. Słownik równie często się kurczy, jak rośnie;
-  okresowo usuwaj z niego szczegóły implementacji.
-- Słowo sprzeczne ze słownikiem → nazwij konflikt od razu („słownik mówi, że Anulowanie to X, a ty mówisz o Y — które?”).
-  Słowo mgliste → zaproponuj precyzyjne („konto — Klient czy Użytkownik?”).
-- Relacje sprawdzaj **wymyślonymi scenariuszami brzegowymi**, aż granice pojęć będą ostre.
-- **Konfrontuj z kodem**: gdy ktoś mówi, jak coś działa, sprawdź w kodzie i zacytuj rozbieżność („kod anuluje całe
-  Zamówienie, a mówisz o częściowym anulowaniu — co jest prawdą?”). Rozbieżność kodu i języka blokuje dalsze decyzje.
-- **Słownik pisany przez agenta to propozycja**, nie autorytet: wpisy bez przeglądu człowieka brzmią pewnie, a mogą być
-  fałszywe. Nowe i zmienione wpisy pokazujesz w podsumowaniu sesji do akceptacji (core-project-record: statusy).
-- **Bez plików na zapas** — słownik i ADR powstają, gdy jest pierwsze pojęcie lub pierwsza decyzja do zapisania.
-- **Istniejące repo bez słownika:** nie czekaj, aż słownik urośnie przy okazji (za wolno). Zrób krótkie przesłuchanie:
-  agent wypisuje kandydatów na pojęcia z kodu (nazwy agregatów, tabel, endpointów) i pyta o znaczenie i synonimy, partiami.
-  Pełna destylacja dokumentów i kodu (słownik z „BRAK w kodzie”, tabela rozjazdów model ↔ kod): ddd-legacy-modernization.
-- Agent konfrontuje język z kodem i zapisanymi artefaktami — nie widzi trackera zgłoszeń; jeśli tam są ustalenia
-  językowe, wskaż je w `CLAUDE.md` projektu.
-Wzorowane na skillu `domain-modeling` z [mattpocock/skills](https://github.com/mattpocock/skills) (MIT; opis: [aihero.dev](https://www.aihero.dev/skills-domain-modeling)), opisane własnymi słowami.
+## 7. Zachowanie wobec człowieka
+- 1–3 pytania naraz, konkretne, z przykładem; parafrazuj językiem rozmówcy.
+- Nigdy nie wypełniaj luki zgadywaniem: luka to hot spot z pytaniem i osobą, która zna odpowiedź.
+- Po każdej rundzie zapisz nowe pojęcia, hot spoty i decyzje.
 
-### Symulowany ekspert domeny (model językowy)
-- Bez dostępu do eksperta możesz przepytać model o domenę: kluczowe procesy dające wartość, pojęcia, które
-  programista nazwie inaczej niż branża (np. „powtórka”, a nie „quiz”), algorytmy branżowe z kompromisami.
-- Wynik to **generator hipotez**, nie źródło prawdy. Model jest mocny w szeroko opisanych ogólnikach, a zmyśla przy
-  szczegółach brzmiących precyzyjnie: wzory i stałe, progi, nazwy pól cudzego API, świeże zmiany, domeny regulowane
-  (podatki, prawo, normy).
-- Twierdzenie, na którym oprzesz schemat, nazwę klasy lub regułę, sprawdzasz przed zapisem: (1) dokumentacja
-  źródłowa lub specyfikacja, (2) to samo pytanie do modelu innego dostawcy — rozbieżności to lista do ręcznego
-  sprawdzenia, (3) konfrontacja z PRD i kodem (`plik:linia`).
-- Wpisy ze źródłem „model” trafiają do `glossary.md` ze statusem `propozycja` do akceptacji człowieka; prawdziwy
-  ekspert ma pierwszeństwo, gdy tylko jest dostępny.
+## 8. Model językowy jako zastępczy ekspert
+Gdy eksperta nie ma, można przepytać model — ale jego odpowiedzi to **hipotezy**, nigdy fakty.
+- Dobre użycie: przejście przez procesy dostarczające wartość, znalezienie branżowej nazwy na coś, co programiści nazwali
+  inaczej, zarys typowych algorytmów i kompromisów w dziedzinie.
+- Słabe miejsce: modele płynnie mówią o szeroko opisanych ogólnikach i **zmyślają precyzyjne szczegóły** — wzory, stałe,
+  progi, nazwy pól w API innych systemów, niedawne zmiany i wszystko w dziedzinach regulowanych (podatki, prawo, normy).
+- Zanim twierdzenie ukształtuje schemat, klasę lub regułę: sprawdź dokumentację źródłową lub specyfikację; zapytaj model
+  innego dostawcy i przejrzyj różnice; skonfrontuj z PRD i kodem (plik:linia).
+- Wpisy słownika z takiej sesji mają status `proposed`; otwarte punkty stają się hot spotami. Prawdziwy ekspert ma
+  pierwszeństwo przed modelem.
 
-### Słowa-sygnały — zatrzymaj się i dopytaj
-| Sygnał | Dlaczego podejrzane | Co zapytać |
-|---|---|---|
-| **status** („zmieniono status na…”) | pole statusu często ukrywa kilka różnych cykli życia i kilka zdarzeń biznesowych | „Co się wydarzyło w biznesie, że status się zmienił? Kto o tym decyduje? Co wolno robić w tym stanie, a czego nie?” — każda wartość statusu to potencjalne zdarzenie lub osobne pojęcie |
-| **CRUD**: dodano, zaktualizowano, usunięto, zapisano, edytowano | język bazy danych, nie biznesu | „Po co ktoś to zmienia? Jak to nazywacie?” — „zaktualizowano zamówienie” to np. „Klient zmienił adres dostawy” albo „Zamówienie zostało opłacone” |
-| przetworzono, zsynchronizowano, obsłużono | ukrywa decyzję lub regułę | „Co dokładnie się sprawdza? Co może pójść nie tak?” |
-| dane, rekord, obiekt, informacje, manager | pojęcie bez znaczenia biznesowego | „Jaki to rodzaj informacji? Do czego służy?” |
-| zawsze / nigdy / automatycznie | ukryte wyjątki | „Czy był przypadek, kiedy nie…?” |
-| nazwy ekranów, tabel, systemów | rozwiązanie zamiast problemu | „Co by się działo, gdyby tego systemu nie było?” |
+## 9. Bramki decyzyjne
+Pętla agenta: **zbadaj → zaproponuj z uzasadnieniem → zatrzymaj się i zapytaj.**
+- Pytaj zawsze przy: sprzeczności między źródłami, decyzji wartościującej (priorytet, ryzyko, koszt), słabych dowodach, zmianie kontraktu.
+- Nigdy nie pytaj o sprawy mechaniczne lub stylistyczne ani o to, na co materiały już odpowiadają.
+- Jedna tura to **3–7 pytań**. Każde cytuje dowód (cytat lub plik), daje opcje, wskazuje domyślną i jest oznaczone jako
+  **blokujące** albo **nieblokujące**.
+- Człowiek może odpowiadać skrótem: `q1: b`, `C2: defer`. Słowa sterujące: `skip` (przyjmij wszystkie domyślne), `stop`, `repeat`.
+- Potwierdź każdą odpowiedź jednym zdaniem: „OK — na podstawie X robię Y.” Zapisz decyzje w artefakcie.
+- Najwyżej **10 tur**; po 3 turach bez postępu przyjmij wartości domyślne i zapisz je jako założenia.
+- Subagenci nie pytają człowieka: zwracają swoje pytania prowadzącej personie.
 
-## Praca agenta z użytkownikiem
-- Zadawaj **jedno–trzy pytania naraz**, konkretne, najlepiej z przykładem.
-- Parafrazuj językiem rozmówcy i proś o korektę („Dobrze rozumiem, że…?”).
-- Nigdy nie uzupełniaj luk zmyśleniem — luka to hot spot z pytaniem i adresatem.
-- Po każdej rundzie zapisz: nowe pojęcia, hot spoty, decyzje.
+Przykładowa tura:
+```
+Q1 [blokujące] E14 mówi „rampa rezerwowana na ciężarówkę”, E52 mówi „na dostawę”. Co jest jednostką rezerwacji?
+   a) ciężarówka  b) dostawa (domyślnie)  c) oba, jako dwa pojęcia
+Q2 [nieblokujące] Brak cytatu o opłatach za anulowanie. a) na razie brak (domyślnie)  b) zapytaj Finanse
+```
 
-## Bramki decyzyjne (agent ↔ człowiek)
-Bramka = punkt, w którym agent zatrzymuje się na decyzję człowieka. Pętla: **zbadaj → zaproponuj z uzasadnieniem → stop**.
-- Na turę **3–7 pytań**, każde oparte na dowodzie (cytat/plik), z opcjami, **wartością domyślną** i oznaczeniem „blokuje / nie blokuje”.
-- Człowiek może odpowiedzieć skrótem: `q1: b`, `C2: odrocz`; słowa sterujące: `pomiń` (przyjmij domyślne), `stop`, `powtórz`.
-- Po każdej odpowiedzi jedno zdanie: „OK — na podstawie X robię Y”. Decyzje zapisuj w artefakcie (core-project-record), żeby
-  przerwaną pracę dało się wznowić bez ponownych pytań.
-- Limit 10 tur; po 3 turach bez postępu przyjmij wartości domyślne i zapisz to jako założenie.
-- **Pytaj zawsze:** sprzeczność w źródłach, decyzja wartościująca (priorytet, ryzyko, koszt), słabe dowody, zmiana kontraktu.
-  **Nie pytaj:** o rzeczy mechaniczne, stylistyczne ani o to, na co odpowiedź jest już w materiałach.
-- Podagent nie ma rozmowy z człowiekiem — zamiast pytać, zwraca pytania (hot spoty) personie, która prowadzi rozmowę.
+## 10. Samoocena facylitatora
+Przeprowadź ją po sesji albo co kilka rund. Oceń każdy antywzorzec **zielony / żółty / czerwony** z dowodem (runda, cytat):
+1. **Przedwczesne projektowanie** — rozmowa o tabelach, klasach lub endpointach, zanim przepływ jest zrozumiany.
+2. **Jedna osoba zdominowała** — większość karteczek lub czasu mówienia od jednego uczestnika.
+3. **Ktoś milczał** — uczestnik nic nie wniósł przez kilka rund.
+4. **Brak hot spotów** — mniej niż jeden na dwie rundy: niezgoda jest ukrywana.
+5. **Brak zdarzeń kluczowych** — oś czasu nie ma zdarzeń dzielących ją na fazy.
+6. **Brak chronologii** — karteczki w skupiskach zamiast wzdłuż czasu.
+7. **Mieszanie poziomów** — polecenia i polityki na Big Picture.
+8. **Facylitator pisze za grupę** — karteczki to słowa facylitatora, nie ekspertów.
+9. **Pominięte regulacje** — zgodność, umowy i audyty w ogóle się nie pojawiły.
+10. **Niesprawdzony język** — słowa sygnałowe (sekcja 5) przeszły bez pytania.
 
-## Metaprogramy — soczewka na uczestników
-| Oś | Rozpoznasz po | Jak prowadzić |
-|---|---|---|
-| podobieństwo ↔ różnica | „jak zawsze” / „to zupełnie inne” | podobnym pokaż ciągłość, różnicującym daj szukać wyjątków (hot spoty) |
-| ogół ↔ szczegół | skróty myślowe / długie opowieści z liczbami | ogólnych proś o przykład, szczegółowych — o nazwę etapu |
-| „od” ↔ „do” | mówi o problemach / o celach | nastawionym na problemy zleć oznaczanie ryzyk i hot spotów |
-| wewnętrzna ↔ zewnętrzna rama | „wiem, że…” / „klienci mówią…” | pewnego siebie nie przekonuj autorytetem — zaproś, by sam sprawdził tezę na przykładzie |
+Podsumowanie: 3 najmocniejsze momenty i 3 do poprawy, każdy zapisany jako „Zauważyłem… to prowadzi do… następnym razem
+spróbuj…”. Zapisz jako `docs/project/07-review/<date>-facilitation.md`.
 
-## Samokontrola facylitatora (po sesji lub co kilka rund)
-| # | Anty-wzorzec | Sygnał |
-|---|---|---|
-| 1 | przedwczesne projektowanie | rozmowa o tabelach/API na Big Picture |
-| 2 | jedna osoba zdominowała | ta sama osoba mówi długo, wielokrotnie |
-| 3 | ktoś milczy | brak wkładu przez kilka rund — zaproś wprost |
-| 4 | brak hot spotów | mniej niż jeden na dwie rundy = spory są zamiatane |
-| 5 | brak zdarzeń przełomowych | oś bez struktury |
-| 6 | brak chronologii | kartki bez porządku czasu |
-| 7 | mieszanie poziomów | komendy/polityki na Big Picture |
-| 8 | facylitator pisze za grupę | kartki powstają z jego słów |
-| 9 | pominięte regulacje/compliance | nikt nie zapytał o prawo i umowy |
-| 10 | niesprawdzony język | słowa-sygnały bez dopytania |
-Podsumowanie: po 3 najmocniejsze momenty i 3 do poprawy, w formie „Zauważyłem… to prowadzi do… następnym razem spróbuj…”.
-Zapis: `docs/project/07-review/<data>-facilitation.md`.
+## 11. Czytanie ludzi (opcjonalna soczewka)
+Jedni szukają podobieństw (pokaż ciągłość), inni różnic (niech polują na wyjątki jako hot spoty); jedni mówią ogólnikami
+(zapytaj o przykład), inni szczegółami (zapytaj o nazwę etapu); jedni uciekają od problemów (daj im zadanie ryzyk i hot
+spotów), inni dążą do celów; jedni oceniają własną miarą (niech sprawdzą tezę na przykładzie zamiast się kłócić).
+Traktuj to jako wskazówkę do prowadzenia, nie diagnozę.
+
+## Łączenie z Event Stormingiem
+| Technika | Jak pasuje do osi czasu |
+|---|---|
+| Customer Journey | etapy podróży jako tory nad osią czasu |
+| User Story Mapping | kroki osi czasu stają się kręgosłupem; historie wiszą pod nim |
+| Impact Mapping | cel → aktorzy → wpływy → produkty; sprawdza, czy procesy służą celowi |
+| Service Blueprint | tory frontstage i backstage, systemy wspierające poniżej |
+| C4 | konteksty z sesji stają się kontenerami i komponentami |
+
+## Przykład
+**Sytuacja:** „Ekspert ciągle mówi «zmienił się status» i «zaktualizowano rekord».”
+**Wynik:** potraktuj oba jako słowa sygnałowe. Zapytaj „Co wydarzyło się w biznesie, gdy zmienił się status?” →
+„dyspozytor potwierdził trasę” → zdarzenie *Trasa potwierdzona*. Potem „Jaki to rodzaj potwierdzenia?” → „wstępne, zanim
+kierowca zaakceptuje” → dwa zdarzenia, *Trasa zaproponowana* i *Trasa zaakceptowana*. Wpis słownika (status `proposed`):
+**Trasa** — uporządkowana lista przystanków, które jeden kierowca obsługuje w jednej zmianie. *Unikaj:* kurs, tura.
 
 ## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 4, lekcja 5 (wywiad z ekspertem, „kiedy ekspert zmyśla”) — materiał szkoleniowy
-  (dostęp 2026-10-09); opisane własnymi słowami.
+- E. de Bono, *Six Thinking Hats*, 1985.
+- D. Grove, Clean Language — czyste pytania w opisie P. Tompkins, J. Lawley, *Metaphors in Mind*, 2000.
+- Deep Democracy (metoda Lewis) — niezgoda jako informacja [niezweryfikowane: wydanie].
+- Metaprogramy NLP (sekcja 11) — słabo udokumentowane; tylko jako wskazówka do facylitacji.
+- Praktyka wpisów słownika w duchu skilla `domain-modeling` z mattpocock/skills (MIT).
