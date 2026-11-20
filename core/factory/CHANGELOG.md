@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [21.1.0] — 2026-11-20
+### Added
+- **pack-it:** ddd-archetype-lookup — find archetype candidates in existing code (#357)
+
 ## [21.0.0] — 2026-11-20
 ### Breaking
 - **core:** make the factory mode the default layout (#369)
