@@ -112,6 +112,9 @@ def main() -> int:
               f"PL-11: agenci fabryki we wtyczce, nie w .claude/agents: {agents[:5]} {old_agents[:3]}")
         man = json.loads((p / ".claude" / "factory-manifest.json").read_text(encoding="utf-8"))
         check(man.get("layout") == "plugin", f"PL-12: manifest zapisuje układ: {man.get('layout')}")
+        cat = (p / ".claude" / "catalog.md").read_text(encoding="utf-8") if (p / ".claude" / "catalog.md").is_file() else ""
+        check("`moj-skill`" in cat and "`core-grounding`" in cat and "tf:" in cat,
+              f"PL-15: katalog w układzie wtyczki pokazuje skille fabryki (z przedrostkiem tf: w sesji) i Twoje: {cat[:300]!r}")
         r = install(p)
         check(r.returncode == 0 and not (p / ".claude" / "skills" / "tf" / "SKILL.md").exists()
               and (plug / "skills" / "tf" / "SKILL.md").is_file()
