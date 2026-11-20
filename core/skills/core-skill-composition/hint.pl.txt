@@ -54,7 +54,7 @@ Skill metody mówi *które* z tych pojęć są potrzebne i *dlaczego*; skill ję
    język), zastosuj wiedzę ogólną, ale trzymaj się słownika i zasad skilli metody; zaznacz w odpowiedzi, że dany wymiar nie był
    pokryty skillem.
 6. **Pokaż złożenie.** W raporcie lub odpowiedzi napisz jednym zdaniem, które skille połączyłeś i jak
-   (np. w pack-it: „ddd-archetypes → Availability, fe-architecture → read model w store, fw-angular → signals, lang-typescript → unia stanów”).
+   (np. w pack-it: „ddd-archetypes → blokady zasobu, fe-architecture → read model w store, fw-angular → signals, lang-typescript → unia stanów”).
 
 ## Skille spoza fabryki
 Oprócz skilli fabryki (prefiksy wymiarów) Claude Code pokazuje Ci listę **wszystkich dostępnych skilli** z opisami: projektu
@@ -85,7 +85,7 @@ Przykłady zakładają nakładkę pack-it; z innymi nakładkami wymiary są te s
 | Analiza kodu Angulara pod kątem DDD i archetypów | metoda → warstwa → framework → język; w pack-it: ddd-archetypes, ddd-tactical-design → fe-architecture → fw-angular → lang-typescript |
 | Projekt systemu (bez technologii) | metoda → warstwa (kontrakty); w pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-archetypes → be-api-design |
 | Implementacja agregatu w Javie | metoda → warstwa → język; w pack-it: ddd-tactical-design, ddd-archetypes → be-database → lang-java |
-| Formularz produktu z cechami | metoda → warstwa → framework → język; w pack-it: ddd-archetypes (Product) → fe-architecture → fw-angular → lang-typescript |
+| Formularz produktu z cechami | metoda → warstwa → framework → język; w pack-it: ddd-archetypes (definicje produktu) → fe-architecture → fw-angular → lang-typescript |
 | Nowy moduł zgodnie z ustaleniami firmy | metoda → `architecture` (skill projektu) → narzędzia → `documentation` (skill osobisty) do ADR; w pack-it: ddd-strategic-analysis |
 
 ## Anty-wzorce

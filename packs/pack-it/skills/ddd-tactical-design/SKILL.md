@@ -49,7 +49,7 @@ specific to one use case → into the service.
 3. The smallest boundary that protects the invariant. A large aggregate = conflicts and loading unnecessary data.
 4. Rules between aggregates → eventual consistency (events, policies), unless the business really requires immediate consistency.
 5. **A dynamic aggregate**: when the boundary depends on the request (e.g. lock a resource in a time range → load only the time
-   segments the request concerns), assemble the aggregate from smaller units for the needs of the operation (ddd-archetypes → availability).
+   segments the request concerns), assemble the aggregate from smaller units for the needs of the operation (ddd-archetypes → resource holds).
 6. Optimistic versioning on the aggregate root.
 7. **Who publishes events?** (a) the aggregate returns an event or a rejection from the business method, the application service publishes it —
    explicit, easy to test; (b) the aggregate collects events, the service "pulls" them after saving. Both are OK — choose one in the project.

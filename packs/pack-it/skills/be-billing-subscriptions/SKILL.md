@@ -20,7 +20,7 @@ The specific API, webhooks, keys and versions at the Stripe provider: tool-strip
   a price list change = a new price, existing customers stay on the old one until a business decision says otherwise.
 - A billing period with an anchor (the billing day), a currency assigned to the customer, the period's time zone explicit (eng-i18n).
 - You compute entitlements (what the customer can do) from the subscription state in one place, not from a plan scattered across the code.
-- The domain model of prices, discounts and balances — the Pricing and Accounting archetypes (ddd-archetypes); here only the subscription mechanics.
+- The domain model of prices, discounts and balances — the price-calculation and value-ledger archetypes (ddd-archetypes); here only the subscription mechanics.
 
 ## 2. Subscription states and access
 Typical states (names as at the provider, e.g. Stripe): trialing, active, past due (the first failed payment),

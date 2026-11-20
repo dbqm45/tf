@@ -41,7 +41,7 @@ specyficzne dla jednego przypadku → do serwisu.
 3. Najmniejsza granica, która chroni niezmiennik. Duży agregat = konflikty i ładowanie zbędnych danych.
 4. Reguły między agregatami → spójność ostateczna (zdarzenia, polityki), chyba że biznes naprawdę wymaga natychmiastowej.
 5. **Agregat dynamiczny**: gdy granica zależy od żądania (np. zablokuj zasób w przedziale czasu → wczytaj tylko segmenty
-   czasu, których dotyczy żądanie), składaj agregat z mniejszych jednostek na potrzeby operacji (ddd-archetypes → dostępność).
+   czasu, których dotyczy żądanie), składaj agregat z mniejszych jednostek na potrzeby operacji (ddd-archetypes → blokady zasobu).
 6. Wersjonowanie optymistyczne na korzeniu agregatu.
 7. **Kto publikuje zdarzenia?** (a) agregat zwraca zdarzenie lub odrzucenie z metody biznesowej, serwis aplikacyjny je publikuje —
    jawne, łatwe w testach; (b) agregat gromadzi zdarzenia, serwis je „wyciąga” po zapisie. Oba OK — wybierz jeden w projekcie.

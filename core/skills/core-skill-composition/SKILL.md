@@ -68,7 +68,7 @@ skill says *how* to write them.
    (e.g. a new language), apply general knowledge, but stick to the vocabulary and the method skills' rules; state in
    the answer that the dimension was not covered by a skill.
 6. **Show the composition.** In the report or answer, say in one sentence which skills you combined and how (e.g. in
-   pack-it: "ddd-archetypes → Availability, fe-architecture → read model in the store, fw-angular → signals, lang-typescript → state union").
+   pack-it: "ddd-archetypes → resource holds, fe-architecture → read model in the store, fw-angular → signals, lang-typescript → state union").
 
 ## Skills from outside the factory
 Besides the factory's skills (dimension prefixes) Claude Code shows you a list of **all available skills** with
@@ -106,7 +106,7 @@ The examples assume the pack-it pack; with other packs the dimensions are the sa
 | Analysing Angular code for DDD and archetypes | method → layer → framework → language; in pack-it: ddd-archetypes, ddd-tactical-design → fe-architecture → fw-angular → lang-typescript |
 | System design (no technology) | method → layer (contracts); in pack-it: ddd-strategic-analysis, ddd-context-mapping, ddd-archetypes → be-api-design |
 | Implementing an aggregate in Java | method → layer → language; in pack-it: ddd-tactical-design, ddd-archetypes → be-database → lang-java |
-| A product form with features | method → layer → framework → language; in pack-it: ddd-archetypes (Product) → fe-architecture → fw-angular → lang-typescript |
+| A product form with features | method → layer → framework → language; in pack-it: ddd-archetypes (product definitions) → fe-architecture → fw-angular → lang-typescript |
 | A new module following the company's decisions | method → `architecture` (project skill) → tools → `documentation` (personal skill) for the ADR; in pack-it: ddd-strategic-analysis |
 
 ## Anti-patterns
