@@ -30,7 +30,12 @@ list i słów normatywnych), reguła 70% kodu po `since`, strony podrzędne Conf
 skonsolidowanych skilli (wymaga pewności, że ekstrakcja nie gubi treści). Pomiar A4 — na koniec (decyzja człowieka
 2026-11-20). Reszta A5 zrobiona (`dna` 0.6.0): wzorce na rodzaj zmiany z testem, importami i użyciami, aliasy
 `tsconfig`; sprawdzone na `devias-io/material-kit-react`. Z A5 zostały konwencje spoza UI (nazwy, obsługa błędów,
-logowanie — port `standards_scan.py`). Następny: A9 (`refresh` przyrostowy przy starcie sesji).
+logowanie — port `standards_scan.py`). A9 zrobione (`dna` 0.7.0 i rdzeń): `refresh` z odciskiem wejść (bez zmian — nic nie robi), dokumentacja z
+pamięci podręcznej, hook `addons_refresh.py` przy starcie sesji uruchamia `tf addon refresh` w tle (log w
+`.tf/logs/addons-refresh.log`, wyłącznik `TF_ADDON_REFRESH=0`). Odświeżanie jest pełne, nie per obszar (learn trwa
+ok. 2,5 s na projekcie z ~70 plikami UI); przyrost per obszar — gdy pomiar pokaże potrzebę. Z A0 zostało: opcja
+dodatku w kreatorze `tf install`. Następny: A10 (pętla zwrotna z PR — wymaga dostępu do platformy repozytorium),
+konwencje spoza UI (reszta A5), A11 (backend), na koniec A4 (pomiar).
 
 ## 1. Cel
 

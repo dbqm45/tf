@@ -10,6 +10,7 @@
     "generator": {"type": "string", "pattern": "^dna \\d+\\.\\d+\\.\\d+"},
     "generated": {"type": "string", "format": "date"},
     "commit": {"type": ["string", "null"]},
+    "fingerprint": {"type": "string", "description": "inputs of learn; refresh does nothing while it is unchanged"},
     "items": {
       "type": "array",
       "items": {

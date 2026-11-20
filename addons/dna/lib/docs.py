@@ -282,6 +282,13 @@ def build(root: Path, items: list[dict], registry: Path, cache: Path, online: bo
     opts["hosts"] = _hosts(sources, opts)
     facts, coverage = [], {"read": [], "skipped": []}
     for t in targets(items):
+        d = _cache_dir(cache, t["tech"], t["version"])
+        cached = None if opts.get("refetch") else _cached(d, t)
+        if cached:   # same technology and version indexed before: no fetch (refresh, re-learn)
+            files, chunks, fetched = cached
+            facts.append(_fact(t, files, chunks, fetched))
+            coverage["read"] += sorted({f["source"].split("#")[0] for f in files})
+            continue
         files, skipped = [], []
         if t["ecosystem"] == "npm":
             files = _local_npm(root, t["package"], t["version"], t["package_dir"])
@@ -318,7 +325,6 @@ def build(root: Path, items: list[dict], registry: Path, cache: Path, online: bo
             for title, body in chunk(f["kind"], f["text"]):
                 chunks.append({"source": f["source"], "kind": f["kind"], "match": f["match"], "title": title,
                                "text": body})
-        d = _cache_dir(cache, t["tech"], t["version"])
         d.mkdir(parents=True, exist_ok=True)
         with (d / "chunks.jsonl").open("w", encoding="utf-8") as fh:
             for c in chunks:
@@ -328,27 +334,42 @@ def build(root: Path, items: list[dict], registry: Path, cache: Path, online: bo
                                  "sha256": hashlib.sha256(f["text"].encode()).hexdigest()} for f in files]}
         (d / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         coverage["read"] += sorted({f["source"].split("#")[0] for f in files})
-        titles = []
-        for c in chunks:
-            parts = c["title"].split(" › ")
-            top = parts[1] if len(parts) > 1 else parts[0]   # README-style docs: one H1, topics under H2
-            if c["kind"] != "types" and top not in titles and top != "(start)":
-                titles.append(top)
-        remote = sorted({f["source"].split("#")[0] for f in files if f["source"].startswith("https://")})
-        facts.append({
-            "id": f"F-DOCS-{t['tech']}-{re.sub(r'[^A-Za-z0-9.]+', '.', t['version'])}",
-            "kind": "fact",
-            "title": f"{t['name']} {t['version']} documentation: {len(chunks)} chunks",
-            "scope": {"paths": ["**"]},
-            "status": "auto-accepted",
-            "acceptance": "exact" if all(f["match"] == "exact" for f in files) else "mixed",
-            "data": {"topic": "docs", "tech": t["tech"], "name": t["name"], "version": t["version"],
-                     "chunks": len(chunks), "titles": titles[:12],
-                     "sources": [{"source": f["source"].split("#")[0], "kind": f["kind"], "match": f["match"]}
-                                 for f in files][:20]},
-            "evidence": t["evidence"] + [f"{u} (fetched {today})" for u in remote[:5]],
-        })
+        facts.append(_fact(t, files, chunks, today))
     return facts, coverage
+
+
+def _cached(d: Path, t: dict) -> tuple[list[dict], list[dict], str] | None:
+    try:
+        manifest = json.loads((d / "manifest.json").read_text(encoding="utf-8"))
+        chunks = [json.loads(ln) for ln in (d / "chunks.jsonl").read_text(encoding="utf-8").splitlines() if ln.strip()]
+    except (OSError, ValueError):
+        return None
+    if manifest.get("tech") != t["tech"] or manifest.get("version") != t["version"] or not chunks:
+        return None
+    return manifest.get("sources") or [], chunks, manifest.get("fetched") or ""
+
+
+def _fact(t: dict, files: list[dict], chunks: list[dict], fetched: str) -> dict:
+    titles = []
+    for c in chunks:
+        parts = c["title"].split(" › ")
+        top = parts[1] if len(parts) > 1 else parts[0]   # README-style docs: one H1, topics under H2
+        if c["kind"] != "types" and top not in titles and top != "(start)":
+            titles.append(top)
+    remote = sorted({f["source"].split("#")[0] for f in files if f["source"].startswith("https://")})
+    return {
+        "id": f"F-DOCS-{t['tech']}-{re.sub(r'[^A-Za-z0-9.]+', '.', t['version'])}",
+        "kind": "fact",
+        "title": f"{t['name']} {t['version']} documentation: {len(chunks)} chunks",
+        "scope": {"paths": ["**"]},
+        "status": "auto-accepted",
+        "acceptance": "exact" if all(f["match"] == "exact" for f in files) else "mixed",
+        "data": {"topic": "docs", "tech": t["tech"], "name": t["name"], "version": t["version"],
+                 "chunks": len(chunks), "titles": titles[:12],
+                 "sources": [{"source": f["source"].split("#")[0], "kind": f["kind"], "match": f["match"]}
+                             for f in files][:20]},
+        "evidence": t["evidence"] + [f"{u} (fetched {fetched})" for u in remote[:5]],
+    }
 
 
 def tokens(text: str) -> list[str]:

@@ -2,6 +2,7 @@
 """dna — project knowledge for writing code like the team (factory add-on, contract 1).
 
   python3 dna.py learn  [--root <repo>] [--out <dir>]   # build out/ from the repository
+  python3 dna.py refresh [--quiet]                      # learn again only when the inputs changed (fingerprint)
   python3 dna.py verify [--root <repo>] [--out <dir>]   # check out/ against the contract
   python3 dna.py status [--root <repo>] [--out <dir>]   # what out/ holds, when it was built
   python3 dna.py docs query <tech> "<topic>" [--version <v>] [--max-chars N] [--json]
@@ -98,6 +99,7 @@ def build(root: Path, today: str | None = None, online: bool = False, cache: Pat
         "generator": f"dna {_version()}",
         "generated": today,
         "commit": _commit(root),
+        "fingerprint": fingerprint(root),
         "items": items,
         "coverage": coverage,
         "layers": {"stack": True, "decisions": bool(decisions), "ui": bool(blocks), "exemplars": bool(examples), "docs": bool(facts)},
@@ -143,6 +145,48 @@ def cmd_verify(root: Path, out: Path) -> int:
         return 1
     print(f"✓ dna verify: {out} matches contract 1")
     return 0
+
+
+def fingerprint(root: Path) -> str:
+    """What `learn` depends on: HEAD, the changed and untracked files (path, size, mtime), the standards skills,
+    dna.yaml and the add-on version. Same fingerprint → `refresh` does nothing."""
+    import hashlib
+    h = hashlib.sha256(_version().encode())
+    h.update((_commit(root) or "").encode())
+    try:
+        r = subprocess.run(["git", "status", "--porcelain", "--untracked-files=all"], cwd=root, capture_output=True,
+                           text=True, encoding="utf-8", errors="replace", timeout=20)
+        changed = [ln[3:].strip().strip('"') for ln in r.stdout.splitlines()] if r.returncode == 0 else []
+    except (OSError, subprocess.TimeoutExpired):
+        changed = []
+    extra = [p for p in (root / ".claude" / "skills").glob("*standard*/**/*") if p.is_file()] \
+        if (root / ".claude" / "skills").is_dir() else []
+    own = (".tf/", ".claude/rules/addon-", ".claude/settings.local.json")   # written by the factory and add-ons
+    for p in sorted({*(root / c for c in changed if not c.startswith(own)), *extra, ADDON / "dna.yaml"}):
+        try:
+            if p.name in ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md"):   # a source, but the factory writes blocks in it
+                text = sources.FACTORY_BLOCK.sub("", p.read_text(encoding="utf-8", errors="replace"))
+                if not text.strip():
+                    continue   # only the factory's block: as if the file were absent
+                h.update(f"{p.name}|{hashlib.sha256(text.encode()).hexdigest()}".encode())
+                continue
+            st = p.stat()
+            h.update(f"{p.relative_to(root) if root in p.parents else p}|{st.st_size}|{st.st_mtime_ns}".encode())
+        except OSError:
+            h.update(str(p).encode())
+    return h.hexdigest()[:16]
+
+
+def cmd_refresh(root: Path, out: Path, online: bool, cache: Path, quiet: bool) -> int:
+    try:
+        old = json.loads((out / "knowledge.json").read_text(encoding="utf-8")).get("fingerprint")
+    except (OSError, ValueError):
+        old = None
+    if old and old == fingerprint(root):
+        if not quiet:
+            print("dna refresh: up to date")
+        return 0
+    return cmd_learn(root, out, online=online, cache=cache)
 
 
 def cmd_status(root: Path, out: Path) -> int:
@@ -218,7 +262,8 @@ def cmd_check(root: Path, out: Path, base: str, as_json: bool) -> int:
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="dna.py", description=__doc__.split("\n")[1])
-    ap.add_argument("command", choices=["learn", "verify", "status", "docs", "check"])
+    ap.add_argument("command", choices=["learn", "refresh", "verify", "status", "docs", "check"])
+    ap.add_argument("--quiet", action="store_true")
     ap.add_argument("args", nargs="*")
     ap.add_argument("--root", type=Path)
     ap.add_argument("--out", type=Path, default=ADDON / "out")
@@ -238,9 +283,11 @@ def main(argv: list[str]) -> int:
         return 2
     if args.command == "check":
         return cmd_check(root, out, args.base, args.json)
-    if args.command == "learn":   # DNA_OFFLINE=1: no network (tests, air-gapped machines)
-        offline = args.offline or os.environ.get("DNA_OFFLINE") == "1"
+    offline = args.offline or os.environ.get("DNA_OFFLINE") == "1"   # DNA_OFFLINE=1: tests, air-gapped machines
+    if args.command == "learn":
         return cmd_learn(root, out, online=not offline, cache=cache)
+    if args.command == "refresh":
+        return cmd_refresh(root, out, not offline, cache, args.quiet)
     return {"verify": cmd_verify, "status": cmd_status}[args.command](root, out)
 
 

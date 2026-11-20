@@ -11,6 +11,7 @@ Implementation plan: `docs/plans/2026-11-19-addons-dna-plan-wdrozenia.md` in the
 
 ```bash
 python3 dna.py learn --root <repository>     # build out/
+python3 dna.py refresh --root <repository>   # learn again only when the inputs changed
 python3 dna.py verify --root <repository>    # check out/ against the contract
 python3 dna.py status --root <repository>    # what out/ holds
 python3 dna.py docs query react "useTransition"   # official docs of the project's version (local index)
@@ -23,9 +24,10 @@ version; the question asked in `docs query` never leaves the machine. Confluence
 skills are read through the REST API with `CONFLUENCE_API_TOKEN` (or `JIRA_API_TOKEN`) and an e-mail variable;
 the credentials are sent only to the Atlassian site (`ATLASSIAN_SITE`, else `*.atlassian.net`).
 
-In a project the add-on sits in `.tf/addons/dna/`; `--root` defaults to the git top level of the current directory.
+In a project the add-on sits in `.tf/addons/dna/`; the factory runs `refresh` in the background at the start of
+every session (hook `addons_refresh.py`); `--root` defaults to the git top level of the current directory.
 
-## What 0.6.0 knows
+## What 0.7.0 knows
 
 | Area | Source | Version from |
 |---|---|---|

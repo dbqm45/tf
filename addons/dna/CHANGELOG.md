@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0 — 2026-11-20
+- `dna.py refresh` (`provides.refresh`): learns again only when its inputs changed — a fingerprint of HEAD, the
+  changed and untracked files, the standards skills, dna.yaml and the add-on version, stored in `knowledge.json`;
+  the factory's blocks in CLAUDE.md / CLAUDE.local.md and the files the factory writes do not count.
+- Documentation already indexed for a technology and version is reused from `cache/` (no fetch on re-learn).
+
 ## 0.6.0 — 2026-11-20
 - Exemplar files per kind of change (`lib/exemplars.py`): page, component, form, hook, store, API endpoint,
   service, test, migration; chosen by script (recent by git, typical size, not legacy/generated, no deprecated
