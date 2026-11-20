@@ -96,16 +96,16 @@
   "offline": "2026-11-18"
  },
  "be-billing-subscriptions": {
-  "fingerprint": "86082f01b73429bf",
-  "offline": "2026-11-18"
+  "fingerprint": "c43980071c3a318d",
+  "offline": "2026-11-20"
  },
  "be-business-app-patterns": {
   "fingerprint": "7f763f2f2b75d5d5",
   "offline": "2026-11-18"
  },
  "be-database": {
-  "fingerprint": "b002d7e4121495a1",
-  "offline": "2026-11-18"
+  "fingerprint": "4fc2246a22e3d53c",
+  "offline": "2026-11-20"
  },
  "be-messaging-outbox": {
   "fingerprint": "9a2d86c3b58dc460",
@@ -136,8 +136,8 @@
   "offline": "2026-11-18"
  },
  "ddd-deep-modeling": {
-  "fingerprint": "0dc63ed930a8fb1f",
-  "offline": "2026-11-18"
+  "fingerprint": "787bea05ae4a62eb",
+  "offline": "2026-11-20"
  },
  "ddd-discovery-intake": {
   "fingerprint": "b15ae308dad38ba7",
@@ -168,8 +168,8 @@
   "offline": "2026-11-18"
  },
  "ddd-tactical-design": {
-  "fingerprint": "5c1979363dc97cbc",
-  "offline": "2026-11-18"
+  "fingerprint": "62ec63287b70c653",
+  "offline": "2026-11-20"
  },
  "eng-algorithms-data-structures": {
   "fingerprint": "ba4b2c90c518577d",
@@ -200,8 +200,8 @@
   "offline": "2026-11-18"
  },
  "eng-design-patterns": {
-  "fingerprint": "d15ffabf0eeea041",
-  "offline": "2026-11-18"
+  "fingerprint": "a17e3b549e951f82",
+  "offline": "2026-11-20"
  },
  "eng-design-principles": {
   "fingerprint": "ec185107ffdceb91",
