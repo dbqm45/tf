@@ -4,7 +4,7 @@ description: Use when the human commissions a task in code (/tf, an issue number
 metadata:
   review: "2027-04-21"
   catalog: "Use when the human commissions a task to be done in code — with the `/tf …` command (also `claude --agent tf`), the number or address of an issue from a tracker, a pdi slice key (TSK-n), a pasted story or a plain sentence (\"implement this story\", \"do EBO-1236\"): recognising the input and the source, criteria, a plan of vertical slices, the slice loop (a red test → code → verification with evidence → a scope review), STOP, one PR, a cost report. Not for questions about the code (an answer without the loop), a small fix in 1–2 files (right away, one commit), reviewing someone else's pull request (core-git-workflow), delegating unsupervised work in general (core-async-delegation) or the phases of a whole project (core-delivery-lifecycle)."
-  keywords: "zrealizuj zadanie, zaimplementuj historyjkę, zrealizuj historyjkę, weź zadanie z trackera, następne zadanie, numer zgłoszenia, zgłoszenie z Jiry, zgłoszenie z Linear, ticket do zrobienia, klucz cięcia, /tf, pętla fabryki, od zadania do PR, wznów zadanie, dokończ zadanie, dodaj funkcję, do the task, implement the story, take a task from the tracker, next task, issue number, an issue from Jira, ticket to do, slice key, the factory loop, from a task to a PR, resume the task, finish the task, add a feature, historyjka backendu, kontroler i serwis, endpoint zwraca pole, backend story"
+  keywords: "zrealizuj zadanie, zaimplementuj historyjkę, zrealizuj historyjkę, weź zadanie z trackera, następne zadanie, numer zgłoszenia, zgłoszenie z Jiry, zgłoszenie z Linear, ticket do zrobienia, klucz cięcia, /tf, pętla fabryki, od zadania do PR, wznów zadanie, dokończ zadanie, dodaj funkcję, do the task, implement the story, take a task from the tracker, next task, issue number, an issue from Jira, ticket to do, slice key, the factory loop, from a task to a PR, resume the task, finish the task, add a feature, historyjka backendu, kontroler i serwis, endpoint zwraca pole, backend story, the screen looks right"
 argument-hint: "[issue number | address | TSK-n [--change CHG-n] | file | text] [--auto] [--budget USD] [--visual|--no-visual]"
 ---
 
@@ -145,7 +145,7 @@ the start of the loop with the next one (at most two; the script will refuse a t
 |---|---|---|
 | facts about the repository | `scout` | fast |
 | versions, external documentation | `researcher` | fast |
-| plan, test, code | `tf` (the main session) | std |
+| plan, test, code | `tf` | std |
 | a mechanical change with a specification | `quick-fixer` | fast |
 | the scope review of a slice | `scope-reviewer` | std |
 | a decision that is hard to reverse | `architect` (analysis only) | deep |
