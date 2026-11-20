@@ -58,6 +58,8 @@ LINT = SKILLS / "txt-polish-correctness" / "scripts" / "polish_lint.py"   # pack
 GROUND = SKILLS / "core-grounding" / "scripts" / "grounding_check.py"
 
 
+SKELETON_TODO = re.compile(r'"TODO(?:[:"]|-problem|-neighbor)')
+
 def load_module(path: Path, name: str):
     spec = importlib.util.spec_from_file_location(name, path)
     mod = importlib.util.module_from_spec(spec)
@@ -117,7 +119,7 @@ def check_scenarios(name: str) -> tuple[list[str], list[str], dict]:
         errs.append("no no-trigger scenario (a neighboring skill's question — it guards the boundaries)")
     if any(n.get("neighbor") == name for n in no):
         errs.append("no-trigger names the same skill as its neighbor")
-    if "TODO" in path.read_text(encoding="utf-8"):
+    if SKELETON_TODO.search(path.read_text(encoding="utf-8")):   # the new-skill placeholders, not a prompt about TODO comments
         errs.append("the scenario file contains TODO — fill in the skeleton")
     warns = []
     if trig and all(len(s.get("checks", {}).get("all") or []) < 2 for s in trig):

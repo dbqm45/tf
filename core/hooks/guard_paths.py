@@ -7,6 +7,10 @@ It also protects the task "oracle" (docs/project/changes/<KEY>/): a write with t
 `spec.md` from the implementation stage on, a task file approved by a human, a frozen file (`tf task freeze`,
 e.g. an acceptance test) and files written only by a script (task.json, INDEX.md, evidence/). Approval or
 freezing is lifted by `tf task reopen <KEY> <file> --by human:<id> --reason "…"`. A closed task protects nothing.
+
+It keeps agents out of the sweep archive (docs/project/archive/sweep/, the core-sweep skill): notes found no longer true.
+Read and Edit/Write inside it are denied, and Grep/Glob only when their path or pattern points into it — a repo-wide search
+is not blocked (the `.ignore` file in the archive keeps it out of ripgrep results). TF_ARCHIVE_READ=1 lifts the block.
 """
 from __future__ import annotations
 
@@ -46,6 +50,9 @@ CONTEXT_ANY = re.compile(r"(^|/)node_modules(/|$)")
 CONTEXT_ROOT = re.compile(r"^(dist|build|coverage)(/|$)")
 LOCKFILES = re.compile(r"(^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$")
 CONTEXT_TOOLS = ("Read", "Grep", "Glob")
+SWEEP_ARCHIVE = re.compile(r"^(\./)?docs/project/archive/sweep(/|$)")
+GLOB_INTO_ARCHIVE = re.compile(r"^(\*\*/)+(docs/project/)?archive/sweep(/|$)")
+ARCHIVE_MSG = "archived — not current; read it only when the human asks; set TF_ARCHIVE_READ=1"
 
 
 def project_relative(norm: str, root: str) -> str | None:
@@ -143,6 +150,10 @@ def main() -> None:
             why = oracle_reason(rel, root or ".") if rel is not None else None
             if why:
                 decide("ask", why)
+        if os.environ.get("TF_ARCHIVE_READ") != "1" and tool in ("Read", "Edit", "Write", "NotebookEdit", "Grep", "Glob"):
+            rel = project_relative(norm, data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", ""))
+            if (rel is not None and SWEEP_ARCHIVE.search(rel)) or (p == pattern and GLOB_INTO_ARCHIVE.search(norm)):
+                decide("deny", f"{p}: {ARCHIVE_MSG}.")
         if tool in CONTEXT_TOOLS:
             rel = project_relative(norm, data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", ""))
             if (CONTEXT_ANY.search(norm) or (rel is not None and CONTEXT_ROOT.search(rel))

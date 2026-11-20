@@ -48,8 +48,8 @@
   "offline": "2026-11-18"
  },
  "core-problem-routing": {
-  "fingerprint": "c6193650d5c8aca4",
-  "offline": "2026-11-18"
+  "fingerprint": "e48559a9071034dd",
+  "offline": "2026-11-20"
  },
  "core-project-record": {
   "fingerprint": "5ea0ea047ca72b9e",
@@ -74,6 +74,10 @@
  "core-stack-sync": {
   "fingerprint": "3c31817dd48426ef",
   "offline": "2026-11-18"
+ },
+ "core-sweep": {
+  "fingerprint": "6fdf2b6e7d022ede",
+  "offline": "2026-11-20"
  },
  "core-teaching-workspace": {
   "fingerprint": "b76061bf337e735f",
