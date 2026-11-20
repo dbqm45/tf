@@ -15,7 +15,7 @@ KINDS = {"fact", "block", "decision", "convention", "exemplar"}
 STATUSES = {"candidate", "auto-accepted", "accepted", "abandoned", "unknown"}
 ID = re.compile(r"^[A-Z]+(-[A-Za-z0-9.]+)+$")
 DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-URL_EVIDENCE = re.compile(r"^https://\S+ \(fetched \d{4}-\d{2}-\d{2}\)$")
+URL_EVIDENCE = re.compile(r"^(https|file)://\S+ \(fetched \d{4}-\d{2}-\d{2}\)$")   # file://: a local git source
 PATH_EVIDENCE = re.compile(r"^(?P<path>[^:]+):(?P<line>\d+)$")
 INDEX_MAX_LINES = 15
 DOCS_INDEX_MAX_BYTES = 8 * 1024
@@ -66,7 +66,7 @@ def check_knowledge(k: dict, root: Path) -> list[str]:
 
 
 def _check_evidence(ev: str, root: Path, where: str, cache: dict) -> list[str]:
-    if ev.startswith("https://"):
+    if ev.startswith(("https://", "file://")):
         return [] if URL_EVIDENCE.match(ev) else [f"{where}: URL evidence needs '(fetched YYYY-MM-DD)': {ev}"]
     m = PATH_EVIDENCE.match(ev)
     if not m:

@@ -8,6 +8,8 @@
   python3 dna.py docs query <tech> "<topic>" [--version <v>] [--max-chars N] [--json]
                                                         # official docs of the project's version (local index)
   python3 dna.py check [--base <ref>] [--json]          # the change against the guidelines; exit 1 = blocking
+  python3 dna.py standards add <git URL> [--ref <tag>] [--dir <skills dir>] [--scope fe|be|mutual] | list | remove
+                                                        # standards skills from a repository (cloned in cache/)
 
 --root: the repository to learn (default: the git top level of the current directory).
 --out: the output directory (default: out/ next to this file). --cache: fetched sources (default: cache/ here).
@@ -24,6 +26,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -47,6 +50,19 @@ except ImportError:  # the factory ships PyYAML in .tf/factory/_vendor; outside 
     sys.exit(2)
 
 from lib import check, code, decide, detect, docs, emit, exemplars, sources, verify  # noqa: E402
+
+
+def config_path() -> Path:
+    """dna.yaml next to this file; DNA_CONFIG points elsewhere (tests, a shared configuration)."""
+    return Path(os.environ.get("DNA_CONFIG") or ADDON / "dna.yaml")
+
+
+def load_config() -> dict:
+    p = config_path()
+    try:
+        return (yaml.safe_load(p.read_text(encoding="utf-8")) or {}) if p.is_file() else {}
+    except (OSError, yaml.YAMLError):
+        return {}
 
 
 def _version() -> str:
@@ -75,10 +91,8 @@ def build(root: Path, today: str | None = None, online: bool = False, cache: Pat
     today = today or dt.date.today().isoformat()
     found = detect.detect(root, ADDON / "registry")
     items, coverage = found["items"], found["coverage"]
-    config = {}
-    if (ADDON / "dna.yaml").is_file():
-        config = yaml.safe_load((ADDON / "dna.yaml").read_text(encoding="utf-8")) or {}
-    found, cov = sources.collect(root, config, online, today, docs_opts)
+    config = load_config()
+    found, cov = sources.collect(root, config, online, today, {**(docs_opts or {}), "cache": cache or ADDON / "cache"})
     decisions = decide.decide(found)
     items += decisions
     coverage["read"] += cov["read"]
@@ -162,7 +176,17 @@ def fingerprint(root: Path) -> str:
     extra = [p for p in (root / ".claude" / "skills").glob("*standard*/**/*") if p.is_file()] \
         if (root / ".claude" / "skills").is_dir() else []
     own = (".tf/", ".claude/rules/addon-", ".claude/settings.local.json")   # written by the factory and add-ons
-    for p in sorted({*(root / c for c in changed if not c.startswith(own)), *extra, ADDON / "dna.yaml"}):
+    cfg = load_config()   # standards repositories: their current commit (a cheap ls-remote; offline: ignored)
+    if os.environ.get("DNA_OFFLINE") != "1":
+        for s in cfg.get("standards") or []:
+            if s.get("git"):
+                try:
+                    r = subprocess.run(["git", "ls-remote", s["git"], s.get("ref") or "HEAD"], capture_output=True,
+                                       text=True, timeout=15, env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
+                    h.update(r.stdout.split("\t")[0].encode())
+                except (OSError, subprocess.TimeoutExpired):
+                    pass
+    for p in sorted({*(root / c for c in changed if not c.startswith(own)), *extra, config_path()}):
         try:
             if p.name in ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md"):   # a source, but the factory writes blocks in it
                 text = sources.FACTORY_BLOCK.sub("", p.read_text(encoding="utf-8", errors="replace"))
@@ -187,6 +211,37 @@ def cmd_refresh(root: Path, out: Path, online: bool, cache: Path, quiet: bool) -
             print("dna refresh: up to date")
         return 0
     return cmd_learn(root, out, online=online, cache=cache)
+
+
+def cmd_standards(args: list[str], ref: str | None, sub_dir: str | None, scope: str | None) -> int:
+    """dna.yaml `standards`: add a repository with standards skills by URL, or list what is configured."""
+    cfg_path = config_path()
+    cfg = load_config()
+    entries = cfg.setdefault("standards", [])
+    if args[:1] == ["list"] or not args:
+        for e in entries:
+            print(f"- {e.get('git') or e.get('path')}" + (f" @{e['ref']}" if e.get("ref") else "")
+                  + (f" dir={e['dir']}" if e.get("dir") else "") + (f" scope={e['scope']}" if e.get("scope") else ""))
+        if not entries:
+            print("dna: no standards configured — skills named *standards* in .claude/skills/ are used")
+        return 0
+    if args[0] == "add" and len(args) == 2:
+        src = args[1]
+        entry = {"git": src} if re.match(r"^(https://|git@|ssh://|file://)", src) else {"path": src}
+        entry.update({k: v for k, v in (("ref", ref), ("dir", sub_dir), ("scope", scope)) if v})
+        entries[:] = [e for e in entries if (e.get("git"), e.get("path"), e.get("dir")) !=
+                      (entry.get("git"), entry.get("path"), entry.get("dir"))] + [entry]
+        cfg_path.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+        print(f"✓ dna: standards source added ({src}) in {cfg_path.name} — run: tf learn")
+        return 0
+    if args[0] == "remove" and len(args) == 2:
+        entries[:] = [e for e in entries if args[1] not in (e.get("git"), e.get("path"))]
+        cfg_path.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+        print(f"✓ dna: standards source removed ({args[1]})")
+        return 0
+    print("✗ Usage: dna.py standards add <git URL | path> [--ref <branch|tag>] [--dir <path in repo>] "
+          "[--scope fe|be|mutual] | list | remove <git URL | path>", file=sys.stderr)
+    return 2
 
 
 def cmd_status(root: Path, out: Path) -> int:
@@ -262,7 +317,10 @@ def cmd_check(root: Path, out: Path, base: str, as_json: bool) -> int:
 
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="dna.py", description=__doc__.split("\n")[1])
-    ap.add_argument("command", choices=["learn", "refresh", "verify", "status", "docs", "check"])
+    ap.add_argument("command", choices=["learn", "refresh", "verify", "status", "docs", "check", "standards"])
+    ap.add_argument("--ref")
+    ap.add_argument("--dir", dest="sub_dir")
+    ap.add_argument("--scope", choices=["fe", "be", "mutual"])
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("args", nargs="*")
     ap.add_argument("--root", type=Path)
@@ -275,6 +333,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--base", default="HEAD")
     args = ap.parse_args(argv)
     out, cache = args.out.resolve(), args.cache.resolve()
+    if args.command == "standards":
+        return cmd_standards(args.args, args.ref, args.sub_dir, args.scope)
     if args.command == "docs":
         return cmd_docs(out, cache, args.args, args.version, args.max_chars, args.json)
     root = (args.root or _git_root(Path.cwd()) or Path.cwd()).resolve()

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0 — 2026-11-20
+- Standards skills from a git repository by URL: `dna.py standards add <git URL> [--ref <tag>] [--dir <skills
+  dir>] [--scope fe|be|mutual]` (also `list`, `remove`; through the factory: `tf addon run dna standards add …`)
+  writes `standards` in dna.yaml; `learn` clones the repository (shallow, `cache/standards/`), reads every skill
+  under `--dir` with its references/ and rules/ and the Confluence pages it links to. Evidence: the repository URL,
+  ref, path and line. Offline: the cached clone. `refresh` notices a new commit on the ref (`git ls-remote`).
+- `DNA_CONFIG` points to another dna.yaml.
+
 ## 0.7.0 — 2026-11-20
 - `dna.py refresh` (`provides.refresh`): learns again only when its inputs changed — a fingerprint of HEAD, the
   changed and untracked files, the standards skills, dna.yaml and the add-on version, stored in `knowledge.json`;

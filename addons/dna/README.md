@@ -16,6 +16,8 @@ python3 dna.py verify --root <repository>    # check out/ against the contract
 python3 dna.py status --root <repository>    # what out/ holds
 python3 dna.py docs query react "useTransition"   # official docs of the project's version (local index)
 python3 dna.py check --base main             # the change against the guidelines; exit 1 = blocking
+python3 dna.py standards add https://github.com/acme/standards.git --ref v1.4.0 --dir skills
+                                             # standards skills from a repository (then: tf learn)
 ```
 
 `learn` reaches the network only for documentation (`--offline` or `DNA_OFFLINE=1` to stop it): package registries
@@ -27,7 +29,7 @@ the credentials are sent only to the Atlassian site (`ATLASSIAN_SITE`, else `*.a
 In a project the add-on sits in `.tf/addons/dna/`; the factory runs `refresh` in the background at the start of
 every session (hook `addons_refresh.py`); `--root` defaults to the git top level of the current directory.
 
-## What 0.7.0 knows
+## What 0.8.0 knows
 
 | Area | Source | Version from |
 |---|---|---|
@@ -50,6 +52,13 @@ source to `registry/docs-sources.yaml` (rules in the file's header).
 Only technologies in `registry/detectors/*.yaml` count as stack. A version without a lockfile is reported as a range
 and listed in `coverage.md`.
 
+## Standards
+
+dna does not write standards. It reads the standards skills you have — in the project (`.claude/skills/*standards*`),
+by path or from a git repository by URL — together with the Confluence pages they link to, quotes their rules and
+writes them as rules for the matching files (`out/rules/standards-*.md`) and as a list with sources
+(`out/decisions.md`). The skills stay the source of truth; change them, and `refresh` picks the change up.
+
 ## Output (contract 1)
 
 | File | Content |
@@ -71,5 +80,5 @@ repository. The Markdown is generated from `knowledge.json` and must not be edit
 
 - Nothing here imports from the factory (`core/`, `packs/`, `modes/`, `tools/`); the tests check it.
 - Standard library and PyYAML only.
-- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py`, `tests/test_check.py`, `tests/test_sources.py`, `tests/test_exemplars.py` (also the `addon-dna` job in CI).
+- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py`, `tests/test_check.py`, `tests/test_sources.py`, `tests/test_exemplars.py`, `tests/test_standards_git.py` (also the `addon-dna` job in CI).
 - Version by SemVer in `addon.yaml`; changes in `CHANGELOG.md`.

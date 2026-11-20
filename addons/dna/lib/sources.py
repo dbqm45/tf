@@ -145,15 +145,64 @@ def confluence_page(url: str, opts: dict) -> tuple[str, str]:
 
 # ---------------------------------------------------------------- collection
 
-def _standards_skills(root: Path, config: dict) -> list[dict]:
+def _slug(s: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]+", "_", s).strip("_")[:80]
+
+
+def clone(url: str, ref: str | None, cache: Path, online: bool) -> tuple[Path | None, str]:
+    """A shallow clone of a standards repository in cache/standards/ (updated when online). (dir, note)."""
+    import subprocess
+    target = cache / "standards" / f"{_slug(url)}@{_slug(ref or 'default')}"
+    if not online:
+        return (target, "cached clone (network off)") if (target / ".git").is_dir() else (None, "network off, no clone")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+    if (target / ".git").is_dir():
+        args = ["git", "-C", str(target), "fetch", "-q", "--depth", "1", "origin", ref or "HEAD"]
+        r = subprocess.run(args, capture_output=True, text=True, timeout=120, env=env)
+        if r.returncode == 0:
+            subprocess.run(["git", "-C", str(target), "checkout", "-q", "--force", "FETCH_HEAD"], capture_output=True,
+                           timeout=60, env=env)
+            return target, "updated"
+        return target, f"update failed, cached clone used: {r.stderr.strip()[-150:]}"
+    args = ["git", "clone", "-q", "--depth", "1"] + (["--branch", ref] if ref else []) + [url, str(target)]
+    r = subprocess.run(args, capture_output=True, text=True, timeout=300, env=env)
+    if r.returncode != 0:
+        return None, f"git clone failed: {r.stderr.strip()[-200:]}"
+    return target, "cloned"
+
+
+def _skill_dirs(base: Path) -> list[Path]:
+    if (base / "SKILL.md").is_file():
+        return [base]
+    return sorted(d.parent for d in base.glob("**/SKILL.md") if ".git" not in d.parts)
+
+
+def _standards_skills(root: Path, config: dict, cache: Path | None = None, online: bool = False,
+                      coverage: dict | None = None) -> list[dict]:
     listed = config.get("standards") or []
+    found = []
+    for s in listed:
+        if s.get("path") and (root / s["path"] / "SKILL.md").is_file():
+            found.append({"dir": root / s["path"], "scope": s.get("scope"), "paths": s.get("paths"), "git": None})
+        elif s.get("git") and cache is not None:
+            repo, note = clone(str(s["git"]), s.get("ref"), cache, online)
+            if coverage is not None and repo is None:
+                coverage["skipped"].append({"source": str(s["git"]), "reason": note})
+                continue
+            base = repo / s.get("dir", "") if s.get("dir") else repo
+            dirs = _skill_dirs(base)
+            if not dirs and coverage is not None:
+                coverage["skipped"].append({"source": str(s["git"]), "reason": f"no SKILL.md under {s.get('dir') or '/'}"})
+            for d in dirs:
+                found.append({"dir": d, "scope": s.get("scope") or _guess_scope(d.name), "paths": s.get("paths"),
+                              "git": {"url": str(s["git"]), "ref": s.get("ref") or "default", "root": repo}})
     if listed:
-        return [{"dir": root / s["path"], "scope": s.get("scope"), "paths": s.get("paths")}
-                for s in listed if s.get("path") and (root / s["path"] / "SKILL.md").is_file()]
+        return found
     base = root / ".claude" / "skills"
     if not base.is_dir():
         return []
-    return [{"dir": d, "scope": _guess_scope(d.name), "paths": None} for d in sorted(base.iterdir())
+    return [{"dir": d, "scope": _guess_scope(d.name), "paths": None, "git": None} for d in sorted(base.iterdir())
             if (d / "SKILL.md").is_file() and re.search(r"standard", d.name, re.I)]
 
 
@@ -162,15 +211,26 @@ def collect(root: Path, config: dict, online: bool, today: str, opts: dict | Non
     found, coverage = [], {"read": [], "skipped": []}
     rel = lambda p: p.relative_to(root).as_posix()  # noqa: E731
     # standards skills and their links
-    for s in _standards_skills(root, config):
+    cache = opts.get("cache")
+    for s in _standards_skills(root, config, cache, online, coverage):
         paths = _scope_paths(s["scope"] or _guess_scope(s["dir"].name), s["paths"])
         files = [s["dir"] / "SKILL.md"] + sorted((s["dir"] / "references").glob("**/*.md")) \
             + sorted((s["dir"] / "rules").glob("**/*.md"))
         links = []
         for f in files:
             text = _read(f)
-            coverage["read"].append(rel(f))
-            for c in extract(text, rel(f), "standards", paths):
+            if s["git"]:   # outside the project: evidence is the repository URL, ref, path and line
+                g = s["git"]
+                src = f"{g['url']}#{g['ref']}:{f.relative_to(g['root']).as_posix()}"
+                coverage["read"].append(src)
+                cands = extract(text, "x", "standards", paths)
+                for c in cands:
+                    line = c["evidence"].rsplit(":", 1)[1]
+                    c["evidence"] = f"{src}:L{line} (fetched {today})"
+            else:
+                coverage["read"].append(rel(f))
+                cands = extract(text, rel(f), "standards", paths)
+            for c in cands:
                 c["skill"] = s["dir"].name
                 found.append(c)
             links += LINK.findall(text)
