@@ -39,7 +39,7 @@ jobs:
           python-version: "3.12"
       - run: pip install pyyaml
       - name: Dodatek dna (addons/dna) — niezależny od rdzenia
-        run: python3 addons/dna/tests/test_dna.py
+        run: for t in addons/dna/tests/test_*.py; do python3 "$t" || exit 1; done
 
   workspace:
     runs-on: ubuntu-latest

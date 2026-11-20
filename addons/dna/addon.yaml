@@ -1,5 +1,5 @@
 name: dna
-version: 0.1.0
+version: 0.2.0
 contract: 1
 title: Project knowledge for writing code like the team
 description: >-
@@ -8,7 +8,9 @@ description: >-
 keep: [dna.yaml]
 provides:
   context: out/INDEX.md
+  context_extra: [out/docs-index.md]
   plan: out/knowledge.json
   learn: "dna.py learn"
   verify: "dna.py verify"
   status: "dna.py status"
+  docs: "dna.py docs query {tech} {query}"

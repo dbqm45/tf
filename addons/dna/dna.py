@@ -4,19 +4,24 @@
   python3 dna.py learn  [--root <repo>] [--out <dir>]   # build out/ from the repository
   python3 dna.py verify [--root <repo>] [--out <dir>]   # check out/ against the contract
   python3 dna.py status [--root <repo>] [--out <dir>]   # what out/ holds, when it was built
+  python3 dna.py docs query <tech> "<topic>" [--version <v>] [--max-chars N] [--json]
+                                                        # official docs of the project's version (local index)
 
 --root: the repository to learn (default: the git top level of the current directory).
---out: the output directory (default: out/ next to this file).
+--out: the output directory (default: out/ next to this file). --cache: fetched sources (default: cache/ here).
+--offline: `learn` uses only installed packages for documentation (no network).
 
 `learn` builds the new output in a temporary directory, checks it (`verify`) and only then replaces out/;
-a failed check leaves the previous out/ untouched. Exit codes: 0 ok, 1 check failed, 2 usage error.
-Standard library and PyYAML only; no network in this version (0.1.0: stack and versions, commands, tooling).
+a failed check leaves the previous out/ untouched. Exit codes: 0 ok, 1 check failed, 2 usage error or no index; `docs query` 3: the version asked for is not the one
+in the project (the answer is still given). Standard library and PyYAML only. Network: only `learn` without
+--offline, only to package registries and the hosts in registry/docs-sources.yaml (see lib/docs.py).
 """
 from __future__ import annotations
 
 import argparse
 import datetime as dt
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -39,7 +44,7 @@ except ImportError:  # the factory ships PyYAML in .tf/factory/_vendor; outside 
     print("dna: PyYAML is required (pip install pyyaml)", file=sys.stderr)
     sys.exit(2)
 
-from lib import detect, emit, verify  # noqa: E402
+from lib import detect, docs, emit, verify  # noqa: E402
 
 
 def _version() -> str:
@@ -63,21 +68,28 @@ def _commit(root: Path) -> str | None:
     return r.stdout.strip() or None if r.returncode == 0 else None
 
 
-def build(root: Path, today: str | None = None) -> dict:
+def build(root: Path, today: str | None = None, online: bool = False, cache: Path | None = None,
+          docs_opts: dict | None = None) -> dict:
+    today = today or dt.date.today().isoformat()
     found = detect.detect(root, ADDON / "registry")
+    items, coverage = found["items"], found["coverage"]
+    facts, cov = docs.build(root, items, ADDON / "registry", cache or ADDON / "cache", online, today, docs_opts)
+    items += facts
+    coverage["read"] += [s for s in cov["read"] if s not in coverage["read"]]
+    coverage["skipped"] += cov["skipped"]
     return {
         "contract": 1,
         "generator": f"dna {_version()}",
-        "generated": today or dt.date.today().isoformat(),
+        "generated": today,
         "commit": _commit(root),
-        "items": found["items"],
-        "coverage": found["coverage"],
-        "layers": {"stack": True},
+        "items": items,
+        "coverage": coverage,
+        "layers": {"stack": True, "docs": bool(facts)},
     }
 
 
-def cmd_learn(root: Path, out: Path) -> int:
-    k = build(root)
+def cmd_learn(root: Path, out: Path, online: bool = True, cache: Path | None = None) -> int:
+    k = build(root, online=online, cache=cache)
     out.parent.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp(prefix=".dna-new-", dir=out.parent))
     try:
@@ -100,8 +112,9 @@ def cmd_learn(root: Path, out: Path) -> int:
         if tmp.exists():
             shutil.rmtree(tmp, ignore_errors=True)
     stack = [i for i in k["items"] if i.get("data", {}).get("topic") == "stack"]
-    print(f"✓ dna learn: {len(k['items'])} items ({len(stack)} stack), {len(k['coverage']['read'])} sources read"
-          f" → {out}")
+    docs_n = sum(1 for i in k["items"] if i.get("data", {}).get("topic") == "docs")
+    print(f"✓ dna learn: {len(k['items'])} items ({len(stack)} stack, {docs_n} documentation indexes), "
+          f"{len(k['coverage']['read'])} sources read, {len(k['coverage']['skipped'])} not read → {out}")
     return 0
 
 
@@ -128,18 +141,66 @@ def cmd_status(root: Path, out: Path) -> int:
     return 0
 
 
+def cmd_docs(out: Path, cache: Path, args: list[str], version: str | None, max_chars: int, as_json: bool) -> int:
+    if len(args) != 3 or args[0] != "query":
+        print('✗ Usage: dna.py docs query <tech> "<topic>" [--version <v>]', file=sys.stderr)
+        return 2
+    tech, topic = args[1], args[2]
+    try:
+        k = json.loads((out / "knowledge.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        k = {"items": []}
+    project = sorted({i["data"]["version"] for i in k["items"] if i.get("data", {}).get("topic") == "docs"
+                      and i["data"]["tech"] == tech})
+    if not version:
+        if len(project) != 1:
+            print(f"✗ dna docs: {tech}: " + (f"several versions in the project {project} — add --version"
+                                             if project else "no documentation index — run: dna.py learn"),
+                  file=sys.stderr)
+            return 2
+        version = project[0]
+    res = docs.query(cache, tech, version, topic, max_chars)
+    if res.get("code") == 2:
+        print(f"✗ dna docs: {res['error']} — run: dna.py learn", file=sys.stderr)
+        return 2
+    code = 0 if version in project else 3
+    if code == 3:
+        print(f"⚠ dna docs: {tech}@{version} is not the version in this project ({project or 'none indexed'})",
+              file=sys.stderr)
+    if as_json:
+        print(json.dumps(res, ensure_ascii=False, indent=2))
+        return code
+    print(f"{tech}@{version} — official documentation, fetched {res['fetched']} — {res['marker']}")
+    for h in res["hits"] or []:
+        print(f"\n## {h['title']}  [{h['source']}{'' if h['match'] == 'exact' else ', ' + h['match']}]\n{h['text']}")
+    if not res["hits"]:
+        print("(no matching fragment)")
+    return code
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(prog="dna.py", description=__doc__.split("\n")[1])
-    ap.add_argument("command", choices=["learn", "verify", "status"])
+    ap.add_argument("command", choices=["learn", "verify", "status", "docs"])
+    ap.add_argument("args", nargs="*")
     ap.add_argument("--root", type=Path)
     ap.add_argument("--out", type=Path, default=ADDON / "out")
+    ap.add_argument("--cache", type=Path, default=ADDON / "cache")
+    ap.add_argument("--offline", action="store_true")
+    ap.add_argument("--version")
+    ap.add_argument("--max-chars", type=int, default=6000)
+    ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
+    out, cache = args.out.resolve(), args.cache.resolve()
+    if args.command == "docs":
+        return cmd_docs(out, cache, args.args, args.version, args.max_chars, args.json)
     root = (args.root or _git_root(Path.cwd()) or Path.cwd()).resolve()
     if not root.is_dir():
         print(f"dna: not a directory: {root}", file=sys.stderr)
         return 2
-    out = args.out.resolve()
-    return {"learn": cmd_learn, "verify": cmd_verify, "status": cmd_status}[args.command](root, out)
+    if args.command == "learn":   # DNA_OFFLINE=1: no network (tests, air-gapped machines)
+        offline = args.offline or os.environ.get("DNA_OFFLINE") == "1"
+        return cmd_learn(root, out, online=not offline, cache=cache)
+    return {"verify": cmd_verify, "status": cmd_status}[args.command](root, out)
 
 
 if __name__ == "__main__":

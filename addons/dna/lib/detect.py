@@ -230,12 +230,15 @@ def _python(root: Path, techs: list[dict], facts: list, coverage: dict):
         locked = _py_lock_versions(lock) if lock else {}
         names = set()
         for m in re.finditer(r'^\s*"?([A-Za-z0-9][A-Za-z0-9_.-]*)\s*(\[[^\]]*\])?\s*(==|>=|~=|<|\^|=|")', text, re.M):
-            names.add(m.group(1))
+            names.add(m.group(1))   # requirements lines, poetry tables, one dependency per line
+        for m in re.finditer(r'["\']([A-Za-z0-9][A-Za-z0-9_.-]*)\s*(?:\[[^\]]*\])?\s*(?:[<>=!~;]|["\'])', text):
+            names.add(m.group(1))   # PEP 621 inline lists: dependencies = ["fastapi>=0.110", ...]
         for raw in sorted(names):
             tech = _match(techs, "pypi", _pyname(raw))
             if not tech:
                 continue
-            decl_line = _line_of(text, re.compile(rf'^\s*"?{re.escape(raw)}\b', re.M | re.I))
+            decl_line = _line_of(text, re.compile(rf'^\s*"?{re.escape(raw)}\b', re.M | re.I)) \
+                or _line_of(text, re.compile(rf'["\']{re.escape(raw)}\b', re.I))
             evidence = [_ev(root, mf, decl_line)]
             version, how = None, "manifest-range"
             if _pyname(raw) in locked:

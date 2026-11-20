@@ -6,6 +6,7 @@ Every test builds a throw-away project (git repository + factory manifest) and r
 would. Key property: a project without add-ons is left exactly as it was.
 """
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -43,8 +44,9 @@ def addon(name="demo", contract=1, provides=None, extra: dict | None = None) -> 
 
 
 def tf_addon(proj: Path, *args) -> subprocess.CompletedProcess:
+    env = {**os.environ, "DNA_OFFLINE": "1"}   # the dna add-on must not reach the network in tests
     return subprocess.run([sys.executable, str(ADDONS_PY), *args], cwd=proj, capture_output=True, text=True,
-                          encoding="utf-8")
+                          encoding="utf-8", env=env)
 
 
 def snapshot(p: Path) -> dict:

@@ -9,7 +9,12 @@ A0, bo działają samodzielnie (`python3 addons/dna/dna.py learn --root <repo>`)
 A0 zrobione w zakresie podstawowym: `core/factory/addons.py` (`tf addon list|add|remove|sync|check|run`, `tf learn`),
 synchronizacja przy `build.py`, informacja w `tf doctor`, wpięcie w skill `tf` (`references/addons.md`); testy
 `tests/test_addons.py`. Z A0 zostało: `refresh` przy starcie sesji (hook) i opcja dodatku w kreatorze `tf install`.
-Następny: A3 (dokumentacja oficjalna dla wersji).
+A3 zrobione (`dna` 0.2.0, 2026-11-20): zainstalowana paczka, tarball npm i opis wydania z PyPI dla dokładnej wersji,
+źródła z `registry/docs-sources.yaml`, indeks BM25, `docs query`, `out/docs-index.md`. Sprawdzone na prawdziwym
+rejestrze npm (`react@18.3.1`, `@tanstack/react-query@5.51.1`): wiele paczek ma tylko krótki README z odnośnikiem do
+strony, więc wartość dla takich technologii zależy od wpisów w `docs-sources.yaml` (jeszcze pusty — każdy adres do
+sprawdzenia przed dodaniem) i od typów z `@types/*` (jeszcze nie pobierane). Następny: A4 (pomiar) albo uzupełnienie
+`docs-sources.yaml` dla stacku repo pilotażowego.
 
 ## 1. Cel
 

@@ -285,7 +285,7 @@ def _learned(files=None) -> tuple[Path, Path]:
     root = repo(files or {"package.json": '{"dependencies": {"react": "^18.2.0"}}',
                           "package-lock.json": '{"packages": {"node_modules/react": {"version": "18.3.1"}}}'})
     out = root / ".tf" / "addons" / "dna" / "out"
-    assert dna.cmd_learn(root, out) == 0
+    assert dna.cmd_learn(root, out, online=False, cache=root / ".tf" / "addons" / "dna" / "cache") == 0
     return root, out
 
 
@@ -329,7 +329,7 @@ def test_failed_check_keeps_previous_output(monkeypatch=None):
     original = verify.check_out
     verify.check_out = lambda o, r: ["forced failure"]
     try:
-        assert dna.cmd_learn(root, out) == 1
+        assert dna.cmd_learn(root, out, online=False, cache=root / "c") == 1
     finally:
         verify.check_out = original
     assert (out / "knowledge.json").read_text(encoding="utf-8") == before
@@ -346,7 +346,7 @@ def test_cli_learn_verify_status():
     root = repo({"go.mod": "module x\n\ngo 1.22\n"})
     out = root / "out-dir"
     run = lambda *a: subprocess.run([sys.executable, str(ADDON / "dna.py"), *a, "--root", str(root), "--out",
-                                     str(out)], capture_output=True, text=True)
+                                     str(out), "--cache", str(root / "c"), "--offline"], capture_output=True, text=True)
     assert run("learn").returncode == 0
     assert run("verify").returncode == 0
     st = run("status")

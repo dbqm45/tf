@@ -1,0 +1,19 @@
+# Official documentation sources per technology (id from detectors/*.yaml), used in addition to the package itself
+# and its registry entry (npm tarball, PyPI release description), which dna reads for every npm and PyPI package
+# without an entry here. Only hosts that appear in this file (plus the package registries) are ever contacted.
+#
+# Source types:
+#   raw   — a file at the version's tag, e.g. https://raw.githubusercontent.com/<owner>/<repo>/{tag}/docs/x.md
+#   page  — a documentation page; versioned when the URL contains {version}, {major} or {minor}
+#   llms  — llms.txt / llms-full.txt of the official site; usually the latest version only (marked "latest")
+# Placeholders: {version} (1.2.3), {tag} (v1.2.3), {major} (1), {minor} (2).
+#
+# Add an entry only with a URL you have opened and checked is the official, version-specific source. A wrong or
+# missing URL never stops `learn`: it is listed under "Not read" in out/coverage.md. The network of the environment
+# must allow the host (Claude Code cloud: Settings → environment → Network access).
+#
+# Example (not active):
+#   spring-boot:
+#     sources:
+#       - {type: page, url: "https://docs.spring.io/spring-boot/{major}.{minor}/index.html"}
+technologies: {}
