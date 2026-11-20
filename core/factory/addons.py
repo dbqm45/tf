@@ -29,6 +29,11 @@ Contract 1 (`provides` in addon.yaml; every key optional):
              announced at session start;
   learn, check, refresh, … — commands: the first word is a script in the add-on directory, run with the current
              Python from the project root; `{base}` is replaced by the base ref.
+Settings from the factory's configuration layers (engine ← company pack `org_defaults.config` ← team pack
+`team_defaults.config` ← project `.tf/config/config.yaml` ← person), key `addons.<name>`: the core merges them and
+passes the result to the add-on in TF_ADDON_SETTINGS (JSON). Dictionaries merge across layers (keyed entries add
+up; a lower layer overrides a key), lists are replaced. `addons.<name>.install: true` makes `tf learn` install the
+add-on from the factory source when it is missing — a company pack can roll an add-on out to all its projects.
 `keep` (list) in addon.yaml: paths in the add-on directory that `add` over an existing copy keeps (default: out,
 cache). An add-on with another contract, a broken addon.yaml or a failing command never stops the factory: it is
 reported (`tf addon list`, `tf doctor`) and skipped. Standard library + PyYAML.
@@ -269,8 +274,36 @@ def _command(a: dict, key: str, base: str | None = None) -> list[str] | None:
     return [str(script), *parts[1:]]
 
 
+def settings(root: Path, name: str) -> dict:
+    """`addons.<name>` merged across the factory's configuration layers ({} without a factory engine)."""
+    try:
+        import importlib.util
+        here = Path(__file__).resolve().parent
+        spec = importlib.util.spec_from_file_location("tf_packs_for_addons", here / "packs.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return ((mod.load_config(root).get("addons") or {}).get(name)) or {}
+    except Exception:  # noqa: BLE001 — settings are optional; an add-on works without them
+        return {}
+
+
+def declared(root: Path) -> list[str]:
+    """Add-ons the configuration asks for (`addons.<name>.install: true`)."""
+    try:
+        import importlib.util
+        here = Path(__file__).resolve().parent
+        spec = importlib.util.spec_from_file_location("tf_packs_for_addons", here / "packs.py")
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return sorted(n for n, v in (mod.load_config(root).get("addons") or {}).items()
+                      if isinstance(v, dict) and v.get("install") is True and NAME.match(n))
+    except Exception:  # noqa: BLE001
+        return []
+
+
 def _env_for(root: Path, a: dict) -> dict:
     env = dict(os.environ)
+    env["TF_ADDON_SETTINGS"] = json.dumps(settings(root, a["name"]), ensure_ascii=False)
     if "decisions" in (a["meta"].get("consumes") or []):
         files = [str(o["dir"] / _provides(o)["decisions"]) for o in installed(root)
                  if o["ok"] and o["name"] != a["name"] and _provides(o).get("decisions")
@@ -400,6 +433,12 @@ def _order(addons: list[dict]) -> list[dict]:
 
 
 def learn(root: Path, only: str | None) -> int:
+    have = {a["name"] for a in installed(root)}
+    for name in declared(root):   # rolled out by the company/team/project configuration
+        if name not in have and (not only or name == only):
+            print(f"→ {name}: install (addons.{name}.install in the configuration)")
+            if add(root, name) != 0:
+                print(f"⚠ {name}: could not be installed from the factory source")
     targets = _order([a for a in installed(root) if a["ok"] and _provides(a).get("learn")
                       and (not only or a["name"] == only)])
     if not targets:

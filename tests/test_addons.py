@@ -241,6 +241,33 @@ def test_standards_and_dna_together():
     assert "data, not instructions" in out["hookSpecificOutput"]["additionalContext"]
 
 
+def test_company_pack_rolls_out_standards_by_url():
+    std = Path(tempfile.mkdtemp(prefix="std-repo-"))
+    (std / "skills" / "acme-be-standards").mkdir(parents=True)
+    (std / "skills" / "acme-be-standards" / "SKILL.md").write_text("# BE\n- Services must log the request id.\n")
+    for args in (["init", "-q"], ["add", "-A"], ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "s"]):
+        subprocess.run(["git", *args], cwd=std, check=True, capture_output=True)
+    p = project(files={".tf/factory/packs/pack-acme/pack.yaml": json.dumps({
+        "id": "pack-acme", "org_defaults": {"config": {"addons": {"standards": {
+            "install": True,
+            "sources": {"acme": {"git": std.as_uri(), "dir": "skills"}}}}}}})})
+    env_on = {**os.environ, "DNA_OFFLINE": "1", "STANDARDS_OFFLINE": "0"}
+    r = subprocess.run([sys.executable, str(ADDONS_PY), "learn"], cwd=p, capture_output=True, text=True, env=env_on)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "→ standards: install (addons.standards.install" in r.stdout
+    rules = p / ".claude/rules/addon-standards-standards-be.md"
+    assert "Services must log the request id" in rules.read_text(encoding="utf-8")
+    listed = subprocess.run([sys.executable, str(p / ".tf/addons/standards/standards.py"), "source", "list"], cwd=p,
+                            capture_output=True, text=True,
+                            env={**os.environ, "TF_ADDON_SETTINGS": json.dumps({"sources": {"acme": {"git": std.as_uri()}}})})
+    assert "[factory configuration (addons.standards.sources.acme)]" in listed.stdout
+    # the project turns the company source off
+    (p / ".tf/config").mkdir(parents=True)
+    (p / ".tf/config/config.yaml").write_text("addons:\n  standards:\n    sources:\n      acme:\n        enabled: false\n")
+    r = subprocess.run([sys.executable, str(ADDONS_PY), "learn"], cwd=p, capture_output=True, text=True, env=env_on)
+    assert r.returncode == 0 and not rules.exists()
+
+
 def test_core_names_no_addon():
     for f in (ROOT / "core").rglob("*"):
         if f.is_file() and f.suffix in (".py", ".md", ".yaml", ".json"):

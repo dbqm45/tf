@@ -74,7 +74,7 @@ def deep_merge(base: dict, over: dict) -> dict:
 # Nakładka firmowa (`org_defaults` w pack.yaml): domyślne organizacji między silnikiem a projektem. Tylko te klucze
 # konfiguracji — reszta to składanie fabryki (wymiary, agenci), którego nakładka firmowa nie przestawia.
 ORG_CONFIG_KEYS = ("autonomy", "tiers", "profiles", "default_profile", "work", "loop", "steps", "task",
-                   "commit_language")
+                   "commit_language", "addons")   # addons.<name>: settings the core passes to that add-on
 ORG_OPERATIONS_KEYS = ("tracker",)
 
 
