@@ -833,9 +833,9 @@ def active_texts() -> dict[str, str]:
         d = SKILLS_DIR / s["_dir"]
         for p in [d / "SKILL.md", *sorted(d.glob("references/**/*.md"))]:
             if p.is_file():
-                out[str(p.relative_to(ROOT))] = p.read_text(encoding="utf-8")
+                out[p.relative_to(ROOT).as_posix()] = p.read_text(encoding="utf-8")
     for rel, txt in render_all().items():
-        out[f"{OUT_DIR.relative_to(ROOT)}/{rel}"] = txt
+        out[f"{OUT_DIR.relative_to(ROOT).as_posix()}/{rel}"] = txt
     return out
 
 
@@ -1206,7 +1206,7 @@ def validate() -> tuple[list[str], list[str]]:
             warnings.append(f"agent descriptions ≈{est} tokens (> the reserve {lim['agent_descriptions_max_tokens']}) — every "
                             "pack adds personas and consultants; consider fewer packs or shorter descriptions")
         # stale files
-        on_disk = {str(p.relative_to(OUT_DIR)): p.read_text(encoding="utf-8")
+        on_disk = {p.relative_to(OUT_DIR).as_posix(): p.read_text(encoding="utf-8")
                    for p in OUT_DIR.rglob("*.md")} if OUT_DIR.exists() else {}
         if on_disk != rendered:
             errors.append("files in .claude/agents/_generated are stale — run: python3 .tf/factory/build.py")

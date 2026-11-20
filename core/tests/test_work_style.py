@@ -8,6 +8,7 @@ loosen the autonomy policy, and the default task mode must fit within `task.allo
 python3 .claude/tests/test_work_style.py"""
 import importlib.util
 import json
+import shutil
 import os
 import subprocess
 import sys
@@ -15,6 +16,17 @@ import tempfile
 from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "tf.py").is_file())
+
+
+def link_or_copy(src: Path, dst: Path) -> None:
+    """A symbolic link, or a copy where the system refuses links (Windows without the developer mode: WinError 1314)."""
+    try:
+        dst.symlink_to(src, target_is_directory=src.is_dir())   # link-ok
+    except OSError:
+        if src.is_dir():
+            shutil.copytree(src, dst, symlinks=True)
+        else:
+            shutil.copy2(src, dst)
 FACTORY = ROOT / ".tf" / "factory"
 TF = FACTORY / "tf.py"
 TASK = FACTORY / "task_state.py"
@@ -58,7 +70,7 @@ def project(base: Path, name: str, config: str = "") -> Path:
     """A project with the factory engine (a copy of the workspace's `.tf/factory`) and an optional project configuration."""
     p = base / name
     (p / ".tf").mkdir(parents=True)
-    os.symlink(FACTORY, p / ".tf" / "factory")
+    link_or_copy(Path(FACTORY), p / ".tf" / "factory")
     (p / ".claude").mkdir()
     (p / ".claude" / "factory-manifest.json").write_text("{}", encoding="utf-8")   # tf: "factory installed"
     if config:

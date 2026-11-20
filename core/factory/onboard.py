@@ -156,7 +156,7 @@ def detect(root: Path) -> dict:
             if kind in found and kind not in commands:
                 commands[kind] = {"command": found[kind], "source": source}
     workflows = root / ".github" / "workflows"
-    ci = sorted(str(p.relative_to(root)) for p in workflows.glob("*.y*ml")) if workflows.is_dir() else []
+    ci = sorted(p.relative_to(root).as_posix() for p in workflows.glob("*.y*ml")) if workflows.is_dir() else []
     ci += [f for f in CI_FILES if (root / f).is_file()]
     facts = {"lockfile": [f for f in LOCKFILES if (root / f).is_file()], "ci": ci,
              "instructions": [f for f in ("CLAUDE.md", "CLAUDE.local.md", "AGENTS.md") if (root / f).is_file()],

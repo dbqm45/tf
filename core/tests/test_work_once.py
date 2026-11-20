@@ -204,7 +204,10 @@ def main() -> int:
               f"WO-19: control characters from the title do not reach the terminal: {r.stdout!r}")
         outside = base / "outside-secret.txt"
         outside.write_text("tajne\n", encoding="utf-8")
-        (s / CHANGES / "IMP-9" / "link.txt").symlink_to(outside)
+        try:   # a link out of the repo must not reach the worktree; without the right to links (Windows) there is no link to test
+            (s / CHANGES / "IMP-9" / "link.txt").symlink_to(outside)   # link-ok
+        except OSError:
+            pass
         (s / ".env").write_text("TOKEN=x\n", encoding="utf-8")
         (s / "secrets").mkdir()
         (s / "secrets" / "key.txt").write_text("k\n", encoding="utf-8")
