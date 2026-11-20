@@ -1,104 +1,128 @@
-head: Użyj przy pracy architekta poza techniką — decyzje (adwokat diabła), komunikacja, szacowanie, ATAM, arc42/C4/ADR. Użyj przy pracy architekta poza samą techniką — poziomy architektury, podejmowanie i komunikowanie decyzji, szacowanie, przegląd architektury (ATAM), upraszczanie, dokumentacja (arc42, C4, ADR), coaching, ramy korporacyjne (TOGAF, ITIL). Nie do atrybutów jakości (arch-quality-attributes) ani wyboru stacku (arch-tech-selection).
-# Praktyka architekta
+head: Użyj przy podejmowaniu, zapisie lub komunikowaniu decyzji architektonicznej, jej podważaniu, przeglądzie architektury, estymacji albo dokumentowaniu architektury. Użyj, gdy praca architekta wykracza poza wybór technologii — nazwanie poziomu architektury (aplikacja, rozwiązanie, przedsiębiorstwo), decyzja z opcjami i kompromisami, odwracalność, zapis ADR i komunikat dla zespołu, biznesu i utrzymania, podważenie rekomendacji przed zapisem (adwokat diabła, pre-mortem, nieznane niewiadome), upraszczanie, estymacje jako przedziały, lekki przegląd w stylu ATAM (punkty wrażliwości, punkty kompromisu, ryzyka), dokumentacja C4 i arc42 jako model tekstowy z kontrolą dryfu w CI, coaching zespołów i tłumaczenie artefaktów zespołu na ramy korporacyjne (TOGAF, ArchiMate, ITIL, PRINCE2, BABOK). Nie do scenariuszy atrybutów jakości i stylów architektury (arch-quality-attributes) ani wyboru stacku, bazy czy platformy (arch-tech-selection).
+# Praktyka architekta — zdecyduj, podważ, zapisz, wyjaśnij
 
-Architekt odpowiada za decyzje, które są drogie do zmiany, i za to, żeby zespół je rozumiał i stosował. Kod piszesz
-o tyle, o ile trzeba, żeby decyzje były osadzone w rzeczywistości (prototyp, szkielet, przegląd).
+Wybór technologii to jedna decyzja z wielu. Ten skill obejmuje resztę pracy architekta: na jakim poziomie leży pytanie,
+jak podjąć decyzję i sprawić, żeby się utrwaliła, jak ją zaatakować przed zapisem oraz jak przeglądać, szacować
+i dokumentować architekturę.
 
-## Poziomy architektury
-| Poziom | Zakres | Typowe pytania | Wynik |
-|---|---|---|---|
-| **aplikacja** | wnętrze jednego systemu: moduły, warstwy, wzorce | jak podzielić kod, gdzie granice modułów, jak testować | struktura modułów, ADR, fitness functions (eng-*, ddd-tactical-design) |
-| **rozwiązanie** | kilka systemów dla jednej potrzeby biznesowej | jak systemy się integrują, przepływ danych, technologie | architektura rozwiązania, mapa kontekstów, kontrakty (ddd-context-mapping, be-api-design) |
-| **przedsiębiorstwo** | cała organizacja: zdolności biznesowe, portfel systemów | które systemy rozwijać, wygaszać, łączyć; standardy | mapy zdolności i aplikacji, zasady, mapa drogowa (`references/corporate-frameworks.md`) |
-Zadanie zawsze nazywa poziom — inaczej rozmowa o „architekturze” miesza wnętrze modułu ze strategią firmy.
+## 1. Najpierw nazwij poziom
+| Poziom | Zakres | Typowy wynik |
+|---|---|---|
+| Aplikacja | wnętrze jednego systemu: moduły, warstwy, granice, testowalność | ADR, fitness functions, reguły modułów |
+| Rozwiązanie | kilka systemów dla jednej potrzeby biznesu: integracja, przepływ danych, kontrakty | dokument rozwiązania, mapa kontekstów (ddd-context-mapping), kontrakty API (be-api-design) |
+| Przedsiębiorstwo | zdolności, portfel, standardy, roadmapa | mapy zdolności i aplikacji, zasady, roadmapa |
 
-## Oczekiwania wobec architekta (wg Richardsa i Forda)
-Podejmuje decyzje architektoniczne (i prowadzi do nich, zamiast dyktować technologie); stale analizuje architekturę
-i jej dryf; śledzi trendy i ocenia je krytycznie; pilnuje zgodności z decyzjami (automatycznie, fitness functions);
-zna różne technologie powierzchownie i kilka głęboko; zna domenę biznesu; ma umiejętności interpersonalne; rozumie
-organizację i jej politykę (bez tego najlepsza decyzja nie zostanie wdrożona).
+Poziom podaj w pierwszym zdaniu odpowiedzi. Rozmowa, która miesza wnętrze modułu ze strategią platformy firmy,
+daje decyzje bez właściciela.
 
-## Decyzje
-1. **Czy to decyzja architektoniczna?** Dotyczy struktury, atrybutów jakości, zależności, interfejsów lub technik
-   budowy i jest kosztowna do odwrócenia. Odwracalne szczegóły zostaw zespołowi.
-2. **Czynniki**: scenariusze atrybutów jakości, ograniczenia (budżet, termin, kompetencje, regulacje), istniejące
-   decyzje (ADR) i dane, nie opinie. Brak faktów → researcher lub spike, nie domysł.
-3. **Opcje**: co najmniej dwie realne plus „nic nie zmieniać”; dla każdej kompromisy wprost (co zyskujemy, co
-   tracimy). Nie ma rozwiązania najlepszego, jest najmniej złe dla tych czynników.
-4. **Odwracalność**: przy remisie wybierz łatwiejsze do zmiany; drogie decyzje odkładaj do ostatniego odpowiedzialnego
-   momentu, ale przygotuj to, co potrzebne do ich podjęcia.
-5. **Zapis**: ADR z kontekstem, opcjami i konsekwencjami (docs-tech-writing); akceptuje człowiek (core-project-record).
-6. **Komunikacja**: decyzję tłumaczysz trzem odbiorcom — zespołowi (co robić inaczej i dlaczego), biznesowi (koszt,
-   ryzyko, termin, w jego języku), operacjom (co zmienia się w utrzymaniu). Uzasadnienie „dlaczego” jest ważniejsze
-   niż „co”.
-7. **Test odporności decyzji (przeciw przytakiwaniu).** Model dopasowuje ocenę do tego, w co człowiek już wierzy.
-   Zanim zapiszesz rekomendację, przepuść lidera przez trzy soczewki — sam, w tej samej sesji:
-   - **adwokat diabła:** 3–5 konkretnych słabości, ukrytych kosztów i trybów awarii *tej* opcji w *tym* projekcie
-     (nazwy, limity, liczby — nie kategorie);
-   - **pre-mortem:** „minęło 3–6 miesięcy, decyzja okazała się porażką” — krótka narracja o błędnych założeniach;
-   - **nieznane niewiadome:** 3–5 klas ryzyka spoza oceny (zgodność, kopie zapasowe, wyjście od dostawcy, status
-     beta, zależność od innych zespołów).
-   Wynik każdej soczewki: akceptuję ryzyko / zapisuję jako znane ograniczenie (w rejestrze ryzyk ze źródłem —
-   która soczewka je ujawniła) / zmieniam wybór. Pytaj „dlaczego X to zły wybór dla Y”, nie „czy X pasuje do Y”.
-   Gdy w wielu decyzjach test nigdy nic nie zmienia, stał się rytuałem. Szczegóły i przykład:
-   `references/decision-resilience-test.md`.
-Anty-wzorce: decyzja odkładana bez końca w oczekiwaniu na pełną informację; „architektura z wieży” bez kontaktu
-z kodem; ta sama dyskusja co miesiąc, bo decyzja nie została zapisana.
+## 2. Czego oczekuje się od architekta
+- Prowadzi decyzje i ludzi, którzy je podejmują; nie narzuca technologii dekretem.
+- Stale sprawdza, czy system wciąż odpowiada decyzjom (dryf), i automatyzuje tę kontrolę (fitness functions — arch-quality-attributes).
+- Szeroka, płytka wiedza o wielu technologiach i głęboka o kilku; śledzi trendy, ale ich nie goni.
+- Zna domenę biznesową na tyle, by oceniać kompromisy w jej kategoriach.
+- Pracuje z ludźmi i z polityką organizacji: poprawna decyzja, której nikt nie przyjmie, nic nie zmienia.
+- Pisze kod tylko na tyle, by ugruntować decyzje: spike'i, szkielet, przeglądy.
 
-## Upraszczanie i równowaga
-- Pytania przy każdej propozycji: dlaczego to lepsze od alternatyw, czy da się prościej, jaki jest koszt budowy,
-  utrzymania i operacji, czy ten przypadek brzegowy uzasadnia koszt?
-- Złożoność nie jest dowodem kompetencji. Technologia wybrana, bo jest nowa, a nie dlatego, że rozwiązuje problem,
-  to dług (eng-design-principles: drabina minimalizmu, YAGNI).
-- Równowaga: szybkość kontra jakość, innowacja kontra stabilność — świadoma decyzja z zapisanym długiem
-  (eng-tech-debt-audit), nie milcząca zgoda.
+## 3. Podejmowanie decyzji
+1. **Czy to decyzja architektoniczna?** Dotyka struktury, atrybutu jakości, zależności, interfejsów lub techniki budowy
+   **i** jest droga do odwrócenia. Tani do zmiany szczegół zostaje w zespole.
+2. **Wejście:** scenariusze atrybutów jakości (arch-quality-attributes), ograniczenia (budżet, termin, umiejętności,
+   regulacje), wcześniejsze ADR, pomiary. Brakujący fakt to spike albo zadanie badawcze (core-grounding), nie zgadywanie.
+3. **Opcje:** co najmniej dwie realne opcje plus „nic nie zmieniamy”. Dla każdej: co zyskujemy, co tracimy, koszt budowy,
+   utrzymania i wyjścia. Nie ma najlepszej opcji, jest najmniej zła dla tych sił.
+4. **Odwracalność:** przy remisie wybierz łatwiejszą do zmiany. Drogą, nieodwracalną decyzję odłóż do ostatniego
+   odpowiedzialnego momentu i wykorzystaj ten czas na zebranie tego, czego potrzebuje.
+5. **Podważ** prowadzącą opcję (sekcja 4), zanim ją zapiszesz.
+6. **Zapisz** ADR (format: docs-tech-writing): kontekst, opcje, decyzja, konsekwencje, data ponownego przeglądu.
+   Akceptuje człowiek (core-project-record).
+7. **Zakomunikuj** trzem odbiorcom, każdemu jego językiem:
+   - zespołowi — co zmienia się w kodzie i dlaczego;
+   - biznesowi — koszt, ryzyko, termin;
+   - utrzymaniu (operacjom) — co zmienia się we wdrażaniu, monitoringu, kopiach zapasowych i dyżurach.
+   „Dlaczego” waży więcej niż „co”; to ono zatrzymuje kolejną dyskusję od nowa.
 
-## Szacowanie i ocena
-- **Szacowanie**: przedziały (optymistycznie / najbardziej prawdopodobnie / pesymistycznie), rozbicie na części,
-  porównanie z podobnymi wykonanymi zadaniami, jawne założenia i niewiadome; największe niewiadome zamieniasz w spike.
-  Prognozowanie przepływem: proc-agile.
-- **Ocena architektury (lekki przegląd w stylu ATAM)**: (1) cele biznesowe i scenariusze jakości z priorytetami,
-  (2) prezentacja architektury i decyzji, (3) dla każdego ważnego scenariusza: które decyzje go wspierają, gdzie są
-  **punkty wrażliwości** (jedna decyzja silnie wpływa na atrybut), **kompromisy** (decyzja poprawia jeden atrybut
-  kosztem innego) i **ryzyka**, (4) raport z ryzykami i rekomendacjami. Okresowo i przed dużą zmianą; ciągłe
-  sprawdzanie przez fitness functions (arch-quality-attributes).
+Antywzorce: czekanie na pełną informację; architekt, który przestał czytać kod; ta sama debata co miesiąc, bo poprzednia
+nie zostawiła zapisu (lekarstwo: wskaż ADR i otwieraj go tylko przy nowych faktach).
 
-## Dokumentacja architektury
-- **ADR** dla decyzji (docs-tech-writing) — najważniejszy dokument, bo zapisuje „dlaczego”.
-- **Model C4** dla widoków: kontekst (system i otoczenie), kontenery (aplikacje i magazyny danych), komponenty (w razie
-  potrzeby); poziom kodu zwykle zbędny. Diagram jako kod w repo (docs-tech-writing, `diagrams-and-presentations.md`).
-- **arc42** jako szablon dokumentu architektury (cele, ograniczenia, kontekst, strategia rozwiązania, widoki, koncepcje
-  przekrojowe, decyzje, wymagania jakości, ryzyka, słownik) — wypełniasz tylko sekcje, które ktoś przeczyta.
-- Dokumentacja żyje w repo i jest aktualizowana z kodem; to, co da się wygenerować (grafy zależności —
-  eng-codebase-mapping, referencja API), generujesz.
-- **Model jako źródło, diagramy jako widoki:** elementy i relacje C4 opisane raz w tekstowym modelu w repo (np.
-  Structurizr DSL, LikeC4 albo eksport z narzędzia), a widoki dla różnych odbiorców generowane z niego zamiast osobno
-  rysowanych diagramów. Zmiana w PR modyfikuje model, CI renderuje widoki. **Kontrola dryfu w CI:** relacje z modelu
-  porównane z faktycznymi zależnościami (graf importów, wywołania między usługami, IaC); relacja w kodzie bez
-  odpowiednika w modelu i odwrotnie to ustalenie do przeglądu. ADR wskazuje elementy modelu, których dotyczy. Agent
-  czyta model, nie obrazki diagramów. Wersje narzędzi sprawdź przed wyborem (core-grounding).
+## 4. Podważ rekomendację przed zapisem
+Zgoda jest tania. Ludzie na spotkaniu i modele językowe dryfują ku potwierdzaniu opcji, która już leży na stole,
+a pytanie „czy X pasuje do Y?” prawie zawsze dostaje odpowiedź „tak”. Zadaj odwrotne: **„dlaczego X to zły wybór dla Y?”**
 
-## Doradztwo i coaching
-- Przegląd projektów i PR pod kątem decyzji architektonicznych, nie stylu (od tego są lintery).
-- Pytania zamiast gotowych odpowiedzi tam, gdzie zespół ma się czegoś nauczyć; gotowa odpowiedź tam, gdzie liczy się czas
-  lub ryzyko.
-- Wiedza architekta skaluje się przez standardy w kodzie (generatory, szablony, reguły granic), przykłady
-  referencyjne i warsztaty, nie przez bycie wąskim gardłem każdej decyzji (fe-engineering-levels, proc-team-topologies).
+Rób to przed zapisem ADR albo rekomendacji stacku czy platformy, zawsze gdy wszyscy zgadzają się od razu, i przed
+przekazaniem porady opartej na researchu. Trzy perspektywy na prowadzącą opcję w tej samej sesji:
+- **Adwokat diabła** — najmocniejszy konkretny argument przeciw: nazwane limity, liczby, ukryte koszty, tryby awarii.
+- **Pre-mortem** — wyobraź sobie, że minęło pół roku i wybór zawiódł; opowiedz historię wstecz do przyczyny.
+- **Nieznane niewiadome** — klasy ryzyka, których ocena w ogóle nie dotknęła, każda zamieniona w pytanie, na które ktoś umie odpowiedzieć.
 
-## Checklista
-- [ ] poziom architektury nazwany; decyzja architektoniczna odróżniona od szczegółu
-- [ ] ≥ 2 opcje z kompromisami, czynniki z danych, odwracalność oceniona
-- [ ] lider przeszedł test odporności (adwokat diabła, pre-mortem, nieznane niewiadome); wynik każdej soczewki zapisany
-- [ ] ADR i komunikat dla zespołu, biznesu i operacji
-- [ ] szacunek w przedziałach z założeniami; spike dla największej niewiadomej
-- [ ] widoki C4 i dokumenty w repo, aktualizowane z kodem
+Każde ustalenie kończy się jednym z trzech wyników: akceptacja, wpis jako znane ograniczenie w rejestrze ryzyk albo
+zmiana wyboru. Procedura, format rejestru i przykład: `references/decision-resilience-test.md`.
+
+## 5. Upraszczaj i równoważ
+Przy każdej propozycji pytaj: dlaczego jest lepsza od alternatyw, czy może być prostsza, ile kosztuje budowa, utrzymanie
+i eksploatacja, czy przypadek brzegowy uzasadnia ten koszt? Złożoność nie świadczy o kompetencji; technologia wzięta dla
+nowości to dług (eng-design-principles). Szybkość z jakością i innowację ze stabilnością równoważ świadomie i zapisuj
+zaciągany dług (eng-tech-debt-audit).
+
+## 6. Estymacja
+- Podawaj przedziały (optymistyczny / najbardziej prawdopodobny / pesymistyczny), nigdy jedną liczbę.
+- Dekomponuj; porównuj z zakończoną podobną pracą; obok liczby wypisz założenia i niewiadome.
+- Największa niewiadoma staje się ograniczonym czasowo spike'iem, zanim estymata zostanie zobowiązaniem.
+- Prognozowanie przepustowości zespołu z historii należy do proc-agile; plany całych projektów do proc-project-planning.
+
+## 7. Lekki przegląd architektury (w stylu ATAM)
+1. Cele biznesowe i uporządkowane priorytetem scenariusze jakości (arch-quality-attributes).
+2. Architektura w obecnej postaci i decyzje, które za nią stoją.
+3. Dla każdego ważnego scenariusza: wspierające go decyzje, **punkty wrażliwości** (jedna decyzja mocno przesuwa jeden
+   atrybut), **punkty kompromisu** (decyzja poprawia jeden atrybut kosztem innego), **ryzyka** i nie-ryzyka.
+4. Raport: przejrzane scenariusze, ryzyka zgrupowane w tematy, rekomendacje z właścicielami.
+Prowadź go okresowo i przed dużymi zmianami; ciągłe kontrole między przeglądami to fitness functions.
+
+## 8. Dokumentacja
+- **ADR** to najcenniejszy dokument: przechowuje „dlaczego”.
+- Widoki **C4**: kontekst, kontenery, komponenty; poziom kodu rzadko warto rysować.
+- **arc42** jako szablon (cele, ograniczenia, kontekst, strategia rozwiązania, bloki, działanie, wdrożenie, koncepcje
+  przekrojowe, decyzje, jakość, ryzyka, słownik) — wypełniaj tylko sekcje, które ktoś czyta.
+- Dokumentacja żyje w repozytorium i zmienia się w tym samym PR co kod; generuj, co da się wygenerować (grafy zależności, referencję API).
+- **Jeden model tekstowy jako źródło prawdy.** Elementy i relacje opisz raz w modelu w repo (Structurizr DSL, LikeC4
+  albo eksport z narzędzia zespołu) i generuj widoki dla każdego odbiorcy. PR zmienia model; CI renderuje widoki.
+  Kontrola dryfu w CI porównuje relacje modelu z rzeczywistymi zależnościami (graf importów, wywołania usług, IaC):
+  zależność w kodzie, której brak w modelu, albo zamodelowana bez kodu za nią, to ustalenie przeglądu. ADR wskazują
+  elementy modelu; agent czyta tekst modelu, nie obrazki. Przed wyborem sprawdź aktualne wersje narzędzi (core-grounding).
+
+## 9. Coaching
+- Przeglądaj projekty i PR pod kątem decyzji architektonicznych, nie stylu (to zadanie lintera).
+- Zadawaj pytania tam, gdzie zespół ma się uczyć; dawaj odpowiedź, gdy dominuje czas lub ryzyko.
+- Skaluj się przez standardy w kodzie (generatory, szablony, reguły granic), implementacje referencyjne i warsztaty,
+  a nie przez bycie wąskim gardłem każdej decyzji.
+
+## 10. Ramy korporacyjne
+Organizacja może oczekiwać artefaktów TOGAF, ArchiMate, ITIL, PRINCE2 albo BABOK. Nie wdrażaj ramy; ustal, co naprawdę
+jest wymagane (często szablon i komisja architektoniczna), i odwzoruj istniejące artefakty zespołu — ADR → rejestr decyzji,
+model zagrożeń → ocena ryzyka, postmortem → rekord problemu — zamiast pisać równoległe dokumenty.
+Przegląd ram i odwzorowań: `references/corporate-frameworks.md`.
+
+## Przykład
+**Sytuacja:** „Co miesiąc zespół od nowa kłóci się, czy wydzielić rozliczenia z monolitu.”
+**Wynik:**
+- Poziom: rozwiązanie (rozliczenia rozmawiają z fakturowaniem i operatorem płatności).
+- Opcje: (A) nic nie zmieniamy; (B) moduł rozliczeń z wymuszonymi granicami w monolicie; (C) osobny serwis.
+  B zachowuje jedno wdrożenie i zyskuje wyraźny szew; C zyskuje niezależne wydania, traci transakcję, dodaje skok sieciowy
+  i drugi grafik dyżurów.
+- Odwracalność: B może później stać się C; powrót z C do B jest drogi → teraz B, C gdy wydania rozliczeń blokują inną pracę
+  częściej niż dwa razy na kwartał (wyzwalacz ponownego przeglądu w ADR).
+- Podważenie: pre-mortem „B zawiodło, bo granica przeciekła” → test granicy w CI od pierwszego dnia.
+- ADR-014 zaakceptowany; notatka dla zespołu (reguły modułu), dla biznesu (bez wpływu na termin), dla utrzymania (bez zmian we wdrożeniach).
+
+## Wynik
+Dla decyzji: poziom, opcje z kompromisami, ustalenia z podważenia i ich wynik, szkic ADR i trzy krótkie notatki dla
+odbiorców. Dla przeglądu: raport z sekcji 7. Brak kontekstu (decyzji, opcji lub ograniczeń) → zapytaj; nie wymyślaj
+decyzji do zapisania.
 
 ## Źródła
-- M. Richards, N. Ford, *Fundamentals of Software Architecture* (2. wyd. 2025) — oczekiwania wobec architekta,
-  decyzje; N. Ford i in., *Building Evolutionary Architectures* — fitness functions
-- SEI (R. Kazman i in.) — ATAM; S. Brown — [C4 model](https://c4model.com/); [arc42](https://arc42.org/)
-- InfoQ, [Driving Architectural Simplicity](https://www.infoq.com/articles/driving-architectural-simplicity/);
-  [roadmap.sh — Software Architect](https://roadmap.sh/software-architect)
-- Kurs 10xDevs, ed. 3 (2026), moduł 1, lekcja 5 (przeciwdziałanie przytakiwaniu modelu przy decyzjach) — materiał
-  szkoleniowy (dostęp 2026-10-09).
-Opisane własnymi słowami.
+- R. Kazman, M. Klein, P. Clements, „ATAM: Method for Architecture Evaluation”, CMU/SEI-2000-TR-004 (SEI, 2000).
+- G. Klein, „Performing a Project Premortem”, Harvard Business Review, wrzesień 2007.
+- M. Richards, N. Ford, *Fundamentals of Software Architecture*, O'Reilly, 2020 (oczekiwania wobec architekta).
+- N. Ford, R. Parsons, P. Kua, P. Sadalage, *Building Evolutionary Architectures*, wyd. 2, O'Reilly, 2023 (fitness functions).
+- InfoQ, „Driving Architectural Simplicity” [niezweryfikowane: autor i data].
+- roadmap.sh, ścieżka „Software Architect” (dostęp 2026-11-20).
+- Model C4, c4model.com; arc42, arc42.org; Structurizr DSL, docs.structurizr.com; LikeC4, likec4.dev (dostęp 2026-11-20).

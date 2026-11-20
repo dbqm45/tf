@@ -1,57 +1,56 @@
-# Investigation from many sources of evidence
+# Evidence from many sources
 
-No single source is enough. In the report, list what each channel contributed.
+A symptom usually leaves traces in more than one place. Pick the first source by the symptom, read code last and only with a
+hypothesis in hand, and verify the fix on every channel that showed the problem.
 
-## A report from a user
-One sentence without a stack trace ("saving a note does not work") you break down into questions, not into a diagnosis: reproduction steps,
-scope (what works, what does not), frequency, since when, the suspected area.
+## Where to start, by symptom
+| Symptom | First source | Then |
+|---|---|---|
+| an exception, HTTP 5xx | error monitoring (Sentry or similar): stack, frequency, release, affected users | logs around the event id |
+| success reported, no effect (200, `ok: true`, nothing stored or sent) | logs at warn/error level that never reached the caller; monitoring for handled errors | the durable state (DB row, file, outgoing message) |
+| visible only in the UI | browser console, network tab, accessibility tree (e.g. via Playwright) — separates front end from back end | the API response for the same action |
+| a failing test | its full output and the test code | the commit that changed either |
+| random, or only in production | monitoring: frequency, versions, regions; logs filtered by request id | a reproduction with the same data |
 
-## Where to start
-| Symptom | First source |
-|---|---|
-| an exception, 5xx, a crash | error monitoring (stack trace, the trail of events before the error, the request context) |
-| "success", but the effect does not happen (200, data unchanged) | monitoring + application logs (warn/error without propagation) |
-| a problem only in the UI, the API healthy | the browser: console, network traffic, accessibility tree |
-| a failing test | the test result and stack trace, then the code |
-| random or only in production | monitoring (frequency, versions, users), logs with a request identifier |
+## Channels and their limits
+- **Error monitoring.** Shows what was captured. Console warnings and handled errors appear only if capture is enabled for them, and that
+  uses the event quota — check the configuration before concluding "no errors".
+- **Application logs.** Decide the scale first: one incident (filter by request or entity id) or the whole population (counts per hour,
+  per version). Missing correlation ids are themselves a finding.
+- **The browser.** Drive the scenario with Playwright and capture console messages and network requests; this tells whether the request
+  left the browser and what came back.
+- **Pixels.** A screenshot given to a model yields hypotheses only — models misjudge positions and sizes. For a test, use a deterministic
+  visual-regression comparison.
+- **The code.** Read it to confirm or refute a specific hypothesis, not to browse.
 
-## Channels and what they give
-- **Error monitoring** (Sentry or an equivalent, also through MCP): the place and name of the error, the stack, the events before the error.
-  A console warning gets there only with console capture turned on — that uses up the event quota; with traffic
-  narrow it down to errors or report selected cases explicitly.
-- **Application/platform logs** (with a filter on the message): the scale — a single incident or every call.
-- **The browser** (Playwright: the console, the list of requests, the details of one request): separates the front end from the backend.
-- **Code**: the root cause — read only with a hypothesis from the previous channels.
+## Swallowed errors
+Typical shape: an exception is caught, logged at warn level (or not at all), and the handler still returns success.
+- **The reproducing test asserts the durable effect** — the stored row, the written file, the sent message — never only the status code.
+- **The fix has two parts:**
+  1. stop hiding: return or propagate the error so the caller and monitoring see it;
+  2. fix the operation that failed.
+  Part 1 alone turns a silent 200 into a visible 500 — progress, but not a fix. Ship both, or ship part 1 knowingly with the human's
+  agreement.
+- Search for the same pattern elsewhere (`rg -n "except Exception:\s*$" -A2`, `catch (e) {}`), and ask why the gates missed it —
+  an escape analysis in the test strategy (qa-test-design).
 
-## A visual signal (only pixel bugs)
-Overlapping, z-index, truncated text, an animation — the console and the network are silent. A screenshot and an open question to a model
-with the image; the answer is a hypothesis (models confuse positions and can report a false alarm or miss a problem).
-Visual regression in tests you check with deterministic tools (qa-regression), not with a model.
+## Verification mirrors the investigation
+Every channel that showed the problem must now show its absence: the test is green, the log has no warning for the request, monitoring
+shows no new events after the release, the browser shows the expected request and response.
 
-## The reproducing test
-It fails for the right reason and checks **the durable effect** (a row in the database, a file, a sent message), not the response status.
-It stays as a regression guard.
+## A failing test in the hook loop
+When a hook (e.g. `tdd_guard`) keeps reporting the same failing test after one or two fix attempts, stop patching and run the procedure
+from the symptom description.
 
-## A swallowed error — a fix in two parts
-1. **Stop hiding:** return an error (5xx or a domain code), not a "success" with data from memory.
-2. **Fix the operation itself.** Part 1 alone turns a silent 200 into a visible 500 — only both together make it work.
-
-Search the code for the same pattern (error handling that logs and returns success) — there are usually several copies
-(eng-clean-code, the "Errors" section).
-
-## Verification = the mirror of the investigation
-Every channel that showed the problem must show its absence: a green test, no new events in monitoring, no
-message in the logs, a correct flow in the browser.
-
-## Why the gates did not catch it
-Add an escape analysis (qa-test-design, `test-strategy-and-plan.md`): a risk named in the test strategy, but without
-a built test phase, is not yet a gate.
-
-## A hook showed a failing test
-The agent fixes trivial things (format, import, type) itself. A business logic test still fails after 1–2 fix attempts → stop and this
-procedure (or a separate change); you do not fix the code "by intuition" until it is green (eng-local-quality-gates).
-
-## Sources
-- The 10xDevs course, ed. 3 (2026), module 3, lesson 5 (debugging with monitoring, logs and the browser) — training
-  material (accessed 2026-10-09).
-Described in our own words.
+## Example — booking saved "successfully", but not stored
+Report: "Customers say their booking disappears." `POST /bookings` returns 200 with `{"ok": true}`; the `bookings` table has no row;
+the log shows `WARN booking insert failed: slot_id violates foreign key`.
+1. Monitoring: no event — handled exceptions are not captured. Logs: 37 such warnings since Tuesday's release, all for slots created
+   by the new admin import.
+2. Hypotheses: (a) the import writes slots to another schema; (b) the slot id is formatted differently; (c) a transaction rollback after
+   insert. Cheapest decisive check: compare a failing `slot_id` with the `slots` table → (b): the import stores ids with a prefix.
+3. Red test: book an imported slot, assert a row exists in `bookings` (not the 200).
+4. Fix part 1: the handler returns 409 with the error instead of `ok: true`. Part 2: the import strips the prefix; a migration fixes
+   existing slots.
+5. Verification: test green, no `booking insert failed` in logs for a day, monitoring now captures the error class. Trap recorded in
+   `docs/project/lessons.md`: "a handler must not return ok after a failed write".

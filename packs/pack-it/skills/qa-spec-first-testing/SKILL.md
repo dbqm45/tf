@@ -1,132 +1,127 @@
 ---
 name: qa-spec-first-testing
-description: Use when tests must check the requirement, not the implementation — an independent oracle, clean-room, ATDD, mutations.
+description: Use when tests must check the requirement, not the implementation — an independent oracle, clean-room roles, failing spec tests, bug examples, mutants.
 metadata:
   review: "2027-10-09"
-  catalog: "Use whenever writing tests — how to make a test check the REQUIREMENT instead of duplicating the implementation (an oracle independent of the code, TDD/ATDD, clean-room, a discrepancy protocol, characterization, mutation and property-based tests). Not for test-case selection techniques (qa-test-design), formal verification (qa-formal-methods) or tool syntax (tool-*)."
+  catalog: "Use when tests must check the requirement, not the implementation: where expected values come from (an independent oracle, never the code), acceptance tests before code, the clean-room split between test designer and automation engineer, what to do when a spec-based test fails, tests derived from a bug report around a threshold, characterization tests before a refactor, mutation and property tests, a manual mutation check of a test written after the code, traceability by criterion id. Not for choosing test techniques and boundary values (qa-test-design), runner syntax (tool-vitest, tool-pytest), formal models of protocols (qa-formal-methods) or exploratory sessions (qa-exploratory-manual)."
   keywords: "test ze specyfikacji pada, zmienić oczekiwaną wartość w teście, poprawić test pod kod, test czy kod, wyrocznia testu, zgłoszony błąd, testy do poprawki błędu, przykład ze zgłoszenia, próg nie działa, dokładnie na progu, jakie przypadki dodać do poprawki, a spec-based test fails, change the expected value in a test, fix the test to match the code, test or code, test oracle, reported bug, tests for a bug fix, example from the report, threshold does not work, exactly at the threshold, which cases to add for a fix, generate unit tests from the code, AI-generated tests, expected values, tests from implementation, oracle problem"
 ---
 
-# Tests from the specification, not from the implementation
+# Spec-first testing — the test checks the requirement
 
-## The problem
-A test written by **reading the existing method** encodes its behavior — along with its bugs. Such a ("mirror") test
-always passes and proves nothing: if the method computes a discount from `> 10` instead of `>= 10`, a test generated from the code
-will check `11` and cement the bug.
+A test whose expected value was read off the code is a **mirror test**: it duplicates the implementation, freezes its current
+behaviour together with its bugs (an off-by-one at a threshold included) and passes forever. Generating unit tests "from the code
+alone" produces exactly that. The expected value has to come from somewhere else.
 
-## The rule: an independent oracle
-**The expected result of a test comes from outside the production code**, always with a named source:
-1. acceptance criteria (Given/When/Then) and business rules from `docs/project/03-requirements/`,
-2. examples from the expert (Example Mapping, ddd-deep-modeling) — concrete numbers and dates,
-3. values computed **by hand or by a method other than** the code (a table in the test, a spreadsheet, a reference model),
-4. regulations, standards, API contracts (OpenAPI, public types),
-5. properties and invariants ("the sum of installments = the amount", "never two reservations for the same interval").
+## 1. The oracle — where expected values come from
+Every expected value names its source (a comment, the case id or the test name). Allowed sources:
+- acceptance criteria and business rules in `docs/project/03-requirements/`;
+- concrete examples given by a domain expert or quoted from a bug report;
+- values computed by hand or by a **different method** (a table, a spreadsheet, a simple reference model);
+- regulations, standards, API contracts;
+- properties and invariants (sum of parts = whole, idempotence, round-trip).
 
-**Never:** running the code and copying the result as "expected"; the same formula in the test as in production;
-a mock returning what is then asserted.
+Not allowed: copying the program's output into the assertion, reusing the production formula in the test, asserting the value
+a mock was told to return. No source → an open question to the requirement owner (core-project-record), not a guess.
 
-## Workflows
-### A new feature — test first (TDD / ATDD)
-1. The tester writes **acceptance tests** (e2e/API) from the acceptance criteria — before the implementation.
-2. The developer in a TDD cycle: a unit test **red for the right reason** → minimal code → green → refactor (eng-testing).
-3. Every new test **must fail first** — a test that is green right away has proved nothing (check that it executes an assertion at all).
+## 2. Clean-room roles
+- `*-qa-analyst` designs cases from specs, contracts and existing tests; **never sees the implementation** (a hook blocks reading
+  source files for agents with that name).
+- `*-qa-automation` turns cases into code; may read production code **only for wiring** (imports, constructors, selectors);
+  expected values come only from the cases.
+- The same blindness applies when stress-testing requirements: the blind profile in ddd-model-stress-test sees only the business brief.
+- For a new feature: acceptance tests first, from the criteria, before the code exists; developer TDD inside (eng-testing).
+  **Every new test must be seen failing** — red for the right reason. A test green at birth proves nothing.
+- Acceptance tests are protected by repository rules in CI (core-git-workflow, "Pull request" section), not by a sentence in a prompt.
 
-### A reported bug — from an example to a test
-1. Write down the example: **input / expected / actual** (with a quote from the report as the source of the expected).
-2. From the threshold derive points: at the threshold, just below and just above (99.99 · 100.00 · 100.01) and one counterexample for the rule
-   (e.g. a promo code, a refund). A counterexample without a clear "Then" is a question for the business, not a test.
-3. The rule in words you write last, from the examples. A single example lets through an implementation that "knows the answer"
-   (`if total == 100`).
-4. **A property test does not replace the example:** random generation over the full range almost never hits the threshold exactly,
-   so the example from the report stays as an explicit case in the property test (e.g. `@example(100.00)` in Hypothesis,
-   tool-pytest).
-5. For thresholds and numeric rules optionally **a contract before the tests**: preconditions, postconditions and unspecified
-   cases written by the agent and read by the human before the tests are created; the tests follow from the contract,
-   not from the code that was read. It costs more tokens, so not as a default step (J. Wąsowski, "Failing Example as
-   the Start of a Spec", 2026-10-28; the numbers from the studies cited there [unverified]).
-6. Acceptance tests protected from change by the agent are enforced by CI, not by a prompt (core-git-workflow, "Pull request").
+## 3. When a spec-based test fails
+1. Re-read the test against the source. Is the test faithful to the spec?
+2. **Test is right** → the code is wrong. **Do not change the expected value.** File a defect (qa-exploratory-manual format)
+   with the case id and a quote of the source; keep the test red, or mark it as a known defect with a link:
+   `test.fails` / `it.fails` (Vitest), `test.fail()` / `test.fixme` (Playwright), `@pytest.mark.xfail(strict=True)`.
+3. **Spec ambiguous** (e.g. rounding not stated) → open question to the owner, mark the test pending/skip with the question's id. Do not pick a side.
+4. The expected value changes only when a **new source** appears — and the commit message cites it.
 
-### Existing code without tests
-Two different kinds of tests — never mix them:
-- **Tests from the specification** (designed in clean-room, see below). A failure = a defect or a gap in the specification — **not a test fix**.
-- **Characterization tests** — only as a safety net before refactoring; they cement the current behavior, not its
-  correctness. Mark them (`describe('[characterization] …')`, the `@characterization` tag) and do not count them as proof that it works.
-  When rewriting such tests to a higher level keep an **assertion register** (what the new assertion no longer distinguishes and why that is OK),
-  and report a change that "while at it" fixes a bug as a hidden defect (eng-behavior-preserving-refactoring).
+## 4. Tests from a reported bug
+1. Record the triple **input / expected / actual**, with the report quoted as the source of "expected".
+2. Derive points **at, just below and just above** the threshold, plus one counterexample from the other side of the rule.
+3. State the general rule last. A single example lets a hard-coded `if (total == 100)` pass.
+4. Property tests rarely hit an exact threshold by chance — keep the report's example as an **explicit case**
+   (Hypothesis `@example(...)`, fast-check `examples`), next to the property.
+5. Optional, for numeric/threshold rules: before tests, the agent writes a short contract (preconditions, postconditions,
+   cases the spec leaves unspecified) and the human reads it. It catches gaps early but costs tokens — not the default.
 
-### Clean-room (separation of roles)
-- **The test designer** (`*-qa-analyst`) sees the specification, contracts and existing tests, **does not see the implementation** —
-  the `cleanroom_guard.py` hook enforces this. Produces test cases with expected results and their source.
-- **The automation engineer** (`*-qa-automation`) may read the code to wire up tests (selectors, API), but **takes expected values
-  only from the test cases** — not from the code.
+## 5. Existing code without tests
+Two kinds of tests, never mixed in one file or one claim:
+- **Spec tests** — from requirements; a failure is a defect or a spec gap, never "fix the test".
+- **Characterization tests** — record what the code does today, as a safety net for a refactor (eng-behavior-preserving-refactoring).
+  Label them with the word `characterization`: `describe('[characterization] invoice totals', …)`, tag `@characterization`.
+  They are not proof of correctness and do not count as coverage of a requirement. (The TDD hook accepts a green-at-birth test only with that label.)
+- Moving characterization tests to a higher level: keep a **register of assertions** — what the new tests no longer distinguish and
+  why that is acceptable. A behaviour "fixed while refactoring" is a hidden defect: report it, do not slip it in.
 
-### Clean-room beyond tests
-The same rule applies when generating requirements for a model stress test (ddd-model-stress-test): an agent in the `blind` profile
-reads only the business brief — requirements written with knowledge of the architecture fit it by construction.
+## 6. Do the tests catch anything?
+**Mutation testing** (Stryker, PIT, mutmut) on domain logic; use the score on critical modules instead of line coverage.
+- 0% or a suspicious 100% first means the tool is not activating mutants — check the runner configuration before reading results.
+- Narrow the scope to risky modules or the current change.
+- Each surviving mutant is a decision:
+  - a real gap → add an assertion on **behaviour**;
+  - an **equivalent** mutant (no observable difference) → skip;
+  - a real difference, but the assertion would be brittle or cosmetic (log text, an internal call order) → skip, with a one-line reason.
+  Ask: "would a real bug like this hurt a user or the business?" Do not chase 100%. Merge or delete duplicate tests that kill nothing.
 
-## The discrepancy protocol (a test from the specification does not pass)
-1. Check the test against the specification: did you read the requirement and the input data correctly?
-2. The test matches the specification → **a defect report** (qa-exploratory-manual: the report format) with the case ID and a quote from the source.
-   The test stays red or is marked as a known bug (`test.fails` / `test.fixme` with a link to the report) — **never
-   change the expected value to make it "pass"**.
-3. The specification is ambiguous → an open question to the product owner (core-project-record); the test marked as pending.
-4. Change the expected value only with a new source (an updated criterion) — give the source in the commit.
+**Property-based tests** (fast-check, Hypothesis, jqwik) for calculations and invariants; boundary values come from qa-test-design;
+concurrency and protocol rules go to qa-formal-methods.
 
-## Do the tests catch bugs at all?
-- **Mutation tests** (Stryker for JS/TS, PIT for Java) on domain logic: the tool introduces small bugs (`>=` → `>`,
-  `+` → `-`). Measure the *mutation score* of critical modules, not line coverage: coverage shows code without a test, the mutation
-  score — blind tests (an agent rarely leaves code uncovered, more often covered but undefended).
-  A result of 0% or a suspicious 100% at the start = first check whether the tool activates mutants at all (tool-vitest).
-  Scope: modules from the risk map or the current change, narrowed to a file or a line range — not the whole repo after every commit.
-- **Property-based tests** (fast-check, jqwik) for calculations and invariants — the oracle is the property, not the code.
-- **Boundary values** from qa-test-design — that is where "off by one" bugs most often hide.
-- **Formal methods** (the Z3 solver, TLA+ or Alloy model checking) for concurrency, protocols and rules with a limit —
-  the oracle is the tool, not random generation (qa-formal-methods).
+**Manual mutation check** — for a test written after the code, or without supervision, that was never seen red:
+1. Stage (`git add`) or commit your work first, so the break is the only unstaged change.
+2. In the working tree only, weaken or invert exactly the behaviour the test protects (`>=` → `>`, drop the discount line).
+3. Run that test — it must go red.
+4. Restore with `git checkout -- <file>`; `git diff` must be empty.
+5. Green on broken code → strengthen the assertion. Report what you broke and which test went red.
 
-### A mutant survived — a decision, not automation
-For each one you ask: "would a real bug of this shape hurt the user or the business?"
-1. **Yes — a real gap** → add an assertion of the behavior (not of an implementation detail). Typically: `>=` → `>` at a threshold,
-   `||` → `&&` in error handling, a removed condition.
-2. **An equivalent mutant** (the change does not alter observable behavior) → skip; no test will kill it.
-3. **A real change, but the assertion would be brittle** (message wording, a header, cosmetics of the response) → skip knowingly,
-   with a one-sentence justification in the report.
+## 7. Adding tests to an existing file (runner already set up)
+1. List the behaviours from requirements and the stack's conventions — **not from the code**. Unknown expectation → a question.
+2. Per behaviour: one behavioural test plus one edge case chosen from risk.
+3. Report in a table:
 
-You do not chase 100% — killing cosmetic mutants produces mirror tests. Tests that kill no mutant
-and duplicate another test (the same assertion, a different setup), merge into one parameterized test or delete.
+| Test | Regression it would catch | Change that turns it red | Source of the expected value |
+|---|---|---|---|
 
-### Deliberate breaking — does the assertion guard anything at all? (manual mutation)
-When the test was written after the code, the agent worked unsupervised, or it guards a risk from the risk map:
-1. Add the step's files to the index (`git add <files>`) so that restoring is exact.
-2. In the production code invert or weaken exactly the protected behavior (narrow a filter, invert a branch, remove a write) —
-   the change only in the working tree.
-3. Run that test. It must be **red** (ideally only it) — that is a positive result.
-4. Always restore: `git checkout -- <file>`, also when something went wrong; check `git diff` before the commit.
-5. Green on broken code = the assertion guards nothing → strengthen the assertion; never weaken the code or skip the step.
+A row with an empty column is marked **uncertain**.
 
-In the report: what was broken, which test turned red, that the file was restored.
+## 8. Mirror-test smells (reject in review)
+The same formula as the code · assertions on internal calls instead of results · snapshots nobody reviewed · test named after the
+method (`testCalculate`) instead of the rule · no link to a requirement · never seen red · result compared with itself ·
+happy path only · "variants" that differ only in setup and assert the same thing.
 
-### Tests for an existing file without a full cycle (the runner is already there)
-1. From the requirements and the stack (not from the code) list the file's behaviors that matter to the user and the business — before the tests. If the sources do not
-   settle the expected result → questions, not guessing.
-2. For each behavior a behavioral test and at least one edge case from the risk (null, empty, a dependency error,
-   bad input). No near-identical copies — every test catches a different regression.
-3. The report: | Test | What regression it catches | What change in the code would turn it red | The source of the expectation |. A row without
-   column 2 or 3 → "uncertain" and a question to the human.
+## 9. Traceability
+The test name or tag carries the criterion or case id: `test('US-02/AC-3: a valid discount code lowers the total', …)`,
+`TC-014`. Coverage is counted **by requirement**: every criterion AC-n has at least one test, every test points to a criterion.
 
-## Signs of a mirror test (reject in review)
-the expected value computed with the same formula as in the code · assertions on calls to internal methods instead of on the result ·
-the whole result as a snapshot accepted without review · the test name = the method name (`test calculate()`) instead of the behavior ·
-no reference to a requirement · a test written after the code that was never red (→ deliberate breaking) ·
-`toEqual(await f(x))` — a function's result compared with itself · only happy paths, zero edge cases
-from the risk · a series of tests differing only in setup with the same assertion.
+## Example
+Report: "An order of exactly 100.00 does not get free shipping; it should from 100." Existing suite uses Hypothesis.
 
-## Traceability
-The test's name or tag contains the criterion/case ID: an acceptance test — the identifier of the story's scenario
-(`US-02/AC-3`), a case from the test plan — its number (`TC-014`). We measure coverage by **requirements** (every criterion has a test),
-not by line percentage.
+```python
+# Source: BUG-231 "free shipping from 100.00" (quote). input 100.00 / expected 0.00 / actual 9.99
+@pytest.mark.parametrize("total, shipping", [
+    (Decimal("99.99"), Decimal("9.99")),   # just below
+    (Decimal("100.00"), Decimal("0.00")),  # at — the reported case
+    (Decimal("100.01"), Decimal("0.00")),  # just above
+    (Decimal("10.00"), Decimal("9.99")),   # counterexample far below
+])
+def test_BUG231_free_shipping_threshold(total, shipping): ...
+
+@given(st.decimals(min_value=100, max_value=10_000, places=2))
+@example(Decimal("100.00"))               # explicit — random draws rarely hit it
+def test_free_shipping_from_100(total): assert shipping_for(total) == 0
+```
+Rule stated last: shipping is free for totals ≥ 100.00.
 
 ## Sources
-- The 10xDevs course, ed. 3 (2026), module 3, lesson 2 (unit tests with an agent, mutation tests) and module 5 (the "deliberate
-  breaking" check in unsupervised work) — training material (accessed 2026-10-09).
-- Stryker 10.0 `stryker run --help` — narrowing `--mutate` to a file or a line range (checked 2026-10-10).
-Described in our own words.
+- B. Meyer, *Object-Oriented Software Construction*, 2nd ed. (1997) — design by contract: preconditions, postconditions, invariants.
+- J. Wąsowski, "Failing Example as the Start of a Spec" (blog, 2026) — a failing example from a report as the seed of a contract
+  before tests [unverified: exact date and figures].
+- Stryker Mutator docs (stryker-mutator.io, "Mutant states and metrics") and PIT docs (pitest.org) — survived, killed and
+  equivalent mutants; check the CLI with `npx stryker run --help` (accessed 2026-10-09).
+- Hypothesis docs, `@example` decorator (hypothesis.readthedocs.io); fast-check docs, `examples` parameter (fast-check.dev).

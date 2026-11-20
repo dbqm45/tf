@@ -1,56 +1,58 @@
-# Reframing — are we solving the right problem
+# Re-framing a problem that may be misnamed
 
-Investigation fills in missing data; reframing corrects a wrongly posed problem. The order depends on what is blocking.
+Some problems resist fixing because the request names the wrong problem: it arrives with a cause and a solution already attached
+("duplicates — add a unique index"). Before another fix, check the framing itself.
 
-## When
-- a second failed fix of the same symptom;
-- the investigation opens more and more questions instead of narrowing down to a contract;
-- the implementation once again does not meet the criteria or persistently deviates from the plan in the same way;
-- the report combines a symptom with a cause and a fix ("X breaks, let's do Y");
-- a lack of expertise in the area.
+## When to use it
+- a second fix of the same symptom did not help;
+- the investigation keeps opening new questions instead of narrowing;
+- the plan keeps deviating from what was agreed;
+- the report mixes the symptom, a presumed cause and a proposed fix in one sentence;
+- the area needs domain knowledge you do not have.
+Not for mechanical changes, or when the human has already verified the cause.
 
-Not for mechanical changes or when the human has verified the cause themselves.
-
-## Procedure
-1. **Separate three things and read them back to the human:** the observation (the literal effect) · the assumed cause or
-   approach · the proposed direction. Only the observation is certain, the rest are hypotheses. You do not merge them, even when
-   the human pushes "just plan the fix".
-2. **One round of 1–3 questions** narrowing down the observation (which symptom is the main one, one or several, a single case or
-   a class), with the option "I don't know / I didn't separate them". The options describe observations, never causes or fixes.
-3. **A map of dimensions** from the code and documents read: every stage of the chain (input, transformation, state, side
-   effects — or the axes of a design decision) in which the problem could arise. Mark where the human's assumption
-   lands. You skip a dimension with no trace in the material.
-4. **Hypotheses in parallel** — 2–4 (at most 5 read-only workers, the assignment in one message). Each one gets
-   the literal observation, one hypothesis and the question "what traces would have to exist if the problem were here — and do they?".
-   The result: strong / weak / none, with `file:line`.
-5. **Deciding questions** (2–5 in total): each one shifts the ranking of the hypotheses; always with the option "I haven't checked". The evidence
-   is unambiguous → skip them and say why.
-6. **A test from a different side:** a new worker gets only the observation, without the name of the leading hypothesis; you look for similar
-   events in the history (commits, reports, tickets); you check what the hypothesis requires and what it forbids.
-   A contradiction → go back to step 4.
-7. **A record** `frame.md` next to the step report (80–150 lines): the observation (verbatim) · the original framing (kept) ·
-   the map of dimensions · a table Hypothesis | Evidence | Verdict · narrowing signals · the problem reframed or confirmed
-   (one sentence) · confidence (high / medium / low + what to check before the plan) · what changes in the plan.
+## Steps
+1. **Take the report apart** into three lines and read them back to the human:
+   - *observation* — what was actually seen, verbatim where possible;
+   - *assumed cause* — what the reporter thinks is behind it;
+   - *proposed direction* — the fix they suggest.
+2. **One round of narrowing questions** (1–3), each offering "I don't know" as an answer. The options describe observations
+   ("does the duplicate have the same timestamp?"), never causes ("is it a race condition?").
+3. **Map where the problem could live.** List the stages of the chain the observation passes through — input, transformation, stored
+   state, side effects (messages, emails, external calls) — and mark the stage the assumed cause points to. The other stages are the
+   alternatives the framing ignored.
+4. **Test 2–4 hypotheses in parallel**, one per stage worth checking. Each read-only worker (at most five) receives the literal
+   observation, one hypothesis, and the question "what traces would exist in code, data or logs if this were true?". It returns a verdict —
+   strong / weak / none — with `file:line` or log evidence.
+5. **Deciding questions** (2–5) for the human, each with a "haven't checked" option — skipped when the evidence is unambiguous.
+6. **Cross-check.** A worker that sees only the observation (not the original framing) proposes its own explanation; search history and
+   tickets for similar events; for the winning hypothesis list what it requires and what it forbids, and check one of each.
+7. **Write `frame.md`** next to the step report (aim for 80–150 lines):
+   - the observation verbatim and the original framing;
+   - the chain map with the marked stage;
+   - a table hypothesis / evidence / verdict;
+   - the narrowing signals (answers, logs) that decided it;
+   - the statement: *re-framed as …* or *original framing confirmed*;
+   - confidence high / medium / low and what would raise it;
+   - what changes in the plan.
 
 ## Rules
-- "The original framing was right" is a fully valid result — you do not invent a reframing by force.
-- No designing of the solution (phases, files, technical decisions) — the step plan does that.
-- Hypotheses from the map of this material, not from "I've seen this in other systems"; a hunch without `file:line` does not go
-  into the result.
-- The limit: 2–4 rounds of workers and 2–5 questions. Longer → a reproduction or data collection is needed, not analysis.
-- The human's objection → a new round of hypotheses with their argument, not a defence of the thesis.
-- The step plan that got `frame.md` does not repeat the diagnostic questions; with "low" confidence it asks one: first
-  verification or a plan with a risk.
+- "The original framing was right" is a valid outcome.
+- No solution design here — the output is a better-named problem, the fix follows the normal procedure.
+- Hypotheses come from this material and cite `file:line`; no generic lists of possible causes.
+- Limits: 2–4 rounds of workers, 2–5 questions. If the human objects to the result, run a new round with their objection as input.
+- Low confidence → the plan starts with one verification question or experiment.
 
-## Example
-The report: "duplicate invoices — let's add a unique index". The observation: two invoices with the same order number,
-both entries approx. 2 s apart. The assumed cause: no lock in the database. The direction: an index. The map: a button in the UI →
-a request → a queue → a consumer → a write. Hypotheses: (a) a double click, (b) a retry from the queue without idempotency,
-(c) a race of two consumers. Evidence: in the broker logs the same message id delivered twice after the acknowledgement
-limit was exceeded → (b) strong. Reframing: the problem is a consumer without idempotency (be-messaging-outbox); an index
-would turn the duplicate into a 500 error on a retry.
-
-## Sources
-- The 10xDevs course, ed. 3 (2026), module 2, lesson 4 (reframing as a lifeline in planning) — training
-  material (accessed 2026-10-09).
-Described in our own words.
+## Example — duplicate invoices
+Report: "Duplicate invoices — let's add a lock in the database." Third fix attempt failed.
+- Taken apart: *observation* — some customers receive two invoices with different numbers for one order; *assumed cause* — two parallel
+  inserts; *proposed direction* — a unique index or lock.
+- Questions: "Do the two invoices have the same creation second?" → no, 4–6 minutes apart. "Does it happen after deployments or restarts?"
+  → don't know.
+- Chain map: order event → consumer → invoice creation → number allocation → email. The assumed cause points at *creation* (concurrency).
+- Hypotheses: (a) concurrent inserts — **none**: timestamps minutes apart, `invoices.py:58` already runs in one transaction;
+  (b) the queue redelivers the event and the consumer is not idempotent — **strong**: visibility timeout 300 s in `queue.yaml:12`,
+  the consumer acknowledges after sending the email (`consumer.py:91`), the email call sometimes takes over 300 s in logs;
+  (c) the frontend submits the order twice — **weak**: one order id per pair.
+- Re-framed: "the invoice consumer is not idempotent under redelivery". A unique index on the invoice number would not help — the
+  numbers differ. Confidence: high. Plan change: idempotency key = order id in the consumer, acknowledge before slow side effects.

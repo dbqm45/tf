@@ -1,91 +1,110 @@
-head: Użyj przy relacjach i integracji kontekstów — mapa kontekstów (OHS, ACL, Conformist), zdarzenia integracyjne. Użyj przy projektowaniu relacji i integracji między kontekstami — mapa kontekstów (Open Host Service, ACL, Published Language, Conformist i in.), serwisy krawędziowe vs wewnętrzne, zdarzenia integracyjne (notification, event-carried state transfer). Nie do wyznaczania samych granic (ddd-strategic-analysis) ani modelu wewnątrz kontekstu (ddd-tactical-design).
-# Mapa kontekstów i integracja
+head: Użyj przy projektowaniu relacji i integracji między bounded contextami — ACL czy konformista czy open host, zdarzenia integracyjne, tożsamość między aplikacjami, izolacja biblioteki. Użyj przy projektowaniu i zapisie relacji oraz integracji między bounded contextami — wzorce mapy kontekstów (open host service, published language, warstwa antykorupcyjna, konformista, klient/dostawca, partnerstwo, shared kernel, separate ways), upstream/downstream, serwisy brzegowe a wewnętrzne, zdarzenia domenowe a integracyjne, notyfikacja a event-carried state transfer, gwarancje dostarczenia, pomiar relacji connascence, tożsamość pojęć i rzeczy między aplikacjami, warstwa antykorupcyjna wokół biblioteki lub SDK pilnowana w CI; wynikiem jest context-map.md. Nie do wyznaczania granic kontekstów (ddd-strategic-analysis) ani modelowania wewnątrz jednego kontekstu (ddd-tactical-design).
+# Mapowanie kontekstów — relacje i integracja między kontekstami
 
-Mapa kontekstów to jeden z najważniejszych artefaktów: pokazuje, kto od kogo zależy i jak modele się tłumaczą.
-Rób kilka małych map pod konkretne pytania zamiast jednej gigantycznej.
+Podział na konteksty już istnieje (ddd-strategic-analysis). Ten skill rozstrzyga, **jak** konteksty rozmawiają: kto dopasowuje się
+do kogo, co przekracza granicę, jak jest dostarczane i jak sprawdzić relację.
 
-## Relacje zespołów
-- **Upstream / downstream** — zmiany u dostawcy (upstream) wpływają na odbiorcę (downstream), odwrotnie nie.
-- **Wzajemna zależność** — oba zespoły muszą dowozić razem.
-- **Niezależność** — zmiany jednego nie wpływają na drugi.
+**Wynik:** `docs/project/02-domain/context-map.md` — Mermaid `flowchart LR` plus tabela: relacja, wzorzec,
+upstream / downstream, kontrakt z wersją, właściciel, uzasadnienie. Brak kontekstów, zespołów lub integracji → zapytaj;
+nie wymyślaj mapy.
 
-## Wzorce — kiedy który
-| Wzorzec | Kiedy wybrać | Koszt / ryzyko |
+## 1. Mapy
+Rysuj kilka małych map, po jednej na pytanie (płatności, realizacja zamówień, raportowanie), zamiast jednej mapy na całą
+ścianę. Dla każdej relacji najpierw nazwij relację zespołów:
+- **upstream / downstream** — zmiany upstreamu lądują u downstreamu;
+- **wzajemna zależność** — oba muszą wydawać razem;
+- **niezależność** — integracja niepotrzebna.
+
+## 2. Wybór wzorca
+| Wzorzec | Kiedy | Ile kosztuje |
 |---|---|---|
-| **Open Host Service (OHS)** | upstream ma wielu odbiorców; zamiast integracji szytych na miarę udostępnia jeden stabilny, udokumentowany protokół (API, zdarzenia) | trzeba utrzymywać kontrakt i wersjonowanie; kontrakt **nie może** być wewnętrznym modelem wystawionym na zewnątrz |
-| **Published Language** | wspólny, dobrze opisany format wymiany (często razem z OHS; np. standardy branżowe, schematy zdarzeń) | zmiany języka wymagają uzgodnień |
-| **Anti-Corruption Layer (ACL)** | downstream chroni swój model przed obcym (legacy, zewnętrzny dostawca, subdomena generic) | warstwa tłumaczeń do utrzymania; opłaca się dla core domain |
-| **Conformist** | downstream przyjmuje model upstream wprost, bo nie ma wpływu, a model jest „wystarczająco dobry” | tracisz własny język; nie dla core domain |
-| **Customer / Supplier** | upstream uwzględnia potrzeby downstream w planowaniu; wynegocjowane zobowiązania | wymaga dojrzałej współpracy i budżetu po stronie dostawcy |
-| **Partnership** | dwa konteksty zależne od siebie, planowane razem | silne sprzężenie organizacyjne |
-| **Shared Kernel** | mały, jawnie uzgodniony wspólny fragment modelu/kodu | każda zmiana wymaga konsultacji; trzymaj minimalny |
-| **Separate Ways** | integracja kosztuje więcej, niż daje | możliwe dublowanie funkcji |
-| **Big Ball of Mud** | oznacz obszar bez spójnego modelu, żeby jego bałagan nie „przeciekał” | izoluj ACL-em |
+| Open Host Service | upstream z wieloma odbiorcami udostępnia jeden stabilny, udokumentowany protokół | kontrakt do wersjonowania; nie może odbijać modelu wewnętrznego |
+| Published Language | udokumentowany format wymiany dzielony przez kilka stron (standard branżowy, schemat zdarzeń) — często z OHS | zmiany wymagają uzgodnienia |
+| Warstwa antykorupcyjna (ACL) | downstream chroni swój model przed modelem legacy, dostawcy lub generycznym | warstwa tłumacząca do zbudowania i utrzymania; opłaca się dla rdzenia |
+| Konformista | downstream nie ma wpływu, a model upstreamu jest wystarczająco dobry | downstream traci własny język — **nigdy dla rdzenia (core)** |
+| Klient / Dostawca | upstream planuje pod potrzeby downstreamu | wymaga dojrzałej relacji i budżetu dostawcy |
+| Partnerstwo | dwa konteksty planowane i wydawane razem | silne sprzężenie organizacyjne |
+| Shared Kernel | malutki, jawnie uzgodniony wspólny model lub kod | każda zmiana jest negocjowana |
+| Separate Ways | integracja kosztuje więcej, niż daje | akceptowana duplikacja |
+| Big Ball of Mud | splątany obszar, którego nie naprawisz teraz | nazwij go i odgrodź warstwą ACL |
 
-Heurystyka: konteksty core → chroń ACL-em albo bądź upstreamem z OHS; generic → konformizm lub ACL do gotowca.
+Heurystyka: kontekst rdzeniowy stoi za ACL albo jest upstreamem z OHS; generyczny dopasowuje się do gotowego produktu albo
+ma cienką ACL. ACL egzekwuj w CI (sekcja 6) — niesprawdzana warstwa eroduje w kilka miesięcy.
 
-**ACL wobec biblioteki lub SDK** (nie tylko innego kontekstu): obiekt wartości domeny jako jedyne miejsce wiedzy
-o kształcie zależności + wąski port w języku domeny + adapter owijający bibliotekę. Kryterium ukończenia jest
-sprawdzalne: `rg -l "from '<pakiet>'"` zwraca wyłącznie pliki katalogu adaptera. Egzekwujesz je regułą w CI
-(dependency-cruiser `forbidden`, ESLint `no-restricted-imports`, ArchUnit), nie pamięcią — szablony:
-`.claude/skills/ddd-legacy-modernization/references/rule-templates.md`. Szczególnie groźny przeciek: biblioteka
-serwerowa w paczce klienta.
+## 3. Serwisy brzegowe i wewnętrzne
+- **Serwis brzegowy** — na granicy kontekstu: serwis aplikacyjny, fasada, endpoint API albo publikujący zdarzenia
+  integracyjne. Tłumaczy języki, sprawdza autoryzację, odpowiada za transakcję i idempotencję i orkiestruje scenariusz.
+  Cienki i stabilny; inne konteksty rozmawiają **tylko** z nim — to ich open host.
+- **Wewnętrzne** — serwisy domenowe, polityki, agregaty (ddd-tactical-design); mogą się swobodnie zmieniać.
+- Wybieraj głęboki moduł: mały, stabilny brzeg i dużo zachowania za nim. Przykład: kontekst harmonogramu wystawia tylko
+  `reserve(slot)`, `release(slot)` i `blockResource(period)`; kalendarze, reguły konfliktów i blokady zostają w środku.
+- Zapachy: inne konteksty wołają serwisy wewnętrzne lub repozytoria; brzeg zwraca encje zamiast DTO lub zdarzeń;
+  reguły biznesowe w kontrolerze.
 
-## Serwisy krawędziowe i wewnętrzne
-- **Serwis krawędziowy** (na granicy kontekstu/modułu): fasada lub serwis aplikacyjny, endpoint API, publikator zdarzeń
-  integracyjnych. Tłumaczy język zewnętrzny na wewnętrzny, pilnuje autoryzacji, transakcji i idempotencji, orkiestruje
-  scenariusz. Jest **cienki i stabilny** — inne konteksty rozmawiają **wyłącznie** z krawędzią (to jest ich OHS).
-- **Serwis wewnętrzny**: serwisy domenowe, polityki, agregaty — logika w głębi modelu. Może się dowolnie zmieniać,
-  bo nikt z zewnątrz od niego nie zależy.
-- Dąż do **modułów głębokich**: mały, stabilny interfejs na krawędzi i dużo zachowania pod spodem. Przykład: kontekst
-  dostępności wystawia tylko `zablokuj / zwolnij / wyłącz` zasób w czasie, a cała złożoność segmentów czasu i blokad
-  jest w środku (ddd-archetypes).
-- Sygnały błędu: inne moduły wołają serwisy wewnętrzne albo repozytoria; krawędź zwraca encje domenowe zamiast DTO/zdarzeń;
-  logika biznesowa „wycieka” do kontrolera.
+## 4. Zdarzenia między kontekstami
+- **Zdarzenie domenowe** jest wewnętrzne, bogate i może zmieniać się z modelem. **Zdarzenie integracyjne** jest
+  publiczne, publikowane na brzegu w języku publikowanym i wersjonowane.
+- Style:
+  - **notyfikacja** — sygnał i identyfikator; niskie sprzężenie, ale odbiorca musi dopytać, a przepływ trudniej śledzić;
+  - **event-carried state transfer (zdarzenie przenoszące stan)** — zdarzenie niesie stan potrzebny odbiorcom; działają,
+    gdy źródło leży, kosztem zduplikowanych danych, spójności ostatecznej i ewolucji schematu;
+  - **event sourcing** — zdarzenia są zapisem prawdy; pełna historia i audyt, duża złożoność; wybieraj tylko wtedy,
+    gdy sama historia ma wartość biznesową.
+- Reguły dla zdarzeń przenoszących stan:
+  - wysyłaj pola potrzebne odbiorcom, nie cały agregat;
+  - wersjonuj schemat; pola dodawaj zgodnie wstecz, usuwaj przez nową wersję;
+  - każdy odbiorca buduje własny model odczytu;
+  - obsługuj zdarzenia idempotentnie i toleruj zmianę kolejności — porównuj numer wersji lub sekwencji i ignoruj nieaktualne;
+  - źródło pozostaje **jedynym właścicielem** danych; odbiorcy trzymają kopie i nigdy ich nie edytują.
 
-## Zdarzenia między kontekstami
-Rozróżniaj **zdarzenie domenowe** (wewnętrzne, pełny język kontekstu, może się zmieniać) od **zdarzenia integracyjnego**
-(publiczne, na krawędzi, w Published Language, wersjonowane).
+## 5. Dostarczanie
+- Stan i zdarzenie zapisywane w jednej transakcji → outbox; dostarczanie co najmniej raz → idempotentni konsumenci;
+  proces przez kilka kontekstów → saga albo menedżer procesu z jawną kompensacją. Szczegóły: be-messaging-outbox.
+- Zanim zastąpisz wywołanie synchroniczne komunikatem, zapytaj: czy wywołujący potrzebuje wyniku? czy ktoś od razu czyta
+  efekt? to polecenie czy zdarzenie? Komunikaty mogą przychodzić w innej kolejności. Asynchroniczność usuwa sprzężenie
+  czasowe, nie logiczne.
 
-| Styl | Co niesie | Zalety | Wady | Kiedy |
-|---|---|---|---|---|
-| **Event notification** | „coś się stało” + identyfikator | minimalne sprzężenie, prosty | odbiorca musi dopytać źródło; trudno śledzić przepływ z wielu zdarzeń | odbiorca potrzebuje tylko sygnału |
-| **Event-carried state transfer** | zdarzenie + stan potrzebny odbiorcom | odbiorca działa, gdy źródło leży; brak zapytań zwrotnych; mniejsze opóźnienia | duplikacja danych, spójność ostateczna, ewolucja schematu | odbiorca potrzebuje lokalnej kopii danych do własnych decyzji |
-| **Event sourcing** | zdarzenia są źródłem prawdy stanu | pełny audyt, odtwarzanie stanu | złożoność, ewolucja zdarzeń | audyt/historia to wartość biznesowa |
+## 6. Warstwa antykorupcyjna wokół biblioteki lub SDK
+ACL opłaca się także wobec pakietu zewnętrznego, gdy jego model rozlałby się po Twoim kodzie (SDK płatności, biblioteka
+dat lub pieniędzy, generator PDF).
+- **Struktura:** wąski port w języku domeny; jeden adapter opakowujący bibliotekę; obiekt wartości domeny jako jedyne
+  miejsce, które zna kształt wymagany przez zależność.
+- **Gotowe znaczy sprawdzalne:** wyszukanie importów pakietu (`rg -l "from 'pdf-lib'" src/`) zwraca wyłącznie pliki
+  w katalogu adaptera.
+- **Utrzymaj to:** reguła w CI, nie obietnica — reguły `forbidden` w dependency-cruiser, ESLint `no-restricted-imports`
+  z wyjątkiem dla ścieżki adaptera, ArchUnit na JVM. Szablony:
+  `.claude/skills/ddd-legacy-modernization/references/rule-templates.md`.
+- Groźny przeciek, którego trzeba szukać: biblioteka serwerowa wciągnięta do paczki klienta (bundle przeglądarki) przez wspólny moduł.
 
-Zasady dla **event-carried state transfer**: wysyłaj tylko dane potrzebne odbiorcom (nie cały agregat), wersjonuj schemat,
-odbiorca buduje własny read model i akceptuje spójność ostateczną, obsługa jest idempotentna i odporna na kolejność
-(numer wersji/sekwencji), źródło pozostaje jedynym właścicielem danych.
+## 7. Sprawdzanie relacji
+Zmierz ją connascence (ddd-connascence-analysis): zanim powstanie kod — na kontraktach (jako przedział); potem — na kodzie
+(kod wygrywa). OHS albo język publikowany zostawiają głównie słabe sprzężenie statyczne (nazwa, typ). Sprzężenie
+dynamiczne przez granicę — wspólna transakcja, wartości, które muszą się zgadzać w tej samej chwili — znaczy, że granica przecieka.
 
-## Gwarancje dostarczenia
-- Zapis stanu i zdarzenia w jednej transakcji → **outbox**; dostarczanie co najmniej raz → **idempotentni odbiorcy**.
-- Procesy przez wiele kontekstów → saga / proces menedżer z jawnymi krokami kompensacji.
-- Zanim zamienisz wywołanie synchroniczne na wiadomość: czy wywołujący używa wyniku? czy ktoś czyta efekt od razu? komenda czy
-  zdarzenie? Kolejność nie jest gwarantowana. Asynchroniczność usuwa sprzężenie czasowe, nie logiczne.
-  Pełna procedura, atomowość i testy: be-messaging-outbox.
+## 8. Tożsamość między kontekstami
+Tożsamości potrzebują zarówno pojęcia, jak i rzeczy, i obsługuje się je inaczej:
+- **Pojęcia** — klasy, właściwości, metryki (np. „przychód”, „aktywny klient”). Jedna definicja z jednym właścicielem
+  w słowniku i stabilny identyfikator w przestrzeni nazw właściciela słownika. Działy, które liczą „przychód” inaczej,
+  używają różnych pojęć i muszą je różnie nazwać.
+- **Rzeczy** — dostawca, zamówienie, produkt. Identyfikator wybija się regułą z klucza biznesowego (np. NIP + kraj),
+  więc ten sam dostawca dostaje ten sam identyfikator w CRM, ERP i zakupach; istniejące lokalne ID mapuje się na niego
+  w tabeli mapowania kluczy.
+- Dane zostają u właścicieli; wspólna jest tylko tożsamość — bez centralnej bazy wszystkiego.
+- Reguła wybijania identyfikatorów żyje w specyfikacji i małej wspólnej bibliotece używanej przez każdy system, nie w jednym narzędziu.
+- Potoki i pochodzenie danych między produktami danych: data-engineering.
 
-## Weryfikacja relacji pomiarem
-Relację z mapy można sprawdzić pomiarem connascence (ddd-connascence-analysis) — przed kodem na kontraktach (stopnie jako przedziały),
-po kodzie na kodzie (rozstrzyga kod). OHS/Published Language powinny dawać głównie sprzężenie statyczne słabe (nazwa, typ);
-sprzężenia dynamiczne przez granicę (wspólna transakcja, dane, które muszą się zgadzać) = granica przecieka.
+## Przykład
+**Sytuacja:** „Sprzedaż (core) integruje zewnętrzną bramkę płatności o niewygodnym modelu.”
+**Wynik:**
+- Relacja: bramka jest upstreamem, Sprzedaż downstreamem; brak wpływu na bramkę.
+- Wzorzec: ACL, nie konformista — dopasowanie wprowadziłoby „charge intents” i „captures” do języka Sprzedaży, a Sprzedaż to rdzeń.
+- Struktura: port `PaymentAuthorizer.authorize(order, amount)` → adapter tłumaczący na SDK bramki; obiekt wartości
+  `PaymentReference` zna format identyfikatora bramki.
+- Egzekwowanie: `no-restricted-imports` dla SDK poza `src/payments/adapter/`; `rg -l` zwraca tylko ten katalog.
+- Wiersz `context-map.md`: Sprzedaż ← Bramka płatności | ACL | upstream: bramka | API v3 | właściciel: zespół Sprzedaży | rdzeń musi zachować swój język.
 
-## Tożsamość między kontekstami: pojęcie a rzecz
-- **Pojęcia** (klasy, właściwości, metryki jak „przychód”) mają stały identyfikator w przestrzeni autorów słownika
-  i jedną definicję z właścicielem.
-- **Rzeczy** (dostawca, zamówienie) dostają identyfikator wybijany regułą z klucza biznesowego: jedna rzecz = jeden
-  identyfikator mimo wielu rekordów w systemach (tablica mapowania kluczy).
-- Dane zostają u właścicieli kontekstów; wspólna jest tylko tożsamość, nie kopia danych.
-- Reguła wybijania identyfikatorów żyje w specyfikacji i wspólnej bibliotece, nie w jednym narzędziu (data-engineering).
-Źródło: S. Banerjee, „The Spine of the Context Fabric…” (2026-10-13).
-
-## Zapis wyniku (`docs/project/02-domain/context-map.md`)
 ```mermaid
 flowchart LR
-  Sprzedaz[Sprzedaż - core] -- "OHS / PL: OrderPlaced v1" --> Magazyn[Magazyn]
-  Platnosci[Płatności - generic, zewn.] -- "ACL" --> Sprzedaz
+  PG[Bramka płatności] -->|API v3| ACL[ACL] --> S[Sprzedaż]
+  S -->|OrderPlaced v2| W[Magazyn]
 ```
-Pod diagramem tabela: relacja, wzorzec, upstream/downstream, kontrakt (API/zdarzenia + wersja), właściciel, uzasadnienie.
-
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 4, lekcja 5 (ACL wobec biblioteki, kryterium „pakiet tylko w adapterze”) —
-  materiał szkoleniowy (dostęp 2026-10-09); opisane własnymi słowami.

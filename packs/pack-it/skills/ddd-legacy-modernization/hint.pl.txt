@@ -1,92 +1,91 @@
-head: Użyj przy DDD na kodzie zastanym — słownik i rozjazdy model↔kod, agregat z niezmiennika, ACL. Użyj, gdy w działającym kodzie (po MVP, legacy) trzeba sprawdzić, czy odwzorowuje domenę, i zaplanować modernizację — destylacja słownika z dokumentów i kodu z tabelą rozjazdów model↔kod, subdomeny, kandydaci na agregaty ze statusem niezmiennika; wybór niezmiennika (rdzeniowość × rozsmarowanie × egzekwowanie) i projekt agregatu-strażnika; wykrycie przeciekającej zależności i projekt ACL (obiekt wartości, wąski port, adapter) ze sprawdzalnym kryterium „pakiet tylko w katalogu adaptera” egzekwowanym regułą dependency-cruiser / ESLint / ArchUnit. Wynik to diagnozy i plany, nie kod produkcyjny. Nie do warsztatu z ekspertami (ddd-facilitation, ddd-event-storming), projektu modelu od zera (ddd-tactical-design), relacji między kontekstami (ddd-context-mapping) ani refaktoryzacji struktury bez zmiany pojęć (eng-refactor-planning).
-# DDD na kodzie zastanym — destylacja, niezmiennik, ACL
+head: Użyj, gdy działający kod przestał odpowiadać temu, jak działa biznes — rozjazd języka, kluczowa reguła pilnowana tylko w UI, biblioteka przeciekająca przez każdą warstwę. Użyj, gdy trzeba sprawdzić, czy istniejący kod (po MVP lub legacy) odwzorowuje domenę, i zaplanować poprawkę bez pisania kodu produkcyjnego — trzy diagnozy: A rozjazd języka (słownik z lokalizacją w dokumentach i w kodzie, znacznik BRAK w kodzie, poddomeny, kandydaci na agregaty, rozjazdy model ↔ kod, ranking), B najcenniejsza, najsłabiej pilnowana reguła przeniesiona do agregatu strażnika (nazwany błąd domenowy, jedna transakcja, cienka trasa na serwerze, przed/po, przypadki testowe), C najbardziej przeciekająca zależność odizolowana za warstwą antykorupcyjną (obiekt wartości, port, adapter) z kryterium ukończenia sprawdzanym przez rg i regułą w CI. Nie do warsztatów z ekspertami (ddd-facilitation, ddd-event-storming), modelowania od zera (ddd-tactical-design), relacji między kontekstami (ddd-context-mapping) ani refaktoryzacji samej struktury (eng-refactor-planning).
+# Modernizacja legacy — czy kod odpowiada biznesowi?
 
-Refaktoryzacja pyta „jak bezpiecznie zmienić kod”. Ten skill pyta **„czy kod odpowiada temu, jak działa biznes”**.
-Produkt to trzy diagnozy z planami — nie kod produkcyjny. Nazw bytów, niezmienników ani przecieków **nie zakładasz
-z góry**: odkrywasz je z dokumentów i kodu, cytując `plik:linia`, które naprawdę sprawdziłeś.
+Refaktoryzacja pyta, *jak bezpiecznie zmienić kod*. Ten skill pyta, *czy kod mówi to, co ma na myśli biznes* — i planuje
+poprawkę. Daje diagnozy i plany, nie kod produkcyjny; wdrożenie idzie wg ddd-tactical-design i eng-behavior-preserving-refactoring.
 
-## Kiedy (sygnały, że domena boli)
-- to samo słowo znaczy kilka rzeczy (trzy różne „Account”: profil, rachunek, konto księgowe);
-- byt z PRD nie ma odpowiednika w kodzie albo żyje jako luźny identyfikator przy wierszach;
-- dane regularnie wpadają w „niemożliwy” stan i ratuje je skrypt;
-- wymiana jednej biblioteki to projekt na sprint.
-Przed walidacją produktu (MVP) zwykle za wcześnie — wiedza o domenie jest jeszcze płytka; modelujesz, gdy boli.
+**Za wcześnie?** Na prototypie przed walidacją produktu nie modeluj; modeluj, gdy zaczyna boleć.
 
-## Krok 0 — kontekst (wspólny dla A–C)
-PRD, decyzja o stacku, README, historia zmian w `docs/project/`. Brak dokumentów wymagań → README + kod, zapisane
-jako ograniczenie. Ustal, gdzie żyje logika (API / serwis / domena / UI / persystencja) i listę zależności z manifestu.
-Mapa kodu (eng-codebase-mapping) skraca ten krok.
+**Sygnały, że boli:** jedno słowo na kilka rzeczy (trzy różne `Account`); encja z PRD, która w kodzie istnieje tylko jako
+luźny identyfikator obok wierszy; skrypty ratunkowe dla danych w „niemożliwych” stanach; reguła pilnowana tylko w UI;
+biblioteka, której wymiana zajęłaby cały sprint.
 
-## A. Destylacja domeny → `docs/project/02-domain/distillation.md`
-1. **Słownik:** pojęcie · definicja · źródło (`plik:linia` dokumentu) · gdzie w kodzie (`plik:linia`) albo
-   **„BRAK w kodzie”**. Wszystkie nazwy tego samego bytu (baza, UI, odpowiedź API, mowa zespołu) w jednym wierszu.
-2. **Subdomeny** core / supporting / generic z uzasadnieniem w celach produktu (ddd-strategic-analysis).
-3. **Kandydaci na agregaty** + niezmiennik (cytat) + status: **egzekwowany / deklarowany / ignorowany**.
-4. **Rozjazdy model ↔ kod** (najcenniejsza część): dokument mówi X · kod robi Y · dowód.
-5. **Ranking:** wartość (jak rdzeniowy niezmiennik) × ryzyko (jak słabo egzekwowany) → #1 do dalszej pracy.
-Nowe wpisy słownika trafiają do `glossary.md` jako **propozycje** do akceptacji człowieka (ddd-facilitation).
+**Nigdy nie zakładaj** z góry encji, reguły ani przecieku. Odkrywaj je z dokumentów i kodu i cytuj `plik:linia`, które
+naprawdę przeczytałeś.
 
-## B. Niezmiennik → agregat-strażnik → `docs/project/02-domain/invariant-<nazwa>.md`
-1. Lista reguł „zawsze prawdziwych” z dokumentów i kodu: „X powstaje tylko z Y”, „A→B wymaga C”, „Z jest atomowe”,
-   „D nigdy nie jest zapisywane”.
-2. Trzy osie dla każdej: **rdzeniowość** (cele produktu) · **rozsmarowanie** (ile plików i warstw) ·
-   **egzekwowanie** (egzekwowany / deklarowany / naruszalny). Wybierz najbardziej rdzeniowy i najsłabiej
-   egzekwowany — często nie ten, który podejrzewasz.
-3. **Diagnoza** z `plik:linia` we wszystkich warstwach: gdzie reguły brak, gdzie jest niespójna, gdzie UI jest
-   jedynym strażnikiem, gdzie endpoint ufa danym z żądania, gdzie błąd jest logowany i połykany.
-4. **Projekt** (ddd-tactical-design): korzeń agregatu jako **jedyne** miejsce egzekwowania; metody z warunkami
-   wstępnymi; nielegalna operacja rzuca **nazwany błąd domenowy** (fail-fast, nie „zaloguj i jedź dalej”);
-   repozytorium ładuje i zapisuje całość; niezmiennik wymagający atomowości → jedna transakcja; cienka trasa API:
-   parsuj wejście → metoda agregatu → mapowanie błędu na odpowiedź; egzekwowanie z klienta przenosi się na serwer.
-5. **Before/after** dla każdego dzisiejszego miejsca reguły, fazy (test-first, eng-behavior-preserving-refactoring),
-   przypadki testowe legalnych i nielegalnych operacji.
+## Krok 0 — wspólny kontekst
+- Przeczytaj PRD, decyzję o stacku, README i historię zmian w `docs/project/`. Brak dokumentów z wymaganiami → pracuj
+  na README i kodzie i zapisz to jako ograniczenie diagnozy.
+- Ustal, gdzie żyje logika (API, serwisy, domena, UI, persystencja), i wypisz zależności z manifestu. Mapa kodu
+  (eng-codebase-mapping) to skraca.
 
-## C. Przeciek zależności → ACL → `docs/project/02-domain/acl-<pakiet>.md`
-1. **Sygnały przecieku:** ten sam pakiet w API + UI + serwisie; typy biblioteki w sygnaturach domeny lub w DTO
-   i odpowiedziach; ta sama konwersja obiektu biblioteki w kilku miejscach; SDK wołane po obu stronach granicy
-   klient/serwer. Dla każdej zależności: **wszystkie** pliki, które ją znają (`rg -l "from '<pakiet>'"`,
-   ast-grep dla importów dynamicznych).
-2. **Osie:** liczba warstw i plików · koszt wymiany dziś · czy dokumenty deklarowały wymienialność. Rozjazd
-   intencji i kodu („miało dać się wymienić”) to najmocniejszy sygnał. Wybierz najgorszy przeciek.
-3. **Diagnoza:** duplikaty, przecieki granic, szczególnie **biblioteka serwerowa w paczce klienta**.
-4. **Projekt:** obiekt wartości domeny jako jedyne miejsce wiedzy o kształcie zależności (mapowanie z i do
-   persystencji, konwersja z i do typu biblioteki) · **wąski port** w języku domeny · **adapter** owijający
-   bibliotekę. Reszta kodu zna tylko port; UI dostaje dane domenowe, nie obiekt biblioteki. Decyzje zależne od
-   kontraktu biblioteki rozstrzygasz z jej dokumentacji i kodujesz w ACL, nie w API.
-5. **Dowód izolacji:** lista „zna dziś / zna po refaktorze”.
-6. **Kryterium ukończenia (sprawdzalne poleceniem):** wyszukanie nazwy pakietu zwraca **wyłącznie pliki katalogu
-   adaptera**. Utrwalasz je regułą w CI — dependency-cruiser `forbidden`, ESLint `no-restricted-imports`, ArchUnit;
-   gotowe szablony: `references/rule-templates.md`.
+## A. Rozjazd języka → `docs/project/02-domain/distillation.md`
+1. **Tabela słownika:** pojęcie | definicja | gdzie mówią o nim dokumenty (`plik:linia`) | gdzie ma je kod (`plik:linia`
+   albo znacznik `BRAK w kodzie`, gdy pojęcie nie ma odpowiednika). Wszystkie nazwy jednej rzeczy w bazie, UI, API
+   i mowie trafiają do jednego wiersza.
+2. **Poddomeny:** core / wspierające / generyczne, każda uzasadniona celami produktu (ddd-strategic-analysis).
+3. **Kandydaci na agregaty:** każdy z regułą, którą powinien chronić (cytat), i statusem — **enforced** (pilnowana na
+   serwerze), **declared** (zapisana w dokumencie, niepilnowana), **ignored** (kod jej przeczy).
+4. **Rozjazdy model ↔ kod** — najcenniejsza część: *dokument mówi X / kod robi Y / dowód*.
+5. **Ranking:** wartość biznesowa obszaru × ryzyko ze słabego egzekwowania; pozycja 1 idzie do B albo C.
+Nowe wpisy słownika trafiają do `glossary.md` jako propozycje do akceptacji przez człowieka (ddd-facilitation).
+
+## B. Reguła pilnowana nadzieją → `docs/project/02-domain/invariant-<name>.md`
+1. **Wypisz reguły „zawsze prawdziwe” (niezmienniki):** X powstaje tylko z Y; A przechodzi w B tylko przy C; Z dzieje się
+   w całości albo wcale; D nigdy nie jest zapisywane.
+2. **Uszereguj je** trzema pytaniami: jak blisko rdzenia jest reguła; ile plików i warstw jej dotyka; jak mocno jest
+   egzekwowana (enforced / declared / violable). Wybierz najcenniejszą, najsłabiej pilnowaną — często nie tę, którą
+   zespół podejrzewał.
+3. **Zdiagnozuj każdą warstwę:** reguły brak, jest niespójna między warstwami, UI jako jedyny strażnik, endpoint ufający
+   liczbom z żądania, błąd zalogowany i połknięty.
+4. **Projekt** (ddd-tactical-design):
+   - korzeń agregatu to jedyne miejsce egzekwujące regułę; jego metody sprawdzają warunki wstępne;
+   - niedozwolona operacja rzuca **nazwany błąd domenowy** (fail fast — nigdy „zaloguj i jedź dalej”);
+   - repozytorium wczytuje i zapisuje cały agregat; reguła „wszystko albo nic” = jedna transakcja;
+   - trasa API jest cienka: parsuj → wywołaj metodę → zamapuj błąd domenowy na odpowiedź (np. 409 Conflict);
+   - egzekwowanie przenosi się z klienta na serwer; UI może dalej ostrzegać wcześniej.
+5. **Przed / po** dla każdego miejsca, w którym reguła żyje dziś; fazy od testów (eng-behavior-preserving-refactoring);
+   przypadki testowe dla dozwolonych i niedozwolonych sekwencji.
+
+## C. Najbardziej przeciekająca zależność → `docs/project/02-domain/acl-<package>.md`
+1. **Sygnały:** ten sam pakiet importowany w API, UI i serwisach; jego typy w sygnaturach domeny, DTO lub odpowiedziach;
+   ta sama konwersja powtórzona; SDK używane po obu stronach granicy klient/serwer.
+2. **Wypisz każdy plik, który zna zależność:** `rg -l "from '<pkg>'"` plus wyszukiwanie strukturalne (ast-grep) dla
+   dynamicznych importów i `require`.
+3. **Uszereguj przecieki:** sięgnięte warstwy i pliki; ile dziś kosztowałaby wymiana; czy dokumenty obiecywały, że będzie
+   wymienna (złamana obietnica to najsilniejszy sygnał). Wybierz najgorszy. Szukaj zwłaszcza biblioteki serwerowej
+   wciągniętej do paczki klienta.
+4. **Projekt:**
+   - obiekt wartości domeny to jedyne miejsce, które zna kształt zależności (mapowanie persystencji, konwersja do i z typu biblioteki);
+   - wąski port w języku domeny; adapter opakowujący bibliotekę; UI dostaje dane domenowe;
+   - decyzje zależne od kontraktu biblioteki pochodzą z jej dokumentacji i żyją w ACL, nie w API.
+5. **Dowód:** lista plików „wie dziś / wie po”. **Gotowe** = wyszukanie nazwy pakietu zwraca tylko pliki w katalogu
+   adaptera, zablokowane regułą w CI (dependency-cruiser `forbidden`, ESLint `no-restricted-imports`, ArchUnit,
+   import-linter lub Tach dla Pythona). Polecenia i szablony reguł: `references/rule-templates.md`.
+
+Szablony dokumentów dla A, B i C: `references/document-templates.md`.
 
 ## Dalej
-Artefakty A–C są wejściem do planowania kroku (core-plan-interview → plan z fazami). Hot spoty z Event Stormingu
-(ddd-event-storming) to kandydaci na kolejne kroki. Cykl: odkryj → nazwij rozjazdy → zabezpiecz niezmiennik →
-odizoluj zależność → zaplanuj. Szablony dokumentów A–C: `references/document-templates.md`.
+Wyniki zasilają planowanie: core-plan-interview zamienia je w plan etapowy; hot spoty z sesji Event Storming
+(ddd-event-storming) to kolejni kandydaci. Cykl: znajdź rozjazd → zabezpiecz regułę → odizoluj zależność → zaplanuj.
 
 ## Przykład
-**Sytuacja:** aplikacja do fiszek po MVP; PRD opisuje „sesję generacji” z cyklem życia.
+**Sytuacja:** aplikacja do inspekcji terenowych, dwa lata na produkcji. PRD mówi „inspekcję można zamknąć tylko wtedy,
+gdy każdy punkt listy kontrolnej jest oznaczony jako spełniony albo niespełniony”; kod nazywa to `visit` (baza), `job`
+(API), `audit` (UI) i „inspection” (PRD), a biblioteka terminów cyklicznych przecieka wszędzie.
 **Wynik:**
-- A: w kodzie sesja to tylko luźny identyfikator przy wierszach propozycji (BRAK bytu); propozycja ma cztery nazwy
-  w czterech warstwach. Rozjazd: PRD „sesja finalizuje się po rozstrzygnięciu wszystkich propozycji” — kod pozwala
-  zapisać fiszki bez rozstrzygnięcia reszty (`src/api/flashcards.ts:41`).
-- B: niezmiennik #1 (rdzeniowy, pilnuje go tylko licznik w UI) → agregat `GenerationSession` z `accept()`,
-  `reject()`, `finalize()`; `finalize()` przy nierozstrzygniętej propozycji rzuca `SessionHasUnresolvedProposals`;
-  zapis w jednej transakcji; trasa API tylko mapuje błąd na 409.
-- C: typ `Card` biblioteki harmonogramu powtórek w schemacie bazy, w odpowiedzi API i w propsach komponentu
-  (7 plików, 3 warstwy; PRD deklarował wymienialny algorytm) → obiekt wartości `ReviewSchedule`, port `Scheduler`,
-  adapter `src/scheduling/adapter/`. Kryterium: `rg -l "from 'ts-fsrs'"` zwraca tylko pliki adaptera; reguła
-  `forbidden` w dependency-cruiser w CI.
+- A: jeden wiersz słownika *Inspekcja* z czterema nazwami; `InspectionTemplate` z PRD → `BRAK w kodzie`; rozjazd:
+  „PRD: zamknięta tylko, gdy kompletna / kod: `PATCH /jobs/:id` ustawia `closed=true` przy otwartych punktach (`api/jobs.ts:88`)”.
+- B: regułę pilnuje tylko licznik w `ChecklistFooter.tsx:41`, a endpoint ufa `openItems` z żądania → agregat `Inspection`
+  z `markItem()` i `close()`; `close()` rzuca `InspectionHasOpenItems`; jedna transakcja; trasa mapuje błąd na 409.
+  Przypadki testowe: zamknięcie przy 0 otwartych punktach, przy 1 otwartym, oznaczenie po zamknięciu.
+- C: typ `RRule` biblioteki powtarzania siedzi w schemacie, odpowiedziach API i propsach komponentów (9 plików, 3 warstwy),
+  a decyzja o stacku obiecywała wymienność → obiekt wartości `RecurrencePattern`, port `ScheduleExpander`, adapter
+  w `src/schedule/adapter/`; gotowe, gdy `rg -l "from 'rrule'" src/` zwraca tylko ten katalog; reguła `forbidden`
+  w dependency-cruiser w CI.
 
-## Checklista
-- [ ] nic nie założone z góry; każde pojęcie z cytatem i statusem w kodzie (`plik:linia` albo „BRAK w kodzie”)
-- [ ] tabela rozjazdów model ↔ kod; wpisy słownika jako propozycje
-- [ ] wybór niezmiennika i przecieku uzasadniony na osiach, z diagnozą we wszystkich warstwach
-- [ ] projekt: jedyne miejsce egzekwowania, nazwany błąd, transakcja, cienka trasa; port + adapter + obiekt wartości
-- [ ] kryterium ACL sprawdzalne poleceniem i utrwalone regułą; plany bez kodu produkcyjnego
+Prośba o kod produkcyjny agregatu → daj plan i pseudokod, a wdrożenie przekaż do ddd-tactical-design.
 
 ## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 4, lekcja 5 (modernizacja legacy z DDD) i trzy prompty do niej (destylacja,
-  niezmiennik → agregat, ACL) — materiał szkoleniowy (dostęp 2026-10-09); opisane własnymi słowami.
-- E. Evans, *Domain-Driven Design* (2003) — agregat, Anti-Corruption Layer, język wszechobecny.
-- Składnia reguł sprawdzona 2026-10-10: dependency-cruiser 18.5.0 (`forbidden` z `from.pathNot` / `to.path`),
-  ESLint 9.39.1 (`no-restricted-imports` w konfiguracji płaskiej z wyjątkiem dla katalogu adaptera).
+- Składnia i wersje narzędzi: `references/rule-templates.md` (dokumentacja dependency-cruiser, ESLint, ArchUnit,
+  import-linter, Tach, Nx, sprawdzona w podanych tam datach).

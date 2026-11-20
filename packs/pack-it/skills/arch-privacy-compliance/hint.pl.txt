@@ -1,125 +1,143 @@
-head: Użyj, gdy system przetwarza dane osobowe (RODO) — podstawy, minimalizacja, retencja, DPIA, procesory. Użyj, gdy system przetwarza dane osobowe — nowa funkcja, integracja, analityka, logi, wysyłanie danych do zewnętrznych usług (także AI) — przy projektowaniu i przeglądzie: inwentarz danych (wkład do art. 30) i ład danych (właściciel, klasy, oznaczanie pól), cel i podstawa prawna, prywatność w fazie projektowania i domyślna (minimalizacja, pseudonimizacja), retencja i usuwanie, realizacja praw osób (dostęp, usunięcie, przenoszenie) także w kopiach zapasowych, logach i u procesorów, umowy powierzenia i transfery poza EOG, ocena skutków (DPIA), naruszenia ochrony danych (72 godziny), cookies. Nie do uwierzytelniania i haseł (be-auth-security), modelu zagrożeń (arch-threat-modeling), reagowania na incydent bezpieczeństwa (ops-security-operations) ani zarządzania danymi w potokach i AI Act (data-engineering). Nie jest poradą prawną.
-# Ochrona danych osobowych (RODO) w projekcie
+head: Użyj, gdy funkcja, integracja, logi, analityka lub usługa AI dotyka danych osobowych — inwentarz RODO, podstawa prawna, retencja, usuwanie, DPIA, naruszenia. Użyj przy projektowaniu lub przeglądzie przetwarzania danych osobowych zgodnie z RODO — inwentarz danych i ład danych (właściciele, klasy danych, znaczniki pól, analizator data-classification), cel i podstawa prawna (art. 6, art. 9), privacy by design (minimalizacja, pseudonimizacja), retencja i automatyczne usuwanie, żądania osób (usunięcie, eksport) razem z podmiotami przetwarzającymi i kopiami zapasowymi, podmioty przetwarzające i transfery poza EOG, bezpieczeństwo przetwarzania, dane testowe, DPIA, naruszenia ochrony danych (72 godziny), cookies i Prawo komunikacji elektronicznej, dane osobowe wysyłane do dostawców modeli AI, kary i zmiany prawa w toku. Przygotowuje projekty; decyzje prawne zostają przy człowieku i IOD. Nie do uwierzytelniania i przechowywania haseł (be-auth-security), modelu zagrożeń (arch-threat-modeling), reagowania na incydenty (ops-security-operations), potoków danych i zarządzania danymi wg AI Act (data-engineering).
+# Dane osobowe wg RODO — najpierw inwentarz, decyzje z człowiekiem
 
-**Rola agenta:** przygotowuje inwentarz danych, projekt zabezpieczeń, szkic oceny skutków i procedury, a także
-wskazuje decyzje do podjęcia. **Decyzje prawne** — podstawa przetwarzania, czy DPIA jest wymagana, czy zgłaszać
-naruszenie, treść klauzul — podejmuje człowiek z inspektorem ochrony danych (IOD) lub prawnikiem. To nie jest porada
-prawna. Artefakt: `docs/project/04-architecture/privacy.md` (szablon w core-project-record).
+**Podział ról.** Agent buduje inwentarz, projektuje zabezpieczenia, szkicuje DPIA i procedury oraz oznacza każdą decyzję
+o charakterze prawnym. Człowiek z IOD lub prawnikiem decyduje: o podstawie prawnej, o tym, czy DPIA jest wymagana, czy
+zgłosić naruszenie, o brzmieniu klauzul. Każda odpowiedź kończy się zdaniem: *„To nie jest porada prawna — potwierdź
+z IOD lub prawnikiem.”*
 
-## Zasady
-1. **Inwentarz przed kodem.**
-   - Spisz: jakie dane, czyje (klienci, pracownicy, dzieci), skąd, po co, gdzie leżą — baza, **logi, kopie
-     zapasowe, analityka, środowiska testowe, kolejki, zewnętrzni dostawcy** — i kto ma dostęp.
-   - Przepływy zaznacz na diagramie przepływu danych z arch-threat-modeling.
-   - To wkład do rejestru czynności przetwarzania (art. 30), który prowadzi administrator.
-   - **Ład danych:** każdy zbiór ma właściciela biznesowego. Każde pole ma klasę: publiczne, wewnętrzne, poufne,
-     dane osobowe albo szczególne kategorie. Klasa wyznacza dostęp, szyfrowanie, maskowanie w logach
-     i poza produkcją oraz retencję. Inwentarz pól prowadzisz w `docs/project/04-architecture/data-inventory.md`,
-     a klasę oznaczasz też przy polu w kodzie. W istniejącym systemie szkic inwentarza daje
-     `tf analyze --only data-classification`. Tabela wymagań, format inwentarza i kolejność porządków:
-     `references/data-governance.md`.
-2. **Cel i podstawa prawna dla każdego celu** (art. 5–6):
-   - podstawy z art. 6 ust. 1: umowa, obowiązek prawny, prawnie uzasadniony interes, zgoda i inne;
-   - szczególne kategorie danych (zdrowie, biometria do identyfikacji, poglądy i inne z art. 9) wymagają dodatkowej
-     przesłanki;
-   - zgoda (art. 7) tylko tam, gdzie pasuje: dobrowolna, konkretna, udokumentowana i możliwa do wycofania tak łatwo,
-     jak ją wyrażono;
-   - analityka zachowań to zwykle osobny cel z osobną podstawą.
-3. **Prywatność w fazie projektowania i domyślna** (art. 25):
-   - zbieraj tylko pola potrzebne do celu; pole opcjonalne jest naprawdę opcjonalne;
-   - domyślnie najwęższa widoczność i najkrótsze przechowywanie;
-   - pseudonimizacja — identyfikator kluczem HMAC zamiast e-maila w analityce i logach;
-   - agregaty zamiast surowych zdarzeń.
-   - Dane pseudonimizowane nadal są danymi osobowymi dla tego, kto ma klucz.
-4. **Retencja:**
-   - okres przechowywania dla każdej kategorii i celu;
-   - **automatyczne usuwanie** (zadanie retencji z testem), a nie „kiedyś posprzątamy”;
-   - logi bez danych osobowych albo z krótką retencją;
-   - kopie zapasowe wygasają w znanym cyklu;
-   - szyfrowanie w spoczynku dobrane do klasy danych i usuwanie przez zniszczenie klucza (crypto-erase):
-     sec-cryptography-pki (dane w spoczynku).
-5. **Prawa osób** (art. 12–22):
-   - mechanizmy w systemie: eksport danych (dostęp, przenoszenie), poprawienie, usunięcie, ograniczenie, sprzeciw;
-   - odpowiedź bez zbędnej zwłoki, **najpóźniej w miesiąc** (przedłużenie o dwa miesiące w uzasadnionych przypadkach,
-     z informacją dla osoby);
-   - usunięcie obejmuje kopie u **procesorów** (polecenie usunięcia) i logi;
-   - w **kopiach zapasowych** dane wygasają z cyklem kopii, a po odtworzeniu kopii usunięcie stosujesz ponownie
-     (lista usuniętych identyfikatorów);
-   - przed wydaniem danych weryfikujesz tożsamość.
-6. **Podmioty przetwarzające i transfery:**
-   - każdy dostawca, który przetwarza dane w Twoim imieniu (chmura, mailing, analityka, obsługa klienta,
-     **API modelu AI**), potrzebuje umowy powierzenia (art. 28) i wpisu na listę;
-   - transfer poza EOG (rozdz. V) wymaga podstawy: decyzji o odpowiednim stopniu ochrony albo standardowych klauzul
-     umownych;
-   - USA: EU–US Data Privacy Framework (decyzja z 10.07.2023) obejmuje tylko certyfikowane firmy; Sąd UE oddalił
-     skargę na tę decyzję 3.09.2025 (T-553/23), a odwołanie (C-703/25 P) jest w toku — śledź wynik.
-7. **Bezpieczeństwo** (art. 32):
-   - szyfrowanie w spoczynku i w transmisji, najmniejsze uprawnienia, rejestr dostępu do danych, kopie i testy
-     odtworzenia (be-auth-security, ops-secrets-identities, ops-sre-incidents);
-   - **w środowiskach testowych nie ma prawdziwych danych osobowych** — tylko dane syntetyczne lub skutecznie
-     zanonimizowane;
-   - przykład z praktyki: UODO ukarał administratora i podmiot przetwarzający za niezabezpieczoną testową bazę
-     z prawdziwymi danymi.
-8. **Ocena skutków dla ochrony danych (DPIA, art. 35):**
-   - wymagana przy prawdopodobnie wysokim ryzyku, m.in. przy profilowaniu z istotnymi skutkami, szczególnych
-     kategoriach na dużą skalę i monitorowaniu miejsc publicznych na dużą skalę;
-   - w Polsce także dla operacji z wykazu Prezesa UODO (M.P. 2019 poz. 666), np. dane biometryczne lub lokalizacyjne,
-     innowacyjne technologie, łączenie zbiorów;
-   - agent przygotowuje szkic: opis, cel, niezbędność, ryzyka i środki; decyzję podejmuje administrator z IOD.
-9. **Naruszenie ochrony danych** (art. 33–34):
-   - zgłoszenie do UODO **bez zbędnej zwłoki, w miarę możliwości do 72 godzin** od stwierdzenia, chyba że naruszenie
-     raczej nie spowoduje ryzyka;
-   - przy wysokim ryzyku zawiadomienie osób;
-   - każde naruszenie dokumentujesz, także niezgłoszone;
-   - procesor zawiadamia administratora bez zbędnej zwłoki;
-   - agent zatrzymuje wyciek i zabezpiecza dowody (ops-security-operations), przygotowuje fakty do zgłoszenia,
-     a o zgłoszeniu decyduje człowiek;
-   - procedura z osią czasu: `references/gdpr-in-practice.md`.
-10. **Cookies, SDK analityczne i dostęp do urządzenia (Prawo komunikacji elektronicznej, nie tylko RODO):**
-    - poza technicznie niezbędnymi potrzebna jest zgoda przed zapisem;
-    - bez domyślnie zaznaczonych zgód (TSUE, Planet49, C-673/17);
-    - odmowa tak samo dostępna jak zgoda;
-    - w Polsce przepisy o dostępie do urządzenia są w Prawie komunikacji elektronicznej, w mocy od 10.11.2024
-      [numer artykułu i organ nadzoru — sprawdź w ISAP przed cytowaniem].
-11. **Dane w promptach do modeli AI** to przekazanie danych dostawcy:
-    - minimalizujesz i pseudonimizujesz przed wysłaniem;
-    - sprawdzasz umowę powierzenia, region przetwarzania i retencję u dostawcy;
-    - sprawdzasz **poziom usługi**: aplikacje konsumenckie mogą domyślnie używać rozmów do trenowania (u części
-      dostawców także w płatnym planie konsumenckim), a API i plany firmowe zwykle domyślnie nie; ustawienie dla
-      narzędzia do kodu bywa osobne od ustawienia czatu. Stan polityki konkretnego dostawcy sprawdzasz w jego
-      aktualnych warunkach i zapisujesz z datą — polityki zmieniają się w miesiącach;
-    - dostawca bez wyboru regionu i bez przedstawiciela w UE, przechowujący dane w państwie bez decyzji
-      o adekwatności, oznacza transfer poza EOG bez podstawy z art. 45 — wymaga decyzji człowieka i oceny prawnika;
-    - obowiązki z AI Act: data-engineering (`.claude/skills/data-engineering/references/quality-management-and-compliance.md`).
-12. **Kary** (art. 83): do 10 mln EUR lub 2% światowego obrotu, a za naruszenie zasad, podstaw i praw osób do
-    20 mln EUR lub 4% (wyższa z kwot).
+## Artefakty
+- `docs/project/04-architecture/privacy.md` — cele, podstawy, retencja, podmioty przetwarzające, środki (szablon: core-project-record).
+- `docs/project/04-architecture/data-inventory.md` — jeden wiersz na pole poufne lub osobowe: zbiór, pole, klasa, cel,
+  retencja, właściciel, gdzie jeszcze żyje (logi, kopie zapasowe, analityka, środowiska testowe, dostawcy).
+- Decyzja o DPIA i jej uzasadnienie trafiają do `decisions.md`.
 
-## Zmiany w prawie — stan 2026-10-03
-- Pakiet **Digital Omnibus** (projekt Komisji COM(2025) 837 z 19.11.2025) proponuje m.in.:
-  - zgłaszanie do organu tylko naruszeń o wysokim ryzyku, w 96 godzin, przez wspólny punkt;
-  - przeniesienie zasad cookies do RODO;
-  - wspólne dla UE wykazy operacji wymagających DPIA;
-  - doprecyzowanie definicji danych osobowych.
-- To **projekt w trakcie prac** (Rada bez mandatu w czerwcu 2026, Parlament na etapie komisji). Do czasu przyjęcia
-  i wejścia w życie obowiązują obecne przepisy — nie projektuj pod 96 godzin.
+## Procedura dla zmiany dotykającej danych osobowych
+1. **Inwentarz przed kodem.** Jakie dane, czyje (klienci, pracownicy, dzieci), źródło, cel, gdzie lądują (baza, logi,
+   kopie zapasowe, analityka, kolejki, środowiska testowe, dostawcy), kto może je czytać. Oznacz przepływy na diagramie
+   przepływu danych (arch-threat-modeling). Inwentarz zasila rejestr czynności przetwarzania administratora (art. 30).
+2. **Właściciel i klasa.** Każdy zbiór ma właściciela biznesowego (decyduje o celu, dostępie, retencji, schemacie —
+   administrator systemu nie jest właścicielem). Właściciel zatwierdza klasę każdego nowego pola osobowego; agent ją
+   proponuje. Klasy po kolei: publiczne → wewnętrzne → poufne → dane osobowe → szczególne kategorie (art. 9) i dane dzieci.
+   Zbiór dostaje klasę najbardziej wrażliwego pola; kopie dziedziczą klasę i właściciela, chyba że są naprawdę
+   zanonimizowane (zapisz to jako decyzję). Wymagania dla klas (szyfrowanie, maskowanie, dostęp), format inwentarza
+   i znaczniki pól: `references/data-governance.md`.
+3. **Cel i podstawa.** Jedna podstawa na cel z art. 6 ust. 1: umowa, obowiązek prawny, żywotne interesy, zadanie
+   publiczne, prawnie uzasadniony interes, zgoda. Szczególne kategorie wymagają też przesłanki z art. 9. Zgoda (art. 7)
+   jest dobrowolna, konkretna, udokumentowana i tak łatwa do wycofania jak do wyrażenia. Analityka zachowań to osobny cel
+   z własną podstawą.
+4. **Privacy by design i by default (art. 25).** Minimalizacja: tylko pola potrzebne do celu; opcjonalne znaczy naprawdę
+   opcjonalne; najwęższa widoczność; najkrótsze przechowywanie. Pseudonimizuj kluczowanym HMAC, nie zwykłym skrótem
+   e-maila (słownik go odwraca); klucz trzymaj w menedżerze sekretów, z dala od danych (ops-secrets-identities).
+   Dane spseudonimizowane to nadal dane osobowe dla posiadacza klucza. Agregaty zamiast surowych zdarzeń.
+5. **Retencja.** Okres przechowywania na kategorię i cel, egzekwowany zadaniem usuwającym z testem; logi bez danych
+   osobowych lub z krótką retencją; kopie zapasowe wygasają w znanym cyklu; szyfrowanie z kryptograficznym usunięciem
+   (sec-cryptography-pki). Przykładowa tabela i kod: `references/gdpr-in-practice.md`.
+6. **Prawa osób (art. 12–22).** Mechanizmy dostępu/eksportu, sprostowania, usunięcia, ograniczenia, sprzeciwu.
+   Odpowiedź bez zbędnej zwłoki, najpóźniej w ciągu **miesiąca** (z możliwością przedłużenia o dwa miesiące
+   z powiadomieniem). Najpierw zweryfikuj tożsamość.
+7. **Podmioty przetwarzające i transfery.** Każdy dostawca przetwarzający w Twoim imieniu (chmura, mailing, analityka,
+   helpdesk, API AI) wymaga umowy powierzenia z art. 28 i miejsca w inwentarzu. Poza EOG (rozdział V, art. 44–49):
+   decyzja stwierdzająca odpowiedni stopień ochrony albo standardowe klauzule umowne.
+8. **Bezpieczeństwo (art. 32).** Szyfrowanie w spoczynku i w transmisji, najmniejsze uprawnienia, log dostępu, kopie
+   zapasowe z testami odtwarzania. Żadnych prawdziwych danych osobowych w środowiskach testowych — tylko dane
+   syntetyczne albo skutecznie zanonimizowane.
+9. **DPIA (art. 35)**, gdy prawdopodobne jest wysokie ryzyko; pytania kontrolne w `references/gdpr-in-practice.md` §5.
+10. **Cookies i dostęp do urządzenia** — zasady zgody (niżej).
+11. **Dostawcy modeli AI** — wysłanie danych osobowych w prompcie to ujawnienie podmiotowi przetwarzającemu (niżej).
 
-## Checklista
-- [ ] inwentarz danych (z logami, kopiami, testami, dostawcami) i przepływy na diagramie
-- [ ] właściciel i klasa każdego zbioru; pola osobowe oznaczone w kodzie i w `data-inventory.md`
-- [ ] cel i podstawa prawna dla każdego celu — zatwierdzone przez człowieka/IOD
-- [ ] minimalizacja i pseudonimizacja w projekcie; brak prawdziwych danych w testach
-- [ ] okresy retencji i automatyczne usuwanie z testem
-- [ ] obsługa praw osób, w tym usunięcie u procesorów i po odtworzeniu kopii
-- [ ] lista procesorów z umowami powierzenia i podstawą transferu poza EOG
-- [ ] decyzja o DPIA zapisana w `decisions.md`; procedura naruszeń z rolami i 72 godzinami
+## Żądanie usunięcia — przebieg
+1. Zapisz żądanie (data, kanał, zweryfikowana tożsamość) w rejestrze żądań.
+2. Sprawdź prawne wyjątki od usunięcia — np. faktury przechowywane z mocy prawa rachunkowego: tę część ogranicz zamiast usuwać.
+3. Usuń konto, powiązane rekordy, pliki, indeksy wyszukiwania i cache.
+4. Wyślij polecenie usunięcia do każdego podmiotu przetwarzającego, który ma dane (narzędzie do mailingu, CRM, helpdesk), i zbierz potwierdzenia.
+5. Logi i kopie zapasowe wygasają w swoim cyklu; usunięte identyfikatory trafiają na listę stosowaną ponownie po każdym odtworzeniu.
+6. Odpowiedz osobie w ciągu miesiąca i zamknij wpis w rejestrze.
+Automatyczny test dowodzi, że po usunięciu żadna tabela nie zawiera danych tej osoby.
+
+## Naruszenie ochrony danych (art. 33–34)
+- Zgłoś organowi nadzorczemu (w Polsce: UODO) bez zbędnej zwłoki i w miarę możliwości w ciągu **72 godzin** od
+  stwierdzenia naruszenia, chyba że jest mało prawdopodobne, by skutkowało ryzykiem. Zgłoszenie można uzupełniać etapami.
+- Zawiadom osoby, których dotyczy, gdy ryzyko dla nich jest **wysokie** (art. 34): co się stało, możliwe skutki,
+  co zrobiliście, co powinny zrobić.
+- Dokumentuj każde naruszenie, także niezgłoszone. Podmiot przetwarzający informuje administratora bez zbędnej zwłoki;
+  zegar 72 godzin biegnie u administratora.
+- Kolejność pracy (procedura naruszenia): natychmiast ogranicz (zamknij dostęp, zrotuj klucze, zabezpiecz dowody) →
+  w ciągu godzin ustal, jakie dane, czyje, jak długo, kto miał dostęp, czy były zaszyfrowane → przed upływem 72 h ocena
+  ryzyka, decyzja i zgłoszenie → osoby → wpis do rejestru i poprawka procesu. Agent zbiera fakty; decyduje człowiek.
+  Szczegóły harmonogramu: `references/gdpr-in-practice.md` §4. Techniczne reagowanie na incydent: ops-security-operations.
+- Przypadek do nauki: UODO ukarał zarówno administratora, jak i podmiot przetwarzający za niezabezpieczoną bazę testową
+  z prawdziwymi danymi klientów [niezweryfikowane: sygnatura]. Lekarstwo: procedura naruszeń plus syntetyczne lub
+  spseudonimizowane dane testowe.
+
+## DPIA
+Prawdopodobnie wymagana przy istotnym profilowaniu, szczególnych kategoriach na dużą skalę, monitorowaniu miejsc
+publicznych na dużą skalę, a w Polsce dla operacji z wykazu UODO (M.P. 2019 poz. 666 — np. biometria, lokalizacja,
+innowacyjna technologia, łączenie zbiorów). Agent szkicuje: opis, cel, niezbędność i proporcjonalność, ryzyka, środki.
+Decyduje administrator i IOD. Dwie odpowiedzi „tak” na pytania kontrolne → zadaj pytanie IOD.
+
+## Cookies i dostęp do urządzenia
+Zasady ePrivacy; w Polsce Prawo komunikacji elektronicznej (PKE, Dz.U. 2024 poz. 1221, w mocy od 10 listopada 2024 —
+przed cytowaniem sprawdź artykuł i właściwy organ w ISAP). Zapis lub odczyt niekoniecznych danych na urządzeniu wymaga
+uprzedniej zgody; żadnych domyślnie zaznaczonych pól (TSUE C-673/17 *Planet49*, 2019); odmowa ma być równie łatwa jak
+zgoda. Cookies analityczne nie są niezbędne.
+
+## Dane osobowe wysyłane do dostawców modeli AI
+Prompt z danymi osobowymi to ujawnienie danych dostawcy, więc obowiązują zwykłe zasady dla podmiotów przetwarzających:
+- minimalizuj i pseudonimizuj przed wysłaniem; wysyłaj pola, nie całe rekordy;
+- przeczytaj **aktualny** regulamin i politykę wykorzystania danych dostawcy w jego oficjalnej dokumentacji i sprawdź:
+  poziom usługi (plany konsumenckie mogą domyślnie trenować na rozmowach, plany biznesowe i API zwykle nie), czy da się
+  wyłączyć trenowanie, region przetwarzania i transfery poza EOG, retencję, umowę z art. 28;
+- ten sam dostawca może mieć osobne ustawienia dla aplikacji czatu, API i narzędzia do kodu — sprawdź każde, którego używa zespół;
+- zapisz, co sprawdziłeś, z datą, w `privacy.md` — te zasady zmieniają się w ciągu miesięcy;
+- brak wyboru regionu, brak przedstawiciela w UE albo przechowywanie w kraju bez decyzji o odpowiednim stopniu ochrony
+  i bez klauzul → transfer bez podstawy: zatrzymaj się i przekaż sprawę człowiekowi i prawnikowi.
+Obowiązki z AI Act dotyczące danych treningowych: data-engineering.
+
+## Kary (art. 83)
+Do 10 mln EUR lub 2% światowego rocznego obrotu; do 20 mln EUR lub 4% za naruszenie zasad, podstaw prawnych i praw
+osób — obowiązuje kwota wyższa.
+
+## Istniejący system bez inwentarza
+1. Szkic z kodu: `tf analyze --only data-classification` (schematy, migracje, modele, dane osobowe w logach i w wywołaniach
+   analityki); ustalenie `pii-field-unclassified` = pole o nazwie wyglądającej na osobową bez znacznika klasy ani wiersza w inwentarzu.
+2. Dodaj pola o nic niemówiących nazwach; próbkuj kolumny z wolnym tekstem i JSON (notes, metadata, payload) na
+   produkcji bez kopiowania danych na zewnątrz.
+3. Właściciele zatwierdzają klasy, potem dopisuje się cele i retencję.
+4. Najpierw napraw dane osobowe w logach i analityce — mają najszersze grono odbiorców.
+
+## Prawo do obserwowania (stan na 2026-11-20)
+- EU–US Data Privacy Framework: decyzja o odpowiednim stopniu ochrony z 10 lipca 2023, ważna tylko dla firm
+  certyfikowanych. Sąd UE oddalił skargę w sprawie T-553/23 *Latombe* 3 września 2025; odwołanie w toku (C-703/25 P)
+  [niezweryfikowane].
+- Projekt Digital Omnibus COM(2025) 837 z 19 listopada 2025 (procedura 2025/0360(COD)): m.in. zgłaszanie naruszeń tylko
+  przy wysokim ryzyku w ciągu 96 godzin przez jeden punkt kontaktowy, przeniesienie zasad cookies do RODO, wykazy DPIA
+  na poziomie UE. To projekt — projektuj pod zasadę 72 godzin, dopóki nie wejdzie w życie.
+
+## Przykład
+**Sytuacja:** „Dodajemy numer telefonu, historię rezerwacji i analitykę zachowań do aplikacji rezerwacji sal.”
+**Wynik:**
+- Wiersze inwentarza: `users.phone` (osobowe, właściciel: produkt, cel: przypomnienia o rezerwacji), `bookings.*`
+  (osobowe, cel: umowa i księgowość), `events.user_id` (osobowe, spseudonimizowane HMAC, cel: analityka).
+- Podstawy: telefon — umowa, jeśli przypomnienia są częścią usługi, inaczej zgoda (decyduje właściciel i IOD); historia —
+  umowa plus obowiązek prawny dla księgowości; analityka — zgoda zbierana banerem cookies (PKE).
+- Minimalizacja: telefon opcjonalny; analityka zapisuje pseudonim, nie e-mail.
+- Retencja: telefon do usunięcia konta; zdarzenia analityczne 13 miesięcy; logi aplikacji 30 dni bez treści żądań —
+  zadanie usuwające z testem.
+- Pytania DPIA: brak profilowania o istotnym skutku, brak szczególnych kategorii → najwyżej jedno „tak”; uzasadnienie
+  zapisz w `decisions.md`.
+- *To nie jest porada prawna — potwierdź z IOD lub prawnikiem.*
+
+Jeśli pytanie nie podaje danych, celów ani kontekstu („czy to jest zgodne z RODO?”), zapytaj o nie; nie wydawaj werdyktu.
 
 ## Źródła
-- Rozporządzenie (UE) 2016/679 (RODO) — eur-lex.europa.eu (art. 5–7, 9, 12–22, 25, 28, 30, 32–35, 44–49, 83)
-- EDPB: wytyczne 4/2019 (art. 25, wersja 2.0 z 20.10.2020), 9/2022 (zgłaszanie naruszeń, wersja 2 z 2023),
-  01/2025 (pseudonimizacja, konsultacje), opinia 08/2024 („consent or pay”) — edpb.europa.eu
-- UODO: wykaz operacji wymagających DPIA (M.P. 2019 poz. 666); decyzje i komunikaty 2025–2026 — uodo.gov.pl
-- Sąd UE T-553/23 Latombe (3.09.2025), odwołanie C-703/25 P; TSUE C-673/17 Planet49 — curia.europa.eu
-- Digital Omnibus: procedura 2025/0360(COD) (oeil.europarl.europa.eu), wspólna opinia EDPB-EDPS 2/2026
-- Prawo komunikacji elektronicznej, Dz.U. 2024 poz. 1221 (w mocy od 10.11.2024)
-- Kurs 10xDevs, ed. 3 (2026), moduł 1, lekcja 3 (dane i kod u dostawców modeli) — materiał szkoleniowy (dostęp 2026-10-09).
-Dostęp 2026-10-03. Opisane własnymi słowami; nie jest poradą prawną.
+- Rozporządzenie (UE) 2016/679 (RODO), art. 5–9, 12–22, 25, 28, 30, 32–35, 44–49, 83 — EUR-Lex (dostęp 2026-11-20).
+- EDPB, Wytyczne 4/2019 dotyczące art. 25 — uwzględnianie ochrony danych w fazie projektowania i domyślna ochrona danych, wersja 2.0 (2020).
+- Decyzja wykonawcza Komisji (UE) 2023/1795 (EU–US Data Privacy Framework), 10 lipca 2023; Sąd UE T-553/23 *Latombe*,
+  3 września 2025 — CURIA (dostęp 2026-11-20).
+- Wykaz UODO rodzajów operacji wymagających DPIA, Monitor Polski 2019 poz. 666.
+- Prawo komunikacji elektronicznej, Dz.U. 2024 poz. 1221 — ISAP (dostęp 2026-11-20).
+- TSUE C-673/17 *Planet49*, wyrok z 1 października 2019.
+- Komisja Europejska, projekt Digital Omnibus COM(2025) 837; OEIL, procedura 2025/0360(COD) (dostęp 2026-11-20).
+
+Opisane własnymi słowami; nie jest to porada prawna.
