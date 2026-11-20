@@ -1,0 +1,63 @@
+head: Użyj, gdy plan, decyzję lub pomysł trzeba przepytać przed startem pracy — rundy niezależnych pytań z rekomendacjami, fakty sprawdzasz sam, potwierdzenie. Użyj, gdy człowiek prosi, by go przepytać z planu, decyzji albo pomysłu, zanim cokolwiek powstanie, gdy agent sam odpowiada na pytania decyzyjne albo zaczął kodować w trakcie wywiadu, gdy przesłuchanie tonie w pytaniach o przypadki brzegowe, albo gdy trzeba przyjąć ranking opcji z badania — rundy pytań, które można postawić już teraz, jedna rekomendacja na pytanie, fakty sprawdzane przez agenta, podsumowanie potwierdzone przez człowieka, zapis decyzji. Nie do warsztatów z ekspertami domeny o wspólnym słowniku (ddd-facilitation, pack-it) ani wyboru zespołu lub skilla do zadania (core-problem-routing).
+# Przesłuchanie planu — pytaj rundami, rekomenduj, potwierdź przed działaniem
+
+Celem jest wspólne rozumienie planu przed jakąkolwiek implementacją. Ty pytasz, człowiek decyduje; nie odpowiadasz
+za niego na pytania decyzyjne i nie zaczynasz budować, zanim nie potwierdzi podsumowania.
+
+## Przed pierwszą rundą
+1. **Przeczytaj wszystkie wejścia** — brief, badanie, ranking, kod. Pytanie rozstrzygnięte w wejściu pomijasz i mówisz to z cytatem.
+2. **Fakty sprawdzasz sam** (wersje, moduły, rozmiary danych, role, konfiguracja): grep, pliki konfiguracyjne, tani
+   subagent zwiadowca. Nie pytasz człowieka o to, co odpowie repozytorium. Trwające sprawdzenie blokuje tylko zależne pytania.
+3. **Decyzje należą do człowieka** (zakres, apetyt na ryzyko, kompromisy, priorytety): pytasz i czekasz.
+4. **Oszacuj rozmiar** z uzasadnieniem: prosta zmiana ok. 4–6 pytań, średnia 7–10, złożona 11–15, mniej po gotowym badaniu.
+   Człowiek może to skorygować. To miękkie widełki.
+5. **Za duże na jedną sesję** → najpierw mapa obszarów i zależności jako osobne zadania w `docs/project/`, potem wywiad per zadanie.
+
+## Rundy
+- Temat to decyzje zależne od siebie. W każdej rundzie zadajesz **wszystkie pytania, które można postawić już teraz** — te,
+  których warunki są już rozstrzygnięte. Dużo pytań w rundzie, mało rund (ok. tuzin pytań w ok. trzech rundach).
+- Nie układasz pełnej listy z góry; po każdej porcji odpowiedzi ustalasz na nowo, co jest otwarte.
+- Dwa pytania, z których jedno zależy od drugiego, nigdy w tej samej rundzie.
+- Odpowiedź zmieniająca wcześniejszą decyzję → mówisz to i wracasz do niej jawnie.
+- Nowy dowód w trakcie (np. „brakująca funkcja” to działający błąd) → osobne pytanie, nie cicha zmiana planu.
+- Pytanie, które rozstrzygnie tylko prototyp → proponujesz prototyp.
+
+## Format pytania
+Numerowane pytania P1, P2… z tytułem, opcjami (co robi, zaleta, koszt — po jednej linii) i linią **Rekomendacja** popartą
+dowodem z kodu lub wejścia. Człowiek odpowiada numerem, np. „P1: b”. Bez opcji, których nikt rozsądny by nie wybrał.
+Prosty język człowieka, bez żargonu procesu. Pytania diagnostyczne (problem, zakres, kryterium sukcesu) odróżniasz od pytań o rozwiązanie.
+
+## Proporcja
+- Szeregujesz pytania według wpływu i prawdopodobieństwa. Rozwiązywanie każdego przypadku brzegowego to przeinżynierowanie;
+  „zawiedź z czytelnym błędem” to dobra odpowiedź dla mało prawdopodobnych przypadków. Minimalizm (drabina minimalizmu w eng-design-principles).
+- Sygnały nadmiaru: stosy zadań, których nikt nie zrobi, plan rosnący z dni do tygodni, opisy PR, których nikt nie czyta.
+
+## Wejście z rankingiem opcji
+Pierwsze pytanie: którą opcję realizujemy. Akceptacja rankingu to wyraźna decyzja człowieka, nie założenie. Mówisz,
+o co nie będziesz pytać, bo badanie już to rozstrzygnęło (z cytatem), i dajesz rekomendację do każdego zadanego pytania.
+
+## Zakończenie
+1. Brak otwartych pytań → podsumowanie: **decyzje**, **założenia**, **poza zakresem** i pytanie „Czy tak to rozumiemy?”.
+   Bez potwierdzenia nic nie wdrażasz.
+2. Zapis: decyzje w artefakcie i `decisions.md` (core-project-record), nowe pojęcia w słowniku (ddd-facilitation),
+   propozycja ADR, gdy decyzja spełnia próg (skill dokumentacji, pack-docs).
+3. **Człowiek niedostępny:** rekomendacje stają się jawnie oznaczonymi założeniami Z1…Zn, nic nie wdrażasz, czekasz.
+4. **Jedno pytanie naraz** na życzenie: spełniasz i proponujesz zapis preferencji w `CLAUDE.md` projektu.
+
+## Typowe błędy
+- Agent sam odpowiada na pytania decyzyjne lub zaczyna kodować → stop, wyjaśnij, zacznij od nowa; w `CLAUDE.md` linia:
+  „Po przesłuchaniu planu nic nie wdrażaj bez wyraźnej zgody człowieka na potwierdzone podsumowanie.”
+- Słabszy model zadaje 2–3 mgliste pytania → mocniejszy model albo tryb jednego pytania, nie skracaj procedury.
+- Zależne pytania razem → człowiek to wskazuje, wracasz do gałęzi w następnej rundzie.
+- Pytania o fakty z repo, pełna lista pytań z góry → sprawdzasz sam, pytasz tylko o to, co można postawić już teraz.
+
+## Przykład
+„Przenoszę kolejkę z RabbitMQ na Kafkę — przepytaj mnie.” Najpierw fakty (4 konsumentów, wiadomości ~2 KB). Rozmiar:
+złożony, ok. 11–13 pytań. Runda 1: kolejność, retencja, którzy konsumenci pierwsi, oczekiwania wobec wycofania — każde
+z rekomendacją. Wstrzymane: metoda przełączenia (zależy od odpowiedzi o konsumentach) → runda 2. Na końcu podsumowanie
+i „Czy tak to rozumiemy?”. Więcej przykładów: `references/examples.md`.
+
+## Lista kontrolna
+- [ ] wejścia przeczytane; fakty sprawdzone, nie zadane
+- [ ] rozmiar oszacowany i przyjęty; w rundzie tylko pytania, które można postawić już teraz
+- [ ] jedna rekomendacja na pytanie; podsumowanie potwierdzone przed wdrożeniem; decyzje zapisane
