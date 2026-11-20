@@ -1,0 +1,93 @@
+head: Użyj, gdy stawiasz szkielet projektu z oficjalnego generatora albo oceniasz, czy istniejące repo jest gotowe do pracy agentów — audyt, testy, DX, werdykt. Użyj, gdy repozytorium ma stać się bezpieczne i weryfikowalne dla pracy agentów. Ścieżka A (nowy projekt): szkielet z oficjalnego generatora wskazanego w zaakceptowanej decyzji o stacku — ocena świeżości startera, katalog tymczasowy, polityka konfliktów, która nigdy nie nadpisuje istniejących plików, raport weryfikacji szkieletu. Ścieżka B (istniejący projekt): audyt tylko do odczytu skryptem scripts/readiness_check.py — lockfile, polecenie audytu zależności, runner testów na sucho, etapy CI, konfiguracja, cztery bramki przyjazności dla agenta na komponent stacku z gotowymi kompensacjami do CLAUDE.md, pętla dewelopera (jedno polecenie setup, compose z healthcheckami, seed, .env.example, testy powiązane, czas od klonu do zielonych testów), werdykt i uporządkowana lista poprawek. Nie do wyboru stacku (arch-tech-selection), audytu długu w kodzie (eng-tech-debt-audit), dopasowania skilli do wersji (core-stack-sync) ani aktualizacji zależności (ops-dependency-upgrades).
+# Gotowość repo — szkielet z generatora albo audyt tego, co jest
+
+Agent pracuje bezpiecznie tylko w repo, w którym sam zainstaluje, uruchomi i przetestuje projekt, a wyniki da się
+sprawdzić. Ten skill albo tworzy takie repo z oficjalnego generatora (ścieżka A), albo audytuje istniejące (ścieżka B).
+Informuje i proponuje; nie zmienia stacku i niczego sam nie naprawia.
+
+**Reguła nadrzędna:** deleguj do autorytatywnego CLI — generator projektu, `docker init`, `ng generate`,
+`prisma migrate dev`. Zapamiętana składnia się starzeje; nigdy nie pisz szkieletu z pamięci. Gdy CLI zawiedzie,
+**zatrzymaj się** i zgłoś polecenie, kod wyjścia i ostatnie linie wyjścia; nie dopisuj brakujących plików ręcznie.
+
+## Ścieżka A — nowy projekt z generatora
+1. **Warunek wstępny:** `docs/project/04-architecture/stack-decision.md` ze statusem `accepted`, z poleceniem generatora
+   i wersją. Ustalenie w rozmowie nie wystarcza; brak pliku → odmowa w jednym zdaniu i odesłanie do arch-tech-selection.
+2. **Świeżość startera** (heurystyka zespołu): `npm view <pkg> version time.modified` albo
+   `gh api repos/<owner>/<repo> --jq .pushed_at`. Poniżej 3 miesięcy — świeży; 3–6 — starzeje się; ponad 6 — nieaktualny:
+   ostrzeżenie, nie blokada, z oficjalną alternatywą tej samej rodziny.
+3. **Generuj do `.bootstrap-scaffold/`**, nigdy do katalogu głównego. Kod wyjścia generatora ≠ 0 → STOP: zostaw katalog
+   do inspekcji, raport ze statusem `failed`, nic nie uzupełniaj ręcznie.
+4. **Przenieś według polityki konfliktów** (istniejący plik wygrywa):
+   - `CLAUDE.md`, `AGENTS.md`, `README.md`, `.claude/`, `docs/project/` — zostaje istniejąca wersja, wersja generatora
+     obok jako `<plik>.scaffold`;
+   - manifesty (`package.json`, `pyproject.toml`) — istniejący zostaje, wersja generatora jako `.scaffold`, różnice w raporcie;
+   - `.gitignore` — scalenie addytywne bez duplikatów;
+   - pozostałe pliki przeniesione; kolizja nazwy → `.scaffold`;
+   - sklonowany starter: usuń jego `.git/` przed przeniesieniem;
+   - nigdy nie usuwaj ani nie nadpisuj plików ludzi; `git init` i pierwszy commit to decyzja człowieka.
+5. **Po przeniesieniu:** audyt zależności (tylko raport; `npm audit fix` za zgodą), testy szkieletu, build.
+6. **Raport** `docs/project/06-delivery/bootstrap-verification.md`: polecenie i wersja generatora, kod wyjścia, przeniesione
+   pliki, konflikty `.scaffold`, dopisane linie `.gitignore`, audyt bezpośrednie vs przechodnie, wyniki testów i buildu,
+   następne kroki. Wariant nieudany: polecenie, kod wyjścia, ostatnie 20 linii, ścieżka katalogu. Wzory: `references/reports.md`.
+
+## Ścieżka B — istniejący projekt
+Fakty przed oceną. Uruchom, nie implementuj od nowa:
+- `python3 .claude/skills/eng-repo-readiness/scripts/readiness_check.py [katalog] [--json]` — offline, niczego nie uruchamia;
+  kod 0 bez wysokich ustaleń, 1 są wysokie, 2 błąd wywołania;
+- `python3 .claude/hooks/detect_stack.py` — komponenty stacku.
+
+Uruchomienie audytu lub listowania testów wymaga zgody człowieka.
+
+1. **Fundament:** lockfile ekosystemu (sam `requirements.txt` to słaby zamiennik); audyt zależności, bezpośrednie vs
+   przechodnie (`npm audit --json`, `pip-audit --format json`, `cargo audit --json`, `govulncheck -json ./...`,
+   `bundle audit check --update`, `composer audit --format json` od Composera 2.4,
+   `dotnet list package --vulnerable --include-transitive`); zależności o major lub więcej w tyle. Rodzina bez
+   wbudowanego audytu (Java, Dart) → **„pominięte”**, nigdy „0 ustaleń”. Krytyczne podatności podnoszą werdykt ręcznie.
+2. **Środowisko uruchomienia:** runner testów i listowanie na sucho (`npx vitest list`, `npx jest --listTests`,
+   `pytest --collect-only -q`, `cargo test --no-run`, `go test -list . ./...`, `dotnet test --list-tests`, `mocha --dry-run`);
+   etapy CI (lint, testy, build, typy, bezpieczeństwo); konfiguracja: brak `.gitignore` wysokie, TypeScript bez `strict`
+   wysokie, brak lintera lub formatera średnie, brak `.editorconfig` lub `.env.example` niskie.
+3. **Cztery bramki przyjazności dla agenta na komponent**, każda z dowodem z pliku lub konfiguracji: **typy** (jawne
+   kontrakty danych), **konwencje** (ustalone miejsca na trasy, testy, konfigurację), **popularność w rodzinie języka**
+   (Django wśród frameworków Pythona, nie Django kontra React), **aktualna wersjonowana dokumentacja**. Werdykt stacku:
+   `ready` / `ready-with-compensation` / `high-friction`. Nieprzechodząca bramka dostaje **kompensację**: konkretne reguły
+   do wklejenia w CLAUDE.md, nigdy „dodaj dokumentację”.
+4. **Pętla dewelopera** (`references/developer-loop.md`):
+   - jedno idempotentne polecenie startowe (`make setup`, `just setup`, `task setup`, `npm run setup`) instalujące z lockfile
+     (`npm ci`, `uv sync`, `poetry install --sync`), stawiające usługi (`docker compose up -d --wait`), migracje i
+     idempotentny syntetyczny seed; plus `make dev` i `make test`; opisane w README i CLAUDE.md/AGENTS.md;
+   - usługi w `compose.yaml` w wersjach produkcyjnych, z `healthcheck` i `depends_on` z `condition: service_healthy` —
+     albo Testcontainers;
+   - devcontainer tylko gdy narzędzia trudno zainstalować lub używa się Codespaces; inaczej compose i plik wersji
+     (`.nvmrc`, `.python-version`, `mise.toml`);
+   - `.env.example` ze wszystkimi zmiennymi, puste lub fikcyjne wartości; wartość wyglądająca na prawdziwy klucz to
+     ustalenie **wysokie** — pokazane tylko nazwą zmiennej, klucz do unieważnienia;
+   - usługi zewnętrzne w trybie testowym lub zaślepione (Stripe test mode, Mailpit);
+   - szybka informacja zwrotna: polecenie testów powiązanych (`vitest related`, `jest --findRelatedTests`,
+     `nx affected -t test`, `pytest --lf` lub testmon), rozdzielone szybkie i wolne zestawy, CLAUDE.md mówi, co uruchomić
+     po zmianie, a co przed oddaniem.
+5. **Zmierz czas od klonu do zielonych testów** (za zgodą; bez prawdziwych sekretów): świeży klon do katalogu
+   tymczasowego, tylko README/CLAUDE.md, `time make setup && time make test`; zapisz sumę, każde zgadywanie lub pytanie
+   i każdy ręczny krok — każdy to poprawka. Orientacyjny cel zespołu: setup poniżej 15 minut, zero ręcznych kroków
+   poza własnymi kluczami [założenie].
+6. **Werdykt i poprawki.** Werdykt projektu: `critical` (brak runnera testów albo ≥ 3 wysokie) / `needs-attention` /
+   `healthy`. Poprawki według wpływu na agenta; każda: co, dlaczego dla agenta, polecenie, wysiłek: szybka (< 5 min),
+   średnia (15–30 min), duża (> 1 h). Werdykt informuje, nie blokuje i nie zaleca zmiany stacku.
+7. **Raport** `docs/project/07-review/<data>-repo-readiness.md`: TL;DR z werdyktami i poprawką nr 1, tabela faktów z dowodami,
+   tabela bramek, kompensacje, tabela poprawek, „czego nie sprawdzono”. Każda liczba ma dowód albo „nie sprawdzono”.
+
+## Przykład
+Przejmowane API we Flasku (Python 3.12, tylko `requirements.txt`, pytest, CI uruchamia tylko `flake8`): lockfile słaby —
+średnie; `pytest --collect-only -q` listuje 212 testów; CI bez etapu testów i buildu; brak formatera — średnie;
+`.env.example` ma `STRIPE_SECRET_KEY` z wartością jak prawdziwa — wysokie. Za zgodą `pip-audit`: 1 wysoka przechodnia,
+0 bezpośrednich. Flask: typy ✗, konwencje ✗, popularność ✓, dokumentacja ✓ → `ready-with-compensation` z regułami do
+CLAUDE.md. Werdykt `needs-attention`. Poprawki: unieważnij klucz (szybka), etap pytest w CI (szybka), `uv` z lockfile
+(średnia), podbicie paczki przechodniej (średnia), ruff format w pre-commit (szybka).
+
+## Lista kontrolna
+- [ ] ścieżka A tylko z zaakceptowanym plikiem decyzji o stacku; generowanie w `.bootstrap-scaffold/`; istniejące pliki wygrywają
+- [ ] porażka generatora → stop i raport, nic dopisane ręcznie
+- [ ] ścieżka B: fakty ze skryptu i datowanych poleceń; audyt i listowanie testów za zgodą; „pominięte” bez audytu
+- [ ] cztery bramki z dowodami; kompensacje jako reguły do CLAUDE.md
+- [ ] pętla dewelopera: jedno polecenie, healthchecki, seed, `.env.example`, testy powiązane, zmierzony czas od klonu
+- [ ] werdykty, poprawki według wpływu na agenta, lista „nie sprawdzono”
