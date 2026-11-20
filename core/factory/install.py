@@ -1129,7 +1129,7 @@ def _main(argv: list[str], tmp: Path) -> int:
     print(f"{head} in {dst_root} — version {ver}, {mode_txt} mode: new files {len(plan.created)}, "
           f"updated {len(plan.updated)}, merged {len(plan.merged)}, removed {len(plan.removed)}")
     print(f"  packs: {', '.join(packs) or '— (core only)'}")
-    if plugin and (migrating or not update):
+    if plugin and (migrating or not update) and not dry:   # once, after the real write (not in the update's preview)
         print("ℹ Factory mode: the factory lives in .tf/plugin/ — start it with `tf code` (e.g. `tf code --continue`); "
               "a plain `claude` in this project loads nothing from the factory. "
               + ("Back to the old layout: python3 .tf/factory/update.py --rollback, or install with --layout default."
