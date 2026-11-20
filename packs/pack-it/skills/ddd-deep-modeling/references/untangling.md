@@ -33,9 +33,9 @@ need ends with another value of the "status" field.
   - "Can the same pair be related twice in different periods?"
 
   Every "yes" confirms that the relationship is a separate concept.
-- **Archetype:** relationships between parties are PartyRelationship
-  (`.claude/skills/ddd-archetypes/references/party.md`), and a contract with items is Agreement
-  (`.claude/skills/ddd-archetypes/references/agreement.md`).
+- **Archetype:** relationships between parties are a separate relationship object
+  (`.claude/skills/ddd-archetypes/references/parties-and-relationships.md`), and a contract with items is a commitment
+  (`.claude/skills/ddd-archetypes/references/commitments.md`).
 
 ## 3. Status is not an extension mechanism
 - **Problem:** every new need gets a new status value, e.g. an offer as "an order with the status offer",
