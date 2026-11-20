@@ -73,7 +73,7 @@ def main() -> int:
         check(r.returncode == 2 and not called(base) and "tf doctor" in r.stdout + r.stderr,
               f"TC-4: brak pliku wtyczki → odmowa z podpowiedzią, claude nie startuje: {r.returncode} {r.stdout}{r.stderr}")
 
-        q = make(base, "default")
+        q = make(base, "default", "--layout", "default")
         r = tf(q, base, "code", "--continue")
         c = called(base)
         check(r.returncode == 0 and c.get("argv") == ["--continue"] and "layout" in (r.stdout + r.stderr).lower(),

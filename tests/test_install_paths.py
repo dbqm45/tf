@@ -44,7 +44,7 @@ def main() -> int:
         write(pack / "workflows" / "aa-audit.js", "export const meta = {name: 'aa-audit', description: 'A'}\n")
         proj = Path(t) / "proj"
         proj.mkdir()
-        r = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes",
+        r = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes", "--layout", "default",
                             "--shared", "--packs", "pack-a"], capture_output=True, text=True, timeout=300)
         check(r.returncode == 0, f"I-1: install: {r.stdout[-600:]} {r.stderr[-300:]}")
         # T-1…T-5 (step 4c): the engine in .tf/factory/, the project configuration in .tf/config/, nothing in a factory/ directory
@@ -74,7 +74,7 @@ def main() -> int:
         instr = (proj / "CLAUDE.md").read_text(encoding="utf-8") if (proj / "CLAUDE.md").exists() else ""
         check(".tf/factory/build.py" in instr and "python3 factory/" not in instr,
               f"T-4: the project instructions point to .tf/factory/: {instr[-400:]}")
-        r3 = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes"],
+        r3 = subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes", "--layout", "default"],
                             capture_output=True, text=True, timeout=300)
         check(r3.returncode == 0 and "economy" in own_cfg.read_text(encoding="utf-8"),
               f"T-5: the update does not touch .tf/config/config.yaml: {r3.stdout[-400:]}")
@@ -103,7 +103,7 @@ def main() -> int:
         priv = Path(t) / "priv"
         priv.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=priv, check=True)
-        subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(priv), "--yes",
+        subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(priv), "--yes", "--layout", "default",
                         "--packs", "pack-a"], capture_output=True, text=True, timeout=300)
         exclude = read(priv / ".git" / "info" / "exclude").splitlines()
         check(".claude/workflows/aa-audit.js" in exclude and ".claude/workflows/" not in exclude,

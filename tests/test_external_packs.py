@@ -39,7 +39,7 @@ def make_pack(base: Path, pid: str, major: int, prefix: str = "xa-", core_spec: 
 
 
 def install(src: Path, proj: Path, *args: str) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes",
+    return subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes", "--layout", "default",
                            *args], capture_output=True, text=True, timeout=300)
 
 
