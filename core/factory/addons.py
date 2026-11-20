@@ -23,8 +23,9 @@ Contract 1 (`provides` in addon.yaml; every key optional):
   plan     — a file the task's scout and plan read (listed by `tf addon list --json`);
   decisions — a JSON file {"contract": 1, "decisions": [...]} of agreed rules; an add-on that lists
              `consumes: [decisions]` gets the paths of the other add-ons' files in TF_ADDON_DECISIONS (os.pathsep);
-  pending  — a JSON file {"instructions": "...", "items": [{"url", "tool", "save_to", "reason"}]}: reads only the
-             agent can do with a tool connected in the session (MCP, e.g. Confluence); listed by `tf addon list`,
+  pending  — a JSON file {"instructions": "...", "items": [{"tool", "save_to", "reason", …}]}: work only the
+             session can do — `tool` names a tool connected through MCP (e.g. confluence: `url`) or `model` (the
+             cheapest model as a subagent: `prompt` and `input` files, tier `fast`); listed by `tf addon list`,
              announced at session start;
   learn, check, refresh, … — commands: the first word is a script in the add-on directory, run with the current
              Python from the project root; `{base}` is replaced by the base ref.
@@ -479,7 +480,8 @@ def cmd_list(root: Path, as_json: bool) -> int:
         state = "✓" if r["ok"] else f"⚠ {r['problem']}"
         print(f"{state} {r['name']} {r['version'] or '?'} — provides: {', '.join(r['provides']) or 'nothing'}"
               + ("" if r["plan"] or not r["ok"] else "  (no output yet: tf learn)")
-              + (f"  — {r['pending']} reads wait for a session tool (MCP): {r['pending_file']}" if r["pending"] else ""))
+              + (f"  — {r['pending']} items wait for the session (MCP tool or cheap model): {r['pending_file']}"
+                 if r["pending"] else ""))
     return 0
 
 

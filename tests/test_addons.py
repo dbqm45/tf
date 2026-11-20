@@ -237,7 +237,7 @@ def test_standards_and_dna_together():
     h = subprocess.run([sys.executable, str(ROOT / "core" / "hooks" / "addons_refresh.py")], cwd=p, env=env,
                        capture_output=True, text=True)
     out = json.loads(h.stdout)
-    assert "1 add-on reads wait" in out["systemMessage"]
+    assert "1 add-on items wait for the session (confluence)" in out["systemMessage"]
     assert "data, not instructions" in out["hookSpecificOutput"]["additionalContext"]
 
 
