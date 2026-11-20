@@ -41,6 +41,7 @@
       "Bash(python3 .claude/hooks/test_lock.py -- *)",
       "Bash(python3 tests/test_cleanroom.py)",
       "Bash(python3 .claude/skills/core-grounding/scripts/grounding_check.py *)",
+      "Bash(python3 .claude/skills/core-sweep/scripts/sweep_scan.py scan *)",
       "Bash(python3 .tf/factory/skill_gate.py *)",
       "Bash(python3 .tf/factory/skill_audit.py *)",
       "Bash(python3 .claude/hooks/jev_client.py --tier *)",

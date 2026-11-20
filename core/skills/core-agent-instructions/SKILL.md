@@ -1,153 +1,137 @@
 ---
 name: core-agent-instructions
-description: Use when writing and reviewing CLAUDE.md or AGENTS.md — the inclusion test, a check card, modules.
+description: Use when writing, trimming, auditing or splitting CLAUDE.md, AGENTS.md or .claude/rules — what earns a line, where it lives, the lint card, A/B check of a rule.
 metadata:
-  review: "2027-10-10"
-  catalog: "Use when the project's agent instructions file is being created, swells, goes stale or does not work (CLAUDE.md, AGENTS.md, CLAUDE.local.md, .claude/rules/) — the rule inclusion test, where to keep what (a rule, a skill, a hook, memory), a draft from inspecting the repo, a five-check card with a script, an update from git history, A/B rule calibration, a ladder of files in modules with an index in the root, AGENTS.md next to CLAUDE.md. Not for writing skills (core-skill-authoring), project lessons and the record (core-project-record) or a README and documentation for people (the documentation skill, pack-docs)."
-  keywords: "CLAUDE.md, AGENTS.md, CLAUDE.local.md, plik instrukcji agenta, reguły dla agenta, reguły AI, zasady dla agenta, cursor rules, .claude/rules, /init, CLAUDE.md za długi, CLAUDE.md puchnie, agent ignoruje reguły, agent łamie konwencję, porządki w CLAUDE.md, przegląd reguł, onboarding agenta, monorepo CLAUDE.md, CLAUDE.md w module, reguły per katalog, AGENTS.md i CLAUDE.md razem, Codex i Claude Code, Copilot, Cursor, kilka narzędzi AI, wspólne reguły agentów, reguły się rozjechały, czy reguła działa, nieaktualne wpisy w CLAUDE.md, refaktor a CLAUDE.md, agent instructions file, rules for the agent, CLAUDE.md too long, agent ignores the rules, review the rules, rules per directory, several AI tools, does the rule work, outdated entries, czy reguła coś zmienia, reguła zajmuje kontekst, kalibracja reguły, test A/B reguły, does the rule change anything, the rule takes up context"
+  review: "2027-02-20"
+  catalog: "Use when you create, shorten, review or refresh a project's agent-instruction files (CLAUDE.md, AGENTS.md, CLAUDE.local.md, .claude/rules/), the agent ignores rules in them, a monorepo needs module rules, several AI tools share one rule set or a rule's worth is in doubt — the inclusion test, where each kind of content lives, the instructions_lint card, refreshing from git history, A/B trials of a rule, module files with an index. Not for writing skills (core-skill-authoring), project lessons and the record (core-project-record) or a README and documentation for people (docs skill, pack-docs)."
+  keywords: "CLAUDE.md puchnie, za długi CLAUDE.md, odchudzić CLAUDE.md, uporządkować plik instrukcji, agent ignoruje reguły, agent łamie zasady mimo reguły, co wpisać do CLAUDE.md, czy dodać regułę, nowa reguła w CLAUDE.md, przegląd CLAUDE.md, przegląd instrukcji agenta, nieaktualne wpisy, po refaktorze instrukcje nieaktualne, nieistniejący skrypt w instrukcjach, pisz czysty kod, wklejony tsconfig, zakaz na końcu pliku, monorepo, zasady pakietu, CLAUDE.md w module, zagnieżdżony CLAUDE.md, .claude/rules, paths, indeks modułów, AGENTS.md i CLAUDE.md, Codex i Claude Code, wspólne reguły dla kilku narzędzi AI, @AGENTS.md, dowiązanie symboliczne, kalibracja reguły, czy reguła działa, czy reguła coś zmienia, reguła zajmuje kontekst, A/B reguły, reguła z sąsiedniego repo, agent startuje w innym repo, globalne instrukcje, CLAUDE.local.md, instrukcje osobiste, pierwszy CLAUDE.md, /init, instructions_lint, bloated CLAUDE.md, trim CLAUDE.md, agent ignores rules, what to put in CLAUDE.md, stale instructions, AGENTS.md vs CLAUDE.md, module CLAUDE.md, monorepo rules, path-scoped rules, does this rule help, rule calibration, cross-repo rules, instruction file review"
 ---
 
-# Instructions for agents in a project (CLAUDE.md, AGENTS.md, rules)
+# Agent instruction files — lean, placed right, checked
 
-An instructions file is the onboarding of an agent that knows the language and the framework, but not your local agreements. Every line
-costs context in every session and for every executor, and the rules from a long file are followed more weakly.
-The skill gives criteria for what to write, where to keep it, how to review the file and how to check that a rule works.
-The architecture of files in a big repo (modules, an index, many repositories): `references/context-scaling.md`.
+An instruction file is onboarding for an agent that already knows the language and the framework but not this
+project's agreements. Every line is paid for in context by every session and every executor, and adherence falls as
+the file grows: models use the middle of a long context worst (Liu et al., "Lost in the Middle").
+Measured effect: an AGENTS.md cut median runtime by ~29% and output tokens by ~17% at comparable quality (Lulla et al.,
+10 repos, 124 PRs); generic context files did not raise success and cost 20%+ more — repo overviews did not help,
+non-standard practices did (Gloaguen et al.). So: few lines, each one something the agent could not guess.
 
-## 1. The inclusion test (before adding every line)
-"Would the agent know this without this file — from training data, the framework's documentation, the README, the linter
-configuration or from the code itself?" Yes → do not add it (at most a link). No → add it.
-- **Belong:** non-obvious conventions (the shape of an API error, file naming, allowed imports), the project's pitfalls,
-  workarounds resulting from history or a dependency bug, the build/test/lint commands, pointing to a model file
-  (`src/users/user.service.ts` instead of a pasted example).
-- **Do not belong:** framework documentation, README content, rules already enforced by configuration (`strict` in tsconfig),
-  a description of the directory structure and lists of dependencies (the agent reads them from the repo), intentions ("write clean code") — replace them with
-  behaviour checkable in the diff or remove them.
-- A rule without a recurring agent mistake does not go into the file "just in case". Signals that it needs adding: the same agent
-  mistake a second time, the same correction typed in the next session, a code review remark the agent could not have known.
+## 1. Does it earn a line?
+Add a line only when the agent **cannot get it** from its training, the framework docs, the README, lint/type/format
+config or the code itself — and, ideally, only **after a recurring miss**: the same mistake twice, the same correction
+typed again, a review remark the agent had no way to know.
+- **Earns a line:** non-obvious local conventions, project pitfalls, workarounds for known dependency bugs, the exact
+  build/test/lint commands, a pointer to a model file ("new endpoints follow `src/api/orders.ts`").
+- **Does not:** framework documentation, README copies, rules a linter or config already enforces, directory trees,
+  dependency lists, intentions ("write clean code") — rewrite those as behaviour visible in a diff or delete them.
+- "We use React hooks" fails (visible in the code). "New code never imports from `legacy/`" passes (not inferable, cheap,
+  checkable).
 
-## 2. Where to keep what
-| Content | Place |
+## 2. Where each kind of content lives
+| Content | Home |
 |---|---|
-| applies always, across the whole repo | the main `CLAUDE.md` / `AGENTS.md`, the most important bans on top |
-| concerns a part of the code | a `CLAUDE.md` in that part's directory or a `.claude/rules/*.md` rule with a `paths` field |
-| a procedure run when needed | a skill (core-skill-authoring) |
-| a check that must not be skipped (format, secrets, blocking a command) | a hook or a permission rule — CLAUDE.md is context, not enforcement |
-| a personal preference | `CLAUDE.local.md` (in `.gitignore`) or `~/.claude/CLAUDE.md` |
-| a pitfall from an incident | `docs/project/lessons.md` (core-project-record); it comes back a second time → a proposal for CLAUDE.md |
-| references: PRDs, plans, decisions, maps | `docs/project/` read when needed, with a link in CLAUDE.md |
+| true for the whole repo, every session | root `CLAUDE.md` (or `AGENTS.md`), strongest bans first |
+| true for one part of the code | module `CLAUDE.md` or `.claude/rules/*.md` with `paths` |
+| a procedure used now and then | a skill |
+| a check that must never be skipped | a hook or a permission rule — the file is context, not enforcement |
+| personal preferences | `CLAUDE.local.md` (gitignored) or `~/.claude/CLAUDE.md` |
+| a pitfall from one incident | `docs/project/lessons.md` (core-project-record); propose a line when it repeats |
+| reference material | `docs/project/…`, linked from the file |
 
-**An agent starting elsewhere** (a multi-repository session, an agent from repo A changes repo B) does not load
-the `CLAUDE.md` or `AGENTS.md` of repo B. Rules needed when working from outside (the fork's name, the target branch, required
-flags, e.g. `gh -R …`) you also keep where such an agent looks: in the global instructions (`~/.claude/CLAUDE.md`)
-or in the README of repo B; a script or a hook enforces a critical rule.
+One rule, one place. The file may still state a ban at the top ("never commit secrets"), but the hook enforces it.
+- **Several AI tools:** `AGENTS.md` is the single source of truth; `CLAUDE.md` holds `@AGENTS.md` plus Claude-only lines.
+  Claude Code reads `AGENTS.md` on its own only when no `CLAUDE.md` exists — check with `/context` or the
+  "Project instructions" setting.
+- **Agent started in another repo:** a session started in repo A does not load repo B's files, even when it edits B.
+  Put what B needs (fork, target branch, `gh -R org/b`) in global instructions or B's README too, and enforce the critical
+  part with a script or hook.
+- Monorepo, module files, loading rules: `references/context-scaling.md` (how files load: section 4).
 
-One rule lives in one place. Several AI tools in the team: `AGENTS.md` as the source of truth, and `CLAUDE.md`
-with one line `@AGENTS.md` (and possibly rules only for Claude Code below it). How Claude Code loads these files
-(subdirectories on demand, imports, AGENTS.md without CLAUDE.md): `references/context-scaling.md`, section 4.
+## 3. First draft
+1. Start from `/init` or by hand: README, manifest scripts, lint/format/type/test config, one or two CI files, two
+   levels of the tree, `git log --oneline -n 30` for the commit convention.
+2. Every statement from a file, command or commit (core-grounding); what you could not find becomes a question to the human.
+3. Order by leverage: hard bans → 3–6 commands → conventions with a model file → testing → commits/PRs → security.
+   No mission, values or team introduction.
+4. No code block longer than 1–2 lines (link the file), no definitions of general concepts.
+5. Budget: under ~200 non-empty lines for the root file (Anthropic's guidance); a module file 10–40 lines. Notes meant
+   only for humans go in HTML comments — Claude Code strips them before loading.
 
-**An ownership map of harness artifacts:** every instructions file, skill, hook, tool contract, permission policy
-and sensor has an owner from the domain it concerns (not a central "harness team"), a test in CI, a review cycle
-and a person who changes the contract. You add rules like a ratchet: only from a real failure, after a review. A skill
-unused for 60–90 days (the factory counts uses from hook logs) you mark for retirement. The measure: the share of artifacts
-without an owner and without a test.
+## 4. Review: the lint card
+`python3 .claude/skills/core-agent-instructions/scripts/instructions_lint.py [files…] [--root DIR] [--json] [--warn N] [--error N] [--strict]`
+- Exit 0 = no ERROR (with `--strict` a WARN also fails), 1 = an ERROR, 2 = bad call. `--root .` scans every
+  `CLAUDE.md`, `AGENTS.md`, `CLAUDE.local.md` and `.claude/rules/*.md` (skips `node_modules`, `.git`, `dist`…).
 
-## 3. Procedure: the first draft
-1. The built-in `/init` or an inspection: the README, the manifest and its scripts, the lint/format/type/test configurations,
-   1–2 CI files, two levels of the tree, `git log --oneline -n 30` (the commit convention). Every claim from a file,
-   a command or a commit (core-grounding); what you cannot establish, write as a question for the human, not a guess.
-2. Order by leverage: hard bans → 3–6 commands (build, test, lint) → conventions with a model file →
-   tests → commit and PR → security. No mission, values or introducing the team.
-3. No code blocks longer than 1–2 lines (a link to the file) and no definitions of general concepts.
-4. Budget: a file below ~200 non-empty lines (Anthropic's recommendation for a CLAUDE.md file); a module file usually 10–40 lines.
-5. Notes for people in HTML comments `<!-- … -->` — Claude Code removes them before injecting into the context.
+| id | Measures | OK / WARN / ERROR |
+|---|---|---|
+| `length` | non-empty lines, HTML comments and rule frontmatter removed | ≤ 200 / ≤ 500 / > 500 (`--warn`, `--error`) |
+| `blocks` | fenced blocks over 3 lines, mermaid excluded | 0 / 1–2 / ≥ 3 |
+| `intents` | vague-aspiration phrases, PL and EN | 0 / 1–3 / ≥ 4 |
+| `order` | first critical rule (never/always/must/do not) in the first third | ERROR if it appears only after line 200 or a file over 30 lines has no headings; WARN if it opens with an introduction heading |
+| `imports` | `@path` imports | WARN for a missing file; reports length with imports; flags `~/` imports as needing approval |
+| `stale` | backticked paths, `npm run x`, `make x` that do not exist | 0 / ≥ 1 (skips the `team-factory` block and lines that are prohibitions) |
 
-## 4. Procedure: a review (the five-check card)
-The script first — **run** it, do not read it:
-`python3 .claude/skills/core-agent-instructions/scripts/instructions_lint.py --root .` (or the file path; `--json`).
-It counts checks 1, 2, 3 and 5, `@` imports and outdated entries, and in `--root` mode also module files outside the index
-and rules copied from the main file. Exit code 1 = at least one `ERROR`. You do check 4 yourself.
+`--root` adds `repo.main_file`, `repo.unindexed` (a nested file not mentioned in the root file — add it under
+"Modules with their own CLAUDE.md") and `repo.duplicates` (a module line repeating a root line).
+**Manual check (4 of 5): unneeded knowledge** — run the §1 test on every line.
 
-| # | Check (`id`) | OK | WARN | ERROR |
-|---|---|---|---|---|
-| 1 | length (non-empty lines without HTML comments) | ≤200 | 201–500 | >500 |
-| 2 | code/configuration blocks > 3 lines (except diagrams) | 0 | 1–2 | ≥3 |
-| 3 | intention phrases | 0 | 1–3 | ≥4 |
-| 4 | unneeded knowledge: no surprise for the agent, the framework's default behaviour, a definition, sounds like a tutorial, could be a link | 0 | 1–3 | ≥4 |
-| 5 | order: critical rules in the first third, no introduction on top | yes | mixed | critical after line 200 / no headings |
+Rules for the review:
+- every finding as `file:line`; an intention becomes a checkable proposal grounded in a project signal (a lint rule,
+  a model file), else a stack default marked [assumption];
+- contradicting rules across files = an error;
+- default is **report only**. Reordering and cuts happen with consent and never change what a rule says.
 
-- Every finding with `plik:linia`. For every intention a checkable proposal based on a signal from the project
-  ("take care of errors" → "handlers return `{ error: { code, message } }`, the model `src/api/errors.ts`"); no signal
-  in the repo → a default for the stack marked [assumption].
-- Conflicting rules in two files are an error: the model may choose either of them.
-- By default only a report. Rearranging sections or cuts — with the human's consent, without changing the content of the rules.
+Output: a first line with the path and a one-sentence verdict; a table of the five checks (check, verdict, count);
+findings (check, `file:line`, problem, proposal); the three actions with the highest gain.
 
-The output schema:
-```
-Instructions review — <path>   Assessment: <one sentence>
-| # | Check | Verdict | Count |      (five rows)
-Findings: <check> — file:line — problem — proposal
-3 actions with the biggest leverage: 1. … 2. … 3. …
-```
+## 5. Refresh after the code moved
+1. `git log -1 --format=%h -- CLAUDE.md` → the last change of the file (LAST).
+2. `git diff LAST..HEAD --stat -- package.json Makefile .github/ README.md <lint configs>` → what changed since.
+3. Lint `stale` plus `python3 .claude/skills/core-grounding/scripts/grounding_check.py CLAUDE.md` for every path and command.
+4. Mark each line KEEP / FIX / REMOVE / MISSING with its evidence `file:line`; show the list.
+5. Edit point by point with consent — never a wholesale rewrite; the human's uncommitted edits count as KEEP.
+6. After a major model upgrade, prune workarounds written for an older model's weaknesses.
 
-## 5. Procedure: updating an existing file
-1. `git log -1 --format=%H -- CLAUDE.md` → the last change of the file (`LAST`).
-2. `git diff LAST..HEAD --stat -- package.json pyproject.toml .github/ README.md <konfiguracje lint/testów>` —
-   what changed since then (especially scripts and commands).
-3. Every file and command CLAUDE.md refers to, check that it exists
-   (`python3 .claude/skills/core-grounding/scripts/grounding_check.py CLAUDE.md`).
-4. Classify the lines: KEEP / FIX / REMOVE / MISSING, each with the `plik:linia` of the source.
-5. Show the list and edit pointwise with consent — do not rewrite the whole thing. The human's uncommitted changes in the file = KEEP.
-6. After a bigger model change review the rules that work around weaknesses of an older model: some have become unneeded.
-
-## 6. Rule calibration (A/B) — does the rule change anything
-1. The same task 3–5 times in a fresh session from the same repo state, **without the rule**. Note: convention breaches,
-   time, the number of files read, iterations, cost (if visible).
-2. Add the rule in 1–3 sentences in the right place (section 2).
-3. Repeat the same runs. The agent got it right without the rule or no improvement → remove the rule.
-4. Change one thing at a time (content, place, order). A change of the factory's CLAUDE.md or of a project with personas is
-   a change of the agent's configuration — an evaluation as in core-delivery-lifecycle.
+## 6. Does a rule pay for itself?
+A rule is a prompt change; test it like one, with repeated trials before and after:
+1. Same task, 3–5 runs, each in a fresh session at the same repo state, **without** the rule. Note breaches of the
+   convention, time, files read, iterations, cost.
+2. Add the rule (1–3 sentences, in its right home), repeat the same runs.
+3. No improvement, or the agent was already right → remove it. Change one variable at a time.
+Changing the factory's own CLAUDE.md or personas is an agent-config change, evaluated per core-delivery-lifecycle.
 
 ## Anti-patterns
-- An encyclopedia file: rules from the middle of a long file get lost (models take the middle of a long context into account worst).
-- A copy of the documentation or the README; a description of the architecture the agent reads from the code anyway.
-- The same rule in three files; a rule in the root and its copy in a module.
-- Local memory (automatic memory, `CLAUDE.local.md`) as the only place of the team's agreements.
-- Asking in words "read AGENTS.md" instead of the `@AGENTS.md` import — the agent may not open the file.
-- An `@plik` import as a way to save — imports load at start and count towards the context.
+- the encyclopedia file; pasted docs, configs or README;
+- architecture prose the agent could read in the code;
+- the same rule in three files, or a module file copying the root;
+- team agreements living only in someone's local memory;
+- "read AGENTS.md" written as prose instead of an `@AGENTS.md` import;
+- `@` imports used to "save" context — they load at start and count in full.
 
 ## Example
-Input: a CLAUDE.md of 340 lines; lines 1–40 "About the project and values"; line 287 "never send customer data
-to the logs"; a 25-line block from tsconfig; "write clean code" in line 52.
-The script's output: `length` WARN (340), `blocks` WARN (1), `intents` WARN (1), `order` ERROR (a critical rule at l. 287,
-an introduction on top). Check 4 (by hand): 6 lines describing directories visible in the tree → WARN.
-3 actions: (1) the ban on logging customer data to the first section; (2) the tsconfig block → remove it (`strict` is enforced
-by the configuration), instead 1 line about the exception the configuration does not show; (3) the introduction down to 2 sentences, remove the directory description,
-"clean code" → "public functions in `src/api/` have a return type and handle errors through `AppError`".
-After the changes: 190 lines, an A/B calibration for the `AppError` rule (3 runs without and 3 with the rule).
+Input: `CLAUDE.md`, 280 non-empty lines; opens with "## About the project"; a 25-line pasted `.eslintrc`; "follow best
+practices" and "keep the code clean"; the ban on raw SQL in handlers sits on line 240; it mentions `npm run e2e`, which
+package.json no longer has.
+Lint: `length` WARN (280), `blocks` WARN (1), `intents` WARN (2), `order` ERROR (first critical rule after line 200),
+`stale` WARN (`npm run e2e`).
+Report: "CLAUDE.md — the important ban is buried and a fifth of the file is pasted config." Top three actions:
+1) move "never raw SQL in handlers — use `db/queries/`" to the top; 2) replace the `.eslintrc` paste with "lint rules:
+`.eslintrc.cjs`"; 3) turn "best practices" into "each handler validates input with `schemas/` before the query", or
+delete; drop `npm run e2e` (or ask what replaced it). Expected result ~190 lines. Nothing edited before the human agrees.
 
 ## Checklist
-- [ ] every new line passed the inclusion test and answers a recurring agent mistake
-- [ ] critical bans on top; the file ≤ ~200 non-empty lines; zero pasted configuration blocks
-- [ ] intentions rewritten into behaviour checkable in the diff; one rule in one place, no conflicts
-- [ ] rules for parts of the code in a module file or `.claude/rules/` with `paths`; procedures in skills; enforcement in hooks
-- [ ] `instructions_lint.py --root .` without ERRORs; references checked with `grounding_check.py`
-- [ ] a new rule tested in a fresh session (A/B), an unneeded one removed
+- [ ] each line passes "the agent could not know this", ideally after a repeated miss
+- [ ] bans first, commands, conventions with a model file; no intro, no pasted config
+- [ ] root under ~200 non-empty lines; module files 10–40 and indexed in the root
+- [ ] must-not-skip rules backed by a hook or permission rule
+- [ ] `instructions_lint.py` run, findings as `file:line`, report before any edit
+- [ ] AGENTS.md as the source, CLAUDE.md imports it; no duplicated rules
+- [ ] a new rule tested with 3–5 runs with and without it
 
 ## Sources
-- Claude Code, "How Claude remembers your project" (code.claude.com/docs/en/memory, accessed 2026-10-10): the goal below
-  200 lines per file, the loading order, subdirectories on demand, `@` imports (up to 4 levels, loaded at start),
-  `.claude/rules/` with `paths`, AGENTS.md read when there is no CLAUDE.md, removing HTML comments, "when to add".
-- Claude Code, "Set up Claude Code in a monorepo or large codebase" (code.claude.com/docs/en/large-codebases, accessed
-  2026-10-10): CLAUDE.md in directories, rules per path, a review after bigger model releases.
-- J. L. Lulla et al., "On the Impact of AGENTS.md Files on the Efficiency of AI Coding Agents", arXiv:2601.20404
-  (2026): median time −28.64%, output tokens −16.58% at comparable effectiveness (10 repos, 124 PRs).
-- T. Gloaguen et al., "Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?",
-  arXiv:2602.11988 (2026): context files do not raise effectiveness, and the cost grows by over 20%; repo overviews
-  do not help; non-standard project practices do help (abstracts accessed 2026-10-10).
-- N. F. Liu et al., "Lost in the Middle: How Language Models Use Long Contexts", arXiv:2307.03172 [unverified
-  in this session — a well-known paper, cited after the course].
-- The 10xDevs course, ed. 3 (2026), module 1, lesson 4 (agent onboarding, AGENTS.md, rules) and module 4, lesson 1
-  (scaling context) — training material (accessed 2026-10-09).
-
-Described in our own words.
+- Anthropic, Claude Code docs "How Claude remembers your project" (memory, imports, `.claude/rules`) and "Best
+  practices" (code.claude.com, accessed 2026-10-10).
+- Anthropic, "Define success criteria and build evaluations" (platform.claude.com, accessed 2026-10-20).
+- Liu et al., "Lost in the Middle: How Language Models Use Long Contexts", arXiv:2307.03172 (2023).
+- Lulla et al., arXiv:2601.20404 (2026), effect of AGENTS.md on agent runtime and tokens.
+- Gloaguen et al., arXiv:2602.11988 (2026), context files and agent success.

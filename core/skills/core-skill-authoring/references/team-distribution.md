@@ -1,66 +1,38 @@
-# Distributing your own skills and rules in a team
+# Sharing skills across repositories
 
+When the same skills should serve several repositories or teams, pick the simplest channel that keeps one source of truth
+and lets every consumer see which version it runs.
 
-Skills, rules, commands and agent configuration templates are code executed with every change: they need versions,
-change review and controlled distribution. Copying between repositories makes versions drift apart after a few weeks.
-This factory's installer (`.tf/factory/install.py`, `.tf/factory/update.py`) implements the properties described below — a working
-pattern to compare with.
+## Channels
+| Channel | Fits | Watch out for |
+|---|---|---|
+| A factory pack (`packs/pack-*` or an external pack via `install.py --pack-dir <source>`) | Skills that belong with the factory's roles, hooks and gate | The pack must pass the same contract as built-in packs: id prefix, `requires.core`, the skill gate; foreign skills go through `skill_audit.py` on install |
+| A Claude Code plugin marketplace (a repository with `.claude-plugin/marketplace.json`) | Skills used outside the factory, by people who install plugins themselves | Each consumer chooses when to update; private repositories need git access for every consumer |
+| Copying the skill directory | A one-off, one repository | No update path; copies drift - avoid for anything maintained |
 
-## 1. Requirements — the measure of every solution
-- one source of truth (a repository with the artifacts);
-- a version per SemVer (core-semver), a breaking change = a new major version;
-- control over who reads and who publishes;
-- installation, update and **a clean uninstallation**;
-- delivery to every AI tool in the team — only the target directories differ (e.g. `.claude/skills/`,
-  another tool's rules directory).
+## What any installer must guarantee
+These are the properties the factory's own installer (`core/factory/install.py`, `update.py`, `uninstall.py`) provides;
+hold any other channel to the same bar:
+- **Idempotent.** Running it again is an update, not a second copy.
+- **Marked blocks.** Text it adds to files people also edit (instructions files, ignore files) sits between begin/end markers,
+  so an update replaces only its own block. A begin marker without an end marker stops the run instead of guessing.
+- **Manifest with hashes.** Every installed file is recorded with its hash, so an update can tell a factory file from one the
+  project changed: a project file with the same name is left alone and reported, a locally edited factory file is
+  overwritten and listed, and an obsolete factory file is removed only if its hash still matches.
+- **Clean removal.** Uninstalling removes what was installed and nothing else.
+- **No secrets in the package.** Credentials for private sources come from the consumer's own git or registry login.
 
-## 2. Choosing the channel — the recipient decides
-| Recipient | Channel | Start cost | Maintenance cost |
-|---|---|---|---|
-| a team on one git platform | a repo with tags or a package in that platform's registry | small | a read token for recipients outside the organisation |
-| an organisation with its own cloud and registry management | an artifact registry in the cloud, configuration as code, login through OIDC | an account + infrastructure code | permissions, rotation |
-| recipients on different stacks, access granted over time | your own API + CLI | a full product | the API, authentication, the client |
-| one AI tool across the whole team | that tool's plugin marketplace | zero | dependence on the vendor's channel |
-Anti-pattern: an "impressive" channel instead of one fitted to the recipient.
+## Versions
+- Tag releases with SemVer (core-semver): renaming a skill, a cited section number, or an output line that a hook parses is a
+  breaking change for consumers; new scenarios or wording fixes are a patch.
+- Consumers pin a tag (`--pack-dir <url>#<tag>`; without a ref the installer takes the latest `vX.Y.Z` tag) and update on purpose.
+- Every shared skill keeps its scenario file next to it, so consumers can run the gate after an update.
 
-## 3. The installer — mandatory properties
-- **Idempotent:** a second run gives the same result.
-- **Blocks with markers** in files edited by people (`CLAUDE.md`, `AGENTS.md`): you replace only the middle of
-  the begin/end block. One marker without the other = a damaged block → abort with a message. Reject content that itself contains
-  markers — otherwise the next installation will delete someone else's text.
-- **A manifest** in the recipient's repo: the package, the version, the tool, a list of files with hashes. Uninstallation removes exactly the files
-  from the manifest, does not depend on `node_modules` or the package manager's scripts; a damaged manifest → it removes nothing.
-- **A locally changed file** is overwritten like a dependency in `node_modules`: changes are made at the source and a new version
-  is released; the recipient's configuration (e.g. `.tf/config/config.yaml`) stays, and new keys are added.
-- **Copying** works everywhere (also with a one-off run from a cache that disappears); links only with
-  a permanent dependency.
-- **Dependencies between skills** declared in the header; choosing a subset goes through dependency resolution.
-- An error of a post-install step does not break the installation of the project's dependencies — a warning instead of a failure.
-- A new version of a foreign skill goes through the audit before being written (`.tf/factory/skill_audit.py`, core-agent-security §4a).
+## Before building a channel
+Ask whether one is needed: if two repositories share three skills, a pack in the factory is usually enough. A separate
+marketplace or a private package registry adds hosting, access control and a release process that someone must own.
 
-## 4. A private package — authentication and releases
-- The recipient's repo commits only the mapping of the package scope to the registry, **never** a token.
-- Publishing from CI with write permission to the registry and a short-lived job token (pack-it: ops-ci-cd).
-- Reading: within the same organisation the CI job token is often enough; outside it (another repo, a foreign CI, build platforms)
-  a token with read rights from an environment variable is needed, locally a login to the registry. The details depend on
-  the registry and the token type — check its documentation [unverified in this session].
-- Registries usually reject republishing the same version → the version is computed by an automaton (`semver.py`).
-- A release only when since the last tag **the files that go into the package changed** (the diff), regardless of the commit type.
-
-## 5. Your own API + CLI as a security boundary
-- A package signature (e.g. Ed25519, the public key built into the client): first the content hash agreement, then the signature.
-- A list of allowed API hosts built into the client — the address cannot be switched with an environment variable.
-- A short-lived token with permissions re-checked on refresh.
-- The API–client contract generated from an OpenAPI specification: a change breaking the client shows up at compile time.
-
-## 6. Before you build
-The first version: one source repo, one test package, a manual installation in one project. Release automation
-and further channels you add only when someone really fetches new versions.
-
-## 7. Example
-A team of 8 people, all repos in one organisation on a git platform, two AI tools. The choice: an `ai-toolkit` repo
-with SemVer tags and a package in the platform's registry; the installer copies skills to `.claude/skills/` and rules to the directory
-of the second tool, adds a block between markers in `CLAUDE.md` and `AGENTS.md`, writes the manifest. CI publishes
-only when the package's files change. Rejected: your own API + CLI (one recipient, no need to grant access over time).
-
-The 10xDevs course, ed. 3 (2026), module 5, lesson 4 — training material (accessed 2026-10-09). Described in our own words.
+## Sources
+- Claude Code docs, "Create and distribute a plugin marketplace", code.claude.com/docs/en/plugin-marketplaces - accessed 2026-11-20.
+- Semantic Versioning 2.0.0, semver.org (paraphrased through core-semver).
+- Factory installer behaviour: `core/factory/install.py` (docstring and marker constants), read 2026-11-20.

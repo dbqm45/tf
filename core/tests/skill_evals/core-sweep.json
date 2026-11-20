@@ -1,0 +1,69 @@
+{
+  "skill": "core-sweep",
+  "scenarios": [
+    {
+      "id": "posprzataj-stary-projekt",
+      "expect": "trigger",
+      "prompt": "Zainstalowaliśmy fabrykę w trzyletnim projekcie. Agent co chwilę goni stare TODO i plany z docs/project, które dawno są zrobione, i sesje się przez to wydłużają. Jak posprzątać projekt, żeby się nie rozpraszał, i niczego potrzebnego nie wyrzucić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["sweep_scan"],
+          ["niezależn", "śwież\\w* (agent|kontekst|subagent)", "osobn\\w* (agent|subagent)", "independent", "fresh (agent|context)", "Explore"],
+          ["archive/sweep", "docs/project/archive"],
+          ["zgod", "akcept", "zatwierdz", "AskUserQuestion", "consent", "approv"]
+        ],
+        "none": ["usuń wszystkie (stare )?TODO", "delete all (old )?TODOs"]
+      }
+    },
+    {
+      "id": "stale-notes-en",
+      "expect": "trigger",
+      "prompt": "Our agents keep chasing old TODOs and the plans of tasks we closed months ago. How do we find the notes in the repo that are no longer true and clean them up without deleting something that is still needed? Answer briefly.",
+      "checks": {
+        "all": [
+          ["sweep_scan"],
+          ["uncertain", "niepewn"],
+          ["confirmed", "refuted", "potwierdz"],
+          ["bug .{0,20}(return|wraca)", "regression", "regres", "still needed", "wciąż potrzeb", "age alone", "sam wiek"]
+        ]
+      }
+    },
+    {
+      "id": "todo-z-kluczami",
+      "expect": "trigger",
+      "prompt": "W kodzie mamy około 40 komentarzy TODO z numerami zgłoszeń z Jiry, np. TODO(EBO-812), i sporo TODO sprzed dwóch lat bez numeru. Część zgłoszeń pewnie jest już zamknięta. Jak ustalić, które z nich są nieaktualne, zanim cokolwiek usuniemy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["sweep_scan"],
+          ["tylko do odczytu", "read-only", "bez zapisu", "tylko odczyt"],
+          ["mcp-runner", "wklej", "paste"],
+          ["star\\w*.{0,40}nie (znaczy|oznacza)", "old.{0,30}not.{0,15}stale", "wiek.{0,30}nie (jest|wystarcz)", "todo-old"]
+        ]
+      }
+    },
+    {
+      "id": "edge-brak-trackera",
+      "expect": "trigger",
+      "prompt": "Zrób przegląd nieaktualnych TODO i starych planów w projekcie. Nie mamy podłączonej Jiry ani żadnego trackera, a w komentarzach TODO są klucze typu PROJ-123. Odpowiedz zwięźle, jak postąpisz z tymi kluczami.",
+      "checks": {
+        "all": [
+          ["niepewn", "uncertain", "nierozstrzygn"],
+          ["wklej", "podaj\\w* status", "paste", "zapytam", "poproszę"]
+        ],
+        "none": ["PROJ-123 (jest|są) zamknięt", "usun\\w* wszystkie TODO z kluczami"]
+      }
+    },
+    {
+      "id": "claude-md-za-dlugi",
+      "expect": "no-trigger",
+      "neighbor": "core-agent-instructions",
+      "prompt": "Nasz CLAUDE.md ma 400 linii, na górze opis wartości zespołu, w środku wklejony tsconfig i zasady w stylu „pisz czysty kod”. Jak go skrócić i ułożyć, żeby agent lepiej go słuchał?"
+    },
+    {
+      "id": "retro-agentow",
+      "expect": "no-trigger",
+      "neighbor": "core-agent-retro",
+      "prompt": "Skończyliśmy etap. Zrób retrospektywę pracy agentów: które sesje były najdroższe, gdzie agent powtarzał ten sam błąd i co zmienić w fabryce."
+    }
+  ]
+}

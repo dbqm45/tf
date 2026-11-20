@@ -1,20 +1,31 @@
-# A fork, a new session, a subagent or agent teams
+# Forms of delegation and what each costs
 
-First the rule from SKILL.md §0: by default the main session works, you delegate only when the handover pays off.
-When it pays off, choose the cheapest form that gives the isolation you need:
+Read section 0 of SKILL.md first: the default is to do the work in the main session. This file compares the forms once
+delegation is justified.
 
-| Form | When | Cost and limitations |
-|---|---|---|
-| **A fork** (`subagent_type: fork`; `/subtask` from v2.1.212) | a side task that needs the whole conversation so far (e.g. checking a hypothesis without cluttering the main thread) | it inherits the whole context, so each of its turns reads that history; only the result comes back to the session |
-| **A new session with a worktree** (`claude -w <nazwa>`, `git worktree add`) | a separate change with its own branch and review, parallel work (core-git-workflow) | a clean start: it reads the files again, but does not pay for someone else's history; you isolate the environment (ports, database) yourself |
-| **A subagent** (`Agent`, optionally `isolation: worktree`) | a lot of reading and a short result, a fresh look, a mechanical change with a test | it starts from zero, gets only the brief; a cheaper model through the `model` parameter; a 5-minute cache |
-| **Agent teams** (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) | exceptionally: several roles that must talk to each other along the way | **experimental**; 3–5 members, many more tokens than subagents; you do not turn it on without the human's consent |
+| Form | Starts with | Cache | Fits | Cost notes |
+|---|---|---|---|---|
+| Fork (`subagent_type: fork`, `/subtask`) | The whole current conversation | Shares the history's content, so every fork turn re-reads it | Checking a side hypothesis that needs everything you know | Cheap to brief, expensive per turn in a long session; whether it reuses the main session's cache entry is not established [unverified] - do not count on it when costing |
+| New session in a worktree (`claude -w <name>`) | A clean context and its own branch | Its own | An independent change that gets its own review and PR | You isolate ports, databases and caches yourself; the brief must carry every agreement |
+| Subagent (Agent tool) | Only your brief | Its own, 5-minute lifetime | Reading-heavy search, a mechanical change with a test, a fresh-eyes review | Can run a cheaper model via `model`; launch independent briefs together so each warms its cache once; optional worktree isolation |
+| Agent teams (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) | Several teammates, each with its own context | One per teammate | Large research, review or feature work with independent parts | Experimental, off by default, token use grows with each active teammate; keep teams small (3-5) and start one only with the human's consent - never a default |
 
-- **The nesting limit:** a subagent can launch further ones up to the depth `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`
-  (3 by default; 1 = no nesting). Each level is a separate start from zero — in the brief forbid further
-  delegation when it is not needed.
-- [unverified] whether a fork shares the cache with the main session and whether it can work in a worktree — do not assume it
-  when estimating the cost.
+## Rules that apply to all forms
+- One coherent change stays with one executor.
+- The brief starts with the `Class:` line, names the files, the check that decides done and what not to touch.
+- Nesting: subagents may spawn their own up to `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` layers (default 3; 1 means no nesting).
+  When further delegation is not needed, say so in the brief.
+- The main session verifies the result (tests, diff) before accepting it; the executor's report is a claim.
 
-Source: Anthropic, Claude Code documentation (code.claude.com/docs: "Subagents", "Agent teams", "Common workflows"
-— worktree), accessed 2026-10-18. Described in our own words.
+## Example
+Two independent changes and a security review of the auth module:
+- change A and change B touch different modules with their own tests -> two subagents launched in one turn
+  (`Class: parallel`), or two worktree sessions if each should become its own PR;
+- the security review -> a subagent on a strong model with only the diff and the threat list (`Class: review`), so it does not
+  inherit the author's reasoning;
+- agent teams would add coordination cost for no gain here.
+
+## Sources
+- Claude Code docs, "Subagents", code.claude.com/docs/en/sub-agents - accessed 2026-11-20 (fork, depth limit, `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`).
+- Claude Code docs, "Agent teams", code.claude.com/docs/en/agent-teams - accessed 2026-11-20 (experimental, more tokens per teammate).
+- Claude Code docs, "Prompt caching", code.claude.com/docs/en/prompt-caching - accessed 2026-11-20 (subagent cache lifetime).

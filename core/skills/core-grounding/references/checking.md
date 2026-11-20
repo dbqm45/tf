@@ -1,36 +1,56 @@
-# How to check a claim before you write it
+# How to check each kind of claim
 
-First the cheapest and most reliable check: a file in the repository, a command, the documentation of the version used
-in the project. The model's memory comes last and only for stable knowledge.
+## 1. Checking table
+| Claim | How to check | What to cite |
+|---|---|---|
+| A file or symbol exists | `ls`, `git ls-files`, `rg -n '<name>'` | `file:line` |
+| A function behaves in a way | Read the function and its tests, not only its name | `file:line` of the code and test |
+| Tests or build pass | Run the project's own command | The command and the end of its output |
+| Dependency version used by the project | `python3 .claude/hooks/detect_stack.py`, the manifest or lockfile entry (core-stack-sync) | Manifest `file:line` |
+| Latest version of a package / whether it exists | `npm view <pkg> version` (and `time.modified`), `pip index versions <pkg>`, Maven Central search | Command output with today's date |
+| A CLI flag or config option | `<tool> --help`, the docs for the installed version, the config schema; for databases the settings view (`SHOW ALL`, `pg_settings`) | Help output or versioned doc URL + date |
+| A library API | The package's own type definitions - grep one specific `.d.ts` file, not all of `node_modules` - or versioned docs | `file:line` or URL + version |
+| Browser or platform behaviour | MDN or the specification, with the support table | URL + date |
+| CVE, RFC, standard, law article | The primary source: NVD, IETF, the official journal (e.g. EUR-Lex) | URL + date read |
+| Price, rate limit, legal deadline | The vendor's page or the legal act; it may change | URL + date read |
+| An estimate | Show the calculation; compute it with a command | The command |
+| Counts and exclusivity in code | A structural tool, then a text search for zeros (section 2) | Verdict table |
+| A quote from a document | The literal excerpt with its location; mark paraphrase as paraphrase | Page / section / `file:line` |
+| What the community reports | core-source-research, with dated sources | URLs + dates |
 
-| Claim | Check (examples) |
-|---|---|
-| a file, directory, symbol exists | `ls`, `git ls-files <ścieżka>`, Grep by name; give `plik:linia` |
-| a function does X | read it (Read) and its tests; do not infer from the name |
-| a test / build passes | run the command from CLAUDE.md and show the output; "it should pass" is not evidence |
-| the version of a dependency in the project | `python3 .claude/hooks/detect_stack.py`, `package.json`, `pom.xml` (core-stack-sync) |
-| the latest version of a package, whether a package exists | `npm view <pakiet> version`, `npm view <pakiet> time.modified`; Maven Central; core-source-research |
-| a CLI flag, a configuration option | `<narzędzie> --help`, the documentation for the project's version; the configuration schema |
-| a library API (method, parameter) | the types in the package (`grep` in a specific `.d.ts` file of the package, without reading the whole `node_modules`), the version's documentation |
-| the behaviour of a browser or platform | documentation (MDN, a specification) with a date; a support table |
-| a CVE, RFC, standard number, article of law | the primary source (NVD, IETF, the official journal / EUR-Lex) with the date it was read |
-| a price, a service limit, a legal deadline | the vendor's page or the legal act with a date; note that it may change |
-| a number in an estimate | show the calculation (input data × conversion factor); compute it with a command when possible |
-| the number or exclusivity of occurrences in code ("exactly 4", "only here") | `ast-grep -p '<wzorzec>' -l <język> --json` or "find references" in an LSP; confirm every zero with `rg -n '<tekst>'`. The binary is `ast-grep` — on Linux `sg` is often the system command to change group (the `login` package) |
-| a quote from a document, conversation, issue | a literal excerpt with its place; a paraphrase marked as a paraphrase |
-| "someone reported / the community thinks" | core-source-research: specific sources with a date, not a general "everyone knows that" |
+## 2. Verifying counts in code
+Applies to reports, codebase maps and refactoring plans containing statements such as "called in exactly 4 places",
+"only module X uses it", "always goes through Y", "the interface has 54 methods".
+1. List every such statement in the document.
+2. Check each with a structural tool: `ast-grep -p '<pattern>' -l <lang> --json` (the binary is `ast-grep`; on Linux `sg` is
+   often the system's group command), LSP find-references, or the compiler (e.g. remove the symbol and count the errors).
+3. Confirm every zero result with `rg -n '<text>'` - a zero can mean the pattern was wrong (generics, decorators,
+   dynamic calls).
+4. Record the result in a table and fix numbers in the text with a trace ("6 (report: 4)"):
 
-## Confidence markers (when it cannot be checked)
-- **[checked: <how>]** — the output of a command, file:line, a source with a date.
-- **[assumption]** — a conclusion from the available data; add how to confirm it.
-- **[unverified]** — a fact from memory that cannot be checked now (e.g. no network); add the risk.
-- **I don't know** — when there is no basis even for an assumption; propose who or what will give the answer.
-The scripts read only these English markers; updating to 19.0.0 rewrote the older Polish ones in the project record.
+| Claim | Verdict | Evidence | Method |
+|---|---|---|---|
+| `calculateFee` called in exactly 4 places | corrected: 6 | src/billing/fee.ts:41, src/checkout/total.ts:88, ... | ast-grep call pattern + rg |
+| Only module billing calls it | refuted | src/checkout/total.ts:88 | ast-grep |
+| `PaymentGateway` has 54 methods | confirmed | src/payments/gateway.ts:12-140 | compiler / LSP symbol list |
 
-## Signals that an answer may be made up
-- A very specific name (flag, option, method) that did not appear in any file or source you read.
-- A number without a calculation or a source ("usually 30%", "the limit is 1000").
-- An answer that fits a question with a false assumption perfectly.
-- Repeated fixes of the same thing in one session: the context is cluttered, and the model starts patching symptoms.
+5. Do not rewrite the document's conclusions or ranking yourself: flag the discrepancies as "to decide" for the author.
 
-Described in our own words.
+## 3. Checking a tool's output
+A script's or analyser's number is a claim from that tool. Before it goes into a report:
+- open the largest item (the biggest cycle, the most connected module) and one random item;
+- read the `file:line` that produced each and check that the tool's classification is right (e.g. a type-only import counted
+  as a runtime dependency);
+- where possible, compare a total with an independent count (a second tool, a hand count on a small module).
+
+## 4. Quote verification
+For a summary others will rely on:
+1. Split the summary into individual claims.
+2. For each claim find the supporting literal quote and its location.
+3. Claims with no quote are removed and replaced by `[]`, so the reader sees that something was cut.
+4. Add a list of gaps: questions the document does not answer.
+Second pass, optional: give the summary and the document to an independent reviewer who checks claim by claim.
+
+## Sources
+- Anthropic, "Reduce hallucinations", platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations - accessed 2026-11-20 (quote extraction, verification with citations).
+- `ast-grep run --help` (ast-grep 0.50.0) - accessed 2026-10-10.

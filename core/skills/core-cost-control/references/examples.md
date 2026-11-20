@@ -1,57 +1,30 @@
-# Examples: choosing a model and cost
+# Worked examples
 
-## 1. Renaming a field across a whole module
-**Situation:** "Rename the field `custId` to `customerId` in the orders module — DTOs, mappers and tests". The module has
-12 files, the unit tests pass.
+## 1. Mechanical rename across 12 files
+Task: rename `customerRef` to `accountRef` in the orders module; module tests and the type check cover the usages.
+- Assessment: checkable by command (yes), easy to undo (yes), no decision, no sensitive area, one pattern -> lowest tier.
+- Brief: `Class: mechanical`, `quick-fixer` with `model: haiku`, the list of files from `rg -l customerRef src/orders`, done =
+  module tests + type check green.
+- First attempt misses a serializer; tests fail. Second attempt with the failing output fixes it. Had it failed twice, the
+  next call would go to sonnet with both failure outputs in the brief.
 
-**How:**
-1. The rubric: tests and types will check the result (yes → a tier lower), git will undo the change (yes → a tier lower), no decision
-   (no → a tier lower), no risk (personal data, money, migration — no).
-2. 12 files, but per one pattern — no need to split.
-3. Start from the cheapest model with a real chance.
+## 2. Flaky payment due-date test after two failed fixes
+- Two sonnet attempts "fixed" the test by widening a tolerance; the flake returned. Verification failed twice -> escalate one
+  level: `Class: decision`, opus, the brief lists what was tried and why it did not hold.
+- Opus finds the cause (the test builds a date in local time, the code in UTC across a month boundary) and returns a
+  diagnosis only. Implementation goes back to sonnet with the diagnosis and a new test pinned to a fixed clock.
+- The first executor ends its report with `Tier: too low — date/timezone reasoning`; the cost report later suggests raising
+  that role's tier for date-handling tasks.
 
-**Result:**
-```
-Delegation: the backend executor, model: haiku
-Reason: a mechanical change, checkable with tests and compilation, easy to undo, no decision.
-Verification: the module's tests + a type check. Escalation to sonnet only after 2 failed attempts.
-```
-
-## 2. Escalation after two failed attempts
-**Situation:** An executor on `sonnet` is to fix a test that sometimes passes and sometimes fails (time zone handling
-when computing a payment due date). Two fixes — the test still fails every few runs.
-
-**How:**
-1. Verification did not pass after 2 attempts → escalation **by one level**, not straight to "everything on max".
-2. The rubric confirms: a bug without an obvious cause after an attempt, it concerns money → `opus`.
-3. To the new call you add what did not work.
-4. After the cause is found, implementing the fix goes back to `sonnet` (de-escalation).
-
-**Result:**
-```
-Agent(model: "opus")
-Task: find the cause of the flaky payment due date test.
-What did not work: (1) setting the UTC zone in the test — it still fails; (2) freezing the clock in the test —
-it fails at the switch to summer time. Expected: the cause + a plan for the fix, without implementing it.
-Then: implementing the plan → Agent(model: "sonnet").
-```
-The executor on `sonnet` ended its report with the line `Tier: too low — the time bug needed analysis, not execution`; `log_usage` records
-it, and for a similar task you choose `opus` for the diagnosis right away.
-
-## 3. A week of work comes out more expensive than assumed
-**Situation:** "This week cost more than usual. Check where the tokens are going, and propose a change".
-
-**How:**
-1. `python3 .tf/factory/cost_report.py --days 7` — the cost per agent and model, cache hits, `Tier:` signals.
-2. You look for a pattern: who often escalates or reports "too high", where cache hits are low.
-3. You check the session habits: switching `/model` in the middle of a task, long breaks, `/compact` instead of `/rewind`.
-4. You propose a configuration change, not a one-off "be careful".
-
-**Result (a report for the human):**
+## 3. Reading a costly week
+`python3 .tf/factory/cost_report.py --days 7` and `python3 .tf/factory/cost_stats.py --period week` show the week in the
+"expensive" band against earlier weeks. Look for patterns, then propose one configuration change per finding:
 
 | Finding | Evidence | Change |
 |---|---|---|
-| the documentation executor reports "Tier: too high" | report: 4 of 9 tasks | lower the role's tier in `.tf/config/config.yaml` |
-| low cache hits in the main session | the status line "cold" after breaks | after a long break a new session from the checkpoint |
-| `/model` switched during a task | the session history | the model set at the start; hard steps to an executor with `model: opus` |
-| short tasks with the `quality` profile | the advisor called in short tasks | `python3 .tf/factory/profile.py balanced --dry-run`, then the change with consent |
+| Executors often report `Tier: too high` | `.tf/logs/delegation.jsonl`, 9 reports for `mechanical` | Lower that role's tier in `.tf/config/config.yaml` |
+| Cold cache after lunch breaks | status line "cold", long re-reads at 13:00 | Resume from a checkpoint in a new session after breaks |
+| `/model` switched mid-task | cost spikes right after the switch | Pick model at session start; delegate the hard step instead |
+| `quality` profile on short tasks | profile log | Default to `balanced`; switch to `quality` per task |
+
+No logs for part of the week -> the statistics show "incomplete data"; say which days are missing instead of estimating.

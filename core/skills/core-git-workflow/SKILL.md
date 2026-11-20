@@ -1,139 +1,132 @@
 ---
 name: core-git-workflow
-description: Use for working with git — branches, commits, pull requests (also agent PRs and auto-merge), their review, conflicts.
+description: Use when branching, committing, pushing, opening or reviewing a PR, merging, running parallel worktrees or resolving conflicts — safe git for humans and agents.
 metadata:
-  review: "2027-10-10"
-  catalog: "Use for working with git — branches, preparing commits, pull requests, PR review (also by AI: REVIEW.md, claude-code-action, separation of duties, branch protection), a PR written by an agent (labelling, protected paths, auto-merge), conflicts, dangerous operations. Not for the commit message format (core-conventional-commits) or CI pipelines (the CI/CD skill, pack-it)."
-  keywords: "worktree, równolegle dwóch agentów, zmiana kontraktu między sesjami, powiadom drugą sesję, commit fazy, przegląd AI w CI, werdykt przeglądu, skip ci, pull request, PR, code review, przegląd kodu, review przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ai-review.yml, ai_review.py, workflow przeglądu AI, ochrona gałęzi, branch protection, konflikt, rebase, merge, stos PR, stacked PR, rebase --onto, squash merge, strategia scalania, gh pr merge, zmiana bazy PR, CODEOWNERS, ochrona gałęzi, chronione testy akceptacyjne, agent zmienia scenariusze Gherkin, agent naprawia testy zmieniając je, wymagany check w CI, PR agenta, agent sam otwiera PR, auto-merge, automatyczne scalanie, ścieżki chronione, oznaczenie PR agenta, etykieta PR agenta, two agents in parallel, contract change between sessions, phase commit, AI review in CI, review verdict, Claude reviews the PR, merge strategy, protected acceptance tests, agent PR, agent opens a PR, protected paths, label agent PRs"
+  review: "2027-05-20"
+  catalog: "Use when you name a branch, stage and commit, commit a plan phase, push (force-with-lease), run several agents in parallel git worktrees, open a pull request (also one written by an agent), set up AI review of PRs (REVIEW.md, claude-code-action, the ai_review.py workflow with the ai-review/verdict status), choose a merge strategy, land a stack of PRs after a squash (rebase --onto), resolve a conflict or ask whether a destructive git command is allowed. Not for the commit message format (core-conventional-commits) or CI pipelines (ops-ci-cd, pack-it)."
+  keywords: "gałąź, nazwa gałęzi, nowa gałąź, praca na main, commit, zrób commit, zacommituj, commit fazy, git add -A, co dodać do commita, push, git push --force, force push, force-with-lease, push odrzucony, rebase, rebase --onto, reset --hard, git clean, przepisanie historii, pull request, otwórz PR, opis PR, przegląd PR, code review, przegląd przez AI, Claude przegląda PR, REVIEW.md, claude-code-action, ai_review.py, werdykt przeglądu, status commita, blokada scalenia, ochrona gałęzi, branch protection, CODEOWNERS, wymagany przegląd, scalanie, squash, merge commit, strategia scalania, stos PR, stacked PR, PR na PR, konflikt, konflikt scalania, rozwiązać konflikt, worktree, git worktree, równolegli agenci, dwie sesje równolegle, zmiana kontraktu, index.lock, port zajęty, PR od agenta, auto-merge, automatyczne scalanie, chronione ścieżki, testy akceptacyjne w CI, klucz zmiany w gałęzi, stopka Change, Rework-Cause, branch name, make a commit, commit my changes, stage files, force push rejected, push rejected after rebase, open a pull request, PR description, review a PR, AI code review, Claude reviews pull requests, required status check, merge strategy, squash or rebase, stacked pull requests, merge conflict, parallel agents, git worktrees, contract change, agent opened PR, auto-merge, protected paths, destructive git command"
 ---
 
-# Git workflow
+# Git workflow — branches, commits, PRs, review, merge
+
+The commit message format belongs to core-conventional-commits; this skill covers everything around it.
+
+## Never without the human's explicit consent
+`git push --force` (and `--force-with-lease`), `git reset --hard`, `git clean -fd`, rewriting history that was pushed,
+pushing to `main`/`master`. Ask first, say what will be lost, offer the safe alternative.
+- Diverged own branch after a rebase → `git push --force-with-lease` on *your own* feature branch, after consent. It
+  refuses if someone else pushed in the meantime. Never force to `main`/`master` or a shared branch.
 
 ## Branches
-- Name: `<typ>/<krótki-opis>` e.g. `feat/user-avatar`, `fix/login-redirect`, `chore/deps-bump`.
-- Work on a slice or a change with a key (`TSK-57`, `CHG-12`): the key in the branch name in lower case
-  (`story/tsk-57-ponowienie-platnosci`), and every commit with the footer `Change: TSK-57` (core-conventional-commits).
-  The `commit-msg` hook from this skill rejects a commit without the footer on such a branch. The key comes from the change plan or
-  from the human.
-- Short-lived branches (hours–days) and frequent integration with the main one (trunk-based, see the delivery skill, pack-it: eng-continuous-delivery).
-- You never work directly on `main`/`master`. If you are on it — create a branch before the first change.
+- Branch before the first edit; never commit directly on `main`/`master`.
+- Name: `<type>/<short-description>`, e.g. `fix/login-timeout`. Work with a change key carries it in lower case:
+  `story/tsk-57-csv-export`, and every commit on it has the footer `Change: TSK-57` — the commit-msg hook of
+  core-conventional-commits rejects a commit on such a branch without it. The key comes from the change plan or the human;
+  you never invent one.
+- Keep branches short-lived and integrate often (trunk-based; details in eng-continuous-delivery, pack-it).
 
 ## Commits
-- The commit message and PR title format: the **core-conventional-commits** skill (also there: how to fix a wrong commit type —
-  `--amend` only for the last, unpushed commit and at an explicit request).
-- One commit = one logical change; small, frequent commits (easy review and revert).
-- A commit fixing something after a PR review or after a task came back for a fix: the trailer `Rework-Cause:` with one value —
-  `spec-gap`, `agent-error` (the requirement was clear), `requirement-change` or `unknown` (not by default);
-  `tf metrics` counts the causes of fixes from them.
+1. `git status`, then review what goes in: `git diff` and after staging `git diff --staged`.
+2. Stage by explicit path. `git add -A` / `git add .` only when you have read the whole diff.
+3. Nothing that should not be versioned: `.env`, keys and tokens, dumps, build output, large binaries.
+4. Tests and lint pass before the commit.
+5. One logical change per commit; message per core-conventional-commits. A wrong message: amend only the last
+   commit, only if unpushed, only on request.
+- A fix after review or rework carries `Rework-Cause:` with `spec-gap`, `agent-error`, `requirement-change` or `unknown`.
+  Choose the real cause; `unknown` is not a default. `tf metrics` counts them.
 
-## Before a commit
-1. `git status` and `git diff --staged` — check that you commit only the intended files.
-2. No secrets, `.env` files, dumps, build artifacts.
-3. Tests and lint pass.
-4. Add files by name (`git add ścieżka`), not `git add -A`, unless the diff is fully reviewed.
+**Commit per plan phase** (factory convention):
+- Stage only the files this phase touched plus its step report. Other changed files → show them and ask: this phase only
+  (recommended) / everything / stop. Before the first commit of a change check the index for files staged earlier by
+  someone else.
+- `git diff --cached --quiet` exits 0 → nothing staged; make no empty commit.
+- Subject `<type>(<change-id>): <phase title> (f<N>)`, files listed in the body. `Refs:` only with references the human
+  gave or that appear in the conversation — never derived from the branch name.
+- A hook rejects the commit → fix the cause and commit again. No `--no-verify`, no `--amend` (it would rewrite the
+  previous phase's commit).
+- After the commit put its SHA in the step report's Progress list (core-project-record); the SHA of the last phase and the
+  final report status go in a separate closing commit.
 
-## A phase commit (work per a step plan)
-- To the index you add **the files touched in this phase** (every Edit/Write) and the step report — not the list from `git status`.
-- Show other changed files and ask: only the phase's files (recommended) / everything / abort. You do not include them silently.
-- Before the first commit of a new change check whether someone else's previously added files are waiting in the index.
-- `git diff --cached --quiet` ends with exit code 0 → there is nothing to commit; you do not create an empty commit.
-- Subject: `<typ>(<identyfikator-zmiany>): <tytuł fazy> (f<N>)`; the touched files in the body. `Refs:` only from references
-  visible in the conversation or given by the human, never inferred from the branch name.
-- The pre-commit hook rejected the commit → remove the cause and make a **new** commit. No `--no-verify` and no `--amend`
-  (the commit did not happen, so `--amend` would change the previous phase).
-- After the commit add the SHA in the "Progress" section of the step report (core-project-record); at the last phase the SHA and the
-  report status go in a separate closing commit.
+## Parallel work
+Start with two changes at a time — the limit is how much the human can review, not how many agents can run.
+1. **Independence check:** shared files, API/type/schema contracts, migrations, external services. A conflict → run them
+   one after another.
+2. **One change = one worktree + branch + fresh session:**
+   `git worktree add ../<repo>-<change> -b feat/<change>`. The main checkout only coordinates. After the merge
+   `git worktree remove`; strays: `git worktree list`, `git worktree prune`.
+3. **A worktree isolates files and the branch, not the environment.** Give each its own dev-server port, local database
+   or schema (migrations!), queue/payment sandbox, cache. A fresh worktree has no `node_modules` and no `.env`. Git
+   operations on the shared repository can collide on `.git/index.lock`. One branch cannot be checked out in two
+   worktrees. Disk use grows with dependencies.
+4. **Contract change mid-flight:** message the other session at once, in this shape:
+   `Contract change: <what> in <file/commit>. Required: <action>. Reply "accepted".` (PL: „Zmiana kontraktu … odpowiedz
+   «przyjęte»”). The other side does not merge until it replied "accepted". Channels: `SendMessage` to a named session,
+   `/peers` to list them, `@session-name` in a prompt; without them the human relays. `claude agents` groups sessions that
+   wait for you under "Needs input".
+5. Choose how each runs: decisions along the way → interactive, phase by phase; closed scope with a measurable end →
+   `/goal` with a turn limit (core-delivery-lifecycle). Each change gets its own review and its own PR; side improvements
+   become new plan items. Cost of parallel sessions: `.claude/skills/core-cost-control/references/parallelism.md`.
+Details and a session checklist: `references/parallel-worktrees.md`.
 
-## Parallel work (several changes at once)
-- Start with **two** changes, not five: parallelism is limited by the throughput of human review, not by the number of agents.
-- Before starting check independence (an agent can do it from the plans): shared files, contracts (API, types, schema),
-  migrations, external services. A conflict → one after another.
-- One change = one worktree + one branch + one fresh agent session:
-  `git worktree add ../<repo>-<zmiana> -b feat/<zmiana>`; the main directory is for coordination.
-  A fork, a new session or a subagent (cost, isolation): `.claude/skills/core-cost-control/references/parallelism.md`.
-- **A contract change along the way** (API, types, schema) → a message to the other session right away:
-  `Contract change: <what> · <file/commit> · what you have to do · reply "accepted"`. Without "accepted" the other session
-  does not merge. The channel: from v2.1.224 `SendMessage` (the session list: `/peers`), from v2.1.232 `@nazwa-sesji`; text only,
-  receiving is controlled by `crossSessionInbound`. An older version → the human passes on the same message.
-- Which session waits for a decision: `claude agents` (the agents view, research preview) shows a "Needs input" group
-  (checked 2026-10-18).
-- A worktree isolates files and the branch, **not the environment**: a separate dev server port, a separate local database
-  (or schema) and migrations, a separate sandbox of payment and queue services, a separate cache. A fresh worktree has no
-  `node_modules` or `.env` — installation and configuration are a start step. Git operations on a shared repository
-  can collide on `.git/index.lock`; the same branch cannot be in two worktrees. Tasks touching the same
-  ports, databases or files you do not run in parallel; you limit the number of worktrees and clean up forgotten ones
-  (`git worktree list`, `git worktree prune`) — the disk cost grows with dependencies.
-- A change with decisions along the way → interactively, phase by phase; a change with a closed scope and a measurable end →
-  `/goal` with a turn limit (core-delivery-lifecycle). Each change → a review → a separate PR.
-- Small improvements discovered along the way you add to the plan as a separate item instead of widening the current change.
-- After merging: `git worktree remove ../<repo>-<zmiana>`.
+## Pull requests
+- Title like a commit subject. Body: What (1–3 points), Why, How it was tested, Risks and rollback; link the plan or
+  requirements in `docs/project/`.
+- Small: one change, a few hundred lines. Split anything bigger.
+- **Agent-authored PRs — the agent proposes, the pipeline decides:**
+  - mark them: a label (e.g. `agent`) and a commit trailer (`Co-Authored-By:`), so history shows what the agent wrote;
+  - protected paths (`infra/`, auth, payments, `.github/workflows/`, `.claude/`) have owners in CODEOWNERS and are
+    excluded from auto-merge; a green run proves nothing when the PR edits the workflow that produced it; `tf risk` rates
+    these paths high;
+  - scope stays with the task, out-of-scope edits are reverted (`scope-reviewer` agent);
+  - AI-written infrastructure gets more gates, not fewer. Agent permissions in CI: core-agent-security.
+- **Protected acceptance tests** are enforced by settings, not by the prompt. CODEOWNERS only names reviewers; it binds with
+  branch protection "Require review from Code Owners" plus a required check. Scenario changes go in a separate PR from
+  code — a CI check rejects a PR that changes both. Guard step definitions and adapters too: a scenario can be turned green
+  there.
+Details: `references/agent-prs.md`.
 
-## Forbidden without the human's explicit consent
-- `git push --force` (`--force-with-lease` on your own branch is allowed after consent),
-- `git reset --hard`, `git clean -fd`, rewriting the history of published branches,
-- a push to `main`.
+## Review, including AI review
+- An agent may do the first pass; the deciding review is human and looks at behaviour and risk, not style.
+- Separation of duties: an agent never approves its own code. Branch protection requires a human approval and green CI;
+  the agent may push fixes to the PR branch; a human merges.
+- Rules live in `REVIEW.md` in the repo root (not in CLAUDE.md): template `references/review-md.md`. A draft from code
+  reconstruction becomes `REVIEW.md` with `ai_review.py review-md` after the human approves it.
+- Tools: the Claude Code Code Review service or `anthropics/claude-code-action@v1` (answers `@claude`, or runs a
+  `prompt`), installed with `/install-github-app`. The human installs the app and sets secrets.
+- **The factory's ready workflow:**
+  1. `python3 .claude/skills/core-git-workflow/scripts/ai_review.py install` (add `--all-prs` to review every PR, not
+     only those labelled `ai-review`) writes `.github/workflows/ai-review.yml`; it refuses to overwrite without `--force`.
+  2. Add the repository secret `ANTHROPIC_API_KEY`.
+  3. In branch protection require the status `ai-review/verdict`.
+  4. `REJECTED` or a missing/invalid result → red status; a human can bypass with the label `ai-review-override`.
+  Fork PRs are skipped (no secrets for them). How the gate works and what breaks it: `references/ai-review-in-ci.md`.
+- Tune monthly: check how many findings were right, cap trivia, exclude generated and CI-covered files. Security-relevant
+  changes (auth, IaC, CI) → `security-reviewer` before merge. Review against the plan with the human → qa-change-review (pack-it).
 
-## Pull request
-The title like a commit. The description: **What** (1–3 points), **Why**, **How it was tested**, **Risks/rollback**.
-A small PR (one change, a few hundred lines) is reviewed faster and more thoroughly than a big one; split a big one into successive PRs.
-Refer to the step plan and the requirements (`docs/project/`), so the reviewer checks agreement with the intent.
+## Merging, stacks, conflicts
+- One strategy per repository, enforced in its settings: squash (small PRs, clean history), rebase (linear history keeping
+  each commit), merge commit (when the merge record matters, e.g. release branches). With squash set the title yourself:
+  `gh pr merge 42 --squash --subject "feat(export): CSV export (#42)"`. Merge only with green CI and required approvals.
+- After squashing the base of a stack, the next PR still carries the old commits:
+  `git fetch origin main` → `git rebase --onto origin/main <old-base-branch> <branch>` →
+  `git push --force-with-lease` (own branch, after consent) → `gh pr edit <N> --base main` → wait for CI → merge.
+- Conflicts: understand both sides, never take "ours" wholesale, run the tests afterwards. During a rebase stop and show the
+  human the files; continue with `git add` + `git rebase --continue`, or `git rebase --abort`.
+Details: `references/merging-and-pr-stacks.md`.
 
-**Protected acceptance tests are enforced by CI, not by a prompt.** CODEOWNERS only points to reviewers; the enforcement comes from
-branch protection ("Require review from Code Owners") and a required check. A change of scenarios goes in a separate PR from the code —
-a check in CI rejects a PR that changes both. The number of protected tests does not drop (a supporting alarm: an assertion can be
-weakened without changing the number). Changes in step definitions (step definitions, adapters) also go through review, because
-a scenario can be "turned green" in the adapter.
-
-**A PR written by an agent.** The agent proposes, the pipeline decides:
-- **Labelling:** an agent PR has a label (e.g. `agent`), and its commits a trailer (e.g. `Co-Authored-By:` with the agent's name).
-  Review, metrics and audit then tell the agent's work apart from a human's.
-- **Protected paths** (`infra/`, auth, payments, `.github/workflows/`, `.claude/`) in CODEOWNERS with "Require review
-  from Code Owners". Auto-merge only for PRs that do not touch them. Green CI is not evidence when the PR changes
-  the workflow that checks it. `tf risk` marks these paths as high risk.
-- **Scope** limited to the task; you revert changes outside it (the `scope-reviewer` agent).
-- **Acceptance tests out of the agent's reach** (the point above), so the agent does not "pass" itself.
-- **Infrastructure from AI** goes through more gates than a human's, not fewer: a plan of changes in the PR and drift detection.
-  A further step: a signed attestation (in-toto, SLSA, Sigstore) with the model, the task and the allowed tools.
-- The agent's permissions in CI (secrets, write rights, PRs from a fork): core-agent-security.
-
-## PR review — also by AI
-- **The first review can be done by an agent**, the second and deciding one — by a human. The human focuses on behaviour
-  ("does it solve the intent?") and risk, not on style, which lint and CI check.
-- **`REVIEW.md` in the repository root** describes the review rules (the Code Review service in Claude Code reads it;
-  it differs from `CLAUDE.md`, which concerns all of the agent's work). A template: `references/review-md.md`.
-- **Tools:** the Code Review service or `anthropics/claude-code-action@v1` in GitHub Actions — it reacts to an `@claude`
-  mention in a comment or works automatically with an instruction in `prompt`; configured with `/install-github-app`
-  (github.com only), the key in a repository secret (`ANTHROPIC_API_KEY`). The installation and secrets are done by the human.
-- **Separation of duties:** the agent does not approve its own code. Protection of the main branch requires the human's approval
-  and green CI; the agent can push fixes after comments to the PR branch, but the human merges.
-- **Tuning once a month:** assess the accuracy of findings, limit the number of trivia, exclude generated code and what
-  CI checks. An untuned review buries the team in comments and stops being read.
-- A security review of changes in authentication, IaC and CI: the `security-reviewer` agent before merging.
-- **AI review as a CI step** (risk triage, an output contract, the verdict as a commit status, `[skip ci]` for
-  bot commits, comments only on diff lines, deduplication): `references/ai-review-in-ci.md`. The blocking gate
-  lives in the workflow (a step after the agent reads the verdict), not in the model's answer.
-- **A ready workflow:** `python3 .claude/skills/core-git-workflow/scripts/ai_review.py install [--all-prs]` →
-  `.github/workflows/ai-review.yml`: a review of PRs with the `ai-review` label (or of every one) per `REVIEW.md`, the agent only
-  reads and returns JSON, a workflow step sets the `ai-review/verdict` status and one summary comment, the
-  `ai-review-override` label (a human) is a deliberate bypass. Actions pinned to a SHA, `permissions: {}`, a fork block.
-  The secret and branch protection are set by the human. `REVIEW.md` from an approved draft of the reconstruction from code:
-  `ai_review.py review-md`.
-- A review of agreement with the step plan and triage of findings with the human: the change review skill (pack-it: qa-change-review).
-
-## Merging and a PR stack
-- One merge strategy in the repository (squash, rebase or merge commit); with squash you give the commit title
-  explicitly (the PR title with its number). Choosing the strategy and the commands: `references/merging-and-pr-stacks.md`.
-- **A PR stack** (each one targets the previous one's branch): after squashing the first you move the next one with
-  `git rebase --onto origin/main <stara-baza> <gałąź>`, push `--force-with-lease` (with consent), change the PR's
-  target branch to `main` and merge after green CI. Show conflicts along the way to the human.
-
-## Conflicts
-Resolve them understanding both sides — never "take everything mine". After resolving run the tests.
+## Example
+Request: "Ship the CSV export; push it however." Branch `story/tsk-57-csv-export`, phase 2 of 3 done. `git status` shows
+`src/export/csv.py`, `tests/export/test_csv.py`, the step report `012-csv-export.md` and an unrelated
+`config/local.yaml`. The agent stages the first three by path, asks about `config/local.yaml` (answer: leave it), checks
+`git diff --staged`, commits `feat(TSK-57): endpoint and serializer (f2)` with `Change: TSK-57`. The pre-commit hook fails on
+a lint error → fixed, new commit `d4e81a2`, SHA added to Progress. The remote rejects the push because the agent rebased on
+`origin/main`: it asks, then runs `git push --force-with-lease origin story/tsk-57-csv-export` — never `--force` and never
+to `main`.
 
 ## Sources
-- The 10xDevs course, ed. 3 (2026), module 2, lessons 3 and 5 (the phase commit, parallel work) and module 5, lesson 3 (AI review
-  in CI) — training material (accessed 2026-10-09); `git help worktree`;
-  the Claude Code documentation (code.claude.com/docs: parallel sessions, communication between sessions, `claude agents`),
-  accessed 2026-10-18. Described in our own words.
-- Merging and a PR stack: callstackincubator/agent-skills, the `github` skill (the version before its removal on 2026-08-07), MIT;
-  details in `references/merging-and-pr-stacks.md`.
+- Git documentation: `git help worktree`, `git help rebase` (`--onto`), `git help push` (`--force-with-lease`), git-scm.com.
+- GitHub Docs: protected branches and required status checks, CODEOWNERS, commit statuses API (docs.github.com).
+- GitHub CLI manual: `gh pr merge` (`--subject`), `gh pr edit --base` (cli.github.com).
+- Claude Code docs (code.claude.com): GitHub Actions / `anthropics/claude-code-action`, Code Review, parallel sessions.
+  The cross-session commands (`SendMessage`, `/peers`, `@session-name`, `claude agents`) are recent [unverified: check the
+  version in the current changelog].
