@@ -44,6 +44,9 @@ def render_index(k: dict) -> str:
     if tools:
         lines.append("- Formatting and lint are done by the tools, not by hand: "
                      + ", ".join(sorted({t["tool"] for t in tools})))
+    if any(i.get("kind") == "exemplar" for i in items):
+        lines.append("- New file: follow the exemplar for its kind (page, component, hook, endpoint, test…) in "
+                     "`exemplars.md` here.")
     if _applied(items):
         lines.append(f"- Standards: {len(_applied(items))} agreed rules load as rules for the matching files; list "
                      "with sources in `decisions.md` here.")
@@ -235,11 +238,26 @@ def render_decisions(k: dict) -> str:
     return "\n".join(lines)
 
 
+def render_exemplars(k: dict) -> str:
+    ex = [i for i in k["items"] if i.get("kind") == "exemplar"]
+    lines = ["# Exemplar files (dna)", "", "For a new file of a kind below, follow the exemplar: its structure, naming, "
+             "imports, error handling and tests. Chosen by script: recent, typical size, clean (no legacy, no "
+             "deprecated components). Agreed rules (rules/standards*.md) win over the exemplar.", "",
+             "| Kind of change | Exemplar | Its test | Imports | Used by |", "|---|---|---|---|---|"]
+    for e in sorted(ex, key=lambda i: i["data"]["change_type"]):
+        r = e["data"]["related"]
+        lines.append(f"| {e['data']['change_type']} | `{e['data']['path']}` | {', '.join(r['tests']) or '—'} | "
+                     f"{', '.join(r['imports']) or '—'} | {', '.join(r['used_by']) or '—'} |")
+    return "\n".join(lines) + "\n"
+
+
 def render(k: dict) -> dict[str, str]:
     """File name in out/ -> content."""
     files = {"INDEX.md": render_index(k), "coverage.md": render_coverage(k)}
     if _docs(k["items"]):
         files["docs-index.md"] = render_docs_index(k)
+    if any(i.get("kind") == "exemplar" for i in k["items"]):
+        files["exemplars.md"] = render_exemplars(k)
     if any(i.get("kind") == "decision" for i in k["items"]):
         files["decisions.md"] = render_decisions(k)
         files.update(render_standards_rules(k))

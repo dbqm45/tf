@@ -28,7 +28,9 @@ moc, przyjęcie automatyczne (źródło rozstrzygające albo dwa niezależne), k
 `out/rules/standards*.md`, `out/decisions.md`. Odłożone: przypisanie sekcji dokumentów modelem (tekst ciągły bez
 list i słów normatywnych), reguła 70% kodu po `since`, strony podrzędne Confluence (`max_depth`), `name-only` dla
 skonsolidowanych skilli (wymaga pewności, że ekstrakcja nie gubi treści). Pomiar A4 — na koniec (decyzja człowieka
-2026-11-20). Następny: reszta A5 (wzorce na rodzaj zmiany) i A9 (`refresh`).
+2026-11-20). Reszta A5 zrobiona (`dna` 0.6.0): wzorce na rodzaj zmiany z testem, importami i użyciami, aliasy
+`tsconfig`; sprawdzone na `devias-io/material-kit-react`. Z A5 zostały konwencje spoza UI (nazwy, obsługa błędów,
+logowanie — port `standards_scan.py`). Następny: A9 (`refresh` przyrostowy przy starcie sesji).
 
 ## 1. Cel
 

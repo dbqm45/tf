@@ -119,8 +119,75 @@ def _ds_of(source: str, pkgs: dict[str, str]) -> str | None:
     return None
 
 
-def _resolve(importer: Path, spec: str) -> Path | None:
+_ALIASES: dict[str, list[tuple[str, Path]]] = {}
+
+
+def aliases(root: Path) -> list[tuple[str, Path]]:
+    """Path aliases from tsconfig.json / jsconfig.json `compilerOptions.paths` (e.g. "@/*" → ./src/*)."""
+    key = str(root)
+    if key in _ALIASES:
+        return _ALIASES[key]
+    out = []
+    for name in ("tsconfig.json", "jsconfig.json"):
+        text = _read(root / name)
+        if not text:
+            continue
+        text = re.sub(r",(\s*[}\]])", r"\1", _strip_json_comments(text))
+        try:
+            opts = json.loads(text).get("compilerOptions") or {}
+        except ValueError:
+            continue
+        base = root / (opts.get("baseUrl") or ".")
+        for pattern, targets in (opts.get("paths") or {}).items():
+            if targets:
+                out.append((pattern.rstrip("*"), (base / str(targets[0]).rstrip("*")).resolve()))
+        break
+    _ALIASES[key] = sorted(out, key=lambda a: -len(a[0]))
+    return _ALIASES[key]
+
+
+def _strip_json_comments(text: str) -> str:
+    """// and /* */ comments outside strings (tsconfig.json is JSON with comments)."""
+    out, i, n, in_str = [], 0, len(text), False
+    while i < n:
+        c = text[i]
+        if in_str:
+            out.append(c)
+            if c == "\\" and i + 1 < n:
+                out.append(text[i + 1])
+                i += 1
+            elif c == '"':
+                in_str = False
+        elif c == '"':
+            in_str = True
+            out.append(c)
+        elif text.startswith("//", i):
+            j = text.find("\n", i)
+            i = n if j < 0 else j
+            continue
+        elif text.startswith("/*", i):
+            j = text.find("*/", i + 2)
+            i = n if j < 0 else j + 2
+            continue
+        else:
+            out.append(c)
+        i += 1
+    return "".join(out)
+
+
+def is_local(spec: str, root: Path) -> bool:
+    return spec.startswith(".") or any(spec.startswith(prefix) for prefix, _ in aliases(root) if prefix)
+
+
+def _resolve(importer: Path, spec: str, root: Path | None = None) -> Path | None:
     base = (importer.parent / spec).resolve()
+    if not spec.startswith(".") and root is not None:
+        for prefix, target in aliases(root):
+            if prefix and spec.startswith(prefix):
+                base = (target / spec[len(prefix):]).resolve()
+                break
+        else:
+            return None
     for cand in [base] + [base.with_name(base.name + ext) for ext in CODE_EXT] + \
                 [base / f"index{ext}" for ext in CODE_EXT]:
         if cand.is_file():
@@ -178,8 +245,8 @@ def ui(root: Path, items: list[dict], config: dict | None = None) -> tuple[list[
                         continue   # types imported without `type`
                     ds_use[(pkg, c)].append((rel, line))
                     ds_form[(pkg, c)][f"import {c} from '{source}'" if subpath else f"import {{ {c} }} from '{source}'"] += 1
-            elif source.startswith("."):
-                target = _resolve(f, source)
+            elif is_local(source, root):
+                target = _resolve(f, source, root)
                 if target and SHARED_DIRS & set(_rel(root, target).split("/")[:-1]):
                     for c in comps:
                         own_use[(target, c)].add(rel)

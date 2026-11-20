@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 — 2026-11-20
+- Exemplar files per kind of change (`lib/exemplars.py`): page, component, form, hook, store, API endpoint,
+  service, test, migration; chosen by script (recent by git, typical size, not legacy/generated, no deprecated
+  component), with their test, local imports and users. `out/exemplars.md` and a line in `INDEX.md`; the factory's
+  scout reads them from `knowledge.json`.
+- Path aliases from `tsconfig.json` / `jsconfig.json` (`compilerOptions.paths`, comments allowed) in the UI catalog
+  and exemplars: own components imported as `@/components/...` are found.
+
 ## 0.5.0 — 2026-11-20
 - Decisions from sources (`lib/sources.py`): standards skills (`standards` in dna.yaml or skills named *standards*;
   SKILL.md, references/, rules/; scope fe/be/mutual from the config or the name), the Confluence pages they link to
