@@ -74,6 +74,7 @@ def http_bytes(url: str, allowed_hosts: set[str], limit: int = MAX_FILE_BYTES, a
 def _html_to_text(text: str) -> str:
     text = re.sub(r"(?is)<(script|style|nav|footer|header)\b.*?</\1>", "", text)
     text = re.sub(r"(?i)<h([1-6])[^>]*>", lambda m: "\n" + "#" * int(m.group(1)) + " ", text)
+    text = re.sub(r"(?i)<li\b[^>]*>", "\n- ", text)   # list items stay list items (rules are often lists)
     text = re.sub(r"(?i)<(br|/p|/li|/tr|/h[1-6]|/pre)[^>]*>", "\n", text)
     text = re.sub(r"<[^>]+>", "", text)
     for a, b in (("&lt;", "<"), ("&gt;", ">"), ("&quot;", '"'), ("&#39;", "'"), ("&nbsp;", " "), ("&amp;", "&")):

@@ -19,11 +19,13 @@ python3 dna.py check --base main             # the change against the guidelines
 
 `learn` reaches the network only for documentation (`--offline` or `DNA_OFFLINE=1` to stop it): package registries
 (npm, PyPI) and the hosts listed in `registry/docs-sources.yaml`, https only, GET of files by package name and
-version; the question asked in `docs query` never leaves the machine.
+version; the question asked in `docs query` never leaves the machine. Confluence pages linked from standards
+skills are read through the REST API with `CONFLUENCE_API_TOKEN` (or `JIRA_API_TOKEN`) and an e-mail variable;
+the credentials are sent only to the Atlassian site (`ATLASSIAN_SITE`, else `*.atlassian.net`).
 
 In a project the add-on sits in `.tf/addons/dna/`; `--root` defaults to the git top level of the current directory.
 
-## What 0.4.0 knows
+## What 0.5.0 knows
 
 | Area | Source | Version from |
 |---|---|---|
@@ -35,6 +37,7 @@ In a project the add-on sits in `.tf/addons/dna/`; `--root` defaults to the git 
 | .NET | `*.csproj`, `*.fsproj` | `packages.lock.json` or `Version` |
 | Commands | `package.json` scripts, `pyproject.toml`, build tools, `Makefile` | — |
 | Tooling | prettier, eslint, biome, stylelint, ruff, editorconfig, golangci-lint, checkstyle | — |
+| Decisions | standards skills (+ linked Confluence pages), ADRs, ESLint restrictions, README/CONTRIBUTING/docs, other agents' instruction files | — |
 | UI building blocks | imports, exports and styles in the code (`lib/code.py`) | — |
 | Documentation | installed npm package; npm tarball and PyPI description of the exact version; `registry/docs-sources.yaml` | the stack facts above |
 
@@ -50,6 +53,8 @@ and listed in `coverage.md`.
 |---|---|
 | `out/knowledge.json` | the canonical record; schema in `schema/knowledge.schema.json` |
 | `out/INDEX.md` | ≤ 15 lines for the agent's permanent context |
+| `out/rules/standards*.md` | agreed rules per scope (fe, be, whole repo) with `paths` |
+| `out/decisions.md` | all decisions with quotes and sources; candidates (one source) listed, not applied |
 | `out/rules/ui.md` | rule with `paths` for UI files: components to use, import form, styling, tokens, theme |
 | `out/catalog/ui.md` | full UI catalog with evidence |
 | `out/docs-index.md` | ≤ 8 KB: technology@version → topics, for the permanent context |
@@ -62,5 +67,5 @@ repository. The Markdown is generated from `knowledge.json` and must not be edit
 
 - Nothing here imports from the factory (`core/`, `packs/`, `modes/`, `tools/`); the tests check it.
 - Standard library and PyYAML only.
-- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py`, `tests/test_check.py` (also the `addon-dna` job in CI).
+- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py`, `tests/test_check.py`, `tests/test_sources.py` (also the `addon-dna` job in CI).
 - Version by SemVer in `addon.yaml`; changes in `CHANGELOG.md`.

@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.0 — 2026-11-20
+- Decisions from sources (`lib/sources.py`): standards skills (`standards` in dna.yaml or skills named *standards*;
+  SKILL.md, references/, rules/; scope fe/be/mutual from the config or the name), the Confluence pages they link to
+  (REST API; credentials from the environment, sent only to the Atlassian site), ADRs, ESLint restricted imports,
+  README/CONTRIBUTING/docs, instruction files of other agents (CLAUDE.md and AGENTS.md without the factory's blocks,
+  Cursor rules with globs, Copilot instructions with applyTo). A decision is a list item or a rule-ID line with
+  normative words (English and Polish); the quote is the source's own line.
+- `lib/decide.py`: duplicates merged with all evidence; strength hard/soft; auto-accepted when a standards skill,
+  an accepted ADR or a lint rule states it, or two independent sources do; otherwise a candidate (listed, not
+  applied); rank by the hierarchy.
+- Output: `out/rules/standards*.md` (rules with `paths` per scope, ≤ 40 lines, overflow pointer),
+  `out/decisions.md` (applied and candidates with sources), a line in `INDEX.md`, hard rules for the whole repo in it.
+- HTML list items stay list items when converted to text.
+
 ## 0.4.0 — 2026-11-20
 - `dna.py check [--base <ref>] [--json]` (`lib/check.py`, `provides.check`): added lines of the change (untracked
   files included) against the guidelines, by the balance rule — hard findings (a deprecated component) block

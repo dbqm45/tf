@@ -22,8 +22,13 @@ i `out/catalog/ui.md`. Sprawdzone na publicznym projekcie Next.js + MUI (`devias
 (twarde: wycofany komponent; miękkie: surowy element, wartość z tokenem, duplikat komponentu, forma importu, sposób
 stylowania), wpięte w bramkę `/tf` przez `provides.check`; sprawdzone na `devias-io/material-kit-react`
 (wychwycone `<button>`, inny import, `style={{}}` przy `sx` w 94%). Ponawianie z raportem (2 rundy) daje istniejąca
-pętla `/tf`. Następny: reszta A5 (wzorce na rodzaj zmiany), A7–A8 (ustalenia ze źródeł) albo A4 (pomiar — wymaga
-repo pilotażowego).
+pętla `/tf`. A7–A8 zrobione bez modelu (`dna` 0.5.0): ustalenia ze skilli standardów (z odnośnikami do
+Confluence przez API), ADR, ograniczeń ESLint, dokumentów projektu i plików instrukcji innych narzędzi; scalanie,
+moc, przyjęcie automatyczne (źródło rozstrzygające albo dwa niezależne), kandydaci bez stosowania;
+`out/rules/standards*.md`, `out/decisions.md`. Odłożone: przypisanie sekcji dokumentów modelem (tekst ciągły bez
+list i słów normatywnych), reguła 70% kodu po `since`, strony podrzędne Confluence (`max_depth`), `name-only` dla
+skonsolidowanych skilli (wymaga pewności, że ekstrakcja nie gubi treści). Pomiar A4 — na koniec (decyzja człowieka
+2026-11-20). Następny: reszta A5 (wzorce na rodzaj zmiany) i A9 (`refresh`).
 
 ## 1. Cel
 
