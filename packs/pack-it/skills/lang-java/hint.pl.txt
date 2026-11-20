@@ -17,11 +17,11 @@ head: Użyj przy kodzie Java 17/21+ — konwencje, niezmienność, błędy, poj�
 | Pojęcie (słownik) | Idiom w Javie |
 |---|---|
 | **obiekt wartości** | `record` z walidacją/normalizacją w konstruktorze kompaktowym; operacje zwracają nowy rekord |
-| **identyfikator / encja** | `record PartyId(String value)` zamiast gołego `String`/`UUID`; encja = klasa z tożsamością i zachowaniem |
+| **identyfikator / encja** | `record MemberId(String value)` zamiast gołego `String`/`UUID`; encja = klasa z tożsamością i zachowaniem |
 | **warianty** | `sealed interface` + `record`-y; wyczerpujący `switch` z wzorcami (kompilator wymusza obsługę nowego wariantu) |
 | **wynik operacji** | `sealed interface Result<E, T>` z `Success`/`Failure` albo zdarzenia sukcesu/odrzucenia jako wynik metody |
 | **agregat** | `final class` z prywatnym stanem, metody biznesowe zamiast setterów, `version` do blokady optymistycznej, lista zdarzeń oddawana przez `pullEvents()` |
-| **maszyna stanów** | stan jako `sealed interface` (np. `Free`/`Blocked`/`Disabled`), przejścia w `switch` z guardami `when` |
+| **maszyna stanów** | stan jako `sealed interface` (np. `OnShelf`/`Lent`/`Withdrawn`), przejścia w `switch` z guardami `when` |
 | **zdarzenie** | `record` w czasie przeszłym implementujący `sealed interface` zdarzeń modułu |
 | **polityka** | interfejs funkcyjny/strategia wstrzykiwana przez fabrykę agregatu |
 | **specyfikacja** | `Predicate<T>` z `and/or/negate` albo własny interfejs z nazwą w języku biznesu |
@@ -29,8 +29,8 @@ head: Użyj przy kodzie Java 17/21+ — konwencje, niezmienność, błędy, poj�
 | **read model** | osobny `record` + zapytanie (SQL/projekcja) omijające agregat |
 | **moduł** | pakiet z publiczną fasadą, reszta package-private; testy architektury pilnują zależności |
 
-Przetestowane implementacje (Money, Party, Result, TimeSlot, agregat ResourceAvailability z maszyną stanów i zdarzeniami,
-port repozytorium): `references/domain-building-blocks.md`.
+Przetestowane implementacje dla domeny wypożyczalni narzędzi (Money z `split`, typowane id, warianty `Member`, Result,
+LoanPeriod, agregat LendableTool z maszyną stanów i zdarzeniami, port repozytorium): `references/domain-building-blocks.md`.
 
 ## Zależne od wersji
 | Wersja | Zmiany istotne dla tego skilla |
