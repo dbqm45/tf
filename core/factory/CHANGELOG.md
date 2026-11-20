@@ -3,6 +3,16 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [20.3.0] — 2026-11-20
+### Added
+- **pack-it:** eng-domain-agents — domain agents from a monorepo (#347)
+- **core:** tf cooldown --fix writes the version cooldown settings (#345)
+- **addons:** add-on mechanism with dna and standards, tf learn and its cost report (#344)
+- **core:** add approved models list and an eval gate script for CI (#342)
+### Fixed
+- release timeout and tf addon add from a branch source (#348)
+- Windows paths in build.py check and tests without symlinks (#346)
+
 ## [20.2.0] — 2026-11-19
 ### Added
 - **tf:** tokens and time next to the cost of a task and a session (#343)
