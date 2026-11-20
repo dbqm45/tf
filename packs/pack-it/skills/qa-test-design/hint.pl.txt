@@ -1,55 +1,94 @@
-head: Użyj przy projekcie przypadków i planu testów — klasy równoważności, brzegi, tablice decyzyjne, stany, ryzyko. Użyj przy projektowaniu przypadków testowych i planu testów w dowolnej technologii — klasy równoważności, wartości brzegowe, tablice decyzyjne, przejścia stanów, testy parami, testowanie oparte na ryzyku, dobór poziomu testu, format przypadku z oczekiwanym wynikiem i jego źródłem. Nie do pisania kodu testów (tool-*).
-# Projektowanie testów
+head: Użyj przy projektowaniu przypadków testowych i planu testów — klasy równoważności, wartości brzegowe, tablice decyzyjne, stany, ryzyko, poziom testu, źródło oczekiwanego wyniku. Użyj przy projektowaniu przypadków testowych i planu testów w dowolnej technologii: wybór technik (klasy równoważności, wartości brzegowe, tablice decyzyjne, przejścia stanów, pairwise, scenariusze, zgadywanie błędów, paginacja i izolacja najemców), priorytet według ryzyka, poziom testu, format przypadku z obowiązkowym źródłem oczekiwanego wyniku, minimalne sprawdzenie niefunkcjonalne; także strategia testów sterowana ryzykiem dla całego projektu z małą liczbą testów, klasy awarii funkcji AI po stronie aplikacji, plan testów, raport i analiza ucieczek defektów. Nie do składni runnera ani frameworka (tool-playwright, tool-vitest, tool-pytest), tego, skąd biorą się oczekiwane wartości i ról clean-room (qa-spec-first-testing), utrzymania zestawu regresji (qa-regression), sesji eksploracyjnych (qa-exploratory-manual) ani testów obciążeniowych (qa-performance-testing).
+# Projektowanie testów — techniki, priorytet, poziom, format przypadku
 
-## Techniki — kiedy której użyć
-| Technika | Kiedy | Jak |
+Wejście: wymaganie (historyjka, kryterium akceptacji, reguła, kontrakt). **Brak wymagania** → poproś o źródło; każdy przypadek
+napisany mimo to ma oczekiwaną wartość oznaczoną jako otwarte pytanie, nigdy zgadywaną. Skąd mogą pochodzić oczekiwane wartości
+i kto może patrzeć w kod: qa-spec-first-testing.
+
+## 1. Dobierz techniki do wymagania
+| Wymaganie ma… | Technika | Co piszesz |
 |---|---|---|
-| **Klasy równoważności** | dane wejściowe z zakresami/kategoriami | podziel na klasy poprawne i niepoprawne; jeden przypadek na klasę |
-| **Wartości brzegowe** | każdy zakres i próg („od 10 sztuk”) | testuj **granicę, tuż pod i tuż nad** (9, 10, 11) oraz min/max/0/pusty |
-| **Tablica decyzyjna** | kilka warunków daje różne wyniki (rabaty, uprawnienia) | kolumna = kombinacja warunków → oczekiwana akcja; usuń niemożliwe kombinacje |
-| **Przejścia stanów** | obiekt ma stany (rezerwacja, zamówienie, blokada z archetypu Availability) | diagram stanów → test każdego dozwolonego przejścia **i** niedozwolonego (powinno zostać odrzucone) |
-| **Testy parami (pairwise)** | wiele parametrów konfiguracji (przeglądarka × rola × język) | zestaw pokrywający każdą parę wartości zamiast pełnego iloczynu |
-| **Scenariusze / przypadki użycia** | przepływy użytkownika end-to-end | ścieżka główna + alternatywne + błędów |
-| **Zgadywanie błędów** | uzupełnienie powyższych | puste wartości, duplikaty, znaki specjalne, strefy czasowe, współbieżność, podwójne kliknięcie, utrata sieci |
-| **Brzeg stronicowania i izolacji** | listy z limitem strony, dane wielu najemców | liczba wyników równa limitowi strony → sprawdź następną stronę; dane testowe: więcej rekordów niż jedna strona, rekordy drugiego najemcy, przypadek odmowy dostępu; asercja na **całym** zbiorze wyliczonym z niezależnie zasianych danych, nie na statusie i pierwszym wierszu |
+| zakresy lub kategorie wejścia | **klasy równoważności** | jeden przypadek na każdą poprawną i niepoprawną klasę |
+| próg liczbowy | **wartości brzegowe** | na progu, tuż poniżej, tuż powyżej (9 / 10 / 11), plus min, max, zero, pusto |
+| kilka warunków naraz | **tablica decyzyjna** | jedna kolumna na kombinację warunków; niemożliwe kombinacje usuń jawnie |
+| statusy i zdarzenia | **przejścia stanów** | diagram stanów; każde dozwolone przejście, co najmniej jedno niedozwolone, które musi zostać odrzucone, przejścia do samego siebie |
+| wiele parametrów konfiguracji | **pairwise** | każda para wartości pokryta (generator), nie pełny iloczyn |
+| przepływ użytkownika | **scenariusze** | ścieżka główna, alternatywne, ścieżki błędów |
+| dowolne wejście od ludzi lub systemów | **zgadywanie błędów** | pusto, duplikaty, znaki specjalne i Unicode, strefy czasowe i zmiana czasu, współbieżność, podwójny klik, utrata sieci |
+| lista ze stronicowaniem albo wielu najemców | **paginacja i izolacja** | zob. §2 |
 
-## Priorytet — testowanie oparte na ryzyku
-Ryzyko = **wpływ** (pieniądze, dane, bezpieczeństwo, reputacja) × **prawdopodobieństwo** (złożoność, nowość, historia błędów).
-Wysokie ryzyko → więcej technik, niższe poziomy testów, testy mutacyjne; niskie → pojedynczy test ścieżki głównej.
+Przy wysokim ryzyku użyj kilku technik na jedno wymaganie; przy niskim jeden przypadek ścieżki głównej.
 
-## Poziom testu — „jak najniżej, jak najtaniej”
-| Co sprawdzasz | Poziom |
-|---|---|
-| reguła biznesowa, obliczenie, walidacja, przejście stanu | **jednostkowy** (logika domeny, bez frameworka) |
-| współpraca z bazą, kolejką, zewnętrznym API | **integracyjny** (prawdziwe zależności, np. kontenery testowe) |
-| zgodność kontraktu między usługami/frontem a API | **kontraktowy** |
-| komponent UI z interakcją | **komponentowy** (np. przeglądarka w Vitest) |
-| krytyczna ścieżka użytkownika przez cały system | **e2e** (nieliczne) |
-| wygląd | **wizualny** (zrzuty ekranu), dostępność — **automatycznie (axe) + ręcznie** |
-Ten sam przypadek nie powinien być testowany na wszystkich poziomach — wybierz najniższy, który go wiarygodnie sprawdza.
+## 2. Listy, stronicowanie, najemcy
+Test, który tworzy 3 rekordy i sprawdza `200` oraz pierwszą pozycję, prawie niczego nie dowodzi. Dla endpointu listy z limitem strony L:
+- zasiej **więcej niż jedną stronę** (L + 1, np. 51 przy 50 na stronę) i sprawdź następną stronę oraz koniec listy;
+- zasiej **drugiego najemcę** (inną organizację) z własnymi danymi; nic z nich nie może się pojawić;
+- dodaj przypadek odmowy dostępu (użytkownik najemcy B prosi o id najemcy A → 403/404);
+- sprawdzaj **cały zbiór**: id i liczbę wyliczone z niezależnie zasianych danych testowych, nie „status + pierwsza pozycja”,
+  i nigdy z zapytania samej implementacji.
 
-## Format przypadku testowego
-| ID | Wymaganie | Technika | Warunki wstępne | Kroki / wejście | **Oczekiwany wynik** | **Źródło wyniku** | Poziom | Priorytet |
+## 3. Priorytet według ryzyka
+Ryzyko = wpływ × prawdopodobieństwo. Wysokie ryzyko: więcej technik, więcej przypadków na niższych poziomach, testy mutacyjne
+tego modułu (qa-spec-first-testing). Niskie ryzyko: jeden test ścieżki głównej. Zapisz ryzyko przy przypadku, żeby było widać kolejność pracy.
+
+## 4. Wybierz poziom
+Najniższy poziom, który sprawdza przypadek wiarygodnie i tanio:
+- reguła, obliczenie, walidacja, przejście stanu → **jednostkowy**;
+- baza danych, kolejka, zewnętrzne API → **integracyjny** z prawdziwymi zależnościami (kontenery), nie mocki;
+- umowa między usługami → testy **kontraktowe**;
+- interaktywny komponent UI → poziom **komponentu** (tryb przeglądarki tool-vitest);
+- kilka krytycznych ścieżek użytkownika → **e2e** (tool-playwright), nieliczne, nie każda reguła;
+- wygląd → porównanie **wizualne**;
+- dostępność → automatyczny skan plus ręczne przejście klawiaturą i czytnikiem ekranu.
+Nie testuj tego samego przypadku na każdym poziomie. Maszynę stanów testuje się jednostkowo, najniżej; e2e pokrywa jedną–dwie szczęśliwe ścieżki.
+
+## 5. Format przypadku
+| ID | Wymaganie | Technika | Warunki wstępne | Wejście | Oczekiwany | Źródło wyniku | Poziom | Priorytet |
 |---|---|---|---|---|---|---|---|---|
-| TC-014 | H1-AC2 | wartości brzegowe | koszyk pusty | 10 szt. × 20,00 zł | 190,00 zł (rabat 5%) | requirements.md: „od 10 sztuk włącznie 5%” | jednostkowy | H |
-Kolumna **Źródło wyniku** jest obowiązkowa (qa-spec-first-testing). Brak źródła = otwarte pytanie, nie zgadywanie.
 
-## Wymagania niefunkcjonalne (minimum)
-- **Dostępność**: automatyczny skan (axe) + ręcznie klawiatura, fokus, czytnik ekranu dla kluczowych ścieżek.
-- **Wydajność**: test dymny czasów odpowiedzi dla scenariuszy (H,H) z arch-quality-attributes.
-- **Bezpieczeństwo**: walidacja wejścia, autoryzacja per zasób (test na 403 dla cudzego zasobu), brak danych wrażliwych w odpowiedziach.
+**Źródło oczekiwanego wyniku** jest obowiązkowe: id kryterium, cytat, ręczne wyliczenie. Puste → otwarte pytanie do właściciela
+wymagania. Id przypadków `TC-014`, odwołania do wymagań jak `H1-AC2` albo `US-02/AC-3`. Plan trafia do
+`docs/project/05-plan/test-plan.md` (szablon `test-plan` z core-project-record).
 
-Strategia i plan testów (weryfikacja vs walidacja, czarna/biała/szara skrzynka, dymne, sanity, regresja, UAT, model V
-i praca zwinna, kryteria wejścia i wyjścia, raport z testów, analiza ucieczek defektów): `references/test-strategy-and-plan.md`.
-Testy wydajnościowe: qa-performance-testing.
-Aplikacja z AI (narzędzia modelu, integracje, text-to-SQL): poza ewaluacjami modelu dziewięć klas awarii, które nie
-są winą modelu, z testem do każdej — `references/ai-application-beyond-the-model.md`.
+## 6. Minimalne sprawdzenie niefunkcjonalne
+- **Dostępność**: axe (albo skaner stosu) na kluczowych ekranach plus ręczna nawigacja klawiaturą i czytnik ekranu.
+- **Wydajność**: smoke test scenariuszy wysokiego ryzyka (czas odpowiedzi przy umiarkowanym obciążeniu); prawdziwe testy obciążeniowe → qa-performance-testing.
+- **Bezpieczeństwo**: walidacja wejścia na granicach; autoryzacja per zasób, w tym **403 na cudzy zasób**;
+  brak wrażliwych danych w odpowiedziach, błędach i logach. Zagrożenia w głąb → arch-threat-modeling, be-auth-security.
 
-## Wynik
-`docs/project/05-plan/test-plan.md` (szablon core-project-record): zakres, ryzyka, techniki, poziomy, przypadki (lub link do
-pliku z przypadkami), kryteria wejścia/wyjścia, podział na testy automatyczne i ręczne.
+## 7. Poza jedną zmianą — referencje
+- **Plan testów, raport, kryteria wyjścia, analiza ucieczek** (model V, weryfikacja a walidacja, smoke/sanity/regresja/UAT,
+  sekcje planu wg ISO/IEC/IEEE 29119-3, raport zaczynający się od decyzji, dlaczego defekt uciekł na produkcję):
+  `references/test-strategy-and-plan.md`.
+- **Strategia testów dla całego projektu** bez testów albo z nielicznymi (wejścia, mapa ryzyk, odpowiedź na ryzyko, fazy wdrażania,
+  bramki jakości, czego świadomie nie testujemy): `references/project-test-strategy.md`; dokument powstaje z
+  `templates/test-strategy.md` w `docs/project/05-plan/test-strategy.md`.
+- **Funkcje oparte na AI** — klasy awarii po stronie aplikacji: `references/ai-application-beyond-the-model.md`
+  (sama jakość odpowiedzi → ai-evals).
 
-Projekt bez testów albo z testami „tam, gdzie łatwo”: najpierw **strategia testów projektu**
-(`docs/project/05-plan/test-strategy.md`, szablon `templates/test-strategy.md`, procedura
-`references/project-test-strategy.md`) — wywiad z człowiekiem, mapa ryzyk ze źródłami, fazy wdrażania, bramki,
-przepisy, wykluczenia. Plan testów zmiany korzysta z niej i na końcu ją uzupełnia.
+## Przykład
+Wymaganie H1-AC2: „Rabat 5% od 10 sztuk, 10% od 50 sztuk, tylko konta firmowe”.
+
+Granice: 9 / 10 / 11 oraz 49 / 50 / 51. Tablica decyzyjna:
+
+| Warunek | R1 | R2 | R3 | R4 |
+|---|---|---|---|---|
+| konto firmowe | tak | tak | tak | nie |
+| ilość | < 10 | 10–49 | ≥ 50 | dowolna |
+| rabat | 0% | 5% | 10% | 0% |
+
+| ID | Wymaganie | Technika | Wejście | Oczekiwany | Źródło wyniku | Poziom | Priorytet |
+|---|---|---|---|---|---|---|---|
+| TC-011 | H1-AC2 | brzegowa | firma, 9 × 100,00 | 900,00 | H1-AC2, wyliczenie ręczne | jednostkowy | wysoki |
+| TC-012 | H1-AC2 | brzegowa | firma, 10 × 100,00 | 950,00 | H1-AC2, 1000 × 0,95 | jednostkowy | wysoki |
+| TC-013 | H1-AC2 | brzegowa | firma, 50 × 100,00 | 4500,00 | H1-AC2, 5000 × 0,90 | jednostkowy | wysoki |
+| TC-014 | H1-AC2 | tablica decyzyjna R4 | prywatny, 50 × 100,00 | 5000,00 | H1-AC2 „tylko firmowe” | jednostkowy | wysoki |
+| TC-015 | H1-AC2 | zgadywanie błędów | firma, 0 sztuk | błąd walidacji | otwarte pytanie do PO — brak w H1 | jednostkowy | średni |
+
+Plus TC-016..TC-018 dla 11, 49 i 51 oraz najwyżej jedna ścieżka e2e (zamówienie z widocznym rabatem).
+
+## Źródła
+- ISTQB Certified Tester Foundation Level Syllabus v4.0 (2023), rozdział 4 — techniki czarnej skrzynki (podział na klasy
+  równoważności, analiza wartości brzegowych, tablice decyzyjne, testowanie przejść stanów), techniki oparte na doświadczeniu
+  (zgadywanie błędów), testowanie oparte na ryzyku.
+- ISO/IEC/IEEE 29119-4:2021 — techniki testowania, w tym testowanie par (kombinatoryczne); ISO/IEC/IEEE 29119-3:2021 — dokumentacja testów.
