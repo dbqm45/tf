@@ -31,6 +31,38 @@
       ]
     },
     {
+      "id": "retry-platnosc-en",
+      "expect": "trigger",
+      "prompt": "We are adding automatic request retries on network errors in our SPA, including for payment POSTs; the API can return 409 and 422. How should we set this up? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "idempoten"
+          ],
+          [
+            "backoff",
+            "jitter"
+          ],
+          [
+            "409|422"
+          ],
+          [
+            "wynik\\w* biznesow",
+            "business (outcome|result)",
+            "shared/api",
+            "jedn\\w+ (warstw|klient)\\w*",
+            "single (layer|client)",
+            "one (layer|client)",
+            "business outcomes?"
+          ]
+        ]
+      },
+      "accept": [
+        "be-api-design",
+        "fe-web-platform"
+      ]
+    },
+    {
       "id": "rsc-cve",
       "expect": "trigger",
       "prompt": "Mamy produkcyjną aplikację Next.js z React Server Components i właśnie wyszła krytyczna podatność we frameworku. Czy to problem tylko frontendu i jak szybko reagować? Odpowiedz zwięźle.",

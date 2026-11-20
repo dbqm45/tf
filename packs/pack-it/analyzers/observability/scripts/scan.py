@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-Moduł `observability` tf analyze, piętro 0 (bez modelu): podstawy obserwowalności usług HTTP (ops-observability).
+The `observability` module of tf analyze, tier 0 (no model): the basics of HTTP service observability (ops-observability).
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines on stdout (contract: .tf/factory/analyze.py)
 
-Reguły:
-- `no-health-endpoint` — w repozytorium jest punkt startowy usługi (Express, Fastify, Koa, NestJS, Hono, FastAPI,
-  Flask, Spring Boot), ale nigdzie nie ma trasy `health`/`healthz`/`livez`/`readyz`/`ready`/`ping`, Actuatora ani
-  `@nestjs/terminus` — orkiestrator nie odróżni usługi żywej od zawieszonej; zgłaszane przy punkcie startowym;
-- `no-correlation-id` — usługa loguje, ale nigdzie nie ma identyfikatora żądania ani śledzenia (`x-request-id`,
-  `correlation id`, `traceparent`, OpenTelemetry, `pino-http`, MDC) — logów jednego żądania nie da się połączyć;
-- `print-instead-of-logger` — `console.*` albo `print` w pliku usługi (importuje framework HTTP albo jest route
-  handlerem Next.js) zamiast loggera z poziomem i polami;
-- `swallowed-error` — pusta obsługa błędu bez komentarza: w JS/TS każdy pusty `catch {}` i `.catch(() => {})`,
-  w Pythonie, Javie i Kotlinie tylko szeroki wyjątek (gołe `except`, `Exception`, `BaseException`, `Throwable`) —
-  błąd znika bez logu i bez ponowienia (pusty blok z komentarzem i wąski, nazwany wyjątek to świadoma decyzja).
-Sprawdzenie na poziomie repozytorium (trasa health, identyfikator) obejmuje wszystkie usługi naraz. Testy, skrypty
-w `scripts/`, dokumentacja i fixtures są pomijane. Znalezienie = „sprawdź”. Tylko biblioteka standardowa.
+Rules:
+- `no-health-endpoint` — the repository has a service entry point (Express, Fastify, Koa, NestJS, Hono, FastAPI,
+  Flask, Spring Boot), but nowhere is there a `health`/`healthz`/`livez`/`readyz`/`ready`/`ping` route, Actuator or
+  `@nestjs/terminus` — the orchestrator cannot tell a live service from a hung one; reported at the entry point;
+- `no-correlation-id` — the service logs, but nowhere is there a request or trace identifier (`x-request-id`,
+  `correlation id`, `traceparent`, OpenTelemetry, `pino-http`, MDC) — the logs of one request cannot be joined;
+- `print-instead-of-logger` — `console.*` or `print` in a service file (it imports an HTTP framework or is a Next.js route
+  handler) instead of a logger with a level and fields;
+- `swallowed-error` — empty error handling without a comment: in JS/TS every empty `catch {}` and `.catch(() => {})`,
+  in Python, Java and Kotlin only a broad exception (bare `except`, `Exception`, `BaseException`, `Throwable`) —
+  the error disappears without a log and without a retry (an empty block with a comment and a narrow, named exception are a deliberate decision).
+The repository-level check (health route, identifier) covers all services at once. Tests, scripts
+in `scripts/`, documentation and fixtures are skipped. A finding = "check it". Standard library only.
 """
 from __future__ import annotations
 
@@ -28,7 +28,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) has no "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -61,7 +61,7 @@ LOGGING = re.compile(r"""\b(?:winston|pino|bunyan|log4js|structlog|loguru|slf4j|
                      r"""\blogger\.(?:info|warn|error|debug)\s*\(""", re.M)
 PRINT = re.compile(r"^\s*(?:console\.(?:log|info|debug|warn|error|trace)|print)\s*\(", re.M)
 EMPTY_CATCH = re.compile(r"\bcatch\s*(?:\([^)]*\))?\s*\{\s*\}|\.catch\s*\(\s*(?:\(\s*\w*\s*\)|\w+)\s*=>\s*\{\s*\}\s*\)")
-# Java/Kotlin i Python: tylko szeroki wyjątek — pusta obsługa wąskiego, nazwanego wyjątku to zwykle świadomy idiom.
+# Java/Kotlin and Python: only a broad exception — empty handling of a narrow, named exception is usually a deliberate idiom.
 JAVA_EMPTY_CATCH = re.compile(r"\bcatch\s*\(\s*(?:final\s+)?(?:java\.lang\.)?(?:Exception|Throwable|RuntimeException)"
                               r"\s+\w+\s*\)\s*\{\s*\}|\bcatch\s*\(\s*\w+\s*:\s*(?:Exception|Throwable)\s*\)\s*\{\s*\}")
 PY_EXCEPT_PASS = re.compile(r"^(\s*)except(?:\s*\(?\s*(?:Exception|BaseException)\s*\)?(?:\s+as\s+\w+)?)?[ \t]*:[ \t]*"

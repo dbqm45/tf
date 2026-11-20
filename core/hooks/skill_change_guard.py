@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Pilnuje bramki jakości skilli (.tf/factory/skill_gate.py).
+Guards the skill quality gate (.tf/factory/skill_gate.py).
 
-PostToolUse (Edit|Write): po zmianie pliku skilla (`.claude/skills/<skill>/…`) albo jego scenariuszy
-(`…/skill_evals/<skill>.json`) dopisuje do kontekstu przypomnienie o bramce — raz na skill w sesji.
-Stop: jeśli w tej sesji zmieniono skill, a jego treść różni się od ostatniej zaliczonej bramki, pokazuje człowiekowi
-listę (komunikat, nie blokada).
+PostToolUse (Edit|Write): after a skill file (`.claude/skills/<skill>/…`) or its scenarios
+(`…/skill_evals/<skill>.json`) changes, appends a gate reminder to the context — once per skill per session.
+Stop: if a skill was changed in this session and its content differs from the last passed gate, shows the human
+the list (a message, not a block).
 
-Wyłączenie: CLAUDE_SKILL_GATE=0. Tylko biblioteka standardowa; błąd nigdy nie blokuje pracy.
+Disable: CLAUDE_SKILL_GATE=0. Standard library only; an error never blocks work.
 """
 from __future__ import annotations
 
@@ -20,8 +20,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 
@@ -108,7 +108,7 @@ def main() -> int:
             on_stop(data)
         else:
             on_edit(data)
-    except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+    except Exception as e:  # the hook does not interrupt the session; the error goes to the log
         record_error("skill_change_guard", e)
     return 0
 

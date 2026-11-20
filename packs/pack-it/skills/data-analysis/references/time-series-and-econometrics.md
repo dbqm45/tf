@@ -1,53 +1,53 @@
-# Szeregi czasowe, prognozowanie i ekonometria
+# Time series, forecasting and econometrics
 
-## Szeregi czasowe
-- **Najpierw wykres**: trend, sezonowość (dzienna, tygodniowa, roczna), święta i zdarzenia jednorazowe, zmiany
-  poziomu (nowy cennik, awaria zbierania danych). Dekompozycja na trend, sezonowość i resztę.
-- **Stacjonarność** (stała średnia i wariancja w czasie) — wymagana przez klasyczne modele: test ADF lub KPSS,
-  różnicowanie, logarytm przy wariancji rosnącej z poziomem. Funkcje autokorelacji (ACF, PACF) pokazują zależność
-  od wartości z przeszłości.
-- **Modele od najprostszych** (każdy kolejny musi pobić poprzedni):
-  1. naiwny (jutro = dziś) i sezonowy naiwny (ten sam dzień tydzień temu) — **obowiązkowy punkt odniesienia**;
-  2. wygładzanie wykładnicze (ETS, Holt-Winters) — trend i sezonowość;
-  3. ARIMA / SARIMA — autoregresja, różnicowanie, średnia ruchoma, z sezonowością;
-  4. regresja z cechami opóźnień, kalendarza i zmiennych zewnętrznych (np. gradient boosting) — gdy wiele szeregów
-     i dużo czynników.
-- **Walidacja w czasie**: backtesting z przesuwanym punktem startu (trenuj do dnia t, prognozuj t+1…t+h, przesuń),
-  nigdy losowy podział. Miary: MAE, MASE (porównanie z modelem naiwnym — odporna na skalę), sMAPE; MAPE zawodzi przy
-  wartościach bliskich zera.
-- Prognoza zawsze z **przedziałem** (np. 80% i 95%) — decyzje o zapasach i pojemności zależą od niepewności,
-  nie od punktu.
+## Time series
+- **A chart first**: trend, seasonality (daily, weekly, yearly), holidays and one-off events, level
+  shifts (a new price list, a data collection failure). Decomposition into trend, seasonality and remainder.
+- **Stationarity** (a constant mean and variance over time) — required by classical models: the ADF or KPSS test,
+  differencing, a logarithm when the variance grows with the level. Autocorrelation functions (ACF, PACF) show the dependence
+  on past values.
+- **Models from the simplest** (each next one must beat the previous):
+  1. naive (tomorrow = today) and seasonal naive (the same day a week ago) — **a mandatory baseline**;
+  2. exponential smoothing (ETS, Holt-Winters) — trend and seasonality;
+  3. ARIMA / SARIMA — autoregression, differencing, a moving average, with seasonality;
+  4. regression with lag, calendar and external variable features (e.g. gradient boosting) — when there are many series
+     and many factors.
+- **Validation in time**: backtesting with a rolling origin (train up to day t, forecast t+1…t+h, move on),
+  never a random split. Measures: MAE, MASE (a comparison with the naive model — scale-robust), sMAPE; MAPE fails with
+  values close to zero.
+- A forecast always with an **interval** (e.g. 80% and 95%) — decisions about stock and capacity depend on uncertainty,
+  not on the point.
 
-## Ekonometria — zależności przyczynowe z danych obserwacyjnych
-- **Regresja metodą najmniejszych kwadratów**: współczynnik to zmiana wyniku przy zmianie zmiennej o jednostkę,
-  **przy pozostałych stałych**. Sprawdź założenia; przy niejednorodnej wariancji reszt — odporne błędy standardowe;
-  przy danych grupowanych (klienci, sklepy) — błędy klastrowane.
-- **Endogeniczność** (zmienna objaśniająca zależy od wyniku lub od pominiętego czynnika) daje obciążone wyniki.
-  Narzędzia:
-  - **różnica w różnicach** — porównanie zmiany w grupie objętej interwencją ze zmianą w grupie kontrolnej, przy
-    założeniu równoległych trendów przed interwencją (sprawdź na wykresie);
-  - **efekty stałe** — eliminacja stałych cech jednostek w danych panelowych;
-  - **zmienne instrumentalne** — czynnik wpływający na wynik tylko przez badaną zmienną (trudne do uzasadnienia);
-  - **nieciągłość regresji** — porównanie tuż nad i tuż pod progiem (np. próg darmowej dostawy).
-  Gdy eksperyment jest możliwy, jest lepszy niż każda z tych metod (`advanced-experiments.md`).
-- **Przyczynowość krok po kroku (decyzja z danych obserwacyjnych):**
-  1. **Graf przyczynowy (DAG)** z ekspertem domeny. Czynnik zakłócający kontrolujesz; mediatora nie (blokuje badany
-     efekt), zderzacza (collider) też nie (wprowadza obciążenie).
-  2. **Metoda:** wagi skłonności (propensity), zmienne instrumentalne, podwójne ML z cross-fittingiem, lasy przyczynowe.
-  3. **ATE czy CATE:** „czy działa średnio” (ATE) a „dla kogo działa” (CATE, uplift). Rabat dajesz tym, których
-     zachowanie zmienia, a nie tym, którzy i tak zostaną albo i tak odejdą. Model churnu mówi „kto odejdzie”;
-     decyzja potrzebuje „czyje odejście zmieni rabat”.
-  4. **Próby obalenia:** losowa wspólna przyczyna, placebo (fałszywa interwencja), podzbiór danych. Wynik, który
-     zmienia dodanie losowej zmiennej, jest kruchy.
-  Biblioteki: DoWhy (graf, identyfikacja, obalanie), EconML (CATE), CausalML (uplift) — wersję i API sprawdzasz przed
-  użyciem (G. Nguyen, „Causal Machine Learning…”, 2026-09-22).
-- **Dopasowanie rozkładu** (czasy obsługi, wielkości zamówień — do symulacji i planowania pojemności): estymacja
-  największej wiarygodności, ocena wykresem kwantyl–kwantyl i testem zgodności; rozkłady z długim ogonem
-  (log-normalny, Pareto) zamiast normalnego dla kwot i czasów.
+## Econometrics — causal relationships from observational data
+- **Ordinary least squares regression**: a coefficient is the change in the outcome for a one-unit change in the variable,
+  **with the others held constant**. Check the assumptions; with heteroscedastic residuals — robust standard errors;
+  with grouped data (customers, shops) — clustered errors.
+- **Endogeneity** (an explanatory variable depends on the outcome or on an omitted factor) gives biased results.
+  Tools:
+  - **difference-in-differences** — comparing the change in the group exposed to the intervention with the change in a control group, under
+    the assumption of parallel trends before the intervention (check on a chart);
+  - **fixed effects** — eliminating the constant characteristics of units in panel data;
+  - **instrumental variables** — a factor affecting the outcome only through the studied variable (hard to justify);
+  - **regression discontinuity** — a comparison just above and just below a threshold (e.g. the free-delivery threshold).
+  When an experiment is possible, it is better than any of these methods (`advanced-experiments.md`).
+- **Causality step by step (a decision from observational data):**
+  1. **A causal graph (DAG)** with a domain expert. You control for a confounder; not for a mediator (it blocks the studied
+     effect), nor for a collider (it introduces bias).
+  2. **Method:** propensity weights, instrumental variables, double ML with cross-fitting, causal forests.
+  3. **ATE or CATE:** "does it work on average" (ATE) versus "for whom does it work" (CATE, uplift). You give a discount to those whose
+     behaviour it changes, not to those who will stay anyway or leave anyway. A churn model says "who will leave";
+     the decision needs "whose leaving a discount will change".
+  4. **Refutation attempts:** a random common cause, a placebo (a fake intervention), a data subset. A result that
+     changes when a random variable is added is fragile.
+  Libraries: DoWhy (graph, identification, refutation), EconML (CATE), CausalML (uplift) — you check the version and API before
+  use (G. Nguyen, "Causal Machine Learning…", 2026-09-22).
+- **Distribution fitting** (service times, order sizes — for simulation and capacity planning): maximum likelihood
+  estimation, assessment with a quantile–quantile plot and a goodness-of-fit test; long-tailed distributions
+  (log-normal, Pareto) instead of the normal for amounts and times.
 
-## Źródła
-- R. Hyndman, G. Athanasopoulos, *Forecasting: Principles and Practice* (wydanie online); J. Angrist, J.-S. Pischke,
+## Sources
+- R. Hyndman, G. Athanasopoulos, *Forecasting: Principles and Practice* (online edition); J. Angrist, J.-S. Pischke,
   *Mostly Harmless Econometrics*
 - [roadmap.sh — AI and Data Scientist](https://roadmap.sh/ai-data-scientist) (econometrics, regression, time series,
   ARIMA, fitting distributions)
-Opisane własnymi słowami.
+Described in our own words.

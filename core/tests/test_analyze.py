@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy `.tf/factory/analyze.py` (tf init, tf analyze): szkielet .tf/, moduły piętra 0, stabilne id ustaleń, raport ze
-scalaniem checkboxów, rejestr, cache po commicie. Plan: docs/plans/2026-11-08-krok-1-tf-analyze-rdzen.md."""
+"""Tests of `.tf/factory/analyze.py` (tf init, tf analyze): the .tf/ skeleton, floor-0 modules, stable finding ids, a report with
+merged checkboxes, the register, the cache after a commit. Plan: docs/plans/2026-11-08-krok-1-tf-analyze-rdzen.md."""
 import json
 import os
 import shutil
@@ -13,7 +13,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory
 ANALYZE = ROOT / ".tf" / "factory" / "analyze.py"
 TF = ROOT / ".tf" / "factory" / "tf.py"
 
-# Moduł testowy: zgłasza każdą linię z "TODO-SEC" w plikach *.py; liczy uruchomienia w pliku obok repo.
+# Test module: reports every line with "TODO-SEC" in *.py files; counts runs in a file next to the repo.
 SCRIPT = r'''import argparse, json, os
 from pathlib import Path
 ap = argparse.ArgumentParser(); ap.add_argument("--root"); ap.add_argument("--files", default="")
@@ -28,9 +28,9 @@ for rel in files:
     for i, line in enumerate(p.read_text().splitlines(), 1):
         if "TODO-SEC" in line:
             sev = "high" if "HIGH" in line else "low"
-            print(json.dumps({"rule": "todo-sec", "title": "Znacznik TODO-SEC", "file": rel, "line": i,
+            print(json.dumps({"rule": "todo-sec", "title": "TODO-SEC marker", "file": rel, "line": i,
                               "snippet": line.strip(), "severity": sev, "confidence": 0.9,
-                              "evidence": line.strip(), "basis": "reguła testowa", "suggestion": "usuń znacznik"}))
+                              "evidence": line.strip(), "basis": "test rule", "suggestion": "remove the marker"}))
 '''
 
 
@@ -49,7 +49,7 @@ def make_module(base: Path, name="sec", prefix="SEC", applies=None, script=SCRIP
     d = base / name
     (d / "scripts").mkdir(parents=True)
     (d / "scripts" / "scan.py").write_text(script)
-    lines = [f"name: {name}", f"prefix: {prefix}", f"title: Moduł {name}", "description: moduł testowy",
+    lines = [f"name: {name}", f"prefix: {prefix}", f"title: Module {name}", "description: test module",
              "version: 1.0.0", "tier0:", "  script: scripts/scan.py"]
     if applies:
         lines += ["applies_when:", "  files_any:", f"    - '{applies}'"]
@@ -61,7 +61,7 @@ def make_project(t: Path, mode="private") -> Path:
     repo = t / "proj"
     (repo / ".claude").mkdir(parents=True)
     (repo / ".claude" / "factory-manifest.json").write_text(json.dumps({"mode": mode}))
-    (repo / ".tf" / "factory").mkdir(parents=True)   # silnik fabryki bez modułów nakładek — testy rdzenia nie zależą od zestawu nakładek
+    (repo / ".tf" / "factory").mkdir(parents=True)   # the factory engine without pack modules — core tests do not depend on the set of packs
     for item in (ROOT / ".tf" / "factory").iterdir():
         if item.name != "analyzers":
             (repo / ".tf" / "factory" / item.name).symlink_to(item)
@@ -70,7 +70,7 @@ def make_project(t: Path, mode="private") -> Path:
         (repo / ".claude" / "skills").mkdir()
         (repo / ".claude" / "skills" / "core-grounding").symlink_to(sk)
     (repo / "src").mkdir()
-    (repo / "src" / "a.py").write_text("x = 1\n# TODO-SEC HIGH token\n# TODO-SEC drobne\n")
+    (repo / "src" / "a.py").write_text("x = 1\n# TODO-SEC HIGH token\n# TODO-SEC minor\n")
     (repo / "src" / "b.py").write_text("y = 2\n")
     git(repo, "init", "-q", "-b", "main")
     (repo / ".gitignore").write_text(".tf/\n.claude/\n")
@@ -86,7 +86,7 @@ def commit(repo, msg="zmiana"):
 
 def main() -> int:
     if not shutil.which("git"):
-        print("✓ 0/0 testów analyze (brak git — pominięto)")
+        print("✓ 0/0 analyze tests (no git — skipped)")
         return 0
     fails, total = [], 0
 
@@ -115,26 +115,26 @@ def main() -> int:
         check(r.returncode == 0 and (tfd / "config" / "config.yaml").is_file()
               and all((tfd / d / "README.md").is_file() for d in dirs),
               f"A-1: init tworzy .tf/ z config/config.yaml i README w katalogach: {r.stdout}{r.stderr}")
-        check("reports" in r.stdout and "register" in r.stdout, f"A-1: init wypisuje mapę .tf/: {r.stdout}")
+        check("reports" in r.stdout and "register" in r.stdout, f"A-1: init prints the .tf/ map: {r.stdout}")
         (tfd / "config" / "config.yaml").write_text("analyze:\n  top: 1\n")
         run("init", cwd=repo)
         check((tfd / "config" / "config.yaml").read_text() == "analyze:\n  top: 1\n", "A-1: drugi init nie nadpisuje config.yaml")
         (tfd / "config" / "config.yaml").write_text("analyze:\n  top: 10\n")
 
-        # A-2 git: prywatna → exclude, zespołowa → .gitignore
+        # A-2 git: private → exclude, team → .gitignore
         excl = (repo / ".git" / "info" / "exclude").read_text() if (repo / ".git" / "info" / "exclude").exists() else ""
         check(".tf/" in excl, f"A-2: instalacja prywatna → .tf/ w .git/info/exclude: {excl!r}")
         shared = make_project(t / "s", mode="shared")
         run("init", cwd=shared)
         gi = (shared / ".gitignore").read_text()
         check(all(f".tf/{d}/" in gi for d in ("cache", "logs", "runs", "backup")) and ".tf/reports" not in gi,
-              f"A-2: instalacja zespołowa → .gitignore dostaje tylko katalogi poza gitem: {gi!r}")
+              f"A-2: a team installation → .gitignore gets only the directories outside git: {gi!r}")
 
         # A-3 list
         r = run("list", cwd=repo)
-        check(r.returncode == 0 and "no analysis modules" in r.stdout.lower(), f"A-3: list bez modułów mówi to wprost: {r.stdout}")
+        check(r.returncode == 0 and "no analysis modules" in r.stdout.lower(), f"A-3: list without modules says so explicitly: {r.stdout}")
         r = run("list", cwd=repo, env=env)
-        check("sec" in r.stdout and "moduł testowy" in r.stdout, f"A-3: list pokazuje moduł z opisem: {r.stdout}")
+        check("sec" in r.stdout and "test module" in r.stdout, f"A-3: list shows the module with its description: {r.stdout}")
 
         # A-4 run: raport, json, rejestr; id stabilne; dedupe
         r = run("run", cwd=repo, env=env)
@@ -142,36 +142,36 @@ def main() -> int:
         data = json.loads((tfd / "reports" / "sec.json").read_text()) if (tfd / "reports" / "sec.json").exists() else {}
         findings = data.get("findings", [])
         check(r.returncode == 0 and rep.is_file() and len(findings) == 2,
-              f"A-4: run tworzy raport i pełną listę (2 ustalenia): {r.stdout}{r.stderr} {findings}")
+              f"A-4: run creates a report and the full list (2 findings): {r.stdout}{r.stderr} {findings}")
         ids = sorted(f["id"] for f in findings)
         check(all(i.startswith("SEC-") and len(i) == 10 for i in ids), f"A-4: id w formacie SEC-<6 hex>: {ids}")
         reg = [json.loads(x) for x in (tfd / "register" / "items.jsonl").read_text().splitlines()] \
             if (tfd / "register" / "items.jsonl").exists() else []
         check(sorted(x["id"] for x in reg) == ids and all(x["status"] == "open" and x["kind"] == "finding" for x in reg),
-              f"A-4: rejestr ma pozycję na ustalenie, status open: {reg}")
+              f"A-4: the register has an entry per finding, status open: {reg}")
         text = rep.read_text() if rep.is_file() else ""
         check(text.splitlines()[1].startswith("Verdict: NEEDS_FIX") if len(text.splitlines()) > 1 else False,
               f"A-4: druga linia raportu to werdykt: {text[:200]}")
         check("## Scope" in text and "floor 0" in text and "Analysis history" in text,
-              f"A-4: raport ma zakres (piętra) i historię: {text}")
-        (repo / "src" / "a.py").write_text("\n\nx = 1\n# TODO-SEC HIGH token\n# TODO-SEC drobne\n# TODO-SEC drobne\n")
+              f"A-4: the report has the scope (floors) and the history: {text}")
+        (repo / "src" / "a.py").write_text("\n\nx = 1\n# TODO-SEC HIGH token\n# TODO-SEC minor\n# TODO-SEC minor\n")
         commit(repo)
         run("run", cwd=repo, env=env)
         data = json.loads((tfd / "reports" / "sec.json").read_text())
         check(sorted(f["id"] for f in data["findings"]) == ids,
-              f"A-4: przesunięcie linii nie zmienia id, powtórzona linia nie dubluje ustalenia: {data['findings']}")
+              f"A-4: a line shift does not change the id, a repeated line does not duplicate the finding: {data['findings']}")
 
         # A-5 ranking i top
         (tfd / "config" / "config.yaml").write_text("analyze:\n  top: 1\n")
         run("run", cwd=repo, env={**env, "TF_ANALYZE_NO_CACHE": "1"})
         text = rep.read_text()
         ust = text.split("## Findings", 1)[1].split("##", 1)[0] if "## Findings" in text else ""
-        check("HIGH" in ust and "drobne" not in ust, f"A-5: w ustaleniach top 1 — najwyższa waga: {ust}")
+        check("HIGH" in ust and "minor" not in ust, f"A-5: in the top 1 findings — the highest severity: {ust}")
         check(len(json.loads((tfd / "reports" / "sec.json").read_text())["findings"]) == 2,
-              "A-5: pełna lista w .json mimo top 1")
+              "A-5: the full list in .json despite top 1")
         (tfd / "config" / "config.yaml").write_text("analyze:\n  top: 10\n")
 
-        # A-6 scalanie checkboxów
+        # A-6 merging checkboxes
         hi = next(f["id"] for f in data["findings"] if "HIGH" in f["snippet"])
         lo = next(f["id"] for f in data["findings"] if "HIGH" not in f["snippet"])
         text = rep.read_text()
@@ -179,36 +179,37 @@ def main() -> int:
         text = text.replace(f"- [ ] {lo}", f"- [ ] {lo}", 1)
         lines = text.splitlines()
         idx = next(i for i, l in enumerate(lines) if l.startswith(f"- [x] {hi}"))
-        lines.insert(idx + 1, "  notatka człowieka: naprawione w PR 12")
+        lines.insert(idx + 1, "  human note: fixed in PR 12")
         rep.write_text("\n".join(lines) + "\n")
         (repo / "src" / "a.py").write_text("x = 1\n# TODO-SEC HIGH token\n# TODO-SEC nowe\n")
         commit(repo)
         run("run", cwd=repo, env=env)
         text = rep.read_text()
         act = text.split("## Recommended actions", 1)[1] if "## Recommended actions" in text else ""
-        check(f"- [x] {hi}" in act and "notatka człowieka: naprawione w PR 12" in act,
-              f"A-6: odhaczone i notatka człowieka zostają: {act}")
-        check("still sees" in act, f"A-6: odhaczone, a nadal widoczne → adnotacja: {act}")
+        check(f"- [x] {hi}" in act and "human note: fixed in PR 12" in act,
+              f"A-6: ticked items and the human's note stay: {act}")
+        check("still sees" in act, f"A-6: ticked but still visible → annotation: {act}")
         lo_line = next((l for l in act.splitlines() if lo in l), "")
         check("confirm it" in act.split(lo, 1)[1][:300] if lo in act else False,
-              f"A-6: nieodhaczone, a zniknęło → „potwierdź”: {act}")
+              f"A-6: unticked but gone → 'confirm it': {act}")
         new_ids = [f["id"] for f in json.loads((tfd / "reports" / "sec.json").read_text())["findings"]]
         newid = next(i for i in new_ids if i not in (hi, lo))
-        check(act.index(newid) > act.index(hi), f"A-6: nowe ustalenie na końcu listy: {act}")
+        check(act.index(newid) > act.index(hi), f"A-6: the new finding at the end of the list: {act}")
         reg = {x["id"]: x for x in map(json.loads, (tfd / "register" / "items.jsonl").read_text().splitlines())}
         check(reg[hi]["status"] == "resolved", f"A-6: odhaczenie w raporcie → resolved w rejestrze: {reg[hi]}")
         check(newid in reg and reg[newid]["status"] == "open", f"A-6: nowe ustalenie w rejestrze: {reg}")
-        # A-6b: raport sprzed 14.x (polskie nagłówki) — odhaczenia i historia przechodzą do nowego raportu
+        # A-6b: ticks and history are read from the previous report; the Polish headings from before 14.x are not (the 19.0.0 migration rewrites them)
         import importlib.util
         spec = importlib.util.spec_from_file_location("ctf_analyze_t", ANALYZE)
         an = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(an)
         old = ("## Rekomendowane działania\n\n- [x] SEC-abc123 — x (a.py:1) — high\n  notatka\n\n"
                "## Historia analiz\n\n- 2026-11-01 · abc1234 · ustaleń: 1\n")
-        items = an.parse_actions(old)
+        new = old.replace("## Rekomendowane działania", "## Recommended actions").replace("## Historia analiz", "## Analysis history")
+        items = an.parse_actions(new)
         check(len(items) == 1 and items[0]["checked"] and items[0]["notes"] == ["  notatka"]
-              and an.history(old) == ["- 2026-11-01 · abc1234 · ustaleń: 1"],
-              f"A-6b: polskie nagłówki starego raportu czytane: {items} {an.history(old)}")
+              and an.history(new) == ["- 2026-11-01 · abc1234 · ustaleń: 1"] and an.parse_actions(old) == [] and an.history(old) == [],
+              f"A-6b: the report headings are read in English only: {items} {an.history(new)}")
 
         # A-7 cache i --since
         counter.write_text("0")
@@ -221,20 +222,20 @@ def main() -> int:
         data = json.loads((tfd / "reports" / "sec.json").read_text())
         files = sorted({f["file"] for f in data["findings"]})
         check(r.returncode == 0 and files == ["src/a.py", "src/b.py"],
-              f"A-7: --since bada zmienione pliki i zachowuje ustalenia pozostałych: {files} {r.stdout}{r.stderr}")
+              f"A-7: --since examines the changed files and keeps the findings of the rest: {files} {r.stdout}{r.stderr}")
 
-        # A-8 odporność i applies_when
+        # A-8 resilience and applies_when
         bad = t / "bad"
-        make_module(bad, name="zly", prefix="ZLY", script="import sys\nprint('nie json')\nsys.exit(3)\n")
+        make_module(bad, name="zly", prefix="ZLY", script="import sys\nprint('not json')\nsys.exit(3)\n")
         make_module(bad, name="ui", prefix="UI", applies="**/*.tsx")
         r = run("run", cwd=repo, env={**env, "TF_ANALYZERS_PATH": f"{mods}{os.pathsep}{bad}", "TF_ANALYZE_NO_CACHE": "1"})
         zly = (tfd / "reports" / "zly.md").read_text() if (tfd / "reports" / "zly.md").exists() else ""
         check(r.returncode == 1 and "module failed" in zly and (tfd / "reports" / "sec.md").is_file(),
-              f"A-8: błąd modułu w raporcie, pozostałe działają, kod 1: {r.returncode} {zly} {r.stdout}")
+              f"A-8: a module error in the report, the others work, code 1: {r.returncode} {zly} {r.stdout}")
         overview = (tfd / "reports" / "README.md").read_text() if (tfd / "reports" / "README.md").exists() else ""
-        check("ui" in overview and "skipped" in overview, f"A-8: moduł bez pasujących plików pominięty z powodem: {overview}")
+        check("ui" in overview and "skipped" in overview, f"A-8: a module without matching files skipped with a reason: {overview}")
         r = run("run", "--only", "sec", cwd=repo, env={**env, "TF_ANALYZERS_PATH": f"{mods}{os.pathsep}{bad}"})
-        check(r.returncode == 0, f"A-8: --only ogranicza moduły: {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"A-8: --only limits the modules: {r.stdout}{r.stderr}")
 
         # A-9 tf.py
         r = subprocess.run([sys.executable, str(TF), "analyze", "--list"], cwd=repo, capture_output=True, text=True,
@@ -248,7 +249,7 @@ def main() -> int:
         if cc.is_file():
             r = subprocess.run([sys.executable, str(cc), str(rep)], capture_output=True, text=True)
             check(r.returncode == 0, f"A-10: raport przechodzi claims_check: {r.stdout}")
-        # A-11 bramka modułu na zestawie testowym
+        # A-11 the module gate on a test set
         def fixture(mod: Path, case: str, files: dict, expected: list):
             d = mod / "fixtures" / case
             for rel, text in files.items():
@@ -262,22 +263,22 @@ def main() -> int:
         fixture(good, "zle", {"x.py": "# TODO-SEC HIGH\n"}, [{"rule": "todo-sec", "file": "x.py"}])
         fixture(good, "clean", {"y.py": "y = 1\n"}, [])
         noisy = make_module(gm, name="szum", prefix="SZU")
-        fixture(noisy, "clean", {"y.py": "# TODO-SEC drobne\n"}, [])
+        fixture(noisy, "clean", {"y.py": "# TODO-SEC minor\n"}, [])
         make_module(gm, name="bez", prefix="BEZ")
         genv = {"TF_ANALYZERS_PATH": str(gm), "T_COUNTER": str(counter)}
         r = run("gate", "--module", "dobry", cwd=repo, env=genv)
         check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"),
-              f"A-11: moduł znajdujący wszystko bez fałszywych trafień przechodzi bramkę: {r.stdout}{r.stderr}")
+              f"A-11: a module finding everything with no false positives passes the gate: {r.stdout}{r.stderr}")
         r = run("gate", "--module", "szum", cwd=repo, env=genv)
         check(r.returncode == 1 and "FAILED" in r.stdout and "false positives" in r.stdout,
-              f"A-11: fałszywe trafienie w przypadku czystym → bramka nie przechodzi: {r.stdout}{r.stderr}")
+              f"A-11: a false positive in a clean case → the gate does not pass: {r.stdout}{r.stderr}")
         r = run("gate", "--module", "bez", cwd=repo, env=genv)
-        check(r.returncode == 1 and "fixtures" in r.stdout, f"A-11: moduł bez zestawu nie przechodzi: {r.stdout}")
-        # A-12 bez --module: wszystkie moduły, kod 1, gdy któryś nie przeszedł
+        check(r.returncode == 1 and "fixtures" in r.stdout, f"A-11: a module without a set does not pass: {r.stdout}")
+        # A-12 without --module: all modules, code 1 when any fails
         r = run("gate", cwd=repo, env=genv)
         check(r.returncode == 1 and "dobry" in r.stdout and "szum" in r.stdout and "bez" in r.stdout,
-              f"A-12: gate bez --module sprawdza wszystkie: {r.stdout}")
-        # A-13 moduł całościowy (incremental: false): --since nie zawęża skanu i nie łączy z poprzednim wynikiem
+              f"A-12: gate without --module checks all: {r.stdout}")
+        # A-13 a whole-repo module (incremental: false): --since does not narrow the scan and does not merge with the previous result
         full = t / "full"
         whole = ("import argparse, json\nap = argparse.ArgumentParser(); ap.add_argument('--root'); "
                  "ap.add_argument('--files', default='')\na = ap.parse_args()\n"
@@ -292,8 +293,8 @@ def main() -> int:
         commit(repo)
         run("run", "--since", before, cwd=repo, env=fenv)
         snips = [f["snippet"] for f in json.loads((tfd / "reports" / "calosc.json").read_text())["findings"]]
-        check(snips == ["files="], f"A-13: incremental: false — skrypt bez --files, bez łączenia z poprzednim: {snips}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów analyze")
+        check(snips == ["files="], f"A-13: incremental: false — the script without --files, without merging with the previous one: {snips}")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} analyze tests")
     return 1 if fails else 0
 
 

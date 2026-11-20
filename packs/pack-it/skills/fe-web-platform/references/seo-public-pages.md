@@ -1,45 +1,45 @@
-# SEO publicznej aplikacji (np. Angular z SSR)
+# SEO of a public application (e.g. Angular with SSR)
 
-Dotyczy stron, które mają być znajdowane przez wyszukiwarki i asystentów AI. Panel za logowaniem pomijasz.
+It concerns pages that are meant to be found by search engines and AI assistants. You skip the panel behind the login.
 
-## Renderowanie
-- Treść publiczna renderowana na serwerze lub statycznie (Angular SSR / prerendering z hydracją). Czysty rendering
-  po stronie klienta tylko za logowaniem.
-- Sprawdź, co dostaje robot: HTML **przed** uruchomieniem JS musi zawierać tytuł, opis, nagłówki i główną treść.
+## Rendering
+- Public content rendered on the server or statically (Angular SSR / prerendering with hydration). Pure client-side
+  rendering only behind the login.
+- Check what the bot gets: the HTML **before** JS runs must contain the title, description, headings and main content.
 
-## Core Web Vitals (75. percentyl rzeczywistych użytkowników)
-| Metryka | Dobrze | Słabo |
+## Core Web Vitals (75th percentile of real users)
+| Metric | Good | Poor |
 |---|---|---|
-| LCP | ≤ 2,5 s | > 4 s |
+| LCP | ≤ 2.5 s | > 4 s |
 | INP | ≤ 200 ms | > 500 ms |
-| CLS | ≤ 0,1 | > 0,25 |
-LCP rozkłada się na TTFB, opóźnienie i czas ładowania zasobu oraz renderowanie — zaczynasz od największego składnika.
-Szczegóły pomiaru i poprawy: `core-web-vitals.md`.
+| CLS | ≤ 0.1 | > 0.25 |
+LCP breaks down into TTFB, the resource load delay and duration, and rendering — you start from the largest component.
+Details of measurement and improvement: `core-web-vitals.md`.
 
-## Indeksowanie
-- `robots.txt` i mapa witryny aktualne; ważne strony najwyżej ~3 kliknięcia od strony głównej.
-- Kanoniczny URL na każdej stronie (zwykle wskazujący na siebie), niesprzeczny z `noindex`.
-- Paginacja przez zwykłe linki `<a href>`; przekierowania bez łańcuchów (jeden skok).
-- Krótkie, czytelne adresy URL; jedna wersja (z ukośnikiem albo bez, jeden host).
+## Indexing
+- `robots.txt` and the sitemap up to date; important pages at most ~3 clicks from the home page.
+- A canonical URL on every page (usually pointing to itself), not contradicting `noindex`.
+- Pagination through ordinary `<a href>` links; redirects without chains (one hop).
+- Short, readable URLs; one version (with a trailing slash or without, one host).
 
-## Metadane
-- `<title>` unikalny, ok. 30–60 znaków; opis ok. 120–160 znaków, nie powtarza tytułu.
-- Open Graph i karty społecznościowe dla stron udostępnianych.
-- W Angularze: tytuł przez właściwość `title` trasy (i własny `TitleStrategy`), opis i Open Graph przez usługę `Meta`
-  (resolver lub efekt na trasie) — renderowane w SSR.
+## Metadata
+- `<title>` unique, approx. 30–60 characters; the description approx. 120–160 characters, not repeating the title.
+- Open Graph and social cards for shared pages.
+- In Angular: the title through the route's `title` property (and a custom `TitleStrategy`), the description and Open Graph through the `Meta` service
+  (a resolver or an effect on the route) — rendered in SSR.
 
-## Dane strukturalne
-- JSON-LD (`<script type="application/ld+json">`) zgodny z treścią strony (Organization, Product, Article,
-  BreadcrumbList…). Nie znakuj treści, której użytkownik nie widzi.
+## Structured data
+- JSON-LD (`<script type="application/ld+json">`) consistent with the page content (Organization, Product, Article,
+  BreadcrumbList…). Do not mark up content the user does not see.
 
-## Roboty AI
-Rozróżniaj roboty zbierające dane do trenowania modeli od robotów wyszukiwania i cytowania w asystentach — decyzję,
-którym pozwolić, podejmuje biznes i zapisuje w `robots.txt` (zmiana świadoma, z ADR).
+## AI bots
+Distinguish bots collecting data for training models from search bots and citation bots in assistants — the decision
+which ones to allow is made by the business and recorded in `robots.txt` (a conscious change, with an ADR).
 
-## Zasada weryfikacji
-Każda rekomendacja ma sposób sprawdzenia, czy zadziałała (np. raport indeksowania, pomiar CWV z RUM po wdrożeniu).
+## The verification rule
+Every recommendation has a way of checking whether it worked (e.g. an indexing report, a CWV measurement from RUM after rollout).
 
-## Źródło inspiracji
-[claude-seo](https://github.com/AgriciDaniel/claude-seo) — progi CWV, zasady indeksowania, metadanych, renderowania
-i danych strukturalnych, rozróżnienie robotów AI, „jak poznamy, że nie zadziałało” (opisane własnymi słowami; bez
-jego crawlera, płatnych API i agentów audytowych).
+## Source of inspiration
+[claude-seo](https://github.com/AgriciDaniel/claude-seo) — CWV thresholds, the rules of indexing, metadata, rendering
+and structured data, the distinction of AI bots, "how will we know it did not work" (described in our own words; without
+its crawler, paid APIs and audit agents).

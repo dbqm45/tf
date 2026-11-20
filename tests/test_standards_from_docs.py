@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Testy generatora standardów z dokumentów firmy (`org/standards_from_docs.py`): podział dokumentów na sekcje
-(Markdown, HTML, Word), kontrola przypisania bez modelu (cytaty, pokrycie sekcji, przykłady reguł, sprzeczności),
-generowanie plików nakładki i odświeżanie po zmianie dokumentu. python3 tests/test_standards_from_docs.py"""
+"""Tests of the standards generator from company documents (`org/standards_from_docs.py`): splitting documents into sections
+(Markdown, HTML, Word), a model-free check of the assignment (quotes, section coverage, rule examples, contradictions),
+generating the overlay files and refreshing after a document change. python3 tests/test_standards_from_docs.py"""
 import copy
 import hashlib
 import importlib.util
@@ -30,7 +30,7 @@ UI_HTML = """<html><body><h1>Interfejs</h1><h2>Kolory</h2>
 
 
 def docx(path: Path, paragraphs: list[tuple[str | None, str]]) -> None:
-    """Minimalny plik Word: akapity z opcjonalnym stylem nagłówka."""
+    """A minimal Word file: paragraphs with an optional heading style."""
     body = "".join(
         f'<w:p>{f"<w:pPr><w:pStyle w:val=\"{st}\"/></w:pPr>" if st else ""}<w:r><w:t>{tx}</w:t></w:r></w:p>'
         for st, tx in paragraphs)
@@ -80,23 +80,23 @@ def main() -> int:
                                     ("Heading2", "Piątek"),
                                     (None, "Wdrożenie w piątek jest możliwe po zgodzie kierownika zespołu.")])
 
-        # SD-1: podział na sekcje
+        # SD-1: splitting into sections
         r = tool("split", str(pack))
         man = src / "sections.jsonl"
         secs = [json.loads(ln) for ln in man.read_text(encoding="utf-8").splitlines()] if man.is_file() else []
         by_head = {s["heading"]: s for s in secs}
         check(r.returncode == 0 and {"Standard API › Błędy", "Standard API › Wersje", "Interfejs › Kolory",
                                      "Wydania › Dni wdrożeń", "Wydania › Piątek"} <= set(by_head),
-              f"SD-1: sekcje z Markdown, HTML i Word z ścieżką nagłówków: {sorted(by_head)} {r.stdout}{r.stderr}")
+              f"SD-1: sections from Markdown, HTML and Word with the heading path: {sorted(by_head)} {r.stdout}{r.stderr}")
         dup = [s for s in secs if s["file"] == "kopia-api.md"]
         check(dup and dup[0].get("duplicate_of") == by_head.get("Standard API › Błędy", {}).get("id"),
-              f"SD-2: powtórzona treść oznaczona jako duplikat pierwszej sekcji: {dup}")
+              f"SD-2: repeated content marked as a duplicate of the first section: {dup}")
         check((src / "TASK.md").is_file() and "assignment.json" in (src / "TASK.md").read_text(encoding="utf-8"),
-              "SD-3: polecenie dla agenta (TASK.md) z formatem przypisania")
+              "SD-3: the agent instruction (TASK.md) with the assignment format")
         if fails:
             for f in fails:
                 print(f"✗ {f}")
-            print(f"✗ {total - len(fails)}/{total} testów standardów z dokumentów")
+            print(f"✗ {total - len(fails)}/{total} tests of standards from documents")
             return 1
 
         sid = lambda h: by_head[h]["id"]
@@ -135,50 +135,50 @@ def main() -> int:
             return tool("check", str(pack))
 
         r = run_check(good)
-        check(r.returncode == 0, f"SD-4: poprawne przypisanie przechodzi kontrolę: {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"SD-4: a correct assignment passes the check: {r.stdout}{r.stderr}")
         for name, mutate, needle in [
-            ("cytat spoza sekcji", lambda d: d["findings"][0].update(quote="błędy zawsze w formacie XML"), "quote"),
-            ("sekcja bez ustalenia i bez powodu pominięcia", lambda d: d.update(skipped=[]), "Ogólne"),
-            ("przykład zgodny łamie regułę", lambda d: d["findings"][1]["rule"]["compliant"].update(content="@Get('/x')"),
+            ("a quote outside the section", lambda d: d["findings"][0].update(quote="błędy zawsze w formacie XML"), "quote"),
+            ("a section with no finding and no reason for skipping", lambda d: d.update(skipped=[]), "Ogólne"),
+            ("a compliant example breaks the rule", lambda d: d["findings"][1]["rule"]["compliant"].update(content="@Get('/x')"),
              "compliant"),
-            ("przykład naruszenia nie łamie reguły",
+            ("a violation example does not break the rule",
              lambda d: d["findings"][2]["rule"]["violation"].update(content="color: var(--x);"), "violation"),
-            ("nieznany obszar", lambda d: d["findings"][0].update(area="backend"), "area"),
-            ("nieznana sekcja", lambda d: d["findings"][0].update(section="nie-ma"), "section"),
-            ("sprzeczność bez pary", lambda d: d["findings"][3].update(conflicts_with=["U9"]), "U9"),
-            ("zły wzorzec", lambda d: d["findings"][1]["rule"].update(forbid="(["), "regex"),
+            ("unknown area", lambda d: d["findings"][0].update(area="backend"), "area"),
+            ("unknown section", lambda d: d["findings"][0].update(section="nie-ma"), "section"),
+            ("a contradiction without a pair", lambda d: d["findings"][3].update(conflicts_with=["U9"]), "U9"),
+            ("a bad pattern", lambda d: d["findings"][1]["rule"].update(forbid="(["), "regex"),
         ]:
             bad = copy.deepcopy(good)
             mutate(bad)
             r = run_check(bad)
             check(r.returncode == 1 and needle in r.stdout + r.stderr,
-                  f"SD-5: kontrola odrzuca: {name} (oczekiwane „{needle}”): {r.returncode} {r.stdout}{r.stderr}")
+                  f"SD-5: the check rejects: {name} (expected “{needle}”): {r.returncode} {r.stdout}{r.stderr}")
 
-        # SD-6: generowanie plików nakładki
+        # SD-6: generating the overlay files
         run_check(good)
         r = tool("apply", str(pack))
-        check(r.returncode == 0, f"SD-6: apply po zaliczonej kontroli: {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"SD-6: apply after a passed check: {r.stdout}{r.stderr}")
         refs = pack / "skills" / "acme-standards" / "references"
         api = (refs / "api.md").read_text(encoding="utf-8")
         check("RFC 9457" in api and "api.md › Standard API › Błędy" in api and "kolor" not in api.lower()
               and "[U2]" not in api,
-              f"SD-6: ustalenie z cytatem i źródłem w pliku swojego obszaru, wzorce tylko w rules.yaml: {api}")
+              f"SD-6: a finding with a quote and a source in the file of its area, patterns only in rules.yaml: {api}")
         wyd = (refs / "releases.md").read_text(encoding="utf-8")
-        check("U6" in wyd and "conflicts with" in wyd.lower(), f"SD-6: sprzeczność oznaczona przy ustaleniu: {wyd}")
+        check("U6" in wyd and "conflicts with" in wyd.lower(), f"SD-6: a contradiction marked at the finding: {wyd}")
         mod = pack / "analyzers" / "acme-standards"
         rules = rs.load_rules(mod / "rules.yaml")
         ids = {x["id"] for x in rules}
         check({"api-sciezka-bez-wersji", "ui-kolor-na-sztywno", "przyklad-print"} <= ids,
-              f"SD-7: reguły z dokumentów dopisane do rules.yaml obok istniejących: {ids}")
+              f"SD-7: rules from the documents appended to rules.yaml next to the existing ones: {ids}")
         found = {(f["rule"], f["file"]) for f in rs.scan(rules, mod / "fixtures/violations/repo",
                                                           rs.repo_files(mod / "fixtures/violations/repo"))}
         expected = {(e["rule"], e["file"]) for e in json.loads((mod / "fixtures/violations/expected.json").read_text())}
         clean = rs.scan(rules, mod / "fixtures/clean/repo", rs.repo_files(mod / "fixtures/clean/repo"))
         check(found == expected and ("api-sciezka-bez-wersji", "src/api/orders.ts") in expected and not clean,
-              f"SD-8: przykłady reguł w fixtures, bramka modułu spełniona: {found} vs {expected}; czyste: {clean}")
+              f"SD-8: rule examples in the fixtures, the module gate satisfied: {found} vs {expected}; clean: {clean}")
         rap = (src / "REPORT.md").read_text(encoding="utf-8") if (src / "REPORT.md").is_file() else ""
         check("U5" in rap and "U6" in rap and "ogólna praktyka" in rap and "kopia-api.md" in rap,
-              f"SD-9: raport: sprzeczności, pominięte z powodem, duplikaty: {rap}")
+              f"SD-9: the report: contradictions, skipped with a reason, duplicates: {rap}")
         app = base / "app"
         app.mkdir()
         subprocess.run(["git", "init", "-q"], cwd=app, check=True)
@@ -191,23 +191,23 @@ def main() -> int:
                   and "zgodnie z RFC 9457." in f.read_text(encoding="utf-8", errors="ignore")
                   and "references" not in f.parts]
         check(r.returncode == 0 and g.returncode == 0 and not leaked,
-              f"SD-13: nakładka po apply instaluje się, bramka modułu w projekcie przechodzi, dokumenty nie trafiają "
-              f"do projektu: {(g.stdout + g.stderr)[-600:]} {leaked}")
+              f"SD-13: the overlay after apply installs, the module gate in the project passes, the documents do not reach "
+              f"the project: {(g.stdout + g.stderr)[-600:]} {leaked}")
         before = digest(pack)
         r = tool("apply", str(pack))
-        check(r.returncode == 0 and digest(pack) == before, "SD-10: ponowne apply niczego nie zmienia")
+        check(r.returncode == 0 and digest(pack) == before, "SD-10: a repeated apply changes nothing")
 
-        # SD-11: odświeżanie po zmianie dokumentu
+        # SD-11: refreshing after a document change
         (src / "api.md").write_text(API_MD.replace("zgodnie z RFC 9457", "zgodnie z RFC 7807"), encoding="utf-8")
         r = tool("split", str(pack))
-        check(r.returncode == 0 and "changed: 1" in r.stdout, f"SD-11: split wskazuje zmienione sekcje: {r.stdout}")
+        check(r.returncode == 0 and "changed: 1" in r.stdout, f"SD-11: split points to the changed sections: {r.stdout}")
         r = tool("check", str(pack))
-        check(r.returncode == 1 and "U1" in r.stdout, f"SD-11: ustalenie ze zmienionej sekcji do przejrzenia: {r.stdout}")
+        check(r.returncode == 1 and "U1" in r.stdout, f"SD-11: a finding from a changed section to review: {r.stdout}")
         r = tool("apply", str(pack))
-        check(r.returncode != 0 and digest(pack) == before, "SD-12: apply bez zaliczonej kontroli niczego nie zapisuje")
+        check(r.returncode != 0 and digest(pack) == before, "SD-12: apply without a passed check writes nothing")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów standardów z dokumentów")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of standards from documents")
     return 1 if fails else 0
 
 

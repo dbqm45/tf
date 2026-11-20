@@ -56,5 +56,5 @@ Wyniki kontroli: <usunięte lub przeformułowane ryzyka>
 - Przegląd strategii: <RRRR-MM-DD>
 - Narzędzia i wersje (sprawdzone: <RRRR-MM-DD>):
 
-## Przekazanie
+## Handoff
 <!-- Co następna faza/osoba musi wiedzieć; otwarte pytania do człowieka. -->

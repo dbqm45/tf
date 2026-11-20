@@ -36,6 +36,51 @@
       }
     },
     {
+      "id": "akcja-bez-autoryzacji-en",
+      "expect": "trigger",
+      "prompt": "In app/orders/actions.ts (Next.js 16.3) there is a Server Action that deletes an order; we check login in app/orders/layout.tsx. Is that enough, and how do we refresh the order list afterwards? Answer briefly.",
+      "files": {
+        "app/orders/actions.ts": "'use server';\nimport { db } from '@/lib/db';\n\nexport async function deleteOrder(id: string) {\n  await db.order.delete({ where: { id } });\n}\n",
+        "app/orders/layout.tsx": "import { redirect } from 'next/navigation';\nimport { getSession } from '@/lib/auth';\n\nexport default async function Layout({ children }: { children: React.ReactNode }) {\n  if (!(await getSession())) redirect('/login');\n  return children;\n}\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "w każdej (akcji|Server Action|funkcji)",
+            "wewnątrz (akcji|funkcji)",
+            "w samej akcji",
+            "publiczn\\w* endpoint",
+            "bezpośredni\\w* (żądani\\w* )?POST",
+            "dowoln\\w* (żądani|POST)",
+            "in (every|each) (action|Server Action|function)",
+            "inside (the )?(action|function)",
+            "in the action itself",
+            "public endpoints?",
+            "direct (POST )?requests?",
+            "(any|arbitrary) (request|POST)"
+          ],
+          [
+            "właściciel",
+            "należy do",
+            "IDOR",
+            "własnoś",
+            "uprawnie",
+            "owner\\w*",
+            "belongs to",
+            "ownership",
+            "authori[sz]ation",
+            "permissions?"
+          ],
+          [
+            "updateTag",
+            "revalidatePath",
+            "revalidateTag",
+            "refresh\\("
+          ]
+        ]
+      }
+    },
+    {
       "id": "migracja-16",
       "expect": "trigger",
       "prompt": "Przechodzimy z Next.js 15.5 na 16 (package.json, middleware.ts, app/products/[id]/page.tsx). Co musimy zmienić w kodzie i jak to zrobić najmniejszym kosztem? Odpowiedz zwięźle.",

@@ -1,59 +1,59 @@
 # Streaming Response
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/streaming-response.
+Source: frontendpatterns.dev/streaming-response.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** AI chat UI (u źródła: Resilience)
-- **Poziom:** Advanced
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 28 czerwca 2026
-- **Autor:** Den Odell
+- **Category:** AI chat UI (at the source: Resilience)
+- **Level:** Advanced
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** 28 June 2026
+- **Author:** Den Odell
 
 ## TLDR
 
-Odczytuj odpowiedź modelu jako strumień i dołączaj każdy fragment do interfejsu w miarę jego
-przybycia, żeby użytkownik obserwował formowanie się odpowiedzi, zamiast patrzeć na wskaźnik
-ładowania przez dziesięć sekund.
+Read the model's response as a stream and append each chunk to the interface as it
+arrives, so that the user watches the answer take shape, instead of looking at a loading
+indicator for ten seconds.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Przed czytaniem strumienia sprawdź `response.ok` (4xx/5xx też mają body) i ustaw `Content-Type: application/json`.
-  Po pętli wywołaj `decoder.decode()` bez argumentów, żeby opróżnić bufor dekodera. Poprawiono w przykładzie React.
-- Parser SSE: ramka może mieć **kilka** linii `data:` (łącz je `\n`), a separatorem bywa `\r\n\r\n`. Format delty
-  (`choices[0].delta.content`) jest specyficzny dla dostawcy — mapuj go w jednym adapterze, nie w komponencie.
-  Gdy serwer jest Twój i to zwykły GET, rozważ natywne `EventSource` (ale nie obsługuje POST ani nagłówków).
-- **Markdown z modelu renderuj przez sanitizer** (DOMPurify / Sanitizer API) albo parser, który nie przepuszcza
-  surowego HTML — odpowiedź modelu to niezaufane dane (security/input-sanitization.md, security/output-encoding.md).
-- Aktualizacja stanu na każdy chunk może obciążać render przy szybkich strumieniach — buforuj tokeny i wypychaj je
-  raz na klatkę (`requestAnimationFrame`) — patrz fe-web-platform (`.claude/skills/fe-web-platform/references/core-web-vitals.md`, INP).
-- Framework-agnostycznie: logikę odczytu strumienia trzymaj w zwykłej funkcji/async generatorze (jak `parseSSE`),
-  a komponent (React hook, Vue composable, serwis Angular z `signal`) tylko dopisuje tokeny do stanu.
-- Przykłady Svelte używają składni Svelte 4 (`export let`, `$:`, `on:click`). W Svelte 5: `$props()`, `$state`,
-  `$derived`, atrybuty `onclick`.
+- Before reading the stream check `response.ok` (4xx/5xx have a body too) and set `Content-Type: application/json`.
+  After the loop call `decoder.decode()` without arguments to flush the decoder's buffer. Corrected in the React example.
+- SSE parser: a frame can have **several** `data:` lines (join them with `\n`), and the separator can be `\r\n\r\n`. The delta format
+  (`choices[0].delta.content`) is provider-specific — map it in one adapter, not in the component.
+  When the server is yours and it is a plain GET, consider the native `EventSource` (but it supports neither POST nor headers).
+- **Render markdown from the model through a sanitizer** (DOMPurify / the Sanitizer API) or a parser that does not let
+  raw HTML through — the model's response is untrusted data (security/input-sanitization.md, security/output-encoding.md).
+- Updating state on every chunk can burden rendering with fast streams — buffer the tokens and flush them
+  once per frame (`requestAnimationFrame`) — see fe-web-platform (`.claude/skills/fe-web-platform/references/core-web-vitals.md`, INP).
+- Framework-agnostically: keep the stream-reading logic in a plain function/async generator (like `parseSSE`),
+  and the component (a React hook, a Vue composable, an Angular service with a `signal`) only appends tokens to the state.
+- The Svelte examples use Svelte 4 syntax (`export let`, `$:`, `on:click`). In Svelte 5: `$props()`, `$state`,
+  `$derived`, `onclick` attributes.
 
 ## Problem
 
-Użytkownik zadaje pytanie asystentowi i czeka. Aplikacja robi `await response.json()`, więc nic nie
-pojawia się na ekranie, aż ostatni token zostanie wygenerowany — dziesięć sekund pustej przestrzeni,
-potem ściana tekstu na raz. Interfejs wydaje się zepsuty, nawet jeśli backend jest szybki, bo
-użytkownik nie ma żadnego dowodu, że coś się dzieje.
+The user asks the assistant a question and waits. The application does `await response.json()`, so nothing
+appears on the screen until the last token has been generated — ten seconds of empty space,
+then a wall of text all at once. The interface seems broken, even if the backend is fast, because
+the user has no evidence that anything is happening.
 
-## Rozwiązanie
+## Solution
 
-Zażądaj odpowiedzi strumieniowanej i czytaj treść w miarę jej przybycia, nie czekając na cały
-payload. Większość API zwraca surowy strumień tekstu albo Server-Sent Events, gdzie każdy fragment
-zawiera niewielką deltę odpowiedzi. Pobierz reader z `response.body`, dekoduj każdy fragment,
-wyodrębnij delty i dołącz je do wyświetlanej wiadomości — to samo mutowanie stanu widoku aktualizuje
-UI na każdym fragmencie, bez dodatkowego mechanizmu.
+Request a streamed response and read the content as it arrives, without waiting for the whole
+payload. Most APIs return a raw text stream or Server-Sent Events, where each chunk
+contains a small delta of the response. Get a reader from `response.body`, decode each chunk,
+extract the deltas and append them to the displayed message — the same view state mutation updates
+the UI on every chunk, without any extra mechanism.
 
-Dwa szczegóły łatwe do przegapienia: dekoduj przez strumieniowy `TextDecoder` (`{ stream: true }`),
-żeby znak, którego bajty wypadły na granicy dwóch fragmentów, nie wyszedł zniekształcony; przekaż
-sygnał `AbortController` przez `fetch`, żeby strumień mógł być anulowany (patrz `stop-generation.md`).
+Two details that are easy to miss: decode through a streaming `TextDecoder` (`{ stream: true }`),
+so that a character whose bytes fell on the boundary of two chunks does not come out garbled; pass
+an `AbortController` signal through `fetch`, so that the stream can be cancelled (see `stop-generation.md`).
 
-## Przykłady kodu
+## Code examples
 
 ### Reading the Stream — React
 
@@ -282,35 +282,35 @@ function useStickToBottom(ref, dep) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Interfejs wydaje się responsywny nawet na wolnym modelu — tekst pojawia się w ciągu sekundy i
-  nigdy się nie zatrzymuje na dłużej.
-- Subiektywny czas czekania jest krótszy — czytanie formującej się odpowiedzi wypełnia czas, który
-  inaczej byłby „martwy”.
-- Użytkownik może zacząć reagować na początek długiej odpowiedzi, zanim koniec się jeszcze
-  wygeneruje.
-- Porzucanie interakcji spada — jest stały dowód, że aplikacja działa, nie cisza odczytywana jako
-  „zamrożenie”.
-- Łączy się naturalnie z `Stop Generation` — masz już reader i sygnał przerwania pod ręką.
+- The interface feels responsive even on a slow model — text appears within a second and
+  never stops for long.
+- The subjective waiting time is shorter — reading the answer as it forms fills time that
+  would otherwise be "dead".
+- The user can start reacting to the beginning of a long answer before the end has even
+  been generated.
+- Interaction abandonment drops — there is constant evidence that the application is working, not silence read as
+  "freezing".
+- It combines naturally with `Stop Generation` — you already have the reader and the abort signal at hand.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Granice fragmentów **nie** pokrywają się ze znakami/tokenami/składnią markdown — naiwne
-  dekodowanie/renderowanie widocznie psuje output (patrz obsługa `{ stream: true }` i niedomkniętych
-  code-fence'ów w przykładach wyżej).
-- Streamowany markdown jest naprawdę zawiły — niedomknięte code fence'y, tabele, listy wymagają
-  specjalnej obsługi, żeby uniknąć migotania.
-- Obsługa błędów jest trudniejsza — żądanie może zawiść **po tym**, jak użytkownik już zobaczył
-  połowę odpowiedzi.
-- Auto-scroll walczy z użytkownikiem, jeśli nie wykryjesz, że celowo przewinął się w górę, żeby
-  przeczytać coś wcześniej (patrz `useStickToBottom`).
-- Tracisz możliwość walidacji/post-processingu **całej** odpowiedzi przed pierwszym wyświetleniem
-  czegokolwiek.
-- Część infrastruktury sieciowej (niektóre proxy, warstwy kompresji) buforuje całą odpowiedź, zanim
-  ją przekaże dalej — to całkowicie uniemożliwia streamowanie, niezależnie od kodu frontendu.
+- Chunk boundaries do **not** coincide with characters/tokens/markdown syntax — naive
+  decoding/rendering visibly breaks the output (see the handling of `{ stream: true }` and unclosed
+  code fences in the examples above).
+- Streamed markdown is genuinely tricky — unclosed code fences, tables, lists require
+  special handling to avoid flicker.
+- Error handling is harder — the request can fail **after** the user has already seen
+  half of the answer.
+- Auto-scroll fights the user if you do not detect that they deliberately scrolled up to
+  read something earlier (see `useStickToBottom`).
+- You lose the ability to validate/post-process the **whole** response before displaying
+  anything at all.
+- Some network infrastructure (certain proxies, compression layers) buffers the whole response before
+  passing it on — this makes streaming completely impossible, regardless of the frontend code.
 
-## Powiązane wzorce
+## Related patterns
 
 - Thinking Indicator — ai-chat-ui (`thinking-indicator.md`)
 - [Stop Generation](stop-generation.md) — ai-chat-ui
@@ -321,10 +321,10 @@ function useStickToBottom(ref, dep) {
 - [Streams API (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Streams_API)
 - [Using Server-Sent Events (MDN)](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Sięgaj po streaming, gdy operacja generuje treść **przyrostowo** i trwa na tyle długo (>1-2s), że
-brak informacji zwrotnej realnie szkodzi doświadczeniu — odpowiedzi modeli AI to typowy przypadek.
-**Nie** streamuj krótkich, szybkich odpowiedzi (proste zapytanie do bazy danych trwające 100ms) —
-narzut implementacyjny (parsowanie SSE, obsługa granic fragmentów, auto-scroll) nie ma tam żadnego
-zysku percepcyjnego; zwykły `await response.json()` + `loading-state.md` jest prostsze i wystarczające.
+Reach for streaming when an operation generates content **incrementally** and takes long enough (>1-2s) that
+the lack of feedback really hurts the experience — AI model responses are the typical case.
+Do **not** stream short, fast responses (a simple database query taking 100ms) —
+the implementation overhead (SSE parsing, handling chunk boundaries, auto-scroll) brings no
+perceptual gain there; a plain `await response.json()` + `loading-state.md` is simpler and sufficient.

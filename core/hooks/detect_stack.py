@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-Wykrywa stack projektu (wersje frameworków i języków) i porównuje go z wersjami, na których oparte są skille.
+Detects the project stack (framework and language versions) and compares it with the versions the skills are based on.
 
-  python3 .claude/hooks/detect_stack.py [KATALOG_PROJEKTU]      # raport tekstowy
-  python3 .claude/hooks/detect_stack.py --json [KATALOG]        # raport JSON (dla agentów/CI)
-  python3 .claude/hooks/detect_stack.py --latest [KATALOG]      # + najnowsze wersje z rejestru npm (sieć)
-  python3 .claude/hooks/detect_stack.py --hook                  # tryb hooka SessionStart: tylko gdy jest coś do zrobienia
+  python3 .claude/hooks/detect_stack.py [PROJECT_DIR]         # text report
+  python3 .claude/hooks/detect_stack.py --json [DIR]            # JSON report (for agents/CI)
+  python3 .claude/hooks/detect_stack.py --latest [DIR]      # + latest versions from the npm registry (network)
+  python3 .claude/hooks/detect_stack.py --hook                  # SessionStart hook mode: only when there is something to do
 
-Źródła wersji: node_modules/<pakiet>/package.json → package-lock.json → zakres w package.json;
-Java: pom.xml / build.gradle(.kts) / .java-version; Python: requires-python w pyproject.toml / .python-version;
-pakiety PyPI: uv.lock / poetry.lock / pylock.toml / requirements*.txt / pyproject.toml. Wersję skilla opisuje plik skill.meta.json obok SKILL.md.
-Tylko biblioteka standardowa — działa bez instalowania pakietów.
+Version sources: node_modules/<package>/package.json → package-lock.json → the range in package.json;
+Java: pom.xml / build.gradle(.kts) / .java-version; Python: requires-python in pyproject.toml / .python-version;
+PyPI packages: uv.lock / poetry.lock / pylock.toml / requirements*.txt / pyproject.toml. A skill's version is described by skill.meta.json next to SKILL.md.
+Standard library only — works without installing packages.
 """
 from __future__ import annotations
 
@@ -25,8 +25,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 
@@ -39,12 +39,12 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 HOOKS_DIR = Path(__file__).resolve().parent
 CLAUDE_DIR = HOOKS_DIR.parent
 SKILLS_DIR = CLAUDE_DIR / "skills"
-REGISTRY = SKILLS_DIR / "core-stack-sync" / "references" / "technologies.json"   # rdzeń (format, wpisy własne)
-PACKS_DIR = CLAUDE_DIR.parent / ".tf" / "factory" / "packs"    # nakładki dokładają rejestry: .tf/factory/packs/<id>/technologies.json
+REGISTRY = SKILLS_DIR / "core-stack-sync" / "references" / "technologies.json"   # core (format, own entries)
+PACKS_DIR = CLAUDE_DIR.parent / ".tf" / "factory" / "packs"    # overlays add registries: .tf/factory/packs/<id>/technologies.json
 
 
 def registry_entries() -> list[dict]:
-    """Technologie do wykrywania: rejestr rdzenia + rejestry zainstalowanych nakładek (ta sama technologia — pierwszy wpis)."""
+    """Technologies to detect: the core registry + the registries of installed overlays (the same technology — first entry wins)."""
     out, seen = [], set()
     files = [REGISTRY, *sorted(PACKS_DIR.glob("*/technologies.json"))] if PACKS_DIR.is_dir() else [REGISTRY]
     for f in files:
@@ -55,7 +55,7 @@ def registry_entries() -> list[dict]:
     return out
 
 
-# ───────────── wersje ─────────────
+# ───────────── versions ─────────────
 
 def parse_version(text: str | None) -> tuple[int, ...] | None:
     if not text:
@@ -71,7 +71,7 @@ def fmt(v: tuple[int, ...] | None) -> str:
 
 
 def cmp_at(project: tuple[int, ...], ref: tuple[int, ...]) -> int:
-    """Porównuje z dokładnością wersji referencyjnej ('22' → major, '6.0' → major.minor)."""
+    """Compares at the precision of the reference version ('22' → major, '6.0' → major.minor)."""
     n = len(ref)
     a = tuple(project[:n]) + (0,) * (n - len(project[:n]))
     return (a > ref) - (a < ref)
@@ -175,7 +175,7 @@ def kotlin_present(root: Path) -> tuple[str | None, str]:
 
 
 def go_version(root: Path) -> tuple[str | None, str]:
-    """Dyrektywa `go` w go.mod (minimalna wersja języka modułu), nie `toolchain` (narzędzie do budowania)."""
+    """The `go` directive in go.mod (the module's minimum language version), not `toolchain` (the build tool)."""
     if not (root / "go.mod").exists():
         return None, ""
     m = re.search(r"^go\s+([\d.]+)\s*$", _read(root / "go.mod"), re.M)
@@ -183,8 +183,8 @@ def go_version(root: Path) -> tuple[str | None, str]:
 
 
 def dotnet_version(root: Path, web: bool = False) -> tuple[str | None, str]:
-    """Najwyższa platforma `netX.Y` / `netcoreappX.Y` z plików *.csproj (do 3 poziomów, bez bin/ i obj/);
-    `web` — tylko projekty z Sdk="Microsoft.NET.Sdk.Web" (ASP.NET Core). Sam netstandard → wersja nieznana."""
+    """The highest platform `netX.Y` / `netcoreappX.Y` from *.csproj files (up to 3 levels, excluding bin/ and obj/);
+    `web` — only projects with Sdk="Microsoft.NET.Sdk.Web" (ASP.NET Core). netstandard alone → version unknown."""
     found, best, src = False, None, ""
     for pattern in ("*.csproj", "*/*.csproj", "*/*/*.csproj"):
         for f in sorted(root.glob(pattern)):
@@ -212,7 +212,7 @@ def _read(path: Path) -> str:
 
 
 def python_version(root: Path) -> tuple[str | None, str]:
-    """Dolna granica requires-python (składnia, której wolno używać) → .python-version (interpreter deweloperski)."""
+    """The lower bound of requires-python (the syntax that may be used) → .python-version (the development interpreter)."""
     m = re.search(r'^\s*requires-python\s*=\s*["\']\s*(?:>=|~=|==)\s*([\d.]+)', _read(root / "pyproject.toml"), re.M)
     if m:
         return m.group(1), "pyproject.toml requires-python"
@@ -226,7 +226,7 @@ def python_version(root: Path) -> tuple[str | None, str]:
 
 
 def pypi_version(root: Path, pkg: str) -> tuple[str | None, str]:
-    """Wersja pakietu PyPI: uv.lock / poetry.lock / pylock.toml → requirements*.txt → specyfikator w pyproject.toml."""
+    """PyPI package version: uv.lock / poetry.lock / pylock.toml → requirements*.txt → the specifier in pyproject.toml."""
     for lock in ("uv.lock", "poetry.lock", "pylock.toml"):
         m = re.search(rf'name\s*=\s*"{re.escape(pkg)}"\s*\nversion\s*=\s*"([^"]+)"', _read(root / lock))
         if m:
@@ -290,7 +290,7 @@ def detect(root: Path, tech: dict) -> tuple[bool, str | None, str]:
 
 def latest_npm(pkg: str) -> str | None:
     try:
-        npm = shutil.which("npm")          # Windows: npm.cmd — samo "npm" bez powłoki nie zostanie znalezione
+        npm = shutil.which("npm")          # Windows: npm.cmd — plain "npm" without a shell will not be found
         if not npm:
             return None
         out = subprocess.run([npm, "view", pkg, "version"], stdin=subprocess.DEVNULL, capture_output=True,
@@ -336,7 +336,7 @@ def analyze(root: Path, with_latest: bool = False) -> dict:
                 item["latest"] = latest_npm(tech["detect"]["npm"][0])
         found.append(item)
 
-    # ograniczenia między skillami (np. Angular 22 wymaga TypeScript 6.0.x)
+    # constraints between skills (e.g. Angular 22 requires TypeScript 6.0.x)
     by_skill = {f["skill"]: f for f in found}
     constraints = []
     for f in found:
@@ -406,7 +406,7 @@ def main(argv: list[str]) -> int:
     args = [a for a in argv[1:] if not a.startswith("--")]
     flags = {a for a in argv[1:] if a.startswith("--")}
     if "--hook" in flags:
-        import threading                    # hook kończy się sam przed limitem Claude Code (10 s), z kodem 0
+        import threading                    # the hook ends on its own before the Claude Code limit (10 s), with exit code 0
         timer = threading.Timer(float(os.environ.get("CLAUDE_HOOK_DEADLINE", "7") or 7), lambda: os._exit(0))
         timer.daemon = True
         timer.start()
@@ -417,7 +417,7 @@ def main(argv: list[str]) -> int:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or ".")
         try:
             out = to_hook(analyze(root))
-        except Exception as e:  # hook nigdy nie może zablokować startu sesji
+        except Exception as e:  # a hook must never block session start
             record_error("detect_stack", e)
             return 0
         if out:

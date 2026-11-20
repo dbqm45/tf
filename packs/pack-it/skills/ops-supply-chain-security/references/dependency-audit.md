@@ -1,25 +1,25 @@
-# Audyt zależności — polecenia i czytanie wyników
+# Dependency audit — commands and reading the results
 
-Audyt uruchamiasz w CI i przy starcie pracy w repo (eng-repo-readiness). Audyt **raportuje**, nie naprawia:
-`npm audit fix` i odpowiedniki tylko za zgodą człowieka, z przeglądem diffu lockfile.
+You run the audit in CI and at the start of work in a repo (eng-repo-readiness). The audit **reports**, it does not fix:
+`npm audit fix` and its equivalents only with a human's consent, with a review of the lockfile diff.
 
-| Rodzina | Polecenie (wynik maszynowy) | Uwagi |
+| Family | Command (machine-readable output) | Notes |
 |---|---|---|
-| JS/TS (npm) | `npm audit --json` | kod wyjścia ≠ 0 przy znaleziskach to informacja, nie awaria kroku; próg: `--audit-level=high` |
+| JS/TS (npm) | `npm audit --json` | an exit code ≠ 0 when there are findings is information, not a step failure; threshold: `--audit-level=high` |
 | JS/TS (pnpm) | `pnpm audit --json` | |
-| Python | `pip-audit --format json` (sprawdzone na 2.10.1) | bez natywnej wagi → domyślnie średnia, chyba że opis mówi inaczej; dla projektu z lockfile: `pip-audit --locked` |
-| Rust | `cargo audit --json` | wymaga `cargo install cargo-audit` |
-| Go | `govulncheck -json ./...` | zgłasza tylko podatności osiągalne z kodu — mniej szumu |
-| Ruby | `bundle audit check --update` | wynik tekstowy |
-| PHP | `composer audit --format json` | od Composera 2.4 — sprawdź wersję |
-| .NET | `dotnet list package --vulnerable --include-transitive` | w nowszym SDK także `dotnet package list --vulnerable` |
-| Java, Dart | brak wbudowanego — narzędzie zewnętrzne (np. OWASP Dependency-Check, OSV-Scanner) | bez narzędzia zapisz „pominięto”, **nigdy „0 znalezisk”** |
+| Python | `pip-audit --format json` (checked on 2.10.1) | no native severity → medium by default, unless the description says otherwise; for a project with a lockfile: `pip-audit --locked` |
+| Rust | `cargo audit --json` | requires `cargo install cargo-audit` |
+| Go | `govulncheck -json ./...` | reports only vulnerabilities reachable from the code — less noise |
+| Ruby | `bundle audit check --update` | text output |
+| PHP | `composer audit --format json` | since Composer 2.4 — check the version |
+| .NET | `dotnet list package --vulnerable --include-transitive` | in a newer SDK also `dotnet package list --vulnerable` |
+| Java, Dart | none built in — an external tool (e.g. OWASP Dependency-Check, OSV-Scanner) | without a tool record "skipped", **never "0 findings"** |
 
-## Czytanie wyników
-- **Waga z CVSS:** ≥ 9,0 krytyczna · 7,0–8,9 wysoka · 4,0–6,9 średnia · < 4,0 niska. Krytyczne i wysokie pokazujesz
-  od razu, resztę w raporcie.
-- **Bezpośrednie osobno od przechodnich:** bezpośrednie naprawiasz od razu (aktualizacja, zamiana); przechodnie
-  czekają na poprawkę opiekuna albo nadpisanie wersji (`overrides` / `resolutions`) po przeglądzie. Mieszanie ich
-  na starcie projektu daje zmęczenie alertami.
-- Priorytet: osiągalność i znane wykorzystanie (SKILL.md, §5 — katalog KEV), nie sama waga.
-- Wynik zapisujesz z datą i wersją narzędzia; brak narzędzia lub błąd sieci = „nie sprawdzono”, nie „czysto”.
+## Reading the results
+- **Severity from CVSS:** ≥ 9.0 critical · 7.0–8.9 high · 4.0–6.9 medium · < 4.0 low. You show critical and high ones
+  at once, the rest in the report.
+- **Direct separately from transitive:** you fix direct ones at once (an update, a replacement); transitive ones
+  wait for the maintainer's fix or a version override (`overrides` / `resolutions`) after a review. Mixing them
+  at the start of a project leads to alert fatigue.
+- Priority: reachability and known exploitation (SKILL.md, §5 — the KEV catalog), not the severity alone.
+- You record the result with the date and the tool version; no tool or a network error = "not checked", not "clean".

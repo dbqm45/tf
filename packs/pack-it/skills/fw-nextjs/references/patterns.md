@@ -1,11 +1,11 @@
-# Wzorce Next.js 16 (App Router) — przykłady
+# Next.js 16 patterns (App Router) — examples
 
-> **Spis treści:** 1. Warstwa dostępu do danych (DAL) · 2. Server Action · 3. Odczyt cache'owany (Cache Components) · 4. Strona z `await params` i `<Suspense>` · 5. `proxy.ts` · 6. Odpowiedniki dla 14 i 15
+> **Contents:** 1. The data access layer (DAL) · 2. Server Action · 3. A cached read (Cache Components) · 4. A page with `await params` and `<Suspense>` · 5. `proxy.ts` · 6. Equivalents for 14 and 15
 
-Sprawdzone kompilatorem TypeScript (`tsc --noEmit`, `strict`) z typami `next` 16.3.8 i `react` 19.3. Moduły
-`@/lib/*` w przykładach to deklaracje zastępcze (sesja, baza) — w projekcie podstaw własne.
+Checked with the TypeScript compiler (`tsc --noEmit`, `strict`) with the `next` 16.3.8 and `react` 19.3 types. The
+`@/lib/*` modules in the examples are stand-in declarations (session, database) — in the project substitute your own.
 
-## 1. Warstwa dostępu do danych (DAL)
+## 1. The data access layer (DAL)
 ```ts
 // features/orders/server/dal.ts
 import 'server-only';
@@ -24,10 +24,10 @@ export const currentUser = cache(async () => {
 export async function ordersOfCurrentUser(): Promise<OrderDTO[]> {
   const user = await currentUser();
   const rows = await db.order.findMany({ where: { ownerId: user.id } });
-  return rows.map(r => ({ id: r.id, total: r.total.toFixed(2), status: r.status }));   // minimalne DTO
+  return rows.map(r => ({ id: r.id, total: r.total.toFixed(2), status: r.status }));   // minimal DTO
 }
 ```
-`cache` z Reacta deduplikuje sprawdzenie sesji w jednym żądaniu. DTO nie zawiera pól, których UI nie potrzebuje.
+React's `cache` deduplicates the session check within one request. The DTO contains no fields the UI does not need.
 
 ## 2. Server Action
 ```ts
@@ -40,23 +40,23 @@ import { db } from '@/lib/db';
 export type DeleteResult = { ok: true } | { ok: false; reason: string };
 
 export async function deleteOrder(_prev: DeleteResult | null, form: FormData): Promise<DeleteResult> {
-  const user = await currentUser();                       // 1. sesja — w KAŻDEJ akcji
+  const user = await currentUser();                       // 1. session — in EVERY action
   const id = form.get('id');
-  if (typeof id !== 'string' || id.length === 0) return { ok: false, reason: 'Brak identyfikatora' };   // 2. wejście
+  if (typeof id !== 'string' || id.length === 0) return { ok: false, reason: 'Missing identifier' };   // 2. input
   const order = await db.order.findUnique({ where: { id } });
-  if (!order || order.ownerId !== user.id) return { ok: false, reason: 'Nie znaleziono zamówienia' };   // 3. właściciel (IDOR)
-  if (order.status === 'paid') return { ok: false, reason: 'Opłaconego zamówienia nie można usunąć' };    // 4. reguła
+  if (!order || order.ownerId !== user.id) return { ok: false, reason: 'Order not found' };   // 3. owner (IDOR)
+  if (order.status === 'paid') return { ok: false, reason: 'A paid order cannot be deleted' };    // 4. rule
   await db.order.delete({ where: { id } });
-  updateTag(`orders:${user.id}`);                         // 5. lista odświeżona od razu (read-your-writes)
+  updateTag(`orders:${user.id}`);                         // 5. list refreshed immediately (read-your-writes)
   return { ok: true };
 }
 ```
-Ten sam komunikat dla „nie istnieje” i „cudze” nie zdradza istnienia cudzych zasobów. Test akcji: bez sesji,
-cudze zamówienie, puste `id`, opłacone zamówienie, przypadek poprawny.
+The same message for "does not exist" and "someone else's" does not reveal the existence of other users' resources. Action tests: no session,
+someone else's order, an empty `id`, a paid order, the valid case.
 
-## 3. Odczyt cache'owany (Cache Components)
+## 3. A cached read (Cache Components)
 ```ts
-// features/products/server/queries.ts — wymaga cacheComponents: true w next.config.ts
+// features/products/server/queries.ts — requires cacheComponents: true in next.config.ts
 import { cacheLife, cacheTag } from 'next/cache';
 import { db } from '@/lib/db';
 
@@ -68,11 +68,11 @@ export async function productList() {
   return rows.map(p => ({ id: p.id, name: p.name }));
 }
 ```
-Edycja w panelu: akcja zapisuje produkt i woła `updateTag('products')` — użytkownik od razu widzi zmianę.
-Odświeżenie w tle (np. z webhooka w Route Handlerze): `revalidateTag('products', 'max')`. Funkcja z `'use cache'`
-nie może czytać `cookies()` ani `headers()` — przekaż potrzebną wartość jako argument (staje się częścią klucza).
+Editing in the admin panel: the action saves the product and calls `updateTag('products')` — the user sees the change immediately.
+A background refresh (e.g. from a webhook in a Route Handler): `revalidateTag('products', 'max')`. A function with `'use cache'`
+cannot read `cookies()` or `headers()` — pass the needed value as an argument (it becomes part of the key).
 
-## 4. Strona z `await params` i `<Suspense>`
+## 4. A page with `await params` and `<Suspense>`
 ```tsx
 // app/products/[id]/page.tsx
 import { Suspense } from 'react';
@@ -88,18 +88,18 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
   return (
     <main>
       <h1>{p.name}</h1>
-      <Suspense fallback={<p>Ładowanie opinii…</p>}>
+      <Suspense fallback={<p>Loading reviews…</p>}>
         <Reviews id={id} />
       </Suspense>
     </main>
   );
 }
 ```
-Po `next typegen` zamiast ręcznego typu: `PageProps<'/products/[id]'>`.
+After `next typegen`, instead of a manual type: `PageProps<'/products/[id]'>`.
 
 ## 5. `proxy.ts`
 ```ts
-// proxy.ts (katalog główny lub src/) — Next.js 16, środowisko Node.js
+// proxy.ts (root directory or src/) — Next.js 16, Node.js runtime
 import { NextResponse, type NextRequest } from 'next/server';
 
 export function proxy(req: NextRequest) {
@@ -109,15 +109,15 @@ export function proxy(req: NextRequest) {
 
 export const config = { matcher: ['/orders/:path*'] };
 ```
-To tylko szybkie przekierowanie dla wygody. Właściwa autoryzacja jest w DAL i w każdej akcji (punkty 1–2).
+This is only a quick redirect for convenience. The real authorization is in the DAL and in every action (points 1–2).
 
-## 6. Odpowiedniki dla 14 i 15
+## 6. Equivalents for 14 and 15
 | Next.js 16 | 15 | 14 |
 |---|---|---|
-| `proxy.ts`, `export function proxy` | `middleware.ts`, `export function middleware` (Node.js od 15.5) | `middleware.ts` (Edge) |
-| `await params` (obowiązkowe) | `await params` (dostęp synchroniczny z ostrzeżeniem) | `params` synchronicznie |
-| `'use cache'` + `cacheTag` | `fetch(url, { next: { tags: ['products'] } })` albo `unstable_cache` | to samo; `fetch` cache'owany domyślnie |
-| `updateTag(tag)` w akcji | `revalidateTag(tag)` | `revalidateTag(tag)` |
+| `proxy.ts`, `export function proxy` | `middleware.ts`, `export function middleware` (Node.js since 15.5) | `middleware.ts` (Edge) |
+| `await params` (mandatory) | `await params` (synchronous access with a warning) | `params` synchronously |
+| `'use cache'` + `cacheTag` | `fetch(url, { next: { tags: ['products'] } })` or `unstable_cache` | the same; `fetch` cached by default |
+| `updateTag(tag)` in an action | `revalidateTag(tag)` | `revalidateTag(tag)` |
 | `revalidateTag(tag, 'max')` | `revalidateTag(tag)` | `revalidateTag(tag)` |
-| `refresh()` | `router.refresh()` w kliencie | `router.refresh()` w kliencie |
-| `useActionState` | `useActionState` (React 19) | `useFormState` z `react-dom` |
+| `refresh()` | `router.refresh()` in the client | `router.refresh()` in the client |
+| `useActionState` | `useActionState` (React 19) | `useFormState` from `react-dom` |

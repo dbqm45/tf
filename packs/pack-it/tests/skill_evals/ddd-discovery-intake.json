@@ -20,6 +20,35 @@
       }
     },
     {
+      "id": "wywiady-na-obszary-en",
+      "expect": "trigger",
+      "prompt": "I have 12 transcripts of interviews with the logistics department and photos of two Event Storming boards. I want to extract business areas from them, but the model must not invent anything. How should I organize this? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "bank (dowod|cytat)|cytat\\w* (dosłown|ze źródła)",
+            "evidence bank",
+            "bank of (evidence|quotes)",
+            "verbatim quotes?",
+            "quotes? (verbatim|from the source)"
+          ],
+          [
+            "sprzeczno|contradiction",
+            "contradict\\w*",
+            "conflict\\w*"
+          ],
+          [
+            "3 .{0,25}cytat|trzy .{0,25}cytat|2 .{0,25}źród|dwóch .{0,25}źród|próg",
+            "3 .{0,25}quotes?",
+            "three .{0,25}quotes?",
+            "2 .{0,25}sources?",
+            "two .{0,25}sources?",
+            "threshold"
+          ]
+        ]
+      }
+    },
+    {
       "id": "czy-warto-modularyzowac",
       "expect": "trigger",
       "prompt": "Szef chce od razu rozbijać nasz wewnętrzny skrypt do raportów na moduły i bounded contexty. Jakie pytania zadać, zanim zaczniemy, żeby ocenić, czy w ogóle warto modularyzować? Odpowiedz zwięźle.",

@@ -1,49 +1,49 @@
 # Memoization
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/memoization.
+Source: frontendpatterns.dev/memoization.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Performance
-- **Poziom:** Advanced
-- **Przykłady frameworków:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 29 listopada 2025
-- **Autor:** Den Odell
+- **Category:** Performance
+- **Level:** Advanced
+- **Framework examples:** React, Vue, Svelte, Native web
+- **Last updated:** 29 November 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Cache expensive computation results so repeated calls with identical inputs return instantly
-instead of recalculating.”
+"Cache expensive computation results so repeated calls with identical inputs return instantly
+instead of recalculating."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **React Compiler** (stabilny, React 19) wstawia memoizację automatycznie — ręczne `useMemo`/`useCallback`/`React.memo`
-  zostają dla przypadków, których kompilator nie obejmuje, i dla bibliotek wymagających stabilnych referencji.
-- Odpowiedniki: Vue `computed`, Svelte 5 `$derived`, Angular `computed()` (memoizowane, leniwie przeliczane — fw-angular).
-- `memoize` z kluczem `JSON.stringify(args)` jest kosztowny dla dużych tablic i nie ogranicza pamięci — dla danych
-  obiektowych użyj `WeakMap` po referencji albo LRU (przykład niżej).
-- Przykłady Svelte to składnia Svelte 4 (`export let`, `$:`, `on:click`, `<svelte:component>`); w Svelte 5: `$props()`,
-  `$state`, `$derived`, `onclick`, komponent dynamiczny renderujesz wprost (`<Comp />`).
+- **React Compiler** (stable, React 19) inserts memoization automatically — manual `useMemo`/`useCallback`/`React.memo`
+  remain for cases the compiler does not cover, and for libraries that require stable references.
+- Equivalents: Vue `computed`, Svelte 5 `$derived`, Angular `computed()` (memoized, lazily recomputed — fw-angular).
+- `memoize` with a `JSON.stringify(args)` key is expensive for large arrays and does not limit memory — for object
+  data use a `WeakMap` by reference or an LRU (example below).
+- The Svelte examples are Svelte 4 syntax (`export let`, `$:`, `on:click`, `<svelte:component>`); in Svelte 5: `$props()`,
+  `$state`, `$derived`, `onclick`, you render a dynamic component directly (`<Comp />`).
 
 ## Problem
 
-Komponenty filtrujące duże zbiory danych (np. 10 000 produktów) przeliczają wynik przy każdym
-renderowaniu rodzica, mimo że dane się nie zmieniły — autor obserwował prosty `sort`, który wykonał
-się 47 razy podczas jednej interakcji użytkownika. Osobny wariant tego samego problemu: callbacki
-inline tworzą nową referencję funkcji przy każdym renderze, wyzwalając niepotrzebne re-rendery
-zmemoizowanych komponentów podrzędnych.
+Components filtering large data sets (e.g. 10,000 products) recompute the result on every
+render of the parent, even though the data has not changed — the author observed a simple `sort` that ran
+47 times during a single user interaction. A separate variant of the same problem: inline callbacks
+create a new function reference on every render, triggering unnecessary re-renders
+of memoized child components.
 
-## Rozwiązanie
+## Solution
 
-„Cache the results of expensive computations so that when inputs haven't changed, you return the
-cached value instead of recalculating.” W React: `useMemo` dla wartości, `useCallback` dla funkcji.
-Vue automatycznie cache'uje computed properties. Svelte robi to przez reaktywne instrukcje (`$:`).
-Autor wprost przestrzega: „unikaj memoizowania wszystkiego — narzut memoizacji może przekroczyć
-koszt przeliczenia tanich operacji”.
+"Cache the results of expensive computations so that when inputs haven't changed, you return the
+cached value instead of recalculating." In React: `useMemo` for values, `useCallback` for functions.
+Vue caches computed properties automatically. Svelte does it through reactive statements (`$:`).
+The author explicitly warns: "avoid memoizing everything — the overhead of memoization can exceed
+the cost of recomputing cheap operations".
 
-## Przykłady kodu
+## Code examples
 
 ### Basic Memoization — React
 
@@ -251,37 +251,37 @@ const fibonacci = (() => {
 fibonacci(50); // Instant with memoization
 ```
 
-## Zalety
+## Advantages
 
-- Kosztowne operacje wykonują się tylko, gdy dane rzeczywiście się zmieniają.
-- Znika widoczne opóźnienie w polach wyszukiwania i interakcjach scroll.
-- Stabilne referencje callbacków zapobiegają kaskadowym re-renderom.
-- Złożony stan pochodny (derived state) staje się praktyczny do utrzymania.
-- Mniejsze zużycie CPU, lepsze działanie na urządzeniach mobilnych.
+- Expensive operations run only when the data really changes.
+- The visible delay in search fields and scroll interactions disappears.
+- Stable callback references prevent cascading re-renders.
+- Complex derived state becomes practical to maintain.
+- Lower CPU usage, better behaviour on mobile devices.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Memoizacja handluje pamięcią za czas CPU — to nie jest darmowe.
-- Dla tanich operacji narzut samej memoizacji może pogorszyć wydajność.
-- Tablice zależności w React (`useMemo`/`useCallback`) łatwo się mylą.
-- Porównanie płytkie (shallow) ma ograniczenia — nie wykrywa zmian zagnieżdżonych w obiekcie.
-- Debugowanie zmemoizowanego kodu jest trudniejsze — breakpointy trafiają tylko czasem.
-- Niestandardowe funkcje porównania w `React.memo` są podatne na błędy.
-- Łatwo o nadmierne memoizowanie „na wszelki wypadek”.
-- Memoizować należy tylko czyste funkcje (bez efektów ubocznych).
+- Memoization trades memory for CPU time — it is not free.
+- For cheap operations the overhead of memoization itself can worsen performance.
+- Dependency arrays in React (`useMemo`/`useCallback`) are easy to get wrong.
+- Shallow comparison has limitations — it does not detect changes nested in an object.
+- Debugging memoized code is harder — breakpoints hit only sometimes.
+- Custom comparison functions in `React.memo` are error-prone.
+- It is easy to over-memoize "just in case".
+- Only pure functions (without side effects) should be memoized.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Pure Component](../components/pure-component.md) — Components.
 - Memoization — Wikipedia.
-- `React.memo` i `useMemo` — dokumentacja React.
-- Computed Properties — dokumentacja Vue.
-- Reactive Statements — dokumentacja Svelte.
+- `React.memo` and `useMemo` — the React documentation.
+- Computed Properties — the Vue documentation.
+- Reactive Statements — the Svelte documentation.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj dla operacji obliczeniowo ciężkich, wywoływanych często z tymi samymi argumentami — ale
-**najpierw zmierz/sprofiluj**, żeby potwierdzić realny problem wydajności, zanim dodasz memoizację.
-To dosłowna ilustracja YAGNI z `../principles.md`: memoizacja „na wszelki wypadek” dla tanich
-operacji jest czystym narzutem bez zysku — dodaje złożoność (tablice zależności, ryzyko błędnego
-porównania) w miejscu, gdzie problem wydajności nigdy nie istniał.
+Use it for computationally heavy operations called often with the same arguments — but
+**measure/profile first** to confirm a real performance problem before you add memoization.
+This is a literal illustration of YAGNI from `../principles.md`: memoization "just in case" for cheap
+operations is pure overhead without gain — it adds complexity (dependency arrays, the risk of a wrong
+comparison) in a place where the performance problem never existed.

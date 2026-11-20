@@ -1,30 +1,32 @@
 #!/usr/bin/env python3
 """
-Odświeżanie rekonstrukcji projektu w dwóch krokach bez modelu. Główny model tylko zleca aktualizacje kart, poprawia
-miejsca z listy i zatwierdza wynik — reszta to skrypty (mniej tur, mniejszy kontekst, niższy koszt).
+Refreshing a project reconstruction in two steps without a model. The main model only orders card updates, fixes
+the places on the list and approves the result — the rest is scripts (fewer turns, smaller context, lower cost).
 
   python3 recon_refresh.py prep <repo> [--dir docs/project/00-reconstruction]
   python3 recon_refresh.py finish <repo> [--dir …] [--cost-usd X]
-  python3 recon_refresh.py apply <repo> [--dir …]   # poprawki z raw/refresh/fixes.md (albo ze stdin), potem finish
+  python3 recon_refresh.py apply <repo> [--dir …]   # fixes from raw/refresh/fixes.md (or stdin), then finish
       fixes.md:  @@ report.md:37
-                 - nowa treść linii (pusty blok usuwa linię)
-  python3 recon_refresh.py card <repo> <karta> [--dir …]   # kontrola jednej karty dla wykonawcy
+                 - new line content (an empty block deletes the line)
+  python3 recon_refresh.py card <repo> <card> [--dir …]   # check a single card for the worker
 
-prep: diff z manifestem (te same partie co w manifeście). Poprzednia wersja zmienionego pliku pochodzi z gita (commit
-manifestu albo HEAD, gdy jej hash zgadza się z manifestem); z niej: pliki ze zmianą tylko w komentarzach i pustych
-liniach nie dostają zleceń, numery linii dowodów w kartach i dokumentach są przeliczane (raz na manifest), a zlecenie
-zawiera diff pliku. Kopia kart do raw/cards-prev/, zlecenie raw/refresh/<karta>.md dla każdej karty, której dotyczą
-zmienione pliki (karta cytuje plik w dowodzie albo jej `batch` jest najdłuższym prefiksem ścieżki), lista plików bez
-karty, plan na ekran (≤ 40 linii). Bez zleceń i plików bez karty prep od razu uruchamia finish.
-finish: karty → .md, rules.md, sekcja Moduły raportu, linia „Odświeżenie przyrostowe:” w nagłówku raportu,
-zmienione reguły kart (stara → nowa), miejsca do sprawdzenia z pełną treścią linii (stary znacznik z recon_cards
---prev, dowód w zmienionej linii kodu, opis podobny do zmienionej reguły) do raw/refresh/STALE.md, przesunięte dowody
-(cytat jednoznacznie w innej linii pliku → nowy numer linii; poza modules/ i raw/), kontrola recon_check --final;
-gdy przechodzi — nowy manifest. Podsumowanie ≤ 70 linii.
-apply: zamienia wskazane linie dokumentów (poza modules/ i liniami rules.md złożonymi z kart — te poprawia się w karcie
-JSON) i uruchamia finish; użyty fixes.md zmienia nazwę na fixes.applied.md. card: dowody karty z cytatem w innej, jednoznacznej linii dostają nowy numer (w JSON), karta
-→ .md, kontrola dowodów; złe dowody z treścią elementu karty i linii kodu (≤ 25 linii).
-Kod wyjścia: 0 — w porządku (finish/card: kontrola przeszła), 1 — kontrola nie przeszła, 2 — złe wywołanie.
+prep: a diff against the manifest (the same batches as in the manifest). The previous version of a changed file comes
+from git (the manifest commit or HEAD when its hash matches the manifest); from it: files changed only in comments and
+blank lines get no orders, evidence line numbers in cards and documents are recomputed (once per manifest), and an
+order contains the file diff. A copy of the cards goes to raw/cards-prev/, an order raw/refresh/<card>.md for every
+card affected by changed files (the card cites the file in its evidence or its `batch` is the longest path prefix),
+a list of files without a card, a plan for the screen (≤ 40 lines). With no orders and no files without a card, prep
+runs finish right away.
+finish: cards → .md, rules.md, the Modules section of the report, the "Incremental refresh:" line in the report header,
+changed card rules (old → new), places to check with the full line content (the old marker from recon_cards --prev,
+evidence in a changed code line, a description similar to a changed rule) into raw/refresh/STALE.md, shifted evidence
+(a quote unambiguously in another line of the file → new line number; outside modules/ and raw/), the recon_check
+--final check; when it passes — a new manifest. Summary ≤ 70 lines.
+apply: replaces the indicated document lines (except modules/ and rules.md lines composed from cards — those are fixed
+in the card JSON) and runs finish; the used fixes.md is renamed to fixes.applied.md. card: card evidence whose quote is
+in another, unambiguous line gets a new number (in the JSON), card → .md, evidence check; bad evidence with the card
+item content and the code line (≤ 25 lines).
+Exit code: 0 — OK (finish/card: the check passed), 1 — the check failed, 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -57,12 +59,11 @@ SLASH = {"cs", "java", "go", "js", "jsx", "ts", "tsx", "mjs", "cjs", "kt", "kts"
          "cc", "cpp", "hpp", "m", "dart", "php", "groovy", "gradle", "proto", "scss", "less", "sql"}
 HASH = {"py", "rb", "sh", "bash", "yml", "yaml", "toml", "r", "pl", "ex", "exs", "properties"}
 STAMP = "Incremental refresh:"
-STAMPS = (STAMP, "Odświeżenie przyrostowe:")   # pl: sprzed 14.x
 
 
 def code_skeleton(text: str, path: str) -> str | None:
-    """Kod bez komentarzy zajmujących całą linię i bez pustych linii; None — język nieznany albo niedomknięty blok.
-    Zachowawczo: komentarz za kodem, docstring i dyrektywa (#if) zostają w szkielecie."""
+    """Code without full-line comments and without blank lines; None — unknown language or an unclosed block.
+    Conservatively: a trailing comment, a docstring and a directive (#if) stay in the skeleton."""
     ext = path.rsplit(".", 1)[-1].lower() if "." in path.rsplit("/", 1)[-1] else ""
     if ext in SLASH:
         marks, block = ("//", "--") if ext == "sql" else ("//",), True
@@ -93,7 +94,7 @@ def comment_only(old: str, new: str, path: str) -> bool:
 
 
 def old_text(repo: str, manifest: dict, rel: str) -> str | None:
-    """Wersja pliku z chwili manifestu: commit manifestu albo HEAD, jeśli hash zgadza się z manifestem."""
+    """The file version from the time of the manifest: the manifest commit or HEAD if the hash matches the manifest."""
     want = {**manifest.get("files", {}), **manifest.get("tests", {})}.get(rel)
     for rev in dict.fromkeys(r for r in (manifest.get("commit"), "HEAD") if r):
         if not want:
@@ -105,7 +106,7 @@ def old_text(repo: str, manifest: dict, rel: str) -> str | None:
 
 
 def line_map(old: str, new: str) -> dict[int, int]:
-    """Stary numer linii → nowy (linie zastąpione: ta sama pozycja w nowym bloku, usunięte: linia, która je zastąpiła)."""
+    """Old line number → new (replaced lines: the same position in the new block; deleted: the line that replaced them)."""
     a, b = old.splitlines(), new.splitlines()
     m = {}
     for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
@@ -116,7 +117,7 @@ def line_map(old: str, new: str) -> dict[int, int]:
 
 
 def changed_lines(old: str, new: str) -> list[int]:
-    """Numery linii nowej wersji, które diff zmienił albo dodał (przy usunięciu — linia, która je zastąpiła)."""
+    """Line numbers of the new version that the diff changed or added (for a deletion — the line that replaced it)."""
     a, b = old.splitlines(), new.splitlines()
     out = set()
     for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
@@ -126,7 +127,7 @@ def changed_lines(old: str, new: str) -> list[int]:
 
 
 def review_places(d: str, changes: list[dict], code_lines: dict) -> list[tuple[str, int, str, str]]:
-    """Opisy syntezy (poza kartami) z dowodem w zmienionej linii kodu albo o treści podobnej do zmienionej reguły."""
+    """Synthesis descriptions (outside cards) with evidence in a changed code line or with content similar to a changed rule."""
     olds = [(c["card"], recon_cards.stems(c["old"].get("rule", "")),
              f"now: {short(c['new'])}" if c["new"] else "rule removed from the code") for c in changes if c["old"]]
     hits = []
@@ -154,7 +155,7 @@ def review_places(d: str, changes: list[dict], code_lines: dict) -> list[tuple[s
 
 
 def remap(d: str, maps: dict[str, dict[int, int]]) -> int:
-    """Przelicza numery linii `plik:linia` w kartach (modules/*.json) i dokumentach .md poza raw/."""
+    """Recomputes `file:line` line numbers in the cards (modules/*.json) and .md documents outside raw/."""
     if not maps:
         return 0
     pat = re.compile(r"(?<![\w/.@-])(" + "|".join(re.escape(p) for p in sorted(maps, key=len, reverse=True))
@@ -189,15 +190,15 @@ def diff_lines(old: str, new: str, rel: str, limit: int = 60) -> list[str]:
 
 
 def stamp(repo: str, rel_dir: str, n_files: int) -> None:
-    """Linia „Odświeżenie przyrostowe: data · commit · zmienione pliki” pod nagłówkiem raportu (jedna, nadpisywana)."""
+    """The "Incremental refresh: date · commit · changed files" line under the report header (a single one, overwritten)."""
     path = os.path.join(repo, rel_dir, "report.md")
     if not os.path.isfile(path):
         return
     with open(path, encoding="utf-8") as fh:
         lines = fh.read().split("\n")
-    if n_files == 0 and any(ln.startswith(STAMPS) for ln in lines):
+    if n_files == 0 and any(ln.startswith(STAMP) for ln in lines):
         return
-    for i in [i for i, ln in enumerate(lines) if ln.startswith(STAMPS)][::-1]:
+    for i in [i for i, ln in enumerate(lines) if ln.startswith(STAMP)][::-1]:
         del lines[i - 1 if i and lines[i - 1] == "" else i:i + 1]
     dirty = subprocess.run(["git", "-C", repo, "status", "--porcelain", "--untracked-files=no", "--", ".",
                             f":(exclude){rel_dir}"], capture_output=True, text=True).stdout.strip()
@@ -211,7 +212,7 @@ def stamp(repo: str, rel_dir: str, n_files: int) -> None:
 
 
 def card_source(d: str, rel: str, n: int) -> str | None:
-    """Karta, z której finish składa daną linię (modules/<karta>.md, sekcje kart w rules.md); None — tekst syntezy."""
+    """The card from which finish builds a given line (modules/<card>.md, card sections in rules.md); None — synthesis text."""
     rel = rel.replace(os.sep, "/")
     if rel.startswith("modules/") and rel.endswith(".md"):
         return rel[len("modules/"):-3]
@@ -223,8 +224,8 @@ def card_source(d: str, rel: str, n: int) -> str | None:
     except OSError:
         return None
     head = next((ln for ln in reversed(lines) if ln.startswith("## ")), "")
-    m = re.search(r"\((?:details|szczegóły): modules/([^)]+)\.md\)", head)
-    return m.group(1) if m and not head.startswith(("## Cross-cutting rules", "## Reguły przekrojowe")) else None
+    m = re.search(r"\(details: modules/([^)]+)\.md\)", head)
+    return m.group(1) if m and not head.startswith("## Cross-cutting rules") else None
 
 
 def doc_line(path: str, n: int) -> str:
@@ -258,13 +259,13 @@ def batch_parts(card: dict) -> list[str]:
 def covers(part: str, path: str) -> bool:
     if part == "":
         return True
-    if "/" not in part:   # krótka nazwa katalogu, np. "owner"
+    if "/" not in part:   # a short directory name, e.g. "owner"
         return path.startswith(part + "/") or f"/{part}/" in path
     return path == part or path.startswith(part + "/")
 
 
 def map_files(files: list[str], cards: dict) -> tuple[dict, list[str]]:
-    """Plik → karty: najpierw karty cytujące plik w dowodzie, potem karta z najdłuższym pasującym `batch`."""
+    """File → cards: first the cards citing the file in evidence, then the card with the longest matching `batch`."""
     ev = {stem: evidence_paths(c) for stem, c in cards.items()}
     by_card, orphans = {}, []
     for f in files:
@@ -277,7 +278,7 @@ def map_files(files: list[str], cards: dict) -> tuple[dict, list[str]]:
                         best, hit = len(p), [s]
                     elif covers(p, f) and len(p) == best and s not in hit:
                         hit.append(s)
-            hit = hit if best > 0 else []   # sam katalog główny nie wystarcza
+            hit = hit if best > 0 else []   # the root directory alone is not enough
         if not hit:
             orphans.append(f)
         for s in hit:
@@ -327,7 +328,7 @@ def task_text(stem: str, card: dict, files: list[str], kinds: dict, rel_dir: str
 
 
 def reanchor(d: str, repo: str) -> int:
-    """Dowody z cytatem, który nie pasuje do wskazanej linii, a występuje dokładnie raz w pliku — nowy numer linii."""
+    """Evidence with a quote that does not match the indicated line but occurs exactly once in the file — a new line number."""
     fixed, cache = 0, {}
     for dp, dn, fn in os.walk(d):
         dn[:] = [x for x in dn if x not in ("raw", "modules")]
@@ -531,7 +532,7 @@ def finish(repo: str, rel_dir: str, cost: str | None) -> int:
         with open(man, "w", encoding="utf-8") as fh:
             json.dump(m, fh, ensure_ascii=False, indent=2)
         L.append(f"✓ manifest: {rel_dir}/manifest.json — code state after the refresh")
-        if os.path.isfile(os.path.join(d, "reconstruction.json")):   # eksport JSON (F2) nadąża za odświeżeniem
+        if os.path.isfile(os.path.join(d, "reconstruction.json")):   # the JSON export (F2) keeps up with the refresh
             ex = subprocess.run([sys.executable, os.path.join(HERE, "recon_export.py"), d, "--repo", repo],
                                 capture_output=True, text=True)
             L.append(ex.stdout.strip() or f"✗ JSON export: {ex.stderr.strip()[-200:]}")
@@ -665,7 +666,7 @@ def main(argv: list[str]) -> int:
             return apply(repo, rel_dir, sys.stdin.read())
         with open(fixes, encoding="utf-8") as fh:
             text = fh.read()
-        os.replace(fixes, fixes[:-3] + ".applied.md")   # ten sam plik nie zostanie użyty drugi raz
+        os.replace(fixes, fixes[:-3] + ".applied.md")   # the same file will not be used a second time
         return apply(repo, rel_dir, text)
     if cmd == "card":
         stem = rest[1] if len(rest) > 1 and not rest[1].startswith("--") else ""

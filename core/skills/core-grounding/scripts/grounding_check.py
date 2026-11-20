@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Sprawdza, czy odwołania w dokumentach markdown wskazują rzeczy, które istnieją — bez modelu.
+Checks whether references in markdown documents point to things that exist — no model.
 
   python3 .claude/skills/core-grounding/scripts/grounding_check.py docs/project/06-delivery/003-logowanie.md
-  python3 .claude/skills/core-grounding/scripts/grounding_check.py docs/project/ --warn   # tylko ostrzeżenia, kod 0
-  python3 .claude/skills/core-grounding/scripts/grounding_check.py report.md --jev       # + czy treść linii potwierdza zdanie
+  python3 .claude/skills/core-grounding/scripts/grounding_check.py docs/project/ --warn   # warnings only, code 0
+  python3 .claude/skills/core-grounding/scripts/grounding_check.py report.md --jev       # + whether the line's content confirms the sentence
 
-Sprawdza:
-- ścieżki w `kodzie` (z ukośnikiem albo znanym rozszerzeniem), także w poleceniach (`python3 tools/x.py`),
-- odwołania `plik:linia` i `plik:linia-linia` (plik istnieje i ma tyle linii),
-- lokalne linki markdown [tekst](ścieżka#kotwica).
-Z --jev (wymaga TYPESAFE_API_KEY; cookbook TypeSafe „citation check”) dla każdego odwołania `plik:linia` pyta model
-decyzyjny Jev, czy wskazane linie POTWIERDZAJĄ zdanie, w którym stoi odwołanie, PRZECZĄ mu, czy NIC O NIM NIE MÓWIĄ.
-Pewność ≥0,8 → werdykt; niższa → „do przejrzenia przez człowieka”. Sprzeczne i niepotwierdzające liczą się jako problemy.
-Ścieżki szuka względem katalogu dokumentu, jego katalogów nadrzędnych i katalogu projektu. Pomija bloki kodu,
-adresy URL, wzorce z <…>, *, {…}, $ oraz ścieżki oznaczone w tej samej linii jako planowane („(new)”, „(to be
-created)”, „(planned)”, „[plan]”; też dawne „(nowy)”, „(do utworzenia)”). Do dokumentów o projekcie (raporty, artefakty, README), nie do przykładów w skillach.
+Checks:
+- paths in `code` (with a slash or a known extension), also in commands (`python3 tools/x.py`),
+- `file:line` and `file:line-line` references (the file exists and has that many lines),
+- local markdown links [text](path#anchor).
+With --jev (requires TYPESAFE_API_KEY; the TypeSafe „citation check” cookbook) for every `file:line` reference it asks the
+Jev decision model whether the indicated lines CONFIRM the sentence the reference stands in, CONTRADICT it, or SAY NOTHING ABOUT IT.
+Confidence ≥0.8 → verdict; lower → „do przejrzenia przez człowieka” ("for human review"). Contradicting and non-confirming count as problems.
+The path is looked up relative to the document's directory, its parent directories and the project directory. Skips code blocks,
+URLs, patterns with <…>, *, {…}, $ and paths marked in the same line as planned („(new)”, „(to be
+created)”, „(planned)”, „[plan]”; in a Polish document also „(nowy)”, „(do utworzenia)”). For project documents (reports, artifacts, README), not for examples in skills.
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ SKIP_CHARS = set("<>*{}$|")
 
 
 def candidates(token: str) -> list[str]:
-    """Ścieżki do sprawdzenia w jednym fragmencie kodu (całość albo słowa polecenia)."""
+    """Paths to check in one code fragment (the whole or the command's words)."""
     parts = token.split() if " " in token.strip() else [token.strip()]
     out = []
     for p in parts:
@@ -44,7 +44,7 @@ def candidates(token: str) -> list[str]:
             continue
         base = LINE_REF.match(p).group("path") if LINE_REF.match(p) else p
         if base.endswith("/") and base.count("/") == 1:
-            continue   # sam katalog w rodzaju `references/` — zbyt ogólny, żeby go sprawdzać
+            continue   # a bare directory like `references/` — too general to check
         if ("/" in base and not base.startswith("/")) or base.lower().endswith(EXT):
             if re.match(r"^[\w.\-/]+$", base) and not base.startswith(".."):
                 out.append(p)
@@ -55,7 +55,7 @@ _NAMES: dict[str, bool] = {}
 
 
 def known_name(name: str) -> bool:
-    """Sama nazwa pliku bez ścieżki (np. `scan_secrets.py`) — istnieje gdziekolwiek w projekcie?"""
+    """A bare file name without a path (e.g. `scan_secrets.py`) — does it exist anywhere in the project?"""
     if name not in _NAMES:
         _NAMES[name] = any(True for p in ROOT.rglob(name)
                            if not any(x in p.parts for x in ("node_modules", ".git", "dist", "build", "coverage")))
@@ -81,8 +81,8 @@ def resolve(doc: Path, rel: str) -> Path | None:
 
 
 def looks_like_repo_path(doc: Path, path: str) -> bool:
-    """Ścieżka bez rozszerzenia (np. `src/app/orders`) jest sprawdzana tylko, gdy jej pierwszy człon istnieje —
-    inaczej to raczej identyfikator w rodzaju `skill/scenariusz`, a nie ścieżka."""
+    """A path without an extension (e.g. `src/app/orders`) is checked only when its first segment exists —
+    otherwise it is rather an identifier like `skill/scenario`, not a path."""
     if path.lower().endswith(EXT) and not path.startswith(".") or "/" not in path:
         return not (path.startswith(".") and "/" not in path and len(path) < 7)
     first = path.split("/")[0]
@@ -119,7 +119,7 @@ def check_doc(doc: Path) -> list[str]:
     return problems
 
 
-JEV_ACCEPT = 0.8      # próg automatycznej akceptacji werdyktu (cookbook „citation check”)
+JEV_ACCEPT = 0.8      # threshold of automatic acceptance of the verdict (the „citation check” cookbook)
 CITE_CRITERIA = {
     "supports": "The `section` affirms the `claim` or logically implies that it is true.",
     "contradicts": "The `section` denies the `claim` or implies that it is false.",
@@ -128,7 +128,7 @@ CITE_CRITERIA = {
 
 
 def jev_citations(doc: Path, limit: int) -> tuple[list[str], list[str]]:
-    """Weryfikacja treści odwołań `plik:linia`: (problemy, do przejrzenia)."""
+    """Verification of the content of `file:line` references: (problems, for review)."""
     cands = [d / ".claude" / "hooks" for d in (ROOT, *ROOT.parents)] + [Path(__file__).resolve().parents[3] / "hooks"]
     hooks = next((h for h in cands if (h / "jev_client.py").exists()), None)
     if not hooks:

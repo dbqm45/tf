@@ -1,37 +1,37 @@
-# Ryzyko dostawców (third-party risk)
+# Vendor risk (third-party risk)
 
-Spis treści: 1. Tiering · 2. Due diligence · 3. Czytanie raportu SOC 2 · 4. Klauzule umowne · 5. Monitoring · 6. Wyjście
+Contents: 1. Tiering · 2. Due diligence · 3. Reading a SOC 2 report · 4. Contract clauses · 5. Monitoring · 6. Exit
 
 ## 1. Tiering
-| Tier | Kryterium | Głębokość |
+| Tier | Criterion | Depth |
 |---|---|---|
-| 1 | dostęp do danych wrażliwych/osobowych na dużą skalę albo awaria zatrzymuje biznes | kwestionariusz pełny, raport SOC 2 typu II lub ISO 27001, przegląd umowy, roczny przegląd |
-| 2 | ograniczony dostęp do danych, awaria uciążliwa | kwestionariusz skrócony, certyfikat lub raport |
-| 3 | bez dostępu do danych, zastępowalny | samooświadczenie, warunki standardowe |
+| 1 | access to sensitive/personal data at large scale, or an outage stops the business | a full questionnaire, a SOC 2 Type II report or ISO 27001, a contract review, a yearly review |
+| 2 | limited access to data, an outage is a nuisance | a short questionnaire, a certificate or a report |
+| 3 | no access to data, replaceable | a self-declaration, standard terms |
 
 ## 2. Due diligence
-Kwestionariusz proporcjonalny (standardowe formaty branżowe zamiast autorskich 300 pytań [niezweryfikowane: dobór wg firmy]).
-Obszary: zarządzanie bezpieczeństwem, dostęp i MFA, szyfrowanie, kopie i ciągłość, zarządzanie podatnościami,
-incydenty i zgłaszanie, podwykonawcy, lokalizacja danych, usuwanie danych. Odpowiedź bez dowodu ma niższą wagę.
-Wynik: ocena dostawcy, luki, warunki zakupu, ryzyka do rejestru (właściciel po stronie biznesu).
+A proportionate questionnaire (standard industry formats instead of 300 home-made questions [unverified: the choice depends on the company]).
+Areas: security management, access and MFA, encryption, backups and continuity, vulnerability management,
+incidents and notification, subcontractors, data location, data deletion. An answer without evidence carries less weight.
+Result: the vendor assessment, gaps, purchase conditions, risks for the register (the owner on the business side).
 
-## 3. Czytanie raportu SOC 2
-Sprawdź: typ (II dla tier 1), **okres** (aktualny, bez długiej luki do dziś — „bridge letter” wypełnia lukę), kategorie
-Trust Services (czy obejmują to, na czym Ci zależy), **zakres systemu** (czy dotyczy usługi, którą kupujesz),
-**opinię** (bez zastrzeżeń czy z zastrzeżeniem), **wyjątki** i odpowiedź kierownictwa, **kontrole uzupełniające
-użytkownika (CUEC)** — to Twoje obowiązki, i wykorzystanie podwykonawców (carve-out). Raport jest poufny; chroń go
-umową o zachowaniu poufności. Certyfikat ISO 27001: zakres, SoA (poproś o wersję), jednostka certyfikująca, ważność.
+## 3. Reading a SOC 2 report
+Check: the type (II for tier 1), the **period** (current, without a long gap until today — a "bridge letter" fills the gap), the Trust
+Services categories (whether they cover what you care about), the **system scope** (whether it concerns the service you are buying),
+the **opinion** (unqualified or qualified), the **exceptions** and management's response, the **complementary user entity
+controls (CUEC)** — these are your obligations, and the use of subservice organizations (carve-out). The report is confidential; protect it
+with a non-disclosure agreement. An ISO 27001 certificate: the scope, the SoA (ask for the version), the certification body, the validity.
 
-## 4. Klauzule umowne
-Wymogi bezpieczeństwa (załącznik) · zgłaszanie incydentów w ustalonym terminie · prawo do audytu lub raportów ·
-zarządzanie podwykonawcami i zgoda na zmiany · lokalizacja i transfer danych · zwrot i usunięcie danych przy
-wyjściu · ciągłość i RTO/RPO · odpowiedzialność i ubezpieczenie · umowa powierzenia, gdy dane osobowe
-(arch-privacy-compliance). Treść klauzul i odpowiedzialność opiniuje prawnik.
+## 4. Contract clauses
+Security requirements (an annex) · incident notification within an agreed deadline · the right to audit or to reports ·
+management of subcontractors and consent to changes · data location and transfer · the return and deletion of data on
+exit · continuity and RTO/RPO · liability and insurance · a data processing agreement, when there is personal data
+(arch-privacy-compliance). The content of the clauses and the liability are reviewed by a lawyer.
 
-## 5. Monitoring ciągły
-Roczny (tier 1) przegląd raportów i certyfikatów, kalendarz ważności; śledzenie incydentów dostawcy i zmian
-właścicielskich; zmiana zakresu użycia → ponowna ocena; wyniki do KRI (dostawcy bez ważnej oceny). Dostawca z krytycznym
-ustaleniem: plan naprawczy z terminem albo akceptacja ryzyka (register-and-acceptance.md).
+## 5. Continuous monitoring
+A yearly (tier 1) review of reports and certificates, a validity calendar; tracking the vendor's incidents and changes of
+ownership; a change in the scope of use → a new assessment; results into the KRIs (vendors without a valid assessment). A vendor with a critical
+finding: a remediation plan with a deadline or a risk acceptance (register-and-acceptance.md).
 
-## 6. Wyjście z dostawcą
-Plan zastępstwa dla tier 1 przed umową: eksport danych w użytecznym formacie, okres przejściowy, potwierdzenie usunięcia.
+## 6. Exit from a vendor
+A replacement plan for tier 1 before the contract: a data export in a usable format, a transition period, a confirmation of deletion.

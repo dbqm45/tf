@@ -17,6 +17,73 @@
       }
     },
     {
+      "id": "czy-ai-i-koszt-bledow-en",
+      "expect": "trigger",
+      "prompt": "My boss wants an AI feature that approves refunds in the shop on its own. How do I know whether it's worth using AI here at all rather than plain rules? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "regu[łl]\\w*",
+            "deterministyczn\\w+",
+            "rule-based",
+            "rules?\\b",
+            "deterministic\\w*"
+          ],
+          [
+            "koszt\\w* błęd\\w+",
+            "cena błęd\\w+",
+            "skutk\\w+ błęd\\w+",
+            "kto ponosi",
+            "cost of (errors?|mistakes?|failures?)",
+            "(error|mistake) cost\\w*",
+            "consequences? of (errors?|mistakes?)",
+            "who bears",
+            "price of (an )?error"
+          ],
+          [
+            "człowiek w pętli",
+            "human-in-the-loop",
+            "zatwierdz\\w+ (przez )?człowiek",
+            "weryfikacj\\w+ człowiek",
+            "człowiek\\w* (zatwierdza|decyduje|akceptuje)",
+            "tylko (proponow|rekomend)\\w*",
+            "human (approval|review|oversight|verification)",
+            "(approved|reviewed|verified) by (a )?human",
+            "human\\w* (approve|decide|review|accept)\\w*",
+            "only (propos|recommend|suggest)\\w*"
+          ],
+          [
+            "tolerancj\\w+",
+            "dopuszczaln\\w+",
+            "typ\\w* błęd\\w+",
+            "fałszywie (dodatni|ujemn)",
+            "limit\\w* na typ",
+            "tolerance",
+            "acceptable (error|risk|rate)\\w*",
+            "error types?|types? of errors?",
+            "false (positive|negative)\\w*",
+            "limits? per (error )?type"
+          ],
+          [
+            "klasyczn\\w+ (ML|uczeni)",
+            "koszt\\w* (na )?udan\\w+",
+            "bez zbioru",
+            "zbiór ewaluac\\w*",
+            "classic(al)? (ML|machine learning)",
+            "cost per (successful|completed)\\w*",
+            "without (a )?(data ?set|data)",
+            "eval\\w* (set|data ?set)"
+          ]
+        ],
+        "none": [
+          "AI zawsze będzie lepsze od reguł",
+          "nie trzeba mierzyć błędów",
+          "AI will always be better than rules",
+          "no need to measure (the )?errors"
+        ]
+      }
+    },
+    {
       "id": "kryteria-akceptacji-jako-ewaluacje",
       "expect": "trigger",
       "prompt": "Piszę wymagania do asystenta AI w aplikacji bankowej i nie wiem, jak zapisać kryteria akceptacji, skoro odpowiedzi modelu są za każdym razem inne. Co tam wpisać? Odpowiedz zwięźle.",

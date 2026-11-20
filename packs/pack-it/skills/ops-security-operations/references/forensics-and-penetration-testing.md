@@ -1,42 +1,42 @@
-# Forensyka po incydencie i testy penetracyjne
+# Post-incident forensics and penetration testing
 
-## Forensyka — zasady
-- **Kolejność ulotności** (RFC 3227): najpierw to, co znika najszybciej — rejestry i pamięć podręczna, pamięć RAM
-  (procesy, połączenia, klucze), stan sieci, procesy; potem dyski, logi zdalne, kopie zapasowe, nośniki archiwalne.
-  Wyłączenie maszyny kasuje pamięć, w której często jest jedyny ślad.
-- **Nie pracuj na oryginale**: obraz dysku (np. `dd`, FTK Imager) lub migawka wolumenu w chmurze, zrzut pamięci
-  narzędziem do akwizycji, skrót (SHA-256) obrazu przy pobraniu i przy każdym użyciu; analiza na kopii, w odizolowanym
-  środowisku.
-- **Łańcuch dowodowy**: kto, kiedy, skąd, jakim narzędziem pobrał dowód, gdzie go przechowywano, kto miał dostęp.
-  Bez tego dowód może nie mieć wartości w sporze lub postępowaniu.
-- **Oś czasu** w UTC z wielu źródeł (logi systemu i aplikacji, logi chmury, EDR, zapory, poczty) — synchronizacja
-  zegarów to warunek (ops-security-operations: telemetria).
-- Narzędzia analizy (np. Autopsy, Volatility dla pamięci, edytory szesnastkowe) obsługuje osoba przeszkolona; w poważnym
-  incydencie lub przy możliwym postępowaniu prawnym — zewnętrzny zespół reagowania (kontakt z planu).
-- Rola agenta: zbiera i porządkuje fakty, buduje oś czasu z logów, pilnuje listy dowodów; **nie** zmienia stanu
-  zaatakowanych systemów bez decyzji osoby dowodzącej (SKILL.md: reagowanie).
+## Forensics — principles
+- **Order of volatility** (RFC 3227): first what disappears fastest — registers and cache, RAM
+  (processes, connections, keys), network state, processes; then disks, remote logs, backups, archival media.
+  Shutting down the machine erases the memory, which often holds the only trace.
+- **Do not work on the original**: a disk image (e.g. `dd`, FTK Imager) or a volume snapshot in the cloud, a memory dump
+  with an acquisition tool, a hash (SHA-256) of the image at acquisition and at every use; analysis on a copy, in an isolated
+  environment.
+- **Chain of custody**: who, when, from where, with which tool collected the evidence, where it was stored, who had access.
+  Without it the evidence may have no value in a dispute or proceedings.
+- **A timeline** in UTC from many sources (system and application logs, cloud logs, EDR, firewalls, mail) — clock
+  synchronization is a precondition (ops-security-operations: telemetry).
+- Analysis tools (e.g. Autopsy, Volatility for memory, hex editors) are operated by a trained person; in a serious
+  incident or with possible legal proceedings — an external response team (the contact from the plan).
+- The agent's role: it collects and organizes facts, builds the timeline from logs, keeps the evidence list; it does **not** change the state
+  of the attacked systems without a decision by the incident commander (SKILL.md: response).
 
-## Testy penetracyjne i ćwiczenia zespołów
-- **Zasady zaangażowania** (rules of engagement) na piśmie, **przed** testem: pisemna zgoda właściciela systemów,
-  zakres (adresy, domeny, aplikacje, konta) i wyłączenia, dozwolone techniki (np. bez DoS, bez socjotechniki), okna
-  czasowe, kontakty awaryjne i warunki natychmiastowego przerwania, postępowanie z danymi znalezionymi w trakcie,
-  sposób raportowania i usunięcia artefaktów testu.
-- Systemy dostawców chmury i SaaS: tylko w granicach ich polityk testów (większość dużych dostawców je publikuje).
-- Zespoły: **czerwony** (atakuje według scenariusza), **niebieski** (broni i wykrywa), **purpurowy** (oba razem,
-  test po teście poprawiają wykrywanie). Wynik ćwiczenia to nowe reguły i poprawki, nie tylko raport.
-- Raport: podatność, dowód, wpływ, prawdopodobieństwo, rekomendacja; potwierdzenie naprawy ponownym testem.
-- Szkolenie praktyczne: legalne laboratoria i platformy CTF (np. TryHackMe, Hack The Box, picoCTF) — nigdy cudze
-  systemy.
+## Penetration tests and team exercises
+- **Rules of engagement** in writing, **before** the test: the written consent of the systems' owner,
+  the scope (addresses, domains, applications, accounts) and exclusions, allowed techniques (e.g. no DoS, no social engineering), time
+  windows, emergency contacts and conditions for immediate termination, handling of data found during the test,
+  the way of reporting and removing the test's artifacts.
+- Cloud provider and SaaS systems: only within their testing policies (most large providers publish them).
+- Teams: **red** (attacks according to a scenario), **blue** (defends and detects), **purple** (both together,
+  improving detection test by test). The result of an exercise is new rules and fixes, not just a report.
+- The report: the vulnerability, evidence, impact, likelihood, recommendation; confirmation of the fix by a retest.
+- Hands-on training: legal labs and CTF platforms (e.g. TryHackMe, Hack The Box, picoCTF) — never someone else's
+  systems.
 
-## Zasada dla agentów fabryki
-Agent **nie uruchamia** skanerów portów i podatności, frameworków eksploitów ani narzędzi do łamania haseł wobec
-żadnego systemu bez pisemnego zakresu i zgody człowieka w rozmowie — także „tylko sprawdzić” cudzy adres. W zakresie
-testów (własne środowisko testowe, zgoda) stosuje zasady zaangażowania powyżej. Skan bierny własnej aplikacji na
-stagingu (OWASP ZAP w trybie bazowym) jest częścią CI (qa-regression, `environment-and-special-data.md`).
+## The rule for factory agents
+An agent **does not run** port and vulnerability scanners, exploit frameworks or password cracking tools against
+any system without a written scope and a human's consent in the conversation — also not to "just check" someone else's address. Within the scope
+of tests (its own test environment, consent) it applies the rules of engagement above. A passive scan of its own application on
+staging (OWASP ZAP in baseline mode) is part of CI (qa-regression, `environment-and-special-data.md`).
 
-## Źródła
+## Sources
 - RFC 3227 *Guidelines for Evidence Collection and Archiving*; NIST SP 800-86 *Guide to Integrating Forensic Techniques
   into Incident Response*
 - [roadmap.sh — Cyber Security](https://roadmap.sh/cyber-security) (forensics, memdump, dd, FTK Imager, Autopsy,
   rules of engagement, blue/red/purple teams, CTF)
-Opisane własnymi słowami.
+Described in our own words.

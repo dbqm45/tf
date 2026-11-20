@@ -1,80 +1,80 @@
-# Typy, koercja i porównania
+# Types, coercion and comparisons
 
-Na podstawie MDN Web Docs (developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Equality), opisane własnymi słowami; przykłady sprawdzone w Node 22.
+Based on MDN Web Docs (developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Equality), described in our own words; examples checked in Node 22.
 
 ## `==` (loose equality) vs `===` (strict equality)
 
-- **`===`** — nigdy nie konwertuje typów; operandy różnych typów są zawsze różne.
-- **`==`** — próbuje skonwertować operandy różnych typów przed porównaniem (koercja).
+- **`===`** — never converts types; operands of different types are always different.
+- **`==`** — tries to convert operands of different types before comparing (coercion).
 
-### Algorytm koercji dla `==` (skrót)
+### The coercion algorithm for `==` (summary)
 
-1. **Ten sam typ** → porównanie jak `===` (Object: ta sama referencja; String: te same znaki;
-   Number: ta sama wartość, `NaN` nigdy nie równa się niczemu, `+0 == -0`; Boolean/BigInt/Symbol:
-   dosłowna równość).
-2. **`null`/`undefined`** — jeśli jeden operand to `null` lub `undefined`, drugi musi być też
-   `null`/`undefined`, inaczej `false`. To jest **specjalna reguła**: `null == undefined` → `true`,
-   ale `null === undefined` → `false`.
-3. **Obiekt + prymityw** — obiekt konwertowany do prymitywu (`valueOf`/`toString`).
-4. **Prymityw + prymityw różnych typów** — Boolean→Number (`true`→`1`), Number+String→String
-   konwertowany do Number, Symbol+cokolwiek → `false` (bez konwersji).
+1. **The same type** → a comparison like `===` (Object: the same reference; String: the same characters;
+   Number: the same value, `NaN` is never equal to anything, `+0 == -0`; Boolean/BigInt/Symbol:
+   literal equality).
+2. **`null`/`undefined`** — if one operand is `null` or `undefined`, the other must also be
+   `null`/`undefined`, otherwise `false`. This is a **special rule**: `null == undefined` → `true`,
+   but `null === undefined` → `false`.
+3. **Object + primitive** — the object is converted to a primitive (`valueOf`/`toString`).
+4. **Primitive + primitive of different types** — Boolean→Number (`true`→`1`), Number+String→the String
+   is converted to a Number, Symbol+anything → `false` (no conversion).
 
-### Tabela przykładów
+### Table of examples
 
 ```js
 "1" == 1;                  // true  (string → number)
 0 == false;                 // true  (false → 0)
-0 == null;                  // false (null tylko == null/undefined)
+0 == null;                  // false (null only == null/undefined)
 0 == undefined;              // false
-null == undefined;           // true  (reguła specjalna)
-NaN == NaN;                  // false (NaN nigdy nie jest równe niczemu, nawet sobie)
+null == undefined;           // true  (special rule)
+NaN == NaN;                  // false (NaN is never equal to anything, not even itself)
 +0 == -0;                    // true
 
 const o1 = { k: "v" }, o2 = { k: "v" };
-o1 == o2;                    // false (różne obiekty, ta sama zawartość)
-o1 == o1;                    // true  (ta sama referencja)
+o1 == o2;                    // false (different objects, the same content)
+o1 == o1;                    // true  (the same reference)
 
-[1, 2, 3] == "1,2,3";        // true  (array → string przez toString())
+[1, 2, 3] == "1,2,3";        // true  (array → string through toString())
 ```
 
-## Kiedy używać którego
+## When to use which
 
-**Domyślnie: `===`.** Jest przewidywalny, nie wymaga rozumienia algorytmu koercji, zapobiega
-subtelnym bugom (`"1" == 1` bywa niezamierzone).
+**By default: `===`.** It is predictable, does not require understanding the coercion algorithm, and prevents
+subtle bugs (`"1" == 1` is often unintended).
 
 ```js
 if (value === 0) { /* ... */ }
 if (status === "active") { /* ... */ }
 ```
 
-**`==` świadomie, w jednym idiomatycznym przypadku:** sprawdzenie „czy `null` albo `undefined`”,
-naraz, jednym porównaniem:
+**`==` deliberately, in one idiomatic case:** checking "is it `null` or `undefined`",
+both at once, with one comparison:
 
 ```js
 if (value == null) {
-  // true dla value === null LUB value === undefined
+  // true for value === null OR value === undefined
 }
-// zamiast dłuższego:
+// instead of the longer:
 if (value === null || value === undefined) { /* ... */ }
 ```
 
-Poza tym jednym przypadkiem, użycie `==` w code review jest sygnałem do zapytania „czy to
-zamierzone”, nie domyślną praktyką.
+Outside this one case, a use of `==` in code review is a signal to ask "is this
+intended", not the default practice.
 
-## `typeof` i `instanceof`
+## `typeof` and `instanceof`
 
-- `typeof` zwraca string: `"string"`, `"number"`, `"bigint"`, `"boolean"`, `"symbol"`,
+- `typeof` returns a string: `"string"`, `"number"`, `"bigint"`, `"boolean"`, `"symbol"`,
   `"undefined"`, `"object"`, `"function"`.
-- **Pułapka historyczna:** `typeof null === "object"` — błąd zakorzeniony w JS od początku, nie da
-  się go naprawić bez złamania wsteczności. Do sprawdzania `null` używaj `=== null`, nie `typeof`.
-- `instanceof` sprawdza łańcuch prototypów (`obj instanceof Klasa`) — działa dla obiektów tworzonych
-  przez `new`/klasy, nie dla prymitywów ani obiektów z innego kontekstu (np. `iframe`, inny
-  realm — tam `instanceof Array` może zawodzić, mimo że to faktycznie tablica).
+- **A historical pitfall:** `typeof null === "object"` — a bug rooted in JS from the start, it cannot
+  be fixed without breaking backward compatibility. To check for `null` use `=== null`, not `typeof`.
+- `instanceof` checks the prototype chain (`obj instanceof MyClass`) — it works for objects created
+  with `new`/classes, not for primitives or objects from another context (e.g. an `iframe`, another
+  realm — there `instanceof Array` can fail even though it really is an array).
 
 ## Truthy / Falsy
 
-Falsy (dokładnie te wartości, wszystko inne jest truthy): `false`, `0`, `-0`, `0n` (BigInt zero),
+Falsy (exactly these values, everything else is truthy): `false`, `0`, `-0`, `0n` (BigInt zero),
 `""`, `null`, `undefined`, `NaN`.
 
-**Pułapka:** `"0"` (string) jest **truthy** (niepusty string), `0` (number) jest falsy — łatwo
-pomylić przy danych z formularza/URL, gdzie wartości bywają stringami.
+**A pitfall:** `"0"` (a string) is **truthy** (a non-empty string), `0` (a number) is falsy — easy
+to confuse with data from a form/URL, where values are often strings.

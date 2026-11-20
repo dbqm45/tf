@@ -18,6 +18,22 @@
       }
     },
     {
+      "id": "warstwy-skanerow-ci-en",
+      "expect": "trigger",
+      "prompt": "We want to introduce DevSecOps in our pipeline: what security scanners (secrets, code, dependencies, application) and at what stage should we run them? Answer briefly.",
+      "checks": {
+        "all": [
+          ["pre-commit", "przed commitem"],
+          ["SAST", "Semgrep", "CodeQL"],
+          ["SCA", "SBOM"],
+          ["DAST", "ZAP"],
+          ["CycloneDX", "SPDX", "Dependency-Track", "osv-scanner"],
+          ["tryb\\w* (raport|ostrzeg|obserw)", "najpierw[^.]{0,40}(nie blok|raport|ostrzeg)", "(report|warn\\w*|observ\\w*|audit|monitor\\w*) mode", "non-blocking", "first[^.]{0,40}(not block\\w*|report|warn\\w*)", "start (by |with )?(reporting|warning)"]
+        ],
+        "none": ["wszystkie skany blokujące na każdym PR od pierwszego dnia", "all (scans|scanners) (are )?block\\w*[^.]{0,30}every PR[^.]{0,30}(day (one|1)|first day)", "block\\w* (on )?every PR from (the )?(first|day (one|1))"]
+      }
+    },
+    {
       "id": "sla-priorytet-podatnosci",
       "expect": "trigger",
       "prompt": "Skaner wyrzucił 400 podatności w zależnościach i dział bezpieczeństwa chce wszystko krytyczne naprawić w 7 dni. Jak je uporządkować i jakie terminy ustalić? Odpowiedz zwięźle.",

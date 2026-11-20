@@ -1,53 +1,54 @@
 ---
 name: proc-safe
-description: Użyj, gdy pracuje wiele zespołów w SAFe — Agile Release Train, PI Planning, role, WSJF, Inspect & Adapt, LPM.
+description: Use when many teams work in SAFe — the Agile Release Train, PI Planning, roles, WSJF, Inspect & Adapt, LPM.
 metadata:
   review: "2027-10-17"
   visibility: name
-  catalog: "Użyj, gdy praca obejmuje wiele zespołów w dużej organizacji stosującej SAFe — Agile Release Train, PI Planning, role (RTE, Product Management, System Architect, Business Owners), hierarchia backlogu, WSJF, Inspect & Adapt, Lean Portfolio Management — oraz przy ocenie, czy SAFe pasuje. Nie do pracy pojedynczego zespołu (proc-agile)."
+  catalog: "Use when the work spans many teams in a large organization that uses SAFe — the Agile Release Train, PI Planning, roles (RTE, Product Management, System Architect, Business Owners), the backlog hierarchy, WSJF, Inspect & Adapt, Lean Portfolio Management — and when assessing whether SAFe fits. Not for the work of a single team (proc-agile)."
+  keywords: "SAFe, czy SAFe ma sens, wdrożyć SAFe, wiele zespołów, kilka zespołów, skalowanie zwinności, pociąg wydań, PI Planning, zależności między zespołami, is SAFe worth it, adopt SAFe, many teams, several teams, scaling agile, release train, dependencies between teams"
 ---
 
 # SAFe (Scaled Agile Framework)
 
-Stan wiedzy: SAFe 6.0 z aktualizacjami 2025 (model **pięciu dyscyplin**: Leadership and Culture, Team and Technical Agility,
-Product Development Flow, Large Solution Integration and Delivery, Lean Portfolio Management; inicjatywa AI-Driven Agility).
-Podstawowe konstrukcje (ART, PI Planning, LPM) bez zmian. Szczegóły sprawdzaj na framework.scaledagile.com.
+State of knowledge: SAFe 6.0 with the 2025 updates (the model of **five disciplines**: Leadership and Culture, Team and Technical Agility,
+Product Development Flow, Large Solution Integration and Delivery, Lean Portfolio Management; the AI-Driven Agility initiative).
+The basic constructs (ART, PI Planning, LPM) are unchanged. Check details at framework.scaledagile.com.
 
-## 10 zasad Lean-Agile SAFe
-1. Patrz ekonomicznie. 2. Myśl systemowo. 3. Zakładaj zmienność, zachowuj opcje. 4. Buduj przyrostowo w szybkich,
-zintegrowanych cyklach uczenia się. 5. Kamienie milowe = obiektywna ocena działających systemów. 6. Zapewnij nieprzerwany
-przepływ wartości. 7. Stosuj kadencję i synchronizuj planowanie między domenami. 8. Uwalniaj wewnętrzną motywację pracowników
-wiedzy. 9. Decentralizuj decyzje. 10. Organizuj się wokół wartości.
+## The 10 Lean-Agile principles of SAFe
+1. Take an economic view. 2. Apply systems thinking. 3. Assume variability; preserve options. 4. Build incrementally with fast,
+integrated learning cycles. 5. Base milestones on an objective evaluation of working systems. 6. Make value flow without
+interruptions. 7. Apply cadence and synchronize planning across domains. 8. Unlock the intrinsic motivation of knowledge
+workers. 9. Decentralize decision-making. 10. Organize around value.
 
-## Konstrukcje
-- **Konfiguracje**: Essential (zespoły + ART), Large Solution (wiele ARTów), Portfolio (+ zarządzanie portfelem), Full.
-- **Agile Release Train (ART)**: długotrwały zespół zespołów (zwykle ~50–125 osób) zorganizowany wokół strumienia wartości.
-- **Program Increment (PI)**: kadencja zwykle 8–12 tygodni (kilka iteracji + iteracja IP: innowacje i planowanie).
-- **Wydarzenia ART**: **PI Planning** (wszyscy razem, cele PI i zależności na tablicy programu), ART Sync (Coach Sync + PO Sync),
-  **System Demo** (zintegrowany przyrost co iterację), **Inspect & Adapt** (demo, metryki, warsztat rozwiązywania problemów).
-- **Role**: Release Train Engineer (RTE), Product Management (co na poziomie ARTu), System Architect, Business Owners
-  (akceptują cele PI i ich wartość), w zespołach Product Owner i Scrum Master/Team Coach.
-- **Backlog**: Epik (portfel, z hipotezą i Lean business case) → Capability (Large Solution) → Feature (ART, mieści się w PI) → Story (zespół).
-- **Priorytety: WSJF** = koszt opóźnienia (wartość biznesowa + krytyczność czasowa + redukcja ryzyka/otwarcie możliwości) / rozmiar.
-- **Lean Portfolio Management**: finansowanie strumieni wartości zamiast projektów, Portfolio Kanban, ograniczanie WIP epików.
+## Constructs
+- **Configurations**: Essential (teams + ART), Large Solution (many ARTs), Portfolio (+ portfolio management), Full.
+- **Agile Release Train (ART)**: a long-lived team of teams (usually ~50–125 people) organized around a value stream.
+- **Program Increment (PI)**: a cadence usually of 8–12 weeks (several iterations + an IP iteration: innovation and planning).
+- **ART events**: **PI Planning** (everyone together, PI objectives and dependencies on the program board), ART Sync (Coach Sync + PO Sync),
+  **System Demo** (an integrated increment every iteration), **Inspect & Adapt** (a demo, metrics, a problem-solving workshop).
+- **Roles**: Release Train Engineer (RTE), Product Management (what, at the ART level), System Architect, Business Owners
+  (they accept the PI objectives and their value), in the teams the Product Owner and Scrum Master/Team Coach.
+- **Backlog**: Epic (portfolio, with a hypothesis and a Lean business case) → Capability (Large Solution) → Feature (ART, fits in a PI) → Story (team).
+- **Priorities: WSJF** = cost of delay (business value + time criticality + risk reduction/opportunity enablement) / size.
+- **Lean Portfolio Management**: funding value streams instead of projects, Portfolio Kanban, limiting WIP of epics.
 
-## Kiedy pasuje, a kiedy nie
-- Pasuje: wiele zespołów pracuje nad wspólnym rozwiązaniem z realnymi zależnościami i potrzebą synchronizacji; organizacja
-  gotowa zmienić finansowanie i strukturę wokół strumieni wartości.
-- Nie pasuje / ryzyka: kilka niezależnych zespołów (wystarczy proc-agile), SAFe jako nakładka nazw na stary proces
-  („SAFe-washing”), PI Planning jako kontrakt zakresu zamiast wspólnego planu, ARTy cięte według działów zamiast wartości.
-- Zanim dołożysz koordynacji, **zmniejsz zależności**: granice kontekstów (ddd-strategic-analysis) i struktura zespołów
-  (proc-team-topologies) często usuwają potrzebę skalowania procesu.
+## When it fits and when it does not
+- It fits: many teams work on a shared solution with real dependencies and a need for synchronization; the organization
+  is ready to change funding and structure around value streams.
+- It does not fit / risks: a few independent teams (proc-agile is enough), SAFe as a layer of names over the old process
+  ("SAFe-washing"), PI Planning as a scope contract instead of a shared plan, ARTs cut by departments instead of by value.
+- Before you add coordination, **reduce dependencies**: context boundaries (ddd-strategic-analysis) and the structure of teams
+  (proc-team-topologies) often remove the need to scale the process.
 
-## Przykład
-**Sytuacja:** Product Management spiera się: „BLIK przynosi najwięcej, więc pierwszy”. **Wynik (WSJF, oceny
-względne):** BLIK ma najwyższy koszt opóźnienia, ale mniejsze featury dają więcej na jednostkę pracy; to podstawa
-rozmowy na PI Planning, nie wyrok.
+## Example
+**Situation:** Product Management is arguing: "BLIK brings the most, so it goes first". **Result (WSJF, relative
+ratings):** BLIK has the highest cost of delay, but smaller features give more per unit of work; this is the basis
+for a conversation at PI Planning, not a verdict.
 
-| Feature | Koszt opóźnienia | Rozmiar | WSJF |
+| Feature | Cost of delay | Size | WSJF |
 |---|---|---|---|
-| Flagi funkcji | 1 + 2 + 8 = 11 | 2 | **5,5** |
-| Wymiana biblioteki szyfrowania | 2 + 8 + 7 = 17 | 5 | **3,4** |
-| Płatność BLIK | 9 + 7 + 2 = 18 | 6 | **3,0** |
+| Feature flags | 1 + 2 + 8 = 11 | 2 | **5.5** |
+| Replacing the encryption library | 2 + 8 + 7 = 17 | 5 | **3.4** |
+| BLIK payment | 9 + 7 + 2 = 18 | 6 | **3.0** |
 
-Więcej przykładów: `references/examples.md`.
+More examples: `references/examples.md`.

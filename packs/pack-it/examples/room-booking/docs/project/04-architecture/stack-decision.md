@@ -8,140 +8,140 @@ created: 2026-09-27
 updated: 2026-09-27
 inputs: [docs/project/01-discovery/brief.md, docs/project/03-requirements/requirements.md]
 ---
-# Decyzja o stacku: Rezerwacja sal i biurek (MVP)
+# Stack decision: Room and desk booking (MVP)
 
 ## TL;DR
-Modularny monolit: **Java 25 + Spring Boot 4.1 + Spring Modulith 2.x** (backend) i **Angular 22 + MSAL Angular** (front, serwowany z tej samej aplikacji), baza **Azure Database for PostgreSQL Flexible Server 18**, hosting **Azure App Service (Linux)** w jednym regionie UE, integracja z M365 przez **Microsoft Graph** (outbox, synchronizacja w jedną stronę).
-Dlaczego: (1) scenariusz „0 podwójnych rezerwacji” gwarantuje baza — **exclusion constraint** na (zasób, przedział czasu), niezależnie od kodu; (2) stack, który zespół zna (TS/Angular + Java/Spring), z najmniejszą liczbą elementów do utrzymania; (3) nowy typ zasobu = dane + polityka w module Zasoby, bez zmian schematu rezerwacji.
-Największe ryzyka: źródło prawdy dla sal, jeśli sale są już skrzynkami zasobów w Exchange (pytanie do IT), uprawnienia Graph (zgoda administratora M365), dostępność usług w regionie Poland Central, jeden programista Javy. Sprawdzamy spike'ami S0–S4 w pierwszych 2 tygodniach.
-Uwaga: brak fazy domeny (02-domain) — model „Availability” przyjęty jako **[propozycja]** na podstawie historyjek H1–H4.
+A modular monolith: **Java 25 + Spring Boot 4.1 + Spring Modulith 2.x** (back end) and **Angular 22 + MSAL Angular** (front end, served by the same application), database **Azure Database for PostgreSQL Flexible Server 18**, hosting **Azure App Service (Linux)** in one EU region, M365 integration through **Microsoft Graph** (outbox, one-way synchronisation).
+Why: (1) the database guarantees the "0 double bookings" scenario — an **exclusion constraint** on (resource, time slot), regardless of the code; (2) a stack the team knows (TS/Angular + Java/Spring), with the fewest parts to maintain; (3) a new resource type = data + a policy in the Resources module, without changes to the booking schema.
+The biggest risks: the source of truth for rooms, if the rooms are already resource mailboxes in Exchange (a question for IT), Graph permissions (the M365 administrator's consent), the availability of the services in the Poland Central region, one Java developer. We check them with spikes S0–S4 in the first 2 weeks.
+Note: no domain phase (02-domain) — the "Availability" model is adopted as a **[proposal]** based on stories H1–H4.
 
-## Czynniki decyzyjne (drivers)
-| Czynnik | Źródło (wymaganie/ograniczenie) | Waga (1–5) |
+## Decision drivers
+| Driver | Source (requirement/constraint) | Weight (1–5) |
 |---|---|---|
-| Spójność: 50 równoczesnych prób → dokładnie 1 sukces, 0 podwójnych rezerwacji | requirements: Atrybuty jakości (H,H) | 5 |
-| MVP w 3 miesiące, zespół 2 × TS/Angular + 1 × Java (Spring) | brief: Ograniczenia | 5 |
-| Modyfikowalność: nowy typ zasobu w ≤ 2 dni | requirements (H,M) | 4 |
-| Bezpieczeństwo: tylko Entra ID, dane w UE | requirements (H,M), brief | 4 |
-| Niski koszt utrzymania | brief: Ograniczenia | 4 |
-| Dostępność 99,5% w godz. 7–19 (nie 24/7) | requirements (M,M) | 2 |
+| Consistency: 50 simultaneous attempts → exactly 1 success, 0 double bookings | requirements: Quality attributes (H,H) | 5 |
+| MVP in 3 months, a team of 2 × TS/Angular + 1 × Java (Spring) | brief: Constraints | 5 |
+| Modifiability: a new resource type in ≤ 2 days | requirements (H,M) | 4 |
+| Security: only Entra ID, data in the EU | requirements (H,M), brief | 4 |
+| Low operations cost | brief: Constraints | 4 |
+| 99.5% availability during 7:00–19:00 (not 24/7) | requirements (M,M) | 2 |
 
-## Filtry obowiązkowe
-- Hosting Azure, wszystkie dane (baza, logi, kopie, sekrety) w regionie UE.
-- Wsparcie (LTS/OSS) co najmniej do końca MVP + plan aktualizacji po MVP.
-- Start bez nauki nowego języka: TypeScript i Java.
-- Uwierzytelnianie wyłącznie Entra ID (OIDC), bez lokalnych kont.
-- Licencje bez opłat: Oracle JDK 21 od aktualizacji z X 2026 przechodzi na licencję OTN — dlatego **OpenJDK (Microsoft Build) 25**, nie Oracle JDK.
-- Odpadło po filtrach: Cosmos DB/NoSQL (brak ograniczeń na nakładające się przedziały), mikroserwisy (patrz ADR-0001).
+## Mandatory filters
+- Azure hosting, all data (database, logs, backups, secrets) in an EU region.
+- Support (LTS/OSS) at least until the end of the MVP + an upgrade plan after the MVP.
+- A start without learning a new language: TypeScript and Java.
+- Authentication only through Entra ID (OIDC), no local accounts.
+- Licences without fees: Oracle JDK 21 moves to the OTN licence from the October 2026 update — hence **OpenJDK (Microsoft Build) 25**, not Oracle JDK.
+- Dropped by the filters: Cosmos DB/NoSQL (no constraints on overlapping ranges), microservices (see ADR-0001).
 
-## Rozważane opcje
-| Obszar | Opcja A (domyślna, „nudna”) | Opcja B | Opcja C |
+## Options considered
+| Area | Option A (default, "boring") | Option B | Option C |
 |---|---|---|---|
-| Styl architektury | modularny monolit | mikroserwisy | serverless (Functions) |
-| Backend | Java 25 + Spring Boot 4.1 | TypeScript + NestJS | — |
-| Kontrola współbieżności | PostgreSQL exclusion constraint | `SELECT … FOR UPDATE` na zasobie | optimistic locking (`@Version`) / unikalny slot |
+| Architecture style | modular monolith | microservices | serverless (Functions) |
+| Back end | Java 25 + Spring Boot 4.1 | TypeScript + NestJS | — |
+| Concurrency control | PostgreSQL exclusion constraint | `SELECT … FOR UPDATE` on the resource | optimistic locking (`@Version`) / a unique slot |
 | Compute | App Service (Linux, Java SE) | Container Apps | AKS |
-| Uwierzytelnianie w SPA | MSAL Angular (auth code + PKCE) + API jako resource server | BFF (sesja po stronie Springa) | — |
-| Integracja M365 | Graph, uprawnienia aplikacyjne + outbox | Graph delegowany (OBO), synchronicznie | zaproszenie .ics mailem |
+| Authentication in the SPA | MSAL Angular (auth code + PKCE) + the API as a resource server | BFF (a session on the Spring side) | — |
+| M365 integration | Graph, application permissions + outbox | delegated Graph (OBO), synchronously | an .ics invitation by email |
 
-## Macierz oceny
-Skala 1–5, w nawiasie waga. Szczegóły współbieżności: ADR-0002, compute i region: ADR-0003, M365: ADR-0004.
+## Assessment matrix
+Scale 1–5, the weight in brackets. Concurrency details: ADR-0002, compute and region: ADR-0003, M365: ADR-0004.
 
-**Backend**
-| Kryterium (waga) | A: Spring Boot | B: NestJS |
+**Back end**
+| Criterion (weight) | A: Spring Boot | B: NestJS |
 |---|---|---|
-| dopasowanie do czynników (5) | 5 | 4 |
-| kompetencje zespołu (4) | 3 (1 osoba) | 4 (3 osoby znają TS, brak doświadczenia z backendem Nest — do potwierdzenia) |
-| dojrzałość ekosystemu (3) | 5 | 4 |
-| koszt operacyjny i złożoność (4) | 3 (dwa języki) | 4 (jeden język) |
-| przyjazność dla agentów AI (2) | 4 (lang-java) | 4 (lang-typescript) |
-| uzależnienie / koszt wyjścia (2) | 4 | 4 |
-| bezpieczeństwo (3) | 5 (Spring Security) | 4 |
-| **Suma ważona** | **95** | **92** |
+| fit to the drivers (5) | 5 | 4 |
+| team skills (4) | 3 (1 person) | 4 (3 people know TS, no experience with a Nest back end — to be confirmed) |
+| ecosystem maturity (3) | 5 | 4 |
+| operational cost and complexity (4) | 3 (two languages) | 4 (one language) |
+| friendliness for AI agents (2) | 4 (lang-java) | 4 (lang-typescript) |
+| lock-in / exit cost (2) | 4 | 4 |
+| security (3) | 5 (Spring Security) | 4 |
+| **Weighted sum** | **95** | **92** |
 
-Wynik jest bliski. O wyborze A decyduje ograniczenie z briefu (zespół: Java/Spring na backendzie) oraz dojrzałość Spring Security i Spring Modulith (granice modułów + outbox z pudełka). Ryzyko „1 programista Javy” — w sekcji Ryzyka.
+The result is close. The choice of A is decided by the constraint from the brief (the team: Java/Spring on the back end) and the maturity of Spring Security and Spring Modulith (module boundaries + an outbox out of the box). The "1 Java developer" risk — in the Risks section.
 
 **Compute**
-| Kryterium (waga) | App Service | Container Apps | AKS |
+| Criterion (weight) | App Service | Container Apps | AKS |
 |---|---|---|---|
-| dopasowanie (5) | 5 | 5 | 4 |
-| kompetencje (4) | 5 (wdrożenie JAR) | 3 (obrazy kontenerów) | 1 |
-| dojrzałość (3) | 5 | 4 | 5 |
-| koszt i złożoność (4) | 4 | 4 | 1 |
+| fit (5) | 5 | 5 | 4 |
+| skills (4) | 5 (JAR deployment) | 3 (container images) | 1 |
+| maturity (3) | 5 | 4 | 5 |
+| cost and complexity (4) | 4 | 4 | 1 |
 | AI (2) | 4 | 4 | 3 |
-| koszt wyjścia (2) | 3 | 4 | 5 |
-| bezpieczeństwo (3) | 4 (runtime łatany przez Azure) | 4 | 3 |
-| **Suma** | **102** | **93** | **68** |
+| exit cost (2) | 3 | 4 | 5 |
+| security (3) | 4 (runtime patched by Azure) | 4 | 3 |
+| **Sum** | **102** | **93** | **68** |
 
-**Współbieżność**
-| Kryterium (waga) | Exclusion constraint | `FOR UPDATE` | Optimistic / unikalny slot |
+**Concurrency**
+| Criterion (weight) | Exclusion constraint | `FOR UPDATE` | Optimistic / unique slot |
 |---|---|---|---|
-| gwarancja 0 podwójnych niezależnie od ścieżki kodu (5) | 5 | 3 | 3 / 5 |
-| prostota (4) | 4 | 4 | 3 / 3 |
-| dowolne przedziały + blokady serwisowe w jednym mechanizmie (4) | 5 | 5 | 4 / 2 |
-| przenośność między bazami (2) | 2 | 5 | 5 / 5 |
-| **Suma** | **65** | **61** | **53 / 55** |
+| a guarantee of 0 double bookings regardless of the code path (5) | 5 | 3 | 3 / 5 |
+| simplicity (4) | 4 | 4 | 3 / 3 |
+| any slots + maintenance blocks in one mechanism (4) | 5 | 5 | 4 / 2 |
+| portability between databases (2) | 2 | 5 | 5 / 5 |
+| **Sum** | **65** | **61** | **53 / 55** |
 
-## Fakty zweryfikowane (wersje, wsparcie, licencje — ze źródłami i datą)
-| Technologia | Wersja / LTS / koniec wsparcia | Źródło | Sprawdzono |
+## Verified facts (versions, support, licences — with sources and a date)
+| Technology | Version / LTS / end of support | Source | Checked |
 |---|---|---|---|
-| Java | 25 LTS (IX 2025), premier support do IX 2030; JDK 21 Oracle od X 2026 na licencji OTN | [Oracle Java SE Support Roadmap](https://www.oracle.com/java/technologies/java-se-support-roadmap.html) | 2026-09-27 |
-| Microsoft Build of OpenJDK | 25 wspierane na App Service i Container Apps, łatki kwartalne | [MS OpenJDK support](https://learn.microsoft.com/en-us/java/openjdk/support), [App Service runtime policy](https://learn.microsoft.com/en-us/azure/app-service/language-support-policy) | 2026-09-27 |
-| Spring Boot | 4.1.x (4.1.1 VIII 2026), OSS do 2027-07-31; 4.0 OSS do 2026-12-31; baseline Java 17 | [endoflife.date/spring-boot](https://endoflife.date/spring-boot), [spring.io](https://spring.io/blog/2025/11/20/spring-boot-4-0-0-available-now/) | 2026-09-27 |
-| Spring Modulith | 2.x (2.0 GA XI 2025, baseline Boot 4), Event Publication Registry (JDBC) | [spring.io blog](https://spring.io/blog/2025/11/21/spring-modulith-2-0-ga-1-4-5-and-1-3-11-released/) | 2026-09-27 |
-| Angular | 22.2.0 (22 wydany 2026-06-03, aktywne wsparcie 6 mies. + 12 mies. LTS); wymaga TypeScript `>=6.0 <6.1` | [angular.dev/reference/releases](https://angular.dev/reference/releases), `npm view @angular/compiler-cli@22 peerDependencies` | 2026-09-27 |
-| MSAL Angular | `@azure/msal-angular` 6.2.1, peer: `@azure/msal-browser ^5.22.0`, `rxjs ^7.4.0` (brak jawnego zakresu Angulara → spike S4) | `npm view @azure/msal-angular` | 2026-09-27 |
-| PostgreSQL (Azure Flexible Server) | wersje 11–18, 18 GA; `btree_gist` dostępne (wymaga dodania do `azure.extensions`) | [Supported versions](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-supported-versions), [Extensions](https://learn.microsoft.com/en-us/azure/postgresql/extensions/concepts-extensions-versions) | 2026-09-27 |
-| SLA PostgreSQL Flexible | bez HA 99,9%, HA strefowe 99,95%, HA międzystrefowe 99,99% (HA niedostępne w warstwie Burstable) | [HA concepts](https://learn.microsoft.com/en-us/azure/postgresql/high-availability/concepts-high-availability) | 2026-09-27 |
-| Region Poland Central | GA, Warszawa, 3 strefy dostępności, w UE; **dostępność App Service/Container Apps w regionie niepotwierdzona w źródle pierwotnym** → spike S0 | [Azure geographies](https://azure.microsoft.com/en-us/explore/global-infrastructure/geographies), [Products by region](https://azure.microsoft.com/en-us/explore/global-infrastructure/products-by-region) | 2026-09-27 |
-| Exchange Online RBAC for Applications | zastępuje Application Access Policies; zawęża `Calendars.ReadWrite` (app) do zakresu skrzynek | [Application RBAC](https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac) | 2026-09-27 |
+| Java | 25 LTS (September 2025), premier support until September 2030; Oracle JDK 21 on the OTN licence from October 2026 | [Oracle Java SE Support Roadmap](https://www.oracle.com/java/technologies/java-se-support-roadmap.html) | 2026-09-27 |
+| Microsoft Build of OpenJDK | 25 supported on App Service and Container Apps, quarterly patches | [MS OpenJDK support](https://learn.microsoft.com/en-us/java/openjdk/support), [App Service runtime policy](https://learn.microsoft.com/en-us/azure/app-service/language-support-policy) | 2026-09-27 |
+| Spring Boot | 4.1.x (4.1.1 August 2026), OSS until 2027-07-31; 4.0 OSS until 2026-12-31; Java 17 baseline | [endoflife.date/spring-boot](https://endoflife.date/spring-boot), [spring.io](https://spring.io/blog/2025/11/20/spring-boot-4-0-0-available-now/) | 2026-09-27 |
+| Spring Modulith | 2.x (2.0 GA November 2025, Boot 4 baseline), Event Publication Registry (JDBC) | [spring.io blog](https://spring.io/blog/2025/11/21/spring-modulith-2-0-ga-1-4-5-and-1-3-11-released/) | 2026-09-27 |
+| Angular | 22.2.0 (22 released 2026-06-03, active support 6 months + 12 months LTS); requires TypeScript `>=6.0 <6.1` | [angular.dev/reference/releases](https://angular.dev/reference/releases), `npm view @angular/compiler-cli@22 peerDependencies` | 2026-09-27 |
+| MSAL Angular | `@azure/msal-angular` 6.2.1, peer: `@azure/msal-browser ^5.22.0`, `rxjs ^7.4.0` (no explicit Angular range → spike S4) | `npm view @azure/msal-angular` | 2026-09-27 |
+| PostgreSQL (Azure Flexible Server) | versions 11–18, 18 GA; `btree_gist` available (must be added to `azure.extensions`) | [Supported versions](https://learn.microsoft.com/en-us/azure/postgresql/configure-maintain/concepts-supported-versions), [Extensions](https://learn.microsoft.com/en-us/azure/postgresql/extensions/concepts-extensions-versions) | 2026-09-27 |
+| PostgreSQL Flexible SLA | without HA 99.9%, zonal HA 99.95%, zone-redundant HA 99.99% (HA not available in the Burstable tier) | [HA concepts](https://learn.microsoft.com/en-us/azure/postgresql/high-availability/concepts-high-availability) | 2026-09-27 |
+| Poland Central region | GA, Warsaw, 3 availability zones, in the EU; **the availability of App Service/Container Apps in the region not confirmed in a primary source** → spike S0 | [Azure geographies](https://azure.microsoft.com/en-us/explore/global-infrastructure/geographies), [Products by region](https://azure.microsoft.com/en-us/explore/global-infrastructure/products-by-region) | 2026-09-27 |
+| Exchange Online RBAC for Applications | replaces Application Access Policies; narrows `Calendars.ReadWrite` (app) to a scope of mailboxes | [Application RBAC](https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac) | 2026-09-27 |
 
-## Rekomendacja
-| Warstwa | Wybór | Uzasadnienie |
+## Recommendation
+| Layer | Choice | Rationale |
 |---|---|---|
-| Styl | modularny monolit, jedna jednostka wdrożenia (ADR-0001) | 1 zespół, 3 mies.; moduły: `resources`, `booking` (Availability), `calendarsync`, `identity` |
-| Backend | Java 25 (Microsoft Build of OpenJDK), Spring Boot 4.1, Spring Modulith 2.x, Spring Data JPA/JDBC, Flyway, Maven | znane zespołowi; Modulith = testy granic modułów + outbox |
-| Współbieżność | PostgreSQL 18: tabela alokacji z `tstzrange` + `EXCLUDE USING gist (resource_id WITH =, period WITH &&) WHERE (aktywne)` (ADR-0002) | gwarancja w bazie; rezerwacje i blokady serwisowe w jednym mechanizmie; błąd `23P01` → czytelna odmowa |
-| No-show (H4) | zadanie `@Scheduled` co 1 min: jeden idempotentny `UPDATE … RETURNING` | bez dodatkowego schedulera i blokad rozproszonych |
-| Frontend | Angular 22 (TS 6.0), standalone + signals, budowany w CI i serwowany jako statyczne zasoby przez Spring Boot **[propozycja]** | jedno źródło (brak CORS), jedna usługa do utrzymania |
-| Auth | Entra ID: MSAL Angular (auth code + PKCE) → token do API; backend `spring-boot-starter-oauth2-resource-server` (walidacja JWT, app roles `Employee`, `Facility`) | standard Microsoft, bezstanowy backend; BFF jako ścieżka wzmocnienia, gdy wymagać tego będzie przegląd bezpieczeństwa |
-| M365 | Microsoft Graph SDK (Java), uprawnienia aplikacyjne zawężone przez Exchange RBAC for Applications, wysyłka z outboxa (ADR-0004) | awaria Graph nie blokuje rezerwacji; ponowienia |
-| Hosting | App Service Linux (Premium v3), PostgreSQL Flexible General Purpose (najmniejszy rozmiar, HA wyłączone w MVP), Key Vault, Managed Identity (także do bazy — bez haseł), Application Insights (OpenTelemetry) — wszystko w jednym regionie UE (ADR-0003) | 99,5% w godz. 7–19 osiągalne w jednym regionie; HA bazy włączalne później bez migracji |
-| Region | Poland Central, jeśli S0 potwierdzi dostępność usług; w przeciwnym razie inny region UE ze strefami (np. Germany West Central / West Europe) | wszystkie w UE; wybór ostateczny po S0 i odpowiedzi użytkownika |
-| IaC / CI | Terraform (azurerm), pipeline GitHub Actions **[propozycja — zależy od tego, gdzie jest repo]** | skille ops-iac-terraform, ops-ci-cd dostępne |
-| Testy | JUnit + Testcontainers (PostgreSQL 18), test Modulith `verify()`, testy Angulara wg domyślnego runnera CLI | fitness functions poniżej |
+| Style | a modular monolith, one deployment unit (ADR-0001) | 1 team, 3 months; modules: `resources`, `booking` (Availability), `calendarsync`, `identity` |
+| Back end | Java 25 (Microsoft Build of OpenJDK), Spring Boot 4.1, Spring Modulith 2.x, Spring Data JPA/JDBC, Flyway, Maven | known to the team; Modulith = module boundary tests + an outbox |
+| Concurrency | PostgreSQL 18: an allocation table with `tstzrange` + `EXCLUDE USING gist (resource_id WITH =, period WITH &&) WHERE (active)` (ADR-0002) | a guarantee in the database; bookings and maintenance blocks in one mechanism; the `23P01` error → a clear refusal |
+| No-show (H4) | a `@Scheduled` job every 1 min: one idempotent `UPDATE … RETURNING` | no extra scheduler and no distributed locks |
+| Front end | Angular 22 (TS 6.0), standalone + signals, built in CI and served as static assets by Spring Boot **[proposal]** | one origin (no CORS), one service to maintain |
+| Auth | Entra ID: MSAL Angular (auth code + PKCE) → a token to the API; back end `spring-boot-starter-oauth2-resource-server` (JWT validation, app roles `Employee`, `Facility`) | the Microsoft standard, a stateless back end; BFF as a hardening path when a security review requires it |
+| M365 | Microsoft Graph SDK (Java), application permissions narrowed by Exchange RBAC for Applications, sending from the outbox (ADR-0004) | a Graph failure does not block the booking; retries |
+| Hosting | App Service Linux (Premium v3), PostgreSQL Flexible General Purpose (the smallest size, HA off in the MVP), Key Vault, Managed Identity (also for the database — no passwords), Application Insights (OpenTelemetry) — all in one EU region (ADR-0003) | 99.5% during 7:00–19:00 is achievable in one region; database HA can be turned on later without a migration |
+| Region | Poland Central, if S0 confirms the availability of the services; otherwise another EU region with zones (e.g. Germany West Central / West Europe) | all in the EU; the final choice after S0 and the user's answer |
+| IaC / CI | Terraform (azurerm), a GitHub Actions pipeline **[proposal — depends on where the repo is]** | skills ops-iac-terraform, ops-ci-cd available |
+| Tests | JUnit + Testcontainers (PostgreSQL 18), the Modulith `verify()` test, Angular tests with the CLI's default runner | fitness functions below |
 
-**Fitness functions (w CI):** (1) test współbieżności: 50 równoległych rezerwacji tej samej sali → dokładnie 1 sukces, 49 odmów z kodem `RESOURCE_UNAVAILABLE`; (2) `ApplicationModules.verify()` — brak naruszeń granic modułów; (3) skan zależności (OWASP/Dependabot); (4) test akceptacyjny „nowy typ zasobu” dodany wyłącznie migracją danych + konfiguracją polityki.
+**Fitness functions (in CI):** (1) a concurrency test: 50 parallel bookings of the same room → exactly 1 success, 49 refusals with the code `RESOURCE_UNAVAILABLE`; (2) `ApplicationModules.verify()` — no module boundary violations; (3) a dependency scan (OWASP/Dependabot); (4) an acceptance test "a new resource type" added only by a data migration + a policy configuration.
 
-**Modyfikowalność (≤ 2 dni):** typ zasobu to dane (`resource_type`: jednostka rezerwacji PRZEDZIAŁ/DZIEŃ, wymagane potwierdzenie obecności, maks. długość) + opcjonalna klasa polityki. Moduł `booking` nie zna typów — operuje na (zasób, przedział). Rezerwacja biurka na dzień = przedział [początek dnia, koniec dnia) w tej samej tabeli.
+**Modifiability (≤ 2 days):** a resource type is data (`resource_type`: the booking unit SLOT/DAY, a check-in required, a maximum length) + an optional policy class. The `booking` module does not know the types — it operates on (resource, slot). Booking a desk for a day = the slot [start of the day, end of the day) in the same table.
 
-## Ryzyka i eksperymenty (spike)
-| Ryzyko | Jak sprawdzimy | Kryterium porzucenia wyboru |
+## Risks and experiments (spikes)
+| Risk | How we check it | Criterion for dropping the choice |
 |---|---|---|
-| S0: App Service Linux / PostgreSQL Flexible GP niedostępne w Poland Central dla subskrypcji | `az provider show -n Microsoft.Web` / `az postgres flexible-server list-skus -l polandcentral`, próbne utworzenie zasobów (0,5 dnia) | brak którejkolwiek usługi → region zapasowy UE |
-| S1: exclusion constraint + JPA — mapowanie błędu `23P01`, zachowanie przy 50 równoległych żądaniach | prototyp + test Testcontainers (1 dzień) | > 1 sukces lub zakleszczenia/timeouty p95 > 1 s → wariant `FOR UPDATE` na zasobie (ADR-0002, opcja B) |
-| S2: Sale już są skrzynkami zasobów w Exchange → dwa źródła prawdy, podwójne rezerwacje „z Outlooka” | pytanie do IT + test na tenancie deweloperskim (1 dzień) | nie da się zablokować bezpośrednich rezerwacji w Exchange → decyzja użytkownika o źródle prawdy (nowa wersja ADR-0004) |
-| S3: zgoda administratora M365 na `Calendars.ReadWrite` (app) zawężone RBAC | uzgodnienie z IT + zapis wydarzenia do testowej skrzynki (1–2 dni) | brak zgody → opcja C z ADR-0004 (zaproszenie .ics) |
-| S4: zgodność MSAL Angular 6.x z Angular 22 (brak jawnego peer dependency) | szkielet aplikacji, logowanie + wywołanie API (0,5 dnia) | błędy runtime/build bez obejścia → BFF (Spring `oauth2Login`, sesja) |
-| 1 programista Javy (bus factor, wąskie gardło) | plan: backend mały (6 historyjek), front-endowcy piszą testy API i kod modułu `calendarsync` w parach | opóźnienie backendu > 2 tyg. po pierwszej iteracji → rozważyć NestJS przed dalszym rozwojem (koszt: przepisanie modułów) |
-| Spring Boot 4.1 OSS kończy się 2027-07-31 | aktualizacje minor co pół roku w backlogu po MVP | — |
+| S0: App Service Linux / PostgreSQL Flexible GP not available in Poland Central for the subscription | `az provider show -n Microsoft.Web` / `az postgres flexible-server list-skus -l polandcentral`, a trial creation of the resources (0.5 day) | any service missing → a fallback EU region |
+| S1: exclusion constraint + JPA — mapping the `23P01` error, behaviour with 50 parallel requests | a prototype + a Testcontainers test (1 day) | > 1 success or deadlocks/timeouts p95 > 1 s → the `FOR UPDATE` on the resource variant (ADR-0002, option B) |
+| S2: The rooms are already resource mailboxes in Exchange → two sources of truth, double bookings "from Outlook" | a question for IT + a test on a developer tenant (1 day) | direct bookings in Exchange cannot be blocked → the user's decision about the source of truth (a new version of ADR-0004) |
+| S3: the M365 administrator's consent to `Calendars.ReadWrite` (app) narrowed by RBAC | agreement with IT + writing an event to a test mailbox (1–2 days) | no consent → option C from ADR-0004 (an .ics invitation) |
+| S4: compatibility of MSAL Angular 6.x with Angular 22 (no explicit peer dependency) | an application skeleton, sign-in + an API call (0.5 day) | runtime/build errors without a workaround → BFF (Spring `oauth2Login`, a session) |
+| 1 Java developer (bus factor, a bottleneck) | plan: a small back end (6 stories), the front-end developers write API tests and the code of the `calendarsync` module in pairs | a back-end delay > 2 weeks after the first iteration → consider NestJS before further development (cost: rewriting the modules) |
+| Spring Boot 4.1 OSS ends on 2027-07-31 | minor upgrades every half year in the backlog after the MVP | — |
 
-## Skille i persony
-- Potrzebne skille — dostępne: `lang-java`, `lang-typescript`, `fw-angular`, `be-database`, `be-api-design`, `be-auth-security`, `ops-iac-terraform`, `ops-ci-cd`, `ops-observability`, `eng-testing`, `ddd-archetypes` (Availability). Do utworzenia: `fw-spring-boot` (Spring Boot 4.x, Spring Modulith 2.x, Spring Security resource server), ewentualnie `integ-microsoft-graph`.
-- Sugerowany `stack` person: backend `[lang-java, fw-spring-boot, be-database, be-api-design, be-auth-security]`, frontend `[fw-angular, lang-typescript, fe-architecture]`, ops `[ops-iac-terraform, ops-ci-cd, ops-observability]`.
+## Skills and personas
+- Skills needed — available: `lang-java`, `lang-typescript`, `fw-angular`, `be-database`, `be-api-design`, `be-auth-security`, `ops-iac-terraform`, `ops-ci-cd`, `ops-observability`, `eng-testing`, `ddd-archetypes` (Availability). To create: `fw-spring-boot` (Spring Boot 4.x, Spring Modulith 2.x, Spring Security resource server), possibly `integ-microsoft-graph`.
+- Suggested `stack` of the personas: back end `[lang-java, fw-spring-boot, be-database, be-api-design, be-auth-security]`, front end `[fw-angular, lang-typescript, fe-architecture]`, ops `[ops-iac-terraform, ops-ci-cd, ops-observability]`.
 
-## Otwarte pytania
-- [ ] Czy sale są dziś skrzynkami zasobów (room mailbox) w Exchange i czy pracownicy rezerwują je bezpośrednio w Outlooku? Kto ma być źródłem prawdy? → IT / właściciel produktu
-- [ ] Czy administrator M365 udzieli zgody na uprawnienie aplikacyjne `Calendars.ReadWrite` zawężone do grupy pracowników i sal? → IT
-- [ ] Gdzie fizycznie jest firma (wybór regionu: Poland Central vs inny region UE) i czy jest wymóg danych „w kraju”, czy wystarczy UE? → użytkownik
-- [ ] Jak pracownik potwierdza obecność (H4): przycisk w aplikacji, kod QR przy biurku/sali, inne? → facility / właściciel produktu
-- [ ] Budżet miesięczny na Azure (warunkuje HA bazy i drugą instancję App Service) → użytkownik
-- [ ] Gdzie jest repozytorium i CI (GitHub vs Azure DevOps)? → IT
-- [ ] Czy programiści TS mogą/chcą pracować w backendzie Java (ryzyko 1 osoby)? → użytkownik
+## Open questions
+- [ ] Are the rooms resource mailboxes (room mailbox) in Exchange today, and do employees book them directly in Outlook? Who is to be the source of truth? → IT / product owner
+- [ ] Will the M365 administrator consent to the application permission `Calendars.ReadWrite` narrowed to the group of employees and rooms? → IT
+- [ ] Where is the company physically (the region choice: Poland Central vs another EU region), and is there a "data in the country" requirement, or is the EU enough? → user
+- [ ] How does an employee check in (H4): a button in the application, a QR code at the desk/room, something else? → facility / product owner
+- [ ] The monthly Azure budget (it determines database HA and a second App Service instance) → user
+- [ ] Where are the repository and CI (GitHub vs Azure DevOps)? → IT
+- [ ] Can/do the TS developers want to work on the Java back end (the 1-person risk)? → user
 
-## Przekazanie
-- **Dla:** użytkownik (akceptacja), potem orkiestrator planu i persony wykonawcze backend/frontend
-- **Zadanie:** użytkownik — akceptacja rekomendacji i odpowiedzi na Otwarte pytania (zwłaszcza źródło prawdy dla sal i zgoda M365) przed startem implementacji; orkiestrator — plan 05-plan/plan.md, w którym spike'i S0–S4 są w pierwszej iteracji, a pierwszym cięciem pionowym jest H6 + H1 bez synchronizacji M365
-- **Przeczytaj:** TL;DR, Rekomendacja, Ryzyka i eksperymenty, ADR-0001 do ADR-0004
-- **Nie rób:** nie zaczynaj integracji Graph przed odpowiedzią IT (S2, S3); nie dodawaj osobnych serwisów ani kolejek (Service Bus) — outbox Modulith wystarcza; nie używaj Oracle JDK
-- **Gotowe, gdy:** status accepted (po zgodzie użytkownika), a spike'i S0–S4 mają wynik zapisany w 06-delivery
+## Handoff
+- **For:** user (acceptance), then the plan orchestrator and the back-end/front-end delivery personas
+- **Task:** user — accept the recommendation and answer the Open questions (especially the source of truth for rooms and the M365 consent) before the implementation starts; orchestrator — the plan 05-plan/plan.md, in which spikes S0–S4 are in the first iteration and the first vertical slice is H6 + H1 without M365 synchronisation
+- **Read:** TL;DR, Recommendation, Risks and experiments, ADR-0001 to ADR-0004
+- **Do not:** do not start the Graph integration before IT's answer (S2, S3); do not add separate services or queues (Service Bus) — the Modulith outbox is enough; do not use Oracle JDK
+- **Done when:** status accepted (after the user's consent), and spikes S0–S4 have their result recorded in 06-delivery

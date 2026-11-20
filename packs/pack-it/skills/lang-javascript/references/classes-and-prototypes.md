@@ -1,39 +1,39 @@
-# Klasy i dziedziczenie prototypowe
+# Classes and prototypal inheritance
 
-> **Spis treści:** Podstawy składni · Pola prywatne (`#`) · Dziedziczenie — `extends` i `super` · Kolejność ewaluacji (skrót) · Klasy vs prototype-based „pod maską” · Pułapki · W TypeScripcie
+> **Contents:** Syntax basics · Private fields (`#`) · Inheritance — `extends` and `super` · Evaluation order (summary) · Classes vs prototype-based "under the hood" · Pitfalls · In TypeScript
 
-Na podstawie MDN Web Docs (developer.mozilla.org/docs/Web/JavaScript/Reference/Classes), opisane własnymi słowami; przykłady sprawdzone w Node 22.
+Based on MDN Web Docs (developer.mozilla.org/docs/Web/JavaScript/Reference/Classes), described in our own words; examples checked in Node 22.
 
-## Podstawy składni
+## Syntax basics
 
 ```js
 class Rectangle {
-  height = 0;          // pole publiczne z wartością domyślną
-  #width;               // pole prywatne (dostępne tylko wewnątrz klasy)
+  height = 0;          // a public field with a default value
+  #width;               // a private field (accessible only inside the class)
 
   constructor(height, width) { this.height = height; this.#width = width; }
 
   get area() { return this.height * this.#width; }   // getter
   set width(w) { if (w <= 0) throw new Error("bad width"); this.#width = w; }
 
-  calcPerimeter() { return 2 * (this.height + this.#width); } // metoda
+  calcPerimeter() { return 2 * (this.height + this.#width); } // method
 
-  static defaultUnit = "cm";                    // pole statyczne (na klasie, nie instancji)
-  static create(h, w) { return new Rectangle(h, w); } // metoda statyczna
+  static defaultUnit = "cm";                    // a static field (on the class, not the instance)
+  static create(h, w) { return new Rectangle(h, w); } // a static method
 
-  static { console.log("class initialized"); }  // statyczny blok inicjalizacyjny
+  static { console.log("class initialized"); }  // a static initialisation block
 }
 ```
 
-**Ważne właściwości klas:**
-- Klasy **nie są hoistowane** jak `function` — podlegają Temporal Dead Zone jak `let`/`const`.
-  Nie można użyć klasy przed jej deklaracją w kodzie.
-- Ciało klasy działa **zawsze w strict mode**, nawet bez `"use strict"`.
-- Tylko **jeden** `constructor` — druga deklaracja to `SyntaxError`.
-- Wywołanie bez `new` (`Rectangle(1,2)`) rzuca `TypeError` — klasy wymagają `new`, w przeciwieństwie
-  do funkcji.
+**Important properties of classes:**
+- Classes are **not hoisted** like `function` — they are subject to the Temporal Dead Zone like `let`/`const`.
+  A class cannot be used before its declaration in the code.
+- The class body always runs **in strict mode**, even without `"use strict"`.
+- Only **one** `constructor` — a second declaration is a `SyntaxError`.
+- A call without `new` (`Rectangle(1,2)`) throws a `TypeError` — classes require `new`, unlike
+  functions.
 
-## Pola prywatne (`#`)
+## Private fields (`#`)
 
 ```js
 class Account {
@@ -42,14 +42,14 @@ class Account {
   get balance() { return this.#balance; }
 }
 const a = new Account();
-a.#balance; // SyntaxError poza klasą — to nie jest konwencja, to język to wymusza
+a.#balance; // SyntaxError outside the class — it is not a convention, the language enforces it
 ```
 
-Reguły: nazwy prywatne muszą być unikalne w klasie i zadeklarowane w jej ciele (w dowolnym miejscu —
-nie muszą stać na początku); nie da się dodać `this.#x = 1` bez deklaracji `#x;`. Sprawdzenie „czy obiekt
-ma pole prywatne”: `#balance in obj` (ES2022) — bezpieczniejsze niż `instanceof` między realmami.
+Rules: private names must be unique in the class and declared in its body (anywhere —
+they do not have to be at the top); you cannot add `this.#x = 1` without a `#x;` declaration. Checking "does the object
+have a private field": `#balance in obj` (ES2022) — safer than `instanceof` across realms.
 
-## Dziedziczenie — `extends` i `super`
+## Inheritance — `extends` and `super`
 
 ```js
 class Animal {
@@ -57,64 +57,64 @@ class Animal {
   speak() { console.log(`${this.name} makes a noise.`); }
 }
 class Dog extends Animal {
-  constructor(name) { super(name); } // MUSI być pierwsze — przed użyciem `this`
-  speak() { super.speak(); console.log(`${this.name} barks.`); } // super.metoda() = wywołanie z rodzica
+  constructor(name) { super(name); } // MUST come first — before `this` is used
+  speak() { super.speak(); console.log(`${this.name} barks.`); } // super.method() = a call to the parent
 }
 ```
 
-**Reguła bezwzględna:** klasa pochodna (`extends`) musi wywołać `super()` w konstruktorze **przed**
-jakimkolwiek użyciem `this` — inaczej `ReferenceError`. Jeśli nie definiujesz własnego konstruktora,
-JS wstawia domyślny, który sam wywołuje `super(...args)`.
+**An absolute rule:** a derived class (`extends`) must call `super()` in the constructor **before**
+any use of `this` — otherwise a `ReferenceError`. If you do not define your own constructor,
+JS inserts a default one that calls `super(...args)` itself.
 
-## Kolejność ewaluacji (skrót)
+## Evaluation order (summary)
 
-1. `extends` jest ewaluowane najpierw.
-2. `constructor` wyodrębniany (albo wstawiany domyślny).
-3. Klucze właściwości ewaluowane w porządku deklaracji, metody instalowane na `prototype`
-   (instancyjne) albo na samej klasie (statyczne).
-4. Wartości pól instancji liczone **na początku konstruktora** (przed jego ciałem, po `super()` w
-   klasach pochodnych); pola statyczne liczone z `this` = sama klasa.
-5. Statyczne bloki inicjalizacyjne wykonywane w porządku deklaracji.
+1. `extends` is evaluated first.
+2. The `constructor` is extracted (or a default one is inserted).
+3. Property keys are evaluated in declaration order, methods are installed on the `prototype`
+   (instance ones) or on the class itself (static ones).
+4. Instance field values are computed **at the start of the constructor** (before its body, after `super()` in
+   derived classes); static fields are computed with `this` = the class itself.
+5. Static initialisation blocks run in declaration order.
 
-## Klasy vs prototype-based „pod maską”
+## Classes vs prototype-based "under the hood"
 
-Klasy to **cukier syntaktyczny** nad tym samym mechanizmem prototypów, który istniał w JS od
-początku:
+Classes are **syntactic sugar** over the same prototype mechanism that has existed in JS since
+the beginning:
 
 ```js
-// To samo zachowanie, styl przed ES6:
+// The same behaviour, pre-ES6 style:
 function Animal() {}
 Animal.prototype.speak = function () { console.log("sound"); };
 ```
 
-Różnice, o których warto pamiętać: klasy nie są hoistowane (funkcje są), klasy wymagają `new`
-(funkcje nie), ciało klasy jest zawsze strict mode, `super` jest dostępne tylko w klasach.
+Differences worth remembering: classes are not hoisted (functions are), classes require `new`
+(functions do not), the class body is always in strict mode, `super` is available only in classes.
 
-## Pułapki
+## Pitfalls
 
-**Metoda odłączona od instancji traci `this`** (patrz też `this-and-functions.md`):
+**A method detached from the instance loses `this`** (see also `this-and-functions.md`):
 ```js
 class Animal { speak() { return this; } }
 const speak = new Animal().speak;
-speak(); // undefined (strict mode) — this zgubione
+speak(); // undefined (strict mode) — this is lost
 ```
-Rozwiązanie: pole klasy jako arrow function (`speak = () => this;`) albo `.bind(this)` w
-konstruktorze.
+Solution: a class field as an arrow function (`speak = () => this;`) or `.bind(this)` in the
+constructor.
 
-**Zapomniane `super()` w konstruktorze pochodnym** → `ReferenceError` przy każdym `new`.
+**A forgotten `super()` in a derived constructor** → a `ReferenceError` on every `new`.
 
-**Duplikaty nazw pól publicznych są dozwolone, ale mylące** — ostatnia deklaracja wygrywa, bez
-ostrzeżenia:
+**Duplicate public field names are allowed, but confusing** — the last declaration wins, without
+a warning:
 ```js
-class C { x = 1; x = 2; } // OK składniowo
+class C { x = 1; x = 2; } // syntactically OK
 new C().x; // 2
 ```
 
-**Prywatne pola nie mogą być tworzone dynamicznie** — `this.#foo = 1` w metodzie działa tylko jeśli
-`#foo` zostało zadeklarowane w ciele klasy; próba dodania nowego prywatnego pola „w locie” to
+**Private fields cannot be created dynamically** — `this.#foo = 1` in a method works only if
+`#foo` was declared in the class body; an attempt to add a new private field "on the fly" is a
 `SyntaxError`.
 
-## W TypeScripcie
+## In TypeScript
 
-`private`/`protected` z TS znikają w runtime — prawdziwą prywatność daje tylko `#`. Szczegóły klas w TS
-(modyfikatory, `override`, parameter properties): lang-typescript `.claude/skills/lang-typescript/references/functions-objects-classes.md`.
+TS `private`/`protected` disappear at runtime — only `#` gives real privacy. Details of classes in TS
+(modifiers, `override`, parameter properties): lang-typescript `.claude/skills/lang-typescript/references/functions-objects-classes.md`.

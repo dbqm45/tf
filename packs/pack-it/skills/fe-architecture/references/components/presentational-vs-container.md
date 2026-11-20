@@ -1,44 +1,44 @@
 # Presentational vs. Container
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/presentational-vs-container.
+Source: frontendpatterns.dev/presentational-vs-container.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Components
-- **Poziom:** Beginner
-- **Przykłady:** React, Vue, Svelte
-- **Data aktualizacji:** September 26, 2025
-- **Autor:** Den Odell
+- **Category:** Components
+- **Level:** Beginner
+- **Examples:** React, Vue, Svelte
+- **Last updated:** September 26, 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Separate dumb components that just render props from smart components that manage data, making UI reusable and trivial to test.”
+"Separate dumb components that just render props from smart components that manage data, making UI reusable and trivial to test."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Rola „kontenera” to dziś częściej **hook / composable / serwis** (React custom hook, Vue composable, Angular serwis
-  z `signal`/`httpResource`) albo loader trasy / Server Component, a komponent prezentacyjny dostaje dane przez
-  wejścia. Zasada zostaje: UI renderuje z wejść, logika danych żyje gdzie indziej.
-- Ręczne `useEffect` + `fetch` w przykładach nie obsługuje anulowania ani wyścigów — w produkcji użyj warstwy danych
-  (resilience/loading-state.md, TanStack Query itp.).
-- `<li onClick>` nie jest dostępny z klawiatury — w realnym kodzie użyj `<button>`/`<a>` wewnątrz `<li>`
+- The "container" role is today more often played by a **hook / composable / service** (a React custom hook, a Vue composable, an Angular service
+  with `signal`/`httpResource`) or a route loader / Server Component, and the presentational component receives data through
+  inputs. The principle remains: the UI renders from inputs, the data logic lives elsewhere.
+- The manual `useEffect` + `fetch` in the examples does not handle cancellation or races — in production use a data layer
+  (resilience/loading-state.md, TanStack Query etc.).
+- `<li onClick>` is not keyboard accessible — in real code use a `<button>`/`<a>` inside the `<li>`
   (fe-web-platform, `.claude/skills/fe-web-platform/references/accessibility/semantic-html.md`).
-- Testy: `screen.getByRole(...)` zamiast destrukturyzacji z `render` (testing/component-testing.md).
-- Przykłady Vue w Options API (`data`, `mounted`) — w nowym kodzie Composition API (`<script setup>`).
-- Przykłady Svelte to składnia Svelte 4 (`export let`, `$:`, `on:click`, `<slot>`); w Svelte 5: `$props()`, `$state`,
-  `$derived`, `$effect`, atrybuty `onclick`, snippety zamiast slotów.
+- Tests: `screen.getByRole(...)` instead of destructuring from `render` (testing/component-testing.md).
+- The Vue examples are in the Options API (`data`, `mounted`) — in new code the Composition API (`<script setup>`).
+- The Svelte examples are Svelte 4 syntax (`export let`, `$:`, `on:click`, `<slot>`); in Svelte 5: `$props()`, `$state`,
+  `$derived`, `$effect`, `onclick` attributes, snippets instead of slots.
 
 ## Problem
 
-Komponent o 800 liniach mieszający: wywołania API, obsługę błędów, transformację danych i JSX. Efekt: trudne testowanie, brak możliwości ponownego użycia komponentu z innym źródłem danych, brak jasnej granicy między logiką stylistyczną i biznesową.
+An 800-line component mixing: API calls, error handling, data transformation and JSX. The effect: hard testing, no way to reuse the component with a different data source, no clear boundary between styling and business logic.
 
-## Rozwiązanie
+## Solution
 
-Podział na dwa typy komponentów: **prezentacyjne** (renderują UI wyłącznie na podstawie propsów, bez efektów ubocznych) i **kontenerowe** (zarządzają stanem, pobierają dane, obsługują błędy i przekazują wynik do komponentu prezentacyjnego jako propsy).
+A split into two types of components: **presentational** (they render the UI solely on the basis of props, without side effects) and **container** (they manage state, fetch data, handle errors and pass the result to the presentational component as props).
 
-## Przykłady kodu
+## Code examples
 
 ### React
 
@@ -183,7 +183,7 @@ export default {
 {/if}
 ```
 
-### Alternatywa: custom hook zamiast kontenera
+### Alternative: a custom hook instead of a container
 
 ```javascript
 // Custom hook extracts data logic - replaces container component
@@ -211,7 +211,7 @@ function UsersPage() {
 }
 ```
 
-### Ten sam komponent prezentacyjny, różne źródła danych
+### The same presentational component, different data sources
 
 ```javascript
 // Same presentational component, different data sources
@@ -244,7 +244,7 @@ function LiveProducts() {
 }
 ```
 
-### Testowanie komponentu prezentacyjnego (bez mockowania danych)
+### Testing a presentational component (without mocking data)
 
 ```javascript
 test('renders user list', () => {
@@ -264,31 +264,31 @@ test('calls onClick handler', () => {
 });
 ```
 
-## Zalety
+## Advantages
 
-- Komponent prezentacyjny działa z dowolnym źródłem danych (API, WebSocket, props statyczne) bez zmiany kodu.
-- Testowanie jest proste — bez mockowania serwisów, tylko propsy i asercje.
-- Projektanci/inne zespoły mogą iterować nad UI bez rozumienia logiki pobierania danych.
-- Komponenty prezentacyjne są przenośne między projektami.
+- The presentational component works with any data source (API, WebSocket, static props) without code changes.
+- Testing is simple — no mocking of services, only props and assertions.
+- Designers/other teams can iterate on the UI without understanding the data-fetching logic.
+- Presentational components are portable between projects.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Więcej plików i pośredniej indirekcji (dwa komponenty tam, gdzie mógłby być jeden).
-- To overkill dla prostych komponentów bez realnej złożoności logiki danych.
-- W nowoczesnym React custom hooki (`useUsers()`) często zastępują ten wzorzec — mniej boilerplate.
-- Prop drilling i rozmyte granice mogą się pojawić, jeśli podział nie jest konsekwentny.
-- Nowoczesne podejście (hooki + kolokacja) faworyzuje trzymanie logiki bliżej komponentu, nie oddzielny plik kontenera.
+- More files and indirection (two components where one could do).
+- It is overkill for simple components without real complexity in the data logic.
+- In modern React custom hooks (`useUsers()`) often replace this pattern — less boilerplate.
+- Prop drilling and blurred boundaries can appear if the split is not consistent.
+- The modern approach (hooks + colocation) favours keeping the logic closer to the component, not a separate container file.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Separation of Concerns](../fundamentals/separation-of-concerns.md) — Fundamentals.
 - [Single Responsibility](../fundamentals/single-responsibility.md) — Fundamentals.
 - [Component Testing](../testing/component-testing.md) — Testing.
-- „Smart and Dumb Components” — Dan Abramov.
-- „Thinking in React” — React docs.
+- "Smart and Dumb Components" — Dan Abramov.
+- "Thinking in React" — React docs.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj tego rozdzielenia, gdy realnie potrzebujesz **wielokrotnego użycia** tego samego UI z różnymi źródłami danych (przykład: `ProductList` zasilany raz z REST, raz z WebSocket) albo gdy komponent mieszający dane i UI już jest trudny do przetestowania/utrzymania.
+Use this separation when you really need **reuse** of the same UI with different data sources (example: a `ProductList` fed once from REST, once from WebSocket) or when a component mixing data and UI is already hard to test/maintain.
 
-Nie wprowadzaj tego podziału mechanicznie dla każdego komponentu z jednym `useEffect` — w nowoczesnym React (hooki) prostszy, jednoplikowy komponent z wydzieloną logiką do custom hooka często daje ten sam zysk (testowalność, reużywalność) bez podwojenia liczby plików. To dokładnie przypadek z eng-design-principles (YAGNI, krytyka nadużywania wzorców): stosuj wzorzec, gdy rozwiązuje nazwany problem, nie „bo jest w podręczniku”.
+Do not introduce this split mechanically for every component with one `useEffect` — in modern React (hooks) a simpler, single-file component with the logic extracted into a custom hook often gives the same gain (testability, reusability) without doubling the number of files. This is exactly the case from eng-design-principles (YAGNI, the critique of pattern overuse): apply a pattern when it solves a named problem, not "because it is in the textbook".

@@ -1,49 +1,49 @@
-# Generyki i wbudowane utility types
+# Generics and built-in utility types
 
-Na podstawie podręcznika TypeScript („Generics”, „Utility Types”), opisane własnymi słowami.
-Przykłady sprawdzone w tsc 6.0.3 i 7.0.2 (`strict`, `noUncheckedIndexedAccess`).
+Based on the TypeScript Handbook ("Generics", "Utility Types"), described in our own words.
+Examples checked in tsc 6.0.3 and 7.0.2 (`strict`, `noUncheckedIndexedAccess`).
 
-## Generyki
+## Generics
 
-### Ograniczenia (`extends`) i zależne parametry (`keyof`)
+### Constraints (`extends`) and dependent parameters (`keyof`)
 ```ts
-function loggingIdentity<T>(arg: T): T { console.log(arg.length); return arg; }   // ❌ brak .length
+function loggingIdentity<T>(arg: T): T { console.log(arg.length); return arg; }   // ❌ no .length
 
 interface Lengthwise { length: number }
 function loggingIdentity2<T extends Lengthwise>(arg: T): T { console.log(arg.length); return arg; }
 
 function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] { return obj[key]; }
-getProperty({ a: 1, b: 2 }, "m"); // ❌ "m" nie jest kluczem
+getProperty({ a: 1, b: 2 }, "m"); // ❌ "m" is not a key
 ```
 
-### Domyślne parametry typu
+### Default type parameters
 ```ts
 declare function create<T extends HTMLElement = HTMLDivElement, U extends HTMLElement[] = T[]>(
   element?: T, children?: U,
 ): { element: T; children: U };
 const div = create(); // element: HTMLDivElement
 ```
-Domyślne parametry stoją po wymaganych i muszą spełniać własne ograniczenie.
+Default parameters come after the required ones and must satisfy their own constraint.
 
-### `const` parametry typu (od TS 5.0) i `NoInfer` (od TS 5.4)
+### `const` type parameters (since TS 5.0) and `NoInfer` (since TS 5.4)
 ```ts
 function identity<const T>(x: T): T { return x; }
-const pair = identity(["a", "b"]);                 // readonly ["a", "b"] bez `as const` u wywołującego
+const pair = identity(["a", "b"]);                 // readonly ["a", "b"] without `as const` at the caller
 
 function withDefault<T extends string>(values: readonly T[], fallback: NoInfer<T>): T {
   return values[0] ?? fallback;
 }
-withDefault(["a", "b"], "c");                      // ❌ "c" nie poszerza T — musi być jedną z wartości
+withDefault(["a", "b"], "c");                      // ❌ "c" does not widen T — it must be one of the values
 ```
 
-### Zasady pisania generyków
-1. Pozwól wnioskować — `identity("x")`, nie `identity<string>("x")`.
-2. Ogranicz przez `extends`, gdy ciało zależy od właściwości typu.
-3. Ograniczenie generyczne zamiast sztywnej unii, gdy trzeba zachować związek wejście → wyjście
+### Rules for writing generics
+1. Let it infer — `identity("x")`, not `identity<string>("x")`.
+2. Constrain with `extends` when the body depends on properties of the type.
+3. A generic constraint instead of a fixed union when the input → output relationship must be kept
    (`merge<T extends object, U extends object>(a: T, b: U): T & U`).
-4. Nie mnóż parametrów typu; parametr użyty raz w sygnaturze jest zbędny.
-5. Fabryka z typem konstruktora: `function make<T>(c: new () => T): T { return new c(); }`.
-6. Generyczne interfejsy dla powtarzalnych kształtów — np. port repozytorium (asynchroniczny, jak w domenie):
+4. Do not multiply type parameters; a parameter used once in the signature is redundant.
+5. A factory with a constructor type: `function make<T>(c: new () => T): T { return new c(); }`.
+6. Generic interfaces for repeated shapes — e.g. a repository port (asynchronous, as in the domain):
    ```ts
    interface Repository<T, Id> {
      getById(id: Id): Promise<T | undefined>;
@@ -51,31 +51,31 @@ withDefault(["a", "b"], "c");                      // ❌ "c" nie poszerza T —
    }
    ```
 
-Checklista przy refaktorze generyków:
-- [ ] generyk zamiast `any`?
-- [ ] potrzebne `extends`? zależność parametrów → `K extends keyof T`?
-- [ ] domyślny parametr typu zamiast przeciążeń?
-- [ ] typ nieczytelny na pierwszy rzut oka → rozbij na nazwane kawałki
+Checklist when refactoring generics:
+- [ ] a generic instead of `any`?
+- [ ] is `extends` needed? a dependency between parameters → `K extends keyof T`?
+- [ ] a default type parameter instead of overloads?
+- [ ] a type unreadable at first glance → split it into named pieces
 
 ---
 
-## Wbudowane utility types
+## Built-in utility types
 
-| Utility type | Co robi | Przykład |
+| Utility type | What it does | Example |
 |---|---|---|
-| `Partial<T>` / `Required<T>` | wszystkie pola opcjonalne / wymagane | `Partial<Todo>` — częściowy update |
-| `Readonly<T>` | wszystkie pola `readonly` (płytko) | `Readonly<Todo>` |
-| `Record<K, V>` | obiekt o kluczach `K` i wartościach `V` | `Record<CatName, CatInfo>` — wymusza komplet kluczy |
-| `Pick<T, K>` / `Omit<T, K>` | wybiera / usuwa pola | `Pick<Todo, "title" \| "done">` |
-| `Exclude<U, M>` / `Extract<U, M>` | usuwa / zostawia człony unii | `Exclude<"a"\|"b"\|"c", "a">` → `"b"\|"c"` |
-| `NonNullable<T>` | usuwa `null`/`undefined` | `NonNullable<string \| undefined>` → `string` |
-| `Parameters<F>` / `ReturnType<F>` | parametry (tuple) / wynik funkcji | `ReturnType<typeof fn>` |
-| `ConstructorParameters<C>` / `InstanceType<C>` | parametry / instancja konstruktora | `InstanceType<typeof MyClass>` |
-| `Awaited<T>` | rekurencyjnie odwija `Promise` | `Awaited<Promise<Promise<number>>>` → `number` |
-| `NoInfer<T>` (5.4+) | blokuje wnioskowanie z tej pozycji | wartości domyślne w generykach |
-| `ThisParameterType<F>` / `OmitThisParameter<F>` | typ `this` / usunięcie `this` z sygnatury | rzadkie, biblioteki |
-| `ThisType<T>` | znacznik kontekstowego `this` (`noImplicitThis`) | budowniczowie obiektów |
-| `Uppercase` / `Lowercase` / `Capitalize` / `Uncapitalize` | przekształcenia literałów tekstowych | `advanced-types.md` |
+| `Partial<T>` / `Required<T>` | all fields optional / required | `Partial<Todo>` — a partial update |
+| `Readonly<T>` | all fields `readonly` (shallow) | `Readonly<Todo>` |
+| `Record<K, V>` | an object with keys `K` and values `V` | `Record<CatName, CatInfo>` — enforces the full set of keys |
+| `Pick<T, K>` / `Omit<T, K>` | picks / removes fields | `Pick<Todo, "title" \| "done">` |
+| `Exclude<U, M>` / `Extract<U, M>` | removes / keeps union members | `Exclude<"a"\|"b"\|"c", "a">` → `"b"\|"c"` |
+| `NonNullable<T>` | removes `null`/`undefined` | `NonNullable<string \| undefined>` → `string` |
+| `Parameters<F>` / `ReturnType<F>` | parameters (tuple) / result of a function | `ReturnType<typeof fn>` |
+| `ConstructorParameters<C>` / `InstanceType<C>` | parameters / instance of a constructor | `InstanceType<typeof MyClass>` |
+| `Awaited<T>` | recursively unwraps `Promise` | `Awaited<Promise<Promise<number>>>` → `number` |
+| `NoInfer<T>` (5.4+) | blocks inference from this position | default values in generics |
+| `ThisParameterType<F>` / `OmitThisParameter<F>` | the `this` type / removing `this` from the signature | rare, libraries |
+| `ThisType<T>` | a marker of contextual `this` (`noImplicitThis`) | object builders |
+| `Uppercase` / `Lowercase` / `Capitalize` / `Uncapitalize` | string literal transformations | `advanced-types.md` |
 
 ```ts
 interface Todo { title: string; description: string; completed: boolean }
@@ -85,5 +85,5 @@ type TodoInfo = Omit<Todo, "completed">;
 type FnReturn = ReturnType<typeof updateTodo>;
 ```
 
-Zanim ręcznie wypiszesz wariant istniejącego typu — złóż go z utility types. Ręczna kopia to dwa miejsca do
-synchronizacji. Wyjątek: kontrakty zewnętrzne (DTO API) celowo niezależne od modelu domeny.
+Before you write out a variant of an existing type by hand — compose it from utility types. A hand-made copy is two places to
+keep in sync. Exception: external contracts (API DTOs) deliberately independent of the domain model.

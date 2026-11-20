@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Eksport rekonstrukcji z kodu w JSON (dla narzędzi, np. ci_for_sdlc jako „stan obecny”): te same treści co `rules.md`,
-`requirements.md` i `domain.md`, z dowodami `plik:linia` rozbitymi na pola, plus moduły z kart i commit z manifestu.
+Export of a code reconstruction to JSON (for tools, e.g. ci_for_sdlc as the "current state"): the same content as `rules.md`,
+`requirements.md` and `domain.md`, with `file:line` evidence split into fields, plus modules from the cards and the commit from the manifest.
 
-  python3 recon_export.py docs/project/00-reconstruction [--repo DIR] [--out PLIK]
+  python3 recon_export.py docs/project/00-reconstruction [--repo DIR] [--out FILE]
 
-Pozycja = wypunktowanie albo wiersz tabeli: `id` (rodzaj + skrót treści bez dowodów — stały, gdy przesuną się linie),
-`text`, `section`, `module` (reguły z sekcji modułu), `evidence` [{path, line, line_end[, verified]}], `quote`,
-`confidence` (z „(confidence: …)”, dawniej „(pewność: …)”), `status` (evidence | assumption | unverified | question), `cells` (wiersz tabeli:
-nagłówek → wartość), `source` (plik:linia w katalogu rekonstrukcji). Z `--repo` każdy dowód ma `verified`: plik i linie
-istnieją, a cytat z punktu pasuje do kodu ±2 linie (jak `recon_check.py`). Format: reconstruction-export.schema.json.
+An item = a bullet or a table row: `id` (kind + a digest of the content without evidence — stable when lines shift),
+`text`, `section`, `module` (rules from a module section), `evidence` [{path, line, line_end[, verified]}], `quote`,
+`confidence` (from "(confidence: …)"), `status` (evidence | assumption | unverified | question), `cells` (a table row:
+header → value), `source` (file:line in the reconstruction directory). With `--repo` each evidence has `verified`: the file and lines
+exist and the item's quote matches the code ±2 lines (like `recon_check.py`). Format: reconstruction-export.schema.json.
 
-Domyślnie zapisuje `reconstruction.json` w katalogu rekonstrukcji. Kod wyjścia: 0 — zapisane, 2 — brak katalogu.
-Bez sieci i bez modelu; tylko biblioteka standardowa Pythona 3.9+.
+By default it writes `reconstruction.json` in the reconstruction directory. Exit code: 0 — written, 2 — no directory.
+No network and no model; only the Python 3.9+ standard library.
 """
 from __future__ import annotations
 
@@ -26,13 +26,12 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-from recon_check import MARK, QUOTE, REF, norm  # noqa: E402  (ten sam format dowodów co kontrola)
+from recon_check import MARK, QUOTE, REF, norm  # noqa: E402  (the same evidence format as the check)
 
 SOURCES = (("rules", "rules.md"), ("requirements", "requirements.md"), ("domain", "domain.md"))
-CONFIDENCE = re.compile(r"\(\s*(?:confidence|pewność):?\s*([^)]+?)\s*\)", re.I)
-STATUS = {"assumption": "assumption", "unverified": "unverified", "question": "question",
-          "założenie": "assumption", "niezweryfikowane": "unverified", "pytanie": "question"}   # pl: sprzed 14.x
-MODULE_HEAD = re.compile(r"^(.+?)\s+\((?:details|szczegóły): modules/[^)]+\)$")
+CONFIDENCE = re.compile(r"\(\s*confidence:?\s*([^)]+?)\s*\)", re.I)
+STATUS = {"assumption": "assumption", "unverified": "unverified", "question": "question"}
+MODULE_HEAD = re.compile(r"^(.+?)\s+\(details: modules/[^)]+\)$")
 
 
 def refs(text: str) -> list:
@@ -40,7 +39,7 @@ def refs(text: str) -> list:
 
 
 def clean(text: str) -> str:
-    """Treść bez dowodów, cytatów, pewności i znaczników — to, co zostaje do przeczytania."""
+    """Content without evidence, quotes, confidence and marks — what is left to read."""
     t = CONFIDENCE.sub("", text)
     for m in reversed(refs(t)):
         t = t[:m.start()] + t[m.end():]
@@ -123,7 +122,7 @@ def parse(kind: str, name: str, lines: list[str], verify) -> list[dict]:
         if b:
             out.append(item(name, n, b.group(1), section, module, verify))
     seen: dict[str, int] = {}
-    for i in out:   # identyfikator z treści i komórek, bez numerów linii — stały przy przesunięciach
+    for i in out:   # an identifier from the content and cells, without line numbers — stable under shifts
         basis = f"{name}\n{i['section']}\n{i['text']}\n{json.dumps(i.get('cells'), sort_keys=True, ensure_ascii=False)}"
         base = f"{kind}-{hashlib.sha1(basis.encode('utf-8')).hexdigest()[:10]}"
         seen[base] = seen.get(base, 0) + 1
@@ -137,7 +136,7 @@ def export(rec: str, repo: str | None) -> dict:
             "commit": None, "modules": []}
     try:
         with open(os.path.join(rec, "manifest.json"), encoding="utf-8") as fh:
-            data["commit"] = json.load(fh).get("commit")   # jak w manifeście (pusty, gdy repo bez commitów)
+            data["commit"] = json.load(fh).get("commit")   # as in the manifest (empty when the repo has no commits)
     except (OSError, ValueError):
         pass
     for card in sorted(glob.glob(os.path.join(rec, "modules", "*.json"))):

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Regresja podpowiedzi skilli (hook skill_hint) na typowych poleceniach backendu w repo Spring Boot — bez modelu.
-Zestaw z pomiaru 2026-11-16 (docs/todo.md, „Warstwy zespołu i preferencji osoby”): oczekiwany skill w podpowiedzi
-i brak skilli innych stacków (filtr stacku). Zmiana opisu skilla, która psuje te podpowiedzi, wychodzi tu, nie na
-płatnej ewaluacji. python3 .claude/tests/test_hint_backend.py"""
+"""A regression test of skill hints (the skill_hint hook) on typical backend commands in a Spring Boot repo — without a model.
+A set from the 2026-11-16 measurement (docs/todo.md, "Team and personal preference layers"): the expected skill in the hint
+and no skills of other stacks (the stack filter). A skill description change that breaks these hints shows up here, not in
+a paid evaluation. python3 .claude/tests/test_hint_backend.py"""
 import json
 import os
 import re
@@ -15,7 +15,7 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hoo
 HINT = ROOT / ".claude" / "hooks" / "skill_hint.py"
 POM = ("<project><parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId>"
        "<version>3.3.4</version></parent></project>")
-# polecenie → skille, z których co najmniej jeden ma być w podpowiedzi
+# command → skills, at least one of which must be in the hint (the commands are Polish test data)
 EXPECT = {
     "Dodaj endpoint GET /orders z paginacją": {"be-api-design"},
     "Napisz migrację bazy dodającą kolumnę status do tabeli orders": {"be-database"},
@@ -53,7 +53,7 @@ def main() -> int:
             fails.append(msg)
 
     if not (ROOT / ".claude" / "skills" / "fw-spring-boot").is_dir():
-        print("• pominięte: bez nakładki IT (fw-spring-boot)")
+        print("• skipped: no IT pack (fw-spring-boot)")
         return 0
     with tempfile.TemporaryDirectory() as t:
         app = Path(t) / "app"
@@ -62,15 +62,15 @@ def main() -> int:
         (app / "pom.xml").write_text(POM, encoding="utf-8")
         for prompt, want in EXPECT.items():
             got = hinted(app, prompt)
-            check(got & want, f"HB: „{prompt}” → oczekiwany {' albo '.join(sorted(want))}, podpowiedź: {sorted(got) or 'brak'}")
+            check(got & want, f"HB: {prompt!r} → expected {' or '.join(sorted(want))}, hint: {sorted(got) or 'none'}")
             bad = got & UNWANTED.get(prompt, set())
             check(not bad, f"HB: „{prompt}” → skill spoza tematu w podpowiedzi: {sorted(bad)}")
         other = {p: sorted(s for s in hinted(app, p) if OTHER_STACK.search(s)) for p in [*EXPECT, *REST]}
-        check(not any(other.values()), f"HB: podpowiedzi skilli innych stacków w repo Spring Boot: "
+        check(not any(other.values()), f"HB: hints of skills of other stacks in a Spring Boot repo: "
                                        f"{ {p: s for p, s in other.items() if s} }")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów podpowiedzi backendu")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the backend hints")
     return 1 if fails else 0
 
 

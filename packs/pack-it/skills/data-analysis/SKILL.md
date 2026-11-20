@@ -1,73 +1,73 @@
 ---
 name: data-analysis
-description: Użyj, gdy na pytanie trzeba odpowiedzieć danymi — spadek lub wzrost metryki, segmenty, paradoks Simpsona, testy hipotez.
+description: Use when a question has to be answered with data — a drop or rise in a metric, segments, Simpson's paradox, hypothesis tests.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj, gdy trzeba odpowiedzieć na pytanie danymi — od pytania i decyzji przez pozyskanie danych, czyszczenie, analizę opisową i diagnostyczną, statystykę i testy hipotez, wizualizację po raport z wnioskami i ograniczeniami; pandas, SQL, R, arkusze, podstawy uczenia maszynowego. Nie do potoków danych (data-engineering) ani eksperymentów A/B produktu (proc-product-discovery)."
-  keywords: "porównanie grup, średnia czy mediana, rozkład skośny, test statystyczny, istotność, wielkość efektu, spadek konwersji, dane z eksperymentu, ile da rabat, efekt interwencji z danych historycznych, bez eksperymentu, wnioskowanie przyczynowe, uplift, CATE, wagi skłonności, model churnu a decyzja, Singular matrix, regresja liniowa, zmienne zero-jedynkowe"
+  catalog: "Use when a question has to be answered with data — from the question and the decision through data acquisition, cleaning, descriptive and diagnostic analysis, statistics and hypothesis tests, visualisation to a report with conclusions and limitations; pandas, SQL, R, spreadsheets, machine learning basics. Not for data pipelines (data-engineering) or product A/B experiments (proc-product-discovery)."
+  keywords: "porównanie grup, średnia czy mediana, rozkład skośny, test statystyczny, istotność, wielkość efektu, spadek konwersji, dane z eksperymentu, ile da rabat, efekt interwencji z danych historycznych, bez eksperymentu, wnioskowanie przyczynowe, uplift, CATE, wagi skłonności, model churnu a decyzja, Singular matrix, regresja liniowa, zmienne zero-jedynkowe, comparing groups, mean or median, skewed distribution, statistical test, significance, effect size, drop in conversion, experiment data, how much a discount will give, the effect of an intervention from historical data, without an experiment, causal inference, propensity weights, churn model and the decision, linear regression, dummy variables"
 ---
 
-# Analiza danych
+# Data analysis
 
-Analiza kończy się **decyzją albo jej brakiem z uzasadnieniem**, nie wykresem. Każda liczba w raporcie ma źródło
-i sposób policzenia, który ktoś inny może powtórzyć.
+An analysis ends with **a decision, or the lack of one with a justification**, not with a chart. Every number in a report has a source
+and a way of calculating it that someone else can repeat.
 
-Zaczynaj od najprostszego rodzaju analizy (opisowa → diagnostyczna → predykcyjna → preskryptywna), który odpowiada
-na pytanie; każdy kolejny jest droższy.
+Start with the simplest kind of analysis (descriptive → diagnostic → predictive → prescriptive) that answers
+the question; every next one is more expensive.
 
-## Procedura
-1. **Pytanie i decyzja**: kto i co zdecyduje na podstawie wyniku, jaki wynik zmieniłby decyzję, termin.
-   Doprecyzuj miary („aktywny klient” = co dokładnie?) — definicje ze słownika domeny (ddd-facilitation) i zapisane.
-2. **Dane**: skąd (baza przez SQL — repliki lub hurtownia, nie produkcja OLTP; API; pliki CSV i arkusze; scraping
-   tylko zgodnie z regulaminem strony, `robots.txt`, z limitem tempa i bez danych osobowych), za jaki okres, z jakim
-   opóźnieniem i jakością. Dane osobowe: minimalizacja, pseudonimizacja, dostęp za zgodą (RODO). Rodzaje zmiennych:
-   nominalne, porządkowe, przedziałowe, ilorazowe — decydują o dozwolonych operacjach (średnia ocen 1–5 bywa
-   myląca; mediana i rozkład lepsze).
-3. **Czyszczenie** (zapisane w skrypcie, nie ręcznie w arkuszu): typy i formaty (daty w UTC, liczby, kodowanie
-   znaków), duplikaty (po kluczu biznesowym), wartości brakujące (dlaczego brakuje? usunięcie, uzupełnienie medianą
-   lub modelem, osobna kategoria „brak” — decyzja zapisana, bo zmienia wynik), błędne i odstające wartości (błąd
-   wprowadzenia czy prawdziwa skrajność? IQR, z-score, wykres pudełkowy), ujednolicenie tekstu (wielkość liter,
-   spacje, warianty nazw). Licz wiersze przed i po każdym kroku.
-4. **Eksploracja (EDA)**: rozkłady (histogram, gęstość), miary położenia i rozproszenia, braki, zależności między
-   zmiennymi, podział na segmenty i czas. Szukasz niespodzianek i błędów w danych, zanim zaczniesz wnioskować.
-5. **Analiza**: agregacje i porównania segmentów, korelacje, regresja, testy statystyczne
-   (`references/statistics.md`), modele predykcyjne tylko gdy potrzebne (`references/machine-learning.md`:
-   także MLOps i inżynieria AI), prognozy i przyczynowość z danych obserwacyjnych
-   (`references/time-series-and-econometrics.md`), czułość eksperymentów i metryki ilorazowe
+## Procedure
+1. **The question and the decision**: who will decide what on the basis of the result, what result would change the decision, the deadline.
+   Pin down the measures ("active customer" = what exactly?) — definitions from the domain dictionary (ddd-facilitation) and written down.
+2. **Data**: from where (a database via SQL — replicas or a warehouse, not production OLTP; an API; CSV files and spreadsheets; scraping
+   only in line with the site's terms, `robots.txt`, with a rate limit and without personal data), for what period, with what
+   delay and quality. Personal data: minimisation, pseudonymisation, access by consent (GDPR). Types of variables:
+   nominal, ordinal, interval, ratio — they determine the permitted operations (an average of 1–5 ratings can be
+   misleading; the median and the distribution are better).
+3. **Cleaning** (recorded in a script, not by hand in a spreadsheet): types and formats (dates in UTC, numbers, character
+   encoding), duplicates (by the business key), missing values (why is it missing? removal, filling with the median
+   or a model, a separate "missing" category — the decision recorded, because it changes the result), wrong and outlying values (an
+   entry error or a real extreme? IQR, z-score, a box plot), text normalisation (case,
+   spaces, name variants). Count rows before and after every step.
+4. **Exploration (EDA)**: distributions (a histogram, density), measures of location and spread, missing values, relationships between
+   variables, a split by segments and time. You look for surprises and errors in the data before you start drawing inferences.
+5. **Analysis**: aggregations and comparisons of segments, correlations, regression, statistical tests
+   with an effect size and, for many comparisons, a correction (Holm, Benjamini-Hochberg) (`references/statistics.md`), predictive models only when needed (`references/machine-learning.md`:
+   also MLOps and AI engineering), forecasts and causality from observational data
+   (`references/time-series-and-econometrics.md`), experiment sensitivity and ratio metrics
    (`references/advanced-experiments.md`).
-   Kontroluj zmienne zakłócające i sprawdź paradoks Simpsona (trend w całości odwrotny niż w segmentach).
-   Pytanie „ile da interwencja” bez eksperymentu: graf przyczynowy, metoda, efekt dla kogo (CATE/uplift) i próby
-   obalenia (`references/time-series-and-econometrics.md`). „Singular matrix” w regresji = problem danych (pułapka
-   zmiennych zero-jedynkowych, stała kolumna), nie biblioteki (`references/statistics.md`).
-6. **Wizualizacja** dopasowana do pytania (`references/visualization.md`).
-7. **Raport**: najpierw odpowiedź na pytanie i rekomendacja, potem dowody, potem metoda; **ograniczenia** (jakość
-   danych, okres, czego nie da się stwierdzić — korelacja to nie przyczynowość), niepewność (przedziały, nie tylko
-   punkt), jak powtórzyć analizę (skrypt lub notatnik w repo, wersja danych).
+   Control for confounders and check Simpson's paradox (the trend as a whole is the reverse of that in the segments).
+   The question "how much will an intervention give" without an experiment: a causal graph, a method, the effect for whom (CATE/uplift) and attempts
+   to refute it (`references/time-series-and-econometrics.md`). "Singular matrix" in a regression = a data problem (the dummy-variable
+   trap, a constant column), not a library problem (`references/statistics.md`).
+6. **Visualisation** matched to the question (`references/visualization.md`).
+7. **Report**: first the answer to the question and a recommendation, then the evidence, then the method; **limitations** (data
+   quality, period, what cannot be established — correlation is not causation), uncertainty (intervals, not only a
+   point), how to repeat the analysis (a script or notebook in the repo, the data version).
 
-## Narzędzia
-- **SQL** do pobierania i agregacji przy źródle (funkcje okna, CTE — be-database); **pandas** (lub polars) w Pythonie,
-  **R** z dplyr i ggplot2; notatniki (Jupyter) do eksploracji, skrypty i testy do analiz powtarzalnych.
-- **Arkusze** (Excel, Google Sheets) dla małych danych i odbiorców biznesowych: tabele przestawne, `XLOOKUP` (zamiast
-  starszych `VLOOKUP`/`HLOOKUP`, gdy wersja na to pozwala), `IF`, funkcje tekstu i dat. Formuły zamiast wklejonych
-  wartości, żeby dało się sprawdzić obliczenia.
-- **BI** (Power BI, Tableau, Looker, Metabase) dla dashboardów wielokrotnego użytku — definicje miar w jednym miejscu
-  (warstwa semantyczna), nie w każdym raporcie osobno.
-- Duże dane i przetwarzanie rozproszone: najpierw sprawdź, czy naprawdę potrzebne (arch-quality-attributes,
+## Tools
+- **SQL** for fetching and aggregating at the source (window functions, CTEs — be-database); **pandas** (or polars) in Python,
+  **R** with dplyr and ggplot2; notebooks (Jupyter) for exploration, scripts and tests for repeatable analyses.
+- **Spreadsheets** (Excel, Google Sheets) for small data and business recipients: pivot tables, `XLOOKUP` (instead of the
+  older `VLOOKUP`/`HLOOKUP`, when the version allows), `IF`, text and date functions. Formulas instead of pasted
+  values, so that the calculations can be checked.
+- **BI** (Power BI, Tableau, Looker, Metabase) for reusable dashboards — the definitions of measures in one place
+  (a semantic layer), not in every report separately.
+- Big data and distributed processing: first check whether it is really needed (arch-quality-attributes,
   `data-architecture.md`).
 
-## Zasady
-- Liczby sprawdzasz krzyżowo z drugim źródłem lub sumą kontrolną (np. suma przychodu zgodna z księgowością).
-- Nie dopasowujesz analizy do oczekiwanego wyniku; hipotezy zapisujesz przed sprawdzeniem.
-- Wynik, który przeczy oczekiwaniom, to najpierw podejrzenie błędu w danych, potem odkrycie.
+## Rules
+- You cross-check numbers against a second source or a checksum (e.g. the sum of revenue matches the accounting).
+- You do not fit the analysis to the expected result; you write down hypotheses before checking.
+- A result that contradicts expectations is first a suspicion of an error in the data, then a discovery.
 
-## Checklista
-- [ ] pytanie, decyzja i definicje miar zapisane
-- [ ] źródła, okres i jakość danych opisane; dane osobowe zminimalizowane
-- [ ] czyszczenie w skrypcie z liczbą wierszy po każdym kroku
-- [ ] EDA przed wnioskami; segmenty i czas sprawdzone
-- [ ] raport: odpowiedź, dowody, metoda, ograniczenia, niepewność, sposób powtórzenia
+## Checklist
+- [ ] the question, the decision and the definitions of measures written down
+- [ ] sources, period and data quality described; personal data minimised
+- [ ] cleaning in a script with the row count after every step
+- [ ] EDA before conclusions; segments and time checked
+- [ ] report: answer, evidence, method, limitations, uncertainty, how to repeat it
 
-## Źródła
-- D. Diez i in., *OpenIntro Statistics*; H. Wickham i in., *R for Data Science*; W. McKinney, *Python for Data Analysis*
+## Sources
+- D. Diez et al., *OpenIntro Statistics*; H. Wickham et al., *R for Data Science*; W. McKinney, *Python for Data Analysis*
 - [roadmap.sh — Data Analyst](https://roadmap.sh/data-analyst)
-Opisane własnymi słowami.
+Described in our own words.

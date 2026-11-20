@@ -1,16 +1,16 @@
-# Klocki domenowe w C# — przetestowane przykłady
+# Domain building blocks in C# — tested examples
 
-> **Spis treści:** Booking.Domain.csproj · Money.cs · ResourceAvailability.cs · ResourceAvailabilityTests.cs
+> **Contents:** Booking.Domain.csproj · Money.cs · ResourceAvailability.cs · ResourceAvailabilityTests.cs
 
-Projekt sprawdzony 2026-10-23: `dotnet test` (xUnit) na net8.0 (C# 12) i net10.0 (C# 14) z
-`TreatWarningsAsErrors` i `Nullable`, `dotnet format --verify-no-changes` bez uwag (SDK 8.0.132 i 10.0.113).
-Kod używa tylko C# 12, więc działa w całym zakresie skilla. Pliki skopiowane bez zmian.
+Project checked 2026-10-23: `dotnet test` (xUnit) on net8.0 (C# 12) and net10.0 (C# 14) with
+`TreatWarningsAsErrors` and `Nullable`, `dotnet format --verify-no-changes` with no findings (SDK 8.0.132 and 10.0.113).
+The code uses only C# 12, so it works across the whole range of the skill. Code from the tested project; only comments and message strings were translated to English (logic unchanged).
 
-## Spis treści
+## Contents
 - Booking.Domain.csproj
-- Money.cs — kwota i identyfikator (obiekty wartości)
-- ResourceAvailability.cs — wynik operacji, stany, zdarzenie, agregat, port repozytorium
-- ResourceAvailabilityTests.cs — testy xUnit, wyczerpujące `switch` na wyniku
+- Money.cs — amount and identifier (value objects)
+- ResourceAvailability.cs — operation result, states, event, aggregate, repository port
+- ResourceAvailabilityTests.cs — xUnit tests, an exhaustive `switch` on the result
 
 ## Booking.Domain.csproj
 ```xml
@@ -28,7 +28,7 @@ Kod używa tylko C# 12, więc działa w całym zakresie skilla. Pliki skopiowane
 ```csharp
 namespace Booking.Domain;
 
-/// <summary>Kwota — obiekt wartości: decimal z jawną walutą, niezmienny, równość po wartości (record struct).</summary>
+/// <summary>Amount — a value object: decimal with an explicit currency, immutable, value equality (record struct).</summary>
 public readonly record struct Money
 {
     public decimal Amount { get; }
@@ -37,7 +37,7 @@ public readonly record struct Money
     public Money(decimal amount, string currency)
     {
         if (string.IsNullOrWhiteSpace(currency) || currency.Length != 3)
-            throw new ArgumentException("Waluta: trzyliterowy kod ISO 4217.", nameof(currency));
+            throw new ArgumentException("Currency: a three-letter ISO 4217 code.", nameof(currency));
         Amount = decimal.Round(amount, 2, MidpointRounding.ToEven);
         Currency = currency.ToUpperInvariant();
     }
@@ -45,12 +45,12 @@ public readonly record struct Money
     public Money Add(Money other) =>
         other.Currency == Currency
             ? new Money(Amount + other.Amount, Currency)
-            : throw new InvalidOperationException($"Różne waluty: {Currency} i {other.Currency}.");
+            : throw new InvalidOperationException($"Different currencies: {Currency} and {other.Currency}.");
 
     public override string ToString() => $"{Amount:0.00} {Currency}";
 }
 
-/// <summary>Identyfikator jako typ, nie goły Guid/string.</summary>
+/// <summary>An identifier as a type, not a bare Guid/string.</summary>
 public readonly record struct ResourceId(Guid Value)
 {
     public static ResourceId New() => new(Guid.NewGuid());
@@ -61,10 +61,10 @@ public readonly record struct ResourceId(Guid Value)
 ```csharp
 namespace Booking.Domain;
 
-/// <summary>Wynik operacji: sukces albo odrzucenie biznesowe — zamknięta hierarchia rekordów.</summary>
+/// <summary>Operation result: success or a business rejection — a closed hierarchy of records.</summary>
 public abstract record BlockResult
 {
-    private BlockResult() { } // tylko warianty zagnieżdżone
+    private BlockResult() { } // only nested variants
 
     public sealed record Blocked(ResourceId Resource, string By) : BlockResult;
     public sealed record AlreadyBlockedBySameOwner : BlockResult;
@@ -72,7 +72,7 @@ public abstract record BlockResult
     public sealed record Disabled : BlockResult;
 }
 
-/// <summary>Stan jako warianty (maszyna stanów).</summary>
+/// <summary>State as variants (a state machine).</summary>
 public abstract record AvailabilityState
 {
     private AvailabilityState() { }
@@ -86,7 +86,7 @@ public interface IDomainEvent;
 
 public sealed record ResourceBlocked(ResourceId Resource, string By, DateTimeOffset At) : IDomainEvent;
 
-/// <summary>Agregat: stan prywatny, zmiana tylko metodami biznesowymi, wersja i zdarzenia.</summary>
+/// <summary>Aggregate: private state, changed only through business methods, a version and events.</summary>
 public sealed class ResourceAvailability
 {
     private readonly List<IDomainEvent> _events = [];
@@ -113,13 +113,13 @@ public sealed class ResourceAvailability
             case AvailabilityState.Off:
                 return new BlockResult.Disabled();
             default:
-                throw new InvalidOperationException($"Nieobsłużony stan {State}."); // błąd programisty
+                throw new InvalidOperationException($"Unhandled state {State}."); // a programmer error
         }
     }
 
     public void Disable() => State = new AvailabilityState.Off();
 
-    /// <summary>Oddaje zdarzenia do publikacji (np. przez outbox) i czyści listę.</summary>
+    /// <summary>Hands out the events for publishing (e.g. through an outbox) and clears the list.</summary>
     public IReadOnlyList<IDomainEvent> PullEvents()
     {
         var events = _events.ToArray();
@@ -128,7 +128,7 @@ public sealed class ResourceAvailability
     }
 }
 
-/// <summary>Port repozytorium w domenie; adapter (EF Core, Dapper) w infrastrukturze.</summary>
+/// <summary>The repository port in the domain; the adapter (EF Core, Dapper) in the infrastructure.</summary>
 public interface IResourceAvailabilityRepository
 {
     Task<ResourceAvailability?> GetAsync(ResourceId id, CancellationToken ct);
@@ -179,12 +179,12 @@ public class ResourceAvailabilityTests
         {
             BlockResult.Blocked => "ok",
             BlockResult.AlreadyBlockedBySameOwner => "ok",
-            BlockResult.Conflict c => $"zajęte przez {c.BlockedBy}",
-            BlockResult.Disabled => "wyłączony",
+            BlockResult.Conflict c => $"taken by {c.BlockedBy}",
+            BlockResult.Disabled => "disabled",
             _ => throw new InvalidOperationException(),
         };
 
-        Assert.Equal("wyłączony", message);
+        Assert.Equal("disabled", message);
     }
 
     [Fact]

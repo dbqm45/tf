@@ -3,40 +3,40 @@ artifact: brief
 phase: discovery
 status: accepted
 version: 1
-author: użytkownik
+author: user
 created: 2026-09-27
 updated: 2026-09-27
 inputs: []
 ---
-# Brief: Rezerwacja sal i biurek
+# Brief: Room and desk booking
 
 ## TL;DR
-Firma (300 osób, model hybrydowy) rezerwuje sale i biurka w arkuszu — dochodzi do podwójnych rezerwacji. Cel: aplikacja webowa
-do samoobsługowych rezerwacji z integracją z kalendarzem Microsoft 365. Sukces: 90% rezerwacji samoobsługowo w 3 miesiące,
-zero podwójnych rezerwacji. Ograniczenia: MVP w 3 miesiące, zespół 2 × TypeScript/Angular + 1 × Java, hosting Azure w UE.
+A company (300 people, a hybrid work model) books rooms and desks in a spreadsheet — double bookings happen. Goal: a web application
+for self-service bookings with an integration with the Microsoft 365 calendar. Success: 90% of bookings self-service within 3 months,
+zero double bookings. Constraints: MVP in 3 months, a team of 2 × TypeScript/Angular + 1 × Java, Azure hosting in the EU.
 
-## Problem i kontekst
-Rezerwacje w współdzielonym arkuszu Excel; konflikty i „martwe” rezerwacje (nikt nie przyszedł).
-## Użytkownicy i interesariusze
-Pracownicy (rezerwują), recepcja/facility (zarządza zasobami, blokuje do serwisu), IT (utrzymanie).
-## Cele i miary sukcesu
-| Cel | Miara | Wartość docelowa |
+## Problem and context
+Bookings in a shared Excel spreadsheet; conflicts and "dead" bookings (nobody came).
+## Users and stakeholders
+Employees (they book), reception/facility (manages the resources, blocks them for maintenance), IT (operations).
+## Goals and success measures
+| Goal | Measure | Target value |
 |---|---|---|
-| Samoobsługa | % rezerwacji przez aplikację | 90% po 3 mies. |
-| Brak konfliktów | podwójne rezerwacje | 0 |
-## Zakres
-- W zakresie: rezerwacja sal i biurek na przedziały czasu, blokady serwisowe, zwalnianie nieodebranych rezerwacji, SSO Microsoft (Entra ID), zapis do kalendarza M365.
-- Poza zakresem: rozliczenia kosztów, aplikacja mobilna natywna.
-## Ograniczenia
-MVP 3 miesiące; zespół 2 × TS/Angular, 1 × Java (Spring); hosting Azure, dane w UE; budżet utrzymania niski.
-## Typ projektu
+| Self-service | % of bookings through the application | 90% after 3 months |
+| No conflicts | double bookings | 0 |
+## Scope
+- In scope: booking rooms and desks for time slots, maintenance blocks, releasing unclaimed bookings, Microsoft SSO (Entra ID), writing to the M365 calendar.
+- Out of scope: cost settlement, a native mobile application.
+## Constraints
+MVP in 3 months; a team of 2 × TS/Angular, 1 × Java (Spring); Azure hosting, data in the EU; a low operations budget.
+## Project type
 greenfield
 
-## Otwarte pytania
-- [ ] Czy biurka mają przypisane strefy/uprawnienia? → facility
+## Open questions
+- [ ] Do desks have assigned zones/permissions? → facility
 
-## Przekazanie
-- **Dla:** tomasz (solution architect)
-- **Zadanie:** rekomendacja stacku i stylu architektury (04-architecture/stack-decision.md)
-- **Przeczytaj:** TL;DR, Zakres, Ograniczenia oraz wymagania (03-requirements)
-- **Gotowe, gdy:** stack-decision.md ma status proposed i przechodzi project_record.py check
+## Handoff
+- **For:** tomasz (solution architect)
+- **Task:** a recommendation of the stack and the architecture style (04-architecture/stack-decision.md)
+- **Read:** TL;DR, Scope, Constraints and the requirements (03-requirements)
+- **Done when:** stack-decision.md has the status proposed and passes project_record.py check

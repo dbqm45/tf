@@ -1,14 +1,14 @@
 ---
 name: ops-docker
-description: Użyj przy Dockerfile, docker-compose i obrazach — tworzenie, rozmiar i czas budowy, bezpieczeństwo obrazów.
+description: Use for Dockerfile, docker-compose and images — creating them, size and build time, image security.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj przy tworzeniu i optymalizacji Dockerfile, docker-compose, obrazów kontenerów i ich bezpieczeństwa. Nie do pipeline'ów CI (ops-ci-cd) ani infrastruktury chmurowej."
+  catalog: "Use when creating and optimizing a Dockerfile, docker-compose, container images and their security. Not for CI pipelines (ops-ci-cd) or cloud infrastructure."
 ---
 
 # Docker
 
-## Dockerfile — wzorzec
+## Dockerfile — the pattern
 ```dockerfile
 # syntax=docker/dockerfile:1
 FROM node:22-slim AS deps
@@ -34,22 +34,22 @@ HEALTHCHECK CMD node dist/healthcheck.js || exit 1
 CMD ["node", "dist/server.js"]
 ```
 
-## Zasady
-1. Multi-stage: narzędzia buildu nie trafiają do obrazu końcowego.
-2. Obraz bazowy z konkretnym tagiem (najlepiej z digestem), nigdy `latest`. Preferuj `-slim`/distroless.
-3. Warstwy zależności przed `COPY . .`, `.dockerignore` z `.env*` i `.git`, użytkownik nie-root (`USER`).
-4. Zero sekretów w obrazie i w `ARG`/`ENV`. Sekrety buildu: `RUN --mount=type=secret`.
-5. `CMD` w formie exec (JSON), aby sygnały docierały do procesu.
-6. `HEALTHCHECK` lub healthcheck w orkiestratorze.
-7. Uruchomienie: system plików tylko do odczytu (`--read-only` + `tmpfs` na katalog tymczasowy), `--cap-drop=ALL`,
-   `no-new-privileges`, obraz bez powłoki i menedżera pakietów (distroless). Po włamaniu przez podatność aplikacji
-   (np. React2Shell) napastnik nie pobierze i nie uruchomi wtedy łatwo koparki ani backdoora.
-8. Ruch wychodzący kontenera ograniczony do potrzebnych usług; brak dostępu do metadanych chmury (`169.254.169.254`),
-   uprawnienia chmurowe daj przez tożsamość obciążenia (np. IRSA, Workload Identity), a na maszynach wymuszaj IMDSv2.
+## Rules
+1. Multi-stage: the build tools do not end up in the final image.
+2. A base image with a specific tag (preferably with a digest), never `latest`. Prefer `-slim`/distroless.
+3. Dependency layers before `COPY . .`, a `.dockerignore` with `.env*` and `.git`, a non-root user (`USER`).
+4. Zero secrets in the image and in `ARG`/`ENV`. Build secrets: `RUN --mount=type=secret`.
+5. `CMD` in the exec (JSON) form, so that signals reach the process.
+6. `HEALTHCHECK` or a healthcheck in the orchestrator.
+7. Running: a read-only file system (`--read-only` + `tmpfs` for the temporary directory), `--cap-drop=ALL`,
+   `no-new-privileges`, an image without a shell and a package manager (distroless). After a break-in through an application vulnerability
+   (e.g. React2Shell) the attacker then cannot easily download and run a miner or a backdoor.
+8. The container's outbound traffic limited to the needed services; no access to the cloud metadata (`169.254.169.254`),
+   give cloud permissions through a workload identity (e.g. IRSA, Workload Identity), and enforce IMDSv2 on the machines.
 
 ## docker-compose (dev)
-Sekrety z niecommitowanego `.env`, w repo tylko `.env.example`.
+Secrets from an uncommitted `.env`, only `.env.example` in the repo.
 
-## Weryfikacja
-- `hadolint Dockerfile` (jeśli dostępny), `docker build` przechodzi, rozmiar obrazu sprawdzony (`docker images`).
-- Skan podatności (`docker scout cves` / `trivy image`), jeśli dostępny.
+## Verification
+- `hadolint Dockerfile` (if available), `docker build` passes, the image size checked (`docker images`).
+- A vulnerability scan (`docker scout cves` / `trivy image`), if available.

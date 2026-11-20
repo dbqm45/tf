@@ -6,7 +6,15 @@
       "expect": "trigger",
       "prompt": "Zaimplementuj tę historyjkę: jako użytkownik chcę zresetować hasło linkiem z maila, link ważny 30 minut.",
       "checks": {
-        "all": [["run_report\\.py", "intake\\.py", "ticket\\.md"], ["spec\\.md", "AC-\\d", "kryteri"], ["kawałk", "K1"]]
+        "all": [["run_report\\.py", "intake\\.py", "ticket\\.md"], ["spec\\.md", "AC-\\d", "kryteri"], ["kawałk", "S1"]]
+      }
+    },
+    {
+      "id": "zwykla-implementacja-historyjki-en",
+      "expect": "trigger",
+      "prompt": "Implement this story: as a user I want to reset my password with a link from an email, the link valid for 30 minutes.",
+      "checks": {
+        "all": [["run_report\\.py", "intake\\.py", "ticket\\.md"], ["spec\\.md", "AC-\\d", "kryteri", "criteri\\w*", "acceptance"], ["kawałk", "S1", "slices?", "chunks?", "pieces?", "increments?"]]
       }
     },
     {
@@ -57,7 +65,7 @@
     {
       "id": "przeglad-zakresu-etykiety",
       "expect": "trigger",
-      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Przegląd zakresu kawałka K2 zwrócił jedno ustalenie ważne i dwa drobne — co robisz dalej?",
+      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Przegląd zakresu kawałka S2 zwrócił jedno ustalenie ważne i dwa drobne — co robisz dalej?",
       "checks": {
         "all": [["ważn"], ["wycof", "popraw"], ["parked", "run_state\\.py park", "park "], ["rund", "R2"], ["run_state\\.py finding", "finding "], ["zakres fail", "zakres pass", "scope fail", "scope pass", "run_state\\.py step"]],
         "none": ["R3 ", "trzeci[aą] rund[aęy] bez"]
@@ -66,10 +74,10 @@
     {
       "id": "pytanie-blokuje-jeden-kawalek",
       "expect": "trigger",
-      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). W projekcie włączono loop.blocked_slices. W kawałku K2 brakuje odpowiedzi na pytanie o abonamenty, a K3 od niego nie zależy — co robisz dalej?",
+      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). W projekcie włączono loop.blocked_slices. W kawałku S2 brakuje odpowiedzi na pytanie o abonamenty, a S3 od niego nie zależy — co robisz dalej?",
       "checks": {
-        "all": [["run_state\\.py block", "zablok"], ["K3"], ["pytani"]],
-        "none": ["(?<!nie )zgaduj[ęe]", "przyjmuj[ęe] założenie i robi[ęe] K2"]
+        "all": [["run_state\\.py block", "zablok"], ["S3"], ["pytani"]],
+        "none": ["(?<!nie )zgaduj[ęe]", "przyjmuj[ęe] założenie i robi[ęe] S2"]
       }
     },
     {
@@ -84,7 +92,7 @@
     {
       "id": "koniec-kawalka-jednym-poleceniem",
       "expect": "trigger",
-      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Kawałek K1 ma zielony dowód z verify, a scope-reviewer nie zgłosił ustaleń ważnych. Jak zamykasz kawałek?",
+      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Kawałek S1 ma zielony dowód z verify, a scope-reviewer nie zgłosił ustaleń ważnych. Jak zamykasz kawałek?",
       "checks": {
         "all": [["run_state\\.py done", "done <katalog>"], ["--message"], ["feat\\(", "fix\\(", "<typ>"]],
         "none": ["git add -A", "git add \\.", "git commit -am"]
@@ -119,6 +127,24 @@
       "expect": "no-trigger",
       "neighbor": "core-delivery-lifecycle",
       "prompt": "Prowadzimy nowy produkt od pomysłu do wdrożenia z agentami AI. Jakie fazy, bramki człowieka i persony przewidzieć?"
+    },
+    {
+      "id": "zmiana-ekranu-zrzuty",
+      "expect": "trigger",
+      "prompt": "Zrealizuj historyjkę: jako użytkownik chcę zobaczyć na ekranie logowania czerwony komunikat o błędnym haśle pod polem hasła. Zmiana dotyczy dwóch komponentów Angulara. Jak sprawdzisz, że ekran wygląda jak trzeba?",
+      "checks": {"all": [["ui_snap", "zrzut", "screenshot"], ["przed", "before"]]}
+    },
+    {
+      "id": "zmiana-ekranu-zrzuty-en",
+      "expect": "trigger",
+      "prompt": "Implement this story: as a user I want a red error message under the password field on the login screen. The change touches two Angular components. How will you check that the screen looks right?",
+      "checks": {"all": [["ui_snap", "screenshot"], ["before"]]}
+    },
+    {
+      "id": "zmiana-backendu-bez-zrzutow",
+      "expect": "trigger",
+      "prompt": "Zaimplementuj historyjkę: jako operator chcę, żeby endpoint /api/sessions zwracał pole duration w sekundach. Zmiana dotyczy tylko kontrolera i serwisu w Pythonie.",
+      "checks": {"all": [["run_report\\.py", "intake\\.py", "spec\\.md"]], "none": ["ui_snap\\.py capture"]}
     }
   ]
 }

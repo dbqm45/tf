@@ -16,6 +16,20 @@
       }
     },
     {
+      "id": "od-notebooka-do-continuous-training-en",
+      "expect": "trigger",
+      "prompt": "We have a scoring model trained in a notebook, and a data scientist manually uploads a file to the server once a quarter. I want to put this in order and get to automatic retraining, but without overdoing the tooling. Where do I start and what is what? Answer briefly.",
+      "checks": {
+        "all": [
+          ["poziom\\w* (0|1|2|zero|dojrzałości)", "level [0-2]", "MLOps [0-2]", "dojrzałości", "maturity", "(MLOps )?level (0|1|2|zero)"],
+          ["continuous training", "ciągł\\w+ trenowani", "automatyczn\\w+ (dotrenowani|trenowani|retrening)", "potok\\w* trenowania", "automat\\w+ (retrain\\w*|training)", "(training|retraining) pipelines?"],
+          ["walidacj\\w+ danych", "data validation", "kontrakt\\w* danych", "schemat\\w* danych", "data contracts?", "data schemas?", "schema validation"],
+          ["rejestr\\w* modeli", "model registry", "alias\\w*", "registry"]
+        ],
+        "none": ["wystarczy cron z notebookiem", "od razu Kubeflow", "a cron (job )?with (a |the )?notebook is enough", "(straight|right) (away |off )?(to|into) Kubeflow", "Kubeflow right away"]
+      }
+    },
+    {
       "id": "monitoring-opoznione-etykiety",
       "expect": "trigger",
       "prompt": "Mamy model churnu na produkcji. Prawdziwą etykietę (czy klient odszedł) znamy dopiero po 90 dniach, a biznes pyta, czy model nadal działa. Co monitorować na co dzień i kiedy dotrenowywać? Odpowiedz zwięźle.",

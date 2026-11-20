@@ -1,60 +1,60 @@
-# Szablony: strategia, raport dla zarządu, RACI
+# Templates: strategy, board report, RACI
 
-Spis treści: 1. Jednostronicowa strategia · 2. Raport dla zarządu · 3. KPI i KRI · 4. RACI · 5. Uświadamianie
+Contents: 1. One-page strategy · 2. Board report · 3. KPI and KRI · 4. RACI · 5. Awareness
 
-## 1. Jednostronicowa strategia
+## 1. One-page strategy
 ```markdown
-Security leadership: <firma> — profil docelowy <rok>, decyzje do podjęcia: <n>
-1. Cele biznesu (3–5) i „klejnoty”: <co musi działać, jakie dane>
-2. Stan obecny: profil bieżący CSF 2.0 wg funkcji (Govern … Recover), 3 największe luki z dowodem
-3. Stan docelowy: profil docelowy za 3 lata i dlaczego taki poziom (klient, regulacja, apetyt)
-4. Filary (3–5): wynik biznesowy · inicjatywa · miernik z progiem · właściciel
-5. Mapa drogowa: 0–6 / 6–18 / 18–36 miesięcy; zależności; punkty decyzji
-6. Budżet: koszt całkowity (przedział) · redukcja ryzyka · alternatywa „bez zmian” i „ubezpieczenie”
-7. Czego nie robimy i dlaczego · główne ryzyka strategii
-8. Decyzje do podjęcia przez zarząd (z terminem)
+Security leadership: <company> — target profile <year>, decisions to be made: <n>
+1. Business goals (3–5) and "crown jewels": <what must work, which data>
+2. Current state: CSF 2.0 current profile by function (Govern … Recover), the 3 biggest gaps with evidence
+3. Target state: the target profile in 3 years and why this level (customer, regulation, appetite)
+4. Pillars (3–5): business outcome · initiative · measure with a threshold · owner
+5. Roadmap: 0–6 / 6–18 / 18–36 months; dependencies; decision points
+6. Budget: total cost (range) · risk reduction · "no change" and "insurance" alternatives
+7. What we do not do and why · the main risks of the strategy
+8. Decisions to be made by the board (with a deadline)
 ```
-Zasady: strona A4, bez żargonu technicznego, każda liczba z przedziałem i źródłem. Przegląd co rok lub po dużym incydencie
-albo przejęciu.
+Rules: one A4 page, no technical jargon, every number with a range and a source. Review every year or after a major incident
+or acquisition.
 
-## 2. Raport dla zarządu (kwartalny, 1 strona + załączniki)
-1. **Werdykt jednym zdaniem** (np. „ryzyko w granicach apetytu, jedno wyjątkowe do decyzji”).
-2. **Ryzyka względem apetytu:** 3–5 największych w języku skutków (zł, dni przestoju, kontrakty); trend (↑ → ↓).
-3. **KRI** z progami (patrz niżej) — tylko te, które przekroczyły próg lub zbliżają się do niego.
-4. **KPI programu:** postęp inicjatyw z mapy drogowej, budżet wykonany, kluczowe terminy.
-5. **Zdarzenia i wnioski:** incydenty istotne dla zarządu, bliskie trafienia, co zmieniono.
-6. **Decyzje do podjęcia** i prośby (budżet, akceptacja ryzyka, mandat) — z rekomendacją i konsekwencją odmowy.
-7. **Zmiany otoczenia:** klienci, regulatorzy, przejęcia, nowe technologie (w tym AI).
+## 2. Board report (quarterly, 1 page + appendices)
+1. **The verdict in one sentence** (e.g. "risk within appetite, one exceptional item for decision").
+2. **Risks against appetite:** the 3–5 biggest in the language of impact (PLN, days of downtime, contracts); trend (↑ → ↓).
+3. **KRI** with thresholds (see below) — only those that have crossed the threshold or are approaching it.
+4. **Program KPI:** progress of the roadmap initiatives, budget spent, key deadlines.
+5. **Events and lessons:** incidents relevant to the board, near misses, what was changed.
+6. **Decisions to be made** and requests (budget, risk acceptance, mandate) — with a recommendation and the consequence of refusal.
+7. **Changes in the environment:** customers, regulators, acquisitions, new technologies (including AI).
 
-Apetyt na ryzyko to **oświadczenie zatwierdzone przez zarząd**, nie CISO, np. „nie akceptujemy ryzyka krytycznego
-dłużej niż 90 dni bez planu; przestój systemu przychodowego ponad 4 h jest poza tolerancją”. Sformułowanie i procedura
-akceptacji — sec-risk-management.
+Risk appetite is **a statement approved by the board**, not by the CISO, e.g. "we do not accept a critical risk
+for longer than 90 days without a plan; downtime of a revenue system over 4 h is outside tolerance". The wording and the acceptance
+procedure — sec-risk-management.
 
-Pułapki: liczba zablokowanych ataków jako sukces (rośnie z szumem); kolorowa mapa cieplna bez skutków; 40 slajdów
-metryk SOC-a; zaskakiwanie zarządu złą wiadomością na sali — wstępnie omów z przewodniczącym.
+Pitfalls: the number of blocked attacks as a success (it grows with noise); a colourful heat map without impact; 40 slides
+of SOC metrics; surprising the board with bad news in the room — discuss it with the chair beforehand.
 
-## 3. KPI i KRI
+## 3. KPI and KRI
 | | KPI | KRI |
 |---|---|---|
-| pytanie | czy program robi to, co zaplanowano | czy ryzyko rośnie |
-| przykłady [przykład] | % systemów krytycznych w EDR; inicjatywy w terminie; pokrycie ćwiczeniami | konta uprzywilejowane bez MFA; krytyczne podatności >7 dni na zasobach z internetu; średni czas wykrycia; wygasłe akceptacje ryzyka |
-| próg i właściciel | cel + właściciel | próg alarmowy + właściciel + działanie po przekroczeniu |
-Metryka bez progu i właściciela nie trafia do raportu. Mało liczb, stała definicja, ten sam miernik co kwartał.
+| question | is the program doing what was planned | is risk growing |
+| examples [example] | % of critical systems in EDR; initiatives on schedule; exercise coverage | privileged accounts without MFA; critical vulnerabilities >7 days on internet-facing assets; mean time to detect; expired risk acceptances |
+| threshold and owner | target + owner | alert threshold + owner + action when crossed |
+A metric without a threshold and an owner does not go into the report. Few numbers, a fixed definition, the same measure every quarter.
 
-## 4. RACI (R wykonuje, A odpowiada, C konsultowany, I informowany) [przykład]
-| Decyzja | Zarząd | CISO | IT/produkt | Prawny | Audyt wew. |
+## 4. RACI (R does the work, A is accountable, C is consulted, I is informed) [example]
+| Decision | Board | CISO | IT/product | Legal | Internal audit |
 |---|---|---|---|---|---|
-| apetyt na ryzyko | A | R | C | C | I |
-| akceptacja ryzyka powyżej progu | A | C | R (właściciel) | C | I |
-| ogłoszenie kryzysu | I | R | C | C | I |
-| decyzja o okupie | A | C | C | R (opinia) | I |
-| kontakt z regulatorem | A | C | I | R | I |
-| niezależna ocena programu | I | I | I | I | A/R |
-Jedna osoba **A** na wiersz. Audyt wewnętrzny nie należy do CISO (niezależność wg modelu trzech linii).
+| risk appetite | A | R | C | C | I |
+| risk acceptance above the threshold | A | C | R (owner) | C | I |
+| crisis declaration | I | R | C | C | I |
+| ransom decision | A | C | C | R (opinion) | I |
+| contact with the regulator | A | C | I | R | I |
+| independent program assessment | I | I | I | I | A/R |
+One **A** per row. Internal audit does not belong to the CISO (independence according to the three lines model).
 
-## 5. Uświadamianie — mierniki zachowań
-Odsetek pracowników zgłaszających phishing (nie tylko klikających), czas od otrzymania do zgłoszenia, powtarzalni
-klikający (wsparcie, nie kara), użycie menedżera haseł i MFA, liczba zgłoszeń błędów bez obaw o winę. Szkolenie krótkie
-i kontekstowe (rola: finanse, programiści, zarząd), bo wymaga innych scenariuszy. Symulacje: zatwierdzone przez zarząd
-i HR, zgodne z prawem pracy i ochroną danych (konsultacja z prawnikiem i IOD [niezweryfikowane] dla danej jurysdykcji),
-zbiorcze wyniki zamiast nazwisk.
+## 5. Awareness — behaviour measures
+The share of employees reporting phishing (not only clicking), the time from receipt to report, repeat
+clickers (support, not punishment), use of a password manager and MFA, the number of mistake reports made without fear of blame. Training short
+and contextual (role: finance, developers, board), because each needs different scenarios. Simulations: approved by the board
+and HR, compliant with labour law and data protection (consultation with a lawyer and the DPO [unverified] for the given jurisdiction),
+aggregate results instead of names.

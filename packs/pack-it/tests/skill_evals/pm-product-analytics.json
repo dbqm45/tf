@@ -40,6 +40,53 @@
    }
   },
   {
+    "id": "plan-sledzenia-rejestracji-en",
+    "expect": "trigger",
+    "prompt": "We're adding signup funnel tracking to our SaaS app: form view, form submit, email confirmation, first login. Propose an event tracking plan: names, properties and where each event should be sent from. Answer briefly.",
+    "checks": {
+      "all": [
+        [
+          "[a-z]+_[a-z]+(_[a-z]+)?",
+          "snake_case"
+        ],
+        [
+          "po stronie serwera",
+          "z serwera",
+          "serwer\\w*",
+          "backend\\w*",
+          "server[- ]side",
+          "from (the )?(server|backend)"
+        ],
+        [
+          "anonim\\w*",
+          "anonymous",
+          "identify",
+          "alias\\w*",
+          "przed zalogowaniem",
+          "pre-?(login|signup|auth\\w*)",
+          "before (login|signing in|sign-in|log ?in)"
+        ],
+        [
+          "właściwoś\\w*",
+          "propert\\w*",
+          "atrybut\\w*",
+          "attributes?\\b"
+        ],
+        [
+          "PII",
+          "dan\\w* osobow\\w*",
+          "adres\\w* e-?mail\\w*[^\\n]{0,60}(nie|bez|zamiast|hash|skrót)",
+          "zgod\\w*",
+          "RODO",
+          "personal data",
+          "e-?mail (address(es)?)?[^\\n]{0,60}(not|without|instead|hash\\w*)",
+          "consent",
+          "GDPR"
+        ]
+      ]
+    }
+  },
+  {
    "id": "lejek-nie-zgadza-sie-z-baza",
    "expect": "trigger",
    "prompt": "Narzędzie analityczne pokazuje 1200 rejestracji w październiku, a w bazie danych przybyło 1450 kont. Skąd może brać się różnica i co po kolei sprawdzić? Odpowiedz zwięźle.",

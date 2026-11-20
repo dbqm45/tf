@@ -3,7 +3,7 @@
 > Dla orkiestratora i coacha. **Uczestnicy tego pliku nie czytają** (hook `cleanroom_guard.py`, profil `es-sim`).
 > Fikcja napisana na potrzeby treningu — zbieżność z realnymi firmami przypadkowa.
 
-## Domena
+## Domain
 Cztery przychodnie w jednym mieście, jedna z dyżurem nocnym. Rejestracja telefoniczna i przez formularz, wizyty planowe
 i nagłe, szczepienia z przypomnieniami, zabiegi, apteka przychodni (sprzedaż leków i ewidencja obrotu), rozliczenia
 (paragon/faktura, pakiety opieki), klienci stali i hodowcy. Właścicielka planuje piątą placówkę i „system, który ogarnie wszystko”.

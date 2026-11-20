@@ -1,55 +1,55 @@
 # Debounce
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/debounce.
+Source: frontendpatterns.dev/debounce.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Performance
-- **Poziom:** Intermediate
-- **Przykłady frameworków:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 19 grudnia 2025
-- **Autor:** Den Odell
+- **Category:** Performance
+- **Level:** Intermediate
+- **Framework examples:** React, Vue, Svelte, Native web
+- **Last updated:** 19 December 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Czekaj, aż dane wejściowe się ustabilizują, zanim zareagujesz. Wykonuj wywołania API, walidacje lub
-kosztowne obliczenia raz, po zatrzymaniu się pisania, zamiast przy każdym naciśnięciu klawisza.”
+"Wait until the input settles before you react. Make API calls, validations or
+expensive computations once, after typing stops, instead of on every keystroke."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Debounce nie usuwa wyścigów — przy zmianie zapytania **anuluj poprzednie żądanie** (`AbortController`) i koduj
-  parametry (`encodeURIComponent`). Poprawiono przykład React.
-- Odpowiedniki gotowe: Angular `debounced()` na signalach / `debounceTime` w RxJS (fw-angular); React 19
-  `useDeferredValue` dla drogiego renderu (to nie debounce sieci, tylko priorytet renderu); Vue `watchDebounced`
+- Debounce does not remove races — when the query changes, **cancel the previous request** (`AbortController`) and encode
+  the parameters (`encodeURIComponent`). The React example has been corrected.
+- Ready-made equivalents: Angular `debounced()` on signals / `debounceTime` in RxJS (fw-angular); React 19
+  `useDeferredValue` for an expensive render (this is not a network debounce, only render priority); Vue `watchDebounced`
   (VueUse).
-- Dla `resize` często lepszy jest `ResizeObserver` na konkretnym elemencie niż debounce na `window`.
-- Przykład Web Components wstawiał wyniki przez `innerHTML` (XSS) — używaj `textContent`/DOM API.
-- Przykłady Svelte to składnia Svelte 4 (`export let`, `$:`, `on:click`, `<svelte:component>`); w Svelte 5: `$props()`,
-  `$state`, `$derived`, `onclick`, komponent dynamiczny renderujesz wprost (`<Comp />`).
+- For `resize` a `ResizeObserver` on a specific element is often better than a debounce on `window`.
+- The Web Components example inserted results through `innerHTML` (XSS) — use `textContent`/the DOM API.
+- The Svelte examples are Svelte 4 syntax (`export let`, `$:`, `on:click`, `<svelte:component>`); in Svelte 5: `$props()`,
+  `$state`, `$derived`, `onclick`, you render a dynamic component directly (`<Comp />`).
 
 ## Problem
 
-Szybkie zdarzenia (np. wpisywanie w pole wyszukiwania) generują niepotrzebne żądania API — wpisanie
-„javascript” wysyła siedem osobnych żądań, po jednym na literę. To marnuje pasmo, przeciąża serwer i
-powoduje race conditions, gdy odpowiedzi wracają w niewłaściwej kolejności. Ten sam problem dotyczy
-handlerów `resize` (60+ obliczeń/s) i walidacji formularzy (błędy pokazywane przed dokończeniem
-wpisywania).
+Rapid events (e.g. typing into a search field) generate unnecessary API requests — typing
+"javascript" sends seven separate requests, one per letter. This wastes bandwidth, overloads the server and
+causes race conditions when responses come back in the wrong order. The same problem affects
+`resize` handlers (60+ computations/s) and form validation (errors shown before the user has finished
+typing).
 
-## Rozwiązanie
+## Solution
 
-Debouncing opóźnia wykonanie funkcji do momentu upłynięcia okresu ciszy bez nowych zdarzeń — wzorzec
-`clearTimeout(timeoutId); timeoutId = setTimeout(fn, delay);` anuluje oczekujące wykonanie i planuje
-nowe. Zakresy opóźnień: 150–200ms dla responsywnego autocomplete, 300–500ms dla kosztownych wywołań
-API.
+Debouncing delays the execution of a function until a quiet period without new events has passed — the
+`clearTimeout(timeoutId); timeoutId = setTimeout(fn, delay);` pattern cancels the pending execution and schedules
+a new one. Delay ranges: 150–200ms for a responsive autocomplete, 300–500ms for expensive API
+calls.
 
-**Kiedy debounce jest złym wyborem:** gdy potrzebujesz okresowych aktualizacji podczas ciągłej
-aktywności (np. scroll-spy podświetlający aktywną sekcję) — debounced handler nie da feedbacku w
-trakcie przewijania. Rozwiązanie w takim przypadku: **throttle** (wykonanie w regularnych
-odstępach, np. co 100ms), nie debounce.
+**When debounce is the wrong choice:** when you need periodic updates during continuous
+activity (e.g. a scroll-spy highlighting the active section) — a debounced handler gives no feedback
+while scrolling. The solution in such a case: **throttle** (execution at regular
+intervals, e.g. every 100ms), not debounce.
 
-## Przykłady kodu
+## Code examples
 
 ### React
 
@@ -222,36 +222,36 @@ window.addEventListener('resize', debouncedResize);
 window.removeEventListener('resize', debouncedResize); // cleanup
 ```
 
-## Zalety
+## Advantages
 
-- Pole wyszukiwania wysyła jedno żądanie po ustaniu wpisywania, zamiast jednego na literę.
-- Kosztowne handlery `resize` uruchamiają się raz po zakończeniu gestu, nie kilkadziesiąt razy/s.
-- Race conditions z odpowiedziami przychodzącymi poza kolejnością stają się rzadkie.
-- Walidacja formularza czeka, aż użytkownik się zatrzyma, zanim pokaże błąd.
-- Poprawia się czas pracy baterii na urządzeniach mobilnych.
-- Implementacja to kilka linii wokół `setTimeout`/`clearTimeout` — brak zależności.
+- A search field sends one request after typing stops, instead of one per letter.
+- Expensive `resize` handlers run once after the gesture ends, not dozens of times per second.
+- Race conditions with responses arriving out of order become rare.
+- Form validation waits until the user pauses before it shows an error.
+- Battery life on mobile devices improves.
+- The implementation is a few lines around `setTimeout`/`clearTimeout` — no dependencies.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Opóźnienie jest zawsze obecne, niezależnie od szybkości operacji.
-- Wybór opóźnienia wymaga balansu między responsywnością a efektywnością.
-- Zarządzanie timerami łatwo zepsuć — zapomnienie `clearTimeout` przy unmount powoduje wyciek pamięci.
-- Powolni użytkownicy (pauzy dłuższe niż opóźnienie) mogą wyzwolić wiele żądań mimo debounce.
-- Bez wskaźnika „searching…” opóźnienie może wydawać się brakiem reakcji UI.
-- Debounce **nie** jest rate-limiterem — ciągłe pisanie bez przerw nigdy nie wyzwoli funkcji.
+- The delay is always present, regardless of how fast the operation is.
+- Choosing the delay requires a balance between responsiveness and efficiency.
+- Timer management is easy to break — forgetting `clearTimeout` on unmount causes a memory leak.
+- Slow users (pauses longer than the delay) can trigger many requests despite the debounce.
+- Without a "searching…" indicator, the delay can look like the UI not responding.
+- Debounce is **not** a rate limiter — continuous typing without pauses will never trigger the function.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Code Splitting](../performance/code-splitting.md) — Performance.
 - [Lazy Loading](../performance/lazy-loading.md) — Performance.
 - [Memoization](../performance/memoization.md) — Performance.
 - Debouncing and Throttling Explained — CSS-Tricks.
-- Debounce — dokumentacja Lodash.
+- Debounce — the Lodash documentation.
 - `setTimeout()` — MDN.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj dla zdarzeń, gdzie liczy się **wynik końcowy po ustaniu aktywności** — pole wyszukiwania,
-walidacja formularza, `resize`. **Nie** używaj, gdy potrzebny jest feedback **w trakcie** ciągłej
-aktywności (scroll-spy) — tam prawidłowy wzorzec to throttle, nie debounce; użycie złego z tych
-dwóch to częsty, konkretny błąd, nie subtelny trade-off.
+Use it for events where what counts is **the final result after activity stops** — a search field,
+form validation, `resize`. Do **not** use it when feedback is needed **during** continuous
+activity (scroll-spy) — there the correct pattern is throttle, not debounce; using the wrong one of these
+two is a common, concrete mistake, not a subtle trade-off.

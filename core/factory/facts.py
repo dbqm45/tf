@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-Szukanie już zweryfikowanych faktów, zanim zacznie się nowy research (tańsze niż ponowne sprawdzanie źródeł).
+Searching for already verified facts before starting new research (cheaper than re-checking sources).
 
-  python3 .tf/factory/facts.py ISO 19112          # wszystkie hasła naraz, bez wielkości liter, po rdzeniu słowa
+  python3 .tf/factory/facts.py ISO 19112          # all terms at once, case-insensitive, by word stem
   python3 .tf/factory/facts.py eidas podpis --json
-  --root <katalog projektu> · --today RRRR-MM-DD (data odniesienia) · --max-age 180 (dni, po których ustalenie jest „stare”)
+  --root <project directory> · --today YYYY-MM-DD (reference date) · --max-age 180 (days after which a finding is "old")
 
-Przeszukuje:
-- tabele weryfikacji w docs/project/archive/research/*.md (werdykty `confirmed` / `partial` / `unconfirmed` / `contradicted` na początku
-  wiersza; dawne litery P / C / N / S też; data z nazwy pliku RRRRMMDD-…),
-- sekcje „## Źródła” w skillach (.claude/skills/*/SKILL.md i references/*.md; data z „odczyt RRRR-MM-DD” w linii).
-Ustalenie stare albo niepotwierdzone sprawdź ponownie w źródłach (agent researcher); nowe tabele weryfikacji zapisuj
-w docs/project/archive/research/, żeby kolejne wyszukanie je znalazło. Tylko biblioteka standardowa.
+Searches:
+- verification tables in docs/project/archive/research/*.md (verdicts `confirmed` / `partial` / `unconfirmed` / `contradicted` at the start of
+  a row; the date from the file name YYYYMMDD-…),
+- "## Sources" sections in skills (.claude/skills/*/SKILL.md and references/*.md; the date from "accessed YYYY-MM-DD" in the line).
+Re-check an old or unconfirmed finding in the sources (the researcher agent); save new verification tables
+in docs/project/archive/research/ so the next search finds them. Standard library only.
 """
 from __future__ import annotations
 
@@ -21,21 +21,19 @@ import re
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-VERDICT = {"confirmed": "confirmed", "partial": "partial", "unconfirmed": "unconfirmed", "contradicted": "contradicted",
-           "P": "confirmed", "C": "partial", "N": "unconfirmed", "S": "contradicted"}   # litery P/C/N/S — tabele sprzed 14.x
-LINE_VERDICT = re.compile(r"^\s*[-*]\s*(confirmed|partial|unconfirmed|contradicted|P|C|N|S)\b")
-DATE_IN_LINE = re.compile(r"(?:accessed|odczyt)[^0-9]{0,12}(\d{4}-\d{2}-\d{2})")   # pl: sprzed 14.x — „odczyt”
+LINE_VERDICT = re.compile(r"^\s*[-*]\s*(confirmed|partial|unconfirmed|contradicted)\b")
+DATE_IN_LINE = re.compile(r"accessed[^0-9]{0,12}(\d{4}-\d{2}-\d{2})")
 
 
 def keys(terms: list[str]) -> list[str]:
@@ -57,7 +55,7 @@ def research(root: Path, ks: list[str]) -> list[dict]:
                 continue
             v = LINE_VERDICT.match(line)
             out.append({"file": f.relative_to(root).as_posix(), "line": i, "text": line.strip().lstrip("-* ").strip(),
-                        "verdict": VERDICT[v.group(1)] if v else "—", "date": date})
+                        "verdict": v.group(1) if v else "—", "date": date})
     return out
 
 
@@ -69,7 +67,7 @@ def skill_sources(root: Path, ks: list[str]) -> list[dict]:
         inside = False
         for i, line in enumerate(lines, 1):
             if line.startswith("## "):
-                inside = line.strip().startswith(("## Sources", "## Źródła"))   # pl: sprzed 14.x — „## Źródła”
+                inside = line.strip().startswith("## Sources")
                 continue
             if inside and line.strip() and matches(line, ks):
                 d = DATE_IN_LINE.search(line)

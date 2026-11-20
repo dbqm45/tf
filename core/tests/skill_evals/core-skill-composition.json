@@ -26,6 +26,37 @@
       ]
     },
     {
+      "id": "formularz-angular-en",
+      "expect": "trigger",
+      "prompt": "I need to add a product form with attributes in Angular, and our domain is described with archetypes. How should I structure the work so that domain concepts, the framework and TypeScript fit together? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "CO.{0,30}GDZIE.{0,30}JAK",
+            "WHAT.{0,30}WHERE.{0,30}HOW"
+          ],
+          [
+            "słownik|słowniku",
+            "pojęci\\w* (domenow|ze słownika)",
+            "idiom",
+            "domen\\w* (decyduje|rozstrzyga|mówi|wygrywa)",
+            "regu\\w* domeny wygryw",
+            "pojęcia z domeny",
+            "glossary",
+            "vocabulary",
+            "domain (concepts?|terms?)",
+            "idioms?",
+            "domain (decides|wins|rules|comes first)",
+            "concepts from the (domain|glossary)"
+          ]
+        ]
+      },
+      "rubric": [
+        "kolejność CO → GDZIE → JAK (domena, potem framework, potem język)",
+        "pojęcia domenowe jako wspólny słownik tłumaczony na idiomy frameworka i języka"
+      ]
+    },
+    {
       "id": "konflikt-zalecen",
       "expect": "trigger",
       "prompt": "Mieszam ogólne wskazówki architektoniczne z wtyczki z ustaleniami naszego zespołu, które im przeczą, a framework podpowiada co innego niż reguła domenowa. Czyje zalecenie wygrywa? Odpowiedz zwięźle.",

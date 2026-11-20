@@ -8,48 +8,48 @@ created: 2026-09-27
 updated: 2026-09-27
 inputs: [docs/project/04-architecture/stack-decision.md, docs/project/04-architecture/adr/0001-modular-monolith.md, docs/project/04-architecture/adr/0002-booking-consistency-postgresql-exclusion-constraint.md, docs/project/04-architecture/adr/0004-m365-graph-outbox-integration.md, docs/project/03-requirements/requirements.md]
 ---
-# Plan realizacji: Rezerwacja sal i biurek (MVP)
+# Delivery plan: Room and desk booking (MVP)
 
 ## TL;DR
-8 kroków (cięć pionowych), każdy wdrażalny. Krok #1 (szkielet + CI) zaraz po akceptacji tego planu.
-Pierwsze cięcie z wartością biznesową: #2 (H6 SSO) → #3 (H1 rezerwacja sali, bez M365). Integracja M365 (#8) jest
-odsunięta na koniec i zależy od odpowiedzi IT (S2/S3) — bez niej H1 działa, tylko bez wpisu w kalendarzu M365.
-Wąskie gardło: 1 programista Java na cały moduł `booking`/`resources`/`identity` — kroki backendowe idą sekwencyjnie.
+8 steps (vertical slices), each deployable. Step #1 (skeleton + CI) right after this plan is accepted.
+The first slice with business value: #2 (H6 SSO) → #3 (H1 room booking, without M365). The M365 integration (#8) is
+moved to the end and depends on IT's answer (S2/S3) — without it H1 works, only without an entry in the M365 calendar.
+Bottleneck: 1 Java developer for the whole `booking`/`resources`/`identity` module — the back-end steps go sequentially.
 
-## Kroki (cięcia pionowe, każdy wdrażalny)
-| # | Krok | Historyjki | Wykonawca (persona/rola, tier) | Kryteria „gotowe” | Zależy od |
+## Steps (vertical slices, each deployable)
+| # | Step | Stories | Executor (persona/role, tier) | "Done" criteria | Depends on |
 |---|---|---|---|---|---|
-| 1 | Szkielet: moduły Spring Modulith (`identity`, `resources`, `booking`, `calendarsync` jako puste porty), `ApplicationModules.verify()` w CI, Testcontainers, workspace Angular + routing pusty, pipeline (GitHub Actions — do potwierdzenia z IT), wdrożenie pustej apki na App Service dev. Obejmuje spike S0 (dostępność usług w regionie) i S4 (MSAL Angular 22). | — (walking skeleton) | jan-backend (std) + zespół frontend Angular (poza zespołem jan) | Pipeline zielony; `verify()` bez naruszeń; apka wdraża się i odpowiada na `/actuator/health` w regionie docelowym | ADR-0001..0003 zaakceptowane (są) |
-| 2 | Logowanie SSO Entra ID, moduł `identity` | H6 | jan-backend (std, skille be-auth-security) + frontend (MSAL Angular) | Pracownik loguje się kontem firmowym; backend weryfikuje token (resource server), role dostępne w kontekście żądania | Krok 1 |
-| 2a | Tactical design agregatu rezerwacji: `Allocation`/`Booking` (archetyp Availability), niezmienniki, obiekty wartości (przedział, status), granica spójności — przed implementacją kroku 3 | — | jan-ddd-analyst (deep, ddd-tactical-design + ddd-archetypes) | Krótki model zapisany w `02-domain/` (agregat, invarianty, mapowanie na `allocation` z ADR-0002) | Krok 1 |
-| 3 | Rezerwacja sali na przedział czasu, **bez** synchronizacji M365 (moduły `booking`+`resources`) — obejmuje spike S1 (exclusion constraint + JPA + test 50 równoległych) | H1 (częściowo — bez wpisu w M365) | jan-backend (std) | Fitness function z ADR-0002 przechodzi (50 równoległych → 1 sukces, 49 × `RESOURCE_UNAVAILABLE`); UI rezerwacji sali działa | Krok 2, 2a |
-| 4 | Kalendarz dostępności zasobów (widok dnia/tygodnia), model do odczytu na `allocation` | H5 | jan-backend + frontend | Pracownik widzi dostępność sal na dzień/tydzień | Krok 3 |
-| 5 | Rezerwacja biurka na dzień — rozszerzenie `resources` o typ zasobu „biurko” (dane + polityka), bez zmian w `booking` | H2 | jan-backend | Test modyfikowalności z ADR-0001 (nowy typ zasobu wyłącznie danymi/konfiguracją) przechodzi; rezerwacja biurka = przedział [00:00,24:00) w strefie biura | Krok 3 |
-| 6 | Blokada zasobu do serwisu (rola facility) | H3 | jan-backend | Zablokowany zasób ma status `BLOCKED` w `allocation`, niedostępny do rezerwacji przez fitness function z kroku 3 | Krok 3 |
-| 7 | Automatyczne zwolnienie rezerwacji bez potwierdzenia obecności po 15 min | H4 | jan-backend | Zadanie w tle wykonuje idempotentny `UPDATE … RETURNING`; bezpieczne przy >1 instancji App Service | Krok 3 |
-| 8 | Integracja M365: moduł `calendarsync`, outbox (Event Publication Registry), Microsoft Graph, uprawnienia aplikacyjne — dopełnia H1 („wpis w M365”) | H1 (dopełnienie) | jan-backend | Rezerwacja sali tworzy/aktualizuje/anuluje wydarzenie w kalendarzu M365; awaria Graph nie blokuje rezerwacji (widoczny stan synchronizacji w UI) | Krok 3; **odpowiedzi IT** (S2, S3) |
+| 1 | Skeleton: Spring Modulith modules (`identity`, `resources`, `booking`, `calendarsync` as empty ports), `ApplicationModules.verify()` in CI, Testcontainers, an Angular workspace + empty routing, a pipeline (GitHub Actions — to be confirmed with IT), deployment of an empty app to App Service dev. Includes spike S0 (availability of the services in the region) and S4 (MSAL Angular 22). | — (walking skeleton) | jan-backend (std) + the Angular front-end team (outside the jan team) | Pipeline green; `verify()` without violations; the app deploys and responds on `/actuator/health` in the target region | ADR-0001..0003 accepted (they are) |
+| 2 | SSO sign-in with Entra ID, the `identity` module | H6 | jan-backend (std, skills be-auth-security) + front end (MSAL Angular) | An employee signs in with the company account; the back end verifies the token (resource server), the roles are available in the request context | Step 1 |
+| 2a | Tactical design of the booking aggregate: `Allocation`/`Booking` (the Availability archetype), invariants, value objects (slot, status), the consistency boundary — before the implementation of step 3 | — | jan-ddd-analyst (deep, ddd-tactical-design + ddd-archetypes) | A short model recorded in `02-domain/` (aggregate, invariants, mapping to `allocation` from ADR-0002) | Step 1 |
+| 3 | Booking a room for a time slot, **without** M365 synchronisation (modules `booking`+`resources`) — includes spike S1 (exclusion constraint + JPA + the 50 parallel test) | H1 (partly — without the M365 entry) | jan-backend (std) | The fitness function from ADR-0002 passes (50 parallel → 1 success, 49 × `RESOURCE_UNAVAILABLE`); the room booking UI works | Step 2, 2a |
+| 4 | The resource availability calendar (a day/week view), a read model on `allocation` | H5 | jan-backend + front end | An employee sees the availability of rooms for a day/week | Step 3 |
+| 5 | Booking a desk for a day — extending `resources` with the "desk" resource type (data + policy), without changes in `booking` | H2 | jan-backend | The modifiability test from ADR-0001 (a new resource type only through data/configuration) passes; a desk booking = the slot [00:00,24:00) in the office's time zone | Step 3 |
+| 6 | Blocking a resource for maintenance (the facility role) | H3 | jan-backend | A blocked resource has the status `BLOCKED` in `allocation`, cannot be booked per the fitness function from step 3 | Step 3 |
+| 7 | Automatic release of a booking without a check-in after 15 min | H4 | jan-backend | A background job runs an idempotent `UPDATE … RETURNING`; safe with >1 App Service instance | Step 3 |
+| 8 | M365 integration: the `calendarsync` module, the outbox (Event Publication Registry), Microsoft Graph, application permissions — completes H1 ("an entry in M365") | H1 (completion) | jan-backend | A room booking creates/updates/cancels an event in the M365 calendar; a Graph failure does not block the booking (the synchronisation state visible in the UI) | Step 3; **IT's answers** (S2, S3) |
 
-## Spike'i
-| ID | Pytanie | Kiedy (krok) | Kryterium porzucenia wyboru |
+## Spikes
+| ID | Question | When (step) | Criterion for dropping the choice |
 |---|---|---|---|
-| S0 | App Service Linux / PostgreSQL Flexible GP dostępne w regionie docelowym? | Krok 1 | Brak usługi → region zapasowy UE (ADR-0003) |
-| S1 | Exclusion constraint + JPA: mapowanie `23P01`, zachowanie przy 50 równoległych | Krok 3 | >1 sukces lub p95 > 1 s → wariant `FOR UPDATE` (ADR-0002 opcja B) |
-| S2 | Sale już są skrzynkami zasobów Exchange? Dwa źródła prawdy? | Przed krokiem 8 | Nie da się zablokować rezerwacji bezpośrednio w Exchange → nowa wersja ADR-0004, decyzja użytkownika |
-| S3 | Zgoda administratora M365 na `Calendars.ReadWrite` (RBAC for Applications) | Przed krokiem 8 | Brak zgody → opcja C ADR-0004 (zaproszenie .ics) |
-| S4 | Zgodność MSAL Angular 6.x z Angular 22 | Krok 1 | Błędy runtime/build → BFF (Spring `oauth2Login`, sesja) |
+| S0 | App Service Linux / PostgreSQL Flexible GP available in the target region? | Step 1 | Service missing → a fallback EU region (ADR-0003) |
+| S1 | Exclusion constraint + JPA: mapping `23P01`, behaviour with 50 parallel requests | Step 3 | >1 success or p95 > 1 s → the `FOR UPDATE` variant (ADR-0002 option B) |
+| S2 | Are the rooms already Exchange resource mailboxes? Two sources of truth? | Before step 8 | Bookings directly in Exchange cannot be blocked → a new version of ADR-0004, the user's decision |
+| S3 | The M365 administrator's consent to `Calendars.ReadWrite` (RBAC for Applications) | Before step 8 | No consent → option C of ADR-0004 (an .ics invitation) |
+| S4 | Compatibility of MSAL Angular 6.x with Angular 22 | Step 1 | Runtime/build errors → BFF (Spring `oauth2Login`, a session) |
 
-## Ryzyka harmonogramu
-- **Bus factor:** 1 programista Java obsługuje kroki 2, 2a→3, 5–8 sekwencyjnie — to oś krytyczna 3-miesięcznego MVP; front-end (2 os. TS/Angular) czeka na kontrakty API z kroków 2–3. Mitigacja: kroki 4–7 mają niezależne fragmenty frontu, które front może budować na mocku API, gdy kontrakt (OpenAPI) z kroku 3 jest ustalony wcześniej.
-- **Krok 8 blokowany przez IT** (S2, S3) — jeśli odpowiedzi się opóźnią, MVP dostarczamy bez synchronizacji M365 (H1 częściowo spełnione) i domykamy krok 8 po odpowiedzi, zgodnie z ADR-0004.
-- **Region Azure (S0)** nieznany do potwierdzenia — może przesunąć krok 1 o dni, jeśli trzeba zmienić region.
+## Schedule risks
+- **Bus factor:** 1 Java developer handles steps 2, 2a→3, 5–8 sequentially — this is the critical path of the 3-month MVP; the front end (2 people TS/Angular) waits for the API contracts from steps 2–3. Mitigation: steps 4–7 have independent front-end parts that the front end can build on an API mock, when the contract (OpenAPI) from step 3 is agreed earlier.
+- **Step 8 blocked by IT** (S2, S3) — if the answers are delayed, we deliver the MVP without M365 synchronisation (H1 partly met) and close step 8 after the answer, per ADR-0004.
+- **The Azure region (S0)** unknown until confirmed — it can move step 1 by days if the region has to change.
 
-## Otwarte pytania
-- [ ] Wszystkie pytania ze `stack-decision.md` pozostają otwarte (źródło prawdy dla sal, zgoda M365, region, potwierdzanie obecności, budżet, repo/CI, kompetencje TS w backendzie) — krok 8 nie startuje bez odpowiedzi na pierwsze dwa.
-- [ ] Kto potwierdza „gotowe” po każdym kroku (Product Owner / właściciel produktu) i w jakim rytmie (Sprint Review co ile)? → użytkownik
+## Open questions
+- [ ] All questions from `stack-decision.md` stay open (the source of truth for rooms, the M365 consent, the region, check-in, the budget, repo/CI, TS skills on the back end) — step 8 does not start without answers to the first two.
+- [ ] Who confirms "done" after each step (Product Owner) and at what rhythm (a Sprint Review every how often)? → user
 
-## Przekazanie
-- **Dla:** jan-backend (krok #1), równolegle jan-ddd-analyst (krok #2a, może zacząć od razu, niezależnie od #1)
-- **Zadanie:** krok #1 — szkielet modułów Spring Modulith + CI z `ApplicationModules.verify()`; krok #2a — tactical design agregatu `Allocation`
-- **Przeczytaj:** TL;DR, wiersze kroków #1 i #2a, ADR-0001, ADR-0002
-- **Nie rób:** nie zaczynaj kroku 8 (M365) przed odpowiedzią IT; nie buduj kroku 3 przed #2a (ryzyko modelu bez ustalonych niezmienników)
-- **Gotowe, gdy:** krok #1 wdrożony i zielony w CI, krok #2a ma zapisany model w `02-domain/`, oba zaakceptowane przez użytkownika
+## Handoff
+- **For:** jan-backend (step #1), in parallel jan-ddd-analyst (step #2a, can start at once, independently of #1)
+- **Task:** step #1 — the Spring Modulith module skeleton + CI with `ApplicationModules.verify()`; step #2a — tactical design of the `Allocation` aggregate
+- **Read:** TL;DR, the rows of steps #1 and #2a, ADR-0001, ADR-0002
+- **Do not:** do not start step 8 (M365) before IT's answer; do not build step 3 before #2a (the risk of a model without agreed invariants)
+- **Done when:** step #1 deployed and green in CI, step #2a has its model recorded in `02-domain/`, both accepted by the user

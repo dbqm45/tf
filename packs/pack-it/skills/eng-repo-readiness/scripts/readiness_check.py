@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
 """
-Gotowość repozytorium do pracy agentów — fakty z plików, bez uruchamiania czegokolwiek.
+Repository readiness for agent work — facts from files, without running anything.
 
-  python3 .claude/skills/eng-repo-readiness/scripts/readiness_check.py            # bieżący katalog, tabela
+  python3 .claude/skills/eng-repo-readiness/scripts/readiness_check.py            # current directory, a table
   python3 .claude/skills/eng-repo-readiness/scripts/readiness_check.py ../repo --json
 
-Wykrywa (manifesty do głębokości 2, z pominięciem node_modules, .git, dist, build, vendor, target, .venv):
-- rodziny języków i lockfile (requirements.txt to słaby zamiennik), komendę audytu zależności dla rodziny
-  (Java i Dart bez wbudowanego audytu → „pominięto”, nigdy „0 znalezisk”);
-- runner testów i komendę „na sucho” (lista testów bez wykonania);
-- etapy CI: lint, test, build, typy, bezpieczeństwo (GitHub Actions, GitLab CI, Azure, CircleCI, Bitbucket, Jenkins);
-- konfigurację: .gitignore, TypeScript strict, linter, formatter, .editorconfig, .env.example;
-- pliki instrukcji agenta (CLAUDE.md, AGENTS.md, .claude/);
-- pętlę deweloperską: polecenie startowe (make/just/Taskfile, skrypty dev/setup, sekcja w README), usługi
-  potrzebne kodowi (Postgres, Redis…) i ich compose z healthcheckiem, devcontainer, dane startowe, wartości
-  w .env.example wyglądające na prawdziwe sekrety (tylko nazwy zmiennych w wyniku), polecenie testów powiązanych.
-Audytu, testów ani builda NIE uruchamia — robi to agent za zgodą człowieka, z komendami podanymi w wyniku.
+Detects (manifests to depth 2, skipping node_modules, .git, dist, build, vendor, target, .venv):
+- language families and lockfiles (requirements.txt is a weak substitute), the dependency audit command for the family
+  (Java and Dart without a built-in audit → "skipped", never "0 findings");
+- the test runner and a "dry" command (a list of tests without executing them);
+- CI stages: lint, test, build, types, security (GitHub Actions, GitLab CI, Azure, CircleCI, Bitbucket, Jenkins);
+- configuration: .gitignore, TypeScript strict, linter, formatter, .editorconfig, .env.example;
+- agent instruction files (CLAUDE.md, AGENTS.md, .claude/);
+- the developer loop: the start command (make/just/Taskfile, dev/setup scripts, a README section), the services
+  the code needs (Postgres, Redis…) and their compose with a healthcheck, devcontainer, seed data, values
+  in .env.example that look like real secrets (only variable names in the output), the related-tests command.
+It does NOT run the audit, tests or build — the agent does that with the human's consent, using the commands given in the output.
 
-Werdykt projektu: critical (brak runnera testów albo ≥3 ustalenia wysokie) / needs-attention / healthy.
-Podatności nie są tu znane — krytyczne podatności z audytu podnoszą werdykt ręcznie.
+Project verdict: critical (no test runner or ≥3 high findings) / needs-attention / healthy.
+Vulnerabilities are not known here — critical vulnerabilities from the audit raise the verdict manually.
 
-Kod wyjścia: 0 — brak ustaleń wysokiej wagi; 1 — są ustalenia wysokiej wagi; 2 — błąd wywołania (zła ścieżka).
-Tylko biblioteka standardowa, bez sieci.
+Exit code: 0 — no high-severity findings; 1 — there are high-severity findings; 2 — invocation error (bad path).
+Standard library only, no network.
 """
 from __future__ import annotations
 
@@ -86,7 +86,7 @@ def read(p: Path) -> str:
 
 
 def walk(root: Path, depth: int = 2):
-    """Pliki do zadanej głębokości (0 = sam katalog główny), bez katalogów generowanych i zależności."""
+    """Files up to the given depth (0 = the root directory only), without generated and dependency directories."""
     stack = [(root, 0)]
     while stack:
         d, lvl = stack.pop()
@@ -129,7 +129,7 @@ def find_lock(manifest_dir: Path, root: Path, locks: list[str]) -> str | None:
 
 
 def runner_for(family: str, mdir: Path, manifest: Path) -> tuple[str | None, str | None]:
-    """(runner, komenda na sucho) dla rodziny w katalogu manifestu."""
+    """(runner, dry-run command) for the family in the manifest directory."""
     if family == "js":
         deps, scripts = js_deps(manifest)
         test_script = scripts.get("test", "")
@@ -170,7 +170,7 @@ def runner_for(family: str, mdir: Path, manifest: Path) -> tuple[str | None, str
     return None, None
 
 
-# Pętla deweloperska (DX): usługi, których kod potrzebuje lokalnie — po zależnościach i obrazach w compose.
+# Developer loop (DX): services the code needs locally — by dependencies and images in compose.
 SERVICE_DEPS = {
     "postgres": r"\b(pg|postgres|postgresql|psycopg2?(-binary)?|asyncpg|pgx|lib/pq|org\.postgresql|npgsql|pg-promise)\b",
     "mysql": r"\b(mysql2?|pymysql|mysqlclient|mysql-connector[\w-]*|go-sql-driver/mysql|mysql-connector-j)\b",
@@ -195,7 +195,7 @@ PLACEHOLDER = re.compile(r"example|changeme|change-me|your|xxx|dummy|fake|placeh
 
 
 def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict, list[tuple]]:
-    """Fakty o pętli deweloperskiej i ustalenia obszaru `dx` (bez uruchamiania czegokolwiek)."""
+    """Facts about the developer loop and findings of the `dx` area (without running anything)."""
     findings, setup = [], []
     for name in ("Makefile", "makefile", "GNUmakefile"):
         text = read(root / name)
@@ -222,7 +222,7 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
                          "and no run instructions in the README", "—",
                          "add `make setup` or `just dev` (dependencies, services, seed data) and document it in the README "
                          "and CLAUDE.md — the agent and a newcomer start with one command"))
-    # zależności usług
+    # service dependencies
     dep_text = " ".join(all_deps) + " " + " ".join(
         read(f) for f in files if f.name in ("pyproject.toml", "requirements.txt", "requirements-dev.txt", "Pipfile",
                                              "Gemfile", "go.mod", "pom.xml", "build.gradle", "build.gradle.kts"))
@@ -240,7 +240,7 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
             kinds = {kind for kind, rx in SERVICE_IMAGES.items()
                      if re.search(rx, name + " " + " ".join(re.findall(r"image:\s*(\S+)", block)), re.I)}
             covered |= kinds
-            if kinds and "healthcheck:" not in block:   # healthcheck liczy się dla usług, na które czeka aplikacja
+            if kinds and "healthcheck:" not in block:   # a healthcheck counts for services the application waits for
                 no_health.append(name)
     devcontainer = (root / ".devcontainer" / "devcontainer.json").is_file() or (root / ".devcontainer.json").is_file()
     if devcontainer and "dockerComposeFile" in read(root / ".devcontainer" / "devcontainer.json"):
@@ -262,7 +262,7 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
     if any(k in needed for k in ("postgres", "mysql", "mongodb")) and not seed:
         findings.append(("dx", "low", "no seed data for the local database", "—",
                          "add an idempotent seed script with synthetic data (no production copy)"))
-    # sekrety w .env.example — tylko nazwy zmiennych, nigdy wartości
+    # secrets in .env.example — variable names only, never values
     leaked = []
     for line in read(root / ".env.example").splitlines():
         mm = re.match(r"^\s*(?:export\s+)?([A-Za-z_][\w]*)\s*=\s*(.*)$", line)
@@ -277,7 +277,7 @@ def dev_loop(root: Path, files: list[Path], families: list[dict]) -> tuple[dict,
                          f"{', '.join(leaked)}", ".env.example",
                          "leave values empty or use obvious dummies; if the key was real, revoke it "
                          "(ops-secrets-identities)"))
-    # testy powiązane ze zmianą
+    # tests related to the change
     runners = [f.get("runner") or "" for f in families]
     related = None
     if (root / "nx.json").is_file():
@@ -393,7 +393,7 @@ def detect(root: Path) -> dict:
     findings += dx_findings
 
     high = [f for f in findings if f[1] == "high"]
-    no_runner = any("no test runner" in f[2] or "runnera testów" in f[2] for f in findings)   # pl: sprzed 14.x
+    no_runner = any("no test runner" in f[2] for f in findings)
     verdict = "critical" if (no_runner or len(high) >= 3) else ("needs-attention" if findings and any(
         f[1] in ("high", "medium") for f in findings) else "healthy")
     findings.sort(key=lambda f: SEV_ORDER[f[1]])

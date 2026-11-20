@@ -1,104 +1,104 @@
 ---
 name: lang-python
-description: Użyj przy kodzie Python 3.11–3.15 — typy i mypy, pyproject i uv, ruff, dataclass i Decimal, wyjątki czy wynik.
+description: Use for Python 3.11–3.15 code — types and mypy, pyproject and uv, ruff, dataclass and Decimal, exceptions or result.
 metadata:
   review: "2027-04-03"
-  catalog: "Użyj przy pisaniu i przeglądzie kodu Python (3.11–3.15) — typowanie (składnia generyków 3.12, X | None, Protocol, mypy/pyright), struktura projektu (pyproject.toml, src layout, uv, lockfile, grupy zależności), ruff, niezmienność (dataclass frozen), pieniądze w Decimal, obsługa błędów i odrzucenia jako wynik, match, asyncio — oraz przy wyrażaniu pojęć domenowych idiomami Pythona. Nie do testów w pytest (tool-pytest), analizy danych i statystyki (data-analysis) ani potoków danych (data-engineering)."
-  keywords: "Python, pyproject, pyproject.toml, uv, ruff, mypy, pyright, typowanie w Pythonie, dataclass, Decimal, TypeVar, asyncio, venv, pip, requirements.txt, FastAPI, Django, .py"
+  catalog: "Use when writing and reviewing Python code (3.11–3.15) — typing (3.12 generics syntax, X | None, Protocol, mypy/pyright), project structure (pyproject.toml, src layout, uv, lockfile, dependency groups), ruff, immutability (frozen dataclass), money in Decimal, error handling and rejections as a result, match, asyncio — and when expressing domain concepts with Python idioms. Not for pytest tests (tool-pytest), data analysis and statistics (data-analysis) or data pipelines (data-engineering)."
+  keywords: "Python, pyproject, pyproject.toml, uv, ruff, mypy, pyright, typowanie w Pythonie, dataclass, Decimal, TypeVar, asyncio, venv, pip, requirements.txt, FastAPI, Django, .py, typing in Python"
 ---
 
 # Python
 
-**Najpierw sprawdź wersję** projektu: `requires-python` w `pyproject.toml` (zakres wspierany) i `.python-version`
-(interpreter do pracy, uv/pyenv). Nie używaj składni nowszej niż dolna granica `requires-python` — tabela
-„Zależne od wersji”.
+**First check the project's version**: `requires-python` in `pyproject.toml` (the supported range) and `.python-version`
+(the interpreter for work, uv/pyenv). Do not use syntax newer than the lower bound of `requires-python` — the
+"Version-dependent" table.
 
-## Zasady języka
-1. **Typy wszędzie na granicach modułów**, sprawdzane w CI (`mypy --strict` albo pyright):
-   - `X | None` zamiast `Optional[X]`;
-   - wbudowane generyki (`list[int]`, `dict[str, Decimal]`);
-   - od 3.12 składnia generyków bez `TypeVar`: `class Result[T, E]: …`, `def first[T](xs: list[T]) -> T`,
-     aliasy `type Money = Decimal`;
-   - `Protocol` zamiast dziedziczenia dla portów, `@override` (3.12) przy nadpisywaniu;
-   - `Any` tylko na granicy z nietypowanym kodem.
-2. **Niezmienność domyślnie:**
-   - `@dataclass(frozen=True, slots=True)` dla wartości, krotki i `frozenset` w polach;
-   - modyfikacja przez `dataclasses.replace`;
-   - nie używaj mutowalnych wartości domyślnych (`def f(xs=[])`, pole `list` bez `field(default_factory=list)`).
-3. **Pieniądze i ilości w `Decimal`** z kontekstem lub jawnym `quantize(Decimal('0.01'), ROUND_HALF_EVEN)`, nigdy
-   `float`. `Decimal` tworzysz z `str` lub `int`, nie z `float`.
-4. **Błędy:**
-   - wyjątki są dla błędów programistycznych i infrastruktury;
-   - **odrzucenie biznesowe** (sala zajęta, limit przekroczony) zwracasz jako wynik (wariant `Rejected`)
-     albo jako własny wyjątek domenowy z nazwą w języku biznesu — nigdy jako ogólny `ValueError` łapany w API;
-   - nie łap gołego `except:` ani `except Exception: pass`;
-   - przy ponownym rzuceniu dodaj kontekst: `raise X from e`.
-5. **Warianty:** `match` po klasach (`case Reserved(slot=s):`) i wyczerpujące sprawdzenie przez `assert_never` w gałęzi
-   `case _`; enumy przez `enum.StrEnum` (3.11).
-6. **Struktura projektu:**
-   - `pyproject.toml` z tabelą `[project]` (`requires-python`, `dependencies`) i `[build-system]`;
-   - **src layout** (`src/<pakiet>/`);
-   - zależności deweloperskie w **`[dependency-groups]`** (PEP 735; `uv add --dev pytest`);
-   - **uv** do środowiska, lockfile `uv.lock` w repo, `uv sync --locked` w CI, `uv run` do poleceń;
-   - eksport do standardu `pylock.toml` (PEP 751) przez `uv export`, gdy wymaga go inne narzędzie;
-   - bez instalowania pakietów globalnie i bez `sudo pip`.
-7. **Lint i format:** `ruff check` (z regułami m.in. `B`, `UP`, `SIM`, `S`) i `ruff format` zamiast black/isort/flake8.
-   Reguła `UP` podpowiada składnię zgodną z `requires-python`.
-8. **Asynchroniczność:**
-   - `asyncio.TaskGroup` (3.11) zamiast luźnych `create_task`;
-   - limit czasu przez `asyncio.timeout()`;
-   - nie wołasz blokujących funkcji w pętli zdarzeń — `asyncio.to_thread` dla wywołań synchronicznych.
-9. **Bezpieczeństwo:**
-   - zapytania SQL z parametrami;
-   - `subprocess` z listą argumentów, bez `shell=True` z danymi z zewnątrz;
-   - bez `pickle` i `yaml.load` dla danych z zewnątrz (`yaml.safe_load`);
-   - sekrety ze zmiennych środowiskowych;
-   - `secrets`, nie `random`, do tokenów.
-10. **Pliki tekstowe:** zawsze `encoding="utf-8"` w `open()` (od 3.15 domyślne, ale kod ma działać na dolnej
-    granicy `requires-python`).
+## Language rules
+1. **Types everywhere at module boundaries**, checked in CI (`mypy --strict` or pyright):
+   - `X | None` instead of `Optional[X]`;
+   - built-in generics (`list[int]`, `dict[str, Decimal]`);
+   - from 3.12 the generics syntax without `TypeVar`: `class Result[T, E]: …`, `def first[T](xs: list[T]) -> T`,
+     aliases `type Money = Decimal`;
+   - `Protocol` instead of inheritance for ports, `@override` (3.12) when overriding;
+   - `Any` only at the boundary with untyped code.
+2. **Immutability by default:**
+   - `@dataclass(frozen=True, slots=True)` for values, tuples and `frozenset` in fields;
+   - modification through `dataclasses.replace`;
+   - do not use mutable default values (`def f(xs=[])`, a `list` field without `field(default_factory=list)`).
+3. **Money and quantities in `Decimal`** with a context or an explicit `quantize(Decimal('0.01'), ROUND_HALF_EVEN)`, never
+   `float`. You create a `Decimal` from a `str` or `int`, not from a `float`.
+4. **Errors:**
+   - exceptions are for programming and infrastructure errors;
+   - you return a **business rejection** (room taken, limit exceeded) as a result (a `Rejected` variant)
+     or as your own domain exception with a name in the business language — never as a generic `ValueError` caught in the API;
+   - do not catch a bare `except:` or `except Exception: pass`;
+   - when re-raising, add context: `raise X from e`.
+5. **Variants:** `match` on classes (`case Reserved(slot=s):`) and an exhaustive check with `assert_never` in the
+   `case _` branch; enums through `enum.StrEnum` (3.11).
+6. **Project structure:**
+   - `pyproject.toml` with a `[project]` table (`requires-python`, `dependencies`) and `[build-system]`;
+   - **src layout** (`src/<package>/`);
+   - development dependencies in **`[dependency-groups]`** (PEP 735; `uv add --dev pytest`);
+   - **uv** for the environment, the `uv.lock` lockfile in the repo, `uv sync --locked` in CI, `uv run` for commands;
+   - export to the `pylock.toml` standard (PEP 751) through `uv export` when another tool requires it;
+   - no installing packages globally and no `sudo pip`.
+7. **Lint and format:** `ruff check` (with rules including `B`, `UP`, `SIM`, `S`) and `ruff format` instead of black/isort/flake8.
+   The `UP` rule suggests syntax compatible with `requires-python`.
+8. **Asynchrony:**
+   - `asyncio.TaskGroup` (3.11) instead of loose `create_task`;
+   - a timeout through `asyncio.timeout()`;
+   - you do not call blocking functions in the event loop — `asyncio.to_thread` for synchronous calls.
+9. **Security:**
+   - SQL queries with parameters;
+   - `subprocess` with a list of arguments, without `shell=True` with external data;
+   - no `pickle` or `yaml.load` for external data (`yaml.safe_load`);
+   - secrets from environment variables;
+   - `secrets`, not `random`, for tokens.
+10. **Text files:** always `encoding="utf-8"` in `open()` (the default from 3.15, but the code must work on the lower
+    bound of `requires-python`).
 
-Przetestowane przykłady (Money, Result, agregat rezerwacji z maszyną stanów i zdarzeniami, port repozytorium jako
-`Protocol`, wariant 3.11 bez składni generyków 3.12): `references/domain-building-blocks.md`.
+Tested examples (Money, Result, a booking aggregate with a state machine and events, a repository port as a
+`Protocol`, a 3.11 variant without the 3.12 generics syntax): `references/domain-building-blocks.md`.
 
-## Pojęcia domenowe w Pythonie
-| Pojęcie (słownik) | Idiom w Pythonie |
+## Domain concepts in Python
+| Concept (glossary) | Python idiom |
 |---|---|
-| **obiekt wartości** | `@dataclass(frozen=True, slots=True)` z walidacją w `__post_init__`; operacje zwracają nowy obiekt |
-| **identyfikator / encja** | `NewType('RoomId', str)` albo zamrożona dataclass zamiast gołego `str`; encja = klasa z tożsamością i zachowaniem, równość po ID |
-| **warianty** | unia zamrożonych dataclass (`type Outcome = Reserved \| Rejected`) i `match` z `assert_never` |
-| **wynik operacji** | `type Result[T] = Ok[T] \| Rejected` (warianty jak wyżej) albo zdarzenia sukcesu/odrzucenia zwracane z metody |
-| **agregat** | klasa z prywatnym stanem (`_slots`), metody biznesowe zamiast setterów, `version` do blokady optymistycznej, lista zdarzeń oddawana przez `pull_events()` |
-| **maszyna stanów** | stan jako unia dataclass lub `StrEnum`; przejścia w `match` z warunkami `if` w `case` |
-| **zdarzenie** | zamrożona dataclass z nazwą w czasie przeszłym (`RoomReserved`) i polem `occurred_at: datetime` (strefa UTC) |
-| **polityka** | `Protocol` z jedną metodą albo funkcja `Callable[[...], ...]` wstrzykiwana do agregatu lub serwisu |
-| **specyfikacja** | funkcja-predykat z nazwą z języka biznesu; złożenia przez `all()`/`any()` |
-| **repozytorium / port** | `Protocol` w pakiecie domeny operujący na agregatach; adapter (SQLAlchemy, psycopg) w infrastrukturze |
-| **read model** | osobna zamrożona dataclass lub `TypedDict` + zapytanie SQL omijające agregat |
-| **moduł** | pakiet z publicznym `__init__.py` (`__all__`); nazwy wewnętrzne z `_`; granice pilnowane testem importów (np. import-linter) |
+| **value object** | `@dataclass(frozen=True, slots=True)` with validation in `__post_init__`; operations return a new object |
+| **identifier / entity** | `NewType('RoomId', str)` or a frozen dataclass instead of a bare `str`; an entity = a class with identity and behaviour, equality by ID |
+| **variants** | a union of frozen dataclasses (`type Outcome = Reserved \| Rejected`) and `match` with `assert_never` |
+| **operation result** | `type Result[T] = Ok[T] \| Rejected` (variants as above) or success/rejection events returned from the method |
+| **aggregate** | a class with private state (`_slots`), business methods instead of setters, `version` for optimistic locking, a list of events handed over by `pull_events()` |
+| **state machine** | the state as a union of dataclasses or a `StrEnum`; transitions in `match` with `if` conditions in `case` |
+| **event** | a frozen dataclass with a past-tense name (`RoomReserved`) and an `occurred_at: datetime` field (UTC zone) |
+| **policy** | a `Protocol` with one method or a `Callable[[...], ...]` function injected into the aggregate or service |
+| **specification** | a predicate function with a name from the business language; compositions through `all()`/`any()` |
+| **repository / port** | a `Protocol` in the domain package operating on aggregates; the adapter (SQLAlchemy, psycopg) in infrastructure |
+| **read model** | a separate frozen dataclass or `TypedDict` + an SQL query that bypasses the aggregate |
+| **module** | a package with a public `__init__.py` (`__all__`); internal names with `_`; boundaries guarded by an import test (e.g. import-linter) |
 
-## Zależne od wersji
-| Wersja | Status (2026-10-03) | Zmiany istotne dla tego skilla |
+## Version-dependent
+| Version | Status (2026-10-03) | Changes relevant to this skill |
 |---|---|---|
-| 3.10 | koniec wsparcia 2026-10 | `match`, `X \| Y` w typach |
-| 3.11 | tylko poprawki bezpieczeństwa | `TaskGroup`, `asyncio.timeout`, `ExceptionGroup`/`except*`, `StrEnum`, `Self`, `tomllib`; szybszy interpreter |
-| 3.12 | tylko poprawki bezpieczeństwa | **składnia generyków** `def f[T]`, `class C[T]`, instrukcja `type`; `@override`; f-stringi bez ograniczeń cudzysłowów; usunięte `distutils`; `datetime.utcnow()` wycofane — używaj `datetime.now(UTC)` |
-| 3.13 | tylko poprawki bezpieczeństwa | nowy REPL; `warnings.deprecated`; domyślne wartości parametrów typu, `TypeIs`, `ReadOnly`; eksperymentalnie wersja bez GIL i JIT; usunięte stare moduły (PEP 594: `cgi`, `crypt`, `telnetlib` i inne) |
-| 3.14 | poprawki błędów (aktualnie 3.14.8) | **leniwe adnotacje** (PEP 649/749, moduł `annotationlib`) — odwołania do typów zdefiniowanych niżej działają bez cudzysłowów; **t-stringi** (`t"…"`, PEP 750) do bezpiecznego składania SQL/HTML; `except A, B:` bez nawiasów; `compression.zstd`; `concurrent.interpreters`; wersja bez GIL oficjalnie wspierana; `uuid.uuid7()` |
-| 3.15 | release candidate; wydanie planowane na 2026-10-09 (PEP 790) | **UTF-8 domyślnie** (PEP 686); `lazy import` (PEP 810); wbudowane `frozendict` i `sentinel`; rozpakowanie w wyrażeniach listowych; moduł `profiling` (profiler próbkujący) |
+| 3.10 | end of support 2026-10 | `match`, `X \| Y` in types |
+| 3.11 | security fixes only | `TaskGroup`, `asyncio.timeout`, `ExceptionGroup`/`except*`, `StrEnum`, `Self`, `tomllib`; a faster interpreter |
+| 3.12 | security fixes only | **generics syntax** `def f[T]`, `class C[T]`, the `type` statement; `@override`; f-strings without quote restrictions; `distutils` removed; `datetime.utcnow()` deprecated — use `datetime.now(UTC)` |
+| 3.13 | security fixes only | a new REPL; `warnings.deprecated`; type parameter defaults, `TypeIs`, `ReadOnly`; an experimental build without the GIL and a JIT; old modules removed (PEP 594: `cgi`, `crypt`, `telnetlib` and others) |
+| 3.14 | bug fixes (currently 3.14.8) | **lazy annotations** (PEP 649/749, the `annotationlib` module) — references to types defined further down work without quotes; **t-strings** (`t"…"`, PEP 750) for safely composing SQL/HTML; `except A, B:` without parentheses; `compression.zstd`; `concurrent.interpreters`; the build without the GIL officially supported; `uuid.uuid7()` |
+| 3.15 | release candidate; release planned for 2026-10-09 (PEP 790) | **UTF-8 by default** (PEP 686); `lazy import` (PEP 810); built-in `frozendict` and `sentinel`; unpacking in comprehensions; the `profiling` module (a sampling profiler) |
 
-Projekt na wersji nowszej niż w tabeli → `detect_stack.py` zgłosi `SKILL_OUTDATED`; zaktualizuj skill wg
-core-stack-sync. Interpretera ani zależności nie podnosisz bez prośby człowieka.
+A project on a version newer than in the table → `detect_stack.py` reports `SKILL_OUTDATED`; update the skill per
+core-stack-sync. You do not upgrade the interpreter or dependencies without a human's request.
 
-## Checklista
-- [ ] wersja z `requires-python` sprawdzona; brak składni nowszej niż dolna granica
-- [ ] `ruff check`, `ruff format --check` i `mypy --strict` (lub pyright) bez błędów
-- [ ] brak `float` dla kwot, brak mutowalnych wartości domyślnych
-- [ ] odrzucenia biznesowe jako wynik albo wyjątek domenowy, nie `ValueError`
-- [ ] `uv.lock` aktualny; zależności deweloperskie w `[dependency-groups]`
-- [ ] testy domeny w pytest bez bazy i frameworka (tool-pytest)
+## Checklist
+- [ ] the version from `requires-python` checked; no syntax newer than the lower bound
+- [ ] `ruff check`, `ruff format --check` and `mypy --strict` (or pyright) without errors
+- [ ] no `float` for amounts, no mutable default values
+- [ ] business rejections as a result or a domain exception, not `ValueError`
+- [ ] `uv.lock` current; development dependencies in `[dependency-groups]`
+- [ ] domain tests in pytest without a database and framework (tool-pytest)
 
-## Źródła
-- docs.python.org/3/whatsnew/ (3.11–3.14) i docs.python.org/3.15/whatsnew/3.15.html — dostęp 2026-10-03
-- devguide.python.org/versions/ (status gałęzi), PEP 745 (3.14), PEP 790 (3.15)
+## Sources
+- docs.python.org/3/whatsnew/ (3.11–3.14) and docs.python.org/3.15/whatsnew/3.15.html — accessed 2026-10-03
+- devguide.python.org/versions/ (branch status), PEP 745 (3.14), PEP 790 (3.15)
 - packaging.python.org: Writing your pyproject.toml, Dependency groups (PEP 735), pylock.toml (PEP 751)
 - PyPI (2026-10-03): uv 0.12.22, ruff 0.16.10, mypy 2.4.0

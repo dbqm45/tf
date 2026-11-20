@@ -1,52 +1,52 @@
-# Zasięg zmiennych i domknięcia (closures)
+# Variable scope and closures
 
-> **Spis treści:** `var` vs `let`/`const` · Co to jest closure · Zastosowanie: module pattern / prywatny stan · Pułapka klasyczna: `var` w pętli · Closures i moduły ES — live bindings · Wydajność/pamięć — kiedy closures są problemem
+> **Contents:** `var` vs `let`/`const` · What a closure is · Use: the module pattern / private state · The classic pitfall: `var` in a loop · Closures and ES modules — live bindings · Performance/memory — when closures are a problem
 
-Na podstawie MDN Web Docs (developer.mozilla.org/docs/Web/JavaScript/Closures), opisane własnymi słowami; przykłady sprawdzone w Node 22.
+Based on MDN Web Docs (developer.mozilla.org/docs/Web/JavaScript/Closures), described in our own words; examples checked in Node 22.
 
 ## `var` vs `let`/`const`
 
 | | `var` | `let`/`const` |
 |---|---|---|
-| Zasięg | funkcja (function scope) | blok (`{}`, block scope) |
-| Hoisting | podnoszone, zainicjowane `undefined` | podnoszone, ale w **Temporal Dead Zone** do deklaracji |
-| Redeklaracja w tym zasięgu | dozwolona | `SyntaxError` |
+| Scope | function (function scope) | block (`{}`, block scope) |
+| Hoisting | hoisted, initialised to `undefined` | hoisted, but in the **Temporal Dead Zone** until the declaration |
+| Redeclaration in the same scope | allowed | `SyntaxError` |
 
 ```js
 if (Math.random() > 0.5) { var x = 1; } else { var x = 2; }
-console.log(x); // 1 albo 2 — blok NIE tworzy zasięgu dla var
+console.log(x); // 1 or 2 — a block does NOT create a scope for var
 
 if (Math.random() > 0.5) { const y = 1; } else { const y = 2; }
-console.log(y); // ReferenceError: y is not defined — poza blokiem nie istnieje
+console.log(y); // ReferenceError: y is not defined — it does not exist outside the block
 ```
 
-**Reguła:** domyślnie `const`, `let` gdy wartość się zmienia, `var` praktycznie nigdy w nowym
-kodzie — `let`/`const` dają przewidywalniejszy zasięg i przewidywalniejsze domknięcia (patrz pułapka
-niżej).
+**Rule:** `const` by default, `let` when the value changes, `var` practically never in new
+code — `let`/`const` give a more predictable scope and more predictable closures (see the pitfall
+below).
 
-## Co to jest closure
+## What a closure is
 
-Closure = funkcja + referencja do jej **lexical environment** (zasięgu, w którym została
-zdefiniowana). Tworzone automatycznie dla każdej funkcji w JS — to nie opt-in feature.
+Closure = a function + a reference to its **lexical environment** (the scope in which it was
+defined). Created automatically for every function in JS — it is not an opt-in feature.
 
 ```js
 function makeAdder(x) {
   return function (y) {
-    return x + y; // domknięcie nad `x` z zewnętrznego zasięgu
+    return x + y; // a closure over `x` from the outer scope
   };
 }
 const add5 = makeAdder(5);
-add5(2); // 7 — `x=5` żyje dalej, mimo że makeAdder() już zwróciło
+add5(2); // 7 — `x=5` lives on, even though makeAdder() has already returned
 ```
 
-Każde wywołanie `makeAdder` tworzy **nowy, niezależny** lexical environment — `add5` i `add10` mają
-własne, odseparowane kopie `x`.
+Every call to `makeAdder` creates a **new, independent** lexical environment — `add5` and `add10` have
+their own, separate copies of `x`.
 
-## Zastosowanie: module pattern / prywatny stan
+## Use: the module pattern / private state
 
 ```js
 const counter = (function () {
-  let privateCounter = 0; // niedostępne z zewnątrz
+  let privateCounter = 0; // not accessible from outside
   function changeBy(val) { privateCounter += val; }
   return {
     increment() { changeBy(1); },
@@ -56,67 +56,67 @@ const counter = (function () {
 })();
 
 counter.increment(); counter.increment();
-counter.value(); // 2 — privateCounter nie jest dostępne inaczej niż przez te 3 metody
+counter.value(); // 2 — privateCounter is not accessible other than through these 3 methods
 ```
 
-Wywołanie tej samej fabryki (`makeCounter()`) dwa razy dałoby dwa **niezależne** liczniki — każde
-wywołanie tworzy własny lexical environment.
+Calling the same factory (`makeCounter()`) twice would give two **independent** counters — each
+call creates its own lexical environment.
 
-## Pułapka klasyczna: `var` w pętli
+## The classic pitfall: `var` in a loop
 
 ```js
-// ❌ BUG — wszystkie callbacki widzą tę samą, ostatnią wartość item
+// ❌ BUG — all callbacks see the same, last value of item
 for (var i = 0; i < items.length; i++) {
   var item = items[i];
-  el[i].onfocus = function () { showHelp(item.help); }; // zawsze ostatni item.help
+  el[i].onfocus = function () { showHelp(item.help); }; // always the last item.help
 }
 ```
 
-**Przyczyna:** `var` ma function scope — jest **jedna** zmienna `item` współdzielona przez wszystkie
-domknięcia utworzone w pętli; po zakończeniu pętli wskazuje na ostatni element.
+**Cause:** `var` has function scope — there is **one** `item` variable shared by all
+closures created in the loop; after the loop ends it points to the last element.
 
-**Poprawki (od najstarszej do rekomendowanej):**
+**Fixes (from the oldest to the recommended one):**
 ```js
-// 1) Function factory — nowy lexical environment per wywołanie
+// 1) Function factory — a new lexical environment per call
 function makeCallback(help) { return function () { showHelp(help); }; }
 for (var i = 0; i < items.length; i++) { el[i].onfocus = makeCallback(items[i].help); }
 
-// 2) IIFE — nowy zasięg blokowy przez wywołanie funkcji
+// 2) IIFE — a new block scope through a function call
 for (var i = 0; i < items.length; i++) {
   (function () { const item = items[i]; el[i].onfocus = () => showHelp(item.help); })();
 }
 
-// 3) let/const — REKOMENDOWANE: każda iteracja ma własne wiązanie blokowe
+// 3) let/const — RECOMMENDED: every iteration has its own block binding
 for (let i = 0; i < items.length; i++) {
   const item = items[i];
   el[i].onfocus = () => showHelp(item.help);
 }
 ```
 
-## Closures i moduły ES — live bindings
+## Closures and ES modules — live bindings
 
 ```js
 // counter.js
 export let count = 0;
 export function increment() { count++; }
 ```
-Import w innym module widzi **żywe** wiązanie — po `increment()` odczyt `count` w miejscu importu
-też się zmienia (to nie jest kopia w momencie importu). Patrz `modules.md`.
+An import in another module sees a **live** binding — after `increment()` reading `count` at the import site
+changes too (it is not a copy taken at import time). See `modules.md`.
 
-## Wydajność/pamięć — kiedy closures są problemem
+## Performance/memory — when closures are a problem
 
 ```js
-// ❌ nieoptymalne — każda instancja dostaje WŁASNĄ kopię metody (closure per instancja)
+// ❌ suboptimal — every instance gets ITS OWN copy of the method (a closure per instance)
 function MyObject(name) {
   this.name = name;
-  this.getName = function () { return this.name; }; // nowa funkcja przy każdym `new`
+  this.getName = function () { return this.name; }; // a new function on every `new`
 }
 
-// ✅ metody współdzielone przez prototype — jedna funkcja dla wszystkich instancji
+// ✅ methods shared through the prototype — one function for all instances
 function MyObject(name) { this.name = name; }
 MyObject.prototype.getName = function () { return this.name; };
 ```
 
-**Reguła:** jeśli metoda nie musi domykać się nad czymś specyficznym dla instancji (poza `this`,
-które i tak dostaje przez wywołanie), definiuj ją na `prototype`/w ciele klasy, nie jako pole
-przypisywane w konstruktorze — inaczej płacisz nową alokację funkcji za każdą instancję.
+**Rule:** if a method does not need to close over something instance-specific (apart from `this`,
+which it gets from the call anyway), define it on the `prototype`/in the class body, not as a field
+assigned in the constructor — otherwise you pay a new function allocation for every instance.

@@ -54,6 +54,8 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf risk [--base <branch>] [--md|--json]
                               # change risk triage of this branch: what a human must review (advisory)
                               # (.tf/factory/risk_triage.py)
+  tf diff [--base <branch>] [--md|--json]
+                              # system diff of this branch: what it touches beyond code lines (.tf/factory/system_diff.py)
   tf metrics [--weeks N] [--revert-days N] [--no-gh]
                               # factory effectiveness: revert rate, cost per accepted change, cycle time,
                               # rework causes → .tf/reports/metrics.md (.tf/factory/metrics.py)
@@ -81,14 +83,14 @@ import re
 import subprocess
 import sys
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 import tempfile
 from pathlib import Path
 
@@ -232,13 +234,13 @@ PROJECT_TF = Path(".tf") / "factory" / "tf.py"
 
 
 def is_launcher() -> bool:
-    """Ten plik to launcher (kopia w ~/.local/bin), a nie tf.py silnika w .tf/factory/ ani w klonie fabryki."""
+    """This file is the launcher (a copy in ~/.local/bin), not the engine's tf.py in .tf/factory/ nor in the factory clone."""
     return Path(__file__).resolve().parent.name != "factory"
 
 
 def refresh_launcher() -> None:
-    """Po aktualizacji projektu launcher przejmuje tf.py silnika projektu (z zachowanym adresem repo), żeby znał
-    nowe polecenia. Nic nie robi, gdy to nie launcher albo projekt nie ma .tf/factory/tf.py."""
+    """After a project update the launcher adopts the project engine's tf.py (keeping the repo address) so that it knows
+    the new commands. It does nothing when this is not the launcher or the project has no .tf/factory/tf.py."""
     if not is_launcher() or not PROJECT_TF.is_file():
         return
     me = Path(__file__).resolve()
@@ -266,11 +268,11 @@ def cmd_config_show(key: str | None) -> int:
     own_path = root / ".tf" / "config" / "config.yaml"
     own = packs.load_yaml(own_path) if own_path.is_file() else {}
     layers = packs.config_layers(root) if hasattr(packs, "config_layers") else []
-    org = next((d for label, d in layers if "org_defaults" in label), {})   # nakładka firmowa
-    team = next((d for label, d in layers if "team_defaults" in label), {})   # nakładka zespołu
+    org = next((d for label, d in layers if "org_defaults" in label), {})   # company overlay
+    team = next((d for label, d in layers if "team_defaults" in label), {})   # team overlay
     person = next((d for label, d in layers if label.endswith("(person)")), {})   # preferencje osoby (tf style)
     cfg = packs.load_config(root)
-    if key == "steps" and cfg.get("steps"):     # kroki pętli /tf z modelem i effortem po nałożeniu profilu kosztów
+    if key == "steps" and cfg.get("steps"):     # steps of the /tf loop with model and effort after the cost profile is applied
         full = project_module("build").load_config()
         print(f"# /tf loop steps (cost profile: {full.get('_profile')}). To change: steps in .tf/config/config.yaml, "
               "then python3 .tf/factory/build.py")
@@ -300,7 +302,7 @@ def cmd_config_show(key: str | None) -> int:
 
 
 def cmd_style(rest: list[str]) -> int:
-    """Styl pracy osoby: pokaż albo zapisz w ~/.tf/preferences.yaml (--here: .tf/config/me.yaml, poza repozytorium)."""
+    """A person's work style: show or save in ~/.tf/preferences.yaml (--here: .tf/config/me.yaml, outside the repository)."""
     here = "--here" in rest
     names = [a for a in rest if a != "--here"]
     packs = project_module("packs")
@@ -343,7 +345,7 @@ def cmd_style(rest: list[str]) -> int:
 
 
 def ensure_excluded(root: Path, rel: str) -> None:
-    """Plik osoby nie trafia do repozytorium: wpis w .git/info/exclude, jeśli git go jeszcze nie ignoruje."""
+    """A person's file does not go to the repository: an entry in .git/info/exclude, if git does not ignore it yet."""
     try:
         if subprocess.run(["git", "-C", str(root), "check-ignore", "-q", rel], capture_output=True).returncode == 0:
             return
@@ -360,7 +362,7 @@ def ensure_excluded(root: Path, rel: str) -> None:
 
 
 def instructions_summary(lint: Path) -> str:
-    """Jedna linia o plikach instrukcji projektu (CLAUDE.md, AGENTS.md…): kontrole z uwagami albo „bez uwag”."""
+    """One line about the project's instruction files (CLAUDE.md, AGENTS.md…): checks with remarks or “no remarks”."""
     try:
         r = subprocess.run([sys.executable, str(lint), "--root", ".", "--json"], capture_output=True, text=True,
                            encoding="utf-8", errors="replace", timeout=120)
@@ -396,28 +398,28 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
     out = r.stdout
     print("\n".join(ln for ln in out.splitlines() if not ln.startswith("⚠ skill ")) or "?")
     hook_log = Path(".claude") / "hooks" / "hook_errors.py"
-    if hook_log.is_file():   # błędy hooków z ostatnich 7 dni — informacja, nie zmienia wyniku doctora
+    if hook_log.is_file():   # hook errors from the last 7 days — information, does not change the doctor result
         h = subprocess.run([sys.executable, str(hook_log), "--summary", "--days", "7"], capture_output=True, text=True,
                            encoding="utf-8", errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if h.stdout.strip():
             print(h.stdout.strip())
     models = Path(".tf") / "factory" / "model_check.py"
-    if models.is_file():   # nazwy modeli w konfiguracji (krok H20) — informacja, nie zmienia wyniku doctora
+    if models.is_file():   # model names in the configuration (step H20) — information, does not change the doctor result
         m = subprocess.run([sys.executable, str(models)], capture_output=True, text=True, encoding="utf-8",
                            errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if m.stdout.strip():
             print(m.stdout.strip())
     health = Path(".tf") / "factory" / "metrics.py"
-    if health.is_file():   # pogorszenie po aktualizacji fabryki (krok H29, D13) — tylko ostrzeżenie, kod bez zmian
+    if health.is_file():   # degradation after a factory update (step H29, D13) — a warning only, exit code unchanged
         u = subprocess.run([sys.executable, str(health), "--after-update"], capture_output=True, text=True,
                            encoding="utf-8", errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if u.stdout.startswith("⚠"):
             print(u.stdout.strip())
     lint = Path(".claude") / "skills" / "core-agent-instructions" / "scripts" / "instructions_lint.py"
-    if lint.is_file():   # karta plików instrukcji projektu (krok H21) — informacja, nie zmienia wyniku doctora
+    if lint.is_file():   # the project's instruction files card (step H21) — information, does not change the doctor result
         print(instructions_summary(lint))
     gate = Path(".claude") / "hooks" / "quality_gate.py"
-    if gate.is_file():   # czy bramka jakości działa (komunikat w zwykłym języku) — informacja, nie zmienia wyniku
+    if gate.is_file():   # whether the quality gate works (a plain-language message) — information, does not change the result
         g = subprocess.run([sys.executable, str(gate), "--status"], capture_output=True, text=True, encoding="utf-8",
                            errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if g.stdout.strip():
@@ -464,7 +466,7 @@ def main(argv: list[str]) -> int:
             print(f"✗ Usage: tf {cmd} <pack> [<pack>…]")
             return 2
         return update(repo or REPO or None, [f"--{cmd}", ",".join(rest)]) if need_project() else 2
-    if cmd in ("language", "commit-language"):   # 12.0.0: język bez ustawień, jak w Claude
+    if cmd in ("language", "commit-language"):   # 12.0.0: language without settings, as in Claude
         print(f"ℹ tf {cmd} is no longer needed: there is no language setting. The agents answer in the language you "
               "write in and write your documents in it; commit messages follow the repository's history (git log; a new "
               "repository: English, or commit_language.new_repo in the config).")
@@ -482,6 +484,10 @@ def main(argv: list[str]) -> int:
         if not need_project():
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "risk_triage.py"), *rest]).returncode
+    if cmd == "diff":
+        if not need_project():
+            return 2
+        return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "system_diff.py"), *rest]).returncode
     if cmd == "new":
         if len(rest) < 3 or rest[0] != "skill":
             print('✗ Usage: tf new skill <name> "<description>" [--role <role>] [--name-only]\n'
@@ -537,7 +543,7 @@ def main(argv: list[str]) -> int:
             return 2
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "metrics.py"), *rest]).returncode
     if cmd not in (None, "install", "update"):
-        if is_launcher() and PROJECT_TF.is_file():   # polecenie nowsze niż launcher — zna je silnik projektu
+        if is_launcher() and PROJECT_TF.is_file():   # a command newer than the launcher — the project engine knows it
             return subprocess.run([sys.executable, str(PROJECT_TF), *argv[1:]]).returncode
         print(f"✗ Unknown command '{cmd}'.\n{__doc__}")
         return 2
@@ -559,13 +565,13 @@ def main(argv: list[str]) -> int:
 
 
 def sync_style_permissions() -> None:
-    """Po instalacji i aktualizacji: tryb uprawnień Claude Code ze stylu pracy osoby w tym projekcie (np. `plan` dla
-    `conversation`) — styl ustawiony raz w ~/.tf/preferences.yaml działa w każdym projekcie po `tf update`."""
+    """After install and update: the Claude Code permission mode from the person's work style in this project (e.g. `plan` for
+    `conversation`) — a style set once in ~/.tf/preferences.yaml works in every project after `tf update`."""
     try:
         packs = project_module("packs")
         for m in packs.apply_style_permissions(Path.cwd()) if hasattr(packs, "apply_style_permissions") else []:
             print(f"• {m}")
-    except Exception as e:  # noqa: BLE001 — instalacja się udała; styl to dodatek
+    except Exception as e:  # noqa: BLE001 — the installation succeeded; the style is an extra
         print(f"⚠ work style: could not sync the Claude Code permission mode ({e})")
 
 

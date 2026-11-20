@@ -40,6 +40,61 @@
       ]
     },
     {
+      "id": "testy-z-kodu-en",
+      "expect": "trigger",
+      "prompt": "I have a calculateDiscount method and I want AI to generate unit tests for it based on the code alone. Is that a good idea? Where do I get the expected values from? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "lustrzan",
+            "mirror",
+            "powiel",
+            "koduj",
+            "utrwal",
+            "mirror\\w*",
+            "duplicat\\w*",
+            "replicat\\w*",
+            "enshrin\\w*",
+            "cement\\w*",
+            "entrench\\w*",
+            "bakes? in|baked in",
+            "encod\\w*",
+            "codif\\w*"
+          ],
+          [
+            "wyroczn",
+            "oracle",
+            "spoza kodu",
+            "źródł\\w* niezależn",
+            "independent (source|oracle)",
+            "outside (of )?(the )?code",
+            "external (source|spec\\w*)"
+          ],
+          [
+            "clean-room",
+            "clean room",
+            "nie widz.{0,25}implementacji",
+            "bez dostępu do (kodu|implementacji)",
+            "przed (napisaniem )?(kodu|implementacj)",
+            "specyfikacj\\w* bez implementacji",
+            "bez implementacji",
+            "bez kodu (metody|implementac|produkcyjn)",
+            "nie (pokazuj|dawaj)\\w* (mu )?kodu",
+            "(not|never|without) (see|seeing|looking at|access to) (the )?(implementation|code|source)",
+            "before (writing )?(the )?(code|implementation)",
+            "spec\\w* without (the )?implementation",
+            "(don'?t|do not|never) (show|give|feed|pass) (it |the (model|AI) )?(the )?(code|implementation)",
+            "black[- ]box"
+          ]
+        ]
+      },
+      "rubric": [
+        "testy wygenerowane z kodu utrwalają (powielają) obecne zachowanie razem z błędami",
+        "oczekiwane wartości z niezależnego źródła (wyrocznia): wymagania, przykłady, ręczne wyliczenia, niezmienniki — nie z kodu",
+        "przypadki testowe projektowane ze specyfikacji bez wglądu w implementację (clean-room)"
+      ]
+    },
+    {
       "id": "test-pada-spec",
       "expect": "trigger",
       "prompt": "Test napisany ze specyfikacji dla rabatu od 10 sztuk pada: kod daje 20,00 zamiast 19,00 zł. Czy zmienić oczekiwaną wartość w teście, żeby build przeszedł? Odpowiedz zwięźle.",

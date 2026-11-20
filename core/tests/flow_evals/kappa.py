@@ -1,10 +1,10 @@
-"""Cohen's κ (nominalna i waga liniowa) — zgodność sędzia↔człowiek na próbce zadań (N17).
+"""Cohen's κ (nominal and linearly weighted) — judge↔human agreement on a sample of tasks (N17).
 
-Bez `scipy`: liczymy ręcznie na stdlib. Przy ocenach 1–5 w `linear_kappa` używamy wag liniowych
-(różnica 1 waży mniej niż różnica 4), co daje stabilniejszy sygnał niż nominalny κ na skali porządkowej.
+Without `scipy`: we compute by hand on the stdlib. For 1–5 ratings `linear_kappa` uses linear weights
+(a difference of 1 weighs less than a difference of 4), which gives a more stable signal than the nominal κ on an ordinal scale.
 
-Źródło: Cohen (1960) *A coefficient of agreement for nominal scales*, educational
-and psychological measurement. Oparcie na stdlib — sprawdzone obliczenia w testach `test_flow_evals.py`.
+Source: Cohen (1960) *A coefficient of agreement for nominal scales*, educational
+and psychological measurement. Built on the stdlib — the calculations are checked in the `test_flow_evals.py` tests.
 """
 from __future__ import annotations
 
@@ -13,15 +13,15 @@ from typing import Sequence
 
 
 def cohens_kappa(a: Sequence[int], b: Sequence[int]) -> float:
-    """Nominalny κ dla dwóch ocen tej samej próbki.
+    """The nominal κ for two ratings of the same sample.
 
-    κ = (p_o - p_e) / (1 - p_e), gdzie p_o — obserwowana zgodność, p_e — oczekiwana z rozkładów brzegowych.
-    Zwraca 1.0 przy pełnej zgodności, 0.0 przy przypadkowej, <0 przy gorszej niż przypadek.
+    κ = (p_o - p_e) / (1 - p_e), where p_o is the observed agreement, p_e the agreement expected from the marginal distributions.
+    Returns 1.0 for full agreement, 0.0 for chance agreement, <0 for worse than chance.
     """
     if len(a) != len(b):
-        raise ValueError(f"długości różne: {len(a)} ≠ {len(b)}")
+        raise ValueError(f"lengths differ: {len(a)} ≠ {len(b)}")
     if not a:
-        raise ValueError("pusta próbka — κ nieokreślony")
+        raise ValueError("empty sample — κ undefined")
     n = len(a)
     p_o = sum(1 for x, y in zip(a, b) if x == y) / n
     ca = Counter(a)
@@ -33,15 +33,15 @@ def cohens_kappa(a: Sequence[int], b: Sequence[int]) -> float:
 
 
 def linear_kappa(a: Sequence[int], b: Sequence[int], *, levels: int = 5) -> float:
-    """Ważony κ z wagami liniowymi dla skali 1..levels. Wagi: w_ij = 1 - |i-j|/(levels-1).
+    """A weighted κ with linear weights for a 1..levels scale. Weights: w_ij = 1 - |i-j|/(levels-1).
 
-    Dla skali 1–5 różnica 1 → waga 0.75, różnica 2 → 0.5, …, różnica 4 → 0. Daje czulszy pomiar
-    zgodności na skali ocen (sędzia↔człowiek) niż nominalny κ.
+    For a 1–5 scale a difference of 1 → weight 0.75, a difference of 2 → 0.5, …, a difference of 4 → 0. It gives a more sensitive measure
+    of agreement on a rating scale (judge↔human) than the nominal κ.
     """
     if len(a) != len(b):
-        raise ValueError(f"długości różne: {len(a)} ≠ {len(b)}")
+        raise ValueError(f"lengths differ: {len(a)} ≠ {len(b)}")
     if not a:
-        raise ValueError("pusta próbka — κ nieokreślony")
+        raise ValueError("empty sample — κ undefined")
     if levels < 2:
         raise ValueError(f"levels={levels}: potrzeba ≥ 2")
     n = len(a)

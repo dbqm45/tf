@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Mapa pokrycia katalogu skilli (B2) — narzędzie autora fabryki, nie instalowane w projektach.
+Coverage map of the skill catalog (B2) — a factory author's tool, not installed in projects.
 
-  python3 tools/coverage_map.py --summary                  # jedna linia + dziury, do CI (informacja)
-  python3 tools/coverage_map.py --out docs/coverage-map.md # pełny raport Markdown (nie jest commitowany)
-  python3 tools/coverage_map.py --areas plik.json --root katalog
+  python3 tools/coverage_map.py --summary                  # one line + holes, for CI (informational)
+  python3 tools/coverage_map.py --out docs/coverage-map.md # full Markdown report (not committed)
+  python3 tools/coverage_map.py --areas file.json --root dir
 
-Dla każdego hasła z `tools/coverage_areas.json` (obszar → lista haseł) liczy skille rdzenia, nakładek i trybów,
-w których metadanych (`description`, `metadata.catalog`, `metadata.keywords`) hasło występuje — bez względu na
-wielkość liter; hasło to zwykle rdzeń wyrazu („faktur” trafia w „faktury”, „fakturach”). Liczą się metadane, bo po
-nich podpowiedź i model wybierają skill; wiedza ukryta w treści, do której nic nie prowadzi, jest dla trasowania
-niewidoczna. Hasło bez skilla to **dziura**, z jednym skillem — **cienkie** miejsce.
+For each term from `tools/coverage_areas.json` (area → list of terms) it counts the skills of the core, overlays and modes
+in whose metadata (`description`, `metadata.catalog`, `metadata.keywords`) the term appears — regardless of
+letter case; a term is usually a word stem („faktur” matches „faktury”, „fakturach”). Metadata counts because
+the hint and the model pick a skill by it; knowledge hidden in the body that nothing leads to is invisible to
+routing. A term with no skill is a **hole**, with one skill — a **thin** spot.
 
-Mapa wskazuje kandydatów, nie decyduje: nowy skill powstaje dopiero, gdy scenariusz ewaluacji potwierdzi, że brak
-szkodzi (core-skill-authoring). Kod wyjścia zawsze 0, gdy wejście jest poprawne (informacja, nie bramka); 2 — błąd
-wejścia. Tylko biblioteka standardowa.
+The map points to candidates and does not decide: a new skill is created only when an evaluation scenario confirms that the lack
+does harm (core-skill-authoring). The exit code is always 0 when the input is valid (information, not a gate); 2 — an input
+error. Standard library only.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ import re
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know „✓”, „⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -36,7 +36,7 @@ FIELD = re.compile(r"^\s*(description|catalog|keywords):\s*(.*)$", re.M)
 
 
 def load_skills(root: Path) -> dict[str, str]:
-    """Nazwa skilla → tekst metadanych (opis, katalog, słowa) małymi literami."""
+    """Skill name → metadata text (description, catalog, keywords) in lowercase."""
     out: dict[str, str] = {}
     files = list((root / "core" / "skills").glob("*/SKILL.md"))
     for base in ("packs", "modes"):

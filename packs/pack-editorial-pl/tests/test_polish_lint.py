@@ -49,22 +49,22 @@ def main() -> int:
     for text, cat in BAD:
         got = {i["category"] for i in lint("Źródło: " + text)}
         if cat not in got:
-            fails.append(f"nie wykryto {cat}: {text!r} (jest {got})")
+            fails.append(f"did not detect {cat}: {text!r} (got {got})")
     for text in GOOD:
         got = [i for i in lint("Zażółć gęślą jaźń. " + text) if i["priority"] != "LOW" or i["category"] != "PUNCTUATION"]
         if got:
-            fails.append(f"fałszywy alarm: {text!r} → {[(i['category'], i['fragment']) for i in got]}")
+            fails.append(f"false alarm: {text!r} → {[(i['category'], i['fragment']) for i in got]}")
     code = "Zażółć.\n```\nWiem że \"to\" napewno - kod\n```\n"
     if lint(code):
-        fails.append("blok kodu powinien być pominięty")
+        fails.append("a code block should be skipped")
     if lint("<!-- polish-lint: ignore-file -->\nTo napewno błąd, ąę."):
         fails.append("ignore-file")
     if lint("I know that it works - english only."):
-        fails.append("tekst bez polskich znaków powinien być pominięty")
+        fails.append("text without Polish characters should be skipped")
     total = len(BAD) + len(GOOD) + 3
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów lintera polszczyzny")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the Polish linter")
     return 1 if fails else 0
 
 

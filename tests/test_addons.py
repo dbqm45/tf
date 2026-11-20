@@ -299,6 +299,15 @@ def test_learn_is_measured_and_report_adds_the_session_work():
     assert "tokens 62,000" in text and "total: " in text and "62,000 tokens, $0.0250" in text
 
 
+def test_log_usage_keeps_the_addon_class():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("lu", ROOT / "core" / "hooks" / "log_usage.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    assert mod.task_class("Class: addon\nRead the pages in pending.json") == "addon"   # not folded into "other"
+    assert mod.task_class("Class: something-else\n") == "other"
+
+
 def test_core_names_no_addon():
     for f in (ROOT / "core").rglob("*"):
         if f.is_file() and f.suffix in (".py", ".md", ".yaml", ".json"):

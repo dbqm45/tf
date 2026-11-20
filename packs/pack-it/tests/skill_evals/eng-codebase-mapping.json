@@ -20,6 +20,27 @@
       }
     },
     {
+      "id": "nieznane-repo-en",
+      "expect": "trigger",
+      "prompt": "I got an unfamiliar TypeScript repo in Nx and have to understand its structure within a day. Where do I start, with what tools, and how do I pinpoint entry points instead of reading random files? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "nx graph|madge"
+          ],
+          [
+            "punktacj|score|punkt\\w* wejścia",
+            "scor\\w+",
+            "entry points?"
+          ],
+          [
+            "cykl|circular",
+            "cycles?"
+          ]
+        ]
+      }
+    },
+    {
       "id": "graf-bez-narzedzi",
       "expect": "trigger",
       "prompt": "Mam zrobić mapę repo z Pythonem (Django) i TypeScriptem, ale nie ma tu madge, dependency-cruisera ani nx, a sieć jest odcięta. Jak zbudować graf importów, wskazać huby i cykle, żeby nie pisać za każdym razem własnego skanera? Odpowiedz zwięźle.",

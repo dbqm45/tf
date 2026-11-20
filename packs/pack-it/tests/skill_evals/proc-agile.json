@@ -29,6 +29,37 @@
       }
     },
     {
+      "id": "prognoza-kanban-en",
+      "expect": "trigger",
+      "prompt": "Our team works in Kanban, and the boss asks how many tasks we'll finish by the end of the quarter. How do we answer based on data rather than estimates? What metrics should we collect? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "monte carlo"
+          ],
+          [
+            "przepustowo",
+            "throughput"
+          ],
+          [
+            "wiek elementu",
+            "work item age",
+            "czas cyklu",
+            "cycle time"
+          ],
+          [
+            "ukrywa ryzyko",
+            "średni\\w*[^.]{0,40}(50 ?%|połow)",
+            "50 ?% szans[^.]{0,40}(średni|ukrywa)",
+            "hides? (the )?risk",
+            "averages?[^.]{0,40}(50 ?%|half)",
+            "50 ?% (chance|probability)[^.]{0,40}(average|hides)",
+            "average\\w*[^.]{0,40}hid\\w+"
+          ]
+        ]
+      }
+    },
+    {
       "id": "ciecie-historyjek",
       "expect": "trigger",
       "prompt": "Mamy historyjkę „Jako klient chcę zamawiać produkty” rozbitą na zadania: baza, API, UI. Jak ją pociąć lepiej, żeby spełniała INVEST? Odpowiedz zwięźle.",

@@ -16,6 +16,20 @@
       }
     },
     {
+      "id": "kontrast-szary-tekst-en",
+      "expect": "trigger",
+      "prompt": "A designer used gray helper text #8A8A8A on a white background, and the buttons are light blue #3B82F6 with white text. Is the contrast sufficient and what should be fixed? Answer briefly.",
+      "checks": {
+        "all": [
+          ["4[,.]5\\s*:\\s*1"],
+          ["3[,.]4\\d?", "3[,.]6\\d?", "nie (spełnia|przechodzi)", "za niski", "niewystarczając", "does(n't| not) (meet|pass)", "fail\\w*", "too low", "insufficient", "not (sufficient|enough)"],
+          ["1\\.4\\.3", "1\\.4\\.11", "3\\s*:\\s*1"],
+          ["tryb\\w* ciemn", "ciemn\\w+ (motyw|palet)", "dark mode", "kolor\\w* marki", "1\\.4\\.11", "dark (mode|theme|palette)", "brand colou?rs?"]
+        ],
+        "none": ["kontrast (jest )?(wystarczając|w normie|spełnia)\\w* (dla|przy) #8A8A8A", "contrast (is )?(sufficient|adequate|fine|ok|compliant|meets?)\\w* (for|with|at) #8A8A8A"]
+      }
+    },
+    {
       "id": "ruch-panel-boczny",
       "expect": "trigger",
       "prompt": "Robię animację wysuwanego panelu bocznego i okna modalnego w aplikacji roboczej. Jak dobrać czas trwania i krzywą oraz co zrobić dla osób, które nie znoszą ruchu na ekranie? Odpowiedz zwięźle.",

@@ -18,6 +18,69 @@
       }
     },
     {
+      "id": "start-platformy-wewnetrznej-en",
+      "expect": "trigger",
+      "prompt": "We have 25 teams, each deploying in their own way, and management wants an internal platform. Where should we start so we don't build an expensive toy nobody uses? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "jako produkt",
+            "product manager",
+            "platform as a product",
+            "as a product"
+          ],
+          [
+            "złot\\w* ścieżk",
+            "golden path",
+            "paved road",
+            "szablon\\w* serwis",
+            "service template\\w*|template\\w*"
+          ],
+          [
+            "najcieńsz\\w* (możliw|użyteczn)",
+            "thinnest viable",
+            "TVP",
+            "minimalna platforma",
+            "minimum viable platform|minimal platform|thinnest"
+          ],
+          [
+            "ból\\w*",
+            "pain point",
+            "wywiad",
+            "ankiet",
+            "odkrywani",
+            "pain\\w*",
+            "interview\\w*",
+            "survey\\w*",
+            "discovery"
+          ],
+          [
+            "adopcj",
+            "dobrowoln",
+            "adoption",
+            "voluntar\\w*",
+            "opt[- ]in"
+          ],
+          [
+            "obowiązkow\\w* (są )?tylko wymagani",
+            "nie sposób ich spełnienia",
+            "wróciłby do starego",
+            "ścieżk\\w* aktualizacji",
+            "(only|just) (the )?requirements? (are )?mandatory",
+            "mandatory[^.]{0,20}only[^.]{0,30}requirement",
+            "(no|not) (way|possible) to (meet|fulfil\\w*)",
+            "revert\\w* to (the )?old",
+            "upgrade path"
+          ]
+        ],
+        "none": [
+          "obowiązkow\\w* od pierwszego dnia",
+          "mandatory (from|on) (the )?(first day|day (one|1))",
+          "mandatory from day (one|1)"
+        ]
+      }
+    },
+    {
       "id": "metryki-sukcesu-platformy",
       "expect": "trigger",
       "prompt": "Po roku platformy zarząd pyta, czy to się opłaciło. Jakie metryki pokazać i czego nie robić z DORA? Odpowiedz zwięźle.",

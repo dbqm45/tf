@@ -20,6 +20,24 @@
       }
     },
     {
+      "id": "jest30-aliasy-en",
+      "expect": "trigger",
+      "prompt": "In src/cart.test.js (Jest 30), after upgrading from 29, tests with toBeCalledWith fail and the script with --testPathPattern stopped working. What should I change? Answer briefly.",
+      "files": {
+        "src/cart.test.js": "test('dodaje', () => {\n  const spy = jest.fn();\n  spy('A', 1);\n  expect(spy).toBeCalledWith('A', 1);\n});\n"
+      },
+      "checks": {
+        "all": [
+          [
+            "toHaveBeenCalledWith"
+          ],
+          [
+            "testPathPatterns"
+          ]
+        ]
+      }
+    },
+    {
       "id": "jest-znany-defekt",
       "expect": "trigger",
       "prompt": "W src/cart.test.js jest test ze specyfikacji, który pada przez znany defekt BUG-9 (łączenie tych samych pozycji). Jak go zostawić w Jest, żeby CI nie padał i oczekiwania się nie zmieniły? Odpowiedz zwięźle.",

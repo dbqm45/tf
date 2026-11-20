@@ -1,47 +1,47 @@
-# Pamiątka (Memento)
+# Memento
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: behawioralne. Istota: obiekt sam robi **migawkę swojego stanu** i sam się z niej przywraca; ktoś inny
-przechowuje migawki, ale nie widzi ich zawartości.
+Category: behavioral. The essence: the object itself takes **a snapshot of its state** and itself restores from it; someone else
+stores the snapshots, but does not see their content.
 
 ## Problem
-Edytor oferty handlowej ma prywatny stan (pozycje, rabaty negocjacyjne, notatki wewnętrzne) i potrzebuje „cofnij”
-oraz „przywróć wersję sprzed negocjacji”. Kopiowanie stanu z zewnątrz wymaga upublicznienia pól — każdy mógłby je
-zmieniać, a każda refaktoryzacja klasy psułaby kod robiący kopie.
+A sales offer editor has private state (line items, negotiation discounts, internal notes) and needs "undo"
+and "restore the version from before the negotiation". Copying the state from the outside requires making the fields public — anyone could
+change them, and every refactoring of the class would break the code that makes the copies.
 
-## Rozwiązanie i uczestnicy
-- **Źródło (originator)** — tworzy migawkę i przywraca się z niej; tylko ono zna jej zawartość.
-- **Pamiątka** — niezmienna migawka; na zewnątrz udostępnia co najwyżej metadane (czas, etykieta).
-- **Zarządca (caretaker)** — historia migawek (stos, limit); decyduje kiedy, ale nie zagląda do środka.
+## Solution and participants
+- **Originator** — creates a snapshot and restores itself from it; only it knows its content.
+- **Memento** — an immutable snapshot; on the outside it exposes at most metadata (time, label).
+- **Caretaker** — the history of snapshots (a stack, a limit); it decides when, but does not look inside.
 
-## Kiedy używać
-- Cofnij/ponów, wersje robocze, punkty przywracania — bez łamania hermetyzacji.
-- Wycofanie zmian obiektu w pamięci po nieudanej operacji wieloetapowej.
+## When to use
+- Undo/redo, drafts, restore points — without breaking encapsulation.
+- Rolling back changes to an in-memory object after a failed multi-step operation.
 
-## Koszty
-Pamięć przy częstych migawkach dużych obiektów; zarządca musi usuwać nieaktualne; w JS niezmienność i prywatność są
-realne tylko przy `#polach`, `Object.freeze` i nieprzezroczystych typach.
+## Costs
+Memory with frequent snapshots of large objects; the caretaker must remove stale ones; in JS immutability and privacy are
+real only with `#fields`, `Object.freeze` and opaque types.
 
-## Powiązania
-- **Polecenie** + Pamiątka — polecenie zapisuje migawkę przed wykonaniem, by móc cofnąć.
-- **Prototyp** — prostsza alternatywa, gdy obiekt można po prostu sklonować.
-- **Iterator** — migawka pozycji iteracji.
-- Event sourcing (decider — ddd-tactical-design) odtwarza stan ze zdarzeń — inny mechanizm „cofania w czasie”.
+## Relations
+- **Command** + Memento — the command saves a snapshot before executing, to be able to undo.
+- **Prototype** — a simpler alternative when the object can simply be cloned.
+- **Iterator** — a snapshot of the iteration position.
+- Event sourcing (decider — ddd-tactical-design) rebuilds the state from events — a different mechanism of "going back in time".
 
-## Forma idiomatyczna w TS
-Gdy stan jest **niezmienny** (nowy obiekt przy każdej zmianie — styl reduktorów/store'ów), historia to po prostu
-tablica poprzednich stanów. Nieprzezroczysty typ pamiątki: marka typu + `WeakMap` z właściwym stanem w module źródła.
+## Idiomatic form in TS
+When the state is **immutable** (a new object on every change — the reducer/store style), the history is simply
+an array of previous states. An opaque memento type: a type brand + a `WeakMap` with the actual state in the originator's module.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 declare const snapshotBrand: unique symbol;
-/** Nieprzezroczysta pamiątka: na zewnątrz widać tylko metadane. */
+/** An opaque memento: only the metadata is visible from the outside. */
 type OfferSnapshot = { readonly takenAt: Date; readonly label: string; readonly [snapshotBrand]: true };
 
 type OfferState = { title: string; lines: { sku: string; qty: number; discount: number }[] };
 
-// Zawartość migawek dostępna tylko w tym module (u źródła).
+// The content of the snapshots is available only in this module (at the originator).
 const contents = new WeakMap<OfferSnapshot, OfferState>();
 
 class OfferDraft {
@@ -64,12 +64,12 @@ class OfferDraft {
   }
   restore(snapshot: OfferSnapshot): void {
     const state = contents.get(snapshot);
-    if (state === undefined) throw new Error('obca migawka');
+    if (state === undefined) throw new Error('foreign snapshot');
     this.#state = structuredClone(state);
   }
 }
 
-/** Zarządca: przechowuje migawki z limitem, nie zna ich zawartości. */
+/** Caretaker: stores the snapshots with a limit, does not know their content. */
 class DraftHistory {
   readonly #stack: OfferSnapshot[] = [];
   readonly #limit: number;
@@ -87,18 +87,18 @@ class DraftHistory {
 
 const draft = new OfferDraft();
 const history = new DraftHistory();
-draft.rename('Oferta dla ACME');
-draft.addLine('SALA-A', 2);
-history.push(draft.save('przed negocjacją'));
+draft.rename('Offer for ACME');
+draft.addLine('ROOM-A', 2);
+history.push(draft.save('before negotiation'));
 draft.addLine('CATERING', 30, 0.15);
 const previous = history.pop();
 if (previous !== undefined) draft.restore(previous);
-console.log(draft.summary(), '| przywrócono:', previous?.label);
+console.log(draft.summary(), '| restored:', previous?.label);
 ```
 
-## Kiedy NIE używać / pułapki
-- **Stan już jest niezmienny** — tablica poprzednich stanów daje cofanie bez klas Memento/Caretaker.
-- **Płaskie DTO bez prywatnego stanu** — `structuredClone` przy zmianie wystarczy; pełny wzorzec ma sens, gdy stan
-  źródła jest prywatny i nie powinien być widoczny dla zarządcy.
-- Od razu ustal limit historii (ostatnie N) — nieograniczona historia dużych obiektów to realny koszt pamięci.
-- Migawka nie obejmuje świata zewnętrznego (zapisane rekordy, wysłane wiadomości) — tam potrzebna kompensacja.
+## When NOT to use / pitfalls
+- **The state is already immutable** — an array of previous states gives undo without Memento/Caretaker classes.
+- **Flat DTOs without private state** — `structuredClone` on a change is enough; the full pattern makes sense when the
+  originator's state is private and should not be visible to the caretaker.
+- Set the history limit right away (the last N) — an unbounded history of large objects is a real memory cost.
+- A snapshot does not cover the outside world (saved records, sent messages) — compensation is needed there.

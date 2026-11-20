@@ -1,42 +1,42 @@
 # Barrel Export
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/barrel-export („Aggregate Module Exports”).
+Source: frontendpatterns.dev/barrel-export ("Aggregate Module Exports").
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Fundamentals
-- **Poziom:** Beginner
-- **Przykłady:** Native web
-- **Data aktualizacji:** September 22, 2025
-- **Autor:** Den Odell
+- **Category:** Fundamentals
+- **Level:** Beginner
+- **Examples:** Native web
+- **Last updated:** September 22, 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Use index files to re-export modules from a single entry point, simplifying imports while being mindful of tree-shaking implications.”
+"Use index files to re-export modules from a single entry point, simplifying imports while being mindful of tree-shaking implications."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- Barrel to naturalny **publiczny API modułu/slice'a** (FSD: `index.ts` każdego slice'a — fsd-screaming-architecture.md;
-  granice wymusza lint, np. `eslint-plugin-boundaries`, Nx `enforce-module-boundaries`).
-- Koszt 2026: duże barrele spowalniają dev server/testy (ładowanie całego grafu modułów) i utrudniają tree-shaking
-  przy efektach ubocznych. Nie rób barrela „wszystkiego” w `shared/`; importuj z podmodułów
-  (`shared/ui/button`), oznacz pakiety `"sideEffects": false`.
-- W TS z `verbatimModuleSyntax`/`isolatedModules` re-eksport typów musi być jawny: `export type { X }` lub
+- A barrel is the natural **public API of a module/slice** (FSD: the `index.ts` of every slice — fsd-screaming-architecture.md;
+  the boundaries are enforced by a linter, e.g. `eslint-plugin-boundaries`, Nx `enforce-module-boundaries`).
+- The cost in 2026: large barrels slow down the dev server/tests (loading the whole module graph) and hinder tree-shaking
+  with side effects. Do not make a barrel of "everything" in `shared/`; import from submodules
+  (`shared/ui/button`), mark packages `"sideEffects": false`.
+- In TS with `verbatimModuleSyntax`/`isolatedModules` a re-export of types must be explicit: `export type { X }` or
   `export { type X }` (lang-typescript).
 
 ## Problem
 
-Długie ścieżki importu typu `import { Button } from './components/atoms/buttons/Button/Button.tsx'` ujawniają całą wewnętrzną strukturę folderów, co uniemożliwia bezpieczną refaktoryzację (przeniesienie pliku łamie każdy import). Bez wyraźnych granic modułu konsumenci importują szczegóły implementacji, którymi nigdy nie zamierzano dzielić się publicznie.
+Long import paths such as `import { Button } from './components/atoms/buttons/Button/Button.tsx'` expose the whole internal folder structure, which makes safe refactoring impossible (moving a file breaks every import). Without clear module boundaries, consumers import implementation details that were never meant to be shared publicly.
 
-## Rozwiązanie
+## Solution
 
-Utwórz plik indeksowy w katalogu modułu, który re-eksportuje publiczny interfejs API tego modułu. Zamiast głębokiej ścieżki — `import { Button } from './components'`. Pozwala to reorganizować wnętrze folderu bez zmiany importów zewnętrznych i ustanawia jawną granicę tego, co jest publicznym API modułu.
+Create an index file in the module's directory that re-exports the module's public API. Instead of a deep path — `import { Button } from './components'`. This lets you reorganize the inside of the folder without changing external imports and establishes an explicit boundary of what the module's public API is.
 
-## Przykłady kodu
+## Code examples
 
-### Podstawowy barrel
+### A basic barrel
 
 ```javascript
 // components/Button.js
@@ -53,7 +53,7 @@ export { Input } from './Input';
 import { Button, Input } from './components';
 ```
 
-### Zagnieżdżony wzorzec barrel
+### A nested barrel pattern
 
 ```javascript
 // components/forms/index.js
@@ -72,7 +72,7 @@ import { Input } from './components/forms';
 import { Input, PrimaryButton } from './components';
 ```
 
-### Import przez namespace
+### Namespace import
 
 ```javascript
 import * as Components from './components';
@@ -81,7 +81,7 @@ const button = <Components.Button label="Click me" />;
 const { Button, Card } = Components;  // Can destructure
 ```
 
-### Selektywne re-eksportowanie (bezpieczniejsze niż `export *`)
+### Selective re-exporting (safer than `export *`)
 
 ```javascript
 // utils/dateUtils.js
@@ -94,7 +94,7 @@ export { capitalize, truncate } from './stringUtils';
 // Internal helpers stay hidden
 ```
 
-### Re-eksport typów w TypeScript
+### Re-exporting types in TypeScript
 
 ```typescript
 // components/index.ts
@@ -105,28 +105,28 @@ export { Input, type InputProps } from './Input';
 import { Button, type ButtonProps } from './components';
 ```
 
-## Zalety
+## Advantages
 
-- Czystsze importy zamiast długich, głębokich ścieżek.
-- Łatwiejsza refaktoryzacja — pliki wewnątrz modułu można swobodnie przenosić bez łamania importów zewnętrznych.
-- Jawne publiczne API modułu — barrel decyduje, co jest eksponowane, co pozostaje wewnętrzne.
-- Hierarchiczna organizacja skoncentrowana na granicach modułów, nie na fizycznej lokalizacji plików.
+- Cleaner imports instead of long, deep paths.
+- Easier refactoring — files inside the module can be moved freely without breaking external imports.
+- An explicit public API of the module — the barrel decides what is exposed and what stays internal.
+- A hierarchical organization focused on module boundaries, not on the physical location of files.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- **Tree-shaking:** „Using `export *` can prevent bundlers from eliminating unused code” — barrel z `export *` bywa gorszy dla rozmiaru bundla niż bezpośrednie importy.
-- Konieczność aktualizowania pliku barrel przy każdym nowym eksporcie modułu — dodatkowy krok do pamiętania.
-- Trudniejsze śledzenie, z którego pliku faktycznie pochodzi dany eksport (jedna warstwa indirekcji więcej).
-- Ryzyko zależności cyklicznych, gdy dwa barrel eksportują z siebie nawzajem.
+- **Tree-shaking:** "Using `export *` can prevent bundlers from eliminating unused code" — a barrel with `export *` can be worse for bundle size than direct imports.
+- The barrel file must be updated with every new export of the module — an extra step to remember.
+- Harder to trace which file a given export actually comes from (one more layer of indirection).
+- The risk of circular dependencies when two barrels export from each other.
 
-## Powiązane wzorce
+## Related patterns
 
 - ES6 Modules — MDN.
 - Tree Shaking and Barrel Files — Webpack docs.
 - Module Systems — javascript.info.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj barrel exportów dla **granic publicznego API** — np. cały folder `components/` albo `utils/`, żeby konsument importował z jednego, stabilnego miejsca, nie z głębokiej ścieżki wewnętrznej.
+Use barrel exports for **public API boundaries** — e.g. the whole `components/` or `utils/` folder, so that the consumer imports from one stable place, not from a deep internal path.
 
-Nie używaj `export *` bezmyślnie na dużych modułach w projekcie z wrażliwym na rozmiar bundlem — preferuj selektywne, nazwane re-eksporty (`export { X, Y } from './plik'`), które bundler łatwiej przeanalizuje pod tree-shaking. Jeśli projekt nie ma realnego problemu z rozmiarem bundla (np. mały, wewnętrzny skrypt), różnica jest nieistotna — nie optymalizuj tego z góry bez powodu (YAGNI, patrz `../principles.md`).
+Do not use `export *` thoughtlessly on large modules in a project with a size-sensitive bundle — prefer selective, named re-exports (`export { X, Y } from './file'`), which the bundler analyses more easily for tree-shaking. If the project has no real bundle size problem (e.g. a small internal script), the difference is negligible — do not optimize it upfront without a reason (YAGNI, see `../principles.md`).

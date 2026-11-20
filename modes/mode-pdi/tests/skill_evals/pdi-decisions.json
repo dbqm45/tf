@@ -29,6 +29,42 @@
    }
   },
   {
+   "id": "zapis-decyzji-o-zmianie-en",
+   "expect": "trigger",
+   "prompt": "We agreed with the product owner that in change CHG-12 the export goes to CSV rather than XLSX, because customers open it in a spreadsheet anyway. We have the pdi decision register connected. Record this decision so that it lives in a single source. Answer briefly.",
+   "checks": {
+    "all": [
+     [
+      "decision add|decisions\\.md"
+     ],
+     [
+      "record_decision"
+     ],
+     [
+      "szkic|zatwierdz|potwierdz|akcept",
+      "draft",
+      "approv",
+      "confirm",
+      "accept"
+     ],
+     [
+      "decision mark|DEC-\\d+|DEC-n|numer\\w* (z )?rejestru",
+      "DEC-\\d+",
+      "register number",
+      "number from the register",
+      "decision number"
+     ],
+     [
+      "CHG-12"
+     ]
+    ],
+    "none": [
+     "tylko w (treści )?odpowiedzi",
+     "only in (the )?(answer|reply|response)"
+    ]
+   }
+  },
+  {
    "id": "dziennik-zmiany-ze-zgloszenia",
    "expect": "trigger",
    "prompt": "Zgłoszenie PRB-34 zostało przyjęte w pdi jako zmiana CHG-12. Załóż dla niej dziennik w repozytorium (zamiar, plan, decyzje) zgodny z kontraktem pdi. Co uruchomisz i co powstanie? Odpowiedz zwięźle.",

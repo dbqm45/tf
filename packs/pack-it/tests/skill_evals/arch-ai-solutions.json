@@ -44,6 +44,63 @@
       }
     },
     {
+      "id": "dobor-wzorca-ai-en",
+      "expect": "trigger",
+      "prompt": "We're designing an assistant for the support team: answers come from terms and conditions that change every week, it must issue refunds in the payment system, and customer data cannot leave the EU. Which AI architecture should we use: a plain model call, RAG, a workflow with tools, an agent or fine-tuning? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "tabel\\w* decyzyj",
+            "wymagan\\w* (świeżo|dok[łl]adno|opóźnie)",
+            "świeżo\\w* wiedzy",
+            "najprostsz\\w+ (wzorzec|rozwiąz)",
+            "\\bosi(e|ach)?\\b[^.]{0,80}(wymaga|podał|liczb|opóźnie|koszt)",
+            "ewaluacj\\w+ pokaż",
+            "decision table",
+            "requirements? (freshness|accuracy|latency)",
+            "freshness",
+            "simplest (pattern|solution|thing|option)",
+            "\\baxes\\b[^.]{0,80}(require|latency|cost|number|figure)",
+            "(let|have) (the )?evals? (show|decide)|evaluation shows"
+          ],
+          [
+            "workflow",
+            "przepływ\\w* z narzędzi",
+            "narzędzi\\w* (z |ze )?(zatwierdz|akceptac)",
+            "human[- ]in[- ]the[- ]loop|kolejk\\w* (do )?(przeglądu|akceptac)",
+            "tools? (with|requiring|plus) (approval|confirmation)",
+            "human[- ]in[- ]the[- ]loop|(review|approval) queue"
+          ],
+          [
+            "rezydencj\\w* danych",
+            "data residency",
+            "region UE|w UE",
+            "lock-?in|uzależnieni",
+            "EU region|in the EU|within the EU",
+            "lock-?in|vendor dependen\\w*"
+          ],
+          [
+            "idempotent|idempotencj",
+            "najmniejszych uprawnie|least[- ]privilege",
+            "idempoten\\w*",
+            "least privilege"
+          ],
+          [
+            "zero[- ]retention",
+            "(własn\\w+ )?bramk\\w*[^.]{0,80}(zmieni\\w+|wymian\\w+) (dostawc|model)",
+            "konta serwisow",
+            "kontem serwisow",
+            "(own |your own )?gateway[^.]{0,80}(switch|swap|chang|replac)\\w* (the )?(provider|model|vendor)",
+            "service accounts?"
+          ]
+        ],
+        "none": [
+          "fine-?tuning\\w* (jest|to) (najlepsz|dobry sposób na aktualn)",
+          "fine-?tuning\\w* (is|being) (the )?(best|a good way)[^.]{0,40}(current|up-to-date|fresh)"
+        ]
+      }
+    },
+    {
       "id": "koszt-i-opoznienie",
       "expect": "trigger",
       "prompt": "Mamy zaprojektować funkcję AI dla 200 tys. żądań dziennie, stały prompt systemowy ok. 6 tys. tokenów, odpowiedź ma się zaczynać w mniej niż 2 s. Jak oszacować koszt i budżet opóźnienia oraz co zrobić, gdy dostawca modelu padnie? Odpowiedz zwięźle.",
@@ -192,6 +249,8 @@
           ["warunk\\w+ wycofania", "przed wydaniem", "z góry"]
         ]
       }
-    }
+    },
+    {"id": "brama-llm-model-zapasowy", "expect": "trigger", "prompt": "Przygotowujemy środowisko pod asystenta AI: proxy do dostawców LLM z aliasami modeli, timeouty, ponowienia, limity dostawcy i modele zapasowe. Jak to poukładać, żeby awaria dostawcy nie położyła aplikacji? Odpowiedz zwięźle.", "checks": {"all": [["fallback\\w*", "zapasow\\w*"], ["wyłącznik\\w*", "kill switch"]]}},
+    {"id": "brama-llm-model-zapasowy-en", "expect": "trigger", "prompt": "We are preparing the environment for an AI assistant: a proxy to LLM providers with model aliases, timeouts, retries, provider limits and fallback models. How do we set it up so that a provider outage does not take the application down? Answer briefly.", "checks": {"all": [["fallback\\w*", "zapasow\\w*"], ["wyłącznik\\w*", "kill switch"]]}}
   ]
 }

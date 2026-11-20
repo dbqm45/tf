@@ -1,14 +1,14 @@
-# Ocena zmiany ceny
+# Assessing a price change
 
-1. **Cel** — przychód, marża, przejście na wyższy plan, wyrównanie do wartości? Jedna miara sukcesu i metryki
-   ochronne (churn, konwersja z okresu próbnego, liczba zgłoszeń).
-2. **Kogo dotyczy** — nowi klienci, obecni, oba; plany i segmenty; liczba klientów i MRR w każdej grupie.
-3. **Scenariusze** — dla podwyżki o p: nowy MRR = MRR × (1 + p) × (1 − dodatkowy churn). Próg opłacalności:
-   dodatkowy churn < p / (1 + p) (np. podwyżka 20% opłaca się, dopóki dodatkowo odejdzie mniej niż ok. 16,7%
-   przychodu grupy). Pokaż trzy scenariusze churnu (optymistyczny, bazowy, pesymistyczny) i ich źródło.
-4. **Test przed zmianą dla wszystkich** — najpierw nowi klienci (cennik A/B albo zmiana z datą i porównanie
-   kohort), potem obecni; badania gotowości do zapłaty (np. Van Westendorp) jako sygnał, nie dowód.
-5. **Obecni klienci** — okres ochronny ceny („grandfathering”) albo zapowiedź z wyprzedzeniem; warunki umów
-   i regulaminu (prawo do zmiany ceny, okres wypowiedzenia); komunikat z wartością, nie tylko kwotą.
-6. **Po zmianie** — NRR, GRR, konwersja i zgłoszenia co miesiąc przez 3–6 miesięcy na kohortach przed i po.
-   Implementacja w systemie rozliczeń: be-billing-subscriptions.
+1. **Goal** — revenue, margin, moving to a higher plan, aligning with value? One success measure and guardrail metrics
+   (churn, trial conversion, number of tickets).
+2. **Who is affected** — new customers, existing ones, both; plans and segments; the number of customers and MRR in each group.
+3. **Scenarios** — for an increase of p: new MRR = MRR × (1 + p) × (1 − additional churn). The break-even threshold:
+   additional churn < p / (1 + p) (e.g. a 20% increase pays off as long as fewer than about 16.7% of the group's
+   revenue additionally leaves). Show three churn scenarios (optimistic, baseline, pessimistic) and their source.
+4. **A test before a change for everyone** — new customers first (A/B pricing or a change with a date and a comparison of
+   cohorts), then existing ones; willingness-to-pay studies (e.g. Van Westendorp) as a signal, not proof.
+5. **Existing customers** — a price protection period ("grandfathering") or an announcement in advance; the terms of contracts
+   and the terms of service (the right to change the price, the notice period); a message with the value, not only the amount.
+6. **After the change** — NRR, GRR, conversion and tickets every month for 3–6 months on cohorts before and after.
+   Implementation in the billing system: be-billing-subscriptions.

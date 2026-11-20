@@ -1,38 +1,38 @@
-# Prototyp (Prototype)
+# Prototype
 
-Kategoria: kreacyjne. Istota: obiekt **sam wie, jak się skopiować**; klient klonuje go przez interfejs, nie znając
-konkretnej klasy ani prywatnych pól.
+Category: creational. The essence: the object **itself knows how to copy itself**; the client clones it through an interface, without knowing
+the concrete class or the private fields.
 
 ## Problem
-Dział prawny utrzymuje kilka skonfigurowanych szablonów umów (klauzule, metadane, wersje). Nowa umowa to kopia
-szablonu z drobnymi zmianami. Kopiowanie „z zewnątrz” nie widzi pól prywatnych, wymaga znajomości konkretnej klasy
-i łatwo kończy się płytką kopią, w której zmiana klauzuli w umowie psuje szablon.
+The legal department maintains several configured contract templates (clauses, metadata, versions). A new contract is a copy
+of a template with small changes. Copying "from the outside" does not see the private fields, requires knowing the concrete class
+and easily ends with a shallow copy in which changing a clause in the contract breaks the template.
 
-## Rozwiązanie i uczestnicy
-- **Prototyp** — interfejs z `clone()`.
-- **Konkretny prototyp** — implementuje `clone()` wewnątrz klasy (ma dostęp do pól `#prywatnych`) i sam decyduje, co
-  kopiować głęboko (kolekcje, obiekty zagnieżdżone, referencje zwrotne).
-- **Rejestr prototypów (opcjonalnie)** — mapa `nazwa → gotowy prototyp`, zwracająca klony.
+## Solution and participants
+- **Prototype** — an interface with `clone()`.
+- **Concrete prototype** — implements `clone()` inside the class (it has access to the `#private` fields) and itself decides what
+  to copy deeply (collections, nested objects, back references).
+- **Prototype registry (optional)** — a `name → ready prototype` map, returning clones.
 
-## Kiedy używać
-- Kod dostaje obiekty przez interfejs i musi je kopiować bez znajomości klasy.
-- Zamiast wielu podklas różniących się tylko konfiguracją — kilka skonfigurowanych egzemplarzy do klonowania.
-- Utworzenie obiektu od zera jest kosztowne (obliczenia, wczytanie), a kopia gotowego — tania.
+## When to use
+- The code gets objects through an interface and must copy them without knowing the class.
+- Instead of many subclasses that differ only in configuration — a few configured instances to clone.
+- Creating the object from scratch is expensive (computations, loading), and a copy of a ready one is cheap.
 
-## Koszty
-Poprawne klonowanie złożonych grafów (cykle, współdzielone referencje, zasoby) bywa trudne; każda nowa pole w klasie
-wymaga pamiętania o `clone()`.
+## Costs
+Correctly cloning complex graphs (cycles, shared references, resources) can be hard; every new field in the class
+requires remembering about `clone()`.
 
-## Powiązania
-- Alternatywa dla Metody wytwórczej (nie wymaga podklas twórcy); Fabryka abstrakcyjna może klonować prototypy.
-- Pomaga kopiować drzewa Kompozytu i stosy Dekoratorów; historia Poleceń może przechowywać kopie.
-- Prosta alternatywa Pamiątki, gdy obiekt można po prostu sklonować.
+## Relations
+- An alternative to Factory Method (it does not require creator subclasses); an Abstract Factory can clone prototypes.
+- It helps copy Composite trees and stacks of Decorators; a history of Commands can store copies.
+- A simple alternative to Memento, when the object can simply be cloned.
 
-## Forma idiomatyczna w TS
-Dla danych bez metod i prywatnego stanu: `structuredClone(obj)` (głęboka kopia, obsługuje cykle, `Map`, `Date`) albo
-spread `{ ...obj }` (płytka). Obiekty niezmienne w ogóle nie potrzebują kopii — współdziel je.
+## Idiomatic form in TS
+For data without methods and private state: `structuredClone(obj)` (a deep copy, handles cycles, `Map`, `Date`) or
+spread `{ ...obj }` (shallow). Immutable objects do not need a copy at all — share them.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 interface Cloneable<T> {
   clone(): T;
@@ -56,7 +56,7 @@ class ContractTemplate implements Cloneable<ContractTemplate> {
     return this;
   }
 
-  /** Kopia robiona wewnątrz klasy: widzi pola #prywatne, kolekcje kopiuje głęboko. */
+  /** A copy made inside the class: it sees the #private fields, copies the collections deeply. */
   clone(): ContractTemplate {
     return new ContractTemplate(this.#clauses, this.#meta);
   }
@@ -67,24 +67,24 @@ class ContractTemplate implements Cloneable<ContractTemplate> {
 }
 
 const registry = new Map<string, ContractTemplate>([
-  ['najem-sali', new ContractTemplate(['Przedmiot najmu', 'Czynsz', 'Kaucja']).tag('wersja', '3')],
-  ['usługa-it', new ContractTemplate(['Zakres usług', 'SLA', 'Poufność']).tag('wersja', '7')],
+  ['room-rental', new ContractTemplate(['Subject of the rental', 'Rent', 'Deposit']).tag('version', '3')],
+  ['it-service', new ContractTemplate(['Scope of services', 'SLA', 'Confidentiality']).tag('version', '7')],
 ]);
 
 function contractFrom(name: string): ContractTemplate {
   const prototype = registry.get(name);
-  if (prototype === undefined) throw new Error(`nieznany szablon: ${name}`);
+  if (prototype === undefined) throw new Error(`unknown template: ${name}`);
   return prototype.clone();
 }
 
-const contract = contractFrom('najem-sali').withClause('Kara umowna');
+const contract = contractFrom('room-rental').withClause('Contractual penalty');
 console.log(contract.render());
-console.log(contractFrom('najem-sali').render()); // szablon bez zmian
+console.log(contractFrom('room-rental').render()); // the template unchanged
 ```
 
-## Kiedy NIE używać / pułapki
-- **Płaskie DTO i obiekty konfiguracyjne** — `structuredClone`/spread wystarcza; interfejs `clone()` i rejestr mają
-  sens przy prywatnym stanie, głębokich hierarchiach klas lub referencjach cyklicznych.
-- „Unikanie `new`” nie jest powodem. Sprawdź, czy naprawdę kopiujesz **bez znajomości klasy**, czy tylko kopiujesz dane.
-- Uważaj na płytkie kopie kolekcji — współdzielona tablica między prototypem a klonem to klasyczny błąd.
-- `structuredClone` gubi prototyp klasy (metody) — do instancji klas używaj `clone()` z klasy.
+## When NOT to use / pitfalls
+- **Flat DTOs and configuration objects** — `structuredClone`/spread is enough; a `clone()` interface and a registry make
+  sense with private state, deep class hierarchies or cyclic references.
+- "Avoiding `new`" is not a reason. Check whether you really copy **without knowing the class**, or just copy data.
+- Watch out for shallow copies of collections — an array shared between the prototype and the clone is a classic mistake.
+- `structuredClone` loses the class prototype (methods) — for class instances use `clone()` from the class.

@@ -18,6 +18,22 @@
       }
     },
     {
+      "id": "serwer-zwalnia-use-en",
+      "expect": "trigger",
+      "prompt": "A production Linux server suddenly slowed down and I don't know where to start. What method and which commands should I use for a first performance diagnosis? Answer briefly.",
+      "checks": {
+        "all": [
+          ["use\\b|utilization.*saturation|wykorzystanie.*nasycenie"],
+          ["vmstat"],
+          ["mpstat|pidstat"],
+          ["iostat"],
+          ["(?-i:\\bRED\\b)|wyklucz\\w*", "rule[sd]? out", "eliminat\\w+", "exclud\\w+"],
+          ["/proc/pressure|PSI"]
+        ],
+        "none": ["zrestartuj serwer", "restart (the )?server", "reboot (the )?server"]
+      }
+    },
+    {
       "id": "cpu-flamegraph",
       "expect": "trigger",
       "prompt": "Proces zużywa 100% CPU i nie wiem, w której funkcji. Jak to profilować na produkcji bez zabijania usługi? Odpowiedz zwięźle.",

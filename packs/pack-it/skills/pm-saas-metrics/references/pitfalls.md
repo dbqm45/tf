@@ -1,16 +1,16 @@
-# Pułapki liczenia
+# Calculation pitfalls
 
-- **Usługi w MRR** — wdrożenia, szkolenia, opłaty jednorazowe zawyżają MRR i zaniżają churn. Poza MRR.
-- **Roczna przedpłata jako MRR miesiąca** — 12 000 zł zapłacone w styczniu to 1 000 zł MRR przez 12 miesięcy.
-- **Średnia zamiast kohort** — średni churn miesza nowych klientów (odchodzą częściej) ze starymi. Licz krzywe
-  retencji kohort według miesiąca startu i kanału pozyskania.
-- **Mianownik churnu** — klienci na początku okresu, bez klientów pozyskanych w trakcie (inaczej churn spada
-  sztucznie przy szybkim wzroście).
-- **NRR z nowymi klientami** — to już wzrost, nie retencja. NRR i GRR tylko na kohorcie z początku okresu.
-- **NRR bez GRR** — NRR 115% może ukrywać GRR 75%: kilku dużych klientów rośnie, wielu małych odchodzi.
-- **CAC bez pełnych kosztów** — same kampanie bez płac sprzedaży, prowizji i narzędzi zaniżają CAC 2–3 razy.
-- **CAC łączny jako płatny** — klienci organiczni obniżają CAC; decyzje o budżecie kampanii na CAC kanału płatnego.
-- **LTV z przychodu, nie z marży** — LTV liczony z przychodu zawyża wartość o koszt obsługi.
-- **LTV przy churnie 0,5% miesięcznie** — 200 miesięcy życia klienta to fikcja; ogranicz horyzont.
-- **Okresy niezgodne** — CAC z kwartału z churnem miesięcznym i ARR rocznym; ujednolić przed porównaniem.
-- **Burn multiple z jednego miesiąca** — licz na kwartale albo roku; pojedynczy miesiąc to szum.
+- **Services in MRR** — implementations, training, one-off fees inflate MRR and understate churn. Outside MRR.
+- **An annual prepayment as one month's MRR** — 12,000 PLN paid in January is 1,000 PLN of MRR for 12 months.
+- **An average instead of cohorts** — an average churn mixes new customers (they leave more often) with old ones. Calculate
+  cohort retention curves by start month and acquisition channel.
+- **The churn denominator** — customers at the start of the period, without customers acquired during it (otherwise churn falls
+  artificially during fast growth).
+- **NRR with new customers** — that is already growth, not retention. NRR and GRR only on the cohort from the start of the period.
+- **NRR without GRR** — an NRR of 115% can hide a GRR of 75%: a few large customers grow, many small ones leave.
+- **CAC without full costs** — campaigns alone without sales salaries, commissions and tools understate CAC 2–3 times.
+- **Blended CAC as paid** — organic customers lower CAC; campaign budget decisions on the CAC of the paid channel.
+- **LTV from revenue, not from margin** — LTV calculated from revenue overstates the value by the cost of serving.
+- **LTV at a churn of 0.5% a month** — 200 months of customer life is fiction; limit the horizon.
+- **Mismatched periods** — CAC from a quarter with monthly churn and annual ARR; unify before comparing.
+- **Burn multiple from one month** — calculate over a quarter or a year; a single month is noise.

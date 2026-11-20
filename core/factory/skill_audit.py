@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-Audyt skilli: bezpieczeństwo (zwłaszcza skilli z obcych źródeł) i zalecenia Anthropic dla dobrych skilli.
-Bez modelu, bez sieci, tylko biblioteka standardowa — audyt czyta pliki, niczego nie uruchamia.
+Skill audit: security (especially of skills from foreign sources) and Anthropic's recommendations for good skills.
+No model, no network, standard library only — the audit reads files and runs nothing.
 
-  python3 .tf/factory/skill_audit.py <katalog-skilla | katalog-ze-skillami> [--json] [--strict]
+  python3 .tf/factory/skill_audit.py <skill-directory | directory-with-skills> [--json] [--strict]
 
-Kody wyjścia: 2 — są ustalenia wysokiej wagi (nie instaluj bez wyjaśnienia), 1 — średniej wagi (albo niskiej
-z --strict), 0 — brak. Audyt automatyczny NIE zastępuje przeczytania SKILL.md i każdego skryptu przez człowieka:
-wykrywa typowe wzorce, a nie każdą złośliwość.
+Exit codes: 2 — high-severity findings (do not install without an explanation), 1 — medium severity (or low
+with --strict), 0 — none. The automatic audit does NOT replace a human reading SKILL.md and every script:
+it detects typical patterns, not every malicious intent.
 
-Bezpieczeństwo (Anthropic: „Review all files bundled in the Skill … unexpected network calls, file access patterns,
-or operations that don't match the Skill's stated purpose”):
+Security (Anthropic: "Review all files bundled in the Skill … unexpected network calls, file access patterns,
+or operations that don't match the Skill's stated purpose"):
   high    prompt-injection, curl-pipe-shell, secret-access, network-undocumented, hidden-unicode
-  medium  dynamic-exec, broad-allowed-tools, shell-injection (!`…` uruchamiane przy wczytaniu), frontmatter-hooks,
-          missing-file (skill obiecuje plik, którego nie ma), long-base64, binary-file, name-invalid,
+  medium  dynamic-exec, broad-allowed-tools, shell-injection (!`…` run on load), frontmatter-hooks,
+          missing-file (the skill promises a file that does not exist), long-base64, binary-file, name-invalid,
           description-missing, description-too-long, xml-in-frontmatter
-  low     network (udokumentowana), description-no-when, no-examples, body-too-long, ref-no-toc, ref-nested, ref-ambiguous, pycache,
+  low     network (documented), description-no-when, no-examples, body-too-long, ref-no-toc, ref-nested, ref-ambiguous, pycache,
           windows-path, vague-name, suppressed
-Skrypt łączący się z siecią musi to deklarować w SKILL.md wprost: „Sieć: … (dokąd i co wysyła)”.
-Linia z komentarzem `audit-ok` jest pomijana, ale każde takie pominięcie trafia do raportu jako `suppressed` —
-w skillu z obcego źródła traktuj je jak czerwoną flagę.
+A script that connects to the network must declare it in SKILL.md explicitly: "Sieć: … (dokąd i co wysyła)" (Polish for "Network: … (where to and what it sends)").
+A line with an `audit-ok` comment is skipped, but every such skip goes into the report as `suppressed` —
+in a skill from a foreign source treat it as a red flag.
 """
 from __future__ import annotations
 
@@ -28,14 +28,14 @@ import re
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 TEXT_EXT = {".md", ".txt", ".py", ".sh", ".bash", ".js", ".mjs", ".cjs", ".ts", ".json", ".yaml", ".yml", ".toml",
@@ -71,7 +71,7 @@ WHEN_RE = re.compile(r"\b(użyj|używaj|gdy|kiedy|przy\s|use\s+(?:when|for|at|in
                      re.I)
 VAGUE_PARTS = {"helper", "helpers", "utils", "util", "tools", "tool", "misc", "stuff", "documents", "docs", "data",
                "files", "general", "common", "productivity", "assistant"}
-NETWORK_DOC_RE = re.compile(r"\b(sieć|network)\s*:", re.I)   # jawna deklaracja: „Sieć: skrypt łączy się z …”
+NETWORK_DOC_RE = re.compile(r"\b(sieć|network)\s*:", re.I)   # explicit declaration: "Sieć: skrypt łączy się z …" ("Network: the script connects to …")
 PATH_REF_RE = re.compile(r"(?<![\w/.-])((?:scripts|references|reference|templates|assets|examples)/[\w./-]+\.[A-Za-z0-9]+)")
 
 
@@ -92,7 +92,7 @@ def fm_value(fm: str, key: str) -> str | None:
 
 
 def scan_lines(rel: str, text: str, is_script: bool, out: list[dict], suppressed: list[dict]) -> bool:
-    """Zwraca True, gdy plik łączy się z siecią."""
+    """Returns True when the file connects to the network."""
     net = False
     in_fence = False
     for i, line in enumerate(text.splitlines(), 1):
@@ -132,7 +132,7 @@ def audit_skill(d: Path) -> dict:
     name = fm_value(fm, "name") or name_dir
     desc = fm_value(fm, "description")
 
-    # ── frontmatter (wymagania Anthropic) ──
+    # ── frontmatter (Anthropic requirements) ──
     if not re.fullmatch(r"[a-z0-9-]{1,64}", name) or re.search(r"anthropic|claude", name):
         findings.append(finding("medium", "name-invalid", "SKILL.md", 2,
                                 "name: up to 64 characters, lowercase letters, digits and hyphens, without the words \"anthropic\" and \"claude\""))
@@ -157,7 +157,7 @@ def audit_skill(d: Path) -> dict:
         findings.append(finding("medium", "frontmatter-hooks", "SKILL.md", 1,
                                 "the skill registers hooks — they run until the session ends; read their commands"))
 
-    # ── treść SKILL.md ──
+    # ── SKILL.md content ──
     for i, line in enumerate(body.splitlines(), fm_lines + 1):
         if re.match(r"^\s*!`|.*\s!`[^`]+`|^```!", line) and "audit-ok" not in line:
             findings.append(finding("medium", "shell-injection", "SKILL.md", i,
@@ -172,7 +172,7 @@ def audit_skill(d: Path) -> dict:
     if re.search(r"\b[\w.-]+\\[\w.-]+\.(py|md|sh|js|json)\b", body):
         findings.append(finding("low", "windows-path", "SKILL.md", 1, "path with a backslash — use \"/\""))
 
-    # ── wszystkie pliki skilla ──
+    # ── all files of the skill ──
     net_files = []
     all_md = body
     for p in sorted(d.rglob("*")):
@@ -198,7 +198,7 @@ def audit_skill(d: Path) -> dict:
         if p.suffix.lower() == ".md" and rel != "SKILL.md":
             all_md += "\n" + t
             lines = t.splitlines()
-            if len(lines) > 100 and not re.search(r"spis treści|table of contents|^## contents", "\n".join(lines[:15]), re.I):
+            if len(lines) > 100 and not re.search(r"spis treści|table of contents|^## contents|^> \*\*contents:\*\*", "\n".join(lines[:15]), re.I | re.M):
                 findings.append(finding("low", "ref-no-toc", rel, 1, "file > 100 lines without a table of contents at the top"))
             if rel.startswith(("references/", "reference/")):
                 for target in sorted(set(re.findall(r"(?<![\w/.-])((?:references?)/[\w./-]+\.md)", t))):

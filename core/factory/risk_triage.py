@@ -1,35 +1,35 @@
 #!/usr/bin/env python3
-"""Triaż ryzyka zmian (B1b): co w tej gałęzi musi zobaczyć człowiek.
+"""Change risk triage (B1b): what in this branch a human must see.
 
-  python3 .tf/factory/risk_triage.py                 # diff względem origin/main (albo main/master)
+  python3 .tf/factory/risk_triage.py                 # diff against origin/main (or main/master)
   python3 .tf/factory/risk_triage.py --base develop
-  python3 .tf/factory/risk_triage.py --md            # sekcja do opisu PR
+  python3 .tf/factory/risk_triage.py --md            # section for the PR description
   python3 .tf/factory/risk_triage.py --json
-  tf risk [opcje]
+  tf risk [options]
 
-Deterministycznie, bez modelu: zmienione pliki i linie diffu `base...HEAD` → poziom i lista z plikiem i powodem.
-- high: uwierzytelnianie i uprawnienia, płatności i rozliczenia, schemat i migracje bazy, wdrożenie i sekrety
-  (CI, IaC, Dockerfile, .env), osłabione testy (usunięte asercje, `skip`, usunięte pliki testów), zmienione
-  specyfikacje i kryteria akceptacji;
-- low: tylko dokumentacja albo tylko manifesty i lockfile'e zależności;
-- medium: reszta — zielone testy i przegląd niezależnego recenzenta; na liście także brakujące dowody
-  (nowy moduł bez ADR).
-Wynik jest doradczy (nie blokuje merge'a) — mówi, co człowiek musi przejrzeć. Reguły: `autonomy.triage`
-w `.tf/factory/config.yaml`, nadpisanie i nowe kategorie w `.tf/config/config.yaml`.
+Deterministic, no model: changed files and lines of the `base...HEAD` diff → a level and a list with the file and reason.
+- high: authentication and permissions, payments and billing, database schema and migrations, deployment and secrets
+  (CI, IaC, Dockerfile, .env), weakened tests (removed assertions, `skip`, removed test files), changed
+  specifications and acceptance criteria;
+- low: documentation only or dependency manifests and lockfiles only;
+- medium: the rest — green tests and an independent reviewer's review; the list also shows missing evidence
+  (a new module without an ADR).
+The result is advisory (does not block the merge) — it says what a human must review. Rules: `autonomy.triage`
+in `.tf/factory/config.yaml`, overrides and new categories in `.tf/config/config.yaml`.
 """
 from __future__ import annotations
 
 import os
 import sys
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 import argparse
 import copy
 import importlib.util
@@ -60,7 +60,7 @@ DEFAULT_RULES: dict = {
     "test_files": [r"(^|/)(tests?|__tests__|spec)/", r"(^|/)test_[^/]*\.py$", r"_test\.(py|go)$",
                    r"\.(test|spec)\.[cm]?[jt]sx?$", r"Tests?\.(java|kt|cs)$"],
     "assert_lines": r"\b(assert\w*|expect\s*\(|should\b|verify\s*\()",
-    # znacznik na początku linii kodu (dekorator, wywołanie) — nie napis z takim tekstem w danych testu
+    # a marker at the start of a code line (decorator, call) — not a string with such text in test data
     "skip_lines": r"^\s*(@pytest\.mark\.(skip|xfail)|pytest\.skip\(|@unittest\.skip|@Disabled|@Ignore|\[Fact\(Skip|"
                   r"t\.Skip\(|(it|describe|test)\.skip\(|x(it|describe|test)\()",
     "adr": [r"(^|/)(adr|ADR|decisions)/", r"(^|/)ADR-?\d+"],
@@ -92,11 +92,11 @@ def _merge(base: dict, over: dict) -> dict:
 
 
 def load_rules(repo: Path) -> dict:
-    """Reguły domyślne + `autonomy.triage` z silnika, nakładki firmowej (`org_defaults`), zespołu (`team_defaults`) i projektu."""
+    """Default rules + `autonomy.triage` from the engine, the company pack (`org_defaults`), the team (`team_defaults`) and the project."""
     rules = copy.deepcopy(DEFAULT_RULES)
     try:
-        layers = _packs().config_layers(repo)   # silnik ← firma ← zespół ← projekt ← osoba
-    except Exception:   # bez packs.py (np. sam skrypt) — tylko reguły domyślne
+        layers = _packs().config_layers(repo)   # engine ← company ← team ← project ← person
+    except Exception:   # without packs.py (e.g. the script alone) — default rules only
         return rules
     for _label, data in layers:
         over = ((data or {}).get("autonomy") or {}).get("triage") or {}
@@ -166,7 +166,7 @@ def triage(repo: Path, base: str | None = None, rules: dict | None = None) -> di
             if any(s_re.search(x) for x in added):
                 items.append({"level": "high", "category": "tests-weakened", "file": path,
                               "reason": "an added test skip"})
-    # D3: dowód — nowy katalog w kodzie (moduł) bez ADR w tej samej zmianie
+    # D3: evidence — a new directory in code (module) without an ADR in the same change
     base_dirs = {str(Path(p).parent) for p in _git(repo, "ls-tree", "-r", "--name-only", base).splitlines()}
     has_adr = any(_any(rules["adr"], p) for _, p in changed)
     if not has_adr:
@@ -218,7 +218,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(res, ensure_ascii=False, indent=1))
     else:
         print(to_markdown(res))
-    return 0   # doradczy: także przy high kod 0
+    return 0   # advisory: exit code 0 even for high
 
 
 if __name__ == "__main__":

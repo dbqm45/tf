@@ -15,6 +15,19 @@
       }
     },
     {
+      "id": "od-dlugu-do-rankingu-en",
+      "expect": "trigger",
+      "prompt": "We have a technical debt report for the message import module (8 findings). How do we choose from it what to refactor at all and in what order, before the agent starts changing code? Answer briefly.",
+      "checks": {
+        "all": [
+          ["kandydat|ranking|opcj", "candidates?", "option"],
+          ["git log -L|blame|intencj|świadom\\w* ogranicz|ADR", "intent\\w*", "deliberate (constraint|trade-?off|limitation)s?", "conscious\\w* (constraint|limitation|decision)s?"],
+          ["guard|osłon|right-siz|Transaction Script|zostaje", "stays? as is", "leave\\w* (it )?as is", "keep\\w* (it )?as is"]
+        ],
+        "none": ["zrefaktoruj cały moduł", "refactor the (whole|entire) module"]
+      }
+    },
+    {
       "id": "odwracalna-sciezka",
       "expect": "trigger",
       "prompt": "Chcemy wymienić warstwę zapisu do bazy w dużym module bez wielotygodniowej gałęzi i bez wstrzymywania wydań. Jaką odwracalną ścieżkę refaktoryzacji wybrać i jak ułożyć kolejność kroków, skoro wszystko zależy od wszystkiego? Odpowiedz zwięźle.",

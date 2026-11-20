@@ -1,55 +1,55 @@
 # Subresource Integrity
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/subresource-integrity.
+Source: frontendpatterns.dev/subresource-integrity.
 
-## Metadane
+## Metadata
 
-Kategoria: Security. Poziom: Advanced. Framework: Native web. Autor: Den Odell. Data aktualizacji:
-21 czerwca 2026.
+Category: Security. Level: Advanced. Framework: Native web. Author: Den Odell. Last updated:
+21 June 2026.
 
 ## TLDR
 
-Atrybut `integrity` na `<script>`/`<link>` weryfikuje kryptograficznie, że zasób z CDN nie został
-podmieniony — przeglądarka blokuje wykonanie, jeśli hash się nie zgadza.
+The `integrity` attribute on `<script>`/`<link>` cryptographically verifies that a resource from a CDN has not been
+tampered with — the browser blocks execution if the hash does not match.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Poprawki:** dyrektywa CSP `require-sri-for` nigdy nie weszła do przeglądarek (usunięta ze specyfikacji) — nie
-  polegaj na niej. Fallback przez `document.write` jest przestarzały (blokowany/ostrzegany, łamie CSP) —
-  wstrzykuj `<script>` przez DOM (`document.createElement('script')`).
-- SRI ma sens głównie dla zasobów z **cudzych** originów; własne bundlowane assety z hashem w nazwie pliku
-  chroni już proces wdrożenia. Import maps obsługują pole `integrity` dla modułów ES.
-- Przykładowe URL-e (`react@18.2.0` UMD) są ilustracją — nowoczesne aplikacje bundlują zależności zamiast ładować je z CDN.
+- **Corrections:** the CSP directive `require-sri-for` never made it into browsers (removed from the specification) — do not
+  rely on it. A fallback through `document.write` is deprecated (blocked/warned about, it breaks CSP) —
+  inject the `<script>` through the DOM (`document.createElement('script')`).
+- SRI makes sense mainly for resources from **other people's** origins; your own bundled assets with a hash in the file name
+  are already protected by the deployment process. Import maps support an `integrity` field for ES modules.
+- The example URLs (`react@18.2.0` UMD) are an illustration — modern applications bundle dependencies instead of loading them from a CDN.
 
 ## Problem
 
-Ładowanie skryptów z CDN wiąże się z permanentnym zaufaniem do dostawcy. Bez mechanizmu weryfikacji
-każdy plik wykonywany w przeglądarce może zawierać złośliwy kod w wyniku kompromitacji CDN, ataku
-man-in-the-middle, pomyłki konfiguracyjnej czy działań wewnętrznych. Zmanipulowany skrypt może
-czytać hasła prosto z pól formularza, wykradać tokeny sesji, wstrzykiwać koparkę kryptowalut albo
-po cichu przekierowywać użytkowników.
+Loading scripts from a CDN means permanent trust in the provider. Without a verification mechanism
+any file executed in the browser can contain malicious code as a result of a CDN compromise, a
+man-in-the-middle attack, a configuration mistake or insider actions. A tampered script can
+read passwords straight from form fields, steal session tokens, inject a cryptocurrency miner or
+silently redirect users.
 
-## Rozwiązanie
+## Solution
 
-Subresource Integrity (SRI) wykorzystuje kryptograficzną sumę kontrolną w atrybucie `integrity`
-tagów `<script>` i `<link>`. Przeglądarka porównuje hash pobranego zasobu z wartością oczekiwaną —
-niedopasowanie blokuje wykonanie. Wymaga `crossorigin="anonymous"` dla poprawnej obsługi CORS.
+Subresource Integrity (SRI) uses a cryptographic checksum in the `integrity` attribute
+of `<script>` and `<link>` tags. The browser compares the hash of the downloaded resource with the expected value —
+a mismatch blocks execution. It requires `crossorigin="anonymous"` for correct CORS handling.
 
-## Przykłady kodu
+## Code examples
 
-### Dodanie integrity do skryptu z CDN
+### Adding integrity to a script from a CDN
 
 ```html
-<!-- Skrypt zewnętrzny, przypięty do dokładnej wersji -->
+<!-- An external script, pinned to an exact version -->
 <script
   src="https://cdn.example.com/react@18.2.0/react.min.js"
   integrity="sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC"
   crossorigin="anonymous"
 ></script>
 
-<!-- Arkusz stylów zewnętrzny -->
+<!-- An external stylesheet -->
 <link
   rel="stylesheet"
   href="https://cdn.example.com/bootstrap@5.3.0/bootstrap.min.css"
@@ -58,19 +58,19 @@ niedopasowanie blokuje wykonanie. Wymaga `crossorigin="anonymous"` dla poprawnej
 />
 ```
 
-### Generowanie hasha
+### Generating the hash
 
 ```bash
-# Hash pliku lokalnego
+# Hash of a local file
 cat react.min.js | openssl dgst -sha384 -binary | openssl base64 -A
 # -> oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxy9rx7HNQlGYl1kPzQho1wx4JwY8wC
 
-# Hash bezpośrednio z CDN
+# Hash directly from the CDN
 curl -s https://cdn.example.com/react@18.2.0/react.min.js \
   | openssl dgst -sha384 -binary | openssl base64 -A
 ```
 
-### Automatyzacja SRI w buildzie — Vite/Rollup
+### Automating SRI in the build — Vite/Rollup
 
 ```javascript
 // vite.config.js
@@ -84,9 +84,9 @@ export default defineConfig({
 });
 ```
 
-Dla webpack — analogicznie `webpack-subresource-integrity`.
+For webpack — analogously `webpack-subresource-integrity`.
 
-### Fallback dla zasobów zablokowanych
+### A fallback for blocked resources
 
 ```html
 <script
@@ -95,7 +95,7 @@ Dla webpack — analogicznie `webpack-subresource-integrity`.
   crossorigin="anonymous"
 ></script>
 <script>
-  // Jeśli SRI zablokuje albo CDN jest niedostępny, window.jQuery będzie niezdefiniowany
+  // If SRI blocks it or the CDN is unavailable, window.jQuery will be undefined
   if (!window.jQuery) {
     const s = document.createElement('script');
     s.src = '/vendor/jquery-3.7.1.min.js'; // self-hosted fallback
@@ -104,7 +104,7 @@ Dla webpack — analogicznie `webpack-subresource-integrity`.
 </script>
 ```
 
-Dla arkuszy stylów — nasłuchiwanie zdarzenia `error`:
+For stylesheets — listening for the `error` event:
 
 ```javascript
 const link = document.querySelector('link[data-cdn]');
@@ -113,41 +113,41 @@ link.addEventListener('error', () => {
 });
 ```
 
-## Zalety
+## Advantages
 
-- Weryfikacja kryptograficzna każdego zasobu przed wykonaniem.
-- Automatyczne blokowanie skompromitowanych CDN i manipulacji w tranzycie.
-- Zmusza do przypinania dokładnych wersji, eliminując niespodziewane aktualizacje pod tym samym URL.
-- Deklaratywna ochrona — jeden atrybut, brak dodatkowych żądań sieciowych.
-- Automatyzacja dla zasobów własnych już w kroku budowania (build).
-- Komponuje się z self-hosted fallbackami.
+- Cryptographic verification of every resource before execution.
+- Automatic blocking of compromised CDNs and tampering in transit.
+- Forces pinning of exact versions, eliminating unexpected updates under the same URL.
+- Declarative protection — one attribute, no extra network requests.
+- Automation for your own resources already in the build step.
+- Composes with self-hosted fallbacks.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Każda zmiana w pliku wymaga regeneracji hasha — utrudnia rutynowe aktualizacje CDN.
-- Niemożliwe użycie z mutowalnymi URL-ami (np. „latest”) — plik się zmienia, hash zawsze się nie
-  zgadza.
-- Konieczność śledzenia i synchronizacji każdego hasha z bumpami wersji zależności.
-- Wymóg poprawnej obsługi CORS przez CDN — bez odpowiednich nagłówków weryfikacja jest niemożliwa.
-- Wszystko albo nic — zablokowany zasób krytyczny przerywa działanie strony bez fallbacku, jeśli
-  go nie przygotujesz.
-- Nie nadaje się do szybko rotujących zasobów (analityka, reklamy).
-- Aktualizacja biblioteki staje się świadomym, ręcznym krokiem, nie pasywnym pobraniem.
-- Błędy failują milcząco z perspektywy użytkownika — wymaga monitoringu, żeby to zauważyć.
-- Chroni integralność zasobu, nie jego dostępność czy prywatność.
+- Every change to a file requires regenerating the hash — it makes routine CDN updates harder.
+- Impossible to use with mutable URLs (e.g. "latest") — the file changes, the hash never
+  matches.
+- The need to track and synchronize every hash with dependency version bumps.
+- Requires correct CORS handling by the CDN — without the right headers verification is impossible.
+- All or nothing — a blocked critical resource breaks the page without a fallback if
+  you do not prepare one.
+- Not suitable for rapidly rotating resources (analytics, ads).
+- Updating a library becomes a deliberate, manual step, not a passive download.
+- Errors fail silently from the user's perspective — monitoring is needed to notice them.
+- It protects the resource's integrity, not its availability or privacy.
 
-## Powiązane wzorce
+## Related patterns
 
 - Content Security Policy (CSP) — Security (`content-security-policy.md`)
 - Trusted Types — Security (`trusted-types.md`)
-- Zewnętrzne: [Subresource Integrity — MDN](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity),
+- External: [Subresource Integrity — MDN](https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity),
   [SRI Hash Generator](https://www.srihash.org/), [CDN Security — web.dev](https://web.dev/codelab-sri/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Dodaj `integrity` **zawsze**, gdy ładujesz skrypt/styl z zewnętrznego CDN pod konkretną, przypiętą
-wersją (`react@18.2.0`, nie `react@latest`) — koszt jest jednorazowy (wygenerowanie hasha), a
-ochrona realna. **Nie** stosuj SRI do zasobów, które z natury muszą się zmieniać bez Twojej
-kontroli (tagi analityczne, sieci reklamowe, „latest” CDN linki) — tam hash i tak będzie się
-rozjeżdżał, a jedyną sensowną obroną jest CSP + izolacja (patrz `content-security-policy.md`), nie
+Add `integrity` **always** when you load a script/style from an external CDN under a specific, pinned
+version (`react@18.2.0`, not `react@latest`) — the cost is one-off (generating the hash), and the
+protection is real. Do **not** apply SRI to resources that by nature must change without your
+control (analytics tags, ad networks, "latest" CDN links) — there the hash will drift
+anyway, and the only sensible defence is CSP + isolation (see `content-security-policy.md`), not
 SRI.

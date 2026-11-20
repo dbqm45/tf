@@ -1,18 +1,18 @@
-# Jakość danych zdarzeń
+# Event data quality
 
-## Rozjazd analityki z bazą — sprawdzaj po kolei
-1. **Definicja** — czy liczysz to samo: konta testowe, konta usunięte, rejestracje przez API lub import, zaproszeni
-   użytkownicy.
-2. **Strefa czasowa i okno** — narzędzie w UTC lub strefie projektu, baza w innej; granice miesiąca przesunięte.
-3. **Źródło zdarzenia** — zdarzenie z klienta: blokery reklam, brak zgody, zamknięcie karty przed wysłaniem,
-   aplikacja mobilna bez sieci. Typowo kilka do kilkunastu procent mniej niż w bazie.
-4. **Tożsamość** — duplikaty po złym `identify` (jedna osoba jako dwie), scalenie dwóch osób w jedną po wspólnym
-   urządzeniu.
-5. **Ruch nieludzki** — boty i testy automatyczne zawyżają zdarzenia z klienta.
-6. **Opóźnienie** — dane z ostatnich godzin lub dni jeszcze nie dotarły (kolejki, przetwarzanie wsadowe).
-Wynik: tabela przyczyna → szacowany wpływ → jak sprawdzić → poprawka. Kluczowe fakty biznesowe przenieś na serwer.
+## A mismatch between analytics and the database — check in order
+1. **Definition** — are you counting the same thing: test accounts, deleted accounts, signups through the API or an import, invited
+   users.
+2. **Time zone and window** — the tool in UTC or the project's zone, the database in another; month boundaries shifted.
+3. **Event source** — a client event: ad blockers, no consent, the tab closed before sending,
+   a mobile app without network. Typically a few to a dozen or so percent lower than in the database.
+4. **Identity** — duplicates after a wrong `identify` (one person as two), two people merged into one after a shared
+   device.
+5. **Non-human traffic** — bots and automated tests inflate client events.
+6. **Delay** — data from the last hours or days has not arrived yet (queues, batch processing).
+Result: a table of cause → estimated impact → how to check → fix. Move the key business facts to the server.
 
-## Testy instrumentacji
-- Test e2e lub integracyjny przechwytuje wysłane zdarzenia i sprawdza nazwę i właściwości wg planu.
-- Walidacja schematu (narzędzie albo własna) odrzuca lub oznacza zdarzenia spoza planu.
-- Codzienny raport: liczba kluczowych zdarzeń wobec bazy, alert przy odchyleniu ponad ustalony próg.
+## Instrumentation tests
+- An e2e or integration test captures the events sent and checks the name and properties against the plan.
+- Schema validation (a tool or your own) rejects or flags events outside the plan.
+- A daily report: the number of key events against the database, an alert on a deviation above a set threshold.

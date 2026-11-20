@@ -1,74 +1,74 @@
-# Event Storming prowadzony przez agenta — fazy i protokół tury
+# Event Storming run by the agent — phases and the turn protocol
 
-Agent jest facylitatorem i skrybą, a wiedzę o domenie i decyzje dają ludzie. Czytasz **tylko kartę bieżącej fazy**:
-mniej reguł naraz to mniej pomyłek, gdy tablica rośnie. Tablicę prowadzi skrypt (zero tokenów):
-`python3 .claude/skills/ddd-event-storming/scripts/es_board.py <polecenie> --id <id-sesji>`.
+The agent is the facilitator and scribe, while people provide the domain knowledge and decisions. You read **only the card of the current phase**:
+fewer rules at once means fewer mistakes as the board grows. The board is kept by a script (zero tokens):
+`python3 .claude/skills/ddd-event-storming/scripts/es_board.py <command> --id <session-id>`.
 
-## Protokół tury (każda Twoja odpowiedź w trakcie sesji)
-1. **Zapisz to, co powiedział człowiek**: `add`, `edit`, `move`, `resolve`. Jego słowami, bez upiększania.
-2. **Zrób jeden ruch:** jedno pytanie albo jedną małą propozycję. Nie wykładasz teorii i nie rozwiązujesz modelu
-   za ludzi. Pytasz tak, żeby wydobyć wiedzę („co musiało się stać wcześniej?”, „kto o tym decyduje?”).
-3. **Własną propozycję oznacz `[propozycja]`** i dodaj ją do tablicy dopiero po zgodzie człowieka.
-   Fakt biznesowy, którego nikt nie potwierdził, zapisujesz jako hot spot, a nie jako kartkę.
-4. **Brak wiedzy domenowej:** zapytaj eksperta domeny, czyli wykonawcę tylko do odczytu (np. analityk domeny
-   persony, `specialist` ze skillami dziedzinowymi). Jego odpowiedź to propozycja dla ludzi, nie fakt na tablicy.
-5. **Co kilka tur pokaż stan:** `show` (krótko: co doszło, czego brakuje), a nie całą tablicę po każdym zdaniu.
+## Turn protocol (each of your replies during the session)
+1. **Write down what the human said**: `add`, `edit`, `move`, `resolve`. In their words, without embellishing.
+2. **Make one move:** one question or one small proposal. You do not lecture on theory and do not solve the model
+   for people. You ask so as to draw out knowledge ("what must have happened earlier?", "who decides about this?").
+3. **Mark your own proposal `[proposal]`** and add it to the board only after the human's consent.
+   A business fact that no one has confirmed you write down as a hot spot, not as a note.
+4. **Missing domain knowledge:** ask a domain expert, i.e. a read-only implementer (e.g. the persona's domain analyst,
+   `specialist` with domain skills). Their answer is a proposal for the people, not a fact on the board.
+5. **Every few turns show the state:** `show` (briefly: what was added, what is missing), not the whole board after every sentence.
 
-## Faza 1 — kontekst sesji
-- **Cel:** jedno pytanie sesji, zakres (co poza), format (Big Picture, Process, Design), aktorzy i systemy.
-- **Kartki:** `actor`, `system`, `hotspot`, `opportunity`.
-- **Ruchy:** „Na jakie pytanie ma odpowiedzieć ta sesja?”, „Gdzie zaczyna się i kończy ten proces?”.
-  Kontekst domeny (słownik, `docs/project/02-domain/`) czytasz raz, na starcie.
-- **Wyjście:** pytanie sesji i granice są zapisane (`init --question`), człowiek potwierdza zakres.
+## Phase 1 — session context
+- **Goal:** one session question, the scope (what is outside), the format (Big Picture, Process, Design), actors and systems.
+- **Notes:** `actor`, `system`, `hotspot`, `opportunity`.
+- **Moves:** "What question should this session answer?", "Where does this process start and end?".
+  You read the domain context (the glossary, `docs/project/02-domain/`) once, at the start.
+- **Exit:** the session question and the boundaries are recorded (`init --question`), the human confirms the scope.
 
-## Faza 2 — zdarzenia
-- **Cel:** jak najwięcej zdarzeń domenowych na osi czasu.
-- **Kartki:** dochodzi `event` (`--pivotal` dla zdarzeń przełomowych).
-- **Ruchy:** „Wypiszcie 10–20 rzeczy, które się dzieją, w czasie przeszłym”. Potem porządkowanie osi (`move`),
-  synonimy jako sygnał dla słownika i zdarzenia przełomowe. Na koniec opowieść od lewej do prawej i od końca.
-- **Typowe błędy:** zdarzenie w trybie rozkazującym („Wyślij paczkę” to komenda), zdarzenie techniczne zamiast
-  biznesowego („Rekord zapisany”), wczesna dyskusja o rozwiązaniach.
-- **Wyjście:** oś bez oczywistych luk, zdarzenia przełomowe zaznaczone, hot spoty zapisane, a człowiek mówi „dalej”.
+## Phase 2 — events
+- **Goal:** as many domain events on the timeline as possible.
+- **Notes:** `event` is added (`--pivotal` for pivotal events).
+- **Moves:** "List 10–20 things that happen, in the past tense". Then ordering the timeline (`move`),
+  synonyms as a signal for the glossary, and pivotal events. Finally a narrative from left to right and from the end.
+- **Typical errors:** an event in the imperative mood ("Send the parcel" is a command), a technical event instead of
+  a business one ("Record saved"), an early discussion about solutions.
+- **Exit:** a timeline without obvious gaps, pivotal events marked, hot spots recorded, and the human says "next".
 
-## Faza 3 — komendy i polityki
-- **Cel:** co wywołuje każde zdarzenie i co dzieje się automatycznie potem.
-- **Kartki:** dochodzą `command` (`--causes`, `--actor`), `policy` (`--on`, `--issues`), `readmodel` (`--for`);
-  zdarzenie z zewnątrz: `edit E --by S`.
-- **Ruchy:** przy każdym zdarzeniu „co je spowodowało?”, „co aktor musiał wiedzieć?”, „co potem dzieje się
-  samo?”. Ścieżki błędów i odrzuceń też są zdarzeniami.
-- **Kontrola:** `check` → zdarzenie bez wyzwalacza, komenda bez zdarzenia, polityka bez „kiedy/wtedy”.
-  Luka to pytanie do ludzi albo hot spot. Nie uzupełniasz jej sam.
-- **Wyjście:** `check` bez luk albo luki zamienione w hot spoty; człowiek akceptuje.
+## Phase 3 — commands and policies
+- **Goal:** what triggers each event and what happens automatically afterwards.
+- **Notes:** `command` (`--causes`, `--actor`), `policy` (`--on`, `--issues`), `readmodel` (`--for`) are added;
+  an event from outside: `edit E --by S`.
+- **Moves:** for each event "what caused it?", "what did the actor need to know?", "what happens
+  on its own afterwards?". Error and rejection paths are events too.
+- **Check:** `check` → an event without a trigger, a command without an event, a policy without "when/then".
+  A gap is a question for the people or a hot spot. You do not fill it yourself.
+- **Exit:** `check` without gaps or the gaps turned into hot spots; the human accepts.
 
-## Faza 4 — agregaty
-- **Cel:** która część systemu pilnuje reguł przy każdej komendzie (granica spójności).
-- **Kartki:** dochodzi `aggregate` (`--handles`). Komenda do systemu zewnętrznego: `edit C --to S`.
-- **Ruchy:** „jaka reguła może odrzucić tę komendę?”, „co musi być spójne natychmiast, a co może dojść później
-  zdarzeniem?”. Nazwy biorą się z komend i zdarzeń, nie z tabel w bazie.
-- **Zasady (ddd-tactical-design):** małe agregaty; inne agregaty wskazuje się tylko przez identyfikator; reakcje
-  między agregatami idą przez zdarzenia. `check` ostrzega przy agregacie z więcej niż 7 komendami.
-- **Bramka człowieka (obowiązkowa):** w późnych krokach błędy modelu się kumulują, więc agregaty zatwierdza
-  człowiek. Wcześniej przegląd w świeżym kontekście: `specialist` z ddd-tactical-design dostaje `board.md`
-  i odpowiada, które agregaty są za duże, za małe albo źle nazwane.
-- **Wyjście:** `check` bez luk, przegląd omówiony, zgoda człowieka.
+## Phase 4 — aggregates
+- **Goal:** which part of the system guards the rules for each command (the consistency boundary).
+- **Notes:** `aggregate` is added (`--handles`). A command to an external system: `edit C --to S`.
+- **Moves:** "what rule can reject this command?", "what must be consistent immediately, and what may arrive later
+  by an event?". Names come from commands and events, not from database tables.
+- **Rules (ddd-tactical-design):** small aggregates; other aggregates are referenced only by identifier; reactions
+  between aggregates go through events. `check` warns about an aggregate with more than 7 commands.
+- **Human gate (mandatory):** in late steps model errors accumulate, so the aggregates are approved by
+  the human. Before that, a review in a fresh context: `specialist` with ddd-tactical-design gets `board.md`
+  and answers which aggregates are too large, too small or badly named.
+- **Exit:** `check` without gaps, the review discussed, the human's consent.
 
-## Faza 5 — konteksty i mapa
-- **Cel:** konteksty ograniczone, ich typ subdomeny i relacje między nimi.
-- **Kartki:** dochodzą `context` (`--contains`, `--kind core|supporting|generic`) i `link` (`--from`, `--to`,
-  `--pattern`).
-- **Ruchy:** granice szukasz przy zdarzeniach przełomowych, zmianie języka i zmianie właściciela. Przy każdej
-  strzałce pytasz, kto jest upstream, czy potrzebna jest warstwa ochronna (ACL) i jaki jest format wiadomości.
-  Wzorce opisuje ddd-context-mapping.
-- **Typ subdomeny ustala wysiłek:** core to najlepsi ludzie i pełne DDD; supporting to prościej; generic to kupić
-  lub zintegrować przez ACL.
-- **Typowe błędy:** granice z organigramu zamiast z języka i odpowiedzialności, jeden „uniwersalny” model tego
-  samego pojęcia w kilku kontekstach, shared kernel bez potrzeby.
-- **Bramka człowieka (obowiązkowa):** mapa kontekstów to decyzja trudna do odwrócenia, więc zapisz ją jako ADR.
-  Przegląd w świeżym kontekście robi `architect` albo `specialist` z ddd-strategic-analysis i ddd-context-mapping.
-- **Wyjście:** `check` bez luk, mapa zatwierdzona.
+## Phase 5 — contexts and map
+- **Goal:** bounded contexts, their subdomain type and the relations between them.
+- **Notes:** `context` (`--contains`, `--kind core|supporting|generic`) and `link` (`--from`, `--to`,
+  `--pattern`) are added.
+- **Moves:** you look for boundaries at pivotal events, a change of language and a change of owner. At every
+  arrow you ask who is upstream, whether a protective layer (ACL) is needed and what the message format is.
+  The patterns are described by ddd-context-mapping.
+- **The subdomain type sets the effort:** core means the best people and full DDD; supporting is simpler; generic means buy
+  or integrate through an ACL.
+- **Typical errors:** boundaries from the org chart instead of from language and responsibility, one "universal" model of the
+  same concept in several contexts, a shared kernel without need.
+- **Human gate (mandatory):** the context map is a decision that is hard to reverse, so record it as an ADR.
+  The review in a fresh context is done by `architect` or `specialist` with ddd-strategic-analysis and ddd-context-mapping.
+- **Exit:** `check` without gaps, the map approved.
 
-## Po sesji
-- `show` zapisuje `board.md` obok dziennika. Słownik uzupełniasz w `docs/project/02-domain/glossary.md`,
-  a decyzje w dzienniku projektu (core-project-record).
-- Otwarte hot spoty to zadania z właścicielem pytania. Sesja to punkt startu, nie ostateczny model: granice
-  sprawdza dopiero dostarczanie kodu.
+## After the session
+- `show` writes `board.md` next to the log. You update the glossary in `docs/project/02-domain/glossary.md`,
+  and decisions in the project record (core-project-record).
+- Open hot spots are tasks with the owner of the question. The session is a starting point, not the final model: the boundaries
+  are tested only by delivering code.

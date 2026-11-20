@@ -14,6 +14,18 @@
       }
     },
     {
+      "id": "retro-etapu-en",
+      "expect": "trigger",
+      "prompt": "We finished a stage. The agents corrected their own commits several times, and the frontend executor reported too low a tier twice. Do a retrospective of the agents' work and propose what to change in the factory. Answer briefly.",
+      "checks": {
+        "all": [
+          ["dow[oó]d|E-\\d|log|dziennik|usage", "evidence|E-\\d|log|journal|usage"],
+          ["lekcj|lessons|CLAUDE\\.md|reguł", "lessons?|CLAUDE\\.md|rules?"],
+          ["tier|model|sonnet|opus|eskal", "escalat\\w*"]
+        ]
+      }
+    },
+    {
       "id": "ten-sam-blad",
       "expect": "trigger",
       "prompt": "Agent drugi raz z rzędu zapomniał uruchomić testy przed commitem. Przejrzyj, co poszło źle w ostatnich sesjach agentów, i zaproponuj, jak temu zapobiec na stałe. Odpowiedz zwięźle.",

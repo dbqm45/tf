@@ -20,6 +20,25 @@
       }
     },
     {
+      "id": "etapy-zaleznosci-en",
+      "expect": "trigger",
+      "prompt": "In the requirements we have: 'the assembly stage depends on completion of the delivery and the design, several stages may run in parallel, and we pay a penalty for delay'. Is this a known algorithmic problem and how do we map it? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "topologiczn|topological"
+          ],
+          [
+            "ścieżk\\w+ krytyczn|critical path|cpm"
+          ],
+          [
+            "cykl|zasob|niejawn",
+            "cycle|resourc\\w*|implicit|hidden"
+          ]
+        ]
+      }
+    },
+    {
       "id": "dobor-projektow",
       "expect": "trigger",
       "prompt": "Biznes mówi: 'dobierz projekty do ludzi tak, żeby zmieścić się w budżecie, godzinach i kompetencjach, i maksymalizować zysk'. Jaki to klasyczny problem i czy pisać własny algorytm? Odpowiedz zwięźle.",

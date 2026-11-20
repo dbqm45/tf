@@ -96,6 +96,18 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
 .rcap.bad{border-left-color:var(--bad);background:var(--bad-bg)}
 .striplbl{font-size:10.5px;color:var(--muted);margin-right:2px}
 .rcap b{color:var(--text);font-weight:500}
+.vis{margin:0 0 14px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel2)}
+.vis h4{margin:0 0 6px}
+.vis .strip{margin:4px 0 8px}
+.vis .why{color:var(--muted);font-size:12px}
+.vgrid{display:flex;flex-direction:column;gap:10px}
+.vrow{border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.vrow.bad{border-color:var(--bad);background:var(--bad-bg)}
+.vrow .vh{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:5px;display:flex;gap:8px;flex-wrap:wrap}
+.vpair{display:flex;gap:8px;flex-wrap:wrap}
+.vpair figure{margin:0}
+.vpair figcaption{font-size:10.5px;color:var(--dim);margin-bottom:2px}
+.vpair img{display:block;max-width:240px;width:100%;height:auto;border:1px solid var(--line);border-radius:4px;background:#fff}
 .plusrow{display:flex;gap:4px;margin:0 0 8px}
 .plusrow .chip{padding:2px 8px;font-size:10.5px;color:var(--accent);border:1px dashed var(--accent)}
 .why{font-size:12px;margin:2px 0 8px}
@@ -106,7 +118,7 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
 .meta1 .eff.e-low{color:var(--muted)}
 .meta1 .eff.e-medium{color:var(--warn)}
 .meta1 .eff.e-high{color:var(--bad)}
-.meta1 .cost,.meta1 .min{cursor:help}
+.meta1 .cost,.meta1 .min,.meta1 .tok{cursor:help}
 .meta2{display:flex;gap:12px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}
 .meta2 span{cursor:help}
 .meta2 .r{color:var(--warn)}
@@ -214,6 +226,8 @@ const RUNS = /*RUNS_JSON*/[];
 /* ===== POMOCNICZE ===== */
 const $ = (s, r=document) => r.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtTok = n => n >= 1e6 ? (n/1e6).toFixed(n >= 1e7 ? 0 : 1) + "M" : n >= 1e3 ? Math.round(n/1e3) + "k" : String(n);
+const fmtMin = m => m >= 60 ? Math.floor(m/60) + "h " + (m % 60) + "m" : m + "m";
 let sel = null, curFile = null;
 const MARK = {pass:"✓", fail:"✗", run:"…", todo:"○"};
 const CLS  = {pass:"done", fail:"fail", run:"cur", todo:"todo"};
@@ -228,6 +242,27 @@ function sliceStrip(r){
   }).join("") + `</div>`;
 }
 const filesFor = r => r.files;
+
+/* the visual check: only relative paths inside the runs directory (no "..", no scheme, no leading slash) */
+const safeRel = p => typeof p === "string" && p !== "" && !/(^|[\\/])\.\.([\\/]|$)/.test(p) && !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(p) && !/^[\\/]/.test(p);
+function shot(label, p){
+  if (!safeRel(p)) return `<figure><figcaption>${esc(label)}</figcaption><span class="why">none</span></figure>`;
+  const u = encodeURI(p);
+  return `<figure><figcaption>${esc(label)}</figcaption><a href="${esc(u)}" target="_blank" rel="noopener"><img loading="lazy" src="${esc(u)}" alt="${esc(label)}"></a></figure>`;
+}
+function visualHtml(r){
+  const v = r.visual; if (!v) return "";
+  if (v.state !== "done") return `<div class="vis"><h4>Visual check</h4><span class="why">${v.state==="skipped"?"skipped: "+esc(v.reason||""):"not applicable: the change does not touch the user interface"}</span></div>`;
+  const c = v.counts || {};
+  const chips = [["identical", c.identical, "done"], ["changed", c.changed, c.changed ? "cur" : "todo"],
+                 ["only before", c["only before"], c["only before"] ? "stale" : "todo"], ["only after", c["only after"], c["only after"] ? "stale" : "todo"],
+                 ["matches", v.matches, "done"], ["mismatches", v.mismatches, v.mismatches ? "fail" : "todo"]]
+    .map(([l, n, cls]) => `<span class="chip ${cls}" title="${esc(l)}: ${esc(n||0)}">${esc(l)} ${esc(n||0)}</span>`).join("");
+  const rows = (v.items || []).map(i => `<div class="vrow ${i.verdict==="does not match"?"bad":""}">
+      <div class="vh"><span>${esc(i.route)}</span><span>${esc(i.viewport)}</span><span>${esc(i.status)}</span><span>${esc(i.verdict)}</span></div>
+      <div class="vpair">${shot("before", i.before)}${shot("after", i.after)}</div></div>`).join("");
+  return `<div class="vis"><h4>Visual check</h4><div class="strip">${chips}</div>${v.checked===false?`<div class="why">screens/check.md is missing: the screenshots were not compared with the criteria.</div>`:""}<div class="vgrid">${rows}</div></div>`;
+}
 
 /* ===== RENDER ===== */
 const STATE_PL = {pass:"passed", run:"in progress", fail:"failed", todo:"not run yet"};
@@ -263,7 +298,7 @@ function card(r){
     <div class="title">${esc(r.title)}</div>
     ${refs.length?`<div class="refs">${refs.map(x=>`<span>${esc(x)}</span>`).join("")}</div>`:""}
     ${sliceStrip(r)}${rowsHtml(r)}${why}
-    <div class="meta1">${r.effort?`<span class="eff e-${["low","medium"].includes(r.effort)?r.effort:"high"}" title="The session model's effort: grey = low, yellow = medium, red = high or higher">${esc(r.effort)}</span>`:""}${r.cost==null?"":`<span class="cost" title="An estimate from the API price list, not an invoice">$${r.cost.toFixed(2)}</span><span class="min" title="Czas od startu przebiegu">${r.min}m</span>`}</div>
+    <div class="meta1">${r.effort?`<span class="eff e-${["low","medium"].includes(r.effort)?r.effort:"high"}" title="The session model's effort: grey = low, yellow = medium, red = high or higher">${esc(r.effort)}</span>`:""}${r.cost==null?"":`<span class="cost" title="An estimate from the API price list, not an invoice">$${r.cost.toFixed(2)}</span><span class="min" title="Time from the start of the run to the model's last answer">${fmtMin(r.min||0)}</span>${r.tokens?`<span class="tok" title="${esc(`Tokens: input ${r.tokens.input}, output ${r.tokens.output}, cache read ${r.tokens.cache_read}, cache write ${r.tokens.cache_write}`)}">${fmtTok(r.tokens.total)} tok</span>`:""}`}</div>
     <div class="meta2">${r.slices.length?`<span title="The plan's slices already committed">slices ${done}/${r.slices.length}</span>`:""}${r.parked?`<span class="r" title="Items from parked.md: edge cases and ideas outside the criteria. They wait for your decision.">postponed ${r.parked}</span>`:""}${r.auto===true?'<span title="A plan without waiting for the human\'s acceptance">--auto</span>':""}</div>
     ${hint?`<div class="hint">${esc(hint)}</div>`:""}
   </button>`;
@@ -298,7 +333,9 @@ function renderBoard(){
   const active = RUNS.filter(r => r.stage!=="done" && r.stage!=="needs").length;
   const wait = RUNS.filter(r => r.stage==="needs" || (r.waiting||[]).length).length;
   const total = RUNS.reduce((s,r)=>s+(r.cost||0),0);
-  $("#summary").textContent = `${active} in progress · ${wait} waiting for you · $${total.toFixed(2)} API equivalent`;
+  const toks = RUNS.reduce((s,r)=>s+((r.tokens||{}).total||0),0);
+  $("#summary").textContent = `${active} in progress · ${wait} waiting for you · $${total.toFixed(2)} API equivalent`
+    + (toks ? ` · ${fmtTok(toks)} tokens` : "");
 }
 
 /* panel */
@@ -306,7 +343,9 @@ function openRun(slug){
   const r = RUNS.find(x=>x.slug===slug); if(!r) return;
   sel = slug; renderBoard();
   $("#dTitle").textContent = r.title;
-  $("#dMeta").innerHTML = [runDir(r), r.dir && r.taskDir ? "task: " + r.taskDir : null, r.dir ? "branch: story/" + r.slug : null, "models: " + ((r.models||[]).join(", ")||"—")].filter(Boolean).map(x => `<div>${esc(x)}</div>`).join("");
+  $("#dMeta").innerHTML = [runDir(r), r.dir && r.taskDir ? "task: " + r.taskDir : null, r.dir ? "branch: story/" + r.slug : null, "models: " + ((r.models||[]).join(", ")||"—"),
+    r.tokens ? `tokens: ${r.tokens.total.toLocaleString("en")} (input ${r.tokens.input.toLocaleString("en")}, output ${r.tokens.output.toLocaleString("en")}, cache read ${r.tokens.cache_read.toLocaleString("en")}, cache write ${r.tokens.cache_write.toLocaleString("en")})` : null,
+    r.min != null ? "time: " + fmtMin(r.min) : null].filter(Boolean).map(x => `<div>${esc(x)}</div>`).join("");
   window.__files = filesFor(r); window.__run = r;
   curFile = (r.stage==="needs"&&r.needs==="stop" && window.__files.some(g=>g.items.some(i=>i.name==="STOP"))) ? "STOP" : window.__files[0].items[0].name;
   renderFiles();
@@ -321,7 +360,7 @@ function renderFiles(){
   let next = "";
   if (r.stage==="needs"&&r.needs==="stop") next = `<div class="nextbox stop">${r.stopNeed?`<b>What is needed:</b> ${esc(r.stopNeed)}<br>`:""}${r.stopQuestion?`<b>Question:</b> ${esc(r.stopQuestion)}<br>${(r.stopOptions||[]).map((o,i)=>`${i+1}. ${esc(o.opcja)} — ${esc(o.skutek)}${o.rekomendowana?" (recommended)":""}`).join("<br>")}<br>`:""}<b>What next:</b> answer in the session; the factory will resume from ${esc(r.cur?r.cur.k:"the place where it stopped")}.<span class="cmd">claude --agent tf  →  "resume ${esc(runDir(r))}"</span></div>`;
   if (r.stage==="needs"&&r.needs==="plan") next = `<div class="nextbox"><b>What next:</b> read the plan and accept it or raise remarks in the conversation. Without acceptance it will not move to the code.</div>`;
-  $("#content").innerHTML = next + `<h4>${esc(it.name)}</h4><pre></pre>`;
+  $("#content").innerHTML = next + visualHtml(r) + `<h4>${esc(it.name)}</h4><pre></pre>`;
   $("#content pre").textContent = it.text;
 }
 function closeDrawer(){ sel=null; renderBoard(); $("#drawer").classList.remove("open"); $("#drawer").setAttribute("aria-hidden","true"); $("#scrim").classList.remove("on"); }

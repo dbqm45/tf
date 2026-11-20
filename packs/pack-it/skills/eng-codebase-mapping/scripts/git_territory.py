@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
 """
-Terytorium kodu z historii gita — co się zmienia, co zmienia się razem, kto zmieniał, gdzie są hotspoty.
+Code territory from git history — what changes, what changes together, who changed it, where the hotspots are.
 
-  python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py                    # 12 mies., top 10
-  python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --all --depth 3     # wszystkie sekcje
+  python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py                    # 12 months, top 10
+  python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --all --depth 3     # all sections
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --cochange --max-files 30 --json
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --authors src/billing
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --hotspots --top 20
   python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --bus-factor --since 24.months
 
-Sekcje:
-- zawsze: ranking katalogów (na głębokości --depth) i plików wg liczby commitów; pliki, których już nie ma
-  w `git ls-files`, oznaczone jako usunięte (historia mówi o przeszłości);
-- --by-quarter: ranking katalogów per kwartał (stałe centrum vs kampania zmian);
-- --cochange: pary katalogów i plików zmieniane w tych samych commitach (commity > --max-files plików pominięte,
-  bo masowy refaktor skleja niezwiązane pliki) oraz huby — pliki zmieniane razem z wieloma obszarami;
-- --authors <ścieżka>: kontrybutorzy obszaru bez botów i bez commitów, których autorem jest agent AI
-  (commit człowieka z trailerem Co-Authored-By agenta zostaje); wypisuje tylko nazwę autora, bez e-maili;
-- --hotspots: zmiany × linie niepuste (proxy złożoności) dla bieżących plików, plus maks. głębokość wcięć;
-- --bus-factor: ryzyko „jednej osoby” per katalog (głębokość --depth, obszary z ≥ --min-commits commitami ludzi):
-  bus factor = najmniej osób, które razem mają ponad 50% commitów obszaru; aktywni = osoby z commitem w obszarze
-  w ostatnich --active-days dniach przed datą HEAD. Ryzyko: krytyczne (nikt aktywny), wysokie (bus factor 1),
-  umiarkowane (2), niskie (≥ 3). Bez botów i agentów AI, tylko nazwy autorów; nie wchodzi do --all.
-Szum odfiltrowany domyślnie: lockfile'e, snapshoty, dist/build, pliki generowane i zminifikowane, tłumaczenia,
-.env*. Własne wzorce: --exclude <regex> (wiele razy). Commity botów (dependabot, renovate, github-actions, „[bot]”)
-nie wchodzą do żadnej sekcji; commity agentów AI wchodzą do terytorium, ale nie do listy kontrybutorów.
+Sections:
+- always: a ranking of directories (at --depth) and files by commit count; files no longer in `git ls-files`
+  are marked as removed (history speaks of the past);
+- --by-quarter: a ranking of directories per quarter (a steady core vs a campaign of changes);
+- --cochange: pairs of directories and files changed in the same commits (commits > --max-files files are skipped,
+  because a mass refactor glues unrelated files together) and hubs — files changed together with many areas;
+- --authors <path>: contributors of an area without bots and without commits authored by an AI agent
+  (a human commit with an agent's Co-Authored-By trailer stays); prints only the author name, no e-mails;
+- --hotspots: changes × non-blank lines (a complexity proxy) for current files, plus max. indentation depth;
+- --bus-factor: "single person" risk per directory (at --depth, areas with ≥ --min-commits human commits):
+  bus factor = the fewest people who together hold over 50% of the area's commits; active = people with a commit in the
+  area in the last --active-days days before the HEAD date. Risk: critical (nobody active), high (bus factor 1),
+  moderate (2), low (≥ 3). Without bots and AI agents, author names only; not part of --all.
+Noise filtered by default: lockfiles, snapshots, dist/build, generated and minified files, translations,
+.env*. Custom patterns: --exclude <regex> (repeatable). Bot commits (dependabot, renovate, github-actions, "[bot]")
+enter no section; AI agent commits enter the territory but not the contributor list.
 
-Kod wyjścia: 0 — wynik wypisany; 2 — katalog nie jest repozytorium git, błąd gita lub złe argumenty.
-Tylko odczyt historii (`git log`, `git ls-files`, `git rev-parse`); biblioteka standardowa, bez sieci.
+Exit code: 0 — result printed; 2 — the directory is not a git repository, a git error or bad arguments.
+History is read only (`git log`, `git ls-files`, `git rev-parse`); standard library, no network.
 """
 from __future__ import annotations
 
@@ -189,7 +189,7 @@ def analyse(a) -> dict:
             "max_files": a.max_files, "skipped_large_commits": skipped,
             "dir_pairs": [{"a": x, "b": y, "commits": n} for (x, y), n in dpairs.most_common(a.top)],
             "file_pairs": [{"a": x, "b": y, "commits": n,
-                            "share": round(n / min(file_c[x], file_c[y]), 2)}   # n / rzadziej zmieniany plik pary
+                            "share": round(n / min(file_c[x], file_c[y]), 2)}   # n / the less often changed file of the pair
                            for (x, y), n in fpairs.most_common() if n >= 2][:a.top],
             "hubs": [{"path": f, "areas": len(p), "alive": f in alive}
                      for f, p in sorted(partners.items(), key=lambda kv: (-len(kv[1]), kv[0])) if len(p) >= 1][:a.top],

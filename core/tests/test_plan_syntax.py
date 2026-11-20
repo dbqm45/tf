@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Składnia planu 14.0.0: kawałki `S<n>`, pola `files:`, `criteria:`, `verify:`, `after:` (`none`) i stopka commita
-`Slice S<n>:`; dawna składnia (`K<n>`, `pliki:`, `po:`, `brak`, `Kawałek K<n>:`) nadal przyjmowana.
+"""The 14.0.0 plan syntax: slices `S<n>`, the fields `files:`, `criteria:`, `verify:`, `after:` (`none`) and the commit footer
+`Slice S<n>:`; since 19.0.0 the old slice id `K<n>` and the Polish fields (`pliki:`, `po:`, `brak`) are not read (the
+19.0.0 and 14.0.0 migrations rewrite them in open tasks; old commit footers `Kawałek K<n>` stay history).
 python3 .claude/tests/test_plan_syntax.py"""
 import importlib.util
 import sys
@@ -25,8 +26,11 @@ NEW = """# Plan
 - [ ] S3 — raport · files: src/report.py · after: none
 """
 OLD = """# Plan
-- [x] K1 — płatność kartą · kryteria: test_card · pliki: src/pay.py · weryfikacja: `pytest` · po: brak
-- [ ] K2 — zwrot · pliki: src/refund.py · po: K1
+- [x] K1 — płatność kartą · criteria: test_card · files: src/pay.py · verify: `pytest` · after: none
+- [ ] K2 — zwrot · files: src/refund.py · after: K1
+"""
+POLISH = """# Plan
+- [x] S1 — płatność kartą · kryteria: test_card · pliki: src/pay.py · weryfikacja: `pytest` · po: brak
 """
 
 
@@ -45,29 +49,31 @@ def main() -> int:
 
     s = rs.plan_with_deps(NEW)
     check([(x["id"], x["checked"], x["deps"]) for x in s] == [("S1", True, []), ("S2", False, ["S1"]), ("S3", False, [])],
-          f"PS-1: kawałki S<n> z `after:` i `none`: {s}")
-    check(rs.next_slice(s, set())["id"] == "S2", "PS-2: następny kawałek po zależnościach")
+          f"PS-1: slices S<n> with `after:` and `none`: {s}")
+    check(rs.next_slice(s, set())["id"] == "S2", "PS-2: the next slice after dependencies")
     o = rs.plan_with_deps(OLD)
-    check([(x["id"], x["deps"]) for x in o] == [("K1", []), ("K2", ["K1"])], f"PS-3: dawna składnia nadal działa: {o}")
+    check(o == [], f"PS-3: the old slice id K<n> is no longer read: {o}")
     p = pd.parse_plan(NEW)
     check([x["files"] for x in p] == [["src/pay.py", "tests/test_pay.py"], ["src/refund.py"], ["src/report.py"]]
           and p[0]["done"], f"PS-4: plan_drift czyta `files:`: {p}")
-    check(pd.parse_plan(OLD)[0]["files"] == ["src/pay.py"], "PS-5: plan_drift czyta dawne `pliki:`")
+    check(pd.parse_plan(OLD) == [] and pd.parse_plan(POLISH)[0]["files"] == [],
+          "PS-5: plan_drift does not read a K<n> plan nor the Polish `pliki:`")
     w = tw.plan_slices(NEW)
     check([x["id"] for x in w] == ["S1", "S2", "S3"] and w[0]["files"] == ["src/pay.py", "tests/test_pay.py"],
           f"PS-6: waga zadania czyta S<n> i `files:`: {w}")
-    check(ts.SLICE.fullmatch("S12") and ts.SLICE.fullmatch("K3") and not ts.SLICE.fullmatch("X1"),
-          "PS-7: identyfikator kawałka S<n> (i dawny K<n>) w poleceniach tf task")
+    check(ts.SLICE.fullmatch("S12") and not ts.SLICE.fullmatch("K3") and not ts.SLICE.fullmatch("X1"),
+          "PS-7: the slice identifier S<n> (not the old K<n>) in tf task commands")
     check(ts.TICKED.sub(rb"\1[ ]\2", NEW.encode()) == NEW.replace("[x] S1", "[ ] S1").encode(),
-          "PS-8: odhaczenie S<n> nie zmienia skrótu zatwierdzonego planu")
+          "PS-8: ticking S<n> does not change the approved plan hash")
     msg = rs.commit_message("feat(pay): card payment", "S1", "płatność kartą", [])
-    check("\n\nSlice S1: płatność kartą\n" in msg, f"PS-9: stopka commita `Slice S<n>:`: {msg!r}")
-    old_msg = "feat(pay): card payment\n\nKawałek K1: płatność kartą"
-    check(rs.commit_message(old_msg, "K1", "płatność kartą", []).count("K1:") == 1,
-          "PS-10: dawna stopka `Kawałek K<n>:` nie jest dopisywana drugi raz")
+    check("\n\nSlice S1: płatność kartą\n" in msg, f"PS-9: the commit footer `Slice S<n>:`: {msg!r}")
+    old_msg = "feat(pay): card payment\n\nSlice S1: płatność kartą"
+    check(rs.commit_message(old_msg, "S1", "płatność kartą", []).count("S1:") == 1,
+          "PS-10: the footer `Slice S<n>:` is not added a second time")
+    check(tw.plan_slices(OLD) == [], "PS-11: task_weight does not read K<n> slices")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów składni planu")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} plan syntax tests")
     return 1 if fails else 0
 
 

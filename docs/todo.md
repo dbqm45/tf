@@ -22,6 +22,23 @@ katalogiem zadania i prostotą dla użytkownika jako wymaganiem (W8).
 - [ ] **Decyzje D1–D12** (sekcja 15 dokumentu) — człowiek.
 - [ ] **E0–E8** (sekcja 14) — każdy etap osobnym planem i PR, po decyzjach; E1 (`tf onboard`) nie zależy od D2–D12. Źródła: 14 artykułów claude.dev (S1–S14, sekcja 16 dokumentu).
 
+## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
+Plan: `docs/plans/2026-11-19-bramka-ewaluacji-i-zatwierdzone-modele.md` (źródło: pdi
+`docs/plan-program-ai-wg-aplikacji.md` §2.1, zadania T4 i T6). Zasada z decyzji człowieka 2026-11-19: tylko to, co
+rozszerza fabrykę i niczego w niej nie zmienia, dopóki ktoś tego nie włączy.
+- [x] **Bramka ewaluacji dla CI** (`packs/pack-it/skills/ai-evals/scripts/eval_gate.py`): próg z rozrzutu 3–5
+  przebiegów obecnej wersji, werdykt release / investigate / hold, budżet kosztu, raport. Bez modelu i bez sieci.
+- [x] **Lista zatwierdzonych modeli** (`models_approved`): rozszerzenie `model_check.py`, odmowa w `profile.py`, hook
+  `model_guard` przy delegacji; warstwy firma → zespół → projekt tylko zawężają. Bez listy zachowanie jak dotąd.
+- [ ] **Model sesji wybrany ręcznie (`/model`)** jest poza kontrolą fabryki — to rola bramki modeli (pdi: DI Model
+  Gateway). Do rozważenia: ostrzeżenie na starcie sesji, gdy `model` z ustawień jest spoza listy.
+- [ ] **`model_check.py` nie czyta identyfikatorów z warstwy firmy i zespołu** (kontrola nazw `claude-…` patrzy na
+  silnik i projekt; lista zatwierdzonych już czyta wszystkie warstwy). Drobne, osobna zmiana.
+- [ ] **`tf standard`** (jedno polecenie „czy repo spełnia standard”, wersja z 9.17) — odłożone: najpierw porównanie
+  z `tf status`, `tf task check` i standardami firmowymi (`tf analyze`), żeby nie powstało drugie polecenie o tym samym.
+- [ ] **Pola opisu modelu** (`provider`, `regions`, `data`, `contract`) są dziś tylko dla ludzi. Gdy powstanie
+  rejestr AI (pdi: DI AI Registry), uzgodnić z nim format, zamiast rozwijać własny.
+
 ## Ustawienia firmy (nakładka firmowa) — na później, zapisane 2026-11-16
 Stan: nakładka firmowa działa (`org_defaults`, zestaw w `org/`: generator, szablon, przewodnik `org/README.md`).
 Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić później.
@@ -850,8 +867,131 @@ treści (angielska), bez równoległej polskiej.
     (`odtworzenie-historii-skutki`), dodane słowa kluczowe PL+EN (replay, reset offsetu, odbudowa modelu odczytu):
     powtórka 2 scenariuszy × 2: 4/4. Podpowiedzi bez zmian (901/918 · 31/43), `--hints` czysto. Haiku przed/po
     (4 scenariusze): 4/4 → 3/4 → po poprawce 4/4, 1,48 USD.
-  - [ ] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
+  - [x] 4d-r1 (2026-11-18): pierwsza runda równoległa — `qa-` (8), `proc-` (8), `tool-` (7), `pm-` (5), `data-` (2):
+    30 skilli (+ referencje) po angielsku, `hint.pl.txt`. Decyzja właściciela (2026-11-18): tłumaczą równolegli
+    wykonawcy według jednej instrukcji (zakres, frontmatter, bloki kodu, znaczniki, samokontrola
+    `translation_check`); jakość pilnuję sam: przegląd każdego zgłoszonego ✗ i próbki tekstu, bramki, holdout,
+    `--hints`, Haiku po zmianie (1 scenariusz na skill, przed zmianą tylko dla porażek). Jedna runda = jeden PR.
+    Przetłumaczone przykładowe teksty w kodzie (Playwright, Vitest, pytest, Semgrep) — żaden scenariusz ani
+    projekt przykładowy od nich nie zależy. `proc-agile` stracił podpowiedź w `ciecie-historyjek` (900/918) —
+    dodane słowa kluczowe PL+EN (pociąć historyjkę, cięcie pionowe): z powrotem 901/918 · 31/43.
+    Haiku po zmianie: 25/27; `testy-z-kodu` 2/2 w powtórce (szum). `porownanie-grup-skosne` (data-analysis):
+    przed 4/5, po 2/6 — model odpowiada z samego SKILL.md (bez referencji) i rzadziej wspomina korektę wielu
+    porównań; dodany krótki wskaźnik w kroku 5 (wielkość efektu, korekta Holm/Benjamini-Hochberg — z
+    `references/statistics.md`): 3/3. Koszt Haiku rundy: ok. 6 USD.
+    Zostaje do dokończenia:
+    - [ ] `qa-test-design/templates/test-strategy.md` jest po polsku; `references/project-test-strategy.md`
+      celowo zachowuje polskie wartości stanów (zakończona, w realizacji…) — tłumaczyć razem.
+    - [ ] `proc-requirements-shaping`: przykłady zachowują polskie nagłówki i linie briefu czytane przez
+      `requirements_lint.py` (lint przyjmuje już angielskie) — przełączyć na angielskie przy usuwaniu aliasów.
+    - [ ] nagłówek „## Brief dla wykonawcy” w `modes/mode-pdi/tests/test_triage_pdi.py` i
+      `eng-code-audit/references/report-template.md` — skill `proc-issue-triage` ma już „Brief for the implementer”.
+  - [x] 4d-r2 (2026-11-18): druga runda równoległa — `lang-` (6), `fw-` (6), `fe-` (5): 17 skilli (+ referencje)
+    po angielsku, `hint.pl.txt`. Słownik pojęć kontraktu technologii (`core/factory/config.yaml` → `vocabulary`)
+    po angielsku (value object, entity, aggregate…); `build.py check` przyjmuje polskie nazwy jako aliasy
+    (`VOCABULARY_PL`, „pl: sprzed 14.x”) — 0 ostrzeżeń. Przykłady Go uruchomione po tłumaczeniu (`go test`),
+    TypeScript skompilowany i uruchomiony; zdanie „pliki skopiowane bez zmian” zastąpione „kod z testowanego
+    projektu; przetłumaczone tylko komentarze i komunikaty”. Spisy treści przeliczone `build.with_toc`.
+    Bramki 17/17, podpowiedzi 901/918 · 31/43, `--hints` czysto, testy repo zielone. Haiku po zmianie 14/16:
+    `modernizacja-typow` 2/2 w powtórce (szum); `bledy-walidacja-openapi` (fw-aspnet-core) pada tak samo na main
+    (0/2) — model cytuje antywzorzec `Conflict(new ProblemDetails…)`, przed którym skill ostrzega.
+    - [ ] `bledy-walidacja-openapi`: niepożądany wzorzec trafia w cytat ostrzeżenia — zawęzić regex albo zmienić
+      sformułowanie w skillu (przed tłumaczeniem też 0/2).
+    - [ ] do sprawdzenia fakty ze źródła: `endoflife.ai` w fw-nestjs (pewnie endoflife.date), `@Service` jako
+      dekorator Angulara w lang-typescript, wsparcie Spring Boot 3.5 do 2026-06-30 vs 3.5.16 w źródłach.
+  - [x] 4d-r3 (2026-11-18): trzecia runda równoległa — `ops-` (22), `sec-` (13): 35 skilli (+ referencje) po
+    angielsku, `hint.pl.txt`. Poprawki z raportów: w sec-llm-security oryginał nazywał bramkę „zawodzi otwarcie”,
+    choć reguła opisuje fail-closed (nieczytelne = odmowa) — teraz „fails closed”; grupa Dependabota `drobne` →
+    `minor-and-patch`. `skill_audit.py` nie rozpoznawał spisu „> **Contents:**”, który pisze `build.with_toc`
+    (`^` bez `re.M`) — 88 fałszywych `ref-no-toc` w pack-it, po poprawce 3; test SA-TOC (EN/PL/brak).
+    Podpowiedzi: nowe angielskie opisy przesunęły wagi i dwa scenariusze spoza rundy straciły podpowiedź
+    (`ai-evals` `sedzia-llm-kalibracja`, `proc-safe` `czy-safe-pasuje`) — słowa kluczowe PL+EN: 902/918 · 31/43.
+    Bramki 35/35, testy repo zielone. Haiku po zmianie 30/34; cztery porażki to brak wywołania skilla
+    (`ops-docker` `hardening-runtime`, `ops-kubernetes` `config-rollout`, `ops-linux-networking` `dysk-inody`,
+    `ops-secrets-identities` `wyciek-klucza-aws`) — na main też (7 z 8 przebiegów bez wywołania).
+    - [ ] cztery scenariusze ops- bez wywołania skilla (także przed tłumaczeniem) — skille bez `keywords`;
+      sprawdzić słowa kluczowe PL+EN i opis pod polskie zgłoszenia.
+  - [x] 4d-r4 (2026-11-18): czwarta runda równoległa — `eng-` (19), `ddd-` (13), `ai-` (13): 45 skilli (+ referencje)
+    po angielsku, `hint.pl.txt`. Wszystkie skille pack-it są po angielsku. Stałe sekcje referencji `ddd-archetypes`
+    (`reference_sections` w pack.yaml) po angielsku; `build.py check` przyjmuje też plik w całości z polskimi nazwami
+    (`sections_pl`, „pl: sprzed 14.x”). Ciągi czytane przez skrypty zostały bajt w bajt (np. `pelna|oszczedna`,
+    `=== POKAŻ DOSŁOWNIE ===` w ddd-es-simulation, statusy ROZWIĄZANE/NOWE/ZMIENIONE w eng-tech-debt-audit, „BRAK w
+    kodzie”), z angielską glosą. Poprawki: ddd-es-simulation pokazywał `--scenario weterynaria`, a katalog to
+    `veterinary` (polecenie z dokumentacji kończyło się „No scenario”); opis ai-mcp-server skrócony do ≤ 170 znaków;
+    ucięte fragmenty spisów treści (eng-llm-features, trzy pliki fw-nextjs) usunięte. Podpowiedzi: słowa kluczowe PL+EN
+    dla ddd-context-mapping, sec-zero-trust-identity, ddd-tactical-design (i tool-vitest w #329 — sprawdzane też w
+    obszarze roboczym samego pack-it): 902/918 · 31/43, `--hints` czysto w `all` i `pack-it`. Bramki 45/45. Haiku po
+    zmianie 39/43; powtórki przed/po dla czterech porażek: 3/8 → 5/8, `tdd-nowa-regula` (eng-testing) bez wywołania
+    skilla po obu stronach.
+    - [ ] `tdd-nowa-regula`: skill eng-testing nie jest wywoływany (także przed tłumaczeniem) — słowa kluczowe/opis.
+    - [ ] kontrola podpowiedzi przed PR w obu obszarach (`all` i sam `pack-it`) — IDF zależy od zestawu skilli.
+  - [x] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
     `proc-`, `data-`, `fw-`, `lang-`, `tool-`, `ux-`).
+  - [x] 4e (2026-11-18): reszta pack-it po angielsku — 21 person, 22 role, `pack.yaml` (wymiary, prompty agentów
+    wspólnych, konsultanci; `content_language: en`), przykłady (shop-pricing, room-booking — README i eksport
+    odtworzone przez `project_record.py index/report`), 7 analizatorów (opisy, docstringi), workflow code-audit.
+    Nazwy sekcji zgodne z przetłumaczonymi skillami („Request / Mechanism / Basis”, „The facilitator's self-check”,
+    „Decision gates”, „What was not checked”). Zostają po polsku, bo czyta je kod lub test: etykiety agentów workflow
+    (`inwentarz`, `przegląd:`, `raport`, `weryfikacja:`) i prompt „Spróbuj obalić…” (test_workflows W-7…W-18),
+    wzorce wykrywania analizatorów (`zł`, `hasło`, `dane osobowe`…), wejścia fixture'ów. Testy: shop-pricing vitest
+    12 + 4 oczekiwane porażki, bramka analizatorów 7/7 (wynik bajt w bajt jak przed), test_workflows 20/20;
+    `--hints` czysto w `all` i `pack-it`, 901/918 · 31/43.
+    - [ ] etykiety i prompt weryfikacji w `workflows/code-audit.js` po angielsku razem z testami W-7…W-18.
+  - [x] 4f (2026-11-18): pack-editorial-pl — opisy, procedury, persona, rola, cecha i `pack.yaml` po angielsku; normy
+    RJP, przykłady zdań, pary błędne/poprawne i nazwy źródeł zostają po polsku (z angielską glosą). Kategorie raportu
+    jak w `polish_lint.py` (SPELLING, PUNCTUATION…); `keywords` PL+EN w txt-polish-correctness (podpowiedzi 3/3);
+    literówka „wcześej” → „wcześniej” w regule §18. Haiku 3/4, `komunikaty-ui` 2/2 przed i po (szum).
+  - [x] 4g (2026-11-18): komentarze i docstringi w kodzie po angielsku — 132 pliki (core/factory, hooks, tools,
+    scripts, core/skills, modes, org, .github, packs). Kontrola: AST bez docstringów identyczne dla 117 plików `.py`
+    (własny skrypt, niezależnie od wykonawców), YAML — dane identyczne poza komentarzami w blokach `run:`. Zostają:
+    literały, regexy, linie `pl: sprzed 14.x`, cytowane polskie dane. Ponowna bramka 21 skilli (skrypty w odcisku).
+    Wykonawcy na Sonnecie (tańsze, praca mechaniczna).
+    - [x] polskie napisy w szablonie `ai-review.yml` i komunikaty `echo` w workflow — w 4h.
+  - [x] 4h (2026-11-18): napisy dla człowieka i komunikaty testów po angielsku — 175 plików (runnery ewaluacji,
+    skrypty, workflow GitHub, szablon ai-review, testy core/modes/packs/repo). Etykiety i prompt weryfikacji
+    workflow code-audit po angielsku razem z test_workflows. Zostają: aliasy i wzorce przyjmujące polski
+    („pl: sprzed 14.x”), polskie dane testowe i fixture'y, formaty czytane przez inny program, prompty sędziego
+    w `run_skill_evals.py` i `flow_evals_runner.py` (zmiana języka sędziego zmienia ocenianie). Kontrola: wszystkie
+    testy repo i 8 obszarów roboczych CI zielone, ponowna bramka 7 skilli, 901/918 · 31/43.
+    - [ ] prompty sędziego ewaluacji po angielsku — osobno, z kalibracją (te same scenariusze przed i po).
+  - [x] 4i (2026-11-18): angielskie bliźniaki scenariuszy ewaluacji — jeden na skill (`<id>-en`, 165 plików; 11 bez
+    scenariusza trigger, txt-polish-style pominięty — skill redaguje polski tekst). Grupy kontroli te same, polskie
+    alternatywy zostają, dopisane angielskie. Podpowiedzi: 154/165 od razu; 11 skilli dostało angielskie słowa
+    kluczowe (m.in. data-engineering, lang-typescript, ops-secrets-identities, ux-accessibility) — 165/165,
+    1066/1083 · holdout 32/43 (było 31). Haiku na próbie 25 bliźniaków: 23/25; dwie porażki to znane już na
+    polskich wersjach (`model-webhook-upload`, `config-rollout`).
+    Słowa kluczowe EN także dla core-grounding (obszar mode-pdi) i ai-fine-tuning (obszar pack-it); `--hints` czysto
+    we wszystkich 8 obszarach roboczych CI — od teraz sprawdzane we wszystkich, nie tylko w `all` i `pack-it`.
+  - [x] 4j (2026-11-19): żywa dokumentacja po angielsku — README, `docs/` (RELEASING, inactive-skills, insights,
+    new-pack, plugins, setup, mapa-fabryki.html), `core/factory/PUBLIC_API.md`. Decyzja: archiwa (`docs/evals`,
+    `docs/plans`) zostają po polsku jako zapis historyczny — w obu katalogach krótki README po angielsku; także ten
+    plik (`docs/todo.md`) i `CHANGELOG.md` zostają po polsku. Przy okazji: skill tf kazał przekazać linię `Waga: …`,
+    a `run_report.py` od #308 wypisuje `Weight: …` — skill i test T-27 poprawione.
+    - [ ] `docs/insights.md` i `docs/plugins.md` opisują `mode-talos` (usunięty w 10.0.0) i liczby skilli sprzed
+      zmian — zaktualizować treść (to nie tłumaczenie).
+    - [ ] gdyby archiwa miały być po angielsku: `docs/evals` (47 plików) i `docs/plans` (40) — osobny krok.
+  - [x] 4k (2026-11-19): usunięte polskie aliasy czytników (`pl: sprzed 14.x`) — decyzja właściciela: jednym krokiem.
+    Migracja 19.0.0 (`migrations.migrate_v19`) przepisuje polskie formy na angielskie w plikach projektu, które czytały
+    usunięte aliasy (punkty kontrolne `.tf/wip/`, decyzje retro, cache bazy wiedzy, tagi banku dowodów, blok fabryki
+    w CLAUDE.md — przed przepisaniem bloku, więc komendy projektu zostają, własne skille i persony, `managed-agents/`,
+    plan i artefakty pdi, rekonstrukcja pack-it); 16 nowych testów MV-18…33 i U-5. Zostaje polski kontrakt pdi
+    `design.md` (forma zewnętrznego kontraktu, nie alias). Przy okazji: Talos usunięty z żywej dokumentacji, testów
+    i przykładów (zostaje tylko to, co sprząta stare instalacje: `RETIRED_PACKS`, przemianowania, strażnik w
+    test_tf_skill, wpis „Removed in 10.0.0” w PUBLIC_API); pasek stanu po angielsku (`context`, `cold`); trzy
+    sprawdzenia w testach szukały polskich komunikatów, których narzędzia już nie wypisują (zawsze przechodziły) —
+    poprawione na angielskie.
+    - [x] aliasy bez znacznika — w 4l.
+  - [x] 4l (2026-11-19): czytniki tylko po angielsku — reszta polskich form bez znacznika (sekcje rejestru projektu,
+    raporty analyze, LESSON_HEADS, werdykty badań P/C/N/S, Given/When/Then w specyfikacji, MARK i aliasy recon,
+    requirements_lint, dossier), wartości `Rework-Cause` i stopka `Kawałek` (historia sprzed zmiany liczona jako nieznana
+    przyczyna), identyfikatory kawałków K<n> → S<n> (migracja otwartych zadań: plan, task.json, dowody, events, run.json,
+    katalogi security; hash zatwierdzenia przeliczany, gdy się zgadzał) i nazwy zdarzeń hooków („session end”, „context
+    compaction”; `settings_v19` przepisuje ustawienia użytkownika przed scaleniem — bez zdublowanego hooka, testy U-6/U-7).
+    Migracja rozszerzona (MV-34…66). Przy okazji: panel plików nie pokazywał dowodów kawałków S (czytnik szukał tylko K).
+    Zostają: LEGACY_GI (sprzątanie starych instalacji), polski kontrakt pdi `design.md`, obsługa polskich treści
+    (historyjki, changelogi, własne skille po polsku, polish_lint, detektory), prompty sędziego ewaluacji.
+    - [ ] `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
+      sprawdzają) — przełożyć razem z testami.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
     M2 hooki, M3–M4 silnik (`core/factory`), M5 skrypty pozostałych skilli rdzenia, M6 pack-it, M7 mode-pdi, M8 org,
     tools, editorial, ux. Docstringi i komentarze w kodzie to dokumentacja opiekunów — poza tym etapem.

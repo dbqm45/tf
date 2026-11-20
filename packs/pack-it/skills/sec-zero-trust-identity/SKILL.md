@@ -1,102 +1,102 @@
 ---
 name: sec-zero-trust-identity
-description: Użyj przy Zero Trust i tożsamości jako perymetrze — NIST 800-207, ZTNA zamiast VPN, MFA odporne na phishing, PAM, postura urządzeń, mapa dojrzałości CISA.
+description: Use for Zero Trust and identity as the perimeter — NIST 800-207, ZTNA instead of VPN, phishing-resistant MFA, PAM, device posture, the CISA maturity map.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj, gdy planujesz lub oceniasz architekturę Zero Trust — zasady NIST SP 800-207, punkty decyzji i egzekucji polityki (PDP/PEP), tożsamość jako perymetr (IAM pracowników, CIAM klientów, PAM, dostęp just-in-time), MFA odporne na phishing (FIDO2, passkeys), postura urządzeń, mikrosegmentacja, ZTNA kontra VPN, SASE/SSE, model dojrzałości CISA, mapa migracji i metryki. Nie do OAuth/OIDC w kodzie aplikacji (be-auth-security), tożsamości maszynowych i sekretów (ops-secrets-identities), NetworkPolicy (ops-kubernetes), zabezpieczeń chmury (sec-cloud-security) ani modelu zagrożeń funkcji (arch-threat-modeling)."
-  keywords: "zero trust, ZTNA, VPN, nigdy nie ufaj, zawsze weryfikuj, perymetr, segmentacja, mikrosegmentacja, SASE, SSE, CASB, SWG, 800-207, PDP, PEP, passkey, FIDO2, WebAuthn, phishing, MFA, PAM, JIT, dostęp na żądanie, IAM, CIAM, stan urządzenia, device posture, dojrzałość zero trust, CISA ZTMM, ruch boczny, lateral movement, tożsamość agenta, agenci ai wywołują api, jedno konto usługi, konto usługi dla agentów, spiffe, spire, svid, dpop, token exchange, w imieniu użytkownika"
+  catalog: "Use when you plan or assess a Zero Trust architecture — NIST SP 800-207 principles, policy decision and enforcement points (PDP/PEP), identity as the perimeter (workforce IAM, customer CIAM, PAM, just-in-time access), phishing-resistant MFA (FIDO2, passkeys), device posture, microsegmentation, ZTNA versus VPN, SASE/SSE, the CISA maturity model, a migration map and metrics. Not for OAuth/OIDC in application code (be-auth-security), machine identities and secrets (ops-secrets-identities), NetworkPolicy (ops-kubernetes), cloud security (sec-cloud-security) or a feature threat model (arch-threat-modeling)."
+  keywords: "zero trust, ZTNA, VPN, nigdy nie ufaj, zawsze weryfikuj, perymetr, segmentacja, mikrosegmentacja, SASE, SSE, CASB, SWG, 800-207, PDP, PEP, passkey, FIDO2, WebAuthn, phishing, MFA, PAM, JIT, dostęp na żądanie, IAM, CIAM, stan urządzenia, device posture, dojrzałość zero trust, CISA ZTMM, ruch boczny, lateral movement, tożsamość agenta, agenci ai wywołują api, jedno konto usługi, konto usługi dla agentów, spiffe, spire, svid, dpop, token exchange, w imieniu użytkownika, never trust, always verify, perimeter, segmentation, microsegmentation, on-demand access, device state, zero trust maturity, agent identity, ai agents call apis, single service account, service account for agents, on behalf of the user, na jakim etapie zero trust, ocena dojrzałości, metryki postępu zero trust, model dojrzałości CISA, zero trust maturity stage, maturity assessment, progress metrics"
 ---
 
-# Zero Trust i tożsamość
+# Zero Trust and identity
 
-**Granica.** Skill dotyczy architektury i programu: kto i z jakiego urządzenia dostaje dostęp do czego i na jakich
-warunkach. OAuth/OIDC, sesje i tokeny w kodzie: `be-auth-security`. Tożsamości maszynowe, sekrety, OIDC dla CI:
-`ops-secrets-identities`. NetworkPolicy i mTLS w klastrze: `ops-kubernetes`. Zabezpieczenia konta chmurowego:
-`sec-cloud-security`. Zagrożenia konkretnej funkcji: `arch-threat-modeling`. Algorytmy i certyfikaty:
-`sec-cryptography-pki`. Zero Trust to strategia, a nie produkt: żaden zakup go nie „włącza”. Rezygnacja z VPN oznacza
-punkt egzekwowania polityki (PEP) przed każdą aplikacją; o dostępie decyduje punkt decyzyjny (PDP) na podstawie
-tożsamości, stanu urządzenia i kontekstu (NIST SP 800-207).
-Wynik: `docs/project/04-architecture/zero-trust.md` (core-project-record) z mapą stanu, planem i metrykami.
+**Boundary.** The skill concerns the architecture and the program: who, from which device, gets access to what and on what
+conditions. OAuth/OIDC, sessions and tokens in code: `be-auth-security`. Machine identities, secrets, OIDC for CI:
+`ops-secrets-identities`. NetworkPolicy and mTLS in the cluster: `ops-kubernetes`. Cloud account security:
+`sec-cloud-security`. Threats to a specific feature: `arch-threat-modeling`. Algorithms and certificates:
+`sec-cryptography-pki`. Zero Trust is a strategy, not a product: no purchase "turns it on". Dropping the VPN means
+a policy enforcement point (PEP) in front of every application; access is decided by a policy decision point (PDP) based on
+identity, device state and context (NIST SP 800-207).
+Result: `docs/project/04-architecture/zero-trust.md` (core-project-record) with a state map, a plan and metrics.
 
-## Fundament: NIST SP 800-207 (sierpień 2020)
-Siedem zasad (tenets), w skrócie:
-1. Każde źródło danych i usługa to zasób.
-2. Cała komunikacja jest zabezpieczona niezależnie od lokalizacji w sieci.
-3. Dostęp do zasobu przyznawany jest na sesję.
-4. Dostęp wynika z dynamicznej polityki (tożsamość, aplikacja, urządzenie, kontekst).
-5. Organizacja monitoruje integralność i postawę wszystkich zasobów.
-6. Uwierzytelnienie i autoryzacja są dynamiczne i ścisłe, zanim dostęp zostanie dany.
-7. Organizacja zbiera dane o stanie zasobów, sieci i komunikacji i używa ich do poprawy bezpieczeństwa.
-Szczegóły i treść zasad [niezweryfikowane] w źródle pierwotnym (strona NIST niedostępna z sandboxu, 2026-10-17).
+## Foundation: NIST SP 800-207 (August 2020)
+Seven tenets, in short:
+1. Every data source and service is a resource.
+2. All communication is secured regardless of network location.
+3. Access to a resource is granted per session.
+4. Access follows from a dynamic policy (identity, application, device, context).
+5. The organization monitors the integrity and posture of all assets.
+6. Authentication and authorization are dynamic and strict before access is granted.
+7. The organization collects data on the state of assets, the network and communication and uses it to improve security.
+Details and the wording of the tenets [unverified] in the primary source (NIST page unreachable from the sandbox, 2026-10-17).
 
-Model logiczny: **PDP** (policy decision point = policy engine + policy administrator) decyduje, **PEP** (policy
-enforcement point) egzekwuje i jest jedyną drogą do zasobu. Dane wejściowe PDP: IdP i MFA, rejestr urządzeń i postura,
-inteligencja zagrożeń, logi, polityki dostępu do danych. Wzorce wdrożenia: oparty na tożsamości agent/bramka,
-mikrosegmentacja, sieć programowalna (SDP). Zdecyduj, które pasuje do zasobów (`references/architecture-and-sase.md`).
+The logical model: the **PDP** (policy decision point = policy engine + policy administrator) decides, the **PEP** (policy
+enforcement point) enforces and is the only path to the resource. PDP inputs: the IdP and MFA, the device registry and posture,
+threat intelligence, logs, data access policies. Deployment patterns: an identity-based agent/gateway,
+microsegmentation, a software-defined perimeter (SDP). Decide which one fits the resources (`references/architecture-and-sase.md`).
 
-## Procedura
-1. **Zasoby i przepływy.** Inwentarz aplikacji, danych, tożsamości (ludzi i maszyn), urządzeń; mapa „kto do czego”.
-   Zacznij od **powierzchni ochrony** (najcenniejsze dane i usługi), a nie od całej sieci.
-2. **Stan wyjściowy** wg CISA Zero Trust Maturity Model 2.0: pięć filarów (tożsamość, urządzenia, sieci,
-   aplikacje i obciążenia, dane), trzy zdolności przekrojowe (widoczność i analityka, automatyzacja i orkiestracja,
-   zarządzanie), cztery stopnie (Traditional, Initial, Advanced, Optimal). Oceń każdy filar osobno, filary
-   rozwijają się w różnym tempie. Data publikacji wersji 2.0 (kwiecień 2023) i ewentualne nowsze wersje:
-   [niezweryfikowane].
-3. **Tożsamość jako perymetr** (priorytet nr 1, `references/identity-and-access.md`): jedno IdP z SSO, MFA odporne
-   na phishing (FIDO2/WebAuthn, passkeys, klucze sprzętowe), CIAM dla klientów oddzielony od katalogu pracowników,
-   PAM i dostęp just-in-time dla uprawnień administracyjnych, przeglądy uprawnień, szybkie odbieranie dostępu.
-   Agenci AI: własna tożsamość obciążenia dla każdej instancji (SPIFFE/SVID), token użytkownika związany z kluczem
-   agenta (mTLS, DPoP), wymiana tokenu przy przejściu między usługami (`references/identity-and-access.md`, ostatnia sekcja).
-4. **Urządzenie:** rejestr, szyfrowanie dysku, aktualność systemu, EDR; sygnał postury trafia do PDP, a niezgodne
-   urządzenie dostaje mniej, nie „wszystko albo nic”. Urządzenia prywatne (BYOD) — dostęp przez przeglądarkę/VDI.
-5. **Dostęp do aplikacji:** ZTNA per aplikacja zamiast VPN do całej sieci; stare aplikacje za proxy świadomym
-   tożsamości. VPN zostaje tylko tam, gdzie ZTNA nie sięga, z ograniczeniem do segmentu i planem wycofania.
-6. **Segmentacja:** mikrosegmentacja wokół powierzchni ochrony, zasada domyślnej odmowy dla ruchu wschód–zachód;
-   w Kubernetesie `ops-kubernetes`. Najpierw tryb obserwacji, potem blokada.
-7. **Dane i ciągła weryfikacja:** klasyfikacja, DLP, telemetria do SIEM, reakcje automatyczne (odebranie sesji,
-   kwarantanna urządzenia) — `ops-security-operations`.
-8. **Plan migracji** (poniżej) i **metryki**. Plan i akceptację ryzyka zatwierdza człowiek; agent proponuje.
+## Procedure
+1. **Resources and flows.** An inventory of applications, data, identities (people and machines), devices; a "who to what" map.
+   Start from the **protect surface** (the most valuable data and services), not from the whole network.
+2. **Baseline** per the CISA Zero Trust Maturity Model 2.0: five pillars (identity, devices, networks,
+   applications and workloads, data), three cross-cutting capabilities (visibility and analytics, automation and orchestration,
+   governance), four stages (Traditional, Initial, Advanced, Optimal). Assess each pillar separately, the pillars
+   develop at different paces. The publication date of version 2.0 (April 2023) and any newer versions:
+   [unverified].
+3. **Identity as the perimeter** (priority no. 1, `references/identity-and-access.md`): one IdP with SSO, phishing-resistant
+   MFA (FIDO2/WebAuthn, passkeys, hardware keys), CIAM for customers separated from the workforce directory,
+   PAM and just-in-time access for administrative privileges, access reviews, fast access revocation.
+   AI agents: their own workload identity for each instance (SPIFFE/SVID), the user's token bound to the agent's key
+   (mTLS, DPoP), token exchange when crossing between services (`references/identity-and-access.md`, last section).
+4. **Device:** a registry, disk encryption, an up-to-date system, EDR; the posture signal goes to the PDP, and a non-compliant
+   device gets less, not "all or nothing". Private devices (BYOD) — access through the browser/VDI.
+5. **Application access:** ZTNA per application instead of a VPN to the whole network; legacy applications behind an identity-aware
+   proxy. The VPN stays only where ZTNA does not reach, limited to a segment and with a retirement plan.
+6. **Segmentation:** microsegmentation around the protect surface, a default-deny rule for east–west traffic;
+   in Kubernetes `ops-kubernetes`. Observation mode first, then blocking.
+7. **Data and continuous verification:** classification, DLP, telemetry to the SIEM, automatic responses (session revocation,
+   device quarantine) — `ops-security-operations`.
+8. **The migration plan** (below) and **metrics**. The plan and the risk acceptance are approved by a human; the agent proposes.
 
-## Mapa migracji (etapy, każdy z kryterium ukończenia)
-| Etap | Zakres | Gotowe, gdy |
+## Migration map (stages, each with a completion criterion)
+| Stage | Scope | Done when |
 |---|---|---|
-| 0 | inwentarz, powierzchnia ochrony, ocena CISA per filar | mapa zatwierdzona |
-| 1 | IdP z SSO dla wszystkich aplikacji, MFA odporne na phishing dla administratorów | 100% kont uprzywilejowanych na FIDO2 |
-| 2 | rejestr urządzeń i postura w polityce; PAM i JIT | brak stałych uprawnień administratora |
-| 3 | ZTNA dla pierwszych 3–5 aplikacji; pilotaż wycofania VPN | pilotaż bez wzrostu zgłoszeń |
-| 4 | mikrosegmentacja powierzchni ochrony, telemetria do SIEM | blokada ruchu bocznego w trybie wymuszenia |
-| 5 | automatyzacja reakcji, ciągła ocena, przegląd co kwartał | metryki w progach |
-Kolejność może się różnić, ale tożsamość i MFA zawsze przed segmentacją.
+| 0 | inventory, protect surface, CISA assessment per pillar | map approved |
+| 1 | IdP with SSO for all applications, phishing-resistant MFA for administrators | 100% of privileged accounts on FIDO2 |
+| 2 | device registry and posture in the policy; PAM and JIT | no standing administrator privileges |
+| 3 | ZTNA for the first 3–5 applications; a VPN retirement pilot | pilot without a rise in tickets |
+| 4 | microsegmentation of the protect surface, telemetry to the SIEM | lateral movement blocked in enforcement mode |
+| 5 | response automation, continuous assessment, quarterly review | metrics within thresholds |
+The order may differ, but identity and MFA always before segmentation.
 
-## Metryki
-Odsetek kont z MFA odpornym na phishing (cel dla uprzywilejowanych: 100%); stałe konta uprzywilejowane vs JIT;
-odsetek aplikacji za ZTNA/SSO; odsetek urządzeń zgodnych z polityką; mediana czasu odebrania dostępu po odejściu;
-odsetek ruchu wschód–zachód objętego polityką; czas wykrycia i odcięcia sesji; liczba wyjątków od polityki i ich wiek.
-Każda metryka ma właściciela, źródło danych i próg; progi poniżej to [przykład] do uzgodnienia.
+## Metrics
+The share of accounts with phishing-resistant MFA (the target for privileged ones: 100%); standing privileged accounts vs JIT;
+the share of applications behind ZTNA/SSO; the share of devices compliant with the policy; the median time to revoke access after offboarding;
+the share of east–west traffic covered by policy; the time to detect and cut off a session; the number of policy exceptions and their age.
+Every metric has an owner, a data source and a threshold; the thresholds below are [example] to be agreed.
 
-## Przykład
-**Wejście:** „Firma 400 osób, VPN dla wszystkich, ataki phishingowe na administratorów, ERP i repozytorium kodu
-w chmurze. Chcemy Zero Trust.”
-**Wynik** (fragment `zero-trust.md`):
-- Powierzchnia ochrony: ERP, repozytorium, konsola chmury, baza klientów.
-- Ocena CISA: tożsamość Initial, urządzenia Traditional, sieci Traditional, dane Traditional.
-- Kwartał 1: klucze FIDO2 dla 12 administratorów; SMS wyłączony dla kont uprzywilejowanych [przykład]; JIT na konsolę chmury.
-- Kwartał 2: rejestr urządzeń i polityka postury; ERP i repozytorium za ZTNA.
-- Kwartał 3: wygaszenie VPN poza dwoma systemami przemysłowymi; mikrosegmentacja bazy klientów.
-- Metryka sukcesu: 0 stałych kont administratora, 100% dostępu do ERP przez ZTNA, czas odebrania dostępu < 1 h [przykład].
-- Ryzyka: zależność od jednego IdP (konta awaryjne offline z przeglądem), zgłoszenia od pracowników BYOD.
+## Example
+**Input:** "A 400-person company, a VPN for everyone, phishing attacks on administrators, the ERP and the code repository
+in the cloud. We want Zero Trust."
+**Result** (a fragment of `zero-trust.md`):
+- Protect surface: the ERP, the repository, the cloud console, the customer database.
+- CISA assessment: identity Initial, devices Traditional, networks Traditional, data Traditional.
+- Quarter 1: FIDO2 keys for 12 administrators; SMS disabled for privileged accounts [example]; JIT for the cloud console.
+- Quarter 2: device registry and posture policy; the ERP and the repository behind ZTNA.
+- Quarter 3: VPN phased out except for two industrial systems; microsegmentation of the customer database.
+- Success metric: 0 standing administrator accounts, 100% of ERP access through ZTNA, access revocation time < 1 h [example].
+- Risks: dependence on a single IdP (offline break-glass accounts with review), tickets from BYOD employees.
 
-## Checklista
-- [ ] powierzchnia ochrony i inwentarz tożsamości, urządzeń i aplikacji
-- [ ] ocena per filar CISA, nie jedna ocena ogólna
-- [ ] MFA odporne na phishing dla uprzywilejowanych, potem dla wszystkich; SMS i push bez dopasowania numeru odpada
-- [ ] PAM i JIT, brak stałych uprawnień administratora; konta awaryjne
-- [ ] postura urządzenia w decyzji o dostępie; ZTNA per aplikacja; plan wycofania VPN
-- [ ] mikrosegmentacja najpierw w trybie obserwacji; telemetria do SIEM
-- [ ] mapa etapów z kryteriami ukończenia i metryki z właścicielami
+## Checklist
+- [ ] protect surface and an inventory of identities, devices and applications
+- [ ] assessment per CISA pillar, not one overall score
+- [ ] phishing-resistant MFA for privileged accounts, then for everyone; SMS and push without number matching are out
+- [ ] PAM and JIT, no standing administrator privileges; break-glass accounts
+- [ ] device posture in the access decision; ZTNA per application; a VPN retirement plan
+- [ ] microsegmentation first in observation mode; telemetry to the SIEM
+- [ ] a stage map with completion criteria and metrics with owners
 
-## Źródła
-- NIST SP 800-207, *Zero Trust Architecture* (sierpień 2020) — siedem zasad przez źródła wtórne, 2026-10-17 [niezweryfikowane w pierwotnym]
-- CISA, *Zero Trust Maturity Model* v2.0 — filary i stopnie przez źródła wtórne, 2026-10-17 [niezweryfikowane w pierwotnym]
-- FIDO Alliance (FIDO2, passkeys), definicje SASE/SSE (Gartner) — [niezweryfikowane]
-Opisane własnymi słowami.
+## Sources
+- NIST SP 800-207, *Zero Trust Architecture* (August 2020) — the seven tenets via secondary sources, 2026-10-17 [unverified in the primary]
+- CISA, *Zero Trust Maturity Model* v2.0 — pillars and stages via secondary sources, 2026-10-17 [unverified in the primary]
+- FIDO Alliance (FIDO2, passkeys), SASE/SSE definitions (Gartner) — [unverified]
+Described in our own words.

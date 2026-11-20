@@ -1,43 +1,43 @@
-# Pyłek (Flyweight)
+# Flyweight
 
-Kategoria: strukturalne. Istota: wiele drobnych obiektów **współdzieli niezmienną część stanu**, a unikalną część
-dostaje z zewnątrz — optymalizacja pamięci, nie porządku.
+Category: structural. The essence: many small objects **share the immutable part of their state**, and get the unique part
+from the outside — a memory optimization, not an organizational one.
 
 ## Problem
-Mapa miejsc na stadionie ma 60 000 foteli. Każdy fotel kopiuje dane swojej kategorii (nazwa, cena, kolor, opis zasad
-zwrotu), choć kategorii jest pięć. W przeglądarce klienta i w pamięci serwera rezerwacji to setki megabajtów
-powtórzeń, a GC ma ciągle pracę.
+A stadium seat map has 60,000 seats. Each seat copies the data of its category (name, price, colour, description of the refund
+rules), although there are five categories. In the client's browser and in the booking server's memory this is hundreds of megabytes
+of repetition, and the GC constantly has work to do.
 
-## Rozwiązanie i uczestnicy
-- **Stan wewnętrzny** (intrinsic) — wspólny i niezmienny (kategoria miejsca) → w obiekcie pyłku.
-- **Stan zewnętrzny** (extrinsic) — unikalny (rząd, numer, zajętość) → w lekkim kontekście albo przekazywany
-  w parametrach metod.
-- **Pyłek** — niezmienny obiekt ze stanem wewnętrznym.
-- **Fabryka pyłków** — pula; zwraca istniejący pyłek dla tego samego klucza zamiast tworzyć nowy.
-- **Kontekst** — stan zewnętrzny + referencja do pyłku.
+## Solution and participants
+- **Intrinsic state** — shared and immutable (the seat category) → in the flyweight object.
+- **Extrinsic state** — unique (row, number, occupancy) → in a light context or passed
+  in method parameters.
+- **Flyweight** — an immutable object with the intrinsic state.
+- **Flyweight factory** — a pool; returns the existing flyweight for the same key instead of creating a new one.
+- **Context** — the extrinsic state + a reference to the flyweight.
 
-## Kiedy używać
-Wszystkie trzy warunki naraz: bardzo dużo podobnych obiektów, **zmierzony** problem z pamięcią, stan da się czysto
-rozdzielić na wspólny i unikalny. Przykłady: glify w edytorze, kafelki/markery map, cząstki w grafice, tablice
-z milionami rekordów w przeglądarce.
+## When to use
+All three conditions at once: very many similar objects, a **measured** memory problem, the state can be cleanly
+split into shared and unique. Examples: glyphs in an editor, map tiles/markers, particles in graphics, tables
+with millions of records in the browser.
 
-## Koszty
-Złożoność (dwa rodzaje stanu, fabryka); CPU za RAM — stan zewnętrzny trzeba przekazywać lub wyliczać; trudniej
-czytać i testować.
+## Costs
+Complexity (two kinds of state, a factory); CPU for RAM — the extrinsic state has to be passed or computed; harder
+to read and test.
 
-## Powiązania
-- **Kompozyt** — liście drzewa mogą być pyłkami.
-- **Singleton** — jedna, często mutowalna instancja; pyłków jest wiele i są niezmienne.
-- Obiekty wartości DDD są niezmienne, więc **mogą** być współdzielone jak pyłki (interning) — ale to optymalizacja,
-  nie powód modelowania.
+## Relations
+- **Composite** — the leaves of the tree can be flyweights.
+- **Singleton** — one, often mutable instance; there are many flyweights and they are immutable.
+- DDD value objects are immutable, so they **can** be shared like flyweights (interning) — but that is an optimization,
+  not a reason for the modelling.
 
-## Forma idiomatyczna w TS
-Pula to `Map<klucz, Pyłek>`; niezmienność przez `readonly` + `Object.freeze`. W JS silnik i tak internuje stringi —
-pyłek ma sens dla obiektów złożonych.
+## Idiomatic form in TS
+The pool is a `Map<key, Flyweight>`; immutability through `readonly` + `Object.freeze`. In JS the engine interns strings anyway —
+a flyweight makes sense for compound objects.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
-/** Pyłek: wspólny, niezmienny stan kategorii miejsca. */
+/** Flyweight: the shared, immutable state of a seat category. */
 class SeatCategory {
   readonly code: string;
   readonly priceCents: number;
@@ -51,11 +51,11 @@ class SeatCategory {
   }
 
   label(row: number, seat: number): string {
-    return `${this.code} rząd ${row}, miejsce ${seat}: ${(this.priceCents / 100).toFixed(2)} zł`;
+    return `${this.code} row ${row}, seat ${seat}: ${(this.priceCents / 100).toFixed(2)} PLN`;
   }
 }
 
-/** Fabryka pyłków z pulą. */
+/** A flyweight factory with a pool. */
 class SeatCategories {
   readonly #pool = new Map<string, SeatCategory>();
 
@@ -74,7 +74,7 @@ class SeatCategories {
   }
 }
 
-/** Kontekst: tylko stan zewnętrzny + referencja do pyłku. */
+/** Context: only the extrinsic state + a reference to the flyweight. */
 type Seat = { row: number; seat: number; taken: boolean; category: SeatCategory };
 
 const categories = new SeatCategories();
@@ -85,12 +85,12 @@ for (let row = 1; row <= 200; row++) {
     seats.push({ row, seat, taken: false, category });
   }
 }
-console.log(seats.length, 'miejsc,', categories.size, 'obiekty kategorii');
+console.log(seats.length, 'seats,', categories.size, 'category objects');
 console.log(seats[0]?.category.label(1, 1));
 ```
 
-## Kiedy NIE używać / pułapki
-- **Obiektów jest mało lub pamięć nie jest zmierzonym problemem** — to wzorzec optymalizacyjny; w typowym kodzie
-  aplikacyjnym najrzadziej potrzebny z katalogu. Najpierw profiler (fe-/be- wydajność: mierz przed optymalizacją).
-- Nie umiesz czysto rozdzielić stanu na „zawsze wspólny” i „unikalny” → to nie ten problem.
-- Pyłek musi być niezmienny; mutowalny pyłek zmienia dane wszystkich kontekstów naraz — trudny do znalezienia błąd.
+## When NOT to use / pitfalls
+- **There are few objects or memory is not a measured problem** — this is an optimization pattern; in typical application
+  code the least often needed one in the catalog. First a profiler (fe-/be- performance: measure before optimizing).
+- You cannot cleanly split the state into "always shared" and "unique" → this is not that problem.
+- A flyweight must be immutable; a mutable flyweight changes the data of all contexts at once — a bug that is hard to find.

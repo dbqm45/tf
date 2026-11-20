@@ -1,42 +1,42 @@
-# Szacowanie kosztu i terminu — przykład
+# Estimating cost and schedule — an example
 
-Liczby w przykładzie policzone skryptem (2026-10-03). Projekt: system rezerwacji sal, szacunek w osobodniach.
+The numbers in the example were computed with a script (2026-10-03). The project: a room booking system, the estimate in person-days.
 
-## 1. Widok z zewnątrz (klasa referencyjna)
-1. Zbierz co najmniej kilka zakończonych projektów podobnej klasy (ten sam typ systemu, podobny zespół i stack):
-   plan i rzeczywistość (koszt, czas).
-2. Policz rozkład stosunku rzeczywistość / plan, np. mediana 1,3, 80. percentyl 1,8.
-3. Twój szacunek „od środka” mnożysz przez percentyl odpowiadający akceptowanemu ryzyku (P50 dla portfela
-   wielu projektów, P80 dla pojedynczego ważnego projektu).
+## 1. The outside view (the reference class)
+1. Collect at least a few completed projects of a similar class (the same type of system, a similar team and stack):
+   plan and reality (cost, time).
+2. Compute the distribution of the reality / plan ratio, e.g. a median of 1.3, the 80th percentile 1.8.
+3. You multiply your "inside" estimate by the percentile that matches the accepted risk (P50 for a portfolio
+   of many projects, P80 for a single important project).
 
-Bez własnych danych historycznych: powiedz to wprost, podaj szeroki przedział i zaplanuj etap odkrywania, który
-dostarczy danych (pierwszy kamień milowy jako pomiar).
+Without your own historical data: say so plainly, give a wide range and plan a discovery stage that
+will provide data (the first milestone as a measurement).
 
-## 2. Widok od środka (szacunek trzypunktowy)
-| Część | O | M | P | E = (O+4M+P)/6 | σ = (P−O)/6 |
+## 2. The inside view (a three-point estimate)
+| Part | O | M | P | E = (O+4M+P)/6 | σ = (P−O)/6 |
 |---|---|---|---|---|---|
-| Szkielet end-to-end i CI | 5 | 8 | 15 | 8,7 | 1,7 |
-| Rezerwacje sal | 10 | 15 | 30 | 16,7 | 3,3 |
-| Powiadomienia | 4 | 6 | 12 | 6,7 | 1,3 |
-| Panel administratora | 6 | 10 | 20 | 11,0 | 2,3 |
-| Integracja z kalendarzem | 5 | 10 | 30 | 12,5 | 4,2 |
-| **Suma** | 30 | **49** | 107 | **55,5** | √Σσ² = **6,2** |
+| End-to-end skeleton and CI | 5 | 8 | 15 | 8.7 | 1.7 |
+| Room bookings | 10 | 15 | 30 | 16.7 | 3.3 |
+| Notifications | 4 | 6 | 12 | 6.7 | 1.3 |
+| Admin panel | 6 | 10 | 20 | 11.0 | 2.3 |
+| Calendar integration | 5 | 10 | 30 | 12.5 | 4.2 |
+| **Sum** | 30 | **49** | 107 | **55.5** | √Σσ² = **6.2** |
 
-Wnioski:
-- suma „najbardziej prawdopodobnych” (49) jest niższa niż suma wartości oczekiwanych (55,5) — kto podaje sumę M,
-  zaniża szacunek;
-- przedział z niezależnych części (P80 ≈ 55,5 + 0,84 × 6,2 ≈ 60,7) jest za wąski, bo części nie są niezależne
-  (wspólne przyczyny: niejasne wymagania, nowa technologia, dostępność ludzi), a przekroczenia w IT mają gruby ogon;
-- dlatego końcowy przedział bierzesz z klasy referencyjnej: np. przy percentylach 1,3 (P50) i 1,5 (P80) —
-  P50 ≈ 72 osobodni, P80 ≈ 83 osobodni;
-- najszerszy przedział ma integracja z kalendarzem (P − O = 25) — to kandydat na spike w pierwszym kamieniu milowym.
+Conclusions:
+- the sum of the "most likely" values (49) is lower than the sum of the expected values (55.5) — whoever reports the sum of M
+  understates the estimate;
+- the range from independent parts (P80 ≈ 55.5 + 0.84 × 6.2 ≈ 60.7) is too narrow, because the parts are not independent
+  (common causes: unclear requirements, new technology, people's availability), and overruns in IT have a fat tail;
+- so you take the final range from the reference class: e.g. with percentiles 1.3 (P50) and 1.5 (P80) —
+  P50 ≈ 72 person-days, P80 ≈ 83 person-days;
+- the widest range is in the calendar integration (P − O = 25) — a candidate for a spike in the first milestone.
 
-## 3. Od osobodni do terminu i kosztu
-- Termin: osobodni ÷ (liczba osób × realna dostępność) + zależności zewnętrzne (zgody, dostawcy, testy z użytkownikami).
-  Dostępność ustalasz z ludźmi, nie przyjmujesz 100%.
-- Koszt: osobodni × stawka + środowiska + licencje + modele AI + utrzymanie. Podaj źródło stawki.
-- Rezerwy: na ryzyka zidentyfikowane (Σ prawdopodobieństwo × koszt skutku z rejestru) i kierownicza na nieznane.
+## 3. From person-days to schedule and cost
+- Schedule: person-days ÷ (number of people × real availability) + external dependencies (approvals, vendors, tests with users).
+  You establish availability with the people, you do not assume 100%.
+- Cost: person-days × rate + environments + licences + AI models + maintenance. State the source of the rate.
+- Reserves: for identified risks (Σ probability × cost of impact from the register) and a management reserve for the unknown.
 
-## 4. Aktualizacja
-Po każdym kamieniu milowym porównaj rzeczywistość z planem dla zakończonych części i przelicz prognozę. Gdy zespół
-ma historię przepustowości, prognozę terminu daje symulacja Monte Carlo (proc-agile).
+## 4. Updating
+After each milestone compare reality with the plan for the completed parts and recompute the forecast. When the team
+has a throughput history, the schedule forecast comes from a Monte Carlo simulation (proc-agile).

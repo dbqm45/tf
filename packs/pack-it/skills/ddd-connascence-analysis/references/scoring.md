@@ -1,29 +1,29 @@
-# Stopień i koszt
+# Degree and cost
 
-## Co liczymy jako miejsce (stopień)
-- jedno miejsce = jedna linia kodu produkcyjnego, która **zmieniłaby się**, gdyby umowa się zmieniła;
-- nie liczymy: importów, nieużywanych deklaracji, komentarzy; testy — osobna kolumna (informacyjnie);
-- funkcja pomocnicza, która zamyka umowę w jednym miejscu, liczy się jako **jedno** miejsce (to dobra praktyka — ma to być widać);
-- jedna linia może liczyć się w kilku wierszach, jeśli wiąże kilka umów.
+## What we count as a place (degree)
+- one place = one line of production code that **would change** if the contract changed;
+- we do not count: imports, unused declarations, comments; tests — a separate column (for information);
+- a helper function that encloses the contract in one place counts as **one** place (it is good practice — this is meant to be visible);
+- one line can count in several rows if it binds several contracts.
 
-| Rodzaj | Liczymy |
+| Kind | We count |
 |---|---|
-| nazwa | wywołania/odwołania po drugiej stronie |
-| typ | miejsca konstruujące lub rozpakowujące typ po drugiej stronie |
-| znaczenie | miejsca interpretujące wartość (porównania, mapowania) po obu stronach |
-| pozycja | wywołania z pozycyjną listą argumentów |
-| algorytm | kopie algorytmu |
-| kolejność | kroki, które muszą zachować kolejność |
-| czas | miejsca z założeniem czasowym (timeout, retry, sleep) |
-| wartość | zapisy do każdego z magazynów, które muszą się zgadzać |
-| tożsamość | komponenty otrzymujące tę samą instancję |
+| name | calls/references on the other side |
+| type | places that construct or unpack the type on the other side |
+| meaning | places that interpret the value (comparisons, mappings) on both sides |
+| position | calls with a positional argument list |
+| algorithm | copies of the algorithm |
+| execution order | steps that must keep the order |
+| timing | places with a timing assumption (timeout, retry, sleep) |
+| value | writes to each of the stores that must agree |
+| identity | components that receive the same instance |
 
-## Koszt wiersza
-`koszt = ranga × log2(1 + stopień)`, zaokrąglony do 0,01. Stopień jako przedział → licz **górną** granicą.
-Logarytm: dziesiąte miejsce boli mniej niż drugie, ale rodzaj (ranga) dominuje.
+## Row cost
+`cost = rank × log2(1 + degree)`, rounded to 0.01. A degree given as a range → count with the **upper** bound.
+The logarithm: the tenth place hurts less than the second, but the kind (rank) dominates.
 
-## Sortowanie (deterministyczne)
-koszt malejąco → pierwsza ścieżka źródła → linia → id wiersza.
+## Sorting (deterministic)
+cost descending → the first source path → line → row id.
 
-## Pasma
-statyczne słabe (1–2) · statyczne semantyczne (3–5) · dynamiczne (6–9). Wiersz z > 8 źródłami: pełna lista w załączniku.
+## Bands
+static weak (1–2) · static semantic (3–5) · dynamic (6–9). A row with > 8 sources: the full list in an appendix.

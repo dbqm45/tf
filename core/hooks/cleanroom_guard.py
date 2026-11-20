@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-PreToolUse (Read|Grep|Glob|NotebookRead|Bash|WebFetch|WebSearch|Agent|Task): izolacja informacji dla wybranych agentów.
+PreToolUse (Read|Grep|Glob|NotebookRead|Bash|WebFetch|WebSearch|Agent|Task): information isolation for selected agents.
 
-Profile z .claude/cleanroom.json:
-- "denylist" (np. `*-qa-analyst`): projektant testów nie czyta implementacji — Read pliku z rozszerzeniem kodu spoza `allow`
-  → deny; Grep tylko po dozwolonych ścieżkach/filtrach; Glob dozwolony (same nazwy plików). Np. qa-spec-first-testing (pack-it).
-- "allowlist" (np. `blind-analyst`): agent czyta WYŁĄCZNIE ścieżki z `allow` (np. brief biznesowy), żeby wymagania powstały
-  bez wiedzy o architekturze. Np. ddd-model-stress-test (pack-it).
-- "web" (np. `researcher`): agent czyta obcą treść z sieci, więc Bash tylko dla poleceń z `bash_allow` (początek
-  polecenia, np. `npm view`), bez łączenia poleceń, podstawień i przekierowań; czytanie bez ograniczeń.
-- `block_tools`: narzędzia zablokowane dla profilu (np. Bash, który ominąłby reguły).
-Agent spoza profili: bez zmian. Hook działa w subagentach (pole `agent_type`).
-`CLAUDE_CLEANROOM_DISABLE=web,qa` wyłącza wymienione profile (np. przywrócenie pełnej powłoki researchera).
+Profiles from .claude/cleanroom.json:
+- "denylist" (e.g. `*-qa-analyst`): the test designer does not read the implementation — Read of a file with a code extension outside `allow`
+  → deny; Grep only over allowed paths/filters; Glob allowed (file names only). E.g. qa-spec-first-testing (pack-it).
+- "allowlist" (e.g. `blind-analyst`): the agent reads ONLY paths from `allow` (e.g. the business brief), so that requirements are written
+  without knowledge of the architecture. E.g. ddd-model-stress-test (pack-it).
+- "web" (e.g. `researcher`): the agent reads foreign content from the web, so Bash only for commands from `bash_allow` (the start of
+  the command, e.g. `npm view`), with no command chaining, substitutions or redirections; reading unrestricted.
+- `block_tools`: tools blocked for the profile (e.g. Bash, which would bypass the rules).
+An agent outside the profiles: unchanged. The hook works in subagents (the `agent_type` field).
+`CLAUDE_CLEANROOM_DISABLE=web,qa` disables the listed profiles (e.g. restoring the full shell for the researcher).
 """
 import fnmatch
 import json
@@ -23,8 +23,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record_block  # blokada do .tf/logs/hook-blocks.jsonl (ostrzeżenie po aktualizacji)
-except ImportError:  # starsza instalacja bez dziennika blokad — hook działa jak dotąd
+    from hook_errors import record_block  # block to .tf/logs/hook-blocks.jsonl (warning after an update)
+except ImportError:  # older install without the block log — the hook works as before
     def record_block(hook: str, decision: str) -> None:
         return None
 
@@ -43,7 +43,7 @@ def load_config(project: Path) -> dict:
         cfg = json.loads((project / ".claude" / "cleanroom.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return DEFAULT
-    if "profiles" not in cfg:   # stary format (jeden profil denylist)
+    if "profiles" not in cfg:   # the old format (a single denylist profile)
         cfg = {"profiles": [{"name": "qa", "mode": "denylist", "block_tools": ["Bash"], **cfg}]}
     return cfg
 
@@ -90,9 +90,9 @@ def is_code(path: str, prof: dict) -> bool:
 def grep_allowed(path: str, glob: str, ftype: str, prof: dict) -> bool:
     if path and path not in (".", ""):
         if is_code(path, prof):
-            return allowed(path, prof)                     # konkretny plik kodu
+            return allowed(path, prof)                     # a specific code file
         if allowed(path, prof) or allowed(path + "/x", prof):
-            return True                                    # dokument albo katalog dozwolony (docs/, test/, e2e/)
+            return True                                    # a document or directory that is allowed (docs/, test/, e2e/)
     if glob:
         sample = glob.replace("*", "x")
         return allowed(sample, prof) or allowed("x/" + sample, prof)
@@ -104,7 +104,7 @@ PYTHONS = ("python3", "python", "py")
 
 
 def bash_allowed(cmd: str, prefixes: list[str]) -> bool:
-    """Polecenie zaczyna się od jednego z dozwolonych przedrostków (słowami), bez metaznaków powłoki i `..`."""
+    """The command starts with one of the allowed prefixes (by words), without shell metacharacters and `..`."""
     if SHELL_META.search(cmd):
         return False
     try:
@@ -117,7 +117,7 @@ def bash_allowed(cmd: str, prefixes: list[str]) -> bool:
         words[0] = "python3"
     for pre in prefixes:
         pw = pre.split()
-        if pw[-1].endswith("/"):    # katalog skryptów: kolejne słowo zaczyna się od tej ścieżki
+        if pw[-1].endswith("/"):    # scripts directory: the next word starts with this path
             if len(words) >= len(pw) and words[:len(pw) - 1] == pw[:-1] and words[len(pw) - 1].startswith(pw[-1]):
                 return True
         elif words[:len(pw)] == pw:
@@ -149,7 +149,7 @@ def main() -> None:
         data = json.load(sys.stdin)
     except json.JSONDecodeError:
         sys.exit(0)
-    if not isinstance(data, dict):   # dane spoza formatu Claude Code: decyzja, nie awaria (onFailure: block)
+    if not isinstance(data, dict):   # data outside the Claude Code format: a decision, not a failure (onFailure: block)
         sys.exit(0)
     agent = data.get("agent_type") or ""
     if not agent or not isinstance(agent, str):
@@ -165,7 +165,7 @@ def main() -> None:
     hint = HINTS.get(mode, "")
     tool = data.get("tool_name", "")
     ti = data.get("tool_input") if isinstance(data.get("tool_input"), dict) else {}
-    ti = {k: v for k, v in ti.items() if isinstance(v, str)}   # pola tekstowe; inne typy to dane spoza formatu
+    ti = {k: v for k, v in ti.items() if isinstance(v, str)}   # text fields; other types are data outside the format
 
     if tool in prof.get("block_tools", []):
         deny(f"{agent} (profile {prof.get('name')}) does not use the tool {tool}.", hint)

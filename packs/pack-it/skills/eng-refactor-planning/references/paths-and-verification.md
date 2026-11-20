@@ -1,87 +1,87 @@
-# Ścieżki refaktoryzacji, archeologia intencji i weryfikacja liczb
+# Refactoring paths, intent archaeology and verifying numbers
 
-## 1. Archeologia intencji
-| Pytanie | Polecenie | Uwagi |
+## 1. Intent archaeology
+| Question | Command | Notes |
 |---|---|---|
-| kto i dlaczego nadał funkcji obecny kształt | `git log -L :<funkcja>:<plik>` | historia samej funkcji z diffami; dla dokładnego wykrywania funkcji ustaw sterownik diff w `.gitattributes` (np. `*.go diff=golang`, `*.java diff=java`, `*.py diff=python`) |
-| historia zakresu linii | `git log -L <od>,<do>:<plik>` | gdy funkcja nie jest rozpoznawana |
-| skąd pochodzą linie (z przeniesieniami) | `git blame -w -C -C <plik>` | `-w` ignoruje białe znaki, `-C` śledzi kod przeniesiony z innych plików |
-| czy mechanizm się psuł | `git log --oneline --grep='fix' -- <plik>` + lektura opisów | 0 poprawek przez lata to dowód stabilności decyzji |
-| opis decyzji poza commitem | numer PR z opisu commita → `gh api repos/<o>/<r>/pulls/<nr>` | czytaj „dlaczego”, nie tylko „co” |
+| who gave the function its current shape and why | `git log -L :<function>:<file>` | the history of the function alone with diffs; for accurate function detection set the diff driver in `.gitattributes` (e.g. `*.go diff=golang`, `*.java diff=java`, `*.py diff=python`) |
+| the history of a line range | `git log -L <from>,<to>:<file>` | when the function is not recognized |
+| where the lines come from (with moves) | `git blame -w -C -C <file>` | `-w` ignores whitespace, `-C` tracks code moved from other files |
+| whether the mechanism broke | `git log --oneline --grep='fix' -- <file>` + reading the descriptions | 0 fixes over years is evidence of a stable decision |
+| a description of the decision outside the commit | the PR number from the commit description → `gh api repos/<o>/<r>/pulls/<no>` | read the "why", not only the "what" |
 
-Werdykt zapisujesz z dowodem: `świadome ograniczenie — commit 27d536b (2020-03): wsadowy INSERT dla szybkości
-importu; 0 poprawek kolejności kolumn w historii pliku`. Bez dowodu: `unknown` + pytanie do zespołu (kto pamięta).
+You write the verdict with evidence: `deliberate constraint — commit 27d536b (2020-03): batch INSERT for import
+speed; 0 column-order fixes in the file history`. Without evidence: `unknown` + a question to the team (who remembers).
 
 ## 2. Strangler Fig
-1. Wybierz szew wejściowy (router, fasada, kolejka), przez który przechodzi ruch do starego kodu.
-2. Nowa implementacja obsługuje najpierw mały, dobrze przetestowany wycinek zachowania; szew kieruje tam tylko ten
-   wycinek.
-3. Porównuj wyniki (równoległe uruchomienie lub testy charakteryzujące), przenoś kolejne wycinki.
-4. Gdy stary kod nie dostaje ruchu — usuń go osobnym commitem.
-Pasuje do: wymiany podsystemu, punktu wejścia, integracji. Ryzyko: dwa systemy żyją długo → data wygaszenia w planie.
+1. Choose an entry seam (a router, a facade, a queue) through which traffic goes to the old code.
+2. The new implementation first handles a small, well-tested slice of behaviour; the seam routes only that
+   slice there.
+3. Compare the results (a parallel run or characterization tests), move further slices.
+4. When the old code gets no traffic — remove it in a separate commit.
+Fits: replacing a subsystem, an entry point, an integration. Risk: two systems live for a long time → a phase-out date in the plan.
 
 ## 3. Branch by Abstraction
-1. Wprowadź abstrakcję (interfejs, port) nad miejscem, gdzie klienci używają starego kodu; stara implementacja za nią.
-2. Przepnij klientów na abstrakcję — commit po commicie, zachowanie bez zmian.
-3. Zbuduj nową implementację obok; testy kontraktowe abstrakcji przechodzą dla obu.
-4. Przełącz (flaga lub konfiguracja, najlepiej per klient lub per środowisko).
-5. Usuń starą implementację i — jeśli nie jest już potrzebna — samą abstrakcję.
-Główna gałąź cały czas nadaje się do wydania; zamiast długiej gałęzi masz serię małych PR.
+1. Introduce an abstraction (an interface, a port) over the place where clients use the old code; the old implementation behind it.
+2. Switch the clients to the abstraction — commit after commit, behaviour unchanged.
+3. Build the new implementation next to it; the contract tests of the abstraction pass for both.
+4. Switch over (a flag or configuration, preferably per client or per environment).
+5. Remove the old implementation and — if it is no longer needed — the abstraction itself.
+The main branch is releasable the whole time; instead of a long-lived branch you have a series of small PRs.
 
 ## 4. Mikado
-1. Zapisz cel jako korzeń grafu (np. „zapis przez `PostRepository` zamiast bezpośrednich zapytań”).
-2. Spróbuj zrobić cel wprost, z limitem czasu (np. 15 min). Zapisz każdy błąd kompilacji lub testu jako węzeł-prerekwizyt.
-3. **Cofnij wszystko** (`git restore .` / `git reset --hard` na gałęzi roboczej — za zgodą, gdy są niezacommitowane zmiany człowieka).
-4. Wybierz liść (prerekwizyt bez własnych prerekwizytów), zrób go, zacommituj, sprawdź testy.
-5. Wróć do kroku 2 dla rodzica. Kończysz, gdy korzeń da się zrobić bez błędów.
-Graf trzymasz w kroku projektu (Mermaid `flowchart BT`), węzły odhaczasz wraz z commitami.
+1. Write down the goal as the root of the graph (e.g. "saving through `PostRepository` instead of direct queries").
+2. Try to do the goal directly, with a time limit (e.g. 15 min). Write down every compilation or test error as a prerequisite node.
+3. **Revert everything** (`git restore .` / `git reset --hard` on the working branch — with consent, when there are uncommitted changes by the human).
+4. Choose a leaf (a prerequisite without its own prerequisites), do it, commit it, check the tests.
+5. Go back to step 2 for the parent. You finish when the root can be done without errors.
+You keep the graph in the project step (Mermaid `flowchart BT`), you tick off the nodes along with the commits.
 
-## 5. Osłona zamiast przebudowy
-Świadome ograniczenie zostaje, ale ryzyko „łatwo o tym zapomnieć” zamieniasz w „nie da się tego popsuć”:
-- test, który zawodzi przy rozjechaniu (np. dwie tablice kolumn muszą mieć tę samą kolejność → test z wartościami-
-  wartownikami, `.claude/skills/eng-behavior-preserving-refactoring/references/examples.md`);
-- reguła lintera lub ast-grepa w CI (wzorzec zabroniony poza jednym plikiem);
-- walidacja w generatorze kodu (np. dekorator musi nadpisać wszystkie metody interfejsu albo jawnie je wymienić
-  na liście wyjątków).
-Osłona to czysty dodatek: jeden commit `test:` albo `build:`, odwracalny revertem.
+## 5. A guard instead of a rebuild
+The deliberate constraint stays, but you turn the risk "it is easy to forget about this" into "this cannot be broken":
+- a test that fails on drift (e.g. two column arrays must have the same order → a test with sentinel
+  values, `.claude/skills/eng-behavior-preserving-refactoring/references/examples.md`);
+- a linter or ast-grep rule in CI (a pattern forbidden outside one file);
+- validation in the code generator (e.g. a decorator must override all the interface methods or explicitly list them
+  in a list of exceptions).
+A guard is a pure addition: one `test:` or `build:` commit, reversible with a revert.
 
-## 6. Weryfikacja twierdzeń ast-grepem
-| Twierdzenie | Wzorzec (sprawdzone na ast-grep 0.50.0) | Potwierdzenie zera |
+## 6. Verifying claims with ast-grep
+| Claim | Pattern (checked on ast-grep 0.50.0) | Confirming a zero |
 |---|---|---|
-| „`save` wołane w 4 miejscach” (TS) | `ast-grep run -p '$S.save($$$A)' -l ts --json=stream src \| wc -l` | `rg -n '\.save\(' src` |
-| „`SaveMultiple` wołane w 4 miejscach” (Go) | `ast-grep run -p 'func _() { $S.SaveMultiple($$$A) }' --selector call_expression -l go .` | `rg -n 'SaveMultiple\('` |
-| „interfejs ma 54 metody” (Go) | `ast-grep run -k method_elem -l go <plik>` (jedna linia na metodę interfejsu) | `rg -c` po sygnaturach w pliku |
-| „warstwa X nie nadpisuje `Delete`” (Go) | `ast-grep run -p 'func ($R $T) Delete($$$A) $$$RET' -l go <katalog-warstwy>` | `rg -n 'func \(.*\) Delete\(' <katalog>` |
-- **Pułapka cichego zera:** wzorzec musi być poprawnym kodem w danym języku. W Go samo wyrażenie
-  `$S.SaveMultiple($$$A)` nie parsuje się na poziomie pliku i zwraca 0 trafień bez błędu — potrzebny kontekst
-  (`func _() { … }`) i `--selector`. Podejrzane zero sprawdzisz przez `--debug-query=ast` (węzły `ERROR` = zły wzorzec)
-  i zawsze przez `rg`.
-- ast-grep pomija komentarze i literały tekstowe i odróżnia `Save(` od `SaveMultiple(`; `rg` łapie wszystko — różnica
-  między wynikami to informacja (wystąpienia w komentarzach, testach, kodzie generowanym).
-- Brak dopasowań kończy `ast-grep` kodem 1 — w skryptach nie traktuj tego jako awarii.
-- Wynik zapisuj z wersją narzędzia i commitem, na którym liczono.
+| "`save` called in 4 places" (TS) | `ast-grep run -p '$S.save($$$A)' -l ts --json=stream src \| wc -l` | `rg -n '\.save\(' src` |
+| "`SaveMultiple` called in 4 places" (Go) | `ast-grep run -p 'func _() { $S.SaveMultiple($$$A) }' --selector call_expression -l go .` | `rg -n 'SaveMultiple\('` |
+| "the interface has 54 methods" (Go) | `ast-grep run -k method_elem -l go <file>` (one line per interface method) | `rg -c` on the signatures in the file |
+| "layer X does not override `Delete`" (Go) | `ast-grep run -p 'func ($R $T) Delete($$$A) $$$RET' -l go <layer-directory>` | `rg -n 'func \(.*\) Delete\(' <directory>` |
+- **The silent-zero trap:** the pattern must be valid code in the given language. In Go the bare expression
+  `$S.SaveMultiple($$$A)` does not parse at the file level and returns 0 matches without an error — it needs context
+  (`func _() { … }`) and `--selector`. You check a suspicious zero with `--debug-query=ast` (`ERROR` nodes = a bad pattern)
+  and always with `rg`.
+- ast-grep skips comments and string literals and distinguishes `Save(` from `SaveMultiple(`; `rg` catches everything — the difference
+  between the results is information (occurrences in comments, tests, generated code).
+- No matches ends `ast-grep` with code 1 — in scripts do not treat it as a failure.
+- Record the result with the tool version and the commit on which the count was made.
 
-## 7. Szablon raportu eksploracji (`docs/project/<krok>/research.md`)
+## 7. The exploration report template (`docs/project/<step>/research.md`)
 ```markdown
 ---
 status: exploration
-last_updated: <data>
+last_updated: <date>
 tags: [refactor-opportunities]
-verified_at_commit: <sha lub „—”>
+verified_at_commit: <sha or "—">
 ---
-# Opcje refaktoryzacji: <obszar>
-**Intencja:** co badamy · czego NIE robimy (zmian, decyzji) · kto decyduje i kiedy
-## Lista problemów i klasyfikacja
-| # | Problem (źródło) | KANDYDAT / wejście | Uzasadnienie |
-## Kandydaci
-### K1: <nazwa>
-- Obecny kształt (evidence/inference/unknown, plik:linia) · teza archetypu
-- Intencja: świadome ograniczenie / przypadkowa złożoność / unknown — dowód
-- Wykonalność: abstrakcja, zasięg, osłony i testy (CI), prerekwizyt
-## Opcje refaktoryzacji (ranking)
-1. … obecny → docelowy · dlaczego · zasięg · ścieżka · prerekwizyt
-## Rozważone i odrzucone
-## Weryfikacja twierdzeń (ast-grep)
-| Twierdzenie | Werdykt | Dowód | Metoda |
-## Decyzje człowieka (wypełnia etap planowania)
+# Refactoring options: <area>
+**Intent:** what we are examining · what we are NOT doing (changes, decisions) · who decides and when
+## List of problems and classification
+| # | Problem (source) | CANDIDATE / input | Justification |
+## Candidates
+### K1: <name>
+- Current shape (evidence/inference/unknown, file:line) · archetype thesis
+- Intent: deliberate constraint / accidental complexity / unknown — evidence
+- Feasibility: abstraction, reach, guards and tests (CI), prerequisite
+## Refactoring options (ranking)
+1. … current → target · why · reach · path · prerequisite
+## Considered and rejected
+## Verifying claims (ast-grep)
+| Claim | Verdict | Evidence | Method |
+## The human's decisions (filled in by the planning stage)
 ```

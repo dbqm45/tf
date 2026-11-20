@@ -24,7 +24,8 @@ The human does not give the tool's name — `/tf EBO-1236` is enough.
    variables, a wrong token, no such issue), you tell the human in one sentence why and go with point 3.
    You do not set, print or read the variables with access data.
 1. `Tracker: <type>` (from the address or from the operations card): when the session has a tool for reading from this tracker
-   (an MCP server for Jira, Linear, GitHub, GitLab…), you read the issue with it: the title, the description, the acceptance criteria.
+   (an MCP server for Jira, Linear, GitHub, GitLab…), the `mcp-runner` agent reads the issue with it and returns the title, the
+   description and the acceptance criteria (not the whole issue JSON).
    This is **read only** — you do not change the status, comments or fields in the tracker.
 2. `Tracker: unknown`: you check which trackers are connected in the session. One → you use it. Several → you ask
    the human once (AskUserQuestion) which one issues with this prefix come from. You save the choice:

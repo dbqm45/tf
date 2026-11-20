@@ -1,38 +1,37 @@
 #!/usr/bin/env python3
 """
-Specyfikacja zadania sprawdzana skryptem (krok D osi przebiegu): `docs/project/changes/<KEY>/spec.md`.
+A task specification checked by a script (step D of the run axis): `docs/project/changes/<KEY>/spec.md`.
 
-  tf spec new <KEY>                 # szablon spec.md z tytułem zadania (nie nadpisuje istniejącego)
-  tf spec check <KEY> [--json]      # czy specyfikacja jest gotowa do planu
+  tf spec new <KEY>                 # spec.md template with the task title (does not overwrite an existing one)
+  tf spec check <KEY> [--json]      # whether the specification is ready for the plan
 
-Format pliku (bez nagłówka artefaktu — stan pliku trzyma task.json):
+File format (no artifact header — the file's state is kept by task.json):
 
-  # Spec: <tytuł>
-  ## Acceptance criteria   - AC-1: Given <stan>, when <jedna akcja>, then <obserwowalny wynik>.
-  ## Unchanged             co ma działać jak dotąd (albo „none, because …”)
-  ## Out of scope          czego historyjka nie obejmuje (albo „none, because …”)
-  ## Open questions        pytanie, bez którego nie da się zacząć, ma znacznik [blocking]
+  # Spec: <title>
+  ## Acceptance criteria   - AC-1: Given <state>, when <one action>, then <observable result>.
+  ## Unchanged             what should keep working as before (or "none, because …")
+  ## Out of scope          what the story does not cover (or "none, because …")
+  ## Open questions        a question without which work cannot start carries the marker [blocking]
 
-Kryterium może też zajmować kilka linii pod nagłówkiem `### AC-1`. Słowa kluczowe i sekcje po angielsku; dawne polskie
-(Zakładając / Mając, Gdy / Kiedy, Wtedy; Kryteria, Bez zmian, Poza zakresem, Otwarte pytania, [blokuje]) skrypt
-przyjmuje przez wydanie 14.x, a migracja przepisuje je w otwartych zadaniach.
+A criterion may also take several lines under a `### AC-1` heading. Keywords and sections are in English (the Polish ones
+from before 14.x are rewritten in open tasks by the 14.0.0 and 19.0.0 migrations); the criterion text may be in any language.
 
-Reguły — strukturalne, bez modelu:
-  SPEC-001 brak kryteriów `AC-n` · SPEC-002 kryterium bez części Given, When albo Then · SPEC-003 powtórzony
-  identyfikator · SPEC-004 więcej niż jedno „When” (jedna akcja na kryterium) · SPEC-005 sekcja „Unchanged” albo „Out of
-  scope” pusta, nieobecna albo samo „none” bez powodu · SPEC-006 otwarte pytanie ze znacznikiem [blocking] ·
-  SPEC-007 niewypełniony szablon (`<…>` w kryterium albo w sekcji) · SPEC-008 wynik, którego nie da się sprawdzić
-  („działa poprawnie”, „works as expected”) bez liczby ani cytowanej wartości w części Then.
-SPEC-009 (ostrzeżenie, nie blokuje etapu): żadne kryterium nie opisuje zachowania niedozwolonego — odmowy, błędu,
-„nie …” w części Then; sprawdzane tylko przy specyfikacji bez błędów.
-SPEC-004 obejmuje też łącznik kolejnej akcji w części Gdy („a następnie”, „potem”, „oraz”, „and then”).
-Pozostałe reguły językowe (szczegół implementacji, kilka akcji w historyjce, pełny słownik) sprawdza
-`requirements_lint.py` z nakładki pack-it, gdy jest zainstalowana.
+Rules — structural, no model:
+  SPEC-001 no `AC-n` criteria · SPEC-002 a criterion without a Given, When or Then part · SPEC-003 duplicated
+  identifier · SPEC-004 more than one "When" (one action per criterion) · SPEC-005 an "Unchanged" or "Out of
+  scope" section empty, absent or just "none" without a reason · SPEC-006 an open question with the [blocking] marker ·
+  SPEC-007 an unfilled template (`<…>` in a criterion or section) · SPEC-008 a result that cannot be verified
+  ("działa poprawnie", "works as expected") without a number or a quoted value in the Then part.
+SPEC-009 (warning, does not block the stage): no criterion describes forbidden behavior — a refusal, an error,
+"nie …" in the Then part; checked only for a specification without errors.
+SPEC-004 also covers a connector of a further action in the When part ("a następnie", "potem", "oraz", "and then").
+The remaining language rules (implementation detail, several actions in a story, the full dictionary) are checked by
+`requirements_lint.py` from the pack-it pack, when installed.
 
-Z niepoprawną specyfikacją `tf task stage <KEY> plan` (i dalsze etapy) kończy się odmową. Zadanie bez `spec.md`
-działa jak dotąd.
+With an invalid specification `tf task stage <KEY> plan` (and later stages) is refused. A task without `spec.md`
+works as before.
 
-Kod wyjścia: 0 — gotowa; 1 — błędy (albo odmowa `new`); 2 — brak pliku lub błąd wywołania. Tylko biblioteka standardowa.
+Exit code: 0 — ready; 1 — errors (or `new` refused); 2 — missing file or invocation error. Standard library only.
 """
 from __future__ import annotations
 
@@ -43,7 +42,7 @@ import re
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -52,23 +51,23 @@ os.environ.setdefault("PYTHONUTF8", "1")
 
 CHANGES = Path("docs") / "project" / "changes"
 KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
-SECTIONS = {"criteria": ("kryteria", "kryteria akceptacji", "acceptance criteria", "criteria"),
-            "unchanged": ("bez zmian", "unchanged"),
-            "out": ("poza zakresem", "out of scope"),
-            "questions": ("otwarte pytania", "open questions")}
+SECTIONS = {"criteria": ("acceptance criteria", "criteria"),
+            "unchanged": ("unchanged",),
+            "out": ("out of scope",),
+            "questions": ("open questions",)}
 LABEL = {"unchanged": "Unchanged", "out": "Out of scope"}
 AC_START = re.compile(r"^\s*(?:[-*]\s+|#{3,6}\s+)?\**(AC-\d+)\**\s*[:—–-]?\s*(.*)$")
-GIVEN = re.compile(r"\b(zakładając|zakladajac|mając|majac|przy założeniu|given)\b", re.I)
-WHEN = re.compile(r"\b(gdy|kiedy|when)\b", re.I)
-THEN = re.compile(r"\b(wtedy|then)\b", re.I)
+GIVEN = re.compile(r"\b(given)\b", re.I)
+WHEN = re.compile(r"\b(when)\b", re.I)
+THEN = re.compile(r"\b(then)\b", re.I)
 NEXT_ACTION = re.compile(r"\b(a następnie|następnie|potem|oraz|po czym|and then|after that|afterwards)\b", re.I)
 WEAK = re.compile(r"\b(poprawnie|prawidłowo|właściwie|odpowiednio|dobrze|sprawnie|bez problemu|bez problemów|zgodnie z oczekiwani\w+|"
                   r"działa|działają|correctly|properly|successfully|as expected|works|work fine|is fine)\b", re.I)
-CONCRETE = re.compile(r"\d|[\"„“”'`«»]")       # liczba albo cytowana wartość — wynik da się porównać w teście
+CONCRETE = re.compile(r"\d|[\"„“”'`«»]")       # a number or a quoted value — the result can be compared in a test
 PLACEHOLDER = re.compile(r"<[^<>\n]{2,}>")
 NONE_ONLY = re.compile(r"^(brak|nie dotyczy|none|n/a|-|—)[.!]?$", re.I)
-BLOCKING = re.compile(r"\[(blokuje|blocking)\]", re.I)
-# wynik opisujący zachowanie niedozwolone: odmowa, blokada, błąd, „nie …” (SPEC-009, tylko ostrzeżenie)
+BLOCKING = re.compile(r"\[blocking\]", re.I)
+# a result describing forbidden behavior: a refusal, a block, an error, "nie …" (SPEC-009, warning only)
 NEGATIVE = re.compile(r"\b(nie|odmaw\w*|odmow\w*|odrzuc\w*|blokuj\w*|zablok\w*|błęd\w*|zabron\w*|brak\w*|"
                       r"not|no|never|cannot|rejects?|rejected|denie[sd]|deny|error|forbidden|blocked)\b", re.I)
 TEMPLATE = """# Spec: {title}
@@ -97,7 +96,7 @@ check>. Check: `tf spec check {key}`.
 
 
 def parse(text: str) -> dict:
-    """Sekcje (nazwa → linie z numerami) i kryteria (id, numer linii, tekst)."""
+    """Sections (name → lines with numbers) and criteria (id, line number, text)."""
     sections: dict[str, list[tuple[int, str]]] = {}
     criteria: list[dict] = []
     current, item = None, None
@@ -124,7 +123,7 @@ def parse(text: str) -> dict:
 
 
 def filled(lines: list[tuple[int, str]]) -> list[tuple[int, str]]:
-    """Linie z treścią: bez pustych i bez znaczników listy."""
+    """Lines with content: without empty ones and without list markers."""
     out = []
     for n, line in lines:
         body = re.sub(r"^\s*(?:[-*]|\d+[.)])\s+", "", line).strip()
@@ -198,7 +197,7 @@ def spec_path(root: Path, key: str) -> Path:
 
 
 def check_task(root: Path, key: str) -> dict | None:
-    """Wynik sprawdzenia spec.md zadania; None, gdy pliku nie ma (zadanie bez specyfikacji)."""
+    """Result of checking a task's spec.md; None when there is no file (a task without a specification)."""
     path = spec_path(root, key)
     if not path.is_file():
         return None

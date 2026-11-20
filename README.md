@@ -1,6 +1,6 @@
 # tf
 
-Fabryka zespołów agentów dla Claude Code: skille, persony, hooki i narzędzia instalowane w projekcie
-(`.claude/` i `.tf/`).
+An agent team factory for Claude Code: skills, personas, hooks and tools installed in a project
+(`.claude/` and `.tf/`).
 
-Instalacja komendy `tf` jedną linijką i pierwsze kroki: [`docs/setup.md`](docs/setup.md).
+Installing the `tf` command with one line, and the first steps: [`docs/setup.md`](docs/setup.md).

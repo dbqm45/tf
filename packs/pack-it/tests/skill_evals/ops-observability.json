@@ -20,6 +20,25 @@
       }
     },
     {
+      "id": "dysk-cert-en",
+      "expect": "trigger",
+      "prompt": "I want alerts that warn about a filling disk and expiring TLS certificates before an outage happens. What queries and thresholds should I use in Prometheus? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "predict_linear"
+          ],
+          [
+            "probe_ssl_earliest_cert_expiry|blackbox"
+          ],
+          [
+            "21 ?\\*? ?86400|21 dni|7 dni",
+            "(21|7|14) days?"
+          ]
+        ]
+      }
+    },
+    {
       "id": "po-wdrozeniu",
       "expect": "trigger",
       "prompt": "Po wydaniu nowej wersji opóźnienia wzrosły z 200 ms do 5 s, ale odsetek błędów jest zerowy i żaden alert nie zadzwonił. Jak ustawić monitoring, żeby to łapać? Odpowiedz zwięźle.",

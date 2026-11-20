@@ -1,23 +1,23 @@
-# Szablon sekcji PRD dla funkcji AI
+# PRD section template for an AI feature
 
-Wklej do `docs/project/03-requirements/requirements.md` albo `ai-feature-brief.md`. Puste pole = otwarte pytanie z adresatem.
+Paste into `docs/project/03-requirements/requirements.md` or `ai-feature-brief.md`. An empty field = an open question with an addressee.
 
 ```
-## Funkcja AI: <nazwa>
-Wynik i miara: <wynik, wartość wyjściowa → cel, termin sprawdzenia>
-Użytkownik i zadanie: <rola, sytuacja, co robi dziś i ile to kosztuje>
-Dlaczego AI: <reguła/ML/LLM — uzasadnienie>; alternatywa bez AI: <co>
-Koszt błędów: <typ błędu → skutek → kto ponosi → limit>
-Tryb autonomii: <sugestia | zatwierdzenie | cofalne | automat>, fallback: <opis>
-Kryteria akceptacji (ewaluacje): zbiór <źródło, N, właściciel>; poprzeczki <metryka ≥ x>; przykłady dobre/złe/graniczne <odnośnik>
-Cele: jakość <..>, opóźnienie p50/p95 <..>, koszt na udane zadanie <..> (data cennika), co ustępuje <..>
-Dane: <potrzebne, mamy?, właściciel, podstawa użycia>
-Podejście: <gotowy | API | dostrojenie | własny> (decyzja techniczna: arch-ai-solutions)
-Ryzyka: <odnośnik do rejestru>, klasa regulacyjna: <od ai-governance-compliance>
-UX niepewności: <oczekiwania, pewność/źródła, korekta, zbieranie sygnałów>
-Wdrożenie: offline <próg> → dogfooding <próg> → beta <grupa, kill switch> → A/B <metryka, próg>
-Metryki: produktowe <..>; modelowe <..>; ochronne <..>
-Monitoring: <próbki, alerty, rytm przeglądu, właściciel>
-Komunikat dla interesariuszy: potrafi <..> / nie potrafi <..> / nie wiemy jeszcze <..>
-Otwarte pytania: <pytanie → adresat>
+## AI feature: <name>
+Outcome and measure: <outcome, baseline value → target, check date>
+User and task: <role, situation, what they do today and how much it costs>
+Why AI: <rule/ML/LLM — justification>; alternative without AI: <what>
+Cost of errors: <error type → effect → who bears it → limit>
+Autonomy mode: <suggestion | approval | reversible | automatic>, fallback: <description>
+Acceptance criteria (evals): set <source, N, owner>; bars <metric ≥ x>; good/bad/borderline examples <link>
+Goals: quality <..>, latency p50/p95 <..>, cost per successful task <..> (price list date), what gives way <..>
+Data: <needed, do we have it?, owner, legal basis for use>
+Approach: <ready | API | fine-tuning | own> (technical decision: arch-ai-solutions)
+Risks: <link to the register>, regulatory class: <from ai-governance-compliance>
+Uncertainty UX: <expectations, confidence/sources, correction, signal collection>
+Rollout: offline <threshold> → dogfooding <threshold> → beta <group, kill switch> → A/B <metric, threshold>
+Metrics: product <..>; model <..>; guardrail <..>
+Monitoring: <samples, alerts, review cadence, owner>
+Message for stakeholders: can <..> / cannot <..> / we do not know yet <..>
+Open questions: <question → addressee>
 ```

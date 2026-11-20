@@ -26,6 +26,30 @@
       }
     },
     {
+      "id": "top10-llm-model-zagrozen-en",
+      "expect": "trigger",
+      "prompt": "We’re building a chatbot with access to company documents and tools (email, calendar). What threats to this LLM application should we take into account, and according to which list? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "OWASP Top 10 for LLM",
+            "LLM01"
+          ],
+          [
+            "prompt injection",
+            "wstrzykiwani\\w* prompt"
+          ],
+          [
+            "indirect|pośredni"
+          ],
+          [
+            "excessive agency",
+            "nadmiern\\w* sprawczo|nadmiern\\w* uprawnie"
+          ]
+        ]
+      }
+    },
+    {
       "id": "eksfiltracja-markdown",
       "expect": "trigger",
       "prompt": "Agent czyta maile klientów i może odpowiadać. Jak zabezpieczyć go przed wyciekiem danych przez złośliwą treść maila (np. obrazek w markdownie)? Odpowiedz zwięźle.",

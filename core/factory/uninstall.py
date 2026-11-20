@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Odinstalowanie fabryki z projektu (`tf uninstall`). Bez modelu i bez sieci.
+Uninstalls the factory from a project (`tf uninstall`). No model, no network.
 
-  python3 .tf/factory/uninstall.py --dry-run        # co zostanie usunięte i zmienione (nic nie zmienia)
-  python3 .tf/factory/uninstall.py --yes            # usuń pliki fabryki, zostaw Twoje
-  python3 .tf/factory/uninstall.py --yes --force    # usuń też Twoje dodatki: własne skille, cały .tf/, pamięć agentów
+  python3 .tf/factory/uninstall.py --dry-run        # what would be removed and changed (changes nothing)
+  python3 .tf/factory/uninstall.py --yes            # remove the factory files, keep yours
+  python3 .tf/factory/uninstall.py --yes --force    # also remove your additions: own skills, the whole .tf/, agent memory
 
-Usuwa: pliki z manifestu instalacji (silnik `.tf/factory/`, skille, hooki, testy, workflowy fabryki), pliki generowane
-(agenci `_generated`, katalog, ustawienia fabryki, kopie aktualizacji), blok fabryki w `CLAUDE.local.md`/`CLAUDE.md`
-i w `.git/info/exclude`/`.gitignore`, wpisy fabryki w ustawieniach Claude Code (hooki, uprawnienia, pasek stanu —
-według manifestu; Twoje wpisy zostają), tryb uprawnień ustawiony przez styl pracy (wraca poprzedni).
-Zostawia (bez `--force`): własne skille w `.claude/skills/`, `.tf/config/` (persony, role, config.yaml), wyniki pracy
-w `.tf/` (raporty, rejestr, logi), pamięć agentów. Nigdy nie rusza `docs/project/` ani kodu projektu.
+Removes: files from the install manifest (the `.tf/factory/` engine, skills, hooks, tests, factory workflows), generated files
+(`_generated` agents, catalog, factory settings, update copies), the factory block in `CLAUDE.local.md`/`CLAUDE.md`
+and in `.git/info/exclude`/`.gitignore`, factory entries in Claude Code settings (hooks, permissions, status line —
+per the manifest; your entries stay), the permission mode set by the work style (the previous one is restored).
+Keeps (without `--force`): own skills in `.claude/skills/`, `.tf/config/` (personas, roles, config.yaml), work results
+in `.tf/` (reports, registry, logs), agent memory. Never touches `docs/project/` or the project code.
 
-Przed zmianą zapisuje kopię wszystkiego, co usuwa lub zmienia: `~/.tf/backups/<projekt>-<data>.zip` (katalog:
-zmienna `TF_BACKUP_DIR`); przywrócenie: `unzip -o <plik> -d <projekt>`.
+Before changing anything it saves a copy of everything it removes or changes: `~/.tf/backups/<project>-<date>.zip` (directory:
+variable `TF_BACKUP_DIR`); to restore: `unzip -o <file> -d <project>`.
 """
 from __future__ import annotations
 
@@ -27,12 +27,12 @@ import sys
 import zipfile
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (git) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (git) also write and read UTF-8
 
 ROOT = Path.cwd()
 MANIFEST = ".claude/factory-manifest.json"
@@ -71,7 +71,7 @@ def exclude_path(root: Path) -> Path | None:
 
 
 def factory_hook(h: dict, fac_cmds: set[str], hook_files: set[str]) -> bool:
-    """Hook fabryki: ten sam co w manifeście albo wskazuje plik fabryki (.claude/hooks/<plik z manifestu>, .tf/factory/)."""
+    """Factory hook: the same as in the manifest or points to a factory file (.claude/hooks/<file from the manifest>, .tf/factory/)."""
     text = " ".join([str(h.get("command", "")), *map(str, h.get("args") or [])])
     if text in fac_cmds or ".tf/factory/" in text:
         return True
@@ -159,7 +159,7 @@ def plan(root: Path, force: bool) -> dict:
             delete |= {p.relative_to(root).as_posix() for p in (root / ".claude/skills" / s).rglob("*") if p.is_file()}
     delete = {d for d in delete if not d.startswith(NEVER)}
     shared = man.get("mode") == "shared"
-    edits: dict[str, str | None] = {}                            # ścieżka → nowa treść (None: usunąć plik)
+    edits: dict[str, str | None] = {}                            # path → new content (None: delete the file)
     for md in ("CLAUDE.local.md", "CLAUDE.md"):
         p = root / md
         if p.is_file():
@@ -246,7 +246,7 @@ def main(argv: list[str]) -> int:
         if not sys.stdin.isatty():
             print("Run again with --yes to uninstall (no terminal to confirm). Nothing changed.")
             return 1
-        if input("Uninstall? [y/N] ").strip().lower() not in ("t", "tak", "y", "yes"):   # t/tak: polskie odpowiedzi nadal przyjmowane
+        if input("Uninstall? [y/N] ").strip().lower() not in ("y", "yes"):
             print("Stopped. Nothing changed.")
             return 1
     zipped = backup(root, p)

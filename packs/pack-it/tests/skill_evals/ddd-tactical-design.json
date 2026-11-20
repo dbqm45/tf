@@ -28,6 +28,41 @@
       }
     },
     {
+      "id": "agregat-i-zdarzenia-en",
+      "expect": "trigger",
+      "prompt": "I'm designing a Reservation aggregate in TypeScript. How do I set its boundary and who should publish domain events so they are not lost in a failure after the commit? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "niezmiennik|invariant"
+          ],
+          [
+            "outbox"
+          ],
+          [
+            "jeden agregat|jedna transakcja|identyfikator|\\bID\\b",
+            "one aggregate (per|in) (a )?transaction",
+            "single aggregate",
+            "by (id|identity)",
+            "identifiers?"
+          ],
+          [
+            "zwraca\\w* zdarzeni",
+            "zdarzeni\\w*.{0,40}z metody",
+            "wybierz jed\\w* z dwóch",
+            "jeden z dwóch wariant",
+            "agregat\\w* dynamiczn",
+            "kto zmienia.{0,60}jednocześnie",
+            "return\\w* (the )?(domain )?events",
+            "events? (are )?return\\w*",
+            "pick one of (the )?two",
+            "one of (the )?two (variants|options|approaches)",
+            "dynamic aggregate"
+          ]
+        ]
+      }
+    },
+    {
       "id": "connascence-magiczne",
       "expect": "trigger",
       "prompt": "W kodzie mamy magiczne wartości („status = 2 oznacza anulowane”) i metodę wyliczającą cenę skopiowaną w dwóch modułach. Jak to ocenić i poprawić pod kątem sprzężeń? Odpowiedz zwięźle.",

@@ -1,74 +1,74 @@
-# Przykłady ciągłego dostarczania
+# Examples of continuous delivery
 
-## 1. Trzytygodniowa gałąź funkcji → seria małych kroków
-**Sytuacja:** „Gałąź `feature/new-checkout` żyje od 3 tygodni, ma 74 pliki zmian i konflikty przy każdym rebase.
-Jak to dowieźć i nie powtórzyć?”
+## 1. A three-week feature branch → a series of small steps
+**Situation:** "The branch `feature/new-checkout` has lived for 3 weeks, has 74 changed files and conflicts on every rebase.
+How do we deliver it and not repeat this?"
 
-**Jak:**
-1. **Trunk-based development:** gałęzie ≤ 1–2 dni, integracja co najmniej codziennie — obecna gałąź to ukryte ryzyko
-   integracji.
-2. **Małe partie:** duża zmiana → seria PR-ów, każdy wdrażalny osobno.
-3. **Feature flag** oddziela wdrożenie od udostępnienia; flaga ma właściciela i datę usunięcia.
-4. **Branch by abstraction** dla wymiany starego koszyka: interfejs, nowa implementacja obok, przełączenie flagą.
-5. **Główna zawsze wdrażalna:** każdy PR przechodzi pełny pipeline, a czerwony build naprawiasz przed nową pracą.
+**How:**
+1. **Trunk-based development:** branches ≤ 1–2 days, integration at least daily — the current branch is a hidden integration
+   risk.
+2. **Small batches:** a large change → a series of PRs, each deployable on its own.
+3. **A feature flag** separates deployment from release; the flag has an owner and a removal date.
+4. **Branch by abstraction** for replacing the old cart: an interface, the new implementation next to it, switching with the flag.
+5. **Main always deployable:** every PR goes through the full pipeline, and you fix a red build before new work.
 
-**Wynik** — plan wydzielenia gałęzi na kroki i definicja flagi:
+**Result** — the plan for splitting the branch into steps and the flag definition:
 
-| Krok | PR | Wdrażalny bez udostępnienia? |
+| Step | PR | Deployable without release? |
 |---|---|---|
-| 1 | interfejs `CheckoutFlow` + stary koszyk za nim (bez zmiany zachowania) | tak |
-| 2 | nowy `CheckoutFlowV2` za flagą `checkout-v2`, domyślnie wyłączoną | tak |
-| 3 | migracja danych *expand*: nowe kolumny obok starych (be-database) | tak |
-| 4 | włączenie flagi dla zespołu wewnętrznego | tak |
-| 5 | włączenie dla wszystkich, potem *contract*: usunięcie starego koszyka i flagi | tak |
+| 1 | the interface `CheckoutFlow` + the old cart behind it (no behaviour change) | yes |
+| 2 | the new `CheckoutFlowV2` behind the flag `checkout-v2`, off by default | yes |
+| 3 | the *expand* data migration: new columns next to the old ones (be-database) | yes |
+| 4 | turning the flag on for the internal team | yes |
+| 5 | turning it on for everyone, then *contract*: removing the old cart and the flag | yes |
 
 ```ts
 type FeatureFlag = { key: string; owner: string; removeBy: string; defaultOn: boolean };
 
 export const flags: FeatureFlag[] = [
-  { key: "checkout-v2", owner: "zespol-platnosci", removeBy: "2026-12-15", defaultOn: false },
+  { key: "checkout-v2", owner: "payments-team", removeBy: "2026-12-15", defaultOn: false },
 ];
 ```
 
-## 2. Metryki DORA jako cel dla zespołów
-**Sytuacja:** „Chcę dać zespołom cel: co najmniej 20 wdrożeń tygodniowo, i ranking zespołów co miesiąc”.
+## 2. DORA metrics as a target for teams
+**Situation:** "I want to give the teams a target: at least 20 deployments a week, and a ranking of the teams every month."
 
-**Jak:**
-1. Metryki DORA służą do uczenia się, **nie są celami** (prawo Goodharta) — cel liczbowy zachęca do dzielenia wdrożeń
-   na sztuczne kawałki.
-2. **Porównuj system z nim samym w czasie**, nie zespoły między sobą (różne usługi, różne ryzyko).
-3. Mierz razem przepustowość i niestabilność — szybkość i stabilność idą w parze.
-4. Poziom pomiaru: aplikacja/usługa, nie osoba.
+**How:**
+1. DORA metrics are for learning, **they are not targets** (Goodhart's law) — a numeric target encourages splitting deployments
+   into artificial pieces.
+2. **Compare the system with itself over time**, not teams with each other (different services, different risk).
+3. Measure throughput and instability together — speed and stability go together.
+4. The level of measurement: the application/service, not a person.
 
-**Wynik** — rekomendacja: zamiast celu i rankingu kwartalny przegląd trendu usługi `orders-api`:
+**Result** — the recommendation: instead of a target and a ranking, a quarterly review of the trend of the service `orders-api`:
 
-| Metryka | Q2 | Q3 | Wniosek |
+| Metric | Q2 | Q3 | Conclusion |
 |---|---|---|---|
-| czas realizacji zmiany | 6 dni | 2 dni | mniejsze PR-y działają |
-| częstotliwość wdrożeń | 3 / tydz. | 9 / tydz. | — |
-| czas przywrócenia po nieudanym wdrożeniu | 5 h | 1,5 h | — |
-| odsetek nieudanych zmian | 18% | 9% | szybciej nie znaczy gorzej |
-| odsetek przeróbek wdrożeń | 7% | 6% | bez zmian — zadanie: przegląd hotfixów |
+| change lead time | 6 days | 2 days | smaller PRs work |
+| deployment frequency | 3 / week | 9 / week | — |
+| failed deployment recovery time | 5 h | 1.5 h | — |
+| change failure rate | 18% | 9% | faster does not mean worse |
+| deployment rework rate | 7% | 6% | unchanged — a task: review the hotfixes |
 
-## 3. Konfiguracja w kodzie a Twelve-Factor
-**Sytuacja:** „Review serwisu: adres bazy jest wpisany w `settings.py`, logi idą do pliku `app.log`, a obraz budujemy
-osobno na test i produkcję”.
+## 3. Configuration in code and Twelve-Factor
+**Situation:** "A service review: the database address is written in `settings.py`, the logs go to the file `app.log`, and we build the image
+separately for test and production."
 
-**Jak:**
-1. **Konfiguracja w środowisku**, nie w kodzie — jeden obraz na wszystkie środowiska.
-2. **Rozdzielone build/release/run:** build raz, release = obraz + konfiguracja środowiska.
-3. **Logi jako strumień zdarzeń:** `stdout`, zbieraniem zajmuje się platforma.
-4. **Shift left:** skan sekretów w pipeline złapałby hasło w `settings.py` przed scaleniem.
+**How:**
+1. **Configuration in the environment**, not in the code — one image for all environments.
+2. **Separated build/release/run:** build once, release = the image + the environment configuration.
+3. **Logs as an event stream:** `stdout`, the platform takes care of collecting them.
+4. **Shift left:** a secret scan in the pipeline would have caught the password in `settings.py` before the merge.
 
-**Wynik:**
+**Result:**
 ```python
 import logging
 import os
 import sys
 
-DATABASE_URL = os.environ["DATABASE_URL"]  # brak zmiennej = błąd przy starcie, nie cicha wartość domyślna
+DATABASE_URL = os.environ["DATABASE_URL"]  # a missing variable = an error at startup, not a silent default value
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 
 logging.basicConfig(stream=sys.stdout, level=LOG_LEVEL, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 ```
-Uwagi z review: usunąć hasło z historii i je zmienić (ops-secrets-identities), jeden obraz promowany test → produkcja.
+Notes from the review: remove the password from the history and change it (ops-secrets-identities), one image promoted test → production.

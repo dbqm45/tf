@@ -1,112 +1,112 @@
 ---
 name: eng-module-depth
-description: Użyj przy projekcie interfejsu modułu — głębokie moduły, test usunięcia, spoiny i adaptery, płytkie moduły.
+description: Use for designing a module interface — deep modules, the deletion test, seams and adapters, shallow modules.
 metadata:
   review: "2027-10-17"
-  catalog: "Użyj przy projektowaniu interfejsu modułu i przeglądzie architektury pod kątem płytkich modułów — słownik (moduł, interfejs, głębokość, spoina, adapter), test usunięcia, kategorie zależności, „zaprojektuj dwa razy”, raport kandydatów do pogłębienia. Nie do mapy całego repo (eng-codebase-mapping) ani audytu długu (eng-tech-debt-audit)."
-  keywords: "interfejs modułu, projektuję interfejs nowego modułu, jak wybrać interfejs, publiczne API modułu, nikt nie importuje wnętrza modułu, import wnętrza modułu, płytki moduł, głęboki moduł, spoina, adapter, test usunięcia"
+  catalog: "Use when designing a module interface and reviewing the architecture for shallow modules — the vocabulary (module, interface, depth, seam, adapter), the deletion test, dependency categories, \"design it twice\", a report of candidates for deepening. Not for a map of the whole repo (eng-codebase-mapping) or a debt audit (eng-tech-debt-audit)."
+  keywords: "interfejs modułu, projektuję interfejs nowego modułu, jak wybrać interfejs, publiczne API modułu, nikt nie importuje wnętrza modułu, import wnętrza modułu, płytki moduł, głęboki moduł, spoina, adapter, test usunięcia, module interface, I am designing the interface of a new module, how to choose an interface, public API of a module, nobody imports the module's internals, importing the module's internals, shallow module, deep module, seam, deletion test"
 ---
 
-# Głębokie moduły
+# Deep modules
 
-Cel: dużo zachowania za małym interfejsem, w dobrze wybranym miejscu, testowalne przez ten interfejs. Zyskują wywołujący
-(dźwignia), utrzymujący (lokalność) i testy. To słownik i procedura przeglądu — sam skill niczego nie refaktoryzuje.
+Goal: a lot of behaviour behind a small interface, in a well-chosen place, testable through that interface. The callers gain
+(leverage), so do the maintainers (locality) and the tests. This is a vocabulary and a review procedure — the skill itself refactors nothing.
 
-## Słownik (używaj dokładnie tych słów)
-| Pojęcie | Znaczenie | Unikaj |
+## Vocabulary (use exactly these words)
+| Term | Meaning | Avoid |
 |---|---|---|
-| **moduł** | wszystko, co ma interfejs i implementację: funkcja, klasa, pakiet, wycinek przez warstwy | komponent, serwis (w tym znaczeniu) |
-| **interfejs** | wszystko, co wywołujący musi wiedzieć: sygnatura **oraz** niezmienniki, kolejność wywołań, tryby błędów, wymagana konfiguracja, wydajność | „API”, „sygnatura” (za wąskie) |
-| **głębokość** | ile zachowania można uruchomić na jednostkę interfejsu, której trzeba się nauczyć; płytki = interfejs prawie tak złożony jak implementacja | stosunek linii kodu (nagradza pompowanie) |
-| **spoina** (ang. *seam*, Feathers) | miejsce, w którym zmienisz zachowanie bez edycji w tym miejscu — tam leży interfejs | „granica” (koliduje z granicą kontekstu w DDD) |
-| **adapter** | konkretna rzecz spełniająca interfejs w spoinie (repozytorium Postgres i fake w pamięci to oba adaptery) | — |
-| **dźwignia** | co dostaje wywołujący: więcej możliwości na jednostkę interfejsu | — |
-| **lokalność** | co dostaje utrzymujący: zmiana, błąd i weryfikacja w jednym miejscu | — |
-Pojęcia domeny bierzesz ze słownika projektu (`docs/project/02-domain/glossary.md`): „moduł przyjmowania Zamówień”,
-nie „OrderHandler”.
+| **module** | anything that has an interface and an implementation: a function, a class, a package, a slice across layers | component, service (in this sense) |
+| **interface** | everything a caller must know: the signature **and** the invariants, the call order, the error modes, the required configuration, performance | "API", "signature" (too narrow) |
+| **depth** | how much behaviour can be triggered per unit of interface that has to be learned; shallow = an interface almost as complex as the implementation | a ratio of lines of code (rewards padding) |
+| **seam** (Feathers) | a place where you change behaviour without editing in that place — that is where the interface lies | "boundary" (clashes with the context boundary in DDD) |
+| **adapter** | a concrete thing satisfying the interface at a seam (a Postgres repository and an in-memory fake are both adapters) | — |
+| **leverage** | what the caller gets: more capabilities per unit of interface | — |
+| **locality** | what the maintainer gets: the change, the bug and the verification in one place | — |
+You take domain terms from the project glossary (`docs/project/02-domain/glossary.md`): "the Order intake module",
+not "OrderHandler".
 
-## Zasady
-0. **Najpierw: czy w ogóle modularyzować.** Prototyp lub rozwiązanie jednorazowe, system z góry na jeden moduł albo brak
-   złożoności to powód, żeby nie dzielić — ocena wstępna w ddd-discovery-intake (pytania o cykl życia i złożoność).
-1. **Głębokość to cecha interfejsu.** Moduł może mieć w środku małe wymienne części i własne, wewnętrzne spoiny — nie
-   wystawiasz ich na zewnątrz tylko dlatego, że używają ich testy.
-2. **Test usunięcia.** Wyobraź sobie, że moduł znika. Złożoność znika razem z nim → był przelotką. Złożoność wraca
-   u N wywołujących → zarabia na siebie.
-3. **Interfejs jest powierzchnią testów.** Wywołujący i testy przechodzą przez tę samą spoinę. Chcesz testować „za”
-   interfejsem → moduł ma zły kształt.
-4. **Jeden adapter = spoina hipotetyczna, dwa = prawdziwa.** Nie wprowadzaj portu, dopóki coś się w nim nie zmienia
-   (zwykle: produkcja + test). Spoina z jednym adapterem to tylko pośrednictwo (eng-design-principles, YAGNI).
-Pytania przy projektowaniu: czy da się zmniejszyć liczbę metod, uprościć parametry, ukryć więcej w środku? Przyjmuj
-zależności zamiast je tworzyć; zwracaj wynik zamiast robić skutki uboczne.
+## Principles
+0. **First: whether to modularize at all.** A prototype or a one-off solution, a system known in advance to be a single module, or no
+   complexity is a reason not to split — the initial assessment is in ddd-discovery-intake (questions about the lifecycle and the complexity).
+1. **Depth is a property of the interface.** A module can have small interchangeable parts inside and its own internal seams — you do not
+   expose them outside just because the tests use them.
+2. **The deletion test.** Imagine that the module disappears. The complexity disappears with it → it was a pass-through. The complexity comes back
+   at N callers → it earns its keep.
+3. **The interface is the test surface.** Callers and tests go through the same seam. You want to test "behind"
+   the interface → the module has the wrong shape.
+4. **One adapter = a hypothetical seam, two = a real one.** Do not introduce a port until something varies in it
+   (usually: production + test). A seam with one adapter is only indirection (eng-design-principles, YAGNI).
+Questions when designing: can the number of methods be reduced, the parameters simplified, more hidden inside? Accept
+dependencies instead of creating them; return a result instead of producing side effects.
 
-## Kategorie zależności — jak testować pogłębiony moduł
-| Kategoria | Przykład | Strategia |
+## Dependency categories — how to test a deepened module
+| Category | Example | Strategy |
 |---|---|---|
-| w procesie | czyste obliczenia, stan w pamięci | scal moduły, testuj przez nowy interfejs, bez adaptera |
-| lokalnie zastępowalna | baza z lekkim zamiennikiem (kontener testowy, PGlite), system plików w pamięci | zamiennik w testach, spoina wewnętrzna |
-| zdalna, ale nasza | własna usługa za siecią | port w spoinie; adapter HTTP/kolejka w produkcji, w pamięci w testach |
-| naprawdę zewnętrzna | bramka płatności, SMS | port wstrzykiwany, w testach mock adaptera |
-**Zastępuj, nie dokładaj:** gdy są testy na interfejsie pogłębionego modułu, stare testy płytkich modułów usuwasz.
-Testy sprawdzają wynik obserwowalny przez interfejs; jeśli test musi się zmienić przy zmianie implementacji, testuje za
-głęboko (eng-testing).
+| in-process | pure computation, in-memory state | merge the modules, test through the new interface, no adapter |
+| locally substitutable | a database with a lightweight substitute (a test container, PGlite), an in-memory file system | the substitute in tests, an internal seam |
+| remote, but ours | our own service over the network | a port at the seam; an HTTP/queue adapter in production, in-memory in tests |
+| truly external | a payment gateway, SMS | an injected port, a mock adapter in tests |
+**Replace, do not add:** once there are tests on the interface of the deepened module, you delete the old tests of the shallow modules.
+Tests check the result observable through the interface; if a test has to change when the implementation changes, it tests too
+deep (eng-testing).
 
-## Procedura A — przegląd: kandydaci do pogłębienia
-1. **Zakres przed skanem.** Kierunek od człowieka (moduł, ból) ma pierwszeństwo. Bez niego — gorące miejsca z historii
-   (`git log --since=6.months --name-only`, jak w eng-tech-debt-audit): pogłębienie opłaca się tam, gdzie kod się zmienia.
-   Przeczytaj słownik domeny i ADR z tego obszaru.
-2. **Szukaj tarcia** (zwykle tani `scout`): zrozumienie jednego pojęcia wymaga skakania po wielu małych modułach;
-   interfejs prawie jak implementacja; czyste funkcje wydzielone „dla testów”, a błędy siedzą w sposobie wywołania; moduły
-   przeciekające przez spoiny; kod nietestowalny przez obecny interfejs. Na każdym podejrzanym — test usunięcia.
-3. **Raport** `docs/project/07-review/<data>-deep-dives.md` (albo strona HTML wg docs-tech-writing, jeśli człowiek chce).
-   Karta kandydata: pliki/moduły · problem (tarcie) · rozwiązanie prostym językiem · korzyść w kategoriach lokalności
-   i dźwigni oraz co z testami · diagram przed/po · siła: **Mocny** (test usunięcia przechodzi, realne tarcie) /
-   **Warto zbadać** / **Spekulatywny**. Na końcu: od którego zacząć i dlaczego.
-4. **Bez interfejsów i bez zmian w kodzie** na tym etapie. Pytasz: „Który kandydat badamy?”. Jeden kandydat na sesję.
-5. Kandydat sprzeczny z ADR — pokazujesz tylko, gdy tarcie uzasadnia powrót do decyzji, z wyraźnym ostrzeżeniem.
-6. Po wyborze: przesłuchanie (core-plan-interview) — ograniczenia, zależności, kształt modułu, co za spoiną, które testy
-   przetrwają. Nowe pojęcie → słownik od razu. Odrzucenie z trwałym powodem → zaproponuj ADR (próg w docs-tech-writing),
-   żeby kolejny przegląd nie podsuwał tego samego. Wynik to **decyzja**, nie diff.
-7. Decyzja → specyfikacja → zadania (core-project-record); pozostałe kandydaty zapisz jako osobne zadania, zamiast
-   ciągnąć je w tej samej sesji (raport, przesłuchanie, słownik i kod naraz przepełniają kontekst).
+## Procedure A — review: candidates for deepening
+1. **Scope before the scan.** A direction from the human (a module, a pain) takes precedence. Without it — hotspots from the history
+   (`git log --since=6.months --name-only`, as in eng-tech-debt-audit): deepening pays off where the code changes.
+   Read the domain glossary and the ADRs from this area.
+2. **Look for friction** (usually a cheap `scout`): understanding one concept requires jumping across many small modules;
+   an interface almost like the implementation; pure functions extracted "for the tests", while the bugs sit in the way of calling them; modules
+   leaking through seams; code untestable through the current interface. On each suspect — the deletion test.
+3. **The report** `docs/project/07-review/<date>-deep-dives.md` (or an HTML page per docs-tech-writing, if the human wants one).
+   A candidate card: files/modules · the problem (friction) · the solution in plain language · the benefit in terms of locality
+   and leverage and what happens to the tests · a before/after diagram · strength: **Strong** (the deletion test passes, real friction) /
+   **Worth exploring** / **Speculative**. At the end: which one to start with and why.
+4. **No interfaces and no code changes** at this stage. You ask: "Which candidate do we explore?". One candidate per session.
+5. A candidate contradicting an ADR — you show it only when the friction justifies revisiting the decision, with a clear warning.
+6. After the choice: an interview (core-plan-interview) — constraints, dependencies, the shape of the module, what is behind the seam, which tests
+   survive. A new term → into the glossary at once. A rejection with a lasting reason → propose an ADR (the threshold is in docs-tech-writing),
+   so that the next review does not suggest the same thing. The result is **a decision**, not a diff.
+7. Decision → specification → tasks (core-project-record); record the remaining candidates as separate tasks, instead of
+   pulling them into the same session (the report, the interview, the glossary and the code at once overflow the context).
 
-**Uwagi do przeglądu**
-- **Najlepsze pytanie startowe** wskazuje kierunek rozwoju: „wchodzimy w <funkcja ze specyfikacji> — co zrobić, żeby ta
-  zmiana była łatwa?”. Skan bez kierunku nadaje się do okresowego przeglądu (np. raz na sprint).
-- Przegląd ma skłonność do znajdowania czegoś zawsze. „Brak mocnych kandydatów” to poprawny wynik; kandydatów
-  `Spekulatywny` zwykle pomijasz.
-- **Bardzo zaniedbany kod:** najpierw wspólny słownik (ddd-facilitation: słownik w istniejącym repo), potem przegląd —
-  bez nazw pojęć kandydaci dostają wymyślone nazwy i nic nie wyjaśniają.
-- **Kod bez testów:** przegląd wskazuje spoiny, w których da się zaczepić testy charakteryzujące
-  (eng-behavior-preserving-refactoring), zanim cokolwiek zmienisz.
-- Raport HTML bez skryptów z CDN: style w pliku, diagramy jako gotowe SVG — działa offline i bez łańcucha dostaw.
+**Review notes**
+- **The best starting question** points to the direction of development: "we are going into <a feature from the specification> — what do we do so that this
+  change is easy?". A scan without a direction suits a periodic review (e.g. once a sprint).
+- A review tends to always find something. "No strong candidates" is a correct result; you usually skip
+  `Speculative` candidates.
+- **Badly neglected code:** first a shared glossary (ddd-facilitation: a glossary in an existing repo), then the review —
+  without names for the concepts, candidates get invented names and explain nothing.
+- **Code without tests:** the review points to the seams where characterization tests can be attached
+  (eng-behavior-preserving-refactoring), before you change anything.
+- An HTML report without scripts from a CDN: styles in the file, diagrams as ready SVGs — it works offline and without a supply chain.
 
-## Jak wymusić głębokość w kodzie
-Głębokość opisana w ADR i tak się rozmyje, jeśli każdy plik da się zaimportować z dowolnego miejsca. Wybierz mechanizm:
-| Stack | Mechanizm | Koszt |
+## How to enforce depth in the code
+Depth described in an ADR will blur anyway if every file can be imported from anywhere. Choose a mechanism:
+| Stack | Mechanism | Cost |
 |---|---|---|
-| TS w Nx | biblioteka z publicznym `index.ts`; reguła `@nx/enforce-module-boundaries` z tagami (`scope:`, `type:`) blokuje głębokie importy i zakazane kierunki | konfiguracja tagów |
-| TS poza monorepo | pole `exports` w `package.json` pakietu; `no-restricted-imports` albo dependency-cruiser dla ścieżek wewnętrznych | reguły trzeba utrzymywać |
-| TS w jednym pliku | klasa lub domknięcie z jedną publiczną funkcją | duże pliki, słaba nawigacja |
-| Java | pakiet z klasami package-private i jedną klasą publiczną; moduły JPMS (`exports`); testy ArchUnit | dyscyplina pakietów |
-Reguła w lincie lub teście architektury jest lepsza niż zapis w dokumentacji — łamanie spoiny wychodzi w CI.
+| TS in Nx | a library with a public `index.ts`; the `@nx/enforce-module-boundaries` rule with tags (`scope:`, `type:`) blocks deep imports and forbidden directions | configuring the tags |
+| TS outside a monorepo | the `exports` field in the package's `package.json`; `no-restricted-imports` or dependency-cruiser for internal paths | the rules must be maintained |
+| TS in one file | a class or a closure with one public function | large files, poor navigation |
+| Java | a package with package-private classes and one public class; JPMS modules (`exports`); ArchUnit tests | package discipline |
+A rule in the linter or an architecture test is better than a note in the documentation — breaking a seam shows up in CI.
 
-## Procedura B — zaprojektuj dwa razy
-Pierwszy pomysł rzadko jest najlepszy (Ousterhout). Gdy trzeba wybrać interfejs:
-1. Opisz człowiekowi przestrzeń problemu: ograniczenia, zależności (kategoria z tabeli), szkic kodu tylko jako ilustracja.
-2. Uruchom równolegle (jedna wiadomość) 3 tanie podagenty, każdy z innym ograniczeniem: (a) minimalny interfejs, 1–3
-   punkty wejścia; (b) elastyczność i rozszerzalność; (c) najprostszy typowy przypadek. Czwarty opcjonalnie: porty i adaptery.
-   Każdy dostaje ten sam brief techniczny i oba słowniki.
-3. Każdy zwraca: interfejs (z niezmiennikami, kolejnością, błędami), przykład użycia, co ukrywa, strategię zależności,
-   gdzie dźwignia jest duża, a gdzie cienka.
-4. Porównaj prozą po głębokości, lokalności i miejscu spoiny. Daj własną rekomendację (także hybrydę) — nie samo menu.
+## Procedure B — design it twice
+The first idea is rarely the best (Ousterhout). When an interface has to be chosen:
+1. Describe the problem space to the human: constraints, dependencies (the category from the table), a code sketch only as an illustration.
+2. Run in parallel (one message) 3 cheap subagents, each with a different constraint: (a) a minimal interface, 1–3
+   entry points; (b) flexibility and extensibility; (c) the simplest typical case. Optionally a fourth: ports and adapters.
+   Each gets the same technical brief and both glossaries.
+3. Each returns: the interface (with invariants, order, errors), a usage example, what it hides, the dependency strategy,
+   where the leverage is large and where it is thin.
+4. Compare in prose by depth, locality and the place of the seam. Give your own recommendation (also a hybrid) — not just a menu.
 
-## Wynik dobry, gdy
-Rozmowa używa słów „moduł, interfejs, spoina”; każda proponowana spoina ma nazwany drugi adapter; dyskusja o interfejsie
-obejmuje niezmienniki i błędy; kandydaci leżą w niedawno zmienianym kodzie i noszą nazwy pojęć domeny; nic nie zostało
-zrefaktoryzowane bez decyzji człowieka.
+## The result is good when
+The conversation uses the words "module, interface, seam"; every proposed seam has a named second adapter; the discussion of the interface
+covers invariants and errors; the candidates lie in recently changed code and carry the names of domain concepts; nothing was
+refactored without the human's decision.
 
-## Źródło
-[mattpocock/skills](https://github.com/mattpocock/skills) (MIT): `codebase-design` (z DEEPENING, DESIGN-IT-TWICE)
-i `improve-codebase-architecture`; opisy: [aihero.dev/skills-codebase-design](https://www.aihero.dev/skills-codebase-design), [aihero.dev/skills-improve-codebase-architecture](https://www.aihero.dev/skills-improve-codebase-architecture). Opisane własnymi
-słowami i dopasowane do dziennika projektu; J. Ousterhout, *A Philosophy of Software Design*; M. Feathers,
+## Source
+[mattpocock/skills](https://github.com/mattpocock/skills) (MIT): `codebase-design` (with DEEPENING, DESIGN-IT-TWICE)
+and `improve-codebase-architecture`; descriptions: [aihero.dev/skills-codebase-design](https://www.aihero.dev/skills-codebase-design), [aihero.dev/skills-improve-codebase-architecture](https://www.aihero.dev/skills-improve-codebase-architecture). Described in our own
+words and adapted to the project log; J. Ousterhout, *A Philosophy of Software Design*; M. Feathers,
 *Working Effectively with Legacy Code*.

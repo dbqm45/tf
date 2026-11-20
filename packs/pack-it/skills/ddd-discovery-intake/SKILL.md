@@ -1,66 +1,66 @@
 ---
 name: ddd-discovery-intake
-description: Użyj przy surowych materiałach (wywiady, notatki, tablice ES) — obszary biznesowe z dowodami, sprzeczności.
+description: Use for raw materials (interviews, notes, ES boards) — business areas backed by evidence, contradictions.
 metadata:
   review: "2027-10-09"
-  catalog: "Użyj, gdy z surowych materiałów (wywiady, notatki, zdjęcia tablic Event Stormingu, dokumenty) trzeba wyprowadzić obszary biznesowe OPARTE NA DOWODACH — ocena „czy warto”, bank cytatów, progi dowodowe, wykrywanie sprzeczności, pytania strategiczne, zamrożenie obszarów. Nie do prowadzenia warsztatu (ddd-event-storming) ani granic kontekstów (ddd-strategic-analysis)."
-  keywords: "notatki z wywiadów, transkrypcje, zdjęcia tablic, czy warto modularyzować, czy dzielić na moduły, prototyp, obszary biznesowe, czy warto modularyzować, rozbijać na moduły i bounded contexty, pytania przed modularyzacją, pytania do wywiadów z użytkownikami, oceń pytania wywiadu, popraw pytania do wywiadów"
+  catalog: "Use when business areas BASED ON EVIDENCE must be derived from raw materials (interviews, notes, photos of Event Storming boards, documents) — the \"is it worth it\" assessment, a quote bank, evidence thresholds, detecting contradictions, strategic questions, freezing the areas. Not for running a workshop (ddd-event-storming) or context boundaries (ddd-strategic-analysis)."
+  keywords: "notatki z wywiadów, transkrypcje, zdjęcia tablic, czy warto modularyzować, czy dzielić na moduły, prototyp, obszary biznesowe, czy warto modularyzować, rozbijać na moduły i bounded contexty, pytania przed modularyzacją, pytania do wywiadów z użytkownikami, oceń pytania wywiadu, popraw pytania do wywiadów, interview notes, transcripts, board photos, is it worth modularizing, should we split into modules, prototype, business areas, split into modules and bounded contexts, questions before modularization, user interview questions, assess interview questions, improve interview questions"
 ---
 
-# Od materiałów do obszarów biznesowych (intake)
+# From materials to business areas (intake)
 
-Cel: z materiałów źródłowych powstaje **zamrożona lista obszarów biznesowych**, w której każde twierdzenie ma cytat
-ze źródła. To wejście do analizy strategicznej — obszar to jeszcze **nie** kontekst ani moduł.
-Zasada nadrzędna: **cytować wolno tylko bank dowodów**; czego nie ma w banku, tego agent nie twierdzi.
+Goal: the source materials produce a **frozen list of business areas** in which every claim has a quote
+from a source. This is the input to strategic analysis — an area is **not** yet a context or a module.
+The overriding rule: **only the evidence bank may be quoted**; what is not in the bank, the agent does not claim.
 
-## Przebieg (każdy krok kończy się bramką — protokół w ddd-facilitation)
-| # | Krok | Wynik w `docs/project/` | Szczegóły |
+## Flow (every step ends with a gate — the protocol in ddd-facilitation)
+| # | Step | Result in `docs/project/` | Details |
 |---|---|---|---|
-| 0 | **Ocena wstępna („czy warto modularyzować?”)** — zawsze trzy pytania do człowieka | `01-discovery/pre-flight.md` | niżej |
-| 1 | **Inwentarz i bramka rozmiaru** — lista źródeł z rozmiarem i typem; powyżej ~150 KB tekstu zapytaj: wszystko / wybrane / stop | sekcja w `corpus.md` | przetwarzaj źródło po źródle w podagentach, do głównego wątku wracają tylko indeksy |
-| 2 | **Odczyt tablic** (zdjęcia/eksporty) | `02-domain/boards/<nazwa>.es.md` | `references/board-reading.md` |
-| 3 | **Bank dowodów** | `02-domain/corpus.md` | `references/corpus.md` |
-| 4 | **Sprzeczności** — osobny agent-krytyk, tylko wykrywa | `02-domain/contradictions.md` | `references/contradictions.md` |
-| 5 | **Pytania strategiczne** — PRZED grupowaniem, bo odpowiedzi ważą obszary | `02-domain/strategic-gaps.md` | `references/strategic-questions.md` |
-| 6 | **Rozmowa** — pytania o luki i sprzeczności; odpowiedzi człowieka trafiają do banku jako nowe źródło | `02-domain/user-answers.md` | ddd-facilitation → bramki |
-| 7 | **Obszary** — grupowanie cytatów, progi, zatwierdzenie i zamrożenie | `02-domain/areas.md` | niżej |
+| 0 | **Pre-flight assessment ("is it worth modularizing?")** — always three questions to the human | `01-discovery/pre-flight.md` | below |
+| 1 | **Inventory and the size gate** — a list of sources with size and type; above ~150 KB of text ask: everything / selected / stop | a section in `corpus.md` | process source by source in subagents, only indexes return to the main thread |
+| 2 | **Reading boards** (photos/exports) | `02-domain/boards/<name>.es.md` | `references/board-reading.md` |
+| 3 | **The evidence bank** | `02-domain/corpus.md` | `references/corpus.md` |
+| 4 | **Contradictions** — a separate critic agent, it only detects | `02-domain/contradictions.md` | `references/contradictions.md` |
+| 5 | **Strategic questions** — BEFORE grouping, because the answers weigh the areas | `02-domain/strategic-gaps.md` | `references/strategic-questions.md` |
+| 6 | **Conversation** — questions about gaps and contradictions; the human's answers go into the bank as a new source | `02-domain/user-answers.md` | ddd-facilitation → gates |
+| 7 | **Areas** — grouping quotes, thresholds, approval and freezing | `02-domain/areas.md` | below |
 
-## Krok 0 — ocena wstępna
-Trzy pytania zadawane zawsze (materiały mogą tylko podpowiedzieć odpowiedź, rozstrzyga człowiek):
-1. **Cykl życia** — czy to prototyp / rozwiązanie jednorazowe?
-2. **Zakres** — czy zakres jest z góry jednym modułem?
-3. **Złożoność** — czy są reguły, konkurencja o zasoby, integracje, czy tylko przechowywanie danych?
-Kolejność ważności przy odmowie: jednorazowe > z góry jeden moduł > brak złożoności. Odmowa to też wynik:
-zaproponuj pracę taktyczną w jednym module lub prosty CRUD (ddd-deep-modeling). Zapisz werdykt z uzasadnieniem i sekcją
-„jeśli się nie zgadzasz”. Nic więcej nie zapisuj przed zatwierdzeniem werdyktu.
+## Step 0 — pre-flight assessment
+Three questions asked always (the materials can only suggest the answer, the human decides):
+1. **Lifecycle** — is it a prototype / a one-off solution?
+2. **Scope** — is the scope a single module from the outset?
+3. **Complexity** — are there rules, competition for resources, integrations, or only data storage?
+The order of importance for a refusal: one-off > a single module from the outset > no complexity. A refusal is also a result:
+propose tactical work in a single module or a simple CRUD (ddd-deep-modeling). Record the verdict with a justification and an
+"if you disagree" section. Write nothing else before the verdict is approved.
 
-## Krok 7 — obszary
-- **Próg obszaru:** co najmniej **3 mocne cytaty z co najmniej 2 różnych źródeł** (odpowiedzi człowieka to jedno źródło).
-  Mocny cytat niesie regułę, liczbę, próg, decyzję, krok procesu, problem, termin albo odpowiedzialność; samo wymienienie nazwy — nie.
-- Grupy poniżej progu → sekcja **„Kandydaci poniżej progu”** (z brakującymi dowodami), nie wyrzucaj ich.
-- **Nazwa obszaru** — słowami biznesu, w języku źródła; nie nazwą techniczną.
-- **Długość opisu proporcjonalna do liczby różnych faktów**: 3–4 cytaty → jedno zdanie; 5–9 → dwa–trzy; 10+ → akapit.
-  Nie dopisuj treści ponad dowody.
-- Każdy obszar: id, nazwa, opis, powiązanie z pytaniami strategicznymi, lista dowodów (id cytatów), liczba cytatów/źródeł,
-  flaga „wskazany przez człowieka”.
-- Bramka: przy każdym obszarze decyzja człowieka — przyjmij / zmień nazwę / połącz / rozdziel / odrzuć; potem osobne
-  pytanie o **zamrożenie**. Zamrożony `areas.md` ma status `accepted` (ustawia człowiek) i zmienia się tylko nową wersją.
-- Czego intake NIE robi: nie klasyfikuje Cynefin, nie wyznacza kontekstów, nie projektuje. To następne kroki (ddd-strategic-analysis,
+## Step 7 — areas
+- **The area threshold:** at least **3 strong quotes from at least 2 different sources** (the human's answers are one source).
+  A strong quote carries a rule, a number, a threshold, a decision, a process step, a problem, a deadline or a responsibility; merely mentioning a name does not.
+- Groups below the threshold → the section **"Candidates below the threshold"** (with the missing evidence); do not throw them away.
+- **The area name** — in the business's words, in the source language; not a technical name.
+- **The description length proportional to the number of distinct facts**: 3–4 quotes → one sentence; 5–9 → two or three; 10+ → a paragraph.
+  Do not add content beyond the evidence.
+- Every area: id, name, description, link to the strategic questions, the list of evidence (quote ids), the number of quotes/sources,
+  a "named by the human" flag.
+- Gate: for every area the human's decision — accept / rename / merge / split / reject; then a separate
+  question about **freezing**. A frozen `areas.md` has the status `accepted` (set by the human) and changes only by a new version.
+- What intake does NOT do: it does not classify Cynefin, does not delineate contexts, does not design. Those are the next steps (ddd-strategic-analysis,
   ddd-algorithm-recognition, ddd-deep-modeling).
 
-## Badania z użytkownikami
-Gdy dowodów od ekspertów jest za mało albo chodzi o użytkowników końcowych: plan badania, rekrutacja, scenariusz
-wywiadu (krytyka pytań: zostaw / przepisz / usuń), ankieta, kryteria decyzji i synteza — `references/user-research.md`.
+## Research with users
+When there is too little evidence from experts or the topic is end users: the research plan, recruitment, the interview
+script (critiquing questions: keep / rewrite / remove), a survey, decision criteria and synthesis — `references/user-research.md`.
 
-## Koszt i stabilność
-- Krok 0–1 i odczyt tablic: tani model; bank i grupowanie: std; krytyk sprzeczności: osobny agent std (świeży kontekst = niezależność).
-- Wyniki są niedeterministyczne — dlatego: pamięć podręczna po skrócie treści źródła (zmiana źródła unieważnia tylko jego wynik),
-  zamrażanie artefaktów przez człowieka, weryfikacja cytatów i progów skryptem: `python3 .claude/hooks/project_record.py evidence` (zero tokenów).
-- Materiały z symulacji lub z wyobraźni agenta nigdy nie trafiają do banku jako dowód.
+## Cost and stability
+- Steps 0–1 and reading boards: a cheap model; the bank and grouping: std; the contradiction critic: a separate std agent (a fresh context = independence).
+- The results are non-deterministic — hence: a cache keyed by the hash of the source content (a change of a source invalidates only its result),
+  freezing artifacts by the human, verifying quotes and thresholds with a script: `python3 .claude/hooks/project_record.py evidence` (zero tokens).
+- Materials from a simulation or from the agent's imagination never go into the bank as evidence.
 
-## Checklista
-- [ ] werdykt oceny wstępnej zatwierdzony przez człowieka
-- [ ] każdy cytat dosłowny, w języku źródła, z `źródło + miejsce`; `project_record.py evidence` przechodzi
-- [ ] sprzeczności wykryte przez osobnego krytyka; każda ma pytanie diagnostyczne i status
-- [ ] każdy obszar spełnia próg albo jest w „poniżej progu”
-- [ ] `areas.md` zamrożony decyzją człowieka; przekazanie do ddd-strategic-analysis
+## Checklist
+- [ ] the pre-flight verdict approved by the human
+- [ ] every quote verbatim, in the source language, with `source + location`; `project_record.py evidence` passes
+- [ ] contradictions detected by a separate critic; each has a diagnostic question and a status
+- [ ] every area meets the threshold or is in "below the threshold"
+- [ ] `areas.md` frozen by the human's decision; handed over to ddd-strategic-analysis

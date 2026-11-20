@@ -15,6 +15,19 @@
       }
     },
     {
+      "id": "pi-planning-en",
+      "expect": "trigger",
+      "prompt": "Our company is adopting SAFe and we have 6 teams in one Agile Release Train. What does PI Planning look like, how long does a PI last and who is responsible for what? Answer briefly.",
+      "checks": {
+        "all": [
+          ["8.{0,6}12", "osiem.{0,10}dwana", "10 tyg", "eight.{0,10}twelve", "10 weeks"],
+          ["RTE|Release Train Engineer"],
+          ["Business Owner|System Architect|Product Management"],
+          ["kontrakt\\w*", "SAFe-?washing", "według działów", "cięt\\w+[^.]{0,30}dział\\w*", "zmniejsz\\w* zależności", "contract\\w*", "by (department|function|silo)s?", "slic\\w+[^.]{0,30}(department|function|silo)\\w*", "(reduc|minimi[sz])\\w* dependenc\\w*", "fewer dependenc\\w*"]
+        ]
+      }
+    },
+    {
       "id": "czy-safe-pasuje",
       "expect": "trigger",
       "prompt": "Mamy 3 niezależne zespoły produktowe, prawie bez zależności, a dyrektor chce wdrożyć SAFe dla uporządkowania. Czy to ma sens? Odpowiedz zwięźle.",

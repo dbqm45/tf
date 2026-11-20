@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy `.claude/skills/core-delivery-lifecycle/scripts/pr_budget.py` (budżet artefaktów w PR: udział artefaktów
-w dodanych liniach, rozmiar pojedynczego artefaktu i planu) w tymczasowym repozytorium git. python3 tests/test_pr_budget.py"""
+"""Tests of `.claude/skills/core-delivery-lifecycle/scripts/pr_budget.py` (the artifact budget in a PR: the share of artifacts
+in added lines, the size of a single artifact and of the plan) in a temporary git repository. python3 tests/test_pr_budget.py"""
 import json
 import subprocess
 import sys
@@ -54,39 +54,39 @@ def main() -> int:
             print(f"✗ {msg}")
 
     if not SCRIPT.is_file():
-        print(f"✗ brak {SCRIPT}")
+        print(f"✗ missing {SCRIPT}")
         return 1
     with tempfile.TemporaryDirectory() as t:
         t = Path(t)
         ok = repo_with(t / "ok", {"src/app.py": lines(120), "docs/project/changes/CHG-1/runs/TSK-1.md": lines(40)})
         r = run(ok)
         check(r.returncode == 0 and r.stdout.startswith("Verdict: OK") and "120" in r.stdout and "40" in r.stdout,
-              f"P-1: mało artefaktów → OK, kod 0, liczby kodu i artefaktów: {r.stdout}{r.stderr}")
+              f"P-1: few artifacts -> OK, code 0, the code and artifact counts: {r.stdout}{r.stderr}")
 
         noisy = repo_with(t / "noisy", {"src/app.py": lines(95), "docs/project/changes/CHG-1/plan.md": lines(150),
                                         "docs/test/evidence/01-run.txt": lines(250)})
         r = run(noisy)
         check(r.returncode == 1 and r.stdout.startswith("Verdict: OVER") and "%" in r.stdout,
-              f"P-2: artefakty > 50% dodanych linii przy zmianie kodu → przekroczony: {r.stdout}{r.stderr}")
+              f"P-2: artifacts > 50% of added lines with a code change -> over: {r.stdout}{r.stderr}")
 
         big = repo_with(t / "big", {"src/app.py": lines(2000), "docs/project/02-domain/notatki.md": lines(700),
                                     "docs/project/changes/CHG-2/plan.md": lines(320)})
         r = run(big)
         check(r.returncode == 1 and "notatki.md" in r.stdout and "700" in r.stdout and "plan.md" in r.stdout
-              and "320" in r.stdout, f"P-3: artefakt > 600 linii i plan > 300 linii wskazane: {r.stdout}")
+              and "320" in r.stdout, f"P-3: an artifact > 600 lines and a plan > 300 lines are pointed out: {r.stdout}")
 
         docs = repo_with(t / "docs", {"docs/project/03-requirements/requirements.md": lines(400)})
         r = run(docs)
         check(r.returncode == 0 and r.stdout.startswith("Verdict: OK"),
-              f"P-4: PR bez zmiany kodu (sama dokumentacja) nie podlega limitowi udziału: {r.stdout}")
+              f"P-4: a PR without a code change (documentation only) is not subject to the share limit: {r.stdout}")
 
         cfg = repo_with(t / "cfg", {"src/app.py": lines(50), "reports/run.log": lines(200)})
         r = run(cfg)
-        check(r.returncode == 0, f"P-5a: bez konfiguracji reports/ to nie artefakt: {r.stdout}")
+        check(r.returncode == 0, f"P-5a: without a configuration reports/ is not an artifact: {r.stdout}")
         (cfg / ".claude").mkdir()
         (cfg / ".claude" / "pr-budget.json").write_text(json.dumps({"artifacts": ["reports/**"], "max_share": 0.5}))
         r = run(cfg)
-        check(r.returncode == 1 and "reports/run.log" in r.stdout, f"P-5b: wzorce artefaktów z .claude/pr-budget.json: {r.stdout}")
+        check(r.returncode == 1 and "reports/run.log" in r.stdout, f"P-5b: artifact patterns from .claude/pr-budget.json: {r.stdout}")
 
         r = run(noisy, "--json")
         try:
@@ -94,8 +94,8 @@ def main() -> int:
         except ValueError:
             data = {}
         check(data.get("verdict") == "OVER" and data.get("artifact_lines") == 400 and data.get("code_lines") == 95,
-              f"P-6: --json z polami verdict, code_lines, artifact_lines: {r.stdout[:300]}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów budżetu artefaktów")
+              f"P-6: --json with the fields verdict, code_lines, artifact_lines: {r.stdout[:300]}")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} artifact budget tests")
     return 1 if fails else 0
 
 

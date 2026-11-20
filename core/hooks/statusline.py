@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Pasek stanu Claude Code: model i effort, zapełnienie kontekstu, cache, koszt sesji, limity — bez tokenów modelu.
+Claude Code status line: model and effort, context fill, cache, session cost, limits — with no model tokens.
 
-  Opus · high │ kontekst 42% 84k │ cache 91% │ $0.42 │ 5h 23%
+  Opus · high │ context 42% 84k │ cache 91% │ $0.42 │ 5h 23%
 
-Ostrzega (⚠), gdy kontekst przekracza próg z CLAUDE_CONTEXT_WARN_K (domyślnie 100 tys. — ten sam co hook
-context_guard), gdy cache jest zimny (następna tura przeczyta całą historię bez rabatu) i gdy limit jest blisko.
-Dane bierze z JSON-a, który Claude Code podaje na wejście; brakujące pola pomija. Błąd nigdy nie przerywa pracy.
+Warns (⚠) when the context exceeds the CLAUDE_CONTEXT_WARN_K threshold (default 100k — the same as the
+context_guard hook), when the cache is cold (the next turn will read the whole history without a discount) and when a limit is near.
+It takes data from the JSON that Claude Code passes on input; missing fields are skipped. An error never interrupts work.
 """
 from __future__ import annotations
 
@@ -42,11 +42,11 @@ def line(d: dict) -> str:
         except ValueError:
             warn_k = 100
         mark = "⚠ " if warn_k > 0 and used >= warn_k * 1000 else ""
-        parts.append(f"{mark}kontekst {pct if pct is not None else '?'}% {fmt_k(used)}".rstrip())
+        parts.append(f"{mark}context {pct if pct is not None else '?'}% {fmt_k(used)}".rstrip())
 
     pc = d.get("prompt_cache") or {}
     if pc.get("hit_ratio") is not None:
-        cold = " zimny" if pc.get("warm") is False and pc.get("requests") else ""
+        cold = " cold" if pc.get("warm") is False and pc.get("requests") else ""
         parts.append(f"cache {round(100 * pc['hit_ratio'])}%{cold}")
     elif cu.get("cache_read_input_tokens") is not None and used:
         parts.append(f"cache {round(100 * (cu.get('cache_read_input_tokens') or 0) / used)}%")
@@ -54,6 +54,13 @@ def line(d: dict) -> str:
     cost = (d.get("cost") or {}).get("total_cost_usd")
     if cost is not None:
         parts.append(f"${cost:.2f}")
+    ms = (d.get("cost") or {}).get("total_duration_ms")
+    if isinstance(ms, (int, float)) and ms > 0:
+        mins = int(ms // 60000)
+        parts.append(f"{mins // 60}h {mins % 60}m" if mins >= 60 else f"{mins}m")
+    toks = sum(cw.get(k) or 0 for k in ("total_input_tokens", "total_output_tokens"))   # session tokens, when Claude Code gives them
+    if toks:
+        parts.append(f"{toks / 1e6:.2f}M tok" if toks >= 1e6 else f"{fmt_k(toks)} tok")
 
     rl = d.get("rate_limits") or {}
     for key, label in (("five_hour", "5h"), ("seven_day", "7d")):

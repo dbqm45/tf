@@ -35,6 +35,54 @@
       }
     },
     {
+      "id": "opis-systemu-przed-refaktorem-en",
+      "expect": "trigger",
+      "prompt": "We're taking over an old invoicing system written in Java and nobody knows how it works anymore. I want to document it properly: what each module does and what business rules sit in the code, so we can later plan fixes and a refactor. How do I do this and in what form should I record it? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "plik:linia",
+            "dow[oó]d\\w*",
+            "numer\\w* linii",
+            "file:line",
+            "path:line",
+            "evidence",
+            "line numbers?"
+          ],
+          [
+            "reguł\\w* biznesow",
+            "business rules?"
+          ],
+          [
+            "do weryfikacji",
+            "pewnoś",
+            "pytani\\w* do",
+            "niepotwierdzon",
+            "to (be )?verif\\w*",
+            "confidence",
+            "open questions?|questions for",
+            "unconfirmed|unverified"
+          ],
+          [
+            "kart\\w* modułu",
+            "każd\\w* moduł",
+            "per moduł",
+            "dla każdego modułu",
+            "module (card|sheet|profile)\\w*",
+            "each module",
+            "per[- ]module",
+            "for every module"
+          ]
+        ],
+        "none": [
+          "przeczytaj całe repo",
+          "najpierw (zrób|przeprowadź) refaktor",
+          "read the (whole|entire) repo",
+          "first (do|perform|carry out) (a |the )?refactor"
+        ]
+      }
+    },
+    {
       "id": "dokument-dla-nowego-zespolu",
       "expect": "trigger",
       "prompt": "Mamy legacy w PHP bez żadnej dokumentacji. Potrzebuję dokumentu, który nowemu zespołowi wytłumaczy, co robi każda część systemu, i będzie punktem wyjścia do poprawek. Co ma się w nim znaleźć i jak sprawdzić, że jest kompletny? Odpowiedz zwięźle.",

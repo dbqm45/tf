@@ -1,39 +1,39 @@
-# Łańcuch zobowiązań (Chain of Responsibility)
+# Chain of Responsibility
 
-> **Spis treści:** Problem · Rozwiązanie i uczestnicy · Kiedy używać · Koszty · Powiązania · Forma idiomatyczna w TS · Przykład (TS) · Kiedy NIE używać / pułapki
+> **Contents:** Problem · Solution and participants · When to use · Costs · Relations · Idiomatic form in TS · Example (TS) · When NOT to use / pitfalls
 
-Kategoria: behawioralne. Istota: żądanie przechodzi przez sekwencję obsługujących; każdy **obsługuje je albo przekazuje
-dalej** (i może zatrzymać przepływ). Nadawca nie wie, kto ostatecznie obsłużył.
+Category: behavioral. The essence: a request passes through a sequence of handlers; each one **handles it or passes it
+on** (and can stop the flow). The sender does not know who finally handled it.
 
 ## Problem
-Wydatek zatwierdza osoba o odpowiednim limicie: kierownik zespołu do 1 000 zł, dyrektor do 10 000 zł, zarząd powyżej;
-kategoria „sprzęt IT” zawsze idzie przez dział IT. Jedna funkcja z zagnieżdżonymi `if`-ami rośnie z każdą zmianą
-struktury firmy, a konfiguracja różni się między spółkami.
+An expense is approved by a person with the right limit: a team lead up to 1,000 PLN, a director up to 10,000 PLN, the board above that;
+the "IT equipment" category always goes through the IT department. One function with nested `if`s grows with every change
+in the company's structure, and the configuration differs between companies.
 
-## Rozwiązanie i uczestnicy
-- **Obsługujący** — wspólny interfejs `handle(request)`.
-- **Bazowy obsługujący (opcjonalnie)** — trzyma referencję do następnego ogniwa i domyślnie przekazuje dalej.
-- **Konkretni obsługujący** — decydują: obsłużyć czy przekazać.
-- **Klient** — składa łańcuch (kolejność ma znaczenie) i może go rekonfigurować w runtime.
+## Solution and participants
+- **Handler** — the shared interface `handle(request)`.
+- **Base handler (optional)** — holds a reference to the next link and by default passes the request on.
+- **Concrete handlers** — decide: handle it or pass it on.
+- **Client** — assembles the chain (the order matters) and can reconfigure it at runtime.
 
-## Kiedy używać
-- Kolejność i skład kroków zmieniają się (konfiguracja, per klient, w runtime).
-- Nie wiadomo z góry, który krok obsłuży żądanie, i pierwszy właściwy ma je „zabrać”.
-- Middleware, walidatory z wczesnym przerwaniem, propagacja zdarzeń UI w górę drzewa.
+## When to use
+- The order and the set of steps change (configuration, per customer, at runtime).
+- It is not known up front which step will handle the request, and the first suitable one is to "take" it.
+- Middleware, validators with early termination, propagation of UI events up the tree.
 
-## Koszty
-Żądanie może przejść bez obsługi — potrzebny jawny wynik „nikt nie obsłużył”; debugowanie ścieżki przez wiele ogniw.
+## Costs
+A request can pass through without being handled — an explicit "nobody handled it" result is needed; debugging the path through many links.
 
-## Powiązania
-- **Dekorator** ma ten sam kształt, ale zawsze deleguje dalej; ogniwo łańcucha może przerwać.
-- **Polecenie** bywa żądaniem wędrującym przez łańcuch; **Kompozyt** — łańcuch od liścia do korzenia.
-- **Polecenie, Mediator, Obserwator** — inne sposoby łączenia nadawców z odbiorcami.
+## Relations
+- **Decorator** has the same shape, but always delegates further; a chain link can interrupt.
+- **Command** is sometimes the request travelling through the chain; **Composite** — a chain from a leaf to the root.
+- **Command, Mediator, Observer** — other ways of connecting senders with receivers.
 
-## Forma idiomatyczna w TS
-**Tablica funkcji** i `for`/`find` z wczesnym wyjściem; middleware `(ctx, next) => …` znane z frameworków HTTP to ten
-wzorzec wbudowany.
+## Idiomatic form in TS
+**An array of functions** and `for`/`find` with an early exit; the `(ctx, next) => …` middleware known from HTTP frameworks is this
+pattern built in.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 type Expense = { amountCents: number; category: string };
 type Decision = { approvedBy: string } | { rejected: string };
@@ -43,7 +43,7 @@ abstract class Approver {
   protected abstract readonly role: string;
   protected abstract canApprove(expense: Expense): boolean;
 
-  /** Zwraca następne ogniwo, żeby łańcuch składać płynnie. */
+  /** Returns the next link, so that the chain can be assembled fluently. */
   then(next: Approver): Approver {
     this.#next = next;
     return next;
@@ -51,43 +51,43 @@ abstract class Approver {
 
   handle(expense: Expense): Decision {
     if (this.canApprove(expense)) return { approvedBy: this.role };
-    return this.#next?.handle(expense) ?? { rejected: 'nikt w łańcuchu nie może zatwierdzić' };
+    return this.#next?.handle(expense) ?? { rejected: 'nobody in the chain can approve' };
   }
 }
 
 class ItDepartment extends Approver {
-  protected readonly role = 'dział IT';
+  protected readonly role = 'IT department';
   protected canApprove(e: Expense): boolean {
-    return e.category === 'sprzęt IT' && e.amountCents <= 2_000_000;
+    return e.category === 'IT equipment' && e.amountCents <= 2_000_000;
   }
 }
 class TeamLead extends Approver {
-  protected readonly role = 'kierownik zespołu';
+  protected readonly role = 'team lead';
   protected canApprove(e: Expense): boolean {
-    return e.category !== 'sprzęt IT' && e.amountCents <= 100_000;
+    return e.category !== 'IT equipment' && e.amountCents <= 100_000;
   }
 }
 class Director extends Approver {
-  protected readonly role = 'dyrektor';
+  protected readonly role = 'director';
   protected canApprove(e: Expense): boolean {
-    return e.category !== 'sprzęt IT' && e.amountCents <= 1_000_000;
+    return e.category !== 'IT equipment' && e.amountCents <= 1_000_000;
   }
 }
 
 const chain = new ItDepartment();
 chain.then(new TeamLead()).then(new Director());
 
-console.log(chain.handle({ amountCents: 50_000, category: 'szkolenie' }));
-console.log(chain.handle({ amountCents: 5_000_000, category: 'szkolenie' }));
+console.log(chain.handle({ amountCents: 50_000, category: 'training' }));
+console.log(chain.handle({ amountCents: 5_000_000, category: 'training' }));
 ```
-Forma funkcyjna:
+The functional form:
 ```ts
 type Expense = { amountCents: number; category: string };
-type Rule = (e: Expense) => string | undefined; // zwraca rolę albo undefined = „przekaż dalej”
+type Rule = (e: Expense) => string | undefined; // returns a role or undefined = "pass it on"
 
 const rules: readonly Rule[] = [
-  (e) => (e.amountCents <= 100_000 ? 'kierownik zespołu' : undefined),
-  (e) => (e.amountCents <= 1_000_000 ? 'dyrektor' : undefined),
+  (e) => (e.amountCents <= 100_000 ? 'team lead' : undefined),
+  (e) => (e.amountCents <= 1_000_000 ? 'director' : undefined),
 ];
 
 function approve(e: Expense): string {
@@ -95,15 +95,15 @@ function approve(e: Expense): string {
     const role = rule(e);
     if (role !== undefined) return role;
   }
-  return 'zarząd';
+  return 'board';
 }
-console.log(approve({ amountCents: 300_000, category: 'szkolenie' }));
+console.log(approve({ amountCents: 300_000, category: 'training' }));
 ```
 
-## Kiedy NIE używać / pułapki
-- **Stała, krótka sekwencja** — `a(); b(); c();` lub tablica funkcji jest czytelniejsza niż obiekty z `setNext()`.
-  Klasowy łańcuch ma sens przy realnej rekonfiguracji w runtime.
-- Framework już ma middleware/interceptory — nie buduj równoległej infrastruktury.
-- Każde żądanie **musi** przejść przez wszystkie kroki (bez przerwania) → to pipeline/kompozycja funkcji, nie łańcuch.
-- Reguły zatwierdzania to wiedza biznesowa — często lepiej modelować je jako polityki/specyfikacje w domenie
-  (ddd-tactical-design), a łańcuch zostawić infrastrukturze.
+## When NOT to use / pitfalls
+- **A fixed, short sequence** — `a(); b(); c();` or an array of functions is more readable than objects with `setNext()`.
+  A class chain makes sense with real reconfiguration at runtime.
+- The framework already has middleware/interceptors — do not build a parallel infrastructure.
+- Every request **must** go through all the steps (without interruption) → that is a pipeline/function composition, not a chain.
+- Approval rules are business knowledge — it is often better to model them as policies/specifications in the domain
+  (ddd-tactical-design), and leave the chain to the infrastructure.

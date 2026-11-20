@@ -1,186 +1,186 @@
-# Archetyp Geographic Location — mapper (lokalizacje, obszary, adresy)
+# The Geographic Location archetype — mapper (locations, areas, addresses)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania o **miejscu** (kraj, gmina, strefa dostaw, adres, współrzędne) na model, w którym lokalizacja jest
-osobnym bytem, a nazwa, rola obszaru, adres i geometria to oddzielne, zmieniające się w różnym rytmie informacje.
-Efekt: ten sam obszar ma wiele nazw i języków, bywa strefą dostaw i jurysdykcją podatkową naraz, a faktura pamięta adres
-z dnia sprzedaży.
-Protokół wspólny (pytania, „To zależy”, kontrola R/A/X, zapis): `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements about **place** (a country, a municipality, a delivery zone, an address, coordinates) into a model in which the location is
+a separate entity, and the name, the area role, the address and the geometry are separate pieces of information that change at different rates.
+The effect: the same area has many names and languages, it is sometimes a delivery zone and a tax jurisdiction at once, and an invoice remembers the address
+as of the sale date.
+The common protocol (questions, "It depends", the R/A/X check, recording): `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy odpowiedź zależy od tego, GDZIE coś jest lub do jakiego obszaru należy?*
-Tak → pasuje. Adres to tylko tekst wpisany przez klienta i nigdzie nie służy do decyzji → wystarczy pole w Party.
+## Fit test
+**The core question:** *does the answer depend on WHERE something is or which area it belongs to?*
+Yes → it fits. The address is only text entered by the customer and is not used for decisions anywhere → a field in Party is enough.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „dostarczamy do wybranych gmin / kodów pocztowych”, strefy dostaw | ✅ |
-| kraj → województwo → powiat → gmina; „wszystko w tym regionie” | ✅ |
-| ten sam obszar pod kilkoma nazwami lub w kilku językach (Gdańsk / Danzig) | ✅ |
-| adres wg szablonu kraju (PL, DE), walidacja kodów | ✅ |
-| faktura, zamówienie lub umowa z adresem „z dnia zdarzenia” | ✅ |
-| obszar sprzedaży, jurysdykcja podatkowa, strefa serwisowa | ✅ |
-| „kim jest odbiorca, jaki ma telefon i e-mail” | ❌ → Party (mechanizmy kontaktu) |
-| „czy w tym punkcie odbioru jest wolne miejsce?” | ❌ → Availability |
-| „ile kosztuje dostawa do strefy 2?” | ❌ → Pricing (strefa jest tylko parametrem) |
-| „jaka trasa kuriera przez 40 adresów?” | ❌ → General assignment (algorytm tras) |
-| wyświetlanie mapy, wyszukiwarka adresów jako usługa zewnętrzna | ⚠️ graniczny |
+| "we deliver to selected municipalities / postal codes", delivery zones | ✅ |
+| country → voivodeship → county → municipality; "everything in this region" | ✅ |
+| the same area under several names or in several languages (Gdańsk / Danzig) | ✅ |
+| an address per the country's template (PL, DE), code validation | ✅ |
+| an invoice, order or agreement with the address "as of the event date" | ✅ |
+| a sales area, a tax jurisdiction, a service zone | ✅ |
+| "who the recipient is, what phone and e-mail they have" | ❌ → Party (contact mechanisms) |
+| "is there a free slot at this pickup point?" | ❌ → Availability |
+| "how much does delivery to zone 2 cost?" | ❌ → Pricing (the zone is only a parameter) |
+| "what courier route through 40 addresses?" | ❌ → General assignment (a routing algorithm) |
+| map display, address search as an external service | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Usługa zewnętrzna (geokoder, mapy)* — model przechowuje wynik i identyfikator z rejestru; samo wyszukiwanie to
-  integracja (ACL), nie archetyp.
-- *Adres jako pole tekstowe* — jeśli nikt nie filtruje, nie waliduje i nie liczy strefy, nie buduj hierarchii „na zapas”.
-- *Magazyn / punkt odbioru* — lokalizacja tak, stan zapasów i wolne miejsca nie (Product, Availability).
+**Borderline cases:**
+- *An external service (a geocoder, maps)* — the model stores the result and the identifier from the register; the search itself is
+  an integration (ACL), not the archetype.
+- *The address as a text field* — if nobody filters, validates or computes a zone, do not build a hierarchy "just in case".
+- *A warehouse / pickup point* — the location yes, the stock level and free slots no (Product, Availability).
 
-## Model (istota)
-Poniższy podział to wniosek modelowy fabryki; źródła w sekcji „Źródła” potwierdzają tylko to, co tam opisano.
-### Lokalizacja i nazwa
-- **GeographicLocation** — punkt albo obszar na Ziemi z własnym, technicznym identyfikatorem (generowanym w aplikacji).
-  Typ (kraj, jednostka podziału, miejscowość, ulica, punkt) to cecha ze słownika, nie osobna klasa.
-- **GeographicName** — osobny byt: nazwa, język, rodzaj (oficjalna, potoczna, historyczna), okres ważności. Lokalizacja
-  ma 1..n nazw; nazwa nie jest kluczem ani nie identyfikuje obszaru.
-- **ExternalIdentifier** — identyfikator z rejestru zewnętrznego: schemat (np. ISO 3166-1, ISO 3166-2, TERC, SIMC, ULIC,
-  kod pocztowy) + wartość + okres ważności. To **atrybut z rejestru**, nie klucz modelu: rejestry zmieniają kody,
-  łączą i dzielą jednostki. Jedna lokalizacja może mieć identyfikatorów wiele (po jednym na schemat).
+## Model (the essence)
+The breakdown below is the factory's modelling conclusion; the sources in the "Sources" section confirm only what is described there.
+### Location and name
+- **GeographicLocation** — a point or an area on Earth with its own technical identifier (generated in the application).
+  The type (country, administrative unit, locality, street, point) is a feature from a dictionary, not a separate class.
+- **GeographicName** — a separate entity: the name, the language, the kind (official, colloquial, historical), the validity period. A location
+  has 1..n names; a name is not a key and does not identify the area.
+- **ExternalIdentifier** — an identifier from an external register: a scheme (e.g. ISO 3166-1, ISO 3166-2, TERC, SIMC, ULIC,
+  postal code) + a value + a validity period. It is **an attribute from a register**, not a model key: registers change codes,
+  merge and split units. One location may have many identifiers (one per scheme).
 
-### Hierarchia i zawieranie
-- **Zawieranie obszarów** — relacja „obszar A leży w B” jako osobny rekord z okresem (kraj → województwo → powiat →
-  gmina; w DE inne poziomy). Nie `parentId` w lokalizacji: struktur bywa kilka (administracyjna, pocztowa, handlowa),
-  a granice się zmieniają. Zasięg bywa liczony z zawierania albo z geometrii — wybór to decyzja (A).
-- **Zbiory obszarów** — strefa to zbiór obszarów (gmin, kodów pocztowych) z okresem, nie osobna geometria rysowana ręcznie;
-  wtedy zmiana granicy gminy nie psuje strefy.
+### Hierarchy and containment
+- **Area containment** — the relationship "area A lies in B" as a separate record with a period (country → voivodeship → county →
+  municipality; in DE other levels). Not a `parentId` in the location: there are sometimes several structures (administrative, postal, commercial),
+  and boundaries change. Coverage is sometimes computed from containment or from geometry — the choice is a decision (A).
+- **Sets of areas** — a zone is a set of areas (municipalities, postal codes) with a period, not a separate hand-drawn geometry;
+  then a change to a municipality's boundary does not break the zone.
 
-### Rola obszaru
-- **AreaRole** — „ten obszar odgrywa rolę X dla Y”: strefa dostaw sklepu, obszar sprzedaży handlowca, jurysdykcja
-  podatkowa. Osobny byt z okresem i właścicielem roli. Rola jest informacją o **zastosowaniu**; stawka, limit czy cena
-  zależna od strefy należą do Pricing lub warstwy reguł, które dostają strefę jako parametr.
+### Area role
+- **AreaRole** — "this area plays role X for Y": a shop's delivery zone, a sales rep's sales area, a tax
+  jurisdiction. A separate entity with a period and a role owner. The role is information about **use**; a rate, a limit or a price
+  depending on the zone belong to Pricing or the rules layer, which get the zone as a parameter.
 
-### Adres
-- **Address** — opis lokalizacji według **szablonu kraju** (kolejność i wymagane elementy różnią się: PL, DE, GB). Szablon
-  to dane (element, wymagalność, format kodu pocztowego), nie `if` w kodzie. Adres wskazuje lokalizację (np. TERC +
-  SIMC + ULIC w PL) i ma pola tekstowe do wydruku; jedno bez drugiego bywa niewystarczające.
-- **Adres strony** — mechanizm kontaktu należy do Party (adres rozliczeniowy, dostawy, zastosowania). Granica:
-  Party wie, *kto* pod jakim adresem jest dostępny; Geographic Location wie, *czym ten adres jest* i *w jakich obszarach
-  leży*.
-- **Adres zamrożony vs aktualny** — dokument (zamówienie, faktura, umowa) trzyma **kopię** adresu z chwili zdarzenia
-  (snapshot: tekst + odniesienie do lokalizacji z datą). Zmiana adresu klienta nie przepisuje historii. Adres aktualny
-  strony to osobny, zmienny stan. To samo dotyczy nazw: faktura pamięta nazwę z dnia sprzedaży.
+### Address
+- **Address** — a description of a location according to **the country's template** (the order and the required elements differ: PL, DE, GB). The template
+  is data (element, requiredness, postal code format), not an `if` in code. The address points to a location (e.g. TERC +
+  SIMC + ULIC in PL) and has text fields for printing; one without the other is sometimes insufficient.
+- **A party's address** — the contact mechanism belongs to Party (billing address, delivery address, uses). The boundary:
+  Party knows *who* is reachable at which address; Geographic Location knows *what this address is* and *which areas
+  it lies in*.
+- **Frozen vs current address** — a document (order, invoice, agreement) holds **a copy** of the address from the moment of the event
+  (a snapshot: text + a reference to the location with a date). A change of the customer's address does not rewrite history. The party's current
+  address is a separate, changing state. The same applies to names: an invoice remembers the name as of the sale date.
 
-### Geometria
-- **Geometry** — osobny byt lub referencja (punkt, wielokąt) w ustalonym układzie współrzędnych, z okresem i źródłem.
-  Zapis w GeoJSON z WGS 84 w stopniach dziesiętnych; współrzędne w kolejności **długość, szerokość**.
-  **Pułapka osi:** oznaczenie EPSG:4326 w wielu narzędziach i bazach zakłada kolejność szerokość, długość — odwrócenie
-  osi daje punkt w innym miejscu świata bez błędu walidacji. Ustal kolejność w kontrakcie i testuj na znanym punkcie.
-- Obszar zawierania liczony z geometrii (punkt w wielokącie) to algorytm przestrzenny za interfejsem; model przechowuje
-  wynik i datę wersji granic.
+### Geometry
+- **Geometry** — a separate entity or a reference (a point, a polygon) in an agreed coordinate system, with a period and a source.
+  Stored in GeoJSON with WGS 84 in decimal degrees; coordinates in the order **longitude, latitude**.
+  **The axis pitfall:** the EPSG:4326 designation in many tools and databases assumes the order latitude, longitude — swapping
+  the axes gives a point elsewhere in the world with no validation error. Fix the order in the contract and test on a known point.
+- Containment computed from geometry (point in polygon) is a spatial algorithm behind an interface; the model stores
+  the result and the date of the boundary version.
 
-## Pytania
-**A — decyzje standardowe:**
-- Jakie kraje i szablony adresów obsługujemy teraz (PL, DE), a które dojdą? Czy kod pocztowy jest walidowany formatem czy rejestrem?
-- Strefa dostaw to zbiór gmin, zbiór kodów pocztowych, czy rysowany wielokąt? Co przy konflikcie (kod przecina gminy)?
-- Hierarchia z zawierania (rekordy) czy z geometrii? Ile poziomów naprawdę potrzeba?
-- Czy dokument zamraża adres w całości (kopia), czy kopia + odniesienie do lokalizacji z datą?
-- Które identyfikatory zewnętrzne zapisujemy i kto aktualizuje je z rejestru (import okresowy)?
+## Questions
+**A — standard decisions:**
+- Which countries and address templates do we support now (PL, DE), and which will be added? Is the postal code validated by format or by register?
+- Is a delivery zone a set of municipalities, a set of postal codes, or a drawn polygon? What on a conflict (a code crosses municipalities)?
+- Hierarchy from containment (records) or from geometry? How many levels are really needed?
+- Does a document freeze the address in full (a copy), or a copy + a reference to the location with a date?
+- Which external identifiers do we record and who updates them from the register (periodic import)?
 
-**B — luki** (przykłady): zmiana granic gminy a istniejące strefy? · nazwy w kilku językach na dokumentach? · adres bez
-ulicy (wieś)? · punkty odbioru i paczkomaty jako lokalizacje? · strefa czasowa obszaru? · strefa wyłączona na święta
-(→ Availability)? · RODO: adres osoby fizycznej a retencja (→ Party, `document.md`)?
+**B — gaps** (examples): a change of municipality boundaries vs existing zones? · names in several languages on documents? · an address without
+a street (a village)? · pickup points and parcel lockers as locations? · the area's time zone? · a zone disabled for holidays
+(→ Availability)? · GDPR: a natural person's address vs retention (→ Party, `document.md`)?
 
-## Kroki mapowania
-1. **Lokalizacje** — każde „miejsce” z wymagań → typ lokalizacji; odetnij nazwy od identyfikatorów.
-2. **Nazwy** — języki, rodzaje, okresy; która nazwa idzie na dokument.
-3. **Identyfikatory zewnętrzne** — schemat, wartość, źródło rejestru, częstość aktualizacji.
-4. **Hierarchia** — relacje zawierania z okresem; poziomy per kraj.
-5. **Role obszarów** — strefa dostaw, obszar sprzedaży, jurysdykcja; właściciel i okres roli.
-6. **Adres** — szablon per kraj (dane), walidacje, związek z lokalizacją.
-7. **Granica z Party i dokumentami** — adres aktualny w Party; kopia w dokumencie (zdarzenie zamrażające).
-8. **Geometria** — czy potrzebna, układ współrzędnych, kolejność osi, wersjonowanie granic.
+## Mapping steps
+1. **Locations** — every "place" from the requirements → a location type; separate names from identifiers.
+2. **Names** — languages, kinds, periods; which name goes on the document.
+3. **External identifiers** — scheme, value, register source, update frequency.
+4. **Hierarchy** — containment relationships with a period; levels per country.
+5. **Area roles** — delivery zone, sales area, jurisdiction; the role owner and period.
+6. **Address** — a template per country (data), validations, the link to the location.
+7. **The boundary with Party and documents** — the current address in Party; a copy in the document (the freezing event).
+8. **Geometry** — is it needed, the coordinate system, the axis order, boundary versioning.
 
-## Decyzje do kontroli (R/A/X)
-kraje i szablony adresów · źródło hierarchii (rekordy vs geometria) · strefa jako zbiór obszarów vs wielokąt · zamrażanie
-adresu na dokumencie · identyfikatory zewnętrzne i ich aktualizacja · nazwy wielojęzyczne · kolejność osi · wersjonowanie granic ·
-walidacja kodów · kto utrzymuje strefy.
+## Decisions to check (R/A/X)
+countries and address templates · the source of the hierarchy (records vs geometry) · a zone as a set of areas vs a polygon · freezing
+the address on a document · external identifiers and their updates · multilingual names · axis order · boundary versioning ·
+code validation · who maintains the zones.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Geographic Location: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Lokalizacje i nazwy — | Typ lokalizacji | Nazwy (język, rodzaj) | Identyfikatory zewnętrzne (schemat) | Uwagi |
-## Hierarchia         — | Relacja zawierania | Poziomy | Okres | Źródło (rekordy/geometria) |
-## Role obszarów      — | Rola | Obszary (zbiór) | Właściciel roli | Okres | Parametr dla Pricing/reguł |
-## Adresy             — | Kraj | Szablon (elementy, wymagalność) | Walidacja | Powiązanie z lokalizacją |
-## Zamrożenie na dokumentach — | Dokument | Co kopiujemy | Zdarzenie zamrażające |
-## Geometria          — | Układ | Kolejność osi | Wersjonowanie | Gdzie liczone |
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), przypadki brzegowe, parametry polityk zmiennych
+# Geographic Location model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Locations and names — | Location type | Names (language, kind) | External identifiers (scheme) | Notes |
+## Hierarchy          — | Containment relationship | Levels | Period | Source (records/geometry) |
+## Area roles         — | Role | Areas (set) | Role owner | Period | Parameter for Pricing/rules |
+## Addresses          — | Country | Template (elements, requiredness) | Validation | Link to the location |
+## Freezing on documents — | Document | What we copy | Freezing event |
+## Geometry           — | System | Axis order | Versioning | Where computed |
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), edge cases, variable policy parameters
 ```
 
-## Wzorce i pułapki
-- **Kod pocztowy lub nazwa miasta jako klucz** — kody i nazwy się zmieniają, jeden kod obejmuje kilka miejscowości.
-  Klucz techniczny, kod jako identyfikator zewnętrzny.
-- **Jedno pole `address` w zamówieniu odsyłające do aktualnego adresu klienta** — po przeprowadzce historyczna faktura
-  pokazuje nowy adres. Zamrażaj w chwili zdarzenia.
-- **`if (kraj == "DE")` w walidacji adresu** — szablon jako dane.
-- **Strefa jako ręcznie rysowany wielokąt** obok granic gmin — rozjazd po zmianie granic; zbiór obszarów jest odporniejszy.
-- **Pomieszanie roli i obszaru** — „strefa 2” nie jest rodzajem lokalizacji, tylko rolą obszaru w kontekście dostaw.
-- **Oś współrzędnych** — odwrócona kolejność długość/szerokość; kontrakt i test na punkcie kontrolnym.
-- **Poza archetypem:** „czy punkt odbioru ma wolny slot?” (Availability), „ile za dostawę?” (Pricing), „w jakiej kolejności
-  jechać?” (General assignment). Autoryzacja („kto może zmienić strefę”) leży w warstwie aplikacji.
-- **Polityki zmienne jako parametry:** zasięg dostaw zależny od pory roku → archetyp dostaje gotowy zbiór obszarów.
+## Patterns and pitfalls
+- **A postal code or a city name as a key** — codes and names change, one code covers several localities.
+  A technical key, the code as an external identifier.
+- **One `address` field in the order pointing to the customer's current address** — after a move, a historical invoice
+  shows the new address. Freeze it at the moment of the event.
+- **`if (country == "DE")` in address validation** — the template as data.
+- **A zone as a hand-drawn polygon** next to municipality boundaries — they drift apart after boundary changes; a set of areas is more robust.
+- **Mixing the role and the area** — "zone 2" is not a kind of location, only an area's role in the delivery context.
+- **The coordinate axis** — the longitude/latitude order swapped; a contract and a test on a control point.
+- **Outside the archetype:** "does the pickup point have a free slot?" (Availability), "how much for delivery?" (Pricing), "in what order
+  to drive?" (General assignment). Authorization ("who may change a zone") lies in the application layer.
+- **Variable policies as parameters:** delivery coverage depending on the season → the archetype gets a ready set of areas.
 
-## Kontrola jakości
-- [ ] nazwa, identyfikator zewnętrzny i klucz techniczny to trzy różne rzeczy
-- [ ] hierarchia z okresem, nie `parentId`; strefa jako zbiór obszarów (lub uzasadniony wielokąt)
-- [ ] szablony adresów jako dane; kraje wymienione
-- [ ] dokumenty zamrażają adres; adres aktualny tylko w Party
-- [ ] kolejność osi i układ współrzędnych jawne (jeśli jest geometria)
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] the name, the external identifier and the technical key are three different things
+- [ ] the hierarchy with a period, not a `parentId`; a zone as a set of areas (or a justified polygon)
+- [ ] address templates as data; countries listed
+- [ ] documents freeze the address; the current address only in Party
+- [ ] the axis order and the coordinate system explicit (if there is geometry)
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Sklep internetowy dostarcza w Polsce i Niemczech. W PL strefy dostaw to zestawy gmin, w DE zestawy kodów
-pocztowych. Faktura ma pokazywać adres nabywcy z dnia sprzedaży. Gdańsk bywa wpisywany jako Danzig.”
+## Example (shortened)
+**Input:** "An online shop delivers in Poland and Germany. In PL the delivery zones are sets of municipalities, in DE sets of postal
+codes. The invoice must show the buyer's address as of the sale date. Gdańsk is sometimes entered as Danzig."
 
 ```markdown
-## Mapowanie pojęć
-| gmina, kraj | GeographicLocation (typ: jednostka podziału) | identyfikator TERC jako atrybut |
-| Gdańsk / Danzig | GeographicName (pl, de, oficjalna / potoczna) | jedna lokalizacja, dwie nazwy |
-| strefa dostaw | AreaRole nad zbiorem obszarów | okres obowiązywania |
-| adres nabywcy | Address wg szablonu kraju | PL i DE: dwa szablony (R) |
-## Role obszarów
-| DOSTAWA_PL_1 | zbiór gmin | Sklep | od–do | parametr `strefa` dla Pricing |
-| DOSTAWA_DE_1 | zbiór kodów pocztowych | Sklep | od–do | parametr `strefa` |
-## Zamrożenie na dokumentach — faktura | kopia adresu nabywcy + odniesienie do lokalizacji | wystawienie (R)
-## Decyzje
-| strefa PL jako zbiór gmin | R |
-| kod pocztowy DE: format czy rejestr | A: format na start |
-| zmiana granic gminy a strefy | X → hot spot |
-## Niezmapowane pojęcia — cena dostawy (→ Pricing), nabywca i jego telefon (→ Party), kurier i trasa (→ General assignment)
+## Concept mapping
+| municipality, country | GeographicLocation (type: administrative unit) | the TERC identifier as an attribute |
+| Gdańsk / Danzig | GeographicName (pl, de, official / colloquial) | one location, two names |
+| delivery zone | AreaRole over a set of areas | period of validity |
+| buyer's address | Address per the country's template | PL and DE: two templates (R) |
+## Area roles
+| DELIVERY_PL_1 | set of municipalities | Shop | from–to | parameter `zone` for Pricing |
+| DELIVERY_DE_1 | set of postal codes | Shop | from–to | parameter `zone` |
+## Freezing on documents — invoice | a copy of the buyer's address + a reference to the location | issuing (R)
+## Decisions
+| the PL zone as a set of municipalities | R |
+| DE postal code: format or register | A: format to start with |
+| a change of municipality boundaries vs zones | X → hot spot |
+## Unmapped concepts — the delivery price (→ Pricing), the buyer and their phone (→ Party), the courier and the route (→ General assignment)
 ```
 
-## Źródła
-Odczyt 2026-10-17.
-- Hay, „Enterprise Model Patterns: Describing the World (UML Version)”, Technics Publications, 2011 (ISBN 978-1-935504-05-4) —
-  bierzemy: rozdział „Geographic Locations” obejmuje lokalizację, nazwy geograficzne i role; rozdział o ludziach i organizacjach
-  jest osobny. Ranga: pierwotne (spis wydawcy). Hierarchii obszarów nie przypisujemy tej książce.
-- Silverston, Agnew, Vol. 3, „Universal Patterns for Data Modeling”, Wiley, styczeń 2009 — bierzemy:
-  wzorzec Geographic Boundary powiązany z adresem pocztowym oraz rozdziały o rolach, hierarchiach, mechanizmach kontaktu. Ranga:
-  wtórne dla treści wzorca (opis O'Reilly).
-- ISO 3166-1:2020 (kody krajów) i ISO 3166-2:2020 (kody jednostek podziału) — bierzemy: identyfikatory z rejestru jako atrybuty.
-  Ranga: pierwotne (iso.org).
-- ISO 19160-1:2015, „Addressing — Part 1: Conceptual model” — bierzemy: adres jako opis lokalizacji. Ranga: pierwotne (iso.org).
-- ISO 19112:2019 — bierzemy: odniesienia przestrzenne przez identyfikatory geograficzne, schemat pojęciowy gazetteera. Ranga: pierwotne.
-- UPU S42 (International postal address components and templates) — bierzemy: szablony adresów per kraj jako dane. Ranga:
-  pierwotne, ale tylko częściowo zweryfikowane; aktualność wydania [niezweryfikowane] (najnowsza znaleziona S42-8, 2017).
-- RFC 7946, GeoJSON (sierpień 2016) — bierzemy: WGS 84, stopnie dziesiętne, kolejność długość–szerokość. Ranga: pierwotne.
-- EPSG:4326 (WGS 84, oś szerokość–długość wg epsg.io) — bierzemy: różnica kolejności osi jako pułapka. Ranga: wtórne.
-- GUS, TERYT (eTERYT): TERC, SIMC, ULIC — bierzemy: identyfikatory jednostek, miejscowości i ulic; adres kodowany TERC + SIMC +
-  ULIC. Ranga: pierwotne.
-- PRG i PRNG (GUGiK) oraz EMUiA (gminy, geoportal.gov.pl) — bierzemy: rejestry granic, nazw i adresów jako źródła importu. Ranga:
-  pierwotne, zweryfikowane częściowo.
-- Dyrektywa INSPIRE 2007/2/WE (14.03.2007), załącznik I — bierzemy: nazwy geograficzne, jednostki administracyjne, adresy i układy
-  współrzędnych jako ustandaryzowane tematy danych. Ranga: wtórne (kopia legislation.gov.uk). Przepisy tylko jako kontekst do
-  potwierdzenia przez prawnika, nie porada.
+## Sources
+Accessed 2026-10-17.
+- Hay, "Enterprise Model Patterns: Describing the World (UML Version)", Technics Publications, 2011 (ISBN 978-1-935504-05-4) —
+  we take: the chapter "Geographic Locations" covers the location, geographic names and roles; the chapter on people and organizations
+  is separate. Rank: primary (the publisher's table of contents). We do not attribute the hierarchy of areas to this book.
+- Silverston, Agnew, Vol. 3, "Universal Patterns for Data Modeling", Wiley, January 2009 — we take:
+  the Geographic Boundary pattern linked to the postal address and the chapters on roles, hierarchies, contact mechanisms. Rank:
+  secondary for the content of the pattern (the O'Reilly description).
+- ISO 3166-1:2020 (country codes) and ISO 3166-2:2020 (subdivision codes) — we take: identifiers from a register as attributes.
+  Rank: primary (iso.org).
+- ISO 19160-1:2015, "Addressing — Part 1: Conceptual model" — we take: the address as a description of a location. Rank: primary (iso.org).
+- ISO 19112:2019 — we take: spatial references through geographic identifiers, the conceptual schema of a gazetteer. Rank: primary.
+- UPU S42 (International postal address components and templates) — we take: address templates per country as data. Rank:
+  primary, but only partly verified; currency of the edition [unverified] (the newest found S42-8, 2017).
+- RFC 7946, GeoJSON (August 2016) — we take: WGS 84, decimal degrees, the longitude–latitude order. Rank: primary.
+- EPSG:4326 (WGS 84, the latitude–longitude axis per epsg.io) — we take: the difference in axis order as a pitfall. Rank: secondary.
+- GUS, TERYT (eTERYT) (the Polish official register of territorial division): TERC, SIMC, ULIC — we take: the identifiers of units, localities and streets; an address coded TERC + SIMC +
+  ULIC. Rank: primary.
+- PRG and PRNG (GUGiK) and EMUiA (municipalities, geoportal.gov.pl) — we take: the registers of boundaries, names and addresses as import sources. Rank:
+  primary, partly verified.
+- The INSPIRE Directive 2007/2/EC (14.03.2007), Annex I — we take: geographic names, administrative units, addresses and coordinate
+  systems as standardized data themes. Rank: secondary (a copy on legislation.gov.uk). Regulations only as context to be
+  confirmed by a lawyer, not advice.
 
-Podział na nazwę, rolę obszaru, adres i geometrię oraz zamrażanie adresu na dokumencie to wnioski modelowe fabryki, nie tezy autorów.
-Opisane własnymi słowami; treść książek i norm nie była cytowana.
+The breakdown into the name, the area role, the address and the geometry, and freezing the address on a document, are the factory's modelling conclusions, not theses of the authors.
+Described in our own words; the content of books and standards was not quoted.

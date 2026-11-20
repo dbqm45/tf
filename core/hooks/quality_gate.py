@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-Stop / SubagentStop: bramka jakości — tura nie kończy się z czerwonym buildem i testami („prompt prosi, hook pilnuje”).
+Stop / SubagentStop: quality gate — a turn does not end with a red build and tests ("the prompt asks, the hook enforces").
 
-Działa tylko z konfiguracją projektu `.claude/quality-gate.json` (fabryka nie zna poleceń projektu):
+Works only with the project configuration `.claude/quality-gate.json` (the factory does not know the project's commands):
   {"command": "npm test", "watch": ["src/", "test/"], "timeout": 600, "max_blocks": 3}
-- `command` — build i testy (napis albo lista argumentów, bez powłoki), uruchamiane pod blokadą test_lock.py;
-- `watch` — ścieżki, których zmiana uruchamia bramkę (domyślnie całe repozytorium);
-- `timeout` — sekundy; przekroczenie to wynik czerwony;
-- `max_blocks` — po tylu blokadach tego samego stanu kodu bramka przepuszcza z komunikatem dla człowieka (ochrona
-  przed pętlą, domyślnie 3).
-Polecenie biegnie tylko, gdy zmienił się kod w `watch` względem HEAD (odcisk diffu i nowych plików); po zielonym
-przebiegu ten sam odcisk nie uruchamia testów drugi raz. Świadomie czerwona partia (TDD, test przed kodem): plik
-`.claude/quality-gate.expected-red` z powodem — bramka przepuszcza; usuń go po partii. `QG_GATE_DISABLE=1` wyłącza
-bramkę (np. w `.claude/settings.local.json`). Stan: `.tf/logs/quality-gate.json`. Tylko biblioteka standardowa.
-Długie wyjście polecenia agent dostaje jako początek i koniec; całość ostatniego przebiegu jest w
+- `command` — build and tests (a string or an argument list, no shell), run under the test_lock.py lock;
+- `watch` — paths whose change triggers the gate (default: the whole repository);
+- `timeout` — seconds; exceeding it is a red result;
+- `max_blocks` — after this many blocks of the same code state the gate lets it through with a message for the human (protection
+  against a loop, default 3).
+The command runs only when code in `watch` changed relative to HEAD (a fingerprint of the diff and new files); after a green
+run the same fingerprint does not run the tests a second time. A deliberately red batch (TDD, test before code): the file
+`.claude/quality-gate.expected-red` with a reason — the gate lets it through; delete it after the batch. `QG_GATE_DISABLE=1` disables
+the gate (e.g. in `.claude/settings.local.json`). State: `.tf/logs/quality-gate.json`. Standard library only.
+The agent gets long command output as its beginning and end; the whole of the last run is in
 `.tf/logs/quality-gate-output.txt`.
 
-  python3 .claude/hooks/quality_gate.py --status [--quiet-ok]   # czy bramka działa i dlaczego nie (tf doctor, start sesji)
+  python3 .claude/hooks/quality_gate.py --status [--quiet-ok]   # whether the gate works and why not (tf doctor, session start)
 """
 from __future__ import annotations
 
@@ -37,20 +37,20 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
         pass
 
 HERE = Path(__file__).resolve().parent
-HEAD, TAIL = 1000, 2000   # tyle znaków początku i końca wyjścia trafia do agenta
+HEAD, TAIL = 1000, 2000   # this many characters of the output start and end go to the agent
 OUTPUT = "quality-gate-output.txt"
 
 
 def clip(out: str, saved: str) -> str:
-    """Wyjście dla agenta: krótkie w całości, długie jako początek i koniec z informacją, ile pominięto i gdzie jest
-    całość. Pierwszy błąd bywa na początku logu, podsumowanie na końcu — sam koniec gubi przyczynę."""
+    """Output for the agent: short in full, long as a beginning and end with a note of how much was omitted and where
+    the whole is. The first error is often at the start of the log and the summary at the end — the end alone loses the cause."""
     if len(out) <= HEAD + TAIL:
         return out
     return (out[:HEAD] + f"\n… [skipped {len(out) - HEAD - TAIL} characters; full output: {saved}] …\n" + out[-TAIL:])
 
 
 def save_output(root: Path, name: str, out: str) -> str:
-    """Zapisuje pełne wyjście ostatniego przebiegu w .tf/logs/ i zwraca ścieżkę względną (błąd zapisu nie przerywa)."""
+    """Saves the full output of the last run in .tf/logs/ and returns the relative path (a write error does not interrupt)."""
     rel = f".tf/logs/{name}"
     try:
         (root / ".tf" / "logs").mkdir(parents=True, exist_ok=True)
@@ -73,8 +73,8 @@ def git(root: Path, *args: str) -> bytes:
 
 
 def fingerprint(root: Path, watch: list[str]) -> str | None:
-    """Odcisk zmian w `watch` względem HEAD; None, gdy nic się nie zmieniło. Pliki zadań (`docs/project/changes/`,
-    pisze je `tf task` po każdym kroku) nie są zmianą kodu i nie uruchamiają bramki."""
+    """Fingerprint of changes in `watch` relative to HEAD; None when nothing changed. Task files (`docs/project/changes/`,
+    written by `tf task` after each step) are not a code change and do not trigger the gate."""
     paths = ["--", *(watch or ["."]), ":(exclude)docs/project/changes"]
     diff = git(root, "diff", "HEAD", "--binary", *paths)
     new = git(root, "ls-files", "--others", "--exclude-standard", *paths).decode(errors="replace").split()
@@ -97,7 +97,7 @@ def load_state(path: Path) -> dict:
 
 
 def run(root: Path, cmd, timeout: float) -> tuple[bool | None, str]:
-    """(zielone?, wyjście przycięte do początku i końca); None = blokada testów zajęta. Pełne wyjście: .tf/logs/."""
+    """(green?, output trimmed to the beginning and end); None = the test lock is busy. Full output: .tf/logs/."""
     argv = shlex.split(cmd) if isinstance(cmd, str) else list(cmd)
     with _lock().held(root) as ok:
         if not ok:
@@ -167,7 +167,7 @@ OFF = "The factory will not block red tests."
 
 
 def _disabled_by(root: Path, env) -> str | None:
-    """Skąd pochodzi wyłącznik QG_GATE_DISABLE=1: środowisko sesji albo plik ustawień projektu."""
+    """Where the QG_GATE_DISABLE=1 switch comes from: the session environment or the project settings file."""
     for name in ("settings.local.json", "settings.json"):
         try:
             cfg = json.loads((root / ".claude" / name).read_text(encoding="utf-8"))
@@ -179,8 +179,8 @@ def _disabled_by(root: Path, env) -> str | None:
 
 
 def gate_status(root: Path, env=None) -> tuple[str, str]:
-    """Stan bramki w zwykłym języku: (stan, komunikat). Stany: on, expected-red, disabled, no-config, invalid,
-    no-command. Niczego nie uruchamia."""
+    """Gate state in plain language: (state, message). States: on, expected-red, disabled, no-config, invalid,
+    no-command. Runs nothing."""
     env = os.environ if env is None else env
     where = _disabled_by(root, env)
     if where:
@@ -213,7 +213,7 @@ def gate_status(root: Path, env=None) -> tuple[str, str]:
 
 
 def main() -> int:
-    if "--status" in sys.argv[1:]:   # tf doctor i start sesji: jedno zdanie o stanie bramki, zawsze kod 0
+    if "--status" in sys.argv[1:]:   # tf doctor and session start: one sentence about the gate state, always exit 0
         state, text = gate_status(Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve())
         if state != "on" or "--quiet-ok" not in sys.argv[1:]:
             print(text)
@@ -225,7 +225,7 @@ def main() -> int:
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or ".").resolve()
     try:
         out = decide(root, data)
-    except Exception as e:  # noqa: BLE001 — bramka nie może wywrócić sesji
+    except Exception as e:  # noqa: BLE001 — the gate must not break the session
         print(f"quality gate: error ({e}) — skipping", file=sys.stderr)
         return 0
     if out:

@@ -20,6 +20,28 @@
       }
     },
     {
+      "id": "priorytet-dlugu-en",
+      "expect": "trigger",
+      "prompt": "I’m auditing the technical debt of a monolith and I have 60 findings. How do I rank them so that I don’t fix code that nobody touches? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "częstoś\\w+ zmian|gorąc\\w+ punkt|hot ?spot|git log",
+            "change (frequency|rate)|frequency of change|churn|hot ?spot\\w*"
+          ],
+          [
+            "waga.{0,60}wysiłek|wysiłek.{0,60}waga|÷|/ ?wysiłek",
+            "(severity|impact).{0,60}effort|effort.{0,60}(severity|impact)|/ ?effort"
+          ],
+          [
+            "szybk\\w+ wygran|quick win",
+            "quick[- ]wins?",
+            "low-hanging"
+          ]
+        ]
+      }
+    },
+    {
       "id": "raport-struktura",
       "expect": "trigger",
       "prompt": "Jak powinien wyglądać raport z audytu długu, żeby zespół coś z nim zrobił, a przy ponownym audycie dało się go porównać? Odpowiedz zwięźle.",

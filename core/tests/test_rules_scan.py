@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Testy skanera reguł deklaratywnych `.tf/factory/rules_scan.py` i modułu `tf analyze` z `tier0.rules`: standardy
-firmy sprawdzane bez modelu (wzorzec zakazany w linii, wzorzec wymagany w nagłówku pliku, wzorce ścieżek, błędne
-reguły) oraz bramka modułu na fixtures. python3 tests/test_rules_scan.py"""
+"""Tests of the declarative rules scanner `.tf/factory/rules_scan.py` and of the `tf analyze` module with `tier0.rules`: company
+standards checked without a model (a pattern forbidden in a line, a pattern required in the file header, path patterns, bad
+rules) and the module gate on fixtures. python3 tests/test_rules_scan.py"""
 import json
 import os
 import subprocess
@@ -15,14 +15,14 @@ ANALYZE = ROOT / ".tf" / "factory" / "analyze.py"
 
 RULES = r"""rules:
   - id: no-print
-    title: print zamiast loggera firmowego
+    title: print instead of the company logger
     files: ["**/*.py"]
     exclude: ["tests/**"]
     forbid: '^\s*print\('
     severity: medium
-    suggestion: użyj acme.log
+    suggestion: use acme.log
   - id: license-header
-    title: brak nagłówka licencji
+    title: missing license header
     files: ["src/**/*.py"]
     require: 'Copyright ACME'
     head: 3
@@ -60,14 +60,14 @@ def main() -> int:
         repo = base / "repo"
         write(repo / "src" / "app.py", "# Copyright ACME\nimport x\nprint('a')\n    print('b')\n")
         write(repo / "src" / "lib" / "util.py", "import y\n\n\n# Copyright ACME\n")
-        write(repo / "tests" / "test_app.py", "print('ok w testach')\n")
-        write(repo / "node_modules" / "p" / "a.py", "print('zależność')\n")
+        write(repo / "tests" / "test_app.py", "print('ok in tests')\n")
+        write(repo / "node_modules" / "p" / "a.py", "print('dependency')\n")
         write(repo / ".tf" / "factory" / "x.py", "print('fabryka')\n")
         r = scan(rules, repo)
         got = found(r)
         check(r.returncode == 0 and got == [("license-header", "src/lib/util.py", 1), ("no-print", "src/app.py", 3),
                                             ("no-print", "src/app.py", 4)],
-              f"RS-1: forbid w linii, require w pierwszych `head` liniach, exclude, bez zależności i plików fabryki: "
+              f"RS-1: forbid in a line, require in the first `head` lines, exclude, without dependencies and factory files: "
               f"{got} {r.stderr}")
         first = json.loads(r.stdout.splitlines()[0]) if r.stdout.strip() else {}
         check({"rule", "title", "file", "line", "snippet", "severity", "confidence", "evidence", "basis",
@@ -75,18 +75,18 @@ def main() -> int:
               f"RS-2: ustalenie w kontrakcie tf analyze: {first}")
         r = scan(rules, repo, "--files", "src/app.py,tests/test_app.py")
         check(found(r) == [("no-print", "src/app.py", 3), ("no-print", "src/app.py", 4)],
-              f"RS-3: --files ogranicza skan (exclude nadal działa): {found(r)}")
-        for name, body in (("bez-wzorca", "rules:\n  - {id: x, title: X}\n"),
-                           ("zly-wzorzec", "rules:\n  - {id: x, title: X, forbid: '(['}\n"),
-                           ("zle-id", "rules:\n  - {id: 'Złe ID', title: X, forbid: a}\n"),
-                           ("oba", "rules:\n  - {id: x, title: X, forbid: a, require: b}\n"),
-                           ("zla-waga", "rules:\n  - {id: x, title: X, forbid: a, severity: huge}\n")):
+              f"RS-3: --files limits the scan (exclude still works): {found(r)}")
+        for name, body in (("no-pattern", "rules:\n  - {id: x, title: X}\n"),
+                           ("bad-pattern", "rules:\n  - {id: x, title: X, forbid: '(['}\n"),
+                           ("bad-id", "rules:\n  - {id: 'Bad ID', title: X, forbid: a}\n"),
+                           ("both", "rules:\n  - {id: x, title: X, forbid: a, require: b}\n"),
+                           ("bad-severity", "rules:\n  - {id: x, title: X, forbid: a, severity: huge}\n")):
             bad = base / f"{name}.yaml"
             write(bad, body)
             r = scan(bad, repo)
-            check(r.returncode == 2 and "rule" in r.stderr, f"RS-4 {name}: błędna reguła → kod 2 z opisem: {r.returncode} {r.stderr}")
+            check(r.returncode == 2 and "rule" in r.stderr, f"RS-4 {name}: a bad rule → code 2 with a description: {r.returncode} {r.stderr}")
 
-        # moduł tf analyze z tier0.rules: uruchomienie i bramka na fixtures
+        # the tf analyze module with tier0.rules: running and the gate on fixtures
         mods = base / "mods"
         mod = mods / "firma"
         write(mod / "analyzer.yaml", "name: firma\nprefix: ACME\ntitle: Standardy ACME\ndescription: test\nversion: 0.1.0\n"
@@ -109,13 +109,13 @@ def main() -> int:
         data = json.loads(report.read_text(encoding="utf-8")) if report.is_file() else {}
         check(r.returncode == 0 and len(data.get("findings", [])) == 3
               and all(f["id"].startswith("ACME-") for f in data["findings"]),
-              f"RS-5: tf analyze uruchamia moduł z tier0.rules skanerem rdzenia: {r.stdout[-500:]}{r.stderr[-500:]}")
+              f"RS-5: tf analyze runs the module with tier0.rules with the core scanner: {r.stdout[-500:]}{r.stderr[-500:]}")
         r = subprocess.run([sys.executable, str(ANALYZE), "gate", "--module", "firma"], cwd=repo, env=env,
                            capture_output=True, text=True, timeout=120)
-        check(r.returncode == 0, f"RS-6: bramka modułu z tier0.rules na fixtures: {r.stdout[-600:]}{r.stderr[-300:]}")
+        check(r.returncode == 0, f"RS-6: the gate of a module with tier0.rules on fixtures: {r.stdout[-600:]}{r.stderr[-300:]}")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów rules_scan")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} rules_scan tests")
     return 1 if fails else 0
 
 

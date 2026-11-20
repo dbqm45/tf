@@ -1,135 +1,135 @@
 # Principal / Distinguished Engineer / Fellow — Frontend
 
-> **Spis treści:** Wizja technologiczna i platformy na ekstremalną skalę · Granica frontend/backend/infrastruktura · Wpływ na standardy branżowe · Sponsoring kariery i kultura techniczna · Podsumowanie — jak korzystać z tego pliku
+> **Contents:** Technology vision and platforms at extreme scale · The frontend/backend/infrastructure boundary · Influence on industry standards · Career sponsorship and technical culture · Summary — how to use this file
 
-Poziom: horyzont decyzji wykracza poza jedną firmę — wizja technologiczna, platformy na ekstremalną skalę,
-granica frontend/infrastruktura, wpływ na standardy branżowe, rozwój kadry technicznej. Soczewka: **cała
-firma i/lub branża**.
+Level: the horizon of decisions goes beyond one company — technology vision, platforms at extreme scale,
+the frontend/infrastructure boundary, influence on industry standards, developing the technical staff. Lens: **the whole
+company and/or the industry**.
 
-## Wizja technologiczna i platformy na ekstremalną skalę
+## Technology vision and platforms at extreme scale
 
-Na tym poziomie problem nie jest „jak zbudować tę funkcję”, a „jaka architektura pozostanie słuszna za 3–5
-lat, gdy skala (użytkownicy, zespoły, kod) wzrośnie o rząd wielkości”. Praktyczne implikacje:
+At this level the problem is not "how to build this feature" but "which architecture will remain right in 3–5
+years, when the scale (users, teams, code) grows by an order of magnitude". Practical implications:
 
-- **Decyzje odwracalne vs nieodwracalne** — Principal rozpoznaje, które decyzje architektoniczne są łatwe
-  do odwrócenia później (wybór biblioteki UI w jednym module) a które są praktycznie nieodwracalne po
-  wdrożeniu na skalę (model danych we współdzielonym API, wybór frameworka dla setek zespołów, kontrakt
-  Design Systemu używany przez cały ekosystem) — i przykłada nieproporcjonalnie więcej rygoru decyzyjnego
-  do drugiej kategorii, świadomie oszczędzając ten rygor na pierwszej (żeby nie zamrozić organizacji
-  analysis-paralysis na decyzjach, które i tak można zmienić).
-- **Platforma jako produkt dla innych inżynierów** — na tej skali frontend przestaje być „stroną”, a staje
-  się **platformą** (Design System, biblioteka komponentów, wewnętrzne SDK, standardy) traktowaną z tym
-  samym rygorem co produkt zewnętrzny: ma własną roadmapę, wersjonowanie, ścieżkę migracji dla użytkowników
-  wewnętrznych (innych zespołów), i mierzony poziom adopcji.
-- **Techniczna kotwica (north star)** — Principal formułuje i komunikuje długoterminową architektoniczną
-  wizję (np. „za 2 lata każdy nowy produkt startuje z tego jednego szablonu platformy”), względem której
-  poszczególne zespoły mogą samodzielnie oceniać, czy ich lokalna decyzja idzie w dobrą stronę, bez
-  potrzeby centralnej zgody na każdą decyzję — to skaluje decyzyjność bez skalowania biurokracji.
+- **Reversible vs irreversible decisions** — a Principal recognizes which architectural decisions are easy
+  to reverse later (the choice of a UI library in one module) and which are practically irreversible after
+  rollout at scale (the data model in a shared API, the choice of a framework for hundreds of teams, the contract of a
+  Design System used by the whole ecosystem) — and applies disproportionately more decision rigour
+  to the second category, consciously sparing that rigour on the first (so as not to freeze the organization in
+  analysis-paralysis over decisions that can be changed anyway).
+- **The platform as a product for other engineers** — at this scale the frontend stops being "a website" and becomes
+  a **platform** (Design System, component library, internal SDKs, standards) treated with the
+  same rigour as an external product: it has its own roadmap, versioning, a migration path for internal
+  users (other teams), and a measured level of adoption.
+- **A technical anchor (north star)** — a Principal formulates and communicates a long-term architectural
+  vision (e.g. "in 2 years every new product starts from this one platform template"), against which
+  individual teams can assess on their own whether their local decision is heading in the right direction, without
+  the need for central approval of every decision — this scales decision-making without scaling bureaucracy.
 
-## Granica frontend/backend/infrastruktura
+## The frontend/backend/infrastructure boundary
 
-Na poziomie Principal granica między „frontend” i „nie-frontend” się rozmywa — decyzje wymagają zrozumienia
-infrastruktury, na której frontend faktycznie działa.
+At the Principal level the boundary between "frontend" and "non-frontend" blurs — decisions require an understanding
+of the infrastructure the frontend actually runs on.
 
 ### Edge Computing
 
-Wykonywanie kodu (zwykle lekkiego, request-scoped) na węzłach sieci **geograficznie najbliższych**
-użytkownikowi, zamiast w jednym centralnym data center — redukuje opóźnienie sieciowe (RTT) dla logiki, która
-wcześniej wymagałaby round-tripu do centralnego serwera. Typowe zastosowania frontendowe: personalizacja/
-A-B testing bez migotania treści (decyzja podjęta na edge, przed wysłaniem HTML do klienta, zamiast po
-stronie klienta z widocznym przeskokiem), przekierowania geograficzne/localizacyjne, lekka autoryzacja
-przed dotarciem do origin. Ograniczenie: środowisko edge zwykle ma **mniejszy** zestaw dostępnych API/
-czasu wykonania niż pełny serwer (brak długotrwałych połączeń, limity pamięci/czasu CPU) — Principal musi
-rozpoznać, która logika **kwalifikuje się** do edge (szybka, bezstanowa lub z małym stanem), a która musi
-zostać w tradycyjnym backendzie.
+Running code (usually lightweight, request-scoped) on network nodes **geographically closest**
+to the user, instead of in one central data center — it reduces network latency (RTT) for logic that
+would previously have required a round-trip to a central server. Typical frontend uses: personalization/
+A-B testing without content flicker (the decision is made on the edge, before the HTML is sent to the client, instead of on
+the client side with a visible jump), geographic/localization redirects, lightweight authorization
+before reaching the origin. Limitation: the edge environment usually has a **smaller** set of available APIs/
+execution time than a full server (no long-lived connections, memory/CPU time limits) — a Principal must
+recognize which logic **qualifies** for the edge (fast, stateless or with little state) and which must
+stay in the traditional backend.
 
 ### CDN (Content Delivery Network)
 
-Sieć serwerów cache'ujących statyczne (i coraz częściej częściowo dynamiczne) zasoby blisko użytkownika.
-Na poziomie Principal kluczowe decyzje to nie „czy używać CDN” (to jest już baseline), a: strategia
-invalidacji cache przy wdrożeniu (jak nowa wersja aplikacji dociera do wszystkich punktów obecności bez
-okna, w którym różni użytkownicy dostają niekompatybilne wersje JS/CSS — problem szczególnie istotny przy
-częstych wdrożeniach wielu niezależnych zespołów, patrz Micro-frontends w `staff.md`), oraz granica między
-tym, co CDN może cache'ować agresywnie (assety z hashem w nazwie, bezpieczne do cache'owania „na zawsze”) a
-tym, co wymaga rewalidacji (HTML, dane spersonalizowane).
+A network of servers caching static (and increasingly partly dynamic) resources close to the user.
+At the Principal level the key decisions are not "whether to use a CDN" (that is already the baseline) but: the cache
+invalidation strategy on deployment (how a new version of the application reaches all points of presence without
+a window in which different users get incompatible JS/CSS versions — a problem especially relevant with
+frequent deployments by many independent teams, see Micro-frontends in `staff.md`), and the boundary between
+what the CDN can cache aggressively (assets with a hash in the name, safe to cache "forever") and
+what requires revalidation (HTML, personalized data).
 
 ### Serverless
 
-Model wykonania, w którym infrastruktura (skalowanie, provisioning maszyn) jest w całości zarządzana przez
-dostawcę — kod wykonuje się jako krótkotrwałe funkcje wywoływane na żądanie, rozliczane za faktyczny czas
-wykonania, nie za utrzymywany serwer. Kompromisy istotne na poziomie Principal: **cold start** (opóźnienie
-pierwszego wywołania po okresie bezczynności, gdy środowisko musi się od nowa zainicjalizować) jako
-realne ryzyko dla ścieżek wymagających niskiego, przewidywalnego opóźnienia; brak długotrwałego stanu
-lokalnego (każde wywołanie może trafić do innej instancji) wymuszający przeniesienie stanu do zewnętrznego
-magazynu; oraz korzyść: brak konieczności zarządzania pojemnością/skalowaniem dla ruchu o dużej
-zmienności (nagłe piki), co bezpośrednio redukuje obciążenie operacyjne zespołu (koszt DevEx, patrz
-`devex.md`, „toil”).
+An execution model in which the infrastructure (scaling, machine provisioning) is managed entirely by
+the provider — code runs as short-lived functions invoked on demand, billed for the actual execution
+time, not for a maintained server. Trade-offs relevant at the Principal level: **cold start** (the latency of
+the first invocation after a period of inactivity, when the environment must initialize from scratch) as
+a real risk for paths requiring low, predictable latency; no long-lived local state
+(every invocation may hit a different instance), forcing state to be moved to an external
+store; and the benefit: no need to manage capacity/scaling for highly
+variable traffic (sudden peaks), which directly reduces the team's operational load (a DevEx cost, see
+`devex.md`, "toil").
 
-**Zasada nadrzędna dla tej sekcji:** Principal nie musi umieć samodzielnie skonfigurować infrastruktury
-edge/CDN/serverless (to zwykle rola zespołu platformowego — proc-team-topologies; narzędzia — ops-*) — musi umieć **rozmawiać z
-tamtym zespołem na równych prawach**, rozumieć kompromisy wystarczająco głęboko, by podjąć wspólną decyzję
-o tym, gdzie leży granica odpowiedzialności frontend/infrastruktura dla konkretnego problemu.
+**The overriding rule for this section:** a Principal does not have to be able to configure edge/CDN/serverless
+infrastructure on their own (that is usually the role of the platform team — proc-team-topologies; tools — ops-*) — they must be able to **talk with
+that team as an equal**, understand the trade-offs deeply enough to make a joint decision
+about where the frontend/infrastructure responsibility boundary lies for a particular problem.
 
-## Wpływ na standardy branżowe
+## Influence on industry standards
 
 ### Open Source
 
-Na poziomie Principal/Distinguished udział w open source przestaje być hobby, a staje się narzędziem
-strategicznym: utrzymywanie/wydanie na wolnej licencji wewnętrznego narzędzia buduje reputację firmy jako
-pracodawcy technicznego (rekrutacja), pozwala zewnętrznym kontrybutorom rozwiązywać błędy zamiast
-wewnętrznego zespołu (redukcja kosztu utrzymania), i tworzy presję na jakość API (kod używany publicznie
-musi mieć jasny, stabilny kontrakt, co samo w sobie bywa zdrowe też dla wewnętrznych użytkowników).
-Kompromis: publiczne API wymaga formalnego procesu deprecacji/wersjonowania (SemVer, patrz
-core-conventional-commits), którego wewnętrzne narzędzie mogłoby nie wymagać.
+At the Principal/Distinguished level participation in open source stops being a hobby and becomes a strategic
+tool: maintaining/releasing an internal tool under a free licence builds the company's reputation as a
+technical employer (recruitment), lets external contributors fix bugs instead of the
+internal team (reducing the maintenance cost), and creates pressure on API quality (code used publicly
+must have a clear, stable contract, which in itself is often healthy for internal users too).
+Trade-off: a public API requires a formal deprecation/versioning process (SemVer, see
+core-conventional-commits), which an internal tool might not require.
 
 ### TC39
 
-Komitet standaryzujący **język JavaScript/ECMAScript** — nowe funkcje języka (np. optional chaining,
-`Array.prototype.toSorted`, decorators — lang-javascript, lang-typescript) przechodzą przez formalny
-proces (Stage 0 „pomysł” → Stage 1 „propozycja formalna” → Stage 2 „szkic składni” → Stage 2.7 „zatwierdzona
-w zasadzie, czeka na testy test262” (etap dodany w 2024) → Stage 3 „kandydat, implementacje w silnikach” →
-Stage 4 „gotowe, trafia do najbliższej edycji ECMAScript”). Principal
-poziomu Distinguished/Fellow może realnie **uczestniczyć** w tym procesie (proponować, recenzować
-propozycje) — nawet bez tego, śledzenie stage'u konkretnej propozycji jest praktyczną kompetencją: kod
-produkcyjny nie powinien zależeć od funkcji języka poniżej Stage 3/4 bez transpilacji i jawnej zgody na
-ryzyko zmiany składni przed finalizacją.
+The committee standardizing **the JavaScript/ECMAScript language** — new language features (e.g. optional chaining,
+`Array.prototype.toSorted`, decorators — lang-javascript, lang-typescript) go through a formal
+process (Stage 0 "idea" → Stage 1 "formal proposal" → Stage 2 "syntax draft" → Stage 2.7 "approved
+in principle, waiting for test262 tests" (a stage added in 2024) → Stage 3 "candidate, implementations in engines" →
+Stage 4 "finished, goes into the next ECMAScript edition"). A Principal
+at the Distinguished/Fellow level can really **participate** in this process (propose, review
+proposals) — even without that, tracking the stage of a particular proposal is a practical competency:
+production code should not depend on language features below Stage 3/4 without transpilation and explicit acceptance of the
+risk of a syntax change before finalization.
 
 ### W3C
 
-Konsorcjum standaryzujące **web platform** (HTML, CSS, dostępność/WCAG — patrz `staff.md`, API
-przeglądarkowe) poprzez Working Groups. Podobnie jak TC39, wpływ na tym poziomie polega na realnym udziale
-w grupach roboczych (zgłaszanie use case'ów z realnej skali produkcyjnej firmy, recenzowanie specyfikacji)
-— firma korzystająca z web platform na dużą skalę ma realny interes w tym, by nowe standardy (np. nowe
-CSS selektory, nowe API dostępności) odpowiadały jej rzeczywistym potrzebom, zanim staną się nieodwracalnym
-standardem.
+The consortium standardizing **the web platform** (HTML, CSS, accessibility/WCAG — see `staff.md`, browser
+APIs) through Working Groups. As with TC39, influence at this level consists in real participation
+in working groups (reporting use cases from the company's real production scale, reviewing specifications)
+— a company using the web platform at large scale has a real interest in new standards (e.g. new
+CSS selectors, new accessibility APIs) matching its actual needs before they become an irreversible
+standard.
 
-## Sponsoring kariery i kultura techniczna
+## Career sponsorship and technical culture
 
-Na poziomie Principal wpływ na ludzi wykracza poza bezpośredni mentoring (domena Seniora, patrz
-`senior.md`) — to **kształtowanie kultury technicznej całej organizacji**:
+At the Principal level influence on people goes beyond direct mentoring (the domain of a Senior, see
+`senior.md`) — it is **shaping the technical culture of the whole organization**:
 
-- **Sponsoring vs mentoring** — mentoring to rozwijanie kompetencji osoby w rozmowie z nią; **sponsoring**
-  to aktywne wykorzystanie własnej pozycji/widoczności, by otworzyć tej osobie okazje, których sama nie ma
-  dostępu (rekomendacja do trudnego, widocznego projektu, wystawienie na spotkanie z decydentami) — różnica
-  jest częstym punktem, w którym rozwój karier na wyższych poziomach się zatrzymuje, bo dobry mentoring bez
-  sponsoringu nie przekłada się na realne okazje do awansu.
-- **Kultura code review i standardów jako artefakt kulturowy, nie tylko proces** — na poziomie Principal to,
-  jak organizacja **traktuje** błędy w produkcji (szukanie winnego vs blameless postmortem), jak traktuje
-  różnicę opinii technicznych (otwarta dyskusja z jasnym mechanizmem rozstrzygania vs polityczne
-  przepychanki), i czy dokumentuje decyzje architektoniczne w sposób odtwarzalny (np. Architecture Decision
-  Records — docs-tech-writing) — to wszystko jest efektem świadomego kształtowania przez najbardziej wpływowych inżynierów w
-  organizacji, nie przypadku.
-- **Rozpoznawanie i rozwój przyszłych Staff/Principal** — identyfikacja, którzy inżynierowie w organizacji
-  mają potencjał do przejścia na wyższą soczewkę (od jednego repo do wielu zespołów, od wielu zespołów do
-  całej firmy/branży) i aktywne dawanie im okazji do ćwiczenia tej soczewki **przed** formalnym awansem
-  (np. poproszenie Staff engineera o reprezentowanie firmy w zewnętrznym Working Groupie) — to jest
-  praktyczna różnica między organizacją, która **ma** kolejnych Principal engineerów, gdy potrzebuje, i
-  organizacją, która musi ich szukać na rynku.
+- **Sponsorship vs mentoring** — mentoring is developing a person's competencies in conversation with them; **sponsorship**
+  is actively using one's own position/visibility to open opportunities for that person that they have no
+  access to on their own (a recommendation for a difficult, visible project, putting them in a meeting with decision-makers) — the difference
+  is a frequent point at which career growth at higher levels stalls, because good mentoring without
+  sponsorship does not translate into real promotion opportunities.
+- **A culture of code review and standards as a cultural artifact, not only a process** — at the Principal level,
+  how the organization **treats** production errors (looking for someone to blame vs a blameless postmortem), how it treats
+  differences of technical opinion (open discussion with a clear resolution mechanism vs political
+  wrangling), and whether it documents architectural decisions in a reproducible way (e.g. Architecture Decision
+  Records — docs-tech-writing) — all of this is the result of conscious shaping by the most influential engineers in
+  the organization, not of chance.
+- **Recognizing and developing future Staff/Principal engineers** — identifying which engineers in the organization
+  have the potential to move to a higher lens (from one repo to many teams, from many teams to
+  the whole company/industry) and actively giving them opportunities to practise that lens **before** a formal promotion
+  (e.g. asking a Staff engineer to represent the company in an external Working Group) — this is the
+  practical difference between an organization that **has** further Principal engineers when it needs them and
+  an organization that has to look for them on the market.
 
-## Podsumowanie — jak korzystać z tego pliku
+## Summary — how to use this file
 
-Treść tego pliku jest z natury bardziej strategiczna/organizacyjna niż techniczna — w przeciwieństwie do
-`senior.md`/`staff.md`, które da się bezpośrednio zastosować do konkretnego fragmentu kodu, ten plik służy
-głównie do: (a) oceny, czy dany problem faktycznie wymaga tej soczewki (patrz `SKILL.md`, „Jak korzystać z
-tego skilla” — nie każda duża zmiana kodu jest decyzją Principal), i (b) dostarczenia języka/ram do
-uzasadnienia decyzji na tym poziomie komuś poza zespołem inżynierskim.
+The content of this file is by nature more strategic/organizational than technical — unlike
+`senior.md`/`staff.md`, which can be applied directly to a particular piece of code, this file serves
+mainly for: (a) assessing whether a given problem really requires this lens (see `SKILL.md`, "Which lens
+to apply" — not every large code change is a Principal decision), and (b) providing the language/frameworks to
+justify decisions at this level to someone outside the engineering team.

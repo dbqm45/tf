@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
 """
-tf onboard — przygotowanie repozytorium do pracy z fabryką: wykrywa polecenia projektu z plików, pisze raport
-gotowości w zwykłym języku i włącza bramkę jakości.
+tf onboard — prepares a repository to work with the factory: detects project commands from files, writes a readiness
+report in plain language and turns on the quality gate.
 
-  tf onboard                 # propozycja i pytanie o zgodę (bez terminala: sama propozycja)
-  tf onboard --yes           # zapis bez pytania: verify.sh, .claude/quality-gate.json, .tf/reports/readiness.md
-                             # i polecenia w sekcji „Komendy” pliku instrukcji (CLAUDE.md / CLAUDE.local.md)
-  tf onboard --yes --verify  # po zapisie uruchamia weryfikację raz i mówi, czy przechodzi
-  tf onboard --dry-run       # tylko propozycja, niczego nie zapisuje
-  tf onboard --json          # wynik wykrywania dla skryptów, niczego nie zapisuje
+  tf onboard                 # proposal and a question for consent (without a terminal: the proposal only)
+  tf onboard --yes           # write without asking: verify.sh, .claude/quality-gate.json, .tf/reports/readiness.md
+                             # and the commands in the "Commands" section of the instructions file (CLAUDE.md / CLAUDE.local.md)
+  tf onboard --yes --verify  # after writing, runs verification once and says whether it passes
+  tf onboard --dry-run       # proposal only, writes nothing
+  tf onboard --json          # detection result for scripts, writes nothing
 
-Wykrywa z manifestów w katalogu głównym (Node, Python, Go, Rust, Java, .NET; Makefile jako zapas): polecenie testów,
-lintu, typów i buildu, plik blokady wersji, CI, plik instrukcji agenta, .gitignore. Bez --verify niczego w projekcie
-nie uruchamia. `verify.sh` to jedno polecenie weryfikacji (lint → typy → testy) dla bramki jakości, pętli `/tf` i CI;
-w Windows bramka dostaje samo polecenie testów. Istniejącego verify.sh ani konfiguracji bramki nie nadpisuje.
-Blokujących kontroli jest najwyżej pięć — reszta to ostrzeżenia.
+Detects from manifests in the root directory (Node, Python, Go, Rust, Java, .NET; Makefile as a fallback): the test,
+lint, type and build commands, the version lock file, CI, the agent instructions file, .gitignore. Without --verify it runs
+nothing in the project. `verify.sh` is a single verification command (lint → types → tests) for the quality gate, the `/tf` loop and CI;
+on Windows the gate gets just the test command. It does not overwrite an existing verify.sh or gate configuration.
+There are at most five blocking checks — the rest are warnings.
 
-Werdykt: ready / ready-with-gaps / no-tests. Kod wyjścia: 0 — są testy; 1 — brak polecenia testów (fabryka nie
-sprawdzi zmian) albo --verify czerwone; 2 — błąd wywołania. Tylko biblioteka standardowa, bez sieci.
+Verdict: ready / ready-with-gaps / no-tests. Exit code: 0 — tests exist; 1 — no test command (the factory cannot
+check changes) or --verify is red; 2 — invocation error. Standard library only, no network.
 """
 from __future__ import annotations
 
@@ -29,12 +29,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes also write and read UTF-8
 
 KINDS = ("test", "lint", "typecheck", "build")
 NAMES = {"test": "tests", "lint": "lint", "typecheck": "types", "build": "build"}
@@ -44,9 +44,9 @@ CI_FILES = (".gitlab-ci.yml", "azure-pipelines.yml", "Jenkinsfile", ".circleci/c
 NO_TEST = re.compile(r"no test specified", re.I)
 MAX_BLOCKING = 5
 VERIFY = "./verify.sh"
-VERIFY_KINDS = ("lint", "typecheck", "test")   # kolejność w verify.sh: od najszybszej kontroli
-MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"   # jak w install.py
-COMMANDS = re.compile(r"(### (?:Commands|Komendy)\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
+VERIFY_KINDS = ("lint", "typecheck", "test")   # order in verify.sh: from the fastest check
+MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->"   # as in install.py
+COMMANDS = re.compile(r"(### Commands\n)(.*?)(?=\n### |\n" + re.escape(MARK_END) + ")", re.S)
 LABELS = {"test": "Test", "lint": "Lint", "typecheck": "Typecheck", "build": "Build"}
 
 
@@ -145,7 +145,7 @@ FAMILIES = (("Node", "package.json", _node), ("Python", "pyproject.toml", _pytho
 
 
 def detect(root: Path) -> dict:
-    """Fakty z plików: polecenia (pierwsze wykryte dla każdego rodzaju), pliki i werdykt. Niczego nie uruchamia."""
+    """Facts from files: commands (the first detected for each kind), files and the verdict. Runs nothing."""
     commands, families = {}, []
     for name, source, fn in FAMILIES:
         found = fn(root)
@@ -165,7 +165,7 @@ def detect(root: Path) -> dict:
     return {"families": families, "commands": commands, "facts": facts, "missing": missing, "verdict": verdict}
 
 
-GAPS = {   # kolejność = kolejność naprawy: najpierw to, bez czego fabryka nie sprawdzi zmian
+GAPS = {   # order = order of fixing: first what the factory needs to check changes
     "test": "No test command. Without tests the factory cannot check whether a change works — this is the first thing "
             "to fix (it can be given as the first task).",
     "lockfile": "No dependency lockfile. Every installation may fetch different versions, so the same test "
@@ -186,14 +186,14 @@ ENV_NAMES = (*TEST_ENVS, "uat", "preprod", "prod", "production", "live")
 
 
 def detect_flags(root: Path) -> dict:
-    """Plik flag funkcji i środowiska (z kluczy pliku JSON); puste pola, gdy niczego nie wykryto."""
+    """Feature flags and environments file (from the keys of a JSON file); empty fields when nothing was detected."""
     for rel in FLAG_FILES:
         if not (root / rel).is_file():
             continue
         data = _json(root / rel) if rel.endswith(".json") else {}
         top = [k for k in data if isinstance(data[k], dict)]
         envs = [k for k in top if k.lower() in ENV_NAMES]
-        if not envs:                        # układ flaga → środowisko → stan
+        if not envs:                        # layout flag → environment → state
             envs = sorted({e for k in top for e in data[k] if str(e).lower() in ENV_NAMES})
         test = next((e for name in TEST_ENVS for e in envs if e.lower() == name), None)
         return {"file": rel, "envs": envs, "test_env": test}
@@ -201,7 +201,7 @@ def detect_flags(root: Path) -> dict:
 
 
 def detect_smoke(root: Path) -> str | None:
-    """Polecenie testu dymnego po wdrożeniu, jeśli projekt je ma: skrypt, skrypt `smoke` w package.json, cel w Makefile."""
+    """Post-deploy smoke test command, if the project has one: a script, a `smoke` script in package.json, a Makefile target."""
     if (root / "scripts" / "smoke.sh").is_file():
         return "./scripts/smoke.sh"
     scripts = _json(root / "package.json").get("scripts")
@@ -213,8 +213,28 @@ def detect_smoke(root: Path) -> str | None:
     return None
 
 
+FRAMEWORK_PORTS = (("@angular/core", 4200), ("next", 3000), ("react-scripts", 3000), ("nuxt", 3000), ("astro", 4321),
+                   ("@sveltejs/kit", 5173), ("vite", 5173))   # the dev server's default port (the same list is in ui_snap.py)
+
+
+def detect_preview(root: Path) -> dict | None:
+    """Where the web frontend's dev server answers, for the visual check of the /tf loop (`ui_snap.py`): the address
+    from the framework's default port, the start command from the dev/start/serve script. None when it is not a web frontend."""
+    pkg = _json(root / "package.json")
+    deps = {**(pkg.get("devDependencies") or {}), **(pkg.get("dependencies") or {})}
+    port = next((p for name, p in FRAMEWORK_PORTS if name in deps), None)
+    if port is None:
+        return None
+    scripts = pkg.get("scripts") if isinstance(pkg.get("scripts"), dict) else {}
+    pm = next((n for lock, n in (("pnpm-lock.yaml", "pnpm"), ("yarn.lock", "yarn"), ("bun.lock", "bun"),
+                                 ("bun.lockb", "bun")) if (root / lock).is_file()), "npm")
+    name = next((n for n in ("dev", "start", "serve") if isinstance(scripts.get(n), str)), None)
+    start = "" if name is None else (f"{pm} start" if name == "start" and pm == "npm" else f"{pm} run {name}")
+    return {"url": f"http://localhost:{port}", "start": start, "routes": ["/"]}
+
+
 def uses_verify(root: Path, det: dict) -> bool:
-    """Czy bramka uruchamia verify.sh: jest już w repozytorium albo da się go wygenerować (nie w Windows)."""
+    """Whether the gate runs verify.sh: it is already in the repository or can be generated (not on Windows)."""
     return os.name != "nt" and ((root / "verify.sh").is_file() or "test" in det["commands"])
 
 
@@ -231,7 +251,7 @@ def verify_script(det: dict) -> str:
 
 
 def blocking(det: dict, verify: bool = False) -> list[str]:
-    """Kontrole, które zatrzymują pracę (najwyżej MAX_BLOCKING). Reszta to ostrzeżenia."""
+    """Checks that stop work (at most MAX_BLOCKING). The rest are warnings."""
     out = []
     for kind in (VERIFY_KINDS if verify else ("test",)):
         if kind in det["commands"]:
@@ -274,7 +294,7 @@ def report(det: dict, verify: bool = False) -> str:
 
 
 def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
-    """Co zostanie zapisane: opis dla człowieka i treść plików (ścieżka → tekst)."""
+    """What will be written: a description for a human and the file contents (path → text)."""
     say, files = [], {}
     verify = uses_verify(root, det)
     if verify and (root / "verify.sh").is_file():
@@ -300,24 +320,31 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
             files[root / name] = new
             say.append(f"• {name} — the project's commands in the \"Commands\" section.")
     card = root / ".tf" / "config" / "operations.json"
-    try:                                  # karta mogła powstać wcześniej bez flag (np. zapis trackera przez pętlę /tf)
+    try:                                  # the card may have been created earlier without flags (e.g. a tracker write by the /tf loop)
         known = json.loads(card.read_text(encoding="utf-8")) if card.exists() else {}
     except (OSError, ValueError):
-        known = None                      # nieczytelna karta zostaje nietknięta
+        known = None                      # an unreadable card is left untouched
     added = {}
-    if isinstance(known, dict) and "flags" not in known:   # skąd fabryka wie, jak w projekcie działają flagi
+    if isinstance(known, dict) and "flags" not in known:   # how the factory knows how flags work in the project
         flags = added["flags"] = detect_flags(root)
         say.append(f"• .tf/config/operations.json — the operations card: flag file {flags['file']}, environments "
                    f"{', '.join(flags['envs'])}, test: {flags['test_env']}." if flags["file"] else
                    "• .tf/config/operations.json — the operations card: no feature flag file detected; fill in "
                    "`file`, `envs` and `test_env` if the project uses flags (without them the factory asks to check them by hand).")
-    if isinstance(known, dict) and "deploy" not in known:  # jak sprawdzić i cofnąć wdrożenie (tf task deployed, opis PR)
+    if isinstance(known, dict) and "deploy" not in known:  # how to check and roll back a deployment (tf task deployed, PR description)
         smoke = detect_smoke(root)
         added["deploy"] = {"rollback": "", "rollback_minutes": None, "smoke": smoke or "", "approval": "", "logs": ""}
         say.append("• .tf/config/operations.json — the operations card, the deployment part (`deploy`): smoke test "
                    + (f"`{smoke}` (detected)" if smoke else "not detected — write the command in `smoke`")
                    + "; fill in `rollback` (how to roll back a deployment) and `rollback_minutes` (how long it takes), `approval` "
                      "(what a human approves) and `logs` (the logs command). Without `smoke` the factory stops at the merge.")
+    preview = detect_preview(root) if isinstance(known, dict) and "preview" not in known else None
+    if preview:                           # the visual check of UI changes: where to take the screenshots (ui_snap.py)
+        added["preview"] = preview
+        say.append(f"• .tf/config/operations.json — the operations card, the visual check part (`preview`): "
+                   f"`{preview['url']}`" + (f", started with `{preview['start']}`" if preview["start"] else
+                                           " (no dev/start/serve script: write the command in `start`)")
+                   + "; fill in `routes` with the screens that matter (the default is `/`).")
     if added:
         files[card] = json.dumps({**known, **added}, ensure_ascii=False, indent=1) + "\n"
     files[root / ".tf" / "reports" / "readiness.md"] = report(det, verify)
@@ -332,7 +359,7 @@ def commands_line(det: dict, verify: bool) -> str:
 
 
 def with_commands(text: str, line: str) -> str:
-    """Podmienia treść podsekcji „Komendy” w bloku fabryki; plik bez bloku albo bez podsekcji zostaje bez zmian."""
+    """Replaces the content of the "Commands" subsection in the factory block; a file without the block or without the subsection stays unchanged."""
     start = text.find(MARK_BEGIN)
     end = text.find(MARK_END, start)
     if start < 0 or end < 0:
@@ -342,7 +369,7 @@ def with_commands(text: str, line: str) -> str:
 
 
 def run_verify(root: Path, command: str, timeout: float = 900) -> tuple[bool, str]:
-    """Uruchamia weryfikację raz (tylko z --verify): (zielona?, wyjście przycięte do początku i końca)."""
+    """Runs verification once (only with --verify): (green?, output trimmed to the beginning and end)."""
     try:
         r = subprocess.run(shlex.split(command), cwd=root, capture_output=True, text=True, encoding="utf-8",
                            errors="replace", timeout=timeout)
@@ -352,7 +379,7 @@ def run_verify(root: Path, command: str, timeout: float = 900) -> tuple[bool, st
         return False, str(e)
     out = r.stdout + r.stderr
     saved = ".tf/logs/verify-output.txt"
-    try:   # pełne wyjście do pliku; na ekran początek i koniec (pierwszy błąd bywa na początku logu)
+    try:   # full output to a file; the screen gets the beginning and end (the first error is often at the start of the log)
         (root / ".tf" / "logs").mkdir(parents=True, exist_ok=True)
         (root / saved).write_text(out, encoding="utf-8")
     except OSError:
@@ -362,7 +389,7 @@ def run_verify(root: Path, command: str, timeout: float = 900) -> tuple[bool, st
     return r.returncode == 0, out
 
 
-LOCAL_FILES = ("verify.sh", ".claude/quality-gate.json")   # pliki z tf onboard, które należą do repozytorium projektu
+LOCAL_FILES = ("verify.sh", ".claude/quality-gate.json")   # files from tf onboard that belong to the project's repository
 
 
 def _git(root: Path, *args: str) -> tuple[int, str]:
@@ -375,8 +402,8 @@ def _git(root: Path, *args: str) -> tuple[int, str]:
 
 
 def settle_files(root: Path) -> str:
-    """Co zrobić z plikami onboardingu w git. Instalacja prywatna niczego nie commituje, więc pliki zostają lokalne
-    (wpis w .git/info/exclude) i drzewo robocze jest czyste; w zespołowej trafiają do commita. Zwraca zdanie dla człowieka."""
+    """What to do with the onboarding files in git. A private install commits nothing, so the files stay local
+    (an entry in .git/info/exclude) and the working tree is clean; in a team install they go into the commit. Returns a sentence for a human."""
     code, exclude = _git(root, "rev-parse", "--path-format=absolute", "--git-path", "info/exclude")
     if code != 0 or not exclude:
         return ""

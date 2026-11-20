@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy wagi zadania (`tf task weight`, .tf/factory/task_weight.py): propozycja z treści zgłoszenia i ścieżek planu,
-kto może zmienić wagę, skutki wagi w bramkach etapów. python3 .claude/tests/test_task_weight.py"""
+"""Task weight tests (`tf task weight`, .tf/factory/task_weight.py): a proposal from the ticket text and plan paths,
+who may change the weight, the effects of the weight in stage gates. python3 .claude/tests/test_task_weight.py"""
 import json
 import os
 import subprocess
@@ -11,8 +11,8 @@ from pathlib import Path
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "tf.py").is_file())
 TASK = ROOT / ".tf" / "factory" / "task_state.py"
 CHANGES = Path("docs") / "project" / "changes"
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci, wtedy opłata wynosi 45 zł.\n"
-        "\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi 45 zł.\n"
+        "\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
 TICKETS = {
     "LOG-1": "# Reset hasła\n\nJako użytkownik chcę zresetować hasło linkiem z maila. AC1: link ważny 30 minut.\n",
     "TYP-1": "# Literówka w README\n\nPopraw literówkę w README: „instlacja” na „instalacja”.\n",
@@ -58,129 +58,129 @@ def main() -> int:
             tf(p, "start", key, "--title", text.splitlines()[0].lstrip("# "))
             (p / CHANGES / key / "ticket.md").write_text(text, encoding="utf-8")
 
-        # propozycja z treści zgłoszenia, zawsze z powodem; samo pytanie o wagę niczego nie zapisuje
+        # a proposal from the ticket text, always with a reason; merely asking about the weight writes nothing
         before = (p / CHANGES / "LOG-1" / "task.json").read_text(encoding="utf-8")
         code, out, raw = weight(p, "LOG-1")
         check(code == 0 and out.get("proposal") == "full" and any("hasł" in r for r in out.get("reasons", []))
               and out.get("weight") == "normal" and out.get("assigned") is False,
-              f"W-1: zgłoszenie o haśle → propozycja full z powodem; waga jeszcze nieprzydzielona: {raw}")
+              f"W-1: a ticket about a password → proposal full with a reason; weight not yet assigned: {raw}")
         check((p / CHANGES / "LOG-1" / "task.json").read_text(encoding="utf-8") == before,
-              "W-2: tf task weight bez opcji niczego nie zapisuje")
+              "W-2: tf task weight without options writes nothing")
         code, out, raw = weight(p, "TYP-1")
-        check(out.get("proposal") == "light" and out.get("reasons"), f"W-3: literówka → lekka: {raw}")
+        check(out.get("proposal") == "light" and out.get("reasons"), f"W-3: typo → light: {raw}")
         code, out, raw = weight(p, "REG-1")
-        check(out.get("proposal") == "normal", f"W-4: nowa reguła z kryteriami → normal: {raw}")
+        check(out.get("proposal") == "normal", f"W-4: a new rule with criteria → normal: {raw}")
         code, out, raw = weight(p, "CSV-1")
-        check(out.get("proposal") == "normal", f"W-5: „sesje ładowania” to nie logowanie — normal: {raw}")
+        check(out.get("proposal") == "normal", f"W-5: “sesje ładowania” (charging sessions) is not a login — normal: {raw}")
         code, out, raw = weight(p, "ENG-1")
         code2, out2, raw2 = weight(p, "ENG-2")
         check(out.get("proposal") == "light" and out2.get("proposal") == "full",
-              f"W-6: zgłoszenia po angielsku (typo → lekka, password → full): {raw} {raw2}")
+              f"W-6: tickets in English (typo → light, password → full): {raw} {raw2}")
 
-        # pierwszy przydział robi fabryka; potem --apply tylko podnosi
+        # the factory makes the first assignment; after that --apply only raises
         code, out, raw = weight(p, "TYP-1", "--apply")
         data = task(p, "TYP-1")
         check(code == 0 and data.get("weight") == "light" and data.get("weight_log")
               and data["weight_log"][-1].get("by") == "process:tf" and data["weight_log"][-1].get("reasons"),
-              f"W-7: --apply przydziela propozycję (także niższą niż domyślna) i zapisuje powód: {raw} {data.get('weight_log')}")
+              f"W-7: --apply assigns the proposal (even one lower than the default) and records the reason: {raw} {data.get('weight_log')}")
         (p / CHANGES / "TYP-1" / "plan.md").write_text(
-            "# Plan\n- [ ] K1 — poprawka · pliki: README.md, db/migrations/0007_add_index.sql · weryfikacja: `make test`\n",
+            "# Plan\n- [ ] S1 — poprawka · files: README.md, db/migrations/0007_add_index.sql · verify: `make test`\n",
             encoding="utf-8")
         code, out, raw = weight(p, "TYP-1", "--apply")
         data = task(p, "TYP-1")
         check(data.get("weight") == "full" and any("db/migrations/0007_add_index.sql" in r for r in out.get("reasons", [])),
-              f"W-8: plan dotyka migracji → --apply podnosi wagę do full, powód wskazuje ścieżkę: {raw}")
-        (p / CHANGES / "TYP-1" / "plan.md").write_text("# Plan\n- [ ] K1 — poprawka · pliki: README.md\n", encoding="utf-8")
+              f"W-8: the plan touches a migration → --apply raises the weight to full, the reason names the path: {raw}")
+        (p / CHANGES / "TYP-1" / "plan.md").write_text("# Plan\n- [ ] S1 — poprawka · files: README.md\n", encoding="utf-8")
         code, out, raw = weight(p, "TYP-1", "--apply")
         check(code == 0 and task(p, "TYP-1").get("weight") == "full" and out.get("proposal") == "light"
               and "human:" in raw,
-              f"W-9: propozycja niższa niż przydzielona waga niczego nie zmienia; komunikat mówi, kto może obniżyć: {raw}")
+              f"W-9: a proposal lower than the assigned weight changes nothing; the message says who may lower it: {raw}")
         (p / CHANGES / "ENG-1" / "plan.md").write_text(
-            "# Plan\n- [ ] K1 — poprawka · pliki: README.md, docs/a.md, docs/b.md\n", encoding="utf-8")
+            "# Plan\n- [ ] S1 — poprawka · files: README.md, docs/a.md, docs/b.md\n", encoding="utf-8")
         code, out, raw = weight(p, "ENG-1")
-        check(out.get("proposal") == "normal", f"W-10: literówka, ale plan na 3 pliki → normal: {raw}")
+        check(out.get("proposal") == "normal", f"W-10: a typo, but a plan for 3 files → normal: {raw}")
 
-        # ręczna zmiana: podnieść może każdy, obniżyć tylko człowiek z powodem
+        # manual change: anyone may raise, only a human with a reason may lower
         r = tf(p, "weight", "REG-1", "--set", "full")
-        check(r.returncode == 0 and task(p, "REG-1").get("weight") == "full", f"W-11: podniesienie bez człowieka: {r.stdout}")
+        check(r.returncode == 0 and task(p, "REG-1").get("weight") == "full", f"W-11: raising without a human: {r.stdout}")
         r = tf(p, "weight", "REG-1", "--set", "normal")
         check(r.returncode == 1 and task(p, "REG-1").get("weight") == "full" and "human:" in r.stdout,
-              f"W-12: obniżenie bez człowieka → odmowa: {r.returncode} {r.stdout}")
+              f"W-12: lowering without a human → refusal: {r.returncode} {r.stdout}")
         r = tf(p, "weight", "REG-1", "--set", "normal", "--by", "human:anna")
-        check(r.returncode == 2 and "--reason" in r.stdout, f"W-13: obniżenie wymaga powodu: {r.returncode} {r.stdout}")
-        r = tf(p, "weight", "REG-1", "--set", "normal", "--by", "human:anna", "--reason", "zmiana tylko w kalkulatorze")
+        check(r.returncode == 2 and "--reason" in r.stdout, f"W-13: lowering requires a reason: {r.returncode} {r.stdout}")
+        r = tf(p, "weight", "REG-1", "--set", "normal", "--by", "human:anna", "--reason", "a change only in the calculator")
         log = task(p, "REG-1").get("weight_log") or []
         check(r.returncode == 0 and task(p, "REG-1").get("weight") == "normal" and log and log[-1].get("by") == "human:anna"
-              and "kalkulatorze" in log[-1].get("reason", "") and log[-1].get("from") == "full",
-              f"W-14: człowiek obniża z powodem, zapis w historii: {r.stdout} {log[-1:]}")
+              and "calculator" in log[-1].get("reason", "") and log[-1].get("from") == "full",
+              f"W-14: a human lowers with a reason, recorded in the history: {r.stdout} {log[-1:]}")
         (p / CHANGES / "REG-1" / "plan.md").write_text(
-            "# Plan\n- [ ] K1 — limit · pliki: parking/fees.py, db/migrations/0008_limit.sql\n", encoding="utf-8")
+            "# Plan\n- [ ] S1 — limit · files: parking/fees.py, db/migrations/0008_limit.sql\n", encoding="utf-8")
         code, out, raw = weight(p, "REG-1", "--apply")
         check(task(p, "REG-1").get("weight") == "normal" and out.get("proposal") == "full" and "human" in out.get("note", ""),
-              f"W-14a: po decyzji człowieka --apply nie zmienia wagi, tylko mówi o propozycji: {raw}")
+              f"W-14a: after the human's decision --apply does not change the weight, it only reports the proposal: {raw}")
         tf(p, "start", "TYP-9", "--title", "Literówka w stopce", "--weight", "full")
         (p / CHANGES / "TYP-9" / "ticket.md").write_text("# Literówka w stopce\n\nPopraw literówkę w stopce.\n", encoding="utf-8")
         code, out, raw = weight(p, "TYP-9", "--apply")
         check(task(p, "TYP-9").get("weight") == "full" and out.get("proposal") == "light",
-              f"W-14b: waga podana przy zakładaniu zadania nie jest obniżana przez --apply: {raw}")
+              f"W-14b: a weight given when creating the task is not lowered by --apply: {raw}")
         r = tf(p, "weight", "REG-1", "--set", "ogromna")
-        check(r.returncode == 2, f"W-15: nieznana waga → kod 2: {r.returncode} {r.stdout}")
+        check(r.returncode == 2, f"W-15: unknown weight → code 2: {r.returncode} {r.stdout}")
         r = tf(p, "weight", "NIE-1")
-        check(r.returncode != 0 and "Traceback" not in r.stderr, f"W-16: brak zadania → błąd bez wyjątku: {r.returncode}")
+        check(r.returncode != 0 and "Traceback" not in r.stderr, f"W-16: no task → an error without an exception: {r.returncode}")
         r = tf(p, "weight", "LOG-1")
         check(r.returncode == 0 and "full" in r.stdout and "hasł" in r.stdout,
-              f"W-17: wyjście tekstowe nazywa propozycję i powód: {r.stdout}")
+              f"W-17: the text output names the proposal and the reason: {r.stdout}")
 
-        # skutek wagi full: realizacja dopiero po zatwierdzeniu planu przez człowieka (tryb bez nadzoru tego nie obejdzie)
+        # effect of weight full: implementation only after a human approves the plan (unattended mode cannot bypass it)
         folder = p / CHANGES / "LOG-1"
         (folder / "spec.md").write_text(SPEC, encoding="utf-8")
-        (folder / "plan.md").write_text("# Plan\n- [ ] K1 — reset · pliki: src/reset.py\n", encoding="utf-8")
+        (folder / "plan.md").write_text("# Plan\n- [ ] S1 — reset · files: src/reset.py\n", encoding="utf-8")
         tf(p, "weight", "LOG-1", "--apply")
         tf(p, "stage", "LOG-1", "plan")
         tf(p, "artifact", "LOG-1", "plan.md", "--stage", "plan", "--by", "process:tf", "--inputs", "spec.md")
         r = tf(p, "stage", "LOG-1", "implementation")
         check(r.returncode == 1 and "approve LOG-1 plan.md" in r.stdout and "human" in r.stdout,
-              f"W-18: waga full — realizacja odrzucona bez planu zatwierdzonego przez człowieka: {r.returncode} {r.stdout}")
+              f"W-18: weight full — implementation rejected without a plan approved by a human: {r.returncode} {r.stdout}")
         tf(p, "approve", "LOG-1", "plan.md", "--by", "human:anna")
         r = tf(p, "stage", "LOG-1", "implementation")
-        check(r.returncode == 0, f"W-19: po zatwierdzeniu planu realizacja przechodzi: {r.stdout}")
-        # odhaczenie kawałka w zatwierdzonym planie nie unieważnia zgody człowieka; zmiana treści planu — tak
-        (folder / "plan.md").write_text("# Plan\n- [x] K1 — reset · pliki: src/reset.py\n", encoding="utf-8")
+        check(r.returncode == 0, f"W-19: after the plan is approved implementation passes: {r.stdout}")
+        # ticking a slice in an approved plan does not invalidate the human's approval; changing the plan content does
+        (folder / "plan.md").write_text("# Plan\n- [x] S1 — reset · files: src/reset.py\n", encoding="utf-8")
         state = json.loads(tf(p, "status", "LOG-1", "--json").stdout).get("artifact_states", {}).get("plan.md")
         r = tf(p, "stage", "LOG-1", "implementation", "--force")
-        check(state == "approved", f"W-19a: odhaczony kawałek — plan nadal zatwierdzony: {state}")
-        (folder / "plan.md").write_text("# Plan\n- [x] K1 — reset · pliki: src/reset.py\n- [ ] K2 — mail · pliki: src/mail.py\n",
+        check(state == "approved", f"W-19a: a ticked slice — the plan is still approved: {state}")
+        (folder / "plan.md").write_text("# Plan\n- [x] S1 — reset · files: src/reset.py\n- [ ] S2 — mail · files: src/mail.py\n",
                                         encoding="utf-8")
         state = json.loads(tf(p, "status", "LOG-1", "--json").stdout).get("artifact_states", {}).get("plan.md")
-        check(state == "changed-after-approval", f"W-19b: nowy kawałek w planie wymaga ponownej zgody: {state}")
+        check(state == "changed-after-approval", f"W-19b: a new slice in the plan requires approval again: {state}")
         tf(p, "artifact", "REG-1", "plan.md", "--stage", "plan", "--by", "process:tf")
         tf(p, "mode", "REG-1", "auto")
         r = tf(p, "stage", "REG-1", "implementation")
-        check(r.returncode == 0, f"W-20: waga normal w trybie Auto nie wymaga zatwierdzenia planu: {r.stdout}")
+        check(r.returncode == 0, f"W-20: weight normal in Auto mode does not require plan approval: {r.stdout}")
 
-        # skutek wagi lekka: jeden kawałek, specyfikacja nie jest potrzebna
+        # effect of weight light: one slice, no spec needed
         tf(p, "start", "TYP-2", "--title", "Literówka w stopce")
         (p / CHANGES / "TYP-2" / "ticket.md").write_text("# Literówka w stopce\n\nPopraw literówkę w stopce strony.\n",
                                                          encoding="utf-8")
         tf(p, "weight", "TYP-2", "--apply")
         (p / CHANGES / "TYP-2" / "plan.md").write_text(
-            "# Plan\n- [ ] K1 — stopka · pliki: web/footer.html\n- [ ] K2 — test · pliki: web/footer.test.js\n", encoding="utf-8")
+            "# Plan\n- [ ] S1 — stopka · files: web/footer.html\n- [ ] S2 — test · files: web/footer.test.js\n", encoding="utf-8")
         r = tf(p, "stage", "TYP-2", "plan")
         check(task(p, "TYP-2").get("weight") == "light" and r.returncode == 1 and "one slice" in r.stdout
               and "weight TYP-2 --set normal" in r.stdout,
-              f"W-21: waga lekka z planem na dwa kawałki → odmowa z podpowiedzią: {r.returncode} {r.stdout}")
-        (p / CHANGES / "TYP-2" / "plan.md").write_text("# Plan\n- [ ] K1 — stopka · pliki: web/footer.html\n", encoding="utf-8")
+              f"W-21: weight light with a two-slice plan → refusal with a hint: {r.returncode} {r.stdout}")
+        (p / CHANGES / "TYP-2" / "plan.md").write_text("# Plan\n- [ ] S1 — stopka · files: web/footer.html\n", encoding="utf-8")
         r = tf(p, "stage", "TYP-2", "plan")
         check(r.returncode == 0 and not (p / CHANGES / "TYP-2" / "spec.md").exists(),
-              f"W-22: waga lekka z jednym kawałkiem przechodzi do planu bez spec.md: {r.stdout}")
+              f"W-22: weight light with one slice moves to plan without spec.md: {r.stdout}")
         r = tf(p, "status", "TYP-2")
-        check("weight: light" in r.stdout, f"W-23: status pokazuje wagę: {r.stdout}")
+        check("weight: light" in r.stdout, f"W-23: status shows the weight: {r.stdout}")
 
-        # zadanie cięcia zmiany pdi (krok E6): waga z wiersza cięcia, nie z zamiaru całej zmiany dołączonego do ticket.md
+        # pdi change-cut task (step E6): the weight comes from the cut row, not from the whole change's intent attached to ticket.md
         cut_ticket = ("# TSK-59: historia prób w panelu\n\nCięcie TSK-59 zmiany CHG-12 (`docs/project/changes/CHG-12/plan.md`). "
                       "Każdy commit przebiegu ma stopki `Change: TSK-59`.\n\n| Pole | Wartość |\n|---|---|\n"
                       "| Cięcie | TSK-59 |\n| Wartość | historia prób w panelu operatora |\n| Pliki | src/history.py |\n\n"
-                      "## Zamiar zmiany (`docs/project/changes/CHG-12/intent.md`)\n\n## Problem\n"
+                      "## The change's intent (`docs/project/changes/CHG-12/intent.md`)\n\n## Problem\n"
                       "Klient nie może ponowić nieudanej płatności kartą i porzuca zamówienie.\n")
         tf(p, "start", "CHG-12-TSK-59", "--title", "TSK-59: historia prób w panelu", "--change", "CHG-12", "--cut", "TSK-59")
         (p / CHANGES / "CHG-12-TSK-59" / "ticket.md").write_text(cut_ticket, encoding="utf-8")
@@ -189,21 +189,22 @@ def main() -> int:
         code, out, raw = weight(p, "CHG-12-TSK-59")
         code2, out2, raw2 = weight(p, "HIS-1")
         check(out.get("proposal") == "normal" and out2.get("proposal") == "full",
-              f"W-24: waga cięcia nie rośnie od zamiaru całej zmiany; zwykłe zadanie z tą samą treścią — pełna: {raw} | {raw2}")
-        # W-24b: run_report.py pisze nagłówek zamiaru po angielsku (etap 4) — odcięcie działa dla obu wersji
+              f"W-24: the cut's weight does not grow from the whole change's intent; an ordinary task with the same content — full: {raw} | {raw2}")
+        # W-24b: the Polish intent heading from before 14.x is no longer cut off (the 19.0.0 migration rewrites open tasks)
         (p / CHANGES / "CHG-12-TSK-59" / "ticket.md").write_text(
-            cut_ticket.replace("## Zamiar zmiany", "## The change's intent"), encoding="utf-8")
+            cut_ticket.replace("## The change's intent", "## Zamiar zmiany"), encoding="utf-8")
         code, out, raw = weight(p, "CHG-12-TSK-59")
-        check(out.get("proposal") == "normal", f"W-24b: angielski nagłówek zamiaru też jest odcinany: {raw}")
+        check(out.get("proposal") == "full", f"W-24b: the Polish intent heading is not cut off: {raw}")
+        (p / CHANGES / "CHG-12-TSK-59" / "ticket.md").write_text(cut_ticket, encoding="utf-8")
         (p / CHANGES / "CHG-12-TSK-59" / "ticket.md").write_text(cut_ticket.replace("historia prób w panelu operatora",
                                                                                    "zmiana hasła operatora"), encoding="utf-8")
         code, out, raw = weight(p, "CHG-12-TSK-59")
         check(out.get("proposal") == "full" and any("hasł" in r for r in out.get("reasons", [])),
-              f"W-25: obszar wrażliwy w wierszu cięcia podnosi wagę cięcia do pełnej: {raw}")
+              f"W-25: a sensitive area in the cut row raises the cut's weight to full: {raw}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów wagi zadania")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} task weight tests")
     return 1 if fails else 0
 
 

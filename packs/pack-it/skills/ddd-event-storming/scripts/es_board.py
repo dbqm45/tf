@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-Tablica Event Storming prowadzonego przez agenta (skill ddd-event-storming). Tylko biblioteka standardowa, zero
-tokenów: dziennik zdarzeń tablicy (z cofnięciem), kartki dozwolone w fazie, kontrola struktury fazy, zapis tablicy.
+The board of an agent-led Event Storming (skill ddd-event-storming). Standard library only, zero
+tokens: the board's event log (with undo), cards allowed in a phase, a phase structure check, saving the board.
 
-  es_board.py init --id <id> --topic "<temat>" [--question "<pytanie sesji>"]
-  es_board.py add <typ> "<tekst>" --id <id> [--causes E1,E2] [--actor X] [--by S1] [--on E1] [--issues C1]
+  es_board.py init --id <id> --topic "<topic>" [--question "<session question>"]
+  es_board.py add <type> "<text>" --id <id> [--causes E1,E2] [--actor X] [--by S1] [--on E1] [--issues C1]
                                           [--for C1] [--at E1] [--handles C1,C2] [--contains A1] [--kind core]
                                           [--from K1 --to K2 --pattern customer-supplier] [--pivotal]
-  es_board.py edit <kartka> --id <id> [tekst] [te same pola co add]
-  es_board.py remove <kartka> --id <id>          es_board.py move <kartka> --after <kartka> --id <id>
-  es_board.py resolve <hot spot> "<odpowiedź>" --id <id>
+  es_board.py edit <card> --id <id> [text] [the same fields as add]
+  es_board.py remove <card> --id <id>          es_board.py move <card> --after <card> --id <id>
+  es_board.py resolve <hot spot> "<answer>" --id <id>
   es_board.py phase <1-5> --id <id>              es_board.py undo --id <id>
-  es_board.py show --id <id>                      # Markdown (stdout i board.md) z diagramem Mermaid
-  es_board.py check --id <id>                     # luki struktury bieżącej fazy; kod 1, gdy faza nie jest domknięta
+  es_board.py show --id <id>                      # Markdown (stdout and board.md) with a Mermaid diagram
+  es_board.py check --id <id>                     # structure gaps of the current phase; code 1 when the phase is not closed
 
-Typy kartek i fazy (kartka późniejszej fazy jest odrzucana — mieszanie poziomów):
-  1 kontekst sesji: actor, system, hotspot, opportunity · 2 zdarzenia: + event · 3 komendy i polityki: + command,
-  policy, readmodel · 4 agregaty: + aggregate · 5 konteksty i mapa: + context, link
-Katalog: $CLAUDE_PROJECT_DIR/docs/project/02-domain/event-storming/<id>/ (board.jsonl, board.md).
-Struktura to warunek konieczny, nie wystarczający: treść (czas przeszły, język biznesu, sens agregatów) ocenia
-człowiek i przegląd fazy (references/agent-phases.md).
+Card types and phases (a card of a later phase is rejected — mixing levels):
+  1 session context: actor, system, hotspot, opportunity · 2 events: + event · 3 commands and policies: + command,
+  policy, readmodel · 4 aggregates: + aggregate · 5 contexts and map: + context, link
+Directory: $CLAUDE_PROJECT_DIR/docs/project/02-domain/event-storming/<id>/ (board.jsonl, board.md).
+Structure is a necessary condition, not a sufficient one: the content (past tense, business language, the sense of the aggregates) is judged by
+the human and the phase review (references/agent-phases.md).
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ import os
 import sys
 from pathlib import Path
 
-TYPES = {  # typ: (prefiks identyfikatora, faza, w której wolno go dodać)
+TYPES = {  # type: (identifier prefix, the phase in which it may be added)
     "actor": ("X", 1), "system": ("S", 1), "hotspot": ("H", 1), "opportunity": ("O", 1),
     "event": ("E", 2), "command": ("C", 3), "policy": ("P", 3), "readmodel": ("R", 3),
     "aggregate": ("A", 4), "context": ("K", 5), "link": ("L", 5),
@@ -38,9 +38,9 @@ PHASES = {1: "session context", 2: "events", 3: "commands and policies", 4: "agg
 KINDS = ("core", "supporting", "generic")
 PATTERNS = ("customer-supplier", "conformist", "acl", "open-host-service", "published-language", "shared-kernel",
             "partnership", "separate-ways")
-LIST_FIELDS = ("causes", "issues", "handles", "contains")   # listy identyfikatorów
+LIST_FIELDS = ("causes", "issues", "handles", "contains")   # lists of identifiers
 REF_FIELDS = ("by", "on", "for", "at", "from", "to")        # pojedyncze identyfikatory
-BIG_AGGREGATE = 7   # tyle komend w jednym agregacie to sygnał do podziału (małe agregaty)
+BIG_AGGREGATE = 7   # this many commands in one aggregate is a signal to split (small aggregates)
 
 
 class BoardError(Exception):
@@ -75,7 +75,7 @@ def append(bid: str, op: dict) -> None:
 
 
 def replay(ops: list[dict]) -> dict:
-    """Stan tablicy z dziennika; `undo` cofa ostatnią wykonaną operację (poza init)."""
+    """Board state from the log; `undo` reverts the last performed operation (except init)."""
     applied: list[dict] = []
     for op in ops:
         if op["op"] == "undo":
@@ -134,7 +134,7 @@ def validate(fields: dict, state: dict) -> None:
 
 
 def gaps(state: dict) -> tuple[list[str], list[str]]:
-    """Luki (blokują zamknięcie fazy) i ostrzeżenia dla bieżącej fazy i wcześniejszych."""
+    """Gaps (they block closing the phase) and warnings for the current and earlier phases."""
     notes, phase = state["notes"], state["phase"]
     by_type = {t: [i for i in state["order"] if notes[i]["type"] == t] for t in TYPES}
     g, w = [], []

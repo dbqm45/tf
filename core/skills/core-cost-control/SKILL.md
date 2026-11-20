@@ -119,9 +119,11 @@ Practice:
 - **Terminal noise:** first "errors only" reporters (`--reporter=dot`, `pytest -q`, `--silent`) and a log to a file
   read in fragments; a hook that filters every command is foreign code with access to everything (`skill_audit`, the human's
   consent). You measure the effect by the cost per successful task, not by the number of tokens.
-- **MCP servers cost in every turn:** every connected server adds the definitions of all its tools to
-  every request. Connect only the servers needed in this project, choose ones with a small number of universal
-  tools (the "search + execute" pattern), and when it is known which command to run — a CLI instead of MCP.
+- **MCP costs twice:** the tool definitions (Claude Code loads them on demand through tool search) and the results — a
+  JQL list or a page body is tens of kilobytes of JSON that stays in the history and is read again in every turn. So the
+  main session does not call MCP tools: the `mcp-runner` agent (a cheap model) calls them, keeps the big results in its
+  context or in `.tf/cache/mcp/`, and returns a short answer. Connect only the servers needed in this project, prefer
+  servers with a few universal tools (the "search + execute" pattern), and when the command is known — a CLI.
 - A broad repo scan (git history, a dependency graph, an inventory) you commission to a cheaper model, and the heavy work is done by a CLI
   outside the context; a strong model only to deepen one flow. Packing the whole repo into one file is an ad hoc
   look at foreign code, not a standing practice.

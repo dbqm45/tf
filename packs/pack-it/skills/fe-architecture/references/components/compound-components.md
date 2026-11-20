@@ -1,20 +1,20 @@
 # Compound Components
 
-Źródło: dawny `fe-architecture/references/patterns.md` (wzorzec własny repo), rozszerzony o odpowiedniki
-w innych frameworkach.
+Source: the former `fe-architecture/references/patterns.md` (the repo's own pattern), extended with equivalents
+in other frameworks.
 
 ## TLDR
 
-Zamiast jednego komponentu z dziesiątkami propsów konfiguracyjnych — rodzina komponentów, które razem tworzą
-całość i współdzielą stan niejawnie (kontekst / DI), a użytkownik składa je jak natywny HTML (`<select>` + `<option>`).
+Instead of one component with dozens of configuration props — a family of components that together form
+a whole and share state implicitly (context / DI), and the user assembles them like native HTML (`<select>` + `<option>`).
 
 ## Problem
 
-`<Tabs items={[...]} renderTab={...} renderPanel={...} tabClassName="..." showIcons />` — każdy nowy przypadek
-użycia dokłada prop; API rośnie kombinatorycznie, a układ (np. ikona między zakładkami) jest niemożliwy bez
-kolejnego propa.
+`<Tabs items={[...]} renderTab={...} renderPanel={...} tabClassName="..." showIcons />` — every new use
+case adds a prop; the API grows combinatorially, and a layout (e.g. an icon between tabs) is impossible without
+yet another prop.
 
-## Rozwiązanie
+## Solution
 
 ```tsx
 <Tabs defaultValue="a">
@@ -27,31 +27,31 @@ kolejnego propa.
 </Tabs>
 ```
 
-Stan (aktywna zakładka) żyje w korzeniu i jest udostępniany częściom wewnętrznie:
+The state (the active tab) lives in the root and is shared with the parts internally:
 
-| Framework | Mechanizm współdzielenia | Składanie części |
+| Framework | Sharing mechanism | Assembling the parts |
 |---|---|---|
 | React | `createContext` + `use(Context)` (React 19) / `useContext` | `children` |
-| Vue | `provide` / `inject` | sloty |
-| Svelte 5 | `setContext` / `getContext` | snippety (`{@render children()}`) |
-| Angular (fw-angular) | serwis wstrzyknięty w komponent-rodzica (`providers`) lub `inject(ParentComponent)` | projekcja treści (`<ng-content select>`), `contentChildren()` |
-| Web Components | zdarzenia + wyszukiwanie przodka (`closest`) lub Context Protocol | `<slot>` |
+| Vue | `provide` / `inject` | slots |
+| Svelte 5 | `setContext` / `getContext` | snippets (`{@render children()}`) |
+| Angular (fw-angular) | a service injected into the parent component (`providers`) or `inject(ParentComponent)` | content projection (`<ng-content select>`), `contentChildren()` |
+| Web Components | events + finding an ancestor (`closest`) or the Context Protocol | `<slot>` |
 
-## Zasady
+## Rules
 
-- Część użyta poza rodzicem ma rzucić czytelny błąd („`Tabs.Trigger` musi być wewnątrz `Tabs`”).
-- Wspieraj tryb kontrolowany i niekontrolowany (`value` + `onValueChange` vs `defaultValue`).
-- Semantyka i klawiatura należą do biblioteki części: role `tablist`/`tab`/`tabpanel`, roving tabindex, strzałki
-  (fe-web-platform, `.claude/skills/fe-web-platform/references/accessibility/keyboard-navigation.md`). Rozważ gotowe prymitywy headless
-  (Radix, React Aria, Angular Aria/CDK, Ark UI) zamiast pisania od zera.
+- A part used outside its parent should throw a readable error ("`Tabs.Trigger` must be inside `Tabs`").
+- Support both controlled and uncontrolled mode (`value` + `onValueChange` vs `defaultValue`).
+- Semantics and keyboard handling belong to the library of parts: the `tablist`/`tab`/`tabpanel` roles, roving tabindex, arrows
+  (fe-web-platform, `.claude/skills/fe-web-platform/references/accessibility/keyboard-navigation.md`). Consider ready headless primitives
+  (Radix, React Aria, Angular Aria/CDK, Ark UI) instead of writing from scratch.
 
-## Kiedy używać / kiedy NIE
+## When to use / when NOT to
 
-Używaj, gdy komponent ma **kilka części konfigurowanych przez użytkownika** (zakładki, akordeon, menu, select,
-dialog z nagłówkiem/stopką). Nie używaj dla prostego komponentu z 2–3 propsami — kontekst i kilka eksportów to
-narzut bez zysku (YAGNI — eng-design-principles).
+Use it when a component has **several parts configured by the user** (tabs, accordion, menu, select,
+a dialog with a header/footer). Do not use it for a simple component with 2–3 props — a context and several exports are
+overhead without gain (YAGNI — eng-design-principles).
 
-## Powiązane
+## Related
 
-- [Props and Attributes](props-and-attributes.md) — kiedy propsów robi się za dużo.
+- [Props and Attributes](props-and-attributes.md) — when there are too many props.
 - [Presentational vs. Container](presentational-vs-container.md).

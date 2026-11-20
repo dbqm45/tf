@@ -61,5 +61,5 @@ w logu (E-04B). Nie powstaje nowy ekran błędu.
 | US-01 | Odwiedzający widzi tempo wdrożeń | server_error | nie dotyczy | Odpowiedź 500 JSON `{"error":"internal error"}` istniejącej obsługi błędów; brak ekranu do zaprojektowania (F4, E-04B). |
 | US-01 | Odwiedzający widzi tempo wdrożeń | permission_denied | nie dotyczy | Brak autoryzacji widoczności (CHG-3/D2, DEC-0013); flaga off = brak elementu, bez komunikatu (F2, E-02B). |
 
-## Pytania do bramki
+## Gate questions
 - Właściciel aplikacji sdlc-proba: ramki idle i empty nie mają ramki w Figmie, bo repo próbne nie ma projektu — czy akceptujesz opis tekstowy w tym dokumencie zamiast ramek (jak w CHG-1/DEC-0005), czy dostarczysz ramki projektanta?

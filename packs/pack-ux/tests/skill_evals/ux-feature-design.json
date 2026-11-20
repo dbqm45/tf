@@ -22,6 +22,29 @@
       }
     },
     {
+      "id": "spec-faktury-en",
+      "expect": "trigger",
+      "prompt": "I'm designing an invoice list screen with filtering and CSV export. What should I describe in the spec for developers so that nothing is missed? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "tabel\\w* stan",
+            "stan\\w* (każdego|dla każdego) ekran",
+            "state tables?",
+            "table of (screen )?states",
+            "states? (for|of) (each|every) (screen|component|view)"
+          ],
+          [
+            "375"
+          ],
+          [
+            "aria-live",
+            "region"
+          ]
+        ]
+      }
+    },
+    {
       "id": "powiadomienia-nawyk",
       "expect": "trigger",
       "prompt": "Chcemy dodać powiadomienia, żeby użytkownicy częściej wracali do aplikacji i budowali nawyk. Jak to zaprojektować odpowiedzialnie? Odpowiedz zwięźle.",

@@ -1,66 +1,66 @@
-# Utwardzanie hosta (system serwera)
+# Host hardening (the server's operating system)
 
-Dotyczy maszyny wirtualnej albo fizycznej z pełnym systemem (Linux, krótko Windows Server). Kontener i obraz:
-`ops-docker`; konto i usługi chmury, CSPM: `sec-cloud-security`; sekrety i klucze maszyn: `ops-secrets-identities`.
-Cel: mniejsza powierzchnia ataku i konfiguracja, która nie dryfuje.
+Applies to a virtual or physical machine with a full operating system (Linux, briefly Windows Server). Containers and images:
+`ops-docker`; the cloud account and services, CSPM: `sec-cloud-security`; secrets and machine keys: `ops-secrets-identities`.
+The goal: a smaller attack surface and a configuration that does not drift.
 
-## Procedura
-1. **Linia bazowa zamiast listy z głowy.** Wybierz CIS Benchmark dla dystrybucji i wersji (poziom 1 na start;
-   poziom 2 dla systemów o wysokiej klasie danych) albo profil SCAP/STIG, jeśli wymaga go regulacja. Odchylenia
-   zapisz z powodem i właścicielem (ADR albo plik wyjątków obok IaC). Ogólne zasady: NIST SP 800-123.
-2. **Minimalny system.** Obraz minimalny dystrybucji; usuń albo wyłącz usługi i pakiety, których rola maszyny nie
-   potrzebuje (`systemctl list-unit-files --state=enabled`, `ss -tulpn` — każdy nasłuchujący port ma właściciela).
-   Bez kompilatorów i narzędzi diagnostycznych na produkcji, jeśli nie są potrzebne.
-3. **SSH.** Tylko klucze (`PasswordAuthentication no`, `KbdInteractiveAuthentication no`), bez logowania roota
-   (`PermitRootLogin no`), ograniczeni użytkownicy lub grupy (`AllowGroups`), dostęp tylko z bastionu, VPN albo
-   dostępu warunkowego (sec-zero-trust-identity) — port 22 nie jest otwarty na internet. Lepiej: dostęp przez
-   zarządcę sesji dostawcy chmury lub krótkotrwałe certyfikaty SSH zamiast stałych kluczy.
-4. **Konta i uprawnienia.** Konta imienne, bez współdzielonych; `sudo` z listą poleceń dla ról, nie `ALL`;
-   konta serwisowe bez powłoki; wygaszanie nieużywanych kont. Najmniejsze uprawnienia także dla procesów: usługa
-   jako osobny użytkownik, ograniczenia systemd (`NoNewPrivileges`, `ProtectSystem`, `PrivateTmp`).
-5. **Zapora hosta** domyślnie odrzuca ruch przychodzący (nftables, ufw, firewalld; w chmurze dodatkowo grupy
-   zabezpieczeń). Ruch wychodzący ograniczony tam, gdzie to możliwe — utrudnia wyciek i pobranie narzędzi przez
-   napastnika.
-6. **Jądro i system plików.** Parametry `sysctl` z linii bazowej (np. wyłączone przekazywanie pakietów, gdy maszyna
-   nie jest routerem; ochrona przed fałszowaniem adresów); `/tmp` i partycje danych z `noexec`, `nosuid`, `nodev`,
-   gdzie rola na to pozwala; Secure Boot; SELinux albo AppArmor w trybie wymuszania, nie wyłączony.
-7. **Audyt i logi.** `auditd` (zmiany kont, sudo, pliki konfiguracyjne, ładowanie modułów) i logi systemowe
-   wysyłane poza host (sekcja 1 skilla: telemetria). Synchronizacja czasu (NTP/chrony) — bez niej korelacja nie działa.
-8. **Łatki.** Automatyczne łatki bezpieczeństwa (`unattended-upgrades`, `dnf-automatic`) albo przebudowa obrazu
-   w pierścieniach (sekcja 5 skilla); restart po łatce jądra zaplanowany, nie odkładany w nieskończoność.
-9. **Ochrona punktu końcowego.** EDR albo agent wykrywania na hostach produkcyjnych (sekcja 3 skilla), kontrola
-   integralności plików dla krytycznych ścieżek.
-10. **Sprawdzenie i dryf.** Skan zgodności z linią bazową (OpenSCAP z profilem CIS, Lynis jako szybki przegląd) po
-    zbudowaniu obrazu i okresowo; wynik w CI obrazu albo w raporcie. Maszyna budowana z IaC (Packer, Ansible,
-    cloud-init), ręczne zmiany wykrywane i cofane — logowanie na maszynę, żeby „poprawić”, to dryf.
+## Procedure
+1. **A baseline instead of a list from memory.** Choose the CIS Benchmark for the distribution and version (level 1 to start;
+   level 2 for systems with a high data classification) or a SCAP/STIG profile if a regulation requires it. Record deviations
+   with a reason and an owner (an ADR or an exceptions file next to the IaC). General principles: NIST SP 800-123.
+2. **A minimal system.** The distribution's minimal image; remove or disable services and packages the machine's role does not
+   need (`systemctl list-unit-files --state=enabled`, `ss -tulpn` — every listening port has an owner).
+   No compilers or diagnostic tools in production, if they are not needed.
+3. **SSH.** Keys only (`PasswordAuthentication no`, `KbdInteractiveAuthentication no`), no root login
+   (`PermitRootLogin no`), restricted users or groups (`AllowGroups`), access only from a bastion, a VPN or
+   conditional access (sec-zero-trust-identity) — port 22 is not open to the internet. Better: access through
+   the cloud provider's session manager or short-lived SSH certificates instead of long-lived keys.
+4. **Accounts and permissions.** Named accounts, no shared ones; `sudo` with a list of commands per role, not `ALL`;
+   service accounts without a shell; expiry of unused accounts. Least privilege also for processes: a service
+   as a separate user, systemd restrictions (`NoNewPrivileges`, `ProtectSystem`, `PrivateTmp`).
+5. **The host firewall** rejects inbound traffic by default (nftables, ufw, firewalld; in the cloud additionally security
+   groups). Outbound traffic restricted where possible — it makes data exfiltration and downloading tools harder for
+   an attacker.
+6. **Kernel and file system.** `sysctl` parameters from the baseline (e.g. packet forwarding disabled when the machine
+   is not a router; protection against address spoofing); `/tmp` and data partitions with `noexec`, `nosuid`, `nodev`,
+   where the role allows it; Secure Boot; SELinux or AppArmor in enforcing mode, not disabled.
+7. **Audit and logs.** `auditd` (account changes, sudo, configuration files, module loading) and system logs
+   sent off the host (section 1 of the skill: telemetry). Time synchronization (NTP/chrony) — without it correlation does not work.
+8. **Patches.** Automatic security patches (`unattended-upgrades`, `dnf-automatic`) or an image rebuild
+   in rings (section 5 of the skill); a reboot after a kernel patch planned, not postponed forever.
+9. **Endpoint protection.** EDR or a detection agent on production hosts (section 3 of the skill), file integrity
+   monitoring for critical paths.
+10. **Checking and drift.** A compliance scan against the baseline (OpenSCAP with a CIS profile, Lynis as a quick review) after
+    building the image and periodically; the result in the image CI or in a report. The machine built from IaC (Packer, Ansible,
+    cloud-init), manual changes detected and reverted — logging in to the machine to "fix" something is drift.
 
-## Windows Server — skrót
-CIS Benchmark lub Microsoft Security Baselines; Server Core tam, gdzie się da; wyłączone SMBv1 i zbędne role;
-LAPS dla haseł lokalnych administratorów; zapora Windows włączona dla wszystkich profili; Defender (lub inny EDR)
-i PowerShell logging (Script Block Logging) wysyłane do SIEM.
+## Windows Server — a summary
+CIS Benchmark or Microsoft Security Baselines; Server Core where possible; SMBv1 and unneeded roles disabled;
+LAPS for local administrator passwords; the Windows firewall enabled for all profiles; Defender (or another EDR)
+and PowerShell logging (Script Block Logging) sent to the SIEM.
 
-## Przykład
-**Wejście:** „Trzy maszyny Ubuntu z API, SSH otwarty z internetu, logowanie hasłem, aktualizacje ręcznie raz na
-kwartał.”
-**Wynik:** obraz z Packer + Ansible wg CIS Ubuntu poziom 1, wyjątki w pliku wyjątków obok IaC; SSH tylko z
-bastionu i tylko kluczami, bez roota; zapora: 443 z load balancera, 22 z bastionu; `unattended-upgrades` dla
-łatek bezpieczeństwa z oknem restartu; auditd i journald do SIEM; OpenSCAP w pipeline obrazu, raport co tydzień;
-zmiana konfiguracji tylko przez PR do IaC.
+## Example
+**Input:** "Three Ubuntu machines with an API, SSH open from the internet, password login, updates by hand once a
+quarter."
+**Result:** an image from Packer + Ansible per CIS Ubuntu level 1, exceptions in an exceptions file next to the IaC; SSH only from
+the bastion and only with keys, no root; firewall: 443 from the load balancer, 22 from the bastion; `unattended-upgrades` for
+security patches with a reboot window; auditd and journald to the SIEM; OpenSCAP in the image pipeline, a report every week;
+configuration changes only through a PR to the IaC.
 
-## Checklista
-- [ ] linia bazowa (CIS/SCAP) wybrana, odchylenia zapisane
-- [ ] tylko potrzebne usługi i porty; każdy port ma właściciela
-- [ ] SSH: klucze lub certyfikaty, bez roota, bez dostępu z internetu
-- [ ] konta imienne, sudo ograniczone, usługi na osobnych użytkownikach
-- [ ] zapora hosta domyślnie odrzuca; ruch wychodzący ograniczony tam, gdzie można
-- [ ] SELinux/AppArmor wymuszane; parametry jądra i montowania z linii bazowej
-- [ ] auditd i logi poza hostem, czas zsynchronizowany
-- [ ] łatki automatyczne lub przebudowa obrazu; restarty zaplanowane
-- [ ] skan zgodności po budowie i okresowo; dryf wykrywany, zmiany tylko przez IaC
+## Checklist
+- [ ] a baseline (CIS/SCAP) chosen, deviations recorded
+- [ ] only the needed services and ports; every port has an owner
+- [ ] SSH: keys or certificates, no root, no access from the internet
+- [ ] named accounts, restricted sudo, services under separate users
+- [ ] the host firewall rejects by default; outbound traffic restricted where possible
+- [ ] SELinux/AppArmor enforcing; kernel and mount parameters from the baseline
+- [ ] auditd and logs off the host, time synchronized
+- [ ] automatic patches or an image rebuild; reboots planned
+- [ ] a compliance scan after the build and periodically; drift detected, changes only through IaC
 
-## Źródła
-- NIST SP 800-123 *Guide to General Server Security* (final, 07.2008; strona nist.gov sprawdzona 2026-10-27, status na
-  csrc.nist.gov [niezweryfikowane] — host niedostępny z sandboxu): https://csrc.nist.gov/pubs/sp/800/123/final
-- CIS Benchmarks (lista per system): https://www.cisecurity.org/cis-benchmarks [niezweryfikowane: strony nie pobrano];
-  CIS Controls v8.1 (06.2024, wg wyszukiwania 2026-10-27)
-Opisane własnymi słowami.
+## Sources
+- NIST SP 800-123 *Guide to General Server Security* (final, 07.2008; the nist.gov page checked 2026-10-27, the status on
+  csrc.nist.gov [unverified] — the host is unreachable from the sandbox): https://csrc.nist.gov/pubs/sp/800/123/final
+- CIS Benchmarks (a list per system): https://www.cisecurity.org/cis-benchmarks [unverified: the page was not fetched];
+  CIS Controls v8.1 (06.2024, per a search on 2026-10-27)
+Described in our own words.

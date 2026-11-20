@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-Moduł `authz` tf analyze, piętro 0 (bez modelu): endpointy zmieniające dane (POST/PUT/PATCH/DELETE) bez widocznego
-sprawdzenia uprawnień po stronie serwera. Ukrycie przycisku w UI nie jest zabezpieczeniem — serwer musi sprawdzić
-uprawnienie przy każdej operacji (be-auth-security, be-business-app-patterns).
+The `authz` module of tf analyze, tier 0 (no model): data-changing endpoints (POST/PUT/PATCH/DELETE) without a visible
+server-side permission check. Hiding a button in the UI is not protection — the server must check
+the permission on every operation (be-auth-security, be-business-app-patterns).
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines on stdout (contract: .tf/factory/analyze.py)
 
-Rozpoznaje: Express/podobne (`router.post(…)` bez middleware'u uprawnień i bez `router.use(auth…)` w pliku), NestJS
-(`@Post`/`@Put`/`@Patch`/`@Delete` bez `@UseGuards`/`@Roles` na metodzie ani klasie), Next.js route handlers
-(`export function POST/PUT/PATCH/DELETE` bez wywołania sprawdzającego sesję lub uprawnienie), FastAPI
-(`@router.post(…)` bez `Depends(…)` uwierzytelniającego w sygnaturze ani `dependencies=` routera), Spring
-(`@PostMapping`… bez `@PreAuthorize`/`@Secured`/`@RolesAllowed`). To heurystyka: znalezienie = „sprawdź”, nie dowód
-— uprawnienie może być sprawdzane w warstwie, której skaner nie widzi (bramka sieciowa, globalny filtr). Testy
-i dokumentacja są pomijane. Tylko biblioteka standardowa.
+Recognises: Express/similar (`router.post(…)` without a permission middleware and without `router.use(auth…)` in the file), NestJS
+(`@Post`/`@Put`/`@Patch`/`@Delete` without `@UseGuards`/`@Roles` on the method or the class), Next.js route handlers
+(`export function POST/PUT/PATCH/DELETE` without a call that checks the session or the permission), FastAPI
+(`@router.post(…)` without an authenticating `Depends(…)` in the signature or the router's `dependencies=`), Spring
+(`@PostMapping`… without `@PreAuthorize`/`@Secured`/`@RolesAllowed`). This is a heuristic: a finding = "check it", not proof
+— the permission may be checked in a layer the scanner does not see (a network gateway, a global filter). Tests
+and documentation are skipped. Standard library only.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) has no "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -36,7 +36,7 @@ FACTORY_OWNED = (".tf/factory/", ".claude/")
 TEST_OR_DOC = re.compile(r"(^|/)(tests?|__tests__|e2e|fixtures|spec|examples?|docs?)/|\.(test|spec)\.|"
                          r"(^|/)test_[^/]*$|\.(md|rst|txt|adoc)$")
 JS_EXT = {".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts"}
-# Nazwy, po których rozpoznajemy sprawdzenie tożsamości lub uprawnienia (middleware, guard, zależność, wywołanie).
+# Names by which we recognise an identity or permission check (middleware, guard, dependency, call).
 AUTH = re.compile(r"(auth\w*|authori[sz]\w*|require_?(user|role|admin|permission|login|scope)\w*|ensure_?\w*|"
                   r"permission\w*|is_?admin|\bcan\s*\(|guard\w*|verify_?\w*token|jwt\w*|current_?user|"
                   r"getServerSession|get_current\w*|login_required|requires_auth|@Roles|PreAuthorize|Secured|"
@@ -65,7 +65,7 @@ def emit(rel: str, line: int, snippet: str, framework: str) -> None:
 
 
 def _decorator_blocks(lines: list[str]):
-    """Bloki dekoratorów/adnotacji: (indeks pierwszej linii, lista linii bloku) przed deklaracją."""
+    """Decorator/annotation blocks: (index of the first line, list of the block's lines) before the declaration."""
     block, start = [], 0
     for i, line in enumerate(lines):
         s = line.strip()
@@ -89,7 +89,7 @@ def scan_express(rel: str, text: str) -> None:
             continue
         call = " ".join(lines[i:i + 4])[m.end():]
         head = re.split(r"=>|\bfunction\b", call, maxsplit=1)[0]
-        args = head.split(",", 1)[1] if "," in head else ""   # pierwszy argument to ścieżka
+        args = head.split(",", 1)[1] if "," in head else ""   # the first argument is the path
         if not AUTH.search(args):
             emit(rel, i + 1, line, "Express")
 

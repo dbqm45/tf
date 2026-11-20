@@ -1,51 +1,51 @@
 # Code Splitting
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/code-splitting.
+Source: frontendpatterns.dev/code-splitting.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Performance
-- **Poziom:** Advanced
-- **Przykłady frameworków:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 13 grudnia 2025
-- **Autor:** Den Odell
+- **Category:** Performance
+- **Level:** Advanced
+- **Framework examples:** React, Vue, Svelte, Native web
+- **Last updated:** 13 December 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Split your bundle into chunks that load on demand, deferring code for routes and features until users actually need them.”
+"Split your bundle into chunks that load on demand, deferring code for routes and features until users actually need them."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Core Web Vitals to LCP, INP i CLS** (INP zastąpił FID w 2024; TTI nie jest już metryką Lighthouse) — patrz
-  fe-web-platform (`.claude/skills/fe-web-platform/references/core-web-vitals.md`). Poprawiono listę w „Zaletach”.
-- Angular (fw-angular): `loadComponent`/`loadChildren` w routingu i `@defer (on viewport | idle | interaction)` w
-  szablonach — deklaratywny odpowiednik `lazy()` + `Suspense`.
-- Vite 8 buduje Rolldownem: `build.rollupOptions.output.manualChunks` jest przestarzałe na rzecz grup chunków
-  Rolldowna (`build.rolldownOptions.output.advancedChunks` / `codeSplitting`, zależnie od wersji) — sprawdź
-  dokumentację swojej wersji; zanim ręcznie dzielisz vendor, zmierz (bundle analyzer).
-- Magic comments `webpackPrefetch/Preload` działają tylko w webpack/Rspack; w Vite prefetch robi się przez
-  `<link rel="modulepreload">` lub import przy hover/`requestIdleCallback`.
-- Nieudany import chunka po wdrożeniu (stary HTML → usunięty chunk) obsłuż Error Boundary + przeładowaniem
-  (np. zdarzenie `vite:preloadError`).
-- Przykłady Svelte to składnia Svelte 4 (`export let`, `$:`, `on:click`, `<svelte:component>`); w Svelte 5: `$props()`,
-  `$state`, `$derived`, `onclick`, komponent dynamiczny renderujesz wprost (`<Comp />`).
+- **The Core Web Vitals are LCP, INP and CLS** (INP replaced FID in 2024; TTI is no longer a Lighthouse metric) — see
+  fe-web-platform (`.claude/skills/fe-web-platform/references/core-web-vitals.md`). The list in "Advantages" has been corrected.
+- Angular (fw-angular): `loadComponent`/`loadChildren` in routing and `@defer (on viewport | idle | interaction)` in
+  templates — the declarative equivalent of `lazy()` + `Suspense`.
+- Vite 8 builds with Rolldown: `build.rollupOptions.output.manualChunks` is deprecated in favour of Rolldown's chunk
+  groups (`build.rolldownOptions.output.advancedChunks` / `codeSplitting`, depending on the version) — check
+  the documentation of your version; before you split vendor code manually, measure (bundle analyzer).
+- The `webpackPrefetch/Preload` magic comments work only in webpack/Rspack; in Vite prefetching is done through
+  `<link rel="modulepreload">` or an import on hover/`requestIdleCallback`.
+- Handle a failed chunk import after a deployment (old HTML → a deleted chunk) with an Error Boundary + a reload
+  (e.g. the `vite:preloadError` event).
+- The Svelte examples are Svelte 4 syntax (`export let`, `$:`, `on:click`, `<svelte:component>`); in Svelte 5: `$props()`,
+  `$state`, `$derived`, `onclick`, you render a dynamic component directly (`<Comp />`).
 
 ## Problem
 
-Aplikacje wysyłają zbyt dużo kodu jednocześnie. Przykład ze źródła: strona główna ładuje się 8
-sekund, bo pobiera kod panelu administratora, edytory tekstu i biblioteki wykresów, których
-użytkownik nigdy nie użyje — bundle 2MB, z czego realnie potrzebne jest 100KB. Problem dotyczy
-zarówno czasu pobierania, jak i czasu parsowania JavaScriptu przez przeglądarkę.
+Applications send too much code at once. An example from the source: the home page takes 8
+seconds to load, because it downloads the code of the admin panel, text editors and chart libraries that
+the user will never use — a 2MB bundle, of which 100KB is really needed. The problem concerns
+both the download time and the time the browser spends parsing JavaScript.
 
-## Rozwiązanie
+## Solution
 
-Dynamiczne `import()` dzieli kod na logiczne części — bundler tworzy osobne chunki ładowane na
-żądanie. Główne punkty podziału: granice tras (route boundaries), komponenty o dużej „wadze”, flagi
-funkcji.
+A dynamic `import()` splits the code into logical parts — the bundler creates separate chunks loaded on
+demand. The main split points: route boundaries, "heavy" components, feature
+flags.
 
-## Przykłady kodu
+## Code examples
 
 ### Route-Based Splitting — React
 
@@ -98,7 +98,7 @@ const router = createRouter({
     DashboardComponent = module.default;
   }
 
-  // $page pochodzi z SvelteKit ($app/stores); w SvelteKit routing i podział kodu per trasa są wbudowane
+  // $page comes from SvelteKit ($app/stores); in SvelteKit routing and per-route code splitting are built in
   $: if ($page.route.id === '/dashboard') loadDashboard();
 </script>
 
@@ -217,37 +217,37 @@ document.querySelector('#dashboard-link').addEventListener('mouseenter', () => {
 });
 ```
 
-## Zalety
+## Advantages
 
-- Rozmiar initial bundle drastycznie maleje.
-- Time-to-interactive lepszy na wszystkich urządzeniach, zwłaszcza mobilnych na wolnych połączeniach.
-- Nieużywane funkcje nie wpływają na rozmiar innych bundli.
-- Biblioteki vendor cachują się niezależnie od kodu aplikacji.
-- Metryki ładowania się poprawiają (FCP, LCP; mniej pracy głównego wątku → lepszy INP).
+- The initial bundle size shrinks drastically.
+- Better time-to-interactive on all devices, especially mobile ones on slow connections.
+- Unused features do not affect the size of other bundles.
+- Vendor libraries are cached independently of the application code.
+- Loading metrics improve (FCP, LCP; less main-thread work → better INP).
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Pierwsza nawigacja na danej trasie „czuje się” wolniej niż w tradycyjnym SPA bez podziału.
-- Każdy punkt podziału wymaga własnego loading UI.
-- Konfiguracja build'u staje się bardziej złożona.
-- Na HTTP/1.1 wiele małych plików szkodzi wydajności; HTTP/2 to rozwiązuje.
-- Trudna granularność: zbyt wiele małych chunków vs zbyt mało dużych.
-- Dynamic imports zwracają promisy — trzeba obsłużyć nieudane żądania sieciowe.
-- Strategia prefetchingu wymaga balansu między zmarnowanym pasmem a wolną nawigacją.
-- Współdzielone zależności mogą się przypadkowo zduplikować bez poprawnej konfiguracji bundlera.
+- The first navigation to a given route "feels" slower than in a traditional SPA without splitting.
+- Every split point requires its own loading UI.
+- The build configuration becomes more complex.
+- On HTTP/1.1 many small files hurt performance; HTTP/2 solves this.
+- Difficult granularity: too many small chunks vs too few large ones.
+- Dynamic imports return promises — failed network requests must be handled.
+- A prefetching strategy requires a balance between wasted bandwidth and slow navigation.
+- Shared dependencies can accidentally be duplicated without a correct bundler configuration.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Lazy Loading](../performance/lazy-loading.md) — Performance.
 - Code Splitting — web.dev.
 - Dynamic `import()` — MDN.
-- Webpack Code Splitting — dokumentacja Webpack.
+- Webpack Code Splitting — the Webpack documentation.
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj przy realnych granicach tras i przy funkcjach, z których korzysta tylko część użytkowników
-(panel admina, ciężki edytor, wykresy) — tam koszt (bardziej złożony build, loading UI) jest
-uzasadniony realnym zyskiem w initial bundle. **Nie** dziel kodu „na wszelki wypadek” dla małych,
-zawsze używanych komponentów — to czysty przykład złamania YAGNI z `../principles.md`:
-narzut (dodatkowy request, własny stan ładowania, ryzyko błędu sieci) przewyższa zysk, jeśli dany
-kod i tak zawsze się wykonuje. Sprawdź bundle analyzer, zanim zdecydujesz, gdzie realnie jest ciężar.
+Use it at real route boundaries and for features used by only some of the users
+(the admin panel, a heavy editor, charts) — there the cost (a more complex build, loading UI) is
+justified by a real gain in the initial bundle. Do **not** split code "just in case" for small,
+always-used components — that is a pure example of breaking YAGNI from `../principles.md`:
+the overhead (an extra request, its own loading state, the risk of a network error) exceeds the gain if the given
+code always runs anyway. Check the bundle analyzer before you decide where the weight really is.

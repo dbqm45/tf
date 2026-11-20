@@ -1,27 +1,27 @@
-# Mapowanie kontroli: odpowiedniki usług i szablon tabeli
+# Control mapping: service equivalents and the table template
 
-Spis treści: 1. Szablon · 2. Odpowiedniki usług · 3. Pułapki konfiguracji
+Contents: 1. Template · 2. Service equivalents · 3. Configuration pitfalls
 
-## 1. Szablon tabeli w `cloud-security-baseline.md`
-Kolumny: ID · kontrola (cel) · AWS · Azure · GCP · wymuszenie (zapobiegawcze) · wykrywanie · weryfikacja · właściciel ·
-odstępstwa (do kiedy). Kontrola zapisana jako cel („brak publicznych magazynów”), nie jako nazwa usługi.
+## 1. The table template in `cloud-security-baseline.md`
+Columns: ID · control (goal) · AWS · Azure · GCP · enforcement (preventive) · detection · verification · owner ·
+deviations (until when). A control is written as a goal ("no public storage"), not as a service name.
 
-## 2. Odpowiedniki usług
-| Cel | AWS | Azure | GCP |
+## 2. Service equivalents
+| Goal | AWS | Azure | GCP |
 |---|---|---|---|
-| Hierarchia | Organizations, OU, konta | grupy zarządzania, subskrypcje | organizacja, foldery, projekty |
-| Guardrail zapobiegawczy | SCP (RCP dla zasobów) | Azure Policy (Deny) | Organization Policy |
-| Dziennik audytowy | CloudTrail | Activity Log | Cloud Audit Logs |
-| Tożsamość obciążenia | role IAM, IRSA, Pod Identity | managed identity, Workload Identity | konto usługi z dołączeniem, Workload Identity |
-| Federacja z CI | OIDC provider w IAM | federacja poświadczeń Entra | Workload Identity Federation |
-| Prywatny dostęp do PaaS | PrivateLink, endpointy VPC | Private Endpoint | Private Service Connect |
-| Klucze klienta | KMS | Key Vault | Cloud KMS |
-| Postura | Security Hub | Defender for Cloud | Security Command Center |
-| Analiza dostępu | IAM Access Analyzer | Entra Permissions Management [niezweryfikowane: status produktu] | IAM Recommender |
+| Hierarchy | Organizations, OUs, accounts | management groups, subscriptions | organization, folders, projects |
+| Preventive guardrail | SCP (RCP for resources) | Azure Policy (Deny) | Organization Policy |
+| Audit log | CloudTrail | Activity Log | Cloud Audit Logs |
+| Workload identity | IAM roles, IRSA, Pod Identity | managed identity, Workload Identity | a service account with attachment, Workload Identity |
+| Federation with CI | OIDC provider in IAM | Entra credential federation | Workload Identity Federation |
+| Private access to PaaS | PrivateLink, VPC endpoints | Private Endpoint | Private Service Connect |
+| Customer keys | KMS | Key Vault | Cloud KMS |
+| Posture | Security Hub | Defender for Cloud | Security Command Center |
+| Access analysis | IAM Access Analyzer | Entra Permissions Management [unverified: product status] | IAM Recommender |
 
-## 3. Pułapki konfiguracji
-- SCP bez wyjątku dla roli awaryjnej blokuje także naprawę; testuj w OU próbnym.
-- Azure Policy z efektem Deny nie poprawia istniejących zasobów (potrzebne zadanie naprawcze).
-- Trail tylko w jednym regionie pomija aktywność w pozostałych; użyj trailu wielu regionów.
-- Logi w tym samym koncie co obciążenia: napastnik z uprawnieniami je kasuje; konto logów osobno.
-- „Szyfrowane” nie znaczy „klucz klienta”: sprawdź, kto jest właścicielem klucza i polityki.
+## 3. Configuration pitfalls
+- An SCP without an exception for the emergency role also blocks the fix; test in a trial OU.
+- Azure Policy with the Deny effect does not fix existing resources (a remediation task is needed).
+- A trail in only one region misses activity in the others; use a multi-region trail.
+- Logs in the same account as the workloads: an attacker with permissions deletes them; a separate log account.
+- "Encrypted" does not mean "customer key": check who owns the key and the policies.

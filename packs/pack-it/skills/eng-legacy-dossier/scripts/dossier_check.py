@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Sprawdza kompletność teczki systemu legacy (skill eng-legacy-dossier) — tylko biblioteka standardowa, bez sieci.
+Checks the completeness of a legacy system dossier (skill eng-legacy-dossier) — standard library only, no network.
 
   python3 .claude/skills/eng-legacy-dossier/scripts/dossier_check.py docs/project/04-architecture/legacy-dossier
-  python3 … <katalog teczki> --root <katalog repozytorium>   # względem niego sprawdzane są dowody plik:linia (domyślnie .)
-  python3 … <katalog teczki> --json
+  python3 … <dossier directory> --root <repository directory>   # file:line evidence is checked relative to it (default .)
+  python3 … <dossier directory> --json
 
-Tryb audytu architektury (opcjonalne pliki obok indeksu): `assessment.md` — ustalenia `### ARCH-NNN — tytuł` z polami
-Obszar, Kategoria, Stan obecny, Stan oczekiwany, Luka, Dowód, Wpływ; `recommendations.md` — `### REC-NNN — tytuł`
-z polami Dotyczy, Decyzja, Priorytet, Wysiłek, Ryzyko, Weryfikacja. Potwierdzony problem i niespójność wymagają
-dowodu; każdy potwierdzony problem — rekomendacji; samą preferencją nie uzasadnisz refaktoryzacji strukturalnej.
+Architecture audit mode (optional files next to the index): `assessment.md` — findings `### ARCH-NNN — title` with the fields
+Area, Category, Current state, Expected state, Gap, Evidence, Impact; `recommendations.md` — `### REC-NNN — title`
+with the fields Addresses, Decision, Priority, Effort, Risk, Verification. A confirmed problem and an inconsistency require
+evidence; every confirmed problem — a recommendation; preference alone does not justify a structural refactoring.
 
-Sprawdza: znaczniki i sekcje README.md oraz kart modułów (modules/*.md), pole `State:` karty, moduły z indeksu bez
-pliku (błąd) i pliki spoza indeksu (ostrzeżenie), reguły biznesowe — unikalne ID, znana pewność (test / kod /
-do weryfikacji), dowód `ścieżka:linia` lub `ścieżka:od-do` wskazujący istniejący plik i linię; reguła bez dowodu
-musi mieć pewność „to verify”. Pierwsza linia wyniku: `legacy-dossier-check: OK` albo `… ERRORS`; kod 0 / 1.
+It checks: the markers and sections of README.md and of the module cards (modules/*.md), the card's `State:` field, modules from the index without a
+file (an error) and files outside the index (a warning), business rules — a unique ID, a known confidence (test / code /
+to verify), evidence `path:line` or `path:from-to` pointing to an existing file and line; a rule without evidence
+must have the confidence "to verify". The first output line: `legacy-dossier-check: OK` or `… ERRORS`; code 0 / 1.
 """
 from __future__ import annotations
 
@@ -41,39 +41,7 @@ DECISIONS = ["no change", "documentation", "configuration", "incremental refacto
              "redesign"]
 HEAVY = {"structural refactoring", "redesign"}
 PRIORITIES = ("P1", "P2", "P3")
-# Dossier sprzed 14.x (po polsku): nazwy sekcji, pól i wartości przyjmowane jako angielskie odpowiedniki; ta sama mapa
-# przepisuje istniejące dossier przy migracji (`migrations.migrate_values`).
-ALIASES = {
-    "Moduły": "Modules", "Przepływy": "Flows", "Słownik": "Glossary",
-    "Stan i kandydaci do refaktoru": "State and refactoring candidates", "Pytania otwarte": "Open questions",
-    "Ograniczenia": "Limitations", "Po co": "Purpose", "Odpowiedzialności": "Responsibilities",
-    "Wejścia i wyjścia": "Inputs and outputs", "Reguły biznesowe": "Business rules", "Dane": "Data",
-    "Zależności": "Dependencies", "Pułapki": "Pitfalls", "Testy": "Tests", "Pytania": "Questions",
-    "Podsumowanie": "Summary", "Zakres i metoda": "Scope and method", "Kryteria oceny": "Assessment criteria",
-    "Ustalenia": "Findings", "Mocne strony": "Strengths", "Do dalszego zbadania": "To investigate",
-    "Docelowe zasady": "Target principles", "Rekomendacje": "Recommendations", "Roadmapa": "Roadmap",
-    "Kryteria sukcesu": "Success criteria",
-    "Obszar": "Area", "Kategoria": "Category", "Stan obecny": "Current state", "Stan oczekiwany": "Expected state",
-    "Luka": "Gap", "Dowód": "Evidence", "Wpływ": "Impact", "Dotyczy": "Addresses", "Decyzja": "Decision",
-    "Priorytet": "Priority", "Wysiłek": "Effort", "Ryzyko": "Risk", "Weryfikacja": "Verification",
-}
-VALUE_ALIASES = {
-    "potwierdzony problem": "confirmed problem", "ryzyko": "risk", "niespójność": "inconsistency",
-    "możliwość poprawy": "improvement", "preferencja": "preference", "bez zmian": "no change",
-    "dokumentacja": "documentation", "konfiguracja": "configuration",
-    "refaktoryzacja przyrostowa": "incremental refactoring", "refaktoryzacja strukturalna": "structural refactoring",
-    "przeprojektowanie": "redesign", "kod": "code", "do weryfikacji": "to verify",
-    "zielony": "green", "żółty": "yellow", "czerwony": "red",
-}
-STATE_LINE = re.compile(r"^(?:State|Stan): (\S+) — \S", re.M)
-
-
-def en(name: str) -> str:
-    return ALIASES.get(name, name)
-
-
-def value(v: str) -> str:
-    return VALUE_ALIASES.get(v, v)
+STATE_LINE = re.compile(r"^State: (\S+) — \S", re.M)
 
 
 EVIDENCE = re.compile(r"`?([^\s`:|]+):(\d+)(?:-(\d+))?`?")
@@ -84,7 +52,7 @@ def sections(text: str) -> dict[str, str]:
     for line in text.splitlines():
         m = re.match(r"^## (.+?)\s*$", line)
         if m:
-            name = en(m.group(1))
+            name = m.group(1)
             out[name] = ""
         elif name:
             out[name] += line + "\n"
@@ -113,11 +81,11 @@ def check_evidence(ev: str, root: Path) -> str | None:
 
 
 def blocks(body: str, prefix: str) -> list[tuple[str, dict[str, str]]]:
-    """Bloki `### <prefix>-NNN — tytuł` z polami `Klucz: wartość` (kolejność bloków zachowana)."""
+    """Blocks `### <prefix>-NNN — title` with `Key: value` fields (block order preserved)."""
     out = []
     for part in re.split(rf"^### (?={prefix}-)", body, flags=re.M)[1:]:
         head, _, rest = part.partition("\n")
-        fields = {en(k): v for k, v in (m.groups() for m in re.finditer(r"^([^:\n]+?):\s*(.*?)\s*$", rest, re.M))}
+        fields = {k: v for k, v in (m.groups() for m in re.finditer(r"^([^:\n]+?):\s*(.*?)\s*$", rest, re.M))}
         out.append((head.split(" ")[0].strip(), fields))
     return out
 
@@ -144,7 +112,7 @@ def check_audit(dossier: Path, root: Path, errors: list[str]) -> tuple[int, int]
         missing = [k for k in FINDING_FIELDS if not f.get(k)]
         if missing:
             errors.append(f"assessment.md: {fid} — missing fields: {', '.join(missing)}")
-        cat = value(f.get("Category", ""))
+        cat = f.get("Category", "")
         if cat and cat not in CATEGORIES:
             errors.append(f"assessment.md: {fid} — unknown category \"{cat}\" (allowed: {', '.join(CATEGORIES)})")
         ev = f.get("Evidence", "")
@@ -171,7 +139,7 @@ def check_audit(dossier: Path, root: Path, errors: list[str]) -> tuple[int, int]
             if ref not in findings:
                 errors.append(f"recommendations.md: {rid} refers to {ref}, which is not in assessment.md")
         covered.update(refs)
-        dec, pri = value(r.get("Decision", "")), r.get("Priority", "")
+        dec, pri = r.get("Decision", ""), r.get("Priority", "")
         if dec and dec not in DECISIONS:
             errors.append(f"recommendations.md: {rid} — unknown decision \"{dec}\" (allowed: {', '.join(DECISIONS)})")
         if pri and pri not in PRIORITIES:
@@ -207,7 +175,7 @@ def check(dossier: Path, root: Path) -> dict:
         if not mt.startswith(MODULE_MARK):
             errors.append(f"{rel}: missing marker {MODULE_MARK} on the first line")
         st = STATE_LINE.search(mt)
-        if not st or value(st.group(1)) not in STATES:
+        if not st or st.group(1) not in STATES:
             errors.append(f"{rel}: missing field \"State: green|yellow|red — <reason>\"")
         ms = sections(mt)
         errors += [f"{rel}: missing section \"## {s}\"" for s in MODULE_SECTIONS if s not in ms]
@@ -216,7 +184,6 @@ def check(dossier: Path, root: Path) -> dict:
                 errors.append(f"{rel}: rule row has {len(row)} columns instead of 4 (ID | Rule | Evidence | Confidence)")
                 continue
             rid, _, ev, conf = row[:4]
-            conf = value(conf)
             rules += 1
             if rid in ids:
                 errors.append(f"{rel}: {rid} duplicated (first seen in {ids[rid]})")

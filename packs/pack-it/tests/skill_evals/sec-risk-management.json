@@ -18,6 +18,22 @@
       }
     },
     {
+      "id": "rejestr-i-akceptacja-en",
+      "expect": "trigger",
+      "prompt": "The product director wants to accept the risk of the missing MFA in the old partner panel. How do we record this formally and who can sign off? Answer briefly.",
+      "checks": {
+        "all": [
+          ["właściciel ryzyka", "risk owner", "właściciel"],
+          ["wygasa", "termin ważności", "data przeglądu", "expiry", "wygaśnięci", "do kiedy", "expir\\w*", "review date", "valid until", "until when"],
+          ["apetyt", "tolerancj", "appetite", "tolerance", "kryteri\\w* (ryzyka|akceptacji)", "progi (uprawnie|akceptacji)", "acceptance criteria", "approval thresholds?", "authority levels?"],
+          ["rezydual", "residual", "resztkow"],
+          ["kto (je |ryzyko )?tworzy", "zespół bezpieczeństwa[^.]{0,60}(za biznes|nie podpis|sprzeciw)", "who creates (it|the risk)", "security team[^.]{0,60}(on behalf of the business|not sign|object\\w*)", "(security|infosec) (team )?(cannot|can't|does not|doesn't) (accept|sign)"],
+          ["inherent", "inherentn"]
+        ],
+        "none": ["akceptuje (je )?zespół bezpieczeństwa sam", "security team (alone )?accepts (it|the risk)( alone| on its own)?", "security team (can )?accept\\w* (it )?(alone|on its own)"]
+      }
+    },
+    {
       "id": "fair-vs-macierz",
       "expect": "trigger",
       "prompt": "Mamy macierz 5x5, ale zarząd pyta, ile realnie możemy stracić na ransomware w roku. Jak to policzyć i czy macierz zastąpić? Odpowiedz zwięźle.",

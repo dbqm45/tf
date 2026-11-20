@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Koniec kawałka jednym poleceniem: `run_state.py done <katalog> K<n> --message "<typ>(<zakres>): <opis>"` zapisuje
-zaliczony przegląd zakresu bieżącej rundy, robi commit plików z dowodu (z treścią `Kawałek K<n>: …` i stopkami),
-odhacza kawałek i podaje następny. Bez aktualnego dowodu albo ze złym tytułem niczego nie zapisuje.
+"""Ending a slice with one command: `run_state.py done <dir> S<n> --message "<type>(<scope>): <description>"` records
+a passed scope review of the current round, commits the evidence files (with the body `Slice S<n>: …` and footers),
+ticks the slice and gives the next one. Without current evidence or with a bad title it records nothing.
 python3 .claude/tests/test_slice_done.py"""
 import json
 import os
@@ -17,10 +17,10 @@ REPORT = SCRIPT.with_name("run_report.py")
 TASK = ROOT / ".tf" / "factory" / "task_state.py"
 CHANGES = Path("docs") / "project" / "changes"
 OK = f'{sys.executable} -c "print(\'3 passed\')"'
-SPEC = ("# Specyfikacja\n\n## Kryteria\n\n- AC-1: Zakładając postój 12 godzin, gdy kierowca płaci kartą, wtedy opłata "
-        "wynosi 45 zł.\n\n## Bez zmian\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Poza zakresem\n\n- Abonamenty.\n")
-PLAN = ("# Plan\n\n- [ ] K1 — płatność kartą · kryteria: AC-1 · pliki: pay.py\n"
-        "- [ ] K2 — paragon · kryteria: AC-1 · pliki: pay.py\n")
+SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci kartą, then opłata "
+        "wynosi 45 zł.\n\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
+PLAN = ("# Plan\n\n- [ ] S1 — płatność kartą · criteria: AC-1 · files: pay.py\n"
+        "- [ ] S2 — paragon · criteria: AC-1 · files: pay.py\n")
 
 
 def env(project: Path) -> dict:
@@ -40,7 +40,7 @@ def git(project: Path, *args: str) -> subprocess.CompletedProcess:
 
 
 def prepare(p: Path, with_git: bool = True) -> str:
-    """Przebieg IMP-1 z zatwierdzonym planem (K1, K2), testem i kodem K1; zwraca katalog przebiegu."""
+    """Run IMP-1 with an approved plan (S1, S2), a test and S1's code; returns the run directory."""
     p.mkdir(parents=True)
     if with_git:
         git(p, "init", "-q", "-b", "main")
@@ -53,10 +53,10 @@ def prepare(p: Path, with_git: bool = True) -> str:
     doc = p / CHANGES / "IMP-1"
     (doc / "spec.md").write_text(SPEC, encoding="utf-8")
     (doc / "plan.md").write_text(PLAN, encoding="utf-8")
-    call(p, SCRIPT, "flag", d, "none", "--reason", "bez flagi, bo zmiana jest za zgodą człowieka w planie")
+    call(p, SCRIPT, "flag", d, "none", "--reason", "no flag, because the change is approved by a human in the plan")
     call(p, SCRIPT, "stage", d, "plan")
     call(p, SCRIPT, "approve", d)
-    call(p, SCRIPT, "step", d, "K1", "R1", "test", "run")
+    call(p, SCRIPT, "step", d, "S1", "R1", "test", "run")
     (p / "pay.py").write_text("FEE = 45\n", encoding="utf-8")
     (p / "test_pay.py").write_text("def test_ac1_card_fee():  # AC-1\n    assert True\n", encoding="utf-8")
     return d
@@ -87,89 +87,89 @@ def main() -> int:
         base = Path(t)
         p = base / "main"
         d = prepare(p)
-        (p / "notes.txt").write_text("szkic poza kawałkiem\n", encoding="utf-8")
+        (p / "notes.txt").write_text("a draft outside the slice\n", encoding="utf-8")
 
-        # bez dowodu: odmowa, nic nie zapisane
-        r = call(p, SCRIPT, "done", d, "K1", "--message", "feat(pay): card payment")
+        # without evidence: refusal, nothing recorded
+        r = call(p, SCRIPT, "done", d, "S1", "--message", "feat(pay): card payment")
         cur = meta(d).get("current") or {}
         check(r.returncode != 0 and "verify" in r.stdout + r.stderr and len(commits(p)) == 1
-              and "- [x] K1" not in plan_text(p) and (cur.get("rounds") or [{}])[-1].get("scope") != "pass",
-              f"DN-1: bez dowodu done odmawia i niczego nie zapisuje: {r.returncode} {r.stdout}{r.stderr} {cur}")
+              and "- [x] S1" not in plan_text(p) and (cur.get("rounds") or [{}])[-1].get("scope") != "pass",
+              f"DN-1: without evidence done refuses and records nothing: {r.returncode} {r.stdout}{r.stderr} {cur}")
 
-        call(p, SCRIPT, "verify", d, "K1", "--files", "pay.py,test_pay.py", "--command", OK)
-        # zły tytuł: odmowa przed zapisem
-        r = call(p, SCRIPT, "done", d, "K1", "--message", "dodałem płatność")
+        call(p, SCRIPT, "verify", d, "S1", "--files", "pay.py,test_pay.py", "--command", OK)
+        # a bad title: refusal before recording
+        r = call(p, SCRIPT, "done", d, "S1", "--message", "added payment")
         check(r.returncode != 0 and "Conventional" in r.stdout + r.stderr and len(commits(p)) == 1
-              and "- [x] K1" not in plan_text(p),
-              f"DN-2: tytuł spoza Conventional Commits → odmowa przed commitem: {r.returncode} {r.stdout}{r.stderr}")
+              and "- [x] S1" not in plan_text(p),
+              f"DN-2: a title outside Conventional Commits → refusal before the commit: {r.returncode} {r.stdout}{r.stderr}")
 
-        r = call(p, SCRIPT, "done", d, "K1", "--message", "feat(pay): card payment")
+        r = call(p, SCRIPT, "done", d, "S1", "--message", "feat(pay): card payment")
         log = commits(p)
         files = set(git(p, "show", "--name-only", "--format=", "HEAD").stdout.split())
         check(r.returncode == 0 and len(log) == 2 and log[0].startswith("feat(pay): card payment")
-              and "Slice K1: płatność kartą" in log[0],
-              f"DN-3: commit z tytułem i treścią „Slice K1: <wartość z planu>”: {r.returncode} {r.stdout}{r.stderr} {log[:1]}")
+              and "Slice S1: płatność kartą" in log[0],
+              f"DN-3: a commit with the title and the body “Slice S1: <value from the plan>”: {r.returncode} {r.stdout}{r.stderr} {log[:1]}")
         check(files == {"pay.py", "test_pay.py"} and "notes.txt" in git(p, "status", "--porcelain").stdout,
-              f"DN-4: commit obejmuje tylko pliki z dowodu, reszta zostaje niezatwierdzona: {files}")
+              f"DN-4: the commit covers only the evidence files, the rest stays uncommitted: {files}")
         cur = meta(d).get("current") or {}
-        check(cur.get("k") == "K1" and (cur.get("rounds") or [{}])[-1].get("scope") == "pass",
-              f"DN-5: zapisany zaliczony przegląd zakresu bieżącej rundy: {cur}")
-        check("- [x] K1" in plan_text(p) and "- [ ] K2" in plan_text(p) and "Next: K2" in r.stdout,
-              f"DN-6: kawałek odhaczony, wyjście podaje następny: {r.stdout} {plan_text(p)}")
+        check(cur.get("k") == "S1" and (cur.get("rounds") or [{}])[-1].get("scope") == "pass",
+              f"DN-5: a passed scope review of the current round recorded: {cur}")
+        check("- [x] S1" in plan_text(p) and "- [ ] S2" in plan_text(p) and "Next: S2" in r.stdout,
+              f"DN-6: the slice ticked, the output gives the next one: {r.stdout} {plan_text(p)}")
 
-        # ponowienie: nic nowego do zatwierdzenia, bez nowego commita, kod 0
-        r = call(p, SCRIPT, "done", d, "K1", "--message", "feat(pay): card payment")
+        # repeat: nothing new to commit, no new commit, code 0
+        r = call(p, SCRIPT, "done", d, "S1", "--message", "feat(pay): card payment")
         check(r.returncode == 0 and len(commits(p)) == 2,
-              f"DN-7: ponowne done bez zmian plików nie tworzy commita: {r.returncode} {r.stdout}{r.stderr} {len(commits(p))}")
+              f"DN-7: a repeated done without file changes does not create a commit: {r.returncode} {r.stdout}{r.stderr} {len(commits(p))}")
 
-        # druga runda: przegląd R1 nie przeszedł, done zapisuje R2; treść z „Kawałek” nie jest dublowana; flaga → stopka
+        # second round: the R1 review did not pass, done records R2; a body with “Slice” is not duplicated; a flag → a footer
         call(p, TASK, "flag", "IMP-1", "set", "imp_1_paragon", "--remove-by", "2027-01-31")
-        call(p, SCRIPT, "step", d, "K2", "R1", "test", "run")
+        call(p, SCRIPT, "step", d, "S2", "R1", "test", "run")
         (p / "pay.py").write_text("FEE = 45\nRECEIPT = True\n", encoding="utf-8")
-        call(p, SCRIPT, "verify", d, "K2", "--files", "pay.py,test_pay.py", "--command", OK)
-        call(p, SCRIPT, "finding", d, "K2", "paragon drukuje się dwa razy [ważne]", "--round", "1")
-        call(p, SCRIPT, "step", d, "K2", "R1", "scope", "fail")
-        call(p, SCRIPT, "step", d, "K2", "R2", "code", "run")
+        call(p, SCRIPT, "verify", d, "S2", "--files", "pay.py,test_pay.py", "--command", OK)
+        call(p, SCRIPT, "finding", d, "S2", "paragon drukuje się dwa razy [ważne]", "--round", "1")
+        call(p, SCRIPT, "step", d, "S2", "R1", "scope", "fail")
+        call(p, SCRIPT, "step", d, "S2", "R2", "code", "run")
         (p / "pay.py").write_text("FEE = 45\nRECEIPT = 1\n", encoding="utf-8")
-        call(p, SCRIPT, "verify", d, "K2", "--files", "pay.py,test_pay.py", "--command", OK)
-        r = call(p, SCRIPT, "done", d, "K2", "--message", "feat(pay): print receipt\n\nKawałek K2: paragon")
+        call(p, SCRIPT, "verify", d, "S2", "--files", "pay.py,test_pay.py", "--command", OK)
+        r = call(p, SCRIPT, "done", d, "S2", "--message", "feat(pay): print receipt\n\nSlice S2: paragon")
         log = commits(p)
         rounds = (meta(d).get("current") or {}).get("rounds") or []
         check(r.returncode == 0 and len(rounds) == 2 and rounds[0].get("scope") == "fail"
               and rounds[1].get("scope") == "pass",
-              f"DN-8: done zapisuje przegląd bieżącej rundy (R2), R1 zostaje fail: {r.returncode} {r.stdout}{r.stderr} {rounds}")
-        check(log[0].count("Kawałek K2") == 1 and "Flag: imp_1_paragon" in log[0],
-              f"DN-9: treść „Kawałek” nie jest dublowana, flaga zadania dodaje stopkę: {log[:1]}")
-        check("- [x] K2" in plan_text(p) and "finishing" in r.stdout,
-              f"DN-10: ostatni kawałek odhaczony, wyjście mówi o zakończeniu: {r.stdout}")
+              f"DN-8: done records the review of the current round (R2), R1 stays fail: {r.returncode} {r.stdout}{r.stderr} {rounds}")
+        check(log[0].count("Slice S2") == 1 and "Flag: imp_1_paragon" in log[0],
+              f"DN-9: the “Slice” footer is not duplicated, the task's flag adds a footer: {log[:1]}")
+        check("- [x] S2" in plan_text(p) and "finishing" in r.stdout,
+              f"DN-10: the last slice ticked, the output speaks of finishing: {r.stdout}")
 
-        # plik zmieniony po dowodzie: odmowa
+        # a file changed after the evidence: refusal
         p = base / "stale"
         d = prepare(p)
-        call(p, SCRIPT, "verify", d, "K1", "--files", "pay.py,test_pay.py", "--command", OK)
+        call(p, SCRIPT, "verify", d, "S1", "--files", "pay.py,test_pay.py", "--command", OK)
         (p / "pay.py").write_text("FEE = 46\n", encoding="utf-8")
-        r = call(p, SCRIPT, "done", d, "K1", "--message", "feat(pay): card payment")
-        check(r.returncode != 0 and len(commits(p)) == 1 and "- [x] K1" not in plan_text(p),
-              f"DN-11: plik zmieniony po dowodzie → odmowa bez commita: {r.returncode} {r.stdout}{r.stderr}")
+        r = call(p, SCRIPT, "done", d, "S1", "--message", "feat(pay): card payment")
+        check(r.returncode != 0 and len(commits(p)) == 1 and "- [x] S1" not in plan_text(p),
+              f"DN-11: a file changed after the evidence → refusal without a commit: {r.returncode} {r.stdout}{r.stderr}")
 
-        # odmowa commita (hook commit-msg): kawałek nieodhaczony, wyjście gita w odpowiedzi
+        # commit refusal (the commit-msg hook): the slice unticked, git's output in the response
         p = base / "hook"
         d = prepare(p)
         hook = p / ".git" / "hooks" / "commit-msg"
         hook.write_text("#!/bin/sh\necho 'brak stopki Change' >&2\nexit 1\n", encoding="utf-8")
         hook.chmod(0o755)
-        call(p, SCRIPT, "verify", d, "K1", "--files", "pay.py,test_pay.py", "--command", OK)
-        r = call(p, SCRIPT, "done", d, "K1", "--message", "feat(pay): card payment")
-        check(r.returncode != 0 and "brak stopki Change" in r.stdout + r.stderr and "- [x] K1" not in plan_text(p),
-              f"DN-12: commit odrzucony przez hook → kod ≠ 0, kawałek nieodhaczony: {r.returncode} {r.stdout}{r.stderr}")
+        call(p, SCRIPT, "verify", d, "S1", "--files", "pay.py,test_pay.py", "--command", OK)
+        r = call(p, SCRIPT, "done", d, "S1", "--message", "feat(pay): card payment")
+        check(r.returncode != 0 and "brak stopki Change" in r.stdout + r.stderr and "- [x] S1" not in plan_text(p),
+              f"DN-12: a commit rejected by the hook → code ≠ 0, the slice unticked: {r.returncode} {r.stdout}{r.stderr}")
 
-    # treść skilla prowadzi przez done
+    # the skill content leads through done
     skill = (ROOT / ".claude" / "skills" / "tf" / "SKILL.md").read_text(encoding="utf-8")
-    check("run_state.py done" in skill, "DN-13: SKILL.md kieruje koniec kawałka do `run_state.py done`")
+    check("run_state.py done" in skill, "DN-13: SKILL.md directs the end of a slice to `run_state.py done`")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów końca kawałka")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} slice completion tests")
     return 1 if fails else 0
 
 

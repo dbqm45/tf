@@ -33,6 +33,43 @@
       }
     },
     {
+      "id": "koszt-i-termin-od-pomyslu-en",
+      "expect": "trigger",
+      "prompt": "The board wants to know how much the new room booking system will cost and when it will be ready, before we start anything. We only have an idea. How do we prepare a project plan with cost and timeline? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "przedział",
+            "widełk",
+            "zakres\\w* (kosztu|terminu|wartości)",
+            "P50",
+            "P80",
+            "pesymist",
+            "ranges?",
+            "confidence interval",
+            "pessimistic"
+          ],
+          [
+            "stożek niepewności",
+            "cone of uncertainty",
+            "klas\\w* referencyjn",
+            "reference class",
+            "widok z zewnątrz",
+            "outside view",
+            "podobnych projekt",
+            "dan\\w* historyczn",
+            "similar projects?",
+            "historical data",
+            "past projects?"
+          ],
+          [
+            "rejestr ryzyk",
+            "ryzyk"
+          ]
+        ]
+      }
+    },
+    {
       "id": "plan-dla-sponsora",
       "expect": "trigger",
       "prompt": "Zostałem kierownikiem projektu migracji sklepu na nową platformę: 4 osoby, pół roku, stały budżet. Co powinien zawierać plan projektu, żeby sponsor mógł go zatwierdzić? Odpowiedz zwięźle.",

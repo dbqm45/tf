@@ -1,130 +1,130 @@
-# Archetyp Quantity / Money — mapper (ilości, jednostki, kwoty, waluty)
+# The Quantity / Money archetype — mapper (quantities, units, amounts, currencies)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania, w których pojawiają się **liczby z jednostką lub walutą** — 3 kg, 8,5 h, 120 PLN, 2 szt. — na obiekty
-wartości niosące liczbę razem z jej znaczeniem. Gdy jednostka lub waluta żyje w osobnym polu (albo tylko w głowie programisty),
-pojawiają się błędy: kilogramy dodane do litrów, złotówki do euro, zaokrąglenia na liczbach zmiennoprzecinkowych, formatowanie
-powielone w wielu miejscach. Efekt: niepoprawna arytmetyka **się nie kompiluje albo rzuca błąd**, a zaokrąglanie i przeliczenia
-są jawnymi politykami. Protokół wspólny (pytania, „To zależy”, kontrola R/A/X, zapis): `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements in which **numbers with a unit or a currency** appear — 3 kg, 8.5 h, 120 PLN, 2 pcs — into value
+objects carrying the number together with its meaning. When the unit or the currency lives in a separate field (or only in the developer's head),
+errors appear: kilograms added to litres, zlotys to euros, rounding on floating-point numbers, formatting
+duplicated in many places. The effect: incorrect arithmetic **does not compile or throws an error**, and rounding and conversions
+are explicit policies. The common protocol (questions, "It depends", the R/A/X check, recording): `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy ta liczba ma sens bez jednostki lub waluty?* Nie → Quantity/Money. Tak (licznik, numer, procent
-bez odniesienia, wynik oceny) → zwykła liczba.
+## Fit test
+**The core question:** *does this number make sense without a unit or a currency?* No → Quantity/Money. Yes (a counter, a number, a percentage
+without a reference, a rating) → an ordinary number.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| kwoty, ceny, salda, raty, podział kosztów | ✅ Money |
-| kg, l, m², h, szt. — zwłaszcza różne w różnych pozycjach | ✅ Quantity |
-| kilka walut, kursy, przewalutowanie | ✅ Money + polityka kursów |
-| „zaokrąglamy do grosza / do 5 gr / w dół” | ✅ polityka zaokrąglania |
-| „podziel 100 zł na 3 raty” | ✅ podział bez gubienia groszy |
-| numer zamówienia, liczba odsłon, ocena 1–5 | ❌ zwykła liczba / identyfikator |
-| „skąd to saldo?”, historia zmian wartości | ❌ → Accounting (używa Money) |
-| „ile kosztuje dla tego klienta?” | ❌ → Pricing (zwraca Money) |
-| procent, stawka VAT | ⚠️ graniczny |
+| amounts, prices, balances, instalments, cost splitting | ✅ Money |
+| kg, l, m², h, pcs — especially different in different items | ✅ Quantity |
+| several currencies, exchange rates, currency conversion | ✅ Money + an exchange rate policy |
+| "we round to the grosz / to 5 groszy / down" | ✅ a rounding policy |
+| "split 100 PLN into 3 instalments" | ✅ splitting without losing groszy |
+| an order number, a number of views, a rating 1–5 | ❌ an ordinary number / identifier |
+| "where does this balance come from?", the history of value changes | ❌ → Accounting (uses Money) |
+| "how much does it cost for this customer?" | ❌ → Pricing (returns Money) |
+| percentage, VAT rate | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Procent / stawka* — czy jest współczynnikiem mnożonym przez Quantity/Money? → osobny obiekt wartości `Stawka` (bez jednostki,
-  z własną precyzją), nie Money. Samodzielny wskaźnik raportowy → zwykła liczba.
-- *Czas* — czy to **ilość** czasu (8,5 h do rozliczenia)? → Quantity. Chwila lub przedział w kalendarzu → typy daty/czasu (Availability).
-- *Punkty lojalnościowe* — Quantity z jednostką `pkt`; ich historia i salda → Accounting.
+**Borderline cases:**
+- *A percentage / rate* — is it a coefficient multiplied by Quantity/Money? → a separate value object `Rate` (no unit,
+  with its own precision), not Money. A standalone reporting indicator → an ordinary number.
+- *Time* — is it an **amount** of time (8.5 h to bill)? → Quantity. A moment or an interval in a calendar → date/time types (Availability).
+- *Loyalty points* — Quantity with the unit `pts`; their history and balances → Accounting.
 
-## Model (istota)
-- **Unit** — obiekt wartości: symbol i nazwa (szt., kg, l, m, m², m³, h, min), **wymiar** (masa, objętość, długość, czas,
-  sztuki). Zbiór jednostek jest otwarty — można dodać własne (paleta, karton).
-- **Quantity** — wartość dziesiętna + jednostka. Dodawanie i odejmowanie **tylko dla tej samej jednostki** (inaczej błąd);
-  mnożenie/dzielenie przez skalar; porównania tylko w tej samej jednostce.
-- **Przelicznik** — osobna, jawna polityka (tabela konwersji), nie ukryta magia. Stałe w obrębie wymiaru (1 kg = 1000 g) vs
-  zależne od produktu (1 karton = 12 szt., 1 l mleka ≈ 1,03 kg) — te drugie należą do Product, nie do Unit.
-- **Money** — wyspecjalizowana ilość: kwota + **waluta** (kod ISO 4217 i liczba miejsc najmniejszej jednostki: PLN 2, JPY 0,
-  KWD 3). Operacje: dodaj, odejmij, zaneguj, wartość bezwzględna, porównania, min/max, pomnóż przez skalar, **dzielenie z resztą**
-  i **podział proporcjonalny** bez gubienia groszy, sprawdzenie zera i znaku.
-- **Kurs waluty** — para walut, wartość, **data/chwila obowiązywania**, źródło i rodzaj (kupno/sprzedaż/średni, np. tabela NBP).
-  Przewalutowanie = operacja `Money × Kurs → Money`, zawsze z zapisanym kursem.
-- **Polityka zaokrąglania** — tryb (HALF_UP, HALF_EVEN, w dół, do 5 gr), precyzja i **moment** (per pozycja vs per dokument),
-  w jednym miejscu, jawnie.
-- Arytmetyka zawsze na typach dokładnych (decimal / liczba całkowita w najmniejszej jednostce); nigdy float.
-- **Gdzie się pojawia:** preferowana jednostka produktu i ilość w partii (Product), cennik zwraca Money (Pricing), salda kont
-  (Accounting), usługa zużywa godziny.
+## Model (the essence)
+- **Unit** — a value object: a symbol and a name (pcs, kg, l, m, m², m³, h, min), **a dimension** (mass, volume, length, time,
+  items). The set of units is open — you can add your own (a pallet, a carton).
+- **Quantity** — a decimal value + a unit. Addition and subtraction **only for the same unit** (otherwise an error);
+  multiplication/division by a scalar; comparisons only in the same unit.
+- **Conversion factor** — a separate, explicit policy (a conversion table), not hidden magic. Constant within a dimension (1 kg = 1000 g) vs
+  dependent on the product (1 carton = 12 pcs, 1 l of milk ≈ 1.03 kg) — the latter belong to Product, not to Unit.
+- **Money** — a specialized quantity: an amount + **a currency** (an ISO 4217 code and the number of places of the smallest unit: PLN 2, JPY 0,
+  KWD 3). Operations: add, subtract, negate, absolute value, comparisons, min/max, multiply by a scalar, **division with a remainder**
+  and **proportional allocation** without losing groszy, a zero and sign check.
+- **Exchange rate** — a currency pair, a value, **the date/moment of validity**, a source and a kind (buy/sell/mid, e.g. the NBP table).
+  Currency conversion = the operation `Money × ExchangeRate → Money`, always with the recorded rate.
+- **Rounding policy** — a mode (HALF_UP, HALF_EVEN, down, to 5 groszy), a precision and **a moment** (per item vs per document),
+  in one place, explicitly.
+- Arithmetic always on exact types (decimal / an integer in the smallest unit); never float.
+- **Where it appears:** the product's preferred unit and the quantity in a batch (Product), a price list returns Money (Pricing), account balances
+  (Accounting), a service consumes hours.
 
-## Pytania
-**A — decyzje standardowe:**
-- W jakiej jednostce biznes myśli o tej liczbie? Czy jednostka może się różnić między pozycjami?
-- Czy przeliczamy jednostki/waluty? Kto ustala kurs/przelicznik i na jaką chwilę?
-- Jakie są reguły zaokrąglania i kto je określa (prawo, księgowość, umowa)?
-- Jak dzielimy kwotę na części (raty, podział kosztów), żeby suma się zgadzała?
+## Questions
+**A — standard decisions:**
+- In what unit does the business think about this number? Can the unit differ between items?
+- Do we convert units/currencies? Who sets the exchange rate/conversion factor and for what moment?
+- What are the rounding rules and who defines them (the law, accounting, the agreement)?
+- How do we split an amount into parts (instalments, cost splitting) so that the total matches?
 
-**B — luki** (przykłady): ujemne kwoty dozwolone (korekty, zwroty)? · precyzja pośrednia większa niż końcowa (ceny jednostkowe
-z 4 miejscami)? · kto dostaje „resztę” przy podziale (pierwsza/ostatnia rata, największa część)? · kwoty w wielu walutach naraz
-(portfel, suma raportowa)? · format wyświetlania per język/kraj (poza modelem)? · VAT liczony od pozycji czy od sumy?
+**B — gaps** (examples): negative amounts allowed (corrections, refunds)? · intermediate precision higher than the final one (unit prices
+with 4 places)? · who gets the "remainder" on a split (the first/last instalment, the largest part)? · amounts in many currencies at once
+(a wallet, a reporting total)? · the display format per language/country (outside the model)? · VAT computed per item or on the total?
 
-## Kroki mapowania
-1. **Inwentaryzacja liczb** — każda liczba z wymagań: ma jednostkę/walutę? Jeśli tak → Quantity/Money; jeśli nie → uzasadnij.
-2. **Jednostki** — lista jednostek z wymiarem; jednostka kanoniczna dla przechowywania per wymiar.
-3. **Przeliczniki** — stałe (w wymiarze) vs zależne od produktu (→ Product); kierunek i precyzja.
-4. **Waluty** — lista, miejsca dziesiętne, waluta bazowa/raportowa.
-5. **Kursy** — źródło, rodzaj, chwila obowiązywania (data transakcji / faktury / płatności), zapis kursu przy operacji.
-6. **Zaokrąglanie** — dla każdego miejsca obliczeń: tryb, precyzja, moment; kto ustala.
-7. **Podział kwot** — algorytm (równo z resztą / proporcjonalnie wg wag / metoda największych reszt) i komu przypada reszta.
+## Mapping steps
+1. **An inventory of numbers** — every number from the requirements: does it have a unit/currency? If so → Quantity/Money; if not → justify it.
+2. **Units** — a list of units with a dimension; a canonical unit for storage per dimension.
+3. **Conversion factors** — constant (within a dimension) vs product-dependent (→ Product); direction and precision.
+4. **Currencies** — the list, decimal places, the base/reporting currency.
+5. **Exchange rates** — the source, the kind, the moment of validity (the transaction / invoice / payment date), recording the rate on the operation.
+6. **Rounding** — for each place of computation: mode, precision, moment; who sets it.
+7. **Splitting amounts** — the algorithm (equal with a remainder / proportional by weights / the largest remainder method) and who gets the remainder.
 
-## Decyzje do kontroli (R/A/X)
-jednostka kanoniczna per wymiar · przeliczniki (stałe vs produktowe) · waluty i ich precyzja · źródło, rodzaj i data kursu ·
-tryb, precyzja i moment zaokrąglenia · komu przypada reszta z podziału · dopuszczalność kwot ujemnych · precyzja pośrednia ·
-obsługa wielu walut w jednej sumie.
+## Decisions to check (R/A/X)
+the canonical unit per dimension · conversion factors (constant vs product) · currencies and their precision · the source, kind and date of the exchange rate ·
+the mode, precision and moment of rounding · who gets the remainder of a split · whether negative amounts are allowed · intermediate precision ·
+handling many currencies in one total.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Quantity/Money: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Jednostki          — | Jednostka | Wymiar | Kanoniczna? | Uwagi |
-## Przeliczniki       — | Z | Na | Współczynnik | Stały/produktowy | Precyzja |
-## Waluty i kursy     — | Waluta | Miejsca | Źródło kursu | Rodzaj | Chwila obowiązywania |
-## Zaokrąglanie       — | Miejsce obliczeń | Tryb | Precyzja | Moment | Kto ustala |
-## Podział kwot       — | Operacja | Algorytm | Reszta trafia do |
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), przypadki brzegowe, parametry polityk zmiennych
+# Quantity/Money model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Units              — | Unit | Dimension | Canonical? | Notes |
+## Conversion factors — | From | To | Factor | Constant/product | Precision |
+## Currencies and rates — | Currency | Places | Rate source | Kind | Moment of validity |
+## Rounding           — | Place of computation | Mode | Precision | Moment | Who sets it |
+## Splitting amounts  — | Operation | Algorithm | Remainder goes to |
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), edge cases, variable policy parameters
 ```
 
-## Wzorce i pułapki
-- `double` na pieniądzach: 0,1 + 0,2 ≠ 0,3. Decimal albo liczba całkowita w groszach.
-- Kwota bez waluty w polu obok (`amount`, `currency`) — ktoś w końcu doda PLN do EUR.
-- 100 zł / 3 = 33,33 × 3 = 99,99 — podział musi rozdzielić resztę (33,34 + 33,33 + 33,33).
-- Kurs „bieżący” zamiast kursu z daty zdarzenia — raporty nie dadzą się odtworzyć.
-- Zaokrąglanie rozsiane po kodzie → różne sumy na fakturze i w księdze.
-- Przeliczenie kg ↔ l wymaga gęstości — to wiedza produktu, nie jednostki.
-- **Poza archetypem:** formatowanie i lokalizacja („1 234,56 zł”) — warstwa prezentacji; kto może ustawić kurs ręcznie —
-  autoryzacja.
-- **Polityki zmienne jako parametry:** tryb zaokrąglenia zależny od kraju lub umowy, źródło kursu per kontrahent → operacja
-  dostaje gotową `politykę_zaokrąglania` / `kurs`.
+## Patterns and pitfalls
+- `double` for money: 0.1 + 0.2 ≠ 0.3. Decimal or an integer in groszy.
+- An amount without a currency in the field next to it (`amount`, `currency`) — someone will eventually add PLN to EUR.
+- 100 PLN / 3 = 33.33 × 3 = 99.99 — the split must distribute the remainder (33.34 + 33.33 + 33.33).
+- The "current" exchange rate instead of the rate from the event date — reports cannot be reproduced.
+- Rounding scattered across the code → different totals on the invoice and in the ledger.
+- Converting kg ↔ l requires the density — that is product knowledge, not unit knowledge.
+- **Outside the archetype:** formatting and localization ("1 234,56 zł" in the Polish format) — the presentation layer; who may set an exchange rate manually —
+  authorization.
+- **Variable policies as parameters:** a rounding mode depending on the country or the agreement, the exchange rate source per counterparty → the operation
+  gets a ready `rounding_policy` / `exchange_rate`.
 
-## Kontrola jakości
-- [ ] żadna kwota ani ilość nie jest „gołą” liczbą; brak float
-- [ ] operacje na różnych jednostkach/walutach są zabronione albo przechodzą przez jawny przelicznik/kurs
-- [ ] każdy kurs ma źródło, rodzaj i chwilę obowiązywania
-- [ ] każde miejsce zaokrąglenia ma tryb, precyzję i moment
-- [ ] każdy podział kwoty sumuje się do całości
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] no amount or quantity is a "bare" number; no float
+- [ ] operations on different units/currencies are forbidden or go through an explicit conversion factor/exchange rate
+- [ ] every exchange rate has a source, a kind and a moment of validity
+- [ ] every place of rounding has a mode, a precision and a moment
+- [ ] every split of an amount sums to the whole
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Hurtownia sprzedaje kawę na kg i w paczkach 250 g, klientom z PL i DE (PLN, EUR). Faktura w EUR przeliczana
-na PLN do księgi. Klient może rozłożyć płatność na 3 raty.”
+## Example (shortened)
+**Input:** "A wholesaler sells coffee per kg and in 250 g packs, to customers from PL and DE (PLN, EUR). An invoice in EUR is converted
+to PLN for the ledger. The customer can split the payment into 3 instalments."
 
 ```markdown
-## Jednostki
-| g | masa | tak | przechowywanie w gramach |
-| kg | masa | nie | 1 kg = 1000 g (stały) |
-| paczka | sztuki | nie | 1 paczka = 250 g kawy (produktowy → Product) |
-## Waluty i kursy
-| PLN | 2 | NBP | średni | dzień roboczy przed datą wystawienia faktury |
+## Units
+| g | mass | yes | storage in grams |
+| kg | mass | no | 1 kg = 1000 g (constant) |
+| pack | items | no | 1 pack = 250 g of coffee (product → Product) |
+## Currencies and rates
+| PLN | 2 | NBP | mid | the business day before the invoice issue date |
 | EUR | 2 | — | — | — |
-## Zaokrąglanie
-| cena jednostkowa | HALF_UP | 4 miejsca | per pozycja | księgowość |
-| VAT | HALF_UP | 0,01 | A: „To zależy” (od pozycji vs od sumy) → parametr `moment_zaokrąglenia_VAT` | prawo/księgowość |
-## Podział kwot — | raty | równo z resztą | pierwsza rata (X → zapytano → A) |
-## Decyzje
-| kurs z dnia poprzedzającego fakturę | R |
-| zwroty jako kwoty ujemne | X → hot spot |
-## Niezmapowane pojęcia — cena za kg per klient (→ Pricing), rozrachunek rat (→ Accounting)
+## Rounding
+| unit price | HALF_UP | 4 places | per item | accounting |
+| VAT | HALF_UP | 0.01 | A: "It depends" (per item vs on the total) → parameter `VAT_rounding_moment` | law/accounting |
+## Splitting amounts — | instalments | equal with a remainder | the first instalment (X → asked → A) |
+## Decisions
+| the rate from the day before the invoice | R |
+| refunds as negative amounts | X → hot spot |
+## Unmapped concepts — the price per kg per customer (→ Pricing), settling the instalments (→ Accounting)
 ```

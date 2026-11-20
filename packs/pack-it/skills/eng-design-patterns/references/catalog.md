@@ -1,42 +1,42 @@
-# Katalog 22 wzorców — skrót „kiedy tak / kiedy nie”
+# Catalog of 22 patterns — a "when yes / when no" summary
 
-Pełny opis w pliku wzorca (problem, rozwiązanie, koszty, powiązania, forma idiomatyczna w TS, przykład sprawdzony
-kompilatorem, pułapki).
+The full description is in the pattern's file (the problem, the solution, the costs, the relations, the idiomatic form in TS, an example checked
+by the compiler, the pitfalls).
 
-## Kreacyjne
-| Wzorzec | Jednym zdaniem | Kiedy NIE (skrót) | Plik |
+## Creational
+| Pattern | In one sentence | When NOT (summary) | File |
 |---|---|---|---|
-| Metoda wytwórcza | podklasa wymienia tworzony produkt, logika bazowa zostaje | jeden wariant; wystarczy funkcja fabrykująca | `creational/factory-method.md` |
-| Fabryka abstrakcyjna | spójne rodziny obiektów bez znajomości klas | jedna rodzina „na zapas”; częściej przybywa typów niż rodzin | `creational/abstract-factory.md` |
-| Budowniczy | złożony obiekt krokami, walidacja przy `build()` | kilka opcji — obiekt opcji wystarczy | `creational/builder.md` |
-| Prototyp | obiekt sam się klonuje, także z prywatnym stanem | płaskie DTO — `structuredClone`/spread | `creational/prototype.md` |
-| Singleton | jedna instancja + globalny dostęp | prawie zawsze: moduł ES lub zakres DI zamiast klasy | `creational/singleton.md` |
+| Factory Method | a subclass replaces the created product, the base logic stays | one variant; a factory function is enough | `creational/factory-method.md` |
+| Abstract Factory | consistent families of objects without knowing the classes | one family "just in case"; types are added more often than families | `creational/abstract-factory.md` |
+| Builder | a complex object in steps, validation at `build()` | a few options — an options object is enough | `creational/builder.md` |
+| Prototype | the object clones itself, also with private state | a flat DTO — `structuredClone`/spread | `creational/prototype.md` |
+| Singleton | one instance + global access | almost always: an ES module or a DI scope instead of a class | `creational/singleton.md` |
 
-## Strukturalne
-| Wzorzec | Jednym zdaniem | Kiedy NIE (skrót) | Plik |
+## Structural
+| Pattern | In one sentence | When NOT (summary) | File |
 |---|---|---|---|
-| Adapter | tłumaczy cudze API na nasz port | obie strony są nasze — ujednolić u źródła | `structural/adapter.md` |
-| Most | dwa niezależne wymiary zmienności jako dwie hierarchie | rośnie tylko jeden wymiar | `structural/bridge.md` |
-| Kompozyt | element i grupa pod jednym interfejsem, rekurencyjnie | dane nie są drzewem | `structural/composite.md` |
-| Dekorator | warstwy zachowania składane w runtime, ten sam interfejs | 1–2 stałe dodatki; nie mylić z `@dekoratorem` TS | `structural/decorator.md` |
-| Fasada | prosty interfejs do złożonego podsystemu | podsystem już jest prosty; fasada-bóg | `structural/facade.md` |
-| Pyłek | współdzielenie niezmiennego stanu tysięcy obiektów | brak zmierzonego problemu z pamięcią | `structural/flyweight.md` |
-| Pełnomocnik | kontrola dostępu (leniwość, uprawnienia, cache) za tym samym interfejsem | motywacją jest nowe zachowanie (Dekorator) albo wystarczy `if`/`??=` | `structural/proxy.md` |
+| Adapter | translates a third-party API into our port | both sides are ours — unify at the source | `structural/adapter.md` |
+| Bridge | two independent dimensions of variation as two hierarchies | only one dimension grows | `structural/bridge.md` |
+| Composite | an element and a group under one interface, recursively | the data is not a tree | `structural/composite.md` |
+| Decorator | layers of behaviour composed at runtime, the same interface | 1–2 fixed additions; do not confuse with a TS `@decorator` | `structural/decorator.md` |
+| Facade | a simple interface to a complex subsystem | the subsystem is already simple; a god facade | `structural/facade.md` |
+| Flyweight | sharing the immutable state of thousands of objects | no measured memory problem | `structural/flyweight.md` |
+| Proxy | access control (laziness, permissions, cache) behind the same interface | the motivation is new behaviour (Decorator) or an `if`/`??=` is enough | `structural/proxy.md` |
 
-Dekorator i Pełnomocnik wyglądają w kodzie tak samo — rozstrzyga motywacja.
+Decorator and Proxy look the same in the code — the motivation decides.
 
-## Behawioralne
-| Wzorzec | Jednym zdaniem | Kiedy NIE (skrót) | Plik |
+## Behavioral
+| Pattern | In one sentence | When NOT (summary) | File |
 |---|---|---|---|
-| Łańcuch zobowiązań | obsłuż albo przekaż dalej; można przerwać | stała, krótka sekwencja; framework ma middleware | `behavioral/chain-of-responsibility.md` |
-| Polecenie | akcja jako obiekt: kolejka, log, cofanie | bez cofania/serializacji — closure wystarczy | `behavioral/command.md` |
-| Iterator | przechodzenie bez ujawniania struktury | protokół iteracji i generatory są w języku | `behavioral/iterator.md` |
-| Mediator | komponenty rozmawiają przez pośrednika | 2–3 obiekty z jedną relacją; store frameworka | `behavioral/mediator.md` |
-| Pamiątka | migawka stanu bez łamania hermetyzacji | stan niezmienny — historia to tablica stanów | `behavioral/memento.md` |
-| Obserwator | subskrybenci dowiadują się o zmianie | jeden znany odbiorca — callback | `behavioral/observer.md` |
-| Stan | zachowanie zależne od stanu w obiektach-stanach | stany różnią się danymi — unia + `switch` | `behavioral/state.md` |
-| Strategia | wymienny wariant algorytmu/polityki | to zwykle po prostu funkcja; jeden wariant | `behavioral/strategy.md` |
-| Metoda szablonowa | stały szkielet, nadpisywane kroki | różnice rozproszone lub zmienne w runtime — Strategia | `behavioral/template-method.md` |
-| Odwiedzający | nowe operacje na stabilnej hierarchii typów | typy często przybywają; mało typów i operacji | `behavioral/visitor.md` |
+| Chain of Responsibility | handle it or pass it on; it can be interrupted | a fixed, short sequence; the framework has middleware | `behavioral/chain-of-responsibility.md` |
+| Command | an action as an object: a queue, a log, undo | no undo/serialization — a closure is enough | `behavioral/command.md` |
+| Iterator | traversal without exposing the structure | the iteration protocol and generators are in the language | `behavioral/iterator.md` |
+| Mediator | components talk through an intermediary | 2–3 objects with one relation; the framework's store | `behavioral/mediator.md` |
+| Memento | a snapshot of the state without breaking encapsulation | immutable state — the history is an array of states | `behavioral/memento.md` |
+| Observer | subscribers learn about a change | one known recipient — a callback | `behavioral/observer.md` |
+| State | state-dependent behaviour in state objects | the states differ in data — a union + `switch` | `behavioral/state.md` |
+| Strategy | an interchangeable variant of an algorithm/policy | it is usually just a function; one variant | `behavioral/strategy.md` |
+| Template Method | a fixed skeleton, overridden steps | differences scattered or variable at runtime — Strategy | `behavioral/template-method.md` |
+| Visitor | new operations on a stable type hierarchy | types are added often; few types and operations | `behavioral/visitor.md` |
 
-Polecenie, Iterator i Strategia najczęściej mają w TS lżejszą formę niż klasowa — `critique-and-pitfalls.md`, pkt 1.
+Command, Iterator and Strategy most often have a lighter form in TS than the class one — `critique-and-pitfalls.md`, point 1.

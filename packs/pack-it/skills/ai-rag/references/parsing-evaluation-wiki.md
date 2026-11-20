@@ -1,57 +1,57 @@
-# Parsowanie, ewaluacja w koszykach i wiedza kanoniczna
+# Parsing, evaluation in buckets and canonical knowledge
 
-Spis treści: 1. Kontrola parsowania przed indeksacją · 2. Ewaluacja w dwóch koszykach i próg podobieństwa ·
-3. Wiki kanoniczne czy RAG · 4. Świeżość generowanych artefaktów wiedzy
+Contents: 1. Checking parsing before indexing · 2. Evaluation in two buckets and the similarity threshold ·
+3. A canonical wiki or RAG · 4. The freshness of generated knowledge artifacts
 
-## 1. Kontrola parsowania przed indeksacją
-Błędny tekst z parsera psuje każdy dalszy krok, a stroić retriever na złym tekście to strata czasu. Kolejność:
-1. **Alarmy na stronę:** strona bez warstwy tekstu albo z podejrzanie małą liczbą znaków w stosunku do sąsiednich
-   to alarm (skan bez OCR, tekst jako obraz), nie pusty dokument. Liczysz to automatycznie dla całego korpusu.
-2. **Przegląd surowego wyjścia na najgorszych dokumentach:** skan, tabela przez dwie strony, układ w dwóch kolumnach,
-   przypisy, nagłówki powtarzane na stronach. Czytasz wynik parsera, zanim ktokolwiek zmieni model embeddingów.
-3. **Miary w zestawie ewaluacyjnym:** struktura tabel (np. TEDS — podobieństwo drzewa tabeli do wzorca) i kolejność
-   czytania (czy akapity z dwóch kolumn nie są przeplecione) na kilkunastu ręcznie opisanych stronach.
-4. **Parser świadomy układu** (open source albo usługa) wybierasz po kryteriach: tabele i scalone komórki, kolejność
-   czytania, OCR i języki (polskie znaki), wzory i przypisy, koszt na stronę, przetwarzanie lokalne czy u dostawcy
-   (dane wrażliwe), stabilność wyniku między wersjami. Rozstrzyga test na Twoich najgorszych dokumentach, nie ranking.
+## 1. Checking parsing before indexing
+Wrong text from the parser spoils every further step, and tuning the retriever on bad text is a waste of time. The order:
+1. **Per-page alarms:** a page without a text layer or with a suspiciously small number of characters compared with the neighbouring ones
+   is an alarm (a scan without OCR, text as an image), not an empty document. You compute this automatically for the whole corpus.
+2. **A review of the raw output on the worst documents:** a scan, a table across two pages, a two-column layout,
+   footnotes, headers repeated on pages. You read the parser result before anyone changes the embedding model.
+3. **Measures in the evaluation set:** table structure (e.g. TEDS — the similarity of the table tree to the reference) and the reading
+   order (whether paragraphs from two columns are not interleaved) on a dozen or so manually annotated pages.
+4. **A layout-aware parser** (open source or a service) you choose by criteria: tables and merged cells, reading
+   order, OCR and languages (Polish characters), formulas and footnotes, cost per page, local processing or at the provider
+   (sensitive data), stability of the result between versions. A test on your worst documents decides, not a ranking.
 
-## 2. Ewaluacja w dwóch koszykach i próg podobieństwa
-- Każde pytanie w zbiorze ma **typ zapytania**: *semantyczne* (parafrazy, intencje) albo *dokładne*
-  (identyfikatory, kody, numery umów, wersje, liczby, negacje). Recall@k liczysz osobno dla każdego koszyka.
-  Średnia 0,82 potrafi ukryć 0,95 dla parafraz i 0,4 dla numerów. Koszyk dokładny ratuje BM25 i hybryda (SKILL.md krok 5).
-- **Pytania łączące dwa fakty** (z dwóch dokumentów albo fragmentów) to trzecia kategoria: pojedynczy wektor
-  zapytania ma teoretyczną granicę tego, ile różnych kombinacji dokumentów umie wskazać (Weller i in., „On the
-  Theoretical Limitations of Embedding-Based Retrieval”, 2025 [niezweryfikowane]). Pomaga dekompozycja pytania albo
-  kilka zapytań.
-- **Próg podobieństwa ustawiasz z rozkładu, nie „na oko”.** Najpierw histogram cosinusa dla kilkuset losowych,
-  niepowiązanych par z własnego korpusu: przestrzeń embeddingów bywa anizotropowa i losowe pary leżą przy 0,8–0,9.
-  Próg poniżej tego rozkładu niczego nie odcina. Lepiej odcinać po reranku albo stałym top-k i mierzyć „nie wiem”.
+## 2. Evaluation in two buckets and the similarity threshold
+- Every question in the set has a **query type**: *semantic* (paraphrases, intents) or *exact*
+  (identifiers, codes, contract numbers, versions, numbers, negations). You compute recall@k separately for each bucket.
+  An average of 0.82 can hide 0.95 for paraphrases and 0.4 for numbers. The exact bucket is rescued by BM25 and the hybrid (SKILL.md step 5).
+- **Questions combining two facts** (from two documents or fragments) are a third category: a single query
+  vector has a theoretical limit on how many different combinations of documents it can point to (Weller et al., "On the
+  Theoretical Limitations of Embedding-Based Retrieval", 2025 [unverified]). Decomposing the question or
+  several queries helps.
+- **You set the similarity threshold from the distribution, not "by eye".** First a cosine histogram for a few hundred random,
+  unrelated pairs from your own corpus: the embedding space is sometimes anisotropic and random pairs lie at 0.8–0.9.
+  A threshold below that distribution cuts nothing off. It is better to cut off after the rerank or at a fixed top-k and measure "I don't know".
 
-## 3. Wiki kanoniczne czy RAG
-| Treść | Gdzie | Dlaczego |
+## 3. A canonical wiki or RAG
+| Content | Where | Why |
 |---|---|---|
-| definicje, które muszą być dokładne i mają właściciela (metryki, schematy tabel, reguły biznesowe) | kuratorowane pliki (Markdown z frontmatterem: `type`, właściciel, data weryfikacji, linki do powiązanych) czytane deterministycznie od indeksu | jedna definicja, wersjonowana, z przeglądem; RAG zwróci trzy sprzeczne wersje z różnych stron |
-| archiwa, treści masowe, dokumenty bez właściciela | RAG | za dużo, by kuratorować |
-| dane z systemów (stan zamówienia, liczby) | narzędzie z zapytaniem | wektory nie liczą |
+| definitions that must be exact and have an owner (metrics, table schemas, business rules) | curated files (Markdown with frontmatter: `type`, owner, verification date, links to related ones) read deterministically, starting from the index | one definition, versioned, with a review; RAG will return three contradictory versions from different pages |
+| archives, mass content, documents without an owner | RAG | too much to curate |
+| data from systems (order status, numbers) | a tool with a query | vectors do not compute |
 
-Router wybiera ścieżkę przed wyszukiwaniem: pytanie o definicję → plik kanoniczny, reszta → RAG. Przykładowy format
-otwarty: Open Knowledge Format (github.com/GoogleCloudPlatform/knowledge-catalog, plik SPEC w katalogu okf, wersja 0.2,
-odczyt 2026-10-29): wymagane tylko pole `type`; plik indeksu jako spis do stopniowego odsłaniania; zwykłe linki Markdown.
+The router chooses the path before the search: a question about a definition → the canonical file, the rest → RAG. An example open
+format: Open Knowledge Format (github.com/GoogleCloudPlatform/knowledge-catalog, the SPEC file in the okf directory, version 0.2,
+read 2026-10-29): only the `type` field is required; an index file as a table of contents for progressive disclosure; plain Markdown links.
 
-Jeśli wiki utrzymuje agent, trzy strefy z różnymi prawami zapisu:
-- źródła — tylko do odczytu;
-- strony utrzymywane przez agenta, z polem `sources` i aktualizacją zamiast przepisywania;
-- notatki i decyzje zespołu — zmieniane tylko za zgodą człowieka.
+If an agent maintains the wiki, three zones with different write rights:
+- sources — read only;
+- pages maintained by the agent, with a `sources` field and updating instead of rewriting;
+- the team's notes and decisions — changed only with a human's approval.
 
-Wczytanie nowych źródeł najpierw pokazuje plan (nowe i zmienione strony), a dopiero potem zapisuje. Pole
-„zweryfikowane” wpisuje człowiek, agent tylko „wygenerowane”.
+Loading new sources first shows a plan (new and changed pages), and only then writes. The
+"verified" field is filled in by a human, the agent only "generated".
 
-## 4. Świeżość generowanych artefaktów wiedzy
-Generowany indeks, graf kodu albo mapa dryfuje po cichu: hook zgłasza sukces, a mapa jest sprzed tygodni. Każdy taki
-artefakt ma znacznik czasu i commit źródła; kontrola w CI porównuje go z `git log -1` i alarmuje po progu (np. 24 h).
-Pola `stale_after` i `verified` (OKF) albo własne odpowiedniki niosą tę informację do agenta, który czyta artefakt.
+## 4. The freshness of generated knowledge artifacts
+A generated index, code graph or map drifts silently: the hook reports success, and the map is weeks old. Every such
+artifact has a timestamp and the source commit; a check in CI compares it with `git log -1` and alarms after a threshold (e.g. 24 h).
+The `stale_after` and `verified` fields (OKF) or your own equivalents carry this information to the agent that reads the artifact.
 
-Źródła: P. Perrone, „Why Your RAG Pipeline Dies on Real Documents” (2026-10-01, artykuł sponsorowany — bez
-rekomendacji dostawcy); J. Wąsowski, „The Limits of Vector Search in RAG” (2026-09-14, liczby [niezweryfikowane]);
-Dev Evolution, „Beyond RAG: … Open Knowledge Format” (2026-09-09); R. Brasil Monteiro, „Building a Complete Personal
-Harness: LLM Wiki…” (2026-05-03); U. Estari, „Production-Grade OKF + Graphify Setup” (2026-08-13).
+Sources: P. Perrone, "Why Your RAG Pipeline Dies on Real Documents" (2026-10-01, a sponsored article — without
+a provider recommendation); J. Wąsowski, "The Limits of Vector Search in RAG" (2026-09-14, numbers [unverified]);
+Dev Evolution, "Beyond RAG: … Open Knowledge Format" (2026-09-09); R. Brasil Monteiro, "Building a Complete Personal
+Harness: LLM Wiki…" (2026-05-03); U. Estari, "Production-Grade OKF + Graphify Setup" (2026-08-13).

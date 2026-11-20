@@ -1,12 +1,12 @@
-# Przykłady pytest 9
+# pytest 9 examples
 
-> **Spis treści:** 1. Tabela przypadków · 2. Test właściwości · 3. `tmp_path` i `monkeypatch` · 4. Fixture-fabryka i fake repozytorium · 5. Test asyncio z limitem czasu · 6. Subtesty
+> **Contents:** 1. Case table · 2. Property-based test · 3. `tmp_path` and `monkeypatch` · 4. Factory fixture and a fake repository · 5. An asyncio test with a time limit · 6. Subtests
 
-Uruchomione 2026-10-03: pytest 9.1.1, pytest-asyncio 1.4.0, hypothesis 6.168.3, CPython 3.14.8, z konfiguracją
-z SKILL.md (`strict = true`, `--import-mode=importlib`, `asyncio_mode = "auto"`) i kodem w `src/shop/`.
+Run on 2026-10-03: pytest 9.1.1, pytest-asyncio 1.4.0, hypothesis 6.168.3, CPython 3.14.8, with the configuration
+from SKILL.md (`strict = true`, `--import-mode=importlib`, `asyncio_mode = "auto"`) and the code in `src/shop/`.
 
-## 1. Tabela przypadków
-Kod: `discount(amount: Decimal) -> Decimal` — 5% od 200 zł, 10% od 1000 zł.
+## 1. Case table
+The code: `discount(amount: Decimal) -> Decimal` — 5% from 200 PLN, 10% from 1000 PLN.
 ```python
 # tests/test_discount.py
 from decimal import Decimal
@@ -19,18 +19,18 @@ from shop.discount import discount
 @pytest.mark.parametrize(
     ("amount", "expected"),
     [
-        pytest.param("199.99", "0.00", id="tuż-pod-progiem-200"),
-        pytest.param("200.00", "10.00", id="próg-200"),
-        pytest.param("999.99", "50.00", id="tuż-pod-progiem-1000"),
-        pytest.param("1000.00", "100.00", id="próg-1000"),
+        pytest.param("199.99", "0.00", id="just-below-threshold-200"),
+        pytest.param("200.00", "10.00", id="threshold-200"),
+        pytest.param("999.99", "50.00", id="just-below-threshold-1000"),
+        pytest.param("1000.00", "100.00", id="threshold-1000"),
     ],
 )
 def test_discount_thresholds(amount: str, expected: str) -> None:
     assert discount(Decimal(amount)) == Decimal(expected)
 ```
-Wartości brzegowe po obu stronach progu (qa-test-design). `id` widać w raporcie i w `-k "próg-200"`.
+Boundary values on both sides of the threshold (qa-test-design). The `id` is visible in the report and in `-k "threshold-200"`.
 
-## 2. Test właściwości
+## 2. Property-based test
 ```python
 # tests/test_discount_properties.py
 from decimal import Decimal
@@ -48,9 +48,9 @@ amounts = st.decimals(min_value=0, max_value=1_000_000, places=2)
 def test_discount_never_exceeds_ten_percent(amount: Decimal) -> None:
     assert Decimal(0) <= discount(amount) <= amount * Decimal("0.10") + Decimal("0.005")
 ```
-Niezmiennik zamiast pojedynczych przykładów; przypadek znaleziony przez Hypothesis utrwalasz w `@example`.
+An invariant instead of single examples; you preserve a case found by Hypothesis in `@example`.
 
-## 3. `tmp_path` i `monkeypatch`
+## 3. `tmp_path` and `monkeypatch`
 ```python
 # tests/test_export.py
 from pathlib import Path
@@ -61,14 +61,14 @@ from shop.export import export_report
 
 
 def test_export_uses_name_from_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("REPORT_NAME", "maj.csv")
+    monkeypatch.setenv("REPORT_NAME", "may.csv")
     path = export_report(["a", "b"], tmp_path)
-    assert path == tmp_path / "maj.csv"
+    assert path == tmp_path / "may.csv"
     assert path.read_text(encoding="utf-8") == "a\nb"
 ```
-`monkeypatch` cofa zmianę zmiennej po teście; `tmp_path` to osobny katalog dla każdego testu.
+`monkeypatch` reverts the variable change after the test; `tmp_path` is a separate directory for every test.
 
-## 4. Fixture-fabryka i fake repozytorium
+## 4. Factory fixture and a fake repository
 ```python
 # tests/conftest.py
 from collections.abc import Callable
@@ -85,7 +85,7 @@ class Order:
 
 
 class InMemoryOrders:
-    """Fake portu repozytorium — prawdziwe zachowanie, bez bazy."""
+    """A fake of the repository port — real behavior, no database."""
 
     def __init__(self) -> None:
         self.saved: dict[str, Order] = {}
@@ -122,12 +122,12 @@ def test_owner_sees_only_own_orders(orders, make_order) -> None:
     make_order(owner="jan")
     assert orders.of_owner("ola") == [mine]
 ```
-**Nie importuj z `conftest.py`** (`from conftest import …`): przy `--import-mode=importlib` kończy się to
-`ModuleNotFoundError` (sprawdzone). Testy dostają obiekty przez fixtures; gdy klasy pomocnicze są potrzebne
-w adnotacjach lub w wielu miejscach, umieść je w osobnym pakiecie testowym instalowanym w środowisku
-deweloperskim albo w `src/<pakiet>/testing.py`.
+**Do not import from `conftest.py`** (`from conftest import …`): with `--import-mode=importlib` this ends in
+`ModuleNotFoundError` (verified). Tests get objects through fixtures; when helper classes are needed
+in annotations or in many places, put them in a separate test package installed in the development
+environment or in `src/<package>/testing.py`.
 
-## 5. Test asyncio z limitem czasu
+## 5. An asyncio test with a time limit
 ```python
 # tests/test_notify.py
 import asyncio
@@ -147,9 +147,9 @@ async def test_times_out_without_event() -> None:
     with pytest.raises(TimeoutError):
         await first_event(asyncio.Queue(), limit_s=0.01)
 ```
-Przy `asyncio_mode = "auto"` funkcje `async def` są testami asyncio bez markera.
+With `asyncio_mode = "auto"`, `async def` functions are asyncio tests without a marker.
 
-## 6. Subtesty
+## 6. Subtests
 ```python
 # tests/test_codes.py
 import pytest
@@ -162,4 +162,4 @@ def test_currency_minor_units(subtests: pytest.Subtests) -> None:
         with subtests.test(code=code):
             assert digits in (0, 2)
 ```
-Każda porażka w pętli jest raportowana osobno; dla prostych tabel wybierz `parametrize`.
+Every failure in the loop is reported separately; for simple tables choose `parametrize`.

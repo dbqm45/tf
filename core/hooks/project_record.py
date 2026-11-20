@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Dziennik projektu (docs/project/): struktura, indeks, walidacja, dziennik zdarzeń, raport.
+Project record (docs/project/): structure, index, validation, event log, report.
 
-  python3 .claude/hooks/project_record.py init                 # utwórz strukturę docs/project/
-  python3 .claude/hooks/project_record.py status               # stan faz, do akceptacji, ostatnie przekazanie
-  python3 .claude/hooks/project_record.py check                # walidacja artefaktów (exit 1 przy błędach)
-  python3 .claude/hooks/project_record.py index                # przebuduj docs/project/README.md
-  python3 .claude/hooks/project_record.py log --by ewa --phase domain "Utworzono mapę kontekstów (proposed)"
-  python3 .claude/hooks/project_record.py report [--out plik]  # raport do przeczytania/przekazania
-  python3 .claude/hooks/project_record.py evidence             # cytaty z corpus.md istnieją w źródłach; progi obszarów
-  python3 .claude/hooks/project_record.py wip start "Cel zadania" [--slug nazwa] [--by kto]   # punkt kontrolny pracy w toku
-  python3 .claude/hooks/project_record.py wip list | show [nazwa] | done <nazwa> | pause <nazwa> | snapshot
-  --hook-session / --hook-index                                 # tryby hooków (SessionStart / PostToolUse)
-  --hook-snapshot <zdarzenie> / --hook-stop                     # migawka stanu (PreCompact, SessionEnd) / przypomnienie (Stop)
+  python3 .claude/hooks/project_record.py init                 # create the docs/project/ structure
+  python3 .claude/hooks/project_record.py status               # phase state, items awaiting acceptance, last handoff
+  python3 .claude/hooks/project_record.py check                # artifact validation (exit 1 on errors)
+  python3 .claude/hooks/project_record.py index                # rebuild docs/project/README.md
+  python3 .claude/hooks/project_record.py log --by ewa --phase domain "Created the context map (proposed)"
+  python3 .claude/hooks/project_record.py report [--out file]  # a report to read/hand over
+  python3 .claude/hooks/project_record.py evidence             # quotes from corpus.md exist in the sources; area thresholds
+  python3 .claude/hooks/project_record.py wip start "Task goal" [--slug name] [--by who]   # checkpoint of work in progress
+  python3 .claude/hooks/project_record.py wip list | show [name] | done <name> | pause <name> | snapshot
+  --hook-session / --hook-index                                 # hook modes (SessionStart / PostToolUse)
+  --hook-snapshot <event> / --hook-stop                         # state snapshot (PreCompact, SessionEnd) / reminder (Stop)
 
-Tylko biblioteka standardowa. Katalog projektu: $CLAUDE_PROJECT_DIR albo bieżący.
+Standard library only. Project directory: $CLAUDE_PROJECT_DIR or the current one.
 """
 from __future__ import annotations
 
@@ -28,8 +28,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 try:
-    from hook_errors import record as record_error  # błąd hooka do .tf/logs/hook-errors.jsonl (tf doctor)
-except ImportError:  # starsza instalacja bez modułu dziennika — hook działa jak dotąd
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
     def record_error(hook: str, exc: BaseException) -> None:
         return None
 
@@ -55,7 +55,7 @@ PHASE_LABEL = {p: label for p, _, label in PHASES}
 STATUSES = ["draft", "proposed", "accepted", "superseded", "rejected"]
 REQUIRED_KEYS = ["artifact", "phase", "status", "version", "author", "created", "updated", "inputs"]
 NO_SECTIONS = {"adr", "journal", "decisions"}
-# główne artefakty faz — muszą mieć nagłówek (pozostałe pliki to materiały pomocnicze)
+# main phase artifacts — they must have a header (other files are supporting material)
 MAIN_PATTERNS = [
     r"01-discovery/brief\.md", r"02-domain/strategic\.md", r"03-requirements/requirements\.md",
     r"04-architecture/[^/]+\.md", r"04-architecture/adr/[^/]+\.md", r"05-plan/[^/]+\.md",
@@ -91,14 +91,8 @@ def parse(path: Path) -> tuple[dict | None, str]:
     return meta, m.group(2)
 
 
-# Nazwy sekcji: angielska (od 14.x) i dawna polska — obie rozpoznawane, szablony mają angielską.
-SECTION_NAMES = {"Przekazanie": ("Handoff", "Przekazanie"), "Otwarte pytania": ("Open questions", "Otwarte pytania"),
-                 "Następna czynność": ("Next step", "Następna czynność"), "Kroki": ("Steps", "Kroki")}
-
-
 def section(body: str, name: str) -> str | None:
-    names = "|".join(re.escape(n) for n in SECTION_NAMES.get(name, (name,)))
-    m = re.search(rf"^##\s+(?:{names})\s*$(.*?)(?=^##\s|\Z)", body, re.M | re.S)
+    m = re.search(rf"^##\s+{re.escape(name)}\s*$(.*?)(?=^##\s|\Z)", body, re.M | re.S)
     return m.group(1).strip() if m else None
 
 
@@ -114,7 +108,7 @@ def artifacts(rec: Path) -> list[dict]:
         if rel == "README.md" or rel.startswith(("exports/", "archive/", "wip/")):
             continue
         meta, body = parse(p)
-        if meta is None and rel.startswith("changes/"):   # plik zadania (ticket, plan, raport) — spis: changes/INDEX.md
+        if meta is None and rel.startswith("changes/"):   # a task file (ticket, plan, report) — index: changes/INDEX.md
             continue
         items.append({"path": p, "rel": rel, "meta": meta, "body": body,
                       "main": any(re.fullmatch(pat, rel) for pat in MAIN_PATTERNS)})
@@ -128,8 +122,8 @@ def phase_index(phase: str) -> int:
 # ───────────── walidacja ─────────────
 
 def language_warnings(rec: Path) -> list[str]:
-    """Uwagi językowe (WYSOKIE i ŚREDNIE) z lintera polszczyzny (pack-editorial-pl) — zero tokenów; tylko ostrzeżenia,
-    nie blokują. Bez nakładki — brak uwag."""
+    """Language remarks (HIGH and MEDIUM) from the Polish-language linter (pack-editorial-pl) — zero tokens; warnings only,
+    they do not block. Without the overlay — no remarks."""
     lint_path = Path(__file__).resolve().parent.parent / "skills" / "txt-polish-correctness" / "scripts" / "polish_lint.py"  # pack-editorial-pl
     if not lint_path.exists():
         return []
@@ -142,8 +136,8 @@ def language_warnings(rec: Path) -> list[str]:
         for f in sorted(rec.rglob("*.md")):
             rel = f.relative_to(rec).as_posix()
             if rel == "README.md" or rel.startswith(("exports/", "archive/")) or rel.endswith("corpus.md"):
-                continue   # bank dowodów to dosłowne cytaty — nie poprawiamy
-            issues = [i for i in mod.lint_file(f) if i["priority"] in ("HIGH", "MEDIUM", "WYSOKI", "ŚREDNI")]   # pl: sprzed 14.x
+                continue   # the evidence bank holds verbatim quotes — we do not correct them
+            issues = [i for i in mod.lint_file(f) if i["priority"] in ("HIGH", "MEDIUM")]
             if issues:
                 first = issues[0]
                 out.append(f"{rel}: {len(issues)} language remarks (e.g. l.{first['line']}: {first['fragment']} → "
@@ -188,9 +182,9 @@ def check(root: Path) -> tuple[list[str], list[str]]:
                 errors.append(f"{rel}: empty TL;DR section")
             elif len([l for l in tldr.splitlines() if l.strip()]) > 12:
                 warnings.append(f"{rel}: TL;DR longer than ~10 lines — shorten it (every next agent reads it)")
-            handoff = section(it["body"], "Przekazanie")
+            handoff = section(it["body"], "Handoff")
             if handoff is None and status != "superseded":
-                errors.append(f"{rel}: no \"## Handoff\" section (formerly \"## Przekazanie\")")
+                errors.append(f"{rel}: no \"## Handoff\" section")
             elif handoff is not None and status in ("proposed", "accepted") and (
                     re.search(r"<[^>]+>", handoff) or re.search(r":\*?\*?\s*…\s*$", handoff, re.M)):
                 errors.append(f"{rel}: Handoff has unfilled template fields (<…> or …)")
@@ -245,7 +239,7 @@ def summary(root: Path) -> dict:
     items = [i for i in artifacts(rec) if i["meta"] and i["meta"].get("phase") in PHASE_DIR]
     live = [i for i in items if i["meta"].get("status") not in ("superseded", "rejected")]
     current = max(live, key=lambda i: phase_index(i["meta"]["phase"]), default=None)
-    with_handoff = [i for i in live if section(i["body"], "Przekazanie")]
+    with_handoff = [i for i in live if section(i["body"], "Handoff")]
     latest = max(with_handoff, key=lambda i: (i["meta"].get("updated", ""), phase_index(i["meta"]["phase"]),
                                              i["path"].stat().st_mtime), default=None)
     return {
@@ -274,9 +268,9 @@ def build_index(root: Path) -> str:
     if wips:
         lines += ["", "## Work in progress", "", "| Task | Status | Updated | Next step |", "|---|---|---|---|"]
         lines += [f"| [{title(w['body'], w['slug'])}](wip/{w['slug']}.md) | {w['meta'].get('status', 'active')} | "
-                  f"{w['meta'].get('updated', '')} | {first_line(section(w['body'], 'Następna czynność'))} |" for w in wips]
+                  f"{w['meta'].get('updated', '')} | {first_line(section(w['body'], 'Next step'))} |" for w in wips]
     if s["latest"]:
-        handoff = section(s["latest"]["body"], "Przekazanie")
+        handoff = section(s["latest"]["body"], "Handoff")
         if handoff:
             lines += ["", f"## Latest handoff — from [{s['latest']['rel']}]({s['latest']['rel']})", "", handoff]
     rows = journal_rows(rec, 5)
@@ -301,7 +295,7 @@ def status_text(root: Path, compact: bool = False) -> str:
     if s["to_accept"]:
         out.append("For a human to accept: " + ", ".join(i["rel"] for i in s["to_accept"]))
     if s["latest"]:
-        handoff = section(s["latest"]["body"], "Przekazanie") or ""
+        handoff = section(s["latest"]["body"], "Handoff") or ""
         h = [l for l in handoff.splitlines() if l.strip()][: 4 if compact else 20]
         if h:
             out.append(f"Latest handoff ({s['latest']['rel']}):")
@@ -345,7 +339,7 @@ def report(root: Path, out: Path | None) -> Path:
                       "|---|---|---|---|---|---|---|", *rows]
     questions = []
     for it in ordered:
-        q = section(it["body"], "Otwarte pytania") if it["meta"].get("status") not in ("superseded", "rejected") else None
+        q = section(it["body"], "Open questions") if it["meta"].get("status") not in ("superseded", "rejected") else None
         for l in (q or "").splitlines():
             l = l.strip()
             if l.startswith(("- [ ]", "- ", "* ")) and not l.startswith("- [x]") and "…" not in l:
@@ -361,11 +355,11 @@ def report(root: Path, out: Path | None) -> Path:
     return target
 
 
-# ───────────── zapis ─────────────
+# ───────────── writing ─────────────
 
 def from_template(name: str) -> str:
     today = f"{date.today():%Y-%m-%d}"
-    return (TEMPLATES / name).read_text(encoding="utf-8").replace("<YYYY-MM-DD>", today).replace("<RRRR-MM-DD>", today)
+    return (TEMPLATES / name).read_text(encoding="utf-8").replace("<YYYY-MM-DD>", today)
 
 
 def init(root: Path) -> Path:
@@ -396,11 +390,11 @@ def log(root: Path, by: str, phase: str, text: str) -> None:
     j.write_text(re.sub(r"^updated: .*$", f"updated: {date.today():%Y-%m-%d}", content, count=1, flags=re.M), encoding="utf-8")
 
 
-# ───────────── praca w toku (wip/) — przerwanie sesji i powrót ─────────────
+# ───────────── work in progress (wip/) — session interruption and return ─────────────
 
 WIP_ACTIVE = ("active", "paused", "blocked")
 AUTO_BEGIN, AUTO_END = "<!-- stan-automatyczny:begin -->", "<!-- stan-automatyczny:end -->"
-STALE_MINUTES = 10          # Stop przypomina, gdy zmiany w plikach są o tyle nowsze niż punkt kontrolny
+STALE_MINUTES = 10          # Stop reminds when file changes are this much newer than the checkpoint
 PL = str.maketrans("ąćęłńóśźżĄĆĘŁŃÓŚŹŻ", "acelnoszzACELNOSZZ")
 
 
@@ -410,8 +404,8 @@ def slugify(text: str) -> str:
 
 
 def git(root: Path, *args: str) -> str | None:
-    """Szybkie, nieblokujące wywołanie gita: bez fsmonitora (na Windows jego demon trzymał potok i hook wisiał),
-    bez opcjonalnych blokad indeksu, wyjście w UTF-8 niezależnie od strony kodowej systemu."""
+    """A fast, non-blocking git call: without fsmonitor (on Windows its daemon held the pipe and the hook hung),
+    without optional index locks, output in UTF-8 regardless of the system code page."""
     try:
         r = subprocess.run(["git", "--no-optional-locks", "-c", "core.fsmonitor=false", *args], cwd=root,
                            stdin=subprocess.DEVNULL, capture_output=True, encoding="utf-8", errors="replace",
@@ -422,8 +416,8 @@ def git(root: Path, *args: str) -> str | None:
 
 
 def hook_deadline() -> None:
-    """Tryb hooka kończy się sam (kod 0, bez wyniku) przed limitem Claude Code (10 s w settings.json). Zabity przez
-    Claude Code proces dawał na Windows „Stop hook error … No stderr output”."""
+    """Hook mode ends on its own (exit 0, no output) before the Claude Code limit (10 s in settings.json). A process killed by
+    Claude Code produced „Stop hook error … No stderr output” on Windows."""
     import threading
     try:
         seconds = float(os.environ.get("CLAUDE_HOOK_DEADLINE", "7"))
@@ -435,7 +429,7 @@ def hook_deadline() -> None:
 
 
 def changed_files(root: Path) -> list[str] | None:
-    """Niezacommitowane zmiany (bez samych punktów kontrolnych); None, gdy to nie repozytorium git."""
+    """Uncommitted changes (excluding the checkpoints themselves); None when this is not a git repository."""
     out = git(root, "status", "--porcelain", "-uall")
     if out is None:
         return None
@@ -449,7 +443,7 @@ def changed_files(root: Path) -> list[str] | None:
 
 
 def wip_dir(root: Path) -> Path:
-    """Punkty kontrolne pracy w toku: `.tf/wip/` (wyniki pracy fabryki), archiwum w `.tf/wip/archive/`."""
+    """Checkpoints of work in progress: `.tf/wip/` (the factory's work output), archive in `.tf/wip/archive/`."""
     return root / ".tf" / "wip"
 
 
@@ -465,7 +459,7 @@ def wip_items(root: Path, statuses: tuple = WIP_ACTIVE) -> list[dict]:
 
 
 def unchecked(body: str) -> list[str]:
-    steps = section(body, "Kroki") or ""
+    steps = section(body, "Steps") or ""
     return [l.strip()[6:].strip() for l in steps.splitlines() if l.strip().startswith("- [ ]")]
 
 
@@ -479,9 +473,8 @@ def wip_start(root: Path, goal: str, slug: str | None, by: str) -> Path:
     now = f"{datetime.now():%Y-%m-%d %H:%M}"
     branch = git(root, "branch", "--show-current") or "—"
     text = from_template("wip.md").replace("<slug>", slug)
-    for en, pl, value in (("<who>", "<kto>", by), ("<goal>", "<cel>", goal), ("<YYYY-MM-DD HH:MM>", "<RRRR-MM-DD GG:MM>", now),
-                          ("<branch>", "<gałąź>", branch)):   # pl: szablony sprzed 14.x
-        text = text.replace(en, value).replace(pl, value)
+    for placeholder, value in (("<who>", by), ("<goal>", goal), ("<YYYY-MM-DD HH:MM>", now), ("<branch>", branch)):
+        text = text.replace(placeholder, value)
     path.write_text(text, encoding="utf-8")
     log(root, by, "meta", f"Work in progress started: {goal} (.tf/wip/{slug}.md)")
     write_index(root)
@@ -509,12 +502,8 @@ def wip_set_status(root: Path, slug: str, status: str, by: str) -> Path:
     return path
 
 
-# Nazwy zdarzeń z core/settings.json (polskie argumenty hooków sprzed 14.x) → angielski zapis w migawce.
-EVENT_NAMES = {"koniec sesji": "session end", "kompaktowanie kontekstu": "context compaction"}
-
-
 def snapshot(root: Path, event: str) -> int:
-    """Mechaniczny zapis stanu (gałąź, commit, zmienione pliki) w aktywnych punktach kontrolnych; nie zmienia mtime."""
+    """Mechanical state record (branch, commit, changed files) in active checkpoints; does not change mtime."""
     items = wip_items(root)
     if not items:
         return 0
@@ -539,12 +528,12 @@ def snapshot(root: Path, event: str) -> int:
         else:
             text = text.rstrip() + "\n\n" + block + "\n"
         p.write_text(text, encoding="utf-8")
-        os.utime(p, (st.st_atime, st.st_mtime))      # migawka nie udaje aktualizacji przez agenta
+        os.utime(p, (st.st_atime, st.st_mtime))      # the snapshot does not pose as an update by the agent
     return len(items)
 
 
 def stop_reminder(root: Path, data: dict) -> str | None:
-    """Powód do kontynuacji, gdy punkt kontrolny jest wyraźnie starszy niż zmiany w plikach."""
+    """A reason to continue when the checkpoint is clearly older than the file changes."""
     if data.get("stop_hook_active"):
         return None
     items = [i for i in wip_items(root, ("active",))]
@@ -562,8 +551,8 @@ def stop_reminder(root: Path, data: dict) -> str | None:
 
 
 def repo_drift(root: Path, body: str) -> str | None:
-    """Rozjazd bieżącego repo ze stanem zapisanym przez migawkę (gałąź, commit); None, gdy zgodne albo brak danych."""
-    m = re.search(r"^- (?:Branch|Gałąź): (.+?) · (?:last commit|ostatni commit): (\S+)", body, re.M)
+    """Drift of the current repo from the state recorded by the snapshot (branch, commit); None when consistent or no data."""
+    m = re.search(r"^- Branch: (.+?) · last commit: (\S+)", body, re.M)
     if not m or m.group(2) == "—":
         return None
     saved_branch, saved_commit = m.group(1).strip(), m.group(2)
@@ -589,7 +578,7 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
     out = []
     for it in wip_items(root):
         m, body = it["meta"], it["body"]
-        nxt = first_line(section(body, "Następna czynność"))
+        nxt = first_line(section(body, "Next step"))
         todo = unchecked(body)
         out.append(f"Work in progress [{m.get('status', 'active')}]: .tf/wip/{it['slug']}.md — "
                    f"{title(body, it['slug'])} (updated {m.get('updated', '?')}, steps to do: {len(todo)})")
@@ -608,11 +597,11 @@ def wip_lines(root: Path, compact: bool) -> list[str]:
 
 # ───────────── CLI ─────────────
 
-# ───────────── dowody (format banku dowodów ze skilla ddd-discovery-intake, pack-it) ─────────────
+# ───────────── evidence (the evidence-bank format from the ddd-discovery-intake skill, pack-it) ─────────────
 
 SRC_RE = re.compile(r"^##\s+(S\d+)\s+[—-]\s+(.+?)\s*$", re.M)
 ENTRY_RE = re.compile(r"^-\s+\*\*(E\d+)\*\*\s*>\s*[„\"“](.+?)[”\"“]\s*[—-]\s*([^\[\n]*?)\s*((?:\[[^\]]*\]\s*)*)$", re.M)
-WEAK_TAGS = ("mention", "superseded", "unverified", "wzmianka", "zastąpiony", "niezweryfikowany")   # pl: sprzed 14.x
+WEAK_TAGS = ("mention", "superseded", "unverified")
 
 
 def _norm(text: str) -> str:
@@ -654,7 +643,7 @@ def evidence(root: Path) -> tuple[list[str], list[str], dict]:
         frags = [f for f in re.split(r"\[(?:…|\.\.\.)\]|…", e["quote"]) if len(f.strip()) >= 3]
         nsrc = _norm(src)
         missing = [f for f in frags if _norm(f) not in nsrc]
-        if missing and not {"unverified", "niezweryfikowany"} & set(e["tags"]):
+        if missing and "unverified" not in e["tags"]:
             errors.append(f"{eid}: the quote does not appear verbatim in {e['path']}: \"{missing[0].strip()[:60]}\"")
             continue
         m = re.fullmatch(r"L(\d+)(?:\s*-\s*L?(\d+))?", e["loc"])
@@ -666,16 +655,16 @@ def evidence(root: Path) -> tuple[list[str], list[str], dict]:
     areas = rec / "02-domain" / "areas.md"
     if areas.exists():
         _, body = parse(areas)
-        main_part = re.split(r"^##\s+(?:Candidates below the threshold|Kandydaci poniżej progu)", body, flags=re.M)[0]
+        main_part = re.split(r"^##\s+Candidates below the threshold", body, flags=re.M)[0]
         for m in re.finditer(r"^###\s+(A\d+)\b(.*?)(?=^###\s|^##\s|\Z)", main_part, re.M | re.S):
             aid, block = m.group(1), m.group(2)
-            ids = re.findall(r"E\d+", (re.search(r"(?:Evidence|Dowody):\*?\*?(.*)", block) or [None, ""])[1])
+            ids = re.findall(r"E\d+", (re.search(r"Evidence:\*?\*?(.*)", block) or [None, ""])[1])
             unknown = [i for i in ids if i not in entries]
             if unknown:
                 errors.append(f"areas.md {aid}: unknown evidence {unknown}")
             strong = [i for i in ids if i in entries and not any(t.startswith(WEAK_TAGS) for t in entries[i]["tags"])]
             sources = {entries[i]["source"] for i in strong}
-            user = re.search(r"(?:Named by the human|Wskazany przez człowieka):\*?\*?\s*(?:yes|tak)", block, re.I)
+            user = re.search(r"Named by the human:\*?\*?\s*yes", block, re.I)
             if len(strong) < 3 or len(sources) < 2:
                 msg = f"areas.md {aid}: {len(strong)} strong quotes from {len(sources)} sources (threshold: 3 from 2)"
                 (warnings if user else errors).append(msg + (" — named by the human" if user else " — move it to \"Candidates below the threshold\""))
@@ -695,15 +684,15 @@ def main(argv: list[str]) -> int:
     if "--hook-session" in args:
         try:
             print(status_text(root, compact=True))
-        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("project_record", e)
         return 0
     if "--hook-snapshot" in args:
         try:
             i = args.index("--hook-snapshot")
             event = args[i + 1] if len(args) > i + 1 else "hook"
-            snapshot(root, EVENT_NAMES.get(event, event))
-        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+            snapshot(root, event)
+        except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("project_record", e)
         return 0
     if "--hook-stop" in args:
@@ -711,7 +700,7 @@ def main(argv: list[str]) -> int:
             reason = stop_reminder(root, json.load(sys.stdin))
             if reason:
                 print(json.dumps({"decision": "block", "reason": reason}, ensure_ascii=False))
-        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("project_record", e)
         return 0
     if "--hook-index" in args:
@@ -723,7 +712,7 @@ def main(argv: list[str]) -> int:
                                                                or parse(path)[0] is None)
             if rec in path.parents and path.name != "README.md" and "exports" not in path.parts and not task_file:
                 write_index(root)
-        except Exception as e:  # hook nie przerywa sesji; błąd trafia do dziennika
+        except Exception as e:  # the hook does not interrupt the session; the error goes to the log
             record_error("project_record", e)
         return 0
     cmd = args[0] if args else "status"

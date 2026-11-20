@@ -25,6 +25,37 @@
       ]
     },
     {
+      "id": "test-zmiennosci-en",
+      "expect": "trigger",
+      "prompt": "Requirement: the system should calculate the equipment rental fee and save it with the contract. How do I tell whether this is plain CRUD with rules or already competition for resources? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "test zmienności",
+            "w tej samej chwili",
+            "inne żądanie|innego żądania",
+            "dan\\w*.{0,60}(zmieni|zmodyfikuje) .{0,40}(w tym samym czasie|jednocześnie|w tej samej chwili)",
+            "mutability test",
+            "at the same (moment|time)",
+            "another request",
+            "(data|record|state).{0,60}(chang|modif)\\w*.{0,40}(at the same time|simultaneously|concurrently)"
+          ],
+          [
+            "skutek\\w* (operacji )?dla stanu|nie liczb\\w+ reguł|nie liczba reguł|wynik.{0,30}(tylko )?zapis",
+            "zależy (tylko )?od (danych|stanu)",
+            "czyst\\w+ funkcj",
+            "depends (only )?on (the )?(data|state|input)",
+            "pure functions?",
+            "not (the )?(number|count) of rules",
+            "effect (of the operation )?on (the )?state"
+          ]
+        ]
+      },
+      "accept": [
+        "ddd-algorithm-recognition"
+      ]
+    },
+    {
       "id": "status-faktury",
       "expect": "trigger",
       "prompt": "Faktura ma pole status (szkic, wysłana, opłacona, anulowana), a ify na nim są rozsiane po serwisach. Jak to zamodelować i jakie pytania zadać ekspertom? Odpowiedz zwięźle.",

@@ -14,6 +14,18 @@
       }
     },
     {
+      "id": "angular22-ts7-en",
+      "expect": "trigger",
+      "prompt": "I’m starting work on an existing project on Angular 22 and someone wants to upgrade TypeScript to 7. Is that safe, and how do I determine which versions I should rely on? Answer briefly.",
+      "checks": {
+        "all": [
+          ["6\\.0"],
+          ["niezgodn|nie zalecam|wymaga|nie wspiera", "incompatib\\w*|not compatible|not supported|unsupported|(does not|doesn'?t) support|requires?|not recommended|(do not|don'?t) recommend"],
+          ["detect_stack", "SKILL_OUTDATE\\w*", "SKILL_AHEAD", "status\\w* skill\\w*", "skill status|status of (the )?skills?"]
+        ]
+      }
+    },
+    {
       "id": "angular17-wiedza",
       "expect": "trigger",
       "prompt": "Pracuję w projekcie na Angularze 17, a moja wiedza o frameworku dotyczy nowszych wersji. Jak ustalić prawdziwy stack projektu i nie użyć API niedostępnych w 17? Odpowiedz zwięźle.",

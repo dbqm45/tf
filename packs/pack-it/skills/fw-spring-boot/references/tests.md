@@ -1,25 +1,25 @@
-# Testy w Spring Boot
+# Tests in Spring Boot
 
-## 1. Piramida
-| Poziom | Narzędzie | Co sprawdza | Czas |
+## 1. Pyramid
+| Level | Tool | What it checks | Time |
 |---|---|---|---|
-| domena | JUnit (5 lub 6) + AssertJ, bez Springa | reguły agregatów, obiekty wartości, polityki | ms |
-| slice | `@WebMvcTest`, `@DataJpaTest`, `@JsonTest`, `@RestClientTest` | jedna warstwa z prawdziwą konfiguracją Springa | ~1–3 s na kontekst |
-| integracja | `@SpringBootTest` + Testcontainers | przepływ przez moduły, transakcje, zdarzenia | sekundy |
-| kontrakt | Spring Cloud Contract / Pact | zgodność z konsumentami API | — |
+| domain | JUnit (5 or 6) + AssertJ, without Spring | aggregate rules, value objects, policies | ms |
+| slice | `@WebMvcTest`, `@DataJpaTest`, `@JsonTest`, `@RestClientTest` | one layer with the real Spring configuration | ~1–3 s per context |
+| integration | `@SpringBootTest` + Testcontainers | a flow through modules, transactions, events | seconds |
+| contract | Spring Cloud Contract / Pact | compatibility with API consumers | — |
 
-Większość testów na poziomie domeny i slice; `@SpringBootTest` dla kilku ścieżek krytycznych.
+Most tests at the domain and slice level; `@SpringBootTest` for a few critical paths.
 
-## 2. Slice testy
-- `@WebMvcTest(OrderController.class)` — kontroler, filtry bezpieczeństwa, `@ControllerAdvice`, konwertery JSON.
-  Serwis aplikacyjny jako `@MockitoBean`. Sprawdzasz status, `ProblemDetail`, walidację i autoryzację.
-- `@DataJpaTest` — repozytoria, encje, zapytania. Od Boot 3.4 domyślne `Replace.NON_TEST` nie podmienia bazy, która
-  pochodzi z kontenera (Testcontainers, `@DynamicPropertySource`), więc `@AutoConfigureTestDatabase(replace =
-  Replace.NONE)` zwykle jest zbędne; w 3.0–3.3 baza była podmieniana na wbudowaną i `Replace.NONE` jest wymagane
-  (javadoc `AutoConfigureTestDatabase`, release notes 3.4, dostęp 2026-10-20). Test pokazuje inną bazę niż kontener →
-  dodaj `Replace.NONE` jawnie. Każdy test w transakcji wycofywanej po teście.
-- `@JsonTest` — serializacja DTO i wariantów (`@JsonTypeInfo`).
-- `@RestClientTest` — klient HTTP z `MockRestServiceServer`.
+## 2. Slice tests
+- `@WebMvcTest(OrderController.class)` — the controller, security filters, `@ControllerAdvice`, JSON converters.
+  The application service as a `@MockitoBean`. You check the status, `ProblemDetail`, validation and authorization.
+- `@DataJpaTest` — repositories, entities, queries. Since Boot 3.4 the default `Replace.NON_TEST` does not replace a database that
+  comes from a container (Testcontainers, `@DynamicPropertySource`), so `@AutoConfigureTestDatabase(replace =
+  Replace.NONE)` is usually unnecessary; in 3.0–3.3 the database was replaced with an embedded one and `Replace.NONE` is required
+  (the `AutoConfigureTestDatabase` javadoc, release notes 3.4, accessed 2026-10-20). The test shows a different database than the container →
+  add `Replace.NONE` explicitly. Every test in a transaction rolled back after the test.
+- `@JsonTest` — serialization of DTOs and variants (`@JsonTypeInfo`).
+- `@RestClientTest` — the HTTP client with `MockRestServiceServer`.
 
 ## 3. Testcontainers
 ```java
@@ -29,45 +29,45 @@ public class TestContainersConfig {
     PostgreSQLContainer<?> postgres() { return new PostgreSQLContainer<>("postgres:17-alpine"); }
 }
 ```
-- `@ServiceConnection` (Boot 3.1+) tworzy szczegóły połączenia (`ConnectionDetails`) z kontenera — bez
+- `@ServiceConnection` (Boot 3.1+) creates the connection details (`ConnectionDetails`) from the container — without
   `@DynamicPropertySource`.
-- Testcontainers 2.x: artefakty z prefiksem `testcontainers-` (np. `testcontainers-mysql`), klasy w pakietach modułu
-  (`org.testcontainers.mysql.MySQLContainer`; dla PostgreSQL analogicznie `org.testcontainers.postgresql` [założenie]);
-  JUnit 4 usunięty. Przy aktualizacji z 1.x popraw importy i zależności.
-- Jedna klasa konfiguracji kontenerów importowana przez testy (`@Import`) → ten sam kontekst i ten sam kontener.
-- Obraz z jawnym tagiem (wersja jak na produkcji), nie `latest`.
-- Dewelopment: `SpringApplication.from(App::main).with(TestContainersConfig.class).run(args)` w `src/test`
-  uruchamia aplikację z kontenerami — z IDE albo `spring-boot:test-run` (Maven) / `bootTestRun` (Gradle)
-  (`dev-services.adoc` w gałęzi main Spring Boot, dostęp 2026-10-20); alternatywnie `spring-boot-docker-compose` z plikiem Docker Compose w katalogu projektu.
-- CI potrzebuje Dockera (lub zgodnego środowiska); bez niego testy integracyjne oznacz tagiem i uruchamiaj osobno.
+- Testcontainers 2.x: artifacts with the `testcontainers-` prefix (e.g. `testcontainers-mysql`), classes in module packages
+  (`org.testcontainers.mysql.MySQLContainer`; for PostgreSQL likewise `org.testcontainers.postgresql` [assumption]);
+  JUnit 4 removed. When upgrading from 1.x fix the imports and dependencies.
+- One container configuration class imported by the tests (`@Import`) → the same context and the same container.
+- An image with an explicit tag (the version as in production), not `latest`.
+- Development: `SpringApplication.from(App::main).with(TestContainersConfig.class).run(args)` in `src/test`
+  runs the application with containers — from the IDE or `spring-boot:test-run` (Maven) / `bootTestRun` (Gradle)
+  (`dev-services.adoc` in the Spring Boot main branch, accessed 2026-10-20); alternatively `spring-boot-docker-compose` with a Docker Compose file in the project directory.
+- CI needs Docker (or a compatible environment); without it, tag the integration tests and run them separately.
 
-## 4. Cache kontekstu
-- Spring buforuje kontekst po konfiguracji testu. Każda inna kombinacja `@MockitoBean`, profili, `properties`
-  albo `@Import` = nowy kontekst (i nowe kontenery, jeśli nie są współdzielone).
-- Wspólna klasa bazowa lub adnotacja złożona dla testów integracyjnych; mocki tylko tam, gdzie konieczne.
-- `@DirtiesContext` to ostateczność — zwykle ukrywa współdzielony stan, który trzeba sprzątać.
+## 4. Context cache
+- Spring caches the context by the test configuration. Every different combination of `@MockitoBean`, profiles, `properties`
+  or `@Import` = a new context (and new containers, if they are not shared).
+- A common base class or a composed annotation for integration tests; mocks only where necessary.
+- `@DirtiesContext` is a last resort — it usually hides shared state that has to be cleaned up.
 
-## 5. Bezpieczeństwo
-- `spring-security-test`: `@WithMockUser(roles = "ADMIN")`, `jwt()` / `oidcLogin()` z `SecurityMockMvcRequestPostProcessors`.
-- Dla każdego endpointu: test bez uwierzytelnienia (401), z niewłaściwą rolą (403), z właściwą (2xx).
-- Test, że Actuator poza `health` nie jest publiczny.
+## 5. Security
+- `spring-security-test`: `@WithMockUser(roles = "ADMIN")`, `jwt()` / `oidcLogin()` from `SecurityMockMvcRequestPostProcessors`.
+- For every endpoint: a test without authentication (401), with the wrong role (403), with the right one (2xx).
+- A test that Actuator beyond `health` is not public.
 
-## 6. Moduły
+## 6. Modules
 ```java
 class ModularityTests {
     ApplicationModules modules = ApplicationModules.of(App.class);
     @Test void verifiesModularStructure() { modules.verify(); }
 }
 ```
-- Spring Modulith: `verify()` wykrywa cykle i dostęp do typów wewnętrznych innego modułu;
-  `@ApplicationModuleTest` uruchamia kontekst jednego modułu; `Scenario` testuje zdarzenia między modułami.
-- Bez Modulith: ArchUnit (`layeredArchitecture()`, `slices().should().beFreeOfCycles()`).
+- Spring Modulith: `verify()` detects cycles and access to another module's internal types;
+  `@ApplicationModuleTest` starts the context of one module; `Scenario` tests events between modules.
+- Without Modulith: ArchUnit (`layeredArchitecture()`, `slices().should().beFreeOfCycles()`).
 
-## 7. Pułapki
-- H2 „w trybie PostgreSQL” to nie PostgreSQL — inne typy, funkcje i blokady.
-- `@Transactional` na teście integracyjnym ukrywa błędy leniwego ładowania i zdarzeń po commicie — przepływ
-  transakcyjny testuj bez niego i sprzątaj dane jawnie.
-- `@MockBean`/`@SpyBean` są przestarzałe od Boot 3.4 i usunięte w 4.0 — zastąp `@MockitoBean`/`@MockitoSpyBean`
-  (działają na polach klasy testu, nie w klasach `@Configuration`).
-- Boot 4: `@SpringBootTest` sam nie daje `MockMvc` — dodaj `@AutoConfigureMockMvc`.
-- Czas: wstrzykuj `Clock` (bean) zamiast `LocalDate.now()`; w testach `Clock.fixed(...)`.
+## 7. Pitfalls
+- H2 "in PostgreSQL mode" is not PostgreSQL — different types, functions and locks.
+- `@Transactional` on an integration test hides lazy loading errors and after-commit events — test the transactional
+  flow without it and clean up the data explicitly.
+- `@MockBean`/`@SpyBean` are deprecated since Boot 3.4 and removed in 4.0 — replace them with `@MockitoBean`/`@MockitoSpyBean`
+  (they work on test class fields, not in `@Configuration` classes).
+- Boot 4: `@SpringBootTest` by itself does not provide `MockMvc` — add `@AutoConfigureMockMvc`.
+- Time: inject a `Clock` (bean) instead of `LocalDate.now()`; in tests `Clock.fixed(...)`.

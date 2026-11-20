@@ -27,6 +27,31 @@
       }
     },
     {
+      "id": "karta-kontener-en",
+      "expect": "trigger",
+      "prompt": "I'm building a card component that has to look good both in a narrow sidebar and at full width; media queries don't help because it depends on the container. How should I style it so it's also ready for RTL? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "@container",
+            "container quer"
+          ],
+          [
+            "margin-inline",
+            "padding-inline",
+            "logiczn",
+            "logical",
+            "inset-inline"
+          ],
+          [
+            "token",
+            "var\\(--",
+            "custom propert"
+          ]
+        ]
+      }
+    },
+    {
       "id": "animacja-height",
       "expect": "trigger",
       "prompt": "Animacja rozwijania panelu przez zmianę height klatkuje, a użytkownicy wrażliwi na ruch skarżą się na nią. Jak to poprawić w CSS? Odpowiedz zwięźle.",

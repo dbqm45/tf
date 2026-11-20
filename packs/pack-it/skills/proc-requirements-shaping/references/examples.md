@@ -1,56 +1,56 @@
-# Przykłady i tryb brownfield
+# Examples and brownfield mode
 
-## Tryb brownfield — co zmienia się w fazach
-| Faza | Greenfield | Brownfield (wymagania jako delta) |
+## Brownfield mode — what changes in the phases
+| Phase | Greenfield | Brownfield (requirements as a delta) |
 |---|---|---|
-| Problem | ból, osoba, moment, koszt dziś | co istnieje, kto używa, co boli, **co nie może się zepsuć** |
-| Dostęp | model logowania i ról | obecny model; czy zmiana go dotyka |
-| MVP | pierwszy przepływ i szacunek | najmniejsza zmiana dowodząca poprawy + zasięg rażenia (moduły, dane, integracje) |
-| Wymagania | `FR-NNN … Priorytet` | jak wyżej + `Zmiana: nowe / zmienione / zachowane` |
-| Reguła biznesowa | jedno zdanie, test pustego CRUD | jedno zdanie o zmianie reguły albo „bez zmiany reguły domenowej” |
-| Zapis | brief + wymagania | dodatkowo „Obecny system” i „Zachowane zachowanie” |
+| Problem | the pain, a person, the moment, the cost today | what exists, who uses it, what hurts, **what must not break** |
+| Access | the login and roles model | the current model; whether the change touches it |
+| MVP | the first flow and an estimate | the smallest change proving an improvement + the blast radius (modules, data, integrations) |
+| Requirements | `FR-NNN … Priority` | as above + `Change: new / changed / kept` |
+| Business rule | one sentence, the empty CRUD test | one sentence about the change of the rule or "no change to the domain rule" |
+| Recording | brief + requirements | additionally "Obecny system" (Current system) and "Preserved behavior" |
 
-W sekcji „Obecny system” wolno nazywać technologie (opisujesz to, co jest). `requirements_lint.py` jej nie sprawdza.
+In the "Obecny system" section you may name technologies (you are describing what exists). `requirements_lint.py` does not check it.
 
-## Przykład brownfield — lista oczekujących w systemie rezerwacji
-**Wejście:** „Mamy działający system rezerwacji sal. Chcemy listę oczekujących, gdy sala jest zajęta.”
-**Szare strefy fazy 1 (opcje z rekomendacją):**
-- kto zapisuje się na listę: a) pracownik, b) też recepcja w czyimś imieniu → rekomendacja: a (mniejszy zasięg);
-- co się dzieje po zwolnieniu sali: a) powiadomienie i 30 min na potwierdzenie, b) automatyczna rezerwacja →
-  rekomendacja: a (b zmienia regułę przydziału — większe ryzyko);
-- nie wiem → do „Otwartych pytań” (→ kierownik biura).
-**Wynik (fragment):**
+## A brownfield example — a waiting list in a booking system
+**Input:** "We have a working room booking system. We want a waiting list for when a room is taken."
+**Grey areas of phase 1 (options with a recommendation):**
+- who joins the list: a) an employee, b) reception on someone's behalf as well → recommendation: a (a smaller blast radius);
+- what happens when the room is freed: a) a notification and 30 min to confirm, b) an automatic booking →
+  recommendation: a (b changes the allocation rule — a bigger risk);
+- I don't know → to "Open questions" (→ the office manager).
+**Result (a fragment):**
 ```
-- FR-014: Pracownik może zapisać się na listę oczekujących na zajęty termin sali. Priorytet: must. Zmiana: nowe
-- FR-003: Pracownik może anulować rezerwację. Priorytet: must. Zmiana: zmienione (anulacja zwalnia termin dla listy)
-## Zachowane zachowanie
-- rezerwacja bez listy oczekujących działa jak dziś; limity rezerwacji na osobę bez zmian
-## Reguła biznesowa
-Zwolniony termin dostaje pierwsza osoba z listy, która potwierdzi go w ciągu 30 minut od powiadomienia.
+- FR-014: An employee can join the waiting list for a taken room slot. Priority: must. Change: new
+- FR-003: An employee can cancel a booking. Priority: must. Change: changed (cancellation frees the slot for the list)
+## Preserved behavior
+- a booking without a waiting list works as today; booking limits per person unchanged
+## Business rule
+A freed slot goes to the first person on the list who confirms it within 30 minutes of the notification.
 ```
 
-## Przykład rundy wyzwania (faza 5)
-`FR-002: Uczący się może zaakceptować, poprawić albo odrzucić każdą propozycję.`
-Kontrargumenty do wyboru:
-1. przy 15 propozycjach akceptacja pojedynczo męczy — rozważ „zaakceptuj wszystkie” z podglądem;
-2. poprawianie treści psuje powiązanie z tekstem źródłowym — zapisz, czy fiszka trzyma odnośnik do źródła;
-3. odrzucone propozycje mogą wracać przy kolejnym generowaniu — czy pamiętamy odrzucenia?
-4. bez kontrargumentu.
-Wynik zapisany pod FR jako „Wyzwanie: …”; nowa potrzeba z rozmowy trafia do „Otwartych pytań”, a nie do FR.
+## An example of a challenge round (phase 5)
+`FR-002: A learner can accept, edit or reject each suggestion.`
+Counterarguments to choose from:
+1. with 15 suggestions, accepting one by one is tiring — consider "accept all" with a preview;
+2. editing the content breaks the link to the source text — record whether the flashcard keeps a reference to the source;
+3. rejected suggestions may return on the next generation — do we remember rejections?
+4. no counterargument.
+The result is recorded under the FR as "Challenge: …"; a new need from the conversation goes to "Open questions", not to the FR.
 
-## Przykład pustego CRUD
-**Wejście:** „Użytkownik dodaje, przegląda, edytuje i usuwa przepisy.”
-**Odpowiedź agenta:** „To pusty CRUD — aplikacja niczego sama nie rozstrzyga. Który kształt reguły pasuje?
-rekomendacja (co ugotować z tego, co mam w lodówce) · klasyfikacja (dieta, alergeny) · obliczenie (porcje,
-kalorie, lista zakupów na tydzień) · walidacja (przepis bez kroków nie zostanie opublikowany) · albo świadomie
-zostajemy przy CRUD i zapisuję to jako otwarte pytanie.”
+## An example of an empty CRUD
+**Input:** "The user adds, browses, edits and deletes recipes."
+**The agent's answer:** "This is an empty CRUD — the application decides nothing on its own. Which shape of a rule fits?
+a recommendation (what to cook from what I have in the fridge) · classification (diet, allergens) · calculation (portions,
+calories, a weekly shopping list) · validation (a recipe without steps will not be published) · or we consciously
+stay with CRUD and I record it as an open question."
 
-## Przykład wyjścia skryptu
+## An example of the script output
 ```
 $ python3 .claude/skills/proc-requirements-shaping/scripts/requirements_lint.py requirements.md --brief brief.md
-Gotowość: 3/4
-  · brak: historyjka z kryteriami Given/When/Then dla głównego przepływu
-requirements.md:41 — miejsce wykonania: „po stronie serwera” → opisz zachowanie widoczne z zewnątrz albo przenieś do „Do decyzji o stacku”
-MVP: szacunek 25 dni > budżet 15 dni — BRAK potwierdzenia kosztu — zaproponuj cięcia
-✗ są blokujące problemy
+Readiness: 3/4
+  · missing: a story with Given/When/Then criteria for the main flow
+requirements.md:41 — execution location: "server-side" → describe behaviour visible from outside or move it to "For the stack decision"
+MVP: estimate 25 days > budget 15 days — cost NOT acknowledged — propose cuts
+✗ there are blocking problems
 ```

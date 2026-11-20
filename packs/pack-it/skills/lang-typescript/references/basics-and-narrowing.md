@@ -1,71 +1,71 @@
-# Podstawy systemu typów i narrowing
+# Type system basics and narrowing
 
-> **Spis treści:** 1. Adnotacje typów, inferencja, erasure · 2. `any` vs `unknown` · 3. Typy podstawowe · 4. `type` vs `interface` · 5. Asercje: `as`, `!`, `as const`, `satisfies` · 6. `enum` vs unia literałów · Narrowing — techniki zawężania
+> **Contents:** 1. Type annotations, inference, erasure · 2. `any` vs `unknown` · 3. Basic types · 4. `type` vs `interface` · 5. Assertions: `as`, `!`, `as const`, `satisfies` · 6. `enum` vs a literal union · Narrowing — narrowing techniques
 
-Na podstawie podręcznika TypeScript („The Basics”, „Everyday Types”, „Narrowing”), opisane własnymi słowami.
-Przykłady sprawdzone w tsc 6.0.3 i 7.0.2 (`strict`, `noUncheckedIndexedAccess`).
+Based on the TypeScript Handbook ("The Basics", "Everyday Types", "Narrowing"), described in our own words.
+Examples checked in tsc 6.0.3 and 7.0.2 (`strict`, `noUncheckedIndexedAccess`).
 
-## 1. Adnotacje typów, inferencja, erasure
+## 1. Type annotations, inference, erasure
 
-- **Adnotuj parametry funkcji** — to jedyne miejsce, gdzie TypeScript nie ma z czego wywnioskować typu:
+- **Annotate function parameters** — it is the only place where TypeScript has nothing to infer the type from:
 
   ```ts
-  function greet(person, date) { /* ... */ }            // ❌ niejawne any (błąd w strict)
+  function greet(person, date) { /* ... */ }            // ❌ implicit any (an error in strict)
   function greet(person: string, date: Date) { /* ... */ } // ✅
   ```
 
-- **Nie adnotuj tego, co TypeScript i tak wywnioskuje** (`let msg = "hello"` ma już typ `string`).
-  Wyjątek: jawny typ wyniku funkcji publicznych (kontrakt — zasada 7 w SKILL.md).
-- **Adnotacje są usuwane przy kompilacji** — nie kosztują nic w runtime, ale też niczego w runtime nie sprawdzają.
-- **Typowanie istniejącego kodu krok po kroku:** zacznij od parametrów funkcji — natychmiast ujawnią niezgodności
-  w miejscach wywołania.
+- **Do not annotate what TypeScript infers anyway** (`let msg = "hello"` already has the type `string`).
+  Exception: an explicit result type of public functions (a contract — rule 7 in SKILL.md).
+- **Annotations are removed at compilation** — they cost nothing at runtime, but they also check nothing at runtime.
+- **Typing existing code step by step:** start with function parameters — they immediately reveal mismatches
+  at the call sites.
 
 ## 2. `any` vs `unknown`
 
 | `any` | `unknown` |
 |---|---|
-| wyłącza sprawdzanie typów i „zaraża” dalsze wyrażenia | bezpieczna alternatywa |
-| można wywołać cokolwiek | trzeba zawęzić przed użyciem |
-| błąd ucieka do runtime | błąd wykrywany przy kompilacji |
+| switches off type checking and "infects" further expressions | a safe alternative |
+| you can call anything | you must narrow before use |
+| the error escapes to runtime | the error is caught at compilation |
 
 ```ts
 let a: any = { x: 0 };
-a.foo(); // brak błędu kompilacji — wybuchnie w runtime
+a.foo(); // no compile error — it blows up at runtime
 
 let u: unknown = { x: 0 };
-u.foo(); // ❌ błąd — trzeba zawęzić
+u.foo(); // ❌ error — you must narrow
 if (typeof u === "object" && u !== null && "foo" in u && typeof u.foo === "function") {
-  u.foo(); // ✅ zawężone bez `as` (od TS 4.9 `in` dodaje właściwość do typu)
+  u.foo(); // ✅ narrowed without `as` (since TS 4.9 `in` adds the property to the type)
 }
 ```
 
-Nowy kod: `unknown`, nie `any`. `noImplicitAny` (część `strict`) zamienia niejawne `any` w błąd.
+New code: `unknown`, not `any`. `noImplicitAny` (part of `strict`) turns an implicit `any` into an error.
 
-## 3. Typy podstawowe
+## 3. Basic types
 
 ```ts
 let numbers: number[] = [1, 2, 3];
 let strings: Array<string> = ["a", "b"];
-let tuple: [number, string] = [42, "hi"];           // dokładna liczba i kolejność
+let tuple: [number, string] = [42, "hi"];           // exact number and order
 
 function printName(obj: { first: string; last?: string }) {
-  console.log(obj.last?.toUpperCase());            // trzeba obsłużyć undefined
+  console.log(obj.last?.toUpperCase());            // undefined must be handled
 }
 
 function printText(s: string, alignment: "left" | "right" | "center") {}
-printText("Hi", "centre"); // ❌ literal type — tylko podane wartości
+printText("Hi", "centre"); // ❌ literal type — only the listed values
 ```
 
-Z `noUncheckedIndexedAccess` `numbers[0]` ma typ `number | undefined` — obsłuż brak elementu (`?? domyślna`, guard).
+With `noUncheckedIndexedAccess`, `numbers[0]` has the type `number | undefined` — handle a missing element (`?? default`, a guard).
 
 ## 4. `type` vs `interface`
 
 | | `type` | `interface` |
 |---|---|---|
-| rozszerzanie | `&` (intersection) | `extends` |
-| declaration merging | nie | tak |
-| unia, tuple, prymityw, typy mapowane/warunkowe | tak | nie |
-| kształt obiektu | możliwy | zwykle preferowany (czytelniejsze błędy) |
+| extending | `&` (intersection) | `extends` |
+| declaration merging | no | yes |
+| union, tuple, primitive, mapped/conditional types | yes | no |
+| object shape | possible | usually preferred (clearer errors) |
 
 ```ts
 type ID = number | string;
@@ -76,60 +76,60 @@ interface Animal { name: string }
 interface Bear2 extends Animal { honey: boolean }
 ```
 
-**Konflikt w `&`** na niezgodnych polach daje `never` na tym polu — bez błędu w miejscu deklaracji:
+**A conflict in `&`** on incompatible fields gives `never` on that field — with no error at the declaration:
 ```ts
 interface A { name: string }
 interface B { name: number }
 declare const x: A & B;
-x.name; // typ: never
+x.name; // type: never
 ```
-(`extends` przy takim konflikcie zgłasza błąd od razu — kolejny argument za `interface` przy kształtach obiektów.)
+(`extends` reports an error immediately on such a conflict — another argument for `interface` for object shapes.)
 
-## 5. Asercje: `as`, `!`, `as const`, `satisfies`
+## 5. Assertions: `as`, `!`, `as const`, `satisfies`
 
 ```ts
-const canvas = document.getElementById("c") as HTMLCanvasElement; // tylko gdy typy się „nakładają”
-const x = "hello" as unknown as number;                           // podwójna asercja — NIEBEZPIECZNE
+const canvas = document.getElementById("c") as HTMLCanvasElement; // only when the types "overlap"
+const x = "hello" as unknown as number;                           // double assertion — DANGEROUS
 ```
 
-`as` nie naprawia błędu typu — to deklaracja „wiem lepiej niż kompilator”, którą trzeba umieć uzasadnić
-(np. po walidacji). Domyślnie zawężaj (guard) zamiast asercji.
+`as` does not fix a type error — it is a declaration "I know better than the compiler" that you must be able to justify
+(e.g. after validation). By default, narrow (a guard) instead of asserting.
 
 ```ts
 function f(x?: number | null) {
-  console.log(x!.toFixed());               // ! = „na pewno nie null/undefined” — ryzykowne
-  if (x != null) console.log(x.toFixed()); // ✅ zawężenie
+  console.log(x!.toFixed());               // ! = "definitely not null/undefined" — risky
+  if (x != null) console.log(x.toFixed()); // ✅ narrowing
 }
 ```
 
-**`as const`** — najwęższy, niemutowalny typ literałów (`"GET"` zamiast `string`):
+**`as const`** — the narrowest, immutable literal type (`"GET"` instead of `string`):
 ```ts
 const req = { url: "/x", method: "GET" } as const; // req.method: "GET"
 ```
 
-**`satisfies`** (od TS 4.9) — sprawdza zgodność z typem, **nie poszerzając** wywnioskowanego typu:
+**`satisfies`** (since TS 4.9) — checks compatibility with a type **without widening** the inferred type:
 ```ts
 const cfg = { port: 8080, host: "localhost" } satisfies Record<string, string | number>;
-cfg.port; // number (a nie string | number)
+cfg.port; // number (not string | number)
 ```
 
-## 6. `enum` vs unia literałów
+## 6. `enum` vs a literal union
 
 ```ts
-enum Direction { Up = 1, Down, Left, Right }                  // generuje kod JS; błąd przy erasableSyntaxOnly
-type Direction2 = "Up" | "Down" | "Left" | "Right";           // czysto typowe
-const DIRECTIONS = ["Up", "Down", "Left", "Right"] as const;  // + tablica wartości do iteracji
+enum Direction { Up = 1, Down, Left, Right }                  // generates JS code; an error with erasableSyntaxOnly
+type Direction2 = "Up" | "Down" | "Left" | "Right";           // purely type-level
+const DIRECTIONS = ["Up", "Down", "Left", "Right"] as const;  // + an array of values for iteration
 type Direction3 = (typeof DIRECTIONS)[number];
 ```
 
-- Nowy kod: unia literałów / `as const` (wzorzec „typ + towarzysz” z `is()` i `values` →
-  `domain-modeling-patterns.md`). `enum` i `const enum` nie działają z `--erasableSyntaxOnly` ani z uruchamianiem
-  TS przez samo usuwanie typów (Node).
-- Nie zamieniaj istniejących `enum` „przy okazji” — wartości bywają serializowane (API, baza); to osobna migracja.
+- New code: a literal union / `as const` (the "type + companion" pattern with `is()` and `values` →
+  `domain-modeling-patterns.md`). `enum` and `const enum` do not work with `--erasableSyntaxOnly` or with running
+  TS by type stripping alone (Node).
+- Do not replace existing `enum`s "while you are at it" — the values are often serialised (API, database); that is a separate migration.
 
 ---
 
-## Narrowing — techniki zawężania
+## Narrowing — narrowing techniques
 
 ### `typeof`
 ```ts
@@ -138,8 +138,8 @@ function padLeft(padding: number | string, input: string) {
   return padding + input;
 }
 ```
-Wartości: `"string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"`.
-Pułapka: `typeof null === "object"`.
+Values: `"string" | "number" | "bigint" | "boolean" | "symbol" | "undefined" | "object" | "function"`.
+Pitfall: `typeof null === "object"`.
 
 ### Truthiness
 ```ts
@@ -147,14 +147,14 @@ function printAll(strs: string | string[] | null) {
   if (strs && typeof strs === "object") for (const s of strs) console.log(s);
 }
 ```
-Falsy: `0`, `-0`, `NaN`, `""`, `0n`, `null`, `undefined`, `false` — uwaga na `0` i `""` jako poprawne wartości.
+Falsy: `0`, `-0`, `NaN`, `""`, `0n`, `null`, `undefined`, `false` — watch out for `0` and `""` as valid values.
 
-### Równość
+### Equality
 ```ts
 function example(x: string | number, y: string | boolean) {
-  if (x === y) x.toUpperCase(); // x: string — jedyny wspólny typ
+  if (x === y) x.toUpperCase(); // x: string — the only common type
 }
-if (value != null) value.trim(); // `!= null` usuwa jednocześnie null i undefined
+if (value != null) value.trim(); // `!= null` removes both null and undefined at once
 ```
 
 ### `in`, `instanceof`
@@ -168,26 +168,26 @@ function logValue(x: Date | string) {
 }
 ```
 
-### Analiza przepływu sterowania
-TypeScript śledzi *obserwowany* typ zmiennej po każdym przypisaniu i każdej gałęzi:
+### Control flow analysis
+TypeScript tracks the *observed* type of a variable after every assignment and every branch:
 ```ts
 let x: string | number | boolean;
 x = Math.random() < 0.5;             // boolean
 if (cond) { x = "a"; } else { x = 1; }
-// tutaj: string | number
+// here: string | number
 ```
 
-### Predykaty typów (`pet is Fish`)
+### Type predicates (`pet is Fish`)
 ```ts
 function isFish(pet: Fish | Bird): pet is Fish { return "swim" in pet; }
 const fishes: Fish[] = animals.filter(isFish);
 
-// od TS 5.5 predykat jest wnioskowany z prostych lambd:
+// since TS 5.5 the predicate is inferred from simple lambdas:
 const nums = [1, undefined, 2].filter((x) => x !== undefined); // number[]
 ```
-Predykat to obietnica bez sprawdzenia przez kompilator — błędna implementacja daje fałszywe zawężenie.
+A predicate is a promise the compiler does not check — a wrong implementation gives false narrowing.
 
-### Unie dyskryminowane + wyczerpujący `switch`
+### Discriminated unions + an exhaustive `switch`
 ```ts
 interface Circle { kind: "circle"; radius: number }
 interface Square { kind: "square"; sideLength: number }
@@ -199,9 +199,9 @@ function area(shape: Shape): number {
   switch (shape.kind) {
     case "circle": return Math.PI * shape.radius ** 2; // shape: Circle
     case "square": return shape.sideLength ** 2;       // shape: Square
-    default: return assertNever(shape);                // błąd kompilacji po dodaniu wariantu
+    default: return assertNever(shape);                // a compile error after adding a variant
   }
 }
 ```
-Każde rozgałęzienie po polu dyskryminującym ma `default` z `assertNever` — tylko wtedy kompilator zgłosi
-nieobsłużony nowy wariant (a w runtime nieznana wartość z sieci rzuci błąd zamiast przejść cicho).
+Every branch on the discriminant field has a `default` with `assertNever` — only then does the compiler report
+an unhandled new variant (and at runtime an unknown value from the network throws an error instead of passing silently).

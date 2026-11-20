@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Testy filtra stacku w hooku skill_hint: w projekcie z wykrytym stackiem hook nie podpowiada skilli frameworków
-i języków (`fw-`, `lang-`) z rejestru technologii, których w projekcie nie ma — chyba że polecenie je wymienia.
-Pomiar 2026-11-16 (docs/todo.md): w repo Spring Boot hook podsuwał fw-nestjs i agent go wczytywał.
+"""Tests of the stack filter in the skill_hint hook: in a project with a detected stack the hook does not suggest framework
+and language skills (`fw-`, `lang-`) from the technology registry that the project does not have — unless the command names them.
+Measurement 2026-11-16 (docs/todo.md): in a Spring Boot repo the hook suggested fw-nestjs and the agent loaded it.
 python3 core/tests/test_skill_hint_stack.py"""
 import json
 import os
@@ -15,7 +15,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = next(p for p in HERE.parents if (p / ".claude" / "hooks" / "skill_hint.py").is_file()
             or (p / "core" / "hooks" / "skill_hint.py").is_file())
 HOOKS = ROOT / ".claude" / "hooks" if (ROOT / ".claude" / "hooks" / "skill_hint.py").is_file() else ROOT / "core" / "hooks"
-# Własny rejestr technologii (format core-stack-sync/references/technologies.json): test nie zależy od nakładek.
+# Our own technology registry (the core-stack-sync/references/technologies.json format): the test does not depend on packs.
 REGISTRY = {"technologies": [
     {"id": "spring-boot", "name": "Spring Boot", "skill": "fw-spring-boot", "versionless": True,
      "detect": {"spring_boot": True}},
@@ -67,15 +67,15 @@ def main() -> int:
         check("fw-spring-boot" in out and "fw-nestjs" not in out,
               f"SH-1: w repo Spring Boot bez podpowiedzi fw-nestjs: {out}")
         out = hint(spring, q + " — przenosimy to do NestJS")
-        check("fw-nestjs" in out, f"SH-2: polecenie wymienia NestJS, więc skill zostaje: {out}")
+        check("fw-nestjs" in out, f"SH-2: the command names NestJS, so the skill stays: {out}")
         out = hint(empty, q)
         check("fw-nestjs" in out and "fw-spring-boot" in out,
-              f"SH-3: bez wykrytego stacku (nowy projekt) nic nie jest odfiltrowane: {out}")
+              f"SH-3: without a detected stack (a new project) nothing is filtered out: {out}")
         out = hint(spring, q, CLAUDE_SKILL_HINT_STACK="0")
-        check("fw-nestjs" in out, f"SH-4: CLAUDE_SKILL_HINT_STACK=0 wyłącza filtr: {out}")
+        check("fw-nestjs" in out, f"SH-4: CLAUDE_SKILL_HINT_STACK=0 disables the filter: {out}")
         out = hint(spring, q)
         check("tool-playwright" in out,
-              f"SH-5: skille narzędzi (tool-) nie są filtrowane — polecenie może dodawać nowe narzędzie: {out}")
+              f"SH-5: tool skills (tool-) are not filtered — a command may add a new tool: {out}")
         r = subprocess.run([sys.executable, str(spring / ".claude" / "hooks" / "skill_hint.py"), "--explain", q],
                            capture_output=True, text=True, timeout=60, cwd=spring,
                            env={**os.environ, "CLAUDE_PROJECT_DIR": str(spring)})
@@ -83,7 +83,7 @@ def main() -> int:
               f"SH-6: --explain pokazuje skille odfiltrowane jako poza stackiem: {r.stdout}")
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów filtra stacku skill_hint")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} skill_hint stack filter tests")
     return 1 if fails else 0
 
 

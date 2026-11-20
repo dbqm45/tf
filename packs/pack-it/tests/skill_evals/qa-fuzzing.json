@@ -37,6 +37,47 @@
       }
     },
     {
+      "id": "parser-ramek-go-en",
+      "expect": "trigger",
+      "prompt": "We have a Go parser for a binary protocol's frames that receives data straight from the network. Unit tests pass, but we're afraid of a panic or a hang on malicious input. How do we check this automatically and keep it going in CI? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "fuzz\\w*"
+          ],
+          [
+            "go test -fuzz",
+            "testing\\.F",
+            "f\\.Fuzz"
+          ],
+          [
+            "f\\.Add",
+            "korpus\\w*",
+            "seed",
+            "corpus|corpora"
+          ],
+          [
+            "testdata/fuzz",
+            "test\\w* regresyjn\\w*",
+            "regresj\\w*",
+            "regression\\w*"
+          ],
+          [
+            "-fuzztime",
+            "nocn\\w*",
+            "limit\\w* czasu",
+            "nightly",
+            "time (limit|budget)\\w*|time[- ]box\\w*"
+          ]
+        ],
+        "none": [
+          "wystarczą testy jednostkowe",
+          "unit tests (will be |are )?(enough|sufficient)",
+          "unit tests suffice"
+        ]
+      }
+    },
+    {
       "id": "python-atheris-crash",
       "expect": "trigger",
       "prompt": "Nasza biblioteka w Pythonie parsuje pliki konfiguracyjne przysyłane przez użytkowników. Chcemy ją sfuzzować. Jak napisać harness i co zrobić, gdy fuzzer znajdzie crash? Odpowiedz zwięźle.",

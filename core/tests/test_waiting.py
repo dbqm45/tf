@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""„Czeka na Ciebie” (krok F1): `tf status` i podgląd mówią, które zadanie czeka na człowieka, na co, jakie jest
-pytanie i która opcja jest rekomendowana; panel plików pokazuje pliki kodu kawałka.
+"""'Waiting for you' (step F1): `tf status` and the preview say which task waits for a human, for what, what the
+question is and which option is recommended; the files panel shows the slice's code files.
 python3 .claude/tests/test_waiting.py"""
 import json
 import os
@@ -52,87 +52,87 @@ def main() -> int:
         r = call(p, cfg, SCRIPTS / "run_report.py", "start", "Limit dobowy", "--key", "IMP-1", "--story",
                  "Jako kierowca chcę limit dobowy opłaty.")
         d = str(p / ".tf" / "runs" / "IMP-1")
-        check(r.returncode == 0, f"przygotowanie: start przebiegu: {r.stdout} {r.stderr}")
+        check(r.returncode == 0, f"setup: run start: {r.stdout} {r.stderr}")
 
         r = call(p, cfg, TASK, "list")
         check(r.returncode == 0 and "waiting for you" not in r.stdout and rows(p, cfg).get("IMP-1", {}).get("waiting") == [],
-              f"Z-1: zadanie w toku na nikogo nie czeka: {r.stdout}")
+              f"Z-1: a task in progress waits for nobody: {r.stdout}")
 
-        # plan czeka na zgodę człowieka
+        # the plan waits for a human's consent
         call(p, cfg, SCRIPTS / "run_state.py", "stage", d, "needs", "--needs", "plan")
         r = call(p, cfg, TASK, "list")
         w = rows(p, cfg).get("IMP-1", {}).get("waiting") or [{}]
         check("waiting for you" in r.stdout and "plan" in r.stdout and "approve IMP-1 plan.md" in r.stdout,
-              f"Z-2: tf status mówi, że plan czeka na zgodę, i jak ją zapisać: {r.stdout}")
+              f"Z-2: tf status says the plan waits for consent, and how to record it: {r.stdout}")
         check(len(w) == 1 and w[0].get("kind") == "plan" and re.match(r"\d{4}-\d{2}-\d{2}T", str(w[0].get("since"))),
-              f"Z-3: list --json: jeden wpis „plan” z czasem, od kiedy czeka: {w}")
+              f"Z-3: list --json: one 'plan' entry with the time since it has been waiting: {w}")
 
-        # blok STOP z kodem: co się stało, powód, pytanie, rekomendacja
+        # a STOP block with a code: what happened, the reason, the question, the recommendation
         call(p, cfg, SCRIPTS / "run_state.py", "stage", d, "needs", "--needs", "stop", "--code", "tests", "--reason",
              "pytest: 2 failed (test_fees.py)")
         r = call(p, cfg, TASK, "list")
         w = rows(p, cfg).get("IMP-1", {}).get("waiting") or [{}]
         check("waiting for you" in r.stdout and "The tests fail" in r.stdout and "pytest: 2 failed" in r.stdout
               and "question:" in r.stdout and "recommended:" in r.stdout,
-              f"Z-4: tf status pokazuje zatrzymanie: co się stało, powód, pytanie i rekomendację: {r.stdout}")
+              f"Z-4: tf status shows the stop: what happened, the reason, the question and the recommendation: {r.stdout}")
         check(len(w) == 1 and w[0].get("kind") == "stop" and w[0].get("code") == "tests"
               and str(w[0].get("question", "")).endswith("?") and w[0].get("recommended")
               and len(w[0].get("options") or []) >= 2 and w[0].get("details") == "pytest: 2 failed (test_fees.py)",
-              f"Z-5: list --json: wpis „stop” z kodem, pytaniem, opcjami i rekomendacją: {w}")
+              f"Z-5: list --json: a 'stop' entry with the code, the question, the options and the recommendation: {w}")
 
-        # podgląd: lista „Czeka na Ciebie” z tych samych danych
+        # the preview: the 'Waiting for you' list from the same data
         html = (p / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8")
         card = next((x for x in runs_json(html) if x.get("key") == "IMP-1"), {})
         cw = card.get("waiting") or [{}]
         check(len(cw) == 1 and cw[0].get("kind") == "stop" and cw[0].get("question") == w[0].get("question")
               and cw[0].get("since") == w[0].get("since"),
-              f"Z-6: karta podglądu ma tę samą listę oczekujących co tf status: {cw}")
+              f"Z-6: the preview card has the same waiting list as tf status: {cw}")
         hint = card.get("stopHint") or ""
         check(".." not in hint and "attempts. pytest: 2 failed (test_fees.py). Decide" in hint and "r.stopHint" in html,
-              f"Z-6a: opis zatrzymania na karcie składa się z pełnych zdań (bez „..” i bez zlanych zdań): {hint!r}")
+              f"Z-6a: the stop description on the card consists of whole sentences (no '..' and no run-together sentences): {hint!r}")
         check('id="waiting"' in html and "Waiting for you" in html and "r.waiting" in html and "rekomendowana" in html,
-              "Z-7: szablon rysuje wyróżnioną listę „Czeka na Ciebie” z pytaniem i rekomendacją")
+              "Z-7: the template draws a highlighted 'Waiting for you' list with the question and the recommendation")
 
-        # po wznowieniu nic nie czeka
+        # after resuming nothing waits
         call(p, cfg, SCRIPTS / "run_state.py", "stage", d, "intake")
         r = call(p, cfg, TASK, "list")
         meta = json.loads((p / ".tf" / "runs" / "IMP-1" / "run.json").read_text(encoding="utf-8"))
         check("waiting for you" not in r.stdout and "needs_at" not in meta,
-              f"Z-8: po wznowieniu przebiegu zadanie nie czeka: {r.stdout} {meta}")
+              f"Z-8: after the run resumes the task does not wait: {r.stdout} {meta}")
 
-        # kawałek zablokowany pytaniem też czeka na człowieka
-        call(p, cfg, TASK, "slice", "IMP-1", "K2", "blocked", "--reason", "nie wiadomo, czy limit dotyczy abonamentów")
+        # a slice blocked by a question also waits for a human
+        call(p, cfg, TASK, "slice", "IMP-1", "S2", "blocked", "--reason", "nie wiadomo, czy limit dotyczy abonamentów")
         r = call(p, cfg, TASK, "list")
         w = rows(p, cfg).get("IMP-1", {}).get("waiting") or [{}]
-        check("waiting for you" in r.stdout and "K2" in r.stdout and "abonamentów" in r.stdout
-              and w[0].get("kind") == "slice" and w[0].get("slice") == "K2",
-              f"Z-9: zablokowany kawałek jest na liście oczekujących z powodem: {r.stdout} {w}")
+        check("waiting for you" in r.stdout and "S2" in r.stdout and "abonamentów" in r.stdout
+              and w[0].get("kind") == "slice" and w[0].get("slice") == "S2",
+              f"Z-9: a blocked slice is on the waiting list with the reason: {r.stdout} {w}")
 
-        # panel plików: pliki kodu kawałka z dowodu weryfikacji
-        call(p, cfg, TASK, "verify", "IMP-1", "K1", "--files", "fees.py", "--command", OK)
+        # the files panel: the slice's code files from the verification evidence
+        call(p, cfg, TASK, "verify", "IMP-1", "S1", "--files", "fees.py", "--command", OK)
         call(p, cfg, SCRIPTS / "run_state.py", "dashboard", "--no-cost")
         card = next((x for x in runs_json((p / ".tf" / "runs" / "dashboard.html").read_text(encoding="utf-8"))
                      if x.get("key") == "IMP-1"), {})
         code = next((g for g in card.get("files", []) if g.get("grp", "").startswith("The slices' code")), {})
-        item = next((i for i in code.get("items", []) if i.get("name") == "K1 · fees.py"), {})
+        item = next((i for i in code.get("items", []) if i.get("name") == "S1 · fees.py"), {})
         check("LIMIT = 45" in item.get("text", ""),
-              f"Z-10: panel plików ma grupę kodu z plikami kawałka (z dowodu): {[g.get('grp') for g in card.get('files', [])]}")
+              f"Z-10: the files panel has a code group with the slice's files (from the evidence): {[g.get('grp') for g in card.get('files', [])]}")
 
-        # tf status --open: buduje podgląd i wypisuje listę (tu bez otwierania przeglądarki)
+        # tf status --open: builds the preview and prints the list (here without opening a browser)
         (p / ".tf" / "runs" / "dashboard.html").unlink()
         import shutil
-        for rel in (Path(".tf") / "factory", Path(".claude") / "skills" / "tf"):     # projekt z zainstalowaną fabryką
+        for rel in (Path(".tf") / "factory", Path(".claude") / "skills" / "tf"):     # a project with the factory installed
             shutil.copytree(ROOT / rel, p / rel, ignore=shutil.ignore_patterns("__pycache__"))
         (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "1.0.0"}), encoding="utf-8")
         env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg), "TF_DASHBOARD_OPEN": "0"}
         r = subprocess.run([sys.executable, str(CTF), "status", "--open"], cwd=p, capture_output=True, text=True,
                            env=env, timeout=120)
         check(r.returncode == 0 and (p / ".tf" / "runs" / "dashboard.html").is_file() and "IMP-1" in r.stdout,
-              f"Z-11: tf status --open buduje podgląd i wypisuje zadania: {r.returncode} {r.stdout} {r.stderr}")
+              f"Z-11: tf status --open builds the preview and prints the tasks: {r.returncode} {r.stdout} {r.stderr}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów listy „Czeka na Ciebie”")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the 'Waiting for you' list")
     return 1 if fails else 0
 
 

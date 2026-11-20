@@ -167,11 +167,22 @@ it goes into the PR description.
 <directory> --base main` → the file `.tf/runs/<KEY>/pr-body.md`, passed with `gh pr create --body-file`). Every PR has
 the same fields: the story, slices with commits, the criteria trace, **How it was checked** (the
 command, the exit code and the evidence file of every slice, the security scan's verdict, agreement with the plan),
-**Risk** (the task's weight and the `tf risk` triage), **How to roll back**, postponed items and
+**System diff** (what the change touches beyond code lines: UI, data, API, dependencies, configuration, operations; `tf diff`), **Risk** (the task's weight and the `tf risk` triage), **How to roll back**, postponed items and
 assumptions. A slice without green evidence is named plainly in the description. The script takes the deployment
 rollback step from the operations card (`.tf/config/operations.json`, the `deploy.rollback` field — text or a list of
 steps); without it, it gives `git revert` of the merge commit, and for a task with a flag it starts with turning the
 flag off.
+
+**A visual check of UI changes — only when it is worth it.** For backend work nothing changes: no screenshots, no section in
+the PR. When the plan or the diff touches UI files (templates, components, styles) in a visible way (at least two UI files,
+or about thirty changed UI lines, or a criterion about a screen, button, form, message …; thresholds: `visual_check` in
+`.tf/config/config.yaml`; a light task needs the criterion), the loop takes screenshots of the affected screens before the
+first slice and after the last (`ui_snap.py`, local headless Chromium/Chrome/Edge, only `localhost`, nothing installed and
+no keys), looks at them against the acceptance criteria and writes the verdict per criterion. A mismatch is a red result
+(back to the slice). The PR gets a `## Visual check` section (identical / changed / mismatches), the dashboard shows the
+before/after pairs. No browser or no dev server: the PR says "skipped" and why. You force it with `--visual` or switch it
+off with `--no-visual` in the `/tf` command. `tf onboard` writes the `preview` part of the operations card (`url`, `start`,
+`routes`) for a web frontend. The screenshots stay in `.tf/runs/<KEY>/screens/`, outside git.
 
 **After the merge.** The operations card has a deployment part (`deploy`), which `tf onboard` creates: `smoke` (the
 smoke test command), `rollback` and `rollback_minutes` (how to roll back and how long it takes), `approval` (what the
@@ -238,5 +249,5 @@ which slice to resume. After your decision ask for a resume and give the run dir
 `plan.md` is where it continues. The cost report is written also after a STOP.
 
 Details of the course: `.claude/skills/tf/SKILL.md` (in the factory's sources:
-`core/skills/tf/SKILL.md`); the mechanism: `docs/insights.md` in the factory repository, the sections
-on modes and on Talos (that was the loop's name up to version 9.33).
+`core/skills/tf/SKILL.md`); the mechanism: `docs/insights.md` in the factory repository, the section
+on modes.

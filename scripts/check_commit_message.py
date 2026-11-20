@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Sprawdza wiadomość commita lub tytuł PR wg Conventional Commits (docs/RELEASING.md).
+"""Checks a commit message or PR title against Conventional Commits (docs/RELEASING.md).
 
-  python3 scripts/check_commit_message.py "feat(build): flaga --only dla wybranych person"   # tytuł
+  python3 scripts/check_commit_message.py "feat(build): --only flag for selected personas"   # title
   python3 scripts/check_commit_message.py --file .git/COMMIT_EDITMSG                         # hook commit-msg
 """
 from __future__ import annotations
@@ -21,9 +21,9 @@ def main(argv: list[str]) -> int:
         message = " ".join(argv)
     problems = cc.lint_message(message)
     if problems:
-        print("✗ To nie jest Conventional Commit:\n" + "\n".join(f"  - {p}" for p in problems), file=sys.stderr)
-        print(f"\n  Format: <typ>(<zakres>)!: <opis>   typy: {', '.join(cc.TYPES)}", file=sys.stderr)
-        print("  Przykład: feat(install): tryb --shared zapisuje workflow team-factory   (docs/RELEASING.md)",
+        print("✗ This is not a Conventional Commit:\n" + "\n".join(f"  - {p}" for p in problems), file=sys.stderr)
+        print(f"\n  Format: <type>(<scope>)!: <description>   types: {', '.join(cc.TYPES)}", file=sys.stderr)
+        print("  Example: feat(install): the --shared mode writes the team-factory workflow   (docs/RELEASING.md)",
               file=sys.stderr)
         return 1
     print("✓ Conventional Commit")

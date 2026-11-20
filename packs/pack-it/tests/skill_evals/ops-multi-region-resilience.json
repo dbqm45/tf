@@ -17,6 +17,21 @@
       }
     },
     {
+      "id": "strategia-dr-rto-rpo-en",
+      "expect": "trigger",
+      "prompt": "We run a shop in a single cloud region and the board is asking about an outage of the whole region. Payments can be down for at most 15 minutes, and the reporting dashboard even for a day. Which DR strategy should we choose for each of them? Answer briefly.",
+      "checks": {
+        "all": [
+          ["pilot light", "warm standby"],
+          ["active.?active", "multi-site", "wielu lokalizacj"],
+          ["backup (and|&|i) restore", "kopi\\w* i odtwarzani", "odtworzeni\\w* z kopii"],
+          ["tier", "poziom\\w* krytyczności", "klas\\w* usług", "per usług"],
+          ["koszt", "cost"]
+        ],
+        "none": ["jedna strategia dla wszystkich usług", "(a )?single strategy for all services", "one strategy for (all|every) service"]
+      }
+    },
+    {
       "id": "failover-dns-control-plane",
       "expect": "trigger",
       "prompt": "Planujemy przełączanie ruchu na drugi region przez DNS z health checkami. Co może pójść nie tak w trakcie prawdziwej awarii regionu i jak to zabezpieczyć? Odpowiedz zwięźle.",

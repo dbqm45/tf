@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Narzędzie fabryki: porównanie przepływów pracy (np. sam tryb planu, talos, mode-pdi) na tych samych zgłoszeniach.
+Factory tool: a comparison of workflows (e.g. plan mode alone, the /tf loop, mode-pdi) on the same tickets.
 
-  python3 tools/flow_compare.py prepare flows.json --out <katalog> [--seed N]
-      zanonimizowane diffy przebiegów (<zgłoszenie>/A.diff, B.diff…) i szablon oceny ocena.json dla oceniającego;
-      klucz przypisania liter do przepływów w <katalog>/key.json (nie dawaj go oceniającemu)
-  python3 tools/flow_compare.py report flows.json --key <katalog>/key.json [--verdicts oceny.json] --out report.md
-      tabela na zgłoszenie: koszt, czas, commity, linie kodu i artefaktów (udział), ocena, gotowy do merge, koszt na
-      punkt oceny, krotność kosztu wobec przepływu bazowego; werdykt: najwyższa ocena wśród gotowych do merge, przy
-      remisie tańszy
+  python3 tools/flow_compare.py prepare flows.json --out <dir> [--seed N]
+      anonymized run diffs (<ticket>/A.diff, B.diff…) and the grading template ocena.json for the grader;
+      the key assigning letters to workflows in <dir>/key.json (do not give it to the grader)
+  python3 tools/flow_compare.py report flows.json --key <dir>/key.json [--verdicts oceny.json] --out report.md
+      a table per ticket: cost, time, commits, lines of code and artifacts (share), grade, ready to merge, cost per
+      grade point, cost multiple relative to the baseline workflow; verdict: the highest grade among those ready to merge, on a
+      tie the cheaper one
 
-flows.json: {"repo": ŚCIEŻKA, "base": "main", "baseline": "plan",
-             "tickets": [{"id": "T-1", "runs": [{"flow": "talos", "branch": "story/x", "cost_usd": 14.0,
+flows.json: {"repo": PATH, "base": "main", "baseline": "plan",
+             "tickets": [{"id": "T-1", "runs": [{"flow": "tf", "branch": "story/x", "cost_usd": 14.0,
                                                    "minutes": 45}, …]}]}
-oceny.json (od ślepego oceniającego, po literach): {"T-1": {"A": {"score": 8, "mergeable": true, "uwagi": "…"}, …}}
-Artefakty liczone tymi samymi wzorcami co pr_budget.py (core-delivery-lifecycle). Protokół:
-docs/evals/protokol-porownania-przeplywow.md. Bez sieci i bez modelu; tylko biblioteka standardowa.
+oceny.json (from the blind grader, by letters): {"T-1": {"A": {"score": 8, "mergeable": true, "uwagi": "…"}, …}}
+Artifacts are counted with the same patterns as pr_budget.py (core-delivery-lifecycle). Protocol:
+docs/evals/protokol-porownania-przeplywow.md. No network and no model; standard library only.
 """
 from __future__ import annotations
 

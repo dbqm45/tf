@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Manifest rekonstrukcji projektu i odświeżanie przyrostowe: zapisuje commit, datę, koszt, partie z `repo_inventory`
-z hashem sha256 i hashe plików; po zmianach w repozytorium mówi, które partie (karty modułów) zrobić od nowa.
-Tylko biblioteka standardowa; kodu nie uruchamia, repozytorium nie zmienia.
+Project reconstruction manifest and incremental refresh: records the commit, date, cost, the batches from `repo_inventory`
+with a sha256 hash, and file hashes; after changes in the repository it tells which batches (module cards) to redo.
+Standard library only; it does not run the code and does not change the repository.
 
   python3 recon_manifest.py write <repo> --out <manifest.json> [--budget-tokens 60000] [--cost-usd 1.25]
   python3 recon_manifest.py diff <repo> --manifest <manifest.json> [--json]
 
-`diff` liczy partie tym samym budżetem co manifest. Wynik: partie do odświeżenia (zmieniony hash albo nowe),
-partie usunięte (ich karty do skasowania), bez zmian, pliki zmienione, dodane i usunięte, zmienione testy (wymagania
-z testów do przejrzenia) i udział zmienionych plików w %. Kod 0; 2 — złe wywołanie.
+`diff` computes the batches with the same budget as the manifest. Result: batches to refresh (changed or new hash),
+removed batches (their cards to delete), unchanged, changed, added and removed files, changed tests (requirements
+from tests to review) and the share of changed files in %. Code 0; 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -17,7 +17,6 @@ import datetime
 import hashlib
 import json
 import os
-import re
 import subprocess
 import sys
 
@@ -63,7 +62,7 @@ def diff(old: dict, new: dict) -> dict:
     modified = sorted(p for p in set(of) & set(nf) if of[p] != nf[p])
     ot, nt = old.get("tests", {}), new["tests"]
     tests = sorted(p for p in set(ot) | set(nt) if ot.get(p) != nt.get(p))
-    ob = {re.sub(r" \(pliki\)$", " (files)", b["name"]): b["hash"] for b in old.get("batches", [])}   # pl: sprzed 14.x
+    ob = {b["name"]: b["hash"] for b in old.get("batches", [])}
     nb = {b["name"]: b["hash"] for b in new["batches"]}
     changed = sorted(set(added) | set(removed) | set(modified))
     return {"refresh": sorted(n for n in nb if ob.get(n) != nb[n]),

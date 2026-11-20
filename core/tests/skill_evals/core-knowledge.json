@@ -23,6 +23,31 @@
       }
     },
     {
+      "id": "zapytaj-fabryke-z-cytatem-en",
+      "expect": "trigger",
+      "prompt": "I want to ask the factory how we calculate the contractual penalty for a delivery delay under the framework agreement with the supplier, and get an answer with a quote from the project documents, not from the model’s memory. How do I do that? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "kb\\.py|kb search|baz[aęy] wiedzy",
+            "knowledge base"
+          ],
+          [
+            "plik:linia|:l\\d|zakres linii|cytat|cytuj",
+            "file:line|:l\\d|line range|quot\\w*|\\bcit(e|es|ing|ation\\w*)"
+          ],
+          [
+            "ingest|pobierz|rejestr|research",
+            "ingest\\w*|download\\w*|regist(er|ry)|fetch|import"
+          ]
+        ],
+        "none": [
+          "z pamięci (wystarczy|jest ok)",
+          "(from|by) (the model(’|')?s )?memory (is (enough|fine|ok(ay)?)|will do|suffices)"
+        ]
+      }
+    },
+    {
       "id": "rejestr-zrodel-nakladki",
       "expect": "trigger",
       "prompt": "Budujemy własną nakładkę fabryki dla branży ubezpieczeń i chcemy dodać zaufane źródła (ustawy, wytyczne nadzoru) do bazy wiedzy fabryki. Gdzie i w jakim formacie je zapisać? Odpowiedz zwięźle.",

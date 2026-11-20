@@ -1,70 +1,69 @@
-# Cache Components (Next.js 16+) — model, klucze, ograniczenia, migracja
-> · 5. Unieważnianie · 6. Dane z żądania · 7. Ograniczenia · 8. Migracja ze starych ustawień
+# Cache Components (Next.js 16+) — model, keys, limitations, migration
 
-Włączasz flagą `cacheComponents: true` w `next.config.ts`; zastępuje ona eksperymentalne `experimental.ppr`.
-Przed zmianą sprawdź w dokumentacji dopasowanej do zainstalowanej wersji (`.next-docs/`, SKILL.md), bo API
-cache zmieniało się między wydaniami 15 i 16.
+You enable it with the `cacheComponents: true` flag in `next.config.ts`; it replaces the experimental `experimental.ppr`.
+Before the change check the documentation matched to the installed version (`.next-docs/`, SKILL.md), because the cache
+API changed between releases 15 and 16.
 
-## 1. Trzy rodzaje treści na jednej stronie
-- **Statyczna:** kod synchroniczny, importy i czyste obliczenia trafiają do powłoki prerenderowanej przy buildzie.
-- **Cache'owana:** dane asynchroniczne, które nie muszą być świeże przy każdym żądaniu, oznaczasz `'use cache'`.
-- **Dynamiczna:** dane, które muszą być świeże albo zależą od żądania (cookies, nagłówki, parametry wyszukiwania),
-  owijasz w `<Suspense>`. Doczytują się strumieniem po wysłaniu powłoki.
+## 1. Three kinds of content on one page
+- **Static:** synchronous code, imports and pure computations go into the shell prerendered at build time.
+- **Cached:** asynchronous data that does not have to be fresh on every request, you mark with `'use cache'`.
+- **Dynamic:** data that must be fresh or depends on the request (cookies, headers, search parameters),
+  you wrap in `<Suspense>`. It loads as a stream after the shell is sent.
 
-Komponent asynchroniczny bez `'use cache'` i bez `<Suspense>` nad nim to błąd builda: Next.js nie wie, czy ma go
-prerenderować, czy czekać na żądanie. Rozstrzygasz to jawnie jednym z dwóch sposobów.
+An asynchronous component without `'use cache'` and without `<Suspense>` above it is a build error: Next.js does not know whether to
+prerender it or to wait for the request. You resolve it explicitly in one of the two ways.
 
-## 2. Gdzie stawiasz `'use cache'`
-- **Plik:** cała strona lub moduł jest cache'owany. Używaj rzadko, bo trudno potem wydzielić część dynamiczną.
-- **Komponent:** cache'owany fragment drzewa, np. lista produktów na stronie z koszykiem użytkownika.
-- **Funkcja:** odczyt danych w DAL (`references/patterns.md`, sekcja 3). Najłatwiejszy do testów i ponownego użycia.
+## 2. Where you put `'use cache'`
+- **File:** the whole page or module is cached. Use it rarely, because it is hard to extract a dynamic part later.
+- **Component:** a cached fragment of the tree, e.g. a product list on a page with the user's cart.
+- **Function:** a data read in the DAL (`references/patterns.md`, section 3). The easiest to test and reuse.
 
-## 3. Czas życia i warianty
-- `cacheLife('minutes' | 'hours' | 'days' | 'weeks' | 'max')` albo obiekt z trzema czasami: jak długo podawać
-  starą wartość bez pytania serwera, co ile odświeżać w tle i kiedy wpis bezwzględnie wygasa.
-  Domyślny profil bez `cacheLife` ma krótkie czasy rzędu minut [niezweryfikowane: dokładne wartości sprawdź
-  w dokumentacji wersji].
-- `'use cache: remote'` — wpisy w magazynie platformy (np. Redis, KV) wspólnym dla instancji.
-- `'use cache: private'` — wyjątek dla danych konkretnego użytkownika, który pozwala czytać `cookies()`; wynik
-  nie trafia do wspólnego cache. Używaj, gdy nie da się przekazać wartości argumentem (sekcja 6).
+## 3. Lifetime and variants
+- `cacheLife('minutes' | 'hours' | 'days' | 'weeks' | 'max')` or an object with three times: how long to serve
+  the stale value without asking the server, how often to refresh in the background and when the entry expires unconditionally.
+  The default profile without `cacheLife` has short times on the order of minutes [unverified: check the exact values
+  in the version's documentation].
+- `'use cache: remote'` — entries in the platform's store (e.g. Redis, KV) shared by the instances.
+- `'use cache: private'` — an exception for a specific user's data that allows reading `cookies()`; the result
+  does not go into the shared cache. Use it when the value cannot be passed as an argument (section 6).
 
-## 4. Klucz cache
-Klucz powstaje automatycznie z identyfikatora builda (nowe wdrożenie unieważnia wszystko), położenia funkcji,
-serializowalnych argumentów i zmiennych z domknięcia. Wnioski:
-- wszystko, od czego zależy wynik, musi być argumentem albo zmienną z domknięcia;
-- argument nieserializowalny (klasa, funkcja) psuje klucz — przekazuj identyfikatory i proste dane;
-- argument o dużej liczbie wartości (np. pełny obiekt filtra) mnoży wpisy — przekazuj tylko potrzebne pola.
+## 4. The cache key
+The key is created automatically from the build identifier (a new deployment invalidates everything), the function's location,
+the serializable arguments and the closure variables. Conclusions:
+- everything the result depends on must be an argument or a closure variable;
+- a non-serializable argument (a class, a function) breaks the key — pass identifiers and simple data;
+- an argument with a large number of values (e.g. a full filter object) multiplies entries — pass only the needed fields.
 
-## 5. Unieważnianie
-- `cacheTag('products', 'product-' + id)` wewnątrz funkcji: ogólny tag dla list i szczegółowy dla jednego rekordu.
-- W Server Action po zapisie `updateTag(tag)`: ten sam użytkownik od razu widzi swój zapis.
-- Z webhooka lub zadania w tle `revalidateTag(tag, 'max')`: następne żądania dostaną świeże dane, bieżące mogą
-  dostać starą wersję.
+## 5. Invalidation
+- `cacheTag('products', 'product-' + id)` inside the function: a general tag for lists and a specific one for a single record.
+- In a Server Action after the save `updateTag(tag)`: the same user sees their write immediately.
+- From a webhook or a background job `revalidateTag(tag, 'max')`: subsequent requests will get fresh data, current ones may
+  get the old version.
 
-## 6. Dane z żądania
-W funkcji z `'use cache'` nie czytasz `cookies()`, `headers()` ani `searchParams`. Odczytujesz je wyżej, poza
-funkcją cache'owaną, i przekazujesz potrzebną wartość jako argument; staje się częścią klucza. Część strony, która
-czyta te dane, leży w `<Suspense>`.
+## 6. Request data
+In a function with `'use cache'` you do not read `cookies()`, `headers()` or `searchParams`. You read them higher up, outside
+the cached function, and pass the needed value as an argument; it becomes part of the key. The part of the page that
+reads this data sits in `<Suspense>`.
 
-## 7. Ograniczenia
-- Wymaga środowiska Node.js: nie działa w Edge Runtime ani przy eksporcie statycznym (`output: 'export'`).
-- Wartości niedeterministyczne (`Math.random()`, `Date.now()`, `crypto.randomUUID()`) w `'use cache'` liczą się
-  raz i zostają w cache. Gdy mają być inne przy każdym żądaniu, poza cache wywołaj najpierw `await connection()`
-  z `next/server`.
-- Przy kilku instancjach wpisy w pamięci jednej instancji nie są widoczne w innych (`references/deployment.md`).
+## 7. Limitations
+- It requires the Node.js environment: it does not work in the Edge Runtime or with a static export (`output: 'export'`).
+- Non-deterministic values (`Math.random()`, `Date.now()`, `crypto.randomUUID()`) in `'use cache'` are computed
+  once and stay in the cache. When they must be different on every request, call `await connection()`
+  from `next/server` first, outside the cache.
+- With several instances, entries in the memory of one instance are not visible in the others (`references/deployment.md`).
 
-## 8. Migracja ze starych ustawień
-| Było (15 i starsze) | Z Cache Components |
+## 8. Migration from the old settings
+| Before (15 and older) | With Cache Components |
 |---|---|
 | `experimental.ppr` | `cacheComponents: true` |
-| `export const dynamic = 'force-dynamic'` | usuń; dynamiczność jest domyślna |
+| `export const dynamic = 'force-dynamic'` | remove it; dynamic is the default |
 | `export const dynamic = 'force-static'` | `'use cache'` + `cacheLife('max')` |
 | `export const revalidate = N` | `cacheLife({ revalidate: N })` |
-| `unstable_cache(fn, keyParts, { tags, revalidate })` | funkcja z `'use cache'`, `cacheTag(...)`, `cacheLife(...)`; bez ręcznych kluczy |
+| `unstable_cache(fn, keyParts, { tags, revalidate })` | a function with `'use cache'`, `cacheTag(...)`, `cacheLife(...)`; no manual keys |
 
-Kolejność: włącz flagę na gałęzi, uruchom `next build` i usuwaj błędy po kolei (każdy wskazuje komponent bez
-decyzji „cache czy Suspense”). Potem przegląd wszystkich `revalidateTag` i `revalidatePath`.
+Order: enable the flag on a branch, run `next build` and remove the errors one by one (each points to a component without
+a "cache or Suspense" decision). Then a review of all `revalidateTag` and `revalidatePath`.
 
-Gdy migrujesz większą aplikację, autorzy Next.js udostępniają skille procesowe `next-cache-components-adoption`
-i `next-cache-components-optimizer` w repozytorium `vercel/next.js` (katalog `skills`). Instaluje je człowiek po
-audycie (core-agent-security).
+When you migrate a larger application, the Next.js authors provide the process skills `next-cache-components-adoption`
+and `next-cache-components-optimizer` in the `vercel/next.js` repository (the `skills` directory). The human installs them after
+an audit (core-agent-security).

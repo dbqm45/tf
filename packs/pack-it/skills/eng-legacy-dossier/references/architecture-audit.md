@@ -1,97 +1,97 @@
-# Audyt architektury — Inventory → Assessment → Recommendations
+# Architecture audit — Inventory → Assessment → Recommendations
 
-> **Spis treści:** 1. Zasada · 2. Etapy i wyniki · 3. Kryteria oceny · 4. Ustalenie (`ARCH-NNN`) · 5. Kategorie · 6. Rekomendacja (`REC-NNN`) i szczeble decyzji · 7. Priorytety i roadmapa · 8. Docelowe zasady · 9. Szablony plików · 10. Harmonogram orientacyjny · 11. Kiedy audyt jest skończony
+> **Contents:** 1. Principle · 2. Stages and results · 3. Assessment criteria · 4. Finding (`ARCH-NNN`) · 5. Categories · 6. Recommendation (`REC-NNN`) and decision rungs · 7. Priorities and roadmap · 8. Target principles · 9. File templates · 10. Indicative schedule · 11. When the audit is finished
 
-## 1. Zasada
-Nie zaczynasz od pytania „co przebudować?”, tylko „jak działa obecna architektura, jakie problemy rzeczywiście
-powoduje i czy zmiana da mierzalną korzyść?”. Rozwiązanie niezgodne z popularnym wzorcem nie jest problemem, dopóki
-nie wykażesz skutku (koszt zmian, błędy, blokada rozwoju) albo ryzyka.
+## 1. Principle
+You do not start from the question "what to rebuild?", but from "how does the current architecture work, what problems does it actually
+cause, and will a change bring a measurable benefit?". A solution that does not match a popular pattern is not a problem until
+you show an effect (cost of changes, bugs, blocked development) or a risk.
 
-## 2. Etapy i wyniki
-| Etap | Działanie | Wynik (plik teczki) |
+## 2. Stages and results
+| Stage | Action | Result (dossier file) |
 |---|---|---|
-| 1. Zakres | aplikacje, biblioteki współdzielone i ich konsumenci, czy build/testy/CI, istniejące standardy zespołu | `assessment.md` § Zakres i metoda, § Kryteria oceny |
-| 2. Inventory (as-is) | struktura, projekty, zależności, rozwiązania — bez ocen | `README.md` + `modules/*.md` |
-| 3. Assessment | stan obecny vs oczekiwany, dowody, kategorie, mocne strony | `assessment.md` § Ustalenia, Mocne strony |
-| 4. Recommendations | decyzja na najniższym skutecznym szczeblu, docelowe zasady | `recommendations.md` § Rekomendacje, Docelowe zasady |
-| 5. Priorytety | P1–P3, wysiłek, ryzyko, kolejność, fazy | `recommendations.md` § Roadmapa, Kryteria sukcesu |
+| 1. Scope | applications, shared libraries and their consumers, whether build/tests/CI, the team's existing standards | `assessment.md` § Scope and method, § Assessment criteria |
+| 2. Inventory (as-is) | structure, projects, dependencies, solutions — no assessments | `README.md` + `modules/*.md` |
+| 3. Assessment | current vs expected state, evidence, categories, strengths | `assessment.md` § Findings, Strengths |
+| 4. Recommendations | a decision at the lowest effective rung, target principles | `recommendations.md` § Recommendations, Target principles |
+| 5. Priorities | P1–P3, effort, risk, order, phases | `recommendations.md` § Roadmap, Success criteria |
 
-Ustalenia zapisujesz na bieżąco (z dowodem i pytaniem do weryfikacji), nie na końcu.
+You record findings as you go (with evidence and a question for verification), not at the end.
 
-## 3. Kryteria oceny
-Checklistę obszarów ustalasz w etapie 1 (dla Nx + Angular: `nx-angular.md` § 1). Każdy obszar oceniasz pytaniami:
-- **Clarity** — czy strukturę da się zrozumieć bez długiej analizy kodu?
-- **Consistency** — czy podobne problemy rozwiązano podobnie?
-- **Coupling** — czy zmiana w jednym miejscu wymusza zmiany w innych?
-- **Cohesion** — czy to, co należy do jednej odpowiedzialności, leży razem?
-- **Testability** — czy istotną logikę można testować niezależnie od widoku?
-- **Enforceability** — czy zasady wymusza narzędzie (lint, reguły zależności), czy tylko pamięć ludzi?
-- **Maintainability** i **Complexity** — czy korzyść uzasadnia złożoność?
+## 3. Assessment criteria
+You set the checklist of areas in stage 1 (for Nx + Angular: `nx-angular.md` § 1). You assess each area with questions:
+- **Clarity** — can the structure be understood without a long analysis of the code?
+- **Consistency** — were similar problems solved in a similar way?
+- **Coupling** — does a change in one place force changes in others?
+- **Cohesion** — does what belongs to one responsibility lie together?
+- **Testability** — can the essential logic be tested independently of the view?
+- **Enforceability** — are the rules enforced by a tool (lint, dependency rules) or only by people's memory?
+- **Maintainability** and **Complexity** — does the benefit justify the complexity?
 
-Sprzężenie mierzone dowodem w kodzie (stopień connascence) — ddd-connascence-analysis.
+Coupling measured with evidence in the code (degree of connascence) — ddd-connascence-analysis.
 
-## 4. Ustalenie (`ARCH-NNN`)
+## 4. Finding (`ARCH-NNN`)
 ```markdown
-### ARCH-004 — Biblioteka współdzielona importuje implementację aplikacji
-Area: granice bibliotek
+### ARCH-004 — A shared library imports an application's implementation
+Area: library boundaries
 Category: confirmed problem
-Current state: libs/shared/ui importuje OrdersFacade z apps/shop
-Expected state: biblioteki współdzielone nie zależą od aplikacji
-Gap: zmiana w aplikacji może zepsuć wszystkich konsumentów shared/ui
+Current state: libs/shared/ui imports OrdersFacade from apps/shop
+Expected state: shared libraries do not depend on applications
+Gap: a change in the application can break all consumers of shared/ui
 Evidence: libs/shared/ui/src/lib/order-badge.component.ts:3
-Impact: sprzężenie; shared/ui nie da się użyć w drugiej aplikacji
+Impact: coupling; shared/ui cannot be used in a second application
 ```
-- **Dowód** to `plik:linia` (kilka po przecinku). Wynik polecenia (np. graf zależności) zapisz w teczce
-  (`evidence/graph.json`) i wskaż `evidence/graph.json:1` — `dossier_check.py` sprawdza istnienie pliku i linii.
-- **Fakt vs interpretacja:** „jest import” to fakt (Dowód); „to szkodzi” to interpretacja (Wpływ) — musi wynikać
-  z dowodu albo trafić do „Do dalszego zbadania”.
+- **Evidence** is `file:line` (several separated by commas). Save the output of a command (e.g. the dependency graph) in the dossier
+  (`evidence/graph.json`) and point to `evidence/graph.json:1` — `dossier_check.py` checks that the file and the line exist.
+- **Fact vs interpretation:** "there is an import" is a fact (Evidence); "it does harm" is an interpretation (Impact) — it must follow
+  from the evidence or go to "To investigate".
 
-## 5. Kategorie
-| Kategoria | Znaczenie | Dowód |
+## 5. Categories
+| Category | Meaning | Evidence |
 |---|---|---|
-| `confirmed problem` | wykazany skutek, np. cykl blokujący niezależne zmiany | wymagany; wymaga rekomendacji |
-| `risk` | może się ujawnić, np. brak kontroli zależności | zalecany |
-| `inconsistency` | podobne rzeczy rozwiązane różnie | wymagany (oba miejsca) |
-| `improvement` | da się prościej, bez krytycznego problemu | zalecany |
-| `preference` | inny styl, bez wykazanego skutku | — ; nie uzasadnia refaktoryzacji strukturalnej |
+| `confirmed problem` | a demonstrated effect, e.g. a cycle that blocks independent changes | required; requires a recommendation |
+| `risk` | may surface, e.g. no control of dependencies | recommended |
+| `inconsistency` | similar things solved differently | required (both places) |
+| `improvement` | can be done more simply, without a critical problem | recommended |
+| `preference` | a different style, without a demonstrated effect | — ; does not justify a structural refactoring |
 
-## 6. Rekomendacja (`REC-NNN`) i szczeble decyzji
+## 6. Recommendation (`REC-NNN`) and decision rungs
 ```markdown
-### REC-002 — Egzekwować kierunek zależności regułą Nx
+### REC-002 — Enforce the dependency direction with an Nx rule
 Addresses: ARCH-004, ARCH-007
 Decision: configuration
 Priority: P1
-Effort: 0,5 dnia
-Risk: lint zablokuje istniejące importy — najpierw lista wyjątków
-Verification: przykładowy niedozwolony import jest zgłaszany przez lint, dozwolone przechodzą
+Effort: 0.5 day
+Risk: lint will block existing imports — first a list of exceptions
+Verification: a sample forbidden import is reported by lint, allowed ones pass
 ```
-Szczeble (wybierz najniższy, który rozwiązuje rzeczywisty problem): **`no change`** (z powodem) → **`documentation`** →
-**`configuration`** (lint, reguły, tagi) → **`incremental refactoring`** → **`structural refactoring`** (zmiana
-podziału odpowiedzialności) → **`redesign`**. Rekomendacja opisuje też obecne rozwiązanie, problem,
-uzasadnienie i oczekiwaną korzyść — w treści pod polami.
+Rungs (choose the lowest one that solves the actual problem): **`no change`** (with a reason) → **`documentation`** →
+**`configuration`** (lint, rules, tags) → **`incremental refactoring`** → **`structural refactoring`** (a change
+in the division of responsibilities) → **`redesign`**. The recommendation also describes the current solution, the problem,
+the justification and the expected benefit — in the text below the fields.
 
-## 7. Priorytety i roadmapa
-| Priorytet | Kryterium | Działanie |
+## 7. Priorities and roadmap
+| Priority | Criterion | Action |
 |---|---|---|
-| P1 | istotny wpływ na stabilność, bezpieczeństwo zmian lub rozwój | zaplanować niezwłocznie |
-| P2 | podnosi koszt utrzymania lub ryzyko kolejnych zmian | najbliższe iteracje |
-| P3 | czytelność lub spójność bez pilnej potrzeby | przy okazji prac |
+| P1 | a significant impact on stability, safety of changes or development | plan without delay |
+| P2 | raises the maintenance cost or the risk of further changes | the next iterations |
+| P3 | readability or consistency without an urgent need | along with other work |
 
-Poza wpływem uwzględnij wysiłek, ryzyko regresji, zasięg (ile projektów), zależności między zadaniami i możliwość
-wdrażania etapami. Fazy roadmapy (przykład, kolejność wynika z ustaleń): **A. Fundamenty** (granice, reguły
-zależności, cykle, lint) → **B. Najważniejsze problemy** → **C. Ujednolicenie** (wzorce, dokumentacja standardów,
-testy) → **D. Dalsze usprawnienia**. Każde zadanie: zakres, priorytet, wysiłek, zależności, ryzyka, warunek
-ukończenia — gotowe do przeniesienia do systemu zadań. Plan wykonania refaktoryzacji: eng-refactor-planning;
-wykonanie z zamrożonym zachowaniem: eng-behavior-preserving-refactoring.
+Besides the impact, take into account the effort, the regression risk, the reach (how many projects), the dependencies between tasks and the possibility
+of rolling out in stages. Roadmap phases (an example, the order follows from the findings): **A. Foundations** (boundaries, dependency
+rules, cycles, lint) → **B. The most important problems** → **C. Unification** (patterns, documentation of standards,
+tests) → **D. Further improvements**. Each task: scope, priority, effort, dependencies, risks, completion
+condition — ready to move into the task system. The refactoring execution plan: eng-refactor-planning;
+execution with frozen behaviour: eng-behavior-preserving-refactoring.
 
-## 8. Docelowe zasady
-Tylko tyle standardu, ile pomaga tej aplikacji. Rozdziel: **obowiązkowe** (wymuszane narzędziem, gdy się da),
-**zalecane** (wyjątki z uzasadnieniem), **zależne od kontekstu** (decyzja w danym przypadku). Typowe obszary:
-podział na biblioteki, nazwy i lokalizacje, tagi, dozwolone kierunki zależności, public API, organizacja feature'ów
-i UI, dostęp do API, zarządzanie stanem, wymagania testów, dokumentowanie wyjątków. Decyzje o zasadach — ADR
+## 8. Target principles
+Only as much standard as helps this application. Separate: **mandatory** (enforced by a tool where possible),
+**recommended** (exceptions with a justification), **context-dependent** (a decision in the given case). Typical areas:
+the division into libraries, names and locations, tags, allowed dependency directions, public API, organization of features
+and UI, API access, state management, test requirements, documenting exceptions. Decisions on principles — an ADR
 (docs-tech-writing).
 
-## 9. Szablony plików
+## 9. File templates
 `assessment.md`:
 ```markdown
 <!-- legacy-dossier:assessment -->
@@ -115,14 +115,14 @@ i UI, dostęp do API, zarządzanie stanem, wymagania testów, dokumentowanie wyj
 ## Success criteria
 ```
 
-## 10. Harmonogram orientacyjny
-Jedna aplikacja z istotnymi bibliotekami — punkt wyjścia ok. 6–9 dni pracy człowieka (założenie z planu audytu,
-nie pomiar): zakres i workspace → biblioteki i zależności → Angular, routing, stan, API, testy → ocena → rekomendacje
-→ priorytety → konsultacje. Z agentem etapy 1–2 są szybsze (narzędzia + skrypt), ale ocena i konsultacje z zespołem
-nie. Duże repo: warstwami lub domenami — najpierw struktura i przepływy, w głąb tam, gdzie są pytania.
+## 10. Indicative schedule
+One application with significant libraries — a starting point of about 6–9 days of human work (an assumption from the audit plan,
+not a measurement): scope and workspace → libraries and dependencies → Angular, routing, state, API, tests → assessment → recommendations
+→ priorities → consultations. With an agent, stages 1–2 are faster (tools + the script), but the assessment and the consultations with the team
+are not. A large repo: by layers or domains — first the structure and the flows, in depth where the questions are.
 
-## 11. Kiedy audyt jest skończony
-- znasz strukturę aplikacji i kluczowych bibliotek, umiesz wyjaśnić najważniejsze zależności i przepływy danych;
-- najważniejsze ustalenia mają dowody, a mocne strony są opisane;
-- każda istotna rekomendacja ma uzasadnienie, priorytet i sposób weryfikacji;
-- `dossier_check.py` → `legacy-dossier-check: OK`; zespół zna wyniki i może z nich planować pracę.
+## 11. When the audit is finished
+- you know the structure of the application and the key libraries, you can explain the most important dependencies and data flows;
+- the most important findings have evidence, and the strengths are described;
+- every significant recommendation has a justification, a priority and a way of verification;
+- `dossier_check.py` → `legacy-dossier-check: OK`; the team knows the results and can plan work from them.

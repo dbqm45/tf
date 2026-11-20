@@ -1,20 +1,20 @@
-# Przykłady czystego kodu
+# Examples of clean code
 
-> **Spis treści:** 1. Funkcja z flagą i `null` jako znaczeniem · 2. Długi `switch` po typie · 3. Połykany wyjątek i `None` jako błąd
+> **Contents:** 1. A function with a flag and `null` as a meaning · 2. A long `switch` on type · 3. A swallowed exception and `None` as an error
 
-## 1. Funkcja z flagą i `null` jako znaczeniem
-**Sytuacja:** „Zrób review `process()` — ciężko się ją czyta, a testy przechodzą”.
+## 1. A function with a flag and `null` as a meaning
+**Situation:** "Review `process()` — it is hard to read, and the tests pass".
 
-**Jak:**
-1. **Nazwy:** `process` i `data` nic nie mówią → nazwa z języka domeny (`blockResource`).
-2. **Parametr-flaga** `notify: boolean` → dwie funkcje (komenda bez i z powiadomieniem).
-3. **`null` jako znaczenie** („brak właściciela = system”) → osobna funkcja zamiast `null` w argumencie.
-4. **Wczesny powrót** zamiast zagnieżdżeń.
-5. Każdy krok osobno, testy zielone po każdym, commit `refactor:`.
+**How:**
+1. **Names:** `process` and `data` say nothing → a name from the domain language (`blockResource`).
+2. **A flag parameter** `notify: boolean` → two functions (the command without and with a notification).
+3. **`null` as a meaning** ("no owner = the system") → a separate function instead of `null` in the argument.
+4. **An early return** instead of nesting.
+5. Each step separately, tests green after each, a `refactor:` commit.
 
-**Wynik:**
+**Result:**
 ```ts
-// przed
+// before
 declare const repo: { find(id: string): { blocked: boolean; by: string } | undefined; save(r: { blocked: boolean; by: string }): void };
 declare function sendMail(to: string): void;
 
@@ -33,7 +33,7 @@ export function process(data: string, owner: string | null, notify: boolean): bo
 }
 ```
 ```ts
-// po
+// after
 type Resource = { blocked: boolean; by: string };
 declare const resources: { find(id: string): Resource | undefined; save(r: Resource): void };
 declare function sendMail(to: string): void;
@@ -55,20 +55,20 @@ export function blockResourceAndNotify(resourceId: string, ownerId: string): boo
   return blocked;
 }
 ```
-Uwaga do review: zwracany `boolean` zostaje, bo `refactor:` nie zmienia zachowania. Zamianę `false` na wynik
-operacji albo wyjątek (rozdzielenie komendy od zapytania — CQS) proponuję w osobnym PR po uzgodnieniu z wywołującymi.
+Review note: the returned `boolean` stays, because `refactor:` does not change behaviour. I propose replacing `false` with an operation
+result or an exception (separating the command from the query — CQS) in a separate PR after agreeing it with the callers.
 
-## 2. Długi `switch` po typie
-**Sytuacja:** „Linter zgłasza `complexity` 12 w `shipping_cost()`. Ten sam `if` po typie przesyłki jest jeszcze w dwóch
-innych plikach”.
+## 2. A long `switch` on type
+**Situation:** "The linter reports `complexity` 12 in `shipping_cost()`. The same `if` on the shipment type is also in two
+other files".
 
-**Jak:**
-1. Złożoność cyklomatyczna 12 > ok. 10 (próg McCabe'a) → dziel.
-2. Zapach „`switch` po typie w wielu miejscach” → polityka/warianty: jedna tabela cen w jednym miejscu.
-3. Kwota jako `float` to **obsesja typów prostych** → grosze w `int` z jednostką w nazwie.
-4. Testy charakteryzujące przed zmianą, potem kroki: wydziel tabelę → podmień trzy miejsca użycia → usuń stare gałęzie.
+**How:**
+1. Cyclomatic complexity 12 > about 10 (McCabe's threshold) → split it.
+2. The smell "`switch` on type in many places" → a policy/variants: one price table in one place.
+3. An amount as a `float` is **primitive obsession** → grosze (PLN cents) in an `int` with the unit in the name.
+4. Characterization tests before the change, then the steps: extract the table → replace the three places of use → remove the old branches.
 
-**Wynik** (złożoność 12 → 2; nowy typ przesyłki = nowy wiersz, bez edycji funkcji):
+**Result** (complexity 12 → 2; a new shipment type = a new row, without editing the function):
 ```python
 from dataclasses import dataclass
 
@@ -89,19 +89,19 @@ TARIFFS: dict[str, Tariff] = {
 def shipping_cost_grosze(kind: str, weight_kg: int) -> int:
     tariff = TARIFFS.get(kind)
     if tariff is None:
-        raise ValueError(f"Nieznany typ przesyłki: {kind!r}. Dozwolone: {', '.join(TARIFFS)}")
+        raise ValueError(f"Unknown shipment type: {kind!r}. Allowed: {', '.join(TARIFFS)}")
     return tariff.base_grosze + tariff.per_kg_grosze * weight_kg
 ```
 
-## 3. Połykany wyjątek i `None` jako błąd
-**Sytuacja:** „Import cennika czasem po cichu daje pusty wynik. Popraw obsługę błędów”.
+## 3. A swallowed exception and `None` as an error
+**Situation:** "Importing the price list sometimes silently gives an empty result. Fix the error handling".
 
-**Jak:**
-1. **Błędy:** `except Exception: return None` połyka przyczynę, a `None` udaje błąd → wynik operacji.
-2. Komunikat mówi, co się stało i co zrobić, bez danych wrażliwych (bez całej linii pliku).
-3. **Komentarze:** zakomentowany stary parser usunięty (jest w historii git), zostaje tylko *dlaczego*.
+**How:**
+1. **Errors:** `except Exception: return None` swallows the cause, and `None` pretends to be an error → an operation result.
+2. The message says what happened and what to do, without sensitive data (without the whole line of the file).
+3. **Comments:** the commented-out old parser removed (it is in the git history), only the *why* stays.
 
-**Wynik:**
+**Result:**
 ```python
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
@@ -125,7 +125,7 @@ def parse_price_list(lines: list[str]) -> Parsed | ParseError:
         try:
             prices[sku] = Decimal(raw)
         except InvalidOperation:
-            # dostawca wysyła przecinek dziesiętny tylko w starych plikach — nie zgadujemy, prosimy o poprawny eksport
-            return ParseError(line_no, f"Linia {line_no}: cena nie jest liczbą. Wyeksportuj cennik z kropką dziesiętną.")
+            # the supplier sends a decimal comma only in old files — we do not guess, we ask for a correct export
+            return ParseError(line_no, f"Line {line_no}: the price is not a number. Export the price list with a decimal point.")
     return Parsed(prices)
 ```

@@ -1,7 +1,7 @@
 name: tech-debt
 prefix: DEBT
-title: Dług techniczny (znaczniki, pominięte testy, wyciszenia)
-description: TODO/FIXME/HACK bez zgłoszenia (z wiekiem z gita), pominięte testy bez powodu, wyciszone sprawdzenia (ts-ignore, eslint-disable, noqa, type ignore), pliki kodu powyżej 1000 linii
+title: Technical debt (markers, skipped tests, suppressions)
+description: TODO/FIXME/HACK without a ticket (with the age from git), skipped tests without a reason, suppressed checks (ts-ignore, eslint-disable, noqa, type ignore), code files over 1000 lines
 version: 0.1.0
 review: "2027-05-10"
 skills: [eng-tech-debt-audit, eng-clean-code, qa-regression]

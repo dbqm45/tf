@@ -95,6 +95,7 @@ Shared agents, available to every persona:
 - `scout` (cheap code search);
 - `quick-fixer` (small changes);
 - `researcher` (current facts from sources);
+- `mcp-runner` (MCP tools — Jira, Confluence, Figma — through a cheap model, a short answer back);
 - `architect` (decisions, analysis only);
 - `security-reviewer` (a review of sensitive changes);
 - `scope-reviewer` (whether the diff goes beyond the plan);
@@ -116,7 +117,7 @@ Shared agents, available to every persona:
 ## 4. Modes and automation on request
 | What | How | When |
 |---|---|---|
-| the factory loop (in the core) | `/tf <task>` or `claude --agent tf` | one task with acceptance criteria → a specification, a plan of slices, a commit per slice, evidence, one PR, a cost report; a live preview in `.tf/runs/dashboard.html`; guide: `.tf/factory/LOOP.md` |
+| the factory loop (in the core) | `/tf <task>` or `claude --agent tf` | one task with acceptance criteria → a specification, a plan of slices, a commit per slice, evidence, one PR, a cost report; a live preview in `.tf/runs/dashboard.html`; for a visible UI change also screenshots before/after, looked at against the criteria (`--visual` / `--no-visual`, only when worth it); guide: `.tf/factory/LOOP.md` |
 | Agent teams (`mode-team`, `tf add mode-team`) | `team_switch.py on`, a new session, `/team-session <task>` | the roles must talk to each other along the way; experimental and expensive; guide: `.tf/factory/packs/mode-team/GUIDE.md` |
 | A code audit (`pack-it`) | after the scope is approved: the `/code-audit` workflow | a full audit in many dimensions with a ranking (the `eng-code-audit` skill) |
 | An Event Storming simulation (`pack-it`) | `/ddd-es-simulation` or `claude --agent es-host` | facilitation training with AI participants |
@@ -184,13 +185,19 @@ machine without your credentials.
   - `balanced` — the default: Haiku for mechanics, Sonnet day to day, Opus for expensive mistakes;
   - `quality` — a higher effort and an Opus advisor.
 - **Measurement:** `python3 .tf/factory/cost_report.py --days 7` (usage per agent and model from `.tf/logs/usage.jsonl`);
-  the status line shows the session's cost and how full the context is. Every entry in `usage.jsonl` has a harness
+  the status line shows the session's cost, time and tokens and how full the context is; every `/tf` task shows its
+  cost, time and tokens on the dashboard, in `report.md` and in the PR description. Every entry in `usage.jsonl` has a harness
   fingerprint (the `harness` field: the versions of Claude Code, the factory and the packs, a hash of the installed
   files), so costs from different factory versions can be separated.
 - **Model names and prices:** `python3 .tf/factory/model_check.py` (also in `tf doctor`) checks whether the
   configuration and the engine refer to an unknown or older model. The current models are in `models_current`, the
   allowed older ones in `models_legacy`, the check date in `models_checked` (the engine's configuration; your own model
   pins in `.tf/config/config.yaml`). A date older than 90 days is a reminder to check the names and the price list.
+- **Approved models (optional):** when the organization allows only some models, list them under `models_approved`
+  (in the company pack, the team pack or `.tf/config/config.yaml`; a lower layer only narrows the list). Then
+  `model_check.py` reports a tier or a session setting of the active profile outside the list, `profile.py` refuses
+  a profile that needs such a model, and the `model_guard` hook denies a delegation that names one. Without the
+  list nothing changes. The model you choose for the session yourself (`/model`) is not checked.
 - **After a factory update:** `python3 .tf/factory/metrics.py --after-update` (also in `tf doctor` and in the
   `tf metrics` report) compares the window after the last update with a window of the same length before it: the share
   of reverted changes, hook blocks (`.tf/logs/hook-blocks.jsonl` — the time, the hook and the decision, without content)
@@ -201,10 +208,14 @@ machine without your credentials.
   and `metrics.json`: the share of reverted changes, accepted and pending changes, the cost per accepted change, the
   median PR time (from `gh`, unless `--no-gh`) and the causes of fixes. The factory itself adds the cause of a fix in
   the commit that fixes an earlier change, in the `Rework-Cause:` footer (`spec-gap`, `agent-error`, `requirement-change`,
-  `unknown`; the older Polish values in past commits count as their equivalents) — you do not have to remember it.
+  `unknown`; from 19.0.0 the older Polish values in past commits count as `unknown`) — you do not have to remember it.
 - **The rules:** the cheapest sufficient model for the task and escalation only after a failure (the `core-cost-control`
   skill); you do not change the session's model in the middle of a task, because that wipes the cache; with a long
   context the `context_guard` hook suggests a checkpoint and a new session.
+- **MCP servers (Jira, Confluence, Figma…)** — connect them as usual (OAuth login, no keys). The agent does not call
+  their tools in the main session: the cheap `mcp-runner` agent calls them, keeps the large results (JSON lists, page
+  bodies, design context) in its own context or in `.tf/cache/mcp/`, and returns a short answer. Writes through MCP
+  (a new issue, a status change, a page edit) wait for your approval of the list of changes.
 - **Paid skill evaluations** (`.tf/factory/skill_gate.py <skill> --model …`) you run consciously — the gate without a
   model is free.
 

@@ -1,111 +1,111 @@
-# Niebezpieczne API i domyślne konfiguracje — lista do przeglądu
+# Dangerous APIs and default configurations — a review list
 
-> **Spis treści:** Wzorce wspólne · Python · JavaScript i Node.js · Java · C# i .NET · Go · Domyślne konfiguracje i ustawienia środowiska
+> **Contents:** Common patterns · Python · JavaScript and Node.js · Java · C# and .NET · Go · Default configurations and environment settings
 
-Lista pytań do przeglądu kodu i konfiguracji. Trafienie to kandydat, nie wyrok: sprawdzasz, czy dane są
-niezaufane i czy po drodze jest kontrola. Znalezione wystąpienie → poszukaj wariantów (sec-variant-analysis).
+A list of questions for code and configuration review. A hit is a candidate, not a verdict: you check whether the data is
+untrusted and whether there is a control along the way. A found occurrence → look for variants (sec-variant-analysis).
 
-## Spis treści
-- Wzorce wspólne
-- Python · JavaScript i Node.js · Java · C# i .NET · Go
-- Domyślne konfiguracje i ustawienia środowiska
+## Contents
+- Common patterns
+- Python · JavaScript and Node.js · Java · C# and .NET · Go
+- Default configurations and environment settings
 
-## Wzorce wspólne
-- **Interpreter z wejścia**: `eval`, wykonanie szablonu, wyrażenia (SpEL, OGNL), polecenie powłoki sklejane ze
-  stringa — dane jako kod (CWE-94, CWE-78).
-- **Deserializacja formatów z typami** z niezaufanego źródła (CWE-502) — używaj formatów bez typów (JSON do DTO).
-- **Zapytania sklejane ze stringa** — SQL, LDAP, XPath, NoSQL (CWE-89, CWE-90, CWE-643); identyfikatory (kolumny,
-  kierunek sortowania) tylko z listy dozwolonych.
-- **Parsery XML z encjami zewnętrznymi** (XXE, CWE-611).
-- **Losowość niekryptograficzna** do tokenów, haseł, identyfikatorów sesji (CWE-338).
-- **Słabe skróty i szyfry**: MD5, SHA-1 do haseł lub podpisów, ECB, własna kryptografia; hasła tylko przez
-  Argon2id, scrypt lub bcrypt (sec-cryptography-pki).
-- **Wyłączona weryfikacja TLS** albo nazwy hosta (CWE-295).
-- **Fail-open**: wyjątek w sprawdzeniu uprawnień kończy się dostępem; pusta lista ról = wszyscy.
-- **Porównanie sekretów zwykłym `==`** zamiast porównania w stałym czasie.
-- **Wyrażenia regularne z zagnieżdżonymi kwantyfikatorami** na wejściu użytkownika (ReDoS, CWE-1333).
+## Common patterns
+- **An interpreter fed from input**: `eval`, template execution, expressions (SpEL, OGNL), a shell command concatenated from
+  a string — data as code (CWE-94, CWE-78).
+- **Deserialization of typed formats** from an untrusted source (CWE-502) — use formats without types (JSON to a DTO).
+- **Queries concatenated from strings** — SQL, LDAP, XPath, NoSQL (CWE-89, CWE-90, CWE-643); identifiers (columns,
+  sort direction) only from an allow-list.
+- **XML parsers with external entities** (XXE, CWE-611).
+- **Non-cryptographic randomness** for tokens, passwords, session identifiers (CWE-338).
+- **Weak hashes and ciphers**: MD5, SHA-1 for passwords or signatures, ECB, home-made cryptography; passwords only through
+  Argon2id, scrypt or bcrypt (sec-cryptography-pki).
+- **Disabled TLS or hostname verification** (CWE-295).
+- **Fail-open**: an exception in a permission check ends in access; an empty role list = everyone.
+- **Comparing secrets with a plain `==`** instead of a constant-time comparison.
+- **Regular expressions with nested quantifiers** on user input (ReDoS, CWE-1333).
 
 ## Python
-| Kandydat | Bezpieczniej |
+| Candidate | Safer |
 |---|---|
-| `pickle.loads`, `shelve`, `marshal` na danych z zewnątrz | JSON + walidacja schematu |
-| `yaml.load` bez bezpiecznego loadera | `yaml.safe_load` |
-| `eval`, `exec`, `compile` z wejściem | parser lub mapa dozwolonych operacji |
-| `subprocess.*(..., shell=True)`, `os.system` | lista argumentów bez powłoki |
-| `random` do tokenów | `secrets` |
-| `hashlib.md5/sha1` do haseł | Argon2id / scrypt / bcrypt |
-| `requests.*(verify=False)` | poprawny łańcuch CA |
-| `xml.etree`, `lxml` na niezaufanym XML | `defusedxml` |
+| `pickle.loads`, `shelve`, `marshal` on external data | JSON + schema validation |
+| `yaml.load` without a safe loader | `yaml.safe_load` |
+| `eval`, `exec`, `compile` with input | a parser or a map of allowed operations |
+| `subprocess.*(..., shell=True)`, `os.system` | an argument list without a shell |
+| `random` for tokens | `secrets` |
+| `hashlib.md5/sha1` for passwords | Argon2id / scrypt / bcrypt |
+| `requests.*(verify=False)` | a correct CA chain |
+| `xml.etree`, `lxml` on untrusted XML | `defusedxml` |
 | `tempfile.mktemp` | `tempfile.mkstemp` / `NamedTemporaryFile` |
-| Django: `DEBUG = True`, `SECRET_KEY` w repo, `ALLOWED_HOSTS = ['*']` | zmienne środowiskowe, lista hostów |
-| Flask: `app.run(debug=True)`; Jinja2 `autoescape=False` | debug tylko lokalnie; autoescape włączony |
+| Django: `DEBUG = True`, `SECRET_KEY` in the repo, `ALLOWED_HOSTS = ['*']` | environment variables, a host list |
+| Flask: `app.run(debug=True)`; Jinja2 `autoescape=False` | debug only locally; autoescape enabled |
 
-## JavaScript i Node.js
-| Kandydat | Bezpieczniej |
+## JavaScript and Node.js
+| Candidate | Safer |
 |---|---|
-| `eval`, `new Function`, `setTimeout("kod")` | funkcje, nie stringi |
-| `child_process.exec` ze sklejonym poleceniem | `execFile` / `spawn` z tablicą argumentów |
-| moduł `vm` jako „piaskownica” | to nie jest granica bezpieczeństwa — osobny proces lub izolacja |
-| `innerHTML`, `dangerouslySetInnerHTML`, `v-html` z danymi | tekst albo sanityzacja (DOMPurify) |
-| `Math.random` do tokenów | `crypto.randomBytes`, `crypto.randomUUID` |
-| scalanie obiektów z wejścia (`__proto__`, `constructor`) | walidacja schematu, obiekty bez prototypu |
-| JWT: weryfikacja bez listy algorytmów | jawna lista algorytmów, sprawdzenie `aud` i `iss` |
-| `NODE_TLS_REJECT_UNAUTHORIZED=0` | poprawny łańcuch CA |
+| `eval`, `new Function`, `setTimeout("code")` | functions, not strings |
+| `child_process.exec` with a concatenated command | `execFile` / `spawn` with an argument array |
+| the `vm` module as a "sandbox" | it is not a security boundary — a separate process or isolation |
+| `innerHTML`, `dangerouslySetInnerHTML`, `v-html` with data | text or sanitization (DOMPurify) |
+| `Math.random` for tokens | `crypto.randomBytes`, `crypto.randomUUID` |
+| merging objects from input (`__proto__`, `constructor`) | schema validation, prototype-less objects |
+| JWT: verification without an algorithm list | an explicit algorithm list, checking `aud` and `iss` |
+| `NODE_TLS_REJECT_UNAUTHORIZED=0` | a correct CA chain |
 
 ## Java
-| Kandydat | Bezpieczniej |
+| Candidate | Safer |
 |---|---|
-| `ObjectInputStream.readObject` na danych z zewnątrz | JSON do DTO; jeśli musi zostać — filtr deserializacji (`ObjectInputFilter`) |
-| `DocumentBuilderFactory`, `SAXParserFactory`, `XMLInputFactory` z ustawieniami domyślnymi | wyłączone DTD i encje zewnętrzne |
-| `Runtime.exec(String)` ze sklejonym poleceniem | `ProcessBuilder` z listą argumentów |
-| `java.util.Random` do tokenów | `SecureRandom` |
-| `TrustManager` akceptujący wszystko, `HostnameVerifier` zwracający `true` | domyślna weryfikacja |
-| SpEL lub szablony z wejścia | bez ewaluacji danych użytkownika |
-| Spring Boot Actuator wystawiony publicznie | tylko `health` publicznie, reszta za uwierzytelnieniem |
+| `ObjectInputStream.readObject` on external data | JSON to a DTO; if it must stay — a deserialization filter (`ObjectInputFilter`) |
+| `DocumentBuilderFactory`, `SAXParserFactory`, `XMLInputFactory` with default settings | DTDs and external entities disabled |
+| `Runtime.exec(String)` with a concatenated command | `ProcessBuilder` with an argument list |
+| `java.util.Random` for tokens | `SecureRandom` |
+| a `TrustManager` that accepts everything, a `HostnameVerifier` returning `true` | default verification |
+| SpEL or templates from input | no evaluation of user data |
+| Spring Boot Actuator exposed publicly | only `health` public, the rest behind authentication |
 
-## C# i .NET
-| Kandydat | Bezpieczniej |
+## C# and .NET
+| Candidate | Safer |
 |---|---|
-| `BinaryFormatter`, `NetDataContractSerializer`, `LosFormatter` | `System.Text.Json` do DTO |
-| Newtonsoft.Json `TypeNameHandling` inne niż `None` | `None` albo jawny `SerializationBinder` |
-| `SqlCommand` ze sklejonym SQL, `FromSqlRaw` z interpolacją stringa | parametry, `FromSqlInterpolated` |
-| `Process.Start` z `cmd /c` i danymi | argumenty bez powłoki |
-| `System.Random` do tokenów | `RandomNumberGenerator` |
-| `ServerCertificateCustomValidationCallback` zwracający `true` | domyślna weryfikacja |
-| `XmlDocument`/`XmlTextReader` z resolverem encji (starsze .NET Framework) | `XmlResolver = null`, `DtdProcessing.Prohibit` |
+| `BinaryFormatter`, `NetDataContractSerializer`, `LosFormatter` | `System.Text.Json` to a DTO |
+| Newtonsoft.Json `TypeNameHandling` other than `None` | `None` or an explicit `SerializationBinder` |
+| `SqlCommand` with concatenated SQL, `FromSqlRaw` with string interpolation | parameters, `FromSqlInterpolated` |
+| `Process.Start` with `cmd /c` and data | arguments without a shell |
+| `System.Random` for tokens | `RandomNumberGenerator` |
+| `ServerCertificateCustomValidationCallback` returning `true` | default verification |
+| `XmlDocument`/`XmlTextReader` with an entity resolver (older .NET Framework) | `XmlResolver = null`, `DtdProcessing.Prohibit` |
 
 ## Go
-| Kandydat | Bezpieczniej |
+| Candidate | Safer |
 |---|---|
-| `text/template` do HTML | `html/template` |
-| `math/rand` do tokenów | `crypto/rand` |
-| `tls.Config{InsecureSkipVerify: true}` | domyślna weryfikacja |
-| `exec.Command("sh", "-c", ...)` z danymi | polecenie i argumenty osobno |
-| `fmt.Sprintf` do SQL | parametry `?` / `$1` |
-| `http.ListenAndServe` bez limitów czasu | `http.Server` z `ReadHeaderTimeout` i pozostałymi limitami |
-| pakiet `unsafe`, `reflect` na danych z zewnątrz | uzasadnienie w przeglądzie |
+| `text/template` for HTML | `html/template` |
+| `math/rand` for tokens | `crypto/rand` |
+| `tls.Config{InsecureSkipVerify: true}` | default verification |
+| `exec.Command("sh", "-c", ...)` with data | the command and arguments separately |
+| `fmt.Sprintf` for SQL | `?` / `$1` parameters |
+| `http.ListenAndServe` without timeouts | `http.Server` with `ReadHeaderTimeout` and the other limits |
+| the `unsafe` package, `reflect` on external data | a justification in the review |
 
-## Domyślne konfiguracje i ustawienia środowiska
-- Domyślne konta i hasła (panel administracyjny, baza, broker, kamera, urządzenie), konta testowe zostawione
-  po wdrożeniu.
-- Sekrety z przykładów (`changeme`, `secret`, klucz JWT z dokumentacji) w konfiguracji produkcyjnej; sekrety
-  w repozytorium (ops-secrets-identities).
-- Tryb debug i strony błędów ze stosem wywołań na produkcji.
-- CORS `*` razem z ciasteczkami lub nagłówkiem uwierzytelnienia; ciasteczka sesji bez `Secure`, `HttpOnly`,
+## Default configurations and environment settings
+- Default accounts and passwords (admin panel, database, broker, camera, device), test accounts left
+  after deployment.
+- Secrets from examples (`changeme`, `secret`, a JWT key from the documentation) in the production configuration; secrets
+  in the repository (ops-secrets-identities).
+- Debug mode and error pages with a stack trace in production.
+- CORS `*` together with cookies or an authentication header; session cookies without `Secure`, `HttpOnly`,
   `SameSite`.
-- Usługi bez uwierzytelnienia nasłuchujące na wszystkich interfejsach (np. Redis, Elasticsearch, panele
-  zarządzania, porty debugowania).
-- Publiczne magazyny obiektów, reguły sieci `0.0.0.0/0` na portach administracyjnych (sec-cloud-security).
-- Logi z danymi wrażliwymi (hasła, tokeny, dane osobowe).
-- Brak limitów: rozmiar żądania i pliku, czas, liczba prób logowania.
+- Services without authentication listening on all interfaces (e.g. Redis, Elasticsearch, management
+  panels, debug ports).
+- Public object stores, network rules `0.0.0.0/0` on administrative ports (sec-cloud-security).
+- Logs with sensitive data (passwords, tokens, personal data).
+- No limits: request and file size, time, number of login attempts.
 
-Sprawdzaj wersję biblioteki: domyślne ustawienia zmieniają się między wersjami — opis dotyczy zachowania
-domyślnego, które trzeba potwierdzić w dokumentacji używanej wersji.
+Check the library version: defaults change between versions — the description concerns the default
+behaviour, which must be confirmed in the documentation of the version in use.
 
-## Źródła
-- MITRE CWE, cwe.mitre.org (dostęp 2026-10-23); OWASP Cheat Sheet Series: Deserialization, XML External Entity
-  Prevention, OS Command Injection Defense, Cryptographic Storage, cheatsheetseries.owasp.org (dostęp 2026-10-23).
-- Dokumentacja języków i bibliotek: Python (`secrets`, `subprocess`, PyYAML), Node.js (`crypto`, `vm`), Java
-  (`ObjectInputFilter`), .NET (BinaryFormatter — przewodnik migracji), Go (`html/template`, `crypto/rand`).
-- Inspiracja tematem: Trail of Bits, skille `sharp-edges` i `insecure-defaults` (CC BY-SA 4.0 — treści nie przejęto).
-Opisane własnymi słowami.
+## Sources
+- MITRE CWE, cwe.mitre.org (accessed 2026-10-23); OWASP Cheat Sheet Series: Deserialization, XML External Entity
+  Prevention, OS Command Injection Defense, Cryptographic Storage, cheatsheetseries.owasp.org (accessed 2026-10-23).
+- Language and library documentation: Python (`secrets`, `subprocess`, PyYAML), Node.js (`crypto`, `vm`), Java
+  (`ObjectInputFilter`), .NET (BinaryFormatter — migration guide), Go (`html/template`, `crypto/rand`).
+- Topic inspiration: Trail of Bits, the `sharp-edges` and `insecure-defaults` skills (CC BY-SA 4.0 — no content taken over).
+Described in our own words.

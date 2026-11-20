@@ -1,12 +1,12 @@
-# Struktury danych ukryte w wymaganiach
+# Data structures hidden in requirements
 
-| id | Pytanie dopasowania | Sygnały | Pułapki |
+| id | Matching question | Signals | Pitfalls |
 |---|---|---|---|
-| **priority-queue** | czy ciągle wybieramy następny najważniejszy element, a priorytety się zmieniają? | pilność, kolejka oczekujących, „najpierw VIP”, lista rezerwowa | zmiana priorytetu elementu w kolejce (decrease-key); sprawiedliwość (starvation) |
-| **selection / percentyle** | top-k, mediana, percentyl bez pełnego sortowania? | „10 najlepszych”, SLA p95, ranking | agregaty przybliżone w strumieniu (t-digest) |
-| **trie / prefiksy** | wyszukiwanie po prefiksie, podpowiadanie? | autouzupełnianie, kody, numeracja hierarchiczna | zwykle wystarczy indeks bazy/wyszukiwarki |
-| **b-tree / zakresy** | zapytania zakresowe po uporządkowanym kluczu? | „od–do”, stronicowanie po dacie | to robi indeks bazy — nie implementuj |
-| **segment-tree / sumy w przedziale** | sumy/minima w przedziałach przy częstych zmianach? | obłożenie w oknie czasu, limity w przedziale | często wystarczą funkcje okna SQL |
-| **interval-tree / nakładanie przedziałów** | czy przedziały czasu nachodzą na siebie; wolne okna? | rezerwacje, urlopy, blokady zasobu, grafik | przedziały półotwarte `[od, do)`; strefy czasowe; w bazie: ograniczenie wykluczające na zakresach — archetyp Availability |
-| **kd-tree / najbliższy punkt** | najbliższe punkty w kilku wymiarach? | „najbliższy serwisant”, wyszukiwanie w promieniu | słabnie przy wielu wymiarach; rozszerzenie geo w bazie |
-| **point-location** | w której strefie/obszarze leży punkt? | strefy dostaw, rejony, taryfy geograficzne | typy geometryczne w bazie zamiast własnego kodu |
+| **priority-queue** | do we keep choosing the next most important element, and the priorities change? | urgency, a waiting queue, "VIP first", a reserve list | changing the priority of an element in the queue (decrease-key); fairness (starvation) |
+| **selection / percentiles** | top-k, median, percentile without a full sort? | "the 10 best", SLA p95, ranking | approximate aggregates in a stream (t-digest) |
+| **trie / prefixes** | search by prefix, suggestions? | autocomplete, codes, hierarchical numbering | usually a database/search engine index is enough |
+| **b-tree / ranges** | range queries over an ordered key? | "from–to", paging by date | the database index does this — do not implement it |
+| **segment-tree / sums over an interval** | sums/minima over intervals with frequent changes? | occupancy in a time window, limits within an interval | SQL window functions are often enough |
+| **interval-tree / overlapping intervals** | do time intervals overlap; free windows? | reservations, leave, resource locks, a schedule | half-open intervals `[from, to)`; time zones; in the database: an exclusion constraint on ranges — the Availability archetype |
+| **kd-tree / nearest point** | nearest points in several dimensions? | "the nearest service technician", search within a radius | weakens with many dimensions; a geo extension in the database |
+| **point-location** | in which zone/area does a point lie? | delivery zones, regions, geographic tariffs | geometric types in the database instead of your own code |

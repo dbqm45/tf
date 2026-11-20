@@ -16,6 +16,20 @@
       }
     },
     {
+      "id": "sortowanie-kart-sklep-en",
+      "expect": "trigger",
+      "prompt": "We're rebuilding the menu of a shop with 400 products in DIY categories. I don't know how people group them or how to name the categories. How do I run card sorting and how many participants should I invite? Answer briefly.",
+      "checks": {
+        "all": [
+          ["otwart\\w+", "open"],
+          ["zamkni\\w+", "closed", "bez słów[^.]{0,60}(kategori|etykiet|nazw)", "nie sugeru\\w+", "odsyłacz\\w*[^.]{0,30}(nie|zamiast) kopi", "without (words|labels?|names?)", "don.t suggest"],
+          ["15|20|30"],
+          ["macierz\\w* podobieństw", "dendrogram", "similarity matrix", "standaryzacj\\w* kategorii", "standardization grid"]
+        ],
+        "none": ["sortowanie kart zastępuje test drzewa", "card sorting (replaces|is a substitute for) (a )?tree test"]
+      }
+    },
+    {
       "id": "test-drzewa-wyniki",
       "expect": "trigger",
       "prompt": "Zrobiliśmy test drzewa nowej nawigacji intranetu: zadanie 'znajdź formularz urlopowy' ma 72% sukcesu, ale tylko 38% bezpośrednio. Jak to czytać i co dalej? Odpowiedz zwięźle.",

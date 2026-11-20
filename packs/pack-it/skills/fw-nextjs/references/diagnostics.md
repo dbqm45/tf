@@ -1,46 +1,45 @@
-# Diagnostyka typowych błędów Next.js (App Router)
-> `<Suspense>` · 4. Paczki niezgodne z serwerem · 5. Nawigacja w `try/catch` · 6. Narzędzia serwera deweloperskiego
+# Diagnosing common Next.js errors (App Router)
 
-## 1. Granica serwer–klient
-- **Asynchroniczny komponent kliencki** (`'use client'` i `async function`) jest niedozwolony. Dane pobierz
-  w rodzicu serwerowym i przekaż je propsami albo użyj `use(promise)` w kliencie.
-- **Nieserializowalne propsy** z serwera do klienta: zwykłe funkcje, instancje klas, `Map`, `Set`, cykle,
-  symbole. `Date` zamieniaj na tekst ISO (np. `toISOString()`), a kolekcje na tablice lub obiekty. Funkcje
-  przekazujesz tylko jako Server Actions (`'use server'`).
-- **Obiekt domenowy** (klasa z metodami) przechodzi jako DTO i jest odtwarzany fabryką po stronie klienta
-  (tabela „Pojęcia domenowe” w SKILL.md).
+## 1. The server–client boundary
+- **An asynchronous client component** (`'use client'` and `async function`) is not allowed. Fetch the data
+  in the server parent and pass it through props, or use `use(promise)` in the client.
+- **Non-serializable props** from the server to the client: plain functions, class instances, `Map`, `Set`, cycles,
+  symbols. Convert `Date` to ISO text (e.g. `toISOString()`), and collections to arrays or objects. You pass functions
+  only as Server Actions (`'use server'`).
+- **A domain object** (a class with methods) crosses as a DTO and is rebuilt by a factory on the client side
+  (the "Domain concepts" table in SKILL.md).
 
-## 2. Błędy hydratacji
-Typowe przyczyny: API przeglądarki w renderze, data i czas (inna strefa i chwila), losowe identyfikatory (`useId()`),
-niepoprawne zagnieżdżenie HTML. Datę formatuj w kliencie po zamontowaniu albo przekaż z serwera tekst dla jednej, jawnej
-strefy. `suppressHydrationWarning` tylko dla pojedynczego elementu z celowo różną treścią, nie jako ogólne wyciszenie.
+## 2. Hydration errors
+Typical causes: browser APIs in render, date and time (a different time zone and moment), random identifiers (`useId()`),
+invalid HTML nesting. Format the date in the client after mounting, or pass from the server text for one explicit
+time zone. `suppressHydrationWarning` only for a single element with intentionally different content, not as a general silencer.
 
-## 3. Utrata renderowania na serwerze bez `<Suspense>`
-`useSearchParams()` w trasie statycznej bez `<Suspense>` nad komponentem przenosi renderowanie całej trasy do
-przeglądarki. To samo dotyczy `usePathname()` w trasie dynamicznej bez `generateStaticParams`. Owiń najmniejszy
-komponent, który ich używa, w `<Suspense>` z zastępczą treścią. `useParams()` i `useRouter()` tego nie wymagają.
+## 3. Losing server rendering without `<Suspense>`
+`useSearchParams()` in a static route without `<Suspense>` above the component moves the rendering of the whole route to
+the browser. The same applies to `usePathname()` in a dynamic route without `generateStaticParams`. Wrap the smallest
+component that uses them in `<Suspense>` with fallback content. `useParams()` and `useRouter()` do not require it.
 
-## 4. Paczki niezgodne z serwerem
-- **Paczki używające `window` lub `document`** (wykresy, edytory, mapy): import dynamiczny bez SSR w komponencie
-  klienckim.
-- **Paczki z natywnymi modułami lub źle pakujące się** (np. `sharp`, `bcrypt`, część ORM): wpis w
-  `serverExternalPackages` w `next.config`.
-- **Błędy ESM/CommonJS** w paczce z `node_modules`: `transpilePackages`.
-- CSS importujesz w module (`import './x.css'`), a nie znacznikiem `<link>`; typowych polifilli nie dodajesz, bo
-  Next.js je dołącza.
-- Rozmiar paczek sprawdzasz analizatorem paczek dla Turbopacka albo webpacka [niezweryfikowane: nazwa polecenia
-  zależy od wersji — sprawdź w dokumentacji wersji].
+## 4. Packages incompatible with the server
+- **Packages using `window` or `document`** (charts, editors, maps): a dynamic import without SSR in a client
+  component.
+- **Packages with native modules or that bundle badly** (e.g. `sharp`, `bcrypt`, some ORMs): an entry in
+  `serverExternalPackages` in `next.config`.
+- **ESM/CommonJS errors** in a package from `node_modules`: `transpilePackages`.
+- You import CSS in a module (`import './x.css'`), not with a `<link>` tag; you do not add common polyfills, because
+  Next.js includes them.
+- You check bundle size with the bundle analyzer for Turbopack or webpack [unverified: the command name
+  depends on the version — check in the version's documentation].
 
-## 5. Nawigacja w `try/catch`
-`redirect()`, `permanentRedirect()`, `notFound()`, `forbidden()` i `unauthorized()` działają przez rzucenie
-specjalnego wyjątku. Nie wołaj ich wewnątrz `try`, którego `catch` połyka błędy: przenieś wywołanie za blok albo
-w `catch` przekaż wyjątek dalej (`unstable_rethrow`). `forbidden()` i `unauthorized()` wymagają włączenia w
-konfiguracji i plików `forbidden.tsx` / `unauthorized.tsx` [niezweryfikowane: status eksperymentalny zależy od wersji].
-`error.tsx` jest komponentem klienckim; `global-error.tsx` zawiera własne `<html>` i `<body>`.
+## 5. Navigation in `try/catch`
+`redirect()`, `permanentRedirect()`, `notFound()`, `forbidden()` and `unauthorized()` work by throwing a
+special exception. Do not call them inside a `try` whose `catch` swallows errors: move the call after the block or
+rethrow the exception in `catch` (`unstable_rethrow`). `forbidden()` and `unauthorized()` require enabling in the
+configuration and the `forbidden.tsx` / `unauthorized.tsx` files [unverified: the experimental status depends on the version].
+`error.tsx` is a client component; `global-error.tsx` contains its own `<html>` and `<body>`.
 
-## 6. Narzędzia serwera deweloperskiego
-- **Punkt MCP serwera deweloperskiego** (`/_next/mcp`, w 16 domyślnie, w 15 za flagą `experimental.mcpServer`):
-  zwraca bieżące błędy builda i działania z mapowaniem źródeł, listę tras i ścieżkę logu. Sprawdź port uruchomionego
-  serwera zamiast zakładać 3000. Podłączenie nowego serwera MCP do agenta to decyzja człowieka (core-agent-security).
-- **Przebudowa wybranych tras:** `next build --debug-build-paths "<ścieżka lub wzorzec>"` (16+) skraca sprawdzenie
-  poprawki błędu builda w dużej aplikacji.
+## 6. Development server tools
+- **The development server's MCP endpoint** (`/_next/mcp`, in 16 by default, in 15 behind the `experimental.mcpServer` flag):
+  it returns current build and runtime errors with source mapping, the list of routes and the log path. Check the port of the running
+  server instead of assuming 3000. Connecting a new MCP server to the agent is the human's decision (core-agent-security).
+- **Rebuilding selected routes:** `next build --debug-build-paths "<path or pattern>"` (16+) shortens checking
+  a build error fix in a large application.

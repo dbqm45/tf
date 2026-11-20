@@ -1,45 +1,45 @@
-# Od klienta wstecz: komunikat prasowy, epik jako hipoteza, roadmapa według wyników
+# Working backwards from the customer: a press release, an epic as a hypothesis, an outcome-based roadmap
 
-## Komunikat prasowy i FAQ przed budową
-Piszesz dokument z dnia premiery, zanim powstanie kod — sprawdzian, czy wiemy, dla kogo i po co.
-**Komunikat (najwyżej 1 strona, język klienta, bez żargonu):**
-1. Tytuł — nazwa i korzyść dla konkretnego klienta.
-2. Podtytuł — kto i co zyskuje, jednym zdaniem.
-3. Problem — jak klient radzi sobie dziś i ile go to kosztuje (z dowodem z odkrywania).
-4. Rozwiązanie — co się zmienia dla klienta, nie jak to działa w środku.
-5. Cytat z firmy — dlaczego to robimy.
-6. Jak zacząć — pierwszy krok klienta.
-7. Cytat klienta — jak opisałby korzyść (hipoteza do sprawdzenia w rozmowach).
-**FAQ zewnętrzne** — pytania klientów (cena, migracja, bezpieczeństwo, czego nie robi).
-**FAQ wewnętrzne** — pytania zespołu i zarządu: kto jest klientem i ilu ich jest, jaki wynik i jak go zmierzymy,
-koszt i zespół, największe ryzyka w czterech kategoriach (wartość, użyteczność, wykonalność, opłacalność), co
-musi być prawdą, czego nie zrobimy, co przerwie projekt.
-**Test**: 5–8 rozmów z klientami docelowymi na podstawie komunikatu (czy chcieliby, co by zmienili, ile by
-zapłacili) i przegląd FAQ wewnętrznego z inżynierią i finansami. Dokument przepisujesz, aż odpowiedzi się
-ustabilizują; dopiero potem zakres i plan.
+## A press release and FAQ before building
+You write a launch-day document before any code exists — a check whether we know for whom and why.
+**The press release (at most 1 page, in the customer's language, no jargon):**
+1. Title — the name and the benefit for a specific customer.
+2. Subtitle — who gains what, in one sentence.
+3. The problem — how the customer copes today and how much it costs them (with evidence from discovery).
+4. The solution — what changes for the customer, not how it works inside.
+5. A quote from the company — why we are doing this.
+6. How to get started — the customer's first step.
+7. A customer quote — how they would describe the benefit (a hypothesis to check in conversations).
+**The external FAQ** — customers' questions (price, migration, security, what it does not do).
+**The internal FAQ** — questions from the team and the board: who the customer is and how many there are, what the outcome is and how we will measure it,
+cost and team, the biggest risks in four categories (value, usability, feasibility, viability), what
+must be true, what we will not do, what will stop the project.
+**The test**: 5–8 conversations with target customers based on the press release (would they want it, what would they change, how much would they
+pay) and a review of the internal FAQ with engineering and finance. You rewrite the document until the answers
+stabilize; only then the scope and the plan.
 
-## Epik jako hipoteza
+## An epic as a hypothesis
 ```
-Wierzymy, że [rozwiązanie] dla [klient] rozwiąże [problem / szansa].
-Poznamy to po [wynik i metryka: wartość wyjściowa → docelowa] w [czas].
-Wczesne sygnały: [metryki wiodące po 2–4 tygodniach].
-Przerywamy albo zmieniamy kierunek, jeśli [kryterium przerwania].
-Najpierw sprawdzimy [najsłabsze ważne założenie] przez [najtańszy test].
+We believe that [solution] for [customer] will solve [problem / opportunity].
+We will know it by [outcome and metric: baseline value → target value] in [time].
+Early signals: [leading metrics after 2–4 weeks].
+We stop or change direction if [stopping criterion].
+First we will check [the weakest important assumption] through [the cheapest test].
 ```
-Epik bez metryki i bez kryterium przerwania to lista prac, nie hipoteza. Po wydaniu porównujesz wynik z hipotezą
-i zapisujesz decyzję (kontynuować, zmienić, wycofać).
+An epic with no metric and no stopping criterion is a list of work, not a hypothesis. After the release you compare the outcome with the hypothesis
+and record the decision (continue, change, withdraw).
 
-## Roadmapa według wyników
-Zamiast funkcji z datami na rok — trzy kolumny:
-- **Teraz** — problemy i wyniki, nad którymi zespół pracuje (z metryką i znanym zakresem);
-- **Dalej** — problemy następne w kolejce, z hipotezami rozwiązań, bez zobowiązań co do funkcji;
-- **Później** — szanse i obszary do zbadania, bez rozwiązań.
-Każda pozycja: problem lub szansa, wynik i metryka, dowody, pewność. Daty tylko tam, gdzie jest zewnętrzne
-zobowiązanie (przepis, umowa, wydarzenie). Przegląd po każdym wydaniu: pozycje przesuwają się według wyników,
-a nie według kalendarza. Interesariuszom pokazujesz, co chcemy zmienić i jak to zmierzymy (pm-stakeholders).
+## An outcome-based roadmap
+Instead of features with dates for a year — three columns:
+- **Now** — the problems and outcomes the team is working on (with a metric and a known scope);
+- **Next** — the problems next in line, with solution hypotheses, with no commitments about features;
+- **Later** — opportunities and areas to investigate, with no solutions.
+Each item: a problem or opportunity, an outcome and metric, evidence, confidence. Dates only where there is an external
+commitment (a regulation, a contract, an event). A review after each release: items move according to results,
+not according to the calendar. You show stakeholders what we want to change and how we will measure it (pm-stakeholders).
 
-## Źródła
-- C. Bryar, B. Carr, *Working Backwards* (2021) — komunikat prasowy i FAQ przed budową (praktyka Amazon).
-- J. Bastow, roadmapa teraz / dalej / później (ProdPad, 2012 i późniejsze opisy).
-- J. Gothelf, J. Seiden, *Lean UX* (wyd. 3, 2021) — hipoteza z wynikiem i metryką.
-Opisane własnymi słowami.
+## Sources
+- C. Bryar, B. Carr, *Working Backwards* (2021) — a press release and FAQ before building (an Amazon practice).
+- J. Bastow, the now / next / later roadmap (ProdPad, 2012 and later write-ups).
+- J. Gothelf, J. Seiden, *Lean UX* (3rd ed., 2021) — a hypothesis with an outcome and a metric.
+Described in our own words.

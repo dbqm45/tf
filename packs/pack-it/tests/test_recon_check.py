@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy eng-codebase-mapping/scripts/recon_check.py: dowody plik:linia w raporcie (plik istnieje, linia w zakresie,
-cytat zgodny z kodem ±2 linie), twierdzenia bez dowodu i sekcje raportu końcowego. python3 .claude/tests/test_recon_check.py"""
+"""Tests of eng-codebase-mapping/scripts/recon_check.py: file:line evidence in the report (the file exists, the line in range,
+the quote matches the code ±2 lines), claims without evidence and the sections of the final report. python3 .claude/tests/test_recon_check.py"""
 import hashlib
 import json
 import subprocess
@@ -17,7 +17,7 @@ CODE = {
     "src/billing/tax.py": "RATE = 0.23\n",
 }
 
-GOOD = """# Rekonstrukcja
+POLISH = """# Rekonstrukcja
 ## TL;DR
 Faktura musi mieć pozycje (`src/billing/invoice.py:3-4`).
 ## Stack
@@ -48,6 +48,16 @@ Faktura musi mieć pozycje (`src/billing/invoice.py:3-4`).
 - Konfiguracja wdrożenia.
 """
 
+PL_EN = (("## Moduły", "## Modules"), ("## Domeny", "## Domains"), ("## Wymagania", "## Requirements"),
+         ("## Reguły", "## Rules"), ("## Standardy", "## Standards"), ("## Ryzyka", "## Risks"),
+         ("## Pytania", "## Questions"), ("## Czego nie sprawdzono", "## Not checked"),
+         ("| Język |", "| Language |"), ("| Dane |", "| Data |"), ("| Testy |", "| Tests |"),
+         ("| Konfiguracja |", "| Configuration |"), ("[założenie", "[assumption"),
+         ("[niezweryfikowane]", "[unverified]"), ("[pytanie", "[question"))
+GOOD = POLISH   # the report in English sections and markers (the Polish ones from before 14.x: the 19.0.0 migration)
+for _pl, _en in PL_EN:
+    GOOD = GOOD.replace(_pl, _en)
+
 BAD = """# Rekonstrukcja
 ## Reguły
 - Rabat 10% dla stałych klientów — `src/billing/discount.py:5`
@@ -65,12 +75,12 @@ def write(root: Path, files: dict) -> None:
 
 
 def card(rep: Path, stem: str, data: dict, md: bool = True) -> None:
-    """Karta modules/<stem>.json i (opcjonalnie) jej aktualny modules/<stem>.md ze skrótem treści karty."""
+    """The card modules/<stem>.json and (optionally) its current modules/<stem>.md with the card content digest."""
     raw = json.dumps(data, ensure_ascii=False)
     write(rep, {f"modules/{stem}.json": raw})
     if md:
         h = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:12]
-        write(rep, {f"modules/{stem}.md": f"<!-- karta: modules/{stem}.json sha256:{h} -->\n# {data['module']}\n"})
+        write(rep, {f"modules/{stem}.md": f"<!-- card: modules/{stem}.json sha256:{h} -->\n# {data['module']}\n"})
 
 
 def run(*args, cwd=None):
@@ -93,110 +103,102 @@ def main() -> int:
         write(repo, {"docs/project/00-reconstruction/report.md": GOOD, "bad.md": BAD})
         r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
-        check(r.returncode == 0 and out.get("refs") == 8 and out.get("bad") == [], f"R-1: poprawny raport: {r.stdout[:500]}")
-        check(out.get("unsupported") == [], f"R-2: twierdzenia oznaczone [założenie]/[pytanie] nie są bez dowodu: {out.get('unsupported')}")
+        check(r.returncode == 0 and out.get("refs") == 8 and out.get("bad") == [], f"R-1: a valid report: {r.stdout[:500]}")
+        check(out.get("unsupported") == [], f"R-2: claims marked [assumption]/[question] are not without evidence: {out.get('unsupported')}")
         r = run("bad.md", "--repo", str(repo), "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
         why = {b["ref"]: b["problem"] for b in out.get("bad", [])}
-        check(r.returncode == 1, f"R-3: złe dowody → kod 1: rc={r.returncode}")
-        check(why.get("src/billing/discount.py:5") == "no such file", f"R-4: brak pliku: {why}")
-        check(why.get("src/billing/tax.py:40") == "line outside the file (1)", f"R-5: linia poza plikiem: {why}")
+        check(r.returncode == 1, f"R-3: bad evidence → code 1: rc={r.returncode}")
+        check(why.get("src/billing/discount.py:5") == "no such file", f"R-4: missing file: {why}")
+        check(why.get("src/billing/tax.py:40") == "line outside the file (1)", f"R-5: line outside the file: {why}")
         check(why.get("src/billing/invoice.py:4") == "quote does not match lines 2–5", f"R-6: cytat niezgodny: {why}")
         uns = out.get("unsupported", [])
-        check(len(uns) == 1 and "EUR" in uns[0]["text"] and uns[0]["at"] == "bad.md:6", f"R-7: twierdzenie bez dowodu: {uns}")
+        check(len(uns) == 1 and "EUR" in uns[0]["text"] and uns[0]["at"] == "bad.md:6", f"R-7: a claim without evidence: {uns}")
         r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--final", cwd=d)
-        check(r.returncode == 0, f"R-8: --final na kompletnym raporcie: {r.stdout[-400:]}")
-        en = GOOD
-        for pl, eng in (("## Moduły", "## Modules"), ("## Domeny", "## Domains"), ("## Wymagania", "## Requirements"),
-                        ("## Reguły", "## Rules"), ("## Standardy", "## Standards"), ("## Ryzyka", "## Risks"),
-                        ("## Pytania", "## Questions"), ("## Czego nie sprawdzono", "## Not checked"),
-                        ("| Język |", "| Language |"), ("| Dane |", "| Data |"), ("| Testy |", "| Tests |"),
-                        ("| Konfiguracja |", "| Configuration |"), ("[założenie", "[assumption"),
-                        ("[niezweryfikowane]", "[unverified]"), ("[pytanie", "[question")):
-            en = en.replace(pl, eng)
-        (repo / "docs/project/00-reconstruction/report.md").write_text(en, encoding="utf-8")
+        check(r.returncode == 0, f"R-8: --final on a complete report: {r.stdout[-400:]}")
+        (repo / "docs/project/00-reconstruction/report.md").write_text(POLISH, encoding="utf-8")
         r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--final", cwd=d)
-        check(r.returncode == 0, f"R-8b: --final na raporcie z angielskimi sekcjami (14.x): {r.stdout[-400:]}")
+        check(r.returncode == 1, f"R-8b: the Polish sections from before 14.x are no longer read (19.0.0 migrates them): {r.stdout[-400:]}")
         r = run("docs/project/00-reconstruction/report.md", "--repo", str(repo), "--json", cwd=d)
-        check(json.loads(r.stdout).get("unsupported") == [],
-              f"R-8c: angielskie oznaczenia [assumption]/[unverified]/[question] (14.x): {r.stdout[:400]}")
+        check(json.loads(r.stdout).get("unsupported") != [],
+              f"R-8c: the Polish markers no longer count as marks: {r.stdout[:400]}")
         (repo / "docs/project/00-reconstruction/report.md").write_text(GOOD, encoding="utf-8")
         r = run("bad.md", "--repo", str(repo), "--final", cwd=d)
         check(r.returncode == 1 and "TL;DR" in r.stdout and "Not checked" in r.stdout,
-              f"R-9: --final wymienia brakujące sekcje: {r.stdout[-500:]}")
+              f"R-9: --final lists the missing sections: {r.stdout[-500:]}")
         r = run("docs/project/00-reconstruction", "--repo", str(repo), cwd=d)
-        check(r.returncode == 0 and "Evidence: 8," in r.stdout, f"R-10: katalog raportu: {r.stdout[-300:]}")
+        check(r.returncode == 0 and "Evidence: 8," in r.stdout, f"R-10: the report directory: {r.stdout[-300:]}")
 
-        # --final: tabela stacku z wymaganymi wierszami i lista modułów zgodna z kartami
+        # --final: a stack table with the required rows and a module list matching the cards
         rep = repo / "docs/project/00-reconstruction"
         card(rep, "billing", {"module": "billing"})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
         check(r.returncode == 0 and out.get("stack_missing") == [] and out.get("modules_missing") == [],
-              f"R-11: kompletny raport z tabelą stacku i modułami z kart: {r.stdout[-500:]}")
-        no_ci = GOOD.replace("| CI | brak konfiguracji CI [niezweryfikowane] | — |\n", "").replace(
-            "| Testy | brak testów [niezweryfikowane] | — |\n", "")
+              f"R-11: a complete report with the stack table and the modules from the cards: {r.stdout[-500:]}")
+        no_ci = GOOD.replace("| CI | brak konfiguracji CI [unverified] | — |\n", "").replace(
+            "| Tests | brak testów [unverified] | — |\n", "")
         write(rep, {"report.md": no_ci})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
-        check(r.returncode == 1 and "stack: missing rows: Tests, CI" in r.stdout, f"R-12: brak wierszy stacku: {r.stdout[-500:]}")
-        write(rep, {"report.md": GOOD.replace("| Konfiguracja | stała w kodzie | `src/billing/tax.py:1` |",
-                                              "| Konfiguracja | stała w kodzie | — |")})
+        check(r.returncode == 1 and "stack: missing rows: Tests, CI" in r.stdout, f"R-12: missing stack rows: {r.stdout[-500:]}")
+        write(rep, {"report.md": GOOD.replace("| Configuration | stała w kodzie | `src/billing/tax.py:1` |",
+                                              "| Configuration | stała w kodzie | — |")})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
-        check(r.returncode == 1 and any("Konfiguracja" in u["text"] for u in out.get("unsupported", [])),
-              f"R-13: wiersz stacku bez dowodu i oznaczenia: {out.get('unsupported')}")
+        check(r.returncode == 1 and any("Configuration" in u["text"] for u in out.get("unsupported", [])),
+              f"R-13: a stack row without evidence and a marker: {out.get('unsupported')}")
         write(rep, {"report.md": GOOD})
         card(rep, "customers", {"module": "customers"})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
         check(r.returncode == 1 and "modules with no entry in the Modules section: customers" in r.stdout,
-              f"R-14: moduł z karty nieopisany w raporcie: {r.stdout[-500:]}")
+              f"R-14: a module from a card not described in the report: {r.stdout[-500:]}")
         write(rep, {"report.md": no_ci})
         r = run(str(rep / "report.md"), "--repo", str(repo), cwd=d)
-        check(r.returncode == 0, f"R-15: bez --final nowe kontrole nie działają: {r.stdout[-300:]}")
+        check(r.returncode == 0, f"R-15: without --final the new checks do not run: {r.stdout[-300:]}")
 
-        # --final: każda karta ma aktualny modules/<karta>.md (recon_cards.py), skrót treści karty się zgadza
+        # --final: every card has a current modules/<card>.md (recon_cards.py), the card content digest matches
         (rep / "modules/customers.json").unlink()
         (rep / "modules/customers.md").unlink()
         write(rep, {"report.md": GOOD})
         (rep / "modules/billing.md").unlink()
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
         check(r.returncode == 1 and "cards without an up-to-date .md (recon_cards.py): billing" in r.stdout,
-              f"R-16: karta bez .md: {r.stdout[-500:]}")
+              f"R-16: a card without .md: {r.stdout[-500:]}")
         card(rep, "billing", {"module": "billing"})
         write(rep, {"modules/billing.json": json.dumps({"module": "billing", "purpose": "zmiana"})})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
-        check(r.returncode == 1 and out.get("cards_stale") == ["billing"], f"R-17: .md starszy niż karta: {r.stdout[-500:]}")
+        check(r.returncode == 1 and out.get("cards_stale") == ["billing"], f"R-17: .md older than the card: {r.stdout[-500:]}")
         card(rep, "billing", {"module": "billing"})
 
-        # --final: w repo są pliki pipeline'u, a wiersz CI nie wskazuje żadnego z nich
+        # --final: the repo has pipeline files, and the CI row points to none of them
         write(repo, {".github/workflows/ci.yml": "name: ci\non: push\n"})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
         check(r.returncode == 1 and out.get("ci_unreferenced") == [".github/workflows/ci.yml"],
-              f"R-18: CI w repo, wiersz CI bez wskazania: {r.stdout[-500:]}")
+              f"R-18: CI in the repo, the CI row without a pointer: {r.stdout[-500:]}")
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", cwd=d)
         check("CI: the repo has pipeline files, but the CI row points to none of them: .github/workflows/ci.yml" in r.stdout,
-              f"R-19: komunikat o CI: {r.stdout[-500:]}")
-        write(rep, {"report.md": GOOD.replace("| CI | brak konfiguracji CI [niezweryfikowane] | — |",
+              f"R-19: the CI message: {r.stdout[-500:]}")
+        write(rep, {"report.md": GOOD.replace("| CI | brak konfiguracji CI [unverified] | — |",
                                               "| CI | GitHub Actions na push | `.github/workflows/ci.yml:2` |")})
         r = run(str(rep / "report.md"), "--repo", str(repo), "--final", "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
-        check(r.returncode == 0 and out.get("ci_unreferenced") == [], f"R-20: wiersz CI wskazuje plik pipeline'u: {r.stdout[-500:]}")
+        check(r.returncode == 0 and out.get("ci_unreferenced") == [], f"R-20: the CI row points to a pipeline file: {r.stdout[-500:]}")
         write(rep, {"report.md": GOOD})
         r = run(str(rep / "report.md"), "--repo", str(repo), cwd=d)
-        check(r.returncode == 0, f"R-21: bez --final kontrola CI nie działa: {r.stdout[-300:]}")
+        check(r.returncode == 0, f"R-21: without --final the CI check does not run: {r.stdout[-300:]}")
 
-        # raw/ (zlecenia odświeżania, notatki robocze) nie jest częścią dokumentacji sprawdzanej przy katalogu
+        # raw/ (refresh orders, working notes) is not part of the documentation checked for the directory
         write(rep, {"raw/refresh/STALE.md": "# Do sprawdzenia\n- opis bez dowodu w notatce roboczej\n- zły dowód `nie/ma.py:3`\n"})
         r = run(str(rep), "--repo", str(repo), "--json", cwd=d)
         out = json.loads(r.stdout) if r.stdout.strip().startswith("{") else {}
         check(not any("raw/" in u["at"] for u in out.get("unsupported", []) + out.get("bad", [])),
-              f"R-22: raw/ pominięte: {out.get('unsupported')} {out.get('bad')}")
+              f"R-22: raw/ skipped: {out.get('unsupported')} {out.get('bad')}")
 
     for f in fails:
         print("✗", f)
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów recon_check")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of recon_check")
     return 1 if fails else 0
 
 

@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-Narzędzie fabryki: szkic skilla z systemu projektowego strony, repozytorium albo katalogu — statyczna analiza CSS
-i HTML, bez modelu i bez kluczy API. Wynik to szkic w formacie fabryki do dopracowania wg core-skill-authoring
-(scenariusze, bramka); nie trafia do projektów.
+Factory tool: a skill draft from a site's design system, a repository or a directory — static analysis of CSS
+and HTML, with no model and no API keys. The result is a draft in the factory format to be refined per core-skill-authoring
+(scenarios, gate); it does not go into projects.
 
-  python3 tools/ui-deconstruct.py --dir ŚCIEŻKA --name NAZWA [--out KATALOG] [--force]
-  python3 tools/ui-deconstruct.py --url https://… --name NAZWA [--out KATALOG] [--force]
+  python3 tools/ui-deconstruct.py --dir PATH --name NAME [--out DIR] [--force]
+  python3 tools/ui-deconstruct.py --url https://… --name NAME [--out DIR] [--force]
 
-Wynik dotyczy rzeczy spoza fabryki, więc nie trafia do repozytorium fabryki: bez --out narzędzie pyta o katalog
-docelowy, a katalog wewnątrz fabryki odrzuca. W KATALOG: ux-ds-<nazwa>/SKILL.md, references/tokens.md, tokens.json
-oraz ux-ds-<nazwa>.evals.json — szkielet scenariuszy ewaluacji skilla.
-Wyciąga: zmienne CSS z :root, kolory (wg częstości, hex małymi literami), rodziny fontów, rozmiary fontu, odstępy,
-promienie, cienie, breakpointy i klasy komponentów z HTML. Pomija node_modules, .git, dist, build.
-Sieć: tylko z --url — https, jedna strona i arkusze CSS z tej samej domeny (najwyżej 20); adresy niepubliczne
-odrzucane; nic nie jest wysyłane poza żądaniami GET. Kody wyjścia: 0 — w porządku, 1 — błąd.
+The result concerns things outside the factory, so it does not go into the factory repository: without --out the tool asks for the
+target directory, and rejects a directory inside the factory. In DIR: ux-ds-<name>/SKILL.md, references/tokens.md, tokens.json
+and ux-ds-<name>.evals.json — a skeleton of the skill evaluation scenarios.
+It extracts: CSS variables from :root, colors (by frequency, hex in lowercase), font families, font sizes, spacing,
+radii, shadows, breakpoints and component classes from HTML. It skips node_modules, .git, dist, build.
+Network: only with --url — https, one page and CSS stylesheets from the same domain (at most 20); non-public addresses are
+rejected; nothing is sent besides GET requests. Exit codes: 0 — OK, 1 — error.
 """
 from __future__ import annotations
 
@@ -187,7 +187,7 @@ def http_get(url: str, allow_private: bool = False) -> str:
         if err:
             raise ValueError(f"{url}: {err}")
     req = urllib.request.Request(url, headers={"User-Agent": "tf-ui-deconstruct"})
-    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:  # noqa: S310 — adres sprawdzony wyżej
+    with urllib.request.urlopen(req, timeout=TIMEOUT) as r:  # noqa: S310 — the address was checked above
         data = r.read(MAX_BYTES + 1)
     if len(data) > MAX_BYTES:
         raise ValueError(f"{url}: over {MAX_BYTES // 1024} KB")
@@ -195,7 +195,7 @@ def http_get(url: str, allow_private: bool = False) -> str:
 
 
 def extract_url(url: str, allow_private: bool = False) -> dict:
-    """allow_private tylko dla testów (lokalny serwer); CLI go nie udostępnia."""
+    """allow_private is for tests only (a local server); the CLI does not expose it."""
     doc = http_get(url, allow_private)
     p = _Html()
     p.feed(doc)
@@ -220,7 +220,7 @@ def extract_url(url: str, allow_private: bool = False) -> dict:
 
 
 def clean(text: str, limit: int = 80) -> str:
-    """Tekst ze strony w szkicu: jedna linia, bez znaków formatowania Markdown."""
+    """Text from the page in the draft: one line, without Markdown formatting characters."""
     return re.sub(r"[`*_<>\[\]|]", "", " ".join(str(text).split()))[:limit]
 
 
@@ -311,7 +311,7 @@ spacing and radius from the tables in `references/tokens.md`, values through the
 
 
 def target_dir(arg: str | None) -> Path:
-    """Katalog wyniku: z --out albo z odpowiedzi na pytanie; nigdy wewnątrz repozytorium fabryki."""
+    """The output directory: from --out or from the answer to a question; never inside the factory repository."""
     if not arg:
         print("Target directory for the skill draft (outside the factory repository): ", end="", flush=True)
         try:

@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
-"""Odfiltrowany eksport logów faz z `$PDI_REGISTRY_PATH/runs/` do wejścia dla N5 (PR2).
+"""A filtered export of phase logs from `$PDI_REGISTRY_PATH/runs/` as input for N5 (PR2).
 
-Źródłowy katalog zawiera, dla każdego przebiegu fazy, zestaw plików ze wspólnym prefiksem
+The source directory contains, for each phase run, a set of files with a common prefix
 `<CHG-n>-<phase>-<YYYYMMDDThhmmssZ>`:
-  - `*.result.json` — status/koszt/błąd/PR/cuts
-  - `*.log` — pełny log fazy (polecenia dockera, wyjście Claude, komunikaty błędów)
-  - `*.decisions.json` — snapshot decyzji zmiany przy wejściu w fazę (JSON lista wpisów)
-  - `*.answers.json` — odpowiedzi do bramki poprzedniej fazy (JSON lista par Q/A)
-  - `*.claude-settings.json`, `*.seccomp.json` — ustawienia uruchomienia
+  - `*.result.json` — status/cost/error/PR/cuts
+  - `*.log` — the full phase log (docker commands, Claude output, error messages)
+  - `*.decisions.json` — a snapshot of the change decisions on entering the phase (a JSON list of entries)
+  - `*.answers.json` — answers to the previous phase gate (a JSON list of Q/A pairs)
+  - `*.claude-settings.json`, `*.seccomp.json` — run settings
 
-Eksport:
+Export:
   python3 scripts/export_pdi_runs.py [--runs DIR] [--out DIR] [--manifest-only]
 
-Do każdego przebiegu wychodzi obiekt manifestu z **tylko** polami potrzebnymi dla fixtur N5 (nie dołącza
-sekretów, pełnej treści skillsettings ani surowych odpowiedzi persony). Skrypt dodatkowo renderuje
-`decisions.md` dla fixtury, odtwarzając format `decision_record.py` (sekcja `## <statement>` z polami ref, id,
-wyslano, kiedy, rodzaj, dlaczego oraz, gdy są, blokiem `- answers:`).
+For each run a manifest object is emitted with **only** the fields needed for the N5 fixtures (it does not include
+secrets, the full skillsettings content, or raw persona responses). The script additionally renders
+`decisions.md` for the fixture, reproducing the `decision_record.py` format (a `## <statement>` section with the fields ref, id,
+wyslano, kiedy, rodzaj, dlaczego and, when present, an `- answers:` block).
 
-Pola każdego wpisu manifestu:
+Fields of each manifest entry:
   - `run_id`, `change`, `phase`, `timestamp`
   - `status`, `cost_usd`, `error`, `step`, `pr`, `cuts`, `finished_at`
-  - `error_lines`: 1–10 linii z loga, które pokazują przyczynę błędu (prefiks # albo linie `✗`), trim
+  - `error_lines`: 1–10 log lines that show the cause of the error (a # prefix or `✗` lines), trimmed
   - `has_decisions`, `has_answers` (bool)
   - `decisions_count`, `answers_count`
 
-Wyjście domyślne: `tmp/flow-evals/import/` z plikiem `manifest.json` + jeden podkatalog `<run_id>/` na każdy
-przebieg ze zrenderowanym `decisions.md` i ewentualnie `answers.md`.
+Default output: `tmp/flow-evals/import/` with a `manifest.json` file + one `<run_id>/` subdirectory for each
+run with a rendered `decisions.md` and possibly `answers.md`.
 
-Źródło pola `out` ze strony fazy: `phase_run.py:cmd_run` (modes/mode-pdi/skills/pdi-decisions/scripts/).
-Źródło pola `decisions.md` — kontrakt pdi 0.11.0 (`pdi/docs/plan-z1-decyzje-w-fazach.md`).
+Source of the `out` field from the phase side: `phase_run.py:cmd_run` (modes/mode-pdi/skills/pdi-decisions/scripts/).
+Source of the `decisions.md` field — the pdi 0.11.0 contract (`pdi/docs/plan-z1-decyzje-w-fazach.md`).
 """
 from __future__ import annotations
 
@@ -43,15 +43,15 @@ from typing import Any
 RUN_RE = re.compile(r"^(?P<change>CHG-\d+)-(?P<phase>intent|requirements|architecture|design|delivery)-"
                     r"(?P<ts>\d{8}T\d{6}Z)")
 ERROR_LINE_RE = re.compile(r"^(?:#\s*(?:błąd|koniec|error)|\s*✗)", re.I)
-# Pola result.json, które przepuszczamy do manifestu (nic więcej). PRB-28 fix dodaje też `detail`,
-# `permission_denials`; brakuje ich w starszych wynikach, więc odczyt jest tolerancyjny.
+# Fields of result.json that we pass through to the manifest (nothing more). The PRB-28 fix also adds `detail`,
+# `permission_denials`; they are missing in older results, so reading is tolerant.
 PASSTHROUGH = ("status", "cost_usd", "error", "step", "pr", "prs", "cuts", "finished_at",
                "detail", "permission_denials")
 MAX_ERROR_LINES = 10
 
 
 def find_runs(root: Path) -> list[str]:
-    """Zwraca unikatowe prefiksy przebiegów (np. `CHG-3-delivery-20261105T170638Z`)."""
+    """Returns the unique run prefixes (e.g. `CHG-3-delivery-20261105T170638Z`)."""
     seen: set[str] = set()
     for p in sorted(root.iterdir()):
         if not p.is_file():
@@ -63,14 +63,14 @@ def find_runs(root: Path) -> list[str]:
 
 
 def filter_result(data: dict) -> dict:
-    """Przepuszcza TYLKO pola z `PASSTHROUGH`; wszystko inne odrzuca (draft persony, surowe eventy)."""
+    """Passes through ONLY the fields from `PASSTHROUGH`; rejects everything else (persona draft, raw events)."""
     if not isinstance(data, dict):
         return {}
     return {k: v for k, v in data.items() if k in PASSTHROUGH}
 
 
 def error_lines_from_log(log: str) -> list[str]:
-    """Linie z loga wyglądające na przyczynę błędu (`# błąd`, `✗`, `# koniec:`), max MAX_ERROR_LINES, trim."""
+    """Log lines that look like the cause of an error (`# błąd`, `✗`, `# koniec:`), max MAX_ERROR_LINES, trimmed."""
     out: list[str] = []
     for line in log.splitlines():
         if ERROR_LINE_RE.match(line):
@@ -81,11 +81,11 @@ def error_lines_from_log(log: str) -> list[str]:
 
 
 def render_decisions_md(entries: list[dict], change: str) -> str:
-    """Renderuje `decisions.md` z listy wpisów (zgodne z `decision_record.py` zapisem).
+    """Renders `decisions.md` from a list of entries (consistent with the `decision_record.py` format).
 
-    Każdy wpis: nagłówek `## <statement>`, pola `- ref`, `- id`, `- wyslano`, `- kiedy`, `- kto`, `- rodzaj`,
-    `- dlaczego`, `- zrodlo`, `- szkic`; gdy `answers` — blok `- answers:` z parami `- pytanie:`/`- odpowiedz:`.
-    Nagłówek YAML na początku (`artifact: decisions`).
+    Each entry: a `## <statement>` heading, the fields `- ref`, `- id`, `- wyslano`, `- kiedy`, `- kto`, `- rodzaj`,
+    `- dlaczego`, `- zrodlo`, `- szkic`; when `answers` — an `- answers:` block with `- pytanie:`/`- odpowiedz:` pairs.
+    A YAML header at the start (`artifact: decisions`).
     """
     rows = [f"---",
             f"artifact: decisions",
@@ -117,8 +117,8 @@ def render_decisions_md(entries: list[dict], change: str) -> str:
             rows.append(f"- dlaczego: {_one_line(e['why'])}")
         rows.append(f"- zrodlo: {e.get('source_kind') or 'manual'}")
         rows.append(f"- szkic: {e.get('drafted_by') or 'ai'}")
-        # decision_record.py:parse_entries czyta pary pytanie/odpowiedz jako top-level `- ` (nie w bloku
-        # `- answers:` z wcięciem); format musi zgadzać się ze schematem pdi 0.11.0 i z `answers_lines` wprost.
+        # decision_record.py:parse_entries reads pytanie/odpowiedz pairs as top-level `- ` (not in an indented
+        # `- answers:` block); the format must match the pdi 0.11.0 schema and `answers_lines` directly.
         for a in e.get("answers") or []:
             q = _one_line(a.get("question", ""))
             ans = _one_line(a.get("answer", ""))
@@ -129,17 +129,17 @@ def render_decisions_md(entries: list[dict], change: str) -> str:
 
 
 def render_answers_md(answers: list[dict]) -> str:
-    """Pomocniczy plik `answers.md` z parami Q/A (do przeglądu przez człowieka — fixture ich nie wymaga)."""
-    rows = ["# Odpowiedzi bramki", ""]
+    """An auxiliary `answers.md` file with Q/A pairs (for human review — the fixture does not require them)."""
+    rows = ["# Gate answers", ""]
     for a in answers:
-        rows.append(f"**Pytanie:** {_one_line(a.get('question', ''))}")
-        rows.append(f"**Odpowiedź:** {_one_line(a.get('answer', ''))}")
+        rows.append(f"**Question:** {_one_line(a.get('question', ''))}")
+        rows.append(f"**Answer:** {_one_line(a.get('answer', ''))}")
         rows.append("")
     return "\n".join(rows) + "\n"
 
 
 def _one_line(text: Any) -> str:
-    """Tekst w jednym wierszu bez znaków sterujących; bezpieczny do wklejenia w markdown."""
+    """Text on one line without control characters; safe to paste into markdown."""
     s = str(text or "").replace("\r", " ").replace("\n", " ")
     return " ".join(s.split())
 
@@ -152,7 +152,7 @@ def _read_json(path: Path) -> Any:
 
 
 def export(runs_root: Path, out: Path, *, manifest_only: bool = False) -> dict:
-    """Pełny eksport; zwraca manifest (lista obiektów) i tworzy katalogi/plik manifestu."""
+    """A full export; returns the manifest (a list of objects) and creates the directories/manifest file."""
     out.mkdir(parents=True, exist_ok=True)
     manifest: list[dict] = []
     for run_id in find_runs(runs_root):
@@ -195,11 +195,11 @@ def export(runs_root: Path, out: Path, *, manifest_only: bool = False) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--runs", help="katalog z logami faz (domyślnie $PDI_REGISTRY_PATH/runs/)")
+    ap.add_argument("--runs", help="directory with the phase logs (default $PDI_REGISTRY_PATH/runs/)")
     ap.add_argument("--out", default="tmp/flow-evals/import",
-                    help="katalog wynikowy (domyślnie tmp/flow-evals/import)")
+                    help="output directory (default tmp/flow-evals/import)")
     ap.add_argument("--manifest-only", action="store_true",
-                    help="zapisz TYLKO manifest.json, bez podkatalogów na przebieg")
+                    help="write ONLY manifest.json, without a subdirectory per run")
     a = ap.parse_args(argv)
     runs_arg = a.runs or (os.environ.get("PDI_REGISTRY_PATH") and
                           str(Path(os.environ["PDI_REGISTRY_PATH"]) / "runs"))
@@ -207,11 +207,11 @@ def main(argv: list[str] | None = None) -> int:
         runs_arg = str(Path("/Users/kamil/pdi-decisions") / "runs")
     runs_root = Path(runs_arg).expanduser().resolve()
     if not runs_root.is_dir():
-        print(f"✗ brak katalogu {runs_root}")
+        print(f"✗ no such directory: {runs_root}")
         return 1
     out = Path(a.out).expanduser().resolve()
     summary = export(runs_root, out, manifest_only=a.manifest_only)
-    print(f"✓ {summary['count']} przebiegów → {summary['out']}/manifest.json")
+    print(f"✓ {summary['count']} runs → {summary['out']}/manifest.json")
     return 0
 
 

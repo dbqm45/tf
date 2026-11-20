@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy zgodności zmian z planem przebiegu (skill tf, scripts/plan_drift.py): pliki w diffie vs pliki kawałków
-z plan.md, zmiany spoza planu, kawałki bez zmian, testy w diffie. python3 .claude/tests/test_plan_drift.py"""
+"""Tests of the conformance of changes to the run plan (the tf skill, scripts/plan_drift.py): the files in the diff vs the slice files
+from plan.md, changes outside the plan, slices without changes, tests in the diff. python3 .claude/tests/test_plan_drift.py"""
 import json
 import os
 import subprocess
@@ -13,9 +13,9 @@ ROOT = next((p for p in Path(__file__).resolve().parents if (p / REL).is_file())
 SCRIPT = ROOT / REL if ROOT else None
 
 PLAN = """# Plan
-- [x] K1 — eksport CSV · kryteria: test_export_csv · pliki: src/export/csv.py, tests/test_export.py · weryfikacja: `pytest -q` · kto: std
-- [x] K2 — przycisk w UI · kryteria: e2e · pliki: web/src/export/ · weryfikacja: `npm test` · kto: std
-- [ ] K3 — limit rozmiaru · kryteria: test_limit · pliki: src/export/limits.py · weryfikacja: `pytest -q` · kto: std
+- [x] S1 — eksport CSV · criteria: test_export_csv · files: src/export/csv.py, tests/test_export.py · verify: `pytest -q` · kto: std
+- [x] S2 — przycisk w UI · criteria: e2e · files: web/src/export/ · verify: `npm test` · kto: std
+- [ ] S3 — limit rozmiaru · criteria: test_limit · files: src/export/limits.py · verify: `pytest -q` · kto: std
 """
 
 
@@ -45,7 +45,7 @@ def main() -> int:
             fails.append(msg)
 
     if SCRIPT is None:
-        print(f"✗ brak skryptu {REL}")
+        print(f"✗ missing script {REL}")
         return 1
     with tempfile.TemporaryDirectory() as d:
         repo = Path(d)
@@ -54,34 +54,34 @@ def main() -> int:
         git(repo, "add", "-A")
         git(repo, "commit", "-qm", "init")
         git(repo, "checkout", "-qb", "story/export")
-        # PRB-32: katalog przebiegu w .tf/runs/cuts/ (nie `.claude/runs/`, chroniony przez Claude Code);
-        # plan_drift ignoruje wyniki pracy fabryki w .tf/ (przebiegi, raporty, logi)
+        # PRB-32: the run directory in .tf/runs/cuts/ (not `.claude/runs/`, which Claude Code protects);
+        # plan_drift ignores the factory's work output in .tf/ (runs, reports, logs)
         run_dir = repo / ".tf" / "runs" / "cuts" / "2026-10-23-export"
         write(repo, ".tf/runs/cuts/2026-10-23-export/plan.md", PLAN)
-        write(repo, ".tf/reports/security.md", "# raport\n")
+        write(repo, ".tf/reports/security.md", "# report\n")
         for f in ("src/export/csv.py", "tests/test_export.py", "web/src/export/Button.tsx", "src/util/helpers.py"):
             write(repo, f)
         git(repo, "add", "-A")
         git(repo, "commit", "-qm", "work")
         r = run(str(run_dir), "--base", "main", "--json", cwd=repo)
-        check(r.returncode == 0, f"P-1: działa: {r.stdout}{r.stderr}")
+        check(r.returncode == 0, f"P-1: it works: {r.stdout}{r.stderr}")
         out = json.loads(r.stdout) if r.returncode == 0 else {}
         sl = {s["id"]: s for s in out.get("slices", [])}
-        check(set(sl) == {"K1", "K2", "K3"} and sl["K1"]["done"] and not sl["K3"]["done"], f"P-2: kawałki i stan: {sl}")
-        check(sorted(sl.get("K1", {}).get("touched", [])) == ["src/export/csv.py", "tests/test_export.py"],
-              f"P-3: pliki kawałka K1 w diffie: {sl.get('K1')}")
-        check(sl.get("K2", {}).get("touched") == ["web/src/export/Button.tsx"], f"P-4: katalog w planie obejmuje pliki: {sl.get('K2')}")
-        check(sl.get("K3", {}).get("missing") == ["src/export/limits.py"], f"P-5: nietknięte pliki planu: {sl.get('K3')}")
+        check(set(sl) == {"S1", "S2", "S3"} and sl["S1"]["done"] and not sl["S3"]["done"], f"P-2: slices and state: {sl}")
+        check(sorted(sl.get("S1", {}).get("touched", [])) == ["src/export/csv.py", "tests/test_export.py"],
+              f"P-3: the files of slice S1 in the diff: {sl.get('S1')}")
+        check(sl.get("S2", {}).get("touched") == ["web/src/export/Button.tsx"], f"P-4: a directory in the plan covers the files: {sl.get('S2')}")
+        check(sl.get("S3", {}).get("missing") == ["src/export/limits.py"], f"P-5: untouched plan files: {sl.get('S3')}")
         check(out.get("unplanned") == ["src/util/helpers.py"],
-              f"P-6: zmiany spoza planu (bez .tf/): {out.get('unplanned')}")
-        check(out.get("coverage") == 75 and out.get("tests_changed") == 1, f"P-7: pokrycie planem 3/4 i testy: {out}")
+              f"P-6: changes outside the plan (without .tf/): {out.get('unplanned')}")
+        check(out.get("coverage") == 75 and out.get("tests_changed") == 1, f"P-7: plan coverage 3/4 and tests: {out}")
         r = run(str(run_dir), "--base", "main", cwd=repo)
         check(r.returncode == 0 and "outside the plan" in r.stdout and "src/util/helpers.py" in r.stdout and "75%" in r.stdout,
-              f"P-8: tekst: {r.stdout}")
+              f"P-8: text: {r.stdout}")
         r = run(str(repo / "nie-ma"), cwd=repo)
-        check(r.returncode == 2, "P-9: brak katalogu przebiegu → kod 2")
+        check(r.returncode == 2, "P-9: no run directory → code 2")
 
-        # krok C4: plan leży w katalogu zadania (run.json: task_dir); pliki zadania nie są „zmianą spoza planu”
+        # step C4: the plan lives in the task directory (run.json: task_dir); task files are not a “change outside the plan”
         key = "T-20261113-export"
         write(repo, f".tf/runs/{key}/run.json", json.dumps({"key": key, "task_dir": f"docs/project/changes/{key}"}))
         write(repo, f"docs/project/changes/{key}/plan.md", PLAN)
@@ -91,14 +91,14 @@ def main() -> int:
         git(repo, "commit", "-qm", "docs(task): record")
         r = run(str(repo / ".tf" / "runs" / key), "--base", "main", "--json", cwd=repo)
         out = json.loads(r.stdout) if r.returncode == 0 else {}
-        check(r.returncode == 0 and {s["id"] for s in out.get("slices", [])} == {"K1", "K2", "K3"},
-              f"P-10: plan z katalogu zadania: {r.returncode} {r.stdout[:200]}{r.stderr}")
+        check(r.returncode == 0 and {s["id"] for s in out.get("slices", [])} == {"S1", "S2", "S3"},
+              f"P-10: a plan from the task directory: {r.returncode} {r.stdout[:200]}{r.stderr}")
         check(out.get("unplanned") == ["src/util/helpers.py"] and out.get("coverage") == 75,
-              f"P-11: pliki zadania (docs/project/changes/) poza porównaniem: {out.get('unplanned')} {out.get('coverage')}")
+              f"P-11: task files (docs/project/changes/) outside the comparison: {out.get('unplanned')} {out.get('coverage')}")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów plan_drift")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} plan_drift tests")
     return 1 if fails else 0
 
 

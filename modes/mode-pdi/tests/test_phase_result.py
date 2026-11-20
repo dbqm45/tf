@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Testy phase_result.py: jedno miejsce do odczytu wyniku `phase_run.py run` (N5, DZ13).
+"""Tests of phase_result.py: a single place to read the result of `phase_run.py run` (N5, DZ13).
 
-A7 i N1 zmieniają zawartość strumienia równolegle; N5 czyta stdout fazy zawsze przez tę samą funkcję,
-żeby zmiana w phase_run.py (nowe linie PDI-PROGRESS, nowe pole second_review w wyniku) nie łamała runnera.
+A7 and N1 change the stream content in parallel; N5 always reads the phase stdout through the same function,
+so that a change in phase_run.py (new PDI-PROGRESS lines, a new second_review field in the result) does not break the runner.
 """
 from __future__ import annotations
 
@@ -34,16 +34,16 @@ def main() -> int:
 
     # ── read_result ──────────────────────────────────────────────────────────
 
-    # R-1: czysty JSON bez linii postępu
+    # R-1: plain JSON without progress lines
     out = pr.read_result(json.dumps({"change": "CHG-1", "phase": "intent", "status": "done",
                                      "cost_usd": 0.42, "gate": "B1", "persona": "maja"}))
     check(out["change"] == "CHG-1" and out["status"] == "done" and out["cost_usd"] == 0.42,
-          f"R-1: zły wynik {out}")
+          f"R-1: bad result {out}")
 
-    # R-2: linie PDI-PROGRESS: ignorowane, JSON na końcu
+    # R-2: PDI-PROGRESS lines: ignored, JSON at the end
     stdout = "\n".join([
         'PDI-PROGRESS: {"phase":"intent","status":"started"}',
-        'PDI-PROGRESS: {"phase":"intent","status":"in_progress","message":"czyta plik"}',
+        'PDI-PROGRESS: {"phase":"intent","status":"in_progress","message":"reads file"}',
         json.dumps({"change": "CHG-1", "phase": "intent", "status": "waiting_gate",
                     "cost_usd": 0.42, "gate": "B1", "persona": "maja"}),
     ])
@@ -59,26 +59,26 @@ def main() -> int:
     check(out["status"] == "failed" and out["detail"] == "linia 1\nlinia 2\nlinia 3"
           and out["error"] == "kod 1", f"R-3: pretty JSON zepsuty, {out}")
 
-    # R-4: dwa bloki JSON pod rząd — wybiera ostatni (np. sędzia wypisał coś obok)
+    # R-4: two JSON blocks in a row — picks the last (e.g. the judge printed something alongside)
     stdout = (
         json.dumps({"ignore": "me", "status": "done"}, indent=2) + "\n"
         + json.dumps({"change": "CHG-1", "phase": "requirements", "status": "waiting_gate",
                       "cost_usd": 0.33, "gate": "B2"}, indent=2))
     out = pr.read_result(stdout)
     check(out.get("change") == "CHG-1" and out.get("gate") == "B2",
-          f"R-4: nie wzięto ostatniego JSONa, {out}")
+          f"R-4: the last JSON was not taken, {out}")
 
-    # R-5: pole second_review z N1 — zachowane (nowy klucz nie łamie czytnika)
+    # R-5: the second_review field from N1 — preserved (a new key does not break the reader)
     out = pr.read_result(json.dumps({"change": "CHG-1", "phase": "requirements", "status": "waiting_gate",
                                      "cost_usd": 0.44, "gate": "B2",
                                      "second_review": {"status": "ok", "blocking": 1, "cost_usd": 0.03}}))
     check(out.get("second_review", {}).get("blocking") == 1,
           f"R-5: second_review zgubiony, {out}")
 
-    # R-6: brak JSONa w ogóle → ValueError z czytelnym komunikatem
+    # R-6: no JSON at all → ValueError with a readable message
     try:
         pr.read_result("PDI-PROGRESS: {\"phase\":\"intent\",\"status\":\"started\"}\nnic więcej")
-        fails.append("R-6: brak wyjątku dla stdout bez JSONa")
+        fails.append("R-6: no exception for stdout without JSON")
         total += 1
     except ValueError as e:
         check("phase_run" in str(e) or "wynik" in str(e), f"R-6: niejasny komunikat: {e}")
@@ -86,7 +86,7 @@ def main() -> int:
     # R-7: pusty stdout → ValueError
     try:
         pr.read_result("")
-        fails.append("R-7: brak wyjątku dla pustego stdout")
+        fails.append("R-7: no exception for empty stdout")
         total += 1
     except ValueError:
         total += 1
@@ -94,7 +94,7 @@ def main() -> int:
     # R-8: status spoza zestawu → ValueError
     try:
         pr.read_result(json.dumps({"change": "CHG-1", "phase": "intent", "status": "zupelnie-inny"}))
-        fails.append("R-8: brak wyjątku dla nieznanego statusu")
+        fails.append("R-8: no exception for an unknown status")
         total += 1
     except ValueError as e:
         check("status" in str(e).lower(), f"R-8: niejasny komunikat: {e}")
@@ -104,71 +104,71 @@ def main() -> int:
                                      "argv": ["claude", "--print"], "prompt": "..."}))
     check(out["status"] == "dry_run", f"R-9: dry_run odrzucony, {out}")
 
-    # R-10: JSON jest tablicą (nie słownikiem) → ValueError
+    # R-10: JSON is an array (not a dict) → ValueError
     try:
         pr.read_result(json.dumps([1, 2, 3]))
-        fails.append("R-10: brak wyjątku dla tablicy")
+        fails.append("R-10: no exception for an array")
         total += 1
     except ValueError:
         total += 1
 
-    # R-11: JSON nie na końcu — niedokończona linia po nim → wciąż znajduje ostatni poprawny
+    # R-11: JSON not at the end — an unfinished line after it → still finds the last valid one
     stdout = (
         'PDI-PROGRESS: {"phase":"intent","status":"started"}\n'
         + json.dumps({"change": "CHG-1", "phase": "intent", "status": "done", "cost_usd": 0.1}, indent=2)
         + "\nsmieci po JSONie bez newline")
     out = pr.read_result(stdout)
     check(out["status"] == "done" and out.get("cost_usd") == 0.1,
-          f"R-11: śmieci po JSONie zepsuły odczyt, {out}")
+          f"R-11: junk after the JSON broke the read, {out}")
 
     # ── read_progress ─────────────────────────────────────────────────────────
 
-    # P-1: wszystkie linie PDI-PROGRESS zebrane, pozostałe pominięte
+    # P-1: all PDI-PROGRESS lines collected, the rest skipped
     stdout = "\n".join([
         'PDI-PROGRESS: {"phase":"intent","status":"started"}',
         'nie linia postępu',
-        'PDI-PROGRESS: {"phase":"intent","status":"in_progress","message":"czyta plik"}',
+        'PDI-PROGRESS: {"phase":"intent","status":"in_progress","message":"reads file"}',
         'PDI-PROGRESS: {"phase":"intent","status":"done","cost_usd":0.4}',
         json.dumps({"status": "done", "change": "CHG-1", "phase": "intent", "cost_usd": 0.4}),
     ])
     rows = pr.read_progress(stdout)
-    check(len(rows) == 3, f"P-1: zła liczba linii postępu, {len(rows)}")
+    check(len(rows) == 3, f"P-1: wrong number of progress lines, {len(rows)}")
     check(rows[0]["status"] == "started" and rows[-1]["status"] == "done",
-          f"P-1: statusy nie w kolejności, {rows}")
+          f"P-1: statuses out of order, {rows}")
 
-    # P-2: niejsonowa linia po PDI-PROGRESS: — pominięta bez wyjątku
+    # P-2: a non-JSON line after PDI-PROGRESS: — skipped without an exception
     stdout = 'PDI-PROGRESS: {ne-json}\nPDI-PROGRESS: {"phase":"intent","status":"done"}'
     rows = pr.read_progress(stdout)
-    check(len(rows) == 1, f"P-2: złe parsowanie, {rows}")
+    check(len(rows) == 1, f"P-2: bad parsing, {rows}")
 
     # P-3: pusty stdout → pusta lista
-    check(pr.read_progress("") == [], "P-3: nie-pusty wynik dla pustego stdout")
+    check(pr.read_progress("") == [], "P-3: non-empty result for empty stdout")
 
     # ── derived metrics ──────────────────────────────────────────────────────
 
-    # M-1: files_read liczy unikatowe pliki z wiadomości „czyta plik <ścieżka>"
+    # M-1: files_read counts unique files from the "reads file <path>" messages
     rows = [
         {"phase": "intent", "status": "started"},
-        {"phase": "intent", "status": "in_progress", "message": "czyta plik docs/project/changes/CHG-1/intent.md"},
-        {"phase": "intent", "status": "in_progress", "message": "czyta plik docs/project/changes/CHG-1/intent.md"},
-        {"phase": "intent", "status": "in_progress", "message": "czyta plik docs/project/changes/CHG-1/plan.md"},
-        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/spec.md"},   # 14.x
+        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/intent.md"},
+        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/intent.md"},
+        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/plan.md"},
+        {"phase": "intent", "status": "in_progress", "message": "reads file docs/project/changes/CHG-1/spec.md"},
         {"phase": "intent", "status": "in_progress", "message": "uruchamia polecenie"},
         {"phase": "intent", "status": "done", "cost_usd": 0.4},
     ]
-    check(pr.files_read(rows) == 3, f"M-1: files_read {pr.files_read(rows)} ≠ 3 (polskie i angielskie wiadomości)")
+    check(pr.files_read(rows) == 3, f"M-1: files_read {pr.files_read(rows)} ≠ 3")
 
-    # M-2: denials_count liczy wiadomości z prefiksem „odmowa narzędzia"
+    # M-2: denials_count counts messages with the "tool denied" prefix
     rows = [
-        {"phase": "delivery", "status": "in_progress", "message": "odmowa narzędzia Bash: not in allow"},
-        {"phase": "delivery", "status": "in_progress", "message": "tool denied Write: locked path"},   # 14.x
-        {"phase": "delivery", "status": "in_progress", "message": "czyta plik x"},
+        {"phase": "delivery", "status": "in_progress", "message": "tool denied Bash: not in allow"},
+        {"phase": "delivery", "status": "in_progress", "message": "tool denied Write: locked path"},
+        {"phase": "delivery", "status": "in_progress", "message": "reads file x"},
     ]
     check(pr.denials_count(rows) == 2, f"M-2: denials {pr.denials_count(rows)} ≠ 2")
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów phase_result")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of phase_result")
     return 1 if fails else 0
 
 

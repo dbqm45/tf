@@ -1,139 +1,139 @@
-# Archetyp Configurator — mapper (opcje, reguły, proces, solver)
+# The Configurator archetype — mapper (options, rules, process, solver)
 
-> **Spis treści:** Test dopasowania · Model (istota) · Pytania · Kroki mapowania · Decyzje do kontroli (R/A/X) · Format wyniku · Wzorce i pułapki · Kontrola jakości · Przykład (skrócony)
+> **Contents:** Fit test · Model (the essence) · Questions · Mapping steps · Decisions to check (R/A/X) · Result format · Patterns and pitfalls · Quality check · Example (shortened)
 
-Zamienia wymagania, w których klient **składa produkt z opcji** (auto, komputer, pakiet ubezpieczenia, abonament), a opcje
-mają zależności („nie razem”, „tylko razem”, „jedna z”, „jeśli A, to jedna z B/C”, „jeśli A, to nie D”), na model
-deklaratywnych reguł, procesu konfiguracji i solvera. Zakodowane `if`-ami w UI i backendzie szybko przestają się zgadzać,
-a sprawdzenie, czy kombinacja jest w ogóle możliwa, robi się trudne. Efekt: reguły dokłada się jako **dane**, każdą
-niedostępną opcję da się **wyjaśnić**. Protokół wspólny: `SKILL.md` → „Mapper — wspólny protokół”.
+It turns requirements in which the customer **assembles a product from options** (a car, a computer, an insurance package, a subscription), and the options
+have dependencies ("not together", "only together", "one of", "if A, then one of B/C", "if A, then not D"), into a model of
+declarative rules, a configuration process and a solver. Coded with `if`s in the UI and the backend, they quickly stop agreeing,
+and checking whether a combination is possible at all becomes hard. The effect: rules are added as **data**, every
+unavailable option can be **explained**. The common protocol: `SKILL.md` → "Mapper — the common protocol".
 
-## Test dopasowania
-**Pytanie rdzeniowe:** *czy wybór jednej opcji zmienia, które inne opcje są dozwolone lub wymagane?*
-Tak → pasuje. Opcje są niezależne (dowolna kombinacja) → wystarczą cechy produktu.
+## Fit test
+**The core question:** *does choosing one option change which other options are allowed or required?*
+Yes → it fits. The options are independent (any combination) → product features are enough.
 
-| Sygnał w wymaganiach | Pasuje? |
+| Signal in the requirements | Fits? |
 |---|---|
-| „nie można wybrać X razem z Y”, „Z wymaga W” | ✅ |
-| „wybierz dokładnie jeden / co najmniej jeden z” | ✅ |
-| kreator krok po kroku z wyszarzanymi opcjami | ✅ |
-| „dlaczego nie mogę wybrać tej opcji?” | ✅ |
-| „ile kosztuje ta konfiguracja?” | ❌ → Pricing (obok Configuratora) |
-| „czy ten wariant jest na stanie / wolny w terminie?” | ❌ → Product / Availability |
-| „wariant = rozmiar × kolor, wszystkie kombinacje dozwolone” | ❌ → Product (cechy z ograniczeniami) |
-| „przydziel zasoby do zadań wg wymagań” | ❌ → General assignment |
-| „walidacja formularza: pole wymagane, format” | ⚠️ graniczny |
+| "X cannot be chosen together with Y", "Z requires W" | ✅ |
+| "choose exactly one / at least one of" | ✅ |
+| a step-by-step wizard with greyed-out options | ✅ |
+| "why can't I choose this option?" | ✅ |
+| "how much does this configuration cost?" | ❌ → Pricing (next to the Configurator) |
+| "is this variant in stock / free on a date?" | ❌ → Product / Availability |
+| "variant = size × colour, all combinations allowed" | ❌ → Product (features with constraints) |
+| "assign resources to tasks by requirements" | ❌ → General assignment |
+| "form validation: required field, format" | ⚠️ borderline |
 
-**Przypadki graniczne:**
-- *Walidacja formularza* — czy reguły **łączą wiele pól zależnościami**, które się zmieniają i których nie da się sprawdzić
-  pojedynczo? Nie → zwykła walidacja; tak → Configurator.
-- *Reguły liczbowe* („suma mocy ≤ 750 W”, „max 4 moduły”) — sama logika tak/nie to SAT; liczby → CSP (ten sam archetyp,
-  mocniejszy silnik). Zapisz to jako decyzję.
-- *Pakiety handlowe* („pakiet Sport zawiera A+B”) — to reguła „wymaga” albo osobny produkt złożony (Product); rozstrzyga pytanie,
-  czy pakiet ma własną cenę i tożsamość.
+**Borderline cases:**
+- *Form validation* — do the rules **connect many fields with dependencies** that change and cannot be checked
+  individually? No → ordinary validation; yes → Configurator.
+- *Numeric rules* ("total power ≤ 750 W", "max 4 modules") — pure yes/no logic is SAT; numbers → CSP (the same archetype,
+  a stronger engine). Record it as a decision.
+- *Commercial packages* ("the Sport package contains A+B") — this is a "requires" rule or a separate composite product (Product); the deciding question is
+  whether the package has its own price and identity.
 
-## Model (istota)
-| Element | Istota |
+## Model (the essence)
+| Element | Essence |
 |---|---|
-| **Definicja konfiguracji** | dla produktu/modelu: zbiór **opcji** i **reguł**; zmienia ją produkt/marketing; **wersjonowana** |
-| **Opcja** | wybieralny element (np. „silnik 2.0”, „hak”), może należeć do grupy (np. „kolor”) |
-| **Reguła** | deklaratywne ograniczenie — tabela niżej |
-| **Wartość domyślna** | opcja wybrana na starcie, jeśli klient nie zdecyduje inaczej; nie może łamać reguł |
-| **Proces konfiguracji** | osobny obiekt z własnym ID; tworzy go klient: start z definicją, kolejne **wybory** (i cofnięcia), lista **niewybranych**, zapytanie o **brakujące** opcje do poprawnej konfiguracji |
-| **Rozstrzyganie** | reguły + wybory → formuła logiczna (klauzule); **solver SAT** (np. DPLL) lub **CSP** sprawdza, czy istnieje poprawne **dokończenie**, i które opcje są jeszcze możliwe |
-| **Wyjaśnienie** | dla opcji niedostępnej: które reguły i które wybory ją blokują (minimalny zbiór konfliktu) |
-| **Konfiguracja zapisana** | wynik procesu + wersja definicji, wg której była poprawna |
+| **Configuration definition** | for a product/model: a set of **options** and **rules**; product/marketing changes it; **versioned** |
+| **Option** | a selectable element (e.g. "2.0 engine", "tow hitch"), may belong to a group (e.g. "colour") |
+| **Rule** | a declarative constraint — the table below |
+| **Default value** | the option selected at the start if the customer does not decide otherwise; must not break the rules |
+| **Configuration process** | a separate object with its own ID; the customer creates it: a start with the definition, successive **choices** (and undos), a list of **unselected** ones, a query about the **missing** options for a valid configuration |
+| **Resolution** | rules + choices → a logical formula (clauses); a **SAT solver** (e.g. DPLL) or **CSP** checks whether a valid **completion** exists, and which options are still possible |
+| **Explanation** | for an unavailable option: which rules and which choices block it (a minimal conflict set) |
+| **Saved configuration** | the result of the process + the version of the definition under which it was valid |
 
-**Rodzaje reguł**
-| Reguła | Znaczenie | Klauzula (idea) |
+**Kinds of rules**
+| Rule | Meaning | Clause (idea) |
 |---|---|---|
-| wymaga (muszą być razem) | A → B | ¬A ∨ B |
-| wyklucza (nie razem) | ¬(A ∧ B) | ¬A ∨ ¬B |
-| jedna z (dokładnie jedna) | dokładnie 1 z grupy | co najmniej 1 + parami wykluczone |
-| co najmniej jedna z | ≥ 1 z listy | A ∨ B ∨ C |
-| musi być wybrana | A zawsze | A |
-| warunkowe włączenie | jeśli A → jedna z listy | ¬A ∨ B ∨ C |
-| warunkowe wykluczenie | jeśli A → żadna z listy | (¬A ∨ ¬B) ∧ (¬A ∨ ¬C) |
+| requires (must be together) | A → B | ¬A ∨ B |
+| excludes (not together) | ¬(A ∧ B) | ¬A ∨ ¬B |
+| one of (exactly one) | exactly 1 from the group | at least 1 + pairwise excluded |
+| at least one of | ≥ 1 from the list | A ∨ B ∨ C |
+| must be selected | A always | A |
+| conditional inclusion | if A → one of the list | ¬A ∨ B ∨ C |
+| conditional exclusion | if A → none of the list | (¬A ∨ ¬B) ∧ (¬A ∨ ¬C) |
 
-Oddziel **definicję** (produkt/marketing) od **procesu** (klient). Solver jest silnikiem za interfejsem archetypu — model mówi
-„opcje i reguły”, nie „zmienne boolowskie”.
+Separate **the definition** (product/marketing) from **the process** (the customer). The solver is an engine behind the archetype's interface — the model says
+"options and rules", not "boolean variables".
 
-## Pytania
-**A — decyzje standardowe:**
-- Jakie są opcje i jakie zależności między nimi? **Kto je definiuje i jak często się zmieniają?**
-- Czy klient ma widzieć, **dlaczego** opcja jest niedostępna?
-- Czy konfiguracja ma **cenę** (Pricing) i **dostępność** (Availability/Product)?
-- Czy zapisane konfiguracje muszą pozostać **ważne po zmianie reguł**?
-- Proces: kolejne kroki w stałej kolejności czy dowolnie? Czy wolno **cofnąć** wybór?
-- Wybór sprzeczny z wcześniejszym: **odrzucić** czy zaproponować **automatyczną zmianę** (usunąć kolidujące)?
+## Questions
+**A — standard decisions:**
+- What are the options and what dependencies are there between them? **Who defines them and how often do they change?**
+- Should the customer see **why** an option is unavailable?
+- Does the configuration have a **price** (Pricing) and **availability** (Availability/Product)?
+- Must saved configurations remain **valid after the rules change**?
+- Process: successive steps in a fixed order or freely? May a choice be **undone**?
+- A choice contradicting an earlier one: **reject** it or propose an **automatic change** (remove the conflicting ones)?
 
-**B — luki** (przykłady):
-- wartości domyślne i ich zmiana po wyborze innej opcji? · automatyczne dobieranie wymaganych opcji (A → B dodaj samo)?
-- reguły liczbowe (suma, limit ilości)? · reguły zależne od kanału/rynku/daty? · zapis niedokończonego procesu i powrót?
-- konfiguracja jako podstawa zamówienia (zamrożenie wersji definicji)? · test definicji: czy każda opcja jest w ogóle osiągalna?
+**B — gaps** (examples):
+- default values and changing them after another option is chosen? · automatically adding required options (A → B adds itself)?
+- numeric rules (a sum, a quantity limit)? · rules depending on the channel/market/date? · saving an unfinished process and coming back?
+- the configuration as the basis of an order (freezing the definition version)? · a definition test: is every option reachable at all?
 
-## Kroki mapowania
-1. **Opcje i grupy** — lista opcji, grupy „jedna z”, opcje obowiązkowe.
-2. **Reguły** — każdą zależność z wymagań zapisz jako regułę z tabeli rodzajów; nazwij ją językiem biznesu (do wyjaśnień).
-3. **Wartości domyślne** — które, i czy są poprawne względem reguł (sprawdź solverem).
-4. **Proces** — kroki (kolejność stała/dowolna), wybór, cofnięcie, obsługa konfliktu (odrzuć / zaproponuj zmianę), brakujące opcje.
-5. **Silnik** — SAT (tylko tak/nie) czy CSP (liczby, sumy); co zwraca: możliwe opcje, brakujące, wyjaśnienie.
-6. **Wersjonowanie** — definicja w wersjach; co z procesami w toku i zapisanymi konfiguracjami przy zmianie reguł.
-7. **Granice** — cena (Pricing), stan/dostępność (Product/Availability), uprawnienia (kto widzi opcje) poza archetypem.
+## Mapping steps
+1. **Options and groups** — the list of options, "one of" groups, mandatory options.
+2. **Rules** — write each dependency from the requirements as a rule from the kinds table; name it in the language of the business (for explanations).
+3. **Default values** — which ones, and are they valid against the rules (check with the solver).
+4. **Process** — steps (fixed/free order), choice, undo, conflict handling (reject / propose a change), missing options.
+5. **Engine** — SAT (yes/no only) or CSP (numbers, sums); what it returns: possible options, missing ones, an explanation.
+6. **Versioning** — the definition in versions; what happens to processes in progress and saved configurations when the rules change.
+7. **Boundaries** — price (Pricing), stock/availability (Product/Availability), permissions (who sees the options) outside the archetype.
 
-## Decyzje do kontroli (R/A/X)
-rodzaj każdej reguły · grupy „jedna z” vs „co najmniej jedna” · wartości domyślne · kolejność kroków · cofanie wyborów ·
-obsługa konfliktu (odrzuć / auto-zmiana) · automatyczne dobieranie wymaganych · SAT vs CSP · zakres wyjaśnień ·
-wersjonowanie definicji i los zapisanych konfiguracji · kto edytuje definicję.
+## Decisions to check (R/A/X)
+the kind of each rule · "one of" vs "at least one" groups · default values · the order of steps · undoing choices ·
+conflict handling (reject / auto-change) · automatically adding required options · SAT vs CSP · the scope of explanations ·
+versioning of the definition and the fate of saved configurations · who edits the definition.
 
-## Format wyniku
+## Result format
 ```markdown
-# Model Configurator: <obszar>
-## Mapowanie pojęć    — | Pojęcie domeny | Element archetypu | Uzasadnienie |
-## Niezmapowane pojęcia
-## Opcje i grupy      — | Opcja | Grupa | Obowiązkowa | Domyślna |
-## Reguły             — | Nazwa (biznesowa) | Rodzaj | Opcje | Źródło |
-## Proces konfiguracji — kroki, cofanie, obsługa konfliktu, brakujące opcje
-## Silnik             — SAT/CSP, zapytania: możliwe / brakujące / wyjaśnienie
-## Wersjonowanie      — | Zmiana definicji | Procesy w toku | Zapisane konfiguracje |
-## Decyzje (R/A/X)    — | Decyzja | Źródło |
-## Uwagi              — założenia (X), parametry polityk zmiennych, granice z Pricing/Product/Availability
+# Configurator model: <area>
+## Concept mapping    — | Domain concept | Archetype element | Justification |
+## Unmapped concepts
+## Options and groups — | Option | Group | Mandatory | Default |
+## Rules              — | Name (business) | Kind | Options | Source |
+## Configuration process — steps, undo, conflict handling, missing options
+## Engine             — SAT/CSP, queries: possible / missing / explanation
+## Versioning         — | Definition change | Processes in progress | Saved configurations |
+## Decisions (R/A/X)  — | Decision | Source |
+## Notes              — assumptions (X), variable policy parameters, boundaries with Pricing/Product/Availability
 ```
 
-## Wzorce i pułapki
-- Te same reguły w UI i backendzie zapisane `if`-ami rozjeżdżają się — **jedna definicja**, UI pyta solver o możliwe opcje.
-- Sprawdzanie reguł tylko parami nie wykryje ślepego zaułka (wybory poprawne, ale nie da się dokończyć) — potrzebne sprawdzenie
-  **możliwych dokończeń** solverem.
-- Wyszarzona opcja bez powodu frustruje klienta — reguły mają **nazwy biznesowe**, wyjaśnienie wskazuje regułę i wybór.
-- Domyślne wartości sprzeczne z regułami po zmianie definicji — testuj definicję (każda opcja osiągalna, domyślne poprawne).
-- Zmiana reguł „w miejscu” unieważnia zamówienia — **wersjonuj**; zapisana konfiguracja wskazuje wersję.
-- Cena wpisana w opcję → mieszanie archetypów; cena opcji to kalkulator Pricing.
-- **Poza archetypem:** „czy ten klient może zamówić wersję flotową?” to autoryzacja/polityka (warstwa aplikacji), która
-  podaje dozwolony zbiór opcji lub dodatkowe reguły jako **parametr** definicji; Configurator liczy mechanicznie.
+## Patterns and pitfalls
+- The same rules written with `if`s in the UI and the backend drift apart — **one definition**, the UI asks the solver for possible options.
+- Checking rules only in pairs will not detect a dead end (valid choices, but it cannot be completed) — you need a check
+  of **possible completions** with the solver.
+- A greyed-out option with no reason frustrates the customer — rules have **business names**, the explanation points to the rule and the choice.
+- Default values contradicting the rules after a definition change — test the definition (every option reachable, defaults valid).
+- Changing the rules "in place" invalidates orders — **version** them; a saved configuration points to a version.
+- A price written into an option → mixing archetypes; an option's price is a Pricing calculator.
+- **Outside the archetype:** "may this customer order the fleet version?" is authorization/policy (the application layer), which
+  supplies the allowed set of options or additional rules as a **parameter** of the definition; the Configurator computes mechanically.
 
-## Kontrola jakości
-- [ ] każda zależność z wymagań jest regułą z rodzajem i nazwą biznesową
-- [ ] każda opcja osiągalna, domyślne wartości spełniają reguły
-- [ ] proces ma: wybór, cofnięcie (lub jawne „nie”), konflikt, brakujące opcje
-- [ ] silnik (SAT/CSP) dobrany do rodzaju reguł; wyjaśnienia zdefiniowane
-- [ ] wersjonowanie definicji i los zapisanych konfiguracji rozstrzygnięte
-- [ ] tabela mapowania i „Niezmapowane pojęcia” obecne; brak materialnych (X)
+## Quality check
+- [ ] every dependency from the requirements is a rule with a kind and a business name
+- [ ] every option reachable, default values satisfy the rules
+- [ ] the process has: choice, undo (or an explicit "no"), conflict, missing options
+- [ ] the engine (SAT/CSP) matched to the kind of rules; explanations defined
+- [ ] versioning of the definition and the fate of saved configurations settled
+- [ ] the mapping table and "Unmapped concepts" present; no material (X)
 
-## Przykład (skrócony)
-**Wejście:** „Kamper: zabudowa krótka albo długa. Długa wymaga silnika 2.2. Panel solarny wymaga akumulatora dodatkowego.
-Markiza nie pasuje do bagażnika dachowego. Standardowo zabudowa krótka.”
+## Example (shortened)
+**Input:** "A camper van: a short or a long conversion. The long one requires the 2.2 engine. A solar panel requires an extra battery.
+An awning does not fit with a roof rack. The short conversion is standard."
 
 ```markdown
-## Opcje i grupy
-| krótka / długa | zabudowa (jedna z) | tak | krótka |
-| silnik 2.0 / 2.2 | silnik (jedna z) | tak | 2.0 (X → A) |
-| panel_solarny, akumulator_dod, markiza, bagażnik | — | nie | — |
-## Reguły
-| Długa zabudowa tylko z mocnym silnikiem | wymaga | długa → 2.2 | R |
-| Panel potrzebuje akumulatora | wymaga | panel → akumulator | R |
-| Markiza koliduje z bagażnikiem | wyklucza | markiza, bagażnik | R |
-## Proces — dowolna kolejność; wybór „długa” przy silniku 2.0: zaproponuj zmianę na 2.2 (A)
-## Decyzje
-| auto-dobieranie akumulatora do panelu | „To zależy” → parametr `auto_dobieraj_wymagane` per kanał (salon/online) (A) |
-| zapisane konfiguracje po zmianie reguł | X → hot spot |
+## Options and groups
+| short / long | conversion (one of) | yes | short |
+| engine 2.0 / 2.2 | engine (one of) | yes | 2.0 (X → A) |
+| solar_panel, extra_battery, awning, roof_rack | — | no | — |
+## Rules
+| Long conversion only with the strong engine | requires | long → 2.2 | R |
+| The panel needs a battery | requires | panel → battery | R |
+| The awning collides with the roof rack | excludes | awning, roof rack | R |
+## Process — any order; choosing "long" with the 2.0 engine: propose a change to 2.2 (A)
+## Decisions
+| auto-adding the battery to the panel | "It depends" → parameter `auto_add_required` per channel (showroom/online) (A) |
+| saved configurations after a rule change | X → hot spot |
 ```

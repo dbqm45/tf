@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
-Aktualność skilli: terminy przeglądu (`metadata.review`) i znaczniki [niezweryfikowane] (tylko biblioteka standardowa).
+Skill freshness: review deadlines (`metadata.review`) and [unverified] markers (standard library only).
 
-  python3 .tf/factory/freshness.py                         # skille po terminie, z terminem ≤30 dni, bez terminu
-  python3 .tf/factory/freshness.py --json                  # to samo jako JSON (np. dla przeglądu okresowego)
-  python3 .tf/factory/freshness.py --strict                # kod 1, gdy jakiś skill jest po terminie
-  python3 .tf/factory/freshness.py --reviewed <skill…>     # po przeglądzie: nowy termin = dziś + interwał skilla
-  python3 .tf/factory/freshness.py --reviewed <skill> --date 2026-10-03   # przegląd z podanego dnia
-  --today RRRR-MM-DD (data odniesienia), --root <katalog projektu>
+  python3 .tf/factory/freshness.py                         # skills past due, due within ≤30 days, without a deadline
+  python3 .tf/factory/freshness.py --json                  # the same as JSON (e.g. for a periodic review)
+  python3 .tf/factory/freshness.py --strict                # exit code 1 when any skill is past due
+  python3 .tf/factory/freshness.py --reviewed <skill…>     # after a review: new deadline = today + the skill's interval
+  python3 .tf/factory/freshness.py --reviewed <skill> --date 2026-10-03   # review from the given day
+  --today YYYY-MM-DD (reference date), --root <project directory>
 
-Termin przeglądu to data, do której treść skilla (wersje, przepisy, standardy, metody) uznajemy za aktualną. Po
-terminie skill nadal działa; agent sprawdza wtedy ulotne fakty w chwili użycia (core-source-research), a przegląd
-w repozytorium fabryki odświeża treść i ustawia nowy termin. Interwał w miesiącach: wyjątek dla skilla, potem
-najdłuższy pasujący prefiks, potem domyślny. Nakładki dokładają swoje interwały (`freshness` w pack.yaml), a projekt
-może je nadpisać w `.tf/config/config.yaml` → `freshness` (te same klucze co DEFAULT_POLICY). Linia `review` nie wchodzi
-do odcisku bramki jakości.
+The review deadline is the date until which the skill's content (versions, recipes, standards, methods) is considered current. After
+the deadline the skill still works; the agent then checks volatile facts at the time of use (core-source-research), and a review
+in the factory repository refreshes the content and sets a new deadline. Interval in months: a skill exception, then
+the longest matching prefix, then the default. Packs add their own intervals (`freshness` in pack.yaml), and the project
+may override them in `.tf/config/config.yaml` → `freshness` (the same keys as DEFAULT_POLICY). The `review` line does not enter
+the quality gate fingerprint.
 """
 from __future__ import annotations
 
@@ -25,25 +25,25 @@ import re
 import sys
 
 import os
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SOON_DAYS = 30
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 REVIEW_RE = re.compile(r"^  review:[ \t]*(.*?)[ \t]*$", re.M)
-UNVERIFIED = ("[unverified", "[niezweryfikowane")   # pl: sprzed 14.x
+UNVERIFIED = ("[unverified",)
 
 DEFAULT_POLICY = {
     "default_months": 12,
-    # wersje frameworków i narzędzi zmieniają się najszybciej, języki — co pół roku; wymiary nakładek: pack.yaml
+    # framework and tool versions change fastest, languages — every half year; pack dimensions: pack.yaml
     "prefixes": {"fw-": 3, "tool-": 3, "lang-": 6},
     "skills": {},
 }
@@ -56,10 +56,10 @@ def load_policy(root: Path = ROOT) -> dict:
         spec = importlib.util.spec_from_file_location("tf_packs_fresh", root / ".tf" / "factory" / "packs.py")
         pm = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(pm)
-        packs = pm.compose(root, pm.load_config(root))["freshness"]   # interwały z nakładek
+        packs = pm.compose(root, pm.load_config(root))["freshness"]   # intervals from packs
         own_p = root / ".tf" / "config" / "config.yaml"
-        own = (pm.load_yaml(own_p).get("freshness") or {}) if own_p.is_file() else {}   # nadpisania projektu
-    except Exception:  # brak fabryki w katalogu albo uszkodzona konfiguracja — wartości domyślne
+        own = (pm.load_yaml(own_p).get("freshness") or {}) if own_p.is_file() else {}   # project overrides
+    except Exception:  # no factory in the directory or a corrupted configuration — default values
         return pol
     for k in ("prefixes", "skills"):
         pol[k].update(packs.get(k) or {})
@@ -85,7 +85,7 @@ def add_months(d: dt.date, n: int) -> dt.date:
 
 
 def frontmatter(text: str) -> tuple[int, int] | None:
-    """Zakres (początek, koniec) frontmattera bez znaczników `---`; None, gdy go nie ma."""
+    """Range (start, end) of the frontmatter without the `---` markers; None when there is none."""
     if not text.startswith("---\n"):
         return None
     end = text.find("\n---", 3)
@@ -124,14 +124,14 @@ def scan(root: Path, today: dt.date) -> list[dict]:
 
 
 def mark_reviewed(md: Path, reviewed: dt.date, months: int) -> str:
-    """Ustawia `metadata.review` = dzień przeglądu + interwał; zwraca nowy termin."""
+    """Sets `metadata.review` = review day + interval; returns the new deadline."""
     due = add_months(reviewed, months).isoformat()
     text = md.read_text(encoding="utf-8")
     fm = frontmatter(text)
     if fm is None:
         raise ValueError(f"{md}: no frontmatter")
     head, rest = text[:fm[1]], text[fm[1]:]
-    line = f'  review: "{due}"'   # tekst, nie data YAML: specyfikacja Agent Skills — metadata to string → string
+    line = f'  review: "{due}"'   # text, not a YAML date: the Agent Skills specification — metadata is string → string
     if REVIEW_RE.search(head):
         head = REVIEW_RE.sub(line, head, count=1)
     elif re.search(r"^metadata:[ \t]*$", head, re.M):

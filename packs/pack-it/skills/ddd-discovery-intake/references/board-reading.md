@@ -1,19 +1,19 @@
-# Odczyt tablicy Event Stormingu ze zdjęcia lub eksportu
+# Reading an Event Storming board from a photo or an export
 
-## Zasady
-- Czytaj tablicę jako **ponumerowany przepływ w każdym torze** (swimlane), a nie jako worki kartek wg koloru.
-  Typ kartki dopisz w nawiasie: `7. Rezerwacja potwierdzona (zdarzenie)`.
-- Zdarzenia przełomowe i hot spoty zapisuj jako **indeksy do kroków** (`przełomowe: Klient/7, Planista/3`), bez powtarzania treści.
-- Niepewność oznaczaj jawnie: `[nieczytelne]`, `[częściowo: „Rezerw…”]`, `[kolejność niepewna]`. Te miejsca nie są dowodem,
-  dopóki człowiek ich nie potwierdzi.
-- Nie „poprawiaj” tablicy: literówki i dziwne sformułowania zostają — to język uczestników.
+## Rules
+- Read the board as **a numbered flow in each lane** (swimlane), not as bags of sticky notes by colour.
+  Add the note type in brackets: `7. Reservation confirmed (event)`.
+- Record pivotal events and hot spots as **indexes to steps** (`pivotal: Customer/7, Planner/3`), without repeating the content.
+- Mark uncertainty explicitly: `[illegible]`, `[partial: "Reserv…"]`, `[order uncertain]`. These places are not evidence
+  until the human confirms them.
+- Do not "correct" the board: typos and odd phrasings stay — that is the participants' language.
 
-## Stałe sekcje wyniku (`02-domain/boards/<nazwa>.es.md`)
-Legenda (kolory → typy) · Tory · Przepływ (per tor, numerowany) · Zdarzenia przełomowe (indeksy) · Hot spoty (indeksy) ·
-Słownik (pojęcia z kartek) · Obserwacje z układu (np. „tor Finanse pusty po kroku 5”).
-Nagłówek zawiera **skrót (hash) pliku obrazu** (`sha256sum` — liczy agent z powłoką, np. orkiestrator) i wersję instrukcji odczytu — zmiana obrazu unieważnia tylko ten opis.
+## Fixed sections of the result (`02-domain/boards/<name>.es.md`)
+Legend (colours → types) · Lanes · Flow (per lane, numbered) · Pivotal events (indexes) · Hot spots (indexes) ·
+Glossary (terms from the notes) · Observations from the layout (e.g. "the Finance lane is empty after step 5").
+The header contains **the hash of the image file** (`sha256sum` — computed by an agent with a shell, e.g. the orchestrator) and the version of the reading instructions — a change of the image invalidates only this description.
 
-## Bramka jakości
-Pokaż człowiekowi: liczbę kartek per typ i tor, **3 losowe kartki z różnych torów** do porównania ze zdjęciem, liczbę
-nieczytelnych. Gdy nieczytelna jest więcej niż co 10. kartka — poproś o lepsze wejście (eksport z narzędzia, zdjęcie per tor)
-zamiast ponawiać odczyt.
+## Quality gate
+Show the human: the number of notes per type and lane, **3 random notes from different lanes** to compare with the photo, the number of
+illegible ones. When more than every 10th note is illegible — ask for better input (an export from the tool, a photo per lane)
+instead of repeating the reading.

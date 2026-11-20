@@ -1,152 +1,152 @@
 # Developer Experience (DevEx)
 
-> **Spis treści:** Definicja · Dlaczego to ma znaczenie biznesowe (nie tylko dla… · Model tight-loose (governance) · Trzy źródła danych o DevEx · Metryki: FLOW i DORA · Antywzorce (5 typowych błędów) · 9 praktyk poprawy DevEx (z artykułu signadot) · Model AI-readiness (5 kryteriów, z conlea.pl) · Praktyczny plan wdrożenia (5–6 kroków, z… · Kiedy stosować tę wiedzę
+> **Contents:** Definition · Why it matters for the business (not only for engineers'… · The tight-loose model (governance) · Three sources of data about DevEx · Metrics: FLOW and DORA · Anti-patterns (5 typical mistakes) · 9 practices for improving DevEx (from the signadot article) · The AI-readiness model (5 criteria, from conlea.pl) · A practical rollout plan (5–6 steps, from… · When to apply this knowledge
 
-Źródła: networkperspective.io/devex-polska/procesy-developer-experience, blog.conlea.pl/jak-developer-
-experience-devex, medium.com/@signadot/how-to-improve-and-measure-devex-in-your-organization — opisane własnymi
-słowami. DevEx nie jest specyficzne dla frontendu; ten plik opisuje je jako kompetencję Staff/Principal.
+Sources: networkperspective.io/devex-polska/procesy-developer-experience, blog.conlea.pl/jak-developer-
+experience-devex, medium.com/@signadot/how-to-improve-and-measure-devex-in-your-organization — described in our own
+words. DevEx is not specific to the frontend; this file describes it as a Staff/Principal competency.
 
-## Definicja
+## Definition
 
-DevEx to **„niewidzialna infrastruktura”** — całość warunków, procesów i narzędzi wpływających na to, jak
-łatwo, szybko i bez frustracji programista przechodzi od pomysłu do działającego, wdrożonego kodu. Można to
-też ująć jako **„UX organizacji technologicznej”**: tak jak UX mierzy, jak łatwo użytkownikowi korzystać z
-produktu, DevEx mierzy, jak łatwo inżynierowi korzystać z wewnętrznych systemów, procesów i narzędzi swojej
-firmy.
+DevEx is **"invisible infrastructure"** — the whole of the conditions, processes and tools that affect how
+easily, quickly and without frustration a developer goes from an idea to working, deployed code. It can
+also be put as **"the UX of a technology organization"**: just as UX measures how easy it is for a user to use the
+product, DevEx measures how easy it is for an engineer to use the internal systems, processes and tools of their
+company.
 
-To nie jest tylko „dobre IDE” czy „szybkie CI” — DevEx obejmuje cały cykl: onboarding, jakość dokumentacji,
-czas oczekiwania na review, stabilność środowisk testowych, jakość komunikacji między zespołami, jasność
-priorytetów.
+It is not only "a good IDE" or "fast CI" — DevEx covers the whole cycle: onboarding, documentation quality,
+time waiting for review, stability of test environments, quality of communication between teams, clarity
+of priorities.
 
-## Dlaczego to ma znaczenie biznesowe (nie tylko dla samopoczucia inżynierów)
+## Why it matters for the business (not only for engineers' well-being)
 
-Cytowane w źródłach szacunki (traktuj jako orientacyjne, zależne od branży/firmy, nie jako uniwersalną
-stałą):
-- Organizacje z dobrym DevEx notują **40–50% krótszy cycle time** (czas od rozpoczęcia pracy nad
-  zadaniem do wdrożenia na produkcję) i podobny rząd wielkości przyspieszenia ogólnego delivery.
-- Dobrze zoptymalizowane pipeline'y CI/CD bywają nawet **10× szybsze** niż nieutrzymywane, co bezpośrednio
-  skraca pętlę feedbacku programisty.
+Estimates cited in the sources (treat them as indicative, dependent on the industry/company, not as a universal
+constant):
+- Organizations with good DevEx record a **40–50% shorter cycle time** (the time from starting work on
+  a task to deploying it to production) and a similar order of magnitude of overall delivery speed-up.
+- Well-optimized CI/CD pipelines are sometimes even **10× faster** than unmaintained ones, which directly
+  shortens the developer's feedback loop.
 
-Mechanizm tego efektu: każde tarcie (friction) — wolny build, niejasny błąd, brak dokumentacji, flaky test —
-kosztuje nie tylko czas, ale też **przełączenie kontekstu** (context switching), które jest nieproporcjonalnie
-drogie kognitywnie. DevEx nie jest „polerowaniem” pracy inżynierskiej — jest usuwaniem realnego, mierzalnego
-kosztu z każdej iteracji.
+The mechanism of this effect: every friction — a slow build, an unclear error, missing documentation, a flaky test —
+costs not only time but also **context switching**, which is disproportionately
+expensive cognitively. DevEx is not "polishing" engineering work — it is removing a real, measurable
+cost from every iteration.
 
-## Model tight-loose (governance)
+## The tight-loose model (governance)
 
-Praktyczny model zarządzania DevEx polega na rozróżnieniu, co powinno być **ściśle** (tight) ustandaryzowane
-w całej organizacji, a co można zostawić **swobodnie** (loose) do decyzji zespołu:
+A practical model of managing DevEx consists in distinguishing what should be **strictly** (tight) standardized
+across the whole organization and what can be left **loose** to the team's decision:
 
-| | Tight (wspólny standard) | Loose (decyzja zespołu) |
+| | Tight (shared standard) | Loose (team decision) |
 |---|---|---|
-| Przykłady | pipeline CI/CD, format commitów, polityka bezpieczeństwa, observability/logging | wybór edytora, wewnętrzna struktura folderów w ramach konwencji, sposób prowadzenia stand-upów |
-| Cel | konsystencja, możliwość przenoszenia się między zespołami, mniejszy koszt utrzymania platformy | autonomia zespołu, brak narzucania rozwiązania niepasującego do lokalnego kontekstu |
+| Examples | CI/CD pipeline, commit format, security policy, observability/logging | choice of editor, internal folder structure within the convention, the way stand-ups are run |
+| Goal | consistency, the ability to move between teams, a lower cost of maintaining the platform | team autonomy, no imposing of a solution that does not fit the local context |
 
-Błąd w obie strony jest kosztowny: nadmierne „tight” (narzucanie wszystkiego centralnie) zabija autonomię i
-tempo; nadmierne „loose” (brak żadnego standardu) tworzy fragmentację, która utrudnia rotację ludzi między
-zespołami i podnosi koszt platformy wspierającej wszystkich.
+A mistake in either direction is costly: excessive "tight" (imposing everything centrally) kills autonomy and
+pace; excessive "loose" (no standard at all) creates fragmentation, which makes rotating people between
+teams harder and raises the cost of the platform supporting everyone.
 
-## Trzy źródła danych o DevEx
+## Three sources of data about DevEx
 
-1. **Dane automatyczne (telemetria)** — metryki z systemów (czas budowania, czas review, liczba
-   deploy'ów, wskaźniki DORA — patrz niżej). Obiektywne, ale nie mówią „dlaczego”.
-2. **Dane od ludzi (ankiety/wywiady)** — subiektywne odczucie tarcia, satysfakcji, frustracji. Mówią
-   „dlaczego”, ale są podatne na bias i wymagają regularności, by wychwycić trend.
-3. **Dane od AI/narzędzi analitycznych** — nowsza kategoria: automatyczna analiza wzorców w danych
-   telemetrycznych i tekstowych (np. sentiment w retro/ankietach) w skali, której człowiek nie przeanalizuje
-   ręcznie.
+1. **Automatic data (telemetry)** — metrics from systems (build time, review time, number of
+   deploys, DORA indicators — see below). Objective, but they do not say "why".
+2. **Data from people (surveys/interviews)** — the subjective feeling of friction, satisfaction, frustration. They say
+   "why", but they are prone to bias and need regularity to capture a trend.
+3. **Data from AI/analytical tools** — a newer category: automatic analysis of patterns in telemetry
+   and text data (e.g. sentiment in retros/surveys) at a scale a human will not analyse
+   manually.
 
-Żadne z tych źródeł osobno nie daje pełnego obrazu — telemetria bez kontekstu ludzkiego prowadzi do
-optymizacji złej metryki (patrz „antywzorce” niżej); ankiety bez telemetrii nie pokazują, czy odczucie
-odpowiada rzeczywistej zmianie.
+None of these sources alone gives the full picture — telemetry without human context leads to
+optimizing the wrong metric (see "anti-patterns" below); surveys without telemetry do not show whether the feeling
+corresponds to a real change.
 
-## Metryki: FLOW i DORA
+## Metrics: FLOW and DORA
 
-**FLOW** — metryki skupione na przepływie pracy przez system (nie na pojedynczym programiście):
-- **Flow velocity** — tempo, w jakim praca przepływa przez pipeline (ile elementów pracy kończy się w danym
-  okresie).
-- **Flow efficiency** — proporcja czasu aktywnej pracy do czasu całkowitego (reszta to czekanie: na review,
-  na CI, na decyzję).
-- **Flow time** — całkowity czas od startu zadania do jego zakończenia.
-- **Flow load** — ilość pracy w toku (WIP) — zbyt wysoki load rozprasza uwagę i wydłuża flow time
-  nieproporcjonalnie (efekt kolejkowania, nie liniowy).
+**FLOW** — metrics focused on the flow of work through the system (not on the individual developer):
+- **Flow velocity** — the pace at which work flows through the pipeline (how many work items finish in a given
+  period).
+- **Flow efficiency** — the ratio of active work time to total time (the rest is waiting: for review,
+  for CI, for a decision).
+- **Flow time** — the total time from the start of a task to its completion.
+- **Flow load** — the amount of work in progress (WIP) — too high a load scatters attention and lengthens flow time
+  disproportionately (a queueing effect, not linear).
 
-**DORA** (DevOps Research and Assessment) — metryki dostarczania uznawane za wskaźnik dojrzałości delivery,
-nazwane w źródłach podejściem „ilościowym”. Aktualny zestaw (od raportu 2024 — pięć metryk: częstotliwość wdrożeń,
-czas realizacji zmiany, czas przywrócenia po nieudanym wdrożeniu, odsetek nieudanych zmian, odsetek przeróbek
-wdrożeń) z definicjami jest w **eng-continuous-delivery** — nie dubluj go tu. Źródła importu znały jeszcze wersję
-czteroelementową z „time to restore service”.
+**DORA** (DevOps Research and Assessment) — delivery metrics regarded as an indicator of delivery maturity,
+called a "quantitative" approach in the sources. The current set (since the 2024 report — five metrics: deployment frequency,
+change lead time, failed deployment recovery time, change fail rate, deployment rework
+rate) with definitions is in **eng-continuous-delivery** — do not duplicate it here. The import sources still knew the
+four-element version with "time to restore service".
 
-**Uwaga o kompletności źródeł:** artykuł signadot, mimo tytułu obiecującego szerszy przegląd sposobów
-mierzenia DevEx, w praktyce nazywa wprost i szczegółowo tylko DORA jako framework ilościowy — nie omawia
-explicite frameworków SPACE ani DX Core 4, mimo że są to znane, publicznie dokumentowane alternatywne/
-komplementarne modele pomiaru DevEx (SPACE: satisfaction, performance, activity, communication, efficiency;
-DX Core 4: speed, effectiveness, quality, impact — łączy DORA, SPACE i DevEx). Nie zakładaj więc, że ten skill (czy źródłowy artykuł) wyczerpuje temat
-metryk DevEx — SPACE/DX Core 4 są warte doczytania osobno, jeśli potrzebna jest pełna mapa dostępnych
-frameworków.
+**A note on the completeness of the sources:** the signadot article, despite a title promising a broader overview of ways
+of measuring DevEx, in practice names explicitly and in detail only DORA as a quantitative framework — it does not discuss
+explicitly the SPACE or DX Core 4 frameworks, even though these are known, publicly documented alternative/
+complementary DevEx measurement models (SPACE: satisfaction, performance, activity, communication, efficiency;
+DX Core 4: speed, effectiveness, quality, impact — it combines DORA, SPACE and DevEx). So do not assume that this skill (or the source article) exhausts the topic
+of DevEx metrics — SPACE/DX Core 4 are worth reading up on separately if a full map of the available
+frameworks is needed.
 
-## Antywzorce (5 typowych błędów)
+## Anti-patterns (5 typical mistakes)
 
-1. **Mierzenie samej aktywności, nie wyniku** — liczba commitów/linii kodu jako proxy produktywności;
-   premiuje szum, nie wartość.
-2. **Metryki per-osoba użyte do oceny/rankingu jednostek** — DORA/FLOW są metrykami **systemu/zespołu**, nie
-   narzędziem do rankingu programistów; użyte tak, wywołują gaming metryk i chowanie problemów.
-3. **Zbieranie danych bez działania na nich** — ankiety/dashboardy, które nie prowadzą do żadnej zmiany,
-   szybko tracą zaufanie zespołu i przestają dostawać szczere odpowiedzi.
-4. **Rozwiązywanie problemu, zanim go zrozumiano** — wdrażanie narzędzia/procesu „bo inni tak robią” bez
-   wcześniejszej diagnozy, gdzie faktycznie jest tarcie w tej konkretnej organizacji.
-5. **Traktowanie DevEx jako projektu jednorazowego** — wdrożenie ankiety/dashboardu raz i uznanie tematu za
-   zamknięty, zamiast ciągłego procesu.
+1. **Measuring activity alone, not the outcome** — the number of commits/lines of code as a proxy for productivity;
+   it rewards noise, not value.
+2. **Per-person metrics used to assess/rank individuals** — DORA/FLOW are **system/team** metrics, not
+   a tool for ranking developers; used that way, they trigger metric gaming and the hiding of problems.
+3. **Collecting data without acting on it** — surveys/dashboards that lead to no change
+   quickly lose the team's trust and stop getting honest answers.
+4. **Solving a problem before understanding it** — rolling out a tool/process "because others do it" without
+   a prior diagnosis of where the friction actually is in this particular organization.
+5. **Treating DevEx as a one-off project** — rolling out a survey/dashboard once and considering the topic
+   closed, instead of a continuous process.
 
-## 9 praktyk poprawy DevEx (z artykułu signadot)
+## 9 practices for improving DevEx (from the signadot article)
 
-Skrót — praktyki, jakie artykuł wskazuje jako konkretne działania poprawiające DevEx (nie tylko mierzące):
-usuwanie ręcznych, powtarzalnych kroków (automatyzacja onboardingu, self-service środowisk), skracanie
-pętli feedbacku (szybsze testy/build, środowiska per-branch/preview), redukcja flaky testów, jasna i
-aktualna dokumentacja wewnętrzna, standaryzacja tooling'u w duchu modelu tight-loose (patrz wyżej), aktywne
-usuwanie „toil” (praca operacyjna bez wartości rozwojowej), inwestycja w platform engineering (wewnętrzne
-platformy self-service zamiast ręcznego ticketowania do innych zespołów), regularne, jakościowe (nie
-tylko ilościowe) zbieranie feedbacku od zespołów, oraz świętowanie/komunikowanie usunięcia konkretnego
-tarcia — żeby zespół widział, że zgłoszony problem faktycznie prowadzi do zmiany (zamyka pętlę z
-antywzorcem 3 powyżej).
+Summary — the practices the article points to as concrete actions that improve DevEx (not only measure it):
+removing manual, repetitive steps (onboarding automation, self-service environments), shortening
+the feedback loop (faster tests/build, per-branch/preview environments), reducing flaky tests, clear and
+current internal documentation, standardizing tooling in the spirit of the tight-loose model (see above), actively
+removing "toil" (operational work without development value), investing in platform engineering (internal
+self-service platforms instead of manual ticketing to other teams), regular, qualitative (not
+only quantitative) collection of feedback from teams, and celebrating/communicating the removal of a concrete
+friction — so that the team sees that a reported problem actually leads to a change (it closes the loop with
+anti-pattern 3 above).
 
-**Zasada nadrzędna z tego źródła:** „identyfikuj ból, zanim zaczniesz go rozwiązywać” — narzędzie/proces
-wdrożony bez wcześniejszej diagnozy realnego problemu w konkretnym zespole z dużą szansą trafia w złe
-miejsce, nawet jeśli sam w sobie jest dobrą praktyką gdzie indziej.
+**The overriding rule from this source:** "identify the pain before you start solving it" — a tool/process
+rolled out without a prior diagnosis of the real problem in a particular team is likely to hit the wrong
+place, even if it is a good practice elsewhere in itself.
 
-## Model AI-readiness (5 kryteriów, z conlea.pl)
+## The AI-readiness model (5 criteria, from conlea.pl)
 
-Kryteria, według których organizacja może ocenić, czy jej DevEx/procesy są gotowe na efektywne wykorzystanie
-AI w pracy inżynierskiej (a nie tylko „mamy dostęp do narzędzia AI”):
-1. **Jakość i dostępność danych/kontekstu** — czy AI ma dostęp do aktualnej dokumentacji, historii kodu,
-   konwencji zespołu, czy działa w informacyjnej próżni.
-2. **Standaryzacja procesów** — powtarzalne, dobrze zdefiniowane procesy są łatwiejsze do wspomagania/
-   automatyzacji przez AI niż chaotyczne, ad-hoc.
-3. **Jakość istniejącego kodu/architektury** — AI wspomaga szybciej dobrze ustrukturyzowany kod; dług
-   techniczny i niekonsystencja utrudniają skuteczne wsparcie AI tak samo, jak utrudniają je ludziom.
-4. **Kultura feedbacku i iteracji** — organizacja musi mieć nawyk oceniania i korygowania wyników (w tym
-   wyników AI), nie tylko akceptowania ich bez weryfikacji.
-5. **Bezpieczeństwo i governance danych** — jasne zasady, jakie dane/kod mogą trafić do narzędzi AI, żeby
-   przyspieszenie nie tworzyło nowego ryzyka compliance/bezpieczeństwa.
+Criteria by which an organization can assess whether its DevEx/processes are ready for the effective use of
+AI in engineering work (and not only "we have access to an AI tool"):
+1. **Quality and availability of data/context** — does the AI have access to current documentation, code history,
+   team conventions, or does it work in an information vacuum.
+2. **Standardization of processes** — repeatable, well-defined processes are easier for AI to support/
+   automate than chaotic, ad-hoc ones.
+3. **Quality of the existing code/architecture** — AI supports well-structured code faster; technical
+   debt and inconsistency make effective AI support harder in the same way as they make it harder for people.
+4. **A culture of feedback and iteration** — the organization must have the habit of assessing and correcting results (including
+   AI results), not only accepting them without verification.
+5. **Security and data governance** — clear rules on which data/code may go to AI tools, so that
+   the speed-up does not create a new compliance/security risk.
 
-## Praktyczny plan wdrożenia (5–6 kroków, z networkperspective.io)
+## A practical rollout plan (5–6 steps, from networkperspective.io)
 
-1. **Zdiagnozuj, zanim wybierzesz narzędzie** — zbierz dane (telemetria + ankiety) o tym, gdzie faktycznie
-   jest tarcie w tej konkretnej organizacji, zamiast kopiować rozwiązanie z innej firmy.
-2. **Ustal model tight-loose** — zdecyduj świadomie, co jest wspólnym standardem, a co autonomią zespołu,
-   zamiast zostawiać to przypadkowi.
-3. **Wybierz mały zestaw metryk (FLOW + DORA)** i zacznij je zbierać systematycznie, zanim inwestujesz w
-   duże zmiany procesu.
-4. **Wdrażaj zmiany iteracyjnie, małymi krokami**, mierząc efekt każdej zmiany — nie jeden duży „program
-   transformacji DevEx” wdrożony naraz.
-5. **Zamknij pętlę z zespołem** — komunikuj, jaka zmiana wynikła z ich feedbacku (antywzorzec 3 i praktyka
-   „świętowania” wyżej) — to, co utrzymuje szczerość kolejnych ankiet.
-6. **Traktuj to jako proces ciągły**, nie projekt z datą zakończenia — powtarzaj cykl diagnoza → zmiana →
-   pomiar regularnie.
+1. **Diagnose before you choose a tool** — collect data (telemetry + surveys) about where the friction actually
+   is in this particular organization, instead of copying a solution from another company.
+2. **Set the tight-loose model** — decide consciously what is a shared standard and what is team autonomy,
+   instead of leaving it to chance.
+3. **Choose a small set of metrics (FLOW + DORA)** and start collecting them systematically before you invest in
+   large process changes.
+4. **Roll out changes iteratively, in small steps**, measuring the effect of each change — not one large "DevEx
+   transformation programme" rolled out all at once.
+5. **Close the loop with the team** — communicate which change resulted from their feedback (anti-pattern 3 and the
+   "celebrating" practice above) — this is what keeps subsequent surveys honest.
+6. **Treat it as a continuous process**, not a project with an end date — repeat the cycle diagnosis → change →
+   measurement regularly.
 
-## Kiedy stosować tę wiedzę
+## When to apply this knowledge
 
-Poziom Staff/Senior Staff to zwykle pierwszy poziom, na którym inżynier ma realny wpływ na DevEx całego
-zespołu/domeny (nie tylko własnej pracy) — patrz `staff.md`. Poziom Principal zwykle wpływa na DevEx całej
-organizacji technologicznej i decyduje o wyborze platform/standardów na tym poziomie — patrz
+The Staff/Senior Staff level is usually the first level at which an engineer has a real influence on the DevEx of a whole
+team/domain (not only their own work) — see `staff.md`. The Principal level usually influences the DevEx of the whole
+technology organization and decides on the choice of platforms/standards at that level — see
 `principal.md`.

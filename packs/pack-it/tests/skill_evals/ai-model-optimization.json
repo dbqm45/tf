@@ -41,6 +41,55 @@
       }
     },
     {
+      "id": "kwantyzacja-70b-en",
+      "expect": "trigger",
+      "prompt": "A 70B model in FP16 doesn't fit on a single 80 GB card for us. How do we shrink it and how do we check that quality hasn't dropped? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "140 ?GB"
+          ],
+          [
+            "awq",
+            "gptq",
+            "fp8",
+            "int4",
+            "4.bit"
+          ],
+          [
+            "kwantyzacj\\w+",
+            "quanti[sz]\\w+"
+          ],
+          [
+            "własn\\w+ (zestaw|zbiór|eval)",
+            "zbiór\\w* ewaluacyjn\\w+",
+            "zadani\\w+ docelow\\w+",
+            "ewaluacj\\w+ (na|po)",
+            "kl divergence|perplexity|perpleksj",
+            "own (eval|test)\\w*( set)?",
+            "(eval\\w*|test) (set|dataset)",
+            "target task\\w*",
+            "evaluat\\w* (on|after)"
+          ],
+          [
+            "kawałk\\w*",
+            "slice",
+            "w podziale na (język|długoś|segment|rodzaj)",
+            "pr[óo]g\\w*[^.]{0,60}przed\\W{0,3}(pomiar|mierzen|kwantyzacj)",
+            "slice\\w*",
+            "(per|by|broken down by) (language|length|segment|type)",
+            "threshold\\w*[^.]{0,60}(before|prior)"
+          ]
+        ],
+        "none": [
+          "kwantyzacja nie wpływa na jakość",
+          "zawsze bez utraty jakości",
+          "quantization (does not|doesn.t) (affect|impact) (the )?quality",
+          "always without (any )?(quality )?loss"
+        ]
+      }
+    },
+    {
       "id": "resnet-cpu-onnx",
       "expect": "trigger",
       "prompt": "Mamy model wizyjny w PyTorch (ResNet do kontroli jakości na linii) i na serwerze z procesorami Intela odpowiedź trwa 120 ms na obraz, a potrzebujemy 40 ms. Co zrobić i w jakiej kolejności? Odpowiedz zwięźle.",

@@ -1,45 +1,45 @@
-# Model biznesowy, rynek i konkurencja
+# Business model, market and competition
 
-Narzędzia do sekcji „opłacalność” w mapie założeń i do rozmowy z biznesem. Każde pole kanwy to hipoteza z dowodem
-albo założenie do sprawdzenia — nie deklaracja.
+Tools for the "viability" section of the assumption map and for the conversation with the business. Each field of a canvas is a hypothesis with evidence
+or an assumption to check — not a declaration.
 
-## Kanwa modelu biznesowego (Osterwalder, Pigneur) — 9 pól
-Segmenty klientów · Propozycja wartości · Kanały · Relacje z klientami · Strumienie przychodów · Kluczowe zasoby ·
-Kluczowe działania · Kluczowi partnerzy · Struktura kosztów. Dla istniejącego produktu: jak dziś tworzymy, dostarczamy
-i przechwytujemy wartość; dla nowej funkcji: które pola zmienia (np. nowy segment, nowy kanał, nowy koszt wsparcia).
+## The business model canvas (Osterwalder, Pigneur) — 9 fields
+Customer segments · Value proposition · Channels · Customer relationships · Revenue streams · Key resources ·
+Key activities · Key partners · Cost structure. For an existing product: how we create, deliver
+and capture value today; for a new feature: which fields it changes (e.g. a new segment, a new channel, a new support cost).
 
-## Lean Canvas (A. Maurya) — dla nowych produktów
-Zamienia część pól na bardziej ryzykowne na starcie: **Problem** (3 najważniejsze + obecne alternatywy), **Segmenty**
-(z pierwszymi klientami), **Unikalna propozycja wartości**, **Rozwiązanie**, **Kanały**, **Przychody**, **Koszty**,
-**Kluczowe metryki**, **Nieuczciwa przewaga** (czego nie da się łatwo skopiować). Wypełniaj od problemu i segmentu;
-pola bez dowodu oznacz i testuj w kolejności ryzyka.
+## Lean Canvas (A. Maurya) — for new products
+It replaces some fields with ones that are riskier at the start: **Problem** (the top 3 + existing alternatives), **Segments**
+(with the first customers), **Unique value proposition**, **Solution**, **Channels**, **Revenue**, **Costs**,
+**Key metrics**, **Unfair advantage** (what cannot be easily copied). Fill it in from the problem and the segment;
+mark the fields without evidence and test them in order of risk.
 
-## Analiza konkurencji
-- Konkurenci bezpośredni (to samo zadanie, ten sam segment), pośredni (inny sposób na to samo zadanie — arkusz
-  kalkulacyjny, papier, „nic nie robić”) i substytuty.
-- Porównanie według **zadań klienta i kryteriów wyboru**, nie listy funkcji: cena, czas do pierwszej wartości,
-  przełączenie, integracje, wsparcie. Źródła z datą: strony, cenniki, dokumentacja, opinie użytkowników, wątki
-  społeczności (core-source-research). Test użyteczności produktu konkurencji to też dowód.
-- Wynik: gdzie jesteśmy lepsi, gdzie gorsi, czego nie robi nikt — i czy to ważne dla naszego segmentu.
+## Competitor analysis
+- Direct competitors (the same job, the same segment), indirect ones (another way of doing the same job — a spreadsheet,
+  paper, "do nothing") and substitutes.
+- Compare by **customer jobs and selection criteria**, not by a list of features: price, time to first value,
+  switching, integrations, support. Sources with a date: websites, price lists, documentation, user reviews, community
+  threads (core-source-research). A usability test of a competitor's product is evidence too.
+- The result: where we are better, where worse, what nobody does — and whether it matters for our segment.
 
-## SWOT → działania
-Mocne i słabe strony (wewnątrz), szanse i zagrożenia (na zewnątrz). Sama tabela niczego nie rozstrzyga — przełóż ją
-na działania: wykorzystaj mocne strony do szans, użyj szans do zniwelowania słabości, mocnymi stronami odpieraj
-zagrożenia, ogranicz miejsca, gdzie słabość spotyka zagrożenie.
+## SWOT → actions
+Strengths and weaknesses (internal), opportunities and threats (external). The table alone settles nothing — turn it
+into actions: use strengths to seize opportunities, use opportunities to offset weaknesses, use strengths to fend off
+threats, limit the places where a weakness meets a threat.
 
-## Pięć sił Portera
-Rywalizacja w branży · groźba nowych wejść · groźba substytutów · siła przetargowa nabywców · siła przetargowa
-dostawców (np. jeden dostawca modeli AI, jeden sklep z aplikacjami). Pokazuje presję na cenę i marżę i podpowiada,
-gdzie budować przewagę (koszt przełączenia, efekty sieciowe, dane).
+## Porter's five forces
+Rivalry in the industry · the threat of new entrants · the threat of substitutes · the bargaining power of buyers · the bargaining power
+of suppliers (e.g. a single AI model provider, a single app store). It shows the pressure on price and margin and suggests
+where to build an advantage (switching cost, network effects, data).
 
-## Mapa doświadczenia klienta
-Etapy (np. poznanie → wybór → zakup → użycie → pomoc → odnowienie lub odejście) × działania, myśli, emocje, punkty
-styku, problemy i momenty zachwytu, z danymi z badań. Dla całego doświadczenia, nie jednego ekranu — wskazuje szanse
-do drzewa szans i rozwiązań. Szczegółowy przepływ w produkcie: ux-feature-design.
+## The customer experience map
+Stages (e.g. discovery → choice → purchase → use → help → renewal or churn) × actions, thoughts, emotions, touchpoints,
+problems and moments of delight, with data from research. For the whole experience, not a single screen — it points to opportunities
+for the opportunity solution tree. The detailed flow inside the product: ux-feature-design.
 
-## Źródła
+## Sources
 - A. Osterwalder, Y. Pigneur, *Business Model Generation* (2010); A. Maurya, *Running Lean* (2012);
-  M. Porter, „How Competitive Forces Shape Strategy” (HBR, 1979)
+  M. Porter, "How Competitive Forces Shape Strategy" (HBR, 1979)
 - [roadmap.sh — UX Design](https://roadmap.sh/ux-design) (business model canvas, lean canvas, competitor analysis,
   SWOT, five forces, customer experience map)
-Opisane własnymi słowami.
+Described in our own words.

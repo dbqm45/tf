@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Testy eng-codebase-mapping/scripts/schema_scan.py: tabele, kolumny, ograniczenia i powiązania z migracji SQL
-(w tym Flyway) oraz encji JPA i EF Core — z miejscem plik:linia. python3 .claude/tests/test_schema_scan.py"""
+"""Tests of eng-codebase-mapping/scripts/schema_scan.py: tables, columns, constraints and relations from SQL migrations
+(including Flyway) and from JPA and EF Core entities — with the file:line location. python3 .claude/tests/test_schema_scan.py"""
 import json
 import subprocess
 import sys
@@ -60,7 +60,7 @@ def main() -> int:
         repo = Path(d)
         write(repo, REPO)
         r = run(str(repo), "--json")
-        check(r.returncode == 0, f"D-1: działa: {r.stderr[-300:]}")
+        check(r.returncode == 0, f"D-1: runs: {r.stderr[-300:]}")
         out = json.loads(r.stdout) if r.returncode == 0 else {}
         t = {x["name"]: x for x in out.get("tables", [])}
         check({"customer", "invoice", "orders", "product"} <= set(t) and "notentity" not in {k.lower() for k in t},
@@ -79,7 +79,7 @@ def main() -> int:
               f"D-7: ALTER TABLE ADD COLUMN z miejscem: {icols.get('due_date')}")
         rules = out.get("rules", [])
         check(any(x["table"] == "invoice" and "total > 0" in x["rule"] and x["at"] == "db/migration/V2__invoice_due.sql:2"
-                  for x in rules), f"D-8: reguła z ADD CONSTRAINT CHECK: {rules}")
+                  for x in rules), f"D-8: rule from ADD CONSTRAINT CHECK: {rules}")
         o = t.get("orders", {})
         ocols = {c["name"]: c for c in o.get("columns", [])}
         check(o.get("source") == "jpa" and "not null" in ocols.get("currency", {}).get("constraints", [])
@@ -94,7 +94,7 @@ def main() -> int:
 
     for f in fails:
         print("✗", f)
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} testów schema_scan")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of schema_scan")
     return 1 if fails else 0
 
 

@@ -34,11 +34,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 INSTALL = ROOT / "core" / "factory" / "install.py"
-ITEM_ROOTS = (ROOT / "packs", ROOT / "modes")   # nakładki i tryby — ta sama budowa katalogu
+ITEM_ROOTS = (ROOT / "packs", ROOT / "modes")   # overlays and modes — the same directory layout
 
 
 def item_dirs() -> list[Path]:
-    """Katalogi nakładek i trybów (z pack.yaml), po nazwie."""
+    """Overlay and mode directories (with pack.yaml), by name."""
     return sorted((p.parent for r in ITEM_ROOTS for p in r.glob("*/pack.yaml")), key=lambda d: d.name)
 
 
@@ -48,7 +48,7 @@ def opts_of(argv: list[str]) -> dict:
     for a in it:
         if a in ("--packs", "--out"):
             out[a[2:]] = next(it, "")
-        elif a == "--pack-dir":     # nakładki spoza packs/ (np. ../ev-intelligence/factory-pack); można powtórzyć
+        elif a == "--pack-dir":     # overlays from outside packs/ (e.g. ../ev-intelligence/factory-pack); may be repeated
             out["pack-dir"] = ",".join(x for x in (out["pack-dir"], next(it, "")) if x)
         elif a == "--keep":
             out["keep"] = True
@@ -70,7 +70,7 @@ def install_cmd(ws: Path, o: dict) -> list[str]:
 
 
 def external_dirs(o: dict) -> list[Path]:
-    """Lokalne katalogi nakładek zewnętrznych z --pack-dir (do sync-gate); adresów git nie ma gdzie zapisać."""
+    """Local directories of external overlays from --pack-dir (for sync-gate); git addresses have nowhere to be recorded."""
     out = []
     for src in (o.get("pack-dir") or "").split(","):
         base = Path(src).expanduser() if src and "://" not in src else None
@@ -93,7 +93,7 @@ def assemble(o: dict) -> Path:
 
 
 def factory_only_tests() -> list[Path]:
-    """Testy rdzenia, których instalator nie kopiuje do projektu (install.py: FACTORY_ONLY) — uruchamiane ze źródła."""
+    """Core tests that the installer does not copy into the project (install.py: FACTORY_ONLY) — run from the source."""
     spec = importlib.util.spec_from_file_location("tf_install_ws", INSTALL)
     inst = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(inst)
@@ -118,10 +118,10 @@ def check(o: dict) -> bool:
     tests = sorted((ws / ".claude" / "tests").glob("test_*.py"))
     for t in tests:
         ok &= run(ws, [sys.executable, str(t.relative_to(ws))])
-    for t in factory_only_tests():   # tylko w przestrzeni fabryki (importują moduły ze źródła fabryki)
+    for t in factory_only_tests():   # only in the factory workspace (they import modules from the factory source)
         ok &= run(ROOT, [sys.executable, str(t.relative_to(ROOT))])
     if (ws / ".claude/tests/run_skill_evals.py").exists():
-        strict = {"TF_EVALS_STRICT": "1"} if o["packs"] == "all" else {}   # sąsiedzi scenariuszy ze wszystkich nakładek
+        strict = {"TF_EVALS_STRICT": "1"} if o["packs"] == "all" else {}   # scenario neighbors from all overlays
         ok &= run(ws, [sys.executable, ".claude/tests/run_skill_evals.py", "--validate"], env=strict)
     ok &= run(ws, [sys.executable, ".tf/factory/skill_gate.py", "--status", "--strict"])
     return ok
@@ -156,7 +156,7 @@ def sync_gate(o: dict) -> int:
 
 
 def pack_id(base: Path) -> str:
-    """Id nakładki z pack.yaml (katalog nakładki zewnętrznej może się nazywać inaczej, np. factory-pack/)."""
+    """The overlay id from pack.yaml (an external overlay's directory may be named differently, e.g. factory-pack/)."""
     import re
     m = re.search(r"^id:\s*(\S+)", (base / "pack.yaml").read_text(encoding="utf-8"), re.M) if (base / "pack.yaml").is_file() else None
     return m.group(1) if m else base.name
@@ -193,7 +193,7 @@ def refs(verbose: bool) -> int:
         found: dict[str, list[str]] = {}
         for f in sorted(base.rglob("*")):
             if not f.is_file() or f.suffix not in (".md", ".yaml", ".yml", ".json", ".py", ".js") or "_vendor" in f.parts \
-                    or f.name == "CHANGELOG.md" or "tests" in f.relative_to(base).parts:   # testy: dane testowe; zgodność bez nakładek sprawdza matrix
+                    or f.name == "CHANGELOG.md" or "tests" in f.relative_to(base).parts:   # tests: test data; compatibility without overlays is checked by matrix
                 continue
             for n, line in enumerate(f.read_text(encoding="utf-8", errors="ignore").splitlines(), 1):
                 for m in pattern.finditer(line):
@@ -214,7 +214,7 @@ CI_FILE = ROOT / ".github" / "workflows" / "factory-checks.yml"
 
 
 def taken_prefixes() -> dict[str, str]:
-    """Prefiksy wymiarów rdzenia, nakładek i trybów → właściciel (proste dopasowanie `prefix: x-`)."""
+    """Dimension prefixes of the core, overlays and modes → owner (simple matching of `prefix: x-`)."""
     import re
     out = {}
     for f in [ROOT / "core" / "factory" / "config.yaml", *(r / "pack.yaml" for r in item_dirs())]:
@@ -285,7 +285,7 @@ def new_pack(argv: list[str]) -> int:
     if problems:
         print("✗ " + "\n✗ ".join(problems), file=sys.stderr)
         return 2
-    def q(v: str) -> str:   # wartość YAML w cudzysłowie (opis z „: ” psuje parser)
+    def q(v: str) -> str:   # a quoted YAML value (a description with „: ” breaks the parser)
         return '"' + v.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
     version = (ROOT / "core" / "factory" / "VERSION").read_text(encoding="utf-8").strip()
@@ -363,8 +363,8 @@ def main(argv: list[str]) -> int:
     if cmd == "new-pack":
         return new_pack(argv[2:])
     if cmd == "flow-evals":
-        # Evale przebiegu (N5, DZ13): bramka dla zmian modelu/skilla/persony/promptu fazy.
-        # Raport porównuje wynik i koszt z poprzednim przebiegiem; walidacja (--validate) nie dotyka modelu.
+        # Run evals (N5, DZ13): a gate for changes to the model/skill/persona/phase prompt.
+        # The report compares the result and cost with the previous run; validation (--validate) does not touch the model.
         sys.path.insert(0, str(ROOT / "core" / "tests"))
         import flow_evals_runner
         return flow_evals_runner.main(argv[2:])

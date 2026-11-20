@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-tf init / tf analyze — katalog `.tf/` na wyniki pracy fabryki i modułowy przegląd projektu (piętro 0: skrypty).
+tf init / tf analyze — the `.tf/` directory for the factory's work results and a modular project review (tier 0: scripts).
 
-  python3 .tf/factory/analyze.py init                      # szkielet .tf/ (idempotentnie) i mapa katalogu
-  python3 .tf/factory/analyze.py list                      # dostępne moduły i czy stosują się do repo
+  python3 .tf/factory/analyze.py init                      # the .tf/ skeleton (idempotent) and a directory map
+  python3 .tf/factory/analyze.py list                      # available modules and whether they apply to the repo
   python3 .tf/factory/analyze.py run [--only a,b] [--since <commit>] [--top N]
-  python3 .tf/factory/analyze.py gate [--module m]          # bramka: moduł na swoim zestawie testowym (fixtures/)
+  python3 .tf/factory/analyze.py gate [--module m]          # gate: a module on its own test set (fixtures/)
 
-Moduł to katalog z `analyzer.yaml` (name, prefix, title, description, version, applies_when.files_any,
-tier0.script albo tier0.rules — reguły deklaratywne wykonywane przez rules_scan.py, incremental, gate) w `.tf/factory/analyzers/`, `.tf/analyzers/` albo katalogach z `TF_ANALYZERS_PATH`. Skrypt piętra 0
-dostaje `--root <repo> [--files a,b]` i wypisuje ustalenia jako JSON Lines (rule, title, file, line, snippet,
-severity, confidence, evidence, basis, suggestion). Rdzeń nadaje stabilne `id` (`<prefix>-<6 hex>` z reguły, pliku
-i treści, bez numeru linii), deduplikuje, szereguje, pisze `.tf/reports/<moduł>.md` (checkboxy scalane przy ponownej
-analizie po `id`), `.tf/reports/<moduł>.json` (pełna lista), `.tf/reports/README.md` (przegląd) i rejestr
-`.tf/register/items.jsonl`. Cache: `.tf/cache/analyze/<moduł>.json` po commicie (`TF_ANALYZE_NO_CACHE=1` wyłącza).
-Piętra 1–3 (model, przeglądarka, weryfikacja) jeszcze nie istnieją — raport mówi to w zakresie.
-Plan: docs/plans/2026-11-08-krok-1-tf-analyze-rdzen.md w repozytorium fabryki. Tylko biblioteka standardowa + PyYAML.
+A module is a directory with `analyzer.yaml` (name, prefix, title, description, version, applies_when.files_any,
+tier0.script or tier0.rules — declarative rules run by rules_scan.py, incremental, gate) in `.tf/factory/analyzers/`, `.tf/analyzers/` or directories from `TF_ANALYZERS_PATH`. A tier-0 script
+gets `--root <repo> [--files a,b]` and prints findings as JSON Lines (rule, title, file, line, snippet,
+severity, confidence, evidence, basis, suggestion). The core assigns a stable `id` (`<prefix>-<6 hex>` from the rule, file
+and content, without the line number), deduplicates, ranks, writes `.tf/reports/<module>.md` (checkboxes merged on re-analysis
+by `id`), `.tf/reports/<module>.json` (the full list), `.tf/reports/README.md` (overview) and the register
+`.tf/register/items.jsonl`. Cache: `.tf/cache/analyze/<module>.json` per commit (`TF_ANALYZE_NO_CACHE=1` turns it off).
+Tiers 1–3 (model, browser, verification) do not exist yet — the report says so in its scope.
+Plan: docs/plans/2026-11-08-krok-1-tf-analyze-rdzen.md in the factory repository. Standard library + PyYAML only.
 """
 from __future__ import annotations
 
@@ -28,25 +28,25 @@ import re
 import subprocess
 import sys
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
         pass
-os.environ.setdefault("PYTHONUTF8", "1")  # procesy potomne (build.py, testy, hooki) też piszą i czytają UTF-8
+os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, hooks) also write and read UTF-8
 
-sys.dont_write_bytecode = True   # silnik w .tf/factory/ bez __pycache__ (jak node_modules — tylko kod)
+sys.dont_write_bytecode = True   # the engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 from pathlib import Path
 
 try:
     import yaml
-except ImportError:  # dołączona kopia PyYAML (.tf/factory/_vendor)
+except ImportError:  # bundled copy of PyYAML (.tf/factory/_vendor)
     sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
     import yaml
 
 TF = Path(".tf")
 SEVERITY = ["critical", "high", "medium", "low"]
-NOTE = "  ↳ "  # adnotacje rdzenia w liście działań (odtwarzane przy każdej analizie; notatki człowieka zostają)
+NOTE = "  ↳ "  # core annotations in the action list (recreated on every analysis; human notes stay)
 DIRS = {
     "reports": ("`tf analyze` reports: an overview (this file after the first analysis), `<module>.md` with a list of actions "
                 "to tick off and `<module>.json` with the full list of findings.", True),
@@ -65,7 +65,7 @@ SHORT = {"reports": "analysis reports with a list of actions", "register": "the 
 CONFIG = "# Overrides of the factory configuration for this project (applied over .tf/factory/config.yaml).\nanalyze:\n  top: 10\n"
 
 
-# ───────────── narzędzia ─────────────
+# ───────────── tools ─────────────
 
 def git(root: Path, *args: str, check: bool = True) -> str:
     r = subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, errors="replace", timeout=120)
@@ -145,7 +145,7 @@ def git_rules(root: Path) -> str:
     return f"  git: {', '.join(lines)} w {rel}" if mode == "shared" else f"  git: .tf/ w {rel} (instalacja prywatna)"
 
 
-# ───────────── moduły ─────────────
+# ───────────── modules ─────────────
 
 def module_dirs(root: Path) -> list[Path]:
     dirs = [root / ".tf" / "factory" / "analyzers", root / TF / "analyzers"]
@@ -168,7 +168,7 @@ def discover(root: Path) -> list[dict]:
 
 
 def applies(m: dict, files: list[str]) -> str | None:
-    """None, gdy moduł się stosuje; inaczej powód pominięcia."""
+    """None when the module applies; otherwise the reason for skipping."""
     pats = ((m.get("applies_when") or {}).get("files_any")) or []
     if not pats:
         return None
@@ -194,7 +194,7 @@ def cmd_list(root: Path) -> int:
     return 0
 
 
-# ───────────── ustalenia ─────────────
+# ───────────── findings ─────────────
 
 def finding_id(prefix: str, f: dict) -> str:
     snippet = " ".join(str(f.get("snippet", "")).split())
@@ -209,7 +209,7 @@ def rank(f: dict) -> tuple:
 
 def run_script(m: dict, root: Path, files: list[str] | None) -> tuple[list[dict], str | None]:
     tier0 = m.get("tier0") or {}
-    if tier0.get("rules"):     # reguły deklaratywne (rules.yaml) — wykonuje je skaner rdzenia rules_scan.py
+    if tier0.get("rules"):     # declarative rules (rules.yaml) — run by the core scanner rules_scan.py
         cmd = [sys.executable, str(Path(__file__).resolve().with_name("rules_scan.py")), "--rules",
                str(m["_dir"] / tier0["rules"]), "--root", str(root)]
     elif tier0.get("script"):
@@ -251,7 +251,7 @@ def dedupe(m: dict, raw: list[dict], prev: dict[str, dict], commit: str) -> list
 
 
 def analyze_module(m: dict, root: Path, head: str, clean: bool, since: str | None) -> tuple[list[dict], str | None, str]:
-    """(ustalenia, błąd, opis zakresu)."""
+    """(findings, error, scope description)."""
     reports = root / TF / "reports"
     cache = root / TF / "cache" / "analyze" / f"{m['name']}.json"
     prev_json = load_json(reports / f"{m['name']}.json")
@@ -289,16 +289,16 @@ def load_json(p: Path) -> dict:
         return {}
 
 
-# ───────────── raport i scalanie ─────────────
+# ───────────── report and merging ─────────────
 
-# Nagłówki sekcji raportu: angielskie (od 14.x) i dawne polskie — oba czytane przy scalaniu z poprzednim raportem.
-ACTIONS = ("## Recommended actions", "## Rekomendowane działania")
-HISTORY = ("## Analysis history", "## Historia analiz")
+# Report section headers, read when merging with the previous report.
+ACTIONS = ("## Recommended actions",)
+HISTORY = ("## Analysis history",)
 ITEM = re.compile(r"^- \[( |x|X)\] ([A-Z0-9]+-[0-9a-f]{6})\b")
 
 
 def parse_actions(text: str) -> list[dict]:
-    """Pozycje listy działań w kolejności: id, checked, header, notes (notatki człowieka)."""
+    """Action list items in order: id, checked, header, notes (human notes)."""
     head = next((h for h in ACTIONS if h in text), None)
     if head is None:
         return []
@@ -451,10 +451,10 @@ def cmd_run(root: Path, only: list[str], since: str | None, top: int | None) -> 
     return 1 if failed else 0
 
 
-# ───────────── bramka modułu ─────────────
+# ───────────── module gate ─────────────
 
 def gate_module(m: dict) -> tuple[bool, list[str]]:
-    """Moduł na fixtures/<przypadek>/repo z expected.json; progi z analyzer.yaml `gate`."""
+    """A module on fixtures/<case>/repo with expected.json; thresholds from analyzer.yaml `gate`."""
     cases = sorted(p for p in (m["_dir"] / "fixtures").glob("*") if (p / "expected.json").is_file()) \
         if (m["_dir"] / "fixtures").is_dir() else []
     if not cases:

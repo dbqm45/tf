@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Recenzent liczb w dokumentach markdown — bez modelu i bez sieci. Uzupełnia grounding_check.py (odwołania).
+Reviewer of numbers in markdown documents — no model and no network. Complements grounding_check.py (references).
 
   python3 .claude/skills/core-grounding/scripts/claims_check.py docs/project/07-review/report.md
   python3 .claude/skills/core-grounding/scripts/claims_check.py docs/evals/ [--strict]
 
-Sprawdza:
-- błąd: arytmetykę zapisu „X/Y (Z%)” — procent musi zgadzać się z ułamkiem z dokładnością zaokrąglenia,
-- błąd: daty RRRR-MM-DD, które nie istnieją (2026-02-30), i daty stanu z przyszłości („stan na”, „dostęp”, „pobrano”,
-  „zmierzono”, „uruchomiono”),
-- ostrzeżenie: liczbę z jednostką (%, pp, USD, zł, EUR, ms, s, min, h, GB, MB, razy) w linii tekstu bez śladu
-  pochodzenia w tej samej linii — `polecenie` albo `ścieżka`, link, adres URL, plik:linia, „źródło”, „wg”/„według”,
-  [assumption], [unverified] (też dawne [założenie], [niezweryfikowane]), przypis [^n]; dokument z deklaracją źródła danych („Pliki:”, „Dane:”,
-  „Źródło danych:” albo „surowe wyniki w” zaraz przed `ścieżką`, także w środku zdania) ma ją dla wszystkich liczb.
-Pomija bloki kodu, nagłówki i — dla ostrzeżeń — wiersze tabel (źródło tabeli stoi zwykle nad nią).
-Pierwsza linia wyniku: „Werdykt: OK | WARNINGS | ERRORS”. Kod wyjścia: 1 przy błędach (z --strict także przy
-ostrzeżeniach), inaczej 0.
+Checks:
+- error: the arithmetic of the notation „X/Y (Z%)” — the percentage must match the fraction within rounding accuracy,
+- error: YYYY-MM-DD dates that do not exist (2026-02-30), and as-of dates from the future („stan na”, „dostęp”, „pobrano”,
+  „zmierzono”, „uruchomiono” — "as of", "accessed", "downloaded", "measured", "run"),
+- warning: a number with a unit (%, pp, USD, zł, EUR, ms, s, min, h, GB, MB, razy) in a text line without a trace of
+  origin in the same line — a `command` or a `path`, a link, a URL, file:line, „źródło” (source), „wg”/„według” (per),
+  [assumption], [unverified], a footnote [^n]; a document with a data source declaration („Pliki:”, „Dane:”,
+  „Źródło danych:” or „surowe wyniki w” right before a `path`, also mid-sentence) has it for all numbers.
+Skips code blocks, headings and — for warnings — table rows (a table's source usually stands above it).
+First line of the result: „Werdykt: OK | WARNINGS | ERRORS” (verdict). Exit code: 1 on errors (with --strict also on
+warnings), otherwise 0.
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ CLAIM = re.compile(r"(?<![\w.])\d+(?:[.,]\d+)?\s*(%|pp\b|p\.p\.|USD\b|zł\b|PLN\
                    r"|razy\b|times\b|×)", re.I)
 DOC_SOURCE = re.compile(r"(?<![\w])(pliki|dane|źródło danych|surowe wyniki(?: w)?|files|data|data source|raw results(?: in)?)\s*\**\s*:?\s*\**\s*`[^`]+`", re.I)
 SOURCE = re.compile(r"`[^`]+`|https?://|\]\([^)]+\)|\b[\w./-]+\.\w+:\d+|źródł\w*|\bwg\b|według|\bsources?\b|according to"
-                    r"|\[(?:założenie|niezweryfikowane|assumption|unverified)\]|\[\^[^\]]+\]", re.I)
+                    r"|\[(?:assumption|unverified)\]|\[\^[^\]]+\]", re.I)
 
 
 def check_text(text: str, label: str, today: dt.date) -> tuple[list[str], list[str]]:
@@ -81,7 +81,7 @@ def files(arg: str) -> list[Path]:
 
 
 def main(argv: list[str]) -> int:
-    if hasattr(signal, "SIGPIPE"):   # wynik przez `| head` bez wyjątku
+    if hasattr(signal, "SIGPIPE"):   # output through `| head` without an exception
         signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     args = [a for a in argv if not a.startswith("--")]
     strict = "--strict" in argv

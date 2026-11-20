@@ -1,52 +1,52 @@
 # ARIA Roles and Attributes
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Kiedy ARIA jest niepotrzebna · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state as of 2026, corrections to the source) · Problem · Solution · Code examples · When ARIA is unnecessary · Advantages · Disadvantages / trade-offs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/aria-roles-and-attributes (Den Odell, aktualizacja 17 października 2025).
+Source: frontendpatterns.dev/aria-roles-and-attributes (Den Odell, updated 17 October 2025).
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Accessibility
-- **Poziom:** Beginner
+- **Category:** Accessibility
+- **Level:** Beginner
 - **Format:** Native web
 
 ## TLDR
 
-„Add ARIA attributes only when native HTML falls short. Use roles to identify custom widgets,
-states to communicate changes, and properties to describe relationships.”
+"Add ARIA attributes only when native HTML falls short. Use roles to identify custom widgets,
+states to communicate changes, and properties to describe relationships."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state as of 2026, corrections to the source)
 
-- **Combobox wg ARIA 1.2**: `role="combobox"` jest na samym `<input>` (z `aria-expanded`, `aria-controls`,
-  `aria-activedescendant`), nie na opakowującym `<div>` — wzorzec z opakowaniem pochodzi z przestarzałego ARIA 1.1.
-  Poprawiono przykład.
-- `role="menu"` jest dla menu aplikacyjnych (jak w programach desktopowych) z nawigacją strzałkami; dla menu
-  nawigacyjnego strony użyj przycisku z `aria-expanded` + zwykłej listy linków (wzorzec „disclosure”).
-- Ukrywanie: atrybut `hidden` (lub `display: none`) ukrywa i przed okiem, i przed czytnikiem — nie łącz ręcznie
-  `aria-hidden` + `style.display`. Nowe natywne mechanizmy zamiast ARIA: `<dialog>`, `popover` + `popovertarget`,
-  `<details name>` (akordeon wykluczający), `<search>`, customizable `<select>` (Chromium, `appearance: base-select`).
-- Landmarki: natywne `<header>`, `<nav>`, `<main>`, `<aside>`, `<footer>` zamiast `role="banner"` itd. — role tylko
-  przy legacy markup.
-- Specyfikacja: WAI-ARIA 1.2 (rekomendacja W3C), 1.3 w przygotowaniu.
+- **Combobox per ARIA 1.2**: `role="combobox"` is on the `<input>` itself (with `aria-expanded`, `aria-controls`,
+  `aria-activedescendant`), not on a wrapping `<div>` — the wrapper pattern comes from the outdated ARIA 1.1.
+  The example was corrected.
+- `role="menu"` is for application menus (as in desktop programs) with arrow navigation; for a site's
+  navigation menu use a button with `aria-expanded` + an ordinary list of links (the "disclosure" pattern).
+- Hiding: the `hidden` attribute (or `display: none`) hides both from the eye and from the screen reader — do not combine
+  `aria-hidden` + `style.display` by hand. New native mechanisms instead of ARIA: `<dialog>`, `popover` + `popovertarget`,
+  `<details name>` (an exclusive accordion), `<search>`, customizable `<select>` (Chromium, `appearance: base-select`).
+- Landmarks: the native `<header>`, `<nav>`, `<main>`, `<aside>`, `<footer>` instead of `role="banner"` etc. — roles only
+  with legacy markup.
+- Specification: WAI-ARIA 1.2 (a W3C recommendation), 1.3 in preparation.
 
 ## Problem
 
-Niestandardowe komponenty (dropdown, panele tabulacji, combobox) zbudowane z `<div>` i CSS są
-niewidoczne dla czytników ekranu — brak informacji o typie widżetu, jego zaznaczeniu czy zmianach
-stanu. Podstawowy problem: HTML nie ma natywnych elementów dla wszystkich interaktywnych wzorców UI,
-jakie faktycznie się buduje.
+Custom components (dropdown, tab panels, combobox) built from `<div>` and CSS are
+invisible to screen readers — there is no information about the widget type, its selection or state
+changes. The basic problem: HTML does not have native elements for all the interactive UI patterns
+that actually get built.
 
-## Rozwiązanie
+## Solution
 
-Atrybuty ARIA komunikują to, czego HTML nie wyraża natywnie:
-- **Stan** — `aria-expanded`, `aria-selected`, `aria-checked`.
-- **Typ widżetu** — `role="menu"`, `role="tab"` itd.
-- **Relacje/opisy** — `aria-label`, `aria-describedby`, `aria-controls`.
+ARIA attributes communicate what HTML does not express natively:
+- **State** — `aria-expanded`, `aria-selected`, `aria-checked`.
+- **Widget type** — `role="menu"`, `role="tab"` etc.
+- **Relationships/descriptions** — `aria-label`, `aria-describedby`, `aria-controls`.
 
-**Kluczowa zasada:** ARIA to ostateczność, nie pierwszy wybór — elementy natywne (`<button>`,
-`<dialog>`, `<details>`) mają wbudowaną semantykę i **nie potrzebują** dodatkowych roles.
+**The key rule:** ARIA is the last resort, not the first choice — native elements (`<button>`,
+`<dialog>`, `<details>`) have built-in semantics and **do not need** additional roles.
 
-## Przykłady kodu
+## Code examples
 
 ### Dropdown menu
 
@@ -68,7 +68,7 @@ Atrybuty ARIA komunikują to, czego HTML nie wyraża natywnie:
 </ul>
 ```
 
-### Interfejs zakładek (tabs) z ARIA
+### A tabs interface with ARIA
 
 ```html
 <div role="tablist" aria-label="Account settings">
@@ -89,7 +89,7 @@ Atrybuty ARIA komunikują to, czego HTML nie wyraża natywnie:
 </div>
 ```
 
-### Live region dla dynamicznych aktualizacji
+### A live region for dynamic updates
 
 ```html
 <div role="status" aria-live="polite" aria-atomic="true" id="status-message">
@@ -116,7 +116,7 @@ function updateStatus(message) {
 </ul>
 ```
 
-### Dynamiczne aktualizacje stanu (JS)
+### Dynamic state updates (JS)
 
 ```javascript
 function toggleDropdown(button) {
@@ -171,31 +171,31 @@ function toggleDarkMode(button) {
 </script>
 ```
 
-## Kiedy ARIA jest niepotrzebna
+## When ARIA is unnecessary
 
-Natywne elementy HTML (`<button>`, `<nav>`, `<dialog>`, `<select>`) mają już właściwą semantykę —
-dodawanie do nich ról ARIA jest zbędne, a czasem szkodliwe (redundancja może zmylić czytnik ekranu).
+Native HTML elements (`<button>`, `<nav>`, `<dialog>`, `<select>`) already have the right semantics —
+adding ARIA roles to them is redundant, and sometimes harmful (redundancy can confuse a screen reader).
 
-## Zalety
+## Advantages
 
-- Niestandardowe widżety stają się użyteczne dla czytników ekranu.
-- Zmiany stanu są ogłaszane automatycznie.
-- Złożone komponenty (combobox, tree view, accordion) stają się dostępne.
-- Relacje między elementami stają się jednoznaczne dzięki `aria-controls`/`aria-describedby`.
+- Custom widgets become usable for screen readers.
+- State changes are announced automatically.
+- Complex components (combobox, tree view, accordion) become accessible.
+- Relationships between elements become unambiguous thanks to `aria-controls`/`aria-describedby`.
 
-## Wady / tradeoffs
+## Disadvantages / trade-offs
 
-- **Nieprawidłowa ARIA pogarsza dostępność** bardziej niż jej brak.
-- Specyfikacja jest złożona, ze ścisłymi wymogami relacji rodzic-dziecko (np. `role="tab"` musi być
-  dzieckiem `role="tablist"`).
-- Łatwo przesadzić — redundantne role na elementach, które już mają natywną semantykę.
-- ARIA **nie dodaje zachowania** — sama rola/atrybut bez odpowiadającego JS to fasada bez funkcji.
-- Testy automatyczne wykrywają tylko błędy składniowe, nie sensowność użycia.
-- `aria-hidden="true"` ukrywa element **i całe jego potomstwo** — łatwo przypadkiem ukryć więcej niż
-  zamierzone.
-- Dynamiczne aktualizacje mogą nie zostać ogłoszone bez odpowiednich live regions.
+- **Incorrect ARIA makes accessibility worse** than its absence.
+- The specification is complex, with strict parent-child relationship requirements (e.g. `role="tab"` must be
+  a child of `role="tablist"`).
+- It is easy to overdo — redundant roles on elements that already have native semantics.
+- ARIA **does not add behaviour** — a role/attribute alone without the matching JS is a facade without function.
+- Automated tests detect only syntax errors, not whether the use makes sense.
+- `aria-hidden="true"` hides the element **and all its descendants** — it is easy to accidentally hide more than
+  intended.
+- Dynamic updates may not be announced without the appropriate live regions.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Semantic HTML](semantic-html.md) — Fundamentals
 - [Keyboard Navigation](keyboard-navigation.md) — Accessibility
@@ -204,10 +204,10 @@ dodawanie do nich ról ARIA jest zbędne, a czasem szkodliwe (redundancja może 
 - [WAI-ARIA Overview — MDN](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA)
 - [ARIA Authoring Practices Guide — W3C](https://www.w3.org/WAI/ARIA/apg/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Użyj ARIA **tylko wtedy, gdy budujesz niestandardowy widżet, którego natywny HTML nie wyraża**
-(custom dropdown, tab panel, combobox). Jeśli możesz użyć `<button>`, `<details>`, `<dialog>`,
-`<select>` — użyj ich i **nie dodawaj ARIA na wierzch** — to jest klasyczny przypadek YAGNI/KISS (eng-design-principles): natywny element już rozwiązuje problem, dokładanie roles „na wszelki
-wypadek” tylko zwiększa ryzyko błędu przy zerowej korzyści. Zanim dodasz atrybut ARIA, zapytaj: „czy
-istnieje natywny element HTML, który już to robi?” — jeśli tak, ARIA jest tu niepotrzebna.
+Use ARIA **only when you are building a custom widget that native HTML does not express**
+(a custom dropdown, a tab panel, a combobox). If you can use `<button>`, `<details>`, `<dialog>`,
+`<select>` — use them and **do not add ARIA on top** — this is a classic case of YAGNI/KISS (eng-design-principles): the native element already solves the problem, adding roles "just in
+case" only increases the risk of a mistake with zero benefit. Before you add an ARIA attribute, ask: "is there
+a native HTML element that already does this?" — if so, ARIA is unnecessary here.

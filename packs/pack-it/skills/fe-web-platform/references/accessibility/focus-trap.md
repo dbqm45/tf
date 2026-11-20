@@ -1,51 +1,51 @@
 # Focus Trap
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state as of 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / trade-offs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/focus-trap (Den Odell, aktualizacja 7 października 2025).
+Source: frontendpatterns.dev/focus-trap (Den Odell, updated 7 October 2025).
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Accessibility
-- **Poziom:** Beginner
-- **Przykłady:** Vue, Native web (React w przykładach kodu też się pojawia)
+- **Category:** Accessibility
+- **Level:** Beginner
+- **Examples:** Vue, Native web (React also appears in the code examples)
 
 ## TLDR
 
-„Trap keyboard focus inside modals and dialogs by cycling Tab through interactive elements and
-preventing escape to background content.”
+"Trap keyboard focus inside modals and dialogs by cycling Tab through interactive elements and
+preventing escape to background content."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state as of 2026, corrections to the source)
 
-- **Pierwszy wybór 2026: `<dialog>` z `showModal()`** — przeglądarka sama robi tło inertnym (także dla czytników),
-  obsługuje Escape (`cancel`) i przywraca fokus. Ręczny trap tylko dla niestandardowych nakładek.
-- Atrybut `inert` wystarcza sam — ukrywa też przed technologiami wspomagającymi; dokładanie `aria-hidden="true"`
-  na tym samym kontenerze jest zbędne.
-- Selektor „fokusowalnych” z przykładów pomija m.in. `[contenteditable]`, `summary`, `audio[controls]` i nie
-  wyklucza `disabled`/ukrytych — biblioteki (`focus-trap`, `tabbable`, Angular CDK `cdkTrapFocus`) robią to poprawnie.
-- `focus-trap-react` od v10: element-dziecko musi przyjmować ref; opcja `active`/`paused` do zagnieżdżeń.
+- **The first choice in 2026: `<dialog>` with `showModal()`** — the browser itself makes the background inert (also for screen readers),
+  handles Escape (`cancel`) and restores focus. A manual trap only for custom overlays.
+- The `inert` attribute is enough on its own — it also hides from assistive technologies; adding `aria-hidden="true"`
+  on the same container is redundant.
+- The "focusable" selector from the examples omits, among others, `[contenteditable]`, `summary`, `audio[controls]` and does not
+  exclude `disabled`/hidden ones — libraries (`focus-trap`, `tabbable`, Angular CDK `cdkTrapFocus`) do it correctly.
+- `focus-trap-react` since v10: the child element must accept a ref; the `active`/`paused` option for nesting.
 
 ## Problem
 
-Użytkownicy klawiatury, naciskając Tab, mogą opuścić modal i trafić do zawartości w tle — mimo że
-wizualnie tło jest zaciemnione/przysłonięte. Czytniki ekranu dodatkowo „głoszą” tę tłową zawartość,
-tworząc niezgodność między tym, co widać (tylko modal), a tym, co jest faktycznie dostępne dla
-technologii wspomagających (cała strona).
+Keyboard users, pressing Tab, can leave the modal and reach the background content — even though
+visually the background is dimmed/obscured. Screen readers additionally "announce" this background content,
+creating a mismatch between what is visible (only the modal) and what is actually accessible to
+assistive technologies (the whole page).
 
-## Rozwiązanie
+## Solution
 
-Przechwycić `Tab` i `Shift+Tab`, żeby cyklicznie kierować fokus między pierwszym a ostatnim
-interaktywnym elementem modala. Implementacja wymaga:
-- znalezienia wszystkich fokusowalnych elementów wewnątrz modala,
-- śledzenia, który jest pierwszy, a który ostatni,
-- nasłuchiwania `Tab`, żeby przekierować fokus na granicach,
-- dodania `aria-modal="true"`,
-- rozważenia atrybutu `inert` dla treści w tle,
-- zapewnienia oczywistego wyjścia (`Escape`, widoczny przycisk „Close”).
+Intercept `Tab` and `Shift+Tab` to cycle focus between the first and the last
+interactive element of the modal. The implementation requires:
+- finding all the focusable elements inside the modal,
+- tracking which is the first and which the last,
+- listening for `Tab` to redirect focus at the boundaries,
+- adding `aria-modal="true"`,
+- considering the `inert` attribute for the background content,
+- providing an obvious way out (`Escape`, a visible "Close" button).
 
-## Przykłady kodu
+## Code examples
 
-### Podstawowa implementacja — React
+### A basic implementation — React
 
 ```javascript
 function Modal({ children, onClose }) {
@@ -87,7 +87,7 @@ function Modal({ children, onClose }) {
 }
 ```
 
-### Podstawowa implementacja — Vue
+### A basic implementation — Vue
 
 ```vue
 <template>
@@ -126,7 +126,7 @@ watch(() => props.isOpen, (isOpen) => { if (isOpen) firstFocusable.value?.focus(
 </script>
 ```
 
-### Podstawowa implementacja — Web Components
+### A basic implementation — Web Components
 
 ```javascript
 class FocusTrapDialog extends HTMLElement {
@@ -173,7 +173,7 @@ class FocusTrapDialog extends HTMLElement {
 customElements.define('focus-trap-dialog', FocusTrapDialog);
 ```
 
-### Focus trap z `inert` na tle
+### A focus trap with `inert` on the background
 
 ```javascript
 function Modal({ isOpen, onClose, children }) {
@@ -210,7 +210,7 @@ function Modal({ isOpen, onClose, children }) {
 }
 ```
 
-### Użycie biblioteki `focus-trap-react`
+### Using the `focus-trap-react` library
 
 ```javascript
 import FocusTrap from 'focus-trap-react';
@@ -234,31 +234,31 @@ function Modal({ isOpen, onClose, children }) {
 }
 ```
 
-**Uwaga ze źródła o zagnieżdżonych modalach:** „For nested modals like confirmation dialogs inside
+**A note from the source about nested modals:** "For nested modals like confirmation dialogs inside
 settings panels, set `active={false}` on the parent trap when the child opens to transfer focus
-control.”
+control."
 
-## Zalety
+## Advantages
 
-- Zachowanie klawiatury odpowiada zachowaniu wizualnemu (co widać jako niedostępne, jest też
-  niedostępne dla Tab).
-- Użytkownicy nie mogą przypadkowo aktywować ukrytej zawartości w tle.
-- To jest wymóg WCAG dla modalnych dialogów, nie opcjonalne udoskonalenie.
-- Użytkownicy pozostają zorientowani w kontekście modala, nie „gubią się” w treści pod nim.
+- Keyboard behaviour matches visual behaviour (what looks unavailable is also
+  unavailable to Tab).
+- Users cannot accidentally activate hidden background content.
+- This is a WCAG requirement for modal dialogs, not an optional refinement.
+- Users stay oriented in the modal's context, they do not "get lost" in the content under it.
 
-## Wady / tradeoffs
+## Disadvantages / trade-offs
 
-- Śledzenie fokusowalnych elementów jest złożone — elementy disabled, `tabindex="-1"`, elementy
-  ukryte, zwinięte kontenery wszystkie wymagają uwzględnienia.
-- Dynamiczna zawartość łamie trap, gdy elementy pojawiają się/znikają po jego ustawieniu.
-- Zagnieżdżone modale wymagają starannej koordynacji (patrz uwaga o `active={false}` wyżej).
-- Wirtualne kursory czytników ekranu mogą czasem „uciec” z trapu mimo prawidłowej implementacji.
-- Atrybut `inert` ma już pełne wsparcie w przeglądarkach i jest **preferowanym** sposobem blokowania
-  tła — prostszy niż ręczne zarządzanie `aria-hidden` + focus trap równocześnie.
-- Biblioteki (np. `focus-trap-react`) dodają wagę do bundla.
-- Testowanie wymaga realnej technologii wspomagającej, nie tylko testów jednostkowych.
+- Tracking focusable elements is complex — disabled elements, `tabindex="-1"`, hidden
+  elements and collapsed containers all need to be taken into account.
+- Dynamic content breaks the trap when elements appear/disappear after it is set up.
+- Nested modals require careful coordination (see the note about `active={false}` above).
+- The virtual cursors of screen readers can sometimes "escape" the trap despite a correct implementation.
+- The `inert` attribute now has full browser support and is the **preferred** way of blocking
+  the background — simpler than managing `aria-hidden` + a focus trap by hand at the same time.
+- Libraries (e.g. `focus-trap-react`) add weight to the bundle.
+- Testing requires real assistive technology, not only unit tests.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Focus Management](focus-management.md) — Accessibility
 - [Keyboard Navigation](keyboard-navigation.md) — Accessibility
@@ -267,12 +267,12 @@ control.”
 - [focus-trap Library — GitHub](https://github.com/focus-trap/focus-trap)
 - [Modal Dialog Accessibility — W3C](https://www.w3.org/WAI/ARIA/apg/patterns/dialogmodal/)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj **zawsze** przy modalach/dialogach blokujących resztę strony — to wymóg WCAG, nie
-opcja. Jeśli przeglądarki docelowe wspierają atrybut `inert` (dziś praktycznie wszystkie nowoczesne)
-— **preferuj `inert` na kontenerze tła** nad ręcznym pisaniem focus trapu od zera; to prostszy,
-natywny mechanizm robiący to samo z mniejszym ryzykiem błędu (mniej kodu do utrzymania = mniej
-miejsc na bug, zgodnie z KISS — eng-design-principles). Pisz własny trap ręcznie tylko, gdy
-potrzebujesz zachowania, którego `inert` nie daje (np. subtelnie inny zakres blokady), albo gdy
-wsparcie przeglądarek docelowych tego wymaga.
+Use it **always** with modals/dialogs that block the rest of the page — it is a WCAG requirement, not
+an option. If the target browsers support the `inert` attribute (today practically all modern ones)
+— **prefer `inert` on the background container** over writing a focus trap from scratch by hand; it is a simpler,
+native mechanism doing the same with a lower risk of error (less code to maintain = fewer
+places for a bug, in line with KISS — eng-design-principles). Write your own trap by hand only when
+you need behaviour that `inert` does not give (e.g. a subtly different blocking scope), or when
+the support of the target browsers requires it.

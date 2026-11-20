@@ -1,79 +1,83 @@
-# Wyłączone skille
+# Disabled skills
 
-Skille, które pomiar uznał za zbędne: model bez skilla odpowiada tak samo dobrze. **Nie są usunięte.** Zostają
-w repozytorium i w instalacji, ale:
-- model nie wczytuje ich sam (`disable-model-invocation: true`), a hook `skill_hint` ich nie podpowiada;
-- `build.py` usuwa je z list skilli ról, person, agentów wspólnych, konsultantów i `always_skills`, a w katalogu
-  (`.claude/catalog.md`) są w osobnej sekcji „Wyłączone skille”; pliki YAML nakładek się nie zmieniają;
-- człowiek może wywołać skill ręcznie: `/<nazwa>`;
-- scenariusze `trigger` są w `tests/skill_evals/inactive/<skill>.json`, w pliku głównym zostają scenariusze
-  `no-trigger`;
-- aktywne skille i prompty agentów nie odsyłają do nich po nazwie: `build.py check` ostrzega o każdym takim
-  odsyłaczu, a test `IN-11` w `test_build.py` nie przechodzi, dopóki odsyłacz zostaje w treści fabryki.
+Skills that a measurement found redundant: the model answers just as well without the skill. **They are not removed.**
+They stay in the repository and in the installation, but:
+- the model does not load them on its own (`disable-model-invocation: true`), and the `skill_hint` hook does not
+  suggest them;
+- `build.py` removes them from the skill lists of roles, personas, shared agents, consultants and `always_skills`, and in
+  the catalog (`.claude/catalog.md`) they are in a separate "Disabled skills" section; the overlay YAML files do not
+  change;
+- a person can invoke a skill by hand: `/<name>`;
+- the `trigger` scenarios are in `tests/skill_evals/inactive/<skill>.json`; the main file keeps the `no-trigger`
+  scenarios;
+- active skills and agent prompts do not refer to them by name: `build.py check` warns about every such reference, and
+  the `IN-11` test in `test_build.py` fails as long as a reference remains in the factory content.
 
-Przy wyłączaniu kolejnego skilla usuń odsyłacze do niego: zostaw temat, usuń nazwę albo wskaż aktywny skill.
+When disabling another skill, remove the references to it: keep the topic and drop the name, or point to an active
+skill.
 
-Skill jest wyłączony, gdy w nagłówku SKILL.md ma `disable-model-invocation: true` i `metadata.status: "inactive"`.
+A skill is disabled when its SKILL.md header has `disable-model-invocation: true` and `metadata.status: "inactive"`.
 
-## Jak włączyć skill z powrotem
-1. W SKILL.md usuń `disable-model-invocation: true` i `status: "inactive"`.
-2. Przenieś scenariusze z `tests/skill_evals/inactive/<skill>.json` z powrotem do `tests/skill_evals/<skill>.json`.
-3. `python3 .tf/factory/skill_gate.py <skill>` i `python3 .tf/factory/build.py`.
-4. Usuń wiersz z tej listy i dopisz powód powrotu (np. nowy pomiar z przewagą, nowa reguła fabryki w treści).
-5. Odsyłacze usunięte przy wyłączaniu (commit z 2026-11-16) możesz przywrócić tam, gdzie skill znów coś wnosi.
+## How to re-enable a skill
+1. In SKILL.md remove `disable-model-invocation: true` and `status: "inactive"`.
+2. Move the scenarios from `tests/skill_evals/inactive/<skill>.json` back to `tests/skill_evals/<skill>.json`.
+3. `python3 .tf/factory/skill_gate.py <skill>` and `python3 .tf/factory/build.py`.
+4. Remove the row from this list and add the reason for the return (e.g. a new measurement with an advantage, a new
+   factory rule in the content).
+5. The references removed when disabling (commit from 2026-11-16) can be restored where the skill adds something again.
 
-Kiedy warto wrócić: skill dostał wiedzę, której modele nie mają (reguła fabryki, świeża wersja narzędzia), albo
-pomiar na Haiku albo na holdoucie pokazał przewagę.
+When it is worth bringing one back: the skill gained knowledge the models do not have (a factory rule, a fresh tool
+version), or a measurement on Haiku or on the holdout showed an advantage.
 
-## Lista
+## List
 
-Pomiar: 2026-11-16, Sonnet, ze skillami fabryki i bez (`--baseline`), `--isolated`, jeden przebieg na scenariusz,
-scenariusze strojenia `trigger`. Raport: `docs/evals/2026-11-16-podejrzane-skille-podsumowanie.md`, surowe wyniki:
-`docs/evals/2026-11-16-podejrzane-skille.jsonl`. Scenariusze napisano na podstawie treści skilli, więc sprzyjają
-skillom — brak przewagi mimo to jest mocnym sygnałem dublowania.
+Measurement: 2026-11-16, Sonnet, with and without the factory skills (`--baseline`), `--isolated`, one run per
+scenario, `trigger` tuning scenarios. Report: `docs/evals/2026-11-16-podejrzane-skille-podsumowanie.md`, raw results:
+`docs/evals/2026-11-16-podejrzane-skille.jsonl`. The scenarios were written from the skills' content, so they favor
+the skills; a lack of advantage even so is a strong signal of duplication.
 
-„✓” = odpowiedź spełnia wszystkie sprawdzenia treści.
+"✓" = the answer meets all content checks.
 
-| Skill | Nakładka | Wyłączony | Ze skillem | Bez skilla | Powód |
+| Skill | Overlay | Disabled | With skill | Without skill | Reason |
 |---|---|---|---|---|---|
-| `eng-algorithms-data-structures` | pack-it | 2026-11-16 | 2/2 | 2/2 | złożoność, struktury danych — wiedza podręcznikowa |
-| `fe-technical-seo` | pack-it | 2026-11-16 | 3/3 | 3/3 | robots.txt, hreflang, soft 404 — model zna sam |
-| `ops-iac-terraform` | pack-it | 2026-11-16 | 2/2 | 2/2 | blokada stanu, dryf — model zna sam |
-| `pm-saas-metrics` | pack-it | 2026-11-16 | 4/4 | 4/4 | NRR, burn multiple, Rule of 40, LTV — model zna sam |
-| `proc-lean` | pack-it | 2026-11-16 | 2/2 | 2/2 | prawo Little'a, WSJF — model zna sam |
-| `tool-nx` | pack-it | 2026-11-16 | 3/3 | 3/3 | granice modułów, migracja Nx 23 — model zna sam, także nową wersję |
-| `eng-design-patterns` | pack-it | 2026-11-16 | 2/3 | 3/3 | ze skillem gorzej (`dekorator-vs-proxy`) |
+| `eng-algorithms-data-structures` | pack-it | 2026-11-16 | 2/2 | 2/2 | complexity, data structures: textbook knowledge |
+| `fe-technical-seo` | pack-it | 2026-11-16 | 3/3 | 3/3 | robots.txt, hreflang, soft 404: the model knows it on its own |
+| `ops-iac-terraform` | pack-it | 2026-11-16 | 2/2 | 2/2 | state locking, drift: the model knows it on its own |
+| `pm-saas-metrics` | pack-it | 2026-11-16 | 4/4 | 4/4 | NRR, burn multiple, Rule of 40, LTV: the model knows it on its own |
+| `proc-lean` | pack-it | 2026-11-16 | 2/2 | 2/2 | Little's law, WSJF: the model knows it on its own |
+| `tool-nx` | pack-it | 2026-11-16 | 3/3 | 3/3 | module boundaries, Nx 23 migration: the model knows it on its own, including the new version |
+| `eng-design-patterns` | pack-it | 2026-11-16 | 2/3 | 3/3 | worse with the skill (`dekorator-vs-proxy`) |
 
-### Wyniki na scenariusz
+### Results per scenario
 
-| Skill | Scenariusz | Ze skillem | Bez skilla | Skill wczytany |
+| Skill | Scenario | With skill | Without skill | Skill loaded |
 |---|---|---|---|---|
-| eng-algorithms-data-structures | `kolejka-shift` | ✓ | ✓ | tak |
-| eng-algorithms-data-structures | `top-k-sortowanie` | ✓ | ✓ | tak |
-| fe-technical-seo | `robots-txt-a-indeks` | ✓ | ✓ | tak |
-| fe-technical-seo | `sklep-jezyki-i-filtry` | ✓ | ✓ | tak |
-| fe-technical-seo | `spa-soft-404-i-dane-produktu` | ✓ | ✓ | tak |
-| ops-iac-terraform | `blokada-stanu` | ✓ | ✓ | tak |
-| ops-iac-terraform | `dryf-i-ochrona` | ✓ | ✓ | tak |
-| pm-saas-metrics | `burn-multiple-rule-of-40` | ✓ | ✓ | tak |
-| pm-saas-metrics | `edge-ltv-bez-danych` | ✓ | ✓ | tak |
-| pm-saas-metrics | `nrr-maskuje-churn` | ✓ | ✓ | tak |
-| pm-saas-metrics | `zdrowie-ekonomiki` | ✓ | ✓ | tak |
-| proc-lean | `prawo-little` | ✓ | ✓ | tak |
-| proc-lean | `wsjf-priorytet` | ✓ | ✓ | tak |
-| tool-nx | `bez-plikow-granice` | ✓ | ✓ | tak |
-| tool-nx | `granice-modulow` | ✓ | ✓ | tak |
-| tool-nx | `migracja-nx23` | ✓ | ✓ | tak |
-| eng-design-patterns | `dekorator-vs-proxy` | ✗ (brak: „nie dubluj tego, co już robi”) | ✓ | tak |
-| eng-design-patterns | `role-object` | ✓ | ✓ | tak |
-| eng-design-patterns | `switch-strategia` | ✓ | ✓ | tak |
+| eng-algorithms-data-structures | `kolejka-shift` | ✓ | ✓ | yes |
+| eng-algorithms-data-structures | `top-k-sortowanie` | ✓ | ✓ | yes |
+| fe-technical-seo | `robots-txt-a-indeks` | ✓ | ✓ | yes |
+| fe-technical-seo | `sklep-jezyki-i-filtry` | ✓ | ✓ | yes |
+| fe-technical-seo | `spa-soft-404-i-dane-produktu` | ✓ | ✓ | yes |
+| ops-iac-terraform | `blokada-stanu` | ✓ | ✓ | yes |
+| ops-iac-terraform | `dryf-i-ochrona` | ✓ | ✓ | yes |
+| pm-saas-metrics | `burn-multiple-rule-of-40` | ✓ | ✓ | yes |
+| pm-saas-metrics | `edge-ltv-bez-danych` | ✓ | ✓ | yes |
+| pm-saas-metrics | `nrr-maskuje-churn` | ✓ | ✓ | yes |
+| pm-saas-metrics | `zdrowie-ekonomiki` | ✓ | ✓ | yes |
+| proc-lean | `prawo-little` | ✓ | ✓ | yes |
+| proc-lean | `wsjf-priorytet` | ✓ | ✓ | yes |
+| tool-nx | `bez-plikow-granice` | ✓ | ✓ | yes |
+| tool-nx | `granice-modulow` | ✓ | ✓ | yes |
+| tool-nx | `migracja-nx23` | ✓ | ✓ | yes |
+| eng-design-patterns | `dekorator-vs-proxy` | ✗ (missing: "nie dubluj tego, co już robi" — "do not duplicate what it already does") | ✓ | yes |
+| eng-design-patterns | `role-object` | ✓ | ✓ | yes |
+| eng-design-patterns | `switch-strategia` | ✓ | ✓ | yes |
 
-## Zmierzone, ale niewyłączone
+## Measured but not disabled
 
-| Skill | Ze skillem | Bez skilla | Dlaczego zostaje |
+| Skill | With skill | Without skill | Why it stays |
 |---|---|---|---|
-| `eng-design-principles` | 2/3 | 2/3 | remis z dwóch różnych scenariuszy: ze skillem zalicza `agent-przeinzynierowuje-mimo-regul` (reguła fabryki „drabina minimalizmu”, bez skilla ✗), bez skilla — `dry-przypadkowe`; skill jest w `always_skills` każdej persony pack-it |
+| `eng-design-principles` | 2/3 | 2/3 | a tie from two different scenarios: with the skill it passes `agent-przeinzynierowuje-mimo-regul` (the factory rule "minimalism ladder"; without the skill ✗), without the skill it passes `dry-przypadkowe`; the skill is in `always_skills` of every pack-it persona |
 
-## Ograniczenia
-- Tylko Sonnet: Haiku bez skilla może wypaść gorzej. Tańsi wykonawcy (tier `fast`) też tracą te skille.
-- Jeden przebieg na scenariusz; scenariusze strojenia, nie holdout.
+## Limitations
+- Sonnet only: Haiku without the skill may do worse. Cheaper executors (tier `fast`) also lose these skills.
+- One run per scenario; tuning scenarios, not a holdout.

@@ -1,6 +1,6 @@
-# Sprawdzenia fabryki bez modelu (bez sekretów, bez kosztu): odwołania między warstwami, testy repozytorium oraz
-# budowa i testy w zestawionym projekcie — sam rdzeń, każda nakładka osobno i wszystkie razem (tools/workspace.py).
-# Ewaluacji na modelu (płatnej) CI nie uruchamia — robi ją człowiek: python3 .tf/factory/skill_gate.py <skill> --model haiku,sonnet
+# Factory checks without a model (no secrets, no cost): references between layers, repository tests, and
+# build and tests in an assembled project — the core alone, each overlay separately, and all together (tools/workspace.py).
+# CI does not run the (paid) model evaluation — a human does it: python3 .tf/factory/skill_gate.py <skill> --model haiku,sonnet
 name: factory-checks
 on:
   pull_request:
@@ -19,12 +19,12 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Rdzeń nie wymienia elementów nakładek, nakładki — tylko tych, od których zależą
+      - name: The core names no overlay items, overlays only those they depend on
         run: python3 tools/workspace.py refs
       - run: for t in tests/test_*.py; do python3 "$t" || exit 1; done
-      - name: Mapa pokrycia katalogu (informacja, nie blokuje)
+      - name: Catalog coverage map (informational, does not block)
         run: python3 tools/coverage_map.py --summary
-      - name: Kopie kontraktu pdi zgodne z tagiem wydania (tools/pdi-contract.json)
+      - name: pdi contract copies match the release tag (tools/pdi-contract.json)
         run: python3 tools/sync_contract.py check
 
   addons:
@@ -55,9 +55,9 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      # Ubuntu 23.10+ blokuje nieuprzywilejowane przestrzenie nazw użytkownika, a bez nich Chromium nie ma piaskownicy
-      # (test_fetch_page renderuje stronę). Zezwolenie tylko dla tej jednej przeglądarki, profilem AppArmor — „Option 2”
-      # z chromium/src docs/security/apparmor-userns-restrictions.md; blokada dla reszty systemu i piaskownica zostają.
+      # Ubuntu 23.10+ blocks unprivileged user namespaces, and without them Chromium has no sandbox
+      # (test_fetch_page renders a page). Allowed only for this one browser, via an AppArmor profile — "Option 2"
+      # from chromium/src docs/security/apparmor-userns-restrictions.md; the block for the rest of the system and the sandbox remain.
       - name: Profil AppArmor dla Chromium (test_fetch_page)
         run: |
           [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] || exit 0
@@ -67,10 +67,10 @@ jobs:
           printf 'abi <abi/4.0>,\ninclude <tunables/global>\n\nprofile tf-chromium %s flags=(unconfined) {\n  userns,\n}\n' "$browser" \
             | sudo tee /etc/apparmor.d/tf-chromium
           sudo apparmor_parser -r /etc/apparmor.d/tf-chromium
-      # Pierwszy start Chromium na runnerze trwa 15–30 s (wczytanie dużego pliku przeglądarki z zimnego dysku; zmierzone
-      # w PR #12: pierwszy render 16–27 s, kolejne ok. 0,7 s, niezależnie od flag). Pod obciążeniem całego zestawu testów
-      # ten pierwszy start w test_fetch_page przekraczał 60 s — dlatego rozgrzanie osobno, z własnym limitem czasu.
-      - name: Rozgrzanie Chromium (pierwszy start)
+      # The first Chromium start on the runner takes 15–30 s (loading the large browser file from a cold disk; measured
+      # in PR #12: first render 16–27 s, later ones about 0.7 s, regardless of flags). Under the load of the whole test suite
+      # that first start in test_fetch_page exceeded 60 s — hence a separate warm-up, with its own time limit.
+      - name: Chromium warm-up (first start)
         run: |
           python3 - <<'PY'
           import importlib.util as u, time
@@ -79,9 +79,9 @@ jobs:
           b = m.find_browser()
           if b:
               t = time.time(); m.render("about:blank", b, timeout=180)
-              print(f"Chromium {b}: pierwszy start {time.time() - t:.1f} s")
+              print(f"Chromium {b}: first start {time.time() - t:.1f} s")
           PY
-      - name: Budowa i testy w projekcie z nakładkami ${{ matrix.packs }}
+      - name: Build and tests in a project with overlays ${{ matrix.packs }}
         run: python3 tools/workspace.py check --packs "${{ matrix.packs }}"
         env:
-          CTF_REQUIRE_BROWSER: "1"  # test_fetch_page pada bez Chromium zamiast pomijać render
+          CTF_REQUIRE_BROWSER: "1"  # test_fetch_page fails without Chromium instead of skipping the render

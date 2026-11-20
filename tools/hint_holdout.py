@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Trafność podpowiedzi skilli (hook skill_hint, bez modelu) na scenariuszach strojenia i odłożonych (holdout).
+"""Accuracy of skill hints (the skill_hint hook, no model) on tuning and held-out (holdout) scenarios.
 
-  python3 tools/hint_holdout.py --out .work/all                 # wszystkie skille z workspace'u
-  python3 tools/hint_holdout.py --out .work/all core-stack-sync # wybrane skille
+  python3 tools/hint_holdout.py --out .work/all                 # all skills from the workspace
+  python3 tools/hint_holdout.py --out .work/all core-stack-sync # selected skills
   python3 tools/hint_holdout.py --out .work/all --json
 
-Pomiar przy tłumaczeniu treści skilli (etap 4): polskie pytanie trafia w angielski skill przez słowa kluczowe,
-więc wynik przed partią i po niej pokazuje, czy słowa nie zostały dopasowane tylko do scenariuszy strojenia.
-Liczy scenariusze `expect: trigger` (skill w podpowiedzi) i `no-trigger` (skill poza podpowiedzią).
+Measurement while translating skill content (stage 4): a Polish question reaches an English skill through keywords,
+so the result before and after a batch shows whether the words were not fitted only to the tuning scenarios.
+It counts the scenarios `expect: trigger` (the skill is in the hint) and `no-trigger` (the skill is outside the hint).
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def load(path: Path, name: str):
 
 
 def scenario_files(ws: Path) -> dict[str, list[tuple[str, dict]]]:
-    """Skill → [(zbiór, scenariusz)]; zbiór: `tuning` albo `holdout`."""
+    """Skill → [(set, scenario)]; set: `tuning` or `holdout`."""
     out: dict[str, list[tuple[str, dict]]] = {}
     base = ws / ".claude" / "tests" / "skill_evals"
     for kind, folder in (("tuning", base), ("holdout", base / "holdout")):

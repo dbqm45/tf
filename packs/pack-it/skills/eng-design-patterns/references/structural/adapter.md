@@ -1,50 +1,50 @@
 # Adapter
 
-Kategoria: strukturalne. Istota: obiekt, który **implementuje interfejs oczekiwany przez nasz kod** i tłumaczy wywołania
-na API, którego nie możemy zmienić.
+Category: structural. The essence: an object that **implements the interface our code expects** and translates the calls
+into an API we cannot change.
 
 ## Problem
-Domena oczekuje portu `PaymentGateway` (async, kwoty w groszach, wynik jako unia). Dostawca płatności daje SDK
-z callbackami, kwotami jako tekst w złotówkach i własnymi kodami błędów. Wołanie SDK bezpośrednio z logiki
-rozlewa jego konwencje po całym kodzie i uniemożliwia zmianę dostawcy.
+The domain expects a `PaymentGateway` port (async, amounts in grosze (cents), the result as a union). The payment provider gives an SDK
+with callbacks, amounts as text in PLN and its own error codes. Calling the SDK directly from the logic
+spreads its conventions across the whole code and makes changing the provider impossible.
 
-## Rozwiązanie i uczestnicy
-- **Interfejs klienta (port)** — to, czego chce nasz kod.
-- **Usługa (adaptee)** — istniejące API: biblioteka zewnętrzna, legacy, inny kontekst.
-- **Adapter** — implementuje port, trzyma referencję do usługi, konwertuje dane i wywołania w obie strony.
-Usługa nie wie o adapterze. Adapter „klasowy” (wielodziedziczenie) nie istnieje w TS — używamy kompozycji.
+## Solution and participants
+- **Client interface (port)** — what our code wants.
+- **Service (adaptee)** — the existing API: an external library, legacy, another context.
+- **Adapter** — implements the port, holds a reference to the service, converts data and calls in both directions.
+The service does not know about the adapter. A "class" adapter (multiple inheritance) does not exist in TS — we use composition.
 
-## Kiedy używać
-- Integracja biblioteki zewnętrznej lub legacy o niezgodnym interfejsie.
-- Architektura heksagonalna: adapter infrastruktury implementuje port zdefiniowany przez domenę
-  (ddd-tactical-design; w kodzie serwera — be-*).
-- Kilka usług o podobnej funkcji i różnych sygnaturach ma być używanych jednolicie.
-- Warstwa antykorupcyjna między kontekstami — adapter to jej budulec (ddd-context-mapping).
+## When to use
+- Integrating an external or legacy library with an incompatible interface.
+- Hexagonal architecture: an infrastructure adapter implements a port defined by the domain
+  (ddd-tactical-design; in server code — be-*).
+- Several services with a similar function and different signatures are to be used uniformly.
+- An anti-corruption layer between contexts — the adapter is its building block (ddd-context-mapping).
 
-## Koszty
-Nowy interfejs i klasa; czasem prościej zmienić samą usługę, jeśli jest nasza.
+## Costs
+A new interface and class; sometimes it is simpler to change the service itself, if it is ours.
 
-## Powiązania
-- **Most** ma podobną strukturę, ale jest planowany z góry; Adapter łata istniejącą niezgodność.
-- **Dekorator** zachowuje interfejs i pozwala nakładać warstwy; Adapter zmienia interfejs.
-- **Pełnomocnik** ma ten sam interfejs co obiekt i kontroluje dostęp; Adapter tłumaczy na inny.
-- **Fasada** tworzy nowy, prostszy interfejs do całego podsystemu; Adapter zwykle opakowuje jeden obiekt.
+## Relations
+- **Bridge** has a similar structure, but is planned up front; an Adapter patches an existing incompatibility.
+- **Decorator** keeps the interface and allows stacking layers; an Adapter changes the interface.
+- **Proxy** has the same interface as the object and controls access; an Adapter translates into a different one.
+- **Facade** creates a new, simpler interface to a whole subsystem; an Adapter usually wraps one object.
 
-## Forma idiomatyczna w TS
-Gdy port to pojedyncza funkcja, adapterem jest funkcja: `const charge: Charge = (id, cents) => sdk.pay(...)`.
-Promisyfikacja callbacków (`new Promise(...)`) to typowa praca adaptera.
+## Idiomatic form in TS
+When the port is a single function, the adapter is a function: `const charge: Charge = (id, cents) => sdk.pay(...)`.
+Promisifying callbacks (`new Promise(...)`) is typical adapter work.
 
-## Przykład (TS)
+## Example (TS)
 ```ts
 type Currency = 'PLN' | 'EUR';
 type ChargeResult = { ok: true; reference: string } | { ok: false; reason: string };
 
-/** Port zdefiniowany po naszej stronie. */
+/** A port defined on our side. */
 interface PaymentGateway {
   charge(orderId: string, amountCents: number, currency: Currency): Promise<ChargeResult>;
 }
 
-/** Zewnętrzne SDK — nie możemy go zmienić. */
+/** An external SDK — we cannot change it. */
 class LegacyPayClient {
   pay(
     request: { ref: string; amount: string; cur: string },
@@ -66,7 +66,7 @@ class LegacyPayAdapter implements PaymentGateway {
     return new Promise((resolve) => {
       this.#client.pay(request, (error, transactionId) => {
         if (error !== null || transactionId === undefined) {
-          resolve({ ok: false, reason: error ?? 'brak identyfikatora transakcji' });
+          resolve({ ok: false, reason: error ?? 'missing transaction identifier' });
         } else {
           resolve({ ok: true, reference: transactionId });
         }
@@ -79,8 +79,8 @@ const gateway: PaymentGateway = new LegacyPayAdapter(new LegacyPayClient());
 gateway.charge('ORD-9', 12_345, 'PLN').then((result) => console.log(result));
 ```
 
-## Kiedy NIE używać / pułapki
-- **Obie strony są pod twoją kontrolą** — ujednolić interfejs u źródła zamiast utrwalać warstwę tłumaczącą.
-- **Projektujesz od zera dwa niezależne wymiary zmienności** — to raczej Most.
-- Tłumaczenie to jedna linijka w jednym miejscu → funkcja mapująca, nie klasa z interfejsem.
-- Adapter nie może „przeciekać”: jeśli w domenie pojawiają się typy lub wyjątki SDK, adapter nie spełnia swojej roli.
+## When NOT to use / pitfalls
+- **Both sides are under your control** — unify the interface at the source instead of cementing a translating layer.
+- **You are designing two independent dimensions of variation from scratch** — that is rather a Bridge.
+- The translation is one line in one place → a mapping function, not a class with an interface.
+- An adapter must not "leak": if SDK types or exceptions appear in the domain, the adapter does not fulfil its role.

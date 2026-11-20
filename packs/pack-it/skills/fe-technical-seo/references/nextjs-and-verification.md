@@ -1,11 +1,11 @@
-# Next.js App Router — metadane, sitemap, robots, dane strukturalne
+# Next.js App Router — metadata, sitemap, robots, structured data
 
-> **Spis treści:** Wspólne · Strona produktu · Sitemap i robots · Sprawdzenie po wdrożeniu (dowolny stack)
+> **Contents:** Shared · Product page · Sitemap and robots · Post-deployment check (any stack)
 
-Sprawdzone 2026-10-24 na Next.js 16.4.3 i React 19.3.1: `next build`, `next start`, odpowiedzi pobrane `curl`.
-Sklep z wersjami `/pl` i `/en`, jeden produkt `kubek-termiczny`.
+Checked on 2026-10-24 on Next.js 16.4.3 and React 19.3.1: `next build`, `next start`, responses fetched with `curl`.
+A shop with `/pl` and `/en` versions, one product `kubek-termiczny` (a travel mug).
 
-## Wspólne
+## Shared
 ```js
 // lib.js
 export const SITE = "https://sklep.example.com";
@@ -18,10 +18,10 @@ export function alternates(path) {
   return { languages: { ...languages, "x-default": `${SITE}/pl${path}` } };
 }
 ```
-Jedna funkcja buduje zestaw wersji językowych dla `<head>` i dla sitemap — obie listy nie mogą się rozjechać,
-a każda wersja wskazuje wszystkie, w tym siebie (powiązania wzajemne).
+One function builds the set of language versions for `<head>` and for the sitemap — the two lists cannot drift apart,
+and every version points to all of them, including itself (reciprocal links).
 
-## Strona produktu
+## Product page
 ```js
 // app/[lang]/produkty/[slug]/page.js
 import { notFound } from "next/navigation";
@@ -61,9 +61,9 @@ export default async function Page({ params }) {
   );
 }
 ```
-`.replace(/</g, "\\u003c")` — dane produktu z bazy nie zamkną tagu `<script>` (XSS przez `</script>` w nazwie).
+`.replace(/</g, "\\u003c")` — product data from the database will not close the `<script>` tag (XSS through `</script>` in the name).
 
-Wynik `curl -s /pl/produkty/kubek-termiczny` (wybrane linie `<head>` i `<main>`):
+The output of `curl -s /pl/produkty/kubek-termiczny` (selected lines of `<head>` and `<main>`):
 ```html
 <title>Kubek termiczny — Sklep</title>
 <meta name="description" content="Kubek termiczny: cena 89.00 zł, wysyłka w 24 h."/>
@@ -73,10 +73,10 @@ Wynik `curl -s /pl/produkty/kubek-termiczny` (wybrane linie `<head>` i `<main>`)
 <link rel="alternate" hrefLang="x-default" href="https://sklep.example.com/pl/produkty/kubek-termiczny"/>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Product","name":"Kubek termiczny","offers":{"@type":"Offer","price":"89.00","priceCurrency":"PLN","availability":"https://schema.org/InStock"}}</script>
 ```
-Nieznany produkt (`/pl/produkty/nie-ma`): `notFound()` daje **kod 404** i `<meta name="robots" content="noindex"/>`
-— bez soft 404.
+An unknown product (`/pl/produkty/nie-ma`): `notFound()` gives **status 404** and `<meta name="robots" content="noindex"/>`
+— no soft 404.
 
-## Sitemap i robots
+## Sitemap and robots
 ```js
 // app/sitemap.js
 import { LANGS, PRODUCTS, SITE, alternates } from "../lib.js";
@@ -100,7 +100,7 @@ export default function robots() {
   };
 }
 ```
-`/sitemap.xml` zawiera dla każdego adresu `<loc>`, trzy `<xhtml:link rel="alternate" hreflang=…>` i
+`/sitemap.xml` contains, for every URL, `<loc>`, three `<xhtml:link rel="alternate" hreflang=…>` and
 `<lastmod>2026-10-01</lastmod>`; `/robots.txt`:
 ```
 User-Agent: *
@@ -110,17 +110,17 @@ Disallow: /*?sort=
 
 Sitemap: https://sklep.example.com/sitemap.xml
 ```
-`lastModified` z daty ostatniej istotnej zmiany produktu, nie z czasu budowania (każdy build zmieniałby datę
-wszystkich adresów).
+`lastModified` from the date of the product's last significant change, not from the build time (every build would change the date
+of all URLs).
 
-## Sprawdzenie po wdrożeniu (dowolny stack)
+## Post-deployment check (any stack)
 ```bash
 U=https://sklep.example.com/pl/produkty/kubek-termiczny
-curl -sI "$U" | grep -iE '^(HTTP|x-robots-tag|location)'                 # kod, nagłówek robots, przekierowanie
+curl -sI "$U" | grep -iE '^(HTTP|x-robots-tag|location)'                 # status code, robots header, redirect
 curl -s "$U" | grep -oE '<title>[^<]*</title>|<link rel="(canonical|alternate)"[^>]*>|<meta name="robots"[^>]*>'
-curl -s -o /dev/null -w '%{http_code}\n' https://sklep.example.com/pl/produkty/nie-ma   # oczekiwane 404
+curl -s -o /dev/null -w '%{http_code}\n' https://sklep.example.com/pl/produkty/nie-ma   # expected 404
 curl -s https://sklep.example.com/robots.txt
 ```
-To, co pokazuje `curl`, jest w HTML przed uruchomieniem JavaScriptu. Treść i metadane, których tam nie ma,
-crawler zobaczy dopiero po renderowaniu (o ile w ogóle) — w Search Console sprawdzisz wersję po renderowaniu
-(narzędzie URL Inspection).
+What `curl` shows is in the HTML before JavaScript runs. Content and metadata that are not there
+the crawler will see only after rendering (if at all) — in Search Console you check the rendered version
+(the URL Inspection tool).

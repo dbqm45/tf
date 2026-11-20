@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Polski indeks podpowiedzi dla skilli przetłumaczonych na angielski (etap 4, decyzja właściciela 2026-11-17).
+"""Polish hint index for skills translated into English (stage 4, owner decision 2026-11-17).
 
-  python3 tools/hint_pl_index.py core/skills/core-grounding core/skills/core-knowledge   # zapis hint.pl.txt
-  python3 tools/hint_pl_index.py --all                       # każdy angielski skill z polską historią
-  python3 tools/hint_pl_index.py --all --check               # kod 1, gdy któremuś brakuje indeksu
+  python3 tools/hint_pl_index.py core/skills/core-grounding core/skills/core-knowledge   # writes hint.pl.txt
+  python3 tools/hint_pl_index.py --all                       # every English skill with Polish history
+  python3 tools/hint_pl_index.py --all --check               # exit 1 when any is missing the index
 
-Hook skill_hint dopasowuje polecenie słowami. Polskie polecenia trafiały w polską treść skilla; po tłumaczeniu
-treść jest angielska, więc trafność spada (pomiar 4b-3: holdout 6/8 → 2/8). Skrypt bierze z historii gita ostatnią
-wersję SKILL.md z polską treścią i zapisuje obok skilla jako `hint.pl.txt`: linię `head:` (dawny opis i katalog —
-waga opisu) i treść (bez nagłówka YAML). Hook dokłada je do indeksu; model go nie wczytuje (nie jest odwołaniem w SKILL.md). Bez modelu i bez sieci.
-Kod 0 — gotowe; 1 — brak indeksu (--check) albo brak polskiej wersji w historii; 2 — złe wywołanie.
+The skill_hint hook matches a prompt by words. Polish prompts used to hit the Polish skill body; after translation
+the body is English, so accuracy drops (measurement 4b-3: holdout 6/8 → 2/8). The script takes from git history the last
+SKILL.md version with a Polish body and writes it next to the skill as `hint.pl.txt`: a `head:` line (the former description and catalog —
+description weight) and the body (without the YAML header). The hook adds them to the index; the model does not load it (it is not a reference in SKILL.md). No model and no network.
+Exit 0 — done; 1 — no index (--check) or no Polish version in history; 2 — bad invocation.
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ LAYERS = ("core/skills", "packs/*/skills", "modes/*/skills")
 
 
 def language(text: str) -> str:
-    """Ta sama reguła co `skill_gate.content_language`: udział polskich liter w treści bez nagłówka i kodu."""
+    """The same rule as `skill_gate.content_language`: the share of Polish letters in the body without the header and code."""
     body = re.sub(r"^---\n.*?\n---\n", "", text, count=1, flags=re.S)
     body = re.sub(r"```.*?```|`[^`\n]*`", " ", body, flags=re.S)
     letters = [c for c in body if c.isalpha()]
@@ -37,7 +37,7 @@ def body_of(text: str) -> str:
 
 
 def head_of(text: str) -> str:
-    """Dawny opis i katalog (jedna linia) — hook liczy je z wagą opisu skilla, jak przed tłumaczeniem."""
+    """The former description and catalog (one line) — the hook counts them with the skill description weight, as before translation."""
     m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
     fm = m.group(1) if m else ""
     desc = (re.search(r"^description:\s*(.*)$", fm, re.M) or [None, ""])[1].strip()
@@ -51,7 +51,7 @@ def git(*args: str) -> str:
 
 
 def polish_version(skill_md: Path) -> tuple[str, str] | None:
-    """(sha, treść) ostatniej wersji pliku z polską treścią; śledzi zmiany nazw (`--follow`)."""
+    """(sha, body) of the last file version with a Polish body; follows renames (`--follow`)."""
     rel = skill_md.relative_to(ROOT).as_posix()
     for entry in git("log", "--follow", "--format=%x00%H", "--name-only", "--", rel).split("\0")[1:]:
         parts = [x for x in entry.splitlines() if x.strip()]
@@ -82,7 +82,7 @@ def write(skill: Path) -> str:
 
 
 def missing(skills: list[Path]) -> list[str]:
-    """Angielskie skille, które mają polską wersję w historii, a nie mają indeksu."""
+    """English skills that have a Polish version in history and have no index."""
     out = []
     for s in skills:
         if (s / INDEX).is_file() or language((s / "SKILL.md").read_text(encoding="utf-8")) == "pl":

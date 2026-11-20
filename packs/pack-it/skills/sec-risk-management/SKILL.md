@@ -1,95 +1,95 @@
 ---
 name: sec-risk-management
-description: Użyj przy rejestrze ryzyk bezpieczeństwa, akceptacji ryzyka, ryzyku dostawcy, FAIR lub ISO 27005 — proces, apetyt, postępowanie, KRI.
+description: Use for a security risk register, risk acceptance, vendor risk, FAIR or ISO 27005 — the process, appetite, treatment, KRIs.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj, gdy firma prowadzi organizacyjny proces ryzyka bezpieczeństwa informacji — kontekst i kryteria (ISO/IEC 27005:2022), identyfikacja wg aktywów lub scenariuszy, analiza jakościowa (macierz) i ilościowa (FAIR: częstotliwość zdarzeń strat × wielkość straty, przedziały, Monte Carlo), apetyt i tolerancja na ryzyko, opcje postępowania (modyfikacja, utrzymanie z właścicielem i terminem, unikanie, podział i ubezpieczenie cyber), rejestr ryzyk, ryzyko dostawców (kwestionariusze, raporty SOC 2, klauzule umowne, monitoring), zarządzanie akceptacją ryzyka, raportowanie KRI. Wynik: szablon rejestru ryzyk i zapis akceptacji ryzyka. Nie do modelu zagrożeń funkcji i oceny projektu (arch-threat-modeling), ram i audytów (sec-governance-compliance), ryzyk projektu (proc-project-planning) ani obsługi incydentu (ops-security-operations). Nie jest poradą prawną ani ubezpieczeniową."
-  keywords: "ryzyko bezpieczeństwa, rejestr ryzyk, akceptacja ryzyka, apetyt na ryzyko, tolerancja ryzyka, ISO 27005, analiza ryzyka, ocena ryzyka, ryzyko rezydualne, plan postępowania z ryzykiem, FAIR, ryzyko ilościowe, macierz ryzyka, KRI, ryzyko dostawcy, ocena dostawcy, vendor risk, due diligence, ankieta bezpieczeństwa dostawcy, ubezpieczenie cyber, polisa cyber, wyjątek od polityki, ile możemy stracić, właściciel ryzyka"
+  catalog: "Use when a company runs an organizational information security risk process — context and criteria (ISO/IEC 27005:2022), identification by assets or by scenarios, qualitative analysis (a matrix) and quantitative analysis (FAIR: loss event frequency × loss magnitude, ranges, Monte Carlo), risk appetite and tolerance, treatment options (modification, retention with an owner and a deadline, avoidance, sharing and cyber insurance), the risk register, vendor risk (questionnaires, SOC 2 reports, contract clauses, monitoring), risk acceptance management, KRI reporting. Result: a risk register template and a risk acceptance record. Not for a feature threat model and design assessment (arch-threat-modeling), frameworks and audits (sec-governance-compliance), project risks (proc-project-planning) or incident handling (ops-security-operations). Not legal or insurance advice."
+  keywords: "ryzyko bezpieczeństwa, rejestr ryzyk, akceptacja ryzyka, apetyt na ryzyko, tolerancja ryzyka, ISO 27005, analiza ryzyka, ocena ryzyka, ryzyko rezydualne, plan postępowania z ryzykiem, FAIR, ryzyko ilościowe, macierz ryzyka, KRI, ryzyko dostawcy, ocena dostawcy, vendor risk, due diligence, ankieta bezpieczeństwa dostawcy, ubezpieczenie cyber, polisa cyber, wyjątek od polityki, ile możemy stracić, właściciel ryzyka, security risk, risk register, risk acceptance, risk appetite, risk tolerance, risk analysis, risk assessment, residual risk, risk treatment plan, quantitative risk, risk matrix, vendor assessment, vendor security questionnaire, cyber insurance, cyber policy, policy exception, how much can we lose, risk owner"
 ---
 
-# Zarządzanie ryzykiem bezpieczeństwa informacji
+# Information security risk management
 
-**Rola agenta:** przygotowuje kryteria, rejestr, analizy, warianty postępowania i projekty zapisów. **Akceptację ryzyka,
-apetyt i zakup polisy decyduje człowiek** (właściciel ryzyka, zarząd); to nie jest porada prawna ani ubezpieczeniowa.
-Granice: model zagrożeń konkretnej funkcji i ocena jej projektu — **arch-threat-modeling** (stamtąd bierzesz
-zagrożenia jako wejście do rejestru); ramy, SoA i audyty — **sec-governance-compliance**; ryzyka projektu (termin,
-budżet) — **proc-project-planning**; incydent w toku — **ops-security-operations**. Artefakt:
+**The agent's role:** it prepares the criteria, the register, the analyses, the treatment variants and draft records. **Risk acceptance,
+the appetite and buying a policy are decided by a human** (the risk owner, the board); this is not legal or insurance advice.
+Boundaries: the threat model of a specific feature and the assessment of its design — **arch-threat-modeling** (from there you take
+threats as input to the register); frameworks, the SoA and audits — **sec-governance-compliance**; project risks (deadline,
+budget) — **proc-project-planning**; an incident in progress — **ops-security-operations**. Artifact:
 `docs/project/04-architecture/risk-register.md` (core-project-record).
 
-## Proces (wg ISO/IEC 27005:2022, zgodny z ISO 31000)
-Kontekst → ocena ryzyka (identyfikacja, analiza, ewaluacja) → postępowanie → akceptacja ryzyka rezydualnego →
-komunikacja → monitorowanie i przegląd. Proces jest cykliczny; wejście do SoA w ISO 27001.
+## The process (per ISO/IEC 27005:2022, consistent with ISO 31000)
+Context → risk assessment (identification, analysis, evaluation) → treatment → acceptance of the residual risk →
+communication → monitoring and review. The process is cyclical; an input to the SoA in ISO 27001.
 
-1. **Kontekst i kryteria.** Zakres, aktywa i właściciele, ograniczenia prawne i umowne. Zapisz **przed oceną**:
-   skale prawdopodobieństwa i wpływu (z progami w zł, np. wpływ 3 = strata 100–500 tys. zł [przykład]),
-   **apetyt** (ile ryzyka firma chce nieść w dążeniu do celów, np. „brak ryzyka krytycznego bez planu”) i **tolerancję**
-   (dopuszczalne odchylenie, próg eskalacji). Kryteria zatwierdza zarząd; bez nich oceny są nieporównywalne.
-2. **Identyfikacja.** Dwa podejścia, często łączone:
-   - **wg aktywów** — aktywo × zagrożenie × podatność; kompletne, ale żmudne; dobre dla zakresu ISO 27001;
-   - **wg scenariuszy** — „kto/co → zdarzenie → skutek” (ransomware w produkcji, kompromitacja konta dostawcy);
-     szybsze i zrozumiałe dla zarządu; dobre dla FAIR.
-   Źródła: modele zagrożeń, wyniki audytów i testów, incydenty, ryzyka dostawców, zmiany w biznesie. Zapis: przyczyna →
-   zdarzenie → skutek, nie „brak patchowania”.
-3. **Analiza.** Domyślnie **jakościowo**: macierz (np. 5×5) z jawnymi skalami z kroku 1. **Ilościowo (FAIR)** dla ryzyk
-   najwyższych i decyzji budżetowych: ryzyko = **częstotliwość zdarzeń strat × wielkość straty**; oba czynniki jako
-   **przedziały** (min, najbardziej prawdopodobna, max) z kalibrowanych ocen ekspertów i danych; **symulacja Monte
-   Carlo** daje rozkład rocznej straty (np. mediana i P90). Rozkład porównujesz z kosztem kontroli i apetytem;
-   wynik symulacji po wdrożeniu kontroli to **ryzyko rezydualne** — nazwij je tak w raporcie.
-   Macierzy nie zastępujesz całkiem: liczysz tylko wybrane scenariusze. Szczegóły: `references/analysis-and-procedure.md`.
-4. **Ewaluacja.** Porównaj ryzyko z kryteriami: ponad tolerancję → postępowanie obowiązkowe; w granicach apetytu → można
-   utrzymać. Rankinguj; ryzyka tej samej klasy grupuj, żeby rejestr nie rósł w setki wierszy.
-5. **Postępowanie** — jedna z opcji (nazwy z ISO 27005:2022):
-   | Opcja | Co | Warunek |
+1. **Context and criteria.** The scope, the assets and their owners, legal and contractual constraints. Record **before the assessment**:
+   the likelihood and impact scales (with thresholds in PLN, e.g. impact 3 = a loss of PLN 100–500 thousand [example]),
+   the **appetite** (how much risk the company wants to carry in pursuing its goals, e.g. "no critical risk without a plan") and the **tolerance**
+   (the acceptable deviation, the escalation threshold). The criteria are approved by the board; without them assessments are not comparable.
+2. **Identification.** Two approaches, often combined:
+   - **by assets** — asset × threat × vulnerability; complete, but tedious; good for an ISO 27001 scope;
+   - **by scenarios** — "who/what → event → consequence" (ransomware in production, a compromised vendor account);
+     faster and understandable for the board; good for FAIR.
+   Sources: threat models, audit and test results, incidents, vendor risks, changes in the business. The record: cause →
+   event → consequence, not "no patching".
+3. **Analysis.** By default **qualitative**: a matrix (e.g. 5×5) with the explicit scales from step 1. **Quantitative (FAIR)** for the highest
+   risks and budget decisions: risk = **loss event frequency × loss magnitude**; both factors as
+   **ranges** (min, most likely, max) from calibrated expert estimates and data; **a Monte
+   Carlo simulation** gives the distribution of the annual loss (e.g. the median and P90). You compare the distribution with the cost of the control and the appetite;
+   the simulation result after implementing the control is the **residual risk** — call it that in the report.
+   You do not replace the matrix entirely: you quantify only selected scenarios. Details: `references/analysis-and-procedure.md`.
+4. **Evaluation.** Compare the risk with the criteria: above the tolerance → treatment is mandatory; within the appetite → it can be
+   retained. Rank them; group risks of the same class, so that the register does not grow to hundreds of rows.
+5. **Treatment** — one of the options (names from ISO 27005:2022):
+   | Option | What | Condition |
    |---|---|---|
-   | modyfikacja (mitygacja) | kontrola obniża prawdopodobieństwo lub skutek | zadanie, termin, test skuteczności |
-   | utrzymanie (akceptacja) | świadoma zgoda na ryzyko | właściciel, uzasadnienie, **data wygaśnięcia**, zapis |
-   | unikanie | rezygnacja z działania lub funkcji | decyzja biznesowa |
-   | podział (transfer) | dostawca, umowa, **ubezpieczenie cyber** | przenosi skutek finansowy, nie odpowiedzialność ani szkodę reputacyjną |
-   Po wyborze policz **ryzyko rezydualne** i zapisz je osobno.
-6. **Akceptacja ryzyka.** Tylko właściciel ryzyka z uprawnieniami adekwatnymi do poziomu (np. średnie — kierownik
-   obszaru, wysokie — dyrektor, krytyczne — zarząd). Nie akceptuje ryzyka ten, kto je tworzy ani zespół bezpieczeństwa
-   za biznes. Ryzyka ponad tolerancję nie akceptuje się podpisem: wymaga postępowania albo decyzji zarządu o zmianie
-   tolerancji. Akceptacja jest **czasowa** (zwykle ≤12 mies. [przykład]), z warunkami kompensującymi i wyzwalaczem
-   przeglądu (zmiana zakresu, incydent). Wzór: `references/register-and-acceptance.md`.
-7. **Ryzyko dostawców** (trzecich stron). Tiering wg dostępu do danych i krytyczności; due diligence proporcjonalne:
-   kwestionariusz, raport **SOC 2 typu II** lub certyfikat ISO 27001 (sprawdź zakres, okres, wyjątki i kontrole
-   uzupełniające użytkownika), testy dowodowe; klauzule umowne (zgłaszanie incydentów w terminie, prawo do audytu,
-   podwykonawcy, zwrot i usunięcie danych, wymogi bezpieczeństwa); **monitoring ciągły** (przegląd raportów rocznie,
-   zmiany właściciela, incydenty w mediach). Dane osobowe → umowa powierzenia (arch-privacy-compliance). Szczegóły:
+   | modification (mitigation) | a control lowers the likelihood or the consequence | a task, a deadline, an effectiveness test |
+   | retention (acceptance) | a conscious agreement to the risk | an owner, a justification, **an expiry date**, a record |
+   | avoidance | giving up an activity or a feature | a business decision |
+   | sharing (transfer) | a vendor, a contract, **cyber insurance** | transfers the financial consequence, not the accountability or the reputational damage |
+   After the choice calculate the **residual risk** and record it separately.
+6. **Risk acceptance.** Only the risk owner with authority adequate to the level (e.g. medium — the area
+   manager, high — a director, critical — the board). The risk is not accepted by whoever creates it, nor by the security team
+   on behalf of the business. A risk above the tolerance is not accepted with a signature: it requires treatment or a board decision to change the
+   tolerance. The acceptance is **time-limited** (usually ≤12 months [example]), with compensating conditions and a review
+   trigger (a change of scope, an incident). Template: `references/register-and-acceptance.md`.
+7. **Vendor risk** (third parties). Tiering by data access and criticality; proportionate due diligence:
+   a questionnaire, a **SOC 2 Type II** report or an ISO 27001 certificate (check the scope, the period, the exceptions and the complementary
+   user entity controls), evidence tests; contract clauses (incident notification within a deadline, the right to audit,
+   subcontractors, the return and deletion of data, security requirements); **continuous monitoring** (a yearly review of reports,
+   changes of ownership, incidents in the media). Personal data → a data processing agreement (arch-privacy-compliance). Details:
    `references/vendor-risk.md`.
-8. **Monitorowanie i KRI.** Wskaźniki wczesnego ostrzegania z progami i właścicielem, np. odsetek krytycznych podatności
-   po terminie, wyjątki bez ważnej akceptacji, dostawcy tier 1 bez aktualnej oceny, czas odtworzenia vs cel. Raport dla zarządu
-   kwartalnie: najwyższe ryzyka, zmiany, akceptacje wygasające, trend KRI, decyzje do podjęcia.
+8. **Monitoring and KRIs.** Early warning indicators with thresholds and an owner, e.g. the share of critical vulnerabilities
+   past their deadline, exceptions without a valid acceptance, tier 1 vendors without a current assessment, restore time vs the target. A report for the board
+   quarterly: the highest risks, changes, expiring acceptances, the KRI trend, decisions to be made.
 
-## Przykład
-Wejście: „Stary panel partnerów nie ma MFA; wdrożenie za 5 miesięcy. Dyrektor sprzedaży chce zaakceptować ryzyko.”
+## Example
+Input: "The old partner portal has no MFA; the rollout is in 5 months. The sales director wants to accept the risk."
 
-Wynik (zapis akceptacji, fragment) [przykład]:
-- R-017: przejęcie konta partnera → wyciek zamówień klientów. Inherentne: P4 × W4 = 16 (wysokie).
-- Opcja: modyfikacja (MFA do 2027-03-31) + utrzymanie przejściowe. Kontrole kompensujące: limit prób, alert na nowe urządzenie,
-  odcięcie eksportu masowego. Rezydualne: P3 × W3 = 9 (średnie).
-- Akceptuje: dyrektor sprzedaży (właściciel procesu, uprawniony do ryzyk średnich). Ważne do 2027-03-31; wcześniej
-  przegląd po każdym incydencie na koncie partnera. Informowani: CISO, dział prawny.
-- Sprzeciw bezpieczeństwa: brak; gdyby rezydualne było wysokie, decyzja idzie do zarządu.
+Result (an acceptance record, a fragment) [example]:
+- R-017: takeover of a partner account → a leak of customer orders. Inherent: L4 × I4 = 16 (high).
+- Option: modification (MFA by 2027-03-31) + temporary retention. Compensating controls: an attempt limit, an alert on a new device,
+  blocking bulk export. Residual: L3 × I3 = 9 (medium).
+- Accepted by: the sales director (the process owner, authorized for medium risks). Valid until 2027-03-31; before that
+  a review after every incident on a partner account. Informed: the CISO, the legal department.
+- Security objection: none; if the residual risk were high, the decision goes to the board.
 
-## Checklista
-- [ ] kryteria, apetyt i tolerancja zatwierdzone przed oceną
-- [ ] ryzyko jako przyczyna → zdarzenie → skutek; źródła: modele zagrożeń, audyty, dostawcy
-- [ ] skale z progami; FAIR tylko dla wybranych scenariuszy, z przedziałami
-- [ ] każde ryzyko ponad tolerancję ma opcję postępowania, zadanie i termin
-- [ ] ryzyko rezydualne zapisane osobno
-- [ ] akceptacja: właściciel z uprawnieniami, uzasadnienie, data wygaśnięcia, warunki
-- [ ] dostawcy z tierem, dowodami (SOC 2/ISO: zakres i wyjątki) i klauzulami
-- [ ] KRI z progami; raport kwartalny dla zarządu
+## Checklist
+- [ ] the criteria, the appetite and the tolerance approved before the assessment
+- [ ] the risk as cause → event → consequence; sources: threat models, audits, vendors
+- [ ] scales with thresholds; FAIR only for selected scenarios, with ranges
+- [ ] every risk above the tolerance has a treatment option, a task and a deadline
+- [ ] the residual risk recorded separately
+- [ ] acceptance: an owner with authority, a justification, an expiry date, conditions
+- [ ] vendors with a tier, evidence (SOC 2/ISO: scope and exceptions) and clauses
+- [ ] KRIs with thresholds; a quarterly report for the board
 
-## Materiały dodatkowe
-- `references/register-and-acceptance.md` — szablon rejestru ryzyk (pola), zapis akceptacji, uprawnienia; czytaj przy tworzeniu `risk-register.md`.
-- `references/analysis-and-procedure.md` — skale, FAIR krok po kroku, ubezpieczenie cyber, KRI; czytaj przy analizie ilościowej i raporcie.
-- `references/vendor-risk.md` — tiering, kwestionariusz, czytanie raportu SOC 2, klauzule, monitoring; czytaj przy ocenie dostawcy.
+## Additional materials
+- `references/register-and-acceptance.md` — the risk register template (fields), the acceptance record, authority levels; read it when creating `risk-register.md`.
+- `references/analysis-and-procedure.md` — scales, FAIR step by step, cyber insurance, KRIs; read it for a quantitative analysis and the report.
+- `references/vendor-risk.md` — tiering, the questionnaire, reading a SOC 2 report, clauses, monitoring; read it when assessing a vendor.
 
-## Źródła
-- ISO/IEC 27005:2022 *Information security risk management* (październik 2022; dodaje akceptację ryzyka rezydualnego,
-  zgodna z ISO/IEC 27001:2022 i ISO 31000:2018) — iso.org; wg źródeł wtórnych (PECB, EVS), dostęp 2026-10-17 [niezweryfikowane u źródła].
-- FAIR — The Open Group, Open FAIR O-RT i O-RA; J. Freund, J. Jones, *Measuring and Managing Information Risk* (2014); wg źródeł wtórnych, dostęp 2026-10-17.
-- AICPA, Trust Services Criteria (2017, punkty uwagi 2022) — wg źródeł wtórnych, dostęp 2026-10-17.
-Opisane własnymi słowami; nie jest poradą prawną.
+## Sources
+- ISO/IEC 27005:2022 *Information security risk management* (October 2022; adds the acceptance of residual risk,
+  consistent with ISO/IEC 27001:2022 and ISO 31000:2018) — iso.org; per secondary sources (PECB, EVS), accessed 2026-10-17 [unverified at the source].
+- FAIR — The Open Group, Open FAIR O-RT and O-RA; J. Freund, J. Jones, *Measuring and Managing Information Risk* (2014); per secondary sources, accessed 2026-10-17.
+- AICPA, Trust Services Criteria (2017, points of focus 2022) — per secondary sources, accessed 2026-10-17.
+Described in our own words; not legal advice.

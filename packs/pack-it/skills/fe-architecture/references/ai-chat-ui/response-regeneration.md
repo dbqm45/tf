@@ -1,55 +1,55 @@
 # Response Regeneration
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/response-regeneration.
+Source: frontendpatterns.dev/response-regeneration.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** AI chat UI (u źródła: Resilience)
-- **Poziom:** Intermediate
-- **Przykłady:** React, Vue, Svelte, Native web
-- **Data aktualizacji:** 2 lipca 2026
-- **Autor:** Den Odell
+- **Category:** AI chat UI (at the source: Resilience)
+- **Level:** Intermediate
+- **Examples:** React, Vue, Svelte, Native web
+- **Last updated:** 2 July 2026
+- **Author:** Den Odell
 
 ## TLDR
 
-„Because a model gives a different answer each time, regenerating is a core action, not an error
+"Because a model gives a different answer each time, regenerating is a core action, not an error
 path. Re-run the prompt, keep the earlier attempts as switchable variants, and let users compare
-instead of losing the previous reply.”
+instead of losing the previous reply."
 
-**Uwaga kontekstowa:** ten wzorzec jest specyficzny dla interfejsów AI/chat (odpowiedzi modelu
-językowego są niedeterministyczne) — nie ma odpowiednika w zwykłych, deterministycznych aplikacjach
-CRUD, gdzie ten sam request zawsze daje tę samą odpowiedź.
+**A context note:** this pattern is specific to AI/chat interfaces (language model responses
+are non-deterministic) — it has no equivalent in ordinary, deterministic CRUD applications,
+where the same request always gives the same response.
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Tokeny adresuj po `variantId`, nie po `activeVariant`** — jeśli użytkownik przełączy wariant w trakcie
-  streamowania, tokeny trafiłyby do złej wersji. Poprawiono w reducerze niżej.
-- `temperature` nie jest obsługiwane przez wszystkie modele (część modeli rozumujących je ignoruje lub odrzuca) —
-  różnorodność zapewnij przez parametry danego API albo po prostu przez ponowne próbkowanie; sprawdź dokumentację
-  dostawcy.
-- Przykład Web Components poprawiony z `innerHTML` (treść modelu = niezaufane dane) na DOM API.
-- Przykłady Svelte używają składni Svelte 4 (`export let`, `$:`, `on:click`). W Svelte 5: `$props()`, `$state`,
-  `$derived`, atrybuty `onclick`.
+- **Address tokens by `variantId`, not by `activeVariant`** — if the user switches the variant during
+  streaming, the tokens would go to the wrong version. Corrected in the reducer below.
+- `temperature` is not supported by all models (some reasoning models ignore or reject it) —
+  ensure variety through the given API's parameters or simply through resampling; check the provider's
+  documentation.
+- The Web Components example corrected from `innerHTML` (model content = untrusted data) to the DOM API.
+- The Svelte examples use Svelte 4 syntax (`export let`, `$:`, `on:click`). In Svelte 5: `$props()`, `$state`,
+  `$derived`, `onclick` attributes.
 
 ## Problem
 
-Użytkownik otrzymuje odpowiedź „prawie dobrą” i chce spróbować jeszcze raz. Złe implementacje: brak
-opcji regeneracji wcale (użytkownik musi przepisać pytanie), albo przycisk regeneracji **nadpisuje**
-poprzednią odpowiedź — jeśli nowa wersja jest gorsza, poprzednia, akceptowalna wersja jest już
-utracona bezpowrotnie.
+The user receives an "almost good" answer and wants to try once more. Bad implementations: no
+regeneration option at all (the user has to retype the question), or a regenerate button **overwrites**
+the previous answer — if the new version is worse, the previous, acceptable version is already
+lost for good.
 
-## Rozwiązanie
+## Solution
 
-Regeneracja re-uruchamia to samo pytanie i przechowuje wynik **obok** poprzedniego, nie na jego
-miejscu. Wiadomość asystenta ma listę wariantów + wskaźnik aktywnego wariantu; kontrolka „‹ 2 / 3 ›”
-pozwala przełączać się między próbami — poprzednia odpowiedź nigdy nie jest utracona, tylko staje
-się jedną z kilku opcji. Regeneracja wchodzi w ten sam cykl co oryginalna generacja: może
-streamować, może być zatrzymana (patrz `stop-generation.md`), może failować i być powtórzona (patrz
-`retry.md`) — różni się tylko tym, **gdzie** ląduje wynik.
+Regeneration re-runs the same question and stores the result **next to** the previous one, not in its
+place. The assistant's message has a list of variants + a pointer to the active variant; a "‹ 2 / 3 ›" control
+lets you switch between attempts — the previous answer is never lost, it just becomes
+one of several options. Regeneration enters the same cycle as the original generation: it can
+stream, it can be stopped (see `stop-generation.md`), it can fail and be retried (see
+`retry.md`) — it differs only in **where** the result lands.
 
-## Przykłady kodu
+## Code examples
 
 ### Modeling Variants (reducer)
 
@@ -222,31 +222,31 @@ function editAndResubmit(messages, editedId, newText) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Użytkownik może próbować uzyskać lepszą odpowiedź bez przepisywania pytania od zera.
-- Przechowywanie prób jako wariantów robi regenerację **niedestruktywną** — poprzednia odpowiedź jest
-  o jedno kliknięcie dalej, nie zgubiona.
-- Paginator wariantów pozwala porównać wersje i wybrać preferowaną.
-- Ponowne wykorzystanie istniejącej infrastruktury streamingu/stop/retry — regeneracja nie jest
-  osobnym systemem.
-- Edit-and-resubmit daje czysty sposób poprawienia **wejścia**, zamiast negocjowania z modelem nad
-  samym wyjściem.
+- The user can try to get a better answer without retyping the question from scratch.
+- Storing attempts as variants makes regeneration **non-destructive** — the previous answer is
+  one click away, not lost.
+- The variant paginator lets you compare versions and choose the preferred one.
+- Reuse of the existing streaming/stop/retry infrastructure — regeneration is not
+  a separate system.
+- Edit-and-resubmit gives a clean way to correct the **input**, instead of negotiating with the model over
+  the output itself.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Każdy zachowany wariant to pełna odpowiedź w pamięci/storage — koszt rośnie przy długich
-  rozmowach z wieloma regeneracjami.
-- Paginator wariantów dodaje UI i stan, który musi zostać spójny w trakcie streamowania **nowej**
-  próby.
-- Bez zwiększenia temperature/próbkowania regeneracja może dać praktycznie identyczną odpowiedź —
-  funkcja wygląda wtedy jak zepsuta.
-- Edit-and-resubmit musi obciąć kolejne tury rozmowy — to destruktywne, jeśli nie zbudujesz pełnego
-  rozgałęzienia konwersacji (branching).
-- Definicja „odpowiedzi” (do zapisu, eksportu, dalszego użycia) robi się niejednoznaczna, gdy jedna
-  wiadomość ma wiele wariantów.
+- Every kept variant is a full response in memory/storage — the cost grows in long
+  conversations with many regenerations.
+- The variant paginator adds UI and state that must stay consistent while a **new**
+  attempt is streaming.
+- Without increasing temperature/sampling, regeneration can give a practically identical answer —
+  the feature then looks broken.
+- Edit-and-resubmit must truncate the subsequent turns of the conversation — that is destructive unless you build full
+  conversation branching.
+- The definition of "the answer" (for saving, exporting, further use) becomes ambiguous when one
+  message has many variants.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Stop Generation](stop-generation.md) — ai-chat-ui
 - [Message Thread](message-thread.md)
@@ -254,12 +254,12 @@ function editAndResubmit(messages, editedId, newText) {
 - [Retry](../resilience/retry.md) — Resilience
 - [Prompt Input](prompt-input.md)
 - Temperature and sampling — OpenAI
-- Regenerate response — wzorce ChatGPT
+- Regenerate response — ChatGPT patterns
 - Structuring Reducers — Redux
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Sięgaj po ten wzorzec **wyłącznie** w interfejsach generatywnego AI/chatu, gdzie ten sam prompt
-realnie może dać inną odpowiedź. **Nie przenoś** tego mechanizmu do zwykłych, deterministycznych
-operacji (np. „regeneruj raport”) — tam powtórzenie tej samej operacji daje ten sam wynik, a
-kolekcja „wariantów” nie ma sensu i tylko komplikuje model danych bez żadnej korzyści.
+Reach for this pattern **only** in generative AI/chat interfaces, where the same prompt
+really can give a different answer. **Do not transfer** this mechanism to ordinary, deterministic
+operations (e.g. "regenerate the report") — there repeating the same operation gives the same result, and
+a collection of "variants" makes no sense and only complicates the data model without any benefit.

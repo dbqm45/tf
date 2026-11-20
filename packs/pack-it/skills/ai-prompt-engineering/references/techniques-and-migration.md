@@ -1,73 +1,73 @@
-# Techniki i migracja — stan na 2026-10-17
+# Techniques and migration — state as of 2026-10-17
 
-Spis treści: 1. Myślenie · 1a. Modele Claude 5.5 · 2. Prefill i format · 3. Cache · 4. Migracja · 5. Szablony i rejestr · 6. Błędy · 7. Inne dostawcy
+Contents: 1. Thinking · 1a. Claude 5.5 models · 2. Prefill and format · 3. Cache · 4. Migration · 5. Templates and registry · 6. Mistakes · 7. Other providers
 
-Nazwy modeli, parametry i ceny zmieniają się często; przed zmianą sprawdź bieżącą stronę dokumentacji (core-grounding).
+Model names, parameters and prices change often; before a change check the current documentation page (core-grounding).
 
-## 1. Myślenie
-- Modele Claude 4.6 i nowsze używają adaptacyjnego myślenia (`thinking: {type: "adaptive"}`): model sam wybiera, czy
-  i ile myśleć, zależnie od parametru `effort` i trudności. W części najnowszych modeli myślenie jest zawsze włączone.
-- Starsze modele: rozszerzone myślenie z `budget_tokens`. Na modelach 4.7 i nowszych ustawienie `budget_tokens`
-  zwraca błąd 400; budżet kontrolujesz przez `effort`. Przy migracji zamień konfigurację i sprawdź ewaluacją.
-- Zbyt częste myślenie przy dużych promptach systemowych możesz ograniczyć instrukcją („myśl tylko, gdy zadanie
-  wymaga rozumowania wieloetapowego”).
-- Przykłady few-shot wpływają też na to, jak model rozumuje; podawaj je jako problem, metodę i wynik.
-- Gdy myślenie wyłączone: ręczny łańcuch myślenia — „rozumuj przed odpowiedzią, wynik w `<answer>`”. Kod czyta tylko `<answer>`.
-- Nie używaj myślenia do prostej ekstrakcji, klasyfikacji i przekształcania formatu; mierz zysk jakości i koszt.
+## 1. Thinking
+- Claude 4.6 models and newer use adaptive thinking (`thinking: {type: "adaptive"}`): the model itself chooses whether
+  and how much to think, depending on the `effort` parameter and the difficulty. In some of the newest models thinking is always on.
+- Older models: extended thinking with `budget_tokens`. On 4.7 models and newer setting `budget_tokens`
+  returns a 400 error; you control the budget through `effort`. During a migration replace the configuration and check it with an evaluation.
+- Too frequent thinking with large system prompts you can limit with an instruction ("think only when the task
+  requires multi-step reasoning").
+- Few-shot examples also influence how the model reasons; give them as a problem, a method and a result.
+- When thinking is off: a manual chain of thought — "reason before the answer, the result in `<answer>`". The code reads only `<answer>`.
+- Do not use thinking for simple extraction, classification and format conversion; measure the quality gain and the cost.
 
-## 1a. Modele Claude 5.5 (przewodniki „Prompting Claude Opus/Sonnet/Haiku 5.5”, odczyt 2026-10-20)
-- `effort` to główna kontrola myślenia (na Opus 5.5 myślenie jest zawsze włączone); domyślnie `medium` na Opus,
-  Sonnet i Haiku 5.5 — ustaw jawnie i porównaj kilka poziomów na własnych ewaluacjach. `xhigh` i `max` tylko tam,
-  gdzie zmierzono zysk; mniej myślenia → najpierw niższy `effort`, nie instrukcja w prompcie.
-- Myślenie liczy się do `max_tokens`, także gdy treść myślenia nie wraca: limit ustawiony pod starszy model ucina
-  odpowiedzi. W długich turach agentowych na Opus 5.5 dobrze działało 128 000 (maksimum modelu).
-- Zmiana `effort` między żądaniami unieważnia cache; zmiana w trakcie rozmowy bez utraty cache — per-message effort
+## 1a. Claude 5.5 models (the guides "Prompting Claude Opus/Sonnet/Haiku 5.5", read 2026-10-20)
+- `effort` is the main control of thinking (on Opus 5.5 thinking is always on); by default `medium` on Opus,
+  Sonnet and Haiku 5.5 — set it explicitly and compare a few levels on your own evaluations. `xhigh` and `max` only where
+  a gain was measured; less thinking → first a lower `effort`, not an instruction in the prompt.
+- Thinking counts towards `max_tokens`, also when the thinking content is not returned: a limit set for an older model cuts
+  answers off. In long agentic turns on Opus 5.5, 128,000 (the model's maximum) worked well.
+- Changing `effort` between requests invalidates the cache; a change during a conversation without losing the cache — per-message effort
   (beta).
-- Agent bez nadzoru: tura zakończona samym tekstem (podsumowanie z zapowiedzią kroku) to raport, nie koniec zadania —
-  lista otwartych pozycji i krótka wiadomość „kontynuuj” (core-async-delegation).
-- Sonnet 5.5 na `low`/`medium` bywa, że pyta przed końcem pracy, a na każdym poziomie dodaje niezamówione testy
-  i dokumentację; Haiku 5.5 przy długim prompcie agenta na `low` kończy za wcześnie. Pomaga instrukcja: „pracuj, aż
-  wszystko jest zrobione; zatrzymaj się tylko bez decyzji człowieka albo przed ryzykownym krokiem; po sprawdzeniu
-  zgłoś wynik, a pomysły na dodatki wymień na końcu” (fabryka: `work_contract` w `.tf/config/config.yaml`).
+- An unsupervised agent: a turn ended with text only (a summary announcing a step) is a report, not the end of the task —
+  a list of open items and a short "continue" message (core-async-delegation).
+- Sonnet 5.5 on `low`/`medium` sometimes asks before the end of the work, and on every level adds unrequested tests
+  and documentation; Haiku 5.5 with a long agent prompt on `low` finishes too early. An instruction helps: "work until
+  everything is done; stop only without a human decision or before a risky step; after checking,
+  report the result, and list ideas for additions at the end" (the factory: `work_contract` in `.tf/config/config.yaml`).
 
-## 2. Prefill i format wyjścia
-- Prefill ostatniej wiadomości asystenta nie jest obsługiwany od modeli Claude 4.6 (żądanie zwraca błąd).
-- Zamienniki: wymuszony format (JSON, YAML, klasyfikacja) → structured outputs ze schematem;
-  pominięcie wstępu → instrukcja „odpowiadaj bezpośrednio, bez wstępu”, tag wyjściowy lub wywołanie narzędzia;
-  kontynuacja przerwanej odpowiedzi → wiadomość użytkownika z końcówką poprzedniej odpowiedzi;
-  odświeżanie kontekstu w długiej rozmowie → przypomnienie w turze użytkownika albo narzędzie dostarczające kontekst.
-- Kontrakt wyjścia, walidacja po odbiorze i obsługa porażki: eng-llm-features §2.
+## 2. Prefill and output format
+- Prefilling the last assistant message is not supported since the Claude 4.6 models (the request returns an error).
+- Replacements: an enforced format (JSON, YAML, classification) → structured outputs with a schema;
+  skipping the preamble → the instruction "answer directly, without a preamble", an output tag or a tool call;
+  continuing an interrupted answer → a user message with the ending of the previous answer;
+  refreshing the context in a long conversation → a reminder in the user turn or a tool supplying the context.
+- The output contract, validation after receipt and failure handling: eng-llm-features §2.
 
-## 3. Układ pod cache (Anthropic)
-Mechanikę cache API (kolejność `tools` → `system` → `messages`, `cache_control`, TTL, ceny zapisu i odczytu, minimalna
-długość prefiksu, co unieważnia) opisuje aktualnie wbudowany skill `claude-api`; reguły kosztowe sesji agenta:
-core-cost-control. Dla promptu liczy się jedno: część stała na początku, zmienna na końcu, a trafienia sprawdzasz
-w polach `cache_creation_input_tokens` i `cache_read_input_tokens` (oba 0 = brak cache).
+## 3. A layout for the cache (Anthropic)
+The mechanics of the API cache (the order `tools` → `system` → `messages`, `cache_control`, TTL, write and read prices, the minimum
+prefix length, what invalidates it) are currently described by the built-in `claude-api` skill; the cost rules of an agent session:
+core-cost-control. For the prompt one thing counts: the fixed part at the beginning, the variable one at the end, and you check the hits
+in the fields `cache_creation_input_tokens` and `cache_read_input_tokens` (both 0 = no cache).
 
-## 4. Migracja promptu na nowszy model
-1. Przeczytaj przewodnik migracji dostawcy dla modelu docelowego.
-2. Uruchom zestaw ewaluacji na starym i nowym modelu **z tym samym promptem**; zapisz różnice.
-3. Usuń: prefill, ręczny `budget_tokens`, wielkie litery i „MUSISZ/ZAWSZE” (zamiast „CRITICAL: MUSISZ użyć narzędzia” →
-   „Użyj narzędzia, gdy …”), zachęty typu „bądź dokładny, użyj wszystkich narzędzi” — nowsze modele są bardziej
-   proaktywne i nadużywają narzędzi po takich zachętach.
-4. Dodaj wprost, co wcześniej było domyślne, jeśli to potrzebne (np. wyraźna prośba o rozbudowany wynik).
-5. Tuning pojedynczymi zmianami; wersja promptu podniesiona (MINOR przy zmianie zachowania, MAJOR przy zmianie kontraktu
-   wyjścia [konwencja własna]); model przypięty w konfiguracji.
+## 4. Migrating a prompt to a newer model
+1. Read the provider's migration guide for the target model.
+2. Run the evaluation set on the old and the new model **with the same prompt**; record the differences.
+3. Remove: prefill, a manual `budget_tokens`, capital letters and "YOU MUST/ALWAYS" (instead of "CRITICAL: YOU MUST use the tool" →
+   "Use the tool when …"), encouragements like "be thorough, use all the tools" — newer models are more
+   proactive and overuse tools after such encouragements.
+4. Add explicitly what used to be the default, if needed (e.g. an explicit request for an extensive result).
+5. Tuning with single changes; the prompt version bumped (MINOR on a behaviour change, MAJOR on a change of the output
+   contract [our own convention]); the model pinned in the configuration.
 
-## 5. Szablony i rejestr
-- Szablon: nazwa, wersja, zmienne z opisem, model docelowy, schemat wyjścia, zestaw ewaluacji, autor i data zmiany.
-- Zmienne wstawiane w jednym miejscu (koniec promptu), dane w tagach; escapowanie treści użytkownika.
-- Rejestr może być plikiem w repo (recenzja w PR) albo usługą; ważne: nieedytowalne wersje i powiązanie wersji z wynikami ewaluacji.
-- Wdrożenie przez flagę lub konfigurację, żeby cofnięcie nie wymagało wydania kodu (ops-release-engineering).
+## 5. Templates and registry
+- A template: a name, a version, variables with a description, the target model, the output schema, the evaluation set, the author and the change date.
+- Variables inserted in one place (the end of the prompt), data in tags; escaping the user content.
+- The registry can be a file in the repo (a review in a PR) or a service; what matters: immutable versions and linking a version to the evaluation results.
+- Deployment through a flag or configuration, so that a rollback does not require a code release (ops-release-engineering).
 
-## 6. Typowe błędy
-- Niejednoznaczność: „krótko”, „profesjonalnie” bez miary → podaj długość, odbiorcę, przykład.
-- Sprzeczne instrukcje po latach łatania → przegląd całości, priorytety wprost.
-- Przeciążenie ograniczeniami: kilkanaście zakazów; model zaczyna odmawiać lub tłumi użyteczną treść → zostaw te, które
-  zmierzone ewaluacją coś zmieniają.
-- Prompt „na okazję”: instrukcja dopisana pod jeden przypadek bez dopisania przypadku do zbioru.
-- Dane w instrukcjach: treść użytkownika wklejona bez tagów.
+## 6. Typical mistakes
+- Ambiguity: "briefly", "professionally" without a measure → give the length, the audience, an example.
+- Contradictory instructions after years of patching → a review of the whole, explicit priorities.
+- Overloading with constraints: a dozen or so bans; the model starts refusing or suppresses useful content → keep those that,
+  as measured by an evaluation, change something.
+- A prompt "for the occasion": an instruction added for one case without adding the case to the set.
+- Data in the instructions: user content pasted without tags.
 
-## 7. Inni dostawcy [niezweryfikowane]
-Ogólne zasady (stała część na początku, przykłady w osobnym bloku, wersjonowanie, ewaluacje przy każdym wydaniu) są
-wspólne; szczegóły parametrów OpenAI sprawdź w bieżącym przewodniku promptowania — strona nie była dostępna 2026-10-17.
+## 7. Other providers [unverified]
+The general rules (the fixed part at the beginning, examples in a separate block, versioning, evaluations on every release) are
+shared; check the details of OpenAI's parameters in the current prompting guide — the page was not available on 2026-10-17.

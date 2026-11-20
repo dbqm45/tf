@@ -8,7 +8,7 @@ change: CHG-53
 
 ## Cięcia
 
-| TSK | Opis | Wydanie | Flaga |
+| TSK | Opis | Release | Flag |
 |---|---|---|---|
 | TSK-A | Integracja mcp__pdi__forecast_report w panelu planu | R1 | pdi_forecast_ui |
 | TSK-B | Mapowanie wierszy szacunków na forecast_id, komentarz w PR | R1 | pdi_forecast_ui |

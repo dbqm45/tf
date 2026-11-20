@@ -20,6 +20,35 @@
       }
     },
     {
+      "id": "test-usuniecia-en",
+      "expect": "trigger",
+      "prompt": "I have an OrderService that only delegates to OrderValidator, OrderMapper and OrderRepository, each with an interface and a single implementation. How do I judge whether these modules are shallow and whether they make sense? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "test usunięcia|usuń\\w+ moduł|deletion test|gdyby moduł zniknął|zniknie",
+            "deletion test",
+            "delet\\w+ (the |a )?module",
+            "if (the )?module (disappeared|vanished|were (deleted|removed))",
+            "remov\\w+ (the )?module",
+            "module (disappears|vanishes)"
+          ],
+          [
+            "przelotk|płytk",
+            "pass-?through",
+            "shallow",
+            "thin"
+          ],
+          [
+            "jeden adapter|dwa adaptery|spoin",
+            "(one|single) adapter",
+            "two adapters",
+            "seam\\w*"
+          ]
+        ]
+      }
+    },
+    {
       "id": "interfejs-pogleb",
       "expect": "trigger",
       "prompt": "Projektuję interfejs nowego modułu rezerwacji i nie wiem, jak go dobrze wybrać oraz jak wymusić w TS w Nx, żeby nikt nie importował jego wnętrza. Odpowiedz zwięźle.",

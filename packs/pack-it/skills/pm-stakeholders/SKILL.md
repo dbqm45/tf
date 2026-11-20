@@ -1,50 +1,50 @@
 ---
 name: pm-stakeholders
-description: Użyj przy pracy z interesariuszami projektu lub produktu — identyfikacja, mapa wpływ × zainteresowanie, zaangażowanie obecne i docelowe, plan komunikacji, opór.
+description: Use for working with project or product stakeholders — identification, an influence × interest map, current and target engagement, a communication plan, resistance.
 metadata:
   review: "2027-10-23"
-  catalog: "Użyj, gdy projekt, wdrożenie albo zmiana produktu zależy od ludzi, którzy mogą ją wesprzeć lub zablokować — identyfikacja interesariuszy (także pośrednich i nieformalnych), mapa wpływ × zainteresowanie, ocena zaangażowania obecnego i docelowego, plan zaangażowania i komunikacji (kto, co, kanał, częstotliwość, właściciel), rozpoznanie przyczyn oporu i działania, przegląd mapy w trakcie. Nie do podziału zespołów i trybów współpracy (proc-team-topologies), planu projektu z kosztami i ryzykami (proc-project-planning), facylitacji warsztatu z ekspertami (ddd-facilitation) ani raportu dla zarządu o bezpieczeństwie (sec-security-leadership)."
-  keywords: "interesariusze, stakeholderzy, mapa interesariuszy, kto jest interesariuszem, wpływ i zainteresowanie, macierz władzy, opór przed zmianą, dział się opiera, wdrożenie w firmie, plan komunikacji, plan zaangażowania, kogo informować, sponsor projektu, zarząd chce szybko, przekonać dział, nikogo nie pominąć"
+  catalog: "Use when a project, a rollout or a product change depends on people who can support or block it — identifying stakeholders (also indirect and informal ones), an influence × interest map, assessing current and target engagement, an engagement and communication plan (who, what, channel, frequency, owner), recognising the causes of resistance and actions, reviewing the map along the way. Not for dividing teams and collaboration modes (proc-team-topologies), a project plan with costs and risks (proc-project-planning), facilitating a workshop with experts (ddd-facilitation) or a board report on security (sec-security-leadership)."
+  keywords: "interesariusze, stakeholderzy, mapa interesariuszy, kto jest interesariuszem, wpływ i zainteresowanie, macierz władzy, opór przed zmianą, dział się opiera, wdrożenie w firmie, plan komunikacji, plan zaangażowania, kogo informować, sponsor projektu, zarząd chce szybko, przekonać dział, nikogo nie pominąć, stakeholders, stakeholder map, who is a stakeholder, influence and interest, power matrix, resistance to change, a department resists, rollout in a company, communication plan, engagement plan, whom to inform, project sponsor, the board wants it fast, win over a department, leave nobody out"
 ---
 
-# Interesariusze
+# Stakeholders
 
-Cel: nikt ważny nie dowiaduje się o zmianie za późno, każdy wie, czego się od niego oczekuje, a opór ma nazwaną
-przyczynę i działanie. Mapa jest dokumentem roboczym zespołu — nie publikujesz ocen ludzi poza nim.
+Goal: nobody important learns of a change too late, everyone knows what is expected of them, and resistance has a named
+cause and an action. The map is a working document of the team — you do not publish assessments of people outside it.
 
-## Procedura
-1. **Identyfikacja** — lista z pytań: kto decyduje i płaci, kto używa, kto zyskuje, kto traci (pracę, wpływ,
-   wygodę), kto musi coś zrobić inaczej, kto może zablokować (prawnik, bezpieczeństwo, związki zawodowe, IT),
-   kto jest na zewnątrz (klienci, dostawcy, regulator, partnerzy). Uwzględnij wpływ nieformalny — osoby, których
-   zdania słuchają inni, choć nie mają stanowiska.
-2. **Mapa wpływ × zainteresowanie** — każdy w jednym z czterech pól:
-   - duży wpływ, duże zainteresowanie → **współpracuj blisko** (decyzje razem, częsty kontakt);
-   - duży wpływ, małe zainteresowanie → **dbaj o zadowolenie** (krótko, rzadko, bez szczegółów);
-   - mały wpływ, duże zainteresowanie → **informuj** (regularnie, łatwy kanał zwrotny);
-   - mały wpływ, małe zainteresowanie → **obserwuj** (mogą się przesunąć).
-3. **Zaangażowanie obecne i docelowe** — skala: nieświadomy · opierający się · neutralny · wspierający ·
-   prowadzący. Przy każdej osobie dwa znaczniki (dziś, potrzebny) — luka to praca do zaplanowania.
-4. **Przyczyny oporu** — zapytaj, nie zgaduj: co tracą (status, kontrolę, czas, premię), czego się boją
-   (dodatkowa praca, błąd przy wdrożeniu), czego nie rozumieją (po co zmiana), jakie mają złe doświadczenia.
-   Działanie dopasowane do przyczyny: udział w decyzji, pilotaż u nich, szkolenie, zmiana harmonogramu, wsparcie
-   w szczycie pracy — nie „więcej komunikacji”.
-5. **Plan zaangażowania** — tabela: osoba/grupa · interes (na czym im zależy) · luka zaangażowania · komunikat ·
-   kanał · częstotliwość · właściciel kontaktu · następny krok. Szablon i przykład: `references/engagement-plan.md`.
-6. **Przegląd** mapy na każdym etapie (start, przed decyzją, przed wdrożeniem, po wdrożeniu) i po zmianie ludzi —
-   wpływ i zainteresowanie się zmieniają.
+## Procedure
+1. **Identification** — a list from the questions: who decides and pays, who uses it, who gains, who loses (a job, influence,
+   convenience), who must do something differently, who can block (a lawyer, security, trade unions, IT),
+   who is external (customers, suppliers, a regulator, partners). Include informal influence — people whose
+   opinion others listen to, though they hold no position.
+2. **The influence × interest map** — everyone in one of four boxes:
+   - high influence, high interest → **work closely** (decisions together, frequent contact);
+   - high influence, low interest → **keep satisfied** (brief, rare, without detail);
+   - low influence, high interest → **keep informed** (regularly, an easy feedback channel);
+   - low influence, low interest → **monitor** (they may shift).
+3. **Current and target engagement** — the scale: unaware · resistant · neutral · supportive ·
+   leading. For each person two markers (today, needed) — the gap is work to plan.
+4. **Causes of resistance** — ask, do not guess: what they lose (status, control, time, a bonus), what they fear
+   (extra work, a mistake in the rollout), what they do not understand (why the change), what bad experiences they have had.
+   An action matched to the cause: a share in the decision, a pilot with them, training, a change of schedule, support
+   at a peak of work — not "more communication".
+5. **Engagement plan** — a table: person/group · interest (what matters to them) · engagement gap · message ·
+   channel · frequency · contact owner · next step. A template and an example: `references/engagement-plan.md`.
+6. **Review** the map at every stage (start, before the decision, before the rollout, after the rollout) and after a change of people —
+   influence and interest change.
 
-## Przykład
-Wdrożenie CRM, 300 osób, dział sprzedaży się opiera, zarząd chce szybko. Mapa: zarząd — duży wpływ, duże
-zainteresowanie (współpracuj blisko); dyrektor sprzedaży — duży wpływ, dziś opierający się, potrzebny wspierający;
-handlowcy — mały wpływ pojedynczo, duże zainteresowanie, razem mogą zablokować wdrożenie brakiem danych; dział IT —
-duży wpływ, małe zainteresowanie (dbaj o zadowolenie). Rozmowy z 5 handlowcami: boją się, że CRM pokaże lejek
-i zabierze czas na wpisy. Działania: pilotaż u dwóch handlowców, którzy sami chcą, automatyczne zapisywanie
-e-maili zamiast ręcznych wpisów, dyrektor sprzedaży współdecyduje o polach i raportach; zarządowi — harmonogram
-z pilotażem 6 tygodni zamiast wdrożenia od razu i miara: odsetek szans sprzedaży z kompletem danych.
+## Example
+A CRM rollout, 300 people, the sales department resists, the board wants it fast. The map: the board — high influence, high
+interest (work closely); the sales director — high influence, resistant today, supportive needed;
+the salespeople — low influence individually, high interest, together they can block the rollout by not entering data; the IT department —
+high influence, low interest (keep satisfied). Conversations with 5 salespeople: they fear the CRM will expose the funnel
+and take time for entries. Actions: a pilot with two salespeople who want it themselves, automatic saving of
+emails instead of manual entries, the sales director co-decides on the fields and reports; for the board — a schedule
+with a 6-week pilot instead of an immediate rollout and a measure: the share of sales opportunities with complete data.
 
-## Źródła
-- R. E. Freeman, *Strategic Management: A Stakeholder Approach* (1984) — kim jest interesariusz.
-- A. Mendelow, „Stakeholder Mapping”, *Proceedings of the 2nd International Conference on Information Systems* (1991) — siatka wpływ × zainteresowanie.
-- R. Mitchell, B. Agle, D. Wood, „Toward a Theory of Stakeholder Identification and Salience”, *Academy of Management Review* (1997) — wpływ, prawomocność, pilność.
-- PMI, *PMBOK Guide* (wyd. 6, 2017) — macierz oceny zaangażowania (obecne i docelowe).
-Opisane własnymi słowami.
+## Sources
+- R. E. Freeman, *Strategic Management: A Stakeholder Approach* (1984) — who a stakeholder is.
+- A. Mendelow, "Stakeholder Mapping", *Proceedings of the 2nd International Conference on Information Systems* (1991) — the influence × interest grid.
+- R. Mitchell, B. Agle, D. Wood, "Toward a Theory of Stakeholder Identification and Salience", *Academy of Management Review* (1997) — power, legitimacy, urgency.
+- PMI, *PMBOK Guide* (6th ed., 2017) — the engagement assessment matrix (current and target).
+Described in our own words.

@@ -1,42 +1,42 @@
-# Rejestr ryzyk i akceptacja ryzyka
+# The risk register and risk acceptance
 
-Spis treści: 1. Pola rejestru · 2. Szablon wiersza · 3. Zapis akceptacji · 4. Uprawnienia · 5. Wygaśnięcie i przegląd
+Contents: 1. Register fields · 2. A row template · 3. The acceptance record · 4. Authority levels · 5. Expiry and review
 
-## 1. Pola rejestru
-ID · tytuł · opis (przyczyna → zdarzenie → skutek) · aktywo/proces · kategoria (dane, dostępność, dostawca, ludzie,
-zgodność) · źródło (model zagrożeń, audyt, incydent, dostawca) · właściciel ryzyka · prawdopodobieństwo i wpływ
-(inherentne) · ocena inherentna · istniejące kontrole · opcja postępowania · plan (zadania, właściciele, terminy) ·
-prawdopodobieństwo i wpływ rezydualne · ocena rezydualna · status (otwarte, w postępowaniu, utrzymane, zamknięte) ·
-data ostatniego przeglądu i następnego · powiązania (ID kontroli w macierzy, ADR, zgłoszenie).
+## 1. Register fields
+ID · title · description (cause → event → consequence) · asset/process · category (data, availability, vendor, people,
+compliance) · source (threat model, audit, incident, vendor) · risk owner · likelihood and impact
+(inherent) · inherent score · existing controls · treatment option · plan (tasks, owners, deadlines) ·
+residual likelihood and impact · residual score · status (open, in treatment, retained, closed) ·
+the date of the last and the next review · links (the control ID in the matrix, ADR, ticket).
 
-## 2. Szablon wiersza [przykład]
-| ID | Opis | Właściciel | Inh. | Opcja | Plan | Rez. | Status | Następny przegląd |
+## 2. A row template [example]
+| ID | Description | Owner | Inh. | Option | Plan | Res. | Status | Next review |
 |---|---|---|---|---|---|---|---|---|
-| R-017 | Przejęcie konta partnera w panelu bez MFA → wyciek zamówień | dyr. sprzedaży | 16 | modyfikacja + utrzymanie przejściowe | MFA do 2027-03-31 (Z-212) | 9 | w postępowaniu | 2027-01-15 |
+| R-017 | Takeover of a partner account in a portal without MFA → a leak of orders | sales director | 16 | modification + temporary retention | MFA by 2027-03-31 (Z-212) | 9 | in treatment | 2027-01-15 |
 
-Zasady: jeden właściciel (osoba, nie zespół); ryzyko bez planu i terminu nie jest „w postępowaniu”; zamknięcie ryzyka
-wymaga dowodu (test, skan, umowa), nie deklaracji.
+Rules: one owner (a person, not a team); a risk without a plan and a deadline is not "in treatment"; closing a risk
+requires evidence (a test, a scan, a contract), not a declaration.
 
-## 3. Zapis akceptacji ryzyka (risk acceptance record)
-Nagłówek: `Akceptacja ryzyka R-017` · wersja · data.
-- Ryzyko (opis i ocena inherentna/rezydualna, FAIR: przedział straty rocznej, jeśli policzono).
-- Dlaczego nie postępujemy w pełni teraz (koszt, termin, zależność) i **alternatywy rozważone**.
-- Kontrole kompensujące i ich dowód.
-- Warunki unieważnienia (incydent, zmiana zakresu, nowa podatność, zmiana apetytu).
-- Właściciel ryzyka akceptujący (imię, rola, uprawnienie), data decyzji, **ważne do** (data), osoba przeglądu.
-- Konsultowani i informowani (CISO, prawnik, IOD, finanse).
-- Podpis akceptującego. Zapis i identyfikacja podpisu wg procedur firmy; agent przygotowuje projekt, nie podpisuje.
+## 3. The risk acceptance record
+Header: `Risk acceptance R-017` · version · date.
+- The risk (description and inherent/residual score, FAIR: the annual loss range, if calculated).
+- Why we are not treating it fully now (cost, deadline, dependency) and **the alternatives considered**.
+- Compensating controls and their evidence.
+- Revocation conditions (an incident, a change of scope, a new vulnerability, a change of appetite).
+- The accepting risk owner (name, role, authority), the decision date, **valid until** (a date), the reviewer.
+- Consulted and informed (CISO, lawyer, DPO, finance).
+- The signature of the acceptor. Recording and identifying the signature per the company's procedures; the agent prepares a draft, it does not sign.
 
-## 4. Uprawnienia do akceptacji [przykład, ustala zarząd w kryteriach]
-| Ocena rezydualna | Kto akceptuje | Maks. okres |
+## 4. Authority to accept [example, set by the board in the criteria]
+| Residual score | Who accepts | Max. period |
 |---|---|---|
-| niska | kierownik zespołu | 24 mies. |
-| średnia | dyrektor obszaru | 12 mies. |
-| wysoka | członek zarządu + CISO informowany | 6 mies. |
-| krytyczna | nie akceptujemy; postępowanie albo unikanie, wyjątkowo zarząd | — |
-Zasada rozdziału: osoba, która zarządza kontrolą lub wnioskuje o wyjątek, nie jest jedynym akceptującym.
+| low | team manager | 24 months |
+| medium | area director | 12 months |
+| high | board member + CISO informed | 6 months |
+| critical | we do not accept; treatment or avoidance, exceptionally the board | — |
+Separation rule: the person who manages the control or requests the exception is not the only acceptor.
 
-## 5. Wygaśnięcie i przegląd
-Kalendarz wygasających akceptacji (alert 30 dni przed). Po wygaśnięciu ryzyko wraca do postępowania; przedłużenie
-to nowa decyzja z aktualnymi danymi, a nie automatyczny zapis. KRI „akceptacje po terminie” raportowane kwartalnie.
-Akceptacja wyjątku od polityki bezpieczeństwa jest tym samym zapisem (sec-governance-compliance: wyjątki w macierzy).
+## 5. Expiry and review
+A calendar of expiring acceptances (an alert 30 days before). After expiry the risk returns to treatment; an extension
+is a new decision with current data, not an automatic entry. The KRI "overdue acceptances" reported quarterly.
+Accepting an exception to the security policy is the same record (sec-governance-compliance: exceptions in the matrix).

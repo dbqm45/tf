@@ -1,106 +1,106 @@
 ---
 name: ai-fine-tuning
-description: Użyj przy dostrajaniu modelu na własnych danych — prompt, RAG czy fine-tuning, dane, SFT i LoRA, DPO, destylacja, ewaluacja przed i po, licencje.
+description: Use for fine-tuning a model on your own data — prompt, RAG or fine-tuning, data, SFT and LoRA, DPO, distillation, before-and-after evaluation, licences.
 metadata:
   review: "2027-04-17"
-  catalog: "Użyj, gdy rozważasz lub prowadzisz dostrajanie modelu językowego na własnych danych — drabina prompt, RAG, fine-tuning i kiedy dostrajanie pomaga (format, styl, wąskie zadanie, mniejszy tańszy model) a kiedy nie (brak wiedzy), zbieranie, czyszczenie i deduplikacja danych, podział na zbiory, formaty czatu, jakość etykiet, SFT, metody oszczędne (LoRA, QLoRA, PEFT) z punktami startowymi hiperparametrów, strojenie preferencji (DPO, przegląd RLHF), destylacja z większego modelu (licencje wyników modelu nauczyciela), ewaluacja przed i po na zamrożonym zbiorze, przeuczenie i zapominanie, licencje danych i modeli, prywatność, API dostawcy czy własne trenowanie (TRL, PEFT, Unsloth, Axolotl). Nie do metody ewaluacji (ai-evals), RAG (ai-rag), potoku MLOps (ai-mlops), hostowania modelu (ops-ai-inference), potoków danych (data-engineering), RODO (arch-privacy-compliance) ani zmniejszania modelu po treningu (ai-model-optimization)."
-  keywords: "fine-tuning, finetuning, dostrajanie modelu, dotrenować model, własny model, LoRA, QLoRA, PEFT, SFT, DPO, RLHF, destylacja, distillation, nauczyciel uczeń, dane treningowe, zbiór treningowy, jsonl, chat template, rank, alpha, learning rate, przeuczenie, overfitting, catastrophic forgetting, zapominanie, Unsloth, Axolotl, TRL, Hugging Face, adapter, czy dotrenować czy RAG, mały model zamiast dużego"
+  catalog: "Use when you consider or carry out fine-tuning a language model on your own data — the prompt, RAG, fine-tuning ladder and when fine-tuning helps (format, style, a narrow task, a smaller cheaper model) and when it does not (missing knowledge), collecting, cleaning and deduplicating data, splitting into sets, chat formats, label quality, SFT, efficient methods (LoRA, QLoRA, PEFT) with hyperparameter starting points, preference tuning (DPO, an overview of RLHF), distillation from a larger model (licences of the teacher model's outputs), before-and-after evaluation on a frozen set, overfitting and forgetting, data and model licences, privacy, a provider API or your own training (TRL, PEFT, Unsloth, Axolotl). Not for the evaluation method (ai-evals), RAG (ai-rag), the MLOps pipeline (ai-mlops), hosting the model (ops-ai-inference), data pipelines (data-engineering), GDPR (arch-privacy-compliance) or shrinking the model after training (ai-model-optimization)."
+  keywords: "fine-tuning, finetuning, dostrajanie modelu, dotrenować model, własny model, LoRA, QLoRA, PEFT, SFT, DPO, RLHF, destylacja, distillation, nauczyciel uczeń, dane treningowe, zbiór treningowy, jsonl, chat template, rank, alpha, learning rate, przeuczenie, overfitting, catastrophic forgetting, zapominanie, Unsloth, Axolotl, TRL, Hugging Face, adapter, czy dotrenować czy RAG, mały model zamiast dużego, model fine-tuning, train the model further, own model, teacher student, training data, training set, forgetting, fine-tune or RAG, a small model instead of a large one, fine-tune the model on our documentation, fine-tune on all the docs, learn the company, teach the model our knowledge, fine-tuning or RAG, does fine-tuning make sense, bot makes up details"
 ---
 
-# Dostrajanie modeli — od decyzji do porównania przed i po
+# Fine-tuning models — from the decision to a before-and-after comparison
 
-Dostrajanie zmienia **zachowanie** modelu (format, styl, wąskie zadanie), a nie dodaje mu aktualnej wiedzy.
-Skill prowadzi od decyzji „czy w ogóle” do ewaluacji. Metodę oceny opisuje **ai-evals**, RAG — **ai-rag**,
-potok produkcyjny — **ai-mlops**, serwowanie wyniku — **ops-ai-inference** (`.claude/skills/ops-ai-inference/SKILL.md`).
+Fine-tuning changes the model's **behaviour** (format, style, a narrow task), it does not add current knowledge to it.
+The skill leads from the decision "whether at all" to the evaluation. The assessment method is described by **ai-evals**, RAG — by **ai-rag**,
+the production pipeline — by **ai-mlops**, serving the result — by **ops-ai-inference** (`.claude/skills/ops-ai-inference/SKILL.md`).
 
-## Procedura
-1. **Zbiór ewaluacyjny najpierw.** Zanim cokolwiek trenujesz, zbierz zamrożony zbiór z zadaniami z produkcji
-   (metoda: **ai-evals**), policz wynik modelu bazowego z dobrym promptem. Bez tego „lepiej” nic nie znaczy.
-2. **Drabina decyzji** — idź od najtańszego szczebla i schodź niżej dopiero z dowodem z zbioru z kroku 1:
-   | Objaw | Pierwszy ruch |
+## Procedure
+1. **The evaluation set first.** Before you train anything, collect a frozen set with tasks from production
+   (the method: **ai-evals**), compute the score of the base model with a good prompt. Without it "better" means nothing.
+2. **The decision ladder** — go from the cheapest rung and go lower only with evidence from the set from step 1:
+   | Symptom | First move |
    |---|---|
-   | model nie zna faktów firmy, zmyśla, wiedza się zmienia | RAG (**ai-rag**), nie dostrajanie |
-   | zły format, ton, niestabilne wyjście | lepszy prompt, przykłady w promptcie, structured output (**eng-llm-features**) |
-   | prompt jest długi i drogi, a zadanie wąskie i powtarzalne | fine-tuning małego modelu |
-   | opóźnienie lub koszt za duże przy dużym modelu | destylacja lub fine-tuning mniejszego modelu |
-   | styl lub preferencje trudne do opisania, łatwe do porównania | SFT, potem ewentualnie DPO |
-   Fine-tuning i RAG się nie wykluczają: dostrojony model może lepiej czytać wstawiony kontekst.
-3. **Dane** (szczegóły: `references/data-and-hyperparameters.md`):
-   - źródło i podstawa prawna: dane osobowe bez podstawy odpadają, licencja źródła zapisana (krok 8);
-   - czyszczenie (kodowanie, puste i ucięte odpowiedzi, szablony), **deduplikacja** dokładna i przybliżona;
-   - **podział według jednostki** (klient, rozmowa, zgłoszenie), nie losowych wierszy, i dopiero po deduplikacji;
-   - format czatu zgodny z szablonem modelu (`messages` z rolami), strata liczona tylko na odpowiedziach asystenta;
-   - jakość etykiet ważniejsza niż liczba: przejrzyj losową próbkę ręcznie, przy ocenie ludzkiej dwóch oceniających
-     i zgodność między nimi.
-   Zacznij od małego zbioru i narysuj krzywą uczenia (25/50/100% danych); płaska krzywa oznacza, że problemem
-   są dane lub zadanie, nie ich ilość.
-4. **Metoda:**
-   - **SFT** (uczenie na parach wejście → pożądane wyjście) to domyślny start.
-   - **LoRA/QLoRA (PEFT)** trenuje małe adaptery zamiast wszystkich wag; QLoRA robi to na modelu zamrożonym w 4 bitach.
-     Tańsze w pamięci i szybkie do iteracji. Punkty startowe: `references/data-and-hyperparameters.md`.
-   - **Pełne dostrajanie** tylko gdy LoRA o wysokiej randze mierzalnie nie wystarcza, a masz pamięć i dużo danych.
-   - **DPO** (pary „lepsza / gorsza odpowiedź”, bez osobnego modelu nagrody) po SFT, gdy cel to preferencje.
-     RLHF z modelem nagrody i uczeniem ze wzmocnieniem jest cięższy; sięgaj po niego z zespołem, który go utrzyma.
-5. **Destylacja** (nauczyciel → uczeń): duży model generuje odpowiedzi na **prawdziwe prompty z domeny**, odfiltruj je
-   weryfikatorem lub sędzią, uczeń trenuje SFT-em. Przed startem sprawdź warunki użycia wyników nauczyciela (krok 8)
-   i czy prompty nie zawierają danych osobowych.
-   Destylacja **agenta**: zamiast SFT na pełnych trajektoriach nauczyciela poprawiaj tylko błędne tury ucznia (korekta
-   on-policy, jak DAgger) i oceniaj w docelowym harnessie — w jednym preprincie pełne trajektorie obniżyły wynik
-   z 78% do 63%, a korekta tur dała ok. 80% (źródło niżej; jedno badanie, ramiona różniły się też danymi).
-6. **Trening:** zapisuj konfigurację, ziarno, wersję danych (skrót) i bibliotek; jedna zmiana na przebieg.
-   Obserwuj stratę treningową **i** walidacyjną oraz metrykę zadania. Rozjazd (trening spada, walidacja rośnie lub stoi)
-   to przeuczenie: mniej epok (zwykle 1–3 [heurystyka]), więcej danych, niższy learning rate, mniejsza ranga.
-7. **Ewaluacja przed i po** na tym samym zamrożonym zbiorze (**ai-evals**): model bazowy z promptem vs dostrojony,
-   wynik na zadaniu **i** na zbiorze regresji ogólnych umiejętności (zapominanie katastroficzne: model świetny w zadaniu,
-   gorszy gdzie indziej). Zbiór ewaluacyjny nigdy nie trafia do treningu; sprawdź też wyciek (przybliżone duplikaty
-   między treningiem a ewaluacją). Dostrojony model wygrywa dopiero, gdy poprawa przekracza próg ustalony **przed** treningiem.
-8. **Licencje i prywatność:**
-   - **dane:** licencja i prawa do użycia w treningu; dane klientów i pracowników — podstawa, minimalizacja,
-     anonimizacja przed treningiem (**arch-privacy-compliance**); model może zapamiętać dane i trudno je z niego usunąć;
-   - **model bazowy:** licencja pozwala na dostrajanie i dystrybucję pochodnej? Wymogi nazewnictwa lub progi użytkowników;
-   - **wyniki nauczyciela:** regulaminy dostawców API często zabraniają trenowania na wynikach modeli konkurencyjnych;
-     licencje otwartych modeli bywają różne. Czytaj aktualny tekst, nie pamięć (`references/data-and-hyperparameters.md`).
-9. **Gdzie trenować:** API dostawcy (mało pracy, brak wag, uzależnienie, zmienna dostępność) czy własne trenowanie
-   (TRL + PEFT, Unsloth, Axolotl — kontrola i wagi, ale GPU i utrzymanie). Stan oferty sprawdź w dokumentacji
-   w dniu decyzji; zapisz decyzję jako ADR z kosztem. Wdrożenie i wersjonowanie adaptera: **ai-mlops**, **ops-ai-inference**.
+   | the model does not know the company's facts, invents, the knowledge changes | RAG (**ai-rag**), not fine-tuning |
+   | a wrong format, tone, unstable output | a better prompt, examples in the prompt, structured output (**eng-llm-features**) |
+   | the prompt is long and expensive, and the task narrow and repetitive | fine-tuning a small model |
+   | latency or cost too high with a large model | distillation or fine-tuning a smaller model |
+   | style or preferences hard to describe, easy to compare | SFT, then possibly DPO |
+   Fine-tuning and RAG do not exclude each other: a fine-tuned model can read the inserted context better.
+3. **Data** (details: `references/data-and-hyperparameters.md`):
+   - the source and the legal basis: personal data without a basis drops out, the source's licence recorded (step 8);
+   - cleaning (encoding, empty and truncated answers, templates), **deduplication** exact and approximate;
+   - **splitting by unit** (customer, conversation, ticket), not by random rows, and only after deduplication;
+   - a chat format matching the model's template (`messages` with roles), the loss computed only on the assistant's answers;
+   - label quality matters more than quantity: review a random sample manually, with human assessment two raters
+     and the agreement between them.
+   Start with a small set and draw a learning curve (25/50/100% of the data); a flat curve means that the problem
+   is the data or the task, not their quantity.
+4. **Method:**
+   - **SFT** (learning on input → desired output pairs) is the default start.
+   - **LoRA/QLoRA (PEFT)** trains small adapters instead of all weights; QLoRA does it on a model frozen in 4 bits.
+     Cheaper in memory and fast to iterate. Starting points: `references/data-and-hyperparameters.md`.
+   - **Full fine-tuning** only when LoRA with a high rank measurably is not enough, and you have the memory and a lot of data.
+   - **DPO** (pairs "better / worse answer", without a separate reward model) after SFT, when the goal is preferences.
+     RLHF with a reward model and reinforcement learning is heavier; reach for it with a team that will maintain it.
+5. **Distillation** (teacher → student): a large model generates answers to **real prompts from the domain**, filter them
+   with a verifier or a judge, the student trains with SFT. Before the start check the terms of use of the teacher's outputs (step 8)
+   and whether the prompts contain personal data.
+   Distilling **an agent**: instead of SFT on the teacher's full trajectories, correct only the student's wrong turns (on-policy
+   correction, like DAgger) and evaluate in the target harness — in one preprint full trajectories lowered the score
+   from 78% to 63%, and turn correction gave approx. 80% (the source below; one study, the arms also differed in data).
+6. **Training:** record the configuration, the seed, the data version (a hash) and the libraries; one change per run.
+   Watch the training **and** validation loss and the task metric. A divergence (training falls, validation rises or stalls)
+   is overfitting: fewer epochs (usually 1–3 [heuristic]), more data, a lower learning rate, a smaller rank.
+7. **Before-and-after evaluation** on the same frozen set (**ai-evals**): the base model with a prompt vs the fine-tuned one,
+   the score on the task **and** on a regression set of general skills (catastrophic forgetting: the model is great at the task,
+   worse elsewhere). The evaluation set never goes into training; also check for leakage (approximate duplicates
+   between training and evaluation). The fine-tuned model wins only when the improvement exceeds a threshold set **before** training.
+8. **Licences and privacy:**
+   - **data:** the licence and the rights to use it in training; customer and employee data — the basis, minimization,
+     anonymization before training (**arch-privacy-compliance**); the model can memorize data and it is hard to remove it from it;
+   - **the base model:** does the licence allow fine-tuning and distributing a derivative? Naming requirements or user thresholds;
+   - **the teacher's outputs:** the terms of API providers often forbid training on the outputs of competing models;
+     the licences of open models vary. Read the current text, not your memory (`references/data-and-hyperparameters.md`).
+9. **Where to train:** a provider API (little work, no weights, lock-in, changing availability) or your own training
+   (TRL + PEFT, Unsloth, Axolotl — control and weights, but GPUs and maintenance). Check the state of the offering in the documentation
+   on the day of the decision; record the decision as an ADR with the cost. Deploying and versioning the adapter: **ai-mlops**, **ops-ai-inference**.
 
-## Wynik
-Karta dostrajania (w repo, np. `docs/project/…`): Decyzja (szczebel drabiny, dlaczego) · Dane (źródło, rozmiar, skrót,
-podstawa prawna) · Metoda i hiperparametry · Wynik przed i po (zadanie + regresja) · Ryzyka i licencje · Co dalej.
+## Result
+A fine-tuning card (in the repo, e.g. `docs/project/…`): Decision (the ladder rung, why) · Data (source, size, hash,
+legal basis) · Method and hyperparameters · Result before and after (task + regression) · Risks and licences · Next steps.
 
-## Przykład
-Wejście: „Klasyfikator zgłoszeń Fakturki (12 kategorii) na dużym modelu API kosztuje 2 400 zł miesięcznie i trwa 3 s.”
-Wynik karty:
-- **Decyzja:** zadanie wąskie, prompt już dobrany, brak braków wiedzy → fine-tuning małego modelu 8B zamiast RAG.
-- **Ewaluacja:** 400 zgłoszeń ze zbioru zamrożonego (podział po kliencie), baseline: duży model 0,87 F1 [liczby przykładowe].
-- **Dane:** 5 200 zgłoszeń po deduplikacji (z 6 100), dane osobowe zamaskowane, etykiety z próbki 100 sztuk sprawdzone.
-- **Metoda:** QLoRA, wszystkie warstwy liniowe, 2 epoki; próg: ≥ 0,85 F1 i brak spadku na zbiorze regresji.
-- **Wynik:** 0,88 F1, 0,4 s [przykład]; zapisane w karcie razem ze skrótem zbioru i konfiguracją.
+## Example
+Input: "The Fakturki ticket classifier (12 categories) on a large API model costs 2,400 PLN a month and takes 3 s."
+The card result:
+- **Decision:** a narrow task, the prompt already tuned, no knowledge gaps → fine-tuning a small 8B model instead of RAG.
+- **Evaluation:** 400 tickets from the frozen set (split by customer), baseline: the large model 0.87 F1 [example numbers].
+- **Data:** 5,200 tickets after deduplication (from 6,100), personal data masked, labels from a sample of 100 items checked.
+- **Method:** QLoRA, all linear layers, 2 epochs; the threshold: ≥ 0.85 F1 and no drop on the regression set.
+- **Result:** 0.88 F1, 0.4 s [example]; recorded in the card together with the set's hash and the configuration.
 
-## Checklista
-- [ ] zamrożony zbiór ewaluacyjny i wynik bazowy policzone przed treningiem
-- [ ] drabina prompt → RAG → fine-tuning przejdzie się z dowodem na każdym szczeblu; brak wiedzy nie jest powodem do dostrajania
-- [ ] dane: podstawa prawna, deduplikacja, podział po jednostce, format zgodny z szablonem, próbka etykiet sprawdzona
-- [ ] hiperparametry z uzasadnionego punktu startowego, jedna zmiana na przebieg, konfiguracja zapisana
-- [ ] ewaluacja przed i po, także regresja ogólnych umiejętności; próg ustalony wcześniej
-- [ ] licencje: dane, model bazowy, wyniki nauczyciela; dane osobowe zanonimizowane
-- [ ] decyzja API vs własne trenowanie z kosztem; adapter wersjonowany
+## Checklist
+- [ ] a frozen evaluation set and the baseline score computed before training
+- [ ] the prompt → RAG → fine-tuning ladder walked through with evidence on every rung; missing knowledge is not a reason to fine-tune
+- [ ] data: legal basis, deduplication, split by unit, a format matching the template, a sample of labels checked
+- [ ] hyperparameters from a justified starting point, one change per run, configuration recorded
+- [ ] before-and-after evaluation, also the regression of general skills; the threshold set in advance
+- [ ] licences: data, the base model, the teacher's outputs; personal data anonymized
+- [ ] the API vs own training decision with the cost; the adapter versioned
 
-## Materiały dodatkowe
-- `references/data-and-hyperparameters.md` — przygotowanie danych, punkty startowe LoRA/QLoRA/DPO ze źródłami, narzędzia, licencje.
+## Additional materials
+- `references/data-and-hyperparameters.md` — data preparation, LoRA/QLoRA/DPO starting points with sources, tools, licences.
 
-## Źródła
-- Dettmers i in., „QLoRA” (arXiv 2305.14314, 2023) — NF4, podwójna kwantyzacja, optymalizatory stronicowane, model 65B na
-  jednej karcie 48 GB; wyszukiwanie 2026-10-17, treści pracy nie otwarto [niezweryfikowane].
-- Rafailov i in., „Direct Preference Optimization” (NeurIPS 2023) — DPO bez modelu nagrody i uczenia ze wzmocnieniem;
-  streszczenie z wyszukiwania 2026-10-17.
-- Biderman i in., „LoRA Learns Less and Forgets Less” (TMLR 2024) — LoRA zapomina mniej, ale też uczy się mniej
-  niż pełne dostrajanie, „nie zawsze”; streszczenia z wyszukiwania 2026-10-17.
-- Lee i in., „Deduplicating Training Data Makes Language Models Better” (ACL 2022) — duplikaty, nakładanie się
-  zbioru treningowego i walidacyjnego; wyszukiwanie 2026-10-17.
-- OpenAI wygasza samoobsługowe dostrajanie (komunikat z maja 2026, daty szczegółowe z wtórnych źródeł),
-  wyszukiwanie 2026-10-17 [niezweryfikowane — sprawdź stronę dostawcy].
-- Yu i in. (Salesforce AI), arXiv:2609.09134, preprint v1 z 8.09.2026, omówiony przez J. Wasowskiego („Model–Harness
-  Fit: Why A Better Teacher Makes A Worse Agent”, Medium, ok. 12.10.2026); preprintu nie otwarto, liczby z artykułu
-  [niezweryfikowane] — destylacja agenta, dopasowanie modelu do harnessu.
-Opisane własnymi słowami.
+## Sources
+- Dettmers et al., "QLoRA" (arXiv 2305.14314, 2023) — NF4, double quantization, paged optimizers, a 65B model on
+  a single 48 GB card; search 2026-10-17, the paper's content was not opened [unverified].
+- Rafailov et al., "Direct Preference Optimization" (NeurIPS 2023) — DPO without a reward model and reinforcement learning;
+  a summary from a search 2026-10-17.
+- Biderman et al., "LoRA Learns Less and Forgets Less" (TMLR 2024) — LoRA forgets less, but also learns less
+  than full fine-tuning, "not always"; summaries from a search 2026-10-17.
+- Lee et al., "Deduplicating Training Data Makes Language Models Better" (ACL 2022) — duplicates, overlap of
+  the training and validation set; search 2026-10-17.
+- OpenAI is phasing out self-service fine-tuning (an announcement from May 2026, detailed dates from secondary sources),
+  search 2026-10-17 [unverified — check the provider's page].
+- Yu et al. (Salesforce AI), arXiv:2609.09134, preprint v1 of 8.09.2026, discussed by J. Wasowski ("Model–Harness
+  Fit: Why A Better Teacher Makes A Worse Agent", Medium, approx. 12.10.2026); the preprint was not opened, numbers from the article
+  [unverified] — distilling an agent, fitting the model to the harness.
+Described in our own words.

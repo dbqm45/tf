@@ -1,54 +1,54 @@
 # Retry
 
-> **Spis treści:** Metadane · TLDR · Uwagi (stan 2026, poprawki względem źródła) · Problem · Rozwiązanie · Przykłady kodu · Zalety · Wady / tradeoffs · Powiązane wzorce · Kiedy używać / kiedy NIE używać
+> **Contents:** Metadata · TLDR · Notes (state in 2026, corrections to the source) · Problem · Solution · Code examples · Advantages · Disadvantages / tradeoffs · Related patterns · When to use / when NOT to use
 
-Źródło: frontendpatterns.dev/retry.
+Source: frontendpatterns.dev/retry.
 
-## Metadane
+## Metadata
 
-- **Kategoria:** Resilience
-- **Poziom:** Advanced
-- **Przykłady:** React, Native web
-- **Data aktualizacji:** 15 listopada 2025
-- **Autor:** Den Odell
+- **Category:** Resilience
+- **Level:** Advanced
+- **Examples:** React, Native web
+- **Last updated:** 15 November 2025
+- **Author:** Den Odell
 
 ## TLDR
 
-„Re-attempt failed requests with exponential backoff to handle transient network issues without
-showing errors for temporary problems.”
+"Re-attempt failed requests with exponential backoff to handle transient network issues without
+showing errors for temporary problems."
 
-## Uwagi (stan 2026, poprawki względem źródła)
+## Notes (state in 2026, corrections to the source)
 
-- **Błąd w przykładzie źródła poprawiony:** błąd „non-retryable” był rzucany wewnątrz `try` i łapany przez własny
-  `catch`, więc 404/401 też były ponawiane. Teraz błędy nieponawialne wychodzą od razu; `options` trafiają do
-  `fetch`; dodano `onRetry` (używane w przykładzie „User Feedback”) i obsługę anulowania.
-- Jitter: rekomendowany „full jitter” (`random(0, delay)`) — lepiej rozprasza klientów niż ±25%.
-- Ponawiaj tylko operacje idempotentne; `POST` — wyłącznie z kluczem idempotencji (`Idempotency-Key`), uzgodnionym z
-  backendem (be-api-design).
-- Warstwy danych mają retry wbudowany (TanStack Query `retry`/`retryDelay`, RxJS `retry({ delay })` w Angularze) —
-  nie pisz własnego, jeśli już ich używasz. Circuit breaker to zwykle zadanie backendu/bramy, rzadko przeglądarki.
+- **A bug in the source's example corrected:** the "non-retryable" error was thrown inside `try` and caught by its own
+  `catch`, so 404/401 were retried too. Now non-retryable errors go out at once; `options` are passed to
+  `fetch`; `onRetry` was added (used in the "User Feedback" example) and cancellation handling.
+- Jitter: "full jitter" (`random(0, delay)`) is recommended — it spreads clients out better than ±25%.
+- Retry only idempotent operations; `POST` — only with an idempotency key (`Idempotency-Key`), agreed with
+  the backend (be-api-design).
+- Data layers have retry built in (TanStack Query `retry`/`retryDelay`, RxJS `retry({ delay })` in Angular) —
+  do not write your own if you already use them. A circuit breaker is usually a job for the backend/gateway, rarely for the browser.
 
 ## Problem
 
-Awarie przejściowe (chwilowy problem sieciowy, timeout serwera, wdrożenie, restart kontenera)
-wyglądają dla użytkownika identycznie jak błędy trwałe. Przerwanie połączenia na 2 sekundy pokazuje
-ten sam komunikat błędu, co żądanie zasobu, który nie istnieje. Użytkownicy mobilni cierpią
-szczególnie — ciągłe zrywanie pakietów i przełączanie WiFi↔mobile sprawia, że „every dropout
-triggers an error dialog”.
+Transient failures (a momentary network problem, a server timeout, a deployment, a container restart)
+look to the user exactly like permanent errors. A 2-second connection drop shows
+the same error message as a request for a resource that does not exist. Mobile users suffer
+particularly — constant packet loss and switching WiFi↔mobile mean that "every dropout
+triggers an error dialog".
 
-## Rozwiązanie
+## Solution
 
-Automatyczna logika ponownych prób: gdy żądanie zawiedzie błędem **przejściowym** (5xx, timeout,
-brak sieci), spróbuj ponownie, zanim pokażesz błąd użytkownikowi — w większości przypadków druga
-próba się powiedzie i użytkownik nigdy się o awarii nie dowie.
+Automatic retry logic: when a request fails with a **transient** error (5xx, timeout,
+no network), try again before you show the error to the user — in most cases the second
+attempt succeeds and the user never learns about the failure.
 
-**Kluczowa technika — exponential backoff:** czekaj 1s przed pierwszą retry, 2s przed drugą, 4s
-przed trzecią. Dodaj losowy **jitter**, żeby uniknąć „thundering herd” (tysiące klientów ponawiających
-jednocześnie po tej samej awarii serwera). Ponawiaj **tylko** rzeczywiście przejściowe błędy —
-`404` (zasób nie istnieje) i `401` (brak autentykacji) nie naprawi się przez powtórzenie — i ustaw
-sensowny limit maksymalnej liczby prób.
+**The key technique — exponential backoff:** wait 1s before the first retry, 2s before the second, 4s
+before the third. Add a random **jitter** to avoid the "thundering herd" (thousands of clients retrying
+at the same time after the same server failure). Retry **only** truly transient errors —
+`404` (the resource does not exist) and `401` (no authentication) will not be fixed by repetition — and set
+a sensible limit on the maximum number of attempts.
 
-## Przykłady kodu
+## Code examples
 
 ### Exponential Backoff with Jitter
 
@@ -217,43 +217,43 @@ function DataLoader({ url }) {
 }
 ```
 
-## Zalety
+## Advantages
 
-- Przerwania sieciowe pozostają niewidoczne dla użytkownika.
-- Użytkownicy mobilni nie widzą ciągłych, powtarzających się komunikatów o błędach.
-- Aplikacja przetrwa wdrożenia serwera i zmiany infrastruktury bez widocznej awarii dla klienta.
-- Limitowanie żądań (rate limiting) staje się obsługiwalne dzięki nagłówkowi `Retry-After`.
-- Operacje odczytu (GET) stają się praktycznie „bulletproof” — bezpieczne do ponawiania z natury.
-- Znacznie mniej tarcia dla użytkownika — brak potrzeby ręcznego klikania „Try Again”.
+- Network interruptions stay invisible to the user.
+- Mobile users do not see constant, repeated error messages.
+- The application survives server deployments and infrastructure changes without a failure visible to the client.
+- Rate limiting becomes manageable thanks to the `Retry-After` header.
+- Read operations (GET) become practically "bulletproof" — safe to retry by nature.
+- Much less friction for the user — no need to click "Try Again" manually.
 
-## Wady / tradeoffs
+## Disadvantages / tradeoffs
 
-- Komunikat o błędzie opóźnia się — użytkownik czeka przez **wszystkie** próby, zanim dowie się o
-  rzeczywistym, trwałym problemie.
-- Bez jittera powstaje problem „thundering herd” — tysiące klientów przytłaczają serwer w tym samym
-  momencie po wspólnej awarii.
-- Tuning parametrów jest trudny: zbyt agresywne ponawianie marnuje zasoby, zbyt konserwatywne zmusza
-  użytkownika do zbyt długiego czekania.
-- Logika retry może **maskować** rzeczywiste problemy infrastrukturalne, które powinny zostać
-  zauważone i naprawione, nie tylko cierpliwie obchodzone.
-- Opóźnienia rosną szybko (1s, 2s, 4s, 8s, 16s) — po kilku próbach użytkownik może uznać, że
-  aplikacja się zawiesiła.
-- **Nigdy nie ponawiaj bezmyślnie operacji nieidempotentnych** — ponowienie `POST` może stworzyć
-  duplikat zasobu (np. dwa zamówienia z jednego kliknięcia „Kup”).
-- Circuit breaker dodaje realną złożoność implementacyjną.
-- Koszty transferu danych rosną na limitowanych, mobilnych połączeniach.
+- The error message is delayed — the user waits through **all** the attempts before learning about
+  a real, permanent problem.
+- Without jitter a "thundering herd" problem arises — thousands of clients overwhelm the server at the same
+  moment after a shared failure.
+- Tuning the parameters is hard: too aggressive retrying wastes resources, too conservative forces
+  the user to wait too long.
+- Retry logic can **mask** real infrastructure problems that should be
+  noticed and fixed, not just patiently worked around.
+- The delays grow fast (1s, 2s, 4s, 8s, 16s) — after a few attempts the user may conclude that
+  the application has frozen.
+- **Never thoughtlessly retry non-idempotent operations** — retrying a `POST` can create
+  a duplicate resource (e.g. two orders from one click of "Buy").
+- A circuit breaker adds real implementation complexity.
+- Data transfer costs grow on metered mobile connections.
 
-## Powiązane wzorce
+## Related patterns
 
 - [Error Handling](./error-handling.md) — Resilience
 - [Retry Pattern (Microsoft)](https://docs.microsoft.com/en-us/azure/architecture/patterns/retry)
 - [Exponential Backoff (Wikipedia)](https://en.wikipedia.org/wiki/Exponential_backoff)
 
-## Kiedy używać / kiedy NIE używać
+## When to use / when NOT to use
 
-Używaj dla operacji **idempotentnych** (GET, i starannie zaprojektowane PUT/DELETE) narażonych na
-przejściowe błędy sieciowe — to jest domyślnie bezpieczne i wysoko opłacalne. **Nie** ponawiaj
-automatycznie `POST`/operacji tworzących zasób, jeśli serwer nie gwarantuje idempotencji (np. przez
-`Idempotency-Key`) — ryzyko duplikatu jest gorsze niż jednorazowy, widoczny błąd. Nie buduj Circuit
-Breakera „na wszelki wypadek” dla aplikacji z małym ruchem — to jest narzut uzasadniony przy realnej
-skali i realnym ryzyku przeciążenia backendu, nie domyślny dodatek do każdego `fetch()`.
+Use it for **idempotent** operations (GET, and carefully designed PUT/DELETE) exposed to
+transient network errors — this is safe by default and highly cost-effective. Do **not** automatically retry
+`POST`/resource-creating operations if the server does not guarantee idempotency (e.g. through
+an `Idempotency-Key`) — the risk of a duplicate is worse than a one-off, visible error. Do not build a Circuit
+Breaker "just in case" for an application with little traffic — it is an overhead justified at real
+scale and with a real risk of overloading the backend, not a default addition to every `fetch()`.

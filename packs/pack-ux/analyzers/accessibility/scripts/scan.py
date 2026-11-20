@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 """
-Moduł `accessibility` tf analyze, piętro 0 (bez modelu i przeglądarki): statyczne sprawdzenie szablonów pod kątem
-WCAG 2.2 (ux-accessibility). HTML, JSX/TSX, Vue, Svelte, Astro i szablony Angulara.
+The `accessibility` module of tf analyze, tier 0 (no model or browser): a static check of templates against
+WCAG 2.2 (ux-accessibility). HTML, JSX/TSX, Vue, Svelte, Astro and Angular templates.
 
-  python3 scan.py --root <repo> [--files a,b]     # JSON Lines na stdout (kontrakt: .tf/factory/analyze.py)
+  python3 scan.py --root <repo> [--files a,b]     # JSON Lines on stdout (contract: .tf/factory/analyze.py)
 
-Reguły:
-- `img-without-alt` — `<img>` bez `alt` (puste `alt=""` dla grafiki dekoracyjnej jest w porządku; wiązania `:alt`,
-  `[alt]`, `alt={…}` się liczą), WCAG 1.1.1;
-- `control-without-name` — `<button>` albo `<a href>` bez tekstu (np. sama ikona) i bez `aria-label`,
-  `aria-labelledby`, `title` ani obrazu z niepustym `alt` w środku, WCAG 4.1.2;
-- `input-without-label` — `input` (poza hidden/submit/button/reset/image), `select`, `textarea` bez etykiety
-  (`<label for>`/`htmlFor` do jego `id`, otaczający `<label>`, `aria-label`, `aria-labelledby`, `title`);
-  placeholder nie jest etykietą, WCAG 1.3.1 i 3.3.2;
-- `click-without-keyboard` — `div`/`span`/`li`/`img` z obsługą kliknięcia bez kompletu `role`, `tabindex`
-  i obsługi klawiatury, WCAG 2.1.1 i 4.1.2;
-- `positive-tabindex` — `tabindex` większy od zera, WCAG 2.4.3;
-- `html-without-lang` — `<html>` bez `lang`, WCAG 3.1.1.
-Element ze spreadem atrybutów (`{...props}`, `v-bind="…"`) jest pomijany, bo atrybuty mogą przyjść z zewnątrz.
-Komponenty (nazwy z wielkiej litery) nie są sprawdzane — tylko elementy HTML. Kontrast, fokus i treść dynamiczna
-wymagają przeglądarki (kolejne piętro). Znalezienie = „sprawdź”. Testy i dokumentacja są pomijane. Tylko biblioteka
-standardowa.
+Rules:
+- `img-without-alt` — `<img>` without `alt` (an empty `alt=""` for decorative graphics is fine; bindings `:alt`,
+  `[alt]`, `alt={…}` count), WCAG 1.1.1;
+- `control-without-name` — `<button>` or `<a href>` without text (e.g. an icon only) and without `aria-label`,
+  `aria-labelledby`, `title` or an image with a non-empty `alt` inside, WCAG 4.1.2;
+- `input-without-label` — `input` (except hidden/submit/button/reset/image), `select`, `textarea` without a label
+  (`<label for>`/`htmlFor` pointing to its `id`, a wrapping `<label>`, `aria-label`, `aria-labelledby`, `title`);
+  a placeholder is not a label, WCAG 1.3.1 and 3.3.2;
+- `click-without-keyboard` — `div`/`span`/`li`/`img` with a click handler lacking the full set of `role`, `tabindex`
+  and keyboard handling, WCAG 2.1.1 and 4.1.2;
+- `positive-tabindex` — `tabindex` greater than zero, WCAG 2.4.3;
+- `html-without-lang` — `<html>` without `lang`, WCAG 3.1.1.
+An element with an attribute spread (`{...props}`, `v-bind="…"`) is skipped, since attributes may come from outside.
+Components (capitalised names) are not checked — only HTML elements. Contrast, focus and dynamic content
+need a browser (the next tier). A finding = "check this". Tests and documentation are skipped. Standard library
+only.
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-for _stream in (sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) nie zna „✓”, „⚠” — zawsze UTF-8
+for _stream in (sys.stdout, sys.stderr):  # Windows: the code page (cp1250) does not know "✓", "⚠" — always UTF-8
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
     except (AttributeError, ValueError):
@@ -45,7 +45,7 @@ TEST_OR_DOC = re.compile(r"(^|/)(tests?|__tests__|e2e|fixtures|spec|examples?|do
                          r"(^|/)test_[^/]*$|\.(md|mdx|rst|txt|adoc)$")
 EXT = {".html", ".htm", ".jsx", ".tsx", ".vue", ".svelte", ".astro", ".js", ".ts"}
 
-# Atrybuty: napisy, wyrażenia {…} z jednym poziomem zagnieżdżenia, reszta bez `>`.
+# Attributes: strings, {…} expressions with one level of nesting, the rest without `>`.
 ATTRS = r"(?:[^>{}\"']|\{(?:[^{}]|\{(?:[^{}]|\{[^{}]*\})*\})*\}|\"[^\"]*\"|'[^']*')*"
 TAG = re.compile(rf"<(img|button|a|input|select|textarea|div|span|li|html|[a-z][a-z0-9]*)(?=[\s/>])({ATTRS})>", re.S)
 ANY_TAG = re.compile(rf"</?[A-Za-z][\w.:-]*{ATTRS}>|<!--.*?-->|\{{/\*.*?\*/\}}", re.S)
@@ -57,7 +57,7 @@ SKIP_INPUT_TYPES = {"hidden", "submit", "button", "reset", "image"}
 
 
 def has_attr(attrs: str, name: str) -> bool:
-    """Atrybut zwykły, wiązanie (`:x`, `[x]`, `[attr.x]`, `v-bind:x`, `x={…}`) albo atrybut logiczny."""
+    """A plain attribute, a binding (`:x`, `[x]`, `[attr.x]`, `v-bind:x`, `x={…}`) or a boolean attribute."""
     return bool(re.search(rf"(?:^|[\s\[(.:]){re.escape(name)}\]?\s*(?==|[\s/>]|$)", attrs, re.I))
 
 
@@ -76,16 +76,16 @@ def emit(rule: str, rel: str, line: int, snippet: str, title: str, severity: str
 
 
 def inner_text(text: str, end: int, tag: str) -> str | None:
-    """Zawartość elementu do najbliższego zamknięcia albo None, gdy zamknięcia nie ma."""
+    """Element content up to the nearest closing tag, or None when there is no closing tag."""
     close = re.compile(rf"</{tag}\s*>", re.I)
     m = close.search(text, end)
     return text[end:m.start()] if m else None
 
 
 def named_by_content(inner: str) -> bool:
-    if re.search(r"<(ng-content|slot)\b", inner):          # treść wstawiana przez rodzica (Angular, Vue, Svelte)
+    if re.search(r"<(ng-content|slot)\b", inner):          # content inserted by the parent (Angular, Vue, Svelte)
         return True
-    if "{" in inner and re.search(r"\{(?!/\*)", inner):     # wyrażenie (JSX, Vue `{{ }}`, Angular) — zwykle tekst
+    if "{" in inner and re.search(r"\{(?!/\*)", inner):     # expression (JSX, Vue `{{ }}`, Angular) — usually text
         return True
     if re.search(r"<img\b[^>]*\balt\s*=\s*(\"[^\"]+\"|'[^']+'|\{)", inner, re.I):
         return True
@@ -95,7 +95,7 @@ def named_by_content(inner: str) -> bool:
 
 
 def wrapped_by_labelled_component(before: str) -> bool:
-    """Pole wewnątrz niezamkniętego komponentu z etykietą (`<Field label="…">`, `<FormItem label={…}>`)."""
+    """A field inside an unclosed component with a label (`<Field label="…">`, `<FormItem label={…}>`)."""
     for m in re.finditer(rf"<([A-Z][\w.]*)({ATTRS})>", before, re.S):
         if re.search(r"(?:^|\s)label\s*=", m.group(2)) and not m.group(0).endswith("/>") \
                 and not re.search(rf"</{re.escape(m.group(1))}\s*>", before[m.end():]):
