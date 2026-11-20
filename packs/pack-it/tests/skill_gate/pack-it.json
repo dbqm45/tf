@@ -72,8 +72,8 @@
   "offline": "2026-11-20"
  },
  "arch-quality-attributes": {
-  "fingerprint": "a711f576a1dcab0f",
-  "offline": "2026-11-18"
+  "fingerprint": "95c7fcad139fe5e0",
+  "offline": "2026-11-20"
  },
  "arch-system-design": {
   "fingerprint": "fda18aaf7f43cf1c",
@@ -123,8 +123,20 @@
   "fingerprint": "d3f16c1ad0675592",
   "offline": "2026-11-18"
  },
+ "ddd-archetype-lookup": {
+  "fingerprint": "2f567e947e3a8a02",
+  "offline": "2026-11-20",
+  "model_previous": {
+   "report": ".tf/logs/evals/2026-11-20-gate-ddd-archetype-lookup.md",
+   "cost": 1.36,
+   "haiku": "5/5",
+   "sonnet": "5/5",
+   "date": "2026-11-20",
+   "note": "for an earlier version of the skill"
+  }
+ },
  "ddd-archetypes": {
-  "fingerprint": "cf54c1bfe54a3a5a",
+  "fingerprint": "5d283b37d16c0aa0",
   "offline": "2026-11-20"
  },
  "ddd-connascence-analysis": {

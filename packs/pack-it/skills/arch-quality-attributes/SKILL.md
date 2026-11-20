@@ -4,6 +4,7 @@ description: Use for quality attributes — scenarios, trade-offs, fitness funct
 metadata:
   review: "2027-10-17"
   catalog: "Use when establishing architectural drivers — quality attribute scenarios (performance, availability, security, modifiability…), constraints, prioritization (the utility tree), trade-offs, fitness functions and choosing an architecture style (modular monolith, microservices, events). Not for choosing specific technologies (arch-tech-selection)."
+  keywords: "wymagania niefunkcjonalne, wymagania jakościowe, system ma być szybki, wysoka dostępność, mierzalne wymaganie, scenariusz jakości, cel czasu odpowiedzi, drzewo użyteczności, kompromisy architektoniczne, wybór stylu architektury, monolit czy mikrousługi, non-functional requirements, quality requirements, fast and available, high availability, measurable requirement, quality attribute scenario, response time target, utility tree, architecture trade-offs, choose an architecture style, monolith or microservices"
 ---
 
 # Quality attributes and architecture styles

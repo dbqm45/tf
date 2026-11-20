@@ -48,6 +48,7 @@ template is not an artifact.
 | `02-domain/event-storming/<id>/` | the facilitator | ddd-event-storming (pack-it) | the analyst: events and processes | skip when the process is simple |
 | `02-domain/concepts/<pojecie>.md` | the domain analyst | ddd-deep-modeling (pack-it) | the implementer: a difficult concept | only difficult concepts |
 | `02-domain/archetypes/<archetyp>-<obszar>.md` | the domain analyst | ddd-archetypes (pack-it) | the architect, the implementer | when an archetype fits |
+| `02-domain/archetypes/lookup-<data>.md` | the domain analyst | ddd-archetype-lookup (pack-it) | the analyst, the architect: where existing code would gain from an archetype, in which order | existing code only |
 | `02-domain/algorithms.md` | the domain analyst | ddd-algorithm-recognition (pack-it) | the implementer: a hidden algorithmic problem | when there is one |
 | `02-domain/connascence/<a>-<b>.md`, `02-domain/connascence/<a>-<b>.frame.md` | the domain analyst | ddd-connascence-analysis (pack-it) | the architect: the cost of coupling | in a dispute about boundaries |
 | `02-domain/stress/<metryka>.md`, `02-domain/_blind/brief.md`, `02-domain/_blind/competitors.md` | the analyst + the blind analyst | ddd-model-stress-test (pack-it) | the architect: will the model withstand the requirements | skip |
