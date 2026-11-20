@@ -1,58 +1,89 @@
-head: Użyj przy surowych materiałach (wywiady, notatki, tablice ES) — obszary biznesowe z dowodami, sprzeczności. Użyj, gdy z surowych materiałów (wywiady, notatki, zdjęcia tablic Event Stormingu, dokumenty) trzeba wyprowadzić obszary biznesowe OPARTE NA DOWODACH — ocena „czy warto”, bank cytatów, progi dowodowe, wykrywanie sprzeczności, pytania strategiczne, zamrożenie obszarów. Nie do prowadzenia warsztatu (ddd-event-storming) ani granic kontekstów (ddd-strategic-analysis).
-# Od materiałów do obszarów biznesowych (intake)
+head: Użyj przy zamianie transkrypcji wywiadów, notatek lub zdjęć tablic Event Storming na obszary biznesowe poparte dosłownymi cytatami albo przy krytyce pytań do wywiadów. Użyj, gdy surowy materiał z odkrywania (transkrypcje wywiadów, notatki, dokumenty, zdjęcia lub eksporty tablic Event Storming) ma się stać zamrożoną, popartą dowodami listą obszarów biznesowych — ocena wstępna, czy modelowanie się opłaca (trzy pytania), bramka rozmiaru, czytanie tablic jako ponumerowanych przepływów, bank dowodów z dosłownymi cytatami i lokalizacjami, sprzeczności wykrywane przez osobnego krytyka, pytania strategiczne, obszary z progiem 3 mocnych cytatów z 2 źródeł i zamrożenie przez człowieka; plus wsparcie badań z użytkownikami (plan, scenariusz wywiadu i krytyka pytań, ankieta, kryteria decyzji, synteza). Nie do prowadzenia warsztatu (ddd-event-storming) ani wyznaczania granic kontekstów (ddd-strategic-analysis).
+# Przyjęcie materiału z odkrywania — od surowego materiału do zamrożonych obszarów biznesowych
 
-Cel: z materiałów źródłowych powstaje **zamrożona lista obszarów biznesowych**, w której każde twierdzenie ma cytat
-ze źródła. To wejście do analizy strategicznej — obszar to jeszcze **nie** kontekst ani moduł.
-Zasada nadrzędna: **cytować wolno tylko bank dowodów**; czego nie ma w banku, tego agent nie twierdzi.
+Surowy materiał (transkrypcje wywiadów, notatki, dokumenty, zdjęcia lub eksporty tablic) staje się listą obszarów
+biznesowych, w której każde twierdzenie wskazuje dosłowny cytat. Agent znajduje i porządkuje; człowiek odpowiada,
+rozstrzyga i zamraża. Brak plików → poproś o nie; nigdy nie zmyślaj cytatu.
 
-## Przebieg (każdy krok kończy się bramką — protokół w ddd-facilitation)
-| # | Krok | Wynik w `docs/project/` | Szczegóły |
+## Przebieg — każdy krok kończy się bramką człowieka (ddd-facilitation)
+| # | Krok | Wynik (w `docs/project/`) | Szczegóły |
 |---|---|---|---|
-| 0 | **Ocena wstępna („czy warto modularyzować?”)** — zawsze trzy pytania do człowieka | `01-discovery/pre-flight.md` | niżej |
-| 1 | **Inwentarz i bramka rozmiaru** — lista źródeł z rozmiarem i typem; powyżej ~150 KB tekstu zapytaj: wszystko / wybrane / stop | sekcja w `corpus.md` | przetwarzaj źródło po źródle w podagentach, do głównego wątku wracają tylko indeksy |
-| 2 | **Odczyt tablic** (zdjęcia/eksporty) | `02-domain/boards/<nazwa>.es.md` | `references/board-reading.md` |
-| 3 | **Bank dowodów** | `02-domain/corpus.md` | `references/corpus.md` |
-| 4 | **Sprzeczności** — osobny agent-krytyk, tylko wykrywa | `02-domain/contradictions.md` | `references/contradictions.md` |
-| 5 | **Pytania strategiczne** — PRZED grupowaniem, bo odpowiedzi ważą obszary | `02-domain/strategic-gaps.md` | `references/strategic-questions.md` |
-| 6 | **Rozmowa** — pytania o luki i sprzeczności; odpowiedzi człowieka trafiają do banku jako nowe źródło | `02-domain/user-answers.md` | ddd-facilitation → bramki |
-| 7 | **Obszary** — grupowanie cytatów, progi, zatwierdzenie i zamrożenie | `02-domain/areas.md` | niżej |
+| 0 | Ocena wstępna: czy modelowanie się opłaca? | `01-discovery/pre-flight.md` | niżej |
+| 1 | Inwentarz źródeł i bramka rozmiaru | lista źródeł z rozmiarami | niżej |
+| 2 | Czytanie tablic | `02-domain/boards/<name>.es.md` | `references/board-reading.md` |
+| 3 | Bank dowodów | `02-domain/corpus.md` | `references/corpus.md` |
+| 4 | Sprzeczności (osobny krytyk) | `02-domain/contradictions.md` | `references/contradictions.md` |
+| 5 | Pytania strategiczne | `02-domain/strategic-gaps.md` | `references/strategic-questions.md` |
+| 6 | Rozmowa z człowiekiem | `02-domain/user-answers.md` (nowe źródło w banku) | — |
+| 7 | Obszary | `02-domain/areas.md` | niżej |
 
-## Krok 0 — ocena wstępna
-Trzy pytania zadawane zawsze (materiały mogą tylko podpowiedzieć odpowiedź, rozstrzyga człowiek):
-1. **Cykl życia** — czy to prototyp / rozwiązanie jednorazowe?
-2. **Zakres** — czy zakres jest z góry jednym modułem?
-3. **Złożoność** — czy są reguły, konkurencja o zasoby, integracje, czy tylko przechowywanie danych?
-Kolejność ważności przy odmowie: jednorazowe > z góry jeden moduł > brak złożoności. Odmowa to też wynik:
-zaproponuj pracę taktyczną w jednym module lub prosty CRUD (ddd-deep-modeling). Zapisz werdykt z uzasadnieniem i sekcją
-„jeśli się nie zgadzasz”. Nic więcej nie zapisuj przed zatwierdzeniem werdyktu.
+Pytania strategiczne idą **przed** grupowaniem: odpowiedzi zmieniają wagę obszarów.
 
-## Krok 7 — obszary
-- **Próg obszaru:** co najmniej **3 mocne cytaty z co najmniej 2 różnych źródeł** (odpowiedzi człowieka to jedno źródło).
-  Mocny cytat niesie regułę, liczbę, próg, decyzję, krok procesu, problem, termin albo odpowiedzialność; samo wymienienie nazwy — nie.
-- Grupy poniżej progu → sekcja **„Kandydaci poniżej progu”** (z brakującymi dowodami), nie wyrzucaj ich.
-- **Nazwa obszaru** — słowami biznesu, w języku źródła; nie nazwą techniczną.
-- **Długość opisu proporcjonalna do liczby różnych faktów**: 3–4 cytaty → jedno zdanie; 5–9 → dwa–trzy; 10+ → akapit.
-  Nie dopisuj treści ponad dowody.
-- Każdy obszar: id, nazwa, opis, powiązanie z pytaniami strategicznymi, lista dowodów (id cytatów), liczba cytatów/źródeł,
-  flaga „wskazany przez człowieka”.
-- Bramka: przy każdym obszarze decyzja człowieka — przyjmij / zmień nazwę / połącz / rozdziel / odrzuć; potem osobne
-  pytanie o **zamrożenie**. Zamrożony `areas.md` ma status `accepted` (ustawia człowiek) i zmienia się tylko nową wersją.
-- Czego intake NIE robi: nie klasyfikuje Cynefin, nie wyznacza kontekstów, nie projektuje. To następne kroki (ddd-strategic-analysis,
-  ddd-algorithm-recognition, ddd-deep-modeling).
+## 0. Ocena wstępna — zawsze trzy pytania
+1. **Cykl życia:** to prototyp albo coś jednorazowego (skrypt migracji, raport uruchamiany raz)?
+2. **Zakres:** czy od początku zostanie jednym modułem?
+3. **Złożoność:** czy są reguły biznesowe, konkurencja o zasoby albo integracje — czy to zapis i wyświetlanie danych?
+Jeśli odpowiedzi mówią „nie warto”, kolejność powodów: jednorazowe > jeden moduł > brak złożoności. Zapisz werdykt
+z uzasadnieniem i sekcją „Jeśli się nie zgadzasz”; nie zapisuj niczego innego, dopóki człowiek nie zatwierdzi. Odmowa
+proponuje tańszą drogę: projekt taktyczny w jednym module albo zwykły CRUD (ddd-deep-modeling).
+
+## 1. Inwentarz i bramka rozmiaru
+Wypisz każde źródło z typem i rozmiarem. Powyżej mniej więcej **150 KB tekstu** zapytaj: przetworzyć wszystko / wybrane
+źródła / stop. Duży materiał przetwarzaj **osobno dla każdego źródła w oddzielnych subagentach**, które zwracają tylko
+swoją część banku (identyfikatory i lokalizacje), a potem scal — po kompresji kontekstu model potrafi „cytować” linie,
+których już nie widzi.
+
+## 2–3. Tablice i bank dowodów
+- Tablice czyta się jako ponumerowany przepływ na każdym torze, a nie stos karteczek według koloru; wszystko niepewne
+  jest oznaczone i nie jest dowodem, dopóki człowiek nie potwierdzi (`references/board-reading.md`).
+- Bank zawiera **dosłowne cytaty w języku źródła** z lokalizacją, domyślnie wszystko, co merytoryczne (bez powitań,
+  wypełniaczy, rozmów o spotkaniu, legendy tablicy). Bez parafrazy i tłumaczenia; pominięcia oznaczone `[…]`.
+- Mocny cytat = reguła, liczba, próg, decyzja, krok procesu, problem, termin lub odpowiedzialność. Samo pojęcie to
+  `[mention]` i nie liczy się do progu.
+- Weryfikuj tanio, bez modelu: `python3 .claude/hooks/project_record.py evidence` sprawdza, czy każdy cytat jest w swoim
+  źródle w podanym miejscu; nieznaleziony cytat to błąd, chyba że ma znacznik `[unverified]`.
+- Materiał symulowany lub wyobrażony (ddd-es-simulation) nigdy nie trafia do banku.
+
+## 4. Sprzeczności
+**Osobny krytyk** — agent `sources-critic`, świeży kontekst, standardowy poziom — czyta bank i zwraca tylko tabelę
+sprzeczności (pusta tabela to poprawny wynik). Wykrycie to nie rozstrzygnięcie: rozstrzyga człowiek, rozstrzygnięcie
+trafia do `decisions.md`, przegrany cytat zostaje w banku z oznaczeniem `[superseded …]`. Rodzaje, test tego samego
+przedmiotu i format: `references/contradictions.md`.
+
+## 5. Pytania strategiczne
+Zestaw domyślny: pieniądze (zarabianie, tracenie, oszczędzanie), ryzyka i szanse, integracje i strony zewnętrzne,
+regulacje i audyty, miara sukcesu i co wygrywa w konflikcie celów. Dla każdego pytania najpierw lista luk, potem
+dopasowanie cytatów po znaczeniu: `references/strategic-questions.md`. Luki formułuj tak, by człowiek odpowiedział
+akapitem; odpowiedzi stają się nowym źródłem (lokalizacja = identyfikator pytania).
+
+## 7. Obszary
+- **Próg:** co najmniej **3 mocne cytaty z co najmniej 2 źródeł** (odpowiedzi człowieka liczą się jako jedno źródło).
+- Grupa poniżej progu trafia do sekcji `## Candidates below the threshold` z brakującymi dowodami — nie jest odrzucana.
+- Każdy obszar: nagłówek `### A<n> <nazwa>` w słowach biznesu i języku źródła; opis o długości zależnej od liczby
+  odrębnych faktów (3–4 cytaty → jedno zdanie; 5–9 → dwa–trzy; 10+ → akapit), nic ponad dowody; dotykane pytania
+  strategiczne; linia `Evidence:` z identyfikatorami E; liczności; `Named by the human: yes/no`.
+- Bramka dla każdego obszaru: akceptuj / zmień nazwę / scal / podziel / odrzuć; potem osobne pytanie o zamrożenie.
+  Status `accepted` ustawia człowiek; późniejsze zmiany tylko jako nowa wersja.
+- Przyjęcie materiału nie klasyfikuje domen, nie wyznacza granic kontekstów (ddd-strategic-analysis) i nie projektuje.
+
+## Koszt i powtarzalność
+Tani model dla kroków 0–1 i czytania tablic; standardowy dla banku i grupowania; krytyk osobny i standardowy.
+Wyniki różnią się między uruchomieniami, więc wynik każdego źródła trzymaj w cache pod skrótem jego treści (zmiana
+unieważnia tylko to źródło), zamrażaj przez człowieka, a cytaty sprawdzaj skryptem (zero tokenów).
 
 ## Badania z użytkownikami
-Gdy dowodów od ekspertów jest za mało albo chodzi o użytkowników końcowych: plan badania, rekrutacja, scenariusz
-wywiadu (krytyka pytań: zostaw / przepisz / usuń), ankieta, kryteria decyzji i synteza — `references/user-research.md`.
+Gdy materiału jeszcze nie ma albo pytania do niego wymagają pracy: plan badania, krytyka scenariusza wywiadu (pytania
+hipotetyczne o przyszłość zamiast ostatniego konkretnego razu; zostaw / przepisz / usuń), ankieta, kryteria decyzji
+ustalone przed badaniem, synteza — `references/user-research.md`. Nagrania i transkrypcje to dane osobowe
+(arch-privacy-compliance).
 
-## Koszt i stabilność
-- Krok 0–1 i odczyt tablic: tani model; bank i grupowanie: std; krytyk sprzeczności: osobny agent std (świeży kontekst = niezależność).
-- Wyniki są niedeterministyczne — dlatego: pamięć podręczna po skrócie treści źródła (zmiana źródła unieważnia tylko jego wynik),
-  zamrażanie artefaktów przez człowieka, weryfikacja cytatów i progów skryptem: `python3 .claude/hooks/project_record.py evidence` (zero tokenów).
-- Materiały z symulacji lub z wyobraźni agenta nigdy nie trafiają do banku jako dowód.
-
-## Checklista
-- [ ] werdykt oceny wstępnej zatwierdzony przez człowieka
-- [ ] każdy cytat dosłowny, w języku źródła, z `źródło + miejsce`; `project_record.py evidence` przechodzi
-- [ ] sprzeczności wykryte przez osobnego krytyka; każda ma pytanie diagnostyczne i status
-- [ ] każdy obszar spełnia próg albo jest w „poniżej progu”
-- [ ] `areas.md` zamrożony decyzją człowieka; przekazanie do ddd-strategic-analysis
+## Przykład
+**Sytuacja:** „12 transkrypcji wywiadów z logistyki i zdjęcia dwóch tablic Event Storming; wyciągnij obszary biznesowe
+bez zmyślania.”
+**Wynik:**
+- Ocena wstępna: system na lata, kilka modułów, konkurencja o rampy załadunkowe → warto modelować; werdykt zapisany.
+- Rozmiar: 310 KB → człowiek wybiera „wszystko”; 14 subagentów (po jednym na źródło) buduje części banku S1–S14.
+- Bank: 412 wpisów, np. `- **E87** > "a truck waits no more than 40 minutes for a dock" — L118-119`.
+- Krytyk: 3 sprzeczności, np. E87 vs E203 (40 vs 60 minut dla tego samego typu rampy) z pytaniem „Który limit
+  obowiązuje dla chłodni?”
+- Obszary: A1 Planowanie ramp (11 cytatów, 5 źródeł) zaakceptowany; A4 Oceny kierowców (2 cytaty, 1 źródło) → poniżej progu.
