@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Standards skills from a git repository by URL (`dna.py standards add`, cloned in cache/standards/).
-python3 addons/dna/tests/test_standards_git.py — the repository is a local one (file://), no network."""
+"""Standards skills from a git repository by URL (`standards.py source add`, cloned in cache/standards/).
+python3 addons/standards/tests/test_sources_git.py — the repository is a local one (file://), no network."""
 from __future__ import annotations
 
 import json
@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.dont_write_bytecode = True
 
 from lib import verify  # noqa: E402
-from test_dna import repo  # noqa: E402
+from test_sources import repo  # noqa: E402
 
 
 def standards_repo() -> Path:
@@ -30,9 +30,9 @@ def standards_repo() -> Path:
 
 
 def run(root: Path, cfg: Path, *args) -> subprocess.CompletedProcess:
-    env = {**os.environ, "DNA_CONFIG": str(cfg), "DNA_OFFLINE": "0"}
-    return subprocess.run([sys.executable, str(ADDON / "dna.py"), *args, "--root", str(root), "--out",
-                           str(root / ".tf/addons/dna/out"), "--cache", str(root / ".tf/addons/dna/cache")],
+    env = {**os.environ, "STANDARDS_CONFIG": str(cfg), "STANDARDS_OFFLINE": "0"}
+    return subprocess.run([sys.executable, str(ADDON / "standards.py"), *args, "--root", str(root), "--out",
+                           str(root / ".tf/addons/standards/out"), "--cache", str(root / ".tf/addons/standards/cache")],
                           capture_output=True, text=True, env=env)
 
 
@@ -41,12 +41,12 @@ def test_add_by_url_learn_and_evidence():
     root = repo({"package.json": '{"name": "app"}'})
     cfg = Path(tempfile.mkdtemp()) / "dna.yaml"
     url = std.as_uri()
-    r = run(root, cfg, "standards", "add", url, "--ref", "v1.0.0", "--dir", "skills")
+    r = run(root, cfg, "source", "add", url, "--ref", "v1.0.0", "--dir", "skills")
     assert r.returncode == 0, r.stderr
-    assert "v1.0.0" in run(root, cfg, "standards", "list").stdout
+    assert "v1.0.0" in run(root, cfg, "source", "list").stdout
     r = run(root, cfg, "learn")
     assert r.returncode == 0, r.stdout + r.stderr
-    out = root / ".tf/addons/dna/out"
+    out = root / ".tf/addons/standards/out"
     assert verify.check_out(out, root) == []
     k = json.loads((out / "knowledge.json").read_text(encoding="utf-8"))
     d = {i["title"]: i for i in k["items"] if i["kind"] == "decision"}
@@ -57,21 +57,21 @@ def test_add_by_url_learn_and_evidence():
     assert "**/*.py" in d["Services must log with the request id"]["scope"]["paths"]
     assert "Forms must use react-hook-form" in (out / "rules" / "standards-fe.md").read_text(encoding="utf-8")
     # offline later: the cached clone is used
-    env = {**os.environ, "DNA_CONFIG": str(cfg), "DNA_OFFLINE": "1"}
-    r2 = subprocess.run([sys.executable, str(ADDON / "dna.py"), "learn", "--root", str(root), "--out", str(out),
-                         "--cache", str(root / ".tf/addons/dna/cache")], capture_output=True, text=True, env=env)
+    env = {**os.environ, "STANDARDS_CONFIG": str(cfg), "STANDARDS_OFFLINE": "1"}
+    r2 = subprocess.run([sys.executable, str(ADDON / "standards.py"), "learn", "--root", str(root), "--out", str(out),
+                         "--cache", str(root / ".tf/addons/standards/cache")], capture_output=True, text=True, env=env)
     assert r2.returncode == 0 and "Forms must use" in (out / "decisions.md").read_text(encoding="utf-8")
-    assert run(root, cfg, "standards", "remove", url).returncode == 0
-    assert "no standards configured" in run(root, cfg, "standards", "list").stdout
+    assert run(root, cfg, "source", "remove", url).returncode == 0
+    assert "no sources configured" in run(root, cfg, "source", "list").stdout
 
 
 def test_bad_url_is_reported_not_fatal():
     root = repo({"package.json": '{"name": "app"}'})
     cfg = Path(tempfile.mkdtemp()) / "dna.yaml"
-    run(root, cfg, "standards", "add", "file:///nonexistent/repo.git")
+    run(root, cfg, "source", "add", "file:///nonexistent/repo.git")
     r = run(root, cfg, "learn")
     assert r.returncode == 0, r.stderr
-    cov = (root / ".tf/addons/dna/out/coverage.md").read_text(encoding="utf-8")
+    cov = (root / ".tf/addons/standards/out/coverage.md").read_text(encoding="utf-8")
     assert "file:///nonexistent/repo.git: git clone failed" in cov
 
 

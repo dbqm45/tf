@@ -15,7 +15,7 @@ from pathlib import Path
 
 from .code import STYLING
 
-UI_FILES = (".tsx", ".jsx", ".vue", ".svelte", ".css", ".scss", ".less", ".ts", ".js")
+UI_FILES = (".tsx", ".jsx", ".vue", ".svelte", ".css", ".scss", ".less", ".ts", ".js", ".mjs", ".cjs")
 RAW = {"button": ["Button", "IconButton"], "input": ["TextField", "Input", "OutlinedInput"],
        "select": ["Select"], "textarea": ["TextField", "Textarea"], "a": ["Link"], "table": ["Table"],
        "dialog": ["Dialog", "Modal"]}
@@ -56,8 +56,10 @@ def changes(root: Path, base: str) -> tuple[dict[str, list[tuple[int, str]]], se
     return dict(added), new
 
 
-def check(root: Path, knowledge: dict, base: str) -> dict:
+def check(root: Path, knowledge: dict, base: str, decisions: list[dict] | None = None) -> dict:
     items = knowledge.get("items") or []
+    forbidden = {d["data"]["forbidden_import"]: d for d in decisions or []
+                 if (d.get("data") or {}).get("forbidden_import")}
     by = lambda topic: [i for i in items if (i.get("data") or {}).get("topic") == topic]  # noqa: E731
     comps = by("ui-component")
     ds = [c for c in comps if c["data"]["origin"] == "design-system"]
@@ -106,7 +108,13 @@ def check(root: Path, knowledge: dict, base: str) -> dict:
                 if names and "var(" not in text:
                     add("value-with-token", True, rel, line, f"{v} has a token: {names[0]}",
                         f"use {names[0]}" + (" (var(...))" if names[0].startswith("--") else ""))
-            im = IMPORT.search(text)
+            im = IMPORT.search(text) or re.search(r"""()()require\(['"]([^'"]+)['"]\)""", text)
+            if im and forbidden:
+                mod = im.group(3)
+                for name, d in forbidden.items():
+                    if mod == name or mod.startswith(name + "/"):
+                        add("forbidden-import", d.get("strength") == "soft", rel, line, f"{d['title']}",
+                            f"agreed rule {d['data'].get('rule_id') or d['id']} ({d['evidence'][0]})")
             if im:
                 named = [n.strip().split(" as ")[0] for n in (im.group(2) or "").split(",") if n.strip()]
                 for name in named + ([im.group(1)] if im.group(1) else []):

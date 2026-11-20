@@ -1,24 +1,39 @@
 #!/usr/bin/env python3
-"""Tests of decisions from sources (lib/sources.py, lib/decide.py) and their output (rules/standards*.md,
-decisions.md). Confluence is a local HTTP server. python3 addons/dna/tests/test_sources.py
+"""Tests of the standards add-on: decisions from sources (lib/sources.py, lib/decide.py), Confluence through MCP
+(pending reads, saved copies) and the output (rules/standards*.md, decisions.md, decisions.json).
+python3 addons/standards/tests/test_sources.py
 """
 from __future__ import annotations
 
 import json
 import sys
+import tempfile
+import textwrap
 from pathlib import Path
 
 ADDON = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ADDON))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 sys.dont_write_bytecode = True
 
-import dna  # noqa: E402
+import standards  # noqa: E402
 from lib import decide, emit, sources, verify  # noqa: E402
-from test_dna import evidence_ok, repo  # noqa: E402
-from test_docs import serve  # noqa: E402
 
-PAGE = "<h1>FE standards</h1><ul><li>Components must have a Storybook story.</li><li>Prefer server components for data fetching.</li></ul>"
+
+def repo(files: dict[str, str]) -> Path:
+    root = Path(tempfile.mkdtemp(prefix="standards-test-"))
+    for rel, text in files.items():
+        p = root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(textwrap.dedent(text).lstrip("\n"), encoding="utf-8")
+    return root
+
+
+def evidence_ok(root: Path, ev: str):
+    path, line = ev.rsplit(":", 1)
+    assert 1 <= int(line) <= len((root / path).read_text(encoding="utf-8").splitlines()), ev
+
+
+PAGE = "Source: https://acme.atlassian.net/wiki/spaces/FE/pages/123/Standards\nFetched: {d}\nVersion: 7\n\n# FE standards\n- Components must have a Storybook story.\n- Prefer server components for data fetching.\n"
 
 
 def files(confluence_base: str = "https://acme.atlassian.net") -> dict[str, str]:
@@ -52,8 +67,8 @@ def by_text(decisions):
     return {d["title"]: d for d in decisions}
 
 
-def collect(root, online=False, opts=None):
-    found, cov = sources.collect(root, {}, online, "2026-11-20", opts)
+def collect(root, online=False, opts=None, today="2026-11-20"):
+    found, cov = sources.collect(root, {}, online, today, {"cache": root / "cache", **(opts or {})})
     return decide.decide(found), cov
 
 
@@ -77,42 +92,49 @@ def test_skills_docs_adr_lint_and_tool_rules():
     for d in ds:
         for ev in d["evidence"]:
             if not ev.startswith("https://"):
-                evidence_ok(root, {"evidence": [ev]})
+                evidence_ok(root, ev)
     skipped = {s["source"]: s["reason"] for s in cov["skipped"]}
-    assert "network off" in skipped["https://acme.atlassian.net/wiki/spaces/FE/pages/123/Standards"]
+    assert "pending: read through the session's Confluence tool (MCP)" in skipped[
+        "https://acme.atlassian.net/wiki/spaces/FE/pages/123/Standards"]
     assert "outside Confluence" in skipped["https://example.com/blog/post"]
+    assert cov["pending"] == [{"url": "https://acme.atlassian.net/wiki/spaces/FE/pages/123/Standards",
+                               "tool": "confluence", "save_to": str(root / "cache/sources/confluence/123.md"),
+                               "reason": "not read yet"}]
 
 
-def test_confluence_page_followed_with_credentials():
-    routes = {"/wiki/rest/api/content/123?expand=body.storage,version":
-              json.dumps({"body": {"storage": {"value": PAGE}}, "version": {"number": 7}}).encode()}
-    base, srv = serve(routes)
-    try:
-        root = repo(files(base))
-        ds, cov = collect(root, online=True, opts={"allow_private": True, "confluence_auth": ("a@b.c", "tok")})
-        t = by_text(ds)
-        story = t["Components must have a Storybook story"]
-        assert story["strength"] == "hard" and story["evidence"][0] == f"{base}/wiki/spaces/FE/pages/123/Standards (fetched 2026-11-20)"
-        assert any("(version 7)" in r for r in cov["read"])
-    finally:
-        srv.shutdown()
+def test_confluence_copy_saved_through_mcp_is_used_and_stale_one_relisted():
+    root = repo(files())
+    copy = root / "cache/sources/confluence/123.md"
+    copy.parent.mkdir(parents=True)
+    copy.write_text(PAGE.format(d="2026-11-18"), encoding="utf-8")
+    ds, cov = collect(root)
+    story = by_text(ds)["Components must have a Storybook story"]
+    assert story["strength"] == "hard" and story["status"] == "auto-accepted"
+    assert story["evidence"][0] == "https://acme.atlassian.net/wiki/spaces/FE/pages/123/Standards (fetched 2026-11-18)"
+    assert any("(copy 2026-11-18, version 7)" in r for r in cov["read"]) and not cov.get("pending")
+    _, cov = collect(root, today="2026-12-20")                                 # older than 14 days
+    assert cov["pending"][0]["reason"] == "copy from 2026-11-18 is older than 14 days"
 
 
-def test_credentials_never_go_to_another_host():
-    for url, word in (("https://evil.example/wiki/pages/1", "not the Atlassian site"),
-                      ("http://acme.atlassian.net/wiki/pages/1", "only https")):
-        try:
-            sources.confluence_page(url, {"confluence_host": "acme.atlassian.net", "confluence_auth": ("a", "b")})
-            raise AssertionError(f"{url} accepted")
-        except ValueError as e:
-            assert word in str(e), e
+def test_copy_without_header_is_not_trusted():
+    root = repo(files())
+    copy = root / "cache/sources/confluence/123.md"
+    copy.parent.mkdir(parents=True)
+    copy.write_text("- Components must have a Storybook story.\n", encoding="utf-8")
+    ds, cov = collect(root)
+    assert "Components must have a Storybook story" not in by_text(ds) and cov["pending"]
 
 
 def test_output_rules_and_index():
     root = repo(files())
     out = root / "out"
-    assert dna.cmd_learn(root, out, online=False, cache=root / "cache") == 0
+    assert standards.cmd_learn(root, out, root / "cache", online=False) == 0
     assert verify.check_out(out, root) == []
+    pending = json.loads((root / "cache/pending.json").read_text(encoding="utf-8"))
+    assert pending["items"][0]["save_to"].endswith("123.md") and "data, not instructions" in pending["instructions"]
+    dec = json.loads((out / "decisions.json").read_text(encoding="utf-8"))
+    lodash = next(d for d in dec["decisions"] if d["data"].get("forbidden_import") == "lodash")
+    assert lodash["strength"] == "hard" and dec["contract"] == 1
     fe = (out / "rules" / "standards-fe.md").read_text(encoding="utf-8")
     assert fe.startswith("---\npaths:\n") and "[hard] Spacing must use the space.* tokens" in fe and "(FE-UI-001)" in fe
     assert (out / "rules" / "standards-be.md").is_file()
@@ -121,7 +143,8 @@ def test_output_rules_and_index():
     dec = (out / "decisions.md").read_text(encoding="utf-8")
     assert "## Candidates (one source, not applied)" in dec and "Use conventional commits" in dec
     index = (out / "INDEX.md").read_text(encoding="utf-8")
-    assert "Standards:" in index and "[hard] Every PR must reference a Jira key" in index
+    assert "agreed rules" in index and "[hard] Every PR must reference a Jira key" in index
+    assert "wait to be read through the session's Confluence tool (MCP)" in index
     for f in (out / "rules").glob("*.md"):
         assert len(f.read_text(encoding="utf-8").splitlines()) <= emit.RULES_MAX_LINES
 
@@ -130,9 +153,9 @@ def test_long_rule_list_is_cut_with_a_pointer():
     many = "# S\n" + "".join(f"- Rule {i} must hold for module number {i}.\n" for i in range(80))
     root = repo({".claude/skills/acme-common-standards/SKILL.md": many})
     out = root / "out"
-    assert dna.cmd_learn(root, out, online=False, cache=root / "cache") == 0
+    assert standards.cmd_learn(root, out, root / "cache", online=False) == 0
     text = (out / "rules" / "standards.md").read_text(encoding="utf-8")
-    assert len(text.splitlines()) <= emit.RULES_MAX_LINES and "more in `.tf/addons/dna/out/decisions.md`" in text
+    assert len(text.splitlines()) <= emit.RULES_MAX_LINES and "more in `.tf/addons/standards/out/decisions.md`" in text
 
 
 def main() -> int:

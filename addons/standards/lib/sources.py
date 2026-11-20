@@ -1,29 +1,30 @@
 """Decisions (standards, rules, agreements) from the project's sources, as candidates with a quote and evidence.
 
-Sources, in the order of the hierarchy (plan, section 4.3):
-  standards  — standards skills (dna.yaml `standards`, or skills named like *standards* in .claude/skills/), their
-               references/ and rules/, and the Confluence pages they link to (REST API, credentials from the
-               environment, sent only to the Atlassian site);
+Sources, in the order of the hierarchy:
+  standards  — standards skills (standards.yaml `sources`, or skills named like *standards* in .claude/skills/), their
+               references/ and rules/; skills may come from a git repository by URL (cloned in cache/standards/);
+               the Confluence pages they link to are read through the session's MCP tool (see `pending` below);
   adr        — architecture decision records (docs/adr, docs/decisions, adr, doc/adr);
   lint       — restricted imports in ESLint configuration (`no-restricted-imports` with a message);
   doc        — README, CONTRIBUTING, docs/**/*.md;
   tool-rules — instruction files of other agents: CLAUDE.md, AGENTS.md (without the factory's generated blocks),
                .cursor/rules/*.mdc, .github/copilot-instructions.md, .github/instructions/*.instructions.md.
+
+Confluence through MCP: a script cannot use the session's tools. For every linked page without a fresh copy the
+add-on lists a pending read (cache/pending.json, `provides.pending`): the agent reads the page with the Confluence
+tool connected in the session (read-only) and saves its text to the given file with the header lines
+`Source: <url>`, `Fetched: YYYY-MM-DD` (and `Version: <n>` when the tool gives it), then the next learn/refresh uses
+the copy. A copy older than `confluence.stale_after_days` (default 14) is used and listed for a re-read.
 A decision is a list item or a rule-ID line with normative words (must, never, always, should, prefer, avoid, use…,
 also Polish). No model: the quote is the line itself, evidence is `path:line` or the page URL with the fetch date.
 """
 from __future__ import annotations
 
-import base64
+import datetime as dt
 import hashlib
-import json
 import os
 import re
-import urllib.parse
-import urllib.request
 from pathlib import Path
-
-from .docs import _html_to_text, _public
 
 HARD = re.compile(r"\b(must|must not|never|do not|don't|shall|is required|are required|forbidden|not allowed|always|"
                   r"nie wolno|musi|muszą|nigdy|zawsze|wymagane|zakazane|zabronione)\b", re.I)
@@ -98,49 +99,21 @@ def extract(text: str, origin: str, kind: str, paths: list[str]) -> list[dict]:
     return out
 
 
-# ---------------------------------------------------------------- Confluence
+# ---------------------------------------------------------------- Confluence (through MCP)
 
-def _confluence_auth() -> tuple[str, str] | None:
-    email = next((os.environ[k] for k in ("CONFLUENCE_EMAIL", "ATLASSIAN_EMAIL", "JIRA_EMAIL", "ATLASSIAN_ADMIN_EMAIL")
-                  if os.environ.get(k)), None)
-    token = next((os.environ[k] for k in ("CONFLUENCE_API_TOKEN", "ATLASSIAN_API_TOKEN", "JIRA_API_TOKEN")
-                  if os.environ.get(k)), None)
-    return (email, token) if email and token else None
-
-
-def _site_host() -> str | None:
-    site = os.environ.get("ATLASSIAN_SITE") or os.environ.get("CONFLUENCE_BASE_URL") or os.environ.get("JIRA_BASE_URL")
-    if not site:
-        return None
-    return urllib.parse.urlsplit(site if "://" in site else f"https://{site}").hostname
-
-
-def confluence_page(url: str, opts: dict) -> tuple[str, str]:
-    """(text, version) of a Confluence page; credentials go only to the configured Atlassian site."""
-    parts = urllib.parse.urlsplit(url)
-    host = parts.hostname or ""
-    allowed = opts.get("confluence_host") or _site_host()
-    if not opts.get("allow_private"):
-        if parts.scheme != "https":
-            raise ValueError("only https")
-        if not (host == allowed or (allowed is None and host.endswith(".atlassian.net"))):
-            raise ValueError(f"{host} is not the Atlassian site ({allowed or '*.atlassian.net'}); credentials not sent")
-        if not _public(host):
-            raise ValueError("not a public address")
+def page_key(url: str) -> str:
     m = re.search(r"/pages/(\d+)", url) or re.search(r"[?&]pageId=(\d+)", url)
-    if not m:
-        raise ValueError("no page id in the link")
-    auth = opts.get("confluence_auth") or _confluence_auth()
-    if not auth:
-        raise ValueError("no Confluence credentials (CONFLUENCE_API_TOKEN or JIRA_API_TOKEN, and an e-mail variable)")
-    api = f"{parts.scheme}://{parts.netloc}/wiki/rest/api/content/{m.group(1)}?expand=body.storage,version"
-    req = urllib.request.Request(api, headers={
-        "Accept": "application/json", "User-Agent": "dna-sources",
-        "Authorization": "Basic " + base64.b64encode(f"{auth[0]}:{auth[1]}".encode()).decode()})
-    with urllib.request.urlopen(req, timeout=30) as r:  # noqa: S310 — host checked above
-        data = json.loads(r.read(MAX_PAGE_BYTES))
-    html = ((data.get("body") or {}).get("storage") or {}).get("value") or ""
-    return _html_to_text(html), str((data.get("version") or {}).get("number", ""))
+    return m.group(1) if m else re.sub(r"[^A-Za-z0-9]+", "_", url.split("://", 1)[-1])[:80]
+
+
+def read_copy(path: Path) -> tuple[str, str, str] | None:
+    """(body, fetched, version) of a page copy saved by the agent; None when absent or without a header."""
+    text = _read(path)
+    head, _, body = text.partition("\n\n")
+    fields = dict(re.findall(r"(?m)^(Source|Fetched|Version):\s*(.+)$", head))
+    if not text or not re.match(r"^\d{4}-\d{2}-\d{2}$", fields.get("Fetched", "").strip()):
+        return None
+    return body, fields["Fetched"].strip(), fields.get("Version", "").strip()
 
 
 # ---------------------------------------------------------------- collection
@@ -234,24 +207,30 @@ def collect(root: Path, config: dict, online: bool, today: str, opts: dict | Non
                 c["skill"] = s["dir"].name
                 found.append(c)
             links += LINK.findall(text)
-        depth = int((config.get("confluence") or {}).get("max_depth", 0))  # 0: only the linked page
+        conf = config.get("confluence") or {}
+        stale = int(conf.get("stale_after_days", 14))
+        copies = Path(opts.get("copies") or (cache or root) / "sources" / "confluence")
         for url in dict.fromkeys(links):
             if "/wiki/" not in url and "atlassian.net" not in url:
                 coverage["skipped"].append({"source": url, "reason": "link outside Confluence: not followed"})
                 continue
-            if not online:
-                coverage["skipped"].append({"source": url, "reason": "network off (learn --offline)"})
+            save_to = copies / f"{page_key(url)}.md"
+            copy = read_copy(save_to)
+            if copy is None:
+                coverage.setdefault("pending", []).append({"url": url, "tool": "confluence", "save_to": str(save_to),
+                                                           "reason": "not read yet"})
+                coverage["skipped"].append({"source": url, "reason": "pending: read through the session's Confluence "
+                                                                     "tool (MCP) — see pending.json"})
                 continue
-            try:
-                text, version = confluence_page(url, opts)
-            except Exception as e:  # noqa: BLE001 — reported, never fatal
-                coverage["skipped"].append({"source": url, "reason": str(e)[:200]})
-                continue
-            coverage["read"].append(f"{url} (version {version})")
-            for c in extract(text, f"{url} (fetched {today})", "standards", paths):
+            body, fetched, version = copy
+            age = (dt.date.fromisoformat(today) - dt.date.fromisoformat(fetched)).days
+            if age > stale:
+                coverage.setdefault("pending", []).append({"url": url, "tool": "confluence", "save_to": str(save_to),
+                                                           "reason": f"copy from {fetched} is older than {stale} days"})
+            coverage["read"].append(f"{url} (copy {fetched}" + (f", version {version})" if version else ")"))
+            for c in extract(body, f"{url} (fetched {fetched})", "standards", paths):
                 c["skill"] = s["dir"].name
                 found.append(c)
-            _ = depth   # child pages: a later version (depth > 0)
     # ADR
     for d in ("docs/adr", "docs/decisions", "adr", "doc/adr", "docs/architecture/decisions"):
         for f in sorted((root / d).glob("*.md")):
@@ -274,6 +253,7 @@ def collect(root: Path, config: dict, online: bool, today: str, opts: dict | Non
                              block[:20000], re.S):
             line = text.count("\n", 0, text.find(m.group(0))) + 1
             found.append({"text": f"Do not import {m.group(1)}: {_clean(m.group(2))}", "rule_id": None,
+                          "forbidden_import": m.group(1),
                           "kind": "lint", "strength": "hard", "paths": ["**"], "evidence": f"{name}:{line}"})
     # project documentation
     docs_files = [p for p in sorted(root.glob("*.md")) if re.match(r"(README|CONTRIBUTING|STYLEGUIDE|CODING)", p.name, re.I)]

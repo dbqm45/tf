@@ -1,0 +1,20 @@
+name: standards
+version: 0.1.0
+contract: 1
+title: The project's agreed rules (standards skills, Confluence through MCP, ADR, lint, docs)
+description: >-
+  Reads the standards you already have — standards skills in the project or from a git repository by URL, the
+  Confluence pages they link to (read by the agent through the session's MCP tool), ADRs, lint restrictions, project
+  docs and other agents' instruction files — and writes them as rules for the matching files. It does not write
+  standards. Everything lives in this directory; removing it detaches the add-on.
+keep: [standards.yaml]
+provides:
+  context: out/INDEX.md
+  rules: out/rules
+  decisions: out/decisions.json
+  pending: cache/pending.json
+  learn: "standards.py learn"
+  refresh: "standards.py refresh --quiet"
+  verify: "standards.py verify"
+  status: "standards.py status"
+  source: "standards.py source"

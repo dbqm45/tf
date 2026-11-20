@@ -1,11 +1,13 @@
 name: dna
-version: 0.8.0
+version: 0.9.0
 contract: 1
 title: Project knowledge for writing code like the team
 description: >-
-  Learns the project's stack with exact versions, its standards and its code conventions, and writes them as
-  guidelines in out/ for the factory to use. Everything lives in this directory; removing it detaches the add-on.
+  Learns what the project's code is — stack with exact versions, official docs of those versions, UI building
+  blocks, styling, exemplar files — and writes it as guidelines in out/ for the factory. Agreed rules come from a
+  decisions add-on (e.g. standards) when one is installed. Everything lives in this directory; removing it detaches it.
 keep: [dna.yaml]
+consumes: [decisions]
 provides:
   context: out/INDEX.md
   context_extra: [out/docs-index.md]
@@ -17,4 +19,3 @@ provides:
   status: "dna.py status"
   docs: "dna.py docs query {tech} {query}"
   check: "dna.py check --base {base} --json"
-  standards: "dna.py standards"

@@ -66,8 +66,14 @@ def _test_of(root: Path, rel: str, tests: set[str]) -> list[str]:
     return sorted(near, key=lambda t: (Path(t).parent != Path(rel).parent, t))[:2]
 
 
-def exemplars(root: Path, items: list[dict]) -> tuple[list[dict], dict]:
+def forbidden_imports(decisions: list[dict] | None) -> list[str]:
+    """Modules the agreed rules forbid (decisions of other add-ons with data.forbidden_import)."""
+    return [d["data"]["forbidden_import"] for d in decisions or [] if (d.get("data") or {}).get("forbidden_import")]
+
+
+def exemplars(root: Path, items: list[dict], decisions: list[dict] | None = None) -> tuple[list[dict], dict]:
     deprecated = {i["data"]["name"] for i in items if (i.get("data") or {}).get("deprecated")}
+    forbidden = forbidden_imports(decisions)
     code, _styles, _tokens = _files(root)
     extra = []
     for dirpath, dirnames, filenames in os.walk(root):   # backend files the UI walk does not collect
@@ -105,6 +111,9 @@ def exemplars(root: Path, items: list[dict]) -> tuple[list[dict], dict]:
                 continue
             if any(re.search(rf"\b{re.escape(d)}\b", text) for d in deprecated):
                 continue
+            if any(re.search(rf"""from\s+['"]{re.escape(m)}(/[^'"]*)?['"]|require\(['"]{re.escape(m)}['"]""", text)
+                   for m in forbidden):
+                continue   # an agreed rule forbids an import it uses
             when = changed.get(r) or int(f.stat().st_mtime)
             typical = lo <= len(text) <= hi
             scored.append(((typical, when), f))

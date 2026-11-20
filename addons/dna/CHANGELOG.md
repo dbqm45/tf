@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.0 — 2026-11-20
+- Breaking: decisions from sources (standards skills, Confluence, ADR, lint, docs, other agents' rule files) moved to
+  the separate `standards` add-on, with `rules/standards*.md`, `decisions.md` and `dna.py standards`. dna keeps what
+  the code is: stack, docs of the versions, UI catalog, styling, exemplars, `check`.
+- `consumes: [decisions]`: decisions of other add-ons (TF_ADDON_DECISIONS) — an agreed rule that forbids an import
+  is a hard finding of `check` and keeps files that use it out of the exemplars.
+
 ## 0.8.0 — 2026-11-20
 - Standards skills from a git repository by URL: `dna.py standards add <git URL> [--ref <tag>] [--dir <skills
   dir>] [--scope fe|be|mutual]` (also `list`, `remove`; through the factory: `tf addon run dna standards add …`)

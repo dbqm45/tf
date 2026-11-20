@@ -16,20 +16,16 @@ python3 dna.py verify --root <repository>    # check out/ against the contract
 python3 dna.py status --root <repository>    # what out/ holds
 python3 dna.py docs query react "useTransition"   # official docs of the project's version (local index)
 python3 dna.py check --base main             # the change against the guidelines; exit 1 = blocking
-python3 dna.py standards add https://github.com/acme/standards.git --ref v1.4.0 --dir skills
-                                             # standards skills from a repository (then: tf learn)
 ```
 
 `learn` reaches the network only for documentation (`--offline` or `DNA_OFFLINE=1` to stop it): package registries
 (npm, PyPI) and the hosts listed in `registry/docs-sources.yaml`, https only, GET of files by package name and
-version; the question asked in `docs query` never leaves the machine. Confluence pages linked from standards
-skills are read through the REST API with `CONFLUENCE_API_TOKEN` (or `JIRA_API_TOKEN`) and an e-mail variable;
-the credentials are sent only to the Atlassian site (`ATLASSIAN_SITE`, else `*.atlassian.net`).
+version; the question asked in `docs query` never leaves the machine.
 
 In a project the add-on sits in `.tf/addons/dna/`; the factory runs `refresh` in the background at the start of
 every session (hook `addons_refresh.py`); `--root` defaults to the git top level of the current directory.
 
-## What 0.8.0 knows
+## What 0.9.0 knows
 
 | Area | Source | Version from |
 |---|---|---|
@@ -41,7 +37,6 @@ every session (hook `addons_refresh.py`); `--root` defaults to the git top level
 | .NET | `*.csproj`, `*.fsproj` | `packages.lock.json` or `Version` |
 | Commands | `package.json` scripts, `pyproject.toml`, build tools, `Makefile` | — |
 | Tooling | prettier, eslint, biome, stylelint, ruff, editorconfig, golangci-lint, checkstyle | — |
-| Decisions | standards skills (+ linked Confluence pages), ADRs, ESLint restrictions, README/CONTRIBUTING/docs, other agents' instruction files | — |
 | Exemplar files | git history, paths and content (`lib/exemplars.py`) | — |
 | UI building blocks | imports, exports and styles in the code (`lib/code.py`) | — |
 | Documentation | installed npm package; npm tarball and PyPI description of the exact version; `registry/docs-sources.yaml` | the stack facts above |
@@ -52,12 +47,11 @@ source to `registry/docs-sources.yaml` (rules in the file's header).
 Only technologies in `registry/detectors/*.yaml` count as stack. A version without a lockfile is reported as a range
 and listed in `coverage.md`.
 
-## Standards
+## Agreed rules
 
-dna does not write standards. It reads the standards skills you have — in the project (`.claude/skills/*standards*`),
-by path or from a git repository by URL — together with the Confluence pages they link to, quotes their rules and
-writes them as rules for the matching files (`out/rules/standards-*.md`) and as a list with sources
-(`out/decisions.md`). The skills stay the source of truth; change them, and `refresh` picks the change up.
+dna describes the code; the project's agreed rules come from a decisions add-on (`addons/standards`). dna declares
+`consumes: [decisions]`, so the factory passes it those decisions: rules that forbid an import are enforced by
+`check` and keep such files out of the exemplars. Without that add-on dna works the same, without them.
 
 ## Output (contract 1)
 
@@ -65,8 +59,6 @@ writes them as rules for the matching files (`out/rules/standards-*.md`) and as 
 |---|---|
 | `out/knowledge.json` | the canonical record; schema in `schema/knowledge.schema.json` |
 | `out/INDEX.md` | ≤ 15 lines for the agent's permanent context |
-| `out/rules/standards*.md` | agreed rules per scope (fe, be, whole repo) with `paths` |
-| `out/decisions.md` | all decisions with quotes and sources; candidates (one source) listed, not applied |
 | `out/exemplars.md` | per kind of change: the file to follow, its test, imports and users |
 | `out/rules/ui.md` | rule with `paths` for UI files: components to use, import form, styling, tokens, theme |
 | `out/catalog/ui.md` | full UI catalog with evidence |
@@ -80,5 +72,5 @@ repository. The Markdown is generated from `knowledge.json` and must not be edit
 
 - Nothing here imports from the factory (`core/`, `packs/`, `modes/`, `tools/`); the tests check it.
 - Standard library and PyYAML only.
-- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py`, `tests/test_check.py`, `tests/test_sources.py`, `tests/test_exemplars.py`, `tests/test_standards_git.py` (also the `addon-dna` job in CI).
+- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py`, `tests/test_check.py`, `tests/test_exemplars.py` (also the `addon-dna` job in CI).
 - Version by SemVer in `addon.yaml`; changes in `CHANGELOG.md`.

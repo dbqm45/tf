@@ -39,6 +39,7 @@ def decide(candidates: list[dict]) -> list[dict]:
             "strength": "hard" if any(c["strength"] == "hard" for c in cs) else "soft",
             "data": {"topic": "decision", "sources": kinds, "rank": RANK.get(kinds[0], 9),
                      "rule_id": next((c["rule_id"] for c in cs if c.get("rule_id")), None),
+                     "forbidden_import": next((c["forbidden_import"] for c in cs if c.get("forbidden_import")), None),
                      "skills": sorted({c["skill"] for c in cs if c.get("skill")})},
             "evidence": list(dict.fromkeys(c["evidence"] for c in cs))[:6],
         })

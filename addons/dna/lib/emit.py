@@ -47,13 +47,6 @@ def render_index(k: dict) -> str:
     if any(i.get("kind") == "exemplar" for i in items):
         lines.append("- New file: follow the exemplar for its kind (page, component, hook, endpoint, test…) in "
                      "`exemplars.md` here.")
-    if _applied(items):
-        lines.append(f"- Standards: {len(_applied(items))} agreed rules load as rules for the matching files; list "
-                     "with sources in `decisions.md` here.")
-    hard = [i for i in items if i.get("kind") == "decision" and i.get("strength") == "hard"
-            and i.get("status") in ("accepted", "auto-accepted") and i["scope"]["paths"] == ["**"]]
-    for d in hard[: max(0, INDEX_MAX_LINES - len(lines) - 3)]:
-        lines.append(f"- [hard] {d['title']} ({d['id']})")
     if any(i.get("data", {}).get("topic") == "ui-component" for i in items):
         lines.append("- UI: use the project's components and tokens before writing your own; the UI rules load for UI "
                      "files, full list in `catalog/ui.md` here.")
@@ -183,61 +176,6 @@ def render_ui_catalog(k: dict) -> str:
     return "\n".join(lines)
 
 
-def _applied(items):
-    return [i for i in items if i.get("kind") == "decision" and i.get("status") in ("accepted", "auto-accepted")]
-
-
-def _rules_name(paths: list[str]) -> str:
-    import hashlib
-    from .sources import BE_PATHS, FE_PATHS
-    if paths == ["**"]:
-        return "standards.md"
-    if sorted(paths) == sorted(FE_PATHS):
-        return "standards-fe.md"
-    if sorted(paths) == sorted(BE_PATHS):
-        return "standards-be.md"
-    return f"standards-{hashlib.sha256(' '.join(paths).encode()).hexdigest()[:6]}.md"
-
-
-def render_standards_rules(k: dict) -> dict[str, str]:
-    groups: dict[str, list[dict]] = {}
-    paths_of: dict[str, list[str]] = {}
-    for d in _applied(k["items"]):
-        name = _rules_name(d["scope"]["paths"])
-        groups.setdefault(name, []).append(d)
-        paths_of[name] = d["scope"]["paths"]
-    files = {}
-    for name, ds in sorted(groups.items()):
-        ds = sorted(ds, key=lambda d: (d["strength"] != "hard", d["data"]["rank"], d["id"]))
-        head = ["---", "paths:"] + [f'  - "{p}"' for p in paths_of[name]] + ["---", "", "# Standards (dna)", "",
-                "Agreed rules of this project. [hard] holds always; [soft] holds in new files and gives way to the "
-                "surrounding code in existing ones.", ""]
-        body = [f"- [{d['strength']}] {d['title']} ({d['data']['rule_id'] or d['id']})" for d in ds]
-        room = RULES_MAX_LINES - len(head) - 1
-        if len(body) > room:
-            body = body[: room - 1] + [f"- … {len(body) - room + 1} more in `.tf/addons/dna/out/decisions.md`"]
-        files[f"rules/{name}"] = "\n".join(head + body + ["- Sources and quotes: `.tf/addons/dna/out/decisions.md`."]) + "\n"
-    return files
-
-
-def render_decisions(k: dict) -> str:
-    ds = [i for i in k["items"] if i.get("kind") == "decision"]
-    lines = ["# Decisions (dna)", "", f"Generated {k['generated']}. Quote = the source's own line; evidence `path:line` "
-             "or the page with its fetch date. Only applied decisions go into the rules.", ""]
-    for title, keep in (("Applied", lambda d: d["status"] in ("accepted", "auto-accepted")),
-                        ("Candidates (one source, not applied)", lambda d: d["status"] == "candidate")):
-        sel = [d for d in ds if keep(d)]
-        if not sel:
-            continue
-        lines += [f"## {title}", "", "| Id | Strength | Rule | Accepted by | Sources |", "|---|---|---|---|---|"]
-        for d in sel:
-            rule = d["title"].replace("|", "\\|")
-            lines.append(f"| {d['data']['rule_id'] or d['id']} | {d['strength']} | {rule} | {d['acceptance']} | "
-                         + "; ".join(d["evidence"]).replace("|", "\\|") + " |")
-        lines.append("")
-    return "\n".join(lines)
-
-
 def render_exemplars(k: dict) -> str:
     ex = [i for i in k["items"] if i.get("kind") == "exemplar"]
     lines = ["# Exemplar files (dna)", "", "For a new file of a kind below, follow the exemplar: its structure, naming, "
@@ -258,9 +196,6 @@ def render(k: dict) -> dict[str, str]:
         files["docs-index.md"] = render_docs_index(k)
     if any(i.get("kind") == "exemplar" for i in k["items"]):
         files["exemplars.md"] = render_exemplars(k)
-    if any(i.get("kind") == "decision" for i in k["items"]):
-        files["decisions.md"] = render_decisions(k)
-        files.update(render_standards_rules(k))
     if any(i.get("data", {}).get("topic") in ("ui-component", "token", "styling") for i in k["items"]):
         files["rules/ui.md"] = render_ui_rules(k)
         files["catalog/ui.md"] = render_ui_catalog(k)
