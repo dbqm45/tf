@@ -16,7 +16,7 @@ TEST = Path(".claude") / "tests" / "test_settings_coverage.py"
 def install(proj: Path, packs: str, *extra: str) -> subprocess.CompletedProcess:
     proj.mkdir()
     subprocess.run(["git", "init", "-q"], cwd=proj, check=False)
-    return subprocess.run([sys.executable, str(ROOT / "core" / "factory" / "install.py"), str(proj), "--yes",
+    return subprocess.run([sys.executable, str(ROOT / "core" / "factory" / "install.py"), str(proj), "--yes", "--layout", "default",
                            "--packs", packs, *extra], capture_output=True, text=True, timeout=600)
 
 

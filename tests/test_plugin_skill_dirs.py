@@ -55,7 +55,7 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as t:
         base = Path(t)
-        for layout, opts in (("plugin", ("--layout", "plugin")), ("default", ())):
+        for layout, opts in (("plugin", ("--layout", "plugin")), ("default", ("--layout", "default"))):
             p = make(base, layout, *opts)
             r = run(p, ".claude/hooks/skill_hint.py", "--explain", "Zaimplementuj tę historyjkę: jako użytkownik chcę "
                     "zresetować hasło linkiem z maila, link ważny 30 minut.")

@@ -98,6 +98,13 @@ Deprecation works like this:
   `task.json`: `verdict`, `sha`, `at`, `note`), `run_state.py panel <directory> [--record <reviewer> pass|fail --note]
   [--base]`, the agent `spec-reviewer`; the `pr` stage of a full-weight task requires `pass` from `security-reviewer`
   and `spec-reviewer` for the current commit.
+- Factory mode (plan 2026-11-20): `install.py --layout plugin|default` (the default since T5: `plugin`; the manifest field
+  `layout`); the local plugin `.tf/plugin/` (`.claude-plugin/plugin.json` named `tf`, `skills/`, `agents/`,
+  `hooks/hooks.json`, `RULES.md`, `session-settings.json`), the directory marketplace `.tf/.claude-plugin/marketplace.json`
+  (`tf-project`, plugin `tf`), the hook `.claude/hooks/factory_rules.py` (SessionStart, the rules from `RULES.md`),
+  `tf code [claude arguments]`, `tf cloud-setup [--apply]` (user settings: `extraKnownMarketplaces.tf-project`,
+  `enabledPlugins["tf@tf-project"]`), `TF_CLAUDE`, `E0_LAYOUT=plugin`; factory skills keep their scripts and references
+  under `.claude/skills/<skill>/` without `SKILL.md`.
 - `tf work --once --budget <USD> [--key <KEY>] [--base <branch>] [--dry-run]` (`work.py`; configuration keys
   `work.budget_usd`, `work.task_budget_usd`, `work.permission_mode` (`acceptEdits` is the default, `dontAsk` or `plan`), `work.lock_hours`, `work.timeout_minutes`; the agent runs with `--strict-mcp-config` and only the allowed
   environment variables (additional ones: the human's variable `TF_WORK_ENV_ALLOW`, a comma-separated list); a warning and the field

@@ -63,7 +63,9 @@ def workspace_dir(o: dict) -> Path:
 
 
 def install_cmd(ws: Path, o: dict) -> list[str]:
-    cmd = [sys.executable, str(INSTALL), str(ws), "--yes", "--packs", o["packs"] or "none"]
+    # the factory's own test suite reads skills and hooks from .claude/ (the old layout); the factory mode (the default
+    # layout of installs since T5) is covered by tests/test_plugin_*.py
+    cmd = [sys.executable, str(INSTALL), str(ws), "--yes", "--packs", o["packs"] or "none", "--layout", "default"]
     if o.get("pack-dir"):
         cmd += ["--pack-dir", o["pack-dir"]]
     return cmd

@@ -89,6 +89,21 @@ fabryki i Twoje.
 
 Do T5 nic się nie zmienia u użytkowników, bo nowy układ jest tylko opcją.
 
+**Stan (2026-11-20):**
+- **T1–T3 i T4:** scalone albo w PR.
+- **T5:**
+  - **Migracja:** układ wtyczki jest domyślny dla nowych instalacji i dla aktualizacji instalacji bez pola `layout`.
+    Aktualizacja sprząta stary układ: przenosi `SKILL.md` fabryki do kopii zapasowej, usuwa wpisy fabryki z ustawień
+    projektu, usuwa blok reguł z `CLAUDE*.md` i agentów z `.claude/agents/_generated`.
+  - **Powrót:** `--rollback` wraca do starego układu, zapamiętuje go (`layout: default`) i odbudowuje agentów.
+  - **Polecenia projektu:** `tf onboard` wpisuje je do `.tf/plugin/RULES.md`.
+  - **Testy fabryki:** zestaw testów (`workspace.py`) instaluje się w starym układzie, a nowy układ pokrywają
+    `tests/test_plugin_*.py`.
+- **Do domknięcia później:**
+  - strojenie widoczności skilli wtyczki (`skill_profile`);
+  - katalog `.claude/catalog.md` z Twoimi skillami w układzie wtyczki;
+  - sprawdzenie `tf cloud-setup --apply` na prawdziwym środowisku chmurowym [niezweryfikowane].
+
 ## Ryzyka
 
 - **Nazwy agentów z przedrostkiem `tf:`.** Treść skilli mówi „scope-reviewer”. W próbie model sam wybrał

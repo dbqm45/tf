@@ -27,6 +27,15 @@ Something does not work, or a command was blocked? Ask in the session: "what blo
 agent will point to the file that made the decision. Frequent questions: `.tf/factory/FAQ.md`.
 
 ## 1. What an installation consists of
+**The factory mode.** The factory lives in a local plugin in `.tf/plugin/` (skills, agents, hook registration, rules) that
+only a factory session loads: `tf code` (e.g. `tf code --continue`) starts `claude --plugin-dir .tf/plugin --settings
+.tf/plugin/session-settings.json`. A plain `claude` in the project loads nothing from the factory — no hook, skill, agent,
+rule or status line — so your own skills in `.claude/skills/` are never shadowed; factory skills appear in a factory session
+as `tf:<skill>`. A cloud environment becomes a factory environment with the setup script printed by `tf cloud-setup`
+(the factory files must be in the repository: a team install). `tf work --once` and the measurements use the same plugin.
+An update of an older install moves it here (a copy in `.tf/backup/`, back: `python3 .tf/factory/update.py --rollback`);
+`install.py --layout default` keeps the old layout, in which every session in the project loads the factory.
+
 | Element | Where in the project | What it does |
 |---|---|---|
 | the core | `.tf/factory/`, `.claude/skills/core-*`, `.claude/hooks/`, `.claude/tests/` | building agents, updates, costs, working rules, the project record |
@@ -82,14 +91,16 @@ section — an update replaces only the section between the factory's markers. T
 version. Details of how instruction files load: the `core-agent-instructions` skill (`references/context-scaling.md`).
 
 ## 2. How to start working
-1. **Choose a persona** from `.claude/catalog.md` and run it: `claude --agent <name>` (e.g. `kuba` — product
+1. **Start a factory session:** `tf code` (or `tf code --agent <persona>`; in the old layout `claude --agent <name>`).
+   **Choose a persona** from `.claude/catalog.md` and run it: `tf code --agent <name>` (e.g. `kuba` — product
    engineer, `ewa` — domain analyst, `kasia` — tests, `natalia` — UX). The persona talks with you and delegates
    work to its executors (`<persona>-<role>`) and to the shared agents.
 2. **Do not know whom to choose?** The pack's dispatcher (`maja` in `pack-it`; a domain pack can have its own —
    `tf list` and `.claude/catalog.md`) will recognise a problem described
    in plain text and choose personas, skills and an approach.
-3. **Enter the project's commands** (test, lint, types, build) in the factory's section in `CLAUDE.local.md` (or
-   `CLAUDE.md` in a team installation) — the executors use them for verification.
+3. **Enter the project's commands** (test, lint, types, build): `tf onboard` writes them into the factory rules
+   (`.tf/plugin/RULES.md`; in the old layout the factory's section in `CLAUDE.local.md` or `CLAUDE.md`) — the executors use
+   them for verification.
 
 Shared agents, available to every persona:
 - `scout` (cheap code search);
