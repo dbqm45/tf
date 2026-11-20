@@ -120,6 +120,8 @@ Verdict: 2 stale · 1 conflicts · 1 uncertain; S-07 and the other 4 refuted. Th
 - [ ] the report has the three groups and an updated `Verdict:` line; nothing changed before the human's consent
 - [ ] `apply` only for approved Stale ids; by-hand edits only those approved; one commit, no push
 
+Trying the skill in a project with planted traps (for a human, in Polish): `references/sweep-test.md`.
+
 ## Sources
 - Google, a study of coding-agent sessions: agents chase stale TODOs and old plans, sessions with a side quest take
   about 2× longer — as given in the factory's task brief, 2026-11-20 [unverified in this session].
