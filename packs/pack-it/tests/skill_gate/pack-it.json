@@ -136,7 +136,7 @@
   "offline": "2026-11-20"
  },
  "ddd-deep-modeling": {
-  "fingerprint": "787bea05ae4a62eb",
+  "fingerprint": "b6d5f88a5c8fb0f4",
   "offline": "2026-11-20"
  },
  "ddd-discovery-intake": {
@@ -380,16 +380,16 @@
   "offline": "2026-11-18"
  },
  "ops-release-engineering": {
-  "fingerprint": "f320fd5de9ededb0",
+  "fingerprint": "71b7642d81b5b062",
   "offline": "2026-11-20"
  },
  "ops-secrets-identities": {
-  "fingerprint": "b6ee3c5dec4131d0",
-  "offline": "2026-11-18"
+  "fingerprint": "759261a91637f444",
+  "offline": "2026-11-20"
  },
  "ops-security-operations": {
-  "fingerprint": "c97e93b5023a48c8",
-  "offline": "2026-11-18"
+  "fingerprint": "862fc351e0f2011c",
+  "offline": "2026-11-20"
  },
  "ops-setup-wizard": {
   "fingerprint": "e8820cfcf46b664c",
@@ -444,11 +444,11 @@
   "offline": "2026-11-20"
  },
  "proc-project-planning": {
-  "fingerprint": "b9fa85a5e2c1e306",
-  "offline": "2026-11-18"
+  "fingerprint": "ccb64354ab08e8c6",
+  "offline": "2026-11-20"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "660ec302820e673a",
+  "fingerprint": "63057dee29a24d14",
   "offline": "2026-11-20"
  },
  "proc-safe": {
@@ -464,8 +464,8 @@
   "offline": "2026-11-20"
  },
  "qa-exploratory-manual": {
-  "fingerprint": "651289b865aeb656",
-  "offline": "2026-11-18"
+  "fingerprint": "cd170ea335867ea1",
+  "offline": "2026-11-20"
  },
  "qa-formal-methods": {
   "fingerprint": "80b41a9bceaa049b",

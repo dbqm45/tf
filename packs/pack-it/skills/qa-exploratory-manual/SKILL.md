@@ -4,7 +4,7 @@ description: Use for manual and exploratory testing — chartered sessions, heur
 metadata:
   review: "2027-10-17"
   catalog: "Use for manual and exploratory testing — chartered sessions (session-based testing), exploration heuristics, acceptance tests with users (UAT), manual accessibility, manual regression checklists and defect reporting. Not for automation (tool-*, qa-regression)."
-  keywords: "zgłoszenie błędu, zgłoszenie defektu, jak napisać zgłoszenie, raport defektu, testy ręczne, sesja eksploracyjna, UAT, jak opisać błąd, bug report, defect report, how to write a bug report, manual testing, exploratory session, how to describe a bug"
+  keywords: "zgłoszenie defektu, napisać zgłoszenie błędu, pola zgłoszenia, deweloper nie musiał dopytywać, zgłoszenie błędu, zgłoszenie defektu, jak napisać zgłoszenie, raport defektu, testy ręczne, sesja eksploracyjna, UAT, jak opisać błąd, bug report, defect report, how to write a bug report, manual testing, exploratory session, how to describe a bug"
 ---
 
 # Manual and exploratory testing

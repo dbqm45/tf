@@ -4,7 +4,7 @@ description: Use for modeling domain concepts — many-to-many, types defined by
 metadata:
   review: "2027-10-17"
   catalog: "Use for discovering and refining the concepts of a model — Being/Behaving/Becoming modeling questions, 5 why, problem classification (CRUD, transformation, presentation, integration, competition for resources), modeling by examples. Not for context boundaries (ddd-strategic-analysis) or implementation patterns (ddd-tactical-design)."
-  keywords: "poziom wiedzy, poziom operacji, knowledge level, rodzaje definiowane przez administratora, typ i egzemplarz, relacja wiele do wielu, ukryte pojęcie, jedno źródło prawdy, single source of truth, status zamiast pojęcia, administrator definiuje nowe rodzaje, rozdzielić w modelu domeny, operations level, kinds defined by an administrator, type and instance, many-to-many relationship, hidden concept, status instead of a concept, administrator defines new kinds, separate in the domain model"
+  keywords: "pole status, ify na statusie, ify rozsiane po serwisach, status faktury, poziom wiedzy, poziom operacji, knowledge level, rodzaje definiowane przez administratora, typ i egzemplarz, relacja wiele do wielu, ukryte pojęcie, jedno źródło prawdy, single source of truth, status zamiast pojęcia, administrator definiuje nowe rodzaje, rozdzielić w modelu domeny, operations level, kinds defined by an administrator, type and instance, many-to-many relationship, hidden concept, status instead of a concept, administrator defines new kinds, separate in the domain model"
 ---
 
 # Deep modeling
