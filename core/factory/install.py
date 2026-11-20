@@ -111,8 +111,14 @@ ALWAYS_OWNED = (".claude/cleanroom.json",)   # assembled from the core and packs
 # The factory's own machinery: without these files the installer, hooks and agents do not work, so a missing one is
 # always restored (a deleted skill or scenario stays deleted).
 REQUIRED = (".tf/factory/", ".claude/hooks/")
-GENERATED = (".claude/agents/_generated/", ".claude/catalog.md")   # built in the project by .tf/factory/build.py
+GENERATED = (".claude/agents/_generated/", ".claude/catalog.md", ".tf/plugin/agents/")   # built in the project by .tf/factory/build.py
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
+# Factory mode (docs/plans/2026-11-20-tryb-fabryki-plan.md): with `--layout plugin` the factory lives in a local plugin
+# that only a factory session loads (`tf code`: claude --plugin-dir .tf/plugin --settings .tf/plugin/session-settings.json).
+# A plain `claude` in the project then sees no factory skill, agent, hook, rule or status line.
+LAYOUTS = ("default", "plugin")
+PLUGIN = ".tf/plugin"
+PLUGIN_SKILLS = PLUGIN + "/skills/"
 # Core tests that make sense only in the factory repository (paths relative to core/): the N5 run evals import
 # `scripts/export_pdi_runs.py` and `modes/mode-pdi/.../phase_result.py` from the source, so in a project they would fail on import.
 # They do not go to `.claude/tests/` (an update removes their copies from earlier versions); `tools/workspace.py check`
@@ -695,10 +701,30 @@ def rebuild(dst_root: Path, dry: bool) -> str:
         return ""
     r = subprocess.run([sys.executable, ".tf/factory/build.py"], cwd=dst_root, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode == 0:
-        n = len(list((dst_root / ".claude" / "agents" / "_generated").rglob("*.md")))
+        n = len(list((dst_root / ".claude" / "agents" / "_generated").rglob("*.md"))) + \
+            len(list((dst_root / ".tf" / "plugin" / "agents").rglob("*.md")))
         return f"✓ Built {n} agents and the catalog (.tf/factory/build.py)."
     return ("⚠ `.tf/factory/build.py` reported problems — run `python3 .tf/factory/build.py check` and fix them:\n"
             + r.stdout[-1500:] + r.stderr[-500:])
+
+
+def plugin_files(plan: "Plan", dst_root: Path, settings: dict, py: str, version: str) -> None:
+    """The plugin's manifest, its hook registration (with the SessionStart hook that gives the factory rules) and the
+    factory session's settings (env, status line, permissions) — `tf code` passes the latter with --settings."""
+    hooks = json.loads(json.dumps(settings.get("hooks") or {}))
+    rules_hook = {"type": "command", "command": py, "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/factory_rules.py"],
+                  "timeout": 10}
+    start = hooks.setdefault("SessionStart", [])
+    if not any("factory_rules.py" in json.dumps(g) for g in start):
+        start.insert(0, {"hooks": [rules_hook]})
+    meta = {"name": "tf", "version": version, "description": "Team factory: skills, agents, hooks and rules of the "
+            "/tf loop. Loaded only by a factory session (tf code)."}
+    plan.copy(None, PLUGIN + "/.claude-plugin/plugin.json", (json.dumps(meta, indent=2) + "\n").encode("utf-8"))
+    plan.copy(None, PLUGIN + "/hooks/hooks.json",
+              (json.dumps({"hooks": hooks}, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    session = {k: v for k, v in settings.items() if k != "hooks"}
+    plan.copy(None, PLUGIN + "/session-settings.json",
+              (json.dumps(session, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
 
 
 def compose_cleanroom(packs: list[str], available: dict) -> bytes:
@@ -728,7 +754,7 @@ def parse_args(argv: list[str]) -> tuple[list[str], dict]:
     args, opts = [], {}
     it = iter(argv[1:])
     for a in it:
-        if a in ("--source", "--python", "--packs", "--add", "--remove"):
+        if a in ("--source", "--python", "--packs", "--add", "--remove", "--layout"):
             opts[a.lstrip("-")] = next(it, "")
         elif a in REMOVED_OPTIONS:                            # old flags with a value — the value does not become a directory
             opts.setdefault("_removed", []).append(f"{a} {next(it, '')}".strip())
@@ -876,6 +902,22 @@ def _main(argv: list[str], tmp: Path) -> int:
         print(f"ℹ Migrating an install of {manifest.get('source') or 'an older factory'} "
               f"(version {manifest.get('version')}) — packs: {', '.join(packs) or 'none'}.")
 
+    layout = opts.get("layout") or (manifest or {}).get("layout") or "default"
+    if layout not in LAYOUTS:
+        print(f"✗ Unknown --layout {layout!r}. Available: {', '.join(LAYOUTS)}")
+        return 2
+    plugin = layout == "plugin"
+
+    def place(f: Path, rel: str) -> None:
+        """A factory file at its path; in the plugin layout a skill goes to the plugin in full, and its scripts and
+        references also stay under .claude/skills/<skill>/ (commands in skill texts and tests use that path) — but
+        without SKILL.md, so a plain claude session does not see the skill."""
+        if plugin and rel.startswith(".claude/skills/"):
+            plan.copy(f, PLUGIN_SKILLS + rel[len(".claude/skills/"):])
+            if rel.endswith("/SKILL.md") and rel.count("/") == 3:
+                return
+        plan.copy(f, rel)
+
     # core files
     for d, target in CORE_DIRS.items():
         for f in sorted((CORE / d).rglob("*")):
@@ -883,7 +925,7 @@ def _main(argv: list[str], tmp: Path) -> int:
             if f.relative_to(CORE).as_posix().startswith(FACTORY_ONLY):
                 continue
             if f.is_file() and not any(x in rel for x in SKIP):
-                plan.copy(f, rel)
+                place(f, rel)
     for src_rel, dst_rel in {**CORE_FILES, **(SHARED_ONLY_FILES if shared else {})}.items():
         if (CORE / src_rel).exists():
             plan.copy(CORE / src_rel, dst_rel)
@@ -896,7 +938,7 @@ def _main(argv: list[str], tmp: Path) -> int:
             for f in sorted((base / d).rglob("*")):
                 rel = target + "/" + f.relative_to(base / d).as_posix()
                 if f.is_file() and not any(x in rel for x in SKIP):
-                    plan.copy(f, rel)
+                    place(f, rel)
         for meta in PACK_META:
             src_meta = base / meta
             files = [src_meta] if src_meta.is_file() else sorted(src_meta.rglob("*")) if src_meta.is_dir() else []
@@ -912,20 +954,27 @@ def _main(argv: list[str], tmp: Path) -> int:
     if user_has_statusline():
         src_set.pop("statusLine", None)
     set_p = dst_root / (".claude/settings.json" if shared else ".claude/settings.local.json")
-    cur_raw = json.loads(set_p.read_text(encoding="utf-8")) if set_p.exists() else {}
-    cur = load_migrations().settings_v19(cur_raw)   # 19.0.0: English hook event names, before the merge (no duplicate)
-    merged = apply_python(merge_settings(src_set, cur), py) if cur else src_set
-    if merged != cur_raw:
-        plan.write(set_p, json.dumps(merged, ensure_ascii=False, indent=2) + "\n",
-                   f"{set_p.relative_to(dst_root)} (factory permissions and hooks)")
+    if plugin:     # hooks → the plugin; env, status line and permissions → the factory session's settings file
+        plugin_files(plan, dst_root, src_set, py, version_of(SRC))
+    else:
+        cur_raw = json.loads(set_p.read_text(encoding="utf-8")) if set_p.exists() else {}
+        cur = load_migrations().settings_v19(cur_raw)   # 19.0.0: English hook event names, before the merge (no duplicate)
+        merged = apply_python(merge_settings(src_set, cur), py) if cur else src_set
+        if merged != cur_raw:
+            plan.write(set_p, json.dumps(merged, ensure_ascii=False, indent=2) + "\n",
+                       f"{set_p.relative_to(dst_root)} (factory permissions and hooks)")
 
     # rules: private → CLAUDE.local.md, team → CLAUDE.md; a section between markers, replaced on update
     md_p = dst_root / ("CLAUDE.md" if shared else "CLAUDE.local.md")
     md_old = md_p.read_text(encoding="utf-8") if md_p.exists() else ""
     md_base = load_migrations().claude_md_v19(drop_legacy_blocks(md_old, LEGACY_MARKS))   # 19.0.0: Polish subsections
     section = keep_commands(claude_md_section(py, dst_root, cfg), md_base)
-    plan.write(md_p, with_block(md_base, MARK_BEGIN, MARK_END, section, update or md_base != md_old),
-               f"{md_p.name} (factory section)")
+    if plugin:     # the rules reach a factory session through the plugin's SessionStart hook (factory_rules.py)
+        body = section.replace(MARK_BEGIN + "\n", "").replace(MARK_END + "\n", "")
+        plan.copy(None, PLUGIN + "/RULES.md", body.encode("utf-8"))
+    else:
+        plan.write(md_p, with_block(md_base, MARK_BEGIN, MARK_END, section, update or md_base != md_old),
+                   f"{md_p.name} (factory section)")
 
     # ignore entries: private → .git/info/exclude (nothing visible in the repo), team or --gitignore → .gitignore
     exclude = None if (shared or force_gitignore) else git_exclude_path(dst_root)
@@ -957,6 +1006,7 @@ def _main(argv: list[str], tmp: Path) -> int:
             # update source: --source, the previous one (not from the migrated factory) or the directory of this factory
             "source": opts.get("source") or ((manifest or {}).get("source") if legacy is None else None) or str(SRC),
             "mode": mode,
+            "layout": layout,
             "python": py,
             "ignore": "gitignore" if force_gitignore else "exclude",
             "packs": {pid: str(available[pid].get("version", "0.0.0")) for pid in packs},
