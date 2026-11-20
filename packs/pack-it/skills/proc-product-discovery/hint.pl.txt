@@ -1,77 +1,74 @@
-head: Użyj przy decyzji, co budować i po co — wynik zamiast funkcji, drzewo szans, JTBD, testy założeń, RICE. Użyj, gdy trzeba zdecydować, CO budować i po co — wynik zamiast funkcji, drzewo szans i rozwiązań, problem i JTBD, pytania „jak moglibyśmy”, co najmniej trzy rozwiązania, mapa założeń i ich testy, priorytety (RICE, MoSCoW, Kano), metryki sukcesu (HEART, OKR), eksperymenty A/B, gotowość do wydania, kwalifikacja narzędzia wewnętrznego (kup, uzupełnij, zbuduj, czekaj), komunikat prasowy i FAQ przed budową, epik jako hipoteza, roadmapa według wyników. Nie do rytuałów zespołu (proc-agile) ani projektu interfejsu (ux-feature-design).
-# Odkrywanie produktu
+head: Użyj przy decyzji, co budować i dlaczego — wyniki, szanse, założenia i tanie testy, priorytety i metryki, kupić czy zbudować narzędzie wewnętrzne, roadmapy wyników. Użyj przy decydowaniu, CO budować i po co, zanim powstanie kod — mierzalny wynik z punktem wyjścia, dowody, drzewo szans i rozwiązań, opis problemu, JTBD i pytania „jak moglibyśmy”, co najmniej trzy rozwiązania, mapa założeń w czterech ryzykach (wartość, użyteczność, wykonalność, opłacalność), tanie testy z kryteriami spisanymi z góry, priorytetyzacja (RICE, MoSCoW, Kano, WSJF) i metryki sukcesu (HEART, OKR, metryki ochronne, plan zdarzeń), eksperymenty A/B i gotowość do wydania, kwalifikacja narzędzi wewnętrznych (kup, uzupełnij, zbuduj albo poczekaj), komunikat prasowy i FAQ przed dużą inicjatywą, epik jako hipoteza, roadmapa wyników teraz/następnie/później, narzędzia modelu biznesowego i rynku. Nie do rytuałów zespołu i procesu dostarczania (proc-agile) ani projektowania interfejsu (ux-feature-design).
+# Odkrywanie produktu — zdecyduj, co budować, zanim zaczniesz budować
 
-Cel: nie budować rzeczy, których nikt nie potrzebuje, i wiedzieć, po czym poznamy, że zadziałały. Odkrywanie
-i dostarczanie idą równolegle — małe testy co tydzień, nie jedna faza „badań” przed projektem.
+Odkrywanie i dostarczanie idą równolegle: małe testy co tydzień, a nie jedna faza badań na początku. Decyzje produktowe
+należą do człowieka; agent przygotowuje dowody, opcje z rekomendacją i otwarte pytania. Brak produktu, użytkowników albo
+wyniku („co budować dalej?”) → zapytaj o nie; niczego nie wymyślaj.
 
 ## Procedura
-0. **Narzędzie wewnętrzne albo automatyzacja dla zespołu?** Najpierw kwalifikacja „kup / uzupełnij / zbuduj / czekaj”
-   z mapą okazji — `references/buy-extend-build.md`. „Zróbmy dashboard / agenta” to rozwiązanie, nie sygnał.
-1. **Wynik, nie funkcja.** Zacznij od mierzalnego wyniku produktowego, na który zespół ma wpływ („odsetek nowych
-   klientów, którzy w 7 dni wystawili pierwszą fakturę: 35% → 50%”). Prośba o funkcję („dodajmy eksport do Excela”)
-   to hipoteza rozwiązania — zapytaj, jaki problem i jaki wynik za nią stoi.
-2. **Dowody od użytkowników**: wywiady o konkretnych, niedawnych zdarzeniach, dane z analityki, zgłoszenia
-   (ddd-discovery-intake, `user-research.md`). Bez dowodów szanse są zgadywaniem — oznacz je jako założenia.
-3. **Drzewo szans i rozwiązań** (opportunity solution tree): wynik → szanse (potrzeby, problemy, pragnienia klientów)
-   → rozwiązania → testy założeń. Test szansy: „czy da się ją rozwiązać więcej niż jednym sposobem?” — jeśli nie, to
-   rozwiązanie przebrane za szansę. Drzewo dla jednego zespołu i jednego wyniku, nie dla całej firmy.
-4. **Wybór szansy docelowej**: rozmiar (ilu klientów, jak często, jak bardzo boli), czynniki rynkowe, strategia firmy.
-   Wysiłku na tym etapie nie liczysz — wiele szans ma zaskakująco proste rozwiązania.
-5. **Ramowanie problemu**:
-   - **stwierdzenie problemu**: kto, w jakiej sytuacji, czego potrzebuje, dlaczego to ważne, jak poznamy poprawę —
-     bez rozwiązania w treści;
-   - **zadanie do wykonania (JTBD)**: „Gdy [sytuacja], chcę [motywacja], żeby [oczekiwany efekt]” — opisuje postęp,
-     którego człowiek szuka, niezależnie od produktu;
-   - **„Jak moglibyśmy…?”**: oparte na odkryciu, nakierowane na efekt, pozytywne, ani za szerokie, ani z gotowym
-     rozwiązaniem („…sprawić, żeby klient był pewien, że faktura jest poprawna?”, a nie „…dodać podgląd PDF?”).
-6. **Co najmniej trzy rozwiązania** dla wybranej szansy (porównanie daje lepsze decyzje niż ocena jednego pomysłu);
-   każde z propozycją wartości — dla kogo, jaki ból usuwa, jaki zysk daje, czym różni się od obecnego sposobu.
-7. **Mapa założeń**: dla każdego rozwiązania wypisz, co musi być prawdą — w czterech ryzykach: **wartość** (czy
-   zechcą), **użyteczność** (czy potrafią), **wykonalność** (czy zbudujemy — z inżynierią, ograniczenia API, danych,
-   wydajności), **opłacalność** (czy to działa dla firmy: koszt, prawo, sprzedaż, wsparcie). Ustaw na macierzy
-   *ważność × siła dowodów*; testujesz najpierw ważne i słabo udowodnione.
-8. **Testy założeń od najtańszego**: rozmowa i dane, które już są → prototyp papierowy lub klikalny (ux-feature-design)
-   → test „ręcznie zamiast automatu” (concierge) → wersja dla wąskiej grupy za flagą → A/B
-   (`references/experiments-and-release.md`). Przed testem zapisz kryterium sukcesu i decyzję, którą podejmiesz
-   przy każdym wyniku. Test „fałszywych drzwi” (przycisk funkcji, której jeszcze nie ma) tylko z uczciwym komunikatem
-   po kliknięciu.
-8a. **Duża inicjatywa przed budową** (nowy moduł, epik na kilka sprintów): komunikat prasowy z dnia premiery
-   i FAQ (praca od klienta wstecz), epik zapisany jako hipoteza z miarą i kryterium przerwania —
-   `references/working-backwards.md`. Jeśli komunikatu nie da się napisać tak, żeby klient chciał go przeczytać,
-   problem albo klient są jeszcze niejasne.
-9. **Decyzja i zapis**: wybrane rozwiązanie, odrzucone z powodem, wyniki testów → `docs/project/01-discovery/`
-   (core-project-record). Zakres pierwszej wersji tnij pionowo (proc-agile) — działająca funkcja przed dopracowaną.
-   Zakres MVP i kontrakt wymagań przed architekturą (budżet czasu, pusty CRUD, wyzwanie dla każdego wymagania):
-   proc-requirements-shaping.
+0. **Narzędzie wewnętrzne albo automatyzacja?** („zbudujmy dashboard / agenta, który zbiera …”) — to proponowane
+   rozwiązanie, nie sygnał. Najpierw je zakwalifikuj: kup, uzupełnij istniejące, zbuduj albo poczekaj — `references/buy-extend-build.md`.
+1. **Wynik (outcome).** Mierzalny rezultat produktu, na który zespół ma wpływ, z punktem wyjścia i celem — np. „odsetek
+   nowych klientów, którzy wysyłają pierwszą fakturę w ciągu 7 dni: 35% → 50%”. Prośba o funkcję to hipoteza rozwiązania:
+   zapytaj, jaki problem lub wynik za nią stoi.
+2. **Dowody.** Wywiady o konkretnych niedawnych zdarzeniach (`.claude/skills/ddd-discovery-intake/references/user-research.md`),
+   analityka, zgłoszenia do wsparcia. Bez dowodów szanse są założeniami — oznacz je tak.
+3. **Drzewo szans i rozwiązań.** Wynik → szanse (potrzeby, problemy, pragnienia) → rozwiązania → testy założeń.
+   Szansa, którą da się rozwiązać tylko w jeden sposób, to przebrane rozwiązanie. Jedno drzewo na zespół i wynik.
+4. **Wybierz szansę docelową** według wielkości (ilu klientów, jak często, jak bardzo boli), czynników rynkowych
+   i strategii — jeszcze nie według pracochłonności.
+5. **Nazwij ją:**
+   - opis problemu — kto, w jakiej sytuacji, czego potrzebuje, dlaczego to ważne, po czym poznamy poprawę; bez rozwiązania;
+   - JTBD — „Kiedy [sytuacja], chcę [motywacja], żeby [oczekiwany wynik]”;
+   - „jak moglibyśmy” — oparte na dowodach, skierowane na wynik, ani tak szerokie, że nic nie znaczy, ani ukrywające rozwiązanie.
+6. **Co najmniej 3 rozwiązania** dla wybranej szansy, każde z propozycją wartości: dla kogo, jaki ból usuwa, co dodaje,
+   czym różni się od dziś.
+7. **Mapa założeń w czterech ryzykach:** wartość (czy zechcą), użyteczność (czy umieją użyć), wykonalność (inżynieria,
+   limity API, dane, wydajność), opłacalność (koszt, prawo, sprzedaż, wsparcie). Umieść każde założenie na osi ważność ×
+   siła dowodów; najpierw testuj ważne i słabo udokumentowane.
+8. **Testy od najtańszego:** istniejące rozmowy i dane → prototyp papierowy lub klikalny → test concierge robiony ręcznie
+   → wersja dla wąskiej grupy za flagą → test A/B (`references/experiments-and-release.md`). Kryterium sukcesu i decyzję
+   dla każdego wyniku zapisz **przed** testem. Test fake door tylko z uczciwym komunikatem po kliknięciu.
+9. **Duża inicjatywa:** najpierw napisz komunikat prasowy z dnia premiery i FAQ, a epik jako hipotezę z miarą i kryterium
+   zatrzymania (`references/working-backwards.md`). Jeśli komunikatu nie da się napisać tak, by klient chciał go przeczytać,
+   niejasny jest problem albo klient.
+10. **Priorytety i metryki:** `references/priorities-and-metrics.md` — RICE, MoSCoW, Kano, WSJF; metryki sukcesu i ochronne;
+    plan zdarzeń przed wdrożeniem; data sprawdzenia po wydaniu.
+11. **Zapisz** w `docs/project/01-discovery/` (core-project-record): decyzję, wybrane i odrzucone rozwiązania z powodami,
+    wyniki testów. Pierwszą wersję tnij pionowo (najpierw działa, potem jest dopracowana). Zakres i kontrakt wymagań MVP:
+    proc-requirements-shaping.
 
-## Priorytety i metryki
-Szczegóły i wzory: `references/priorities-and-metrics.md` — RICE, MoSCoW, Kano, wartość/wysiłek,
-HEART z celami, sygnałami i metrykami, OKR, metryka wiodąca z metrykami ochronnymi, dopasowanie produktu do rynku,
-plan zdarzeń analitycznych.
-
-Roadmapa według wyników (teraz / dalej / później zamiast listy funkcji z datami): `references/working-backwards.md`.
-
-Model biznesowy, rynek i konkurencja (kanwa modelu biznesowego, Lean Canvas, analiza konkurencji, SWOT z działaniami,
-pięć sił Portera, mapa doświadczenia klienta): `references/business-model-and-market.md`.
+**Roadmapa:** listę funkcji z datami zastąp roadmapą wyników — Teraz / Następnie / Później, każda pozycja to problem lub
+szansa z metryką wyniku; daty tylko dla zobowiązań zewnętrznych (`references/working-backwards.md`).
+**Model biznesowy i rynek:** kanwy, konkurencja, SWOT, pięć sił — `references/business-model-and-market.md`.
 
 ## Zasady
-- Decyzje produktowe (co budujemy, co wycinamy, czy wydajemy) podejmuje człowiek. Agent przygotowuje dowody,
-  opcje z rekomendacją i pytania (core-plan-interview).
-- Dane osobowe w badaniach i analityce: zgoda, minimalizacja, bez wysyłania do zewnętrznych narzędzi bez zgody
-  organizacji (RODO).
-- Wynik, który nie ma miary, nie jest wynikiem. Miara, której nikt nie sprawdzi po wydaniu, jest dekoracją.
+- Wynik bez miary nie jest wynikiem; metryka, której nikt nie sprawdza po wydaniu, to dekoracja.
+- Dane osobowe w badaniach i analityce wymagają zgody i minimalizacji (arch-privacy-compliance).
+- Pokazanie zmiany interesariuszom i tego, jak będzie mierzona: pm-stakeholders.
 
-## Checklista
-- [ ] wynik mierzalny, z wartością wyjściową
-- [ ] szanse oparte na dowodach, z oznaczonymi założeniami
-- [ ] ≥ 3 rozwiązania, mapa założeń w czterech ryzykach
-- [ ] test najsłabszego ważnego założenia z kryterium sukcesu zapisanym przed testem
-- [ ] metryki sukcesu i ochronne + plan zdarzeń; termin sprawdzenia po wydaniu
+## Przykład
+**Sytuacja:** „Szef chce eksportu do Excela, bo klienci o to proszą.”
+**Wynik:**
+- Za prośbą (trzy zgłoszenia, dwie rozmowy): księgowi co miesiąc przepisują dane z faktur do własnego systemu.
+- Wynik: czas od końca miesiąca do zamknięcia ksiąg u klientów z planem Pro, mediana 6 dni → 3 dni.
+- Rozwiązania: (A) eksport do Excela; (B) bezpośrednia integracja z dwoma najczęściej używanymi systemami księgowymi;
+  (C) zaplanowany e-mail z plikiem CSV do księgowego.
+- Najbardziej ryzykowne założenie: „księgowi zaimportują plik bez ręcznych poprawek” (wartość, słabe dowody).
+- Test: w tym tygodniu wyślij ręcznie przygotowany CSV do 5 księgowych; kryterium — co najmniej 4 importują go bez zmian;
+  inaczej porzuć A i C i zbadaj B.
+
+## Lista kontrolna
+- [ ] mierzalny wynik z punktem wyjścia
+- [ ] szanse z dowodów, założenia oznaczone
+- [ ] co najmniej 3 rozwiązania i mapa czterech ryzyk
+- [ ] test najsłabszego ważnego założenia z kryterium spisanym wcześniej
+- [ ] metryki sukcesu i ochronne, plan zdarzeń, data sprawdzenia po wydaniu
 
 ## Źródła
-- T. Torres, [Opportunity Solution Trees](https://www.producttalk.org/opportunity-solution-trees), *Continuous Discovery Habits* (2021)
-- M. Cagan, *Inspired* (2018) — cztery ryzyka; NN/g, [How Might We questions](https://www.nngroup.com/articles/how-might-we-questions/)
-- C. Christensen i in., *Competing Against Luck* (2016) — JTBD; Strategyzer — propozycja wartości
-- [roadmap.sh — Product Design](https://roadmap.sh/product-design)
-- Kurs 10xDevs, ed. 3 (2026), moduł 5, lekcja 1 (kup, uzupełnij czy zbuduj) — materiał szkoleniowy (dostęp 2026-10-09)
-Opisane własnymi słowami.
+- T. Torres, *Continuous Discovery Habits*, 2021; Product Talk, „Opportunity Solution Trees”.
+- M. Cagan, *Inspired*, wyd. 2, 2017 (cztery ryzyka produktu).
+- C. Christensen i in., *Competing Against Luck*, 2016 (jobs to be done).
+- Nielsen Norman Group, „Using 'How Might We' Questions to Ideate on the Right Problems” [niezweryfikowane: data].
+- Strategyzer, Value Proposition Canvas.
+- roadmap.sh, ścieżka „Product Design” (dostęp 2026-11-20).

@@ -63,7 +63,7 @@
     {
       "id": "zapis-pozycyjny-wartownicy",
       "expect": "trigger",
-      "prompt": "Funkcja zapisuje 18 kolumn pozycyjnie (tablica wartości w kolejności kolumn), a odczyt idzie po nazwach. Przed refaktoryzacją dopisaliśmy test zapisz → odczytaj → porównaj. Czy to wystarczy, żeby wykryć zamianę dwóch kolumn? Odpowiedz zwięźle.",
+      "prompt": "Eksport rozliczeń buduje INSERT z dwóch równoległych list: nazw 14 kolumn i wartości dopisywanych w pętli, a raporty czytają tabelę po nazwach kolumn. Przed refaktoryzacją dopisaliśmy test zapisz → odczytaj → porównaj. Czy to wystarczy, żeby wykryć zamianę dwóch kolumn? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [

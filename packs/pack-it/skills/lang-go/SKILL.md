@@ -36,11 +36,11 @@ metadata:
 | **aggregate** | a pointer to a struct with private state, business methods instead of setters, `version` for optimistic locking, `PullEvents()` |
 | **variants** | an interface with an unexported method (a set closed within the package) + `switch v := x.(type)`; `default` with `panic` for an unhandled variant |
 | **operation result** | `(T, error)`; rejections as sentinel errors or error types with `Unwrap`, told apart with `errors.Is` / `errors.As` |
-| **event** | a struct in the past tense (`ResourceBlocked`) implementing the module's event interface |
+| **event** | a struct in the past tense (`ToolLent`) implementing the module's event interface |
 | **policy** | an interface with one method or a function type (`type DiscountPolicy func(Order) Money`) injected through the constructor |
 | **repository** | an interface (port) in the domain package operating on aggregates; the SQL adapter in the infrastructure package |
 | **read model** | a separate struct and SQL query bypassing the aggregate |
-| **state machine** | the state as variants (`Free`, `Blocked`, `Disabled`), transitions in a type `switch` in an aggregate method |
+| **state machine** | the state as variants (`OnShelf`, `Lent`, `Withdrawn`), transitions in a type `switch` in an aggregate method |
 | **module** | a package with a small exported API, the rest unexported; `internal/` for boundaries |
 
 Tested implementations (amount, identifier, rejection errors, state variants, aggregate with events, repository
@@ -60,10 +60,11 @@ A project with a directive older than 1.22 → `detect_stack.py` reports `PROJEC
 version. Newer than 1.27 → `SKILL_OUTDATED`, update per core-stack-sync.
 
 ## Example
-Question: "Reserve should return success or a rejection (slot taken, resource disabled)". Result:
-`func (r *ResourceAvailability) Block(by string, at time.Time) error` — `nil` is success; `ErrDisabled`
-(a sentinel error); `*ConflictError{BlockedBy: "jan"}` with `Unwrap() error { return ErrSlotTaken }`. The caller:
-`errors.Is(err, ErrSlotTaken)` → 409, `errors.As(err, &ce)` → a message with `ce.BlockedBy`, another error → 500.
+Question: "Reserve should return success or a rejection (slot taken, resource disabled)". Result, on the tool-library
+domain (reserve = lend, taken = on loan, disabled = withdrawn):
+`func (t *Tool) Lend(member MemberID, at time.Time) error` — `nil` is success; `ErrWithdrawn`
+(a sentinel error); `*OnLoanError{Borrower: "m-0042"}` with `Unwrap() error { return ErrOnLoan }`. The caller:
+`errors.Is(err, ErrOnLoan)` → 409, `errors.As(err, &onLoan)` → a message with `onLoan.Borrower`, another error → 500.
 The full code with a test: `references/domain-building-blocks.md`.
 
 ## Checklist

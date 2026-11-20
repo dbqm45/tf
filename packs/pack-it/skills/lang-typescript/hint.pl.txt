@@ -35,12 +35,12 @@ head: Użyj przy kodzie TypeScript 5.x–7.x — typy, zawężanie, generyki, ts
 | Pojęcie (słownik) | Idiom w TypeScript |
 |---|---|
 | **obiekt wartości** | klasa z `private constructor` + fabryka `static of()`, pola `readonly`, operacje zwracają nowe instancje; kwoty jako `bigint` w najmniejszej jednostce (nigdy `number` w obliczeniach) |
-| **identyfikator / encja** | typ markowany (branded) `string & { __brand: 'PartyId' }` — nie pomylisz ID różnych bytów |
+| **identyfikator / encja** | typ markowany (branded) `string & { __brand: 'MemberId' }` — nie pomylisz ID różnych bytów |
 | **warianty** | unia dyskryminowana z polem `kind`/`type` + wyczerpujący `switch` i `assertNever` |
 | **wynik operacji** | `type Result<E, T> = { ok: true; value: T } \| { ok: false; error: E }` — odrzucenie z powodem zamiast wyjątku |
 | **agregat** | klasa z prywatnym stanem, zmiany tylko metodami biznesowymi zwracającymi `Result`, zdarzenia zbierane i oddawane przez `pullEvents()` |
 | **maszyna stanów** | unia stanów (`{ state: 'free' } \| { state: 'blocked'; by }`) — nieprawidłowe stany są niereprezentowalne |
-| **zdarzenie** | niezmienny obiekt w unii zdarzeń, nazwa w czasie przeszłym (`type: 'ResourceBlocked'`) |
+| **zdarzenie** | niezmienny obiekt w unii zdarzeń, nazwa w czasie przeszłym (`type: 'ToolLent'`) |
 | **polityka** | typ funkcji (`(ctx: Ctx) => Money`) lub interfejs strategii; wybór polityki w fabryce |
 | **specyfikacja** | predykaty `(x: T) => boolean` składane funkcjami `and/or/not` |
 | **repozytorium / port** | `interface` w domenie (async), implementacja (HTTP, baza, pamięć) poza domeną |
@@ -50,7 +50,7 @@ head: Użyj przy kodzie TypeScript 5.x–7.x — typy, zawężanie, generyki, ts
 ## Indeks `references/` (czytaj tylko potrzebny plik)
 | Plik | Czytaj, gdy… |
 |---|---|
-| `domain-building-blocks.md` | implementujesz Money, Quantity, Party, TimeSlot, Result, agregat ze zdarzeniami |
+| `domain-building-blocks.md` | implementujesz Money, Measure, brandowane id, warianty Member, LoanPeriod, reguły pól i opcji, Result, agregat ze zdarzeniami |
 | `domain-modeling-patterns.md` | typ + towarzysz, zdarzenia wewnętrzne vs publikowane, decider, `#imports`, pułapki dat |
 | `basics-and-narrowing.md` | `any`/`unknown`, `type`/`interface`, asercje, `satisfies`, `enum`, zawężanie |
 | `functions-objects-classes.md` | sygnatury, przeciążenia, wariancja, excess property checks, klasy, `this` |

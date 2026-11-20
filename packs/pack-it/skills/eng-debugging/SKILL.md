@@ -1,101 +1,90 @@
 ---
 name: eng-debugging
-description: Use when something works wrongly or stopped working and the cause is not obvious — reproduction, hypotheses, git bisect.
+description: Use when something works wrongly or stopped working and the cause is unclear — reproduce, hypotheses, git bisect, swallowed errors, a fix that did not help.
 metadata:
   review: "2027-10-09"
-  catalog: "Use when a program works wrongly and the cause is not obvious — describing the symptom, reproduction (preferably with a red test), hypotheses with a deciding experiment, narrowing down (bisection in history with git bisect run, in input data, in code and configuration), the debugger and logs, typical classes of causes (nondeterminism, shared state, cache, environment, versions), the root cause and a fix without masking. Not for running a production incident (ops-sre-incidents), diagnosing a server and network (ops-linux-networking), reviewing reports from outside (proc-issue-triage) or quarantining flaky tests (qa-regression)."
-  keywords: "debugowanie, błąd, bug, nie działa, dlaczego to nie działa, przyczyna błędu, wyjątek, stack trace, NullPointerException, regresja, git bisect, który commit zepsuł, debugger, breakpoint, pdb, odtworzyć błąd, działa lokalnie a nie w CI, poprawka nie pomogła, kolejna poprawka, znowu ten sam błąd, przeramowanie, zapis nie działa, API zwraca 200, połknięty błąd, debugging, error, does not work, why does this not work, cause of the error, exception, regression, which commit broke it, reproduce the bug, works locally but not in CI, the fix did not help, another fix, the same bug again, reframing, saving does not work, API returns 200, swallowed error"
+  catalog: "Use when code behaves wrongly, a regression appeared, it works locally but not in CI, an API returns 200 but nothing is stored, or a fix did not help — describing the symptom, a reproducing red test, 2–4 hypotheses with deciding experiments, narrowing down (git bisect run, halving data, instrumentation, environment diff), checking assumptions, root cause, a fix without masking, a record in lessons.md, multi-source evidence and re-framing a misnamed problem. Not for running a production incident (ops-sre-incidents), diagnosing a server and network (ops-linux-networking), reviewing reports from outside (proc-issue-triage) or quarantining flaky tests (qa-regression)."
+  keywords: "debugowanie, debugować, znaleźć przyczynę błędu, nie wiem czemu nie działa, przestało działać, regresja, który commit zepsuł, git bisect, bisekcja, u mnie działa, działa lokalnie a w CI nie, poprawka nie pomogła, kolejna poprawka nie pomogła, ten sam błąd wraca, przeramowanie, źle postawiony problem, zapis nie działa, API zwraca 200, nic się nie zapisuje, połknięty błąd, połknięty wyjątek, pusty catch, błąd tylko dla części użytkowników, losowy błąd, test przechodzi sam a w zestawie pada, NullPointerException, stack trace, debugger, pdb, breakpoint, odtworzyć błąd, nie da się odtworzyć, debugging, find the root cause, stopped working, which commit broke it, regression, works on my machine, works locally fails in CI, fix did not help, returns 200 but nothing saved, swallowed error, swallowed exception, cannot reproduce, flaky only in suite, root cause analysis, reframe the problem"
 ---
 
-# Debugging — from the symptom to the cause
+# Debugging — from symptom to cause, then a fix that does not mask
 
-The rule: **first the cause, then the fix.** A fix without understanding the cause usually moves the bug elsewhere
-or masks it. You work as in an experiment: observation → hypothesis → prediction → test → conclusion.
-You keep a short log (what was checked, the result), so as not to check the same thing twice and to be able to hand the work over.
+Cause before fix. Work as a loop of experiments: observe → hypothesise → predict → test → conclude. Keep a short log of what you
+checked and what it showed — it stops you repeating experiments and lets someone else take over.
 
 ## Procedure
-1. **Describe the symptom precisely:**
-   - what is expected, what is actual;
-   - since when, where (environment, version, commit, data, user);
-   - the full message and call stack, without summarizing.
-   The discrepancy "works for me / does not work in CI" is already information: the difference between environments is the first suspect.
-   A user report in one sentence, without a stack trace → first questions (steps, scope, frequency, area),
-   then sources of evidence: monitoring, logs, the browser, code — `references/evidence-from-many-sources.md`.
-2. **Reproduce the bug:**
-   - the smallest, repeatable case, preferably **an automated test that is red** for the right reason;
-     this is also the first TDD step of the fix (the `tdd_guard` hook);
-   - a random bug: run it many times in a loop, fix the random seed, the clock, the test order and parallelism;
-   - without a reproduction you do not announce a fix, only "could not reproduce" with a list of attempts.
-3. **Pose hypotheses and decide them with an experiment:**
-   - write down 2–4 possible causes;
-   - for each, record what would have to be true and what experiment will confirm or refute it;
-   - start with the one that is cheapest to check, not your favourite;
-   - change one thing at a time.
-4. **Narrow down by half:**
-   - **in history**: `git bisect run <script>` finds the first bad commit in log₂(n) steps (200 commits → approx. 8);
-     code 125 skips a commit that cannot be checked — `references/bisection-and-tools.md`;
-   - **in data**: split the input into halves until the smallest case triggering the bug remains (delta debugging);
-   - **in code**: logs or assertions at module boundaries — where the state is still good and where it is already bad;
-   - **in the environment**: compare the working and the non-working one (versions from the lockfile, variables, flags, data, system).
-5. **Observe instead of guessing:**
-   - the debugger: a breakpoint, inspecting variables, stepping (`breakpoint()` in Python, `node --inspect-brk`,
-     the IDE debugger);
-   - a log with context (identifiers, input values), not "I am here";
-   - go **backwards from the failure**: which value is wrong, where did it come from, where did it first become wrong (defect →
-     infected state → failure).
-6. **Check the assumptions** that "are surely true":
-   - are you running the code you think (an old build, bytecode cache, a server not reloaded, another branch);
-   - dependency versions and configuration;
-   - time zones, character encoding, locale settings.
-   Example: in a Python bisection a stale `__pycache__` gave a false result — see the reference.
-7. **Find the root cause:**
-   - ask "why" several times: why was the value wrong, why did the code allow it, why did the test not catch it;
-   - you fix the cause and the gap in the tests, not only the symptom.
-8. **Fix without masking:**
-   - test red → minimal fix → test green → the whole test suite;
-   - you do not mask: an empty `except`, retrying without a cause, `sleep` in a test, disabling a test or a linter rule;
-   - you check similar places in the code with `grep` — the same bug is often in several copies.
-9. **Record** in the step report: the symptom, the cause, the evidence (a test, the commit from the bisection) and the fix. A trap that may
-   come back goes to `docs/project/lessons.md` (core-project-record).
-10. **Know when to stop:**
-    - after approx. 2 hours without progress or after all hypotheses are refuted, present the log and the hypotheses to a human
-      or hand the problem to an agent in a fresh context;
-    - a production bug affecting users: first restore the service (ops-sre-incidents), diagnosis later;
-    - a second failed fix of the same symptom, a plan that does not converge on a decision, or a report with a ready
-      fix ("X breaks, let's do Y") → reframing (`references/reframing.md`): the problem may be wrongly
-      named, not poorly investigated.
+1. **Describe the symptom.** Expected vs actual; since when; where (environment, version, commit, data, user); the full error message
+   and stack trace, not a summary. A difference of environment ("works for me") is the first suspect.
+   A one-sentence report without a stack ("it doesn't work") → ask first: the steps, who is affected, how often, which area. Do not guess
+   a cause.
+2. **Reproduce.** The smallest repeatable case, ideally an automated test that is **red for the right reason** — it is the first TDD step
+   of the fix (`tdd_guard` lets production code change only after it). Intermittent bug: run it N times in a loop; pin the seed, the clock,
+   test order and parallelism. No reproduction → report "could not reproduce" with the list of attempts; never claim a fix.
+3. **Hypotheses.** 2–4 candidates. For each: what must be true if it holds, and which experiment decides. Run the cheapest decisive
+   experiment first, not your favourite. Change one thing at a time.
+4. **Narrow down** along the axis that fits (examples: `references/bisection-and-tools.md`):
+   - **history** — `git bisect run <script>`: exit 0 = good, 1–127 except 125 = bad, 125 = cannot test (skip), above 127 aborts.
+     About log2(n) steps (200 commits ≈ 8). Keep the script outside the repo or untracked; clean build and caches between steps; merge-heavy
+     history → `git bisect start --first-parent`; monorepo → limit by path `git bisect start <bad> <good> -- <path>`; first check that
+     the "bad" end is really red and the "good" end green; save `git bisect log`; finish with `git bisect reset`. A skipped commit next to the
+     first bad one gives an honest two-candidate answer — decide by reading both diffs. The bisect test becomes the regression test;
+   - **data** — halve the input until the smallest case that still fails (delta debugging); it becomes a regression test without personal data;
+   - **code** — logs and assertions at module boundaries, context-rich (ids, input values);
+   - **environment** — diff versions from the lockfile, variables, flags, data, operating system.
+5. **Observe.** A debugger (`breakpoint()`, `python -m pdb`, `pytest --pdb`; `node --inspect-brk` + `chrome://inspect`, `debugger;`).
+   Walk backwards from the failure: the failure ← the infected state ← the defect.
+6. **Check your assumptions.** Are you running the code you think (an old build, stale bytecode or cache, a server not reloaded, the
+   wrong branch)? Dependency versions and configuration? Time zones, encoding, locale?
+7. **Root cause.** Ask "why" until you reach the defect and the gap: why the value was wrong, why it was allowed, why the tests missed it.
+   Fix the cause and the test gap.
+8. **Fix without masking.** Red → minimal fix → green → the whole suite. Forbidden masks: an empty `except`/`catch`, a blind retry,
+   `sleep` in tests, disabling a test or a lint rule. Search for copies of the same pattern elsewhere (`rg`).
+9. **Record.** In the step report: symptom, cause, evidence, fix. A trap that may recur → `docs/project/lessons.md`.
 
-## Typical classes of causes
+## Cause classes — first experiment
 | Class | Signal | First experiment |
 |---|---|---|
-| nondeterminism | the bug every n-th run | a loop N times; a fixed seed, clock, order; no parallelism |
-| shared state | the test passes alone, fails in the suite | run in a different order; look for global variables, singletons, a shared database |
-| edge values | the bug for part of the data | empty, `null`, zero, very large, non-ASCII characters, the turn of a day/month |
-| time and zones | the bug at a specific hour or date | set the clock to that moment; check the server and database zone |
-| cache and artifacts | "the fix does not work" | a clean build, clear the cache, check which file is executed |
-| environment | works locally, not in CI/production | compare versions, variables, permissions, data |
-| dependency | after an update | bisection over the lockfile, release notes (ops-dependency-upgrades) |
-| concurrency | rare, under load | a test with many threads; logs with a thread/request identifier; locks and transactions |
-| swallowed error | the API returns 200/`ok`, but the effect (a write, a send) did not happen; a warn in the logs | look for error handling that logs and returns success; the test checks the stored state, not the response |
+| nondeterminism | fails sometimes | loop N runs, pin seed and clock |
+| shared state | passes alone, fails in the suite | shuffle test order, look for globals, singletons, leftover DB rows |
+| edge values | only for some inputs | halve the input, test the boundaries |
+| time and zones | around midnight, month end, DST | inject a fixed clock, run in another `TZ` |
+| cache and artifacts | the change "has no effect" | clean build, `PYTHONDONTWRITEBYTECODE=1`, clear caches |
+| environment | works locally, not in CI | diff versions, variables, flags, OS |
+| dependency | after an update | bisect the lockfile change |
+| concurrency | under load, duplicates | a many-thread test, logs with request id |
+| swallowed error | 200 / `ok: true`, no effect | a test that checks the stored state, not the response (`references/evidence-from-many-sources.md`) |
 
-## Boundaries
-- A production incident (command, communication, rollback): ops-sre-incidents. Server and network symptoms (DNS, TLS,
-  ports, processes): ops-linux-networking. Performance: qa-performance-testing.
-- A report from outside (category, reproduction, a brief for the implementer): proc-issue-triage. Flaky tests in CI
-  (quarantine, metrics): qa-regression.
+## When to stop and change approach
+- No progress after a long session or all hypotheses refuted → hand the log to the human or to a fresh-context agent.
+  (A time limit such as about two hours is a team heuristic [assumption], not a rule.)
+- Production impact → restore service first (ops-sre-incidents), investigate after.
+- A second failed fix of the same symptom, a plan that does not converge, or a report that bundles symptom, cause and fix
+  ("duplicates — add a lock") → re-frame the problem: `references/reframing.md`.
+- The `tdd_guard` hook shows the same failing test after 1–2 fix attempts → stop editing and run this procedure from step 1.
+
+## Example
+Input: "The invoice report computed totals correctly two weeks ago, now they are wrong; ~200 commits since."
+Result:
+- Symptom: `report_totals()` returns 1,204.10 instead of 1,204.13 for fixture `march.csv`; reproduced with a red test
+  `test_march_totals` (checked on HEAD: red; on the tag from two weeks ago: green).
+- Script `/tmp/check.sh` (outside the repo): `git clean -fdx -e .venv`; build; exit 125 if the build fails; run the one test.
+- `git bisect start --first-parent HEAD v2.14.0` → `git bisect run /tmp/check.sh` → 8 steps → first bad `e41b9d0` "use float sum in
+  aggregation". `git bisect log` saved in the step report.
+- Root cause: float summation replaced `Decimal`; the tests used whole numbers only. Fix: back to `Decimal`, plus a property test
+  "the total equals the sum of the rounded lines". `rg "sum(float"` found one more copy — fixed in the same commit.
 
 ## Checklist
-- [ ] symptom described with the full message, version and environment
-- [ ] bug reproduced with a test that was red for the right reason
-- [ ] hypotheses with experiments in the log; one change at a time
-- [ ] root cause named and proven (a test, a commit, a measurement)
-- [ ] fix without masking; the whole test suite green; similar places checked
-- [ ] fix verified on every channel that showed the problem (test, monitoring, logs, browser)
+- [ ] symptom complete (expected/actual, since when, where, full stack)
+- [ ] red test reproduces it for the right reason (or "could not reproduce" with attempts)
+- [ ] hypotheses with experiments logged; one change at a time
+- [ ] root cause proven, not presumed; test gap closed
+- [ ] no masking; whole suite green; similar places checked
+- [ ] verified on every channel that showed the problem; lessons.md if the trap can recur
 
 ## Sources
-- A. Zeller, *Why Programs Fail* and debuggingbook.org (the scientific method, the defect → infection → failure chain, delta debugging)
-- D. J. Agans, *Debugging: The 9 Indispensable Rules*
-- git-scm.com/docs/git-bisect (`git bisect run`, code 125); behaviour checked on git 2.43 (2026-10-03)
-- The 10xDevs course, ed. 3 (2026), module 2, lesson 4 (reframing) and module 3, lesson 5 (debugging from many sources) —
-  training material (accessed 2026-10-09)
-Described in our own words.
+- git documentation, `git-bisect` (git-scm.com/docs/git-bisect, accessed 2026-10-03); behaviour checked on git 2.43 and CPython 3.11
+  (own run, 2026-10-03).
+- Python documentation, `pdb` and `breakpoint()` (docs.python.org/3/library/pdb.html, accessed 2026-10-03); Node.js "Debugging guide"
+  (nodejs.org, accessed 2026-10-03); Playwright documentation (playwright.dev, accessed 2026-10-03).
+- A. Zeller, *Why Programs Fail*, 2nd ed., Morgan Kaufmann, 2009, and debuggingbook.org — the infection chain, delta debugging.
+- D. J. Agans, *Debugging: The 9 Indispensable Rules for Finding Even the Most Elusive Software and Hardware Problems*, AMACOM, 2002.

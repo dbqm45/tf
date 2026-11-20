@@ -1,123 +1,116 @@
-head: Użyj przy przeglądzie planu przed kodem albo kodu względem planu — dryf, waga, triaż, werdykt. Użyj, gdy trzeba sprawdzić plan kroku, zanim agent zacznie kodować (spójność, ugruntowanie w repo, weryfikacja ryzykownych twierdzeń, wymiary, werdykt), albo implementację względem zatwierdzonego planu po fazie lub przed scaleniem (trzy zbiory plików, dryf, nadmiar i braki, bezpieczeństwo i wzorce, kryteria), a potem przejść ustalenia z człowiekiem (macierz waga × wpływ, triaż z decyzjami, zapis jako lekcja). Nie do procesu PR i konfiguracji przeglądu przez usługę lub CI (core-git-workflow), samego bezpieczeństwa (agent security-reviewer), czytelności kodu bez planu (eng-clean-code) ani przepytywania człowieka przed planem (core-plan-interview), ani przeglądu specyfikacji wymagań przed planem — panel niezależnych recenzentów (core-delivery-lifecycle).
-# Przegląd zmiany względem planu
+head: Użyj przy przeglądzie planu przed kodem albo kodu względem planu — spójność, ugruntowanie, dryf (nadmiar, BRAK), ustalenia z wagą i wpływem, triaż. Użyj, gdy pisemny plan kroku trzeba sprawdzić przed kodowaniem (czy zadziała, czy jest spójny, czy pasuje do kodu) albo zaimplementowaną fazę sprawdzić względem planu przed scaleniem (dryf, nadmiar, brak, kryteria naprawdę uruchomione, przebieg bezpieczeństwa i jakości), a potem przejść ustalenia z człowiekiem po jednym i je zapisać. Agent przygotowuje dowody, decyduje człowiek. Nie do konfiguracji automatycznego review PR w CI ani REVIEW.md (core-git-workflow), pisania samego planu (core-plan-interview), reguł czystego kodu (eng-clean-code) ani oceny, czy test sprawdza wymaganie (qa-spec-first-testing).
+# Przegląd zmiany — plan przed kodem, kod względem planu
 
-Zły plan kosztuje godziny pracy, przegląd planu — minuty. **Przegląd planu** pyta „czy ten plan zadziała?”,
-**przegląd implementacji** — „czy zbudowaliśmy to, co zaplanowaliśmy, i czy da się to bezpiecznie scalić?”.
-Agent przygotowuje raport i prowadzi triaż; werdykt i decyzje należą do człowieka. Ustaleń nie szuka się na siłę:
-dobry plan lub kod daje krótki raport.
+Dwa momenty, jeden zapis:
+- **Przegląd planu przed implementacją** — „czy ten plan zadziała?” Werdykt: **gotowy / do poprawy / do przemyślenia**.
+- **Przegląd zgodności po implementacji** — „czy zbudowaliśmy to, co obiecał plan, i czy można bezpiecznie scalić?”
+  Werdykt: **zatwierdzony / wymaga uwagi / odrzucony**.
 
-## Wejście
-- Raport kroku `docs/project/06-delivery/NNN-*.md` z planem (stan końcowy, poza zakresem, fazy, kryteria)
-  i sekcją „Postęp” (szablon `delivery` w core-project-record).
-- Badanie lub przeramowanie obok raportu kroku, jeśli powstały.
-- `docs/project/lessons.md` — ustalenie łamiące zapisaną lekcję ma wyższą wagę.
-- Wcześniejszy raport przeglądu → wznów od triażu (ustalenia z decyzją `PENDING`).
+Oba kończą się triażem z człowiekiem. Agent zbiera dowody i proponuje; człowiek decyduje o każdym ustaleniu.
 
-## Tryb A — przegląd planu (przed kodem)
-1. **Spójność wewnętrzna** (tu jest najwięcej trafień):
-   - sprzeczność — ograniczenie opisane na górze, a ignorowane w fazach; punkt „poza zakresem” wraca w fazie;
-   - obietnica bez fazy — kryterium stanu końcowego, którego żadna faza nie buduje;
-   - złamany kontrakt — faza B potrzebuje identyfikatora lub pola, którego wynik fazy A nie zwraca; decyzja,
-     którą wykonawca musiałby zgadnąć;
-   - „Postęp” ↔ fazy — każde kryterium ma swój wiersz, pola wyboru są tylko w „Postępie”.
-2. **Ugruntowanie** (sam, bez wykonawców): istnienie co najmniej 5 ścieżek z planu, `grep` nazw funkcji i kluczy,
-   zgodność TL;DR z treścią. Wynik jedną linią, np. `Ugruntowanie: 5/5 ścieżek, 3/3 symbole, TL;DR zgodne z planem`.
-3. **Weryfikacja w kodzie** (pomijana w trybie szybkim): 3–5 najbardziej ryzykownych twierdzeń planu → jeden
-   wykonawca (np. `scout`) z trzema zadaniami: potwierdź lub obal każde twierdzenie z `plik:linia`; znajdź innych
-   wywołujących zmieniane funkcje (zasięg, którego plan nie zna); sprawdź, czy istniejący kod już rozwiązuje to,
-   co plan buduje od nowa.
-4. **Wymiary:**
-   - zgodność ze stanem końcowym — czy wszystkie kryteria mogą przejść, a cel mimo to nie zostać osiągnięty?
-   - oszczędność — czy cel jest osiągalny bez tej fazy; abstrakcja „na zapas”; zmiany „przy okazji”;
-   - dopasowanie do architektury — nowy wzorzec obok istniejącego, kierunek zależności, „refaktoruj według potrzeb”;
-   - ślepe plamy — ścieżki błędów, wycofanie, koszt, zmiana wartości domyślnych, testy, granice bezpieczeństwa;
-   - wykonalność — konkretne ścieżki i polecenia weryfikacji, brak TODO.
-5. **Werdykt:** **gotowy** / **do poprawy** (konkretne poprawki planu) / **do przemyślenia** (problem z podejściem —
-   wróć do badania lub przeramowania).
+## Wejście i wyjście
+- Wejście: raport kroku `docs/project/06-delivery/NNN-*.md` (zatwierdzony plan, kryteria stanu końcowego, sekcja „Postęp”)
+  oraz `docs/project/lessons.md`. **Brak raportu kroku lub planu** → poproś o niego albo powiedz, że plan tworzy core-plan-interview,
+  a szablon `delivery` jest w core-project-record. Nigdy nie przeglądaj planu odtworzonego z rozmowy i nie wymyślaj ustaleń.
+- Wyjście: `docs/project/07-review/<data>-plan-review-<krok>.md` albo `docs/project/07-review/<data>-impl-review-<krok>[-fN].md`
+  (`-fN` = faza N), z szablonu `review` z core-project-record: werdykt, linia **Grounding** (ugruntowanie), tabela ustaleń
+  z kolumnami Waga, Wpływ i Decyzja.
+- Poprzedni raport dla tego samego kroku z decyzjami `PENDING` → nie przeglądaj od nowa; wznów od triażu.
 
-## Tryb B — przegląd implementacji (po fazie albo przed scaleniem)
-1. **Zakres z gita:** commity od zatwierdzenia planu (`git log --since`, `git diff <baza>...HEAD --stat`) i trzy
-   zbiory plików: w planie i w diffie (sprawdź treść) · w diffie bez planu (**NADMIAR** — zmiana nieplanowana) ·
-   w planie bez diffu (**BRAK**). Główna sesja trzyma plan i listę plików, nie ich treść.
-2. **Dwa niezależne przebiegi** (równolegle, w osobnych kontekstach):
-   - **dryf** — dla każdej planowanej zmiany: ZGODNE / DRYF / BRAK / NADMIAR, z cytatem planu i `plik:linia`;
-   - **bezpieczeństwo, jakość, wzorce** — wstrzyknięcia, sekrety, autoryzacja na granicach; N+1 i brak
-     stronicowania; obsługa błędów na granicach zewnętrznych, wyścigi; destrukcyjne operacje na danych bez ścieżki
-     migracji; porównanie z 1–2 podobnymi plikami w repo (tylko istotne różnice; przy ≤ 3 plikach krótko).
-3. **Kryteria:** uruchom polecenia automatyczne z planu i pokaż wynik dosłownie. Kryterium ręczne odhaczone
-   w „Postępie” bez śladu w diffie → ustalenie „odhaczone bez sprawdzenia”.
-4. **Kolejność czytania diffu dla człowieka:** zakres → granice ryzyka (auth, zapis danych, migracje, API
-   zewnętrzne, konfiguracja) → lokalne wzorce → testy (czy test złapałby błąd, którego chcemy uniknąć; zielony test
-   agenta to informacja, nie dowód — qa-spec-first-testing).
-5. **Wymiary:** zgodność z planem · dyscyplina zakresu · bezpieczeństwo i jakość · architektura · spójność wzorców
-   · kryteria sukcesu. Plan definiuje, co znaczy „przetestowane” — nie oceniasz tego, czego nie obiecał, a jego
-   „poza zakresem” nie jest rozrostem zakresu.
-6. **Werdykt:** **zatwierdzone** / **wymaga uwagi** / **odrzucone** (każde krytyczne niezaliczenie wymiaru).
+## A. Przegląd planu (przed kodem)
+1. **Najpierw spójność wewnętrzna** — najtańsze sprawdzenie o największym uzysku:
+   - ograniczenie zapisane na górze, którego żadna faza nie respektuje;
+   - pozycja z „poza zakresem”, która wraca w fazie;
+   - kryterium stanu końcowego, którego żadna faza nie buduje (obietnica bez fazy);
+   - faza B używa identyfikatora, pola lub endpointu, którego faza A nigdy nie zwraca;
+   - wiersze „Postępu”, które nie odpowiadają jeden do jednego kryteriom;
+   - podsumowanie mówi coś, czego nie ma w treści — sprzeczność.
+2. **Ugruntuj plan sam** (tanio, bez pomocnika): sprawdź, że istnieje co najmniej 5 ścieżek z planu, grep nazwanych
+   funkcji/typów/kluczy konfiguracji, porównaj podsumowanie z treścią. Zapisz jedną linią, np.
+   `Grounding: 6/7 ścieżek istnieje (brak src/export/csv.ts), 4/4 symbole znalezione, podsumowanie zgodne z treścią`.
+3. **Zweryfikuj najbardziej ryzykowne twierdzenia w kodzie** — 2–3 stwierdzenia, które zatopią plan, jeśli są fałszywe („funkcja nie ma
+   innych wywołań”, „nic jeszcze nie eksportuje CSV”, „kolumna dopuszcza null”). Przekaż je jednemu pomocnikowi tylko do odczytu
+   (agent `scout`) i poproś o potwierdzenie/obalenie z `plik:linia`, inne wywołania funkcji zmienianych przez plan i istniejący kod,
+   który już robi to zadanie. Tryb szybki może pominąć ten krok; napisz to w raporcie.
+4. **Wymiary** (patrz, nie dopychaj):
+   - **Stan końcowy** — czy wszystkie kryteria mogą być zielone, a cel wciąż nieosiągnięty?
+   - **Oszczędność** — fazy, abstrakcje lub opcje, o które nikt nie prosił (YAGNI).
+   - **Dopasowanie** — zgodność z granicami modułów i kierunkiem zależności w kodzie.
+   - **Martwe pola** — ścieżki błędów, wycofanie, migracja danych, koszt, zmienione wartości domyślne, testy, bezpieczeństwo.
+   - **Wykonalność** — konkretne ścieżki i komendy weryfikacji w każdej fazie, bez „TODO” i „ustalimy później”.
+5. **Werdykt.** Dobry plan dostaje krótki raport: „brak ustaleń”, werdykt **gotowy**. Nie dodawaj obserwacji dla pozoru dokładności.
+   **do poprawy** = lokalne korekty; **do przemyślenia** = podejście albo podział na fazy jest zły.
 
-## Ustalenie
-`ID · waga · wpływ · wymiar · miejsce · szczegół z dowodem · poprawka`
-- **Waga** — jak źle, jeśli zignorujemy: krytyczne / ostrzeżenie / obserwacja.
-- **Wpływ** — jak trudna decyzja: niski (poprawka oczywista i lokalna) / średni (prawdziwy kompromis) /
-  wysoki (szeroki zasięg: dane, kontrakt, produkt). Waga i wpływ są niezależne.
-- **Miejsce** — `plik:linia` albo sekcja planu.
-- Domyślnie jedna poprawka. Dwie tylko przy prawdziwym kompromisie; wtedy każda ma: podejście · mocną stronę ·
-  koszt · pewność · czego nie sprawdzono, i dokładnie jedna jest rekomendowana.
-- Najwyżej 10 ustaleń — podobne scal („6 plików łamie konwencję nazw” = jedno ustalenie). Sekret opisujesz bez
-  wartości.
+## B. Przegląd implementacji (po fazie, przed scaleniem)
+1. **Zakres z historii.** Weź commity od zatwierdzenia planu (`git log`/`git diff <baza>..HEAD --name-only`).
+   Podziel pliki na trzy zbiory i trzymaj w głównej sesji **listy, nie treść**:
+   - **MATCH** — zaplanowane i zmienione;
+   - **EXCESS** — zmienione, ale nie w planie (nadmiar, spoza planu, nieplanowane);
+   - **GAP** — w planie, bez diffu (np. zaplanowana migracja, która się nie pojawiła); w polskim raporcie oznacz `BRAK`.
+   Zmiana oznaczona **DRIFT** (dryf) jest w zaplanowanym pliku, ale robi coś innego, niż mówi plan.
+2. **Dwa niezależne przebiegi w osobnych kontekstach** (osobni podagenci, żeby jeden nie zakotwiczał drugiego):
+   - **Zgodność z planem** — dryf, nadmiar, brak, kryteria, przestrzeganie listy „poza zakresem”.
+   - **Bezpieczeństwo i jakość** (agent `security-reviewer` dla części bezpieczeństwa): wstrzyknięcia, sekrety w kodzie lub logach,
+     autoryzacja na granicach (cudzy zasób), N+1 i brak paginacji, obsługa błędów na zewnętrznych krawędziach, wyścigi,
+     destrukcyjne operacje na danych bez ścieżki migracji, spójność z 1–2 sąsiednimi plikami tego samego rodzaju (eng-clean-code).
+3. **Uruchom automatyczne kryteria planu** (np. `npm test`, `npm run lint`) i wklej wynik **dosłownie**, z kodem wyjścia.
+   Ręczne kryterium odhaczone w „Postępie” bez śladu w diffie to osobne ustalenie: „odhaczone bez dowodu”.
+4. **Kolejność czytania dla człowieka:** zakres (trzy zbiory) → granice ryzyka (auth, zapisy, migracje, zewnętrzne API, konfiguracja)
+   → lokalne wzorce → testy. Zielony test napisany przez agenta to informacja, nie dowód — czy sprawdza wymaganie,
+   ocenia qa-spec-first-testing.
+5. **Oceniaj tylko to, co plan obiecał.** To, co plan jawnie wyłączył z zakresu, nie jest rozrostem zakresu, a jego brak nie jest luką.
+6. **Werdykt.** Jakiekolwiek krytyczne ustalenie w wymiarze → **odrzucony**; same ostrzeżenia → **wymaga uwagi**; inaczej **zatwierdzony**.
+   Wariant w CI (werdykt jako bramka scalenia, `.claude/skills/core-git-workflow/references/ai-review-in-ci.md`) konfiguruje się tam, nie tutaj.
 
-## Macierz waga × wpływ (heurystyka)
-| Waga \ wpływ | niski | średni | wysoki |
-|---|---|---|---|
-| krytyczne | napraw teraz | napraw ostrożnie | zatrzymaj się, zawęź poprawkę |
-| ostrzeżenie | napraw albo pomiń | zależy od kontekstu | zwykle wymaga planowania |
-| obserwacja | zwykle pomiń | notatka albo lekcja | sprawdź, czy problem nie występuje w wielu miejscach |
+## Ustalenia
+Każde ustalenie ma: id, **wagę** (krytyczne / ostrzeżenie / obserwacja), **wpływ** (niski / średni / wysoki), wymiar, miejsce
+(`plik:linia` albo sekcja planu), dowód i poprawkę.
+- **Waga** = ile kosztuje zignorowanie. **Wpływ** = jak trudna i szeroka jest decyzja. Są niezależne:
+  krytyczna literówka w stałej jest krytyczna przy niskim wpływie.
+- Domyślnie **jedna poprawka**. Dwie tylko przy prawdziwym kompromisie — każda z podejściem, zaletą, kosztem, pewnością i tym, czego
+  nie sprawdzono, i dokładnie jedna oznaczona jako rekomendowana.
+- **Najwyżej 10 ustaleń.** Scalaj bliskie duplikaty (14 identycznych naruszeń nazewnictwa = jedno ustalenie z liczbą i 2–3 przykładami).
+- **Nigdy nie wypisuj wartości sekretu** — opisz go: „klucz dostępu AWS w `config/dev.ts:12` (40 znaków, zaczyna się od `AKIA`)”, potem zaleć rotację.
+- Ustalenie łamiące regułę zapisaną już w `docs/project/lessons.md` idzie o jedną wagę w górę i cytuje lekcję.
 
-## Triaż (po kolei, od krytycznych)
-Dla każdego ustalenia człowiek wybiera decyzję:
-- **napraw teraz** — pokaż przed/po, potwierdź, minimalna zmiana;
-- **napraw inaczej** — podejście człowieka;
-- **pomiń**;
-- **akceptuj ryzyko** — z uzasadnieniem;
-- **odrzuć** — ustalenie błędne, z uzasadnieniem;
-- **zapisz jako lekcję** — wpis do `docs/project/lessons.md` wstępnie wypełniony z ustalenia (kontekst = miejsce,
-  problem = szczegół); regułę i zakres uzupełnia człowiek (format lekcji: core-project-record). Potem **zawsze**
-  pytanie „zastosować też poprawkę w kodzie?” — nie decydujesz za człowieka.
-Nie każde ustalenie trzeba naprawić. Po każdej decyzji aktualizuj zapisany raport.
+Jak waga i wpływ zwykle przekładają się na decyzję (heurystyka, nie reguła):
 
-## Zapis
-- `docs/project/07-review/<data>-plan-review-<krok>.md` albo `…-impl-review-<krok>[-fN].md`, szablon
-  `review` (core-project-record) z kolumnami Wpływ i Decyzja oraz linią „Ugruntowanie”.
-- Decyzje: `PENDING` / `FIXED` / `SKIPPED` / `RISK_ACCEPTED` / `REJECTED` / `LESSON`.
-- Poprawki odłożone → „Otwarte pytania” raportu kroku.
-- Większa zmiana: zapisz raport, daj człowiekowi przeczytać go spokojnie, triaż w kolejnej rozmowie.
-- Ten sam wzorzec w CI (werdykt jako bramka workflow, komentarze inline): core-git-workflow,
-  `.claude/skills/core-git-workflow/references/ai-review-in-ci.md`.
+| | niski wpływ | wysoki wpływ |
+|---|---|---|
+| **krytyczne** | napraw teraz, to tanie | zatrzymaj się, zawęź zmianę, najpierw decyzja z człowiekiem |
+| **obserwacja** | zwykle pomiń | sprawdź, czy wzorzec nie rozlewa się dalej |
+
+## Triaż z człowiekiem
+1. Po jednym ustaleniu, krytyczne najpierw. Pokaż dowód i proponowaną poprawkę, potem zaproponuj:
+   - **napraw teraz** — pokaż przed/po, zastosuj, oznacz `FIXED`;
+   - **napraw inaczej** — podejście człowieka, potem `FIXED`;
+   - **pomiń** — `SKIPPED`;
+   - **akceptuj ryzyko** — z powodem człowieka, `RISK_ACCEPTED`;
+   - **odrzuć ustalenie** — z powodem („to nie problem, bo …”), `REJECTED`;
+   - **zapisz jako lekcję** — wstępnie wypełnij regułę z ustalenia, człowiek uzupełnia regułę i zakres, trafia do
+     `docs/project/lessons.md` (core-project-record), oznacz `LESSON`; **potem zawsze zapytaj, czy poprawić też kod**.
+2. Aktualizuj zapisany raport po każdej decyzji, żeby przerwana sesja mogła wznowić.
+3. Duża zmiana: zapisz raport ze wszystkim `PENDING` i zrób triaż w późniejszej sesji. Odłożone poprawki trafiają do
+   „Otwartych pytań” raportu kroku.
+4. Po triażu nazwij następny krok, nie uruchamiaj go: powrót do implementacji albo następna faza przez core-delivery-lifecycle.
 
 ## Przykład
-**Sytuacja:** przegląd implementacji kroku „zapis zaakceptowanych fiszek”, faza 2. Trzy zbiory: 6 plików zgodnych,
-NADMIAR `src/lib/format.ts` (helper dla zaplanowanego kodu), BRAK — żaden.
-**Raport (fragment):**
-```
-Ugruntowanie: 6/6 ścieżek, 4/4 symbole, TL;DR zgodne z planem · npm test → 48 passed
-| ID | Waga | Wpływ | Wymiar | Miejsce | Ustalenie | Decyzja |
-| F1 | krytyczne | niski | bezpieczeństwo | api/cards/save.ts:18 | endpoint zapisu omija wspólny strażnik autoryzacji | FIXED |
-| F2 | obserwacja | wysoki | spójność | db/schema.ts:40 | nowa nazwa statusu w bazie (front, backend, dane historyczne) | SKIPPED (notatka) |
-| F3 | ostrzeżenie | niski | wzorce | actions/deck.ts:12 | ręczne sprawdzanie userId zamiast strażnika | LESSON + FIXED |
-Werdykt: wymaga uwagi → po triażu zatwierdzone
-```
-Więcej (przegląd planu, dobry plan bez ustaleń): `references/examples.md`.
+Wejście: raport kroku 003 (eksport CSV), faza 2 zaimplementowana, plan wymienia 6 plików, diff ma 8.
 
-## Checklista
-- [ ] tryb wybrany (plan / implementacja); wejście przeczytane, lekcje uwzględnione
-- [ ] plan: spójność, ugruntowanie (linia z liczbami), ryzykowne twierdzenia sprawdzone w kodzie, wymiary
-- [ ] implementacja: trzy zbiory plików, dryf i bezpieczeństwo osobno, kryteria uruchomione, wynik dosłownie
-- [ ] każde ustalenie z wagą, wpływem, miejscem i dowodem; najwyżej 10
-- [ ] triaż z decyzją człowieka przy każdym ustaleniu; lekcja zawsze z pytaniem o poprawkę
-- [ ] raport w `07-review/`; werdykt należy do człowieka
+```
+Przegląd implementacji — 003-export, faza 2. Werdykt: wymaga uwagi (0 krytycznych, 2 ostrzeżenia, 1 obserwacja)
+Grounding: 6/6 zaplanowanych ścieżek przeczytanych, 3/3 symbole znalezione, podsumowanie zgodne z planem
+Zbiory: MATCH 5 · EXCESS 3 (src/util/date.ts, src/api/admin.ts, package.json) · GAP 1 (migrations/007_export_jobs.sql) — BRAK
+Kryteria: `npm test` → exit 0, 142 passed (wynik wklejony niżej); „CSV otwiera się w Excelu” odhaczone, brak śladu w diffie → ustalenie F3
+| # | Waga | Wpływ | Ustalenie | Dowód | Rekomendacja | Decyzja |
+| F1 | ostrzeżenie | wysoki | brak zaplanowanej migracji (GAP); tabela zadań tworzona w runtime | src/export/jobs.ts:31 | dodać migrację 007, usunąć CREATE w runtime | PENDING |
+| F2 | ostrzeżenie | niski | trasa admina dodana spoza planu, bez sprawdzenia roli | src/api/admin.ts:14 | usunąć z tego kroku albo dodać autoryzację + test | PENDING |
+| F3 | obserwacja | niski | ręczne kryterium odhaczone bez dowodu | Postęp, wiersz 4 | dołączyć sprawdzenie albo odznaczyć | PENDING |
+```
+Więcej przykładowych raportów (przegląd planu „brak ustaleń”, odrzucona implementacja): `references/examples.md`.
 
 ## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 2, lekcje 2–3 (przegląd planu, przegląd implementacji, triaż) i moduł 5,
-  lekcja 3 (przegląd w CI) — materiał szkoleniowy (dostęp 2026-10-09).
-- Google Engineering Practices, „What to look for in a code review” — google.github.io/eng-practices (dostęp 2026-10-10).
-- Konwencje fabryki: core-project-record (raport kroku, „Postęp”, lekcje), core-git-workflow (PR, `REVIEW.md`).
-Opisane własnymi słowami.
+- Google Engineering Practices, „What to look for in a code review” (google.github.io/eng-practices) — projekt, funkcjonalność,
+  złożoność, testy i spójność jako wymiary przeglądu (dostęp 2026-10-10).
+- ISO/IEC 20246:2017, Software and systems engineering — Work product reviews: przegląd jako uporządkowane badanie produktu pracy
+  z zapisanymi ustaleniami i decyzjami.

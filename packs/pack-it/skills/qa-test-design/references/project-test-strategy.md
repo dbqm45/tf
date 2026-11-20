@@ -1,103 +1,97 @@
-# The project test strategy — a living document
+# A risk-driven test strategy for a whole project
 
-> **Contents:** When · Inputs — you read, you do not invent; every fact with a… · The interview (one question at a time, with 2–3 sample… · The risk map (5–7 rows) · The response to a risk (one row per risk) · The check before writing (every risk) · The rollout phases (3–5) · Quality gates · Recipes (they grow with the phases) · What we knowingly do not test · Freshness · What is not in the document
+For a project that has run for a while with no tests, or with tests only where they were easy to write (helpers, formatters).
+The goal is not coverage; it is protection against the failures that would hurt users or the business, introduced in phases.
+The result is one document, `docs/project/05-plan/test-strategy.md`, written from `templates/test-strategy.md`
+(its headings and fixed words are in Polish and stay as they are). The document plans; it contains no test code and no CI YAML.
 
-The file: `docs/project/05-plan/test-strategy.md` (template: `.claude/skills/qa-test-design/templates/test-strategy.md`).
-The change's test plan (`test-plan.md`) draws on the strategy and updates it when it is done.
+## 1. When to use it
+- Use: "the project is two years old, almost no tests, where do we start", "we need a strategy, not a plan for one change".
+- Do not use for one feature or one change: that is a test plan (SKILL.md §5, `references/test-strategy-and-plan.md`).
+- The approach follows risk-based testing as described in the ISTQB Foundation syllabus: identify product risks, assess
+  them by likelihood and impact, and let the assessment drive the techniques, levels and order of work.
 
-## When
-A project with no tests, or with tests "where it is easy" — before the agent writes the first test. Without a strategy the agent covers
-helpers and formatters, the coverage percentage grows, and the critical flow (payment, access to content) stays unprotected.
-Tests start from risk, not from a file.
+## 2. Step 1 — inputs and the test-base profile
+Read what exists, and give every fact in the document a source (a document, a commit, the interview answer):
+requirements (`docs/project/03-requirements/`), the roadmap or project plan, closed changes and the review record, the stack
+and its test runner, `CLAUDE.md`.
+Classify the existing test base with one of three words used by the template:
+- `brak` — no tests that run;
+- `rzadki` — some tests, but they do not protect the main flows (or are mostly on trivial code);
+- `znaczący` — a suite that already guards the main flows; the strategy then fills gaps instead of starting over.
+Write one sentence of justification (e.g. "12 tests, all in `src/utils/`, none on checkout").
 
-## Inputs — you read, you do not invent; every fact with a source path
-- the requirements (users, flows, rules, exclusions), the roadmap (what will change → probability),
-  closed changes, the stack and the existing test configuration, `CLAUDE.md`;
-- the **test base profile** in one word: `brak` (none: no configuration, < 3 test files), `rzadki` (sparse: configuration, but
-  a dozen or so files or all in one place), `znaczący` (significant: tests in many areas);
-- **hot spots from git history** — the number of commits per directory over the last ~30 days, only hand-written code (no
-  lockfiles, snapshots, generated code, `dist`). You show the human the scan scope. Fewer than ~5 commits
-  in the window → skip the scan and record that the probability rests on the roadmap and the interview.
+## 3. Step 2 — where the code changes (git history)
+Frequently changed code is where regressions appear. Count commits per directory in a recent window (e.g. 30 days):
 
-## The interview (one question at a time, with 2–3 sample answers, an echo of the answer in one line)
-- W1. What are you most afraid of breaking — regardless of the documents?
-- W2. Where have you been burned before (in this code or similar)?
-- W3. What do you change most often and without certainty?
-- W4. What is under-tested today? (profile `rzadki`: "which gap worries you most?"; profile `brak`: skip)
-- W5. What do you NOT want to spend the test budget on? → the section "What we knowingly do not test".
+```bash
+git log --since=30.days --name-only --pretty=format: -- src | grep -v '^$' | cut -d/ -f1-3 | sort | uniq -c | sort -rn | head
+```
 
-Three skipped questions → you end the interview and note that the strategy rests solely on the documents.
+- Count only hand-written code: skip lockfiles, generated clients, migrations snapshots, vendored code.
+- Show the human the window and the directories you counted, and let them accept or change the scope.
+- Fewer than about 5 commits in the window → skip this step and write "pominięte (< 5 commitów)" in the document.
 
-## The risk map (5–7 rows)
-A risk is a failure scenario felt by a user or the business — not the name of a module or a test.
-Good: "a logged-in, paying user gets 403 on their own content". Bad: "test the login form".
+## 4. Step 3 — a short interview
+Questions to the human, **one at a time**; after three skipped questions stop and continue with what you have.
+The template labels the answers W1–W5:
+- **W1** — which failure would hurt most: what are you most afraid of breaking?
+- **W2** — what has broken before (incidents, angry customers, hotfixes)?
+- **W3** — which flows bring money or carry legal obligations?
+- **W4** — what is about to change (roadmap, migrations, a new integration)?
+- **W5** — what is already checked another way (manual QA, monitoring, a vendor's guarantees)?
 
-| Rating | Impact | Probability |
-|---|---|---|
-| high | loss of access, data or money; a publicly visible failure | the area changes every week or there was an incident here |
-| medium | a feature works worse, there is a workaround, it affects some users | changed from time to time, has been a source of bugs |
-| low | cosmetics, easy to roll back, no effect on data | stable, rarely touched |
+## 5. Step 4 — the risk map
+- A risk is a **failure scenario seen by a user or the business** ("an invoice is sent with the wrong VAT rate"), not a module
+  name ("billing").
+- Rate impact and probability (high / medium / low each). Keep the map short enough to act on — roughly 5–7 rows.
+- High impact with low probability usually becomes **monitoring** (an alert, a dashboard) rather than a test; say so.
+- The source column cites the evidence (W2 answer, incident note, commit count), not `file:line`.
+- For anything with login, payments or untrusted input, also look at abuse: access to someone else's resource, untrusted input
+  reaching a query or a template, data leaking in responses or logs, resource abuse (unbounded uploads, request floods).
+  Deeper analysis: arch-threat-modeling.
 
-- The order: high × high first. High impact × low probability (a cloud provider outage) is usually
-  monitoring and an alert, not a test (ops-observability) — record that instead of a row.
-- The **Source** column: the evidence that raised the risk — a row of the requirements, a roadmap item, a closed change, an answer W1–W5,
-  a directory with a commit count, a stack constraint. **Not** a file, `file:line`, a function or a module — that is settled only by
-  the code analysis in the phase (eng-codebase-mapping). A row that loses its source without an anchor in the code, delete or back it
-  with the interview.
-- **The abuse lens** — mandatory for login, payments or any user input: at
-  least one row from the classes: someone else's resource (an ownership check, not just being logged in), untrusted input
-  (injections, server-side validation), a leak of secrets or personal data (logs, error content, the front-end
-  bundle), resource abuse (bypassing a limit, an expensive operation in a loop). No such rows for these
-  surfaces is a gap, not proof of security (arch-threat-modeling).
-- The risk numbers are fixed; you add new ones at the end.
+## 6. Step 5 — the response to each risk
+One row per risk:
+- **what will prove protection** — an observable result ("an invoice with a reduced rate shows 8% and the right total");
+- **what to settle in the code first** — the context the tester still lacks (where the rate is chosen);
+- **the cheapest layer** that can prove it — a hypothesis to confirm when the phase starts (unit for the rate rule,
+  integration for the PDF);
+- **the anti-pattern to avoid** — e.g. an e2e test for every rate, a test that recomputes the rate with the production formula.
+The template also has a column for an assumption worth challenging; fill it only when there is one.
 
-## The response to a risk (one row per risk)
-| Risk | What will prove the protection (observable behavior) | The assumption to challenge | The context to settle in the code | The cheapest layer (hypothesis) | The anti-pattern to avoid |
+## 7. Step 6 — review before writing
+Before the document is saved, go through the map once more:
+- is each risk backed by evidence (a defect, an incident, a real change), or is it speculation?
+- did an example from the interview leak into every row (anchoring on one story)?
+- does the plan protect against real regressions, or does it just raise coverage numbers?
+Remove or rephrase what fails, and note it under "Wyniki kontroli".
 
-Assumptions to challenge, e.g.: "a successful login = access to paid content", "200 = the write succeeded", "an empty
-response = no data". You reject answers like "unit tests of module X", "cover the main path", "an assertion
-on the current result". A risk for which the row cannot be filled, rephrase or delete.
+## 8. Step 7 — rollout phases and their states
+- 3–5 phases, each named after the protection it proves ("phase 1 — wrong totals cannot reach an invoice"), each tied to risks
+  and the kinds of tests it adds.
+- A phase's state is derived from what is on disk (the change folder for that phase and its files), in this fixed order:
+  `nie rozpoczęta` → `otwarta` → `zbadana` → `zaplanowana` → `w realizacji` → `zakończona`.
+- Each phase is delivered as an ordinary change through core-delivery-lifecycle.
 
-## The check before writing (every risk)
-1. A defect or a description of the implementation? A risk that requires a safeguard that does not exist ("no retry") is speculation —
-   rephrase it to what exists ("a provider failure ends in a clean 5xx, does not pretend success, saves nothing").
-2. Is there no anchor in the code in the source?
-3. Will the response catch a real regression, or will it only raise coverage?
+## 9. Step 8 — quality gates, recipes, exclusions, freshness
+- **Quality gates** — each is either already wired (pre-commit, CI job) or tied to the phase that will introduce it
+  (eng-local-quality-gates, ops-ci-cd).
+- **Recipes** ("Przepisy") — how a unit, integration and e2e test is written in this project. Until a phase delivers one,
+  the line reads `TBD — faza N (ochrona przed <zachowanie>)`. After each phase, fill it in and copy the short form into `CLAUDE.md`,
+  so agents follow it.
+- **What we knowingly do not test** — a short list (about five items) with the reason and when to reassess
+  (e.g. "admin CSV export — used twice a year, manual check; reassess when customers get access").
+- **Freshness** — the review date and the triggers for a new review: a new integration, a serious production defect,
+  a phase finished, a major framework upgrade.
 
-List the deleted or rephrased risks in one line, "Check results".
-
-## The rollout phases (3–5)
-| # | Phase | What protection it proves | Risks | Kinds of tests | State | Change folder |
-
-The states (fixed words): `nie rozpoczęta` → `otwarta` → `zbadana` → `zaplanowana` → `w realizacji` → `zakończona`
-(not started → open → studied → planned → in progress → completed).
-You derive the state from files on disk (there is an analysis → `zbadana`, there is a plan → `zaplanowana`, progress ticked off →
-`zakończona`), not from the memory of the conversation. Profile `brak`: phase 1 = setting up the runner and the first integration test for
-risk #1. Every phase ends with updating the recipes.
-
-## Quality gates
-| Gate | The layer (edit / commit / push / CI) | Required from | What it catches |
-
-Every row is either already wired in or points to the phase that will wire it ("from phase 2"). A gate without a phase is a wish.
-Local layers: eng-local-quality-gates; CI: ops-ci-cd.
-
-## Recipes (they grow with the phases)
-At the start: `TBD — faza N (ochrona przed <zachowanie>)` (TBD — phase N, protection against <behavior>). After a phase, for each kind of test: location, naming,
-the policy on doubles, a model test (the path), the run command. 3–6 recipes; a rare case = a link to a test.
-After entering a recipe, update the tests section in the project's `CLAUDE.md` — otherwise every agent guesses the commands.
-
-## What we knowingly do not test
-The answers to W5 with a reason and a condition for reassessment. More than 5–6 points = the strategy is too broad.
-
-## Freshness
-The review date, tool versions and the date the references to AI tools were checked. A review when: a new risk in the top 3,
-a tool date older than 3 months, a stack change, an exclusion stopped being true. A change to risks or phases goes
-as a separate change; the exception — a fix to a risk's wording after the code analysis, with the human's consent.
-
-## What is not in the document
-Test code, CI YAML, hook scripts, anchors in the code in the risk map, new state words.
-
-## Sources
-- The 10xDevs course, ed. 3 (2026), module 3, lesson 1 (the project test plan) — training material (accessed 2026-10-09).
-- ISTQB CTFL v4.0 — risk-based testing (impact × probability).
-Described in our own words.
+## 10. Example
+A two-year-old SaaS invoicing app, 12 tests in `src/utils/`.
+- Profile: `rzadki` — "12 tests, all on formatters; nothing on invoice totals or payments".
+- Git (30 days): `src/billing` 41, `src/invoices/pdf` 17, `src/auth` 6 commits.
+- W1: "wrong amounts on invoices". W2: "last quarter a VAT change broke reduced rates".
+- Risk map (top 3): wrong VAT total on an invoice (high/high, W1+W2); a customer sees another customer's invoice (high/low → test + monitoring);
+  a failed payment marked as paid (high/medium).
+- Phases: 1 — totals and VAT (unit, table-driven); 2 — tenant isolation of the invoice API (integration, two seeded tenants);
+  3 — payment webhooks (contract + integration).
+- Not testing: PDF layout pixel-perfectness (visual review per release), admin export.

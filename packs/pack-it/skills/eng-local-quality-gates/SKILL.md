@@ -1,131 +1,126 @@
 ---
 name: eng-local-quality-gates
-description: Use for local quality gates — a post-edit hook, pre-commit, pre-push, related tests.
+description: Use when lint, types or tests should run on the developer machine — a post-edit agent hook, pre-commit, pre-push — so errors surface in seconds, not in CI.
 metadata:
   review: "2027-10-09"
-  catalog: "Use when setting up local quality gates in a project — placing lint, formatting, types and tests between the agent's post-edit hook, pre-commit, pre-push and CI; tests related to the edited file; exit codes and feedback for the agent; the agent's behaviour with a failing hook; Husky, lint-staged, Lefthook, pre-commit; the post_edit_checks.py hook template with the quality-gates.json configuration. Not for CI pipelines (ops-ci-cd), branches, commits and PRs (core-git-workflow), agent permissions (core-agent-security) or choosing regression suites (qa-regression)."
-  keywords: "hook po edycji, hook PostToolUse, pre-commit, pre-push, husky, lint-staged, lefthook, formatowanie po edycji, lint przy zapisie, testy powiązane z plikiem, vitest related, findRelatedTests, bramka przed commitem, git hooks, hooki gita, agent dostaje błąd lintera, szybka informacja zwrotna, post-edit hook, PostToolUse hook, formatting after edit, lint on save, tests related to a file, gate before commit, agent gets a linter error, fast feedback"
+  catalog: "Use when format, lint, type and test checks should run locally in layers — an agent hook after each file edit (Claude Code PostToolUse with a ready template driven by a JSON config), pre-commit on staged files, pre-push with wider tests, CI keeping the full suite — and when you decide how the agent reacts to a failing hook (fix trivial errors at once, stop after 1–2 attempts on logic, never bypass). Tools: Husky, lint-staged, Lefthook, the pre-commit framework, vitest related, jest --findRelatedTests, pytest-testmon. Not for CI pipelines (ops-ci-cd), branches, commits and PRs (core-git-workflow), agent permissions (core-agent-security) or choosing regression suites (qa-regression)"
+  keywords: "hook po edycji, hook po każdej edycji pliku, po edycji przez agenta uruchom eslint, automatycznie testy po zmianie pliku, błąd wraca do agenta, PostToolUse, hook Claude Code, settings.json hooks, pre-commit, pre-push, przed commitem, przed pushem, hooki gita, husky, lint-staged, lefthook, pre-commit-config, pre-commit install, ruff przed commitem, testy przed pushem, vitest related, findRelatedTests, testy powiązane, pytest-testmon, testmon, CI za wolne, czekamy 20 minut na CI, lint tylko w CI, commit trwa minuty, warstwy sprawdzeń, bramki jakości lokalnie, agent w pętli, agent w kółko poprawia kod, hook nie przechodzi, hook trwa za długo, timeout hooka, --no-verify, pominąć hook, obejść hook, plik ze spacją w nazwie, jak sprawdzić że hook działa, post-edit hook, after every edit run eslint, run related tests automatically, error back to the agent, git hooks, pre-commit hook, pre-push hook, staged files, lint staged files, CI too slow, local quality gates, agent loops on failing hook, hook timeout, skip the hook, verify the hook works"
 ---
 
-# Local quality gates
+# Local quality gates — errors in seconds, not after CI
 
-Goal: a format, lint or type error or a broken test in a risk area surfaces on the machine, within seconds of the edit, not
-after 20 minutes in CI. The agent's hook is a deterministic layer: it works regardless of what the model remembers from the instructions,
-also after context compaction. CI still runs the full suite — the local layers do not replace it.
+Checks that run by themselves on the developer machine do not depend on what the model remembers (they survive context
+compaction) or on a person's discipline. Each layer has a time budget; a check that does not fit moves one layer up.
+**Local layers never replace CI** — CI still runs the full suite.
 
-## Which check goes where
-| Layer | What | Time budget | Notes |
+## Layers
+| Layer | What runs | Budget (rule of thumb) | Why there |
 |---|---|---|---|
-| post-edit (agent hook) | format and lint of one file; tests related to a file from a risk area | seconds | the only layer that tells the agent about an error while it works |
-| pre-commit (git) | lint and format of staged files; types; possibly tests related to staged files | a dozen or so s | also catches manual edits and edits from outside the agent |
-| pre-push (git) | full types, a wider set of tests | minutes | |
-| CI | integration, full E2E, scans, build | minutes and more | ops-ci-cd |
+| post-edit (agent hook) | format/lint of the one edited file; related tests **only for risk areas** | seconds | the only layer that tells the agent mid-work |
+| pre-commit | lint/format of staged files, type check, maybe related tests | ~10–20 s | also catches manual edits |
+| pre-push | full type check, the unit suite or a wider test set | minutes | last stop before others see it |
+| CI | integration, full E2E, security scans, build, the complete suite | as needed | the source of truth for merge |
 
-- A check longer than a few seconds → one layer up, or narrow it to the file.
-- The post-edit hook runs separately for every edit (3 files = 3 runs), without aggregation.
-- Start with one hook (format/lint) and one commit gate; add more when you see what slips through.
-- The gates follow from the project's test strategy (qa-test-design, the "Quality gates" section) — each has a layer and a phase
-  from which it applies.
+Start with one post-edit hook and one commit gate; add more from observed leaks (what reached CI that a local layer
+could have caught). Gates come from the project test strategy (qa-test-design, "Quality gates" in
+`docs/project/05-plan/test-strategy.md`), each with its layer and the phase from which it applies.
 
 ## Procedure
-1. **Inventory (read only).** The lint, format, type and test commands (`package.json`, `pyproject.toml`), existing
-   hooks (`.husky/`, `lefthook.yml`, `.pre-commit-config.yaml`, the `hooks` section in `.claude/settings.json`), the test
-   strategy (`docs/project/05-plan/test-strategy.md`). You do not migrate a working configuration to another tool.
-2. **Place the checks** per the table above; for related tests list the globs of risk areas (e.g. `src/billing/**`),
-   not the whole `src/`.
-3. **The agent's post-edit hook** — the template below. Change `.claude/settings.json` and `.claude/hooks/` only at the human's
-   request (CLAUDE.md); without consent you hand over a ready fragment to paste.
-4. **Git hooks** — `references/git-hooks.md` (Husky + lint-staged, Lefthook, pre-commit; versions checked).
-5. **Test the gates:** edit a file → the hook runs → the error returns to the agent; a broken staged file → the commit is rejected;
-   a red test → the push is rejected. Without this a gate is a wish.
-6. **Record:** a "gate → layer → from when" table in the test strategy; the commands in the "Commands" section of the project's `CLAUDE.md`.
+1. **Inventory, read-only:** commands in `package.json` / `pyproject.toml` / `Makefile`; existing `.husky/`,
+   `lefthook.yml`, `.pre-commit-config.yaml`; hooks already in `.claude/settings.json`; the test strategy.
+   A working tool stays — do not migrate Husky to Lefthook because you prefer it.
+2. **Place each check** in the cheapest layer whose budget it fits.
+3. **Post-edit hook** from the template (below), with risk globs (e.g. `src/billing/**`), not the whole `src/`.
+4. **Git hooks** with the tool that fits the repo: `references/git-hooks.md`.
+5. **Test the gates** with deliberate errors: an edit with an unused import → the hook fires → the error reaches the
+   agent; a broken staged file → the commit is rejected; a red test → the push is rejected.
+6. **Record** the gate → layer → phase table and the commands in CLAUDE.md.
 
-## The agent hook model
-event (after a tool use) → filter (the `Edit|Write` tool, a path pattern) → action (a command) → signal
-(the exit code and the output that returns to the agent). The file path is in the JSON on stdin: `tool_input.file_path`.
+Changing `.claude/settings.json` or hook files happens **only on a human's request**; otherwise you hand over the
+fragment to paste. Settings files: `.claude/settings.json` (project, committed), `.claude/settings.local.json`
+(personal, not committed), `~/.claude/settings.json` (user).
 
-| Hook exit code (Claude Code) | Effect |
-|---|---|
-| 0 | OK; JSON on stdout can add `hookSpecificOutput.additionalContext` (context for the model) or `systemMessage` (for the human) |
-| 2 | a blocking error — the stderr content goes to the model as the hook's message |
-| other | a non-blocking error — visible in verbose mode, the model does not get it |
+## Post-edit hook (Claude Code)
+Model: event → filter (tool matcher, path pattern) → action (command) → signal (exit code and output back to the
+agent). A hook whose output never reaches the agent teaches it nothing.
 
-A hook whose result does not return to the agent will not teach it the fix. Configuration: `.claude/settings.json` (the project, in the repo),
-`.claude/settings.local.json` (local, outside the repo), `~/.claude/settings.json` (the user).
+Exit codes of a Claude Code command hook: **0** — OK (stdout JSON may carry `hookSpecificOutput.additionalContext` or
+`systemMessage`); **2** — blocking error, stderr is shown to the model, which then fixes it; any other code — a
+non-blocking error the model does not see.
 
-### Template: `templates/post_edit_checks.py` + `.claude/quality-gates.json`
-A ready hook (the Python standard library, test: `tests/test_post_edit_checks.py`). You describe the gates in JSON,
-without writing a hook from scratch; example: `templates/quality-gates.example.json`.
-- no configuration or no matching `glob` → nothing; a command failure → code 2 and the last `max_lines` lines on stderr;
-- the command runs without a shell, `{file}` = the relative path of the edited file (one argument, also with spaces);
-- an exceeded `timeout`, a missing program, a bad configuration → code 0 and the message "narrow it or move it to pre-commit";
-- the whole hook's own limit `CLAUDE_QG_DEADLINE` (50 s by default, it ends with code 0 before the Claude Code limit);
-  UTF-8 forced on stdin/stdout/stderr (Windows); `CLAUDE_QUALITY_GATES=off` turns the hook off;
-- `python3 .claude/hooks/post_edit_checks.py --dry-run src/billing/invoice.ts [--json]` shows which checks
-  will cover the file — it runs nothing.
-
-Installation in a project (with the human's consent): copy the template to `.claude/hooks/`, the configuration to
-`.claude/quality-gates.json`, and in `.claude/settings.json`:
+Setup from the template:
+1. Copy `.claude/skills/eng-local-quality-gates/templates/post_edit_checks.py` to `.claude/hooks/post_edit_checks.py`.
+2. Write `.claude/quality-gates.json` from `templates/quality-gates.example.json`: `max_lines` and `checks[]`, each
+   with `name`, `glob`, `cmd`, `timeout` and optional `env`.
+3. Register it in `.claude/settings.json`:
 ```json
-"PostToolUse": [
-  { "matcher": "Edit|Write",
-    "hooks": [ { "type": "command", "command": "python3",
-                 "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/post_edit_checks.py"], "timeout": 60 } ] }
-]
+{ "hooks": { "PostToolUse": [ { "matcher": "Edit|Write", "hooks": [
+  { "type": "command", "command": "python3",
+    "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/post_edit_checks.py"], "timeout": 60 } ] } ] } }
 ```
+4. Check the config without running anything: `python3 .claude/hooks/post_edit_checks.py --dry-run src/billing/invoice.ts --json`.
 
-## Tests related to a file
-| Runner | Command | Notes (checked 2026-10-10) |
-|---|---|---|
-| Vitest 5 | `vitest related <file> --run` | `related` is a subcommand; `--run` turns off watch mode; no related tests → code 0 |
-| Jest 30 | `jest --findRelatedTests <file>` | a flag, not a subcommand |
-| pytest | `pytest --testmon` (the pytest-testmon plugin) or a file → test directory map | no native equivalent |
+What the script does (do not re-implement it):
+- reads `tool_input.file_path` from the hook's stdin JSON; acts on Write, Edit and MultiEdit; each edit is a separate
+  run (3 edited files = 3 runs);
+- no config or no matching glob → does nothing;
+- a failed check → exit 2 and the last `max_lines` lines of its output on stderr;
+- commands run **without a shell**; `{file}` becomes the edited file's relative path as **one argument**, so a file
+  name with spaces is safe;
+- an exceeded `timeout`, a missing program or a bad config → exit 0 with a message: the hook never blocks through its
+  own fault;
+- the whole run stops after `CLAUDE_QG_DEADLINE` seconds (default 50) — keep the hook `timeout` in settings higher
+  (e.g. 60); `CLAUDE_QUALITY_GATES=off` disables it;
+- `--dry-run <file> [--json]` lists the checks covering a file and runs none; exit codes 0 OK, 2 failed check,
+  1 bad config in dry-run;
+- Python 3.9+ standard library, no network, UTF-8 forced on its streams.
 
-- Vitest 5 in an agent environment (it detects, among others, `AI_AGENT`, which Claude Code sets) chooses the reporter
-  `minimal` (alias `agent`) by default and turns off watch — less noise in the context.
-- Related tests only for risk globs, not for helpers and configuration.
-- Limit the output to the tail (template: `max_lines`).
+Related tests (checked 2026-10-10): Vitest 5 `vitest related <file> --run` (a subcommand; no related tests → exit 0;
+with an agent environment variable such as `AI_AGENT` it picks a compact reporter and no watch); Jest 30
+`jest --findRelatedTests <file>` (a flag); pytest has no built-in equivalent — the `pytest-testmon` plugin
+(`pytest --testmon`, data in `.testmondata`). Run them only for risk globs, not helpers or config, and keep the output
+to the tail.
 
-## The agent and a failing hook
-- **Trivial** (format, import, type, an unused variable) — the agent fixes it itself in the next step.
-- **A logic test** fails after 1–2 fix attempts → stop: the cause per eng-debugging or a question to the human. You do not
-  blindly fit the code to green and you do not weaken the test (tdd_guard, qa-spec-first-testing).
-- You do not bypass a git gate (`--no-verify`, `HUSKY=0`, `LEFTHOOK=0`); it failed → fix the cause, a new commit.
-- A hook that regularly exceeds the limit you move up — you do not extend the `timeout` endlessly.
+## Agent and a failing hook
+- **Trivial** failures (format, import, type, unused variable) → fix at once.
+- **A logic test** still failing after **1–2 attempts** → stop changing code; find the cause (eng-debugging) or ask the
+  human. Never fit the code to green blindly and never weaken the test (tdd_guard, qa-spec-first-testing).
+- Never bypass git gates: no `--no-verify`, `HUSKY=0`, `LEFTHOOK=0`. When someone wants to skip a hook to ship, fix
+  the cause; a permanent disable is a human decision recorded in the test strategy.
+- A hook that regularly times out (a check taking 90 s) is in the wrong layer: narrow it to the file or move it up a
+  layer instead of raising the timeout again and again.
 
 ## Other agent tools
-Cursor, Codex, Windsurf and Copilot have the same model (event → filter → command), but different files, event names
-and input fields; some tools only block and do not pass the result to the agent. Check a hook ported 1:1 against the current
-documentation of the given tool (core-source-research) and with the test from step 5. [unverified: per-tool details]
+Cursor, Codex, Windsurf and Copilot have hooks or rules built on the same event → filter → command model, but with
+other files, event names and input fields, and some can only block, not return a message. Check the tool's current
+docs, mark per-tool details as [unverified] until tested, and run the deliberate-error test from step 5.
 
 ## Example
-**Situation:** a TS project (Vitest 5, ESLint), risk #1 from the test strategy — billing in `src/billing/`. CI takes
-18 minutes, and every second PR the agent hands over code with a lint error.
-**Result:**
+A FastAPI service, ruff + mypy + pytest, payments in `app/payments/` as risk area #1, CI takes 25 minutes.
 
-| Gate | Layer | From when |
+| Gate | Layer | From phase |
 |---|---|---|
-| `npx eslint --fix {file}` for `src/**/*.{ts,tsx}` | post-edit (`post_edit_checks.py`) | right away |
-| `npx vitest related {file} --run` for `src/billing/**/*.ts` | post-edit | after phase 1 of the strategy (billing tests exist) |
-| lint-staged (`eslint --fix`, `prettier --write`) + `npx tsc --noEmit` | pre-commit (Husky) | right away |
-| `npx vitest run` | pre-push | right away |
-| full E2E, build, scans | CI | unchanged |
+| `ruff check --fix {file}` on `**/*.py` | post-edit | now |
+| `pytest --testmon` on `app/payments/**/*.py` (timeout 30) | post-edit | after the payment tests are stable |
+| ruff + `mypy app` on staged files (pre-commit framework) | pre-commit | now |
+| `pytest -q` unit suite (`stages: [pre-push]`) | pre-push | now |
+| integration, E2E, `pip-audit`, image build | CI | unchanged |
 
-Testing the gates: an unused import in `src/billing/invoice.ts` → the hook returned code 2 with the ESLint error, the agent fixed it in the next
-step; the same error introduced by hand → the commit rejected by lint-staged.
+Test run: an unused import added by the agent → hook exit 2 with ruff's line → the agent removes it in the next edit;
+the same mistake by hand → the pre-commit hook rejects the commit and shows the file; a deliberately failing unit test
+→ the push is rejected. Recorded in CLAUDE.md with the commands.
 
 ## Checklist
-- [ ] every gate from the test strategy has a layer and a phase from which it applies
-- [ ] the post-edit hook takes seconds; related tests only for risk globs
-- [ ] a failure returns to the agent (code 2 / stderr), an error of the hook itself does not block work
-- [ ] a change of `settings.json`/`.claude/hooks/` only with the human's consent
-- [ ] the gates tested (edit, commit, push); the result in the report
-- [ ] CI still runs the full suite
+- [ ] every gate has a layer and a phase; post-edit checks take seconds
+- [ ] a failure reaches the agent (exit 2, stderr); the hook's own errors do not block
+- [ ] settings changed only with the human's consent; otherwise a fragment handed over
+- [ ] gates tested with deliberate errors (edit, commit, push)
+- [ ] no bypass flags; CI still runs the full suite
 
 ## Sources
-- The 10xDevs course, ed. 3 (2026), module 3, the lesson on hooks and local quality layers — training material (accessed 2026-10-09).
-- Claude Code — the hooks documentation (code.claude.com/docs/en/hooks): the PostToolUse event, exit codes, `additionalContext`;
-  the handling of code 2 and the stderr message confirmed in the Claude Code 2.1 code (2026-10-10).
-- Vitest 5.0.3 `--help` and the source code (`related`, the `agent`/`minimal` reporter, agent detection through std-env), Jest 30.5.2
-  `--help`, pytest-testmon 2.2.0 `--help` — checked locally 2026-10-10.
-- Husky 9.1.7, lint-staged 17.6.0, Lefthook 2.2.1, pre-commit 4.6.2 — the npm/PyPI registries and configuration validation 2026-10-10.
+- Claude Code docs, "Hooks" — events, matchers, exit code semantics, JSON output (code.claude.com/docs/en/hooks,
+  accessed 2026-10-10).
+- Vitest CLI `related` (vitest.dev/guide/cli), Jest CLI `--findRelatedTests` (jestjs.io/docs/cli), pytest-testmon
+  (testmon.org) — accessed and run 2026-10-10.
+- Husky (typicode.github.io/husky), lint-staged (github.com/lint-staged/lint-staged), Lefthook (lefthook.dev),
+  pre-commit (pre-commit.com) — accessed 2026-10-10.

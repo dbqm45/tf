@@ -36,8 +36,19 @@ import packs as packs_mod  # noqa: E402  (.tf/factory/packs.py — overlays and 
 yaml = packs_mod.yaml
 packs_mod.commit_language(ROOT)   # commit language from git log once, at load time — render starts no processes
 FACTORY = ROOT / ".tf" / "factory"
-SKILLS_DIR = ROOT / ".claude" / "skills"
-OUT_DIR = ROOT / ".claude" / "agents" / "_generated"
+
+
+def _layout() -> str:
+    """`plugin`: the factory lives in .tf/plugin/ (factory mode, install.py --layout plugin); otherwise `default`."""
+    try:
+        return json.loads((ROOT / ".claude" / "factory-manifest.json").read_text(encoding="utf-8")).get("layout") or "default"
+    except (OSError, ValueError, AttributeError):
+        return "default"
+
+
+PLUGIN_LAYOUT = _layout() == "plugin"
+SKILLS_DIR = ROOT / ".tf" / "plugin" / "skills" if PLUGIN_LAYOUT else ROOT / ".claude" / "skills"
+OUT_DIR = ROOT / ".tf" / "plugin" / "agents" if PLUGIN_LAYOUT else ROOT / ".claude" / "agents" / "_generated"
 # Targets: tools we build agents for (the project's `targets` setting). Claude Code always;
 # `managed-agents` — files for `ant apply` (Claude Managed Agents), renderer in .tf/factory/target_managed.py.
 TARGETS = {"claude": OUT_DIR, "managed-agents": ROOT / "managed-agents"}

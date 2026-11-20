@@ -1,158 +1,117 @@
 ---
 name: eng-codebase-mapping
-description: Use for unfamiliar code and change impact assessment — entry points, layers from imports, hubs, cycles.
+description: Use when entering an unfamiliar repo or assessing a change — import graph, entry points, cycles, history hotspots, who to ask, diff impact, research before a change.
 metadata:
   review: "2027-10-09"
-  catalog: "Use when you must understand unfamiliar code or assess the impact of a change — entry points, layers from the import graph, central nodes and runtime vs lazy cycles (scripts/code_graph.py for Python, TS/JS, Java, C# and Go), territory from git history (changes over time, co-changes, contributors, bus factor, hotspots — scripts/git_territory.py), a module legend, a reading route for a newcomer, diff impact (1 step up and down, layers, risk), edge confidence, analysis of a single flow and researching code before a change (research.md). Not for assessing debt (eng-tech-debt-audit), choosing a refactoring (eng-refactor-planning) or designing boundaries (ddd-strategic-analysis)."
-  keywords: "graf importów bez narzędzi, cykle importów, nieznane repo, mapa kodu, mapa repo, od czego zacząć czytać, punkty wejścia, graf zależności, historia gita, co się najczęściej zmienia, współzmiany, kto zmieniał, kogo zapytać, bus factor, ryzyko jednej osoby, hotspoty, analiza przepływu, jak działa ten feature, research przed zmianą, wpływ zmiany, import graph without tools, import cycles, unfamiliar repo, code map, repo map, where to start reading, entry points, dependency graph, git history, what changes most often, co-changes, who changed it, who to ask, single-person risk, hotspots, flow analysis, how this feature works, research before a change, change impact"
+  catalog: "Use when you have to understand an unfamiliar repository or the reach of a change — a codebase map built from deterministic tools (nx graph, madge, dependency-cruiser, jdeps, or scripts/code_graph.py for Python, TS/JS, Java, C#, Go), scored entry points, layers, hubs and runtime vs lazy cycles, territory from git history (scripts/git_territory.py — hotspots, co-changes, contributors, bus factor), edge confidence labels, diff impact, research before a change (research.md), deepening one flow, evaluating context tools, and the reconstruction script suite. Not for assessing debt (eng-tech-debt-audit), choosing a refactoring (eng-refactor-planning) or designing boundaries (ddd-strategic-analysis)."
+  keywords: "nieznane repo, nowe repo, od czego zacząć w repo, zrozumieć strukturę repo, mapa kodu, mapa repozytorium, graf importów, graf importów bez narzędzi, graf zależności, cykle importów, cykliczne zależności, huby, punkty wejścia, gdzie zaczyna się wykonanie, warstwy w kodzie, trasa czytania, co czytać najpierw, hotspoty, co zmienia się najczęściej, co zmienia się razem, współzmiany, kogo pytać o kod, bus factor, wpływ zmiany, wpływ diffu, ryzyko zmiany przed PR, czy mapa jest aktualna, research przed zmianą, zbadać kod przed zmianą, analiza przepływu, prześledzić przepływ, ocena narzędzi kontekstu, graf kodu MCP, rekonstrukcja projektu, unfamiliar repo, where to start, understand the codebase, codebase map, import graph, dependency graph, import cycles, circular dependencies, entry points, hotspots, co-change, who to ask, bus factor, change impact, diff impact, research before a change, flow analysis, code graph tool evaluation"
 ---
 
-# Code map
+# Codebase map — tools find the structure, the model names it
 
-Map first, then read. An agent that starts with random files uses up context and mistakes the periphery for the core.
-You build the map from deterministic tools, and the language model only names and describes what the tools showed.
+Map first, then read. Deterministic tools (an import graph, git history) produce the structure and the numbers; the model only names
+layers, describes roles and checks doubtful items in the code. A directory tree is a hypothesis, not evidence.
+Keep two jobs apart: a **wide, shallow scan** of the whole repo (a cheaper model is fine) and **deepening one flow**
+(`references/flow-analysis.md`). Never ask in one instruction to "find the structure, pick the important areas and explain the
+behaviour" — that produces a flat summary of everything.
 
-**A wide scan, then deepening.** A repo map is a wide, shallow scan from the CLI — a cheaper model can do it, because
-the tools work outside the context. Deepening a single flow is a separate task with the map as input
-(`references/flow-analysis.md`). Do not combine in one instruction looking for structure, choosing the important areas
-and understanding behaviour — "read the whole repo" gives a flat summary without priorities. The directory tree
-is a hypothesis: it does not show what changes, what breaks together or what is dead.
-
-## Procedure
-1. **Inventory:** the number of files and lines per directory/project, languages, frameworks. You treat the README and manifests as
-   hints, not truth — the code is the source. With a large repo (> ~100 files in scope) agree the scope with the human.
-1a. **Territory from history (a 12-month window)** — **run** `python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --all`
-   (`--json`, `--depth 3` when the result is too general, e.g. `src/backend`):
-   - the top 10 directories and files by number of commits, without noise (lockfiles, snapshots, generated files, translations, `.env*`);
-   - the same ranking per quarter — it tells a stable centre apart from a one-off campaign of changes;
-   - co-changes: pairs of directories and files from the same commits (commits > 30 files skipped — a mass refactor
-     glues unrelated files together); separately **hubs** changed together with many areas (configuration, translations, generated code);
-   - files from the ranking that are not in `git ls-files` are marked — history speaks of the past;
-   - hotspots: changes × non-empty lines (eng-tech-debt-audit).
-1c. **Inventory and conventions without a model** (a large or foreign repo): `python3 .claude/skills/eng-codebase-mapping/scripts/repo_inventory.py
-   <repo> [--budget-tokens N]` — languages, build files, exclusions (dependencies, build, generated code), modules
-   and batches of files within a token budget for analysis in portions; `scripts/standards_scan.py <repo>` — tools
-   from the configuration and conventions counted in the code (file names, tests, test and code idioms, error catching,
-   logging, TODO) with a share, `file:line` examples and exceptions. These are data for a standard, not the standard.
-   `scripts/schema_scan.py <repo>` — tables, columns, constraints and relations from SQL migrations (Flyway) and from JPA
-   and EF Core entities with `file:line` (constraints = rule candidates). A report with evidence is checked by
-   `scripts/recon_check.py <report.md> --repo <repo>`: the file and line exist, the quote matches the code (±2 lines),
-   bullet points without evidence and without [assumption]/[unverified]/[question] are reported.
-   `scripts/recon_scan.py <repo> --out <raw/>` — the scans above in one command, JSON results to files, a summary
-   on screen (project reconstruction). `scripts/recon_cards.py <modules/> --repo <repo>` — module cards (JSON) as `modules/<module>.md` with evidence
-   that `recon_check` can check; `--summary` gives a draft of the Modules section, `--rules` — `rules.md` from the cards' rules, `--into report.md` inserts the Modules section, `--prev <old cards>` when
-   refreshing points to places in the documentation with markers of removed or changed rules.
-   `scripts/recon_manifest.py write|diff <repo>` — batches and files with hashes; after changes it says which batches
-   to analyse again; `scripts/recon_refresh.py prep|finish <repo>` — refreshing a reconstruction in two steps.
-1b. **Contributors** (optional, for 3–5 risk zones): `git_territory.py --authors <path>` — without bots
-   and commits whose author is an AI agent. This is a list of "whom to ask, which PRs to read", not owners: it does not
-   say who still works here or whether those decisions are current. Knowledge in one person = a risk on the map: all
-   areas at once are shown by `git_territory.py --bus-factor` (the fewest people with > 50% of commits, active in the 90 days before
-   HEAD; "critical" = no one active, "high" = one person). In a one-person team it will come out as 1 everywhere — that is a fact,
-   not a conclusion. On the map only a login or initials and the area, without judging people.
-2. **A dependency graph from tools**, not from reading:
-   - Nx: `nx graph --file=graph.json` (projects and dependencies), module boundaries from tags;
-   - TS/JS: `madge --json` / `madge --circular`, dependency-cruiser (`--collapse`, `--focus`, `--reaches`, `--metrics`);
-     Java: `jdeps`, ArchUnit, Maven/Gradle modules; other languages and the tools' blind spots: `references/wide-scan.md`.
-   - Python, TS/JS, Java, C# and Go without these tools (not installed, no network): **run**
-     `python3 .claude/skills/eng-codebase-mapping/scripts/code_graph.py <repo>` (`--impact <file>`, `--focus <path>`
-     — imports across a module boundary, two `--focus` — the seam of a pair; `--json`) instead of
-     writing your own scanner — it gives steps 3 and 5 and data for 4: scored entry points, edges between workspace
-     packages, groups with direction, upstream pairs, hubs without barrels (re-exports), runtime cycles separately from those closed
-     by lazy imports (in a function, `TYPE_CHECKING`, `import type`, `import()`); it splits a group with > 40% of the files
-     one level lower by itself (`--group-depth N` turns this off). Take the numbers from the output; read the code to
-     name the layers and check doubtful places (an entry point from the name alone, a cycle through `__init__`). C#: `using`
-     links to every file of the namespace (coarse edges); Java: classes from the same package without an import
-     are invisible; it recognises Java, C# and Go entries by `main` (`Program.cs`, `@SpringBootApplication`).
-   - The graph omits runtime coupling (DI, flags, queues, webhooks, reflection, dynamic import, codegen) — write it
-     into `unknowns`; a layer without a graph is "not covered by the tool", not "no connections".
-3. **Entry points** — scoring candidates:
-   a conventional name (`main.ts`, `app.config.ts`, `*.routes.ts`, `Application.java`) +3 · in the root or one level lower +1 ·
-   the top 10% by number of outgoing imports +1 · the bottom 25% of incoming imports +1. In addition routes (routing), endpoints
-   (controllers), queue handlers, scheduled jobs — `code_graph.py` lists them separately as entries from registries
-   (Celery tasks, Django commands, the GraphQL schema, HTTP apps and routes, controllers and cron in Nest).
-4. **Layers (3–10):** a group of files densely importing one another (import density inside > ~0.3) is a coherent
-   layer; a group that is often imported and imports little itself is a foundation; dependencies should flow
-   UI/API → services → data/utilities. An upstream arrow is a finding.
-5. **Central nodes and cycles:** the files/classes with the largest number of connections (after filtering out `index.ts` barrels,
-   types and constants) — here a change has the widest reach; always list import cycles, with their kind: runtime (breaks on
-   import) or closed only by a lazy import or a type (coupling, not a loading error).
-6. **Reading route (5–15 steps):** from the best entry point downwards along the graph (wider first, then down);
-   2–5 tightly linked files are one step. Each step: what is here and why read it now.
-7. **Module legend** for the areas relevant to change risk: role (core / supporting / peripheral) · depth
-   (deep / shallow) · change profile (stable / volatile / seasonal) · reach (load-bearing / contained) · sensitivity.
-   Every label with evidence; without evidence → `to verify` (details: `references/wide-scan.md`).
-8. **Write-up:** `docs/project/04-architecture/codebase-map.md` with the date and the HEAD commit: (1) a TL;DR of 5–7 sentences + a layer
-   diagram (Mermaid), (2) the terrain: core vs periphery, activity over time, (3) real connections (imports + co-changes
-   + cycles, with the source), (4) 4–6 risk zones, each with one "why", (5) whom to ask (1–2 people per zone),
-   (6) the first day: 5–8 files, (7) limitations: the time window, the method, what the map does NOT say. The working results of the scans
-   go next to it (`codebase-map/territory.md`, `structure.md`); the map is a synthesis, not a copy of tables. Goal: after ~15 min a newcomer
-   knows where things live, what is dangerous and where to start.
+## Procedure — the map
+1. **Inventory.** Files and lines per directory/project, languages, frameworks, manifests; README and manifests are hints, not facts.
+   `python3 .claude/skills/eng-codebase-mapping/scripts/repo_inventory.py <repo>` (budget for reading: `--budget-tokens`).
+   More than ~100 files in scope → agree the scope with the human first.
+2. **Territory from history** (default window 12 months):
+   `python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --repo <repo> --all`.
+   - Top directories/files by commits, without noise (lockfiles, snapshots, generated code, translations, `.env*`; more with `--exclude`).
+   - `--by-quarter`: at the top in every quarter = **stable centre**; in one quarter = a **campaign** (check whether it finished).
+   - `--cochange`: pairs and hubs; commits touching more than `--max-files` (30) files are skipped — mass changes glue unrelated files.
+     A pair sharing ≥ 0.8 is a hidden agreement; a pair caused by regeneration is cheap — flag it. A hub (config, i18n, route registry)
+     co-changes with many areas; the hub ranking is not the pair ranking. No co-change does not prove independence.
+   - `--hotspots`: changes × non-empty lines. Files in the ranking that `git ls-files` no longer lists are marked removed and stay off the
+     reading route.
+   - Whom to ask: `--authors <path>` lists people active in an area (bots and AI-agent commits excluded) — a list of people to ask, not
+     owners. `--bus-factor`: the fewest people covering > 50% of commits, active in the 90 days before HEAD (`--active-days`);
+     "critical" = nobody active, "high" = one person. A solo team shows 1 everywhere — a fact, not a finding. Show login/initials and
+     the area, never a judgement of people.
+   - No git history (a zip export, a squashed import) → skip this step and say so under Limitations; never invent history.
+   Reading the output: `references/wide-scan.md` §4.
+3. **The import graph.** Use the project's tool if it has one: `nx graph --file=graph.json`, `madge --json` / `madge --circular`,
+   dependency-cruiser (levers and pitfalls: `references/wide-scan.md` §2), jdeps. Otherwise
+   `python3 .claude/skills/eng-codebase-mapping/scripts/code_graph.py <repo>` — do not write your own scanner. Take the numbers from the
+   output; read code only to name layers and to check doubtful items (an entry point found by its name alone, a cycle through
+   `__init__.py`). C#: edges are coarse, at namespace level; Java: same-package classes without an import are invisible.
+   The graph misses runtime coupling (DI, flags, queues, webhooks, reflection, dynamic import, codegen) → write it into `unknowns`.
+   A layer the tool did not see is "not covered by the tool", not "no connections". Blind spots per ecosystem: `references/wide-scan.md` §3.
+4. **Entry points.** `code_graph.py` scores candidates with an illustrative heuristic (tune it per repo): a conventional name (`main`,
+   `app`, `manage.py`, `urls.py`, `index`) +3, at the root or one level down +1, top 10% by outgoing imports +1, bottom 25% by incoming
+   imports +1. It also reads registries: Celery tasks, Django management commands, the GraphQL schema, HTTP apps and routes, Nest
+   controllers and cron jobs. Add routes, endpoints, queue handlers and scheduled jobs you find in configuration. A file with no
+   incoming edge is "unreachable by static imports", not "dead code" until registries and dynamic loading are checked.
+5. **Layers** (3–10). A group that imports densely inside itself (internal import density above roughly 0.3) is a layer candidate;
+   imported often and importing little = a foundation. The intended direction is UI/API → services → data/utils; an arrow upstream is a
+   finding. `code_graph.py` splits a group holding more than 40% of files one level down.
+6. **Central nodes and cycles.** Highest connectivity after dropping barrels (re-export-only `index.*`/`__init__.py`), types and
+   constants. List every cycle, typed **runtime** (module-level imports — can break on import) or **lazy/type-only** (closed by an import
+   inside a function, under `TYPE_CHECKING` or `import type` — coupling only).
+7. **Reading route.** 5–15 steps from the best entry point downwards, 2–5 tightly related files per step, each step says why now.
+8. **Module legend and couplings.** Per module: role, depth, change profile, reach, sensitivity — each with evidence, otherwise
+   `to verify`; couplings incoming/outgoing, contractual, runtime, co-change, each with its source or "the tool did not cover it"
+   (`references/wide-scan.md` §5–6).
+9. **Write the map** to `docs/project/04-architecture/codebase-map.md` with the date and the HEAD commit; working results in
+   `codebase-map/territory.md` and `codebase-map/structure.md`. Sections: TL;DR in 5–7 sentences with a Mermaid layer diagram; terrain
+   (core vs periphery); real connections with sources; 4–6 risk zones, each with a why; whom to ask (1–2 per zone); first day (5–8 files);
+   Limitations (window, method, blind spots). Goal: a newcomer is oriented in about 15 minutes. It is a synthesis, not a dump of tables.
 
 ## Edge confidence
-Every connection on the map has a label: **EXTRACTED** (from a tool/AST), **INFERRED** (from names, conventions,
-DI configuration) or **UNCERTAIN**. You do not invent connections; you show uncertain ones rather than omit them.
+Every connection on the map carries a confidence label: **EXTRACTED** (read by a tool from imports/AST), **INFERRED** (from names,
+conventions, DI configuration), **UNCERTAIN** (plausible, unchecked). Never invent an edge; show the uncertain ones instead of hiding them.
 
-## Assessing context tools (graph, index, code map)
-A single better run proves nothing. You measure: accuracy, **repeatability** (good in each of N runs),
-input tokens and the **usage rate** — whether the agent reaches for the tool at all (for the factory's skills and maps:
-`hint_report.py`, "hinted but not used"). You provide the knowledge layer through a tool that returns a small subgraph with
-sources, and do not paste it into the prompt (ai-evals, ai-rag).
+## Diff impact and map freshness
+- Changed files: `git diff --name-only <base>...HEAD`. Is the map still valid for a project in a monorepo:
+  `git diff --name-only <map-commit> HEAD -- <path>` or `nx show projects --affected`.
+- Per changed file one step up (who uses it) and one step down (what it uses), and the layers touched:
+  `code_graph.py <repo> --impact <file>`; dependency-cruiser `--affected <revision>`.
+- Risk low / medium / high from complexity, cross-layer edges and reach (with their confidence labels). Output: affected modules,
+  risk, what to test (qa-regression).
 
-## Change impact (diff)
-1. Changed files: `git diff --name-only <base>...HEAD`.
-2. **Map freshness in a monorepo:** `git diff --name-only <map-commit> HEAD -- <project-path>` — changes in other
-   projects do not invalidate this project's map. In Nx it is faster: `nx show projects --affected`.
-3. For each file: dependencies 1 step up (who uses it) and 1 step down (what it uses), the layers it touches.
-4. Risk: the file's complexity, the number of edges between layers, the reach (how many projects/modules) → low/medium/high.
-5. The result for the PR description: the list of affected modules, the risk, what to test (qa-regression).
+## Research before a change
+1. Read the files the human pointed to and `docs/project/lessons.md` first. Earlier maps and reports are priors, not truth.
+2. Split the question into 2–4 areas; ask 1–3 scoping questions only if the scope is unclear.
+3. Investigate the areas in parallel, read-only: a cheaper worker finds the files, a stronger one analyses many of them.
+   Every claim gets `file:line`.
+4. Write `docs/project/<step>/research.md` with: Question, Summary, Findings (file:line), Architectural conclusions, Historical context,
+   Open questions. A follow-up goes into a section "Follow-up research <date>". It is the only file produced — no code changes.
+Choosing a library or an external solution is not code research: core-source-research.
 
-## Researching code before a change (a step's `research.md`)
-When a step's plan needs knowledge of existing code (patterns, data flow, touch points):
-1. Read yourself the files the human pointed to and the project's lessons — they narrow what is worth researching.
-2. Split the question into 2–4 areas; an unclear scope → 1–3 questions (scope, depth, emphasis). A narrow question → no questions.
-3. Areas in parallel: a cheap implementer looks for files and patterns, a stronger one analyses many files; each returns with `file:line`.
-4. Write-up in `docs/project/<step>/research.md` (the only file the research creates — it does not change code): date, commit,
-   branch; Question · Summary · Findings (each with `file:line`) · Architectural conclusions · Historical context
-   · Open questions. A follow-up question → a section "Follow-up research <date>" in the same file.
-No `file:line` = no claim. Earlier reports and the map are a prior, not truth — you correct an outdated claim
-explicitly. Internal research answers "what our code does", not "which library to choose"
-(core-source-research). Deep analysis of a single flow: `references/flow-analysis.md`.
+## Deepening one flow
+One flow, the current state only, the map as a prior (or the human's explicit consent to go without one): `references/flow-analysis.md`.
 
-## Structural search
-`rg` for text, ast-grep for structure (definitions, calls, signatures). Run the `ast-grep` binary: on
-Linux `sg` is usually the change-group command (`/usr/bin/sg`), not ast-grep. Confirm every zero from ast-grep
-with `rg` — a wrong pattern also gives zero. The table "which tool for which question": `references/wide-scan.md`.
+## Evaluating context tools (code graph, semantic index, MCP)
+One good run proves nothing. Measure on the same tasks with and without the tool: accuracy; repeatability over N runs; input tokens and
+cost; the usage rate — does the agent reach for the tool at all (the factory's `hint_report.py` shows "hinted but not used"). Deliver
+knowledge through a tool that returns a small, sourced subgraph, not pasted into the prompt. Method: ai-evals; retrieval: ai-rag.
+
+## Scripts
+All under `.claude/skills/eng-codebase-mapping/scripts/`, standard library only, read-only on the repo, no network. One-line catalogue
+and the reconstruction chain (inventory → scan → cards → check → export/refresh): `references/scripts.md`; flags: each script's `--help`.
 
 ## Example
-**Situation:** "Where should I start reading the `shop` repo (Nx, Angular + NestJS)?"
-**Result:** `nx graph` + `madge`; entry points `apps/api/src/main.ts` and `app.config.ts` (6 pts each), `app.routes.ts`
-(4 pts); layers controller → `order.service.ts` → repository → `libs/db`; finding: `libs/db/src/audit.ts`
-imports the service (upstream, a cycle — EXTRACTED); central node `order.service.ts` (23 connections); an edge through a
-DI token — INFERRED. `git_territory.py`: `apps/api/src/orders` changed in every quarter (a stable centre),
-the pair `orders` ↔ `libs/db/migrations` in 14 commits, the hub `libs/i18n`; two files from the ranking already deleted. Risk
-zone: orders (load-bearing, volatile); whom to ask: 2 logins. A 7-step route, the map with a date and a commit.
-More examples: `references/examples.md`.
+Input: "A Django + TypeScript repo, no madge, no network. Map it."
 
-## Checklist
-- [ ] the graph from tools, not from guesses; scope agreed for a large repo
-- [ ] territory from history: 12 months, quarters, co-changes without mass commits, file existence checked
-- [ ] module legend with evidence for every label; runtime couplings in `unknowns`
-- [ ] scored entry points, layers with the dependency direction, cycles listed with their kind (runtime / lazy)
-- [ ] edges with a confidence label
-- [ ] a reading route of 5–15 steps; the map with a date and a commit
+Result (`docs/project/04-architecture/codebase-map.md`, 2026-11-20, HEAD `9c41e7a`):
+- `repo_inventory.py`: 1,140 files, Python 61%, TS 34%; scope agreed: `backend/` and `web/src/`.
+- `git_territory.py --all`: stable centre `backend/orders/` (top in 4/4 quarters); campaign `web/src/checkout/` (Q2 only, finished);
+  pair `backend/orders/models.py` ↔ `web/src/api/generated.ts` share 0.92 — regeneration, cheap; hub `backend/settings/base.py`.
+- `code_graph.py`: entry points `manage.py` (score 5), `backend/config/celery.py` (registry: 14 tasks), `web/src/main.tsx` (5);
+  runtime cycle `orders/services.py → billing/hooks.py → orders/services.py`; a lazy cycle closed by a `TYPE_CHECKING` import;
+  barrel `web/src/components/index.ts` excluded from hubs.
+- Unknowns: signals in `orders/apps.py` connect billing at runtime — INFERRED, not in the graph.
+- Risk zones: `orders/services.py` (hotspot #1, runtime cycle), `billing/hooks.py` (bus factor: one person). First day: 6 files.
+More cases (diff impact, co-change reading, a repo without history): `references/examples.md`.
 
 ## Sources
-- 10xDevs course, ed. 3 (2026), module 4, lessons 2–3 (a project map from history and the graph, feature analysis) and their
-  prompts; module 2, lesson 4 (researching code before a change) — training material (accessed 2026-10-09); described in our own words.
-- dependency-cruiser 18.5.0 (`depcruise --help`, checked 2026-10-10): `--collapse`, `--focus`, `--focus-depth`,
-  `--reaches`, `--metrics`, `--exclude`, `--do-not-follow`, `-T archi|mermaid|dot`; ast-grep 0.50.0; `/usr/bin/sg`
-  in Ubuntu from the `login` package (checked 2026-10-10).
-- Factory measurement (read 2026-10-18): a full map from `code_graph.py` vs the agent's own scanner on two repositories
-  (TS ~22 thousand lines, Python ~860 thousand) — `docs/project/archive/research/20261018-code-graph.md`.
-
-## Sources of inspiration
-[Understand-Anything](https://github.com/Egonex-AI/Understand-Anything) (entry point scoring, layer heuristics,
-the reading route, diff impact with per-path freshness in a monorepo) and [graphify](https://github.com/Graphify-Labs/graphify)
-(central nodes, cycles, edge confidence labels, "graph first, then grep") — described in our own words; instead of
-their tools the factory uses `nx graph`, madge and jdeps.
+- git documentation: `git-log`, `git-diff`, `git-ls-files` (git-scm.com/docs, accessed 2026-10-10).
+- Nx documentation, "nx graph" and "nx show projects --affected" (nx.dev, accessed 2026-10-10).
+- dependency-cruiser documentation, CLI options (github.com/sverweij/dependency-cruiser, 18.5.0, accessed 2026-10-10).
+- madge README (github.com/pahen/madge, accessed 2026-10-10); ast-grep CLI reference (ast-grep.github.io, accessed 2026-10-10).
+- Sources of inspiration: the open-source code-knowledge-graph projects Understand-Anything and graphify (GitHub) — scored entry points,
+  confidence-labelled edges [unverified: repository owners and access dates].

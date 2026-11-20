@@ -1,104 +1,93 @@
-head: Użyj, gdy repo ma być gotowe dla agentów — szkielet z generatora albo audyt lockfile, testów, CI. Użyj, gdy repozytorium ma być gotowe do bezpiecznej, weryfikowalnej pracy agentów — nowy projekt: szkielet z oficjalnego generatora z decyzji o stacku, świeżość startera, katalog tymczasowy i polityka konfliktów plików, raport z kodem wyjścia; istniejący projekt: audyt tylko do odczytu (lockfile, komenda audytu zależności, runner testów na sucho, etapy CI, konfiguracja, cztery bramki stacku z kompensacją w CLAUDE.md, pętla deweloperska: jedno polecenie startowe, usługi lokalnie z healthcheckiem, dane startowe, testy powiązane, czas od klonu do zielonych testów), werdykt i lista poprawek. Skrypt scripts/readiness_check.py. Nie do wyboru stacku (arch-tech-selection), audytu długu w kodzie (eng-tech-debt-audit), dopasowania skilli do wersji (core-stack-sync) ani podnoszenia zależności (ops-dependency-upgrades).
-# Gotowość repozytorium do pracy agentów
+head: Użyj, gdy stawiasz szkielet projektu z oficjalnego generatora albo oceniasz, czy istniejące repo jest gotowe do pracy agentów — audyt, testy, DX, werdykt. Użyj, gdy repozytorium ma stać się bezpieczne i weryfikowalne dla pracy agentów. Ścieżka A (nowy projekt): szkielet z oficjalnego generatora wskazanego w zaakceptowanej decyzji o stacku — ocena świeżości startera, katalog tymczasowy, polityka konfliktów, która nigdy nie nadpisuje istniejących plików, raport weryfikacji szkieletu. Ścieżka B (istniejący projekt): audyt tylko do odczytu skryptem scripts/readiness_check.py — lockfile, polecenie audytu zależności, runner testów na sucho, etapy CI, konfiguracja, cztery bramki przyjazności dla agenta na komponent stacku z gotowymi kompensacjami do CLAUDE.md, pętla dewelopera (jedno polecenie setup, compose z healthcheckami, seed, .env.example, testy powiązane, czas od klonu do zielonych testów), werdykt i uporządkowana lista poprawek. Nie do wyboru stacku (arch-tech-selection), audytu długu w kodzie (eng-tech-debt-audit), dopasowania skilli do wersji (core-stack-sync) ani aktualizacji zależności (ops-dependency-upgrades).
+# Gotowość repo — szkielet z generatora albo audyt tego, co jest
 
-Pytanie skilla: **czy agent może w tym repo od jutra pracować bezpiecznie i sprawdzalnie?** Bezpiecznie, czyli nie
-nadpisze plików człowieka i nie zainstaluje czegoś po cichu. Sprawdzalnie, czyli ma lockfile, testy uruchamiane jednym
-poleceniem, CI i jasne konwencje. Nowy projekt dostaje szkielet (ścieżka A), istniejący — audyt (ścieżka B).
+Agent pracuje bezpiecznie tylko w repo, w którym sam zainstaluje, uruchomi i przetestuje projekt, a wyniki da się
+sprawdzić. Ten skill albo tworzy takie repo z oficjalnego generatora (ścieżka A), albo audytuje istniejące (ścieżka B).
+Informuje i proponuje; nie zmienia stacku i niczego sam nie naprawia.
 
-## Zasada nadrzędna: deleguj do autorytatywnego CLI
-- Jeśli istnieje narzędzie, które robi zadanie (generator projektu, `docker init`, `ng generate`, `prisma migrate dev`),
-  agent je wywołuje, zamiast odtwarzać pliki z pamięci. Pamięć modelu to często składnia sprzed dwóch wydań.
-- Gdy autorytatywne CLI zwróci błąd, agent też się zatrzymuje: **nie dopisuje brakujących plików ręcznie**, nie
-  „dokańcza” szkieletu. Raportuje polecenie, kod wyjścia i ostatnie linie wyjścia.
+**Reguła nadrzędna:** deleguj do autorytatywnego CLI — generator projektu, `docker init`, `ng generate`,
+`prisma migrate dev`. Zapamiętana składnia się starzeje; nigdy nie pisz szkieletu z pamięci. Gdy CLI zawiedzie,
+**zatrzymaj się** i zgłoś polecenie, kod wyjścia i ostatnie linie wyjścia; nie dopisuj brakujących plików ręcznie.
 
-## Ścieżka A — nowy projekt (szkielet)
-**Warunek wstępny:** zaakceptowana decyzja o stacku (`docs/project/04-architecture/stack-decision.md`, status
-`accepted`) z poleceniem generatora i jego wersją. Brak pliku → odmowa i odesłanie do arch-tech-selection. Ustalenia
-z rozmowy nie zastępują pliku.
-1. **Świeżość generatora** (ostrzeżenie, nie blokada):
-   - `npm view <pakiet-generatora> version time.modified` albo `gh api repos/<właściciel>/<repo> --jq .pushed_at`;
-   - < 3 mies. świeży · 3–6 mies. starzejący się · > 6 mies. nieaktualny → pokaż człowiekowi i zaproponuj oficjalną
-     alternatywę z tej samej rodziny.
-2. **Szkielet do katalogu tymczasowego** `.bootstrap-scaffold/` (nigdy wprost do korzenia repo). Generator z kodem
-   ≠ 0 → STOP: katalog zostaje do inspekcji, raport ze statusem `failed`.
-3. **Przeniesienie z polityką konfliktów** (tabela niżej). Klonowany starter: usuń jego `.git/` przed przeniesieniem.
-   Plików człowieka nie kasujesz ani nie nadpisujesz.
-4. **Po przeniesieniu:** audyt zależności (komendy:
-   `.claude/skills/ops-supply-chain-security/references/dependency-audit.md`), testy i build szkieletu. Audyt nie naprawia sam — `npm audit fix` itp. tylko za zgodą.
-5. **Raport** `docs/project/06-delivery/bootstrap-verification.md`: polecenie i wersja generatora, kod wyjścia,
-   przeniesione pliki, konflikty `.scaffold`, wynik audytu (bezpośrednie / przechodnie), wynik testów i builda,
-   następne kroki. `git init` i pierwszy commit to decyzja człowieka.
+## Ścieżka A — nowy projekt z generatora
+1. **Warunek wstępny:** `docs/project/04-architecture/stack-decision.md` ze statusem `accepted`, z poleceniem generatora
+   i wersją. Ustalenie w rozmowie nie wystarcza; brak pliku → odmowa w jednym zdaniu i odesłanie do arch-tech-selection.
+2. **Świeżość startera** (heurystyka zespołu): `npm view <pkg> version time.modified` albo
+   `gh api repos/<owner>/<repo> --jq .pushed_at`. Poniżej 3 miesięcy — świeży; 3–6 — starzeje się; ponad 6 — nieaktualny:
+   ostrzeżenie, nie blokada, z oficjalną alternatywą tej samej rodziny.
+3. **Generuj do `.bootstrap-scaffold/`**, nigdy do katalogu głównego. Kod wyjścia generatora ≠ 0 → STOP: zostaw katalog
+   do inspekcji, raport ze statusem `failed`, nic nie uzupełniaj ręcznie.
+4. **Przenieś według polityki konfliktów** (istniejący plik wygrywa):
+   - `CLAUDE.md`, `AGENTS.md`, `README.md`, `.claude/`, `docs/project/` — zostaje istniejąca wersja, wersja generatora
+     obok jako `<plik>.scaffold`;
+   - manifesty (`package.json`, `pyproject.toml`) — istniejący zostaje, wersja generatora jako `.scaffold`, różnice w raporcie;
+   - `.gitignore` — scalenie addytywne bez duplikatów;
+   - pozostałe pliki przeniesione; kolizja nazwy → `.scaffold`;
+   - sklonowany starter: usuń jego `.git/` przed przeniesieniem;
+   - nigdy nie usuwaj ani nie nadpisuj plików ludzi; `git init` i pierwszy commit to decyzja człowieka.
+5. **Po przeniesieniu:** audyt zależności (tylko raport; `npm audit fix` za zgodą), testy szkieletu, build.
+6. **Raport** `docs/project/06-delivery/bootstrap-verification.md`: polecenie i wersja generatora, kod wyjścia, przeniesione
+   pliki, konflikty `.scaffold`, dopisane linie `.gitignore`, audyt bezpośrednie vs przechodnie, wyniki testów i buildu,
+   następne kroki. Wariant nieudany: polecenie, kod wyjścia, ostatnie 20 linii, ścieżka katalogu. Wzory: `references/reports.md`.
 
-| Plik w szkielecie | Gdy w repo już istnieje |
-|---|---|
-| `CLAUDE.md`, `AGENTS.md`, `README.md`, `.claude/`, `docs/project/` | istniejący wygrywa; wersja generatora obok jako `<plik>.scaffold` |
-| `package.json`, `pyproject.toml` i inne manifesty | istniejący wygrywa, `<plik>.scaffold` + lista różnic w raporcie do decyzji |
-| `.gitignore` | scalenie dopisujące: linie generatora, których brak, bez duplikatów |
-| pozostałe pliki | przeniesienie; konflikt nazwy → `.scaffold` |
+## Ścieżka B — istniejący projekt
+Fakty przed oceną. Uruchom, nie implementuj od nowa:
+- `python3 .claude/skills/eng-repo-readiness/scripts/readiness_check.py [katalog] [--json]` — offline, niczego nie uruchamia;
+  kod 0 bez wysokich ustaleń, 1 są wysokie, 2 błąd wywołania;
+- `python3 .claude/hooks/detect_stack.py` — komponenty stacku.
 
-## Ścieżka B — istniejący projekt (audyt tylko do odczytu)
-Najpierw fakty, potem ocena:
-`python3 .claude/hooks/detect_stack.py` oraz **uruchom** `python3 .claude/skills/eng-repo-readiness/scripts/readiness_check.py [katalog] [--json]`
-(rodziny, lockfile, komenda audytu, runner i komenda na sucho, etapy CI, konfiguracja, pliki instrukcji, pętla
-deweloperska; kod 1 =
-ustalenia wysokiej wagi). Skrypt niczego nie uruchamia — audyt i listę testów puszczasz sam, za zgodą człowieka.
-1. **Fundament:** lockfile właściwy dla ekosystemu (`requirements.txt` to słaby zamiennik), wynik audytu
-   zależności (bezpośrednie osobno od przechodnich), zależności zaległe o ≥ 1–2 wersje główne (tylko główne luki).
-   Rodzina bez wbudowanego audytu (Java, Dart) → „pominięto”, **nigdy „0 znalezisk”**.
-2. **Środowisko wykonania:** runner testów i próba na sucho (`npx vitest list`, `npx jest --listTests`,
-   `pytest --collect-only -q`, `cargo test --no-run`, `go test -list . ./...`, `dotnet test --list-tests`); etapy CI
-   lint / test / build / typy / bezpieczeństwo (✓/✗); konfiguracja: `.gitignore` (wysoka), TypeScript bez `strict`
-   (wysoka), brak lintera lub formatera (średnia), `.editorconfig` i `.env.example` (niska).
-3. **Cztery bramki stacku per komponent** — z dowodem (plik, konfiguracja) przy każdej ocenie:
-   **typy** (jawne kontrakty danych w kodzie) · **konwencje** (ustalone miejsca na routing, testy, konfigurację) ·
-   **popularność w obrębie rodziny języka** (Django wśród frameworków Pythona, nie wobec Reacta) · **aktualna,
-   wersjonowana dokumentacja**. Dla oblanej bramki: **gotowe do wklejenia reguły do CLAUDE.md**, np. „trasy
-   w `src/routes/`, każda eksportuje `router`; middleware w kolejności rejestracji w `src/app.js`”. Nie „dodaj
-   dokumentację”.
-4. **Pętla deweloperska (DX):**
-   - jedno polecenie startowe (`make setup` / `just setup`), opisane w README i CLAUDE.md;
-   - usługi (baza, Redis, kolejka) w `compose.yaml` z healthcheckiem, `docker compose up -d --wait`, albo
-     Testcontainers;
-   - idempotentne dane startowe z danymi syntetycznymi i `.env.example` bez prawdziwych kluczy;
-   - polecenie testów powiązanych ze zmianą (`vitest related`, `jest --findRelatedTests`, `nx affected`,
-     `pytest --lf`) wpisane w CLAUDE.md jako to, które agent puszcza po każdej zmianie.
-   Fakty daje sekcja `dx` skryptu. Miarą jest **czas od klonu do zielonych testów**: świeży klon w katalogu
-   tymczasowym, tylko według README, `time make setup && time make test` — za zgodą człowieka, wynik w raporcie.
-   Procedura i progi: `references/developer-loop.md`.
-5. **Werdykt** (informuje, nie blokuje; nigdy nie rekomenduje zmiany stacku):
-   - stack: `gotowe` / `gotowe-z-kompensacją` / `duże-tarcie`;
-   - projekt: `healthy` (zdrowy) / `needs-attention` (wymaga uwagi) / `critical` (krytyczny) (krytyczne podatności, brak runnera testów, ≥ 3 luki wysokie).
-6. **Lista poprawek** w kolejności wpływu na pracę agenta (brak testów > niski alert audytu): co · dlaczego dla
-   agenta · konkretne polecenie · wysiłek (szybko < 5 min / średnio 15–30 min / duże > 1 h). Nic nie naprawiasz sam.
+Uruchomienie audytu lub listowania testów wymaga zgody człowieka.
 
-Raport: `docs/project/07-review/<data>-repo-readiness.md` (core-project-record). Szablon obu raportów:
-`references/reports.md`.
+1. **Fundament:** lockfile ekosystemu (sam `requirements.txt` to słaby zamiennik); audyt zależności, bezpośrednie vs
+   przechodnie (`npm audit --json`, `pip-audit --format json`, `cargo audit --json`, `govulncheck -json ./...`,
+   `bundle audit check --update`, `composer audit --format json` od Composera 2.4,
+   `dotnet list package --vulnerable --include-transitive`); zależności o major lub więcej w tyle. Rodzina bez
+   wbudowanego audytu (Java, Dart) → **„pominięte”**, nigdy „0 ustaleń”. Krytyczne podatności podnoszą werdykt ręcznie.
+2. **Środowisko uruchomienia:** runner testów i listowanie na sucho (`npx vitest list`, `npx jest --listTests`,
+   `pytest --collect-only -q`, `cargo test --no-run`, `go test -list . ./...`, `dotnet test --list-tests`, `mocha --dry-run`);
+   etapy CI (lint, testy, build, typy, bezpieczeństwo); konfiguracja: brak `.gitignore` wysokie, TypeScript bez `strict`
+   wysokie, brak lintera lub formatera średnie, brak `.editorconfig` lub `.env.example` niskie.
+3. **Cztery bramki przyjazności dla agenta na komponent**, każda z dowodem z pliku lub konfiguracji: **typy** (jawne
+   kontrakty danych), **konwencje** (ustalone miejsca na trasy, testy, konfigurację), **popularność w rodzinie języka**
+   (Django wśród frameworków Pythona, nie Django kontra React), **aktualna wersjonowana dokumentacja**. Werdykt stacku:
+   `ready` / `ready-with-compensation` / `high-friction`. Nieprzechodząca bramka dostaje **kompensację**: konkretne reguły
+   do wklejenia w CLAUDE.md, nigdy „dodaj dokumentację”.
+4. **Pętla dewelopera** (`references/developer-loop.md`):
+   - jedno idempotentne polecenie startowe (`make setup`, `just setup`, `task setup`, `npm run setup`) instalujące z lockfile
+     (`npm ci`, `uv sync`, `poetry install --sync`), stawiające usługi (`docker compose up -d --wait`), migracje i
+     idempotentny syntetyczny seed; plus `make dev` i `make test`; opisane w README i CLAUDE.md/AGENTS.md;
+   - usługi w `compose.yaml` w wersjach produkcyjnych, z `healthcheck` i `depends_on` z `condition: service_healthy` —
+     albo Testcontainers;
+   - devcontainer tylko gdy narzędzia trudno zainstalować lub używa się Codespaces; inaczej compose i plik wersji
+     (`.nvmrc`, `.python-version`, `mise.toml`);
+   - `.env.example` ze wszystkimi zmiennymi, puste lub fikcyjne wartości; wartość wyglądająca na prawdziwy klucz to
+     ustalenie **wysokie** — pokazane tylko nazwą zmiennej, klucz do unieważnienia;
+   - usługi zewnętrzne w trybie testowym lub zaślepione (Stripe test mode, Mailpit);
+   - szybka informacja zwrotna: polecenie testów powiązanych (`vitest related`, `jest --findRelatedTests`,
+     `nx affected -t test`, `pytest --lf` lub testmon), rozdzielone szybkie i wolne zestawy, CLAUDE.md mówi, co uruchomić
+     po zmianie, a co przed oddaniem.
+5. **Zmierz czas od klonu do zielonych testów** (za zgodą; bez prawdziwych sekretów): świeży klon do katalogu
+   tymczasowego, tylko README/CLAUDE.md, `time make setup && time make test`; zapisz sumę, każde zgadywanie lub pytanie
+   i każdy ręczny krok — każdy to poprawka. Orientacyjny cel zespołu: setup poniżej 15 minut, zero ręcznych kroków
+   poza własnymi kluczami [założenie].
+6. **Werdykt i poprawki.** Werdykt projektu: `critical` (brak runnera testów albo ≥ 3 wysokie) / `needs-attention` /
+   `healthy`. Poprawki według wpływu na agenta; każda: co, dlaczego dla agenta, polecenie, wysiłek: szybka (< 5 min),
+   średnia (15–30 min), duża (> 1 h). Werdykt informuje, nie blokuje i nie zaleca zmiany stacku.
+7. **Raport** `docs/project/07-review/<data>-repo-readiness.md`: TL;DR z werdyktami i poprawką nr 1, tabela faktów z dowodami,
+   tabela bramek, kompensacje, tabela poprawek, „czego nie sprawdzono”. Każda liczba ma dowód albo „nie sprawdzono”.
 
 ## Przykład
-**Sytuacja:** „Przejmujemy API w Express (JavaScript, bez TS). Czy agenci mogą tu pracować?”
-**Wynik:** `readiness_check.py` — `package-lock.json` jest, `npm audit --json` do uruchomienia, runner testów:
-BRAK (wysoka), CI tylko `npm run build`, `.gitignore` jest, linter jest, formatera brak (średnia). Audyt (za zgodą):
-2 wysokie w zależnościach przechodnich, 0 w bezpośrednich. Bramki: typy ✗, konwencje ✗, popularność ✓,
-dokumentacja ✓ → `gotowe-z-kompensacją`; reguły do CLAUDE.md: układ katalogów tras, kolejność middleware, wzorzec
-obsługi błędów (`next(err)` + jeden handler), JSDoc na funkcjach publicznych. Projekt: `krytyczne` (brak runnera).
-Poprawka nr 1: runner testów z jednym testem dymnym (średnio); nr 2: etap testów w CI; nr 3: przechodnie
-podatności — czekamy na opiekuna albo `overrides` po przeglądzie.
+Przejmowane API we Flasku (Python 3.12, tylko `requirements.txt`, pytest, CI uruchamia tylko `flake8`): lockfile słaby —
+średnie; `pytest --collect-only -q` listuje 212 testów; CI bez etapu testów i buildu; brak formatera — średnie;
+`.env.example` ma `STRIPE_SECRET_KEY` z wartością jak prawdziwa — wysokie. Za zgodą `pip-audit`: 1 wysoka przechodnia,
+0 bezpośrednich. Flask: typy ✗, konwencje ✗, popularność ✓, dokumentacja ✓ → `ready-with-compensation` z regułami do
+CLAUDE.md. Werdykt `needs-attention`. Poprawki: unieważnij klucz (szybka), etap pytest w CI (szybka), `uv` z lockfile
+(średnia), podbicie paczki przechodniej (średnia), ruff format w pre-commit (szybka).
 
-## Checklista
-- [ ] (A) generator z zaakceptowanej decyzji, nie z pamięci; świeżość sprawdzona; katalog tymczasowy
-- [ ] (A) pliki człowieka i fabryki nietknięte, konflikty jako `.scaffold`; błąd generatora = stop i raport
-- [ ] (B) fakty ze skryptu i poleceń przed oceną; każda ocena z dowodem `plik` lub polecenie
-- [ ] (B) pominięty audyt opisany jako „pominięto”, nie „0”; bezpośrednie osobno od przechodnich
-- [ ] kompensacje jako konkretne reguły do CLAUDE.md; runner testów działa albo jest poprawką nr 1
-- [ ] (B) jedno polecenie startowe, usługi z healthcheckiem, dane startowe, testy powiązane w CLAUDE.md; czas od
-  klonu do zielonych testów zmierzony albo wpisany jako „nie mierzono”
-- [ ] raport w `docs/project/`; nic nie zainstalowano ani nie naprawiono bez zgody
-
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), lekcja 4.1 (dobór stacku) i moduł 1, lekcje 2 i 5 (start projektu z agentem,
-  wdrożenie) — materiał szkoleniowy (dostęp 2026-10-09); opisane własnymi słowami.
-- Dokumentacja CLI sprawdzona 2026-10-10 w izolowanym katalogu: `vitest list` (Vitest 3.2.4), `mocha --dry-run`
-  (Mocha 11.7.1), `pip-audit --format json` (pip-audit 2.10.1), `npm view <pakiet> time.modified` (npm 10).
-- Composer: `composer audit` od wersji 2.4 — [php.watch](https://php.watch/articles/composer-audit) (dostęp 2026-10-10);
-  govulncheck: raportuje podatności osiągalne z kodu — [pkg.go.dev](https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck)
-  (dostęp 2026-10-10).
+## Lista kontrolna
+- [ ] ścieżka A tylko z zaakceptowanym plikiem decyzji o stacku; generowanie w `.bootstrap-scaffold/`; istniejące pliki wygrywają
+- [ ] porażka generatora → stop i raport, nic dopisane ręcznie
+- [ ] ścieżka B: fakty ze skryptu i datowanych poleceń; audyt i listowanie testów za zgodą; „pominięte” bez audytu
+- [ ] cztery bramki z dowodami; kompensacje jako reguły do CLAUDE.md
+- [ ] pętla dewelopera: jedno polecenie, healthchecki, seed, `.env.example`, testy powiązane, zmierzony czas od klonu
+- [ ] werdykty, poprawki według wpływu na agenta, lista „nie sprawdzono”

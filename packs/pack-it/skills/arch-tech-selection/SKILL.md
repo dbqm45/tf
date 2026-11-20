@@ -1,92 +1,111 @@
 ---
 name: arch-tech-selection
-description: Use for choosing or assessing a stack (language, framework, database, hosting) — criteria, candidates, a matrix, risks.
+description: Use when choosing or changing a stack — framework, database, hosting, tools — with knock-out filters, a weighted matrix, verified versions and a recorded decision.
 metadata:
-  review: "2027-10-09"
-  catalog: "Use when you must recommend a stack (languages, frameworks, database, hosting, tools) for a new project or assess and evolve the stack of an existing one — drivers, mandatory filters, 2–3 candidates, verifying facts from sources, an assessment matrix, risks and spikes, mapping onto skills and personas. Not for establishing quality attributes (arch-quality-attributes)."
-  keywords: "przepisać od zera, co zostawić a co wymienić, wybrać framework, który framework wybrać, czy wybrać, porównanie frameworków, modernizacja starego systemu, legacy, migracja stacku, nowy stack, wybór technologii, rewrite from scratch, what to keep and what to replace, choose a framework, which framework to choose, framework comparison, modernizing an old system, stack migration, new stack, technology choice, stack decision, pick a framework and a database, choose a stack, startup stack, regret the choice later, team knows Python"
+  review: "2027-05-20"
+  catalog: "Use when choosing the technology stack for a new project (language, framework, database, hosting, tools) or deciding keep / improve / replace per area of an existing one — drivers and weights, knock-out filters (licence, data location, support horizon, security patches, team skills), the boring option, facts verified from primary sources with a date, a weighted matrix, conclusions from the domain model, agent friendliness and what to do when a chosen tool fails it, spikes with abandonment criteria, MVP hosting, the record in stack-decision.md. Not for quality attribute scenarios and the utility tree (arch-quality-attributes), communicating and recording architectural decisions in general (arch-architect-practice)."
+  keywords: "wybór stacku, jaki stack, jaki framework, jaka baza danych, wybrać bazę, wybrać framework, porównanie frameworków, stack dla startupu, nowy projekt jaki język, hosting MVP, gdzie wdrożyć aplikację, platforma do wdrożenia, przepisać od zera, przepisanie aplikacji, migracja stacku, stary stack, AngularJS, Java 8, zostawić czy wymienić, strangler fig, macierz decyzyjna, macierz ważona, filtry obowiązkowe, nudna technologia, przyjazność dla agentów, framework bez typów, klient upiera się przy frameworku, zgodność wersji, kompatybilne wersje, czy wersje są zgodne, własny algorytm czy solver, planowanie tras, spike, kryterium porzucenia, decyzja o stacku, websockety hosting, serverless, tech stack, choose a framework, which database, pick a database, framework comparison, startup stack, MVP hosting, where to deploy, deployment platform, rewrite from scratch, stack migration, legacy stack, keep or replace, weighted decision matrix, knock-out criteria, boring technology, agent friendly stack, untyped framework, version compatibility, build vs solver, abandonment criterion, stack decision"
 ---
 
-# Choosing a technology stack
+# Choosing a stack — a recorded decision, not a list of favourites
 
-A recommendation is **a decision with a justification and verified facts**, recorded in `docs/project/04-architecture/stack-decision.md`
-(template: core-project-record). Not a list of favourite technologies.
+The result is a recommendation with reasons and facts checked today. A key input missing (the team's skills, where data
+must live, the budget) → ask; do not assume.
 
-## Input (read the TL;DR + the indicated sections)
-The brief (goals, constraints, team), the requirements (quality attribute scenarios), the domain (subdomains, archetypes, problem classes).
-A key input missing (e.g. the team's skills, the hosting location) → a question to the user, not an assumption.
-**An existing project:** first `python3 .claude/hooks/detect_stack.py` — the recommendation is *keep / improve / replace* per area,
-with the migration cost (strangler fig, along context boundaries), not a new stack from scratch.
-
-Supplementary input (if it exists): `02-domain/algorithms.md`, `02-domain/stress/*.md`.
+**Inputs (read TL;DR and the indicated sections):** the brief, `03-requirements/requirements.md` (quality scenarios),
+domain documents, optionally `02-domain/algorithms.md` and `02-domain/stress/*.md`. Existing project: run
+`python3 .claude/hooks/detect_stack.py` first.
+**Output:** `docs/project/04-architecture/stack-decision.md` with status `proposed` (template: core-project-record), an ADR
+for each key decision, rows in `decisions.md`, a log entry. A human accepts.
 
 ## Procedure
-1. **Drivers** — 3–5 (H,H) scenarios + constraints (arch-quality-attributes), with weights 1–5.
-2. **Mandatory filters** (they reject an option without scoring): the licence, hosting and compliance (e.g. data in the EU), support within the project's
-   horizon (LTS / end of support), security (active patches), the team's ability to start (or a real hiring plan).
-3. **Candidates** — 2–3 per area, always with the **"boring"** option: what the team knows, or the most common choice in the ecosystem.
-   Fewer technologies = cheaper: every extra language/framework is a cost of maintenance, recruitment and skills.
-4. **Fact verification** — current versions, support dates, compatibility between elements (e.g. Angular 22 requires TS 6.0.x),
-   licences: only from **primary sources** (release pages, the package registry: `npm view <package> version`), with a check date.
-   Cheaply: delegate to the `researcher` agent (it returns facts with sources). **Never from memory.**
-5. **Assessment** — a weighted matrix:
-   | Criterion | Question |
-   |---|---|
-   | fit to the drivers | does it meet the (H,H) scenarios without extraordinary measures? |
-   | team skills | how much learning before the first release? |
-   | ecosystem maturity | stable releases, libraries, community, documentation |
-   | operating cost and complexity | how many elements to maintain and monitor? |
-   | **friendliness for AI agents** | **four gates**: **types** (explicit data contracts in the code) · **conventions** (established places for routing, tests, configuration) · **popularity assessed within the language family** (Django among Python frameworks, not against React) · **current, versioned documentation** (preferably in markdown: `llms.txt`, `.md` versions, available through a live documentation server); plus fast tests, deterministic tools, services integrated in one step (one command, one environment variable, one documentation page) and **existing `lang-*`/`fw-*`/`tool-*` skills** |
-   | lock-in and exit cost | what if the provider/framework has to be changed? |
-   | security | vulnerability history, patch speed, secure defaults |
-6. **Conclusions from the domain** (ddd-deep-modeling, ddd-archetypes):
-   - a generic subdomain → buy / SaaS / a ready component (through an ACL);
-   - CRUD and supporting → the simplest framework, generators, even BaaS;
-   - a core with complex rules → a language with a strong type system (sum types, immutability), easy domain tests;
-   - competition for resources → a database with strong consistency and constraints (e.g. PostgreSQL with exclusion of overlapping ranges);
-   - integration between contexts → messages + an outbox (be-messaging-outbox); read-dominated → read models / cache;
-   - **an algorithmic core** (`02-domain/algorithms.md`, ddd-algorithm-recognition): an NP-hard problem → a solver/optimization
-     library behind a domain interface + a spike with an abandonment criterion, not your own algorithm; a spatial problem →
-     a geo extension in the database; similarity → a full-text/vector index. The `researcher` checks the specific libraries and versions.
-7. **Architecture style** — by default a modular monolith (arch-quality-attributes); another one only with a justification in the drivers.
-8. **Risks and spikes** — for every uncertainty: a time-boxed experiment and an **abandonment criterion** for the choice.
-   Run the leader through the decision resilience test (devil's advocate, pre-mortem, unknown unknowns —
-   arch-architect-practice) before you record the recommendation. MVP hosting: `references/deployment-platform.md`.
-9. **Mapping onto the agent team** — the needed skills: available / to be created (`python3 .tf/factory/build.py new-skill …`),
-   the suggested `stack` of the implementing personas (e.g. `[fw-angular, lang-typescript]`).
-9a. **A start from the official generator and failed gates.**
-   - Say what the project will start with: the official generator or a mature template (the command and version from a source with a date),
-     never an empty directory. Confidence: checked by us / registered, untested / manual. eng-repo-readiness sets up
-     the skeleton.
-   - A candidate that failed the friendliness gate does not go into the recommendation "by default". When the human chooses it:
-     name the failed gates, give the best alternative from the same family, describe the compensation (concrete rules for
-     CLAUDE.md) and record `quality_override: yes` with a justification in stack-decision.
-   - The human's self-check (5 questions): types? an official starter? recognizable conventions? current documentation?
-     **will I recognize that the agent is doing something against the practice of this stack?** Two "no" answers → recommend the "boring" option.
-10. **Record** — stack-decision.md (`proposed`), an ADR for key decisions, rows in decisions.md, an entry in the log; a human accepts it.
+1. **Drivers.** 3–5 quality scenarios rated (H,H) (arch-quality-attributes) plus constraints; give each a weight 1–5.
+2. **Knock-out filters** — a candidate that fails one is rejected without scoring:
+   - licence acceptable for the product;
+   - hosting and compliance (e.g. personal data must stay in the EU);
+   - a support horizon covering the product's life (LTS, end-of-life date);
+   - security patches still being released;
+   - the team can start with it now, or there is a real hiring plan.
+3. **Candidates.** 2–3 per area, and always the **boring option**: what the team already knows or the default of the
+   ecosystem. Every additional technology costs maintenance, hiring and skills.
+4. **Facts from primary sources, with a date.** Versions, support dates, compatibility between components (a framework's
+   major version usually pins a range of its language or compiler), licences — from release pages, official docs and
+   registry queries (`npm view <pkg> version`, `pip index versions <pkg>`). Delegate the lookup to the `researcher` agent
+   (it returns facts with sources); never answer a version or compatibility question from memory (core-grounding,
+   core-source-research).
+5. **Weighted matrix.** Criteria:
+   - fit to the drivers;
+   - team skills (time to learn before the first release);
+   - ecosystem maturity;
+   - cost and complexity of running it;
+   - agent friendliness (section below);
+   - lock-in and exit cost;
+   - security (vulnerability history, patch speed, secure defaults).
+   Total = Σ (score 1–5 × weight). The matrix supports the decision; a close result means "pick the boring one".
+6. **Conclusions from the domain model** (ddd-deep-modeling, ddd-archetypes, ddd-algorithm-recognition):
+   - generic subdomain → buy or SaaS behind an anti-corruption layer;
+   - CRUD or supporting subdomain → the simplest framework, generators, even a BaaS;
+   - complex core rules → a language with a strong type system (sum types, immutability) and easy domain tests;
+   - competition for a scarce resource → a strongly consistent database with constraints (e.g. exclusion constraints on
+     overlapping ranges — be-database);
+   - integration between contexts → messages with an outbox (be-messaging-outbox); read-heavy → read models or a cache;
+   - an algorithmic core (scheduling, routing — often NP-hard) → an optimisation library or solver behind a domain
+     interface, plus a time-boxed spike; geography → a geo extension of the database; similarity → full-text or vector index.
+7. **Architecture style:** a modular monolith unless the drivers justify something else.
+8. **Risks and spikes.** Every serious uncertainty gets a time-boxed experiment with an **abandonment criterion** (what
+   result makes us drop the option). Before recording, challenge the leading option — devil's advocate, pre-mortem,
+   unknown unknowns (arch-architect-practice, `.claude/skills/arch-architect-practice/references/decision-resilience-test.md`).
+   MVP hosting: `references/deployment-platform.md`.
+9. **The agent team.** Which `lang-*`, `fw-*`, `tool-*` skills exist for the stack and which must be created
+   (`python3 .tf/factory/build.py new-skill …`); a suggested `stack` field for implementing personas, e.g.
+   `[fw-angular, lang-typescript]`.
+10. **Starting point.** The official generator or a mature template: the command and version from a dated source, never an
+    empty directory (eng-repo-readiness). Label the confidence: checked by us / listed but not tried / manual.
 
-When the problem is team friction (a slow build, long feedback, standards for many teams), not the technology choice
-itself — first a DevEx diagnosis and the migration cost in fe-engineering-levels; buying or changing a tool is the result of
-that diagnosis.
+## Agent friendliness
+An agent works well with a stack it can read, run and check without a human. Look at:
+- **types** — typed data contracts (static types, schemas) so mistakes surface at compile or validation time;
+- **conventions** — established places for routing, tests, configuration, so the agent finds and puts things where people expect;
+- **popularity within the language family** — compare a framework with its siblings in the same language, not with the whole
+  market; widely used tools have more examples and fewer surprises;
+- **current, versioned documentation** in a machine-readable form (Markdown, `llms.txt`, a documentation server);
+- fast tests, deterministic tools, low integration friction (one command, one variable, one documentation page for a
+  service), and existing skills for the stack.
+
+**When the human picks a candidate that does poorly here** (e.g. a client insists on an untyped framework with thin docs):
+it is not in the recommendation by default. Name what it lacks, name the best alternative in the same language family, and
+propose compensation — concrete rules for `CLAUDE.md` (where files go, which commands verify a change, which patterns are
+forbidden), schema validation at boundaries, extra tests. Record `quality_override: yes` with the reason in
+`stack-decision.md`. A quick question for the human: will you notice when the agent drifts from this stack's practice?
+If not, recommend the boring option.
+
+Team friction (slow builds, long feedback, many teams' standards) is diagnosed first as developer experience
+(fe-engineering-levels); a tool change is a possible outcome, not the starting point.
+
+## Existing project
+- Detect the stack, then give a verdict **per area**: keep / improve / replace, each with the migration cost.
+- Replace step by step along context boundaries (strangler fig), never in one switch.
+- Reject "rewrite because it is old" when no driver gains: a full rewrite costs everything up front and delivers value only at the end.
+- A component that fails a knock-out filter (e.g. a framework without security patches) must be replaced — plan it.
+- Worked table: `references/examples.md` §2.
 
 ## Anti-patterns
-A choice for the CV or fashion; benchmarks unrelated to the drivers; microservices "just in case"; versions outside the compatibility range;
-a recommendation without the team's skills and constraints; facts (versions, licences, EOL) from memory.
+Choosing for a CV or fashion; benchmarks unrelated to the drivers; microservices "just in case"; versions outside the
+compatible range; ignoring team constraints; facts from memory.
 
 ## Example
-**Situation:** "The backend of a fault reporting app; 4 people write TypeScript, the frontend is in Angular, data in the EU."
-**Result** (all candidates passed the mandatory filters; facts from `researcher` with a source and a date):
-
-| Criterion (weight) | A: TypeScript + Node.js ("boring") | B: Java + Spring | C: Go |
-|---|---|---|---|
-| team skills (5) | 5 | 2 | 2 |
-| friendliness for AI agents (4) | 5 | 4 | 2 (no `lang-go` skill) |
-| **Weighted total (7 criteria)** | **106** | 95 | 82 |
-
-Decision `proposed`: A + PostgreSQL (competition for ticket assignment), a modular monolith; an ADR, a human accepts it.
-More examples: `references/examples.md`.
+**Situation:** "A team of 4 knows Python; B2B SaaS with EU customer data; pick a framework and a database."
+**Result (excerpt of `stack-decision.md`):**
+- Drivers: tenant isolation (H,H, weight 5), time to first release (weight 4), EU data residency (constraint).
+- Filters: a US-only hosted database rejected (data location); a framework whose current major has no security support rejected.
+- Candidates: Django + PostgreSQL (boring option), FastAPI + PostgreSQL, a Node framework (rejected on team skills).
+- Facts: versions and support dates from the projects' release pages, checked 2026-11-20 by `researcher`.
+- Matrix: Django 4.4, FastAPI 4.0 — Django wins on conventions and admin generators.
+- Spike: row-level security for tenants in 2 days; abandonment criterion — policies cannot cover the reporting queries.
+- Challenge: pre-mortem "a tenant saw another tenant's invoice" → isolation test in CI.
+- Status `proposed`; the human accepts.
+More cases (matrix, keep/improve/replace, solver spike): `references/examples.md`.
 
 ## Sources
-- The 10xDevs course, ed. 3 (2026), lesson 4.1 (stack), module 1, lessons 2 and 5 (agent friendliness criteria, the deployment
-  platform, the resilience test), module 2, lesson 4 (service visibility for agents) — training material
-  (accessed 2026-10-09); described in our own words.
+- Facts about versions, support and licences come from each project's release pages and package registries, checked at
+  decision time; the skill itself contains no version facts.

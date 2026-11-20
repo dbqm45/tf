@@ -4,7 +4,7 @@
     {
       "id": "od-dlugu-do-rankingu",
       "expect": "trigger",
-      "prompt": "Mamy raport długu technicznego modułu importu wiadomości (8 ustaleń). Jak z niego wybrać, co w ogóle refaktoryzować i w jakiej kolejności, zanim agent zacznie zmieniać kod? Odpowiedz zwięźle.",
+      "prompt": "Mamy raport długu technicznego modułu eksportu faktur (8 ustaleń). Jak z niego wybrać, co w ogóle refaktoryzować i w jakiej kolejności, zanim agent zacznie zmieniać kod? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           ["kandydat|ranking|opcj"],
@@ -17,7 +17,7 @@
     {
       "id": "od-dlugu-do-rankingu-en",
       "expect": "trigger",
-      "prompt": "We have a technical debt report for the message import module (8 findings). How do we choose from it what to refactor at all and in what order, before the agent starts changing code? Answer briefly.",
+      "prompt": "We have a technical debt report for the invoice export module (8 findings). How do we choose from it what to refactor at all and in what order, before the agent starts changing code? Answer briefly.",
       "checks": {
         "all": [
           ["kandydat|ranking|opcj", "candidates?", "option"],
@@ -44,7 +44,7 @@
       "id": "weryfikacja-liczb-rankingu",
       "expect": "trigger",
       "accept": ["core-grounding"],
-      "prompt": "Ranking opcji refaktoryzacji stoi na twierdzeniach, że interfejs Store ma 54 metody, a SaveMultiple jest wołane w 4 miejscach. Jak to sprawdzić, zanim zdecydujemy, którą opcję realizujemy? Odpowiedz zwięźle.",
+      "prompt": "Ranking opcji refaktoryzacji stoi na twierdzeniach, że interfejs InvoiceSource ma 31 metod, a list_corrections jest wołane w 4 miejscach. Jak to sprawdzić, zanim zdecydujemy, którą opcję realizujemy? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           ["ast-grep"],

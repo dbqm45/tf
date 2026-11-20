@@ -4,7 +4,7 @@ Data: 2026-11-12. Status: **propozycja do decyzji człowieka** — nic z tego do
 sekcja 2 nie mówi inaczej. Dokument łączy w jedną całość: plany z `docs/plans/` (zwłaszcza
 `2026-11-08-tf-analyze-i-katalog-tf.md` §8–10 i `2026-11-09-luki-katalogu-i-autonomia.md`), tryb Talos z dashboardem
 (tf#211), plik `propozycje-wdrozen.md` (tf-1…tf-13, plik użytkownika spoza repo, 2026-11-12), porównanie z dev-kitem
-(PDF „AI Playbook”, szkic, 2026-11-12), łańcuch skilli `10x-*` załączony 2026-11-12 (jedenaście skilli i pięć plików lekcji, sekcja 17) oraz 14 artykułów zespołów Anthropic z claude.dev wskazanych przez człowieka (S1–S14, sekcja 16).
+(PDF „AI Playbook”, szkic, 2026-11-12) oraz 14 artykułów zespołów Anthropic z claude.dev wskazanych przez człowieka (S1–S14, sekcja 16).
 
 ## 1. Cel i podział ról
 
@@ -315,7 +315,7 @@ reguła flag.
 - skrypt sprawdza diff konfiguracji flag: zmiana stanu na środowisku innym niż testowe bez zapisanej decyzji człowieka
   w `decisions.md` zatrzymuje przebieg;
 - testy kawałka idą w obu stanach: z flagą włączoną (nowe zachowanie, kryteria `AC-n`) i wyłączoną (stare zachowanie
-  bez zmian — to „strażnik” z sekcji 17);
+  bez zmian — to „strażnik”);
 - bramka zamknięcia historyjki: flaga włączona na teście, wyłączona wszędzie indziej, wszystkie `AC-n` zielone.
 
 **Skąd fabryka wie, jak w projekcie działają flagi i środowiska.** Z karty operacyjnej (sekcja 11), wypełnianej raz
@@ -518,7 +518,7 @@ Stan uczciwie: dziś fabryka kończy na PR. Wdrożenie należy do CI projektu, a
 ## 12. Porównanie z innymi rozwiązaniami
 
 Kolumny z tabeli w PDF „AI Playbook” (s. 8–9) plus trzy, których tam nie ma. Wiersze obcych narzędzi pochodzą z tego
-PDF, ze specyfikacji Symphony (plan §10.6) i z załączonych skilli `10x-*`; poza tym **nie były sprawdzane w kodzie
+PDF, ze specyfikacji Symphony (plan §10.6); poza tym **nie były sprawdzane w kodzie
 [niezweryfikowane]**. Wiersz „tf dziś” — z sekcji 2. Wiersz „tf docelowo” to cel tego dokumentu, nie stan.
 
 | Rozwiązanie | Spec przed kodem | Zatwierdzany plan | Kontrole maszynowe | Co pilnuje zasad | Stan między sesjami | Waga wg ryzyka | Dobór modelu z pomiarem | Dowód ukończenia |
@@ -526,7 +526,6 @@ PDF, ze specyfikacji Symphony (plan §10.6) i z załączonych skilli `10x-*`; po
 | Spec Kit, OpenSpec, BMAD | ✓ | ✓ | częściowo | markdown | częściowo | – | – | – |
 | Superpowers, GSD | ✓ | ✓ | ✓ | częściowo | ✓ | – | częściowo | – |
 | dev-kit (PDF) | ✓ | ✓ | ✓ | hook | ✓ | ręczny wybór z 4 przebiegów | ✓ (bez opisu pomiaru) | – |
-| łańcuch `10x-*` | ✓ (shape → PRD) | ✓ | lint w skillu | markdown | ✓ (checkpoint w pliku) | – | – | – |
 | Symphony (SPEC) | – | – | zależne od repo | usługa | ✓ (tracker) | – | – | stan „do przeglądu” |
 | **tf dziś** | ✓ (Talos, pdi) | ✓ | częściowo (bramka śpi) | hook po konfiguracji | ✓ | – | poziomy, bez pomiaru w pętli | – |
 | **tf docelowo** | ✓ z lintem i śladem AC → test | ✓ | ✓ od wdrożenia | hook + skrypt bramki etapu | ✓ pliki zadania | ✓ automatycznie z triażu | ✓ eskalacja + metryki | ✓ `evidence/` |
@@ -543,7 +542,7 @@ Czym fabryka ma być lepsza, a nie tylko równa:
 6. **Bez nowej usługi.** Pliki, skrypty, hooki i CLI; podgląd to widok na pliki.
 
 Czego się uczymy od innych (wzorzec, nie kopia): wdrożenie jednym poleceniem i strona startowa (dev-kit); plik jako
-wejście etapu, wykrywanie nowy/istniejący projekt i zasada „nie zmyślaj, zapisz pytanie” (`10x-*`); stany zajęcia
+wejście etapu, wykrywanie nowy/istniejący projekt i zasada „nie zmyślaj, zapisz pytanie”; stany zajęcia
 zadania i `git worktree` na zadanie (Symphony).
 
 ## 13. Co łączymy, co zostaje, co wygaszamy
@@ -569,7 +568,7 @@ Każdy etap to osobny plan w `docs/plans/`, TDD i osobny PR. Etap ma sprawdzalne
 | Etap | Zakres | Kryterium końca |
 |---|---|---|
 | E0 | pomiar bazowy na repo testowym: liczba decyzji i poleceń od instalacji do zielonego PR, czas, koszt; test laika (sekcja 1a); strona „Zacznij tutaj” | raport w `docs/evals/` |
-| E1 | `tf onboard`: raport gotowości repo (sekcja 17), bramki włączone przy wdrożeniu; skill weryfikacji produktu i `REVIEW.md`; komunikat w `tf doctor` i na starcie sesji | w czystym repo bramka blokuje czerwony test bez ręcznej konfiguracji |
+| E1 | `tf onboard`: raport gotowości repo, bramki włączone przy wdrożeniu; skill weryfikacji produktu i `REVIEW.md`; komunikat w `tf doctor` i na starcie sesji | w czystym repo bramka blokuje czerwony test bez ręcznej konfiguracji |
 | E2 | katalog zadania i `task_state.py` (stan, nagłówki, dowody, nieaktualność); Talos pisze do nowego układu | testy Talosa zielone; przerwany przebieg wznawia się z plików |
 | E3 | etap specyfikacji: `spec.md` z GWT, lint jako bramka, `trace_check.py`, ochrona wyroczni | PR zawiera tabelę AC → test → commit → dowód |
 | E4 | jedno wejście `/tf`, waga z triażu, tryby Plan / zwykły / Auto, punkty stałe | scenariusze flow-evals: lekka, zwykła i pełna zatrzymują się tam, gdzie mówi sekcja 4 |
@@ -643,122 +642,9 @@ człowieka zależną od ryzyka zmiany (S12); mechanizm zamiast reguły w prompci
 przy jednym łańcuchu zależnych kroków koszt koordynacji przewyższa zysk — S9); doradcy i `opusplan` bez pomiaru (S9);
 przepływów agentów dla zwykłych zadań (S3: zużywają znacznie więcej tokenów).
 
-## 17. Wnioski z łańcucha skilli `10x-*`
+## 17. Sekcja usunięta
 
-Jedenaście skilli, pięć plików instrukcji lekcji (moduł 1, lekcje 1–5) i kryteria oceny platform załączone przez
-człowieka 2026-11-12. Pliki
-lekcji wymieniają dalsze skille pracy nad pojedynczą zmianą (`new`, `frame`, `research`, `plan`, `plan-review`,
-`implement`, `impl-review`, `archive`, `contract`) — to odcinek najbliższy naszej osi; nie były załączone, więc
-tabela jest do uzupełnienia [niezweryfikowane]. Łańcuch
-prowadzi projekt od pomysłu do gotowego repo: `init` → `shape` → `prd` → `tech-stack-selector` → `bootstrapper`
-(nowy projekt) albo `shape` → `prd` → `stack-assess` → `health-check` (istniejący), a obok `agents-md` i `lesson`.
-To inny odcinek niż nasza oś: oś zaczyna od zadania w gotowym repo, łańcuch kończy tam, gdzie oś się zaczyna.
-Bierzemy wzorce, nie treść; odpowiedniki w fabryce są wskazane, żeby nie budować drugi raz tego samego.
-
-| Skill | Wzorzec wart przejęcia | Co mamy | Zmiana |
-|---|---|---|---|
-| `init` | stały szkielet katalogów: zmiany w toku, archiwum, dokumenty trwałe; każdy element tworzony tylko, gdy go brak | `tf init` (`.tf/`), `docs/project/` | podział „trwałe dla projektu” / „dla jednego zadania” / „archiwum” w sekcji 5 (D5) |
-| `shape` | wywiad w stałych fazach z punktem kontrolnym w pliku i wznowieniem bez powtarzania; tryb nowy / istniejący wykrywany z repo; nazwane antywzorce (lista bez reguły biznesowej, za duży pierwszy zakres) zamiast ogólnych ostrzeżeń; jedno pytanie podważające na każde wymaganie | `core-plan-interview`, `proc-requirements-shaping` | etap 2: przy zgłoszeniu niepełnym krótki wywiad z punktem kontrolnym w `spec.md`; dla zmiany w istniejącym systemie pole „co ma zostać bez zmian” jako osobne kryteria |
-| `prd` | generator, który nie zmyśla: brak → „Otwarte pytania”; ocena jakości wejścia przed pracą; kontrola wyniku przed zapisem (struktura i „przeciek techniczny” do wymagań) | lint historyjek | etap 2: kontrola przecieku — nazwy dostawców, schematy, protokoły w kryteriach akceptacji to uwaga lintu |
-| `tech-stack-selector` | ścieżka standardowa (rekomendacja nazwana wprost, do przyjęcia jednym potwierdzeniem) i własna (pełny wywiad); rejestr gotowych startów jako jedno źródło prawdy ze sprawdzeniem zgodności w CI; etykiety wewnętrzne nie trafiają do użytkownika | `arch-tech-selection` | zasada dla każdego pytania osi: najpierw rekomendacja do przyjęcia, wywiad tylko na życzenie (sekcja 1a) |
-| `bootstrapper` | szkielet nowego projektu z polityką konfliktów (istniejące pliki nietknięte), sprawdzeniem świeżości startera przed i audytem zależności po; twarde zatrzymanie tylko przy błędzie narzędzia, reszta to ostrzeżenia w dzienniku | generator w `eng-repo-readiness` | ścieżka „nowy projekt” przed pierwszym zadaniem (niżej) |
-| `stack-assess` | ocena istniejącego stacku pod kątem pracy agenta (typy, konwencje, popularność, dokumentacja) z dowodem; przy brakach — gotowe wpisy do pliku instrukcji zamiast rady „zmień stack” | `eng-repo-readiness`, `readiness_check.py` | raport gotowości w `tf onboard` |
-| `health-check` | przegląd tylko do odczytu: lockfile, audyt zależności wg języka, czy testy w ogóle ruszają, co robi CI, brakująca konfiguracja; kolejność napraw wg wpływu na agenta (brak testów ważniejszy niż drobna podatność); każda naprawa z poleceniem i szacunkiem czasu | `readiness_check.py`, `tf analyze` | raport gotowości w `tf onboard` |
-| `agents-md` | plik instrukcji 200–400 słów; każda reguła sprawdzalna na diffie; nic, co widać z repo; najważniejsze na górze; aktualizacja punktowa: zachowaj / popraw / usuń / dodaj na podstawie zmian w repo od ostatniej edycji pliku; osobne pliki dla katalogów o własnych zasadach | `core-agent-instructions` | `tf doctor`: wykrywanie nieaktualnych wpisów `CLAUDE.md` (polecenie lub ścieżka już nie istnieje) skryptem; zgodne z S6 |
-| `lesson` | lekcja = reguła powtarzalna, nie opis jednego błędu; pola: gdzie dotyczy, co się psuje, reguła, których etapów dotyczy; treść pisze człowiek; plik tylko do dopisywania | `lessons.md`, `core-agent-retro` | pole „dotyczy etapów”, żeby etap czytał tylko swoje lekcje; lekcja bez kontroli (sekcja 7) jest niedokończona |
-| `rule-review` | karta oceny pliku instrukcji w pięciu punktach: długość (do 200 niepustych linii dobrze, powyżej 500 źle), wklejony kod zamiast odwołania do pliku, sformułowania niesprawdzalne na diffie (z propozycją sprawdzalnej wersji, nie „usuń”), wiedza, którą model i tak ma, kolejność (najważniejsze na górze); zmiany pojedynczo, każda sprawdzona w następnej sesji | `core-agent-instructions` (test włączenia, karta kontroli), lint instrukcji | te pięć punktów jako część `tf doctor` dla `CLAUDE.md` projektu i dla skilli fabryki (przegląd z S6) |
-| `infra-research` | decyzja o platformie wdrożenia jako plik-kontrakt: ograniczenia twarde ze stacku, krótki wywiad, badanie kandydatów równolegle, ocena wg pięciu cech „platformy dla agenta” (wszystko z CLI, usługa zarządzana, dokumentacja czytelna dla agenta, stabilne i skryptowalne wdrożenie, integracja MCP jako dodatek), trzech finalistów; przed zapisem trzy spojrzenia przeciw własnej rekomendacji: adwokat diabła, „pół roku później to była katastrofa — dlaczego”, czego nie widać w dokumentacji; rejestr ryzyk ze wskazaniem, które spojrzenie je ujawniło; status funkcji (beta, podgląd) z datą sprawdzenia; polecenia sprawdzone dla wersji z projektu | `arch-tech-selection`, `ops-release-engineering`, `core-source-research` | karta operacyjna wdrożenia (sekcja 11); trzy spojrzenia jako obowiązkowy krok przy decyzji trudnej do odwrócenia (waga pełna) |
-
-**Z plików lekcji** (reguły pracy z instrukcjami dla agenta, spójne z S6 i S13; część fabryka już ma
-w `core-agent-instructions` — test włączenia, karta pięciu kontroli ze skryptem, aktualizacja z historii gita,
-kalibracja reguły, `AGENTS.md` obok `CLAUDE.md` — tu chodzi o wpięcie ich w `tf onboard` i `tf doctor`):
-- **Reguła zarabia na miejsce pomiarem.** Zanim reguła trafi do instrukcji: 3–5 przebiegów tego samego zadania bez niej
-  w czystej sesji; jeśli agent i tak trzyma konwencję, reguła jest zbędna. Fabryka mierzy tak wkład skilli (B4) —
-  tę samą miarę stosujemy do reguł w `CLAUDE.md` i do lekcji.
-- **Reguły obszaru leżą przy kodzie obszaru** (plik instrukcji w katalogu), a nie w jednym długim pliku; ładują się
-  tylko tam, gdzie agent pracuje.
-- **Jedno źródło instrukcji dla wielu narzędzi:** `AGENTS.md` jako źródło, `CLAUDE.md` jako cienka nakładka — do
-  rozważenia przy `tf onboard`, gdy zespół używa kilku agentów.
-- **Sprawdzenia deterministyczne w hookach, procedury w skillach** — to samo rozróżnienie co w sekcji 7.
-- **Rejestr nazw nośnych** (ścieżki API, nazwy zdarzeń, zmienne środowiska, na których polegają inni): plik w repo,
-  z którego skrypt rozpoznaje „zmianę kontraktu” — punkt stały 3 z sekcji 4 przestaje zależeć od oceny modelu.
-- **Tabela „użyj, gdy…”** jako pierwsza rzecz w instrukcji: jedno zdanie na polecenie. Wzór dla strony startowej (1a).
-- **Archiwum jest niezmienne:** skrypt odmawia zapisu do zamkniętego zadania i każe otworzyć nowe (D5).
-- **Pierwsze wdrożenie w trybie Plan:** agent pisze plan (kroki własne, kroki ręczne człowieka, dokładne polecenia,
-  sprawdzenie), człowiek go poprawia i zatwierdza, zatwierdzony plan zostaje w repo jako ślad „co miało się stać”.
-- **CLI przed MCP:** do obsługi platformy najpierw CLI (jawne, tanie w kontekście); serwer MCP dopiero, gdy agent
-  wielokrotnie odpytuje stan na żywo — każdy podłączony serwer kosztuje kontekst w każdej sesji.
-- **Dostęp do produkcji:** token o wąskim zakresie, w zmiennej środowiska; działania nieodwracalne (usunięcie bazy,
-  rotacja głównego sekretu) wykonuje człowiek ręcznie; docelowo pełny dostęp agenta do środowiska testowego, a do
-  produkcji tylko odczyt. Zgodne z polityką autonomii (B1) i S2.
-- **Kontrola, która nigdy nie zmienia decyzji, jest rytuałem** — jeśli spojrzenia przeciw rekomendacji ani razu nie
-  doprowadziły do zmiany wyboru, trzeba je przepisać. Ta sama miara dla naszych bramek: bramka, która nigdy nie
-  czerwienieje, i bramka, którą zawsze się obchodzi, idą do przeglądu (`tf metrics`).
-
-**Z plików pomocniczych skilli** (schematy raportów, protokół odmów, scalanie szkieletu, dziennik weryfikacji):
-- **Dwa rodzaje zatrzymania i jedno źródło komunikatów.** Twarda odmowa tylko wtedy, gdy narzędzie naprawdę nie może
-  wykonać pracy (brak pliku wejściowego, nieznany wariant); wszystko inne to ostrzeżenie z wyborem „kontynuuj /
-  przerwij”. Teksty zatrzymań leżą w jednym pliku, więc brzmią tak samo wszędzie. U nas: jeden plik komunikatów
-  zatrzymań osi w prostym języku (1a), testowany jak kod.
-- **Zapis do istniejącego repo nigdy nie kasuje pracy człowieka:** istniejący plik wygrywa, wersja narzędzia ląduje obok
-  (do porównania), `.gitignore` jest dopisywany, a katalog z ustaleniami projektu jest nietykalny. Reguła dla
-  `tf onboard` i instalatora.
-- **Raport jest śladem, a nie listą wyjątków:** zawiera także sprawdzenia, które się nie wykonały, z powodem („nie
-  uruchomiono: brak narzędzia”), kopię wejść, z których powstał, oraz listę informacji odczytanych, ale
-  niewykorzystanych. Przy przerwaniu powstaje raport częściowy; gdy zapis na dysk zawiedzie, treść trafia do rozmowy.
-  To doprecyzowuje `report.md` i `evidence/` z sekcji 5: „nie sprawdzono” jest jawne i nigdy nie wygląda jak „zielone”.
-- **Nagłówek dla maszyny, treść dla człowieka:** werdykt i liczby w nagłówku pliku, opis w stałej kolejności sekcji —
-  ten sam układ co nasze pliki etapów.
-- **Świeżość zależności w obie strony:** obok karencji 7 dni dla wersji zbyt nowych (Talos) — ostrzeżenie dla
-  narzędzi i szablonów nieaktualizowanych od ponad 6 miesięcy; to ostrzeżenie, nie blokada.
-
-**Z kontraktów przekazania, wywiadu i konfiguracji** (druga paczka plików pomocniczych):
-- **Kontrakt pliku ma jednego właściciela.** Schemat pliku przekazania opisuje ten, kto plik pisze; czytający ma
-  osobną, krótką listę: których pól używa, które tylko pokazuje człowiekowi, które zapisuje w śladzie bez działania.
-  Nowe pole to zmiana schematu oraz piszącego i czytającego naraz. Rozjazd ze schematem daje ostrzeżenie, a odmowę
-  tylko brak pliku. U nas: schemat każdego pliku etapu obok skryptu, który go zapisuje (`task_state.py`), a etap
-  czytający deklaruje używane pola — test sprawdza zgodność obu stron.
-- **Część dla maszyny minimalna, uzasadnienie w jednym akapicie dla człowieka.** Skrypty czytają wyłącznie nagłówek;
-  akapit „dlaczego” nie jest parsowany. Chroni to przed budowaniem logiki na prozie.
-- **Reguły pytań** (uzupełnienie 1a): nie pytać o to, co jest już w plikach wcześniejszych etapów; pytanie pojawia się
-  tylko wtedy, gdy istnieją realne opcje do wyboru; zawsze jest opcja „nie wiem — wybierz za mnie”, która zapisuje
-  konkretną wartość domyślną, a nie „nieokreślone”; nie porównywać wariantów „w próżni”, zanim znany jest kontekst
-  zadania; ścieżka własna kończy się krótką samokontrolą, a przy dwóch lub więcej odpowiedziach „nie” fabryka
-  proponuje powrót do rekomendacji — i szanuje każdą decyzję.
-- **Wyniki skanów bez zmęczenia alarmami:** w rozmowie tylko krytyczne i wysokie, reszta w raporcie; podatności
-  w zależnościach bezpośrednich osobno od pośrednich (pierwsze człowiek naprawia od razu, drugie czekają na dostawcę);
-  każda linia podsumowania ma liczbę i kategorię. Do raportu skanu w pętli kawałka i w `tf onboard`.
-- **Tabele wyboru jako dane, nie proza:** polecenie audytu dla języka, sposób uruchomienia narzędzia — w pliku
-  konfiguracji ze sprawdzeniem zgodności w CI. Tak samo wykrywanie poleceń projektu w `tf onboard` (sekcja 7).
-
-**Ze schematu wymagań, przebiegu decyzji i przypadków ewaluacji** (trzecia paczka):
-- **Kształt `spec.md`** (uzupełnienie sekcji 6): kryteria sukcesu w trzech grupach — główne, dodatkowe i **strażnicy**
-  (co nie może się zepsuć; z nich powstają testy regresji); zakres zmiany w istniejącym systemie ze znacznikami
-  nowe / zmienione (było → jest) / usunięte / **zachowane**; wymagania jakościowe jako własność widoczna z zewnątrz
-  z mierzalnym progiem, bez nazywania mechanizmu („odpowiedź w 200 ms”, nie „cache”); otwarte pytanie ma właściciela,
-  termin i znacznik „blokuje: tak/nie”.
-- **Status pliku podnosi kto inny niż autor:** generator zapisuje „szkic”; „sprawdzony” i „zatwierdzony” nadaje
-  dopiero przegląd albo człowiek. U nas tak samo dla `spec.md` i `plan.md` — etap nie zatwierdza własnego wyniku.
-- **Najpierw filtry twarde, potem osąd:** to, co niezgodne z ograniczeniami, odpada skryptem; wśród pozostałych
-  model wybiera z uzasadnieniem z 2–3 czynników, bez udawanej punktacji. Wzór dla doboru wagi i specjalistów w etapie 1.
-- **Poziom wsparcia mówiony zawsze:** narzędzie podaje wprost, czy dany stack jest sprawdzony w całości, obsługiwany,
-  czy „na miarę możliwości”, i co to oznacza dla człowieka. Raport gotowości w `tf onboard` podaje to samo dla
-  wykrytego stacku; braki stacku (brak typów, brak konwencji) kompensują wpisy w instrukcji — jawnie, jako dług.
-- **Zmiana kontraktu zaczyna się od schematu:** najpierw dokument schematu, potem piszący i czytający, na końcu
-  walidator. Kolejność do zapisania w zasadach rozwoju samej fabryki.
-- **Przypadki ewaluacji z oczekiwaniem negatywnym** („nie może zaproponować…”, „ma uczciwie nazwać lukę”): fabryka ma
-  scenariusze skilli; dla osi dochodzą przypadki „tu ma się zatrzymać” i „tu nie wolno mu pytać” (E4).
-
-**Przygotowanie repo — jednorazowo, przed pierwszym zadaniem.** Oś zakłada repo, w którym agent może sprawdzić własną
-pracę. `tf onboard` zaczyna więc od raportu gotowości w zwykłym języku: co jest (testy, lint, typy, CI, lockfile), czego
-brakuje i w jakiej kolejności to naprawić — najpierw to, bez czego fabryka nie zweryfikuje zmian. Braki blokujące
-(brak uruchamialnych testów) fabryka proponuje naprawić jako pierwsze zadanie przez tę samą oś. Dla nowego projektu
-ta sama komenda prowadzi ścieżką: pomysł → wymagania → wybór stacku z rekomendacją → szkielet → bramki; każdy krok
-zostawia plik, z którego rusza następny.
-
-**Czym nasza oś ma się różnić:** w łańcuchu `10x-*` każdy skill kończy się przekazaniem polecenia następnego kroku
-i czeka na człowieka; kontrolę wyniku robi model według opisu w skillu. U nas przejście robi fabryka, zatrzymanie
-wynika z reguły (sekcja 4), a kontrolę robi skrypt (sekcja 3).
+Treść usunięta 2026-11-20 (decyzja właściciela).
 
 ## 18. Wnioski z dokumentacji Claude Code
 
@@ -827,11 +713,6 @@ Funkcje oznaczone jako „podgląd badawczy” mogą się zmienić — nie buduj
 - `docs/plans/2026-11-08-tf-analyze-i-katalog-tf.md` §8–10; `docs/plans/2026-11-09-luki-katalogu-i-autonomia.md` B1–B4.
 - `propozycje-wdrozen.md` (2026-11-12, plik użytkownika; źródła wtórne — autor sam oznacza je jako hipotezy).
 - PDF „AI Playbook” (szkic do przeglądu, 18 stron, przeczytany 2026-11-12) — opis dev-kitu i tabela podejść.
-- Skille `10x-init`, `10x-shape`, `10x-prd`, `10x-stack-assess`, `10x-tech-stack-selector`, `10x-health-check`,
-  `10x-bootstrapper`, `10x-agents-md`, `10x-lesson`, `10x-rule-review`, `10x-infra-research` z kryteriami platform
-  oraz pliki instrukcji lekcji M1L1–M1L5 i czternaście plików pomocniczych (schematy, protokół odmów, scalanie szkieletu, kontrakt przekazania, wywiad,
-  konfiguracja, przebieg decyzji, kryteria, przypadki ewaluacji)
-  (załączone 2026-11-12, przeczytane w całości; sekcja 17).
 - Dokumentacja Claude Code, code.claude.com/docs (61 stron, pobrane 2026-11-12; lista możliwości w sekcji 18).
 - 14 artykułów z claude.dev/blog (lista i daty w sekcji 16), pobrane i przeczytane w całości 2026-11-12.
 - Tryby uprawnień Claude Code: code.claude.com/docs/en/permission-modes (odczyt 2026-11-05, wg `GUIDE.md` Talosa).

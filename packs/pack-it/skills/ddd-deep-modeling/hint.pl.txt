@@ -60,15 +60,15 @@ Przy polu „status” zacznij od **5 why** (sekcja Behaving): pytaj, po co zmie
 biznesowego; dopiero potem decyduj o maszynie stanów.
 
 ## Rozplątywanie modelu
-Gdy fakty się rozjeżdżają albo każda potrzeba dostaje nową wartość statusu, sięgnij po jedną z czterech technik
-z `references/untangling.md`:
-- **Jedno źródło prawdy:** każdy fakt ma jednego właściciela, a reszta wskazuje go identyfikatorem albo odświeża
-  kopię zdarzeniem.
-- **Ukryte pojęcie w relacji wiele do wielu:** nazwij je, np. lekarz ↔ przychodnia to Zatrudnienie z datami
-  i warunkami.
-- **Status to nie mechanizm rozszerzania:** inne dane, reguły i cykl życia oznaczają osobne pojęcie albo rolę.
-- **Dwa poziomy modelu:** poziom wiedzy (typy i reguły definiowane przez biznes) i poziom operacji (egzemplarze,
-  które wskazują swój typ).
+Cztery zapachy i ich naprawy, z przykładami i pytaniami do eksperta: `references/untangling.md`.
+- **Jedno źródło prawdy:** każdy fakt ma jednego właściciela; reszta trzyma jego identyfikator albo model odczytu
+  odświeżany zdarzeniem.
+- **Ukryte pojęcie w relacji wiele do wielu:** nazwij trzecie pojęcie (lekarz i przychodnia → Zatrudnienie) i oddaj mu
+  daty, warunki i reguły powiązania zamiast list identyfikatorów po obu stronach.
+- **Status to nie mechanizm rozszerzeń:** status pasuje do cyklu życia jednego pojęcia; nowe dane, reguły albo
+  właściciel oznaczają osobne pojęcie, rolę, rozszerzenie albo politykę.
+- **Dwa poziomy modelu:** poziom wiedzy (rodzaje definiowane przez biznes) i poziom operacji (egzemplarze wskazujące
+  swój rodzaj, wersja po wersji).
 
 ## Modelowanie przez przykłady
 - Każdą regułę opisz **konkretnym przykładem** z liczbami i datami (Given / When / Then), razem z **kontrprzykładem**.
