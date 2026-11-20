@@ -1,38 +1,44 @@
-# The `REVIEW.md` template
+# `REVIEW.md` — review rules for AI and human reviewers
 
-`REVIEW.md` sits in the repository root and adjusts the PR review done by Claude (the Code Review service
-in Claude Code). You write the rules directly into the file. Below a template to copy and adapt — the passes and weights
-according to "The AI-Native SDLC Playbook" (Anthropic, 2026).
+`REVIEW.md` sits in the repository root. CLAUDE.md tells an agent how to *work* in the repo; `REVIEW.md` tells a reviewer
+what to *look for* in a change. Both the CI workflow (`references/ai-review-in-ci.md`) and a human can follow it. Keep it
+under one screen; project specifics beat general advice.
 
+## Template
 ```markdown
-# PR review rules
+# Review rules
 
 ## Scope
-Review changes in `src/` and `infra/`. Skip: generated code (`**/generated/**`, `*.lock`), changes of
-formatting alone and everything CI checks (lint, types, coverage).
+- Review only the PR's diff against its base. Plan: the step report in docs/project/ changed by the PR, or the `Plan:` line.
+- Skip: lockfiles, generated code (`src/gen/**`), snapshots, files already checked by CI (formatting, types).
 
-## Passes
-1. **Bugs and logic** — edge cases, error handling, concurrency, agreement with the tests.
-2. **Security** — authorisation in every action and endpoint, input validation, secrets, dependencies,
-   personal data (minimisation, logs).
-3. **Compliance** — with the requirements and the step plan (`docs/project/03-requirements/`, `docs/project/06-delivery/`),
-   with the ADRs (`docs/project/04-architecture/adr/`) and the rules from `CLAUDE.md`.
+## Passes (in this order)
+1. Bugs and logic — wrong conditions, missing error paths, races, off-by-one, broken contracts with callers.
+2. Security — input validation at boundaries, authz checks, secrets in code or logs, injection, unsafe deserialization.
+3. Compliance with project rules — <3–5 rules specific to this repo, e.g. "money is integer cents", "no SQL outside repositories/">.
 
-## Weight of findings
-- **Critical** — blocks the merge (a data error, a security gap, breaking an API contract).
-- **Important** — to fix in this PR.
-- **Minor** — at most 3 per PR; skip the rest.
-For each finding: the file and line, what is wrong, why, a proposed fix.
-For each finding also **the difficulty of the decision (impact)**: low (an obvious fix) / medium (a trade-off — give
-the cost and what you did not check) / high (architectural consequences). At most 10 findings; merge similar ones into one.
-You do not judge compliance with what the plan did not promise; what the plan excluded ("Out of scope") is not scope creep.
+## Weights
+- critical — blocks the merge (bug, vulnerability, data loss, broken contract).
+- important — should be fixed in this PR.
+- minor — optional; at most 3 per review.
+Impact for each finding: low / medium / high.
+
+## Output
+- At most 10 findings after merging duplicates, most severe first; each with file:line, what is wrong, a concrete fix.
+- A secret is reported by location and type, never by value.
 
 ## What you do not do
-You do not approve the PR and do not judge style the formatter takes care of. Questions about requirements you direct to the author.
+- You do not approve or request changes — a human decides.
+- No remarks a formatter or linter would make; no style preferences.
+- Whatever the plan lists under "Out of scope" is not scope creep.
 ```
 
-A review in GitHub Actions with the verdict as a gate: `ai-review-in-ci.md`. Triage of findings with a weight × impact matrix:
-the change review skill (pack-it: qa-change-review).
+## Filling it in
+- Take the project rules from real review history: the last 20 merged PRs' comments and the bugs that escaped.
+- After code reconstruction a draft may exist; the human reads and approves it, then
+  `python3 .claude/skills/core-git-workflow/scripts/ai_review.py review-md` copies it to `REVIEW.md` (`--from FILE` for
+  another draft, `--force` to overwrite).
+- Revisit monthly with the numbers: findings accepted vs dismissed. Rules that only produce dismissed findings go.
 
-After a month: review the findings (accurate / inaccurate), improve the scope and examples in the file, and take the `REVIEW.md` change
-through the same path as a code change — a PR.
+Sources: Claude Code docs, "Code Review" and GitHub Actions pages (code.claude.com) — `REVIEW.md` as the place for
+review-specific guidance [unverified: exact file lookup rules of the managed service].

@@ -1,96 +1,63 @@
-head: Użyj przed działaniem, by przepytać plan, decyzję lub pomysł — drzewo decyzji, rundy pytań z rekomendacją. Użyj, gdy plan, decyzję lub pomysł trzeba przepytać przed działaniem — drzewo decyzji, rundy pytań z rekomendacją (tylko pytania niezależne od siebie), fakty sprawdzane samodzielnie, decyzje zostawione człowiekowi, koniec dopiero po potwierdzeniu wspólnego zrozumienia. Nie do warsztatu z ekspertami domeny (skill facylitacji, pack-it) ani doboru zespołu (core-problem-routing).
-# Przesłuchanie planu
+head: Użyj, gdy plan, decyzję lub pomysł trzeba przepytać przed startem pracy — rundy niezależnych pytań z rekomendacjami, fakty sprawdzasz sam, potwierdzenie. Użyj, gdy człowiek prosi, by go przepytać z planu, decyzji albo pomysłu, zanim cokolwiek powstanie, gdy agent sam odpowiada na pytania decyzyjne albo zaczął kodować w trakcie wywiadu, gdy przesłuchanie tonie w pytaniach o przypadki brzegowe, albo gdy trzeba przyjąć ranking opcji z badania — rundy pytań, które można postawić już teraz, jedna rekomendacja na pytanie, fakty sprawdzane przez agenta, podsumowanie potwierdzone przez człowieka, zapis decyzji. Nie do warsztatów z ekspertami domeny o wspólnym słowniku (ddd-facilitation, pack-it) ani wyboru zespołu lub skilla do zadania (core-problem-routing).
+# Przesłuchanie planu — pytaj rundami, rekomenduj, potwierdź przed działaniem
 
-Rozmowa, która ma doprowadzić do **wspólnego zrozumienia**, zanim ktokolwiek zacznie pracę. Przedmiot przesłuchania
-traktujesz jak **drzewo decyzji**: każda decyzja ma decyzje od niej zależne.
+Celem jest wspólne rozumienie planu przed jakąkolwiek implementacją. Ty pytasz, człowiek decyduje; nie odpowiadasz
+za niego na pytania decyzyjne i nie zaczynasz budować, zanim nie potwierdzi podsumowania.
 
-## Pojęcia
-- **Front** — decyzje, których wszystkie warunki wstępne są już rozstrzygnięte. Tylko o nie można teraz uczciwie zapytać.
-- **Runda** — cały front zadany naraz i w całości odpowiedziany. Dobrze idzie, gdy pytań jest dużo, a rund mało
-  (np. kilkanaście pytań w ok. 3 rundach).
+## Przed pierwszą rundą
+1. **Przeczytaj wszystkie wejścia** — brief, badanie, ranking, kod. Pytanie rozstrzygnięte w wejściu pomijasz i mówisz to z cytatem.
+2. **Fakty sprawdzasz sam** (wersje, moduły, rozmiary danych, role, konfiguracja): grep, pliki konfiguracyjne, tani
+   subagent zwiadowca. Nie pytasz człowieka o to, co odpowie repozytorium. Trwające sprawdzenie blokuje tylko zależne pytania.
+3. **Decyzje należą do człowieka** (zakres, apetyt na ryzyko, kompromisy, priorytety): pytasz i czekasz.
+4. **Oszacuj rozmiar** z uzasadnieniem: prosta zmiana ok. 4–6 pytań, średnia 7–10, złożona 11–15, mniej po gotowym badaniu.
+   Człowiek może to skorygować. To miękkie widełki.
+5. **Za duże na jedną sesję** → najpierw mapa obszarów i zależności jako osobne zadania w `docs/project/`, potem wywiad per zadanie.
 
-## Procedura
-1. Zbuduj w głowie drzewo; nie licz go z góry do końca — odpowiedzi zmieniają kształt drzewa.
-2. **Fakty to twoja praca.** Co da się sprawdzić w repo, dokumentacji czy narzędziach, sprawdzasz sam (tani `scout`,
-   `researcher`) — nie pytasz człowieka. Sprawdzanie w toku to nierozstrzygnięty warunek: czekają tylko pytania od niego
-   zależne, resztę frontu zadajesz od razu.
-3. **Decyzje należą do człowieka.** Każdą zadajesz i czekasz. Agent, który sam odpowiada na własne pytania decyzyjne,
-   psuje cały mechanizm.
-4. Zadaj rundę w formacie:
-   ```
-   **P1 — <tytuł>**: <treść, możliwe opcje>
-   → Rekomendacja: <twoja odpowiedź i krótko dlaczego>
+## Rundy
+- Temat to decyzje zależne od siebie. W każdej rundzie zadajesz **wszystkie pytania, które można postawić już teraz** — te,
+  których warunki są już rozstrzygnięte. Dużo pytań w rundzie, mało rund (ok. tuzin pytań w ok. trzech rundach).
+- Nie układasz pełnej listy z góry; po każdej porcji odpowiedzi ustalasz na nowo, co jest otwarte.
+- Dwa pytania, z których jedno zależy od drugiego, nigdy w tej samej rundzie.
+- Odpowiedź zmieniająca wcześniejszą decyzję → mówisz to i wracasz do niej jawnie.
+- Nowy dowód w trakcie (np. „brakująca funkcja” to działający błąd) → osobne pytanie, nie cicha zmiana planu.
+- Pytanie, które rozstrzygnie tylko prototyp → proponujesz prototyp.
 
-   **P2 — …**
-   ```
-   Dwa pytania nie trafiają do jednej rundy, jeśli jedno zależy od drugiego. Człowiek odpowiada numerami (`P1: b`).
-5. Po odpowiedziach przelicz front: rozstrzygnięte decyzje odblokowują kolejne. Odpowiedź może też wymusić powrót do
-   wcześniejszej decyzji — wtedy wracasz jawnie.
-6. Front pusty → podsumowanie ustaleń (decyzje, założenia, co zostało poza zakresem) i pytanie: „Czy tak to rozumiemy?”.
-   Koniec dopiero po potwierdzeniu. **Bez potwierdzenia nie zaczynasz wdrażać.**
-7. Zapis: decyzje do artefaktu i `decisions.md` (core-project-record), pojęcia do słownika (pack-it: ddd-facilitation),
-   decyzja spełniająca próg ADR → propozycja ADR (skill dokumentacji, pack-docs).
+## Format pytania
+Numerowane pytania P1, P2… z tytułem, opcjami (co robi, zaleta, koszt — po jednej linii) i linią **Rekomendacja** popartą
+dowodem z kodu lub wejścia. Człowiek odpowiada numerem, np. „P1: b”. Bez opcji, których nikt rozsądny by nie wybrał.
+Prosty język człowieka, bez żargonu procesu. Pytania diagnostyczne (problem, zakres, kryterium sukcesu) odróżniasz od pytań o rozwiązanie.
 
-## Ustawienia
-- Człowiek woli pojedyncze pytania (dostępność, preferencja) → jedno pytanie na raz; zapisz to w `CLAUDE.md` projektu.
-- Bez sztywnego limitu pytań — zakres decyduje (orientacyjne liczby: „Skalowanie przesłuchania”). Gdy człowiek jest niedostępny: przyjmij rekomendacje jako założenia
-  i wypisz je (bramki decyzyjne w pack-it: ddd-facilitation).
-- Pytanie, na które odpowie tylko prototyp lub makieta — zaproponuj prototyp zamiast zgadywania.
+## Proporcja
+- Szeregujesz pytania według wpływu i prawdopodobieństwa. Rozwiązywanie każdego przypadku brzegowego to przeinżynierowanie;
+  „zawiedź z czytelnym błędem” to dobra odpowiedź dla mało prawdopodobnych przypadków. Minimalizm (drabina minimalizmu w eng-design-principles).
+- Sygnały nadmiaru: stosy zadań, których nikt nie zrobi, plan rosnący z dni do tygodni, opisy PR, których nikt nie czyta.
 
-## Skalowanie przesłuchania
-- **Każdy artefakt wejściowy to decyzje już podjęte.** Przeczytaj go przed pierwszym pytaniem i nie pytaj o to, co
-  w nim zapisano. Pytanie pomijasz tylko wtedy, gdy artefakt dosłownie przesądza odpowiedź — ogłoś pominięcie
-  z cytatem.
-- Oznaczaj pytania: **[D]** diagnostyczne (problem, zakres, kryterium sukcesu) i **[R]** o rozwiązanie. Z gotowym
-  badaniem kodu pomijasz pytania o stan kodu; z gotowym przeramowaniem zadajesz tylko [R].
-- Orientacyjnie: zmiana prosta 4–6 pytań, średnia 7–10, złożona 11–15; z gotowym badaniem o ok. 1/3 mniej, z badaniem
-  i przeramowaniem ok. połowę. Ocenę złożoności z uzasadnieniem (systemy, integracje, zmiany danych, niewiadome)
-  pokaż człowiekowi i daj mu ją skorygować przed pierwszą rundą.
-- **Ranking opcji na wejściu** (np. z badania): pierwsze pytanie brzmi „którą opcję realizujemy?” — akceptacja
-  rankingu to jawna decyzja człowieka, nie ciche założenie.
-- **Nowy dowód w trakcie** (np. luka okazała się żywym błędem) nie trafia do planu po cichu — staje się osobnym
-  pytaniem do człowieka.
-- **Format opcji:** `co robi · mocna strona · koszt`; dokładnie jedna rekomendowana, oparta na dowodzie z repo lub
-  artefaktu. Opcja bez własnego „rozsądna, gdy …” wypada (bez słomianych alternatyw); gdy artefakty wspierają tylko
-  jedną odpowiedź, powiedz to: rekomendacja + „inaczej — wyjaśnię”.
-- Pytania w języku człowieka, bez żargonu skilla („pierwsza historyjka, która dowodzi, że produkt działa”, a nie
-  „gwiazda przewodnia”).
+## Wejście z rankingiem opcji
+Pierwsze pytanie: którą opcję realizujemy. Akceptacja rankingu to wyraźna decyzja człowieka, nie założenie. Mówisz,
+o co nie będziesz pytać, bo badanie już to rozstrzygnęło (z cytatem), i dajesz rekomendację do każdego zadanego pytania.
 
-## Gdy przesłuchanie się psuje
-- **Agent sam odpowiada na pytania decyzyjne albo zaczyna wdrażać** — najczęściej, gdy przesłuchanie jest częścią zadania
-  „rozwiąż zgłoszenie”: ramka zadania wygląda jak zgoda. Zapobieganie: w `CLAUDE.md` projektu linia „Nie wdrażaj bez
-  wyraźnej zgody po przesłuchaniu”.
-- **Słabszy model** zwija rundy do 2–3 ogólnych pytań i konspektu → przełącz na mocniejszy model albo tryb pytań
-  pojedynczych; nie skracaj procedury.
-- **Pytania zależne w jednej rundzie** (front to ocena agenta, nie policzony graf) → człowiek wskazuje zależność, agent
-  jawnie otwiera gałąź ponownie w kolejnej rundzie.
-- **Zakres za duży na jedną sesję** (dziesiątki decyzji, kilka obszarów) → najpierw mapa: lista obszarów i ich zależności
-  jako osobne zadania w `docs/project/`, potem przesłuchanie każdego zadania osobno.
+## Zakończenie
+1. Brak otwartych pytań → podsumowanie: **decyzje**, **założenia**, **poza zakresem** i pytanie „Czy tak to rozumiemy?”.
+   Bez potwierdzenia nic nie wdrażasz.
+2. Zapis: decyzje w artefakcie i `decisions.md` (core-project-record), nowe pojęcia w słowniku (ddd-facilitation),
+   propozycja ADR, gdy decyzja spełnia próg (skill dokumentacji, pack-docs).
+3. **Człowiek niedostępny:** rekomendacje stają się jawnie oznaczonymi założeniami Z1…Zn, nic nie wdrażasz, czekasz.
+4. **Jedno pytanie naraz** na życzenie: spełniasz i proponujesz zapis preferencji w `CLAUDE.md` projektu.
 
-## Bez nadmiaru
-Przesłuchanie bez kontekstu wyciąga każdy przypadek brzegowy jako coś do rozwiązania i kończy się przeinżynierowaniem.
-Pytania szeregujesz wpływem i prawdopodobieństwem; odpowiedź „po prostu zawiedź z czytelnym błędem” jest
-pełnoprawna (drabina minimalizmu: eng-design-principles w pack-it). Sygnały ostrzegawcze procesu: zaległości
-wygenerowanych zgłoszeń, których nikt nie zrobi, i opisy PR dłuższe niż ktokolwiek przeczyta.
-
-## Anty-wzorce
-Zaczynanie pracy bez zgody; skracanie przesłuchania do kilku ogólników; wszystkie pytania wyliczone z góry zamiast
-przeliczania frontu; pytanie człowieka o fakty z repo; mieszanie w jednej rundzie pytań zależnych.
+## Typowe błędy
+- Agent sam odpowiada na pytania decyzyjne lub zaczyna kodować → stop, wyjaśnij, zacznij od nowa; w `CLAUDE.md` linia:
+  „Po przesłuchaniu planu nic nie wdrażaj bez wyraźnej zgody człowieka na potwierdzone podsumowanie.”
+- Słabszy model zadaje 2–3 mgliste pytania → mocniejszy model albo tryb jednego pytania, nie skracaj procedury.
+- Zależne pytania razem → człowiek to wskazuje, wracasz do gałęzi w następnej rundzie.
+- Pytania o fakty z repo, pełna lista pytań z góry → sprawdzasz sam, pytasz tylko o to, co można postawić już teraz.
 
 ## Przykład
-**Sytuacja:** „Dodaję eksport zamówień do CSV w panelu admina — przepytaj mnie”. Role w panelu i liczbę zamówień
-(ok. 2 mln) ustala `scout`, nie człowiek. **Wynik (runda 1, tylko pytania niezależne):**
-```
-**P1 — Kto eksportuje**: a) admin, b) admin i support → Rekomendacja: a — plik zawiera dane klientów.
-**P2 — Dane osobowe**: a) pełne, b) bez, c) do wyboru → Rekomendacja: b — bez kopii danych poza systemem.
-**P3 — Filtry**: a) daty, b) daty i status → Rekomendacja: b — pokrywa opisany przypadek.
-```
-Forma wydania dużego pliku czeka do rundy 2 — zależy od filtrów z P3.
+„Przenoszę kolejkę z RabbitMQ na Kafkę — przepytaj mnie.” Najpierw fakty (4 konsumentów, wiadomości ~2 KB). Rozmiar:
+złożony, ok. 11–13 pytań. Runda 1: kolejność, retencja, którzy konsumenci pierwsi, oczekiwania wobec wycofania — każde
+z rekomendacją. Wstrzymane: metoda przełączenia (zależy od odpowiedzi o konsumentach) → runda 2. Na końcu podsumowanie
+i „Czy tak to rozumiemy?”. Więcej przykładów: `references/examples.md`.
 
-Więcej przykładów: `references/examples.md`.
-
-## Źródło
-Kurs 10xDevs, ed. 3 (2026), moduł 2 (planowanie kroku, roadmapa) i moduł 4, lekcja 4 (bramka decyzyjna w planie) —
-materiał szkoleniowy (dostęp 2026-10-09).
-[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), skill `grilling`; opis:
-[aihero.dev](https://www.aihero.dev/skills-grilling). Opisane własnymi słowami.
+## Lista kontrolna
+- [ ] wejścia przeczytane; fakty sprawdzone, nie zadane
+- [ ] rozmiar oszacowany i przyjęty; w rundzie tylko pytania, które można postawić już teraz
+- [ ] jedna rekomendacja na pytanie; podsumowanie potwierdzone przed wdrożeniem; decyzje zapisane

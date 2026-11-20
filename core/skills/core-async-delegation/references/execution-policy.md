@@ -1,61 +1,95 @@
-# The policy for executing a plan unsupervised — formats
+# Unattended plan execution - policy and line formats
+> 6. Line formats - 7. Final report - 8. Example transcript
 
-## A `/goal` command to copy
-The goal condition is the session's stop test; the policy from `SKILL.md` §4 is the way to meet it. The evaluator
-sees only the conversation, so the condition refers to what the agent prints.
-```text
-/goal Execute all phases of the plan docs/project/<step>/plan.md per the core-async-delegation §4 policy.
-Done when: every automatic item in the plan's progress section is ticked, every phase has its own commit
-(Conventional Commits) with the SHA printed in the conversation, and at the end there is a list of items for manual verification.
-Constraints: do not change or weaken existing tests unless the plan says so; do not touch files
-outside the plan's scope. Stop after <N> turns if you do not finish.
+This is the factory's own convention for running an approved plan with `claude -p` or `/goal` while nobody is watching. The
+line formats are fixed because evaluators, `/goal` conditions and reviewers read only the transcript. The engineering behind
+it is ordinary: bounded retries, fail closed on surprises, and a mutation-style check that a new test fails on broken code.
+
+## 1. Preconditions
+- The plan is a file: `docs/project/<step>/plan.md` with phases, files per phase, verification commands, and a progress
+  section. The first unticked progress item is where execution starts or resumes (core-project-record,
+  core-delivery-lifecycle).
+- Chat notes are not a plan. Without a plan file, do not start; say which file is needed.
+- Every verification command named for a phase must be runnable before that phase starts. A missing tool or script is a STOP
+  for that phase, not a reason to invent another check.
+
+## 2. Per-phase loop
+1. Read the phase; compare it with the repository. Minor divergence (a renamed or moved file) -> adapt and print `ADAPT`.
+   Structural divergence (a missing dependency, a different architecture, the previous phase's result absent) -> STOP. In
+   doubt, treat it as structural.
+2. Make the change, staying within the phase's files.
+3. Run the gates in order of cost:
+   1. the plan's own verification commands;
+   2. `git add <files>` for the phase's files by name;
+   3. deliberate breakage for every new or changed test (section 3);
+   4. full test suite, lint, type check;
+   5. commit (section 5).
+4. Tick the phase's progress items in the plan. Manual verification items stay unticked and go to the report.
+
+## 3. Deliberate breakage
+- Files are already staged, so the restore is exact.
+- Break the protected behaviour in the working tree only (invert a condition, return a wrong value).
+- Run only the test that should catch it. Red -> the gate passes. Green -> the assertion protects nothing: strengthen the
+  assertion (not the production code, not a skip) and repeat.
+- Always restore with `git checkout -- <file>`, also when something failed in between. The breakage is never committed.
+
+## 4. Repairs and STOP
+- At most 2 repair attempts per gate. A third failure stops the run.
+- Never weaken a test, an assertion, a lint rule or a type check to pass a gate.
+- "Not possible within scope" is a legitimate result. STOP and report; never route around a boundary.
+- On STOP: leave ticked items as they are, leave work in progress uncommitted, restore any breakage, make no further changes,
+  write the final report.
+- With `/goal`, add a progress condition: each turn improves at least one measured value from a tool; two turns without
+  improvement -> STOP; the same command run a third time with an unchanged result -> STOP; plus a turn limit.
+
+## 5. Commits
+- Only on green. Message per core-conventional-commits; files added by name.
+- Unrelated dirty files are listed, not added.
+- No `--no-verify`, no `--amend`. A failing pre-commit hook is a gate failure (counts toward the 2 attempts).
+- Issue ids in the footer only when the plan or the conversation names them; never derived from the branch name.
+
+## 6. Line formats
 ```
-Running without a window (a tool list without network and without `git push`, if the task does not need them):
-```bash
-claude -p "<polecenie>" --allowedTools "<lista>" --permission-mode acceptEdits --max-budget-usd <kwota>
+GATE <name>: PASS
+GATE <name>: FAIL (<short reason>, attempt k/2)
+ADAPT: <what changed against the plan and why>
+DIRTY (not added): <files>
+COMMIT phase N: <sha>
 ```
-
-## Verdict lines (after each gate)
-```text
-GATE tests-from-plan: PASS
-GATE deliberate-breakage: PASS (test red on the broken code, file restored)
-GATE lint: FAIL (2 errors in src/limits.ts, attempt 1/2)
-GATE lint: PASS
-DIRTY (not added): .env.local, notes.md
-ADAPT: the plan points to src/limits.ts, the file is in src/limits/index.ts
-COMMIT phase 2: a1b2c3d
+STOP block:
 ```
-
-## Deliberate breakage (only phases that add or change tests)
-1. The phase's files are already in the index (`git add <pliki>`), so the restore will be exact.
-2. In the production code invert or weaken the protected behaviour — a change only in the working tree.
-3. Run only that test. Red = the gate PASSES.
-4. Always restore with `git checkout -- <plik>`, also after a failure; the breakage never goes into a commit.
-5. The test is green on the broken code → the assertion protects nothing → strengthen the assertion (do not weaken the code, do not skip the step).
-
-## The STOP block (then the end: no further changes and no commit)
-```text
 STOP — <STRUCTURAL DIVERGENCE | GATE FAILURE> in phase <N>
-Expected: <what the plan says / what the gate requires>
-Found: <the actual state / a summary of the error>
-Why it blocks: <why it cannot continue without the human's decision>
-Resume: <what to fix>, then again from phase <N>
+Expected: <what the plan says>
+Found: <what the repository shows, with file:line or command output>
+Why it blocks: <one sentence>
+Resume: <what a human must decide or provide; the plan item to resume from>
 ```
-Before stopping: ticked items stay, work in progress stays uncommitted in the working tree,
-the deliberate breakage restored.
 
-## The final report (always — after success and after STOP)
-```text
+## 7. Final report
+Always written, also after STOP:
+```
 REPORT — <step>
-Phases: <done>/<all>
-- Phase 1: <title> — <SHA> (gates: tests, deliberate-breakage, lint, types: PASS)
-- Phase 2: <title> — STOP (<reason>)
-Adaptations: <one line each or "none">
-Uncertainties: <points where the plan and the code disagreed, without an independent source — or "none">
-For manual verification (for the human): <items from the plan, literally>
-Next step: a review in a fresh context (core-git-workflow; tests from the specification, pack-it: qa-spec-first-testing)
+Phases: <N: sha | N: STOP | N: not started>
+Adaptations: <ADAPT lines or none>
+Uncertainties: <assumptions taken under the conservative rule>
+For manual verification (for the human): <unticked manual items>
+Next step: review in a fresh context | decision needed on <...>
 ```
 
-## References in commits
-Issue identifiers (`ABC-123`, `#123`) you add in the commit footer only when they came up in the conversation or
-the plan — you never make them up from the branch name.
+## 8. Example transcript
+```
+GATE plan-commands: PASS
+GATE breakage(refund_rounding_test): PASS
+GATE full-suite: FAIL (lint: unused import in refunds.ts, attempt 1/2)
+GATE full-suite: PASS
+COMMIT phase 2: 4f1c2ab
+DIRTY (not added): .vscode/settings.json
+STOP — STRUCTURAL DIVERGENCE in phase 3
+Expected: src/payments/ledger.ts exports postEntry()
+Found: ledger module replaced by src/accounting/** (git log -1 -- src/payments/ledger.ts: removed 2 days ago)
+Why it blocks: phase 3 changes a module that no longer exists
+Resume: update plan phase 3 to the accounting module; resume from item 3.1
+REPORT — payments-refunds
+Phases: 1: 9b07e1d | 2: 4f1c2ab | 3: STOP
+...
+```

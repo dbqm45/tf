@@ -1,109 +1,106 @@
 ---
 name: core-plan-interview
-description: Use before acting to interview a plan, decision or idea — a decision tree, rounds of questions with a recommendation.
-metadata:
-  review: "2027-10-09"
-  catalog: "Use when a plan, decision or idea has to be interviewed before acting — a decision tree, rounds of questions with a recommendation (only questions independent of each other), facts checked on your own, decisions left to the human, the end only after shared understanding is confirmed. Not for a workshop with domain experts (the facilitation skill, pack-it) or for choosing the team (core-problem-routing)."
-  keywords: "przepytaj mnie, przesłuchaj plan, grilling, zadawaj pytania przed planem, pytania z rekomendacją, ranking opcji, którą opcję wybrać, raport z badania, agent sam odpowiada na pytania, agent zaczyna kodować bez zgody, zanim zaczniesz, grill me, interview my plan, ask me before you start, questions with a recommendation, agent answers its own questions, za dużo pytań, przypadki brzegowe, plan urósł, przeinżynierowanie, too many questions, edge cases, over-engineering"
+description: Use when a plan, decision or idea must be questioned before work starts — rounds of independent questions with recommendations, facts checked by you, confirmation.
 argument-hint: "[plan, decision or idea]"
+metadata:
+  review: "2027-11-20"
+  catalog: "Use when the human asks to be interviewed or questioned about a plan, decision or idea before anything is built, when an agent answered its own decision questions or started coding mid-interview, when an interview drowns in edge-case questions, or when a study's ranking of options has to be accepted — rounds of questions that can be asked now, one recommendation per question, facts looked up by the agent, a summary confirmed by the human, recording of decisions. Not for workshops with domain experts on shared vocabulary (ddd-facilitation, pack-it) or choosing which team or skill handles a task (core-problem-routing)."
+  keywords: "przepytaj mnie, przesłuchaj mój plan, wypytaj mnie, zadaj mi pytania, zanim zaczniesz, zapytaj mnie przed startem, grill me, wywiad o planie, doprecyzuj plan, pytania przed implementacją, plan w głowie, rundy pytań, rekomendacja do pytania, agent sam odpowiada na pytania, agent zaczął kodować, za dużo pytań, przypadki brzegowe, 40 pytań, przeinżynierowanie, ranking opcji, którą opcję wybrać, raport z badania, potwierdzenie planu, czy tak to rozumiemy, jedno pytanie naraz, człowiek niedostępny, założenia, interview me, question my plan, grill my plan, ask me before you start, clarify the plan, questions before implementation, decision questions, agent answered its own questions, too many questions, edge cases, over-engineering, ranking of options, confirm the plan, one question at a time"
 ---
 
-# Plan interview
+# Plan interview — ask in rounds, recommend, confirm before acting
 
-A conversation meant to reach **shared understanding** before anyone starts work. You treat the subject of the
-interview as a **decision tree**: every decision has decisions that depend on it.
+The goal is shared understanding of a plan before any implementation. You ask, the human decides; you never answer
+their decisions for them, and you never start building before they confirm the summary.
 
-## Concepts
-- **Frontier** — decisions whose preconditions are all settled. Only those can honestly be asked now.
-- **Round** — the whole frontier asked at once and answered in full. It goes well when there are many questions and
-  few rounds (e.g. a dozen or so questions in about 3 rounds).
+## Before round 1
+1. **Read every input** — the brief, a study, a ranking, a reframing, the relevant code. A question that an input
+   already settles is skipped; say so and quote the line.
+2. **Facts are your job.** Versions, existing modules, data sizes, roles, configuration: look them up (grep, config files,
+   a cheap read-only scout or researcher subagent). Never ask the human what the repository can answer. A lookup still
+   running blocks only the questions that depend on it.
+3. **Decisions are the human's.** Scope, risk appetite, trade-offs, policy, priorities: ask and wait.
+4. **Estimate the size** and show it with reasons (systems touched, integrations, data changes, unknowns): roughly
+   4–6 questions for a simple change, 7–10 for a medium one, 11–15 for a complex one, fewer when a study already exists.
+   The human may adjust it. These are soft ranges, not a quota.
+5. **Too big for one session** (several areas, dozens of decisions) → first write a map of the areas and their
+   dependencies as separate tasks under docs/project/, then interview one task at a time.
 
-## Procedure
-1. Build the tree in your head; do not work it out to the end up front — answers change the tree's shape.
-2. **Facts are your job.** What can be checked in the repo, documentation or tools you check yourself (cheap `scout`,
-   `researcher`) — you do not ask the human. A check in progress is an unsettled precondition: only the questions that
-   depend on it wait, the rest of the frontier you ask right away.
-3. **Decisions belong to the human.** You ask each one and wait. An agent that answers its own decision questions
-   breaks the whole mechanism.
-4. Ask a round in this format:
-   ```
-   **Q1 — <title>**: <content, the possible options>
-   → Recommendation: <your answer and briefly why>
+## Rounds
+- See the subject as decisions that depend on each other. In each round ask **every question that can be asked now** —
+  those whose preconditions are already settled. Many questions per round, few rounds (around a dozen questions in
+  about three rounds is typical).
+- Do not draft the full question list up front: answers change what comes next. After each set of answers, work out
+  again which questions are now open.
+- Two questions where one depends on the other never go in the same round; the dependent one waits.
+- An answer that changes an earlier decision → say so and reopen it explicitly.
+- Evidence found during the interview (e.g. the "missing feature" is actually a live bug) becomes its own question,
+  not a silent change to the plan.
+- A question only a prototype or mock-up can settle → propose building one instead of speculating.
 
-   **Q2 — …**
-   ```
-   Two questions do not go into one round if one depends on the other. The human answers with numbers (`P1: b`).
-5. After the answers, recompute the frontier: settled decisions unlock the next ones. An answer may also force a
-   return to an earlier decision — then you go back explicitly.
-6. Frontier empty → a summary of what was settled (decisions, assumptions, what stayed out of scope) and the
-   question: "Is that how we understand it?". The end only after confirmation. **Without confirmation you do not
-   start implementing.**
-7. Recording: decisions to the artifact and `decisions.md` (core-project-record), concepts to the glossary
-   (pack-it: ddd-facilitation), a decision meeting the ADR threshold → an ADR proposal (the documentation skill, pack-docs).
+## Question format
+```
+Round 1 — 3 questions, answer by number (e.g. "Q1: b, Q2: ok, Q3: own answer")
 
-## Settings
-- The human prefers single questions (accessibility, preference) → one question at a time; record it in the
-  project's `CLAUDE.md`.
-- No fixed question limit — the scope decides (rough numbers: "Scaling the interview"). When the human is
-  unavailable: take the recommendations as assumptions and list them (decision gates in pack-it: ddd-facilitation).
-- A question only a prototype or mock-up can answer — propose a prototype instead of guessing.
+Q1. Message ordering
+   a) per key (all events for one order in sequence) — matches today's behaviour; costs partition planning
+   b) none — simplest; consumers must tolerate reordering
+   Recommendation: a — the invoice consumer assumes order (billing/consumer.ts:41).
+```
+- Exactly one recommended answer per question, backed by evidence from the code or an input.
+- Each option in one line: what it does, its strength, its cost. Drop options nobody would sensibly pick.
+- If the evidence supports only one answer, say so and invite correction.
+- Plain language in the human's own words; no process jargon. Mark questions as diagnostic (problem, scope, success
+  criterion) or solution questions; with a finished code study skip code-state questions, with a finished reframing ask
+  only solution questions.
 
-## Scaling the interview
-- **Every input artifact holds decisions already made.** Read it before the first question and do not ask about what
-  it records. You skip a question only when the artifact literally settles the answer — announce the skip with a
-  quote.
-- Mark the questions: **[D]** diagnostic (the problem, scope, success criterion) and **[R]** about the solution. With
-  a finished code study you skip questions about the state of the code; with a finished reframing you ask only [R].
-- Roughly: a simple change 4–6 questions, a medium one 7–10, a complex one 11–15; with a finished study about 1/3
-  fewer, with a study and a reframing about half. Show the human the complexity estimate with its rationale
-  (systems, integrations, data changes, unknowns) and let them correct it before the first round.
-- **A ranking of options as input** (e.g. from a study): the first question is "which option do we implement?" —
-  accepting the ranking is an explicit decision by the human, not a silent assumption.
-- **New evidence along the way** (e.g. a gap turned out to be a live bug) does not go into the plan silently — it
-  becomes a separate question for the human.
-- **Option format:** `what it does · strength · cost`; exactly one recommended, based on evidence from the repo or an
-  artifact. An option without its own "sensible when …" is dropped (no straw-man alternatives); when the artifacts
-  support only one answer, say so: recommendation + "otherwise — I'll explain".
-- Questions in the human's language, without the skill's jargon ("the first story that proves the product works",
-  not "north star").
+## Keep it proportionate
+- Rank questions by impact and likelihood. Treating every edge case as something to solve leads to over-engineering;
+  "fail with a clear, readable error" is a perfectly good answer for unlikely cases. Prefer the minimal design
+  (the minimalism ladder in eng-design-principles, pack-it).
+- Warning signs of a bloated interview: dozens of generated tickets nobody will do, plans that grow from days to weeks,
+  PR descriptions nobody reads.
 
-## When the interview breaks
-- **The agent answers decision questions itself or starts implementing** — most often when the interview is part of
-  a "solve the ticket" task: the task framing looks like consent. Prevention: in the project's `CLAUDE.md` the line
-  "Do not implement without explicit consent after the interview".
-- **A weaker model** collapses the rounds into 2–3 general questions and an outline → switch to a stronger model or
-  single-question mode; do not shorten the procedure.
-- **Dependent questions in one round** (the frontier is the agent's judgement, not a computed graph) → the human
-  points out the dependency, the agent explicitly reopens the branch in the next round.
-- **Scope too big for one session** (dozens of decisions, several areas) → first a map: a list of areas and their
-  dependencies as separate tasks in `docs/project/`, then an interview for each task separately.
+## Input with a ranking of options
+When a study or report ranks options, the **first** question is which option to pursue. Accepting the ranking is an
+explicit decision by the human, never an assumption. State which questions you will not ask because the study already
+answered them (quote it), and still give a recommendation for each question you do ask.
 
-## Without excess
-An interview without context pulls out every edge case as something to solve and ends in over-engineering. You rank
-questions by impact and likelihood; the answer "just fail with a readable error" is fully valid (the minimalism
-ladder: eng-design-principles in pack-it). Process warning signs: a backlog of generated tickets nobody will do, and
-PR descriptions longer than anyone will read.
+## Ending
+1. When no open questions remain: summarise **decisions**, **assumptions**, **out of scope**, and ask
+   "Is that how we understand it?" No implementation until the human confirms.
+2. Record: decisions in the artifact and `decisions.md` (core-project-record); new terms in the glossary
+   (ddd-facilitation (pack-it)); an ADR proposal when a decision meets the ADR threshold (documentation skill, pack-docs).
+3. **Human unavailable** (on leave, not answering): turn the recommendations into explicitly labelled assumptions
+   A1…An, list them, implement nothing, and wait for confirmation.
+4. **One question at a time** preferred (accessibility, taste): honour it and offer to record the preference in the
+   project's CLAUDE.md.
 
-## Anti-patterns
-Starting work without consent; shortening the interview to a few generalities; all questions computed up front
-instead of recomputing the frontier; asking the human about facts from the repo; mixing dependent questions in one
-round.
+## Failure modes
+| Symptom | Fix |
+|---|---|
+| The agent answers its own decision questions or starts coding (often when the interview sits inside a "solve the ticket" task) | Stop, explain, restart. Add to the project's CLAUDE.md: "After a plan interview, implement nothing without the human's explicit consent to the confirmed summary." |
+| A weaker model collapses to 2–3 vague questions | Use a stronger model or one-question mode; do not shorten the procedure |
+| Dependent questions asked together | When the human points it out, reopen that branch in the next round |
+| Questions about facts in the repo | Look them up yourself, report what you found |
+| Full question list produced up front | Ask only what can be asked now; recompute after answers |
 
 ## Example
-**Situation:** "I'm adding a CSV export of orders in the admin panel — grill me". The roles in the panel and the
-number of orders (about 2 million) are established by `scout`, not the human. **Result (round 1, independent
-questions only):**
-```
-**Q1 — Who exports**: a) admin, b) admin and support → Recommendation: a — the file holds customer data.
-**Q2 — Personal data**: a) full, b) none, c) selectable → Recommendation: b — no copy of the data outside the system.
-**Q3 — Filters**: a) dates, b) dates and status → Recommendation: b — covers the described case.
-```
-How a large file is delivered waits for round 2 — it depends on the filters from Q3.
+"I'm moving our queue from RabbitMQ to Kafka — interview me first."
+- Facts checked first: 4 consumers found in the services directory, messages ~2 KB, no ordering code except in billing.
+- Size: complex (two systems, four consumers, a cutover) → about 11–13 questions; the human agrees.
+- Round 1 (independent): ordering needs, retention period, which consumers move first, rollback expectation — each with
+  a recommendation.
+- Held back: "cutover method (dual-write vs. replay)" — depends on the consumer answers; it goes to round 2.
+- End: summary of 12 decisions, 2 assumptions, out of scope "schema registry"; "Is that how we understand it?" → the
+  human confirms → decisions written to `decisions.md`.
 
-More examples: `references/examples.md`.
+More worked examples (auth migration, feature flag, unavailable human): `references/examples.md`.
 
-## Source
-The 10xDevs course, ed. 3 (2026), module 2 (step planning, roadmap) and module 4, lesson 4 (the decision gate in the
-plan) — training material (accessed 2026-10-09).
-[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), the `grilling` skill; description:
-[aihero.dev](https://www.aihero.dev/skills-grilling). Described in our own words.
+## Checklist
+- [ ] inputs read; facts looked up, not asked
+- [ ] size estimated with reasons and accepted
+- [ ] each round = only questions that can be asked now; dependent ones held back
+- [ ] one recommendation per question, with evidence
+- [ ] summary (decisions, assumptions, out of scope) confirmed before any implementation
+- [ ] decisions recorded; preferences in CLAUDE.md when asked
