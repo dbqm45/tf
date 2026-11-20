@@ -23,7 +23,7 @@ jobs:
   prepare:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30   # the release runs `workspace.py check --packs all` (10–12 min in CI by 20.2.0), so 10 min cancelled every release
     permissions:
       contents: write
     outputs:
