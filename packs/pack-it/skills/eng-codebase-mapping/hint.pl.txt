@@ -1,0 +1,64 @@
+head: Użyj, gdy wchodzisz do nieznanego repo albo oceniasz zmianę — graf importów, punkty wejścia, cykle, hotspoty z historii, kogo pytać, wpływ diffu, research przed zmianą. Użyj, gdy trzeba zrozumieć nieznane repozytorium albo zasięg zmiany — mapa kodu z deterministycznych narzędzi (nx graph, madge, dependency-cruiser, jdeps albo scripts/code_graph.py dla Pythona, TS/JS, Javy, C#, Go), punktowane punkty wejścia, warstwy, huby i cykle runtime a leniwe, terytorium z historii gita (scripts/git_territory.py — hotspoty, współzmiany, kontrybutorzy, bus factor), etykiety pewności krawędzi, wpływ diffu, research przed zmianą (research.md), pogłębienie jednego przepływu, ocena narzędzi kontekstu i zestaw skryptów rekonstrukcji. Nie do oceny długu (eng-tech-debt-audit), wyboru refaktoryzacji (eng-refactor-planning) ani projektowania granic (ddd-strategic-analysis).
+# Mapa kodu — narzędzia znajdują strukturę, model ją nazywa
+
+Najpierw mapa, potem czytanie. Deterministyczne narzędzia (graf importów, historia gita) dają strukturę i liczby; model tylko nazywa
+warstwy, opisuje role i sprawdza w kodzie wątpliwe miejsca. Drzewo katalogów to hipoteza, nie dowód. Rozdziel dwie prace: **szeroki,
+płytki skan** całego repo (tańszy model wystarczy) i **pogłębienie jednego przepływu** (`references/flow-analysis.md`). Nigdy w jednym
+poleceniu „znajdź strukturę, wybierz ważne obszary i wyjaśnij zachowanie” — wychodzi płaskie streszczenie wszystkiego.
+
+## Procedura — mapa
+1. **Inwentaryzacja.** Pliki i linie na katalog/projekt, języki, frameworki, manifesty; README i manifesty to wskazówki.
+   `python3 .claude/skills/eng-codebase-mapping/scripts/repo_inventory.py <repo>`. Ponad ~100 plików w zakresie → najpierw uzgodnij zakres.
+2. **Terytorium z historii** (domyślnie 12 miesięcy): `python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --repo <repo> --all`.
+   - Ranking katalogów/plików po commitach, bez szumu (lockfile, snapshoty, generowany kod, tłumaczenia, `.env*`; więcej przez `--exclude`).
+   - `--by-quarter`: na górze w każdym kwartale = **stałe centrum**; w jednym kwartale = **kampania**.
+   - `--cochange`: pary i huby; commity powyżej `--max-files` (30) plików pomijane — masowe commity sklejają niezwiązane pliki. Para ≥ 0,8 to
+     ukryta umowa; para z regeneracji jest tania. Hub (konfiguracja, i18n, rejestr tras) zmienia się z wieloma obszarami. Brak współzmian nie
+     dowodzi niezależności.
+   - `--hotspots`: zmiany × linie niepuste. Pliki z rankingu, których nie ma w `git ls-files`, oznaczone jako usunięte, poza trasą czytania.
+   - Kogo pytać: `--authors <ścieżka>` (bez botów i commitów agentów AI) — lista ludzi do zapytania, nie właścicieli. `--bus-factor`: najmniej
+     osób pokrywających > 50% commitów, aktywnych w 90 dniach przed HEAD; „critical” = nikt aktywny, „high” = jedna osoba. Zespół jednoosobowy
+     daje 1 wszędzie — to fakt, nie wniosek. Bez ocen ludzi.
+   - Brak historii gita (eksport zip) → pomiń krok i zapisz w Ograniczeniach; nie wymyślaj historii.
+3. **Graf importów.** Narzędzie projektu, jeśli jest: `nx graph --file=graph.json`, `madge --json` / `madge --circular`, dependency-cruiser,
+   jdeps. Inaczej `python3 .claude/skills/eng-codebase-mapping/scripts/code_graph.py <repo>` — nie pisz własnego skanera. Liczby z wyniku;
+   kod czytasz tylko, by nazwać warstwy i sprawdzić wątpliwe miejsca. Graf nie widzi sprzężeń w runtime (DI, flagi, kolejki, webhooki,
+   refleksja, dynamiczny import, codegen) → do `unknowns`. Warstwa bez grafu = „nie pokryta przez narzędzie”, nie „brak połączeń”.
+4. **Punkty wejścia.** `code_graph.py` punktuje kandydatów heurystyką poglądową (dostrój do repo): konwencjonalna nazwa +3, w korzeniu
+   lub poziom niżej +1, górne 10% importów wychodzących +1, dolne 25% przychodzących +1. Czyta też rejestry: zadania Celery, komendy
+   management Django, schemat GraphQL, aplikacje i trasy HTTP, kontrolery i crony Nest. Plik bez przychodzącej krawędzi to „nieosiągalny
+   statycznymi importami”, nie „martwy kod”, dopóki nie sprawdzisz rejestrów.
+5. **Warstwy** (3–10): gęsto importująca się wewnętrznie grupa (gęstość ok. 0,3) to kandydat; kierunek UI/API → usługi → dane; strzałka
+   pod prąd to ustalenie.
+6. **Węzły centralne i cykle.** Najwyższa łączność po odrzuceniu barreli (pliki tylko z re-eksportami), typów i stałych. Każdy cykl
+   z typem: **runtime** (importy na poziomie modułu) albo **leniwy/typowy** (import w funkcji, pod `TYPE_CHECKING`, `import type`).
+7. **Trasa czytania.** 5–15 kroków od najlepszego wejścia w dół, 2–5 plików na krok, każdy krok mówi, dlaczego teraz.
+8. **Legenda modułów i sprzężenia** — każda etykieta z dowodem, inaczej `to verify` (`references/wide-scan.md` §5–6).
+9. **Zapis** `docs/project/04-architecture/codebase-map.md` z datą i commitem HEAD; wyniki robocze `codebase-map/territory.md`,
+   `codebase-map/structure.md`. Sekcje: TL;DR 5–7 zdań z diagramem warstw (Mermaid), teren, połączenia ze źródłem, 4–6 stref ryzyka,
+   kogo pytać, pierwszy dzień (5–8 plików), Ograniczenia. Cel: nowa osoba zorientowana w ~15 minut.
+
+## Pewność krawędzi
+Każde połączenie ma etykietę pewności: **EXTRACTED** (z importów/AST), **INFERRED** (z nazw, konwencji, konfiguracji DI), **UNCERTAIN**.
+Nigdy nie wymyślaj krawędzi; niepewne pokazuj.
+
+## Wpływ diffu i aktualność mapy
+- `git diff --name-only <base>...HEAD`; aktualność mapy projektu w monorepo: `git diff --name-only <commit-mapy> HEAD -- <ścieżka>` albo
+  `nx show projects --affected`.
+- Dla każdego pliku 1 krok w górę (kto go używa) i 1 krok w dół (czego używa), dotknięte warstwy: `code_graph.py <repo> --impact <plik>`.
+- Ryzyko niskie/średnie/wysokie ze złożoności, krawędzi między warstwami i zasięgu. Wynik: moduły, ryzyko, co testować (qa-regression).
+
+## Research przed zmianą
+Najpierw pliki wskazane przez człowieka i `docs/project/lessons.md`; wcześniejsze mapy to przesłanki. Podział na 2–4 obszary, 1–3 pytania
+tylko przy niejasnym zakresie; równolegle, tylko odczyt, każde twierdzenie z `plik:linia`. Zapis `docs/project/<step>/research.md`:
+Question, Summary, Findings, Architectural conclusions, Historical context, Open questions; kolejna runda w „Follow-up research <data>”.
+Jedyny tworzony plik — bez zmian w kodzie. Wybór biblioteki: core-source-research.
+
+## Ocena narzędzi kontekstu (graf kodu, indeks semantyczny, MCP)
+Jeden dobry przebieg nic nie dowodzi. Mierz na tych samych zadaniach z narzędziem i bez: trafność, powtarzalność w N przebiegach, tokeny
+wejścia i koszt, odsetek użycia — czy agent w ogóle sięga po narzędzie. Wiedzę dostarczaj przez narzędzie zwracające mały podgraf ze
+źródłami, nie wklejaną do promptu. Metoda: ai-evals; wyszukiwanie: ai-rag.
+
+## Skrypty
+Wszystkie w `.claude/skills/eng-codebase-mapping/scripts/`, tylko biblioteka standardowa, bez sieci. Katalog i łańcuch rekonstrukcji:
+`references/scripts.md`; flagi: `--help` każdego skryptu.
