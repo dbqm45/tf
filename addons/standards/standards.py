@@ -11,6 +11,11 @@ and writes the rules as files the factory loads.
   python3 standards.py source add <git URL | path> [--ref <tag>] [--dir <skills dir>] [--scope fe|be|mutual]
   python3 standards.py source list | remove <git URL | path>
 
+Where sources come from: the factory's configuration `addons.standards.sources` — usually the company pack
+(`org_defaults.config`) and the team pack (`team_defaults.config`), passed in TF_ADDON_SETTINGS — plus the
+project's own standards.yaml (`source add`). A project turns a company source off with
+`addons.standards.sources.<name>.enabled: false` in .tf/config/config.yaml.
+
 --root: the repository (default: git top level of the current directory); --out (default out/ here), --cache
 (default cache/ here: clones of standards repositories, Confluence page copies, pending.json — outside git).
 STANDARDS_CONFIG points to another standards.yaml. `learn` replaces out/ only after a passing check.
@@ -54,11 +59,39 @@ def config_path() -> Path:
 
 
 def load_config() -> dict:
+    """The project's standards.yaml (local sources)."""
     p = config_path()
     try:
         return (yaml.safe_load(p.read_text(encoding="utf-8")) or {}) if p.is_file() else {}
     except (OSError, yaml.YAMLError):
         return {}
+
+
+def factory_settings() -> dict:
+    """`addons.standards` from the factory's configuration (company pack ← team pack ← project), passed by the
+    factory in TF_ADDON_SETTINGS. `sources` is keyed by name so the layers add up; `enabled: false` turns one off."""
+    try:
+        return json.loads(os.environ.get("TF_ADDON_SETTINGS") or "{}") or {}
+    except ValueError:
+        return {}
+
+
+def all_sources() -> list[dict]:
+    """Sources from the factory's configuration (with `origin`), then the project's standards.yaml."""
+    out = []
+    configured = factory_settings().get("sources") or {}
+    items = configured.items() if isinstance(configured, dict) else ((str(i), s) for i, s in enumerate(configured))
+    for name, s in items:
+        if isinstance(s, dict) and s.get("enabled", True) is not False:
+            out.append({**s, "origin": f"factory configuration (addons.standards.sources.{name})"})
+    out += [{**s, "origin": "standards.yaml"} for s in load_config().get("sources") or []]
+    return out
+
+
+def merged_config() -> dict:
+    cfg = {**load_config(), **{k: v for k, v in factory_settings().items() if k != "sources"}}
+    cfg["standards"] = all_sources()   # sources.collect reads `standards`
+    return cfg
 
 
 def _version() -> str:
@@ -86,8 +119,9 @@ def fingerprint(root: Path, cache: Path) -> str:
     files |= {p for p in (cache / "sources").glob("**/*.md")} if (cache / "sources").is_dir() else set()
     files |= {p for p in (cache / "model").glob("*.json")} if (cache / "model").is_dir() else set()
     files.add(config_path())
+    h.update(json.dumps(factory_settings(), sort_keys=True).encode())
     if os.environ.get("STANDARDS_OFFLINE") != "1":
-        for s in load_config().get("sources") or []:
+        for s in all_sources():
             if s.get("git"):
                 h.update(_git(root, "ls-remote", s["git"], s.get("ref") or "HEAD", timeout=15).split("\t")[0].encode())
     for p in sorted(files):
@@ -106,9 +140,7 @@ def fingerprint(root: Path, cache: Path) -> str:
 
 def build(root: Path, cache: Path, online: bool, today: str | None = None) -> dict:
     today = today or dt.date.today().isoformat()
-    cfg = load_config()
-    cfg = {**cfg, "standards": cfg.get("sources") or []}   # sources.collect reads `standards`
-    found, coverage = sources.collect(root, cfg, online, today, {"cache": cache})
+    found, coverage = sources.collect(root, merged_config(), online, today, {"cache": cache})
     pending = coverage.pop("pending", [])
     return {"contract": 1, "generator": f"standards {_version()}", "generated": today,
             "commit": _git(root, "rev-parse", "HEAD").strip() or None, "fingerprint": fingerprint(root, cache),
@@ -182,10 +214,12 @@ def cmd_source(args: list[str], ref, sub_dir, scope) -> int:
     cfg = load_config()
     entries = cfg.setdefault("sources", [])
     if not args or args[0] == "list":
-        for e in entries:
+        every = all_sources()
+        for e in every:
             print(f"- {e.get('git') or e.get('path')}" + (f" @{e['ref']}" if e.get("ref") else "")
-                  + (f" dir={e['dir']}" if e.get("dir") else "") + (f" scope={e['scope']}" if e.get("scope") else ""))
-        if not entries:
+                  + (f" dir={e['dir']}" if e.get("dir") else "") + (f" scope={e['scope']}" if e.get("scope") else "")
+                  + f"  [{e['origin']}]")
+        if not every:
             print("standards: no sources configured — skills named *standards* in .claude/skills/ are used")
         return 0
     if args[0] == "add" and len(args) == 2:

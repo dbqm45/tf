@@ -19,10 +19,23 @@ only when its quote is found verbatim in the section. Duplicates are merged; `ha
 applied when a settling source (standards skill, accepted ADR, lint) or two independent sources state it, otherwise
 it is a listed candidate.
 
+## Where the sources are set
+
+| Where | For | How |
+|---|---|---|
+| company pack `pack.yaml` → `org_defaults.config.addons.standards` | every project of the company | `sources.<name>: {git, ref, dir, scope}`, `install: true` |
+| team pack → `team_defaults.config.addons.standards` | the team's projects | its own `sources.<name>` (added to the company's) |
+| project `.tf/config/config.yaml` → `addons.standards` | this project | add a source, or `sources.<name>.enabled: false` |
+| project `standards.yaml` here (`source add`) | this project | local sources, listed after the configured ones |
+
+The factory merges the configuration layers and passes `addons.standards` in TF_ADDON_SETTINGS; with
+`install: true`, `tf learn` installs this add-on where it is missing. `source list` shows every source and where it
+comes from.
+
 ## Use
 
 ```bash
-python3 standards.py source add https://github.com/acme/standards.git --ref v1.4.0 --dir skills [--scope fe]
+python3 standards.py source add https://github.com/acme/standards.git --ref v1.4.0 --dir skills [--scope fe]   # project only
 python3 standards.py learn            # or, through the factory: tf learn
 python3 standards.py pending          # Confluence pages waiting for the agent (MCP)
 python3 standards.py refresh          # again only when the inputs changed (the factory: at session start)
