@@ -70,7 +70,7 @@ answered them (quote it), and still give a recommendation for each question you 
 1. When no open questions remain: summarise **decisions**, **assumptions**, **out of scope**, and ask
    "Is that how we understand it?" No implementation until the human confirms.
 2. Record: decisions in the artifact and `decisions.md` (core-project-record); new terms in the glossary
-   (ddd-facilitation); an ADR proposal when a decision meets the ADR threshold (documentation skill, pack-docs).
+   (ddd-facilitation (pack-it)); an ADR proposal when a decision meets the ADR threshold (documentation skill, pack-docs).
 3. **Human unavailable** (on leave, not answering): turn the recommendations into explicitly labelled assumptions
    A1…An, list them, implement nothing, and wait for confirmation.
 4. **One question at a time** preferred (accessibility, taste): honour it and offer to record the preference in the

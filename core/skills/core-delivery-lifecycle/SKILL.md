@@ -3,7 +3,7 @@ name: core-delivery-lifecycle
 description: Use when taking a project from idea to production and maintenance with AI agents — phases 0-9, human gates B1-B6, artifacts, cut plan, readiness, measures.
 metadata:
   review: "2027-11-20"
-  catalog: "Use when you need to know which stage a project is at, what must exist before coding or a release, who approves moving on, how to run AI agents in phases with personas, what happens post-deployment, where each project document goes (artifact map), how to order delivery (cut plan, release lines, flags), how to review a spec with a panel, run a factory dry run or build an AI-native loop (plan before code, agent evals, AI PR review, control bands, paired measures). Not for the content of one phase (pack dimension skills), an end-of-stage agent retrospective (core-agent-retro), a canary rollback (ops-release-engineering) or one incident (ops-sre-incidents)."
+  catalog: "Use when you need to know which stage a project is at, what must exist before coding or a release, who approves moving on, how to run AI agents in phases with personas, what happens post-deployment, where each project document goes (artifact map), how to order delivery (cut plan, release lines, flags), how to review a spec with a panel, run a factory dry run or build an AI-native loop (plan before code, agent evals, AI PR review, control bands, paired measures). Not for the content of one phase (pack dimension skills), an end-of-stage agent retrospective (core-agent-retro), a canary rollback (ops-release-engineering) or one incident (ops-sre-incidents (pack-it))."
   keywords: "na jakim etapie jesteśmy, fazy projektu, etapy projektu, cykl życia projektu, od pomysłu do produkcji, od pomysłu do wdrożenia, kto zatwierdza dalszy krok, kto odbiera, bramki człowieka, akceptacja etapu, co musi być gotowe przed kodem, zanim programiści ruszą, gotowość do wydania, przegląd gotowości, kryteria wydania, makiety i połowa backendu, agenci AI prowadzą projekt, praca z agentami w etapach, kiedy człowiek patrzy agentowi na ręce, kto wdraża na produkcję, po wdrożeniu, projekt naprawdę skończony, utrzymanie po wdrożeniu, łatki bezpieczeństwa, aktualizacje zależności, wycofywanie funkcji, ścieżka skrócona, mały projekt, które etapy pominąć, plan faz, walking skeleton, plan cięć, cięcia pionowe, fundamenty, niewiadome blokujące, gwiazda przewodnia, od którego cięcia zacząć realizację, plan wydania, linie wydania, MVP, release.yaml, wdrażanie za flagą, przegląd specyfikacji, dziury w specyfikacji, próba fabryki, dry run, kod od agentów szybszy niż przeglądy, plan przed kodem, ewaluacje agenta, REVIEW.md, pasma kontrolne, pogorszenie metryk produkcji, udział agentów w pull requestach, refinement z agentami, refinement kończy się opisem z AI, sukces mierzony odsetkiem agentów, budżet artefaktów w PR, mapa artefaktów, gdzie zapisać dokument, dokumenty fazy architektury, project phases, who approves the next stage, idea to production, release readiness, human gates, shortened path, which stages can be skipped, share of PRs by agents"
 ---
 
@@ -30,7 +30,7 @@ approves**; the content of a phase lives in the packs' dimension skills.
    scale and risk and picks the **full** or **shortened** path. Without a dispatcher: core-problem-routing.
 2. It writes `01-discovery/brief.md` with a **Phase plan** section: phases, the persona for each, the gates, the human's
    tasks. With a budget or a deadline also `01-discovery/project-plan.md` (P50/P80 ranges of cost and date, milestones,
-   risk register; proc-project-planning).
+   risk register; proc-project-planning (pack-it)).
 3. The human starts the persona named in the last Handoff; personas do their own tasks (core-cost-control §0).
    Staffing with skill names: `references/pack-staffing.md`.
 
@@ -71,7 +71,7 @@ Allowed when: one team, a few screens or endpoints, no sensitive data or regulat
    before any feature depth.
 2. **Risk first:** prototypes and spikes for the riskiest assumptions before B3.
 3. **Tests come from acceptance criteria**, written before or alongside the code by a test designer who does not see
-   the implementation (qa-spec-first-testing).
+   the implementation (qa-spec-first-testing (pack-it)).
 4. **Every step ends with a pass/fail command** whose output the agent shows as evidence in the step report.
 5. **The author does not judge their own work:** review in a fresh context — `/code-review`, the security-reviewer agent
    for risky areas.
@@ -105,11 +105,11 @@ statuses and self-check: `references/cut-plan.md`.
 
 ## Phase 9: maintenance
 - A periodic operations review (weekly or per sprint, template `operations-review`) in
-  `08-operations/<date>-operations-review.md`: SLOs, incidents, issues by severity (proc-issue-triage), patches,
-  dependency updates (ops-dependency-upgrades), costs, retirements. Metrics go under control bands.
+  `08-operations/<date>-operations-review.md`: SLOs, incidents, issues by severity (proc-issue-triage (pack-it)), patches,
+  dependency updates (ops-dependency-upgrades (pack-it)), costs, retirements. Metrics go under control bands.
 - Bug: cause → red regression test → fix → release on the shortened path.
 - A critical vulnerability in an exposed component gets a fast path exempt from the dependency cooldown
-  (ops-supply-chain-security); the human sets the deadline. Minor updates regularly, majors before end of support, one at
+  (ops-supply-chain-security (pack-it)); the human sets the deadline. Minor updates regularly, majors before end of support, one at
   a time; the agent only proposes.
 - Retiring a feature is the human's decision based on usage data: announce it with a date and a transition path,
   deprecate in a minor version, remove in a major one, delete code and data per the retention policy. Shutting down the

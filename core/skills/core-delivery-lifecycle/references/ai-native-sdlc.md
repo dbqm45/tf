@@ -89,7 +89,7 @@ Per stage, pair a leading measure (early signal) with a lagging one (result):
 | Plan | share of items with a requirement ID and verification | plan deviations per step |
 | Build | time to first review, PR size | rework after review |
 | Review and test | review findings per PR, false-alarm rate | escaped defects |
-| Deploy | deployment frequency, lead time for changes | change failure rate, time to restore (DORA; eng-continuous-delivery) |
+| Deploy | deployment frequency, lead time for changes | change failure rate, time to restore (DORA; eng-continuous-delivery (pack-it)) |
 | Maintain | open issues by severity, patch age | incidents, cost per change |
 
 - Flow measures: PR size, time to first review, open PRs per person.

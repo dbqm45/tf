@@ -8,7 +8,7 @@
   "offline": "2026-11-19"
  },
  "core-agent-security": {
-  "fingerprint": "0bf31a6736373720",
+  "fingerprint": "ea26d4645d693f57",
   "offline": "2026-11-20"
  },
  "core-async-delegation": {
@@ -24,7 +24,7 @@
   "offline": "2026-11-20"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "adfda264a9754104",
+  "fingerprint": "fa33e8edc54277f4",
   "offline": "2026-11-20"
  },
  "core-factory-update": {
@@ -32,7 +32,7 @@
   "offline": "2026-11-17"
  },
  "core-git-workflow": {
-  "fingerprint": "c7747f654342dc43",
+  "fingerprint": "05ccd52b43cd67df",
   "offline": "2026-11-20"
  },
  "core-grounding": {
@@ -44,7 +44,7 @@
   "offline": "2026-11-19"
  },
  "core-plan-interview": {
-  "fingerprint": "9106ffffee56f50b",
+  "fingerprint": "0b12f27f3bdb53ba",
   "offline": "2026-11-20"
  },
  "core-problem-routing": {
@@ -52,11 +52,11 @@
   "offline": "2026-11-18"
  },
  "core-project-record": {
-  "fingerprint": "1fa9662e312503ae",
+  "fingerprint": "43bc9ed7f9fc49dd",
   "offline": "2026-11-20"
  },
  "core-semver": {
-  "fingerprint": "cd3ee57e417fbc5e",
+  "fingerprint": "825b2f515acd2b4e",
   "offline": "2026-11-20"
  },
  "core-skill-authoring": {

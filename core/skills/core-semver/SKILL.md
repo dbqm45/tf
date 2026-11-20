@@ -74,7 +74,7 @@ Script (run it, do not read it): `python3 .claude/skills/core-semver/scripts/sem
 
 ## Edge cases
 - **Monorepo:** each published package has its own version and tags (`pkg@1.2.0` or per-path `next --path`).
-- **URL version** (`/v1/…`) of an HTTP API is a separate decision (be-api-design); `/v2` normally comes with a major.
+- **URL version** (`/v1/…`) of an HTTP API is a separate decision (be-api-design (pack-it)); `/v2` normally comes with a major.
 - **Container images:** the full `1.4.2` tag is immutable; moving tags (`1`, `1.4`, `latest`) only move forward
   within compatible versions.
 - **Our dependencies:** this skill is about what we release; raising the project's dependencies is core-stack-sync.

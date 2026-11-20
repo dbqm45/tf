@@ -40,7 +40,7 @@ no change on the user's side → major. New compatible capability → minor. Com
 | new value in a response enum | major, unless the contract says clients must tolerate unknown values (then minor) |
 | changed rate limit with no contract change | patch, announced in advance |
 
-The `/v1` → `/v2` path segment is a separate choice (be-api-design); a new path version normally accompanies a major.
+The `/v1` → `/v2` path segment is a separate choice (be-api-design (pack-it)); a new path version normally accompanies a major.
 
 ## 4. CLI
 | Change | Bump |

@@ -101,7 +101,7 @@ Details: `references/agent-prs.md`.
   4. `REJECTED` or a missing/invalid result → red status; a human can bypass with the label `ai-review-override`.
   Fork PRs are skipped (no secrets for them). How the gate works and what breaks it: `references/ai-review-in-ci.md`.
 - Tune monthly: check how many findings were right, cap trivia, exclude generated and CI-covered files. Security-relevant
-  changes (auth, IaC, CI) → `security-reviewer` before merge. Review against the plan with the human → qa-change-review.
+  changes (auth, IaC, CI) → `security-reviewer` before merge. Review against the plan with the human → qa-change-review (pack-it).
 
 ## Merging, stacks, conflicts
 - One strategy per repository, enforced in its settings: squash (small PRs, clean history), rebase (linear history keeping

@@ -176,7 +176,7 @@ Answer outline:
 ## §8 Code sent to the model vendor
 - Check the data terms of the service tier in use: consumer plans may use chats for training unless switched off;
   API and business tiers usually do not by default. Terms change — cite the page and the date you read it.
-- Storage region and jurisdiction are a decision of the human and compliance (arch-privacy-compliance), not the agent.
+- Storage region and jurisdiction are a decision of the human and compliance (arch-privacy-compliance (pack-it)), not the agent.
 
 ## Sources
 - code.claude.com: "Configure permissions", "Permission modes", "Settings", "Sandboxing", "Checkpointing", "Hooks"
