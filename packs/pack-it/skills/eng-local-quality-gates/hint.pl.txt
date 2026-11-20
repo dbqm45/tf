@@ -1,0 +1,89 @@
+head: Użyj, gdy lint, typy lub testy mają działać na maszynie programisty — hook agenta po edycji, pre-commit, pre-push — żeby błędy wychodziły w sekundy, a nie w CI. Użyj, gdy sprawdzenia formatu, lintera, typów i testów mają działać lokalnie warstwami — hook agenta po każdej edycji pliku (PostToolUse w Claude Code z gotowym szablonem sterowanym konfiguracją JSON), pre-commit na plikach w indeksie, pre-push z szerszymi testami, CI z pełnym zestawem — oraz gdy ustalasz, jak agent reaguje na nieprzechodzący hook (trywialne błędy od razu, stop po 1–2 próbach przy logice, nigdy obejście). Narzędzia: Husky, lint-staged, Lefthook, framework pre-commit, vitest related, jest --findRelatedTests, pytest-testmon. Nie do pipeline’ów CI (ops-ci-cd), gałęzi, commitów i PR (core-git-workflow), uprawnień agenta (core-agent-security) ani wyboru zestawów regresji (qa-regression).
+# Lokalne bramki jakości — błędy w sekundy, nie po CI
+
+Sprawdzenia uruchamiane samoczynnie na maszynie programisty są niezależne od tego, co model pamięta (przetrwają kompakcję
+kontekstu), ani od dyscypliny człowieka. Każda warstwa ma budżet czasu; sprawdzenie, które się nie mieści, idzie warstwę
+wyżej. **Lokalne warstwy nigdy nie zastępują CI** — CI nadal uruchamia pełny zestaw.
+
+## Warstwy
+| Warstwa | Co działa | Budżet (reguła kciuka) | Po co tam |
+|---|---|---|---|
+| po edycji (hook agenta) | format/lint jednego pliku; testy powiązane **tylko dla obszarów ryzyka** | sekundy | jedyna warstwa, która mówi agentowi w trakcie pracy |
+| pre-commit | lint/format plików w indeksie (staged), typy, ewentualnie testy powiązane | ~10–20 s | łapie też ręczne edycje |
+| pre-push | pełne typy, zestaw jednostkowy lub szerszy zestaw testów | minuty | ostatni przystanek, zanim kod trafi do innych |
+| CI | integracja, pełne E2E, skany, build, kompletny zestaw | wg potrzeb | źródło prawdy dla merge |
+
+Zacznij od jednego hooka po edycji i jednej bramki commita; dokładaj na podstawie obserwowanych wycieków. Bramki wynikają
+ze strategii testów projektu (qa-test-design, „Quality gates” w `docs/project/05-plan/test-strategy.md`), każda z warstwą
+i fazą, od której obowiązuje.
+
+## Procedura
+1. **Inwentaryzacja tylko do odczytu:** polecenia w `package.json` / `pyproject.toml` / `Makefile`; istniejące `.husky/`,
+   `lefthook.yml`, `.pre-commit-config.yaml`; hooki w `.claude/settings.json`; strategia testów. Działające narzędzie zostaje.
+2. **Umieść każde sprawdzenie** w najtańszej warstwie, w której budżecie się mieści.
+3. **Hook po edycji** z szablonu, z globami ryzyka (np. `src/billing/**`), nie całe `src/`.
+4. **Hooki gita** narzędziem pasującym do repo: `references/git-hooks.md`.
+5. **Przetestuj bramki** celowymi błędami: edycja z nieużywanym importem → hook odpala → błąd wraca do agenta; plik z błędem
+   w indeksie → commit odrzucony; czerwony test → push odrzucony.
+6. **Zapisz** tabelę bramka → warstwa → faza i polecenia w CLAUDE.md.
+
+Zmiana `.claude/settings.json` lub plików hooków **tylko na prośbę człowieka**; w przeciwnym razie dajesz fragment do wklejenia.
+
+## Hook po edycji (Claude Code)
+Model: zdarzenie → filtr (matcher narzędzia, wzorzec ścieżki) → akcja (polecenie) → sygnał (kod wyjścia i wyjście
+wracające do agenta). Hook, którego wynik nie dociera do agenta, niczego go nie uczy.
+
+Kody wyjścia hooka: **0** — OK (JSON na stdout może nieść `hookSpecificOutput.additionalContext` lub `systemMessage`);
+**2** — błąd blokujący, stderr trafia do modelu; inny kod — błąd nieblokujący, model go nie widzi.
+
+Ustawienie z szablonu:
+1. Skopiuj `templates/post_edit_checks.py` do `.claude/hooks/post_edit_checks.py`.
+2. Napisz `.claude/quality-gates.json` na wzór `templates/quality-gates.example.json`: `max_lines` i `checks[]`
+   (`name`, `glob`, `cmd`, `timeout`, opcjonalnie `env`).
+3. Zarejestruj w `.claude/settings.json` pod `PostToolUse`, matcher `Edit|Write`, typ `command`, polecenie `python3`,
+   argument `${CLAUDE_PROJECT_DIR}/.claude/hooks/post_edit_checks.py`, `timeout: 60`.
+4. Sprawdź konfigurację bez uruchamiania: `--dry-run <plik> --json`.
+
+Co robi skrypt:
+- czyta `tool_input.file_path` z JSON na stdin; działa dla Write, Edit i MultiEdit; każda edycja to osobne uruchomienie;
+- brak konfiguracji lub pasującego globu → hook kończy bez działania;
+- nieudane sprawdzenie → kod 2 i ostatnie `max_lines` linii na stderr;
+- polecenia bez powłoki; `{file}` to ścieżka względna edytowanego pliku jako **jeden argument** — nazwa ze spacją jest bezpieczna;
+- przekroczony `timeout`, brak programu, zła konfiguracja → kod 0 z komunikatem: hook nie blokuje z własnej winy;
+- całość kończy się po `CLAUDE_QG_DEADLINE` sekundach (domyślnie 50) — `timeout` hooka w ustawieniach wyżej (np. 60);
+  `CLAUDE_QUALITY_GATES=off` wyłącza;
+- `--dry-run <plik> [--json]` pokazuje sprawdzenia dla pliku, niczego nie uruchamia; kody 0 OK, 2 nieudane sprawdzenie, 1 zła konfiguracja;
+- Python 3.9+, tylko biblioteka standardowa, bez sieci, UTF-8 na strumieniach.
+
+Testy powiązane (sprawdzone 2026-10-10): Vitest 5 `vitest related <plik> --run` (podpolecenie; brak powiązanych → kod 0;
+ze zmienną środowiska agenta, np. `AI_AGENT`, zwięzły reporter i bez trybu watch); Jest 30 `jest --findRelatedTests <plik>`;
+pytest nie ma wbudowanego odpowiednika — wtyczka `pytest-testmon` (`pytest --testmon`, dane w `.testmondata`).
+Tylko dla globów ryzyka, wyjście przycięte do końcówki.
+
+## Agent i nieprzechodzący hook
+- **Trywialne** błędy (format, import, typ, nieużywana zmienna) → popraw od razu.
+- **Test logiki** nadal czerwony po **1–2 próbach** → przestań zmieniać kod; znajdź przyczynę (eng-debugging) albo zapytaj
+  człowieka. Nigdy nie dopasowuj kodu na ślepo do zielonego i nie osłabiaj testu (tdd_guard, qa-spec-first-testing).
+- Nigdy nie obchodź bramek gita: bez `--no-verify`, `HUSKY=0`, `LEFTHOOK=0`. Trwałe wyłączenie to decyzja człowieka
+  zapisana w strategii testów.
+- Hook, który regularnie przekracza czas (sprawdzenie 90 s), jest w złej warstwie: zawęź go do pliku albo przenieś
+  wyżej zamiast w nieskończoność zwiększać timeout.
+
+## Inne narzędzia agentowe
+Cursor, Codex, Windsurf i Copilot mają hooki lub reguły w tym samym modelu zdarzenie → filtr → polecenie, ale z innymi
+plikami, nazwami zdarzeń i polami wejścia; niektóre tylko blokują. Sprawdź aktualną dokumentację, oznacz szczegóły jako
+[unverified] do czasu testu i wykonaj test celowym błędem z kroku 5.
+
+## Przykład
+Serwis FastAPI, ruff + mypy + pytest, płatności w `app/payments/` jako obszar ryzyka nr 1, CI trwa 25 minut:
+`ruff check --fix {file}` po edycji; `pytest --testmon` dla `app/payments/**` po edycji od fazy stabilnych testów
+płatności; ruff + `mypy app` przed commitem (framework pre-commit); `pytest -q` przed pushem (`stages: [pre-push]`);
+integracja, E2E, `pip-audit`, build obrazu w CI bez zmian. Test: nieużywany import od agenta → kod 2 → agent usuwa go;
+ten sam błąd ręcznie → hook pre-commit odrzuca commit; celowo czerwony test → push odrzucony.
+
+## Lista kontrolna
+- [ ] każda bramka ma warstwę i fazę; sprawdzenia po edycji trwają sekundy
+- [ ] porażka dociera do agenta (kod 2, stderr); błędy samego hooka nie blokują
+- [ ] ustawienia zmieniane tylko za zgodą człowieka
+- [ ] bramki przetestowane celowymi błędami (edycja, commit, push)
+- [ ] bez flag obejścia; CI nadal uruchamia pełny zestaw
