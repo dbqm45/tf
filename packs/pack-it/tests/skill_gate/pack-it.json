@@ -460,8 +460,8 @@
   "offline": "2026-11-18"
  },
  "qa-change-review": {
-  "fingerprint": "1542cdd5aa7087f5",
-  "offline": "2026-11-18"
+  "fingerprint": "5935e1104e959bc0",
+  "offline": "2026-11-20"
  },
  "qa-exploratory-manual": {
   "fingerprint": "651289b865aeb656",
@@ -484,12 +484,12 @@
   "offline": "2026-11-18"
  },
  "qa-spec-first-testing": {
-  "fingerprint": "babb7049f1d897dc",
-  "offline": "2026-11-18"
+  "fingerprint": "a95e592104acc8e9",
+  "offline": "2026-11-20"
  },
  "qa-test-design": {
-  "fingerprint": "4dcc53348cfe38e0",
-  "offline": "2026-11-19"
+  "fingerprint": "747ad108926ab262",
+  "offline": "2026-11-20"
  },
  "sec-appsec-devsecops": {
   "fingerprint": "00beffb178f12e1d",
@@ -552,8 +552,8 @@
   "offline": "2026-11-18"
  },
  "tool-playwright": {
-  "fingerprint": "bef3bc75ee3abc42",
-  "offline": "2026-11-18"
+  "fingerprint": "8fc28cf5964ac8fb",
+  "offline": "2026-11-20"
  },
  "tool-pytest": {
   "fingerprint": "69f9b52a2622440d",
@@ -568,7 +568,7 @@
   "offline": "2026-11-18"
  },
  "tool-vitest": {
-  "fingerprint": "359a04fec6c79bb7",
-  "offline": "2026-11-18"
+  "fingerprint": "fc77378d0294aaea",
+  "offline": "2026-11-20"
  }
 }
