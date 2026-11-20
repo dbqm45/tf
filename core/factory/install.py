@@ -708,6 +708,73 @@ def rebuild(dst_root: Path, dry: bool) -> str:
             + r.stdout[-1500:] + r.stderr[-500:])
 
 
+def drop_rules_block(text: str) -> str:
+    """CLAUDE.md / CLAUDE.local.md without the factory's block between the markers (the rest is yours and stays)."""
+    start, stop = text.index(MARK_BEGIN), text.index(MARK_END) + len(MARK_END)
+    head, tail = text[:start].rstrip(), text[stop:].lstrip("\n")
+    return (head + ("\n\n" + tail if tail.strip() else "\n")) if head else tail
+
+
+def strip_factory_settings(cur: dict, factory: dict, current: dict, overrides: set[str]) -> dict:
+    """Project settings without what the factory put there in the old layout: its hooks (commands running
+    .claude/hooks/<factory hook>), env values, status line, permission entries and managed skillOverrides.
+    Your entries stay; `factory` is what the manifest recorded, `current` what this version would add."""
+    out = json.loads(json.dumps(cur))
+    hook_files: set[str] = set()
+    for src in (factory, current):
+        for groups in (src.get("hooks") or {}).values():
+            for g in groups:
+                for h in g.get("hooks") or []:
+                    for part in [h.get("command", ""), *h.get("args", [])]:
+                        if ".claude/hooks/" in part:
+                            hook_files.add(part.split(".claude/hooks/", 1)[1].split()[0].strip("\"'"))
+
+    def factory_hook(h: dict) -> bool:
+        text = " ".join([h.get("command", ""), *h.get("args", [])])
+        return any(f".claude/hooks/{name}" in text for name in hook_files)
+
+    for event, groups in list((out.get("hooks") or {}).items()):
+        kept = []
+        for g in groups:
+            hs = [h for h in g.get("hooks") or [] if not factory_hook(h)]
+            if hs:
+                kept.append({**g, "hooks": hs})
+        if kept:
+            out["hooks"][event] = kept
+        else:
+            out["hooks"].pop(event)
+    if "hooks" in out and not out["hooks"]:
+        out.pop("hooks")
+    for src in (factory, current):
+        for k, v in (src.get("env") or {}).items():
+            if (out.get("env") or {}).get(k) == v:
+                out["env"].pop(k)
+        sl = src.get("statusLine")
+        if (sl and out.get("statusLine") == sl) or ".claude/hooks/statusline.py" in json.dumps(out.get("statusLine") or ""):
+            out.pop("statusLine", None)
+        for kind in ("allow", "ask", "deny"):
+            drop = set((src.get("permissions") or {}).get(kind) or [])
+            if drop and kind in (out.get("permissions") or {}):
+                out["permissions"][kind] = [x for x in out["permissions"][kind] if x not in drop]
+                if not out["permissions"][kind]:
+                    out["permissions"].pop(kind)
+        for k, v in src.items():
+            if k not in ("hooks", "env", "statusLine", "permissions", "$schema") and out.get(k) == v:
+                out.pop(k)
+    if "env" in out and not out["env"]:
+        out.pop("env")
+    if "permissions" in out and not out["permissions"]:
+        out.pop("permissions")
+    if overrides and isinstance(out.get("skillOverrides"), dict):
+        for name in overrides:
+            out["skillOverrides"].pop(name, None)
+        if not out["skillOverrides"]:
+            out.pop("skillOverrides")
+    if set(out) <= {"$schema"}:
+        out = {}
+    return out
+
+
 def plugin_files(plan: "Plan", dst_root: Path, settings: dict, py: str, version: str) -> None:
     """The plugin's manifest, its hook registration (with the SessionStart hook that gives the factory rules) and the
     factory session's settings (env, status line, permissions) — `tf code` passes the latter with --settings."""
@@ -720,6 +787,9 @@ def plugin_files(plan: "Plan", dst_root: Path, settings: dict, py: str, version:
     meta = {"name": "tf", "version": version, "description": "Team factory: skills, agents, hooks and rules of the "
             "/tf loop. Loaded only by a factory session (tf code)."}
     plan.copy(None, PLUGIN + "/.claude-plugin/plugin.json", (json.dumps(meta, indent=2) + "\n").encode("utf-8"))
+    market = {"name": "tf-project", "owner": {"name": "team factory"},       # .tf/ as a directory marketplace: the cloud
+              "plugins": [{"name": "tf", "source": "./plugin", "description": meta["description"]}]}   # (tf cloud-setup)
+    plan.copy(None, ".tf/.claude-plugin/marketplace.json", (json.dumps(market, indent=2) + "\n").encode("utf-8"))
     plan.copy(None, PLUGIN + "/hooks/hooks.json",
               (json.dumps({"hooks": hooks}, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     session = {k: v for k, v in settings.items() if k != "hooks"}
@@ -902,11 +972,14 @@ def _main(argv: list[str], tmp: Path) -> int:
         print(f"ℹ Migrating an install of {manifest.get('source') or 'an older factory'} "
               f"(version {manifest.get('version')}) — packs: {', '.join(packs) or 'none'}.")
 
-    layout = opts.get("layout") or (manifest or {}).get("layout") or "default"
+    # factory mode is the default (plan 2026-11-20, T5): a new install and an update of an older install (a manifest
+    # without `layout`) go to the plugin layout; `--layout default` keeps the factory in .claude/ as before
+    layout = opts.get("layout") or (manifest or {}).get("layout") or "plugin"
     if layout not in LAYOUTS:
         print(f"✗ Unknown --layout {layout!r}. Available: {', '.join(LAYOUTS)}")
         return 2
     plugin = layout == "plugin"
+    migrating = plugin and update and (manifest or {}).get("layout") != "plugin"   # from the old layout to the plugin
 
     def place(f: Path, rel: str) -> None:
         """A factory file at its path; in the plugin layout a skill goes to the plugin in full, and its scripts and
@@ -948,6 +1021,10 @@ def _main(argv: list[str], tmp: Path) -> int:
     plan.copy(None, ".claude/cleanroom.json", compose_cleanroom(packs, available))
     if update:
         plan.remove_obsolete()
+    if migrating and (dst_root / ".claude" / "agents" / "_generated").is_dir() and not dry:   # rebuilt in .tf/plugin/agents
+        target = dst_root / BACKUP_DIR / stamp / ".claude" / "agents" / "_generated"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(dst_root / ".claude" / "agents" / "_generated"), target)
 
     # settings: private → settings.local.json, team → settings.json (always merged with what is already there)
     src_set = apply_python(compose_settings(packs, available), py)
@@ -956,6 +1033,18 @@ def _main(argv: list[str], tmp: Path) -> int:
     set_p = dst_root / (".claude/settings.json" if shared else ".claude/settings.local.json")
     if plugin:     # hooks → the plugin; env, status line and permissions → the factory session's settings file
         plugin_files(plan, dst_root, src_set, py, version_of(SRC))
+        if migrating and set_p.exists():   # the old layout put the factory's entries into the project settings
+            try:
+                cur_raw = json.loads(set_p.read_text(encoding="utf-8"))
+            except ValueError:
+                cur_raw = None
+            if isinstance(cur_raw, dict):
+                factory = (manifest or {}).get("settings") or src_set
+                cleaned = strip_factory_settings(cur_raw, factory, src_set,
+                                                 set((manifest or {}).get("skill_overrides") or {}))
+                if cleaned != cur_raw:
+                    plan.write(set_p, json.dumps(cleaned, ensure_ascii=False, indent=2) + "\n",
+                               f"{set_p.relative_to(dst_root)} (factory entries moved to .tf/plugin/)")
     else:
         cur_raw = json.loads(set_p.read_text(encoding="utf-8")) if set_p.exists() else {}
         cur = load_migrations().settings_v19(cur_raw)   # 19.0.0: English hook event names, before the merge (no duplicate)
@@ -968,10 +1057,19 @@ def _main(argv: list[str], tmp: Path) -> int:
     md_p = dst_root / ("CLAUDE.md" if shared else "CLAUDE.local.md")
     md_old = md_p.read_text(encoding="utf-8") if md_p.exists() else ""
     md_base = load_migrations().claude_md_v19(drop_legacy_blocks(md_old, LEGACY_MARKS))   # 19.0.0: Polish subsections
-    section = keep_commands(claude_md_section(py, dst_root, cfg), md_base)
+    rules_p = dst_root / PLUGIN / "RULES.md"
+    if plugin and rules_p.is_file():       # the commands entered by tf onboard or a human live in RULES.md now
+        section = keep_commands(claude_md_section(py, dst_root, cfg),
+                                f"{MARK_BEGIN}\n{rules_p.read_text(encoding='utf-8')}{MARK_END}\n")
+    else:                                  # (on the move to the plugin layout: from the old block in CLAUDE.md)
+        section = keep_commands(claude_md_section(py, dst_root, cfg), md_base)
     if plugin:     # the rules reach a factory session through the plugin's SessionStart hook (factory_rules.py)
         body = section.replace(MARK_BEGIN + "\n", "").replace(MARK_END + "\n", "")
         plan.copy(None, PLUGIN + "/RULES.md", body.encode("utf-8"))
+        for old_md in (dst_root / "CLAUDE.md", dst_root / "CLAUDE.local.md"):   # the old layout's block of rules
+            text = old_md.read_text(encoding="utf-8") if old_md.exists() else ""
+            if MARK_BEGIN in text and MARK_END in text:
+                plan.write(old_md, drop_rules_block(text), f"{old_md.name} (factory section moved to .tf/plugin/RULES.md)")
     else:
         plan.write(md_p, with_block(md_base, MARK_BEGIN, MARK_END, section, update or md_base != md_old),
                    f"{md_p.name} (factory section)")
@@ -1031,6 +1129,11 @@ def _main(argv: list[str], tmp: Path) -> int:
     print(f"{head} in {dst_root} — version {ver}, {mode_txt} mode: new files {len(plan.created)}, "
           f"updated {len(plan.updated)}, merged {len(plan.merged)}, removed {len(plan.removed)}")
     print(f"  packs: {', '.join(packs) or '— (core only)'}")
+    if plugin and (migrating or not update) and not dry:   # once, after the real write (not in the update's preview)
+        print("ℹ Factory mode: the factory lives in .tf/plugin/ — start it with `tf code` (e.g. `tf code --continue`); "
+              "a plain `claude` in this project loads nothing from the factory. "
+              + ("Back to the old layout: python3 .tf/factory/update.py --rollback, or install with --layout default."
+                 if migrating else "The old layout: install with --layout default."))
     for m in plan.merged:
         print(f"  ~ {m}")
     if not dry and update:     # self-correction of the project's own files after renames in the core (.tf/factory/migrations.py)

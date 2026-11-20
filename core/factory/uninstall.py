@@ -42,7 +42,8 @@ MARK_BEGIN, MARK_END = "<!-- team-factory:begin -->", "<!-- team-factory:end -->
 GI_BEGIN, GI_END = "# team-factory:begin (managed by factory/install.py)", "# team-factory:end"
 LEGACY = [("<!-- claude-team-factory:begin -->", "<!-- claude-team-factory:end -->"),
           ("<!-- ev-team-factory:begin -->", "<!-- ev-team-factory:end -->")]
-GENERATED_DIRS = [".tf/factory", ".claude/agents/_generated", ".claude/tests", ".tf/backup", ".claude/scratch"]
+GENERATED_DIRS = [".tf/factory", ".claude/agents/_generated", ".claude/tests", ".tf/backup", ".claude/scratch",
+                  ".tf/plugin", ".tf/.claude-plugin"]   # factory mode: the plugin and its directory marketplace
 GENERATED_FILES = [".claude/catalog.md", ".claude/cleanroom.json", ".claude/JEV.md", MANIFEST, LOCK, SETTINGS_REL,
                    ".claude/factory-profile.json", ".claude/skill-gate.json"]
 FORCE_DIRS = [".tf", ".claude/agent-memory", ".claude/agent-memory-local"]

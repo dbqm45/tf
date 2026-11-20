@@ -118,11 +118,11 @@ def main() -> int:
               and json.loads((p / ".claude" / "factory-manifest.json").read_text(encoding="utf-8")).get("layout") == "plugin",
               f"PL-13: aktualizacja bez opcji zostaje w układzie wtyczki: {r.returncode} {r.stdout[-400:]}")
 
-        # domyślny układ bez zmian
+        # stary układ na żądanie (od T5 domyślny jest układ wtyczki — tests/test_plugin_migration.py)
         q = project(base, "default")
-        r = install(q)
+        r = install(q, "--layout", "default")
         check(r.returncode == 0 and (q / ".claude" / "skills" / "tf" / "SKILL.md").is_file() and not (q / ".tf" / "plugin").exists(),
-              f"PL-14: bez opcji układ jak dotąd: {r.returncode} {r.stdout[-300:]}")
+              f"PL-14: --layout default daje stary układ: {r.returncode} {r.stdout[-300:]}")
 
     for f in fails:
         print(f"✗ {f}")

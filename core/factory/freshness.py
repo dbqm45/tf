@@ -49,6 +49,12 @@ DEFAULT_POLICY = {
 }
 
 
+
+def skill_md(root: Path, name: str) -> Path:
+    """SKILL.md of a skill: the factory plugin (factory mode) first, then .claude/skills."""
+    p = root / ".tf" / "plugin" / "skills" / name / "SKILL.md"
+    return p if p.is_file() else root / ".claude" / "skills" / name / "SKILL.md"
+
 def load_policy(root: Path = ROOT) -> dict:
     pol = {k: (dict(v) if isinstance(v, dict) else v) for k, v in DEFAULT_POLICY.items()}
     try:
@@ -105,7 +111,7 @@ def unverified(skill_dir: Path) -> int:
 
 def scan(root: Path, today: dt.date) -> list[dict]:
     rows = []
-    for md in sorted((root / ".claude" / "skills").glob("*/SKILL.md")):
+    for md in sorted([*(root / ".tf" / "plugin" / "skills").glob("*/SKILL.md"), *(root / ".claude" / "skills").glob("*/SKILL.md")]):
         raw = review_date(md.read_text(encoding="utf-8"))
         row = {"skill": md.parent.name, "due": raw, "unverified": unverified(md.parent)}
         if raw is None:
@@ -181,12 +187,12 @@ def main(argv: list[str]) -> int:
         if not reviewed:
             print("✗ Give the skills after --reviewed.")
             return 2
-        missing = [n for n in reviewed if not (root / ".claude" / "skills" / n / "SKILL.md").is_file()]
+        missing = [n for n in reviewed if not skill_md(root, n).is_file()]
         if missing:
             print(f"✗ Unknown skills: {', '.join(missing)}")
             return 2
         for n in reviewed:
-            due = mark_reviewed(root / ".claude" / "skills" / n / "SKILL.md", day, interval(n, policy))
+            due = mark_reviewed(skill_md(root, n), day, interval(n, policy))
             print(f"✓ {n}: reviewed {day.isoformat()}, next review date {due} ({interval(n, policy)} months)")
         return 0
 

@@ -31,7 +31,7 @@ def long_reference(toc: str | None) -> str:
 
 
 def install(src: Path, proj: Path, *args: str) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes", *args],
+    return subprocess.run([sys.executable, str(src / "core" / "factory" / "install.py"), str(proj), "--yes", "--layout", "default", *args],
                           capture_output=True, text=True, timeout=300)
 
 

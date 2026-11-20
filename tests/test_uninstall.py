@@ -16,7 +16,7 @@ INSTALL = ROOT / "core" / "factory" / "install.py"
 
 
 def install(app: Path, *extra: str) -> subprocess.CompletedProcess:
-    return subprocess.run([sys.executable, str(INSTALL), str(app), "--yes", "--packs", "none", *extra],
+    return subprocess.run([sys.executable, str(INSTALL), str(app), "--yes", "--layout", "default", "--packs", "none", *extra],
                           capture_output=True, text=True, timeout=300)
 
 
@@ -120,7 +120,7 @@ def main() -> int:
         check(zips and ".claude/factory-manifest.json" in names and "CLAUDE.local.md" in names
               and ".claude/settings.local.json" in names and str(zips[-1]) in r.stdout,
               f"UN-7: a backup of removed and changed files, the path in the message: {zips} {sorted(names)[:5]}")
-        r = uninstall(app, env, "--yes") if (app / ".tf/factory/uninstall.py").exists() else None
+        r = uninstall(app, env, "--yes", "--layout", "default") if (app / ".tf/factory/uninstall.py").exists() else None
         check(r is None, "UN-8: after uninstall the factory engine is gone")
 
         # --force: own skills too, .tf/ entirely; docs/project and the code stay

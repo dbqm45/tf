@@ -7,7 +7,7 @@ title: Polish editorial
 description: Polish language editing — correctness and style checks, the polish-editor agent and the Stefan persona. For anyone who writes in Polish.
 content_language: en
 requires:
-  core: ">=3.0.0 <21.0.0"
+  core: ">=3.0.0 <22.0.0"
 optional_packs: [pack-docs]
 
 facets:

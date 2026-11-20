@@ -6,10 +6,10 @@ One endpoint, `POST /tools/{id}/loans`, over the tool-lending domain from
 `.claude/skills/lang-csharp/references/domain-building-blocks.md` (`LendableTool`, `LendResult`, `ToolId`,
 `MemberId`). The handler maps the domain result to HTTP; the domain knows nothing about HTTP.
 
-**Verification status:** written 2026-11-20 in an environment without a .NET SDK — this version has **not been
-compiled or run** [unverified]. Check it with `dotnet test` on .NET 10 before relying on it; the behaviour notes in
-`SKILL.md` (problem+json from `TypedResults.Problem`, `Program` visible to the test on .NET 10) were checked on an
-earlier example on 2026-10-23.
+**Verification status:** checked 2026-11-20 with SDK 10.0.115 (runtime 10.0.15, Ubuntu 24.04 packages):
+`dotnet test` passes all 5 integration tests, the build has 0 warnings with `TreatWarningsAsErrors`, and
+`dotnet format --verify-no-changes` is clean. Packages: `Microsoft.AspNetCore.OpenApi` and
+`Microsoft.AspNetCore.Mvc.Testing` 10.0.13.
 
 What it shows:
 - `Results<Ok<LoanResponse>, NotFound, ProblemHttpResult>` as the handler's return type: the set of responses is

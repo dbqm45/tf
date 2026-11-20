@@ -42,9 +42,10 @@
 - Do not change `.claude/settings.json`, `.claude/hooks/` or `.tf/factory/` without the user's request.
 - The factory's files in the project are like `node_modules` (the factory's skills and agents, hooks, the `.tf/factory/` engine): an update
   overwrites them, so you propose a factory change in the factory repo, not in the project. The project's own skills and personas are yours.
-- The factory's hooks (TDD, path protection, logs, session start) work only in a session started in this
-  repository's directory. A cloud session with several repositories or one started from a parent directory does not load them (no start
-  messages from the hooks) — then run the tests and gates by hand and tell the human.
+- The factory's hooks (TDD, path protection, logs, session start) work only in a factory session (`tf code`, or a cloud
+  environment set up with `tf cloud-setup`) started in this repository's directory. A plain `claude`, a cloud session with several
+  repositories or one started from a parent directory does not load them (no start messages from the hooks) — then run the tests
+  and gates by hand and tell the human.
 - You add or change a skill by core-skill-authoring (evaluation scenarios first); before handing it in
   `python3 .tf/factory/skill_gate.py <skill>`. You run a model evaluation (paid) only with the human's consent.
   You do not add a skill from a foreign source without `python3 .tf/factory/skill_audit.py <directory>`, reading it and the human's consent

@@ -407,6 +407,18 @@ def rollback(root: Path) -> tuple[int, str]:
     for rel in meta.get("files", []):
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src / rel, root / rel)
+    if current.get("layout") == "plugin" and man_p.is_file():
+        try:                               # back from the factory mode: the old layout stays on the next update
+            restored = json.loads(man_p.read_text(encoding="utf-8"))
+            if "layout" not in restored:
+                restored["layout"] = "default"
+                man_p.write_text(json.dumps(restored, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        except (OSError, ValueError):
+            pass
+    build = root / ".tf" / "factory" / "build.py"
+    if build.is_file():                    # agents are generated, not copied: rebuild them for the restored layout
+        subprocess.run([sys.executable, str(build)], cwd=root, capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", timeout=300)
     msg = (f"✓ Restored version {meta.get('version')} (was {current.get('version', '?')}) from "
            f"{src.relative_to(root).as_posix()}. Restart Claude Code.")
     if left:

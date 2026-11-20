@@ -6,7 +6,8 @@ report in plain language and turns on the quality gate.
   tf onboard                 # proposal and a question for consent (without a terminal: the proposal only)
   tf onboard --yes           # write without asking: verify.sh, .claude/quality-gate.json, .tf/reports/readiness.md,
                              # the package manager's 7-day version cooldown (.npmrc, .yarnrc.yml, pyproject.toml)
-                             # and the commands in the "Commands" section of the instructions file (CLAUDE.md / CLAUDE.local.md)
+                             # and the commands in the "Commands" section of the instructions file (CLAUDE.md / CLAUDE.local.md,
+                             # in the factory mode .tf/plugin/RULES.md)
   tf onboard --yes --verify  # after writing, runs verification once and says whether it passes
   tf onboard --dry-run       # proposal only, writes nothing
   tf onboard --json          # detection result for scripts, writes nothing
@@ -323,6 +324,13 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
         if new != old:
             files[root / name] = new
             say.append(f"• {name} — the project's commands in the \"Commands\" section.")
+    rules = root / ".tf" / "plugin" / "RULES.md"   # factory mode: the factory's rules (with its "Commands") live in the plugin
+    old = _read(rules)
+    if old and line:
+        new = with_commands(f"{MARK_BEGIN}\n{old}{MARK_END}", line)[len(MARK_BEGIN) + 1:-len(MARK_END)]
+        if new != old:
+            files[rules] = new
+            say.append("• .tf/plugin/RULES.md — the project's commands in the \"Commands\" section of the factory rules.")
     card = root / ".tf" / "config" / "operations.json"
     try:                                  # the card may have been created earlier without flags (e.g. a tracker write by the /tf loop)
         known = json.loads(card.read_text(encoding="utf-8")) if card.exists() else {}
