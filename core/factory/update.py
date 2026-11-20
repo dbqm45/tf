@@ -417,7 +417,8 @@ def rollback(root: Path) -> tuple[int, str]:
             pass
     build = root / ".tf" / "factory" / "build.py"
     if build.is_file():                    # agents are generated, not copied: rebuild them for the restored layout
-        subprocess.run([sys.executable, str(build)], cwd=root, capture_output=True, text=True, timeout=300)
+        subprocess.run([sys.executable, str(build)], cwd=root, capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", timeout=300)
     msg = (f"✓ Restored version {meta.get('version')} (was {current.get('version', '?')}) from "
            f"{src.relative_to(root).as_posix()}. Restart Claude Code.")
     if left:

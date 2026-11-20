@@ -163,7 +163,7 @@ def main() -> int:
             p = Path(t) / "projekt"
             p.mkdir()
             (p / "pyproject.toml").write_text('[project]\nname = "x"\nrequires-python = ">=3.12"\n')
-            inst = [sys.executable, str(installer), str(p), "--yes", "--packs", "pack-it"]
+            inst = [sys.executable, str(installer), str(p), "--yes", "--packs", "pack-it", "--layout", "default"]   # visibility of skills in .claude/ (the old layout)
             r = subprocess.run(inst, capture_output=True, text=True)
             st = json.loads((p / ".claude" / "settings.local.json").read_text()) if r.returncode == 0 else {}
             ov = st.get("skillOverrides", {})
