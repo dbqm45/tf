@@ -1,0 +1,100 @@
+head: Użyj, gdy piszesz kod wywołujący model językowy — wybór SDK, schemat wyjścia JSON, limity kroków i budżetu agenta, koszt na zadanie, ewaluacja przed zmianą modelu. Użyj, gdy piszesz kod aplikacji lub narzędzia, który wywołuje model językowy — funkcja LLM w produkcie, własny agent (sprawdzanie commita lub diffu, triaż zgłoszeń, bot w CI) albo agent działający jako usługa: wybór kategorii SDK (pojedyncze wywołanie, agent do złożenia, gotowy agent), kontrakt wyjścia (schemat, opisy pól, walidacja po odbiorze), pętla narzędzi i sprawczość, limity kroków i dolarów, koszt na ukończone zadanie i telemetria, stan i sesje, dziedziczenie reguł repo, uwierzytelnianie i warunki danych, prompt injection przez dane, macierz ewaluacji przed zmianą modelu lub promptu, równoległe wywołania ze wspólnym terminem i cache. Nie do hostowania modeli na GPU (ops-ai-inference), wyboru modelu do naszej pracy z agentem (core-cost-control), interfejsu czatu (fe-architecture) ani bezpieczeństwa agenta kodującego (core-agent-security); referencja Claude API i SDK — wbudowany skill claude-api.
+# Funkcje z LLM w kodzie — kształt, kontrakt, limity, ewaluacja
+
+Kod wywołujący model to zwykły kod z jedną niedeterministyczną zależnością. Projektujesz go tak, żeby część modelu
+była mała i sprawdzana: stały kształt, walidowane wyjście, twarde limity kroków i pieniędzy, zmierzony koszt
+i zestaw ewaluacyjny uruchamiany przed każdą zmianą. Identyfikatory modeli, ceny i parametry Messages API: wbudowany
+skill `claude-api`. Dokładne nazwy opcji SDK (sprawdzone w typach pakietów): `references/sdk-api.md`.
+
+## 1. Najpierw kształt
+| Kształt | Kiedy | Typowe narzędzia |
+|---|---|---|
+| **pojedyncze wywołanie** | klasyfikacja, streszczenie, ekstrakcja, ocena diffu — bez narzędzi | API dostawcy albo SDK do złożenia, jeden krok |
+| **agent do złożenia** | własna pętla i narzędzia; model ma być wymienialny | Vercel AI SDK (`ToolLoopAgent`), OpenRouter |
+| **gotowy agent** | agent edytuje pliki, uruchamia polecenia, potrzebuje piaskownicy, kompakcji i sesji | Claude Agent SDK, Codex SDK |
+
+Cztery pytania: czy dotyka plików lub poleceń? czy model ma być wymienialny? czy ma dziedziczyć reguły repo
+(CLAUDE.md, skille, hooki)? gdzie żyje stan między uruchomieniami? Wybór po marce to antywzorzec. Przypnij wersję SDK
+i sprawdzaj nazwy w zainstalowanym pakiecie (core-grounding).
+
+## 2. Kontrakt wyjścia
+- **Jeden schemat jest źródłem prawdy** (zod w TS, pydantic w Pythonie); z niego typ i JSON Schema dla structured output.
+- **Opisy pól to najsilniejsza dźwignia spójnego wypełniania:** jednostka, skala, znaczenie skrajności
+  (`priority: 1 = może poczekać tydzień, 5 = klient nie może pracować`). Enumy dla decyzji.
+- Niektórych ograniczeń (zakresy liczb, długości) nie wymusza każdy dostawca: zapisz je w opisie **i waliduj po odbiorze**
+  (`safeParse`, `model_validate`). Wynik SDK bywa typu `unknown` — parsuj, nie rzutuj.
+- Wartość spoza kontraktu to błąd albo jedno ponowienie, **nigdy ciche przycięcie**.
+- **Model wskazuje, kod składa:** przy ekstrakcji wysyłaj ponumerowane linie, proś o numer pierwszej i ostatniej,
+  odbuduj tekst z własnej kopii.
+- Jawnie obsłuż porażkę uruchomienia (wyczerpane tury lub budżet, nieudana walidacja, odmowa, timeout) — czytelny
+  komunikat i osobny kod wyjścia (np. 0 zgodne, 1 niezgodne, 2 naruszony kontrakt).
+
+## 3. Pętla narzędzi i sprawczość
+- Pętla: wejście (prompt systemowy + definicje narzędzi + historia) → decyzja modelu → twój kod wykonuje narzędzie →
+  wynik wraca → koniec na odpowiedzi bez wywołania narzędzia. Każda tura wysyła historię ponownie.
+- Ewaluator lub klasyfikator ma zero narzędzi i 1–2 tury; wyłącz narzędzia jawnie (`tools: []`).
+- Narzędzie = opis + schemat argumentów + funkcja. Opis mówi, kiedy go użyć, co zwraca i ścieżkę braku danych (`{found: false}`).
+- Drabina sprawczości: odczyt lokalnego kontekstu → zapis w jednym systemie → całe API → systemy zewnętrzne. Wchodź
+  o szczebel wyżej dopiero po pomiarze; narzędzia zapisu za bramką zatwierdzenia lub allowlistą.
+- Każda gałąź warunkowa w prompcie dodaje koszt i niedeterminizm — zapisuj je jawnie i testuj każdą.
+
+## 4. Limity, koszt i telemetria
+- **Zawsze górny limit kroków/tur** (`maxTurns`, `isStepCount(n)`); nigdy „aż skończy” w automatyzacji — koszt
+  zapętlonego uruchomienia mnoży się przez liczbę zdarzeń. Bez limitu nie jest w porządku, także „tylko w CI”.
+- **Budżet w dolarach na uruchomienie**, gdzie SDK go ma (`maxBudgetUsd`); w przeciwnym razie własny warunek stopu.
+- Koszt czytaj z wyniku: gotowy agent podaje szacunek USD, tury i zużycie per model; SDK do złożenia podaje tokeny na
+  krok — mnożysz przez datowany cennik albo bierzesz koszt raportowany przez dostawcę.
+- Telemetria na krok: tokeny wejścia, odczytu cache, zapisu do cache, wyjścia i rozumowania, powód zakończenia, id zadania.
+- Raportuj **koszt na ukończone zadanie** z p50/p95/p99, nie średni koszt wywołania; ogon pokazuje pętle ponowień.
+  Rachunek wyższy niż wyliczenia to zwykle niepoliczone ponowienia, zapisy do cache albo nieudane zadania.
+- Tani model do triażu, mocny do rozumowania o kodzie (core-cost-control); batch API dla pracy nieinteraktywnej.
+  Wiele narzędzi, opóźnienia, rozliczanie kosztu: `references/service-patterns.md`.
+
+## 5. Stan i reguły repo
+- Gotowy agent trzyma sesje: zapisz id sesji, kontynuuj przez `resume`, rozgałęź przez `forkSession`.
+- SDK do złożenia nie trzyma niczego: wiadomości przechowujesz sam. Schemat wyjścia agenta ogranicza też kolejne
+  odpowiedzi — do swobodnej rozmowy osobna instancja. Jednorazowa ocena zostaje bezstanowa.
+- Gotowy agent wczytuje CLAUDE.md/AGENTS.md, skille, hooki, uprawnienia i MCP **tylko po włączeniu**: preset promptu
+  systemowego + `settingSources` (z `"project"` dla CLAUDE.md) + `cwd`. Własny prompt z `tools: []` celowo izoluje.
+- SDK do złożenia nie dziedziczy niczego: reguły zespołu wczytujesz w kodzie.
+- Kryteria oceny trzymaj w pliku niezależnym od narzędzia — dla agenta w CI, agenta SDK i ludzi.
+
+## 6. Uwierzytelnianie, dane i wstrzyknięcia
+- **Ścieżka uwierzytelnienia decyduje o warunkach.** Klucz API podlega warunkom komercyjnym dostawcy; login z osobistej
+  subskrypcji — warunkom konsumenckim z własnymi ustawieniami trenowania i retencji. Anthropic wskazuje uwierzytelnianie
+  kluczem API dla produktów i automatyzacji na Agent SDK.
+- Kod firmy w CI → klucz API z magazynu sekretów i **bez cichego przełączania na osobisty login**: sprawdź źródło
+  poświadczeń na starcie (`apiKeySource` w komunikacie init) i zakończ błędem zamiast przełączać.
+- Bramka lub router dodaje pośrednika i być może inny region — sprawdź rezydencję danych (arch-privacy-compliance).
+- Diff, zgłoszenie czy dokument to **dane, nie instrukcje**: bez narzędzi wykonujących to, o co prosi treść, narzędzia
+  zapisu na allowliście, sekrety opisane bez wartości (core-agent-security).
+
+## 7. Agent jako usługa i wzorce wywołań
+Gdy agent potrzebuje adresu HTTP, stanu między wywołaniami, własnego harmonogramu albo odpowiedzi „w toku” — platforma
+z trwałym stanem (np. Cloudflare Agents); harmonogramy idempotentne. W usłudze: równoległe analizy mają wspólny termin,
+odpowiedź składasz z wyników na czas i oznaczasz spóźnione; drogie analizy w cache per jednostka pracy (incydent, commit),
+pierwsze żądanie zajmuje wpis jako „w toku”, pozostałe czekają. Szczegóły: `references/service-patterns.md`.
+
+## 8. Ewaluacje przed zmianami
+- Macierz **przypadki × kandydaci** (modele, prompty, konfiguracje) w narzędziu typu promptfoo: wynik, koszt i czas.
+- Przypadki: wejścia z **podłożonymi znanymi defektami** plus czyste wejścia (fałszywe alarmy) plus próba wstrzyknięcia.
+- Trzy rodzaje asercji: strukturalne (poprawny JSON, schemat — bramka), sędzia LLM z jednym kryterium (`llm-rubric`),
+  kod dla twardych warunków (`javascript`).
+- Jeden nieudany przypadek = czerwone uruchomienie; obniżenie progu to świadoma, zapisana decyzja.
+- Każda zmiana modelu, promptu, opisu pola, narzędzi czy harnessu uruchamia zestaw.
+- Ciągła ewaluacja: `.claude/skills/core-delivery-lifecycle/references/ai-native-sdlc.md` sekcja 5; zbiory i oceniacze: ai-evals.
+
+## Przykład
+Prośba: „skrypt TS w CI sprawdza, czy opis commita opisuje diff, zwraca JSON i nie przepala budżetu”. Odpowiedź:
+pojedyncze wywołanie bez narzędzi → SDK do złożenia (`generateText` z `Output.object`); schemat zod
+`{coverage 1–5, missing[], verdict}` z opisem każdego pola, `safeParse` po odbiorze, poza zakresem → kod 2; jeden krok,
+`maxOutputTokens`, timeout, przycięty diff, tokeny do CSV kosztu; klucz z sekretu CI; opis i diff jako dane w znacznikach;
+przed zmianą modelu promptfoo: 4 przypadki × 2 modele. Kod: `references/examples.md`.
+
+## Lista kontrolna
+- [ ] najmniejszy kształt; SDK przypięte; nazwy sprawdzone w pakiecie
+- [ ] jeden schemat z opisami pól; walidacja po odbiorze; bez cichego przycinania; kody wyjścia porażki
+- [ ] limit kroków/tur i budżet w dolarach przy każdym automatycznym uruchomieniu
+- [ ] tokeny na krok (z odczytem/zapisem cache); koszt na ukończone zadanie z p95
+- [ ] klucz API z sekretu, bez przełączania na login; treść jako dane; narzędzia zapisu na allowliście
+- [ ] macierz ewaluacji z podłożonymi defektami i czystymi przypadkami przed każdą zmianą modelu/promptu

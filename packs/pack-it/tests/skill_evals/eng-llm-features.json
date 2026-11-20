@@ -4,7 +4,7 @@
     {
       "id": "recenzent-diffu-sdk",
       "expect": "trigger",
-      "prompt": "Chcemy w naszym repo napisać skrypt w TypeScript, który bierze git diff, wysyła go do modelu językowego i zwraca ocenę zmiany jako JSON. Jakie SDK wybrać i jak zabezpieczyć skrypt, żeby nie przepalił budżetu? Odpowiedz zwięźle.",
+      "prompt": "Chcemy w CI dodać skrypt w TypeScript, który bierze opis ostatniego commita i jego git diff, wysyła je do modelu językowego i zwraca jako JSON ocenę, czy opis zgadza się ze zmianą. Jakie SDK wybrać i jak zabezpieczyć skrypt, żeby nie przepalił budżetu? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [
@@ -38,7 +38,7 @@
     {
       "id": "recenzent-diffu-sdk-en",
       "expect": "trigger",
-      "prompt": "In our repo we want to write a TypeScript script that takes a git diff, sends it to a language model and returns an assessment of the change as JSON. Which SDK should we pick and how do we guard the script so it doesn't burn through the budget? Answer briefly.",
+      "prompt": "We want to add a TypeScript script to CI that takes the last commit message and its git diff, sends them to a language model and returns, as JSON, an assessment of whether the message matches the change. Which SDK should we pick and how do we guard the script so it doesn't burn through the budget? Answer briefly.",
       "checks": {
         "all": [
           [
