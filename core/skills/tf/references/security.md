@@ -6,7 +6,8 @@ You read this when `security_scan.py` returns FAIL or STOP and you need to under
 ## The version cooldown at the start (N10)
 `security_scan.py cooldown` — FAIL when the package manager has no cooldown set: `min-release-age=7` (npm),
 `minimumReleaseAge: 10080` (pnpm), `npmMinimalAgeGate` (Yarn), `exclude-newer` (uv), or the lockfile is outside git.
-FAIL → STOP with the line to add from the output; you do not change the settings yourself. A new dependency younger than 7 days (the package
+FAIL → STOP; the human runs `tf cooldown --fix` (writes the missing settings, keeps the rest of the files; `tf onboard
+--yes` does the same when preparing the repository). You do not change the settings yourself. A new dependency younger than 7 days (the package
 manager refuses to install it) → STOP with an explanation, not a workaround.
 
 ## The slice scan (after green tests)

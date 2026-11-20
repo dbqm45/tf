@@ -50,7 +50,7 @@ prints `Input`, `Key`, `Tracker` and `Next`; you do what stands in `Next` (every
 
 ## 0. Start
 1. A clean working tree, otherwise STOP ("uncommitted changes: <files>"). The version cooldown:
-   `security_scan.py cooldown` — FAIL → STOP with the line to add from the output; you do not change the settings yourself.
+   `security_scan.py cooldown` — FAIL → STOP: the human runs `tf cooldown --fix`; you do not change the settings yourself.
 2. `run_report.py start "<tytuł>" --story-file <plik>` (or `--story "<treść>"`; an issue: `--key PROJ-123
    --source "<skąd>"`) creates the task and prints the run directory `.tf/runs/<KEY>/` (working, outside git).
    The permanent files are in `docs/project/changes/<KEY>/` (`ticket.md`, `plan.md`, `task.json`, later `spec.md`,

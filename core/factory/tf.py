@@ -15,6 +15,8 @@ tf — the team factory command: install, update, packs, health check (standard 
                               # prepare the repository: detect test/lint/type/build commands, write verify.sh, the
                               # readiness report (.tf/reports/readiness.md) and the commands in the instructions file,
                               # turn the quality gate on; --verify runs the verification once (.tf/factory/onboard.py)
+  tf cooldown [--fix]         # the package manager's 7-day version cooldown the /tf loop requires; --fix writes it
+                              # (.npmrc, pnpm-workspace.yaml, .yarnrc.yml, [tool.uv] in pyproject.toml)
   tf addon list | add <name|path|git URL> | remove <name> | sync | check [--base <ref>]
                               # add-ons: independent packages in .tf/addons/<name>/ the factory uses through a
                               # contract (addon.yaml); e.g. tf addon add dna (.tf/factory/addons.py)
@@ -534,6 +536,11 @@ def main(argv: list[str]) -> int:
         return subprocess.run([sys.executable, str((Path(".tf") / "factory") / "onboard.py"), *rest]).returncode
     if cmd == "work":
         return engine("work.py", rest)
+    if cmd == "cooldown":   # the version cooldown the /tf loop requires; --fix writes the missing settings
+        if not need_project():
+            return 2
+        script = Path(".claude") / "skills" / "tf" / "scripts" / "security_scan.py"
+        return subprocess.run([sys.executable, str(script), "cooldown", *rest]).returncode
     if cmd == "addon":
         return engine("addons.py", rest)
     if cmd == "learn":

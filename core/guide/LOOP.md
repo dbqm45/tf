@@ -232,7 +232,8 @@ Requirements for the product:
   named in the first line of the product's `CLAUDE.md`; the loop and CI run the same one (templates in mode-pdi).
 - **A 7-day version cooldown (N10):** `.npmrc` `min-release-age=7` (npm ≥ 11.10), `pnpm-workspace.yaml`
   `minimumReleaseAge: 10080` (minutes, pnpm ≥ 10.17), `.yarnrc.yml` `npmMinimalAgeGate`, `[tool.uv]
-  exclude-newer = "7 days"`; the lockfile in git. `security_scan.py cooldown` checks this at the start of the run. A
+  exclude-newer = "7 days"`; the lockfile in git. `security_scan.py cooldown` checks this at the start of the run; `tf cooldown --fix` (or `tf onboard --yes`) writes
+  the missing settings for you. A
   pnpm caveat: Dependabot updates the lockfile without a cooldown, and `pnpm install --frozen-lockfile` in CI then ends
   with `ERR_PNPM_NO_MATURE_MATCHING_VERSION` (pnpm/pnpm#11203, #12450) — Dependabot PRs with versions younger than
   7 days wait or have a `cooldown` in `dependabot.yml`.

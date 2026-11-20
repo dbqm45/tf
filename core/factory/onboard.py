@@ -4,7 +4,8 @@ tf onboard — prepares a repository to work with the factory: detects project c
 report in plain language and turns on the quality gate.
 
   tf onboard                 # proposal and a question for consent (without a terminal: the proposal only)
-  tf onboard --yes           # write without asking: verify.sh, .claude/quality-gate.json, .tf/reports/readiness.md
+  tf onboard --yes           # write without asking: verify.sh, .claude/quality-gate.json, .tf/reports/readiness.md,
+                             # the package manager's 7-day version cooldown (.npmrc, .yarnrc.yml, pyproject.toml)
                              # and the commands in the "Commands" section of the instructions file (CLAUDE.md / CLAUDE.local.md)
   tf onboard --yes --verify  # after writing, runs verification once and says whether it passes
   tf onboard --dry-run       # proposal only, writes nothing
@@ -407,7 +408,8 @@ def settle_files(root: Path) -> str:
     code, exclude = _git(root, "rev-parse", "--path-format=absolute", "--git-path", "info/exclude")
     if code != 0 or not exclude:
         return ""
-    mine = [f for f in LOCAL_FILES if (root / f).is_file() and _git(root, "ls-files", "--error-unmatch", f)[0] != 0]
+    mine = [f for f in LOCAL_FILES + COOLDOWN_FILES[:3]
+            if (root / f).is_file() and _git(root, "ls-files", "--error-unmatch", f)[0] != 0]
     if not mine:
         return ""
     if _json(root / ".claude" / "factory-manifest.json").get("mode") != "private":
@@ -421,6 +423,37 @@ def settle_files(root: Path) -> str:
             f.write(("" if not have or have[-1] == "" else "\n") + "\n".join(new) + "\n")
     return ("Private installation: " + ", ".join(mine) + " stay local (an entry in .git/info/exclude), "
             "so the working tree is clean. For the checks to work for the whole team: tf install --shared.")
+
+
+COOLDOWN_FILES = (".npmrc", ".yarnrc.yml", "pnpm-workspace.yaml", "pyproject.toml")
+
+
+def cooldown_fix(root: Path) -> list[str]:
+    """The version cooldown the /tf loop requires (security_scan.py cooldown --fix): written with the human's --yes.
+    A private install commits nothing: it only creates files git does not track (settle_files excludes them) and
+    leaves an existing file alone — `tf cooldown --fix` changes it on the human's word."""
+    script = Path(__file__).resolve().parents[2] / ".claude" / "skills" / "tf" / "scripts" / "security_scan.py"
+    if not script.is_file():
+        return []
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_security_scan", script)
+    mod = importlib.util.module_from_spec(spec)
+    private = _json(root / ".claude" / "factory-manifest.json").get("mode") == "private"
+    refused = []
+
+    def allow(path: Path) -> bool:
+        if private and path.is_file():
+            refused.append(path.relative_to(root).as_posix())
+            return False
+        return True
+    try:
+        spec.loader.exec_module(mod)
+        done = mod.fix_cooldown(root, allow)
+        if refused:
+            done.append(f"not changed in a private install: {', '.join(sorted(set(refused)))} — run tf cooldown --fix")
+        return done
+    except Exception as e:  # noqa: BLE001 — onboarding goes on; the loop's start check says what is missing
+        return [f"not written ({e})"]
 
 
 def main(argv: list[str]) -> int:
@@ -453,6 +486,9 @@ def main(argv: list[str]) -> int:
         path.write_text(text, encoding="utf-8")
         if path.name == "verify.sh":
             path.chmod(0o755)
+    cooldown = cooldown_fix(root)
+    if cooldown:
+        print("✓ The package manager's version cooldown (7 days, N10): " + "; ".join(cooldown))
     print("\n✓ Written. Check the state: tf doctor")
     note = settle_files(root)
     if note:

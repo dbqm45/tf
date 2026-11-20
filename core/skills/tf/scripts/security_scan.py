@@ -7,7 +7,7 @@ SEC-001 in ci_for_sdlc. A missing scanner is a FAIL with an install command, nev
   python3 .claude/skills/tf/scripts/security_scan.py scan [--base REF] [--out DIR]
                                                                        [--slice S<n> --attempt k] [--json]
   python3 .claude/skills/tf/scripts/security_scan.py verdict FILE.sarif... [--json]
-  python3 .claude/skills/tf/scripts/security_scan.py cooldown
+  python3 .claude/skills/tf/scripts/security_scan.py cooldown [--fix]
 
 scan     — without --base: uncommitted changes and new files (the slice loop); with --base: also commits since the base (CI on a PR).
            Writes to --out (default reports/security): semgrep.sarif, npm-audit.sarif, pip-audit.sarif,
@@ -16,7 +16,10 @@ scan     — without --base: uncommitted changes and new files (the slice loop);
            a copy of the last attempt's feedback.md.
 verdict  — a verdict from ready SARIF files.
 cooldown — version cooldown (N10): npm min-release-age, pnpm minimumReleaseAge, Yarn npmMinimalAgeGate,
-           uv exclude-newer ≥ 7 days and a lockfile in git.
+           uv exclude-newer ≥ 7 days and a lockfile in git. --fix writes the missing or too short settings itself
+           (.npmrc; pnpm-workspace.yaml when the project has one, else .npmrc; .yarnrc.yml; [tool.uv] in pyproject.toml),
+           keeps every other line, then checks again. A lockfile outside git is only reported (git add is yours).
+           Run by the human (`tf cooldown --fix`, `tf onboard --yes`): the agent does not change these settings.
 
 Blocking: level error or warning with a CWE from OWASP Top 10 2021 or 2025; result level → the rule's default level →
 warning; level none is skipped. The rest goes into the report. Exit code: 0 PASS, 1 FAIL, 2 bad call.
@@ -522,8 +525,87 @@ def read(p: Path) -> str:
     return p.read_text(encoding="utf-8") if p.is_file() else ""
 
 
+def _set_line(path: Path, key: str, sep: str, value: str, allow=None) -> bool:
+    """Set `key<sep>value` in a line-based config file (.npmrc, YAML top level); keep the rest. True when changed."""
+    if allow is not None and not allow(path):
+        return False
+    text = read(path)
+    line = f"{key}{sep}{value}" if sep == "=" else f"{key}: {value}"
+    pat = re.compile(rf"(?m)^\s*{re.escape(key)}\s*{re.escape(sep)}.*$")
+    new = pat.sub(line, text, count=1) if pat.search(text) else (text + ("" if not text or text.endswith("\n") else "\n")
+                                                                  + line + "\n")
+    if new == text:
+        return False
+    path.write_text(new, encoding="utf-8")
+    return True
+
+
+def _set_uv(path: Path, value: str, allow=None) -> bool:
+    """exclude-newer in [tool.uv] of pyproject.toml (the section is added when missing)."""
+    if allow is not None and not allow(path):
+        return False
+    text = read(path)
+    line = f'exclude-newer = "{value}"'
+    sec = re.search(r"(?m)^\[tool\.uv\]\s*$", text)
+    if sec:
+        end = re.search(r"(?m)^\[", text[sec.end():])
+        body_end = sec.end() + (end.start() if end else len(text) - sec.end())
+        body = text[sec.end():body_end]
+        if re.search(r"(?m)^\s*exclude-newer\s*=", body):
+            nbody = re.sub(r"(?m)^\s*exclude-newer\s*=.*$", line, body, count=1)
+        else:
+            nbody = "\n" + line + body if not body.startswith("\n") else "\n" + line + body
+        new = text[:sec.end()] + nbody + text[body_end:]
+    else:
+        new = text + ("" if not text or text.endswith("\n") else "\n") + f"\n[tool.uv]\n{line}\n"
+    if new == text:
+        return False
+    path.write_text(new, encoding="utf-8")
+    return True
+
+
+def fix_cooldown(root: Path, allow=None) -> list[str]:
+    """Write the missing or too short cooldown settings; the names of the files changed. `allow(path)` may refuse a
+    file (a private install writes only new, untracked files)."""
+    changed = []
+    need_min = COOLDOWN_DAYS * 1440
+    if (root / "package-lock.json").is_file() or (root / "npm-shrinkwrap.json").is_file():
+        val = kv(read(root / ".npmrc"), "min-release-age", "=")
+        if not (val and re.fullmatch(r"\d+(\.\d+)?", val) and float(val) >= COOLDOWN_DAYS):
+            if _set_line(root / ".npmrc", "min-release-age", "=", str(COOLDOWN_DAYS), allow):
+                changed.append(".npmrc (npm min-release-age)")
+    if (root / "pnpm-lock.yaml").is_file() or (root / "pnpm-workspace.yaml").is_file():
+        val = kv(read(root / "pnpm-workspace.yaml"), "minimumReleaseAge", ":") or kv(read(root / ".npmrc"), "minimum-release-age", "=")
+        if (minutes(val) if val else None) is None or minutes(val) < need_min:
+            if (root / "pnpm-workspace.yaml").is_file():
+                if _set_line(root / "pnpm-workspace.yaml", "minimumReleaseAge", ":", str(need_min), allow):
+                    changed.append("pnpm-workspace.yaml (pnpm minimumReleaseAge)")
+            elif _set_line(root / ".npmrc", "minimum-release-age", "=", str(need_min), allow):
+                changed.append(".npmrc (pnpm minimum-release-age)")
+    if (root / "yarn.lock").is_file():
+        val = kv(read(root / ".yarnrc.yml"), "npmMinimalAgeGate", ":")
+        if (minutes(val) if val else None) is None or minutes(val) < need_min:
+            if _set_line(root / ".yarnrc.yml", "npmMinimalAgeGate", ":", f'"{COOLDOWN_DAYS}d"', allow):
+                changed.append(".yarnrc.yml (Yarn npmMinimalAgeGate)")
+    if (root / "uv.lock").is_file() and (root / "pyproject.toml").is_file():
+        val = None
+        try:
+            import tomllib
+            val = ((tomllib.loads(read(root / "pyproject.toml")).get("tool") or {}).get("uv") or {}).get("exclude-newer")
+        except Exception:  # noqa: BLE001
+            val = None
+        absolute = bool(val) and minutes(val) is None and re.match(r"^\d{4}-\d{2}-\d{2}", str(val))
+        if not absolute and ((minutes(val) if val else None) is None or minutes(val) < need_min):
+            if _set_uv(root / "pyproject.toml", f"{COOLDOWN_DAYS} days", allow):
+                changed.append("pyproject.toml ([tool.uv] exclude-newer)")
+    return changed
+
+
 def cmd_cooldown(_a) -> int:
     root = Path(git("rev-parse", "--show-toplevel", cwd=Path.cwd()).strip())
+    if getattr(_a, "fix", False):
+        changed = fix_cooldown(root)
+        print("COOLDOWN --fix: " + ("written: " + "; ".join(changed) if changed else "nothing to write"))
     tracked = set(git("ls-files", cwd=root).splitlines())
     need, ok, problems = COOLDOWN_DAYS * 1440, [], []
 
@@ -614,6 +696,7 @@ def main(argv: list[str]) -> int:
     v.add_argument("--json", action="store_true")
     v.set_defaults(fn=cmd_verdict)
     c = sub.add_parser("cooldown")
+    c.add_argument("--fix", action="store_true")
     c.set_defaults(fn=cmd_cooldown)
     a = p.parse_args(argv)
     try:

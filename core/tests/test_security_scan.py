@@ -397,6 +397,46 @@ def main() -> int:
         r = run("cooldown", cwd=p)
         check(r.returncode == 0, f"C-7: uv exclude-newer 7 days -> PASS: {r.stdout}")
 
+        # F: cooldown --fix writes the missing settings itself (one command instead of editing files by hand)
+        f = tmp / "fix"
+        f.mkdir()
+        git(f, "init", "-q", "-b", "main")
+        write(f, "package.json", '{"name": "p"}\n')
+        write(f, "package-lock.json", "{}\n")
+        write(f, ".npmrc", "registry=https://registry.example/\nmin-release-age=3\n")
+        write(f, "yarn.lock", "# yarn\n")
+        write(f, ".yarnrc.yml", "nodeLinker: node-modules\n")
+        write(f, "pyproject.toml", '[project]\nname = "p"\nversion = "0"\n\n[tool.uv]\npackage = true\n')
+        write(f, "uv.lock", "version = 1\n")
+        git(f, "add", "-A")
+        git(f, "commit", "-qm", "init")
+        r = run("cooldown", "--fix", cwd=f)
+        npmrc = (f / ".npmrc").read_text(encoding="utf-8")
+        check(r.returncode == 0 and "registry=https://registry.example/" in npmrc and "min-release-age=7" in npmrc
+              and "min-release-age=3" not in npmrc, f"F-1: npm: the short cooldown raised, other lines kept: {r.stdout} {npmrc}")
+        yarnrc = (f / ".yarnrc.yml").read_text(encoding="utf-8")
+        check("nodeLinker: node-modules" in yarnrc and 'npmMinimalAgeGate: "7d"' in yarnrc, f"F-2: Yarn: {yarnrc}")
+        pyproject = (f / "pyproject.toml").read_text(encoding="utf-8")
+        check('package = true' in pyproject and 'exclude-newer = "7 days"' in pyproject
+              and pyproject.count("[tool.uv]") == 1, f"F-3: uv: inside the existing [tool.uv]: {pyproject}")
+        check("COOLDOWN: PASS" in r.stdout and "written" in r.stdout, f"F-4: the check after the fix passes: {r.stdout}")
+        before = {n: (f / n).read_text(encoding="utf-8") for n in (".npmrc", ".yarnrc.yml", "pyproject.toml")}
+        r = run("cooldown", "--fix", cwd=f)
+        check(r.returncode == 0 and all((f / n).read_text(encoding="utf-8") == t for n, t in before.items()),
+              f"F-5: --fix again changes nothing: {r.stdout}")
+        g = tmp / "fix2"
+        g.mkdir()
+        git(g, "init", "-q", "-b", "main")
+        write(g, "pnpm-lock.yaml", "lockfileVersion: '9.0'\n")
+        write(g, "pyproject.toml", '[project]\nname = "p"\nversion = "0"\n')
+        write(g, "uv.lock", "version = 1\n")
+        r = run("cooldown", "--fix", cwd=g)
+        check(r.returncode == 1 and "minimum-release-age=10080" in (g / ".npmrc").read_text(encoding="utf-8")
+              and not (g / "pnpm-workspace.yaml").exists() and "[tool.uv]" in (g / "pyproject.toml").read_text(encoding="utf-8")
+              and "pnpm-lock.yaml is not in git" in r.stdout,
+              f"F-6: pnpm without a workspace file -> .npmrc; new [tool.uv]; a lockfile outside git is only reported: "
+              f"{r.returncode} {r.stdout}")
+
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} slice security scan (security_scan.py)")
     for f in fails:
         print(f"  ✗ {f}")
