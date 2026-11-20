@@ -38,7 +38,7 @@ unversioned_skills: [lang-javascript, tool-stripe]
 # Fixed sections of reference files (checked by `build.py check`): one file per business archetype.
 reference_sections:
   ddd-archetypes:
-    skip: [across-layers.md]
+    skip: [across-layers.md, system-types.md]
     sections: ["When it applies", "Core shape", "Rules", "Decisions to settle", "Belongs elsewhere", "Traps",
                "Worked example"]
 

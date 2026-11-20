@@ -203,6 +203,27 @@
       }
     },
     {
+      "id": "typ-systemu-wms",
+      "expect": "trigger",
+      "prompt": "Budujemy system magazynowy (WMS) dla regionalnego dystrybutora: przyjęcia, rozmieszczenie, kompletacja, inwentaryzacje, wycofania partii. Od których archetypów zacząć modelowanie i jaką decyzję biznes musi podjąć najpierw? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "księg\\w*|ledger|ruch\\w* (magazynow|towar)|przesunię\\w+|movement"
+          ],
+          [
+            "lokalizac\\w+|miejsc\\w+ (składow|w magazyn)|regał\\w*|lokacj\\w+|strefa|bin"
+          ],
+          [
+            "parti\\w+|lot\\w*|genealog\\w+|śledzeni\\w+"
+          ],
+          [
+            "kiedy.{0,60}(zmniejsz|zdejm|ksi[eę]g|odejm|rezerw)|(alokac|zarezerw|kompletac|potwierdz)\\w*.{0,80}(stan|zapas)|stan\\w*.{0,60}(dostępn|zaalokow|zarezerw)"
+          ]
+        ]
+      }
+    },
+    {
       "id": "edge-brak-wymagan",
       "expect": "trigger",
       "prompt": "Zmapuj nasz pomysł na program lojalnościowy na archetyp księgi (salda punktów). Odpowiedz zwięźle.",

@@ -48,7 +48,8 @@ Answer the signal question; "yes" points to the reference file. Read only the fi
 | Is a reading, test or finding recorded, with method, time and certainty? | observations and measurements | `references/observations-and-measurements.md` |
 | Is one thing known under several ids or names, or duplicated? | identity and references | `references/identity-and-references.md` |
 
-Layers, module communication, UI rules and code smells across all archetypes: `references/across-layers.md`.
+Layers, UI rules and code smells: `references/across-layers.md`; a named system type (WMS, billing, booking…):
+`references/system-types.md`.
 Each archetype file: When it applies · Core shape · Rules · Decisions · Elsewhere · Traps · Worked example.
 
 ## Procedure
@@ -105,7 +106,7 @@ Use the business's words in the model; archetype names stay in the design docume
 - Commitments reference parties and price lists; evidence documents prove them; the ledger posts their effects.
 - Production traceability uses product definitions, quantities and resources in work that is scheduled.
 - Places supply addresses to parties and zones (as inputs) to price calculation.
-- Observations use quantities, start and judge work execution; identity resolves which party or product a record means.
+- Observations use quantities and start or judge work; identity resolves which party or product is meant.
 
 ## Example
 Input: "Each workspace gets 10,000 API credits a month; top-ups are valid a year; unused monthly credits vanish; top-ups
@@ -136,7 +137,7 @@ Summary (access and edition dates in the archetype files):
 - ISO 15489-1:2016 records management; Regulation (EU) No 910/2014 (eIDAS); Regulation (EC) No 178/2002, Article 18.
 - GS1 EPCIS 2.0 (GS1, 2022); IEC 62264 / ISA-95; OMG BPMN 2.0, CMMN 1.1, DMN.
 - E. Evans, *Domain-Driven Design* (Addison-Wesley, 2003) — responsibility layers; M. Fowler, *Analysis Patterns*
-  (Addison-Wesley, 1997) — ch. 2 accountability and knowledge level, ch. 3–4 observations, ch. 5 identifiers and merge,
-  ch. 6 accounting, ch. 8 planning and resource allocation, ch. 9 portfolio and scenario, § 15.3 historic mapping.
+  (Addison-Wesley, 1997) — ch. 2 (accountability), 3–4 (observations), 5 (identifiers, merge), 6 (accounting),
+  8 (planning), 9 (portfolio, scenario), § 15.3 (historic mapping).
 - J. Arlow, I. Neustadt, *Enterprise Patterns and MDA: Building Better Software with Archetype Patterns and UML*
   (Addison-Wesley, 2003) — the term "archetype pattern"; D. C. Hay, *Data Model Patterns* (Dorset House, 1996).
