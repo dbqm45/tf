@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Tests of the quality gate `.claude/hooks/quality_gate.py` (Stop/SubagentStop: build and tests green before finishing)
 and of the test lock `.claude/hooks/test_lock.py` in a temporary git repository. python3 tests/test_quality_gate.py"""
+import importlib.util
 import json
 import os
 import subprocess
@@ -197,6 +198,66 @@ def main() -> int:
               f"B-4: short output goes into the message in full, without a note about skipping: {b.get('reason', '')[-200:]}")
         now = full.read_text(encoding="utf-8") if full.is_file() else ""
         check("test_suma" in now and "MIDDLE" not in now, "B-5: the file with the full output contains the last run, not the previous one")
+
+    # `related`: only the tests related to the changed files (an Nx monorepo: the whole suite every turn is too slow)
+    rel_py = ("import json, pathlib, sys\np = pathlib.Path(__file__).parent\n"
+              "(p / 'related.log').open('a').write(json.dumps(sys.argv[1:]) + '\\n')\n"
+              "sys.exit(1 if (p / 'mode.txt').exists() and (p / 'mode.txt').read_text().strip() == 'fail' else 0)\n")
+
+    def related_runs(repo) -> list:
+        f = repo / "related.log"
+        return [json.loads(ln) for ln in f.read_text().splitlines()] if f.exists() else []
+
+    spec = importlib.util.spec_from_file_location("quality_gate_mod", GATE)
+    qg = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(qg)
+    files = ["apps/web/a b.ts", "libs/ui/c.ts"]
+    check(qg.expand_related("npx nx affected -t test --files={files,}", files)
+          == ["npx", "nx", "affected", "-t", "test", "--files=apps/web/a b.ts,libs/ui/c.ts"],
+          "R-0a: {files,} inside a token -> one argument joined with commas")
+    check(qg.expand_related("npx jest --findRelatedTests {files} --ci", files)
+          == ["npx", "jest", "--findRelatedTests", "apps/web/a b.ts", "libs/ui/c.ts", "--ci"],
+          "R-0b: the token {files} -> one argument per file (a space in a name stays inside the argument)")
+    check(qg.expand_related(["npx", "vitest", "related", "--run", "{files}"], files[1:])
+          == ["npx", "vitest", "related", "--run", "libs/ui/c.ts"], "R-0c: an argument-list template")
+
+    rcfg = {**cfg, "related": f"{sys.executable} related.py {{files}} --files={{files,}}"}
+    with tempfile.TemporaryDirectory() as t:
+        repo = setup(Path(t) / "r", rcfg)
+        (repo / "related.py").write_text(rel_py)
+        git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "add", "related.py")
+        git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "related")
+        (repo / "docs" / "notes.md").write_text("# changed outside watch\n")
+        r = hook(repo)
+        check(r.returncode == 0 and related_runs(repo) == [] and runs(repo) == 0,
+              f"R-1: no changed file in watch -> nothing runs: {related_runs(repo)} {r.stderr}")
+        (repo / "src" / "app.py").write_text("x = 3\n")
+        (repo / "src" / "new.py").write_text("y = 1\n")
+        r = hook(repo)
+        check(r.returncode == 0 and not r.stdout.strip() and runs(repo) == 0
+              and related_runs(repo) == [["src/app.py", "src/new.py", "--files=src/app.py,src/new.py"]],
+              f"R-2: related runs with the changed and new files ({{files}} and {{files,}}), not the full command: "
+              f"{related_runs(repo)} {runs(repo)} {r.stdout}{r.stderr}")
+        r = hook(repo)
+        check(len(related_runs(repo)) == 1, f"R-3: green related -> the same state is not run again: {related_runs(repo)}")
+        (repo / "mode.txt").write_text("fail")
+        (repo / "src" / "app.py").write_text("x = 4\n")
+        r = hook(repo)
+        b = blocked(r)
+        check(b is not None and "related.py" in b.get("reason", "") and "src/app.py" in b.get("reason", ""),
+              f"R-4: red related blocks, the message names the command that ran: {r.stdout}{r.stderr}")
+        (repo / "mode.txt").unlink()
+        (repo / "src" / "app.py").write_text("x = 1\n")
+        (repo / "src" / "new.py").unlink()
+        git(repo, "rm", "-q", "src/app.py")
+        r = hook(repo)
+        check(runs(repo) == 1 and len(related_runs(repo)) == 2,
+              f"R-5: only a deletion changed -> the full command (no file to pass): {runs(repo)} {related_runs(repo)}")
+        r = subprocess.run([sys.executable, str(GATE), "--status"], capture_output=True, text=True, timeout=30,
+                           env={**{k: v for k, v in os.environ.items() if k != "QG_GATE_DISABLE"},
+                                "CLAUDE_PROJECT_DIR": str(repo)})
+        check("gate on" in r.stdout and "related" in r.stdout and "related.py" in r.stdout and "check.py" in r.stdout,
+              f"R-6: --status names the related command and the full one: {r.stdout}")
 
     # the gate state in plain language (tf doctor, session start)
     def status(repo, *flags, **env):

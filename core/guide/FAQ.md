@@ -106,7 +106,7 @@ Scripts that Claude Code runs at events, independently of the model's decisions:
 - `model_guard` — a delegation names only an approved model (works only with a `models_approved` list);
 - `tdd_guard` — code only after a red test;
 - `quality_gate` — with `.claude/quality-gate.json` a turn and a subagent do not finish with red tests (the test
-  lock: `test_lock.py`);
+  lock: `test_lock.py`); with its `related` key only the tests related to the changed files run;
 - `scan_secrets` — secrets in saved files;
 - `skill_hint` — skill hints (without frameworks and languages outside the project's stack);
 - `context_guard` — a warning about a long context;

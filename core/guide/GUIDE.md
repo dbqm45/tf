@@ -111,7 +111,12 @@ Shared agents, available to every persona:
 - **A plan before the code, then TDD:** first a test that fails, then the code. The `tdd_guard` hook blocks production
   code without a red test. The quality gate: the `.claude/quality-gate.json` file with the test command, e.g.
   `{"command": "npm test", "watch": ["src/", "test/"]}` — the `quality_gate` hook will not let a turn end with a red
-  build (described in the header of `.claude/hooks/quality_gate.py`). When the gate is off (no file, the switch, a
+  build (described in the header of `.claude/hooks/quality_gate.py`). In a big repository (an Nx monorepo) add
+  `"related"` — the tests related to the changed files only, e.g. `"npx nx affected -t test --files={files,}"`,
+  `"npx jest --findRelatedTests {files}"` or `"npx vitest related --run {files}"` (`{files}`: one argument per file,
+  `{files,}`: joined with commas); the gate and slice verification run it instead of the whole `command`, and
+  `run_state.py verify … --full` (`tf task verify … --full`) runs the whole suite, e.g. once before the PR. `tf onboard`
+  proposes it when it detects Nx, Jest or Vitest. When the gate is off (no file, the switch, a
   declared red batch), `tf doctor` and the session start say so in one sentence.
 
 ## 4. Modes and automation on request

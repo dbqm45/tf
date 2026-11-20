@@ -8,7 +8,7 @@ the model calls commands, it does not edit the state by hand. No model and no ne
   tf task stage <KEY> <stage> [--force]
   tf task status <KEY> [--json]
   tf task slice <KEY> S1 planned|implemented|blocked [--title "<value>"] [--reason "<block reason>"]
-  tf task verify <KEY> S1 --files <file>[,<file>…] [--command "<command>"] [--timeout <s>]
+  tf task verify <KEY> S1 --files <file>[,<file>…] [--command "<command>" | --full] [--timeout <s>]
   tf task artifact <KEY> <file> --stage <stage> --by <executor> [--inputs <file>[,<file>…]]
   tf task approve <KEY> <file> --by human:<id>
   tf task check <KEY>
@@ -40,8 +40,9 @@ and `cut` fields in `task.json`; `list` and `status` show them together with the
 was approved by a human at the pdi gate before the implementation phase, so a full-weight cut can run in `auto` mode.
 
 A slice is “verified” only when it has evidence. `verify` itself runs the command (by default the one from
-`.claude/quality-gate.json`), so the exit code cannot be declared, and writes `evidence/S1-<n>.json`
-(command, exit code, commit SHA, time, slice file hashes); the full output goes to `.tf/runs/<KEY>/`. The state is computed on every read: no evidence or a change of a
+`.claude/quality-gate.json`: its `related` with the slice's `--files` when it is set, else `command`; `--full` forces
+`command`), so the exit code cannot be declared, and writes `evidence/S1-<n>.json`
+(command, exit code, duration in seconds, commit SHA, time, slice file hashes); the full output goes to `.tf/runs/<KEY>/`. The state is computed on every read: no evidence or a change of a
 file after the evidence → unverified; an exit code other than 0 → red. A task moves to the `review` stage and later
 only when all slices are verified (or with --force). When a task has `spec.md`, it moves to the `plan` stage
 and later only with an error-free specification (`tf spec check <KEY>`), and to the `review` stage and later —
@@ -87,6 +88,7 @@ import re
 import shlex
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 for _stream in (sys.stdout, sys.stderr):  # Windows: the cp1250 code page lacks “✓”, “⚠” — always UTF-8
@@ -382,6 +384,37 @@ def run_command(root: Path, command: str, timeout: float) -> tuple[int, str]:
     return r.returncode, r.stdout + r.stderr
 
 
+RELATED_MAX = 200   # more slice files than this: the full command (as in the quality_gate.py hook)
+
+
+def expand_related(template, files: list[str]) -> list[str]:
+    """argv of the gate's `related` command (the same rule as in the quality_gate.py hook): the token `{files}` becomes
+    the files as separate arguments, `{files,}` inside a token — the files joined with commas. No shell."""
+    argv = []
+    for token in (shlex.split(template) if isinstance(template, str) else [str(t) for t in template]):
+        if token == "{files}":
+            argv.extend(files)
+        else:
+            argv.append(token.replace("{files,}", ",".join(files)).replace("{files}", " ".join(files)))
+    return argv
+
+
+def gate_command(root: Path, files: list[str], full: bool) -> tuple[str | None, bool]:
+    """The default verification command from `.claude/quality-gate.json`: (command, related?). `related` with the slice's
+    files when it is set (and not `full`), else `command`; (None, False) when there is nothing to run."""
+    try:
+        cfg = json.loads((root / ".claude" / "quality-gate.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        cfg = {}
+    cfg = cfg if isinstance(cfg, dict) else {}
+    related, gate = cfg.get("related"), cfg.get("command")
+    if related and not full and len(files) <= RELATED_MAX:
+        return shlex.join(expand_related(related, files)), True
+    if not gate:
+        return None, False
+    return (gate if isinstance(gate, str) else shlex.join(map(str, gate))), False
+
+
 def clip(out: str, saved: str) -> str:
     if len(out) <= 3000:
         return out
@@ -428,7 +461,9 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
         commit = head.stdout.strip() if head.returncode == 0 else None
     except (OSError, subprocess.SubprocessError):
         commit = None
+    started = time.monotonic()
     code, out = run_command(root, command, timeout)
+    duration = int(time.monotonic() - started)
     log = Path(".tf") / "runs" / key / f"{slice_id}-{n}.log"
     try:   # the full output is outside git; only the path stays in the evidence
         (root / log).parent.mkdir(parents=True, exist_ok=True)
@@ -437,7 +472,7 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
         pass
     rel = f"evidence/{slice_id}-{n}.json"
     write_atomic(root / CHANGES / key / rel, json.dumps(
-        {"slice": slice_id, "command": command, "exit_code": code, "sha": commit, "at": now(), "files": hashes,
+        {"slice": slice_id, "command": command, "exit_code": code, "duration_s": duration, "sha": commit, "at": now(), "files": hashes,
          "log": str(log), **({"red_tests": red} if (red := red_tests(root, list(hashes))) else {})},
         ensure_ascii=False, indent=1) + "\n")
     sl = task.setdefault("slices", {}).setdefault(slice_id, {})
@@ -1202,6 +1237,7 @@ def main(argv: list[str]) -> int:
     v.add_argument("--command", default=None)
     v.add_argument("--timeout", type=float, default=900)
     v.add_argument("--files", default="")
+    v.add_argument("--full", action="store_true")
     r = sub.add_parser("artifact")
     r.add_argument("key")
     r.add_argument("name")
@@ -1370,12 +1406,11 @@ def main(argv: list[str]) -> int:
         if not files:
             return fail("give the slice's files: --files <file>[,<file>…] — without them the evidence is not tied to the code", 2)
         command = a.command
-        if not command:   # by default the same command the quality gate watches
-            try:
-                gate = json.loads((root / ".claude" / "quality-gate.json").read_text(encoding="utf-8")).get("command")
-            except (OSError, ValueError, AttributeError):
-                gate = None
-            command = gate if isinstance(gate, str) else (" ".join(map(shlex.quote, gate)) if gate else None)
+        if not command:   # by default the same command the quality gate watches (its `related` for the slice's files)
+            command, related = gate_command(root, files, a.full)
+            if related:
+                print(f"• {a.key} {a.slice_id}: the tests related to the slice's files (`related` in "
+                      ".claude/quality-gate.json); the whole suite: --full")
         if not command:
             return fail("there is nothing to run: give --command or set the command in .claude/quality-gate.json "
                         "(tf onboard --yes)", 2)
