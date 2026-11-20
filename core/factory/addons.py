@@ -483,9 +483,13 @@ def learn(root: Path, only: str | None) -> int:
     rc, rows = _timed(root, targets, "learn", "learn")
     total = sum(r["seconds"] for r in rows)
     waiting = sum(r["pending"] for r in rows)
-    print(f"learn: {total:.1f} s of scripts (" + ", ".join(f"{r['name']} {r['seconds']:.1f} s" for r in rows)
-          + "), 0 tokens" + (f"; {waiting} items wait for the session — their tokens and cost: tf addon report"
-                             if waiting else ""))
+    parts = ", ".join(f"{r['name']} {r['seconds']:.1f} s" for r in rows)
+    if waiting:
+        print(f"learn, part 1 of 2 — scripts: {total:.1f} s ({parts}), no model calls. Part 2: {waiting} items for an "
+              "agent in the session (Confluence through MCP, the cheap model) — that part costs tokens; the full cost "
+              "of this learn after it is done: tf addon report")
+    else:
+        print(f"learn: {total:.1f} s ({parts}), no model calls — nothing left for an agent, so this was the whole cost")
     return rc
 
 
@@ -544,19 +548,23 @@ def report(root: Path, every: bool, as_json: bool) -> int:
         return 0
     for r in out:
         print(f"learn {r['learn_at']}")
-        print(f"  scripts: {r['script_seconds']:.1f} s (" + ", ".join(f"{n} {s:.1f} s" for n, s in r["addons"].items())
-              + f"), 0 tokens; later refresh: {r['refresh_runs']}× {r['refresh_seconds']:.1f} s")
+        print(f"  1. scripts: {r['script_seconds']:.1f} s (" + ", ".join(f"{n} {s:.1f} s" for n, s in r["addons"].items())
+              + f"), no model calls; later refresh: {r['refresh_runs']}× {r['refresh_seconds']:.1f} s")
         if r["session_agents"]:
             t = r["tokens"]
-            print(f"  session work (subagents \"Class: addon\"): {r['session_agents']} "
+            print(f"  2. agent work (subagents \"Class: addon\"): {r['session_agents']} "
                   f"({r['session_agents_measured']} measured)"
                   + (f", {r['session_seconds']} s" if r["session_seconds"] else "")
                   + f"; tokens {r['tokens_total']:,} (in {t['input']:,}, out {t['output']:,}, cache read "
-                  f"{t['cache_read']:,}, cache write {t['cache_write']:,})"
-                  + (f"; cost ${r['cost_usd']:.4f}" if r["cost_usd"] is not None else
-                     "; cost: set prices_usd_per_mtok in .tf/config/config.yaml" if not r["prices"] else ""))
+                  f"{t['cache_read']:,}, cache write {t['cache_write']:,})")
+            total_s = r["script_seconds"] + r["refresh_seconds"] + (r["session_seconds"] or 0)
+            print(f"  total: {total_s:.1f} s, {r['tokens_total']:,} tokens"
+                  + (f", ${r['cost_usd']:.4f}" if r["cost_usd"] is not None else
+                     ", cost: set prices_usd_per_mtok in .tf/config/config.yaml" if not r["prices"] else ""))
+        elif r["pending_after_learn"]:
+            print(f"  2. agent work: not done yet ({r['pending_after_learn']} items wait) — the cost so far is part 1 only")
         else:
-            print(f"  session work: none yet ({r['pending_after_learn']} items were waiting after learn)")
+            print("  2. agent work: none needed — total: part 1, no tokens")
     return 0
 
 

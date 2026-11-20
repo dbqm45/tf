@@ -275,7 +275,7 @@ def test_learn_is_measured_and_report_adds_the_session_work():
                                                  "cache_write: 1.25}\n"})
     tf_addon(p, "add", "dna")
     r = tf_addon(p, "learn")
-    assert r.returncode == 0 and "learn: " in r.stdout and "s of scripts (dna " in r.stdout and "0 tokens" in r.stdout
+    assert r.returncode == 0 and "learn: " in r.stdout and "(dna " in r.stdout and "no model calls" in r.stdout
     rec = json.loads((p / ".tf/logs/addons.jsonl").read_text(encoding="utf-8").splitlines()[-1])
     assert rec["event"] == "learn" and rec["addons"][0]["name"] == "dna" and rec["addons"][0]["seconds"] >= 0
     rep = json.loads(tf_addon(p, "report", "--json").stdout)[0]
@@ -296,7 +296,7 @@ def test_learn_is_measured_and_report_adds_the_session_work():
     assert rep["session_agents"] == 1 and rep["tokens_total"] == 62000 and rep["session_seconds"] == 12.0
     assert abs(rep["cost_usd"] - (10000 * 1 + 2000 * 5 + 50000 * 0.1) / 1e6) < 1e-9
     text = tf_addon(p, "report").stdout
-    assert "tokens 62,000" in text and "cost $0.0250" in text
+    assert "tokens 62,000" in text and "total: " in text and "62,000 tokens, $0.0250" in text
 
 
 def test_core_names_no_addon():
