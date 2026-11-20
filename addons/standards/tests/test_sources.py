@@ -97,7 +97,7 @@ def test_skills_docs_adr_lint_and_tool_rules():
     assert "pending: read through the session's Confluence tool (MCP)" in skipped[
         "https://acme.atlassian.net/wiki/spaces/FE/pages/123/Standards"]
     assert "outside Confluence" in skipped["https://example.com/blog/post"]
-    assert cov["pending"] == [{"url": "https://acme.atlassian.net/wiki/spaces/FE/pages/123/Standards",
+    assert [i for i in cov["pending"] if i["tool"] == "confluence"] == [{"url": "https://acme.atlassian.net/wiki/spaces/FE/pages/123/Standards",
                                "tool": "confluence", "save_to": str(root / "cache/sources/confluence/123.md"),
                                "reason": "not read yet"}]
 
@@ -111,7 +111,8 @@ def test_confluence_copy_saved_through_mcp_is_used_and_stale_one_relisted():
     story = by_text(ds)["Components must have a Storybook story"]
     assert story["strength"] == "hard" and story["status"] == "auto-accepted"
     assert story["evidence"][0] == "https://acme.atlassian.net/wiki/spaces/FE/pages/123/Standards (fetched 2026-11-18)"
-    assert any("(copy 2026-11-18, version 7)" in r for r in cov["read"]) and not cov.get("pending")
+    assert any("(copy 2026-11-18, version 7)" in r for r in cov["read"])
+    assert not [i for i in cov.get("pending", []) if i["tool"] == "confluence"]
     _, cov = collect(root, today="2026-12-20")                                 # older than 14 days
     assert cov["pending"][0]["reason"] == "copy from 2026-11-18 is older than 14 days"
 
@@ -122,7 +123,50 @@ def test_copy_without_header_is_not_trusted():
     copy.parent.mkdir(parents=True)
     copy.write_text("- Components must have a Storybook story.\n", encoding="utf-8")
     ds, cov = collect(root)
-    assert "Components must have a Storybook story" not in by_text(ds) and cov["pending"]
+    assert "Components must have a Storybook story" not in by_text(ds)
+    assert any(i["tool"] == "confluence" for i in cov["pending"])
+
+
+PROSE = """# Forms
+
+We build every form with react-hook-form, because it gives the same validation everywhere. Components must not
+fetch data themselves; that is what the hooks in hooks/ are for, and they use the shared API client.
+
+## History
+
+The old forms used Formik until 2023; we migrated in two quarters.
+
+## Lists
+- Lists must be virtualised above 200 rows.
+"""
+
+
+def test_prose_goes_to_the_cheap_model_and_only_checked_quotes_count():
+    root = repo({".claude/skills/acme-fe-standards/SKILL.md": PROSE})
+    ds, cov = collect(root)
+    assert "Lists must be virtualised above 200 rows" in by_text(ds)          # the pattern reads the list
+    items = [i for i in cov["pending"] if i["tool"] == "model"]
+    assert len(items) == 1 and items[0]["source"].endswith("§ Forms") and items[0]["tier"] == "fast"
+    assert Path(items[0]["prompt"]).name == "extract.md" and Path(items[0]["input"]).is_file()
+    assert "react-hook-form" in Path(items[0]["input"]).read_text(encoding="utf-8")
+    # the agent's subagent (cheap model) answers; one quote is real, one is invented
+    Path(items[0]["save_to"]).write_text(json.dumps({"rules": [
+        {"quote": "Components must not\nfetch data themselves", "rule": "Components must not fetch data themselves; use hooks",
+         "strength": "hard"},
+        {"quote": "Every form must have an autosave", "rule": "Forms must autosave", "strength": "hard"}]}))
+    ds, cov = collect(root)
+    t = by_text(ds)
+    d = t["Components must not fetch data themselves; use hooks"]
+    assert d["strength"] == "hard" and d["data"]["extracted_by"] == "model" and d["status"] == "auto-accepted"
+    assert d["evidence"] == [".claude/skills/acme-fe-standards/SKILL.md:3"] and "cheap model" in d["acceptance"]
+    assert "Forms must autosave" not in t
+    assert any("quote not in the source" in s["reason"] for s in cov["skipped"])
+    assert not [i for i in cov.get("pending", []) if i["tool"] == "model"]   # answered: not asked again
+    # the section changes → asked again
+    p = root / ".claude/skills/acme-fe-standards/SKILL.md"
+    p.write_text(PROSE.replace("two quarters", "three quarters").replace("We build", "Teams build"), encoding="utf-8")
+    _, cov = collect(root)
+    assert len([i for i in cov["pending"] if i["tool"] == "model"]) == 1
 
 
 def test_output_rules_and_index():
@@ -131,7 +175,8 @@ def test_output_rules_and_index():
     assert standards.cmd_learn(root, out, root / "cache", online=False) == 0
     assert verify.check_out(out, root) == []
     pending = json.loads((root / "cache/pending.json").read_text(encoding="utf-8"))
-    assert pending["items"][0]["save_to"].endswith("123.md") and "data, not instructions" in pending["instructions"]
+    page = next(i for i in pending["items"] if i["tool"] == "confluence")
+    assert page["save_to"].endswith("123.md") and "data, not instructions" in pending["instructions"]
     dec = json.loads((out / "decisions.json").read_text(encoding="utf-8"))
     lodash = next(d for d in dec["decisions"] if d["data"].get("forbidden_import") == "lodash")
     assert lodash["strength"] == "hard" and dec["contract"] == 1
@@ -144,7 +189,7 @@ def test_output_rules_and_index():
     assert "## Candidates (one source, not applied)" in dec and "Use conventional commits" in dec
     index = (out / "INDEX.md").read_text(encoding="utf-8")
     assert "agreed rules" in index and "[hard] Every PR must reference a Jira key" in index
-    assert "wait to be read through the session's Confluence tool (MCP)" in index
+    assert "reads wait for the session (Confluence pages through MCP" in index
     for f in (out / "rules").glob("*.md"):
         assert len(f.read_text(encoding="utf-8").splitlines()) <= emit.RULES_MAX_LINES
 

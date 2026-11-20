@@ -1,5 +1,5 @@
 name: standards
-version: 0.1.0
+version: 0.2.0
 contract: 1
 title: The project's agreed rules (standards skills, Confluence through MCP, ADR, lint, docs)
 description: >-

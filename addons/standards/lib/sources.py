@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import json
 import os
 import re
 from pathlib import Path
@@ -196,13 +197,17 @@ def collect(root: Path, config: dict, online: bool, today: str, opts: dict | Non
                 g = s["git"]
                 src = f"{g['url']}#{g['ref']}:{f.relative_to(g['root']).as_posix()}"
                 coverage["read"].append(src)
-                cands = extract(text, "x", "standards", paths)
-                for c in cands:
-                    line = c["evidence"].rsplit(":", 1)[1]
-                    c["evidence"] = f"{src}:L{line} (fetched {today})"
+                ev_for = lambda n, src=src: f"{src}:L{n} (fetched {today})"  # noqa: E731
+                label = src
             else:
                 coverage["read"].append(rel(f))
-                cands = extract(text, rel(f), "standards", paths)
+                ev_for = lambda n, r=rel(f): f"{r}:{n}"  # noqa: E731
+                label = rel(f)
+            cands = extract(text, "x", "standards", paths)
+            lines_found = {int(c["evidence"].rsplit(":", 1)[1]) for c in cands}
+            for c in cands:
+                c["evidence"] = ev_for(int(c["evidence"].rsplit(":", 1)[1]))
+            cands += model_fallback(text, ev_for, "standards", paths, cache, coverage, label, lines_found)
             for c in cands:
                 c["skill"] = s["dir"].name
                 found.append(c)
@@ -228,7 +233,13 @@ def collect(root: Path, config: dict, online: bool, today: str, opts: dict | Non
                 coverage.setdefault("pending", []).append({"url": url, "tool": "confluence", "save_to": str(save_to),
                                                            "reason": f"copy from {fetched} is older than {stale} days"})
             coverage["read"].append(f"{url} (copy {fetched}" + (f", version {version})" if version else ")"))
-            for c in extract(body, f"{url} (fetched {fetched})", "standards", paths):
+            page = extract(body, "x", "standards", paths)
+            lines_found = {int(c["evidence"].rsplit(":", 1)[1]) for c in page}
+            for c in page:
+                c["evidence"] = f"{url} (fetched {fetched})"
+            page += model_fallback(body, lambda n, u=url, d=fetched: f"{u} (fetched {d})", "standards", paths, cache,
+                                   coverage, url, lines_found)
+            for c in page:
                 c["skill"] = s["dir"].name
                 found.append(c)
     # ADR
@@ -278,6 +289,105 @@ def collect(root: Path, config: dict, online: bool, today: str, opts: dict | Non
         coverage["read"].append(rel(f))
         found += extract(text, rel(f), "tool-rules", paths)
     return found, coverage
+
+
+# ---------------------------------------------------------------- the cheap model for prose (through the session)
+
+PROMPT = Path(__file__).resolve().parents[1] / "prompts" / "extract.md"
+MIN_SECTION = 80
+
+
+def sections(text: str) -> list[tuple[str, int, list[str]]]:
+    """(heading, first line number, lines) per Markdown section; code fences stay inside their section."""
+    out, title, start, buf, fence = [], "(start)", 1, [], False
+    for n, line in enumerate(text.splitlines(), 1):
+        if line.strip().startswith(("```", "~~~")):
+            fence = not fence
+        m = None if fence else re.match(r"^(#{1,6})\s+(.*)", line)
+        if m:
+            if buf:
+                out.append((title, start, buf))
+            title, start, buf = m.group(2).strip(), n, [line]
+        else:
+            buf.append(line)
+    if buf:
+        out.append((title, start, buf))
+    return out
+
+
+def _prose(lines: list[str]) -> str:
+    """The section without code, list items and rule-ID lines (those the patterns read)."""
+    keep, fence = [], False
+    for line in lines:
+        if line.strip().startswith(("```", "~~~")):
+            fence = not fence
+            continue
+        if fence or ITEM.match(line) or RULE_ID.match(line) or re.match(r"^#{1,6}\s", line):
+            continue
+        keep.append(line)
+    return "\n".join(keep).strip()
+
+
+def _squash(s: str) -> str:
+    return re.sub(r"\s+", " ", s).strip().lower()
+
+
+def _line_of_quote(lines: list[str], quote: str, start: int) -> int:
+    """The line where the quote begins (whitespace and case ignored, also across line breaks)."""
+    acc, ends = "", []
+    for ln in lines:
+        part = _squash(ln)
+        acc = f"{acc} {part}".strip() if part else acc
+        ends.append(len(acc))
+    pos = acc.find(_squash(quote))
+    return start + next((i for i, e in enumerate(ends) if e > pos), 0) if pos >= 0 else start
+
+
+def model_fallback(text: str, evidence_for, kind: str, paths: list[str], cache: Path | None, coverage: dict,
+                   label: str, found_lines: set[int]) -> list[dict]:
+    """Sections whose rules the patterns did not find but whose prose (or tables) uses normative words go to the
+    cheap model in the session: a pending item with the section text and the fixed prompt. Its answer, once saved,
+    is used only for quotes found verbatim in the section. The answer is reused while the section is unchanged."""
+    if cache is None:
+        return []
+    out = []
+    for title, start, lines in sections(text):
+        end = start + len(lines) - 1
+        if any(start <= n <= end for n in found_lines):
+            continue   # the patterns read this section
+        prose = _prose(lines)
+        if len(prose) < MIN_SECTION or not (HARD.search(prose) or SOFT.search(prose)):
+            continue
+        body = "\n".join(lines)
+        key = hashlib.sha256((label + "\n" + body).encode()).hexdigest()[:16]
+        base = cache / "model"
+        answer = base / f"{key}.json"
+        if not answer.is_file():
+            base.mkdir(parents=True, exist_ok=True)
+            (base / f"{key}.md").write_text(f"Source: {label}\nSection: {title}\nLines: {start}-{end}\n\n{body}\n",
+                                            encoding="utf-8")
+            coverage.setdefault("pending", []).append({
+                "tool": "model", "tier": "fast", "prompt": str(PROMPT), "input": str(base / f"{key}.md"),
+                "save_to": str(answer), "source": f"{label} § {title}", "reason": "prose without list rules"})
+            continue
+        try:
+            rules = (json.loads(answer.read_text(encoding="utf-8")) or {}).get("rules") or []
+        except ValueError:
+            coverage["skipped"].append({"source": f"{label} § {title}", "reason": "model answer is not valid JSON"})
+            continue
+        flat = _squash(body)
+        for r in rules:
+            quote, rule = str(r.get("quote", "")), _clean(str(r.get("rule", "")))
+            if len(quote) < 12 or _squash(quote) not in flat or not 8 <= len(rule) <= 200:
+                coverage["skipped"].append({"source": f"{label} § {title}",
+                                            "reason": f"model rule dropped (quote not in the source): {quote[:60]}"})
+                continue
+            n = _line_of_quote(lines, quote, start)
+            strength = "hard" if HARD.search(quote) or r.get("strength") == "hard" and HARD.search(rule) else \
+                ("hard" if r.get("strength") == "hard" else "soft")
+            out.append({"text": rule, "rule_id": None, "kind": kind, "strength": strength, "paths": paths,
+                        "evidence": evidence_for(n), "quote": quote, "extracted_by": "model"})
+    return out
 
 
 def candidate_id(c: dict) -> str:

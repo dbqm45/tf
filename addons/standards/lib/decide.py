@@ -24,7 +24,8 @@ def decide(candidates: list[dict]) -> list[dict]:
         settled = [k for k in kinds if k in ("standards", "lint")] or \
             (["adr"] if any(c["kind"] == "adr" and c.get("adr_accepted") for c in cs) else [])
         if settled:
-            status, acceptance = "auto-accepted", f"source: {settled[0]}"
+            status, acceptance = "auto-accepted", f"source: {settled[0]}" + (
+                " (cheap model, quote checked)" if all(c.get("extracted_by") == "model" for c in cs) else "")
         elif len(origins) >= 2:
             status, acceptance = "auto-accepted", f"{len(origins)} independent sources"
         else:
@@ -40,6 +41,8 @@ def decide(candidates: list[dict]) -> list[dict]:
             "data": {"topic": "decision", "sources": kinds, "rank": RANK.get(kinds[0], 9),
                      "rule_id": next((c["rule_id"] for c in cs if c.get("rule_id")), None),
                      "forbidden_import": next((c["forbidden_import"] for c in cs if c.get("forbidden_import")), None),
+                     "quote": next((c["quote"] for c in cs if c.get("quote")), None),
+                     "extracted_by": "model" if all(c.get("extracted_by") == "model" for c in cs) else "pattern",
                      "skills": sorted({c["skill"] for c in cs if c.get("skill")})},
             "evidence": list(dict.fromkeys(c["evidence"] for c in cs))[:6],
         })

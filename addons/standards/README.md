@@ -13,7 +13,9 @@ matching files:
 | other agents' rule files | CLAUDE.md, AGENTS.md (without the factory's blocks), Cursor rules (globs), Copilot instructions (applyTo) |
 
 A rule is a list item or a rule-ID line (`FE-UI-001: …`) with normative words (must, never, should, prefer, avoid…,
-also Polish); prose paragraphs are not read yet. Duplicates are merged; `hard` / `soft` by the wording; a rule is
+also Polish). A section of a standards skill or Confluence page that states rules in prose or tables goes to the
+cheapest model in the session (pending item `tool: model`, prompt `prompts/extract.md`); a rule it returns counts
+only when its quote is found verbatim in the section. Duplicates are merged; `hard` / `soft` by the wording; a rule is
 applied when a settling source (standards skill, accepted ADR, lint) or two independent sources state it, otherwise
 it is a listed candidate.
 

@@ -43,8 +43,8 @@ def render_index(k: dict) -> str:
         lines.append("- No agreed rules found yet; see `coverage.md` here for what was read.")
     pending = len(k.get("pending") or [])
     if pending:
-        lines.append(f"- {pending} linked pages wait to be read through the session's Confluence tool (MCP): "
-                     "`python3 .tf/addons/standards/standards.py pending`.")
+        lines.append(f"- {pending} reads wait for the session (Confluence pages through MCP, prose sections for the "
+                     "cheap model): `python3 .tf/addons/standards/standards.py pending`.")
     return "\n".join(lines[:INDEX_MAX_LINES]) + "\n"
 
 
@@ -82,6 +82,8 @@ def render_decisions(k: dict) -> str:
         lines += [f"## {title}", "", "| Id | Strength | Rule | Accepted by | Sources |", "|---|---|---|---|---|"]
         for d in sel:
             rule = d["title"].replace("|", "\\|")
+            if d["data"].get("quote"):
+                rule += " — quote: “" + d["data"]["quote"].replace("|", "\\|")[:200] + "”"
             lines.append(f"| {d['data']['rule_id'] or d['id']} | {d['strength']} | {rule} | {d['acceptance']} | "
                          + "; ".join(d["evidence"]).replace("|", "\\|") + " |")
         lines.append("")
