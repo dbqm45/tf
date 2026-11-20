@@ -3,6 +3,11 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [20.7.0] — 2026-11-20
+### Added
+- **core:** start a factory session with tf code (#364)
+- **core:** add an opt-in plugin layout for the factory mode (#362)
+
 ## [20.6.0] — 2026-11-20
 ### Added
 - **core:** core-sweep — a report of stale notes, plans and rules (#356)
