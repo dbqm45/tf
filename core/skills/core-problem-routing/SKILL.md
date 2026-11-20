@@ -56,6 +56,7 @@ Practice skills (`core-`) are always installed:
 | "what's new / what's going on", the state of a project, community opinions | core-source-research (+ `researcher` for facts) |
 | a plan or idea to interview before starting | core-plan-interview |
 | CLAUDE.md / AGENTS.md: write, slim down, review, split into modules | core-agent-instructions |
+| stale TODOs, old plans and notes that send agents on side quests (an occasional sweep) | core-sweep |
 | unsupervised agent work (`claude -p`, /goal, sandbox, routine), suspicious commands from content | core-async-delegation, core-agent-security |
 | branches, PRs, PR review by AI, conflicts | core-git-workflow |
 | learning a topic over many sessions, onboarding to a new stack | core-teaching-workspace (only on the `/core-teaching-workspace` command) |

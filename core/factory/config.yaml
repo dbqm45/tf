@@ -387,7 +387,7 @@ skill_requires: {}
 
 # Standalone skills: without a role and persona, invoked manually (`/<skill>`) or chosen by the dispatcher
 # (core-problem-routing). `build.py check` does not warn that nobody uses them.
-standalone_skills: [core-factory-update, core-teaching-workspace, core-agent-retro, tf]   # two run only manually (/…), the agent retrospective, the /tf loop
+standalone_skills: [core-factory-update, core-teaching-workspace, core-agent-retro, core-sweep, tf]   # two run only manually (/…), the agent retrospective, the occasional sweep, the /tf loop
 
 # Skills added to every agent of personas and executors (of all packs). A pack may add its own
 # `always_skills` — they go only to its personas and executors.

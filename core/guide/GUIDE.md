@@ -108,6 +108,9 @@ Shared agents, available to every persona:
 - **A checkpoint** for a longer task: `python3 .claude/hooks/project_record.py wip start "<goal>"`. After a break the
   session starts from it and from `git status`.
 - **The phases from the idea to maintenance** (personas, gates, readiness): the `core-delivery-lifecycle` skill.
+- **A sweep of stale notes** (monthly, before a big change, after installing the factory in an old project): the
+  `core-sweep` skill reports TODOs, plans and rules that are no longer true, with evidence; after your consent it moves
+  documents to `docs/project/archive/sweep/`, which the `guard_paths` hook keeps agents out of (`TF_ARCHIVE_READ=1` lifts it).
 - **A plan before the code, then TDD:** first a test that fails, then the code. The `tdd_guard` hook blocks production
   code without a red test. The quality gate: the `.claude/quality-gate.json` file with the test command, e.g.
   `{"command": "npm test", "watch": ["src/", "test/"]}` — the `quality_gate` hook will not let a turn end with a red
