@@ -42,7 +42,7 @@ analysis stays as the rationale for the decision.
   - `skill_hint` hook suggestions;
   - the quality gate and the versioned registry;
   - references to skills of other overlays, checked today by `workspace.py refs`.
-- **Context cost:** the description of every skill from a plugin is in context on every turn, and `pack-it` has 142
+- **Context cost:** the description of every skill from a plugin is in context on every turn, and `pack-it` has 143
   skills. The factory limits this with visibility by stack; a plugin does not.
 
 ### The core

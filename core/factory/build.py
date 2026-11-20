@@ -390,14 +390,14 @@ def load_team(cfg: dict) -> tuple[dict, dict, dict, dict, list[str]]:
             dropped = [x for k in PERSONA_SKILL_KEYS for x in p.get(k) or [] if x not in skills]
             dropped += [f"rola {x}" for x in p.get("roles") or [] if x not in out_roles]
             dropped += [f"cecha {x}" for x in p.get("traits") or [] if x not in traits]
-            dropped += [f"agent {x}" for x in p.get("extra_agents") or [] if x.split("-", 1)[0] not in personas_raw]
+            dropped += [f"agent {x}" for x in p.get("extra_agents") or [] if not any(x.startswith(n + "-") for n in personas_raw)]
             for k in PERSONA_SKILL_KEYS:
                 p[k] = [x for x in p.get(k) or [] if x in skills]
             p["role_skills"] = {r: [x for x in v if x in skills] for r, v in (p.get("role_skills") or {}).items()
                                 if r in out_roles}
             p["roles"] = [x for x in p.get("roles") or [] if x in out_roles]
             p["traits"] = [x for x in p.get("traits") or [] if x in traits]
-            p["extra_agents"] = [x for x in p.get("extra_agents") or [] if x.split("-", 1)[0] in personas_raw]
+            p["extra_agents"] = [x for x in p.get("extra_agents") or [] if any(x.startswith(n + "-") for n in personas_raw)]
             p["_dropped"] = dropped
         out_personas[name] = p
     drop_inactive(cfg, out_roles, out_personas, inactive_skills(skills))
