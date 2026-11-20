@@ -257,6 +257,19 @@ def main() -> int:
         check(dash.is_file(), "S-10c: dashboard_open=false — it builds but does not open (the file exists)")
         dash.unlink()
         (proj / ".claude" / "tf.json").unlink()
+        # S-10c2: opening — no browser is a reason in a message, not silence and not an exception
+        sys.path.insert(0, str(SCRIPT.parent))
+        import run_state as rs
+        real_open, real_name = rs.webbrowser.open, rs.os.name
+        try:
+            rs.webbrowser.open = lambda uri: False
+            why = rs.open_file(proj / "x.html") if os.name != "nt" and sys.platform != "darwin" else "skip"
+            check(bool(why), f"S-10c2: webbrowser without a browser → the reason: {why!r}")
+            rs.webbrowser.open = lambda uri: (_ for _ in ()).throw(OSError("boom"))
+            why = rs.open_file(proj / "x.html") if os.name != "nt" and sys.platform != "darwin" else "boom"
+            check("boom" in why, f"S-10c2: an exception → the reason: {why!r}")
+        finally:
+            rs.webbrowser.open, rs.os.name = real_open, real_name
         r = run(REPORT, ["start", "Czwarta historyjka", "--story", "x"], proj, cfg, {"TF_DASHBOARD": "0"})
         check(r.returncode == 0 and not dash.exists(), "S-10d: TF_DASHBOARD=0 disables it without a file")
         # corrupt options file → defaults (enabled), the run does not crash
