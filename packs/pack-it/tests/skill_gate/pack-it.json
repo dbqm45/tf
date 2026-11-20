@@ -68,8 +68,8 @@
   "offline": "2026-11-18"
  },
  "arch-privacy-compliance": {
-  "fingerprint": "54f7f76998a16d51",
-  "offline": "2026-11-18"
+  "fingerprint": "8a4f68350ca92154",
+  "offline": "2026-11-20"
  },
  "arch-quality-attributes": {
   "fingerprint": "a711f576a1dcab0f",
@@ -80,8 +80,8 @@
   "offline": "2026-11-18"
  },
  "arch-tech-selection": {
-  "fingerprint": "7594fb3d4ed8c1e0",
-  "offline": "2026-11-18"
+  "fingerprint": "de34727a7c3e9780",
+  "offline": "2026-11-20"
  },
  "arch-threat-modeling": {
   "fingerprint": "a7a0117fdef2eb01",
@@ -132,16 +132,16 @@
   "offline": "2026-11-18"
  },
  "ddd-context-mapping": {
-  "fingerprint": "f1d685e3c669cf3a",
-  "offline": "2026-11-18"
+  "fingerprint": "9ca0a89b79425fd5",
+  "offline": "2026-11-20"
  },
  "ddd-deep-modeling": {
   "fingerprint": "787bea05ae4a62eb",
   "offline": "2026-11-20"
  },
  "ddd-discovery-intake": {
-  "fingerprint": "b15ae308dad38ba7",
-  "offline": "2026-11-18"
+  "fingerprint": "d4e45423b15445ee",
+  "offline": "2026-11-20"
  },
  "ddd-es-simulation": {
   "fingerprint": "534b078d3b01f2bd",
@@ -152,12 +152,12 @@
   "offline": "2026-11-18"
  },
  "ddd-facilitation": {
-  "fingerprint": "44b6bc05e39c0789",
-  "offline": "2026-11-18"
+  "fingerprint": "c1bc2f6b8f81ef1e",
+  "offline": "2026-11-20"
  },
  "ddd-legacy-modernization": {
-  "fingerprint": "5632486e1e2ceb7d",
-  "offline": "2026-11-18"
+  "fingerprint": "69084f6b25ab5ca3",
+  "offline": "2026-11-20"
  },
  "ddd-model-stress-test": {
   "fingerprint": "2a9d74ecbddc55d8",
@@ -168,7 +168,7 @@
   "offline": "2026-11-18"
  },
  "ddd-tactical-design": {
-  "fingerprint": "62ec63287b70c653",
+  "fingerprint": "f159efbc0d8ad1d1",
   "offline": "2026-11-20"
  },
  "eng-algorithms-data-structures": {
@@ -440,16 +440,16 @@
   "offline": "2026-11-18"
  },
  "proc-product-discovery": {
-  "fingerprint": "919da81a95e777b4",
-  "offline": "2026-11-18"
+  "fingerprint": "d108c149989626f4",
+  "offline": "2026-11-20"
  },
  "proc-project-planning": {
   "fingerprint": "b9fa85a5e2c1e306",
   "offline": "2026-11-18"
  },
  "proc-requirements-shaping": {
-  "fingerprint": "2c8c408162600f51",
-  "offline": "2026-11-19"
+  "fingerprint": "660ec302820e673a",
+  "offline": "2026-11-20"
  },
  "proc-safe": {
   "fingerprint": "c8aa8367ca5259d0",
