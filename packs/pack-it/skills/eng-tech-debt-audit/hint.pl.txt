@@ -1,107 +1,89 @@
-head: Użyj przy audycie długu technicznego repo lub modułu — ustalenia z plik:linia, waga, wysiłek, priorytety. Użyj przy audycie długu technicznego repozytorium lub modułu — orientacja (rozmiar × częstość zmian), dziewięć wymiarów długu, tabela ustaleń z plik:linia, waga i wysiłek, priorytet, szybkie wygrane, „wygląda źle, ale jest w porządku”, ponowny audyt. Nie do pojedynczej refaktoryzacji (eng-behavior-preserving-refactoring) ani przeglądu jednego PR (eng-design-principles).
-# Audyt długu technicznego
+head: Użyj, gdy audytujesz dług techniczny repo lub modułu — hotspoty, dziewięć wymiarów, ustalenia z plik:linia, priorytet według częstości zmian, ponowne audyty. Użyj, gdy audytujesz dług techniczny repozytorium lub modułu tak, żeby zespół mógł działać — orientacja według rozmiaru × częstości zmian (hotspoty, współzmiany), dziewięć wymiarów długu, ustalenia z plik:linia, wagą, wysiłkiem i propozycją, wyliczony priorytet, szybkie wygrane, obowiązkowa sekcja „wygląda źle, ale jest dobrze”, tanie i groźne sprzężenie nazwane rodzajem connascence, cykle bez madge (code_graph.py), ponowny audyt ze statusami ROZWIĄZANE/NOWE/ZMIENIONE i stała rutyna higieny architektury (testy architektury, zapadka, cotygodniowe małe PR, chronione weryfikatory). Audyt tylko proponuje i niczego nie przepisuje. Nie do pojedynczej refaktoryzacji (eng-behavior-preserving-refactoring) ani przeglądu jednego PR (eng-design-principles).
+# Audyt długu technicznego — ustalenia, na których zespół może działać
 
-Audyt, z którym zespół coś zrobi: każde ustalenie wskazuje plik i linię, ma wagę, wysiłek i propozycję, a wynik zostaje
-w repozytorium i da się go porównać przy następnym audycie. Audyt niczego nie przepisuje — tylko ustala i proponuje.
+Audyt jest użyteczny, gdy zespół w poniedziałek wybierze trzy pierwsze pozycje, a późniejszy audyt powie, co się zmieniło.
+Dlatego każde ustalenie ma miejsce, wagę, wysiłek i propozycję; kolejność wynika ze wzoru, nie z gustu; a raport mówi,
+co wygląda źle, ale jest dobrze. **Audyt tylko proponuje — niczego nie przepisuje.** Prośba o naprawę w tym samym
+przebiegu → dokończ raport i przekaż wybór do eng-refactor-planning.
 
-## Procedura
-1. **Orientacja (obowiązkowa, przed oceną).**
-   - README, manifesty (`package.json`, `pom.xml`, `nx.json`), ADR-y, mapa modułów (eng-codebase-mapping).
-   - Historia: `git log --oneline -200` i zmiany z ostatnich 6 miesięcy (`git log --since=6.months --stat`).
-   - **Gorące punkty:** hotspot = **złożoność × częstość zmian**. Każda oś osobno myli: gęsty, ale zamrożony plik
-     jest tylko stary; trywialny, ale często zmieniany to zwykle konfiguracja. Proxy złożoności wybierz tani
-     i liczony tak samo na całym repo (linie niepuste, głębokość wcięć) — iloczyn jest ważniejszy niż wybór proxy.
-     **Uruchom** `python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --hotspots --cochange`.
-   - **Współzmiany czytaj dwojako:** ciasna **para** (A i B prawie zawsze razem) to ukryta umowa — kandydat na
-     connascence znaczenia lub algorytmu; **hub** (plik zmieniany z wieloma obszarami) to szeroki zasięg. Współzmiany
-     kłamią w obie strony: masowe commity sklejają niezwiązane pliki, a brak współzmian nie dowodzi braku umowy
-     (model backendu i jego ręczna kopia na froncie, które się NIE zmieniają razem, to cichy dług do sprawdzenia).
-   - Zapisz 1–2 akapity modelu architektury, jak go rozumiesz. Rozbieżność z README to już ustalenie.
-   - Pokaż człowiekowi plan audytu (zakres, moduły, narzędzia), zanim zaczniesz.
-2. **Ocena w dziewięciu wymiarach** (tabela niżej). Narzędzia uruchamiasz tylko te, które projekt już ma albo na które
-   człowiek się zgodzi — bez globalnych instalacji.
-3. **Scal i oceń:** usuń duplikaty, nadaj wagę i wysiłek, policz priorytet.
-4. **Raport** `docs/project/07-review/<data>-tech-debt.md` (core-project-record).
+## 1. Orientacja (przed oceną)
+1. Przeczytaj README, manifesty, ADR i mapę modułów.
+2. Historia: `git log --oneline -200`, `git log --since=6.months --stat`.
+3. **Hotspoty = złożoność × częstość zmian.** Uruchom
+   `python3 .claude/skills/eng-codebase-mapping/scripts/git_territory.py --hotspots --cochange`. Każdy czynnik osobno myli:
+   gęsty plik, którego nikt nie dotyka, jest tylko stary; trywialny plik zmieniany co tydzień to zwykle konfiguracja.
+   Jeden tani wskaźnik złożoności liczony jednakowo — iloczyn waży więcej niż wskaźnik.
+4. **Współzmiany czytane dwojako:** ciasna para plików zmienianych zawsze razem = ukryty kontrakt (kandydat na connascence
+   znaczenia lub algorytmu); hub zmieniany z wieloma obszarami = szeroki zasięg. Współzmiany mylą w obie strony: masowe
+   commity sklejają niezwiązane pliki, a brak współzmian nie dowodzi niezależności — np. DTO zamówienia skopiowane ręcznie
+   do API i aplikacji mobilnej nigdy nie zmienia się w jednym commicie i właśnie ta cicha kopia jest długiem do sprawdzenia.
+5. Napisz 1–2 akapity modelu architektury; rozbieżność z README to osobne ustalenie.
+6. Pokaż plan audytu (zakres, moduły, narzędzia) człowiekowi przed startem. Tylko narzędzia, które projekt ma lub które
+   człowiek zatwierdzi — bez globalnych instalacji.
 
-| Wymiar | Czego szukasz | Narzędzia (TS / Java / Nx) |
+## 2. Ocena — dziewięć wymiarów
+| Wymiar | Czego szukać | Narzędzia (gdy są) |
 |---|---|---|
-| rozpad architektury | cykle, łamanie warstw i granic modułów, pliki > 500 linii, logika powielona w 3+ miejscach, nieużywane abstrakcje, martwy kod | `madge --circular`, `knip`, `nx graph`, lint granic modułów Nx; jdeps, ArchUnit; Python i TS/JS bez narzędzi: `code_graph.py` z eng-codebase-mapping (cykle runtime vs leniwe, pary pod prąd) |
-| niespójność | kilka sposobów na to samo (HTTP, stan, błędy, nazwy) | przegląd wzorców |
-| typy i kontrakty | `any`, `as`, niewalidowane granice, kontrakty API bez schematu | `tsc --noEmit` (strict), lint |
-| testy | często zmieniane pliki bez testów, testy sprawdzające implementację, niestabilne testy | pokrycie, historia CI (qa-regression) |
-| zależności i konfiguracja | znane CVE, nieużywane paczki, rozrost zmiennych środowiskowych | `npm audit`, `depcheck`/`knip`; OWASP dependency-check |
+| rozpad architektury | cykle, łamane warstwy i granice modułów, pliki > 500 linii, logika powielona w 3+ miejscach, nieużywane abstrakcje, martwy kod | `madge --circular`, dependency-cruiser, `nx graph`, `jdeps`, ArchUnit, `knip`; bez nich `code_graph.py` |
+| niespójność | kilka sposobów na to samo: klienci HTTP, stan, błędy, nazewnictwo | grep, czytanie |
+| typy i kontrakty | `any`, rzutowania, niewalidowane granice, API bez schematu | `tsc --noEmit` ze strict |
+| testy | często zmieniane pliki bez testów, testy związane z implementacją, niestabilne testy | pokrycie, historia CI (qa-regression) |
+| zależności i konfiguracja | znane CVE, nieużywane pakiety, rozrost zmiennych środowiskowych | `npm audit`, `depcheck`, OWASP dependency-check |
 | wydajność | N+1, blokujące I/O, zbędne renderowanie | be-database, fe-architecture |
-| błędy i obserwowalność | połykane wyjątki, brak logów i metryk na ścieżkach krytycznych | ops-observability |
-| bezpieczeństwo | sekrety, brak autoryzacji per zasób, niebezpieczne wzorce | be-auth-security, ops-supply-chain-security |
-| dokumentacja | README i ADR niezgodne z kodem | docs-tech-writing |
+| błędy i obserwowalność | połknięte wyjątki, brak logów i metryk na ścieżkach krytycznych | ops-observability |
+| bezpieczeństwo | sekrety w kodzie, brak autoryzacji per zasób, groźne wzorce | be-auth-security |
+| dokumentacja | README i ADR rozjechane z kodem | docs-tech-writing |
 
-## Ocena i priorytet
-- **Waga:** krytyczna / wysoka / średnia / niska — według skutku (dane, bezpieczeństwo, awaria, spowolnienie zespołu).
-- **Wysiłek:** S (godziny) / M (dni) / L (tygodnie).
-- **Priorytet (propozycja fabryki):** waga (4/3/2/1) × częstość zmian pliku (zmiany w 6 mies., min. 1) ÷ wysiłek (1/2/4).
-  Dług w kodzie, którego nikt nie dotyka, może poczekać; dług w gorącym punkcie spowalnia każdą zmianę.
-- **Dług tani i prawdziwy:** sprzężenie mechaniczne (kod generowany, regeneracja, rozjazd łapany przez kompilator
-  lub CI) wygląda groźnie, ale jest tanie — waga co najwyżej niska. Groźne jest sprzężenie dynamiczne bez bariery
-  narzędziowej (kolejność, znaczenie na dużym dystansie). W opisie nazwij rodzaj (connascence), nie „tightly coupled”.
-- Etykieta pomocnicza: kwadrant Fowlera (świadomy / nieświadomy × rozważny / lekkomyślny). Najpierw spłacasz dług
-  o najwyższych „odsetkach” — ten, który spowalnia bieżące zmiany (formuła wyżej liczy to przez częstość zmian).
-- Długu nie wymyślasz, żeby wypełnić tabelę: brak ustaleń w wymiarze = „nic istotnego”.
+Wymiar bez ustaleń: **„nic istotnego”** — nigdy nie wymyślaj długu, żeby wypełnić tabelę.
 
-## Raport
-1. Podsumowanie (≤ 10 punktów) i model architektury.
-2. Tabela: ID · wymiar · plik:linia · waga · wysiłek · priorytet · opis · propozycja.
-3. Top 5 ze szkicem zmiany (diff w skrócie, bez wykonywania).
-4. **Szybkie wygrane:** wysiłek S przy wadze co najmniej średniej.
-5. **Wygląda źle, ale jest w porządku** — obowiązkowo: rzeczy celowe, żeby nikt ich nie „naprawiał”. Celowość
-   uzasadniasz dowodem: ADR, commit (`git log -L :<funkcja>:<plik>`, `git blame`), opis PR; liczba poprawek
-   mechanizmu w historii też jest dowodem (np. 0 przez 6 lat). Ryzyko celowego ograniczenia zamykasz tanią osłoną
-   (test, reguła lintera), nie przebudową. Wybór, co i jak refaktoryzować: eng-refactor-planning.
-6. Pytania do zespołu (gdy brakuje kontekstu, pytasz zamiast zgadywać).
+Cykle bez madge i dependency-cruisera (np. Django + TypeScript, nic nie można instalować):
+`python3 .claude/skills/eng-codebase-mapping/scripts/code_graph.py <repo>`. Oddziela cykle **runtime** (importy na poziomie
+modułu) od cykli zamykanych tylko leniwymi krawędziami — import w funkcji, pod `TYPE_CHECKING` albo import samego typu.
 
-## Duże repozytoria i ponowny audyt
-- Ponad ~50 tys. linii lub więcej niż 5 modułów: jeden wykonawca na moduł (każdy z tą samą procedurą), potem scalanie
-  i wspólny ranking.
-- Ponowny audyt porównuje z poprzednim raportem: ustalenia oznaczasz jako ROZWIĄZANE, NOWE albo ZMIENIONE.
-- Świadome skróty w kodzie znakuj komentarzem `debt: <ograniczenie>, <kiedy wrócić>`; audyt zbiera je do tabeli,
-  a znacznik bez warunku powrotu jest osobnym ustaleniem.
+## 3. Waga, wysiłek, priorytet
+- **Waga** według skutku: krytyczna 4 (utrata danych, bezpieczeństwo, awaria), wysoka 3, średnia 2, niska 1.
+- **Wysiłek:** S = godziny (1), M = dni (2), L = tygodnie (4).
+- **Priorytet = waga × częstość zmian ÷ wysiłek**, częstość = commity dotykające pliku w ostatnich 6 miesiącach (minimum 1).
+  Przykłady: 3×25/2 = **37,5**; 4×6/1 = **24**. Dług w kodzie, którego nikt nie dotyka, może poczekać.
+- **Szybkie wygrane** = wysiłek S przy wadze ≥ średnia.
+- **Tanie i groźne sprzężenie.** Sprzężenie mechaniczne pilnowane przez narzędzie — kod generowany odświeżany regeneracją,
+  rozjazd łapany przez kompilator lub CI — ma wagę co najwyżej niską. Groźne jest sprzężenie dynamiczne bez bariery
+  narzędzia: kolejność wywołań, znaczenie wartości na odległość, skopiowany algorytm. Nazwij rodzaj connascence zamiast
+  pisać „tightly coupled”.
+- Etykieta pomocnicza: kwadrant długu (celowy/nieświadomy × rozważny/lekkomyślny, za Fowlerem). Spłacaj najpierw dług o najwyższych odsetkach.
 
-## Odśmiecanie architektury jako rutyna
-Audyt raz na kwartał nie nadąża za kodem pisanym z agentami. Pętla:
-1. **Testy architektury** (warstwy, cykle, rozmiar pliku; narzędzia jak dependency-cruiser, import-linter, Tach,
-   ArchUnit — ddd-legacy-modernization) w szybkich bramkach i w CI; agent uruchamia je przed „gotowe”.
-2. **Zapadka (ratchet):** próg startuje przy obecnym maksimum i tylko spada; wyjątki wąskie, z właścicielem
-   i terminem.
-3. **Rutyna co tydzień:** jedno naruszenie → jeden mały PR refaktoryzacji z przeglądem człowieka
-   (core-async-delegation §5).
-4. Testy architektury, progi i listy wyjątków w **ścieżkach chronionych** (CODEOWNERS i ochrona gałęzi): agent
-   optymalizujący „zielone CI” przesunie weryfikator zamiast kodu.
+## 4. Raport
+Ścieżka `docs/project/07-review/<data>-tech-debt.md`. Części: podsumowanie (≤ 10 punktów) i model architektury; tabela
+ustaleń (ID, wymiar, plik:linia, waga, wysiłek, priorytet, opis, propozycja) według priorytetu; top 5 ze szkicem zmiany;
+szybkie wygrane; **„wygląda źle, ale jest dobrze”** (obowiązkowe; celowe wybory z dowodem — ADR, `git log -L`, `git blame`,
+opis PR, liczba poprawek mechanizmu; ryzyko celowego ograniczenia zamyka tani strażnik, nie przebudowa; „nie ruszaj”);
+pytania do zespołu.
+
+Znaczniki w kodzie: `debt: <ograniczenie>, <kiedy wrócić>`; znacznik bez warunku powrotu to osobne ustalenie.
+Przykładowy raport: `references/examples.md`.
+
+## 5. Skala i ponowne audyty
+- Ponad ~50 tys. linii lub ponad 5 modułów → jeden wykonawca na moduł według tej samej procedury, potem scalenie i wspólny ranking.
+- **Ponowny audyt** porównuje z poprzednim raportem i oznacza każde ustalenie **ROZWIĄZANE**, **NOWE** albo **ZMIENIONE**.
+
+## 6. Rutyna higieny architektury
+1. **Testy architektury** dla warstw, cykli i rozmiaru plików (import-linter, dependency-cruiser, ArchUnit, Tach) w szybkich
+   bramkach i CI; agent uruchamia je przed „gotowe”.
+2. **Zapadka:** każdy próg zaczyna od obecnego maksimum i tylko spada; wyjątki imiennie, z właścicielem i terminem.
+3. **Rytm co tydzień:** jedno naruszenie → jeden mały PR z refaktoryzacją i przeglądem człowieka.
+4. **Chronione weryfikatory:** progi, listy wyjątków i testy architektury w ścieżkach pod CODEOWNERS i ochroną gałęzi —
+   agent optymalizujący zielone CI inaczej przesunie weryfikator zamiast poprawić kod.
 
 ## Przykład
-**Sytuacja:** „Audyt `apps/shop-api` przed sprintem sprzątania — od czego zacząć?”
-**Wynik** (po orientacji i planie pokazanym człowiekowi):
+„60 ustaleń w monolicie, jak uszeregować bez naprawiania kodu, którego nikt nie dotyka?” — częstość zmian z
+`git log --since=6.months` (git_territory.py), waga 1–4 i wysiłek S/M/L, priorytet = waga × częstość ÷ wysiłek; średnie
+ustalenie w nieruszanym pliku z wysiłkiem L: 2×1/4 = 0,5 i czeka; wysokie w pliku zmienianym 25 razy z wysiłkiem M: 37,5
+i prowadzi. Szybkie wygrane osobno; celowe dziwactwa w „wygląda źle, ale jest dobrze”.
 
-| ID | plik:linia | Waga | Wysiłek | Zmiany | Priorytet |
-|---|---|---|---|---|---|
-| D2 | `src/billing/invoice.ts:88` (VAT bez testów) | wysoka | M | 25 | 3×25÷2 = 37,5 |
-| D3 | `src/payments/webhook.ts:42` (`catch {}`) | krytyczna | S | 6 | 4×6÷1 = 24 |
-
-Szybka wygrana: D3. „Wygląda źle, ale OK”: dwa `retry.ts` — celowo (ADR-007).
-Więcej przykładów: `references/examples.md`.
-
-## Checklista
-- [ ] orientacja i model architektury przed oceną; plan pokazany człowiekowi
-- [ ] każde ustalenie z plik:linia, wagą, wysiłkiem i propozycją
-- [ ] hotspoty jako złożoność × częstość; współzmiany jako pary i huby; dług tani oddzielony od groźnego
-- [ ] priorytet uwzględnia częstość zmian; szybkie wygrane wypisane
-- [ ] sekcja „wygląda źle, ale jest w porządku”
-- [ ] raport w docs/project/07-review/, porównanie z poprzednim
-
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 4, lekcje 3–4 (hotspoty, współzmiany, dług tani i groźny, intencja z historii,
-  kwadrant długu) — materiał szkoleniowy (dostęp 2026-10-09); opisane własnymi słowami.
-
-## Źródła inspiracji
-[tech-debt-skill](https://github.com/ksimback/tech-debt-skill) (orientacja przez rozmiar i historię zmian, wymiary
-długu, tabela ustaleń, sekcja rzeczy celowych, podział na moduły, ponowny audyt) i
-[ponytail](https://github.com/DietrichGebert/ponytail) (znaczniki świadomych skrótów z warunkiem powrotu) — opisane
-własnymi słowami; formuła priorytetu i narzędzia Java/Nx dodane w fabryce.
+## Lista kontrolna
+- [ ] orientacja i plan pokazany przed oceną; tylko zatwierdzone narzędzia
+- [ ] każde ustalenie: plik:linia, waga, wysiłek, priorytet ze wzoru, propozycja
+- [ ] puste wymiary: „nic istotnego”; sprzężenie nazwane rodzajem connascence
+- [ ] sekcja „wygląda źle, ale jest dobrze” z dowodami
+- [ ] ponowny audyt: ROZWIĄZANE / NOWE / ZMIENIONE; znaczniki `debt:` zebrane
+- [ ] nic nie przepisane; wybór refaktoryzacji przekazany do eng-refactor-planning

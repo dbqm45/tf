@@ -89,7 +89,7 @@
     {
       "id": "narzedzie-wewnetrzne-kup-czy-zbuduj",
       "expect": "trigger",
-      "prompt": "Zespół chce z pomocą AI zbudować własne narzędzie wewnętrzne, które co rano zbiera dane z Jiry, GitHuba i Slacka do raportu dla kierownika. Czy to budować, kupić gotowe, czy jakoś inaczej? Odpowiedz zwięźle.",
+      "prompt": "Zespół wsparcia chce z pomocą AI zbudować własne narzędzie wewnętrzne, które co piątek zbiera liczby zgłoszeń z helpdesku, CRM i arkusza SLA do raportu dla kierowniczki. Czy to budować, kupić gotowe, czy jakoś inaczej? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [

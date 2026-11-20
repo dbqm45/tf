@@ -54,6 +54,15 @@ def main() -> int:
         r = run(REPORT, ["start", "Sortowanie listy", "--story", "Jako admin chcę sortować."], proj, cfg)
         d = next((proj / ".tf" / "runs").glob("T-*-sortowanie-listy"), None)
         check(r.returncode == 0 and d is not None, f"S-0: preparing the run: {r.stdout} {r.stderr}")
+        check("Tip:" not in r.stderr, f"S-0b: a fresh session — no tip about /clear: {r.stderr}")
+        proj2 = Path(t) / "proj2"
+        proj2.mkdir()
+        tdir = cfg / "projects" / re.sub(r"[^A-Za-z0-9]", "-", str(proj2.resolve()))
+        tdir.mkdir(parents=True, exist_ok=True)
+        (tdir / "s1.jsonl").write_text('{"x": "run_report.py start A"}\n{"x": "run_report.py start B"}\n', encoding="utf-8")
+        r2 = run(REPORT, ["start", "Druga w tej sesji", "--story", "x"], proj2, cfg)
+        check("Tip:" in r2.stderr and "/clear" in r2.stderr,
+              f"S-0c: the session already holds another task — the tip to start a fresh one: {r2.stderr}")
         if d is None:
             print("✗ no run directory")
             return 1
@@ -257,6 +266,19 @@ def main() -> int:
         check(dash.is_file(), "S-10c: dashboard_open=false — it builds but does not open (the file exists)")
         dash.unlink()
         (proj / ".claude" / "tf.json").unlink()
+        # S-10c2: opening — no browser is a reason in a message, not silence and not an exception
+        sys.path.insert(0, str(SCRIPT.parent))
+        import run_state as rs
+        real_open, real_name = rs.webbrowser.open, rs.os.name
+        try:
+            rs.webbrowser.open = lambda uri: False
+            why = rs.open_file(proj / "x.html") if os.name != "nt" and sys.platform != "darwin" else "skip"
+            check(bool(why), f"S-10c2: webbrowser without a browser → the reason: {why!r}")
+            rs.webbrowser.open = lambda uri: (_ for _ in ()).throw(OSError("boom"))
+            why = rs.open_file(proj / "x.html") if os.name != "nt" and sys.platform != "darwin" else "boom"
+            check("boom" in why, f"S-10c2: an exception → the reason: {why!r}")
+        finally:
+            rs.webbrowser.open, rs.os.name = real_open, real_name
         r = run(REPORT, ["start", "Czwarta historyjka", "--story", "x"], proj, cfg, {"TF_DASHBOARD": "0"})
         check(r.returncode == 0 and not dash.exists(), "S-10d: TF_DASHBOARD=0 disables it without a file")
         # corrupt options file → defaults (enabled), the run does not crash

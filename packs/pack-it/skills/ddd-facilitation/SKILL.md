@@ -1,141 +1,149 @@
 ---
 name: ddd-facilitation
-description: Use for a conversation or workshop with domain experts — facilitation techniques, ubiquitous language, signal words.
+description: Use when leading a conversation or workshop with domain experts — facilitation, signal words, clean questions, the glossary, decision gates, a model as stand-in expert.
 metadata:
-  review: "2027-10-09"
-  catalog: "Use when leading a conversation or workshop with domain experts — facilitation techniques, building the ubiquitous language, catching signal words (status, CRUD), group dynamics. Also the agent's decision gates and the facilitator's self-check. Not for the course and notation of Event Storming (ddd-event-storming) or designing the model (ddd-deep-modeling)."
+  review: "2027-11-20"
+  catalog: "Use when running a conversation or workshop with domain experts — the facilitator's stance, thinking modes, techniques for loops, dominance and disagreement (hot spots), clean questions, signal words (status, CRUD verbs, processed, always), building the ubiquitous language and glossary.md, confronting language with code, a language model as a stand-in expert (hypotheses to verify), decision gates for the agent's questions to the human, and the facilitator's self-check with 10 anti-patterns. Not for Event Storming formats, notation and colours (ddd-event-storming) or designing the model itself (ddd-deep-modeling)."
+  keywords: "facylitacja, prowadzenie warsztatu, rozmowa z ekspertem domeny, wywiad z ekspertem, jak dopytywać eksperta, ekspert mówi zmieniono status, zaktualizowano rekord, język biznesu, wszechobecny język, ubiquitous language, słownik pojęć, glosariusz, czyste pytania, clean questions, słowa sygnałowe, eksperci się nie zgadzają, spór ekspertów, hot spot, kto ma rację, dyskusja kręci się w kółko, jedna osoba dominuje, ktoś milczy, model zamiast eksperta, przepytać model językowy, brak dostępu do eksperta, model zmyśla szczegóły, pytania do użytkownika, bramki decyzyjne, ile pytań zadać, samoocena facylitatora, ocena sesji warsztatowej, antywzorce facylitacji, sześć kapeluszy, parking lot, facilitation, facilitate a workshop, domain expert interview, probe the expert, status changed, record updated, business language, glossary, signal words, experts disagree, discussion going in circles, dominant participant, silent participants, simulated expert, interview the model instead of an expert, decision gates, clarifying questions batch, facilitator self-check, six thinking hats, parking lot"
 ---
 
-# Facilitation and a shared language
+# Facilitation — conversations and workshops with domain experts
 
-## The facilitator's role
-- You own the **process**, not the content. You do not settle substantive disputes — you record them as a hot spot.
-- You keep the session's goal and time; you decide to move to the next step when the group goes round in circles.
-- First we write, then we talk — this way the quiet experts are heard too, not only the loudest ones.
-- Set the rules at the start (in the spirit of Deep Democracy): everyone is partly right, nobody is wholly right; a difference of opinion is information, not a problem.
-- Open with a **check-in** (short, human) and close with a **check-out** ("what are you taking away from the session?").
+The facilitator owns the **process**, not the content. Formats and notation of Event Storming: ddd-event-storming.
+Turning the findings into a model: ddd-deep-modeling.
 
-## Modes of thinking — do not mix them
-1. **Divergence** — we generate (chaotic exploration): no judging.
-2. **Emergence** — we group, look for patterns, name things (ordering the timeline, swimlanes).
-3. **Convergence** — we decide (voting, choosing boundaries).
-Announce aloud which mode you are in. Judging in the divergence phase kills ideas; generating in the decision phase kills time.
+## 1. Stance
+- Guard the goal and the time; when the group circles, name it and move on — the dispute becomes a hot spot.
+- Write first, talk second: everyone writes silently, then reads out, so quiet experts are heard.
+- Ground rules: everyone is partly right; disagreement is information, not a problem to suppress.
+- Open with a check-in (what do you expect?) and close with a check-out (what do you take away?).
 
-## Techniques for difficult moments
-- **Six hats** — when the discussion goes round in circles: everyone looks from one perspective at once (facts → risks → benefits → ideas → emotions → process), instead of trading arguments.
-- **Clean Questions** — questions that do not suggest an answer and use the speaker's words:
-  "And what kind of X is that?", "Is there anything else about X?", "Where does X come from?", "What happens just before X?", "And then what happens?",
-  "What would you like to happen?". Ideal for drawing out concepts without imposing your own vocabulary.
-- **Parking lot** — a thread that is important, but not now → a sticky note in the parking lot with an owner.
-- **A dominant participant** — give them a task (e.g. telling the walkthrough at the end), collect votes in a round.
-- **The experts disagree** — do not settle it. Record both versions as a hot spot; often these are two different contexts with the same word.
+## 2. Thinking modes — say which one you are in
+**Diverge** (generate, no judging) → **emerge** (group, find patterns, name them) → **converge** (decide).
+Mixing modes either kills ideas (judging while generating) or burns the time (generating while deciding).
 
-## Introducing the notation gradually
-You show only what the group needs in a given step: first events and hot spots, then actors and systems,
-finally commands, policies and read models. A new element = a short example on the wall + a note in the legend.
+## 3. Difficult moments
+| Situation | Move |
+|---|---|
+| The discussion loops | name the mode; Six Thinking Hats — everyone takes the same perspective at once (facts, risks, benefits, ideas, feelings, process) |
+| Off-topic but important | the parking lot, each item with an owner |
+| One person dominates | give them a task (retell the walkthrough, keep time) or vote round-robin; invite the silent ones by name |
+| Experts disagree | **do not settle it.** Record both versions as a hot spot with names; the same word often means two things in two contexts |
+| The group is new to the notation | introduce it in stages: events and hot spots → actors and systems → commands, policies, read models; each new element gets an example on the wall and a legend entry |
 
-## Complementary techniques — when to reach for them
-| Technique | When | How to combine it with Event Storming |
+## 4. Clean questions
+Neutral questions that reuse the speaker's own words and add none of yours:
+- "What kind of *X* is that *X*?"
+- "Is there anything else about *X*?"
+- "Where does *X* come from?" / "What happens just before *X*?" / "And then what happens?"
+- "What would you like to happen?"
+They draw out the expert's model instead of confirming yours.
+
+## 5. Signal words
+| Word heard | Why it is suspicious | Ask |
 |---|---|---|
-| Customer Journey | when the customer experience matters | the journey stages as lanes above the event timeline |
-| User Story Mapping | when the scope has to be cut into releases | the steps from the timeline = the backbone of the map, the stories underneath |
-| Impact Mapping | when it is not clear why we are building something | goal → actors → impact → products; it checks the sense of the processes on the timeline |
-| Service Blueprint | when the "back office" of the service matters | frontstage/backstage as lanes, support systems underneath |
-| C4 | when you move on to architecture | the contexts from the session → containers/components |
+| status, state | hides several lifecycles and events | "What happened in the business when it changed? Who decides? What is allowed in this state?" — each value is a candidate event or concept |
+| create, update, delete, record updated | database language | "Why does someone change it? What do you call that?" |
+| processed, synchronised, handled | hides decisions | "What is checked? What can go wrong?" |
+| data, record, object, information, manager | no business meaning | "What kind? What for?" |
+| always, never, automatically | hidden exceptions | "Was there ever a case when it did not?" |
+| names of screens, tables, systems | the solution, not the problem | "If that system did not exist, what would you need?" |
 
-## Ubiquitous language
-If the expert does not understand the model, the project goes in the wrong direction from the start. The language is shared by the business, the analysis and the code.
-- Keep the glossary `docs/project/02-domain/glossary.md`: the term, its meaning **in the given context**, examples, synonyms, conflicts.
-- The same word, different meanings (e.g. "Customer" in CRM and in Billing) → a likely **context boundary**. Do not unify by force.
-- Different words, the same meaning → agree on one within the context.
-- Ask: "What do you call it on your side?", "Are X and Y the same thing?", "Who uses this word?".
+## 6. Ubiquitous language and the glossary
+- One word with two meanings (a *Customer* in CRM and in Billing) → probably a context boundary; do not unify it by force
+  (ddd-context-mapping). Two words for one thing inside a context → choose one.
+- Ask: "What do you call it?", "Are X and Y the same?", "Who uses this word?"
+- File: `docs/project/02-domain/glossary.md` — one per context when there are several. Created at the first settled term,
+  not in advance.
+- Entry: the **term** in bold; one or two sentences saying what it *is* (not how it is stored); an "Avoid:" line with the
+  rejected synonyms. Group under headings where it reads naturally. Be decisive — a glossary that lists three options
+  helps nobody.
+- Only domain terms of this context: no generic programming words, no implementation details; it is not a specification
+  or a scratchpad. Prune drifted implementation detail from time to time.
+- Record a term as soon as it is settled, not in a batch at the end.
+- Stress a term with invented edge cases ("is a cancelled-then-restored booking the same booking?") until its boundary is sharp.
+- Name a conflict with an existing entry at once; for a vague word propose two or three precise ones.
+- **Confront with code:** when someone describes behaviour, check the code and quote the difference (file:line). A gap
+  between the language and the code blocks further decisions until it is resolved.
+- Entries the agent writes have status `proposed` until the human accepts them (core-project-record); list new and
+  changed entries in the session summary.
+- An existing repository without a glossary: a short interview with candidate terms mined from the code (aggregates,
+  tables, endpoints), in batches; full distillation: ddd-legacy-modernization.
 
-### The glossary during design (not only at a workshop)
-- **An entry**: the term in bold, 1–2 sentences on what something **is** (not what it does), a `_Avoid_: …` line with the rejected
-  synonyms. Be firm: choose one word out of several. Group entries under headings when natural groups appear.
-- **Only the terms of this context** — no general programming terms (timeout, error type) and no implementation
-  details. The glossary is not a specification or a scratchpad. Several contexts → a separate glossary per context + a map of
-  relationships (ddd-context-mapping).
-- **Record it right away** when a term is settled — not in bulk at the end of the session. The glossary shrinks as often as it grows;
-  periodically remove implementation details from it.
-- A word that contradicts the glossary → name the conflict right away ("the glossary says Cancellation is X, but you are talking about Y — which one?").
-  A vague word → propose a precise one ("account — Customer or User?").
-- Check relationships with **invented edge-case scenarios** until the boundaries of the terms are sharp.
-- **Confront it with the code**: when someone says how something works, check it in the code and quote the discrepancy ("the code cancels the whole
-  Order, but you are talking about a partial cancellation — which is true?"). A discrepancy between the code and the language blocks further decisions.
-- **A glossary written by the agent is a proposal**, not an authority: entries without a human review sound confident, but can be
-  false. You show new and changed entries in the session summary for acceptance (core-project-record: statuses).
-- **No files in advance** — the glossary and an ADR are created when there is the first term or the first decision to record.
-- **An existing repo without a glossary:** do not wait for the glossary to grow along the way (too slow). Do a short interrogation:
-  the agent lists candidate terms from the code (the names of aggregates, tables, endpoints) and asks about meaning and synonyms, in batches.
-  Full distillation of documents and code (a glossary with "BRAK w kodzie" — missing in the code, a table of model ↔ code divergences): ddd-legacy-modernization.
-- The agent confronts the language with the code and the recorded artifacts — it does not see the issue tracker; if there are language
-  agreements there, point to them in the project's `CLAUDE.md`.
-Modelled on the `domain-modeling` skill from [mattpocock/skills](https://github.com/mattpocock/skills) (MIT; description: [aihero.dev](https://www.aihero.dev/skills-domain-modeling)), described in our own words.
+## 7. Conduct with the human
+- 1–3 questions at a time, concrete, with an example; paraphrase in the speaker's language.
+- Never fill a gap by guessing: a gap is a hot spot with a question and the person who can answer it.
+- After each round record new terms, hot spots and decisions.
 
-### A simulated domain expert (a language model)
-- Without access to an expert you can question a model about the domain: the key processes that deliver value, the terms that
-  a programmer names differently from the industry (e.g. "review" rather than "quiz"), industry algorithms with their trade-offs.
-- The result is a **hypothesis generator**, not a source of truth. The model is strong at widely described generalities, and makes things up in
-  precise-sounding details: formulas and constants, thresholds, the field names of someone else's API, recent changes, regulated domains
-  (taxes, law, standards).
-- A claim on which you base a schema, a class name or a rule is checked before you record it: (1) the source documentation
-  or a specification, (2) the same question to a model from another provider — the discrepancies are a list for manual
-  checking, (3) a confrontation with the PRD and the code (`file:line`).
-- Entries with the source "model" go into `glossary.md` with the status `proposed` for a human's acceptance; a real
-  expert takes precedence as soon as one is available.
+## 8. A language model as a stand-in expert
+When no expert is available, a model can be interviewed — but its answers are **hypotheses**, never facts.
+- Good use: walking through value-delivering processes, finding the industry's name for something programmers named
+  differently, outlining common algorithms and trade-offs in the field.
+- Weak spot: models are fluent about widely described generalities and **invent precise details** — formulas, constants,
+  thresholds, field names of other systems' APIs, recent changes, and anything in regulated areas (tax, law, standards).
+- Before a claim shapes a schema, a class or a rule: check the source documentation or specification; ask a model from
+  another provider and review where they differ; confront it with the PRD and the code (file:line).
+- Glossary entries from such a session carry status `proposed`; open points become hot spots. A real expert overrides the model.
 
-### Signal words — stop and ask more
-| Signal | Why it is suspicious | What to ask |
-|---|---|---|
-| **status** ("the status was changed to…") | a status field often hides several different life cycles and several business events | "What happened in the business that the status changed? Who decides about it? What is allowed in this state, and what is not?" — every status value is a potential event or a separate concept |
-| **CRUD**: added, updated, deleted, saved, edited | the language of the database, not of the business | "Why does someone change it? What do you call it?" — "the order was updated" is e.g. "The customer changed the delivery address" or "The order was paid" |
-| processed, synchronized, handled | it hides a decision or a rule | "What exactly is checked? What can go wrong?" |
-| data, record, object, information, manager | a term without a business meaning | "What kind of information is it? What is it for?" |
-| always / never / automatically | hidden exceptions | "Was there a case when it did not…?" |
-| names of screens, tables, systems | a solution instead of a problem | "What would happen if this system did not exist?" |
+## 9. Decision gates
+The agent's loop: **investigate → propose with a justification → stop and ask.**
+- Always ask on: a contradiction between sources, a value decision (priority, risk, cost), weak evidence, a change of a contract.
+- Never ask about mechanical or stylistic matters, or anything the materials already answer.
+- One turn holds **3–7 questions**. Each cites its evidence (a quote or a file), offers options, names a default and is marked
+  **blocking** or **not blocking**.
+- The human may answer in shorthand: `q1: b`, `C2: defer`. Control words: `skip` (accept all defaults), `stop`, `repeat`.
+- Acknowledge each answer in one sentence: "OK — based on X I am doing Y." Record the decisions in an artefact.
+- At most **10 turns**; after 3 turns without progress accept the defaults and record them as assumptions.
+- Subagents do not ask the human: they return their questions to the leading persona.
 
-## The agent's work with the user
-- Ask **one to three questions at a time**, specific, preferably with an example.
-- Paraphrase in the speaker's language and ask for corrections ("Do I understand correctly that…?").
-- Never fill gaps by making things up — a gap is a hot spot with a question and an addressee.
-- After each round record: new terms, hot spots, decisions.
+Example turn:
+```
+Q1 [blocking] E14 says "the dock is booked per truck", E52 says "per delivery". Which unit is the booking?
+   a) truck  b) delivery (default)  c) both, as two concepts
+Q2 [not blocking] No quote on cancellation fees. a) none for now (default)  b) ask Finance
+```
 
-## Decision gates (agent ↔ human)
-A gate = a point where the agent stops for a human's decision. The loop: **investigate → propose with a justification → stop**.
-- Per turn **3–7 questions**, each based on evidence (a quote/a file), with options, a **default value** and a "blocking / not blocking" mark.
-- The human can answer in shorthand: `q1: b`, `C2: defer`; control words: `skip` (accept the defaults), `stop`, `repeat`.
-- After each answer one sentence: "OK — based on X I am doing Y". Record the decisions in an artifact (core-project-record), so that
-  interrupted work can be resumed without asking again.
-- A limit of 10 turns; after 3 turns without progress accept the default values and record that as an assumption.
-- **Always ask:** a contradiction in the sources, a value decision (priority, risk, cost), weak evidence, a contract change.
-  **Do not ask:** about mechanical or stylistic things, or about what the materials already answer.
-- A subagent has no conversation with the human — instead of asking, it returns the questions (hot spots) to the persona that leads the conversation.
+## 10. The facilitator's self-check
+Run it after a session or every few rounds. Rate each anti-pattern **green / yellow / red** with evidence (round, quote):
+1. **Premature design** — talk of tables, classes or endpoints before the flow is understood.
+2. **One person dominated** — most notes or speaking time came from one participant.
+3. **Someone was silent** — a participant contributed nothing for several rounds.
+4. **No hot spots** — fewer than one per two rounds: disagreement is being hidden.
+5. **No pivotal events** — the timeline has no events that split it into phases.
+6. **No chronology** — notes in clusters rather than along time.
+7. **Mixing levels** — commands and policies appearing at Big Picture.
+8. **The facilitator writes for the group** — the notes are the facilitator's words, not the experts'.
+9. **Regulations skipped** — compliance, contracts and audits never came up.
+10. **Unchecked language** — signal words (section 5) passed without a question.
 
-## Metaprograms — a lens on the participants
-| Axis | You recognize it by | How to lead |
-|---|---|---|
-| sameness ↔ difference | "as always" / "this is completely different" | show continuity to the sameness people, let the difference people look for exceptions (hot spots) |
-| general ↔ specific | mental shortcuts / long stories with numbers | ask the general ones for an example, the specific ones — for the name of the stage |
-| "away from" ↔ "towards" | talks about problems / about goals | give those focused on problems the job of marking risks and hot spots |
-| internal ↔ external frame | "I know that…" / "customers say…" | do not convince a self-assured person with authority — invite them to check the thesis on an example themselves |
+Summary: the 3 strongest moments and 3 to improve, each written as "I noticed… this leads to… next time try…". Save it as
+`docs/project/07-review/<date>-facilitation.md`.
 
-## The facilitator's self-check (after the session or every few rounds)
-| # | Anti-pattern | Signal |
-|---|---|---|
-| 1 | premature design | talking about tables/APIs at Big Picture |
-| 2 | one person dominated | the same person speaks long, many times |
-| 3 | someone is silent | no contribution for several rounds — invite them directly |
-| 4 | no hot spots | fewer than one per two rounds = disputes are swept under the rug |
-| 5 | no pivotal events | a timeline without structure |
-| 6 | no chronology | sticky notes without time order |
-| 7 | mixing levels | commands/policies at Big Picture |
-| 8 | the facilitator writes for the group | sticky notes come from their words |
-| 9 | regulations/compliance skipped | nobody asked about the law and contracts |
-| 10 | unchecked language | signal words without asking more |
-Summary: the 3 strongest moments and 3 to improve each, in the form "I noticed… this leads to… next time try…".
-Record: `docs/project/07-review/<date>-facilitation.md`.
+## 11. Reading people (optional lens)
+Some people look for sameness (show continuity), others for differences (let them hunt exceptions as hot spots); some
+speak in generalities (ask for an example), others in specifics (ask for the stage name); some move away from problems
+(give them the risk and hot-spot job), others move to goals; some judge by their own frame (let them test their thesis on
+an example rather than arguing). Treat it as a hint for how to lead, not as a diagnosis.
+
+## Combining with Event Storming
+| Technique | How it fits the timeline |
+|---|---|
+| Customer Journey | journey stages as lanes above the timeline |
+| User Story Mapping | timeline steps become the backbone; stories hang below |
+| Impact Mapping | goal → actors → impacts → deliverables; checks that processes serve a goal |
+| Service Blueprint | frontstage and backstage lanes, supporting systems below |
+| C4 | contexts from the session become containers and components |
+
+## Example
+**Situation:** "The expert keeps saying 'the status changed' and 'the record was updated'."
+**Result:** treat both as signal words. Ask "What happened in the business when the status changed?" → "the dispatcher
+confirmed the route" → event *Route confirmed*. Then "What kind of confirmation is that?" → "a provisional one, before the
+driver accepts" → two events, *Route proposed* and *Route accepted*. Glossary entry (status `proposed`):
+**Route** — the ordered list of stops one driver serves in one shift. *Avoid:* trip, tour.
 
 ## Sources
-- The 10xDevs course, ed. 3 (2026), module 4, lesson 5 (interviewing an expert, "when the expert makes things up") — training material
-  (accessed 2026-10-09); described in our own words.
+- E. de Bono, *Six Thinking Hats*, 1985.
+- D. Grove, Clean Language — clean questions as described in P. Tompkins, J. Lawley, *Metaphors in Mind*, 2000.
+- Deep Democracy (Lewis method) — treating disagreement as information [unverified: edition].
+- NLP metaprograms (section 11) — weakly evidenced; used only as a facilitation hint.
+- Glossary-entry practice in the spirit of the `domain-modeling` skill from mattpocock/skills (MIT).

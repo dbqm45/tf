@@ -18,7 +18,7 @@ roles or gets additional capabilities. Both replace flag fields and a growing "s
 - **Costs:** the identity is split into several objects; you must make sure a role does not exist without the core, and settle
   where the shared data lives.
 - **In a domain model:** a role is often a separate aggregate in another context, pointing to the party by an identifier.
-  The Party and PartyRole archetype (`.claude/skills/ddd-archetypes/references/party.md`) is this pattern at the level
+  The parties-and-relationships archetype (`.claude/skills/ddd-archetypes/references/parties-and-relationships.md`) is this pattern at the level
   of the business model.
 - **When NOT:** the role has no data or rules of its own and only changes permissions; then an attribute or
   an authorization mechanism is enough.

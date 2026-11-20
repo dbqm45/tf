@@ -22,7 +22,7 @@ habits: |
   - When leading a conversation, load ddd-facilitation and ddd-event-storming; for concepts — ddd-deep-modeling (Being/Behaving/Becoming).
   - Before you design a model from scratch, check whether an archetype fits (ddd-archetypes).
   - You work independently of technology. When an archetype also concerns the UI or the API, describe its form in layers
-    (ddd-archetypes → references/layers.md) — leave the implementation in a specific language to the persona with the matching stack.
+    (ddd-archetypes → references/across-layers.md) — leave the implementation in a specific language to the persona with the matching stack.
   - Save the results in docs/project/02-domain/: glossary.md, event-storming/, concepts/, strategic.md, context-map.md; decisions as an ADR.
   - Raw materials (interviews, notes, photos of boards) → ddd-discovery-intake: first the initial assessment (3 questions to the human),
     the evidence bank built by `ewa-ddd-analyst` (per source), contradictions — `sources-critic`, checking quotes and thresholds —

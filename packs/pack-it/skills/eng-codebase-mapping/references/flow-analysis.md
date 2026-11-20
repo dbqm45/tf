@@ -1,49 +1,58 @@
-# Analysis of a single flow (deepening after the map)
+# Deepening one flow — current-state analysis
 
-The repo map says where to look. Flow analysis says **how one flow works today** (e.g. "saving a message",
-"calculating a discount") and what is fragile in it — before a decision about a change. The result is input to a step's plan or to
-choosing a refactoring (eng-refactor-planning). An audit of a whole module in many dimensions is eng-tech-debt-audit;
-the cause of a specific bug — eng-debugging.
 
-## 1. Scope contract
-- **Input:** the repo map as a prior — the target from "Risk zones", 2–3 starting files from "First day", the first
-  `unknowns` from "Limitations". Without a map: the map first, or the human's explicit consent to an analysis without it.
-- **One flow**, not a subsystem. At the top of the report one line with the goal: what I am researching, from which file, why the map
-  pointed to this area.
-- **Hard boundary:** only the current state — no refactoring proposals and no target architecture.
+## 1. Input and boundaries
+- **Input:** the codebase map as a prior — the risk zone this flow belongs to, 2–3 starting files, the first unknowns. No map → ask for
+  one first (the procedure in SKILL.md) or for the human's explicit consent to start without it, and say in the report that there was none.
+- **One flow** (e.g. "redeeming a coupon at checkout"), named in one goal line.
+- **Current state only.** No proposals, no target architecture, no refactoring plan — those belong to eng-refactor-planning, which uses
+  this report as input. The cause of one specific bug: eng-debugging.
 
-## 2. Three implementers in parallel (the same contract, read only)
-1. **Trace end-to-end:** from the entry point through the layers to the write or read and back; steps with `file:line`;
-   a sequence diagram (Mermaid). Where the data comes from, who validates, where the state changes, what returns. Both sides (e.g.
-   an optimistic UI and the server) and the place where they reconcile. Name the layers that only delegate explicitly.
-2. **Test gaps:** which methods and branches of the path have a test (the test name), which do not — especially the error paths.
-3. **Change reach:** what must change together — the interface seam, generated layers, the model, migrations, tests;
-   the static graph + co-changes from `git_territory.py --cochange` (pair vs hub).
-Every claim with an evidence / inference / unknown label.
+## 2. Three read-only investigations
+Split the work among parallel workers that only read. Each labels every statement **evidence** (file:line seen), **inference**
+(reasoned from evidence) or **unknown**.
 
-## 3. The report `docs/project/<step>/research.md`
-1. **Goal** (1 line).
-2. **Flow overview** — the flow, not a list of files; a sequence diagram.
-3. **Debt as a fragility map:** the kind of risk in the language of connascence (order, meaning, position, algorithm;
-   static vs dynamic; distance), gaps in the test net, reach. **Cheap couplings separately** — generated code,
-   regeneration, things caught by the compiler or CI. Do not write "tightly coupled"; name the kind.
-4. **Prior corrections:** what from the map turned out to be outdated — explicitly, with evidence.
-5. **Unknowns** with how to resolve them (whom to ask, what to run).
-6. **Verification of structural claims** ("exactly 4 calls", "only here", "always through X"): each one
-   checked with ast-grep or LSP, every zero confirmed with `rg`; corrections in place with the trace "5 (report: 4)";
-   a table claim → verdict → evidence → method.
-7. **Flow hotspots:** change frequency from the map × the complexity of the flow's files (a cheap proxy, e.g. non-empty lines).
+| Worker | Delivers |
+|---|---|
+| **trace** | the end-to-end path with `file:line` per hop; a Mermaid sequence diagram showing both sides of every call and the point where results are reconciled; layers that only delegate are named as such |
+| **test gaps** | which hops have tests and at what level; untested branches, especially error and timeout paths |
+| **change reach** | seams where the flow could be cut; generated layers (clients, ORM models); the data model and migrations; tests that would need to change; co-changes from history — a pair vs a hub |
 
-## 4. Report review criteria (a human, fresh context)
-- a flow instead of a list of files?
-- debt named by the kind of risk, and the cheap kind separated from the dangerous one?
-- numbers verified with a tool, zeros confirmed?
-- nothing proposes changes?
+## 3. The report
+Sections, in this order:
+1. **Goal** — one line: which flow, from which entry point to which effect.
+2. **Flow overview** — the sequence diagram and a hop table (layer · file:line · what it does · label).
+3. **Fragility map** — debt described as couplings in connascence terms: order (positional arguments or columns), meaning (magic values
+   shared by two sides), position, algorithm (the same calculation in two places); static vs dynamic; the distance between the coupled parts
+   (same function → different services). Cheap couplings (generated, checked by a compiler) are listed separately so they do not inflate the map.
+4. **Corrections to the prior** — where the map was wrong or incomplete, with evidence.
+5. **Unknowns** — runtime wiring, configuration, external systems not read.
+6. **Verifying structural claims** — every count or "called in N places" checked with `ast-grep` or LSP find-references; every zero
+   confirmed with `rg`; corrections written in place as `5 (report: 4)`.
+7. **Flow hotspots** — files of the flow ranked by change frequency × size (`git_territory.py --hotspots`).
 
-## 5. Example
-The "saving a message" flow: 6 layers in directories, of which 4 only delegate; a single save is a facade over a
-batch save; saved objects are not read back from the database. Fragility: a positional write of 18 columns (connascence
-of position, without a guard); the message model on the backend and its hand-made copy on the front end (meaning, large distance, almost
-zero co-changes — silent debt); error paths without tests. Cheap: store layers generated from the interface (a mismatch
-is caught by CI). Prior correction: the map gave 3 delegating layers, there are 4. Verification: "4 batch save calls"
-→ 5 (report: 4), the fifth in an integration test.
+## 4. Reviewing the report
+A human with fresh context reads it and checks:
+- every hop has `file:line` and a label; no proposal or target design slipped in;
+- the sequence diagram matches the hop table;
+- error paths appear in the test-gap section;
+- counts were verified and zeros confirmed;
+- the unknowns are specific enough to check ("the `coupon.redeemed` consumer in another repo"), not "maybe something else".
+
+## 5. Example — coupon redemption
+Goal: `POST /checkout/coupons` → coupon marked used and discount applied to the cart.
+
+Hop table (excerpt):
+| Layer | Location | What it does | Label |
+|---|---|---|---|
+| API | `api/checkout.py:41` | parses body, calls the service | evidence |
+| service | `checkout/coupons.py:88` | validates, calls `pricing.apply_discount` | evidence |
+| pricing | `pricing/discount.py:17` | computes the discount; the same rounding as `web/src/cart/total.ts:52` | evidence |
+| repository | `checkout/repo.py:130` | `UPDATE coupons SET used_at` and inserts a redemption row | evidence |
+| event | `checkout/coupons.py:112` | publishes `coupon.redeemed`; consumer outside this repo | unknown |
+
+Fragility map: connascence of algorithm between `pricing/discount.py:17` and `web/src/cart/total.ts:52` (dynamic risk — totals can disagree
+by 0.01; far apart: backend vs frontend); connascence of meaning on the status string `"USED"` in three files; the generated TS client
+↔ OpenAPI schema is a cheap coupling. Test gaps: no test for "coupon expired between validation and update". Correction to the prior:
+the map called `checkout/repo.py` a thin adapter; it holds the uniqueness rule (`repo.py:126`). Verification: "`apply_discount` is called
+in 2 places" → `3 (report: 2)`, the third in `admin/refunds.py:64`.

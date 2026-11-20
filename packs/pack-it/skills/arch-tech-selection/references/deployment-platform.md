@@ -1,52 +1,66 @@
-# The deployment platform for an MVP
+# Hosting an MVP — choosing the deployment platform
 
-Choosing the hosting is part of the stack decision (`stack-decision.md`, the platform section). Facts about platforms (features,
-statuses, limits, prices) change within weeks — always from a primary source with a check date
-(core-source-research), never from memory.
+Part of the stack decision (arch-tech-selection, step 8). Platform offers, limits and prices change from month to month:
+every fact in the comparison carries its primary source (the provider's docs or pricing page) and the date it was checked.
 
-## 1. Hard filters (they reject without scoring)
-- the stack's runtime unsupported (the language version, the framework adapter);
-- persistent connections (WebSocket), background processes or long tasks required → platforms that are serverless only drop out;
-- compliance requirements (the data region, e.g. the EU) impossible to meet.
+## 1. Questions before any comparison
+Ask the human; record yes / no / don't know:
+- Does the app hold **long-lived connections** (WebSockets, server-sent events), run background workers or tasks longer
+  than a few minutes?
+- Which matters more right now: lowest cost, or least operational work?
+- Has the team deployed to any of the candidates before?
+- Will users be spread across continents in the first year?
+- Should the database and file storage come from the same provider?
+Long-lived connections and long tasks are a hard requirement; the other answers change the weights.
 
-## 2. Five criteria (Pass / Partial / Fail)
-| Criterion | Weight | Question |
-|---|---|---|
-| a CLI for full operation | high | deployment, rollback and logs without a web panel? |
-| a managed service instead of raw machines | high | who patches the system, scales it, makes backups? |
-| a deterministic, scriptable deployment | high | one command with an exit code that the agent and CI can check? |
-| documentation readable for the agent | medium | markdown, `llms.txt`, current examples for the project's version? |
-| an MCP server or another integration with the agent | low | it settles ties |
-For every feature a status: GA / beta / preview / regionally limited + a check date. A feature in beta is
-not an argument for choosing it for production.
+## 2. Hard filters
+Reject a platform without scoring when:
+- it does not support the runtime or version the project uses;
+- the app needs long-lived connections, workers or long tasks and the platform runs only short request-scoped functions;
+- it cannot keep the data in the required region.
 
-## 3. Interview (yes / no / don't know)
-Persistent connections? Cost or convenience? A platform known to the team? Global reach? The database and storage from one
-provider? The answers change the criteria weights, they do not exclude (the exception: persistent connections → a hard filter).
+## 3. What to compare
+Score each candidate as meets / partly / does not meet, with a source and a date:
 
-## 4. Candidates and the operational story
-Three candidates, the decision resilience test on the leader (arch-architect-practice). Then the "operational story" —
-one concrete answer per axis:
-| Axis | A concrete answer |
+| Criterion | What "meets" looks like |
 |---|---|
-| a preview per PR (and its protection against public access) | |
-| secrets: where, who reads them, how to rotate | |
-| rollback: the command, the time, caveats for database migrations | |
-| what requires a human (accounts, domains, payments, production secrets) | |
-| logs for the agent, read-only (CLI or MCP) | |
+| Full operation from the command line | deploy, rollback, logs, environment variables and scaling without a web console |
+| Managed building blocks | managed database, storage, TLS and domains instead of raw virtual machines to patch |
+| Repeatable deploys | one scripted command, a non-zero exit code on failure, the same result from CI and a laptop |
+| Docs an agent can read | current, versioned documentation in text form; CLI help that matches it |
+| Agent tooling | an official API or MCP server for read-only status and logs — a tie-breaker, low weight |
+| Cost at expected load | the price at launch and at 10× users, including egress and database size |
 
-## 5. First steps and the signal to change the decision
-- You check the "first steps" (CLI commands, the framework adapter) against **the project's version** — platform adapters and CLIs
-  change between major versions; a general guide is often outdated.
-- You plan the first deployment per ops-release-engineering ("First deployment").
-- Record the signal to change the decision: what will invalidate it after leaving the MVP (recurring jobs, long tasks, a dedicated
-  database, global traffic, the cost at N users).
+Record the maturity of each feature used (generally available / beta / preview / limited regions). A beta feature is not
+an argument for production.
+
+## 4. Shortlist and challenge
+Keep three candidates. Challenge the leader before recording it — devil's advocate, pre-mortem, unknown unknowns
+(arch-architect-practice, `.claude/skills/arch-architect-practice/references/decision-resilience-test.md`).
+
+## 5. How we will operate it
+Write concrete answers, not "supported":
+- **Preview environments** — is there one per pull request, and who can open it (protect it if it holds real data)?
+- **Secrets** — where they live, who and what can read them, how they are rotated.
+- **Rollback** — the command, how long it takes, and what happens to the database: migrations follow expand / contract so
+  that the previous release still runs against the new schema (ops-release-engineering).
+- **Steps that need a human** — accounts, billing, domains and DNS, production secrets.
+- **Logs and metrics for the agent** — read-only access, so the agent can diagnose without deploy rights.
+
+## 6. First deploy and the signal to revisit
+Check the first steps against the version the project actually uses; do the first deploy by ops-release-engineering.
+Write down what would make the choice worth revisiting: scheduled jobs, long-running tasks, a dedicated database, global
+traffic, or monthly cost above an agreed figure at N users.
 
 ## Example
-SvelteKit + PostgreSQL, a team of 2, an MVP in the EU. Filter: WebSockets needed for notifications → a serverless-only platform
-drops out. Candidates A (PaaS with containers, a full CLI, Pass×4), B (serverless + an external WebSocket
-service, Partial), C (a VM with a panel, Fail on the managed service). The resilience test on A: the pre-mortem reveals no
-database backup on the basic plan → recorded as a known limitation + the task "a nightly backup to storage". The operational
-story of A: a preview per PR with a password, secrets in the platform's store (only the runtime reads them), rollback with a command
-to the previous release (~1 min, expand–contract migrations), a human creates the account and the domain, the agent reads logs through
-the CLI read-only.
+**Situation:** a team of three builds a live auction MVP (Phoenix with LiveView, PostgreSQL), customers in the EU.
+- Questions: long-lived connections — yes (LiveView keeps a socket per user); least operational work matters more than cost.
+- Hard filters: two function-only platforms rejected (no persistent sockets); one provider rejected (no EU region for its
+  managed database).
+- Shortlist: a container platform with a managed PostgreSQL, a PaaS with an EU region, a managed Kubernetes service.
+- Comparison: the container platform meets CLI, repeatable deploys and docs; managed database backups only on the paid tier
+  (source: pricing page, checked 2026-11-20).
+- Pre-mortem: "A bad migration on auction day locked the bids table and rollback did not help" → expand/contract migrations
+  and a tested restore before launch.
+- Decision: the container platform. Known limitation: daily backups require the paid database tier — budgeted. Revisit
+  when concurrent sockets exceed the plan's limit or a second region is needed.

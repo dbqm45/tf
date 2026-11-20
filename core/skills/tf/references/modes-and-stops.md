@@ -64,7 +64,8 @@ with 2–3 options (each with its effect, one recommended) and what the factory 
 instead of your own description — without words from the factory's internals (slice, gate, tier, hook) and without pointing to files to
 understand the question:
 - you complete it with something concrete from this run: evidence (a command and its output), questions for the human or a proposed split;
-- in the conversation you ask the question with the AskUserQuestion tool with the options from the script (the recommended one first); the answer
+- in the conversation you ask the question with the AskUserQuestion tool: 2–4 options from the script, the recommended one first with
+  "(Recommended)" in the label, a short consequence in each option's description (the tool adds "Other" for the human's own answer); the answer
   "decide yourself" you accept only when the decision is reversible and does not block the work;
 - in an unsupervised run (`--auto`) the message goes to the report and to the answer ending the run;
 - a preview of the message without recording a stop: `run_state.py message <kod>`.

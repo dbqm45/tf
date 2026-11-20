@@ -19,7 +19,7 @@ at once, and two people editing promotions conflict in the same file.
 - You want to remove a big condition choosing the algorithm and test the variants separately.
 - The variants change independently of the code that uses them.
 - **A policy** in DDD (discounting, charging penalties, allocation) is a strategy named in the business language
-  (ddd-tactical-design); in the Pricing archetype the price variants are policies (ddd-archetypes).
+  (ddd-tactical-design); in the price-calculation archetype the price variants are policies (ddd-archetypes).
 
 ## Costs
 The client must know the differences between the variants in order to choose; with 2 rarely changed variants — overkill.

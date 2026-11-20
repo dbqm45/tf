@@ -3,8 +3,17 @@
 Stop / SubagentStop: quality gate — a turn does not end with a red build and tests ("the prompt asks, the hook enforces").
 
 Works only with the project configuration `.claude/quality-gate.json` (the factory does not know the project's commands):
-  {"command": "npm test", "watch": ["src/", "test/"], "timeout": 600, "max_blocks": 3}
+  {"command": "npm test", "related": "npx jest --findRelatedTests {files}", "watch": ["src/", "test/"],
+   "timeout": 600, "max_blocks": 3}
 - `command` — build and tests (a string or an argument list, no shell), run under the test_lock.py lock;
+- `related` — optional: the tests related to the changed files only (a string or an argument list, no shell). The token
+  `{files}` expands into the changed files as separate arguments; `{files,}` inside a token is replaced with the files joined
+  with commas; `{dirs}` gives the directories of the changed source files. The factory knows no test tool: the command
+  for the project's stack is chosen in the project (the /tf loop proposes one). A placeholder that gives nothing → the
+  full `command`. With `related` the gate runs
+  it instead of `command` — in a big repository (an Nx monorepo) the whole suite on every turn is the bottleneck. The
+  changed files are the ones the fingerprint sees (changed relative to HEAD and new, within `watch`) that still exist;
+  when only deletions remain or there are more than RELATED_MAX files, the gate runs the full `command`;
 - `watch` — paths whose change triggers the gate (default: the whole repository);
 - `timeout` — seconds; exceeding it is a red result;
 - `max_blocks` — after this many blocks of the same code state the gate lets it through with a message for the human (protection
@@ -24,6 +33,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import shlex
 import signal
 import subprocess
@@ -39,6 +49,7 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 HERE = Path(__file__).resolve().parent
 HEAD, TAIL = 1000, 2000   # this many characters of the output start and end go to the agent
 OUTPUT = "quality-gate-output.txt"
+RELATED_MAX = 200   # more changed files than this: the full command (Windows limits a command line to ~32k characters)
 
 
 def clip(out: str, saved: str) -> str:
@@ -87,6 +98,70 @@ def fingerprint(root: Path, watch: list[str]) -> str | None:
         if p.is_file():
             h.update(p.read_bytes())
     return h.hexdigest()
+
+
+def changed_files(root: Path, watch: list[str]) -> list[str]:
+    """The files the fingerprint sees (changed relative to HEAD and new, within `watch`) that still exist, sorted."""
+    paths = ["--", *(watch or ["."]), ":(exclude)docs/project/changes"]
+    names = (git(root, "diff", "HEAD", "--name-only", "-z", *paths)
+             + git(root, "ls-files", "--others", "--exclude-standard", "-z", *paths)).decode(errors="replace")
+    return sorted({n for n in names.split("\0") if n and (root / n).is_file()})
+
+
+CODE_EXT = {".py", ".go", ".rs", ".java", ".kt", ".cs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".rb", ".php", ".swift",
+            ".c", ".cc", ".cpp", ".h", ".hpp", ".scala", ".ex", ".exs", ".dart", ".vue", ".svelte"}
+PLACEHOLDER = re.compile(r"\{(files|dirs)(,?)\}")
+
+
+def placeholder_values(root: Path | None, files: list[str], kind: str) -> list[str]:
+    """`files` — the changed files; `dirs` — the directories of the changed source files (`./pkg/a`; `.` for the root).
+    Nothing here knows a test tool: the project's command (chosen for its stack) decides what to do with them."""
+    if kind == "files":
+        return files
+    return sorted({("./" + Path(f).parent.as_posix()) if Path(f).parent.as_posix() != "." else "."
+                   for f in files if Path(f).suffix in CODE_EXT})
+
+
+def expand_related(template, files: list[str], root: Path | None = None) -> list[str] | None:
+    """argv of the `related` command. A token that is exactly `{files}` or `{dirs}` becomes separate arguments; with a
+    comma (`{files,}`) or inside a longer token — the values joined with commas (spaces without the comma). None when a
+    placeholder gives nothing (e.g. only non-code files changed for `{dirs}`) — then the full command runs. No shell."""
+    argv, cache = [], {}
+
+    def values(kind: str) -> list[str]:
+        if kind not in cache:
+            cache[kind] = placeholder_values(root, files, kind)
+        return cache[kind]
+
+    for token in (shlex.split(template) if isinstance(template, str) else [str(t) for t in template]):
+        m = PLACEHOLDER.fullmatch(token)
+        if m and not m.group(2):
+            if not values(m.group(1)):
+                return None
+            argv.extend(values(m.group(1)))
+            continue
+        for m in PLACEHOLDER.finditer(token):
+            if not values(m.group(1)):
+                return None
+        argv.append(PLACEHOLDER.sub(lambda m: ("," if m.group(2) else " ").join(values(m.group(1))), token))
+    return argv
+
+
+def gate_command(root: Path, cfg: dict) -> list[str] | str:
+    """What the gate runs: `related` with the changed files when it is set and there are files to give it, else `command`."""
+    related = cfg.get("related")
+    if related:
+        files = changed_files(root, list(cfg.get("watch") or []))
+        argv = expand_related(related, files, root) if files and len(files) <= RELATED_MAX else None
+        if argv:
+            return argv
+    return cfg["command"]
+
+
+def shown(cmd) -> str:
+    """A command for a message: a string as it is, an argument list joined (shortened when very long)."""
+    text = cmd if isinstance(cmd, str) else " ".join(map(str, cmd))
+    return text if len(text) <= 300 else text[:300] + " …"
 
 
 def load_state(path: Path) -> dict:
@@ -144,8 +219,9 @@ def decide(root: Path, data: dict) -> dict | None:
     red = state.get("red") or {}
     if red.get("fp") == fp and red.get("count", 0) >= max_blocks:
         return {"systemMessage": f"Quality gate: the tests are still red after {max_blocks} attempts on the same state of "
-                                 f"the code — letting it through, the decision is a human's (`{cfg['command']}`)."}
-    ok, tail = run(root, cfg["command"], float(cfg.get("timeout", 600)))
+                                 f"the code — letting it through, the decision is a human's (`{shown(cfg['command'])}`)."}
+    cmd = gate_command(root, cfg)
+    ok, tail = run(root, cmd, float(cfg.get("timeout", 600)))
     if ok is None:
         print("quality gate: other tests of this repository are running (the lock is taken) — skipping", file=sys.stderr)
         return None
@@ -158,7 +234,7 @@ def decide(root: Path, data: dict) -> dict | None:
                           encoding="utf-8")
     who = "the subagent" if data.get("hook_event_name") == "SubagentStop" else "the turn"
     return {"decision": "block",
-            "reason": f"Quality gate: `{cfg['command']}` does not pass — fix it before ending {who} "
+            "reason": f"Quality gate: `{shown(cmd)}` does not pass — fix it before ending {who} "
                       f"(attempt {count}/{max_blocks}). If the red test is intended (TDD), write the reason in "
                       f".claude/quality-gate.expected-red.\n--- output (full: .tf/logs/{OUTPUT}) ---\n{tail}"}
 
@@ -209,7 +285,13 @@ def gate_status(root: Path, env=None) -> tuple[str, str]:
             reason = ""
         return "expected-red", ("⚠ Quality gate lets red tests through: the file .claude/quality-gate.expected-red"
                                 + (f" ({reason})" if reason else "") + ". Remove it when the batch is done.")
-    return "on", f"✓ Quality gate on: `{command}`."
+    related = cfg.get("related")
+    if related:
+        related = related if isinstance(related, str) else " ".join(map(str, related))
+        return "on", (f"✓ Quality gate on: `{related}` for the changed files (`related`), "
+                      f"the full `{command}` when there are none to pass (only deletions) or too many.")
+    return "on", (f"✓ Quality gate on: `{command}` — the whole suite on every check; for speed add `related` (only the "
+                  "tests of the changed files, a command for this project's stack — the /tf loop proposes one).")
 
 
 def main() -> int:

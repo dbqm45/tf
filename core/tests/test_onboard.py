@@ -125,6 +125,22 @@ def main() -> int:
         r = run(p, "--dry-run", "--yes")
         check(r.returncode == 0 and "npm test" in r.stdout, f"O-16: --dry-run shows the proposal: {r.stdout}{r.stderr}")
 
+        # `related` is not guessed from a technology table: the gate stays with `command`, the /tf loop proposes one
+        p = make(base, "nx", {"package.json": {**NODE, "devDependencies": {"jest": "^29.7.0"}}, "package-lock.json": "{}",
+                              "nx.json": "{}"})
+        r = run(p, "--yes")
+        cfg = json.loads((p / ".claude" / "quality-gate.json").read_text()) if (p / ".claude" / "quality-gate.json").is_file() else {}
+        check(cfg.get("command") and "related" not in cfg and "related" in r.stdout and "/tf" in r.stdout,
+              f"O-16a: no technology table — a gate with command only, a hint that /tf proposes related: {cfg} {r.stdout}")
+        p = make(base, "gate-old", {"package.json": NODE, ".claude/quality-gate.json": {"command": "npm test"}})
+        r = run(p, "--yes")
+        check(json.loads((p / ".claude" / "quality-gate.json").read_text()) == {"command": "npm test"} and "related" in r.stdout,
+              f"O-16b: an existing gate without related stays unchanged, with the hint: {r.stdout}")
+        p = make(base, "gate-rel", {"package.json": NODE,
+                                    ".claude/quality-gate.json": {"command": "npm test", "related": "x {files}"}})
+        r = run(p, "--yes")
+        check("Speed:" not in r.stdout, f"O-16c: a gate with related — no hint: {r.stdout}")
+
         p = make(base, "dry", {"package.json": NODE})
         r = run(p, "--dry-run", "--yes")
         check(not (p / ".claude").exists() and not (p / ".tf").exists(), "O-17: --dry-run writes nothing")

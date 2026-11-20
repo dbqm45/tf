@@ -1,91 +1,111 @@
-head: Użyj przy modelu wewnątrz kontekstu — agregaty, encje, obiekty wartości, zdarzenia, polityki, saga, CQRS. Użyj przy projektowaniu modelu wewnątrz kontekstu — building blocks (agregat, encja, obiekt wartości, serwis, polityka, specyfikacja, fabryka, repozytorium, zdarzenia, saga), warstwy, granice spójności, CQRS, ocena sprzężeń przez connascence. Nie do granic i relacji kontekstów (ddd-strategic-analysis, ddd-context-mapping).
-# Projekt taktyczny
+head: Użyj przy projektowaniu modelu wewnątrz jednego kontekstu — agregaty, obiekty wartości, zdarzenia, sagi, decidery, polityki, sprzężenia (connascence), reguły zmienne w czasie. Użyj przy projektowaniu modelu domeny wewnątrz jednego bounded contextu — warstwy (aplikacji, domeny, heksagonalna), elementy (obiekt wartości, encja, agregat, serwis domenowy, polityka, specyfikacja, fabryka, repozytorium, zdarzenie domenowe, saga z dispatcherem, maszyna stanów, decider), granice agregatów z niezmienników, jeden agregat na transakcję, sposób publikacji zdarzeń (outbox), sagi dla długich procesów, CQRS, gdy uzasadniony, antywzorce, ocena sprzężeń connascence (siła, stopień, lokalność), testy domenowe i reguły dynamiczne (drzewa polityk, scoring, reguły wersjonowane datą obowiązywania, reguły zależne od historii). Nie do granic i relacji kontekstów (ddd-strategic-analysis, ddd-context-mapping).
+# Projekt taktyczny — model wewnątrz jednego kontekstu
 
-## Warstwy
-- **Warstwa aplikacji** — cienkie serwisy aplikacyjne: realizują przypadek użycia, zarządzają transakcją i bezpieczeństwem,
-  pobierają agregaty z repozytoriów, wywołują metody biznesowe, zapisują, publikują zdarzenia. **Bez reguł biznesowych.**
-- **Warstwa domeny** — czyste reguły biznesowe, bez frameworków i infrastruktury; testowalna bez serwera i bazy.
-- Operuj identyfikatorami na wejściu serwisu aplikacyjnego (klient nie przekazuje „gotowych” obiektów domenowych).
-- Architektura heksagonalna: domena w środku, porty (interfejsy) definiuje domena, adaptery (REST, baza, kolejki) na zewnątrz.
+Granice i relacje między kontekstami rozstrzyga się gdzie indziej (ddd-strategic-analysis, ddd-context-mapping). Tu
+projektujemy to, co żyje w jednym kontekście. Brak niezmienników, faktów o współbieżności albo przykładów z domeny →
+zapytaj o nie, zanim zaproponujesz agregaty.
 
-## Building blocks — kiedy którego użyć
-| Element | Użyj, gdy | Zasady |
+## 1. Warstwy
+- **Warstwa aplikacji:** cienkie serwisy uruchamiające jeden przypadek użycia — otwierają transakcję, sprawdzają
+  bezpieczeństwo, wczytują agregaty przez repozytoria, wołają metody biznesowe, zapisują, publikują zdarzenia. Żadnych
+  reguł biznesowych. Wejście: identyfikatory i proste dane, nie gotowe obiekty domenowe.
+- **Warstwa domeny:** czyste reguły, bez frameworka, testowalne bez serwera i bazy.
+- **Heksagonalnie:** domena w centrum definiuje swoje porty; adaptery (baza, HTTP, kolejki) żyją na zewnątrz.
+
+## 2. Elementy budulcowe
+| Element | Do czego | Kluczowa reguła |
 |---|---|---|
-| **Obiekt wartości** | pojęcie opisane wartościami, bez tożsamości (kwota, okres, adres, prawdopodobieństwo) | niezmienny, sam się waliduje; zastępuje prymitywy i usuwa rozproszone walidacje („150 miejsc sprawdzania nulla”) |
-| **Encja** | liczy się tożsamość i cykl życia | tylko odpowiedzialności właściwe jej naturze |
-| **Agregat** | grupa obiektów, które muszą być spójne natychmiast | jeden korzeń; zmiany tylko metodami biznesowymi (bez setterów); jedna transakcja = jeden agregat; odwołania do innych agregatów przez ID |
-| **Serwis domenowy** | operacja nie należy naturalnie do żadnego agregatu (transformacja, obliczenie na kilku obiektach) | bezstanowy; zapobiega „klasom-bogom” |
-| **Polityka** | reguła ma warianty (np. rabatowanie, naliczanie kar) | wzorzec strategii; nowe warianty bez zmiany rdzenia (supple design) |
-| **Specyfikacja** | złożone warunki biznesowe do łączenia (i/lub/nie) | wzorzec kompozytu; nazwa warunku w języku biznesu |
-| **Fabryka** | tworzenie złożonego agregatu wymaga decyzji (jakie polityki, jacy współpracownicy) | gwarantuje poprawny stan od początku; mniej `new` w domenie = łatwiejsze testy |
-| **Repozytorium** | trwałość agregatów danego typu | kolekcja agregatów, nie DAO z setkami metod pod ekrany; zapytania pod operacje biznesowe |
-| **Zdarzenie domenowe** | coś ważnego się wydarzyło i inni mogą chcieć zareagować | czas przeszły, niezmienne; umożliwia rozszerzenia, asynchroniczność, luźne sprzężenie |
-| **Saga / proces menedżer** | proces trwa długo i obejmuje wiele zdarzeń/agregatów | stan procesu zapisany; reaguje na kolejne zdarzenia; kompensacje |
-| **Maszyna stanów** | zachowanie zależy od stanu | jawne przejścia i warunki zamiast rozproszonych `if (status == …)` |
-| **Decider (funkcyjny rdzeń)** | chcesz oddzielić decyzję od efektów (testowalność, droga do event sourcingu) | `decide(stan, komenda)` → nowy stan / zdarzenia / odrzucenie; niezmienny stan; I/O w powłoce: wczytaj → decyduj → zapisz → publikuj. Przejście z bogatego agregatu: eng-behavior-preserving-refactoring |
+| Obiekt wartości | pojęcie określone wartościami (pieniądze, okres, adres, prawdopodobieństwo) | niezmienny, sam się waliduje, porównywany po wartości; zastępuje typy proste i rozproszoną walidację |
+| Encja | coś z tożsamością i cyklem życia | porównywana po identyfikatorze; zachowanie zamiast setterów |
+| Agregat | grupa, która musi być spójna natychmiast | jeden korzeń; zmiana tylko przez metody biznesowe; jeden agregat na transakcję; inne agregaty po identyfikatorze |
+| Serwis domenowy | operacja nienależąca do żadnego agregatu | bezstanowy |
+| Polityka | reguła z wariantami | strategia; nowy wariant bez zmiany rdzenia |
+| Specyfikacja | łączone warunki biznesowe | nazwane językiem biznesu |
+| Fabryka | tworzenie wymagające decyzji | obiekt startuje poprawny |
+| Repozytorium | kolekcja agregatów | nie DAO do zapytań ekranowych |
+| Zdarzenie domenowe | fakt, który się wydarzył | czas przeszły, niezmienne |
+| Saga / menedżer procesu | długi proces przez wiele zdarzeń i agregatów | utrwalony stan, jawne kroki, kompensacje |
+| Maszyna stanów | operacje zależne od cyklu życia | jawne przejścia zamiast `if`ów na statusie wszędzie |
+| Decider | decyzje jako czysta funkcja | `decide(state, command)` → zdarzenia albo odmowa; `evolve(state, event)` → stan |
 
-Heurystyka: metody charakterystyczne i wielokrotnie używane w wielu przypadkach użycia → do agregatu;
-specyficzne dla jednego przypadku → do serwisu.
+Zachowanie używane przez wiele przypadków użycia należy do agregatu; specyficzne dla jednego — do jego serwisu.
 
-**Gdy jedna polityka nie wystarcza** (`references/dynamic-rules.md`):
-- polityki jako czyste funkcje składane w łańcuchy, drzewa i dekoratory, zbudowane z konfiguracji przez fabrykę
-  polityk;
-- scoring z wersjonowanymi składnikami i progami;
-- reguły zmienne w czasie, gdzie nowa wersja to nowa klasa wybierana po dacie istotnej (bez `if (rok >= …)`);
-- reguły zależne od historii zdarzeń (stan jako złożenie strumienia);
-- agregat jako maszyna stanów.
+## 3. Projektowanie agregatu
+1. **Zacznij od niezmienników** (reguł, które muszą być prawdziwe po każdej zmianie — karteczki z Design Level), nie od rzeczowników czy tabel.
+2. **Zapytaj, kto zmienia go jednocześnie.** Dwóch użytkowników edytujących różne części → prawdopodobnie dwa agregaty.
+3. **Najmniejsza granica chroniąca niezmiennik.** Duży agregat powoduje konflikty zapisu i wczytuje za dużo: `Order`
+   trzymający `Customer`, wszystkie `Invoice` i ich pozycje powinien zachować tylko to, czego wymaga jego niezmiennik,
+   a resztę wskazywać po identyfikatorze.
+4. **Reguły między agregatami** są spójne ostatecznie (zdarzenia, polityki), chyba że biznes potrzebuje natychmiastowości.
+5. **Agregat dynamiczny:** gdy granica zależy od żądania (zablokuj zasób na przedział czasu → wczytaj tylko dotknięte
+   segmenty czasu), złóż go z mniejszych jednostek (ddd-archetypes, blokady zasobów).
+6. **Optymistyczna współbieżność:** wersja na korzeniu.
+7. **Publikacja zdarzeń — wybierz jeden z dwóch wariantów na projekt:**
+   - (a) metoda biznesowa **zwraca** zdarzenia (albo odmowę); publikuje je serwis aplikacyjny;
+   - (b) agregat **zbiera** zdarzenia; serwis odbiera je po zapisie.
+   Publikacja w pamięci „po commicie” gubi zdarzenia, gdy proces padnie między commitem a publikacją → jeśli to
+   nie do przyjęcia, zapisz zdarzenia do **outboxa** w tej samej transakcji (be-messaging-outbox).
+8. **Antywzorzec:** metoda, która jednocześnie mutuje obiekt i zwraca nową instancję.
+9. **Reguła rozsmarowana po warstwach** (kawałek w UI, kawałek w serwisie, nic w bazie): agregat staje się jedynym
+   strażnikiem — warunki wstępne w jego metodach, nazwany błąd domenowy przy naruszeniu (fail fast), repozytorium wczytuje
+   cały agregat, jedna transakcja, cienka trasa mapująca błąd na odpowiedź. Wyszukiwanie takich reguł w istniejącym kodzie:
+   ddd-legacy-modernization.
 
-## Projektowanie agregatów
-1. Wyjdź od **niezmienników** (żółte kartki z Design Level), nie od rzeczowników i relacji w bazie.
-2. Zapytaj o **konkurencję o zasoby**: kto zmienia jednocześnie? co jeśli dwie osoby zrobią to naraz? (ddd-deep-modeling)
-3. Najmniejsza granica, która chroni niezmiennik. Duży agregat = konflikty i ładowanie zbędnych danych.
-4. Reguły między agregatami → spójność ostateczna (zdarzenia, polityki), chyba że biznes naprawdę wymaga natychmiastowej.
-5. **Agregat dynamiczny**: gdy granica zależy od żądania (np. zablokuj zasób w przedziale czasu → wczytaj tylko segmenty
-   czasu, których dotyczy żądanie), składaj agregat z mniejszych jednostek na potrzeby operacji (ddd-archetypes → dostępność).
-6. Wersjonowanie optymistyczne na korzeniu agregatu.
-7. **Kto publikuje zdarzenia?** (a) agregat zwraca zdarzenie lub odrzucenie z metody biznesowej, serwis aplikacyjny je publikuje —
-   jawne, łatwe w testach; (b) agregat gromadzi zdarzenia, serwis je „wyciąga” po zapisie. Oba OK — wybierz jeden w projekcie.
-   Publikacja z pamięci „po commicie” gubi zdarzenia przy awarii; gdy to niedopuszczalne → outbox (be-messaging-outbox).
-8. **Saga** trzyma stan procesu i jawny typ kroku; decyzję „co dalej” podejmuje saga (czysto), wykonanie kroków — osobny dispatcher.
-9. Anty-wzorzec: metoda, która jednocześnie **mutuje** obiekt i **zwraca nową instancję** — wybierz jedno (niezmienny VO albo mutacja agregatu).
-10. **Niezmiennik w istniejącym kodzie** bywa „wszędzie i nigdzie”: kawałek w UI, kawałek w serwisie, kawałek
-    w kolejności wywołań, nic w bazie. Objawy: klient jest jedynym strażnikiem, endpoint ufa danym z żądania, błąd
-    jest logowany i połykany. Agregat-strażnik: jedyne miejsce egzekwowania, metody z warunkami wstępnymi, nazwany
-    błąd domenowy (fail-fast), repozytorium ładujące całość, atomowość w jednej transakcji, cienka trasa API
-    (parsuj → metoda → mapuj błąd). Wybór niezmiennika i diagnoza w legacy: ddd-legacy-modernization.
+## 4. Długie procesy — saga i dispatcher
+Proces trwający godziny lub dni przez płatność, magazyn i kuriera, w którym każdy krok może zawieść:
+- saga trzyma **stan procesu**, utrwalony, i jawny **typ kroku** (`AwaitingPayment`, `AwaitingPickup`, …);
+- decyzja *co dalej* to czysta funkcja stanu sagi i przychodzącego zdarzenia;
+- **wykonanie** następnego kroku (wysłanie polecenia, wywołanie dostawcy) robi osobny **dispatcher**;
+- każdy krok, który może zawieść, ma kompensację (zwrot pieniędzy, zwolnienie rezerwacji) i limit czasu.
 
-## Odczyty — CQRS
-Gdy odczyty i zapisy mają różne potrzeby: model zapisu chroni reguły, osobne **read modele/projekcje** służą ekranom i raportom.
-Nie dodawaj CQRS „na zapas” — to dodatkowa złożoność; uzasadnij różnicą wzorców dostępu.
+## 5. Decider — decyzje jako czysta funkcja
+- `decide(state, command)` zwraca zdarzenia albo odmowę; `evolve(state, event)` zwraca następny stan; stan jest niezmienny.
+- Powłoka robi I/O: **wczytaj → zdecyduj → zapisz → opublikuj**. Rdzeń nie potrzebuje mocków do testów.
+- Przy event sourcingu stan to `events.reduce(evolve, initial)`.
+- Przejście istniejącego bogatego agregatu na decider: krok po kroku, z zachowaniem zachowania (eng-behavior-preserving-refactoring).
 
-## Anty-wzorce
-- **Anemiczny model** — encje jako worki danych z getterami/setterami, logika w serwisach.
-- Encje jako DTO na zewnątrz kontekstu; mieszanie modeli kontekstów.
-- Gettery/settery pozwalające dowolnie zmienić stan z pominięciem reguł.
-- Dziedziczenie tam, gdzie wystarczy kompozycja lub polityka.
-- Pola-flagi (`isReserved`, `inMaintenance`, `isCustomer`) zamiast osobnych pojęć lub archetypu.
+## 6. CQRS
+Osobne modele odczytu (projekcje) tylko wtedy, gdy wzorce odczytu i zapisu naprawdę się różnią — nie „na wszelki wypadek”.
 
-## Connascence — ocena sprzężeń
-Dwa elementy są współzależne (connascent), gdy zmiana jednego wymusza zmianę drugiego. Oceniaj trzy cechy:
-- **Siła** (od słabszej): statyczne — nazwa → typ → znaczenie (umowne wartości) → pozycja → algorytm;
-  dynamiczne (silniejsze) — kolejność wykonania → czas → wartość → tożsamość.
-- **Stopień** — ile elementów jest związanych. **Lokalność** — jak daleko od siebie są.
+## 7. Antywzorce
+Model anemiczny; encje wynoszone poza kontekst jako DTO albo jeden model mieszający kilka kontekstów; swobodne gettery
+i settery omijające reguły; dziedziczenie tam, gdzie wystarczy kompozycja lub polityka; pola-flagi (`isReserved`,
+`inMaintenance`) zamiast nazwanych pojęć (ddd-archetypes).
 
-Zasady: silne connascence akceptuj tylko **lokalnie** (w obrębie agregatu/modułu); przez granice kontekstów dopuszczaj
-najsłabsze (nazwa, typ — przez Published Language). Refaktoryzuj w stronę słabszych form:
-- magiczne wartości („2 = anulowane”) → obiekt wartości / enum (znaczenie → nazwa);
-- długie listy parametrów tego samego typu → obiekt parametrów (pozycja → nazwa);
-- ten sam algorytm (np. wyliczanie ceny, hash) w dwóch miejscach → jedno źródło (algorytm → nazwa);
-- dwa konteksty muszą mieć „tę samą wartość” danych → jeden właściciel + zdarzenia (wartość → typ zdarzenia);
-- wymagana kolejność wywołań → jedna metoda biznesowa lub maszyna stanów (kolejność → nazwa).
+## 8. Sprzężenia — connascence
+Dwa elementy są współzależne (connascent), gdy zmiana jednego wymusza zmianę drugiego. Oceń trzy cechy:
+- **siła** — statyczna i słabsza: nazwa (CoN), typ (CoT), znaczenie (CoM), pozycja (CoP), algorytm (CoA); dynamiczna
+  i silniejsza: kolejność wykonania, czas, wartość (CoV), tożsamość;
+- **stopień** — ile elementów jest związanych;
+- **lokalność** — jak daleko od siebie są.
+Reguła: silna connascence tylko lokalnie (w agregacie lub module); przez granicę kontekstu tylko najsłabsza (nazwa, typ,
+przez język publikowany).
 
-Powtarzalny **pomiar** sprzężenia między dwoma modułami (rozbicie na umowy, stopień z linii kodu, koszt, profil pasm):
-ddd-connascence-analysis. Wspólna transakcja przez granicę to dwie umowy — kolejność wykonania i wartość.
+| Znalezione | Rodzaj | Poprawka |
+|---|---|---|
+| `status = 2` znaczy „anulowane” | znaczenie | enum albo obiekt wartości |
+| długa lista parametrów tego samego typu | pozycja | obiekt parametrów |
+| wyliczanie ceny skopiowane w dwóch modułach | algorytm | jedno źródło (polityka lub serwis domenowy) |
+| ta sama wartość trzymana w dwóch kontekstach | wartość | jeden właściciel plus zdarzenia |
+| metody, które trzeba wołać w kolejności | kolejność wykonania | jedna metoda biznesowa albo maszyna stanów |
 
-## Testy domeny
-Testuj zachowanie agregatów i polityk przez ich publiczne metody, na przykładach z modelowania (Given/When/Then),
-bez bazy i frameworka. Zdarzenia to dobre asercje („po X powstało zdarzenie Y”).
+Powtarzalny pomiar z raportem: ddd-connascence-analysis. Transakcja dzielona przez granicę wiąże i kolejność, i wartość.
 
-## Źródła
-- Kurs 10xDevs, ed. 3 (2026), moduł 4, lekcja 5 (niezmiennik rozsmarowany w legacy, agregat-strażnik) — materiał
-  szkoleniowy (dostęp 2026-10-09); opisane własnymi słowami.
+## 9. Testy domenowe
+Testuj agregaty i polityki przez metody publiczne na przykładach z modelowania (Given / When / Then), bez bazy i frameworka;
+asercjami są emitowane zdarzenia.
+
+## 10. Reguły dynamiczne
+Reguły zmienne wg konfiguracji, daty albo historii — drzewa polityk, scoring, reguły wersjonowane datą obowiązywania
+(nowa wersja jako nowa klasa, stara nietknięta, wybór wg daty istotnej dla sprawy), reguły zależne od wcześniejszych
+zdarzeń, agregaty jako maszyny stanów: `references/dynamic-rules.md`.
+
+## Przykład
+**Sytuacja:** „Agregat `Reservation` w TypeScript — gdzie granica i kto publikuje zdarzenia, żeby nie zgubić ich po commicie?”
+**Wynik:**
+- Niezmiennik: sala nie ma nachodzących na siebie potwierdzonych rezerwacji w przedziale czasu; rywalizacja: wiele osób
+  rezerwuje tę samą salę tego samego ranka → agregatem jest harmonogram sali dla dotkniętych dni (dynamiczny), nie cały kalendarz.
+- `Reservation` jest wskazywana po identyfikatorze z `Invoice`; jeden agregat na transakcję.
+- Wariant (a): `schedule.reserve(slot, guest)` zwraca `[ReservationConfirmed]` albo `SlotTaken`; serwis aplikacyjny
+  zapisuje agregat i zdarzenia do outboxa w jednej transakcji; przekaźnik je publikuje.
+- Testy: Given `ReservationConfirmed(10:00–11:00)`, When `reserve(10:30–11:30)`, Then `SlotTaken`.

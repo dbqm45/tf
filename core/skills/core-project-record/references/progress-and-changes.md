@@ -1,48 +1,63 @@
-# Step progress, exploration and the tracker
+# Progress checklist, spikes, decisions and changing accepted work
 
-> Details for the core-project-record SKILL.md: the "Progress" section in the step report, research steps, human decisions
-> vs AI proposals, moving the slice plan to a tracker.
+## 1. The `### Progress` checklist of a step report
+The step plan in `06-delivery/NNN-<slug>.md` lists phases with automatic and manual criteria. The checklist under
+`### Progress` mirrors those criteria and is the only place in the report with checkboxes, so a script or a fresh session
+can find the position without reading prose.
 
-## Progress of a delivery step (the "Progress" section in `06-delivery/NNN-*.md`)
-The step plan (the `delivery` template) ends with a "Progress" subsection — the only place for the step's delivery state:
-- the checkboxes `- [ ]` / `- [x]` are only in "Progress"; the rest of the plan has none;
-- the `<faza>.<n>` numbering given at planning is never renumbered — a removed item leaves a gap,
-  a changed intent is a note in the phase block, the title stays the same;
-- the next step = the first `- [ ]`; the current phase = the phase of the first `- [ ]`; completion = `[x] / ([ ] + [x])`;
-- you tick a box after each step; you add the SHA once, after the phase's commit (` — <sha>`, core-git-workflow).
-  In the middle of a phase `[x]` without a SHA is a correct state; a phase without code changes stays without a SHA;
-- manual criteria are ticked only after the human confirms; at the last phase remind about all
-  unmet manual criteria from earlier phases.
-The checkpoint in `wip/` says which task is in progress; "Progress" says where in the step plan you are.
+Rules — the same idea as a stable issue number or an ADR number: an ID, once given, means one thing forever.
+| Situation | What you write |
+|---|---|
+| item finished | `[x]` immediately, not at the end of the phase |
+| phase committed | append ` — <sha>` to the last item of that phase, once |
+| item dropped | leave it unchecked with `(dropped: <reason>)`; the number is not reused |
+| intent changed | keep the title, add `(changed: <what>, <date>)` |
+| new item mid-phase | next free number in that phase, e.g. `2.4` after `2.3` |
+| manual criterion | tick only after the human confirms, write who and when |
 
-## Changes, phases and exploration
-- **Exploration whose product is a report** (research, a code map, a ranking of options) is a separate entry — a separate step
-  report with the intent at the top: what we study, what we do NOT do at this stage (no code changes, no decision),
-  who decides and when. The next step reads this report as a starting point; you do not add the research to the previous,
-  closed change.
-- The step report and the review report have a **"Human decisions vs AI proposals"** section: what the agent proposed,
-  what the human decided and why. It is a trace of who is responsible for what.
+Derived values:
+- next step = first `[ ]`, current phase = its phase prefix;
+- completion = ticked / all items (dropped items count as neither);
+- before closing the last phase, list every unticked manual criterion from earlier phases and ask the human about each.
 
-## The slice plan in a tracker (Jira, Linear, GitHub Issues)
-- **The slice plan to the tracker:** an issue from a plan item — title = Result, description = Requirements + Preconditions + Risk
-  + acceptance criteria; the labels `slice` / `foundation` / `star`; dependencies as issue links;
-  the change identifier in the body.
-- **The agent's access to the tracker:** a token with the smallest scope (reading and creating in one project, no
-  administration); deleting, changing roles and bulk status changes are done by the human in the tool's interface. After the first
-  session review the activity log and agree with the team whether the agent may change and comment on other people's issues.
-
-## An example of the "Progress" section during phase 2
+### Worked example
+A three-phase change adding CSV export to an invoices list, two phases committed:
 ```
 ### Progress
-#### Phase 1: Model and storage
-- [x] 1.1 npm test -- cards.repo.spec.ts passes — 3f9c2a1
-- [x] 1.2 the migration works on a copy of the database (manual) — 3f9c2a1
+#### Phase 1: Query and serializer
+- [x] 1.1 `pytest tests/export/test_rows.py` passes
+- [x] 1.2 10 000 rows serialize in < 2 s (`pytest -k perf`) — 5e3a1c0
 #### Phase 2: Endpoint
-- [x] 2.1 npm test -- cards.api.spec.ts passes
-- [ ] 2.3 401 for an anonymous user (2.2 removed — the gap stays)
-- [ ] 2.4 the human checked the response in the browser (manual)
+- [x] 2.1 GET /invoices/export returns text/csv
+- [ ] 2.2 auth: 403 for role viewer (dropped: viewers may export, decision D-014)
+- [x] 2.3 filename contains the date — 91bd7f2
+#### Phase 3: UI button
+- [ ] 3.1 button visible on the list (manual)
+- [ ] 3.2 Playwright test `export.spec.ts` passes
 ```
-Next step: 2.3; current phase: 2; completion: 3/5. Item 2.1 without a SHA, because phase 2 has no commit yet.
+Next step: 3.1, current phase 3, completion 4/6 (the dropped 2.2 is left out; six live items, four ticked).
+Phase 3 has no SHA yet because it is not committed. 3.1 is manual: the agent prepares the build and asks the
+human to look; it is not ticked on a passing test.
 
-Source: the 10xDevs course, ed. 3 (2026), module 2 (the plan progress format, moving the roadmap to a tracker) and module 4,
-lesson 4 (research steps) — training material (accessed 2026-10-09). Described in our own words.
+## 2. Spikes and other investigations
+When the outcome is knowledge (which caching library, why latency doubled, whether an API supports X), write a separate
+report — a time-boxed spike in the XP sense — never an appendix to a delivered change:
+- **Question and scope** on top: what is studied, the time box.
+- **Not doing:** what is deliberately out (no code merged, no benchmark on production data, …).
+- **Decider:** who chooses and by when; the report ends with options, not with a decision taken for them.
+- Location: a new step report in `06-delivery/` or a review in `07-review/<date>-<kind>.md`, whichever the plan uses.
+A closed change stays closed; if the spike leads to work, the plan gets a new item.
+
+## 3. Who decided what
+Step reports and reviews keep `## Human decisions vs AI proposals` — a small decision log with the decider and the reason:
+| Agent's proposal | Human's decision | Why |
+|---|---|---|
+| retry 3 times with fixed delay | 5 times, exponential backoff | provider rate-limits bursts |
+Durable decisions also go to `decisions.md`; the table shows the moments where the human overrode or confirmed the agent.
+
+## 4. Changing an accepted artifact
+1. Copy the current file to `docs/project/archive/<name>-v<N>.md`, set `status: superseded`, `superseded_by: <path of the new one>`.
+2. In the live file raise `version` to N+1, status `proposed`, update `updated`, describe the change in the TL;DR.
+3. Add a decision row if the change reverses an earlier decision (mark the old row superseded, do not delete it).
+4. `log` the change, `check`, and ask for acceptance again.
+Typos and broken links may be fixed without a new version; anything that changes meaning may not.

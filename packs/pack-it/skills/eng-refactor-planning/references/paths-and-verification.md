@@ -1,87 +1,124 @@
-# Refactoring paths, intent archaeology and verifying numbers
+# Reversible paths, git archaeology, verification of claims, the report
 
-## 1. Intent archaeology
-| Question | Command | Notes |
-|---|---|---|
-| who gave the function its current shape and why | `git log -L :<function>:<file>` | the history of the function alone with diffs; for accurate function detection set the diff driver in `.gitattributes` (e.g. `*.go diff=golang`, `*.java diff=java`, `*.py diff=python`) |
-| the history of a line range | `git log -L <from>,<to>:<file>` | when the function is not recognized |
-| where the lines come from (with moves) | `git blame -w -C -C <file>` | `-w` ignores whitespace, `-C` tracks code moved from other files |
-| whether the mechanism broke | `git log --oneline --grep='fix' -- <file>` + reading the descriptions | 0 fixes over years is evidence of a stable decision |
-| a description of the decision outside the commit | the PR number from the commit description → `gh api repos/<o>/<r>/pulls/<no>` | read the "why", not only the "what" |
+> **Contents:** 1. Reversible paths · 2. Intent from history — git archaeology · 3. Verifying structural claims with ast-grep and rg · 4. The exploration report template (`research.md`)
 
-You write the verdict with evidence: `deliberate constraint — commit 27d536b (2020-03): batch INSERT for import
-speed; 0 column-order fixes in the file history`. Without evidence: `unknown` + a question to the team (who remembers).
+## 1. Reversible paths
+All three keep the main line releasable and allow stopping half-way with a working system.
 
-## 2. Strangler Fig
-1. Choose an entry seam (a router, a facade, a queue) through which traffic goes to the old code.
-2. The new implementation first handles a small, well-tested slice of behaviour; the seam routes only that
-   slice there.
-3. Compare the results (a parallel run or characterization tests), move further slices.
-4. When the old code gets no traffic — remove it in a separate commit.
-Fits: replacing a subsystem, an entry point, an integration. Risk: two systems live for a long time → a phase-out date in the plan.
+### Strangler Fig
+- **When:** a module or subsystem with a natural entry point (HTTP routes, a facade, a queue consumer) whose behaviour can move in slices.
+- **Steps:** put a seam at the edge (router, facade, queue) → implement one slice in the new code → route that slice to it → compare
+  old and new (a parallel run on copies of real input, or characterization tests) → next slice → delete the old part when its traffic is zero.
+- **Risk:** two systems living side by side indefinitely. Set a phase-out date and track the remaining slices.
 
-## 3. Branch by Abstraction
-1. Introduce an abstraction (an interface, a port) over the place where clients use the old code; the old implementation behind it.
-2. Switch the clients to the abstraction — commit after commit, behaviour unchanged.
-3. Build the new implementation next to it; the contract tests of the abstraction pass for both.
-4. Switch over (a flag or configuration, preferably per client or per environment).
-5. Remove the old implementation and — if it is no longer needed — the abstraction itself.
-The main branch is releasable the whole time; instead of a long-lived branch you have a series of small PRs.
+### Branch by Abstraction
+- **When:** an internal dependency used from many places (a persistence layer, a client library) must be replaced without a long branch.
+- **Steps:**
+  1. Introduce an abstraction over the contact point; the old implementation goes behind it unchanged.
+  2. Switch clients to the abstraction commit by commit.
+  3. Build the new implementation beside the old one; the same contract tests run against both.
+  4. Choose the implementation by flag or configuration, per client or per environment; switch gradually.
+  5. Delete the old implementation and, if it adds nothing, the abstraction itself.
+- Every commit is releasable; no branch lives longer than a day or two.
 
-## 4. Mikado
-1. Write down the goal as the root of the graph (e.g. "saving through `PostRepository` instead of direct queries").
-2. Try to do the goal directly, with a time limit (e.g. 15 min). Write down every compilation or test error as a prerequisite node.
-3. **Revert everything** (`git restore .` / `git reset --hard` on the working branch — with consent, when there are uncommitted changes by the human).
-4. Choose a leaf (a prerequisite without its own prerequisites), do it, commit it, check the tests.
-5. Go back to step 2 for the parent. You finish when the root can be done without errors.
-You keep the graph in the project step (Mermaid `flowchart BT`), you tick off the nodes along with the commits.
+### Mikado
+- **When:** the goal change breaks things in many places and the order of prerequisites is unknown.
+- **Steps:**
+  1. Write the goal as the root of a graph.
+  2. Try it directly in a time box (e.g. 15 minutes).
+  3. Each breakage becomes a prerequisite node under the goal.
+  4. **Revert everything** (`git restore .` / `git reset --hard` to the start). If the working tree holds the human's uncommitted changes,
+     ask first.
+  5. Pick a leaf, try it the same way; when it works without new breakage, commit it and tick the node.
+  6. Repeat towards the root.
+- Keep the graph in the plan as Mermaid, leaves at the bottom:
+  ```mermaid
+  flowchart BT
+    a["InvoiceSource split into Reader + Corrections ✓ 3f2a1c"] --> goal["Exporter depends on InvoiceReader only"]
+    b["CachedInvoiceSource delegates list_corrections"] --> a
+    c["TaxedInvoiceSource delegates list_corrections"] --> a
+  ```
 
-## 5. A guard instead of a rebuild
-The deliberate constraint stays, but you turn the risk "it is easy to forget about this" into "this cannot be broken":
-- a test that fails on drift (e.g. two column arrays must have the same order → a test with sentinel
-  values, `.claude/skills/eng-behavior-preserving-refactoring/references/examples.md`);
-- a linter or ast-grep rule in CI (a pattern forbidden outside one file);
-- validation in the code generator (e.g. a decorator must override all the interface methods or explicitly list them
-  in a list of exceptions).
-A guard is a pure addition: one `test:` or `build:` commit, reversible with a revert.
+### Rejected by default: rewrite from scratch
+A rewrite loses the knowledge stored in fixes and edge cases, stops delivery or runs two systems in parallel for months. List it under
+"Considered and rejected" with that reason unless the human brings evidence that the old code is beyond rescue.
 
-## 6. Verifying claims with ast-grep
-| Claim | Pattern (checked on ast-grep 0.50.0) | Confirming a zero |
-|---|---|---|
-| "`save` called in 4 places" (TS) | `ast-grep run -p '$S.save($$$A)' -l ts --json=stream src \| wc -l` | `rg -n '\.save\(' src` |
-| "`SaveMultiple` called in 4 places" (Go) | `ast-grep run -p 'func _() { $S.SaveMultiple($$$A) }' --selector call_expression -l go .` | `rg -n 'SaveMultiple\('` |
-| "the interface has 54 methods" (Go) | `ast-grep run -k method_elem -l go <file>` (one line per interface method) | `rg -c` on the signatures in the file |
-| "layer X does not override `Delete`" (Go) | `ast-grep run -p 'func ($R $T) Delete($$$A) $$$RET' -l go <layer-directory>` | `rg -n 'func \(.*\) Delete\(' <directory>` |
-- **The silent-zero trap:** the pattern must be valid code in the given language. In Go the bare expression
-  `$S.SaveMultiple($$$A)` does not parse at the file level and returns 0 matches without an error — it needs context
-  (`func _() { … }`) and `--selector`. You check a suspicious zero with `--debug-query=ast` (`ERROR` nodes = a bad pattern)
-  and always with `rg`.
-- ast-grep skips comments and string literals and distinguishes `Save(` from `SaveMultiple(`; `rg` catches everything — the difference
-  between the results is information (occurrences in comments, tests, generated code).
-- No matches ends `ast-grep` with code 1 — in scripts do not treat it as a failure.
-- Record the result with the tool version and the commit on which the count was made.
+## 2. Intent from history — git archaeology
+| Question | Command |
+|---|---|
+| how did this function evolve? | `git log -L :<function>:<file>` |
+| how did these lines evolve? | `git log -L <from>,<to>:<file>` |
+| who wrote each line, ignoring whitespace and following moved/copied code? | `git blame -w -C -C <file>` |
+| how many fixes touched the file? | `git log --oneline --grep=fix -- <file>` (also try the team's words: `bug`, `hotfix`, ticket prefixes) |
+| what did the review say? | `gh api repos/<o>/<r>/pulls/<no>` (and `/comments`) for the PR named in the commit |
 
-## 7. The exploration report template (`docs/project/<step>/research.md`)
+- `git log -L :<function>:` finds function boundaries with a diff driver; without one it guesses from lines that look like headers.
+  Add to `.gitattributes` (locally, without committing, if the repo has none): `*.go diff=golang`, `*.java diff=java`, `*.py diff=python`.
+- Read the commit message and the linked PR or ticket of the commit that introduced the odd shape. "9× faster on month-end" or
+  "required by the bank's file format" is a **deliberate constraint**; "quick fix, refactor later" is **accidental complexity**.
+- Zero fix commits on a mechanism in years is evidence it is stable; many fixes in the same place is evidence of accidental complexity.
+- No history (squashed import, a zip) → the verdict is **unknown**; say so, do not guess.
+
+## 3. Verifying structural claims with ast-grep and rg
+Run the `ast-grep` binary — on Linux `sg` is usually the group-switching command from the login package.
+
+| Need | Command |
+|---|---|
+| find matches as data | `ast-grep run -p '<pattern>' -l <lang> --json=stream <dir>` (one JSON object per line; count lines) |
+| see how ast-grep parsed the pattern | `ast-grep run -p '<pattern>' -l <lang> --debug-query=ast` — `ERROR` nodes mean the pattern is not valid code |
+| match a fragment that is not valid alone | wrap it in valid context and pick the node with `--selector <node kind>` |
+| list nodes of one kind | `-k <node kind>` |
+| confirm a zero | `rg -n '<plain text>' <dir>` |
+
+- **No matches → exit code 1.** It is a result, not a failure of your script; handle it explicitly.
+- **The silent zero.** A pattern that does not parse as code in the target language matches nothing and reports nothing. Example in Java:
+  `ast-grep run -p 'source.listCorrections($A)' -l java src/` may return 0 because a bare expression is not a valid Java compilation
+  unit; wrap it — `-p 'class X { void m() { source.listCorrections($A); } }' --selector method_invocation` — and check with
+  `--debug-query=ast`. Whatever the tool says, every zero gets an `rg` check.
+- ast-grep skips comments and strings and separates `save(` from `save_batch(`; `rg` catches everything. The difference between the two
+  counts is information (generated code, tests, docs), not noise — say where it comes from.
+- Write corrections in place, keeping the trace: `33 (report: 31)`. Record the ast-grep version (`ast-grep --version`) and the commit.
+- Do **not** reorder the ranking or change intent verdicts in this pass. A count that changes the picture is logged in "Verifying claims"
+  as "for a decision at the planning stage".
+
+Claims table:
+
+| Claim | Verdict | Evidence | Method |
+|---|---|---|---|
+| `InvoiceSource` has 31 methods | refined: 33 (report: 31) | `billing/export/source.py:12-140` | ast-grep `def $M($$$)` in the class, rg `def ` |
+| `list_corrections` called in 4 places | refined: 5 (report: 4) | `billing/export/client_gen.py:88` (generated) | ast-grep call pattern + rg |
+| no direct SQL outside `writer.py` | confirmed: 0 | — | ast-grep `cursor.execute($$$)` → 0, rg `execute(` → only `writer.py` |
+
+## 4. The exploration report template (`research.md`)
 ```markdown
 ---
 status: exploration
-last_updated: <date>
+last_updated: 2026-11-20
 tags: [refactor-opportunities]
-verified_at_commit: <sha or "—">
+verified_at_commit: <sha>
 ---
-# Refactoring options: <area>
-**Intent:** what we are examining · what we are NOT doing (changes, decisions) · who decides and when
-## List of problems and classification
-| # | Problem (source) | CANDIDATE / input | Justification |
+# <module> — refactoring options
+
+## Intent
+What this exploration examines, what it deliberately does not do (no code changes, no plan), who decides and when.
+
+## Problems and classification
+| # | Problem (from input) | Source | CANDIDATE? | Why / why not |
+
 ## Candidates
-### K1: <name>
-- Current shape (evidence/inference/unknown, file:line) · archetype thesis
-- Intent: deliberate constraint / accidental complexity / unknown — evidence
-- Feasibility: abstraction, reach, guards and tests (CI), prerequisite
+Per candidate: current shape (archetype), intent (deliberate constraint / accidental complexity / unknown, with history evidence),
+feasibility (abstraction, reach, guards and tests, first prerequisite), right-sizing decision. Labels evidence / inference / unknown, file:line.
+
 ## Refactoring options (ranking)
-1. … current → target · why · reach · path · prerequisite
+1. <option> — current → target; why here; reach; reversible path; first prerequisite.
+2. …
+
 ## Considered and rejected
+- <option> — one-sentence reason.
+
 ## Verifying claims (ast-grep)
-| Claim | Verdict | Evidence | Method |
-## The human's decisions (filled in by the planning stage)
+Tool version, commit, the claims table, discrepancies "for a decision at the planning stage".
+
+## Human's decisions
+Which option do we implement? (filled in at the planning stage)
 ```

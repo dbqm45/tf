@@ -313,6 +313,9 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
         say.append(f"• .claude/quality-gate.json — the quality gate with the command `{command}`.")
     else:
         say.append("• the quality gate stays off: no test command detected.")
+    if (gate.is_file() or command) and "related" not in _json(gate):
+        say.append("  Speed: at the first /tf the loop proposes `related` — only the tests of the changed files, "
+                   "a command for this project's stack (the whole `command` stays for `verify --full` and CI).")
     line = commands_line(det, verify)
     for name in ("CLAUDE.local.md", "CLAUDE.md"):
         old = _read(root / name)

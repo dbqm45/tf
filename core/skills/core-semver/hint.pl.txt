@@ -90,7 +90,5 @@ Zasady:
 - Semantic Versioning 2.0.0, semver.org (licencja CC BY 3.0; dostęp 2026-10-03): reguły 1–11, FAQ, oficjalne
   wyrażenie regularne (w `scripts/semver.py`).
 - Conventional Commits 1.0.0 (powiązanie typów z podbiciem — core-conventional-commits).
-- Kurs 10xDevs, ed. 3 (2026), moduł 5, lekcja 4 (wersjonowanie bez ręcznego podbijania) — materiał szkoleniowy
-  (dostęp 2026-10-09).
 
 Opisane własnymi słowami.

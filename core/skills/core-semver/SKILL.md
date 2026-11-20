@@ -101,7 +101,5 @@ Rules:
 - Semantic Versioning 2.0.0, semver.org (CC BY 3.0 licence; accessed 2026-10-03): rules 1–11, FAQ, the official
   regular expression (in `scripts/semver.py`).
 - Conventional Commits 1.0.0 (mapping types to the bump — core-conventional-commits).
-- The 10xDevs course, ed. 3 (2026), module 5, lesson 4 (versioning without manual bumping) — training material
-  (accessed 2026-10-09).
 
 Described in our own words.

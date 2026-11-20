@@ -11,7 +11,7 @@ Konkretne API, webhooki, klucze i wersje u dostawcy Stripe: tool-stripe.
   zmiana cennika = nowa cena, istniejący klienci zostają na starej, dopóki decyzja biznesowa nie mówi inaczej.
 - Okres rozliczeniowy z kotwicą (dzień rozliczenia), waluta przypisana do klienta, strefa czasowa okresu jawna (eng-i18n).
 - Uprawnienia (co klient może) liczysz ze stanu subskrypcji w jednym miejscu, nie z planu rozsianego po kodzie.
-- Model domenowy cen, rabatów i sald — archetypy Pricing i Accounting (ddd-archetypes); tu tylko mechanika subskrypcji.
+- Model domenowy cen, rabatów i sald — archetypy wyceny i księgi wartości (ddd-archetypes); tu tylko mechanika subskrypcji.
 
 ## 2. Stany subskrypcji i dostęp
 Typowe stany (nazwy jak u dostawcy, np. Stripe): okres próbny, aktywna, zaległa (pierwsza nieudana płatność),

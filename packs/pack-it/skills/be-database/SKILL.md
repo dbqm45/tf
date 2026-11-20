@@ -49,7 +49,7 @@ metadata:
 
 ## Read models
 Merge continuous periods and aggregate over ranges with window functions (`LAG`, `SUM() OVER`) in SQL — instead of a loop in the application.
-For time ranges: range types + an exclusion constraint (PostgreSQL), when the database has them (ddd-archetypes → availability).
+For time ranges: range types + an exclusion constraint (PostgreSQL), when the database has them (ddd-archetypes → resource holds).
 A schema per module (e.g. a separate `schema` in PostgreSQL) strengthens module boundaries in a monolith.
 
 ## Integrity

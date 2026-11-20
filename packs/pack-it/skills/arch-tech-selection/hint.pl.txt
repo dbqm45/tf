@@ -1,84 +1,103 @@
-head: Użyj przy wyborze lub ocenie stacku (język, framework, baza, hosting) — kryteria, kandydaci, macierz, ryzyka. Użyj, gdy trzeba zarekomendować stack (języki, frameworki, bazę, hosting, narzędzia) dla nowego projektu albo ocenić i ewoluować stack istniejącego — czynniki, filtry obowiązkowe, 2–3 kandydaci, weryfikacja faktów ze źródeł, macierz ocen, ryzyka i spike'i, mapowanie na skille i persony. Nie do ustalania atrybutów jakości (arch-quality-attributes).
-# Dobór stacku technologicznego
+head: Użyj przy wyborze lub zmianie stacku — framework, baza danych, hosting, narzędzia — z filtrami obowiązkowymi, macierzą ważoną, sprawdzonymi wersjami i zapisaną decyzją. Użyj przy wyborze stacku technologicznego dla nowego projektu (język, framework, baza danych, hosting, narzędzia) albo przy werdykcie zostawić / usprawnić / wymienić dla każdego obszaru istniejącego systemu — czynniki i wagi, filtry eliminujące (licencja, lokalizacja danych, horyzont wsparcia, łatki bezpieczeństwa, umiejętności zespołu), nudna opcja, fakty sprawdzone w źródłach pierwotnych z datą, macierz ważona, wnioski z modelu domeny, przyjazność dla agentów i co zrobić, gdy wybrane narzędzie ją oblewa, spike'i z kryterium porzucenia, hosting MVP, zapis w stack-decision.md. Nie do scenariuszy atrybutów jakości i drzewa użyteczności (arch-quality-attributes) ani ogólnego komunikowania i zapisywania decyzji architektonicznych (arch-architect-practice).
+# Wybór stacku — zapisana decyzja, nie lista ulubieńców
 
-Rekomendacja to **decyzja z uzasadnieniem i sprawdzonymi faktami**, zapisana w `docs/project/04-architecture/stack-decision.md`
-(szablon: core-project-record). Nie lista ulubionych technologii.
+Wynikiem jest rekomendacja z uzasadnieniem i faktami sprawdzonymi dziś. Brakuje kluczowego wejścia (umiejętności zespołu,
+gdzie muszą leżeć dane, budżet) → zapytaj; nie zakładaj.
 
-## Wejście (czytaj TL;DR + wskazane sekcje)
-brief (cele, ograniczenia, zespół), wymagania (scenariusze atrybutów jakości), domena (subdomeny, archetypy, klasy problemów).
-Brak kluczowego wejścia (np. kompetencji zespołu, miejsca hostingu) → pytanie do użytkownika, nie założenie.
-**Projekt istniejący:** najpierw `python3 .claude/hooks/detect_stack.py` — rekomendacja to *zachowaj / usprawnij / zastąp* per obszar,
-z kosztem migracji (strangler fig, po granicach kontekstów), a nie nowy stack od zera.
-
-Wejście uzupełniające (jeśli istnieje): `02-domain/algorithms.md`, `02-domain/stress/*.md`.
+**Wejście (czytaj TL;DR i wskazane sekcje):** brief, `03-requirements/requirements.md` (scenariusze jakości), dokumenty
+domeny, opcjonalnie `02-domain/algorithms.md` i `02-domain/stress/*.md`. Istniejący projekt: najpierw uruchom
+`python3 .claude/hooks/detect_stack.py`.
+**Wynik:** `docs/project/04-architecture/stack-decision.md` ze statusem `proposed` (szablon: core-project-record), ADR dla
+każdej kluczowej decyzji, wiersze w `decisions.md`, wpis w logu. Akceptuje człowiek.
 
 ## Procedura
-1. **Czynniki** — 3–5 scenariuszy (H,H) + ograniczenia (arch-quality-attributes), z wagami 1–5.
-2. **Filtry obowiązkowe** (odrzucają opcję bez punktacji): licencja, hosting i zgodność (np. dane w UE), wsparcie w horyzoncie
-   projektu (LTS / koniec wsparcia), bezpieczeństwo (aktywne łatki), możliwość startu przez zespół (lub realny plan zatrudnienia).
-3. **Kandydaci** — 2–3 na obszar, zawsze z opcją **„nudną”**: to, co zespół zna, albo najpowszechniejszy wybór w ekosystemie.
-   Mniej technologii = taniej: każdy dodatkowy język/framework to koszt utrzymania, rekrutacji i skilli.
-4. **Weryfikacja faktów** — aktualne wersje, daty wsparcia, zgodność między elementami (np. Angular 22 wymaga TS 6.0.x),
-   licencje: tylko ze **źródeł pierwotnych** (strony wydań, rejestr pakietów: `npm view <pakiet> version`), z datą sprawdzenia.
-   Tanio: deleguj do agenta `researcher` (zwraca fakty ze źródłami). **Nigdy z pamięci.**
-5. **Ocena** — macierz ważona:
-   | Kryterium | Pytanie |
-   |---|---|
-   | dopasowanie do czynników | czy spełnia scenariusze (H,H) bez nadzwyczajnych zabiegów? |
-   | kompetencje zespołu | ile nauki przed pierwszym wydaniem? |
-   | dojrzałość ekosystemu | stabilne wydania, biblioteki, społeczność, dokumentacja |
-   | koszt operacyjny i złożoność | ile elementów do utrzymania i monitorowania? |
-   | **przyjazność dla agentów AI** | **cztery bramki**: **typy** (jawne kontrakty danych w kodzie) · **konwencje** (ustalone miejsca na routing, testy, konfigurację) · **popularność oceniana w obrębie rodziny języka** (Django wśród frameworków Pythona, nie wobec Reacta) · **aktualna, wersjonowana dokumentacja** (najlepiej w markdown: `llms.txt`, wersje `.md`, dostępna przez serwer dokumentacji na żywo); do tego szybkie testy, deterministyczne narzędzia, usługi integrowane jednym krokiem (jedno polecenie, jedna zmienna środowiskowa, jedna strona dokumentacji) i **istniejące skille `lang-*`/`fw-*`/`tool-*`** |
-   | uzależnienie i koszt wyjścia | co, jeśli trzeba będzie zmienić dostawcę/framework? |
-   | bezpieczeństwo | historia podatności, szybkość łatek, bezpieczne ustawienia domyślne |
-6. **Wnioski z domeny** (ddd-deep-modeling, ddd-archetypes):
-   - subdomena generyczna → kup / SaaS / gotowy komponent (przez ACL);
-   - CRUD i supporting → najprostszy framework, generatory, nawet BaaS;
-   - core ze złożonymi regułami → język z silnym systemem typów (typy sum, niezmienność), łatwe testy domeny;
-   - konkurencja o zasoby → baza z mocną spójnością i ograniczeniami (np. PostgreSQL z wykluczaniem nakładających się przedziałów);
-   - integracja między kontekstami → komunikaty + outbox (be-messaging-outbox); odczyty dominujące → read modele / cache;
-   - **jądro algorytmiczne** (`02-domain/algorithms.md`, ddd-algorithm-recognition): problem NP-trudny → solver/biblioteka
-     optymalizacyjna za interfejsem domenowym + spike z kryterium porzucenia, nie własny algorytm; problem przestrzenny →
-     rozszerzenie geo w bazie; podobieństwo → indeks pełnotekstowy/wektorowy. Konkretne biblioteki i wersje sprawdza `researcher`.
-7. **Styl architektury** — domyślnie modularny monolit (arch-quality-attributes); inny tylko z uzasadnieniem w czynnikach.
-8. **Ryzyka i spike'i** — dla każdej niepewności: eksperyment ograniczony czasem i **kryterium porzucenia** wyboru.
-   Lidera przepuść przez test odporności decyzji (adwokat diabła, pre-mortem, nieznane niewiadome —
-   arch-architect-practice), zanim zapiszesz rekomendację. Hosting MVP: `references/deployment-platform.md`.
-9. **Mapowanie na zespół agentów** — potrzebne skille: dostępne / do utworzenia (`python3 .tf/factory/build.py new-skill …`),
-   sugerowany `stack` person realizujących (np. `[fw-angular, lang-typescript]`).
-9a. **Start z oficjalnego generatora i oblane bramki.**
-   - Wskaż, czym projekt wystartuje: oficjalny generator lub dojrzały szablon (polecenie i wersja ze źródła z datą),
-     nigdy pusty katalog. Pewność: sprawdzony u nas / zarejestrowany, nieprzetestowany / ręczny. Szkielet stawia
-     eng-repo-readiness.
-   - Kandydat, który oblał bramkę przyjazności, nie trafia do rekomendacji „z urzędu”. Gdy człowiek go wybiera:
-     nazwij oblane bramki, podaj najlepszą alternatywę z tej samej rodziny, opisz kompensację (konkretne reguły do
-     CLAUDE.md) i zapisz w stack-decision `quality_override: tak` z uzasadnieniem.
-   - Samosprawdzenie człowieka (5 pytań): typy? oficjalny starter? rozpoznawalne konwencje? aktualna dokumentacja?
-     **czy rozpoznam, że agent robi coś niezgodnego z praktyką tego stacku?** Dwa „nie” → rekomenduj opcję „nudną”.
-10. **Zapis** — stack-decision.md (`proposed`), ADR dla decyzji kluczowych, wiersze w decisions.md, wpis w dzienniku; akceptuje człowiek.
+1. **Czynniki.** 3–5 scenariuszy jakości z oceną (H,H) (arch-quality-attributes) plus ograniczenia; każdemu nadaj wagę 1–5.
+2. **Filtry obowiązkowe (eliminujące)** — kandydat, który oblewa choć jeden, odpada bez oceniania:
+   - licencja akceptowalna dla produktu;
+   - hosting i zgodność (np. dane osobowe muszą zostać w UE);
+   - horyzont wsparcia obejmujący życie produktu (LTS, data końca wsparcia);
+   - łatki bezpieczeństwa wciąż wydawane;
+   - zespół może zacząć od razu albo istnieje realny plan rekrutacji.
+3. **Kandydaci.** 2–3 na obszar i zawsze **nudna opcja**: to, co zespół już zna, albo domyślny wybór ekosystemu.
+   Każda dodatkowa technologia kosztuje utrzymanie, rekrutację i umiejętności.
+4. **Fakty ze źródeł pierwotnych, z datą.** Wersje, daty wsparcia, zgodność między komponentami (główna wersja frameworka
+   zwykle wymaga określonego zakresu wersji języka lub kompilatora), licencje — ze stron wydań, oficjalnej dokumentacji
+   i zapytań do rejestrów (`npm view <pkg> version`, `pip index versions <pkg>`). Wyszukanie deleguj agentowi `researcher`
+   (zwraca fakty ze źródłami); nigdy nie odpowiadaj z pamięci na pytanie o wersje czy kompatybilność (core-grounding,
+   core-source-research).
+5. **Macierz ważona.** Kryteria:
+   - dopasowanie do czynników;
+   - umiejętności zespołu (czas nauki przed pierwszym wydaniem);
+   - dojrzałość ekosystemu;
+   - koszt i złożoność eksploatacji;
+   - przyjazność dla agentów (sekcja niżej);
+   - uzależnienie od dostawcy i koszt wyjścia;
+   - bezpieczeństwo (historia podatności, szybkość łatek, bezpieczne ustawienia domyślne).
+   Suma = Σ (ocena 1–5 × waga). Macierz wspiera decyzję; wyrównany wynik oznacza „weź nudną opcję”.
+6. **Wnioski z modelu domeny** (ddd-deep-modeling, ddd-archetypes, ddd-algorithm-recognition):
+   - poddomena generyczna → kup lub SaaS za warstwą antykorupcyjną;
+   - CRUD lub poddomena wspierająca → najprostszy framework, generatory, nawet BaaS;
+   - złożone reguły rdzenia → język z silnym systemem typów (typy sumy, niezmienność) i łatwymi testami domeny;
+   - rywalizacja o rzadki zasób → silnie spójna baza z ograniczeniami (np. exclusion constraints na nachodzących
+     przedziałach — be-database);
+   - integracja między kontekstami → komunikaty z outboxem (be-messaging-outbox); dużo odczytów → modele odczytu lub cache;
+   - rdzeń algorytmiczny (harmonogramy, trasy — często NP-trudne) → biblioteka optymalizacyjna lub solver za interfejsem
+     domenowym plus ograniczony czasowo spike; geografia → rozszerzenie geo bazy; podobieństwo → indeks pełnotekstowy lub wektorowy.
+7. **Styl architektury:** modularny monolit, chyba że czynniki uzasadniają coś innego.
+8. **Ryzyka i spike'i.** Każda poważna niepewność dostaje ograniczony czasowo eksperyment z **kryterium porzucenia**
+   (jaki wynik każe porzucić opcję). Przed zapisem podważ prowadzącą opcję — adwokat diabła, pre-mortem, nieznane
+   niewiadome (arch-architect-practice, `.claude/skills/arch-architect-practice/references/decision-resilience-test.md`).
+   Hosting MVP: `references/deployment-platform.md`.
+9. **Zespół agentów.** Które skille `lang-*`, `fw-*`, `tool-*` istnieją dla stacku, a które trzeba utworzyć
+   (`python3 .tf/factory/build.py new-skill …`); proponowane pole `stack` dla person wdrażających, np. `[fw-angular, lang-typescript]`.
+10. **Punkt startu.** Oficjalny generator albo dojrzały szablon: polecenie i wersja z datowanego źródła, nigdy pusty
+    katalog (eng-repo-readiness). Oznacz pewność: sprawdzone przez nas / na liście, niewypróbowane / ręcznie.
 
-Gdy problemem jest tarcie zespołów (wolny build, długi feedback, standardy dla wielu zespołów), a nie sam wybór
-technologii — najpierw diagnoza DevEx i koszt migracji w fe-engineering-levels; zakup lub zmiana narzędzia to wynik
-tej diagnozy.
+## Przyjazność dla agentów
+Agent dobrze pracuje ze stackiem, który potrafi czytać, uruchamiać i sprawdzać bez człowieka. Patrz na:
+- **typy** — typowane kontrakty danych (typy statyczne, schematy), żeby błędy wychodziły przy kompilacji lub walidacji;
+- **konwencje** — utarte miejsca na routing, testy, konfigurację, żeby agent znajdował i kładł rzeczy tam, gdzie ludzie się ich spodziewają;
+- **popularność w obrębie rodziny języka** — porównuj framework z rodzeństwem w tym samym języku, nie z całym rynkiem;
+  szeroko używane narzędzia mają więcej przykładów i mniej niespodzianek;
+- **aktualną, wersjonowaną dokumentację** w formie czytelnej dla maszyny (Markdown, `llms.txt`, serwer dokumentacji);
+- szybkie testy, deterministyczne narzędzia, niskie tarcie integracji (jedno polecenie, jedna zmienna, jedna strona
+  dokumentacji dla usługi) i istniejące skille dla stacku.
 
-## Anty-wzorce
-Wybór pod CV lub modę; benchmarki bez związku z czynnikami; mikroserwisy „na zapas”; wersje spoza zakresu zgodności;
-rekomendacja bez kompetencji i ograniczeń zespołu; fakty (wersje, licencje, EOL) z pamięci.
+**Gdy człowiek wybiera kandydata, który wypada tu słabo** (np. klient upiera się przy frameworku bez typów i z ubogą
+dokumentacją): domyślnie nie ma go w rekomendacji. Nazwij, czego mu brakuje, wskaż najlepszą alternatywę w tej samej
+rodzinie języka i zaproponuj kompensację — konkretne reguły do `CLAUDE.md` (gdzie trafiają pliki, które polecenia
+weryfikują zmianę, które wzorce są zakazane), walidację schematów na granicach, dodatkowe testy. Zapisz
+`quality_override: yes` z uzasadnieniem w `stack-decision.md`. Szybkie pytanie do człowieka: czy zauważysz, kiedy agent
+odejdzie od praktyk tego stacku? Jeśli nie, rekomenduj nudną opcję.
+
+Tarcie w zespole (wolne buildy, długa informacja zwrotna, standardy wielu zespołów) diagnozuj najpierw jako developer
+experience (fe-engineering-levels); zmiana narzędzia to możliwy wynik, nie punkt wyjścia.
+
+## Istniejący projekt
+- Wykryj stack, potem wydaj werdykt **dla każdego obszaru**: zostawić / usprawnić / wymienić, każdy z kosztem migracji.
+- Wymieniaj stopniowo wzdłuż granic kontekstów (strangler fig), nigdy jednym przełączeniem.
+- Odrzuć „przepiszmy, bo stare”, gdy żaden czynnik nie zyskuje: pełne przepisanie kosztuje wszystko z góry, a wartość daje dopiero na końcu.
+- Komponent, który oblewa filtr obowiązkowy (np. framework bez łatek bezpieczeństwa), trzeba wymienić — zaplanuj to.
+- Przykładowa tabela: `references/examples.md` §2.
+
+## Antywzorce
+Wybór pod CV albo modę; benchmarki niezwiązane z czynnikami; mikroserwisy „na wszelki wypadek”; wersje spoza zgodnego
+zakresu; ignorowanie ograniczeń zespołu; fakty z pamięci.
 
 ## Przykład
-**Sytuacja:** „Backend aplikacji usterkowej; 4 osoby piszą w TypeScripcie, front w Angularze, dane w UE.”
-**Wynik** (wszyscy kandydaci przeszli filtry obowiązkowe; fakty od `researcher` ze źródłem i datą):
-
-| Kryterium (waga) | A: TypeScript + Node.js („nudna”) | B: Java + Spring | C: Go |
-|---|---|---|---|
-| kompetencje zespołu (5) | 5 | 2 | 2 |
-| przyjazność dla agentów AI (4) | 5 | 4 | 2 (brak skilla `lang-go`) |
-| **Suma ważona (7 kryteriów)** | **106** | 95 | 82 |
-
-Decyzja `proposed`: A + PostgreSQL (konkurencja o przydział zgłoszeń), modularny monolit; ADR, akceptuje człowiek.
-Więcej przykładów: `references/examples.md`.
+**Sytuacja:** „Czteroosobowy zespół zna Pythona; B2B SaaS z danymi klientów w UE; wybierzcie framework i bazę.”
+**Wynik (fragment `stack-decision.md`):**
+- Czynniki: izolacja najemców (H,H, waga 5), czas do pierwszego wydania (waga 4), dane w UE (ograniczenie).
+- Filtry: hostowana baza tylko w USA odrzucona (lokalizacja danych); framework, którego bieżąca wersja główna nie ma
+  wsparcia bezpieczeństwa, odrzucony.
+- Kandydaci: Django + PostgreSQL (nudna opcja), FastAPI + PostgreSQL, framework w Node (odrzucony przez umiejętności zespołu).
+- Fakty: wersje i daty wsparcia ze stron wydań projektów, sprawdzone 2026-11-20 przez `researcher`.
+- Macierz: Django 4,4, FastAPI 4,0 — Django wygrywa konwencjami i generatorami panelu administracyjnego.
+- Spike: row-level security dla najemców w 2 dni; kryterium porzucenia — polityki nie obejmują zapytań raportowych.
+- Podważenie: pre-mortem „najemca zobaczył fakturę innego najemcy” → test izolacji w CI.
+- Status `proposed`; akceptuje człowiek.
+Więcej przypadków (macierz, zostawić/usprawnić/wymienić, spike solvera): `references/examples.md`.
 
 ## Źródła
-- Kurs 10xDevs, ed. 3 (2026), lekcja 4.1 (stack), moduł 1, lekcje 2 i 5 (kryteria przyjazności dla agentów, platforma
-  wdrożeniowa, test odporności), moduł 2, lekcja 4 (widoczność usług dla agentów) — materiał szkoleniowy
-  (dostęp 2026-10-09); opisane własnymi słowami.
+- Fakty o wersjach, wsparciu i licencjach pochodzą ze stron wydań i rejestrów pakietów każdego projektu, sprawdzanych
+  w chwili decyzji; sam skill nie zawiera faktów o wersjach.

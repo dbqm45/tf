@@ -1,60 +1,103 @@
-# Templates of the A–C documents
+# Document templates for the three diagnoses
 
-Every document starts with a header: `title`, `created`, `type` (`domain-distillation` / `refactor-plan`), the commit
-on which the code was analysed. At the end a summary of 5–8 sentences: what the artifact contains and the most important conclusion.
+> **Contents:** A. `docs/project/02-domain/distillation.md` · B. `docs/project/02-domain/invariant-<name>.md` · C. `docs/project/02-domain/acl-<package>.md`
+
+Every document starts with the same header and ends with a summary of 5–8 sentences written for someone who reads only that.
+
+```markdown
+---
+title: <what was diagnosed>
+created: <YYYY-MM-DD>
+type: domain-distillation | refactor-plan
+commit: <short hash of the commit analysed>
+---
+```
+
+Use `type: domain-distillation` for A and `type: refactor-plan` for B and C.
 
 ## A. `docs/project/02-domain/distillation.md`
+
 ```markdown
-# Domain distillation — <product>, <date>, commit <sha>
-**Constraints:** <e.g. no PRD — the README and the code are the source>
+# Domain distillation — <system>
+
+## Inputs and constraints
+Documents read: … · Code areas read: … · Missing inputs (e.g. no PRD — README and code only): …
 
 ## Glossary
-| Term | Definition | Source (document) | In the code | Other names |
-|---|---|---|---|---|
-| Generation session | a batch of proposals from one text, with a moment of finalization | `docs/prd.md:88` | BRAK w kodzie (only `generation_id` in `flashcards`) | "batch" (UI), "generation" (database) |
+| Term | Definition | Documents (file:line) | Code (file:line or BRAK w kodzie) |
+|---|---|---|---|
 
 ## Subdomains
-| Area | Type | Justification (product goals) |
+| Subdomain | Kind (core / supporting / generic) | Why (product goal) |
+|---|---|---|
 
 ## Aggregate candidates
-| Candidate | Invariant (quote) | Status: enforced / declared / ignored | Evidence |
+| Candidate | Rule it protects (quote) | Status (enforced / declared / ignored) | Evidence |
+|---|---|---|---|
 
 ## Model ↔ code divergences
-| The document says | The code does | Evidence |
+| # | The document says | The code does | Evidence (file:line) |
+|---|---|---|---|
 
 ## Ranking
-| # | Candidate | Value | Risk | Justification |
+| # | Area | Business value | Enforcement risk | Next (B / C / later) |
+|---|---|---|---|---|
+
+## Summary
 ```
 
 ## B. `docs/project/02-domain/invariant-<name>.md`
+
 ```markdown
-# Invariant: <rule> — the guardian aggregate plan
-## List of invariants and axes
-| Rule | Source | Coreness | Smearing (files/layers) | Enforcement |
-## Diagnosis of the chosen one (all layers)
-| Layer | Place | What it does with the rule | Problem (missing / inconsistent / UI only / swallows the error) |
-## Design
-- Root: `<Aggregate>`; methods with preconditions (signatures + pseudocode)
-- Domain errors: `<ErrorName>` → mapping to a response (e.g. 409)
-- Repository: `load(id)` / `save(aggregate)`; transaction: <scope>
-- API route: parse → method → map the error
-## Before / after (every current place of the rule)
-## Phases (test-first) and test cases
-| Operation | Input state | Expectation (success / named error) |
+# Rule: <the rule in one sentence>
+
+## Candidate rules
+| Rule | Closeness to core | Files / layers touching it | Enforcement (enforced / declared / violable) |
+|---|---|---|---|
+Chosen: … because …
+
+## Where the rule lives today
+| Layer | file:line | What happens (missing / inconsistent / UI only / trusts request / swallowed error) |
+|---|---|---|
+
+## Target design
+Aggregate root, methods with preconditions, named domain error, repository, transaction boundary, route → error mapping.
+
+## Before / after
+| Place today | After the change |
+|---|---|
+
+## Phases (test first)
+1. Characterisation tests of today's behaviour …
+
+## Test cases
+| Sequence | Expected |
+|---|---|
+
+## Summary
 ```
 
 ## C. `docs/project/02-domain/acl-<package>.md`
+
 ```markdown
-# ACL for <package> — plan
-## Dependencies and leak signals
-| Package | Files that know it | Layers | Types in signatures/DTOs | Client/server |
-## Choice (axes: reach · replacement cost · declared replaceability)
-## Design
-- Value object `<Name>`: mapping from/to persistence, conversion from/to the library type
-- Port `<Name>` (domain language), adapter in `<directory>/`
-## Proof of isolation
-| File | Knows the package today | Knows it after the refactor |
-## Completion criterion
-`rg -l "<package>" src | rg -v '^<adapter-directory>/'` → empty; CI rule: <dependency-cruiser / ESLint / ArchUnit>
-## Phases
+# Isolating <package>
+
+## Files that know the dependency today
+Command used: `rg -l "from '<package>'" src/` (+ dynamic imports) · Count: … · Layers: …
+
+## Ranking of leaks
+| Dependency | Layers / files | Cost to replace today | Promised replaceable? (document:line) |
+|---|---|---|---|
+
+## Target design
+Value object …, port …, adapter directory …, what the UI receives …
+
+## Knows today / knows after
+| File | Today | After |
+|---|---|---|
+
+## Completion check
+Command: … → must list only files in `<adapter dir>`. CI rule: … (references/rule-templates.md)
+
+## Summary
 ```

@@ -1,61 +1,66 @@
-# Examples: plan interview
+# Plan interview — worked examples
 
-## 1. CSV export of orders
-**Situation:** "I want to add a CSV export of orders in the admin panel. Grill me before you start".
+Contents: 1. Auth migration (independent first round, a held-back question) · 2. Feature flag (summary and
+confirmation) · 3. OAuth move while the human is away (assumptions) · 4. Pruning an over-grown interview
 
-**How:**
-1. Tree: permissions, personal data and filters are independent of each other; the export register depends on
-   personal data, the file size on the filters, and how the file is delivered on the size.
-2. You check facts yourself: `scout` finds that the panel has the roles `admin` and `support`, and the orders table
-   has about 2 million rows. You do not ask about that.
-3. Frontier of the first round: only decisions without unsettled preconditions (permissions, personal data,
-   filters). The question about how the file is delivered waits — it depends on the answer about filters (file size).
+## 1. Moving login from sessions to an identity provider
+Facts checked first (not asked): the app uses cookie sessions in the auth module; 3 roles (`admin`, `agent`,
+`customer`); 40k active users in the last 30 days (from the metrics dashboard config).
+Size: complex — an external provider, user data, every page → about 12 questions in three rounds.
 
-**Result (round 1):**
 ```
-**Q1 — Who can export**: a) only admin, b) admin and support
-→ Recommendation: a — the export holds customer data; support can get it later.
+Round 1 — 4 questions, answer by number
 
-**Q2 — Personal data in the file**: a) full (name, e-mail, address), b) no personal data, c) selectable at export
-→ Recommendation: b — enough for reports, and it creates no copy of personal data outside the system.
+Q1. Which provider
+   a) the company's existing Entra ID tenant — already paid for, staff accounts there; customers would need guest accounts
+   b) a customer-facing IdP (e.g. Auth0) — built for external users; new contract and cost
+   Recommendation: b — 95% of users are customers (role counts above).
 
-**Q3 — Filters**: a) date range, b) date range and status, c) all filters from the order list
-→ Recommendation: b — covers the described case, and does not tie the export to every change in the list.
+Q2. Existing passwords
+   a) migrate hashes to the IdP — no reset for users; needs a compatible hash format
+   b) force a reset on first login — simple; friction for 40k users
+   Recommendation: a, if the IdP accepts bcrypt imports — I will check its docs before round 2.
+
+Q3. Admin accounts — same flow as customers or a separate one?
+   Recommendation: separate, with MFA required.
+
+Q4. Deadline driver — a security audit, a contract, or none?
+   Recommendation: none assumed until you say otherwise.
 ```
-The human: `P1: a, P2: c, P3: b`. The answers unlock new questions for round 2: the export register (follows from
-Q2: c) and how the file is delivered when the date filter covers all 2 million rows (follows from Q3).
+Held back to round 2: "big-bang switch or gradual by role" — it depends on Q1 and Q3.
+Round 2 adds that question plus session lifetime and logout across devices.
 
-## 2. Summary and confirmation
-**Situation:** After three rounds (13 questions) the frontier is empty.
-
-**How:**
-1. Summary: decisions, assumptions, what is out of scope.
-2. The question about shared understanding; without "yes" you do not implement.
-3. Decisions recorded to `decisions.md`; the decision to deliver files in the background meets the ADR threshold →
-   an ADR proposal.
-
-**Result:**
+## 2. Adding a feature flag around a new checkout
+After two rounds (7 questions):
 ```
-Decisions: export only for admin; personal data selectable, every export with personal data in the register;
-filters: dates and status; above 50 thousand rows the file is generated in the background, link by e-mail.
-Assumptions: CSV format UTF-8 with the separator ";" [to be confirmed by the reporting team].
-Out of scope: export to XLSX, a schedule of automatic exports.
-Is that how we understand it?
+Summary — is that how we understand it?
+Decisions
+  D1. Flag key checkout-v2, default off, toggled per tenant.
+  D2. Old checkout stays until 100% rollout plus two weeks.
+  D3. Metrics: conversion and payment errors per variant.
+Assumptions
+  A1. The existing flag service handles per-tenant targeting (confirmed in its config; no new service).
+Out of scope
+  - Redesign of the cart page.
+Reply "yes" or correct a line by its number.
 ```
+The human replies "D2: one week, otherwise yes". Only now is the plan written; D1–D3 go to `decisions.md`.
 
-## 3. The human is unavailable
-**Situation:** The human leaves a note: "I'm away until Friday, prepare a plan for migrating login to OIDC".
-
-**How:**
-1. You gather facts from the repo as usual.
-2. You do not settle decisions silently: you take the recommendations as explicit **assumptions**.
-3. You do not implement — the plan waits for confirmation after they are back.
-
-**Result:**
+## 3. "I'm on leave until Monday — plan the OAuth move"
+No decision may be taken for the human, so the recommendations become labelled assumptions:
 ```
-Assumptions (to confirm, nothing implemented):
-A1 — identity provider: the company's current Keycloak [recommendation Q1]
-A2 — old sessions: expire naturally, no forced logout [recommendation Q2]
-A3 — accounts without an e-mail: manual linking by support [recommendation Q3]
-After you are back: confirm or change A1–A3; A1 changes the shape of the further questions.
+Nothing will be implemented before you confirm. Assumptions taken from my recommendations:
+  A1. Provider: the customer-facing IdP (Q1 b).
+  A2. Password hashes migrated, no forced reset (Q2 a) — the IdP accepts bcrypt (checked in its import docs).
+  A3. Admins use a separate flow with MFA (Q3).
+  A4. No external deadline (Q4).
+Open, needs you: big-bang vs. gradual rollout.
 ```
+The plan draft is marked "based on unconfirmed assumptions A1–A4"; work waits for Monday.
+
+## 4. Pruning an over-grown interview
+A simple CSV export produced 40 edge-case questions and a three-week plan. Re-ranked by impact × likelihood:
+- kept (5): which columns, date and number format, size limit, who may export, where the file goes;
+- answered "fail with a readable error": malformed rows, exports above the limit, unsupported characters;
+- dropped: scenarios with no user who hits them.
+Result: 5 questions in one round, a two-day plan.

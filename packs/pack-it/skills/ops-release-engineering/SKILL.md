@@ -1,132 +1,143 @@
 ---
 name: ops-release-engineering
-description: Use for the release method — rolling, blue/green, canary with rollback, feature flags, database migrations in CD.
+description: Use when choosing how a change reaches production — canary or blue/green, flag stages, GitOps, expand-contract migrations, rollback, the first deploy plan.
 metadata:
-  review: "2027-04-09"
-  catalog: "Use for choosing and configuring the release method — rolling, blue/green, canary with metric gates and automatic rollback, feature flags with a removal date, GitOps (Argo CD, Flux), database migrations in CD (expand–contract), preview environments for PRs. Not for building the pipeline itself (ops-ci-cd) or trunk-based and DORA rules (eng-continuous-delivery)."
-  keywords: "sposób wydania, wdrożenie stopniowe, canary, blue/green, rolling, wycofanie, rollback, feature flaga, za flagą, etapy flagi, etapy udostępniania, procent klientów, najpierw pracownicy, potem wszyscy, przejście etapu, kryterium wyjścia, release.yaml, data usunięcia flagi, dark launch, GitOps, Argo CD, Flux, expand contract, release method, progressive delivery, feature flag, behind a flag, flag stages, rollout stages, percentage of customers, employees first, then everyone, stage transition, exit criterion, flag removal date"
+  review: "2027-11-20"
+  catalog: "Use when choosing and configuring the release method — rolling, blue/green, canary with metric gates and automatic rollback (Argo Rollouts, Flagger), feature-flag stages in release.yaml, GitOps (Argo CD, Flux) and emergency changes under it, expand-contract database migrations, preview environments, configuration as part of a release, rehearsed rollback, the first (MVP) deployment with an approved plan. Not for building the pipeline itself (ops-ci-cd) or trunk-based development and DORA metrics (eng-continuous-delivery)."
+  keywords: "pierwsze wdrożenie, pierwsze wdrożenie MVP, szkielet MVP, wdrożenie z agentem, złe konto, canary, wdrożenie canary, blue green, rolling update, automatyczne wycofanie, rollback, wycofanie wdrożenia, progressive delivery, argo rollouts, flagger, bramki metryk, etapy flagi, flaga funkcji, feature flag, wdrożenie flagą, release.yaml, kryterium wyjścia, gitops, argo cd, flux, self-heal, zmiana awaryjna na produkcji, ręczna zmiana na produkcji, dryf konfiguracji, migracja bez przestoju, zmiana nazwy kolumny, expand contract, środowisko podglądowe, preview environment, środowisko per PR, próba wycofania, pierwsze wdrożenie, wdrożenie MVP, plan wdrożenia, deploy plan, jak wypuścić wersję, zero downtime deployment, release strategy, traffic shifting, rollback rehearsal, emergency change, first deployment, schema migration without downtime"
 ---
 
-# Release engineering
+# Release engineering — how a change reaches users
 
-Goal: a release is boring. Every change has a limited reach (blast radius), a measurable success criterion and a way
-back that is faster than a fix.
+Every release method buys three things: a **limited blast radius**, a **measurable success criterion** decided before the release,
+and a **way back that is faster than a fix**. If one of the three is missing, the method is not finished.
 
-## 1. Choosing a strategy
-| Strategy | When | Notes |
+## 1. Choosing the method
+Ask three questions: how much risk is acceptable (payments ≠ an internal report), how fast must we be able to go back, and can we
+verify the new version before it gets all traffic?
+
+| Method | When | Cost / weakness |
 |---|---|---|
-| rolling | routine changes, stateless services, backward compatible | cheap; rollback is slow (another rolling) |
-| blue/green | critical paths (payments, login), when an immediate return is needed | check the inactive environment **before** switching traffic; the cost of double infrastructure |
-| canary | when staging does not reproduce production (traffic, data, integrations) | needs per-version metrics and an automatic decision |
-| feature flag / dark launch | separating deployment from enabling a feature | every flag has an owner, a removal date and stages in `release.yaml` |
-You choose by three questions: what risk we accept, how fast we must get back, how well we can verify the version.
+| Rolling update | stateless services, low risk, backward-compatible changes | cheap; rollback is another rollout, so it is slow; old and new pods serve at the same time |
+| Blue/green | you need an instant switch and a full check of the idle environment first | double capacity during the switch; shared database must suit both colours |
+| Canary | staging differs from production, risk is high, per-version metrics exist | needs metrics split by version and an automated decision |
+| Feature flag | separate *deploy* from *release*; target audiences | flag debt: every flag has an owner, stages and a removal date |
 
-## 2. Canary with gates
-- A traffic ladder, e.g. 1–5% → 10% → 25% → 50% → 100%, with an observation time at every step (e.g. 10–15 minutes at the first).
-- Gates from the metrics of the canary version against the stable one, e.g. error rate < 0.1% and p99 < 200 ms (you pick thresholds to fit
-  the service's SLO — ops-sre-incidents). Exceeding them = **automatic** rollback, without waiting for a human.
-- Tools: Argo Rollouts, Flagger (Kubernetes), traffic weights in the load balancer or service mesh. Mirrored traffic
-  (shadowing) lets you check a version without affecting users.
-- Measure, in addition to DORA: rollback frequency and the time from detection to rollback.
+Usually you combine them: a canary deploy of the binary + a flag for the behaviour.
 
-A flag has the same ladder as a canary, only by users: the stages (`internal` → `10%` → `100%`) recorded
-in the release plan `release.yaml` (`flags[].rollout`), each with an exit criterion from metrics ("recovered ≥ 15%,
-duplicates = 0") and a minimum time (`min_days`), plus `owner` and `remove_by`. A human approves the stage transition
-when the criterion is met and the minimum time has passed — not "by feel".
+## 2. Progressive exposure
+### 2a. Canary with metric gates
+- Tooling: **Argo Rollouts** (Rollout + AnalysisTemplate) or **Flagger** (Canary resource with a service mesh or ingress).
+- A ladder of traffic weights with observation windows, for example **1–5% → 10–25% → 50% → 100%**; the first windows are the longest,
+  because that is where most problems show up (cold caches, a new query plan, a rare client).
+- Gates compare canary to stable, not to an absolute number: **error rate** and **p99 latency** with thresholds derived from the SLO
+  (e.g. error rate of the canary ≤ stable + 0.5 pp, p99 ≤ SLO target; ops-sre-incidents for SLOs). Thresholds are illustrative — derive yours.
+- A gate breach means an **automatic rollback** to stable, no human needed at 2 a.m. A gate with no data (no traffic) is a failure, not a pass.
+- Optional before the first step: mirrored (shadow) traffic, responses discarded.
+- Measure the method itself: how often canaries roll back and the time from detection to completed rollback.
+
+### 2b. Feature-flag stages in `release.yaml`
+Stages by audience (internal → percent → everyone) with the same discipline as a canary: each stage has an **exit criterion** taken from
+metrics and a **minimum time** (`min_days`), a human approves the move to the next stage, and the flag has an `owner` and a removal date
+(`remove_by`). These keys are a factory convention read by core-delivery-lifecycle and eng-continuous-delivery — keep the names.
+
+```yaml
+flags:
+  - key: payment-retry
+    owner: team-payments            # decides on each stage transition
+    remove_by: 2027-03-31           # the flag and the dead branch are deleted by then
+    rollout:
+      - { stage: internal, min_days: 3, exit: "retry success ≥ 95%, no double charge, 0 P1/P2" }
+      - { stage: "10%",    min_days: 7, exit: "payment error rate ≤ control + 0.2 pp, support tickets not above baseline" }
+      - { stage: "100%" }
+```
+A stage is never passed "on feel": no exit criterion met, or `min_days` not elapsed → stay, or roll back the flag.
 
 ## 3. GitOps
-- The target state (manifests, image versions, configuration) in Git; a controller (Argo CD, Flux) reconciles the cluster with it
-  and reverts manual changes (drift). Rollback = `git revert`.
-- Policies (security, resources, compliance) checked in the PR before the change reaches the cluster. Low-risk changes
-  may merge automatically, high-risk ones — with human approval.
-- Promotion between environments through Git (a PR with the version change), not through a manual `kubectl apply`.
-- Secrets not in plain form: SOPS, Sealed Secrets or an external manager (Vault, External Secrets).
-- Decide early: one configuration repository or separate ones per team; what the dev → staging → prod path looks like.
+- The desired state lives in Git; a controller (Argo CD, Flux) reconciles the cluster and reverts drift (self-heal). Rollback = `git revert`.
+- Policy checks (schema, OPA/Kyverno, image-from-allowed-registry) run on the PR; auto-merge only for low-risk changes (e.g. an image bump in dev).
+- Promotion between environments is a PR (dev → staging → prod), not a manual sync.
+- Secrets are never plain in Git: SOPS / Sealed Secrets or an external secret store (ops-secrets-identities).
+- Decide the repository layout early (app code vs. config repo, a directory per environment); changing it later moves every application.
 
-## 4. Database migrations in continuous delivery
-- **Expand–contract in separate releases:** (1) add the new column/table and write to both, (2) switch reads,
-  (3) remove the old ones. Never a schema change and the application change that needs it in one deployment.
-- Every migration works with **two** application versions at once (the old and the new run in parallel during the deployment)
-  and is idempotent.
-- In CI a DDL linter blocks table-locking operations (e.g. `CREATE INDEX` without `CONCURRENTLY` in PostgreSQL).
-- Test migrations of large tables on production-sized data (be-database).
+## 4. Database migrations: expand-contract
+During a rolling update or a canary **two application versions run at the same time**. Each migration step must work with both.
+1. **Expand** (release 1): add the new structure (column, table, index) without removing anything; the new code writes to both.
+   Indexes on large PostgreSQL tables with `CREATE INDEX CONCURRENTLY` (outside a transaction block), backfill in batches.
+2. **Migrate** (release 2): reads switch to the new structure; verify data parity.
+3. **Contract** (release 3, after old versions are gone and rollback no longer needs them): remove the old structure.
+- Each step is idempotent and rehearsed on production-sized data.
+- A DDL linter in CI (for example squawk for PostgreSQL) blocks locking operations (`ALTER TABLE … RENAME`, adding a `NOT NULL`
+  column with a volatile default, a non-concurrent index).
+- Never "change the schema and the code in one deployment". Schema design itself: be-database.
 
-## 5. Preview environments
-- An environment per PR: isolated, created automatically, with a mandatory lifetime and deletion when the PR is closed.
-- Synthetic or masked data, separate secrets, no management ports from the internet.
-- The performance test environment may be smaller than production, but created on demand, not permanent.
+## 5. Environments and configuration
+### 5a. Preview environments
+Created automatically per PR, deleted when the PR closes, plus a TTL as a safety net. Synthetic or masked data only, secrets separate
+from staging/production, no management ports exposed to the internet. Cost: a cap on concurrent previews.
 
-## 6. Configuration as part of the release
-A release is code **and** configuration: flags, ConfigMaps, secrets, environment variables, the AI model version. You change them
-in the same PR, promote them along the same path and roll them back together. An application without the required configuration does not report
-readiness, so the release stops on its own (ops-kubernetes, section 4).
+### 5b. Configuration is part of the release
+Flags, ConfigMaps, environment variables and model versions change in **the same PR and through the same path** as the code,
+and are rolled back together with it. A missing required configuration value fails the readiness probe instead of starting a half-working
+pod (ops-kubernetes, section 4).
 
-## 6a. Rollback rehearsed, not assumed
-A rollback plan that nobody has executed usually fails exactly when it is needed.
-- **Rehearse regularly** (e.g. once a quarter and after a pipeline change): a rollback on staging or in a canary, measuring
-  the time from the decision to restoration.
-- Conditions you check: the previous image **is still in the registry** (the retention policy does not delete the last N production
-  releases — pinned by digest); database migrations compatible with the previous version (section 4); the pipeline can still deploy
-  the old version; configuration and flags go back together with the code (section 6).
-- Mark irreversible changes (dropping a column, a data migration, a message format change) in the PR — for them the way
-  back is a fix forward or a restore from backup (ops-sre-incidents), which you must know **before** the release.
+## 6. Rollback and changes on production
+### 6a. Rollback — rehearsed, not assumed
+- Rehearse on a schedule (e.g. quarterly) and after every pipeline change: deploy N, roll back to N−1, measure the time.
+- Conditions: previous images kept in the registry by digest (retention policy does not delete them), migrations compatible with N−1,
+  the pipeline can still deploy the old version, flags and config revert with it.
+- Label **irreversible changes** in the PR (dropping a column, a data migration, a changed event format on a queue) and write down the
+  way forward (fix-forward, a backup restore path, ops-sre-incidents) before the release, not during the incident.
 
-## 6b. An emergency change in production
-A manual change is sometimes necessary in an incident, but without a record it creates drift: the next deployment reverts it or a new machine
-does not get it.
-- You make it deliberately: a record in the incident log (who, what, why), in GitOps — an explicit pause of self-healing for
-  that resource, otherwise the tool reverts the change immediately.
-- The same change goes into the repository (code, IaC, manifest) **within one working day**; then you resume
-  synchronization. The rule: what exists in production exists in version control.
-- Drift detection (GitOps) will catch forgotten changes anyway.
+### 6b. Emergency change on production under GitOps
+1. Log who, what, why and when (incident channel or ticket).
+2. Pause reconciliation **for that one application only**: Argo CD — turn off automated sync/self-heal for the Application;
+   Flux — `flux suspend kustomization <name>` (or `helmrelease`). Never disable the controller globally.
+3. Make the change; confirm the effect.
+4. Reproduce it in the repository as a PR within one working day; after merge, resume sync (`flux resume …` / self-heal back on)
+   and check that the controller reports no drift. Drift detection is the safety net for forgotten steps.
 
-## 6c. The first deployment (sprint zero)
-You do the MVP deployment right after the skeleton, not after the features — it is a cheap test of the platform and the whole path to production.
-1. **Input:** the platform decision (stack-decision, ADR) and the stack. The plan in read-only mode, for approval.
-2. **The plan contains:** automatic steps with an owner (agent / human); accounts and services to be created manually;
-   a list of secrets (names and target location — without values); exact deployment commands for the chosen platform
-   variant (variants of the same platform have different commands — check against the CLI version from the project); a final
-   check (public address, logs, healthcheck).
-3. **Before the deployment** the agent checks which account and project the CLI is logged in to (`whoami` / `auth status`
-   of the given tool) and shows it to the human.
-4. Save the approved plan in `docs/project/06-delivery/deploy-plan.md` — the answer to "what was supposed to happen" when
-   the run goes off track, and the input to the next steps.
-5. **During:** the agent does not take steps outside the plan (a deviation = stop and ask); a human enters the secrets;
-   a human approves the production deployment (section 7).
+### 6c. First deployment (MVP) — with an approved plan
+Do it as soon as the walking skeleton exists, not at the end.
+1. Read the stack decision (`docs/project/04-architecture/stack-decision.md`, the platform section; arch-tech-selection).
+2. Write a **read-only plan** to `docs/project/06-delivery/deploy-plan.md` and get it approved before any command runs. Per step:
+   the owner (human or agent), the exact CLI command for the chosen platform variant, the manual account/console steps,
+   the **names** of required secrets (never values) and the final checks (health URL, logs, rollback command).
+3. Before the first mutating command show the human which account the CLI login is using: `gh auth status`, `aws sts get-caller-identity`,
+   `gcloud auth list`, `az account show`, `vercel whoami`, `fly auth whoami`… Wrong account → stop.
+4. The human enters secrets into the platform's secret store and approves the production step; the agent executes only the plan's steps.
+   Anything off-plan → stop, update the plan, ask again.
+5. Afterwards: the plan marked done with the actual URL and version; the release number and the `vX.Y.Z` tag from core-semver's script
+   (`.claude/skills/core-semver/scripts/semver.py`) — never move or overwrite a published tag.
 
-## 7. The agent and releases
-The agent prepares the change (manifest, rollout configuration, a PR in the GitOps repository) and a description of the gates. It does not promote
-a version to production and does not disable automatic rollback without a human's consent.
-It computes the release number and the `vX.Y.Z` tag according to SemVer with the script from core-semver. It does not overwrite a published tag or an image with a full version;
-a fix is a new version.
+## 7. The agent's boundary
+The agent prepares manifests, rollout and analysis definitions, migration PRs and gates, and runs read-only checks. It does **not** promote
+to production, skip a canary stage or disable automatic rollback without a human's explicit consent — "the canary keeps failing,
+just turn off the rollback" is a reason to look at the metrics, not to remove the gate.
 
 ## Example
-**Situation:** a new ranking in `search-api`; staging has no real traffic, SLO: errors < 0.1%, p99 < 200 ms.
-**Result:** a canary in Argo Rollouts, a PR in the GitOps repository, a human approves the promotion.
-- Ladder: 5% (15 min) → 25% (10 min) → 50% (10 min) → 100%; background analysis from the first step.
-- Gates from Prometheus for `track="canary"`: `result[0] < 0.001` (5xx) and `< 0.2` s (p99), `failureLimit: 2`.
-- The third failed measurement = automatic rollback to the stable version, without waiting for the on-call engineer.
-- The image pinned by digest, `revisionHistoryLimit: 5`; you measure the time from detection to rollback.
+Request: "Rename `customer.fullname` to `display_name` in a 40 M-row PostgreSQL table; the app ships by rolling update."
 
-More examples: `references/examples.md`.
+Result:
+- R1 (expand): `ALTER TABLE customer ADD COLUMN display_name text;` — the app writes both columns, reads the old one; batch backfill
+  of 10k rows; `CREATE INDEX CONCURRENTLY` if needed. Old and new pods both work.
+- R2 (migrate): reads switch to `display_name`; a parity check query returns 0 differences.
+- R3 (contract, after R2 is stable and N−1 rollback is no longer needed): `ALTER TABLE customer DROP COLUMN fullname;` — marked
+  **irreversible**, restore path = backup from before R3.
+- CI: squawk blocks a direct `RENAME COLUMN`.
 
-## Checklist
-- [ ] strategy matched to the risk and the required speed of return
-- [ ] canary gates from SLO thresholds and automatic rollback
-- [ ] flags with an owner, a removal date and stages (exit criterion, minimum time) in `release.yaml`
-- [ ] expand–contract migrations, compatible with two application versions, a DDL linter in CI
-- [ ] preview environments with a lifetime
-- [ ] first deployment: approved plan in the repo, CLI account checked, secrets entered by a human
-- [ ] rollback rehearsed (time measured), previous images kept in the registry
-- [ ] emergency changes reproduced in the repository, GitOps self-healing resumed
+More in `references/examples.md`: 1. a canary with gates in Argo Rollouts · 2. renaming a column through expand-contract ·
+3. an emergency change with GitOps enabled.
+
+## Related skills
+ops-ci-cd (the pipeline that builds the artifact) · eng-continuous-delivery (trunk-based, DORA) · ops-kubernetes ·
+ops-sre-incidents (SLOs, restore) · be-database · core-semver · core-delivery-lifecycle.
 
 ## Sources
-- 10xDevs course, ed. 3 (2026), module 1, lesson 5 (the first deployment with an agent in planning mode) — training
-  material (accessed 2026-10-09); described in our own words.
-- [Mastering the Blast Radius: Progressive Delivery in Modern DevOps](https://devops.com/mastering-the-blast-radius-deployment-without-fear-progressive-delivery-in-modern-devops/)
-- [Software Deployment Strategies for Enterprise Teams](https://devops.com/software-deployment-strategies-for-enterprise-teams-a-scenario-based-guide-to-choosing-the-right-approach/)
-- [GitOps in 2026: Why Pull Requests Are Taking Over Cloud Operations](https://devops.com/gitops-in-2026-why-pull-requests-are-taking-over-cloud-operations/)
-- [From Legacy to GitOps: A Roadmap for Enterprise Modernization](https://devops.com/from-legacy-to-gitops-a-roadmap-for-enterprise-modernization/)
-- [Avoiding Database Migration Pitfalls with Continuous Software Delivery](https://devops.com/avoiding-database-migration-pitfalls-with-continuous-software-delivery/)
-- [Ephemeral Environments are Better for Scaling Your Tests](https://devops.com/ephemeral-environments-are-better-for-scaling-your-tests/)
-- [10 Minor DevOps Mistakes That Can Cause Major Production Issues](https://medium.com/coinmonks/10-minor-devops-mistakes-that-can-cause-major-production-issues-191d141e7686) — Pawan Natekar, 2026 (unrehearsed rollback, manual changes in production)
+- Argo Rollouts documentation: canary strategy, analysis and automated rollback (argo-rollouts.readthedocs.io), as of 2026-11.
+- Flagger documentation: canary analysis with metric checks (docs.flagger.app), as of 2026-11.
+- Argo CD documentation: automated sync policy and self-heal (argo-cd.readthedocs.io); Flux documentation: `flux suspend` /
+  `flux resume` (fluxcd.io), as of 2026-11.
+- PostgreSQL documentation: `CREATE INDEX`, section "Building Indexes Concurrently" (postgresql.org/docs), as of 2026-11.
+- Kubernetes documentation: Deployments — rolling update and rollback (kubernetes.io), as of 2026-11.
+- squawk — PostgreSQL migration linter (squawkhq.com), tool documentation, as of 2026-11.

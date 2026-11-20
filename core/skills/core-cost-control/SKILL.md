@@ -1,201 +1,136 @@
 ---
 name: core-cost-control
-description: Use for choosing a model and for cost — benchmarks, the haiku→sonnet→opus cascade, effort, cache, compaction.
+description: Use when choosing a model or effort, deciding whether to delegate, escalating after a failure, or when token cost, cache, context or compaction is the concern.
 metadata:
-  review: "2027-10-09"
-  catalog: "Use when you choose a model or effort for a task or an executor, escalate after a failed attempt, plan a long session, compact the context or analyse cost and cache hits — a difficulty rubric, the model cascade with the model parameter of the Agent tool, cost profiles, the advisor, opusplan, cache rules, compaction, a cost report. Not for limiting hallucinations (core-grounding) or the performance of the application itself (the skills from pack-it)."
-  keywords: "ile kosztowała praca agentów, koszt w złotówkach, koszt w PLN, statystyki kosztów, drogo czy tanio, koszt, tokeny, tańszy model, drogi model, haiku, sonnet, opus, effort, eskalacja, cache, kompaktowanie, compact, limit, rachunek, oszczędność, profil kosztów, doradca, advisor, opusplan, serwery MCP drogie, dryf kontekstu, przekręca nazwy plików, nowy model, ranking modeli, benchmark, domyślny model, koszt agenta w CI, fork czy subagent, agent teams, wyjście testów i buildu, tysiące linii wyjścia, szum z terminala, hook filtrujący wyjście poleceń, sesje szybko się kompaktują, sesje są drogie, rachunek za agenta wzrósł, przejść na tańszy model, how much did the agents cost, cost statistics, cheaper model, expensive model, escalation, compaction, bill, saving, cost profile, context drift, new model, model ranking, default model, agent cost in CI, terminal noise, sessions are expensive, switch to a cheaper model, kiedy delegowanie się opłaca, delegować czy zrobić samemu, klasa zadania w briefie, koszt delegowania, when delegating pays off, delegate or do it yourself, task class in the brief"
+  review: "2027-11-20"
+  catalog: "Use when you pick the cheapest model and effort that will pass objective verification, decide whether to do the work in the main session or delegate it (and in which form: subagent, fork, worktree session, agent teams), escalate one level after failed verification, protect the prompt cache, keep context and compaction under control, cut MCP and terminal-output cost, assess a new model before switching, bound agents in CI and schedules, and read cost reports and statistics. Not for invented facts and verification of claims (core-grounding), application or database performance (pack-it skills such as be-database) or handing work to unattended agents (core-async-delegation)."
+  keywords: "koszt, koszty, rachunek, rachunek za Claude, drogo, tańszy model, tańszy, oszczędzać tokeny, tokeny, który model, wybór modelu, haiku, sonnet, opus, effort, wysiłek, eskalacja, po dwóch próbach, delegować czy samemu, delegowanie, subagent, wykonawca, Klasa:, Tier: za niski, cache, przełączam /model, /model w połowie sesji, kompakcja, /compact, /clear, /rewind, kontekst, dryf kontekstu, przekręca nazwy plików, wraca do odrzuconych poprawek, MCP, serwery MCP, definicje narzędzi, mcp-runner, fork, worktree, agent teams, advisor, doradca, opusplan, ultrathink, ultracode, xhigh, profil economy, profil quality, cost_report, cost_stats, złotówki, PLN, NBP, ile kosztowało, koszt tygodnia, nowy model w rankingu, publiczny ranking, ranking programowania, punktów więcej w rankingu, przestawić model domyślny, domyślny model dla zespołu, model w CI, benchmark, benchmark agentowy, wyniki porównywalne, przejść na nowy model, harness, szum z terminala, wyjście testów tysiące linii, hook filtrujący, agent w CI, budżet, max-budget-usd, klucz API, subskrypcja, cost, bill, cheaper model, which model, escalate, delegate or do it yourself, prompt cache, compaction, context drift, MCP cost, leaderboard, new model, CI agent cost, token usage"
 ---
 
-# Cost and model choice — the cheapest model that passes verification
+# Cost control - the cheapest setup that passes verification
 
-Goal: every task is done by the cheapest model that gives a result passing **objective verification** (tests, lint, build,
-`grounding_check`, a review). The model does not assess itself "by eye". Whether it was enough is decided by the result
-of the check. Only when the check fails do you go one level up.
+Principle: use the cheapest model and effort whose output passes an **objective check** (tests, lint, build, type check,
+grounding check, independent review). "Looks fine" is not a check. Step up only when the check fails.
 
-## 0. Yourself or delegate
-By default the main session does the task: it already knows the code and the conversation, and further work in it reads the history from the cache.
-A new executor starts from zero — it reads the same files again (a cache write at 1.25× the input price) and gets
-only a summary, so it loses agreements. Anthropic: multi-agent systems use about 15× more tokens than a chat,
-and code has fewer parts that can really be done in parallel than research (anthropic.com/engineering, 13.06.2025).
-You delegate only when the handover pays off: a lot of reading and a short result (`scout`, `researcher`), parts that are really
-independent (in parallel), a fresh look (a security review, clean-room tests, a diff review), a
-mechanical change with a full specification and a test (`quick-fixer`), a decision that is hard to reverse (analysis on a stronger
-model, the execution comes back to the session). You do not split one coherent change between executors.
-A fork, a session with a worktree, a subagent or agent teams (and the nesting limit): `references/parallelism.md`.
-You start the brief with the line `Class: reading|parallel|review|mechanical|decision|other` — a reason for delegating that
-can be measured later (§7).
+## 0. Do it yourself or delegate
+Default: the main session does the work. It already holds the code it read and the agreements from the conversation, and
+later turns read that history from the cache. A new executor starts cold: it re-reads files (a cache write costs about
+1.25x the input price) and gets only your summary, losing agreements. Multi-agent runs used about 15x the tokens of a chat
+in Anthropic's research system; code has fewer truly parallel pieces than research.
 
-## 1. Assessing the task before delegating
-Answer five questions. The routing table in the persona's prompt gives the starting tier, and the answers move it:
+Delegate only when one of these holds:
+- **reading**: a lot to read, a short result (`scout`, `researcher`);
+- **parallel**: parts that are genuinely independent;
+- **review**: a fresh, unbiased look is the point (security review, clean-room tests, diff review);
+- **mechanical**: a fully specified change with a test (`quick-fixer` on a cheap model);
+- **decision**: a hard-to-reverse choice analysed on a stronger model, execution returns to the session.
+Never split one coherent change across executors.
 
-| Question | Yes → | No → |
-|---|---|---|
-| Will a command check the result (tests, lint, types, build)? | a tier lower | a tier higher or a review |
-| Is the change easy to undo (git, no production data)? | a tier lower | a tier higher |
-| Does the task require a **decision** (choosing an approach, a trade-off), not only execution? | a tier higher | a tier lower |
-| Does it concern security, personal data, money, data migration, architecture? | deep or a deep review | — |
-| Does it cover many domains or >5 files without a pattern? | split it into steps | — |
+Every executor brief starts with `Class: reading|parallel|review|mechanical|decision|other` (the hook also accepts the
+Polish `Klasa:`; an unknown word is logged as `other`). The `log_usage` hook records it in
+`.tf/logs/delegation.jsonl`; `python3 .tf/factory/cost_report.py --delegation` shows cost per class. A costly class that
+returns short reports is a signal to do that work yourself. Forms of delegation and their costs (fork, worktree session,
+subagent, agent teams, nesting limits): `references/parallelism.md`.
 
-Typically: a mechanical change with a test → `haiku`; a feature in one domain → `sonnet`; an architecture choice, a security
-review, a bug without an obvious cause after an attempt → `opus`.
+## 1. Assess the task
+Five questions:
+1. Can a command check the result? Yes -> a lower tier is enough; no -> higher tier or a review.
+2. Is it easy to undo? Yes -> lower; no -> higher.
+3. Does it need a decision or trade-off? Yes -> higher; no -> lower.
+4. Security, personal data, money, data migration or architecture? -> deep tier or a deep review.
+5. Many domains or more than 5 files without a common pattern? -> split into steps first.
 
-Optionally `python3 .claude/hooks/jev_client.py --tier "<opis zadania>"` (the key TYPESAFE_API_KEY) asks these questions
-of the Jev decision model in ~0.1 s for a fraction of a cent. A "NIEPEWNE" (uncertain) suggestion you settle with the rubric yourself.
+Typical mapping: mechanical change with a test -> haiku; a feature within one domain -> sonnet; architecture, security review,
+a bug still unexplained after one attempt -> opus. Optional: `python3 .claude/hooks/jev_client.py --tier "<task description>"`
+(needs `TYPESAFE_API_KEY`); an "uncertain" verdict is settled by the five questions.
 
-## 2. The model cascade
-- The Agent tool takes a `model` parameter (`haiku`, `sonnet`, `opus`). It overrides the model from the agent's definition for that
-  call (and its resumptions).
-- **Start:** the cheapest model that has a real chance. **Escalation by one level** when the executor reports a blocker or
-  verification does not pass after 2 attempts. Add to the new call what did not work — otherwise the stronger model
-  will repeat the same mistake.
-- **De-escalation:** after a decision made on `opus` (architecture, a plan) commission the implementation on `sonnet` again, and
-  mechanical steps on `haiku`.
-- **A signal from the executor:** a report can end with the line `Tier: too low — …` or `Tier: too high — …`. The
-  `log_usage` hook records it, and `cost_report.py` sums it up and suggests changing the role's tier. For the next similar task
-  choose the right model right away.
-- Do not switch the model of the **main session** in the middle of a task (`/model`). Each model has a separate cache, so the next
-  turn reads the whole history without a discount. Delegating to an executor on another model does not spoil the session's cache.
+## 2. Cascade and escalation
+- The Agent tool's `model` parameter (`haiku|sonnet|opus`) overrides the agent definition for that call and its resumptions.
+- Start with the cheapest model that has a real chance. Escalate **one level** when the executor reports a blocker or after
+  **2 failed verifications**, and pass on what failed. After the decision work, go back down (implementation to sonnet,
+  mechanical work to haiku).
+- Executors may end their report with `Tier: too low — <reason>` or `Tier: too high — <reason>`; the hook logs it and the
+  cost report suggests tier changes per role (`.tf/config/config.yaml`).
+- Do not switch the main session's model mid-task with `/model`: every model has its own cache, so the next turn re-reads the
+  whole history at full price. Delegating a step to another model does not touch the session's cache.
 
-## 3. The main session: model, profile, advisor
-- **The cost profile** (`python3 .tf/factory/profile.py`) switches the whole team at once:
-  - `economy` — without Opus;
-  - `balanced` — the default;
-  - `quality` — std with effort high and an Opus advisor.
+## 3. Main-session settings
+- Choose model and effort **at the start** of a session.
+- Profiles switch the whole team at once: `python3 .tf/factory/profile.py economy|balanced|quality` (`--dry-run` to preview;
+  balanced is the default). Economy has no Opus; quality raises effort and adds an Opus advisor. A profile also changes
+  effort, the compaction threshold and the advisor.
+- **Advisor** (`/advisor opus`, `/advisor off`): a cheaper main model consults a stronger one at key moments (before choosing
+  an approach, on a repeated error, before declaring done). Each consultation reads the whole conversation at the advisor's
+  price without cache, so it pays off in long multi-stage work. Toggling the advisor keeps the cache. Experimental, Anthropic
+  API only; subagents inherit it.
+- **`opusplan`**: Opus in plan mode, Sonnet for execution. Every switch of mode is a model switch with an uncached re-read -
+  worth it when you plan once and then execute for long.
+- **Effort**: thinking tokens are billed as output, the most expensive kind. low - quick exchanges, renames, drafts; medium -
+  everyday work (default for Sonnet 5.5 and Opus 5.5); high - bugs in existing code, edge cases, verification; xhigh/max -
+  hard independent problems. Executors get effort from the tier config. On most models a mid-session effort change clears the
+  cache; with an API key or subscription it is kept on Opus 5.5, Sonnet 5.5, Haiku 5.5 and Fable 5.1+ (not on Bedrock, Agent
+  Platform, a Claude apps gateway, or with `CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS`).
+- **`ultrathink`** in a prompt deepens reasoning for that one turn without changing the stored effort
+  (`CLAUDE_CODE_DISABLE_ULTRATHINK` turns it off). **`ultracode`** is a setting, not an effort level: Claude orchestrates
+  multi-agent workflows for substantive tasks (`/effort ultracode`, `"ultracode": true`, or `--effort ultracode`, which also
+  sets xhigh). It spends many contexts, each subagent with a 5-minute cache. Details: `references/model-and-automation.md`
+  section 5.
 
-  The profile also changes the session settings: effort, the compaction threshold and the advisor.
-- **The advisor** — a cheaper main model calls a stronger one at key moments: before choosing an approach, at
-  a recurring error, before announcing the end. **It judges by itself when it needs it.**
-  - Typical pairs: Sonnet + an Opus advisor, Haiku + an Opus advisor (Haiku can ask, but cannot advise).
-  - Cost: every consultation reads the whole conversation at the advisor's price and without cache. It pays off in long,
-    multi-stage tasks, not in short ones.
-  - Limitations: only the Anthropic API (not Bedrock, Vertex, Foundry); an experimental feature. Subagents inherit
-    the advisor, so in the `quality` profile cheap executors can call it too.
-  - Turning on: `/advisor opus`, turning off: `/advisor off`. Switching the advisor does not spoil the cache.
-- **`opusplan`** — Opus in plan mode, Sonnet during execution. Every switch of plan mode changes
-  the model, so it means a full read without cache. Use it when you plan once and then execute for a long time.
-- You choose the model and effort **at the start of the session**.
+## 4. Cache
+- Automatic; it matches the beginning of a request. Reading from cache costs a fraction of input (per `.tf/factory/config.yaml`
+  prices: 10% on haiku, 5% on sonnet and opus, 2.5% on fable); writing costs about 1.25x input for the 5-minute lifetime.
+- **Clears the cache**: a model change (`/model`, `opusplan`, a skill's `model` field), an effort change on most models,
+  adding or removing an MCP server when tools load upfront, denying a whole tool, `/compact`, a Claude Code upgrade, many images.
+- **Keeps the cache**: file edits (CLAUDE.md takes effect at `/clear`), skill calls, permission mode, output style, running
+  subagents, `/rewind`, `/recap`, toggling the advisor.
+- Lifetime: 5 minutes; the main conversation on a subscription gets 1 hour. After a longer break the next turn re-reads
+  everything - after long breaks resume from a checkpoint (core-project-record) in a new session. Subagents have a 5-minute
+  cache, so launch independent briefs together. Abandon a failed path with `/rewind`, not `/compact`. Do not swap MCP servers
+  mid-task.
 
-## 4. Effort (reasoning depth)
-Thinking tokens count as output tokens, that is the most expensive.
-- `low` — quick exchanges, a rename, a draft;
-- `medium` — everyday work with a clear scope (the default for Sonnet 5.5 and Opus 5.5);
-- `high` — bugs in existing code, edge cases, verification;
-- `xhigh`/`max` — hard problems to solve independently (e.g. looking for vulnerabilities).
+## 5. Context, compaction, MCP, terminal output
+- The factory sets `autoCompactWindow: 200000`; without it 1M-window models compact only near the limit, and quality drops
+  well before that. `/compact <what to keep>` at task boundaries after a checkpoint; `/clear` for an unrelated task. After
+  compaction each used skill is re-attached up to about 5000 tokens.
+- **Context drift** - the agent repeats rejected fixes, mangles file names, "remembers" decisions never made: write a
+  checkpoint, start a new session, load the plan and progress, restart the phase. Attention to the middle of a long input
+  degrades; the cache lowers the price, not the clutter. Between plan phases offer: continue / fresh context with a resume
+  instruction / review first. Fact-checking itself is core-grounding.
+- **MCP costs twice**: tool definitions travel with every request (tool search loads them on demand) and results stay in the
+  history. The main session does not call MCP; the `mcp-runner` agent on a cheap model does, keeps large results in its own
+  context or `.tf/cache/mcp/`, and returns a short answer. Connect only the servers you need, prefer a few general tools
+  (search + execute) over dozens of narrow ones, and use a CLI when the command is known.
+- **Terminal output**: quiet reporters first (`pytest -q`, a dot reporter, `--silent`, errors only); write long logs to a file
+  and read fragments (`tail`, `grep`). A hook that filters every command is foreign code with full access: audit it and get the
+  human's consent. Measure the effect as cost per successful task, not raw token count.
+- **Broad repository scans**: a script or a cheap model collects the inventory, history and dependency graph; a strong model
+  deepens one flow.
 
-The agents' effort follows from the tier (`.tf/config/config.yaml`), and a skill can set its own with the `effort` field. On most
-models changing effort during a session also clears the cache; the exception: Opus 5.5, Sonnet 5.5, Haiku 5.5 and Fable 5.1 through
-the Anthropic API or a subscription. One hard turn: `ultrathink` in the text of the instruction instead of changing the session's effort;
-`ultracode` is the orchestration of a multi-agent workflow, not an effort level (`references/model-and-automation.md` §8).
-
-## 5. Cache — what spoils it and what does not
-The cache works automatically and matches the **beginning** of a request. A cache read costs 10% of the input price, and on
-Opus 5.5 and Sonnet 5.5 — 5%, on Fable 5.1 — 2.5% (platform.claude.com, prompt caching, as of 2026-10-17).
-
-| Clears the cache (the next turn costs more) | Does not clear it |
-|---|---|
-| a model change (`/model`, `opusplan`, a skill with a `model` field) | editing files, also CLAUDE.md (effective from `/clear`) |
-| an effort change (most models) | calling a skill, the permission mode, the answer style |
-| adding or removing an MCP server (when the tools load right away) | running a subagent, `/rewind`, `/recap` |
-| blocking a whole tool with a deny rule | turning the advisor on or off |
-| `/compact`, a Claude Code update, many images | |
-
-Practice:
-- A break longer than the cache lifetime (5 min, in a subscription the main conversation 1 h) means that the next turn reads
-  everything again. After a long break come back from a checkpoint in a new session, instead of resuming a long history.
-- Subagents have a 5-minute cache. Run independent commissions together, not with long breaks.
-- Abandon a failed path with `/rewind`, not `/compact`: undoing hits the existing cache.
-- Do not switch MCP servers in the middle of a task.
-
-## 6. Context and compaction
-- The factory sets `autoCompactWindow: 200000`. Without it models with a 1 M window compact only at ~967 thousand
-  tokens. Before that every turn reads an ever longer history, and quality drops (core-grounding).
-- Run `/compact <co zachować>` at the boundary of tasks, not in the middle. Save a checkpoint first
-  (core-project-record).
-- After compaction the content of every skill used comes back, but at most ~5000 tokens. That is why SKILL.md is to be short,
-  and you keep details in `references/` (`build.py check` warns).
-- A task unrelated to the previous one you start with `/clear`.
-- Exploration and long outputs (tests, logs, documentation) go to a subagent. Only the report comes back to the main session.
-- **Terminal noise:** first "errors only" reporters (`--reporter=dot`, `pytest -q`, `--silent`) and a log to a file
-  read in fragments; a hook that filters every command is foreign code with access to everything (`skill_audit`, the human's
-  consent). You measure the effect by the cost per successful task, not by the number of tokens.
-- **MCP costs twice:** the tool definitions (Claude Code loads them on demand through tool search) and the results — a
-  JQL list or a page body is tens of kilobytes of JSON that stays in the history and is read again in every turn. So the
-  main session does not call MCP tools: the `mcp-runner` agent (a cheap model) calls them, keeps the big results in its
-  context or in `.tf/cache/mcp/`, and returns a short answer. Connect only the servers needed in this project, prefer
-  servers with a few universal tools (the "search + execute" pattern), and when the command is known — a CLI.
-- A broad repo scan (git history, a dependency graph, an inventory) you commission to a cheaper model, and the heavy work is done by a CLI
-  outside the context; a strong model only to deepen one flow. Packing the whole repo into one file is an ad hoc
-  look at foreign code, not a standing practice.
-- **Context drift — signals for a fresh session:** the agent repeats rejected fixes, mangles file names, "remembers"
-  decisions that never happened, mixes in a data model from another change or phase. Do not tell it to "fix it once more": save
-  a checkpoint, open a new session, load the plan and its progress, start the phase from the beginning. Quality drops with the length of the
-  input before the window fills up — that is why phases with commits and a plan in a file, not an ever longer conversation.
-- Between plan phases you propose to the human: continue in this session / a fresh context (with a ready instruction to
-  resume from phase N) / a review of this phase first.
-
-## 7. Measurement
-**Diagnosis before leverage:** before you change the model, establish whether the problem concerns the context (files read in full
-many times, input:output ~100:1, low cache hits), the model (failures of a class of tasks despite good context) or
-the measurement (tokens estimated from characters) — `references/model-and-automation.md` §6.
-
-- **The status line** (`.claude/hooks/statusline.py`): the model, effort, context fill, cache hits (with the note
-  "cold" when the cache expired), the session's cost, limits. It uses no model tokens.
-- `/usage` — the session's cache hits and the likely cause of the last miss.
-- Cost reports from logs (`.tf/factory/cost_report.py`, `.tf/factory/cost_stats.py`) — commands and options:
-  `references/model-and-automation.md` §7; the causes of a stage's cost are assessed by core-agent-retro.
-
-## 8. Assessing a new model (before you change the default)
-- **You do not compare results from different reports directly.** A result in a ranking is a task set + a metric + a protocol (a fixed
-  or free harness, a step limit); without these three the number says nothing,
-  and the same model in another harness comes out clearly different.
-- Agentic work requires repeatability in every attempt (pass^k), not "at least once" (pass@1): 90% per step is about 59%
-  for five steps in a row (0.9⁵).
-- You compare **the cost of a solved task** (tokens × iterations + review time), not the price of a token — a cheap model
-  that needs three rounds of fixes is more expensive.
-- Your own test decides: 3–5 real project tasks with the same verification (tests, build), for agents in code —
-  an evaluation set (pack-it: eng-llm-features §8). A review of news in models about every 2 weeks, not daily.
-Details and an instruction for a reasoning model: `references/model-and-automation.md` §1.
-
-## 9. Agents in automation (CI, a schedule, your own agent)
-- You run them on an event that matters (a PR, a red build, a new issue), never "in a loop just in
-  case" — the cost multiplies by the number of events.
-- A hard limit per run: the number of turns **and** a budget in dollars (`claude -p … --max-budget-usd`, in the SDK a budget option;
-  names: eng-llm-features from pack-it). An evaluator agent without tools, 1–2 turns.
-- A model per role: triage and labels with the cheapest; reasoning about code with a medium one; an expensive one only for critical paths.
-- The cost from the result of every run to a table or a dashboard: per PR, per triage level, per week.
-- Company code in automation → an API key from a secret, not a developer's subscription login (different data and billing terms).
-Details: `references/model-and-automation.md` §2–3; the contract of unsupervised work: core-async-delegation.
+## 6. Measuring
+- Diagnose before changing the model. **Context problem**: the same files read in full again and again, input far larger than
+  output, low cache-hit rate, frequent compaction -> fix context, not model. **Model problem**: a high failure rate in one task
+  class despite good context, many turns to the first correct edit -> change the tier per section 1. **Measurement problem**:
+  subscription numbers instead of API data, benchmark instead of production, tokens estimated from characters -> use the
+  vendor's counters first.
+- The status line (`.claude/hooks/statusline.py`) shows model, effort, context fill, cache hits ("cold" after expiry), session
+  cost and limits without spending model tokens. `/usage` shows the hit rate and the last miss's cause.
+- Reports: `python3 .tf/factory/cost_report.py --days 7`, `--delegation`; `python3 .tf/factory/cost_stats.py --period
+  day|week|month` (USD and PLN at the NBP average rate, a cheap/typical/expensive band against the median of earlier periods,
+  an "incomplete data" marker). No logs -> say what is missing; never invent a number.
+- New model, agents in CI and schedules, authentication versus the bill: `references/model-and-automation.md`.
 
 ## Example
-Escalation `sonnet` → `opus` after two failed fixes of a flaky test and the implementation going back to `sonnet`:
-`references/examples.md` §2; the other examples are there too.
-
-## Checklist
-- [ ] the tier chosen with the rubric (checkability, reversibility, decision, risk, scope), not out of habit
-- [ ] start from the cheapest sensible model; escalation after a blocker or 2 failed verifications, with a description of the failure
-- [ ] after a decision on opus the implementation goes back to sonnet/haiku
-- [ ] the session's model and effort set at the start; no `/model` in the middle of a task
-- [ ] `/compact` at the boundary of tasks after a checkpoint; `/rewind` to abandon a failed path
-- [ ] the cost checked in the status line or `cost_report.py`
-- [ ] only the MCP servers needed; on drift signals a new session from the checkpoint
-- [ ] a new model assessed with your own test and the cost of a solved task; an agent in automation with a turn limit and a budget
+Rename a field across 12 files, module tests cover it -> `Class: mechanical`, `quick-fixer` with `model: haiku`. Check:
+module tests + type check. Two failed attempts -> one level up to sonnet with both failure outputs in the brief. More
+worked cases (escalating a flaky test diagnosis to opus and back, reading a costly week from the cost report):
+`references/examples.md`.
 
 ## Sources
-- Anthropic, Claude Code documentation (as of 2026-10-03):
-  - "How Claude Code uses prompt caching";
-  - "Model configuration" (opusplan, effort, autoCompactWindow);
-  - "Subagents" (the `model` field, the `model` parameter of the Agent tool, the model selection order);
-  - "Skills" (the `model`, `effort`, `context: fork` fields);
-  - "Escalate hard decisions with the advisor tool";
-  - "Manage costs effectively";
-  - "Customize your status line".
-- Anthropic, API pricing (platform.claude.com, 2026-10-03): input/output Haiku 4.5 $1/$5, Sonnet 5.5 $2/$10,
-  Opus 5.5 $4/$20 per 1 M tokens; a cache read $0.10–0.20.
-
-- The 10xDevs course, ed. 3 (2026): prework 3.5 (model rankings), module 1 lesson 5 (the cost of MCP), module 2 lesson 4 (context
-  drift), module 4 lessons 1–2 (a broad repo scan), module 5 lessons 2–3 (agents in automation) — training
-  material (accessed 2026-10-09).
-- `claude --help`, Claude Code 2.1.296 (2026-10-10): `--max-budget-usd` works only with `--print`.
-
-Described in our own words.
+- Claude Code docs, "Prompt caching", code.claude.com/docs/en/prompt-caching - accessed 2026-11-20 (what invalidates the cache, effort exceptions, lifetimes).
+- Claude Code docs, "Model configuration", code.claude.com/docs/en/model-config - accessed 2026-11-20 (effort, `ultrathink`, `ultracode`, `opusplan`).
+- Claude Code docs, "Manage costs effectively", code.claude.com/docs/en/costs - accessed 2026-11-20.
+- Claude Code docs, "Subagents" and "Agent teams", code.claude.com/docs/en/sub-agents - accessed 2026-11-20.
+- Claude Code docs, "Skills", code.claude.com/docs/en/skills - accessed 2026-11-20 (5000-token re-attachment after compaction).
+- Anthropic Engineering, "How we built our multi-agent research system", anthropic.com/engineering/multi-agent-research-system - accessed 2026-11-20 (about 15x tokens).
+- Anthropic Engineering, "Code execution with MCP", anthropic.com/engineering/code-execution-with-mcp - accessed 2026-11-20.
+- Factory prices: `.tf/factory/config.yaml` (`prices_usd_per_mtok`).

@@ -1,99 +1,119 @@
 ---
 name: ddd-context-mapping
-description: Use for relations and integration between contexts — a context map (OHS, ACL, Conformist), integration events.
+description: Use when designing how bounded contexts relate and integrate — ACL vs conformist vs open host, integration events, identity across systems, isolating a library.
 metadata:
-  review: "2027-10-09"
-  catalog: "Use when designing relations and integration between contexts — a context map (Open Host Service, ACL, Published Language, Conformist and others), edge vs internal services, integration events (notification, event-carried state transfer). Not for drawing the boundaries themselves (ddd-strategic-analysis) or the model inside a context (ddd-tactical-design)."
-  keywords: "relacja z zewnętrznym systemem, obcy model przecieka do naszego, zewnętrzny system z kiepskim modelem, relacja na mapie kontekstów, ten sam dostawca w kilku systemach, różne ID w CRM i ERP, tożsamość między kontekstami, mapowanie kluczy, każdy dział liczy metrykę inaczej, identyfikator pojęcia, relation with an external system, a foreign model leaks into ours, an external system with a poor model, a relation on the context map, the same supplier in several systems, different IDs in CRM and ERP, identity between contexts, key mapping, every department computes a metric differently, concept identifier, anti-corruption layer, ACL wobec biblioteki, warstwa antykorupcyjna, izolacja zależności, biblioteka npm za adapterem, test izolacji, ACL around a library, dependency isolation, library behind an adapter"
+  review: "2027-11-20"
+  catalog: "Use when designing and recording relations and integration between bounded contexts — context map patterns (open host service, published language, anti-corruption layer, conformist, customer/supplier, partnership, shared kernel, separate ways), upstream/downstream, edge versus internal services, domain versus integration events, notification versus event-carried state transfer, delivery guarantees, measuring a relation by connascence, identity of concepts and things across systems, an anti-corruption layer around a library or SDK enforced in CI; the result is context-map.md. Not for drawing the context boundaries (ddd-strategic-analysis) or modelling inside one context (ddd-tactical-design)."
+  keywords: "mapa kontekstów, relacje między kontekstami, integracja kontekstów, warstwa antykorupcyjna, ACL, anti-corruption layer, konformista, conformist, open host service, published language, shared kernel, customer supplier, upstream downstream, obcy model przecieka, zewnętrzny system z kiepskim modelem, integracja z systemem płatności, integracja z legacy, zdarzenia integracyjne, zdarzenie domenowe czy integracyjne, event-carried state transfer, notyfikacja zdarzeniem, lokalna kopia danych, odbiorcy zdarzenia, idempotentny konsument, wersjonowanie schematu zdarzeń, spójność ostateczna, ten sam dostawca pod różnymi ID, różne identyfikatory w systemach, mapowanie kluczy, tożsamość między kontekstami, przychód liczony inaczej, ACL wobec biblioteki, izolacja biblioteki npm, opakować bibliotekę adapterem, port i adapter, serwis brzegowy, fasada kontekstu, za ciasne powiązanie kontekstów, context map, bounded context integration, foreign model leaking, payment gateway integration, integration events, domain vs integration event, local copy of data, idempotent consumer, event schema version, eventual consistency, same entity different ids, key mapping, identity across systems, wrap a library, isolate an SDK, edge service, coupling between contexts"
 ---
 
-# Context map and integration
+# Context mapping — relations and integration between contexts
 
-The context map is one of the most important artifacts: it shows who depends on whom and how the models translate.
-Make several small maps for specific questions instead of one gigantic one.
+Boundaries are already drawn (ddd-strategic-analysis). This skill decides **how** contexts talk: who adapts to whom, what
+crosses the boundary, how it is delivered, and how the relation is verified.
 
-## Team relations
-- **Upstream / downstream** — changes at the supplier (upstream) affect the consumer (downstream), not the other way round.
-- **Mutual dependency** — both teams have to deliver together.
-- **Independence** — the changes of one do not affect the other.
+**Result:** `docs/project/02-domain/context-map.md` — a Mermaid `flowchart LR` plus a table: relation, pattern,
+upstream / downstream, contract with its version, owner, justification. Contexts, teams or integrations not given → ask
+for them; do not invent a map.
 
-## Patterns — when to use which
-| Pattern | When to choose it | Cost / risk |
+## 1. Maps
+Draw several small maps, one per question (payments, fulfilment, reporting), rather than one wall chart. For each relation
+first name the team relationship:
+- **upstream / downstream** — the upstream's changes land on the downstream;
+- **mutual dependency** — both must release together;
+- **independent** — no integration needed.
+
+## 2. Choosing the pattern
+| Pattern | Use when | What it costs |
 |---|---|---|
-| **Open Host Service (OHS)** | the upstream has many consumers; instead of tailor-made integrations it exposes one stable, documented protocol (an API, events) | the contract and versioning have to be maintained; the contract **must not** be the internal model exposed to the outside |
-| **Published Language** | a shared, well-described exchange format (often together with OHS; e.g. industry standards, event schemas) | changes to the language require agreement |
-| **Anti-Corruption Layer (ACL)** | the downstream protects its model from a foreign one (legacy, an external supplier, a generic subdomain) | a translation layer to maintain; it pays off for the core domain |
-| **Conformist** | the downstream adopts the upstream model directly, because it has no influence and the model is "good enough" | you lose your own language; not for the core domain |
-| **Customer / Supplier** | the upstream takes the downstream's needs into account in planning; negotiated commitments | requires mature cooperation and budget on the supplier's side |
-| **Partnership** | two contexts dependent on each other, planned together | strong organizational coupling |
-| **Shared Kernel** | a small, explicitly agreed shared fragment of the model/code | every change requires consultation; keep it minimal |
-| **Separate Ways** | integration costs more than it gives | possible duplication of features |
-| **Big Ball of Mud** | mark an area without a coherent model, so that its mess does not "leak" | isolate it with an ACL |
+| Open Host Service | an upstream with many consumers offers one stable, documented protocol | a contract to version; it must not mirror the internal model |
+| Published Language | a documented exchange format shared by several parties (an industry standard, an event schema) — often with OHS | changes need agreement |
+| Anti-Corruption Layer | the downstream protects its model from a legacy, vendor or generic model | a translation layer to build and maintain; worth it for the core |
+| Conformist | the downstream has no influence and the upstream model is good enough | the downstream loses its own language — **never for the core** |
+| Customer / Supplier | the upstream plans for the downstream's needs | requires a mature relationship and the supplier's budget |
+| Partnership | a pair of contexts planned and released together | strong organisational coupling |
+| Shared Kernel | a tiny, explicitly agreed shared model or code | every change is negotiated |
+| Separate Ways | integration costs more than it brings | accepted duplication |
+| Big Ball of Mud | a tangled area you cannot fix now | label it and fence it off with an ACL |
 
-A heuristic: core contexts → protect with an ACL or be the upstream with an OHS; generic → conformism or an ACL to a ready-made solution.
+Heuristic: a core context sits behind an ACL or is the upstream with an OHS; a generic one conforms to the off-the-shelf
+product or uses a thin ACL. Enforce an ACL in CI (section 6) — an unverified layer erodes within months.
 
-**An ACL towards a library or an SDK** (not only another context): a domain value object as the only place of knowledge
-about the shape of the dependency + a narrow port in the domain language + an adapter wrapping the library. The completion criterion is
-checkable: `rg -l "from '<package>'"` returns only files of the adapter directory. You enforce it with a rule in CI
-(dependency-cruiser `forbidden`, ESLint `no-restricted-imports`, ArchUnit), not with memory — templates:
-`.claude/skills/ddd-legacy-modernization/references/rule-templates.md`. A particularly dangerous leak: a server
-library in the client bundle.
+## 3. Edge and internal services
+- **Edge service** — at the context's boundary: an application service, facade, API endpoint or integration-event
+  publisher. It translates languages, enforces authorisation, owns the transaction and idempotency and orchestrates the
+  scenario. Thin and stable; other contexts talk **only** to it — it is their open host.
+- **Internal** — domain services, policies, aggregates (ddd-tactical-design); free to change.
+- Prefer a deep module: a small, stable edge with a lot of behaviour behind it. Example: a scheduling context exposes
+  only `reserve(slot)`, `release(slot)` and `blockResource(period)`; calendars, conflict rules and locks stay inside.
+- Smells: other contexts call internal services or repositories; the edge returns entities instead of DTOs or events;
+  business rules in a controller.
 
-## Edge and internal services
-- **An edge service** (at the boundary of a context/module): a facade or an application service, an API endpoint, a publisher of integration
-  events. It translates the external language into the internal one, takes care of authorization, transactions and idempotency, orchestrates
-  the scenario. It is **thin and stable** — other contexts talk **only** to the edge (this is their OHS).
-- **An internal service**: domain services, policies, aggregates — the logic deep in the model. It can change freely,
-  because nobody from the outside depends on it.
-- Aim for **deep modules**: a small, stable interface at the edge and a lot of behaviour underneath. An example: the availability
-  context exposes only `block / release / disable` a resource in time, and the whole complexity of time segments and locks
-  is inside (ddd-archetypes).
-- Error signals: other modules call internal services or repositories; the edge returns domain entities instead of DTOs/events;
-  business logic "leaks" into the controller.
+## 4. Events between contexts
+- A **domain event** is internal, rich and may change with the model. An **integration event** is public, published at
+  the edge in the published language, and versioned.
+- Styles:
+  - **notification** — a signal and an id; low coupling, but the consumer must call back and the flow is harder to trace;
+  - **event-carried state transfer** — the event carries the state the consumers need; they keep working when the source
+    is down, at the price of duplicated data, eventual consistency and schema evolution;
+  - **event sourcing** — events are the record of truth; full history and audit, high complexity; choose it only when the
+    history itself is business value.
+- Rules for event-carried state transfer:
+  - send the data consumers need, not the whole aggregate;
+  - version the schema; add attributes compatibly, remove them through a new version;
+  - each consumer builds its own read model;
+  - handle events idempotently and tolerate reordering — compare a version or sequence number and ignore stale events;
+  - the source stays the **only owner** of the data; consumers hold copies, never edit them.
 
-## Events between contexts
-Distinguish a **domain event** (internal, the full language of the context, can change) from an **integration event**
-(public, at the edge, in the Published Language, versioned).
+## 5. Delivery
+- State and event written in one transaction → an outbox; at-least-once delivery → idempotent consumers; a process across
+  several contexts → a saga or process manager with explicit compensation. Details: be-messaging-outbox.
+- Before replacing a synchronous call with an asynchronous event ask: does the caller need the result? does someone read the effect
+  immediately? is it a command or an event? Events may arrive out of order. Asynchrony removes temporal coupling, not
+  logical coupling.
 
-| Style | What it carries | Advantages | Disadvantages | When |
-|---|---|---|---|---|
-| **Event notification** | "something happened" + an identifier | minimal coupling, simple | the consumer has to query the source; hard to trace a flow from many events | the consumer needs only a signal |
-| **Event-carried state transfer** | the event + the state the consumers need | the consumer works when the source is down; no callback queries; lower latency | data duplication, eventual consistency, schema evolution | the consumer needs a local copy of the data for its own decisions |
-| **Event sourcing** | events are the source of truth of the state | a full audit, state reconstruction | complexity, event evolution | audit/history is a business value |
+## 6. An anti-corruption layer around a library or SDK
+An ACL is worth it for a third-party package too, when the package's model would otherwise spread through your code
+(a payment SDK, a date or money library, a PDF generator).
+- **Structure:** a narrow port in the domain's language; one adapter that wraps the library; a domain value object as the
+  only place that knows the shape the dependency needs.
+- **Done means verifiable:** searching for imports of the package (`rg -l "from 'pdf-lib'" src/`) lists only files in the
+  adapter directory.
+- **Keep it done:** a rule in CI, not a promise — dependency-cruiser `forbidden` rules, ESLint `no-restricted-imports`
+  with an exception for the adapter path, ArchUnit for the JVM. Templates:
+  `.claude/skills/ddd-legacy-modernization/references/rule-templates.md`.
+- A dangerous leak to look for: a server-only library pulled into the client bundle through a shared module.
 
-Rules for **event-carried state transfer**: send only the data the consumers need (not the whole aggregate), version the schema,
-the consumer builds its own read model and accepts eventual consistency, handling is idempotent and resilient to ordering
-(a version/sequence number), the source remains the only owner of the data.
+## 7. Verifying a relation
+Measure it with connascence (ddd-connascence-analysis): before the code exists, on the contracts (as a range); afterwards,
+on the code (the code wins). An OHS or published language should leave mostly weak static coupling (name, type).
+Dynamic coupling across a boundary — a shared transaction, values that must agree at the same moment — means the boundary
+leaks.
 
-## Delivery guarantees
-- Writing the state and the event in one transaction → an **outbox**; at-least-once delivery → **idempotent consumers**.
-- Processes across many contexts → a saga / a process manager with explicit compensation steps.
-- Before you replace a synchronous call with a message: does the caller use the result? does someone read the effect right away? a command or
-  an event? Ordering is not guaranteed. Asynchrony removes temporal coupling, not logical coupling.
-  The full procedure, atomicity and tests: be-messaging-outbox.
+## 8. Identity across contexts
+Concepts and things both need identity, and they are handled differently:
+- **Concepts** — classes, properties, metrics (e.g. "revenue", "active customer"). One definition with one owner in the
+  glossary, and a stable identifier in the glossary owner's namespace. Teams that compute "revenue" differently are using
+  different concepts and must name them apart.
+- **Things** — a supplier, an order, a product. The identifier is minted by a rule from a business key (e.g. VAT number +
+  country), so the same supplier gets the same id in CRM, ERP and procurement; existing local ids map to it in a key-mapping
+  table.
+- The data stays with its owners; only identity is shared — no central database of everything.
+- The minting rule lives in a specification plus a small shared library that every system uses, not inside one tool.
+- Pipelines and lineage between data products: data-engineering.
 
-## Verifying a relation by measurement
-A relation from the map can be checked by measuring connascence (ddd-connascence-analysis) — before the code on the contracts (degrees as ranges),
-after the code on the code (the code decides). OHS/Published Language should give mainly weak static coupling (name, type);
-dynamic coupling across the boundary (a shared transaction, data that must agree) = the boundary leaks.
+## Example
+**Situation:** "Sales (core) integrates an external payment gateway whose model is awkward."
+**Result:**
+- Relation: the gateway is upstream, Sales downstream; no influence over the gateway.
+- Pattern: ACL, not conformist — conforming would put "charge intents" and "captures" into Sales' language, and Sales is core.
+- Structure: port `PaymentAuthorizer.authorize(order, amount)` → adapter translating to the gateway SDK; `PaymentReference`
+  value object holds the gateway's id format.
+- Enforcement: `no-restricted-imports` for the SDK outside `src/payments/adapter/`; `rg -l` lists only that directory.
+- `context-map.md` row: Sales ← Payment gateway | ACL | upstream: gateway | API v3 | owner: Sales team | core must keep its language.
 
-## Identity between contexts: a concept versus a thing
-- **Concepts** (classes, properties, metrics like "revenue") have a stable identifier in the namespace of the glossary's authors
-  and one definition with an owner.
-- **Things** (a supplier, an order) get an identifier minted by a rule from the business key: one thing = one
-  identifier despite many records in systems (a key mapping table).
-- The data stays with the context owners; only the identity is shared, not a copy of the data.
-- The identifier minting rule lives in the specification and a shared library, not in one tool (data-engineering).
-Source: S. Banerjee, "The Spine of the Context Fabric…" (2026-10-13).
-
-## Recording the result (`docs/project/02-domain/context-map.md`)
 ```mermaid
 flowchart LR
-  Sales[Sales - core] -- "OHS / PL: OrderPlaced v1" --> Warehouse[Warehouse]
-  Payments[Payments - generic, ext.] -- "ACL" --> Sales
+  PG[Payment gateway] -->|API v3| ACL[ACL] --> S[Sales]
+  S -->|OrderPlaced v2| W[Warehouse]
 ```
-Under the diagram a table: the relation, the pattern, upstream/downstream, the contract (API/events + version), the owner, the justification.
-
-## Sources
-- The 10xDevs course, ed. 3 (2026), module 4, lesson 5 (an ACL towards a library, the criterion "the package only in the adapter") —
-  training material (accessed 2026-10-09); described in our own words.

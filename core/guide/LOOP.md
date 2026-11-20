@@ -122,7 +122,9 @@ directories:
 | `.tf/runs/<KEY>/` | `run.json`, `parked.md` (items postponed for your decision), scan results, full verification logs | no |
 
 The list of tasks: `tf status` (computed live from the task folders); the state of one: `tf task status <KEY>`. A slice
-is "done" only with evidence: the loop runs the verification through `run_state.py verify`, and without current evidence
+is "done" only with evidence: the loop runs the verification through `run_state.py verify` (with `related` in
+`.claude/quality-gate.json` only the tests related to the slice's files; `--full` the whole `command`; the evidence
+records the command and `duration_s`), and without current evidence
 the script will not tick the slice off and will not let the run through to the PR. The same without a recorded, passed
 scope review (`run_state.py step … scope pass`): in the measurement after step G the loop always called the reviewer,
 but recorded the result in 7 of 15 runs. After a review without important findings the loop finishes the slice with one

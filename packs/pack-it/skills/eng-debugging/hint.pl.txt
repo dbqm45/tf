@@ -1,93 +1,54 @@
-head: Użyj, gdy coś działa źle lub przestało działać, a przyczyna jest nieoczywista — odtworzenie, hipotezy, git bisect. Użyj, gdy program działa źle, a przyczyna nie jest oczywista — opis objawu, odtworzenie (najlepiej czerwonym testem), hipotezy z eksperymentem rozstrzygającym, zawężanie (bisekcja w historii przez git bisect run, w danych wejściowych, w kodzie i konfiguracji), debugger i logi, typowe klasy przyczyn (niedeterminizm, stan współdzielony, cache, środowisko, wersje), przyczyna źródłowa i poprawka bez maskowania. Nie do prowadzenia incydentu produkcyjnego (ops-sre-incidents), diagnozy serwera i sieci (ops-linux-networking), przeglądu zgłoszeń z zewnątrz (proc-issue-triage) ani kwarantanny niestabilnych testów (qa-regression).
-# Debugowanie — od objawu do przyczyny
+head: Użyj, gdy coś działa źle albo przestało działać, a przyczyna jest niejasna — odtworzenie, hipotezy, git bisect, połknięte błędy, poprawka, która nie pomogła. Użyj, gdy kod zachowuje się źle, pojawiła się regresja, działa lokalnie, a w CI nie, API zwraca 200, a nic się nie zapisuje, albo poprawka nie pomogła — opis objawu, czerwony test odtwarzający, 2–4 hipotezy z rozstrzygającymi eksperymentami, zawężanie (git bisect run, dzielenie danych na pół, instrumentacja, różnica środowisk), sprawdzanie założeń, przyczyna źródłowa, poprawka bez maskowania, wpis w lessons.md, dowody z wielu źródeł i przeramowanie źle nazwanego problemu. Nie do prowadzenia incydentu produkcyjnego (ops-sre-incidents), diagnozy serwera i sieci (ops-linux-networking), przeglądu zgłoszeń z zewnątrz (proc-issue-triage) ani kwarantanny niestabilnych testów (qa-regression).
+# Debugowanie — od objawu do przyczyny, potem poprawka, która nie maskuje
 
-Zasada: **najpierw przyczyna, potem poprawka.** Poprawka bez zrozumienia przyczyny zwykle przenosi błąd w inne
-miejsce albo go maskuje. Pracujesz jak w eksperymencie: obserwacja → hipoteza → przewidywanie → test → wniosek.
-Prowadzisz krótki dziennik (co sprawdzone, wynik), żeby nie sprawdzać dwa razy tego samego i móc przekazać pracę.
+Najpierw przyczyna, potem poprawka. Pracuj pętlą eksperymentów: obserwuj → postaw hipotezę → przewiduj → sprawdź → wnioskuj. Prowadź
+krótki dziennik tego, co sprawdzono i co wyszło — chroni przed powtarzaniem i pozwala przekazać pracę.
 
 ## Procedura
-1. **Opisz objaw dokładnie:**
-   - co oczekiwane, co rzeczywiste;
-   - od kiedy, gdzie (środowisko, wersja, commit, dane, użytkownik);
-   - pełny komunikat i stos wywołań, bez streszczania.
-   Rozbieżność „działa u mnie / nie działa w CI” to już informacja: różnica środowisk jest pierwszym podejrzanym.
-   Zgłoszenie użytkownika w jednym zdaniu, bez stack trace → najpierw pytania (kroki, zakres, częstotliwość, obszar),
-   potem źródła dowodów: monitoring, logi, przeglądarka, kod — `references/evidence-from-many-sources.md`.
-2. **Odtwórz błąd:**
-   - najmniejszy, powtarzalny przypadek, najlepiej **test automatyczny, który jest czerwony** z właściwego powodu;
-     to jest też pierwszy krok TDD przy poprawce (hook `tdd_guard`);
-   - błąd losowy: uruchom wielokrotnie w pętli, ustal ziarno losowości, zegar, kolejność testów i równoległość;
-   - bez odtworzenia nie ogłaszasz naprawy, tylko „nie udało się odtworzyć” z listą prób.
-3. **Postaw hipotezy i rozstrzygaj je eksperymentem:**
-   - wypisz 2–4 możliwe przyczyny;
-   - dla każdej zapisz, co musiałoby być prawdą i jaki eksperyment ją potwierdzi lub obali;
-   - zacznij od tej, którą najtaniej sprawdzić, a nie od ulubionej;
-   - zmieniaj jedną rzecz naraz.
-4. **Zawężaj o połowę:**
-   - **w historii**: `git bisect run <skrypt>` znajduje pierwszy zły commit w log₂(n) krokach (200 commitów → ok. 8);
-     kod 125 pomija commit, którego nie da się sprawdzić — `references/bisection-and-tools.md`;
-   - **w danych**: dziel wejście na połowy, dopóki zostanie najmniejszy przypadek wywołujący błąd (delta debugging);
-   - **w kodzie**: logi lub asercje na granicach modułów — gdzie stan jest jeszcze dobry, a gdzie już zły;
-   - **w środowisku**: porównaj działające i niedziałające (wersje z lockfile, zmienne, flagi, dane, system).
-5. **Obserwuj zamiast zgadywać:**
-   - debugger: punkt zatrzymania, podgląd zmiennych, krokowanie (`breakpoint()` w Pythonie, `node --inspect-brk`,
-     debugger IDE);
-   - log z kontekstem (identyfikatory, wartości wejściowe), a nie „tu jestem”;
-   - idź **wstecz od awarii**: która wartość jest zła, skąd przyszła, gdzie pierwszy raz stała się zła (defekt →
-     zainfekowany stan → awaria).
-6. **Sprawdź założenia**, które „na pewno są prawdą”:
-   - czy uruchamiasz kod, który myślisz (stary build, cache bajtkodu, nieprzeładowany serwer, inny branch);
-   - wersje zależności i konfiguracja;
-   - strefy czasowe, kodowanie znaków, ustawienia regionalne.
-   Przykład: w bisekcji Pythona nieaktualny `__pycache__` dał fałszywy wynik — referencja.
-7. **Znajdź przyczynę źródłową:**
-   - zadaj „dlaczego” kilka razy: dlaczego wartość była zła, dlaczego kod na to pozwolił, dlaczego test tego nie złapał;
-   - poprawiasz przyczynę i lukę w testach, nie tylko objaw.
-8. **Popraw bez maskowania:**
-   - test czerwony → minimalna poprawka → test zielony → cały zestaw testów;
-   - nie maskujesz: puste `except`, ponawianie bez przyczyny, `sleep` w teście, wyłączenie testu lub reguły lintera;
-   - podobne miejsca w kodzie sprawdzasz `grep`-em — ten sam błąd często jest w kilku kopiach.
-9. **Zapisz** w raporcie kroku: objaw, przyczynę, dowód (test, commit z bisekcji) i poprawkę. Pułapka, która może
-   wrócić, trafia do `docs/project/lessons.md` (core-project-record).
-10. **Wiedz, kiedy przestać:**
-    - po ok. 2 godzinach bez postępu albo po obaleniu wszystkich hipotez przedstaw człowiekowi dziennik i hipotezy
-      albo oddaj problem agentowi w świeżym kontekście;
-    - błąd na produkcji z wpływem na użytkowników: najpierw przywrócenie usługi (ops-sre-incidents), diagnoza potem;
-    - druga nieudana poprawka tego samego objawu, plan, który nie zbiega się do decyzji, albo zgłoszenie z gotową
-      poprawką („X się psuje, zróbmy Y”) → przeramowanie (`references/reframing.md`): problem może być źle
-      nazwany, a nie słabo zbadany.
+1. **Opisz objaw.** Oczekiwane a faktyczne; od kiedy; gdzie (środowisko, wersja, commit, dane, użytkownik); pełny komunikat i stack trace,
+   nie streszczenie. Różnica środowisk („u mnie działa”) to pierwszy podejrzany. Zgłoszenie w jednym zdaniu bez stosu („nie działa”) →
+   najpierw pytania do zgłaszającego: kroki, kogo dotyczy, jak często, który obszar. Nie zgaduj przyczyny.
+2. **Odtwórz.** Najmniejszy powtarzalny przypadek, najlepiej automatyczny test **czerwony z właściwego powodu** — to pierwszy krok TDD
+   poprawki (`tdd_guard`). Błąd losowy: pętla N uruchomień; przypnij ziarno, zegar, kolejność testów i równoległość. Brak odtworzenia →
+   raport „nie udało się odtworzyć” z listą prób; nigdy nie ogłaszaj poprawki.
+3. **Hipotezy.** 2–4 kandydatki; dla każdej: co musi być prawdą i który eksperyment rozstrzyga. Najpierw najtańszy rozstrzygający, nie
+   ulubiony. Jedna rzecz naraz.
+4. **Zawężaj** (przykłady: `references/bisection-and-tools.md`):
+   - **historia** — `git bisect run <skrypt>`: kod 0 = dobry, 1–127 poza 125 = zły, 125 = nie da się sprawdzić (pomiń), powyżej 127
+     przerywa. Około log2(n) kroków (200 commitów ≈ 8). Skrypt poza repozytorium albo nieśledzony; czysty build i cache między krokami;
+     dużo merge'y → `git bisect start --first-parent`; monorepo → ograniczenie ścieżką; najpierw sprawdź, że koniec „zły” jest czerwony,
+     a „dobry” zielony; zapisz `git bisect log`; zakończ `git bisect reset`. Pominięty commit obok pierwszego złego daje uczciwą odpowiedź
+     z dwoma kandydatami;
+   - **dane** — dziel wejście na pół do najmniejszego przypadku (delta debugging); trafia do testu regresyjnego bez danych osobowych;
+   - **kod** — logi i asercje na granicach modułów, z kontekstem (identyfikatory, wartości wejścia);
+   - **środowisko** — różnice wersji z lockfile, zmienne, flagi, dane, system.
+5. **Obserwuj.** Debugger (`breakpoint()`, `python -m pdb`, `pytest --pdb`; `node --inspect-brk` + `chrome://inspect`, `debugger;`).
+   Idź wstecz od awarii: awaria ← zainfekowany stan ← defekt.
+6. **Sprawdź założenia.** Czy uruchamiasz ten kod, co myślisz (stary build, nieaktualny bajtkod `__pycache__`, cache, serwer bez
+   przeładowania, zła gałąź)? Wersje zależności, konfiguracja? Strefy czasowe, kodowanie, locale?
+7. **Przyczyna źródłowa.** Pytaj „dlaczego” aż do defektu i luki: czemu wartość była zła, czemu to przeszło, czemu testy tego nie złapały.
+8. **Poprawka bez maskowania.** Czerwony → minimalna poprawka → zielony → cały zestaw. Zakazane maski: pusty `except`/`catch`, ślepy
+   retry, `sleep` w testach, wyłączenie testu albo reguły lintera. Poszukaj kopii tego samego wzorca (`rg`).
+9. **Zapisz.** W raporcie kroku: objaw, przyczyna, dowód, poprawka. Pułapka, która może wrócić → `docs/project/lessons.md`.
 
-## Typowe klasy przyczyn
-| Klasa | Sygnał | Pierwszy eksperyment |
-|---|---|---|
-| niedeterminizm | błąd co n-te uruchomienie | pętla N razy; stałe ziarno, zegar, kolejność; bez równoległości |
-| stan współdzielony | test przechodzi sam, pada w zestawie | uruchom w innej kolejności; szukaj zmiennych globalnych, singletonów, wspólnej bazy |
-| wartości brzegowe | błąd dla części danych | puste, `null`, zero, bardzo duże, znaki spoza ASCII, przełom doby/miesiąca |
-| czas i strefy | błąd o określonej godzinie lub dacie | ustaw zegar na tę chwilę; sprawdź strefę serwera i bazy |
-| cache i artefakty | „poprawka nie działa” | czysty build, wyczyść cache, sprawdź, który plik się wykonuje |
-| środowisko | działa lokalnie, nie w CI/produkcji | porównaj wersje, zmienne, uprawnienia, dane |
-| zależność | po aktualizacji | bisekcja po lockfile, informacje o wydaniu (ops-dependency-upgrades) |
-| współbieżność | rzadkie, pod obciążeniem | test z wieloma wątkami; logi z identyfikatorem wątku/żądania; blokady i transakcje |
-| połknięty błąd | API zwraca 200/`ok`, a efekt (zapis, wysyłka) nie zaszedł; w logach warn | szukaj obsługi błędu, która loguje i zwraca sukces; test sprawdza zapisany stan, nie odpowiedź |
+## Klasy przyczyn — pierwszy eksperyment
+Niedeterminizm (pętla, przypięte ziarno i zegar); stan współdzielony — przechodzi sam, pada w zestawie (przetasuj kolejność, szukaj
+globali); wartości brzegowe (dziel wejście); czas i strefy (wstrzyknięty zegar, inny `TZ`); cache i artefakty (czysty build,
+`PYTHONDONTWRITEBYTECODE=1`); środowisko (różnice wersji, zmiennych); zależność (bisekcja zmiany lockfile); współbieżność (test wielowątkowy,
+logi z request id); połknięty błąd — 200 / `ok: true` bez skutku (test sprawdza zapisany stan w bazie, nie odpowiedź;
+`references/evidence-from-many-sources.md`: monitoring, logi, przeglądarka, poprawka w dwóch częściach).
 
-## Granice
-- Incydent produkcyjny (dowodzenie, komunikacja, wycofanie): ops-sre-incidents. Objawy serwera i sieci (DNS, TLS,
-  porty, procesy): ops-linux-networking. Wydajność: qa-performance-testing.
-- Zgłoszenie z zewnątrz (kategoria, odtworzenie, brief dla wykonawcy): proc-issue-triage. Niestabilne testy w CI
-  (kwarantanna, metryki): qa-regression.
+## Kiedy przestać i zmienić podejście
+- Brak postępu po długiej sesji albo wszystkie hipotezy obalone → przekaż dziennik człowiekowi lub agentowi ze świeżym kontekstem
+  (limit rzędu dwóch godzin to heurystyka zespołu [założenie]).
+- Wpływ na produkcję → najpierw przywróć usługę (ops-sre-incidents).
+- Druga nieudana poprawka tego samego objawu, plan, który się nie zbiega, albo zgłoszenie łączące objaw, przyczynę i poprawkę („duplikaty —
+  dodajmy blokadę”) → przeramowanie problemu: `references/reframing.md` (obserwacja, założona przyczyna, kierunek; hipotezy z dowodami
+  plik:linia; `frame.md`).
+- Hook `tdd_guard` pokazuje ten sam padający test po 1–2 próbach → przestań łatać, procedura od kroku 1.
 
-## Checklista
-- [ ] objaw opisany z pełnym komunikatem, wersją i środowiskiem
-- [ ] błąd odtworzony testem, który był czerwony z właściwego powodu
-- [ ] hipotezy z eksperymentami w dzienniku; jedna zmiana naraz
-- [ ] przyczyna źródłowa nazwana i udowodniona (test, commit, pomiar)
-- [ ] poprawka bez maskowania; cały zestaw testów zielony; podobne miejsca sprawdzone
-- [ ] poprawka zweryfikowana na każdym kanale, który pokazał problem (test, monitoring, logi, przeglądarka)
-
-## Źródła
-- A. Zeller, *Why Programs Fail* i debuggingbook.org (metoda naukowa, łańcuch defekt → infekcja → awaria, delta debugging)
-- D. J. Agans, *Debugging: The 9 Indispensable Rules*
-- git-scm.com/docs/git-bisect (`git bisect run`, kod 125); zachowanie sprawdzone na git 2.43 (2026-10-03)
-- Kurs 10xDevs, ed. 3 (2026), moduł 2, lekcja 4 (przeramowanie) i moduł 3, lekcja 5 (debugowanie z wielu źródeł) —
-  materiał szkoleniowy (dostęp 2026-10-09)
-Opisane własnymi słowami.
+## Przykład
+Raport faktur liczył dobrze dwa tygodnie temu, ~200 commitów później źle. Czerwony test `test_march_totals` (HEAD czerwony, tag sprzed
+dwóch tygodni zielony); skrypt poza repo z `git clean -fdx`, kod 125 przy nieudanym buildzie; `git bisect start --first-parent`,
+`git bisect run` → 8 kroków → commit „float sum in aggregation”. Przyczyna: float zamiast `Decimal`; poprawka plus test właściwości;
+`rg` znalazł drugą kopię.

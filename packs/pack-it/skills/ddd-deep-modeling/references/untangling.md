@@ -33,9 +33,9 @@ need ends with another value of the "status" field.
   - "Can the same pair be related twice in different periods?"
 
   Every "yes" confirms that the relationship is a separate concept.
-- **Archetype:** relationships between parties are PartyRelationship
-  (`.claude/skills/ddd-archetypes/references/party.md`), and a contract with items is Agreement
-  (`.claude/skills/ddd-archetypes/references/agreement.md`).
+- **Archetype:** relationships between parties are a separate relationship object
+  (`.claude/skills/ddd-archetypes/references/parties-and-relationships.md`), and a contract with items is a commitment
+  (`.claude/skills/ddd-archetypes/references/commitments.md`).
 
 ## 3. Status is not an extension mechanism
 - **Problem:** every new need gets a new status value, e.g. an offer as "an order with the status offer",
@@ -58,13 +58,13 @@ need ends with another value of the "status" field.
 - **When:** the business wants to add kinds without a programmer, the rules depend on the kind, and the number of kinds grows.
 - **Rules:**
   - Operations refer to knowledge, never the other way round.
-  - A change of knowledge is a new version. New operations use the new version, existing ones stay with theirs (agreement,
-    pricing in ddd-archetypes).
+  - A change of knowledge is a new version. New operations use the new version, existing ones stay with theirs (commitments,
+    price calculation in ddd-archetypes).
   - The knowledge level has its own validity rules, e.g. you will not delete a type that has operations.
 - **Cost:** the model becomes abstract and harder to read. When there are a few kinds and new ones rarely appear,
   ordinary classes are enough.
-- **In the archetypes:** ProductType and ProductInstance (`product.md`), procedure and activity (`activity-process.md`),
-  resource type and instance (`resource-service.md`).
+- **In the archetypes:** product type and product instance (`product-definitions.md`), procedure and its execution (`work-execution.md`),
+  asset type and asset instance (`assets-and-services.md`).
 
 ## Sources
 - M. Fowler, *Analysis Patterns: Reusable Object Models*, Addison-Wesley, 1996 [unverified: the year according to

@@ -1,94 +1,112 @@
 ---
 name: core-teaching-workspace
-description: Use on the human's command to learn a topic over many sessions in a workshop directory — lessons, cheat sheets, progress.
-metadata:
-  review: "2027-10-10"
-  catalog: "Use only on the human's command (`/core-teaching-workspace`) — learning one topic over many sessions in a workshop directory (mission, sources, HTML lessons, cheat sheets, progress records), e.g. onboarding into a new stack or the project's code. Not for a one-off explanation or for researching sources without learning (core-source-research)."
+description: Use when the human runs /core-teaching-workspace to study one topic over many sessions — a workshop directory with mission, sources, lessons, quizzes, progress.
 argument-hint: "[topic] | next lesson"
 disable-model-invocation: true
+metadata:
+  review: "2027-11-20"
+  catalog: "Use only on the human's command /core-teaching-workspace [topic | next lesson] — a multi-session self-study course on one topic (a new stack, a library, the project's own code) kept in a workshop directory, so a new session continues from files, not chat history: mission, vetted sources, lessons and reference sheets, quizzes as gates, spaced review, progress records, explanation mode for code the agent wrote. Not for a one-off explanation (answer directly), for finding and vetting sources without learning (core-source-research) or for a planning interview (core-plan-interview)."
 ---
 
-# Learning workshop
+# Teaching workspace — a course that lives in files
 
-Learning one topic over many sessions that build on each other. Continuity comes from the **directory**, not the
-conversation history: a new session in the same directory + "next lesson" = the course continues.
+Run only on the human's command. Continuity lives in the workshop directory: a new session with "next lesson" reads the
+files and carries on. Nothing depends on remembering the chat.
 
-## Where
-By default `docs/learning/<temat>/` in the project; if the human does not want to commit it — a path in
-`.git/info/exclude` or a separate directory outside the repo. Before writing, check that the files go where they
-should (not into `~/.claude`).
-
-| File | Contents |
+## Workshop directory
+Default `docs/learning/<topic>/`:
+| File | Holds |
 |---|---|
-| `MISSION.md` | **why** the human is learning — the first file, it steers every lesson |
-| `RESOURCES.md` | vetted sources: **Knowledge** (documentation, books) and **Wisdom** (communities), each with one sentence on "what for"; a `Luki` section |
-| `lessons/NNNN-nazwa.html` | one lesson = one session = one new skill |
-| `reference/*.html` | cheat sheets to come back to: syntax, algorithms, a glossary |
-| `learning-records/NNNN-nazwa.md` | ADR-style progress records |
-| `assets/` | shared components: stylesheet, quiz, simulator |
-| `NOTES.md` | the learner's preferences |
+| MISSION.md | why the learner studies this: goal, observable abilities, constraints, out of scope — steers every lesson |
+| SOURCES.md | vetted sources in two groups: references (docs, books, specs) and communities and practitioners; one line each on what it is good for; a "gaps" section |
+| `lessons/NN-<slug>.html` | one lesson per sitting |
+| `sheets/<slug>.html` | quick-reference sheets |
+| `records/NNNN-<slug>.md` | progress records, numbered |
+| `assets/` | shared stylesheet, quiz and simulator components reused by every lesson |
+| NOTES.md | learner preferences, the review list with dates, flashcards |
 
-## Procedure
-**First session (empty directory):** do not start with a lesson. First talk about the mission until `MISSION.md` has:
-a concrete goal ("onboard into the billing module and do reviews within 3 weeks", not "learn X"), what they will be
-able to do (observable), constraints, what is out of scope. Also ask directly what they already know — otherwise the
-level of the first lesson is guesswork. Then sources, then lesson 1.
-**Later sessions:** read the mission, the progress records and `assets/`; pick the next step in the **zone of
-proximal development** (hard but reachable); write the lesson.
+Not to be committed → put the path in `.git/info/exclude` or use a directory outside the repository. Never write into `~/.claude`.
 
-## Lesson
-- Short (one sitting), tied to the mission, gives one concrete skill.
-- **Do not trust your own memory**: every claim links to a source from `RESOURCES.md`; the lesson recommends one main
-  source to read on one's own. A lesson without footnotes = a sign of fabrication. For project code the source is
-  the code itself (file:line).
-- Knowledge first (here difficulty gets in the way), then practice with immediate feedback (here difficulty helps):
-  **retrieval practice**, **spacing**, **interleaving** related topics. The goal is lasting retention, not momentary
-  fluency that gives an illusion of mastery.
-- Quiz: answers of the same length, order shuffled **at display time** (models tend to put the correct answer first).
-- Build from `assets/` (a shared stylesheet from the first lesson); a new reusable element goes to `assets/`. No CDN
-  libraries without a pinned version (the documentation skill from pack-docs: docs-tech-writing,
-  diagrams-and-presentations.md).
-- Links to previous lessons and cheat sheets; a reminder that the learner can ask the agent follow-up questions.
+## Every session starts the same way
+1. Read MISSION.md, the records and NOTES.md; look at `assets/`.
+2. **Overdue reviews first** (from the review list), as retrieval questions — then new material.
+3. Choose the next step from the mission and the records: the next thing the learner can just reach with help.
 
-## Progress record (`learning-records/`)
-One to three sentences: what is already known and why it changes the next lessons. You write one when: the learner
-**showed** understanding (a task, an answer — "it was covered" is not enough), declared prior knowledge (with depth),
-a misconception was corrected, the mission changed (after agreement, with an update to `MISSION.md`). An old record
-is marked "superseded by NNNN", not deleted.
+## First session (empty directory) — no lesson yet
+1. **Mission.** Ask until it holds: a concrete goal tied to an outcome and a time frame ("review pull requests in the
+   billing module within 3 weeks", not "learn Rust"), what the learner should be able to do, constraints (time per
+   week, tools), what is out of scope. Write MISSION.md.
+2. **What they already know.** Without it the level is guesswork. Run a short diagnostic: about 5–8 questions from easy
+   to hard, in the plan-interview style (core-plan-interview: numbered, answer by number). Its result is record 0001.
+3. **Sources.** Collect and vet them into SOURCES.md (core-source-research for the vetting method). For the
+   project's own code the source is the code itself (`file:line`).
+4. Only then lesson 1 — usually in the next turn.
 
-## Diagnosis, reviews and the end of the course
-- **Before lesson 1:** a short diagnosis (5–8 questions from easy to hard, in the style of core-plan-interview), the
-  result as the first record in `learning-records/`. Without it the lesson level is guesswork, and lessons assume
-  unexplained jargon.
-- **The quiz is a gate:** the next lesson only after passing the previous lesson's exercises; after a failure — a
-  short recap with a different example, not the same lesson.
-- **Reviews:** the skill has no calendar. Keep a "to review" list with dates in `NOTES.md` (e.g. after 1, 3, 7 and 14
-  days); at the start of a session first the overdue reviews (retrieval practice), then the new lesson.
-- **Build, then take apart** (when the agent delivered a solution in an area new to the learner): explanation mode,
-  one concept at a time — "why this way", "what breaks when I change X", "when is this a bad choice"; after each step a
-  checking question, moving on only after a correct answer. The topic is closed when the learner, without hints,
-  answers one question about the logic, a trade-off or a failure symptom. Approving a change the learner cannot
-  defend is a sign that no learning happened. In an Anthropic study (2026, 52 programmers) the group with AI did
-  worse on a comprehension test, and the results held for those who, after generating code, asked how it works or
-  asked about the concepts.
-- **Flashcards after a valuable session:** 3–5 question–answer pairs (answer 2–3 sentences, questions about
-  application, not definitions) added to the "to review" list in `NOTES.md`.
-- **A default mode instead of discipline:** in Claude Code the `Explanatory` output style ("Insight" blocks with the
-  rationale for decisions) or `Learning` (it also leaves the learner fragments with a design decision to write,
-  marked `TODO(human)`) — switch with `/output-style <styl>` or `/config`.
-- **When to stop adding lessons:** the mission is achieved or further lessons give no new skill from the mission →
-  propose moving to practice (a task in the project, a review with a mentor) and record it in `learning-records/`.
-- Shallow or too short lessons → first a stronger model or higher reasoning effort, only then a change of
-  instructions. Domains with precise notation (sequences, commands, formulas) — check them in the source especially
-  carefully.
+## Lesson design
+- **One sitting, one concrete skill**, tied to the mission.
+- **Knowledge, then practice with immediate feedback.** Use retrieval (recall before re-reading), spacing (come back
+  after days), interleaving (mix related problems). Aim for durable retention, not the feeling of fluency right after
+  reading — effortful recall works better than re-reading (Bjork's "desirable difficulties").
+- **Every claim links to a vetted source**; no model memory as a source. Each lesson recommends one main source to read
+  alone. A lesson without citations is a warning sign — flag such a claim as unverifiable and either source it or cut it.
+  Commands, formulas and step sequences: check them against the source character by character.
+- Questions that need hands-on experience: answer as well as you can and point to a community or colleague who can
+  confirm it (unless the learner opted out of that).
+- **Quizzes:** options of similar length; correct answers not always in one position — **shuffle the order when the
+  quiz renders** (models tend to put the right answer first).
+- Build on `assets/`; a new reusable piece goes there. External libraries only with pinned versions (CDN pinning:
+  docs-tech-writing, pack-docs, `diagrams-and-presentations.md`).
+- Link back to earlier lessons and sheets; remind the learner that follow-up questions are welcome.
 
-## Questions that need experience
-Try to answer, but point to a community (a forum, a group, a team channel, a person on the team) where it can be
-checked in practice — unless the learner wrote in `NOTES.md` that they do not want that.
+## Gates and review
+- **The quiz is a gate.** The next lesson only after the exercises pass. Failed → a short recap with a different
+  example (not the same text again), then the quiz again.
+- No calendar integration: keep a "to review" list in NOTES.md with dates (e.g. after 1, 3, 7 and 14 days).
+- After a valuable session add 3–5 flashcards: application questions, not definitions; answers of 2–3 sentences.
 
-## Source
-Anthropic, "How AI assistance impacts the formation of coding skills" (anthropic.com/research, 2026-01-29) and Claude
-Code "Output styles" (code.claude.com/docs/en/output-styles), accessed 2026-10-10; the 10xDevs course, ed. 3 (2026),
-lesson 1.3 (learning with AI) — training material (accessed 2026-10-09).
-[mattpocock/skills](https://github.com/mattpocock/skills) (MIT), the `teach` skill (MISSION, RESOURCES,
-LEARNING-RECORD formats); description: [aihero.dev](https://www.aihero.dev/skills-teach). Described in our own words.
+## Progress records
+- 1–3 sentences: what the learner now knows and how that changes the next lessons.
+- Write one when the learner **showed** understanding (solved a task, answered unaided — not "it was covered"),
+  declared prior knowledge (with its depth), had a misconception corrected, or the mission changed (agree it first,
+  then update MISSION.md).
+- Records are never deleted: a newer record marks an older one as superseded.
+
+## Understanding code the agent wrote
+When you have just built something in an area the learner does not know (a caching layer, an outbox):
+- switch to explanation mode, **one concept at a time** — why it is built this way, what breaks if X changes, when it
+  would be the wrong choice;
+- a check question after each concept; move on only after a correct answer;
+- the topic is closed when the learner answers one question about the logic, a trade-off or a failure symptom
+  without help. Approving a change you cannot defend means nothing was learned.
+- Why it matters: an Anthropic study found that developers who relied on AI help scored lower on a comprehension
+  quiz, while those who asked how the generated code works kept their understanding (2026-01-29).
+- A lighter, always-on alternative: Claude Code output styles `Explanatory` (adds insight notes) or `Learning`
+  (leaves `TODO(human)` parts for the learner), chosen via `/output-style` or `/config`.
+
+## Ending the course
+- Stop adding lessons when the mission is met or further lessons add nothing towards it. Propose practice instead —
+  a real task in the project, a review by a mentor — and record that decision.
+- Lessons come out thin or short → first try a stronger model or higher effort, then change the instructions.
+
+## Example
+`/core-teaching-workspace Rust ownership` in an empty repository:
+- Turn 1: no lesson file. "What should you be able to do, and by when?" → "Review the parser crate's PRs in a month."
+  Abilities: explain a borrow-checker error, choose `&`, `&mut` or an owned value. Out of scope: async, unsafe.
+  MISSION.md written; 6 diagnostic questions asked.
+- Answers show moves are understood, lifetimes are not → record 0001.
+- SOURCES.md: The Rust Book ch. 4 and 10, the Rustonomicon (gaps only), the users.rust-lang.org forum.
+- Next session ("next lesson"): reads the files, starts with lesson 1 "Borrowing rules in the parser's tokenizer",
+  ends with a 4-question quiz (shuffled), review dates added to NOTES.md.
+
+## Checklist
+- [ ] started on the command only; files read before anything new
+- [ ] mission and prior knowledge before lesson 1
+- [ ] every claim sourced; one main source per lesson
+- [ ] quiz as a gate, shuffled options; overdue reviews first
+- [ ] records written on evidence, never deleted
+
+## Sources
+- Anthropic, "How AI assistance impacts the formation of coding skills", anthropic.com/research (2026-01-29).
+- Claude Code docs, "Output styles", https://code.claude.com/docs/en/output-styles (accessed 2026-11-20).
+- Bjork, R. A. & Bjork, E. L., work on desirable difficulties in learning; Vygotsky's zone of proximal development —
+  general learning-science background.

@@ -196,6 +196,29 @@ def main() -> int:
               f"TS-39: without --command verify runs the quality gate command: {r.stdout}{r.stderr}")
         r = run(p, "verify", "EV-3", "S2", "--command", OK, "--exit", "0", "--files", "src/cli.py")
         check(r.returncode == 2, f"TS-40: the exit code cannot be declared (--exit rejected): {r.returncode}")
+        check(isinstance(e3.get("duration_s"), int) and e3["duration_s"] >= 0,
+              f"TS-40a: the evidence records the duration in whole seconds: {e3}")
+
+        # `related` in the gate: verify runs only the tests related to the slice's files; --full forces `command`
+        (p / "src" / "b.py").write_text("y = 1\n", encoding="utf-8")
+        argv_py = "import json, sys; print(json.dumps(sys.argv[1:]))"
+        related = f'{sys.executable} -c "{argv_py}" related {{files}} --files={{files,}}'
+        (p / ".claude" / "quality-gate.json").write_text(json.dumps({"command": OK, "related": related}), encoding="utf-8")
+        (p / ".claude" / "hooks").mkdir(parents=True, exist_ok=True)   # the placeholders' one implementation is the hook
+        shutil.copy(ROOT / ".claude" / "hooks" / "quality_gate.py", p / ".claude" / "hooks" / "quality_gate.py")
+        r = run(p, "verify", "EV-3", "S3", "--files", "src/cli.py,src/b.py")
+        e4 = json.loads((p / CHANGES / "EV-3" / "evidence" / "S3-1.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
+        log = (p / e4["log"]).read_text(encoding="utf-8") if e4.get("log") else ""
+        check(r.returncode == 0 and "related" in e4.get("command", "") and "--full" in r.stdout
+              and '["related", "src/cli.py", "src/b.py", "--files=src/cli.py,src/b.py"]' in log
+              and isinstance(e4.get("duration_s"), int),
+              f"TS-40b: related with {{files}} and {{files,}} expanded into argv, recorded in the evidence: {r.stdout}{r.stderr}{e4}{log}")
+        r = run(p, "verify", "EV-3", "S3", "--files", "src/cli.py", "--full")
+        e5 = json.loads((p / CHANGES / "EV-3" / "evidence" / "S3-2.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
+        check(r.returncode == 0 and e5.get("command") == OK, f"TS-40c: --full runs the gate's full command: {r.stdout}{r.stderr}{e5}")
+        r = run(p, "verify", "EV-3", "S3", "--files", "src/cli.py", "--command", OK)
+        e6 = json.loads((p / CHANGES / "EV-3" / "evidence" / "S3-3.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
+        check(e6.get("command") == OK, f"TS-40d: an explicit --command wins over related: {e6}")
 
         # C3: task files — who generated and approved them, what they were built from, whether they are still current
         def astates(key):

@@ -108,10 +108,19 @@ Shared agents, available to every persona:
 - **A checkpoint** for a longer task: `python3 .claude/hooks/project_record.py wip start "<goal>"`. After a break the
   session starts from it and from `git status`.
 - **The phases from the idea to maintenance** (personas, gates, readiness): the `core-delivery-lifecycle` skill.
+- **A sweep of stale notes** (monthly, before a big change, after installing the factory in an old project): the
+  `core-sweep` skill reports TODOs, plans and rules that are no longer true, with evidence; after your consent it moves
+  documents to `docs/project/archive/sweep/`, which the `guard_paths` hook keeps agents out of (`TF_ARCHIVE_READ=1` lifts it).
 - **A plan before the code, then TDD:** first a test that fails, then the code. The `tdd_guard` hook blocks production
   code without a red test. The quality gate: the `.claude/quality-gate.json` file with the test command, e.g.
   `{"command": "npm test", "watch": ["src/", "test/"]}` — the `quality_gate` hook will not let a turn end with a red
-  build (described in the header of `.claude/hooks/quality_gate.py`). When the gate is off (no file, the switch, a
+  build (described in the header of `.claude/hooks/quality_gate.py`). For speed add `"related"` — only the tests
+  of the changed files, a command for the project's own stack (the factory knows no test tool; the /tf loop proposes
+  one at the first task and writes it after your consent). Placeholders: `{files}` the changed files, `{dirs}` the
+  directories of the changed source files, one argument per value; with a comma (`{files,}`) joined with commas.
+  E.g. `"npx nx affected -t test --files={files,}"` or `"go test {dirs}"`. The gate and slice verification run it instead
+  of the whole `command` (a placeholder with nothing → the whole `command`), and `run_state.py verify … --full`
+  (`tf task verify … --full`) runs the whole suite once before the PR. When the gate is off (no file, the switch, a
   declared red batch), `tf doctor` and the session start say so in one sentence.
 
 ## 4. Modes and automation on request

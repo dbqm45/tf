@@ -1,46 +1,52 @@
-# Reviewing a skill — how it works and how to make a similar one
+# Reviewing a skill
 
-To the question "how does this skill work?", "why does it behave like this and not otherwise?" or "how to make a similar one?"
-you answer with a report in seven points. First you read all of it: SKILL.md, every file from `references/`, every script
-(a foreign skill — first `python3 .tf/factory/skill_audit.py <katalog>`, core-agent-security §4a).
+Use this list when you take over a skill, review one in a pull request, or consider adopting one from outside the factory.
+Answer each point in a sentence or two with evidence (a line of the skill, a scenario id, a gate result). A point you
+cannot answer is a finding.
 
-Depth: SKILL.md shorter than 150 lines → concisely, without the anatomy table; longer than 400 lines → a full anatomy
-table with line numbers.
+## Before reading the content
+- **Origin and safety.** For a foreign skill run `python3 .tf/factory/skill_audit.py <dir>` first and read every script it
+  ships. High or medium findings stop the review until they are explained (core-agent-security covers the adoption
+  procedure and the human's consent).
+- **Evidence it helps.** Is there a scenario file? Does the gate pass? Was a trial without the skill or a baseline run
+  recorded? No evidence means the review judges text, not effect - say so.
 
-## The seven points of the report
-1. **Problem and goal** — which gap of the model it closes (knowledge, steps, format, boundaries) and how to tell it works.
-2. **Position in the chain** — the input (a file, a question, the repo state) → the output (a file, a report, a decision); which skill comes
-   before it, which after it.
-3. **Anatomy** — sections with a line range and the answer to "what breaks without this section":
+## The checklist
+1. **Purpose.** One task, stated in one sentence. Several independent jobs -> propose a split.
+2. **Selection.** Does the description read as a "Use when ..." rule in users' words? Does the catalog name the neighbours it
+   must not cover ("Not for ...")? Is there a `no-trigger` scenario for the closest neighbour?
+3. **Inputs and outputs.** What does the skill expect (files, arguments, state of the repository) and what does it leave
+   behind (files, a report, a verdict line)? What happens when an input is missing?
+4. **Structure.** SKILL.md within the size limit; detail one level down in `references/`; long references with a table of
+   contents; scripts for deterministic work, with a `Network:` line when they connect anywhere.
+5. **What actually drives behaviour.** Mark the sentences that change what the model does by default. The rest is a candidate
+   for removal (see slimming in SKILL.md). Rules without an example usually do less than one example.
+6. **Reasons for key decisions.** A non-obvious rule (a limit, an order of steps, a ban) should say why, so the next editor does
+   not remove it by accident. Look for a source or a factory measurement behind numbers.
+7. **Cost of renaming.** List what depends on the skill's names: other skills citing its sections, roles and personas,
+   hooks or scripts parsing its output lines, eval scenarios naming it as a neighbour. Renaming any of these is a breaking
+   change for those dependents.
+8. **Freshness.** `metadata.review` date set; external facts dated in `## Sources`; nothing that only held for an old version.
 
-   | Section | Lines | Role | What breaks without it |
-   |---|---|---|---|
+## Report shape
+```
+Skill: <name>   Gate: pass|fail (<date>)   Evidence: scenarios <n>, baseline <yes/no>
+Findings:
+- [blocking] <point> - <evidence> - <proposed change>
+- [improve]  <point> - <evidence> - <proposed change>
+Verdict: adopt | adopt after fixes | do not adopt
+```
 
-4. **3–5 driving mechanisms** with the high-leverage places marked: the description (a selection rule), `allowed-tools`,
-   hard rules, the output schema, self-check gates, scripts.
-5. **Design decisions** — each with a rejected alternative ("a refusal instead of a guess, because …").
-6. **Easy / medium / hard changes** — hard ones are changes of file, section and status names that further
-   skills, hooks or scripts depend on.
-7. **The road from an instruction to a skill** — how to turn a one-off instruction into a skill: the gap measured without the skill,
-   evaluation scenarios, minimal content (the procedure in the main SKILL.md).
+## Example
+A skill `ops-log-triage` from another team: the audit is clean; it has 4 scenarios but none `no-trigger`, and its
+description "Log helper" never matches users' wording ("why is the service throwing 502s"). Its script counts errors per
+service and the counts go straight into incident notes, but there is no test against a hand-counted sample.
 
-## Example (short)
-Input: "How does the PR review skill that leaves comments in CI work?"
-Result: (1) it closes the gap "the model comments on style instead of risks"; (2) input: the PR diff + the step plan, output: a report
-with the line `Werdykt: approve|request-changes`; (4) leverage: a fixed verdict marker checked by a script in CI and a ban on
-questions to the human; (5) inline comments for every remark were rejected (noise) in favour of one report; (6) a hard
-change: the name of the `Werdykt` field, because a gate step in the pipeline reads it.
-
-The 10xDevs course, ed. 3 (2026), module 1, lesson 2 — training material (accessed 2026-10-09). Described in our own words.
-
-## Slimming down
-- **A "no-op" test sentence by sentence:** does the sentence change behaviour compared with the default model? If not, you remove
-  the whole sentence (a measurement of 2026-10-30: two pack-it skills slimmed by 5–12% of words without losing results).
-- **Positive instructions instead of bans:** a ban brings the forbidden thing into the context; write what to do.
-- **Concepts by name,** when the model knows them (e.g. Fowler's code smells), instead of definitions.
-- **A skill-router** called by hand, which only then loads a heavier skill.
-- **The cost of the descriptions of all skills** visible in the session is a fixed overhead of every request: skills rarely called
-  automatically get `disable-model-invocation` when the human calls them by name anyway (a decision
-  with a measurement of hook hits and an evaluation, not from intuition).
-- A specification in a skill without the project's file paths and code fragments — they age, and the agent reaches them anyway.
-- Every cut goes through the scenarios and the gate; a paid measurement with the human's consent.
+```
+Skill: ops-log-triage   Gate: fail (no neighbour scenario)   Evidence: scenarios 4, baseline no
+Findings:
+- [blocking] selection - description "Log helper" - rewrite as "Use when service logs must be triaged for an error spike ..."
+- [blocking] script output copied into notes - no test vs a hand-counted sample - add a test on a real log file first
+- [improve]  reasons - limit "last 2000 lines" without a reason - state why or make it an argument
+Verdict: adopt after fixes
+```

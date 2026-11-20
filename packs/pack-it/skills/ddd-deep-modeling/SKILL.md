@@ -4,7 +4,7 @@ description: Use for modeling domain concepts — many-to-many, types defined by
 metadata:
   review: "2027-10-17"
   catalog: "Use for discovering and refining the concepts of a model — Being/Behaving/Becoming modeling questions, 5 why, problem classification (CRUD, transformation, presentation, integration, competition for resources), modeling by examples. Not for context boundaries (ddd-strategic-analysis) or implementation patterns (ddd-tactical-design)."
-  keywords: "poziom wiedzy, poziom operacji, knowledge level, rodzaje definiowane przez administratora, typ i egzemplarz, relacja wiele do wielu, ukryte pojęcie, jedno źródło prawdy, single source of truth, status zamiast pojęcia, administrator definiuje nowe rodzaje, rozdzielić w modelu domeny, operations level, kinds defined by an administrator, type and instance, many-to-many relationship, hidden concept, status instead of a concept, administrator defines new kinds, separate in the domain model"
+  keywords: "pole status, ify na statusie, ify rozsiane po serwisach, status faktury, poziom wiedzy, poziom operacji, knowledge level, rodzaje definiowane przez administratora, typ i egzemplarz, relacja wiele do wielu, ukryte pojęcie, jedno źródło prawdy, single source of truth, status zamiast pojęcia, administrator definiuje nowe rodzaje, rozdzielić w modelu domeny, operations level, kinds defined by an administrator, type and instance, many-to-many relationship, hidden concept, status instead of a concept, administrator defines new kinds, separate in the domain model"
 ---
 
 # Deep modeling
@@ -53,7 +53,7 @@ signals; when they contradict the test, the test decides.
 | **Transformation / calculations** | "calculate", "price", "determine", many rules, a deterministic result | pure functions, policies/strategies, value objects at the input and output, tests on examples |
 | **Presentation** | "show", "summary", "report", combining many sources | read models, projections (CQRS), no business logic |
 | **Integration** | another system, another language, another pace of change | ACL / Open Host, translation, idempotency, outbox (ddd-context-mapping) |
-| **Competition for resources** | "cannot happen twice", limits, reservations, concurrency | an aggregate around an invariant, choosing the granularity of locks, the availability archetype (ddd-archetypes) |
+| **Competition for resources** | "cannot happen twice", limits, reservations, concurrency | an aggregate around an invariant, choosing the granularity of locks, the resource-holds archetype (ddd-archetypes) |
 
 One business area usually contains several classes — separate them instead of building one "model for everything".
 
