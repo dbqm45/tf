@@ -1,21 +1,44 @@
-MIT License
+tf (team factory) — Proprietary License
 
-Copyright (c) 2026 claude-team-factory contributors
+Copyright (c) 2026 dbqm45. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This license applies to this version of the software "tf" (the "Software") and to every later version, including its
+source code, scripts, configuration, skills, personas, roles, templates, prompts, documentation and the design and
+structure in which they are organised. Versions published earlier under the MIT License remain under that license.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. No use without permission. You may install and use the Software only if the copyright holder has given you
+   permission in writing (a written agreement, or an e-mail or a message from the copyright holder that names you
+   or your organisation) and only within the scope of that permission. Access to the repository is not permission.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. What a permitted user may do. Within the permission you may install the Software in your own projects with the
+   Software's installer, run it, and change its configuration in the places meant for it (`.tf/config/`, the
+   project's own skills and personas).
+
+3. What nobody may do without a separate written permission:
+   a) copy, reproduce, publish or distribute the Software or any part of it, except the copies the installer makes
+      in a permitted project;
+   b) modify the Software, translate it, or create derivative works from it;
+   c) sell, rent, lend, sublicense or otherwise make the Software available to third parties, including as a service;
+   d) use the Software, its structure, its design or its documentation to create, describe or train a product,
+      a service or an artificial-intelligence model that does the same job;
+   e) remove or change this notice or any copyright notice.
+
+4. Confidentiality. The Software and its documentation are the copyright holder's confidential information and trade
+   secret. A permitted user keeps them confidential, gives access only to people covered by the permission, and
+   returns or deletes them when the permission ends.
+
+5. Your work stays yours. Code, documents and other results that the Software helps you create in your projects
+   belong to you. The Software's own files copied into your project stay under this license.
+
+6. Third-party components. Parts written by others keep their own licenses, listed in THIRD_PARTY_NOTICES.md
+   (for example the bundled PyYAML under the MIT License, and quoted specifications under CC BY 3.0).
+
+7. End of permission. A permission ends when the copyright holder withdraws it in writing or when you break this
+   license. You then stop using the Software and delete its copies.
+
+8. No warranty. The Software is provided "as is", without warranty of any kind. The copyright holder is not liable for
+   any damage arising from its use, to the extent the law allows.
+
+9. Law. Polish law applies. Disputes go to the court competent for the copyright holder's place of residence.
+
+Permission requests: contact the copyright holder through the repository owner's GitHub profile.
