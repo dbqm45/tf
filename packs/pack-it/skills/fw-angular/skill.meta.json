@@ -2,8 +2,8 @@
   "technology": "Angular",
   "based_on": "22",
   "min_supported": "17",
-  "verified": "2026-09-27",
-  "verified_with": "@angular/compiler-cli 22.2.0 + TypeScript 6.0.3 (ngc, strictTemplates); 19.x dla wariantu sprzed v22",
+  "verified": "2026-11-20",
+  "verified_with": "@angular/compiler-cli 22.2.0 + TypeScript 6.0.3 (ngc, strictTemplates; references/domain-adapters.md, 2026-11-20); 19.x dla wariantu sprzed v22 (2026-09-27)",
   "constraints": {
     "19": {"lang-typescript": ">=5.5 <5.9"},
     "20": {"lang-typescript": ">=5.8 <6.0"},

@@ -272,12 +272,12 @@
   "offline": "2026-11-18"
  },
  "fw-angular": {
-  "fingerprint": "63bd71aec58e5c49",
+  "fingerprint": "a49b608572b5b1a4",
   "offline": "2026-11-20"
  },
  "fw-aspnet-core": {
-  "fingerprint": "d37ee5c0097a5e0e",
-  "offline": "2026-11-18"
+  "fingerprint": "549494b1bd713738",
+  "offline": "2026-11-20"
  },
  "fw-nestjs": {
   "fingerprint": "8101fd6e5d7a5a3e",
@@ -296,28 +296,28 @@
   "offline": "2026-11-18"
  },
  "lang-csharp": {
-  "fingerprint": "90f7cc88cfcbc963",
-  "offline": "2026-11-18"
+  "fingerprint": "6809e74ccaa5bd67",
+  "offline": "2026-11-20"
  },
  "lang-go": {
-  "fingerprint": "f4284933fe951177",
-  "offline": "2026-11-18"
+  "fingerprint": "f30fb09bb1461637",
+  "offline": "2026-11-20"
  },
  "lang-java": {
-  "fingerprint": "0cb2ea5cc54b347c",
-  "offline": "2026-11-18"
+  "fingerprint": "3411a987478fa39b",
+  "offline": "2026-11-20"
  },
  "lang-javascript": {
   "fingerprint": "22856cd239a82e12",
-  "offline": "2026-11-18"
+  "offline": "2026-11-20"
  },
  "lang-python": {
   "fingerprint": "1dcab55464836800",
   "offline": "2026-11-18"
  },
  "lang-typescript": {
-  "fingerprint": "95cc50211d6daa22",
-  "offline": "2026-11-18"
+  "fingerprint": "f82ba4229eff27c6",
+  "offline": "2026-11-20"
  },
  "ops-ai-inference": {
   "fingerprint": "b01558f157966795",
