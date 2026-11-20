@@ -38,7 +38,7 @@ everything by composing objects and functions.
 | principles (why) | SOLID, KISS, YAGNI, composition > inheritance | eng-design-principles |
 | GoF patterns (how in the code) | this skill | eng-design-patterns |
 | DDD building blocks | aggregate, policy (= strategy), specification (= composite), factory, repository | ddd-tactical-design |
-| business archetypes | Party, Availability, Pricing, Accounting | ddd-archetypes |
+| business archetypes | parties, resource holds, price calculation, value ledger | ddd-archetypes |
 | UI patterns | compound components, loading states, error boundaries | fe-architecture |
 | language idioms | discriminated unions, generators, `satisfies` | lang-typescript |
 

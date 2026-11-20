@@ -70,7 +70,7 @@ class GermanInvoicing implements InvoicingKit {
 }
 
 // Client: does not know the concrete classes, cannot mix up the families.
-// (In a real model the amounts are a Money value object — ddd-archetypes, quantity-money.)
+// (In a real model the amounts are a Money value object — ddd-archetypes, quantities and money.)
 function issueInvoice(kit: InvoicingKit, sequence: number, netCents: number) {
   const taxCents = kit.taxPolicy().vatCents(netCents);
   return {

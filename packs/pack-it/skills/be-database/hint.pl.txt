@@ -41,7 +41,7 @@ head: Użyj przy relacyjnej bazie — schemat, migracje, indeksy, zapytania SQL/
 
 ## Read modele
 Łączenie ciągłych okresów i agregaty po przedziałach rób funkcjami okna (`LAG`, `SUM() OVER`) w SQL — zamiast pętli w aplikacji.
-Dla przedziałów czasu: typy zakresów + ograniczenie wykluczające (PostgreSQL), gdy baza je ma (ddd-archetypes → availability).
+Dla przedziałów czasu: typy zakresów + ograniczenie wykluczające (PostgreSQL), gdy baza je ma (ddd-archetypes → blokady zasobu).
 Schemat per moduł (np. osobny `schema` w PostgreSQL) wzmacnia granice modułów w monolicie.
 
 ## Integralność

@@ -35,12 +35,12 @@ skill_requires:
 # by date, not by package version — the skill describes the API version).
 unversioned_skills: [lang-javascript, tool-stripe]
 
-# Fixed sections of reference files (checked by `build.py check`): mapper-style archetypes.
+# Fixed sections of reference files (checked by `build.py check`): one file per business archetype.
 reference_sections:
   ddd-archetypes:
-    skip: [layers.md]
-    sections: ["Fit test", "Model (the essence)", "Questions", "Mapping steps", "Decisions to check (R/A/X)",
-               "Result format", "Patterns and pitfalls", "Quality check", "Example (shortened)"]
+    skip: [across-layers.md]
+    sections: ["When it applies", "Core shape", "Rules", "Decisions to settle", "Belongs elsewhere", "Traps",
+               "Worked example"]
 
 # Added to this overlay's personas and executors (on top of the core's always_skills).
 always_skills: [eng-design-principles]

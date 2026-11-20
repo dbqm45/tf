@@ -53,7 +53,7 @@ signals; when they contradict the test, the test decides.
 | **Transformation / calculations** | "calculate", "price", "determine", many rules, a deterministic result | pure functions, policies/strategies, value objects at the input and output, tests on examples |
 | **Presentation** | "show", "summary", "report", combining many sources | read models, projections (CQRS), no business logic |
 | **Integration** | another system, another language, another pace of change | ACL / Open Host, translation, idempotency, outbox (ddd-context-mapping) |
-| **Competition for resources** | "cannot happen twice", limits, reservations, concurrency | an aggregate around an invariant, choosing the granularity of locks, the availability archetype (ddd-archetypes) |
+| **Competition for resources** | "cannot happen twice", limits, reservations, concurrency | an aggregate around an invariant, choosing the granularity of locks, the resource-holds archetype (ddd-archetypes) |
 
 One business area usually contains several classes — separate them instead of building one "model for everything".
 

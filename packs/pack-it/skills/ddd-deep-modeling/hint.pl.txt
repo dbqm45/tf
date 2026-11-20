@@ -45,7 +45,7 @@ pomocnicze; gdy przeczą testowi, rozstrzyga test.
 | **Transformacja / obliczenia** | „policz”, „wyceń”, „wyznacz”, dużo reguł, deterministyczny wynik | czyste funkcje, polityki/strategie, obiekty wartości na wejściu i wyjściu, testy na przykładach |
 | **Prezentacja** | „pokaż”, „zestawienie”, „raport”, łączenie wielu źródeł | read modele, projekcje (CQRS), bez logiki biznesowej |
 | **Integracja** | inny system, inny język, inne tempo zmian | ACL / Open Host, tłumaczenie, idempotencja, outbox (ddd-context-mapping) |
-| **Konkurencja o zasoby** | „nie może być dwa razy”, limity, rezerwacje, współbieżność | agregat wokół niezmiennika, dobór ziarnistości blokad, archetyp dostępności (ddd-archetypes) |
+| **Konkurencja o zasoby** | „nie może być dwa razy”, limity, rezerwacje, współbieżność | agregat wokół niezmiennika, dobór ziarnistości blokad, archetyp blokad zasobu (ddd-archetypes) |
 
 Jeden obszar biznesowy zwykle zawiera kilka klas — rozdziel je, zamiast budować jeden „model do wszystkiego”.
 
