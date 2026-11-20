@@ -27,7 +27,7 @@ head: Użyj przy ASP.NET Core (.NET 8–10) — Minimal API, ProblemDetails, wal
 `POST /tools/{id}/loans` z `LoanRequest([Required, RegularExpression(@"^[msc]-\d{4}$")] string MemberId)`:
 200 z `LoanResponse`, 404 dla nieznanego narzędzia, 409 jako `application/problem+json` dla „wypożyczone m-0042”
 i „wycofane”, 400 z walidacji dla `MemberId = "x"`, operacja `LendTool` w `/openapi/v1.json`. Kod i 5 testów
-integracyjnych (nieskompilowane od przepisania 2026-11-20): `references/minimal-api.md`.
+integracyjnych (sprawdzone 2026-11-20 przez `dotnet test` na .NET 10): `references/minimal-api.md`.
 
 ## Zależne od wersji
 Progi sprawdzone kompilacją 2026-10-23 (net8.0 i net10.0 z SDK; net9.0 z pakietami referencyjnymi z NuGet).

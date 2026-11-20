@@ -43,7 +43,7 @@ metadata:
 | **module** | a project (`.csproj`) or namespace with `internal` by default; dependencies between projects are guarded by references and architecture tests |
 
 Implementations for a tool-lending domain (amount, identifier, operation result, states, events, aggregate,
-repository port, xUnit tests; not compiled since the 2026-11-20 rewrite, see the file's status line):
+repository port, xUnit tests; checked 2026-11-20 on net8.0 and net10.0):
 `references/domain-building-blocks.md`.
 
 ## Version-dependent
