@@ -201,20 +201,6 @@ def detect_flags(root: Path) -> dict:
     return {"file": None, "envs": [], "test_env": None}
 
 
-def detect_related(root: Path) -> str | None:
-    """The quality gate's `related` command (only the tests related to the changed files; `{files}` / `{files,}` are
-    replaced by the gate): an Nx monorepo, else Jest or Vitest in package.json. None when nothing is detected."""
-    if (root / "nx.json").is_file():
-        return "npx nx affected -t test --files={files,}"
-    pkg = _json(root / "package.json")
-    deps = {name for key in ("dependencies", "devDependencies") if isinstance(pkg.get(key), dict) for name in pkg[key]}
-    if "jest" in deps:
-        return "npx jest --findRelatedTests {files}"
-    if "vitest" in deps:
-        return "npx vitest related --run {files}"
-    return None
-
-
 def detect_smoke(root: Path) -> str | None:
     """Post-deploy smoke test command, if the project has one: a script, a `smoke` script in package.json, a Makefile target."""
     if (root / "scripts" / "smoke.sh").is_file():
@@ -320,20 +306,16 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
                    + " → ".join(NAMES[k] for k in VERIFY_KINDS if k in det["commands"]) + ".")
     command = VERIFY if verify else (det["commands"].get("test") or {}).get("command")
     gate = root / ".claude" / "quality-gate.json"
-    related = detect_related(root)
     if gate.is_file():
         say.append("• .claude/quality-gate.json already exists — it stays unchanged.")
-        if related and "related" not in _json(gate):
-            say.append("  Tip: add to it " + json.dumps({"related": related}, ensure_ascii=False)[1:-1]
-                       + " — the gate and slice verification then run only the tests related to the changed files "
-                         "(`verify --full` runs the whole command).")
     elif command:
-        files[gate] = json.dumps({"command": command, **({"related": related} if related else {})},
-                                 ensure_ascii=False, indent=2) + "\n"
-        say.append(f"• .claude/quality-gate.json — the quality gate with the command `{command}`"
-                   + (f", for the changed files only `{related}`." if related else "."))
+        files[gate] = json.dumps({"command": command}, ensure_ascii=False, indent=2) + "\n"
+        say.append(f"• .claude/quality-gate.json — the quality gate with the command `{command}`.")
     else:
         say.append("• the quality gate stays off: no test command detected.")
+    if (gate.is_file() or command) and "related" not in _json(gate):
+        say.append("  Speed: at the first /tf the loop proposes `related` — only the tests of the changed files, "
+                   "a command for this project's stack (the whole `command` stays for `verify --full` and CI).")
     line = commands_line(det, verify)
     for name in ("CLAUDE.local.md", "CLAUDE.md"):
         old = _read(root / name)
