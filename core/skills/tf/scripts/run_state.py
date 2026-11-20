@@ -422,7 +422,8 @@ def slice_evidence(project: Path, meta: dict, slice_id: str) -> str:
         return "the task's state is unreadable"
 
 
-def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, timeout: float | None, project: Path) -> int:
+def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, timeout: float | None, project: Path,
+               full: bool = False) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
@@ -433,6 +434,8 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
     args = ["verify", meta["key"], slice_id, "--files", files]
     if command:
         args += ["--command", command]
+    if full:   # the whole `command` of the quality gate instead of its `related`
+        args.append("--full")
     if timeout:
         args += ["--timeout", str(timeout)]
     r = run_report.task_state(project, *args)
@@ -831,8 +834,10 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
     if rest and confirm_each_slice(project) and task_field(run_dir, meta, "mode") != "auto":
         meta["hold"] = slice_id
         write_run(run_dir, meta)
+        nxt = rest[0]["id"]
         print(f"Next: STOP — the step-by-step style: show the human the changes of {slice_id} (git show --stat HEAD) and ask "
-              f"whether to go on. After consent: run_state.py proceed {run_dir}")
+              f"with AskUserQuestion: \"Go on to {nxt} (Recommended)\" · \"Fix {slice_id} first\" · \"Stop here\". "
+              f"After consent: run_state.py proceed {run_dir}")
         return 0
     print_next(project, run_dir, meta)
     return 0
@@ -1720,6 +1725,21 @@ def options(project: Path) -> dict:
     return opts
 
 
+def open_file(path: Path) -> str | None:
+    """Opens a local file in the default browser: Windows `os.startfile` (a native path — `webbrowser` with a file:// address
+    can do nothing there without a message), macOS `open`, otherwise `webbrowser`. None = opened, else the reason it was not."""
+    try:
+        if os.name == "nt":
+            os.startfile(str(path.resolve()))  # type: ignore[attr-defined]  # noqa: S606 — a local file, no shell
+            return None
+        if sys.platform == "darwin":
+            r = subprocess.run(["open", str(path.resolve())], capture_output=True, text=True)
+            return None if r.returncode == 0 else (r.stderr.strip() or f"open: exit code {r.returncode}")
+        return None if webbrowser.open(path.resolve().as_uri()) else "no browser found (a cloud or SSH session)"
+    except Exception as e:  # noqa: BLE001 — no browser is not an error of the run
+        return str(e) or type(e).__name__
+
+
 def launch(project: Path, open_browser: bool = True) -> str | None:
     """Run start: build the dashboard and (when the options and `open_browser` allow) open it in the browser.
     Returns the file's address or None when the dashboard is off. An error never interrupts the run."""
@@ -1727,14 +1747,17 @@ def launch(project: Path, open_browser: bool = True) -> str | None:
     if not opts["dashboard"]:
         return None
     try:
-        uri = build_dashboard(project, costs=False).resolve().as_uri()
+        path = build_dashboard(project, costs=False).resolve()
+        uri = path.as_uri()
     except Exception:  # noqa: BLE001 — the preview never breaks the run
         return None
     if open_browser and opts["dashboard_open"]:
-        try:
-            webbrowser.open(uri)
-        except Exception:  # noqa: BLE001 — no browser (cloud, SSH) is not an error
-            pass
+        why = open_file(path)
+        if why:
+            print(f"⚠ The dashboard did not open ({why}) — open it with `tf status --open` or the address below.",
+                  file=sys.stderr)
+    elif open_browser and os.environ.get("CI"):
+        print("ℹ The dashboard does not open by itself: the CI variable is set.", file=sys.stderr)
     return uri
 
 
@@ -1798,6 +1821,7 @@ def main(argv: list[str]) -> int:
     v.add_argument("--files", default="")
     v.add_argument("--command", default=None)
     v.add_argument("--timeout", type=float, default=None)
+    v.add_argument("--full", action="store_true")
     dn = sub.add_parser("done")
     dn.add_argument("run_dir")
     dn.add_argument("slice_id")
@@ -1860,7 +1884,7 @@ def main(argv: list[str]) -> int:
     if args.cmd == "spec":
         return cmd_spec(Path(args.run_dir), project, new=args.action == "new")
     if args.cmd == "verify":
-        return cmd_verify(Path(args.run_dir), args.slice_id, args.files, args.command, args.timeout, project)
+        return cmd_verify(Path(args.run_dir), args.slice_id, args.files, args.command, args.timeout, project, args.full)
     if args.cmd == "done":
         return cmd_done(Path(args.run_dir), args.slice_id, args.message, project)
     if args.cmd == "tick":
@@ -1884,10 +1908,9 @@ def main(argv: list[str]) -> int:
     path = build_dashboard(project, Path(args.out) if args.out else None, costs=not args.no_cost)
     print(path.resolve().as_uri())
     if args.open:
-        try:
-            webbrowser.open(path.resolve().as_uri())
-        except Exception:  # noqa: BLE001
-            pass
+        why = open_file(path)
+        if why:
+            print(f"⚠ Not opened ({why}) — open the address above in a browser.", file=sys.stderr)
     return 0
 
 
