@@ -1,0 +1,121 @@
+head: Użyj przy pisaniu, skracaniu, audycie albo dzieleniu CLAUDE.md, AGENTS.md lub .claude/rules — co zasługuje na linię, gdzie mieszka, karta lint, test A/B reguły. Użyj, gdy tworzysz, skracasz, przeglądasz albo odświeżasz pliki instrukcji agenta w projekcie (CLAUDE.md, AGENTS.md, CLAUDE.local.md, .claude/rules/), agent ignoruje zawarte w nich reguły, monorepo potrzebuje reguł modułów, kilka narzędzi AI dzieli jeden zestaw reguł albo wartość reguły jest wątpliwa — test włączenia, gdzie mieszka każdy rodzaj treści, karta instructions_lint, odświeżanie z historii gita, próby A/B reguły, pliki modułów z indeksem. Nie do pisania skilli (core-skill-authoring), lekcji projektu i zapisu projektu (core-project-record) ani README i dokumentacji dla ludzi (skill docs, pack-docs).
+# Pliki instrukcji agenta — chude, dobrze ułożone, sprawdzone
+
+Plik instrukcji to wdrożenie dla agenta, który zna już język i framework, ale nie zna ustaleń tego projektu. Za każdą
+linię płaci kontekstem każda sesja i każdy wykonawca, a przestrzeganie reguł spada, gdy plik rośnie: modele najsłabiej
+korzystają ze środka długiego kontekstu (Liu i in., „Lost in the Middle”).
+Zmierzony efekt: AGENTS.md skrócił medianę czasu pracy o ~29% i tokeny wyjściowe o ~17% przy porównywalnej jakości
+(Lulla i in., 10 repozytoriów, 124 PR-y); ogólne pliki kontekstu nie podniosły skuteczności i kosztowały 20%+ więcej —
+przeglądy repo nie pomagały, niestandardowe praktyki tak (Gloaguen i in.). Więc: mało linii, każda o czymś, czego agent nie zgadnie.
+
+## 1. Czy to zasługuje na linię?
+Dodaj linię tylko wtedy, gdy agent **nie może tego wziąć** z treningu, dokumentacji frameworka, README, konfiguracji
+lint/typów/formatu ani z samego kodu — najlepiej dopiero **po powtarzającym się błędzie**: ten sam błąd dwa razy, ta sama
+poprawka wpisana znowu, uwaga z przeglądu, której agent nie mógł znać.
+- **Zasługuje:** nieoczywiste lokalne konwencje, pułapki projektu, obejścia znanych błędów zależności, dokładne komendy
+  build/test/lint, wskazanie pliku wzorcowego („nowe endpointy wzoruj na `src/api/orders.ts`”).
+- **Nie zasługuje:** dokumentacja frameworka, kopie README, reguły wymuszane już przez linter albo konfigurację, drzewa
+  katalogów, listy zależności, intencje („pisz czysty kod”) — przepisz je na zachowanie widoczne w diffie albo usuń.
+- „Używamy hooków Reacta” odpada (widać w kodzie). „Nowy kod nigdy nie importuje z `legacy/`” przechodzi (nie do wywnioskowania,
+  tani, sprawdzalny).
+
+## 2. Gdzie mieszka każdy rodzaj treści
+| Treść | Miejsce |
+|---|---|
+| prawdziwe dla całego repo, w każdej sesji | główny `CLAUDE.md` (albo `AGENTS.md`), najmocniejsze zakazy na górze |
+| prawdziwe dla części kodu | `CLAUDE.md` modułu albo `.claude/rules/*.md` z `paths` |
+| procedura używana od czasu do czasu | skill |
+| sprawdzenie, którego nie wolno pominąć | hook albo reguła uprawnień — plik to kontekst, nie egzekwowanie |
+| osobiste preferencje | `CLAUDE.local.md` (w gitignore) albo `~/.claude/CLAUDE.md` |
+| pułapka z jednego incydentu | `docs/project/lessons.md` (core-project-record); zaproponuj linię, gdy się powtórzy |
+| materiał referencyjny | `docs/project/…`, z odnośnikiem w pliku |
+
+Jedna reguła, jedno miejsce. Plik może nadal podać zakaz na górze („nigdy nie commituj sekretów”), ale wymusza go hook.
+- **Kilka narzędzi AI:** `AGENTS.md` to jedno źródło prawdy; `CLAUDE.md` zawiera `@AGENTS.md` i linie tylko dla Claude.
+  Claude Code czyta `AGENTS.md` sam tylko wtedy, gdy nie ma `CLAUDE.md` — sprawdź `/context` albo ustawienie „Project instructions”.
+- **Agent startujący w innym repo:** sesja uruchomiona w repo A nie wczytuje plików repo B, nawet gdy edytuje B.
+  To, czego potrzebuje B (fork, gałąź docelowa, `gh -R org/b`), zapisz też w globalnych instrukcjach albo README B, a krytyczną
+  część wymuś skryptem albo hookiem.
+- Monorepo, pliki modułów, zasady wczytywania: `references/context-scaling.md` (jak wczytują się pliki: sekcja 4).
+
+## 3. Pierwsza wersja
+1. Zacznij od `/init` albo ręcznie: README, skrypty manifestu, konfiguracja lint/format/typów/testów, jeden–dwa pliki CI,
+   dwa poziomy drzewa, `git log --oneline -n 30` dla konwencji commitów.
+2. Każde stwierdzenie z pliku, komendy albo commita (core-grounding); czego nie znalazłeś, staje się pytaniem do człowieka.
+3. Kolejność według dźwigni: twarde zakazy → 3–6 komend → konwencje z plikiem wzorcowym → testy → commity/PR-y → bezpieczeństwo.
+   Bez misji, wartości i przedstawiania zespołu.
+4. Żadnego bloku kodu dłuższego niż 1–2 linie (odnośnik do pliku), żadnych definicji ogólnych pojęć.
+5. Budżet: poniżej ~200 niepustych linii dla głównego pliku (zalecenie Anthropic); plik modułu 10–40 linii. Notatki tylko dla
+   ludzi w komentarzach HTML — Claude Code usuwa je przed wczytaniem.
+
+## 4. Przegląd: karta lint
+`python3 .claude/skills/core-agent-instructions/scripts/instructions_lint.py [pliki…] [--root DIR] [--json] [--warn N] [--error N] [--strict]`
+- Kod 0 = brak ERROR (z `--strict` WARN też oblewa), 1 = jest ERROR, 2 = złe wywołanie. `--root .` skanuje każdy
+  `CLAUDE.md`, `AGENTS.md`, `CLAUDE.local.md` i `.claude/rules/*.md` (pomija `node_modules`, `.git`, `dist`…).
+
+| id | Mierzy | OK / WARN / ERROR |
+|---|---|---|
+| `length` | niepuste linie po usunięciu komentarzy HTML i nagłówka reguły | ≤ 200 / ≤ 500 / > 500 (`--warn`, `--error`) |
+| `blocks` | bloki kodu dłuższe niż 3 linie, bez mermaid | 0 / 1–2 / ≥ 3 |
+| `intents` | ogólnikowe frazy-intencje, PL i EN | 0 / 1–3 / ≥ 4 |
+| `order` | pierwsza krytyczna reguła (nigdy/zawsze/musisz/nie wolno) w pierwszej jednej trzeciej | ERROR, gdy pojawia się dopiero po linii 200 albo plik ponad 30 linii nie ma nagłówków; WARN, gdy zaczyna się nagłówkiem wstępu |
+| `imports` | importy `@ścieżka` | WARN dla brakującego pliku; podaje długość z importami; oznacza importy `~/` jako wymagające zgody |
+| `stale` | ścieżki w backtickach, `npm run x`, `make x`, których nie ma | 0 / ≥ 1 (pomija blok `team-factory` i linie z zakazami) |
+
+`--root` dodaje `repo.main_file`, `repo.unindexed` (zagnieżdżony plik niewspomniany w głównym — dopisz go w sekcji
+„Modules with their own CLAUDE.md”) i `repo.duplicates` (linia modułu powtarzająca linię główną).
+**Sprawdzenie ręczne (4 z 5): zbędna wiedza** — zastosuj test z §1 do każdej linii.
+
+Zasady przeglądu:
+- każde znalezisko jako `plik:linia`; intencja staje się sprawdzalną propozycją opartą na sygnale z projektu (reguła lintera,
+  plik wzorcowy), w przeciwnym razie domyślną dla stosu, oznaczoną [założenie];
+- sprzeczne reguły w różnych plikach = błąd;
+- domyślnie **tylko raport**. Przestawianie i cięcia za zgodą, bez zmiany tego, co reguła mówi.
+
+Wynik: pierwsza linia ze ścieżką i werdyktem w jednym zdaniu; tabela pięciu sprawdzeń (sprawdzenie, werdykt, liczba);
+znaleziska (sprawdzenie, `plik:linia`, problem, propozycja); trzy działania o największym zysku.
+
+## 5. Odświeżenie, gdy kod się przesunął
+1. `git log -1 --format=%h -- CLAUDE.md` → ostatnia zmiana pliku (LAST).
+2. `git diff LAST..HEAD --stat -- package.json Makefile .github/ README.md <konfiguracje lint>` → co się od tego czasu zmieniło.
+3. Sprawdzenie `stale` w lincie plus `python3 .claude/skills/core-grounding/scripts/grounding_check.py CLAUDE.md` dla każdej ścieżki i komendy.
+4. Oznacz każdą linię KEEP / FIX / REMOVE / MISSING z dowodem `plik:linia`; pokaż listę.
+5. Edytuj punktowo za zgodą — nigdy całościowe przepisanie; niezacommitowane zmiany człowieka liczą się jako KEEP.
+6. Po dużej aktualizacji modelu usuń obejścia pisane pod słabości starszego modelu.
+
+## 6. Czy reguła się opłaca?
+Reguła to zmiana promptu; testuj ją jak zmianę promptu, powtarzanymi próbami przed i po:
+1. To samo zadanie, 3–5 przebiegów, każdy w świeżej sesji przy tym samym stanie repo, **bez** reguły. Zapisz złamania
+   konwencji, czas, przeczytane pliki, iteracje, koszt.
+2. Dodaj regułę (1–3 zdania, we właściwym miejscu), powtórz te same przebiegi.
+3. Brak poprawy albo agent i tak robił dobrze → usuń ją. Zmieniaj jedną zmienną naraz.
+Zmiana własnego CLAUDE.md fabryki albo person to zmiana konfiguracji agenta, oceniana według core-delivery-lifecycle.
+
+## Antywzorce
+- plik-encyklopedia; wklejona dokumentacja, konfiguracja albo README;
+- proza o architekturze, którą agent może przeczytać w kodzie;
+- ta sama reguła w trzech plikach albo plik modułu kopiujący główny;
+- ustalenia zespołu żyjące tylko w czyjejś lokalnej pamięci;
+- „przeczytaj AGENTS.md” zapisane prozą zamiast importu `@AGENTS.md`;
+- importy `@` używane, żeby „oszczędzić” kontekst — wczytują się na starcie i liczą się w całości.
+
+## Przykład
+Wejście: `CLAUDE.md`, 280 niepustych linii; zaczyna się od „## About the project”; 25 linii wklejonego `.eslintrc`;
+„stosuj dobre praktyki” i „dbaj o czysty kod”; zakaz surowego SQL w handlerach jest w linii 240; wspomina `npm run e2e`,
+którego package.json już nie ma.
+Lint: `length` WARN (280), `blocks` WARN (1), `intents` WARN (2), `order` ERROR (pierwsza krytyczna reguła po linii 200),
+`stale` WARN (`npm run e2e`).
+Raport: „CLAUDE.md — ważny zakaz jest zakopany, a piąta część pliku to wklejona konfiguracja.” Trzy główne działania:
+1) przenieś „nigdy surowego SQL w handlerach — używaj `db/queries/`” na górę; 2) zastąp wklejony `.eslintrc` linią
+„reguły lintera: `.eslintrc.cjs`”; 3) zamień „dobre praktyki” na „każdy handler waliduje wejście schematem z `schemas/` przed
+zapytaniem” albo usuń; wyrzuć `npm run e2e` (albo zapytaj, co go zastąpiło). Oczekiwany wynik ~190 linii. Nic nie jest
+edytowane, zanim człowiek się zgodzi.
+
+## Lista kontrolna
+- [ ] każda linia przechodzi test „agent nie mógł tego wiedzieć”, najlepiej po powtórzonym błędzie
+- [ ] najpierw zakazy, komendy, konwencje z plikiem wzorcowym; bez wstępu, bez wklejonej konfiguracji
+- [ ] główny plik poniżej ~200 niepustych linii; pliki modułów 10–40 i w indeksie głównego
+- [ ] reguły nie do pominięcia wsparte hookiem albo regułą uprawnień
+- [ ] uruchomiony `instructions_lint.py`, znaleziska jako `plik:linia`, raport przed jakąkolwiek edycją
+- [ ] AGENTS.md jako źródło, CLAUDE.md go importuje; bez zdublowanych reguł
+- [ ] nowa reguła sprawdzona 3–5 przebiegami z nią i bez niej
