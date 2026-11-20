@@ -18,7 +18,7 @@
           ["księg|ledger|wpis\\w*|transakcj\\w+|saldo"],
           ["nie pasuje|not a fit|koszyk\\w*.{0,60}(nie|bez)|BasketItem.{0,80}(nie|pomi)"]
         ],
-        "none": ["BasketItem.{0,60}(ledger|księg)"]
+        "none": ["BasketItem[^\\n|]{0,80}\\|[^\\n|]*\\|[^\\n|]*\\*\\*(apply|zastosuj)", "BasketItem[^\\n]{0,60}(apply|zastosuj)\\b"]
       }
     },
     {

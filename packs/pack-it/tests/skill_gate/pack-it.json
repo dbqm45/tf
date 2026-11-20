@@ -124,8 +124,15 @@
   "offline": "2026-11-18"
  },
  "ddd-archetype-lookup": {
-  "fingerprint": "7314f0a07cfc181b",
-  "offline": "2026-11-20"
+  "fingerprint": "a2ebe37927a935bf",
+  "offline": "2026-11-20",
+  "model": {
+   "report": ".tf/logs/evals/2026-11-20-gate-ddd-archetype-lookup.md",
+   "cost": 1.36,
+   "haiku": "5/5",
+   "sonnet": "5/5",
+   "date": "2026-11-20"
+  }
  },
  "ddd-archetypes": {
   "fingerprint": "5d283b37d16c0aa0",
