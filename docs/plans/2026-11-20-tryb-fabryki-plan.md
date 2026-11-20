@@ -99,10 +99,22 @@ Do T5 nic się nie zmienia u użytkowników, bo nowy układ jest tylko opcją.
   - **Polecenia projektu:** `tf onboard` wpisuje je do `.tf/plugin/RULES.md`.
   - **Testy fabryki:** zestaw testów (`workspace.py`) instaluje się w starym układzie, a nowy układ pokrywają
     `tests/test_plugin_*.py`.
-- **Do domknięcia później:**
-  - strojenie widoczności skilli wtyczki (`skill_profile`);
-  - katalog `.claude/catalog.md` z Twoimi skillami w układzie wtyczki;
-  - sprawdzenie `tf cloud-setup --apply` na prawdziwym środowisku chmurowym [niezweryfikowane].
+- **Domknięte 2026-11-20 (po T6):**
+  - **Katalog:** `.claude/catalog.md` w układzie wtyczki pokazuje Twoje skille z `.claude/skills/` w osobnej sekcji
+    i mówi, że skille fabryki w sesji fabryki mają nazwę `tf:<nazwa>`.
+  - **`tf cloud-setup --apply`:** sprawdzone na prawdziwym `claude` bez flag (Claude Code 2.1.325, haiku, ok.
+    0,02 USD). Z ustawieniami użytkownika zapisanymi przez `--apply` w osobnym katalogu domowym sesja widzi 20 skilli
+    `tf:` i reguły fabryki; z pustym katalogiem domowym — 0 skilli i brak reguł. Niesprawdzone zostaje tylko
+    uruchomienie skryptu startowego w prawdziwym środowisku chmurowym z instalacją zespołową [niezweryfikowane].
+  - **Persony:** `tf code --agent <persona>` działa bez przedrostka (`--agent burak` uruchamia agenta wtyczki `tfx:burak`).
+  - **Izolacja:** plan `2026-11-20-poziomy-izolacji.md` już kładzie ustawienia sandboxa do `session-settings.json`.
+- **Widoczność skilli wtyczki — do decyzji właściciela.** Claude Code 2.1.325 nie stosuje `skillOverrides` do skilli
+  z wtyczki: sprawdzone klucze `tfx:nazwa`, `nazwa` i `nazwa@tfx` w `--settings` i w `.claude/settings.local.json`
+  zostawiają opis widoczny, a ten sam wpis dla skilla z `.claude/skills/` go ukrywa. Do wyboru:
+  - zostawić skrót listy skilli samemu Claude Code (budżet ~1% kontekstu wg opisu w `core/factory/skill_profile.py`: przy przepełnieniu sam usuwa opisy
+    najrzadziej używanych skilli, ale bez wiedzy o stosie projektu);
+  - albo skracać opis w kopii `SKILL.md` we wtyczce dla skilli spoza stosu projektu. Pełny opis zostałby w osobnym
+    polu dla podpowiedzi `skill_hint`, a odcisk bramki skilla musiałby pomijać to pole.
 
 ## Ryzyka
 
