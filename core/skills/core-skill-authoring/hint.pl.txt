@@ -1,178 +1,129 @@
-head: Użyj przy dodaniu lub zmianie skilla — najpierw scenariusze ewaluacji, potem zwięzła treść z przykładami, bramka, audyt. Użyj, gdy dodajesz nowy skill do fabryki, zmieniasz istniejący, skill się nie uruchamia albo trzeba udowodnić, że skill coś wnosi — kolejność pracy od scenariuszy ewaluacji, punkt odniesienia bez skilla, reguły opisu i struktury, bramka jakości .tf/factory/skill_gate.py, ewaluacja na modelach i rejestr wyników. Nie do łączenia istniejących skilli w jednym zadaniu (core-skill-composition) ani testów kodu aplikacji (skill testów, pack-it).
-# Dodawanie i zmiana skilla — najpierw dowód, potem treść
+head: Użyj, gdy dodajesz, zmieniasz, przeglądasz albo odchudzasz skill fabryki lub gdy skill się nie uruchamia — luka, najpierw scenariusze, potem treść i skill_gate. Użyj, gdy skill trafia do fabryki lub projektu, jest zmieniany, przeglądany przed przyjęciem, odchudzany, ma działać bez człowieka (CI, claude -p) albo ma być udostępniony między repozytoriami, i gdy trzeba udowodnić, że pomaga: próba bez skilla, scenariusze przed treścią (trigger, no-trigger wobec sąsiada, holdout), minimalna treść z przykładami i skryptami, opis działający jak reguła wyboru, darmowy skill_gate i płatna ewaluacja modelem za zgodą. Nie do łączenia kilku istniejących skilli w jednym zadaniu (core-skill-composition), pisania reguł CLAUDE.md (core-agent-instructions) ani testowania kodu aplikacji (skille testowania z nakładki).
+# Pisanie i zmienianie skilli — najpierw dowody
 
-Skill jest gotowy dopiero wtedy, gdy zmierzono, że:
-- model go wczytuje przy właściwym pytaniu i nie wczytuje przy cudzym;
-- odpowiedź z nim jest lepsza niż bez niego.
+Skill jest gotowy, gdy zmierzono trzy rzeczy: wczytuje się przy pytaniach, dla których powstał, nie wchodzi w pytania
+sąsiada, a odpowiedź z nim jest lepsza niż bez niego. Dobrze napisany tekst niczego z tego nie dowodzi.
+Kolejność: luka -> scenariusze -> treść -> bramka -> (za zgodą) ewaluacja modelem.
 
-Sama treść SKILL.md niczego nie dowodzi.
+## 1. Czy luka w ogóle istnieje
+- Sprawdź, co już pokrywa obszar: wbudowany skill (np. skill z dokumentacją Claude API), zainstalowana wtyczka, istniejący
+  skill fabryki. Jeśli tak, zapisz tylko ustalenia projektu — krótki skill albo linia w CLAUDE.md.
+- Wykonaj 2-3 realistyczne zadania **bez** nowego skilla i zanotuj, czego brakowało: wiedzy, kroków, formatu wyniku, granic.
+  Niczego nie brakuje -> nie ma skilla. Notatki stają się pierwszymi scenariuszami.
+- Skill tworzący dokument lub inny artefakt (PRD, ADR, raport): zacznij od najlepszego wzorcowego wyniku, jaki masz, a nie od
+  listy kroków. Spisz decyzje, których ogólny szablon by nie podjął (kolejność sekcji pod tego czytelnika, nierówna głębia,
+  co pominięto i dlaczego), oraz 2-3 pytania, na które autor musi odpowiedzieć przed pisaniem („kto to czyta i co decyduje?”,
+  „co musi być prawdą, żeby to przyjęto?”). Sama lista kroków daje płaskie, generyczne wyniki.
 
-## Procedura
-1. **Luka.** Najpierw sprawdź, czy obszaru nie pokrywa skill wbudowany w Claude Code (np. `claude-api` — referencja
-   API i SDK Claude, aktualizowana przez Anthropic) albo zainstalowana wtyczka: wtedy piszesz najwyżej ustalenia
-   projektu i odsyłasz do niego. Potem daj modelowi 2–3 prawdziwe zadania z obszaru skilla **bez skilla**. Zapisz,
-   czego brakuje: wiedzy, kroków, formatu albo granic. Jeśli model radzi sobie dobrze, skill nie jest potrzebny.
-   **Skill, który tworzy artefakt** (PRD, raport, plan), zaczynasz od najlepszego istniejącego wyniku, a nie od listy
-   kroków: wypisujesz decyzje, których ogólny szablon nie zna (kolejność sekcji pod czytelnika, nierówna głębia,
-   ograniczenia wprost), i 2–3 pytania, które skill zadaje przed pisaniem. To staje się treścią i scenariuszami.
-2. **Szkielet.** `python3 .tf/factory/build.py new-skill <prefiks-nazwa> "<pełny opis z granicami>"` tworzy SKILL.md
-   z terminem przeglądu i polem `keywords` oraz szkielet scenariuszy `tests/skill_evals/<nazwa>.json` (w projekcie:
-   `.claude/tests/skill_evals/`). `--role <rola>` dopisuje skill do roli, `--name-only` ustawia `visibility: name`.
-   Prefiks wybierz z wymiarów w `.tf/config/config.yaml → facets`.
-3. **Scenariusze przed treścią** (≥3):
-   - **2× `trigger`** — pytania z luki z kroku 1, zadane słowami człowieka, a nie opisu skilla. Do tego `checks.all`:
-     ≥2 grupy wyrażeń sprawdzających wiedzę, której model nie ma bez skilla; `none` dla typowego błędu.
-   - **1× `no-trigger`** z polem `neighbor` — pytanie z pogranicza, które należy do sąsiedniego skilla. Pilnuje granic.
-   - **1× brzegowy** (`trigger`, id `edge-…`), gdy skill przetwarza dane wejściowe: brakujące, za długie albo
-     niejednoznaczne dane. Oczekiwane jest pytanie albo „nie wiem” z tym, czego brakuje — `checks.none` łapie
-     zmyśloną odpowiedź (platform.claude.com, „Define success criteria and build evaluations”, 2026-10-20).
-   - Format i przykłady: `tests/skill_evals/README.md`.
-4. **Punkt odniesienia (opcjonalnie, płatnie):** `run_skill_evals.py --skills <nazwa> --models sonnet --baseline`
-   pokazuje, ile treści zalicza model bez skilli fabryki.
-   - **Zamknięty zbiór** (`tests/skill_evals/holdout/<skill>.json`) mierzy, nie stroi: jego porażki nie prowadzą do
-     zmian opisu, słów ani treści pod te pytania. Inaczej wynik mierzy dopasowanie do egzaminu, nie skill.
-     Autor zmiany (człowiek albo agent) nie czyta plików holdout. Zmianę przyjmujesz, gdy poprawia zbiór strojenia
-     i nie pogarsza holdoutu; dużą lukę „strojenie − holdout” w raporcie (`--per-skill N`) traktujesz jak sygnał
-     uczenia się egzaminu.
-5. **Minimalna treść**, która zamyka luki:
-   - **jeden skill, jedno zadanie** — opis wymieniający kilka niezależnych zadań to sygnał do podziału;
-   - procedura (kroki, kolejność, punkty decyzji, format wyniku), a nie wykład; zakładaj, że model jest bystry —
-     pisz tylko to, czego nie wie;
-   - **przykłady ważniejsze niż reguły:** sekcja `## Przykład` (wejście → wynik, konkretne nazwy i liczby),
-     kolejne w `<skill>/references/examples.md`;
-   - **kod tam, gdzie pasuje:** sortowanie, parsowanie, liczenie, walidacja → skrypt w `scripts/` (deterministyczny,
-     tańszy, jego treść nie zajmuje kontekstu); napisz, czy skrypt uruchomić, czy przeczytać; obsługuje błędy sam,
-     bez „magicznych” stałych; łączenie z siecią deklarujesz linią „Sieć: …” w SKILL.md; skrypt, z którego agenci
-     biorą liczby, powstaje przez TDD i przed wpięciem do SKILL.md jest sprawdzony na prawdziwym repo względem
-     wzorca policzonego niezależnie — agent zwykle nie weryfikuje jego wyniku, więc błąd skryptu trafia do każdego raportu;
-   - SKILL.md do ~300 linii (Anthropic: poniżej 500), część zasad mieści się na ekranie telefonu; szczegóły
-     w `references/` — **jeden poziom od SKILL.md** (każdy plik wymieniony w SKILL.md, plik z innego skilla pełną
-     ścieżką `.claude/skills/<skill>/…`), spis treści w plikach dłuższych niż 100 linii;
-   - jedno określenie na jedno pojęcie w całym skillu; ścieżki z ukośnikiem `/`;
-   - do innych skilli odsyłaj po nazwie, nie kopiuj ich treści;
-   - fakty zewnętrzne ze źródłem i datą (core-grounding), na końcu sekcja **Źródła**.
-   - **kryteria oddziel od mechaniki:** wiedza „jak oceniać / co jest dobre” w `references/` bez założeń o narzędziu
-     i środowisku; SKILL.md niesie przebieg (skąd dane, gdzie wynik) i odsyła do kryteriów — te same kryteria
-     posłużą w CI, w innym narzędziu AI i jako checklista dla człowieka;
-   - **kontrakt wyjścia sprawdzalny maszynowo:** stały znacznik w pierwszej linii i stałe pola (np. `Werdykt: …`),
-     żeby następny krok sprawdził je skryptem, a nie zakładał, że model trzymał się formatu.
-6. **Opis i wyszukiwanie:**
-   - Treść skilla (opis, katalog, instrukcje, references) piszesz **po angielsku**; człowiekowi model odpowiada w jego
-     języku. Bramka rozpoznaje język treści sama (krok 5: polska treść przechodzi przez linter polszczyzny).
-   - `description` ≤170 znaków jako **reguła wyboru**: „Use when/for <sytuacja> — <kluczowe pojęcia>.”, bez „: ”
-     (psuje YAML). Tylko to model widzi na starcie; pole `metadata` Claude Code pomija. Nie „Helps with documents”.
-   - `metadata.catalog`: pełny opis z granicami („Not for … (skill)”; dawne „Nie do …” też działa).
-   - `metadata.keywords`: słowa, którymi ludzie opisują problem — **po polsku i po angielsku** (wyrażenia z pytań, nie
-     z treści skilla). Indeksuje je hook `skill_hint` bez modelu: polskie pytanie trafia w angielski skill tylko przez
-     polskie słowa kluczowe, więc po przetłumaczeniu treści bramka (krok 3) i scenariusze holdout pokażą, czego brakuje.
-   - Pola `paths` nie używasz: z nim skill wczytuje się automatycznie tylko przy pasujących plikach, a pytanie
-     projektowe pada zwykle, zanim pliki istnieją. `when_to_use` dokleja się do opisu na liście skilli i zjada
-     budżet opisów — granice piszesz w `metadata.catalog`.
-   - `model` ani `effort` w nagłówku skilla: inny model niż model sesji to zmiana modelu w turze — następne
-     zapytanie czyta całą historię bez cache (code.claude.com, „Skills” i „Prompt caching”, 2026-10-20).
-   - `context: fork` (skill działa w osobnym podagencie, do rozmowy wraca wynik) tylko dla skilla, który czyta dużo,
-     zwraca krótki wynik i nie pyta człowieka w trakcie — a sesja po nim trwa długo albo jest blisko limitu kontekstu.
-     Pomiar 2026-11-16 (`eng-codebase-mapping` z pack-it): kontekst głównej sesji −37%, koszt +33%, jakość bez zmian — fork
-     nie oszczędza pieniędzy, daje miejsce w kontekście (`docs/evals/2026-11-16-context-fork.md`). Warunki:
-     `background: false` (inaczej wynik przychodzi w tle), na górze treści `**Zadanie:** $ARGUMENTS` z regułą „puste
-     zadanie → odpowiedz BRAK ZADANIA” (podagent nie widzi rozmowy, a model wywołuje skill bez `args`), `argument-hint`
-     i format krótkiego wyniku. Skill z krokiem „uzgodnij z człowiekiem” w forku nie zadziała.
-   - Skill rzadko potrzebny: `metadata.visibility: name` — na liście tylko nazwa (nie zabiera budżetu opisów),
-     a hook `skill_hint` podpowiada go z opisem przy pasującym poleceniu (`.tf/factory/skill_profile.py`).
-   - Skill uruchamiany tylko ręcznie: `disable-model-invocation: true` i scenariusze wyłącznie `no-trigger`.
-   - Skill bez przewagi w pomiarze (model bez skilla odpowiada tak samo): wyłącz, nie usuwaj —
-     `disable-model-invocation: true` i `metadata.status: "inactive"`; scenariusze `trigger` przenieś do
-     `tests/skill_evals/inactive/<skill>.json`. `build.py` usuwa wtedy skill z ról, person i katalogu. Odsyłacze do niego
-     w innych skillach usuń (`build.py check` je wypisuje). Powód i wyniki wpisz w `docs/inactive-skills.md`
-     repozytorium fabryki.
-   - `metadata.review`: termin przeglądu treści (RRRR-MM-DD). Ustawia go `python3 .tf/factory/freshness.py --reviewed
-     <nazwa>` po sprawdzeniu faktów w źródłach (dziś + interwał: wersje 3 mies., przepisy 3–6, metody 12).
-7. **Wpięcie:** dopisz skill do roli (`.tf/config/roles/*.yaml`) albo persony i uruchom `python3 .tf/factory/build.py`.
-8. **Bramka jakości** (bezpłatna, obowiązkowa): `python3 .tf/factory/skill_gate.py <nazwa>`. Sprawdza:
-   - strukturę;
-   - scenariusze;
-   - czy hook podpowiada skill przy jego pytaniach, a przy pytaniu sąsiada nie stawia go na pierwszym miejscu;
-   - **regresję podpowiedzi wszystkich skilli** (nowy skill nie może podkradać pytań innym);
-   - polszczyznę;
-   - odwołania;
-   - **audyt** (`.tf/factory/skill_audit.py`): bezpieczeństwo i zalecenia Anthropic (reguła wyboru w opisie, przykłady,
-     istniejące pliki, deklaracja sieci) — wysoka i średnia waga blokują bramkę.
+## 2. Scenariusze przed treścią
+Utwórz `tests/skill_evals/<name>.json` (w projekcie: `.claude/tests/skill_evals/`; format w `tests/skill_evals/README.md`):
+- **2+ scenariusze `trigger`** słowami użytkownika, nie słowami opisu. Każdy ma co najmniej dwie grupy `checks.all` dla wiedzy,
+  której model nie ma bez skilla, i regex `checks.none` dla typowej złej odpowiedzi.
+- **1+ scenariusz `no-trigger`** z `neighbor` wskazującym skill, który powinien odpowiedzieć (albo `brak`).
+- **Przypadek brzegowy** (id zaczyna się od `edge-`), gdy skill przetwarza wejście: brak pliku, puste wejście, sprzeczność.
+  Oczekiwane: odpowiedź pyta albo mówi, czego brakuje; `none` łapie zmyśloną odpowiedź.
+- Reguły bramki: `skill` równe nazwie pliku, co najmniej 3 scenariusze, unikalne id, prompty od 15 znaków, bez dosłownego `TODO`.
+- Opcjonalny płatny punkt odniesienia `run_skill_evals.py --skills <name> --models sonnet --baseline` (`--per-skill N`):
+  scenariusz, który przechodzi bez skilla, nie mierzy skilla — przepisz go.
+- **Zbiór odłożony** `tests/skill_evals/holdout/<skill>.json` (scenariusze trigger z checks): mierzy, nigdy nie stroi.
+  Autor go nie czyta. Przyjmij zmianę, gdy scenariusze strojenia się poprawiają, a wynik na odłożonym się nie pogarsza.
+  Duża luka między nimi (95% na własnych, dużo mniej na odłożonych) oznacza dopasowanie skilla do egzaminu.
 
-   Wynik i odcisk treści trafiają do rejestru. `build.py check` ostrzega, gdy skill zmieniono po bramce.
-9. **Ewaluacja na modelu** (płatna, **za zgodą człowieka**, ~$0,10–0,30 na scenariusz i model):
-   `python3 .tf/factory/skill_gate.py <nazwa> --model haiku,sonnet --budget 2`.
-   - Muszą przejść wszystkie scenariusze. Haiku sprawdza, czy instrukcje wystarczą słabszemu modelowi, a Sonnet,
-     czy są zwięzłe.
-   - Dodaj `opus` dla skilli, których używają agenci na tierze deep.
-   - Raport trafia do `docs/evals/` (w projekcie `.tf/logs/evals/`).
-10. **Zapis:** wpis w CHANGELOG (co, wynik bramki i ewaluacji z kosztem).
+## 3. Treść
+- **Jeden skill, jedno zadanie.** Gdy opis wymienia kilka niezależnych prac, podziel skill.
+- **Procedura, nie wykład.** Pisz tylko to, czego model domyślnie nie zrobi; każde zdanie ma zmieniać zachowanie.
+- **Przykłady wygrywają z regułami.** Sekcja `## Example` z konkretnymi nazwami, liczbami i wynikiem; więcej przypadków w osobnym
+  pliku przykładów w references.
+- **Praca deterministyczna idzie do `scripts/`** (sortowanie, parsowanie, liczenie, walidacja). Napisz, czy model skrypt
+  uruchamia, czy czyta; błędy obsłuż w środku; bez niewyjaśnionych stałych; skrypt otwierający połączenia wymaga w SKILL.md
+  linii zaczynającej się od `Network:` (albo `Sieć:`), mówiącej dokąd się łączy — inaczej audyt blokuje bramkę.
+- **Skrypt, z którego agenci przepisują liczby do raportów**, piszesz najpierw testem (TDD: czerwony test, potem kod) i
+  sprawdzasz na prawdziwym repozytorium wobec wzorca policzonego niezależnie (ręcznie lub innym narzędziem), zanim SKILL.md go
+  wymieni. Agenci rzadko weryfikują wynik skryptu, więc jeden błędny wynik przechodzi do każdego raportu.
+- **Oddziel kryteria od mechaniki.** „Jaki wynik jest dobry” (niezależne od narzędzia, do użycia w CI i przez ludzi) osobno od
+  „jak przebiega ten przepływ”. Gdy wynik sprawdza skrypt, ustal pierwszą linię i nazwy pól.
+- **Rozmiar.** W tym repozytorium SKILL.md ma do 15000 znaków / ok. 300 linii (zalecenie dostawcy: poniżej 500 linii; po
+  kompakcji Claude Code dołącza ponownie tylko pierwsze 5000 tokenów każdego użytego skilla). Szczegóły w `references/`, jeden
+  poziom od SKILL.md; plik powyżej 100 linii zaczyna się spisem treści. Jeden termin na pojęcie, ścieżki z ukośnikiem, inne
+  skille po nazwie. Fakty zewnętrzne ze źródłem i datą (core-grounding) w sekcji `## Sources` z liniami `accessed YYYY-MM-DD`.
+- Treść po angielsku; model odpowiada w języku użytkownika.
 
-## Skille procesowe i do pracy bez człowieka
-- **Dwa typy:** procesowy (wywoływany jawnie, czyta plik → pisze plik, `disable-model-invocation: true`) i doradczy
-  (ładowany po opisie, bez artefaktu). Ważne kroki projektuj jako procesowe — automatyczne wczytanie to pomoc, nie gwarancja.
-- **Warunek wstępny:** skill sprawdza, czy plik wejściowy istnieje na dysku; brak → odmowa jednym zdaniem z nazwą
-  skilla, który go tworzy. Rozmowa nie zastępuje pliku.
-- **Trzy bramki:** przed (plik wejściowy, czyste drzewo, zielone testy), w trakcie (uprawnienia), po (raport na dysku
-  ze statusem każdej fazy: passed / warned / failed / skipped). Twardy stop tylko przy braku podstaw do dalszej pracy;
-  resztę ostrzeż i kontynuuj, decyzję zostaw człowiekowi.
-- **Bez łańcuchowania:** skill kończy na zapisie i podaje nazwę następnego kroku, nie uruchamia go sam. Istniejący plik
-  wyjściowy → pytanie: nadpisz / zapisz jako `-vN` / przerwij.
-- **Etykiety wewnętrzne zostają wewnętrzne:** numerów kroków i nazw pól skilla nie pokazujesz człowiekowi.
-- **Praca bez człowieka** (CI, `claude -p`): zakaz pytań do użytkownika; niejednoznaczność → wariant zachowawczy
-  (mniej plików, mniejsza zmiana zachowania, najbliżej litery planu) zapisany w raporcie; każda bramka drukuje linię
-  werdyktu, bo oceniający widzi tylko transkrypt.
-- Ewaluacje projektuj pod granice kontraktu i przypadki brzegowe (brak pliku, kolizja zapisu), nie tylko pod ścieżkę szczęśliwą.
-- Analiza cudzego lub własnego skilla („jak działa, jak zrobić podobny”): `references/skill-review.md`.
-  Udostępnianie skilli kilku repozytoriom i narzędziom: `references/team-distribution.md`.
+## 4. Opis i odnajdywanie
+- `description`: reguła wyboru w trzeciej osobie zaczynająca się od „Use when ...”, najwyżej 170 znaków, bez `: ` w środku
+  (psuje YAML). To jedyny tekst widoczny dla modelu na starcie sesji, więc nazywa sytuację, nie temat.
+- `metadata.catalog`: pełny tekst zakończony granicami „Not for X (skill-a), Y (skill-b)”.
+- `metadata.keywords`: po polsku i angielsku, słowami użytkowników (objawy, komunikaty błędów). Indeksuje je hook `skill_hint`;
+  polskie pytania trafiają do angielskich skilli przez `hint.pl.txt` (`python3 tools/hint_pl_index.py <skill>`).
+- `metadata.review`: data w cudzysłowie dla następnego przeglądu treści (`python3 .tf/factory/freshness.py --reviewed <name>`).
+- Pomiń `paths` (skill jest niewidoczny, dopóki nie otworzysz pasującego pliku — objaw „Unknown skill”), `when_to_use` (dzieli
+  budżet listy z opisem) oraz `model`/`effort` (zmiana modelu w środku sesji unieważnia cache promptu; koszt wybierasz w
+  core-cost-control).
+- `context: fork` tylko dla skilla, który dużo czyta, zwraca krótki wynik, nigdy nie pyta człowieka i działa w długich sesjach.
+  Wymaga `background: false`, `argument-hint`, linii zadania z `$ARGUMENTS`, odmowy przy pustym zadaniu i krótkiego formatu
+  wyniku. Pomiar fabryki 2026-11-16 (`docs/evals/2026-11-16-context-fork.md`): główny kontekst -37%, koszt +33%, ta sama
+  jakość — fork kupuje miejsce, nie oszczędność.
+- Rzadko potrzebny skill: `metadata.visibility: name` — na liście jest sama nazwa, a hook i tak podpowiada go, gdy pytanie pasuje.
+- Skill tylko ręczny: `disable-model-invocation: true`; plik scenariuszy ma tylko scenariusze `no-trigger`.
+- Skill bez zmierzonej przewagi: wyłącz, nie usuwaj — `metadata.status: "inactive"`, `disable-model-invocation: true`,
+  scenariusze trigger przeniesione do `tests/skill_evals/inactive/<skill>.json`, powód w `docs/inactive-skills.md`. `build.py`
+  usuwa go wtedy z ról, person i katalogu; popraw odwołania wskazane przez `build.py check`.
 
-## Zmiana istniejącego skilla
-- Ten sam cykl w skrócie:
-  1. dopisz scenariusz, który odtwarza problem;
-  2. sprawdź, że **nie przechodzi** (`run_skill_evals.py --skills <nazwa>` lub krok 3 bramki);
-  3. popraw treść;
-  4. bramka, a przy zmianie treści merytorycznej także ewaluacja na modelu.
-- **Wiedzy nie usuwasz przy porządkach.** Przenosisz ją do `references/` i zostawiasz odnośnik.
-- Mniej tokenów (test „no-op” zdanie po zdaniu, instrukcje pozytywne, pojęcia po nazwie, koszt opisów wszystkich
-  skilli): `references/skill-review.md` §„Odchudzanie”.
-- Hook `skill_change_guard` przypomina o bramce po każdej edycji skilla, a na koniec sesji wymienia skille bez
-  zaliczonej bramki.
+## 5. Skille działające bez człowieka (CI, `claude -p`, harmonogramy)
+- Wywoływane jawnie (`disable-model-invocation: true`, wywołanie po nazwie), nigdy przypadkiem.
+- **Warunek wstępny na wejście**: nazwij plik wejściowy; gdy go brak, odpowiedz jednym zdaniem wskazującym skill, który go tworzy,
+  i zakończ (odmowa).
+- Sprawdzenia przed, w trakcie i po pracy, z linią statusu dla każdej fazy. Twarde zatrzymanie tylko, gdy nie ma podstaw do dalszej pracy.
+- Bez pytań: wybierz opcję zachowawczą i zapisz ją w wyniku.
+- Bez automatycznego łańcuchowania do kolejnego skilla; nazwij następny krok.
+- Istniejący wynik: zdecyduj z góry — nadpisz, kopia z wersją albo przerwij.
+- Wypisz linię werdyktu (np. `Verdict: PASS | FAIL`) na początku lub końcu: oceniający widzi tylko transkrypt.
+- Scenariusze testują granice kontraktu: brak wejścia, kolizja zapisu, pusty wynik.
 
-## Diagnoza: skill się nie uruchamia
-| Objaw | Przyczyna | Poprawka |
-|---|---|---|
-| bramka krok 3: hook nie podpowiada | słowa użytkownika ≠ słowa opisu | `metadata.keywords`, opis bliżej języka pytań; `skill_hint.py --explain "<pytanie>"`; propozycja fraz: `skill_gate.py --suggest <skill>` |
-| hook podpowiada, model ignoruje | ogólny temat, model „wie sam” | w opisie konkretna luka („procedura…”, „pułapki wersji…”), scenariusz z tą luką |
-| skill uruchamia się przy cudzych pytaniach | za szeroki opis | granice w `metadata.catalog`, `no-trigger` z sąsiadem, zawężony opis |
-| „Unknown skill” | pole `paths` | usuń `paths` |
-| treść nie przechodzi, choć skill wczytany | instrukcja za ogólna albo za długa | konkretne kroki i przykłady; szczegóły do `references/` |
-| model nie sięga po skill mimo podpowiedzi | opis-hasło bez „kiedy” | opis jako reguła wyboru „Użyj, gdy …” |
+## 6. Bramka, podpięcie, ewaluacja modelem
+- Szkielet: `python3 .tf/factory/build.py new-skill <prefix-name> "<full description>"` (`--role <role>`, `--name-only`). Nazwa
+  zgadza się z katalogiem i zaczyna prefiksem fasety z `.tf/config/config.yaml -> facets`.
+- Podpięcie: dodaj do roli w `.tf/config/roles/*.yaml` albo persony, potem `python3 .tf/factory/build.py`.
+- **Darmowa i obowiązkowa**: `python3 .tf/factory/skill_gate.py <name>` (struktura, scenariusze, podpowiedź, język, odwołania,
+  audyt). Także `--changed`, `--status`, `--fast`, `--suggest <skill>`. Obcy skill najpierw przez
+  `python3 .tf/factory/skill_audit.py <dir>`.
+- **Płatna, za zgodą człowieka** (ok. 0,10-0,30 USD za scenariusz na model): `skill_gate.py <name> --model haiku,sonnet --budget 2`.
+  Haiku pokazuje, czy treść wystarcza, Sonnet — czy jest zwięzła; Opus tylko dla skilli głębokiego tieru. Każdy scenariusz musi
+  przejść; wynik i koszt zapisz w CHANGELOG. Raporty w `docs/evals/` (projekt: `.tf/logs/evals/`).
 
-## Checklista
-- [ ] luka zmierzona bez skilla; scenariusze (2× trigger, 1× no-trigger z sąsiadem) napisane przed treścią
-- [ ] treść po angielsku, description jako reguła wyboru „Use when/for …” (≤170 znaków), katalog z granicami, `metadata.keywords` PL+EN, bez `paths`
-- [ ] jedno zadanie; sekcja `## Przykład`; skrypty dla operacji deterministycznych; sieć zadeklarowana
-- [ ] SKILL.md zwięzły, `references/` jeden poziom od SKILL.md ze spisem treści, źródła z datą, `metadata.review`
-- [ ] skill procesowy: warunek wstępny pliku, raport ze statusami faz, bez łańcuchowania; w CI bez pytań, z linią werdyktu
-- [ ] `python3 .tf/factory/skill_gate.py <nazwa>` przechodzi (także regresja wszystkich skilli)
-- [ ] ewaluacja na haiku i sonnet zaliczona (za zgodą człowieka), wynik i koszt w CHANGELOG
+## 7. Zmiana i odchudzanie istniejącego skilla
+- Zmiana: dodaj scenariusz odtwarzający problem, potwierdź, że nie przechodzi, popraw, uruchom bramkę (plus ewaluację modelem przy
+  zmianach merytorycznych). Hook `skill_change_guard` przypomina po edycjach i na koniec sesji.
+- Porządkowanie nie usuwa wiedzy: przenieś ją do `references/` i podlinkuj.
+- Odchudzanie długiego skilla (np. 900 linii): sprawdź zdanie po zdaniu — „czy zmienia domyślne zachowanie?”; usuń zdania no-op;
+  zamień zakazy na pozytywne instrukcje; nazwij pojęcie, które model zna, zamiast je tłumaczyć; szczegóły o poziom niżej ze spisem
+  treści; zachowaj przykłady. Pomiar fabryki 2026-10-30: dwa skille pack-it straciły 5-12% słów bez spadku wyników. Każde cięcie
+  przechodzi przez scenariusze i bramkę.
+- Opisy wszystkich widocznych skilli to stały koszt każdego zapytania. Rzadko wywoływane automatycznie skille ustaw jako sama nazwa
+  albo tylko ręczne — na podstawie danych o trafieniach podpowiedzi, nie intuicji.
+- Specyfikacje nie cytują ścieżek plików ani kodu projektu: starzeją się szybciej niż skill.
+- Przegląd skilla (własnego lub obcego): lista w `references/skill-review.md`. Udostępnianie skilli między repozytoriami:
+  `references/team-distribution.md`.
 
-## Źródła
-- Anthropic: „Skill authoring best practices” (platform.claude.com, stan na 2026-10-03):
-  - ewaluacje przed dokumentacją;
-  - punkt odniesienia bez skilla;
-  - minimalne instrukcje;
-  - test na Haiku, Sonnecie i Opusie;
-  - treść poniżej 500 linii;
-  - obserwacja, jak model korzysta ze skilla.
-  - opis w trzeciej osobie z „co” i „kiedy”, odwołania jeden poziom od SKILL.md, spis treści przy > 100 liniach,
-    skrypty zamiast generowanego kodu, przykłady zamiast abstrakcji (stan na 2026-10-04).
-- Anthropic: „Agent Skills — overview”, sekcja „Security considerations” (zaufane źródła, audyt wszystkich plików,
-  ryzyko zewnętrznych adresów) i Claude Code „Skills” (lista opisów w 1% okna kontekstu, `allowed-tools` bez bramki
-  zaufania, polecenia wstawiane w treść i wykonywane przy wczytaniu), dostęp 2026-10-04.
-- Wyniki ewaluacji fabryki (`docs/evals/2026-10-02-*`): bez podpowiedzi modele rzadko wczytują skille, a pole `paths`
-  ukrywa skill.
+## Diagnoza
+| Objaw | Poprawka |
+|---|---|
+| Hook nie podpowiada skilla | Słowa kluczowe i opis słowami użytkowników; `skill_hint.py --explain "<question>"`, `skill_gate.py --suggest <skill>` |
+| Hook podpowiada, model ignoruje | Opis nazywa konkretną lukę, którą skill wypełnia |
+| Odpala się na pytania innych skilli | Węższy opis, granice „Not for” w katalogu, scenariusz `no-trigger` |
+| „Unknown skill” | Usuń `paths` |
+| Wczytany, a odpowiedź nadal zła | Konkretniejsze kroki i przykład; scenariusz brzegowy |
+| Bramka: brak sformułowania „kiedy” | Przepisz opis jako regułę „Use when ...” |
 
-- Kurs 10xDevs, ed. 3 (2026), moduł 1, lekcja 2 (typy skilli, aktywacja), moduł 5, lekcje 3–4 (skill w CI,
-  dystrybucja artefaktów AI w zespole) — materiał szkoleniowy (dostęp 2026-10-09).
+## Przykład
+Prośba: „Chcę skill do pisania release notes”. Pierwszy ruch to nie szkic SKILL.md.
 
-Opisane własnymi słowami.
+```
+1. Próba: 3 ostatnie wydania napisane bez skilla -> brakuje: grupowania wg wpływu na użytkownika, notatek migracji,
+   linków do zgłoszeń. Luka potwierdzona.
+2. tests/skill_evals/eng-release-notes.json:
+   - trigger "notes-from-tags", trigger "notes-hotfix"
+   - no-trigger "commit-message", neighbor core-conventional-commits
+   - edge "edge-no-tag": brak tagu i zakresu -> pyta o zakres
+3. SKILL.md: 60 linii, jeden przykład, skrypt zbierający PR-y z linią Network:.
+4. python3 .tf/factory/skill_gate.py eng-release-notes -> pass; ewaluacja modelem po zgodzie.
+```
