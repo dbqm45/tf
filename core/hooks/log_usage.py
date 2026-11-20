@@ -35,6 +35,8 @@ PL_CLASSES = {"czytanie": "reading", "rownolegle": "parallel", "przeglad": "revi
               "decyzja": "decision", "inne": "other"}
 
 
+SKILL_READ_RE = re.compile(r"(?:\.claude|\.tf/plugin)/skills/([^/]+)/SKILL\.md$")   # also the factory plugin (factory mode)
+
 def task_class(brief: str) -> str | None:
     """Class from the „Klasa: …” line of the brief (without diacritics, lowercase); outside the list → "other", no line → None."""
     m = KLASA_RE.search(brief[:2000])
@@ -112,7 +114,7 @@ def usage_from_transcript(path: Path) -> dict:
                     if c.get("name") == "Skill" and inp.get("skill"):
                         skills.append(str(inp["skill"]).split(":")[-1])
                     elif c.get("name") == "Read":
-                        m = re.search(r"\.claude/skills/([^/]+)/SKILL\.md$", str(inp.get("file_path", "")))
+                        m = SKILL_READ_RE.search(str(inp.get("file_path", "")).replace("\\", "/"))
                         if m:
                             skills.append(m.group(1))
                 usage = msg.get("usage")

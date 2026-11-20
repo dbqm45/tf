@@ -380,8 +380,9 @@ def _chunks(lines: list[str]) -> list[tuple[int, int, str]]:
 
 def _documents(root: Path) -> list[dict]:
     docs = []
-    for p in sorted((root / ".claude" / "skills").glob("*/SKILL.md")) + sorted((root / ".claude" / "skills").glob("*/references/*.md")):
-        docs.append({"path": p, "kind": "skill", "source": p.relative_to(root / ".claude" / "skills").parts[0]})
+    for p in sorted((root / ".tf" / "plugin" / "skills").glob("*/SKILL.md")) + \
+            sorted((root / ".claude" / "skills").glob("*/SKILL.md")) + sorted((root / ".claude" / "skills").glob("*/references/*.md")):
+        docs.append({"path": p, "kind": "skill", "source": (p.parent if p.name == "SKILL.md" else p.parent.parent).name})
     for p in sorted((root / "docs" / "knowledge").rglob("*.md")) if (root / "docs" / "knowledge").is_dir() else []:
         docs.append({"path": p, "kind": "note", "source": p.stem})
     for p in sorted((root / "docs" / "project" / "archive" / "research").glob("*.md")):

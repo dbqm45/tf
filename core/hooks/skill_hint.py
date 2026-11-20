@@ -41,7 +41,9 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
     except (AttributeError, ValueError):
         pass
 
-SKILLS = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path(__file__).resolve().parents[2]) / ".claude" / "skills"
+_PROJECT = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path(__file__).resolve().parents[2])
+SKILLS = _PROJECT / ".claude" / "skills"
+PLUGIN_SKILLS = _PROJECT / ".tf" / "plugin" / "skills"   # factory mode: the factory's skills live in the plugin
 STEM = 5                  # stem length: Polish inflection mostly changes the endings
 MIN_SCORE = 8.0           # relevance threshold (tuned on the scenarios in tests/skill_evals)
 MAX_HINTS = 3
@@ -90,7 +92,11 @@ def clean_body(text: str) -> str:
 
 def load_index() -> list[dict]:
     items = []
-    for p in sorted(SKILLS.glob("*/SKILL.md")):
+    seen: set[str] = set()
+    for p in [*sorted(PLUGIN_SKILLS.glob("*/SKILL.md")), *sorted(SKILLS.glob("*/SKILL.md"))]:
+        if p.parent.name in seen:          # the same skill in both places: the plugin copy wins
+            continue
+        seen.add(p.parent.name)
         text = p.read_text(encoding="utf-8", errors="ignore")
         m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
         fm = m.group(1) if m else ""

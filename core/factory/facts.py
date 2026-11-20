@@ -61,7 +61,8 @@ def research(root: Path, ks: list[str]) -> list[dict]:
 
 def skill_sources(root: Path, ks: list[str]) -> list[dict]:
     out = []
-    files = [*(root / ".claude" / "skills").glob("*/SKILL.md"), *(root / ".claude" / "skills").glob("*/references/*.md")]
+    files = [*(root / ".tf" / "plugin" / "skills").glob("*/SKILL.md"),      # factory mode: SKILL.md in the plugin
+             *(root / ".claude" / "skills").glob("*/SKILL.md"), *(root / ".claude" / "skills").glob("*/references/*.md")]
     for f in sorted(files):
         lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
         inside = False

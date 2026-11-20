@@ -31,7 +31,12 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
     except (AttributeError, ValueError):
         pass
 
-PATH_RE = re.compile(r"\.claude/skills/([a-z0-9][a-z0-9-]*)/|skill_evals/([a-z0-9][a-z0-9-]*)\.json$")
+PATH_RE = re.compile(r"(?:\.claude|\.tf/plugin)/skills/([a-z0-9][a-z0-9-]*)/|skill_evals/([a-z0-9][a-z0-9-]*)\.json$")
+
+
+def has_skill(root: Path, skill: str) -> bool:
+    """The skill's SKILL.md in .claude/skills (your own) or in the factory plugin (factory mode)."""
+    return any((root / d / "skills" / skill / "SKILL.md").exists() for d in (".claude", ".tf/plugin"))
 
 
 def root_of(data: dict) -> Path:
@@ -62,7 +67,7 @@ def on_edit(data: dict) -> None:
         return
     skill = m.group(1) or m.group(2)
     root = root_of(data)
-    if not (root / ".claude" / "skills" / skill / "SKILL.md").exists() and not path.endswith("SKILL.md"):
+    if not has_skill(root, skill) and not path.endswith("SKILL.md"):
         return
     state = load_state(root)
     sess = str(data.get("session_id") or "?")
@@ -91,7 +96,7 @@ def on_stop(data: dict) -> None:
     build = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(build)
     reg = build.gate_registry()
-    stale = [s for s in seen if (root / ".claude" / "skills" / s / "SKILL.md").exists()
+    stale = [s for s in seen if has_skill(root, s)
              and reg.get(s, {}).get("fingerprint") != build.skill_fingerprint(s)]
     if stale:
         print(json.dumps({"systemMessage": "⚠ Skills changed in this session without a passed quality gate: "
