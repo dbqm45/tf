@@ -177,6 +177,26 @@ def test_dna_by_name_learn_and_wire():
                           capture_output=True).returncode == 0
 
 
+def test_add_by_name_from_a_git_source_with_a_branch():
+    # `tf install --repo <url>#<branch>` stores the source with `#<branch>`; git must get the URL and --branch,
+    # not "url#branch" (git: "unable to update url base from redirection")
+    repo = Path(tempfile.mkdtemp(prefix="tf-addon-repo-")) / "factory"
+    import shutil
+    shutil.copytree(ROOT / "addons" / "dna", repo / "addons" / "dna", ignore=shutil.ignore_patterns("__pycache__", "out", "cache"))
+    g = ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@example.test"]
+    subprocess.run(["git", "init", "-q", "-b", "main", str(repo)], check=True)
+    subprocess.run([*g, "commit", "-q", "--allow-empty", "-m", "base"], check=True)
+    subprocess.run([*g, "switch", "-q", "-c", "next"], check=True)
+    subprocess.run([*g, "add", "-A"], check=True)
+    subprocess.run([*g, "commit", "-q", "-m", "addons on a branch"], check=True)
+    p = project()
+    (p / ".claude" / "factory-manifest.json").write_text(
+        json.dumps({"mode": "private", "source": f"{repo.as_uri()}#next"}), encoding="utf-8")
+    r = tf_addon(p, "add", "dna")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert (p / ".tf" / "addons" / "dna" / "addon.yaml").is_file()
+
+
 def test_refresh_only_when_inputs_change_and_session_hook():
     p = project(files={"package.json": '{"dependencies": {"react": "^18.2.0"}}',
                        "package-lock.json": '{"packages": {"node_modules/react": {"version": "18.3.1"}}}'})

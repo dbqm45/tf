@@ -344,6 +344,14 @@ def run(root: Path, a: dict, key: str, extra: list[str] | None = None, base: str
         return subprocess.CompletedProcess(cmd, 124, "", str(e))
 
 
+def _clone(source: str, dest: Path) -> subprocess.CompletedProcess:
+    """A shallow clone of `url` or `url#branch-or-tag` (the form `tf install --repo <url>#<ref>` stores in the
+    manifest); git gets the URL and `--branch`, never the `#…` suffix."""
+    url, _, ref = source.partition("#")
+    return subprocess.run(["git", "clone", "--depth", "1", *(["--branch", ref] if ref else []), url, str(dest)],
+                          capture_output=True, text=True, encoding="utf-8", errors="replace")
+
+
 def _resolve_source(root: Path, spec: str) -> tuple[Path, Path | None]:
     """(directory with addon.yaml, temporary directory to delete or None)."""
     p = Path(spec).expanduser()
@@ -351,12 +359,12 @@ def _resolve_source(root: Path, spec: str) -> tuple[Path, Path | None]:
         return p.resolve(), None
     if re.match(r"^(https://|git@|ssh://)", spec):
         tmp = Path(tempfile.mkdtemp(prefix="tf-addon-"))
-        r = subprocess.run(["git", "clone", "--depth", "1", spec, str(tmp / "src")], capture_output=True, text=True, encoding="utf-8", errors="replace")
+        r = _clone(spec, tmp / "src")
         if r.returncode != 0:
             shutil.rmtree(tmp, ignore_errors=True)
             raise SystemExit(f"✗ git clone failed: {r.stderr.strip()[-300:]}")
         src = tmp / "src"
-        return (src if (src / "addon.yaml").is_file() else src / "addons" / Path(spec).stem), tmp
+        return (src if (src / "addon.yaml").is_file() else src / "addons" / Path(spec.partition("#")[0]).stem), tmp
     if NAME.match(spec):
         try:
             source = json.loads((root / ".claude" / "factory-manifest.json").read_text(encoding="utf-8")).get(
@@ -367,8 +375,7 @@ def _resolve_source(root: Path, spec: str) -> tuple[Path, Path | None]:
             return (Path(source) / "addons" / spec).resolve(), None
         if source:
             tmp = Path(tempfile.mkdtemp(prefix="tf-addon-"))
-            r = subprocess.run(["git", "clone", "--depth", "1", source, str(tmp / "src")], capture_output=True,
-                               text=True, encoding="utf-8", errors="replace")
+            r = _clone(source, tmp / "src")
             if r.returncode != 0:
                 shutil.rmtree(tmp, ignore_errors=True)
                 raise SystemExit(f"✗ git clone of the factory source failed: {r.stderr.strip()[-300:]}")
