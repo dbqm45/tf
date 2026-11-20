@@ -1,0 +1,71 @@
+head: Użyj, gdy piszesz, sprawdzasz lub parsujesz commit message albo tytuł PR — Conventional Commits, zmiany niezgodne, stopki Change/Flag, podbicie wersji, hook commit-msg. Użyj, gdy piszesz, oceniasz lub klasyfikujesz komunikat commita albo tytuł pull requesta — Conventional Commits 1.0.0 (typ, zakres, `!`, treść, stopki), oznaczanie zmiany niezgodnej, stopki śladu `Change:` i `Flag:`, jakie podbicie wynika z commitów (PATCH/MINOR/MAJOR), poprawa commita z błędnym typem, commity revert, tytuł PR przy squash merge, parsowanie historii i hook commit-msg commit_msg.py. Nie do strategii gałęzi i PR (core-git-workflow) ani treści ręcznie pisanego CHANGELOG (skill dokumentacji, pack-docs).
+# Komunikaty commitów — Conventional Commits i stopki śladu fabryki
+
+Format każdego commita (i tytułu PR przy squash merge): `<typ>(<zakres>)!: <opis>`, pusta linia, treść (dlaczego,
+nie co), pusta linia, stopki `Token: wartość`. Zakres, `!`, treść i stopki są opcjonalne. Reguły, uzasadnienie,
+FAQ i parsowanie: `references/specification-and-faq.md`.
+
+## Pisanie komunikatu
+1. **Najpierw `git log --format=%s -20`:** język opisów, używane zakresy i typy. Trzymaj się ich (historia po polsku
+   zostaje po polsku; zakres = klucz zadania, jeśli tak jest w repo). Nowe repo: angielski.
+2. **Jeden commit = jedna logiczna zmiana.** Poprawka i nowa funkcja → dwa osobne commity (`fix`, potem `feat`).
+3. **Typ** małymi literami; lista otwarta, spec wymaga tylko `feat` i `fix`: `feat` → MINOR, `fix` → PATCH,
+   `perf` → zwykle PATCH (zależy od konfiguracji narzędzia), `refactor`, `test`, `docs`, `style`, `build`, `ci`, `chore` → bez wydania,
+   `revert` → zależy od cofanej zmiany. Dodatkowe typy to konwencja `@commitlint/config-conventional`.
+4. **Zakres** z architektury: projekt Nx (lub jego tag `scope:`), moduł albo kontekst; nigdy imię autora.
+5. **Opis** w trybie rozkazującym, bez kropki na końcu, nagłówek ≤ 72 znaki (sufiks ` (#123)` się nie liczy).
+6. **Treść** po pustej linii: dlaczego zmiana i na co wpływa.
+7. **Stopki** po pustej linii, tokeny z myślnikiem (`Reviewed-by`, `Refs`). Zadanie w `Refs: PROJ-123`, nie w opisie.
+8. **Zmiana niezgodna** (każda, niezależnie od typu, także we wczesnej fazie): `!` przed dwukropkiem i/lub stopka
+   `BREAKING CHANGE: <co się zmieniło i jak migrować>` — wielkimi literami; `BREAKING-CHANGE:` znaczy to samo.
+
+## Stopki śladu (konwencja fabryki)
+- Praca należąca do zmiany lub cięcia z kluczem (`CHG-12`, `TSK-57`, klucz Jiry): **każdy** commit ma `Change: TSK-57`
+  (kilka kluczy po przecinku).
+- Cięcie za flagą ma też `Flag: payment-retry` (jeden klucz, bez spacji).
+- Klucz z planu zmiany albo od człowieka — nigdy wymyślony. `Change:` i `Flag:` to publiczne API fabryki.
+
+## Hook commit-msg
+- Ręczne sprawdzenie: `python3 .claude/skills/core-conventional-commits/scripts/commit_msg.py check <plik>` (0 ok, 1 odrzucony, 2 złe wywołanie).
+- Instalacja `… commit_msg.py install` — **tylko na prośbę człowieka**; respektuje `core.hooksPath`, nie nadpisuje cudzego hooka.
+- Wymusza: kształt nagłówka z małą literą typu, niepusty opis ≤ 72 znaki bez kropki, pustą linię po nagłówku,
+  `BREAKING CHANGE:` wielkimi literami z opisem, klucze `Change:` w kształcie `TSK-57`, `Flag:` jako jeden token;
+  na gałęzi z kluczem w nazwie (`story/tsk-57-retry`) wymaga `Change: TSK-57`. Komunikaty gita (`Merge …`, `Revert "…"`,
+  `fixup!`, `squash!`, `amend!`) przechodzą bez sprawdzania.
+
+## Podbicie wersji z commitów
+Tylko `fix` (i `perf`) → PATCH; co najmniej jeden `feat` → MINOR; co najmniej jeden `!` lub `BREAKING CHANGE` → MAJOR.
+Liczą to `nx release`, semantic-release, release-please; commitlint w hooku pilnuje wejścia. Sam numer:
+`python3 .claude/skills/core-semver/scripts/semver.py next`; szczegóły SemVer w core-semver.
+
+## Zły typ commita
+- Rebase interaktywny nie jest dostępny w tym środowisku agenta.
+- Ostatni commit, **niewypchnięty**, i wyraźna prośba człowieka → `git commit --amend`.
+- Starszy lub już wypchnięty → nie przepisuj historii; powiedz człowiekowi (commit korygujący albo ręczny rebase po jego stronie).
+  Domyślnie: następna zmiana w nowym commicie z poprawnym typem.
+
+## Squash merge i revert
+- Przy squash merge tytuł PR staje się commitem, więc ma ten sam format.
+- Revert: spec go nie definiuje; u nas `revert: <co cofamy>` ze stopką `Refs: <sha>`. Wygenerowany przez gita `Revert "…"` przechodzi hook.
+
+## Przykład
+```
+refactor(booking)!: replace isReserved with blockade.state
+
+Reservation state now lives in one place, so the two flags can no longer disagree.
+
+BREAKING CHANGE: ResourceDto.isReserved is removed; read blockade.state === "reserved" instead.
+Refs: BOOK-88
+Change: TSK-57
+```
+`!` i stopka → MAJOR. Niezwiązana poprawka błędu idzie osobnym commitem `fix(booking): …`.
+
+## Lista kontrolna
+- [ ] przeczytany `git log`; jedna logiczna zmiana na commit; typ i zakres pasują
+- [ ] opis w trybie rozkazującym, ≤ 72 znaki, bez kropki; treść mówi dlaczego
+- [ ] zmiana niezgodna oznaczona; stopki `Change:`/`Flag:` gdy jest klucz; `check` przechodzi
+- [ ] bez przepisywania wypchniętej historii; amend tylko niewypchniętego i na prośbę
+
+## Źródła
+- Conventional Commits 1.0.0 — https://www.conventionalcommits.org/en/v1.0.0/ (CC BY 3.0, dostęp 2026-11-20), opisane własnymi słowami.
+- `@commitlint/config-conventional`, git trailers (git-interpret-trailers), dostęp 2026-11-20.
