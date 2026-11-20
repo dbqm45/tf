@@ -241,6 +241,8 @@ def main() -> int:
         proj.mkdir()
         r = install(ROOT, proj, "--packs", "none")
         check(r.returncode == 0, f"W-0: install: {r.stdout[-400:]} {r.stderr[-300:]}")
+        check((proj / ".tf/factory/LICENSE").is_file() and (proj / ".tf/factory/THIRD_PARTY_NOTICES.md").is_file(),
+              "W-0b: the license and the third-party notices go with the factory into the project")
         man = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
         man["packs"]["mode-talos"] = "1.3.0"
         if "offered" in man:
