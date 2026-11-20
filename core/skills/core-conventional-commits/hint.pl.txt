@@ -67,5 +67,5 @@ Change: TSK-57
 - [ ] bez przepisywania wypchniętej historii; amend tylko niewypchniętego i na prośbę
 
 ## Źródła
-- Conventional Commits 1.0.0 — https://www.conventionalcommits.org/en/v1.0.0/ (CC BY 3.0, dostęp 2026-11-20), opisane własnymi słowami.
+- Conventional Commits 1.0.0 — https://www.conventionalcommits.org/en/v1.0.0/ (dostęp 2026-11-20), opisane własnymi słowami.
 - `@commitlint/config-conventional`, git trailers (git-interpret-trailers), dostęp 2026-11-20.

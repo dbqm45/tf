@@ -118,6 +118,6 @@ More shapes:
 - [ ] no rewriting of pushed history; amend only unpushed and on request
 
 ## Sources
-- Conventional Commits 1.0.0 — https://www.conventionalcommits.org/en/v1.0.0/ (CC BY 3.0; accessed 2026-11-20). Restated in our own words.
+- Conventional Commits 1.0.0 — https://www.conventionalcommits.org/en/v1.0.0/ (accessed 2026-11-20). Restated in our own words.
 - `@commitlint/config-conventional` type list — https://github.com/conventional-changelog/commitlint (accessed 2026-11-20).
 - Git trailers — https://git-scm.com/docs/git-interpret-trailers (accessed 2026-11-20).

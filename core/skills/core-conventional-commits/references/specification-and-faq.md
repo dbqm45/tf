@@ -3,7 +3,7 @@
 Contents: 1. The rules in our own words · 2. Why the format exists · 3. Common questions · 4. Parsing history ·
 5. What the factory adds
 
-Primary source: https://www.conventionalcommits.org/en/v1.0.0/ (licence CC BY 3.0, accessed 2026-11-20). Everything
+Primary source: https://www.conventionalcommits.org/en/v1.0.0/ (accessed 2026-11-20). Everything
 below is a paraphrase with our own examples; read the original when wording matters. The spec uses RFC 2119 keywords;
 here "required" and "allowed" stand in for them.
 
