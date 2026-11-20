@@ -1,0 +1,25 @@
+# {{pack}}
+
+Domain agents for the {{project}} monorepo, generated from the code by `eng-domain-agents` (`domain_scan.py write`).
+
+| Element | File | Purpose |
+| --- | --- | --- |
+| Domain agents | `personas/<domain>.yaml` ({{names}}) | `claude --agent <domain>`: works only in that domain's root |
+| Dispatcher | `personas/{{dispatcher}}.yaml` | `claude --agent {{dispatcher}}`: assigns a task to domains, orders them, passes results |
+| Routing skill | `skills/{{project}}-domain-routing/` | domain, agent, entrypoints, allowed imports, commands |
+
+Each domain root also has `AGENTS.md` (boundaries, rules, commands) and a `CLAUDE.md` with the single line `@AGENTS.md`.
+
+## Install
+```bash
+python3 .tf/factory/update.py --pack-dir {{pack_dir}} --add {{pack}}
+```
+(`py` instead of `python3` on Windows.)
+
+## Keep it current
+```bash
+python3 .claude/skills/eng-domain-agents/scripts/domain_scan.py check --pack-dir {{pack_dir}} --project-id {{project}}   # drift, exit 1 when out of date
+python3 .claude/skills/eng-domain-agents/scripts/domain_scan.py write --pack-dir {{pack_dir}} --project-id {{project}}   # a file a human edited is kept; the new version goes to <file>.tf-new
+```
+Edits are safe: a generated file carries a marker with a content hash; once you edit it, the script no longer overwrites it.
+After a pack change, bump `version` in `pack.yaml` and re-run the install command.

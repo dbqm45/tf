@@ -1,0 +1,35 @@
+---
+name: {{skill}}
+description: Use when a task must be assigned to one of this repository's domains and handed to a domain agent, or it crosses domains.
+metadata:
+  review: '{{review}}'
+  catalog: 'Use to assign a ticket or task to the domains of this repository ({{names}}), pick the domain agents and set the order when a task crosses domains. Not for rules of code inside one domain (the domain AGENTS.md) or writing instruction files (core-agent-instructions).'
+  keywords: 'domain routing, dispatcher, domain agent, cross-domain task, shared entrypoint, module boundaries, {{keywords}}, agent domenowy, dyspozytor, routing domen, zadanie przekrojowe, granice domen'
+---
+
+# Domain routing
+
+State of knowledge: {{today}}, generated from the code by `domain_scan.py`. When this disagrees with the code, the code wins; re-run `python3 .claude/skills/eng-domain-agents/scripts/domain_scan.py check`.
+
+## 1. Which domain, which agent
+| Domain | Agent | Root | Entrypoints | May import | Tests |
+| --- | --- | --- | --- | --- | --- |
+{{rows}}
+
+Confirm the domain with `grep` for the screen or component name in the domain roots before assigning; a table is a hint, not proof.
+
+## 2. Who imports whom today
+Domains imported by others: {{consumed}}.
+
+Imports the boundary rules do not allow (do not copy them):
+{{violations}}
+
+A new cross-domain import, a new boundary exception or a new shared export has consequences for other domains: stop and ask the human.
+
+## 3. Order across several domains
+1. Find the domain that exposes the new thing in a shared entrypoint. It goes first.
+2. Independent assignments (each domain changes only its own code) go in parallel, in one message.
+3. The dependent domain gets in its brief what the first returned: export path, symbol, signature. Domain agents do not talk to each other; you pass the results.
+
+## 4. Brief to a domain agent
+Ticket key, goal in 1-2 sentences, acceptance criteria, file scope (`<domain root>/**`), data from the previous domain, a test first, the domain's test command. Figma links from the ticket go into the brief; the agent reads them through the `mcp-runner` agent.

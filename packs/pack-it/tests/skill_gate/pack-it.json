@@ -207,6 +207,10 @@
   "fingerprint": "ec185107ffdceb91",
   "offline": "2026-11-18"
  },
+ "eng-domain-agents": {
+  "fingerprint": "843043601466fdc5",
+  "offline": "2026-11-20"
+ },
  "eng-i18n": {
   "fingerprint": "15e9b62cfc0e92df",
   "offline": "2026-11-18"
@@ -268,8 +272,8 @@
   "offline": "2026-11-18"
  },
  "fw-angular": {
-  "fingerprint": "4e959ff0e9650442",
-  "offline": "2026-11-18"
+  "fingerprint": "63bd71aec58e5c49",
+  "offline": "2026-11-20"
  },
  "fw-aspnet-core": {
   "fingerprint": "d37ee5c0097a5e0e",

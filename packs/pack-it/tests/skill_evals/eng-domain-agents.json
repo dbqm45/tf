@@ -1,0 +1,65 @@
+{
+  "skill": "eng-domain-agents",
+  "scenarios": [
+    {
+      "id": "agent-na-domene",
+      "expect": "trigger",
+      "prompt": "Mamy monorepo w Nx z kilkoma domenami w katalogu domains/. Chcę osobnego agenta dla każdej domeny, z własnym AGENTS.md i dyspozytorem, który przydziela zadania. Skąd mam wiedzieć, które katalogi są domenami, i jak to zrobić bez zgadywania?",
+      "checks": {
+        "all": [
+          ["domain_scan"],
+          ["domains\\.yaml"],
+          ["@AGENTS\\.md"]
+        ]
+      }
+    },
+    {
+      "id": "agent-na-domene-en",
+      "expect": "trigger",
+      "prompt": "We have an Nx monorepo with several domains under domains/. I want one agent per domain, each with its own AGENTS.md, plus a dispatcher that assigns tasks. How do I find out which directories are the domains and set this up without guessing?",
+      "checks": {
+        "all": [
+          ["domain_scan"],
+          ["domains\\.yaml"],
+          ["@AGENTS\\.md"]
+        ]
+      }
+    },
+    {
+      "id": "granice-domen",
+      "expect": "trigger",
+      "prompt": "W monorepo mamy reguły enforce-module-boundaries i aliasy w tsconfig. Chcę, żeby agenci domenowi znali dozwolone importy między domenami i żebym wiedział, gdy ktoś doda nowy import. Jak to wygenerować i pilnować w CI?",
+      "checks": {
+        "all": [
+          ["domain_scan"],
+          ["check"],
+          ["tf-new|nadpisuj|overwrit|ręcznie|human"]
+        ]
+      }
+    },
+    {
+      "id": "granice-domen-en",
+      "expect": "trigger",
+      "prompt": "Our monorepo has enforce-module-boundaries rules and tsconfig path aliases. I want the domain agents to know the allowed imports between domains and to learn when someone adds a new import. How do I generate that and guard it in CI?",
+      "checks": {
+        "all": [
+          ["domain_scan"],
+          ["check"],
+          ["tf-new|overwrit|human|kept"]
+        ]
+      }
+    },
+    {
+      "id": "skrocic-claude-md",
+      "expect": "no-trigger",
+      "prompt": "Nasz główny CLAUDE.md urósł do 400 linii. Pomóż go skrócić i zdecydować, które reguły usunąć.",
+      "neighbor": "core-agent-instructions"
+    },
+    {
+      "id": "mapa-repo",
+      "expect": "no-trigger",
+      "prompt": "Dostałem nieznane repo i chcę zrozumieć, które pliki są punktami wejścia i gdzie są cykle importów.",
+      "neighbor": "eng-codebase-mapping"
+    }
+  ]
+}
