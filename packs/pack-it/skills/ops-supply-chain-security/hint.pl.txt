@@ -1,0 +1,70 @@
+head: Użyj przy zabezpieczaniu zależności — lockfile, karencja nowych wersji, skrypty instalacyjne, publikacja przez OIDC, audyty w każdym ekosystemie, SBOM, przejęta paczka. Użyj przy utwardzaniu łańcucha dostaw zależności — commitowany lockfile i zamrożone instalacje, karencja wersji (npm min-release-age, pnpm minimumReleaseAge, Yarn npmMinimalAgeGate) z wyjątkami, allowlista skryptów instalacyjnych, publikacja przez trusted publishing (OIDC) z provenance, wewnętrzne paczki w scope, SBOM, audyt podatności per ekosystem i priorytety, przypinanie skanerów, reakcja na przejętą paczkę, zasady dodawania zależności przez agentów AI (slopsquatting). Nie do budowy samego pipeline'u CI (ops-ci-cd), rutynowych aktualizacji wersji (ops-dependency-upgrades) ani programu AppSec (sec-appsec-devsecops).
+# Łańcuch dostaw zależności
+
+Większość włamań przychodzi przez prawowitą nazwę: przejęte konto opiekuna publikuje nową wersję, jej skrypt instalacyjny uruchamia się
+na maszynach programistów i runnerach CI i kradnie tokeny. Obrony poniżej są tanie i warstwowe. Prawdziwe przypadki: `references/cases.md`.
+
+## 1. Instalacja
+- Lockfile w repozytorium. CI instaluje tylko z niego: `npm ci`, `pnpm install --frozen-lockfile`, `yarn install --immutable`,
+  `pip install --require-hashes`, `go.sum`.
+- Człowiek czyta diff lockfile; **nowa paczka przechodnia** w PR podbijającym łatkę to sygnał ostrzegawczy.
+- Java: przypięte wersje i weryfikacja sum kontrolnych (Gradle verification metadata, Maven `--strict-checksums`).
+- Analizator zgłasza brak lockfile komunikatem „ops-supply-chain-security (lockfile in git)”.
+
+## 2. Karencja — nie instaluj tego, co wyszło godzinę temu
+Złośliwe wersje są zwykle wykrywane i wycofywane w ciągu kilku godzin, więc opóźnienie **1–3 dni** usuwa większość ryzyka.
+- npm: `min-release-age=3` w `.npmrc` — dni, npm ≥ 11.10.
+- pnpm: `minimumReleaseAge: 4320` — minuty, pnpm ≥ 10.16, domyślnie 1440 od pnpm 11; wyjątki w `minimumReleaseAgeExclude`.
+- Yarn: `npmMinimalAgeGate` (Yarn ≥ 4.10), wyjątki w `npmPreapprovedPackages`.
+- Renovate i Dependabot mają osobne ustawienia opóźnienia.
+**Wyjątek dla pilnej łatki** (krytyczna, wykorzystywana podatność w usłudze dostępnej z internetu): jedna paczka na liście wyjątków,
+przegląd diffu paczki przed scaleniem, cel w ciągu 24 h, wyjątek usuwany po upływie karencji. Nigdy nie wyłączaj karencji globalnie.
+
+## 3. Skrypty instalacyjne
+- W CI `npm ci --ignore-scripts`, potem przebudowa tylko paczek z allowlisty.
+- pnpm 10 domyślnie nie uruchamia skryptów; allowlista to `onlyBuiltDependencies` (pnpm 10) lub `allowBuilds` (pnpm 11).
+- Żadnych instalatorów przekazujących pobrany plik prosto do powłoki; pobierz, sprawdź sumę lub podpis, uruchom.
+- Instalacja zależności w jobie bez sekretów publikacji i wdrożenia.
+
+## 4. Publikacja własnych paczek
+- **Trusted publishing (OIDC)** z CI zamiast tokenu; `npm publish --provenance`. Po przejściu **unieważnij wszystkie stare tokeny** —
+  zapomniany token omija OIDC.
+- Provenance mówi, *gdzie* zbudowano paczkę, nie że wydanie było autoryzowane. Przypnij zaufanego wydawcę do jednego workflow
+  i chronionego środowiska z zatwierdzeniem; nigdy z commitów z forków; alarmuj na zależności `git+`/`github:`.
+- Konsumenci sprawdzają `npm audit signatures`.
+- Konta opiekunów: klucze sprzętowe lub passkeys, krótkie tokeny granularne, publikacja tylko z CI, czujność na phishing.
+
+## 5. Inwentarz i audyt podatności
+- **SBOM CycloneDX** dla każdego artefaktu w CI.
+- Audyt per ekosystem (szczegóły: `references/dependency-audit.md`): `npm audit`, `pnpm audit`, `pip-audit`, `govulncheck ./...`,
+  `cargo audit`, `composer audit`, `dotnet list package --vulnerable --include-transitive`; Java i Dart bez wbudowanego audytu —
+  Dependency-Check lub osv-scanner, a bez nich **pominięto**.
+- Znaleziska bezpośrednie i przechodnie osobno. Niezerowy kod wyjścia to informacja, nie awaria kroku.
+- Brak narzędzia lub błąd sieci → „**nie sprawdzono**”, nigdy „0 znalezisk”. Zapisz datę i wersję narzędzia.
+- Progi CVSS: krytyczna ≥ 9,0, wysoka ≥ 7,0, średnia ≥ 4,0; priorytet z osiągalności i znanej eksploatacji (katalog CISA KEV).
+- Audyt sam niczego nie naprawia; poprawki przez PR (ops-dependency-upgrades). Skanowanie CVE nie znajduje złośliwego kodu.
+- Skanery przypięte i uruchamiane bez sekretów.
+
+## 6. Paczki wewnętrzne
+- Scope organizacji zmapowany na prywatny rejestr w commitowanym `.npmrc` (`@acme:registry=…`); blokuje też dependency confusion.
+- **Bez tokenu w pliku.** CI podaje go ze środowiska, programiści w `~/.npmrc`; zewnętrzne platformy budowania dostają token osobno.
+
+## 7. Przejęta paczka — reakcja
+Pełna procedura: `references/dependency-incident.md`.
+1. Fakty z ostrzeżenia: wersje, okno publikacji, dodane paczki.
+2. `grep` po lockfile i SBOM wszystkich repozytoriów i gałęzi wydań; katalog złośliwej paczki w `node_modules` oznacza, że skrypt się wykonał.
+3. Lista maszyn i runnerów instalujących w oknie.
+4. **Najpierw zabezpiecz dowody**, potem **przebuduj** maszynę — nie „czyść”.
+5. **Rotuj wszystko, co było osiągalne** (rejestr, GitHub, SSH, chmura, `.env`, sesje), potem przejrzyj logi dostępu.
+6. Przypnij bezpieczną wersję (`overrides` / `resolutions`), wyczyść cache, przeinstaluj z wyłączonymi skryptami.
+7. Post-mortem: które zabezpieczenie by zatrzymało atak. Nigdy „wystarczy npm update”.
+
+## 8. Zasady dla agentów AI
+- Żadnej nowej zależności bez zgody człowieka.
+- **Slopsquatting**: modele zmyślają nazwy paczek, a atakujący je rejestrują. Sprawdź istnienie pod dokładną nazwą, wydawcę, datę
+  ostatniego wydania, provenance, liczbę pobrań i zależności przechodnich.
+- Opcjonalnie w CI: blokada zależności młodszej niż karencja lub z bardzo małą liczbą pobrań.
+
+## Przykład
+pnpm: `minimumReleaseAge: 4320` (minuty = 3 dni), `onlyBuiltDependencies: [esbuild]`; npm: `min-release-age=3` (dni), `ignore-scripts=true`;
+osobne opóźnienie w Renovate; CI z `--frozen-lockfile`. Więcej: `references/examples.md`.
