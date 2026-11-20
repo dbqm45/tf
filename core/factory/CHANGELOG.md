@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [20.4.0] — 2026-11-20
+### Added
+- **core:** scoped verification with related tests, verify --full and test durations (#352)
+
 ## [20.3.0] — 2026-11-20
 ### Added
 - **pack-it:** eng-domain-agents — domain agents from a monorepo (#347)
