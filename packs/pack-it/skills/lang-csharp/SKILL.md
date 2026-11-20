@@ -22,7 +22,7 @@ metadata:
    hierarchy of records + `switch`), mapped to a response at the boundary (fw-aspnet-core).
 6. Async all the way: I/O methods `async Task`, `CancellationToken` as the last parameter and passed on;
    no `.Result`/`.Wait()` (deadlocks, blocking pool threads).
-7. Identifiers as types (`readonly record struct ResourceId(Guid Value)`), not a bare `Guid`/`string`.
+7. Identifiers as types (`readonly record struct ToolId(Guid Value)`), not a bare `Guid`/`string`.
 8. Module boundaries: `internal` by default, only the project API public; dependencies between projects only
    in one direction (the domain does not know the infrastructure).
 
@@ -31,19 +31,20 @@ metadata:
 | Concept (vocabulary) | Idiom |
 |---|---|
 | **value object** | `readonly record struct` or `record` with validation in the constructor; value equality from the compiler |
-| **entity** | a class with an identifier type (`ResourceId`) and behaviour; equality by identifier |
+| **entity** | a class with an identifier type (`ToolId`) and behaviour; equality by identifier |
 | **aggregate** | a `sealed class` with private state, business methods instead of setters, `Version` for optimistic locking, `PullEvents()` |
 | **variants** | an `abstract record` with a private constructor and nested `sealed record`s (a closed set) + `switch` |
-| **operation result** | a closed hierarchy of records (`BlockResult.Blocked`, `.Conflict`, `.Disabled`) handled with `switch`; exceptions only for programmer errors |
+| **operation result** | a closed hierarchy of records (`LendResult.Lent`, `.OnLoan`, `.Withdrawn`) handled with `switch`; exceptions only for programmer errors |
 | **event** | a `sealed record` in the past tense implementing `IDomainEvent` |
 | **policy** | an interface with one method or a delegate (`Func<Order, Money>`) injected through the constructor |
 | **repository** | an interface (port) in the domain project with `async` methods and `CancellationToken`; the adapter (EF Core, Dapper) in the infrastructure |
 | **read model** | a separate `record` and query (Dapper, an EF Core `AsNoTracking` projection) bypassing the aggregate |
-| **state machine** | the state as variants (`Free`, `Taken`, `Off`), transitions in a `switch` with patterns and `when` guards |
+| **state machine** | the state as variants (`OnShelf`, `Lent`, `Withdrawn`), transitions in a `switch` with patterns and `when` guards |
 | **module** | a project (`.csproj`) or namespace with `internal` by default; dependencies between projects are guarded by references and architecture tests |
 
-Tested implementations (amount, identifier, operation result, states, event, aggregate, repository port,
-xUnit tests): `references/domain-building-blocks.md`.
+Implementations for a tool-lending domain (amount, identifier, operation result, states, events, aggregate,
+repository port, xUnit tests; not compiled since the 2026-11-20 rewrite, see the file's status line):
+`references/domain-building-blocks.md`.
 
 ## Version-dependent
 Every threshold checked with a compiler (2026-10-23, SDK 10.0.113): the code does not compile in the earlier version,
@@ -58,11 +59,11 @@ and compiles in the given one; the default language version for the platform was
 `SKILL_OUTDATED`, update per core-stack-sync.
 
 ## Example
-Question: "Reserve should return success or a rejection". Result: `public BlockResult Block(string by, DateTimeOffset at)`
-with `abstract record BlockResult { private BlockResult() {} sealed record Blocked(...); sealed record Conflict(string
-BlockedBy); sealed record Disabled; }`. The caller: `result switch { BlockResult.Blocked => …, BlockResult.Conflict
-c => …, BlockResult.Disabled => … }`. Adding a new variant shows every place to fill in when reviewing the
-`switch`; a missing branch ends with an exception in `_ =>` (a programmer error). The full code with a test:
+Question: "Lend should return success or a rejection". Result: `public LendResult Lend(MemberId member, DateTimeOffset at)`
+with `abstract record LendResult { private LendResult() {} sealed record Lent(ToolLent Event); sealed record
+OnLoan(MemberId Borrower); sealed record Withdrawn; }`. The caller: `result switch { LendResult.Lent => …,
+LendResult.OnLoan o => …, LendResult.Withdrawn => … }`. Adding a new variant shows every place to fill in when reviewing the
+`switch`; a missing branch ends with an exception in `_ =>` (a programmer error). The full code with tests:
 `references/domain-building-blocks.md`.
 
 ## Checklist
