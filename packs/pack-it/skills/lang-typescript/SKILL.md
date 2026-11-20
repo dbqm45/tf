@@ -43,12 +43,12 @@ metadata:
 | Concept (glossary) | TypeScript idiom |
 |---|---|
 | **value object** | a class with a `private constructor` + a `static of()` factory, `readonly` fields, operations return new instances; amounts as `bigint` in the smallest unit (never `number` in calculations) |
-| **identifier / entity** | a branded type `string & { __brand: 'PartyId' }` — you cannot mix up IDs of different entities |
+| **identifier / entity** | a branded type `string & { __brand: 'MemberId' }` — you cannot mix up IDs of different entities |
 | **variants** | a discriminated union with a `kind`/`type` field + an exhaustive `switch` and `assertNever` |
 | **operation result** | `type Result<E, T> = { ok: true; value: T } \| { ok: false; error: E }` — a rejection with a reason instead of an exception |
 | **aggregate** | a class with private state, changes only through business methods returning `Result`, events collected and handed over by `pullEvents()` |
 | **state machine** | a union of states (`{ state: 'free' } \| { state: 'blocked'; by }`) — invalid states are unrepresentable |
-| **event** | an immutable object in a union of events, named in the past tense (`type: 'ResourceBlocked'`) |
+| **event** | an immutable object in a union of events, named in the past tense (`type: 'ToolLent'`) |
 | **policy** | a function type (`(ctx: Ctx) => Money`) or a strategy interface; the policy is chosen in a factory |
 | **specification** | predicates `(x: T) => boolean` composed with `and/or/not` functions |
 | **repository / port** | an `interface` in the domain (async), the implementation (HTTP, database, memory) outside the domain |
@@ -58,7 +58,7 @@ metadata:
 ## Index of `references/` (read only the file you need)
 | File | Read when… |
 |---|---|
-| `domain-building-blocks.md` | you implement Money, Quantity, Party, TimeSlot, Result, an aggregate with events |
+| `domain-building-blocks.md` | you implement Money, Measure, branded ids, Member variants, LoanPeriod, field and option rules, Result, an aggregate with events |
 | `domain-modeling-patterns.md` | type + companion, internal vs published events, decider, `#imports`, date pitfalls |
 | `basics-and-narrowing.md` | `any`/`unknown`, `type`/`interface`, assertions, `satisfies`, `enum`, narrowing |
 | `functions-objects-classes.md` | signatures, overloads, variance, excess property checks, classes, `this` |
