@@ -1,0 +1,65 @@
+head: Użyj, gdy decydujesz, jak testować, albo piszesz testy — kolejność TDD (tdd_guard), jakie przypadki, mocki czy fake'i, testy łamiące się przy refaktoryzacji albo od razu zielone, jakość testów. Użyj do strategii testów i pisania testów w dowolnym języku — TDD w tej fabryce (czerwony test przed kodem produkcyjnym, pilnowany przez hook tdd_guard), bramka przed fazą planu, szwy i pionowe plastry, BDD i Example Mapping, proporcje (piramida, trofeum), dublery testowe (fake za własnym portem, mock tylko tego, czego nie posiadasz, stub do częściowej awarii), jakość testów (wartość oczekiwana z wymagania, testy mutacyjne i oparte na właściwościach), testy czytelne dla biznesu, warstwy testów akceptacyjnych. Nie do narzędzi konkretnego frameworka testowego (tool-*) ani pracy testera (qa-*).
+# Testowanie — strategia i pisanie testów
+
+## TDD w tej fabryce
+Cykl: **czerwony → zielony → refaktoryzacja**. W czerwonym najmniejszy nowy test pada *z właściwego powodu*. Poprawka błędu zaczyna się
+od testu, który go odtwarza. Testy sprawdzają zachowanie przez publiczne API, nie implementację.
+
+**Dla kodu produkcyjnego kolejność jest obowiązkowa** — pilnuje jej hook `tdd_guard`:
+1. edytuj plik testu;
+2. uruchom testy (`npm test`, `npm test -- <plik>`, `pytest <plik>`…) — nowy test **nie przechodzi** z właściwego powodu (brak funkcji,
+   zła wartość — nie literówka, zły import ani „No test files found”);
+3. dopiero wtedy kod produkcyjny; potem cały zestaw na zielono.
+- Test **od razu zielony niczego nie dowodzi.** Przepisz go, żeby sprawdzał brakujące zachowanie. Wyjątek: test charakteryzujący przed
+  refaktoryzacją nieprzetestowanego kodu, oznaczony `[characterization]` (qa-spec-first-testing).
+- Następne zachowanie = następny test. Po `CLAUDE_TDD_MAX_EDITS` (domyślnie 12) edycjach kodu bez nowego testu `tdd_guard` znów żąda testu.
+  Śledzi sesję główną i każdego podagenta osobno.
+- **Bez oszukiwania:** nie zmieniaj oczekiwania, żeby test przeszedł; nie zaszywaj implementacji pod test (stała, rozgałęzienie na danych
+  testowych); nie pomijaj testów — osłabienie (skip, xfail, `@Disabled`, `xit`, mniej asercji) jest wykrywane (`CLAUDE_TDD_WEAKEN`,
+  domyślnie ostrzeżenie). Zły test: powiedz to w raporcie i popraw jawnie z uzasadnieniem.
+- Tryby (`CLAUDE_TDD`): `strict` (domyślny), `ask` (człowiek decyduje przy każdej blokadzie), `off` — spike albo prototyp, **decyzja
+  człowieka**, nie agenta. Domyślnie poza bramką: konfiguracja, style, szablony, dokumentacja, `.d.ts`, pliki generowane; więcej przez
+  `CLAUDE_TDD_EXEMPT`.
+- Raport: polecenie, fragment czerwonego wyniku, potem zielony wynik całego zestawu.
+- Przed fazą planu zdecyduj, czy to w ogóle TDD (bramka), nazwij szwy, pracuj pionowymi plastrami: `references/tdd-with-agent.md`.
+  Kod fazy już istnieje → to nie TDD. Faza mieszana (np. konfiguracja i parser) → TDD dla logiki, reszta zwykle; zapisz to w raporcie.
+
+## Zachowanie i przykłady (BDD)
+Reguły biznesowe jako Given / When / Then w języku domeny. **Example Mapping** przed implementacją: historyjka → reguły → przykłady →
+pytania. Dużo otwartych pytań = historyjka niegotowa.
+
+## Proporcje
+Dużo szybkich testów logiki domeny; integracyjne na krawędziach (repozytorium na prawdziwej bazie, klient HTTP, kolejka); mało E2E.
+Front: głównie testy komponentów (trofeum). **Prawdziwa baza**, gdy reguły zależą od ograniczeń, kaskad, unikalności. **Stub klienta**, gdy
+trzeba wywołać awarię w środku sekwencji (druga z trzech operacji pada) — testuj kontrakt, który faktycznie istnieje (częściowa awaria →
+log i `ok: true`), nie wymarzony rollback; brak ochrony zgłoś jako otwarte ryzyko produktowe.
+
+## Dublery testowe
+**Fake** (działająca prosta implementacja, np. repozytorium w pamięci) > **stub** > **mock**. Mockuj tylko to, czego nie posiadasz
+(dostawca płatności, poczta, zegar, losowość), i przez **własny port**. Nigdy nie mockuj własnych klas. Sprawdzaj wynik i stan, nie
+interakcje.
+
+## Jakość testów
+- **Wartość oczekiwana z wymagania albo przykładu, nigdy z uruchomienia kodu** — to cementuje błąd.
+- Czerwony test zgodny z wymaganiem oznacza **defekt w kodzie**: zgłoś go albo popraw kod; nie zmieniaj oczekiwania.
+- Pokrycie linii to nie jakość. Krytyczna logika — **testy mutacyjne** (Stryker, PIT, mutmut); obliczenia — **testy oparte na
+  właściwościach** (fast-check, Hypothesis, jqwik), np. „podzielone kwoty zawsze sumują się do całości”.
+- Dobór przypadków (wartości brzegowe, klasy równoważności, ryzyko): qa-test-design. Testy niestabilne i kwarantanna: qa-regression.
+- Niestabilność z konstrukcji: czas (wstrzyknij zegar), kolejność i stan współdzielony (izolacja), równoległość, sieć — usuń przyczynę.
+
+## Dobre testy
+Nazwa mówi zachowanie (`rejects_booking_when_room_is_closed`); jeden powód porażki; bez `sleep`. Nazwa pliku zgodna ze wzorcem runnera.
+Testuj własne helpery (asercja porównująca wartość ze sobą zawsze przechodzi). Współbieżność: N równoległych prób, spójny stan końcowy.
+
+## Testy czytelne dla biznesu
+Buildery w języku domeny, asercje domenowe, konfiguracja testowa modułu = prawdziwa fasada z fake'ów (szybkie testy przypadków użycia bez
+bazy). Testy kontraktowe sterowane konsumentem zamiast kruchych E2E między systemami.
+
+## Warstwy testów akceptacyjnych
+Scenariusz → DSL → sterownik (bez asercji) → system; scenariusz i DSL przeżywają refaktoryzację (eng-behavior-preserving-refactoring).
+Kluczową logikę (pieniądze, uprawnienia, reguły domeny) testuje ktoś inny niż autor kodu — `qa-analyst` w clean-roomie (qa-spec-first-testing).
+
+## Przykład
+Reguła: 10% rabatu, gdy koszyk przekracza 200 zł. Przykłady z wymagania: 199,99 → 199,99; 200,00 → 200,00; 200,01 → 180,01; 500 → 450.
+Najpierw test `discount_above_200` → `npm test -- cart.test.ts` → czerwony; minimalny kod; zielony; test granicy 200 jako strażnik;
+cały zestaw zielony.
