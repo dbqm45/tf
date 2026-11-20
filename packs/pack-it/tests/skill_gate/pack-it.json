@@ -64,8 +64,8 @@
   "offline": "2026-11-18"
  },
  "arch-multi-tenancy": {
-  "fingerprint": "0284f28d6a9d3cfa",
-  "offline": "2026-11-18"
+  "fingerprint": "a3c6275c631cca27",
+  "offline": "2026-11-20"
  },
  "arch-privacy-compliance": {
   "fingerprint": "8a4f68350ca92154",
@@ -88,8 +88,8 @@
   "offline": "2026-11-18"
  },
  "be-api-design": {
-  "fingerprint": "9aa0cb10799b5dcd",
-  "offline": "2026-11-18"
+  "fingerprint": "b252e89bd7cf9fb0",
+  "offline": "2026-11-20"
  },
  "be-auth-security": {
   "fingerprint": "8538ce21fe58720b",
@@ -136,7 +136,7 @@
   "offline": "2026-11-20"
  },
  "ddd-deep-modeling": {
-  "fingerprint": "b6d5f88a5c8fb0f4",
+  "fingerprint": "1f6c2993d7fe953a",
   "offline": "2026-11-20"
  },
  "ddd-discovery-intake": {
@@ -200,7 +200,7 @@
   "offline": "2026-11-20"
  },
  "eng-design-patterns": {
-  "fingerprint": "a17e3b549e951f82",
+  "fingerprint": "80094061ca1725f4",
   "offline": "2026-11-20"
  },
  "eng-design-principles": {
@@ -272,12 +272,12 @@
   "offline": "2026-11-18"
  },
  "fw-angular": {
-  "fingerprint": "63bd71aec58e5c49",
+  "fingerprint": "a49b608572b5b1a4",
   "offline": "2026-11-20"
  },
  "fw-aspnet-core": {
-  "fingerprint": "d37ee5c0097a5e0e",
-  "offline": "2026-11-18"
+  "fingerprint": "549494b1bd713738",
+  "offline": "2026-11-20"
  },
  "fw-nestjs": {
   "fingerprint": "8101fd6e5d7a5a3e",
@@ -296,28 +296,28 @@
   "offline": "2026-11-18"
  },
  "lang-csharp": {
-  "fingerprint": "90f7cc88cfcbc963",
-  "offline": "2026-11-18"
+  "fingerprint": "6809e74ccaa5bd67",
+  "offline": "2026-11-20"
  },
  "lang-go": {
-  "fingerprint": "f4284933fe951177",
-  "offline": "2026-11-18"
+  "fingerprint": "f30fb09bb1461637",
+  "offline": "2026-11-20"
  },
  "lang-java": {
-  "fingerprint": "0cb2ea5cc54b347c",
-  "offline": "2026-11-18"
+  "fingerprint": "3411a987478fa39b",
+  "offline": "2026-11-20"
  },
  "lang-javascript": {
   "fingerprint": "22856cd239a82e12",
-  "offline": "2026-11-18"
+  "offline": "2026-11-20"
  },
  "lang-python": {
   "fingerprint": "1dcab55464836800",
   "offline": "2026-11-18"
  },
  "lang-typescript": {
-  "fingerprint": "95cc50211d6daa22",
-  "offline": "2026-11-18"
+  "fingerprint": "f82ba4229eff27c6",
+  "offline": "2026-11-20"
  },
  "ops-ai-inference": {
   "fingerprint": "b01558f157966795",

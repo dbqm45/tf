@@ -32,10 +32,10 @@ metadata:
    (checked 2026-10-23); on older versions add that line.
 
 ## Example
-`POST /resources/{id}/block` with `BlockRequest([Required, StringLength(50, MinimumLength = 2)] string By)`:
-200 with `BlockResponse`, 404 for an unknown resource, 409 as `application/problem+json` for "taken by jan"
-and "disabled", 400 from validation for `By = "a"`, the `BlockResource` operation in `/openapi/v1.json`. The code and 4
-integration tests: `references/minimal-api.md`.
+`POST /tools/{id}/loans` with `LoanRequest([Required, RegularExpression(@"^[msc]-\d{4}$")] string MemberId)`:
+200 with `LoanResponse`, 404 for an unknown tool, 409 as `application/problem+json` for "lent to m-0042"
+and "withdrawn", 400 from validation for `MemberId = "x"`, the `LendTool` operation in `/openapi/v1.json`. The code and 5
+integration tests (not compiled since the 2026-11-20 rewrite): `references/minimal-api.md`.
 
 ## Version-dependent
 Thresholds checked by compilation 2026-10-23 (net8.0 and net10.0 from the SDK; net9.0 with reference packages from NuGet).
@@ -65,7 +65,7 @@ Thresholds checked by compilation 2026-10-23 (net8.0 and net10.0 from the SDK; n
 
 ## Sources
 - Microsoft Learn: Minimal APIs, "Handle errors in ASP.NET Core APIs", "Generate OpenAPI documents", "What's new in
-  ASP.NET Core 9.0/10.0", "Integration tests in ASP.NET Core" (accessed 2026-10-23; behaviour checked on the
-  example from `references/minimal-api.md`).
+  ASP.NET Core 9.0/10.0", "Integration tests in ASP.NET Core" (accessed 2026-10-23; behaviour checked then on an
+  earlier version of the example in `references/minimal-api.md`).
 - RFC 9457 "Problem Details for HTTP APIs".
 Described in our own words.

@@ -68,15 +68,14 @@ With a "status" field, start with **5 why** (the Behaving section): ask why the 
 event; only then decide on a state machine.
 
 ## Untangling the model
-When facts drift apart or every need gets a new status value, reach for one of the four techniques
-in `references/untangling.md`:
-- **A single source of truth:** every fact has one owner, and the rest point to it by an identifier or refresh
-  a copy with an event.
-- **A hidden concept in a many-to-many relationship:** name it, e.g. doctor ↔ clinic is an Employment (*Zatrudnienie*) with dates
-  and conditions.
-- **Status is not an extension mechanism:** different data, rules and life cycle mean a separate concept or role.
-- **Two levels of the model:** the knowledge level (types and rules defined by the business) and the operations level (instances
-  that point to their type).
+Four smells and their fixes, with examples and questions for the expert: `references/untangling.md`.
+- **Single source of truth:** each fact has one owner; others hold its id or a read model refreshed by an event.
+- **Hidden concept in a many-to-many relationship:** name the third concept (doctor and clinic → Employment) and let it
+  own dates, conditions and rules of the link instead of id lists on both sides.
+- **Status is not an extension mechanism:** a status fits one concept's life cycle; new data, rules or owner mean a
+  separate concept, a role, an extension or a policy.
+- **Two levels of the model:** the knowledge level (kinds the business defines) and the operations level (instances
+  pointing to their kind, version by version).
 
 ## Modeling by examples
 - Describe every rule with a **concrete example** with numbers and dates (Given / When / Then), together with a **counterexample**.

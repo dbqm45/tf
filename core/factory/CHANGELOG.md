@@ -1030,8 +1030,7 @@ Versions up to 2.45.0 are the history of claude-team-factory, from which this co
 
 ## [2.6.0] — 2026-10-10
 ### Nowe
-- **Wiedza z kursu 10xDevs (ed. 3, 2026)** przeniesiona własnymi słowami tam, gdzie uzupełnia fabrykę; skille kursu
-  przeszły audyt (`skill_audit.py`: 0 wysokiej wagi), ale żaden nie został skopiowany. 9 nowych skilli (nazwy wg funkcji):
+- **9 nowych skilli** (nazwy wg funkcji):
   - `proc-requirements-shaping` — od pomysłu do wymagań (PRD): MVP w budżecie czasu z briefu, pusty CRUD, wyzwanie dla
     wymagań, otwarte pytania zamiast domysłów; skrypt `requirements_lint.py` (wyciek technologii do wymagań, gotowość);
   - `qa-change-review` — przegląd planu przed kodem i kodu względem planu: dryf, waga × wpływ, triaż, werdykt;

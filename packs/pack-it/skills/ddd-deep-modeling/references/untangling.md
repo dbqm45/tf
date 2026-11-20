@@ -1,54 +1,53 @@
 # Techniques for untangling a model
 
-Four techniques for a model in which the same knowledge sits in many places, relationships drift apart, and every new
-need ends with another value of the "status" field.
+Four recurring smells of a tangled model, each with its fix: the same fact kept in several places, a many-to-many
+link whose two sides drift apart, a "status" field that absorbs every new need, and types hard-coded where the
+business wants to define them itself. Treat them as diagnostic lenses, not as a fixed procedure.
 
-## 1. A single source of truth
-- **Principle:** every business fact has one owner (an aggregate in one context). The others point to it by an
-  identifier or keep a read-only copy refreshed by an event (a read model). The copy is never the
-  basis of a decision that changes this fact.
-- **Test:** "where will I change this fact when it changes in the business?". More than one place means the fact is
-  untangled badly.
-- **Signals:**
-  - the same list of identifiers on both sides of a relationship;
-  - fields "copied for convenience" without an event that refreshes them;
-  - two tables with the same validity date;
-  - disputes between teams about "who holds the truth".
-- **Procedure:**
-  1. List the facts that drift apart.
-  2. For each, establish the owner: who decides about it in the business.
-  3. Replace the other copies with references or read models.
-  4. Announce a change of the fact with an event (ddd-tactical-design, ddd-context-mapping).
+## 1. A single source of truth for every fact
+- **Smell:** a customer's billing address lives in `Customer`, `Order`, `Invoice` and `Shipment`; after a change, half
+  of them still show the old one. Other signs: a copy kept "for convenience" that nothing refreshes, two tables with
+  their own `valid_until` for the same thing, teams arguing whose number is right.
+- **Test question:** "when the business changes this fact, how many places do we have to touch?" One is healthy;
+  more than one means the fact has no owner.
+- **Fix:** give each fact exactly one owner, an aggregate in one bounded context (ddd-tactical-design). Everyone else
+  keeps only its identifier, or a read-only copy (read model) refreshed by an event the owner publishes
+  (ddd-context-mapping). A copy may be displayed or used to filter, never to decide a change of the fact itself.
+- **Not every copy is a smell:** an invoice must keep the address valid on the day of issue. That is a deliberate,
+  frozen snapshot with a legal meaning, so name it as such (`billedTo`) and do not refresh it.
+- **How to get there:** list the facts that drift; for each one ask who in the business decides about it; replace
+  the other copies with references or read models; make the owner announce changes as events.
 
 ## 2. A hidden concept in a many-to-many relationship
-- **Principle:** a many-to-many relationship between two concepts almost always hides a third concept. It has its own
-  data (from–to dates, conditions, role), its own life cycle and its own rules. Name it in the business language. It becomes
-  the single source of truth about the relationship.
-- **Example:** doctor ↔ clinic is an **Employment** (*Zatrudnienie*: from–to, working hours, the specialization in this clinic,
-  the schedule). In turn, student ↔ course is an **Enrolment** (*Zapis*: term, pass status, grade). The lists of identifiers on both
-  sides disappear, and the question "where does the doctor work on day X" has one place for the answer.
-- **Questions for the expert:**
-  - "What happens when this relationship begins and ends?"
-  - "Does the relationship have dates, conditions or a document?"
-  - "Can the same pair be related twice in different periods?"
-
-  Every "yes" confirms that the relationship is a separate concept.
-- **Archetype:** relationships between parties are a separate relationship object
-  (`.claude/skills/ddd-archetypes/references/parties-and-relationships.md`), and a contract with items is a commitment
-  (`.claude/skills/ddd-archetypes/references/commitments.md`).
+- **Smell:** a student holds a list of course ids, a course holds a list of student ids, and a flag such as
+  `isPassed` sits on the student, although it is true only for one course in one term.
+- **Diagnosis:** a many-to-many link almost always hides a third concept with its own data (dates from-to,
+  conditions, a role), its own life cycle and its own rules. Here it is an **Enrolment** (term, grade, pass status);
+  a doctor working in several clinics hides an **Employment** (hours, specialization, schedule).
+- **Fix:** name the concept in the expert's language and make it the owner of the facts about the relationship.
+  The id lists on both sides disappear, and so does the drift between them (one source of truth again).
+- **What to ask the expert:** what starts and ends the relationship; whether it has dates, conditions or a document
+  behind it; whether the same pair can be linked again later, e.g. a student retaking a course. A "yes" to any of
+  these means a concept of its own.
+- **In the archetypes:** a link between people or organisations is a party relationship
+  (`ddd-archetypes/references/parties-and-relationships.md`); an agreement with items and obligations is a
+  commitment (`ddd-archetypes/references/commitments.md`). In code, the textbook form is an association class.
 
 ## 3. Status is not an extension mechanism
-- **Problem:** every new need gets a new status value, e.g. an offer as "an order with the status offer",
-  "VIP", "wholesale order". This ends with conditions `if (status == …)` spread everywhere and rules that apply
-  only to some of the values.
-- **A status is fine** when it describes the life cycle of one concept with explicit transitions (a state machine):
-  the same data, different allowed operations.
-- **Instead of a new status value:**
-  - different data, rules and life cycle mean a **separate concept** (Becoming: an offer turns into a contract or
-    an order, but it is not one);
-  - the same entity in a new context is a **role** (Role Object);
-  - an additional capability for some of the objects is an **extension** (Extension Object);
-  - a different way of calculating is a **policy** (ddd-tactical-design).
+- **Smell:** each new requirement becomes one more status value. A quote is an `Order` with `status = QUOTE`, a stock
+  item gets `status = RESERVED` although a reservation has a customer, an expiry and rules of its own. Soon there are
+  `if (status == ...)` checks in many services and rules that apply only to some values.
+- **When a status is fine:** it describes the life cycle of ONE concept, the data stays the same and only the allowed
+  operations change, with explicit transitions. An order going draft, paid, shipped, delivered is a plain state
+  machine; do not invent new concepts for it.
+- **When it is not:** a "state" that brings its own data, rules or owner is a different concept. Pick the fix by
+  what differs:
+  - different data, rules or life cycle: a **separate concept**; a quote *becomes* a contract or an order (Becoming),
+    it is not one of its states; a reservation is its own concept holding stock for someone until a deadline;
+  - the same thing acting in a new context: a **role** (Role Object);
+  - an extra capability only some objects have: an **extension** (Extension Object);
+  - a different way of calculating: a **policy** chosen at run time (ddd-tactical-design).
+- **Start with 5 why** on every transition (see the Behaving section of SKILL.md) before deciding which case it is.
 
 ## 4. Two levels of the model: knowledge and operations
 - **Knowledge level:** types, rules and configuration that the business defines and changes, e.g. a kind
@@ -74,5 +73,3 @@ need ends with another value of the "status" field.
   "Large-Scale Structure", the "Knowledge Level" pattern [unverified: according to a table of contents from secondary sources].
 - J. Arlow, I. Neustadt, *Enterprise Patterns and MDA: Building Better Software with Archetype Patterns and UML*,
   Addison-Wesley, ISBN 9780321112309, year: sources give 2003 or 2004 (chapters Party, Product, Inventory, Rule according to the table of contents).
-- Techniques 1–3 are described in our own words on the basis of the sources above and the training programme "DDD — zaawansowane
-  techniki modelowania i archetypy" (Advanced modeling techniques and archetypes; Bottega IT Minds, material from a human, 2026-10-21).

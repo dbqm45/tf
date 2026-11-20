@@ -1,44 +1,58 @@
 # Patterns outside GoF: Role Object and Extension Object
 
-Two structural patterns from the later PLoP catalogs, useful in domain models when the same entity plays many
-roles or gets additional capabilities. Both replace flag fields and a growing "status" field (ddd-deep-modeling,
-`.claude/skills/ddd-deep-modeling/references/untangling.md`).
+Two structural patterns from the later PLoP catalogs. Both are alternatives to boolean flag fields and to a base
+class that keeps growing for the sake of a few clients. See also the modelling side of the same problem in
+`.claude/skills/ddd-deep-modeling/references/untangling.md`.
 
 ## Role Object
-- **Problem:** the same person or company is at the same time a customer, a supplier and an employee. Each role has its own
-  data, rules and life cycle, and roles appear and disappear over time. One class with the fields `isCustomer`,
-  `isSupplier` and their data grows without end. Subclasses (`CustomerSupplier`) explode combinatorially and do not allow
-  changing a role during the object's lifetime.
-- **Solution and participants:**
-  - **the core**: the identity and the shared data, e.g. a person with a name and an address;
-  - **role objects:** separate objects with the role's data and behaviour (`Customer` with a credit limit, `Supplier`
-    with delivery terms), which point to the core;
-  - the core allows asking for a role, adding it and removing it (`hasRole`, `getRole`, `addRole`, `removeRole`).
-- **When to use:** the roles are independent, are added and disappear over time, or each has its own rules and owner.
-- **Costs:** the identity is split into several objects; you must make sure a role does not exist without the core, and settle
-  where the shared data lives.
-- **In a domain model:** a role is often a separate aggregate in another context, pointing to the party by an identifier.
-  The parties-and-relationships archetype (`.claude/skills/ddd-archetypes/references/parties-and-relationships.md`) is this pattern at the level
-  of the business model.
-- **When NOT:** the role has no data or rules of its own and only changes permissions; then an attribute or
-  an authorization mechanism is enough.
+- **Problem:** one entity plays several roles at once or over time, e.g. a company is our customer, later also our
+  supplier; a person is a student and becomes a teaching assistant. Each role has its own data, rules and life cycle.
+  Putting `isCustomer`, `isSupplier`, `creditLimit`, `paymentTerms` into one class makes it grow without limit.
+  Subclassing does not help either: combinations explode (`CustomerSupplier`, `StudentAssistant`) and an object
+  cannot change its class when a role starts or ends.
+- **Structure:**
+  - a **core object** with the identity and the data shared by all roles (name, tax id, contact);
+  - **role objects**, one per role, holding only role-specific data and behaviour and a link to the core;
+  - the core exposes `hasRole(type)`, `getRole(type)`, `addRole(role)`, `removeRole(type)`; clients ask for the
+    role they need instead of checking flags.
+  ```ts
+  const supplier = company.getRole(SupplierRole);
+  if (supplier) supplier.schedulePickup(order);
+  ```
+- **Use when:** roles are independent of each other, are added and removed at run time, and have their own rules or
+  their own owner in the organisation.
+- **Costs:** identity is split across several objects (equality and caching must go through the core); a role must
+  never outlive its core; decide explicitly which data is shared and lives in the core.
+- **In a domain model:** a role frequently grows into its own aggregate, often in another bounded context, that
+  refers to the party only by id (a `Supplier` in purchasing, a `Customer` in sales). The business-level counterpart
+  is the party and party-relationship archetype (`.claude/skills/ddd-archetypes/references/parties-and-relationships.md`).
+- **Do not use when:** the "role" carries no data or rules of its own and only changes what the user may do, e.g. an
+  admin flag. That is an attribute or an authorization concern, not a role object.
 
 ## Extension Object
-- **Problem:** you need to add to an existing class interfaces that only some clients need, e.g.
-  a document with a "signable" or "printable" extension. Adding methods to the base class bloats it and forces
-  all subclasses to implement them.
-- **Solution and participants:**
-  - **the subject** with one method for accessing an extension by name or type, e.g. `getExtension("signature")`;
-  - **extensions:** separate objects with an additional interface, attached to the subject;
-  - the client asks for the extension and handles its absence.
-- **When to use:** the set of additional interfaces is open, and which objects have them is decided
-  at runtime, e.g. in plugins or in extensions added by other modules.
-- **Costs:** the client must check whether the extension exists; the subject's interface stops saying what the object can do.
-- **Difference:** Role Object concerns roles in the business model with a life cycle, while Extension Object concerns additional
-  technical interfaces. Decorator keeps the interface and adds behaviour around the calls, while Extension Object
-  adds a new interface alongside.
-- **When NOT:** there are a few extensions and they are known up front; then an ordinary interface or a union type is enough.
-  In TS a map of extensions keyed by type is often enough.
+- **Problem:** some clients need an extra interface on an object (export, signing, watermarking, an accounting view),
+  others never use it, and the set of such interfaces is not known when the base class is written. Adding every one
+  to the base class bloats it and forces all subclasses to implement things they do not care about.
+- **Structure:**
+  - a **subject** with one generic accessor, e.g. `getExtension(key)` or `getExtension(Type)`;
+  - **extension objects** implementing the additional interface and attached to the subject, typically by the
+    module that provides the capability;
+  - the **client** asks for the extension it needs and must handle the case that it is missing.
+  ```ts
+  const signing = doc.getExtension(Signable);
+  if (!signing) return reject("document cannot be signed");
+  await signing.sign(user);
+  ```
+- **Use when:** the set of extensions is open and decided at run time, e.g. capabilities contributed by plugins or by
+  modules the core does not depend on.
+- **Costs:** every client has to check for presence; the subject's own interface no longer tells you what it can do,
+  so documentation and tests of the registered extensions matter more.
+- **Compared with neighbours:**
+  - Role Object models business roles with a life cycle; Extension Object adds (often technical) interfaces.
+  - Decorator keeps the same interface and wraps calls (logging, caching); Extension Object offers a *new* interface
+    next to the subject without wrapping it.
+- **Do not use when:** there are two or three capabilities known up front. A plain interface, a union type, or in
+  TypeScript a typed map of optional capabilities is simpler and checked by the compiler.
 
 ## Sources
 - D. Bäumer, D. Riehle, W. Siberski, M. Wulf, "Role Object", PLoP '97; reprinted in *Pattern Languages of Program
@@ -46,5 +60,3 @@ roles or gets additional capabilities. Both replace flag fields and a growing "s
   data from catalogs and secondary sources, without reading the text in this session].
 - E. Gamma, "Extension Object", in: *Pattern Languages of Program Design 3* (eds. R. Martin, D. Riehle, F. Buschmann),
   Addison-Wesley, 1998, ISBN 0201310112 [unverified: as above].
-- Described in our own words; the scope based on the programme of the training "DDD — zaawansowane techniki modelowania
-  i archetypy" ("DDD — advanced modelling techniques and archetypes"; Bottega IT Minds, material from a human, 2026-10-21).

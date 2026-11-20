@@ -1,184 +1,206 @@
-# Minimal API with typed results, ProblemDetails, validation and OpenAPI — a tested example
+# Minimal API with typed results, ProblemDetails, validation and OpenAPI — example
 
-> **Contents:** Booking.Api.csproj · Program.cs · Booking.Api.Tests.csproj
+> **Contents:** ToolLibrary.Api.csproj · Program.cs · ToolLibrary.Api.Tests.csproj · LendToolTests.cs
 
-Project checked 2026-10-23 on net10.0 (SDK 10.0.113, Microsoft.AspNetCore.OpenApi 10.0.13,
-Microsoft.AspNetCore.Mvc.Testing 10.0.13): `dotnet test` — 4 integration tests (200, 409 as
-`application/problem+json`, 400 from validation, 404, the OpenAPI document), `TreatWarningsAsErrors`,
-`dotnet format --verify-no-changes` with no remarks. Domain (`Booking.Domain`): lang-csharp
-(`.claude/skills/lang-csharp/references/domain-building-blocks.md`). Code from the tested project; only comments and message strings were translated to English (logic unchanged).
+One endpoint, `POST /tools/{id}/loans`, over the tool-lending domain from
+`.claude/skills/lang-csharp/references/domain-building-blocks.md` (`LendableTool`, `LendResult`, `ToolId`,
+`MemberId`). The handler maps the domain result to HTTP; the domain knows nothing about HTTP.
 
-## Contents
-- Booking.Api.csproj
-- Program.cs — the endpoint, mapping the domain result to HTTP
-- Booking.Api.Tests.csproj
-- BlockResourceTests.cs — integration tests through WebApplicationFactory
+**Verification status:** written 2026-11-20 in an environment without a .NET SDK — this version has **not been
+compiled or run** [unverified]. Check it with `dotnet test` on .NET 10 before relying on it; the behaviour notes in
+`SKILL.md` (problem+json from `TypedResults.Problem`, `Program` visible to the test on .NET 10) were checked on an
+earlier example on 2026-10-23.
 
-## Booking.Api.csproj
+What it shows:
+- `Results<Ok<LoanResponse>, NotFound, ProblemHttpResult>` as the handler's return type: the set of responses is
+  checked by the compiler and described in OpenAPI;
+- business refusals (`OnLoan`, `Withdrawn`) as `409` with `application/problem+json`, an unknown tool as `404`;
+- validation (.NET 10 `AddValidation()`) with DataAnnotations on a record parameter → `400` before the handler runs;
+- the `LendTool` operation in `/openapi/v1.json`;
+- `TimeProvider` injected instead of `DateTimeOffset.UtcNow`.
+
+Files:
+- ToolLibrary.Api.csproj — the web project referencing the domain project
+- Program.cs — registration, the endpoint, request/response records, an in-memory store
+- ToolLibrary.Api.Tests.csproj — the test project
+- LendToolTests.cs — integration tests through `WebApplicationFactory<Program>`
+
+## ToolLibrary.Api.csproj
 ```xml
 <Project Sdk="Microsoft.NET.Sdk.Web">
-
-  <ItemGroup>
-    <ProjectReference Include="..\Booking.Domain\Booking.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.*" />
-  </ItemGroup>
-
   <PropertyGroup>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
-
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.13" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ToolLibrary.Lending\ToolLibrary.Lending.csproj" />
+  </ItemGroup>
 </Project>
 ```
 
 ## Program.cs
 ```csharp
 using System.ComponentModel.DataAnnotations;
-using Booking.Domain;
+using System.Diagnostics;
 using Microsoft.AspNetCore.Http.HttpResults;
+using ToolLibrary.Lending;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddProblemDetails();          // errors as application/problem+json (RFC 9457)
-builder.Services.AddValidation();              // attribute validation in Minimal API (.NET 10)
-builder.Services.AddOpenApi();                 // OpenAPI document (.NET 9+)
+builder.Services.AddProblemDetails();
+builder.Services.AddValidation();
+builder.Services.AddOpenApi();
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddSingleton<IResourceStore, InMemoryResourceStore>();
+builder.Services.AddSingleton<IToolStore, InMemoryToolStore>();
 
 var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 app.MapOpenApi();
 
-app.MapGroup("/resources")
-   .MapPost("/{id:guid}/block", BlockResource)
-   .WithName("BlockResource");
+app.MapGroup("/tools")
+   .MapPost("/{id}/loans", LendTool)
+   .WithName("LendTool");
 
 app.Run();
 
-// The result type lists every response — it goes into OpenAPI and is checked by the compiler.
-static Results<Ok<BlockResponse>, NotFound, ProblemHttpResult> BlockResource(
-    Guid id, BlockRequest request, IResourceStore store, TimeProvider clock)
+static Results<Ok<LoanResponse>, NotFound, ProblemHttpResult> LendTool(
+    string id, LoanRequest request, IToolStore store, TimeProvider clock)
 {
-    var resource = store.Find(new ResourceId(id));
-    if (resource is null)
-        return TypedResults.NotFound();
-
-    // A business rejection from the domain → the HTTP code here, at the boundary; the domain does not know HTTP.
-    return resource.Block(request.By, clock.GetUtcNow()) switch
+    var tool = store.Find(new ToolId(id));
+    if (tool is null)
     {
-        BlockResult.Blocked or BlockResult.AlreadyBlockedBySameOwner => TypedResults.Ok(new BlockResponse(id, request.By)),
-        // TypedResults.Problem → application/problem+json; Conflict(new ProblemDetails()) would give plain application/json.
-        BlockResult.Conflict c => TypedResults.Problem(
-            title: "Resource taken", detail: $"The resource was blocked by {c.BlockedBy}.", statusCode: StatusCodes.Status409Conflict),
-        BlockResult.Disabled => TypedResults.Problem(title: "Resource disabled", statusCode: StatusCodes.Status409Conflict),
-        _ => throw new InvalidOperationException("Unhandled result."),
+        return TypedResults.NotFound();
+    }
+
+    // A real store would now save the aggregate with its expected version and publish tool.PullEvents().
+    return tool.Lend(new MemberId(request.MemberId), clock.GetUtcNow()) switch
+    {
+        LendResult.Lent lent => TypedResults.Ok(new LoanResponse(id, lent.Event.Borrower.Value, lent.Event.At)),
+        LendResult.OnLoan onLoan => TypedResults.Problem(
+            title: "Tool on loan",
+            detail: $"The tool is lent to {onLoan.Borrower}.",
+            statusCode: StatusCodes.Status409Conflict),
+        LendResult.Withdrawn => TypedResults.Problem(
+            title: "Tool withdrawn",
+            statusCode: StatusCodes.Status409Conflict),
+        _ => throw new UnreachableException(),
     };
 }
 
-public sealed record BlockRequest([Required, StringLength(50, MinimumLength = 2)] string By);
+public sealed record LoanRequest([Required, RegularExpression(@"^[msc]-\d{4}$")] string MemberId);
 
-public sealed record BlockResponse(Guid ResourceId, string BlockedBy);
+public sealed record LoanResponse(string ToolId, string Borrower, DateTimeOffset Since);
 
-public interface IResourceStore
+public interface IToolStore
 {
-    ResourceAvailability? Find(ResourceId id);
+    LendableTool? Find(ToolId id);
 }
 
-public sealed class InMemoryResourceStore : IResourceStore
+/// <summary>Demo only: a singleton with a plain dictionary, no locking, no persistence.</summary>
+public sealed class InMemoryToolStore : IToolStore
 {
-    public static readonly ResourceId Room1 = new(Guid.Parse("11111111-1111-1111-1111-111111111111"));
-    private readonly Dictionary<ResourceId, ResourceAvailability> _items = new() { [Room1] = new ResourceAvailability(Room1) };
+    private readonly Dictionary<ToolId, LendableTool> _tools = [];
 
-    public ResourceAvailability? Find(ResourceId id) => _items.GetValueOrDefault(id);
+    public InMemoryToolStore()
+    {
+        var drill = new LendableTool(new ToolId("T-100"));
+        var welder = new LendableTool(new ToolId("T-900"));
+        welder.Withdraw(new MemberId("s-0001"), "failed inspection", DateTimeOffset.UnixEpoch);
+        _tools[drill.Id] = drill;
+        _tools[welder.Id] = welder;
+    }
+
+    public LendableTool? Find(ToolId id) => _tools.GetValueOrDefault(id);
 }
 ```
 
-## Booking.Api.Tests.csproj
+## ToolLibrary.Api.Tests.csproj
 ```xml
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
-
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="6.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.*" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.13" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.12.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
   </ItemGroup>
-
   <ItemGroup>
-    <Using Include="Xunit" />
+    <ProjectReference Include="..\ToolLibrary.Api\ToolLibrary.Api.csproj" />
   </ItemGroup>
+</Project>
+```
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Booking.Api\Booking.Api.csproj" />
-  </ItemGroup>
+## LendToolTests.cs
+The tests share one `WebApplicationFactory` (and so one in-memory store): each test uses its own tool or does not
+change state.
 
-</Project>```
-
-## BlockResourceTests.cs
 ```csharp
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
 
-namespace Booking.Api.Tests;
-
-public class BlockResourceTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
+public class LendToolTests(WebApplicationFactory<Program> factory) : IClassFixture<WebApplicationFactory<Program>>
 {
-    private const string Url = "/resources/11111111-1111-1111-1111-111111111111/block";
-
     [Fact]
-    public async Task Blocks_then_returns_conflict_for_other_person()
+    public async Task Lends_once_then_refuses_with_problem_details()
     {
         var client = factory.CreateClient();
 
-        var first = await client.PostAsJsonAsync(Url, new { by = "anna" });
-        var second = await client.PostAsJsonAsync(Url, new { by = "jan" });
-
+        var first = await client.PostAsJsonAsync("/tools/T-100/loans", new { memberId = "m-0042" });
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+
+        var second = await client.PostAsJsonAsync("/tools/T-100/loans", new { memberId = "m-0107" });
         Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
         Assert.Equal("application/problem+json", second.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("m-0042", await second.Content.ReadAsStringAsync());
     }
 
     [Fact]
-    public async Task Invalid_request_returns_validation_problem()
-    {
-        var response = await factory.CreateClient().PostAsJsonAsync(Url, new { by = "a" });
-
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("By", await response.Content.ReadAsStringAsync());
-    }
-
-    [Fact]
-    public async Task Unknown_resource_returns_404()
+    public async Task Withdrawn_tool_is_a_conflict()
     {
         var response = await factory.CreateClient()
-            .PostAsJsonAsync("/resources/22222222-2222-2222-2222-222222222222/block", new { by = "anna" });
+            .PostAsJsonAsync("/tools/T-900/loans", new { memberId = "m-0042" });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Contains("Tool withdrawn", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Unknown_tool_is_not_found()
+    {
+        var response = await factory.CreateClient()
+            .PostAsJsonAsync("/tools/T-404/loans", new { memberId = "m-0042" });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public async Task Exposes_openapi_document()
+    public async Task Invalid_member_id_is_rejected_by_validation()
     {
-        var response = await factory.CreateClient().GetAsync("/openapi/v1.json");
+        var response = await factory.CreateClient()
+            .PostAsJsonAsync("/tools/T-100/loans", new { memberId = "x" });
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("BlockResource", await response.Content.ReadAsStringAsync());
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task OpenApi_document_lists_the_operation()
+    {
+        var document = await factory.CreateClient().GetStringAsync("/openapi/v1.json");
+
+        Assert.Contains("LendTool", document);
     }
 }
 ```
-
