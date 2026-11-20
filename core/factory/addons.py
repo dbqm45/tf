@@ -21,6 +21,11 @@ Contract 1 (`provides` in addon.yaml; every key optional):
   skill_overrides — a JSON file {skill: "name-only" | "off" | …}: merged into .claude/settings.local.json
              `skillOverrides`; removed again on `remove` when the value is still the one the add-on set;
   plan     — a file the task's scout and plan read (listed by `tf addon list --json`);
+  decisions — a JSON file {"contract": 1, "decisions": [...]} of agreed rules; an add-on that lists
+             `consumes: [decisions]` gets the paths of the other add-ons' files in TF_ADDON_DECISIONS (os.pathsep);
+  pending  — a JSON file {"instructions": "...", "items": [{"url", "tool", "save_to", "reason"}]}: reads only the
+             agent can do with a tool connected in the session (MCP, e.g. Confluence); listed by `tf addon list`,
+             announced at session start;
   learn, check, refresh, … — commands: the first word is a script in the add-on directory, run with the current
              Python from the project root; `{base}` is replaced by the base ref.
 `keep` (list) in addon.yaml: paths in the add-on directory that `add` over an existing copy keeps (default: out,
@@ -263,6 +268,33 @@ def _command(a: dict, key: str, base: str | None = None) -> list[str] | None:
     return [str(script), *parts[1:]]
 
 
+def _env_for(root: Path, a: dict) -> dict:
+    env = dict(os.environ)
+    if "decisions" in (a["meta"].get("consumes") or []):
+        files = [str(o["dir"] / _provides(o)["decisions"]) for o in installed(root)
+                 if o["ok"] and o["name"] != a["name"] and _provides(o).get("decisions")
+                 and (o["dir"] / _provides(o)["decisions"]).is_file()]
+        env["TF_ADDON_DECISIONS"] = os.pathsep.join(files)
+    return env
+
+
+def pending(root: Path) -> list[dict]:
+    """Reads the add-ons wait for (MCP tools of the session): [{addon, instructions, items}]."""
+    out = []
+    for a in installed(root):
+        rel = _provides(a).get("pending") if a["ok"] else None
+        if not rel or not (a["dir"] / rel).is_file():
+            continue
+        try:
+            data = json.loads((a["dir"] / rel).read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        if data.get("items"):
+            out.append({"addon": a["name"], "file": (ADDONS / a["name"] / rel).as_posix(),
+                        "instructions": data.get("instructions", ""), "items": data["items"]})
+    return out
+
+
 def run(root: Path, a: dict, key: str, extra: list[str] | None = None, base: str | None = None,
         capture: bool = False) -> subprocess.CompletedProcess | None:
     cmd = _command(a, key, base)
@@ -272,7 +304,7 @@ def run(root: Path, a: dict, key: str, extra: list[str] | None = None, base: str
         cmd += ["--root", str(root)]
     try:
         return subprocess.run(cmd + list(extra or []), cwd=root, capture_output=capture, text=True,
-                              encoding="utf-8", errors="replace", timeout=TIMEOUT)
+                              encoding="utf-8", errors="replace", timeout=TIMEOUT, env=_env_for(root, a))
     except (OSError, subprocess.TimeoutExpired) as e:
         return subprocess.CompletedProcess(cmd, 124, "", str(e))
 
@@ -361,8 +393,14 @@ def remove(root: Path, name: str) -> int:
     return 0
 
 
+def _order(addons: list[dict]) -> list[dict]:
+    """Producers of decisions before their consumers."""
+    return sorted(addons, key=lambda a: "decisions" in (a["meta"].get("consumes") or []))
+
+
 def learn(root: Path, only: str | None) -> int:
-    targets = [a for a in installed(root) if a["ok"] and _provides(a).get("learn") and (not only or a["name"] == only)]
+    targets = _order([a for a in installed(root) if a["ok"] and _provides(a).get("learn")
+                      and (not only or a["name"] == only)])
     if not targets:
         print("ℹ No installed add-on provides `learn`" + (f" named {only}" if only else "") + " — tf addon list")
         return 2 if only else 0
@@ -379,7 +417,7 @@ def learn(root: Path, only: str | None) -> int:
 
 def refresh(root: Path) -> int:
     rc = 0
-    for a in installed(root):
+    for a in _order(installed(root)):
         if not a["ok"] or not _provides(a).get("refresh"):
             continue
         r = run(root, a, "refresh", capture=True)
@@ -426,9 +464,12 @@ def cmd_list(root: Path, as_json: bool) -> int:
     for a in installed(root):
         p = _provides(a)
         plan = p.get("plan")
+        waiting = next((len(x["items"]) for x in pending(root) if x["addon"] == a["name"]), 0)
         rows.append({"name": a["name"], "version": a["meta"].get("version"), "ok": a["ok"], "problem": a["problem"],
                      "dir": (ADDONS / a["name"]).as_posix(), "provides": sorted(p),
-                     "plan": (ADDONS / a["name"] / plan).as_posix() if plan and (a["dir"] / plan).exists() else None})
+                     "plan": (ADDONS / a["name"] / plan).as_posix() if plan and (a["dir"] / plan).exists() else None,
+                     "pending": waiting,
+                     "pending_file": (ADDONS / a["name"] / p["pending"]).as_posix() if waiting else None})
     if as_json:
         print(json.dumps(rows, ensure_ascii=False, indent=2))
         return 0
@@ -437,7 +478,8 @@ def cmd_list(root: Path, as_json: bool) -> int:
     for r in rows:
         state = "✓" if r["ok"] else f"⚠ {r['problem']}"
         print(f"{state} {r['name']} {r['version'] or '?'} — provides: {', '.join(r['provides']) or 'nothing'}"
-              + ("" if r["plan"] or not r["ok"] else "  (no output yet: tf learn)"))
+              + ("" if r["plan"] or not r["ok"] else "  (no output yet: tf learn)")
+              + (f"  — {r['pending']} reads wait for a session tool (MCP): {r['pending_file']}" if r["pending"] else ""))
     return 0
 
 

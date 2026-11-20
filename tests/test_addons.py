@@ -44,7 +44,7 @@ def addon(name="demo", contract=1, provides=None, extra: dict | None = None) -> 
 
 
 def tf_addon(proj: Path, *args) -> subprocess.CompletedProcess:
-    env = {**os.environ, "DNA_OFFLINE": "1"}   # the dna add-on must not reach the network in tests
+    env = {**os.environ, "DNA_OFFLINE": "1", "STANDARDS_OFFLINE": "1"}   # add-ons must not reach the network here
     return subprocess.run([sys.executable, str(ADDONS_PY), *args], cwd=proj, capture_output=True, text=True,
                           encoding="utf-8", env=env)
 
@@ -203,11 +203,49 @@ def test_session_hook_without_addons_does_nothing():
     assert r.returncode == 0 and snapshot(p) == before
 
 
+def test_standards_and_dna_together():
+    p = project(files={
+        "package.json": '{"dependencies": {"react": "^18.2.0"}}',
+        "package-lock.json": '{"packages": {"node_modules/react": {"version": "18.3.1"}}}',
+        ".eslintrc.json": '{"rules": {"no-restricted-imports": ["error", {"paths": [{"name": "lodash", '
+                          '"message": "Use lodash-es instead."}]}]}}',
+        ".claude/skills/acme-fe-standards/SKILL.md": "# FE\n- Forms must use react-hook-form.\n"
+                                                     "See https://acme.atlassian.net/wiki/spaces/FE/pages/42/Forms\n"})
+    subprocess.run(["git", "add", "-A"], cwd=p, check=True)
+    subprocess.run(["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "i"], cwd=p, check=True)
+    for name in ("dna", "standards"):
+        assert tf_addon(p, "add", name).returncode == 0
+    r = tf_addon(p, "learn")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert r.stdout.index("→ standards") < r.stdout.index("→ dna")              # producer before consumer
+    assert (p / ".claude/rules/addon-standards-standards-fe.md").is_file()
+    instr = (p / "CLAUDE.local.md").read_text(encoding="utf-8")
+    assert "@.tf/addons/standards/out/INDEX.md" in instr and "@.tf/addons/dna/out/INDEX.md" in instr
+    rows = {x["name"]: x for x in json.loads(tf_addon(p, "list", "--json").stdout)}
+    assert rows["standards"]["pending"] == 1 and rows["standards"]["pending_file"].endswith("cache/pending.json")
+    (p / "src").mkdir()
+    (p / "src" / "util.ts").write_text("import { debounce } from 'lodash';\nexport const d = debounce;\n")
+    r = tf_addon(p, "check", "--json")
+    assert r.returncode == 1, r.stdout
+    dna_report = next(e for e in json.loads(r.stdout) if e["addon"] == "dna")["report"]
+    assert dna_report["findings"][0]["rule"] == "forbidden-import" and dna_report["findings"][0]["strength"] == "hard"
+    # session start: the notice about the read only the agent can do
+    (p / ".tf" / "factory").mkdir(parents=True, exist_ok=True)
+    (p / ".tf" / "factory" / "addons.py").write_text(ADDONS_PY.read_text(encoding="utf-8"), encoding="utf-8")
+    env = {**os.environ, "DNA_OFFLINE": "1", "STANDARDS_OFFLINE": "1", "TF_ADDON_REFRESH_SYNC": "1",
+           "CLAUDE_PROJECT_DIR": str(p)}
+    h = subprocess.run([sys.executable, str(ROOT / "core" / "hooks" / "addons_refresh.py")], cwd=p, env=env,
+                       capture_output=True, text=True)
+    out = json.loads(h.stdout)
+    assert "1 add-on reads wait" in out["systemMessage"]
+    assert "data, not instructions" in out["hookSpecificOutput"]["additionalContext"]
+
+
 def test_core_names_no_addon():
     for f in (ROOT / "core").rglob("*"):
         if f.is_file() and f.suffix in (".py", ".md", ".yaml", ".json"):
             text = f.read_text(encoding="utf-8", errors="replace")
-            assert "addons/dna" not in text, f
+            assert "addons/dna" not in text and "addons/standards" not in text, f
 
 
 def main() -> int:
