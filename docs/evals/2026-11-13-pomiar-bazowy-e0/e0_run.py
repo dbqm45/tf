@@ -4,6 +4,7 @@
   python3 docs/evals/2026-11-13-pomiar-bazowy-e0/e0_run.py <historyjka: S1|S2|S3|S4> <powtórzenie>
           [--model sonnet] [--budget 3] [--timeout 2400]
   E0_CONFIG="loop:\n  blocked_slices: true" python3 … e0_run.py S2 1    # z ustawieniem projektu na czas pomiaru
+  E0_LAYOUT=plugin python3 … e0_run.py S1 1    # tryb fabryki: instalacja --layout plugin, claude z --plugin-dir
 
 Przebieg jest płatny (wywołuje `claude -p`) — uruchamiaj tylko za zgodą człowieka. Katalog roboczy i wyniki:
 zmienna E0_OUT (domyślnie katalog tymczasowy), żeby kopie repozytorium nie trafiały do repozytorium fabryki.
@@ -106,8 +107,10 @@ def main(argv):
            "factory_version": (FACTORY / "core" / "factory" / "VERSION").read_text().strip()}
 
     t0 = time.time()
+    layout = os.environ.get("E0_LAYOUT") or "default"      # E0_LAYOUT=plugin: factory mode (tf code), plan 2026-11-20
+    row["layout"] = layout
     r = sh([sys.executable, str(FACTORY / "core" / "factory" / "install.py"), ".", "--yes", "--packs",
-            "pack-it"], repo)
+            "pack-it", *(["--layout", "plugin"] if layout == "plugin" else [])], repo)
     row["install_ok"], row["install_s"] = r.returncode == 0, round(time.time() - t0, 1)
     t0 = time.time()
     r = sh([sys.executable, ".tf/factory/tf.py", "onboard", "--yes", "--verify"], repo)
@@ -130,7 +133,9 @@ def main(argv):
     prompt = f"/tf {text.strip()}\n\n--auto --budget {budget}"
     t0 = time.time()
     try:
-        r = sh(["claude", "-p", prompt, "--model", model, "--output-format", "json", "--permission-mode", "acceptEdits"],
+        plugin = ["--plugin-dir", str(repo / ".tf" / "plugin"), "--settings",
+                  str(repo / ".tf" / "plugin" / "session-settings.json")] if layout == "plugin" else []
+        r = sh(["claude", *plugin, "-p", prompt, "--model", model, "--output-format", "json", "--permission-mode", "acceptEdits"],
                repo, timeout=timeout)
         out, timed_out = r.stdout, False
     except subprocess.TimeoutExpired as e:
