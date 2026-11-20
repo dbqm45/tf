@@ -1,0 +1,76 @@
+head: Użyj przy wyborze sposobu, w jaki zmiana trafia na produkcję — canary lub blue/green, etapy flagi, GitOps, migracje expand-contract, wycofanie, plan pierwszego wdrożenia. Użyj przy wyborze i konfiguracji metody wydania — rolling, blue/green, canary z bramkami metryk i automatycznym wycofaniem (Argo Rollouts, Flagger), etapy flag funkcji w release.yaml, GitOps (Argo CD, Flux) i zmiany awaryjne pod nim, migracje bazy expand-contract, środowiska podglądowe, konfiguracja jako część wydania, przećwiczone wycofanie, pierwsze wdrożenie (MVP) z zatwierdzonym planem. Nie do budowy samego pipeline'u (ops-ci-cd) ani trunk-based development i metryk DORA (eng-continuous-delivery).
+# Inżynieria wydań — jak zmiana trafia do użytkowników
+
+Każda metoda wydania daje trzy rzeczy: **ograniczony zasięg awarii**, **mierzalne kryterium sukcesu** ustalone przed wydaniem
+i **drogę powrotu szybszą niż poprawka**. Bez którejś z nich metoda nie jest skończona.
+
+## 1. Wybór metody
+Trzy pytania: jakie ryzyko jest akceptowalne, jak szybko trzeba móc wrócić, czy da się sprawdzić nową wersję, zanim dostanie cały ruch?
+- Rolling update: usługi bezstanowe, niskie ryzyko; tanio, ale wycofanie to kolejny rollout, więc wolno.
+- Blue/green: natychmiastowe przełączenie po sprawdzeniu bezczynnego środowiska; podwójny koszt.
+- Canary: gdy staging nie przypomina produkcji, ryzyko jest wysokie, a metryki są rozdzielone per wersja; wymaga automatycznej decyzji.
+- Flaga funkcji: oddziela wdrożenie od wydania; każda flaga ma właściciela, etapy i datę usunięcia.
+
+## 2. Stopniowe udostępnianie
+### 2a. Canary z bramkami metryk
+- Narzędzia: **Argo Rollouts** (Rollout + AnalysisTemplate) albo **Flagger**.
+- Drabina wag ruchu z oknami obserwacji, np. **1–5% → 10–25% → 50% → 100%**; pierwsze okna najdłuższe.
+- Bramki porównują canary ze stabilną wersją: **odsetek błędów** i **p99** z progami wyprowadzonymi ze SLO (ops-sre-incidents). Progi są przykładowe.
+- Przekroczenie bramki = **automatyczne wycofanie**. Bramka bez danych to porażka, nie zaliczenie.
+- Opcjonalnie: ruch lustrzany przed pierwszym krokiem.
+- Mierz samą metodę: częstość wycofań i czas od wykrycia do zakończonego wycofania.
+
+### 2b. Etapy flagi w `release.yaml`
+Etapy według odbiorców (pracownicy → procent → wszyscy): każdy etap ma **kryterium wyjścia** z metryk i **minimalny czas** (`min_days`),
+przejście dalej zatwierdza człowiek, flaga ma `owner` i datę usunięcia `remove_by`. Pola to konwencja fabryki — nie zmieniaj nazw.
+Przykład: `key: payment-retry`, `rollout:` internal (`min_days: 3`, `exit: …`), "10%" (`min_days: 7`, `exit: …`), "100%".
+Etapu nie zalicza się „na wyczucie”.
+
+## 3. GitOps
+- Stan docelowy w Git; kontroler (Argo CD, Flux) uzgadnia klaster i cofa dryf (self-heal). Wycofanie = `git revert`.
+- Kontrole polityk na PR; auto-merge tylko dla zmian niskiego ryzyka; promocja między środowiskami przez PR.
+- Sekrety zaszyfrowane albo z zewnętrznego magazynu. Układ repozytoriów ustal wcześnie.
+
+## 4. Migracje bazy: expand-contract
+Podczas rolling update lub canary **działają naraz dwie wersje aplikacji**; każdy krok migracji musi działać z obiema.
+1. **Expand** (wydanie 1): dodaj nową strukturę, nic nie usuwaj; nowy kod zapisuje do obu. Indeksy przez `CREATE INDEX CONCURRENTLY`, backfill partiami.
+2. **Migrate** (wydanie 2): odczyty przechodzą na nową strukturę; sprawdź zgodność danych.
+3. **Contract** (wydanie 3): usuń starą strukturę — krok nieodwracalny, oznacz go.
+- Kroki idempotentne, przećwiczone na danych o rozmiarze produkcyjnym; linter DDL w CI (np. squawk) blokuje operacje z blokadą.
+- Nigdy „schemat i kod w jednym wdrożeniu”.
+
+## 5. Środowiska i konfiguracja
+### 5a. Środowiska podglądowe
+Per PR, tworzone automatycznie, usuwane przy zamknięciu PR, z TTL; dane syntetyczne lub zamaskowane, osobne sekrety, bez otwartych portów zarządzania.
+
+### 5b. Konfiguracja jest częścią wydania
+Flagi, ConfigMapy, zmienne środowiskowe i wersje modeli w tym samym PR i tą samą ścieżką co kod; wycofywane razem.
+Brak wymaganej konfiguracji blokuje readiness (ops-kubernetes, sekcja 4).
+
+## 6. Wycofanie i zmiany na produkcji
+### 6a. Wycofanie — przećwiczone
+- Próba regularnie i po każdej zmianie pipeline'u: wdroż N, wycofaj do N−1, zmierz czas.
+- Warunki: poprzednie obrazy w rejestrze po digeście, migracje zgodne z N−1, pipeline umie wdrożyć starą wersję, flagi i konfiguracja wracają razem.
+- Zmiany nieodwracalne oznacz w PR i z góry zapisz drogę naprzód (fix-forward, odtworzenie z kopii).
+
+### 6b. Zmiana awaryjna na produkcji pod GitOps
+1. Zapisz kto, co, dlaczego, kiedy.
+2. Wstrzymaj uzgadnianie **tylko dla tej aplikacji** (Argo CD: wyłącz self-heal; Flux: `flux suspend kustomization <name>`).
+3. Wprowadź zmianę, potwierdź efekt.
+4. Odtwórz ją w repozytorium jako PR w ciągu jednego dnia roboczego, wznów synchronizację, sprawdź brak dryfu.
+
+### 6c. Pierwsze wdrożenie (MVP) z zatwierdzonym planem
+1. Przeczytaj decyzję o stosie (`stack-decision.md`).
+2. Zapisz plan tylko do odczytu w `docs/project/06-delivery/deploy-plan.md` i uzyskaj zatwierdzenie: właściciel kroku, dokładne polecenia CLI,
+   ręczne kroki na kontach, **nazwy** sekretów (bez wartości), końcowe kontrole.
+3. Przed pierwszym poleceniem zmieniającym stan pokaż człowiekowi aktywne konto (`gh auth status`, `aws sts get-caller-identity`, `vercel whoami`…).
+4. Sekrety wpisuje człowiek, on też zatwierdza produkcję; agent wykonuje tylko kroki z planu, poza planem → stop.
+5. Numer wydania i tag `vX.Y.Z` ze skryptu core-semver; opublikowanego tagu nigdy się nie nadpisuje.
+
+## 7. Granica agenta
+Agent przygotowuje manifesty, definicje rolloutów, PR z migracjami i bramki. Nie promuje na produkcję, nie pomija etapu canary
+i nie wyłącza automatycznego wycofania bez wyraźnej zgody człowieka.
+
+## Przykład
+Zmiana nazwy kolumny w tabeli 40 mln wierszy przy rolling update → trzy wydania expand / migrate / contract, ostatnie oznaczone jako nieodwracalne,
+squawk blokuje bezpośredni `RENAME COLUMN`. Więcej: `references/examples.md`.
