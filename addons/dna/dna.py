@@ -41,6 +41,9 @@ ADDON = Path(__file__).resolve().parent
 sys.path.insert(0, str(ADDON))
 sys.dont_write_bytecode = True
 
+for _vendor in (ADDON.parents[1] / "factory" / "_vendor", ADDON.parents[1] / "core" / "factory" / "_vendor"):
+    if _vendor.is_dir() and str(_vendor) not in sys.path:   # the engine's PyYAML next door, when there is no system one
+        sys.path.append(str(_vendor))
 try:
     import yaml  # noqa: E402
 except ImportError:  # the factory ships PyYAML in .tf/factory/_vendor; outside it, install it

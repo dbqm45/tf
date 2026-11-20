@@ -24,6 +24,9 @@ def project(mode: str = "private", files: dict | None = None) -> Path:
     (p / ".claude").mkdir()
     (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"mode": mode, "source": str(ROOT)}),
                                                          encoding="utf-8")
+    # like a real installation: the engine's vendored PyYAML in .tf/factory/_vendor (tf install puts it there)
+    import shutil
+    shutil.copytree(ROOT / "core" / "factory" / "_vendor", p / ".tf" / "factory" / "_vendor")
     for rel, text in (files or {}).items():
         f = p / rel
         f.parent.mkdir(parents=True, exist_ok=True)

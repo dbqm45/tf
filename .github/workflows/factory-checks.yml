@@ -37,7 +37,6 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - run: pip install pyyaml
       - name: Dodatki (addons/*) — niezależne od rdzenia i od siebie
         run: for t in addons/*/tests/test_*.py; do python3 "$t" || exit 1; done
 

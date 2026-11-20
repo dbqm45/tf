@@ -301,6 +301,9 @@ def declared(root: Path) -> list[str]:
 
 def _env_for(root: Path, a: dict) -> dict:
     env = dict(os.environ)
+    vendor = Path(__file__).resolve().parent / "_vendor"   # PyYAML shipped with the engine: add-ons need not install it
+    if vendor.is_dir():
+        env["PYTHONPATH"] = os.pathsep.join(x for x in (str(vendor), env.get("PYTHONPATH", "")) if x)
     env["TF_ADDON_SETTINGS"] = json.dumps(settings(root, a["name"]), ensure_ascii=False)
     if "decisions" in (a["meta"].get("consumes") or []):
         files = [str(o["dir"] / _provides(o)["decisions"]) for o in installed(root)
