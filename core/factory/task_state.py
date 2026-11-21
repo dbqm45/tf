@@ -824,10 +824,51 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
 MODE_LABEL = {"plan": "Plan", "normal": "normal", "auto": "Auto"}
 
 
-def cmd_mode(root: Path, key: str, new: str | None) -> int:
+def cmd_mode_proposal(root: Path, task: dict, apply: bool, as_json: bool) -> int:
+    """The factory's mode proposal (task_weight.propose_mode). It may lower the mode by itself (more caution); raising it
+    is only a proposal: the human chooses a more autonomous mode. A mode the human chose and a pdi cut are kept."""
+    key = task["key"]
+    current = task.get("mode") if task.get("mode") in MODES else "normal"
+    rules = weight_rules()
+    out = {"key": key, "mode": current, "proposal": None, "reasons": [], "applied": False}
+    if task.get("change"):
+        out["reasons"] = ["a pdi cut: its mode follows the change plan approved at the gate"]
+    elif rules is None or not hasattr(rules, "propose_mode"):
+        return fail("no mode proposal in .tf/factory/task_weight.py — update the factory (tf update)", 2)
+    else:
+        prop = rules.propose_mode(root, key, task.get("weight") or "normal", work_style(root).get("allowed_modes"))
+        out["proposal"], out["reasons"] = prop["mode"], prop["reasons"]
+        lower = rules.mode_rank(prop["mode"]) < rules.mode_rank(current)
+        if apply and lower and task.get("mode_by") != "human":
+            task.update(mode=prop["mode"], mode_by="process:tf", updated=now())
+            task.setdefault("mode_log", []).append({"from": current, "to": prop["mode"], "by": "process:tf", "at": task["updated"],
+                                                    "reasons": prop["reasons"]})
+            save(root, task)
+            out["mode"], out["applied"] = prop["mode"], True
+    why = "; ".join(out["reasons"])
+    if out["proposal"] is None or out["proposal"] == current and not out["applied"]:
+        msg = f"Mode: {MODE_LABEL[current]} — {why}"
+    elif out["applied"]:
+        msg = (f"Mode: lowered to {MODE_LABEL[out['mode']]} by the factory — {why} (the human may choose another: "
+               f"tf task mode {key} <mode>)")
+    elif rules.mode_rank(out["proposal"]) < rules.mode_rank(current):
+        msg = (f"Mode: {MODE_LABEL[current]}, chosen by the human; the factory would choose {MODE_LABEL[out['proposal']]} — "
+               f"{why}. Tell the human in one sentence; the mode stays")
+    else:
+        msg = (f"Mode: {MODE_LABEL[current]}; proposal {MODE_LABEL[out['proposal']]} — {why}. Ask the human (AskUserQuestion: "
+               f"\"{MODE_LABEL[out['proposal']]} (Recommended)\" / \"Keep {MODE_LABEL[current]}\"); after their choice: "
+               f"tf task mode {key} {out['proposal']}. You do not raise it yourself")
+    out["message"] = msg
+    print(json.dumps(out, ensure_ascii=False) if as_json else msg)
+    return 0
+
+
+def cmd_mode(root: Path, key: str, new: str | None, propose: bool = False, apply: bool = False, as_json: bool = False) -> int:
     task = load(root, key)
     if task is None:
         return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
+    if propose:
+        return cmd_mode_proposal(root, task, apply, as_json)
     current = task.get("mode") if task.get("mode") in MODES else "normal"
     if new is None:
         print(f"{key}: mode {MODE_LABEL[current]}")
@@ -844,8 +885,8 @@ def cmd_mode(root: Path, key: str, new: str | None) -> int:
         new = "normal"
         note = (" — the Auto mode does not cover full-weight tasks (a sensitive area): the normal mode stays, "
                 "the human approves the plan")
-    if new != task.get("mode"):
-        task["mode"], task["updated"] = new, now()
+    if new != task.get("mode") or task.get("mode_by") != "human":
+        task["mode"], task["mode_by"], task["updated"] = new, "human", now()   # a mode set by this command is the human's choice
         save(root, task)
     print(f"✓ {key}: mode {MODE_LABEL[new]}{note}")
     return 0
@@ -1266,6 +1307,9 @@ def main(argv: list[str]) -> int:
     md = sub.add_parser("mode")
     md.add_argument("key")
     md.add_argument("new", nargs="?")
+    md.add_argument("--propose", action="store_true", help="the factory's mode proposal from the task's content and weight")
+    md.add_argument("--apply", action="store_true", help="with --propose: lower the mode to the proposal (never raises it)")
+    md.add_argument("--json", action="store_true")
     w = sub.add_parser("weight")
     w.add_argument("key")
     w.add_argument("--apply", action="store_true")
@@ -1381,7 +1425,11 @@ def main(argv: list[str]) -> int:
     if a.cmd == "check":
         return cmd_check(root, a.key)
     if a.cmd == "mode":
-        return cmd_mode(root, a.key, a.new)
+        if a.propose and a.new:
+            return fail("give one: a mode to set or --propose", 2)
+        if a.apply and not a.propose:
+            return fail("--apply works with --propose", 2)
+        return cmd_mode(root, a.key, a.new, a.propose, a.apply, a.json)
     if a.cmd == "weight":
         if a.apply and a.new is not None:
             return fail("give one: --apply (the factory's proposal) or --set <weight>", 2)

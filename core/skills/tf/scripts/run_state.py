@@ -516,6 +516,10 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         w = run_report.task_state(project, "weight", meta["key"], "--apply")
         if w is not None and w.returncode == 0 and task_weight(run_dir, meta) != before:
             print("The task's weight changed — " + " ".join(ln.strip() for ln in w.stdout.splitlines()[:3] if ln.strip()))
+        # mode: the factory's proposal from the content and the weight; it lowers a default mode by itself, never raises one
+        mp = None if meta.get("change") else run_report.task_state(project, "mode", meta["key"], "--propose", "--apply")
+        if mp is not None and mp.returncode == 0 and mp.stdout.strip():
+            print(mp.stdout.strip())
     refused = sync_task(project, run_dir, meta, stage)
     if refused:
         print(refused)

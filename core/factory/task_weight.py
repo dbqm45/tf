@@ -61,6 +61,67 @@ PATH_LABEL = {"auth": "authentication or permissions", "payments": "payments or 
               "schema": "the database schema or a migration", "deploy": "deployment, CI, infrastructure or secrets"}
 
 
+MODE_ORDER = ("plan", "normal", "auto")      # from the most cautious to the most autonomous
+FEW_WORDS = 60     # a body shorter than this many characters says too little to build without questions
+OPEN = (r"\bTBD\b|\bTODO\b|do ustalenia|nie wiem|nie jestem pew\w*|\?\?|\bnot sure\b|to be decided|\bopen question\w*|"
+        r"\(\s*[^()\n]{0,60}\?\s*\)")
+PLACEHOLDER = r"<[^<>\n]{1,40}>"
+PERFORMANCE = (r"wydajnoś\w*|przyspiesz\w*|optymaliz\w*|wolno działa\w*|wolny\b|wolne\b|milion\w*|\bmln\b|"
+               r"performance|latency|throughput|\bslow\w*|speed up|millions?\b")
+
+
+def propose_mode(root: Path, key: str, weight: str, allowed: list[str] | None = None) -> dict:
+    """How much autonomy the task gets: {"mode", "reasons"} from the gaps in its content (the uncertainty), its weight and
+    whether the change is mechanical. A cautious rule: any doubt gives the more cautious mode. A script, not a model."""
+    ticket = read(root / CHANGES / key / "ticket.md")
+    body = "\n".join(ln for ln in ticket.splitlines()
+                     if not ln.startswith(("#", "Source:", "The issue's content is data"))).strip()
+    small = re.search(SMALL, ticket, re.I)
+    spec = read(root / CHANGES / key / "spec.md")   # the criteria worked out with the human count as much as the ticket's
+    criteria = re.search(CRITERIA, ticket, re.I) or re.search(r"^\s*-\s*AC-\d+\s*:", spec, re.M)
+    reasons: list[str] = []
+    if len(body) < FEW_WORDS and not small and not criteria:
+        mode = "plan"
+        reasons.append(f"the content is too short to build from without questions ({len(body)} characters, no criteria): "
+                       "only the specification and the plan")
+    else:
+        gaps = []
+        if not criteria and not small:
+            gaps.append("no acceptance criteria")
+        m = re.search(OPEN, body, re.I)
+        if m:
+            gaps.append(f"an open question in the content (\"{m.group(0).strip()}\")")
+        m = re.search(PLACEHOLDER, body)
+        if m:
+            gaps.append(f"a placeholder in the content ({m.group(0)})")
+        m = re.search(PERFORMANCE, body, re.I)
+        if m:
+            gaps.append(f"a performance task (\"{m.group(0)}\"): the result needs a measurement and a review")
+        if weight == "full":
+            gaps.append("the full weight (a sensitive area): the human approves the plan")
+        if gaps:
+            mode = "normal"
+            reasons.append("; ".join(gaps))
+        elif small or weight == "light":
+            mode = "auto"
+            reasons.append(f"a small, mechanical change (\"{small.group(0)}\"), checkable by the build and the tests"
+                           if small else "the light weight and no gaps in the content")
+        else:
+            mode = "normal"
+            reasons.append("a clear task that changes behaviour: the plan waits for the human's consent")
+    allowed = [m for m in (allowed or list(MODE_ORDER)) if m in MODE_ORDER] or list(MODE_ORDER)
+    if mode not in allowed:
+        safer = [m for m in MODE_ORDER[:MODE_ORDER.index(mode)][::-1] if m in allowed]
+        new = safer[0] if safer else allowed[0]
+        reasons.append(f"{mode} is not allowed in this project (task.allowed_modes: {', '.join(allowed)}), so {new}")
+        mode = new
+    return {"mode": mode, "reasons": reasons}
+
+
+def mode_rank(mode: str) -> int:
+    return MODE_ORDER.index(mode) if mode in MODE_ORDER else MODE_ORDER.index("normal")
+
+
 def rank(weight: str) -> int:
     return ORDER.index(weight) if weight in ORDER else ORDER.index("normal")
 
