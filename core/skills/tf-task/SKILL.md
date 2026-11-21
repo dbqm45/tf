@@ -66,7 +66,7 @@ prints `Input`, `Key`, `Tracker` and `Next`; you do what stands in `Next` (every
    from the message and repeat the command.
 
 ## 1. Taking in the story
-`run_state.py stage <katalog> intake [--auto]`. Can it be done without guessing: **who, what, why**;
+`run_state.py stage <katalog> intake [--auto]`; follow its `Mode:` line. Can it be done without guessing: **who, what, why**;
 **acceptance criteria** checkable with a test; **scope** (what we do not do). The repository's state is collected by `scout`
 (`plik:linia` lists).
 - **Knowledge about the project:** `docs/project/00-reconstruction/standards/INDEX.md`, `domain.md` and add-on
@@ -97,7 +97,7 @@ Every `AC-n` goes into a slice. `spec.md` changed after the plan → repeat `sta
 - **Conditional phases** only with a reason: docs (a public API or documented behaviour changes), `security-reviewer`
   (auth, secrets, permissions, IaC, CI), `architect` (a decision that is hard to reverse).
 - Edge cases → `run_state.py park <katalog> "<sprawa>"` (into the PR and the report).
-- **Visual check, only when worth it:** `ui_snap.py worth <katalog> --base <gałąź domyślna>`: `no` = skip it; `yes` → `references/visual-check.md`. Forced: `stage <katalog> intake --visual|--no-visual`.
+- **Visual check, only when worth it:** `ui_snap.py worth <katalog> --base <gałąź domyślna>`: `no` = skip it; `yes` → `references/visual-check.md` (`--visual`/`--no-visual`).
 - After saving the plan: `run_state.py stage <katalog> plan`. **Without `--auto`:** `run_state.py stage <katalog> needs
   --needs plan`, show the plan (slices, conditional phases, assumptions, postponed items) and wait; after the human's consent
   `run_state.py approve <katalog>`. With `--plan` you end here. **With `--auto`:** you go on; the plan goes into the PR description.

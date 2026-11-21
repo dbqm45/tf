@@ -73,6 +73,9 @@ The factory itself assesses how much care the task needs and tells you in one se
 
 - A script computes the weight from the task's content and the plan's paths, not the model. When the plan touches e.g.
   migrations, the weight rises by itself.
+- The factory also proposes the **mode** from the task's content: one short sentence → only the plan; no criteria,
+  an open question or a sensitive area → you approve the plan; a small mechanical change → it may run by itself.
+  It lowers the autonomy by itself (when you did not choose the mode); a more autonomous mode it only proposes, you decide.
 - Anyone (the factory too) can raise the weight. **Only you can lower it**, with a reason:
   `tf task weight <KEY> --set normal --by human:<your identifier> --reason "…"`. After your decision the factory
   no longer changes the weight.

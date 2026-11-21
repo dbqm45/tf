@@ -24,6 +24,25 @@ at the start and from the plan's paths at the `plan` stage. You tell the human i
    only with a `pass` from both for the current commit; after a fix in a new commit the review starts again. `architect` — when the plan
    contains a decision that is hard to reverse (a data migration, a contract change).
 
+## The mode proposal
+At the `intake` and `plan` stages `run_state.py` prints a `Mode:` line: the factory's proposal of how much autonomy
+the task gets (`tf task mode <KEY> --propose`), computed by a script from the task's content and its weight, never by you:
+
+| Content and weight | Proposal |
+|---|---|
+| one short sentence, no criteria (neither in the ticket nor as `AC-n` in `spec.md`) | `plan` — only the specification and the plan |
+| no acceptance criteria, an open question ("TBD", "do ustalenia", "(SMS czy push?)"), a placeholder, a performance task, or the full weight | `normal` — the plan waits for the human |
+| a small mechanical change (a typo, a rename, documentation) or the light weight, without gaps | `auto` |
+| a clear task that changes behaviour | `normal` |
+
+Always within `task.allowed_modes`. What the line asks you to do:
+- **"lowered to …"** — the factory took a more cautious mode itself (a default from the style, not the human's choice):
+  tell the human in one sentence.
+- **"proposal …, Ask the human"** — a more autonomous mode is possible: AskUserQuestion with the proposal first; record
+  only the human's answer (`tf task mode <KEY> <mode>`). You never raise the mode yourself.
+- **"chosen by the human"** — the human's mode stays; name the factory's doubt in one sentence.
+- A pdi cut keeps the mode approved at the gate.
+
 ## Changing the weight
 - A preview with the reason: `run_state.py weight <katalog>`.
 - **Anyone can raise it**, also you, when you see a risk the script did not catch:
