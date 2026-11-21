@@ -1,4 +1,4 @@
-# Security in the /tf loop: the version cooldown and the slice scan
+# Security in the /tf-task loop: the version cooldown and the slice scan
 
 You read this when `security_scan.py` returns FAIL or STOP and you need to understand the result. The script:
 `python3 .claude/skills/tf/scripts/security_scan.py` (below `security_scan.py`).

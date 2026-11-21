@@ -72,7 +72,7 @@ PHASES = {
     "requirements": {"persona": "ewa", "artifact": "requirements.md", "gate": "B2"},
     "architecture": {"persona": "tomasz", "artifact": "plan.md", "gate": "B3"},
     "design": {"persona": "natalia", "artifact": "design.md", "gate": "design-review"},
-    "delivery": {"persona": "tf", "artifact": None, "gate": None},
+    "delivery": {"persona": "tf-task", "artifact": None, "gate": None},
 }
 # The previous phase's result without which the phase does not start (except the draft from `change new`). Missing = the previous phase's PR
 # is not merged, and this phase's branch would diverge from it in the project log and decisions.md.
@@ -274,7 +274,7 @@ def build_prompt(a) -> dict:
                      f"`git switch -c story/<slug>`, no `git switch main` — and go back to it between cuts "
                      f"(`git switch pdi/{a.change}-delivery`), so a cut does not inherit the previous cut's commits. "
                      f"Run `plan_drift.py` with `--base pdi/{a.change}-delivery`.")
-        lines.append(f"Deliver the TSK cuts from {d}/plan.md: for each one run `/tf <TSK> --auto "
+        lines.append(f"Deliver the TSK cuts from {d}/plan.md: for each one run `/tf-task <TSK> --auto "
                      f"--change {a.change}{budget_flag}` (one commit per piece with the trailer `Change: <TSK>`, "
                      f"one PR per cut). Do not merge the PRs.")
     else:
@@ -336,7 +336,7 @@ def cmd_run(a) -> int:
         open_qs = unanswered(a.change, plan)
         if open_qs:
             raise Refused(f"{plan} has questions in `## {QUESTIONS}` with no answer in decisions.md — delivery does "
-                          "not start, because the /tf loop would guess the answer (PRB-3): "
+                          "not start, because the /tf-task loop would guess the answer (PRB-3): "
                           + "; ".join(f"“{q}”" for q in open_qs)
                           + ". Answer them at the gate in pdi (answers in decide_inbox_item) or remove them from "
                           "plan.md with fixes in the architecture phase.")

@@ -17,18 +17,19 @@ def main() -> int:
             fails.append(msg)
 
     agents = ROOT / ".claude" / "agents" / "_generated"
-    agent = next(iter(agents.rglob("tf.md")), None)
+    agent = next(iter(agents.rglob("tf-task.md")), None)
     text = agent.read_text(encoding="utf-8") if agent else ""
     fm = text.split("---")[1] if text.count("---") >= 2 else ""
     check("Agent(scout, researcher, quick-fixer, scope-reviewer, spec-reviewer, architect, security-reviewer, mcp-runner)" in fm
           and "skills:" not in fm and "maxTurns" not in fm,
-          f"T-1: the tf agent — a main session with a list of agents, without preloading skills and without a turn limit: {fm[:300]}")
-    skill = ROOT / ".claude" / "skills" / "tf"
-    check(".claude/skills/tf/SKILL.md" in text and "talos" not in text.lower() and (skill / "SKILL.md").is_file(),
+          f"T-1: the tf-task agent — a main session with a list of agents, without preloading skills and without a turn limit: {fm[:300]}")
+    skill = ROOT / ".claude" / "skills" / "tf-task"
+    engine = ROOT / ".claude" / "skills" / "tf"   # the shared engine of the /tf family: scripts/ and templates/
+    check(".claude/skills/tf-task/SKILL.md" in text and "talos" not in text.lower() and (skill / "SKILL.md").is_file(),
           "T-2: the agent reads the process skill from an installed file; the old name is not in the core")
     script = ".claude/skills/tf/scripts/run_report.py"
     check((ROOT / script).is_file() and script in (skill / "SKILL.md").read_text(encoding="utf-8"),
-          "T-3: the run script sits next to the skill and the path is in the skill")
+          "T-3: the run script sits in the shared tf engine and the path is in the loop skill")
     allow = []
     for name in ("settings.json", "settings.local.json"):
         f = ROOT / ".claude" / name
@@ -37,7 +38,7 @@ def main() -> int:
     check(any(script in a for a in allow), f"T-4: uprawnienie dla skryptu przebiegu: {[a for a in allow if 'run' in a]}")
     guide = ROOT / ".tf" / "factory" / "GUIDE.md"
     guide_text = guide.read_text(encoding="utf-8") if guide.is_file() else ""
-    check("/tf" in guide_text and "claude --agent tf" in guide_text, "T-5: przewodnik rdzenia opisuje /tf i agenta tf")
+    check("/tf-task" in guide_text and "claude --agent tf-task" in guide_text, "T-5: przewodnik rdzenia opisuje /tf-task i agenta tf-task")
     personas = [p for p in agents.rglob("*.md") if p.parent.name not in ("shared", "consult") and p.stem == p.parent.name]
     check(personas == [] or all("`tf`" not in p.read_text(encoding="utf-8") for p in personas),
           "T-6: personas do not delegate to the tf agent (it is the main session, not an executor)")
@@ -71,14 +72,14 @@ def main() -> int:
           "is inserted by the script itself — test_pr_body PB-8 checks this")
     scan = ".claude/skills/tf/scripts/security_scan.py"
     check((ROOT / scan).is_file() and any(scan in a for a in allow)
-          and (skill / "templates" / "verify.sh").is_file()
+          and (engine / "templates" / "verify.sh").is_file()
           and "security_scan.py scan" in loop and "feedback.md" in loop and "STOP" in loop
           and "security_scan.py cooldown" in body,
           "T-10: security scan in the slice loop (script, permission, FAIL → feedback.md, STOP), grace period "
           "wersji na starcie, szablon verify.sh")
 
     state = ".claude/skills/tf/scripts/run_state.py"
-    check((ROOT / state).is_file() and (skill / "templates" / "dashboard.html").is_file()
+    check((ROOT / state).is_file() and (engine / "templates" / "dashboard.html").is_file()
           and any(state in a for a in allow) and "run_state.py stage" in body and "run_state.py step" in body
           and "dashboard.html" in guide_text,
           "T-11: run state for the preview (script, dashboard template, permission, commands in the skill, description in the guide)")

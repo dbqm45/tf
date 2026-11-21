@@ -15,7 +15,7 @@ tf — the team factory command: install, update, packs, health check (standard 
                               # prepare the repository: detect test/lint/type/build commands, write verify.sh, the
                               # readiness report (.tf/reports/readiness.md) and the commands in the instructions file,
                               # turn the quality gate on; --verify runs the verification once (.tf/factory/onboard.py)
-  tf cooldown [--fix]         # the package manager's 7-day version cooldown the /tf loop requires; --fix writes it
+  tf cooldown [--fix]         # the package manager's 7-day version cooldown the /tf-task loop requires; --fix writes it
                               # (.npmrc, pnpm-workspace.yaml, .yarnrc.yml, [tool.uv] in pyproject.toml)
   tf addon list | add <name|path|git URL> | remove <name> | sync | check [--base <ref>]
                               # add-ons: independent packages in .tf/addons/<name>/ the factory uses through a
@@ -30,7 +30,7 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf style [<name>] [--here]  # your work style: autonomous | step-by-step | conversation; no name — show the current one;
                               # saved in ~/.tf/preferences.yaml (all your projects) or, with --here, .tf/config/me.yaml
   tf config show [<key>]      # merged configuration and where each value comes from (factory or project);
-                              # `tf config show steps`: who runs each /tf loop step, with model and effort
+                              # `tf config show steps`: who runs each /tf-task loop step, with model and effort
   tf task start <KEY> --title "<title>" | stage <KEY> <stage> | status <KEY>
   tf task start <CHG>-<TSK> --title "<title>" --change <CHG> --cut <TSK>   # task of a pdi change cut
   tf task freeze <KEY> <file> --by human:<id> | reopen <KEY> <file> --by human:<id> --reason "<why>"
@@ -52,7 +52,7 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf cloud-setup [--apply]    # factory mode in a cloud environment: prints the environment's setup script; --apply
                               # enables the factory plugin and its session settings in ~/.claude/settings.json
   tf work --once --budget <USD> [--key <KEY>] [--dry-run]
-                              # unattended: one task in Auto mode (light or normal weight) through the /tf loop in its
+                              # unattended: one task in Auto mode (light or normal weight) through the /tf-task loop in its
                               # own worktree (.tf/worktrees/<KEY>) with a spending limit; never merges (.tf/factory/work.py)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
   tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
@@ -278,9 +278,9 @@ def cmd_config_show(key: str | None) -> int:
     team = next((d for label, d in layers if "team_defaults" in label), {})   # team overlay
     person = next((d for label, d in layers if label.endswith("(person)")), {})   # preferencje osoby (tf style)
     cfg = packs.load_config(root)
-    if key == "steps" and cfg.get("steps"):     # steps of the /tf loop with model and effort after the cost profile is applied
+    if key == "steps" and cfg.get("steps"):     # steps of the /tf-task loop with model and effort after the cost profile is applied
         full = project_module("build").load_config()
-        print(f"# /tf loop steps (cost profile: {full.get('_profile')}). To change: steps in .tf/config/config.yaml, "
+        print(f"# /tf-task loop steps (cost profile: {full.get('_profile')}). To change: steps in .tf/config/config.yaml, "
               "then python3 .tf/factory/build.py")
         print(f"{'step':<16} {'what':<38} {'who':<18} {'tier':<5} {'model':<8} effort")
         for sid, step in full["steps"].items():
@@ -647,7 +647,7 @@ def main(argv: list[str]) -> int:
         return cmd_cloud_setup("--apply" in rest)
     if cmd == "work":
         return engine("work.py", rest)
-    if cmd == "cooldown":   # the version cooldown the /tf loop requires; --fix writes the missing settings
+    if cmd == "cooldown":   # the version cooldown the /tf-task loop requires; --fix writes the missing settings
         if not need_project():
             return 2
         script = Path(".claude") / "skills" / "tf" / "scripts" / "security_scan.py"

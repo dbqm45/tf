@@ -269,8 +269,8 @@ def register_plan(project: Path, run_dir: Path, meta: dict) -> None:
 
 def no_task(meta: dict) -> int:
     """A run directory without a task (the old cut layout `.tf/runs/cuts/`): task commands cannot be executed on it."""
-    again = f"/tf {meta['task']}" + (f" --change {meta['change']}" if meta.get("change") else "") if meta.get("task") \
-        else "/tf <TSK-n>"
+    again = f"/tf-task {meta['task']}" + (f" --change {meta['change']}" if meta.get("change") else "") if meta.get("task") \
+        else "/tf-task <TSK-n>"
     return fail(f"this run directory has the old layout (without a task) — start the cut again: {again}")
 
 
@@ -507,7 +507,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
             return fail(f"the question concerns the slice {cur_k}, and {other['id']} does not depend on it — block only {cur_k}: "
                         f"run_state.py block {run_dir} {cur_k} --question \"<question>\" and do {other['id']}. When the question "
                         "concerns the whole task, add `--task`.")
-    if (auto or plan_mode) and meta.get("key"):               # the task's mode is chosen by the human in the /tf command
+    if (auto or plan_mode) and meta.get("key"):               # the task's mode is chosen by the human in the /tf-task command
         m = run_report.task_state(project, "mode", meta["key"], "auto" if auto else "plan")
         if m is not None and "—" in m.stdout:                  # e.g. Auto at full weight: the normal mode stays
             print(m.stdout.strip())
@@ -536,7 +536,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
                 meta["stop_text"] = reason.strip()
     if pr is not None:
         meta["pr"] = pr
-    if visual:                                      # the human's choice in the /tf command: on | off (`ui_snap.py worth` obeys it)
+    if visual:                                      # the human's choice in the /tf-task command: on | off (`ui_snap.py worth` obeys it)
         meta["visual"] = visual
     if auto:
         meta["auto"] = True

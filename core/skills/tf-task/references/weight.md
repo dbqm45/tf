@@ -1,4 +1,4 @@
-# The task's weight in the /tf loop
+# The task's weight in the /tf-task loop
 
 You read this when `run_report.py start` or the `plan` stage prints a line with a weight other than normal, when the script refuses a stage
 because of the weight or when the human wants to change it. The script chooses the weight, not you and not the human: from the issue's content

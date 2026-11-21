@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Unattended work (step H19): `tf work --once` takes one task that a human marked with the Auto mode
-(`tf task mode <KEY> auto`), and runs it with the `/tf` loop in a separate worktree with a spending limit. It does not merge or deploy:
+(`tf task mode <KEY> auto`), and runs it with the `/tf-task` loop in a separate worktree with a spending limit. It does not merge or deploy:
 the result is a `story/<key>` branch with a PR or a STOP block in the task's worktree.
 
   tf work --once --budget <USD> [--key <KEY>] [--base <branch>] [--dry-run]
@@ -8,7 +8,7 @@ the result is a `story/<key>` branch with a PR or a STOP block in the task's wor
 A task that can be taken: Auto mode, light or normal weight, stage before PR, not waiting for a human, no worktree yet
 (resuming in an existing worktree only via `--key`) and not taken by another run (`.tf/locks/<KEY>.json`).
 Exit code: 0 — run finished, 2 — refusal, 3 — no task to take, other — the agent's code.
-Agent: `claude -p "/tf <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode <mode, default acceptEdits>
+Agent: `claude -p "/tf-task <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode <mode, default acceptEdits>
 --strict-mcp-config`, only with allowed environment variables; before the start the files controlling the agent in the worktree
 must be the same as in the human's copy. The `TF_WORK_AGENT` variable replaces the `claude` command (tests). Journal:
 `.tf/logs/work.jsonl`.
@@ -288,7 +288,7 @@ def agent_command(key: str, budget: str, mode: str, wt: Path | None = None, plug
     plugin = []
     if wt is not None and plugin_layout:
         plugin = ["--plugin-dir", str(wt / ".tf" / "plugin"), "--settings", str(wt / ".tf" / "plugin" / "session-settings.json")]
-    return [*agent, *plugin, "-p", f"/tf {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode",
+    return [*agent, *plugin, "-p", f"/tf-task {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode",
             mode, "--strict-mcp-config"]   # without --mcp-config: no MCP servers from the repository or from configuration
 
 
@@ -486,7 +486,7 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
                 return 2
             watched = control_set(root, wt)
             before = snapshot(root, [*watched, ".git/hooks", ".git/config"])
-            print(f"• {k}: /tf loop in {wt.as_posix()}, limit {budget} USD")
+            print(f"• {k}: /tf-task loop in {wt.as_posix()}, limit {budget} USD")
             write_log(root, {"key": k, "event": "start", "started": started, "budget_usd": float(budget),
                              "worktree": wt.relative_to(root).as_posix()})   # before the agent: an interruption counts too
             try:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Recognizing the input of the /tf command (skill tf): what the human gave and where to get the task from. No model and no network.
+Recognizing the input of the /tf-task command (skill tf): what the human gave and where to get the task from. No model and no network.
 
   python3 .claude/skills/tf/scripts/intake.py resolve [--json] <input…>      # read-only
   python3 .claude/skills/tf/scripts/intake.py tracker [<type> [--prefix EBO]]  # remember the tracker / show the record
@@ -19,6 +19,7 @@ The options `--auto`, `--plan`, `--design`, `--budget N`, `--change CHG-n` and a
   one key from the plan's `tasks` header → cut        (in several plans without `--change` → a question about the change)
   one key ABC-123                       → issue       (tracker from the operations card: prefix, then default)
   a path of an existing file            → file
+  several keys ABC-1 ABC-2 …            → batch       (one task after another, one PR each)
   a key followed by text / other text   → content
 
 The script does not see the session's tools: whether a tracker is connected (an MCP server) is judged by the model. The human's choice is recorded by
@@ -72,13 +73,13 @@ TASK_KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")     # factory 
 TRACKER = re.compile(r"[a-z][a-z0-9-]{1,30}")
 INTENTS = ("task", "question", "quick", "design")
 INTENT_ALIASES = {"zadanie": "task", "pytanie": "question", "szybko": "quick"}   # a word at the start, in both languages
-KINDS = {"none": "none", "issue": "issue", "resume": "resume", "cut": "cut", "file": "file", "content": "content"}
+KINDS = {"none": "none", "issue": "issue", "resume": "resume", "cut": "cut", "file": "file", "content": "content", "batch": "batch"}
 ASK = {"tracker": "which tracker the issue comes from", "change": "which change the cut belongs to",
        "content": "for the issue's content (pasting it)"}
 START = "python3 .claude/skills/tf/scripts/run_report.py start"
 PASTE = "paste the issue's content in the conversation"
 MAX_TICKET = 20000                                      # characters of the issue content in ticket.md
-CUTS = ".claude/skills/tf/references/pdi-cuts.md"     # rules of the pdi cut run
+CUTS = ".claude/skills/tf-task/references/pdi-cuts.md"     # rules of the pdi cut run
 
 
 def load_card(root: Path) -> dict | None:
@@ -356,7 +357,7 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
     if options["design"]:   # only the explicit option: a first word like "Projekt ma błąd…" must stay a task
         intent = "design"
     out = {"kind": "content", "key": None, "tracker": None, "tracker_from": None, "source": None, "changes": [],
-           "stage": None, "file": None, "title": None, "text": None, "tasks": [], "options": options,
+           "stage": None, "file": None, "title": None, "text": None, "tasks": [], "keys": [], "options": options,
            "intent": intent, "ask": None, "next": ""}
     tokens = text.split()
     suffix = opts_suffix(options)
@@ -369,17 +370,25 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
             out["next"] = ("make the change right away, without creating a task: a test, the code, one commit; when it turns out bigger "
                            "(a contract, more than a few files, a decision) — stop and propose a task run")
         elif intent == "design":
-            out["next"] = ("run a design session with the human (skill core-design-session): stages with checkpoints, no code and "
-                           "no task; its Handoff comes back to /tf as the story")
+            out["next"] = ("run a design session with the human (skill tf-design): stages with checkpoints, no code and "
+                           "no task; its Handoff comes back to /tf-task as the story")
         return code, out
 
     if not tokens:
         out["kind"], out["tasks"] = "none", open_tasks(root)
         out["next"] = ("ask which task to resume (the list above), or ask for an issue number or the task's content"
                        if out["tasks"] else "ask what we do (AskUserQuestion): commission a task (an issue number, a cut key or "
-                       "the content), a design session first (skill core-design-session), or a question about the code")
+                       "the content), a design session first (skill tf-design), or a question about the code")
         if out["tasks"]:
-            out["next"] += "; or a design session first (skill core-design-session)"
+            out["next"] += "; or a design session first (skill tf-design)"
+        return done()
+
+    if len(tokens) > 1 and all(TICKET.fullmatch(t) for t in tokens):   # several keys: one task after another
+        keys = [t.upper() for t in tokens]
+        out.update(kind="batch", keys=keys)
+        out["next"] = (f"run the loop for each key in turn ({', '.join(keys)}): resolve each one alone "
+                       f"(intake.py resolve <KEY>{suffix}), one branch and one PR per task; a STOP or a question stops "
+                       "only that task — record it and go on with the next; at the end a summary of all of them")
         return done()
 
     first = tokens[0]
@@ -465,6 +474,8 @@ def render(out: dict) -> str:
     lines = [f"Input: {KINDS[out['kind']]}"]
     if out["intent"]:
         lines.append(f"Way: {out['intent']} (forced by " + ("--design)" if out["options"].get("design") else "the first word)"))
+    if out["keys"]:
+        lines.append(f"Keys: {', '.join(out['keys'])}")
     if out["key"]:
         lines.append(f"Key: {out['key']}")
     if out["kind"] == "issue":

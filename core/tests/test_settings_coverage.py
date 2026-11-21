@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Coverage of the /tf loop's Bash commands by permissions.allow (PRB-32): the tf skills (SKILL.md and scripts/)
+"""Coverage of the /tf-task loop's Bash commands by permissions.allow (PRB-32): the tf skills (SKILL.md and scripts/)
 and the pdi delivery-phase scripts (phase_run.py cuts publish) run git and gh; every such call must be
 in `permissions.allow` of the project's assembled settings (.claude/settings.json, core + mode-pdi).
 
@@ -30,7 +30,7 @@ LOOP = ".claude/skills/tf/"
 PDI = ".claude/skills/pdi-decisions/"
 PY = "python3"
 
-# Commands the /tf loop and the pdi phases run in a session (a persona in --print). Each must have an `allow` rule.
+# Commands the /tf-task loop and the pdi phases run in a session (a persona in --print). Each must have an `allow` rule.
 # We do not list `git push` or `gh pr …` of the cuts publish phase here, because they are in phase_run.py (run outside the session
 # of the persona), not in the loop's prompt.
 REQUIRED = [
@@ -127,8 +127,8 @@ def covers(cmd: str, patterns: list[re.Pattern]) -> bool:
 
 def skill_path() -> Path:
     if INSTALLED:
-        return ROOT / LOOP / "SKILL.md"
-    return ROOT / "core" / "skills" / "tf" / "SKILL.md"
+        return ROOT / ".claude/skills/tf-task/" / "SKILL.md"
+    return ROOT / "core" / "skills" / "tf-task" / "SKILL.md"
 
 
 def required() -> list[str]:

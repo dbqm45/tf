@@ -63,7 +63,7 @@ AC_ID = re.compile(r"^(?:[-*•]\s*)?(?:\*\*)?(AC-\d+)(?:\*\*)?\s*[:.)—–-]\s
 BULLET = re.compile(r"^[-*•]\s+")
 AC_LABEL = re.compile(r"^(?:#{1,6}\s*)?(kryteria akceptacji|acceptance criteria)\b.*$", re.I)
 # the "Jako … chcę" sentence need not open the description (the description is lines joined with a space): a task's ticket.md starts with the
-# source line (the /tf loop), so the actor may also come after the end of the previous sentence
+# source line (the /tf-task loop), so the actor may also come after the end of the previous sentence
 ACTOR = re.compile(r"(?:^\s*|(?<=[.!?]\s))(?:jako|as an?|as)\s+(.+?)\s+(?:chcę|chciał\w*|i want|i would like|i'd like)\b", re.I)
 GOAL = re.compile(r"\b(?:chcę|chciał\w*(?: bym)?|i want to|i would like to|i'd like to|i want)\s+(.*)", re.I | re.S)
 PURPOSE = re.compile(r",?\s+(?:aby|żeby|by|so that|in order to)\b", re.I)

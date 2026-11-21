@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests of the factory tool `tools/flow_compare.py` (comparing flows — the /tf loop, mode-pdi, the plan mode alone — on the same
+"""Tests of the factory tool `tools/flow_compare.py` (comparing flows — the /tf-task loop, mode-pdi, the plan mode alone — on the same
 tickets: anonymized diffs for blind grading and a report with measures). python3 tests/test_flow_compare.py"""
 import json
 import subprocess

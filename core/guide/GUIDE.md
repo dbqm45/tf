@@ -17,7 +17,9 @@ Four steps from zero to the first PR. The rest of this file is details for the c
 
 | I want to… | Use | What I get |
 |---|---|---|
-| do a task with acceptance criteria | `/tf <issue number or text>` or an ordinary sentence ("deliver EBO-1236") | a plan, tests, code, a commit per slice, one PR |
+| do a task with acceptance criteria | `/tf-task <issue numbers or text>` or an ordinary sentence ("deliver EBO-1236") | a plan, tests, code, a commit per slice, one PR per task; several keys run one after another |
+| work out an idea with the agent before any code | `/tf-design <topic>` or a sentence ("let's design it together, no code yet") | stages with a checkpoint each, diagrams, decisions in `docs/project/`, then a handoff to `/tf` |
+| work with the factory without the loop (also on an issue as material: "like EVD-45678, but …") | `/tf <text>` (type `/tf` to see `/tf`, `/tf-task`, `/tf-design` side by side) | the project context, issues read as data, skills for the problem; a proposal of `/tf-task` or `/tf-design` when the work grows |
 | ask about the code, or I do not know where to start | `claude --agent maja` (the `pack-it` pack) | an answer or a choice of people and approach |
 | make a small change | an ordinary `claude` session | a change under the hooks' control, without a plan |
 | work in one role (tests, UX, domain…) | `claude --agent <persona>` from `.claude/catalog.md` | a conversation with the persona and its executors |
@@ -126,7 +128,7 @@ Shared agents, available to every persona:
   code without a red test. The quality gate: the `.claude/quality-gate.json` file with the test command, e.g.
   `{"command": "npm test", "watch": ["src/", "test/"]}` — the `quality_gate` hook will not let a turn end with a red
   build (described in the header of `.claude/hooks/quality_gate.py`). For speed add `"related"` — only the tests
-  of the changed files, a command for the project's own stack (the factory knows no test tool; the /tf loop proposes
+  of the changed files, a command for the project's own stack (the factory knows no test tool; the /tf-task loop proposes
   one at the first task and writes it after your consent). Placeholders: `{files}` the changed files, `{dirs}` the
   directories of the changed source files, one argument per value; with a comma (`{files,}`) joined with commas.
   E.g. `"npx nx affected -t test --files={files,}"` or `"go test {dirs}"`. The gate and slice verification run it instead
@@ -137,7 +139,7 @@ Shared agents, available to every persona:
 ## 4. Modes and automation on request
 | What | How | When |
 |---|---|---|
-| the factory loop (in the core) | `/tf <task>` or `claude --agent tf` | one task with acceptance criteria → a specification, a plan of slices, a commit per slice, evidence, one PR, a cost report; a live preview in `.tf/runs/dashboard.html`; for a visible UI change also screenshots before/after, looked at against the criteria (`--visual` / `--no-visual`, only when worth it); guide: `.tf/factory/LOOP.md` |
+| the factory loop (in the core) | `/tf-task <task>` or `claude --agent tf-task` | one task with acceptance criteria → a specification, a plan of slices, a commit per slice, evidence, one PR, a cost report; a live preview in `.tf/runs/dashboard.html`; for a visible UI change also screenshots before/after, looked at against the criteria (`--visual` / `--no-visual`, only when worth it); guide: `.tf/factory/LOOP.md` |
 | Agent teams (`mode-team`, `tf add mode-team`) | `team_switch.py on`, a new session, `/team-session <task>` | the roles must talk to each other along the way; experimental and expensive; guide: `.tf/factory/packs/mode-team/GUIDE.md` |
 | A code audit (`pack-it`) | after the scope is approved: the `/code-audit` workflow | a full audit in many dimensions with a ranking (the `eng-code-audit` skill) |
 | An Event Storming simulation (`pack-it`) | `/ddd-es-simulation` or `claude --agent es-host` | facilitation training with AI participants |
@@ -171,13 +173,13 @@ one class of problems; packs provide the modules (`pack-it`, `accessibility` —
 `tf risk [--base main]` assesses the current branch's diff against the base: a high, medium or low level and a list of
 "what a human must see" (the file, the reason). A high level comes from e.g. authentication, payments, the database
 schema, deployment and CI, the specification and weakened tests (removed assertions, skips, a deleted test); a new
-module without an ADR is an "evidence" point on the list. `--md` gives a section for the PR description (the `/tf` loop
+module without an ADR is an "evidence" point on the list. `--md` gives a section for the PR description (the `/tf-task` loop
 inserts it itself: `run_state.py pr-body`), `--json` a result for scripts. The triage is advisory and never blocks a
 merge. Your own rules (e.g. price list paths as high risk) you enter in `autonomy.triage` in `.tf/config/config.yaml`.
 
 ### Unsupervised work: `tf work --once`
 `tf work --once --budget 5` takes one task you gave the Auto mode (`tf task mode <KEY> auto` — that is your consent to
-unsupervised work), of light or normal weight, and runs it with the `/tf --auto` loop in a separate worktree
+unsupervised work), of light or normal weight, and runs it with the `/tf-task --auto` loop in a separate worktree
 (`.tf/worktrees/<KEY>`, the branch `story/<key>`). A spending limit is mandatory (`--budget` or `work.budget_usd` in
 `.tf/config/config.yaml`); the agent works in the `acceptEdits` permission mode: it saves files in its worktree, and any
 other tool outside the allowed list in the `.claude` settings is rejected rather than waiting for you. A lock
@@ -205,7 +207,7 @@ machine without your credentials.
   - `balanced` — the default: Haiku for mechanics, Sonnet day to day, Opus for expensive mistakes;
   - `quality` — a higher effort and an Opus advisor.
 - **Measurement:** `python3 .tf/factory/cost_report.py --days 7` (usage per agent and model from `.tf/logs/usage.jsonl`);
-  the status line shows the session's cost, time and tokens and how full the context is; every `/tf` task shows its
+  the status line shows the session's cost, time and tokens and how full the context is; every `/tf-task` task shows its
   cost, time and tokens on the dashboard, in `report.md` and in the PR description. Every entry in `usage.jsonl` has a harness
   fingerprint (the `harness` field: the versions of Claude Code, the factory and the packs, a hash of the installed
   files), so costs from different factory versions can be separated.
@@ -293,7 +295,7 @@ autonomy policy.
 |---|---|---|
 | the models and effort of the `fast` / `std` / `deep` levels | `.tf/config/config.yaml` → `tiers` | enter only the changed fields, then `python3 .tf/factory/build.py` |
 | the overall cost level | the cost profile | `python3 .tf/factory/profile.py <profile>` |
-| who performs a step of the `/tf` loop and at what level | `.tf/config/config.yaml` → `steps` | e.g. `steps: {review: {tier: deep}}`, then `python3 .tf/factory/build.py`; a preview with the model and effort: `tf config show steps` |
+| who performs a step of the `/tf-task` loop and at what level | `.tf/config/config.yaml` → `steps` | e.g. `steps: {review: {tier: deep}}`, then `python3 .tf/factory/build.py`; a preview with the model and effort: `tf config show steps` |
 | the operations the factory asks about or blocks | `.tf/config/config.yaml` → `autonomy` | it can only be tightened (a question → a block) |
 | the language of the conversation and of commits | nothing to set | agents answer in the language you write in; commits in the language of the repository's history (`git log`), in a new repository in English (`.tf/config/config.yaml` → `commit_language.new_repo`) |
 | whether the factory runs feature flags itself | `.tf/config/config.yaml` → `feature_flags.auto` | `true` by default: the factory asks you for the flag's name, creates it and makes sure it is off outside the test environment; `false`: you add flags yourself (in the code, in an external service), and the factory neither creates nor requires them |

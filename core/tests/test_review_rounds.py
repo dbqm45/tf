@@ -11,7 +11,7 @@ from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "tf.py").is_file())
 SCRIPTS = ROOT / ".claude" / "skills" / "tf" / "scripts"
-SKILL = ROOT / ".claude" / "skills" / "tf" / "SKILL.md"
+SKILL = ROOT / ".claude" / "skills" / "tf-task" / "SKILL.md"
 
 
 def call(project: Path, cfg: Path, name: str, *args: str) -> subprocess.CompletedProcess:

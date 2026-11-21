@@ -108,7 +108,7 @@ def main() -> int:
                       and "Standard API (poufne)" in f.read_text(encoding="utf-8", errors="ignore")]
             check(not leaked, f"OP-16: the company's source documents (sources/) do not reach the project: {leaked}")
             check((app / ".tf/factory/packs/pack-acme/semgrep.yml").is_file(),
-                  "OP-14: the overlay's semgrep.yml in .tf/factory/packs/pack-acme/ (the /tf loop slice scan)")
+                  "OP-14: the overlay's semgrep.yml in .tf/factory/packs/pack-acme/ (the /tf-task loop slice scan)")
             check(an.get("prefix") == "ACME" and (an.get("tier0") or {}).get("rules") == "rules.yaml",
                   f"OP-12: the company rule module installed, the finding prefix derived from the company name: {an}")
             g = subprocess.run([sys.executable, str(app / ".tf/factory/analyze.py"), "gate", "--module", "acme-standards"],

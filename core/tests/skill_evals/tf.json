@@ -2,155 +2,22 @@
   "skill": "tf",
   "scenarios": [
     {
-      "id": "zwykla-implementacja-historyjki",
-      "expect": "trigger",
-      "prompt": "Zaimplementuj tę historyjkę: jako użytkownik chcę zresetować hasło linkiem z maila, link ważny 30 minut.",
-      "checks": {
-        "all": [["run_report\\.py", "intake\\.py", "ticket\\.md"], ["spec\\.md", "AC-\\d", "kryteri"], ["kawałk", "S1"]]
-      }
-    },
-    {
-      "id": "zwykla-implementacja-historyjki-en",
-      "expect": "trigger",
-      "prompt": "Implement this story: as a user I want to reset my password with a link from an email, the link valid for 30 minutes.",
-      "checks": {
-        "all": [["run_report\\.py", "intake\\.py", "ticket\\.md"], ["spec\\.md", "AC-\\d", "kryteri", "criteri\\w*", "acceptance"], ["kawałk", "S1", "slices?", "chunks?", "pieces?", "increments?"]]
-      }
-    },
-    {
-      "id": "numer-zgloszenia-bez-trackera",
-      "expect": "trigger",
-      "prompt": "Zrealizuj zgłoszenie EBO-1236, jest następne w kolejce na ten sprint.",
-      "checks": {
-        "all": [["intake\\.py", "tracker", "Jir", "Linear"], ["wklej", "treś[ćc] zgłoszenia", "treś[ćc] zadania"]],
-        "none": ["zainstaluj[ęe] serwer MCP", "npx .*mcp"]
-      }
-    },
-    {
-      "id": "zgloszenie-z-jiry-skryptem",
-      "expect": "trigger",
-      "prompt": "Zrealizuj zgłoszenie EBO-1236 z naszej Jiry. Zmienne JIRA_BASE_URL, JIRA_EMAIL i JIRA_API_TOKEN są ustawione w środowisku.",
-      "checks": {
-        "all": [["--from-tracker", "intake\\.py fetch"], ["ticket\\.md", "treś[ćc] zgłoszenia"]],
-        "none": ["zainstaluj[ęe] serwer MCP", "curl [^\\n]*(atlassian|rest/api)", "echo \\$JIRA_(API_)?TOKEN"]
-      }
-    },
-    {
-      "id": "opis-pr-ze-skryptu",
-      "expect": "trigger",
-      "prompt": "Zrealizuj zadanie do końca: oba kawałki historyjki o limicie dobowym są zrobione i zacommitowane, zgodność z planem sprawdzona. Wypchnij gałąź i wystaw PR.",
-      "checks": {
-        "all": [["pr-body"], ["--body-file"], ["Jak cofnąć", "jak cofnąć"]],
-        "none": ["gh pr merge", "git push --force"]
-      }
-    },
-    {
-      "id": "waga-pelna-panel-recenzentow",
-      "expect": "trigger",
-      "prompt": "Zrealizuj zadanie PAY-7 pętlą /tf: zmiana w obsłudze płatności kartą ma wagę pełną, plan zatwierdzony, oba kawałki zrobione i zweryfikowane. Co jeszcze przed otwarciem PR?",
-      "checks": {
-        "all": [["security-reviewer"], ["spec-reviewer"], ["run_state\\.py panel", "panel"]],
-        "none": ["gh pr merge"]
-      }
-    },
-    {
-      "id": "ciecie-zmiany-pdi",
-      "expect": "trigger",
-      "prompt": "Zrealizuj zadanie: klucz cięcia TSK-57 z planu zmiany CHG-12, bez nadzoru (/tf TSK-57 --auto --change CHG-12).",
-      "checks": {
-        "all": [["intake\\.py", "run_report\\.py start --task"], ["CHG-12-TSK-57", "zadani[ea] cięcia"], ["spec\\.md", "AC-\\d", "kryteri"], ["Change: TSK-57"], ["runs/TSK-57\\.md", "raport cięcia"]],
-        "none": ["\\.tf/runs/cuts", "story\\.md", "git switch main"]
-      }
-    },
-    {
-      "id": "przeglad-zakresu-etykiety",
-      "expect": "trigger",
-      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Przegląd zakresu kawałka S2 zwrócił jedno ustalenie ważne i dwa drobne — co robisz dalej?",
-      "checks": {
-        "all": [["ważn"], ["wycof", "popraw"], ["parked", "run_state\\.py park", "park "], ["rund", "R2"], ["run_state\\.py finding", "finding "], ["zakres fail", "zakres pass", "scope fail", "scope pass", "run_state\\.py step"]],
-        "none": ["R3 ", "trzeci[aą] rund[aęy] bez"]
-      }
-    },
-    {
-      "id": "pytanie-blokuje-jeden-kawalek",
-      "expect": "trigger",
-      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). W projekcie włączono loop.blocked_slices. W kawałku S2 brakuje odpowiedzi na pytanie o abonamenty, a S3 od niego nie zależy — co robisz dalej?",
-      "checks": {
-        "all": [["run_state\\.py block", "zablok"], ["S3"], ["pytani"]],
-        "none": ["(?<!nie )zgaduj[ęe]", "przyjmuj[ęe] założenie i robi[ęe] S2"]
-      }
-    },
-    {
-      "id": "edge-zadanie-bez-tresci",
-      "expect": "trigger",
-      "prompt": "Weź się za następne zadanie z trackera.",
-      "checks": {
-        "all": [["numer", "klucz", "które zadanie", "treś[ćc]"], ["wklej", "podaj", "wznowi"]],
-        "none": ["K1 —", "S1 —", "BRAMKA K1", "GATE S1"]
-      }
-    },
-    {
-      "id": "koniec-kawalka-jednym-poleceniem",
-      "expect": "trigger",
-      "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Kawałek S1 ma zielony dowód z verify, a scope-reviewer nie zgłosił ustaleń ważnych. Jak zamykasz kawałek?",
-      "checks": {
-        "all": [["run_state\\.py done", "done <katalog>"], ["--message"], ["feat\\(", "fix\\(", "<typ>"]],
-        "none": ["git add -A", "git add \\.", "git commit -am"]
-      }
-    },
-    {
-      "id": "pytanie-o-kod",
+      "id": "zgloszenie-jako-material",
       "expect": "no-trigger",
-      "neighbor": "brak",
-      "prompt": "Jak w tym repozytorium działa logowanie i w którym miejscu sprawdzany jest token sesji?"
+      "prompt": "Zrób zadanie EBO-1236 i otwórz PR, kryteria akceptacji są w Jirze.",
+      "neighbor": "tf-task"
     },
     {
-      "id": "literowka-w-readme",
+      "id": "projektowanie-etapami",
       "expect": "no-trigger",
-      "neighbor": "brak",
-      "prompt": "Popraw literówkę w README: „instlacja” na „instalacja”."
+      "prompt": "Mam luźny pomysł na moduł raportów. Zaprojektujmy go razem etap po etapie, zanim powstanie jakikolwiek kod.",
+      "neighbor": "tf-design"
     },
     {
-      "id": "przeglad-cudzego-pr",
+      "id": "historyjka-do-pr",
       "expect": "no-trigger",
-      "neighbor": "core-git-workflow",
-      "prompt": "Przejrzyj pull request kolegi przed scaleniem: na co patrzeć w diffie i jak opisać uwagi?"
-    },
-    {
-      "id": "zadanie-na-noc-bez-nadzoru",
-      "expect": "no-trigger",
-      "neighbor": "core-async-delegation",
-      "prompt": "Chcę zostawić agentowi na noc uzupełnienie testów modułu płatności, sam zamknę laptopa. Jak przygotować dla niego kontrakt i bramki?"
-    },
-    {
-      "id": "fazy-projektu-od-pomyslu",
-      "expect": "no-trigger",
-      "neighbor": "core-delivery-lifecycle",
-      "prompt": "Prowadzimy nowy produkt od pomysłu do wdrożenia z agentami AI. Jakie fazy, bramki człowieka i persony przewidzieć?"
-    },
-    {
-      "id": "zmiana-ekranu-zrzuty",
-      "expect": "trigger",
-      "prompt": "Zrealizuj historyjkę: jako użytkownik chcę zobaczyć na ekranie logowania czerwony komunikat o błędnym haśle pod polem hasła. Zmiana dotyczy dwóch komponentów Angulara. Jak sprawdzisz, że ekran wygląda jak trzeba?",
-      "checks": {"all": [["ui_snap", "zrzut", "screenshot"], ["przed", "before"]]}
-    },
-    {
-      "id": "zmiana-ekranu-zrzuty-en",
-      "expect": "trigger",
-      "prompt": "Implement this story: as a user I want a red error message under the password field on the login screen. The change touches two Angular components. How will you check that the screen looks right?",
-      "checks": {"all": [["ui_snap", "screenshot"], ["before"]]}
-    },
-    {
-      "id": "zmiana-backendu-bez-zrzutow",
-      "expect": "trigger",
-      "prompt": "Zaimplementuj historyjkę: jako operator chcę, żeby endpoint /api/sessions zwracał pole duration w sekundach. Zmiana dotyczy tylko kontrolera i serwisu w Pythonie.",
-      "checks": {"all": [["run_report\\.py", "intake\\.py", "spec\\.md"]], "none": ["ui_snap\\.py capture"]}
-    },
-    {
-      "id": "projektujmy-bez-kodu",
-      "expect": "no-trigger",
-      "prompt": "Mam luźny pomysł na moduł raportów. Zaprojektujmy go razem etap po etapie, zanim powstanie jakiekolwiek zadanie czy kod.",
-      "neighbor": "core-design-session"
+      "prompt": "Implement this story end to end and open a pull request: as an operator I want to export failed sessions to CSV.",
+      "neighbor": "tf-task"
     }
   ]
 }

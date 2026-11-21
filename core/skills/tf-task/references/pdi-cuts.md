@@ -1,6 +1,6 @@
-# pdi slices in the /tf loop
+# pdi slices in the /tf-task loop
 
-You read this when the input is a slice key from a change plan (`/tf TSK-57`, this is how the pdi change delivery phase calls the loop)
+You read this when the input is a slice key from a change plan (`/tf-task TSK-57`, this is how the pdi change delivery phase calls the loop)
 or when pdi calls the loop in a round of the PR loop. A slice is an ordinary task: the same run as in SKILL.md — a specification,
 a plan of slices, `verify` evidence before `done`, the `trace` of the criteria. Only the differences are here.
 

@@ -133,7 +133,7 @@ def active_profile(cfg: dict) -> str:
 
 
 def apply_steps(cfg: dict) -> dict:
-    """Assignment of /tf loop steps (`steps`): a step's tier becomes the tier of its executor (the shared agent)."""
+    """Assignment of /tf-task loop steps (`steps`): a step's tier becomes the tier of its executor (the shared agent)."""
     agents = cfg.get("shared_agents") or {}
     for step in (cfg.get("steps") or {}).values():
         if isinstance(step, dict) and step.get("who") in agents and step.get("tier") in (cfg.get("tiers") or {}):
@@ -1286,7 +1286,7 @@ def validate() -> tuple[list[str], list[str]]:
                                     cfg.get("semver_strict_from")):
             errors.append(f".tf/factory/CHANGELOG.md: {p}")
     errors += steps_errors(cfg)
-    loop_skill = SKILLS_DIR / "tf" / "SKILL.md"
+    loop_skill = SKILLS_DIR / "tf-task" / "SKILL.md"
     if loop_skill.is_file() and cfg.get("steps"):
         errors += steps_table_errors(cfg, loop_skill.read_text(encoding="utf-8"))
     return errors, warnings

@@ -60,7 +60,7 @@ def main() -> int:
         check(r.returncode == 0 and "decision_record.py" not in r.stdout and "allow (" in r.stdout and "✓" in r.stdout,
               f"C-3: the core alone (team mode) passes without the pdi commands: {r.stdout[-800:]} {r.stderr[-300:]}")
 
-        # C-4: the core alone, private settings — the /tf loop is in the core, so the check runs (not skipped)
+        # C-4: the core alone, private settings — the /tf-task loop is in the core, so the check runs (not skipped)
         proj = Path(t) / "none"
         r = install(proj, "none")
         check(r.returncode == 0, f"C-0: install without overlays: {r.stdout[-600:]} {r.stderr[-300:]}")

@@ -1,7 +1,7 @@
 # A specification review by a panel of reviewers
 
 ## When
-After phase 3 (requirements) and before the cut plan — when the requirements are to be delivered by agents (the `/tf`
+After phase 3 (requirements) and before the cut plan — when the requirements are to be delivered by agents (the `/tf-task`
 loop, executors), the change is large or touches areas from the high-risk triage (`tf risk`: permissions, money, data,
 schema). A small change with a few criteria: an ordinary plan review is enough.
 

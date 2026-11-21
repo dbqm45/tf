@@ -42,10 +42,13 @@ RENAMES: dict[str, dict[str, str]] = {
         "fe-ux-design": "ux-feature-design",            # pack-ux
     },
     "5.0.0": {
-        "core-story-run": "tf",                         # the “task → PR” loop (until 9.33 the talos-story-run skill of the mode-talos mode)
+        "core-story-run": "tf-task",                         # the “task → PR” loop (until 9.33 the talos-story-run skill of the mode-talos mode)
     },
     "10.0.0": {
-        "talos-story-run": "tf",                        # loop moved from the mode-talos mode to the core
+        "talos-story-run": "tf-task",                        # loop moved from the mode-talos mode to the core
+    },
+    "22.0.0": {
+        "core-design-session": "tf-design",             # the /tf-* command family (/tf, /tf-task, /tf-design); the loop itself moved from tf to tf-task in 22.0.0
     },
 }
 

@@ -27,7 +27,7 @@ def project(base: Path) -> Path:
     p = base / "proj"
     shutil.copytree(ROOT / ".tf" / "factory", p / ".tf" / "factory", ignore=shutil.ignore_patterns("packs", "__pycache__", "personas",
                                                                                      "roles"))
-    for d in [*(ROOT / ".claude" / "skills").glob("core-*"), ROOT / ".claude" / "skills" / "tf"]:   # core skills
+    for d in [*(ROOT / ".claude" / "skills").glob("core-*"), *(ROOT / ".claude" / "skills").glob("tf*")]:   # core skills
         shutil.copytree(d, p / ".claude" / "skills" / d.name)
     skill = "---\nname: {n}\ndescription: Użyj przy {n}.\nmetadata:\n  catalog: \"Użyj przy {n}. Nie do niczego.\"\n" \
             "  review: \"2099-01-01\"\n---\n# {n}\n"

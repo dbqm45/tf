@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Screenshots of the screens a UI change touches, before and after, for the /tf loop. The agent LOOKS at them (the Read
+"""Screenshots of the screens a UI change touches, before and after, for the /tf-task loop. The agent LOOKS at them (the Read
 tool shows images) against the acceptance criteria; the PR description lists the result.
 
     ui_snap.py capture <run_dir> --label before|after [--url URL ...] [--route /path ...] [--viewport 1280x800,390x844]
@@ -10,7 +10,7 @@ tool shows images) against the acceptance criteria; the PR description lists the
 `worth` decides deterministically from the UI files of the task (the plan's `files:` and, with a base branch, the diff):
 no UI files = no visual check at all; yes when there are at least `visual_check.min_ui_files` of them, or at least
 `visual_check.min_ui_lines` changed UI lines, or an acceptance criterion names something visible
-(`visual_check.keywords`); the light weight needs such a criterion. `--visual` / `--no-visual` of the /tf command
+(`visual_check.keywords`); the light weight needs such a criterion. `--visual` / `--no-visual` of the /tf-task command
 (recorded in run.json) win. The thresholds: `.tf/factory/config.yaml`, overridden in `.tf/config/config.yaml`.
 
 `capture` writes `<run_dir>/screens/<label>/<route-slug>@<W>x<H>.png` and `screens/<label>/index.json`; `compare` pairs

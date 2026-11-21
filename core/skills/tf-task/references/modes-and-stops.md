@@ -1,4 +1,4 @@
-# Work modes and stops in the /tf loop
+# Work modes and stops in the /tf-task loop
 
 You read this when the human gave `--plan` or `--auto`, when the script refuses entry into the slice loop ("the human's consent to
 the plan", "Plan mode"), when you end with a STOP block and have to choose a code, or when the script rejects a STOP with the `question` code
@@ -10,11 +10,11 @@ The human chooses the mode in the command; you only record it at the first `run_
 
 | Mode | The human's command | What you do after the plan |
 |---|---|---|
-| Plan | `/tf <zadanie> --plan` | you end: `run_state.py stage <katalog> needs --needs plan`, you show the specification and the plan, then `run_report.py finish` and a commit of the task's files. You do not touch the code. |
-| normal | `/tf <zadanie>` | `run_state.py stage <katalog> needs --needs plan`, you show the specification and the plan and wait. After the human's consent: `run_state.py approve <katalog>` — only then does `step` let the slice loop in. One consent covers the plan and the specification. |
-| Auto | `/tf <zadanie> --auto` | you go on without consent; the plan and the assumptions go into the PR description. At the full weight the Auto mode does not work — the normal one stays (`references/weight.md`). |
+| Plan | `/tf-task <zadanie> --plan` | you end: `run_state.py stage <katalog> needs --needs plan`, you show the specification and the plan, then `run_report.py finish` and a commit of the task's files. You do not touch the code. |
+| normal | `/tf-task <zadanie>` | `run_state.py stage <katalog> needs --needs plan`, you show the specification and the plan and wait. After the human's consent: `run_state.py approve <katalog>` — only then does `step` let the slice loop in. One consent covers the plan and the specification. |
+| Auto | `/tf-task <zadanie> --auto` | you go on without consent; the plan and the assumptions go into the PR description. At the full weight the Auto mode does not work — the normal one stays (`references/weight.md`). |
 
-- **Resuming after the Plan mode:** the human writes `/tf <KLUCZ>`; you change the mode to the one from the command
+- **Resuming after the Plan mode:** the human writes `/tf-task <KLUCZ>`; you change the mode to the one from the command
   (`run_state.py mode <katalog> normal` or `auto`) and go from the consent to the plan.
 - `run_state.py approve` records the consent with the human's identifier from git. You call it only after the human's explicit consent
   in the conversation ("yes", "I accept the plan"); in the Auto mode the script refuses, because there is nobody to ask.
@@ -42,7 +42,7 @@ no code is a command error. You choose the code that says **what is needed from 
 
 A task whose story came from a design session (`docs/project/04-architecture/design-<slug>.md`) and a `question`, `split`
 or `plan-approval` STOP that touches the design → offer the human to resume that session at the affected stage
-(core-design-session) instead of a workaround in the code.
+(tf-design) instead of a workaround in the code.
 
 "It's too hard" is not a code: you stop on evidence (a command and its output), not on your own assessment of difficulty.
 

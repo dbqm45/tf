@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests of input recognition for the /tf command (the tf skill, scripts/intake.py): input kind, key, tracker
+"""Tests of input recognition for the /tf-task command (the tf skill, scripts/intake.py): input kind, key, tracker
 from a URL or from the operations card, a cut from a change plan, resume, options.
 python3 .claude/tests/test_intake.py"""
 import json
@@ -135,7 +135,7 @@ def main() -> int:
         code, out, raw = resolve(p, "TSK-57")
         check(out.get("kind") == "cut" and out.get("key") == "TSK-57" and out.get("changes") == ["CHG-12"]
               and out.get("ask") is None and "start --task TSK-57 --change CHG-12" in out.get("next", "")
-              and ".claude/skills/tf/references/pdi-cuts.md" in out.get("next", ""),
+              and ".claude/skills/tf-task/references/pdi-cuts.md" in out.get("next", ""),
               f"I-13: a key from the tasks heading → a cut: first the cut rules (references), then a ready command: {raw}")
         code, out, raw = resolve(p, "TSK-58")
         check(out.get("kind") == "cut" and out.get("changes") == ["CHG-12", "CHG-13"] and out.get("ask") == "change",
@@ -193,15 +193,27 @@ def main() -> int:
               f"I-24: “zadanie <key>”: {raw}")
         code, out, raw = resolve(p, "--design", "mechanizm", "uprawnień")   # a design session with the developer
         nxt = out.get("next", "")
-        check(out.get("intent") == "design" and out.get("options", {}).get("design") and "core-design-session" in nxt
+        check(out.get("intent") == "design" and out.get("options", {}).get("design") and "tf-design" in nxt
               and "run_report.py start" not in nxt and out.get("text") == "mechanizm uprawnień",
               f"I-25: “--design …” → a design session, no task created: {raw}")
         for word in ("Projekt", "design"):   # a sentence starting with these words stays a task (no forcing word)
             code, out, raw = resolve(p, word, "ma", "błąd", "w", "logowaniu")
-            check(out.get("intent") is None and "core-design-session" not in out.get("next", ""),
+            check(out.get("intent") is None and "tf-design" not in out.get("next", ""),
                   f"I-25b: “{word} ma błąd…” → an ordinary task, not a design session: {raw}")
         code, out, raw = resolve(p)
-        check("core-design-session" in out.get("next", ""), f"I-26: no input → the design session among the options: {raw}")
+        check("tf-design" in out.get("next", ""), f"I-26: no input → the design session among the options: {raw}")
+
+        # several issue keys → a batch: one task after another (/tf-task EBO-1 EBO-2 EBO-3)
+        code, out, raw = resolve(p, "EBO-11", "EBO-22", "--auto", "EBO-33")
+        nxt = out.get("next", "")
+        check(code == 0 and out.get("kind") == "batch" and out.get("keys") == ["EBO-11", "EBO-22", "EBO-33"]
+              and out.get("options", {}).get("auto") and nxt.find("EBO-11") < nxt.find("EBO-22") < nxt.find("EBO-33")
+              and "one PR" in nxt, f"I-27: several keys → a batch in the given order, the options kept: {raw}")
+        code, out, raw = resolve(p, "EBO-11", "dokończ", "eksport")
+        check(out.get("kind") != "batch", f"I-27b: one key and text is not a batch: {raw}")
+        r = run(p, "resolve", "EBO-11", "EBO-22")
+        check(r.returncode == 0 and "Input: batch" in r.stdout and "Keys: EBO-11, EBO-22" in r.stdout,
+              f"I-27c: text output of a batch: {r.stdout}")
 
         # output for a human and invocation errors
         r = run(p, "resolve", "EBO-1236")

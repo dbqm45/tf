@@ -456,7 +456,7 @@ def task_story(task: str, ctx: dict, extra: str | None) -> str:
 
 
 def busy_session(project: Path) -> bool:
-    """Whether the current session (the newest transcript of the project) already holds another /tf task: an earlier
+    """Whether the current session (the newest transcript of the project) already holds another /tf-task task: an earlier
     `run_report.py start` in it. Old attempts in the context distract the agent — a fresh session per task is cheaper."""
     for d in transcript_dirs(project):
         try:
@@ -512,7 +512,7 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
     taken = [p for p in (run_dir, docs / "task.json", docs / "plan.md", docs / "spec.md", docs / story_name) if p.exists()]
     if taken:
         print(f"✗ The run already exists: {taken[0]} — "
-              + (f"resume it (/tf {task}) or delete this directory to start the cut again." if cut
+              + (f"resume it (/tf-task {task}) or delete this directory to start the cut again." if cut
                  else "finish it or give another title or `--key`."))
         return 2
     r = task_state(project, "start", key, "--title", title, *(["--change", cut["change"], "--cut", task] if cut else []))
