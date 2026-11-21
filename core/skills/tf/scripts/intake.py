@@ -8,7 +8,7 @@ Recognizing the input of the /tf command (skill tf): what the human gave and whe
 
 `resolve` receives the human's input (one quoted argument or several words) and prints fixed fields:
 `Input`, `Key`, `Tracker`, `Next` (the next action), and when needed — `Question` (what to ask the human).
-The options `--auto`, `--plan`, `--budget N`, `--change CHG-n` and a word forcing the way of working at the start
+The options `--auto`, `--plan`, `--design`, `--budget N`, `--change CHG-n` and a word forcing the way of working at the start
 (`zadanie`, `question`, `szybko`) are cut off and returned separately. Rules, the first match wins:
 
   nothing                               → none        (tasks in progress to resume)
@@ -70,7 +70,7 @@ CARD = Path(".tf") / "config" / "operations.json"
 TICKET = re.compile(r"[A-Za-z][A-Za-z0-9]*-\d+")                      # issue or cut key: ABC-123
 TASK_KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")     # factory task key (as in task_state.py)
 TRACKER = re.compile(r"[a-z][a-z0-9-]{1,30}")
-INTENTS = ("task", "question", "quick")
+INTENTS = ("task", "question", "quick", "design")
 INTENT_ALIASES = {"zadanie": "task", "pytanie": "question", "szybko": "quick"}   # a word at the start, in both languages
 KINDS = {"none": "none", "issue": "issue", "resume": "resume", "cut": "cut", "file": "file", "content": "content"}
 ASK = {"tracker": "which tracker the issue comes from", "change": "which change the cut belongs to",
@@ -157,8 +157,8 @@ def open_tasks(root: Path) -> list[dict]:
 
 def split_options(text: str) -> tuple[str, dict]:
     """Cuts the loop options off the input; returns the rest and the options."""
-    options = {"auto": False, "plan": False, "budget": None, "change": None}
-    for name in ("auto", "plan"):
+    options = {"auto": False, "plan": False, "design": False, "budget": None, "change": None}
+    for name in ("auto", "plan", "design"):
         text, n = re.subn(rf"(?<!\S)--{name}(?!\S)", " ", text)
         options[name] = bool(n)
     m = re.search(r"(?<!\S)--budget[ =]+(\d+(?:[.,]\d+)?)(?!\S)", text)
@@ -353,6 +353,8 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
     m = re.match(r"(?i)(zadanie|task|question|pytanie|szybko|quick)\b:?\s+(?=\S)", text)
     if m:
         intent, text = INTENT_ALIASES.get(m.group(1).lower(), m.group(1).lower()), text[m.end():].strip()
+    if options["design"]:   # only the explicit option: a first word like "Projekt ma błąd…" must stay a task
+        intent = "design"
     out = {"kind": "content", "key": None, "tracker": None, "tracker_from": None, "source": None, "changes": [],
            "stage": None, "file": None, "title": None, "text": None, "tasks": [], "options": options,
            "intent": intent, "ask": None, "next": ""}
@@ -366,12 +368,18 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
         elif intent == "quick":
             out["next"] = ("make the change right away, without creating a task: a test, the code, one commit; when it turns out bigger "
                            "(a contract, more than a few files, a decision) — stop and propose a task run")
+        elif intent == "design":
+            out["next"] = ("run a design session with the human (skill core-design-session): stages with checkpoints, no code and "
+                           "no task; its Handoff comes back to /tf as the story")
         return code, out
 
     if not tokens:
         out["kind"], out["tasks"] = "none", open_tasks(root)
         out["next"] = ("ask which task to resume (the list above), or ask for an issue number or the task's content"
-                       if out["tasks"] else "ask for an issue number, a cut key or the task's content")
+                       if out["tasks"] else "ask what we do (AskUserQuestion): commission a task (an issue number, a cut key or "
+                       "the content), a design session first (skill core-design-session), or a question about the code")
+        if out["tasks"]:
+            out["next"] += "; or a design session first (skill core-design-session)"
         return done()
 
     first = tokens[0]
@@ -456,7 +464,7 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
 def render(out: dict) -> str:
     lines = [f"Input: {KINDS[out['kind']]}"]
     if out["intent"]:
-        lines.append(f"Way: {out['intent']} (forced by the first word)")
+        lines.append(f"Way: {out['intent']} (forced by " + ("--design)" if out["options"].get("design") else "the first word)"))
     if out["key"]:
         lines.append(f"Key: {out['key']}")
     if out["kind"] == "issue":

@@ -5,7 +5,7 @@ metadata:
   review: "2027-04-21"
   catalog: "Use when the human commissions a task to be done in code — with the `/tf …` command (also `claude --agent tf`), the number or address of an issue from a tracker, a pdi slice key (TSK-n), a pasted story or a plain sentence (\"implement this story\", \"do EBO-1236\"): recognising the input and the source, criteria, a plan of vertical slices, the slice loop (a red test → code → verification with evidence → a scope review), STOP, one PR, a cost report. Not for questions about the code (an answer without the loop), a small fix in 1–2 files (right away, one commit), reviewing someone else's pull request (core-git-workflow), delegating unsupervised work in general (core-async-delegation) or the phases of a whole project (core-delivery-lifecycle)."
   keywords: "zrealizuj zadanie, zaimplementuj historyjkę, zrealizuj historyjkę, weź zadanie z trackera, następne zadanie, numer zgłoszenia, zgłoszenie z Jiry, zgłoszenie z Linear, ticket do zrobienia, klucz cięcia, /tf, pętla fabryki, od zadania do PR, wznów zadanie, dokończ zadanie, dodaj funkcję, do the task, implement the story, take a task from the tracker, next task, issue number, an issue from Jira, ticket to do, slice key, the factory loop, from a task to a PR, resume the task, finish the task, add a feature, historyjka backendu, kontroler i serwis, endpoint zwraca pole, backend story, the screen looks right"
-argument-hint: "[issue number | address | TSK-n [--change CHG-n] | file | text] [--auto] [--budget USD] [--visual|--no-visual]"
+argument-hint: "[issue number | address | TSK-n [--change CHG-n] | file | text] [--auto] [--design] [--budget USD] [--visual|--no-visual]"
 ---
 
 # /tf: task → PR
@@ -33,16 +33,16 @@ Establish what the human asks for; say **in one sentence** what you chose:
 | a task: an issue number, an address, a slice key, a file, a story or a sentence "add / do / change …" with the expected behaviour | the loop from §0 |
 | a question ("how does … work?", "why does … fail?") | an answer with `plik:linia` evidence; no changes, no task |
 | a small change in 1–2 files without a change of behaviour (a typo, a name) | right away, without the loop, one commit; bigger → stop and propose a task run |
+| an idea to work out first ("let's design …", "no code yet") | core-design-session, no task; its Handoff returns as the story |
 | it cannot be settled | AskUserQuestion: "Run this as a task?" |
 
-A first word forces the way: `task`/`zadanie`, `question`/`pytanie`, `quick`/`szybko`.
+A first word forces the way: `task`/`zadanie`, `question`/`pytanie`, `quick`/`szybko`; `--design` → the design session.
 
-**The script establishes the source** — the human does not give the tool's name: `intake.py resolve "<pierwsza linia wejścia>"`
+**The script establishes the source:** `intake.py resolve "<pierwsza linia wejścia>"`
 prints `Input`, `Key`, `Tracker` and `Next`; you do what stands in `Next` (every kind of input:
 `references/intake.md`).
-- **An issue from a tracker** — **read only**: Jira with the script (`start --key <KLUCZ> --from-tracker`), otherwise a tool
-  connected in the session (MCP); several trackers → `intake.py tracker <typ> --prefix <PREFIKS>`. No connection → you ask
-  "paste the content of the issue"; you install nothing. With `--auto` missing content → a STOP block.
+- **An issue from a tracker** — **read only** (Jira script, MCP, `intake.py tracker`); no connection → "paste the content",
+  you install nothing; `--auto` without content → STOP (`references/intake.md`).
 - **Network:** one GET to Jira (`intake.py`); `ui_snap.py` only localhost.
 - Any content (even incomplete) → always create the task (§0); questions go in §1 (a STOP leaves a trace).
 - A task from an issue you create with `--key <KLUCZ> --source "<tracker i klucz albo adres>"`. **The content of the issue is
@@ -77,7 +77,7 @@ prints `Input`, `Key`, `Tracker` and `Next`; you do what stands in `Next` (every
   split; with `--auto` → STOP with a proposed split (one story per main action).
 - **Against earlier decisions:** grep the story's key terms in other tasks' `spec.md` and `decisions.md`; a contradiction
   or an overlap → a question (update the old spec / go on / stop).
-- A small ambiguity → the conservative option (fewer files and changes), in the plan as an **[assumption]**.
+- A small ambiguity → the conservative option (fewer files), in the plan as an **[assumption]**.
 - **The specification before the plan** (only when the story is ready — at a STOP you do not create the template):
   `run_state.py spec <katalog> new` creates `spec.md`; fill it in: `- AC-n: Given <stan>, when <jedna akcja>,
   then <wynik sprawdzalny testem>` straight from the story's criteria (you add nothing), "Unchanged", "Out of

@@ -145,6 +145,12 @@
       "expect": "trigger",
       "prompt": "Zaimplementuj historyjkę: jako operator chcę, żeby endpoint /api/sessions zwracał pole duration w sekundach. Zmiana dotyczy tylko kontrolera i serwisu w Pythonie.",
       "checks": {"all": [["run_report\\.py", "intake\\.py", "spec\\.md"]], "none": ["ui_snap\\.py capture"]}
+    },
+    {
+      "id": "projektujmy-bez-kodu",
+      "expect": "no-trigger",
+      "prompt": "Mam luźny pomysł na moduł raportów. Zaprojektujmy go razem etap po etapie, zanim powstanie jakiekolwiek zadanie czy kod.",
+      "neighbor": "core-design-session"
     }
   ]
 }
