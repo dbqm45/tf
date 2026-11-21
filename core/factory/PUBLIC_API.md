@@ -21,8 +21,9 @@ that is, what we promise to keep within the same MAJOR version, also toward over
 | data formats | `docs/project/` artifacts (TL;DR, Handoff; Open questions; status; domain areas: Evidence / Named by the human / Candidates below the threshold), the checkpoint `.tf/wip/`, the questions file between personas `docs/project/questions.md`, scenarios `skill_evals/*.json`, the gate registry (`.claude/tests/skill_gate/<id>.json`, `.claude/skill-gate.json`), logs `.tf/logs/*.jsonl`, the run directory `.tf/runs/` (ignored by git), commit footers `Change: <key>` and `Flag: <key>` (the `commit-msg` hook of core-conventional-commits), knowledge base source registries `.claude/skills/*/references/zrodla.json` (`version`, `areas`, `sources`) and its cache `.claude/knowledge/<id>/` (`doc.txt`, `meta.json`, ignored by git); an analysis module `analyzer.yaml` (`name`, `prefix`, `title`, `description`, `version`, `review`, `skills`, `applies_when.files_any`, `incremental`, `tier0.script` or `tier0.rules`: a declarative rules file `rules.yaml` (`rules`: `id`, `title`, `files`, `exclude`, `forbid` or `require`, `head`, `severity`, `suggestion`, `basis`) executed by `.tf/factory/rules_scan.py`, `gate.min_recall`, `gate.max_false_positives`; the gate set `fixtures/<case>/repo/` and `expected.json` with a list of `{rule, file}`) and the tier-0 script output (JSON Lines: `rule`, `title`, `file`, `line`, `snippet`, `severity`, `confidence`, `evidence`, `basis`, `suggestion`), the finding id `<PREFIX>-<6 hex>`, the report `.tf/reports/<module>.md` (second line `Verdict:`, section `## Recommended actions` with checkboxes, read when merging), `.tf/reports/<module>.json`, the register `.tf/register/items.jsonl` (`id`, `kind`, `module`, `title`, `status`, `source`, `refs`, `created`, `updated`, `note`), variables `TF_ANALYZERS_PATH`, `TF_ANALYZE_NO_CACHE` |
 
 The names of skills, personas and agents of an **overlay** or **mode** are the public API of that overlay or mode (the
-version in its `pack.yaml`). **The "task → PR" loop is part of the core** (since 10.0.0): the main session agent `tf`, the skill `tf`
-(the command `/tf`), the scripts `.claude/skills/tf/scripts/run_report.py` (`start [--key KEY | --task TSK-n [--change CHG-n]]
+version in its `pack.yaml`). **The "task → PR" loop is part of the core** (since 10.0.0): the main session agent `tf-task`, the skill `tf-task`
+(the command `/tf-task`, several keys run in turn; since 22.0.0 — before that the skill `tf` and the command `/tf`), next to it the
+skill `tf` (`/tf`: work with the factory without the loop) and `tf-design` (`/tf-design`: the design session), the scripts `.claude/skills/tf/scripts/run_report.py` (`start [--key KEY | --task TSK-n [--change CHG-n]]
 [--source "<where from>"]`, `status`, `finish`), `intake.py` (`resolve [--json] <input>` with the fields `kind`, `key`, `tracker`,
 `changes`, `options`, `intent`, `ask`, `next`; `tracker [<type> [--prefix P]]`; `fetch <KEY> [--json]`: a Jira ticket,
 read only; `run_report.py start --key <KEY> --from-tracker`; variables `JIRA_BASE_URL`, `JIRA_EMAIL`, `JIRA_API_TOKEN`,
@@ -64,7 +65,7 @@ an existing file becomes a fixed note), stop codes (`run_state.py stage <directo
 `.tf/runs/cuts/<date>-<slug>/` (`story.md`) is no longer created. **Removed in 10.0.0** (the loop used to be the mode `mode-talos`):
 the mode `mode-talos`, the command `/talos-story-run`, the agent `talos`, the path `.claude/skills/talos-story-run/scripts/`,
 the options file `.claude/talos.json`, the variables `TALOS_DASHBOARD`, `TALOS_DASHBOARD_OPEN`, `TALOS_SCAN_PATH`,
-`TALOS_SEMGREP_CONFIG` and the directory `.tf/runs/talos/`; the equivalents: `/tf`, the agent `tf`, `.claude/skills/tf/scripts/`,
+`TALOS_SEMGREP_CONFIG` and the directory `.tf/runs/talos/`; the equivalents: `/tf-task`, the agent `tf-task`, `.claude/skills/tf/scripts/`,
 `.claude/tf.json`, the variables `TF_*`, `.tf/runs/`. The mode `mode-team`: the skill `team-session`, the script
 `.claude/skills/team-session/scripts/team_switch.py` (`on`, `off`, `status`).
 

@@ -442,7 +442,7 @@ def retarget(data: bytes) -> bytes:
 # Packs and modes retired from the factory: id → what replaced them. A project update that had them skips them
 # with a message (files go to .tf/backup/ like any file the factory no longer ships); an explicit request
 # for such an identifier (--packs, --add) is refused with an explanation.
-RETIRED_PACKS = {"mode-talos": "the task loop is part of the core now: use /tf (agent `tf`)",
+RETIRED_PACKS = {"mode-talos": "the task loop is part of the core now: use /tf-task (agent `tf-task`)",
                  "pack-ev": "EV knowledge lives in the EV Intelligence project (github.com/dbqm45/ev-intelligence): "
                             "ev-* skills and an MCP server for Claude Code (integrations/claude-code/README.md there)"}
 
@@ -785,7 +785,7 @@ def plugin_files(plan: "Plan", dst_root: Path, settings: dict, py: str, version:
     if not any("factory_rules.py" in json.dumps(g) for g in start):
         start.insert(0, {"hooks": [rules_hook]})
     meta = {"name": "tf", "version": version, "description": "Team factory: skills, agents, hooks and rules of the "
-            "/tf loop. Loaded only by a factory session (tf code)."}
+            "/tf-task loop. Loaded only by a factory session (tf code)."}
     plan.copy(None, PLUGIN + "/.claude-plugin/plugin.json", (json.dumps(meta, indent=2) + "\n").encode("utf-8"))
     market = {"name": "tf-project", "owner": {"name": "team factory"},       # .tf/ as a directory marketplace: the cloud
               "plugins": [{"name": "tf", "source": "./plugin", "description": meta["description"]}]}   # (tf cloud-setup)

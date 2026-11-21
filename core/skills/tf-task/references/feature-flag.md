@@ -1,7 +1,7 @@
 # A feature flag per story
 
 You read this at the plan (§2 of SKILL.md), when `run_state.py flag <katalog> mode` returns `auto`. A pdi slice run has
-the flag from the release plan — see `.claude/skills/tf/references/pdi-cuts.md`.
+the flag from the release plan — see `.claude/skills/tf-task/references/pdi-cuts.md`.
 
 ## The decision (without it the `pr` stage is rejected)
 | Change | What you record |

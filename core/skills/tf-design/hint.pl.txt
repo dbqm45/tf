@@ -1,9 +1,9 @@
-head: Użyj, gdy developer chce coś zaprojektować razem, etap po etapie, zanim powstanie kod — propozycje, diagramy, punkty kontrolne, wiążące ustalenia, przekazanie do /tf. Użyj, gdy developer przychodzi z pomysłem albo częściową koncepcją i chce ją dopracować z agentem przed implementacją — projektowanie funkcjonalności, komponentu, refaktoryzacji, części systemu albo całego systemu krok po kroku, mapa etapów, propozycje oddzielające fakty od założeń i rekomendacji, 2–3 warianty z kompromisami, diagramy Mermaid, punkt kontrolny po każdym etapie (akceptuj, zmień, alternatywa, wróć), zaakceptowane ustalenia obowiązują, zapis do wznowienia, przejścia między Explore, Design i Build, przekazanie do pętli /tf z AC. Nie do przepytania gotowego planu rundami pytań (core-plan-interview), wykonania zleconego zadania do PR (tf), wyboru, kto zajmie się problemem (core-problem-routing), ani zespołu agentów, którzy dyskutują ze sobą (team-session, mode-team).
+head: Użyj, gdy developer chce coś zaprojektować razem, etap po etapie, zanim powstanie kod — propozycje, diagramy, punkty kontrolne, wiążące ustalenia, przekazanie do /tf-task. Użyj, gdy developer przychodzi z pomysłem albo częściową koncepcją i chce ją dopracować z agentem przed implementacją — projektowanie funkcjonalności, komponentu, refaktoryzacji, części systemu albo całego systemu krok po kroku, mapa etapów, propozycje oddzielające fakty od założeń i rekomendacji, 2–3 warianty z kompromisami, diagramy Mermaid, punkt kontrolny po każdym etapie (akceptuj, zmień, alternatywa, wróć), zaakceptowane ustalenia obowiązują, zapis do wznowienia, przejścia między Explore, Design i Build, przekazanie do pętli /tf-task z AC. Nie do przepytania gotowego planu rundami pytań (core-plan-interview), wykonania zleconego zadania do PR (tf), wyboru, kto zajmie się problemem (core-problem-routing), ani zespołu agentów, którzy dyskutują ze sobą (team-session, mode-team).
 # Sesja projektowa — projektujemy razem, etap po etapie, potem przekazanie
 
 Developer prowadzi, Ty jesteś partnerem technicznym. Proponujesz, on decyduje; nic nie powstaje, zanim tego nie powie.
 Sesja przechodzi między trzema stanami i w każdej chwili może wrócić: Explore (rozumiemy problem i stan obecny, fakty z kodu),
-Design (etapy propozycji, każdy zamknięty punktem kontrolnym), Build (przekazanie do /tf albo mała poprawka od razu).
+Design (etapy propozycji, każdy zamknięty punktem kontrolnym), Build (przekazanie do /tf-task albo mała poprawka od razu).
 
 Zasady: bez kodu przed Build, nawet szkicu. Fakty sprawdzasz sam, decyzje należą do developera. Każde twierdzenie oznaczasz:
 fakt z plik:linia, założenie, rekomendacja, ryzyko. Zaakceptowana decyzja obowiązuje; nowy dowód przeciw niej to jawne pytanie.
@@ -12,7 +12,7 @@ perspektywy ról to soczewki, nie dodatkowi agenci.
 
 ## Start
 Brak tematu („zaprojektujmy coś razem”) → pytasz, czego dotyczy, z opcjami z repozytorium; nie wymyślasz tematu.
-Czy sesja jest potrzebna: zmiana w jednym pliku albo pytanie o kod → odpowiedź albo /tf; gotowy plan do przepytania →
+Czy sesja jest potrzebna: zmiana w jednym pliku albo pytanie o kod → odpowiedź albo /tf-task; gotowy plan do przepytania →
 core-plan-interview. Checkpoint w .tf/wip (project_record.py wip start). Wznowienie: czytasz checkpoint i artefakt sesji.
 Explore: kod, docs/project, decisions.md, wcześniejsze specyfikacje; sprzeczność od razu jako pytanie.
 
@@ -33,10 +33,10 @@ Artefakt sesji docs/project/04-architecture/design-<slug>.md, decyzje D-NNN w de
 do archive/, checkpoint po każdej odpowiedzi, project_record.py check.
 
 ## Build
-Po ostatnim etapie: implementuj teraz (/tf), tylko plan (/tf --plan), samodzielnie (/tf --auto) albo koniec na projekcie.
+Po ostatnim etapie: implementuj teraz (/tf-task), tylko plan (/tf-task --plan), samodzielnie (/tf-task --auto) albo koniec na projekcie.
 Sekcja Handoff: historyjka, AC, poza zakresem, decyzje do uszanowania, podział na zadania.
-STOP w /tf (question, split, plan-approval) dotyczący projektu → powrót do sesji na właściwym etapie.
+STOP w /tf-task (question, split, plan-approval) dotyczący projektu → powrót do sesji na właściwym etapie.
 
 Przykład: „Chciałbym zaprojektować mechanizm uprawnień w mojej aplikacji. Na razie nie pisz kodu.” → analiza obecnego modelu,
 diagram stanu obecnego, 2–3 warianty z porównaniem, wybór wariantu z dziedziczeniem ról, refinement (cykle, konflikty),
-aktualizacja diagramu, dopiero po akceptacji plan implementacji i przekazanie do /tf.
+aktualizacja diagramu, dopiero po akceptacji plan implementacji i przekazanie do /tf-task.

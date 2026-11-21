@@ -100,7 +100,7 @@ os.environ.setdefault("PYTHONUTF8", "1")  # child processes also write and read 
 
 SCHEMA = 1
 CHANGES = Path("docs") / "project" / "changes"
-RUNS = Path(".tf") / "runs"                       # working directories of /tf loop runs (run.json: stage, stop)
+RUNS = Path(".tf") / "runs"                       # working directories of /tf-task loop runs (run.json: stage, stop)
 STOP_MESSAGES = Path(".claude") / "skills" / "tf" / "templates" / "stop_messages.json"
 CARD = Path(".tf") / "config" / "operations.json"   # the project's operations card; the `deploy` section: how to check and roll back a deployment
 PANEL = ("security-reviewer", "spec-reviewer")   # reviewer panel at full weight (step H11, decision D11)
@@ -804,7 +804,7 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
     mode = task.get("mode")
     if mode == "plan":
         return (f"the task is in the Plan mode — the run ends at the plan, without code changes. The human starts the delivery "
-                f"with a separate command (/tf {key}); then change the mode: tf task mode {key} normal (or auto)")
+                f"with a separate command (/tf-task {key}); then change the mode: tf task mode {key} normal (or auto)")
     art = (task.get("artifacts") or {}).get("plan.md")
     state = artifact_state(root, key, art, "plan.md")[0] if art else "none"
     upstream = bool(task.get("change")) and mode == "auto"   # cut: the change plan was approved at the pdi gate
@@ -816,7 +816,7 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
     if mode != "auto" and art and state != "approved":
         return (f"in the normal mode the task moves to the stage {stage} after the human's consent to the plan (the plan's state: "
                 f"{state}): show the plan and the specification to the human, and after their consent tf task approve {key} plan.md "
-                f"--by human:<id>. The human chooses the mode without approval (--auto) in the /tf command: if they gave it, "
+                f"--by human:<id>. The human chooses the mode without approval (--auto) in the /tf-task command: if they gave it, "
                 f"record the mode (tf task mode {key} auto); you do not set it yourself to skip the consent")
     return None
 
@@ -1075,7 +1075,7 @@ def cmd_stage(root: Path, key: str, stage: str, force: bool) -> int:
 
 
 def stop_message(root: Path, code: str | None) -> dict:
-    """The /tf loop stop message for a human (what, need, question, options); empty when there is no loop or code."""
+    """The /tf-task loop stop message for a human (what, need, question, options); empty when there is no loop or code."""
     for base in (Path(__file__).resolve().parents[2], root):
         try:
             msg = json.loads((base / STOP_MESSAGES).read_text(encoding="utf-8")).get(code or "")

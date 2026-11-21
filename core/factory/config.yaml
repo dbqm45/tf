@@ -133,16 +133,16 @@ shared_agents:
       project and the accepted exceptions (with a reason). Never record secrets or fragments of them.
     memory: project
 
-  # The "task → PR" loop (the /tf command, a plain sentence assigning a task, or `claude --agent tf`). The agent reads the skill
+  # The "task → PR" loop (the /tf-task command, a plain sentence assigning a task, or `claude --agent tf-task`). The agent reads the skill
   # from a file instead of loading it at start (`skills`) — the same as before step E1.
-  tf:
+  tf-task:
     tier: std
     main_only: true
-    description: The factory's "task → PR" loop on request (run `claude --agent tf` and give the task; --auto skips plan approval, --budget USD is a hard limit). A specification, a plan of slices, a commit per slice, evidence, one PR, a time and cost report.
+    description: The factory's "task → PR" loop on request (run `claude --agent tf-task` and give the task; --auto skips plan approval, --budget USD is a hard limit). A specification, a plan of slices, a commit per slice, evidence, one PR, a time and cost report.
     tools: ["Agent(scout, researcher, quick-fixer, scope-reviewer, spec-reviewer, architect, security-reviewer, mcp-runner)", Read, Grep, Glob, Edit, Write, Bash]
     prompt: |
       You run the factory loop: you turn one task into one PR. You work only in this mode.
-      Before you do anything else, read `.claude/skills/tf/SKILL.md` with the Read tool and run the
+      Before you do anything else, read `.claude/skills/tf-task/SKILL.md` with the Read tool and run the
       course exactly according to it: the start (`run_report.py start`), taking in the story, a plan of slices, the
       slice loop, finishing with a PR and `run_report.py finish`.
       You take the options from the human's message: `--auto` — the plan does not wait for acceptance; `--visual` / `--no-visual` — force or forbid the screenshots of a UI change; `--budget <USD>` — a hard STOP
@@ -150,7 +150,7 @@ shared_agents:
       As cheaply and simply as possible: the acceptance criteria, nothing beyond them; edge cases to `parked.md`; the cheapest
       sufficient executor; at most 2 repair attempts per gate, then a STOP block. You do not merge the PR.
 
-  # Scope review in a fresh context: the diff against a plan slice (KISS, YAGNI). Used by the /tf loop.
+  # Scope review in a fresh context: the diff against a plan slice (KISS, YAGNI). Used by the /tf-task loop.
   scope-reviewer:
     tier: std
     description: A review of the diff against the step plan in a fresh context — code out of scope, unrequested edge cases, unneeded dependencies. Read-only.
@@ -365,7 +365,7 @@ facets:
   - {prefix: lang-, order: 100, name: language,        question: "HOW to express the concepts in a specific language", contract: true, versioned: true}
   - {prefix: tool-, order: 110, name: tools,           question: "what we build with and how we organize the repository (monorepo, build)", versioned: true}
   - {prefix: core-, order: 900, name: practices,       question: "how we work (skill composition, versions, git, commits, project record)"}
-  - {prefix: tf,    order: 950, name: delivery,        question: "how to take a task from the ticket to the PR (the factory loop, the /tf command)"}
+  - {prefix: tf,    order: 950, name: delivery,        question: "how to work with the factory and take a task from the ticket to the PR (/tf, /tf-task, /tf-design)"}
 
 # Concept vocabulary — a contract that every skill with `contract: true` must cover
 # (the "## Domain concepts in …" section with a concept → idiom mapping).
@@ -387,7 +387,7 @@ skill_requires: {}
 
 # Standalone skills: without a role and persona, invoked manually (`/<skill>`) or chosen by the dispatcher
 # (core-problem-routing). `build.py check` does not warn that nobody uses them.
-standalone_skills: [core-factory-update, core-teaching-workspace, core-agent-retro, core-sweep, core-design-session, tf]   # two run only manually (/…), the agent retrospective, the occasional sweep, the design session with a developer, the /tf loop
+standalone_skills: [core-factory-update, core-teaching-workspace, core-agent-retro, core-sweep, tf-design, tf, tf-task]   # two run only manually (/…), the agent retrospective, the occasional sweep, the design session with a developer, the /tf-task loop and its /tf-task shortcut
 
 # Skills added to every agent of personas and executors (of all packs). A pack may add its own
 # `always_skills` — they go only to its personas and executors.
@@ -436,14 +436,14 @@ autonomy:
     data_upload: confirm        # sending a file outside (curl -F @, --upload-file)
     sudo: confirm
 
-# Steps of the /tf loop (step E of the run axis): who performs the step and at what level. A step's tier becomes the tier of its
+# Steps of the /tf-task loop (step E of the run axis): who performs the step and at what level. A step's tier becomes the tier of its
 # executor when building agents (model and effort from `tiers` after applying the cost profile). The values equal
 # the previous ones — changing the assignment is a separate decision after measurement. A project overrides in .tf/config/config.yaml, e.g.
 # `steps: {review: {tier: deep}}`, and rebuilds the agents (python3 .tf/factory/build.py). Preview: tf config show steps.
 steps:
   facts:          {label: "facts about the repository", who: scout, tier: fast}
   versions:         {label: "versions, external documentation", who: researcher, tier: fast}
-  implementation:     {label: "plan, test, code", who: tf, tier: std}
+  implementation:     {label: "plan, test, code", who: tf-task, tier: std}
   mechanical:      {label: "a mechanical change with a specification", who: quick-fixer, tier: fast}
   review:       {label: "the scope review of a slice", who: scope-reviewer, tier: std}
   decision:        {label: "a decision that is hard to reverse", who: architect, tier: deep}
@@ -481,7 +481,7 @@ system_diff:
 feature_flags:
   auto: true
 
-# The /tf loop. blocked_slices: true — a question blocks only its own slice (`run_state.py block`), and the loop does in the
+# The /tf-task loop. blocked_slices: true — a question blocks only its own slice (`run_state.py block`), and the loop does in the
 # meantime the slices that do not depend on it (dependencies are recorded by the plan: `· after: S1`, `· after: none`); STOP only when
 # no slice is independent. false (default, until measured) — every question is a STOP block, as before.
 loop:
@@ -490,7 +490,7 @@ loop:
   # (`run_state.py proceed`) before starting the next; does not work in Auto mode (there is no human).
   confirm_each_slice: false
 
-# Visual check of UI changes in the /tf loop (`ui_snap.py worth <run>`): screenshots before/after exist only when it is worth it.
+# Visual check of UI changes in the /tf-task loop (`ui_snap.py worth <run>`): screenshots before/after exist only when it is worth it.
 # No UI files in the plan or the diff = no visual check at all. Yes: at least min_ui_files UI files, or at least min_ui_lines
 # changed UI lines (known from the diff, at PR time), or an acceptance criterion that names something visible (a word that
 # starts with one of the keywords). A light task needs such a criterion. The human forces it with --visual / --no-visual.
@@ -519,11 +519,11 @@ styles:
     task: {default_mode: plan}
     loop: {blocked_slices: false, confirm_each_slice: true}
     # Claude Code permission mode in the project's .claude/settings.local.json (`tf style`): plan — even a conversation outside
-    # the /tf loop does not change files without consent. A human's own mode is not overwritten by the style; changing the style gives it back.
+    # the /tf-task loop does not change files without consent. A human's own mode is not overwritten by the style; changing the style gives it back.
     claude: {permission_mode: plan}
 
 # Unattended work (`tf work --once`): takes a task in Auto mode (`tf task mode <KEY> auto`), of light or
-# regular weight, and runs the /tf loop in a separate worktree (.tf/worktrees/<KEY>). budget_usd — the spend limit of a single run
+# regular weight, and runs the /tf-task loop in a separate worktree (.tf/worktrees/<KEY>). budget_usd — the spend limit of a single run
 # (0: --budget must be given; at most 500), task_budget_usd — the total limit of all runs of one task
 # (the sum of limits from .tf/logs/work.jsonl; 0 — no limit), permission_mode — the agent's permission mode: acceptEdits
 # (file edits in the worktree accepted, any other tool outside the allowed list rejected — nobody waits for consent),

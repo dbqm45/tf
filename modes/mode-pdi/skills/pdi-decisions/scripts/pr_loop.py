@@ -248,7 +248,7 @@ def fix_prompt(change: str, branch: str, round_no: int, data: dict[str, Any]) ->
         f"You work without interaction: fix round {round_no} of the PR loop (N2) for cut {task or branch} of change {change}. "
         f"You are already on branch `{branch}` (pdi switched it). Nobody will answer questions.",
         "Fix only what is below — review findings confirmed by a second model and the red check — nothing else "
-        "(rules: `.claude/skills/tf/references/pdi-cuts.md`, section „Fixes from the PR loop”). Do not work around a "
+        "(rules: `.claude/skills/tf-task/references/pdi-cuts.md`, section „Fixes from the PR loop”). Do not work around a "
         "finding that cannot be fixed within the cut: describe it in one sentence in your last reply.",
         "Tools: read files with Read, Grep and Glob. In Bash, one command per call, without `&&`, `||`, `;`, "
         "`|` and without `cd …` — otherwise the command is rejected.",
@@ -280,7 +280,7 @@ def cmd_fix(a: argparse.Namespace) -> int:
     if not isinstance(data, dict) or not (data.get("comments") or data.get("ci_log")):
         raise Refused("fix input: {comments: [...], ci_log?} — nothing to fix")
     prompt = fix_prompt(a.change, a.branch, a.round, data)
-    argv = _claude(["--agent", "tf", "--permission-mode", "acceptEdits"], budget)
+    argv = _claude(["--agent", "tf-task", "--permission-mode", "acceptEdits"], budget)
     if a.dry_run:
         print(json.dumps({"status": "dry_run", "argv": argv, "prompt": prompt}, ensure_ascii=False, indent=2))
         return 0

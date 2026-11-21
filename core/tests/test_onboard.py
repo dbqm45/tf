@@ -125,7 +125,7 @@ def main() -> int:
         r = run(p, "--dry-run", "--yes")
         check(r.returncode == 0 and "npm test" in r.stdout, f"O-16: --dry-run shows the proposal: {r.stdout}{r.stderr}")
 
-        # `related` is not guessed from a technology table: the gate stays with `command`, the /tf loop proposes one
+        # `related` is not guessed from a technology table: the gate stays with `command`, the /tf-task loop proposes one
         p = make(base, "nx", {"package.json": {**NODE, "devDependencies": {"jest": "^29.7.0"}}, "package-lock.json": "{}",
                               "nx.json": "{}"})
         r = run(p, "--yes")
@@ -226,7 +226,7 @@ def main() -> int:
               f"O-29b: the template commands come from the new block, not the old template: {out}")
         check(keep and keep(fresh, "bez bloku") == fresh, "O-30: the first write of the block unchanged")
 
-        # private installation: the files from tf onboard stay local, the working tree clean (the /tf loop requires it)
+        # private installation: the files from tf onboard stay local, the working tree clean (the /tf-task loop requires it)
         if shutil.which("git") and os.name != "nt":
             def git(repo, *a):
                 return subprocess.run(["git", "-c", "user.name=t", "-c", "user.email=t@t", *a], cwd=repo,

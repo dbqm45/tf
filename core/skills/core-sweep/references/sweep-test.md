@@ -56,7 +56,7 @@ git branch -D test/sweep
 
 ## Koszt
 Krok 1 jest darmowy. Kroki 3–4 to tani model (Haiku) — rząd centów na przebieg [szacunek]; dokładny koszt pokaże
-raport `/tf` lub status sesji.
+raport `/tf-task` lub status sesji.
 
 ## Gdy coś jest nie tak
 Skan zgłasza coś bez sensu albo pomija pułapkę z kroku 2 → zapisz wynik `scan --json` i zgłoś to w repozytorium

@@ -24,11 +24,7 @@
   "offline": "2026-11-20"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "c393013ed2cc6178",
-  "offline": "2026-11-21"
- },
- "core-design-session": {
-  "fingerprint": "302404d8c168099f",
+  "fingerprint": "5629086366af7866",
   "offline": "2026-11-21"
  },
  "core-factory-update": {
@@ -80,15 +76,23 @@
   "offline": "2026-11-18"
  },
  "core-sweep": {
-  "fingerprint": "9e2df0b9c0439edc",
-  "offline": "2026-11-20"
+  "fingerprint": "16b599a3af61648e",
+  "offline": "2026-11-21"
  },
  "core-teaching-workspace": {
   "fingerprint": "f0d9e8d54f6a5def",
   "offline": "2026-11-20"
  },
  "tf": {
-  "fingerprint": "5f31695f35338bfa",
+  "fingerprint": "ac5f812c4c31a425",
+  "offline": "2026-11-21"
+ },
+ "tf-design": {
+  "fingerprint": "03e9e04d5b4779ff",
+  "offline": "2026-11-21"
+ },
+ "tf-task": {
+  "fingerprint": "c4dad80e9ceaabcd",
   "offline": "2026-11-21"
  }
 }

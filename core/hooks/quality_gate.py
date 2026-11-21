@@ -9,7 +9,7 @@ Works only with the project configuration `.claude/quality-gate.json` (the facto
 - `related` — optional: the tests related to the changed files only (a string or an argument list, no shell). The token
   `{files}` expands into the changed files as separate arguments; `{files,}` inside a token is replaced with the files joined
   with commas; `{dirs}` gives the directories of the changed source files. The factory knows no test tool: the command
-  for the project's stack is chosen in the project (the /tf loop proposes one). A placeholder that gives nothing → the
+  for the project's stack is chosen in the project (the /tf-task loop proposes one). A placeholder that gives nothing → the
   full `command`. With `related` the gate runs
   it instead of `command` — in a big repository (an Nx monorepo) the whole suite on every turn is the bottleneck. The
   changed files are the ones the fingerprint sees (changed relative to HEAD and new, within `watch`) that still exist;
@@ -291,7 +291,7 @@ def gate_status(root: Path, env=None) -> tuple[str, str]:
         return "on", (f"✓ Quality gate on: `{related}` for the changed files (`related`), "
                       f"the full `{command}` when there are none to pass (only deletions) or too many.")
     return "on", (f"✓ Quality gate on: `{command}` — the whole suite on every check; for speed add `related` (only the "
-                  "tests of the changed files, a command for this project's stack — the /tf loop proposes one).")
+                  "tests of the changed files, a command for this project's stack — the /tf-task loop proposes one).")
 
 
 def main() -> int:

@@ -217,7 +217,7 @@ def main() -> int:
         (old / "run.json").write_text(json.dumps({"slug": "tsk-1", "started_at": "2026-11-01T10:00:00+00:00",
                                                   "change": "CHG-1", "task": "TSK-1"}), encoding="utf-8")
         r = script(p, cfg, "run_state.py", "verify", str(old), "S1", "--files", "a.py")
-        check(r.returncode != 0 and "start the cut again" in r.stdout + r.stderr and "/tf TSK-1" in r.stdout + r.stderr,
+        check(r.returncode != 0 and "start the cut again" in r.stdout + r.stderr and "/tf-task TSK-1" in r.stdout + r.stderr,
               f"C-23: a run without a task -> the 'start the cut again' message: {r.returncode} {r.stdout} {r.stderr}")
 
     for f in fails:

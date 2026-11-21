@@ -92,7 +92,7 @@ def project(tmp: Path) -> Path:
     """A project with the CHG-12 change log, personas ewa and tomasz, and the tf agent (factory loop)."""
     subprocess.run([sys.executable, str(ROOT / DREC), "change", "new", "CHG-12"], cwd=tmp, capture_output=True,
                    check=True)
-    for p in ("ewa", "tomasz", "tf"):
+    for p in ("ewa", "tomasz", "tf-task"):
         f = tmp / ".claude" / "agents" / "_generated" / p / f"{p}.md"
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(f"---\nname: {p}\n---\n", encoding="utf-8")
@@ -145,7 +145,7 @@ def main() -> int:
               f"R-3: rework points to the decision and decisions.md: {text[:500]}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "delivery", "--budget-usd", "5"], repo)
         p = jl(r) or {}
-        check(p.get("persona") == "tf" and p.get("gate") is None and "/tf <TSK>" in p.get("prompt", "")
+        check(p.get("persona") == "tf-task" and p.get("gate") is None and "/tf-task <TSK>" in p.get("prompt", "")
               and "--auto" in p.get("prompt", "") and "--budget 5" in p.get("prompt", "")
               # PRB-33: the delivery prompt gives `--change CHG-n` so the loop does not guess which change a TSK belongs to
               # (the same TSK can be in two plans, see test_run_report.py R-33a)

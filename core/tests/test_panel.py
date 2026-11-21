@@ -148,8 +148,8 @@ def main() -> int:
     block = cfg.split("\n  spec-reviewer:", 1)[-1].split("\n\n", 1)[0] if "\n  spec-reviewer:" in cfg else ""
     check(block and "tools: [Read, Grep, Glob, Bash]" in block and "AC-n" in block and "Unchanged" in block,
           f"PN-15: the spec-reviewer agent — read-only, checks criterion by criterion and the 'Unchanged' rules: {block[:300]}")
-    tf_tools = cfg.split("\n  tf:", 1)[-1].split("\n", 6)[:6] if "\n  tf:" in cfg else []
-    check(any("spec-reviewer" in ln for ln in tf_tools), f"PN-16: the tf loop can call spec-reviewer: {tf_tools}")
+    tf_tools = cfg.split("\n  tf-task:", 1)[-1].split("\n", 6)[:6] if "\n  tf-task:" in cfg else []
+    check(any("spec-reviewer" in ln for ln in tf_tools), f"PN-16: the tf-task loop can call spec-reviewer: {tf_tools}")
 
     for f in fails:
         print(f"✗ {f}")

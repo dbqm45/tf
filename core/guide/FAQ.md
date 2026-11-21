@@ -61,7 +61,7 @@ company's documents (e.g. Confluence) with the `org/standards_from_docs.py` scri
      languages;
    - `pack.yaml` → `org_defaults.operations.tracker`: the tracker, issue key prefixes, the Jira field with criteria;
    - rules checkable with a pattern (`analyzers/<company>-standards/rules.yaml`, with examples in `fixtures/`): they work
-     without a model in `tf analyze`; semgrep rules — `semgrep.yml`, used in the `/tf` loop's scan;
+     without a model in `tf analyze`; semgrep rules — `semgrep.yml`, used in the `/tf-task` loop's scan;
    - the standards skill (`skills/<company>-standards/`): only findings that need judgement — first the scenarios
      in `tests/skill_evals/`, then the content;
    - `settings.json`: Claude Code permissions for the whole company.

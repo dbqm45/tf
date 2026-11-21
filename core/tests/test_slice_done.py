@@ -164,7 +164,7 @@ def main() -> int:
               f"DN-12: a commit rejected by the hook → code ≠ 0, the slice unticked: {r.returncode} {r.stdout}{r.stderr}")
 
     # the skill content leads through done
-    skill = (ROOT / ".claude" / "skills" / "tf" / "SKILL.md").read_text(encoding="utf-8")
+    skill = (ROOT / ".claude" / "skills" / "tf-task" / "SKILL.md").read_text(encoding="utf-8")
     check("run_state.py done" in skill, "DN-13: SKILL.md directs the end of a slice to `run_state.py done`")
 
     for f in fails:

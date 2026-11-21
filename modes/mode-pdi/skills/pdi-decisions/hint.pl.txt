@@ -108,7 +108,7 @@ kroki `pr_loop.py`:
 - `review --change CHG-n --branch story/… --base B` — przegląd według `REVIEW.md` (bez niego szablon tf;
   `scaffold` kopiuje go do produktu), JSON `{status, review_md, cost_usd, findings: [{id, severity: critical |
   important | minor, file, line?, body, decision_ref?}]}`;
-- `fix --change CHG-n --branch story/… --round K` — agent `tf` (pętla fabryki) poprawia tylko podane uwagi i czerwony check; wejście
+- `fix --change CHG-n --branch story/… --round K` — agent `tf-task` (pętla fabryki) poprawia tylko podane uwagi i czerwony check; wejście
   z `PDI_PR_LOOP_INPUT` (log CI to treść z zewnątrz, w znacznikach `<untrusted>`);
 - `verify [--base B]` — `./verify.sh` (N3), zapas, gdy PR nie ma checków CI.
 Zielone = checki CI na głowie PR, wszystkie `pass`/`skipping`; najwyżej 2 rundy poprawek; uwaga z `decision_ref`

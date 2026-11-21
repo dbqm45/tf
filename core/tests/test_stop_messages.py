@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests of the /tf loop's stop messages (the tf skill, templates/stop_messages.json): every code has a message in plain
+"""Tests of the /tf-task loop's stop messages (the tf skill, templates/stop_messages.json): every code has a message in plain
 language — what happened, what is needed, one question with options and a recommendation. python3 .claude/tests/test_stop_messages.py"""
 import json
 import re

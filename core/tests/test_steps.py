@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests of assigning a model and effort to the /tf loop's steps (`steps` in the factory configuration, .tf/factory/build.py):
+"""Tests of assigning a model and effort to the /tf-task loop's steps (`steps` in the factory configuration, .tf/factory/build.py):
 the defaults give today's models, an override changes the executor, the table in the skill matches the configuration.
 python3 .claude/tests/test_steps.py"""
 import copy
@@ -11,9 +11,9 @@ from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "tf.py").is_file())
 BUILD = ROOT / ".tf" / "factory" / "build.py"
-SKILL = ROOT / ".claude" / "skills" / "tf" / "SKILL.md"
+SKILL = ROOT / ".claude" / "skills" / "tf-task" / "SKILL.md"
 # values from before step E5 (the default profile): executor → model
-TODAY = {"scout": "haiku", "researcher": "haiku", "quick-fixer": "haiku", "tf": "sonnet", "scope-reviewer": "sonnet",
+TODAY = {"scout": "haiku", "researcher": "haiku", "quick-fixer": "haiku", "tf-task": "sonnet", "scope-reviewer": "sonnet",
          "architect": "opus", "security-reviewer": "opus"}
 
 

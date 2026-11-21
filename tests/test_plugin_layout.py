@@ -68,7 +68,7 @@ def main() -> int:
               f"{len(CORE_SKILLS)}, w .claude/skills {in_claude}")
         check((p / ".claude" / "skills" / "tf" / "scripts" / "run_state.py").is_file()
               and (plug / "skills" / "tf" / "scripts" / "run_state.py").is_file()
-              and (plug / "skills" / "tf" / "references").is_dir(),
+              and (plug / "skills" / "tf-task" / "references").is_dir(),
               "PL-4: skrypty skilli zostają pod dotychczasową ścieżką (polecenia w treści działają), a wtyczka ma pełny skill")
         check((p / ".claude" / "skills" / "moj-skill" / "SKILL.md").read_text(encoding="utf-8").startswith("---\nname: moj-skill"),
               "PL-5: Twój skill w .claude/skills nietknięty")

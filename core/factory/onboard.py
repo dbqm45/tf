@@ -14,7 +14,7 @@ report in plain language and turns on the quality gate.
 
 Detects from manifests in the root directory (Node, Python, Go, Rust, Java, .NET; Makefile as a fallback): the test,
 lint, type and build commands, the version lock file, CI, the agent instructions file, .gitignore. Without --verify it runs
-nothing in the project. `verify.sh` is a single verification command (lint → types → tests) for the quality gate, the `/tf` loop and CI;
+nothing in the project. `verify.sh` is a single verification command (lint → types → tests) for the quality gate, the `/tf-task` loop and CI;
 on Windows the gate gets just the test command. It does not overwrite an existing verify.sh or gate configuration.
 There are at most five blocking checks — the rest are warnings.
 
@@ -220,7 +220,7 @@ FRAMEWORK_PORTS = (("@angular/core", 4200), ("next", 3000), ("react-scripts", 30
 
 
 def detect_preview(root: Path) -> dict | None:
-    """Where the web frontend's dev server answers, for the visual check of the /tf loop (`ui_snap.py`): the address
+    """Where the web frontend's dev server answers, for the visual check of the /tf-task loop (`ui_snap.py`): the address
     from the framework's default port, the start command from the dev/start/serve script. None when it is not a web frontend."""
     pkg = _json(root / "package.json")
     deps = {**(pkg.get("devDependencies") or {}), **(pkg.get("dependencies") or {})}
@@ -315,7 +315,7 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
     else:
         say.append("• the quality gate stays off: no test command detected.")
     if (gate.is_file() or command) and "related" not in _json(gate):
-        say.append("  Speed: at the first /tf the loop proposes `related` — only the tests of the changed files, "
+        say.append("  Speed: at the first /tf-task the loop proposes `related` — only the tests of the changed files, "
                    "a command for this project's stack (the whole `command` stays for `verify --full` and CI).")
     line = commands_line(det, verify)
     for name in ("CLAUDE.local.md", "CLAUDE.md"):
@@ -332,7 +332,7 @@ def proposal(root: Path, det: dict) -> tuple[list[str], dict]:
             files[rules] = new
             say.append("• .tf/plugin/RULES.md — the project's commands in the \"Commands\" section of the factory rules.")
     card = root / ".tf" / "config" / "operations.json"
-    try:                                  # the card may have been created earlier without flags (e.g. a tracker write by the /tf loop)
+    try:                                  # the card may have been created earlier without flags (e.g. a tracker write by the /tf-task loop)
         known = json.loads(card.read_text(encoding="utf-8")) if card.exists() else {}
     except (OSError, ValueError):
         known = None                      # an unreadable card is left untouched
@@ -440,7 +440,7 @@ COOLDOWN_FILES = (".npmrc", ".yarnrc.yml", "pnpm-workspace.yaml", "pyproject.tom
 
 
 def cooldown_fix(root: Path) -> list[str]:
-    """The version cooldown the /tf loop requires (security_scan.py cooldown --fix): written with the human's --yes.
+    """The version cooldown the /tf-task loop requires (security_scan.py cooldown --fix): written with the human's --yes.
     A private install commits nothing: it only creates files git does not track (settle_files excludes them) and
     leaves an existing file alone — `tf cooldown --fix` changes it on the human's word."""
     script = Path(__file__).resolve().parents[2] / ".claude" / "skills" / "tf" / "scripts" / "security_scan.py"

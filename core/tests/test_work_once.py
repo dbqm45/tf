@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Unattended work (step H19): `tf work --once` takes one task in Auto mode (a human's decision), claims it with
-a lock, runs the `/tf` loop in a separate worktree with a spend limit and records the result in the log. The tests use
+a lock, runs the `/tf-task` loop in a separate worktree with a spend limit and records the result in the log. The tests use
 a fake agent (`TF_WORK_AGENT`), with no model calls.
 python3 .claude/tests/test_work_once.py"""
 import json
@@ -109,7 +109,7 @@ def main() -> int:
 
         # --dry-run: the chosen task, the command, no side effects
         r = work(p, "--once", "--budget", "3", "--dry-run")
-        check(r.returncode == 0 and "IMP-2" in r.stdout and "--max-budget-usd 3" in r.stdout and "/tf IMP-2 --auto" in r.stdout
+        check(r.returncode == 0 and "IMP-2" in r.stdout and "--max-budget-usd 3" in r.stdout and "/tf-task IMP-2 --auto" in r.stdout
               and not (p / ".tf" / "worktrees").exists() and not (p / ".tf" / "locks").exists() and not agent_calls(p),
               f"WO-2: dry-run shows task IMP-2 (the oldest in Auto mode) and the command, creates nothing: {r.stdout}{r.stderr}")
 
@@ -120,10 +120,10 @@ def main() -> int:
         check(r.returncode == 0 and len(calls) == 1 and Path(calls[0]["cwd"]).resolve() == wt.resolve(),
               f"WO-3: the agent started once, in the task's worktree: {r.returncode} {r.stdout}{r.stderr} {calls}")
         argv = calls[0]["argv"] if calls else []
-        check("-p" in argv and "/tf IMP-2 --auto --budget 3" in argv and "--max-budget-usd" in argv
+        check("-p" in argv and "/tf-task IMP-2 --auto --budget 3" in argv and "--max-budget-usd" in argv
               and argv[argv.index("--max-budget-usd") + 1] == "3" and "--permission-mode" in argv
               and argv[argv.index("--permission-mode") + 1] == "acceptEdits",
-              f"WO-4: the agent command has /tf --auto, a spend limit and acceptEdits mode (pilot 2026-11-15: in dontAsk "
+              f"WO-4: the agent command has /tf-task --auto, a spend limit and acceptEdits mode (pilot 2026-11-15: in dontAsk "
               f"the agent will not write a file, because the factory settings do not allow Edit/Write): {argv}")
         branch = git(wt, "branch", "--show-current").stdout.strip() if wt.is_dir() else ""
         check(branch == "story/imp-2" and (wt / ".tf" / "factory" / "marker.py").is_file()

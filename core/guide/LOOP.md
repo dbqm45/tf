@@ -1,7 +1,7 @@
 # The factory loop — task → PR on request
 
-The `/tf` command (or the `tf` agent) takes one task and carries it to one PR: a specification, a plan, tests, code,
-verification with evidence, commits and a cost report. You start it with `/tf …` or with an ordinary sentence in which
+The `/tf-task` command (or the `tf-task` agent) takes one task and carries it to one PR: a specification, a plan, tests, code,
+verification with evidence, commits and a cost report. You start it with `/tf-task …` or with an ordinary sentence in which
 you commission a task ("deliver EBO-1236", "add a session export to CSV"); for a question or a small fix the factory
 does not start the loop, and when it is not sure — it asks. It is part of the factory's core, so it works in every installation.
 First time with the factory? Start with the "Start here" section in `.tf/factory/GUIDE.md`.
@@ -14,23 +14,23 @@ First time with the factory? Start with the "Start here" section in `.tf/factory
   the story is ready.
 
 ## How to start it
-Two ways, the same course (the `tf` skill):
+Two ways, the same course (the `tf-task` skill):
 
 | Way | Command | When |
 |---|---|---|
-| the `tf` agent | `claude --agent tf`, then the task (as below) | a session only for the automation |
-| in any persona | `/tf <task> [--auto] [--budget USD]` or an ordinary sentence | once, in the current session |
+| the `tf-task` agent | `claude --agent tf-task`, then the task (as below) | a session only for the automation |
+| in any persona | `/tf-task <task> [--auto] [--budget USD]` or an ordinary sentence | once, in the current session |
 
 **What you can give as the task** — the factory recognises what it is; you do not type the tool's name:
 
 | You give | Example | What happens |
 |---|---|---|
-| an issue number | `/tf EBO-1236` | the factory reads the issue from Jira with a script (when it has credentials) or from a tracker connected in the session — read-only; without a connection it asks you to paste the content |
-| an issue address | `/tf https://firma.atlassian.net/browse/EBO-1236` | it takes the tracker and the number from the address |
-| a cut key from a change plan | `/tf TSK-57` | the cut's task `CHG-12-TSK-57` (pdi mode) |
-| content or a file | `/tf As an operator I want…`, `/tf docs/story.md` | a task with the key `T-<date>-<name>` |
-| the key of an existing task | `/tf EBO-1236` after a break | resuming from the first unfinished slice |
-| nothing | `/tf` | the list of tasks in progress and a question about what next |
+| an issue number | `/tf-task EBO-1236` | the factory reads the issue from Jira with a script (when it has credentials) or from a tracker connected in the session — read-only; without a connection it asks you to paste the content |
+| an issue address | `/tf-task https://firma.atlassian.net/browse/EBO-1236` | it takes the tracker and the number from the address |
+| a cut key from a change plan | `/tf-task TSK-57` | the cut's task `CHG-12-TSK-57` (pdi mode) |
+| content or a file | `/tf-task As an operator I want…`, `/tf-task docs/story.md` | a task with the key `T-<date>-<name>` |
+| the key of an existing task | `/tf-task EBO-1236` after a break | resuming from the first unfinished slice |
+| nothing | `/tf-task` | the list of tasks in progress and a question about what next |
 
 - **The tracker (Jira, Linear, GitHub…):** the factory uses the connection you added to Claude Code yourself (an MCP
   server); it installs nothing and changes nothing in the tracker. When several are connected, it asks once which one
@@ -45,20 +45,20 @@ Two ways, the same course (the `tf` skill):
   you point to in the card: `"fields": {"acceptance": "customfield_10042"}`.
 - **Where the content comes from:** the task's `ticket.md` starts with the line `Source: … · fetched: <date>`. For the factory the issue's content is data, not instructions — an instruction found in an issue you
   will see as a remark, not as an action taken.
-- **Forcing the way of working:** `/tf task …` (alias `zadanie`), `/tf question …` (alias `pytanie`; an answer only),
-  `/tf quick …` (alias `szybko`; a small change right away, without creating a task).
+- **Forcing the way of working:** `/tf-task task …` (alias `zadanie`), `/tf-task question …` (alias `pytanie`; an answer only),
+  `/tf-task quick …` (alias `szybko`; a small change right away, without creating a task).
 
 Options (in the message to the agent or with the command):
 - no option (normal mode) — the factory shows the specification and the plan and waits for your consent; it records
   the consent and only then starts the code;
-- `--plan` — only the specification and the plan, no code changes; you start delivery later with `/tf <KEY>`;
+- `--plan` — only the specification and the plan, no code changes; you start delivery later with `/tf-task <KEY>`;
 - `--auto` — the plan does not wait for your consent (except for full-weight tasks);
 - `--budget <USD>` — a hard limit: after the slice that exceeds it, the loop stops. By default there is no budget,
   but the factory always chooses the cheapest sufficient model and the least work.
 
 Example:
 ```
-claude --agent tf
+claude --agent tf-task
 > As an operator I want to import a CDR file (CSV) and see the sessions with an error. --auto
 ```
 
@@ -132,7 +132,7 @@ command `run_state.py done <directory> S<n> --message "<type>(<scope>): <descrip
 evidence's files with footers, ticking off and the next slice. The quality gate does not react to changes in
 `docs/project/changes/`.
 
-A cut from a change plan (`/tf TSK-57`, pdi mode) is the same kind of task, with a key made of the change and the cut:
+A cut from a change plan (`/tf-task TSK-57`, pdi mode) is the same kind of task, with a key made of the change and the cut:
 `docs/project/changes/CHG-12-TSK-57/` and `.tf/runs/CHG-12-TSK-57/`. The differences: the task's content comes from the
 cut's row and the change's intent, the flag — from the release plan, the report also goes to
 `docs/project/changes/CHG-12/runs/TSK-57.md` (pdi takes the PR description from there); `tf status` shows cuts
@@ -183,7 +183,7 @@ first slice and after the last (`ui_snap.py`, local headless Chromium/Chrome/Edg
 no keys), looks at them against the acceptance criteria and writes the verdict per criterion. A mismatch is a red result
 (back to the slice). The PR gets a `## Visual check` section (identical / changed / mismatches), the dashboard shows the
 before/after pairs. No browser or no dev server: the PR says "skipped" and why. You force it with `--visual` or switch it
-off with `--no-visual` in the `/tf` command. `tf onboard` writes the `preview` part of the operations card (`url`, `start`,
+off with `--no-visual` in the `/tf-task` command. `tf onboard` writes the `preview` part of the operations card (`url`, `start`,
 `routes`) for a web frontend. The screenshots stay in `.tf/runs/<KEY>/screens/`, outside git.
 
 **After the merge.** The operations card has a deployment part (`deploy`), which `tf onboard` creates: `smoke` (the

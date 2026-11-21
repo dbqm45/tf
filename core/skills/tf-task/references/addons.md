@@ -1,4 +1,4 @@
-# Add-ons in the /tf loop
+# Add-ons in the /tf-task loop
 
 Add-ons are independent packages in `.tf/addons/<name>/` (for example project knowledge: stack versions, standards,
 building blocks, exemplar files). The factory uses them through a fixed contract (`addon.yaml`, contract 1); the core

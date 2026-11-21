@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Factory tool: a comparison of workflows (e.g. plan mode alone, the /tf loop, mode-pdi) on the same tickets.
+Factory tool: a comparison of workflows (e.g. plan mode alone, the /tf-task loop, mode-pdi) on the same tickets.
 
   python3 tools/flow_compare.py prepare flows.json --out <dir> [--seed N]
       anonymized run diffs (<ticket>/A.diff, B.diff…) and the grading template ocena.json for the grader;
