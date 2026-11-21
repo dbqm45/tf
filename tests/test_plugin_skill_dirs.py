@@ -60,7 +60,7 @@ def main() -> int:
             r = run(p, ".claude/hooks/skill_hint.py", "--explain", "Zaimplementuj tę historyjkę: jako użytkownik chcę "
                     "zresetować hasło linkiem z maila, link ważny 30 minut.")
             top = [ln.split()[-1] for ln in r.stdout.splitlines()[:3] if ln.strip() and not ln.startswith("---")]
-            check("tf" in top, f"SD-1 [{layout}]: podpowiedź skilla widzi skille fabryki (tf w czołówce): {r.stdout[:400]}")
+            check("tf-task" in top, f"SD-1 [{layout}]: podpowiedź skilla widzi skille fabryki (tf-task w czołówce): {r.stdout[:400]}")
             r = run(p, ".claude/hooks/skill_hint.py", "--explain", "prepare the weekly sales report for the management board")
             check("moj-raport" in r.stdout.split("---")[0],
                   f"SD-2 [{layout}]: podpowiedź skilla widzi Twój skill z .claude/skills: {r.stdout[:400]}")
