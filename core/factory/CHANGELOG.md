@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [22.0.0] — 2026-11-21
+### Breaking
+- **core:** split /tf and /tf-task, add /tf-design (#375)
+
 ## [21.5.0] — 2026-11-21
 ### Added
 - **tf:** route design ideas to a design session (#374)
