@@ -1,0 +1,95 @@
+{
+  "skill": "core-design-session",
+  "scenarios": [
+    {
+      "id": "uprawnienia-bez-kodu",
+      "expect": "trigger",
+      "prompt": "Chciałbym razem z Tobą zaprojektować mechanizm uprawnień w mojej aplikacji, etap po etapie. Na razie nie pisz kodu. Jak poprowadzisz taką sesję? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "etap\\w*"
+          ],
+          [
+            "akcept\\w*|zatwierd\\w*"
+          ],
+          [
+            "wariant\\w*|alternatyw\\w*|opcj\\w*"
+          ],
+          [
+            "/tf|specyfikacj\\w*|kryteri\\w* akceptacji"
+          ]
+        ],
+        "none": [
+          "^```(ts|js|python|java)"
+        ]
+      }
+    },
+    {
+      "id": "uprawnienia-bez-kodu-en",
+      "expect": "trigger",
+      "prompt": "I want to design a permissions model for my app together with you, step by step, and I want to approve each stage. Don't write code yet. How will you run this? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "stage\\w*|step\\w*"
+          ],
+          [
+            "approv\\w*|accept\\w*"
+          ],
+          [
+            "option\\w*|alternative\\w*|variant\\w*"
+          ],
+          [
+            "/tf|spec\\w*|acceptance criteria"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "pomysl-wroc-do-projektu",
+      "expect": "trigger",
+      "prompt": "Mam tylko luźny pomysł na moduł raportów i nie wiem jeszcze, co dokładnie zlecić. Pomyślmy o tym razem, a jak w trakcie implementacji coś wyjdzie, chcę wrócić do projektu. Jak to zorganizujesz?",
+      "checks": {
+        "all": [
+          [
+            "explore|eksplor\\w*|myśl\\w*"
+          ],
+          [
+            "wróc\\w*|powr\\w*|cofn\\w*"
+          ],
+          [
+            "zapis\\w*|checkpoint|docs/project"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "grill-me-plan",
+      "expect": "no-trigger",
+      "prompt": "Mam gotowy plan migracji z RabbitMQ na Kafkę. Przepytaj mnie z niego rundami pytań, zanim cokolwiek zaczniemy.",
+      "neighbor": "core-plan-interview"
+    },
+    {
+      "id": "zadanie-do-pr",
+      "expect": "no-trigger",
+      "prompt": "Zrób zadanie EBO-1236: dodaj eksport sesji z błędem do CSV i otwórz PR.",
+      "neighbor": "tf"
+    },
+    {
+      "id": "edge-brak-tematu",
+      "expect": "trigger",
+      "prompt": "Zaprojektujmy coś razem krok po kroku, bez pisania kodu.",
+      "checks": {
+        "all": [
+          [
+            "co\\b.{0,40}(projekt|zaprojekt)\\w*|jaki\\w* (problem|temat|cel)|czego dotyczy|\\?"
+          ]
+        ],
+        "none": [
+          "Etap 1: .{0,40}(uprawnie|raport|logowa)"
+        ]
+      }
+    }
+  ]
+}

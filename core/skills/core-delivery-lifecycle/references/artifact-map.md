@@ -67,6 +67,7 @@ template is not an artifact.
 |---|---|---|---|---|
 | `04-architecture/stack-decision.md` | the solution architect | arch-tech-selection (pack-it) | the skeleton generator (eng-repo-readiness, pack-it), the implementer | always, briefly |
 | `04-architecture/architecture.md` | the solution architect | core-project-record (template); arch-system-design (pack-it) | everyone: C4, the data and deployment strategy | one paragraph + a diagram |
+| `04-architecture/design-<slug>.md` | the agent with the developer, stage by stage | core-design-session | the developer, the `/tf` loop (the Handoff section as the story) | when the design was worked out in a session |
 | `04-architecture/adr/NNNN-short-title.md` | the architect | core-project-record (the `adr` template); docs-tech-writing (pack-docs) | future authors of changes: why so | when the decision is costly to reverse |
 | `04-architecture/erd.md` | the architect / the backend implementer | be-database (pack-it) | the implementer, the data analyst, the migration review | when there is a relational database |
 | `04-architecture/threat-model.md` | the architect + security | arch-threat-modeling (pack-it) | the security-reviewer, the implementer | with sensitive data or internet access |

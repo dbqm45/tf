@@ -24,8 +24,12 @@
   "offline": "2026-11-20"
  },
  "core-delivery-lifecycle": {
-  "fingerprint": "0373623f41ff70ec",
-  "offline": "2026-11-20"
+  "fingerprint": "c393013ed2cc6178",
+  "offline": "2026-11-21"
+ },
+ "core-design-session": {
+  "fingerprint": "302404d8c168099f",
+  "offline": "2026-11-21"
  },
  "core-factory-update": {
   "fingerprint": "0f357e941ec029a6",
