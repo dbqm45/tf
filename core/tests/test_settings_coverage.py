@@ -57,6 +57,8 @@ REQUIRED = [
     "python3 .claude/skills/tf/scripts/ui_snap.py capture .tf/runs/PROJ-1 --label before --start",
     "python3 .claude/skills/tf/scripts/run_state.py verify .tf/runs/PROJ-1 S1 --files src/a.py",
     "python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base main",
+    # the design session record (tf-design)
+    "python3 .claude/skills/tf-design/scripts/design_session.py stage uprawnienia 1 accept --decision x",
     # a pdi script called at the end of the architecture/design phase (decision_record.py check — in the phase_run.py prompt)
     "python3 .claude/skills/pdi-decisions/scripts/decision_record.py check",
     # the PR loop (N2, pr_loop.py fix): fixing comments, N3 verification and a commit with three -m

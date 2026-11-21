@@ -29,6 +29,7 @@ pominięcie etapu i przejście do implementacji przez „Other”. Grill me, ref
 przez core-plan-interview.
 
 ## Zapis
+Zapis prowadzi skrypt design_session.py (start, status, stage accept/back/skip, handoff), a nie pamięć modelu: decyzje, wersje, powrót do etapu, sprawdzenie przed przekazaniem.
 Artefakt sesji docs/project/04-architecture/design-<slug>.md, decyzje D-NNN w decisions.md, poprzednie wersje i diagramy
 do archive/, checkpoint po każdej odpowiedzi, project_record.py check.
 

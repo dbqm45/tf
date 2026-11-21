@@ -37,8 +37,9 @@ Rules that win over "doing more":
    subjects from the repository (recent branches, `docs/project/` open questions, `parked.md`) as options. Never invent one.
 2. **Is a session needed?** A one-file change or a question about the code → say so and answer or route it (`/tf-task`, a direct
    answer). A ready plan to be questioned → core-plan-interview. Say in one sentence what you chose.
-3. **Checkpoint:** `python3 .claude/hooks/project_record.py wip start "design: <subject>" --slug design-<slug>`.
-   Resuming → read the checkpoint and the session artifact first; tell the developer where you are and what is accepted.
+3. **The record is written by a script, not by memory** — below `ds` = `python3 .claude/skills/tf-design/scripts/design_session.py`.
+   After the stage map is agreed (§1): `ds start "<subject>" --slug <slug> --stages "A;B;C"` creates the artifact and the
+   checkpoint. Resuming → `ds status <slug>` first; tell the developer where you are and what is accepted.
 4. **Explore:** read the relevant code and records (TL;DR and Handoff of `docs/project/`, `decisions.md`, earlier specs).
    A contradiction with an earlier specification or decision → name it now, as a question.
 
@@ -67,13 +68,12 @@ Three to six stages. More → split the subject and design one part at a time (m
 
 | Option | What follows |
 |---|---|
-| Accept (Recommended) | record the decisions (§3), next stage |
+| Accept (Recommended) | `ds stage <slug> <n> accept --decision "…" --why "…"`, then the next stage |
 | Change | the developer's change; a new version of this stage, then the checkpoint again |
 | Show an alternative | a different option or angle for the same stage |
-| Go back | to the stage they name; later stages that depended on it become open again — list them |
+| Go back | `ds stage <slug> <n> back --reason "…"`: the script reopens that stage and the later accepted ones — list them |
 
-"Skip this stage" and "go to implementation" come through "Other"; skipping an assumption-heavy stage → write the
-assumptions down as **[assumption]** in the artifact. Several independent questions in one stage → one AskUserQuestion
+"Skip this stage" and "go to implementation" come through "Other"; skip → `ds stage <slug> <n> skip --assumption "…"`. Several independent questions in one stage → one AskUserQuestion
 call with several questions; dependent ones wait for the next round.
 
 **On request only** (the developer says "grill me", "find every ambiguity", "refinement"): run core-plan-interview on the
@@ -81,17 +81,17 @@ current stage or the whole subject, then come back to the checkpoint with its su
 expensive part of a session.
 
 ## 3. The record
-Everything the session agrees lives in the project record (core-project-record) — no new mechanism:
-- **Session artifact** `docs/project/04-architecture/design-<slug>.md` (template `references/session-template.md`):
-  header keys as in core-project-record, `status: proposed` until the developer accepts the whole design.
-  Each stage is a section: proposal, chosen option, rejected options with one-line reasons, diagram, open questions.
-- **Decisions**: every accepted choice → a row `D-NNN` in `decisions.md` ("accepted by: user"), linked from the stage.
-  A decision costly to reverse → also propose an ADR.
-- **Versions**: changing an accepted stage after a "Go back" → the artifact goes to `version+1`, the previous file to
-  `archive/` (`status: superseded`), so variants stay comparable. A diagram changed within a stage before acceptance
-  just changes.
-- **Checkpoint** after every checkpoint answer: `project_record.py wip snapshot` with the stage, what is accepted, what is
-  next. The session can stop at any point and resume tomorrow from it.
+Everything the session agrees lives in the project record (core-project-record); `ds` keeps the parts that must not
+depend on memory, you write the content:
+- **Session artifact** `docs/project/04-architecture/design-<slug>.md` (`ds start`; content per
+  `references/session-template.md`): `status: proposed` until the developer accepts the whole design. You add one
+  section per stage: proposal, chosen option, rejected options with one-line reasons, diagram, open questions. The stage
+  map table belongs to the script — do not edit it by hand.
+- **Decisions**: `ds stage … accept` writes the `D-NNN` row in `decisions.md` ("accepted by: user") and links it in the
+  stage map — only after the human's answer. A decision costly to reverse → also propose an ADR.
+- **Versions**: `ds stage … back` archives the previous file in `archive/` (`status: superseded`), raises the version and
+  marks the reopened decisions in the register, so variants stay comparable. A diagram changed before acceptance just changes.
+- **Checkpoint**: every `ds stage` takes a snapshot; the session can stop at any point and resume from `ds status`.
 - Then `python3 .claude/hooks/project_record.py check`.
 
 ## 4. Build — handoff to /tf-task
@@ -101,8 +101,9 @@ here with the design. Before the handoff, the artifact gets its **Handoff** sect
   accepted decisions to respect (D-NNN), parked ideas;
 - a split into tasks when the design is bigger than one PR — one `/tf-task` run per task, in order.
 
-Then: `/tf-task docs/project/04-architecture/design-<slug>.md [--plan|--auto]` — the loop takes the file as the story and its
-acceptance criteria from the Handoff section. One task of a split → pass only that task's part as a story.
+Then `ds handoff <slug>`: it refuses while a stage is open or reopened, or the Handoff lacks `AC-` criteria or still
+holds a `<…>` placeholder; otherwise it prints `/tf-task docs/project/04-architecture/design-<slug>.md` — add `--plan` or
+`--auto` as chosen. The loop takes the file as the story and its acceptance criteria from the Handoff section. One task of a split → pass only that task's part as a story.
 The developer runs it, or you do after they chose the option. A small change of 1–2 files → right away, one commit.
 
 **Back from Build:** a `/tf-task` STOP with the code `question`, `split` or `plan-approval` that touches the design →
@@ -137,7 +138,7 @@ Handoff: AC-1…6, out of scope: per-resource ACL (parked). Developer picks "/tf
 More: `references/session-template.md`, `references/diagrams.md`, `references/lenses.md`.
 
 ## Checklist
-- [ ] subject known (asked, not invented); session needed; checkpoint started
+- [ ] subject known (asked, not invented); session needed; `ds start` done
 - [ ] stage map accepted; every stage closed by a checkpoint; claims labelled
-- [ ] accepted decisions in `decisions.md`; superseded versions in `archive/`; `project_record.py check` passes
-- [ ] no code before Build; Handoff with acceptance criteria before `/tf-task`
+- [ ] every answer recorded with `ds stage`; `project_record.py check` passes
+- [ ] no code before Build; `ds handoff` passed before `/tf-task`

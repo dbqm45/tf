@@ -65,6 +65,27 @@
       }
     },
     {
+      "id": "powrot-do-etapu",
+      "expect": "trigger",
+      "prompt": "W naszej sesji projektowej uprawnień zaakceptowaliśmy już etapy 1–3, ale zmieniam założenie z etapu 2: jednak potrzebujemy ACL dla raportów. Co teraz zrobisz z ustaleniami i zapisem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "design_session\\.py"
+          ],
+          [
+            "back"
+          ],
+          [
+            "etap\\w* 3|późniejsz\\w*|kolejn\\w*|reopen\\w*|ponownie otw\\w*"
+          ]
+        ],
+        "none": [
+          "usuwam decyzj\\w*|nadpisuj\\w* decyzj\\w*"
+        ]
+      }
+    },
+    {
       "id": "grill-me-plan",
       "expect": "no-trigger",
       "prompt": "Mam gotowy plan migracji z RabbitMQ na Kafkę. Przepytaj mnie z niego rundami pytań, zanim cokolwiek zaczniemy.",
