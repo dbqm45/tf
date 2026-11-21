@@ -40,6 +40,10 @@ no code is a command error. You choose the code that says **what is needed from 
 | `contract` | a change of the public API, the data schema, a migration or a business decision that is not in the task | a decision; you do not choose the conservative option yourself |
 | `permissions` | an operation reserved for the human: production, publishing, a flag outside the test environment, merging a PR | performing the operation or explicit consent |
 
+A task whose story came from a design session (`docs/project/04-architecture/design-<slug>.md`) and a `question`, `split`
+or `plan-approval` STOP that touches the design → offer the human to resume that session at the affected stage
+(core-design-session) instead of a workaround in the code.
+
 "It's too hard" is not a code: you stop on evidence (a command and its output), not on your own assessment of difficulty.
 
 ## A question about one slice (the `loop.blocked_slices` switch)

@@ -11,10 +11,12 @@ a task from what the human gave. The script: `python3 .claude/skills/tf/scripts/
 | `resume` | a task with this key already exists | you read `docs/project/changes/<KEY>/plan.md` and go from the first unticked slice; the run directory `.tf/runs/<KEY>` |
 | `file` | the path of a file with a story | `run_report.py start "<title>" --story-file <file>` |
 | `content` | a pasted story or a sentence | `run_report.py start "<title>" --story "<content>"`; with a key at the start (`PROJ-12: …`) you add `--key PROJ-12` |
-| `none` | `/tf` alone | you show the tasks in progress (the `In progress:` lines) and ask which one to resume or what the new one's content is |
+| `none` | `/tf` alone | you show the tasks in progress (the `In progress:` lines) and ask (AskUserQuestion): resume one, a new task (its content), a design session first (core-design-session) or a question |
 
-The `Way` field (the word `task`/`zadanie`, `question`/`pytanie`, `quick`/`szybko` at the start) wins over your judgement. `Options` you carry over to
+The `Way` field (the word `task`/`zadanie`, `question`/`pytanie`, `quick`/`szybko` at the start, or the `--design` option) wins over your judgement. `Options` you carry over to
 the run (`--auto`, `--budget`). A key that is not an issue number (e.g. `UTF-8` at the start of a sentence) you skip.
+`Way: design` (only the `--design` option, never a first word: "Projekt ma błąd…" is a task) → no task: the design session
+(core-design-session) runs first, and its artifact comes back as a `file` input.
 
 ## An issue from a tracker
 The human does not give the tool's name — `/tf EBO-1236` is enough.

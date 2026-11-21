@@ -142,7 +142,7 @@ def main() -> int:
               f"I-14: a key in two plans → a question about the change: {raw}")
         code, out, raw = resolve(p, "TSK-58", "--change", "CHG-13", "--auto", "--budget", "3")
         check(out.get("changes") == ["CHG-13"] and out.get("ask") is None
-              and out.get("options") == {"auto": True, "plan": False, "budget": 3.0, "change": "CHG-13"},
+              and out.get("options") == {"auto": True, "plan": False, "design": False, "budget": 3.0, "change": "CHG-13"},
               f"I-15: --change selects the change; options cut off and returned: {raw}")
         r = run(p, "resolve", "TSK-99", "--change", "CHG-12")
         check(r.returncode == 2 and "TSK-99" in r.stdout and "CHG-12" in r.stdout,
@@ -191,6 +191,17 @@ def main() -> int:
         code, out, raw = resolve(p, "zadanie", "EBO-1236")
         check(out.get("intent") == "task" and out.get("kind") == "issue" and out.get("key") == "EBO-1236",
               f"I-24: “zadanie <key>”: {raw}")
+        code, out, raw = resolve(p, "--design", "mechanizm", "uprawnień")   # a design session with the developer
+        nxt = out.get("next", "")
+        check(out.get("intent") == "design" and out.get("options", {}).get("design") and "core-design-session" in nxt
+              and "run_report.py start" not in nxt and out.get("text") == "mechanizm uprawnień",
+              f"I-25: “--design …” → a design session, no task created: {raw}")
+        for word in ("Projekt", "design"):   # a sentence starting with these words stays a task (no forcing word)
+            code, out, raw = resolve(p, word, "ma", "błąd", "w", "logowaniu")
+            check(out.get("intent") is None and "core-design-session" not in out.get("next", ""),
+                  f"I-25b: “{word} ma błąd…” → an ordinary task, not a design session: {raw}")
+        code, out, raw = resolve(p)
+        check("core-design-session" in out.get("next", ""), f"I-26: no input → the design session among the options: {raw}")
 
         # output for a human and invocation errors
         r = run(p, "resolve", "EBO-1236")
