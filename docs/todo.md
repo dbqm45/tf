@@ -947,9 +947,9 @@ treści (angielska), bez równoległej polskiej.
     Bramki 35/35, testy repo zielone. Haiku po zmianie 30/34; cztery porażki to brak wywołania skilla
     (`ops-docker` `hardening-runtime`, `ops-kubernetes` `config-rollout`, `ops-linux-networking` `dysk-inody`,
     `ops-secrets-identities` `wyciek-klucza-aws`) — na main też (7 z 8 przebiegów bez wywołania).
-    - [ ] (2026-11-22: opisy czterech skilli poszerzone o sytuację ze scenariusza; podpowiedzi 0 pominięć w `all`
+    - [x] (2026-11-22: opisy czterech skilli poszerzone o sytuację ze scenariusza; podpowiedzi 0 pominięć w `all`
       i `pack-it`; Haiku 2026-11-22, 2 powtórki, 1,87 USD za całą serię: `hardening-runtime`, `config-rollout`, `dysk-inody` 2/2;
-      `wyciek-klucza-aws` 0/2 — skill nadal nie wywołany, brak punktu „wszystkie osiągalne poświadczenia”) cztery
+      `wyciek-klucza-aws` 0/2, po wzmocnieniu opisu i słów kluczowych PL+EN 2/2 (0,20 USD)) cztery
       scenariusze ops- bez wywołania skilla (także przed tłumaczeniem) — skille bez `keywords`;
       sprawdzić słowa kluczowe PL+EN i opis pod polskie zgłoszenia.
   - [x] 4d-r4 (2026-11-18): czwarta runda równoległa — `eng-` (19), `ddd-` (13), `ai-` (13): 45 skilli (+ referencje)
