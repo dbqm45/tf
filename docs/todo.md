@@ -70,8 +70,9 @@ człowieka, D2 na start tylko terminal, D3 stała lista + domeny projektu, D4 `s
   z szablonu dla `sandbox`/`container`, bez sandboxa dla `basic`) i `TF_ISOLATION`; układ domyślny — sandbox
   w `.claude/settings.local.json` (instalator dodaje tylko bez klucza `sandbox`, `tf isolation` zastępuje lub usuwa,
   `tf uninstall` usuwa niezmieniony); `tf isolation` mówi o braku bubblewrap na Linuksie i o sesji bez `tf code`.
-  Otwarte: pomiar `claude -p`, że projektowe `"enabled": false` nie wyłącza sandboxa przy `--settings` (płatny, zgoda
-  właściciela); skill `core-agent-security` §4a nadal mówi „opt-in” — do I8.
+  Pomiar (2026-11-22, za zgodą, 0,0067 USD, Claude Code 2.1.330, Linux z bubblewrap): projektowe `"enabled": false`
+  nie wyłącza sandboxa podanego przez `--settings` (zapis do `~` odrzucony; bez `--settings` przeszedł).
+  Otwarte: skill `core-agent-security` §4a nadal mówi „opt-in” — do I8.
 - [ ] I3 hook startu, pasek stanu, blokada obniżenia z sesji.
 - [ ] I4 obraz i `tf code --container` → I5 kontener tylko commituje; I6 odłożone (D2); I7–I9.
 
