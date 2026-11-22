@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/event.schema.json",
-  "title": "Zdarzenie (pdi, kontrakt 0.13.0)",
+  "title": "Zdarzenie (pdi, kontrakt 0.14.0)",
   "description": "Koperta zdarzenia wymienianego między pdi, tf, ci_for_sdlc i ShipScope; treść (payload) zależy od typu.",
   "type": "object",
   "additionalProperties": false,
@@ -498,7 +498,7 @@
     "targets_status": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Stan celów zmiany (release_plan.targets) przed B4 (Z7b-1b, kontrakt 0.13.0): wypełnia ci_for_sdlc, czyta pdi. Brak pola = cele nie zostały zbadane. `details` nazywa cele po kolei, żeby człowiek zobaczył, który próg jest niespełniony.",
+      "description": "Stan celów zmiany (release_plan.targets) przed B4 (Z7b-1b, kontrakt 0.14.0): wypełnia ci_for_sdlc, czyta pdi. Brak pola = cele nie zostały zbadane. `details` nazywa cele po kolei, żeby człowiek zobaczył, który próg jest niespełniony.",
       "required": [
         "overall",
         "checked_at"

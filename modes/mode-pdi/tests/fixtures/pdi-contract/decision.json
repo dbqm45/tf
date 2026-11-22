@@ -1,4 +1,7 @@
 {
+  "record": "decision",
+  "schema": "https://github.com/dbqm45/pdi/contract/decision.schema.json",
+  "contract_version": "0.14.0",
   "id": "DEC-41",
   "statement": "Bulk konfiguracja ładowarek zaczyna od zmiany taryfy.",
   "why": "Najczęstsza operacja w zgłoszeniach; restart i firmware mają inne ryzyka.",
@@ -16,5 +19,20 @@
     "chg": "CHG-12"
   },
   "decision_type": "triage",
-  "draft_edited": false
+  "draft_edited": false,
+  "consequences": [
+    {
+      "text": "Operator zmienia taryfę na wielu ładowarkach naraz zamiast po jednej.",
+      "effect": "good"
+    },
+    {
+      "text": "Restart i aktualizacja firmware czekają na kolejne cięcia.",
+      "effect": "bad"
+    }
+  ],
+  "confirmation": {
+    "how": "Test e2e zmiany taryfy na 50 ładowarkach w jednej operacji",
+    "kind": "test",
+    "ref": "e2e/bulk-tariff.spec.ts"
+  }
 }
