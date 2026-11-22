@@ -16,8 +16,8 @@ najlepiej po zmianie repo na prywatne.
 - [ ] **Usunięcie atrybucji w plikach repo:** wzmianki o udziale Claude jako autora lub współautora (np. przypisy,
   stopki, opisy „napisane przez Claude”). Odwołania funkcjonalne do Claude Code jako narzędzia, na którym działa
   fabryka, zostają.
-- [ ] **Nowe commity bez atrybucji:** wyłączyć dopisywanie atrybucji w ustawieniach Claude Code (`attribution`
-  w `settings.json`) i w instrukcjach sesji, żeby nie wracała.
+- [x] **Nowe commity bez atrybucji:** wyłączyć dopisywanie atrybucji w ustawieniach Claude Code (`attribution`
+  w `settings.json`) i w instrukcjach sesji, żeby nie wracała. Zrobione: `.claude/settings.json` `"attribution": false` (#363).
 - [ ] **Skutki do obsłużenia:** zmienią się wszystkie SHA. Trzeba odtworzyć tagi i wydania (v1…v20+), zaktualizować
   odwołania do commitów w `docs/` i CHANGELOG. Stare commity nadal będą w refach PR-ów (`refs/pull/*`) i w cache
   GitHuba, więc do ich usunięcia potrzebne jest zgłoszenie do GitHub Support. Forki i klony zachowają starą historię.
@@ -182,18 +182,18 @@ człowieka, i z kontrolą wyniku skryptem.
     `CLAUDE_SKILL_HINT_STACK=0` wyłącza) (usuwa jedyny zaobserwowany błąd, bez konfiguracji). `skills_off` odkładamy; warstwy
     zespołu i osoby uzasadniają standardy i styl pracy, nie oszczędność kontekstu. Powtórzenie pomiaru nie jest
     potrzebne do tej decyzji.
-- [ ] **Warstwy:** silnik ← firma ← zespół ← projekt ← osoba. Każdy czytelnik konfiguracji (build, hooki, `tf risk`,
+- [x] **Warstwy:** silnik ← firma ← zespół ← projekt ← osoba. Zrobione: `core/factory/packs.py`, `org/new_org_pack.py --team` (#282, #283). Każdy czytelnik konfiguracji (build, hooki, `tf risk`,
   `tf work`, `tf config show`) składa je w tej kolejności; `tf config show` przy każdej wartości podaje warstwę.
   - **Zespół:** nakładka z tego samego szablonu co firmowa (`org/new_org_pack.py <firma> --team <zespół>` →
     `pack-<firma>-<zespół>`, `requires` nakładki firmy): standardy zespołu (reguły, obszary, semgrep), domyślne
     ustawienia, `settings.json` (np. wyłączone serwery MCP).
   - **Osoba:** plik poza repozytorium (np. `~/.tf/preferences.yaml`, wspólny dla wszystkich projektów osoby) i
     nadpisanie w projekcie (`.tf/config/me.yaml`, zawsze w `.git/info/exclude`, także przy `--shared`).
-- [ ] **Zasada warstw:** niższa warstwa dodaje i zaostrza, nie rozluźnia tego, co wyższa zablokowała. Tak działa już
+- [x] **Zasada warstw:** (zrobione z warstwami, #282, #283) niższa warstwa dodaje i zaostrza, nie rozluźnia tego, co wyższa zablokowała. Tak działa już
   polityka autonomii (`deny` firmy obowiązuje projekt). Firma albo zespół może dać **sufit** (np. „tryb Auto
   dozwolony”, „najwyżej X USD na przebieg”), a osoba wybiera w jego granicach. Skille bezpieczeństwa, rzetelności
   i TDD (`core-agent-security`, `core-grounding`, hooki `tdd_guard`, `guard_*`) wyłącza tylko firma.
-- [ ] **Style pracy osoby** (preset, który ustawia kilka istniejących przełączników naraz):
+- [x] **Style pracy osoby** (zrobione: `tf style`, `core/factory/config.yaml` sekcja stylów, #282) (preset, który ustawia kilka istniejących przełączników naraz):
   - **autonomous** — domyślny tryb zadania `auto` (w granicach sufitu), `loop.blocked_slices: true`, raport na końcu;
     wymaga limitów `work` i obowiązującej polityki autonomii;
   - **step-by-step** — tryb `normal` i nowy przełącznik zatrzymania pętli `/tf` po każdym kawałku (zgoda przed
@@ -668,7 +668,7 @@ treści (angielska), bez równoległej polskiej.
   w `docs/project/` (`plan-review`, `impl-review`, `operations-review`, `tech-debt`, `readiness`, `repo-readiness`,
   `legal-map`, `deep-dives`, `dry-run`, `language-<dokument>`). Dawne formy przyjmowane. Znaczniki
   `[założenie]`/`[niezweryfikowane]`/`[pytanie]` (core-grounding) — razem z etapem 4.
-- [ ] Po wydaniach 14.x — usunięcie dawnej składni z parserów (`K<n>`, `pliki:`, Zakładając/Gdy/Wtedy, polskie
+- [x] Po wydaniach 14.x — usunięcie dawnej składni z parserów (zrobione w 4k, #336; dawne formy czyta już tylko `migrations.py`) (`K<n>`, `pliki:`, Zakładając/Gdy/Wtedy, polskie
   nagłówki rekonstrukcji).
 - [x] Język rozmowy bez ustawień (decyzja właściciela, 2026-11-17: „bez żadnej konfiguracji, jak w Claude”, #290):
   stała reguła rozmowy, język commitów z `git log`, bez `tf language`, `tf commit-language` i `--language`.
@@ -990,7 +990,7 @@ treści (angielska), bez równoległej polskiej.
     `docs/plans`) zostają po polsku jako zapis historyczny — w obu katalogach krótki README po angielsku; także ten
     plik (`docs/todo.md`) i `CHANGELOG.md` zostają po polsku. Przy okazji: skill tf kazał przekazać linię `Waga: …`,
     a `run_report.py` od #308 wypisuje `Weight: …` — skill i test T-27 poprawione.
-    - [ ] `docs/insights.md` i `docs/plugins.md` opisują `mode-talos` (usunięty w 10.0.0) i liczby skilli sprzed
+    - [x] (2026-11-22: żaden z plików nie wspomina już `mode-talos`) `docs/insights.md` i `docs/plugins.md` opisywały `mode-talos` (usunięty w 10.0.0) i liczby skilli sprzed
       zmian — zaktualizować treść (to nie tłumaczenie).
     - [ ] gdyby archiwa miały być po angielsku: `docs/evals` (47 plików) i `docs/plans` (40) — osobny krok.
   - [x] 4k (2026-11-19): usunięte polskie aliasy czytników (`pl: sprzed 14.x`) — decyzja właściciela: jednym krokiem.
@@ -1013,7 +1013,7 @@ treści (angielska), bez równoległej polskiej.
     Migracja rozszerzona (MV-34…66). Przy okazji: panel plików nie pokazywał dowodów kawałków S (czytnik szukał tylko K).
     Zostają: LEGACY_GI (sprzątanie starych instalacji), polski kontrakt pdi `design.md`, obsługa polskich treści
     (historyjki, changelogi, własne skille po polsku, polish_lint, detektory), prompty sędziego ewaluacji.
-    - [ ] `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
+    - [x] (2026-11-22: komunikaty `statusline.py` są po angielsku) `statusline.py` i część komunikatów `task_state.py`/`project_record.py` wciąż po polsku (testy je
       sprawdzają) — przełożyć razem z testami.
   - [x] komunikaty skryptów i hooków po angielsku (model przekazuje je człowiekowi w jego języku). Partie: M1 pętla tf,
     M2 hooki, M3–M4 silnik (`core/factory`), M5 skrypty pozostałych skilli rdzenia, M6 pack-it, M7 mode-pdi, M8 org,
