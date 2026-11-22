@@ -19,6 +19,7 @@ change them rarely. This directory does not go into projects: it is the kit for 
 | `pack.yaml` → `org_defaults.config.work`, `default_profile`, `commit_language.new_repo` | `tf work` limits, the cost profile, the commit language in a new repository (the conversation language is not a setting) |
 | `pack.yaml` → `org_defaults.config.task.allowed_modes` | task modes allowed in the company; a person's work style (`tf style`) chooses only among them |
 | `pack.yaml` → `org_defaults.config.models_approved` | models allowed in the company (an alias or an identifier, optionally `until`); a team and a project can only narrow the list. Checked by `model_check.py` (`tf doctor`), `profile.py` refuses a profile outside the list, the `model_guard` hook blocks a delegation with such a model and warns at the session start. Without a list nothing changes |
+| `pack.yaml` → `org_defaults.config.isolation` | the default isolation level of agent sessions (`basic`, `sandbox`, `container`); a project changes it only from a human's terminal (`tf isolation`) |
 | `pack.yaml` → `org_defaults.operations.tracker` | the tracker, issue key prefixes, the Jira field with the criteria (no address and no token) |
 | `analyzers/<company>-standards/rules.yaml` | standards checked **without a model** (`tf analyze`): forbidden APIs and imports, required headers, file names |
 | `semgrep.yml` | semgrep rules in the scan of every slice of the `/tf-task` loop |

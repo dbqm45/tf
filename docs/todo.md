@@ -59,6 +59,16 @@ katalogiem zadania i prostotą dla użytkownika jako wymaganiem (W8).
     z Confluence), obserwacja pipeline'u wydania w CI, zapadki jakości i zbiór „incydent → test recenzenta”, zapis do
     trackera.
 
+## Poziomy izolacji (basic / sandbox / container) — zapisane 2026-11-22
+Plan: `docs/plans/2026-11-20-poziomy-izolacji.md`. Decyzje właściciela (2026-11-22): D1 push tylko z komputera
+człowieka, D2 na start tylko terminal, D3 stała lista + domeny projektu, D4 `sandbox` domyślnie, D5 Docker i Podman
+(wykrywany).
+- [x] I1 (2026-11-22): klucz `isolation` (domyślnie `sandbox`, także w `org_defaults.config`), `tf isolation [<poziom>]`
+  i `install.py --isolation` z odmową w sesji agenta, poziom i luka w `tf isolation` i `tf doctor`
+  (`core/tests/test_isolation.py`, `tests/test_isolation_install.py`).
+- [ ] I2 sandbox włączany przez `tf code` i w układzie domyślnym → I3 hook startu, pasek stanu, blokada obniżenia z sesji.
+- [ ] I4 obraz i `tf code --container` → I5 kontener tylko commituje; I6 odłożone (D2); I7–I9.
+
 ## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
 Plan: `docs/plans/2026-11-19-bramka-ewaluacji-i-zatwierdzone-modele.md` (źródło: pdi
 `docs/plan-program-ai-wg-aplikacji.md` §2.1, zadania T4 i T6). Zasada z decyzji człowieka 2026-11-19: tylko to, co

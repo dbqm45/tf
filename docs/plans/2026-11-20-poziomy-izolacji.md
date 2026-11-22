@@ -1,8 +1,8 @@
 # Poziomy izolacji fabryki: podstawowy, sandbox, kontener
 
 Data: 2026-11-20. Prośba właściciela: po uruchomieniu fabryki ani fabryka, ani Claude nie mogą nic zrobić poza
-folderem projektu. Uzasadnienie i ocena poziomów: `docs/insights/isolation.md`. Plan czeka na decyzje właściciela
-(sekcja „Decyzje”); nic z niego nie jest jeszcze zrobione.
+folderem projektu. Uzasadnienie i ocena poziomów: `docs/insights/isolation.md`. Decyzje właściciela zapisane 2026-11-22
+(sekcja „Decyzje właściciela”). Stan: I1 zrobione (2026-11-22), I2–I9 otwarte.
 
 ## Cel
 
@@ -93,6 +93,13 @@ Do I2 nic się nie zmienia u użytkowników.
   projekt (`isolation_allow_domains`).
 - **D4. Domyślny poziom** dla nowych instalacji: `sandbox` (rekomendacja) czy `basic` do czasu pomiaru na macOS.
 - **D5. Docker czy Podman** jako wymagany silnik (albo oba).
+
+Odpowiedzi właściciela (2026-11-22):
+- D1 → (a) push tylko z komputera człowieka; kontener tylko commituje.
+- D2 → na start tylko terminal (`tf code --container`); I6 odłożone.
+- D3 → stała lista i domeny dopisywane per projekt (`isolation_allow_domains`).
+- D4 → `sandbox` domyślnie.
+- D5 → oba silniki; `tf code --container` wykrywa, który jest zainstalowany.
 
 ## Ryzyka
 
