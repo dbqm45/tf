@@ -812,7 +812,7 @@ treści (angielska), bez równoległej polskiej.
       a model nie sięga po plik; $1,93.
     - [ ] szablony person i wykonawców w `build.py` (sekcje „Rola”, „Priorytety”, „Cechy”, „Granice”, „Konsultanci”,
       `COMPOSE_HINT`, tabela wymiarów) oraz `facets`/`vocabulary` — razem z sekcjami pojęć w skillach fw-/lang-.
-    - [ ] tf: panel recenzentów przy wadze pełnej tylko w `references/weight.md` — jedna linia w SKILL.md (Finishing),
+    - [x] (2026-11-22: linia w §4 Finishing `tf-task/SKILL.md`; ewaluacja scenariusza na modelu — za zgodą) tf: panel recenzentów przy wadze pełnej tylko w `references/weight.md` — jedna linia w SKILL.md (Finishing),
       żeby model nie pomijał `run_state.py panel` (scenariusz `waga-pelna-panel-recenzentow` pada przed i po 4b-9).
     - [x] 4b-10 (2026-11-17): przewodniki `core/guide/` (GUIDE, LOOP, FAQ, JEV, ONBOARDING) w całości po angielsku —
       także symbole zastępcze w poleceniach, komentarze w blokach kodu i przykłady (bez jednej polskiej litery; zostają
