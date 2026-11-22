@@ -582,20 +582,20 @@ Talosa jako osobnej persony dopiero po danych z pomiaru; E1 i E2 nie zależą od
 
 ## 15. Decyzje dla człowieka
 
-| # | Decyzja | Rekomendacja |
-|---|---|---|
-| D1 | trwałe pliki zadania w gicie (`docs/project/changes/<KEY>/`) czy poza gitem jak dziś w Talosie | w gicie, z budżetem artefaktów; surowe dane poza gitem |
-| D2 | nazwa wejścia: `/tf` (nowy skill) czy rozbudowa `/talos-story-run` | `/tf`, a stara nazwa jako alias |
-| D3 | trzy wagi dobierane automatycznie czy ręczny wybór przebiegu | automatycznie, człowiek może podnieść |
-| D4 | pierwszy tracker: Jira czy GitHub Issues | ten, którego używa pierwszy projekt pilotażowy |
-| D5 | co z folderem zadania po zamknięciu: zostaje czy archiwum | zostaje; archiwizacja po 90 dniach skryptem |
-| D6 | czy tryb Auto może scalać zmiany niskiego ryzyka | nie teraz; wrócić po danych z `tf metrics` |
-| D7 | kolejność: E1 (kontrole) przed E2–E4 (oś) czy odwrotnie | E1 najpierw — najtańsze i daje największy zysk jakości |
-| D8 | domyślna instalacja: zestaw minimalny (rdzeń, `pack-it`, Talos) czy jak dziś | minimalny, po pomiarze kosztu kontekstu listy agentów (S13: każdy skill w repo dokłada kontekst) |
-| D9 | podgląd i pytania jako mod w oknie Claude Code (S14) obok strony HTML; wymaga wtyczki z marketplace'u, a decyzja 2026-10-21 była przeciw eksportowi tf jako pluginu | najpierw strona HTML i linia stanu z odświeżaniem (sekcja 18, C15); mod później, jako mała osobna wtyczka tylko z interfejsem |
-| D10 | czwarty poziom `lead` (Fable 5.2) dla wagi pełnej i długich przebiegów bez nadzoru | tak, ale dopiero po pomiarze na własnych zadaniach; domyślnie wyłączony |
-| D11 | pełna waga: panel recenzentów i weryfikacja reguła po regule jako zapisany przepływ agentów (S3) czy jako proza w skillu | przepływ, tylko dla wagi pełnej — kosztuje więcej tokenów |
-| D12 | zmiana `tiers`: rozdzielenie modelu i effortu na krok (sekcja 8) zamiast stałych par | tak, po pomiarze E0 |
+| # | Decyzja | Rekomendacja | Decyzja (zapis 2026-11-22, wg kodu) |
+|---|---|---|---|
+| D1 | trwałe pliki zadania w gicie (`docs/project/changes/<KEY>/`) czy poza gitem jak dziś w Talosie | w gicie, z budżetem artefaktów; surowe dane poza gitem | zrealizowane: `docs/project/changes/<KEY>/task.json` |
+| D2 | nazwa wejścia: `/tf` (nowy skill) czy rozbudowa `/talos-story-run` | `/tf`, a stara nazwa jako alias | zrealizowane i rozwinięte: `/tf` (asystent) i `/tf-task` (pętla), 22.0.0; stare nazwy w `migrations.py` |
+| D3 | trzy wagi dobierane automatycznie czy ręczny wybór przebiegu | automatycznie, człowiek może podnieść | zrealizowane: `tf task weight --apply`, potem tylko podnosi |
+| D4 | pierwszy tracker: Jira czy GitHub Issues | ten, którego używa pierwszy projekt pilotażowy | zrealizowane szerzej: Jira (`intake.py fetch`) i adresy Jira, Linear, GitHub, GitLab |
+| D5 | co z folderem zadania po zamknięciu: zostaje czy archiwum | zostaje; archiwizacja po 90 dniach skryptem | folder zostaje; archiwizacja po 90 dniach odłożona, wrócić po pomiarze |
+| D6 | czy tryb Auto może scalać zmiany niskiego ryzyka | nie teraz; wrócić po danych z `tf metrics` | zgodnie z rekomendacją: `tf work` nie scala i nie wdraża |
+| D7 | kolejność: E1 (kontrole) przed E2–E4 (oś) czy odwrotnie | E1 najpierw — najtańsze i daje największy zysk jakości | zrealizowane: E1 `tf onboard` (#216) |
+| D8 | domyślna instalacja: zestaw minimalny (rdzeń, `pack-it`, Talos) czy jak dziś | minimalny, po pomiarze kosztu kontekstu listy agentów (S13: każdy skill w repo dokłada kontekst) | odłożone, wrócić po pomiarze |
+| D9 | podgląd i pytania jako mod w oknie Claude Code (S14) obok strony HTML; wymaga wtyczki z marketplace'u, a decyzja 2026-10-21 była przeciw eksportowi tf jako pluginu | najpierw strona HTML i linia stanu z odświeżaniem (sekcja 18, C15); mod później, jako mała osobna wtyczka tylko z interfejsem | zrealizowane: `dashboard.html` i `statusline.py`; mod odłożony |
+| D10 | czwarty poziom `lead` (Fable 5.2) dla wagi pełnej i długich przebiegów bez nadzoru | tak, ale dopiero po pomiarze na własnych zadaniach; domyślnie wyłączony | odłożone, wrócić po pomiarze |
+| D11 | pełna waga: panel recenzentów i weryfikacja reguła po regule jako zapisany przepływ agentów (S3) czy jako proza w skillu | przepływ, tylko dla wagi pełnej — kosztuje więcej tokenów | wariant pośredni: panel recenzentów pilnowany skryptem (`run_state.py panel`), nie zapisanym przepływem |
+| D12 | zmiana `tiers`: rozdzielenie modelu i effortu na krok (sekcja 8) zamiast stałych par | tak, po pomiarze E0 | odłożone, wrócić po pomiarze |
 
 **Poza zakresem (decyzja człowieka, 2026-11-12):** fabryka nie wprowadza na razie Definition of Ready ani oceny
 gotowości zgłoszenia z ci_for_sdlc. O właściwy opis zadania dba człowiek; fabryka robi tylko to, co opisuje etap 2

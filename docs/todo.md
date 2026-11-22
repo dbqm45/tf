@@ -42,7 +42,7 @@ Dokument zbiorczy (propozycja, czeka na decyzje D1–D12 człowieka):
 politykę autonomii i propozycje tf-1…tf-13 w jeden przebieg `/tf <KEY>` z trybami Plan / zwykły / Auto, jednym
 katalogiem zadania i prostotą dla użytkownika jako wymaganiem (W8).
 - [ ] **Plan zmian** (22 pozycje wg wielkości, kroki A–H, ocena skali): `docs/plans/2026-11-12-plan-zmian-os-fabryki.md`.
-- [ ] **Decyzje D1–D12** (sekcja 15 dokumentu) — człowiek.
+- [x] **Decyzje D1–D12** (sekcja 15 dokumentu) — zapisane 2026-11-22 wg kodu za zgodą właściciela; D5, D8, D10, D12 odłożone.
 - [ ] **E0–E8** (sekcja 14) — każdy etap osobnym planem i PR, po decyzjach; E1 (`tf onboard`) nie zależy od D2–D12. Źródła: 14 artykułów claude.dev (S1–S14, sekcja 16 dokumentu).
 
 ## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
