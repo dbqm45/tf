@@ -1,4 +1,4 @@
-head: Użyj przy manifestach i operacjach Kubernetes — zasoby, sondy, repliki i PDB, autoskalowanie, RBAC, NetworkPolicy. Użyj przy manifestach i operacjach Kubernetes — zasoby (requests/limits), sondy, liczba replik i PodDisruptionBudget, autoskalowanie, bezpieczeństwo podów (Pod Security Standards, securityContext), RBAC i konta usług, NetworkPolicy, sekrety, walidacja manifestów w CI, aktualizacje klastra. Nie do obrazów (ops-docker), wydań i GitOps (ops-release-engineering) ani chmury.
+head: Użyj przy manifestach i operacjach Kubernetes — zasoby, sondy, repliki i PDB, autoskalowanie, RBAC, NetworkPolicy, zmiany ConfigMap przy wdrożeniu. Użyj przy manifestach i operacjach Kubernetes — zasoby (requests/limits), sondy, liczba replik i PodDisruptionBudget, autoskalowanie, bezpieczeństwo podów (Pod Security Standards, securityContext), RBAC i konta usług, NetworkPolicy, sekrety, walidacja manifestów w CI, aktualizacje klastra. Nie do obrazów (ops-docker), wydań i GitOps (ops-release-engineering) ani chmury.
 # Kubernetes
 
 ## 1. Każdy Deployment ma

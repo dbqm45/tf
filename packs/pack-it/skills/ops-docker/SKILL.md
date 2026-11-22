@@ -1,6 +1,6 @@
 ---
 name: ops-docker
-description: Use for Dockerfile, docker-compose and images — creating them, size and build time, image security.
+description: Use for Dockerfile, docker-compose, images and running containers — size, build time, image and runtime security (non-root, read-only, capabilities).
 metadata:
   review: "2027-04-17"
   catalog: "Use when creating and optimizing a Dockerfile, docker-compose, container images and their security. Not for CI pipelines (ops-ci-cd) or cloud infrastructure."

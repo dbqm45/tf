@@ -1,4 +1,4 @@
-head: Użyj przy Dockerfile, docker-compose i obrazach — tworzenie, rozmiar i czas budowy, bezpieczeństwo obrazów. Użyj przy tworzeniu i optymalizacji Dockerfile, docker-compose, obrazów kontenerów i ich bezpieczeństwa. Nie do pipeline'ów CI (ops-ci-cd) ani infrastruktury chmurowej.
+head: Użyj przy Dockerfile, docker-compose, obrazach i uruchamianiu kontenerów — rozmiar, czas budowy, bezpieczeństwo obrazu i uruchomienia (bez roota, tylko do odczytu, uprawnienia). Użyj przy tworzeniu i optymalizacji Dockerfile, docker-compose, obrazów kontenerów i ich bezpieczeństwa. Nie do pipeline'ów CI (ops-ci-cd) ani infrastruktury chmurowej.
 # Docker
 
 ## Dockerfile — wzorzec

@@ -1,6 +1,6 @@
 ---
 name: ops-linux-networking
-description: Use for diagnosing a Linux server and the network from the symptom — a full disk, processes, systemd, ss, dig, DNS, TLS.
+description: Use for diagnosing a Linux server and the network from the symptom — a full disk (also with free space, inodes), processes, systemd, ss, dig, DNS, TLS.
 metadata:
   review: "2027-04-17"
   catalog: "Use when diagnosing problems on a Linux server and in the network — a procedure from the symptom to the cause (resources, processes, systemd logs, files and connections), network tools (ss, dig, curl, openssl, mtr, tcpdump), OSI layers, DNS, TLS, SSH, the firewall, web servers and proxies, mail (SPF, DKIM, DMARC). Not for Kubernetes manifests (ops-kubernetes) or IaC."

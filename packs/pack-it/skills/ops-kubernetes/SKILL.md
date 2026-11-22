@@ -1,6 +1,6 @@
 ---
 name: ops-kubernetes
-description: Use for Kubernetes manifests and operations — resources, probes, replicas and PDB, autoscaling, RBAC, NetworkPolicy.
+description: Use for Kubernetes manifests and operations — resources, probes, replicas and PDB, autoscaling, RBAC, NetworkPolicy, ConfigMap changes in a rollout.
 metadata:
   review: "2027-04-17"
   catalog: "Use for Kubernetes manifests and operations — resources (requests/limits), probes, replica count and PodDisruptionBudget, autoscaling, pod security (Pod Security Standards, securityContext), RBAC and service accounts, NetworkPolicy, secrets, manifest validation in CI, cluster upgrades. Not for images (ops-docker), releases and GitOps (ops-release-engineering) or the cloud."

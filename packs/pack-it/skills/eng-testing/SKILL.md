@@ -1,6 +1,6 @@
 ---
 name: eng-testing
-description: Use when deciding how to test or writing tests — TDD order (tdd_guard), which cases, mocks vs fakes, tests that break on refactoring or pass at once, test quality.
+description: Use when deciding how to test or writing tests — TDD steps for a new rule (tdd_guard), which cases, mocks vs fakes, brittle or always-green tests, test quality.
 metadata:
   review: "2027-10-09"
   catalog: "Use for test strategy and writing tests in any language — TDD in this factory (red before production code, enforced by the tdd_guard hook), the gate before a plan phase, seams and vertical slices, BDD and Example Mapping, proportions (pyramid, trophy), test doubles (fake behind your own port, mock only what you don't own, stub for partial failure), test quality (expected value from the requirement, mutation and property-based tests), business-readable tests, acceptance-test layers. Not for the tools of a specific test framework (tool-*) or a tester's work (qa-*)."
