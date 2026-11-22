@@ -26,7 +26,7 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
         pass
 
 TIER_RE = re.compile(r"Tier:\**\s*(?:za\s+)?(niski|wysoki|too\s+low|too\s+high)", re.I)
-TIER_EN = {"too low": "niski", "too high": "wysoki"}   # 14.x: signal in English, recorded with the same value
+TIER_EN = {"too low": "too low", "too high": "too high", "niski": "too low", "wysoki": "too high"}   # recorded in English; the former Polish signal too
 KLASA_RE = re.compile(r"^[\s*_`>#-]*(?:Klasa|Class)\s*:[\s*_`]*([^\s—–,.;:*_`-]+)", re.I | re.M)
 CLASSES = ("reading", "parallel", "review", "mechanical", "decision", "other",   # core-cost-control §0
            "addon")   # work an add-on left for the session (tf addon report counts it)
@@ -132,7 +132,7 @@ def usage_from_transcript(path: Path) -> dict:
         totals["cache_read"] += u.get("cache_read_input_tokens") or 0
         totals["cache_write"] += u.get("cache_creation_input_tokens") or 0
         models[model] = models.get(model, 0) + (u.get("output_tokens") or 0)
-    m = TIER_RE.search(last_text[-2000:])     # the executor's self-assessment from the report: „Tier: za niski/za wysoki — powód”
+    m = TIER_RE.search(last_text[-2000:])     # the executor's self-assessment from the report: „Tier: too low/too high — reason”
     return {**totals, "models": models, "skills": list(dict.fromkeys(skills)),
             "tier_feedback": TIER_EN.get(" ".join(m.group(1).lower().split()), m.group(1).lower()) if m else None, "claude_code": version}
 

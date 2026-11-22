@@ -110,8 +110,8 @@ def main() -> int:
               f"AR-2: tokens per agent only from the window (an entry from before the window skipped): {agents}")
         check(d.get("tokens", {}).get("agents", [{}])[0].get("agent") == "ola-frontend",
               "AR-3: agents sorted descending by output tokens")
-        check(agents.get("ola-frontend", {}).get("tier_feedback") == {"za niski": 2},
-              f"AR-4: the “Tier: za niski/za wysoki” signals counted per agent: {agents.get('ola-frontend')}")
+        check(agents.get("ola-frontend", {}).get("tier_feedback") == {"too low": 2},
+              f"AR-4: the tier signals counted per agent, old values (za niski) read as too low: {agents.get('ola-frontend')}")
         h = d.get("hints", {})
         check(h.get("missed") == {"fe-css": 1} and h.get("ignored") == {"tool-nx": 2},
               f"AR-5: hints — used without a hint (missed) and hinted without use: {h}")
@@ -155,19 +155,19 @@ def main() -> int:
             encoding="utf-8")
         d = json.loads(run(root, "--json").stdout or "{}")
         keys = {e.get("key") for e in d.get("evidence", [])}
-        check({"tier:ola-frontend:za niski", "hint-missed:fe-css", "cost:ola-frontend"} <= keys
+        check({"tier:ola-frontend:too low", "hint-missed:fe-css", "cost:ola-frontend"} <= keys
               and all(e.get("key") for e in d.get("evidence", [])),
               f"AR-14: every piece of evidence has a stable key for comparison between retrospectives: {sorted(keys)}")
         tr = d.get("trend", {})
         rec = {x["key"]: x for x in tr.get("recurring", [])}
-        check(rec.get("tier:ola-frontend:za niski", {}).get("seen") == 1, f"AR-15: a repeat from the previous retrospective: {tr}")
+        check(rec.get("tier:ola-frontend:too low", {}).get("seen") == 1, f"AR-15: a repeat from the previous retrospective: {tr}")
         meas = {x["key"]: x["status"] for x in tr.get("measured", [])}
-        check(meas == {"tier:ola-frontend:za niski": "coming back", "rework:src/old.ts": "gone"},
+        check(meas == {"tier:ola-frontend:too low": "coming back", "rework:src/old.ts": "gone"},
               f"AR-16: the effect of approved changes — gone or coming back: {meas}")
         check([x["key"] for x in tr.get("rejected_again", [])] == ["hint-missed:fe-css"],
               f"AR-17: a previously rejected signal returns — marked, so it is not proposed without new evidence: {tr}")
         sug = {x["key"]: x for x in d.get("suggestions", [])}
-        check("tier:ola-frontend:za niski" in sug and sug["tier:ola-frontend:za niski"]["place"] == "role tier"
+        check("tier:ola-frontend:too low" in sug and sug["tier:ola-frontend:too low"]["place"] == "role tier"
               and "hint-missed:fe-css" not in sug,
               f"AR-18: proposals from the logs — a tier at ≥2 signals, skill words only at ≥2 sessions: {sug}")
 
@@ -181,14 +181,14 @@ def main() -> int:
         check(r.returncode == 2 and data.get("decisions") == {}, f"AR-20: a bad decision → code 2, nothing saved: {r.stdout}{r.stderr}")
         r = run(root, "--decide", "tier:ola-frontend:za niski=yes", "--decide", "hint-ignored:tool-nx=later")
         data = json.loads(saved.read_text(encoding="utf-8")) if saved.is_file() else {}
-        check(r.returncode == 0 and data.get("decisions") == {"tier:ola-frontend:za niski": "yes",
+        check(r.returncode == 0 and data.get("decisions") == {"tier:ola-frontend:too low": "yes",
                                                               "hint-ignored:tool-nx": "later"},
               f"AR-21: --decide records the human's decisions in the retrospective file: {data.get('decisions')} {r.stderr}")
         run(root, "--save")
         data = json.loads(saved.read_text(encoding="utf-8")) if saved.is_file() else {}
         check(len(data.get("decisions", {})) == 2, f"AR-22: a repeated --save does not erase the decisions: {data.get('decisions')}")
         d = json.loads(run(root, "--json").stdout or "{}")
-        check(not any(x["key"] == "tier:ola-frontend:za niski" and x.get("date") == "2026-10-17"
+        check(not any(x["key"] == "tier:ola-frontend:too low" and x.get("date") == "2026-10-17"
                       for x in d.get("trend", {}).get("measured", [])),
               "AR-23: the current retrospective (from the --until day) is not the history of itself")
         r = run(root)

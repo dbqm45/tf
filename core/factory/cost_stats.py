@@ -15,7 +15,7 @@ and in PLN at the **NBP average rate from table A** at the time of calculation (
 between models in proportion to their output tokens (the log records output per model) — an approximation.
 
 Effectiveness: changes (feat/fix commits in the repository), cost per change, rework (a fix of a file that a feat
-added in the same period), cache share of input, „Tier: za niski” per 100 executor runs.
+added in the same period), cache share of input, „Tier: too low” per 100 executor runs.
 Expensive or cheap (objectively, no hourly rates): cost per change against its own history (band median ± 3·MAD,
 from 4 periods) and a comparison with the “everything on Opus” (what model selection gave) and “no cache” (what the cache gave) variants.
 With a subscription (Pro/Max) the cost is equivalent to API prices, not actual spend. Log gaps (commits after the
@@ -116,7 +116,7 @@ def aggregate(records: list[dict], prices: dict, period: str) -> list[dict]:
         a["sessions"].add(r.get("session"))
         a["runs"] += 1
         a["subagent_runs"] += r.get("event") == "SubagentStop"
-        a["tier_low"] += "niski" in str(r.get("tier_feedback") or "")
+        a["tier_low"] += str(r.get("tier_feedback") or "") in ("too low", "niski", "za niski")
         for x in TYPES:
             a[x] += r.get(x) or 0
         c = record_cost(r, prices)

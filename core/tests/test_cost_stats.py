@@ -80,6 +80,8 @@ def main() -> int:
           f"CS-5: aggregation per week — sessions, runs, tokens, the model share in %: {per}")
     check(w41["usd_all_opus"] > w41["usd"] and w41["usd_no_cache"] > w41["usd"] and w41.get("tier_low") == 1
           and 0 < w41.get("cache_pct", 0) < 100, f"CS-6: the 'everything on Opus' and 'no cache' variants, tier signals, cache %: {w41}")
+    w = cs.aggregate([rec("2026-10-06T10:00:00+00:00", "s1", "x", {"claude-sonnet-5-5": 10}, out=10, fb="too low")], PRICES, "week")
+    check(w and w[0].get("tier_low") == 1, f"CS-6b: the English signal value (too low) counts like the former one: {w}")
 
     check(cs.parse_nbp(NBP) == (3.6512, "201/A/NBP/2026", "2026-10-16"), "CS-7: the mid rate from the NBP response (table A)")
     with tempfile.TemporaryDirectory() as d:

@@ -37,7 +37,9 @@ def project(base: Path, source: str | None = "https://github.com/dbqm45/claude-t
             {"id": "E-6", "kind": "trap", "key": "trap:vitest-trybie-watch", "text": "Vitest w /home/x/secret/app.ts"},
             {"id": "E-7", "kind": "hint", "key": "hint-ignored:fe-css", "n": 3, "text": "fe-css szum"},
             # the key in the form retro_data writes (the tier_feedback value from log_usage: "niski"/"wysoki")
-            {"id": "E-8", "kind": "tier", "key": "tier:ola-frontend:wysoki", "n": 2, "text": "ola-frontend"}],
+            {"id": "E-8", "kind": "tier", "key": "tier:ola-frontend:wysoki", "n": 2, "text": "ola-frontend"},
+            # the key since the English value (log_usage writes "too low"/"too high")
+            {"id": "E-9", "kind": "tier", "key": "tier:ola-frontend:too high", "n": 3, "text": "ola-frontend"}],
         "decisions": {"hint-missed:fe-css": "yes", "hint-ignored:fe-css": "no"}}), encoding="utf-8")
     return p
 
@@ -67,7 +69,8 @@ def main() -> int:
         r = run(FEEDBACK, "--root", str(p))
         body = link_body(r.stdout)
         check(r.returncode == 0 and "https://github.com/dbqm45/claude-team-factory/issues/new?" in r.stdout
-              and "hint-missed:fe-css" in body and "tier:ola-frontend:za niski" in body and "tier:ola-frontend:wysoki" in body and "2.23.0" in body,
+              and "hint-missed:fe-css" in body and "tier:ola-frontend:za niski" in body and "tier:ola-frontend:wysoki" in body
+              and "tier:ola-frontend:too high" in body and "2.23.0" in body,
               f"FF-1: by default a 'new issue' link with ready content: {r.stdout[-500:]}{r.stderr[-300:]}")
         check(not any(x in body for x in ("moj-skill", "obcy-agent", "vitest", "/home/x", "cost:main", "hint-ignored")),
               f"FF-2: only signals about the factory's skills and agents, no traps, paths, costs or rejected ones: {body}")
@@ -81,7 +84,8 @@ def main() -> int:
               and len(payload.get("project", "")) == 10
               and {s["key"]: s["n"] for s in payload.get("signals", [])} == {"hint-missed:fe-css": 3,
                                                                            "tier:ola-frontend:za niski": 2,
-                                                                           "tier:ola-frontend:wysoki": 2},
+                                                                           "tier:ola-frontend:wysoki": 2,
+                                                                           "tier:ola-frontend:too high": 3},
               f"FF-3: the content has a JSON block for the aggregate report (an anonymous project, version, signals with counts): {payload}")
 
         r = run(FEEDBACK, "--root", str(p), "--json", "--item", "skill:fe-css: no form grid example")
@@ -115,7 +119,8 @@ def main() -> int:
         saved = json.loads((p / "docs/project/archive/retro/20261017-retro.json").read_text(encoding="utf-8"))
         check(r.returncode == 0 and "--repo dbqm45/claude-team-factory" in args and "issue create" in args
               and "hint-missed:fe-css" in (Path(str(log) + ".body").read_text() if log.exists() else "")
-              and set(saved.get("reported", {})) == {"hint-missed:fe-css", "tier:ola-frontend:za niski", "tier:ola-frontend:wysoki"},
+              and set(saved.get("reported", {})) == {"hint-missed:fe-css", "tier:ola-frontend:za niski", "tier:ola-frontend:wysoki",
+                                                       "tier:ola-frontend:too high"},
               f"FF-8: --gh --yes creates an issue and remembers the reported keys: {args} {saved.get('reported')} {r.stderr}")
         r = run(FEEDBACK, "--root", str(p))
         check(r.returncode == 0 and "issues/new?" not in r.stdout and "nothing new" in r.stdout,

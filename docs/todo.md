@@ -724,7 +724,8 @@ treści (angielska), bez równoległej polskiej.
       902/918 · 29/43 bez zmian. Haiku przed/po (routing, research): 9/11 → 11/11 (jeden przebieg — „bez spadku”, nie zysk), $3,68 — ponad
       uzgodnione ~2 USD; kolejne partie: próbka ≤ 7 scenariuszy na stronę. Z katalogu `core-factory-update`
       zniknęła nieaktualna „zmiana języka pracy i commitów” (od #290 bez ustawień).
-    - [ ] składnia danych retrospektywy wciąż po polsku (etap 3): decyzje `--decide KLUCZ=tak|nie|później`,
+    - [x] (2026-11-22: `--decide` i `Rework-Cause:` już po angielsku; sygnał tieru zapisywany jako `too low`/`too high`,
+      dawne wartości i klucze retrospektyw czytane dalej) składnia danych retrospektywy wciąż po polsku (etap 3): decyzje `--decide KLUCZ=tak|nie|później`,
       `Rework-Cause:` (`luka-specyfikacji|blad-agenta|zmiana-wymagan|nieznana` — też `metrics.py`), sygnał
       „Tier: za niski/za wysoki” w raportach wykonawców — angielskie wartości z aliasami, jak w 3a.
     - [x] 4b-3 (2026-11-17): `core-grounding`, `core-knowledge`, `core-conventional-commits` (+ referencje),
@@ -758,7 +759,7 @@ treści (angielska), bez równoległej polskiej.
       Prompty `build.py`, `core/CLAUDE.md`, przewodnik: nazwy sekcji `Handoff` / `Open questions`.
       Podpowiedzi bez zmian (all 900 · 31/43, none 167 · 16/16, `--hints` czysto we wszystkich instalacjach).
       Haiku przed/po: 5/5 → 5/5, $1,43.
-    - [ ] nagłówki generowanego indeksu i raportu (`project_record.py`: „Praca w toku”, „Ostatnie zdarzenia”,
+    - [x] (2026-11-22: sprawdzone — nagłówki po angielsku, „Work in progress”, „Recent events”) nagłówki generowanego indeksu i raportu (`project_record.py`: „Praca w toku”, „Ostatnie zdarzenia”,
       „Decyzje”, „Otwarte pytania”) — razem z komunikatami skryptów.
     - [x] 4b-5 (2026-11-17): `core-git-workflow` (+ 3 referencje), `core-cost-control` (+ 3 referencje),
       `core-agent-instructions` (+ referencja). Hook `log_usage` czyta `Class:` (dawniej `Klasa:`) i `Tier: too low/too
@@ -810,7 +811,8 @@ treści (angielska), bez równoległej polskiej.
       (wypisuje je `profile.py` — etap komunikatów). Haiku przed/po (tf ×2, core-cost-control ×2, core-grounding ×2):
       4/6 → 5/6; `waga-pelna-panel-recenzentow` pada tak samo przed i po — panel jest tylko w `references/weight.md`,
       a model nie sięga po plik; $1,93.
-    - [ ] szablony person i wykonawców w `build.py` (sekcje „Rola”, „Priorytety”, „Cechy”, „Granice”, „Konsultanci”,
+    - [x] (2026-11-22: sprawdzone — szablony, `facets` i `vocabulary` po angielsku; ostatni polski przykład w opisie
+      `build.py` przetłumaczony) szablony person i wykonawców w `build.py` (sekcje „Rola”, „Priorytety”, „Cechy”, „Granice”, „Konsultanci”,
       `COMPOSE_HINT`, tabela wymiarów) oraz `facets`/`vocabulary` — razem z sekcjami pojęć w skillach fw-/lang-.
     - [x] (2026-11-22: linia w §4 Finishing `tf-task/SKILL.md`; ewaluacja scenariusza na modelu — za zgodą) tf: panel recenzentów przy wadze pełnej tylko w `references/weight.md` — jedna linia w SKILL.md (Finishing),
       żeby model nie pomijał `run_state.py panel` (scenariusz `waga-pelna-panel-recenzentow` pada przed i po 4b-9).
@@ -947,9 +949,9 @@ treści (angielska), bez równoległej polskiej.
     Bramki 35/35, testy repo zielone. Haiku po zmianie 30/34; cztery porażki to brak wywołania skilla
     (`ops-docker` `hardening-runtime`, `ops-kubernetes` `config-rollout`, `ops-linux-networking` `dysk-inody`,
     `ops-secrets-identities` `wyciek-klucza-aws`) — na main też (7 z 8 przebiegów bez wywołania).
-    - [ ] (2026-11-22: opisy czterech skilli poszerzone o sytuację ze scenariusza; podpowiedzi 0 pominięć w `all`
+    - [x] (2026-11-22: opisy czterech skilli poszerzone o sytuację ze scenariusza; podpowiedzi 0 pominięć w `all`
       i `pack-it`; Haiku 2026-11-22, 2 powtórki, 1,87 USD za całą serię: `hardening-runtime`, `config-rollout`, `dysk-inody` 2/2;
-      `wyciek-klucza-aws` 0/2 — skill nadal nie wywołany, brak punktu „wszystkie osiągalne poświadczenia”) cztery
+      `wyciek-klucza-aws` 0/2, po wzmocnieniu opisu i słów kluczowych PL+EN 2/2 (0,20 USD)) cztery
       scenariusze ops- bez wywołania skilla (także przed tłumaczeniem) — skille bez `keywords`;
       sprawdzić słowa kluczowe PL+EN i opis pod polskie zgłoszenia.
   - [x] 4d-r4 (2026-11-18): czwarta runda równoległa — `eng-` (19), `ddd-` (13), `ai-` (13): 45 skilli (+ referencje)
