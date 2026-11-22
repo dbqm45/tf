@@ -69,7 +69,7 @@ FINDINGS_SCHEMA = {
                 "properties": {
                     "severity": {"type": "string", "enum": ["blocker", "major", "minor", "info"]},
                     "kind": {"type": "string", "enum": [
-                        "missing_error_state", "unclear_acceptance", "contradiction", "unverifiable_slice", "other"]},
+                        "missing_error_state", "unclear_acceptance", "contradiction", "unverifiable_slice", "needs_guess", "other"]},
                     "quote": {"type": "string"},
                     "reason": {"type": "string"},
                     "settled_ref": {"type": "string"},
@@ -103,7 +103,9 @@ COMMENTS_SCHEMA = {
 SYSTEM_PROMPT_ARTIFACT = (
     "You are an independent reviewer of a change artifact. Your job is to find gaps: missing error states, "
     "acceptance criteria without a concrete example, contradictions with binding decisions, and cuts that cannot "
-    "be verified. Severity rubric: blocker — security, personal data, a contradiction with a binding decision; "
+    "be verified, and places where an implementer would have to guess — an undefined term, a missing value or limit, "
+    "a rule that can be read two ways (kind `needs_guess`, severity major; `reason` is the question to ask, `quote` "
+    "the place). Severity rubric: blocker — security, personal data, a contradiction with a binding decision; "
     "major — a user path with no error state, a criterion without a Given/When/Then example; minor — incomplete "
     "style, repetition; info — an observation that needs no action. If a finding concerns a question already settled "
     "in decisions.md, give `settled_ref` in the format `CHG-n/Dk` or `DEC-n`. Do not invent decisions that are not "

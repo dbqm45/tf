@@ -89,6 +89,10 @@ def main() -> int:
               and body["response_format"]["json_schema"].get("strict") is True,
               f"S-1: openai: body ma response_format strict i temperature 0: {r.stdout}{r.stderr}")
         check("sk-x" not in r.stdout and "sk-x" not in r.stderr, "S-1a: klucz nie wycieka w --dry-run")
+        schema_txt = json.dumps(body.get("response_format", {}), ensure_ascii=False)
+        prompt_all = json.dumps(body.get("messages") or [], ensure_ascii=False)
+        check("needs_guess" in schema_txt and "guess" in prompt_all,
+              f"S-1b: the reviewer looks for places where an implementer would have to guess (kind needs_guess): {prompt_all[:400]}")
 
         # S-2: fallback — bez OPENAI_API_KEY i bez PDI_SECOND_MODEL → claude same_vendor
         s = seq(tmp, OK_BODY)
