@@ -487,6 +487,11 @@ read_gate:
   mode: warn
   max_lines: 350
 
+# Isolation of agent sessions (docs/plans/2026-11-20-poziomy-izolacji.md): basic — permissions and hooks only (not
+# isolation); sandbox — Claude Code's sandbox limits the files and the network of commands; container — the session runs
+# in a container. Changed only from a human's terminal: `tf isolation <level>`. `tf doctor` shows what really protects.
+isolation: sandbox
+
 # The /tf-task loop. blocked_slices: true — a question blocks only its own slice (`run_state.py block`), and the loop does in the
 # meantime the slices that do not depend on it (dependencies are recorded by the plan: `· after: S1`, `· after: none`); STOP only when
 # no slice is independent. false (default, until measured) — every question is a STOP block, as before.

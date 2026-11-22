@@ -824,7 +824,7 @@ def parse_args(argv: list[str]) -> tuple[list[str], dict]:
     args, opts = [], {}
     it = iter(argv[1:])
     for a in it:
-        if a in ("--source", "--python", "--packs", "--add", "--remove", "--layout"):
+        if a in ("--source", "--python", "--packs", "--add", "--remove", "--layout", "--isolation"):
             opts[a.lstrip("-")] = next(it, "")
         elif a in REMOVED_OPTIONS:                            # old flags with a value — the value does not become a directory
             opts.setdefault("_removed", []).append(f"{a} {next(it, '')}".strip())
@@ -835,6 +835,24 @@ def parse_args(argv: list[str]) -> tuple[list[str], dict]:
         else:
             args.append(a)
     return args, opts
+
+
+def isolation_module():
+    spec = importlib.util.spec_from_file_location("tf_isolation_install", Path(__file__).resolve().parent / "isolation.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def isolation_refusal(level: str) -> str | None:
+    """`--isolation <level>`: an unknown level, or an agent session choosing its own isolation → the message; else None."""
+    iso = isolation_module()
+    if level not in iso.LEVELS:
+        return f"✗ Unknown --isolation {level!r}. Available: {', '.join(iso.LEVELS)}"
+    if any(os.environ.get(v) for v in iso.SESSION_VARS):
+        return ("✗ --isolation is chosen by a human in a terminal, not by an agent session — "
+                "run the install outside Claude Code")
+    return None
 
 
 def split_ids(raw: str | None) -> list[str]:
@@ -978,6 +996,12 @@ def _main(argv: list[str], tmp: Path) -> int:
     if layout not in LAYOUTS:
         print(f"✗ Unknown --layout {layout!r}. Available: {', '.join(LAYOUTS)}")
         return 2
+    iso_level = opts.get("isolation")
+    if iso_level is not None:
+        err = isolation_refusal(iso_level)
+        if err:
+            print(err)
+            return 2
     plugin = layout == "plugin"
     migrating = plugin and update and (manifest or {}).get("layout") != "plugin"   # from the old layout to the plugin
 
@@ -1148,6 +1172,9 @@ def _main(argv: list[str], tmp: Path) -> int:
             print(msg)
         # .tf/ — one place for the factory's work results (reports, registry, logs, runs, copies), like `tf init`
         ensure_config(dst_root)
+        if iso_level:
+            isolation_module().write_level(dst_root, iso_level)
+            print(f"  ✓ isolation: {iso_level} → .tf/config/config.yaml")
         if (dst_root / ".tf" / "factory" / "analyze.py").is_file():
             subprocess.run([sys.executable, ".tf/factory/analyze.py", "init"], cwd=dst_root, capture_output=True,
                            text=True, encoding="utf-8", errors="replace", timeout=120)

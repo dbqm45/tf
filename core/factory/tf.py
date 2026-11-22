@@ -29,6 +29,8 @@ tf — the team factory command: install, update, packs, health check (standard 
                               # them too); backup in ~/.tf/backups/
   tf style [<name>] [--here]  # your work style: autonomous | step-by-step | conversation; no name — show the current one;
                               # saved in ~/.tf/preferences.yaml (all your projects) or, with --here, .tf/config/me.yaml
+  tf isolation [<level>]      # isolation of agent sessions: basic | sandbox | container; no level — show the chosen
+                              # one and what protects this session; a level is set only from a human's terminal
   tf config show [<key>]      # merged configuration and where each value comes from (factory or project);
                               # `tf config show steps`: who runs each /tf-task loop step, with model and effort
   tf task start <KEY> --title "<title>" | stage <KEY> <stage> | status <KEY>
@@ -518,6 +520,12 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
                            errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if m.stdout.strip():
             print(m.stdout.strip())
+    iso = Path(".tf") / "factory" / "isolation.py"
+    if iso.is_file():   # isolation level and what protects the session (plan of isolation levels, I1) — information
+        i = subprocess.run([sys.executable, str(iso), "show"], capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
+        if i.stdout.strip():
+            print(i.stdout.strip())
     health = Path(".tf") / "factory" / "metrics.py"
     if health.is_file():   # degradation after a factory update (step H29, D13) — a warning only, exit code unchanged
         u = subprocess.run([sys.executable, str(health), "--after-update"], capture_output=True, text=True,
@@ -619,6 +627,9 @@ def main(argv: list[str]) -> int:
         return engine("uninstall.py", rest) if need_project() else 2
     if cmd == "style":
         return cmd_style(rest) if need_project() else 2
+    if cmd == "isolation":
+        return engine("isolation.py", ["set", *rest] if rest and not rest[0].startswith("-") else ["show", *rest]) \
+            if need_project() else 2
     if cmd == "task":
         return engine("task_state.py", rest)
     if cmd == "status":

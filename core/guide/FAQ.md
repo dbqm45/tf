@@ -116,6 +116,14 @@ Scripts that Claude Code runs at events, independently of the model's decisions:
 
 The guards block an action also when the hook itself fails. The state of the hooks: `python3 .tf/factory/hooks_status.py`.
 
+## How isolated is the agent from the rest of my computer?
+The `isolation` key chooses the level: `basic` (permissions and hooks only — not isolation), `sandbox` (the default:
+Claude Code's sandbox limits the files and the network of commands) or `container` (the session in a container with
+only the project). `tf isolation` shows the chosen level and what really protects the current session; `tf doctor`
+shows it too. You change it in a terminal, outside Claude Code: `tf isolation <level>` or `tf install --isolation
+<level>` — an agent session cannot lower its own isolation. The factory does not turn the sandbox on by itself yet;
+until then `tf isolation` names the gap.
+
 ## Why does the agent ask for consent to a command?
 The permissions are deliberately narrow: without asking, the agent runs only the commands from the `allow` list in the
 settings. A command you use often you add to `allow` in `.claude/settings.local.json`. The rules and the permission
