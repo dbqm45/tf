@@ -7,7 +7,7 @@ Token usage report per agent and model, based on .tf/logs/usage.jsonl.
   python3 .tf/factory/cost_report.py --delegation   # delegation cost by task class (delegation.jsonl)
 
 Also shows tier selection: which executors were escalated to a stronger model or reported in the report
-„Tier: za niski/za wysoki” (tier too low/too high) — with a hint where to change the default tier.
+„Tier: too low/too high” (also the former „za niski/za wysoki”) — with a hint where to change the default tier.
 
 Set prices in .tf/config/config.yaml → prices_usd_per_mtok (without them the report shows tokens only).
 """
@@ -79,7 +79,7 @@ def where_tier(agent: str, cfg: dict) -> str:
 
 def tier_advice(records: list[dict], cfg: dict) -> list[str]:
     """Team self-assessment from the data: escalations (the same agent in one session on a stronger model) and lines
-    „Tier: za niski/za wysoki” from executor reports."""
+    „Tier: too low/too high” from executor reports."""
     stats = defaultdict(lambda: {"runs": 0, "escalated": 0, "low": 0, "high": 0})
     last: dict[tuple, int] = {}
     for r in sorted(records, key=lambda r: r.get("ts", "")):
@@ -89,8 +89,8 @@ def tier_advice(records: list[dict], cfg: dict) -> list[str]:
         s = stats[agent]
         s["runs"] += 1
         fb = r.get("tier_feedback")
-        s["low"] += fb == "niski"
-        s["high"] += fb == "wysoki"
+        s["low"] += fb in ("too low", "niski")       # "niski"/"wysoki": records from before the English value
+        s["high"] += fb in ("too high", "wysoki")
         key = (r.get("session"), agent)
         if fam in RANK:
             if key in last and RANK[fam] > last[key]:

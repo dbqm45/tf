@@ -6,7 +6,7 @@ Team factory: core + overlays (pack-*) → skills → roles → personas → age
   python3 .tf/factory/build.py check      # validation + detection of stale files (CI)
   python3 .tf/factory/build.py list       # team summary
   python3 .tf/factory/build.py managed-apply [--yes]   # managed-agents target: the `ant apply` plan; --yes uploads to the account
-  python3 .tf/factory/build.py new-skill fw-demo "Użyj przy ... Nie do ..."
+  python3 .tf/factory/build.py new-skill fw-demo "Use when ... Not for ..."
 
 The sources of truth are .tf/config/config.yaml (core), .tf/factory/packs/<id>/ (overlays) and the project's own files
 in .tf/factory/{roles,personas,traits}/; assembly is described in .tf/factory/packs.py. Do not edit the files in .claude/agents/_generated/

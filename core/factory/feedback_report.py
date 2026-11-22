@@ -32,7 +32,7 @@ sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (l
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SIGNAL = re.compile(r"^(hint-missed|hint-ignored):[a-z0-9][a-z0-9-]*$|^tier:[a-z0-9][a-z0-9-]*:(?:za )?(?:niski|wysoki)$")   # retro_data writes the key with the log_usage value („niski”); „za niski” — the old form
+SIGNAL = re.compile(r"^(hint-missed|hint-ignored):[a-z0-9][a-z0-9-]*$|^tier:[a-z0-9][a-z0-9-]*:(?:too (?:low|high)|(?:za )?(?:niski|wysoki))$")   # retro_data writes the log_usage value („too low”); „niski”, „za niski” — older forms
 PROJECT = re.compile(r"^[0-9a-f]{10}$")
 BLOCK = re.compile(r"```json\s*\n(.*?)\n```", re.S)
 MIN_PROJECTS = 2
