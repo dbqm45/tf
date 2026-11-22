@@ -8,8 +8,8 @@
 The single source of truth is three keys of `.tf/factory/config.yaml`: `models_current` (alias → current identifier),
 `models_legacy` (older identifiers, still allowed when someone pins them deliberately) and `models_checked` (the date
 of the check, source: the `claude-api` skill). Checked are:
-- every `claude-…` identifier in the core configuration, in project overrides (`.tf/config/config.yaml`)
-  and in the engine code (`.tf/factory/*.py`) — an unknown one is an error (a typo or a model that no longer exists);
+- every `claude-…` identifier in the core configuration, in the company and team packs (`org_defaults`, `team_defaults`),
+  in project overrides (`.tf/config/config.yaml`) and in the engine code (`.tf/factory/*.py`) — an unknown one is an error (a typo or a model that no longer exists);
 - aliases in `managed_agents.models` — they must point to a model from `models_current`, not an older one;
 - the price list `prices_usd_per_mtok` — every current alias has a price (missing is a warning: the cost report will show only tokens);
 - the `models_checked` date — older than 90 days is a warning (not an error: CI does not turn red from the passage of time).
@@ -291,7 +291,9 @@ def check(root: Path, today: date) -> dict:
         for mid in ID.findall(text):
             seen.setdefault(mid, set()).add(where)
 
-    for label, data in (((ENGINE / "config.yaml").as_posix(), core), (OWN.as_posix(), own)):
+    sources = [((ENGINE / "config.yaml").as_posix(), core), (OWN.as_posix(), own)]
+    sources[1:1] = [(label, data) for label, data in policy_layers(mod, root)[1:-1]]   # company and team packs
+    for label, data in sources:
         for key, text in strings(data):
             if not key.startswith(("models_current", "models_legacy")):
                 note(f"{label} ({key})", text)
