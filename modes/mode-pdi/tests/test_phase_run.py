@@ -403,6 +403,8 @@ def main() -> int:
                 {"severity": "major", "kind": "unclear_acceptance", "quote": "FR-2",
                  "reason": "brak przykładu Given/When/Then"},
                 {"severity": "minor", "kind": "other", "quote": "CSV", "reason": "warto dopisać format"},
+                {"severity": "major", "kind": "needs_guess", "quote": "FR-4",
+                 "reason": "What is the maximum file size?"},
                 {"severity": "major", "kind": "contradiction", "quote": "FR-3",
                  "reason": "sprzeczne z decyzją D1", "settled_ref": "CHG-12/D1"},
             ],
@@ -417,9 +419,11 @@ def main() -> int:
               and any("[contradicts CHG-12/D1]" in q for q in review_qs)
               and all("minor" not in q for q in review_qs),
               f"N1-1: blocking (blocker, major) + contradiction go into questions with a prefix: {pl.get('questions')}")
+        check(any(q.startswith("[would have to guess] ") and "maximum file size" in q for q in pl.get("questions", [])),
+              f"N1-1b: a place where the implementer would have to guess → a gate question with its own prefix: {pl.get('questions')}")
         sr = pl.get("second_review", {})
         check(sr.get("status") == "ok" and sr.get("provider") == "openai"
-              and sr.get("blocking") == 2 and sr.get("contradictions") == 1
+              and sr.get("blocking") == 3 and sr.get("contradictions") == 1
               and sr.get("same_vendor") is False and sr.get("cost_usd") == 0.004,
               f"N1-2: second_review w payload: status, blocking, contradictions, cost: {sr}")
 
