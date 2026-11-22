@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [22.3.0] — 2026-11-22
+### Added
+- **mode-pdi:** report sessions to pdi as agent runs (#387)
+
 ## [22.2.0] — 2026-11-21
 ### Added
 - **tf-task:** propose the task mode from its content and weight (#377)
