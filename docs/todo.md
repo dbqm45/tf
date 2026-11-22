@@ -932,8 +932,8 @@ treści (angielska), bez równoległej polskiej.
     Bramki 17/17, podpowiedzi 901/918 · 31/43, `--hints` czysto, testy repo zielone. Haiku po zmianie 14/16:
     `modernizacja-typow` 2/2 w powtórce (szum); `bledy-walidacja-openapi` (fw-aspnet-core) pada tak samo na main
     (0/2) — model cytuje antywzorzec `Conflict(new ProblemDetails…)`, przed którym skill ostrzega.
-    - [x] (2026-11-22: `none` łapie tylko użycie w kodzie — `return`/`=>` przed `Conflict(new ProblemDetails`; ponowna
-      ewaluacja na modelu za zgodą właściciela) `bledy-walidacja-openapi`: niepożądany wzorzec trafia w cytat ostrzeżenia — zawęzić regex albo zmienić
+    - [x] (2026-11-22: `none` łapie tylko użycie w kodzie — `return`/`=>` przed `Conflict(new ProblemDetails`; Haiku
+      2026-11-22: 4/4, PL i EN) `bledy-walidacja-openapi`: niepożądany wzorzec trafia w cytat ostrzeżenia — zawęzić regex albo zmienić
       sformułowanie w skillu (przed tłumaczeniem też 0/2).
     - [ ] (2026-11-22: nie sprawdzone — sieć sesji nie dochodzi do endoflife.date ani angular.dev) do sprawdzenia fakty ze źródła: `endoflife.ai` w fw-nestjs (pewnie endoflife.date), `@Service` jako
       dekorator Angulara w lang-typescript, wsparcie Spring Boot 3.5 do 2026-06-30 vs 3.5.16 w źródłach.
@@ -948,7 +948,9 @@ treści (angielska), bez równoległej polskiej.
     (`ops-docker` `hardening-runtime`, `ops-kubernetes` `config-rollout`, `ops-linux-networking` `dysk-inody`,
     `ops-secrets-identities` `wyciek-klucza-aws`) — na main też (7 z 8 przebiegów bez wywołania).
     - [ ] (2026-11-22: opisy czterech skilli poszerzone o sytuację ze scenariusza; podpowiedzi 0 pominięć w `all`
-      i `pack-it`; brakuje ewaluacji na modelu — płatna, za zgodą) cztery scenariusze ops- bez wywołania skilla (także przed tłumaczeniem) — skille bez `keywords`;
+      i `pack-it`; Haiku 2026-11-22, 2 powtórki, 1,87 USD za całą serię: `hardening-runtime`, `config-rollout`, `dysk-inody` 2/2;
+      `wyciek-klucza-aws` 0/2 — skill nadal nie wywołany, brak punktu „wszystkie osiągalne poświadczenia”) cztery
+      scenariusze ops- bez wywołania skilla (także przed tłumaczeniem) — skille bez `keywords`;
       sprawdzić słowa kluczowe PL+EN i opis pod polskie zgłoszenia.
   - [x] 4d-r4 (2026-11-18): czwarta runda równoległa — `eng-` (19), `ddd-` (13), `ai-` (13): 45 skilli (+ referencje)
     po angielsku, `hint.pl.txt`. Wszystkie skille pack-it są po angielsku. Stałe sekcje referencji `ddd-archetypes`
@@ -962,7 +964,7 @@ treści (angielska), bez równoległej polskiej.
     obszarze roboczym samego pack-it): 902/918 · 31/43, `--hints` czysto w `all` i `pack-it`. Bramki 45/45. Haiku po
     zmianie 39/43; powtórki przed/po dla czterech porażek: 3/8 → 5/8, `tdd-nowa-regula` (eng-testing) bez wywołania
     skilla po obu stronach.
-    - [ ] (2026-11-22: opis poszerzony o „kroki TDD dla nowej reguły”; brakuje ewaluacji na modelu — płatna, za zgodą)
+    - [x] (2026-11-22: opis poszerzony o „kroki TDD dla nowej reguły”; Haiku 2026-11-22: 2/2)
       `tdd-nowa-regula`: skill eng-testing nie jest wywoływany (także przed tłumaczeniem) — słowa kluczowe/opis.
     - [ ] kontrola podpowiedzi przed PR w obu obszarach (`all` i sam `pack-it`) — IDF zależy od zestawu skilli.
   - [x] 4d… — pack-it partiami po prefiksach (`arch-`, `be-`, `fe-`, `ops-`, `sec-`, `qa-`, `ddd-`, `eng-`, `ai-`, `pm-`,
