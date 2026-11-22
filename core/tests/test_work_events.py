@@ -150,6 +150,24 @@ def main() -> int:
         check("after:" in r.stdout and "after: none" in r.stdout,
               f"WE-15: the plan stage with the switch on reminds to record the slice dependencies: {r.stdout}")
 
+    # a question from taking in the story and the human's answer, verbatim, without the switch (QA-n)
+    with tempfile.TemporaryDirectory() as t:
+        p = Path(t) / "qa"
+        d = new_run(p)
+        rs = SCRIPTS / "run_state.py"
+        answer = "Nie — abonamenty mają własny limit.\nTo osobne zgłoszenie."
+        r = call(p, rs, "qa", d, QUESTION, answer, "--by", "human:anna")
+        ev = events(p)
+        check(r.returncode == 0 and [e.get("type") for e in ev] == ["question", "answer"]
+              and ev[0].get("text") == QUESTION and ev[1].get("text") == answer
+              and ev[1].get("by") == "human:anna" and all(e.get("slice") == "task" for e in ev),
+              f"QA-1: the question and the human's answer recorded verbatim (line breaks kept), the switch off: {r.stdout}{r.stderr} {ev}")
+        r = call(p, rs, "qa", d, QUESTION, answer)
+        check(r.returncode != 0 and "--by human:" in r.stdout + r.stderr and len(events(p)) == 2,
+              f"QA-2: without the human's identifier nothing is recorded: {r.stdout}{r.stderr}")
+        r = call(p, rs, "qa", d, QUESTION, "  ", "--by", "human:anna")
+        check(r.returncode != 0 and len(events(p)) == 2, f"QA-3: an empty answer is refused: {r.stdout}{r.stderr}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} blocked slice tests")

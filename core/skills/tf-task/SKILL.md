@@ -67,19 +67,20 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
 
 ## 1. Taking in the story
 `run_state.py stage <katalog> intake [--auto]`; follow its `Mode:` line. Can it be done without guessing: **who, what, why**;
-**acceptance criteria** checkable with a test; **scope** (what we do not do). The repository's state is collected by `scout`
-(`plik:linia` lists).
+**acceptance criteria** checkable with a test; **scope** (what we do not do). `scout` collects the repository's state
+(`plik:linia`).
 - **Knowledge about the project:** `docs/project/00-reconstruction/standards/INDEX.md`, `domain.md` and add-on
   guidelines (`references/addons.md`, with `check` in stage 3), if they exist, apply in the plan and code.
-- No acceptance criteria → up to 3 questions; with `--auto` → STOP with them.
+- No acceptance criteria → up to 3 questions; with `--auto` → STOP with them. Each question and the answer
+  verbatim: `run_state.py qa <katalog> "<pytanie>" "<odpowiedź>" --by human:<id>`.
 - **The shape of the story**, when the lint is installed (pack-it):
   `python3 .claude/skills/proc-requirements-shaping/scripts/requirements_lint.py --story docs/project/changes/<KEY>/ticket.md`.
   AC-001…004 → an **[assumption]** or a question in the plan. STORY-001 (several actions or actors) → you ask about a
   split; with `--auto` → STOP with a proposed split (one story per main action).
 - **Against earlier decisions:** grep the story's key terms in other tasks' `spec.md` and `decisions.md`; a contradiction
   or an overlap → a question (update the old spec / go on / stop).
-- A small ambiguity → the conservative option (fewer files), in the plan as an **[assumption]**.
-- **The specification before the plan** (only when the story is ready — at a STOP you do not create the template):
+- A small ambiguity → the conservative option (fewer files), an **[assumption]** in the plan.
+- **The specification before the plan** (only for a ready story — not at a STOP):
   `run_state.py spec <katalog> new` creates `spec.md`; fill it in: `- AC-n: Given <stan>, when <jedna akcja>,
   then <wynik sprawdzalny testem>` straight from the story's criteria (you add nothing), "Unchanged", "Out of
   scope", "Open questions" (a question with the `[blocking]` marker → you ask the human; with `--auto` STOP).
@@ -89,7 +90,7 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
 `plan.md` — one line per slice, fields to tick (the resumption state):
 `- [ ] S<n> — <wartość> · criteria: <AC-n i testy> · files: <ścieżki> · verify: \`<polecenie>\` · tier: <tier>`
 Every `AC-n` goes into a slice. `spec.md` changed after the plan → repeat `stage <katalog> plan`.
-- **A vertical slice** (INVEST): visible value, passes the tests and the build by itself, no half-features; the first one
+- **A vertical slice** (INVEST): visible value, passes the tests and the build by itself; the first one
   is the thinnest working path. A slice = one commit, a story = one PR. More than 5 slices → propose a split and STOP.
 - **The same change in many places** (a width, a label on N pages) = one slice, one test per criterion, `quick-fixer`.
 - **A feature flag:** `run_state.py flag <katalog> mode`; `auto` → a decision `flag … set <klucz>` or `flag … none --reason`,
@@ -99,7 +100,7 @@ Every `AC-n` goes into a slice. `spec.md` changed after the plan → repeat `sta
 - Edge cases → `run_state.py park <katalog> "<sprawa>"` (into the PR and the report).
 - **Visual check, only when worth it:** `ui_snap.py worth <katalog> --base <gałąź domyślna>`: `no` = skip it; `yes` → `references/visual-check.md` (`--visual`/`--no-visual`).
 - After saving the plan: `run_state.py stage <katalog> plan`. **Without `--auto`:** `run_state.py stage <katalog> needs
-  --needs plan`, show the plan (slices, conditional phases, assumptions, postponed items) and wait; after the human's consent
+  --needs plan`, show the plan and wait; after the human's consent
   `run_state.py approve <katalog>`. With `--plan` you end here. **With `--auto`:** you go on; the plan goes into the PR description.
   Modes: `references/modes-and-stops.md`.
 

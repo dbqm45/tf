@@ -1307,7 +1307,10 @@ metodą TDD, bramka skilla; jeden mały PR):
   `design_check.py` przed `design-review`. Koszt: jedno wywołanie modelu na bramkę [szacunek: kilka centów na
   Haiku/Sonnet] — zmierzyć na pierwszych zmianach.
 
-- [ ] **Pierwotna prośba i odpowiedzi na pytania zapisane dosłownie** (artykuł „From OpenSpec to AIDLC”, P. Qian,
+- [x] (2026-11-22: mode-pdi już zapisywał odpowiedzi z bramki dosłownie w `decisions.md` (pary `question`/`answer`,
+  kontrakt pdi 0.12.0); w pętli `/tf-task` nowe `run_state.py qa` — pytanie z przyjęcia historyjki i odpowiedź
+  człowieka dosłownie w `events.jsonl` zadania, obok `spec.md`; rozdział „zatwierdzam” / „uruchom fazę” w pdi — nie
+  ruszany, to po stronie pdi) **Pierwotna prośba i odpowiedzi na pytania zapisane dosłownie** (artykuł „From OpenSpec to AIDLC”, P. Qian,
   2026-09-04; AWS `aidlc-workflows`): specyfikacje SDD gubią, *po co* coś zrobiono — AIDLC trzyma per faza plik pytań
   z odpowiedziami człowieka i `audit.md` tylko do dopisywania (wejście człowieka, odpowiedź, streszczenie fazy, kto
   zatwierdził — `git config user.name/email`). U nas zamiar jest w `intent.md`, a bramka to PR (tożsamość i historia
