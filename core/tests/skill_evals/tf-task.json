@@ -47,7 +47,7 @@
     {
       "id": "waga-pelna-panel-recenzentow",
       "expect": "trigger",
-      "prompt": "Zrealizuj zadanie PAY-7 pętlą /tf: zmiana w obsłudze płatności kartą ma wagę pełną, plan zatwierdzony, oba kawałki zrobione i zweryfikowane. Co jeszcze przed otwarciem PR?",
+      "prompt": "Zrealizuj zadanie PAY-7 pętlą /tf: zmiana w obsłudze płatności kartą ma wagę pełną, plan zatwierdzony, oba kawałki zrobione i zweryfikowane. Katalog przebiegu to .tf/runs/PAY-7/ — nie sprawdzaj go, wypisz kroki z procedury. Co jeszcze przed otwarciem PR?",
       "checks": {
         "all": [["security-reviewer"], ["spec-reviewer"], ["run_state\\.py panel", "panel"]],
         "none": ["gh pr merge"]
