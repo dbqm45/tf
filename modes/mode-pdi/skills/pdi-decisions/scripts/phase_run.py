@@ -59,6 +59,7 @@ SECOND_REVIEW_DIR = ".review"
 # Findings of this severity are appended to the gate questions; minor/info land only in the artifact (they do not block B2/B3).
 BLOCKING_SEVERITIES = ("blocker", "major")
 REVIEW_QUESTION_PREFIX = "[second review] "
+GUESS_QUESTION_PREFIX = "[would have to guess] "   # a needs_guess finding: the reason is the question itself
 # Report fields from pdi (contract/problem.schema.json) that go into the intent phase prompt.
 PROBLEM_FIELDS = {"title": "title", "kind": "kind", "who": "who has the problem", "cannot": "what they cannot do",
                   "impact": "impact", "workaround": "how they cope today", "frequency": "how often"}
@@ -467,7 +468,8 @@ def second_review_questions(sidecar: dict) -> list[str]:
             continue
         reason = (f.get("reason") or "").strip()
         quote = (f.get("quote") or "").strip()
-        text = REVIEW_QUESTION_PREFIX + reason + (f" — quote: “{quote}”" if quote else "")
+        prefix = GUESS_QUESTION_PREFIX if f.get("kind") == "needs_guess" else REVIEW_QUESTION_PREFIX
+        text = prefix + reason + (f" — quote: “{quote}”" if quote else "")
         out.append(text)
     return out
 

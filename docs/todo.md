@@ -1299,7 +1299,9 @@ metodą TDD, bramka skilla; jeden mały PR):
   np. „but za 140 USD”, „but niedostępny”), *Powiązania* (obszary i zmiany, których dotyczy). Dziś zamiar ma metryki
   sukcesu i „poza zakresem”, a scenariusze porażki pojawiają się dopiero w wymaganiach pisanych przez agenta.
   Zgodność: ci_for_sdlc czyta z `intent.md` tylko tytuł, treść i sekcję metryk — sprawdzić przy zmianie (kontrakt pdi).
-- [ ] **Test „gdzie agent musiałby zgadywać” przed bramką B2.** Osobny agent bez kontekstu rozmowy (wzorzec czystego
+- [x] (2026-11-22: zamiast osobnego agenta — rodzaj `needs_guess` w drugiej recenzji `second_review.py`, która już
+  czyta `requirements.md` z `intent.md` przed B2 i B3; pytanie do bramki z prefiksem `[would have to guess]`, bez
+  dodatkowego wywołania modelu) **Test „gdzie agent musiałby zgadywać” przed bramką B2.** Osobny agent bez kontekstu rozmowy (wzorzec czystego
   pokoju jak `blind-analyst`, `kasia-qa-analyst`) czyta `intent.md` i `requirements.md` i zwraca listę miejsc, w
   których musiałby zgadywać; lista trafia jako pytania do prośby o bramkę (`gate.requested`), tak jak braki z
   `design_check.py` przed `design-review`. Koszt: jedno wywołanie modelu na bramkę [szacunek: kilka centów na

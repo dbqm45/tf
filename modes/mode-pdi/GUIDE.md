@@ -49,12 +49,12 @@ Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
 - **Second review before gates B2 and B3 (N1, DZ12):** `second_review.py artifact --change CHG-n --phase P`
   after the `requirements`/`architecture` phase and before the gate request reads the artifact together with the change's decisions and
   (for architecture) `requirements.md` and lists gaps (missing error states, criteria without an example, contradictions
-  with a decision, cuts without proof of verifiability) as JSON with a schema and a "Second-model review" section
+  with a decision, cuts without proof of verifiability, places where an implementer would have to guess) as JSON with a schema and a "Second-model review" section
   in the artifact. Provider: `PDI_SECOND_MODEL` (`openai:<model>` → `OPENAI_API_KEY`, `claude:<model>` →
   `ANTHROPIC_API_KEY`); without `PDI_SECOND_MODEL` or without the provider's key — the fallback
   `claude:claude-sonnet-5-5` marked as a same-vendor review (`same_vendor: true`).
   `phase_run.py gate request` adds the blocking findings (`blocker` and `major`) to the gate questions with the prefix
-  `[second review]`, and lists contradictions with decisions with a reference `[contradicts <ref>]`. The second model being
+  `[second review]` (a place to guess: `[would have to guess]`, the question itself), and lists contradictions with decisions with a reference `[contradicts <ref>]`. The second model being
   unavailable shows in the gate request as `second_review: {status: unavailable, reason: …}`. In Actions
   only this step gets `OPENAI_API_KEY` (the key does not reach the persona's container — Z8g). The cost recorded
   in the sidecar (`docs/project/changes/CHG-n/.review/<phase>.json`) counts towards the phase budget (`PDI_PHASE_BUDGET_USD`)
