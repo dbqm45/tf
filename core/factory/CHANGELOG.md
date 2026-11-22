@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [22.9.0] — 2026-11-22
+### Added
+- **core:** isolation level key, tf isolation and install --isolation (#398)
+
 ## [22.8.0] — 2026-11-22
 ### Added
 - **core:** record the human's answers verbatim in the task (run_state.py qa) (#397)
