@@ -21,7 +21,7 @@ and the tools.
 ## When
 - At the end of a stage or phase (core-delivery-lifecycle), after closing a checkpoint, before a new plan.
 - When the same agent mistake happened in the project **a second time** (core-project-record: a lesson → a candidate for CLAUDE.md).
-- When the cost of a stage was clearly higher than usual or the executors reported "Tier: za niski".
+- When the cost of a stage was clearly higher than usual or the executors reported "Tier: too low".
 No more often than once per stage — a retrospective after every session is noise and cost.
 
 ## Procedure (five phases)
@@ -85,7 +85,7 @@ request; a rule the agent would not break anyway does not go into CLAUDE.md (a c
 ```
 
 ## Example (a project with pack-it)
-**Input (from `retro_data.py --since 2026-10-10`):** E-1 `ola-frontend` 61% of output tokens · E-4 "Tier: za niski" × 2
+**Input (from `retro_data.py --since 2026-10-10`):** E-1 `ola-frontend` 61% of output tokens · E-4 "Tier: too low" × 2
 (`ola-frontend`) · E-6 `fe-css` (pack-it) used without a hint in 3 sessions · E-9 trap "Vitest in watch mode hangs the hook" ·
 E-12 a fix after an own feat in the form file · a lesson about Vitest already exists. [example]
 

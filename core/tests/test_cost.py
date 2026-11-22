@@ -104,17 +104,17 @@ def main() -> int:
         run([str(HOOKS / "log_usage.py")], env, json.dumps({"hook_event_name": "SubagentStop", "agent_type": "scout",
                                                              "agent_transcript_path": str(tr), "session_id": "s"}))
         rec = json.loads((root / ".tf" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
-        if rec.get("tier_feedback") != "niski":
-            fails.append(f"log_usage: no tier_feedback — {rec}")
-        total += 1     # 14.x: the English signal recorded with the same value as the former Polish one
+        if rec.get("tier_feedback") != "too low":
+            fails.append(f"log_usage: the former signal „Tier: za niski” → tier_feedback too low — {rec}")
+        total += 1     # the English signal recorded in English
         tr.write_text(json.dumps({"type": "assistant", "message": {"id": "m2", "model": "claude-haiku-4-5",
                       "usage": {"input_tokens": 10, "output_tokens": 50},
                       "content": [{"type": "text", "text": "**Done:** …\n**Tier:** `Tier: too high — a rename only`"}]}}) + "\n")
         run([str(HOOKS / "log_usage.py")], env, json.dumps({"hook_event_name": "SubagentStop", "agent_type": "scout",
                                                              "agent_transcript_path": str(tr), "session_id": "s"}))
         rec = json.loads((root / ".tf" / "logs" / "usage.jsonl").read_text().splitlines()[-1])
-        if rec.get("tier_feedback") != "wysoki":
-            fails.append(f"log_usage: „Tier: too high” (14.x) → tier_feedback wysoki — {rec}")
+        if rec.get("tier_feedback") != "too high":
+            fails.append(f"log_usage: „Tier: too high” → tier_feedback too high — {rec}")
         total += 1
         run([str(HOOKS / "log_usage.py")], env, json.dumps({"hook_event_name": "SubagentStop", "agent_type": "scout",
                                                              "agent_id": "a1", "agent_transcript_path": str(tr)}))
@@ -226,6 +226,10 @@ def main() -> int:
     adv = "\n".join(cr.tier_advice(records, cfg))
     if "quick-fixer" not in adv or "raise" not in adv or "architect" not in adv or "lower" not in adv:
         fails.append(f"cost_report: tier recommendations — {adv!r}")
+    total += 1     # the English values give the same advice as the former ones
+    en = [{**r, "tier_feedback": {"niski": "too low", "wysoki": "too high"}.get(r["tier_feedback"])} for r in records]
+    if "\n".join(cr.tier_advice(en, cfg)) != adv:
+        fails.append(f"cost_report: tier recommendations from too low/too high differ — {cr.tier_advice(en, cfg)!r}")
 
     # ── cost_report --delegation: delegation cost by task class ──
     total += 1

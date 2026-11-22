@@ -29,7 +29,7 @@ import urllib.parse
 from pathlib import Path
 
 RETRO_DIR = Path("docs") / "project" / "archive" / "retro"
-SIGNAL = re.compile(r"^(hint-missed|hint-ignored):([a-z0-9][a-z0-9-]*)$|^tier:([a-z0-9][a-z0-9-]*):(?:za )?(?:niski|wysoki)$")   # retro_data writes the key with the log_usage value („niski”); „za niski” — the old form
+SIGNAL = re.compile(r"^(hint-missed|hint-ignored):([a-z0-9][a-z0-9-]*)$|^tier:([a-z0-9][a-z0-9-]*):(?:too (?:low|high)|(?:za )?(?:niski|wysoki))$")   # retro_data writes the log_usage value („too low”); „niski”, „za niski” — older forms
 GITHUB = re.compile(r"github\.com[:/]([\w.-]+)/([\w.-]+?)(?:\.git)?(?:#.*)?$")
 LEAK = [(re.compile(r"(?:^|\s)(?:~|[A-Za-z]:\\|\.{0,2}/)[\w.-]+[/\\]"), "a path"),
         (re.compile(r"https?://|www\.", re.I), "an address"), (re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+"), "an e-mail")]

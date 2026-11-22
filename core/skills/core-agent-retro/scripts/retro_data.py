@@ -6,7 +6,7 @@ Data for the retrospective of agent work (skill core-agent-retro) — standard l
   python3 .claude/skills/core-agent-retro/scripts/retro_data.py --days 7
   python3 .claude/skills/core-agent-retro/scripts/retro_data.py --since 2026-10-01 --until 2026-10-17 --json
   ... --save                                    # save docs/project/archive/retro/<YYYYMMDD of --until>-retro.json
-  ... --decide "tier:<agent>:za niski=yes"     # human decision (yes | no | later) in the file of the --until day
+  ... --decide "tier:<agent>:too low=yes"     # human decision (yes | no | later) in the file of the --until day
   --root <project directory> (default: $CLAUDE_PROJECT_DIR or the current one)
 
 Memory: every piece of evidence has a stable key (e.g. `hint-missed:<skill>`, `trap:vitest-trybie-watch-…`). Previous files
@@ -16,7 +16,7 @@ a repeated pitfall or fix → candidate for a CLAUDE.md rule, ≥3 denials of th
 cause (`Rework-Cause:` agent error or specification gap).
 
 Sources (no source → an entry in „missing”, not an error):
-- .tf/logs/usage.jsonl (log_usage hook): tokens, models, skills and the „Tier: za niski/za wysoki” signal per agent,
+- .tf/logs/usage.jsonl (log_usage hook): tokens, models, skills and the „Tier: too low/too high” signal per agent,
 - .tf/logs/skill-hints.jsonl (skill_hint hook): hints vs. skills actually used in the session,
 - docs/project/journal.md: entries from the window, those with a problem signal highlighted,
 - .tf/wip/*.md and .tf/wip/archive/*.md: „Pitfalls and dead ends” sections of checkpoints from the window,
@@ -81,6 +81,17 @@ def blocks(p: Path, since: dt.date, until: dt.date) -> dict[str, int]:
     return dict(out.most_common())
 
 
+TIER_VALUE = {"niski": "too low", "za niski": "too low", "wysoki": "too high", "za wysoki": "too high"}   # former values
+
+
+def canon(key: str) -> str:
+    """A key in today's form: `tier:<agent>:za niski` (older retrospectives and decisions) → `tier:<agent>:too low`."""
+    if key.startswith("tier:"):
+        head, _, value = key.rpartition(":")
+        return f"{head}:{TIER_VALUE.get(value, value)}"
+    return key
+
+
 def tokens(usage: list[dict]) -> dict:
     agg: dict[str, dict] = defaultdict(lambda: {"output": 0, "requests": 0, "cache_read": 0, "sessions": set(),
                                                 "models": set(), "tier_feedback": Counter()})
@@ -92,7 +103,7 @@ def tokens(usage: list[dict]) -> dict:
         a["sessions"].add(r.get("session"))
         a["models"].update((r.get("models") or {}).keys())
         if r.get("tier_feedback"):
-            a["tier_feedback"][r["tier_feedback"]] += 1
+            a["tier_feedback"][TIER_VALUE.get(r["tier_feedback"], r["tier_feedback"])] += 1
     rows = [{"agent": k, "output": v["output"], "requests": v["requests"], "cache_read": v["cache_read"],
              "sessions": len(v["sessions"]), "models": sorted(v["models"]), "tier_feedback": dict(v["tier_feedback"])}
             for k, v in agg.items()]
@@ -318,6 +329,11 @@ def history(root: Path, until: dt.date) -> list[dict]:
         except (OSError, ValueError):
             continue
         data["_date"] = data.get("date") or f.name[:8]
+        for e in data.get("evidence") or []:
+            if isinstance(e, dict) and isinstance(e.get("key"), str):
+                e["key"] = canon(e["key"])
+        if isinstance(data.get("decisions"), dict):
+            data["decisions"] = {canon(k): v for k, v in data["decisions"].items()}
         out.append(data)
     return out
 
@@ -361,7 +377,7 @@ def suggestions(d: dict) -> list[dict]:
     for a in d["tokens"]["agents"]:
         for k, n in a["tier_feedback"].items():
             if n >= 2:
-                up = "niski" in k
+                up = k == "too low"
                 out.append({"key": f"tier:{a['agent']}:{k}", "place": "role tier",
                             "text": f"{a['agent']}: „{k}” × {n} — " + ("raise the tier or route harder tasks to a "
                                     "stronger executor" if up else "consider a cheaper model for this role")
@@ -471,7 +487,7 @@ def main(argv: list[str]) -> int:
         return 2
     path = root / RETRO_DIR / f"{until.strftime('%Y%m%d')}-retro.json"
     if decide:
-        pairs = [x.rpartition("=") for x in decide]
+        pairs = [(canon(k), s, v) for k, s, v in (x.rpartition("=") for x in decide)]
         bad = [x for x, (k, _, v) in zip(decide, pairs) if not k or v not in DECISIONS]
         if bad:
             print(f"✗ A decision has the form KEY=yes|no|later: {', '.join(bad)}")
