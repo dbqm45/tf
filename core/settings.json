@@ -129,6 +129,19 @@
         ]
       },
       {
+        "matcher": "Read|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/read_gate.py"
+            ],
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "Agent|Task",
         "hooks": [
           {
