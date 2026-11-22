@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [22.4.1] — 2026-11-22
+### Fixed
+- **pack-it:** skill descriptions for missed scenarios, narrower eval antipattern (#389)
+
 ## [22.4.0] — 2026-11-22
 ### Added
 - **core:** warn at the session start when the session model is not approved (#388)
