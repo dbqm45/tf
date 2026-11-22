@@ -6,7 +6,12 @@ Works only when the project, its team pack or its company pack sets `models_appr
 `.tf/factory/model_check.py`); without a list the hook ends at once. With a list, the `model` parameter of a delegation
 that is not approved (by alias or by the identifier the alias points to in `models_current`, with `until` not past)
 → deny, with the approved models in the message. A delegation without `model` uses the agent's own tier, which
-`model_check.py` checks (`tf doctor`, CI). The model of the session itself (`/model`) is outside this hook.
+`model_check.py` checks (`tf doctor`, CI).
+
+SessionStart (`model_guard.py --session`): the session's model — named in the hook input, or else the `model` key of
+`.claude/settings.local.json`, `.claude/settings.json`, `~/.claude/settings.json` (in that order) — outside the list → a
+warning for the human and the agent; it never blocks. A model switched later with `/model` stays outside the factory's
+control (that is the role of a company model gateway).
 
 A configuration that cannot be read never blocks: the error goes to `.tf/logs/hook-errors.jsonl` and the delegation
 passes — that is why this hook has no `onFailure: block`.
@@ -50,7 +55,52 @@ def verdict(project: Path, model: str) -> tuple[bool, str, dict]:
     return ok, why, policy
 
 
+def session_model(project: Path, data: dict) -> tuple[str, str] | None:
+    """(model, where from) of the session: the hook input first, then the settings files, the nearest first."""
+    if isinstance(data.get("model"), str) and data["model"].strip():
+        return data["model"].strip(), "the session"
+    for path in (project / ".claude" / "settings.local.json", project / ".claude" / "settings.json",
+                 Path.home() / ".claude" / "settings.json"):
+        try:
+            model = json.loads(path.read_text(encoding="utf-8")).get("model")
+        except (OSError, ValueError, AttributeError):
+            continue
+        if isinstance(model, str) and model.strip():
+            return model.strip(), str(path)
+    return None
+
+
+def session_start() -> None:
+    try:
+        data = json.load(sys.stdin)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        data = {}
+    data = data if isinstance(data, dict) else {}
+    cwd = data.get("cwd") if isinstance(data.get("cwd"), str) else None
+    project = Path(os.environ.get("CLAUDE_PROJECT_DIR") or cwd or os.getcwd())
+    found = session_model(project, data)
+    if not found or found[0] == "inherit":
+        sys.exit(0)
+    model, where = found
+    try:
+        ok, why, policy = verdict(project, model)
+    except Exception as e:  # noqa: BLE001 — a broken configuration says nothing at the session start
+        record("model_guard", e)
+        sys.exit(0)
+    if ok or not policy.get("set"):
+        sys.exit(0)
+    text = (f"[model_guard] The session model {model} (from {where}) is not approved in this project ({why}). Approved "
+            f"(models_approved, source: {policy.get('source')}): {', '.join(policy.get('valid') or []) or 'nothing'}. "
+            "Switch with /model to an approved one; delegations to other models are refused.")
+    print(json.dumps({"systemMessage": text,
+                      "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": text}},
+                     ensure_ascii=False))
+    sys.exit(0)
+
+
 def main() -> None:
+    if "--session" in sys.argv[1:]:
+        session_start()
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, UnicodeDecodeError):

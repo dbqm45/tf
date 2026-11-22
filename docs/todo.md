@@ -53,7 +53,7 @@ rozszerza fabrykę i niczego w niej nie zmienia, dopóki ktoś tego nie włączy
   przebiegów obecnej wersji, werdykt release / investigate / hold, budżet kosztu, raport. Bez modelu i bez sieci.
 - [x] **Lista zatwierdzonych modeli** (`models_approved`): rozszerzenie `model_check.py`, odmowa w `profile.py`, hook
   `model_guard` przy delegacji; warstwy firma → zespół → projekt tylko zawężają. Bez listy zachowanie jak dotąd.
-- [ ] **Model sesji wybrany ręcznie (`/model`)** jest poza kontrolą fabryki — to rola bramki modeli (pdi: DI Model
+- [x] (2026-11-22: ostrzeżenie na starcie sesji, `model_guard.py --session`, testy MG-8…MG-11) **Model sesji wybrany ręcznie (`/model`)** jest poza kontrolą fabryki — to rola bramki modeli (pdi: DI Model
   Gateway). Do rozważenia: ostrzeżenie na starcie sesji, gdy `model` z ustawień jest spoza listy.
 - [ ] **`model_check.py` nie czyta identyfikatorów z warstwy firmy i zespołu** (kontrola nazw `claude-…` patrzy na
   silnik i projekt; lista zatwierdzonych już czyta wszystkie warstwy). Drobne, osobna zmiana.

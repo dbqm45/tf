@@ -232,6 +232,27 @@ def main() -> int:
                 got, _ = hook(by_id, {"model": "sonnet"})
                 check(got == "none", f"MG-7: an approved identifier covers the alias in a delegation: {got}")
 
+            # session start: the session's model from the settings (or the hook input) outside the list → a warning
+            def session(proj: Path, settings: dict | None = None, payload: dict | None = None) -> str:
+                if settings is not None:
+                    (proj / ".claude").mkdir(exist_ok=True)
+                    (proj / ".claude" / "settings.local.json").write_text(json.dumps(settings), encoding="utf-8")
+                r = subprocess.run([sys.executable, str(HOOK), "--session"],
+                                   input=json.dumps({"hook_event_name": "SessionStart", "source": "startup", **(payload or {})}),
+                                   cwd=proj, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30,
+                                   env={**os.environ, "CLAUDE_PROJECT_DIR": str(proj), "HOME": str(proj / "home")})
+                return f"exit {r.returncode}" if r.returncode else r.stdout
+            sess = project(base, "session-out", models("haiku", "sonnet"))
+            out = session(sess, {"model": "opus"})
+            check("opus" in out and "models_approved" in out and "systemMessage" in out and "additionalContext" in out,
+                  f"MG-8: a session model from the settings outside the list → a warning for the human and the agent: {out}")
+            out = session(project(base, "session-in", models("haiku", "sonnet")), {"model": "sonnet"})
+            check(out.strip() == "", f"MG-9: an approved session model → silence: {out}")
+            out = session(project(base, "session-input", models("haiku", "sonnet")), payload={"model": "claude-opus-5-5"})
+            check("claude-opus-5-5" in out, f"MG-10: the model named in the hook input counts: {out}")
+            out = session(project(base, "session-nolist"), {"model": "opus"})
+            check(out.strip() == "", f"MG-11: without models_approved the session start says nothing: {out}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} approved models tests")
