@@ -283,11 +283,23 @@ def has_plugin(root: Path) -> bool:
     return (root / ".tf" / "plugin" / ".claude-plugin" / "plugin.json").is_file()
 
 
+def session_settings(wt: Path) -> Path:
+    """The worktree's factory session settings with the isolation level (isolation.py launch), as in `tf code`."""
+    iso = Path(__file__).resolve().parent / "isolation.py"
+    plain = wt / ".tf" / "plugin" / "session-settings.json"
+    if not iso.is_file() or not plain.is_file():
+        return plain
+    spec = importlib.util.spec_from_file_location("tf_isolation_work", iso)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.launch_settings(wt)
+
+
 def agent_command(key: str, budget: str, mode: str, wt: Path | None = None, plugin_layout: bool = False) -> list[str]:
     agent = shlex.split(os.environ.get("TF_WORK_AGENT") or "claude")
     plugin = []
     if wt is not None and plugin_layout:
-        plugin = ["--plugin-dir", str(wt / ".tf" / "plugin"), "--settings", str(wt / ".tf" / "plugin" / "session-settings.json")]
+        plugin = ["--plugin-dir", str(wt / ".tf" / "plugin"), "--settings", str(session_settings(wt))]
     return [*agent, *plugin, "-p", f"/tf-task {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode",
             mode, "--strict-mcp-config"]   # without --mcp-config: no MCP servers from the repository or from configuration
 

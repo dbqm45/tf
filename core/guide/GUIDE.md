@@ -31,7 +31,8 @@ agent will point to the file that made the decision. Frequent questions: `.tf/fa
 ## 1. What an installation consists of
 **The factory mode.** The factory lives in a local plugin in `.tf/plugin/` (skills, agents, hook registration, rules) that
 only a factory session loads: `tf code` (e.g. `tf code --continue`) starts `claude --plugin-dir .tf/plugin --settings
-.tf/plugin/session-settings.json`. A plain `claude` in the project loads nothing from the factory — no hook, skill, agent,
+.tf/cache/session-settings.json` (the plugin's `session-settings.json` with the isolation level: the sandbox for
+`sandbox` and `container`). A plain `claude` in the project loads nothing from the factory — no hook, skill, agent,
 rule or status line — so your own skills in `.claude/skills/` are never shadowed; factory skills appear in a factory session
 as `tf:<skill>`. A cloud environment becomes a factory environment with the setup script printed by `tf cloud-setup`
 (the factory files must be in the repository: a team install). `tf work --once` and the measurements use the same plugin.

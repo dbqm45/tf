@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""`install.py --isolation <level>` (plan docs/plans/2026-11-20-poziomy-izolacji.md, slice I1): the level goes into the
-project's .tf/config/config.yaml; an unknown level and an agent session (CLAUDECODE / CLAUDE_CODE_ENTRYPOINT) are refused
+"""`install.py --isolation <level>` (plan docs/plans/2026-11-20-poziomy-izolacji.md, slices I1–I2): the level goes into the
+project's .tf/config/config.yaml, and in the default layout the sandbox into .claude/settings.local.json; an unknown level and an agent session (CLAUDECODE / CLAUDE_CODE_ENTRYPOINT) are refused
 before anything is installed.
 python3 tests/test_isolation_install.py"""
+import json
 import os
 import subprocess
 import sys
@@ -49,6 +50,37 @@ def main() -> int:
         r = install(p, "--isolation", "basic", env={**HUMAN, "CLAUDECODE": "1"})
         check(r.returncode == 2 and "terminal" in r.stdout and not (p / ".tf").exists(),
               f"II-3: an agent session does not choose its own isolation: {r.returncode} {r.stdout[-300:]}")
+
+        # I2, default layout: the sandbox goes into .claude/settings.local.json (per person, not the shared settings)
+        p = base / "dflt"
+        p.mkdir()
+        r = install(p, "--layout", "default")
+        local = p / ".claude" / "settings.local.json"
+        got = json.loads(local.read_text(encoding="utf-8")) if local.is_file() else {}
+        check(r.returncode == 0 and (got.get("sandbox") or {}).get("enabled") is True,
+              f"II-4: default layout, default level → sandbox enabled in settings.local.json: {r.stdout[-300:]} {list(got)}")
+        got.setdefault("sandbox", {})["enabled"] = False
+        local.write_text(json.dumps(got), encoding="utf-8")
+        install(p, "--layout", "default")
+        got = json.loads(local.read_text(encoding="utf-8"))
+        check((got.get("sandbox") or {}).get("enabled") is False, "II-5: an update keeps a person's own sandbox setting")
+        r = install(p, "--layout", "default", "--isolation", "basic")
+        got = json.loads(local.read_text(encoding="utf-8"))
+        check(r.returncode == 0 and "sandbox" not in got, f"II-6: --isolation basic → no sandbox in settings.local.json: {list(got)}")
+        p = base / "team"
+        p.mkdir()
+        r = install(p, "--layout", "default", "--shared")
+        shared_s = json.loads((p / ".claude" / "settings.json").read_text(encoding="utf-8"))
+        local = p / ".claude" / "settings.local.json"
+        got = json.loads(local.read_text(encoding="utf-8")) if local.is_file() else {}
+        check(r.returncode == 0 and "sandbox" not in shared_s and (got.get("sandbox") or {}).get("enabled") is True,
+              f"II-8: team mode → the shared settings.json without a sandbox, the person's settings.local.json with it: "
+              f"{list(shared_s)} {list(got)} {r.stdout[-300:]}")
+        p = base / "plug"
+        p.mkdir()
+        install(p, "--layout", "plugin")
+        sess = json.loads((p / ".tf" / "plugin" / "session-settings.json").read_text(encoding="utf-8"))
+        check("sandbox" not in sess, "II-7: plugin layout → the plugin files do not depend on the level (tf code adds it)")
 
     for f in fails:
         print(f"✗ {f}")

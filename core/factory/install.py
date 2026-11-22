@@ -1073,9 +1073,24 @@ def _main(argv: list[str], tmp: Path) -> int:
         cur_raw = json.loads(set_p.read_text(encoding="utf-8")) if set_p.exists() else {}
         cur = load_migrations().settings_v19(cur_raw)   # 19.0.0: English hook event names, before the merge (no duplicate)
         merged = apply_python(merge_settings(src_set, cur), py) if cur else src_set
+        iso = isolation_module()
+        level = iso_level or iso.configured(dst_root)[0]
+        if not shared:   # the isolation level's sandbox — per person (settings.local.json), never the shared settings
+            merged = iso.with_level(merged, level, force=bool(iso_level))
         if merged != cur_raw:
             plan.write(set_p, json.dumps(merged, ensure_ascii=False, indent=2) + "\n",
                        f"{set_p.relative_to(dst_root)} (factory permissions and hooks)")
+        local_p = dst_root / ".claude" / "settings.local.json"
+        if shared:       # team mode: the shared settings.json stays without a sandbox, each person's local file gets it
+            try:
+                local_cur = json.loads(local_p.read_text(encoding="utf-8")) if local_p.exists() else {}
+            except ValueError:
+                local_cur = None
+            if isinstance(local_cur, dict):
+                local_new = iso.with_level(local_cur, level, force=bool(iso_level))
+                if local_new != local_cur:
+                    plan.write(local_p, json.dumps(local_new, ensure_ascii=False, indent=2) + "\n",
+                               ".claude/settings.local.json (isolation level: sandbox)")
 
     # rules: private → CLAUDE.local.md, team → CLAUDE.md; a section between markers, replaced on update
     md_p = dst_root / ("CLAUDE.md" if shared else "CLAUDE.local.md")

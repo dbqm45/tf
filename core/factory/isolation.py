@@ -8,14 +8,22 @@ The `isolation` key in the configuration layers (engine ← company ← team ←
 
   isolation.py show [--json]   # the chosen level, where it comes from, and what actually protects this session
   isolation.py set <level>     # writes `isolation: <level>` into .tf/config/config.yaml — only from a human's terminal
+  isolation.py launch          # the settings file `tf code` passes with --settings (plugin layout); prints its path
+
+How the level reaches the session (slice I2): in the plugin layout `tf code` (and `tf work`) passes
+`.tf/cache/session-settings.json` — the plugin's session settings plus the sandbox template for `sandbox` and
+`container`, without a sandbox for `basic`. In the default layout the sandbox goes into `.claude/settings.local.json`
+(per person: the project settings would switch a colleague's sandbox off); the installer adds it only when the file
+has no `sandbox` key yet, `set` (a human's explicit choice) replaces or removes it.
 
 `set` refuses inside an agent session (the variables CLAUDECODE / CLAUDE_CODE_ENTRYPOINT): an agent does not lower its
-own isolation. Until slice I2 the factory does not turn the sandbox on by itself; `show` says so honestly.
+own isolation.
 """
 import importlib.util
 import json
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -30,8 +38,12 @@ for _stream in (sys.stdout, sys.stderr):  # Windows: the code page ≠ UTF-8
 LEVELS = ("basic", "sandbox", "container")
 DEFAULT = "sandbox"
 SESSION_VARS = ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")
-SETTINGS = (Path(".claude") / "settings.local.json", Path(".claude") / "settings.json",
-            Path(".tf") / "plugin" / "session-settings.json")   # the first one with `sandbox.enabled` decides
+SETTINGS = (Path(".claude") / "settings.local.json", Path(".claude") / "settings.json")   # the first with sandbox.enabled
+LOCAL = Path(".claude") / "settings.local.json"
+PLUGIN_SESSION = Path(".tf") / "plugin" / "session-settings.json"
+LAUNCH = Path(".tf") / "cache" / "session-settings.json"
+MANIFEST = Path(".claude") / "factory-manifest.json"
+TEMPLATE = Path(__file__).resolve().parent / "templates" / "sandbox.settings.json"
 CONFIG = Path(".tf") / "config" / "config.yaml"
 KEY_LINE = re.compile(r"^isolation\s*:.*$", re.M)
 
@@ -78,6 +90,55 @@ def sandbox_state(root: Path) -> tuple[bool, str | None]:
     return False, None
 
 
+def layout(root: Path) -> str:
+    try:
+        return json.loads((root / MANIFEST).read_text(encoding="utf-8")).get("layout") or "default"
+    except (OSError, ValueError, AttributeError):
+        return "default"
+
+
+def sandbox_block() -> dict:
+    """The `sandbox` key of the factory's template (credential directories closed, a network allowlist)."""
+    return json.loads(TEMPLATE.read_text(encoding="utf-8"))["sandbox"]
+
+
+def with_level(settings: dict, level: str, force: bool = True) -> dict:
+    """Settings for the level: `sandbox`/`container` → the template's sandbox (without `force` only when there is no
+    `sandbox` key yet — a person's own setting stays); `basic` → without a sandbox (only with `force`)."""
+    out = json.loads(json.dumps(settings))
+    if level in ("sandbox", "container"):
+        if force or "sandbox" not in out:
+            out["sandbox"] = sandbox_block()
+    elif force:
+        out.pop("sandbox", None)
+    return out
+
+
+def launch_settings(root: Path) -> Path:
+    """`.tf/cache/session-settings.json` from the plugin's session settings and the current level (plugin layout)."""
+    base = json.loads((root / PLUGIN_SESSION).read_text(encoding="utf-8"))
+    out = root / LAUNCH
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(with_level(base, configured(root)[0]), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return out
+
+
+def apply_local(root: Path, level: str) -> Path | None:
+    """Default layout: the level's sandbox in `.claude/settings.local.json` (a human's explicit choice)."""
+    if layout(root) == "plugin":
+        return None
+    f = root / LOCAL
+    try:
+        cur = json.loads(f.read_text(encoding="utf-8")) if f.is_file() else {}
+    except ValueError:
+        return None                        # a broken file is the person's to fix; `show` reports what it sees
+    new = with_level(cur if isinstance(cur, dict) else {}, level)
+    if new != cur:
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(json.dumps(new, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return f
+
+
 def in_container() -> bool:
     """The factory's container image sets TF_CONTAINER=1 (slice I4)."""
     return os.environ.get("TF_CONTAINER") == "1"
@@ -85,9 +146,20 @@ def in_container() -> bool:
 
 def state(root: Path) -> dict:
     level, source = configured(root)
-    enabled, where = sandbox_state(root)
+    if layout(root) == "plugin":           # tf code passes the level's settings with --settings and sets TF_ISOLATION
+        in_session = any(os.environ.get(v) for v in SESSION_VARS)
+        launched = os.environ.get("TF_ISOLATION") if in_session else level   # a terminal: what tf code will do
+        if launched in ("sandbox", "container"):
+            enabled, where = True, "tf code (--settings .tf/cache/session-settings.json)"
+        else:                              # a session started without tf code (e.g. a cloud session): its own settings
+            enabled, where = sandbox_state(root)
+    else:
+        enabled, where = sandbox_state(root)
     container = in_container()
     gaps = []
+    if enabled and sys.platform.startswith("linux") and not container and not shutil.which("bwrap"):
+        gaps.append("bubblewrap (bwrap) is not installed — on Linux the sandbox cannot start without it, Claude Code only "
+                    "warns (install the bubblewrap package)")
     if level == "basic":
         gaps.append("basic is not isolation: a command run by the agent can read and send whatever your user account can")
     elif level == "sandbox" and not enabled:
@@ -136,6 +208,9 @@ def cmd_set(root: Path, level: str) -> int:
         return 2
     f = write_level(root, level)
     print(f"✓ isolation: {level} → {f.relative_to(root).as_posix()}")
+    local = apply_local(root, level)
+    if local:
+        print(f"✓ sandbox {'removed from' if level == 'basic' else 'set in'} {local.relative_to(root).as_posix()}")
     return cmd_show(root, False)
 
 
@@ -143,6 +218,9 @@ def main(argv: list[str]) -> int:
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or Path.cwd())
     if not argv or argv[0] == "show":
         return cmd_show(root, "--json" in argv)
+    if argv[0] == "launch":
+        print(launch_settings(root))
+        return 0
     if argv[0] == "set" and len(argv) == 2:
         return cmd_set(root, argv[1])
     if argv[0] in ("-h", "--help"):

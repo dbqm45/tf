@@ -79,6 +79,15 @@ def factory_hook(h: dict, fac_cmds: set[str], hook_files: set[str]) -> bool:
     return any(f in text for f in hook_files)
 
 
+def factory_sandbox() -> dict | None:
+    """The sandbox the factory writes for the isolation level (templates/sandbox.settings.json); a changed one stays."""
+    try:
+        return json.loads((Path(__file__).resolve().parent / "templates" / "sandbox.settings.json")
+                          .read_text(encoding="utf-8"))["sandbox"]
+    except (OSError, ValueError, KeyError):
+        return None
+
+
 def clean_settings(cur: dict, fac: dict, overrides: dict, mark: dict | None, hook_files: set[str]) -> dict:
     out = json.loads(json.dumps(cur))
     perms = out.get("permissions") if isinstance(out.get("permissions"), dict) else {}
@@ -104,6 +113,8 @@ def clean_settings(cur: dict, fac: dict, overrides: dict, mark: dict | None, hoo
             out["env"].pop(k)
     if out.get("env") == {}:
         out.pop("env")
+    if out.get("sandbox") is not None and out.get("sandbox") == factory_sandbox():   # the isolation level's sandbox
+        out.pop("sandbox")
     fac_cmds = {" ".join([str(h.get("command", "")), *map(str, h.get("args") or [])])
                 for es in (fac.get("hooks") or {}).values() for e in es for h in e.get("hooks", [])}
     hooks = out.get("hooks") if isinstance(out.get("hooks"), dict) else {}
