@@ -27,6 +27,14 @@ Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
   The change templates are in English (`## Gate questions`, the plan columns `Slice | Kind | Release | Flag | …`,
   `## Options considered`, `## Change targets`); the readers still accept the Polish forms of older changes.
 
+- **Runs on the DI Team board (contract 0.15.0):** the hook `run_report.py` reports every Claude Code session to pdi as
+  one agent run: `run.started` at start (who: `git config user.name`; how: `manual`, or `pdi` for a phase run, which
+  also carries the change and phase), `run.progress` after each turn (the goal of the active `.tf/wip/` checkpoint as
+  the activity) and `run.finished` at the end (with the duration). It sends only when `PDI_EVENTS_URL` and
+  `PDI_TF_SIGNING_SECRET` are set in the session's environment (the same as for phases); `TF_RUN_REPORT=0` turns it off.
+  No prompt, code or file content leaves the machine; a refused or unreachable pdi never blocks the session (the error
+  goes to `.tf/logs/hook-errors.jsonl`). pdi keeps the runs in `agent-runs/`.
+
 - **Security scan on every PR (Z8c-2):** `phase_run.py workflow install --workflow change-check` installs
   `change-check.yml`: the same scan as in the factory's piece loop (`security_scan.py scan` from the tf skill — semgrep
   with the OWASP Top 10 rules and the product's `.semgrep.yml` on the files changed since the PR base, `npm audit` / `pip-audit` when

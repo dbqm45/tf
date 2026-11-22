@@ -1,0 +1,30 @@
+{
+  "id": "evt-run.finished",
+  "type": "run.finished",
+  "occurred_at": "2026-11-22T09:42:00Z",
+  "source": "tf",
+  "contract_version": "0.15.1",
+  "payload": {
+    "run": "run-CHG-12-TSK-57-1",
+    "change": "CHG-12",
+    "task": "TSK-57",
+    "phase": "delivery",
+    "slice": "S-01",
+    "outcome": "done",
+    "started_by": {
+      "name": "Ola",
+      "kind": "human"
+    },
+    "cost_usd": 3.1,
+    "budget_usd": 10,
+    "duration_s": 2520,
+    "message": "cięcie S-01 gotowe, PR otwarty",
+    "review": {
+      "url": "https://github.com/acme/pay/pull/88",
+      "status": "open",
+      "ai_verdict": "needs_attention",
+      "risk": "medium",
+      "reviewer": "Kuba"
+    }
+  }
+}

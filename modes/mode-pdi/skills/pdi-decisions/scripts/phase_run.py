@@ -13,7 +13,7 @@ Change phases run by pdi (mode-pdi, F4): the persona works without interaction a
       that repeats a question already settled in decisions.md ends the phase with the error `repeated_question` (Z1, PRB-3)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
-      gate.requested (pdi contract 0.14.0) to $PDI_EVENTS_URL/events/tf, signature from $PDI_TF_SIGNING_SECRET;
+      gate.requested (contract 0.15.1) to $PDI_EVENTS_URL/events/tf, signature from $PDI_TF_SIGNING_SECRET;
       refuses when the artifact repeats a settled question
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list
       JSON with the local story/* cut branches — recorded before the delivery phase
@@ -50,7 +50,7 @@ OVERRIDES = Path(".claude") / "pdi-phases.json"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "sdlc-phase.yml"
 WORKFLOW = Path(".github") / "workflows" / "sdlc-phase.yml"
 SCRIPTS = ".claude/skills/pdi-decisions/scripts"
-CONTRACT_VERSION = "0.14.0"
+CONTRACT_VERSION = "0.15.1"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Gate questions"
 # Second review (N1, DZ12): a sidecar from second_review.py next to the phase artifact; the phases we look for one in.
@@ -345,9 +345,11 @@ def cmd_run(a) -> int:
     relay = phase_progress.ProgressRelay(change=a.change, phase=a.phase,
                                          budget_usd=float(budget) if budget else None)
     try:
+        # run_report.py (mode-pdi hook) reports this session to pdi as a run of this change and phase (contract 0.15.0).
+        run_env = {**os.environ, "TF_RUN_TRIGGER": "pdi", "TF_RUN_CHANGE": a.change, "TF_RUN_PHASE": a.phase}
         process = subprocess.Popen([*argv, p["prompt"]], stdin=subprocess.DEVNULL,
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   text=True, bufsize=1)
+                                   text=True, bufsize=1, env=run_env)
     except OSError as e:
         raise Refused(f"cannot start {argv[0]} ({e.strerror}) — install Claude Code or set PDI_CLAUDE_BIN") from e
     raw_lines: list[str] = []
