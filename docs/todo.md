@@ -37,13 +37,27 @@ kontraktem. Plan i polecenie startowe: `docs/plans/2026-10-23-integracja-pdi.md`
   do rejestru pdi przez MCP, kolejka bez połączenia; reguła w skillu trybu. Osobny PR po F0.
 
 ## Oś fabryki: od numeru zadania do wdrożenia — zapisane 2026-11-12
-Dokument zbiorczy (propozycja, czeka na decyzje D1–D12 człowieka):
+Dokument zbiorczy (w większości zbudowany; decyzje D1–D12 zapisane 2026-11-22):
 `docs/plans/2026-11-12-os-fabryki-od-zadania-do-wdrozenia.md`. Łączy Talosa, dashboard, pdi, plany §9–10 z 2026-11-08,
 politykę autonomii i propozycje tf-1…tf-13 w jeden przebieg `/tf <KEY>` z trybami Plan / zwykły / Auto, jednym
 katalogiem zadania i prostotą dla użytkownika jako wymaganiem (W8).
-- [ ] **Plan zmian** (22 pozycje wg wielkości, kroki A–H, ocena skali): `docs/plans/2026-11-12-plan-zmian-os-fabryki.md`.
+- [x] **Plan zmian** (22 pozycje wg wielkości, kroki A–H, ocena skali): `docs/plans/2026-11-12-plan-zmian-os-fabryki.md`.
+  Zrealizowany krokami A–H (plany `docs/plans/2026-11-1[34]-krok-*`, pomiary po krokach w `docs/evals/`, ostatni
+  `2026-11-15-pomiar-po-kroku-h.md`).
 - [x] **Decyzje D1–D12** (sekcja 15 dokumentu) — zapisane 2026-11-22 wg kodu za zgodą właściciela; D5, D8, D10, D12 odłożone.
-- [ ] **E0–E8** (sekcja 14) — każdy etap osobnym planem i PR, po decyzjach; E1 (`tf onboard`) nie zależy od D2–D12. Źródła: 14 artykułów claude.dev (S1–S14, sekcja 16 dokumentu).
+- [x] **E0–E8** (sekcja 14) — każdy etap osobnym planem i PR, po decyzjach; E1 (`tf onboard`) nie zależy od D2–D12. Źródła: 14 artykułów claude.dev (S1–S14, sekcja 16 dokumentu).
+  Sprawdzone 2026-11-22 w kodzie (etapy zrealizowane jako kroki C–H planu zmian):
+  - E0 pomiar bazowy: `docs/evals/2026-11-13-pomiar-bazowy-e0.md` (#220, #221);
+  - E1 `tf onboard` (#216, #219), `REVIEW.md` w `core-git-workflow/references/review-md.md`;
+  - E2 katalog zadania i `task_state.py` (krok C); E3 `spec_check.py`, `trace_check.py`, ochrona w `guard_paths.py` (krok D);
+  - E4 jedno wejście, waga, tryby (krok E; dziś `/tf` + `/tf-task`); E5 `events.jsonl`, kawałek zablokowany, przegląd
+    z końcem, „Waiting for you” (krok F; mod odłożony, D9);
+  - E6 zgłoszenie z Jiry skryptem (G1); E7 karta wdrożenia, test dymny po scaleniu, `tf task close` (G3, G4);
+  - E8 `tf work --once` (#271), odcisk harnessu w `log_usage.py`, pasmo kosztu w `cost_stats.py`, przegląd instrukcji
+    (#258), ostrzeżenie po aktualizacji fabryki (#267), powtórka pomiaru po kroku H.
+  - [ ] Zostaje z E6–E7 (poza krokiem G, `krok-g-plan-realizacji.md` „Poza krokiem G”): `tf po setup` (wiedza
+    z Confluence), obserwacja pipeline'u wydania w CI, zapadki jakości i zbiór „incydent → test recenzenta”, zapis do
+    trackera.
 
 ## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
 Plan: `docs/plans/2026-11-19-bramka-ewaluacji-i-zatwierdzone-modele.md` (źródło: pdi
@@ -53,9 +67,9 @@ rozszerza fabrykę i niczego w niej nie zmienia, dopóki ktoś tego nie włączy
   przebiegów obecnej wersji, werdykt release / investigate / hold, budżet kosztu, raport. Bez modelu i bez sieci.
 - [x] **Lista zatwierdzonych modeli** (`models_approved`): rozszerzenie `model_check.py`, odmowa w `profile.py`, hook
   `model_guard` przy delegacji; warstwy firma → zespół → projekt tylko zawężają. Bez listy zachowanie jak dotąd.
-- [ ] **Model sesji wybrany ręcznie (`/model`)** jest poza kontrolą fabryki — to rola bramki modeli (pdi: DI Model
+- [x] (2026-11-22: ostrzeżenie na starcie sesji, `model_guard.py --session`, testy MG-8…MG-11) **Model sesji wybrany ręcznie (`/model`)** jest poza kontrolą fabryki — to rola bramki modeli (pdi: DI Model
   Gateway). Do rozważenia: ostrzeżenie na starcie sesji, gdy `model` z ustawień jest spoza listy.
-- [ ] **`model_check.py` nie czyta identyfikatorów z warstwy firmy i zespołu** (kontrola nazw `claude-…` patrzy na
+- [x] (2026-11-22: czyta, test MC-10) **`model_check.py` nie czyta identyfikatorów z warstwy firmy i zespołu** (kontrola nazw `claude-…` patrzy na
   silnik i projekt; lista zatwierdzonych już czyta wszystkie warstwy). Drobne, osobna zmiana.
 - [ ] **`tf standard`** (jedno polecenie „czy repo spełnia standard”, wersja z 9.17) — odłożone: najpierw porównanie
   z `tf status`, `tf task check` i standardami firmowymi (`tf analyze`), żeby nie powstało drugie polecenie o tym samym.

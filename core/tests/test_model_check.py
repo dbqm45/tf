@@ -93,6 +93,17 @@ def main() -> int:
         check(r.returncode in (0, 1) and "Traceback" not in r.stdout + r.stderr,
               f"MC-8: an unreadable project configuration does not end in an exception trace: {r.returncode} {r.stdout} {r.stderr[-300:]}")
 
+        # the company and team packs set tiers and profiles too: their identifiers are checked like the project's
+        for key, pid in (("org_defaults", "pack-acme"), ("team_defaults", "pack-acme-web")):
+            p = project(base, f"layer-{pid}")
+            d = p / ".tf" / "factory" / "packs" / pid
+            d.mkdir(parents=True)
+            (d / "pack.yaml").write_text(f"id: {pid}\nversion: 1.0.0\ntitle: X\n{key}:\n  config:\n    tiers:\n      std:\n"
+                                         "        model: claude-sonet-9-9\n", encoding="utf-8")
+            r = call(p)
+            check(r.returncode == 1 and "claude-sonet-9-9" in r.stdout and pid in r.stdout,
+                  f"MC-10: an unknown identifier in the {key} pack → an error naming the pack: {r.returncode} {r.stdout}")
+
     # tf doctor shows the model check result (informational; does not change the exit code)
     r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=ROOT, capture_output=True, text=True, timeout=300,
                        env={**os.environ, "CLAUDE_PROJECT_DIR": str(ROOT)})
