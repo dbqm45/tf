@@ -833,8 +833,12 @@ treści (angielska), bez równoległej polskiej.
       nim odłożone sprawy z raportu cięcia (zmiana razem z repozytorium pdi, jak kolumny `plan.md`). Bez próbki Haiku:
       żaden skill nie odsyła modelu do przewodników; podpowiedzi all 901 · 32/43, `--hints` czysto, bramki tf,
       core-git-workflow, core-agent-retro przechodzą.
-    - [ ] dalsze partie: 4c (pack-docs, pack-ux, mode-team, mode-pdi, org).
-  - [ ] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
+    - [x] dalsze partie: 4c (pack-docs, pack-ux, mode-team, mode-pdi, org).
+  - [x] 4c — pack-docs, pack-ux, mode-team, mode-pdi, org (szablony).
+    - [x] 4c-org (2026-11-22): `org/README.md` po angielsku (szablony `org/template*` były już po angielsku; pętla
+      nazwana `/tf-task`, `model_guard` z ostrzeżeniem na starcie sesji). Zostają celowo po polsku: schematy JSON
+      w mode-pdi (kopie kontraktu pdi — zmieniać tylko razem z pdi), aliasy czytników (`nagłówek`, kolumny
+      `design.md`), polskie słowa kluczowe, nazwy polskich aktów prawnych i przykładowe aplikacje analizatora dostępności.
     - [x] 4c-1 (2026-11-18): `docs-tech-writing` (+ 6 referencji), rola `tech-writer` i wiersz routingu pack-docs,
       `team-session` i przewodnik mode-team; nazwy i pytania wymiarów (`facets`) rdzenia, pack-docs i mode-team po
       angielsku (pominięte w 4b-9); `content_language: en` w przetłumaczonych nakładkach i w szkielecie
