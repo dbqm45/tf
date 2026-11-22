@@ -3,6 +3,12 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [22.4.0] — 2026-11-22
+### Added
+- **core:** warn at the session start when the session model is not approved (#388)
+### Fixed
+- **core:** check model names in the company and team packs (#386)
+
 ## [22.3.0] — 2026-11-22
 ### Added
 - **mode-pdi:** report sessions to pdi as agent runs (#387)
