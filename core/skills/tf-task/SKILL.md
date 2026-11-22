@@ -134,7 +134,7 @@ the start of the loop with the next one (at most two), e.g. `… S2 R1 verify fa
    `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base <gałąź domyślna>` — `Verdict:
    OVER` → shorten the artifacts or describe the exception. **The criteria trace:** `run_state.py trace <katalog>
    --base <gałąź domyślna>` — exit code 1 (a criterion without a test, a test with a foreign `AC-n`) you fix.
-3. Full weight: the reviewer panel first, `run_state.py panel <katalog>` (`references/weight.md`).
+3. Full weight: the panel first, `run_state.py panel <katalog>` (`security-reviewer`, `spec-reviewer`).
    `run_state.py stage <katalog> pr` and `run_state.py step <katalog> PR plan_drift pass` (or `fail`). Push the branch
    and one PR. The description is assembled by the script: `run_state.py pr-body <katalog> --base <gałąź domyślna>` → `gh pr create
    --body-file <plik>` (with "Jak cofnąć"); you add only the deviations from the plan and the `pr_budget` exception. You do not merge.
