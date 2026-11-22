@@ -1,7 +1,7 @@
 # Oś fabryki: od numeru zadania do wdrożenia (dokument zbiorczy)
 
-Data: 2026-11-12. Status: **propozycja do decyzji człowieka** — nic z tego dokumentu nie jest jeszcze zbudowane, o ile
-sekcja 2 nie mówi inaczej. Dokument łączy w jedną całość: plany z `docs/plans/` (zwłaszcza
+Data: 2026-11-12. Status (2026-11-22): **w większości zbudowane** krokami C–H; decyzje D1–D12 i co odłożone — sekcja 15.
+Pierwotny status: propozycja do decyzji człowieka; nic nie było zbudowane, o ile sekcja 2 nie mówiła inaczej. Dokument łączy w jedną całość: plany z `docs/plans/` (zwłaszcza
 `2026-11-08-tf-analyze-i-katalog-tf.md` §8–10 i `2026-11-09-luki-katalogu-i-autonomia.md`), tryb Talos z dashboardem
 (tf#211), plik `propozycje-wdrozen.md` (tf-1…tf-13, plik użytkownika spoza repo, 2026-11-12), porównanie z dev-kitem
 (PDF „AI Playbook”, szkic, 2026-11-12) oraz 14 artykułów zespołów Anthropic z claude.dev wskazanych przez człowieka (S1–S14, sekcja 16).
