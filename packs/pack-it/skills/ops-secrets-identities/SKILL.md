@@ -1,6 +1,6 @@
 ---
 name: ops-secrets-identities
-description: Use for secrets and machine identities — scanning, rotation, OIDC instead of keys, PKI.
+description: Use for secrets and machine identities — a leaked key (what to do first), scanning, rotation, OIDC instead of keys, PKI.
 metadata:
   review: "2027-04-17"
   catalog: "Use for secrets and machine identities — an inventory of service accounts, tokens, keys and certificates (owner, scope, expiry), separating the build and deployment identities, secret scanning before commit and in CI, push protection, rotation and clean-up, a cryptography inventory (CBOM). Not for authenticating application users (be-auth-security) or dependencies (ops-supply-chain-security)."

@@ -252,8 +252,8 @@
   "offline": "2026-11-20"
  },
  "eng-testing": {
-  "fingerprint": "c41ad0cb5a2fc550",
-  "offline": "2026-11-20"
+  "fingerprint": "dbe6d0047b5a14c4",
+  "offline": "2026-11-22"
  },
  "fe-architecture": {
   "fingerprint": "409f8e6364fbb522",
@@ -280,8 +280,8 @@
   "offline": "2026-11-20"
  },
  "fw-aspnet-core": {
-  "fingerprint": "cc29e69d31ac3718",
-  "offline": "2026-11-20"
+  "fingerprint": "274fee0d6413fdeb",
+  "offline": "2026-11-22"
  },
  "fw-nestjs": {
   "fingerprint": "8101fd6e5d7a5a3e",
@@ -348,8 +348,8 @@
   "offline": "2026-11-18"
  },
  "ops-docker": {
-  "fingerprint": "1a9c8ba24944bf0a",
-  "offline": "2026-11-18"
+  "fingerprint": "b5baad10bbe8116c",
+  "offline": "2026-11-22"
  },
  "ops-finops": {
   "fingerprint": "7405d6b3d08e7339",
@@ -360,12 +360,12 @@
   "offline": "2026-11-18"
  },
  "ops-kubernetes": {
-  "fingerprint": "df0abbcae51bdba5",
-  "offline": "2026-11-18"
+  "fingerprint": "7381b55f62b1c48b",
+  "offline": "2026-11-22"
  },
  "ops-linux-networking": {
-  "fingerprint": "8b0f35bb42de17d2",
-  "offline": "2026-11-18"
+  "fingerprint": "e4b2cb6d7464cec3",
+  "offline": "2026-11-22"
  },
  "ops-linux-performance": {
   "fingerprint": "64ec7c67b61aa06b",
@@ -388,8 +388,8 @@
   "offline": "2026-11-20"
  },
  "ops-secrets-identities": {
-  "fingerprint": "759261a91637f444",
-  "offline": "2026-11-20"
+  "fingerprint": "80aa75b70968ffa3",
+  "offline": "2026-11-22"
  },
  "ops-security-operations": {
   "fingerprint": "862fc351e0f2011c",

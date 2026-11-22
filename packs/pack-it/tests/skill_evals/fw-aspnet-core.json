@@ -28,7 +28,7 @@
           ]
         ],
         "none": [
-          "Conflict\\(new ProblemDetails"
+          "(return|=>)\\s*(Typed)?Results\\.Conflict\\(\\s*new\\s+ProblemDetails"
         ]
       }
     },
@@ -59,7 +59,7 @@
           ]
         ],
         "none": [
-          "Conflict\\(new ProblemDetails"
+          "(return|=>)\\s*(Typed)?Results\\.Conflict\\(\\s*new\\s+ProblemDetails"
         ]
       }
     },
