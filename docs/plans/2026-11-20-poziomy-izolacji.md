@@ -2,7 +2,7 @@
 
 Data: 2026-11-20. Prośba właściciela: po uruchomieniu fabryki ani fabryka, ani Claude nie mogą nic zrobić poza
 folderem projektu. Uzasadnienie i ocena poziomów: `docs/insights/isolation.md`. Decyzje właściciela zapisane 2026-11-22
-(sekcja „Decyzje właściciela”). Stan: I1 zrobione (2026-11-22), I2–I9 otwarte.
+(sekcja „Decyzje właściciela”). Stan: I1 i I2 zrobione (2026-11-22), I3–I9 otwarte.
 
 ## Cel
 
@@ -35,7 +35,10 @@ nie nadpisuje). Domyślnie `sandbox`. Wybór przy instalacji: `install.py --isol
 **Poziom 2 przez launcher.** `tf code` dokłada ustawienia sandboxa do `session-settings.json` podawanego w
 `--settings`. Według dokumentacji Claude Code ustawienia z wiersza poleceń mają pierwszeństwo przed projektowymi
 i lokalnymi, więc projektowe `"enabled": false` nie wyłączy sandboxa w sesji fabryki
-[niezweryfikowane — do sprawdzenia testem w I2]. W układzie domyślnym (bez wtyczki) instalator wpisuje sandbox do
+(pomiar 2026-11-22 za zgodą właściciela: Claude Code 2.1.330, Linux z bubblewrap, haiku, 2 przebiegi `claude -p`,
+0,0067 USD — projekt `{"sandbox": {"enabled": false}}` bez `--settings`: zapis do katalogu domowego przeszedł;
+ten sam projekt z `--settings` z szablonem: zapis do katalogu domowego odrzucony „Read-only file system”, zapis
+w projekcie przeszedł). W układzie domyślnym (bez wtyczki) instalator wpisuje sandbox do
 `.claude/settings.local.json`, jak dziś opisuje skill.
 
 **Poziom 3: `tf code --container` albo `isolation: container`.**

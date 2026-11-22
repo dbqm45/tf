@@ -49,7 +49,8 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf task mode <KEY> [plan|normal|auto]   # who approves: plan stops after the plan, normal waits for the human's approval of the plan, auto does not
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
-  tf code [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin) and its settings; a plain
+  tf code [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin), its settings and the isolation
+                              # level (the sandbox for `sandbox`); a plain
                               # `claude` in the project loads nothing from the factory (install --layout plugin)
   tf cloud-setup [--apply]    # factory mode in a cloud environment: prints the environment's setup script; --apply
                               # enables the factory plugin and its session settings in ~/.claude/settings.json
@@ -410,8 +411,23 @@ def claude_command() -> list[str]:
     return shlex.split(os.environ.get("TF_CLAUDE") or "claude")
 
 
+def session_settings(plugin_settings: Path) -> Path:
+    """The settings of a factory session with the isolation level (`.tf/cache/session-settings.json`); the plugin's
+    own file when the engine has no isolation.py yet."""
+    if not (Path(".tf") / "factory" / "isolation.py").is_file():
+        return plugin_settings
+    return project_module("isolation").launch_settings(Path.cwd()).resolve()
+
+
+def isolation_level() -> str:
+    if not (Path(".tf") / "factory" / "isolation.py").is_file():
+        return "basic"
+    return project_module("isolation").configured(Path.cwd())[0]
+
+
 def cmd_code(rest: list[str]) -> int:
-    """Factory session: `claude --plugin-dir .tf/plugin --settings .tf/plugin/session-settings.json <rest>`."""
+    """Factory session: `claude --plugin-dir .tf/plugin --settings .tf/cache/session-settings.json <rest>` — the plugin's
+    session settings with the isolation level (the sandbox for `sandbox` and `container`); TF_ISOLATION names the level."""
     if not need_project():
         return 2
     if factory_layout() != "plugin":
@@ -426,9 +442,9 @@ def cmd_code(rest: list[str]) -> int:
             print(f"✗ The factory plugin is incomplete (missing: {', '.join(missing)}) — run `tf doctor --fix` "
                   "(or `tf` to update), then `tf code` again.")
             return 2
-        cmd = [*claude_command(), "--plugin-dir", str(plugin), "--settings", str(settings), *rest]
+        cmd = [*claude_command(), "--plugin-dir", str(plugin), "--settings", str(session_settings(settings)), *rest]
     try:
-        return subprocess.run(cmd).returncode
+        return subprocess.run(cmd, env={**os.environ, "TF_ISOLATION": isolation_level()}).returncode
     except FileNotFoundError:
         print("✗ The `claude` command (Claude Code) is not in PATH.")
         return 127

@@ -66,7 +66,7 @@ def main() -> int:
         argv = call.get("argv") or []
         wt = (p / ".tf" / "worktrees" / "IMP-1").resolve()
         check(r.returncode == 0 and "--plugin-dir" in argv and Path(argv[argv.index("--plugin-dir") + 1]).resolve() == wt / ".tf" / "plugin"
-              and "--settings" in argv and Path(argv[argv.index("--settings") + 1]).resolve() == wt / ".tf" / "plugin" / "session-settings.json",
+              and "--settings" in argv and Path(argv[argv.index("--settings") + 1]).resolve() == wt / ".tf" / "cache" / "session-settings.json",
               f"PW-2: tf work woła agenta z wtyczką i ustawieniami sesji z worktree: {r.returncode} {argv} {r.stdout[-400:]}")
         check((wt / ".tf" / "plugin" / "skills" / "tf" / "SKILL.md").is_file() and (wt / ".tf" / "plugin" / "hooks" / "hooks.json").is_file(),
               "PW-3: worktree dostaje wtyczkę fabryki")

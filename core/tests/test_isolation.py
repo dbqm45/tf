@@ -81,7 +81,12 @@ def main() -> int:
         p = project(base, "on")
         (p / ".claude").mkdir()
         (p / ".claude" / "settings.local.json").write_text(json.dumps({"sandbox": {"enabled": True}}), encoding="utf-8")
-        data = json.loads(iso(p, "show", "--json").stdout or "{}")
+        fake_bin = base / "bin"                   # a stand-in bwrap: this check is about the settings, not the machine
+        fake_bin.mkdir()
+        (fake_bin / "bwrap").write_text("#!/bin/sh\n", encoding="utf-8")
+        (fake_bin / "bwrap").chmod(0o755)
+        with_bwrap = {**HUMAN, "PATH": f"{fake_bin}{os.pathsep}{HUMAN.get('PATH', '')}"}
+        data = json.loads(iso(p, "show", "--json", env=with_bwrap).stdout or "{}")
         check(data.get("sandbox_enabled") is True and data.get("sandbox_where") == ".claude/settings.local.json"
               and not data.get("gaps"), f"IS-6: a sandbox enabled in the settings → no gap: {data}")
         (p / ".claude" / "settings.json").write_text(json.dumps({"sandbox": {"enabled": False}}), encoding="utf-8")
@@ -107,6 +112,53 @@ def main() -> int:
         r = subprocess.run([sys.executable, str(p / ".tf" / "factory" / "tf.py"), "isolation"], cwd=p, capture_output=True,
                            text=True, timeout=60, env={**HUMAN, "CLAUDE_PROJECT_DIR": str(p)})
         check(r.returncode == 0 and "sandbox" in r.stdout, f"IS-11: `tf isolation` shows the level: {r.stdout}{r.stderr}")
+
+        # I2: the level reaches the session. Plugin layout: `launch` builds the settings `tf code` passes with --settings
+        p = project(base, "plug")
+        (p / ".claude").mkdir()
+        (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"layout": "plugin"}), encoding="utf-8")
+        (p / ".tf" / "plugin").mkdir(parents=True)
+        (p / ".tf" / "plugin" / "session-settings.json").write_text(json.dumps({"env": {"A": "1"}}), encoding="utf-8")
+        r = iso(p, "launch")
+        out = Path(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip() else None
+        got = json.loads(out.read_text(encoding="utf-8")) if out and out.is_file() else {}
+        tpl = json.loads((ROOT / ".tf" / "factory" / "templates" / "sandbox.settings.json").read_text(encoding="utf-8"))
+        check(got.get("env") == {"A": "1"} and got.get("sandbox") == tpl["sandbox"] and ".tf/cache" in out.as_posix(),
+              f"IS-13: plugin layout, level sandbox → session settings + the sandbox template in .tf/cache: {r.stdout}{r.stderr} {got}")
+        data = json.loads(iso(p, "show", "--json").stdout or "{}")
+        check(data.get("sandbox_enabled") is True and "tf code" in str(data.get("sandbox_where")),
+              f"IS-14: plugin layout → the sandbox comes from tf code: {data}")
+        data = json.loads(iso(p, "show", "--json", env={**HUMAN, "CLAUDECODE": "1"}).stdout or "{}")
+        check(data.get("sandbox_enabled") is False and data.get("gaps"),
+              f"IS-14b: a session not started by tf code (no TF_ISOLATION, e.g. a cloud session) → no sandbox from tf code: {data}")
+        data = json.loads(iso(p, "show", "--json", env={**HUMAN, "CLAUDECODE": "1", "TF_ISOLATION": "sandbox"}).stdout or "{}")
+        check(data.get("sandbox_enabled") is True, f"IS-14c: a session started by tf code (TF_ISOLATION=sandbox): {data}")
+        (p / ".tf" / "plugin" / "session-settings.json").write_text(json.dumps({"env": {"A": "1"}, "sandbox": {"enabled": True}}),
+                                                                   encoding="utf-8")
+        (p / ".tf" / "config").mkdir(parents=True, exist_ok=True)
+        (p / ".tf" / "config" / "config.yaml").write_text("isolation: basic\n", encoding="utf-8")
+        r = iso(p, "launch")
+        got = json.loads(Path(r.stdout.strip()).read_text(encoding="utf-8")) if r.returncode == 0 and r.stdout.strip() else {"sandbox": "?"}
+        check("sandbox" not in got and got.get("env") == {"A": "1"}, f"IS-15: level basic → no sandbox in the session settings: {got}")
+
+        # default layout: `set` writes the sandbox into .claude/settings.local.json (per person) and keeps the rest
+        p = project(base, "deflt")
+        (p / ".claude").mkdir()
+        local = p / ".claude" / "settings.local.json"
+        local.write_text(json.dumps({"permissions": {"allow": ["Bash(ls *)"]}}), encoding="utf-8")
+        r = iso(p, "set", "sandbox")
+        got = json.loads(local.read_text(encoding="utf-8"))
+        check(r.returncode == 0 and got.get("sandbox") == tpl["sandbox"] and got.get("permissions") == {"allow": ["Bash(ls *)"]},
+              f"IS-16: default layout, set sandbox → the template in settings.local.json, the rest kept: {r.stdout}{r.stderr} {got}")
+        iso(p, "set", "basic")
+        got = json.loads(local.read_text(encoding="utf-8"))
+        check("sandbox" not in got and got.get("permissions"), f"IS-17: set basic → the sandbox removed from settings.local.json: {got}")
+
+        if sys.platform.startswith("linux"):
+            iso(p, "set", "sandbox")
+            data = json.loads(iso(p, "show", "--json", env={**HUMAN, "PATH": str(base / "empty")}).stdout or "{}")
+            check(any("bubblewrap" in g for g in data.get("gaps", [])),
+                  f"IS-18: Linux without bubblewrap → the sandbox cannot start, named as a gap: {data}")
 
     r = subprocess.run([sys.executable, str(ROOT / ".tf" / "factory" / "tf.py"), "doctor"], cwd=ROOT, capture_output=True,
                        text=True, timeout=300, env={**HUMAN, "CLAUDE_PROJECT_DIR": str(ROOT)})

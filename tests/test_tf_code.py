@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factory").is_dir())
 INSTALL = ROOT / "core" / "factory" / "install.py"
-FAKE = "import json, sys, os\nopen(os.environ['TF_FAKE_OUT'], 'w').write(json.dumps({'argv': sys.argv[1:], 'cwd': os.getcwd()}))\n" \
+FAKE = "import json, sys, os\nopen(os.environ['TF_FAKE_OUT'], 'w').write(json.dumps({'argv': sys.argv[1:], 'cwd': os.getcwd(), 'isolation': os.environ.get('TF_ISOLATION')}))\n" \
        "raise SystemExit(int(os.environ.get('TF_FAKE_EXIT', '0')))\n"
 
 
@@ -59,10 +59,20 @@ def main() -> int:
         r = tf(p, base, "code", "--continue", "-p", "zrób coś")
         c = called(base)
         plug = (p / ".tf" / "plugin").resolve()
-        want = ["--plugin-dir", str(plug), "--settings", str(plug / "session-settings.json"), "--continue", "-p", "zrób coś"]
-        check(r.returncode == 0 and c.get("argv") == want and Path(c.get("cwd", "")).resolve() == p.resolve(),
+        launch = (p / ".tf" / "cache" / "session-settings.json").resolve()
+        want = ["--plugin-dir", str(plug), "--settings", str(launch), "--continue", "-p", "zrób coś"]
+        sess = json.loads(launch.read_text(encoding="utf-8")) if launch.is_file() else {}
+        base_sess = json.loads((plug / "session-settings.json").read_text(encoding="utf-8"))
+        check(r.returncode == 0 and c.get("argv") == want and Path(c.get("cwd", "")).resolve() == p.resolve()
+              and all(sess.get(k) == v for k, v in base_sess.items() if k != "sandbox")
+              and (sess.get("sandbox") or {}).get("enabled") is True and c.get("isolation") == "sandbox",
               f"TC-1: tf code uruchamia claude z wtyczką fabryki i ustawieniami sesji, potem argumenty: {r.returncode} "
               f"{c} {r.stdout[-300:]} {r.stderr[-300:]}")
+        (p / ".tf" / "config" / "config.yaml").write_text("isolation: basic\n", encoding="utf-8")
+        r = tf(p, base, "code")
+        sess = json.loads(launch.read_text(encoding="utf-8")) if launch.is_file() else {"sandbox": "?"}
+        check(r.returncode == 0 and "sandbox" not in sess and called(base).get("isolation") == "basic",
+              f"TC-7: level basic → tf code starts the session without the sandbox: {sess} {called(base)}")
         r = tf(p, base, "code", TF_FAKE_EXIT="7")
         check(r.returncode == 7, f"TC-2: kod wyjścia claude przechodzi dalej: {r.returncode}")
         r = tf(p, base, "doctor")

@@ -277,15 +277,18 @@ def main() -> int:
         fails.append(f"install: merging settings — {merged.get('autoCompactWindow')} {py.get('statusLine')}")
 
     # ── installer: the withdrawn Read(...) context-economy rules (the sandbox turns them into denyRead for programs, so
-    # npm test would not read node_modules) — guard_paths takes care of it. The Bash sandbox is opt-in: the template does not
-    # enable it (it breaks `git add -A`, localhost services) nor override the user's setting ──
+    # npm test would not read node_modules) — guard_paths takes care of it. The permissions template does not carry the
+    # sandbox: it comes from the isolation level (isolation.py, since I2), which never overrides a person's own setting ──
     total += 1
+    src = {k: v for k, v in src.items() if k != "sandbox"}      # the installed file has the level's sandbox (I2)
     old = {"permissions": {"deny": ["Read(./node_modules/**)", "Read(**/yarn.lock)", "Read(./vendor/**)"]}}
     merged = inst.merge_settings(src, old)
     deny = merged["permissions"]["deny"]
     mine = inst.merge_settings(src, {"sandbox": {"enabled": True}})
+    iso = load(ROOT / ".tf" / "factory" / "isolation.py", "isolation")
+    own = iso.with_level(mine, "sandbox", force=False)
     if any(r in deny for r in ("Read(./node_modules/**)", "Read(**/yarn.lock)")) or "Read(./vendor/**)" not in deny \
-            or "sandbox" in merged or mine.get("sandbox") != {"enabled": True}:
+            or "sandbox" in merged or mine.get("sandbox") != {"enabled": True} or own.get("sandbox") != {"enabled": True}:
         fails.append(f"install: the sandbox and withdrawn rules — deny={deny} sandbox={merged.get('sandbox')} "
                      f"own={mine.get('sandbox')}")
 

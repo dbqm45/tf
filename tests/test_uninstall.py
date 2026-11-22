@@ -105,7 +105,7 @@ def main() -> int:
         s = json.loads(local.read_text(encoding="utf-8")) if local.exists() else {}
         hooks = json.dumps(s.get("hooks", {}))
         check(s.get("permissions", {}).get("allow") == ["Bash(make test)"] and "echo moje" in hooks
-              and ".claude/hooks" not in hooks and "statusLine" not in s,
+              and ".claude/hooks" not in hooks and "statusLine" not in s and "sandbox" not in s,
               f"UN-5: settings: your permissions and hooks stay, the factory entries removed: {s}")
         check(planned and s.get("permissions", {}).get("defaultMode") in (None, "default"),
               f"UN-5: the planning mode set by the style given back: {planned} {s.get('permissions')}")

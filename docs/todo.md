@@ -66,7 +66,14 @@ człowieka, D2 na start tylko terminal, D3 stała lista + domeny projektu, D4 `s
 - [x] I1 (2026-11-22): klucz `isolation` (domyślnie `sandbox`, także w `org_defaults.config`), `tf isolation [<poziom>]`
   i `install.py --isolation` z odmową w sesji agenta, poziom i luka w `tf isolation` i `tf doctor`
   (`core/tests/test_isolation.py`, `tests/test_isolation_install.py`).
-- [ ] I2 sandbox włączany przez `tf code` i w układzie domyślnym → I3 hook startu, pasek stanu, blokada obniżenia z sesji.
+- [x] I2 (2026-11-22): `tf code` i `tf work` podają `.tf/cache/session-settings.json` (ustawienia wtyczki + sandbox
+  z szablonu dla `sandbox`/`container`, bez sandboxa dla `basic`) i `TF_ISOLATION`; układ domyślny — sandbox
+  w `.claude/settings.local.json` (instalator dodaje tylko bez klucza `sandbox`, `tf isolation` zastępuje lub usuwa,
+  `tf uninstall` usuwa niezmieniony); `tf isolation` mówi o braku bubblewrap na Linuksie i o sesji bez `tf code`.
+  Pomiar (2026-11-22, za zgodą, 0,0067 USD, Claude Code 2.1.330, Linux z bubblewrap): projektowe `"enabled": false`
+  nie wyłącza sandboxa podanego przez `--settings` (zapis do `~` odrzucony; bez `--settings` przeszedł).
+  Otwarte: skill `core-agent-security` §4a nadal mówi „opt-in” — do I8.
+- [ ] I3 hook startu, pasek stanu, blokada obniżenia z sesji.
 - [ ] I4 obraz i `tf code --container` → I5 kontener tylko commituje; I6 odłożone (D2); I7–I9.
 
 ## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
