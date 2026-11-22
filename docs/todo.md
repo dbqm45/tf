@@ -1809,7 +1809,7 @@ znaki/4) [niezweryfikowane]. Braki:
   (subskrypcja vs API, benchmark vs produkcja, tokeny szacowane ze znaków) → najpierw liczniki dostawcy. Cache obniża
   cenę powtarzanego prefiksu, nie zdejmuje treści z okna (gnicie kontekstu zostaje).
 - [x] (2026-11-22: hak `read_gate` — domyślnie ostrzeżenie dla agenta, `read_gate.mode: deny|off`, `max_lines: 350`;
-  odczyt z zakresem, `head`/`tail` i `cat` w potoku przechodzą; bez streszczania przez model — decyzja właściciela) **Bramka na odczyt dużych plików** (Spotify: hook PreToolUse blokuje `Read` pliku > 350 linii i `cat`/`head`/`tail`
+  odczyt z zakresem, `head`/`tail` i `cat` w potoku przechodzą; streszczenie przez `scout` tylko jako podpowiedź, hak nie woła modelu) **Bramka na odczyt dużych plików** (Spotify: hook PreToolUse blokuje `Read` pliku > 350 linii i `cat`/`head`/`tail`
   na nim, kieruje do taniego modelu, który zwraca streszczenie; odczyt z `offset`/`limit` przechodzi; instrukcja
   w CLAUDE.md nie wystarczyła). Fabryka ma delegację czytania do `scout`; ocenić hook razem z pozycją o RTK wyżej
   — ograniczenia z artykułu: edycji i rozumowania nie delegować (numery linii w streszczeniu się przesuwają, tani
