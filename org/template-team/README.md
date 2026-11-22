@@ -17,7 +17,7 @@ Every place to change has a `TODO` marker. List them: `grep -rn TODO .`
 | `pack.yaml` → `team_defaults.operations.tracker.prefixes` | the team's issue key prefixes |
 | `analyzers/{{COMPANY}}-standards/rules.yaml` | team rules a pattern can check (`tf analyze`, no model), with examples in `fixtures/` |
 | `skills/{{PREFIX}}standards/` | team rules that need judgement: `SKILL.md` is the index, the areas are in `references/` — write the scenarios in `tests/skill_evals/` first |
-| `semgrep.yml` | the team's semgrep rules in the scan of every `/tf` loop chunk |
+| `semgrep.yml` | the team's semgrep rules in the scan of every `/tf-task` loop slice |
 | `settings.json` | the team's Claude Code permissions (e.g. `deny` for tools the team does not use) |
 
 Do not repeat the company standards: they apply in the project through the `pack-{{ORG}}` pack. This pack holds only
