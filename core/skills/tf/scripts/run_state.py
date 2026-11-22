@@ -24,6 +24,7 @@ and the dashboard generator. The state is written by the script, not the model �
   python3 .claude/skills/tf/scripts/run_state.py park <run-directory> "<matter for a decision>"
   python3 .claude/skills/tf/scripts/run_state.py block <run-directory> S2 --question "<question for the human>"
   python3 .claude/skills/tf/scripts/run_state.py answer <run-directory> S2 "<answer>" --by human:<id>
+  python3 .claude/skills/tf/scripts/run_state.py qa <run-directory> "<question>" "<the human's answer, verbatim>" --by human:<id>
   python3 .claude/skills/tf/scripts/run_state.py next <katalog-przebiegu>
   python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out FILE]
 
@@ -942,10 +943,10 @@ def held_slices(slices: list[dict], blocked: set[str]) -> list[tuple[str, list[s
             if not s["checked"] and s["id"] not in blocked and any(d not in done for d in s["deps"])]
 
 
-def append_event(task_dir: Path, kind: str, slice_id: str, text: str, by: str) -> dict:
-    """Appends an entry to the task's events.jsonl and returns it."""
+def append_event(task_dir: Path, kind: str, slice_id: str, text: str, by: str, verbatim: bool = False) -> dict:
+    """Appends an entry to the task's events.jsonl and returns it; `verbatim` keeps the text as given (line breaks too)."""
     event = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "type": kind, "slice": slice_id,
-             "text": " ".join(text.split()), "by": by}
+             "text": text.strip() if verbatim else " ".join(text.split()), "by": by}
     with (task_dir / "events.jsonl").open("a", encoding="utf-8") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
     return event
@@ -1034,6 +1035,25 @@ def cmd_answer(run_dir: Path, slice_id: str, text: str, by: str | None, project:
     refresh(project)
     print(f"✓ {slice_id} unblocked — the answer is recorded ({by}).")
     print_next(project, run_dir, meta)
+    return 0
+
+
+def cmd_qa(run_dir: Path, question: str, answer: str, by: str | None, project: Path) -> int:
+    """A question to the human from taking in the story or the plan and their answer, verbatim, into the task's
+    events.jsonl (the `task` slice) — the reason for a decision stays next to the spec, also without `loop.blocked_slices`."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if not by or not HUMAN.fullmatch(by):
+        return fail("you record an answer with the identifier of the human who gave it: --by human:<id>.")
+    if not question.strip() or not answer.strip():
+        return fail("give the question and the human's answer, in their words.")
+    docs = run_report.docs_dir(run_dir, meta)
+    append_event(docs, "question", "task", question, "process:tf", verbatim=True)
+    append_event(docs, "answer", "task", answer, by, verbatim=True)
+    print(f"✓ the question and the answer are recorded verbatim in {docs.relative_to(project) if docs.is_relative_to(project) else docs}/events.jsonl ({by}).")
     return 0
 
 
@@ -1845,6 +1865,11 @@ def main(argv: list[str]) -> int:
     an.add_argument("slice_id")
     an.add_argument("text")
     an.add_argument("--by", default=None)
+    qa = sub.add_parser("qa")
+    qa.add_argument("run_dir")
+    qa.add_argument("question")
+    qa.add_argument("answer")
+    qa.add_argument("--by", default=None)
     nx = sub.add_parser("next")
     nx.add_argument("run_dir")
     pc = sub.add_parser("proceed")
@@ -1899,6 +1924,8 @@ def main(argv: list[str]) -> int:
         return cmd_block(Path(args.run_dir), args.slice_id, args.question, project)
     if args.cmd == "answer":
         return cmd_answer(Path(args.run_dir), args.slice_id, args.text, args.by, project)
+    if args.cmd == "qa":
+        return cmd_qa(Path(args.run_dir), args.question, args.answer, args.by, project)
     if args.cmd == "next":
         return cmd_next(Path(args.run_dir), project)
     if args.cmd == "proceed":
