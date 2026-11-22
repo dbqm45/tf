@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Copies of the pdi contract in tf: pinned to a version, generated from a release tag, never edited by hand.
+Copies of the suite contract (dbqm45/di-contract, formerly in pdi) in tf: pinned to a version, generated from a release tag, never edited by hand.
 
   python3 tools/sync_contract.py sync  [--pin tools/pdi-contract.json] [--source DIR]
       fetches files from the tag contract-v<version> in the repo from the pin (or from the directory DIR = the contract/ directory)

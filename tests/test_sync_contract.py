@@ -70,7 +70,7 @@ def main() -> int:
     real = json.loads((ROOT / "tools" / "pdi-contract.json").read_text(encoding="utf-8")) \
         if (ROOT / "tools" / "pdi-contract.json").is_file() else {}
     dests = [d for ds in real.get("files", {}).values() for d in ds] + real.get("version_files", [])
-    check(real.get("repo") == "dbqm45/pdi" and dests and all((ROOT / d).is_file() for d in dests)
+    check(real.get("repo") == "dbqm45/di-contract" and dests and all((ROOT / d).is_file() for d in dests)
           and "packs/pack-it/skills/eng-codebase-mapping/scripts/reconstruction-export.schema.json" in dests,
           f"S-8: the tf pin exists and points to existing copies (including the reconstruction schema): {dests}")
     copies = {}
