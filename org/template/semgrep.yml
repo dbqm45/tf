@@ -1,4 +1,4 @@
-# {{TITLE}} semgrep rules (patterns in code syntax). The /tf loop uses this file in the scan of every chunk,
+# {{TITLE}} semgrep rules (patterns in code syntax). The /tf-task loop uses this file in the scan of every chunk,
 # next to the OWASP rules and the project's .semgrep.yml. Empty list = no company rules (the scan runs as usual).
 # Syntax: https://semgrep.dev/docs/writing-rules/rule-syntax
 rules: []

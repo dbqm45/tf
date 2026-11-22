@@ -1,129 +1,135 @@
-# Ustawienia firmy (nakładka firmowa)
+# Company settings (the company overlay)
 
-Standardy i domyślne ustawienia jednej organizacji dla wszystkich jej projektów z fabryką. Robisz je raz, potem
-zmieniasz rzadko. Ten katalog nie trafia do projektów: to zestaw do przygotowania paczki firmy.
+Standards and default settings of one organisation for all of its projects with the factory. You make them once and
+change them rarely. This directory does not go into projects: it is the kit for preparing the company's pack.
 
-| W katalogu | Co to jest |
+| In the directory | What it is |
 |---|---|
-| `new_org_pack.py` | generator: kopiuje szablon do repozytorium firmy i wstawia nazwę, prefiks i wersję rdzenia |
-| `template/` | szablon paczki `pack-<firma>` z polami `TODO` |
-| `template-team/` | `pack.yaml` i `README.md` nakładki zespołu (`--team`); resztę plików bierze z `template/` |
-| `standards_from_docs.py` | standardy z dokumentów firmy: podział na sekcje, kontrola przypisania i cytatów, pliki nakładki |
-| `README.md` | ten przewodnik |
+| `new_org_pack.py` | generator: copies the template into the company's repository and fills in the name, prefix and core version |
+| `template/` | the template of the `pack-<company>` pack with `TODO` fields |
+| `template-team/` | `pack.yaml` and `README.md` of a team overlay (`--team`); the other files come from `template/` |
+| `standards_from_docs.py` | standards from the company's documents: splitting into sections, checking the assignment and quotes, overlay files |
+| `README.md` | this guide |
 
-## Co ustawia paczka firmy
-| Część paczki | Co robi w każdym projekcie |
+## What the company pack sets
+| Part of the pack | What it does in every project |
 |---|---|
-| `pack.yaml` → `org_defaults.config.autonomy.operations` | blokuje operacje agenta w całej firmie (`deny`); projekt nie może tego rozluźnić |
-| `pack.yaml` → `org_defaults.config.autonomy.triage` | ścieżki, które `tf risk` zawsze oznacza do przeglądu człowieka |
-| `pack.yaml` → `org_defaults.config.work`, `default_profile`, `commit_language.new_repo` | limity `tf work`, profil kosztów, język commitów w nowym repozytorium (język rozmowy nie jest ustawieniem) |
-| `pack.yaml` → `org_defaults.config.task.allowed_modes` | tryby zadania dozwolone w firmie; styl pracy osoby (`tf style`) wybiera tylko spośród nich |
-| `pack.yaml` → `org_defaults.config.models_approved` | modele dozwolone w firmie (alias albo identyfikator, opcjonalnie `until`); zespół i projekt mogą listę tylko zawęzić. Sprawdza `model_check.py` (`tf doctor`), `profile.py` odmawia profilu spoza listy, hook `model_guard` blokuje delegację z takim modelem. Bez listy nic się nie zmienia |
-| `pack.yaml` → `org_defaults.operations.tracker` | tracker, prefiksy kluczy zgłoszeń, pole Jiry z kryteriami (bez adresu i tokenu) |
-| `analyzers/<firma>-standards/rules.yaml` | standardy sprawdzane **bez modelu** (`tf analyze`): zakazane API i importy, wymagane nagłówki, nazwy plików |
-| `semgrep.yml` | reguły semgrep w skanie każdego kawałka pętli `/tf` |
-| `skills/<firma>-standards/` | standardy wymagające oceny: `SKILL.md` to spis, ustalenia obszarów w `references/` (`ui.md`, `api.md`, `data.md`, `releases.md`) — agent czyta tylko obszar swojego zadania |
-| `settings.json` | uprawnienia Claude Code dla całej firmy |
+| `pack.yaml` → `org_defaults.config.autonomy.operations` | blocks agent operations across the company (`deny`); a project cannot loosen it |
+| `pack.yaml` → `org_defaults.config.autonomy.triage` | paths that `tf risk` always marks for a human review |
+| `pack.yaml` → `org_defaults.config.work`, `default_profile`, `commit_language.new_repo` | `tf work` limits, the cost profile, the commit language in a new repository (the conversation language is not a setting) |
+| `pack.yaml` → `org_defaults.config.task.allowed_modes` | task modes allowed in the company; a person's work style (`tf style`) chooses only among them |
+| `pack.yaml` → `org_defaults.config.models_approved` | models allowed in the company (an alias or an identifier, optionally `until`); a team and a project can only narrow the list. Checked by `model_check.py` (`tf doctor`), `profile.py` refuses a profile outside the list, the `model_guard` hook blocks a delegation with such a model and warns at the session start. Without a list nothing changes |
+| `pack.yaml` → `org_defaults.operations.tracker` | the tracker, issue key prefixes, the Jira field with the criteria (no address and no token) |
+| `analyzers/<company>-standards/rules.yaml` | standards checked **without a model** (`tf analyze`): forbidden APIs and imports, required headers, file names |
+| `semgrep.yml` | semgrep rules in the scan of every slice of the `/tf-task` loop |
+| `skills/<company>-standards/` | standards that need judgement: `SKILL.md` is the index, the area findings are in `references/` (`ui.md`, `api.md`, `data.md`, `releases.md`) — the agent reads only the area of its task |
+| `settings.json` | Claude Code permissions for the whole company |
 
-Paczka **nie zawiera** adresów ani tokenów (Jira bierze je ze zmiennych `JIRA_BASE_URL`, `JIRA_EMAIL`,
-`JIRA_API_TOKEN` albo `JIRA_TOKEN`) ani połączeń z narzędziami (Confluence i Jira na żywo to serwery MCP
-w konfiguracji Claude Code).
+The pack **contains no** addresses or tokens (Jira takes them from the variables `JIRA_BASE_URL`, `JIRA_EMAIL`,
+`JIRA_API_TOKEN` or `JIRA_TOKEN`) and no connections to tools (live Confluence and Jira are MCP servers in the Claude
+Code configuration).
 
-## Jak wygenerować — krok po kroku
-1. **Szkielet** (w klonie repozytorium fabryki):
+## How to generate it — step by step
+1. **The skeleton** (in a clone of the factory repository):
    ```
    python3 org/new_org_pack.py acme --out ~/repos/acme-factory --title "ACME"
    ```
-2. **Uzupełnij pola `TODO`** (`grep -rn TODO ~/repos/acme-factory`), w tej kolejności:
-   1. `pack.yaml` → `org_defaults`: polityka autonomii, ścieżki do przeglądu, limity, tracker;
-   2. `rules.yaml` — każde ustalenie, które da się zapisać wzorcem (z przykładem naruszenia w
-      `fixtures/violations/` i kodem zgodnym w `fixtures/clean/`);
-   3. scenariusze `tests/skill_evals/<firma>-standards.json` — pytanie na obszar;
-   4. pliki obszarów `references/<obszar>.md` — tylko ustalenia wymagające oceny; spis w `SKILL.md`;
-   5. `semgrep.yml` i `settings.json`, jeśli firma ich potrzebuje.
-3. **Sprawdź** (w repozytorium fabryki):
+2. **Fill in the `TODO` fields** (`grep -rn TODO ~/repos/acme-factory`), in this order:
+   1. `pack.yaml` → `org_defaults`: the autonomy policy, the paths for review, the limits, the tracker;
+   2. `rules.yaml` — every finding that can be written as a pattern (with a violation example in
+      `fixtures/violations/` and compliant code in `fixtures/clean/`);
+   3. the scenarios `tests/skill_evals/<company>-standards.json` — a question per area;
+   4. the area files `references/<area>.md` — only the findings that need judgement; the index in `SKILL.md`;
+   5. `semgrep.yml` and `settings.json`, if the company needs them.
+3. **Check** (in the factory repository):
    ```
    python3 tools/workspace.py check --packs pack-it,pack-acme --pack-dir ~/repos/acme-factory
    ```
-   Dopóki scenariusze mają `TODO`, nie przejdzie tylko bramka skilla. Po uzupełnieniu w przestrzeni roboczej:
-   `python3 .tf/factory/skill_gate.py acme-standards` i
-   `python3 tools/workspace.py sync-gate --out <przestrzeń> --pack-dir ~/repos/acme-factory`.
-4. **Opublikuj** katalog jako repozytorium git firmy z tagiem `v0.1.0`.
-5. **Zainstaluj w projekcie:** `tf install --pack-dir <adres repozytorium firmy> --add pack-acme`.
-   Wartości firmy pokazuje `tf config show` (źródło „organizacja”), reguły — `tf analyze --only acme-standards`.
+   While the scenarios have `TODO`, only the skill gate fails. After filling them in, in the workspace:
+   `python3 .tf/factory/skill_gate.py acme-standards` and
+   `python3 tools/workspace.py sync-gate --out <workspace> --pack-dir ~/repos/acme-factory`.
+4. **Publish** the directory as the company's git repository with the tag `v0.1.0`.
+5. **Install it in a project:** `tf install --pack-dir <the company repository's address> --add pack-acme`.
+   `tf config show` shows the company's values (source "organisation"), `tf analyze --only acme-standards` the rules.
 
-## Jak wygenerować z dokumentów firmy (np. Confluence)
-Gdy standardy są już opisane, nie przepisujesz ich ręcznie. Wszystko, co da się sprawdzić, robi skrypt
-`org/standards_from_docs.py`; model tylko przypisuje ustalenia do obszaru i rodzaju (krok 3), a skrypt sprawdza wynik.
-1. **Dokumenty do katalogu** `~/repos/acme-factory/sources/`: eksport z Confluence (HTML), Word (`.docx`), PDF (przez
-   `pdftotext`) albo Markdown. W sesji z połączeniem z Confluence (serwer MCP) agent może je pobrać sam — wtedy zapisuje
-   kopię z adresem i datą pobrania. Katalog `sources/` nie trafia do projektów; dodaj go do `.gitignore` repozytorium
-   firmy, jeśli dokumenty są poufne.
-2. **Podział na sekcje (skrypt):**
+## How to generate it from the company's documents (e.g. Confluence)
+When the standards are already written down, you do not retype them. Everything that can be checked is done by the
+`org/standards_from_docs.py` script; the model only assigns the findings to an area and a kind (step 3), and the script
+checks the result.
+1. **The documents into the directory** `~/repos/acme-factory/sources/`: an export from Confluence (HTML), Word (`.docx`),
+   PDF (through `pdftotext`) or Markdown. In a session connected to Confluence (an MCP server) the agent can fetch them
+   itself — then it saves a copy with the address and the fetch date. The `sources/` directory does not go into
+   projects; add it to the company repository's `.gitignore` if the documents are confidential.
+2. **Splitting into sections (script):**
    ```
    python3 org/standards_from_docs.py split ~/repos/acme-factory
    ```
-   Sekcja to tekst pod jednym nagłówkiem, z pełną ścieżką nagłówków (`sources/sections.jsonl`); sekcje o tej samej treści
-   są oznaczone jako duplikaty. Skrypt zapisuje też `sources/TASK.md` — polecenie dla agenta z formatem wyniku
-   i listą sekcji do pokrycia.
-3. **Przypisanie (model):** w sesji Claude Code w katalogu nakładki: „Wykonaj sources/TASK.md”. Agent zapisuje
-   `sources/assignment.json`: każde ustalenie (`findings`) z obszarem (`area`: `ui`, `api`, `data`, `releases`, `common`),
-   rodzajem (`kind`: `pattern` — reguła z przykładem naruszenia i kodem zgodnym; `judgement` — do pliku obszaru),
-   dosłownym cytatem (`quote`) i sprzecznościami (`conflicts_with`); ogólną praktykę wpisuje do `skipped` z powodem.
-4. **Kontrola (skrypt, bez modelu):**
+   A section is the text under one heading, with the full heading path (`sources/sections.jsonl`); sections with the
+   same content are marked as duplicates. The script also writes `sources/TASK.md` — the instruction for the agent with
+   the result format and the list of sections to cover.
+3. **The assignment (model):** in a Claude Code session in the overlay directory: "Do sources/TASK.md". The agent writes
+   `sources/assignment.json`: every finding (`findings`) with an area (`area`: `ui`, `api`, `data`, `releases`, `common`),
+   a kind (`kind`: `pattern` — a rule with a violation example and compliant code; `judgement` — into the area file),
+   a verbatim quote (`quote`) and contradictions (`conflicts_with`); general practice goes into `skipped` with a reason.
+4. **The check (script, no model):**
    ```
    python3 org/standards_from_docs.py check ~/repos/acme-factory
    ```
-   Odrzuca: cytat, którego nie ma w sekcji; sekcję bez ustalenia i bez powodu pominięcia; nieznany obszar; sprzeczność
-   bez pary; regułę, która się nie wczytuje albo nie wykrywa swojego przykładu naruszenia (lub wykrywa kod zgodny);
-   przykłady, przez które bramka modułu reguł przestałaby przechodzić. Błędy poprawia agent w `assignment.json`.
-5. **Pliki nakładki (skrypt):**
+   It rejects: a quote that is not in the section; a section with no finding and no reason to skip; an unknown area;
+   a contradiction without a pair; a rule that does not load or does not detect its violation example (or detects the
+   compliant code); examples that would make the rule module's gate fail. The agent fixes the errors in
+   `assignment.json`.
+5. **The overlay files (script):**
    ```
    python3 org/standards_from_docs.py apply ~/repos/acme-factory
    ```
-   Ustalenia do oceny trafiają do `references/<obszar>.md` (wspólne — do `SKILL.md`) z cytatem i źródłem, wzorce do
-   `rules.yaml` z przykładami w `fixtures/`, a `sources/REPORT.md` zbiera sprzeczności, pominięte sekcje i duplikaty.
-   Skrypt zmienia tylko bloki `from-docs` — ręczne ustalenia i reguły zostają. Bez zaliczonej kontroli nic nie zapisuje.
-6. **Przegląd człowieka:** `sources/REPORT.md` — rozstrzygnij sprzeczności i przejrzyj przypisanie obszarów. Cytaty
-   sprawdził już skrypt. Potem scenariusze w `tests/skill_evals/` i kroki 3–5 z listy wyżej.
+   The findings that need judgement go to `references/<area>.md` (common ones to `SKILL.md`) with the quote and the
+   source, the patterns to `rules.yaml` with examples in `fixtures/`, and `sources/REPORT.md` collects the
+   contradictions, the skipped sections and the duplicates. The script changes only the `from-docs` blocks — findings
+   and rules added by hand stay. Without a passed check it writes nothing.
+6. **The human's review:** `sources/REPORT.md` — settle the contradictions and review the area assignment. The script
+   has already checked the quotes. Then the scenarios in `tests/skill_evals/` and steps 3–5 of the list above.
 
-**Gdy dokument się zmieni:** `split` pokazuje nowe, zmienione i usunięte sekcje od ostatniego `apply`, a `TASK.md`
-wymienia tylko je — agent przypisuje tylko zmiany, `check` wskazuje ustalenia, których cytat zniknął ze źródła.
+**When a document changes:** `split` shows the new, changed and removed sections since the last `apply`, and
+`TASK.md` lists only those — the agent assigns only the changes, and `check` points to findings whose quote has
+disappeared from the source.
 
-Koszt modelu to jedno przypisanie sekcji (krok 3); zależy od objętości dokumentów [założenie: nie mierzono na
-dokumentach firmy]. Ten sam proces działa dla nakładki zespołu (`--team`).
+The model cost is one assignment of the sections (step 3); it depends on the size of the documents [assumption: not
+measured on company documents]. The same process works for a team overlay (`--team`).
 
-## Standardy ze skilli przez dodatek `standards`
-Gdy firma ma już skille standardów (w repozytorium git, z odnośnikami do Confluence), nie przepisujesz ich do
-nakładki. W `pack.yaml` → `org_defaults.config.addons.standards` podajesz URL repozytorium (`sources.<nazwa>.git`,
-`ref`, `dir`) i `install: true`. W każdym projekcie z nakładką `tf learn` sam instaluje dodatek, klonuje repozytorium,
-czyta skille i podlinkowane strony (Confluence czyta agent przez MCP sesji, akapity bez list — tani model w sesji ze
-sprawdzeniem cytatu) i zapisuje reguły w `.claude/rules/addon-standards-*.md`. Nakładka zespołu dokłada swoje źródła
-pod własną nazwą (`team_defaults.config.addons.standards.sources.<zespół>`); projekt wyłącza źródło przez
-`addons.standards.sources.<nazwa>.enabled: false` w `.tf/config/config.yaml`. Wartości i ich pochodzenie pokazuje
-`tf config show addons`. Szczegóły: `addons/standards/README.md` w repozytorium fabryki.
+## Standards from skills through the `standards` add-on
+When the company already has standards skills (in a git repository, with links to Confluence), you do not retype them
+into the overlay. In `pack.yaml` → `org_defaults.config.addons.standards` you give the repository URL
+(`sources.<name>.git`, `ref`, `dir`) and `install: true`. In every project with the overlay `tf learn` installs the
+add-on by itself, clones the repository, reads the skills and the linked pages (the agent reads Confluence through the
+session's MCP, paragraphs without lists — a cheap model in a session with a quote check) and writes the rules into
+`.claude/rules/addon-standards-*.md`. A team overlay adds its own sources under its own name
+(`team_defaults.config.addons.standards.sources.<team>`); a project turns a source off with
+`addons.standards.sources.<name>.enabled: false` in `.tf/config/config.yaml`. `tf config show addons` shows the values
+and where they come from. Details: `addons/standards/README.md` in the factory repository.
 
-## Nakładka zespołu
-Gdy zespoły w firmie pracują inaczej (np. backend ma własne zasady API i migracji, a frontend bibliotekę komponentów),
-każdy zespół dostaje nakładkę ponad firmową:
+## A team overlay
+When the teams in the company work differently (e.g. the backend has its own API and migration rules, the frontend a
+component library), each team gets an overlay above the company's:
 ```
 python3 org/new_org_pack.py acme --team backend --out ~/repos/acme-backend-factory --title "ACME Backend"
 ```
-Powstaje `pack-acme-backend`, który wymaga `pack-acme`. Ma ten sam układ co nakładka firmy, ale w `pack.yaml` sekcję
-`team_defaults` (zamiast `org_defaults`) i prefiks skilli `backend-`. Wpisujesz tylko to, czym zespół różni się od firmy.
-- **Kolejność warstw:** silnik ← firma ← zespół ← projekt ← osoba. `tf config show` pokazuje źródło każdej wartości.
-- **Granice:** zespół, projekt i osoba tylko zaostrzają politykę autonomii firmy; dozwolone tryby zadania
-  (`task.allowed_modes`) i zatwierdzone modele (`models_approved`) to przecięcie warstw — nikt niżej nie przywróci
-  trybu ani modelu, który firma zabrała. Inne wartości
-  (limity `tf work`, profil kosztów, języki) zespół zmienia dla swoich projektów.
-- **Tracker:** prefiksy zgłoszeń zespołu zastępują prefiksy firmy; typ i pola przychodzą z firmy.
-- **Sprawdzenie:** `python3 tools/workspace.py check --packs pack-it,pack-acme,pack-acme-backend --pack-dir
+This creates `pack-acme-backend`, which requires `pack-acme`. It has the same layout as the company overlay, but in
+`pack.yaml` a `team_defaults` section (instead of `org_defaults`) and the skill prefix `backend-`. You write in only what
+makes the team different from the company.
+- **The order of the layers:** engine ← company ← team ← project ← person. `tf config show` shows the source of every value.
+- **The limits:** a team, a project and a person only tighten the company's autonomy policy; the allowed task modes
+  (`task.allowed_modes`) and the approved models (`models_approved`) are the intersection of the layers — nobody lower
+  brings back a mode or a model the company took away. Other values (`tf work` limits, the cost profile, languages)
+  the team changes for its projects.
+- **The tracker:** the team's issue prefixes replace the company's; the type and the fields come from the company.
+- **The check:** `python3 tools/workspace.py check --packs pack-it,pack-acme,pack-acme-backend --pack-dir
   ~/repos/acme-factory --pack-dir ~/repos/acme-backend-factory`.
-- **Instalacja w projekcie zespołu:** `tf install --pack-dir <repo firmy> --pack-dir <repo zespołu> --add
-  pack-acme-backend` (nakładka firmy dochodzi sama). W projekcie może być najwyżej jedna nakładka zespołu.
+- **Installation in a team's project:** `tf install --pack-dir <company repo> --pack-dir <team repo> --add
+  pack-acme-backend` (the company overlay comes along by itself). A project can have at most one team overlay.
 
-## Zmiany później
-Zmiana standardów to zmiana w repozytorium firmy: popraw pliki, podbij `version` w `pack.yaml` według SemVer (nowa
-reguła albo obszar — MINOR, usunięcie albo zmiana nazwy skilla — MAJOR), sprawdź (krok 3), dodaj tag. Projekty
-dostają zmianę przy `tf update`. Ponowne generowanie nie jest potrzebne: generator robi tylko pierwszy szkielet
-i odmawia zapisu do istniejącego katalogu.
+## Changes later
+A change of the standards is a change in the company's repository: fix the files, bump `version` in `pack.yaml` by
+SemVer (a new rule or area — MINOR, removing or renaming a skill — MAJOR), check (step 3), add a tag. Projects get the
+change with `tf update`. Generating again is not needed: the generator only makes the first skeleton and refuses to
+write into an existing directory.

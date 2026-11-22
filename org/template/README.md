@@ -18,13 +18,13 @@ Every place to change has a `TODO` marker. List them: `grep -rn TODO .`
 | `skills/{{PREFIX}}standards/SKILL.md` | the index: a few shared rules and the table of areas — keep it short, every task with this skill reads it |
 | `skills/{{PREFIX}}standards/references/<area>.md` | the rules of one area (UI, API, data, releases) that need judgement; the agent reads only the file for its task's area |
 | `tests/skill_evals/{{PREFIX}}standards.json` | one question per area (with `none` for rules of another area) and 1 question unrelated to the company — **before** the skill content |
-| `semgrep.yml` | the company's semgrep rules (patterns in code syntax) for the scan of every `/tf` loop chunk |
+| `semgrep.yml` | the company's semgrep rules (patterns in code syntax) for the scan of every `/tf-task` loop slice |
 | `settings.json` | Claude Code permissions for the whole company (`allow`, `deny`); added to the project settings |
 
 **Rules first, then the skill.** A rule that a pattern can express goes into `rules.yaml`, not into the skill: the
 factory scanner points to the violation with file and line at no token cost, and the agent does not have to read the
 rule in every session. The skill gets what a pattern cannot check. Semgrep rules (patterns in code syntax, e.g. "call
-without a timeout") go into `semgrep.yml` at the pack root — the `/tf` loop uses it in the scan of every chunk. An empty
+without a timeout") go into `semgrep.yml` at the pack root — the `/tf-task` loop uses it in the scan of every slice. An empty
 rule list changes nothing in the scan.
 
 **Split by area.** A change to the look alone should not load the API rules. That is why `SKILL.md` is an index and the
