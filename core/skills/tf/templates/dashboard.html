@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
 <title>Factory · task preview</title>
 <style>
 :root{
@@ -165,12 +166,12 @@ h1{font-size:20px;margin:0 0 2px;font-weight:650}
     <div class="sub">Tasks from <code>docs/project/changes/</code> and runs from <code>.tf/runs/</code></div>
   </div>
   <div class="tools">
-    <span class="pill"><span class="dot warn"></span> state as of <span id="gen">/*GENERATED*/</span></span>
+    <span class="pill" id="livePill" title="Opened as a file: the data is re-read every 5 s"><span class="dot warn" id="liveDot"></span> <span id="liveTxt">state as of</span> <span id="gen">/*GENERATED*/</span></span>
     <button class="btn" id="themeBtn" type="button">Light / dark</button>
   </div>
 </header>
 
-<div class="banner"><code>run_state.py stage</code> and <code>run_state.py step</code> record the state, and <code>run_state.py dashboard</code> builds this file (it refreshes itself every 5 s while the panel is closed). A script computes cost and time from the transcripts, not the model.</div>
+<div class="banner"><code>run_state.py stage</code> and <code>run_state.py step</code> record the state, and <code>run_state.py dashboard</code> builds this file. Opened from the live server (<code>run_state.py dashboard --live</code>) the page updates as soon as the state changes; opened as a file it re-reads the data every 5 s. A script computes cost and time from the transcripts, not the model.</div>
 
 <section class="waiting" id="waiting" aria-label="Waiting for you" hidden></section>
 
@@ -342,21 +343,27 @@ function renderBoard(){
 function openRun(slug){
   const r = RUNS.find(x=>x.slug===slug); if(!r) return;
   sel = slug; renderBoard();
+  curFile = null; fillDrawer(r);
+  $("#drawer").classList.add("open"); $("#drawer").setAttribute("aria-hidden","false"); $("#scrim").classList.add("on");
+  $("#dClose").focus();
+}
+function fillDrawer(r){
+  /* the drawer's content for run r; keeps the chosen file when it still exists (a live update), else the default one */
   $("#dTitle").textContent = r.title;
   $("#dMeta").innerHTML = [runDir(r), r.dir && r.taskDir ? "task: " + r.taskDir : null, r.dir ? "branch: story/" + r.slug : null, "models: " + ((r.models||[]).join(", ")||"—"),
     r.tokens ? `tokens: ${r.tokens.total.toLocaleString("en")} (input ${r.tokens.input.toLocaleString("en")}, output ${r.tokens.output.toLocaleString("en")}, cache read ${r.tokens.cache_read.toLocaleString("en")}, cache write ${r.tokens.cache_write.toLocaleString("en")})` : null,
     r.min != null ? "time: " + fmtMin(r.min) : null].filter(Boolean).map(x => `<div>${esc(x)}</div>`).join("");
   window.__files = filesFor(r); window.__run = r;
-  curFile = (r.stage==="needs"&&r.needs==="stop" && window.__files.some(g=>g.items.some(i=>i.name==="STOP"))) ? "STOP" : window.__files[0].items[0].name;
+  const names = window.__files.flatMap(g=>g.items.map(i=>i.name));
+  if (curFile === null || !names.includes(curFile))
+    curFile = (r.stage==="needs"&&r.needs==="stop" && names.includes("STOP")) ? "STOP" : names[0];
   renderFiles();
-  $("#drawer").classList.add("open"); $("#drawer").setAttribute("aria-hidden","false"); $("#scrim").classList.add("on");
-  $("#dClose").focus();
 }
 function renderFiles(){
   const r = window.__run, groups = window.__files;
   $("#files").innerHTML = groups.map(g => `<div class="grp">${esc(g.grp)}</div>` + g.items.map(i =>
     `<button class="fbtn" type="button" data-file="${esc(i.name)}" aria-current="${i.name===curFile}"><span class="dot ${i.dot}"></span>${esc(i.name)}</button>`).join("")).join("");
-  const it = groups.flatMap(g=>g.items).find(i=>i.name===curFile);
+  const it = groups.flatMap(g=>g.items).find(i=>i.name===curFile) || {name:"", text:""};
   let next = "";
   if (r.stage==="needs"&&r.needs==="stop") next = `<div class="nextbox stop">${r.stopNeed?`<b>What is needed:</b> ${esc(r.stopNeed)}<br>`:""}${r.stopQuestion?`<b>Question:</b> ${esc(r.stopQuestion)}<br>${(r.stopOptions||[]).map((o,i)=>`${i+1}. ${esc(o.opcja)} — ${esc(o.skutek)}${o.rekomendowana?" (recommended)":""}`).join("<br>")}<br>`:""}<b>What next:</b> answer in the session; the factory will resume from ${esc(r.cur?r.cur.k:"the place where it stopped")}.<span class="cmd">claude --agent tf  →  "resume ${esc(runDir(r))}"</span></div>`;
   if (r.stage==="needs"&&r.needs==="plan") next = `<div class="nextbox"><b>What next:</b> read the plan and accept it or raise remarks in the conversation. Without acceptance it will not move to the code.</div>`;
@@ -376,7 +383,55 @@ $("#themeBtn").addEventListener("click", () => { const r=document.documentElemen
 try { const t = localStorage.getItem("tf-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
 $("#themeBtn").addEventListener("click", () => { try { localStorage.setItem("tf-theme", document.documentElement.dataset.theme); } catch (e) {} });
 renderBoard();
-setTimeout(function tick(){ if (!sel) location.reload(); else setTimeout(tick, 5000); }, 5000);
+
+/* ===== REFRESH =====
+   Served by the live server (http): an EventSource on `events` pushes the new RUNS on every state change.
+   Opened as a file (file://): fetch of file:// is blocked in Chrome, but a script element may load the side file
+   `dashboard.data.js` (`tfRuns([…])`) — re-read every 5 s; only when that file cannot load does the page reload,
+   and then only while the panel is closed. Either way the data is replaced in place: the open panel, the chosen
+   file and the scroll stay. */
+const DATA_JS = "/*DATA_JS*/";
+let lastData = JSON.stringify(RUNS);
+function applyRuns(next){
+  const text = JSON.stringify(next);
+  if (text === lastData) return;
+  const prev = sel ? JSON.stringify(RUNS.find(x=>x.slug===sel)||null) : null;
+  lastData = text;
+  const keep = {x: window.scrollX, y: window.scrollY, board: $("#board").scrollLeft,
+                content: $("#content").scrollTop, files: $("#files").scrollTop};
+  const focused = document.activeElement && document.activeElement.closest && document.activeElement.closest("#board [data-run], #waiting [data-run]");
+  const focusKey = focused ? focused.dataset.run : null;
+  RUNS.splice(0, RUNS.length, ...next);
+  renderBoard();
+  if (sel){
+    const r = RUNS.find(x=>x.slug===sel);
+    if (r && JSON.stringify(r) !== prev) fillDrawer(r);
+  }
+  $("#gen").textContent = new Date().toLocaleString("sv-SE").slice(0, 19);
+  window.scrollTo(keep.x, keep.y); $("#board").scrollLeft = keep.board;
+  $("#content").scrollTop = keep.content; $("#files").scrollTop = keep.files;
+  if (focusKey){ const el = document.querySelector(`#board [data-run="${CSS.escape(focusKey)}"]`); if (el) el.focus({preventScroll:true}); }
+}
+function liveState(on, text, tip){
+  $("#liveDot").className = "dot " + on; $("#liveTxt").textContent = text; $("#livePill").title = tip;
+}
+window.tfRuns = applyRuns;
+if (/^https?:$/.test(location.protocol) && window.EventSource){
+  liveState("warn", "connecting…", "Connecting to the live server");
+  const es = new EventSource("events");
+  es.addEventListener("runs", e => { try { applyRuns(JSON.parse(e.data)); } catch (err) {} liveState("ok", "live ·", "Live: the page updates on every state change"); });
+  es.addEventListener("open", () => liveState("ok", "live ·", "Live: the page updates on every state change"));
+  es.addEventListener("error", () => liveState("bad", "offline — retrying ·", "The live server does not answer; the page keeps trying (run_state.py dashboard --live)"));
+} else {
+  setTimeout(function tick(){
+    if (!DATA_JS){ if (!sel) return location.reload(); return setTimeout(tick, 5000); }
+    const s = document.createElement("script");
+    s.src = encodeURI(DATA_JS) + "?t=" + Date.now();
+    s.onload = () => { s.remove(); setTimeout(tick, 5000); };
+    s.onerror = () => { s.remove(); if (!sel) location.reload(); else setTimeout(tick, 5000); };
+    document.head.appendChild(s);
+  }, 5000);
+}
 </script>
 </body>
 </html>

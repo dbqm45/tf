@@ -37,7 +37,8 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf task start <CHG>-<TSK> --title "<title>" --change <CHG> --cut <TSK>   # task of a pdi change cut
   tf task freeze <KEY> <file> --by human:<id> | reopen <KEY> <file> --by human:<id> --reason "<why>"
   tf status [--json] [--open] [--all] # open tasks (--all: closed ones too): stage, slices with current evidence, files to refresh, what waits for you;
-                              # --open builds the live view (.tf/runs/dashboard.html) and opens it in the browser
+                              # --open opens the live view in the browser: the local live server (updates on every
+                              # state change), or the file .tf/runs/dashboard.html when live mode is off or cannot start
   tf spec new <KEY> | check <KEY> [--json]   # task specification (spec.md): template, readiness check
   tf trace <KEY> [--base <branch>] [--md|--json]   # criterion → test → commit → evidence
   tf task flag <KEY> set <key> [--remove-by YYYY-MM-DD] | none --reason "<why>" | allow <env> --by human:<id>
@@ -649,11 +650,11 @@ def main(argv: list[str]) -> int:
     if cmd == "task":
         return engine("task_state.py", rest)
     if cmd == "status":
-        if "--open" in rest:          # build the live view and open it in the browser, then print the list
+        if "--open" in rest:          # open the live view (server, else the file) in the browser, then print the list
             rest = [a for a in rest if a != "--open"]
             view = Path(".claude") / "skills" / "tf" / "scripts" / "run_state.py"
             if need_project() and view.is_file():
-                subprocess.run([sys.executable, str(view), "dashboard", "--open"])
+                subprocess.run([sys.executable, str(view), "dashboard", "--live", "--open"])
         return engine("task_state.py", ["list", *rest])
     if cmd == "spec":
         return engine("spec_check.py", rest)
