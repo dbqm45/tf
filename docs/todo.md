@@ -257,7 +257,7 @@ człowieka, i z kontrolą wyniku skryptem.
 - [ ] **Monorepo (później):** kilka zespołów w jednym repozytorium wymaga podziału po katalogach. Claude Code
   wczytuje `CLAUDE.md` z podkatalogów; czy tak samo skille z podkatalogów — sprawdzić w dokumentacji przed planem
   [niezweryfikowane].
-- [ ] **Testy:** składanie pięciu warstw, sufit firmy i zespołu nie do przekroczenia przez osobę, preset stylu
+- [x] (2026-11-23: `core/tests/test_config_layers.py`, CL-1…CL-6, 11/11 — zachowanie zgodne, bez poprawek kodu) **Testy:** składanie pięciu warstw, sufit firmy i zespołu nie do przekroczenia przez osobę, preset stylu
   zmienia tylko wartości domyślne, `tf config show` pokazuje źródło, plik osoby nigdy nie trafia do repozytorium.
 
 ## Luki z przeglądu agend szkoleń (AI, agenci, product engineering) — zapisane 2026-11-15
