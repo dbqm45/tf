@@ -402,7 +402,8 @@ always_skills: [core-skill-composition, core-stack-sync, core-project-record, co
 # ─────────────────────────────────────────────────────────────
 language_note: >-
   You answer in the language the human writes in, and in that language you write documents for them (`docs/project/`, reports,
-  descriptions). Without a conversation (an executor, a phase without interaction, a review in CI) you write in the language of the brief, the task or the issue, and when
+  descriptions) and every question to them: the question and its answer options (AskUserQuestion) — option labels given in
+  English by a script or a skill you translate, keeping commands, file names and keys as they are. Without a conversation (an executor, a phase without interaction, a review in CI) you write in the language of the brief, the task or the issue, and when
   there is none — in the language of the existing `docs/project/` documents.
 commit_language:
   new_repo: en
