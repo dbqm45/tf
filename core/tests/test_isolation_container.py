@@ -120,6 +120,22 @@ def main() -> int:
         check(r.returncode == 2 and not argv and "container" in r.stdout + r.stderr,
               f"IC-14: inside the container tf code does not start another container: {r.returncode} {r.stdout}{r.stderr}")
 
+        # I5: after the session — the commits made in the container that wait for a push from this terminal
+        remote = base / "remote.git"
+        subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
+        g = project(base, "gitproj", "isolation: container\n")
+        gitenv = {**CLEAN, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t", "GIT_COMMITTER_NAME": "t",
+                  "GIT_COMMITTER_EMAIL": "t@t"}
+        for args in (["init", "-q", "-b", "main"], ["remote", "add", "origin", str(remote)],
+                     ["commit", "-q", "--allow-empty", "-m", "a"], ["push", "-q", "-u", "origin", "main"],
+                     ["commit", "-q", "--allow-empty", "-m", "b"], ["commit", "-q", "--allow-empty", "-m", "c"]):
+            subprocess.run(["git", "-c", "commit.gpgsign=false", *args], cwd=g, check=True, env=gitenv, capture_output=True)
+        gitbin = bindir(base, "docker")
+        (gitbin / "git").symlink_to(shutil.which("git"))
+        r, argv = tf(g, gitbin, "code")
+        check(r.returncode == 0 and "2 commit" in r.stdout + r.stderr and "git push" in r.stdout + r.stderr,
+              f"IC-17: after the session — how many commits wait for a push, and the command: {r.stdout}{r.stderr}")
+
     df = (ROOT / ".tf" / "factory" / "container" / "Dockerfile").read_text(encoding="utf-8")
     check("@sha256:" in df and "claude-code@" in df and "TF_CONTAINER=1" in df,
           "IC-15: the Dockerfile pins the base image by digest and Claude Code by version, and sets TF_CONTAINER=1")

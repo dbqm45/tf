@@ -106,6 +106,19 @@ def main() -> int:
                     "cat .tf/config/config.yaml", "grep sandbox .claude/settings.local.json"):
             check(bash(cmd) == "none", f"IH-10: `{cmd}` (reading the level) passes: {bash(cmd)}")
 
+        # I5: in the container there are no git keys — the agent commits, a human pushes
+        def bash_in(cmd: str, env: dict) -> subprocess.CompletedProcess:
+            return run("guard_bash.py", p, {"tool_name": "Bash", "tool_input": {"command": cmd}, "cwd": str(p)}, env)
+        r = bash_in("git push origin feat/x", {**session, "TF_CONTAINER": "1"})
+        check(decision(r) == "deny" and "terminal" in r.stdout and "commit" in r.stdout,
+              f"IH-19: git push in the container → refused with what to do instead: {r.stdout}")
+        r = bash_in("git push origin feat/x", session)
+        check(decision(r) != "deny" or "container" not in r.stdout,
+              f"IH-20: outside the container git push is not refused for this reason: {r.stdout}")
+        r = run("isolation_notice.py", p, None, {**session, "TF_ISOLATION": "container", "TF_CONTAINER": "1"})
+        check("push" in r.stdout and "terminal" in r.stdout,
+              f"IH-21: session start in the container says pushes happen in the human's terminal: {r.stdout}")
+
         # guard_paths: the isolation key and the session settings
         def edit(tool: str, rel: str, **ti) -> str:
             return decision(run("guard_paths.py", p, {"tool_name": tool, "tool_input": {"file_path": str(p / rel), **ti},

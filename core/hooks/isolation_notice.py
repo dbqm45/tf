@@ -30,7 +30,8 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: the code page �
 NOT_COVERED = {
     "basic": "not isolation: commands run by the agent can read and send whatever your user account can",
     "sandbox": "the sandbox limits Bash commands only; Claude's file tools, hooks and MCP servers run outside it",
-    "container": "only the project is mounted; Claude's file tools and MCP servers work inside the container too",
+    "container": "only the project is mounted and the network goes through the container's firewall; there are no git "
+                 "keys here — commit, and the human pushes from their own terminal",
 }
 
 
@@ -52,7 +53,8 @@ def main() -> None:
     except Exception as e:  # noqa: BLE001 — the session starts anyway
         record("isolation_notice", e)
         sys.exit(0)
-    text = f"[isolation] Isolation: {s['level']} — {NOT_COVERED.get(s['level'], '')}."
+    level = "container" if s.get("in_container") else s["level"]
+    text = f"[isolation] Isolation: {level} — {NOT_COVERED.get(level, '')}."
     if s.get("gaps"):
         text += " Gaps: " + "; ".join(s["gaps"]) + ". The level is changed by a human in a terminal (`tf isolation`)."
     print(json.dumps({"systemMessage": text,
