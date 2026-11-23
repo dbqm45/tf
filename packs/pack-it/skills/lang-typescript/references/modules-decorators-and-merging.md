@@ -141,7 +141,8 @@ Order (both modes): decorator/factory expressions are evaluated top to bottom, t
 bottom to top; member decorators before the class decorator (the class last).
 
 ### Angular
-The `@Component`, `@Injectable`/`@Service` decorators stay, but `@Input`/`@Output` and constructor DI
+The `@Component`, `@Injectable`/`@Service` decorators stay (`@Service` since Angular 22: in the `@angular/core` 22.0.0
+typings, not in 21.2.26, checked 2026-11-23), but `@Input`/`@Output` and constructor DI
 are replaced by the `input()`, `output()`, `inject()` functions — do not introduce new code on the old patterns (fw-angular).
 
 ---

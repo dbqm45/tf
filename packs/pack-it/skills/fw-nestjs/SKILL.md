@@ -133,5 +133,5 @@ Accessed 2026-10-19; docs.nestjs.com unavailable from the session (proxy 403), s
   npm `@prisma/client` latest 7.10.1 (accessed 2026-10-20).
 - Wildcard: `packages/core/router/legacy-route-converter.ts` in nestjs/nest and `content/controllers.md`
   in nestjs/docs.nestjs.com (master branch); npm `@nestjs/core`: latest 12.2.0, legacy 11.2.7 (accessed 2026-10-20).
-- Node.js: https://nodejs.org/en/about/previous-releases; release dates [secondary]: endoflife.ai.
+- Node.js: https://nodejs.org/en/about/previous-releases; release dates [secondary]: https://endoflife.date/nodejs (accessed 2026-11-23).
 Described in our own words.
