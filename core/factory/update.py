@@ -14,6 +14,8 @@ Updates the team factory in this project, like a software update (standard libra
   python3 .tf/factory/update.py --ci --source <git URL>      # CI run (the team-factory-update workflow opens a PR from it)
   python3 .tf/factory/update.py --packs a,b|all|none         # change packs (also --add x, --remove y); same version is re-applied
   python3 .tf/factory/update.py --pack-dir <dir|git URL> --add <pack>   # a pack from outside the factory (remembered)
+  python3 .tf/factory/update.py --layout default|plugin      # classic layout (.claude/, every session and the Desktop
+                                                             # app load it) or the opt-in plugin layout (only `tf code`)
 Before updating, the skills of the new version are audited (`skill_audit.py` from the INSTALLED version, not the
 downloaded one): high-severity findings stop an update with `--yes` and need explicit confirmation interactively.
 
@@ -863,7 +865,7 @@ def pending_messages(root: Path) -> list[str]:
 
 
 PASS_THROUGH = ("--packs", "--add", "--remove",   # → the new version's installer
-                "--pack-dir", "--drop-pack-dir")
+                "--pack-dir", "--drop-pack-dir", "--layout")
 
 
 def main(argv: list[str]) -> int:
@@ -924,8 +926,8 @@ def main(argv: list[str]) -> int:
             if (new / "core" / "factory" / "VERSION").exists() else "0.0.0"
         print(f"Installed version: {current}   available: {new_version}   (source: {src})")
         newer = newer_than(new_version, current) > 0
-        if passthrough:                       # overlay change — the same version is also applied
-            print("ℹ Changing packs: " + " ".join(passthrough))
+        if passthrough:                       # pack or layout change — the same version is also applied
+            print("ℹ Changing the install: " + " ".join(passthrough))
         if not newer and not opts.get("--force") and not passthrough:
             if newer_than(new_version, current) < 0:
                 print("ℹ The source has an older version than the installed one — doing nothing (force: --force).")

@@ -113,12 +113,17 @@ ALWAYS_OWNED = (".claude/cleanroom.json",)   # assembled from the core and packs
 REQUIRED = (".tf/factory/", ".claude/hooks/")
 GENERATED = (".claude/agents/_generated/", ".claude/catalog.md", ".tf/plugin/agents/")   # built in the project by .tf/factory/build.py
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
-# Factory mode (docs/plans/2026-11-20-tryb-fabryki-plan.md): with `--layout plugin` the factory lives in a local plugin
-# that only a factory session loads (`tf code`: claude --plugin-dir .tf/plugin --settings .tf/plugin/session-settings.json).
-# A plain `claude` in the project then sees no factory skill, agent, hook, rule or status line.
+# Layouts (docs/plans/2026-11-20-tryb-fabryki-plan.md). `default` (the classic layout, `--layout default`): the factory
+# lives in .claude/ and every Claude Code session in the project loads it, the Desktop app too. `plugin` (factory mode,
+# the default since T5): the factory lives in a local plugin in .tf/plugin/, registered for the folder with the Claude
+# Code CLI in local scope (plugin_register.py: settings.local.json and the user's Claude config), so every session in
+# the folder loads it — a plain `claude`, `tf code` and the Desktop app — with the commands /tf:tf, /tf:tf-task…;
+# without the registration only `tf code` loads it (claude --plugin-dir .tf/plugin --settings <session settings>).
 LAYOUTS = ("default", "plugin")
 PLUGIN = ".tf/plugin"
 PLUGIN_SKILLS = PLUGIN + "/skills/"
+PLUGIN_MARKET = ".tf/.claude-plugin"
+CLASSIC_OK = ("✓ Classic layout: the factory is in .claude/ — every Claude Code session loads it (also the Desktop app).")
 # Core tests that make sense only in the factory repository (paths relative to core/): the N5 run evals import
 # `scripts/export_pdi_runs.py` and `modes/mode-pdi/.../phase_result.py` from the source, so in a project they would fail on import.
 # They do not go to `.claude/tests/` (an update removes their copies from earlier versions); `tools/workspace.py check`
@@ -775,6 +780,65 @@ def strip_factory_settings(cur: dict, factory: dict, current: dict, overrides: s
     return out
 
 
+def register_module():
+    """plugin_register.py of the factory being installed: registers .tf/plugin/ for the folder with the Claude Code CLI
+    (local scope), so every session in it loads the factory — a plain `claude` and the Desktop app too."""
+    spec = importlib.util.spec_from_file_location("tf_plugin_register_install",
+                                                  Path(__file__).resolve().parent / "plugin_register.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def plugin_own_skills(dst_root: Path, old_files: dict) -> list[str]:
+    """Skills in .tf/plugin/skills/ that the factory did not put there (no file of theirs in the manifest) — yours."""
+    base = dst_root / PLUGIN_SKILLS
+    if not base.is_dir():
+        return []
+    return sorted(d.name for d in base.iterdir() if d.is_dir() and (d / "SKILL.md").is_file()
+                  and not any(r.startswith(f"{PLUGIN_SKILLS}{d.name}/") for r in old_files))
+
+
+def leave_plugin(plan: "Plan", dst_root: Path, own_skills: list[str], dry: bool) -> list[str]:
+    """Back to the classic layout: the factory files of .tf/plugin/ and .tf/.claude-plugin/ (also ones you changed —
+    factory files are like node_modules) and the generated agents go to the backup; your own skills move to
+    .claude/skills/ (unless a skill of that name is already there). Returns what is left in the plugin (yours)."""
+    plugin_dirs = (PLUGIN + "/", PLUGIN_MARKET + "/")
+    for rel in [r for r in plan.kept_removed if r.startswith(plugin_dirs)]:
+        plan.kept_removed.remove(rel)
+        plan.removed.append(rel)
+        if not dry:
+            target = dst_root / BACKUP_DIR / plan.stamp / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(dst_root / rel), target)
+    agents = dst_root / PLUGIN / "agents"                    # generated: rebuilt in .claude/agents/_generated
+    if agents.is_dir() and not dry:
+        target = dst_root / BACKUP_DIR / plan.stamp / PLUGIN / "agents"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(agents), target)
+    for name in own_skills:
+        src, dst = dst_root / PLUGIN_SKILLS / name, dst_root / ".claude" / "skills" / name
+        if dst.exists():
+            continue
+        plan.merged.append(f".claude/skills/{name}/ (your skill, moved from .tf/plugin/skills/)")
+        if not dry:
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(str(src), dst)
+    left = []
+    for d in (dst_root / PLUGIN, dst_root / PLUGIN_MARKET):
+        if not d.is_dir():
+            continue
+        if not dry:
+            for sub in sorted((p for p in d.rglob("*") if p.is_dir()), key=lambda p: len(p.parts), reverse=True):
+                if not any(sub.iterdir()):
+                    sub.rmdir()
+            if not any(d.iterdir()):
+                d.rmdir()
+                continue
+        left += sorted(p.relative_to(dst_root).as_posix() for p in d.rglob("*") if p.is_file())
+    return left
+
+
 def plugin_files(plan: "Plan", dst_root: Path, settings: dict, py: str, version: str) -> None:
     """The plugin's manifest, its hook registration (with the SessionStart hook that gives the factory rules) and the
     factory session's settings (env, status line, permissions) — `tf code` passes the latter with --settings."""
@@ -785,7 +849,8 @@ def plugin_files(plan: "Plan", dst_root: Path, settings: dict, py: str, version:
     if not any("factory_rules.py" in json.dumps(g) for g in start):
         start.insert(0, {"hooks": [rules_hook]})
     meta = {"name": "tf", "version": version, "description": "Team factory: skills, agents, hooks and rules of the "
-            "/tf-task loop. Loaded only by a factory session (tf code)."}
+            "/tf-task loop. Every Claude Code session in the folder loads it once registered (local scope); tf code "
+            "loads it anyway."}
     plan.copy(None, PLUGIN + "/.claude-plugin/plugin.json", (json.dumps(meta, indent=2) + "\n").encode("utf-8"))
     market = {"name": "tf-project", "owner": {"name": "team factory"},       # .tf/ as a directory marketplace: the cloud
               "plugins": [{"name": "tf", "source": "./plugin", "description": meta["description"]}]}   # (tf cloud-setup)
@@ -991,7 +1056,8 @@ def _main(argv: list[str], tmp: Path) -> int:
               f"(version {manifest.get('version')}) — packs: {', '.join(packs) or 'none'}.")
 
     # factory mode is the default (plan 2026-11-20, T5): a new install and an update of an older install (a manifest
-    # without `layout`) go to the plugin layout; `--layout default` keeps the factory in .claude/ as before
+    # without `layout`) go to the plugin layout; `--layout default` (also through update.py) moves to the classic layout
+    # in .claude/, which every session loads (the Desktop app too), and back with `--layout plugin`
     layout = opts.get("layout") or (manifest or {}).get("layout") or "plugin"
     if layout not in LAYOUTS:
         print(f"✗ Unknown --layout {layout!r}. Available: {', '.join(LAYOUTS)}")
@@ -1003,7 +1069,9 @@ def _main(argv: list[str], tmp: Path) -> int:
             print(err)
             return 2
     plugin = layout == "plugin"
-    migrating = plugin and update and (manifest or {}).get("layout") != "plugin"   # from the old layout to the plugin
+    was_plugin = (manifest or {}).get("layout") == "plugin"
+    migrating = plugin and update and not was_plugin   # from the classic layout to the plugin
+    returning = not plugin and update and was_plugin   # from the plugin back to the classic layout
 
     def place(f: Path, rel: str) -> None:
         """A factory file at its path; in the plugin layout a skill goes to the plugin in full, and its scripts and
@@ -1043,12 +1111,7 @@ def _main(argv: list[str], tmp: Path) -> int:
                 if f.is_file() and not any(x in f.name for x in SKIP):
                     plan.copy(f, f".tf/factory/packs/{pid}/" + f.relative_to(base).as_posix())
     plan.copy(None, ".claude/cleanroom.json", compose_cleanroom(packs, available))
-    if update:
-        plan.remove_obsolete()
-    if migrating and (dst_root / ".claude" / "agents" / "_generated").is_dir() and not dry:   # rebuilt in .tf/plugin/agents
-        target = dst_root / BACKUP_DIR / stamp / ".claude" / "agents" / "_generated"
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.move(str(dst_root / ".claude" / "agents" / "_generated"), target)
+    own_plugin_skills = plugin_own_skills(dst_root, (manifest or {}).get("files") or {}) if returning else []
 
     # settings: private → settings.local.json, team → settings.json (always merged with what is already there)
     src_set = apply_python(compose_settings(packs, available), py)
@@ -1069,7 +1132,7 @@ def _main(argv: list[str], tmp: Path) -> int:
                 if cleaned != cur_raw:
                     plan.write(set_p, json.dumps(cleaned, ensure_ascii=False, indent=2) + "\n",
                                f"{set_p.relative_to(dst_root)} (factory entries moved to .tf/plugin/)")
-    else:
+    else:      # (back from the plugin layout: the factory's entries return to the project settings, yours stay)
         cur_raw = json.loads(set_p.read_text(encoding="utf-8")) if set_p.exists() else {}
         cur = load_migrations().settings_v19(cur_raw)   # 19.0.0: English hook event names, before the merge (no duplicate)
         merged = apply_python(merge_settings(src_set, cur), py) if cur else src_set
@@ -1097,7 +1160,8 @@ def _main(argv: list[str], tmp: Path) -> int:
     md_old = md_p.read_text(encoding="utf-8") if md_p.exists() else ""
     md_base = load_migrations().claude_md_v19(drop_legacy_blocks(md_old, LEGACY_MARKS))   # 19.0.0: Polish subsections
     rules_p = dst_root / PLUGIN / "RULES.md"
-    if plugin and rules_p.is_file():       # the commands entered by tf onboard or a human live in RULES.md now
+    if (plugin and rules_p.is_file()) or (returning and rules_p.is_file() and MARK_BEGIN not in md_base):
+        # the commands entered by tf onboard or a human live in RULES.md in the plugin layout (and come back from it)
         section = keep_commands(claude_md_section(py, dst_root, cfg),
                                 f"{MARK_BEGIN}\n{rules_p.read_text(encoding='utf-8')}{MARK_END}\n")
     else:                                  # (on the move to the plugin layout: from the old block in CLAUDE.md)
@@ -1112,6 +1176,21 @@ def _main(argv: list[str], tmp: Path) -> int:
     else:
         plan.write(md_p, with_block(md_base, MARK_BEGIN, MARK_END, section, update or md_base != md_old),
                    f"{md_p.name} (factory section)")
+
+    # after every copy: files of the previous version that this one no longer has (in the plugin layout the plugin's
+    # own files are written above, so an earlier call took them for obsolete)
+    if update:
+        plan.remove_obsolete()
+    if migrating and (dst_root / ".claude" / "agents" / "_generated").is_dir() and not dry:   # rebuilt in .tf/plugin/agents
+        target = dst_root / BACKUP_DIR / stamp / ".claude" / "agents" / "_generated"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(dst_root / ".claude" / "agents" / "_generated"), target)
+    plugin_left: list[str] = []
+    unregistered = ""
+    if returning:  # the plugin is not loaded any more: its factory files go to the backup, your skills to .claude/skills
+        if not dry:    # first its registration for this folder (local scope), so the classic layout does not load twice
+            unregistered = register_module().unregister(dst_root)[1]
+        plugin_left = leave_plugin(plan, dst_root, own_plugin_skills, dry)
 
     # ignore entries: private → .git/info/exclude (nothing visible in the repo), team or --gitignore → .gitignore
     exclude = None if (shared or force_gitignore) else git_exclude_path(dst_root)
@@ -1168,11 +1247,12 @@ def _main(argv: list[str], tmp: Path) -> int:
     print(f"{head} in {dst_root} — version {ver}, {mode_txt} mode: new files {len(plan.created)}, "
           f"updated {len(plan.updated)}, merged {len(plan.merged)}, removed {len(plan.removed)}")
     print(f"  packs: {', '.join(packs) or '— (core only)'}")
-    if plugin and (migrating or not update) and not dry:   # once, after the real write (not in the update's preview)
-        print("ℹ Factory mode: the factory lives in .tf/plugin/ — start it with `tf code` (e.g. `tf code --continue`); "
-              "a plain `claude` in this project loads nothing from the factory. "
-              + ("Back to the old layout: python3 .tf/factory/update.py --rollback, or install with --layout default."
-                 if migrating else "The old layout: install with --layout default."))
+    if returning and not dry:
+        print(CLASSIC_OK)
+        print(f"  ✓ plugin registration: {unregistered}")
+        for rel in plugin_left:
+            print(f"  ℹ left in place (yours): {rel} — the classic layout does not load .tf/plugin/; "
+                  "move it to .claude/ if you still need it")
     for m in plan.merged:
         print(f"  ~ {m}")
     if not dry and update:     # self-correction of the project's own files after renames in the core (.tf/factory/migrations.py)
@@ -1275,6 +1355,8 @@ Next:
   4. Costs: the `balanced` profile works right away; `{py} .tf/factory/profile.py economy|quality` switches the team.
   Packs: `tf add <pack>` / `tf remove <pack>` · language: none to set — write in yours, the agents answer in it.
   Updates: `{py} .tf/factory/update.py` (or `tf`, or `/core-factory-update` in Claude Code).""")
+    if plugin and not dry:     # last, after every file is written: register the plugin for this folder (local scope)
+        print("\n" + register_module().report(dst_root))   # ✓, or the framed warning with the two commands
     return 0
 
 

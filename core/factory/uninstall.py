@@ -261,6 +261,15 @@ def main(argv: list[str]) -> int:
         if input("Uninstall? [y/N] ").strip().lower() not in ("y", "yes"):
             print("Stopped. Nothing changed.")
             return 1
+    reg = Path(__file__).resolve().parent / "plugin_register.py"
+    if reg.is_file():   # the plugin's registration for this folder (local scope) first; it edits settings.local.json
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("tf_plugin_register_uninstall", reg)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        ok, detail = mod.unregister(root)
+        print(("✓ plugin registration: " if ok else "⚠ plugin registration: ") + detail)
+        p = plan(root, force)
     zipped = backup(root, p)
     for rel, new in p["edits"].items():
         f = Path(rel) if Path(rel).is_absolute() else root / rel

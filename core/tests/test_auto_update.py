@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+os.environ["TF_NO_PLUGIN_REGISTER"] = "1"   # installs here never call the real Claude Code CLI (plugin_register.py)
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "update.py").is_file())
 GIT_SRC = "https://example.com/fabryka.git"
@@ -39,7 +40,7 @@ def manifest(p: Path) -> dict:
 
 
 def auto_switch_tests(up, check) -> None:
-    env = {"PATH": os.environ.get("PATH", "")}
+    env = {"TF_NO_PLUGIN_REGISTER": "1", "PATH": os.environ.get("PATH", "")}
     with tempfile.TemporaryDirectory() as d:
         base = Path(d)
         p = project(base, "prywatny")
@@ -252,7 +253,7 @@ def log(p: Path) -> list[dict]:
 
 
 def auto_run_tests(up, check) -> None:
-    env = {"PATH": os.environ.get("PATH", "")}
+    env = {"TF_NO_PLUGIN_REGISTER": "1", "PATH": os.environ.get("PATH", "")}
     with tempfile.TemporaryDirectory() as d:
         base = Path(d)
         src = factory_repo(base, "fab", [("2.0.1", PASS, False), ("2.1.0", PASS, False), ("3.0.0", PASS, False)])
@@ -307,7 +308,7 @@ def auto_run_tests(up, check) -> None:
 
 
 def start_tests(up, check) -> None:
-    env = {"PATH": os.environ.get("PATH", "")}
+    env = {"TF_NO_PLUGIN_REGISTER": "1", "PATH": os.environ.get("PATH", "")}
     with tempfile.TemporaryDirectory() as d:
         base = Path(d)
         cache = base / "cache"
@@ -387,7 +388,7 @@ def run_ci(p: Path, src: str) -> tuple[subprocess.CompletedProcess, str, str]:
     out.write_text("")
     r = subprocess.run([sys.executable, str(p / ".tf" / "factory" / "update.py"), "--ci", "--source", src], cwd=p,
                        capture_output=True, text=True,
-                       env={"PATH": os.environ.get("PATH", ""), "HOME": str(p.parent), "GITHUB_OUTPUT": str(out)})
+                       env={"TF_NO_PLUGIN_REGISTER": "1", "PATH": os.environ.get("PATH", ""), "HOME": str(p.parent), "GITHUB_OUTPUT": str(out)})
     body = p / ".tf" / "logs" / "update-pr.md"
     return r, out.read_text(), body.read_text(encoding="utf-8") if body.is_file() else ""
 
