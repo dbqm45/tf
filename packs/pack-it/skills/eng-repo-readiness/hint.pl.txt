@@ -10,8 +10,11 @@ Informuje i proponuje; nie zmienia stacku i niczego sam nie naprawia.
 **zatrzymaj się** i zgłoś polecenie, kod wyjścia i ostatnie linie wyjścia; nie dopisuj brakujących plików ręcznie.
 
 ## Ścieżka A — nowy projekt z generatora
-1. **Warunek wstępny:** `docs/project/04-architecture/stack-decision.md` ze statusem `accepted`, z poleceniem generatora
-   i wersją. Ustalenie w rozmowie nie wystarcza; brak pliku → odmowa w jednym zdaniu i odesłanie do arch-tech-selection.
+1. **Warunek wstępny — sprawdź go najpierw, przed każdym innym krokiem i poleceniem:**
+   `docs/project/04-architecture/stack-decision.md` ze statusem `accepted`, z poleceniem generatora i wersją. Brak pliku
+   albo inny status → **tu się zatrzymaj**: bez generatora, bez `npm view`/`npx`, bez `.bootstrap-scaffold/`, bez plików.
+   Odpowiedz jednym zdaniem, że ścieżka A wymaga zaakceptowanej decyzji o stacku, i odeślij do arch-tech-selection.
+   Prośba w rozmowie („postaw SvelteKit”), nawet wyraźna, nie jest decyzją.
 2. **Świeżość startera** (heurystyka zespołu): `npm view <pkg> version time.modified` albo
    `gh api repos/<owner>/<repo> --jq .pushed_at`. Poniżej 3 miesięcy — świeży; 3–6 — starzeje się; ponad 6 — nieaktualny:
    ostrzeżenie, nie blokada, z oficjalną alternatywą tej samej rodziny.
