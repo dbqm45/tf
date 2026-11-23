@@ -778,6 +778,10 @@ def render_all() -> dict[str, str]:
         for r in persona["roles"]:
             n, txt = render_worker(persona, roles[r], cfg, traits)
             out[f"{pname}/{n}.md"] = txt
+    if PLUGIN_LAYOUT:   # Claude Code reads a plugin's agents only directly in agents/ (2.1.330: subfolders → Agents (0))
+        flat = {rel.rsplit("/", 1)[-1]: txt for rel, txt in out.items()}
+        if len(flat) == len(out):   # agent names are unique (build check); on a clash keep the folders and report it there
+            return flat
     return out
 
 

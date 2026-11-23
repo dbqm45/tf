@@ -112,6 +112,9 @@ def main() -> int:
         old_agents = list((p / ".claude" / "agents" / "_generated").rglob("*.md")) if (p / ".claude" / "agents" / "_generated").is_dir() else []
         check("scope-reviewer.md" in agents and not old_agents,
               f"PL-11: agenci fabryki we wtyczce, nie w .claude/agents: {agents[:5]} {old_agents[:3]}")
+        nested = [x.relative_to(plug).as_posix() for x in (plug / "agents").rglob("*.md") if x.parent != plug / "agents"] \
+            if (plug / "agents").is_dir() else []
+        check(not nested, f"PL-11b: plugin agents lie flat in agents/ — Claude Code skips subfolders (Agents (0)): {nested[:3]}")
         man = json.loads((p / ".claude" / "factory-manifest.json").read_text(encoding="utf-8"))
         check(man.get("layout") == "plugin", f"PL-12: manifest zapisuje układ: {man.get('layout')}")
         cat = (p / ".claude" / "catalog.md").read_text(encoding="utf-8") if (p / ".claude" / "catalog.md").is_file() else ""
