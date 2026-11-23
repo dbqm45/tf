@@ -99,8 +99,9 @@ Deprecation works like this:
   `task.json`: `verdict`, `sha`, `at`, `note`), `run_state.py panel <directory> [--record <reviewer> pass|fail --note]
   [--base]`, the agent `spec-reviewer`; the `pr` stage of a full-weight task requires `pass` from `security-reviewer`
   and `spec-reviewer` for the current commit.
-- Factory mode (plan 2026-11-20): `install.py --layout plugin|default` (the default since T5: `plugin`; the manifest field
-  `layout`); the local plugin `.tf/plugin/` (`.claude-plugin/plugin.json` named `tf`, `skills/`, `agents/`,
+- Factory mode (plan 2026-11-20): `install.py --layout plugin|default` and `update.py --layout plugin|default` (the
+  default: `default`, the classic layout in `.claude/`; an install whose manifest says `plugin` stays plugin until
+  `--layout default`; the manifest field `layout`); the local plugin `.tf/plugin/` (`.claude-plugin/plugin.json` named `tf`, `skills/`, `agents/`,
   `hooks/hooks.json`, `RULES.md`, `session-settings.json`), the directory marketplace `.tf/.claude-plugin/marketplace.json`
   (`tf-project`, plugin `tf`), the hook `.claude/hooks/factory_rules.py` (SessionStart, the rules from `RULES.md`),
   `tf code [claude arguments]` (`--settings .tf/cache/session-settings.json`: the plugin's session settings with the

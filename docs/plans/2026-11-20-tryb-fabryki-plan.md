@@ -99,6 +99,10 @@ Do T5 nic się nie zmienia u użytkowników, bo nowy układ jest tylko opcją.
   - **Polecenia projektu:** `tf onboard` wpisuje je do `.tf/plugin/RULES.md`.
   - **Testy fabryki:** zestaw testów (`workspace.py`) instaluje się w starym układzie, a nowy układ pokrywają
     `tests/test_plugin_*.py`.
+  - **Cofnięte 2026-11-23:** domyślny jest znowu układ klasyczny (`.claude/`). Po aktualizacji do układu wtyczki
+    aplikacja Claude Desktop nie widziała `/tf`: nie poda `--plugin-dir`, a wtyczka z zakresu projektu miałaby nazwę
+    `/tf:tf`. Układ wtyczki zostaje opcją (`--layout plugin`), a `update.py --layout default` przenosi instalację z
+    powrotem do `.claude/`.
 - **Domknięte 2026-11-20 (po T6):**
   - **Katalog:** `.claude/catalog.md` w układzie wtyczki pokazuje Twoje skille z `.claude/skills/` w osobnej sekcji
     i mówi, że skille fabryki w sesji fabryki mają nazwę `tf:<nazwa>`.

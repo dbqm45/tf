@@ -50,9 +50,10 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf task mode <KEY> [plan|normal|auto]   # who approves: plan stops after the plan, normal waits for the human's approval of the plan, auto does not
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
-  tf code [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin), its settings and the isolation
-                              # level (the sandbox for `sandbox`); a plain
-                              # `claude` in the project loads nothing from the factory (install --layout plugin)
+  tf code [claude arguments]  # factory session with the isolation level (TF_ISOLATION). Classic layout (the default):
+                              # a plain `claude` — every session loads the factory from .claude/, the Desktop app too.
+                              # Plugin layout (opt-in, install --layout plugin): claude with the factory plugin
+                              # (.tf/plugin) and its settings (the sandbox for `sandbox`); only tf code loads the factory
   tf cloud-setup [--apply]    # factory mode in a cloud environment: prints the environment's setup script; --apply
                               # enables the factory plugin and its session settings in ~/.claude/settings.json
   tf work --once --budget <USD> [--key <KEY>] [--dry-run]
@@ -397,6 +398,13 @@ def instructions_summary(lint: Path) -> str:
 
 
 PLUGIN_DIR = Path(".tf") / "plugin"
+PLUGIN_WARNING = ("⚠ Plugin layout: only `tf code` loads the factory; a plain `claude` and the Claude Desktop app see no "
+                  "/tf. Back to the classic layout: python3 .tf/factory/update.py --layout default")
+
+
+def plugin_warning_block() -> str:
+    rule = "⚠ " + "─" * 70
+    return "\n".join([rule, PLUGIN_WARNING, "  Start the factory with `tf code` (e.g. `tf code --continue`).", rule])
 
 
 def factory_layout() -> str:
@@ -432,9 +440,8 @@ def cmd_code(rest: list[str]) -> int:
     if not need_project():
         return 2
     if factory_layout() != "plugin":
-        print("ℹ This project has the default layout (factory files in .claude/, loaded by every session) — starting "
-              "claude as usual. The factory mode needs the plugin layout (install.py --layout plugin); moving existing "
-              "installs comes with a later factory update.", file=sys.stderr)
+        print("ℹ Classic layout (the factory in .claude/, loaded by every session, the Desktop app too) — starting "
+              "claude as usual; the isolation level's sandbox is in .claude/settings.local.json.", file=sys.stderr)
         cmd = [*claude_command(), *rest]
     else:
         plugin, settings = PLUGIN_DIR.resolve(), (PLUGIN_DIR / "session-settings.json").resolve()
@@ -516,8 +523,9 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
     if not need_project():
         return 2
     if factory_layout() == "plugin":
-        print("ℹ Layout: plugin (.tf/plugin/) — start the factory with `tf code`; a plain `claude` in this project "
-              "loads nothing from the factory.")
+        print(plugin_warning_block())
+    else:
+        print("✓ layout: classic (.claude/) — every Claude Code session loads the factory (also the Desktop app)")
     mig = project_module("migrations")
     changes = mig.apply(Path.cwd(), dry=not fix)
     for c in changes:

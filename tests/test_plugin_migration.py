@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Tryb fabryki, krok T5 (docs/plans/2026-11-20-tryb-fabryki-plan.md): układ wtyczki jest domyślny. Aktualizacja
-instalacji w starym układzie przenosi fabrykę do .tf/plugin/ i sprząta po niej: SKILL.md fabryki z .claude/skills,
+"""Tryb fabryki, krok T5 (docs/plans/2026-11-20-tryb-fabryki-plan.md): układ wtyczki na żądanie (od 2026-11-23 domyślny
+jest znowu układ klasyczny — tests/test_layout_default.py). `update.py --layout plugin` przenosi instalację w starym
+układzie do .tf/plugin/ i sprząta po niej: SKILL.md fabryki z .claude/skills,
 jej hooki, env, pasek i uprawnienia z ustawień projektu, blok w CLAUDE.local.md i agentów z .claude/agents/_generated.
 Twoje skille, ustawienia i treść CLAUDE.md zostają; `update.py --rollback` wraca do starego układu.
 `--layout default` zostawia stary układ.
@@ -67,7 +68,7 @@ def main() -> int:
         p = old_install(base, "old")
         check((p / ".claude" / "skills" / "tf" / "SKILL.md").is_file() and "tdd_guard" in (p / ".claude" / "settings.local.json").read_text(encoding="utf-8"),
               "MG-0: przygotowanie — stara instalacja ma skille i hooki fabryki w .claude")
-        r = subprocess.run([sys.executable, str(p / ".tf" / "factory" / "update.py"), "--force", "--yes"], cwd=p,
+        r = subprocess.run([sys.executable, str(p / ".tf" / "factory" / "update.py"), "--layout", "plugin", "--yes"], cwd=p,
                            capture_output=True, text=True, timeout=900, env=env(base))   # the real update path (with backup)
         check(r.returncode == 0 and "tf code" in r.stdout, f"MG-1: aktualizacja przenosi do układu wtyczki i mówi o tf code: "
                                                           f"{r.returncode} {r.stdout[-600:]} {r.stderr[-300:]}")
@@ -107,7 +108,7 @@ def main() -> int:
         o.mkdir()
         subprocess.run(["git", "init", "-q", str(o)], check=True)
         (o / "package.json").write_text(json.dumps({"name": "x", "scripts": {"test": "node -e 1"}}), encoding="utf-8")
-        install(o, base)
+        install(o, base, "--layout", "plugin")
         r = subprocess.run([sys.executable, ".tf/factory/tf.py", "onboard", "--yes"], cwd=o, capture_output=True, text=True,
                            timeout=600, env=env(base))
         rules = (o / ".tf" / "plugin" / "RULES.md").read_text(encoding="utf-8")
@@ -127,9 +128,9 @@ def main() -> int:
         n.mkdir()
         subprocess.run(["git", "init", "-q", str(n)], check=True)
         r = install(n, base)
-        check(r.returncode == 0 and (n / ".tf" / "plugin" / "skills" / "tf" / "SKILL.md").is_file()
-              and not (n / ".claude" / "skills" / "tf" / "SKILL.md").exists(),
-              f"MG-10: nowa instalacja bez opcji ma układ wtyczki: {r.returncode} {r.stdout[-300:]}")
+        check(r.returncode == 0 and (n / ".claude" / "skills" / "tf" / "SKILL.md").is_file()
+              and not (n / ".tf" / "plugin").exists(),
+              f"MG-10: a new install without options has the classic layout: {r.returncode} {r.stdout[-300:]}")
 
     for f in fails:
         print(f"✗ {f}")

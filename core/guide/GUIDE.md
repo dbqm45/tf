@@ -29,15 +29,18 @@ Something does not work, or a command was blocked? Ask in the session: "what blo
 agent will point to the file that made the decision. Frequent questions: `.tf/factory/FAQ.md`.
 
 ## 1. What an installation consists of
-**The factory mode.** The factory lives in a local plugin in `.tf/plugin/` (skills, agents, hook registration, rules) that
-only a factory session loads: `tf code` (e.g. `tf code --continue`) starts `claude --plugin-dir .tf/plugin --settings
-.tf/cache/session-settings.json` (the plugin's `session-settings.json` with the isolation level: the sandbox for
-`sandbox` and `container`). A plain `claude` in the project loads nothing from the factory — no hook, skill, agent,
-rule or status line — so your own skills in `.claude/skills/` are never shadowed; factory skills appear in a factory session
-as `tf:<skill>`. A cloud environment becomes a factory environment with the setup script printed by `tf cloud-setup`
-(the factory files must be in the repository: a team install). `tf work --once` and the measurements use the same plugin.
-An update of an older install moves it here (a copy in `.tf/backup/`, back: `python3 .tf/factory/update.py --rollback`);
-`install.py --layout default` keeps the old layout, in which every session in the project loads the factory.
+**Two layouts.** The **classic layout** is the default: the factory lives in `.claude/` (skills, agents, hooks) and the
+factory's section of `CLAUDE.local.md` or `CLAUDE.md`, so every Claude Code session in the project loads it — a plain
+`claude`, `tf code` and the Claude Desktop app. The **plugin layout** (the factory mode) is opt-in:
+`python3 .tf/factory/update.py --layout plugin` (or `install.py --layout plugin`) moves the factory into a local plugin in
+`.tf/plugin/` (skills, agents, hook registration, rules) that only a factory session loads: `tf code` (e.g.
+`tf code --continue`) starts `claude --plugin-dir .tf/plugin --settings .tf/cache/session-settings.json` (the plugin's
+`session-settings.json` with the isolation level: the sandbox for `sandbox` and `container`). A plain `claude` and the
+Desktop app (which cannot pass `--plugin-dir`) then load nothing from the factory — no `/tf`, hook, skill, agent, rule or
+status line; factory skills appear in a factory session as `tf:<skill>`. A cloud environment becomes a factory
+environment with the setup script printed by `tf cloud-setup` (the factory files must be in the repository: a team
+install). Back to the classic layout: `python3 .tf/factory/update.py --layout default` (your own skills and settings stay).
+`tf doctor` says which layout the project has.
 
 | Element | Where in the project | What it does |
 |---|---|---|
@@ -94,7 +97,8 @@ section — an update replaces only the section between the factory's markers. T
 version. Details of how instruction files load: the `core-agent-instructions` skill (`references/context-scaling.md`).
 
 ## 2. How to start working
-1. **Start a factory session:** `tf code` (or `tf code --agent <persona>`; in the old layout `claude --agent <name>`).
+1. **Start a session:** `claude` or `tf code` in the project directory (the plugin layout needs `tf code`; with a persona:
+   `claude --agent <name>` or `tf code --agent <name>`).
    **Choose a persona** from `.claude/catalog.md` and run it: `tf code --agent <name>` (e.g. `kuba` — product
    engineer, `ewa` — domain analyst, `kasia` — tests, `natalia` — UX). The persona talks with you and delegates
    work to its executors (`<persona>-<role>`) and to the shared agents.
@@ -102,7 +106,7 @@ version. Details of how instruction files load: the `core-agent-instructions` sk
    `tf list` and `.claude/catalog.md`) will recognise a problem described
    in plain text and choose personas, skills and an approach.
 3. **Enter the project's commands** (test, lint, types, build): `tf onboard` writes them into the factory rules
-   (`.tf/plugin/RULES.md`; in the old layout the factory's section in `CLAUDE.local.md` or `CLAUDE.md`) — the executors use
+   (the factory's section in `CLAUDE.local.md` or `CLAUDE.md`; in the plugin layout `.tf/plugin/RULES.md`) — the executors use
    them for verification.
 
 Shared agents, available to every persona:
