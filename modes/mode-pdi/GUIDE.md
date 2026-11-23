@@ -42,6 +42,13 @@ Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
   `decision pending`. Same switches as above (`PDI_EVENTS_URL`, `PDI_TF_SIGNING_SECRET`; `TF_DECISION_PUBLISH=0` turns
   it off). Resending is idempotent; what pdi accepted is kept in `.tf/cache/decision-publish/sent.json`, an unreachable
   pdi is retried next session. `python3 .claude/hooks/decision_publish.py --dry-run` prints what would be sent.
+- **A local copy of the suite decisions (D8):** at session start the hook `decision_cache.py` refreshes a read-only
+  copy of the pdi index in `.tf/cache/suite-decisions/` (outside git) with `pdi-records changes` — set
+  `TF_DECISION_CACHE_CMD` (e.g. `uv run --directory ~/pdi pdi-records`) or `PDI_REGISTRY_PATH`; `TF_DECISION_CACHE=0`
+  turns it off. It adds one line to the session context: how many decisions are binding, how many superseded, how old
+  the copy is. `decision_cache.py search <words>` searches the copy and the project's own decisions together. Decisions
+  of this repo published by the factory are not copied (they are here); a copy edited by hand is fetched again; without
+  pdi the last copy stays and is marked stale.
 
 - **Security scan on every PR (Z8c-2):** `phase_run.py workflow install --workflow change-check` installs
   `change-check.yml`: the same scan as in the factory's piece loop (`security_scan.py scan` from the tf skill — semgrep
