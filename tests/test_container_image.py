@@ -29,6 +29,7 @@ echo "diag_hosts=$(grep -c . /etc/hosts) lines, github: $(grep api.github.com /e
 echo "diag_resolve=$(getent ahostsv4 api.github.com | awk '{print $1}' | sort -u | tr '\n' ' ')"
 echo "diag_curl=$(curl -sS -o /dev/null -m 10 -w '%{remote_ip} %{http_code}' https://api.github.com 2>&1 | tail -1)"
 """
+RUNS = 3                                       # the network check failed only sometimes — several starts catch it
 WANT = {"user": "node", "write_etc": "DENIED", "write_workspace": "OK", "write_home": "OK", "firewall_change": "DENIED",
         "allowed_domain": "OK", "other_domain": "DENIED", "claude": "OK", "tf_container": "1"}
 
@@ -57,21 +58,24 @@ def main() -> int:
             return 1
         args = mod.run_args(proj, [])
         args = args[:args.index(tag) + 1] + ["sh", "-c", PROBE]
-        r = subprocess.run([eng, *args], capture_output=True, text=True, timeout=300, stdin=subprocess.DEVNULL)
-        got = dict(line.split("=", 1) for line in r.stdout.splitlines() if "=" in line)
-        print(json.dumps(got))
-        fails = [f"{k}: want {v}, got {got.get(k)}" for k, v in WANT.items() if got.get(k) != v]
+        fails = []
+        for attempt in range(1, RUNS + 1):     # a fresh container each time: the firewall resolves and pins anew
+            r = subprocess.run([eng, *args], capture_output=True, text=True, timeout=300, stdin=subprocess.DEVNULL)
+            got = dict(line.split("=", 1) for line in r.stdout.splitlines() if "=" in line)
+            print(f"run {attempt}: " + json.dumps({k: v for k, v in got.items() if not k.startswith("diag_")}))
+            print("\n".join(f"  {k}: {v}" for k, v in got.items() if k.startswith("diag_")))
+            if r.stderr.strip():
+                print("  entrypoint stderr: " + r.stderr[-800:].replace("\n", " | "))
+            fails += [f"run {attempt} {k}: want {v}, got {got.get(k)}" for k, v in WANT.items() if got.get(k) != v]
         if not (proj / "tf-probe").is_file():
             fails.append("the file written in /workspace is not in the project on the host")
-    if fails:                                              # what the firewall and DNS saw, for the failure report
-        print("\n".join(f"  {k}: {v}" for k, v in got.items() if k.startswith("diag_")))
-        print("  entrypoint stderr: " + r.stderr[-800:].replace("\n", " | "))
     for f in fails:
         print(f"✗ {f}")
     if r.returncode != 0 and not fails:
         fails.append(f"exit {r.returncode}: {r.stderr[-800:]}")
         print(f"✗ {fails[-1]}")
-    print(f"{'✓' if not fails else '✗'} {len(WANT) + 1 - len(fails)}/{len(WANT) + 1} container image checks")
+    total = RUNS * len(WANT) + 1
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} container image checks ({RUNS} starts)")
     return 1 if fails else 0
 
 
