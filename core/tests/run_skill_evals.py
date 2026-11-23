@@ -49,7 +49,7 @@ EXPECT = ("trigger", "no-trigger")
 DEFAULT_BUDGET_USD = 5.0
 # Approximate cost of one run (USD) for a rough forecast before the start; Claude Code reports the real cost.
 COST_GUESS = {"haiku": 0.14, "sonnet": 0.15, "opus": 0.45}   # haiku and sonnet: average from docs/evals/2026-10-18-*
-COST_GUESS_TASK = {"haiku": 0.45, "sonnet": 0.9, "opus": 2.5}  # [assumption: not measured — up to ~30 turns; the pilot measures it]
+COST_GUESS_TASK = {"haiku": 0.02, "sonnet": 0.1, "opus": 0.3}  # haiku: pilot 2026-11-23 (0.008–0.021, docs/evals/2026-11-23-pilot-a3-a2a.md); sonnet, opus: an estimate
 # Messages meaning a usage or rate limit — after them the runner does not start further runs.
 LIMIT_RE = re.compile(r"usage limit|rate limit|rate_limit|session limit|limit reached|429|overloaded|quota", re.I)
 
@@ -444,7 +444,8 @@ FILE_TOOLS = {"Read", "Grep", "Glob", "LS", "NotebookRead"}
 
 
 def parse_stream(lines: list[str]) -> dict:
-    """Skills triggered by the Skill tool or by reading SKILL.md, answer text, cost, number of turns."""
+    """Skills triggered by the Skill tool or by reading SKILL.md (Read, or a Bash command naming it), the Bash commands,
+    answer text, cost, number of turns."""
     skills, text, cost, turns, error, via, tool_errors, paths, commands = [], "", 0.0, 0, None, {}, [], [], []
     for line in lines:
         try:
@@ -458,6 +459,10 @@ def parse_stream(lines: list[str]) -> dict:
                 inp = c.get("input") or {}
                 if c.get("name") == "Bash" and inp.get("command"):
                     commands.append(str(inp["command"]))
+                    # a task run often reads the skill with cat/sed/head instead of the Read tool — that also counts
+                    for m in re.finditer(r"\.claude/skills/([^/\s'\"]+)/SKILL\.md", str(inp["command"])):
+                        skills.append(m.group(1))
+                        via.setdefault(m.group(1), "Bash")
                 if c.get("name") in FILE_TOOLS:
                     p = inp.get("file_path") or inp.get("path") or inp.get("notebook_path")
                     if p:

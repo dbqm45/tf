@@ -2,7 +2,8 @@
 
 Stan: 2026-11-23 — właściciel zatwierdził rozszerzenie runnera i przygotowanie pilota; kroki 1–2 zrobione
 (`--tasks`, `core/tests/test_skill_eval_tasks.py`, fixtury `express-api` i `business-app`, scenariusze P-A3-1 i
-P-A2a-1; przebieg wzorcowy bez modelu: dobre rozwiązanie 7/7 i 8/8 grup, złe 1/7 i 1/8). Pilot (krok 3) czeka na zgodę. Kontekst: `docs/evals/2026-11-10-podsumowanie.md`
+P-A2a-1; przebieg wzorcowy bez modelu: dobre rozwiązanie 7/7 i 8/8 grup, złe 1/7 i 1/8). Pilot (krok 3) zrobiony 2026-11-23, 0,06 USD: `docs/evals/2026-11-23-pilot-a3-a2a.md` — A3 bez uruchomienia
+skilla, A2a równo ze skillem i bez; następny krok do decyzji. Kontekst: `docs/evals/2026-11-10-podsumowanie.md`
 (A3 `eng-repo-readiness` i A2a `be-business-app-patterns` — modele znają treść bez skilla; wartość, jeśli jest,
 leży w procedurze) i `docs/todo.md`, odłożona decyzja (2).
 

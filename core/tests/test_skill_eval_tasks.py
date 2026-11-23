@@ -28,7 +28,7 @@ prompt = argv[argv.index("-p") + 1]
 def tool(name, inp):
     print(json.dumps({"type": "assistant", "message": {"content": [{"type": "tool_use", "name": name, "input": inp}]}}))
 if "SKILL" in prompt:
-    tool("Skill", {"skill": "be-api-design"})
+    tool("Skill", {"skill": os.environ["FAKE_SKILL"]})
 tool("Bash", {"command": "python3 scripts/check.py ."})
 if "INSTALL" in prompt:
     tool("Bash", {"command": "npm ci && npm test"})
@@ -52,6 +52,11 @@ def main() -> int:
         if not cond:
             fails.append(msg)
 
+    # a skill present in every workspace (core); the stub "agent" triggers it
+    skill = "core-grounding" if (ev.SKILLS / "core-grounding" / "SKILL.md").is_file() else \
+        next(p.parent.name for p in sorted(ev.SKILLS.glob("*/SKILL.md")))
+    os.environ["FAKE_SKILL"] = skill
+
     # T-1: the stream gives the Bash commands in order
     p = ev.parse_stream([
         json.dumps({"type": "assistant", "message": {"content": [
@@ -59,6 +64,10 @@ def main() -> int:
             {"type": "tool_use", "name": "Bash", "input": {"command": "make test"}}]}}),
         json.dumps({"type": "result", "subtype": "success", "result": "ok", "total_cost_usd": 0.01, "num_turns": 1})])
     check(p.get("commands") == ["ls", "make test"], f"T-1: parse_stream collects Bash commands in order: {p.get('commands')}")
+    p = ev.parse_stream([json.dumps({"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Bash",
+        "input": {"command": "cat -n app/x.py; sed -n 1,60p .claude/skills/be-business-app-patterns/SKILL.md"}}]}})])
+    check(p["skills"] == ["be-business-app-patterns"] and p["via"].get("be-business-app-patterns") == "Bash",
+          f"T-1b: reading a SKILL.md through Bash (cat, sed, head) counts as triggering the skill: {p['skills']} {p['via']}")
 
     with tempfile.TemporaryDirectory() as d:
         base = Path(d)
@@ -95,7 +104,7 @@ def main() -> int:
         (tasks / "fixtures" / "app.json").write_text(json.dumps({"files": {"scripts/check.py": "print('ok')\n",
                                                                          ".env.example": "STRIPE_SECRET_KEY=\n"}}))
         ev.TASKS = tasks
-        sc = {"skill": "be-api-design", "id": "t", "expect": "trigger", "kind": "task", "fixture": "app",
+        sc = {"skill": skill, "id": "t", "expect": "trigger", "kind": "task", "fixture": "app",
               "prompt": "SKILL: audit this repo", "max_turns": 25, "allowed_tools": ["Bash(python3:*)", "Edit", "Write"],
               "checks": {"commands": [["scripts/check\\.py"]], "no_commands": ["npm (ci|install)"],
                          "files": [{"glob": "docs/report.md", "matches": ["Verdict: (healthy|needs-attention)"]},
@@ -128,24 +137,24 @@ def main() -> int:
               f"T-5c: a skill triggered in the run without skills makes the result unreliable: {r['error']}")
 
         # T-6: validation — a task file has its own rules
-        f = tasks / "be-api-design.json"
-        f.write_text(json.dumps({"skill": "be-api-design", "scenarios": [sc]}), encoding="utf-8")
+        f = tasks / f"{skill}.json"
+        f.write_text(json.dumps({"skill": skill, "scenarios": [sc]}), encoding="utf-8")
         check(ev.validate_file(f, kind="task") == [], f"T-6: a valid task file: {ev.validate_file(f, kind='task')}")
         broken = [{**sc, "id": "a", "checks": {"all": [["x"]]}},
                   {**sc, "id": "b", "fixture": "nope"},
                   {**sc, "id": "c", "checks": {"commands": [["("]]}},
                   {**sc, "id": "d", "kind": "qa"}]
-        f.write_text(json.dumps({"skill": "be-api-design", "scenarios": broken}), encoding="utf-8")
+        f.write_text(json.dumps({"skill": skill, "scenarios": broken}), encoding="utf-8")
         errs = ev.validate_file(f, kind="task")
         check(len(errs) == 4, f"T-6b: no task check, a missing fixture, a bad regex, a wrong kind: {errs}")
 
         # T-7: task scenarios load only on request (they are costly)
-        f.write_text(json.dumps({"skill": "be-api-design", "scenarios": [sc]}), encoding="utf-8")
+        f.write_text(json.dumps({"skill": skill, "scenarios": [sc]}), encoding="utf-8")
         ev.EVALS = base / "skill_evals"
-        (ev.EVALS / "be-api-design.json").write_text(json.dumps({"skill": "be-api-design", "scenarios": [
+        (ev.EVALS / f"{skill}.json").write_text(json.dumps({"skill": skill, "scenarios": [
             {"id": "q", "expect": "trigger", "prompt": "a question long enough", "checks": {"all": [["x"]]}}]}))
-        plain = [s["id"] for s in ev.load_scenarios(["be-api-design"])]
-        only = [s["id"] for s in ev.load_scenarios(["be-api-design"], tasks=True)]
+        plain = [s["id"] for s in ev.load_scenarios([skill])]
+        only = [s["id"] for s in ev.load_scenarios([skill], tasks=True)]
         check(plain == ["q"] and only == ["t"], f"T-7: tasks only with tasks=True: {plain} {only}")
         check(any(k == "task" for _p, k in ev.scenario_files()), "T-7b: validation sees the task files")
 
