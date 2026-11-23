@@ -61,8 +61,9 @@ tf — the team factory command: install, update, packs, health check (standard 
                               # unattended: one task in Auto mode (light or normal weight) through the /tf-task loop in its
                               # own worktree (.tf/worktrees/<KEY>) with a spending limit; never merges (.tf/factory/work.py)
   tf init                     # create .tf/ — the one place for factory results (reports, register, cache, logs…)
-  tf analyze [--only a,b] [--since <commit>] [--top N] [--list]
+  tf analyze [--only a,b] [--since <commit>] [--top N] [--fail-on high] [--list]
                               # modular project review → .tf/reports/<module>.md with a checklist (.tf/factory/analyze.py)
+                              # --fail-on critical/high/medium/low: exit 1 on an open finding that severe or worse (CI)
   tf risk [--base <branch>] [--md|--json]
                               # change risk triage of this branch: what a human must review (advisory)
                               # (.tf/factory/risk_triage.py)
