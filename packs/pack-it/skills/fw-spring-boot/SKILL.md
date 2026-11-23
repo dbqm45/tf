@@ -88,7 +88,7 @@ More: `references/tests.md`.
 ## Version-dependent
 | Version | Changes relevant to this skill |
 |---|---|
-| 3.x | Java 17+, Spring Framework 6, the `jakarta.*` namespace; `ProblemDetail` support (3.0); `@ServiceConnection` and Docker Compose support (3.1); `RestClient`, virtual threads (3.2); `@MockBean` deprecated in favour of `@MockitoBean` (3.4) (release notes 3.1, 3.2, 3.4 and issue #32634, accessed 2026-10-20). Free support for 3.5 ended 2026-06-30 [secondary] — new code on 4.x |
+| 3.x | Java 17+, Spring Framework 6, the `jakarta.*` namespace; `ProblemDetail` support (3.0); `@ServiceConnection` and Docker Compose support (3.1); `RestClient`, virtual threads (3.2); `@MockBean` deprecated in favour of `@MockitoBean` (3.4) (release notes 3.1, 3.2, 3.4 and issue #32634, accessed 2026-10-20). Free support for 3.5 ended 2026-06-30, paid support until 2032-06-30 (endoflife.date, accessed 2026-11-23) — new code on 4.x |
 | 4.x | Java 17+, Spring Framework 7, Jakarta EE 11, Tomcat 11. Modularization: `spring-boot-<tech>` modules, `spring-boot-starter-<tech>` starters and test starters `spring-boot-starter-<tech>-test`; slice annotations in new packages (e.g. `org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest`). `@MockBean`/`@SpyBean` removed. `@SpringBootTest` no longer configures MockMvc or `TestRestTemplate` — `@AutoConfigureMockMvc`/`@AutoConfigureTestRestTemplate` or `RestTestClient`. Jackson 3 (`tools.jackson` packages), JSpecify instead of `org.springframework.lang`; Flyway/Liquibase require a starter; Undertow removed. HTTP clients: `@ImportHttpServices` for `@HttpExchange` interfaces |
 
 ## Checklist before handing over the work

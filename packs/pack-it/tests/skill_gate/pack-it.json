@@ -284,8 +284,8 @@
   "offline": "2026-11-22"
  },
  "fw-nestjs": {
-  "fingerprint": "8101fd6e5d7a5a3e",
-  "offline": "2026-11-18"
+  "fingerprint": "4382899a76844b2c",
+  "offline": "2026-11-23"
  },
  "fw-nextjs": {
   "fingerprint": "3f45cc66cfd84c4a",
@@ -296,8 +296,8 @@
   "offline": "2026-11-18"
  },
  "fw-spring-boot": {
-  "fingerprint": "ae9b61bfd95b5f6d",
-  "offline": "2026-11-18"
+  "fingerprint": "0040075d948fa92b",
+  "offline": "2026-11-23"
  },
  "lang-csharp": {
   "fingerprint": "ec48c156aa359fb9",
@@ -320,8 +320,8 @@
   "offline": "2026-11-18"
  },
  "lang-typescript": {
-  "fingerprint": "f82ba4229eff27c6",
-  "offline": "2026-11-20"
+  "fingerprint": "b344917f286372ea",
+  "offline": "2026-11-23"
  },
  "ops-ai-inference": {
   "fingerprint": "b01558f157966795",

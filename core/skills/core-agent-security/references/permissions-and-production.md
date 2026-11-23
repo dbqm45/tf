@@ -60,13 +60,20 @@ Bash commands (code.claude.com "Checkpointing", accessed 2026-10-18). Commit or 
 
 ## §4 Hard boundaries
 
-### §4a The Bash sandbox (opt-in)
-Measured in the factory on Claude Code 2.1.302, Linux with bubblewrap, 2026-10-18.
-- Template: `.tf/factory/templates/sandbox.settings.json` (filesystem read bans for credential directories, a network
-  allowlist of package registries and GitHub, `allowUnsandboxedCommands: false`, `autoAllowBashIfSandboxed: false`).
-- Enable it **per user**: in `.claude/settings.local.json` or `~/.claude/settings.json`. Do not write
-  `"enabled": false` into the project settings — project settings beat user settings and would silently switch off a
-  colleague's sandbox.
+### §4a Isolation levels and the Bash sandbox
+The factory's `isolation` key chooses the level (default `sandbox`); `tf isolation` shows the level and what really
+protects the session, and only a human changes it, in a terminal — the agent's attempts (`tf isolation <level>`, edits of
+the key or of the `sandbox` settings) are refused by `guard_bash` and `guard_paths`. A company sets `isolation_min`.
+- `basic` — permissions and hooks only: not isolation.
+- `sandbox` — the template `.tf/factory/templates/sandbox.settings.json` (filesystem read bans for credential
+  directories, a network allowlist of package registries and GitHub, `allowUnsandboxedCommands: false`,
+  `autoAllowBashIfSandboxed: false`): `tf code` passes it with `--settings` (a project's `"enabled": false` does not switch
+  it off — measured 2026-11-22, Claude Code 2.1.330, Linux with bubblewrap); in the default layout the installer puts it
+  into each person's `.claude/settings.local.json`. Never write `"enabled": false` into the shared project settings —
+  project settings beat user settings and would silently switch off a colleague's sandbox. Linux needs bubblewrap.
+- `container` — `tf code --container`: the factory's image with only the project mounted, a firewall with an allowlist
+  (plus `isolation_allow_domains`), no git keys (the agent commits, the human pushes), no Bash sandbox inside.
+Measured in the factory on Claude Code 2.1.302, Linux with bubblewrap, 2026-10-18 (the sandbox level):
 - Start the session in the repository root. A session started in a subdirectory does not load the project settings,
   and with a user-level sandbox `.git` becomes read-only there.
 - `git push`, `git fetch`, `git pull` are excluded from the sandbox (they need keys). Their options that run a program
@@ -80,8 +87,8 @@ Measured in the factory on Claude Code 2.1.302, Linux with bubblewrap, 2026-10-1
   - macOS (Seatbelt) has no placeholders; without bubblewrap Linux only warns; Windows outside WSL2 has no sandbox.
 - `sandbox_check.py` in the factory repository re-measures this on another machine (paid, a few `claude -p` runs).
 - Factory maintenance scripts are run by the human outside the sandbox.
-- A task that needs the network or localhost: the human runs it, or the human switches the sandbox off for a moment.
-  The agent does not propose disabling it as a way around a failure.
+- A task that needs the network or localhost: the human runs it, or lowers the level for a moment in a terminal
+  (`tf isolation basic`, then back). The agent does not propose lowering it as a way around a failure.
 
 ### §4b Paths that go around the boundary
 An HTTP allowlist and a working-directory filter are where isolation starts, not where it ends.
