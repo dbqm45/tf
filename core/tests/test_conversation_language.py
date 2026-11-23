@@ -43,6 +43,8 @@ def main() -> int:
     cfg = pm.load_yaml(ROOT / ".tf" / "factory" / "config.yaml")
     check("languages" not in cfg and "default_language" not in cfg and cfg.get("language_note"),
           "CL-1: config.yaml without `languages`/`default_language`, with a single `language_note` rule")
+    check("AskUserQuestion" in (cfg.get("language_note") or "") and "translate" in (cfg.get("language_note") or ""),
+          "CL-1b: questions and their answer options go in the human's language; English labels from scripts are translated")
     with tempfile.TemporaryDirectory() as t:
         t = Path(t)
         en = git_repo(t / "en", ["feat: add export to CSV", "fix: handle empty input in the parser",
