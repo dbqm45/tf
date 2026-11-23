@@ -20,6 +20,7 @@ change them rarely. This directory does not go into projects: it is the kit for 
 | `pack.yaml` → `org_defaults.config.task.allowed_modes` | task modes allowed in the company; a person's work style (`tf style`) chooses only among them |
 | `pack.yaml` → `org_defaults.config.models_approved` | models allowed in the company (an alias or an identifier, optionally `until`); a team and a project can only narrow the list. Checked by `model_check.py` (`tf doctor`), `profile.py` refuses a profile outside the list, the `model_guard` hook blocks a delegation with such a model and warns at the session start. Without a list nothing changes |
 | `pack.yaml` → `org_defaults.config.isolation` | the default isolation level of agent sessions (`basic`, `sandbox`, `container`); a project changes it only from a human's terminal (`tf isolation`) |
+| `pack.yaml` → `org_defaults.config.isolation_min` | the lowest level allowed in the company: `tf isolation` refuses a lower one, `tf doctor` and the session start name a project below it. For a hard guarantee use Claude Code's managed settings (below) |
 | `pack.yaml` → `org_defaults.operations.tracker` | the tracker, issue key prefixes, the Jira field with the criteria (no address and no token) |
 | `analyzers/<company>-standards/rules.yaml` | standards checked **without a model** (`tf analyze`): forbidden APIs and imports, required headers, file names |
 | `semgrep.yml` | semgrep rules in the scan of every slice of the `/tf-task` loop |
@@ -29,6 +30,14 @@ change them rarely. This directory does not go into projects: it is the kit for 
 The pack **contains no** addresses or tokens (Jira takes them from the variables `JIRA_BASE_URL`, `JIRA_EMAIL`,
 `JIRA_API_TOKEN` or `JIRA_TOKEN`) and no connections to tools (live Confluence and Jira are MCP servers in the Claude
 Code configuration).
+
+## A hard minimum: Claude Code's managed settings
+`isolation_min` is checked by the factory; a person who removes the factory can bypass it. When the company needs a
+guarantee, the administrator also puts the sandbox into Claude Code's managed settings, which users cannot override:
+`{"sandbox": {"enabled": true, "allowUnsandboxedCommands": false}}` in `managed-settings.json` — on Linux
+`/etc/claude-code/`, on macOS `/Library/Application Support/ClaudeCode/`, on Windows `C:\Program Files\ClaudeCode\`
+[unverified — check the paths in the Claude Code settings documentation before rolling out]. The factory's sandbox
+template (`.tf/factory/templates/sandbox.settings.json`) is a starting point for the rest of the `sandbox` key.
 
 ## How to generate it — step by step
 1. **The skeleton** (in a clone of the factory repository):
