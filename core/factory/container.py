@@ -20,6 +20,7 @@ import json
 import os
 import re
 import shutil
+import socket
 import subprocess
 import sys
 from pathlib import Path
@@ -78,6 +79,20 @@ def allow_domains(root: Path) -> list[str]:
     return list(dict.fromkeys(d.lower() for d in out if DOMAIN.match(d)))
 
 
+def pinned_hosts(domains: list[str]) -> list[str]:
+    """`--add-host <domain>:<address>` for each domain resolved here, on the host: the engine writes them into the
+    container's /etc/hosts (read-only inside), so the firewall and every program use one address per domain."""
+    out = []
+    for d in domains:
+        try:
+            infos = socket.getaddrinfo(d, 443, socket.AF_INET, socket.SOCK_STREAM)
+        except (socket.gaierror, OSError, UnicodeError):
+            continue                       # not resolvable here: the firewall resolves it itself at the start
+        if infos:
+            out += ["--add-host", f"{d}:{infos[0][4][0]}"]
+    return out
+
+
 def volume(root: Path) -> str:
     name = re.sub(r"[^a-z0-9_.-]", "-", root.resolve().name.lower()).strip("-.") or "project"
     return f"tf-claude-{name}"
@@ -118,13 +133,14 @@ def run_args(root: Path, rest: list[str]) -> list[str]:
     if session_settings(root):
         inside += ["--plugin-dir", "/workspace/.tf/plugin", "--settings", "/workspace/.tf/cache/session-settings.json"]
     tty = ["-t"] if sys.stdin.isatty() and sys.stdout.isatty() else []
+    domains = allow_domains(root)
     return ["run", "--rm", "-i", *tty,
             "--cap-drop", "ALL", "--cap-add", "NET_ADMIN", "--cap-add", "NET_RAW", "--cap-add", "SETUID",
             "--cap-add", "SETGID", "--cap-add", "SETPCAP", "--security-opt", "no-new-privileges",
             "--read-only", "--tmpfs", "/tmp", "--tmpfs", "/run", "--tmpfs", "/home/node:mode=1777",
             "-v", f"{root}:/workspace", "-w", "/workspace", "-v", f"{volume(root)}:/home/node/.claude",
             "-e", "TF_ISOLATION=container", "-e", "CLAUDE_CONFIG_DIR=/home/node/.claude",
-            "-e", f"TF_ALLOW_DOMAINS={','.join(allow_domains(root))}", *git_identity(),
+            "-e", f"TF_ALLOW_DOMAINS={','.join(domains)}", *pinned_hosts(domains), *git_identity(),
             image(root), *inside, *rest]
 
 

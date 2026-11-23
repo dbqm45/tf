@@ -137,12 +137,36 @@ def main() -> int:
         check(r.returncode == 0 and "2 commit" in r.stdout + r.stderr and "git push" in r.stdout + r.stderr,
               f"IC-17: after the session — how many commits wait for a push, and the command: {r.stdout}{r.stderr}")
 
+    # the addresses: resolved once on the host and handed to the engine (--add-host), so /etc/hosts in the container,
+    # the firewall and every program see the same address — round-robin DNS gave the firewall one and curl another
+    import importlib.util
+    import socket
+    spec = importlib.util.spec_from_file_location("tf_container_t", ROOT / ".tf" / "factory" / "container.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    real = socket.getaddrinfo
+
+    def fake(host, *a, **k):
+        if host == "api.github.com":
+            return [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("140.82.114.6", 443))]
+        raise socket.gaierror("no such host in the test")
+    socket.getaddrinfo = fake
+    try:
+        with tempfile.TemporaryDirectory() as t:
+            args = mod.run_args(project(Path(t), "hosts"), [])
+    finally:
+        socket.getaddrinfo = real
+    hosts = [args[i + 1] for i, a in enumerate(args[:-1]) if a == "--add-host"]
+    check(hosts == ["api.github.com:140.82.114.6"],
+          f"IC-18: the allowed domains' addresses resolved on the host go in as --add-host (unresolvable ones left out): {hosts}")
+
     df = (ROOT / ".tf" / "factory" / "container" / "Dockerfile").read_text(encoding="utf-8")
     check("@sha256:" in df and "claude-code@" in df and "TF_CONTAINER=1" in df,
           "IC-15: the Dockerfile pins the base image by digest and Claude Code by version, and sets TF_CONTAINER=1")
     fw = (ROOT / ".tf" / "factory" / "container" / "init_firewall.sh").read_text(encoding="utf-8")
     check("OUTPUT DROP" in fw and "TF_ALLOW_DOMAINS" in fw, "IC-16: the firewall drops outgoing traffic by default")
-    check("/etc/hosts" in fw, "IC-16b: the firewall pins the addresses it allows in /etc/hosts (round-robin DNS)")
+    check("/etc/hosts" not in fw.split("set -eu", 1)[-1] or ">> /etc/hosts" not in fw,
+          "IC-16b: the firewall does not write /etc/hosts (read-only in the container; the engine writes it from --add-host)")
 
     for f in fails:
         print(f"✗ {f}")
