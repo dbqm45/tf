@@ -66,6 +66,17 @@ def source_name(label: str) -> str:
     return "project" if label.startswith(".tf/config/") else "factory"
 
 
+def minimum(root: Path) -> str | None:
+    """The strictest `isolation_min` of the layers (a company or team overlay sets it; nobody lower can loosen it)."""
+    found = None
+    for _label, data in packs_module(root).config_layers(root):
+        value = (data or {}).get("isolation_min") if isinstance(data, dict) else None
+        if isinstance(value, str) and value.lower() in LEVELS:
+            if found is None or LEVELS.index(value.lower()) > LEVELS.index(found):
+                found = value.lower()
+    return found
+
+
 def configured(root: Path) -> tuple[str, str]:
     """(level, source) after all layers; an unknown value → the default with the source "factory"."""
     level, source = DEFAULT, "factory"
@@ -157,6 +168,10 @@ def state(root: Path) -> dict:
         enabled, where = sandbox_state(root)
     container = in_container()
     gaps = []
+    low = minimum(root)
+    if low and LEVELS.index(level) < LEVELS.index(low):
+        gaps.append(f"the level is below the company's minimum (isolation_min: {low}) — set it in a terminal: "
+                    f"`tf isolation {low}`")
     if enabled and sys.platform.startswith("linux") and not container and not shutil.which("bwrap"):
         gaps.append("bubblewrap (bwrap) is not installed — on Linux the sandbox cannot start without it, Claude Code only "
                     "warns (install the bubblewrap package)")
@@ -167,7 +182,7 @@ def state(root: Path) -> dict:
     elif level == "container" and not container:
         gaps.append("container chosen, but this session does not run in the factory's container (tf code --container)")
     return {"level": level, "source": source, "sandbox_enabled": enabled, "sandbox_where": where,
-            "in_container": container, "gaps": gaps}
+            "in_container": container, "minimum": low, "gaps": gaps}
 
 
 def cmd_show(root: Path, as_json: bool) -> int:
@@ -201,6 +216,10 @@ def write_level(root: Path, level: str) -> Path:
 def cmd_set(root: Path, level: str) -> int:
     if level not in LEVELS:
         print(f"✗ unknown level {level!r}; choose one of: {', '.join(LEVELS)}", file=sys.stderr)
+        return 2
+    low = minimum(root)
+    if low and LEVELS.index(level) < LEVELS.index(low):
+        print(f"✗ {level} is below the company's minimum (isolation_min: {low}); choose {low} or higher", file=sys.stderr)
         return 2
     if any(os.environ.get(v) for v in SESSION_VARS):
         print("✗ the isolation level is changed by a human in a terminal, not by an agent session "

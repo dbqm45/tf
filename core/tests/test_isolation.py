@@ -113,6 +113,19 @@ def main() -> int:
                            text=True, timeout=60, env={**HUMAN, "CLAUDE_PROJECT_DIR": str(p)})
         check(r.returncode == 0 and "sandbox" in r.stdout, f"IS-11: `tf isolation` shows the level: {r.stdout}{r.stderr}")
 
+        # I7: the company's minimum (isolation_min in org_defaults.config) — a gap below it, `set` below it refused
+        p = project(base, "min", "isolation: basic\nisolation_min: sandbox\n")
+        data = json.loads(iso(p, "show", "--json").stdout or "{}")
+        check(data.get("minimum") == "sandbox" and any("minimum" in g for g in data.get("gaps", [])),
+              f"IS-19: a level below isolation_min → a gap naming the minimum: {data}")
+        p = project(base, "min-set", "isolation: container\nisolation_min: sandbox\n")
+        r = iso(p, "set", "basic")
+        cfg = (p / ".tf" / "config" / "config.yaml").read_text(encoding="utf-8")
+        check(r.returncode == 2 and "isolation: container" in cfg and "sandbox" in r.stdout + r.stderr,
+              f"IS-20: `set` below the minimum is refused, the file unchanged: {r.returncode} {r.stdout}{r.stderr}")
+        r = iso(p, "set", "sandbox")
+        check(r.returncode == 0, f"IS-21: `set` at the minimum passes: {r.stdout}{r.stderr}")
+
         # I2: the level reaches the session. Plugin layout: `launch` builds the settings `tf code` passes with --settings
         p = project(base, "plug")
         (p / ".claude").mkdir()

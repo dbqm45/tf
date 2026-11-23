@@ -87,7 +87,11 @@ człowieka, D2 na start tylko terminal, D3 stała lista + domeny projektu, D4 `s
 - [x] I5 (2026-11-23, D1): w kontenerze `guard_bash` odmawia `git push` z instrukcją (commit tu, push z terminala
   człowieka), hook startu mówi o tym w kontenerze, a `tf code --container` po sesji podaje liczbę commitów
   czekających na push i polecenie.
-- [ ] I6 odłożone (D2); I7–I9.
+- [x] I7 (2026-11-23): `isolation_min` w warstwach (najostrzejszy wygrywa), luka w `tf isolation` / `tf doctor` / na starcie
+  sesji, `tf isolation <poziom>` poniżej minimum odmawia; opis managed settings w `org/README.md` (ścieżki
+  [niezweryfikowane]). Bez sprawdzenia minimum w `install.py --isolation` (nakładka firmy może jeszcze nie być
+  zainstalowana w chwili wyboru).
+- [ ] I6 odłożone (D2); I8 skill `core-agent-security` §4a („opt-in” → poziomy); I9 pomiar macOS (właściciel).
 
 ## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
 Plan: `docs/plans/2026-11-19-bramka-ewaluacji-i-zatwierdzone-modele.md` (źródło: pdi

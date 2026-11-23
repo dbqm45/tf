@@ -25,6 +25,9 @@ curl -s -o /dev/null -m 10 https://api.github.com && echo "allowed_domain=OK" ||
 curl -s -o /dev/null -m 10 https://example.com && echo "other_domain=OK" || echo "other_domain=DENIED"
 claude --version >/dev/null 2>&1 && echo "claude=OK" || echo "claude=MISSING"
 echo "tf_container=$TF_CONTAINER"
+echo "diag_hosts=$(grep -c . /etc/hosts) lines, github: $(grep api.github.com /etc/hosts | tr '\n' ' ')"
+echo "diag_resolve=$(getent ahostsv4 api.github.com | awk '{print $1}' | sort -u | tr '\n' ' ')"
+echo "diag_curl=$(curl -sS -o /dev/null -m 10 -w '%{remote_ip} %{http_code}' https://api.github.com 2>&1 | tail -1)"
 """
 WANT = {"user": "node", "write_etc": "DENIED", "write_workspace": "OK", "write_home": "OK", "firewall_change": "DENIED",
         "allowed_domain": "OK", "other_domain": "DENIED", "claude": "OK", "tf_container": "1"}
@@ -60,6 +63,9 @@ def main() -> int:
         fails = [f"{k}: want {v}, got {got.get(k)}" for k, v in WANT.items() if got.get(k) != v]
         if not (proj / "tf-probe").is_file():
             fails.append("the file written in /workspace is not in the project on the host")
+    if fails:                                              # what the firewall and DNS saw, for the failure report
+        print("\n".join(f"  {k}: {v}" for k, v in got.items() if k.startswith("diag_")))
+        print("  entrypoint stderr: " + r.stderr[-800:].replace("\n", " | "))
     for f in fails:
         print(f"✗ {f}")
     if r.returncode != 0 and not fails:
