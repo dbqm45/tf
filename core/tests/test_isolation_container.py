@@ -131,7 +131,8 @@ def main() -> int:
                      ["commit", "-q", "--allow-empty", "-m", "b"], ["commit", "-q", "--allow-empty", "-m", "c"]):
             subprocess.run(["git", "-c", "commit.gpgsign=false", *args], cwd=g, check=True, env=gitenv, capture_output=True)
         gitbin = bindir(base, "docker")
-        (gitbin / "git").symlink_to(shutil.which("git"))
+        (gitbin / "git").write_text(f"#!/bin/sh\nexec {shutil.which('git')} \"$@\"\n", encoding="utf-8")
+        (gitbin / "git").chmod(0o755)
         r, argv = tf(g, gitbin, "code")
         check(r.returncode == 0 and "2 commit" in r.stdout + r.stderr and "git push" in r.stdout + r.stderr,
               f"IC-17: after the session — how many commits wait for a push, and the command: {r.stdout}{r.stderr}")
