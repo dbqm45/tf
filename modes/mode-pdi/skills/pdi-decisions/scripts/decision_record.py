@@ -54,7 +54,8 @@ REQUIRED = ("artifact", "phase", "status", "version", "created", "updated", "cha
 OUTCOMES = ("approved", "changes_requested", "rejected")   # gate.decided w kontrakcie pdi 0.4.0
 KINDS = ("product", "technical", "process", "triage", "intent", "gate", "other")
 # source.kind decyzji z kontraktu pdi 0.10.0 (decyzje z pdi: konsola, ci_for_sdlc, spotkania)
-SOURCE_KINDS = ("claude-cli", "claude-ai", "slack", "confluence", "jira", "manual", "console", "ci_for_sdlc", "meeting")
+SOURCE_KINDS = ("claude-cli", "claude-ai", "slack", "confluence", "jira", "manual", "console", "ci_for_sdlc", "meeting",
+                "tf", "shipscope")
 ENTRY = ("ref", "id", "sent", "date", "by", "kind", "why", "source", "drafted_by",
          "finding", "effect",   # answer to a ci_for_sdlc finding
          "origin")           # pdi — an entry from the pdi register (decision import)

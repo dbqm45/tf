@@ -1,6 +1,6 @@
 {
   "repo": "dbqm45/di-contract",
-  "version": "0.15.1",
+  "version": "0.17.0",
   "version_files": [
     "modes/mode-pdi/tests/fixtures/pdi-contract/VERSION"
   ],
@@ -63,6 +63,9 @@
     ],
     "examples/event-run.finished.json": [
       "modes/mode-pdi/tests/fixtures/pdi-contract/event-run.finished.json"
+    ],
+    "examples/event-decision.recorded.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/event-decision.recorded.json"
     ]
   }
 }

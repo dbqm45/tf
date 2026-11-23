@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/decision.schema.json",
-  "title": "Decyzja (kontrakt suity 0.15.1)",
+  "title": "Decyzja (kontrakt suity 0.17.0)",
   "description": "Jedna decyzja w rejestrze pdi albo w nagłówku wpisu changes/CHG-n/decisions.md. Pola: docs/14-pdi-standalone.md §4.1.",
   "type": "object",
   "additionalProperties": false,
@@ -100,7 +100,9 @@
             "manual",
             "console",
             "ci_for_sdlc",
-            "meeting"
+            "meeting",
+            "tf",
+            "shipscope"
           ]
         },
         "url": {
@@ -109,6 +111,55 @@
         },
         "excerpt": {
           "type": "string"
+        }
+      }
+    },
+    "origin": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Pochodzenie decyzji podjętej w innej aplikacji suity (D1, od 0.16.0): kto jest jej właścicielem i gdzie leży oryginał. Klucz idempotencji: app + scope + local_id. Brak pola = decyzja podjęta w DI Decision (pdi).",
+      "required": [
+        "app",
+        "scope",
+        "local_id"
+      ],
+      "properties": {
+        "app": {
+          "type": "string",
+          "enum": [
+            "pdi",
+            "tf",
+            "ci_for_sdlc",
+            "shipscope"
+          ],
+          "description": "Aplikacja-właściciel decyzji; te same wartości co source zdarzenia."
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Gdzie local_id jest jednoznaczny: repo (owner/name), przestrzeń DI Definition, projekt."
+        },
+        "local_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Identyfikator decyzji u właściciela, np. D-012, CHG-12/D1, PAY-12/COV-001."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Plik z decyzją w repo właściciela, np. docs/project/decisions.md."
+        },
+        "commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$",
+          "description": "Commit, w którym zapisano tę wersję decyzji."
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://",
+          "description": "Strona decyzji u właściciela."
         }
       }
     },

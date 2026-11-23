@@ -3,7 +3,7 @@
   "type": "run.started",
   "occurred_at": "2026-11-22T09:00:00Z",
   "source": "tf",
-  "contract_version": "0.15.1",
+  "contract_version": "0.17.0",
   "payload": {
     "run": "run-CHG-12-TSK-57-1",
     "change": "CHG-12",

@@ -34,6 +34,14 @@ Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
   `PDI_TF_SIGNING_SECRET` are set in the session's environment (the same as for phases); `TF_RUN_REPORT=0` turns it off.
   No prompt, code or file content leaves the machine; a refused or unreachable pdi never blocks the session (the error
   goes to `.tf/logs/hook-errors.jsonl`). pdi keeps the runs in `agent-runs/`.
+- **Decisions in the suite index (D3, contract 0.17.0):** the hook `decision_publish.py` (session start and end) sends
+  the project's decisions to pdi as `decision.recorded`: accepted rows of `docs/project/decisions.md` (D-NNN) and
+  accepted ADRs in `04-architecture/adr/`. Each carries its origin (app `tf`, the repo, `D-012` / `ADR-0003`, the file,
+  its last commit, a GitHub link), so pdi shows it next to the decisions of other apps and links back here; the files in
+  the repo do not change. Proposals, rejected and superseded rows are not sent; decisions of a change keep
+  `decision pending`. Same switches as above (`PDI_EVENTS_URL`, `PDI_TF_SIGNING_SECRET`; `TF_DECISION_PUBLISH=0` turns
+  it off). Resending is idempotent; what pdi accepted is kept in `.tf/cache/decision-publish/sent.json`, an unreachable
+  pdi is retried next session. `python3 .claude/hooks/decision_publish.py --dry-run` prints what would be sent.
 
 - **Security scan on every PR (Z8c-2):** `phase_run.py workflow install --workflow change-check` installs
   `change-check.yml`: the same scan as in the factory's piece loop (`security_scan.py scan` from the tf skill — semgrep
