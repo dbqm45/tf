@@ -154,3 +154,9 @@ pełny pomiar wyceniamy dopiero z liczbą z pilota.
 ## Do decyzji właściciela
 - Rozszerzenie `run_skill_evals.py` o zadania (rekomendacja) zamiast flow-evals.
 - Zgoda na pilot (~1–2,5 USD) po krokach 1–2.
+
+## Stan 2026-11-23 (wieczór)
+Pozostałe scenariusze P-A3-2…4 i P-A2a-2…4 dopisane (`packs/pack-it/tests/skill_evals/tasks/`, fixtury
+`agent-repo`, `generator-fails`, `make-project`; A2a — moduły dodane do `business-app` polem `files`). Przebieg
+wzorcowy bez modelu: dobre rozwiązania A3 6/6, 5/5, 4/4; złe 3/6, 1/5, 1/4; A2a bez zmian 1/8 w każdym (testy
+na starcie zielone). Pomiar (36 przebiegów, haiku, 3 powtórzenia, prognoza ~0,7 USD) — za zgodą właściciela.

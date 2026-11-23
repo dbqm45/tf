@@ -1,0 +1,12 @@
+{
+ "files": {
+  "Makefile": "setup:\n\tpython3 -c \"import sqlite3; sqlite3.connect('dev.db').close(); print('setup ok')\"\n\ntest:\n\tpython3 -m unittest -q\n",
+  "README.md": "# Inventory\n\n## Quick start\n\n```\ncp .env.example .env\nmake setup\nmake test\n```\n",
+  ".env.example": "DB_PATH=dev.db\n",
+  "app/__init__.py": "",
+  "app/config.py": "import os\n\n\ndef settings():\n    return {\"env\": os.environ[\"APP_ENV\"], \"db\": os.environ.get(\"DB_PATH\", \"dev.db\")}\n",
+  "tests/__init__.py": "",
+  "tests/test_config.py": "import unittest\n\nfrom app.config import settings\n\n\nclass ConfigTest(unittest.TestCase):\n    def test_env(self):\n        self.assertIn(settings()[\"env\"], (\"dev\", \"test\", \"prod\"))\n",
+  ".gitignore": "dev.db\n.env\n"
+ }
+}

@@ -1,0 +1,8 @@
+{
+ "files": {
+  "CLAUDE.md": "# Project rules\n\n- Stack decisions live in docs/project/04-architecture/.\n",
+  "docs/project/README.md": "# Project record\n\nIntent and requirements are agreed; the stack is still open.\n",
+  "docs/project/02-requirements/requirements.md": "# Requirements\n\n- Booking calendar for a small clinic.\n- Web app, Polish UI.\n",
+  "README.md": "# Clinic booking\n"
+ }
+}
