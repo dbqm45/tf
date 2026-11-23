@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.4.0] — 2026-11-23
+### Added
+- **core:** commit in the container, push from the human's terminal (#405)
+
 ## [24.3.0] — 2026-11-23
 ### Added
 - **core:** run the session in the factory container with tf code --container (#404)
