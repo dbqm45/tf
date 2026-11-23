@@ -302,6 +302,9 @@ def evaluate_checks(text: str, checks: dict) -> tuple[bool, list[str]]:
     return not misses, misses
 
 
+HEREDOC = re.compile(r"(<<-?\s*['\"]?(\w+)['\"]?)[^\n]*\n.*?\n\s*\2\b", re.S)
+
+
 def task_checks(checks: dict, commands: list[str], ws: Path, timeout: int = 300) -> tuple[int, list[str]]:
     """The task groups of a scenario on the run's Bash commands and the directory it left: the number of groups and
     the misses (each beginning with "missing:")."""
@@ -311,9 +314,10 @@ def task_checks(checks: dict, commands: list[str], ws: Path, timeout: int = 300)
         alts = g if isinstance(g, list) else [g]
         if not any(re.search(rx, c, re.I) for rx in alts for c in commands):
             misses.append("missing: command " + " | ".join(alts))
+    run = [HEREDOC.sub(r"\1", c) for c in commands]   # a heredoc body is text written to a file, not a command
     for rx in checks.get("no_commands") or []:
         groups += 1
-        hit = next((c for c in commands if re.search(rx, c, re.I)), None)
+        hit = next((c for c in run if re.search(rx, c, re.I)), None)
         if hit:
             misses.append(f"missing: no command {rx} (ran: {hit[:120]})")
     for f in checks.get("files") or []:

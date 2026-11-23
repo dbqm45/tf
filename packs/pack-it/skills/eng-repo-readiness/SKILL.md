@@ -18,9 +18,11 @@ are checkable. This skill either creates such a repo from an official generator 
 fails, **stop** and report the command, the exit code and the last output lines; never patch missing files by hand.
 
 ## Path A — a new project from the generator
-1. **Precondition:** `docs/project/04-architecture/stack-decision.md` with status `accepted`, naming the generator
-   command and version. Agreement in the conversation is not enough; no file → refuse in one sentence and point to
-   arch-tech-selection. No scaffold without it.
+1. **Precondition — check it first, before any other step or command:**
+   `docs/project/04-architecture/stack-decision.md` with status `accepted`, naming the generator command and version.
+   Missing or not accepted → **stop here**: no generator, no `npm view`/`npx`, no `.bootstrap-scaffold/`, no files.
+   Answer in one sentence that path A needs an accepted stack decision and point to arch-tech-selection. A request in
+   the conversation ("set up SvelteKit"), however explicit, is not a decision.
 2. **Freshness of the starter** (a team heuristic): `npm view <pkg> version time.modified` or
    `gh api repos/<owner>/<repo> --jq .pushed_at`. Under 3 months — fresh; 3–6 — ageing; over 6 — outdated: a warning,
    not a block, with an official alternative of the same family (e.g. `sv create` instead of a community template).

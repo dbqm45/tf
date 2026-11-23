@@ -83,6 +83,11 @@ def main() -> int:
                   "after": {"cmd": [sys.executable, "-c", "import sys; sys.exit(0)"], "exit": 0}}
         groups, misses = ev.task_checks(checks, ["python3 x/readiness_check.py .", "make test"], ws)
         check(groups == 7 and misses == [], f"T-2: a good run passes every task group: {groups} {misses}")
+        heredoc = "mkdir -p docs && cat > docs/r.md <<'EOF'\nFix: run npm ci, then npx jest\nEOF\necho done"
+        groups, misses = ev.task_checks({"no_commands": ["npm (ci|install)", "npx jest"]}, [heredoc], ws)
+        check(misses == [], f"T-2d: text written through a heredoc (a report naming commands) is not a command run: {misses}")
+        groups, misses = ev.task_checks({"no_commands": ["npm (ci|install)"]}, [heredoc + " && npm ci"], ws)
+        check(len(misses) == 1, f"T-2e: a forbidden command after the heredoc still counts: {misses}")
         groups, misses = ev.task_checks(checks, ["npm ci"], ws)
         check(len(misses) == 3 and all(m.startswith("missing:") for m in misses),
               f"T-2b: missing commands and a forbidden one are misses (each a group): {misses}")
