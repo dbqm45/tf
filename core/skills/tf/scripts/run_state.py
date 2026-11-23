@@ -26,7 +26,8 @@ and the dashboard generator. The state is written by the script, not the model �
   python3 .claude/skills/tf/scripts/run_state.py answer <run-directory> S2 "<answer>" --by human:<id>
   python3 .claude/skills/tf/scripts/run_state.py qa <run-directory> "<question>" "<the human's answer, verbatim>" --by human:<id>
   python3 .claude/skills/tf/scripts/run_state.py next <katalog-przebiegu>
-  python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out FILE]
+  python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out FILE] [--open]
+  python3 .claude/skills/tf/scripts/run_state.py dashboard --live [--open] | --live --stop    # the live server
 
 `stage` sets the run's stage: intake, plan, slices, pr, needs, done. The `needs` stage requires `--needs plan` (the plan waits
 for acceptance) or `--needs stop --code <code>` (a STOP block; the code from the closed list `STOP_CODES`, `--reason` is the reason
@@ -97,9 +98,16 @@ after `done` the run waits for the human's consent (`Next: STOP`), and `verify` 
 `launch` (called by `run_report.py start`) builds the dashboard and opens it in the browser; you turn this off in
 `.claude/tf.json`: {"dashboard": false} (entirely) or {"dashboard_open": false} (builds, but does not open);
 both on by default. The variables TF_DASHBOARD=0 and TF_DASHBOARD_OPEN=0 do the same without the file.
+Live mode (`dashboard_live`, on by default; {"dashboard_live": false} or TF_DASHBOARD_LIVE=0 turns it off, CI too):
+the page opens from a local server (`dashboard_live.py`: 127.0.0.1, a free port, a random token in the address), which
+pushes every state change to the page over Server-Sent Events — no reload, the open panel and the scroll stay.
+`launch` starts it only when it opens the page (a running one is reused and its address printed); when it cannot start
+within 2 s the file address is used and a `⚠` line says why. `dashboard --live` starts it (or reuses it) and prints the
+address, `--open` also opens it, `--live --stop` stops it; idle, it exits by itself after 30 min.
 
 `dashboard` builds a standalone file .tf/runs/dashboard.html from all runs in .tf/runs/<KEY>/ and cut runs
-in .tf/runs/cuts/ (ignored by git along with the runs): columns by stage, cards with rounds, a file panel. It computes the cost and time from the transcripts
+in .tf/runs/cuts/ (ignored by git along with the runs), with the data also in `dashboard.data.js` (opened as a file, the page
+re-reads it every 5 s in place — fetch of file:// is blocked, a script element is not): columns by stage, cards with rounds, a file panel. It computes the cost and time from the transcripts
 (run_report.py) and stores them in run.json; `stage` and `step` refresh the file without computing the cost. The task card
 shows the stage from task.json and a slice bar; a ticked-off slice that lost its current evidence has a separate state (`stale`).
 A task without a run (just `tf task`, a fresh clone without `.tf/runs/`) also gets a card. The file panel splits
@@ -158,7 +166,7 @@ MAX_ROUNDS = 2      # rounds of one slice without a human decision (the first at
 TEMPLATE = HERE.parent / "templates" / "dashboard.html"
 MESSAGES = HERE.parent / "templates" / "stop_messages.json"   # stop messages for the human, one per code
 CONFIG = Path(".claude") / "tf.json"         # preview options; a personal file, a factory update does not touch it
-DEFAULTS = {"dashboard": True, "dashboard_open": True}
+DEFAULTS = {"dashboard": True, "dashboard_open": True, "dashboard_live": True}
 
 
 def now_iso() -> str:
@@ -1707,13 +1715,14 @@ def task_object(task_dir: Path, project: Path) -> dict | None:
     return obj
 
 
-def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) -> Path:
+def collect_runs(project: Path, rel_to: Path, costs: bool = True) -> list[dict]:
+    """The dashboard data (RUNS): runs from `.tf/runs/` and tasks without a run; `rel_to` is the directory the page's
+    relative links (screenshots) start from — the dashboard file's directory, also the live server's root."""
     root = project / run_report.RUNS                # the old cut layout (no longer created): the history stays in the preview
     work = project / run_report.WORK                # the tasks' working directories: .tf/runs/<KEY>/
     runs = []
-    target = out or (work / "dashboard.html")
     for d in sorted({*root.glob("*/run.json"), *work.glob("*/run.json")}):
-        obj = run_object(d.parent, project, costs, target.parent)
+        obj = run_object(d.parent, project, costs, rel_to)
         if obj:
             runs.append(obj)
     seen = {r["key"] for r in runs}
@@ -1722,51 +1731,103 @@ def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) 
         if obj:
             runs.append(obj)
     runs.sort(key=lambda r: (r["date"], r["started"]), reverse=True)
+    return runs[:MAX_RUNS]
+
+
+def runs_data(runs: list[dict]) -> str:
+    """RUNS as JSON safe inside a <script> element (`</` cannot close it)."""
+    return json.dumps(runs, ensure_ascii=False).replace("</", "<\\/")
+
+
+def render_html(runs: list[dict], data_js: str = "") -> str:
+    """The one renderer: the template with the data inline. `data_js` is the side file's name, which the page re-reads
+    every 5 s when it is opened as a file (file://); the live server leaves it empty — the page listens to events."""
     html = TEMPLATE.read_text(encoding="utf-8")
-    data = json.dumps(runs[:MAX_RUNS], ensure_ascii=False).replace("</", "<\\/")
-    html = html.replace("/*RUNS_JSON*/[]", data, 1).replace("/*GENERATED*/", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    return (html.replace("/*RUNS_JSON*/[]", runs_data(runs), 1)
+            .replace("/*DATA_JS*/", data_js.replace("\\", "/").replace('"', ""), 1)
+            .replace("/*GENERATED*/", datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+
+
+def data_file(target: Path) -> Path:
+    """The side file next to the dashboard file: `dashboard.data.js` with `tfRuns([…])` — a script element can load it
+    from file:// (fetch cannot), so the page refreshes in place without reloading."""
+    return target.with_name(target.stem + ".data.js")
+
+
+def write_atomic(path: Path, text: str) -> None:
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+def build_dashboard(project: Path, out: Path | None = None, costs: bool = True) -> Path:
+    target = out or (project / run_report.WORK / "dashboard.html")
+    runs = collect_runs(project, target.parent, costs)
     target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_suffix(".tmp")
-    tmp.write_text(html, encoding="utf-8")
-    os.replace(tmp, target)
+    side = data_file(target)
+    write_atomic(side, f"tfRuns({runs_data(runs)});\n")
+    write_atomic(target, render_html(runs, side.name))
     return target
 
 
 def options(project: Path) -> dict:
-    """Options from `.claude/tf.json` (no file or key = on by default); the variables TF_DASHBOARD=0
-    and TF_DASHBOARD_OPEN=0 turn the option off without editing the file."""
+    """Options from `.claude/tf.json` (no file or key = on by default); the variables TF_DASHBOARD=0,
+    TF_DASHBOARD_OPEN=0 and TF_DASHBOARD_LIVE=0 turn the option off without editing the file."""
     opts = dict(DEFAULTS)
     try:
         data = json.loads((project / CONFIG).read_text(encoding="utf-8"))
         opts.update({k: bool(v) for k, v in data.items() if k in DEFAULTS})
     except (OSError, ValueError, AttributeError):
         pass
-    for key, env in (("dashboard", "TF_DASHBOARD"), ("dashboard_open", "TF_DASHBOARD_OPEN")):
+    for key, env in (("dashboard", "TF_DASHBOARD"), ("dashboard_open", "TF_DASHBOARD_OPEN"),
+                     ("dashboard_live", "TF_DASHBOARD_LIVE")):
         if os.environ.get(env, "").strip().lower() in ("0", "false", "no", "off"):
             opts[key] = False
-    if os.environ.get("CI"):          # CI and tests: without opening the browser
-        opts["dashboard_open"] = False
+    if not opts["dashboard"]:
+        opts["dashboard_live"] = False
+    if os.environ.get("CI"):          # CI and tests: without opening the browser and without the live server
+        opts["dashboard_open"] = opts["dashboard_live"] = False
     return opts
 
 
-def open_file(path: Path) -> str | None:
-    """Opens a local file in the default browser: Windows `os.startfile` (a native path — `webbrowser` with a file:// address
-    can do nothing there without a message), macOS `open`, otherwise `webbrowser`. None = opened, else the reason it was not."""
+def open_file(path: Path | str) -> str | None:
+    """Opens a local file or a http://127.0.0.1 address in the default browser: Windows `os.startfile` (a native path —
+    `webbrowser` with a file:// address can do nothing there without a message), macOS `open`, otherwise `webbrowser`.
+    None = opened, else the reason it was not."""
+    url = isinstance(path, str)
+    target = path if url else str(path.resolve())
     try:
         if os.name == "nt":
-            os.startfile(str(path.resolve()))  # type: ignore[attr-defined]  # noqa: S606 — a local file, no shell
+            os.startfile(target)  # type: ignore[attr-defined]  # noqa: S606 — a local file or address, no shell
             return None
         if sys.platform == "darwin":
-            r = subprocess.run(["open", str(path.resolve())], capture_output=True, text=True)
+            r = subprocess.run(["open", target], capture_output=True, text=True)
             return None if r.returncode == 0 else (r.stderr.strip() or f"open: exit code {r.returncode}")
-        return None if webbrowser.open(path.resolve().as_uri()) else "no browser found (a cloud or SSH session)"
+        return None if webbrowser.open(target if url else path.resolve().as_uri()) else "no browser found (a cloud or SSH session)"
     except Exception as e:  # noqa: BLE001 — no browser is not an error of the run
         return str(e) or type(e).__name__
 
 
+def live_url(project: Path, start: bool) -> tuple[str | None, str | None]:
+    """The live dashboard's address (`dashboard_live.py`): a running server of this project is reused; `start` starts
+    one when none answers. Returns (address, None) or (None, the reason for the fallback to the file)."""
+    try:
+        import dashboard_live
+        info = dashboard_live.running(project)
+        if info:
+            return dashboard_live.url(info), None
+        if not start:
+            return None, None
+        return dashboard_live.start(project)
+    except Exception as e:  # noqa: BLE001 — the preview never breaks the run
+        return None, str(e) or type(e).__name__
+
+
 def launch(project: Path, open_browser: bool = True) -> str | None:
     """Run start: build the dashboard and (when the options and `open_browser` allow) open it in the browser.
-    Returns the file's address or None when the dashboard is off. An error never interrupts the run."""
+    With `dashboard_live` (default) the page opens from the local live server (`dashboard_live.py`), which pushes
+    every state change to it; a new server starts only when the page is to be opened, a running one is reused.
+    Returns the address (http:// or file://) or None when the dashboard is off. An error never interrupts the run."""
     opts = options(project)
     if not opts["dashboard"]:
         return None
@@ -1775,8 +1836,16 @@ def launch(project: Path, open_browser: bool = True) -> str | None:
         uri = path.as_uri()
     except Exception:  # noqa: BLE001 — the preview never breaks the run
         return None
-    if open_browser and opts["dashboard_open"]:
-        why = open_file(path)
+    want = open_browser and opts["dashboard_open"]
+    if opts["dashboard_live"]:
+        url, why = live_url(project, start=want)
+        if url:
+            uri = url
+        elif why:
+            print(f"⚠ The live dashboard did not start ({why}) — the file instead, it re-reads the state every 5 s.",
+                  file=sys.stderr)
+    if want:
+        why = open_file(uri if uri.startswith("http") else path)
         if why:
             print(f"⚠ The dashboard did not open ({why}) — open it with `tf status --open` or the address below.",
                   file=sys.stderr)
@@ -1891,6 +1960,8 @@ def main(argv: list[str]) -> int:
     d.add_argument("--no-cost", action="store_true")
     d.add_argument("--out", default=None)
     d.add_argument("--open", action="store_true", help="open the file in a browser")
+    d.add_argument("--live", action="store_true", help="start the live server if needed and print its address")
+    d.add_argument("--stop", action="store_true", help="with --live: stop the live server")
     args = ap.parse_args(argv[1:])
     project = Path.cwd()
     if args.cmd == "stage":
@@ -1936,10 +2007,24 @@ def main(argv: list[str]) -> int:
         return cmd_finding(Path(args.run_dir), args.slice_id, args.text, args.round, project)
     if args.cmd == "pr-body":
         return cmd_pr_body(Path(args.run_dir), args.base, project)
+    if args.live and args.stop:
+        import dashboard_live
+        print("✓ The live dashboard stopped." if dashboard_live.stop(project) else "ℹ No live dashboard is running.")
+        return 0
     path = build_dashboard(project, Path(args.out) if args.out else None, costs=not args.no_cost)
-    print(path.resolve().as_uri())
+    target = path.resolve().as_uri()
+    if args.live:
+        opts = options(project)
+        url, why = live_url(project, start=True) if opts["dashboard_live"] else (None, (
+            "the CI variable is set" if os.environ.get("CI") else
+            "turned off: dashboard_live/dashboard in .claude/tf.json or TF_DASHBOARD_LIVE=0 / TF_DASHBOARD=0"))
+        if url:
+            target = url
+        else:
+            print(f"⚠ The live dashboard did not start ({why}) — the file instead.", file=sys.stderr)
+    print(target)
     if args.open:
-        why = open_file(path)
+        why = open_file(target if target.startswith("http") else path)
         if why:
             print(f"⚠ Not opened ({why}) — open the address above in a browser.", file=sys.stderr)
     return 0

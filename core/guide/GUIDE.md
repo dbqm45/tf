@@ -140,7 +140,7 @@ Shared agents, available to every persona:
 ## 4. Modes and automation on request
 | What | How | When |
 |---|---|---|
-| the factory loop (in the core) | `/tf-task <task>` or `claude --agent tf-task` | one task with acceptance criteria → a specification, a plan of slices, a commit per slice, evidence, one PR, a cost report; a live preview in `.tf/runs/dashboard.html`; for a visible UI change also screenshots before/after, looked at against the criteria (`--visual` / `--no-visual`, only when worth it); guide: `.tf/factory/LOOP.md` |
+| the factory loop (in the core) | `/tf-task <task>` or `claude --agent tf-task` | one task with acceptance criteria → a specification, a plan of slices, a commit per slice, evidence, one PR, a cost report; a live preview (a local server that pushes every state change to the page, or `.tf/runs/dashboard.html`); for a visible UI change also screenshots before/after, looked at against the criteria (`--visual` / `--no-visual`, only when worth it); guide: `.tf/factory/LOOP.md` |
 | Agent teams (`mode-team`, `tf add mode-team`) | `team_switch.py on`, a new session, `/team-session <task>` | the roles must talk to each other along the way; experimental and expensive; guide: `.tf/factory/packs/mode-team/GUIDE.md` |
 | A code audit (`pack-it`) | after the scope is approved: the `/code-audit` workflow | a full audit in many dimensions with a ranking (the `eng-code-audit` skill) |
 | An Event Storming simulation (`pack-it`) | `/ddd-es-simulation` or `claude --agent es-host` | facilitation training with AI participants |

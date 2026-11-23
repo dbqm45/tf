@@ -147,8 +147,12 @@ computes it from the session transcripts, not the model, so it uses no tokens. T
 price list — with a subscription an equivalent, not an invoice. During the run, one status line:
 `python3 .claude/skills/tf/scripts/run_report.py status <directory>`.
 
-A live preview: `python3 .claude/skills/tf/scripts/run_state.py dashboard` builds `.tf/runs/dashboard.html` (you open
-the file in a browser, it refreshes itself every 5 s). The columns are the run's stages (Intake, Plan, Slices, PR,
+A live preview: `python3 .claude/skills/tf/scripts/run_state.py dashboard` builds `.tf/runs/dashboard.html` (opened
+as a file, it re-reads its data every 5 s in place). `run_state.py dashboard --live [--open]` serves it from a small local
+server (`dashboard_live.py`: only 127.0.0.1, a free port, a random token in the address) that pushes every state change to
+the page at once over Server-Sent Events — no reload, the open panel and the scroll stay; a "live" pill shows the
+connection ("offline — retrying" when the server is gone). One server per project (`.tf/runs/.live.json`), it exits by
+itself after 30 min with no page open and no change; `--live --stop` stops it. The columns are the run's stages (Intake, Plan, Slices, PR,
 Waiting for the human, Done), a card shows the rounds of the
 current slice (R1, R2…) and the loop's steps (test, code, verify, scan, scope) and a bar of slices S1, S2… — a purple
 slice was ticked off but has no current evidence (a file changed after the verification). A card also shows the task's
@@ -161,8 +165,11 @@ preview and opens it in a browser at any moment. The loop records the state with
 `run_state.py step`; a script computes cost and time from the transcripts (`dashboard` without `--no-cost`).
 `run_report.py start` builds the dashboard itself and opens it in a browser (a cut with a key, called by the pdi phase,
 only builds it). You turn this off in `.claude/tf.json` (a personal file, a factory update does not touch it):
-`{"dashboard": false}` — not at all, `{"dashboard_open": false}` — it builds but does not open; both are `true` by
-default. The variables `TF_DASHBOARD=0` and `TF_DASHBOARD_OPEN=0` do the same.
+`{"dashboard": false}` — not at all, `{"dashboard_open": false}` — it builds but does not open, `{"dashboard_live": false}`
+— the file instead of the live server; all are `true` by default. The variables `TF_DASHBOARD=0`, `TF_DASHBOARD_OPEN=0` and
+`TF_DASHBOARD_LIVE=0` do the same; with `CI` set nothing opens and no server starts. `run_report.py start` (and
+`tf status --open`) opens the live server's address and, when it cannot start (a sandbox blocks the socket), falls back to
+the file with a `⚠` line saying why.
 
 Agreement of the changes with the plan (`python3 .claude/skills/tf/scripts/plan_drift.py <directory> --base main`):
 changed files vs the slices' files, changes outside the plan, the plan's coverage of the diff and tests in the diff —

@@ -124,7 +124,7 @@ def main() -> int:
         for rel in (Path(".tf") / "factory", Path(".claude") / "skills" / "tf"):     # a project with the factory installed
             shutil.copytree(ROOT / rel, p / rel, ignore=shutil.ignore_patterns("__pycache__"))
         (p / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "1.0.0"}), encoding="utf-8")
-        env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg), "TF_DASHBOARD_OPEN": "0"}
+        env = {**os.environ, "CLAUDE_CONFIG_DIR": str(cfg), "TF_DASHBOARD_OPEN": "0", "TF_DASHBOARD_LIVE": "0"}   # the file, no server
         r = subprocess.run([sys.executable, str(CTF), "status", "--open"], cwd=p, capture_output=True, text=True,
                            env=env, timeout=120)
         check(r.returncode == 0 and (p / ".tf" / "runs" / "dashboard.html").is_file() and "IMP-1" in r.stdout,
