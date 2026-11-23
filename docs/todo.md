@@ -91,7 +91,9 @@ człowieka, D2 na start tylko terminal, D3 stała lista + domeny projektu, D4 `s
   sesji, `tf isolation <poziom>` poniżej minimum odmawia; opis managed settings w `org/README.md` (ścieżki
   [niezweryfikowane]). Bez sprawdzenia minimum w `install.py --isolation` (nakładka firmy może jeszcze nie być
   zainstalowana w chwili wyboru).
-- [ ] I6 odłożone (D2); I8 skill `core-agent-security` §4a („opt-in” → poziomy); I9 pomiar macOS (właściciel).
+- [x] I8 (2026-11-23): `core-agent-security`, `references/permissions-and-production.md` §4a — poziomy izolacji zamiast
+  „opt-in”, pomiar `--settings`, kontener, zmiana poziomu tylko w terminalu; bramka skilla w obszarze `all`.
+- [ ] I6 odłożone (D2); I9 pomiar macOS (`scripts/sandbox_check.py`, uruchamia właściciel).
 
 ## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
 Plan: `docs/plans/2026-11-19-bramka-ewaluacji-i-zatwierdzone-modele.md` (źródło: pdi
