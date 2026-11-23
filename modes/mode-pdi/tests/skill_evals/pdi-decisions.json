@@ -312,36 +312,36 @@
    ]
   },
   {
-    "id": "faza-design-tabela-ramek",
-    "expect": "trigger",
-    "prompt": "pdi uruchomiło fazę design dla CHG-12. Wymagania są w requirements.md, projektantka ma ekrany w Figmie. Co mam oddać i jak sprawdzić przed bramką design-review? Odpowiedz zwięźle.",
-    "checks": {
-      "all": [
-        [
-          "design\\.md"
-        ],
-        [
-          "Wymaganie \\| Ścieżka \\| Stan \\| Ramka",
-          "Requirement \\| Journey \\| State \\| Frame",
-          "tabel\\w* ramek"
-        ],
-        [
-          "design_check"
-        ],
-        [
-          "node-id|link\\w* do ramk\\w*"
-        ],
-        [
-          "Pytania do bramki|Gate questions|pytani\\w*"
-        ]
-      ],
-      "none": []
-    },
-    "rubric": [
-      "design.md z tabelą ramek wg kontraktu pdi (conventions.design), szablon templates/design.md",
-      "ramki projektanta dopasowane, nie rysowane przez agenta bez prośby",
-      "design_check.py check CHG-12 przed bramką; braki idą jako pytania do pdi"
-    ]
+   "id": "faza-design-tabela-ramek",
+   "expect": "trigger",
+   "prompt": "pdi uruchomiło fazę design dla CHG-12. Wymagania są w requirements.md, projektantka ma ekrany w Figmie. Co mam oddać i jak sprawdzić przed bramką design-review? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "design\\.md"
+     ],
+     [
+      "Wymaganie \\| Ścieżka \\| Stan \\| Ramka",
+      "Requirement \\| Journey \\| State \\| Frame",
+      "tabel\\w* ramek"
+     ],
+     [
+      "design_check"
+     ],
+     [
+      "node-id|link\\w* do ramk\\w*"
+     ],
+     [
+      "Pytania do bramki|Gate questions|pytani\\w*"
+     ]
+    ],
+    "none": []
+   },
+   "rubric": [
+    "design.md z tabelą ramek wg kontraktu pdi (conventions.design), szablon templates/design.md",
+    "ramki projektanta dopasowane, nie rysowane przez agenta bez prośby",
+    "design_check.py check CHG-12 przed bramką; braki idą jako pytania do pdi"
+   ]
   },
   {
    "id": "zamiar-ograniczenia-porazka",
@@ -371,23 +371,46 @@
     ]
    }
   },
-    {
-      "id": "adr-fazy-architecture",
-      "expect": "trigger",
-      "prompt": "Tryb mode-pdi: pdi uruchomił fazę architecture zmiany CHG-5 (persona tomasz). Gdzie zapisać ADR tej zmiany — w design.md czy gdzie indziej? Odpowiedz zwięźle.",
-      "checks": {
-        "all": [
-          [
-            "architecture\\.md"
-          ],
-          [
-            "faz\\w* design",
-            "natali\\w*",
-            "projekt\\w* doświadczeni\\w*",
-            "ramek"
-          ]
-        ]
-      }
-    }
-]
+  {
+   "id": "adr-fazy-architecture",
+   "expect": "trigger",
+   "prompt": "Tryb mode-pdi: pdi uruchomił fazę architecture zmiany CHG-5 (persona tomasz). Gdzie zapisać ADR tej zmiany — w design.md czy gdzie indziej? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "architecture\\.md"
+     ],
+     [
+      "faz\\w* design",
+      "natali\\w*",
+      "projekt\\w* doświadczeni\\w*",
+      "ramek"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "decyzje-suity-przed-planem",
+   "expect": "trigger",
+   "prompt": "Tryb mode-pdi, bez serwera MCP pdi w tej sesji. Zanim zaplanuję zmianę progu darmowej dostawy, chcę wiedzieć, czy ktoś w suicie (bramki w pdi, DI Definition) już coś o tym zdecydował. Jak to sprawdzić i co, jeśli kopia jest stara? Odpowiedz zwięźle.",
+   "checks": {
+    "all": [
+     [
+      "decision_cache\\.py search"
+     ],
+     [
+      "kopi\\w*"
+     ],
+     [
+      "refresh",
+      "odśwież\\w*",
+      "pdi-records"
+     ]
+    ],
+    "none": [
+     "edytuj\\w* (tę |tą )?kopi\\w*"
+    ]
+   }
+  }
+ ]
 }

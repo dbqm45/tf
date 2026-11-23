@@ -53,6 +53,10 @@ it only in the text of an answer — but you also do not decide on your own what
 3. **The pdi register:** if the session has the MCP tool `record_decision` of the pdi server, `decision_record.py decision pending
    --change CHG-12` gives ready arguments; call it, and record the returned number: `decision mark CHG-12/Dn --id DEC-41`.
    Before you propose a solution in an area already being decided, check `find_decisions`.
+   Without the pdi server, search the local copy of the suite index (D8) together with the project's own decisions:
+   `python3 .claude/hooks/decision_cache.py search <words>`; the session start line says how old the copy is, and
+   `decision_cache.py refresh` updates it (`pdi-records changes`). The copy is read-only: a decision of another app is
+   changed in that app, never in the copy.
 4. **Without the pdi server** (the tool is missing or does not respond): you do not push, you do not assign a number, you do not guess. The entry
    stays unsent; you tell the human that it is waiting. When the server is back: `decision pending`, `record_decision`, `mark`
    (repeating an identical record makes the register return it as an existing entry — no duplicates).
