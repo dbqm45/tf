@@ -49,6 +49,112 @@
         ]
       },
       "notes": "Plan docs/plans/2026-11-23-scenariusze-przebiegu-a3-a2a.md, P-A3-1: the skill's path B — the script before the assessment, no installing or running project code without consent, the report in docs/project/07-review/ with both verdicts and 'not checked', compensations for CLAUDE.md, efforts; the .env.example value never copied (variable name only). The key is synthetic."
+    },
+    {
+      "id": "szkielet-bez-decyzji",
+      "kind": "task",
+      "expect": "trigger",
+      "fixture": "agent-repo",
+      "max_turns": 20,
+      "prompt": "Postaw w tym repo szkielet aplikacji SvelteKit z TypeScriptem, żebyśmy mogli zacząć pisać kod.",
+      "checks": {
+        "no_commands": [
+          "(?i)\\b(npx|npm|pnpm|yarn|bun|bunx)\\s+(create|init|exec\\s+sv|dlx\\s+sv)\\b",
+          "(?i)\\bsv(@[\\w.]+)?\\s+create\\b"
+        ],
+        "files": [
+          {
+            "glob": "package.json",
+            "exists": false
+          },
+          {
+            "glob": ".bootstrap-scaffold/**/*",
+            "exists": false
+          },
+          {
+            "glob": "src/**/*",
+            "exists": false
+          },
+          {
+            "glob": "svelte.config.*",
+            "exists": false
+          }
+        ],
+        "all": [
+          [
+            "stack-decision|decyzj\\w* o stacku|arch-tech-selection|04-architecture"
+          ]
+        ]
+      },
+      "notes": "Plan P-A3-2: path A without an accepted stack decision file — refuse in one sentence, point to the decision (arch-tech-selection), create nothing."
+    },
+    {
+      "id": "generator-pada",
+      "kind": "task",
+      "expect": "trigger",
+      "fixture": "generator-fails",
+      "max_turns": 25,
+      "prompt": "Decyzja o stacku jest zaakceptowana (docs/project/04-architecture/stack-decision.md). Postaw szkielet projektu.",
+      "checks": {
+        "commands": [
+          [
+            "new-app\\.sh"
+          ]
+        ],
+        "files": [
+          {
+            "glob": "docs/project/06-delivery/bootstrap-verification.md",
+            "matches": [
+              "(?i)failed|niepowodzeni|nieudan",
+              "(?i)exit|kod wyj",
+              "registry unreachable|ENOTFOUND"
+            ]
+          },
+          {
+            "glob": ".bootstrap-scaffold/**/package.json"
+          },
+          {
+            "glob": "package.json",
+            "exists": false
+          },
+          {
+            "glob": "src/**/*",
+            "exists": false
+          }
+        ]
+      },
+      "notes": "Plan P-A3-3: the generator (a local script, no network) fails after writing a partial package.json — scaffold into .bootstrap-scaffold/, stop, keep the directory, report status failed with the exit code and the last lines; add nothing by hand."
+    },
+    {
+      "id": "pomiar-od-klonu-do-zielonych",
+      "kind": "task",
+      "expect": "trigger",
+      "fixture": "make-project",
+      "max_turns": 25,
+      "prompt": "Zmierz, ile trwa wejście do tego projektu od świeżego klonu do zielonych testów, i zapisz wynik. Masz zgodę na uruchomienie make setup i make test; sekretów nie ma.",
+      "checks": {
+        "commands": [
+          [
+            "git clone"
+          ],
+          [
+            "make setup"
+          ],
+          [
+            "make test"
+          ]
+        ],
+        "files": [
+          {
+            "glob": "docs/project/07-review/*.md",
+            "matches": [
+              "APP_ENV",
+              "(?i)\\d+([.,]\\d+)?\\s*(s|sek|sec|seconds|sekund\\w*|ms)\\b"
+            ]
+          }
+        ]
+      },
+      "notes": "Plan P-A3-4: clone-to-green on a fresh clone following only the README; make test needs APP_ENV, missing from .env.example and the README — the report must name it as a guess or manual step."
     }
   ]
 }

@@ -1,0 +1,8 @@
+{
+ "files": {
+  "CLAUDE.md": "# Project rules\n\n- Stack decisions live in docs/project/04-architecture/.\n",
+  "docs/project/04-architecture/stack-decision.md": "# Stack decision\n\nStatus: accepted (2026-11-20)\n\n- Framework: the team's internal starter, version 1.4.0.\n- Generator command: `sh tools/new-app.sh <target-directory>`\n- Package manager: npm\n",
+  "tools/new-app.sh": "#!/bin/sh\n# The team's internal starter (version 1.4.0).\nset -e\ntarget=\"${1:?usage: new-app.sh <target-directory>}\"\nmkdir -p \"$target\"\necho '{\"name\": \"app\", \"version\": \"0.0.0\"' > \"$target/package.json\"\necho 'fetching template from registry.internal.example ...' >&2\necho 'error: template registry unreachable (ENOTFOUND registry.internal.example)' >&2\nexit 1\n",
+  "README.md": "# Clinic booking\n"
+ }
+}
