@@ -11,6 +11,11 @@ freezing is lifted by `tf task reopen <KEY> <file> --by human:<id> --reason "…
 It keeps agents out of the sweep archive (docs/project/archive/sweep/, the core-sweep skill): notes found no longer true.
 Read and Edit/Write inside it are denied, and Grep/Glob only when their path or pattern points into it — a repo-wide search
 is not blocked (the `.ignore` file in the archive keeps it out of ripgrep results). TF_ARCHIVE_READ=1 lifts the block.
+
+It keeps the isolation level out of the agent's reach (plan docs/plans/2026-11-20-poziomy-izolacji.md, slice I3): an
+Edit/Write that changes the `isolation` key of .tf/config/config.yaml, the `sandbox` key of .claude/settings*.json, or
+writes the session settings (.tf/plugin|cache/session-settings.json) or the sandbox template is refused — a human changes
+the level in a terminal (`tf isolation <level>`).
 """
 from __future__ import annotations
 
@@ -43,6 +48,65 @@ SAFE_ENV = re.compile(r"\.env\.(example|sample|template|dist)$", re.IGNORECASE)
 
 # Self-modification of the safeguards requires human approval
 GUARDRAILS = re.compile(r"(^|/)\.claude/(settings(\.local)?\.json|hooks/|cleanroom\.json)|(^|/)\.git/")
+
+# The isolation level: only a human lowers it (tf isolation in a terminal)
+ISOLATION_FILES = re.compile(r"^\.tf/(cache|plugin)/session-settings\.json$|^\.tf/factory/templates/sandbox\.settings\.json$")
+SETTINGS_FILES = re.compile(r"^\.claude/settings(\.local)?\.json$")
+ISOLATION_CONFIG = ".tf/config/config.yaml"
+ISOLATION_KEY = re.compile(r"^isolation\s*:\s*['\"]?([\w-]*)", re.M)
+ISOLATION_MSG = ("The isolation level is changed by a human in a terminal (`tf isolation <level>`), not from inside a "
+                 "session")
+
+
+def after_edit(tool: str, ti: dict, current: str | None) -> str | None:
+    """The file's text after this Edit/Write/MultiEdit, or None when it cannot be worked out."""
+    if tool == "Write":
+        return ti.get("content") if isinstance(ti.get("content"), str) else None
+    if current is None:
+        return None
+    edits = ti.get("edits") if tool == "MultiEdit" else [ti]
+    text = current
+    for e in edits if isinstance(edits, list) else []:
+        old, new = e.get("old_string"), e.get("new_string")
+        if not isinstance(old, str) or not isinstance(new, str) or old not in text:
+            return None
+        text = text.replace(old, new) if e.get("replace_all") else text.replace(old, new, 1)
+    return text
+
+
+def sandbox_of(text: str | None):
+    try:
+        data = json.loads(text) if text is not None else None
+    except ValueError:
+        return "?"
+    return data.get("sandbox") if isinstance(data, dict) else "?"
+
+
+def isolation_reason(tool: str, rel: str, ti: dict, root: str) -> str | None:
+    """Why this write lowers (or may lower) the isolation level, or None."""
+    if ISOLATION_FILES.search(rel):
+        return f"{rel} carries the session's isolation (the sandbox). {ISOLATION_MSG}."
+    if rel != ISOLATION_CONFIG and not SETTINGS_FILES.search(rel):
+        return None
+    try:
+        current = (Path(root) / rel).read_text(encoding="utf-8")
+    except OSError:
+        current = None
+    new = after_edit(tool, ti, current)
+    if rel == ISOLATION_CONFIG:
+        before = ISOLATION_KEY.search(current or "")
+        after = ISOLATION_KEY.search(new) if new is not None else None
+        if new is None:
+            changed = any("isolation" in str(v) for v in (ti.get("old_string"), ti.get("new_string"), ti.get("edits")))
+        else:
+            changed = (before.group(1) if before else None) != (after.group(1) if after else None)
+        return f"the `isolation` key of {rel}. {ISOLATION_MSG}." if changed else None
+    if new is None:
+        changed = any("sandbox" in str(v) for v in (ti.get("old_string"), ti.get("new_string"), ti.get("edits")))
+    else:
+        changed = sandbox_of(current) != sandbox_of(new)
+    return f"the `sandbox` key of {rel}. {ISOLATION_MSG}." if changed else None
+
 
 # Context economy: dependencies, artifacts and lockfiles do not enter the model window. Here rather than in permissions.deny,
 # because the Bash sandbox turns Read(...) deny rules into a read ban for programs (npm test, build).
@@ -142,6 +206,12 @@ def main() -> None:
         norm = p.replace("\\", "/")
         if SECRET_PATHS.search(norm) and not SAFE_ENV.search(norm):
             decide("deny", f"Access to a file with secrets ({p}) is blocked. Use environment variables and *.example files.")
+        if tool in ("Edit", "Write", "MultiEdit"):
+            root = data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", "")
+            rel = project_relative(norm, root)
+            why = isolation_reason(tool, rel, ti, root or ".") if rel is not None else None
+            if why:
+                decide("deny", f"A change to {why}")
         if tool in ("Edit", "Write", "NotebookEdit") and GUARDRAILS.search(norm):
             decide("ask", f"A change to the safeguards' configuration or .git ({p}) needs a human's consent.")
         if tool in ("Edit", "Write", "NotebookEdit"):

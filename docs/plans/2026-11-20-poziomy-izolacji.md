@@ -2,7 +2,7 @@
 
 Data: 2026-11-20. Prośba właściciela: po uruchomieniu fabryki ani fabryka, ani Claude nie mogą nic zrobić poza
 folderem projektu. Uzasadnienie i ocena poziomów: `docs/insights/isolation.md`. Decyzje właściciela zapisane 2026-11-22
-(sekcja „Decyzje właściciela”). Stan: I1 i I2 zrobione (2026-11-22), I3–I9 otwarte.
+(sekcja „Decyzje właściciela”). Stan: I1–I3 zrobione (2026-11-22/23), I4–I9 otwarte.
 
 ## Cel
 

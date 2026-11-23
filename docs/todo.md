@@ -73,7 +73,10 @@ człowieka, D2 na start tylko terminal, D3 stała lista + domeny projektu, D4 `s
   Pomiar (2026-11-22, za zgodą, 0,0067 USD, Claude Code 2.1.330, Linux z bubblewrap): projektowe `"enabled": false`
   nie wyłącza sandboxa podanego przez `--settings` (zapis do `~` odrzucony; bez `--settings` przeszedł).
   Otwarte: skill `core-agent-security` §4a nadal mówi „opt-in” — do I8.
-- [ ] I3 hook startu, pasek stanu, blokada obniżenia z sesji.
+- [x] I3 (2026-11-23): hook `isolation_notice` (SessionStart: poziom, czego nie chroni, luki), poziom na pasku stanu
+  (`container`, `TF_ISOLATION`, sandbox z ustawień albo `⚠ no sandbox`), `guard_bash` i `guard_paths` odmawiają
+  obniżenia poziomu z sesji (`tf isolation <poziom>`, `isolation.py set`, `--isolation`, klucz `isolation`, klucz
+  `sandbox` w `.claude/settings*.json`, pliki ustawień sesji, szablon sandboxa); `core/tests/test_isolation_hooks.py`.
 - [ ] I4 obraz i `tf code --container` → I5 kontener tylko commituje; I6 odłożone (D2); I7–I9.
 
 ## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19

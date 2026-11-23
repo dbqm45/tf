@@ -2,7 +2,11 @@
 """
 Claude Code status line: model and effort, context fill, cache, session cost, limits — with no model tokens.
 
-  Opus · high │ context 42% 84k │ cache 91% │ $0.42 │ 5h 23%
+  Opus · high │ sandbox │ context 42% 84k │ cache 91% │ $0.42 │ 5h 23%
+
+The isolation part (slice I3 of the isolation plan) says what protects this session: `container` (TF_CONTAINER=1),
+the level `tf code` started it with (TF_ISOLATION), else `sandbox` when the project's settings enable it, else
+`⚠ no sandbox`. It reads only environment variables and two small JSON files.
 
 Warns (⚠) when the context exceeds the CLAUDE_CONTEXT_WARN_K threshold (default 100k — the same as the
 context_guard hook), when the cache is cold (the next turn will read the whole history without a discount) and when a limit is near.
@@ -13,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from pathlib import Path
 
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
@@ -25,12 +30,30 @@ def fmt_k(n: float) -> str:
     return f"{n / 1000:.0f}k" if n >= 1000 else str(int(n))
 
 
+def isolation(d: dict) -> str:
+    if os.environ.get("TF_CONTAINER") == "1":
+        return "container"
+    level = os.environ.get("TF_ISOLATION")
+    if level in ("sandbox", "container"):
+        return level
+    root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or (d.get("workspace") or {}).get("project_dir") or os.getcwd())
+    for rel in (".claude/settings.local.json", ".claude/settings.json"):
+        try:
+            sb = json.loads((root / rel).read_text(encoding="utf-8")).get("sandbox")
+        except (OSError, ValueError, AttributeError):
+            continue
+        if isinstance(sb, dict) and isinstance(sb.get("enabled"), bool):
+            return "sandbox" if sb["enabled"] else "⚠ no sandbox"
+    return "⚠ no sandbox"
+
+
 def line(d: dict) -> str:
     parts = []
     model = (d.get("model") or {}).get("display_name") or (d.get("model") or {}).get("id") or "?"
     effort = (d.get("effort") or {}).get("level")
     agent = (d.get("agent") or {}).get("name")
     parts.append(" · ".join(x for x in (agent, model, effort) if x))
+    parts.append(isolation(d))
 
     cw = d.get("context_window") or {}
     cu = cw.get("current_usage") or {}

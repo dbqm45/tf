@@ -298,6 +298,13 @@ def _module(name: str):
     return mod
 
 
+# The isolation level is lowered only by a human in a terminal (plan of isolation levels, slice I3): `tf isolation <level>`,
+# `isolation.py set`, `install --isolation` — also with the session variables removed (`env -u CLAUDECODE …`).
+ISOLATION_CMD = re.compile(r"\btf(\.py)?\s+isolation\s+(?!-)\S|\bisolation\.py\s+set\b|\binstall(\.py)?\b[^;&|]*\s--isolation\b")
+ISOLATION_MSG = ("the isolation level is changed by a human in a terminal (`tf isolation <level>`), not from inside a "
+                 "session")
+
+
 def check_writes(data: dict, cmd: str) -> None:
     targets = write_targets(cmd)
     if not targets:
@@ -313,6 +320,9 @@ def check_writes(data: dict, cmd: str) -> None:
         if paths.SECRET_PATHS.search(norm) and not paths.SAFE_ENV.search(norm):
             decide("deny", f"Blocked: writing to a file with secrets ({t}). Use environment variables and "
                            "*.example files; a human changes secrets.")
+        if inside and (paths.ISOLATION_FILES.search(norm) or (norm == paths.ISOLATION_CONFIG and "isolation" in cmd)
+                       or (paths.SETTINGS_FILES.search(norm) and re.search(r"sandbox|enabled", cmd))):
+            decide("deny", f"Blocked: a shell write to the isolation settings ({t}) — {ISOLATION_MSG}.")
         if paths.GUARDRAILS.search(norm):
             decide("ask", f"Needs consent: a shell write to the safeguards' configuration or .git ({t}).")
         if inside and "$" not in norm:
@@ -364,6 +374,8 @@ def main() -> None:
     for pattern, reason in DENY:
         if re.search(pattern, cmd, re.IGNORECASE):
             decide("deny", f"Blocked: {reason}. If it is necessary, ask a human to run it by hand.")
+    if ISOLATION_CMD.search(cmd):
+        decide("deny", f"Blocked: {ISOLATION_MSG}.")
     if git_exec_option(cmd):
         decide("deny", "Blocked: a git option that runs any program (--upload-pack, --receive-pack, "
                        "--exec). If it is necessary, ask a human to run it by hand.")
