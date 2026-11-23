@@ -113,9 +113,9 @@ ALWAYS_OWNED = (".claude/cleanroom.json",)   # assembled from the core and packs
 REQUIRED = (".tf/factory/", ".claude/hooks/")
 GENERATED = (".claude/agents/_generated/", ".claude/catalog.md", ".tf/plugin/agents/")   # built in the project by .tf/factory/build.py
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
-# Layouts (docs/plans/2026-11-20-tryb-fabryki-plan.md). `default` (the classic layout, the default): the factory lives in
-# .claude/ and every Claude Code session in the project loads it, the Desktop app too. `plugin` (factory mode, opt-in
-# with `--layout plugin`): the factory lives in a local plugin that only a factory session loads (`tf code`: claude
+# Layouts (docs/plans/2026-11-20-tryb-fabryki-plan.md). `default` (the classic layout, `--layout default`): the factory
+# lives in .claude/ and every Claude Code session in the project loads it, the Desktop app too. `plugin` (factory mode,
+# the default since T5): the factory lives in a local plugin that only a factory session loads (`tf code`: claude
 # --plugin-dir .tf/plugin --settings .tf/plugin/session-settings.json) — a plain `claude` and the Desktop app, which
 # cannot pass --plugin-dir, see no factory skill, agent, hook, rule or status line.
 LAYOUTS = ("default", "plugin")
@@ -1051,10 +1051,10 @@ def _main(argv: list[str], tmp: Path) -> int:
         print(f"ℹ Migrating an install of {manifest.get('source') or 'an older factory'} "
               f"(version {manifest.get('version')}) — packs: {', '.join(packs) or 'none'}.")
 
-    # the classic layout is the default: a new install and an update of an install whose manifest has no `layout` keep
-    # the factory in .claude/ (every session loads it, the Desktop app too); a plugin install stays plugin until
-    # `--layout default`, and `--layout plugin` opts in (T5 made the plugin the default; reverted, see the plan)
-    layout = opts.get("layout") or (manifest or {}).get("layout") or "default"
+    # factory mode is the default (plan 2026-11-20, T5): a new install and an update of an older install (a manifest
+    # without `layout`) go to the plugin layout; `--layout default` (also through update.py) moves to the classic layout
+    # in .claude/, which every session loads (the Desktop app too), and back with `--layout plugin`
+    layout = opts.get("layout") or (manifest or {}).get("layout") or "plugin"
     if layout not in LAYOUTS:
         print(f"✗ Unknown --layout {layout!r}. Available: {', '.join(LAYOUTS)}")
         return 2

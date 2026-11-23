@@ -123,7 +123,7 @@ Claude Code's sandbox limits the files and the network of commands) or `containe
 only the project). `tf isolation` shows the chosen level and what really protects the current session; `tf doctor`
 shows it too. You change it in a terminal, outside Claude Code: `tf isolation <level>` or `tf install --isolation
 <level>` — an agent session cannot lower its own isolation. With `sandbox` (and inside a container) `tf code` starts the session
-with the factory's sandbox; in the classic (default) layout the installer puts it into your `.claude/settings.local.json` (your
+with the factory's sandbox; in the default layout the installer puts it into your `.claude/settings.local.json` (your
 own `sandbox` setting stays). On Linux the sandbox needs bubblewrap (`bwrap`). Known limits: services on the host's
 localhost are unreachable from commands, and on Linux `git add -A` can trip over the placeholder files.
 

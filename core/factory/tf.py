@@ -50,10 +50,9 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf task mode <KEY> [plan|normal|auto]   # who approves: plan stops after the plan, normal waits for the human's approval of the plan, auto does not
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
-  tf code [claude arguments]  # factory session with the isolation level (TF_ISOLATION). Classic layout (the default):
-                              # a plain `claude` — every session loads the factory from .claude/, the Desktop app too.
-                              # Plugin layout (opt-in, install --layout plugin): claude with the factory plugin
-                              # (.tf/plugin) and its settings (the sandbox for `sandbox`); only tf code loads the factory
+  tf code [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin), its settings and the isolation
+                              # level (the sandbox for `sandbox`); a plain `claude` and the Desktop app load nothing from
+                              # the factory (classic layout, loaded by every session: update.py --layout default)
   tf cloud-setup [--apply]    # factory mode in a cloud environment: prints the environment's setup script; --apply
                               # enables the factory plugin and its session settings in ~/.claude/settings.json
   tf work --once --budget <USD> [--key <KEY>] [--dry-run]

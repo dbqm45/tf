@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""The classic layout is the default (docs/plans/2026-11-20-tryb-fabryki-plan.md, reverted 2026-11-23): the Claude
-Desktop app cannot pass --plugin-dir, so in the plugin layout it saw no /tf. A new install and an update of a manifest
-without `layout` keep the factory in .claude/; a plugin install stays plugin until `update.py --layout default`, which
-moves it back (skills, agents, hooks in the project settings, the rules block in CLAUDE*.md) and removes .tf/plugin/;
-your skills and settings survive both directions. `tf doctor` reports the layout and warns about the plugin one.
+"""Switching layouts (docs/plans/2026-11-20-tryb-fabryki-plan.md): the plugin layout stays the default, and
+`update.py --layout default|plugin` moves an install between it and the classic layout in .claude/ — the one the
+Claude Desktop app loads (it cannot pass --plugin-dir, so in the plugin layout it shows no /tf). Moving back restores
+skills, agents, hooks in the project settings and the rules block in CLAUDE*.md and removes .tf/plugin/; your skills
+and settings survive both directions. A plain update of a plugin install keeps the plugin complete. Install, update and
+`tf doctor` warn about the plugin layout.
 python3 tests/test_layout_default.py"""
 import json
 import os
@@ -83,23 +84,27 @@ def main() -> int:
     with tempfile.TemporaryDirectory() as t:
         base = Path(t)
 
-        # LD-1: a new install is classic
+        # LD-0: a new install without options has the plugin layout (the default since T5), with the warning
+        n = project(base, "new")
+        r = install(n, base)
+        check(r.returncode == 0 and manifest(n).get("layout") == "plugin"
+              and (n / ".tf" / "plugin" / "skills" / "tf" / "SKILL.md").is_file() and WARNING in r.stdout,
+              f"LD-0: a new install has the plugin layout and warns about Desktop: {r.returncode} {r.stdout[-400:]}")
+
+        # LD-1: --layout default gives the classic layout
         p = project(base, "rt")
-        r = install(p, base)
+        r = install(p, base, "--layout", "default")
         check(r.returncode == 0 and manifest(p).get("layout") == "default"
               and (p / ".claude" / "skills" / "tf" / "SKILL.md").is_file() and not (p / ".tf" / "plugin").exists()
               and WARNING not in r.stdout,
-              f"LD-1: a new install has the classic layout: {r.returncode} {r.stdout[-400:]}")
+              f"LD-1: --layout default gives the classic layout: {r.returncode} {r.stdout[-400:]}")
         before = classic_state(p)
 
-        # LD-2: an update of a manifest without `layout` stays classic
-        man = manifest(p)
-        man.pop("layout")
-        (p / ".claude" / "factory-manifest.json").write_text(json.dumps(man), encoding="utf-8")
+        # LD-2: a plain update of a classic install stays classic (the manifest says `default`)
         r = update(p, base, "--force")
         check(r.returncode == 0 and manifest(p).get("layout") == "default"
               and (p / ".claude" / "skills" / "tf" / "SKILL.md").is_file() and not (p / ".tf" / "plugin").exists(),
-              f"LD-2: an update of a manifest without layout stays classic: {r.returncode} {r.stdout[-400:]}")
+              f"LD-2: a plain update of a classic install stays classic: {r.returncode} {r.stdout[-400:]}")
 
         # LD-3: --layout plugin still migrates classic → plugin, with the prominent warning
         r = update(p, base, "--layout", "plugin")
@@ -184,7 +189,7 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
-    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} classic default layout tests")
+    print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} layout switching tests")
     return 1 if fails else 0
 
 

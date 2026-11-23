@@ -2,7 +2,7 @@
 """Tryb fabryki, krok T1 (docs/plans/2026-11-20-tryb-fabryki-plan.md): `install.py --layout plugin` składa fabrykę
 w lokalnej wtyczce `.tf/plugin/` — skille, agenci, rejestracja hooków, reguły i ustawienia sesji — tak, żeby zwykły
 `claude` w projekcie nie ładował niczego z fabryki. Twoje skille, ustawienia i CLAUDE.md zostają nietknięte.
-The classic layout stays the default (tests/test_layout_default.py).
+Domyślny układ (bez opcji) się nie zmienia.
 python3 tests/test_plugin_layout.py"""
 import json
 import subprocess
@@ -121,7 +121,7 @@ def main() -> int:
               and json.loads((p / ".claude" / "factory-manifest.json").read_text(encoding="utf-8")).get("layout") == "plugin",
               f"PL-13: aktualizacja bez opcji zostaje w układzie wtyczki: {r.returncode} {r.stdout[-400:]}")
 
-        # the classic layout on request (it is the default again — tests/test_layout_default.py)
+        # stary układ na żądanie (od T5 domyślny jest układ wtyczki — tests/test_plugin_migration.py)
         q = project(base, "default")
         r = install(q, "--layout", "default")
         check(r.returncode == 0 and (q / ".claude" / "skills" / "tf" / "SKILL.md").is_file() and not (q / ".tf" / "plugin").exists(),
