@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.1.0] — 2026-11-23
+### Added
+- **core:** questions and answer options in the human's language (#400)
+
 ## [24.0.0] — 2026-11-23
 ### Breaking
 - **core:** show the isolation level in the session and refuse lowering it (#401)
