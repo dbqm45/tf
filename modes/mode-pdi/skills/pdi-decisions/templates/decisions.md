@@ -13,7 +13,7 @@ later (`decision pending`). Do not invent numbers.
 - by: <the person or role that decided>
 - kind: product | technical | process | triage | intent | gate | other
 - why: <1–5 sentences, only from the conversation>
-- source: claude-cli | claude-ai | slack | confluence | jira | manual | console | ci_for_sdlc | meeting
+- source: claude-cli | claude-ai | slack | confluence | jira | manual | console | ci_for_sdlc | meeting | tf | shipscope
 - drafted_by: ai | human
 - finding: <only an answer to a ci_for_sdlc finding, e.g. DES-001:TSK-1>
 - effect: <optional with a finding: resolve | accept_risk | dismiss | confirm>

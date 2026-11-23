@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/event.schema.json",
-  "title": "Zdarzenie (kontrakt suity 0.15.1)",
+  "title": "Zdarzenie (kontrakt suity 0.17.0)",
   "description": "Koperta zdarzenia wymienianego między pdi, tf, ci_for_sdlc i ShipScope; treść (payload) zależy od typu.",
   "type": "object",
   "additionalProperties": false,
@@ -538,7 +538,7 @@
     "targets_status": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Stan celów zmiany (release_plan.targets) przed B4 (Z7b-1b, kontrakt 0.15.1): wypełnia ci_for_sdlc, czyta pdi. Brak pola = cele nie zostały zbadane. `details` nazywa cele po kolei, żeby człowiek zobaczył, który próg jest niespełniony.",
+      "description": "Stan celów zmiany (release_plan.targets) przed B4 (Z7b-1b, kontrakt 0.16.0): wypełnia ci_for_sdlc, czyta pdi. Brak pola = cele nie zostały zbadane. `details` nazywa cele po kolei, żeby człowiek zobaczył, który próg jest niespełniony.",
       "required": [
         "overall",
         "checked_at"
@@ -964,7 +964,7 @@
     "decision_recorded": {
       "type": "object",
       "additionalProperties": false,
-      "description": "Decyzja podjęta w aplikacji nadawcy (np. zamknięcie pytania w ci_for_sdlc, decyzja D-A2) do zapisu w rejestrze pdi. Decyzja człowieka ma drafted_by i przy szkicu AI draft_edited; decyzja automatu ma automation i nie ma draft_edited.",
+      "description": "Decyzja podjęta w aplikacji nadawcy (np. zamknięcie pytania w ci_for_sdlc, decyzja D-A2) do zapisu w rejestrze pdi. Decyzja człowieka ma drafted_by i przy szkicu AI draft_edited; decyzja automatu ma automation i nie ma draft_edited. Od 0.16.0 każda aplikacja suity publikuje tak swoje decyzje (D1); origin daje pochodzenie i klucz idempotencji.",
       "required": [
         "decision_type",
         "ref",
@@ -982,6 +982,55 @@
           "minLength": 1,
           "maxLength": 200,
           "description": "Czego dotyczy decyzja w aplikacji nadawcy, np. PAY-12/COV-001."
+        },
+        "origin": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Pochodzenie decyzji podjętej w innej aplikacji suity (D1, od 0.16.0): kto jest jej właścicielem i gdzie leży oryginał. Klucz idempotencji: app + scope + local_id. Brak pola = decyzja podjęta w DI Decision (pdi).",
+          "required": [
+            "app",
+            "scope",
+            "local_id"
+          ],
+          "properties": {
+            "app": {
+              "type": "string",
+              "enum": [
+                "pdi",
+                "tf",
+                "ci_for_sdlc",
+                "shipscope"
+              ],
+              "description": "Aplikacja-właściciel decyzji; te same wartości co source zdarzenia."
+            },
+            "scope": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Gdzie local_id jest jednoznaczny: repo (owner/name), przestrzeń DI Definition, projekt."
+            },
+            "local_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Identyfikator decyzji u właściciela, np. D-012, CHG-12/D1, PAY-12/COV-001."
+            },
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Plik z decyzją w repo właściciela, np. docs/project/decisions.md."
+            },
+            "commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{7,40}$",
+              "description": "Commit, w którym zapisano tę wersję decyzji."
+            },
+            "url": {
+              "type": "string",
+              "pattern": "^https://",
+              "description": "Strona decyzji u właściciela."
+            }
+          }
         },
         "url": {
           "type": "string",
