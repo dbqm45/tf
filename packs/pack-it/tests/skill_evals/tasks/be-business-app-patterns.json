@@ -1,0 +1,73 @@
+{
+  "skill": "be-business-app-patterns",
+  "scenarios": [
+    {
+      "id": "usuwanie-projektu",
+      "kind": "task",
+      "expect": "trigger",
+      "fixture": "business-app",
+      "max_turns": 30,
+      "prompt": "Klienci usuwają projekt przez pomyłkę i tracą wszystkie dane (zadania, historię). Popraw usuwanie projektów w tej aplikacji.",
+      "checks": {
+        "commands": [
+          [
+            "unittest|pytest"
+          ]
+        ],
+        "files": [
+          {
+            "glob": "app/*.py",
+            "matches": [
+              "deleted_at"
+            ]
+          },
+          {
+            "glob": "app/*.py",
+            "matches": [
+              "restore",
+              "purge|permanent|hard_delete|purge_after"
+            ]
+          },
+          {
+            "glob": "app/*.py",
+            "matches": [
+              "(?s)audit\\.record\\([^)]{0,200}(delet|trash|remov)"
+            ],
+            "not_matches": [
+              "CREATE TABLE (IF NOT EXISTS )?\\w*audit(_log|_logs|_entries)?\\b"
+            ]
+          },
+          {
+            "glob": "app/db.py",
+            "matches": [
+              "(?is)unique\\s+index.{0,200}where.{0,60}deleted_at"
+            ]
+          },
+          {
+            "glob": "tests/*.py",
+            "matches": [
+              "(?i)other|another|stranger|not_owner|non_owner|PermissionError|Forbidden"
+            ]
+          }
+        ],
+        "count": [
+          {
+            "glob": "tests/*.py",
+            "rx": "def test_",
+            "min": 6
+          }
+        ],
+        "after": {
+          "cmd": [
+            "python3",
+            "-m",
+            "unittest",
+            "-q"
+          ],
+          "exit": 0
+        }
+      },
+      "notes": "Plan docs/plans/2026-11-23-scenariusze-przebiegu-a3-a2a.md, P-A2a-1: the trash (deleted_at, restore, purge), the existing audit_events reused (procedure step 2: the project's facts from the code), a partial unique index so the name is free again, only the owner deletes, a test per decision (3 at the start → at least 6), the suite green."
+    }
+  ]
+}

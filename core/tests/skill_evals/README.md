@@ -94,3 +94,33 @@ Raport ma sekcję „Protokół: wynik czy koszt”. Dla każdego ramienia (mode
   zaliczonych;
 - **niestabilne** — scenariusze z różnym wynikiem między powtórzeniami (`--repeats`).
 
+
+## Scenariusze zadaniowe (`tasks/`)
+
+Pytanie i odpowiedź mierzą wiedzę; scenariusz zadaniowy mierzy **procedurę** skilla na projekcie z kodem
+(plan `docs/plans/2026-11-23-scenariusze-przebiegu-a3-a2a.md`). Plik `tasks/<skill>.json` ma ten sam kształt co
+główny, a każdy scenariusz `"kind": "task"`, `"expect": "trigger"` i co najmniej jedno sprawdzenie zadaniowe:
+
+```json
+{"id": "usuwanie-projektu", "kind": "task", "expect": "trigger", "fixture": "business-app", "max_turns": 30,
+ "allowed_tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash"],
+ "prompt": "…",
+ "checks": {
+   "commands": [["unittest|pytest"]],                 // każda grupa: któreś polecenie Bash pasuje
+   "no_commands": ["\\bnpm (ci|install)\\b"],          // żadne polecenie nie może pasować
+   "files": [{"glob": "app/*.py", "matches": ["deleted_at"], "not_matches": ["CREATE TABLE audit_log"]},
+             {"glob": "package-lock.json", "exists": false}],
+   "count": [{"glob": "tests/*.py", "rx": "def test_", "min": 6}],
+   "after": {"cmd": ["python3", "-m", "unittest", "-q"], "exit": 0},
+   "none": ["<tekst, którego nie może być w odpowiedzi>"]}}
+```
+
+- `fixture` — `tasks/fixtures/<nazwa>.json` (`{"files": {ścieżka: treść}}`), kopiowana do katalogu przebiegu
+  i zatwierdzona jako pierwszy commit; pole `files` scenariusza ją uzupełnia. Fixtury bez instalacji pakietów
+  i bez sieci (czysty Python, pliki statyczne), żeby `after` było powtarzalne; sekrety w nich są syntetyczne.
+- Przebieg: `--permission-mode acceptEdits`, `--allowedTools` ze scenariusza (domyślnie Read, Grep, Glob, Edit,
+  Write, Bash), `max_turns` ze scenariusza. Bez skilli (`--baseline`): bez `--restricted` (zadanie potrzebuje
+  Basha), z `--setting-sources project,local`; skill uruchomiony w takim przebiegu = wynik niewiarygodny (błąd).
+- Każde sprawdzenie zadaniowe to jedna grupa w „wkładzie skilla”, obok grup `checks.all`.
+- Uruchamiane tylko z `--tasks` (koszt kilkukrotnie większy niż pytanie; prognoza z `COST_GUESS_TASK`):
+  `python3 tests/run_skill_evals.py --tasks --skills eng-repo-readiness,be-business-app-patterns --baseline --models haiku`.
