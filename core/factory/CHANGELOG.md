@@ -3,6 +3,12 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.8.0] — 2026-11-23
+### Added
+- **mode-pdi:** read-only local copy of the suite decisions (D8) (#416)
+### Fixed
+- **pack-it:** repo readiness stops without a stack decision (#418)
+
 ## [24.7.0] — 2026-11-23
 ### Added
 - **evals:** task scenarios measure a skill's procedure (#414)
