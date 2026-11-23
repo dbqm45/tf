@@ -161,7 +161,7 @@
           {
             "glob": "app/*.py",
             "matches": [
-              "(?i)impersonat\\w*_id|impersonator|acting_as|on_behalf"
+              "(?is)impersonat\\w*_id|impersonator|acting_as|on_behalf|(sessions|session)\\b[^;]{0,400}\\b(actor|support|staff)\\w*_id"
             ]
           },
           {
@@ -209,7 +209,7 @@
           "exit": 0
         }
       },
-      "notes": "Plan P-A2a-3: the session carries who impersonates and expires; audit entries with the actor and 'on behalf of'; a test that changing the password during impersonation is refused; a test of expiry."
+      "notes": "Plan P-A2a-3: the session carries who impersonates and expires; audit entries with the actor and 'on behalf of'; a test that changing the password during impersonation is refused; a test of expiry. Round 3: a session column actor_id is accepted (audit_events.actor_id alone is not)."
     },
     {
       "id": "rodo-przy-soft-delete",
@@ -230,15 +230,15 @@
         ],
         "files": [
           {
-            "glob": "app/*.py",
+            "glob": "app/crm.py",
             "matches": [
-              "(?i)def \\w*(eras|anonymi[sz]|forget|gdpr|rodo|art17|purge_personal)\\w*"
+              "(?is)UPDATE\\s+customers\\s+SET[^;]{0,300}\\b(email|name|phone)\\s*="
             ]
           },
           {
             "glob": "app/crm.py",
             "matches": [
-              "(?is)def \\w*(eras|anonymi[sz]|forget|gdpr|rodo|art17|purge_personal)\\w*.{0,2000}(shipping_name|orders)"
+              "(?is)UPDATE\\s+orders\\s+SET[^;]{0,300}\\bshipping_(name|address)\\s*=|DELETE\\s+FROM\\s+orders"
             ]
           },
           {
@@ -259,7 +259,7 @@
           {
             "glob": "tests/test_crm.py",
             "matches": [
-              "(?i)shipping_name"
+              "(?is)(eras|anonymi|forget|gdpr|rodo|art17).{0,1500}shipping_(name|address)|shipping_(name|address).{0,1500}(eras|anonymi|forget|gdpr|rodo)"
             ]
           }
         ],
@@ -285,7 +285,7 @@
           ]
         ]
       },
-      "notes": "Plan P-A2a-4: erasure also covers soft-deleted rows and orders.shipping_name; an audit entry without personal data; a test that personal fields are gone for an already soft-deleted customer; the answer mentions backups."
+      "notes": "Plan P-A2a-4: erasure also covers soft-deleted rows and orders.shipping_name; an audit entry without personal data; a test that personal fields are gone for an already soft-deleted customer; the answer mentions backups. Checks on behaviour, not names (round 3: an anonymizing delete_customer was a valid design the name-based check missed)."
     }
   ]
 }

@@ -160,3 +160,6 @@ Pozostałe scenariusze P-A3-2…4 i P-A2a-2…4 dopisane (`packs/pack-it/tests/s
 `agent-repo`, `generator-fails`, `make-project`; A2a — moduły dodane do `business-app` polem `files`). Przebieg
 wzorcowy bez modelu: dobre rozwiązania A3 6/6, 5/5, 4/4; złe 3/6, 1/5, 1/4; A2a bez zmian 1/8 w każdym (testy
 na starcie zielone). Pomiar (36 przebiegów, haiku, 3 powtórzenia, prognoza ~0,7 USD) — za zgodą właściciela.
+Runda 3 (36 przebiegów, 0,41 USD): `docs/evals/2026-11-23-runda3-a3-a2a.md` — A3 wkład w generatorze i pomiarze,
+warunek „bez decyzji o stacku” nie działa (do poprawy w skillu); A2a wkład częściowy w operacji masowej, brak w
+impersonacji i RODO.
