@@ -84,7 +84,10 @@ człowieka, D2 na start tylko terminal, D3 stała lista + domeny projektu, D4 `s
   system plików tylko do odczytu, `isolation_allow_domains`; w kontenerze bez sandboxa Bash (zmiana planu, opis
   w planie). Testy: `core/tests/test_isolation_container.py`, obraz w zadaniu CI `container`
   (`tests/test_container_image.py`).
-- [ ] I5 kontener tylko commituje (push z komputera człowieka); I6 odłożone (D2); I7–I9.
+- [x] I5 (2026-11-23, D1): w kontenerze `guard_bash` odmawia `git push` z instrukcją (commit tu, push z terminala
+  człowieka), hook startu mówi o tym w kontenerze, a `tf code --container` po sesji podaje liczbę commitów
+  czekających na push i polecenie.
+- [ ] I6 odłożone (D2); I7–I9.
 
 ## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
 Plan: `docs/plans/2026-11-19-bramka-ewaluacji-i-zatwierdzone-modele.md` (źródło: pdi

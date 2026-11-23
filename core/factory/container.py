@@ -146,9 +146,24 @@ def run(root: Path, rest: list[str]) -> int:
             print(f"✗ The image {tag} did not build (exit {b.returncode}).", file=sys.stderr)
             return b.returncode
     try:
-        return subprocess.run([eng, *run_args(root, rest)]).returncode
+        code = subprocess.run([eng, *run_args(root, rest)]).returncode
     except KeyboardInterrupt:
-        return 130
+        code = 130
+    unpushed_hint(root)
+    return code
+
+
+def unpushed_hint(root: Path) -> None:
+    """After the session: the container has no git keys (D1), so the commits made there wait for a push from here."""
+    try:
+        r = subprocess.run(["git", "rev-list", "--count", "HEAD", "--not", "--remotes"], cwd=root, capture_output=True,
+                           text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return
+    n = int(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip().isdigit() else 0
+    if n:
+        print(f"ℹ {n} commit{'s' if n != 1 else ''} from the session not pushed yet — the container has no git keys; "
+              "review them (`git log --stat @{u}..`) and push from this terminal: `git push`.", file=sys.stderr)
 
 
 def main(argv: list[str]) -> int:

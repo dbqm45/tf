@@ -301,6 +301,7 @@ def _module(name: str):
 # The isolation level is lowered only by a human in a terminal (plan of isolation levels, slice I3): `tf isolation <level>`,
 # `isolation.py set`, `install --isolation` — also with the session variables removed (`env -u CLAUDECODE …`).
 ISOLATION_CMD = re.compile(r"\btf(\.py)?\s+isolation\s+(?!-)\S|\bisolation\.py\s+set\b|\binstall(\.py)?\b[^;&|]*\s--isolation\b")
+CONTAINER_PUSH = re.compile(r"\bgit\b[^;&|]*\spush\b")
 ISOLATION_MSG = ("the isolation level is changed by a human in a terminal (`tf isolation <level>`), not from inside a "
                  "session")
 
@@ -374,6 +375,9 @@ def main() -> None:
     for pattern, reason in DENY:
         if re.search(pattern, cmd, re.IGNORECASE):
             decide("deny", f"Blocked: {reason}. If it is necessary, ask a human to run it by hand.")
+    if os.environ.get("TF_CONTAINER") == "1" and CONTAINER_PUSH.search(cmd):
+        decide("deny", "Blocked: the factory's container has no git keys (decision D1): commit here, and the human pushes "
+                       "from their own terminal (`git push` in the project), as `tf code --container` reminds them at the end.")
     if ISOLATION_CMD.search(cmd):
         decide("deny", f"Blocked: {ISOLATION_MSG}.")
     if git_exec_option(cmd):
