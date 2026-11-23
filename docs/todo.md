@@ -978,7 +978,7 @@ treści (angielska), bez równoległej polskiej.
     - [x] (2026-11-22: `none` łapie tylko użycie w kodzie — `return`/`=>` przed `Conflict(new ProblemDetails`; Haiku
       2026-11-22: 4/4, PL i EN) `bledy-walidacja-openapi`: niepożądany wzorzec trafia w cytat ostrzeżenia — zawęzić regex albo zmienić
       sformułowanie w skillu (przed tłumaczeniem też 0/2).
-    - [ ] (2026-11-22: nie sprawdzone — sieć sesji nie dochodzi do endoflife.date ani angular.dev) do sprawdzenia fakty ze źródła: `endoflife.ai` w fw-nestjs (pewnie endoflife.date), `@Service` jako
+    - [x] (2026-11-23: sprawdzone — dane endoflife.date z repo endoflife-date/endoflife.date na GitHubie, typy `@angular/core` z npm: `endoflife.ai` → endoflife.date; `@Service` jest od Angular 22.0.0, nie ma go w 21.2.26; Spring Boot 3.5: bezpłatne wsparcie do 2026-06-30, płatne do 2032-06-30, ostatnia 3.5.16 z 2026-06-25 — zgodne z treścią) do sprawdzenia fakty ze źródła: `endoflife.ai` w fw-nestjs (pewnie endoflife.date), `@Service` jako
       dekorator Angulara w lang-typescript, wsparcie Spring Boot 3.5 do 2026-06-30 vs 3.5.16 w źródłach.
   - [x] 4d-r3 (2026-11-18): trzecia runda równoległa — `ops-` (22), `sec-` (13): 35 skilli (+ referencje) po
     angielsku, `hint.pl.txt`. Poprawki z raportów: w sec-llm-security oryginał nazywał bramkę „zawodzi otwarcie”,
