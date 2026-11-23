@@ -3,6 +3,11 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.6.0] — 2026-11-23
+### Added
+- **core:** tf analyze run --fail-on blocks CI on findings (#411)
+- **mode-pdi:** publish project decisions to the suite index (D3) (#412)
+
 ## [24.5.1] — 2026-11-23
 ### Fixed
 - **core:** the container firewall sometimes blocks an allowed domain (#407)
