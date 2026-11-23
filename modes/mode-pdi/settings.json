@@ -8,7 +8,8 @@
       "Bash(python3 .claude/skills/pdi-decisions/scripts/metric_watch.py *)",
       "Bash(python3 .claude/skills/pdi-decisions/scripts/second_review.py *)",
       "Bash(python3 .claude/skills/pdi-decisions/scripts/pr_loop.py *)",
-      "Bash(python3 .claude/hooks/decision_publish.py *)"
+      "Bash(python3 .claude/hooks/decision_publish.py *)",
+      "Bash(python3 .claude/hooks/decision_cache.py *)"
     ]
   },
   "hooks": {
@@ -29,6 +30,14 @@
             "command": "python3",
             "args": [
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/decision_publish.py"
+            ],
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/decision_cache.py"
             ],
             "timeout": 10
           }
