@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.2.0] — 2026-11-23
+### Added
+- **tf:** live dashboard over server-sent events, no page reloads (#402)
+
 ## [24.1.0] — 2026-11-23
 ### Added
 - **core:** questions and answer options in the human's language (#400)
