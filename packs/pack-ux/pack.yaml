@@ -6,7 +6,7 @@ title: UX
 description: User experience team — research, flows, information architecture, content, visual design and design systems, accessibility, service design.
 content_language: en
 requires:
-  core: ">=3.0.0 <24.0.0"
+  core: ">=3.0.0 <25.0.0"
 # UX roles also use IT skills (process, requirements, exploratory testing, front end) — without pack-it they are skipped.
 optional_packs: [pack-it, pack-docs, pack-editorial-pl]
 
