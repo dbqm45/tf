@@ -21,10 +21,8 @@
   it concerns.
 
 ## A personal data erasure request (GDPR Art. 17)
-- `deleted_at` is not enough: the data is still in the database. Permanent deletion or anonymization (irreversible, without
-  a key to restore; pseudonymization is still personal data).
-- It covers: the application tables, files, search, analytics, external systems and subcontractors, logs and the audit
-  (pseudonymization), backups (they usually expire with the rotation; you document the deadline and do not restore deleted
-  data when restoring).
-- Exceptions (a legal obligation, e.g. accounting documents) — the data stays only in the required scope; the decision and the basis
-  recorded. The legal assessment: arch-privacy-compliance.
+- `deleted_at` is not erasure: delete or anonymize irreversibly (pseudonymization is still personal data) — the
+  application tables, files, search, analytics, external systems, logs; backups expire with the rotation (document the
+  deadline, do not restore erased data).
+- Exceptions (e.g. accounting documents) keep only the required scope, with the basis recorded; the legal assessment:
+  arch-privacy-compliance.
