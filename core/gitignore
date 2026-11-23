@@ -12,3 +12,4 @@ __pycache__/
 .idea
 .tf/locks/
 .tf/worktrees/
+.tf/.claude-plugin/local-marketplace.json

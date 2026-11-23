@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+os.environ["TF_NO_PLUGIN_REGISTER"] = "1"   # installs here never call the real Claude Code CLI (plugin_register.py)
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factory").is_dir())
 INSTALL = ROOT / "core" / "factory" / "install.py"
@@ -18,7 +19,7 @@ FAKE = "import json, sys, os\nopen(os.environ['TF_FAKE_OUT'], 'w').write(json.du
 
 
 def env(base: Path, **extra: str) -> dict:
-    return {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(base), "TF_CLAUDE": f"{sys.executable} {base / 'fake.py'}",
+    return {"TF_NO_PLUGIN_REGISTER": "1", "PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(base), "TF_CLAUDE": f"{sys.executable} {base / 'fake.py'}",
             "TF_FAKE_OUT": str(base / "argv.json"), **extra}
 
 

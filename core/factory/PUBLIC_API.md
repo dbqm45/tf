@@ -107,7 +107,14 @@ Deprecation works like this:
   `tf code [claude arguments]` (`--settings .tf/cache/session-settings.json`: the plugin's session settings with the
   isolation level, `TF_ISOLATION` names the level for the session; `isolation.py launch` builds the file), `tf cloud-setup [--apply]` (user settings: `extraKnownMarketplaces.tf-project`,
   `enabledPlugins["tf@tf-project"]`), `TF_CLAUDE`, `E0_LAYOUT=plugin`; factory skills keep their scripts and references
-  under `.claude/skills/<skill>/` without `SKILL.md`.
+  under `.claude/skills/<skill>/` without `SKILL.md`. The registration for the folder (`plugin_register.py
+  status|register|unregister`): the git-ignored marketplace file `.tf/.claude-plugin/local-marketplace.json` named
+  `tf-<folder>-<8 hex of the path's sha256>` (plugin `tf`, source `./plugin`), registered with `claude plugin marketplace
+  add <abs file> --scope local` and `claude plugin install tf@<name> --scope local` after a plugin-layout install, update
+  or migration, every Claude Code session in the folder then loads the plugin (commands `/tf:tf`, `/tf:tf-task`,
+  `/tf:tf-design`); `--layout default` and `tf uninstall` unregister it (`claude plugin uninstall … --scope local`,
+  `claude plugin marketplace remove … --scope local`); `tf doctor` reports it, `--fix` registers it;
+  `TF_NO_PLUGIN_REGISTER=1` or `CI` skips the CLI; `tf code` omits `--plugin-dir` in a registered folder.
 - `tf work --once --budget <USD> [--key <KEY>] [--base <branch>] [--dry-run]` (`work.py`; configuration keys
   `work.budget_usd`, `work.task_budget_usd`, `work.permission_mode` (`acceptEdits` is the default, `dontAsk` or `plan`), `work.lock_hours`, `work.timeout_minutes`; the agent runs with `--strict-mcp-config` and only the allowed
   environment variables (additional ones: the human's variable `TF_WORK_ENV_ALLOW`, a comma-separated list); a warning and the field

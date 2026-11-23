@@ -25,22 +25,34 @@ Four steps from zero to the first PR. The rest of this file is details for the c
 | work in one role (tests, UX, domain…) | `claude --agent <persona>` from `.claude/catalog.md` | a conversation with the persona and its executors |
 | review the repository without model cost | `tf analyze` | reports in `.tf/reports/` |
 
+In the plugin layout (the default) the plugin's commands are namespaced: `/tf:tf`, `/tf:tf-task`, `/tf:tf-design` (type
+`/tf:` to see them side by side); they load in every session in the folder once the plugin is registered (`tf doctor`,
+section 1).
+
 Something does not work, or a command was blocked? Ask in the session: "what blocked me and what can I do?" — the
 agent will point to the file that made the decision. Frequent questions: `.tf/factory/FAQ.md`.
 
 ## 1. What an installation consists of
-**The factory mode.** The factory lives in a local plugin in `.tf/plugin/` (skills, agents, hook registration, rules) that
-only a factory session loads: `tf code` (e.g. `tf code --continue`) starts `claude --plugin-dir .tf/plugin --settings
-.tf/cache/session-settings.json` (the plugin's `session-settings.json` with the isolation level: the sandbox for
-`sandbox` and `container`). A plain `claude` in the project loads nothing from the factory — no hook, skill, agent,
-rule or status line — so your own skills in `.claude/skills/` are never shadowed; factory skills appear in a factory session
-as `tf:<skill>`. A cloud environment becomes a factory environment with the setup script printed by `tf cloud-setup`
-(the factory files must be in the repository: a team install). `tf work --once` and the measurements use the same plugin.
-An update of an older install moves it here (a copy in `.tf/backup/`, back: `python3 .tf/factory/update.py --rollback`).
-The Claude Desktop app cannot pass `--plugin-dir`, so in this layout it shows no `/tf` — work with `tf code`, or switch to the
-classic layout, in which every session in the project (Desktop too) loads the factory from `.claude/`:
-`python3 .tf/factory/update.py --layout default` (your skills and settings stay; back: `--layout plugin`). `tf doctor` says
-which layout the project has.
+**The factory mode.** The factory lives in a local plugin in `.tf/plugin/` (skills, agents, hook registration, rules);
+its files stay in `.tf/`, so your own `.claude/` holds none of them and your own skills in `.claude/skills/` are never
+shadowed. Install, update and `--layout plugin` register the plugin for the project folder with the Claude Code CLI, in
+local scope (`claude plugin marketplace add <abs>/.tf/.claude-plugin/local-marketplace.json --scope local` and `claude
+plugin install tf@tf-<folder>-<hash> --scope local`; the keys go to `.claude/settings.local.json`, which is git-ignored and
+per developer — also in team mode — and the install is recorded in your Claude config). From then on every Claude Code
+session in the folder loads the factory and its hooks and rules: a plain `claude`, `tf code` and the Claude Desktop app.
+The plugin's commands are namespaced: `/tf:tf`, `/tf:tf-task`, `/tf:tf-design` (factory skills are `tf:<skill>`).
+Without the `claude` command (or with `TF_NO_PLUGIN_REGISTER=1` / `CI`) the install prints the two commands to run by
+hand; `tf doctor` says whether the folder is registered with the right path and `tf doctor --fix` registers it again
+(e.g. after the project folder moved). `tf code` (e.g. `tf code --continue`) adds the factory session settings: `claude
+--settings .tf/cache/session-settings.json` — the plugin's `session-settings.json` (env, status line, permissions) with the
+isolation level (the sandbox for `sandbox` and `container`); these apply only to `tf code`, not to a plain `claude` or the
+Desktop app, and in an unregistered folder `tf code` also passes `--plugin-dir .tf/plugin`. A cloud environment becomes a
+factory environment with the setup script printed by `tf cloud-setup` (the factory files must be in the repository: a
+team install). `tf work --once` and the measurements use the same plugin. An update of an older install moves it here
+(a copy in `.tf/backup/`, back: `python3 .tf/factory/update.py --rollback`). The classic layout keeps the factory in
+`.claude/`, loaded by every session without any registration: `python3 .tf/factory/update.py --layout default` (it
+unregisters the plugin, so the factory does not load twice; your skills and settings stay; back: `--layout plugin`).
+`tf doctor` says which layout the project has.
 
 | Element | Where in the project | What it does |
 |---|---|---|

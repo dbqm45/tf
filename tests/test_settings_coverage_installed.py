@@ -8,6 +8,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+import os
+os.environ["TF_NO_PLUGIN_REGISTER"] = "1"   # installs here never call the real Claude Code CLI (plugin_register.py)
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factory").is_dir())
 TEST = Path(".claude") / "tests" / "test_settings_coverage.py"

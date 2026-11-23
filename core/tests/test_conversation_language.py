@@ -7,6 +7,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+import os
+os.environ["TF_NO_PLUGIN_REGISTER"] = "1"   # installs here never call the real Claude Code CLI (plugin_register.py)
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".tf" / "factory" / "packs.py").is_file())
 
@@ -21,7 +23,7 @@ def load(name):
 def git_repo(path: Path, subjects: list[str]) -> Path:
     path.mkdir(parents=True, exist_ok=True)
     env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.com", "GIT_COMMITTER_NAME": "t",
-           "GIT_COMMITTER_EMAIL": "t@example.com", "PATH": __import__("os").environ.get("PATH", "")}
+           "GIT_COMMITTER_EMAIL": "t@example.com", "PATH": __import__("os").environ.get("PATH", ""), "TF_NO_PLUGIN_REGISTER": "1"}
     subprocess.run(["git", "init", "-q"], cwd=path, check=True, env=env)
     for i, s in enumerate(subjects):
         (path / f"f{i}.txt").write_text(s, encoding="utf-8")

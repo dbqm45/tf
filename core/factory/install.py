@@ -115,16 +115,15 @@ GENERATED = (".claude/agents/_generated/", ".claude/catalog.md", ".tf/plugin/age
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
 # Layouts (docs/plans/2026-11-20-tryb-fabryki-plan.md). `default` (the classic layout, `--layout default`): the factory
 # lives in .claude/ and every Claude Code session in the project loads it, the Desktop app too. `plugin` (factory mode,
-# the default since T5): the factory lives in a local plugin that only a factory session loads (`tf code`: claude
-# --plugin-dir .tf/plugin --settings .tf/plugin/session-settings.json) — a plain `claude` and the Desktop app, which
-# cannot pass --plugin-dir, see no factory skill, agent, hook, rule or status line.
+# the default since T5): the factory lives in a local plugin in .tf/plugin/, registered for the folder with the Claude
+# Code CLI in local scope (plugin_register.py: settings.local.json and the user's Claude config), so every session in
+# the folder loads it — a plain `claude`, `tf code` and the Desktop app — with the commands /tf:tf, /tf:tf-task…;
+# without the registration only `tf code` loads it (claude --plugin-dir .tf/plugin --settings <session settings>).
 LAYOUTS = ("default", "plugin")
 PLUGIN = ".tf/plugin"
 PLUGIN_SKILLS = PLUGIN + "/skills/"
 PLUGIN_MARKET = ".tf/.claude-plugin"
 CLASSIC_OK = ("✓ Classic layout: the factory is in .claude/ — every Claude Code session loads it (also the Desktop app).")
-PLUGIN_WARNING = ("⚠ Plugin layout: only `tf code` loads the factory; a plain `claude` and the Claude Desktop app see no "
-                  "/tf. Back to the classic layout: python3 .tf/factory/update.py --layout default")
 # Core tests that make sense only in the factory repository (paths relative to core/): the N5 run evals import
 # `scripts/export_pdi_runs.py` and `modes/mode-pdi/.../phase_result.py` from the source, so in a project they would fail on import.
 # They do not go to `.claude/tests/` (an update removes their copies from earlier versions); `tools/workspace.py check`
@@ -781,10 +780,14 @@ def strip_factory_settings(cur: dict, factory: dict, current: dict, overrides: s
     return out
 
 
-def plugin_warning_block() -> str:
-    """The plugin layout's warning, framed so that it is not lost in the install report."""
-    rule = "⚠ " + "─" * 70
-    return "\n".join([rule, PLUGIN_WARNING, "  Start the factory with `tf code` (e.g. `tf code --continue`).", rule])
+def register_module():
+    """plugin_register.py of the factory being installed: registers .tf/plugin/ for the folder with the Claude Code CLI
+    (local scope), so every session in it loads the factory — a plain `claude` and the Desktop app too."""
+    spec = importlib.util.spec_from_file_location("tf_plugin_register_install",
+                                                  Path(__file__).resolve().parent / "plugin_register.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def plugin_own_skills(dst_root: Path, old_files: dict) -> list[str]:
@@ -846,7 +849,8 @@ def plugin_files(plan: "Plan", dst_root: Path, settings: dict, py: str, version:
     if not any("factory_rules.py" in json.dumps(g) for g in start):
         start.insert(0, {"hooks": [rules_hook]})
     meta = {"name": "tf", "version": version, "description": "Team factory: skills, agents, hooks and rules of the "
-            "/tf-task loop. Loaded only by a factory session (tf code)."}
+            "/tf-task loop. Every Claude Code session in the folder loads it once registered (local scope); tf code "
+            "loads it anyway."}
     plan.copy(None, PLUGIN + "/.claude-plugin/plugin.json", (json.dumps(meta, indent=2) + "\n").encode("utf-8"))
     market = {"name": "tf-project", "owner": {"name": "team factory"},       # .tf/ as a directory marketplace: the cloud
               "plugins": [{"name": "tf", "source": "./plugin", "description": meta["description"]}]}   # (tf cloud-setup)
@@ -1182,7 +1186,10 @@ def _main(argv: list[str], tmp: Path) -> int:
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(dst_root / ".claude" / "agents" / "_generated"), target)
     plugin_left: list[str] = []
+    unregistered = ""
     if returning:  # the plugin is not loaded any more: its factory files go to the backup, your skills to .claude/skills
+        if not dry:    # first its registration for this folder (local scope), so the classic layout does not load twice
+            unregistered = register_module().unregister(dst_root)[1]
         plugin_left = leave_plugin(plan, dst_root, own_plugin_skills, dry)
 
     # ignore entries: private → .git/info/exclude (nothing visible in the repo), team or --gitignore → .gitignore
@@ -1242,6 +1249,7 @@ def _main(argv: list[str], tmp: Path) -> int:
     print(f"  packs: {', '.join(packs) or '— (core only)'}")
     if returning and not dry:
         print(CLASSIC_OK)
+        print(f"  ✓ plugin registration: {unregistered}")
         for rel in plugin_left:
             print(f"  ℹ left in place (yours): {rel} — the classic layout does not load .tf/plugin/; "
                   "move it to .claude/ if you still need it")
@@ -1347,8 +1355,8 @@ Next:
   4. Costs: the `balanced` profile works right away; `{py} .tf/factory/profile.py economy|quality` switches the team.
   Packs: `tf add <pack>` / `tf remove <pack>` · language: none to set — write in yours, the agents answer in it.
   Updates: `{py} .tf/factory/update.py` (or `tf`, or `/core-factory-update` in Claude Code).""")
-    if plugin and not dry:     # prominent and last: this is why a plain session or the Desktop app sees no /tf
-        print("\n" + plugin_warning_block())
+    if plugin and not dry:     # last, after every file is written: register the plugin for this folder (local scope)
+        print("\n" + register_module().report(dst_root))   # ✓, or the framed warning with the two commands
     return 0
 
 

@@ -11,13 +11,14 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+os.environ["TF_NO_PLUGIN_REGISTER"] = "1"   # installs here never call the real Claude Code CLI (plugin_register.py)
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factory").is_dir())
 INSTALL = ROOT / "core" / "factory" / "install.py"
 
 
 def env(base: Path) -> dict:
-    return {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(base)}
+    return {"TF_NO_PLUGIN_REGISTER": "1", "PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(base)}
 
 
 def install(p: Path, base: Path, *opts: str) -> subprocess.CompletedProcess:

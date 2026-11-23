@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+os.environ["TF_NO_PLUGIN_REGISTER"] = "1"   # installs here never call the real Claude Code CLI (plugin_register.py)
 
 ROOT = next(p for p in Path(__file__).resolve().parents if (p / "core" / "factory").is_dir())
 INSTALL = ROOT / "core" / "factory" / "install.py"
@@ -18,7 +19,7 @@ OWN = ("---\nname: moj-raport\ndescription: Use when preparing the weekly sales 
 
 
 def env(p: Path) -> dict:
-    return {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(p.parent), "CLAUDE_PROJECT_DIR": str(p)}
+    return {"TF_NO_PLUGIN_REGISTER": "1", "PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(p.parent), "CLAUDE_PROJECT_DIR": str(p)}
 
 
 def make(base: Path, name: str, *opts: str) -> Path:

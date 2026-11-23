@@ -51,8 +51,9 @@ tf — the team factory command: install, update, packs, health check (standard 
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
   tf code [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin), its settings and the isolation
-                              # level (the sandbox for `sandbox`); a plain `claude` and the Desktop app load nothing from
-                              # the factory (classic layout, loaded by every session: update.py --layout default)
+                              # level (the sandbox for `sandbox`, only here). Install registers the plugin for the folder
+                              # (local scope), so a plain `claude` and the Desktop app load it too, as /tf:tf …;
+                              # unregistered (tf doctor says), only `tf code` loads it
   tf cloud-setup [--apply]    # factory mode in a cloud environment: prints the environment's setup script; --apply
                               # enables the factory plugin and its session settings in ~/.claude/settings.json
   tf work --once --budget <USD> [--key <KEY>] [--dry-run]
@@ -402,8 +403,14 @@ PLUGIN_WARNING = ("⚠ Plugin layout: only `tf code` loads the factory; a plain 
 
 
 def plugin_warning_block() -> str:
+    """The warning of an engine without plugin_register.py (older than this launcher)."""
     rule = "⚠ " + "─" * 70
     return "\n".join([rule, PLUGIN_WARNING, "  Start the factory with `tf code` (e.g. `tf code --continue`).", rule])
+
+
+def plugin_register():
+    """The project's plugin_register.py (registration of .tf/plugin/ for this folder, local scope), or None."""
+    return project_module("plugin_register") if (Path(".tf") / "factory" / "plugin_register.py").is_file() else None
 
 
 def factory_layout() -> str:
@@ -449,7 +456,10 @@ def cmd_code(rest: list[str]) -> int:
             print(f"✗ The factory plugin is incomplete (missing: {', '.join(missing)}) — run `tf doctor --fix` "
                   "(or `tf` to update), then `tf code` again.")
             return 2
-        cmd = [*claude_command(), "--plugin-dir", str(plugin), "--settings", str(session_settings(settings)), *rest]
+        reg = plugin_register()
+        # registered for this folder: every session loads the plugin already — --plugin-dir would load it twice
+        load = [] if reg and reg.configured(Path.cwd()) else ["--plugin-dir", str(plugin)]
+        cmd = [*claude_command(), *load, "--settings", str(session_settings(settings)), *rest]
     try:
         return subprocess.run(cmd, env={**os.environ, "TF_ISOLATION": isolation_level()}).returncode
     except FileNotFoundError:
@@ -521,10 +531,29 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
     """Install health: build check (versions, required packs, references), renames from core migrations."""
     if not need_project():
         return 2
-    if factory_layout() == "plugin":
+    reg = plugin_register()
+    if factory_layout() == "plugin" and reg is None:
         print(plugin_warning_block())
+    elif factory_layout() == "plugin":
+        print("ℹ layout: plugin (.tf/plugin/)")
+        if fix:
+            print(reg.report(Path.cwd()))
+        else:
+            st = reg.status(Path.cwd())
+            if st["state"] in ("registered", "disabled"):
+                print(f"{'✓' if st['state'] == 'registered' else '⚠'} plugin: registered for this folder ({st['detail']}) "
+                      "— every Claude Code session here loads the factory (claude, tf code, the Desktop app); "
+                      "commands /tf:tf, /tf:tf-task, /tf:tf-design")
+            else:
+                print(reg.warning_block(Path.cwd(), st["detail"]))
     else:
         print("✓ layout: classic (.claude/) — every Claude Code session loads the factory (also the Desktop app)")
+        if reg and reg.stale(Path.cwd()) + ([reg.market_name(Path.cwd())] if reg.configured(Path.cwd()) else []):
+            if fix:
+                print("✓ fixed: " + reg.unregister(Path.cwd())[1] + " (the classic layout would load the factory twice)")
+            else:
+                print("⚠ to fix (tf doctor --fix): the factory plugin is still registered in .claude/settings.local.json "
+                      "— the classic layout would load the factory twice")
     mig = project_module("migrations")
     changes = mig.apply(Path.cwd(), dry=not fix)
     for c in changes:

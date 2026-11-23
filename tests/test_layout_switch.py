@@ -5,7 +5,7 @@ Claude Desktop app loads (it cannot pass --plugin-dir, so in the plugin layout i
 skills, agents, hooks in the project settings and the rules block in CLAUDE*.md and removes .tf/plugin/; your skills
 and settings survive both directions. A plain update of a plugin install keeps the plugin complete. Install, update and
 `tf doctor` warn about the plugin layout.
-python3 tests/test_layout_default.py"""
+python3 tests/test_layout_switch.py"""
 import json
 import os
 import subprocess
@@ -20,7 +20,8 @@ CLASSIC = "✓ Classic layout: the factory is in .claude/"
 
 
 def env(base: Path) -> dict:
-    return {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(base)}
+    return {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(base),
+            "TF_NO_PLUGIN_REGISTER": "1"}   # the registration itself: tests/test_plugin_register.py (a fake claude)
 
 
 def install(p: Path, base: Path, *opts: str) -> subprocess.CompletedProcess:
