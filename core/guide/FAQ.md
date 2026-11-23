@@ -126,8 +126,8 @@ shows it too. You change it in a terminal, outside Claude Code: `tf isolation <l
 with the factory's sandbox; in the default layout the installer puts it into your `.claude/settings.local.json` (your
 own `sandbox` setting stays). On Linux the sandbox needs bubblewrap (`bwrap`). With `container` (or `tf code --container`) the session runs in
 the factory's image with Docker or Podman: only the project is mounted, the firewall lets out only Anthropic, GitHub,
-the package registries and your `isolation_allow_domains`, and `git push` has no keys there — you push from your own
-terminal. Known limits: services on the host's
+the package registries and your `isolation_allow_domains`, and `git push` has no keys there — the agent commits, and after the session
+`tf code --container` tells you how many commits wait for your `git push`. Known limits: services on the host's
 localhost are unreachable from commands, and on Linux `git add -A` can trip over the placeholder files.
 
 ## Why does the agent ask for consent to a command?
