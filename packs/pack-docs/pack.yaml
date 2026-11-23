@@ -7,7 +7,7 @@ description: Technical writing — README, API docs, ADRs, changelogs, runbooks 
 content_language: en
 default: true          # selected by default in the installer
 requires:
-  core: ">=3.0.0 <24.0.0"
+  core: ">=3.0.0 <25.0.0"
 # The docs skill gives examples from the skills of these overlays; without them the references are plain text.
 optional_packs: [pack-it, pack-ux, pack-editorial-pl]
 
