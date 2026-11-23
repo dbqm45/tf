@@ -177,7 +177,8 @@ def main() -> int:
             code, body = get(port, f"/{tok}/")
             check(code == 200 and "EventSource" in body and "const RUNS = [" in body and "Sort the list" in body,
                   f"L-1c: the page with the token is the dashboard with the data: {code} {body[:120]!r}")
-            for path in ("/", "/data", "/events", f"/{tok[:-1]}x/", f"/{tok}x/data", "/health"):
+            other = tok[:-1] + ("y" if tok[-1] == "x" else "x")   # a wrong token: the last character always differs
+            for path in ("/", "/data", "/events", f"/{other}/", f"/{tok}x/data", "/health"):
                 code, _ = get(port, path)
                 check(code == 404, f"L-1d: no token → 404: {path} {code}")
             code, _ = get(port, f"/{tok}/.live.json")
