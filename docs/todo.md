@@ -107,7 +107,7 @@ rozszerza fabrykę i niczego w niej nie zmienia, dopóki ktoś tego nie włączy
   Gateway). Do rozważenia: ostrzeżenie na starcie sesji, gdy `model` z ustawień jest spoza listy.
 - [x] (2026-11-22: czyta, test MC-10) **`model_check.py` nie czyta identyfikatorów z warstwy firmy i zespołu** (kontrola nazw `claude-…` patrzy na
   silnik i projekt; lista zatwierdzonych już czyta wszystkie warstwy). Drobne, osobna zmiana.
-- [ ] **`tf standard`** (jedno polecenie „czy repo spełnia standard”, wersja z 9.17) — odłożone: najpierw porównanie
+- [x] (2026-11-23: zamiast osobnego polecenia `tf analyze run --fail-on <ważność>` — bramka CI, test A-4f) **`tf standard`** (jedno polecenie „czy repo spełnia standard”, wersja z 9.17) — odłożone: najpierw porównanie
   z `tf status`, `tf task check` i standardami firmowymi (`tf analyze`), żeby nie powstało drugie polecenie o tym samym.
 - [ ] **Pola opisu modelu** (`provider`, `regions`, `data`, `contract`) są dziś tylko dla ludzi. Gdy powstanie
   rejestr AI (pdi: DI AI Registry), uzgodnić z nim format, zamiast rozwijać własny.

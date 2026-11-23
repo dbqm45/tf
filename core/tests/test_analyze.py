@@ -165,6 +165,16 @@ def main() -> int:
               f"A-4: druga linia raportu to werdykt: {text[:200]}")
         check("## Scope" in text and "floor 0" in text and "Analysis history" in text,
               f"A-4: the report has the scope (floors) and the history: {text}")
+        # A-4f --fail-on: a CI gate — exit 1 when a finding is at least that severe (a: one high, one low)
+        r = run("run", "--fail-on", "high", cwd=repo, env=env)
+        check(r.returncode == 1 and "fail-on" in r.stdout + r.stderr and "SEC-" in r.stdout + r.stderr,
+              f"A-4f: --fail-on high with a high finding → exit 1 naming the finding: {r.returncode} {r.stdout}{r.stderr}")
+        r = run("run", "--fail-on", "critical", cwd=repo, env=env)
+        check(r.returncode == 0, f"A-4f: --fail-on critical with nothing critical → exit 0: {r.returncode} {r.stdout}{r.stderr}")
+        r = run("run", "--fail-on", "low", cwd=repo, env=env)
+        check(r.returncode == 1, f"A-4f: --fail-on low counts every severity at or above low: {r.returncode} {r.stdout}")
+        r = run("run", "--fail-on", "urgent", cwd=repo, env=env)
+        check(r.returncode == 2, f"A-4f: an unknown severity is refused: {r.returncode} {r.stderr}")
         (repo / "src" / "a.py").write_text("\n\nx = 1\n# TODO-SEC HIGH token\n# TODO-SEC minor\n# TODO-SEC minor\n")
         commit(repo)
         run("run", cwd=repo, env=env)

@@ -4,7 +4,8 @@ tf init / tf analyze — the `.tf/` directory for the factory's work results and
 
   python3 .tf/factory/analyze.py init                      # the .tf/ skeleton (idempotent) and a directory map
   python3 .tf/factory/analyze.py list                      # available modules and whether they apply to the repo
-  python3 .tf/factory/analyze.py run [--only a,b] [--since <commit>] [--top N]
+  python3 .tf/factory/analyze.py run [--only a,b] [--since <commit>] [--top N] [--fail-on critical|high|medium|low]
+                                                         # --fail-on: exit 1 on an open finding that severe or worse (CI)
   python3 .tf/factory/analyze.py gate [--module m]          # gate: a module on its own test set (fixtures/)
 
 A module is a directory with `analyzer.yaml` (name, prefix, title, description, version, applies_when.files_any,
@@ -412,7 +413,7 @@ def save_register(root: Path, reg: dict[str, dict]) -> None:
                     encoding="utf-8")
 
 
-def cmd_run(root: Path, only: list[str], since: str | None, top: int | None) -> int:
+def cmd_run(root: Path, only: list[str], since: str | None, top: int | None, fail_on: str | None = None) -> int:
     if not (root / TF / "reports").exists():
         cmd_init(root)
     cfg = load_yaml(root / TF / "config" / "config.yaml")
@@ -440,6 +441,12 @@ def cmd_run(root: Path, only: list[str], since: str | None, top: int | None) -> 
         print(f"{'✗' if err else '✓'} {name}: {verdict} — findings {len(found)}, to do {open_n}"
               + (f" ({err})" if err else ""))
     save_register(root, reg)
+    blocking = []
+    if fail_on:                            # a CI gate: open findings at least this severe fail the run
+        limit = SEVERITY.index(fail_on)
+        blocking = [f for _m, found, err, _s in results.values() if not err for f in found
+                    if f.get("severity") in SEVERITY and SEVERITY.index(f["severity"]) <= limit
+                    and (reg.get(f["id"]) or {}).get("status") != "resolved"]
     for m, why in skipped:
         rows.append(f"| {m['name']} | skipped: {why} | — | — |")
         print(f"- {m['name']}: skipped ({why})")
@@ -448,7 +455,11 @@ def cmd_run(root: Path, only: list[str], since: str | None, top: int | None) -> 
          "| Module | Verdict | To do | Findings |", "|---|---|---|---|", *rows, "",
          "The list of actions in a module report is a view of the register `.tf/register/items.jsonl`: ticking changes "
          "the item's status at the next analysis."]) + "\n", encoding="utf-8")
-    return 1 if failed else 0
+    if blocking:
+        print(f"✗ --fail-on {fail_on}: {len(blocking)} open finding{'s' if len(blocking) != 1 else ''} at {fail_on} "
+              "or above — " + ", ".join(f"{f['id']} {f['severity']} ({f['file']}:{f.get('line', '?')})"
+                                        for f in blocking[:10]) + (" …" if len(blocking) > 10 else ""))
+    return 1 if failed or blocking else 0
 
 
 # ───────────── module gate ─────────────
@@ -504,6 +515,7 @@ def main(argv=None) -> int:
     r.add_argument("--only", default="")
     r.add_argument("--since")
     r.add_argument("--top", type=int)
+    r.add_argument("--fail-on", choices=SEVERITY, help="exit 1 when an open finding is at least this severe (CI gate)")
     g = sub.add_parser("gate")
     g.add_argument("--module")
     a = ap.parse_args(argv)
@@ -515,7 +527,7 @@ def main(argv=None) -> int:
             return cmd_list(root)
         if a.cmd == "gate":
             return cmd_gate(root, a.module)
-        return cmd_run(root, [x for x in a.only.split(",") if x], a.since, a.top)
+        return cmd_run(root, [x for x in a.only.split(",") if x], a.since, a.top, a.fail_on)
     except RuntimeError as e:
         print(f"✗ {e}")
         return 2
