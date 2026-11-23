@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.5.1] — 2026-11-23
+### Fixed
+- **core:** the container firewall sometimes blocks an allowed domain (#407)
+
 ## [24.5.0] — 2026-11-23
 ### Added
 - **core:** the company's minimum isolation level (isolation_min) (#406)
