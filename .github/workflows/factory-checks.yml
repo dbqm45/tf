@@ -40,6 +40,22 @@ jobs:
       - name: Dodatki (addons/*) — niezależne od rdzenia i od siebie
         run: for t in addons/*/tests/test_*.py; do python3 "$t" || exit 1; done
 
+  container:
+    # The session image of the isolation level `container` (core/factory/container/): build, firewall, read-only
+    # filesystem, the session as `node` without capabilities (tests/test_container_image.py)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python3 tests/test_container_image.py
+        env:
+          TF_CONTAINER_TEST: "1"
+
   workspace:
     runs-on: ubuntu-latest
     timeout-minutes: 30

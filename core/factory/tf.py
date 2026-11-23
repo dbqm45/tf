@@ -50,8 +50,9 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf task mode <KEY> [plan|normal|auto]   # who approves: plan stops after the plan, normal waits for the human's approval of the plan, auto does not
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
-  tf code [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin), its settings and the isolation
-                              # level (the sandbox for `sandbox`); a plain
+  tf code [--container] [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin), its settings
+                              # and the isolation level (the sandbox for `sandbox`; --container or the level `container`:
+                              # in the factory's container with Docker or Podman, only the project mounted); a plain
                               # `claude` in the project loads nothing from the factory (install --layout plugin)
   tf cloud-setup [--apply]    # factory mode in a cloud environment: prints the environment's setup script; --apply
                               # enables the factory plugin and its session settings in ~/.claude/settings.json
@@ -431,6 +432,13 @@ def cmd_code(rest: list[str]) -> int:
     session settings with the isolation level (the sandbox for `sandbox` and `container`); TF_ISOLATION names the level."""
     if not need_project():
         return 2
+    container = "--container" in rest
+    rest = [a for a in rest if a != "--container"]
+    if container or isolation_level() == "container":
+        if not (Path(".tf") / "factory" / "container.py").is_file():
+            print("✗ This engine has no container level yet — update the factory (`tf`).")
+            return 2
+        return project_module("container").run(Path.cwd(), rest)
     if factory_layout() != "plugin":
         print("ℹ This project has the default layout (factory files in .claude/, loaded by every session) — starting "
               "claude as usual. The factory mode needs the plugin layout (install.py --layout plugin); moving existing "

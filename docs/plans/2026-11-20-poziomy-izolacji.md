@@ -2,7 +2,7 @@
 
 Data: 2026-11-20. Prośba właściciela: po uruchomieniu fabryki ani fabryka, ani Claude nie mogą nic zrobić poza
 folderem projektu. Uzasadnienie i ocena poziomów: `docs/insights/isolation.md`. Decyzje właściciela zapisane 2026-11-22
-(sekcja „Decyzje właściciela”). Stan: I1–I3 zrobione (2026-11-22/23), I4–I9 otwarte.
+(sekcja „Decyzje właściciela”). Stan: I1–I4 zrobione (2026-11-22/23), I5–I9 otwarte.
 
 ## Cel
 
@@ -49,7 +49,10 @@ w projekcie przeszedł). W układzie domyślnym (bez wtyczki) instalator wpisuje
   Użytkownik bez uprawnień roota w kontenerze; system plików obrazu tylko do odczytu tam, gdzie się da.
 - Zapora (iptables/nftables w kontenerze, jak w referencyjnym devcontainerze Claude Code): domyślnie blokada, dozwolone
   API Anthropic, GitHub i rejestry pakietów; dodatkowe domeny z `isolation_allow_domains` w konfiguracji projektu.
-- Wewnątrz kontenera działa poziom 2 (sandbox Bash) jako druga warstwa.
+- ~~Wewnątrz kontenera działa poziom 2 (sandbox Bash) jako druga warstwa.~~ Zmiana przy I4 (2026-11-23): w kontenerze
+  ustawienia sesji są bez sandboxa Bash — granicą jest kontener. Powód: bubblewrap pod domyślnym profilem seccomp
+  Dockera najpewniej nie startuje [założenie: niezmierzone — w kontenerze sesji nie dało się zainstalować pakietów
+  Debiana], a nieudany sandbox przy `allowUnsandboxedCommands: false` mógłby zablokować wszystkie polecenia.
 - Szablon `devcontainer.json` na tym samym obrazie dla VS Code i JetBrains (opcjonalnie, decyzja D2).
 
 **Widoczność.**
