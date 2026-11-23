@@ -50,10 +50,11 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf task mode <KEY> [plan|normal|auto]   # who approves: plan stops after the plan, normal waits for the human's approval of the plan, auto does not
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
-  tf code [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin), its settings and the isolation
-                              # level (the sandbox for `sandbox`, only here). Install registers the plugin for the folder
-                              # (local scope), so a plain `claude` and the Desktop app load it too, as /tf:tf …;
-                              # unregistered (tf doctor says), only `tf code` loads it
+  tf code [--container] [claude arguments]  # factory session: claude with the factory plugin (.tf/plugin), its settings
+                              # and the isolation level (the sandbox for `sandbox`, only here; --container or the level
+                              # `container`: in the factory's container with Docker or Podman, only the project mounted).
+                              # Install registers the plugin for the folder (local scope), so a plain `claude` and the
+                              # Desktop app load it too, as /tf:tf …; unregistered (tf doctor says), only `tf code` loads it
   tf cloud-setup [--apply]    # factory mode in a cloud environment: prints the environment's setup script; --apply
                               # enables the factory plugin and its session settings in ~/.claude/settings.json
   tf work --once --budget <USD> [--key <KEY>] [--dry-run]
@@ -445,6 +446,13 @@ def cmd_code(rest: list[str]) -> int:
     session settings with the isolation level (the sandbox for `sandbox` and `container`); TF_ISOLATION names the level."""
     if not need_project():
         return 2
+    container = "--container" in rest
+    rest = [a for a in rest if a != "--container"]
+    if container or isolation_level() == "container":
+        if not (Path(".tf") / "factory" / "container.py").is_file():
+            print("✗ This engine has no container level yet — update the factory (`tf`).")
+            return 2
+        return project_module("container").run(Path.cwd(), rest)
     if factory_layout() != "plugin":
         print("ℹ Classic layout (the factory in .claude/, loaded by every session, the Desktop app too) — starting "
               "claude as usual; the isolation level's sandbox is in .claude/settings.local.json.", file=sys.stderr)

@@ -492,6 +492,9 @@ read_gate:
 # isolation); sandbox — Claude Code's sandbox limits the files and the network of commands; container — the session runs
 # in a container. Changed only from a human's terminal: `tf isolation <level>`. `tf doctor` shows what really protects.
 isolation: sandbox
+# Level container only: domains the container's firewall lets out besides the fixed list (Anthropic API, GitHub,
+# package registries), e.g. [registry.example.com]. Exact names, resolved once at the session start.
+isolation_allow_domains: []
 
 # The /tf-task loop. blocked_slices: true — a question blocks only its own slice (`run_state.py block`), and the loop does in the
 # meantime the slices that do not depend on it (dependencies are recorded by the plan: `· after: S1`, `· after: none`); STOP only when

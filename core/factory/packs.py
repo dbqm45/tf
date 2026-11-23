@@ -74,7 +74,7 @@ def deep_merge(base: dict, over: dict) -> dict:
 # Company pack (`org_defaults` in pack.yaml): organization defaults between the engine and the project. Only these configuration
 # keys — the rest is factory assembly (dimensions, agents), which the company pack does not rearrange.
 ORG_CONFIG_KEYS = ("autonomy", "tiers", "profiles", "default_profile", "work", "loop", "steps", "task",
-                   "commit_language", "models_approved", "isolation",
+                   "commit_language", "models_approved", "isolation", "isolation_allow_domains",
                    "addons")   # addons.<name>: settings the core passes to that add-on
 ORG_OPERATIONS_KEYS = ("tracker",)
 

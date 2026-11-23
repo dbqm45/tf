@@ -104,7 +104,7 @@ Deprecation works like this:
   back; the manifest field `layout`); the local plugin `.tf/plugin/` (`.claude-plugin/plugin.json` named `tf`, `skills/`, `agents/`,
   `hooks/hooks.json`, `RULES.md`, `session-settings.json`), the directory marketplace `.tf/.claude-plugin/marketplace.json`
   (`tf-project`, plugin `tf`), the hook `.claude/hooks/factory_rules.py` (SessionStart, the rules from `RULES.md`),
-  `tf code [claude arguments]` (`--settings .tf/cache/session-settings.json`: the plugin's session settings with the
+  `tf code [--container] [claude arguments]` (`--container` or the level `container`: `.tf/factory/container.py` runs the image `tf-sandbox:<version>` from `.tf/factory/container/` with Docker or Podman — `TF_CONTAINER_ENGINE` chooses —, only the project mounted at `/workspace`, the volume `tf-claude-<project>`, the firewall's domains in `TF_ALLOW_DOMAINS` from the fixed list and the key `isolation_allow_domains`, `TF_CONTAINER=1` in the image; `--settings .tf/cache/session-settings.json`: the plugin's session settings with the
   isolation level, `TF_ISOLATION` names the level for the session; `isolation.py launch` builds the file), `tf cloud-setup [--apply]` (user settings: `extraKnownMarketplaces.tf-project`,
   `enabledPlugins["tf@tf-project"]`), `TF_CLAUDE`, `E0_LAYOUT=plugin`; factory skills keep their scripts and references
   under `.claude/skills/<skill>/` without `SKILL.md`. The registration for the folder (`plugin_register.py

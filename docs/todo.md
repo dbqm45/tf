@@ -77,7 +77,14 @@ człowieka, D2 na start tylko terminal, D3 stała lista + domeny projektu, D4 `s
   (`container`, `TF_ISOLATION`, sandbox z ustawień albo `⚠ no sandbox`), `guard_bash` i `guard_paths` odmawiają
   obniżenia poziomu z sesji (`tf isolation <poziom>`, `isolation.py set`, `--isolation`, klucz `isolation`, klucz
   `sandbox` w `.claude/settings*.json`, pliki ustawień sesji, szablon sandboxa); `core/tests/test_isolation_hooks.py`.
-- [ ] I4 obraz i `tf code --container` → I5 kontener tylko commituje; I6 odłożone (D2); I7–I9.
+- [x] I4 (2026-11-23): obraz `tf-sandbox:<wersja>` (`core/factory/container/`: Dockerfile z bazą przypiętą
+  digestem i Claude Code 2.1.330, `init_firewall.sh` — domyślnie DROP, dozwolone DNS i adresy z `TF_ALLOW_DOMAINS`,
+  `entrypoint.sh` — zapora jako root, potem `node` bez uprawnień), `container.py` i `tf code --container` (albo poziom
+  `container`): Docker albo Podman (`TF_CONTAINER_ENGINE`), montaż tylko projektu i woluminu `tf-claude-<projekt>`,
+  system plików tylko do odczytu, `isolation_allow_domains`; w kontenerze bez sandboxa Bash (zmiana planu, opis
+  w planie). Testy: `core/tests/test_isolation_container.py`, obraz w zadaniu CI `container`
+  (`tests/test_container_image.py`).
+- [ ] I5 kontener tylko commituje (push z komputera człowieka); I6 odłożone (D2); I7–I9.
 
 ## Program AI: bramka ewaluacji i zatwierdzone modele — zapisane 2026-11-19
 Plan: `docs/plans/2026-11-19-bramka-ewaluacji-i-zatwierdzone-modele.md` (źródło: pdi
