@@ -1,0 +1,16 @@
+{
+ "files": {
+  "package.json": "{\n  \"name\": \"orders-api\",\n  \"version\": \"1.0.0\",\n  \"private\": true,\n  \"scripts\": {\n    \"start\": \"node src/index.js\",\n    \"test\": \"jest\",\n    \"lint\": \"eslint .\"\n  },\n  \"dependencies\": {\n    \"express\": \"^4.19.2\",\n    \"pg\": \"^8.11.3\"\n  },\n  \"devDependencies\": {\n    \"eslint\": \"^8.57.0\",\n    \"jest\": \"^29.7.0\",\n    \"supertest\": \"^6.3.4\"\n  }\n}\n",
+  "src/index.js": "const express = require('express');\nconst orders = require('./routes/orders');\nconst invoices = require('./routes/invoices');\n\nconst app = express();\napp.use(express.json());\napp.use('/orders', orders);\ninvoices(app);\n\napp.get('/health', (req, res) => res.json({ ok: true }));\napp.get('/customers/:id', async (req, res) => {\n  const db = require('./db');\n  const { rows } = await db.query('SELECT * FROM customers WHERE id = $1', [req.params.id]);\n  res.json(rows[0] || null);\n});\n\nif (require.main === module) app.listen(process.env.PORT || 3000);\nmodule.exports = app;\n",
+  "src/db.js": "const { Pool } = require('pg');\nmodule.exports = new Pool({ connectionString: process.env.DATABASE_URL });\n",
+  "src/routes/orders.js": "const router = require('express').Router();\nconst db = require('../db');\n\nrouter.get('/', async (req, res) => {\n  const { rows } = await db.query('SELECT * FROM orders ORDER BY id DESC LIMIT 50');\n  res.json(rows);\n});\n\nrouter.post('/', async (req, res) => {\n  const { customerId, total } = req.body;\n  const { rows } = await db.query('INSERT INTO orders(customer_id, total) VALUES ($1, $2) RETURNING *', [customerId, total]);\n  res.status(201).json(rows[0]);\n});\n\nmodule.exports = router;\n",
+  "src/routes/invoices.js": "const db = require('../db');\n\nmodule.exports = function (app) {\n  app.get('/invoices/:id', function (req, res) {\n    db.query('SELECT * FROM invoices WHERE id = $1', [req.params.id]).then(function (r) { res.json(r.rows[0]); });\n  });\n};\n",
+  "test/health.test.js": "const request = require('supertest');\nconst app = require('../src/index');\n\ntest('health', async () => {\n  const res = await request(app).get('/health');\n  expect(res.body).toEqual({ ok: true });\n});\n",
+  "test/orders.test.js": "jest.mock('../src/db', () => ({ query: jest.fn(async () => ({ rows: [{ id: 1 }] })) }));\nconst request = require('supertest');\nconst app = require('../src/index');\n\ntest('list orders', async () => {\n  const res = await request(app).get('/orders');\n  expect(res.status).toBe(200);\n});\n",
+  ".github/workflows/ci.yml": "name: ci\non: [push, pull_request]\njobs:\n  lint:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 20\n      - run: npm install\n      - run: npm run lint\n",
+  ".env.example": "DATABASE_URL=postgres://app:app@127.0.0.1:5432/orders\nPORT=3000\nSTRIPE_SECRET_KEY=Q7mZp2Lw9Vt4Rk8Xc3Nb6Hy1Jd5Fs0Ga\n",
+  "compose.yaml": "services:\n  db:\n    image: postgres:16\n    environment:\n      POSTGRES_USER: app\n      POSTGRES_PASSWORD: app\n      POSTGRES_DB: orders\n    ports:\n      - \"5432:5432\"\n",
+  "README.md": "# Orders API\n\nInternal API for orders, customers and invoices.\n",
+  ".gitignore": "node_modules/\n"
+ }
+}

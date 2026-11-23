@@ -12,6 +12,12 @@ Skill evaluations on a real model through Claude Code in non-interactive mode (`
 Each scenario runs `claude -p` in a temporary directory with a copy of `.claude/skills` (`plan` mode, no file
 changes), reads the event stream and checks: whether the skill was triggered (the Skill tool or a read of its SKILL.md),
 whether the answer passes the content checks. Scenario format: tests/skill_evals/README.md.
+Task scenarios (`tests/skill_evals/tasks/<skill>.json`, `"kind": "task"`, run only with `--tasks`): the run gets a
+fixture project (`tasks/fixtures/<name>.json`), accepted edits and the scenario's tools (Bash included), and is checked
+on the Bash commands it ran, the files it left and a command run after it (`checks.commands`, `no_commands`, `files`,
+`count`, `after`) — the skill's procedure. Plan: docs/plans/2026-11-23-scenariusze-przebiegu-a3-a2a.md.
+  python3 tests/run_skill_evals.py --tasks --skills eng-repo-readiness --baseline --models haiku
+
 Standard library only. The `claude` command can be replaced with the CLAUDE_BIN variable (tests use a stub).
 """
 from __future__ import annotations
@@ -33,6 +39,9 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 EVALS = HERE / "skill_evals"
+TASKS = EVALS / "tasks"           # task scenarios (a fixture project, edits, Bash) — costly, only with --tasks
+TASK_TOOLS = ["Read", "Grep", "Glob", "Edit", "Write", "Bash"]
+TASK_CHECKS = ("commands", "no_commands", "files", "count", "after")
 ROOT = next((p for p in HERE.parents if (p / ".claude" / "skills").is_dir()), HERE.parent)
 SKILLS = ROOT / ".claude" / "skills"
 EXPECT = ("trigger", "no-trigger")
@@ -40,6 +49,7 @@ EXPECT = ("trigger", "no-trigger")
 DEFAULT_BUDGET_USD = 5.0
 # Approximate cost of one run (USD) for a rough forecast before the start; Claude Code reports the real cost.
 COST_GUESS = {"haiku": 0.14, "sonnet": 0.15, "opus": 0.45}   # haiku and sonnet: average from docs/evals/2026-10-18-*
+COST_GUESS_TASK = {"haiku": 0.02, "sonnet": 0.1, "opus": 0.3}  # haiku: pilot 2026-11-23 (0.008–0.021, docs/evals/2026-11-23-pilot-a3-a2a.md); sonnet, opus: an estimate
 # Messages meaning a usage or rate limit — after them the runner does not start further runs.
 LIMIT_RE = re.compile(r"usage limit|rate limit|rate_limit|session limit|limit reached|429|overloaded|quota", re.I)
 
@@ -66,9 +76,55 @@ def skill_inactive(name: str) -> bool:
     return bool(m and re.search(r"^\s+status:\s*[\"']?inactive[\"']?", m.group(1), re.M))
 
 
-def validate_file(path: Path, holdout: bool = False) -> list[str]:
+def _regex_errors(where: str, rxs) -> list[str]:
+    errs = []
+    for rx in rxs:
+        try:
+            re.compile(rx)
+        except (re.error, TypeError) as e:
+            errs.append(f"{where}: invalid expression {rx!r} ({e})")
+    return errs
+
+
+def validate_task(where: str, s: dict) -> list[str]:
+    """One task scenario: a trigger, `kind: task`, an existing fixture, at least one task check, valid expressions."""
+    errs = []
+    if s.get("kind") != "task":
+        errs.append(f"{where}: a file in tasks/ holds only scenarios with kind: task")
+    if s.get("expect") != "trigger":
+        errs.append(f"{where}: a task scenario measures the skill's procedure — expect: trigger")
+    if s.get("fixture") and not (TASKS / "fixtures" / f"{s['fixture']}.json").is_file():
+        errs.append(f"{where}: no fixture tasks/fixtures/{s['fixture']}.json")
+    checks = s.get("checks") or {}
+    if not any(checks.get(k) for k in TASK_CHECKS):
+        errs.append(f"{where}: a task scenario needs a task check ({', '.join(TASK_CHECKS)})")
+    rxs = [rx for g in checks.get("commands") or [] for rx in (g if isinstance(g, list) else [g])]
+    rxs += list(checks.get("no_commands") or []) + [rx for g in checks.get("all") or [] for rx in g]
+    rxs += list(checks.get("none") or [])
+    for f in checks.get("files") or []:
+        if not isinstance(f, dict) or not f.get("glob"):
+            errs.append(f"{where}: checks.files entries need a glob")
+            continue
+        rxs += list(f.get("matches") or []) + list(f.get("not_matches") or [])
+    for c in checks.get("count") or []:
+        if not isinstance(c, dict) or not c.get("glob") or not c.get("rx") or not isinstance(c.get("min"), int):
+            errs.append(f"{where}: checks.count entries need glob, rx and min")
+            continue
+        rxs.append(c["rx"])
+    after = checks.get("after")
+    if after is not None and not (isinstance(after, dict) and isinstance(after.get("cmd"), list) and after["cmd"]):
+        errs.append(f"{where}: checks.after needs cmd (a list of arguments)")
+    errs += _regex_errors(where, rxs)
+    for rel in (s.get("files") or {}):
+        if rel.startswith("/") or ".." in Path(rel).parts:
+            errs.append(f"{where}: file {rel} must be a relative path inside the working directory")
+    return errs
+
+
+def validate_file(path: Path, holdout: bool = False, kind: str = "") -> list[str]:
     """A skill's scenario file. `holdout`: file of the closed test set (skill_evals/holdout/) — only trigger scenarios
-    with checks, no minimum of three and no no-trigger (the main file guards the limits)."""
+    with checks, no minimum of three and no no-trigger (the main file guards the limits). `kind="task"`: a task file
+    (skill_evals/tasks/) — task scenarios only, no minimum."""
     errs = []
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -80,6 +136,19 @@ def validate_file(path: Path, holdout: bool = False) -> list[str]:
     if not (SKILLS / str(name) / "SKILL.md").exists():
         errs.append(f"{path.name}: no skill {name} in .claude/skills")
     sc = data.get("scenarios") or []
+    if kind == "task":
+        if not sc:
+            errs.append(f"{path.name}: task file without scenarios")
+        ids = set()
+        for i, s in enumerate(sc):
+            where = f"{path.name}#{s.get('id', i)}"
+            if not s.get("id") or s["id"] in ids:
+                errs.append(f"{where}: missing or duplicated id")
+            ids.add(s.get("id"))
+            if len(str(s.get("prompt", ""))) < 15:
+                errs.append(f"{where}: prompt too short")
+            errs += validate_task(where, s)
+        return errs
     if holdout:
         if not sc:
             errs.append(f"{path.name}: holdout file without scenarios")
@@ -198,20 +267,25 @@ def select_ids(scenarios: list[dict], ids: str) -> tuple[list[dict], list[str]]:
             [w for w in want if not any(hit(s, w) for s in scenarios)])
 
 
-def scenario_files() -> list[tuple[Path, bool]]:
-    """Scenario files: main (tuning and gate) and the closed test set `holdout/` (measurement only)."""
-    return [(p, False) for p in sorted(EVALS.glob("*.json"))] + \
-           [(p, True) for p in sorted((EVALS / "holdout").glob("*.json"))]
+def scenario_files() -> list[tuple[Path, str]]:
+    """Scenario files with their kind: "" main (tuning and gate), "holdout" the closed test set (measurement only),
+    "task" task scenarios (`tasks/`, run only with --tasks)."""
+    return [(p, "") for p in sorted(EVALS.glob("*.json"))] + \
+           [(p, "holdout") for p in sorted((EVALS / "holdout").glob("*.json"))] + \
+           [(p, "task") for p in sorted(TASKS.glob("*.json"))]
 
 
-def load_scenarios(patterns: list[str]) -> list[dict]:
+def load_scenarios(patterns: list[str], tasks: bool = False) -> list[dict]:
+    """Question scenarios, or with `tasks=True` only the task scenarios."""
     out = []
-    for p, ho in scenario_files():
+    for p, kind in scenario_files():
+        if (kind == "task") != tasks:
+            continue
         if patterns and not any(fnmatch.fnmatch(p.stem, pat.strip()) for pat in patterns):
             continue
         data = json.loads(p.read_text(encoding="utf-8"))
         for s in data["scenarios"]:
-            out.append({**s, "skill": data["skill"], **({"holdout": True} if ho else {})})
+            out.append({**s, "skill": data["skill"], **({"holdout": True} if kind == "holdout" else {})})
     return out
 
 
@@ -226,6 +300,57 @@ def evaluate_checks(text: str, checks: dict) -> tuple[bool, list[str]]:
         if re.search(rx, text, re.I | re.S):
             misses.append("unwanted: " + rx)
     return not misses, misses
+
+
+def task_checks(checks: dict, commands: list[str], ws: Path, timeout: int = 300) -> tuple[int, list[str]]:
+    """The task groups of a scenario on the run's Bash commands and the directory it left: the number of groups and
+    the misses (each beginning with "missing:")."""
+    groups, misses = 0, []
+    for g in checks.get("commands") or []:
+        groups += 1
+        alts = g if isinstance(g, list) else [g]
+        if not any(re.search(rx, c, re.I) for rx in alts for c in commands):
+            misses.append("missing: command " + " | ".join(alts))
+    for rx in checks.get("no_commands") or []:
+        groups += 1
+        hit = next((c for c in commands if re.search(rx, c, re.I)), None)
+        if hit:
+            misses.append(f"missing: no command {rx} (ran: {hit[:120]})")
+    for f in checks.get("files") or []:
+        groups += 1
+        paths = [p for p in sorted(ws.glob(f["glob"])) if p.is_file()]
+        if f.get("exists", True) is False:
+            if paths:
+                misses.append(f"missing: absent {f['glob']} (found {paths[0].relative_to(ws)})")
+            continue
+        if not paths:
+            misses.append(f"missing: file {f['glob']}")
+            continue
+        text = "\n".join(p.read_text(encoding="utf-8", errors="replace") for p in paths)
+        lacking = [rx for rx in f.get("matches") or [] if not re.search(rx, text, re.I | re.M)]
+        unwanted = [rx for rx in f.get("not_matches") or [] if re.search(rx, text, re.I | re.M)]
+        if lacking or unwanted:
+            misses.append(f"missing: {f['glob']}" + (f" lacks {lacking}" if lacking else "")
+                          + (f" contains {unwanted}" if unwanted else ""))
+    for c in checks.get("count") or []:
+        groups += 1
+        n = sum(len(re.findall(c["rx"], p.read_text(encoding="utf-8", errors="replace"), re.M))
+                for p in sorted(ws.glob(c["glob"])) if p.is_file())
+        if n < c["min"]:
+            misses.append(f"missing: {c['min']}× {c['rx']} in {c['glob']} (found {n})")
+    after = checks.get("after")
+    if after:
+        groups += 1
+        env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")}
+        try:
+            r = subprocess.run(after["cmd"], cwd=ws, capture_output=True, text=True, timeout=timeout, env=env,
+                               stdin=subprocess.DEVNULL)
+            code, out = r.returncode, (r.stdout + r.stderr).strip()[-300:]
+        except (OSError, subprocess.TimeoutExpired) as e:
+            code, out = None, str(e)[:300]
+        if code != after.get("exit", 0):
+            misses.append(f"missing: {' '.join(after['cmd'])} → exit {after.get('exit', 0)} (got {code}: {out})")
+    return groups, misses
 
 
 def requirement(group: list[str]) -> str:
@@ -319,8 +444,9 @@ FILE_TOOLS = {"Read", "Grep", "Glob", "LS", "NotebookRead"}
 
 
 def parse_stream(lines: list[str]) -> dict:
-    """Skills triggered by the Skill tool or by reading SKILL.md, answer text, cost, number of turns."""
-    skills, text, cost, turns, error, via, tool_errors, paths = [], "", 0.0, 0, None, {}, [], []
+    """Skills triggered by the Skill tool or by reading SKILL.md (Read, or a Bash command naming it), the Bash commands,
+    answer text, cost, number of turns."""
+    skills, text, cost, turns, error, via, tool_errors, paths, commands = [], "", 0.0, 0, None, {}, [], [], []
     for line in lines:
         try:
             e = json.loads(line)
@@ -331,6 +457,12 @@ def parse_stream(lines: list[str]) -> dict:
                 if c.get("type") != "tool_use":
                     continue
                 inp = c.get("input") or {}
+                if c.get("name") == "Bash" and inp.get("command"):
+                    commands.append(str(inp["command"]))
+                    # a task run often reads the skill with cat/sed/head instead of the Read tool — that also counts
+                    for m in re.finditer(r"\.claude/skills/([^/\s'\"]+)/SKILL\.md", str(inp["command"])):
+                        skills.append(m.group(1))
+                        via.setdefault(m.group(1), "Bash")
                 if c.get("name") in FILE_TOOLS:
                     p = inp.get("file_path") or inp.get("path") or inp.get("notebook_path")
                     if p:
@@ -354,7 +486,7 @@ def parse_stream(lines: list[str]) -> dict:
             if e.get("is_error") or e.get("subtype") not in (None, "success"):
                 error = (e.get("subtype") or "error") + (f": {str(e.get('result'))[:200]}" if e.get("is_error") else "")
     return {"skills": list(dict.fromkeys(skills)), "text": text, "cost": cost, "turns": turns, "error": error,
-            "via": via, "tool_errors": tool_errors, "paths": paths}
+            "via": via, "tool_errors": tool_errors, "paths": paths, "commands": commands}
 
 
 def outside(paths: list[str], ws: str) -> list[str]:
@@ -377,15 +509,30 @@ def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
                             ".claude/catalog.md", ".claude/cleanroom.json"):
                     if (ROOT / rel).is_file():
                         shutil.copy2(ROOT / rel, ws / rel)
-        for rel, content in (sc.get("files") or {}).items():
+        task = sc.get("kind") == "task"
+        files = {}
+        if task and sc.get("fixture"):
+            files.update(json.loads((TASKS / "fixtures" / f"{sc['fixture']}.json").read_text(encoding="utf-8"))["files"])
+        files.update(sc.get("files") or {})
+        for rel, content in files.items():
             f = ws / rel
             f.parent.mkdir(parents=True, exist_ok=True)
             f.write_text(content, encoding="utf-8")
         subprocess.run(["git", "init", "-q", str(ws)], capture_output=True)
+        if task:   # the fixture is the project's first commit: `git status`/`git diff` show the run's changes
+            subprocess.run(["git", "-C", str(ws), "-c", "user.name=eval", "-c", "user.email=eval@localhost",
+                            "-c", "commit.gpgsign=false", "add", "-A"], capture_output=True)
+            subprocess.run(["git", "-C", str(ws), "-c", "user.name=eval", "-c", "user.email=eval@localhost",
+                            "-c", "commit.gpgsign=false", "commit", "-qm", "fixture", "--", "."], capture_output=True)
         cmd = [os.environ.get("CLAUDE_BIN", "claude"), "-p", sc["prompt"], "--model", model,
-               "--max-turns", str(args.max_turns), "--permission-mode", "plan",
+               "--max-turns", str(sc.get("max_turns", args.max_turns) if task else args.max_turns),
+               "--permission-mode", "acceptEdits" if task else "plan",
                "--output-format", "stream-json", "--verbose"]
-        if baseline:   # no Bash, files only in the test directory, no user and project settings (Claude Code ≥ 2.1.248)
+        if task:   # edits and the scenario's tools (Bash included) — the task needs them with and without skills
+            cmd += ["--allowedTools", *(sc.get("allowed_tools") or TASK_TOOLS)]
+            if baseline or args.isolated:
+                cmd += ["--setting-sources", "project,local"]
+        elif baseline:   # no Bash, files only in the test directory, no user and project settings (Claude Code ≥ 2.1.248)
             cmd += ["--restricted"]
         elif args.isolated:
             cmd += ["--setting-sources", "project,local"]
@@ -403,12 +550,24 @@ def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
         outside_reads = outside(parsed.get("paths", []), str(ws))
         if baseline and outside_reads and not parsed["error"]:
             parsed["error"] = "read outside the test directory (the result without skills is unreliable): " + ", ".join(outside_reads[:3])
+        if task and baseline and parsed.get("skills") and not parsed["error"]:
+            parsed["error"] = ("a skill was triggered in the run without skills (personal skills?) — the result is "
+                               "unreliable: " + ", ".join(parsed["skills"][:3]))
+        t_groups, t_misses = task_checks(sc.get("checks") or {}, parsed.get("commands", []), ws, args.timeout) \
+            if task and not parsed["error"] else (0, [])
+        if task and parsed["error"]:
+            t_groups = sum(len((sc.get("checks") or {}).get(k) or []) for k in TASK_CHECKS if k != "after") \
+                + (1 if (sc.get("checks") or {}).get("after") else 0)
+            t_misses = ["missing: the run failed"] * t_groups
     triggered = sc["skill"] in parsed["skills"] or any(a in parsed["skills"] for a in sc.get("accept") or [])
     if triggered and skill_meta(sc["skill"]).get("disable-model-invocation") == "true" \
             and (parsed.get("via") or {}).get(sc["skill"]) == "Read":
         triggered = False   # manual-only skill: merely reading the file is not a trigger (we count a Skill tool call)
     checks = sc.get("checks") or {}
-    ok_checks, misses = evaluate_checks(parsed["text"], checks) if parsed["text"] else (False, ["no answer"])
+    if task and not (checks.get("all") or checks.get("none")):
+        ok_checks, misses = True, []
+    else:
+        ok_checks, misses = evaluate_checks(parsed["text"], checks) if parsed["text"] else (False, ["no answer"])
     judged = False
     if not ok_checks and parsed["text"] and args.judge != "none" and checks.get("all"):
         groups = checks["all"]
@@ -426,19 +585,22 @@ def run_one(sc: dict, model: str, baseline: bool, args) -> dict:
             bad = [m for m in misses if m.startswith("unwanted")]
             misses = ["missing: " + " | ".join(g) for g in unmet] + bad
             ok_checks = not misses
+    if task:
+        misses += t_misses
+        ok_checks = ok_checks and not t_misses
     if sc["expect"] == "trigger":
         passed = triggered and ok_checks
     else:
         passed = not triggered
-    groups_total = len(checks.get("all") or [])
-    groups_met = groups_total - sum(m.startswith("missing") for m in misses) if parsed["text"] else 0
+    groups_total = len(checks.get("all") or []) + (t_groups if task else 0)
+    groups_met = groups_total - sum(m.startswith("missing") for m in misses) if (parsed["text"] or task) else 0
     return {"skill": sc["skill"], "id": sc["id"], "expect": sc["expect"], "model": model, "baseline": baseline,
             "holdout": bool(sc.get("holdout")), "repeat": sc.get("_repeat", 0),
             "groups_total": groups_total, "groups_met": max(0, groups_met),
             "triggered": triggered, "skills_used": parsed["skills"], "checks_ok": ok_checks, "misses": misses,
             "judged": judged, "judged_by": parsed.get("judged_by"),
             "judge_same_model": same_family(parsed.get("judged_by") or "", model), "via": parsed.get("via", {}), "tool_errors": parsed.get("tool_errors", []),
-            "outside_reads": outside_reads,
+            "outside_reads": outside_reads, "kind": "task" if task else "qa", "commands": parsed.get("commands", []),
             "passed": passed and not parsed["error"], "error": parsed["error"], "cost": parsed["cost"],
             "turns": parsed["turns"], "seconds": round(time.time() - t0, 1), "answer": parsed["text"]}
 
@@ -681,6 +843,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--seed", type=int, default=0, help="random seed for --per-skill")
     ap.add_argument("--yes", action="store_true", help="without asking for confirmation")
     ap.add_argument("--validate", action="store_true", help="only check the scenario files")
+    ap.add_argument("--tasks", action="store_true", help="only the task scenarios (tests/skill_evals/tasks/: a fixture "
+                    "project, edits and Bash; costly — several times a question)")
     ap.add_argument("--contribution", nargs="+", metavar="JSONL", help="only the skill contribution table from .jsonl files "
                     "of earlier runs (without running a model)")
     args = ap.parse_args(argv[1:])
@@ -699,7 +863,8 @@ def main(argv: list[str]) -> int:
         if easy:
             print("\nPassed without skills: " + ", ".join(f"{s}/{i}" for s, i in easy))
         return 0
-    errs = [("holdout/" if ho else "") + e for p, ho in scenario_files() for e in validate_file(p, holdout=ho)]
+    errs = [(f"{kind}/" if kind else "") + e for p, kind in scenario_files()
+            for e in validate_file(p, holdout=kind == "holdout", kind=kind)]
     if args.validate:
         for e in errs:
             print(f"✗ {e}")
@@ -713,7 +878,7 @@ def main(argv: list[str]) -> int:
         return 1
     if not args.all and not args.skills:
         print("Give --skills <patterns> or --all."); return 2
-    scenarios = load_scenarios([] if args.all else args.skills.split(","))
+    scenarios = load_scenarios([] if args.all else args.skills.split(","), tasks=args.tasks)
     if args.ids:
         scenarios, unknown = select_ids(scenarios, args.ids)
         if unknown:
@@ -752,7 +917,7 @@ def main(argv: list[str]) -> int:
         print(f"Resume: {len(done_keys)} runs already done, {len(jobs)} left.")
     if not jobs:
         print("No scenarios to run."); return 2
-    guess = sum(COST_GUESS.get(m, 0.15) for _, m, _ in jobs)
+    guess = sum((COST_GUESS_TASK if s.get("kind") == "task" else COST_GUESS).get(m, 0.15) for s, m, _ in jobs)
     print(f"Runs: {len(jobs)} ({len({s['skill'] for s in scenarios})} skills × {len(models)} models"
           f"{f' × {args.repeats} repeats' if args.repeats > 1 else ''}"
           f"{' + runs without skills' if args.baseline else ''}). Rough cost forecast: ~${guess:.2f}, "
