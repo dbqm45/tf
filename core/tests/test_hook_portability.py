@@ -79,6 +79,24 @@ def encoding_tests() -> list[str]:
     return fails
 
 
+def plugin_rules_test() -> list[str]:
+    """factory_rules.py is registered only in the plugin's hooks.json (not in settings), so the loop above misses it:
+    the factory rules hold characters outside cp1250 (→) and the hook crashed on Windows with UnicodeEncodeError."""
+    with tempfile.TemporaryDirectory() as d:
+        root = project(d)
+        rules = f"## Factory rules\n- tests first → code; {POLISH}\n"
+        (root / ".tf" / "plugin").mkdir(parents=True)
+        (root / ".tf" / "plugin" / "RULES.md").write_text(rules, encoding="utf-8")
+        r, _ = run([".claude/hooks/factory_rules.py"], root, payload("SessionStart"))
+        if r.returncode != 0:
+            return [f"factory_rules.py: exit code {r.returncode} with the cp1250 code page, stderr: {r.stderr[-300:]!r}"]
+        try:
+            context = json.loads(r.stdout.decode("utf-8"))["hookSpecificOutput"]["additionalContext"]
+        except (UnicodeDecodeError, ValueError, KeyError) as e:
+            return [f"factory_rules.py: stdout is not UTF-8 JSON with the cp1250 code page ({type(e).__name__})"]
+        return [] if context == rules.strip() else ["factory_rules.py: the rules came out changed"]
+
+
 def hint_test() -> list[str]:
     """A Polish prompt read under cp1250 must not get garbled (skill_hint matches word stems)."""
     with tempfile.TemporaryDirectory() as d:
@@ -125,7 +143,8 @@ def hanging_git_test() -> list[str]:
 
 
 def main() -> int:
-    tests = [("encoding", encoding_tests), ("skill_hint", hint_test), ("hung git", hanging_git_test)]
+    tests = [("encoding", encoding_tests), ("plugin rules", plugin_rules_test), ("skill_hint", hint_test),
+             ("hung git", hanging_git_test)]
     fails = []
     for name, fn in tests:
         f = fn()
