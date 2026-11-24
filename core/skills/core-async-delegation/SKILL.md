@@ -61,8 +61,9 @@ Placement rule: what the agent must not be able to do is enforced by configurati
 secret store, `--allowedTools`, `--permission-mode`, budget flags). The instruction only says what it should not try.
 
 ## 4. Executing an approved plan without a human
-Applies to `claude -p "<prompt>" --allowedTools "<list>" --permission-mode acceptEdits --max-budget-usd <amount>` or `/goal`
-running `docs/project/<step>/plan.md`. The first unticked item of the plan's progress section is the resume point. No plan
+Applies to `claude -p "<prompt>" --allowedTools "<list>" --permission-mode acceptEdits --permission-prompts none
+--max-budget-usd <amount>` or `/goal` running `docs/project/<step>/plan.md`. `--permission-prompts none` (2.1.259+): a call
+that would wait on a prompt is denied and the run goes on; rules, hooks and the mode still decide first. The first unticked item of the plan's progress section is the resume point. No plan
 file with runnable verification commands -> do not start; ask for one instead of improvising gates. Full policy with all
 line formats (a factory convention): `references/execution-policy.md`.
 - **No questions.** Conservative = fewer files, smaller behaviour change, closest to the plan's letter; record it in the
@@ -82,7 +83,10 @@ line formats (a factory convention): `references/execution-policy.md`.
   failure. Print `COMMIT phase N: <sha>`. Issue ids only if they appear in the plan or conversation.
 - **Progress condition for `/goal`** instead of "until it is good": the target is a number from a tool (score, count of green
   tests, p95 latency). Each turn must improve at least one measured value; two turns without improvement -> STOP; the same
-  command a third time with an unchanged result -> STOP; plus a turn limit.
+  command a third time with an unchanged result -> STOP; plus a turn limit (`or stop after 20 turns` in the condition).
+- **`/goal`'s evaluator** is a separate small fast model run after every turn; it runs no commands and reads only the
+  transcript, so the condition names a check whose output Claude prints. Verdicts: not yet met (another turn), met (goal
+  cleared), impossible (cleared with a failed entry and a reason) - treat impossible as STOP and report it.
 - **The end of a turn is a report, not completion.** Long-running models may end a turn with text announcing the next step.
   Keep the task's parts as a checkbox list; open items with no blocker get a short "continue or name the blocker" nudge; the
   done check is made by someone other than the executor (`/goal`'s evaluator, a CI gate). A running background process or
@@ -107,7 +111,8 @@ line formats (a factory convention): `references/execution-policy.md`.
 - **Self-improvement loop** (an agent editing its own prompts, skills or hooks): no write access to the permission policy,
   the sandbox, its identity or the evaluation set (keep that set read-only, ideally in a separate repository). A change is
   accepted on a held-out result plus a human's approval, never by the loop itself.
-- In-session `/loop` and session-scoped scheduled tasks expire after 7 days; long-lived work goes to a cloud routine.
+- In-session `/loop` and session-scoped scheduled tasks expire 30 days after creation (7 before v2.1.330, and tasks made
+  then keep 7); long-lived work goes to a cloud routine.
 - Typical failures are mundane: hours of retries against a blocked host, near-duplicate reports, symptom patches,
   branches that cannot be merged.
 
@@ -144,7 +149,8 @@ fresh session and decide the merge.
 ## Sources
 - Claude Code docs, "Claude Code on the web" and "Cloud environments", code.claude.com/docs/en/claude-code-on-the-web - accessed 2026-11-20 (setup scripts, network levels, environment cache).
 - Claude Code docs, "Remote Control", code.claude.com/docs/en/remote-control - accessed 2026-11-20.
-- Claude Code docs, "Scheduled tasks", code.claude.com/docs/en/scheduled-tasks - accessed 2026-11-20 ("Seven-day expiry").
-- Claude Code docs, "Run Claude Code programmatically", code.claude.com/docs/en/headless, and `claude --help` of Claude Code 2.1.329 - accessed 2026-11-20 (`--max-budget-usd` only with `--print`, `--permission-mode` values, `--allowedTools`).
+- Claude Code docs, "Run prompts on a schedule", code.claude.com/docs/en/scheduled-tasks, and the changelog (2.1.330) - accessed 2026-11-24 (recurring tasks expire after 30 days, 7 before 2.1.330).
+- Claude Code docs, "Keep Claude working toward a goal", code.claude.com/docs/en/goal - accessed 2026-11-24 (evaluator, verdicts met / not yet met / impossible).
+- Claude Code docs, "Run Claude Code programmatically", code.claude.com/docs/en/headless, and `claude --help` of Claude Code 2.1.329 - accessed 2026-11-24 (`--max-budget-usd` only with `--print`, `--permission-prompts none` from 2.1.259, `--permission-mode` values, `--allowedTools`).
 - Anthropic, "Prompting Claude Opus 5.5", platform.claude.com - accessed 2026-10-20 (turns ending with an announcement in long tasks).
 - OWASP GenAI Security Project, "LLM06:2025 Excessive Agency", genai.owasp.org/llmrisk/llm062025-excessive-agency - accessed 2026-11-20 (least privilege, human approval, independent logging).

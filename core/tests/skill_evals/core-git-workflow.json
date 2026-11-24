@@ -370,6 +370,18 @@
           ]
         ]
       }
+    },
+    {
+      "id": "worktree-natywny-env",
+      "expect": "trigger",
+      "prompt": "Chcę puścić dwie sesje Claude Code równolegle, każdą w swoim worktree. Ostatnio w nowym worktree brakowało pliku .env i testy nie ruszyły. Jak to ustawić, żeby nie kopiować go ręcznie za każdym razem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["\\.worktreeinclude"],
+          ["--worktree", "claude -w"],
+          ["ignorowan\\w*", "gitignore", "nie (są )?śledzon\\w*", "untracked"]
+        ]
+      }
     }
   ]
 }

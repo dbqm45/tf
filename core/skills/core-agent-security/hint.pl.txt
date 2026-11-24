@@ -89,6 +89,9 @@ hostami, zmienione pliki systemowe, zniknięte logi, sam agent czytający klucze
 - **Reguła to próg, nie zamek:** dopasowuje tekst polecenia, więc pełna ścieżka, `sh -c`, cudzysłowy albo opcje gita przed
   podpoleceniem (`git -C . push`) się prześlizgują. Twarda granica to piaskownica, kontener albo osobny użytkownik. Zablokowany →
   zapytaj; nie szukaj wariantu, który przejdzie.
+- Reguły `Tool(param:value)` (deny/ask) na jeden parametr narzędzia: `Agent(model:opus)`, `Bash(run_in_background:true)`.
+- **Chronione ścieżki** (`.git`, `.claude`, `.mcp.json`, `.npmrc`): pytanie w trybie domyślnym, w trybie bez pytania dozwolone.
+- **Tryb auto** (domyślny tryb startowy sesji interaktywnej od 2.1.283): klasyfikator, nie zamek; reguły deny i hooki decydują pierwsze.
 - **Tryb bez pytania** (`--dangerously-skip-permissions`) tylko w kontenerze/VM bez `~/.ssh` i kluczy chmury, bez MCP do produkcji,
   z ograniczonym ruchem wychodzącym, z repo w gicie. Na laptopie zaproponuj zamiast tego `acceptEdits` albo wąską allowlistę.
 - Cofanie (`/rewind`, punkty kontrolne) obejmuje edycje narzędziami plikowymi, nie skutki Bash → commit albo kopia przed ryzykownym poleceniem.

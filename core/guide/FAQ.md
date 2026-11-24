@@ -103,7 +103,7 @@ Scripts that Claude Code runs at events, independently of the model's decisions:
 - `guard_bash` — dangerous shell commands;
 - `guard_paths` — files with secrets;
 - `cleanroom_guard` — information isolation between agents;
-- `isolation_notice` — at the session start, the isolation level and what it does not protect (the status line shows the level too); lowering the level from inside a session is refused by `guard_bash` and `guard_paths`;
+- the status line — the isolation level of the session (`sandbox`, `container` or `⚠ no sandbox`; `tf isolation` and `tf doctor` name the gaps); lowering the level from inside a session is refused by `guard_bash` and `guard_paths`;
 - `model_guard` — a delegation names only an approved model, and a warning at the session start when the session's model is not approved (works only with a `models_approved` list);
 - `read_gate` — a hint before a whole read of a large file (over 350 lines: a range, Grep or `scout`); `read_gate.mode: deny` blocks it, `off` turns it off;
 - `tdd_guard` — code only after a red test;

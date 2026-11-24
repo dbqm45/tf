@@ -192,6 +192,30 @@
           ["poza procesem agenta", "niezależn\\w+ log", "transkrypt\\w* (nie|to nie)", "log\\w* (sieci|ruchu|wywołań)"]
         ]
       }
+    },
+    {
+      "id": "loop-wygasanie",
+      "expect": "trigger",
+      "prompt": "Ustawiłem w sesji /loop co godzinę, który sprawdza nocne buildy. Jak długo będzie działał, zanim sam wygaśnie, i co zrobić, jeśli ma chodzić miesiącami? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["30 dni", "30 days", "trzydzie\\w+ dni"],
+          ["rutyn\\w+", "w chmurze", "cloud", "Desktop"]
+        ],
+        "none": ["wygasa\\w* po (7|siedmiu) dni", "expire\\w* after (7|seven) days"]
+      }
+    },
+    {
+      "id": "goal-niemozliwy-pytania",
+      "expect": "trigger",
+      "prompt": "Puściłem w nocy claude -p z /goal na zatwierdzony plan. Rano przebieg albo wisi na pytaniu o uprawnienia, albo cel znika sam z wpisem o porażce. Co się dzieje i jak to ustawić? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["--permission-prompts none", "permission-prompts"],
+          ["impossible", "niemożliw\\w*"],
+          ["ewaluator\\w*", "evaluator", "osobn\\w+ model\\w*", "mał\\w+ model\\w*"]
+        ]
+      }
     }
   ]
 }

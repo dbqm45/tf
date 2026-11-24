@@ -299,6 +299,29 @@ def main() -> int:
         r = install(ROOT, proj, "--add", "pack-ev")
         check(r.returncode == 2 and "ev-intelligence" in r.stdout, f"W-5: --add pack-ev → refusal with an address: {r.stdout[-300:]}")
 
+        # a hook retired from the factory (isolation_notice, SessionStart): the update moves its unchanged file to the
+        # backup and drops its registration from the project's settings, the other hooks of the event stay
+        man = json.loads((proj / MANIFEST).read_text(encoding="utf-8"))
+        hook = proj / ".claude" / "hooks" / "isolation_notice.py"
+        write(hook, "print('old notice')\n")
+        man["files"][".claude/hooks/isolation_notice.py"] = inst.sha(hook.read_bytes())
+        (proj / MANIFEST).write_text(json.dumps(man), encoding="utf-8")
+        local = proj / ".claude" / "settings.local.json"
+        data = json.loads(local.read_text(encoding="utf-8"))
+        start = data.setdefault("hooks", {}).setdefault("SessionStart", [])
+        before = sum(len(g.get("hooks") or []) for g in start)
+        start.append({"hooks": [{"type": "command", "command": "python3",
+                                 "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/isolation_notice.py"], "timeout": 10}]})
+        local.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        r = install(ROOT, proj, "--update")
+        text = local.read_text(encoding="utf-8")
+        after = json.loads(text).get("hooks", {}).get("SessionStart", [])
+        backups = list((proj / ".tf" / "backup").rglob("isolation_notice.py"))
+        check(r.returncode == 0 and not hook.exists() and backups and "isolation_notice" not in text
+              and sum(len(g.get("hooks") or []) for g in after) == before,
+              f"W-6: a retired hook — file to the backup, registration dropped, other SessionStart hooks kept: "
+              f"{r.returncode} {hook.exists()} {backups} {r.stdout[-400:]}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} installer update tests")
