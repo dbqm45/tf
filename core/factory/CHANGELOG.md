@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.10.3] — 2026-11-24
+### Fixed
+- **core:** TDD and the task loop on Windows (#426)
+
 ## [24.10.2] — 2026-11-24
 ### Fixed
 - **core:** write the session-start factory rules as UTF-8 on Windows (#425)
