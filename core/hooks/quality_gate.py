@@ -27,8 +27,9 @@ the gate (e.g. in `.claude/settings.local.json`). State: `.tf/logs/quality-gate.
 is appended to `.tf/logs/quality-gate-runs.jsonl` — the /tf-task run report sums it. Standard library only.
 During an active /tf-task run (`.tf/runs/<KEY>/run.json` with a stage other than done/closed, updated within the last
 6 hours) the gate does not run the full `command`: the loop's `verify` evidence is required before a slice is done and
-before the PR, so the whole suite after every turn only repeats it. With `related` the gate still runs it for the changed
-files; without it the gate skips with one `ℹ` note per code state. Outside a run nothing changes.
+before the PR, so tests after every turn and subagent only repeat it: the gate skips with one `ℹ` note per code state,
+`related` or not. Outside a run nothing changes. Changes only in `.tf/`, `.claude/` or `docs/project/changes/` (the factory's
+and the agent's own files, e.g. `related` written into the gate config) are not code and run nothing.
 The agent gets long command output as its beginning and end; the whole of the last run is in
 `.tf/logs/quality-gate-output.txt`.
 
@@ -91,10 +92,20 @@ def git(root: Path, *args: str) -> bytes:
     return r.stdout if r.returncode == 0 else b""
 
 
+# Not project code: task files written by `tf task`, the factory's own files (.tf/: engine, runs, logs, config) and the
+# agent's configuration (.claude/: the gate config `related` is written into, settings, hooks). A change there alone runs
+# no tests — in a monorepo a root config file would otherwise make "affected" mean every project.
+NOT_CODE = ("docs/project/changes", ".tf", ".claude")
+
+
+def scope(watch: list[str]) -> list[str]:
+    return ["--", *(watch or ["."]), *(f":(exclude){p}" for p in NOT_CODE)]
+
+
 def fingerprint(root: Path, watch: list[str]) -> str | None:
     """Fingerprint of changes in `watch` relative to HEAD; None when nothing changed. Task files (`docs/project/changes/`,
     written by `tf task` after each step) are not a code change and do not trigger the gate."""
-    paths = ["--", *(watch or ["."]), ":(exclude)docs/project/changes"]
+    paths = scope(watch)
     diff = git(root, "diff", "HEAD", "--binary", *paths)
     new = git(root, "ls-files", "--others", "--exclude-standard", *paths).decode(errors="replace").split()
     if not diff and not new:
@@ -110,7 +121,7 @@ def fingerprint(root: Path, watch: list[str]) -> str | None:
 
 def changed_files(root: Path, watch: list[str]) -> list[str]:
     """The files the fingerprint sees (changed relative to HEAD and new, within `watch`) that still exist, sorted."""
-    paths = ["--", *(watch or ["."]), ":(exclude)docs/project/changes"]
+    paths = scope(watch)
     names = (git(root, "diff", "HEAD", "--name-only", "-z", *paths)
              + git(root, "ls-files", "--others", "--exclude-standard", "-z", *paths)).decode(errors="replace")
     return sorted({n for n in names.split("\0") if n and (root / n).is_file()})
@@ -274,16 +285,17 @@ def decide(root: Path, data: dict) -> dict | None:
         return {"systemMessage": f"Quality gate: the tests are still red after {max_blocks} attempts on the same state of "
                                  f"the code — letting it through, the decision is a human's (`{shown(cfg['command'])}`)."}
     task = active_run(root)
-    related = related_command(root, cfg)
-    if task and not related:
-        # A /tf-task run verifies every slice itself (`verify` evidence is required before done and the PR): the whole
-        # suite after every turn would repeat that work. One short note per code state, not per turn of the same state.
+    if task:
+        # A /tf-task run verifies every slice itself (`verify` evidence, reused while the files are unchanged, is required
+        # before done and the PR): tests after every turn and every subagent would only repeat that work and make the
+        # human wait on "running stop hooks". One short note per code state, not per turn of the same state.
         if state.get("task_skip") != fp:
-            print(f"ℹ quality gate: the /tf-task run {task} is active — the full `{shown(cfg['command'])}` is left to its "
-                  "`verify` (set `related` to also check the changed files after each turn)", file=sys.stderr)
+            print(f"ℹ quality gate: the /tf-task run {task} is active — the tests are left to its `verify`",
+                  file=sys.stderr)
             state_path.parent.mkdir(parents=True, exist_ok=True)
             state_path.write_text(json.dumps({**state, "task_skip": fp}), encoding="utf-8")
         return None
+    related = related_command(root, cfg)
     cmd = related or cfg["command"]
     started = time.monotonic()
     ok, tail = run(root, cmd, float(cfg.get("timeout", 600)))

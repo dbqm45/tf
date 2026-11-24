@@ -305,14 +305,30 @@ def main() -> int:
         git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "related")
         task_run(repo)
         (repo / "src" / "app.py").write_text("x = 7\n")
-        r = hook(repo)
-        check(related_runs(repo) == [["src/app.py"]] and runs(repo) == 0 and blocked(r) is None,
-              f"T-6: an active task run with related -> related runs as always: {related_runs(repo)} {runs(repo)} {r.stderr}")
+        r = hook(repo, "SubagentStop")
+        check(related_runs(repo) == [] and runs(repo) == 0 and blocked(r) is None and "ℹ" in r.stderr,
+              f"T-6: an active task run with related -> nothing runs, the loop's verify checks the slice: "
+              f"{related_runs(repo)} {runs(repo)} {r.stderr}")
         (repo / "src" / "app.py").write_text("x = 1\n")
         git(repo, "rm", "-q", "src/app.py")
         r = hook(repo)
-        check(runs(repo) == 0 and blocked(r) is None,
-              f"T-7: in a task run related with nothing to pass does not fall back to the full command: {runs(repo)}")
+        check(runs(repo) == 0 and related_runs(repo) == [] and blocked(r) is None,
+              f"T-7: in a task run a deletion does not fall back to the full command: {runs(repo)}")
+
+    # the factory's own files (.tf/, .claude/) are not project code: writing the gate config or a run file runs nothing
+    with tempfile.TemporaryDirectory() as t:
+        repo = setup(Path(t) / "f1", {k: v for k, v in cfg.items() if k != "watch"})   # watch: the whole repo
+        (repo / "mode.txt").write_text("fail")
+        git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "add", "mode.txt")
+        git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "mode")
+        gate_cfg = repo / ".claude" / "quality-gate.json"
+        gate_cfg.write_text(json.dumps({**json.loads(gate_cfg.read_text()), "related": "x {files}"}))
+        (repo / ".tf" / "config").mkdir(parents=True, exist_ok=True)
+        (repo / ".tf" / "config" / "config.yaml").write_text("security:\n  scanner: off\n")
+        r = hook(repo, "SubagentStop")
+        check(r.returncode == 0 and blocked(r) is None and runs(repo) == 0 and related_runs(repo) == [],
+              f"F-1: only .claude/ and .tf/ changed -> the gate runs nothing: {runs(repo)} {r.stdout}{r.stderr}")
+        check(qg.changed_files(repo, []) == [], f"F-2: changed_files leaves out .claude/ and .tf/: {qg.changed_files(repo, [])}")
 
     # the gate state in plain language (tf doctor, session start)
     def status(repo, *flags, **env):
