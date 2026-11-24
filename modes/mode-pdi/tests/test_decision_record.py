@@ -619,6 +619,36 @@ def main() -> int:
         check(r.returncode == 0 and f"- id: {example['id']}" in text and run(["check"], repo).returncode == 0,
               f"K-5: the decision example from the contract imports and passes check: {r.stdout}")
 
+    # Contract 0.22.0: what a decision applies to in the code (applies_to: path patterns and components).
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        run(["change", "new", "CHG-12"], repo)
+        dec = repo / "docs" / "project" / "changes" / "CHG-12" / "decisions.md"
+        base = ["decision", "add", "CHG-12", "--statement", "Dokumenty idą przez kolejkę.", "--why", "Skoki ruchu.",
+                "--kind", "technical", "--by", "zespół"]
+        r = run(base + ["--applies-to", "services/docs/**", "--applies-to", "src/*.py", "--component", "billing"], repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and "- applies_to: services/docs/**, src/*.py\n" in text
+              and "- components: billing\n" in text, f"AT-1: the entry lists the patterns and components: {r.stdout}{text[-300:]}")
+        r = run(["decision", "pending"], repo)
+        args = (jl(r) or [{}])[0].get("record_decision", {})
+        check(args.get("applies_to") == {"paths": ["services/docs/**", "src/*.py"], "components": ["billing"]},
+              f"AT-2: pending passes applies_to to record_decision: {args}")
+        check(run(["check"], repo).returncode == 0, "AT-3: an entry with applies_to passes check")
+        for bad in (["--applies-to", "../secrets"], ["--applies-to", "/src"], ["--applies-to", "a, b"],
+                    ["--component", "Billing"]):
+            r = run(base + bad, repo)
+            check(r.returncode != 0, f"AT-4: {bad} → error: {r.stdout}")
+        dec.write_text(dec.read_text(encoding="utf-8").replace("- applies_to: services/docs/**", "- applies_to: ./services"),
+                       encoding="utf-8")
+        check(run(["check"], repo).returncode != 0, "AT-5: check rejects a hand-edited invalid pattern")
+        r = run(base, repo)
+        args = [i["record_decision"] for i in jl(run(["decision", "pending"], repo))]
+        check(r.returncode == 0 and "applies_to" not in args[-1], f"AT-6: without --applies-to no applies_to: {args[-1:]}")
+    schema = json.loads((SCRIPT.parent / "decision.schema.json").read_text(encoding="utf-8"))
+    contract_pattern = schema["properties"].get("applies_to", {}).get("properties", {}).get("paths", {}).get("items", {})
+    check(contract_pattern.get("pattern") is not None, "AT-7: the contract copy has applies_to.paths (0.22.0)")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the change log (mode-pdi)")

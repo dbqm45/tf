@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/decision.schema.json",
-  "title": "Decyzja (kontrakt suity 0.21.0)",
+  "title": "Decyzja (kontrakt suity 0.22.0)",
   "description": "Jedna decyzja w rejestrze pdi albo w nagłówku wpisu changes/CHG-n/decisions.md. Pola: docs/14-pdi-standalone.md §4.1.",
   "type": "object",
   "additionalProperties": false,
@@ -307,6 +307,36 @@
     "provisional": {
       "type": "boolean",
       "description": "Decyzja tymczasowa (0.19.0, N2): przyjęta bez decydenta — opcja rekomendowana, z którą agent idzie dalej, albo opcja domyślna po terminie pytania — do potwierdzenia albo zastąpienia przez decydenta. Tylko dla decyzji łatwej do cofnięcia: przy `reversibility: one_way` niedozwolona."
+    },
+    "applies_to": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "description": "Czego dotyczy decyzja (0.22.0): wzorce ścieżek w repo projektu decyzji i/lub nazwy komponentów. Agent przed zmianą pyta rejestr o przyjęte decyzje, których `applies_to` pasuje do plików, które zmiana rusza; reguła PR może wskazać decyzje, których obszar zmienia PR. Brak pola = decyzja nie jest przypięta do plików. Dopasowanie wzorca: decision-record.md §4a, przypadki: fixtures/applies-to/cases.json.",
+      "properties": {
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Wzorce ścieżek względem korzenia repo, separator `/`: `*` — dowolne znaki w jednym segmencie, `?` — jeden znak, `**` jako cały segment — zero lub więcej segmentów; wzorzec pasuje do pliku albo do katalogu, w którym plik leży (`services/document-processing` obejmuje wszystko pod nim). Wielkość liter ma znaczenie. Bez wiodącego `/` i `./`, bez segmentów `.` i `..`, bez `\\`.",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\]+$"
+          }
+        },
+        "components": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Nazwy komponentów (usług, modułów) w tym samym kształcie co `project`, np. `document-processing`; pasują, gdy nazwa jest równa.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          }
+        }
+      }
     },
     "status": {
       "type": "string",

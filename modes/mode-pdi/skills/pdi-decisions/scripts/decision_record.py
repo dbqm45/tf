@@ -54,13 +54,18 @@ REQUIRED = ("artifact", "phase", "status", "version", "created", "updated", "cha
 OUTCOMES = ("approved", "changes_requested", "rejected")   # gate.decided w kontrakcie pdi 0.4.0
 KINDS = ("product", "technical", "process", "triage", "intent", "gate", "other")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
+# applies_to (contract 0.22.0, decision-record.md §4a): a path pattern relative to the repo root and a component name;
+# in an entry the lists are comma-separated, so a pattern has no comma.
+PATH_PATTERN = re.compile(r"^(?!/)(?!.*(?:^|/)\.{1,2}(?:/|$))[^\\,]{1,300}$")
+COMPONENT = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 # source.kind decyzji z kontraktu pdi 0.10.0 (decyzje z pdi: konsola, ci_for_sdlc, spotkania)
 SOURCE_KINDS = ("claude-cli", "claude-ai", "slack", "confluence", "jira", "manual", "console", "ci_for_sdlc", "meeting",
                 "tf", "shipscope")
 ENTRY = ("ref", "id", "sent", "date", "by", "kind", "why", "source", "drafted_by",
          "finding", "effect",   # answer to a ci_for_sdlc finding
          "origin",           # pdi — an entry from the pdi register (decision import)
-         "artifact_sha256")  # contract 0.21.0: the artifact version the human approved at the gate
+         "artifact_sha256",  # contract 0.21.0: the artifact version the human approved at the gate
+         "applies_to", "components")  # contract 0.22.0: what the decision applies to in the code
 # A pair of rows of an answer to a gate question (pdi contract 0.12.0, answers); an entry may have several.
 ANSWER_KEYS = ("question", "answer")
 ORIGINS = ("pdi",)
@@ -225,9 +230,27 @@ def as_record(e: dict, change_header: dict) -> dict:
     links = {"chg": chg}
     if change_header.get("source"):
         links["prb"] = change_header["source"]
-    return {"statement": e["statement"], "why": e.get("why", ""), "kind": e.get("kind", ""),
-            "source": {"kind": e.get("source", "")}, "drafted_by": e.get("drafted_by", ""),
-            "decided_by": e.get("by", ""), "decided_at": e.get("date", ""), "links": links}
+    out = {"statement": e["statement"], "why": e.get("why", ""), "kind": e.get("kind", ""),
+           "source": {"kind": e.get("source", "")}, "drafted_by": e.get("drafted_by", ""),
+           "decided_by": e.get("by", ""), "decided_at": e.get("date", ""), "links": links}
+    scope = {k: split_list(e[f]) for k, f in (("paths", "applies_to"), ("components", "components")) if e.get(f)}
+    if scope:
+        out["applies_to"] = scope
+    return out
+
+
+def split_list(value: str) -> list[str]:
+    """A comma-separated entry value (`- applies_to: a/**, b.py`) as a list."""
+    return [x.strip() for x in value.split(",") if x.strip()]
+
+
+def scope_errors(paths, components) -> list[str]:
+    """applies_to (contract 0.22.0): every pattern and component name in the contract's shape."""
+    errs = [f"applies_to '{p}' — a path pattern relative to the repo root (no leading / or ./, no . or .. segment, "
+            f"no \\ or comma), e.g. services/docs/**" for p in paths if not PATH_PATTERN.match(p)]
+    errs += [f"component '{c}' — lowercase name like the project, e.g. document-processing"
+             for c in components if not COMPONENT.match(c)]
+    return errs
 
 
 def all_entries(change: str | None = None) -> list[tuple[dict, dict]]:
@@ -251,6 +274,7 @@ def decision_add(a) -> int:
         errs.append(f"--finding '{a.finding}' refers to {a.finding.split(':')[1]}, which is neither {a.key} nor one of its cuts (plan.md)")
     if a.effect and not a.finding:
         errs.append("--effect only with --finding")
+    errs += scope_errors(a.applies_to or [], a.component or [])
     if errs:
         print("✗ " + "; ".join(errs))
         return 1
@@ -261,6 +285,10 @@ def decision_add(a) -> int:
              f"- drafted_by: {a.drafted_by}\n")
     if a.finding:
         entry += f"- finding: {a.finding}\n" + (f"- effect: {a.effect}\n" if a.effect else "")
+    if a.applies_to:
+        entry += f"- applies_to: {', '.join(dict.fromkeys(a.applies_to))}\n"
+    if a.component:
+        entry += f"- components: {', '.join(dict.fromkeys(a.component))}\n"
     f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
     print(f"✓ {ref} in {f} (sent: no)")
     return 0
@@ -442,6 +470,8 @@ def check_entries(path: Path) -> list[str]:
         if not DATE.match(e.get("date", "")):
             errs.append(f"{r}: date YYYY-MM-DD")
         errs += [f"{r}: missing field {k}" for k in ("by", "why") if not e.get(k)]
+        errs += [f"{r}: {m}" for m in scope_errors(split_list(e.get("applies_to") or ""),
+                                                   split_list(e.get("components") or ""))]
         if e.get("artifact_sha256") is not None and not SHA256.match(e["artifact_sha256"]):
             errs.append(f"{r}: artifact_sha256 — 64 hex characters (SHA-256)")
         finding = e.get("finding")
@@ -717,6 +747,11 @@ def main(argv: list[str]) -> int:
     add.add_argument("--drafted-by", default="ai", choices=("ai", "human"))
     add.add_argument("--finding", help="id of the ci_for_sdlc finding this answers (e.g. DES-001:TSK-1)")
     add.add_argument("--effect", choices=EFFECTS, help="effect of the answer; default resolve")
+    add.add_argument("--applies-to", action="append", metavar="PATTERN",
+                     help="path pattern the decision applies to, relative to the repo root (e.g. services/docs/**); "
+                          "repeatable (contract 0.22.0)")
+    add.add_argument("--component", action="append", metavar="NAME",
+                     help="component the decision applies to (e.g. document-processing); repeatable")
     dec.add_parser("pending").add_argument("--change")
     mark = dec.add_parser("mark")
     mark.add_argument("ref")
