@@ -138,9 +138,18 @@ Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić p�
   minimalny poziom izolacji) są konfiguracją klienta w DI Suite, a fabryka pobiera je per firma do kopii tylko do
   odczytu (jak kopia decyzji suity, plan D8 `docs/plans/2026-11-23-d8-pamiec-decyzji-suity.md`) i wpina jako warstwę
   firmy w istniejący łańcuch warstw (silnik ← firma ← zespół ← projekt ← osoba, `packs.config_layers`) — własny
-  format ustawień zamiast `pack.yaml`. Warunek: organizacje i usługa tożsamości w pdi (dziś ich nie ma). Do ustalenia
-  z architekturą suity: kto edytuje ustawienia (panel suity), format i wersjonowanie, praca bez połączenia, droga
-  migracji z istniejących `pack-<firma>` (jednorazowy import), co z `team_defaults`.
+  format ustawień zamiast `pack.yaml`. Warunek: organizacje i usługa tożsamości w pdi (dziś ich nie ma).
+  - **Kto edytuje (kierunek właściciela 2026-11-24): jak w Jira, GitHub, Confluence — bez wymyślania od nowa.**
+    Role na poziomach (admin organizacji, admin zespołu, opiekun projektu, członek; każdy zmienia tylko swój poziom);
+    ustawienie jest domyślne (niższy poziom może zmienić) albo narzucone (nie może — jak dziś `isolation_min`
+    i przecięcie `task.allowed_modes`); tożsamość z firmowego dostawcy (SSO, SCIM, role z grup); zwykły użytkownik
+    składa prośbę, a admin zatwierdza (konto, token, instalacja aplikacji); tokeny od admina z zakresem i terminem;
+    dziennik zmian ustawień. Role, SSO/SCIM, panel, prośby i dziennik dostarcza DI Suite; fabryka tylko czyta wynik
+    per firma (warstwy i które ustawienia są narzucone) i nie buduje własnego modelu uprawnień.
+  - **Agent przy braku uprawnień** nie obchodzi blokady: przygotowuje prośbę do właściwej osoby (co, po co, zakres),
+    tak jak przy zablokowanym płatnym przebiegu w sesji 2026-11-23.
+  - Do ustalenia z architekturą suity: format i wersjonowanie, praca bez połączenia, droga migracji z istniejących
+    `pack-<firma>` (jednorazowy import), co z `team_defaults`.
 - [x] **Generator standardów z dokumentów firmy z kontrolą cytatów skryptem** (zrobione 2026-11-16, `org/standards_from_docs.py`). Dziś `org/README.md` daje gotowe
   polecenie dla agenta, a cytaty sprawdza człowiek. Plan (wzorzec rekonstrukcji projektu z kodu): (1) dokumenty
   (eksport z Confluence: HTML, Word, PDF, Markdown; albo pobrane przez połączenie MCP z adresem i datą) do `sources/`;
