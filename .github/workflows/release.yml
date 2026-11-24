@@ -6,8 +6,16 @@ name: release
 #      and an entry in core/factory/CHANGELOG.md; the job commits that as "chore(release): X.Y.Z" to main. A version set
 #      by hand (a merged "chore(release)" PR) without a tag is released unchanged.
 #   2. tag + github-release: an annotated tag vX.Y.Z on that commit and a GitHub Release with the CHANGELOG entry.
+#
+# The full test suite is not run here again: the release starts only after `factory-checks` (the full suite, every
+# pack set, on push to main) succeeded for the same commit, and releases exactly that commit
+# (github.event.workflow_run.head_sha). Only the cheap checks of the release commit itself run here (build check:
+# VERSION ↔ CHANGELOG sections, every overlay installs with the new core). A manual run (workflow_dispatch) has no
+# such CI run behind it, so it runs the full suite itself before committing a new version, as before.
 on:
-  push:
+  workflow_run:
+    workflows: [factory-checks]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -21,9 +29,18 @@ permissions:
 
 jobs:
   prepare:
-    if: github.ref == 'refs/heads/main'
+    # workflow_run: only a successful factory-checks run of a push to main of this repository (not a pull request
+    # whose branch happens to be called main, not a fork). The release commit is pushed with GITHUB_TOKEN, which starts
+    # no workflow, so it gets no factory-checks run and cannot start another release (no loop).
+    if: >-
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+      || github.event_name == 'workflow_run'
+      && github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.event == 'push'
+      && github.event.workflow_run.head_branch == 'main'
+      && github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 30   # the release runs `workspace.py check --packs all` (10–12 min in CI by 20.2.0), so 10 min cancelled every release
+    timeout-minutes: 30   # a manual run still runs `workspace.py check --packs all` (10–12 min in CI by 20.2.0)
     permissions:
       contents: write
     outputs:
@@ -32,21 +49,24 @@ jobs:
       sha: ${{ steps.read.outputs.sha }}
       skip: ${{ steps.bump.outputs.skip }}
     steps:
-      # Full history and tags to compute the version; no token in .git/config.
+      # Full history and tags to compute the version; no token in .git/config. workflow_run checks out the default
+      # branch by default, so the commit that passed CI is checked out explicitly (a manual run: the main it started on).
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - run: pip install pyyaml
-      # The release runs `workspace.py check --packs all`, which includes rendering a page in Chromium — the same step as
+      # A manual run runs `workspace.py check --packs all`, which includes rendering a page in Chromium — the same step as
       # in factory-checks.yml (without it test_fetch_page fails and no release is produced).
       # Ubuntu 23.10+ blocks unprivileged user namespaces, and without them Chromium has no sandbox
       # (test_fetch_page renders a page). Allowed only for this one browser, via an AppArmor profile — "Option 2"
       # from chromium/src docs/security/apparmor-userns-restrictions.md; the block for the rest of the system and the sandbox remain.
       - name: Profil AppArmor dla Chromium (test_fetch_page)
+        if: github.event_name == 'workflow_dispatch'
         run: |
           [ "$(cat /proc/sys/kernel/apparmor_restrict_unprivileged_userns 2>/dev/null)" = 1 ] || exit 0
           browser=$(python3 -c 'import importlib.util as u; s = u.spec_from_file_location("fp", "core/skills/core-source-research/scripts/fetch_page.py"); m = u.module_from_spec(s); s.loader.exec_module(m); print(m.find_browser() or "")')
@@ -59,6 +79,7 @@ jobs:
       # in PR #12: first render 16–27 s, later ones about 0.7 s, regardless of flags). Under the load of the whole test suite
       # that first start in test_fetch_page exceeded 60 s — hence a separate warm-up, with its own time limit.
       - name: Chromium warm-up (first start)
+        if: github.event_name == 'workflow_dispatch'
         run: |
           python3 - <<'PY'
           import importlib.util as u, time
@@ -74,15 +95,31 @@ jobs:
         id: bump
         env:
           GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
         run: |
           version=$(tr -d '[:space:]' < core/factory/VERSION)
           if ! git rev-parse -q --verify "refs/tags/v$version" > /dev/null; then
             echo "core/factory/VERSION is $version without a tag (set by a chore(release) PR) — releasing as is"
             exit 0
           fi
+          # CI runs finish in any order: when a newer commit was released first (it contains this one), this commit's
+          # VERSION is an older tagged version. There is nothing left to release (release.py would refuse).
+          last=$(git tag --list 'v*' | grep -E '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$' | sort -V | tail -1)
+          if [ "v$version" != "$last" ]; then
+            echo "::notice::core/factory/VERSION $version is older than the last tag $last — already released by a newer run"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           python3 scripts/release.py --ci
           [ -z "$(git status --porcelain)" ] && exit 0
-          python3 tools/workspace.py check --packs all
+          if [ "$EVENT" = workflow_dispatch ]; then
+            # a manual run has no factory-checks run behind it: the full suite, as before
+            python3 tools/workspace.py check --packs all
+          else
+            # factory-checks ran the full suite on this commit; the release commit only adds VERSION, the CHANGELOG
+            # entry and (on a MAJOR) the overlays' requires.core: the build check and an install of every overlay
+            python3 tools/workspace.py check --packs all --no-tests
+          fi
           version=$(tr -d '[:space:]' < core/factory/VERSION)
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
