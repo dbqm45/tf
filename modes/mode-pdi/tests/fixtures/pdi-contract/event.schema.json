@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/event.schema.json",
-  "title": "Zdarzenie (kontrakt suity 0.19.0)",
+  "title": "Zdarzenie (kontrakt suity 0.20.0)",
   "description": "Koperta zdarzenia wymienianego między pdi, tf, ci_for_sdlc i ShipScope; treść (payload) zależy od typu.",
   "type": "object",
   "additionalProperties": false,
@@ -490,6 +490,76 @@
             "$ref": "#/$defs/actor"
           },
           "description": "Pytani o zdanie (0.19.0, N2; §3b pkt 2–3): 2–4 wskazane osoby (albo agenci), które dostają powiadomienie z terminem. Doradzają; decyduje decydent. Reszta zespołu nie jest tu wymieniana."
+        },
+        "risk": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "level"
+          ],
+          "description": "Ocena ryzyka zmiany (0.20.0, DV2; plan budowy suity §3d): deterministyczna, bez modelu (`tf risk` w fabryce). Doradcza — nie zmienia, przez które bramki przechodzi zmiana; politykę „jaka zmiana, jakie bramki” ustala później operating model (pytanie 12).",
+          "properties": {
+            "level": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ],
+              "description": "`high`: uwierzytelnianie i uprawnienia, płatności, schemat bazy i migracje, wdrożenie i sekrety, osłabione testy, zmienione specyfikacje; `low`: tylko dokumentacja albo tylko zależności; `medium`: reszta."
+            },
+            "items": {
+              "type": "array",
+              "maxItems": 50,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "level",
+                  "category",
+                  "reason"
+                ],
+                "properties": {
+                  "level": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "category": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 60,
+                    "description": "np. auth, payments, schema, deploy, spec, tests-weakened, evidence-adr"
+                  },
+                  "file": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 300
+                  }
+                }
+              },
+              "description": "Co w zmianie daje ten poziom: obszar, plik i powód."
+            },
+            "files": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Liczba zmienionych plików, z których policzono ocenę."
+            },
+            "base": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Gałąź albo commit, względem którego liczono różnicę."
+            }
+          }
         }
       }
     },

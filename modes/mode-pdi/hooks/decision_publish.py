@@ -38,7 +38,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HOOK = "decision_publish"
-CONTRACT_VERSION = "0.19.0"
+CONTRACT_VERSION = "0.20.0"
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 TIMEOUT_S = 4
 BUDGET_S = 7            # whole run as a hook (the hook timeout is 10 s); what is left goes next session

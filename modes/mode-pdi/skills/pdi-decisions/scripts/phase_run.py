@@ -13,8 +13,9 @@ Change phases run by pdi (mode-pdi, F4): the persona works without interaction a
       that repeats a question already settled in decisions.md ends the phase with the error `repeated_question` (Z1, PRB-3)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
-      gate.requested (contract 0.19.0) to $PDI_EVENTS_URL/events/tf, signature from $PDI_TF_SIGNING_SECRET;
-      refuses when the artifact repeats a settled question
+      gate.requested (contract 0.20.0) to $PDI_EVENTS_URL/events/tf, signature from $PDI_TF_SIGNING_SECRET;
+      refuses when the artifact repeats a settled question; with code changed outside docs/project/ it carries the
+      advisory change risk from `tf risk` (DV2; engine .tf/factory/risk_triage.py or $TF_RISK_TRIAGE)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list
       JSON with the local story/* cut branches — recorded before the delivery phase
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts publish --before FILE [--base main] [--dry-run]
@@ -50,7 +51,7 @@ OVERRIDES = Path(".claude") / "pdi-phases.json"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "sdlc-phase.yml"
 WORKFLOW = Path(".github") / "workflows" / "sdlc-phase.yml"
 SCRIPTS = ".claude/skills/pdi-decisions/scripts"
-CONTRACT_VERSION = "0.19.0"
+CONTRACT_VERSION = "0.20.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Gate questions"
 # Second review (N1, DZ12): a sidecar from second_review.py next to the phase artifact; the phases we look for one in.
@@ -566,6 +567,42 @@ def second_review_summary(sidecar: dict | None, phase: str) -> dict:
     return out
 
 
+RISK_ENGINE = Path(".tf") / "factory" / "risk_triage.py"
+RISK_MAX_ITEMS = 50
+
+
+def change_risk() -> dict | None:
+    """The advisory change risk for gate.requested (contract 0.20.0, DV2) from `tf risk` (risk_triage.py), counted
+    without the change artifacts in docs/project/ — on a phase branch they are most of the diff and an artifact named
+    requirements would read as a changed specification. None when only artifacts changed or the engine is missing."""
+    engine = Path(os.environ.get("TF_RISK_TRIAGE") or RISK_ENGINE)
+    if not engine.is_file():
+        return None
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("tf_risk_triage", engine)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        rules = mod.load_rules(Path("."))
+        res = mod.triage(Path("."), None, rules)
+    except Exception:  # noqa: BLE001 — the score is advisory; the gate goes without it
+        return None
+    files = [f for f in res.get("files", []) if not f.startswith(str(CHANGES.parent) + "/")]
+    if not files:
+        return None
+    items = [i for i in res.get("items", []) if not str(i.get("file", "")).startswith(str(CHANGES.parent) + "/")]
+    if any(i["level"] == "high" for i in items):
+        level = "high"
+    elif not items and (all(mod._any(rules["low_docs"], f) for f in files)
+                        or all(mod._any(rules["low_deps"], f) for f in files)):
+        level = "low"
+    else:
+        level = "medium"
+    return {"level": level, "files": len(files), "base": res.get("base"),
+            "items": [{"level": i["level"], "category": str(i["category"])[:60], "file": str(i["file"])[:300],
+                       "reason": str(i["reason"])[:300]} for i in items[:RISK_MAX_ITEMS]]}
+
+
 def gate_event(a) -> dict:
     d = change_dir(a.change)
     if a.phase:
@@ -602,6 +639,9 @@ def gate_event(a) -> dict:
             payload["summary"] += f" (second review: unavailable ({summary.get('reason') or 'unknown'}))"
     if a.url:
         payload["url"] = a.url
+    risk = change_risk()
+    if risk:   # DV2: advisory — pdi shows it, the gates stay the same (owner decision 2026-11-24)
+        payload["risk"] = {k: v for k, v in risk.items() if v not in (None, [])}
     now = time.gmtime()
     slug = re.sub(r"[^A-Za-z0-9._-]", "-", gate)
     return {"id": f"tf-{a.change}-{slug}-{time.strftime('%Y%m%d%H%M%S', now)}", "type": "gate.requested",

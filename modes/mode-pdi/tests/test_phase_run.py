@@ -802,6 +802,48 @@ if sys.argv[1:3] == ["pr", "create"]:
         check((jl(r) or {}).get("sandbox", {}).get("enableWeakerNestedSandbox") is True,
               f"S-4: --nested dla sandboxu w kontenerze (pdi lokalnie): {r.stdout}")
 
+    # --- DV2 (pdi plan §3d): an advisory change risk from `tf risk` in gate.requested, artifacts left out ---
+    engine = next((p / ".tf" / "factory" / "risk_triage.py" for p in [ROOT, *ROOT.parents]
+                   if (p / ".tf" / "factory" / "risk_triage.py").is_file()), None) if ROOT else None
+    check(engine is not None, "DV2-0: the tf risk engine (.tf/factory/risk_triage.py) is in the workspace")
+    if engine is not None:
+        with tempfile.TemporaryDirectory() as t:
+            repo = project(Path(t))
+            g = lambda *args: subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True,  # noqa: E731
+                                             check=True)
+            g("init", "-q", "-b", "main")
+            g("config", "user.email", "t@example.com")
+            g("config", "user.name", "T")
+            g("add", "-A")
+            g("commit", "-qm", "base")
+            g("switch", "-qc", "pdi/CHG-12-delivery")
+            renv = {"TF_RISK_TRIAGE": str(engine)}
+            art = repo / "docs" / "project" / "changes" / "CHG-12" / "requirements.md"
+            art.write_text("---\nartifact: requirements\n---\n# Wymagania\n", encoding="utf-8")
+            g("add", "-A")
+            g("commit", "-qm", "artifact")
+            r = run(["gate", "request", "--change", "CHG-12", "--gate", "B4", "--dry-run"], repo, **renv)
+            payload = (jl(r) or {}).get("would_send", {}).get("payload", {})
+            check(r.returncode == 0 and "risk" not in payload,
+                  f"DV2-1: only change artifacts changed → no risk on the gate: {r.stdout} {r.stderr}")
+            code = repo / "src" / "auth" / "login.py"
+            code.parent.mkdir(parents=True)
+            code.write_text("def login():\n    return True\n", encoding="utf-8")
+            (repo / "README.md").write_text("# Sklep\n", encoding="utf-8")
+            g("add", "-A")
+            g("commit", "-qm", "code")
+            r = run(["gate", "request", "--change", "CHG-12", "--gate", "B4", "--dry-run"], repo, **renv)
+            risk = (jl(r) or {}).get("would_send", {}).get("payload", {}).get("risk", {})
+            check(risk.get("level") == "high" and risk.get("base") == "main" and risk.get("files") == 2
+                  and {"level": "high", "category": "auth", "file": "src/auth/login.py",
+                       "reason": "authentication or permissions"} in risk.get("items", [])
+                  and all(not i["file"].startswith("docs/project/") for i in risk.get("items", [])),
+                  f"DV2-2: code changed → risk from tf risk without the artifacts: {risk} {r.stderr}")
+            r = run(["gate", "request", "--change", "CHG-12", "--gate", "B4", "--dry-run"], repo,
+                    TF_RISK_TRIAGE=str(Path(t) / "missing.py"))
+            check(r.returncode == 0 and "risk" not in (jl(r) or {}).get("would_send", {}).get("payload", {}),
+                  f"DV2-3: without the engine the gate goes without risk: {r.stdout}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of phases run by pdi (mode-pdi)")

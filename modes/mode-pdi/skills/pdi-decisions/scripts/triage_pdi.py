@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Triage of a pdi report (F3) — mode-pdi. The triage procedure: skill proc-issue-triage; this script checks the input
-and assembles a recommendation in pdi states (contract 0.19.0, R7).
+and assembles a recommendation in pdi states (contract 0.20.0, R7).
 
   python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py check <prb.json>
       a PRB report in JSON against contract/problem.schema.json (a copy next to the script); triage only for the states
@@ -27,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from decision_record import validate  # noqa: E402  (the same JSON Schema subset validator as for release.yaml)
 
-CONTRACT = "0.19.0"
+CONTRACT = "0.20.0"
 PROBLEM_SCHEMA = HERE / "problem.schema.json"                  # kopia z kontraktu pdi (tools/pdi-contract.json)
 RECOMMENDATION_SCHEMA = HERE / "triage-recommendation.schema.json"   # kopia z kontraktu pdi (tools/pdi-contract.json)
 TRIAGE_INPUT = ("new", "clarifying", "ready_for_triage")

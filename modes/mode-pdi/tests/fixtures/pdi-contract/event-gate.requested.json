@@ -3,7 +3,7 @@
   "type": "gate.requested",
   "occurred_at": "2026-10-23T10:00:00Z",
   "source": "tf",
-  "contract_version": "0.19.0",
+  "contract_version": "0.20.0",
   "payload": {
     "change": "CHG-12",
     "gate": "B1",
@@ -21,6 +21,19 @@
         "name": "Tomasz",
         "kind": "human"
       }
-    ]
+    ],
+    "risk": {
+      "level": "medium",
+      "items": [
+        {
+          "level": "medium",
+          "category": "evidence-adr",
+          "file": "src/retry/",
+          "reason": "a new module without an ADR (is it an architecture decision?)"
+        }
+      ],
+      "files": 4,
+      "base": "origin/main"
+    }
   }
 }
