@@ -8,7 +8,7 @@ a task from what the human gave. The script: `python3 .claude/skills/tf/scripts/
 |---|---|---|
 | `issue` | the number or address of an issue from a tracker | the "An issue from a tracker" section |
 | `cut` | a key from the `tasks` header of a change plan | `.claude/skills/tf-task/references/pdi-cuts.md`; a key in several plans → you ask about the change (`--change CHG-n`) |
-| `resume` | a task with this key already exists | you read `docs/project/changes/<KEY>/plan.md` and go from the first unticked slice; the run directory `.tf/runs/<KEY>` |
+| `resume` | a task with this key already exists | you read `docs/project/changes/<KEY>/plan.md` and go from the first unticked slice; the run directory `.tf/runs/<KEY>`; the story is in `ticket.md` (`Story: cached …`) — you do not read the tracker again |
 | `file` | the path of a file with a story | `run_report.py start "<title>" --story-file <file>` |
 | `content` | a pasted story or a sentence | `run_report.py start "<title>" --story "<content>"`; with a key at the start (`PROJ-12: …`) you add `--key PROJ-12` |
 | `none` | `/tf-task` alone | you show the tasks in progress (the `In progress:` lines) and ask (AskUserQuestion): resume one, a new task (its content), a design session first (tf-design) or a question |
@@ -28,8 +28,10 @@ The human does not give the tool's name — `/tf-task EBO-1236` is enough.
    variables, a wrong token, no such issue), you tell the human in one sentence why and go with point 3.
    You do not set, print or read the variables with access data.
 1. `Tracker: <type>` (from the address or from the operations card): when the session has a tool for reading from this tracker
-   (an MCP server for Jira, Linear, GitHub, GitLab…), the `mcp-runner` agent reads the issue with it and returns the title, the
-   description and the acceptance criteria (not the whole issue JSON).
+   (an MCP server for Jira, Linear, GitHub, GitLab…), **you call it yourself**: one issue is one call with a fields filter
+   (the title, the description, the acceptance criteria — not comments, attachments, history or linked issues) and a
+   small result, so a subagent's cold start would cost more than the read. You hand it to `mcp-runner` only when the
+   read is large or needs many calls (see "Large reads" below).
    This is **read only** — you do not change the status, comments or fields in the tracker.
 2. `Tracker: unknown`: you check which trackers are connected in the session. One → you use it. Several → you ask
    the human once (AskUserQuestion) which one issues with this prefix come from. You save the choice:
@@ -39,6 +41,25 @@ The human does not give the tool's name — `/tf-task EBO-1236` is enough.
 3. No connection does not block the work: you say in one sentence what is missing ("I have no connection to Jira"), and ask
    "paste the content of the issue". You install and configure nothing yourself — the human adds the connection.
 4. With `--auto` there is nobody to ask: no content or an unclear source → a STOP block with that question.
+
+## Large reads: `mcp-runner` in the background
+Your judgement, not a size table: one record with a fields filter you read yourself; a list, a search, a page body, a
+design context, attachments or several linked issues the `mcp-runner` agent reads (a cheap model, a budget of about
+3 calls). Then:
+- the issue itself you still read directly and create the task from it (§0); the extra material (a linked page, a
+  design, attachments) goes to the runner started with the Agent tool and `run_in_background: true`; the brief names
+  the fields, the limit and the file for the result (`.tf/cache/mcp/<KEY>-<what>.md`);
+- `run_state.py fetch <katalog> begin --what intake` when you start it, `… end --what intake` when you take its result —
+  the report shows the time;
+- meanwhile go on with the start (§0), `scout`'s recon and the `⚠ … no related` check; you join the result before the
+  plan (§2). Content for `ticket.md` goes under the "Source" line as usual.
+
+## Read once: the cached story
+`ticket.md` is the cache of the issue. A re-run or a resume (`Input: resume`, `Story: cached <path>`) reads that file,
+never the tracker; `start --from-tracker` for an existing task makes no request and prints `story cached: <path>`.
+You read the issue again only when the human asks or gives `--refresh` (`/tf-task EBO-1236 --refresh`): then replace the
+content under the "Source" line (the Jira script: `start --key <KEY> --from-tracker --refresh` does it) and compare it
+with `plan.md` and `spec.md`; a changed criterion → a question to the human.
 
 ## Creating a task from an issue
 `run_report.py start "<tytuł zgłoszenia>" --key <KLUCZ> --source "<tracker i klucz albo adres>"` — `ticket.md`

@@ -704,6 +704,8 @@ def render_shared(name: str, spec: dict, cfg: dict) -> tuple[str, str]:
     tf = tier_fields(cfg, spec["tier"])
     if spec.get("main_only"):          # main session (`claude --agent`) like a persona: without the subagent turn limit
         tf.pop("maxTurns", None)
+    elif isinstance(spec.get("maxTurns"), int) and spec["maxTurns"] > 0:   # an agent's own, tighter limit than its tier's
+        tf["maxTurns"] = spec["maxTurns"]
     fm = frontmatter({
         "name": name,
         "description": spec["description"],

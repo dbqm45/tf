@@ -113,8 +113,25 @@ def main() -> int:
             card.write_text(json.dumps({"tracker": {"type": "jira", "url": url, "fields": {"acceptance": "customfield_10042"}}}),
                             encoding="utf-8")
             dc = {"JIRA_TOKEN": TOKEN, "JIRA_BASE_URL": url}
+            run_json = p / ".tf" / "runs" / "EBO-1236" / "run.json"
+            meta = json.loads(run_json.read_text(encoding="utf-8")) if run_json.is_file() else {}
+            spans = meta.get("fetches") or [{}]
+            check(spans[0].get("what") == "intake" and spans[0].get("from") and spans[0].get("to")
+                  and meta.get("started_at", "") <= spans[0]["from"],
+                  f"J-1a: the script's fetch is timed in run.json (fetches) and the run starts before it: {meta}")
+            before = len(SEEN)
             r = call(p, "run_report.py", "start", "Własny tytuł", "--key", "EBO-1236", "--from-tracker", env=dc)
-            check(r.returncode == 2 and "already exists" in r.stdout, f"J-5: the task already exists -> code 2, not overwritten: {r.stdout}")
+            check(r.returncode == 2 and "already exists" in r.stdout and "story cached: docs/project/changes/EBO-1236/ticket.md" in r.stdout
+                  and len(SEEN) == before and ticket.read_text(encoding="utf-8") == text,
+                  f"J-5: the task already exists -> code 2, the story cached, no request, not overwritten: {r.stdout} {len(SEEN) - before}")
+            ticket.write_text(text.replace("postój 12 godzin", "STARA TREŚĆ"), encoding="utf-8")
+            r = call(p, "run_report.py", "start", "--key", "EBO-1236", "--from-tracker", "--refresh", env=dc)
+            fresh = ticket.read_text(encoding="utf-8")
+            meta = json.loads(run_json.read_text(encoding="utf-8")) if run_json.is_file() else {}
+            check(r.returncode == 0 and "story refreshed" in r.stdout and len(SEEN) == before + 1
+                  and "STARA TREŚĆ" not in fresh and "postój 12 godzin" in fresh and "Source: jira EBO-1236" in fresh
+                  and len(meta.get("fetches") or []) == 2,
+                  f"J-5a: --refresh reads the issue again (one GET) and rewrites only ticket.md: {r.returncode} {r.stdout} {fresh[:200]}")
             import shutil
             shutil.rmtree(p / CHANGES / "EBO-1236")
             shutil.rmtree(p / ".tf" / "runs" / "EBO-1236")

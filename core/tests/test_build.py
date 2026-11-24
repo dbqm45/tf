@@ -124,6 +124,20 @@ def main() -> int:
         check(f"- `{n}` —" not in catalog, f"IN-8: the disabled skill {n} is outside the catalog's facet list")
         check(n in catalog.split("## Disabled skills", 1)[-1], f"IN-9: the disabled skill {n} in the 'Disabled skills' section")
 
+    # An agent's own `maxTurns` beats its tier's (mcp-runner: a brief is a few MCP calls, not a search); main_only has none.
+    cfg_mt = {"tiers": {"fast": {"model": "haiku", "effort": "low", "maxTurns": 15}}}
+    _, own = b.render_shared("r", {"tier": "fast", "description": "d", "tools": [], "prompt": "p", "maxTurns": 6}, cfg_mt)
+    _, tier = b.render_shared("s", {"tier": "fast", "description": "d", "tools": [], "prompt": "p"}, cfg_mt)
+    _, main = b.render_shared("m", {"tier": "fast", "description": "d", "tools": [], "prompt": "p", "maxTurns": 6,
+                                    "main_only": True}, cfg_mt)
+    check("maxTurns: 6" in own and "maxTurns: 15" in tier and "maxTurns" not in main,
+          f"MT-1: maxTurns per agent over the tier, none for main_only: {own[:200]} | {tier[:200]} | {main[:200]}")
+    runner = b.load_config()["shared_agents"]["mcp-runner"]
+    check(runner.get("maxTurns") == 6 and "at most 3 tool calls" in runner["prompt"] and "one tool search" in runner["prompt"]
+          and "never page" in runner["prompt"] and "never delete" in runner["prompt"],
+          f"MT-2: mcp-runner has a turn limit of 6, a call budget, one tool search, no paging beyond the brief, read-only by default: "
+          f"{runner.get('maxTurns')}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} build.py tests")

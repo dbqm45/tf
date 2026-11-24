@@ -142,7 +142,7 @@ def main() -> int:
               f"I-14: a key in two plans → a question about the change: {raw}")
         code, out, raw = resolve(p, "TSK-58", "--change", "CHG-13", "--auto", "--budget", "3")
         check(out.get("changes") == ["CHG-13"] and out.get("ask") is None
-              and out.get("options") == {"auto": True, "plan": False, "design": False, "budget": 3.0, "change": "CHG-13"},
+              and out.get("options") == {"auto": True, "plan": False, "design": False, "refresh": False, "budget": 3.0, "change": "CHG-13"},
               f"I-15: --change selects the change; options cut off and returned: {raw}")
         r = run(p, "resolve", "TSK-99", "--change", "CHG-12")
         check(r.returncode == 2 and "TSK-99" in r.stdout and "CHG-12" in r.stdout,
@@ -152,6 +152,18 @@ def main() -> int:
         code, out, raw = resolve(p, "PROJ-7")
         check(out.get("kind") == "resume" and out.get("stage") == "implementation" and "PROJ-7" in out.get("next", ""),
               f"I-17: the key of an existing task → resume with the stage: {raw}")
+        check(out.get("story") is None and "Story:" not in run(p, "resolve", "PROJ-7").stdout,
+              f"I-17b: a task without ticket.md → no cached story claimed: {raw}")
+        (p / CHANGES / "PROJ-7" / "ticket.md").write_text("# Zadanie PROJ-7\n\nSource: jira PROJ-7\n\nAC1.\n", encoding="utf-8")
+        code, out, raw = resolve(p, "PROJ-7")
+        plain = run(p, "resolve", "PROJ-7").stdout
+        check(out.get("story") == "docs/project/changes/PROJ-7/ticket.md" and "do not read the tracker again" in out.get("next", "")
+              and "Story: cached docs/project/changes/PROJ-7/ticket.md" in plain,
+              f"I-17c: a re-run reads the cached story (ticket.md), not the tracker: {raw} {plain}")
+        code, out, raw = resolve(p, "PROJ-7", "--refresh")
+        check(out.get("options", {}).get("refresh") is True and "read it from the tracker (read-only)" in out.get("next", "")
+              and "do not read the tracker again" not in out.get("next", ""),
+              f"I-17d: --refresh reads the issue again (read-only) and replaces the content in ticket.md: {raw}")
         (p / CHANGES / "PROJ-7" / "task.json").write_text(json.dumps(
             {"key": "PROJ-7", "title": "Zadanie PROJ-7", "stage": "plan", "mode": "plan"}), encoding="utf-8")
         code, out, raw = resolve(p, "PROJ-7", "--auto")
