@@ -15,7 +15,7 @@ RUN apt-get update \
 
 COPY --chmod=0755 init_firewall.sh entrypoint.sh /usr/local/bin/
 
-# TF_CONTAINER=1 tells the factory (tf isolation, the status line, the session-start hook) that the session is here
+# TF_CONTAINER=1 tells the factory (tf isolation, the status line, guard_bash) that the session is here
 ENV TF_CONTAINER=1 \
     CLAUDE_CONFIG_DIR=/home/node/.claude \
     HOME=/home/node

@@ -485,12 +485,50 @@ RETIRED_DENY = ("Read(./node_modules/**)", "Read(./dist/**)", "Read(./build/**)"
                 "Read(**/package-lock.json)", "Read(**/pnpm-lock.yaml)", "Read(**/yarn.lock)")
 
 
+# Hooks retired from the factory: an update moves the file to .tf/backup/ (remove_obsolete) and drops its registration
+# from the project's settings here, so a session does not run a missing script. The plugin layout regenerates
+# hooks.json, so only the default layout needs this.
+# after 24.12.2: isolation_notice (SessionStart) — the status line shows the level, `tf doctor` and `tf isolation` the gaps.
+RETIRED_HOOKS = ("isolation_notice.py",)
+
+
+def drop_retired_hooks(settings: dict) -> dict:
+    """A copy of the settings without the registrations of RETIRED_HOOKS (an empty group or event goes too)."""
+    out = json.loads(json.dumps(settings))
+    hooks = out.get("hooks") if isinstance(out.get("hooks"), dict) else None
+    if not hooks:
+        return out
+
+    def retired(h) -> bool:
+        parts = [h.get("command", ""), *(h.get("args") or [])] if isinstance(h, dict) else []
+        return any(isinstance(x, str) and f".claude/hooks/{name}" in x for x in parts for name in RETIRED_HOOKS)
+
+    for event, groups in list(hooks.items()):
+        if not isinstance(groups, list):
+            continue
+        kept = []
+        for g in groups:
+            if not isinstance(g, dict) or not isinstance(g.get("hooks"), list):
+                kept.append(g)
+                continue
+            hs = [h for h in g["hooks"] if not retired(h)]
+            if hs:
+                kept.append({**g, "hooks": hs})
+            elif not g["hooks"]:
+                kept.append(g)
+        if kept:
+            hooks[event] = kept
+        else:
+            hooks.pop(event)
+    return out
+
+
 # Hook fields that an update adds to a hook already present in the project (onFailure: Claude Code ≥ 2.1.295).
 HOOK_KEYS_ADDED = ("onFailure",)
 
 
 def merge_settings(src: dict, dst: dict) -> dict:
-    out = json.loads(json.dumps(dst))
+    out = drop_retired_hooks(dst)
     out.setdefault("$schema", src.get("$schema"))
     for k, v in (src.get("env") or {}).items():
         out.setdefault("env", {}).setdefault(k, v)          # your values take precedence

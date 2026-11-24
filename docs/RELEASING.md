@@ -144,6 +144,26 @@ Rules:
 - **Push to `main`** always runs everything, and the release starts only after that run succeeded, so every release
   is guarded by a full run on its exact commit.
 
+## Before releasing a loop change: `tf bench` (manual, paid)
+
+A change to the `/tf-task` loop, its hooks or its gates can pass every test and still make runs slower or let a gate
+slip (the 87-minute run of a five-minute task; the fix #432 whose gate ran the whole monorepo suite after every
+subagent, found by hand and fixed in #433). Before such a PR is merged, compare the candidate with the last release on
+the reference tasks (`tools/bench/tasks/`: `simple` must end in the quick lane with 1 slice, `medium` in 2 slices,
+`sensitive` must stay `full` and stop an `--auto` run for plan approval):
+
+```
+python3 tools/bench.py run --ref v<last release> --cand <branch or checkout> [--task simple] [--runs 3] --yes
+```
+
+Each run installs the factory of that side into a fresh copy of the fixture and runs `claude -p "/tf-task … --auto"`
+unattended with your logged-in CLI. **It costs tokens** (up to `--budget` USD, default 5, per task, side and run), so it
+is run only with the owner's consent and never in CI (the tests use `--fake-claude`). The table in
+`.work/bench/<time>/bench-<date>.md` compares the medians (time, turns, cost, verify and gate hook time, slices, weight,
+tests, commits, gates); a regression (default: >20% slower, more turns or costlier, a wrong weight, a gate missing on
+the sensitive task) exits with 1 and becomes an `open` entry in `docs/proposals.md`. Fix it, or record in the PR why it
+is accepted. `python3 tools/bench.py compare <dir> --max-slower 0.3` recomputes a saved comparison without new runs.
+
 ## GitHub repository settings
 
 - *Settings → Branches*: required status checks name the jobs; the `all` set is now `workspace (all, 1/3)`,

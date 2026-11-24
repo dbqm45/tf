@@ -61,7 +61,7 @@ system files, logs that vanished, the agent itself reading keys or sending data 
 - Removing the symptom hides the attacker (`references/cases.md`).
 
 ## 4. The agent's powers — least privilege
-- The agent works under **its own identity** with the narrowest rights, like a new hire on day one: no org-wide
+- The agent works under **its own identity** with the narrowest rights: no org-wide
   tokens, no cloud or package-publish credentials in its environment. Unattended work runs in a container or VM with an
   outbound allowlist.
 - **MCP servers, plugins and skills are suppliers.** Known source, pinned version, read capabilities, review each update
@@ -88,21 +88,21 @@ system files, logs that vanished, the agent itself reading keys or sending data 
    `disableSkillShellExecution` in managed settings.
 
 ### 4b. Permission rules and production
-- Order: **deny → ask → allow**, first match wins; deny anywhere beats allow elsewhere. Details, modes and the sandbox:
-  `references/permissions-and-production.md` §1–§4.
-- **allow** only what passes "what can this break outside the repo?" (tests, lint, local `git status/diff/add/commit`);
-  **ask** for publishing and other people's state (`git push`, deploy, `gh pr merge`, new dependencies); **deny**
-  destruction and surprises (`rm -rf` outside the repo, `git reset --hard`, `git clean -f`, `git push --force`), secret
-  reads, fetch-to-shell.
-- Never `Bash(*)`, an interpreter with any arguments (`python *`, `node -e *`) or a broad `Bash(git *)` — that one lets
-  through `push`, `reset --hard` and `clean -f`.
-- **A rule is a threshold, not a lock:** it matches command text, so a full path, `sh -c`, quoting or git options before
-  the subcommand (`git -C . push`) slip past. A hard boundary is the sandbox, a container or a separate user. Blocked →
-  ask; do not hunt for a variant that passes.
+- How rules match: code.claude.com/docs/en/permissions; modes, sandbox: `references/permissions-and-production.md` §1–§4.
+- **allow** only what passes "what can this break outside the repo?" (tests, lint, local `git commit`); **ask** for
+  publishing and other people's state (`git push`, deploy, new dependencies); **deny** destruction (`git reset --hard`,
+  `git push --force`), secret reads, fetch-to-shell. Lists: reference §3.
+- Never `Bash(*)`, an interpreter with any arguments (`python *`, `node -e *`) or a broad `Bash(git *)`.
+- **A rule is a threshold** (`git -C . push` passes `Bash(git push *)`): a hard boundary is the sandbox, a
+  container or a separate user. Blocked → ask; never hunt for a variant that passes.
+- `Tool(param:value)` deny/ask rules gate one input: `Agent(model:opus)`, `Bash(run_in_background:true)`.
+- **Protected paths** (`.git`, `.claude`, `.mcp.json`…) ask in `default`, are **allowed** in bypass:
+  code.claude.com/docs/en/permission-modes#protected-paths.
+- **Auto mode** (interactive start mode from 2.1.283; the factory sets `defaultMode: default`) is a classifier, not a
+  lock: deny rules and hooks decide first (ref. §2).
 - **Bypass mode** (`--dangerously-skip-permissions`) only in a container/VM without `~/.ssh` or cloud keys, without MCP to
-  production, with limited egress, the repo in git. On a laptop offer `acceptEdits` or a narrow allowlist instead.
-- Undo (`/rewind`, checkpoints) covers file-tool edits, not Bash effects → commit or copy before a risky command.
-- **Production:** first ask whether access is needed (read-only logs usually suffice); a token scoped to one service,
+  production, limited egress, the repo in git. On a laptop offer `acceptEdits` or a narrow allowlist instead.
+- **Production:** first ask if access is needed (read-only logs usually suffice); a token scoped to one service,
   short-lived, from an environment variable — never in `.mcp.json`, a committed `.env` or the command line; the human
   performs irreversible operations; print the logged-in account (`whoami`, `auth status`) before a deploy; staging
   full access, production read-only. Rules and CLI-vs-MCP: `references/permissions-and-production.md` §5–§6.
@@ -153,7 +153,7 @@ allow `Bash(git status)`, `Bash(git diff *)`, `Bash(git add *)`, `Bash(git commi
 
 ## Sources
 - Claude Code docs, "Configure permissions", "Permission modes", "Settings", "Sandboxing", "Checkpointing"
-  (code.claude.com, accessed 2026-10-18).
+  (code.claude.com, accessed 2026-10-18; permissions and permission modes 2026-11-24).
 - Anthropic, "Agent Skills — overview", section "Security considerations" (platform.claude.com, accessed 2026-10-04).
 - Anthropic, "Mitigate jailbreaks and prompt injections" and "Reduce prompt leak" (platform.claude.com, accessed 2026-10-20).
 - OWASP Top 10 for LLM Applications 2025 (LLM01, LLM06); NIST SP 800-53 Rev. 5, AC-6 "Least Privilege".

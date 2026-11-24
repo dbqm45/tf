@@ -9,9 +9,16 @@ A task that can be taken: Auto mode, light or normal weight, stage before PR, no
 (resuming in an existing worktree only via `--key`) and not taken by another run (`.tf/locks/<KEY>.json`).
 Exit code: 0 — run finished, 2 — refusal, 3 — no task to take, other — the agent's code.
 Agent: `claude -p "/tf-task <KEY> --auto --budget <USD>" --max-budget-usd <USD> --permission-mode <mode, default acceptEdits>
---strict-mcp-config`, only with allowed environment variables; before the start the files controlling the agent in the worktree
-must be the same as in the human's copy. The `TF_WORK_AGENT` variable replaces the `claude` command (tests). Journal:
-`.tf/logs/work.jsonl`.
+--permission-prompts none --output-format json --strict-mcp-config`, only with allowed environment variables; before the start
+the files controlling the agent in the worktree must be the same as in the human's copy. The `TF_WORK_AGENT` variable replaces
+the `claude` command (tests). Journal: `.tf/logs/work.jsonl`.
+
+`--permission-prompts none` (Claude Code >= 2.1.259): a call that would wait on a permission prompt is denied instead, and the
+run goes on; permission rules, the factory's hooks and the permission mode still decide first
+(https://code.claude.com/docs/en/headless#turn-off-permission-prompts-in-unattended-runs).
+Cost: `--output-format json` returns `total_cost_usd` (https://code.claude.com/docs/en/headless). The end entry records it as
+`cost_usd` with `cost_source: "claude"`; without the field (an older CLI, a run that printed no JSON) the run's limit is
+recorded instead, with `cost_source: "estimate"`. The task's total limit (`work.task_budget_usd`) sums these.
 """
 from __future__ import annotations
 
@@ -25,7 +32,9 @@ import shutil
 import socket
 import subprocess
 import sys
+import math
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -300,8 +309,11 @@ def agent_command(key: str, budget: str, mode: str, wt: Path | None = None, plug
     plugin = []
     if wt is not None and plugin_layout:
         plugin = ["--plugin-dir", str(wt / ".tf" / "plugin"), "--settings", str(session_settings(wt))]
+    # --permission-prompts none: nobody answers a prompt unattended, so it is denied and the run goes on (the guard hooks
+    # and permission rules still apply); --output-format json: the run's cost (total_cost_usd) for the journal
     return [*agent, *plugin, "-p", f"/tf-task {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode",
-            mode, "--strict-mcp-config"]   # without --mcp-config: no MCP servers from the repository or from configuration
+            mode, "--permission-prompts", "none", "--output-format", "json",
+            "--strict-mcp-config"]   # without --mcp-config: no MCP servers from the repository or from configuration
 
 
 def agent_env() -> dict:
@@ -403,21 +415,55 @@ def budget_text(value) -> str | None:
     return f"{v:g}" if 0 < v <= MAX_RUN_USD else None
 
 
-def spent(root: Path, key: str) -> float:
-    """The sum of the limits of earlier task runs from the journal (an upper estimate of spending)."""
-    total = 0.0
+def money(value) -> float | None:
+    """A non-negative finite amount, else None (a bool or a string is not an amount)."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return float(value) if math.isfinite(value) and value >= 0 else None
+
+
+def run_result(stdout: str) -> dict:
+    """The result object of `claude -p --output-format json` (the whole output, or its last JSON line); {} without one."""
+    text = (stdout or "").strip()
+    for chunk in [text, *reversed(text.splitlines())]:
+        try:
+            data = json.loads(chunk)
+        except ValueError:
+            continue
+        if isinstance(data, dict):
+            return data
+    return {}
+
+
+def spent_detail(root: Path, key: str) -> tuple[float, bool]:
+    """(spending of earlier task runs, whether any part is an estimate). A run counts with the cost Claude Code reported
+    (`cost_usd` of its end entry, `cost_source: "claude"`); without it (an interrupted run, an older CLI, an old journal)
+    with its limit (`budget_usd` of the start entry), an upper estimate."""
     try:
         lines = (root / LOG).read_text(encoding="utf-8").splitlines()
     except OSError:
-        return 0.0
-    for line in lines:
+        return 0.0, False
+    limits: dict[str, float] = {}
+    reported: dict[str, float] = {}
+    for i, line in enumerate(lines):
         try:
             e = json.loads(line)
         except ValueError:
             continue
-        if isinstance(e, dict) and e.get("key") == key and isinstance(e.get("budget_usd"), (int, float)):
-            total += float(e["budget_usd"])
-    return total
+        if not isinstance(e, dict) or e.get("key") != key:
+            continue
+        run = str(e.get("run") or f"#{i}")              # the start and end entries of one run share `run`
+        if money(e.get("budget_usd")) is not None:
+            limits[run] = money(e["budget_usd"])
+        if e.get("cost_source") == "claude" and money(e.get("cost_usd")) is not None:
+            reported[run] = money(e["cost_usd"])
+    total = sum(reported.get(run, limit) for run, limit in limits.items())
+    total += sum(cost for run, cost in reported.items() if run not in limits)
+    return total, any(run not in reported for run in limits)
+
+
+def spent(root: Path, key: str) -> float:
+    return spent_detail(root, key)[0]
 
 
 def write_log(root: Path, entry: dict) -> None:
@@ -460,9 +506,11 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
         queue = candidates(root)
     for task in queue:
         k = task["key"]
-        if cap and spent(root, k) + float(budget) > cap:
+        so_far, estimated = spent_detail(root, k)
+        if cap and so_far + float(budget) > cap:
             msg = (f"{k}: total task limit work.task_budget_usd = {cap:g} USD. Earlier runs "
-                   f"{spent(root, k):g} USD + this run {budget} USD. A human decides on more spending")
+                   f"{so_far:g} USD{' (estimate: the limits of runs without a reported cost)' if estimated else ''} "
+                   f"+ this run {budget} USD. A human decides on more spending")
             if key:
                 print(f"✗ {msg}")
                 return 2
@@ -478,7 +526,7 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
             continue
         if note:
             print(note)
-        started = now()
+        started, run_id = now(), uuid.uuid4().hex[:12]
         try:
             wt, info = prepare_worktree(root, k, base or "HEAD")
             if wt is None:
@@ -499,28 +547,42 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
             watched = control_set(root, wt)
             before = snapshot(root, [*watched, ".git/hooks", ".git/config"])
             print(f"• {k}: /tf-task loop in {wt.as_posix()}, limit {budget} USD")
-            write_log(root, {"key": k, "event": "start", "started": started, "budget_usd": float(budget),
+            write_log(root, {"key": k, "event": "start", "run": run_id, "started": started, "budget_usd": float(budget),
                              "worktree": wt.relative_to(root).as_posix()})   # before the agent: an interruption counts too
+            out = ""
             try:
-                code = subprocess.run(agent_command(k, budget, mode, wt, has_plugin(wt)), cwd=wt, env=agent_env(),
-                                      timeout=float(cfg.get("timeout_minutes") or 180) * 60).returncode
+                proc = subprocess.run(agent_command(k, budget, mode, wt, has_plugin(wt)), cwd=wt, env=agent_env(),
+                                      stdout=subprocess.PIPE, text=True, encoding="utf-8", errors="replace",
+                                      timeout=float(cfg.get("timeout_minutes") or 180) * 60)
+                code, out = proc.returncode, proc.stdout or ""
             except FileNotFoundError:
                 print("✗ the claude command (Claude Code) is not in PATH")
                 code = 127
-            except subprocess.TimeoutExpired:
+            except subprocess.TimeoutExpired as e:
                 print(f"✗ {k}: run stopped after {cfg.get('timeout_minutes')} min")
                 code = 124
+                out = e.stdout.decode("utf-8", "replace") if isinstance(e.stdout, bytes) else (e.stdout or "")
+            result = run_result(out)
+            if isinstance(result.get("result"), str):
+                print(result["result"].rstrip())
+            elif out.strip() and not result:
+                print(out.rstrip())                     # not JSON (an older CLI): the output as it came
+            cost = money(result.get("total_cost_usd"))
             after = load_task(wt, k) or {}
             now_root = snapshot(root, [*sorted(set(watched) | instruction_files(root)), ".git/hooks", ".git/config"])
             changed = sorted(n for n in set(before) | set(now_root) if before.get(n) != now_root.get(n))
             if changed:
                 print(f"⚠ {k}: control files in your copy of the project (outside the worktree) changed during the run: "
                       f"{', '.join(changed[:12])}. Review them before the next session (git diff)")
-            entry = {"key": k, "event": "end", "started": started, "ended": now(), "exit": code,
+            entry = {"key": k, "event": "end", "run": run_id, "started": started, "ended": now(), "exit": code,
                      "stage": after.get("stage"), "worktree": wt.relative_to(root).as_posix(),
+                     "cost_usd": cost if cost is not None else float(budget),
+                     "cost_source": "claude" if cost is not None else "estimate",
                      **({"root_changed": changed[:50]} if changed else {})}
             write_log(root, entry)
-            print(f"{'✓' if code == 0 else '✗'} {k}: exit code {code}, stage {after.get('stage') or '?'}. Result in "
+            shown = (f"cost {cost:.2f} USD (reported by Claude Code)" if cost is not None else
+                     f"cost up to {budget} USD (estimate: the run's limit — Claude Code reported no total_cost_usd)")
+            print(f"{'✓' if code == 0 else '✗'} {k}: exit code {code}, stage {after.get('stage') or '?'}, {shown}. Result in "
                   f"{entry['worktree']} (tf status in the worktree). A human does the merge")
             return code
         finally:

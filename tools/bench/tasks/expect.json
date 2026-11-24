@@ -1,0 +1,6 @@
+{
+ "_doc": "What each task must produce, hidden from the agent (the prompt carries only the .txt file). weights: the accepted task weights from task.json; slices: the expected number of plan slices; accept: the hidden check tools/bench/checks/<task>.py must pass; gate_any: at least one of these gates must fire (sensitive area: the full weight stops an --auto run for plan approval, or the security review ran).",
+ "simple": {"weights": ["quick", "light"], "slices": 1, "accept": true},
+ "medium": {"weights": ["normal"], "slices": 2, "accept": true},
+ "sensitive": {"weights": ["full"], "gate_any": ["stop:plan-approval", "panel:security-reviewer"], "accept": false}
+}

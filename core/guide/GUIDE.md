@@ -200,11 +200,14 @@ merge. Your own rules (e.g. price list paths as high risk) you enter in `autonom
 unsupervised work), of light or normal weight, and runs it with the `/tf-task --auto` loop in a separate worktree
 (`.tf/worktrees/<KEY>`, the branch `story/<key>`). A spending limit is mandatory (`--budget` or `work.budget_usd` in
 `.tf/config/config.yaml`); the agent works in the `acceptEdits` permission mode: it saves files in its worktree, and any
-other tool outside the allowed list in the `.claude` settings is rejected rather than waiting for you. A lock
+other tool outside the allowed list in the `.claude` settings is rejected rather than waiting for you
+(`--permission-prompts none`, Claude Code 2.1.259 or later: a call that would prompt is denied and the run goes on; the
+factory's hooks still apply). A lock
 (`.tf/locks/`) holds the task, so two parallel runs will not take the same one. The result is a PR or a STOP block in
-the task's worktree, and an entry goes to `.tf/logs/work.jsonl`; the factory merges and deploys nothing. It does not take
-a task with a worktree again by itself — resuming: `tf work --once --key <KEY>`; all the runs of one task together
-will not exceed `work.task_budget_usd` (20 USD by default). `--dry-run` shows the task and the command without running
+the task's worktree, and an entry goes to `.tf/logs/work.jsonl` with the run's cost: the `total_cost_usd` Claude Code
+reports (`--output-format json`), or the run's limit marked as an estimate when the CLI reports none. The factory merges
+and deploys nothing. It does not take a task with a worktree again by itself — resuming: `tf work --once --key <KEY>`;
+all the runs of one task together will not exceed `work.task_budget_usd` (20 USD by default), counted from those costs. `--dry-run` shows the task and the command without running
 it. Only the factory's files (`.claude/`, `.tf/factory/`), the configuration and the task folder go from the
 installation into the worktree — without symlinks and without files outside them (e.g. `.env`). Before the start the
 factory compares the files that steer the agent (`.claude/settings.json` and the scripts its commands point to, hooks,

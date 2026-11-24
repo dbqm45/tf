@@ -1,0 +1,12 @@
+Volume discount on orders
+
+Shoppers who buy many items get a discount, and the cart shows it.
+
+Acceptance criteria:
+- AC-1: a new function `order_discount(lines)` in app/pricing.py returns the discount in cents for the order's lines
+  ((unit price in cents, quantity) pairs): 5% of the order's total when the order has 10 to 49 items in total, 10%
+  when it has 50 items or more, 0 below 10 items. The discount is rounded down to whole cents.
+- AC-2: `order_total(lines)` returns the total after the discount.
+- AC-3: the cart page (app/pages/cart.py) shows a line `Discount: -X.XX` before the total when a discount applies,
+  and no discount line otherwise.
+- AC-4: all tests pass (`python3 run_tests.py`).
