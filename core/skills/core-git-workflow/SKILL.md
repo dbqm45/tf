@@ -51,13 +51,18 @@ pushing to `main`/`master`. Ask first, say what will be lost, offer the safe alt
 Start with two changes at a time — the limit is how much the human can review, not how many agents can run.
 1. **Independence check:** shared files, API/type/schema contracts, migrations, external services. A conflict → run them
    one after another.
-2. **One change = one worktree + branch + fresh session:**
-   `git worktree add ../<repo>-<change> -b feat/<change>`. The main checkout only coordinates. After the merge
-   `git worktree remove`; strays: `git worktree list`, `git worktree prune`.
+2. **One change = one worktree + branch + fresh session:** `claude --worktree <change>` (`-w`) creates
+   `.claude/worktrees/<change>/` on a new branch `worktree-<change>` from the default branch (`worktree.baseRef: "head"`
+   branches from your HEAD) and starts the session there; add `.claude/worktrees/` to `.gitignore`. A `.worktreeinclude`
+   file at the root (`.gitignore` syntax, e.g. `.env`, `.env.local`) copies those gitignored files into each new worktree;
+   tracked files are never copied. On exit a clean worktree is removed, one with work asks; a `-p` run leaves it
+   (`git worktree remove`). Fallback when `--worktree` does not fit (a named or existing branch, a directory outside the
+   repo, no native worktrees): `git worktree add ../<repo>-<change> -b feat/<change>`, then `git worktree remove`. The main
+   checkout only coordinates; strays: `git worktree list`, `git worktree prune`.
 3. **A worktree isolates files and the branch, not the environment.** Give each its own dev-server port, local database
-   or schema (migrations!), queue/payment sandbox, cache. A fresh worktree has no `node_modules` and no `.env`. Git
-   operations on the shared repository can collide on `.git/index.lock`. One branch cannot be checked out in two
-   worktrees. Disk use grows with dependencies.
+   or schema (migrations!), queue/payment sandbox, cache. A fresh worktree has no `node_modules`, and no `.env` unless
+   `.worktreeinclude` names it. Git operations on the shared repository can collide on `.git/index.lock`. One branch
+   cannot be checked out in two worktrees. Disk use grows with dependencies.
 4. **Contract change mid-flight:** message the other session at once, in this shape:
    `Contract change: <what> in <file/commit>. Required: <action>. Reply "accepted".` (PL: „Zmiana kontraktu … odpowiedz
    «przyjęte»”). The other side does not merge until it replied "accepted". Channels: `SendMessage` to a named session,
@@ -127,6 +132,8 @@ to `main`.
 - Git documentation: `git help worktree`, `git help rebase` (`--onto`), `git help push` (`--force-with-lease`), git-scm.com.
 - GitHub Docs: protected branches and required status checks, CODEOWNERS, commit statuses API (docs.github.com).
 - GitHub CLI manual: `gh pr merge` (`--subject`), `gh pr edit --base` (cli.github.com).
+- Claude Code docs, "Run parallel sessions with worktrees", code.claude.com/docs/en/worktrees - accessed 2026-11-24
+  (`--worktree`, `.worktreeinclude`, `worktree.baseRef`, cleanup, manual `git worktree add`).
 - Claude Code docs (code.claude.com): GitHub Actions / `anthropics/claude-code-action`, Code Review, parallel sessions.
   The cross-session commands (`SendMessage`, `/peers`, `@session-name`, `claude agents`) are recent [unverified: check the
   version in the current changelog].

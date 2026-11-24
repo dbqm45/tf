@@ -41,7 +41,8 @@ push na `main`/`master`. Najpierw zapytaj, powiedz, co przepadnie, zaproponuj be
 Zacznij od dwóch zmian naraz — limitem jest to, ile człowiek nadąży przejrzeć, nie ile agentów da się uruchomić.
 1. **Sprawdzenie niezależności:** wspólne pliki, kontrakty API/typów/schematu, migracje, usługi zewnętrzne. Konflikt →
    jedna po drugiej.
-2. **Jedna zmiana = jeden worktree + gałąź + świeża sesja:**
+2. **Jedna zmiana = jeden worktree + gałąź + świeża sesja:** `claude --worktree <zmiana>` (`-w`), plik
+   `.worktreeinclude` kopiuje do worktree pliki ignorowane przez git, np. `.env`; awaryjnie ręcznie
    `git worktree add ../<repo>-<zmiana> -b feat/<zmiana>`. Główny katalog tylko koordynuje. Po scaleniu
    `git worktree remove`; pozostałości: `git worktree list`, `git worktree prune`.
 3. **Worktree izoluje pliki i gałąź, nie środowisko.** Każdy dostaje własny port serwera dev, lokalną bazę danych

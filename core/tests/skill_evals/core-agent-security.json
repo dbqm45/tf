@@ -450,6 +450,18 @@
       "expect": "no-trigger",
       "neighbor": "core-git-workflow",
       "prompt": "Zanim włączymy auto-merge dla PR-ów otwieranych przez agenta: jak je oznaczać w GitHubie i które katalogi objąć CODEOWNERS?"
+    },
+    {
+      "id": "bypass-chronione-sciezki-param",
+      "expect": "trigger",
+      "prompt": "Puszczam agenta w kontenerze z --dangerously-skip-permissions. Chcę regułą zabronić mu odpalania subagentów na Opusie i upewnić się, że nie przepisze sobie .git ani .claude. Czy w tym trybie te katalogi są nadal chronione? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["Agent\\(model:opus\\)"],
+          ["chronion\\w* ścieżk\\w*", "ścieżk\\w* chronion\\w*", "protected paths?"],
+          ["dozwolon\\w*", "allowed", "nie są chronion\\w*", "bez pytania", "guard_paths"]
+        ]
+      }
     }
   ]
 }

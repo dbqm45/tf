@@ -24,6 +24,9 @@ with out.open("a", encoding="utf-8") as f:
 time.sleep(float(os.environ.get("TF_FAKE_SLEEP", "0")))
 if os.environ.get("TF_FAKE_TOUCH"):
     Path(os.environ["TF_FAKE_TOUCH"]).write_text("# changed by the agent\\n", encoding="utf-8")
+if os.environ.get("TF_FAKE_COST"):   # claude -p --output-format json: the result object with the run's cost
+    print(json.dumps({"type": "result", "subtype": "success", "result": "fake result text",
+                      "total_cost_usd": float(os.environ["TF_FAKE_COST"])}))
 raise SystemExit(int(os.environ.get("TF_FAKE_EXIT", "0")))
 '''
 
@@ -33,7 +36,7 @@ def env(project: Path, **extra: str) -> dict:
             "GIT_COMMITTER_NAME": "T", "GIT_COMMITTER_EMAIL": "t@example.com", "GIT_CONFIG_GLOBAL": os.devnull,
             "TF_WORK_AGENT": f"{sys.executable} {project.parent / 'fake_agent.py'}",
             "TF_FAKE_OUT": str(project.parent / f"{project.name}-agent.jsonl"),
-            "TF_WORK_ENV_ALLOW": "TF_FAKE_OUT,TF_FAKE_SLEEP,TF_FAKE_EXIT,TF_FAKE_TOUCH", **extra}
+            "TF_WORK_ENV_ALLOW": "TF_FAKE_OUT,TF_FAKE_SLEEP,TF_FAKE_EXIT,TF_FAKE_TOUCH,TF_FAKE_COST", **extra}
 
 
 def git(p: Path, *args: str) -> subprocess.CompletedProcess:
@@ -137,6 +140,32 @@ def main() -> int:
               f"WO-6: a start entry with the limit (before the agent — an interrupted run counts too) and an end entry in "
               f".tf/logs/work.jsonl: {entries}")
         check(not (p / ".tf" / "locks" / "IMP-2.json").exists(), "WO-7: lock released after the run")
+        check("--permission-prompts" in argv and argv[argv.index("--permission-prompts") + 1] == "none"
+              and "--output-format" in argv and argv[argv.index("--output-format") + 1] == "json",
+              f"WO-35: unattended run — no waiting on permission prompts, JSON output for the cost: {argv}")
+        end = entries[1] if len(entries) > 1 else {}
+        check(end.get("cost_source") == "estimate" and end.get("cost_usd") == 3 and "estimate" in r.stdout,
+              f"WO-36: no total_cost_usd (an older CLI) → the run's limit recorded and shown as an estimate: {end} {r.stdout}")
+
+        # the cost Claude Code reports (total_cost_usd) is recorded and shown, and the total limit sums it
+        c = project(base, "cost")
+        task(c, "", "start", "IMP-20", "--title", "Koszt", "--mode", "auto")
+        (c / ".tf" / "config").mkdir(parents=True, exist_ok=True)
+        (c / ".tf" / "config" / "config.yaml").write_text("work:\n  task_budget_usd: 5\n", encoding="utf-8")
+        r = work(c, "--once", "--budget", "2", TF_FAKE_COST="0.42")
+        end = log(c)[-1] if log(c) else {}
+        check(r.returncode == 0 and end.get("cost_usd") == 0.42 and end.get("cost_source") == "claude"
+              and "0.42 USD" in r.stdout and "fake result text" in r.stdout and "estimate" not in r.stdout,
+              f"WO-37: total_cost_usd parsed, recorded as the run's cost and shown with the result: {end} {r.stdout}")
+        for _ in range(2):
+            r = work(c, "--once", "--budget", "2", "--key", "IMP-20", TF_FAKE_COST="0.5")
+        check(r.returncode == 0 and len(agent_calls(c)) == 3,
+              f"WO-38: the total limit sums reported costs (0.42 + 0.5 + 2 ≤ 5), not the limits (2 + 2 + 2 > 5): "
+              f"{r.returncode} {r.stdout}")
+        r = work(c, "--once", "--budget", "2", "--key", "IMP-20", TF_FAKE_COST="nan")
+        end = log(c)[-1] if log(c) else {}
+        check(end.get("cost_source") == "estimate" and end.get("cost_usd") == 2,
+              f"WO-39: an unusable cost value → the limit as an estimate: {end}")
 
         # next run: IMP-2 already has a worktree (resuming only via --key), so it takes IMP-4; IMP-1 and IMP-3 never
         r = work(p, "--once", "--budget", "3", "--dry-run")

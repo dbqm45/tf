@@ -94,7 +94,9 @@ uruchamialnymi poleceniami weryfikacji -> nie startuj; poproś o plan zamiast im
 - **Pętla samodoskonalenia** (agent edytuje własne prompty, skille, hooki): bez prawa zapisu do polityki uprawnień, piaskownicy,
   tożsamości i zestawu ewaluacji (zestaw tylko do odczytu, najlepiej w osobnym repo). Zmianę przyjmuje wynik na zbiorze odłożonym
   plus zatwierdzenie człowieka, nigdy sama pętla.
-- `/loop` w sesji i zadania zaplanowane w sesji wygasają po 7 dniach; praca długotrwała idzie do rutyny w chmurze.
+- `/loop` w sesji i zadania zaplanowane w sesji wygasają po 30 dniach (przed v2.1.330 po 7); praca długotrwała idzie do rutyny w chmurze.
+- Ewaluator `/goal` (osobny mały model po każdej turze) zwraca: jeszcze nie, spełniony albo niemożliwy (impossible) — niemożliwy czyści cel z wpisem o porażce: STOP i raport.
+- `claude -p --permission-prompts none`: przebieg nie czeka na pytanie o uprawnienia, wywołanie jest odrzucane, a praca idzie dalej.
 - Typowe porażki są przyziemne: godziny ponawiania wobec zablokowanego hosta, prawie identyczne raporty, łatanie objawów,
   gałęzie nie do zmergowania.
 
