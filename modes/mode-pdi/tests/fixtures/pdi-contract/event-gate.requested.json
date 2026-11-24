@@ -3,11 +3,24 @@
   "type": "gate.requested",
   "occurred_at": "2026-10-23T10:00:00Z",
   "source": "tf",
-  "contract_version": "0.17.0",
+  "contract_version": "0.19.0",
   "payload": {
     "change": "CHG-12",
     "gate": "B1",
     "summary": "Intencja gotowa do akceptacji",
-    "artifact": "docs/project/changes/CHG-12/intent.md"
+    "artifact": "docs/project/changes/CHG-12/intent.md",
+    "reversibility": "local",
+    "closes_at": "2026-10-27T10:00:00Z",
+    "default_option": "Przyjąć intencję w obecnym brzmieniu",
+    "asked": [
+      {
+        "name": "Ola",
+        "kind": "human"
+      },
+      {
+        "name": "Tomasz",
+        "kind": "human"
+      }
+    ]
   }
 }

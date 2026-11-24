@@ -49,6 +49,12 @@ Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
   the copy is. `decision_cache.py search <words>` searches the copy and the project's own decisions together. Decisions
   of this repo published by the factory are not copied (they are here); a copy edited by hand is fetched again; without
   pdi the last copy stays and is marked stale.
+- **An open gate question does not stop the whole delivery (N4, contract 0.19.0):** a question in `## Gate questions`
+  may end with markers `[local|broad|one_way; default: <option>; blocks: TSK-n, …]`. Before delivery, an unanswered
+  question that is easy to undo (`local`, `broad`) and has a `default` becomes a provisional decision — the loop builds
+  with that option and writes `Tymczasowo: …` in the cut's PR, the question stays open in pdi; one with `blocks` stops
+  only those cuts; any other unanswered question stops delivery as before. The phase result lists `provisional` and
+  `skipped_tasks`; `gate.requested` carries `reversibility` (the strictest) when every question is marked.
 
 - **Security scan on every PR (Z8c-2):** `phase_run.py workflow install --workflow change-check` installs
   `change-check.yml`: the same scan as in the factory's piece loop (`security_scan.py scan` from the tf skill — semgrep
