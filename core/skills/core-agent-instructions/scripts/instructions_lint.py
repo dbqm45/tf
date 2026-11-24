@@ -20,7 +20,8 @@ Per-file checks:
             without a script in package.json, `make <target>` without a target in the Makefile: OK 0, WARN ≥ 1 (the factory block
             `<!-- team-factory:begin/end -->` is skipped — it is common to all projects)
 The --root mode additionally: nested CLAUDE.md/AGENTS.md not listed in the main file (index) and lines
-copied from the main file into a module file.
+copied from the main file into a module file. It skips .tf/ (factory backups, cache, plugin), node_modules, .git and
+build directories.
 
 Exit code: 0 — no ERROR; 1 — at least one ERROR (with --strict also WARN); 2 — call error.
 File reading only, no network.
@@ -33,7 +34,8 @@ import sys
 from pathlib import Path
 
 NAMES = {"CLAUDE.md", "AGENTS.md", "CLAUDE.local.md"}
-SKIP_DIRS = {"node_modules", ".git", "dist", "build", "coverage", ".venv", "venv", "__pycache__", "vendor", "target"}
+# .tf/ holds the factory itself, its backups (.tf/backup/<date>/CLAUDE.md), cache and plugin — never the user's files
+SKIP_DIRS = {".tf", "node_modules", ".git", "dist", "build", "coverage", ".venv", "venv", "__pycache__", "vendor", "target"}
 INTENTS = [
     r"czyst\w* kod", r"dobr\w* praktyk", r"dba[jć]\w* o (jakość|czytelność|porządek|bezpieczeństwo)",
     r"b[ąa]d[źz] spójn", r"pisz czyteln", r"czytelny kod", r"wysok\w* jakoś", r"zgodnie ze sztuką",
