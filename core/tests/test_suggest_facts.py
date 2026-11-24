@@ -76,13 +76,24 @@ def main() -> int:
             s = re.sub(r'^  keywords: ".*"$', '  keywords: ""', s, flags=re.M)       # without the words the scenario does not hit
             md.write_text(s, encoding="utf-8")
             r = run([root / ".tf" / "factory" / "skill_gate.py", "--hints"], cwd=root)
-            check("qa-test-design" in r.stdout, f"E-3: after removing the words the scenario does not hit again: {r.stdout[-300:]}")
+            check(r.returncode == 1 and "qa-test-design" in r.stdout,
+                  f"E-3: after removing the words the scenario does not hit again: {r.stdout[-300:]}")
+            # --hints with skill names: only their scenarios, against the whole index
+            r = run([root / ".tf" / "factory" / "skill_gate.py", "--hints", "qa-test-design"], cwd=root)
+            check(r.returncode == 1 and "qa-test-design: #" in r.stdout and "hints: 1 skills" in r.stdout,
+                  f"E-3b: --hints <skill> reports that skill's missed scenario: {r.stdout[-300:]}")
+            other = next(n for n in ("core-grounding", "core-git-workflow") if (root / ".claude" / "skills" / n).is_dir())
+            r = run([root / ".tf" / "factory" / "skill_gate.py", "--hints", other], cwd=root)
+            check(r.returncode == 0 and "qa-test-design" not in r.stdout and "hints: 1 skills" in r.stdout,
+                  f"E-3c: --hints <another skill> checks only that skill's scenarios: {r.stdout[-300:]}")
+            r = run([root / ".tf" / "factory" / "skill_gate.py", "--hints", "no-such-skill"], cwd=root)
+            check(r.returncode == 2 and "no-such-skill" in r.stdout, f"E-3d: --hints <unknown skill> → code 2: {r.stdout[-300:]}")
             r = run([root / ".tf" / "factory" / "skill_gate.py", "--suggest", "qa-test-design"], cwd=root)
             check(r.returncode == 0 and "keywords" in r.stdout and "--apply" in r.stdout and s == md.read_text(encoding="utf-8"),
                   f"E-4: --suggest without --apply only shows the proposal: {r.stdout[-500:]}{r.stderr[-300:]}")
             r = run([root / ".tf" / "factory" / "skill_gate.py", "--suggest", "qa-test-design", "--apply"], cwd=root)
             r2 = run([root / ".tf" / "factory" / "skill_gate.py", "--hints"], cwd=root)
-            check(r.returncode == 0 and md.read_text(encoding="utf-8") != s and "qa-test-design" not in r2.stdout,
+            check(r.returncode == 0 and md.read_text(encoding="utf-8") != s and r2.returncode == 0 and "qa-test-design" not in r2.stdout,
                   f"E-5: --apply adds the phrases and the scenario hits again: {r.stdout[-400:]} | {r2.stdout[-300:]}")
 
     # ── F: facts.py ──

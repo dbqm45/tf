@@ -82,6 +82,17 @@ def main() -> int:
         s = json.loads(run("--root", str(repo), "--json").stdout)
         check(s["active"] is False and s["last_log"] is None and s["after_commits"] == 3, f"H4 without hook logs: {s}")
 
+        # check.py runs hooks_status.py as its "factory hooks" step: check.py --root on this repository, where the only
+        # script is a copy of hooks_status.py — the other steps are skipped, so this does not run the whole factory check
+        (repo / ".tf" / "factory").mkdir()
+        (repo / ".tf" / "factory" / "hooks_status.py").write_bytes(SCRIPT.read_bytes())
+        expected = run("--root", str(repo)).stdout.strip().splitlines()[-1]
+        r = subprocess.run([sys.executable, str(CHECK), "--root", str(repo)], capture_output=True, text=True, timeout=120,
+                           encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, cwd=repo, env=NO_CI)
+        step = next((ln for ln in r.stdout.splitlines() if "factory hooks" in ln), "")
+        check(step.startswith("ℹ factory hooks:") and step.endswith(expected) and "not active" in step,
+              f"H6 a step in check.py runs hooks_status.py (info, its verdict line): {r.stdout[-500:]}")
+
         # in CI there are no Claude Code sessions or logs — no warning
         env = {**os.environ, "CI": "true"}
         r = subprocess.run([sys.executable, str(SCRIPT), "--root", str(repo), "--json"], capture_output=True, text=True,
@@ -92,10 +103,6 @@ def main() -> int:
         (repo / ".claude" / "settings.json").write_text("{}", encoding="utf-8")
         s = json.loads(run("--root", str(repo), "--json").stdout)
         check(s["active"] is None, f"H5 without hooks: {s}")
-
-    r = subprocess.run([sys.executable, str(CHECK), "-k", "nic_takiego"], capture_output=True, text=True, timeout=900,
-                       encoding="utf-8", errors="replace", stdin=subprocess.DEVNULL, cwd=ROOT, env=NO_CI)
-    check("factory hooks" in r.stdout, f"H6 a step in check.py: {r.stdout[-500:]}")
 
     for f in fails:
         print("✗", f)
