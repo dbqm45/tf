@@ -1251,7 +1251,7 @@ def validate() -> tuple[list[str], list[str]]:
                           "run: python3 .tf/factory/build.py")
         for pname, p in personas.items():
             for x in p.get("extra_agents") or []:
-                if not any(k.endswith(f"/{x}.md") for k in rendered):
+                if not any(k == f"{x}.md" or k.endswith(f"/{x}.md") for k in rendered):   # flat in the plugin layout
                     errors.append(f"persona {pname}: extra_agents points to an unknown agent '{x}'")
     # Fixed sections of reference files in a fixed order (outside code blocks) — the rules are supplied by overlays
     # (`reference_sections` in pack.yaml, e.g. in pack-it: archetypes in the mapper style).
