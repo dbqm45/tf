@@ -9,6 +9,11 @@ import sys
 from pathlib import Path
 
 os.environ.setdefault("PYTHONUTF8", "1")
+for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: the code page (cp1250) cannot hold "→", "⚠" — UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
 
 
 def main() -> int:

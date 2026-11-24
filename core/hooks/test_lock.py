@@ -25,6 +25,12 @@ import tempfile
 import time
 from pathlib import Path
 
+for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: the code page (cp1250) cannot hold "→", "⚠" — UTF-8
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 try:
     import fcntl
 except ImportError:  # Windows
