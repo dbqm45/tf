@@ -51,7 +51,9 @@ Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
   pdi the last copy stays and is marked stale.
 - **The approval is pinned to the artifact version (contract 0.21.0):** `gate request` sends the artifact's SHA-256
   (`artifact_sha256`, the file's bytes) and the commit (`artifact_commit`); pdi refuses an approval when the artifact
-  changed after the request, and its `gate.decided` carries the approved hash back.
+  changed after the request, and its `gate.decided` carries the approved hash back. The phase workflow writes it into
+  the gate entry (`decision gate --artifact-sha256`, input `artifact_sha256`), and `phase_run.py run` does not start
+  the next phase when its input artifact (e.g. `plan.md` for delivery, approved at B3) changed since the approval.
 - **Change risk at the gate (DV2, contract 0.20.0):** `phase_run.py gate request` adds `risk` to `gate.requested`
   — the same deterministic score as `tf risk` in the PR description (`level`, the items with file and reason), counted
   without the change artifacts in `docs/project/`; a gate whose branch changed only artifacts goes without it. Advisory:

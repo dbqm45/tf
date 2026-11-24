@@ -484,6 +484,19 @@ def main() -> int:
               "(decision in the pdi gate inbox, DEC-45)", f"G-9: --why trafia do wpisu w jednym wierszu: {line!r}")
         r = run(["check"], repo)
         check(r.returncode == 0, f"G-10: wpis z --why przechodzi check: {r.stdout}")
+        # contract 0.21.0: the gate entry keeps the hash of the artifact version the human approved
+        sha = "ab" * 32
+        r = run(["decision", "gate", "CHG-12", "--gate", "B4", "--outcome", "approved", "--id", "DEC-46",
+                 "--artifact-sha256", sha], repo)
+        text = dec.read_text(encoding="utf-8")
+        check(r.returncode == 0 and f"- artifact_sha256: {sha}" in text.split("- id: DEC-46")[-1],
+              f"G-11: --artifact-sha256 goes into the entry: {r.stdout}{text[-300:]}")
+        r = run(["check"], repo)
+        check(r.returncode == 0, f"G-12: an entry with artifact_sha256 passes check: {r.stdout}")
+        r = run(["decision", "gate", "CHG-12", "--gate", "B5", "--outcome", "approved", "--id", "DEC-47",
+                 "--artifact-sha256", "nie-skrot"], repo)
+        check(r.returncode != 0 and "DEC-47" not in dec.read_text(encoding="utf-8"),
+              f"G-13: a bad hash → error, nothing written: {r.stdout}")
         r = run(["decision", "gate", "CHG-99", "--gate", "B1", "--outcome", "approved", "--id", "DEC-44"], repo)
         check(r.returncode != 0 and "change new" in r.stdout, "G-8: no change log → error with a hint")
 

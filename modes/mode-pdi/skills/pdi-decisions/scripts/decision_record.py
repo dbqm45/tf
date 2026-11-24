@@ -25,7 +25,7 @@ Change log conforming to the pdi 0.3.0 contract (contract/change.schema.json; fr
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision export
       JSON of all project decisions (with number and sent state)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision gate CHG-12 --gate B1 --outcome approved \
-      --id DEC-41 [--by pdi] [--date YYYY-MM-DD] [--why "…"] [--answers FILE]
+      --id DEC-41 [--by pdi] [--date YYYY-MM-DD] [--why "…"] [--answers FILE] [--artifact-sha256 HEX]
       a decision from the pdi inbox (gate.decided, inputs of the sdlc-phase.yml template) as an entry with a number and sent: yes;
       a repeat with the same number appends nothing; --answers: JSON [{question, answer}] — the human's answers to
       questions from `## Gate questions` (pdi contract 0.12.0, field answers), in the entry as `question`/`answer` pairs
@@ -53,12 +53,14 @@ KEYS = ("artifact", "phase", "status", "version", "author", "created", "updated"
 REQUIRED = ("artifact", "phase", "status", "version", "created", "updated", "change")
 OUTCOMES = ("approved", "changes_requested", "rejected")   # gate.decided w kontrakcie pdi 0.4.0
 KINDS = ("product", "technical", "process", "triage", "intent", "gate", "other")
+SHA256 = re.compile(r"^[0-9a-f]{64}$")
 # source.kind decyzji z kontraktu pdi 0.10.0 (decyzje z pdi: konsola, ci_for_sdlc, spotkania)
 SOURCE_KINDS = ("claude-cli", "claude-ai", "slack", "confluence", "jira", "manual", "console", "ci_for_sdlc", "meeting",
                 "tf", "shipscope")
 ENTRY = ("ref", "id", "sent", "date", "by", "kind", "why", "source", "drafted_by",
          "finding", "effect",   # answer to a ci_for_sdlc finding
-         "origin")           # pdi — an entry from the pdi register (decision import)
+         "origin",           # pdi — an entry from the pdi register (decision import)
+         "artifact_sha256")  # contract 0.21.0: the artifact version the human approved at the gate
 # A pair of rows of an answer to a gate question (pdi contract 0.12.0, answers); an entry may have several.
 ANSWER_KEYS = ("question", "answer")
 ORIGINS = ("pdi",)
@@ -274,6 +276,8 @@ def decision_gate(a) -> int:
     errs += [f"--id '{a.id}' — number from the pdi registry, e.g. DEC-41" for _ in [0] if not KEY.match(a.id)]
     errs += [f"--date '{a.date}' — YYYY-MM-DD" for _ in [0] if a.date and not DATE.match(a.date)]
     errs += [f"--{n} is empty" for n, v in (("gate", a.gate), ("by", a.by)) if not v.strip()]
+    errs += [f"--artifact-sha256 '{a.artifact_sha256}' — 64 hex characters (SHA-256)"
+             for _ in [0] if a.artifact_sha256 and not SHA256.match(a.artifact_sha256)]
     if errs:
         print("✗ " + "; ".join(errs))
         return 1
@@ -295,7 +299,8 @@ def decision_gate(a) -> int:
         f"decision in the pdi gate inbox ({a.id}); rationale in the pdi registry")
     entry = (f"\n## Gate {a.gate.strip()}: {a.outcome}\n- ref: {ref}\n- id: {a.id}\n- sent: yes\n"
              f"- date: {a.date or dt.date.today().isoformat()}\n- by: {a.by.strip()}\n- kind: gate\n"
-             f"- why: {one_line(why)}\n- source: manual\n- drafted_by: human\n" + answers_lines(answers))
+             f"- why: {one_line(why)}\n- source: manual\n- drafted_by: human\n"
+             + (f"- artifact_sha256: {a.artifact_sha256}\n" if a.artifact_sha256 else "") + answers_lines(answers))
     f.write_text(f.read_text(encoding="utf-8").rstrip("\n") + "\n" + entry, encoding="utf-8")
     told = f", answers to questions: {len(answers)}" if answers else ""
     print(f"✓ {ref} in {f} ({a.id}, sent: yes{told})")
@@ -437,6 +442,8 @@ def check_entries(path: Path) -> list[str]:
         if not DATE.match(e.get("date", "")):
             errs.append(f"{r}: date YYYY-MM-DD")
         errs += [f"{r}: missing field {k}" for k in ("by", "why") if not e.get(k)]
+        if e.get("artifact_sha256") is not None and not SHA256.match(e["artifact_sha256"]):
+            errs.append(f"{r}: artifact_sha256 — 64 hex characters (SHA-256)")
         finding = e.get("finding")
         if finding is not None and not FINDING.match(finding):
             errs.append(f"{r}: finding '{finding}' — ci_for_sdlc finding id, e.g. DES-001:TSK-1")
@@ -724,6 +731,7 @@ def main(argv: list[str]) -> int:
     gate.add_argument("--date")
     gate.add_argument("--why", help="decision statement and rationale from the pdi registry (goes into the entry)")
     gate.add_argument("--answers", help="JSON file [{question, answer}] — answers to the gate questions (pdi 0.12.0)")
+    gate.add_argument("--artifact-sha256", help="SHA-256 of the artifact version approved at the gate (contract 0.21.0)")
     imp = dec.add_parser("import")
     imp.add_argument("key")
     imp.add_argument("--json", required=True, help="JSON file with the change decisions from the pdi registry (links.chg)")
