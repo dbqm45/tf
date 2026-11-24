@@ -28,6 +28,8 @@ import json, os, sys
 from pathlib import Path
 log, state_f = os.environ["FAKE_CLAUDE_LOG"], Path(os.environ["FAKE_CLAUDE_STATE"])
 a = sys.argv[1:]
+if os.environ.get("FAKE_CLAUDE_FAIL"):    # e.g. the organization's settings gateway is unreachable
+    print(os.environ["FAKE_CLAUDE_FAIL"], file=sys.stderr); sys.exit(1)
 with open(log, "a", encoding="utf-8") as f:
     f.write(json.dumps({{"argv": a, "cwd": os.getcwd()}}) + "\n")
 st = json.loads(state_f.read_text()) if state_f.is_file() else {{"installs": [], "markets": {{}}}}
@@ -163,6 +165,20 @@ def main() -> int:
         r = tf(p, "doctor")
         check("✓ plugin: registered for this folder" in r.stdout and pid in r.stdout,
               f"PR-5: tf doctor reports the registration: {r.stdout[:600]}")
+
+        # PR-5b: claude cannot reach the organization's gateway → a hint about the company network / VPN;
+        # inside a sandboxed tf code session → a hint to run it in a plain terminal
+        gw = ("Couldn't load settings from Cloud gateway https://gw.example.com/settings. Check your connection, and join "
+              "your organization's network if the gateway needs it")
+        r = tf(p, "doctor", extra={"FAKE_CLAUDE_FAIL": gw})
+        check("Cloud gateway" in r.stdout and "connect to the company network or VPN" in r.stdout
+              and "sandboxed session" not in r.stdout,
+              f"PR-5b: a gateway failure names the VPN: {r.stdout[:900]}")
+        r = tf(p, "doctor", extra={"FAKE_CLAUDE_FAIL": gw, "TF_ISOLATION": "sandbox", "CLAUDECODE": "1"})
+        check("connect to the company network or VPN" in r.stdout and "sandboxed session (tf code)" in r.stdout,
+              f"PR-5c: inside a sandboxed tf code session → run it in a plain terminal: {r.stdout[:900]}")
+        r = tf(p, "doctor", extra={"FAKE_CLAUDE_FAIL": "Unknown option --json"})
+        check("company network or VPN" not in r.stdout, f"PR-5d: no VPN hint for an unrelated failure: {r.stdout[:600]}")
         n = len(calls())
         r = tf(p, "code", "--continue", extra={"TF_CLAUDE": str(fake_bin / "claude")})
         argv = (calls()[n:] or [{"argv": []}])[-1]["argv"]

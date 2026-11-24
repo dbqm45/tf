@@ -157,8 +157,10 @@ def in_container() -> bool:
 
 def state(root: Path) -> dict:
     level, source = configured(root)
+    in_session = any(os.environ.get(v) for v in SESSION_VARS)
+    # who reads this: a tf code session (TF_ISOLATION), another agent session, or a plain terminal
+    session = "tf code" if in_session and os.environ.get("TF_ISOLATION") else "agent" if in_session else "terminal"
     if layout(root) == "plugin":           # tf code passes the level's settings with --settings and sets TF_ISOLATION
-        in_session = any(os.environ.get(v) for v in SESSION_VARS)
         launched = os.environ.get("TF_ISOLATION") if in_session else level   # a terminal: what tf code will do
         if launched in ("sandbox", "container"):
             enabled, where = True, "tf code (--settings .tf/cache/session-settings.json)"
@@ -182,7 +184,8 @@ def state(root: Path) -> dict:
     elif level == "container" and not container:
         gaps.append("container chosen, but this session does not run in the factory's container (tf code --container)")
     return {"level": level, "source": source, "sandbox_enabled": enabled, "sandbox_where": where,
-            "in_container": container, "minimum": low, "gaps": gaps}
+            "in_container": container, "minimum": low, "gaps": gaps, "session": session,
+            "layout": layout(root)}
 
 
 def cmd_show(root: Path, as_json: bool) -> int:
@@ -193,7 +196,9 @@ def cmd_show(root: Path, as_json: bool) -> int:
     actual = ("container" if s["in_container"] else
               f"sandbox enabled ({s['sandbox_where']})" if s["sandbox_enabled"] else "sandbox not enabled")
     mark = "⚠" if s["gaps"] else "✓"
-    print(f"{mark} Isolation: {s['level']} (from {s['source']}); this session: {actual}")
+    # a plain terminal in the plugin layout is not a session: say what `tf code` will start
+    who = "tf code sessions" if s["layout"] == "plugin" and s["session"] == "terminal" else "this session"
+    print(f"{mark} Isolation: {s['level']} (from {s['source']}); {who}: {actual}")
     for g in s["gaps"]:
         print(f"  - {g}")
     return 0

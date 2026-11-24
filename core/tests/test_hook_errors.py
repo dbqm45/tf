@@ -103,8 +103,9 @@ def main() -> int:
                                env={**os.environ, "CLAUDE_PROJECT_DIR": str(proj)})
             check(r.returncode == 0 and r.stdout.strip() == "", f"H-4: with no errors --summary prints nothing: {r.stdout}")
         # H-5: real hooks with a corrupted input: code 0, nothing on stdout, an error in the log (jev_guard without
-        # an API key finishes before reading the input — its place is covered by the static check H-6)
-        for name in ("skill_hint", "skill_change_guard", "context_guard", "tdd_guard"):
+        # an API key finishes before reading the input — its place is covered by the static check H-6; skill_hint
+        # ignores an empty or invalid input without an entry, as quality_gate — core/tests/test_skill_hint_stack.py SH-7)
+        for name in ("skill_change_guard", "context_guard", "tdd_guard"):
             p = t / f"p-{name}"
             p.mkdir()
             r = run_hook(name, p, "{this is not json")

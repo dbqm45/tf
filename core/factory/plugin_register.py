@@ -41,6 +41,12 @@ DESCRIPTION = ("Team factory: skills, agents, hooks and rules of the /tf-task lo
                "Claude Code session here loads it.")
 REGISTERED = ("✓ Plugin registered for this folder (local scope): every Claude Code session here — claude, tf code, the "
               "Desktop app — loads the factory; commands /tf:tf, /tf:tf-task, /tf:tf-design.")
+NETWORK_HINT = ("ℹ Claude Code could not reach your organization's settings (gateway/network): connect to the company "
+                "network or VPN, then run `tf doctor --fix` again.")
+SANDBOX_HINT = "ℹ This runs inside a sandboxed session (tf code): run `tf doctor --fix` in a plain terminal outside Claude."
+NETWORK_RE = re.compile(r"(?i)cloud gateway|couldn't load settings|\b(ECONNREFUSED|ENOTFOUND|ETIMEDOUT|ECONNRESET|EAI_AGAIN)\b"
+                        r"|\bnetwork\b|\bconnection\b")
+SESSION_VARS = ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")   # as isolation.py: set inside a Claude Code session
 PLUGIN_WARNING = ("⚠ Plugin layout: only `tf code` loads the factory; a plain `claude` and the Claude Desktop app see no "
                   "/tf. Back to the classic layout: python3 .tf/factory/update.py --layout default")
 
@@ -52,6 +58,24 @@ def skipped() -> str | None:
     if os.environ.get("CI", "").strip().lower() not in ("", "0", "false"):
         return "CI is set"
     return None
+
+
+def network_failure(text: str) -> bool:
+    """The claude output names a gateway, network or connection failure (e.g. the organization's settings gateway is
+    reachable only from the company network or a VPN)."""
+    return bool(NETWORK_RE.search(text or ""))
+
+
+def sandboxed() -> bool:
+    """Inside a `tf code` session with the sandbox (TF_ISOLATION set by tf code), which blocks the network."""
+    return (os.environ.get("TF_ISOLATION") in ("sandbox", "container")
+            and any(os.environ.get(v) for v in SESSION_VARS))
+
+
+def excerpt(out: str) -> str:
+    """The end of the claude output; its start when only the start names the network failure."""
+    tail = out[-300:]
+    return out[:300] if network_failure(out) and not network_failure(tail) else tail
 
 
 def market_name(root: Path) -> str:
@@ -178,7 +202,7 @@ def status(root: Path) -> dict:
     except ValueError:
         items = None
     if not isinstance(items, list):
-        return {"state": "error", "detail": f"`claude plugin list --json` failed: {out[-300:]}"}
+        return {"state": "error", "detail": f"`claude plugin list --json` failed: {excerpt(out)}"}
     mine = [x for x in items if isinstance(x, dict) and x.get("id") == plugin_id(root) and x.get("scope") == "local"
             and same(x.get("projectPath"), root)]
     if not mine:
@@ -220,7 +244,7 @@ def register(root: Path) -> tuple[bool, str]:
                      ["plugin", "install", plugin_id(root), "--scope", "local"]):
             rc, out = run(cmd, args, root)
             if rc != 0:
-                return False, f"`claude {' '.join(args)}` failed ({rc}): {out[-300:]}"
+                return False, f"`claude {' '.join(args)}` failed ({rc}): {excerpt(out)}"
         st = status(root)
         return st["state"] in ("registered", "disabled"), st["detail"]
     except Exception as e:  # noqa: BLE001 — the registration never breaks an install
@@ -260,6 +284,10 @@ def warning_block(root: Path, reason: str = "") -> str:
     lines = [rule, PLUGIN_WARNING]
     if reason:
         lines.append(f"  Not registered for this folder: {reason}.")
+        if network_failure(reason):
+            lines.append(NETWORK_HINT)
+        if sandboxed() and ("failed" in reason or network_failure(reason)):   # a claude call failed in the sandbox
+            lines.append(SANDBOX_HINT)
     lines.append("  Register it (then every session here loads the factory, as /tf:tf …) — in the project folder:")
     lines += [f"    {c}" for c in commands(root)]
     lines += ["  or `tf doctor --fix`. Meanwhile start the factory with `tf code` (e.g. `tf code --continue`).", rule]
