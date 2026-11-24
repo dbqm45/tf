@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.11.0] — 2026-11-24
+### Added
+- **mode-pdi:** pin a gate request to its artifact (contract 0.21.0) (#430)
+
 ## [24.10.5] — 2026-11-24
 ### Fixed
 - **core:** build the hint index once — slow tests from 8 min to 18 s (#429)
