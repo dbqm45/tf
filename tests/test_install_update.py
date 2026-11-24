@@ -102,6 +102,10 @@ def main() -> int:
         write(pack / "skills" / "aa-run" / "SKILL.md",
               "---\nname: aa-run\ndescription: Użyj przy A.\nmetadata:\n  catalog: \"Użyj przy A. Nie do niczego.\"\n"
               "  review: 2099-01-01\n---\n# aa-run\nTreść 1.\n")
+        write(pack / "skills" / "ab-tool" / "SKILL.md",
+              "---\nname: ab-tool\ndescription: Użyj przy B.\nmetadata:\n  catalog: \"Użyj przy B. Nie do niczego.\"\n"
+              "  review: 2099-01-01\n---\n# ab-tool\nTreść 2.\n")
+        write(pack / "skills" / "ab-tool" / "scripts" / "tool.py", "print('b')\n")
         ref = pack / "skills" / "aa-run" / "references" / "dlugi.md"
         write(ref, long_reference("> **Spis treści:** Pierwsza · Druga"))   # stale table of contents (missing “Trzecia”)
 
@@ -148,6 +152,20 @@ def main() -> int:
         check(not (proj / ".claude/skills/aa-run/SKILL.md").exists() and "not restoring" in r.stdout,
               f"U-6: a deleted skill stays deleted: {r.stdout[-300:]}")
         skill_md.write_bytes(skill_bytes)   # the rest of the scenario uses the skill
+        # U-6b: a missing script of a skill that stays (its SKILL.md is there) is restored — other factory scripts import
+        # it (run_state.py imports ui_snap.py, and `tf status --open` broke without it); a skill deleted as a whole
+        # (SKILL.md too) stays deleted with its scripts
+        snap = proj / ".claude/skills/tf/scripts/ui_snap.py"
+        snap.unlink()
+        tool = proj / ".claude/skills/ab-tool"
+        for p in (tool / "scripts" / "tool.py", tool / "SKILL.md"):
+            p.unlink()
+        r = install(src, proj)
+        check(r.returncode == 0 and snap.is_file() and ".claude/skills/tf/scripts/ui_snap.py" in r.stdout
+              and "restored" in r.stdout,
+              f"U-6b: a missing skill script restored by the update: {r.returncode} {r.stdout[-600:]}")
+        check(not (tool / "scripts" / "tool.py").exists() and not (tool / "SKILL.md").exists(),
+              f"U-6b: the scripts of a skill deleted as a whole stay deleted: {r.stdout[-300:]}")
         # U-6 (19.0.0): settings with the Polish snapshot hook arguments — after the update exactly one snapshot hook per event,
         # with the English argument (the old argument would otherwise not match and the hook would be added a second time)
         def snapshot_args(settings: Path) -> dict:

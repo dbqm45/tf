@@ -10,6 +10,7 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf remove <pack> [<pack>…]  # remove packs (their files go to .tf/backup/)
   tf list                     # installed packs and modes, what the source offers
   tf doctor [--fix]           # check the install: core/pack versions, required packs, agents, renames
+                              # missing factory files (engine, hooks, skill scripts; --fix restores them),
                               # and whether the quality gate is on (.claude/quality-gate.json)
   tf onboard [--yes] [--verify] [--dry-run] [--json]
                               # prepare the repository: detect test/lint/type/build commands, write verify.sh, the
@@ -536,6 +537,30 @@ def cmd_cloud_setup(apply: bool) -> int:
     return 0
 
 
+def missing_factory_files(root: Path) -> list[str]:
+    """Factory files from the manifest that are gone but the factory needs (the rules of the installer: the machinery
+    and the scripts of a skill that stays) — an update restores them; a skill deleted as a whole is the project's choice."""
+    man_p = root / ".claude" / "factory-manifest.json"
+    inst_p = root / ".tf" / "factory" / "install.py"
+    if not man_p.is_file() or not inst_p.is_file():
+        return []
+    try:
+        files = json.loads(man_p.read_text(encoding="utf-8")).get("files") or {}
+        inst = project_module("install")
+    except Exception:  # noqa: BLE001 — a broken manifest or installer is reported by the build check
+        return []
+    required = tuple(getattr(inst, "REQUIRED", ()))
+    script = getattr(inst, "SKILL_SCRIPT", None)
+
+    def needed(rel: str) -> bool:
+        if rel.startswith(required):
+            return True
+        m = script.match(rel) if script else None
+        return bool(m) and (root / m.group(1) / "SKILL.md").is_file()
+
+    return sorted(r for r in files if needed(r) and not (root / r).exists())
+
+
 def cmd_doctor(fix: bool, repo: str | None) -> int:
     """Install health: build check (versions, required packs, references), renames from core migrations."""
     if not need_project():
@@ -563,6 +588,18 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
             else:
                 print("⚠ to fix (tf doctor --fix): the factory plugin is still registered in .claude/settings.local.json "
                       "— the classic layout would load the factory twice")
+    lost = missing_factory_files(Path.cwd())
+    if lost and fix:
+        print(f"→ restoring {len(lost)} missing factory files: the update re-applies the installed version")
+        restored = update(repo, ["--force", "--yes"])
+        if restored != 0:
+            return restored
+        lost = missing_factory_files(Path.cwd())
+    if lost:
+        print(f"✗ Missing factory files the factory needs ({len(lost)}) — deleted, blocked by antivirus or a broken copy; "
+              "`tf doctor --fix` restores them:")
+        for rel in lost[:20]:
+            print(f"  ! {rel}")
     mig = project_module("migrations")
     changes = mig.apply(Path.cwd(), dry=not fix)
     for c in changes:
@@ -617,6 +654,8 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
         return update(repo, ["--add", ",".join(missing)])
     if missing:
         print(f"→ tf doctor --fix adds: {', '.join(missing)}")
+    if lost:
+        return 1
     return 0 if r.returncode == 0 or (fix and stale and not missing) else r.returncode
 
 
