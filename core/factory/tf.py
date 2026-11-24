@@ -50,7 +50,9 @@ tf — the team factory command: install, update, packs, health check (standard 
   tf task weight <KEY> [--apply | --set light|normal|full [--by human:<id> --reason "<why>"]]   # task weight: proposal with a reason; lowering is a human decision
   tf task deployed <KEY> [--version X] | --rolled-back --by human:<id>   # after deployment: run the smoke test from the operations card, record the result; a red result asks whether to roll back
   tf task finding <KEY> add "<finding>" | control F1 "<control>"   # important review findings and the control that will catch each next time
-  tf task close <KEY> [--lesson "<lesson>" --by human:<id>]   # close a merged task; refuses with an open rollback decision or a finding without a control
+  tf task close <KEY> [--lesson "<lesson>" --evidence "<pointer>" --by human:<id>]   # close a merged task; refuses with an open rollback decision or a finding without a control; a lesson without evidence is parked
+  tf proposals add "<title>" --observation "…" --evidence "<pointer>" --change "…" --place skill:<name>   # a factory change with evidence: into the factory checkout, else .tf/proposals/pending.md
+  tf proposals list | send --to <factory checkout> | send --gh [--yes]   # unsent proposals; copy them to a checkout or file a GitHub issue
   tf task mode <KEY> [plan|normal|auto]   # who approves: plan stops after the plan, normal waits for the human's approval of the plan, auto does not
                               # one place per task: docs/project/changes/<KEY>/task.json and the task index
                               # (.tf/factory/task_state.py)
@@ -607,6 +609,18 @@ def missing_factory_files(root: Path) -> list[str]:
     return sorted(r for r in files if needed(r) and not (root / r).exists())
 
 
+def proposals_warning(root: Path) -> str:
+    """A ⚠ line with the count of factory proposals waiting in .tf/proposals/pending.md, or an empty text."""
+    props = root / ".tf" / "factory" / "proposals.py"
+    if not props.is_file():
+        return ""
+    c = subprocess.run([sys.executable, str(props), "count"], capture_output=True, text=True, encoding="utf-8",
+                       errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(root)})
+    n = c.stdout.strip()
+    return (f"⚠ {n} unsent factory proposals in .tf/proposals/pending.md — tf proposals send --to <factory checkout> "
+            "or tf proposals send --gh") if n.isdigit() and int(n) else ""
+
+
 def cmd_doctor(fix: bool, repo: str | None) -> int:
     """Install health: build check (versions, required packs, references), renames from core migrations."""
     if not need_project():
@@ -695,6 +709,9 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
                            errors="replace", env={**os.environ, "CLAUDE_PROJECT_DIR": str(Path.cwd())})
         if g.stdout.strip():
             print(g.stdout.strip())
+    unsent = proposals_warning(Path.cwd())   # factory proposals not sent yet — information, does not change the result
+    if unsent:
+        print(unsent)
     addons_py = Path(".tf") / "factory" / "addons.py"
     if addons_py.is_file() and (Path(".tf") / "addons").is_dir():   # dodatki — informacja, nie zmienia wyniku
         a = subprocess.run([sys.executable, str(addons_py), "list"], capture_output=True, text=True, encoding="utf-8",
@@ -790,6 +807,8 @@ def main(argv: list[str]) -> int:
             if need_project() else 2
     if cmd == "task":
         return engine("task_state.py", rest)
+    if cmd == "proposals":
+        return engine("proposals.py", rest)
     if cmd == "status":
         if "--open" in rest:          # open the live view (server, else the file) in the browser, then print the list
             rest = [a for a in rest if a != "--open"]

@@ -69,6 +69,8 @@
           ["plik\\w* instrukcji", "CLAUDE\\.md", "ADR", "nie tylko w pamięci"]
         ]
       }
-    }
+    },
+    {"id": "lekcja-z-dowodem", "expect": "trigger", "prompt": "Retrospektywa po etapie: wydaje mi się, że weryfikacja w pętli /tf-task leci dwa razy i marnuje czas. Zapisz z tego wnioski, rozdziel co dotyczy projektu, a co fabryki. Odpowiedz zwięźle.", "checks": {"all": [["dow[oó]d\\w*", "evidence", "--evidence"], ["\\.tf/runs|report\\.md|run\\.json|SHA|commit\\w*|PR"], ["tf proposals add|proposals\\.md|pending\\.md"], ["kontrast\\w*|przed\\W+(i|a)\\W+po|before.{0,10}after|dwa przebiegi|porówn\\w+"]]}},
+    {"id": "lesson-with-evidence-en", "expect": "trigger", "prompt": "Agent retrospective: I think the verify step in the /tf-task loop runs twice and wastes time. Turn it into lessons and tell project ones from factory ones. Answer briefly.", "checks": {"all": [["evidence", "--evidence"], ["\\.tf/runs|report\\.md|run\\.json|SHA|commit\\w*|PR"], ["tf proposals add|proposals\\.md|pending\\.md"], ["contrast\\w*|before.{0,15}after|run twice|two runs|compar\\w+"]]}}
   ]
 }

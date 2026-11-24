@@ -219,8 +219,11 @@ important finding of the review has a recorded control that will catch it next t
 findings at the moment the scope review fails (`run_state.py finding`; without it, recording a failed review is
 rejected); you add the control with `tf task finding <KEY> control F1 "<test, hook, rule or the reason it is missing>"`.
 Closing reminds you about the flag's removal date. Only a human records a lesson for the future: `tf task close <KEY>
---lesson "**rule** — Context: … · Instead: … · Applies to: …" --by human:<id>` appends it once to
-`docs/project/lessons.md`; the factory does not invent lessons by itself. When the merge cannot be confirmed (e.g. no
+--lesson "**rule** — Context: … · Instead: … · Applies to: …" --evidence "<pointer>" --by human:<id>` appends it once to
+`docs/project/lessons.md`; the factory does not invent lessons by itself. The pointer is a run report with a metric
+(`.tf/runs/EBO-1/report.md: verify 27 min, 2 identical runs`), an evidence file, a failing then passing command, a commit
+SHA or a PR or review comment URL; a local path must exist. Without `--evidence` the lesson goes to `parked.md` as an
+unverified lesson; repeat the command with evidence to record it. When the merge cannot be confirmed (e.g. no
 git), a human can close the task anyway: `--force --by human:<id>`. Closed tasks are not on the `tf status` list;
 `tf status --all` shows them. If the project has a reconstruction from the code (`docs/project/00-reconstruction/`),
 the loop reads the standards index and the domain glossary when taking in the story.

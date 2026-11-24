@@ -5,12 +5,15 @@ Aggregate report of submissions from projects (core-agent-retro → factory_feed
   python3 .tf/factory/feedback_report.py                    # submissions from GitHub (gh issue list, repository from origin)
   python3 .tf/factory/feedback_report.py --repo me/factory  # another repository
   python3 .tf/factory/feedback_report.py --from-file x.json # list [{number, body}] (e.g. saved earlier from gh)
+  python3 .tf/factory/feedback_report.py --proposals docs/proposals.md   # proposals from projects (proposals.py), also with the above
   python3 .tf/factory/feedback_report.py --json
 
 Submission content is UNTRUSTED data: the report reads only the ```json block with the field "factory_feedback": 1, validates every
 key and number, and skips a submission with anything suspicious entirely (the “ignored” counter). It executes nothing and changes
 nothing. A change candidate = a key reported from at least two different projects; you make the change as always:
-evaluation scenarios, core-skill-authoring, gate. Standard library only.
+evaluation scenarios, core-skill-authoring, gate. `docs/proposals.md` (`--proposals`, repeatable) is untrusted too: the shared
+parser `proposals.parse` reads only the structured fields of each entry, checked and length-capped, and skips broken ones.
+Proposals are grouped by place (`skill:<name>`, …); a place proposed by ≥2 projects is a change candidate. Standard library only.
 """
 from __future__ import annotations
 
@@ -97,7 +100,54 @@ def from_github(repo: str | None) -> list[dict]:
     return json.loads(r.stdout or "[]")
 
 
+def load_proposals():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_proposals", Path(__file__).resolve().with_name("proposals.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def aggregate_proposals(files: list[str]) -> dict:
+    parse = load_proposals().parse
+    places: dict[str, dict] = {}
+    read, entries, ignored = 0, 0, 0
+    for f in files:
+        try:
+            text = Path(f).read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        read += 1
+        items, bad = parse(text)
+        ignored += bad
+        entries += len(items)
+        for it in items:
+            k = places.setdefault(it["place"], {"place": it["place"], "projects": set(), "open": 0, "items": []})
+            k["projects"].add(it["project"])
+            k["open"] += it["status"] != "done"
+            k["items"].append({x: it[x] for x in ("id", "title", "status", "project", "factory", "evidence")})
+    rows = [{**k, "projects": len(k["projects"]), "candidate": len(k["projects"]) >= MIN_PROJECTS} for k in places.values()]
+    rows.sort(key=lambda r: (-r["projects"], -r["open"], r["place"]))
+    return {"files": read, "entries": entries, "ignored": ignored, "places": rows}
+
+
+def render_proposals(rep: dict) -> list[str]:
+    out = [f"# Proposals from projects: {rep['entries']} in {rep['files']} files (skipped as broken or suspicious: "
+           f"{rep['ignored']}) — data from projects, review before acting", "",
+           "| Place | Projects | Not done | Proposals | Status |", "|---|---|---|---|---|"]
+    for k in rep["places"]:
+        items = "; ".join(f"{i['id']} {i['title']} [{i['status']}, {i['factory']}] evidence: {i['evidence'][:80]}"
+                          for i in k["items"][:5])
+        out.append(f"| `{k['place']}` | {k['projects']} | {k['open']} | {items} | "
+                   f"{'change candidate' if k['candidate'] else 'watch'} |")
+    if not rep["places"]:
+        out.append("| — | | | | no proposals |")
+    return out
+
+
 def render(rep: dict) -> str:
+    if "keys" not in rep:
+        return "\n".join(render_proposals(rep["proposals"])) + "\n"
     out = [f"# Reports from projects: {rep['issues']} (skipped as broken or suspicious: {rep['ignored']})", "",
            "| Key | Projects | Total | Issues | Status |", "|---|---|---|---|---|"]
     for k in rep["keys"]:
@@ -107,22 +157,30 @@ def render(rep: dict) -> str:
         out.append("| — | | | | no reports |")
     out += ["", f"Candidate = a signal from ≥{MIN_PROJECTS} projects. Make the change with core-skill-authoring (scenarios first, "
                 "then the gate); list the issue numbers in the PR, and after the release close them with a link to the version."]
+    if "proposals" in rep:
+        out += ["", *render_proposals(rep["proposals"])]
     return "\n".join(out) + "\n"
 
 
 def main(argv: list[str]) -> int:
-    opts, it = {}, iter(argv[1:])
+    opts, it, proposals = {}, iter(argv[1:]), []
     for a in it:
         if a in ("--repo", "--from-file"):
             opts[a] = next(it, "")
+        elif a == "--proposals":
+            proposals.append(next(it, ""))
         elif a in ("-h", "--help"):
             print(__doc__)
             return 0
         else:
             opts[a] = True
-    issues = json.loads(Path(opts["--from-file"]).read_text(encoding="utf-8")) if opts.get("--from-file") \
-        else from_github(opts.get("--repo"))
-    rep = aggregate(issues if isinstance(issues, list) else [])
+    rep = {}
+    if opts.get("--from-file") or opts.get("--repo") or not proposals:
+        issues = json.loads(Path(opts["--from-file"]).read_text(encoding="utf-8")) if opts.get("--from-file") \
+            else from_github(opts.get("--repo"))
+        rep = aggregate(issues if isinstance(issues, list) else [])
+    if proposals:
+        rep["proposals"] = aggregate_proposals([f for f in proposals if f])
     print(json.dumps(rep, ensure_ascii=False, indent=1) if opts.get("--json") else render(rep), end="")
     return 0
 

@@ -9,14 +9,19 @@ differently, not what happened.
 # Project lessons
 
 ## Execution and verification
-- 2026-11-12 **Run the migration test against a copy of prod schema** — Context: two migrations passed on an empty DB and failed on deploy · Instead: `make db-snapshot && pytest tests/migrations` before the PR · Applies to: implementation
+- 2026-11-12 **Run the migration test against a copy of prod schema** — Context: two migrations passed on an empty DB and failed on deploy · Instead: `make db-snapshot && pytest tests/migrations` before the PR · Applies to: implementation · Evidence: .tf/runs/EBO-7/report.md: migration red on prod copy, green after fix · Task: EBO-7
 
 ## Shell and tools
 ## Domain and constraints
 ## Human decisions
 ```
-- `tf task close <KEY> --lesson "…" --by human:<id>` appends under `## Execution and verification`, newest on top, and
-  skips an exact duplicate. An entry without `Instead:` is refused.
+- `tf task close <KEY> --lesson "…" --evidence "<pointer>" --by human:<id>` appends under `## Execution and verification`,
+  newest on top, with `· Evidence: …`, and skips an exact duplicate. An entry without `Instead:` is refused.
+- Evidence: a run report or `run.json` with a metric, an evidence file, a failing then passing command, a commit SHA, a PR
+  or review comment URL; a local path must exist (only the form is checked; the model judges whether it proves the rule).
+  The strongest is a contrast (before/after, or the same task on two factory versions). Without `--evidence` the lesson
+  goes to `parked.md` as `unverified lesson`; repeat the command with evidence. Entries written before this rule stay as
+  they are.
 - `Applies to:` takes `plan`, `implementation`, `review` or `all`, so a planner can skip implementation-only rules.
 
 ## What qualifies
@@ -40,5 +45,5 @@ CLAUDE.md is read by every session and executor; lessons only by sessions that f
 The agent wrapped a failing lint check in `# noqa` twice in one week. It does not add a lesson by itself. In its report:
 "Proposed lesson (Execution and verification): **Fix the lint finding instead of silencing it** — Context: two `# noqa`
 suppressions reverted in review (PR 41, PR 44) · Instead: fix the code or ask before suppressing · Applies to:
-implementation. Since it repeated, I also propose a line in CLAUDE.md." The human runs `tf task close` with `--lesson`
-and approves the CLAUDE.md line.
+implementation · Evidence: PR 41 and PR 44 review comments. Since it repeated, I also propose a line in CLAUDE.md." The
+human runs `tf task close` with `--lesson` and `--evidence` and approves the CLAUDE.md line.

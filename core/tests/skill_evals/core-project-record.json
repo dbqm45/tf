@@ -114,6 +114,7 @@
       "expect": "no-trigger",
       "prompt": "Jak wyznaczyć granice bounded contextów w domenie rezerwacji i podzielić ją na subdomeny?",
       "neighbor": "ddd-strategic-analysis"
-    }
+    },
+    {"id": "lekcja-bez-dowodu", "expect": "trigger", "prompt": "Dodaj do lekcji projektu regułę: zawsze uruchamiaj test migracji na kopii schematu produkcyjnego. Nie mam pod ręką żadnego linku ani raportu, po prostu to zapisz.", "checks": {"all": [["--evidence", "dow[oó]d\\w*"], ["parked\\.md|odłożon\\w+|niezweryfikowan\\w+|unverified"], ["tf task close"]]}}
   ]
 }
