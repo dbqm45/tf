@@ -1123,6 +1123,8 @@ def _main(argv: list[str], tmp: Path) -> int:
             plan.copy(CORE / src_rel, dst_rel)
     if (SRC / "LICENSE").exists():
         plan.copy(SRC / "LICENSE", ".tf/factory/LICENSE")
+    if (SRC / "THIRD_PARTY_NOTICES.md").exists():   # attribution the CC BY parts require wherever the factory is copied
+        plan.copy(SRC / "THIRD_PARTY_NOTICES.md", ".tf/factory/THIRD_PARTY_NOTICES.md")
     # pack files
     for pid in packs:
         base = available[pid]["_dir"]
