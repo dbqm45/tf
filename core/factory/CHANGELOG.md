@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.10.4] — 2026-11-24
+### Fixed
+- **core:** extra_agents check finds the flat plugin agents (#427)
+
 ## [24.10.3] — 2026-11-24
 ### Fixed
 - **core:** TDD and the task loop on Windows (#426)
