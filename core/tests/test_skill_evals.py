@@ -364,16 +364,17 @@ def main() -> int:
         hint = importlib.util.module_from_spec(hs)
         hs.loader.exec_module(hint)
         items = hint.load_index()
+        stats = hint.index_stats(items)   # word statistics of the (unchanged) index, once for all the prompts below
         trig = [(json.loads(f.read_text(encoding="utf-8"))["skill"], s) for f in files
                 for s in ev.tuning_set(json.loads(f.read_text(encoding="utf-8"))["scenarios"]) if s["expect"] == "trigger"]
-        hits = sum(sk in [it["name"] for _, it in hint.select(s["prompt"], items)] for sk, s in trig)
+        hits = sum(sk in [it["name"] for _, it in hint.select(s["prompt"], items, stats=stats)] for sk, s in trig)
         # a generic command → no hint; for a commit request only commit skills are acceptable (in a small
         # installation, without competition from other skills, the core-git-workflow hint is accurate, not noise)
         generic = {"hej, jak się masz?": set(), "Jaka jest stolica Francji?": set(),
                    "Przetłumacz ten akapit na angielski": set(), "Co robi ten plik?": set(),
                    "Zrób commit z tymi zmianami": {"core-git-workflow", "core-conventional-commits"}}
         def noisy(g: str, ok: set) -> bool:
-            picks = [it["name"] for _, it in hint.select(g, items)]
+            picks = [it["name"] for _, it in hint.select(g, items, stats=stats)]
             return bool(picks) and (not ok or picks[0] not in ok)   # for a commit the hint leader counts
         noise = sum(noisy(g, ok) for g, ok in generic.items())
         if trig and hits / len(trig) < 0.8:
