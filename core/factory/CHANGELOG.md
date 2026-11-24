@@ -3,6 +3,11 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.12.2] — 2026-11-24
+### Fixed
+- **core:** read one tracker issue directly, budget mcp-runner (#434)
+- **core:** no gate tests during a task run or for factory files (#433)
+
 ## [24.12.1] — 2026-11-24
 ### Fixed
 - **core:** fast lane for small tasks — no duplicate verify, one slice (#432)
