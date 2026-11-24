@@ -115,7 +115,8 @@ rozszerza fabrykę i niczego w niej nie zmienia, dopóki ktoś tego nie włączy
 ## Ustawienia firmy (nakładka firmowa) — na później, zapisane 2026-11-16
 Stan: nakładka firmowa działa (`org_defaults`, zestaw w `org/`: generator, szablon, przewodnik `org/README.md`).
 Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić później.
-- [ ] **Gdzie leżą wygenerowane ustawienia firmy** — decyzja człowieka. Dziś (wariant B) paczka firmy żyje
+- [x] (2026-11-24, decyzja właściciela: wariant A odrzucony — fabryka ma być częścią DI Suite jako SaaS dla wielu
+  firm, więc nie może nieść ustawień jednej firmy; B zostaje jako rozwiązanie przejściowe) **Gdzie leżą wygenerowane ustawienia firmy** — decyzja człowieka. Dziś (wariant B) paczka firmy żyje
   w osobnym repozytorium firmy i trafia do projektu przez `tf install --pack-dir … --add pack-<firma>`.
   - **Wariant A:** katalog `custom-settings/` w repozytorium fabryki, obok `packs/` i `modes/`. Zalety: jedno repo
     zamiast dwóch, instalator bierze ustawienia sam (bez `--pack-dir`), `tf update` przynosi je razem z fabryką,
@@ -131,6 +132,15 @@ Decyzja człowieka z 2026-11-16: miejsce ustawień zostaje jak jest, wrócić p�
   - **Zakres zmiany dla A:** instalator i sprawdzenia fabryki (CI, `tools/workspace.py`) traktują `custom-settings/`
     jak dodatkowe źródło nakładek, włączane domyślnie; generator `org/new_org_pack.py` dostaje opcję zapisu tam;
     `org/README.md` opisuje oba warianty; testy instalacji i aktualizacji z ustawieniami w `custom-settings/`.
+- [ ] **Ustawienia firmy z DI Suite, nie z nakładki** (2026-11-24, kierunek właściciela). Nakładki (`packs/`)
+  służą wiedzy dziedzinowej, nie konfiguracji firmy — dostarczanie ustawień przez `pack-<firma>` to rozwiązanie
+  przejściowe. Docelowo: ustawienia firmy (dziś `org_defaults`: autonomia, poziomy, profile, kroki, języki, tracker,
+  minimalny poziom izolacji) są konfiguracją klienta w DI Suite, a fabryka pobiera je per firma do kopii tylko do
+  odczytu (jak kopia decyzji suity, plan D8 `docs/plans/2026-11-23-d8-pamiec-decyzji-suity.md`) i wpina jako warstwę
+  firmy w istniejący łańcuch warstw (silnik ← firma ← zespół ← projekt ← osoba, `packs.config_layers`) — własny
+  format ustawień zamiast `pack.yaml`. Warunek: organizacje i usługa tożsamości w pdi (dziś ich nie ma). Do ustalenia
+  z architekturą suity: kto edytuje ustawienia (panel suity), format i wersjonowanie, praca bez połączenia, droga
+  migracji z istniejących `pack-<firma>` (jednorazowy import), co z `team_defaults`.
 - [x] **Generator standardów z dokumentów firmy z kontrolą cytatów skryptem** (zrobione 2026-11-16, `org/standards_from_docs.py`). Dziś `org/README.md` daje gotowe
   polecenie dla agenta, a cytaty sprawdza człowiek. Plan (wzorzec rekonstrukcji projektu z kodu): (1) dokumenty
   (eksport z Confluence: HTML, Word, PDF, Markdown; albo pobrane przez połączenie MCP z adresem i datą) do `sources/`;
