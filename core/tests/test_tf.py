@@ -204,6 +204,30 @@ def main() -> int:
         r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=doc, env=denv, capture_output=True, text=True)
         check(r.returncode == 0 and "Quality gate on" in r.stdout and "npm test" in r.stdout,
               f"CTF-13: doctor confirms a working gate with the command: {r.stdout}{r.stderr}")
+        # CTF-13a: the project's one decision to work without a security scanner — recorded by a human, shown by doctor
+        shutil.copy(ROOT / ".tf" / "factory" / "packs.py", doc / ".tf" / "factory" / "packs.py")
+        if (ROOT / ".tf" / "factory" / "_vendor").is_dir():
+            shutil.copytree(ROOT / ".tf" / "factory" / "_vendor", doc / ".tf" / "factory" / "_vendor")
+        r = subprocess.run([sys.executable, str(CTF), "config", "security.scanner", "off", "--by", "process:tf",
+                            "--reason", "x"], cwd=doc, env=denv, capture_output=True, text=True)
+        check(r.returncode == 2 and "human:" in r.stdout and not (doc / ".tf" / "config" / "config.yaml").exists(),
+              f"CTF-13a: the decision is a human's: {r.returncode} {r.stdout}{r.stderr}")
+        r = subprocess.run([sys.executable, str(CTF), "config", "security.scanner", "off", "--by", "human:anna"],
+                           cwd=doc, env=denv, capture_output=True, text=True)
+        check(r.returncode == 2 and "--reason" in r.stdout, f"CTF-13b: working without a scanner needs a reason: {r.stdout}")
+        r = subprocess.run([sys.executable, str(CTF), "config", "security.scanner", "off", "--by", "human:anna",
+                            "--reason", "no semgrep on the team's Windows laptops"], cwd=doc, env=denv, capture_output=True,
+                           text=True)
+        cfg_text = (doc / ".tf" / "config" / "config.yaml").read_text(encoding="utf-8") if r.returncode == 0 else ""
+        check(r.returncode == 0 and "security:" in cfg_text and "human:anna" in cfg_text and "Windows" in cfg_text,
+              f"CTF-13c: tf config security.scanner off records who, when and why: {r.stdout}{r.stderr} {cfg_text}")
+        r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=doc, env=denv, capture_output=True, text=True)
+        check(r.returncode == 0 and "⚠ security scanner off by decision (human:anna" in r.stdout,
+              f"CTF-13d: doctor shows the decision as a warning: {r.stdout}{r.stderr}")
+        subprocess.run([sys.executable, str(CTF), "config", "security.scanner", "on", "--by", "human:anna"], cwd=doc,
+                       env=denv, capture_output=True, text=True)
+        r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=doc, env=denv, capture_output=True, text=True)
+        check("scanner off by decision" not in r.stdout, f"CTF-13e: the decision withdrawn — no warning: {r.stdout}")
         # CTF-14: a missing factory file the factory needs (here a script of a skill that stays) is an error with the
         # fix named; a skill deleted as a whole is not; --fix re-applies the version (the update restores the file)
         shutil.copy(ROOT / ".tf" / "factory" / "install.py", doc / ".tf" / "factory" / "install.py")

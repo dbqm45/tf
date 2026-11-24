@@ -421,6 +421,64 @@ def main() -> int:
         check(r.returncode == 0 and "Source:" not in text and "Cut TSK-57 of the change CHG-12" in text and "Weight:" in r.stderr,
               f"R-43: pdi slice task — ticket.md without a source line (it has a slice heading), with a weight: {r.stdout} {r.stderr} {text[:200]}")
 
+        # what would slow down or stop every slice is said once at the start: a gate without `related`, no scanner
+        (proj / ".claude").mkdir(exist_ok=True)
+        (proj / ".claude" / "quality-gate.json").write_text(json.dumps({"command": "npm test"}), encoding="utf-8")
+        empty_bin = Path(t) / "empty-bin"
+        empty_bin.mkdir()
+        os.environ["TF_SCAN_PATH"] = str(empty_bin)
+        try:
+            r = run(["start", "Szerokość wyszukiwarki", "--key", "EBO-17", "--story", "AC1: 280px."], proj, cfg)
+        finally:
+            os.environ.pop("TF_SCAN_PATH", None)
+        check(r.returncode == 0 and "⚠ The quality gate has no `related`" in r.stderr and "`npm test`" in r.stderr
+              and "{files}" in r.stderr and "gate-related" in r.stderr and "semgrep is missing" in r.stderr and "security.scanner off" in r.stderr,
+              f"R-46: start warns once: no `related` (every verify runs the whole command) and no scanner: {r.stderr}")
+        (proj / ".claude" / "quality-gate.json").write_text(json.dumps({"command": "npm test", "related": "x {files}"}),
+                                                           encoding="utf-8")
+        r = run(["start", "Szerokość tabel", "--key", "EBO-18", "--story", "AC1: 280px."], proj, cfg)
+        check(r.returncode == 0 and "has no `related`" not in r.stderr, f"R-47: with `related` no warning: {r.stderr}")
+        (proj / ".claude" / "quality-gate.json").write_text(json.dumps(
+            {"command": "npm test", "related_decision": {"state": "not-found", "reason": "no per-file runner"}}), encoding="utf-8")
+        r = run(["start", "Szerokość list", "--key", "EBO-19", "--story", "AC1: 280px."], proj, cfg)
+        check(r.returncode == 0 and "has no `related`" not in r.stderr,
+              f"R-47a: a recorded not-found decision is not asked again: {r.stderr}")
+
+        # where the time went: verify evidence, gate hook runs, waiting for the human, the rest (model and tools)
+        tdir = proj / ".tf" / "runs" / "cuts" / "2026-10-21-time"
+        (tdir / "evidence").mkdir(parents=True)
+        (tdir / "run.json").write_text(json.dumps({"slug": "time", "started_at": "2026-10-21T10:00:00+00:00",
+                                                   "waits": [{"from": "2026-10-21T10:01:00Z", "to": "2026-10-21T10:02:00Z"}]}))
+        (tdir / "plan.md").write_text("# Plan\n- [x] S1 import\n")
+        (tdir / "task.json").write_text(json.dumps({"approach_log": [
+            {"weight": "quick", "from": "normal", "by": "process:approach", "at": "2026-10-21T10:00:30Z", "rationale": "one class"},
+            {"weight": "full", "from": "quick", "by": "process:approach", "at": "2026-10-21T10:03:30Z", "escalated": True,
+             "rationale": "escalated: the login page uses it"}]}))
+        for n, (sec, at) in enumerate(((60, "2026-10-21T10:03:00Z"), (30, "2026-10-21T10:04:00Z"),
+                                       (999, "2026-10-20T10:00:00Z")), 1):
+            (tdir / "evidence" / f"S1-{n}.json").write_text(json.dumps({"slice": "S1", "duration_s": sec, "at": at}))
+        (proj / ".tf" / "logs").mkdir(parents=True, exist_ok=True)
+        (proj / ".tf" / "logs" / "quality-gate-runs.jsonl").write_text(
+            json.dumps({"at": "2026-10-21T10:04:30Z", "duration_s": 20, "ok": True}) + "\n"
+            + json.dumps({"at": "2026-10-20T10:04:30Z", "duration_s": 500, "ok": True}) + "\n")
+        cfg_t = Path(t) / "cfg-time"
+        write_jsonl(cfg_t / "projects" / re.sub(r"[^A-Za-z0-9]", "-", str(proj.resolve())) / "T1.jsonl", [
+            assistant("2026-10-21T10:00:10Z", "t1", "claude-sonnet-5", i=10, o=5),
+            assistant("2026-10-21T10:05:00Z", "t2", "claude-sonnet-5", i=10, o=5)])
+        r = run(["finish", str(tdir), "--json"], proj, cfg_t)
+        try:
+            tm = json.loads(r.stdout).get("time") or {}
+        except ValueError:
+            tm = {}
+        check(tm == {"verify_s": 90, "verify_runs": 2, "gate_s": 20, "gate_runs": 1, "wait_s": 60, "model_s": 130,
+                     "total_s": 300}, f"R-48: the time breakdown counts only this run's evidence, gate runs and waits: {tm} {r.stderr}")
+        md = (tdir / "report.md").read_text(encoding="utf-8") if (tdir / "report.md").is_file() else ""
+        check("## Where the time went" in md and "1 min 30 s" in md and "Quality-gate hook runs (1): 0 min 20 s" in md
+              and "Waiting for the human" in md and "the model and its tools: 2 min 10 s" in md,
+              f"R-49: report.md has the section „Where the time went”: {md[-600:]}")
+        check("## Approach and escalations" in md and "**escalated** quick → full" in md and "login page" in md,
+              f"R-50: report.md records the approach and its escalations: {md[-900:]}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} run report tests")

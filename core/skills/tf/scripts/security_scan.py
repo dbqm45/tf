@@ -8,6 +8,7 @@ SEC-001 in ci_for_sdlc. A missing scanner is a FAIL with an install command, nev
                                                                        [--slice S<n> --attempt k] [--json]
   python3 .claude/skills/tf/scripts/security_scan.py verdict FILE.sarif... [--json]
   python3 .claude/skills/tf/scripts/security_scan.py cooldown [--fix]
+  python3 .claude/skills/tf/scripts/security_scan.py scanner        # is semgrep here, or did the project decide without it
 
 scan     — without --base: uncommitted changes and new files (the slice loop); with --base: also commits since the base (CI on a PR).
            Writes to --out (default reports/security): semgrep.sarif, npm-audit.sarif, pip-audit.sarif,
@@ -20,6 +21,10 @@ cooldown — version cooldown (N10): npm min-release-age, pnpm minimumReleaseAge
            (.npmrc; pnpm-workspace.yaml when the project has one, else .npmrc; .yarnrc.yml; [tool.uv] in pyproject.toml),
            keeps every other line, then checks again. A lockfile outside git is only reported (git add is yours).
            Run by the human (`tf cooldown --fix`, `tf onboard --yes`): the agent does not change these settings.
+
+A missing scanner with the project's decision (`tf config security.scanner off --by human:<id> --reason "<why>"`,
+`security.scanner` in .tf/config/config.yaml) is recorded in the verdict's notes ("scanner off by decision (who, when)")
+instead of a FAIL.
 
 Blocking: level error or warning with a CWE from OWASP Top 10 2021 or 2025; result level → the rule's default level →
 warning; level none is skipped. The rest goes into the report. Exit code: 0 PASS, 1 FAIL, 2 bad call.
@@ -208,6 +213,34 @@ def changed_files(root: Path, base: str | None, skip: list[str]) -> list[str]:
 
 def tool(name: str) -> str | None:
     return shutil.which(name, path=os.environ.get("TF_SCAN_PATH") or None)
+
+
+def engine_module(root: Path, name: str):
+    """A module of the project's engine (`.tf/factory/<name>.py`); None when it is absent or broken."""
+    import importlib.util
+    path = root / ".tf" / "factory" / f"{name}.py"
+    if not path.is_file():
+        return None
+    try:
+        spec = importlib.util.spec_from_file_location(f"tf_scan_{name}", path)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+    except Exception:  # noqa: BLE001 — without the engine: no decision, the default patterns
+        return None
+
+
+def scanner_decision(root: Path) -> dict | None:
+    """The project's recorded decision to work without a scanner (`security.scanner: off`, by a human); None — no decision,
+    a missing scanner is a FAIL."""
+    packs = engine_module(root, "packs")
+    dec = packs.scanner_decision(root) if packs and hasattr(packs, "scanner_decision") else None
+    return dec if isinstance(dec, dict) and str(dec.get("by", "")).startswith("human:") else None
+
+
+def decision_text(dec: dict) -> str:
+    return (f"scanner off by decision ({dec.get('by')}, {dec.get('at') or 'no date'})"
+            + (f": {' '.join(str(dec['reason']).split())[:200]}" if dec.get("reason") else ""))
 
 
 SEMGREP_STATE = Path(".tf") / "cache" / "semgrep"
@@ -424,6 +457,8 @@ def write_outputs(out: Path, v: dict, lines: list[str]) -> None:
     summ += ["Below the threshold:", *map(item, v["other"])] if v["other"] else ["Below the threshold: none."]
     if v.get("skipped"):
         summ += ["", "Dependency audit skipped:", *(f"- {s}" for s in v["skipped"])]
+    if v.get("notes"):
+        summ += ["", "Notes:", *(f"- {n}" for n in v["notes"])]
     if v["blocking"] or v["errors"]:
         summ += ["", "Blocking and errors:", *map(item, v["blocking"]), *(f"- {e}" for e in v["errors"])]
     (out / "summary.md").write_text("\n".join(summ) + "\n", encoding="utf-8")
@@ -447,19 +482,23 @@ def cmd_scan(a) -> int:
         d.mkdir(parents=True, exist_ok=True)
         for old in list(d.glob("*.sarif")) + [d / n for n in ("verdict.json", "feedback.md", "summary.md")]:
             old.unlink(missing_ok=True)
-    errors = []
+    errors, notes = [], []
     files = changed_files(root, a.base, [rel_out])
     jobs, job_errors, skipped = audit_jobs(root, files)
     errors += job_errors
     needed = (["semgrep"] if files else []) + sorted({t for t, _ in jobs})
     missing = [n for n in needed if not tool(n)]
-    errors += [f"the scanner {n} is missing — install it: {INSTALL[n]}" for n in missing]
+    dec = scanner_decision(root) if missing else None
+    if dec:      # the project decided once to work without it: recorded instead of a FAIL that stops the task
+        notes.append(f"{', '.join(missing)}: {decision_text(dec)}")
+    else:
+        errors += [f"the scanner {n} is missing — install it: {INSTALL[n]}" for n in missing]
     if files and "semgrep" not in missing:
         try:
             run_semgrep(root, files, out)
         except ScanError as e:
             errors.append(str(e))
-    elif not files:
+    elif not files or dec:
         run_semgrep(root, [], out)
     counts: dict[str, int] = {}
     for t, f in jobs:
@@ -476,7 +515,9 @@ def cmd_scan(a) -> int:
     v["files"] = files
     v["audits"] = [f for _, f in jobs]
     v["skipped"] = skipped
-    lines = render(v)
+    if notes:
+        v["notes"] = notes
+    lines = render(v) + [f"Note: {n}" for n in notes]
     if a.slice:
         lines += slice_lines(v, a.slice, a.attempt)
     write_outputs(out, v, lines)
@@ -484,6 +525,26 @@ def cmd_scan(a) -> int:
         shutil.copyfile(out / "feedback.md", base_out / "feedback.md")
     print(json.dumps(v, ensure_ascii=False, indent=2) if a.json else "\n".join(lines))
     return 0 if v["status"] == "PASS" else 1
+
+
+def cmd_scanner(_a) -> int:
+    """Whether the slice scan can run here: semgrep present, or the project's decision to work without it. Exit code 0 —
+    ready (or decided), 1 — missing and undecided (run_report.py start asks the human once, at the start)."""
+    try:
+        root = Path(git("rev-parse", "--show-toplevel", cwd=Path.cwd()).strip())
+    except ScanError:
+        root = Path.cwd()
+    if tool("semgrep"):
+        print("✓ scanner: semgrep is available")
+        return 0
+    dec = scanner_decision(root)
+    if dec:
+        print(f"⚠ scanner: semgrep is missing — {decision_text(dec)}; the slice scans record this instead of a FAIL")
+        return 0
+    print(f"⚠ scanner: semgrep is missing — every slice scan will FAIL and stop the task. Ask the human now, once: install it "
+          f"({INSTALL['semgrep']}) or record the decision to work without it: python3 .tf/factory/tf.py config "
+          "security.scanner off --by human:<id> --reason \"<why>\"")
+    return 1
 
 
 def cmd_verdict(a) -> int:
@@ -701,6 +762,8 @@ def main(argv: list[str]) -> int:
     s.add_argument("--attempt", type=int, default=1)
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_scan)
+    sc = sub.add_parser("scanner")
+    sc.set_defaults(fn=cmd_scanner)
     v = sub.add_parser("verdict")
     v.add_argument("sarif", nargs="+")
     v.add_argument("--json", action="store_true")

@@ -51,18 +51,18 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
 - **A pdi slice key** (`/tf-task TSK-57`, `start --task`) and a round of the PR loop → first `references/pdi-cuts.md`.
 
 ## 0. Start
-1. A clean working tree, otherwise STOP. The gate without `related` (`.claude/quality-gate.json`) → once per project
-   propose a command for its stack that runs only the tests of `{files}`/`{dirs}`, check it on one file, write it after
-   the human's consent. The version cooldown:
-   `security_scan.py cooldown` — FAIL → STOP: the human runs `tf cooldown --fix`; you do not change the settings yourself.
+1. A clean working tree, otherwise STOP. The version cooldown: `security_scan.py cooldown` — FAIL → STOP: the human runs
+   `tf cooldown --fix`; you do not change the settings yourself.
 2. `run_report.py start "<tytuł>" --story-file <plik>` (or `--story "<treść>"`; an issue: `--key PROJ-123
    --source "<skąd>"`) creates the task and prints the run directory `.tf/runs/<KEY>/` (outside git).
    The permanent files are in `docs/project/changes/<KEY>/` — they go into git with one commit at the end (§4).
-   Pass the `Weight: …` line on in one sentence; another weight than normal changes the run (`references/weight.md`).
+   Pass the `Weight: …` line on in one sentence (`references/weight.md`).
+   **Do not skip, before §1:** `⚠ … no related` → work out the narrowest tests-of-`{files}` command from the build files,
+   check it on one file, `run_state.py gate-related` (`references/verify-scope.md`); `⚠ scanner:` → AskUserQuestion:
+   install it or record the decision (`references/security.md`).
 3. A branch from the default one: `git switch main`, then `git switch -c story/<slug>`.
 4. **The preview:** `run_state.py stage` and `step` record the stage in `run.json` and build `.tf/runs/dashboard.html`
-   (`--auto` or `--plan` goes into the first `stage`). Pass on the `Dashboard:`, `⚠` and `Tip:` lines from `start`;
-   a preview error is not a STOP. **A refusal** (`✗`, exit code 2) is a gate — remove the cause
+   (`--auto` or `--plan` goes into the first `stage`). Pass on `Dashboard:` and `Tip:`; a preview error is not a STOP. **A refusal** (`✗`, exit code 2) is a gate — remove the cause
    from the message and repeat the command.
 
 ## 1. Taking in the story
@@ -80,6 +80,9 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
 - **Against earlier decisions:** grep the story's key terms in other tasks' `spec.md` and `decisions.md`; a contradiction
   or an overlap → a question (update the old spec / go on / stop).
 - A small ambiguity → the conservative option (fewer files), an **[assumption]** in the plan.
+- **Your approach is a judgement** (`references/weight.md`): one class or label in N templates → `quick`, one slice,
+  one parametrized test per criterion, narrow verify, no spec, `plan.md` first; new domain logic across modules →
+  `normal`/`full`, spec, slices. `run_state.py approach <katalog> --weight … --rationale "<evidence>"`.
 - **The specification before the plan** (only for a ready story — not at a STOP):
   `run_state.py spec <katalog> new` creates `spec.md`; fill it in: `- AC-n: Given <stan>, when <jedna akcja>,
   then <wynik sprawdzalny testem>` straight from the story's criteria (you add nothing), "Unchanged", "Out of
@@ -92,41 +95,37 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
 Every `AC-n` goes into a slice. `spec.md` changed after the plan → repeat `stage <katalog> plan`.
 - **A vertical slice** (INVEST): visible value, passes the tests and the build by itself; the first one
   is the thinnest working path. A slice = one commit, a story = one PR. More than 5 slices → propose a split and STOP.
-- **The same change in many places** (a width, a label on N pages) = one slice, one test per criterion, `quick-fixer`.
+- **The same change in many places** = one slice, `quick-fixer`.
 - **A feature flag:** `run_state.py flag <katalog> mode`; `auto` → a decision `flag … set <klucz>` or `flag … none --reason`,
   without it the `pr` stage is rejected (`references/feature-flag.md`).
 - **Conditional phases** only with a reason: docs (a public API or documented behaviour changes), `security-reviewer`
   (auth, secrets, permissions, IaC, CI), `architect` (a decision that is hard to reverse).
 - Edge cases → `run_state.py park <katalog> "<sprawa>"` (into the PR and the report).
 - **Visual check, only when worth it:** `ui_snap.py worth <katalog> --base <gałąź domyślna>`: `no` = skip it; `yes` → `references/visual-check.md` (`--visual`/`--no-visual`).
-- After saving the plan: `run_state.py stage <katalog> plan`. **Without `--auto`:** `run_state.py stage <katalog> needs
-  --needs plan`, show the plan and wait; after the human's consent
+- After the plan and the approach: `run_state.py stage <katalog> plan`. **Without `--auto`:** `run_state.py stage <katalog> needs
+  --needs plan`, show the plan with the `Approach:` line and wait; after the human's consent
   `run_state.py approve <katalog>`. With `--plan` you end here. **With `--auto`:** you go on; the plan goes into the PR description.
   Modes: `references/modes-and-stops.md`.
 
 ## 3. The slice loop
 State: `run_state.py step <katalog> S<n> R<k> <etap> <stan>` — the stages `test`, `code`, `verify`, `scan`, `scope`; the states
-`run`, `pass`, `fail`; at the start of a stage and at the result. **R<k>** is the round: after a failed gate you go back to
-the start of the loop with the next one (at most two), e.g. `… S2 R1 verify fail`, then `… S2 R2 code run`.
+`run`, `pass`, `fail`. **R<k>** is the round: after a failed gate the next one (at most two).
 1. **A red test** with only the cases from the slice's criteria (TDD; the `tdd_guard` hook guards the order).
-   From its first version the test carries the criterion's identifier (`test_ac1_…`, `# AC-1`) — the criterion's trace
-   is built from it; adding it after the fact is an extra commit.
+   The test carries the criterion's id from its first version (`test_ac1_…`, `# AC-1`); added later = an extra commit.
 2. **The smallest code** that turns it green; a mechanical change with a specification → `quick-fixer`.
-3. **Verification with evidence:** `run_state.py verify <katalog> S<n> --files <pliki kawałka po przecinku, z plikiem
-   testu>` — runs the product's verification (`.claude/quality-gate.json`, otherwise `--command "<polecenie>"`) and saves
-   the evidence in `evidence/`; 0 = green, 1 = red. With `related` in the gate only the tests of `--files`; `--full` once
-   on the last slice before the PR. Without current evidence `done` and `pr` are rejected.
-   The verdict: `GATE S<n>: PASS` or `FAIL (<skrót>, attempt k/2)`.
-   **The scan** after green tests: `security_scan.py scan --slice S<n> --attempt <k> --out <katalog>/security/S<n>`.
-   FAIL → the findings from `security/S<n>/feedback.md` are the input of the next attempt; after 2 attempts STOP, you do not commit
-   the slice. A missing scanner is a FAIL, not a silent PASS (`references/security.md`).
-4. **The scope review:** always `scope-reviewer` (not you, also with a small diff) gets the slice from the plan
+3. **The scope review:** always `scope-reviewer` (not you, also with a small diff) gets the slice from the plan
    and the `git diff`. An **important** finding → `run_state.py finding <katalog> S<n> "<ustalenie>"`, `step <katalog> S<n>
    R<k> scope fail`, you revert, a new round; **minor** and **pre-existing** ones → `parked.md`.
-5. **No important ones:** `run_state.py done <katalog> S<n> --message "<typ>(<zakres>): <opis>"` records the review,
-   commits the files from the evidence (the body `Slice S<n>`, the `Flag:` footer), ticks it and gives the next slice.
-   A refusal says what is missing. Footers: `references/pdi-cuts.md`.
-6. With `--budget`: `run_report.py status <katalog>`; over it → STOP.
+4. **No important ones — one call ends the slice:** `run_state.py finish-slice <katalog> S<n> --files <pliki kawałka po
+   przecinku, z plikiem testu> --message "<typ>(<zakres>): <opis>"`: verification with evidence (`.claude/quality-gate.json`:
+   `related` for `--files`, else `command`; or `--command "<polecenie>"`; the same code again reuses the evidence, `--force`
+   reruns), the scan (`security_scan.py`), the step states, the commit (body `Slice S<n>`, `Flag:` footer), the tick, the
+   next slice. `GATE S<n>: FAIL` → fix, call it again (the next round); scan findings: `security/S<n>/feedback.md`; after 2
+   attempts STOP, no commit. A missing scanner is a FAIL (`references/security.md`). `--full` once before the PR.
+   Separately: `verify`, `security_scan.py scan --slice S<n> --attempt <k> --out <katalog>/security/S<n>`,
+   `run_state.py done` (a refusal says what is missing). Footers: `references/pdi-cuts.md`.
+5. **Bigger than judged** (unexpected red tests, files outside the plan, a new unknown) → escalate now: `approach <katalog>
+   --weight <heavier> --rationale "escalated: …"`; down only with the human's OK. **Budget:** `run_report.py status`.
 
 ## 4. Finishing
 1. The conditional phases from the plan (only those).
@@ -137,11 +136,10 @@ the start of the loop with the next one (at most two), e.g. `… S2 R1 verify fa
    --base <gałąź domyślna>` — exit code 1 (a criterion without a test, a test with a foreign `AC-n`) you fix.
 3. Full weight: the panel first, `run_state.py panel <katalog>` (`security-reviewer`, `spec-reviewer`).
    `run_state.py stage <katalog> pr` and `run_state.py step <katalog> PR plan_drift pass` (or `fail`). Push the branch
-   and one PR. The description is assembled by the script: `run_state.py pr-body <katalog> --base <gałąź domyślna>` → `gh pr create
-   --body-file <plik>` (with "Jak cofnąć"); you add only the deviations from the plan and the `pr_budget` exception. You do not merge.
+   and one PR, the description (with "Jak cofnąć") from `run_state.py pr-body <katalog> --base <gałąź domyślna>` →
+   `gh pr create --body-file <plik>`; you add only deviations and the `pr_budget` exception. You do not merge.
 4. `run_state.py stage <katalog> done --pr <numer>`, then `run_report.py finish <katalog>` → `report.md`.
-   **The task's files — one commit** on `story/<slug>` (`finish` prints the commands), also after a STOP. Show a summary
-   with the time, cost and PR link.
+   **The task's files — one commit** on `story/<slug>` (`finish` prints it), also after a STOP. Show the time, cost, PR link.
 
 ## Who does what
 | Step | Who | Tier |
@@ -168,8 +166,8 @@ After a STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --re
 ## Example
 **Input:** `/tf-task "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`
 
-**Result:** S1 importing a correct CSV · S2 sessions with an error · S3 a rejected file (a test each); `parked.md`: duplicates,
-time zones; 3 commits `feat(cdr): …`, one PR [example].
+**Result:** S1 a correct CSV · S2 sessions with an error · S3 a rejected file (a test each); `parked.md`: duplicates;
+3 commits `feat(cdr): …`, one PR [example].
 
 ## Sources
 - Anthropic, "Prompting Claude Opus 5.5" (platform.claude.com, read 2026-10-20).

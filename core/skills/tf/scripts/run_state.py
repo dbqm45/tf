@@ -19,7 +19,13 @@ and the dashboard generator. The state is written by the script, not the model �
   python3 .claude/skills/tf/scripts/run_state.py panel <run-directory> [--record <reviewer> pass|fail --note "…"]
   python3 .claude/skills/tf/scripts/run_state.py finding <run-directory> S2 "<important review finding>" [--round R]
   python3 .claude/skills/tf/scripts/run_state.py verify <run-directory> S2 --files <file>[,<file>…]
-        [--command "<command>"] [--timeout <s>]
+        [--command "<command>"] [--timeout <s>] [--full] [--force]
+  python3 .claude/skills/tf/scripts/run_state.py gate-related <run-directory> --command "<cmd with {files}>" | --not-found
+        --rationale "<evidence>"
+  python3 .claude/skills/tf/scripts/run_state.py approach <run-directory> --weight <w> --rationale "<evidence>"
+        [--slices N] [--test-strategy "…"] [--verify-scope "…"] [--review "…"] [--by human:<id>]
+  python3 .claude/skills/tf/scripts/run_state.py finish-slice <run-directory> S2 --files <file>[,<file>…]
+        --message "<type>(<scope>): <description>" [--command "<command>"] [--full] [--force] [--review pass|incomplete]
   python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> S2
   python3 .claude/skills/tf/scripts/run_state.py park <run-directory> "<matter for a decision>"
   python3 .claude/skills/tf/scripts/run_state.py block <run-directory> S2 --question "<question for the human>"
@@ -79,6 +85,24 @@ with current evidence, and the `pr` stage passes only when every slice of the ta
 to `task.json` (intake → intake, plan → plan, slices → implementation, pr → pr). A run directory without a task in run.json
 (the old cut layout `.tf/runs/cuts/`) does not accept task commands (`spec`, `flag`, `verify`, `trace`, `mode`, `weight`,
 `approve`) — the command says how to start the cut anew.
+
+`finish-slice` ends a slice in one call instead of five to seven: `verify` (current evidence of the same code is reused),
+the security scan (`security_scan.py scan --slice`), the step states of the round, the scope review's result (`--review
+pass`, given after scope-reviewer's answer) and `done` (the commit and the tick), with one summary line. It stops at the
+first red gate with the state recorded; called again after a fix it works in the next round. A slice of the fast lane
+(the `quick` weight) may pass `--review incomplete`: a scope review that got no answer within
+`loop.scope_review_minutes` (default 5) — the PR description names it; other weights refuse it.
+
+`gate-related` records the model's decision about the gate's narrow command: `--command` (it must contain `{files}`,
+`{files,}` or `{dirs}`) is written as `related` into `.claude/quality-gate.json`, the other keys kept, with
+`related_decision` (state, by, at, reason); `--not-found` records that no narrow command was found, so `run_report.py
+start` does not ask again and `tf doctor` shows a `⚠`. `stage plan` prints `verify will use: …` for the plan question.
+
+`approach` records the model's judgement of the task (`tf task approach`): `--weight quick|light|normal|full`, `--slices`,
+`--test-strategy`, `--verify-scope`, `--review` and `--rationale` with evidence. The script checks only the floors (a
+sensitive area → full; a plan larger than the weight's limits → re-assess; a lower weight once the loop started → the
+human's OK, `--by human:<id>`). A heavier weight during the loop is an escalation, named in the report. `stage plan` and
+`stage needs --needs plan` print the `Approach:` line for the plan question.
 
 `tick` ticks off a slice in plan.md, `park` appends a matter at the end of parked.md — one command from the allowed list
 instead of `sed`, `>>` and a heredoc in the shell, which Claude Code asks the human about (measurement E0, 2026-11-13).
@@ -190,6 +214,12 @@ def fail(msg: str) -> int:
     return 2
 
 
+def close_wait(meta: dict) -> None:
+    """The run stops waiting for the human: the span since `needs_at` goes to `waits` (the report's time breakdown)."""
+    if meta.get("stage") == "needs" and meta.get("needs_at"):
+        meta.setdefault("waits", []).append({"from": meta["needs_at"], "to": now_iso(), "needs": meta.get("needs")})
+
+
 def load(run_dir: Path) -> dict | None:
     try:
         return read_run(run_dir)
@@ -251,7 +281,7 @@ def sync_task(project: Path, run_dir: Path, meta: dict, stage: str) -> str | Non
         cur = json.loads((run_report.docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get("stage")
     except (OSError, ValueError, AttributeError):
         cur = None
-    if TASK_ORDER.index(target) >= TASK_ORDER.index("plan") and task_weight(run_dir, meta) != "light" \
+    if TASK_ORDER.index(target) >= TASK_ORDER.index("plan") and task_weight(run_dir, meta) not in ("light", "quick") \
             and not (run_report.docs_dir(run_dir, meta) / "spec.md").is_file():
         return (f"✗ the task {key} has no specification yet — create the template: run_state.py spec {run_dir} new, "
                 f"fill it in and check it: run_state.py spec {run_dir}")
@@ -383,6 +413,94 @@ def cmd_approve(run_dir: Path, project: Path) -> int:
     return 0 if r.returncode == 0 else 2
 
 
+def cmd_approach(run_dir: Path, project: Path, weight: str | None, rationale: str, fields: dict, by: str | None) -> int:
+    """The model's approach to the task (`tf task approach`): recorded with its rationale, floors checked by the script."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
+    if not meta.get("key"):
+        return no_task(meta)
+    args = ["approach", meta["key"]]
+    if weight:
+        args += ["--weight", weight, "--rationale", rationale]
+    for name, value in fields.items():
+        if value:
+            args += [f"--{name.replace('_', '-')}", value]
+    if by:
+        args += ["--by", by]
+    r = run_report.task_state(project, *args)
+    if r is None:
+        return fail("no .tf/factory/task_state.py — update the factory (tf update).")
+    print((r.stdout + r.stderr).rstrip("\n"))
+    refresh(project)
+    return r.returncode
+
+
+GATE_PLACEHOLDER = re.compile(r"\{(files|dirs),?\}")
+
+
+def cmd_gate_related(run_dir: Path, project: Path, command: str | None, rationale: str, not_found: bool) -> int:
+    """The model's decision about the quality gate's `related` command: written into `.claude/quality-gate.json` (the other
+    keys stay) with who, when and why — or "not found" with the reason, so the next run does not search again."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
+    path = project / ".claude" / "quality-gate.json"
+    try:
+        cfg = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return fail(".claude/quality-gate.json is missing or not JSON — there is no gate to narrow (tf onboard --yes)")
+    if not isinstance(cfg, dict) or not cfg.get("command"):
+        return fail(".claude/quality-gate.json has no `command` — there is no gate to narrow (tf onboard --yes)")
+    rationale = " ".join(rationale.split())
+    if not rationale:
+        return fail("give the evidence: --rationale \"<which build file, how you checked it on one file>\"")
+    if not_found == bool(command):
+        return fail("give one: --command \"<command with {files}>\" or --not-found --rationale \"<why>\"")
+    decision = {"state": "not-found" if not_found else "set", "by": f"process:tf-task ({meta.get('key') or run_dir.name})",
+                "at": now_iso(), "reason": rationale}
+    if command:
+        command = command.strip()
+        if not GATE_PLACEHOLDER.search(command):
+            return fail(f"the command has no placeholder: \"{command}\" — it must contain {{files}}, {{files,}} or {{dirs}} "
+                        "(the gate puts the changed files there)")
+        cfg["related"] = command
+    else:
+        cfg.pop("related", None)
+    cfg["related_decision"] = decision
+    path.write_bytes((json.dumps(cfg, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+    print(f"✓ quality gate: verify will use `{command}` for the slice's files ({rationale})" if command else
+          f"✓ quality gate: related not found — every verify runs `{cfg['command']}` ({rationale}); recorded, not asked again")
+    return 0
+
+
+def gate_line(project: Path) -> str | None:
+    """`verify will use: …` for the plan question."""
+    try:
+        cfg = json.loads((project / ".claude" / "quality-gate.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(cfg, dict) or not cfg.get("command"):
+        return None
+    full = cfg["command"] if isinstance(cfg["command"], str) else " ".join(map(str, cfg["command"]))
+    rel = cfg.get("related")
+    if rel:
+        return f"verify will use: {rel if isinstance(rel, str) else ' '.join(map(str, rel))}"
+    return f"verify will use: {full} (the whole suite — no `related`)"
+
+
+def approach_text(run_dir: Path, meta: dict) -> str:
+    """The recorded approach in one line (`Approach: …`), or how to record it."""
+    app = task_field(run_dir, meta, "approach")
+    if not isinstance(app, dict):
+        return (f"Approach: not recorded — judge the task and record it: run_state.py approach {run_dir} --weight "
+                "<quick|light|normal|full> --slices <n> --test-strategy \"…\" --verify-scope \"…\" --review \"…\" "
+                "--rationale \"<evidence>\"")
+    parts = [f"weight {app.get('weight')}"] + [f"{k.replace('_', ' ')}: {app[k]}" for k in
+                                                ("slices", "test_strategy", "verify_scope", "review") if app.get(k)]
+    return f"Approach: {' · '.join(parts)} — {app.get('rationale', '')}"
+
+
 def cmd_weight(run_dir: Path, new: str | None, project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
@@ -432,7 +550,7 @@ def slice_evidence(project: Path, meta: dict, slice_id: str) -> str:
 
 
 def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, timeout: float | None, project: Path,
-               full: bool = False) -> int:
+               full: bool = False, force: bool = False) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
@@ -440,11 +558,16 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
         return no_task(meta)
     if hold_refusal(meta, slice_id, run_dir):
         return fail(hold_refusal(meta, slice_id, run_dir))
+    if not command and not full and task_weight(run_dir, meta) == "quick" and not gate_related(project):
+        print(f"⚠ {slice_id}: the approach is the fast lane, and the gate has no `related` — this runs the whole configured "
+              "command; the narrow scope of the approach: --command \"<the narrowest command that runs the slice's tests>\"")
     args = ["verify", meta["key"], slice_id, "--files", files]
     if command:
         args += ["--command", command]
     if full:   # the whole `command` of the quality gate instead of its `related`
         args.append("--full")
+    if force:  # run again even when the newest evidence covers the same code
+        args.append("--force")
     if timeout:
         args += ["--timeout", str(timeout)]
     r = run_report.task_state(project, *args)
@@ -455,6 +578,15 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
         print(line)
     refresh(project)
     return r.returncode
+
+
+def gate_related(project: Path):
+    """The `related` command of the quality gate (`.claude/quality-gate.json`); None when it is not set."""
+    try:
+        cfg = json.loads((project / ".claude" / "quality-gate.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return cfg.get("related") if isinstance(cfg, dict) else None
 
 
 TEST_FILE = re.compile(r"(^|/)(tests?|__tests__|e2e|spec)/|\.(test|spec)\.|(^|/)test_[^/]*\.py$|_test\.(py|go)$|"
@@ -535,6 +667,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         return 2
     if stage == "plan":
         register_plan(project, run_dir, meta)
+    close_wait(meta)            # leaving a wait (also for a new needs block: the first wait ends here)
     meta["stage"] = stage
     meta.pop("needs", None)
     meta.pop("stop_text", None)
@@ -560,6 +693,12 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     write_run(run_dir, meta)
     refresh(project)
     print(f"✓ stage: {stage}" + (f" ({needs})" if needs else ""))
+    if meta.get("key") and (stage == "plan" or needs == "plan"):   # the human sees the approach in the plan question
+        print(approach_text(run_dir, meta) + (" — show it in the plan question; the human may override it in the answer"
+                                              if task_field(run_dir, meta, "approach") else ""))
+        line = gate_line(project)
+        if line:
+            print(line + " — one line of the plan question")
     if stage == "plan" and meta.get("key") and blocked_slices_enabled(project):
         print("Slice dependencies: add `· after: S<n>` to the slice's row (after which it can start) or `· after: none` "
               "(independent); without it a slice depends on the previous one. That way a question in one slice does not "
@@ -589,6 +728,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
         steps = meta.setdefault("pr_steps", {})
         steps[PR_STEPS[rest[0]]] = rest[1]
         if entering:
+            close_wait(meta)
             meta["stage"] = "pr"
             meta.pop("needs", None)
             meta.pop("stop_text", None)
@@ -633,6 +773,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
         if refused:
             print(refused)
             return 2
+        close_wait(meta)
         meta["stage"] = "slices"
         for name in ("needs", "stop_text", "stop_code", "needs_at"):
             meta.pop(name, None)
@@ -747,6 +888,8 @@ def review_missing(run_dir: Path, meta: dict, slice_id: str) -> str | None:
     last = rounds[-1].get("scope") if rounds and isinstance(rounds[-1], dict) else None
     if last == "pass":
         return None
+    if slice_id in (meta.get("review_incomplete") or {}) and last != "fail" and task_weight(run_dir, meta) == "quick":
+        return None   # the fast lane: the reviewer did not answer in time — recorded, and named in the PR description
     k = len(rounds) or 1
     if last == "fail":
         return (f"{slice_id}: the scope review in R{k} failed — revert the [important] finding and do a new round: "
@@ -789,7 +932,7 @@ def commit_message(message: str, slice_id: str, value: str, footers: list[str]) 
     return text + "\n\n" + "\n".join(missing) + "\n"
 
 
-def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
+def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path, review: str = "pass") -> int:
     """The end of a slice in one command: a passed scope review of the current round, a commit of the evidence files with the body
     and footers, ticking off and the next slice. A refusal before writing when there is no evidence or the title is bad."""
     meta = load(run_dir)
@@ -813,10 +956,24 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
                     f"{slice_id} --files <the slice's files>; nothing was recorded")
     cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
     rnd = len(cur.get("rounds") or []) if cur.get("k") == slice_id else 0
-    code = cmd_step(run_dir, slice_id, [f"R{rnd or 1}", "scope", "pass"], project)
-    if code:
-        return code
-    meta = load(run_dir) or meta
+    if review == "incomplete":
+        if task_weight(run_dir, meta) != "quick":
+            return fail(f"{slice_id}: a scope review without an answer is accepted only in the fast lane (quick); here "
+                        "the review is required — repeat it, or STOP with the code `environment` when the reviewer cannot run")
+        code = cmd_step(run_dir, slice_id, [f"R{rnd or 1}", "scope", "run"], project)
+        if code:
+            return code
+        meta = load(run_dir) or meta
+        meta.setdefault("review_incomplete", {})[slice_id] = {
+            "at": now_iso(), "note": f"the scope-reviewer did not answer within {review_minutes(project)} min"}
+        write_run(run_dir, meta)
+    else:
+        code = cmd_step(run_dir, slice_id, [f"R{rnd or 1}", "scope", "pass"], project)
+        if code:
+            return code
+        meta = load(run_dir) or meta
+        if (meta.get("review_incomplete") or {}).pop(slice_id, None) is not None:
+            write_run(run_dir, meta)
     flag = task_field(run_dir, meta, "flag")
     flag_key = (flag.get("key") if isinstance(flag, dict) else None) or meta.get("flag")
     footers = ([f"Change: {meta['task']}"] if meta.get("task") else []) + ([f"Flag: {flag_key}"] if flag_key else [])
@@ -853,6 +1010,86 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path) -> int:
               f"After consent: run_state.py proceed {run_dir}")
         return 0
     print_next(project, run_dir, meta)
+    return 0
+
+
+REVIEW_MINUTES = 5   # the fast lane: how long the loop waits for the scope reviewer (`loop.scope_review_minutes`)
+
+
+def review_minutes(project: Path) -> int:
+    try:
+        value = int((run_report._tf_config(project).get("loop") or {}).get("scope_review_minutes") or REVIEW_MINUTES)
+    except Exception:  # noqa: BLE001 — without the configuration the default
+        value = REVIEW_MINUTES
+    return max(1, value)
+
+
+def round_for(meta: dict, slice_id: str) -> int:
+    """The round finish-slice works in: the current one, or the next after a failed gate (verify, scan or scope)."""
+    cur = meta.get("current") if isinstance(meta.get("current"), dict) else {}
+    rounds = cur.get("rounds") if cur.get("k") == slice_id and isinstance(cur.get("rounds"), list) else []
+    if not rounds:
+        return 1
+    last = rounds[-1] if isinstance(rounds[-1], dict) else {}
+    return len(rounds) + 1 if any(last.get(s) == "fail" for s in STEPS) else len(rounds)
+
+
+def cmd_finish_slice(run_dir: Path, slice_id: str, files: str, message: str, project: Path, command: str | None = None,
+                     timeout: float | None = None, full: bool = False, force: bool = False, review: str = "pass") -> int:
+    """The end of a slice in one call: verify (reusing current evidence), the security scan, the step states, the scope
+    review's result, the commit and the tick (`done`). It stops at the first red gate, with the state recorded."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if not re.fullmatch(SLICE_ID, slice_id) or not files.strip():
+        return fail("usage: finish-slice <directory> S<n> --files <file>[,<file>…] --message \"<type>(<scope>): <description>\"")
+    if not CONVENTIONAL.match(message.strip()):
+        return fail(f"the commit title is outside Conventional Commits: \"{message.strip().splitlines()[0] if message.strip() else ''}\" "
+                    "— give --message \"<type>(<scope>): <description>\", e.g. feat(pay): add card payment")
+    if review not in ("pass", "incomplete"):
+        return fail("--review pass (the scope-reviewer found nothing important) or incomplete (the fast lane: no answer in time)")
+    if review == "incomplete" and task_weight(run_dir, meta) != "quick":
+        return fail(f"{slice_id}: a scope review without an answer is accepted only in the fast lane (quick); here the review "
+                    "is required — repeat it, or STOP with the code `environment` when the reviewer cannot run")
+    if hold_refusal(meta, slice_id, run_dir):
+        return fail(hold_refusal(meta, slice_id, run_dir))
+    rnd = round_for(meta, slice_id)
+    summary = []
+    code = cmd_step(run_dir, slice_id, [f"R{rnd}", "verify", "run"], project)
+    if code:
+        return code
+    code = cmd_verify(run_dir, slice_id, files, command, timeout, project, full, force)
+    if code:
+        cmd_step(run_dir, slice_id, [f"R{rnd}", "verify", "fail"], project)
+        print(f"GATE {slice_id}: FAIL (verify, attempt {rnd}/{MAX_ROUNDS}) — fix it and repeat finish-slice (the next round)")
+        return code
+    cmd_step(run_dir, slice_id, [f"R{rnd}", "verify", "pass"], project)
+    summary.append("verify green")
+    scanner = HERE / "security_scan.py"
+    if scanner.is_file():
+        cmd_step(run_dir, slice_id, [f"R{rnd}", "scan", "run"], project)
+        args = [sys.executable, str(scanner), "scan", "--slice", slice_id, "--attempt", str(rnd),
+                "--out", str(run_dir / "security" / slice_id)]
+        r = subprocess.run(args, cwd=project, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           env={**os.environ, "CLAUDE_PROJECT_DIR": str(project), "PYTHONUTF8": "1"})
+        gate = [ln for ln in r.stdout.splitlines() if ln.startswith(("GATE", "STOP", "Reason:", "Needed", "Resume:"))]
+        if r.returncode != 0:
+            cmd_step(run_dir, slice_id, [f"R{rnd}", "scan", "fail"], project)
+            print("\n".join(gate or [(r.stdout + r.stderr).strip()[-1500:]]))
+            print(f"The findings for the next attempt: {run_dir / 'security' / slice_id / 'feedback.md'}")
+            return 1
+        cmd_step(run_dir, slice_id, [f"R{rnd}", "scan", "pass"], project)
+        note = scan_note(run_dir, slice_id)
+        summary.append("scan PASS" + (f" ({note})" if note else ""))
+    else:
+        summary.append("scan: no security_scan.py")
+    code = cmd_done(run_dir, slice_id, message, project, review=review)
+    if code:
+        return code
+    summary.append("scope review " + ("not completed (recorded for the PR)" if review == "incomplete" else "pass"))
+    print(f"✓ {slice_id} finished (R{rnd}): " + " · ".join(summary))
     return 0
 
 
@@ -1036,6 +1273,7 @@ def cmd_answer(run_dir: Path, slice_id: str, text: str, by: str | None, project:
         return fail(((r.stdout + r.stderr).strip() if r else "no .tf/factory/task_state.py — update the factory (tf update)."))
     append_event(run_report.docs_dir(run_dir, meta), "answer", slice_id, text, by)
     if meta.get("stage") == "needs" and meta.get("stop_code") == "question" and blocked == {slice_id}:
+        close_wait(meta)
         meta["stage"] = "slices"            # the last question has an answer: the run no longer waits for anyone
         for name in ("needs", "stop_text", "stop_code", "needs_at"):
             meta.pop(name, None)
@@ -1076,7 +1314,7 @@ def cmd_next(run_dir: Path, project: Path) -> int:
 
 
 # --- the PR description assembled from the task files (step G2) -------------------------------------------------------------------
-WEIGHT_EN = {"light": "light", "normal": "normal", "full": "full"}
+WEIGHT_EN = {"light": "light", "quick": "quick (the fast lane)", "normal": "normal", "full": "full"}
 CARD = Path(".tf") / "config" / "operations.json"
 ASSUMPTION = re.compile(r"\[assumption", re.I)
 BASES = ("origin/main", "main", "origin/master", "master")
@@ -1153,6 +1391,17 @@ def scan_status(run_dir: Path, slice_id: str) -> str | None:
     except (OSError, ValueError, AttributeError):
         return None
     return status if isinstance(status, str) and re.fullmatch(r"[A-Z]{2,12}", status) else None
+
+
+def scan_note(run_dir: Path, slice_id: str) -> str | None:
+    """The notes of a slice's last scan (a scanner off by the project's decision)."""
+    base = run_dir / "security" / slice_id
+    tries = sorted(base.glob("attempt-*/verdict.json"), key=lambda f: int(re.sub(r"\D", "", f.parent.name) or 0))
+    try:
+        notes = json.loads((tries[-1] if tries else base / "verdict.json").read_text(encoding="utf-8")).get("notes")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return "; ".join(str(n) for n in notes) if isinstance(notes, list) and notes else None
 
 
 def rollback_steps(project: Path) -> tuple[list[str], str]:
@@ -1301,7 +1550,8 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
         out.append(engine_md(project, "trace_check.py", key, "--md", *base_args)
                    or "- The trace could not be computed (`tf trace`).")
     else:
-        out.append("- The task has no specification (`spec.md`) — the light weight does not need one, so there is no criteria trace.")
+        out.append(f"- The task has no specification (`spec.md`) — the {task.get('weight') or 'light'} weight does not need "
+                   "one, so there is no criteria trace; the tests carry the ticket's criteria.")
 
     out += ["", "## How it was checked", ""]
     missing = []
@@ -1322,7 +1572,11 @@ def pr_body(run_dir: Path, meta: dict, project: Path, base: str | None) -> tuple
                 why = f"evidence out of date, state: {state}"
         if why:
             missing.append(f"{s['id']} ({why})")
-        out.append(f"- **{s['id']}** — {line} · security scan: {scan}")
+        note = scan_note(run_dir, s["id"])
+        review = (meta.get("review_incomplete") or {}).get(s["id"])
+        out.append(f"- **{s['id']}** — {line} · security scan: {scan}" + (f" ({as_data(note, 200)})" if note else "")
+                   + (f" · scope review: **not completed** — {as_data(review.get('note') or 'no answer in time', 200)}"
+                      if isinstance(review, dict) else ""))
     if not slices:
         out.append("- no slices in the plan, so there is no verification evidence")
     drift = (meta.get("pr_steps") or {}).get("drift")
@@ -1915,10 +2169,36 @@ def main(argv: list[str]) -> int:
     v.add_argument("--command", default=None)
     v.add_argument("--timeout", type=float, default=None)
     v.add_argument("--full", action="store_true")
+    v.add_argument("--force", action="store_true")
     dn = sub.add_parser("done")
     dn.add_argument("run_dir")
     dn.add_argument("slice_id")
     dn.add_argument("--message", required=True)
+    dn.add_argument("--review", default="pass", choices=["pass", "incomplete"])
+    gr = sub.add_parser("gate-related")
+    gr.add_argument("run_dir")
+    gr.add_argument("--command", default=None)
+    gr.add_argument("--not-found", action="store_true")
+    gr.add_argument("--rationale", default="")
+    ap_ = sub.add_parser("approach")
+    ap_.add_argument("run_dir")
+    ap_.add_argument("--weight", default=None)
+    ap_.add_argument("--rationale", default="")
+    ap_.add_argument("--slices", default=None)
+    ap_.add_argument("--test-strategy", default=None)
+    ap_.add_argument("--verify-scope", default=None)
+    ap_.add_argument("--review", default=None)
+    ap_.add_argument("--by", default=None)
+    fs = sub.add_parser("finish-slice")
+    fs.add_argument("run_dir")
+    fs.add_argument("slice_id")
+    fs.add_argument("--files", default="")
+    fs.add_argument("--message", required=True)
+    fs.add_argument("--command", default=None)
+    fs.add_argument("--timeout", type=float, default=None)
+    fs.add_argument("--full", action="store_true")
+    fs.add_argument("--force", action="store_true")
+    fs.add_argument("--review", default="pass", choices=["pass", "incomplete"])
     k = sub.add_parser("tick")
     k.add_argument("run_dir")
     k.add_argument("slice_id")
@@ -1984,9 +2264,19 @@ def main(argv: list[str]) -> int:
     if args.cmd == "spec":
         return cmd_spec(Path(args.run_dir), project, new=args.action == "new")
     if args.cmd == "verify":
-        return cmd_verify(Path(args.run_dir), args.slice_id, args.files, args.command, args.timeout, project, args.full)
+        return cmd_verify(Path(args.run_dir), args.slice_id, args.files, args.command, args.timeout, project, args.full,
+                          args.force)
     if args.cmd == "done":
-        return cmd_done(Path(args.run_dir), args.slice_id, args.message, project)
+        return cmd_done(Path(args.run_dir), args.slice_id, args.message, project, review=args.review)
+    if args.cmd == "gate-related":
+        return cmd_gate_related(Path(args.run_dir), project, args.command, args.rationale, args.not_found)
+    if args.cmd == "approach":
+        return cmd_approach(Path(args.run_dir), project, args.weight, args.rationale,
+                            {"slices": args.slices, "test_strategy": args.test_strategy,
+                             "verify_scope": args.verify_scope, "review": args.review}, args.by)
+    if args.cmd == "finish-slice":
+        return cmd_finish_slice(Path(args.run_dir), args.slice_id, args.files, args.message, project, args.command,
+                                args.timeout, args.full, args.force, args.review)
     if args.cmd == "tick":
         return cmd_tick(Path(args.run_dir), args.slice_id, project)
     if args.cmd == "park":

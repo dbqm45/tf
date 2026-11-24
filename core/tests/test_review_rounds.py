@@ -68,6 +68,9 @@ def main() -> int:
               f"{r5.returncode} {r5.stdout}")
         check(meta.get("stage") == "slices" and not any(k in meta for k in ("needs", "stop_text", "stop_code", "needs_at")),
               f"PR-4: resuming through step clears the whole stop record: {sorted(meta)}")
+        waits = meta.get("waits") or []
+        check(len(waits) == 1 and waits[0].get("needs") == "stop" and waits[0].get("from") and waits[0].get("to"),
+              f"PR-4a: the wait for the human is kept as a span for the report's time breakdown: {waits}")
         r = call(p, cfg, "run_state.py", "step", d, "S2", "R1", "test", "run")
         check(r.returncode == 0 and rounds(p) == 1, f"PR-5: a new slice counts rounds from the start: {r.returncode} {r.stdout}")
         r = call(p, cfg, "run_state.py", "step", d, "S2", "R3", "test", "run")

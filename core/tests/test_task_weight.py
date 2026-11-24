@@ -99,6 +99,62 @@ def main() -> int:
             "# Plan\n- [ ] S1 — poprawka · files: README.md, docs/a.md, docs/b.md\n", encoding="utf-8")
         code, out, raw = weight(p, "ENG-1")
         check(out.get("proposal") == "normal", f"W-10: a typo, but a plan for 3 files → normal: {raw}")
+        (p / CHANGES / "ENG-1" / "plan.md").write_text(
+            "# Plan\n- [ ] S1 — poprawka · files: README.md, src/a.py, src/b.py, src/c.py\n", encoding="utf-8")
+        code, out, raw = weight(p, "ENG-1")
+        check(out.get("proposal") == "normal", f"W-10a: a plan with 3 code files is not the fast lane → normal: {raw}")
+
+        # the approach: the model's judgement; the script enforces only floors (no file-type rules)
+        lane = ("# Search bars 280px\n\nEvery table search bar is 280px wide by default. AC1: the default width is 280px.\n")
+        many = ", ".join(f"apps/x/src/app/l{i}/l{i}.component.html" for i in range(6))
+
+        def approach(key, *args):
+            return tf(p, "approach", key, *args)
+
+        for key in ("AP-1", "AP-2", "AP-3", "AP-4"):
+            tf(p, "start", key, "--title", "Search bars 280px")
+            (p / CHANGES / key / "ticket.md").write_text(lane, encoding="utf-8")
+        (p / CHANGES / "AP-1" / "plan.md").write_text(f"# Plan\n- [ ] S1 — 280px · files: {many}, libs/ui/search.ts\n",
+                                                      encoding="utf-8")
+        tf(p, "weight", "AP-1", "--apply")
+        code, out, raw = weight(p, "AP-1")
+        check(out.get("proposal") == "normal", f"W-AP0: the script never proposes the fast lane itself: {raw}")
+        r = approach("AP-1", "--weight", "quick", "--slices", "1 (the same edit in 7 places)", "--test-strategy",
+                     "one parametrized test per criterion", "--rationale", "one class in 6 templates and the shared component")
+        t1 = task(p, "AP-1")
+        check(r.returncode == 0 and t1.get("weight") == "quick" and t1["approach"]["test_strategy"].startswith("one param")
+              and t1["weight_log"][-1]["by"] == "process:approach" and "Approach: weight quick" in r.stdout,
+              f"W-AP1: a quick approach for a non-sensitive plan is accepted and recorded: {r.stdout}{r.stderr} {t1}")
+        weight(p, "AP-1", "--apply")
+        check(task(p, "AP-1").get("weight") == "quick", f"W-AP2: --apply keeps the approach's weight: {task(p, 'AP-1')}")
+        r = approach("AP-1", "--weight", "quick")
+        check(r.returncode == 2 and "rationale" in r.stdout, f"W-AP3: an approach needs a rationale: {r.stdout}")
+        (p / CHANGES / "AP-2" / "plan.md").write_text(
+            f"# Plan\n- [ ] S1 — 280px · files: {many}, src/auth/login.component.html\n", encoding="utf-8")
+        r = approach("AP-2", "--weight", "quick", "--rationale", "small")
+        check(r.returncode == 1 and "below full" in r.stdout and task(p, "AP-2").get("weight") != "quick",
+              f"W-AP4: floor — a sensitive path refuses a weight below full, with the reason: {r.stdout}")
+        r = approach("AP-2", "--weight", "full", "--rationale", "the login page")
+        check(r.returncode == 0 and task(p, "AP-2").get("weight") == "full", f"W-AP5: full is accepted: {r.stdout}")
+        (p / CHANGES / "AP-3" / "plan.md").write_text(
+            "# Plan\n- [ ] S1 — a · files: " + ", ".join(f"v{i}.html" for i in range(16)) + "\n- [ ] S2 — b · files: b.css\n",
+            encoding="utf-8")
+        r = approach("AP-3", "--weight", "quick", "--rationale", "templates only")
+        check(r.returncode == 1 and "re-assess" in r.stdout and "2 slices" in r.stdout and "17 files" in r.stdout,
+              f"W-AP6: floor — a plan beyond the weight's limits is refused with re-assess: {r.stdout}")
+        (p / CHANGES / "AP-4" / "plan.md").write_text("# Plan\n- [ ] S1 — a · files: a.html\n", encoding="utf-8")
+        approach("AP-4", "--weight", "quick", "--rationale", "one template")
+        tf(p, "stage", "AP-4", "implementation", "--force")
+        r = approach("AP-4", "--weight", "full", "--rationale", "escalated: the template is also used by the login page")
+        t4 = task(p, "AP-4")
+        check(r.returncode == 0 and "escalated" in r.stdout and t4.get("weight") == "full"
+              and t4["approach_log"][-1].get("escalated") is True and t4["approach_log"][-1].get("from") == "quick",
+              f"W-AP7: a heavier weight during the loop is recorded as an escalation: {r.stdout} {t4.get('approach_log')}")
+        r = approach("AP-4", "--weight", "quick", "--rationale", "smaller after all")
+        check(r.returncode == 1 and "human" in r.stdout and task(p, "AP-4").get("weight") == "full",
+              f"W-AP8: going back down mid-run needs the human's OK: {r.stdout}")
+        r = approach("AP-4", "--weight", "quick", "--rationale", "agreed", "--by", "human:anna")
+        check(r.returncode == 0 and task(p, "AP-4").get("weight") == "quick", f"W-AP9: with the human's OK: {r.stdout}")
 
         # manual change: anyone may raise, only a human with a reason may lower
         r = tf(p, "weight", "REG-1", "--set", "full")

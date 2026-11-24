@@ -14,6 +14,8 @@ Works only with the project configuration `.claude/quality-gate.json` (the facto
   it instead of `command` — in a big repository (an Nx monorepo) the whole suite on every turn is the bottleneck. The
   changed files are the ones the fingerprint sees (changed relative to HEAD and new, within `watch`) that still exist;
   when only deletions remain or there are more than RELATED_MAX files, the gate runs the full `command`;
+- `related_decision` — who worked `related` out, when and why (`run_state.py gate-related`), or `state: not-found` with
+  the reason: the loop does not search again and `--status` shows a ⚠;
 - `watch` — paths whose change triggers the gate (default: the whole repository);
 - `timeout` — seconds; exceeding it is a red result;
 - `max_blocks` — after this many blocks of the same code state the gate lets it through with a message for the human (protection
@@ -21,7 +23,12 @@ Works only with the project configuration `.claude/quality-gate.json` (the facto
 The command runs only when code in `watch` changed relative to HEAD (a fingerprint of the diff and new files); after a green
 run the same fingerprint does not run the tests a second time. A deliberately red batch (TDD, test before code): the file
 `.claude/quality-gate.expected-red` with a reason — the gate lets it through; delete it after the batch. `QG_GATE_DISABLE=1` disables
-the gate (e.g. in `.claude/settings.local.json`). State: `.tf/logs/quality-gate.json`. Standard library only.
+the gate (e.g. in `.claude/settings.local.json`). State: `.tf/logs/quality-gate.json`; every run (time, duration, result)
+is appended to `.tf/logs/quality-gate-runs.jsonl` — the /tf-task run report sums it. Standard library only.
+During an active /tf-task run (`.tf/runs/<KEY>/run.json` with a stage other than done/closed, updated within the last
+6 hours) the gate does not run the full `command`: the loop's `verify` evidence is required before a slice is done and
+before the PR, so the whole suite after every turn only repeats it. With `related` the gate still runs it for the changed
+files; without it the gate skips with one `ℹ` note per code state. Outside a run nothing changes.
 The agent gets long command output as its beginning and end; the whole of the last run is in
 `.tf/logs/quality-gate-output.txt`.
 
@@ -38,6 +45,7 @@ import shlex
 import signal
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
@@ -147,15 +155,53 @@ def expand_related(template, files: list[str], root: Path | None = None) -> list
     return argv
 
 
+def related_command(root: Path, cfg: dict) -> list[str] | None:
+    """`related` with the changed files; None when it is not set or there is nothing (or too much) to give it."""
+    related = cfg.get("related")
+    if not related:
+        return None
+    files = changed_files(root, list(cfg.get("watch") or []))
+    return expand_related(related, files, root) if files and len(files) <= RELATED_MAX else None
+
+
 def gate_command(root: Path, cfg: dict) -> list[str] | str:
     """What the gate runs: `related` with the changed files when it is set and there are files to give it, else `command`."""
-    related = cfg.get("related")
-    if related:
-        files = changed_files(root, list(cfg.get("watch") or []))
-        argv = expand_related(related, files, root) if files and len(files) <= RELATED_MAX else None
-        if argv:
-            return argv
-    return cfg["command"]
+    return related_command(root, cfg) or cfg["command"]
+
+
+ACTIVE_HOURS = 6   # a /tf-task run updated within this many hours counts as active
+DONE_STAGES = ("done", "closed")
+
+
+def active_run(root: Path, now: float | None = None) -> str | None:
+    """The key of an active /tf-task run: `.tf/runs/<KEY>/run.json` with a stage other than done/closed, updated within the
+    last ACTIVE_HOURS hours (the file's time). None — no run, the gate works as always."""
+    now = time.time() if now is None else now
+    best = None
+    for f in (root / ".tf" / "runs").glob("*/run.json"):
+        try:
+            meta = json.loads(f.read_text(encoding="utf-8"))
+            age = now - f.stat().st_mtime
+        except (OSError, ValueError):
+            continue
+        if isinstance(meta, dict) and meta.get("stage") not in DONE_STAGES and age <= ACTIVE_HOURS * 3600:
+            if best is None or age < best[0]:
+                best = (age, str(meta.get("key") or f.parent.name))
+    return best[1] if best else None
+
+
+RUNS_LOG = "quality-gate-runs.jsonl"   # one line per gate run: time, duration, result (the run report sums it)
+
+
+def log_run(root: Path, cmd, ok: bool, seconds: float, related: bool) -> None:
+    try:
+        (root / ".tf" / "logs").mkdir(parents=True, exist_ok=True)
+        row = {"at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "duration_s": round(seconds, 1), "ok": ok,
+               "related": related, "command": shown(cmd)}
+        with (root / ".tf" / "logs" / RUNS_LOG).open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except OSError:
+        pass
 
 
 def shown(cmd) -> str:
@@ -227,11 +273,24 @@ def decide(root: Path, data: dict) -> dict | None:
     if red.get("fp") == fp and red.get("count", 0) >= max_blocks:
         return {"systemMessage": f"Quality gate: the tests are still red after {max_blocks} attempts on the same state of "
                                  f"the code — letting it through, the decision is a human's (`{shown(cfg['command'])}`)."}
-    cmd = gate_command(root, cfg)
+    task = active_run(root)
+    related = related_command(root, cfg)
+    if task and not related:
+        # A /tf-task run verifies every slice itself (`verify` evidence is required before done and the PR): the whole
+        # suite after every turn would repeat that work. One short note per code state, not per turn of the same state.
+        if state.get("task_skip") != fp:
+            print(f"ℹ quality gate: the /tf-task run {task} is active — the full `{shown(cfg['command'])}` is left to its "
+                  "`verify` (set `related` to also check the changed files after each turn)", file=sys.stderr)
+            state_path.parent.mkdir(parents=True, exist_ok=True)
+            state_path.write_text(json.dumps({**state, "task_skip": fp}), encoding="utf-8")
+        return None
+    cmd = related or cfg["command"]
+    started = time.monotonic()
     ok, tail = run(root, cmd, float(cfg.get("timeout", 600)))
     if ok is None:
         print("quality gate: other tests of this repository are running (the lock is taken) — skipping", file=sys.stderr)
         return None
+    log_run(root, cmd, ok, time.monotonic() - started, bool(related))
     state_path.parent.mkdir(parents=True, exist_ok=True)
     if ok:
         state_path.write_text(json.dumps({"green": fp}), encoding="utf-8")
@@ -297,8 +356,13 @@ def gate_status(root: Path, env=None) -> tuple[str, str]:
         related = related if isinstance(related, str) else " ".join(map(str, related))
         return "on", (f"✓ Quality gate on: `{related}` for the changed files (`related`), "
                       f"the full `{command}` when there are none to pass (only deletions) or too many.")
+    decision = cfg.get("related_decision") if isinstance(cfg.get("related_decision"), dict) else {}
+    if decision.get("state") == "not-found":
+        return "on", (f"⚠ Quality gate on: `{command}` — the whole suite on every check; a narrow `related` command was not "
+                      f"found ({decision.get('reason') or 'no reason'}, {decision.get('at') or 'no date'}). To retry: remove "
+                      "`related_decision` from .claude/quality-gate.json; the next /tf-task run works it out.")
     return "on", (f"✓ Quality gate on: `{command}` — the whole suite on every check; for speed add `related` (only the "
-                  "tests of the changed files, a command for this project's stack — the /tf-task loop proposes one).")
+                  "tests of the changed files, a command for this project's stack — the /tf-task loop works one out).")
 
 
 def main() -> int:

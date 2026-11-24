@@ -163,9 +163,122 @@ def main() -> int:
         check(r.returncode != 0 and "brak stopki Change" in r.stdout + r.stderr and "- [x] S1" not in plan_text(p),
               f"DN-12: a commit rejected by the hook → code ≠ 0, the slice unticked: {r.returncode} {r.stdout}{r.stderr}")
 
+    # finish-slice: verify (reusing evidence), the scan, the step states, the review's result and done in one call
+    with tempfile.TemporaryDirectory() as t:
+        base = Path(t)
+        fake = base / "bin"
+        fake.mkdir()
+        (fake / "semgrep").write_text(f"#!{sys.executable}\nimport json, sys\na = sys.argv[1:]\n"
+                                      "json.dump({'version': '2.1.0', 'runs': [{'tool': {'driver': {'name': 'f', 'rules': []}}, "
+                                      "'results': []}]}, open(a[a.index('--output') + 1], 'w'))\n", encoding="utf-8")
+        (fake / "semgrep").chmod(0o755)
+        os.environ["TF_SCAN_PATH"] = str(fake)
+        try:
+            p = base / "fs"
+            d = prepare(p)
+            (p / ".gitignore").write_text(".tf/\n", encoding="utf-8")
+            git(p, "add", ".gitignore")
+            git(p, "commit", "-q", "-m", "chore: ignore")
+            call(p, SCRIPT, "verify", d, "S1", "--files", "pay.py,test_pay.py", "--command", OK)
+            r = call(p, SCRIPT, "finish-slice", d, "S1", "--files", "pay.py,test_pay.py", "--command", OK,
+                     "--message", "feat(pay): card payment")
+            rounds = (meta(d).get("current") or {}).get("rounds") or []
+            check(r.returncode == 0 and "already verified" in r.stdout and "✓ S1 finished (R1)" in r.stdout
+                  and "scan PASS" in r.stdout and len(commits(p)) == 3 and "- [x] S1" in plan_text(p)
+                  and rounds and all(rounds[-1].get(k) == "pass" for k in ("test", "code", "verify", "scan", "scope")),
+                  f"FS-1: one call ends the slice, the earlier evidence is reused: {r.returncode} {r.stdout}{r.stderr} {rounds}")
+            call(p, SCRIPT, "step", d, "S2", "R1", "test", "run")
+            (p / "pay.py").write_text("FEE = 45\nRECEIPT = True\n", encoding="utf-8")
+            red = f'{sys.executable} -c "raise SystemExit(1)"'
+            r = call(p, SCRIPT, "finish-slice", d, "S2", "--files", "pay.py,test_pay.py", "--command", red,
+                     "--message", "feat(pay): receipt")
+            rounds = (meta(d).get("current") or {}).get("rounds") or []
+            check(r.returncode == 1 and "GATE S2: FAIL (verify" in r.stdout and len(commits(p)) == 3
+                  and rounds and rounds[-1].get("verify") == "fail" and "- [ ] S2" in plan_text(p),
+                  f"FS-2: a red verify stops before the scan and the commit, recorded as fail: {r.returncode} {r.stdout} {rounds}")
+            r = call(p, SCRIPT, "finish-slice", d, "S2", "--files", "pay.py,test_pay.py", "--command", OK,
+                     "--message", "feat(pay): receipt", "--review", "incomplete")
+            check(r.returncode != 0 and "fast lane" in r.stdout and len(commits(p)) == 3,
+                  f"FS-3: a review without an answer is refused outside the fast lane: {r.returncode} {r.stdout}")
+            r = call(p, SCRIPT, "finish-slice", d, "S2", "--files", "pay.py,test_pay.py", "--command", OK,
+                     "--message", "feat(pay): receipt")
+            rounds = (meta(d).get("current") or {}).get("rounds") or []
+            check(r.returncode == 0 and "✓ S2 finished (R2)" in r.stdout and len(rounds) == 2 and len(commits(p)) == 4,
+                  f"FS-4: after a red gate the next call works in the next round: {r.returncode} {r.stdout} {rounds}")
+
+            # the fast lane (quick, the model's approach): no spec, a capped review
+            q = base / "quick"
+            q.mkdir()
+            git(q, "init", "-q", "-b", "main")
+            (q / "README.md").write_text("x\n", encoding="utf-8")
+            (q / ".gitignore").write_text(".tf/\n", encoding="utf-8")
+            git(q, "add", "-A")
+            git(q, "commit", "-q", "-m", "chore: init")
+            (q / ".claude").mkdir()
+            (q / ".claude" / "quality-gate.json").write_text(json.dumps({"command": OK}), encoding="utf-8")
+            call(q, REPORT, "start", "Search bars 280px", "--key", "QK-1", "--story", "AC1: every search bar is 280px.")
+            dq = str(q / ".tf" / "runs" / "QK-1")
+            (q / CHANGES / "QK-1" / "plan.md").write_text(
+                "# Plan\n\n- [ ] S1 — 280px · criteria: AC1 · files: web/list.component.html, web/list.component.spec.ts\n",
+                encoding="utf-8")
+            r = call(q, SCRIPT, "stage", dq, "plan", "--auto")
+            check(r.returncode != 0 and "specification" in r.stdout and "Approach: not recorded" not in r.stdout,
+                  f"FS-5: without an approach the script does not pick the fast lane: the plan stage asks for spec.md: {r.stdout}")
+            r = call(q, SCRIPT, "approach", dq, "--weight", "quick", "--slices", "1", "--verify-scope", "the spec file only",
+                     "--rationale", "one class in one template")
+            r2 = call(q, SCRIPT, "stage", dq, "plan", "--auto")
+            weight_now = json.loads((q / CHANGES / "QK-1" / "task.json").read_text(encoding="utf-8")).get("weight")
+            check(r.returncode == 0 and r2.returncode == 0 and weight_now == "quick"
+                  and "Approach: weight quick" in r2.stdout and "verify scope: the spec file only" in r2.stdout
+                  and not (q / CHANGES / "QK-1" / "spec.md").exists(),
+                  f"FS-5a: the recorded approach is shown in the plan output; quick passes without spec.md: {r.stdout}{r2.stdout}")
+            call(q, SCRIPT, "step", dq, "S1", "R1", "test", "run")
+            (q / "web").mkdir()
+            (q / "web" / "list.component.html").write_text('<div class="search"></div>\n', encoding="utf-8")
+            (q / "web" / "list.component.spec.ts").write_text("// AC1\n", encoding="utf-8")
+            files = "web/list.component.html,web/list.component.spec.ts"
+            r = call(q, SCRIPT, "finish-slice", dq, "S1", "--files", files, "--message", "feat(ui): search bars 280px",
+                     "--review", "incomplete")
+            m = meta(dq)
+            check(r.returncode == 0 and "narrowest" in r.stdout and "scan PASS" in r.stdout and "not completed" in r.stdout
+                  and "S1" in (m.get("review_incomplete") or {}) and "- [x] S1" in
+                  (q / CHANGES / "QK-1" / "plan.md").read_text(encoding="utf-8"),
+                  f"FS-6: the lane warns about the whole suite, scans the changed files and records an unanswered review: "
+                  f"{r.returncode} {r.stdout}{r.stderr}")
+            r = call(q, SCRIPT, "pr-body", dq)
+            body = (Path(dq) / "pr-body.md").read_text(encoding="utf-8") if (Path(dq) / "pr-body.md").is_file() else ""
+            check("scope review: **not completed**" in body, f"FS-7: the PR description names the incomplete review: {body[-1500:]}")
+            # gate-related: the model's narrow verify command, recorded in the gate file (no human writes it)
+            gate = q / ".claude" / "quality-gate.json"
+            gate.write_text(json.dumps({"command": OK, "watch": ["web/"], "timeout": 300}), encoding="utf-8")
+            r = call(q, SCRIPT, "gate-related", dq, "--command", "npx jest web", "--rationale", "package.json")
+            check(r.returncode != 0 and "placeholder" in r.stdout and "related" not in json.loads(gate.read_text()),
+                  f"GR-1: a command without {{files}}/{{dirs}} is refused: {r.stdout}")
+            r = call(q, SCRIPT, "gate-related", dq, "--command", "npx jest --findRelatedTests {files}", "--rationale", "")
+            check(r.returncode != 0 and "evidence" in r.stdout, f"GR-2: the rationale is required: {r.stdout}")
+            r = call(q, SCRIPT, "gate-related", dq, "--command", "npx jest --findRelatedTests {files}",
+                     "--rationale", "package.json scripts.test is jest; checked on web/a.ts: exit 0, 3 tests")
+            raw = gate.read_bytes()
+            cfg = json.loads(raw)
+            check(r.returncode == 0 and r.stdout.startswith("✓") and cfg.get("related") == "npx jest --findRelatedTests {files}"
+                  and cfg.get("watch") == ["web/"] and cfg.get("timeout") == 300 and cfg.get("command") == OK
+                  and cfg["related_decision"]["state"] == "set" and "checked on" in cfg["related_decision"]["reason"]
+                  and cfg["related_decision"].get("at") and b"\r\n" not in raw and raw.endswith(b"\n"),
+                  f"GR-3: related written, other keys kept, who/when/why logged, LF: {r.stdout} {cfg}")
+            r = call(q, SCRIPT, "stage", dq, "plan")
+            check("verify will use: npx jest --findRelatedTests {files}" in r.stdout,
+                  f"GR-4: the plan output names the verify command for the plan question: {r.stdout}")
+            r = call(q, SCRIPT, "gate-related", dq, "--not-found", "--rationale", "the build tool has no per-file test run")
+            cfg = json.loads(gate.read_text())
+            check(r.returncode == 0 and "related" not in cfg and cfg["related_decision"]["state"] == "not-found"
+                  and cfg.get("watch") == ["web/"], f"GR-5: not found is recorded so it is not retried: {r.stdout} {cfg}")
+        finally:
+            os.environ.pop("TF_SCAN_PATH", None)
+
     # the skill content leads through done
     skill = (ROOT / ".claude" / "skills" / "tf-task" / "SKILL.md").read_text(encoding="utf-8")
     check("run_state.py done" in skill, "DN-13: SKILL.md directs the end of a slice to `run_state.py done`")
+    check("finish-slice" in skill, "DN-14: SKILL.md directs the end of a slice to `run_state.py finish-slice`")
 
     for f in fails:
         print(f"✗ {f}")
