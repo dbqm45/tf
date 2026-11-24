@@ -64,7 +64,9 @@ unregisters the plugin, so the factory does not load twice; your skills and sett
 | project settings | `.tf/config/` | `config.yaml`, your own personas, roles and traits — an update does not touch them |
 | work results | `.tf/reports/`, `.tf/register/`, `.tf/cache/`, `.tf/logs/`, `.tf/backup/` | analysis and metrics reports, the findings register, cache, usage (`usage.jsonl`), copies from before an update; `tf init` creates the skeleton |
 
-What is installed: `tf list`. The installation's state: `tf doctor`.
+What is installed: `tf list`. The installation's state: `tf doctor` — it also reports factory files the factory
+needs that are gone (the engine, hooks, a script of a skill that stays; deleted, blocked by antivirus or a broken copy),
+and `tf doctor --fix` restores them. A skill you delete as a whole stays deleted after an update.
 
 **The company pack.** The organisation's standards and default settings (the autonomy policy, `tf risk` rules, `tf work`
 limits, the cost profile, the tracker and issue prefixes) come from one company pack: `tf install --pack-dir

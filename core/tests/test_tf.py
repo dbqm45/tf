@@ -204,6 +204,22 @@ def main() -> int:
         r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=doc, env=denv, capture_output=True, text=True)
         check(r.returncode == 0 and "Quality gate on" in r.stdout and "npm test" in r.stdout,
               f"CTF-13: doctor confirms a working gate with the command: {r.stdout}{r.stderr}")
+        # CTF-14: a missing factory file the factory needs (here a script of a skill that stays) is an error with the
+        # fix named; a skill deleted as a whole is not; --fix re-applies the version (the update restores the file)
+        shutil.copy(ROOT / ".tf" / "factory" / "install.py", doc / ".tf" / "factory" / "install.py")
+        (doc / ".claude" / "skills" / "tf").mkdir(parents=True)
+        (doc / ".claude" / "skills" / "tf" / "SKILL.md").write_text("---\nname: tf\n---\n")
+        (doc / ".claude" / "factory-manifest.json").write_text(json.dumps({"version": "1.0.0", "files": {
+            ".claude/skills/tf/SKILL.md": "a", ".claude/skills/tf/scripts/ui_snap.py": "b",
+            ".claude/skills/gone/SKILL.md": "c", ".claude/skills/gone/scripts/x.py": "d"}}))
+        (doc / ".tf" / "factory" / "update.py").write_text("import sys\nprint('UPDATE', *sys.argv[1:])\n")
+        r = subprocess.run([sys.executable, str(CTF), "doctor"], cwd=doc, env=denv, capture_output=True, text=True)
+        check(r.returncode != 0 and ".claude/skills/tf/scripts/ui_snap.py" in r.stdout and "tf doctor --fix" in r.stdout
+              and "gone/scripts/x.py" not in r.stdout,
+              f"CTF-14: doctor reports a missing skill script, not a deleted skill: {r.returncode} {r.stdout}{r.stderr}")
+        r = subprocess.run([sys.executable, str(CTF), "doctor", "--fix"], cwd=doc, env=denv, capture_output=True, text=True)
+        check("UPDATE" in r.stdout and "--force" in r.stdout and "--yes" in r.stdout,
+              f"CTF-14: doctor --fix re-applies the installed version: {r.stdout}{r.stderr}")
 
     # personalisation: one place for the commands — tf new skill, tf skill check/audit, tf config show
     with tempfile.TemporaryDirectory() as t:
