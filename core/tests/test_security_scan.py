@@ -247,7 +247,55 @@ def main() -> int:
         r = run("scan", "--out", str(out), cwd=repo, FAKE_EXIT="2")
         check(r.returncode == 1 and "SCAN: FAIL" in r.stdout and "invalid configuration" in r.stdout,
               f"S-18: a semgrep error is a FAIL: {r.returncode} {r.stdout}")
+
+        # D: the project's one decision to work without a scanner (tf config security.scanner off): recorded, not a FAIL
+        import shutil
+        engine = repo / ".tf" / "factory"
+        engine.mkdir(parents=True, exist_ok=True)
+        for name in ("packs.py", "task_weight.py"):
+            if (ROOT / ".tf" / "factory" / name).is_file():
+                shutil.copy(ROOT / ".tf" / "factory" / name, engine / name)
+        if (ROOT / ".tf" / "factory" / "_vendor").is_dir():
+            shutil.copytree(ROOT / ".tf" / "factory" / "_vendor", engine / "_vendor", dirs_exist_ok=True)
+        (repo / ".tf" / ".gitignore").write_text("*\n", encoding="utf-8")
+        r = run("scanner", cwd=repo, TF_SCAN_PATH=str(empty))
+        check(r.returncode == 1 and "security.scanner off" in r.stdout and "human:" in r.stdout,
+              f"D-1: no scanner and no decision -> `scanner` says what to ask the human: {r.returncode} {r.stdout}{r.stderr}")
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("scan_test_packs", engine / "packs.py")
+        packs = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(packs)
+        (repo / ".tf" / "config").mkdir(parents=True, exist_ok=True)
+        (repo / ".tf" / "config" / "config.yaml").write_text("# own\nsecurity:\n  other: 1\n", encoding="utf-8")
+        packs.write_scanner_decision(repo, "off", "human:anna", "no semgrep on Windows laptops", "2026-11-24")
+        cfg_text = (repo / ".tf" / "config" / "config.yaml").read_text(encoding="utf-8")
+        check("# own" in cfg_text and "other: 1" in cfg_text and cfg_text.count("scanner:") == 1
+              and (packs.scanner_decision(repo) or {}).get("by") == "human:anna",
+              f"D-2: the decision goes into the existing security block, the rest of the file stays: {cfg_text}")
+        r = run("scan", "--out", str(out), "--slice", "S1", "--attempt", "1", cwd=repo, TF_SCAN_PATH=str(empty))
+        v = json.loads((out / "attempt-1" / "verdict.json").read_text()) if (out / "attempt-1" / "verdict.json").is_file() else {}
+        check(r.returncode == 0 and "scanner off by decision (human:anna, 2026-11-24)" in r.stdout and "STOP" not in r.stdout
+              and v.get("status") == "PASS" and any("by decision" in n for n in v.get("notes") or []),
+              f"D-3: a missing scanner with the decision -> recorded in the verdict, no FAIL or STOP: {r.returncode} {r.stdout} {v}")
+        r = run("scanner", cwd=repo, TF_SCAN_PATH=str(empty))
+        check(r.returncode == 0 and "⚠" in r.stdout and "by decision" in r.stdout, f"D-4: `scanner` shows the decision: {r.stdout}")
+        r = run("scan", "--out", str(out), cwd=repo)
+        check(r.returncode == 0 and any(x[0] == "semgrep" for x in log_of(log)),
+              f"D-5: with the scanner installed the decision changes nothing — it runs: {r.stdout}")
+        packs.write_scanner_decision(repo, "on", "human:anna", "", "2026-11-25")
+        r = run("scan", "--out", str(out), cwd=repo, TF_SCAN_PATH=str(empty))
+        check(r.returncode == 1 and "SCAN: FAIL" in r.stdout and packs.scanner_decision(repo) is None,
+              f"D-6: the decision withdrawn -> a missing scanner is a FAIL again: {r.stdout}")
         (repo / "a.py").unlink()
+
+        # the scan runs only on the slice's changed files, whatever their kind — there is no skipping by extension
+        write(repo, "web/list.component.html", "<div>SQLI</div>\n")
+        log.unlink(missing_ok=True)
+        r = run("scan", "--out", str(out), cwd=repo)
+        scanned = [a for x in log_of(log) for a in x if a.startswith("web/")]
+        check(r.returncode == 1 and scanned == ["web/list.component.html"],
+              f"P-1: a changed template is scanned like any changed file: {scanned} {r.stdout}")
+        (repo / "web" / "list.component.html").unlink()
 
         # N: package.json without dependencies and without a lockfile (e.g. only scripts and engines) — nothing to audit:
         # no audit, no error, the verdict and summary say the audit was skipped; with dependencies and no lockfile -> error

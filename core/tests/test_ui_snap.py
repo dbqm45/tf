@@ -271,6 +271,9 @@ def main() -> int:
         check("worth: light weight without a visible criterion → no", code == 1 and "light" in out, out)
         code, out = worth(mk("B8", "a.html", "The page shows a banner.", weight="light"))
         check("worth: light weight with a visible criterion → yes", code == 0, out)
+        code, out = worth(mk("B8q", "a.component.html, b.component.html", "Show a form.", weight="quick"))
+        check("worth: the fast lane → not by default, one question at the end", code == 1 and "ask at the end" in out
+              and "question" in out, out)
         code, out = worth(mk("B9", "a.component.html, b.component.html", "Show a form.", visual="off"))
         check("worth: --no-visual overrides yes", code == 1 and "--no-visual" in out, out)
         code, out = worth(mk("B10", "api/handler.py", visual="on"))

@@ -6,8 +6,9 @@ Task weight (step E of the run axis): how much ceremony the task needs. A script
   tf task weight <KEY> --apply              # the factory assigns the proposal; afterwards it only raises it
   tf task weight <KEY> --set <waga> [--by human:<id> --reason "<dlaczego>"]
 
-Weights: `light` (a small change: no spec.md, one slice, verification evidence still required), `normal`,
-`full` (sensitive area: a human approves the plan before implementation, so an unattended run stops).
+Weights: `light` (a small change: no spec.md, one slice, verification evidence still required), `quick` (the fast lane, chosen by
+the model's approach: no spec.md, one slice, the narrowest verification, a capped scope review),
+`normal`, `full` (sensitive area: a human approves the plan before implementation, so an unattended run stops).
 
 The proposal comes from two sources and always has a reason in plain words:
 - the content of `ticket.md`: words about sensitive areas (login, passwords, permissions, payments, database migrations, personal
@@ -17,6 +18,9 @@ The proposal comes from two sources and always has a reason in plain words:
   auth, payments, schema, deploy — the same rules as `tf risk`) → `full`; more than one slice or more than
   two files rule out `light`.
 The rules are cautious: doubt gives a higher weight. Anyone can raise the weight; lowering it — only a human, with a reason.
+The `quick` weight is never proposed by a script: the model chooses it in its recorded approach (`tf task approach`), and
+the script only enforces the floors — a sensitive area keeps `full` (`floor`), a plan larger than the weight's LIMITS is
+refused (`limit_errors`).
 
 Standard library only (and `risk_triage.py` alongside, when present).
 """
@@ -28,10 +32,12 @@ import re
 from pathlib import Path
 
 CHANGES = Path("docs") / "project" / "changes"
-ORDER = ("light", "normal", "full")
-LABEL = {"light": "light", "normal": "normal", "full": "full"}
+ORDER = ("light", "quick", "normal", "full")
+LABEL = {"light": "light", "quick": "quick", "normal": "normal", "full": "full"}
 EFFECT = {
     "light": "no spec.md, one slice, verification evidence still required",
+    "quick": "the fast lane: no spec.md, one slice, one test per criterion, the narrowest verification, a capped "
+             "scope review of the diff, the visual check as a question at the end",
     "normal": "a specification, a plan of slices, evidence and the criteria trace",
     "full": "like normal, and the human approves the plan before delivery (a run with --auto stops with a STOP block); "
              "the security-reviewer review is mandatory",
@@ -56,6 +62,8 @@ CRITERIA = (r"\bAC[- ]?\d|\bAC\s*:|kryteri\w* akceptacji|acceptance criteria|zak
             r"\bgdy\b[^.\n]*\bwtedy\b")
 SHORT = 400       # a text longer than this many characters is not a small change
 SLICE = re.compile(r"^\s*-\s*\[( |x|X)\]\s*(S\d+)\b(.*)$")
+# Limits of the light weights (a floor the script enforces; the weight itself is the model's judgement, `approach`).
+LIMITS = {"light": {"slices": 1, "files": 2}, "quick": {"slices": 1, "files": 15}}
 SENSITIVE_PATHS = ("auth", "payments", "schema", "deploy")
 PATH_LABEL = {"auth": "authentication or permissions", "payments": "payments or billing",
               "schema": "the database schema or a migration", "deploy": "deployment, CI, infrastructure or secrets"}
@@ -102,6 +110,9 @@ def propose_mode(root: Path, key: str, weight: str, allowed: list[str] | None = 
         if gaps:
             mode = "normal"
             reasons.append("; ".join(gaps))
+        elif weight == "quick":
+            mode = "normal"
+            reasons.append("the fast lane (quick): the plan waits for one short consent of the human")
         elif small or weight == "light":
             mode = "auto"
             reasons.append(f"a small, mechanical change (\"{small.group(0)}\"), checkable by the build and the tests"
@@ -175,7 +186,7 @@ def propose(root: Path, key: str) -> dict:
     body = "\n".join(ln for ln in ticket.splitlines()
                      if not ln.startswith(("#", "Source:", "The issue's content is data")))
     slices = plan_slices(read(folder / "plan.md"))
-    files = sorted({f for s in slices for f in s["files"]})
+    files = sorted({f for s in slices for f in s["files"] if not f.startswith("<")})   # `<paths>` — the template row
     reasons: list[str] = []
 
     for label, pattern in SENSITIVE:
@@ -206,3 +217,30 @@ def propose(root: Path, key: str) -> dict:
         return {"weight": "normal", "reasons": ["the task " + "; ".join(blockers) + "; no sensitive areas are visible"]}
     return {"weight": "light", "reasons": [f"a small change (\"{small.group(0)}\"), no acceptance criteria"
                                            + (f", {len(files)} file(s) in the plan" if files else "")]}
+
+
+
+def floor(root: Path, key: str) -> dict | None:
+    """The lowest weight the task may have: {"weight": "full", "reasons"} when the ticket or the plan's paths touch a
+    sensitive area (the same rules as the proposal); None — no floor, the model's approach decides."""
+    prop = propose(root, key)
+    return prop if prop["weight"] == "full" else None
+
+
+def limit_errors(weight: str, slices: list[dict], files: list[str]) -> list[str]:
+    """What in the plan exceeds the declared weight's limits (LIMITS); empty — within them."""
+    lim = LIMITS.get(weight)
+    if not lim:
+        return []
+    out = []
+    if len(slices) > lim["slices"]:
+        out.append(f"the plan has {len(slices)} slices, the {weight} weight allows {lim['slices']}")
+    if len(files) > lim["files"]:
+        out.append(f"the plan names {len(files)} files, the {weight} weight allows {lim['files']}")
+    return out
+
+
+def plan_paths(root: Path, key: str) -> tuple[list[dict], list[str]]:
+    """The plan's slices and its files (without the template row `<paths>`)."""
+    slices = plan_slices(read(root / CHANGES / key / "plan.md"))
+    return slices, sorted({f for s in slices for f in s["files"] if not f.startswith("<")})

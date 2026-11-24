@@ -34,6 +34,9 @@ tf — the team factory command: install, update, packs, health check (standard 
                               # one and what protects this session; a level is set only from a human's terminal
   tf config show [<key>]      # merged configuration and where each value comes from (factory or project);
                               # `tf config show steps`: who runs each /tf-task loop step, with model and effort
+  tf config security.scanner off|on --by human:<id> --reason "<why>"
+                              # the project's one decision to work without a security scanner: the slice scan then
+                              # records "scanner off by decision (who, when)" instead of a FAIL; tf doctor shows it
   tf task start <KEY> --title "<title>" | stage <KEY> <stage> | status <KEY>
   tf task start <CHG>-<TSK> --title "<title>" --change <CHG> --cut <TSK>   # task of a pdi change cut
   tf task freeze <KEY> <file> --by human:<id> | reopen <KEY> <file> --by human:<id> --reason "<why>"
@@ -106,6 +109,7 @@ os.environ.setdefault("PYTHONUTF8", "1")  # child processes (build.py, tests, ho
 
 sys.dont_write_bytecode = True   # engine in .tf/factory/ without __pycache__ (like node_modules — code only)
 import tempfile
+import time
 from pathlib import Path
 
 # Factory repository URL — written by --install-launcher (without credentials).
@@ -312,6 +316,45 @@ def cmd_config_show(key: str | None) -> int:
     for w in (packs.work_style(root).get("warnings") or []) if hasattr(packs, "work_style") else []:
         print(f"⚠ personal preferences: {w}")
     print("# The full value of one key: tf config show <key>")
+    return 0
+
+
+def cmd_config_scanner(rest: list[str]) -> int:
+    """`security.scanner off|on --by human:<id> --reason "<why>"`: the project's decision about a missing security scanner,
+    recorded once in .tf/config/config.yaml (who, when, why)."""
+    usage = '✗ Usage: tf config security.scanner off|on --by human:<id> --reason "<why>"'
+    state, by, reason, it = None, None, "", iter(rest)
+    for a in it:
+        if a in ("off", "on") and state is None:
+            state = a
+        elif a == "--by":
+            by = next(it, None)
+        elif a == "--reason":
+            reason = next(it, "") or ""
+        else:
+            print(usage)
+            return 2
+    if state is None or not by or not re.fullmatch(r"human:[\w.@-]+", by):
+        print(usage + " — the decision is a human's: --by human:<id>")
+        return 2
+    if state == "off" and not reason.strip():
+        print("✗ give the reason for working without a scanner: --reason \"<why>\"")
+        return 2
+    packs = project_module("packs")
+    if not hasattr(packs, "write_scanner_decision"):
+        print("✗ The engine in .tf/factory/ does not know this setting. Update the factory: tf update")
+        return 2
+    at = time.strftime("%Y-%m-%d")
+    try:
+        f = packs.write_scanner_decision(Path.cwd(), state, by, " ".join(reason.split()), at)
+    except ValueError as e:
+        print(f"✗ {e}")
+        return 2
+    if state == "off":
+        print(f"✓ security.scanner: off by {by} ({at}) → {f.relative_to(Path.cwd()).as_posix()}. A slice scan without the "
+              "scanner records this decision instead of a FAIL; installing semgrep turns the scan on again by itself.")
+    else:
+        print(f"✓ security.scanner: on ({by}, {at}) — a missing scanner is a FAIL of the slice scan again.")
     return 0
 
 
@@ -637,6 +680,15 @@ def cmd_doctor(fix: bool, repo: str | None) -> int:
     lint = Path(".claude") / "skills" / "core-agent-instructions" / "scripts" / "instructions_lint.py"
     if lint.is_file():   # the project's instruction files card (step H21) — information, does not change the doctor result
         print(instructions_summary(lint))
+    try:   # the project's decision to work without a security scanner — information, does not change the result
+        dec = project_module("packs").scanner_decision(Path.cwd())
+    except Exception:  # noqa: BLE001 — an older engine without the setting
+        dec = None
+    if dec:
+        print(f"⚠ security scanner off by decision ({dec.get('by')}, {dec.get('at') or 'no date'})"
+              + (f": {dec['reason']}" if dec.get("reason") else "")
+              + " — slice scans skip the missing scanner. To turn it on: install semgrep, or "
+              "tf config security.scanner on --by human:<id>")
     gate = Path(".claude") / "hooks" / "quality_gate.py"
     if gate.is_file():   # whether the quality gate works (a plain-language message) — information, does not change the result
         g = subprocess.run([sys.executable, str(gate), "--status"], capture_output=True, text=True, encoding="utf-8",
@@ -723,8 +775,10 @@ def main(argv: list[str]) -> int:
             return 2
         return engine(scripts[rest[0]], rest[1:])
     if cmd == "config":
+        if rest and rest[0] == "security.scanner":
+            return cmd_config_scanner(rest[1:]) if need_project() else 2
         if not rest or rest[0] != "show" or len(rest) > 2:
-            print("✗ Usage: tf config show [<key>]")
+            print("✗ Usage: tf config show [<key>] | tf config security.scanner off|on --by human:<id> --reason \"<why>\"")
             return 2
         return cmd_config_show(rest[1] if len(rest) == 2 else None) if need_project() else 2
     if cmd == "uninstall":

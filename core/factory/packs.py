@@ -309,6 +309,55 @@ def load_config(root: Path) -> dict:
     return cfg
 
 
+# The project's decision to work without a security scanner (`tf config security.scanner off --by human:<id> --reason …`).
+# Without it a missing scanner is a FAIL of the slice scan; with it the scan records the decision instead (who, when, why).
+SCANNER_KEY = re.compile(r"(?m)^security:[ \t]*(#.*)?$")
+
+
+def scanner_decision(root: Path) -> dict | None:
+    """The recorded `security.scanner` decision when it is `off` ({"state", "by", "at", "reason"}); None otherwise."""
+    try:
+        sec = load_config(root).get("security")
+    except Exception:  # noqa: BLE001 — an unreadable configuration is no decision: the scan stays strict
+        return None
+    dec = sec.get("scanner") if isinstance(sec, dict) else None
+    if isinstance(dec, dict) and str(dec.get("state", "")).lower() == "off" and dec.get("by"):
+        return dec
+    return None
+
+
+def write_scanner_decision(root: Path, state: str, by: str, reason: str, at: str) -> Path:
+    """`security.scanner` in the project configuration, as one flow-mapping line; the rest of the file (comments too) stays.
+    A `security:` block that already exists gets the line in place of its old `scanner:` entry."""
+    f = root / CONFIG_REL / "config.yaml"
+    text = f.read_text(encoding="utf-8") if f.is_file() else ""
+    value = {"state": state, "by": by, "at": at, "reason": reason}
+    line = "  scanner: " + json.dumps(value, ensure_ascii=False)
+    lines = text.splitlines()
+    head = next((i for i, ln in enumerate(lines) if SCANNER_KEY.fullmatch(ln)), None)
+    if head is None:
+        if re.search(r"(?m)^security:", text):
+            raise ValueError("the `security` key in .tf/config/config.yaml is not a block — write it as `security:` with "
+                             "indented entries")
+        lines += ["security:", line]
+    else:
+        end = head + 1
+        while end < len(lines) and (not lines[end].strip() or lines[end][:1] in " \t"):
+            end += 1
+        body, skip = [], None
+        for ln in lines[head + 1:end]:
+            indent = len(ln) - len(ln.lstrip())
+            if skip is not None and (not ln.strip() or indent > skip):
+                continue                         # the nested lines of the old `scanner:` entry
+            skip = indent if re.match(r"\s+scanner:", ln) else None
+            if skip is None:
+                body.append(ln)
+        lines[head + 1:end] = [line, *body]
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return f
+
+
 def installed_packs(root: Path) -> dict[str, dict]:
     """Packs installed in the project: id → pack.yaml data (+ `_dir`)."""
     out: dict[str, dict] = {}

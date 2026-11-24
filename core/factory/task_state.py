@@ -3,16 +3,17 @@
 tf task — task state in one place: `docs/project/changes/<KEY>/task.json`. The only writer of this file;
 the model calls commands, it does not edit the state by hand. No model and no network.
 
-  tf task start <KEY> --title "<title>" [--weight light|normal|full] [--mode plan|normal|auto]
+  tf task start <KEY> --title "<title>" [--weight light|quick|normal|full] [--mode plan|normal|auto]
   tf task start <CHG>-<TSK> --title "<title>" --change <CHG> --cut <TSK>      # a pdi change cut task
   tf task stage <KEY> <stage> [--force]
   tf task status <KEY> [--json]
   tf task slice <KEY> S1 planned|implemented|blocked [--title "<value>"] [--reason "<block reason>"]
-  tf task verify <KEY> S1 --files <file>[,<file>…] [--command "<command>" | --full] [--timeout <s>]
+  tf task verify <KEY> S1 --files <file>[,<file>…] [--command "<command>" | --full] [--timeout <s>] [--force]
   tf task artifact <KEY> <file> --stage <stage> --by <executor> [--inputs <file>[,<file>…]]
   tf task approve <KEY> <file> --by human:<id>
   tf task check <KEY>
-  tf task weight <KEY> [--apply | --set light|normal|full] [--by human:<id> --reason "<why>"] [--json]
+  tf task weight <KEY> [--apply | --set light|quick|normal|full] [--by human:<id> --reason "<why>"] [--json]
+  tf task approach <KEY> --weight <w> --rationale "<evidence>" [--slices N] [--test-strategy …] [--verify-scope …] [--review …]
   tf task mode <KEY> [plan|normal|auto]
   tf task deployed <KEY> [--version <X>] [--timeout <s>]           # smoke test from the operations card after deployment
   tf task deployed <KEY> --rolled-back --by human:<id> [--note "<what was done>"]   # the human's rollback decision
@@ -42,7 +43,10 @@ was approved by a human at the pdi gate before the implementation phase, so a fu
 A slice is “verified” only when it has evidence. `verify` itself runs the command (by default the one from
 `.claude/quality-gate.json`: its `related` with the slice's `--files` when it is set, else `command`; `--full` forces
 `command`), so the exit code cannot be declared, and writes `evidence/S1-<n>.json`
-(command, exit code, duration in seconds, commit SHA, time, slice file hashes); the full output goes to `.tf/runs/<KEY>/`. The state is computed on every read: no evidence or a change of a
+(command, exit code, duration in seconds, commit SHA, time, slice file hashes, a fingerprint of the working tree); the full
+output goes to `.tf/runs/<KEY>/`. A second `verify` of the same code is not run: when the newest evidence of the slice has the
+same command, exit code 0, the same file hashes, commit and working-tree fingerprint, it prints `already verified` and reuses
+it (`--force` runs it again). The state is computed on every read: no evidence or a change of a
 file after the evidence → unverified; an exit code other than 0 → red. A task moves to the `review` stage and later
 only when all slices are verified (or with --force). When a task has `spec.md`, it moves to the `plan` stage
 and later only with an error-free specification (`tf spec check <KEY>`), and to the `review` stage and later —
@@ -51,7 +55,15 @@ when every criterion has a test (`tf trace <KEY>`); a task without `spec.md` wor
 Task weight (`weight`, rules in `task_weight.py`): without options it shows the current weight and a proposal with the reason; `--apply`
 assigns the proposal (the first time any, later only a higher one; after a human decision it changes nothing); `--set` raises freely, and lowers only with
 `--by human:<id>` and `--reason`. Effects: a task of weight `full` enters the `implementation` stage only with a plan
-approved by a human (`approve <KEY> plan.md`); a task of weight `light` has at most one slice in the plan.
+approved by a human (`approve <KEY> plan.md`); a task of weight `light` or `quick` (the fast lane) has one slice in the plan.
+
+Approach (`approach <KEY> --weight <w> --rationale "<evidence>" [--slices N] [--test-strategy …] [--verify-scope …]
+[--review …] [--by human:<id>]`): the model's judgement of how to do the task, recorded in `task.json` (`approach`,
+history `approach_log`) and applied as the weight. The script enforces only floors: a sensitive area (the full-weight
+rules of `task_weight.py`) refuses anything below `full`; a plan larger than the weight's limits (quick: 1 slice, 15
+files) is refused with "re-assess"; from the implementation stage a lower weight needs `--by human:<id>`. A higher weight
+during the loop is an escalation (`escalated` in the log, named in the report). `weight --apply` keeps an approach's
+weight unless a sensitive area raises it to full.
 
 Task mode (`mode`; chosen by a human in the command): `plan` — the task does not enter the `implementation` stage (the run
 ends at the plan); `normal` — a task with a registered `plan.md` enters implementation after the human's consent
@@ -112,7 +124,7 @@ DEPLOY_STATES = {"ok": "the smoke test is green", "red": "the smoke test is red 
                  "rolled-back": "rolled back by the human's decision"}
 KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")
 STAGES = ("intake", "spec", "plan", "implementation", "review", "pr", "deploy", "closed")
-WEIGHTS = ("light", "normal", "full")
+WEIGHTS = ("light", "quick", "normal", "full")
 MODES = ("plan", "normal", "auto")
 PDI_KEY = re.compile(r"[A-Z][A-Z0-9]+-[0-9]+")   # key of a pdi change and cut (CHG-12, TSK-57)
 SLICE = re.compile(r"S[1-9][0-9]?")   # S<n> (K<n> of tasks from before 14.0.0: migrated in 19.0.0)
@@ -464,7 +476,57 @@ def red_tests(root: Path, files: list[str]) -> dict[str, str]:
     return out
 
 
-def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[str], timeout: float) -> int:
+def tree_fingerprint(root: Path) -> str | None:
+    """A fingerprint of the working tree against HEAD: the diff and the untracked files (their content), without the task
+    files (`docs/project/changes/`, written by every `tf task` command) and the factory's work output (`.tf/`). None outside
+    git — then `verify` never reuses evidence."""
+    paths = ["--", ".", ":(exclude)docs/project/changes", ":(exclude).tf"]
+    try:
+        diff = subprocess.run(["git", "-C", str(root), "diff", "HEAD", "--binary", *paths], capture_output=True, timeout=60)
+        new = subprocess.run(["git", "-C", str(root), "ls-files", "--others", "--exclude-standard", "-z", *paths],
+                             capture_output=True, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if diff.returncode != 0 or new.returncode != 0:
+        return None
+    h = hashlib.sha256(diff.stdout)
+    for rel in sorted(n for n in new.stdout.decode("utf-8", "replace").split("\0") if n):
+        h.update(rel.encode("utf-8"))
+        h.update(sha256(root / rel).encode() if sha256(root / rel) else b"-")
+    return h.hexdigest()
+
+
+def reusable_evidence(root: Path, key: str, slice_id: str, command: str, hashes: dict, commit: str | None,
+                      tree: str | None) -> str | None:
+    """The newest evidence of the slice when running again would only repeat it: the same command, exit code 0, the same
+    slice files with the same hashes, the same commit and the same working-tree fingerprint. Its relative path, else None."""
+    folder = root / CHANGES / key / "evidence"
+    nums = [int(m.group(1)) for m in (re.fullmatch(rf"{slice_id}-(\d+)\.json", x.name) for x in folder.glob(f"{slice_id}-*.json"))
+            if m] if folder.is_dir() else []
+    if not nums or tree is None or commit is None:
+        return None
+    rel = f"evidence/{slice_id}-{max(nums)}.json"
+    try:
+        ev = json.loads((root / CHANGES / key / rel).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(ev, dict):
+        return None
+    same = (ev.get("command") == command and ev.get("exit_code") == 0 and ev.get("files") == hashes
+            and ev.get("sha") == commit and ev.get("tree") == tree)
+    return rel if same else None
+
+
+def git_commit(root: Path) -> str | None:
+    try:
+        head = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=20)
+        return head.stdout.strip() if head.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[str], timeout: float,
+               force: bool = False) -> int:
     task = load(root, key)
     if task is None:
         return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
@@ -480,11 +542,17 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
     folder = root / CHANGES / key / "evidence"
     n = 1 + max([int(m.group(1)) for m in (re.fullmatch(rf"{slice_id}-(\d+)\.json", x.name) for x in folder.glob(f"{slice_id}-*.json")) if m]
                 or [0]) if folder.is_dir() else 1
-    try:
-        head = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=20)
-        commit = head.stdout.strip() if head.returncode == 0 else None
-    except (OSError, subprocess.SubprocessError):
-        commit = None
+    commit, tree = git_commit(root), tree_fingerprint(root)
+    same = None if force else reusable_evidence(root, key, slice_id, command, hashes, commit, tree)
+    if same:   # the same code was already verified green with the same command: running it again only costs time
+        sl = task.setdefault("slices", {}).setdefault(slice_id, {})
+        if sl.get("evidence") != same or sl.get("state") != "implemented":
+            sl["evidence"], sl["state"] = same, "implemented"
+            sl.pop("reason", None)
+            task["updated"] = now()
+            save(root, task)
+        print(f"✓ {slice_id}: already verified (evidence {Path(same).name}, same files) — to run it again: --force")
+        return 0
     started = time.monotonic()
     code, out = run_command(root, command, timeout)
     duration = int(time.monotonic() - started)
@@ -497,7 +565,7 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
     rel = f"evidence/{slice_id}-{n}.json"
     write_atomic(root / CHANGES / key / rel, json.dumps(
         {"slice": slice_id, "command": command, "exit_code": code, "duration_s": duration, "sha": commit, "at": now(), "files": hashes,
-         "log": str(log), **({"red_tests": red} if (red := red_tests(root, list(hashes))) else {})},
+         **({"tree": tree} if tree else {}), "log": str(log), **({"red_tests": red} if (red := red_tests(root, list(hashes))) else {})},
         ensure_ascii=False, indent=1) + "\n")
     sl = task.setdefault("slices", {}).setdefault(slice_id, {})
     if sl.get("state") != "implemented":
@@ -802,14 +870,20 @@ def weight_gate(root: Path, task: dict, stage: str) -> str | None:
     before implementation. Returns the refusal reason or None."""
     key, weight = task["key"], task.get("weight")
     rules = weight_rules()
-    if weight == "light" and rules and STAGES.index(stage) >= STAGES.index("plan"):
+    if weight in ("light", "quick") and rules and STAGES.index(stage) >= STAGES.index("plan"):
         try:
             slices = rules.plan_slices((root / CHANGES / key / "plan.md").read_text(encoding="utf-8", errors="replace"))
         except OSError:
             slices = []
+        too_many = rules.limit_errors(weight, slices, rules.plan_paths(root, key)[1]) if weight == "quick" \
+            and hasattr(rules, "limit_errors") else []
+        if too_many and len(slices) <= 1:
+            return (f"the task has the quick weight and {'; '.join(too_many)} — re-assess the approach: "
+                    f"tf task approach {key} --weight normal --rationale \"<why>\"")
         if len(slices) > 1:
-            return (f"the task has the light weight, i.e. one slice, and the plan has {len(slices)} — merge the slices or "
-                    f"raise the weight: tf task weight {key} --set normal")
+            same = " (the same change in many places is one slice)" if weight == "quick" else ""
+            return (f"the task has the {weight} weight, i.e. one slice, and the plan has {len(slices)} — merge the slices"
+                    f"{same} or raise the weight: tf task weight {key} --set normal")
     if STAGES.index(stage) < STAGES.index("implementation"):
         return None
     mode = task.get("mode")
@@ -932,7 +1006,7 @@ def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | Non
                             f"tf task weight {key} --set {new} --by human:<id> --reason \"<dlaczego>\"")
             if not reason.strip():
                 return fail("give the reason for lowering it: --reason \"<why a lower weight is enough>\"", 2)
-        if new != current or not assigned:
+        if new != current or not assigned or who.startswith("human:"):   # a human confirming the weight is a decision too
             record(new, who, **({"reason": " ".join(reason.split())} if reason.strip() else {}))
         current, assigned = new, True
     elif apply:
@@ -941,6 +1015,10 @@ def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | Non
             if prop["weight"] != current:
                 note = (f"the human set the weight ({last['by']}) — the factory does not change it; its proposal is "
                         f"{rules.LABEL[prop['weight']]}")
+        elif last.get("by") == "process:approach" and prop["weight"] != "full":
+            if prop["weight"] != current:   # the model's recorded approach stays; only the full floor overrides it
+                note = (f"the weight comes from the recorded approach — the factory's proposal {rules.LABEL[prop['weight']]} "
+                        "does not change it (only a sensitive area raises it to full)")
         elif not assigned or rules.rank(prop["weight"]) > rules.rank(current):
             record(prop["weight"], "process:tf", reasons=prop["reasons"])
             current, assigned = prop["weight"], True
@@ -963,6 +1041,73 @@ def cmd_weight(root: Path, key: str, apply: bool, new: str | None, by: str | Non
     elif not assigned:
         print(f"  Przydziel: tf task weight {key} --apply")
     return 0
+
+
+APPROACH_FIELDS = ("slices", "test_strategy", "verify_scope", "review")
+
+
+def cmd_approach(root: Path, key: str, weight: str | None, rationale: str, fields: dict, by: str | None,
+                 as_json: bool) -> int:
+    """The model's recorded approach (weight, slices, test strategy, verification scope, review) with its rationale.
+    The script checks only the floors; without --weight it shows the recorded approach."""
+    task = load(root, key)
+    if task is None:
+        return fail(f"there is no task {key} — create it: tf task start {key} --title \"…\"")
+    rules = weight_rules()
+    if rules is None or not hasattr(rules, "floor"):
+        return fail("no approach rules in .tf/factory/task_weight.py — update the factory (tf update)", 2)
+    if weight is None:
+        app = task.get("approach")
+        print(json.dumps(app or {}, ensure_ascii=False, indent=1) if as_json else approach_line(app))
+        return 0
+    if weight not in WEIGHTS:
+        return fail(f"unknown weight \"{weight}\" — choose from: {', '.join(WEIGHTS)}", 2)
+    rationale = " ".join(rationale.split())
+    if not rationale:
+        return fail("give the rationale with evidence: --rationale \"<files touched, the nature of the change, risk, unknowns>\"", 2)
+    who = by or "process:approach"
+    if by and not by.startswith("human:"):
+        return fail("--by takes only human:<id> (the human's override); the model's approach is recorded without it", 2)
+    current = task.get("weight") if task.get("weight") in WEIGHTS else "normal"
+    low = rules.floor(root, key)
+    if low and weight != "full":
+        return fail(f"the weight cannot be below full: {'; '.join(low['reasons'])} — record --weight full")
+    slices, files = rules.plan_paths(root, key)
+    over = rules.limit_errors(weight, slices, files)
+    if over:
+        return fail(f"the plan does not fit the {weight} weight: {'; '.join(over)} — re-assess: a heavier weight, or a "
+                    "smaller plan")
+    started = STAGES.index(task.get("stage", "intake")) >= STAGES.index("implementation")
+    last = (task.get("weight_log") or [{}])[-1]
+    human = str(last.get("by", "")).startswith("human:")
+    if rules.rank(weight) < rules.rank(current) and not who.startswith("human:") and (started or human):
+        why = "the loop has started" if started else f"the human set {current} ({last.get('by')})"
+        return fail(f"a lower weight ({current} → {weight}) needs the human's OK: {why}. Ask, then record it with "
+                    f"--by human:<id>")
+    escalated = started and rules.rank(weight) > rules.rank(current)
+    stamp = now()
+    app = {"weight": weight, "rationale": rationale, "by": who, "at": stamp,
+           **{k: " ".join(str(v).split()) for k, v in fields.items() if v not in (None, "")}}
+    if escalated:
+        app["escalated"] = True
+    task["approach"] = app
+    task.setdefault("approach_log", []).append({**app, "from": current})
+    if weight != current or not task.get("weight_log"):
+        task.setdefault("weight_log", []).append({"from": current, "to": weight, "by": who, "at": stamp,
+                                                  "reason": rationale})
+    task["weight"], task["updated"] = weight, stamp
+    save(root, task)
+    print(json.dumps(app, ensure_ascii=False, indent=1) if as_json else
+          ("✓ escalated: " if escalated else "✓ ") + approach_line(app))
+    return 0
+
+
+def approach_line(app: dict | None) -> str:
+    """The approach in one line, for the plan question and the report."""
+    if not app:
+        return "Approach: not recorded"
+    parts = [f"weight {app.get('weight')}"] + [f"{k.replace('_', ' ')}: {app[k]}" for k in APPROACH_FIELDS if app.get(k)]
+    return f"Approach: {' · '.join(parts)} — {app.get('rationale', '')}"
 
 
 def spec_errors(root: Path, key: str) -> list[dict]:
@@ -1303,6 +1448,17 @@ def main(argv: list[str]) -> int:
     v.add_argument("--timeout", type=float, default=900)
     v.add_argument("--files", default="")
     v.add_argument("--full", action="store_true")
+    v.add_argument("--force", action="store_true", help="run again even when the newest evidence covers the same code")
+    apr = sub.add_parser("approach")
+    apr.add_argument("key")
+    apr.add_argument("--weight", default=None)
+    apr.add_argument("--rationale", default="")
+    apr.add_argument("--slices", default=None)
+    apr.add_argument("--test-strategy", default=None)
+    apr.add_argument("--verify-scope", default=None)
+    apr.add_argument("--review", default=None)
+    apr.add_argument("--by", default=None)
+    apr.add_argument("--json", action="store_true")
     r = sub.add_parser("artifact")
     r.add_argument("key")
     r.add_argument("name")
@@ -1441,6 +1597,9 @@ def main(argv: list[str]) -> int:
         if a.apply and not a.propose:
             return fail("--apply works with --propose", 2)
         return cmd_mode(root, a.key, a.new, a.propose, a.apply, a.json)
+    if a.cmd == "approach":
+        return cmd_approach(root, a.key, a.weight, a.rationale, {"slices": a.slices, "test_strategy": a.test_strategy,
+                            "verify_scope": a.verify_scope, "review": a.review}, a.by, a.json)
     if a.cmd == "weight":
         if a.apply and a.new is not None:
             return fail("give one: --apply (the factory's proposal) or --set <weight>", 2)
@@ -1486,7 +1645,7 @@ def main(argv: list[str]) -> int:
         if not command:
             return fail("there is nothing to run: give --command or set the command in .claude/quality-gate.json "
                         "(tf onboard --yes)", 2)
-        return cmd_verify(root, a.key, a.slice_id, command, files, a.timeout)
+        return cmd_verify(root, a.key, a.slice_id, command, files, a.timeout, a.force)
     return cmd_status(root, a.key, a.json)
 
 

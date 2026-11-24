@@ -19,8 +19,20 @@ manager refuses to install it) → STOP with an explanation, not a workaround.
 - **blocking** (an error or a warning with a CWE from the OWASP Top 10, the rule SEC-001 from ci_for_sdlc) → the attempt FAILS: the findings
   (the rule, file:line) from `security/S<n>/feedback.md` (always from the last attempt) are the input of the next attempt;
 - after 2 attempts the script prints a STOP block — you do not commit the slice, just as with a red test;
-- a missing scanner is a FAIL with an installation command, not a silent PASS;
+- a missing scanner is a FAIL with an installation command, not a silent PASS — unless the project recorded the decision
+  to work without it (below);
 - findings below the threshold go to the run report (the "Security" section).
+
+`run_state.py finish-slice` runs this scan itself (after a green `verify`) and records `scan pass|fail` for the round.
+
+## A missing scanner: one decision at the start, not a STOP after slice 1
+`run_report.py start` checks whether semgrep is available (`security_scan.py scanner`). A `⚠ scanner:` line → ask the
+human **now**, one AskUserQuestion: "Install semgrep (Recommended)" (the line gives the command) · "Work without a scanner
+in this project". On the second answer record the human's decision with the human's identifier and reason:
+`python3 .tf/factory/tf.py config security.scanner off --by human:<id> --reason "<why>"` (`security.scanner` in
+`.tf/config/config.yaml`; `tf doctor` shows it as `⚠`; `… security.scanner on --by human:<id>` withdraws it). From then on
+the scan records "scanner off by decision (who, when)" in the verdict and the PR description instead of a FAIL. Without the
+decision, or with `--auto` and no human to ask, a missing scanner stays a FAIL. An installed scanner always runs.
 
 Variables: `TF_SCAN_PATH` (where to look for scanners instead of `PATH`), `TF_SEMGREP_CONFIG` (your own rule set). The semgrep state
 (`SEMGREP_SETTINGS_FILE`, `SEMGREP_LOG_FILE`, `SEMGREP_VERSION_CACHE_PATH`) the script directs to `.tf/cache/semgrep/`,

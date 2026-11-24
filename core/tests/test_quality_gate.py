@@ -264,6 +264,56 @@ def main() -> int:
         check("gate on" in r.stdout and "related" in r.stdout and "related.py" in r.stdout and "check.py" in r.stdout,
               f"R-6: --status names the related command and the full one: {r.stdout}")
 
+    # an active /tf-task run: the loop's `verify` checks every slice, so the gate does not repeat the whole suite
+    def task_run(repo, stage="slices", age_h=0.0):
+        d = repo / ".tf" / "runs" / "EBO-1"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "run.json").write_text(json.dumps({"key": "EBO-1", "stage": stage}))
+        if age_h:
+            old = time.time() - age_h * 3600
+            os.utime(d / "run.json", (old, old))
+
+    def gate_log(repo) -> list:
+        f = repo / ".tf" / "logs" / "quality-gate-runs.jsonl"
+        return [json.loads(ln) for ln in f.read_text().splitlines()] if f.exists() else []
+
+    with tempfile.TemporaryDirectory() as t:
+        repo = setup(Path(t) / "t1", cfg)
+        task_run(repo)
+        (repo / "mode.txt").write_text("fail")
+        (repo / "src" / "app.py").write_text("x = 5\n")
+        r = hook(repo)
+        check(r.returncode == 0 and blocked(r) is None and runs(repo) == 0 and "ℹ" in r.stderr and "EBO-1" in r.stderr,
+              f"T-1: an active task run without related -> the full command is skipped with an ℹ note: "
+              f"{runs(repo)} {r.stdout}{r.stderr}")
+        r = hook(repo, "SubagentStop")
+        check(runs(repo) == 0 and "ℹ" not in r.stderr, f"T-2: the note once per code state, not again: {r.stderr}")
+        task_run(repo, stage="done")
+        r = hook(repo)
+        check(blocked(r) is not None and runs(repo) == 1, f"T-3: a finished run -> the gate as always: {runs(repo)} {r.stdout}")
+        task_run(repo, stage="slices", age_h=7)
+        (repo / "src" / "app.py").write_text("x = 6\n")
+        r = hook(repo)
+        check(blocked(r) is not None and runs(repo) == 2, f"T-4: a run idle for over 6 h is not active: {runs(repo)} {r.stdout}")
+        log = gate_log(repo)
+        check(len(log) == 2 and all(isinstance(x.get("duration_s"), (int, float)) and x.get("ok") is False for x in log),
+              f"T-5: every gate run is logged with its duration (for the run report): {log}")
+
+        repo = setup(Path(t) / "t2", {**cfg, "related": f"{sys.executable} related.py {{files}}"})
+        (repo / "related.py").write_text(rel_py)
+        git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "add", "related.py")
+        git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "related")
+        task_run(repo)
+        (repo / "src" / "app.py").write_text("x = 7\n")
+        r = hook(repo)
+        check(related_runs(repo) == [["src/app.py"]] and runs(repo) == 0 and blocked(r) is None,
+              f"T-6: an active task run with related -> related runs as always: {related_runs(repo)} {runs(repo)} {r.stderr}")
+        (repo / "src" / "app.py").write_text("x = 1\n")
+        git(repo, "rm", "-q", "src/app.py")
+        r = hook(repo)
+        check(runs(repo) == 0 and blocked(r) is None,
+              f"T-7: in a task run related with nothing to pass does not fall back to the full command: {runs(repo)}")
+
     # the gate state in plain language (tf doctor, session start)
     def status(repo, *flags, **env):
         base = {k: v for k, v in os.environ.items() if k != "QG_GATE_DISABLE"}
@@ -291,6 +341,11 @@ def main() -> int:
         (repo / ".claude" / "quality-gate.expected-red").write_text("TDD batch: CDR import")
         r = status(repo, "--quiet-ok")
         check("lets red tests through" in r.stdout and "CDR import" in r.stdout, f"S-6: a red-batch marker -> a warning with the reason: {r.stdout}")
+        repo = setup(Path(t) / "s6b", {"command": "npm test", "related_decision": {"state": "not-found",
+                                                                                  "reason": "no per-file runner"}})
+        r = status(repo)
+        check("⚠" in r.stdout and "not found" in r.stdout and "no per-file runner" in r.stdout,
+              f"S-6b: a recorded not-found related -> a warning with the reason (tf doctor): {r.stdout}")
         repo = setup(Path(t) / "s7", {"watch": ["src/"]})
         r = status(repo)
         check("disabled" in r.stdout and "command" in r.stdout, f"S-7: a configuration without a command -> disabled: {r.stdout}")

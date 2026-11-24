@@ -23,6 +23,10 @@ then also writes the report to `docs/project/changes/CHG-n/runs/TSK-n.md` — pd
 The `.tf/runs/cuts/` directory (the old cut layout, without a task) is no longer created. `finish` sums the usage from Claude Code transcripts — the session and its subagents — since the start time:
 time, tokens (input, output, cache read, cache write 5 min and 1 h), cost per `prices_usd_per_mtok`
 from .tf/config/config.yaml, models and agents; it appends the plan progress and the number of postponed items, and writes report.md.
+The report also says where the time went (the `verify` evidence durations, the quality-gate hook runs from
+`.tf/logs/quality-gate-runs.jsonl`, waiting for the human — `waits` in run.json — and the rest: the model and its tools)
+and lists the recorded approaches with their escalations (`approach_log` in task.json). `start` warns once when the gate has
+no `related` and when the security scanner is missing without the project's decision.
 
 The script counts, not the model — the report uses no tokens beyond pasting a dozen or so lines of the result. Transcripts:
 `$CLAUDE_CONFIG_DIR/projects/<project path>/` (default `~/.claude`); without `--session` all sessions of the
@@ -350,6 +354,21 @@ def report_md(slug: str, rep: dict) -> str:
     # pdi (src/pdi/pr_loop.py) reads the postponed items of the cut report after this heading — since pdi#181 both languages
     lines += ["", "## Postponed for a decision", "", *(rep.get("parked_items") or ["- none"])]
     lines += ["", *(rep.get("security") or ["## Security", "", "- no scan result (security_scan.py was not run)"])]
+    if rep.get("approach"):
+        lines += ["", "## Approach and escalations", ""]
+        for a in rep["approach"]:
+            tag = "**escalated** " if a.get("escalated") else ""
+            lines.append(f"- {a.get('at', '?')}: {tag}{a.get('from', '?')} → {a.get('weight', '?')} ({a.get('by', '?')}) — "
+                         + " ".join(str(a.get("rationale", "")).split())[:300])
+    t = rep.get("time")
+    if t:
+        share = (lambda v: f" ({100 * v // t['total_s']}%)" if t["total_s"] else "")   # noqa: E731
+        lines += ["", "## Where the time went", "",
+                  f"- Verification commands (`verify`, {t['verify_runs']} run(s)): {minutes_text(t['verify_s'])}"
+                  + share(t["verify_s"]),
+                  f"- Quality-gate hook runs ({t['gate_runs']}): {minutes_text(t['gate_s'])}" + share(t["gate_s"]),
+                  f"- Waiting for the human (`needs`): {minutes_text(t['wait_s'])}" + share(t["wait_s"]),
+                  f"- The rest — the model and its tools: {minutes_text(t['model_s'])}" + share(t["model_s"])]
     return "\n".join(lines) + "\n"
 
 
@@ -470,6 +489,91 @@ def busy_session(project: Path) -> bool:
     return False
 
 
+def start_warnings(project: Path) -> list[str]:
+    """What would slow down or stop every slice, said once at the start: a quality gate without `related` (every
+    `verify` runs the whole command) and a missing security scanner without the project's decision."""
+    out = []
+    try:
+        gate = json.loads((project / ".claude" / "quality-gate.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        gate = None
+    decided = isinstance(gate, dict) and (gate.get("related_decision") or {}).get("state") == "not-found"
+    if isinstance(gate, dict) and gate.get("command") and not gate.get("related") and not decided:
+        cmd = gate["command"] if isinstance(gate["command"], str) else " ".join(map(str, gate["command"]))
+        out.append(f"⚠ The quality gate has no `related`: every verify runs the whole configured command (`{cmd}`). Work out "
+                   "now, from this project's build files, the narrowest command that runs only the tests of `{files}`; "
+                   "run it once on one existing source file; then record it: run_state.py gate-related <directory> "
+                   "--command \"…{files}…\" --rationale \"…\" (or --not-found --rationale \"<why>\") — "
+                   "references/verify-scope.md")
+    scanner = Path(__file__).resolve().with_name("security_scan.py")
+    if scanner.is_file():
+        try:
+            r = subprocess.run([sys.executable, str(scanner), "scanner"], cwd=project, capture_output=True, text=True,
+                               encoding="utf-8", errors="replace", timeout=60)
+        except (OSError, subprocess.SubprocessError):
+            r = None
+        if r is not None and r.returncode == 1 and r.stdout.strip():
+            out.append(r.stdout.strip().splitlines()[0])
+    return out
+
+
+def time_breakdown(project: Path, run_dir: Path, meta: dict, since: datetime, last: datetime) -> dict:
+    """Where the run's time went: verify commands (the evidence's `duration_s`), quality-gate hook runs (its log), waiting
+    for the human (`waits` and an open `needs_at` in run.json), and the rest — the model and its tools. Seconds."""
+    def after(value) -> bool:
+        ts = parse_ts(str(value or ""))
+        return ts is not None and ts >= since
+
+    verify = runs = 0
+    for f in (docs_dir(run_dir, meta) / "evidence").glob("S*-*.json"):
+        try:
+            ev = json.loads(f.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if isinstance(ev, dict) and isinstance(ev.get("duration_s"), (int, float)) and after(ev.get("at")):
+            verify += ev["duration_s"]
+            runs += 1
+    gate = gate_runs = 0
+    try:
+        rows = (project / ".tf" / "logs" / "quality-gate-runs.jsonl").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        rows = []
+    for ln in rows:
+        try:
+            row = json.loads(ln)
+        except ValueError:
+            continue
+        if isinstance(row, dict) and isinstance(row.get("duration_s"), (int, float)) and after(row.get("at")):
+            gate += row["duration_s"]
+            gate_runs += 1
+    spans = [(w.get("from"), w.get("to")) for w in meta.get("waits") or [] if isinstance(w, dict)]
+    if meta.get("needs_at"):
+        spans.append((meta["needs_at"], None))
+    wait = 0.0
+    for a, b in spans:
+        start, end = parse_ts(str(a or "")), (parse_ts(str(b)) if b else last)
+        if start and end:
+            start, end = max(start, since), min(end, last)   # only within the run's measured time
+            wait += max(0.0, (end - start).total_seconds())
+    total = max(0.0, (last - since).total_seconds())
+    return {"verify_s": int(verify), "verify_runs": runs, "gate_s": int(gate), "gate_runs": gate_runs,
+            "wait_s": int(wait), "model_s": int(max(0.0, total - verify - gate - wait)), "total_s": int(total)}
+
+
+def approach_log(run_dir: Path, meta: dict) -> list[dict]:
+    """The recorded approaches of the task (`tf task approach`), escalations marked — from task.json."""
+    try:
+        log = json.loads((docs_dir(run_dir, meta) / "task.json").read_text(encoding="utf-8")).get("approach_log")
+    except (OSError, ValueError, AttributeError):
+        return []
+    return [a for a in log if isinstance(a, dict)] if isinstance(log, list) else []
+
+
+def minutes_text(seconds: int) -> str:
+    m, s = divmod(int(seconds), 60)
+    return f"{m} min {s} s"
+
+
 def cmd_start(title: str | None, story: str | None, project: Path, task: str | None = None,
               change: str | None = None, key: str | None = None, source: str | None = None) -> int:
     cut = None                           # a pdi change cut: the change-plan row the task is created from
@@ -555,6 +659,8 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
         why = next((re.split(r"^reason: ", ln, maxsplit=1)[1] for ln in lines if re.match(r"reason: ", ln)), "")
         print(f"Weight: {head}" + (f" — {why}" if why else "")
               + f" (a higher weight: run_state.py weight {(WORK / key).as_posix()} --set <weight>)", file=sys.stderr)
+    for line in start_warnings(project):   # asked once at the start, not after the first slice
+        print(line, file=sys.stderr)
     if busy_session(project):
         print("Tip: this session already holds another task — suggest /clear before this one (the run resumes from its "
               "files; old attempts in the context distract the agent and cost tokens).", file=sys.stderr)
@@ -598,7 +704,8 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
            "agents": data["agents"],
            "cost_usd": round(sum(t.get("_cost", 0.0) for t in data["models"].values()), 9),
            "plan": plan_progress(run_dir, committed_pieces(project, meta)), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir),
-           "security": security_section(run_dir), "usage_missing": usage_missing}
+           "security": security_section(run_dir), "usage_missing": usage_missing,
+           "time": time_breakdown(project, run_dir, meta, since, data["last"]), "approach": approach_log(run_dir, meta)}
     if status:   # budget check after a slice: one line, no report written
         print(f"cost: {rep['cost_usd']:.4f} USD · tokens: {fmt_tokens(token_totals(rep['models'])['total'])} · "
               f"time: {rep['duration_s'] // 60} min · plan: "

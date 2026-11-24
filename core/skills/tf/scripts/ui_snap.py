@@ -437,6 +437,11 @@ def worth(run_dir: Path, project: Path, base: str | None = None) -> dict:
         return {"yes": True, "forced": "on", "ui_files": files, "reasons": ["switched on by --visual"]}
     if not files:
         return {"yes": False, "forced": None, "ui_files": [], "reasons": ["no UI files in the plan or the diff"]}
+    if _read_json(docs / "task.json").get("weight") == "quick":   # the fast lane: not by default, one question at the end
+        return {"yes": False, "forced": None, "ask": True, "ui_files": files,
+                "reasons": [f"the fast lane (quick): offer it as one question at the end, after the last slice — "
+                            f"\"Check it visually ({len(files)} UI file(s))\" / \"No visual check (Recommended)\"; "
+                            "on yes: references/visual-check.md"]}
     try:
         spec = (docs / "spec.md").read_text(encoding="utf-8", errors="replace")
         crit = " ".join(AC_LINE.findall(spec))
@@ -473,7 +478,8 @@ def cmd_worth(args) -> int:
     if not (run_dir / "run.json").is_file():
         raise Fail(2, f"no run.json in {run_dir}")
     res = worth(run_dir, root, args.base)
-    print(f"visual check: {'yes' if res['yes'] else 'no'} — " + "; ".join(res["reasons"]))
+    print(f"visual check: {'yes' if res['yes'] else 'ask at the end' if res.get('ask') else 'no'} — "
+          + "; ".join(res["reasons"]))
     return 0 if res["yes"] else 1
 
 

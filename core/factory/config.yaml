@@ -504,6 +504,9 @@ loop:
   # confirm_each_slice: true — after each slice (`run_state.py done`) the run waits for human consent
   # (`run_state.py proceed`) before starting the next; does not work in Auto mode (there is no human).
   confirm_each_slice: false
+  # scope_review_minutes: the fast lane (weight quick) waits this long for scope-reviewer's answer; then the loop goes on
+  # (`run_state.py finish-slice … --review incomplete`) and the PR description says the review was not completed.
+  scope_review_minutes: 5
 
 # Visual check of UI changes in the /tf-task loop (`ui_snap.py worth <run>`): screenshots before/after exist only when it is worth it.
 # No UI files in the plan or the diff = no visual check at all. Yes: at least min_ui_files UI files, or at least min_ui_lines

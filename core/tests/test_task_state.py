@@ -220,6 +220,44 @@ def main() -> int:
         e6 = json.loads((p / CHANGES / "EV-3" / "evidence" / "S3-3.json").read_text(encoding="utf-8")) if r.returncode == 0 else {}
         check(e6.get("command") == OK, f"TS-40d: an explicit --command wins over related: {e6}")
 
+        # no duplicate verify: the same green command on the same code reuses the newest evidence (a git project)
+        g = Path(t) / "git"
+        (g / "src").mkdir(parents=True)
+        (g / "src" / "w.py").write_text("W = 1\n", encoding="utf-8")
+        (g / "other.py").write_text("O = 1\n", encoding="utf-8")
+        counter = g / "count.py"
+        counter.write_text("import pathlib\np = pathlib.Path('runs.txt')\np.write_text(p.read_text() + 'x' if p.exists() "
+                           "else 'x')\nprint('1 passed')\n", encoding="utf-8")
+        (g / ".gitignore").write_text("runs.txt\n.tf/\n", encoding="utf-8")
+        for cmd in (["init", "-q"], ["add", "-A"], ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "init"]):
+            subprocess.run(["git", *cmd], cwd=g, check=True, capture_output=True)
+        cnt = f"{sys.executable} count.py"
+        runs_done = lambda: len((g / "runs.txt").read_text()) if (g / "runs.txt").is_file() else 0   # noqa: E731
+        run(g, "start", "DV-1", "--title", "Duplicate verify")
+        (g / "src" / "w.py").write_text("W = 2\n", encoding="utf-8")
+        r1 = run(g, "verify", "DV-1", "S1", "--command", cnt, "--files", "src/w.py")
+        r2 = run(g, "verify", "DV-1", "S1", "--command", cnt, "--files", "src/w.py")
+        ev_dir = g / CHANGES / "DV-1" / "evidence"
+        check(r1.returncode == 0 and r2.returncode == 0 and runs_done() == 1 and "already verified" in r2.stdout
+              and "S1-1.json" in r2.stdout and not (ev_dir / "S1-2.json").exists(),
+              f"TS-40e: an identical second verify is skipped and reuses the evidence: {runs_done()} {r2.stdout}{r2.stderr}")
+        (g / "src" / "w.py").write_text("W = 3\n", encoding="utf-8")
+        r = run(g, "verify", "DV-1", "S1", "--command", cnt, "--files", "src/w.py")
+        check(r.returncode == 0 and runs_done() == 2 and (ev_dir / "S1-2.json").is_file(),
+              f"TS-40f: a change of a slice file runs verify again: {runs_done()} {r.stdout}")
+        (g / "other.py").write_text("O = 2\n", encoding="utf-8")
+        r = run(g, "verify", "DV-1", "S1", "--command", cnt, "--files", "src/w.py")
+        check(runs_done() == 3, f"TS-40g: a change elsewhere in the working tree runs verify again: {runs_done()} {r.stdout}")
+        r = run(g, "verify", "DV-1", "S1", "--command", cnt, "--files", "src/w.py", "--force")
+        check(r.returncode == 0 and runs_done() == 4, f"TS-40h: --force runs it again: {runs_done()} {r.stdout}")
+        r = run(g, "verify", "DV-1", "S1", "--command", f"{cnt} --other", "--files", "src/w.py")
+        check(runs_done() == 5, f"TS-40i: another command runs again: {runs_done()} {r.stdout}")
+        (g / "mode").write_text("", encoding="utf-8")
+        red = f'{sys.executable} -c "raise SystemExit(1)"'
+        run(g, "verify", "DV-1", "S2", "--command", red, "--files", "src/w.py")
+        r = run(g, "verify", "DV-1", "S2", "--command", red, "--files", "src/w.py")
+        check(r.returncode == 1 and "already verified" not in r.stdout, f"TS-40j: red evidence is never reused: {r.stdout}")
+
         # C3: task files — who generated and approved them, what they were built from, whether they are still current
         def astates(key):
             r = run(p, "status", key, "--json")
