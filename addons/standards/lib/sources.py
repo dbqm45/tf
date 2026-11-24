@@ -38,7 +38,8 @@ FACTORY_BLOCK = re.compile(r"<!-- (team-factory|tf-addons):begin.*?<!-- \1:end -
 FE_PATHS = ["**/*.tsx", "**/*.jsx", "**/*.ts", "**/*.js", "**/*.vue", "**/*.svelte", "**/*.css", "**/*.scss",
             "**/*.less", "**/*.html"]
 BE_PATHS = ["**/*.py", "**/*.java", "**/*.kt", "**/*.go", "**/*.cs", "**/*.rs", "**/*.rb", "**/*.php", "**/*.sql"]
-RANK = {"standards": 1, "adr": 2, "lint": 3, "doc": 4, "tool-rules": 4}
+RANK = {"standards": 1, "adr": 2, "lint": 3, "doc": 4, "tool-rules": 4, "review": 5, "convention": 5}
+INFERRED = {"review", "convention"}   # read by a model from what people did, not from what they wrote down
 MAX_PAGE_BYTES = 2 * 1024 * 1024
 
 
@@ -387,6 +388,42 @@ def model_fallback(text: str, evidence_for, kind: str, paths: list[str], cache: 
                 ("hard" if r.get("strength") == "hard" else "soft")
             out.append({"text": rule, "rule_id": None, "kind": kind, "strength": strength, "paths": paths,
                         "evidence": evidence_for(n), "quote": quote, "extracted_by": "model"})
+    return out
+
+
+# ---------------------------------------------------------------- code conventions of other add-ons
+
+GLOB = re.compile(r"^[A-Za-z0-9_*./{},\-\[\]@+]{1,120}$")
+MAX_CONVENTIONS = 12
+
+
+def conventions(files: list[Path], root: Path, coverage: dict) -> list[dict]:
+    """High-confidence code conventions another add-on observed (its `provides.conventions` file, contract 1:
+    {"conventions": [{statement, confidence, paths, evidence: [path:line]}]}). A second source for a written rule,
+    never applied on its own (INFERRED)."""
+    out = []
+    for f in files:
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+            items = data.get("conventions") or [] if data.get("contract") == 1 else []
+        except (OSError, ValueError, AttributeError):
+            coverage["skipped"].append({"source": str(f), "reason": "conventions file unreadable"})
+            continue
+        n = 0
+        for c in items[:MAX_CONVENTIONS]:
+            if not isinstance(c, dict) or c.get("confidence") != "high":
+                continue
+            text = _clean(str(c.get("statement", "")))
+            evidence = [e for e in c.get("evidence") or [] if isinstance(e, str) and re.match(r"^[^:]+:\d+$", e)
+                        and ".." not in e.split("/") and (root / e.rsplit(":", 1)[0]).is_file()]
+            if not 10 <= len(text) <= 200 or len(evidence) < 2:
+                continue
+            paths = [p for p in c.get("paths") or [] if isinstance(p, str) and GLOB.match(p)][:5] or ["**"]
+            for ev in evidence[:4]:
+                out.append({"text": text, "rule_id": None, "kind": "convention", "strength": "soft", "paths": paths,
+                            "evidence": ev, "extracted_by": "model"})
+            n += 1
+        coverage["read"].append(f"code conventions: {n} high-confidence from {f.parent.parent.name}")
     return out
 
 

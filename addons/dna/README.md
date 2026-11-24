@@ -1,7 +1,7 @@
 # dna — project knowledge for the factory
 
-`dna` learns how a project is built — stack with exact versions, commands, tooling, and in later versions its
-standards, code conventions and official documentation for the versions in use — and writes it as guidelines in
+`dna` learns how a project is built — stack with exact versions, commands, tooling, exemplar files, official
+documentation for the versions in use and the code conventions the code follows — and writes it as guidelines in
 `out/`. The factory reads `out/` through the add-on contract (`addon.yaml`, contract 1). Everything the add-on needs
 and produces lives in this directory; removing the directory detaches it.
 
@@ -25,7 +25,7 @@ version; the question asked in `docs query` never leaves the machine.
 In a project the add-on sits in `.tf/addons/dna/`; the factory runs `refresh` in the background at the start of
 every session (hook `addons_refresh.py`); `--root` defaults to the git top level of the current directory.
 
-## What 0.9.0 knows
+## What 0.10.0 knows
 
 | Area | Source | Version from |
 |---|---|---|
@@ -39,6 +39,7 @@ every session (hook `addons_refresh.py`); `--root` defaults to the git top level
 | Tooling | prettier, eslint, biome, stylelint, ruff, editorconfig, golangci-lint, checkstyle | — |
 | Exemplar files | git history, paths and content (`lib/exemplars.py`) | — |
 | UI building blocks | imports, exports and styles in the code (`lib/code.py`) | — |
+| Code conventions | the exemplar files and the tracked paths, read by the session's cheapest model (`lib/conventions.py`) | — |
 | Documentation | installed npm package; npm tarball and PyPI description of the exact version; `registry/docs-sources.yaml` | the stack facts above |
 
 Many npm packages ship only a short README that points to a website; for those, add the official, version-specific
@@ -46,6 +47,21 @@ source to `registry/docs-sources.yaml` (rules in the file's header).
 
 Only technologies in `registry/detectors/*.yaml` count as stack. A version without a lockfile is reported as a range
 and listed in `coverage.md`.
+
+## Code conventions
+
+A few project-wide habits (naming suffixes, test placement, the error-handling helper, module layout, import style)
+that the cheapest model in the session infers from the exemplar files and the repository's paths; no per-language
+table in the code. `learn` writes one pending item `tool: model` (prompt `prompts/conventions.md`) to
+`cache/pending.json` (`provides.pending`); the factory announces it and the agent's subagent saves the answer; the
+next `refresh` uses it. Each convention has a statement, 2+ example files, a counter-example count and a confidence
+(high, medium, low). The script keeps one only when every example path exists in the repository and contains the
+snippet cited for it; `high` needs three such files and more examples than counter-examples. At most 12, one line
+each, in `out/rules/conventions*.md` with `paths` (loaded only for the matching files). They are candidates —
+guidance like a [soft] rule: agreed rules and the surrounding code win. The question is keyed by the exemplar paths
+and the directory layout, so edits inside files do not ask it again; while a new one waits, the last answer is used.
+`conventions: false` in dna.yaml turns it off. High-confidence ones go to `out/conventions.json`
+(`provides.conventions`), which a decisions add-on may read as a second source.
 
 ## Agreed rules
 
@@ -60,6 +76,8 @@ dna describes the code; the project's agreed rules come from a decisions add-on 
 | `out/knowledge.json` | the canonical record; schema in `schema/knowledge.schema.json` |
 | `out/INDEX.md` | ≤ 15 lines for the agent's permanent context |
 | `out/exemplars.md` | per kind of change: the file to follow, its test, imports and users |
+| `out/rules/conventions*.md` | observed code conventions (guidance, candidates), with `paths`, ≤ 12 lines |
+| `out/conventions.json` | high-confidence conventions for a decisions add-on (`provides.conventions`) |
 | `out/rules/ui.md` | rule with `paths` for UI files: components to use, import form, styling, tokens, theme |
 | `out/catalog/ui.md` | full UI catalog with evidence |
 | `out/docs-index.md` | ≤ 8 KB: technology@version → topics, for the permanent context |
@@ -72,5 +90,5 @@ repository. The Markdown is generated from `knowledge.json` and must not be edit
 
 - Nothing here imports from the factory (`core/`, `packs/`, `modes/`, `tools/`); the tests check it.
 - Standard library and PyYAML only.
-- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py`, `tests/test_check.py`, `tests/test_exemplars.py` (also the `addon-dna` job in CI).
+- Tests: `python3 tests/test_dna.py`, `tests/test_docs.py`, `tests/test_code.py`, `tests/test_check.py`, `tests/test_exemplars.py`, `tests/test_conventions.py` (CI job `addons`).
 - Version by SemVer in `addon.yaml`; changes in `CHANGELOG.md`.
