@@ -3,6 +3,13 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.14.0] — 2026-11-24
+### Added
+- **core:** lessons need evidence, factory proposals go to the factory (#438)
+- **mode-pdi:** reconstruct the context of a change at task start (DV3) (#439)
+- **tools:** tf bench — A/B the factory on reference tasks (#437)
+- **core:** align with native Claude Code — skill facts, tf work cost (#436)
+
 ## [24.13.0] — 2026-11-24
 ### Added
 - **mode-pdi:** pin decisions to code paths (contract 0.22.0) (#435)
