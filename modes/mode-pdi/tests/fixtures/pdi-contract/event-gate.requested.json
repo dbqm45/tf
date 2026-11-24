@@ -3,7 +3,7 @@
   "type": "gate.requested",
   "occurred_at": "2026-10-23T10:00:00Z",
   "source": "tf",
-  "contract_version": "0.20.0",
+  "contract_version": "0.21.0",
   "payload": {
     "change": "CHG-12",
     "gate": "B1",
@@ -34,6 +34,8 @@
       ],
       "files": 4,
       "base": "origin/main"
-    }
+    },
+    "artifact_sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+    "artifact_commit": "4ec59c8a1f2b3c4d5e6f708192a3b4c5d6e7f809"
   }
 }

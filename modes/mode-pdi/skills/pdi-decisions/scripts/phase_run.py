@@ -13,7 +13,7 @@ Change phases run by pdi (mode-pdi, F4): the persona works without interaction a
       that repeats a question already settled in decisions.md ends the phase with the error `repeated_question` (Z1, PRB-3)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
-      gate.requested (contract 0.20.0) to $PDI_EVENTS_URL/events/tf, signature from $PDI_TF_SIGNING_SECRET;
+      gate.requested (contract 0.21.0) to $PDI_EVENTS_URL/events/tf, signature from $PDI_TF_SIGNING_SECRET;
       refuses when the artifact repeats a settled question; with code changed outside docs/project/ it carries the
       advisory change risk from `tf risk` (DV2; engine .tf/factory/risk_triage.py or $TF_RISK_TRIAGE)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list
@@ -51,7 +51,7 @@ OVERRIDES = Path(".claude") / "pdi-phases.json"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "sdlc-phase.yml"
 WORKFLOW = Path(".github") / "workflows" / "sdlc-phase.yml"
 SCRIPTS = ".claude/skills/pdi-decisions/scripts"
-CONTRACT_VERSION = "0.20.0"
+CONTRACT_VERSION = "0.21.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Gate questions"
 # Second review (N1, DZ12): a sidecar from second_review.py next to the phase artifact; the phases we look for one in.
@@ -624,6 +624,12 @@ def gate_event(a) -> dict:
                           + "; ".join(repeats) + " — remove them from the artifact (record the outcome with a "
                           "reference) and retry")
         payload["artifact"] = str(art)
+        # contract 0.21.0: the approval is pinned to this version of the artifact — pdi refuses it when the file changed;
+        # line ends as LF, so a Windows checkout (CRLF) and the blob pdi reads from git give the same hash
+        payload["artifact_sha256"] = hashlib.sha256(art.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        head = _git("rev-parse", "HEAD")
+        if head.returncode == 0 and re.fullmatch(r"[0-9a-f]{7,40}", head.stdout.strip()):
+            payload["artifact_commit"] = head.stdout.strip()
         qs = questions_in(art) + (design_problems(art) if a.phase == "design" else [])
         if sidecar and sidecar.get("status") == "ok":
             qs = qs + second_review_questions(sidecar)

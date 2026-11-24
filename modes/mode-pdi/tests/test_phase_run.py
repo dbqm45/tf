@@ -839,6 +839,20 @@ if sys.argv[1:3] == ["pr", "create"]:
                        "reason": "authentication or permissions"} in risk.get("items", [])
                   and all(not i["file"].startswith("docs/project/") for i in risk.get("items", [])),
                   f"DV2-2: code changed → risk from tf risk without the artifacts: {risk} {r.stderr}")
+            # contract 0.21.0: the approval is pinned to the artifact version — its SHA-256 and the commit go with it
+            plan_md = repo / "docs" / "project" / "changes" / "CHG-12" / "plan.md"
+            head = g("rev-parse", "HEAD").stdout.strip()
+            r = run(["gate", "request", "--change", "CHG-12", "--phase", "architecture", "--dry-run"], repo, **renv)
+            sent = (jl(r) or {}).get("would_send", {}).get("payload", {})
+            plan_md.write_bytes(plan_md.read_bytes().replace(b"\n", b"\r\n"))   # a Windows checkout: CRLF
+            r = run(["gate", "request", "--change", "CHG-12", "--phase", "architecture", "--dry-run"], repo, **renv)
+            sent = (jl(r) or {}).get("would_send", {}).get("payload", {})
+            check(sent.get("artifact_sha256") == hashlib.sha256(plan_md.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+                  and sent.get("artifact_commit") == head,
+                  f"PIN-1: the gate carries the artifact's SHA-256 and the commit: {sent} {r.stderr}")
+            r = run(["gate", "request", "--change", "CHG-12", "--gate", "B4", "--dry-run"], repo, **renv)
+            check("artifact_sha256" not in (jl(r) or {}).get("would_send", {}).get("payload", {}),
+                  f"PIN-2: a gate without an artifact carries no hash: {r.stdout}")
             r = run(["gate", "request", "--change", "CHG-12", "--gate", "B4", "--dry-run"], repo,
                     TF_RISK_TRIAGE=str(Path(t) / "missing.py"))
             check(r.returncode == 0 and "risk" not in (jl(r) or {}).get("would_send", {}).get("payload", {}),
