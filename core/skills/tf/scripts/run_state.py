@@ -181,7 +181,7 @@ def write_run(run_dir: Path, meta: dict) -> None:
     """Atomic write (a temporary file and a replace) — the preview never reads half a file."""
     meta["updated_at"] = now_iso()
     tmp = run_dir / "run.json.tmp"
-    tmp.write_text(json.dumps(meta, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    tmp.write_bytes((json.dumps(meta, ensure_ascii=False, indent=1) + "\n").encode("utf-8"))
     os.replace(tmp, run_dir / "run.json")
 
 
@@ -733,7 +733,7 @@ def cmd_tick(run_dir: Path, slice_id: str, project: Path) -> int:
                 if refused:
                     return fail(refused)
                 lines[i] = line.replace("- [ ]", "- [x]", 1)
-                path.write_text("\n".join(lines), encoding="utf-8")
+                path.write_bytes(("\n".join(lines)).encode("utf-8"))
             print(f"✓ {slice_id} ticked off in {path.name}")
             refresh(project)
             return 0
@@ -955,7 +955,7 @@ def append_event(task_dir: Path, kind: str, slice_id: str, text: str, by: str, v
     """Appends an entry to the task's events.jsonl and returns it; `verbatim` keeps the text as given (line breaks too)."""
     event = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "type": kind, "slice": slice_id,
              "text": text.strip() if verbatim else " ".join(text.split()), "by": by}
-    with (task_dir / "events.jsonl").open("a", encoding="utf-8") as f:
+    with (task_dir / "events.jsonl").open("a", encoding="utf-8", newline="\n") as f:
         f.write(json.dumps(event, ensure_ascii=False) + "\n")
     return event
 
@@ -1382,7 +1382,7 @@ def cmd_pr_body(run_dir: Path, base: str | None, project: Path) -> int:
         pass
     text, missing = pr_body(run_dir, meta, project, base)
     target = run_dir / "pr-body.md"
-    target.write_text(text, encoding="utf-8")
+    target.write_bytes(text.encode("utf-8"))
     try:
         shown = target.resolve().relative_to(project.resolve()).as_posix()
     except ValueError:
@@ -1416,7 +1416,7 @@ def cmd_park(run_dir: Path, item: str, project: Path) -> int:
     if not run_dir.is_dir():
         return fail(f"the run directory {run_dir} does not exist")
     text = path.read_text(encoding="utf-8") if path.is_file() else ""
-    path.write_text(text.rstrip("\n") + ("\n" if text.strip() else "") + f"- {item.lstrip('- ')}\n", encoding="utf-8")
+    path.write_bytes((text.rstrip("\n") + ("\n" if text.strip() else "") + f"- {item.lstrip('- ')}\n").encode("utf-8"))
     print(f"✓ postponed for a decision in {path.name}")
     refresh(project)
     return 0
@@ -1756,7 +1756,7 @@ def data_file(target: Path) -> Path:
 
 def write_atomic(path: Path, text: str) -> None:
     tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
+    tmp.write_bytes(text.encode("utf-8"))
     os.replace(tmp, path)
 
 

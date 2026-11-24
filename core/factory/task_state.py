@@ -86,6 +86,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import time
@@ -149,7 +150,7 @@ def write_atomic(path: Path, text: str) -> None:
     """Write via a temporary file and a rename — an interrupted write does not leave half a file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
+    tmp.write_bytes(text.encode("utf-8"))
     os.replace(tmp, path)
 
 
@@ -367,12 +368,22 @@ def cmd_slice(root: Path, key: str, slice_id: str, state: str, title: str | None
     return 0
 
 
+def split_command(command: str) -> list[str]:
+    """A command line → arguments; on Windows a backslash is a path separator, not an escape (as in test_lock.py)."""
+    if os.name != "nt":
+        return shlex.split(command)
+    return [a[1:-1] if len(a) >= 2 and a[0] == a[-1] and a[0] in "\"'" else a for a in shlex.split(command, posix=False)]
+
+
 def run_command(root: Path, command: str, timeout: float) -> tuple[int, str]:
-    """Runs the verification command (without a shell; through the test lock when the factory has one): (exit code, output)."""
-    argv = shlex.split(command)
+    """Runs the verification command (without a shell; through the test lock when the factory has one): (exit code, output).
+    A program that cannot be started is an error (127), never a pass; Windows: `npx` → `npx.cmd` (shutil.which)."""
+    argv = split_command(command)
     lock = root / ".claude" / "hooks" / "test_lock.py"
     if lock.is_file():
         argv = [sys.executable, str(lock), "--", *argv]
+    elif os.name == "nt" and argv and shutil.which(argv[0]):
+        argv = [shutil.which(argv[0]), *argv[1:]]
     try:
         r = subprocess.run(argv, cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace",
                            timeout=timeout, env={**os.environ, "CLAUDE_PROJECT_DIR": str(root)})
@@ -480,7 +491,7 @@ def cmd_verify(root: Path, key: str, slice_id: str, command: str, files: list[st
     log = Path(".tf") / "runs" / key / f"{slice_id}-{n}.log"
     try:   # the full output is outside git; only the path stays in the evidence
         (root / log).parent.mkdir(parents=True, exist_ok=True)
-        (root / log).write_text(out, encoding="utf-8")
+        (root / log).write_bytes(out.encode("utf-8"))
     except OSError:
         pass
     rel = f"evidence/{slice_id}-{n}.json"
@@ -581,7 +592,7 @@ def cmd_deployed(root: Path, key: str, version: str | None, timeout: float, roll
     log = RUNS / key / f"deploy-{n}.log"
     try:   # the full output is outside git; only the path stays in the evidence
         (root / log).parent.mkdir(parents=True, exist_ok=True)
-        (root / log).write_text(out, encoding="utf-8")
+        (root / log).write_bytes(out.encode("utf-8"))
     except OSError:
         pass
     rel, at = f"evidence/deploy-{n}.json", now()

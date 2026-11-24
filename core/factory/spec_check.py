@@ -235,7 +235,7 @@ def cmd_new(root: Path, key: str) -> int:
     if path.exists():
         print(f"✗ {CHANGES / key / 'spec.md'} already exists — not overwriting; check: tf spec check {key}")
         return 1
-    path.write_text(TEMPLATE.format(title=task.get("title") or key, key=key), encoding="utf-8")
+    path.write_bytes((TEMPLATE.format(title=task.get("title") or key, key=key)).encode("utf-8"))
     print(f"✓ {CHANGES / key / 'spec.md'} — fill in the criteria, then: tf spec check {key}")
     return 0
 
