@@ -65,14 +65,17 @@ The factory is already past 1.0.0, so the left column applies. The computation (
 
 ## How the version is bumped (automatically)
 
-After every merge to `main`, the `release` workflow (`.github/workflows/release.yml`) does the following in order:
+After every merge to `main`, the `factory-checks` workflow runs the full suite on the merged commit. When it
+succeeds, the `release` workflow (`.github/workflows/release.yml`, trigger `workflow_run`) releases exactly that
+commit (it does not run the suite again; see [CI](#ci-what-runs-when)) and does the following in order:
 
 1. **Computes the version** (`python3 scripts/release.py --ci`): takes the commits since the last `vX.Y.Z` tag and
    applies the tables above.
    - No `feat`, `fix`, `perf` and no incompatible changes means no new version: the run ends with no changes.
    - Otherwise the script writes the new version to `core/factory/VERSION` and adds an entry at the top of
      `core/factory/CHANGELOG.md` (sections *Breaking*, *Added*, *Fixed* from the commit titles; English names as in [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), older entries have Polish names and stay unchanged). The sections match
-     the `build.py check` validation (kind of bump ↔ sections), which the job runs before committing.
+     the `build.py check` validation (kind of bump ↔ sections), which the job runs before committing
+     (`workspace.py check --packs all --no-tests`: the build check and an install of every overlay with the new core).
    - On a MAJOR release (`X.0.0`) the script raises the upper bound `requires.core: "… <X.0.0"` to `<X+1.0.0` in
      `packs/*/pack.yaml` and `modes/*/pack.yaml`; otherwise `build.py check` would reject every overlay with the new
      core. An overlay that really does not work with the new core must have a different bound in the same PR.
@@ -85,7 +88,11 @@ After every merge to `main`, the `release` workflow (`.github/workflows/release.
 
 Several PRs merged in quick succession: the runs wait in a queue (`concurrency: release`), so they will not compute the
 same version twice. If a new commit lands on `main` during a release, the push of the release commit is rejected, and
-all the changes are released by the run started for the newer commit.
+all the changes are released by the run started (after its CI) for the newer commit. CI runs can finish out of order:
+when the newer commit was released first, the run for the older one sees an older tagged version and stops (nothing
+left to release). If `factory-checks` fails on `main`, nothing is released until a later commit passes.
+A manual run (*Run workflow*) has no CI run behind it, so it runs the full `workspace.py check --packs all` itself
+before committing a new version.
 
 In an ordinary PR you **do not change** `core/factory/VERSION` or the CHANGELOG headings; CI does that.
 
@@ -109,8 +116,38 @@ Rules:
 - **Deprecation**: first a MINOR with a *Deprecated* section and an alias, removal only in the next MAJOR
   (core/factory/PUBLIC_API.md).
 
+## CI: what runs when
+
+`.github/workflows/factory-checks.yml` runs on every pull request and on every push to `main`:
+
+| Job | Pull request | Push to `main` |
+|---|---|---|
+| `repo` (`tests/test_*.py`, `refs`), `addons`, `container` | full | full |
+| `workspace (<pack set>)`, one job per pack set | the tests related to the change | full |
+| `workspace (all, i/3)`: the `all` set in 3 shards | the related tests, split over the shards | full, split over the shards |
+
+- **Shards** (`workspace.py check --shard i/n`): the tests split into n disjoint, duration-balanced slices (the times
+  in `tools/test-durations.json`; a test missing there counts as the median). Together they run exactly the tests of
+  one full run (`tests/test_workspace_ci.py`). The cheap checks (`build.py check`, scenario validation,
+  `skill_gate --status`) run in shard 1. Refresh the times after big test changes:
+  `python3 tools/workspace.py check --packs all --timings --save-durations` (a stale file only unbalances the shards).
+- **Selection on a pull request** (`workspace.py check --changed-from <base sha>`, from `git diff <base>...HEAD`):
+  a changed test runs itself; a changed module or script runs the tests that name it (`x.py`, `"x"`, `import x`) and
+  those of the modules that import or load it; a changed skill (SKILL.md, references, scenarios) runs the tests that
+  name the skill plus the skill-gate and hint tests; a change to an overlay or mode affects only the pack sets that
+  contain it; documentation and files outside the installed project (`docs/`, `tests/`, `tools/`, `scripts/`) run
+  only the workspace tests that name them (the `repo` job runs its tests in full anyway). The cheap checks always run.
+- **Full suite instead** (the log says why): workflows, `tools/workspace.py`, `core/factory/build.py`, `install.py`,
+  `packs.py`, `update.py`, `config.yaml`, `_vendor/`, `core/settings.json`, a module those load, an overlay's
+  `pack.yaml`, a file no rule matches or no test names, a selection over 40% of the tests, and when git cannot
+  compute the diff. Locally: `python3 tools/workspace.py check --packs all --changed-from origin/main --list`.
+- **Push to `main`** always runs everything, and the release starts only after that run succeeded, so every release
+  is guarded by a full run on its exact commit.
+
 ## GitHub repository settings
 
+- *Settings → Branches*: required status checks name the jobs; the `all` set is now `workspace (all, 1/3)`,
+  `workspace (all, 2/3)` and `workspace (all, 3/3)` instead of `workspace (all)`.
 - *Settings → General → Pull Requests*: **squash merge** enabled (PR title as the commit message).
 - *Settings → Actions → General → Workflow permissions*: the `release` workflow needs `contents: write` (it declares it
   itself); the `main` protection rule must allow `github-actions[bot]` to push the release commit.
