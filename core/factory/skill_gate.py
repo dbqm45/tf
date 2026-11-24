@@ -5,6 +5,7 @@ Skill quality gate — mandatory when adding a skill and on every change to it.
   python3 .tf/factory/skill_gate.py core-grounding                 # free checks (no model)
   python3 .tf/factory/skill_gate.py --changed                      # skills changed since the last gate
   python3 .tf/factory/skill_gate.py --status [--strict]            # gate status of all skills (--strict: exit code 1 in CI)
+  python3 .tf/factory/skill_gate.py --hints [skill …]              # hook hits for the scenarios of all (or the given) skills
   python3 .tf/factory/skill_gate.py core-grounding --model haiku,sonnet --budget 2 --yes   # + model evaluation (paid)
   python3 .tf/factory/skill_gate.py core-grounding --model sonnet --baseline --yes         # + comparison without skills
 
@@ -111,8 +112,19 @@ def check_structure(name: str) -> tuple[list[str], list[str]]:
     return mine(errors), [w for w in mine(warnings) if "gate" not in w and "bramk" not in w and "bramce" not in w]   # gate status is a result, not an input
 
 
+_EVALS_MOD = None
+
+
+def evals_module():
+    """run_skill_evals.py loaded once per process (`--hints` reads the scenarios of every skill)."""
+    global _EVALS_MOD
+    if _EVALS_MOD is None:
+        _EVALS_MOD = load_module(TESTS / "run_skill_evals.py", "run_skill_evals")
+    return _EVALS_MOD
+
+
 def check_scenarios(name: str) -> tuple[list[str], list[str], dict]:
-    ev = load_module(TESTS / "run_skill_evals.py", "run_skill_evals")
+    ev = evals_module()
     path = EVALS / f"{name}.json"
     if not path.exists():
         return [f"no scenario file {path.relative_to(ROOT)} — create it BEFORE the skill's content "
@@ -137,25 +149,28 @@ def check_scenarios(name: str) -> tuple[list[str], list[str], dict]:
     return errs, warns, {"trigger": trig, "no": no, "manual": manual}
 
 
-def check_hint(name: str, sc: dict) -> tuple[list[str], list[str], str]:
-    hint = load_module(ROOT / ".claude" / "hooks" / "skill_hint.py", "skill_hint")
-    items = hint.load_index()
+def check_hint(name: str, sc: dict, hint=None, items: list[dict] | None = None, stats=None) -> tuple[list[str], list[str], str]:
+    """`hint`, `items` and `stats` (the hook module, its index and the index's word statistics) can be passed in when checking
+    many skills: they are the same for all of them, and rebuilding them for each skill and prompt made `--hints` take minutes."""
+    hint = hint or load_module(ROOT / ".claude" / "hooks" / "skill_hint.py", "skill_hint")
+    items = hint.load_index() if items is None else items
+    stats = stats or hint.index_stats(items)   # the index does not change while the scenarios are checked
     errs, warns = [], []
     if sc.get("manual"):
         return errs, ["a manual skill (disable-model-invocation) — the hint does not apply to it"], "—"
     hits = 0
     for s in sc.get("trigger", []):
-        picks = [it["name"] for _, it in hint.select(s["prompt"], items)]
+        picks = [it["name"] for _, it in hint.select(s["prompt"], items, stats=stats)]
         if name in picks:
             hits += 1
         else:
-            top = [it["name"] for _, it in hint.rank(s["prompt"], items)[:3]]
+            top = [it["name"] for _, it in hint.rank(s["prompt"], items, stats)[:3]]
             warns.append(f"#{s['id']}: the hook will not hint the skill (closest: {', '.join(top)}) — add words to "
                          "metadata.keywords or the description")
     if sc.get("trigger") and hits == 0:
         errs.append("the hook does not hint the skill for any of its questions — the model will most likely not load it")
     for s in sc.get("no", []):
-        picks = [it["name"] for _, it in hint.select(s["prompt"], items)]
+        picks = [it["name"] for _, it in hint.select(s["prompt"], items, stats=stats)]
         if picks and picks[0] == name:
             nb = s.get("neighbor")
             if nb in picks or set(s.get("accept") or []) & set(picks):
@@ -434,15 +449,26 @@ def suggest(name: str, apply: bool) -> int:
     return 0
 
 
-def hints_all() -> int:
-    """Gate step 3 for all skills at once: a "trigger" scenario that the hook does not suggest is an error."""
+def hints_all(only: list[str] | None = None) -> int:
+    """Gate step 3 for all skills at once: a "trigger" scenario that the hook does not suggest is an error.
+    `only`: the scenarios of these skills only (the index, and so the competition, is still the whole installation)."""
+    names = all_skills()
+    if only:
+        unknown = [d for d in only if d not in names or not (EVALS / f"{d}.json").exists()]
+        if unknown:
+            print(f"✗ no skill or no scenario file: {', '.join(unknown)}")
+            return 2
+        names = list(dict.fromkeys(only))
+    hint = load_module(ROOT / ".claude" / "hooks" / "skill_hint.py", "skill_hint")
+    items = hint.load_index()   # once: the same index for every skill's scenarios
+    stats = hint.index_stats(items)
     misses, narrow, n = [], 0, 0
-    for d in all_skills():
+    for d in names:
         if not (EVALS / f"{d}.json").exists():
             continue
         _, _, sc = check_scenarios(d)
         n += 1
-        errs, warns, _ = check_hint(d, sc)
+        errs, warns, _ = check_hint(d, sc, hint, items, stats)
         misses += [f"{d}: {x}" for x in errs + warns if "will not hint" in x]
         narrow += sum("will not hint" not in x and "manual skill" not in x for x in warns)
     for m in misses:
@@ -469,7 +495,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--yes", action="store_true", help="without asking for consent to the cost")
     ap.add_argument("--fast", action="store_true", help="skip the regression of all skills (step 4)")
     ap.add_argument("--hints", action="store_true",
-                    help="skill_hint hook hits for the scenarios of ALL skills (a new skill does not steal hints)")
+                    help="skill_hint hook hits for the scenarios of ALL skills (a new skill does not steal hints); "
+                         "with skill names: the scenarios of those skills only")
     ap.add_argument("--suggest", metavar="SKILL", help="phrases for metadata.keywords from the skill's missed scenarios")
     ap.add_argument("--apply", action="store_true", help="with --suggest: add the phrases to SKILL.md")
     args = ap.parse_args(argv[1:])
@@ -478,7 +505,7 @@ def main(argv: list[str]) -> int:
     if args.status:
         return status(args.strict)
     if args.hints:
-        return hints_all()
+        return hints_all(args.skills)
     names = list(args.skills) + (changed() if args.changed else [])
     if not names:
         print("Nothing to check." if args.changed else __doc__)

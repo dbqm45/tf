@@ -143,13 +143,19 @@ REF_SKILLS = 150   # thresholds were calibrated on ~150 skills; a smaller instal
                    # otherwise all scores are lower and even correct hints fall below MIN_SCORE
 
 
-def rank(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
-    n = max(len(items), REF_SKILLS)
+def index_stats(items: list[dict]) -> tuple[dict[str, int], float]:
+    """Word document frequencies and the average body length of the index. They depend only on the index, so a caller that ranks
+    many prompts against the same, unchanged index (the gate's `--hints`) computes them once and passes them to `rank`/`select`."""
     df: dict[str, int] = {}
     for it in items:
         for t in it["head"] | it["body"]:
             df[t] = df.get(t, 0) + 1
-    avg = sum(it.get("blen", len(it["body"])) for it in items) / (len(items) or 1)
+    return df, sum(it.get("blen", len(it["body"])) for it in items) / (len(items) or 1)
+
+
+def rank(prompt: str, items: list[dict], stats: tuple[dict[str, int], float] | None = None) -> list[tuple[float, dict]]:
+    n = max(len(items), REF_SKILLS)
+    df, avg = stats or index_stats(items)
     q = set(stems(intent(prompt)))
     scored = []
     for it in items:
@@ -163,10 +169,11 @@ def rank(prompt: str, items: list[dict]) -> list[tuple[float, dict]]:
     return scored
 
 
-def select(prompt: str, items: list[dict], exclude: set[str] | frozenset = frozenset()) -> list[tuple[float, dict]]:
+def select(prompt: str, items: list[dict], exclude: set[str] | frozenset = frozenset(),
+           stats: tuple[dict[str, int], float] | None = None) -> list[tuple[float, dict]]:
     """Skills to suggest: a score above the threshold and a clear leader (a flat ranking is usually noise from generic words).
     `exclude` (skills outside the project stack) is dropped after ranking: word weights are computed over the whole index, as in calibration."""
-    ranked = [x for x in rank(prompt, items) if x[1]["name"] not in exclude]
+    ranked = [x for x in rank(prompt, items, stats) if x[1]["name"] not in exclude]
     if not ranked or ranked[0][0] < MIN_SCORE:
         return []
     best = ranked[0][0]
