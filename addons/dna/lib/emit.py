@@ -3,6 +3,7 @@ does not, so the two cannot disagree (verify.check_out compares them byte for by
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -50,6 +51,10 @@ def render_index(k: dict) -> str:
     if any(i.get("data", {}).get("topic") == "ui-component" for i in items):
         lines.append("- UI: use the project's components and tokens before writing your own; the UI rules load for UI "
                      "files, full list in `catalog/ui.md` here.")
+    conv = _conventions(items)
+    if conv:
+        lines.append(f"- Code conventions observed in this code ({len(conv)}, guidance, not rules): they load for the "
+                     "matching files; agreed rules and the surrounding code win over them.")
     if _docs(items):
         lines.append("- API of these versions, not from memory: `docs-index.md` here; query: "
                      "`python3 .tf/addons/dna/dna.py docs query <tech> \"<topic>\"`")
@@ -189,6 +194,54 @@ def render_exemplars(k: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
+CONVENTIONS_MAX = 12
+CONVENTION_LINE_MAX = 260
+
+
+def _conventions(items: list[dict]) -> list[dict]:
+    return [i for i in items if i.get("kind") == "convention" and (i.get("data") or {}).get("topic") == "convention"
+            and i.get("status") != "abandoned"][:CONVENTIONS_MAX]
+
+
+def _conventions_name(paths: list[str]) -> str:
+    return "conventions.md" if paths == ["**"] else \
+        f"conventions-{hashlib.sha256(' '.join(paths).encode()).hexdigest()[:6]}.md"
+
+
+def convention_line(c: dict) -> str:
+    d = c["data"]
+    eg = ", ".join(f"`{p}`" for p in d["examples"][:2])
+    counter = d["counter_examples"]
+    tail = f"; {counter} counter-example{'s' if counter != 1 else ''}" if counter else ""
+    return f"- [{d['confidence']}] {c['title']} (e.g. {eg}{tail})"[:CONVENTION_LINE_MAX]
+
+
+def render_conventions(k: dict) -> dict[str, str]:
+    """rules/conventions*.md, one per scope: one line per convention, loaded only for the matching files."""
+    groups: dict[tuple, list[dict]] = {}
+    for c in _conventions(k["items"]):
+        groups.setdefault(tuple(c["scope"]["paths"]), []).append(c)
+    files = {}
+    for paths, cs in sorted(groups.items()):
+        head = ["---", "paths:"] + [f'  - "{p}"' for p in paths] + ["---", "", "# Code conventions (dna, guidance)", "",
+                "Observed in this code by the cheap model and checked against the files; candidates, not agreed "
+                "rules. Follow them in new code like a [soft] rule: agreed rules (rules/standards*.md) win, and in an "
+                "existing file the surrounding code wins.", ""]
+        files[f"rules/{_conventions_name(list(paths))}"] = "\n".join(head + [convention_line(c) for c in cs]) + "\n"
+    return files
+
+
+def render_conventions_json(k: dict) -> str:
+    """High-confidence conventions offered to a decisions add-on (`provides.conventions`); candidates there too."""
+    high = [c for c in _conventions(k["items"]) if c["data"]["confidence"] == "high"]
+    return json.dumps({"contract": 1, "generator": k["generator"], "generated": k["generated"],
+                       "note": "observed conventions: guidance, a second source for a written rule, never a rule alone",
+                       "conventions": [{"id": c["id"], "statement": c["title"], "confidence": "high",
+                                        "paths": c["scope"]["paths"], "evidence": c["evidence"],
+                                        "counter_examples": c["data"]["counter_examples"]} for c in high]},
+                      ensure_ascii=False, indent=2) + "\n"
+
+
 def render(k: dict) -> dict[str, str]:
     """File name in out/ -> content."""
     files = {"INDEX.md": render_index(k), "coverage.md": render_coverage(k)}
@@ -199,6 +252,8 @@ def render(k: dict) -> dict[str, str]:
     if any(i.get("data", {}).get("topic") in ("ui-component", "token", "styling") for i in k["items"]):
         files["rules/ui.md"] = render_ui_rules(k)
         files["catalog/ui.md"] = render_ui_catalog(k)
+    files.update(render_conventions(k))
+    files["conventions.json"] = render_conventions_json(k)
     return files
 
 

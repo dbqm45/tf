@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0 — 2026-11-24
+- PR review comments as a source (`lib/reviews.py`, prompt `prompts/reviews.md`): a pending item `tool: code-review`
+  asks the agent to read the review bodies and inline comments of the last `pr_reviews.max_prs` (default 30) merged
+  pull requests through the session's GitHub, GitLab or Bitbucket MCP tool, or `gh api` (read-only), into
+  `cache/reviews/batch-<date>.json`; PRs already cached are listed in `skip`, a new read is due after
+  `pr_reviews.stale_after_days` (default 7). The cheapest model extracts recurring requests; a rule counts only with
+  2+ verbatim quotes, found in the comments, from different PRs or reviewers. The comments are untrusted: invisible
+  and control characters, HTML comments and tags removed, fields capped, bots skipped, every line quoted.
+  `pr_reviews.enabled: false` turns the source off.
+- Code conventions of other add-ons (`provides.conventions`, e.g. dna's high-confidence ones) as a source.
+- Review rules and conventions are inferred: alone (even from two PRs or two files) they stay candidates; they are
+  applied with a written source (same wording, or `same_as` a known rule id, checked by the script) or when a human
+  lists the id under `accept` (status `accepted`).
+
 ## 0.3.1 — 2026-11-20
 - pending.json asks for all items in one subagent on the cheapest model briefed "Class: addon", so the factory
   counts their tokens and cost (`tf addon report`).
