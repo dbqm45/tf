@@ -144,13 +144,34 @@ VALID_MISSING_RE = re.compile(
     r"No module named '(?![^']*test)[^']+'|cannot import name '[^']+'", re.I)
 
 
+# test_lock.py ends a run with one of these lines (stderr): the exit code survives a pipe (`… 2>&1 | tail`) that hides it
+# from Claude Code, and a program that did not start (Windows: `npx` without `.cmd`) is not a test result.
+LOCK_EXIT_RE = re.compile(r"^✗ test_lock: the command exited with code (-?\d+)\s*$", re.M)
+NOT_RUN_RE = re.compile(r"^✗ test_lock: the command did not run\b", re.M)
+# A shell that could not find the program (bash, cmd.exe, PowerShell) — not a test result either.
+SHELL_NOT_FOUND_RE = re.compile(r"^(?:\S[^\n]*: )?[^\s:]+: command not found\s*$"
+                                r"|^(?:\S*/)?(?:ba|da|z)?sh: (?:\d+: |line \d+: )?[^\s:]+: not found\s*$"
+                                r"|is not recognized as an internal or external command"
+                                r"|is not recognized as the name of a cmdlet", re.M | re.I)
+
+
 def response_text(data: dict) -> str:
     resp = data.get("tool_response")
     if isinstance(resp, dict):
         text = f"{resp.get('stdout', '')}\n{resp.get('stderr', '')}\n{resp.get('output', '')}"
     else:
         text = str(resp or "")
+    if data.get("error"):   # PostToolUseFailure carries the output of a failed command in `error`
+        text = f"{text}\n{data['error']}"
     return ANSI_RE.sub("", text[-20000:])
+
+
+def not_run(data: dict) -> bool:
+    """The test command did not start (the program was not found): neither red nor green — the run proves nothing."""
+    text = response_text(data)
+    if NOT_RUN_RE.search(text):
+        return True
+    return bool(SHELL_NOT_FOUND_RE.search(text)) and not FAIL_RE.search(text) and not LOCK_EXIT_RE.search(text)
 
 
 def red_without_assertion(data: dict) -> bool:
@@ -166,10 +187,10 @@ def bash_failed(data: dict) -> bool:
         code = resp.get("exit_code", resp.get("exitCode", resp.get("returncode")))
         if isinstance(code, int) and code != 0:
             return True
-        text = f"{resp.get('stdout', '')}\n{resp.get('stderr', '')}\n{resp.get('output', '')}"
-    else:
-        text = str(resp or "")
-    return bool(FAIL_RE.search(text[-20000:]))
+    text = response_text(data)
+    if any(int(c) != 0 for c in LOCK_EXIT_RE.findall(text)):   # test_lock saw a non-zero exit code
+        return True
+    return bool(FAIL_RE.search(text))
 
 
 def deny(reason: str) -> None:
@@ -478,7 +499,11 @@ def main() -> int:
 
         if event in ("PostToolUse", "PostToolUseFailure") and tool == "Bash":
             notes = []
-            if TEST_CMD_RE.search(str(inp.get("command") or "")):
+            if TEST_CMD_RE.search(str(inp.get("command") or "")) and not_run(data):
+                notes.append("[tdd_guard] The test command did not run (the program was not found) — that is neither "
+                             "a red nor a green test. Fix the command (Windows: `npx`, `npm` are `.cmd` files; "
+                             "test_lock.py finds them) and run the tests again.")
+            elif TEST_CMD_RE.search(str(inp.get("command") or "")):
                 if bash_failed(data):
                     s["red"] = s["seq"]
                     if not red_without_assertion(data) and s.get("tests"):

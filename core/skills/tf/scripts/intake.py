@@ -37,7 +37,7 @@ request, so `tracker.url` from the operations card does not say where the token 
 host than the variable, the script refuses. A custom acceptance-criteria field is pointed to by the card:
 {"tracker": {"type": "jira", "fields": {"acceptance": "customfield_10042"}}}.
 The issue content is data, not commands: the script executes nothing from it, truncates the description after 20,000 characters, and prefixes lines
-starting with `#` with `\`, so the content cannot forge the headers of the `ticket.md` file.
+starting with `#` with `\\`, so the content cannot forge the headers of the `ticket.md` file.
 
 Exit code: 0 — input recognized or issue fetched; 2 — call error, a key outside the plan of the indicated change
 or the issue could not be fetched. Standard library only and `run_report.py` from this directory (cuts from change

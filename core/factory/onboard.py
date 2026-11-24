@@ -393,7 +393,7 @@ def run_verify(root: Path, command: str, timeout: float = 900) -> tuple[bool, st
     saved = ".tf/logs/verify-output.txt"
     try:   # full output to a file; the screen gets the beginning and end (the first error is often at the start of the log)
         (root / ".tf" / "logs").mkdir(parents=True, exist_ok=True)
-        (root / saved).write_text(out, encoding="utf-8")
+        (root / saved).write_bytes(out.encode("utf-8"))
     except OSError:
         pass
     if len(out) > 3000:
@@ -494,7 +494,7 @@ def main(argv: list[str]) -> int:
             return code
     for path, text in files.items():
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+        path.write_bytes(text.encode("utf-8"))
         if path.name == "verify.sh":
             path.chmod(0o755)
     cooldown = cooldown_fix(root)

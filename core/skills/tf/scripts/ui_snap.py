@@ -217,13 +217,14 @@ def find_browser(env=None, extra=None):
     return next((c for c in candidates if _executable(c)), None)
 
 
-def kill_tree(proc: subprocess.Popen, sig=signal.SIGKILL) -> None:
-    """Ends the process with its children (a process group; Windows: taskkill /T)."""
+def kill_tree(proc: subprocess.Popen, sig=None) -> None:
+    """Ends the process with its children (a process group, SIGKILL by default; Windows: taskkill /T). The default is
+    not `signal.SIGKILL` in the signature: Windows has no SIGKILL, and importing this module (run_state.py does) failed."""
     try:
         if os.name == "nt":
             subprocess.run(["taskkill", "/T", "/F", "/PID", str(proc.pid)], capture_output=True, timeout=20)
         else:
-            os.killpg(proc.pid, sig)
+            os.killpg(proc.pid, sig if sig is not None else signal.SIGKILL)
     except (ProcessLookupError, PermissionError, OSError, subprocess.SubprocessError):
         pass
 

@@ -525,6 +525,16 @@ def read(p: Path) -> str:
     return p.read_text(encoding="utf-8") if p.is_file() else ""
 
 
+def write_keeping_eol(path: Path, text: str) -> None:
+    """A project config file in the line ending it already has (LF by default): a text-mode write on Windows would turn
+    it into CRLF, and the project's lint (endOfLine: lf) would fail on it."""
+    try:
+        crlf = b"\r\n" in path.read_bytes()
+    except OSError:
+        crlf = False
+    path.write_bytes((text.replace("\n", "\r\n") if crlf else text).encode("utf-8"))
+
+
 def _set_line(path: Path, key: str, sep: str, value: str, allow=None) -> bool:
     """Set `key<sep>value` in a line-based config file (.npmrc, YAML top level); keep the rest. True when changed."""
     if allow is not None and not allow(path):
@@ -536,7 +546,7 @@ def _set_line(path: Path, key: str, sep: str, value: str, allow=None) -> bool:
                                                                   + line + "\n")
     if new == text:
         return False
-    path.write_text(new, encoding="utf-8")
+    write_keeping_eol(path, new)
     return True
 
 
@@ -560,7 +570,7 @@ def _set_uv(path: Path, value: str, allow=None) -> bool:
         new = text + ("" if not text or text.endswith("\n") else "\n") + f"\n[tool.uv]\n{line}\n"
     if new == text:
         return False
-    path.write_text(new, encoding="utf-8")
+    write_keeping_eol(path, new)
     return True
 
 

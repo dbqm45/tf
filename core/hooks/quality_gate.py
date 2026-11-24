@@ -173,13 +173,20 @@ def load_state(path: Path) -> dict:
 
 def run(root: Path, cmd, timeout: float) -> tuple[bool | None, str]:
     """(green?, output trimmed to the beginning and end); None = the test lock is busy. Full output: .tf/logs/."""
-    argv = shlex.split(cmd) if isinstance(cmd, str) else list(cmd)
-    with _lock().held(root) as ok:
+    lock = _lock()
+    split = getattr(lock, "split_command", shlex.split)   # Windows: a backslash is a path separator, not an escape
+    argv = split(cmd) if isinstance(cmd, str) else list(map(str, cmd))
+    argv = lock.resolve(argv) if hasattr(lock, "resolve") else argv   # Windows: `npx` → `npx.cmd`
+    with lock.held(root) as ok:
         if not ok:
             return None, ""
-        proc = subprocess.Popen(argv, cwd=root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                                errors="replace", start_new_session=True,
-                                env={**os.environ, "TF_TEST_LOCK_HELD": "1"})
+        try:
+            proc = subprocess.Popen(argv, cwd=root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                                    errors="replace", start_new_session=os.name != "nt",
+                                    env={**os.environ, "TF_TEST_LOCK_HELD": "1"})
+        except OSError as e:   # the program was not found: an error, never a pass
+            return False, (f"the command could not start: `{argv[0] if argv else cmd}` ({e.__class__.__name__}: {e}) "
+                           "— fix the command in .claude/quality-gate.json")
         try:
             out, _ = proc.communicate(timeout=timeout)
         except subprocess.TimeoutExpired:

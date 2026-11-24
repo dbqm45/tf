@@ -282,7 +282,7 @@ def build_index(root: Path) -> str:
 def write_index(root: Path) -> None:
     rec = record_dir(root)
     if rec.exists():
-        (rec / "README.md").write_text(build_index(root), encoding="utf-8")
+        (rec / "README.md").write_bytes((build_index(root)).encode("utf-8"))
 
 
 def status_text(root: Path, compact: bool = False) -> str:
@@ -351,7 +351,7 @@ def report(root: Path, out: Path | None) -> Path:
         lines += ["", "## Recent events", "", "| When | Who | Phase | Event |", "|---|---|---|---|", *rows]
     target = out or rec / "exports" / f"report-{date.today():%Y-%m-%d}.md"
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    target.write_bytes(("\n".join(lines) + "\n").encode("utf-8"))
     return target
 
 
@@ -371,7 +371,7 @@ def init(root: Path) -> Path:
         (rec / extra).mkdir(exist_ok=True)
     for name in ("journal.md", "decisions.md"):
         if not (rec / name).exists():
-            (rec / name).write_text(from_template(name), encoding="utf-8")
+            (rec / name).write_bytes((from_template(name)).encode("utf-8"))
     log(root, "system", "meta", "Created the project record (docs/project/)")
     write_index(root)
     return rec
@@ -382,12 +382,12 @@ def log(root: Path, by: str, phase: str, text: str) -> None:
     j = rec / "journal.md"
     if not j.exists():
         rec.mkdir(parents=True, exist_ok=True)
-        j.write_text(from_template("journal.md"), encoding="utf-8")
+        j.write_bytes((from_template("journal.md")).encode("utf-8"))
     clean = " ".join(text.split()).replace("|", "\\|")
-    with j.open("a", encoding="utf-8") as f:
+    with j.open("a", encoding="utf-8", newline="\n") as f:
         f.write(f"| {datetime.now():%Y-%m-%d %H:%M} | {by} | {phase} | {clean} |\n")
     content = j.read_text(encoding="utf-8")
-    j.write_text(re.sub(r"^updated: .*$", f"updated: {date.today():%Y-%m-%d}", content, count=1, flags=re.M), encoding="utf-8")
+    j.write_bytes((re.sub(r"^updated: .*$", f"updated: {date.today():%Y-%m-%d}", content, count=1, flags=re.M)).encode("utf-8"))
 
 
 # ───────────── work in progress (wip/) — session interruption and return ─────────────
@@ -475,7 +475,7 @@ def wip_start(root: Path, goal: str, slug: str | None, by: str) -> Path:
     text = from_template("wip.md").replace("<slug>", slug)
     for placeholder, value in (("<who>", by), ("<goal>", goal), ("<YYYY-MM-DD HH:MM>", now), ("<branch>", branch)):
         text = text.replace(placeholder, value)
-    path.write_text(text, encoding="utf-8")
+    path.write_bytes(text.encode("utf-8"))
     log(root, by, "meta", f"Work in progress started: {goal} (.tf/wip/{slug}.md)")
     write_index(root)
     return path
@@ -492,11 +492,11 @@ def wip_set_status(root: Path, slug: str, status: str, by: str) -> Path:
     if status == "done":
         target = wip_dir(root) / "archive" / f"{datetime.now():%Y%m%d}-{slug}.md"
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(text, encoding="utf-8")
+        target.write_bytes(text.encode("utf-8"))
         path.unlink()
         path = target
     else:
-        path.write_text(text, encoding="utf-8")
+        path.write_bytes(text.encode("utf-8"))
     log(root, by, "meta", f"Work in progress {slug}: {status}")
     write_index(root)
     return path
@@ -527,7 +527,7 @@ def snapshot(root: Path, event: str) -> int:
             text = text[:text.index(AUTO_BEGIN)] + block + text[text.index(AUTO_END) + len(AUTO_END):]
         else:
             text = text.rstrip() + "\n\n" + block + "\n"
-        p.write_text(text, encoding="utf-8")
+        p.write_bytes(text.encode("utf-8"))
         os.utime(p, (st.st_atime, st.st_mtime))      # the snapshot does not pose as an update by the agent
     return len(items)
 

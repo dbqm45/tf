@@ -551,10 +551,13 @@ def missing_factory_files(root: Path) -> list[str]:
         return []
     required = tuple(getattr(inst, "REQUIRED", ()))
     script = getattr(inst, "SKILL_SCRIPT", None)
+    stays = getattr(inst, "skill_stays", None)   # the plugin layout: SKILL.md only in .tf/plugin/skills/
 
     def needed(rel: str) -> bool:
         if rel.startswith(required):
             return True
+        if stays is not None:
+            return stays(root, rel)
         m = script.match(rel) if script else None
         return bool(m) and (root / m.group(1) / "SKILL.md").is_file()
 

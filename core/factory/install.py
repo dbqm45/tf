@@ -113,7 +113,15 @@ ALWAYS_OWNED = (".claude/cleanroom.json",)   # assembled from the core and packs
 REQUIRED = (".tf/factory/", ".claude/hooks/")
 # Scripts of a skill import each other (run_state.py imports ui_snap.py): a missing script of a skill that stays — its
 # SKILL.md is there — is restored like the machinery; a skill deleted as a whole stays deleted with its scripts.
-SKILL_SCRIPT = re.compile(r"^((?:\.claude|\.tf/plugin)/skills/[^/]+)/scripts/")
+SKILL_SCRIPT = re.compile(r"^((?:\.claude|\.tf/plugin)/skills/([^/]+))/scripts/")
+
+
+def skill_stays(root: Path, rel: str) -> bool:
+    """`rel` is a script of a skill that is still installed. In the plugin layout SKILL.md is only in .tf/plugin/skills/,
+    and .claude/skills/<skill>/scripts/ holds the copies that skill texts call — they count too."""
+    m = SKILL_SCRIPT.match(rel)
+    return bool(m) and any((root / base / m.group(2) / "SKILL.md").is_file()
+                           for base in (".claude/skills", ".tf/plugin/skills"))
 GENERATED = (".claude/agents/_generated/", ".claude/catalog.md", ".tf/plugin/agents/")   # built in the project by .tf/factory/build.py
 SKIP = ("__pycache__", ".pyc", "/logs/", ".factory-new")
 # Layouts (docs/plans/2026-11-20-tryb-fabryki-plan.md). `default` (the classic layout, `--layout default`): the factory
@@ -361,8 +369,7 @@ class Plan:
         """A factory file that is restored when missing: the machinery, or a script of a skill that is still there."""
         if rel.startswith(REQUIRED):
             return True
-        skill = SKILL_SCRIPT.match(rel)
-        return bool(skill) and (self.root / skill.group(1) / "SKILL.md").is_file()
+        return skill_stays(self.root, rel)
 
     def _write(self, dst: Path, data: bytes, src: Path | None) -> None:
         if self.dry:
@@ -446,7 +453,17 @@ class Plan:
         (self.merged if old is not None else self.created).append(note)
         if not self.dry:
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(text, encoding="utf-8")
+            write_keeping_eol(path, text)
+
+
+def write_keeping_eol(path: Path, text: str) -> None:
+    """Writes `text` (read with universal newlines) in the line ending the file already has: LF by default, CRLF only
+    when the file had it. A text-mode write would turn every LF file into CRLF on Windows (lint with endOfLine: lf)."""
+    try:
+        crlf = b"\r\n" in path.read_bytes()
+    except OSError:
+        crlf = False
+    path.write_bytes((text.replace("\r\n", "\n").replace("\n", "\r\n") if crlf else text).encode("utf-8"))
 
 
 def retarget(data: bytes) -> bytes:
