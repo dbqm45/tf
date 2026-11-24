@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.10.1] — 2026-11-24
+### Fixed
+- **core:** restore missing skill scripts on update and in tf doctor --fix (#424)
+
 ## [24.10.0] — 2026-11-24
 ### Added
 - **mode-pdi:** send the advisory change risk with a gate request (DV2) (#423)
