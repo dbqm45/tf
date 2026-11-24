@@ -52,6 +52,9 @@ on:
       decisions:
         description: "Other decisions of the change from the pdi register (JSON, links.chg) for decisions.md (decision import)"
         required: false
+      artifact_sha256:
+        description: "SHA-256 of the artifact version approved at the gate (contract 0.21.0); the next phase checks it"
+        required: false
 
 permissions:
   contents: write
@@ -78,6 +81,7 @@ jobs:
       PDI_PROBLEM: ${{ inputs.problem }}
       DECISION_TEXT: ${{ inputs.decision_text }}
       ANSWERS: ${{ inputs.answers }}
+      APPROVED_ARTIFACT: ${{ inputs.artifact_sha256 }}
       DECISIONS: ${{ inputs.decisions }}
     steps:
       - uses: actions/checkout@v7
@@ -123,6 +127,7 @@ jobs:
         run: |
           args=(--gate "$GATE" --outcome "$OUTCOME" --id "$DECISION")
           if [ -n "$DECISION_TEXT" ]; then args+=(--why "$DECISION_TEXT"); fi
+          if [ -n "$APPROVED_ARTIFACT" ]; then args+=(--artifact-sha256 "$APPROVED_ARTIFACT"); fi
           if [ -n "$ANSWERS" ]; then
             printf '%s' "$ANSWERS" > "$RUNNER_TEMP/answers.json"
             args+=(--answers "$RUNNER_TEMP/answers.json")

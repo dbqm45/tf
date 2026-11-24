@@ -704,6 +704,26 @@ if sys.argv[1:3] == ["pr", "create"]:
         r = run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, **env)
         check(r.returncode == 0, f"Z1-D3: plan.md without questions → delivery as before: {r.stdout}")
 
+        # --- contract 0.21.0: a phase does not start when the artifact approved at the previous gate changed since ---
+        decisions_before = (d / "decisions.md").read_bytes()   # the cases below must not leak into the next ones
+        approved = hashlib.sha256(plan.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+        drec("decision", "gate", "CHG-12", "--gate", "B3", "--outcome", "approved", "--id", "DEC-20",
+             "--artifact-sha256", approved)
+        n = len(log.read_text().splitlines()) if log.is_file() else 0
+        r = run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, **env)
+        check(r.returncode == 0, f"PIN-R1: the approved plan.md unchanged → delivery starts: {r.stdout} {r.stderr}")
+        plan.write_bytes(plan.read_bytes().replace(b"\n", b"\r\n"))   # the same text in a Windows checkout
+        r = run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, **env)
+        check(r.returncode == 0, f"PIN-R2: only line ends differ → delivery starts: {r.stdout} {r.stderr}")
+        plan.write_text(original + "\nDopisane po zatwierdzeniu.\n", encoding="utf-8")
+        n = len(log.read_text().splitlines()) if log.is_file() else 0
+        r = run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, **env)
+        check(r.returncode == 1 and "changed after" in r.stdout and "DEC-20" in r.stdout and "B3" in r.stdout
+              and (len(log.read_text().splitlines()) if log.is_file() else 0) == n,
+              f"PIN-R3: plan.md changed after the B3 approval → refusal without the model: {r.stdout}")
+        plan.write_text(original, encoding="utf-8")
+        (d / "decisions.md").write_bytes(decisions_before)
+
         # --- N4 (pdi plan §3b): an open question that is easy to undo does not stop delivery; a hard one only its cuts ---
         tagged = ("- Czy limit eksportu to 1000 wierszy? (PO) [local; default: 1000 wierszy]\n"
                   "- Czy migrujemy stare zamówienia? (PO) [one_way; blocks: TSK-3, TSK-4]\n")
@@ -745,6 +765,9 @@ if sys.argv[1:3] == ["pr", "create"]:
           and "decision import" in body and "--answers" in body and "--why" in body
           and "${{ inputs.decisions }}" not in body.split("env:", 1)[0],
           "Z1-W1: the template has the inputs decision_text, answers and decisions and passes them to decision gate/import")
+    check("      artifact_sha256:\n" in body and "APPROVED_ARTIFACT: ${{ inputs.artifact_sha256 }}" in body
+          and '--artifact-sha256 "$APPROVED_ARTIFACT"' in body,
+          "PIN-W1: the template takes the approved artifact hash and passes it to decision gate")
     check(all(body.count("${{ inputs." + k + " }}") == 1 and f"{v}: ${{{{ inputs.{k} }}}}" in body
               for k, v in (("decision_text", "DECISION_TEXT"), ("answers", "ANSWERS"), ("decisions", "DECISIONS"))),
           "Z1-W2: pdi inputs only through env, never directly in run:")

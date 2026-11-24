@@ -380,6 +380,30 @@ def missing_input(change: str, phase: str) -> str | None:
             f"drift apart in docs/project/README.md and decisions.md); merge that PR and retry the phase")
 
 
+def approved_artifact_changed(change: str, phase: str) -> str | None:
+    """A message when the input artifact of the phase changed after it was approved at the previous gate (contract
+    0.21.0: `artifact_sha256` of the gate entry in decisions.md; line ends as LF); None when it is the same, or the gate
+    entry has no hash (approved before 0.21.0, or by hand)."""
+    name = REQUIRES.get(phase)
+    producer = next((p for p, spec in PHASES.items() if spec.get("artifact") == name and spec.get("gate")), None)
+    if not name or producer is None:
+        return None
+    gate = PHASES[producer]["gate"]
+    pinned = [e for e in decisions_of(change)
+              if e.get("statement") == f"Gate {gate}: approved" and e.get("artifact_sha256")]
+    f = change_dir(change) / name
+    if not pinned or not f.is_file():
+        return None
+    entry = pinned[-1]
+    current = hashlib.sha256(f.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+    if current == entry["artifact_sha256"]:
+        return None
+    return (f"{f} changed after it was approved at gate {gate} ({entry.get('id') or entry['ref']}): the approval was "
+            f"for {entry['artifact_sha256'][:12]}, the file is now {current[:12]} — phase {phase} does not start on a "
+            f"version nobody approved; ask for gate {gate} again (phase_run.py gate request) or restore the approved "
+            "version")
+
+
 def cmd_run(a) -> int:
     # stream-json requires --print and --verbose (code.claude.com/docs/en/cli-reference, read 2026-11-06);
     # the final `result` event has the fields total_cost_usd, is_error, subtype, result.{type,text}, permission_denials,
@@ -399,6 +423,9 @@ def cmd_run(a) -> int:
     missing = missing_input(a.change, a.phase)
     if missing:
         raise Refused(missing)
+    changed = approved_artifact_changed(a.change, a.phase)
+    if changed:   # contract 0.21.0: the approval is pinned to the artifact version
+        raise Refused(changed)
     if a.phase == "delivery":
         plan = change_dir(a.change) / "plan.md"
         n4 = delivery_plan(a.change)
