@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.12.1] — 2026-11-24
+### Fixed
+- **core:** fast lane for small tasks — no duplicate verify, one slice (#432)
+
 ## [24.12.0] — 2026-11-24
 ### Added
 - **mode-pdi:** check the approved artifact before the next phase (#431)
