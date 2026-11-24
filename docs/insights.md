@@ -165,7 +165,8 @@ in the repo. A workflow runs as `/<name>`, so its name differs from the skill na
 - `python3 tools/workspace.py assemble|check --packs <selection>`: a project assembled from the current sources in
   `.work/` (tests and `build.py` work in the installation layout, not in the source tree).
 - `python3 tools/workspace.py matrix`: the core alone, each overlay and each mode separately, everything together (CI
-  does the same).
+  does the same: `all` in shards, `check --shard i/n`; on a pull request only the tests related to the change,
+  `check --changed-from <base>`; docs/RELEASING.md, "CI: what runs when").
 - `python3 tools/workspace.py refs`: the core does not name overlay elements (unless the line names the overlay, e.g.
   "(pack-it)"), an overlay names only elements of overlays it depends on.
 - `python3 tools/workspace.py sync-gate`: the skill quality gate results from the working project back to the sources.
