@@ -49,6 +49,9 @@ Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
   the copy is. `decision_cache.py search <words>` searches the copy and the project's own decisions together. Decisions
   of this repo published by the factory are not copied (they are here); a copy edited by hand is fetched again; without
   pdi the last copy stays and is marked stale.
+- **The approval is pinned to the artifact version (contract 0.21.0):** `gate request` sends the artifact's SHA-256
+  (`artifact_sha256`, the file's bytes) and the commit (`artifact_commit`); pdi refuses an approval when the artifact
+  changed after the request, and its `gate.decided` carries the approved hash back.
 - **Change risk at the gate (DV2, contract 0.20.0):** `phase_run.py gate request` adds `risk` to `gate.requested`
   — the same deterministic score as `tf risk` in the PR description (`level`, the items with file and reason), counted
   without the change artifacts in `docs/project/`; a gate whose branch changed only artifacts goes without it. Advisory:
