@@ -32,7 +32,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HOOK = "run_report"
-CONTRACT_VERSION = "0.21.0"
+CONTRACT_VERSION = "0.22.0"
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 TIMEOUT_S = 4
 STATE_DIR = Path(".tf") / "cache" / "run-report"

@@ -27,7 +27,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from decision_record import validate  # noqa: E402  (the same JSON Schema subset validator as for release.yaml)
 
-CONTRACT = "0.21.0"
+CONTRACT = "0.22.0"
 PROBLEM_SCHEMA = HERE / "problem.schema.json"                  # kopia z kontraktu pdi (tools/pdi-contract.json)
 RECOMMENDATION_SCHEMA = HERE / "triage-recommendation.schema.json"   # kopia z kontraktu pdi (tools/pdi-contract.json)
 TRIAGE_INPUT = ("new", "clarifying", "ready_for_triage")

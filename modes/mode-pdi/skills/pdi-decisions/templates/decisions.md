@@ -18,6 +18,8 @@ later (`decision pending`). Do not invent numbers.
 - finding: <only an answer to a ci_for_sdlc finding, e.g. DES-001:TSK-1>
 - effect: <optional with a finding: resolve | accept_risk | dismiss | confirm>
 - origin: <only a decision from the pdi register: pdi (decision import)>
+- applies_to: <optional: path patterns the decision applies to, comma-separated (decision add --applies-to)>
+- components: <optional: component names, comma-separated (decision add --component)>
 - question: <a question from "Gate questions" that the human answered (decision gate --answers)>
 - answer: <their answer; question/answer pairs may repeat>
 -->

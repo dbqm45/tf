@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/event.schema.json",
-  "title": "Zdarzenie (kontrakt suity 0.21.0)",
+  "title": "Zdarzenie (kontrakt suity 0.22.0)",
   "description": "Koperta zdarzenia wymienianego między pdi, tf, ci_for_sdlc i ShipScope; treść (payload) zależy od typu.",
   "type": "object",
   "additionalProperties": false,
@@ -564,7 +564,7 @@
         "artifact_sha256": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$",
-          "description": "Skrót SHA-256 treści artefaktu (bajty pliku) w chwili prośby (0.21.0): zgoda człowieka dotyczy tej wersji; odbiorca odrzuca zgodę, gdy artefakt zmienił się po wysłaniu prośby."
+          "description": "Skrót SHA-256 treści artefaktu w chwili prośby (0.21.0), liczony z końcami linii zamienionymi na LF (CRLF → LF; od 0.21.1 opisane wprost), żeby kopia robocza w Windows i plik w gicie dawały ten sam skrót. Zgoda człowieka dotyczy tej wersji; odbiorca odrzuca zgodę, gdy artefakt zmienił się po wysłaniu prośby."
         },
         "artifact_commit": {
           "type": "string",
@@ -1302,6 +1302,36 @@
         "provisional": {
           "type": "boolean",
           "description": "Decyzja tymczasowa (0.19.0, N2): przyjęta bez decydenta — opcja rekomendowana, z którą agent idzie dalej, albo opcja domyślna po terminie pytania — do potwierdzenia albo zastąpienia przez decydenta. Tylko dla decyzji łatwej do cofnięcia: przy `reversibility: one_way` niedozwolona."
+        },
+        "applies_to": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "description": "Czego dotyczy decyzja (0.22.0): wzorce ścieżek w repo projektu decyzji i/lub nazwy komponentów. Agent przed zmianą pyta rejestr o przyjęte decyzje, których `applies_to` pasuje do plików, które zmiana rusza; reguła PR może wskazać decyzje, których obszar zmienia PR. Brak pola = decyzja nie jest przypięta do plików. Dopasowanie wzorca: decision-record.md §4a, przypadki: fixtures/applies-to/cases.json.",
+          "properties": {
+            "paths": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "description": "Wzorce ścieżek względem korzenia repo, separator `/`: `*` — dowolne znaki w jednym segmencie, `?` — jeden znak, `**` jako cały segment — zero lub więcej segmentów; wzorzec pasuje do pliku albo do katalogu, w którym plik leży (`services/document-processing` obejmuje wszystko pod nim). Wielkość liter ma znaczenie. Bez wiodącego `/` i `./`, bez segmentów `.` i `..`, bez `\\`.",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 300,
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))[^\\\\]+$"
+              }
+            },
+            "components": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "description": "Nazwy komponentów (usług, modułów) w tym samym kształcie co `project`, np. `document-processing`; pasują, gdy nazwa jest równa.",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+              }
+            }
+          }
         }
       },
       "not": {

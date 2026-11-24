@@ -439,6 +439,30 @@
           "decision add"
         ]
       }
+    },
+    {
+      "id": "decyzje-dla-plikow-przed-planem",
+      "expect": "trigger",
+      "prompt": "Tryb mode-pdi, serwer pdi jest dostępny. Zaczynam CHG-31: zmiana ruszy services/docs/api/handler.py i migrations/007_docs.sql. Co sprawdzić w rejestrze decyzji, zanim napiszę plan, i jak zapisać nową decyzję, że migracje dokumentów robimy tylko w oknie serwisowym? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "find_decisions"
+          ],
+          [
+            "paths"
+          ],
+          [
+            "--applies-to"
+          ],
+          [
+            "decision add"
+          ]
+        ],
+        "none": [
+          "supersede_decision bez"
+        ]
+      }
     }
   ]
 }

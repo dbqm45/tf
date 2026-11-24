@@ -46,13 +46,17 @@ it only in the text of an answer — but you also do not decide on your own what
    missing, ask about it), who decided, the kind (`product`, `technical`, `process`, `triage`, `intent`, `gate`,
    `other`). You record it only after their "yes".
 2. **Local entry:** `decision_record.py decision add CHG-12 --statement "…" --why "…" --kind product --by "…"`
-   (optionally `--source-kind slack|jira|…`, `--drafted-by human`, `--date`) → `CHG-12/Dn` in `decisions.md`,
+   (optionally `--source-kind slack|jira|…`, `--drafted-by human`, `--date`; a decision about specific code: `--applies-to
+   'services/docs/**'` and/or `--component docs`, repeatable — patterns relative to the repo root) → `CHG-12/Dn` in `decisions.md`,
    `id` empty, `sent: no`. An answer to a ci_for_sdlc finding (e.g. the question DES-001 at TSK-1) is the same kind of entry
    with `--finding DES-001:TSK-1` (optionally `--effect accept_risk|dismiss|confirm`, resolves by default): the
    `--statement` text is the answer, and ci_for_sdlc reads it from the repo and closes the finding (the gate in the PR too).
 3. **The pdi register:** if the session has the MCP tool `record_decision` of the pdi server, `decision_record.py decision pending
    --change CHG-12` gives ready arguments; call it, and record the returned number: `decision mark CHG-12/Dn --id DEC-41`.
-   Before you propose a solution in an area already being decided, check `find_decisions`.
+   Before you propose a solution in an area already being decided, check `find_decisions`. Before the plan of a change,
+   call `find_decisions` with `paths` (the files the change will touch, relative to the repo root) and/or `components`:
+   it returns the decisions in force whose `applies_to` covers them, with `matched`; follow them or propose superseding
+   one, and list the decisions you checked in the summary of the change.
    Without the pdi server, search the local copy of the suite index (D8) together with the project's own decisions:
    `python3 .claude/hooks/decision_cache.py search <words>`; the session start line says how old the copy is, and
    `decision_cache.py refresh` updates it (`pdi-records changes`). The copy is read-only: a decision of another app is
