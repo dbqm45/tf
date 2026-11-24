@@ -1,0 +1,10 @@
+A manager role
+
+Shop managers need their own role in the permission map in app/auth/permissions.py.
+
+Acceptance criteria:
+- AC-1: a `manager` role may read and write orders and issue refunds (`orders:read`, `orders:write`,
+  `refunds:issue`).
+- AC-2: a manager may not manage users (`users:manage`).
+- AC-3: the existing roles keep their permissions, and an unknown role still may do nothing.
+- AC-4: all tests pass (`python3 run_tests.py`).

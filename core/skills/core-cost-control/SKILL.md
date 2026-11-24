@@ -116,9 +116,11 @@ a bug still unexplained after one attempt -> opus. Optional: `python3 .claude/ho
   class despite good context, many turns to the first correct edit -> change the tier per section 1. **Measurement problem**:
   subscription numbers instead of API data, benchmark instead of production, tokens estimated from characters -> use the
   vendor's counters first.
-- The status line (`.claude/hooks/statusline.py`) shows model, effort, context fill, cache hits ("cold" after expiry), session
-  cost and limits without spending model tokens. `/usage` shows the hit rate and the last miss's cause.
-- Reports: `python3 .tf/factory/cost_report.py --days 7`, `--delegation`; `python3 .tf/factory/cost_stats.py --period
+- One session: run `/usage` rather than estimating - session cost, the `Prompt cache (main)` line and, on subscription plans,
+  attribution to skills, subagents, plugins and MCP servers with recommendations (code.claude.com/docs/en/costs). The status
+  line (`.claude/hooks/statusline.py`) keeps model, context, cache and cost in view without model tokens. `claude -p
+  --output-format json` returns `total_cost_usd` (`tf work` records it per run).
+- Across sessions, per task class, over time (what `/usage` does not give): `python3 .tf/factory/cost_report.py --days 7`, `--delegation`; `python3 .tf/factory/cost_stats.py --period
   day|week|month` (USD and PLN at the NBP average rate, a cheap/typical/expensive band against the median of earlier periods,
   an "incomplete data" marker). No logs -> say what is missing; never invent a number.
 - New model, agents in CI and schedules, authentication versus the bill: `references/model-and-automation.md`.
@@ -132,7 +134,8 @@ worked cases (escalating a flaky test diagnosis to opus and back, reading a cost
 ## Sources
 - Claude Code docs, "Prompt caching", code.claude.com/docs/en/prompt-caching - accessed 2026-11-20 (what invalidates the cache, effort exceptions, lifetimes).
 - Claude Code docs, "Model configuration", code.claude.com/docs/en/model-config - accessed 2026-11-20 (effort, `ultrathink`, `ultracode`, `opusplan`).
-- Claude Code docs, "Manage costs effectively", code.claude.com/docs/en/costs - accessed 2026-11-20.
+- Claude Code docs, "Manage costs effectively", code.claude.com/docs/en/costs - accessed 2026-11-24 (`/usage`: session cost, prompt cache line, plan usage attribution).
+- Claude Code docs, "Run Claude Code programmatically", code.claude.com/docs/en/headless - accessed 2026-11-24 (`total_cost_usd` in JSON output).
 - Claude Code docs, "Subagents" and "Agent teams", code.claude.com/docs/en/sub-agents - accessed 2026-11-20.
 - Claude Code docs, "Skills", code.claude.com/docs/en/skills - accessed 2026-11-20 (5000-token re-attachment after compaction).
 - Anthropic Engineering, "How we built our multi-agent research system", anthropic.com/engineering/multi-agent-research-system - accessed 2026-11-20 (about 15x tokens).

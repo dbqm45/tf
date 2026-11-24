@@ -321,6 +321,17 @@
           ]
         ]
       }
+    },
+    {
+      "id": "usage-ktory-skill-zjada",
+      "expect": "trigger",
+      "prompt": "Mam plan Max i limit kończy mi się w połowie dnia. Skąd wziąć, które skille, subagenci albo serwery MCP zjadają mi najwięcej w tej sesji, zanim zacznę coś zmieniać? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          ["/usage"],
+          ["atrybucj\\w*", "attribution", "udział\\w*", "rekomendac\\w*", "recommendation"]
+        ]
+      }
     }
   ]
 }

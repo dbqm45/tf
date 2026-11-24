@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Isolation level in the session (plan docs/plans/2026-11-20-poziomy-izolacji.md, slice I3): the SessionStart hook
-`isolation_notice` names the level and what it does not protect, the status line shows the level, and guard_bash and
+"""Isolation level in the session (plan docs/plans/2026-11-20-poziomy-izolacji.md, slice I3): the status line shows the
+level (the SessionStart hook `isolation_notice` is retired: `tf doctor` and `tf isolation` name the gaps), and guard_bash and
 guard_paths block lowering it from inside a session (`tf isolation <level>`, `--isolation`, the `isolation` key in
 .tf/config/config.yaml, the session settings files, the `sandbox` key of .claude/settings*.json).
 python3 .claude/tests/test_isolation_hooks.py"""
@@ -52,33 +52,12 @@ def main() -> int:
         if not cond:
             fails.append(msg)
 
-    check((HOOKS / "isolation_notice.py").is_file(), "IH-0: the hook .claude/hooks/isolation_notice.py is installed")
-    if fails:
-        print(f"✗ {fails[0]}")
-        return 1
+    check(not (HOOKS / "isolation_notice.py").exists(),
+          "IH-0: the retired hook isolation_notice.py is not installed (the status line shows the level)")
     session = {**CLEAN, "CLAUDECODE": "1"}
     with tempfile.TemporaryDirectory() as t:
         base = Path(t)
         p = project(base, "sbx")
-        r = run("isolation_notice.py", p, None, {**session, "TF_ISOLATION": "sandbox"})
-        try:
-            out = json.loads(r.stdout)
-        except ValueError:
-            out = {}
-        msg = out.get("systemMessage", "")
-        ctx = (out.get("hookSpecificOutput") or {}).get("additionalContext", "")
-        check(r.returncode == 0 and "Isolation: sandbox" in msg and "outside" in msg and msg == ctx,
-              f"IH-1: session start names the level and what it does not protect: {r.stdout}{r.stderr}")
-        r = run("isolation_notice.py", p, None, session)
-        check("not enabled" in r.stdout or "without" in r.stdout,
-              f"IH-2: a session without tf code (no TF_ISOLATION) → the gap is named at the start: {r.stdout}")
-        q = project(base, "basic", "isolation: basic\n")
-        r = run("isolation_notice.py", q, None, {**session, "TF_ISOLATION": "basic"})
-        check("not isolation" in r.stdout, f"IH-3: basic → said to be no isolation: {r.stdout}")
-        e = base / "empty"
-        e.mkdir()
-        r = run("isolation_notice.py", e, None, session)
-        check(r.returncode == 0 and not r.stdout.strip(), f"IH-4: without the engine — silence: {r.stdout}{r.stderr}")
 
         # status line: the level that protects this session
         def status(env: dict, cwd: Path) -> str:
@@ -116,9 +95,6 @@ def main() -> int:
         r = bash_in("git push origin feat/x", session)
         check(decision(r) != "deny" or "container" not in r.stdout,
               f"IH-20: outside the container git push is not refused for this reason: {r.stdout}")
-        r = run("isolation_notice.py", p, None, {**session, "TF_ISOLATION": "container", "TF_CONTAINER": "1"})
-        check("push" in r.stdout and "terminal" in r.stdout,
-              f"IH-21: session start in the container says pushes happen in the human's terminal: {r.stdout}")
 
         # guard_paths: the isolation key and the session settings
         def edit(tool: str, rel: str, **ti) -> str:
@@ -144,11 +120,11 @@ def main() -> int:
         check(edit("Edit", loc, old_string='"allow": []', new_string='"allow": ["Bash(ls *)"]') == "ask",
               "IH-17: another change of the settings still asks a human (as before)")
 
-    settings = next((json.loads(f.read_text(encoding="utf-8")) for f in (ROOT / ".claude" / "settings.json",
-                                                                         ROOT / ".claude" / "settings.local.json")
-                     if f.is_file() and "isolation_notice" in f.read_text(encoding="utf-8")), {})
-    start = json.dumps((settings.get("hooks") or {}).get("SessionStart") or [])
-    check("isolation_notice.py" in start, "IH-18: isolation_notice is registered for SessionStart")
+    registered = [f.relative_to(ROOT).as_posix() for f in (ROOT / ".claude" / "settings.json",
+                                                           ROOT / ".claude" / "settings.local.json",
+                                                           ROOT / ".tf" / "plugin" / "hooks" / "hooks.json")
+                  if f.is_file() and "isolation_notice" in f.read_text(encoding="utf-8")]
+    check(not registered, f"IH-18: isolation_notice is not registered for SessionStart: {registered}")
 
     for f in fails:
         print(f"✗ {f}")

@@ -8,19 +8,19 @@
   "offline": "2026-11-22"
  },
  "core-agent-security": {
-  "fingerprint": "ebf638faf28bc32e",
-  "offline": "2026-11-23"
+  "fingerprint": "62e99b20cb8a76bf",
+  "offline": "2026-11-24"
  },
  "core-async-delegation": {
-  "fingerprint": "2aa83e01f6c220d3",
-  "offline": "2026-11-20"
+  "fingerprint": "ab33b1d7340457d3",
+  "offline": "2026-11-24"
  },
  "core-conventional-commits": {
   "fingerprint": "d98addc20290895b",
   "offline": "2026-11-20"
  },
  "core-cost-control": {
-  "fingerprint": "29f830547f343034",
+  "fingerprint": "7c099d322a552dfc",
   "offline": "2026-11-24"
  },
  "core-delivery-lifecycle": {
@@ -32,8 +32,8 @@
   "offline": "2026-11-17"
  },
  "core-git-workflow": {
-  "fingerprint": "05ccd52b43cd67df",
-  "offline": "2026-11-20"
+  "fingerprint": "ff545f81089fbca8",
+  "offline": "2026-11-24"
  },
  "core-grounding": {
   "fingerprint": "06da2e97ec698dce",

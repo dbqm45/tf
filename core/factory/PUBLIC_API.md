@@ -121,9 +121,11 @@ Deprecation works like this:
   `root_changed` of the `event: end` entry when control files in the project copy change during the run; a refusal when the agent's control files in the worktree differ from the project copy, an
   `event: refused` entry with the field `drift`; the lock `.tf/locks/<KEY>.json`
   with the fields `pid`, `host`, `at`; the worktree `.tf/worktrees/<KEY>` on the branch `story/<key>`; the log `.tf/logs/work.jsonl`
-  with entries `event: start` (`key`, `started`, `budget_usd`, `worktree`; before the agent is started) and `event: end`
-  (`key`, `started`, `ended`, `exit`, `stage`, `worktree`); exit codes 0, 2, 3; the variable
-  `TF_WORK_AGENT`).
+  with entries `event: start` (`key`, `run`, `started`, `budget_usd`, `worktree`; before the agent is started) and `event: end`
+  (`key`, `run`, `started`, `ended`, `exit`, `stage`, `worktree`, `cost_usd`, `cost_source`: `claude` — the
+  `total_cost_usd` of `claude -p --output-format json`, `estimate` — the run's limit when the CLI reports none);
+  `work.task_budget_usd` sums `cost_usd`; the agent runs with `--permission-prompts none` (Claude Code ≥ 2.1.259);
+  exit codes 0, 2, 3; the variable `TF_WORK_AGENT`).
 - `metrics.py --after-update [--json]` (also in `tf doctor` and in the `tf metrics` report; the fields `update`, `from`, `to`,
   `before`, `after`, `warnings`, `notes`, `rollback`) and the log `.tf/logs/hook-blocks.jsonl` (`ts`, `hook`,
   `decision`) written by `hook_errors.record_block` from the hooks that block.

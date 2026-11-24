@@ -105,7 +105,8 @@ niewyjaśniony po jednej próbie -> opus. Opcjonalnie `python3 .claude/hooks/jev
   -> zmień tier wg sekcji 1. **Problem pomiaru**: liczby z subskrypcji zamiast danych z API, benchmark zamiast produkcji, tokeny
   szacowane ze znaków -> najpierw liczniki dostawcy.
 - Linia statusu (`.claude/hooks/statusline.py`) pokazuje model, effort, zapełnienie kontekstu, trafienia cache („cold” po
-  wygaśnięciu), koszt sesji i limity bez zużycia tokenów modelu. `/usage` pokazuje odsetek trafień i przyczynę ostatniego chybienia.
+  wygaśnięciu), koszt sesji i limity bez zużycia tokenów modelu. `/usage` pokazuje koszt sesji, odsetek trafień i przyczynę ostatniego chybienia,
+  a na planach subskrypcyjnych udział skilli, subagentów, wtyczek i MCP z rekomendacjami (skrót `f`); `claude -p --output-format json` podaje `total_cost_usd`.
 - Raporty: `python3 .tf/factory/cost_report.py --days 7`, `--delegation`; `python3 .tf/factory/cost_stats.py --period
   day|week|month` (USD i PLN po średnim kursie NBP, pasmo tanio/typowo/drogo wobec mediany wcześniejszych okresów, znacznik
   „niepełne dane”). Brak logów -> powiedz, czego brakuje; nigdy nie zmyślaj liczby.

@@ -31,9 +31,24 @@ version and organisation policy — an organisation may switch off bypass and au
 | `default` | asks on first use of each tool | everyday work, unfamiliar repos |
 | `plan` | reads, proposes, changes nothing | exploring, reviewing a plan before edits |
 | `acceptEdits` | file edits inside the working directory without asking; commands still ask | a known, scoped refactor |
-| `auto` | a classifier approves calls it judges safe | long sessions with a human nearby [availability: unverified per plan] |
+| `auto` | a classifier approves calls it judges safe | long sessions with a human nearby (all plans; the built-in start mode of interactive sessions from 2.1.283) |
 | `dontAsk` | only allowlisted calls run, everything else is refused | CI and automation with a fixed list |
 | `bypassPermissions` | no prompts at all | only a disposable container/VM without secrets (§7) |
+
+Re-checked against code.claude.com/docs/en/permission-modes and /permissions (accessed 2026-11-24):
+- **Auto mode** is the built-in start mode of interactive terminal and VS Code sessions from Claude Code 2.1.283 on every
+  plan; `claude -p` without a mode starts in Manual from 2.1.302. Blocked by default include downloading and running code, sending
+  sensitive data out, production deploys, force push, destroying files that existed before the session
+  (`claude auto-mode defaults` prints the rules). It is a classifier: deny and ask rules and blocking hooks still apply. The
+  factory's settings set `defaultMode: default`, so its sessions start in Manual unless a person chooses otherwise.
+- **Protected paths** (`.git`, `.claude` except worktrees and memory, `.vscode`, `.idea`, `.husky`, `.devcontainer`,
+  `.gitconfig`, shell rc files, `.npmrc`, `.mcp.json`, `.pre-commit-config.yaml`…): prompted in `default` and
+  `acceptEdits`, the classifier decides in `auto`, denied in `dontAsk`, **allowed** in `bypassPermissions`. That is why
+  `guard_paths.py` keeps its own `.claude` and `.git` protection.
+- **`Tool(param:value)`**: deny and ask rules can match one top-level scalar input of a built-in tool, e.g.
+  `Agent(model:opus)`, `Agent(isolation:worktree)`, `Bash(run_in_background:true)`; `*` is a wildcard, an omitted
+  parameter never matches, and the value is the literal input (`opus`, not a full model ID). Allow rules keep each tool's
+  own syntax.
 
 ## §3 Designing the allow / ask / deny lists
 Question for every pattern: **"what can this break outside the repository?"**

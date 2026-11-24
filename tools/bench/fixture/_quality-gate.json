@@ -1,0 +1,7 @@
+{
+  "command": ["python3", "run_tests.py"],
+  "related": ["python3", "run_tests.py", "{files}"],
+  "related_decision": {"by": "bench fixture", "why": "run_tests.py maps app/<module>.py to tests/test_<module>.py"},
+  "watch": ["app/", "tests/", "run_tests.py"],
+  "timeout": 120
+}
