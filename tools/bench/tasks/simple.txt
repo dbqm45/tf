@@ -1,0 +1,13 @@
+Full-width buttons and two label renames
+
+Every page sets the width of its button by hand with an inline style. Move this into the shared button component:
+the component adds the CSS class `btn-block` to every button it renders, and the pages drop their inline
+`style="width: 100%"` overrides. In the same change rename two button labels: "Proceed" becomes "Continue"
+(cart and orders pages) and "Discard" becomes "Remove" (profile and wishlist pages).
+
+Acceptance criteria:
+- AC-1: every button rendered by app/components/button.py has the class `btn-block` next to its existing classes.
+- AC-2: no page in app/pages/ renders an inline `width` style any more.
+- AC-3: the cart and orders pages show "Continue" instead of "Proceed".
+- AC-4: the profile and wishlist pages show "Remove" instead of "Discard".
+- AC-5: all tests pass (`python3 run_tests.py`).

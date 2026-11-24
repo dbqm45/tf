@@ -184,6 +184,9 @@ in the repo. A workflow runs as `/<name>`, so its name differs from the skill na
 - `python3 tools/flow_compare.py prepare|report flows.json …`: comparing flows (plan mode, the `/tf` loop, mode-pdi) on the same
   tickets: anonymized diffs for blind rating, a report with cost, time, code and artifacts; the protocol is in
   `docs/evals/protokol-porownania-przeplywow.md`.
+- `python3 tools/bench.py run --ref <git-ref|path> --cand <git-ref|path> [--task …] [--runs N]`: an A/B of the factory
+  on reference tasks (`tools/bench/`) before releasing a loop, hook or gate change; paid, only with the owner's consent
+  (docs/RELEASING.md, "Before releasing a loop change"); `--fake-claude` for tests.
 
 ## Consultants: how teams from different overlays ask each other
 
