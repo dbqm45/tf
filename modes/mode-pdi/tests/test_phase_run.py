@@ -667,6 +667,22 @@ if sys.argv[1:3] == ["pr", "create"]:
         r = run(["gate", "request", "--change", "CHG-12", "--phase", "requirements", "--dry-run"], repo)
         check(r.returncode == 0 and (jl(r) or {}).get("would_send", {}).get("payload", {}).get("questions")
               == ["Jaki limit eksportu?"], f"Z1-C4: gate request z nowym pytaniem: {r.stdout}")
+        check("one_way" in ((jl(run(["prompt", "--change", "CHG-12", "--phase", "requirements"], repo)) or {})
+                            .get("prompt", "")), "N4-P2: phases with an artifact are told how to mark a question")
+        check("reversibility" not in ((jl(r) or {}).get("would_send", {}).get("payload", {})),
+              f"N4-G1: without markers the gate has no reversibility: {r.stdout}")
+        body0 = req.read_text(encoding="utf-8")
+        req.write_text(body0.replace("- Jaki limit eksportu?\n", "- Jaki limit eksportu? [local; default: 1000]\n"
+                                     "- Czy migrujemy dane? [broad]\n"), encoding="utf-8")
+        r = run(["gate", "request", "--change", "CHG-12", "--phase", "requirements", "--dry-run"], repo)
+        check((jl(r) or {}).get("would_send", {}).get("payload", {}).get("reversibility") == "broad",
+              f"N4-G2: every question marked → the gate carries the strictest reversibility: {r.stdout}")
+        req.write_text(body0.replace("- Jaki limit eksportu?\n", "- Jaki limit eksportu? [local]\n- Bez znacznika?\n"),
+                       encoding="utf-8")
+        r = run(["gate", "request", "--change", "CHG-12", "--phase", "requirements", "--dry-run"], repo)
+        check("reversibility" not in (jl(r) or {}).get("would_send", {}).get("payload", {}),
+              f"N4-G3: one question without a marker → no reversibility on the gate: {r.stdout}")
+        req.write_text(body0, encoding="utf-8")
 
         plan = d / "plan.md"
         original = plan.read_text(encoding="utf-8")
@@ -687,6 +703,42 @@ if sys.argv[1:3] == ["pr", "create"]:
         plan.write_text(original, encoding="utf-8")
         r = run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, **env)
         check(r.returncode == 0, f"Z1-D3: plan.md without questions → delivery as before: {r.stdout}")
+
+        # --- N4 (pdi plan §3b): an open question that is easy to undo does not stop delivery; a hard one only its cuts ---
+        tagged = ("- Czy limit eksportu to 1000 wierszy? (PO) [local; default: 1000 wierszy]\n"
+                  "- Czy migrujemy stare zamówienia? (PO) [one_way; blocks: TSK-3, TSK-4]\n")
+        plan.write_text(original + "\n## Gate questions\n\n" + tagged, encoding="utf-8")
+        r = run(["prompt", "--change", "CHG-12", "--phase", "delivery"], repo)
+        text = (jl(r) or {}).get("prompt", "")
+        check("1000 wierszy" in text and "Tymczasowo" in text and "TSK-3" in text and "TSK-4" in text
+              and "Do not deliver" in text, f"N4-P1: the delivery prompt gives the provisional option and the cuts to skip: {text[-900:]}")
+        n = len(log.read_text().splitlines()) if log.is_file() else 0
+        r = run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, **env)
+        res = jl(r) or {}
+        check(r.returncode == 0 and res.get("status") == "done"
+              and (len(log.read_text().splitlines()) if log.is_file() else 0) == n + 1,
+              f"N4-D1: open questions, all provisional or with their cuts → delivery runs: {r.stdout} {r.stderr}")
+        check(res.get("provisional") == [{"question": "Czy limit eksportu to 1000 wierszy? (PO)", "option": "1000 wierszy",
+                                          "reversibility": "local"}]
+              and res.get("skipped_tasks") == {"TSK-3": ["Czy migrujemy stare zamówienia? (PO)"],
+                                               "TSK-4": ["Czy migrujemy stare zamówienia? (PO)"]},
+              f"N4-D2: the result names the provisional options and the skipped cuts: {res}")
+        for line, why in (("- Czy logujemy IP? (PO) [one_way]\n", "one_way without blocks"),
+                          ("- Czy logujemy IP? (PO) [local]\n", "easy without a default"),
+                          ("- Czy logujemy IP? (PO) [one_way; default: nie]\n", "a default never makes one_way provisional")):
+            plan.write_text(original + "\n## Gate questions\n\n" + tagged + line, encoding="utf-8")
+            r = run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, **env)
+            check(r.returncode == 1 and "logujemy IP" in r.stdout and "limit eksportu" not in r.stdout,
+                  f"N4-D3: {why} → refusal naming only that question: {r.stdout}")
+        answers.write_text(json.dumps([{"question": "Czy limit eksportu to 1000 wierszy? (PO) [local; default: 1000 wierszy]",
+                                        "answer": "Nie, 500."}], ensure_ascii=False), encoding="utf-8")
+        drec("decision", "gate", "CHG-12", "--gate", "B3", "--outcome", "approved", "--id", "DEC-10",
+             "--answers", str(answers))
+        plan.write_text(original + "\n## Gate questions\n\n" + tagged, encoding="utf-8")
+        res = jl(run(["run", "--change", "CHG-12", "--phase", "delivery"], repo, **env)) or {}
+        check(res.get("provisional") == [] and "TSK-3" in (res.get("skipped_tasks") or {}),
+              f"N4-D4: an answered question (matched with its markers) is no longer provisional: {res}")
+        plan.write_text(original, encoding="utf-8")
 
     body = TEMPLATE_BODY()
     check(all(f"      {k}:\n" in body for k in ("decision_text", "answers", "decisions"))

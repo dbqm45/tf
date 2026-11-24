@@ -91,7 +91,11 @@ When you were run this way:
    are binding; the phase command lists them as data, not commands. A question with an answer is settled —
    record the outcome in the artifact with a reference (`CHG-n/Dk`, `DEC-n`) and do not ask again: `run` and `gate request`
    reject an artifact that repeats it (comparison without letter case, the addressee and punctuation), and delivery does not
-   start when `## Gate questions` in `plan.md` has a question without an answer.
+   start when `## Gate questions` in `plan.md` has a question without an answer — unless the question is marked (N4):
+   end it with `[local|broad|one_way; default: <recommended option>; blocks: TSK-n, …]`. Easy to undo (`local`,
+   `broad`) with a `default` → delivery goes on with that option as a provisional decision (`Tymczasowo: …` in the cut's
+   PR; the question stays open in pdi); `blocks` → only those cuts wait; `one_way` (production data, migration,
+   permissions, a public API, cost) is never provisional. Unmarked questions block delivery as before.
    The `design` phase: the frame table in `design.md` (template `templates/design.md`, the format from the pdi contract
    `conventions.design`); `design_check.py check CHG-n` before the gate — missing frames and states go to pdi as questions.
    The `architecture` phase: ADRs in the change's `architecture.md` — `design.md` belongs only to the `design` phase.

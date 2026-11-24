@@ -3,7 +3,7 @@
   "type": "run.started",
   "occurred_at": "2026-11-22T09:00:00Z",
   "source": "tf",
-  "contract_version": "0.17.0",
+  "contract_version": "0.19.0",
   "payload": {
     "run": "run-CHG-12-TSK-57-1",
     "change": "CHG-12",
@@ -17,6 +17,7 @@
     "trigger": "manual",
     "agent": "jan",
     "repo": "acme/pay",
-    "budget_usd": 10
+    "budget_usd": 10,
+    "agent_id": "16eda11b-ba24-4683-9a20-84f41bf80056"
   }
 }

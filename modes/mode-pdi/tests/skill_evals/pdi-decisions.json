@@ -1,416 +1,444 @@
 {
- "skill": "pdi-decisions",
- "scenarios": [
-  {
-   "id": "zapis-decyzji-o-zmianie",
-   "expect": "trigger",
-   "prompt": "Ustaliliśmy z właścicielem produktu, że w zmianie CHG-12 eksport idzie do CSV, a nie do XLSX, bo klienci i tak otwierają go w arkuszu. Mamy podłączony rejestr decyzji pdi. Zapisz tę decyzję tak, żeby była w jednym źródle. Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "decision add|decisions\\.md"
-     ],
-     [
-      "record_decision"
-     ],
-     [
-      "szkic|zatwierdz|potwierdz|akcept"
-     ],
-     [
-      "decision mark|DEC-\\d+|DEC-n|numer\\w* (z )?rejestru"
-     ],
-     [
-      "CHG-12"
-     ]
-    ],
-    "none": [
-     "tylko w (treści )?odpowiedzi"
-    ]
-   }
-  },
-  {
-   "id": "zapis-decyzji-o-zmianie-en",
-   "expect": "trigger",
-   "prompt": "We agreed with the product owner that in change CHG-12 the export goes to CSV rather than XLSX, because customers open it in a spreadsheet anyway. We have the pdi decision register connected. Record this decision so that it lives in a single source. Answer briefly.",
-   "checks": {
-    "all": [
-     [
-      "decision add|decisions\\.md"
-     ],
-     [
-      "record_decision"
-     ],
-     [
-      "szkic|zatwierdz|potwierdz|akcept",
-      "draft",
-      "approv",
-      "confirm",
-      "accept"
-     ],
-     [
-      "decision mark|DEC-\\d+|DEC-n|numer\\w* (z )?rejestru",
-      "DEC-\\d+",
-      "register number",
-      "number from the register",
-      "decision number"
-     ],
-     [
-      "CHG-12"
-     ]
-    ],
-    "none": [
-     "tylko w (treści )?odpowiedzi",
-     "only in (the )?(answer|reply|response)"
-    ]
-   }
-  },
-  {
-   "id": "dziennik-zmiany-ze-zgloszenia",
-   "expect": "trigger",
-   "prompt": "Zgłoszenie PRB-34 zostało przyjęte w pdi jako zmiana CHG-12. Załóż dla niej dziennik w repozytorium (zamiar, plan, decyzje) zgodny z kontraktem pdi. Co uruchomisz i co powstanie? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "decision_record\\.py"
-     ],
-     [
-      "change new"
-     ],
-     [
-      "docs/project/changes/CHG-12"
-     ],
-     [
-      "intent\\.md"
-     ],
-     [
-      "--source PRB-34|source: PRB-34|source"
-     ]
-    ]
-   }
-  },
-  {
-   "id": "brak-serwera-pdi",
-   "expect": "trigger",
-   "prompt": "Na bramce B2 zdecydowaliśmy w CHG-7, że zostajemy przy PostgreSQL. Zapisz decyzję w rejestrze pdi — ale serwer MCP pdi nie odpowiada w tej sesji. Co robisz? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "decisions\\.md"
-     ],
-     [
-      "niewysłan|nie wysłan|później|kolejk|uzupełni|decision pending"
-     ],
-     [
-      "nie (wymyślaj|zgaduj|nadawaj)|pust\\w* (pole|id)|bez numeru"
-     ]
-    ],
-    "none": [
-     "DEC-\\d{2,}"
-    ]
-   }
-  },
-  {
-   "id": "plan-wydania-zmiany",
-   "expect": "trigger",
-   "prompt": "W projekcie z rejestrem pdi mamy zmianę CHG-12 z cięciami TSK-57…TSK-60. Gdzie zapisać, które cięcia są w MVP, a które później, i flagę payment-retry z etapami? Jak to sprawdzić przed commitem? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "release\\.yaml"
-     ],
-     [
-      "decision_record\\.py check",
-      "\\bcheck\\b"
-     ],
-     [
-      "R1"
-     ],
-     [
-      "remove_by",
-      "data usunięcia",
-      "datą usunięcia"
-     ],
-     [
-      "plan\\.md"
-     ]
-    ]
-   },
-   "rubric": [
-    "linie R1…Rn i flagi w changes/CHG-12/release.yaml (kontrakt pdi 0.4.0)",
-    "decision_record.py check: schemat i spójność z plan.md (tasks, kolumny Wydanie i Flaga)",
-    "flaga z etapami, właścicielem i remove_by"
-   ]
-  },
-  {
-   "id": "rekomendacja-triazu-dla-pdi",
-   "expect": "trigger",
-   "prompt": "W projekcie z rejestrem pdi mam zgłoszenie PRB-40 do triażu. Uważam, że trzeba je odłożyć, dopóki nie przyjdą kolejne zgłoszenia. Jak przygotować rekomendację dla pdi? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "triage_pdi\\.py"
-     ],
-     [
-      "parked"
-     ],
-     [
-      "--return-when",
-      "return_when",
-      "próg\\w* powrotu"
-     ],
-     [
-      "deferred",
-      "needs-triage"
-     ]
-    ]
-   },
-   "rubric": [
-    "triage_pdi.py check, potem recommend --status parked --return-when „…” --rationale „…”",
-    "w tf to needs-triage z etykietą deferred (tabela mapowania kontraktu)",
-    "decyzję podejmuje PO w pdi",
-    "rekomendacja zgodna ze schematem z kontraktu pdi (triage-recommendation.schema.json, od 0.6.0), nie z własnego formatu tf"
-   ]
-  },
-  {
-   "id": "dziennik-projektu-bez-pdi",
-   "expect": "no-trigger",
-   "neighbor": "core-project-record",
-   "prompt": "Kończę fazę architektury w projekcie. Gdzie i w jakim formacie zapisać artefakt fazy z TL;DR i przekazaniem dla następnej fazy? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "docs/project"
-     ],
-     [
-      "TL;DR"
-     ]
-    ]
-   }
-  },
-  {
-   "id": "commit-message",
-   "expect": "no-trigger",
-   "neighbor": "core-conventional-commits",
-   "prompt": "Jak sformułować commit message dla poprawki błędu w eksporcie, żeby trafił do changelogu jako patch? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "fix"
-     ]
-    ]
-   }
-  },
-  {
-   "id": "faza-uruchomiona-przez-pdi",
-   "expect": "trigger",
-   "prompt": "Workflow sdlc-phase uruchomiony przez pdi wywołał cię bez interakcji: zmiana CHG-12, faza requirements, nikt nie odpowie na pytania. Co robisz i czym kończysz pracę? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "requirements\\.md"
-     ],
-     [
-      "Pytania do bramki|Gate questions"
-     ],
-     [
-      "nie pyta|bez pyta|nie czekaj|nikt nie odpowie|bez interakcji"
-     ],
-     [
-      "decision_record\\.py check"
-     ],
-     [
-      "B2|bramk"
-     ]
-    ],
-    "none": [
-     "zapytam (człowieka|właściciela)",
-     "decision add"
-    ]
-   }
-  },
-  {
-   "id": "pasma-kontrolne-shipscope",
-   "expect": "trigger",
-   "prompt": "Projekt w trybie pdi ma ShipScope z tokenem usługi. Chcę, żeby skok rollbacków na PROD sam trafiał do pdi jako nowy problem. Jak to ustawić i co dokładnie trafi do pdi? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "metric_watch\\.py"
-     ],
-     [
-      "metric\\.breached"
-     ],
-     [
-      "3σ|3 ?sigma|poza 3"
-     ],
-     [
-      "--send|workflow install|metric-watch\\.yml"
-     ],
-     [
-      "SHIPSCOPE_TOKEN"
-     ]
-    ],
-    "none": [
-     "pdi-metrics\\.json.*token",
-     "decision add"
-    ]
-   }
-  },
-  {
-   "id": "faza-intent-ze-zgloszenia",
-   "expect": "trigger",
-   "prompt": "Workflow sdlc-phase uruchomiony przez pdi bez interakcji: zmiana CHG-31, faza intent, zgłoszenie PRB-3 (operator nie może zmienić konfiguracji wielu ładowarek naraz; zgłaszający proponuje przycisk bulk update). Co piszesz i jak traktujesz ten przycisk? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "intent\\.md"
-     ],
-     [
-      "PRB-3|source"
-     ],
-     [
-      "wariant"
-     ],
-     [
-      "Pytania do bramki|Gate questions|B1|bramk|gate"
-     ]
-    ],
-    "none": [
-     "zapytam (człowieka|właściciela)",
-     "wymaganie: przycisk"
-    ]
-   }
-  },
-  {
-   "id": "plan-zmiany-fundament",
-   "expect": "trigger",
-   "prompt": "Piszę plan.md zmiany CHG-12. Przed cięciem TSK-58 (ponowienie płatności) potrzebny jest klucz idempotencji jako TSK-57, bez efektu dla użytkownika. Jak go zapisać w planie, żeby przeszedł check i bramkę na PR? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "fundament|foundation"
-     ],
-     [
-      "Odblokowuje|Unblocks"
-     ],
-     [
-      "TSK-58"
-     ],
-     [
-      "decision_record\\.py check",
-      "\\bcheck\\b"
-     ]
-    ],
-    "none": [
-     "kolumna „Odblokowuje” jest opcjonalna dla fundamentu"
-    ]
-   },
-   "rubric": [
-    "TSK-57 z rodzajem „fundament” i wartością „(fundament) … jest gotowe”",
-    "„Odblokowuje”: TSK-58 (cięcie tej zmiany); bez tego fundament to praca warstwowa",
-    "decision_record.py check i REL-008 w ci_for_sdlc sprawdzają to samo"
-   ]
-  },
-  {
-   "id": "faza-design-tabela-ramek",
-   "expect": "trigger",
-   "prompt": "pdi uruchomiło fazę design dla CHG-12. Wymagania są w requirements.md, projektantka ma ekrany w Figmie. Co mam oddać i jak sprawdzić przed bramką design-review? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "design\\.md"
-     ],
-     [
-      "Wymaganie \\| Ścieżka \\| Stan \\| Ramka",
-      "Requirement \\| Journey \\| State \\| Frame",
-      "tabel\\w* ramek"
-     ],
-     [
-      "design_check"
-     ],
-     [
-      "node-id|link\\w* do ramk\\w*"
-     ],
-     [
-      "Pytania do bramki|Gate questions|pytani\\w*"
-     ]
-    ],
-    "none": []
-   },
-   "rubric": [
-    "design.md z tabelą ramek wg kontraktu pdi (conventions.design), szablon templates/design.md",
-    "ramki projektanta dopasowane, nie rysowane przez agenta bez prośby",
-    "design_check.py check CHG-12 przed bramką; braki idą jako pytania do pdi"
-   ]
-  },
-  {
-   "id": "zamiar-ograniczenia-porazka",
-   "expect": "trigger",
-   "prompt": "Projekt w trybie mode-pdi. Właściciel produktu chce zmiany CHG-21: „szybszy checkout”. Mam wypełnić intent.md. Co poza problemem, wariantami i metrykami muszę od niego dostać, zanim przejdę do wymagań? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "ograniczeni\\w*"
-     ],
-     [
-      "porażk\\w*",
-      "nie może być",
-      "czym wynik nie"
-     ],
-     [
-      "powiązani\\w*",
-      "obszar\\w*",
-      "inn\\w* zmian"
-     ],
-     [
-      "zapyta\\w*",
-      "pytani\\w*",
-      "od człowieka",
-      "podaje człowiek"
-     ]
-    ]
-   }
-  },
-  {
-   "id": "adr-fazy-architecture",
-   "expect": "trigger",
-   "prompt": "Tryb mode-pdi: pdi uruchomił fazę architecture zmiany CHG-5 (persona tomasz). Gdzie zapisać ADR tej zmiany — w design.md czy gdzie indziej? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "architecture\\.md"
-     ],
-     [
-      "faz\\w* design",
-      "natali\\w*",
-      "projekt\\w* doświadczeni\\w*",
-      "ramek"
-     ]
-    ]
-   }
-  },
-  {
-   "id": "decyzje-suity-przed-planem",
-   "expect": "trigger",
-   "prompt": "Tryb mode-pdi, bez serwera MCP pdi w tej sesji. Zanim zaplanuję zmianę progu darmowej dostawy, chcę wiedzieć, czy ktoś w suicie (bramki w pdi, DI Definition) już coś o tym zdecydował. Jak to sprawdzić i co, jeśli kopia jest stara? Odpowiedz zwięźle.",
-   "checks": {
-    "all": [
-     [
-      "decision_cache\\.py search"
-     ],
-     [
-      "kopi\\w*"
-     ],
-     [
-      "refresh",
-      "odśwież\\w*",
-      "pdi-records"
-     ]
-    ],
-    "none": [
-     "edytuj\\w* (tę |tą )?kopi\\w*"
-    ]
-   }
-  }
- ]
+  "skill": "pdi-decisions",
+  "scenarios": [
+    {
+      "id": "zapis-decyzji-o-zmianie",
+      "expect": "trigger",
+      "prompt": "Ustaliliśmy z właścicielem produktu, że w zmianie CHG-12 eksport idzie do CSV, a nie do XLSX, bo klienci i tak otwierają go w arkuszu. Mamy podłączony rejestr decyzji pdi. Zapisz tę decyzję tak, żeby była w jednym źródle. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "decision add|decisions\\.md"
+          ],
+          [
+            "record_decision"
+          ],
+          [
+            "szkic|zatwierdz|potwierdz|akcept"
+          ],
+          [
+            "decision mark|DEC-\\d+|DEC-n|numer\\w* (z )?rejestru"
+          ],
+          [
+            "CHG-12"
+          ]
+        ],
+        "none": [
+          "tylko w (treści )?odpowiedzi"
+        ]
+      }
+    },
+    {
+      "id": "zapis-decyzji-o-zmianie-en",
+      "expect": "trigger",
+      "prompt": "We agreed with the product owner that in change CHG-12 the export goes to CSV rather than XLSX, because customers open it in a spreadsheet anyway. We have the pdi decision register connected. Record this decision so that it lives in a single source. Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "decision add|decisions\\.md"
+          ],
+          [
+            "record_decision"
+          ],
+          [
+            "szkic|zatwierdz|potwierdz|akcept",
+            "draft",
+            "approv",
+            "confirm",
+            "accept"
+          ],
+          [
+            "decision mark|DEC-\\d+|DEC-n|numer\\w* (z )?rejestru",
+            "DEC-\\d+",
+            "register number",
+            "number from the register",
+            "decision number"
+          ],
+          [
+            "CHG-12"
+          ]
+        ],
+        "none": [
+          "tylko w (treści )?odpowiedzi",
+          "only in (the )?(answer|reply|response)"
+        ]
+      }
+    },
+    {
+      "id": "dziennik-zmiany-ze-zgloszenia",
+      "expect": "trigger",
+      "prompt": "Zgłoszenie PRB-34 zostało przyjęte w pdi jako zmiana CHG-12. Załóż dla niej dziennik w repozytorium (zamiar, plan, decyzje) zgodny z kontraktem pdi. Co uruchomisz i co powstanie? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "decision_record\\.py"
+          ],
+          [
+            "change new"
+          ],
+          [
+            "docs/project/changes/CHG-12"
+          ],
+          [
+            "intent\\.md"
+          ],
+          [
+            "--source PRB-34|source: PRB-34|source"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "brak-serwera-pdi",
+      "expect": "trigger",
+      "prompt": "Na bramce B2 zdecydowaliśmy w CHG-7, że zostajemy przy PostgreSQL. Zapisz decyzję w rejestrze pdi — ale serwer MCP pdi nie odpowiada w tej sesji. Co robisz? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "decisions\\.md"
+          ],
+          [
+            "niewysłan|nie wysłan|później|kolejk|uzupełni|decision pending"
+          ],
+          [
+            "nie (wymyślaj|zgaduj|nadawaj)|pust\\w* (pole|id)|bez numeru"
+          ]
+        ],
+        "none": [
+          "DEC-\\d{2,}"
+        ]
+      }
+    },
+    {
+      "id": "plan-wydania-zmiany",
+      "expect": "trigger",
+      "prompt": "W projekcie z rejestrem pdi mamy zmianę CHG-12 z cięciami TSK-57…TSK-60. Gdzie zapisać, które cięcia są w MVP, a które później, i flagę payment-retry z etapami? Jak to sprawdzić przed commitem? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "release\\.yaml"
+          ],
+          [
+            "decision_record\\.py check",
+            "\\bcheck\\b"
+          ],
+          [
+            "R1"
+          ],
+          [
+            "remove_by",
+            "data usunięcia",
+            "datą usunięcia"
+          ],
+          [
+            "plan\\.md"
+          ]
+        ]
+      },
+      "rubric": [
+        "linie R1…Rn i flagi w changes/CHG-12/release.yaml (kontrakt pdi 0.4.0)",
+        "decision_record.py check: schemat i spójność z plan.md (tasks, kolumny Wydanie i Flaga)",
+        "flaga z etapami, właścicielem i remove_by"
+      ]
+    },
+    {
+      "id": "rekomendacja-triazu-dla-pdi",
+      "expect": "trigger",
+      "prompt": "W projekcie z rejestrem pdi mam zgłoszenie PRB-40 do triażu. Uważam, że trzeba je odłożyć, dopóki nie przyjdą kolejne zgłoszenia. Jak przygotować rekomendację dla pdi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "triage_pdi\\.py"
+          ],
+          [
+            "parked"
+          ],
+          [
+            "--return-when",
+            "return_when",
+            "próg\\w* powrotu"
+          ],
+          [
+            "deferred",
+            "needs-triage"
+          ]
+        ]
+      },
+      "rubric": [
+        "triage_pdi.py check, potem recommend --status parked --return-when „…” --rationale „…”",
+        "w tf to needs-triage z etykietą deferred (tabela mapowania kontraktu)",
+        "decyzję podejmuje PO w pdi",
+        "rekomendacja zgodna ze schematem z kontraktu pdi (triage-recommendation.schema.json, od 0.6.0), nie z własnego formatu tf"
+      ]
+    },
+    {
+      "id": "dziennik-projektu-bez-pdi",
+      "expect": "no-trigger",
+      "neighbor": "core-project-record",
+      "prompt": "Kończę fazę architektury w projekcie. Gdzie i w jakim formacie zapisać artefakt fazy z TL;DR i przekazaniem dla następnej fazy? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "docs/project"
+          ],
+          [
+            "TL;DR"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "commit-message",
+      "expect": "no-trigger",
+      "neighbor": "core-conventional-commits",
+      "prompt": "Jak sformułować commit message dla poprawki błędu w eksporcie, żeby trafił do changelogu jako patch? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fix"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "faza-uruchomiona-przez-pdi",
+      "expect": "trigger",
+      "prompt": "Workflow sdlc-phase uruchomiony przez pdi wywołał cię bez interakcji: zmiana CHG-12, faza requirements, nikt nie odpowie na pytania. Co robisz i czym kończysz pracę? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "requirements\\.md"
+          ],
+          [
+            "Pytania do bramki|Gate questions"
+          ],
+          [
+            "nie pyta|bez pyta|nie czekaj|nikt nie odpowie|bez interakcji"
+          ],
+          [
+            "decision_record\\.py check"
+          ],
+          [
+            "B2|bramk"
+          ]
+        ],
+        "none": [
+          "zapytam (człowieka|właściciela)",
+          "decision add"
+        ]
+      }
+    },
+    {
+      "id": "pasma-kontrolne-shipscope",
+      "expect": "trigger",
+      "prompt": "Projekt w trybie pdi ma ShipScope z tokenem usługi. Chcę, żeby skok rollbacków na PROD sam trafiał do pdi jako nowy problem. Jak to ustawić i co dokładnie trafi do pdi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "metric_watch\\.py"
+          ],
+          [
+            "metric\\.breached"
+          ],
+          [
+            "3σ|3 ?sigma|poza 3"
+          ],
+          [
+            "--send|workflow install|metric-watch\\.yml"
+          ],
+          [
+            "SHIPSCOPE_TOKEN"
+          ]
+        ],
+        "none": [
+          "pdi-metrics\\.json.*token",
+          "decision add"
+        ]
+      }
+    },
+    {
+      "id": "faza-intent-ze-zgloszenia",
+      "expect": "trigger",
+      "prompt": "Workflow sdlc-phase uruchomiony przez pdi bez interakcji: zmiana CHG-31, faza intent, zgłoszenie PRB-3 (operator nie może zmienić konfiguracji wielu ładowarek naraz; zgłaszający proponuje przycisk bulk update). Co piszesz i jak traktujesz ten przycisk? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "intent\\.md"
+          ],
+          [
+            "PRB-3|source"
+          ],
+          [
+            "wariant"
+          ],
+          [
+            "Pytania do bramki|Gate questions|B1|bramk|gate"
+          ]
+        ],
+        "none": [
+          "zapytam (człowieka|właściciela)",
+          "wymaganie: przycisk"
+        ]
+      }
+    },
+    {
+      "id": "plan-zmiany-fundament",
+      "expect": "trigger",
+      "prompt": "Piszę plan.md zmiany CHG-12. Przed cięciem TSK-58 (ponowienie płatności) potrzebny jest klucz idempotencji jako TSK-57, bez efektu dla użytkownika. Jak go zapisać w planie, żeby przeszedł check i bramkę na PR? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "fundament|foundation"
+          ],
+          [
+            "Odblokowuje|Unblocks"
+          ],
+          [
+            "TSK-58"
+          ],
+          [
+            "decision_record\\.py check",
+            "\\bcheck\\b"
+          ]
+        ],
+        "none": [
+          "kolumna „Odblokowuje” jest opcjonalna dla fundamentu"
+        ]
+      },
+      "rubric": [
+        "TSK-57 z rodzajem „fundament” i wartością „(fundament) … jest gotowe”",
+        "„Odblokowuje”: TSK-58 (cięcie tej zmiany); bez tego fundament to praca warstwowa",
+        "decision_record.py check i REL-008 w ci_for_sdlc sprawdzają to samo"
+      ]
+    },
+    {
+      "id": "faza-design-tabela-ramek",
+      "expect": "trigger",
+      "prompt": "pdi uruchomiło fazę design dla CHG-12. Wymagania są w requirements.md, projektantka ma ekrany w Figmie. Co mam oddać i jak sprawdzić przed bramką design-review? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "design\\.md"
+          ],
+          [
+            "Wymaganie \\| Ścieżka \\| Stan \\| Ramka",
+            "Requirement \\| Journey \\| State \\| Frame",
+            "tabel\\w* ramek"
+          ],
+          [
+            "design_check"
+          ],
+          [
+            "node-id|link\\w* do ramk\\w*"
+          ],
+          [
+            "Pytania do bramki|Gate questions|pytani\\w*"
+          ]
+        ],
+        "none": []
+      },
+      "rubric": [
+        "design.md z tabelą ramek wg kontraktu pdi (conventions.design), szablon templates/design.md",
+        "ramki projektanta dopasowane, nie rysowane przez agenta bez prośby",
+        "design_check.py check CHG-12 przed bramką; braki idą jako pytania do pdi"
+      ]
+    },
+    {
+      "id": "zamiar-ograniczenia-porazka",
+      "expect": "trigger",
+      "prompt": "Projekt w trybie mode-pdi. Właściciel produktu chce zmiany CHG-21: „szybszy checkout”. Mam wypełnić intent.md. Co poza problemem, wariantami i metrykami muszę od niego dostać, zanim przejdę do wymagań? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "ograniczeni\\w*"
+          ],
+          [
+            "porażk\\w*",
+            "nie może być",
+            "czym wynik nie"
+          ],
+          [
+            "powiązani\\w*",
+            "obszar\\w*",
+            "inn\\w* zmian"
+          ],
+          [
+            "zapyta\\w*",
+            "pytani\\w*",
+            "od człowieka",
+            "podaje człowiek"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "adr-fazy-architecture",
+      "expect": "trigger",
+      "prompt": "Tryb mode-pdi: pdi uruchomił fazę architecture zmiany CHG-5 (persona tomasz). Gdzie zapisać ADR tej zmiany — w design.md czy gdzie indziej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "architecture\\.md"
+          ],
+          [
+            "faz\\w* design",
+            "natali\\w*",
+            "projekt\\w* doświadczeni\\w*",
+            "ramek"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "decyzje-suity-przed-planem",
+      "expect": "trigger",
+      "prompt": "Tryb mode-pdi, bez serwera MCP pdi w tej sesji. Zanim zaplanuję zmianę progu darmowej dostawy, chcę wiedzieć, czy ktoś w suicie (bramki w pdi, DI Definition) już coś o tym zdecydował. Jak to sprawdzić i co, jeśli kopia jest stara? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "decision_cache\\.py search"
+          ],
+          [
+            "kopi\\w*"
+          ],
+          [
+            "refresh",
+            "odśwież\\w*",
+            "pdi-records"
+          ]
+        ],
+        "none": [
+          "edytuj\\w* (tę |tą )?kopi\\w*"
+        ]
+      }
+    },
+    {
+      "id": "pytanie-bramki-latwe-do-cofniecia",
+      "expect": "trigger",
+      "prompt": "Tryb mode-pdi, faza architecture uruchomiona przez pdi. W plan.md mam dwa pytania do bramki: czy limit eksportu to 1000 wierszy (łatwo zmienić później, rekomenduję 1000) i czy migrujemy stare zamówienia (trudne do cofnięcia, dotyczy tylko TSK-3). Jak je zapisać, żeby delivery nie stał przez brak odpowiedzi? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "Gate questions"
+          ],
+          [
+            "local",
+            "broad"
+          ],
+          [
+            "one_way"
+          ],
+          [
+            "default:"
+          ],
+          [
+            "blocks: ?TSK-3"
+          ]
+        ],
+        "none": [
+          "decision add"
+        ]
+      }
+    }
+  ]
 }

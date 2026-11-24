@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/release-plan.schema.json",
-  "title": "Plan wydania zmiany (kontrakt suity 0.17.0)",
+  "title": "Plan wydania zmiany (kontrakt suity 0.19.0)",
   "description": "Plik changes/CHG-n/release.yaml: MVP z miarą, linie wydań R1…Rn z cięciami, flagi z etapami udostępniania; od 0.12.0 opcjonalnie cele zmiany (`targets`: pokrycie i mutacje zmienionego kodu, wydajność, ewaluacje aplikacji AI). Schemat sprawdza strukturę; spójność (mvp.release wśród linii, TSK zgodne z plan.md, flaga z etapami i remove_by, kompletność `targets` dla produktu AI) sprawdzają tf (check) i ci_for_sdlc (REL-001…008, Z7b-1b).",
   "type": "object",
   "additionalProperties": false,

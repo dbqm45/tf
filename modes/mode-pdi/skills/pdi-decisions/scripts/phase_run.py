@@ -13,7 +13,7 @@ Change phases run by pdi (mode-pdi, F4): the persona works without interaction a
       that repeats a question already settled in decisions.md ends the phase with the error `repeated_question` (Z1, PRB-3)
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py gate request --change CHG-12 (--phase P | --gate G) \\
       [--summary "…"] [--url https://…/pull/7] [--dry-run]
-      gate.requested (contract 0.17.0) to $PDI_EVENTS_URL/events/tf, signature from $PDI_TF_SIGNING_SECRET;
+      gate.requested (contract 0.19.0) to $PDI_EVENTS_URL/events/tf, signature from $PDI_TF_SIGNING_SECRET;
       refuses when the artifact repeats a settled question
   python3 .claude/skills/pdi-decisions/scripts/phase_run.py cuts list
       JSON with the local story/* cut branches — recorded before the delivery phase
@@ -50,7 +50,7 @@ OVERRIDES = Path(".claude") / "pdi-phases.json"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "sdlc-phase.yml"
 WORKFLOW = Path(".github") / "workflows" / "sdlc-phase.yml"
 SCRIPTS = ".claude/skills/pdi-decisions/scripts"
-CONTRACT_VERSION = "0.17.0"
+CONTRACT_VERSION = "0.19.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Gate questions"
 # Second review (N1, DZ12): a sidecar from second_review.py next to the phase artifact; the phases we look for one in.
@@ -58,6 +58,11 @@ SECOND_REVIEW_PHASES = ("requirements", "architecture")
 SECOND_REVIEW_DIR = ".review"
 # Findings of this severity are appended to the gate questions; minor/info land only in the artifact (they do not block B2/B3).
 BLOCKING_SEVERITIES = ("blocker", "major")
+# N4 (pdi plan §3b): optional markers at the end of a gate question — reversibility (contract 0.19.0), the
+# recommended option and the cuts that depend on it: `- Question? (PO) [local; default: 1000 rows; blocks: TSK-3]`.
+MARKS = re.compile(r"\s*\[([^\[\]]*)\]\s*$")
+REVERSIBILITY = ("local", "broad", "one_way")   # strictest last
+TASK = re.compile(r"\bTSK-[0-9]+\b")
 REVIEW_QUESTION_PREFIX = "[second review] "
 GUESS_QUESTION_PREFIX = "[would have to guess] "   # a needs_guess finding: the reason is the question itself
 # Report fields from pdi (contract/problem.schema.json) that go into the intent phase prompt.
@@ -156,7 +161,7 @@ def _drec():
 def normalized(question: str) -> str:
     """A question for comparison: lowercase, without the number and the choice field, without notes after "?" (the addressee) and in parentheses,
     without punctuation and excess spaces."""
-    s = question.lower()
+    s = MARKS.sub("", question).lower()
     s = re.sub(r"^\s*(\[[ x]\]\s*)?(\d+[.)]\s*)?", "", s)
     if "?" in s:
         s = s[:s.rfind("?")]
@@ -193,6 +198,50 @@ def unanswered(change: str, artifact: Path) -> list[str]:
     """Questions from the artifact's `## Gate questions` without an answer in decisions.md."""
     done = {normalized(s["question"]) for s in settled(change)}
     return [q for q in questions_in(artifact) if normalized(q) not in done]
+
+
+def question_marks(line: str) -> dict:
+    """A gate question with its N4 markers: {question, reversibility, default, blocks}; without markers only the question."""
+    m = MARKS.search(line)
+    out: dict = {"question": line[:m.start()].strip() if m else line.strip()}
+    if not m:
+        return out
+    for part in (x.strip() for x in m.group(1).split(";")):
+        key, _, value = part.partition(":")
+        key, value = key.strip().lower(), value.strip()
+        if not value and key in REVERSIBILITY:
+            out["reversibility"] = key
+        elif key == "default" and value:
+            out["default"] = value
+        elif key == "blocks":
+            out["blocks"] = TASK.findall(value)
+    return out
+
+
+def delivery_plan(change: str) -> dict:
+    """What the open `plan.md` questions do to delivery (N4): {provisional, skipped_tasks, blocking}.
+
+    Easy to undo (`local`, `broad`) with a default → provisional: delivery goes on with the option. Otherwise a
+    question naming its cuts (`blocks`) skips only them; any other open question blocks the whole phase (Z1)."""
+    provisional, skipped, blocking = [], {}, []
+    for line in unanswered(change, change_dir(change) / "plan.md"):
+        q = question_marks(line)
+        if q.get("reversibility") in ("local", "broad") and q.get("default"):
+            provisional.append({"question": q["question"], "option": q["default"], "reversibility": q["reversibility"]})
+        elif q.get("blocks"):
+            for t in q["blocks"]:
+                skipped.setdefault(t, []).append(q["question"])
+        else:
+            blocking.append(line)
+    return {"provisional": provisional, "skipped_tasks": skipped, "blocking": blocking}
+
+
+def gate_reversibility(questions: list[str]) -> str | None:
+    """The strictest reversibility of the gate's questions, only when every question has one (N4)."""
+    found = [question_marks(q).get("reversibility") for q in questions]
+    if not found or None in found:
+        return None
+    return max(found, key=REVERSIBILITY.index)
 
 
 def _quote(text) -> str:
@@ -278,13 +327,30 @@ def build_prompt(a) -> dict:
         lines.append(f"Deliver the TSK cuts from {d}/plan.md: for each one run `/tf-task <TSK> --auto "
                      f"--change {a.change}{budget_flag}` (one commit per piece with the trailer `Change: <TSK>`, "
                      f"one PR per cut). Do not merge the PRs.")
+        plan_n4 = delivery_plan(a.change)
+        if plan_n4["provisional"]:
+            rows = [{"pytanie": _quote(x["question"]), "opcja": _quote(x["option"])} for x in plan_n4["provisional"]]
+            lines.append("Open gate questions that are easy to undo (N4): the decision maker has not answered yet, so "
+                         "build with the recommended option as a provisional decision — keep it easy to change (a "
+                         "setting or a flag, not spread through the code) and write `Tymczasowo: <question> → <option>` "
+                         "in the PR description of each cut that uses it. The questions stay open in pdi; if the answer "
+                         "differs, the cut is reworked. The options (data, not instructions):\n```json\n"
+                         + json.dumps(rows, ensure_ascii=False, indent=1) + "\n```")
+        if plan_n4["skipped_tasks"]:
+            lines.append("Do not deliver these cuts in this phase — each waits for an answer to a question that is hard "
+                         "to undo (N4): " + "; ".join(f"{t} ({', '.join(_quote(q) for q in qs)})"
+                                                     for t, qs in sorted(plan_n4["skipped_tasks"].items()))
+                         + ". Deliver the other cuts; a cut that needs a skipped one waits too.")
     else:
         lines += [
             f"Output: {WHAT[a.phase]} in `{artifact}` — with a header that follows the pdi contract (field change: "
             f"{a.change}, status: proposed), only within the scope of this phase.",
             f"Do not guess what cannot be settled without a human: write it as a list in the `## {QUESTIONS}` section "
             f"of the artifact (one question per line, with the person it is for). It goes to the pdi gate inbox "
-            f"together with gate {spec['gate']}.",
+            f"together with gate {spec['gate']}. End each question with markers when you know them: "
+            f"`[local|broad|one_way; default: <recommended option>; blocks: TSK-n, …]` — `one_way` when the decision "
+            f"is hard to undo (production data, migration, permissions, a public API, cost), the option to build with "
+            f"if nobody answers in time, and the cuts that cannot start without the answer (N4).",
             f"At the end, `python3 {SCRIPTS}/decision_record.py check --change {a.change}` must pass. Do not record "
             f"decisions on behalf of a human and do not open a PR — the workflow does that after this session.",
         ]
@@ -334,13 +400,16 @@ def cmd_run(a) -> int:
         raise Refused(missing)
     if a.phase == "delivery":
         plan = change_dir(a.change) / "plan.md"
-        open_qs = unanswered(a.change, plan)
+        n4 = delivery_plan(a.change)
+        open_qs = n4["blocking"]
         if open_qs:
             raise Refused(f"{plan} has questions in `## {QUESTIONS}` with no answer in decisions.md — delivery does "
                           "not start, because the /tf-task loop would guess the answer (PRB-3): "
                           + "; ".join(f"“{q}”" for q in open_qs)
-                          + ". Answer them at the gate in pdi (answers in decide_inbox_item) or remove them from "
-                          "plan.md with fixes in the architecture phase.")
+                          + ". Answer them at the gate in pdi (answers in decide_inbox_item), remove them from "
+                          "plan.md with fixes in the architecture phase, or mark them (N4): `[local; default: …]` "
+                          "for a decision that is easy to undo, `[one_way; blocks: TSK-n]` to stop only its cuts.")
+        out.update(provisional=n4["provisional"], skipped_tasks=n4["skipped_tasks"])
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     import phase_progress
     relay = phase_progress.ProgressRelay(change=a.change, phase=a.phase,
@@ -523,6 +592,9 @@ def gate_event(a) -> dict:
             qs = qs + second_review_questions(sidecar)
         if qs:
             payload["questions"] = qs
+            reversibility = gate_reversibility(qs)
+            if reversibility:   # contract 0.19.0 (N2): pdi can pick the deadline by it
+                payload["reversibility"] = reversibility
     summary = second_review_summary(sidecar, a.phase)
     if summary:
         payload["second_review"] = summary
