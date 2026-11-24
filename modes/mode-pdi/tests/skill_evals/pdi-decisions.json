@@ -463,6 +463,25 @@
           "supersede_decision bez"
         ]
       }
+    },
+    {
+      "id": "kontekst-na-start-zadania",
+      "expect": "trigger",
+      "prompt": "Tryb mode-pdi. Przejmuję CHG-12 po kimś innym i zaczynam cięcie TSK-3, które ruszy services/bulk/queue.py. Nie wiem, czemu ta zmiana powstała ani co już ustalono. Od czego zacząć, zanim napiszę plan? Serwer pdi czasem nie odpowiada. Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "change_context"
+          ],
+          [
+            "paths"
+          ],
+          [
+            "decision_record.py context"
+          ]
+        ],
+        "none": []
+      }
     }
   ]
 }

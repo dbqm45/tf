@@ -39,6 +39,12 @@ When pdi accepts a report as a change (or a human gives the change key):
 You keep the whole project's phase log (`docs/project/0N-*`) as before (core-project-record); the change log does
 not replace it.
 
+**Start of a task on a change (DV3):** before the plan, call the pdi MCP tool `change_context` with the change and the
+files the task will touch (`paths`, relative to the repo root): the report, the intent with its metric, the decisions in
+force with the options not chosen, the decisions for those files, open questions, PRs and gaps. Without the pdi server:
+`decision_record.py context CHG-12 --paths <files>` (this repo only). Do not go against a decision without proposing to
+supersede it, and do not bring back a rejected option without a new reason.
+
 ## Decision
 A decision is the resolution of a human or a gate (B1–B6): choosing an option, consent, rejection, an exception. You do not leave
 it only in the text of an answer — but you also do not decide on your own what a decision is (the pdi register requires this).
