@@ -8,6 +8,9 @@ Change log conforming to the pdi 0.3.0 contract (contract/change.schema.json; fr
       creates docs/project/changes/CHG-12/ with intent.md, plan.md, decisions.md and release.yaml (templates next to the script)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py check [--change CHG-n]
       checks artifact headers and decision entries in docs/project/changes/*/, and release.yaml — against the contract schema
+  python3 .claude/skills/pdi-decisions/scripts/decision_record.py context CHG-n [--paths FILE …]
+      DV3, without the pdi server: intent, decisions of the change, unanswered gate questions and the local decisions whose
+      applies_to covers the files, as JSON (with the server: MCP change_context)
       and for consistency: mvp.release among the lines, TSK in a single line and matching plan.md (tasks, the Release and Flag columns),
       flag with stages (rollout) and a removal date (remove_by), flag TSKs in the lines; in plan.md the cut-plan self-check
       (a foundation whose „Unblocks” points to a TSK of this change, a cut with a requirement ID or verification — like REL-008)
@@ -725,6 +728,105 @@ def check(change: str | None = None) -> int:
     return 1 if bad else 0
 
 
+# --- DV3: the context of a change at the start of a task, locally (without the pdi server) ---
+INTENT_SECTIONS = {"Problem": "problem", "Chosen option": "chosen_option", "Success metrics": "success_metrics",
+                   "Out of scope": "out_of_scope", "Constraints": "constraints", "When it is a failure": "failure",
+                   "Related": "related"}
+LIST_SECTIONS = ("success_metrics", "out_of_scope", "constraints", "failure", "related")
+QUESTION_MARKS = re.compile(r"\s*\[([^\[\]]*)\]\s*$")
+
+
+def _segment(pattern: str) -> re.Pattern:
+    return re.compile("".join("[^/]*" if c == "*" else "[^/]" if c == "?" else re.escape(c) for c in pattern) + r"\Z")
+
+
+def path_matches(pattern: str, path: str) -> bool:
+    """An applies_to.paths pattern covers the file (or directory) — contract 0.22.0, decision-record.md §4a."""
+    pat, parts = pattern.split("/"), path.replace("\\", "/").removeprefix("./").split("/")
+
+    def go(i: int, j: int) -> bool:
+        if i == len(pat):
+            return True   # the rest of the path lies under the matched directory
+        if pat[i] == "**":
+            return any(go(i + 1, k) for k in range(j, len(parts) + 1))
+        return j < len(parts) and bool(_segment(pat[i]).match(parts[j])) and go(i + 1, j + 1)
+
+    return go(0, 0)
+
+
+def _sections(path: Path) -> dict[str, list[str]]:
+    """`## Heading` → its lines, without comments and template placeholders (`<…>`, an empty table row)."""
+    out: dict[str, list[str]] = {}
+    cur = None
+    text = re.sub(r"<!--.*?-->", "", path.read_text(encoding="utf-8"), flags=re.S) if path.is_file() else ""
+    for line in text.splitlines():
+        if line.startswith("## "):
+            cur = out.setdefault(line[3:].strip(), [])
+        elif cur is not None and line.strip():
+            bare = line.strip().removeprefix("- ").strip()
+            if not re.fullmatch(r"<.*>", bare) and not re.fullmatch(r"\|[\s|A-Z-]*\|", line.strip()):
+                cur.append(line.strip())
+    return out
+
+
+def _intent(path: Path) -> dict:
+    out = {}
+    for heading, lines in _sections(path).items():
+        key = INTENT_SECTIONS.get(heading)
+        if key and lines:
+            out[key] = [x.removeprefix("- ").strip() for x in lines] if key in LIST_SECTIONS else " ".join(lines)
+    return out
+
+
+def _question(line: str) -> dict:
+    m = QUESTION_MARKS.search(line)
+    out: dict = {"question": line[:m.start()].strip() if m else line.strip()}
+    for part in (x.strip() for x in (m.group(1).split(";") if m else [])):
+        key, _, value = part.partition(":")
+        key, value = key.strip().lower(), value.strip()
+        if not value and key in ("local", "broad", "one_way"):
+            out["reversibility"] = key
+        elif key in ("default", "blocks") and value:
+            out[key] = value
+    return out
+
+
+def change_context(key: str, paths: list[str]) -> int:
+    """What a task on the change starts from: intent, decisions, open gate questions, decisions for the files."""
+    d = CHANGES / key
+    if not KEY.match(key) or not (d / "decisions.md").is_file():
+        print(f"✗ no {d / 'decisions.md'} — first run: decision_record.py change new {key}")
+        return 1
+    header = parse_header((d / "intent.md").read_text(encoding="utf-8")) if (d / "intent.md").is_file() else None
+    entries = parse_entries(d / "decisions.md")
+    answered = {" ".join(str(q).lower().split()) for e in entries for q, a in e.get("answers") or [] if q and a}
+    decisions = []
+    for e in entries:
+        item = {k: e[k] for k in ("ref", "id", "statement", "why", "kind", "date", "by") if e.get(k)}
+        scope = {k: split_list(e[f]) for k, f in (("paths", "applies_to"), ("components", "components")) if e.get(f)}
+        if scope:
+            item["applies_to"] = scope
+        decisions.append(item)
+    questions = []
+    for art in sorted(d.glob("*.md")):
+        for line in _sections(art).get("Gate questions", []):
+            if line.startswith("- "):
+                q = _question(line[2:])
+                if " ".join(q["question"].lower().split()) not in answered:
+                    questions.append({**q, "artifact": art.stem})
+    code = []
+    for item in decisions:
+        hit = [p for p in paths if any(path_matches(pt, p) for pt in item.get("applies_to", {}).get("paths", []))]
+        if hit:
+            code.append({"ref": item["ref"], "statement": item["statement"], "matched": hit})
+    print(json.dumps({"change": key, "origin": "local", "source": (header or {}).get("source") or None,
+                      "intent": _intent(d / "intent.md"), "decisions": decisions, "open_questions": questions,
+                      "code_decisions": code,
+                      "note": "local view of this repo only; with the pdi server call change_context (decisions of the "
+                              "whole suite, rejected options, PRs and gaps)"}, ensure_ascii=False, indent=2))
+    return 0
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -735,6 +837,9 @@ def main(argv: list[str]) -> int:
     new.add_argument("--author", default="claude")
     new.add_argument("--source-reported-at")
     sub.add_parser("check").add_argument("--change", help="only this change (e.g. CHG-12); without it — all changes")
+    ctx = sub.add_parser("context", help="what a task on the change starts from (DV3; without the pdi server)")
+    ctx.add_argument("key")
+    ctx.add_argument("--paths", nargs="*", default=[], help="files the task will touch: local decisions for them")
     dec = sub.add_parser("decision").add_subparsers(dest="action", required=True)
     add = dec.add_parser("add")
     add.add_argument("key")
@@ -773,6 +878,8 @@ def main(argv: list[str]) -> int:
     args = ap.parse_args(argv)
     if args.cmd == "check":
         return check(args.change)
+    if args.cmd == "context":
+        return change_context(args.key, args.paths)
     if args.cmd == "decision":
         return {"add": lambda: decision_add(args), "pending": lambda: decision_pending(args.change),
                 "mark": lambda: decision_mark(args.ref, args.id), "export": decision_export,

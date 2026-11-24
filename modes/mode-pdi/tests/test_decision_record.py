@@ -649,6 +649,48 @@ def main() -> int:
     contract_pattern = schema["properties"].get("applies_to", {}).get("properties", {}).get("paths", {}).get("items", {})
     check(contract_pattern.get("pattern") is not None, "AT-7: the contract copy has applies_to.paths (0.22.0)")
 
+    # DV3: the context of a change at the start of a task, locally (without the pdi server: decision_record.py context).
+    cases = json.loads((FIX / "applies-to-cases.json").read_text(encoding="utf-8")) if FIX.is_dir() else {"cases": []}
+    with tempfile.TemporaryDirectory() as tmp:
+        repo = Path(tmp)
+        run(["change", "new", "CHG-12", "--source", "PRB-34"], repo)
+        d = repo / "docs" / "project" / "changes" / "CHG-12"
+        intent = d / "intent.md"
+        intent.write_text(intent.read_text(encoding="utf-8")
+                          .replace("<Whose problem, in what situation, how we know (a report, data, a conversation).>",
+                                   "Operator zmienia taryfę na 200 ładowarkach przez dzień.")
+                          .replace("- <A measurable outcome and a threshold.>", "- zmiana taryfy na 200 ładowarkach < 10 min"),
+                          encoding="utf-8")
+        plan = d / "plan.md"
+        plan.write_text(plan.read_text(encoding="utf-8").rstrip("\n")
+                        + "\n\n## Gate questions\n- Czy limit to 1000 ładowarek? [local; default: 1000]\n- Czy migrujemy stare?\n",
+                        encoding="utf-8")
+        base = ["decision", "add", "CHG-12", "--why", "Skoki ruchu.", "--kind", "technical", "--by", "zespół"]
+        run(base + ["--statement", "Zmiany idą przez kolejkę.", "--applies-to", "services/bulk/**"], repo)
+        run(base + ["--statement", "Bez zmian w API."], repo)
+        r = run(["context", "CHG-12", "--paths", "services/bulk/queue.py", "README.md"], repo)
+        ctx = json.loads(r.stdout) if r.returncode == 0 else {}
+        check(ctx.get("change") == "CHG-12" and ctx.get("source") == "PRB-34" and ctx.get("origin") == "local",
+              f"CX-1: context names the change, its report and that it is local: {r.stdout[:300]}{r.stderr}")
+        check("Operator zmienia taryfę" in ctx.get("intent", {}).get("problem", "")
+              and ctx.get("intent", {}).get("success_metrics") == ["zmiana taryfy na 200 ładowarkach < 10 min"]
+              and "options" not in ctx.get("intent", {}),
+              f"CX-2: intent sections without template placeholders: {ctx.get('intent')}")
+        check([e.get("ref") for e in ctx.get("decisions", [])] == ["CHG-12/D1", "CHG-12/D2"]
+              and ctx["decisions"][0].get("applies_to") == {"paths": ["services/bulk/**"]},
+              f"CX-3: decisions of the change with applies_to: {ctx.get('decisions')}")
+        check([q.get("question") for q in ctx.get("open_questions", [])] == ["Czy limit to 1000 ładowarek?", "Czy migrujemy stare?"]
+              and ctx["open_questions"][0].get("default") == "1000",
+              f"CX-4: unanswered gate questions with their markers: {ctx.get('open_questions')}")
+        check([m.get("ref") for m in ctx.get("code_decisions", [])] == ["CHG-12/D1"]
+              and ctx["code_decisions"][0].get("matched") == ["services/bulk/queue.py"],
+              f"CX-5: local decisions whose applies_to covers --paths: {ctx.get('code_decisions')}")
+        check(run(["context", "CHG-99"], repo).returncode != 0, "CX-6: an unknown change → error")
+    sys.path.insert(0, str(SCRIPT.parent))
+    import decision_record as dr
+    wrong = [c for c in cases["cases"] if dr.path_matches(c["pattern"], c["path"]) is not c["match"]]
+    check(cases["cases"] and not wrong, f"CX-7: path matching passes the contract cases (applies-to-cases.json): {wrong}")
+
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} tests of the change log (mode-pdi)")

@@ -66,6 +66,9 @@
     ],
     "examples/event-decision.recorded.json": [
       "modes/mode-pdi/tests/fixtures/pdi-contract/event-decision.recorded.json"
+    ],
+    "fixtures/applies-to/cases.json": [
+      "modes/mode-pdi/tests/fixtures/pdi-contract/applies-to-cases.json"
     ]
   }
 }
