@@ -33,11 +33,11 @@ frontend answers, `tf onboard` fills it in; used by `ui_snap.py`)
 of the operations card `.tf/config/operations.json`, the post-deployment check (`tf task deployed <KEY> [--version X]
 [--timeout s]`, `tf task deployed <KEY> --rolled-back --by human:<id> [--note]`; the `deploy` field in `task.json`: `state` =
 `ok` | `red` | `rolled-back`, `evidence`, `version`, `at`; evidence `evidence/deploy-<n>.json`; a `deploy` item on the
-`waiting` list), closing a task (`tf task close <KEY> [--lesson "…" --by human:<id>] [--base <branch>] [--force --by
-human:<id>]`; `tf task finding <KEY> add "<finding>" [--slice S<n>] [--round R]` and `… control <F-n> "<control>"`;
+`waiting` list), closing a task (`tf task close <KEY> [--lesson "…" --evidence "<pointer>" --by human:<id>] [--base <branch>] [--force --by
+human:<id>]`; a lesson without `--evidence` goes to `parked.md` as `unverified lesson`, a lesson entry ends with `· Evidence: …`; `tf task finding <KEY> add "<finding>" [--slice S<n>] [--round R]` and `… control <F-n> "<control>"`;
 `run_state.py finding <directory> S<n> "<finding>" [--round R]`; the refusal of `run_state.py step … scope fail` without a finding
-from this round; the fields `findings` (`id`, `text`, `slice`, `round`, `control`) and `closed` (`at`, `by`, `forced`, `lesson`)
-in `task.json`; `tf status --all`; the file `docs/project/lessons.md`), the assignment of loop steps (the key `steps` in the configuration: step
+from this round; the fields `findings` (`id`, `text`, `slice`, `round`, `control`) and `closed` (`at`, `by`, `forced`, `lesson`, `lesson_parked`)
+in `task.json`; `tf status --all`; the file `docs/project/lessons.md`), factory proposals (`tf proposals add|list|send [--to <checkout> | --gh [--yes]]`, `.tf/factory/proposals.py count`; the entry format `## <id> — <title>` with `Status:`, `Date:`, `Project:`, `Factory version:`, `Evidence:`, `Proposed change:` in the factory's `docs/proposals.md` and `.tf/proposals/pending.md`; `feedback_report.py --proposals <path>`), the assignment of loop steps (the key `steps` in the configuration: step
 identifier → `label`, `who`, `tier`; `tf config show steps`), task weight (`tf task weight <KEY> [--apply | --set <weight>] [--by]
 [--reason] [--json]`, values `light`/`quick`/`normal`/`full` (`quick`: the fast lane), the model's approach (`tf task approach <KEY> --weight <w> --rationale … [--slices] [--test-strategy] [--verify-scope] [--review] [--by human:<id>] [--json]`, `run_state.py approach <directory> …`; the fields `approach` and `approach_log` in `task.json`, `escalated` for a heavier weight during the loop; the script enforces only floors: a sensitive area → full, the weight's plan limits, a lower weight mid-run only with a human), the fields `weight` and `weight_log` in `task.json`, the line `Weight:`
 on stderr of `run_report.py start`, `run_state.py weight <directory> [--set <weight>]`), task mode (`tf task mode <KEY>
