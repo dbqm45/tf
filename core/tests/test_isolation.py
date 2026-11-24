@@ -141,6 +141,11 @@ def main() -> int:
         data = json.loads(iso(p, "show", "--json").stdout or "{}")
         check(data.get("sandbox_enabled") is True and "tf code" in str(data.get("sandbox_where")),
               f"IS-14: plugin layout → the sandbox comes from tf code: {data}")
+        r = iso(p, "show")
+        check("tf code sessions: sandbox enabled" in r.stdout and "this session" not in r.stdout,
+              f"IS-14d: a plain terminal says what tf code sessions get, not 'this session': {r.stdout}")
+        r = iso(p, "show", env={**HUMAN, "CLAUDECODE": "1", "TF_ISOLATION": "sandbox"})
+        check("this session: sandbox enabled" in r.stdout, f"IS-14e: inside tf code → 'this session': {r.stdout}")
         data = json.loads(iso(p, "show", "--json", env={**HUMAN, "CLAUDECODE": "1"}).stdout or "{}")
         check(data.get("sandbox_enabled") is False and data.get("gaps"),
               f"IS-14b: a session not started by tf code (no TF_ISOLATION, e.g. a cloud session) → no sandbox from tf code: {data}")

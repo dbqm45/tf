@@ -326,6 +326,19 @@ def hint(prompt: str, data: dict | None = None) -> str:
     return "\n".join(lines)
 
 
+def read_payload() -> dict:
+    """The hook input from stdin; {} when it is empty, not JSON (e.g. a BOM or a truncated write) or not an object."""
+    try:
+        raw = sys.stdin.read()
+    except (OSError, ValueError):
+        return {}
+    try:
+        data = json.loads(raw.lstrip("\ufeff")) if raw.strip() else {}
+    except ValueError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
 def main(argv: list[str]) -> int:
     if "--explain" in argv:
         prompt = " ".join(a for a in argv[1:] if a != "--explain")
@@ -339,8 +352,10 @@ def main(argv: list[str]) -> int:
         return 0
     if os.environ.get("CLAUDE_SKILL_HINT") == "0":
         return 0
+    data = read_payload()
+    if not data:          # empty, invalid or non-object input: no hint, no error (the hook never interrupts the session)
+        return 0
     try:
-        data = json.load(sys.stdin)
         text = hint(str(data.get("prompt") or ""), data)
         if text:
             print(text)

@@ -81,6 +81,22 @@ def main() -> int:
                            env={**os.environ, "CLAUDE_PROJECT_DIR": str(spring)})
         check("outside the project's stack" in r.stdout and "fw-nestjs" in r.stdout,
               f"SH-6: --explain pokazuje skille odfiltrowane jako poza stackiem: {r.stdout}")
+        # SH-7: empty, invalid or non-object input (logged on Windows as JSONDecodeError in decoder.py:363) → code 0,
+        # no hint, no traceback, nothing in .tf/logs/hook-errors.jsonl
+        for raw in ("", "  \n", "{this is not json", "\ufeff{\"prompt\": 1", "[1, 2]", "\"text\"", "null"):
+            r = subprocess.run([sys.executable, str(spring / ".claude" / "hooks" / "skill_hint.py")], input=raw,
+                               capture_output=True, text=True, timeout=60, cwd=spring,
+                               env={**os.environ, "CLAUDE_PROJECT_DIR": str(spring)})
+            log = spring / ".tf" / "logs" / "hook-errors.jsonl"
+            check(r.returncode == 0 and not r.stdout.strip() and "Traceback" not in r.stderr and not log.is_file(),
+                  f"SH-7: stdin {raw!r} → code 0, no hint, no error: {r.returncode} {r.stdout!r} {r.stderr[-300:]!r}")
+        # SH-8: a corrupt data file (the technology registry) counts as missing: the hint still works, no error logged
+        reg = spring / ".claude" / "skills" / "core-stack-sync" / "references" / "technologies.json"
+        reg.write_text("{corrupt", encoding="utf-8")
+        out = hint(spring, q)
+        check("fw-spring-boot" in out and "Traceback" not in out
+              and not (spring / ".tf" / "logs" / "hook-errors.jsonl").is_file(),
+              f"SH-8: a corrupt technologies.json is treated as missing: {out}")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} skill_hint stack filter tests")
