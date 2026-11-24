@@ -8,13 +8,14 @@ Recognizing the input of the /tf-task command (skill tf): what the human gave an
 
 `resolve` receives the human's input (one quoted argument or several words) and prints fixed fields:
 `Input`, `Key`, `Tracker`, `Next` (the next action), and when needed — `Question` (what to ask the human).
-The options `--auto`, `--plan`, `--design`, `--budget N`, `--change CHG-n` and a word forcing the way of working at the start
+The options `--auto`, `--plan`, `--design`, `--refresh`, `--budget N`, `--change CHG-n` and a word forcing the way of working at the start
 (`zadanie`, `question`, `szybko`) are cut off and returned separately. Rules, the first match wins:
 
   nothing                               → none        (tasks in progress to resume)
   an http(s)://… address                → issue       (tracker and key from the address: Jira …/browse/KEY, Linear
                                                        linear.app/…/issue/KEY, GitHub/GitLab …/issues/n → GH-n / GL-n)
-  one key of an existing task           → resume
+  one key of an existing task           → resume      (the story is cached in its ticket.md: `Story: cached <path>`;
+                                                       the tracker is read again only with `--refresh`)
   a key of a cut that already has a task → resume     (the cut's task `<CHG>-<TSK>`, e.g. CHG-12-TSK-57)
   one key from the plan's `tasks` header → cut        (in several plans without `--change` → a question about the change)
   one key ABC-123                       → issue       (tracker from the operations card: prefix, then default)
@@ -158,8 +159,8 @@ def open_tasks(root: Path) -> list[dict]:
 
 def split_options(text: str) -> tuple[str, dict]:
     """Cuts the loop options off the input; returns the rest and the options."""
-    options = {"auto": False, "plan": False, "design": False, "budget": None, "change": None}
-    for name in ("auto", "plan", "design"):
+    options = {"auto": False, "plan": False, "design": False, "refresh": False, "budget": None, "change": None}
+    for name in ("auto", "plan", "design", "refresh"):
         text, n = re.subn(rf"(?<!\S)--{name}(?!\S)", " ", text)
         options[name] = bool(n)
     m = re.search(r"(?<!\S)--budget[ =]+(\d+(?:[.,]\d+)?)(?!\S)", text)
@@ -357,7 +358,7 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
     if options["design"]:   # only the explicit option: a first word like "Projekt ma błąd…" must stay a task
         intent = "design"
     out = {"kind": "content", "key": None, "tracker": None, "tracker_from": None, "source": None, "changes": [],
-           "stage": None, "file": None, "title": None, "text": None, "tasks": [], "keys": [], "options": options,
+           "stage": None, "file": None, "story": None, "title": None, "text": None, "tasks": [], "keys": [], "options": options,
            "intent": intent, "ask": None, "next": ""}
     tokens = text.split()
     suffix = opts_suffix(options)
@@ -426,6 +427,14 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
             out["next"] = (f"resume the task {key} (stage: {task.get('stage', '?')}): read "
                            f"{(CHANGES / key).as_posix()}/plan.md and continue from the first unticked slice; "
                            f"the run directory: .tf/runs/{key}")
+            ticket = CHANGES / key / "ticket.md"
+            if (root / ticket).is_file():   # read once: the story is in the task's file, the tracker is not read again
+                out["story"] = ticket.as_posix()
+                out["next"] += (f"; the human asked to read the issue again (--refresh): read it from the tracker (read-only) "
+                                f"and replace the content under the \"Source\" line of {ticket.as_posix()}, then compare it with "
+                                "plan.md and spec.md" if options["refresh"] else
+                                f"; the story is cached in {ticket.as_posix()} — read that file, do not read the tracker again "
+                                "(only --refresh or the human's request does)")
             if task.get("mode") == "plan" and not options["plan"]:   # implementation after the Plan mode: the mode from the command
                 mode = "auto" if options["auto"] else "normal"
                 out["next"] += (f"; the task was in the Plan mode — set the mode from the human's command: "
@@ -490,6 +499,8 @@ def render(out: dict) -> str:
         lines.append(f"Stage: {out['stage']}")
     if out["file"]:
         lines.append(f"File: {out['file']}")
+    if out["story"]:
+        lines.append(f"Story: cached {out['story']}")
     if out["title"]:
         lines.append(f"Title: {out['title']}")
     for t in out["tasks"]:

@@ -476,6 +476,20 @@ def main() -> int:
         check("## Where the time went" in md and "1 min 30 s" in md and "Quality-gate hook runs (1): 0 min 20 s" in md
               and "Waiting for the human" in md and "the model and its tools: 2 min 10 s" in md,
               f"R-49: report.md has the section „Where the time went”: {md[-600:]}")
+        # tracker and MCP reads (`fetches`): a part of the rest, shown only when there are any (an open read counts to the end)
+        meta_t = json.loads((tdir / "run.json").read_text())
+        meta_t["fetches"] = [{"what": "intake", "from": "2026-10-21T09:59:00Z", "to": "2026-10-21T10:00:40Z"},
+                             {"what": "addon", "from": "2026-10-21T10:04:40Z", "to": None}]
+        (tdir / "run.json").write_text(json.dumps(meta_t))
+        r = run(["finish", str(tdir), "--json"], proj, cfg_t)
+        try:
+            tm2 = json.loads(r.stdout).get("time") or {}
+        except ValueError:
+            tm2 = {}
+        md2 = (tdir / "report.md").read_text(encoding="utf-8") if (tdir / "report.md").is_file() else ""
+        check(tm2.get("fetch_s") == 60 and tm2.get("fetch_runs") == 2 and tm2.get("model_s") == 130
+              and "tracker and MCP reads (`fetch`, 2): 1 min 0 s" in md2,
+              f"R-49a: the intake and addon reads are timed within the run, as a part of the rest: {tm2} {md2[-400:]}")
         check("## Approach and escalations" in md and "**escalated** quick → full" in md and "login page" in md,
               f"R-50: report.md records the approach and its escalations: {md[-900:]}")
 

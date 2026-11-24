@@ -350,6 +350,18 @@ def main() -> int:
               f"T-4: park appends items at the end of parked.md, each on its own line: {after[-200:]}")
         r = run(SCRIPT, ["park", str(d), "  "], proj, cfg)
         check(r.returncode != 0 and parked.read_text(encoding="utf-8") == after, f"T-5: empty item → error, file unchanged: {r.returncode}")
+        # tracker and MCP reads the model makes (a direct call, an mcp-runner brief in the background): timed in run.json
+        r_end0 = run(SCRIPT, ["fetch", str(d), "end"], proj, cfg)
+        r_b1 = run(SCRIPT, ["fetch", str(d), "begin", "--what", "addon"], proj, cfg)
+        r_b2 = run(SCRIPT, ["fetch", str(d), "begin", "--what", "addon"], proj, cfg)
+        r_e = run(SCRIPT, ["fetch", str(d), "end", "--what", "addon"], proj, cfg)
+        r_bad = run(SCRIPT, ["fetch", str(d), "begin", "--what", "Zła Nazwa"], proj, cfg)
+        spans = [f for f in json.loads((d / "run.json").read_text(encoding="utf-8")).get("fetches") or []
+                 if f.get("what") == "addon"]
+        check(r_end0.returncode == 2 and r_b1.returncode == 0 and r_b2.returncode == 0 and "already open" in r_b2.stdout
+              and r_e.returncode == 0 and r_bad.returncode == 2 and len(spans) == 1 and spans[0].get("from") and spans[0].get("to"),
+              f"T-5a: fetch begin/end records one span per read; end without begin and a bad name → code 2: "
+              f"{r_end0.stdout} {r_b2.stdout} {r_bad.stdout} {spans}")
         rep = run(REPORT, ["status", str(d)], proj, cfg)
         check("2" in rep.stdout or "postponed" in rep.stdout.lower(), f"T-6: the run report sees the postponed items: {rep.stdout[-300:]}")
 

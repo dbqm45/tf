@@ -28,6 +28,7 @@ and the dashboard generator. The state is written by the script, not the model �
         --message "<type>(<scope>): <description>" [--command "<command>"] [--full] [--force] [--review pass|incomplete]
   python3 .claude/skills/tf/scripts/run_state.py tick <katalog-przebiegu> S2
   python3 .claude/skills/tf/scripts/run_state.py park <run-directory> "<matter for a decision>"
+  python3 .claude/skills/tf/scripts/run_state.py fetch <run-directory> begin|end [--what intake|addon|design]
   python3 .claude/skills/tf/scripts/run_state.py block <run-directory> S2 --question "<question for the human>"
   python3 .claude/skills/tf/scripts/run_state.py answer <run-directory> S2 "<answer>" --by human:<id>
   python3 .claude/skills/tf/scripts/run_state.py qa <run-directory> "<question>" "<the human's answer, verbatim>" --by human:<id>
@@ -1661,6 +1662,35 @@ def has_remote(project: Path) -> bool:
     return r.returncode != 0 or bool(r.stdout.strip())
 
 
+FETCH_WHAT = re.compile(r"[a-z][a-z0-9-]{0,30}")
+
+
+def cmd_fetch(run_dir: Path, action: str, what: str) -> int:
+    """A tracker or MCP read the model makes (a direct call or an `mcp-runner` brief): `begin` opens a span in `fetches`
+    of run.json, `end` closes the last open one of the same kind. `run_report.py finish` shows their time."""
+    if not FETCH_WHAT.fullmatch(what):
+        return fail(f"--what \"{what}\": a short lowercase name (intake, addon, design)")
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"no {run_dir / 'run.json'} — `run_report.py start` creates the run")
+    spans = meta.setdefault("fetches", [])
+    open_ = [f for f in spans if isinstance(f, dict) and f.get("what") == what and not f.get("to")]
+    if action == "begin":
+        if open_:
+            print(f"ℹ a read „{what}” is already open since {open_[-1].get('from')}")
+            return 0
+        spans.append({"what": what, "from": now_iso(), "to": None})
+        write_run(run_dir, meta)
+        print(f"✓ read „{what}” started")
+        return 0
+    if not open_:
+        return fail(f"no open read „{what}” — call `fetch {run_dir} begin --what {what}` first")
+    open_[-1]["to"] = now_iso()
+    write_run(run_dir, meta)
+    print(f"✓ read „{what}” ended")
+    return 0
+
+
 def cmd_park(run_dir: Path, item: str, project: Path) -> int:
     """Appends a matter postponed for the human's decision at the end of parked.md (one row)."""
     item = " ".join(item.split())
@@ -2205,6 +2235,10 @@ def main(argv: list[str]) -> int:
     p = sub.add_parser("park")
     p.add_argument("run_dir")
     p.add_argument("item")
+    fe = sub.add_parser("fetch")
+    fe.add_argument("run_dir")
+    fe.add_argument("action", choices=["begin", "end"])
+    fe.add_argument("--what", default="intake")
     bl = sub.add_parser("block")
     bl.add_argument("run_dir")
     bl.add_argument("slice_id")
@@ -2281,6 +2315,8 @@ def main(argv: list[str]) -> int:
         return cmd_tick(Path(args.run_dir), args.slice_id, project)
     if args.cmd == "park":
         return cmd_park(Path(args.run_dir), args.item, project)
+    if args.cmd == "fetch":
+        return cmd_fetch(Path(args.run_dir), args.action, args.what)
     if args.cmd == "block":
         return cmd_block(Path(args.run_dir), args.slice_id, args.question, project)
     if args.cmd == "answer":

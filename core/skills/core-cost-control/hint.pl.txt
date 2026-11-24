@@ -86,8 +86,11 @@ niewyjaśniony po jednej próbie -> opus. Opcjonalnie `python3 .claude/hooks/jev
   nie bałagan. Między fazami planu zaproponuj: kontynuuj / świeży kontekst z instrukcją wznowienia / najpierw przegląd. Samo
   sprawdzanie faktów to core-grounding.
 - **MCP kosztuje podwójnie**: definicje narzędzi jadą w każdym zapytaniu (każda tura; tool search ładuje je na żądanie), a wyniki
-  zostają w historii. Główna sesja nie wywołuje MCP; robi to agent `mcp-runner` na tanim modelu, duże wyniki trzyma u siebie lub w
-  `.tf/cache/mcp/` i zwraca krótką odpowiedź. Podłączaj tylko potrzebne serwery, wybieraj kilka ogólnych narzędzi (wyszukaj +
+  zostają w historii. To ocena, nie tabela rozmiarów: JEDEN mały rekord z filtrem pól (tytuł, opis i kryteria jednego zgłoszenia)
+  główna sesja czyta sama - jedno wywołanie, mały wynik, bez zimnego startu subagenta. Duży wynik albo wiele wywołań (listy,
+  wyszukiwania, treści stron, kontekst projektu, załączniki) robi agent `mcp-runner` na tanim modelu, z budżetem wywołań, w tle,
+  gdy praca może iść dalej (`run_in_background`); duże wyniki trzyma u siebie lub w `.tf/cache/mcp/` i zwraca krótką odpowiedź.
+  Czytasz raz: wyniku już zapisanego (`ticket.md`, plik w cache) nie pobierasz ponownie. Podłączaj tylko potrzebne serwery, wybieraj kilka ogólnych narzędzi (wyszukaj +
   wykonaj) zamiast dziesiątek wąskich, a znane polecenie uruchamiaj przez CLI.
 - **Wyjście terminala**: najpierw ciche reportery (`pytest -q`, reporter kropkowy, `--silent`, tylko błędy); długie logi do pliku i
   czytanie fragmentów (`tail`, `grep`). Hook filtrujący każde polecenie to obcy kod z pełnym dostępem: audyt i zgoda człowieka.
