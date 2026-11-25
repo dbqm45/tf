@@ -216,6 +216,20 @@ def main() -> int:
         body = re.sub(r"RETIRED_PACKS = \{.*?\n\}?\n\n", "", body, flags=re.S)   # the retired-id registry is migration data
         check("pack-ev" not in body and "iwona" not in body and "dom-ev-" not in body, f"EP-16: {rel} names pack-ev")
 
+    # EP-17: a pack source without pack.yaml: the message names the fix (a deeper pack.yaml, or --drop-pack-dir)
+    sys.path.insert(0, str(ROOT / "core" / "factory"))
+    import install as inst
+    with tempfile.TemporaryDirectory() as t:
+        base = Path(t) / "tf-pack"
+        write(base / "packs" / "pack-q" / "pack.yaml", "id: pack-q\n")
+        msg = inst.missing_pack_message(str(base), base)
+        check("Found deeper" in msg and str(base / "packs") in msg and "--drop-pack-dir" in msg,
+              f"EP-17: a deeper pack.yaml is suggested as the new source: {msg}")
+        gone = Path(t) / "gone"
+        msg = inst.missing_pack_message(str(gone), gone)
+        check("does not exist" in msg and "--drop-pack-dir" in msg and "--remove" in msg,
+              f"EP-17: a missing directory → fix the path or forget the source: {msg}")
+
     # EP-13: tools/workspace.py passes --pack-dir to the installer and names the workspace after the overlays
     sys.path.insert(0, str(ROOT / "tools"))
     import workspace
