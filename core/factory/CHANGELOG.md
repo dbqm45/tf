@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.19.0] — 2026-11-25
+### Added
+- **core:** the human approves pushes and commit messages, no AI co-author (#454)
+
 ## [24.18.2] — 2026-11-25
 ### Fixed
 - **core:** ticket.md must hold the issue's content (#453)
