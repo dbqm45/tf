@@ -407,14 +407,19 @@ def main(argv: list[str]) -> int:
     flags = {a for a in argv[1:] if a.startswith("--")}
     if "--hook" in flags:
         import threading                    # the hook ends on its own before the Claude Code limit (10 s), with exit code 0
-        timer = threading.Timer(float(os.environ.get("CLAUDE_HOOK_DEADLINE", "7") or 7), lambda: os._exit(0))
+        try:
+            seconds = float(os.environ.get("CLAUDE_HOOK_DEADLINE", "7") or 7)
+        except ValueError:   # a malformed value: the default, not a crash at session start
+            seconds = 7.0
+        timer = threading.Timer(seconds, lambda: os._exit(0))
         timer.daemon = True
         timer.start()
         try:
             data = json.load(sys.stdin)
         except (json.JSONDecodeError, ValueError):
             data = {}
-        root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or ".")
+        cwd = data.get("cwd") if isinstance(data, dict) and isinstance(data.get("cwd"), str) else None
+        root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or cwd or ".")
         try:
             out = to_hook(analyze(root))
         except Exception as e:  # a hook must never block session start

@@ -19,6 +19,13 @@ import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from hook_errors import record as record_error  # hook error to .tf/logs/hook-errors.jsonl (tf doctor)
+except ImportError:  # older install without the log module — the hook works as before
+    def record_error(hook: str, exc: BaseException) -> None:
+        return None
+
 for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (cp1250) ≠ UTF-8 Claude Code
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")
@@ -160,8 +167,18 @@ def harness(root: Path, claude_code: str | None) -> dict:
 def main() -> None:
     try:
         data = json.load(sys.stdin)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError):
         sys.exit(0)
+    if not isinstance(data, dict):   # data outside the Claude Code format: nothing to record
+        sys.exit(0)
+    try:
+        log(data)
+    except Exception as e:  # noqa: BLE001 — a usage log never interrupts the session (e.g. an unwritable .tf/logs)
+        record_error("log_usage", e)
+    sys.exit(0)
+
+
+def log(data: dict) -> None:
     event = data.get("hook_event_name", "")
     transcript = data.get("transcript_path") or ""
 
@@ -169,7 +186,7 @@ def main() -> None:
         if data.get("tool_name") in ("Agent", "Task"):
             with (log_dir_for(data) / "delegation.jsonl").open("a", encoding="utf-8") as f:
                 f.write(json.dumps(delegation_record(data), ensure_ascii=False) + "\n")
-        sys.exit(0)
+        return
     if event == "SubagentStop":
         agent = data.get("agent_type") or "subagent"
         path = data.get("agent_transcript_path")
@@ -179,11 +196,11 @@ def main() -> None:
         agent = data.get("agent_type") or "main"
         path = transcript
     if not path:
-        sys.exit(0)
+        return
 
     usage = usage_from_transcript(Path(path).expanduser())
     if usage["requests"] == 0:
-        sys.exit(0)
+        return
     root = Path(os.environ.get("CLAUDE_PROJECT_DIR", data.get("cwd", ".")))
     usage["harness"] = harness(root, usage.pop("claude_code", None))
     record = {
@@ -198,7 +215,7 @@ def main() -> None:
         record["agent_id"] = data["agent_id"]
     with (log_dir_for(data) / "usage.jsonl").open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
-    sys.exit(0)
+    return
 
 
 if __name__ == "__main__":

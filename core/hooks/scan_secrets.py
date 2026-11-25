@@ -23,7 +23,7 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
 
 RULES = [
     ("AWS access key", r"\b(AKIA|ASIA)[0-9A-Z]{16}\b"),
-    ("klucz prywatny", r"-----BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----"),
+    ("private key", r"-----BEGIN (RSA |EC |OPENSSH |DSA |PGP |ENCRYPTED )?PRIVATE KEY( BLOCK)?-----"),
     ("GitHub token", r"\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36}\b|\bgithub_pat_[A-Za-z0-9_]{50,}\b"),
     ("Slack token", r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b"),
     ("Anthropic API key", r"\bsk-ant-[A-Za-z0-9_-]{20,}\b"),
@@ -41,13 +41,16 @@ SKIP_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".pdf", ".zip", ".
 def main() -> None:
     try:
         data = json.load(sys.stdin)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError):
         sys.exit(0)
-    path = (data.get("tool_input") or {}).get("file_path", "")
+    ti = data.get("tool_input") if isinstance(data, dict) else None
+    path = ti.get("file_path") if isinstance(ti, dict) else None
+    if not path or not isinstance(path, str) or "\0" in path:   # data outside the Claude Code format: nothing to scan
+        sys.exit(0)
     p = Path(path)
-    if not path or not p.is_file() or p.suffix.lower() in SKIP_EXT or p.stat().st_size > 2_000_000:
-        sys.exit(0)
     try:
+        if not p.is_file() or p.suffix.lower() in SKIP_EXT or p.stat().st_size > 2_000_000:
+            sys.exit(0)
         text = p.read_text(encoding="utf-8", errors="ignore")
     except OSError:
         sys.exit(0)

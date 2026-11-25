@@ -46,6 +46,7 @@
  "test_hook_errors.py": 0.4,
  "test_hook_portability.py": 7.0,
  "test_hooks.py": 12.3,
+ "test_hooks_edge.py": 6.0,
  "test_hooks_status.py": 116.9,
  "test_instructions_lint.py": 3.3,
  "test_intake.py": 3.9,
