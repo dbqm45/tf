@@ -3,6 +3,14 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.18.0] — 2026-11-25
+### Added
+- **mode-pdi:** recommend a no-code resolution in triage (DV7) (#450)
+### Fixed
+- **core:** hook edge cases (fail-safe logs, gate budget, guard evasions) (#448)
+- **core:** install, update, uninstall and add-on edge cases (#449)
+- **core:** loop scripts survive corrupted state and odd file names (#447)
+
 ## [24.17.0] — 2026-11-25
 ### Added
 - **mode-pdi:** pin contract 0.23.0 (no reverted decision status) (#446)
