@@ -32,8 +32,8 @@
   "offline": "2026-11-17"
  },
  "core-git-workflow": {
-  "fingerprint": "3a41e4e2da55d613",
-  "offline": "2026-11-25"
+  "fingerprint": "ff545f81089fbca8",
+  "offline": "2026-11-24"
  },
  "core-grounding": {
   "fingerprint": "06da2e97ec698dce",
@@ -84,7 +84,7 @@
   "offline": "2026-11-20"
  },
  "tf": {
-  "fingerprint": "3fcf7f521d791cb4",
+  "fingerprint": "f878db5609e41e2f",
   "offline": "2026-11-25"
  },
  "tf-design": {
@@ -92,7 +92,7 @@
   "offline": "2026-11-21"
  },
  "tf-task": {
-  "fingerprint": "49a27691fa60a4a3",
+  "fingerprint": "b5619990cba637e7",
   "offline": "2026-11-25"
  }
 }

@@ -720,6 +720,11 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
     (docs / "plan.md").write_bytes((PLAN_TEMPLATE.format(title=title)).encode("utf-8"))
     (run_dir / "parked.md").write_bytes((PARKED_TEMPLATE.format(title=title)).encode("utf-8"))
     print(run_dir.relative_to(project) if run_dir.is_relative_to(project) else run_dir)
+    if not cut and not (story or "").strip():   # e.g. an issue read through MCP: the content must not stay in the context only
+        rel = (docs / story_name).relative_to(project) if (docs / story_name).is_relative_to(project) else docs / story_name
+        print(f"⚠ {rel} has no content of the issue yet — add it unchanged under the Source line before the plan "
+              "(next time in one call: write the text to a file and pass `--story-file <file>`); the intake and plan "
+              "stages refuse until it is there.")
     if cut:                              # a cut's flag is a release-plan decision: the loop neither invents it nor asks about it
         if cut["flag"]:
             dated = re.fullmatch(r"\d{4}-\d{2}-\d{2}", cut.get("remove_by") or "")

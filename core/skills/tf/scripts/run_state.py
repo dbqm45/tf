@@ -663,6 +663,15 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         m = run_report.task_state(project, "mode", meta["key"], "auto" if auto else "plan")
         if m is not None and "—" in m.stdout:                  # e.g. Auto at full weight: the normal mode stays
             print(m.stdout.strip())
+    if stage in ("intake", "plan") and meta.get("task_dir") and not meta.get("change"):
+        ticket = run_report.story_file(run_dir, meta)          # the spec and the weight are read from it, not from the context
+        spec_i = importlib.util.spec_from_file_location("tf_intake_for_stage", Path(__file__).resolve().parent / "intake.py")
+        intake = importlib.util.module_from_spec(spec_i)
+        spec_i.loader.exec_module(intake)
+        if ticket.is_file() and not intake.cached_story(ticket):
+            return fail(f"{ticket} has no content of the issue — add it unchanged under the Source line (or start again "
+                        "with `--story-file <file>`) before the {stage} stage: the spec, the weight and a resume read it, "
+                        "not this conversation.".replace("{stage}", stage))
     if stage in ("intake", "plan") and meta.get("key"):      # weight: a repeated assignment (upward only) after the content and the plan
         before = task_weight(run_dir, meta)
         w = run_report.task_state(project, "weight", meta["key"], "--apply")

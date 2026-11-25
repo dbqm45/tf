@@ -129,6 +129,7 @@
  "test_team_switch.py": 0.4,
  "test_tf.py": 3.5,
  "test_tf_skill.py": 0.0,
+ "test_ticket_body.py": 6.0,
  "test_trace_check.py": 1.6,
  "test_triage_pdi.py": 1.4,
  "test_ui_snap.py": 66.6,
