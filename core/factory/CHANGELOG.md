@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.16.1] — 2026-11-25
+### Fixed
+- **core:** a missing or emptied pack source says how to fix it (#443)
+
 ## [24.16.0] — 2026-11-24
 ### Added
 - **addons:** standards from PR reviews, dna code conventions (#441)
