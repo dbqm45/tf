@@ -122,6 +122,19 @@ def main() -> int:
         check(r.returncode == 0 and (q / ".claude/skills/ma-run").is_dir() and (q / ".claude/skills/mb-run").is_dir(),
               f"EP-6: a directory with several overlays: {(r.stdout + r.stderr)[-800:]}")
 
+        # EP-7b: the source directory is still there but holds no pack (only __pycache__, e.g. another branch checked
+        # out) → the same refusal naming the overlay, plus how to fix it, nothing removed
+        hidden = ext.parent / (ext.name + "-hidden")
+        shutil.move(str(ext), hidden)
+        write(ext / "skills" / "__pycache__" / "x.pyc", "")
+        r = install(src, p)
+        o = r.stdout + r.stderr
+        check(r.returncode == 2 and "pack-x" in o and "no pack.yaml" in o and "--drop-pack-dir" in o,
+              f"EP-7b: an emptied source → refusal with the overlay and a fix: {o[-900:]}")
+        check((p / ".claude/skills/xa-run/SKILL.md").is_file(), "EP-7b: after the refusal the overlay's files stay")
+        shutil.rmtree(ext)
+        shutil.move(str(hidden), ext)
+
         # EP-7: the source disappeared at update time → refusal naming the overlay and the source, nothing removed
         moved = base / "other-repo-moved"
         shutil.move(str(base / "other-repo"), moved)

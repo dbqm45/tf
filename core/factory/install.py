@@ -223,7 +223,8 @@ def missing_pack_message(src: str, base: Path) -> str:
                "\n  Point the source at that directory: update.py --drop-pack-dir " + f'"{src}"' + \
                " --pack-dir " + f'"{dirs[0]}"'
     else:
-        msg += ("\n  Fix the path, or forget the source: update.py --drop-pack-dir " + f'"{src}"'
+        msg += ("\n  Restore the packs there (e.g. `git status` / `git log --all -- <dir>` if they are on another "
+                "branch), or forget the source: update.py --drop-pack-dir " + f'"{src}"'
                 + " (add --remove <pack> for the packs installed from it)")
     return msg
 
@@ -1060,6 +1061,8 @@ def _main(argv: list[str], tmp: Path) -> int:
     external, missing = {}, {}
     for s in pack_dirs:
         d, why = fetch_pack_source(s, tmp)
+        if d is not None and not pack_yaml_files(d):   # the directory is there, the packs are not (e.g. another branch)
+            d, why = None, missing_pack_message(s, d)
         if d is None:
             missing[s] = why
         else:
