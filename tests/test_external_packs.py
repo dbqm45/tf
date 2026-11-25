@@ -122,6 +122,19 @@ def main() -> int:
         check(r.returncode == 0 and (q / ".claude/skills/ma-run").is_dir() and (q / ".claude/skills/mb-run").is_dir(),
               f"EP-6: a directory with several overlays: {(r.stdout + r.stderr)[-800:]}")
 
+        # EP-7b: the source directory is still there but holds no pack (only __pycache__, e.g. another branch checked
+        # out) → the same refusal naming the overlay, plus how to fix it, nothing removed
+        hidden = ext.parent / (ext.name + "-hidden")
+        shutil.move(str(ext), hidden)
+        write(ext / "skills" / "__pycache__" / "x.pyc", "")
+        r = install(src, p)
+        o = r.stdout + r.stderr
+        check(r.returncode == 2 and "pack-x" in o and "no pack.yaml" in o and "--drop-pack-dir" in o,
+              f"EP-7b: an emptied source → refusal with the overlay and a fix: {o[-900:]}")
+        check((p / ".claude/skills/xa-run/SKILL.md").is_file(), "EP-7b: after the refusal the overlay's files stay")
+        shutil.rmtree(ext)
+        shutil.move(str(hidden), ext)
+
         # EP-7: the source disappeared at update time → refusal naming the overlay and the source, nothing removed
         moved = base / "other-repo-moved"
         shutil.move(str(base / "other-repo"), moved)
@@ -215,6 +228,20 @@ def main() -> int:
         body = (ROOT / rel).read_text(encoding="utf-8")
         body = re.sub(r"RETIRED_PACKS = \{.*?\n\}?\n\n", "", body, flags=re.S)   # the retired-id registry is migration data
         check("pack-ev" not in body and "iwona" not in body and "dom-ev-" not in body, f"EP-16: {rel} names pack-ev")
+
+    # EP-17: a pack source without pack.yaml: the message names the fix (a deeper pack.yaml, or --drop-pack-dir)
+    sys.path.insert(0, str(ROOT / "core" / "factory"))
+    import install as inst
+    with tempfile.TemporaryDirectory() as t:
+        base = Path(t) / "tf-pack"
+        write(base / "packs" / "pack-q" / "pack.yaml", "id: pack-q\n")
+        msg = inst.missing_pack_message(str(base), base)
+        check("Found deeper" in msg and str(base / "packs") in msg and "--drop-pack-dir" in msg,
+              f"EP-17: a deeper pack.yaml is suggested as the new source: {msg}")
+        gone = Path(t) / "gone"
+        msg = inst.missing_pack_message(str(gone), gone)
+        check("does not exist" in msg and "--drop-pack-dir" in msg and "--remove" in msg,
+              f"EP-17: a missing directory → fix the path or forget the source: {msg}")
 
     # EP-13: tools/workspace.py passes --pack-dir to the installer and names the workspace after the overlays
     sys.path.insert(0, str(ROOT / "tools"))

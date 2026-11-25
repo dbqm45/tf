@@ -196,7 +196,7 @@ def available_packs(external: dict[str, Path] | None = None) -> dict[str, dict]:
     for src, base in (external or {}).items():
         files = pack_yaml_files(base)
         if not files:
-            raise ValueError(f"no pack.yaml in the pack source {src} (expected pack.yaml or */pack.yaml)")
+            raise ValueError(missing_pack_message(src, base))
         for p in files:
             data = pm.load_yaml(p)
             data["_dir"], data["_external"] = p.parent, src
@@ -210,6 +210,23 @@ def available_packs(external: dict[str, Path] | None = None) -> dict[str, dict]:
                 raise ValueError(f"{pid} from the pack source {src}: the id is already used by {where} — rename the pack")
             out[pid] = data
     return out
+
+
+def missing_pack_message(src: str, base: Path) -> str:
+    """Why a pack source has no pack and how to fix it: a deeper pack.yaml it could mean, or forgetting the source."""
+    deeper = sorted(base.glob("*/*/pack.yaml"))[:3] if base.is_dir() else []
+    msg = (f"no pack.yaml in the pack source {src} (expected pack.yaml or */pack.yaml)"
+           + ("" if base.exists() else " — the directory does not exist"))
+    if deeper:
+        dirs = sorted({str(p.parent.parent) for p in deeper})
+        msg += "\n  Found deeper: " + ", ".join(str(p) for p in deeper) + \
+               "\n  Point the source at that directory: update.py --drop-pack-dir " + f'"{src}"' + \
+               " --pack-dir " + f'"{dirs[0]}"'
+    else:
+        msg += ("\n  Restore the packs there (e.g. `git status` / `git log --all -- <dir>` if they are on another "
+                "branch), or forget the source: update.py --drop-pack-dir " + f'"{src}"'
+                + " (add --remove <pack> for the packs installed from it)")
+    return msg
 
 
 def pack_yaml_files(base: Path) -> list[Path]:
@@ -1044,6 +1061,8 @@ def _main(argv: list[str], tmp: Path) -> int:
     external, missing = {}, {}
     for s in pack_dirs:
         d, why = fetch_pack_source(s, tmp)
+        if d is not None and not pack_yaml_files(d):   # the directory is there, the packs are not (e.g. another branch)
+            d, why = None, missing_pack_message(s, d)
         if d is None:
             missing[s] = why
         else:
