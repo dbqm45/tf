@@ -150,6 +150,20 @@ def main() -> int:
         r = run(["recommend", prb, "--status", "parked", "--return-when", "x", "--rationale", "x", "--out", "rec.json"], d)
         saved = json.loads((d / "rec.json").read_text(encoding="utf-8")) if (d / "rec.json").is_file() else {}
         check(r.returncode == 0 and saved.get("recommended_status") == "parked", f"R-11: --out zapisuje JSON: {r.stdout}")
+        # DV7 (contract 0.24.0): solved without development — a configuration, a process change or an existing feature.
+        how = "Set the tariff for a charger group in Settings → Groups; it changes on all of them at once."
+        r = run(["recommend", prb, "--status", "rejected", "--no-code", "configuration", "--how", how,
+                 "--rationale", "The group setting already does what the report asks."], d)
+        out = json.loads(r.stdout) if r.returncode == 0 else {}
+        check(out.get("rejection_reason") == "no_code" and out.get("no_code") == {"kind": "configuration", "how": how}
+              and out.get("tf_state") == "wontfix", f"NC-1: --no-code makes a no_code rejection with how: {r.stdout}{r.stderr}")
+        r = run(["recommend", prb, "--status", "rejected", "--no-code", "configuration", "--rationale", "x"], d)
+        check(r.returncode == 1 and "--how" in r.stdout, f"NC-2: --no-code needs --how: {r.stdout}")
+        r = run(["recommend", prb, "--status", "rejected", "--no-code", "magic", "--how", "x", "--rationale", "x"], d)
+        check(r.returncode != 0, f"NC-3: an unknown no-code kind → error: {r.stdout}{r.stderr}")
+        r = run(["recommend", prb, "--status", "accepted", "--brief", "x", "--no-code", "configuration", "--how", "x",
+                 "--rationale", "x"], d)
+        check(r.returncode == 1 and "rejected" in r.stdout, f"NC-4: --no-code only with --status rejected: {r.stdout}")
 
     for f in fails:
         print(f"✗ {f}")

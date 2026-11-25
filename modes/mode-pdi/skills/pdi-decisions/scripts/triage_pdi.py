@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
 Triage of a pdi report (F3) — mode-pdi. The triage procedure: skill proc-issue-triage; this script checks the input
-and assembles a recommendation in pdi states (contract 0.21.0, R7).
+and assembles a recommendation in pdi states (contract 0.24.0, R7).
 
   python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py check <prb.json>
       a PRB report in JSON against contract/problem.schema.json (a copy next to the script); triage only for the states
       new, clarifying, ready_for_triage
   python3 .claude/skills/pdi-decisions/scripts/triage_pdi.py recommend <prb.json> --status S --rationale "…" […]
       S: clarifying (--question … ×n) · accepted (--brief "…", --executor agent|human) · rejected (--reason R
-      [--note "…"], with out_of_scope_recorded --out-of-scope-file .out-of-scope/<concept>.md) · parked
+      [--note "…"], with out_of_scope_recorded --out-of-scope-file .out-of-scope/<concept>.md; solved without
+      development: --no-code configuration|process_change|existing_feature --how "what the reporter does", DV7) · parked
       (--return-when "…") · duplicate (--duplicate-of PRB-n); opcjonalnie --category bug|enhancement,
       --observation "…" and --evidence "…" (evidence: an observation or an AI conclusion), --out FILE
       recommendation JSON (triage-recommendation.schema.json next to the script) with tf_state from the contract's mapping table.
@@ -27,13 +28,14 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from decision_record import validate  # noqa: E402  (the same JSON Schema subset validator as for release.yaml)
 
-CONTRACT = "0.23.0"
+CONTRACT = "0.24.0"
 PROBLEM_SCHEMA = HERE / "problem.schema.json"                  # kopia z kontraktu pdi (tools/pdi-contract.json)
 RECOMMENDATION_SCHEMA = HERE / "triage-recommendation.schema.json"   # kopia z kontraktu pdi (tools/pdi-contract.json)
 TRIAGE_INPUT = ("new", "clarifying", "ready_for_triage")
 # The table „Stany zgłoszenia i mapowanie na tf” (report states and mapping to tf) from contract/README.md (R7).
 TF_STATE = {"clarifying": "needs-info", "rejected": "wontfix", "duplicate": "wontfix", "parked": "needs-triage"}
-REASONS = ("out_of_strategy", "works_as_designed", "cost_disproportionate", "already_exists", "out_of_scope_recorded",
+NO_CODE_KINDS = ("configuration", "process_change", "existing_feature")
+REASONS = ("out_of_strategy", "works_as_designed", "cost_disproportionate", "already_exists", "out_of_scope_recorded", "no_code",
            "other")
 
 
@@ -77,6 +79,13 @@ def build(prb: dict, a) -> tuple[dict, list[str]]:
         if not (a.brief or "").strip():
             errs.append("accepted needs a brief for the executor: --brief \"…\" (format from proc-issue-triage)")
         rec.update(brief=a.brief, executor=a.executor or "agent")
+    if a.no_code and a.status != "rejected":
+        errs.append("--no-code only with --status rejected (the report is solved without development)")
+    if a.status == "rejected" and a.no_code:
+        a.reason = a.reason or "no_code"
+        if not (a.how or "").strip():
+            errs.append("--no-code needs --how \"…\": what the reporter does so the problem goes away")
+        rec["no_code"] = {"kind": a.no_code, "how": (a.how or "").strip()}
     if a.status == "rejected":
         if not a.reason:
             errs.append(f"rejected needs a reason: --reason {'|'.join(REASONS)}")
@@ -126,6 +135,8 @@ def main(argv: list[str]) -> int:
     r.add_argument("--reason")
     r.add_argument("--note")
     r.add_argument("--out-of-scope-file")
+    r.add_argument("--no-code", choices=NO_CODE_KINDS, help="solved without development (DV7, contract 0.24.0)")
+    r.add_argument("--how", help="with --no-code: what the reporter does so the problem goes away")
     r.add_argument("--return-when")
     r.add_argument("--duplicate-of")
     r.add_argument("--observation", action="append")

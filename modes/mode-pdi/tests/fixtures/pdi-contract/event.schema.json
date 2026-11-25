@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/event.schema.json",
-  "title": "Zdarzenie (kontrakt suity 0.23.0)",
+  "title": "Zdarzenie (kontrakt suity 0.24.0)",
   "description": "Koperta zdarzenia wymienianego między pdi, tf, ci_for_sdlc i ShipScope; treść (payload) zależy od typu.",
   "type": "object",
   "additionalProperties": false,
