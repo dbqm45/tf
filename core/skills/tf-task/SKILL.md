@@ -18,7 +18,8 @@ Rules that win over "doing more":
 - **Evidence:** every step ends with a verification command with its result; a fact about the code with `plik:linia` (core-grounding).
 - **STOP, not pushing on:** at most 2 repair attempts per gate; a blocker → a STOP block, not a workaround.
 - **A question to the human** — always AskUserQuestion: 2–4 answers, the recommended one first with "(Recommended)";
-  several questions in one call. With `--auto` → a STOP block.
+  several in one call. With `--auto` → a STOP block.
+- **Git questions:** the human approves each commit message, the push, the PR title: `references/git-questions.md`.
 - **One action per command:** you do not chain commands with `;`, `&&` or a pipe, no `sed`, `>>` and heredoc —
   Claude Code rejects a compound command when unsupervised. You read with Read, write the plan with Write or Edit.
 
@@ -33,7 +34,7 @@ Say **in one sentence** what you chose:
 | a task: issue numbers, an address, a slice key, a file, a story, "add / do / change …" with the expected behaviour | the loop from §0 |
 | a question, or a small change in 1–2 files without a change of behaviour | no loop: an answer with `plik:linia`, or one commit |
 | an idea to work out first ("let's design …", "no code yet") | ask: design first (/tf-design) or a task now |
-| it cannot be settled | AskUserQuestion: "Run this as a task?" |
+| unclear | AskUserQuestion: "Run this as a task?" |
 
 A first word forces the way: `task`/`zadanie`, `question`/`pytanie`, `quick`/`szybko`; `/tf-design` (= `--design`).
 
@@ -79,7 +80,7 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
   split; with `--auto` → STOP with a proposed split (one story per main action).
 - **Against earlier decisions:** grep the story's key terms in other tasks' `spec.md` and `decisions.md`; a contradiction
   or an overlap → a question (update the old spec / go on / stop).
-- A small ambiguity → the conservative option (fewer files), an **[assumption]** in the plan.
+- A small ambiguity → the conservative option (fewer files), an **[assumption]**.
 - **Your approach is a judgement** (`references/weight.md`): one class or label in N templates → `quick`, one slice,
   one parametrized test per criterion, narrow verify, no spec, `plan.md` first; new domain logic across modules →
   `normal`/`full`, spec, slices. `run_state.py approach <katalog> --weight … --rationale "<evidence>"`.
@@ -99,10 +100,10 @@ Every `AC-n` goes into a slice. `spec.md` changed after the plan → repeat `sta
   without it the `pr` stage is rejected (`references/feature-flag.md`).
 - **Conditional phases** only with a reason: docs (a public API or documented behaviour changes), `security-reviewer`
   (auth, secrets, permissions, IaC, CI), `architect` (a decision that is hard to reverse).
-- Edge cases → `run_state.py park <katalog> "<sprawa>"` (into the PR and the report).
-- **Visual check, only when worth it:** `ui_snap.py worth <katalog> --base <gałąź domyślna>`: `no` = skip it; `yes` → `references/visual-check.md` (`--visual`/`--no-visual`).
+- Edge cases → `run_state.py park <katalog> "<sprawa>"` (into the PR, the report).
+- **Visual check, when worth it:** `ui_snap.py worth <katalog> --base <gałąź domyślna>`: `no` = skip it; `yes` → `references/visual-check.md` (`--visual`/`--no-visual`).
 - After the plan and the approach: `run_state.py stage <katalog> plan`. **Without `--auto`:** `run_state.py stage <katalog> needs
-  --needs plan`, show the plan with the `Approach:` line and wait; after the human's consent
+  --needs plan`, show the plan with the `Approach:` line and wait; after consent
   `run_state.py approve <katalog>`. With `--plan` you end here. **With `--auto`:** you go on; the plan goes into the PR description.
   Modes: `references/modes-and-stops.md`.
 
@@ -121,8 +122,7 @@ State: `run_state.py step <katalog> S<n> R<k> <etap> <stan>` — the stages `tes
    reruns), the scan (`security_scan.py`), the step states, the commit (body `Slice S<n>`, `Flag:` footer), the tick, the
    next slice. `GATE S<n>: FAIL` → fix, call it again (the next round); scan findings: `security/S<n>/feedback.md`; after 2
    attempts STOP, no commit. A missing scanner is a FAIL (`references/security.md`). `--full` once before the PR.
-   Separately: `verify`, `security_scan.py scan --slice S<n> --attempt <k> --out <katalog>/security/S<n>`,
-   `run_state.py done` (a refusal says what is missing). Footers: `references/pdi-cuts.md`.
+   Separately: `verify`, `security_scan.py scan --slice S<n>`, `run_state.py done` (a refusal says what is missing). Footers: `references/pdi-cuts.md`.
 5. **Bigger than judged** (unexpected red tests, files outside the plan, a new unknown) → escalate now: `approach <katalog>
    --weight <heavier> --rationale "escalated: …"`; down only with the human's OK. **Budget:** `run_report.py status`.
 
@@ -134,11 +134,11 @@ State: `run_state.py step <katalog> S<n> R<k> <etap> <stan>` — the stages `tes
    OVER` → shorten the artifacts or describe the exception. **The criteria trace:** `run_state.py trace <katalog>
    --base <gałąź domyślna>` — exit code 1 (a criterion without a test, a test with a foreign `AC-n`) you fix.
 3. Full weight: the panel first, `run_state.py panel <katalog>` (`security-reviewer`, `spec-reviewer`).
-   `run_state.py stage <katalog> pr` and `run_state.py step <katalog> PR plan_drift pass` (or `fail`). Push the branch
+   `run_state.py stage <katalog> pr` and `run_state.py step <katalog> PR plan_drift pass` (or `fail`). Push (asked first)
    and one PR, the description (with "Jak cofnąć") from `run_state.py pr-body <katalog> --base <gałąź domyślna>` →
    `gh pr create --body-file <plik>`; you add only deviations and the `pr_budget` exception. You do not merge.
 4. `run_state.py stage <katalog> done --pr <numer>`, then `run_report.py finish <katalog>` → `report.md`.
-   **The task's files — one commit** on `story/<slug>` (`finish` prints it), also after a STOP. Show the time, cost, PR link.
+   **The task's files — one commit** on `story/<slug>` (`finish` prints it), also after a STOP. Show time, cost, PR link.
 5. **Lessons:** observation → evidence → rule; project: `tf task close … --evidence`; factory: `tf proposals add`
    (core-agent-retro); a before/after contrast is the strongest evidence.
 

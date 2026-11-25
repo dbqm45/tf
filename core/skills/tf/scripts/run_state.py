@@ -32,6 +32,8 @@ and the dashboard generator. The state is written by the script, not the model �
   python3 .claude/skills/tf/scripts/run_state.py block <run-directory> S2 --question "<question for the human>"
   python3 .claude/skills/tf/scripts/run_state.py answer <run-directory> S2 "<answer>" --by human:<id>
   python3 .claude/skills/tf/scripts/run_state.py qa <run-directory> "<question>" "<the human's answer, verbatim>" --by human:<id>
+  python3 .claude/skills/tf/scripts/run_state.py push <run-directory> --by human:<id> [--remote <name>]   # after "Yes, push"
+  python3 .claude/skills/tf/scripts/run_state.py revert <run-directory> --by human:<id>   # back to before /tf-task
   python3 .claude/skills/tf/scripts/run_state.py next <katalog-przebiegu>
   python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out FILE] [--open]
   python3 .claude/skills/tf/scripts/run_state.py dashboard --live [--open] | --live --stop    # the live server
@@ -147,6 +149,7 @@ import importlib.util
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import webbrowser
@@ -632,6 +635,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
+    remember_branch(run_dir, meta, project)
     if stage not in STAGES:
         return fail(f"the stage \"{stage}\" does not exist; allowed: {', '.join(STAGES)}.")
     if stage == "needs" and needs not in NEEDS:
@@ -731,6 +735,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
+    remember_branch(run_dir, meta, project)
     if re.fullmatch(SLICE_ID, target) and hold_refusal(meta, target, run_dir):
         return fail(hold_refusal(meta, target, run_dir))
     if target.upper() == "PR":
@@ -933,9 +938,21 @@ def slice_files(project: Path, key: str, slice_id: str) -> list[str]:
     return [f for f in files if isinstance(f, str)] if isinstance(files, dict) else []
 
 
+# AI attribution a model may copy into a message: the author of a factory commit is the person logged into git only
+# (user.name/user.email). A human co-author's `Co-Authored-By` stays.
+AI_TRAILER = re.compile(r"^\s*(?:co-authored-by:.*\b(?:claude|anthropic)\b.*|claude-session:.*|"
+                        r"\W*generated with \[?claude(?: code)?\b.*)$", re.I)
+
+
+def without_ai_attribution(text: str) -> str:
+    lines = [ln for ln in text.split("\n") if not AI_TRAILER.match(ln)]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
+
+
 def commit_message(message: str, slice_id: str, value: str, footers: list[str]) -> str:
-    """Title and body from `--message`; appends `Slice S<n>: <value>` and missing footers (the last paragraph)."""
-    text = message.strip().replace("\r\n", "\n")
+    """Title and body from `--message`; appends `Slice S<n>: <value>` and missing footers (the last paragraph). Lines
+    of AI attribution (an AI `Co-Authored-By`, `Claude-Session`, "Generated with Claude Code") are dropped."""
+    text = without_ai_attribution(message.strip().replace("\r\n", "\n"))
     if not re.search(rf"^Slice {re.escape(slice_id)}:", text, re.M):
         title, _, rest = text.partition("\n")
         text = f"{title}\n\nSlice {slice_id}: {value}" + (f"\n{rest.strip(chr(10))}" if rest.strip() else "")
@@ -1659,6 +1676,10 @@ def cmd_pr_body(run_dir: Path, base: str | None, project: Path) -> int:
         shown = str(target)
     print(f"✓ the PR description: {shown}\n  use: gh pr create --title \"<type>(<scope>): <description>\" --body-file {shown}\n"
           "  add your own remarks (deviations from the plan, an artifact budget exception) at the end of the file")
+    if task_field(run_dir, meta, "mode") != "auto":
+        print("Next: ask the human with AskUserQuestion — push the branch (yes / keep it local) and the PR title (your "
+              f"proposal / an alternative), one call; after \"Yes, push\": run_state.py push {run_dir} --by human:<id> "
+              "(tf-task references/git-questions.md)")
     if missing:
         print(f"⚠ without green evidence: {', '.join(missing)} — the description says so plainly")
     if not has_remote(project):
@@ -2155,6 +2176,211 @@ def launch(project: Path, open_browser: bool = True) -> str | None:
     return uri
 
 
+# ---- revert: back to the state before /tf-task, a human's decision ----------------------------------------------------
+
+def git_out(project: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(["git", "-C", str(project), *args], capture_output=True, text=True, timeout=120)
+
+
+def remember_branch(run_dir: Path, meta: dict, project: Path) -> None:
+    """The task branch, once the loop is on it (a branch other than the recorded base): `revert` deletes only this one."""
+    base = meta.get("base") if isinstance(meta.get("base"), dict) else None
+    if not base or meta.get("branch"):
+        return
+    try:
+        cur = git_out(project, "branch", "--show-current").stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return
+    if cur and cur != base.get("branch"):
+        meta["branch"] = cur
+        write_run(run_dir, meta)
+
+
+def pushed(project: Path, branch: str, base_sha: str) -> list[str]:
+    """Remote branches that hold any of the task branch's own commits (empty: never pushed)."""
+    own = git_out(project, "rev-list", f"{base_sha}..{branch}").stdout.split()
+    if not own:
+        return []
+    r = git_out(project, "branch", "-r", "--format=%(refname:short)", "--contains", own[-1])
+    return [ln.strip() for ln in r.stdout.splitlines() if ln.strip()]
+
+
+def cmd_revert(run_dir: Path, by: str | None, project: Path) -> int:
+    """The human's "Revert everything for <KEY>": back to the base branch at its current state, the task branch deleted
+    when it was never pushed, the task files moved to .tf/backup/revert-<KEY>-<date>/. Never `git reset --hard` or
+    `git clean`; the human's own uncommitted changes and stash stay as they are."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if not by or not HUMAN.fullmatch(by):
+        return fail("a revert is the human's decision: run it after they chose \"Revert everything\", with --by human:<id>.")
+    key = meta["key"]
+    base = meta.get("base") if isinstance(meta.get("base"), dict) else None
+    if not base or not base.get("sha"):
+        return fail(f"the run {key} has no recorded base (it started before the factory recorded one), so the script does "
+                    "not know what to return to. Revert by hand: `git switch <your branch>`, then delete the task branch "
+                    f"and move {run_report.CHANGES.as_posix()}/{key}/ and .tf/runs/{key}/ away yourself.")
+    base_branch, base_sha = base.get("branch"), base["sha"]
+    if not base_branch:
+        return fail("the task started on a detached HEAD — there is no branch to return to; switch by hand "
+                    f"(`git switch --detach {base_sha[:12]}`).")
+    docs = run_report.docs_dir(run_dir, meta)
+    try:
+        docs_rel = docs.resolve().relative_to(project.resolve()).as_posix()
+    except ValueError:
+        docs_rel = (run_report.CHANGES / key).as_posix()
+    dirty = run_report.dirty_paths(project)
+    if dirty is None:
+        return fail("git does not answer — nothing was changed.")
+    before = set(base.get("dirty") or [])
+    foreign = [f for f in dirty if f not in before and not f.startswith(docs_rel.rstrip("/") + "/")
+               and not f.startswith(".tf/")]
+    if foreign:
+        return fail("uncommitted changes that are not the task's files — the revert does not touch them, so it stops:\n"
+                    + "\n".join(f"  {f}" for f in foreign)
+                    + "\nCommit them, or set them aside yourself (`git stash push -m <name> -- <files>`), then ask again. "
+                      "Nothing was changed.")
+    cur = git_out(project, "branch", "--show-current").stdout.strip()
+    branch = meta.get("branch") or (cur if cur and cur != base_branch else None)
+    if branch == base_branch:
+        branch = None
+    if cur not in (base_branch, branch):
+        return fail(f"you are on `{cur or 'a detached HEAD'}`, not on the task branch `{branch or '—'}` or the base "
+                    f"`{base_branch}` — switch to one of them first. Nothing was changed.")
+    if branch is None and git_out(project, "rev-parse", "HEAD").stdout.strip() != base_sha:
+        return fail(f"the task's commits are on `{base_branch}` itself; the revert does not rewrite that branch. Undo them "
+                    f"with `git revert {base_sha[:12]}..HEAD` if you want. Nothing was changed.")
+    tip = git_out(project, "rev-parse", branch).stdout.strip() if branch else ""
+    remote = pushed(project, branch, base_sha) if branch else []
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    target = project / ".tf" / "backup" / f"revert-{key}-{stamp}"
+    n = 2
+    while target.exists():
+        target, n = project / ".tf" / "backup" / f"revert-{key}-{stamp}-{n}", n + 1
+    try:
+        if docs.is_dir():
+            shutil.copytree(docs, target / "changes" / key)
+        if run_dir.is_dir():
+            shutil.copytree(run_dir, target / "runs" / key)
+    except OSError as e:
+        shutil.rmtree(target, ignore_errors=True)
+        return fail(f"the task files could not be archived ({e}) — nothing was changed.")
+    if branch and cur != base_branch:
+        r = git_out(project, "switch", base_branch)
+        if r.returncode != 0:
+            shutil.rmtree(target, ignore_errors=True)
+            return fail(f"git switch {base_branch} was refused — nothing was changed:\n{(r.stdout + r.stderr).strip()}")
+    rel = target.relative_to(project).as_posix()
+    print(f"✓ back on `{base_branch}` (its current state); the task files are in {rel}/")
+    if docs.is_dir():
+        if git_out(project, "ls-files", "--", docs_rel).stdout.strip():
+            print(f"⚠ {docs_rel}/ is committed on `{base_branch}` — left in place (the copy is in {rel}/changes/)")
+        else:
+            shutil.rmtree(docs, ignore_errors=True)
+    shutil.rmtree(run_dir, ignore_errors=True)
+    deleted = False
+    if branch and remote:
+        print(f"⚠ the branch `{branch}` was pushed ({', '.join(remote)}), so it is kept; the revert does not delete it. "
+              f"Deleting it on the remote is your call: git push origin --delete {branch}")
+    elif branch:
+        r = git_out(project, "branch", "-D", branch)
+        deleted = r.returncode == 0
+        print(f"✓ the task branch `{branch}` was never pushed — deleted (tip {tip[:12]})" if deleted
+              else f"⚠ the branch `{branch}` could not be deleted: {(r.stdout + r.stderr).strip()}")
+    record = {"key": key, "by": by, "at": now_iso(), "base": base, "branch": branch, "tip": tip,
+              "branch_deleted": deleted, "pushed_to": remote}
+    (target / "revert.json").write_bytes((json.dumps(record, ensure_ascii=False, indent=1) + "\n").encode("utf-8"))
+    print("Undo the revert:")
+    if deleted:
+        print(f"  git branch {branch} {tip}")
+    if branch:
+        print(f"  git switch {branch}")
+    if (target / "changes" / key).is_dir():
+        print(f"  move {rel}/changes/{key} back to {docs_rel}  (only the untracked files; the committed ones come back with the branch)")
+    print(f"  move {rel}/runs/{key} back to {run_report.WORK.as_posix()}/{key}")
+    refresh(project)
+    return 0
+
+
+def push_policy(project: Path) -> tuple[str, list[str]]:
+    """The level of `git_push` in the autonomy policy, read the way the guard_bash hook reads it (engine ← company ←
+    team ← project ← person; a policy only tightens). Without the hook the default: confirm."""
+    for hook in (project / ".claude" / "hooks" / "guard_bash.py", run_report.ROOT / ".claude" / "hooks" / "guard_bash.py"):
+        if not hook.is_file():
+            continue
+        try:
+            spec = importlib.util.spec_from_file_location("tf_guard_bash_policy", hook)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            levels, warns = mod.load_policy(project)
+            return levels.get("git_push", "confirm"), warns
+        except Exception as e:  # noqa: BLE001 — a policy error never loosens: the default stays
+            return "confirm", [f"could not load the autonomy policy: {e}"]
+    return "confirm", []
+
+
+def cmd_push(run_dir: Path, by: str | None, remote: str | None, project: Path) -> int:
+    """The human's "Yes, push" in the loop's question: `git push -u <remote> <task branch>` run here, without a shell, so
+    no second permission window appears. Only the task branch recorded in run.json, never forced; the autonomy policy
+    (`git_push`) applies as in guard_bash."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if os.environ.get("TF_CONTAINER") == "1":
+        return fail("the factory's container has no git keys (decision D1): the human pushes from their own terminal "
+                    "(`git push` in the project).")
+    level, warns = push_policy(project)
+    for w in warns:
+        print(f"⚠ {w}")
+    stop = (f"run_state.py stage {run_dir} needs --needs stop --code permissions --reason \"the push of the task branch "
+            "waits for the human\"")
+    if level == "deny":
+        return fail(f"the project's autonomy policy says `git_push: deny` — the factory does not push. Finish with a STOP: "
+                    f"{stop}; the human pushes by hand.")
+    if task_field(run_dir, meta, "mode") == "auto":
+        return fail(f"Auto mode: nobody answered the push question, and the policy is `git_push: {level}` — no push "
+                    f"without a human. Finish with a STOP: {stop}")
+    if not by or not HUMAN.fullmatch(by):
+        return fail("a push needs the human's answer \"Yes, push\" in the loop's question: --by human:<id>.")
+    branch = meta.get("branch")
+    base_branch = (meta.get("base") or {}).get("branch") if isinstance(meta.get("base"), dict) else None
+    cur = git_out(project, "branch", "--show-current").stdout.strip()
+    if not branch:
+        return fail("run.json records no task branch (the loop records it at `stage`/`step` once it is on the story "
+                    "branch) — nothing pushed.")
+    if branch == base_branch or branch in ("main", "master"):
+        return fail(f"`{branch}` is the base branch, not a task branch — the factory pushes only the task's own branch.")
+    if cur != branch:
+        return fail(f"you are on `{cur or 'a detached HEAD'}`, not on the task branch `{branch}` — the factory pushes only "
+                    "the task branch; switch to it first. Nothing pushed.")
+    remotes = git_out(project, "remote").stdout.split()
+    if not remote:
+        up = git_out(project, "config", "--get", f"branch.{branch}.remote").stdout.strip()
+        remote = up if up in remotes else ("origin" if "origin" in remotes else (remotes[0] if len(remotes) == 1 else None))
+    if not remote or remote not in remotes:
+        return fail(f"no such remote ({remote or 'none configured'}; known: {', '.join(remotes) or 'none'}) — nothing pushed.")
+    ref = f"refs/heads/{branch}"
+    try:   # an explicit refspec without a leading +: never a forced update, whatever remote.<name>.push says
+        r = subprocess.run(["git", "-C", str(project), "push", "-u", remote, f"{ref}:{ref}"], capture_output=True,
+                           text=True, timeout=300)
+    except (OSError, subprocess.SubprocessError) as e:
+        return fail(f"git push did not finish ({e}) — check the network and the credentials, then repeat.")
+    if r.returncode != 0:
+        return fail(f"git push was rejected — nothing forced. Pull and integrate the remote changes, or ask the human:\n"
+                    f"{(r.stdout + r.stderr).strip()}")
+    sha = git_out(project, "rev-parse", "HEAD").stdout.strip()
+    meta = load(run_dir) or meta
+    meta["pushed"] = {"by": by, "at": now_iso(), "remote": remote, "branch": branch, "sha": sha}
+    write_run(run_dir, meta)
+    print(f"✓ pushed `{branch}` to `{remote}` ({sha[:12]}), upstream {remote}/{branch} — approved by {by}")
+    print(f"Next: gh pr create --title \"<the approved title>\" --body-file {run_dir / 'pr-body.md'}")
+    return 0
+
+
 def refresh(project: Path) -> None:
     """Refreshing the preview after a state write; without computing the cost, without interrupting the run on an error."""
     try:
@@ -2284,6 +2510,13 @@ def main(argv: list[str]) -> int:
     fd.add_argument("slice_id")
     fd.add_argument("text")
     fd.add_argument("--round", type=int, default=None)
+    pu = sub.add_parser("push")
+    pu.add_argument("run_dir")
+    pu.add_argument("--by", default=None)
+    pu.add_argument("--remote", default=None)
+    rv = sub.add_parser("revert")
+    rv.add_argument("run_dir")
+    rv.add_argument("--by", default=None)
     pb = sub.add_parser("pr-body")
     pb.add_argument("run_dir")
     pb.add_argument("--base", default=None)
@@ -2348,6 +2581,10 @@ def main(argv: list[str]) -> int:
         return cmd_panel(Path(args.run_dir), args.record, args.note, args.base, project)
     if args.cmd == "finding":
         return cmd_finding(Path(args.run_dir), args.slice_id, args.text, args.round, project)
+    if args.cmd == "push":
+        return cmd_push(Path(args.run_dir), args.by, args.remote, project)
+    if args.cmd == "revert":
+        return cmd_revert(Path(args.run_dir), args.by, project)
     if args.cmd == "pr-body":
         return cmd_pr_body(Path(args.run_dir), args.base, project)
     if args.live and args.stop:

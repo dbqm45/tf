@@ -499,10 +499,10 @@ def only_for_agents(ws: Path) -> set[str]:
     return out
 
 
-def bash_allow(settings: Path) -> list[re.Pattern]:
+def bash_allow(settings: Path, kind: str = "allow") -> list[re.Pattern]:
     data = json.loads(settings.read_text(encoding="utf-8"))
     pats = []
-    for r in (data.get("permissions") or {}).get("allow") or []:
+    for r in (data.get("permissions") or {}).get(kind) or []:
         m = re.fullmatch(r"Bash\((.*)\)", r)
         if not m:
             continue
@@ -527,6 +527,10 @@ LOOP_SKILLS = ("tf", "tf-task", "tf-design")
 # A command that records a human's decision (`--by human:<id>`): the model runs it after the human answered, and the
 # permission prompt is a second confirmation by design, so it needs no allow rule.
 HUMAN_DECISION = re.compile(r"--by human:")
+# Except a command that carries out what the human just approved in the loop's own question (`run_state.py push` after
+# "Yes, push"): there a second prompt is exactly what the owner ruled out, so it must be allowed and match no ask rule.
+ONE_CONFIRMATION = re.compile(r"run_state\.py$")
+ONE_CONFIRMATION_SUBCOMMANDS = ("push",)
 
 
 def skill_text(skill_dir: Path) -> str:
@@ -688,17 +692,28 @@ def main() -> int:
                 check(n in all_agents, f"C-4: Agent({n}) names an agent that does not exist")
 
         # C-6: permissions for the loop skills' script commands, both layouts
-        rules = {"default": bash_allow(ws / ".claude" / "settings.local.json"),
-                 "plugin": bash_allow(plg / ".tf" / "plugin" / "session-settings.json")}
+        files = {"default": ws / ".claude" / "settings.local.json",
+                 "plugin": plg / ".tf" / "plugin" / "session-settings.json"}
+        rules = {k: bash_allow(f) for k, f in files.items()}
+        asks = {k: bash_allow(f, "ask") for k, f in files.items()}
         loop_srcs = {f"core/skills/{s}/" for s in LOOP_SKILLS}
+        one_confirmation = 0
         for ref in scripts:
-            if not any(ref.src.startswith(s) for s in loop_srcs) or PLACEHOLDER.search(ref.script) \
-                    or HUMAN_DECISION.search(ref.frag):
+            if not any(ref.src.startswith(s) for s in loop_srcs) or PLACEHOLDER.search(ref.script):
                 continue
+            single = bool(ONE_CONFIRMATION.search(ref.script)) and ref.args[:1] == list(ONE_CONFIRMATION_SUBCOMMANDS[:1])
+            if HUMAN_DECISION.search(ref.frag) and not single:
+                continue
+            one_confirmation += single
             cmd = " ".join(["python3", ref.script, *ref.args]).strip()
             for layout, pats in rules.items():
                 check(any(p.match(cmd) for p in pats),
                       f"C-6 {ref.where()}: `{cmd[:90]}` has no permissions.allow rule ({layout} layout)")
+                if single:
+                    check(not any(p.match(cmd) for p in asks[layout]),
+                          f"C-6 {ref.where()}: `{cmd[:90]}` matches an ask rule ({layout} layout) — a second prompt after "
+                          "the human's answer")
+        check(one_confirmation > 0, "C-6: the loop skills name `run_state.py push` (one confirmation pushes the task branch)")
 
     for n in sorted(set(notes)):
         print(f"ℹ {n}")

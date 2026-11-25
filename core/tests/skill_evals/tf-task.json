@@ -440,6 +440,129 @@
           ]
         ]
       }
+    },
+    {
+      "id": "pytanie-przed-pushem",
+      "expect": "trigger",
+      "prompt": "Zadanie IMP-3 w trybie zwykłym (bez --auto): oba kawałki zacommitowane, pr-body.md gotowy. Co robisz teraz z gałęzią story/limit-dobowy i z PR?",
+      "checks": {
+        "all": [
+          [
+            "AskUserQuestion"
+          ],
+          [
+            "Push branch",
+            "[Ww]ypchn\\w*",
+            "push\\w*"
+          ],
+          [
+            "keep it local",
+            "lokaln\\w*",
+            "No"
+          ],
+          [
+            "PR title",
+            "tytuł\\w* PR",
+            "title"
+          ],
+          [
+            "run_state\\.py push",
+            "push <katalog>",
+            "push \\.tf/runs"
+          ]
+        ],
+        "none": [
+          "git push --force",
+          "gh pr merge"
+        ]
+      }
+    },
+    {
+      "id": "pytanie-o-komunikat-commita",
+      "expect": "trigger",
+      "prompt": "Kończę kawałek S1 zadania IMP-4 w trybie zwykłym: dowód z verify zielony, scope-reviewer bez ważnych ustaleń. Jaki komunikat commita i kto go zatwierdza?",
+      "checks": {
+        "all": [
+          [
+            "AskUserQuestion"
+          ],
+          [
+            "Recommended",
+            "[Zz]alecan\\w*",
+            "rekomend\\w*"
+          ],
+          [
+            "Other",
+            "[Ii]nn\\w*",
+            "własn\\w*",
+            "alternatyw\\w*"
+          ],
+          [
+            "finish-slice",
+            "--message"
+          ]
+        ],
+        "none": [
+          "git commit -am",
+          "git add -A"
+        ]
+      }
+    },
+    {
+      "id": "push-odmowa-cofniecie",
+      "expect": "trigger",
+      "prompt": "Pętla fabryki dla zadania IMP-5: kawałki zrobione, ale na pytanie o wypchnięcie gałęzi odpowiedziałem No. Chcę cofnąć zadanie i wrócić do stanu sprzed /tf-task. Co teraz?",
+      "checks": {
+        "all": [
+          [
+            "revert"
+          ],
+          [
+            "--by human:"
+          ],
+          [
+            "Keep the work locally",
+            "zachowa\\w*",
+            "lokaln\\w*"
+          ],
+          [
+            "\\.tf/backup",
+            "archiw\\w*",
+            "backup"
+          ]
+        ],
+        "none": [
+          "reset --hard origin",
+          "git clean -f"
+        ]
+      }
+    },
+    {
+      "id": "auto-bez-pytan-o-git",
+      "expect": "trigger",
+      "prompt": "Zadanie IMP-6 leci z /tf-task --auto w nocy. Czy pętla ma pytać o komunikaty commitów i o wypchnięcie gałęzi?",
+      "checks": {
+        "all": [
+          [
+            "[Bb]ez pyta\\w*",
+            "[Nn]ie pyta\\w*",
+            "no question\\w*",
+            "[Nn]ie ma pyta\\w*"
+          ],
+          [
+            "git_push",
+            "autonomy",
+            "polityk\\w* autonomii"
+          ],
+          [
+            "confirm",
+            "deny"
+          ]
+        ],
+        "none": [
+          "AskUserQuestion.*komunikat\\w* commit\\w* w (trybie )?--auto"
+        ]
+      }
     }
   ]
 }
