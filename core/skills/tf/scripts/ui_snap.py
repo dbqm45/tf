@@ -410,12 +410,13 @@ def diff_stat(project: Path, base: str | None) -> dict:
     if not base:
         return {}
     try:
-        r = subprocess.run(["git", "-C", str(project), "diff", "--numstat", f"{base}...HEAD"],
-                           capture_output=True, text=True, timeout=30)
+        # -z --no-renames: one record per path, exactly as on disk (no quoting of non-ASCII names, no `a => b`)
+        r = subprocess.run(["git", "-C", str(project), "diff", "--numstat", "-z", "--no-renames", f"{base}...HEAD"],
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=30)
     except (OSError, subprocess.SubprocessError):
         return {}
     out = {}
-    for ln in (r.stdout.splitlines() if r.returncode == 0 else []):
+    for ln in (r.stdout.split("\0") if r.returncode == 0 else []):
         parts = ln.split("\t")
         if len(parts) == 3:
             out[parts[2]] = (int(parts[0]) if parts[0].isdigit() else 0) + (int(parts[1]) if parts[1].isdigit() else 0)

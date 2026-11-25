@@ -12,7 +12,9 @@ HOOKS = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "ho
 
 def run(hook: str, payload, env: dict | None = None) -> tuple[int, str, str]:
     p = subprocess.run([sys.executable, str(HOOKS / hook)], input=payload if isinstance(payload, str) else json.dumps(payload),
-                       env={**os.environ, **(env or {})},
+                       # CLAUDE_PROJECT_DIR is pinned to this workspace: a value inherited from the session running the
+                       # tests (another project, without the `web` cleanroom profile) would change the verdicts
+                       env={**os.environ, "CLAUDE_PROJECT_DIR": str(HOOKS.parent.parent), **(env or {})},
                        capture_output=True, text=True, timeout=10)
     return p.returncode, p.stdout, p.stderr
 

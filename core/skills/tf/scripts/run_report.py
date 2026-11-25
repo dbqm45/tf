@@ -532,14 +532,25 @@ def time_breakdown(project: Path, run_dir: Path, meta: dict, since: datetime, la
         ts = parse_ts(str(value or ""))
         return ts is not None and ts >= since
 
+    total = max(0.0, (last - since).total_seconds())
+
+    def seconds(value) -> float | None:
+        """A recorded duration that can belong to this run: a finite, non-negative number not longer than the run."""
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            return None
+        return float(value) if 0 <= value <= total else None   # NaN fails both comparisons
+
+    def rows_of(value) -> list:
+        return [x for x in value if isinstance(x, dict)] if isinstance(value, list) else []
+
     verify = runs = 0
     for f in (docs_dir(run_dir, meta) / "evidence").glob("S*-*.json"):
         try:
             ev = json.loads(f.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
-        if isinstance(ev, dict) and isinstance(ev.get("duration_s"), (int, float)) and after(ev.get("at")):
-            verify += ev["duration_s"]
+        if isinstance(ev, dict) and seconds(ev.get("duration_s")) is not None and after(ev.get("at")):
+            verify += seconds(ev["duration_s"])
             runs += 1
     gate = gate_runs = 0
     try:
@@ -551,10 +562,10 @@ def time_breakdown(project: Path, run_dir: Path, meta: dict, since: datetime, la
             row = json.loads(ln)
         except ValueError:
             continue
-        if isinstance(row, dict) and isinstance(row.get("duration_s"), (int, float)) and after(row.get("at")):
-            gate += row["duration_s"]
+        if isinstance(row, dict) and seconds(row.get("duration_s")) is not None and after(row.get("at")):
+            gate += seconds(row["duration_s"])
             gate_runs += 1
-    spans = [(w.get("from"), w.get("to")) for w in meta.get("waits") or [] if isinstance(w, dict)]
+    spans = [(w.get("from"), w.get("to")) for w in rows_of(meta.get("waits"))]
     if meta.get("needs_at"):
         spans.append((meta["needs_at"], None))
     wait = 0.0
@@ -563,13 +574,10 @@ def time_breakdown(project: Path, run_dir: Path, meta: dict, since: datetime, la
         if start and end:
             start, end = max(start, since), min(end, last)   # only within the run's measured time
             wait += max(0.0, (end - start).total_seconds())
-    total = max(0.0, (last - since).total_seconds())
     out = {"verify_s": int(verify), "verify_runs": runs, "gate_s": int(gate), "gate_runs": gate_runs,
            "wait_s": int(wait), "model_s": int(max(0.0, total - verify - gate - wait)), "total_s": int(total)}
     fetch = fetch_runs = 0.0
-    for f in meta.get("fetches") or []:  # tracker and MCP reads: a part of "the rest" (a background read overlaps other work)
-        if not isinstance(f, dict):
-            continue
+    for f in rows_of(meta.get("fetches")):  # tracker and MCP reads: a part of "the rest" (a background read overlaps other work)
         start, end = parse_ts(str(f.get("from") or "")), (parse_ts(str(f["to"])) if f.get("to") else last)
         if start and end:
             fetch += max(0.0, (min(end, last) - max(start, since)).total_seconds())
@@ -705,7 +713,9 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
 def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path, status: bool = False) -> int:
     try:
         meta = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
-        since = parse_ts(meta["started_at"])
+        since = parse_ts(meta["started_at"]) if isinstance(meta, dict) and meta.get("started_at") else None
+        if since is None:
+            raise ValueError("no start time")
     except (OSError, ValueError, KeyError):
         print(f"✗ Missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
         return 2
@@ -797,17 +807,17 @@ def main(argv: list[str]) -> int:
             if not args.key or args.task:
                 print("✗ `--from-tracker` needs `--key <issue number>` (e.g. --key EBO-1236).")
                 return 2
+            import intake
             cached = project / CHANGES / args.key.upper() / "ticket.md"
-            if cached.is_file() and not args.refresh:   # read once: a re-run or a resume reads the file, not the tracker
+            if intake.cached_story(cached) and not args.refresh:   # read once: a re-run or a resume reads the file, not the tracker
                 print(f"story cached: {cached.relative_to(project).as_posix()} — the task already exists, no request was made; "
                       f"resume it (/tf-task {args.key.upper()}), or read the issue again with --refresh")
                 return 2
-            import intake
             began = datetime.now(timezone.utc).isoformat(timespec="seconds")
             try:
                 ticket = intake.fetch_jira(project, args.key)
             except intake.FetchError as e:
-                print(f"✗ {e}. Another way: {intake.PASTE} and run start with --story.")
+                print(f"✗ {e}. Another way: {intake.fallback(args.key.upper())}; then run start with --story.")
                 return 2
             fetch = {"what": "intake", "from": began, "to": datetime.now(timezone.utc).isoformat(timespec="seconds")}
             args.key, args.title = ticket["key"], args.title or ticket["title"]

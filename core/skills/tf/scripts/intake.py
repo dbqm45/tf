@@ -69,7 +69,7 @@ sys.dont_write_bytecode = True
 
 CHANGES = Path("docs") / "project" / "changes"
 CARD = Path(".tf") / "config" / "operations.json"
-TICKET = re.compile(r"[A-Za-z][A-Za-z0-9]*-\d+")                      # issue or cut key: ABC-123
+TICKET = re.compile(r"[A-Za-z][A-Za-z0-9]*-[0-9]+")                    # issue or cut key: ABC-123
 TASK_KEY = re.compile(r"[A-Z][A-Z0-9]*-[A-Za-z0-9][A-Za-z0-9-]*")     # factory task key (as in task_state.py)
 TRACKER = re.compile(r"[a-z][a-z0-9-]{1,30}")
 INTENTS = ("task", "question", "quick", "design")
@@ -81,6 +81,21 @@ START = "python3 .claude/skills/tf/scripts/run_report.py start"
 PASTE = "paste the issue's content in the conversation"
 MAX_TICKET = 20000                                      # characters of the issue content in ticket.md
 CUTS = ".claude/skills/tf-task/references/pdi-cuts.md"     # rules of the pdi cut run
+
+
+def fallback(key: str) -> str:
+    """What to do when the script cannot fetch the issue: the script does not see the session's tools, so it never says
+    that no tracker is connected — the model checks (deferred MCP tools too) before asking the human to paste."""
+    return (f"read {key} with a tracker tool connected in the session (read-only; an MCP server's tools may be deferred — "
+            f"search for them first); only when there is none: {PASTE}")
+
+
+def cached_story(path: Path) -> bool:
+    """A ticket.md that holds a story: an empty (or whitespace-only) file is not one — the issue is read again."""
+    try:
+        return path.is_file() and bool(path.read_bytes().strip())
+    except OSError:
+        return False
 
 
 def load_card(root: Path) -> dict | None:
@@ -178,20 +193,21 @@ def from_url(url: str) -> tuple[str | None, str | None]:
     """The tracker and key from an issue address."""
     parsed = urlparse(url)
     host, path = (parsed.hostname or "").lower(), parsed.path
-    m = re.search(r"/browse/([A-Za-z][A-Za-z0-9]*-\d+)", path)
+    m = (re.search(r"/browse/([A-Za-z][A-Za-z0-9]*-[0-9]+)", path)
+         or re.search(r"(?:^|&)selectedIssue=([A-Za-z][A-Za-z0-9]*-[0-9]+)(?:&|$)", parsed.query))   # a board or a list
     if m:
         return "jira", m.group(1).upper()
     if host.endswith("linear.app"):
-        m = re.search(r"/issue/([A-Za-z][A-Za-z0-9]*-\d+)", path)
+        m = re.search(r"/issue/([A-Za-z][A-Za-z0-9]*-[0-9]+)", path)
         return "linear", m.group(1).upper() if m else None
-    m = re.search(r"/issues/(\d+)", path)
+    m = re.search(r"/issues/([0-9]+)", path)
     if m and ("gitlab" in host or "/-/issues/" in path):
         return "gitlab", f"GL-{m.group(1)}"
     if m and "github" in host:
         return "github", f"GH-{m.group(1)}"
     if host.endswith("atlassian.net"):
         return "jira", None
-    m = re.search(r"(?<![A-Za-z0-9])([A-Za-z][A-Za-z0-9]*-\d+)(?![A-Za-z0-9])", path)
+    m = re.search(r"(?<![A-Za-z0-9])([A-Za-z][A-Za-z0-9]*-[0-9]+)(?![A-Za-z0-9])", path)
     return None, m.group(1).upper() if m else None
 
 
@@ -398,7 +414,8 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
         out.update(kind="issue", key=key, source=first, tracker=tracker, tracker_from="address" if tracker else None)
         if tracker is None and (saved := tracker_source(root, key))[0]:
             out.update(tracker=saved[0], tracker_from=saved[1])
-        out["ask"], out["next"] = ticket_next(key, out["tracker"], first)
+        same = (urlparse(first).hostname or "").lower() == (urlparse(jira_base(root) or "").hostname or "").lower()
+        out["ask"], out["next"] = ticket_next(key, out["tracker"], first, root if same else None)   # the script: only its Jira
         if out["ask"] == "tracker":          # there is an address, so we do not ask about the tracker — the content is enough
             out["ask"] = None
         return done()
@@ -428,7 +445,7 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
                            f"{(CHANGES / key).as_posix()}/plan.md and continue from the first unticked slice; "
                            f"the run directory: .tf/runs/{key}")
             ticket = CHANGES / key / "ticket.md"
-            if (root / ticket).is_file():   # read once: the story is in the task's file, the tracker is not read again
+            if cached_story(root / ticket):   # read once: the story is in the task's file, the tracker is not read again
                 out["story"] = ticket.as_posix()
                 out["next"] += (f"; the human asked to read the issue again (--refresh): read it from the tracker (read-only) "
                                 f"and replace the content under the \"Source\" line of {ticket.as_posix()}, then compare it with "
@@ -566,7 +583,7 @@ def main(argv: list[str]) -> int:
         try:
             ticket = fetch_jira(root, keys[0])
         except FetchError as e:
-            print(f"✗ {e}. Another way: {PASTE}.")
+            print(f"✗ {e}. Another way: {fallback(keys[0].upper())}.")
             return 2
         print(json.dumps(ticket, ensure_ascii=False, indent=1) if as_json
               else f"# {ticket['title']}\n\nSource: {ticket['source']}\n\n{ticket['text']}")

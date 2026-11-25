@@ -82,8 +82,12 @@ def load(d: Path) -> dict:
     info = {"name": d.name, "dir": d, "meta": {}, "ok": False, "problem": None}
     try:
         meta = yaml.safe_load((d / "addon.yaml").read_text(encoding="utf-8")) or {}
-    except (OSError, yaml.YAMLError) as e:
-        info["problem"] = f"addon.yaml unreadable: {e}"
+    except (OSError, ValueError, yaml.YAMLError) as e:   # ValueError: not UTF-8
+        info["problem"] = f"addon.yaml unreadable: {e} — fix it, or add the add-on again: tf addon add <source>"
+        return info
+    if not isinstance(meta, dict) or not isinstance(meta.get("provides") or {}, dict):
+        info["problem"] = ("addon.yaml is not a mapping with `name`, `contract` and a `provides` mapping — fix it, or "
+                           "add the add-on again: tf addon add <source>")
         return info
     info["meta"] = meta
     if meta.get("contract") != CONTRACT:
@@ -186,6 +190,16 @@ def _block(text: str, body: str) -> str:
     return text + ("" if not text or text.endswith("\n") else "\n") + ("\n" if text else "") + block
 
 
+def _write_keeping_eol(path: Path, text: str):
+    """The instructions file keeps its line ending (a committed CRLF CLAUDE.md stays CRLF, an LF one stays LF on
+    Windows); text-mode writes would rewrite every line."""
+    try:
+        crlf = b"\r\n" in path.read_bytes()
+    except OSError:
+        crlf = False
+    path.write_bytes((text.replace("\r\n", "\n").replace("\n", "\r\n") if crlf else text).encode("utf-8"))
+
+
 def sync(root: Path, quiet: bool = False) -> list[str]:
     """Wire every compatible add-on's output into the project; remove what an add-on no longer provides.
     With no add-ons and nothing wired before, nothing is written. Returns notes for the human."""
@@ -206,7 +220,7 @@ def sync(root: Path, quiet: bool = False) -> list[str]:
         old = instr.read_text(encoding="utf-8") if instr.exists() else ""
         new = _block(old, body)
         if new != old:
-            instr.write_text(new, encoding="utf-8")
+            _write_keeping_eol(instr, new)
     # 2. rules: copies, not links (Windows)
     rules_dir = root / ".claude" / "rules"
     wanted = {}
@@ -404,6 +418,9 @@ def add(root: Path, spec: str) -> int:
         if info is None:
             print(f"✗ No addon.yaml in {src}")
             return 2
+        if not info["meta"]:   # unreadable or not a mapping
+            print(f"✗ {src}: {info['problem']}")
+            return 2
         name = info["meta"].get("name") or src.name
         if not NAME.match(str(name)):
             print(f"✗ Bad add-on name {name!r}")
@@ -441,7 +458,8 @@ def add(root: Path, spec: str) -> int:
 def remove(root: Path, name: str) -> int:
     dst = root / ADDONS / name
     if not NAME.match(name) or not dst.is_dir():
-        print(f"✗ No add-on {name!r} in {ADDONS}")
+        names = ", ".join(a["name"] for a in installed(root)) or "none"
+        print(f"✗ No add-on {name!r} in {ADDONS.as_posix()} (installed: {names}) — see: tf addon list")
         return 2
     shutil.rmtree(dst)
     sync(root)
@@ -500,8 +518,15 @@ def learn(root: Path, only: str | None) -> int:
     for name in declared(root):   # rolled out by the company/team/project configuration
         if name not in have and (not only or name == only):
             print(f"→ {name}: install (addons.{name}.install in the configuration)")
-            if add(root, name) != 0:
-                print(f"⚠ {name}: could not be installed from the factory source")
+            try:
+                code = add(root, name)
+            except SystemExit as e:   # no network, no factory source: the other add-ons still learn
+                if isinstance(e.code, str):
+                    print(e.code)
+                code = 2
+            if code != 0:
+                print(f"⚠ {name}: could not be installed from the factory source — check the network and the "
+                      f"`source` in .claude/factory-manifest.json, then run tf learn again (or: tf addon add <path>)")
     targets = _order([a for a in installed(root) if a["ok"] and _provides(a).get("learn")
                       and (not only or a["name"] == only)])
     if not targets:

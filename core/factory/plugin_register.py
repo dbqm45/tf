@@ -53,7 +53,7 @@ PLUGIN_WARNING = ("⚠ Plugin layout: only `tf code` loads the factory; a plain 
 
 def skipped() -> str | None:
     """Why the CLI is not called (TF_NO_PLUGIN_REGISTER, CI), or None."""
-    if os.environ.get("TF_NO_PLUGIN_REGISTER", "").strip() not in ("", "0"):
+    if os.environ.get("TF_NO_PLUGIN_REGISTER", "").strip().lower() not in ("", "0", "false", "no", "off"):
         return "TF_NO_PLUGIN_REGISTER is set"
     if os.environ.get("CI", "").strip().lower() not in ("", "0", "false"):
         return "CI is set"
@@ -108,15 +108,34 @@ def write_market(root: Path) -> Path:
     return p
 
 
+def quote(arg: str, windows: bool | None = None) -> str:
+    """An argument for a command the human pastes: POSIX shells take '…'; on Windows cmd.exe does not, so the path
+    gets double quotes when it needs any (spaces), which PowerShell takes too — and its backslashes stay."""
+    if os.name == "nt" if windows is None else windows:
+        return subprocess.list2cmdline([arg])
+    return shlex.quote(arg)
+
+
+def split_command(value: str, windows: bool | None = None) -> list[str]:
+    """TF_CLAUDE as a command line. POSIX splitting would eat the backslashes of a Windows path
+    (C:\\Users\\…\\claude.cmd → C:Users…claude.cmd), so on Windows the split keeps them and drops the quotes;
+    a value that names an existing file is that one file, spaces included."""
+    if Path(value).is_file():
+        return [value]
+    if os.name == "nt" if windows is None else windows:
+        return [x[1:-1] if len(x) > 1 and x[0] == x[-1] == '"' else x for x in shlex.split(value, posix=False)]
+    return shlex.split(value)
+
+
 def commands(root: Path) -> list[str]:
     """The two commands that register the plugin by hand (run in the project folder)."""
-    return [f"claude plugin marketplace add {shlex.quote(str(market_path(root)))} --scope local",
+    return [f"claude plugin marketplace add {quote(str(market_path(root)))} --scope local",
             f"claude plugin install {plugin_id(root)} --scope local"]
 
 
 def claude() -> list[str] | None:
     """The Claude Code command (TF_CLAUDE, as `tf code`; default `claude`) resolved on PATH, or None."""
-    cmd = shlex.split(os.environ.get("TF_CLAUDE") or "claude")
+    cmd = split_command(os.environ.get("TF_CLAUDE") or "claude")
     exe = shutil.which(cmd[0]) if cmd else None
     return [exe, *cmd[1:]] if exe else None
 

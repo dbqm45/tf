@@ -120,7 +120,7 @@ MANIFEST = Path(".claude") / "factory-manifest.json"
 
 
 def is_git(src: str) -> bool:
-    return src.startswith(("https://", "http://", "git@", "ssh://")) or src.split("#")[0].endswith(".git")
+    return src.startswith(("https://", "http://", "git@", "ssh://", "file://")) or src.split("#")[0].endswith(".git")
 
 
 def public(url: str) -> str:
@@ -176,6 +176,16 @@ def origin_of(path: Path) -> str:
     return r.stdout.strip() if r.returncode == 0 else ""
 
 
+def cmd_bytes(text: str) -> bytes:
+    """A .cmd file as cmd.exe reads it: bytes as they are (a text-mode write would turn its CRLF into CR CR LF) in the
+    console's OEM code page (cp852 for Polish), so a Python path with "Ł" or "ą" in the user name still runs; UTF-8
+    when that code page cannot spell it."""
+    try:
+        return text.encode("oem")
+    except (LookupError, UnicodeEncodeError):   # LookupError: no "oem" codec outside Windows
+        return text.encode("utf-8")
+
+
 def install_launcher(repo: str | None, bin_dir: Path) -> int:
     if not repo:
         saved = saved_source()
@@ -193,7 +203,7 @@ def install_launcher(repo: str | None, bin_dir: Path) -> int:
     target.write_text(text, encoding="utf-8")
     target.chmod(0o755)
     if os.name == "nt":
-        (bin_dir / "tf.cmd").write_text(f'@"{sys.executable}" "%~dp0tf" %*\r\n', encoding="utf-8")
+        (bin_dir / "tf.cmd").write_bytes(cmd_bytes(f'@"{sys.executable}" "%~dp0tf" %*\r\n'))
     print(f"✓ Installed {target} (repository: {url})")
     on_path = [Path(p).expanduser().resolve() for p in os.environ.get("PATH", "").split(os.pathsep) if p]
     if bin_dir.resolve() not in on_path:
@@ -213,6 +223,18 @@ def project_module(name: str):
     return mod
 
 
+def installed_above() -> Path | None:
+    """The nearest parent directory with the factory installed, when this directory has none (tf run in a subdirectory)."""
+    if MANIFEST.exists():
+        return None
+    return next((d for d in Path.cwd().resolve().parents if (d / MANIFEST).is_file()), None)
+
+
+def subdirectory_message(root: Path) -> str:
+    return (f"✗ This is a subdirectory of {root}, where the factory is installed. Run tf from the project directory: "
+            f'cd "{root}"')
+
+
 def need_project() -> bool:
     if MANIFEST.exists() and not (Path(".tf") / "factory").is_dir() and Path("factory").is_dir():
         print("✗ This project has the old layout (factory/ in the project root). The engine now lives in .tf/factory/ "
@@ -221,7 +243,8 @@ def need_project() -> bool:
         return False
     if MANIFEST.exists():
         return True
-    print("✗ No factory in this directory. Install it first: tf install")
+    above = installed_above()
+    print(subdirectory_message(above) if above else "✗ No factory in this directory. Install it first: tf install")
     return False
 
 
@@ -470,8 +493,13 @@ def factory_layout() -> str:
 
 
 def claude_command() -> list[str]:
+    """TF_CLAUDE (default `claude`) split as plugin_register.py splits it (a Windows path keeps its backslashes)."""
+    value = os.environ.get("TF_CLAUDE") or "claude"
+    reg = plugin_register()
+    if reg is not None and hasattr(reg, "split_command"):
+        return reg.split_command(value)
     import shlex
-    return shlex.split(os.environ.get("TF_CLAUDE") or "claude")
+    return shlex.split(value)
 
 
 def session_settings(plugin_settings: Path) -> Path:
@@ -853,6 +881,12 @@ def main(argv: list[str]) -> int:
             return subprocess.run([sys.executable, str(PROJECT_TF), *argv[1:]]).returncode
         print(f"✗ Unknown command '{cmd}'.\n{__doc__}")
         return 2
+    above = installed_above()
+    if above and cmd != "install":   # a bare `tf` here would install a second factory into the subdirectory
+        print(subdirectory_message(above))
+        return 2
+    if above:
+        print(f"⚠ {above} already has the factory — this installs a second one into the subdirectory {Path.cwd()}.")
     if MANIFEST.exists() and cmd != "install":
         rc = update(repo or REPO or None, rest)
         if rc == 0:

@@ -223,9 +223,10 @@ def close_wait(meta: dict) -> None:
 
 def load(run_dir: Path) -> dict | None:
     try:
-        return read_run(run_dir)
+        meta = read_run(run_dir)
     except (OSError, ValueError):
         return None
+    return meta if isinstance(meta, dict) else None   # a list or a string is not a run (a bad merge, a hand edit)
 
 
 # ---- task (task.json is written only by `tf task`) -------------------------------------------------------------------
@@ -438,6 +439,7 @@ def cmd_approach(run_dir: Path, project: Path, weight: str | None, rationale: st
 
 
 GATE_PLACEHOLDER = re.compile(r"\{(files|dirs),?\}")
+SHELL_SYNTAX = re.compile(r"[;|&<>`]|\$\(")   # the gate runs `related` without a shell: these would be literal arguments
 
 
 def cmd_gate_related(run_dir: Path, project: Path, command: str | None, rationale: str, not_found: bool) -> int:
@@ -465,6 +467,10 @@ def cmd_gate_related(run_dir: Path, project: Path, command: str | None, rational
         if not GATE_PLACEHOLDER.search(command):
             return fail(f"the command has no placeholder: \"{command}\" — it must contain {{files}}, {{files,}} or {{dirs}} "
                         "(the gate puts the changed files there)")
+        if SHELL_SYNTAX.search(command):
+            return fail(f"the command uses shell syntax ({SHELL_SYNTAX.search(command).group(0)}): \"{command}\" — the gate runs "
+                        "it without a shell, so it would not work; give one program with its arguments (a wrapper script "
+                        "in the repository if it needs more)")
         cfg["related"] = command
     else:
         cfg.pop("related", None)
@@ -1673,7 +1679,9 @@ def cmd_fetch(run_dir: Path, action: str, what: str) -> int:
     meta = load(run_dir)
     if meta is None:
         return fail(f"no {run_dir / 'run.json'} — `run_report.py start` creates the run")
-    spans = meta.setdefault("fetches", [])
+    if not isinstance(meta.get("fetches"), list):   # an old run.json (null) or a hand-edited one
+        meta["fetches"] = []
+    spans = meta["fetches"]
     open_ = [f for f in spans if isinstance(f, dict) and f.get("what") == what and not f.get("to")]
     if action == "begin":
         if open_:

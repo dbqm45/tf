@@ -97,7 +97,11 @@ def held(root: Path, wait: float | None = None):
         print("⚠ test_lock: no fcntl or msvcrt — tests without a lock", file=sys.stderr)
         yield True
         return
-    wait = float(os.environ.get("QG_LOCK_WAIT", "900")) if wait is None else wait
+    if wait is None:
+        try:
+            wait = float(os.environ.get("QG_LOCK_WAIT", "900"))
+        except ValueError:   # a malformed value: the default wait, not a crash
+            wait = 900.0
     f = open(lock_path(root), "a+")
     deadline = time.monotonic() + wait
     try:
