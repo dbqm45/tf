@@ -67,8 +67,23 @@ def strip_blocks(text: str, marks: list[tuple[str, str]]) -> str:
 
 
 def exclude_path(root: Path) -> Path | None:
-    r = subprocess.run(["git", "-C", str(root), "rev-parse", "--git-path", "info/exclude"], capture_output=True, text=True)
+    try:
+        r = subprocess.run(["git", "-C", str(root), "rev-parse", "--git-path", "info/exclude"], capture_output=True,
+                           text=True, timeout=20)
+    except (OSError, subprocess.SubprocessError):   # no git (or it hangs): there is no info/exclude to clean
+        return None
     return (root / r.stdout.strip()).resolve() if r.returncode == 0 and r.stdout.strip() else None
+
+
+def write_keeping_eol(path: Path, text: str) -> None:
+    """Writes `text` (read with universal newlines) in the line ending the file had: CRLF only when it had CRLF. A
+    text-mode write would turn a committed CRLF CLAUDE.md or .gitignore into LF here (and every LF file into CRLF on
+    Windows) — a whole-file diff in the project."""
+    try:
+        crlf = b"\r\n" in path.read_bytes()
+    except OSError:
+        crlf = False
+    path.write_bytes((text.replace("\r\n", "\n").replace("\n", "\r\n") if crlf else text).encode("utf-8"))
 
 
 def factory_hook(h: dict, fac_cmds: set[str], hook_files: set[str]) -> bool:
@@ -276,7 +291,7 @@ def main(argv: list[str]) -> int:
         if new is None:
             f.unlink(missing_ok=True)
         else:
-            f.write_text(new, encoding="utf-8")
+            write_keeping_eol(f, new)
     for rel in p["delete"]:
         (root / rel).unlink(missing_ok=True)
     for d in GENERATED_DIRS + (FORCE_DIRS if force else []):
