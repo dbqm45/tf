@@ -23,14 +23,15 @@ call `finish-slice` again for the same slice, keep the approved message: no new 
 `run_report.py finish` prints at the end holds only the task's records: no question, its message as printed.
 
 ## 2. Push and PR: one call, two questions
-After `pr-body` and before `git push`, one AskUserQuestion call with two questions:
+After `pr-body` and before the push, one AskUserQuestion call with two questions:
 1. "Push branch `<branch>` to `<remote>`?" — "Yes, push (Recommended)" · "No, keep it local".
 2. "PR title?" — your proposed title (Recommended) · an alternative wording; "Other" for their own. Say in the
    question text, in one line, what the body holds (from `pr-body.md`: slices, evidence, how to roll back).
 
-"Yes" → `git push -u <remote> <branch>`, then `gh pr create --title "<chosen title>" --body-file <file>`. The
-permission prompt that may follow is the factory's safety net (`guard_bash`, `Bash(git push *)`); it names the operation
-in plain words.
+"Yes" → `run_state.py push <katalog> --by human:<id>` (the id as for `approve`), then `gh pr create --title
+"<chosen title>" --body-file <file>`. The script pushes the task branch recorded in run.json with `-u`, never forced,
+and checks the autonomy policy itself, so the human's answer is the only confirmation: no second permission window.
+You do not run a raw `git push`: outside this command `guard_bash` asks again (its safety net).
 
 ## 3. "No, keep it local" → the revert question
 Ask once more, with AskUserQuestion:
@@ -50,9 +51,10 @@ What `revert` does (deterministic, refuses rather than guesses):
 It is a human decision: you run it only after the human chose "Revert everything" in this question.
 
 ## 4. Auto mode
-No questions. Commit messages and the PR title as you propose them. The push goes through the autonomy policy
-(`autonomy.operations.git_push` in `.tf/factory/config.yaml`, tightened in `.tf/config/config.yaml`): `confirm` → the
-permission prompt; `deny` → blocked, STOP with the code `permissions` (the human pushes). You never run `revert` in Auto.
+No questions. Commit messages and the PR title as you propose them. The push follows the autonomy policy
+(`autonomy.operations.git_push` in `.tf/factory/config.yaml`, tightened in `.tf/config/config.yaml`): call
+`run_state.py push <katalog>` without `--by`; with `confirm` (the default) or `deny` it refuses, because nobody
+answered, and prints the STOP `permissions` command: record it, the human pushes. You never run `revert` in Auto.
 
 ## Example
 ```

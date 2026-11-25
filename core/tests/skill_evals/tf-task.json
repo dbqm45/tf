@@ -464,6 +464,11 @@
             "PR title",
             "tytuł\\w* PR",
             "title"
+          ],
+          [
+            "run_state\\.py push",
+            "push <katalog>",
+            "push \\.tf/runs"
           ]
         ],
         "none": [

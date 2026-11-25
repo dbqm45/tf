@@ -121,6 +121,7 @@
  "test_task_index.py": 2.3,
  "test_task_mode.py": 3.7,
  "test_task_oracle.py": 2.4,
+ "test_task_push.py": 3.5,
  "test_task_revert.py": 3.0,
  "test_task_state.py": 10.3,
  "test_task_weight.py": 4.5,

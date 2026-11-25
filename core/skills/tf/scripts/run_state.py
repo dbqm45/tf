@@ -32,6 +32,7 @@ and the dashboard generator. The state is written by the script, not the model �
   python3 .claude/skills/tf/scripts/run_state.py block <run-directory> S2 --question "<question for the human>"
   python3 .claude/skills/tf/scripts/run_state.py answer <run-directory> S2 "<answer>" --by human:<id>
   python3 .claude/skills/tf/scripts/run_state.py qa <run-directory> "<question>" "<the human's answer, verbatim>" --by human:<id>
+  python3 .claude/skills/tf/scripts/run_state.py push <run-directory> --by human:<id> [--remote <name>]   # after "Yes, push"
   python3 .claude/skills/tf/scripts/run_state.py revert <run-directory> --by human:<id>   # back to before /tf-task
   python3 .claude/skills/tf/scripts/run_state.py next <katalog-przebiegu>
   python3 .claude/skills/tf/scripts/run_state.py dashboard [--no-cost] [--out FILE] [--open]
@@ -1667,8 +1668,9 @@ def cmd_pr_body(run_dir: Path, base: str | None, project: Path) -> int:
     print(f"✓ the PR description: {shown}\n  use: gh pr create --title \"<type>(<scope>): <description>\" --body-file {shown}\n"
           "  add your own remarks (deviations from the plan, an artifact budget exception) at the end of the file")
     if task_field(run_dir, meta, "mode") != "auto":
-        print("Next: before git push, ask the human with AskUserQuestion — push the branch (yes / keep it local) and the PR "
-              "title (your proposal / an alternative), one call (tf-task references/git-questions.md)")
+        print("Next: ask the human with AskUserQuestion — push the branch (yes / keep it local) and the PR title (your "
+              f"proposal / an alternative), one call; after \"Yes, push\": run_state.py push {run_dir} --by human:<id> "
+              "(tf-task references/git-questions.md)")
     if missing:
         print(f"⚠ without green evidence: {', '.join(missing)} — the description says so plainly")
     if not has_remote(project):
@@ -2293,6 +2295,83 @@ def cmd_revert(run_dir: Path, by: str | None, project: Path) -> int:
     return 0
 
 
+def push_policy(project: Path) -> tuple[str, list[str]]:
+    """The level of `git_push` in the autonomy policy, read the way the guard_bash hook reads it (engine ← company ←
+    team ← project ← person; a policy only tightens). Without the hook the default: confirm."""
+    for hook in (project / ".claude" / "hooks" / "guard_bash.py", run_report.ROOT / ".claude" / "hooks" / "guard_bash.py"):
+        if not hook.is_file():
+            continue
+        try:
+            spec = importlib.util.spec_from_file_location("tf_guard_bash_policy", hook)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            levels, warns = mod.load_policy(project)
+            return levels.get("git_push", "confirm"), warns
+        except Exception as e:  # noqa: BLE001 — a policy error never loosens: the default stays
+            return "confirm", [f"could not load the autonomy policy: {e}"]
+    return "confirm", []
+
+
+def cmd_push(run_dir: Path, by: str | None, remote: str | None, project: Path) -> int:
+    """The human's "Yes, push" in the loop's question: `git push -u <remote> <task branch>` run here, without a shell, so
+    no second permission window appears. Only the task branch recorded in run.json, never forced; the autonomy policy
+    (`git_push`) applies as in guard_bash."""
+    meta = load(run_dir)
+    if meta is None:
+        return fail(f"missing or invalid {run_dir / 'run.json'} — `run_report.py start` creates the run.")
+    if not meta.get("key"):
+        return no_task(meta)
+    if os.environ.get("TF_CONTAINER") == "1":
+        return fail("the factory's container has no git keys (decision D1): the human pushes from their own terminal "
+                    "(`git push` in the project).")
+    level, warns = push_policy(project)
+    for w in warns:
+        print(f"⚠ {w}")
+    stop = (f"run_state.py stage {run_dir} needs --needs stop --code permissions --reason \"the push of the task branch "
+            "waits for the human\"")
+    if level == "deny":
+        return fail(f"the project's autonomy policy says `git_push: deny` — the factory does not push. Finish with a STOP: "
+                    f"{stop}; the human pushes by hand.")
+    if task_field(run_dir, meta, "mode") == "auto":
+        return fail(f"Auto mode: nobody answered the push question, and the policy is `git_push: {level}` — no push "
+                    f"without a human. Finish with a STOP: {stop}")
+    if not by or not HUMAN.fullmatch(by):
+        return fail("a push needs the human's answer \"Yes, push\" in the loop's question: --by human:<id>.")
+    branch = meta.get("branch")
+    base_branch = (meta.get("base") or {}).get("branch") if isinstance(meta.get("base"), dict) else None
+    cur = git_out(project, "branch", "--show-current").stdout.strip()
+    if not branch:
+        return fail("run.json records no task branch (the loop records it at `stage`/`step` once it is on the story "
+                    "branch) — nothing pushed.")
+    if branch == base_branch or branch in ("main", "master"):
+        return fail(f"`{branch}` is the base branch, not a task branch — the factory pushes only the task's own branch.")
+    if cur != branch:
+        return fail(f"you are on `{cur or 'a detached HEAD'}`, not on the task branch `{branch}` — the factory pushes only "
+                    "the task branch; switch to it first. Nothing pushed.")
+    remotes = git_out(project, "remote").stdout.split()
+    if not remote:
+        up = git_out(project, "config", "--get", f"branch.{branch}.remote").stdout.strip()
+        remote = up if up in remotes else ("origin" if "origin" in remotes else (remotes[0] if len(remotes) == 1 else None))
+    if not remote or remote not in remotes:
+        return fail(f"no such remote ({remote or 'none configured'}; known: {', '.join(remotes) or 'none'}) — nothing pushed.")
+    ref = f"refs/heads/{branch}"
+    try:   # an explicit refspec without a leading +: never a forced update, whatever remote.<name>.push says
+        r = subprocess.run(["git", "-C", str(project), "push", "-u", remote, f"{ref}:{ref}"], capture_output=True,
+                           text=True, timeout=300)
+    except (OSError, subprocess.SubprocessError) as e:
+        return fail(f"git push did not finish ({e}) — check the network and the credentials, then repeat.")
+    if r.returncode != 0:
+        return fail(f"git push was rejected — nothing forced. Pull and integrate the remote changes, or ask the human:\n"
+                    f"{(r.stdout + r.stderr).strip()}")
+    sha = git_out(project, "rev-parse", "HEAD").stdout.strip()
+    meta = load(run_dir) or meta
+    meta["pushed"] = {"by": by, "at": now_iso(), "remote": remote, "branch": branch, "sha": sha}
+    write_run(run_dir, meta)
+    print(f"✓ pushed `{branch}` to `{remote}` ({sha[:12]}), upstream {remote}/{branch} — approved by {by}")
+    print(f"Next: gh pr create --title \"<the approved title>\" --body-file {run_dir / 'pr-body.md'}")
+    return 0
+
+
 def refresh(project: Path) -> None:
     """Refreshing the preview after a state write; without computing the cost, without interrupting the run on an error."""
     try:
@@ -2422,6 +2501,10 @@ def main(argv: list[str]) -> int:
     fd.add_argument("slice_id")
     fd.add_argument("text")
     fd.add_argument("--round", type=int, default=None)
+    pu = sub.add_parser("push")
+    pu.add_argument("run_dir")
+    pu.add_argument("--by", default=None)
+    pu.add_argument("--remote", default=None)
     rv = sub.add_parser("revert")
     rv.add_argument("run_dir")
     rv.add_argument("--by", default=None)
@@ -2489,6 +2572,8 @@ def main(argv: list[str]) -> int:
         return cmd_panel(Path(args.run_dir), args.record, args.note, args.base, project)
     if args.cmd == "finding":
         return cmd_finding(Path(args.run_dir), args.slice_id, args.text, args.round, project)
+    if args.cmd == "push":
+        return cmd_push(Path(args.run_dir), args.by, args.remote, project)
     if args.cmd == "revert":
         return cmd_revert(Path(args.run_dir), args.by, project)
     if args.cmd == "pr-body":
