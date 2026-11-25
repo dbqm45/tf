@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Closing a task (step G4): `tf task close` closes only a merged change, requires a control for every important
-review finding, reminds about the flag, records a lesson given by the human; `tf status` shows tasks in progress.
+review finding, reminds about the flag, records a lesson given by the human (with evidence; without it the lesson is parked
+as unverified); `tf status` shows tasks in progress.
 python3 .claude/tests/test_close.py"""
 import json
 import os
@@ -15,6 +16,7 @@ SCRIPTS = ROOT / ".claude" / "skills" / "tf" / "scripts"
 CHANGES = Path("docs") / "project" / "changes"
 LESSON = ("**Sprawdzaj limit dobowy na granicy doby** — Kontekst: opłaty za postój, fees.py · Zamiast tego: test "
           "z postojem przez północ · Dotyczy: realizacja")
+PROOF = "https://github.com/acme/app/pull/41#discussion_r1"
 FINDING = "usunięta asercja testu limitu przy końcu doby"
 SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given postój 12 godzin, when kierowca płaci, then opłata wynosi "
         "45 zł.\n\n## Unchanged\n\n- Pierwsze 30 minut jest bezpłatne.\n\n## Out of scope\n\n- Abonamenty.\n")
@@ -159,12 +161,13 @@ def main() -> int:
         r = call(p, TASK, "close", "IMP-1", "--lesson", "Watch the daily limit", "--by", "human:anna")
         check(r.returncode == 2 and "Instead" in r.stdout and not lessons.exists(),
               f"CL-16: a lesson without 'Instead:' is not a lesson: {r.returncode} {r.stdout}")
-        r = call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna")
+        r = call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--evidence", PROOF, "--by", "human:anna")
         text = lessons.read_text(encoding="utf-8") if lessons.is_file() else ""
         check(r.returncode == 0 and text.count(LESSON) == 1 and "IMP-1" in text and text.startswith("# ")
+              and f"Evidence: {PROOF}" in text
               and task(p)["closed"].get("lesson") is True,
               f"CL-17: the human's lesson goes to docs/project/lessons.md with the date and the task key: {r.stdout} {text}")
-        call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna")
+        call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--evidence", PROOF, "--by", "human:anna")
         check((lessons.read_text(encoding="utf-8") if lessons.is_file() else "").count(LESSON) == 1,
               "CL-18: the same lesson is not added a second time")
         check("lessons.md" not in call(Path(t) / "merged", TASK, "status", "IMP-1").stdout
@@ -178,21 +181,62 @@ def main() -> int:
         old = ("# Lekcje projektu\n\n## Execution and verification\n\n- 2026-01-01 **Stara lekcja** — Kontekst: x · Zamiast "
                "tego: y\n\n## Powłoka i narzędzia\n\n- 2026-01-02 **Inna** — Kontekst: x · Zamiast tego: y\n")
         lessons.write_text(old, encoding="utf-8")
-        call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna")
+        call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--evidence", "abc1234", "--by", "human:anna")
         text = lessons.read_text(encoding="utf-8")
         check(text.count("## Execution and verification") == 1 and "## Powłoka i narzędzia" in text
-              and text.index(LESSON) < text.index("Stara lekcja") < text.index("## Powłoka") and "Inna" in text,
+              and text.index(LESSON) < text.index("Stara lekcja") < text.index("## Powłoka") and "Inna" in text
+              and old.split("\n## Execution and verification\n\n", 1)[1] in text,
               f"CL-30: the lesson goes under the existing heading, above older entries; the rest of the file is unchanged: {text}")
 
         p = Path(t) / "lesson3"
         new_task(p)
         lessons = p / "docs" / "project" / "lessons.md"
         en = "**Check the daily cap at midnight** — Context: parking fees · Instead: test a stay over midnight · Applies to: implementation"
-        r = call(p, TASK, "close", "IMP-1", "--lesson", en, "--by", "human:anna")
+        (p / ".tf" / "runs" / "IMP-1").mkdir(parents=True)
+        (p / ".tf" / "runs" / "IMP-1" / "report.md").write_text("# Report\n", encoding="utf-8")
+        r = call(p, TASK, "close", "IMP-1", "--lesson", en, "--by", "human:anna",
+                 "--evidence", ".tf/runs/IMP-1/report.md: verify 27 min, 2 identical runs")
         text = lessons.read_text(encoding="utf-8") if lessons.is_file() else ""
         check(r.returncode == 0 and text.startswith("# Project lessons") and "## Execution and verification" in text
-              and en in text and "Task: IMP-1" in text,
+              and en in text and "Task: IMP-1" in text and "Evidence: .tf/runs/IMP-1/report.md: verify 27 min" in text,
               f"CL-31: the lesson in the Context / Instead / Applies to format, a new file with an English heading: {r.stdout} {text}")
+
+        # evidence: required for lessons.md; a missing local file is refused; no evidence → parked as unverified
+        p = Path(t) / "lesson4"
+        new_task(p)
+        lessons, parked = p / "docs" / "project" / "lessons.md", p / "docs" / "project" / "parked.md"
+        r = call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna",
+                 "--evidence", ".tf/runs/IMP-1/evidence/S1-2.json")
+        check(r.returncode == 2 and "S1-2.json" in r.stdout and "does not exist" in r.stdout and not lessons.exists()
+              and task(p)["stage"] == "pr",
+              f"CL-32: an evidence path that does not exist is refused, the task stays open: {r.returncode} {r.stdout}")
+        r = call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna", "--evidence", "  ")
+        check(r.returncode == 2 and "empty" in r.stdout and not lessons.exists(),
+              f"CL-33: an empty evidence pointer is refused: {r.returncode} {r.stdout}")
+        r = call(p, TASK, "close", "IMP-1", "--evidence", PROOF, "--by", "human:anna")
+        check(r.returncode == 2 and "--lesson" in r.stdout and task(p)["stage"] == "pr",
+              f"CL-34: --evidence goes with --lesson: {r.returncode} {r.stdout}")
+        r = call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna")
+        ptext = parked.read_text(encoding="utf-8") if parked.is_file() else ""
+        lines = [ln for ln in r.stdout.splitlines() if "lesson:" in ln]
+        check(r.returncode == 0 and task(p)["stage"] == "closed" and not lessons.exists()
+              and "unverified lesson" in ptext and LESSON in ptext and len(lines) == 1 and "parked" in lines[0]
+              and task(p)["closed"].get("lesson_parked") is True and "lesson" not in task(p)["closed"],
+              f"CL-35: a lesson without evidence is parked as unverified, not in lessons.md; one line says so: "
+              f"{r.stdout} {ptext}")
+        r = call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna", "--evidence", "fees.py")
+        text = lessons.read_text(encoding="utf-8") if lessons.is_file() else ""
+        check(r.returncode == 0 and LESSON in text and "Evidence: fees.py" in text and task(p)["closed"].get("lesson") is True,
+              f"CL-36: a parked lesson given again with evidence after closing goes to lessons.md: {r.stdout} {text}")
+
+        p = Path(t) / "lesson5"
+        new_task(p)
+        (p / ".tf" / "runs" / "IMP-1").mkdir(parents=True)
+        r = call(p, TASK, "close", "IMP-1", "--lesson", LESSON, "--by", "human:anna")
+        run_parked = p / ".tf" / "runs" / "IMP-1" / "parked.md"
+        check(r.returncode == 0 and run_parked.is_file() and "unverified lesson" in run_parked.read_text(encoding="utf-8")
+              and not (p / "docs" / "project" / "parked.md").exists(),
+              f"CL-37: with a run directory the unverified lesson goes to the task's parked.md: {r.stdout}")
 
         # tf status: closed tasks are not on the in-progress list
         p = Path(t) / "merged"

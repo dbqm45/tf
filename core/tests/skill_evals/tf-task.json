@@ -157,6 +157,7 @@
       "expect": "trigger",
       "prompt": "Realizuję zadanie TYP-7 w pętli fabryki i po etapie intake dostałem linię: Mode: normal; proposal Auto — a small, mechanical change. Mogę od razu przełączyć na auto, żeby nie czekać na akceptację planu? Odpowiedz zwięźle.",
       "checks": {"all": [["AskUserQuestion", "zapyta\\w* (człowieka|użytkownika|Ciebie)", "decyzj\\w* (człowieka|użytkownika|należy)"], ["tf task mode TYP-7 auto"]], "none": ["(sam|samodzielnie) (przełączam|włączam|ustawiam)"]}
-    }
+    },
+    {"id": "wnioski-na-koniec-zadania", "expect": "trigger", "prompt": "Kończymy zadanie EBO-1: PR wystawiony, raport z run_report.py finish gotowy. Weryfikacja szła 27 minut, dwa identyczne przebiegi. Co zrobić z tym wnioskiem na koniec zadania?", "checks": {"all": [["--evidence"], ["tf proposals add", "proposals"], ["obserwac\\w+|observation"]]}}
   ]
 }

@@ -20,7 +20,7 @@ the model calls commands, it does not edit the state by hand. No model and no ne
   tf task finding <KEY> add "<important review finding>" [--slice S1] [--round 1]
   tf task finding <KEY> control F1 "<test, hook, rule or the reason there is none>"   # what will catch it next time
   tf task review <KEY> <reviewer> pass|fail [--note "<remark>"]   # panel verdict at full weight
-  tf task close <KEY> [--lesson "<lesson>" --by human:<id>] [--base <branch>] [--force --by human:<id>]
+  tf task close <KEY> [--lesson "<lesson>" --evidence "<pointer>" --by human:<id>] [--base <branch>] [--force --by human:<id>]
 
 `tf status` (that is `task_state.py list [--json]`) lists all tasks: stage, how many slices have current evidence
 and which files need refreshing — state computed at read time, not from INDEX.md. Under a task that waits for a human
@@ -742,13 +742,35 @@ def merged_on(root: Path, key: str, base: str | None) -> tuple[bool | None, str]
     return (False, ", ".join(seen)) if seen else (None, "git does not know the branch " + (base or "main or master"))
 
 
-def add_lesson(root: Path, key: str, lesson: str) -> bool:
+def evidence_refusal(root: Path, pointer: str) -> str | None:
+    """Why an evidence pointer is refused, or None — the shared rule in proposals.py (form only: non-empty, an existing
+    file when it starts with a local path; a URL, a commit SHA or a command passes; the model judges the content)."""
+    return proposals().evidence_refusal(root, pointer)
+
+
+def proposals():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("tf_proposals", Path(__file__).resolve().with_name("proposals.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def park_lesson(root: Path, key: str, lesson: str) -> Path:
+    """A lesson without evidence goes to the parked list, not to lessons.md: the task's .tf/runs/<KEY>/parked.md when the
+    run directory exists, otherwise docs/project/parked.md. Once per text."""
+    return proposals().park(root, f"unverified lesson ({key}, {now()[:10]}): {lesson} — no evidence; record it with "
+                                  f"tf task close {key} --lesson \"…\" --evidence \"<pointer>\" --by human:<id>", key)
+
+
+def add_lesson(root: Path, key: str, lesson: str, evidence: list[str] | None = None) -> bool:
     """Appends the human's lesson to docs/project/lessons.md (once); True when the file changed."""
     path = root / LESSONS
     text = path.read_text(encoding="utf-8") if path.is_file() else "# Project lessons\n"
     if lesson in text:
         return False
-    entry = f"- {now()[:10]} {lesson} · Task: {key}"
+    proof = f" · Evidence: {'; '.join(evidence)}" if evidence else ""
+    entry = f"- {now()[:10]} {lesson}{proof} · Task: {key}"
     lines = text.rstrip("\n").split("\n")
     at = next((i for i, ln in enumerate(lines) if re.fullmatch(rf"##\s+{re.escape(LESSON_HEAD)}\s*", ln, re.I)), None)
     if at is None:
@@ -762,11 +784,31 @@ def add_lesson(root: Path, key: str, lesson: str) -> bool:
     return True
 
 
-def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: str | None, force: bool) -> int:
+def record_lesson(root: Path, key: str, lesson: str, evidence: list[str]) -> bool:
+    """A lesson with evidence goes to lessons.md; without it, to the parked list. Prints one line; True when recorded."""
+    if not evidence:
+        where = park_lesson(root, key, lesson)
+        print(f"  lesson: no --evidence — parked as an unverified lesson in {where.relative_to(root).as_posix()}, "
+              f"not in {LESSONS.as_posix()}")
+        return False
+    wrote = add_lesson(root, key, lesson, evidence)
+    print(f"  lesson: {'added to' if wrote else 'was already in'} {LESSONS.as_posix()}")
+    return True
+
+
+def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: str | None, force: bool,
+              evidence: list[str] | None = None) -> int:
+    evidence = evidence or []
     task = load(root, key)
     if task is None:
         return fail(f"there is no task {key} — the list of tasks: tf status --all")
     stage = task.get("stage", STAGES[0])
+    if stage == "closed" and lesson:   # e.g. a lesson parked at closing, given again with evidence
+        print(f"• {key} is already closed")
+        if record_lesson(root, key, lesson, evidence) and isinstance(task.get("closed"), dict):
+            task["closed"]["lesson"] = True
+            save(root, task)
+        return 0
     if stage == "closed":
         print(f"• {key} is already closed" + (f" ({task['closed']['at']})" if isinstance(task.get("closed"), dict)
                                               and task["closed"].get("at") else ""))
@@ -792,10 +834,10 @@ def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: st
                     + "; ".join(f"{f.get('id')} — {f.get('text')}" for f in open_)
                     + f". Record one for each: tf task finding {key} control <F-n> \"<a test, a hook, a rule or the reason "
                       "it is missing>\"")
-    wrote = add_lesson(root, key, lesson) if lesson else False
     task["stage"], task["updated"] = "closed", now()
     task["closed"] = {"at": now(), **({"by": by} if by else {}), **({"forced": True} if force else {}),
-                      **({"lesson": True} if lesson else {})}
+                      **({"lesson": True} if lesson and evidence else {}),
+                      **({"lesson_parked": True} if lesson and not evidence else {})}
     save(root, task)
     print(f"✓ {key} closed ({stage} → closed)")
     print("  deployment: " + (DEPLOY_STATES[dep["state"]] if isinstance(dep.get("state"), str) and dep["state"] in DEPLOY_STATES
@@ -806,7 +848,7 @@ def cmd_close(root: Path, key: str, by: str | None, lesson: str | None, base: st
     elif flag.get("key"):
         print(f"  the flag {flag['key']} has no removal date — set it: tf task flag {key} set {flag['key']} --remove-by YYYY-MM-DD")
     if lesson:
-        print(f"  lesson: {'added to' if wrote else 'was already in'} {LESSONS.as_posix()}")
+        record_lesson(root, key, lesson, evidence)
     else:
         print(f"  lesson: not recorded (if the task yields a rule for the future, add it to {LESSONS.as_posix()})")
     return 0
@@ -1529,6 +1571,7 @@ def main(argv: list[str]) -> int:
     cl.add_argument("key")
     cl.add_argument("--by", default=None)
     cl.add_argument("--lesson", default=None)
+    cl.add_argument("--evidence", action="append", default=[])
     cl.add_argument("--base", default=None)
     cl.add_argument("--force", action="store_true")
     try:
@@ -1578,7 +1621,15 @@ def main(argv: list[str]) -> int:
         if lesson and "Instead:" not in lesson and "Zamiast tego:" not in lesson:
             return fail("a lesson has an \"Instead: <action>\" part — without it, it is a description of a mistake, not a rule "
                         "(format: **rule** — Context: … · Instead: … · Applies to: plan|implementation|review|all)", 2)
-        return cmd_close(root, a.key, a.by, lesson, a.base, a.force)
+        evidence = [one_line(e, 300) for e in a.evidence]
+        if evidence and not lesson:
+            return fail("--evidence goes with --lesson: tf task close <KEY> --lesson \"…\" --evidence \"<pointer>\" "
+                        "--by human:<id>", 2)
+        for e in evidence:
+            why = evidence_refusal(root, e)
+            if why:
+                return fail(f"{why}. {proposals().EVIDENCE_HELP}", 2)
+        return cmd_close(root, a.key, a.by, lesson, a.base, a.force, evidence)
     if a.cmd == "deployed":
         if a.rolled_back and not ((a.by or "").startswith("human:") and ACTOR.fullmatch(a.by)):
             return fail("rolling back a deployment is the human's decision: --rolled-back --by human:<id>", 2)

@@ -126,10 +126,97 @@
       "prompt": "Trzech agentów-badaczy równolegle zbiera dane o wynikach modeli na benchmarku. Dwóch podało tę samą liczbę, trzeci nie znalazł nic. Jak złożyć z tego wiarygodny raport? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["wersj\\w+ (źródła|preprintu|dokumentu)", "identyfikator\\w*", "nazw\\w+ metryki"],
-          ["deklaracj\\w+ (firmy|producenta)", "pomiar\\w* niezależn\\w+", "twórc\\w+ benchmarku", "status\\w* pomiaru"],
-          ["brak\\w* (informacji|wyniku) (pozostaje|to nie)", "nie znalazł\\w* (to nie|≠)", "nie (jest|znaczy) zaprzeczeni\\w+"],
-          ["duplikat\\w*", "te same źródła", "niezależn\\w+ potwierdzeni\\w+", "nie liczy się"]
+          [
+            "wersj\\w+ (źródła|preprintu|dokumentu)",
+            "identyfikator\\w*",
+            "nazw\\w+ metryki"
+          ],
+          [
+            "deklaracj\\w+ (firmy|producenta)",
+            "pomiar\\w* niezależn\\w+",
+            "twórc\\w+ benchmarku",
+            "status\\w* pomiaru"
+          ],
+          [
+            "brak\\w* (informacji|wyniku) (pozostaje|to nie)",
+            "nie znalazł\\w* (to nie|≠)",
+            "nie (jest|znaczy) zaprzeczeni\\w+"
+          ],
+          [
+            "duplikat\\w*",
+            "te same źródła",
+            "niezależn\\w+ potwierdzeni\\w+",
+            "nie liczy się"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zbieranie-rownolegle",
+      "expect": "trigger",
+      "prompt": "Przed aktualizacją biblioteki pg do nowej wersji muszę ustalić: gdzie i jak używamy jej w kodzie, co mówią nasze ADR-y w docs/, jaka wersja jest w lockfile i obrazie CI oraz co zmieniło się w nowym wydaniu. Jak zorganizować to badanie z agentami, żeby trwało krócej? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "równoleg\\w*",
+            "parallel",
+            "run_in_background",
+            "w tle"
+          ],
+          [
+            "jedn\\w* wiadomoś\\w*",
+            "one message",
+            "jednym komunikacie",
+            "naraz",
+            "jednocześnie"
+          ],
+          [
+            "plik:linia",
+            "path:line",
+            "\\w+:\\d+",
+            "ścieżk\\w*.{0,30}lini\\w*",
+            "URL.{0,40}dat\\w*"
+          ],
+          [
+            "pewnoś\\w*",
+            "confidence"
+          ],
+          [
+            "scal\\w*",
+            "deduplik\\w*",
+            "duplikat\\w*",
+            "konflikt\\w*",
+            "sprzeczn\\w*"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "krotka-sciezka-jedna-kategoria",
+      "expect": "trigger",
+      "prompt": "I only need the latest version of the requests package on PyPI and its release date, as of today. Should I start several research subagents in parallel for this? Answer briefly.",
+      "checks": {
+        "all": [
+          [
+            "\\bno\\b",
+            "not needed",
+            "unnecessary",
+            "overkill",
+            "don't",
+            "do not"
+          ],
+          [
+            "single",
+            "one (agent|category|source|call|path)",
+            "yourself",
+            "directly"
+          ],
+          [
+            "pypi\\.org/pypi",
+            "pip index versions",
+            "registry",
+            "JSON API"
+          ]
         ]
       }
     }

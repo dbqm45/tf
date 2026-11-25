@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0 — 2026-11-24
+- Code conventions (`lib/conventions.py`, prompt `prompts/conventions.md`): the cheapest model in the session infers
+  a few project-wide conventions from the exemplar files and the tracked paths (pending item `tool: model` in
+  `cache/pending.json`, new `provides.pending`). Each has a statement, 2+ example files, a counter-example count and
+  a confidence; the script keeps it only when every example exists and contains its snippet; `high` needs three.
+  At most 12, one line each, in `out/rules/conventions*.md` with `paths`, as candidates (guidance, not rules).
+- `out/conventions.json` (`provides.conventions`): the high-confidence ones, offered to a decisions add-on as a second
+  source. `conventions: false` in dna.yaml turns the area off.
+- The fingerprint counts the saved answers (`cache/model/conventions-*.json`); the question is keyed by the exemplar
+  paths and the directory layout, so an edit inside a file does not ask it again.
+
 ## 0.9.0 — 2026-11-20
 - Breaking: decisions from sources (standards skills, Confluence, ADR, lint, docs, other agents' rule files) moved to
   the separate `standards` add-on, with `rules/standards*.md`, `decisions.md` and `dna.py standards`. dna keeps what

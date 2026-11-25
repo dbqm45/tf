@@ -1,11 +1,12 @@
 name: standards
-version: 0.3.1
+version: 0.4.0
 contract: 1
-title: The project's agreed rules (standards skills, Confluence through MCP, ADR, lint, docs)
+title: The project's agreed rules (standards skills, Confluence through MCP, ADR, lint, docs, PR reviews)
 description: >-
   Reads the standards you already have — standards skills in the project or from a git repository by URL, the
   Confluence pages they link to (read by the agent through the session's MCP tool), ADRs, lint restrictions, project
-  docs and other agents' instruction files — and writes them as rules for the matching files. It does not write
+  docs and other agents' instruction files, plus candidates from recurring PR review requests and other add-ons'
+  code conventions — and writes them as rules for the matching files. It does not write
   standards. Everything lives in this directory; removing it detaches the add-on.
 keep: [standards.yaml]
 provides:

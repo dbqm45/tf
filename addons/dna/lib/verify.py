@@ -101,6 +101,20 @@ def check_out(out: Path, root: Path) -> list[str]:
             problems.append(f"{name}: missing (generated from knowledge.json)")
         elif f.read_text(encoding="utf-8") != text:
             problems.append(f"{name}: differs from knowledge.json (edit knowledge.json, not the Markdown)")
+    conv = [i for i in k.get("items") or [] if (i.get("data") or {}).get("topic") == "convention"]
+    if len(conv) > emit.CONVENTIONS_MAX:
+        problems.append(f"more than {emit.CONVENTIONS_MAX} conventions")
+    for c in conv:
+        d = c.get("data") or {}
+        if c.get("status") != "candidate" or d.get("confidence") not in ("high", "medium", "low"):
+            problems.append(f"{c.get('id')}: a convention is a candidate with confidence high|medium|low")
+        if len(d.get("examples") or []) < 2 or len(c.get("evidence") or []) < 2:
+            problems.append(f"{c.get('id')}: a convention needs 2 example files")
+    for f in sorted((out / "rules").glob("conventions*.md")) if (out / "rules").is_dir() else []:
+        lines = f.read_text(encoding="utf-8").splitlines()
+        if sum(1 for ln in lines if ln.startswith("- [")) > emit.CONVENTIONS_MAX or \
+                any(len(ln) > emit.CONVENTION_LINE_MAX for ln in lines if ln.startswith("- [")):
+            problems.append(f"rules/{f.name}: more than {emit.CONVENTIONS_MAX} conventions or a line too long")
     index = out / "INDEX.md"
     if index.is_file() and len(index.read_text(encoding="utf-8").splitlines()) > INDEX_MAX_LINES:
         problems.append(f"INDEX.md: more than {INDEX_MAX_LINES} lines")
