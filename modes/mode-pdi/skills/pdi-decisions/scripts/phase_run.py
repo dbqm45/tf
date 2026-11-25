@@ -51,7 +51,7 @@ OVERRIDES = Path(".claude") / "pdi-phases.json"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "sdlc-phase.yml"
 WORKFLOW = Path(".github") / "workflows" / "sdlc-phase.yml"
 SCRIPTS = ".claude/skills/pdi-decisions/scripts"
-CONTRACT_VERSION = "0.22.0"
+CONTRACT_VERSION = "0.23.0"
 LOCAL_HOSTS = ("127.0.0.1", "localhost", "::1")
 QUESTIONS = "Gate questions"
 # Second review (N1, DZ12): a sidecar from second_review.py next to the phase artifact; the phases we look for one in.

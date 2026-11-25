@@ -1,7 +1,7 @@
 {
   "record": "decision",
   "schema": "https://github.com/dbqm45/pdi/contract/decision.schema.json",
-  "contract_version": "0.22.0",
+  "contract_version": "0.23.0",
   "id": "DEC-41",
   "statement": "Bulk konfiguracja ładowarek zaczyna od zmiany taryfy.",
   "why": "Najczęstsza operacja w zgłoszeniach; restart i firmware mają inne ryzyka.",
