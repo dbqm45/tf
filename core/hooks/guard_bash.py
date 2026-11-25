@@ -73,7 +73,13 @@ DENY = [
 # default "confirm" (human approval); a project may only tighten to "deny" (human decision 2026-11-10, D1).
 ASK = [
     (r"\bsudo\b", "sudo", "sudo"),
-    (r"\bgit\s+(reset\s+--hard|clean\s+-[a-zA-Z]*f|push\b)", "git reset --hard / clean -f / push", "git_push"),
+    # one entry per git operation, each with its own plain description: the user reads it in the permission prompt
+    # (permissionDecisionReason of "ask"); the type stays `git_push` for all three, so existing policies keep working
+    (r"\bgit\s+push\b", "git push — sends your commits to the remote repository", "git_push"),
+    (r"\bgit\s+reset\s+--hard\b", "git reset --hard — throws away uncommitted changes to tracked files for good",
+     "git_push"),
+    (r"\bgit\s+clean\s+(?:-[a-zA-Z]+\s+)*(?:-[a-zA-Z]*f|--force\b)", "git clean -f — deletes untracked files for good",
+     "git_push"),
     (r"\bterraform\s+(apply|import|state\s+(rm|mv))\b", "a change to the infrastructure state", "infra_change"),
     (r"\b(kubectl\s+(delete|apply|scale|rollout)|helm\s+(install|upgrade|uninstall|rollback))\b", "a change in a Kubernetes cluster",
      "infra_change"),
@@ -413,8 +419,9 @@ def main() -> None:
             if levels.get(op) == "deny":
                 decide("deny", f"Blocked by the project's autonomy policy ({op}: deny): {reason}. "
                                f"Ask a human to run it by hand.")
-        reason, op = hits[0]
-        decide("ask", f"Needs consent ({op}): {reason}.")
+        reasons = list(dict.fromkeys(reason for reason, _ in hits))       # every operation the command would do
+        ops = ", ".join(dict.fromkeys(op for _, op in hits))
+        decide("ask", f"Needs your consent: {'; '.join(reasons)}. (autonomy policy type: {ops})")
     sys.exit(0)  # no decision → normal permission flow
 
 

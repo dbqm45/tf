@@ -608,6 +608,44 @@ def ticket_text(title: str, story: str | None, source: str | None, now: datetime
     return f"# {title}\n\n{origin}{(story or '').strip()}\n"
 
 
+def dirty_paths(project: Path) -> list[str] | None:
+    """Paths with uncommitted changes (tracked and untracked, not ignored), sorted; None when git does not answer."""
+    try:
+        r = subprocess.run(["git", "-C", str(project), "status", "--porcelain=v1", "-z", "--untracked-files=all"],
+                           capture_output=True, text=True, timeout=60)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if r.returncode != 0:
+        return None
+    out, parts = [], r.stdout.split("\0")
+    i = 0
+    while i < len(parts):
+        entry = parts[i]
+        i += 1
+        if len(entry) < 4:
+            continue
+        out.append(entry[3:])
+        if entry[0] in "RC":               # a rename or copy: the original path follows
+            i += 1
+    return sorted(set(out))
+
+
+def git_base(project: Path) -> dict | None:
+    """The state before the task: the branch, its commit, whether the tree was clean and which files were already dirty
+    (they are the human's, `run_state.py revert` leaves them alone). None outside git or before the first commit."""
+    try:
+        sha = subprocess.run(["git", "-C", str(project), "rev-parse", "--verify", "--quiet", "HEAD"], capture_output=True,
+                             text=True, timeout=30)
+        branch = subprocess.run(["git", "-C", str(project), "branch", "--show-current"], capture_output=True, text=True,
+                                timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    dirty = dirty_paths(project)
+    if sha.returncode != 0 or not sha.stdout.strip() or dirty is None:
+        return None
+    return {"branch": branch.stdout.strip() or None, "sha": sha.stdout.strip(), "clean": not dirty, "dirty": dirty}
+
+
 def cmd_start(title: str | None, story: str | None, project: Path, task: str | None = None,
               change: str | None = None, key: str | None = None, source: str | None = None,
               fetch: dict | None = None) -> int:
@@ -654,12 +692,13 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
               + (f"resume it (/tf-task {task}) or delete this directory to start the cut again." if cut
                  else "finish it or give another title or `--key`."))
         return 2
+    base = git_base(project)              # before any task file exists: what `run_state.py revert` returns to
     r = task_state(project, "start", key, "--title", title, *(["--change", cut["change"], "--cut", task] if cut else []))
     if r is None or r.returncode != 0:
         print(f"✗ the task {key} could not be created: "
               + ((r.stdout + r.stderr).strip() if r else "no .tf/factory/task_state.py — update the factory (tf update)"))
         return 2
-    meta = {"key": key, "task_dir": (CHANGES / key).as_posix()}
+    meta = {"key": key, "task_dir": (CHANGES / key).as_posix(), **({"base": base} if base else {})}
     if cut:
         meta.update(change=cut["change"], task=task, flag=cut["flag"])
     run_dir.mkdir(parents=True)

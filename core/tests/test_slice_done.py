@@ -5,6 +5,7 @@ ticks the slice and gives the next one. Without current evidence or with a bad t
 python3 .claude/tests/test_slice_done.py"""
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -274,6 +275,35 @@ def main() -> int:
                   and cfg.get("watch") == ["web/"], f"GR-5: not found is recorded so it is not retried: {r.stdout} {cfg}")
         finally:
             os.environ.pop("TF_SCAN_PATH", None)
+
+    # DN-AI: the author is the person logged into git (user.name/user.email), with no AI co-author: the script drops
+    # AI trailers a model may add (Co-Authored-By naming Claude/Anthropic, Claude-Session, "Generated with Claude Code"),
+    # keeps a human co-author, and never overrides the identity (no --author, no -c user.*)
+    with tempfile.TemporaryDirectory() as t:
+        p = Path(t) / "author"
+        d = prepare(p)
+        git(p, "config", "user.name", "Ada Human")
+        git(p, "config", "user.email", "ada@example.com")
+        call(p, SCRIPT, "verify", d, "S1", "--files", "pay.py,test_pay.py", "--command", OK)
+        clean = {k: v for k, v in env(p).items() if not k.startswith(("GIT_AUTHOR_", "GIT_COMMITTER_"))}
+        msg = ("feat(pay): card payment\n\nCard fee for long stays.\n\nCo-Authored-By: Bob Pair <bob@example.com>\n"
+               "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_1\n"
+               "\U0001f916 Generated with [Claude Code](https://claude.com/claude-code)")
+        r = subprocess.run([sys.executable, str(SCRIPT), "done", d, "S1", "--message", msg], cwd=p, capture_output=True,
+                           text=True, env=clean, timeout=120)
+        body = git(p, "log", "-1", "--format=%B").stdout
+        who = git(p, "log", "-1", "--format=%an <%ae>|%cn <%ce>").stdout.strip()
+        check(r.returncode == 0 and body.startswith("feat(pay): card payment") and "Slice S1:" in body
+              and "Card fee for long stays." in body and "Co-Authored-By: Bob Pair <bob@example.com>" in body,
+              f"DN-AI-1: the commit keeps the title, the body, the slice footer and a human co-author: {r.stdout}{r.stderr} {body}")
+        check(not re.search(r"(?i)claude|anthropic|generated with", body),
+              f"DN-AI-2: no AI attribution in the commit message: {body}")
+        check(who == "Ada Human <ada@example.com>|Ada Human <ada@example.com>",
+              f"DN-AI-3: author and committer are the git user (user.name/user.email): {who}")
+    source = SCRIPT.read_text(encoding="utf-8")
+    check("--author" not in source and not re.search(r"[\"']-c[\"'],\s*[\"']user\.", source)
+          and "Co-Authored-By: Claude" not in source,
+          "DN-AI-4: run_state.py does not override the git identity (--author, -c user.*) or add an AI trailer")
 
     # the skill content leads through done
     skill = (ROOT / ".claude" / "skills" / "tf-task" / "SKILL.md").read_text(encoding="utf-8")
