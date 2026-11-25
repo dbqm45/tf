@@ -62,10 +62,13 @@ def plan_file(run_dir: str) -> str:
 
 
 def changed_files(base: str) -> list[str]:
-    r = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD"], capture_output=True, text=True)
+    # -z: names exactly as on disk (without it git quotes non-ASCII letters and they never match the plan)
+    r = subprocess.run(["git", "diff", "--name-only", "-z", f"{base}...HEAD"], capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
     if r.returncode != 0:
-        r = subprocess.run(["git", "diff", "--name-only", base], capture_output=True, text=True)
-    return sorted(f for f in r.stdout.splitlines() if f and not f.startswith(RUN_PREFIXES))
+        r = subprocess.run(["git", "diff", "--name-only", "-z", base], capture_output=True, text=True,
+                           encoding="utf-8", errors="replace")
+    return sorted(f for f in r.stdout.split("\0") if f and not f.startswith(RUN_PREFIXES))
 
 
 def drift(plan: list[dict], changed: list[str]) -> dict:

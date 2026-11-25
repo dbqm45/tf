@@ -56,6 +56,7 @@
  "test_jira_fetch.py": 3.0,
  "test_kb.py": 1.2,
  "test_legacy_dossier.py": 1.0,
+ "test_loop_edges.py": 19.0,
  "test_metric_watch.py": 2.5,
  "test_metrics.py": 0.9,
  "test_migrate_values.py": 2.5,

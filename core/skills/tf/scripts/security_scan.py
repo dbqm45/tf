@@ -193,17 +193,18 @@ def render(v: dict) -> list[str]:
 # ── changed files ────────────────────────────────────────────────────────────────────────────────────────────────
 
 def git(*args, cwd: Path) -> str:
-    r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True)
+    r = subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0:
         raise ScanError(f"git {' '.join(args)}: {r.stderr.strip()}")
     return r.stdout
 
 
 def changed_files(root: Path, base: str | None, skip: list[str]) -> list[str]:
-    names = set(git("diff", "--name-only", "HEAD", cwd=root).splitlines())
-    names |= set(git("ls-files", "--others", "--exclude-standard", cwd=root).splitlines())
+    # -z: names exactly as on disk — without it git quotes non-ASCII letters, quotes and tabs and the file would drop out
+    names = set(git("diff", "--name-only", "-z", "HEAD", cwd=root).split("\0"))
+    names |= set(git("ls-files", "--others", "--exclude-standard", "-z", cwd=root).split("\0"))
     if base:
-        names |= set(git("diff", "--name-only", f"{base}...HEAD", cwd=root).splitlines())
+        names |= set(git("diff", "--name-only", "-z", f"{base}...HEAD", cwd=root).split("\0"))
     # The factory's work output (.tf/: runs, reports, logs) outside the scan.
     prefixes = [".tf/", *(s.rstrip("/") + "/" for s in skip if s)]
     return sorted(n for n in names if n and (root / n).is_file() and not any(n.startswith(p) for p in prefixes))
@@ -235,7 +236,9 @@ def scanner_decision(root: Path) -> dict | None:
     a missing scanner is a FAIL."""
     packs = engine_module(root, "packs")
     dec = packs.scanner_decision(root) if packs and hasattr(packs, "scanner_decision") else None
-    return dec if isinstance(dec, dict) and str(dec.get("by", "")).startswith("human:") else None
+    # a decision is a human's, with a reason (as `tf config security.scanner off` requires); anything less stays strict
+    return dec if (isinstance(dec, dict) and str(dec.get("by", "")).startswith("human:")
+                   and str(dec.get("reason") or "").strip()) else None
 
 
 def decision_text(dec: dict) -> str:
@@ -274,7 +277,10 @@ def run_semgrep(root: Path, files: list[str], out: Path) -> None:
         cmd += ["--config", ".semgrep.yml"]
     for rules in sorted((root / ".tf" / "factory" / "packs").glob("*/semgrep.yml")):   # overlay rules (e.g. the company's)
         cmd += ["--config", rules.relative_to(root).as_posix()]
-    r = subprocess.run([*cmd, *files], cwd=root, capture_output=True, text=True, env=semgrep_env(root))
+    try:
+        r = subprocess.run([*cmd, *files], cwd=root, capture_output=True, text=True, env=semgrep_env(root))
+    except OSError as e:   # cannot start (a broken install, a command line too long on Windows): a FAIL, never a PASS
+        raise ScanError(f"semgrep could not be started: {e}") from None
     if r.returncode != 0 or not target.is_file():
         tail = (r.stderr or r.stdout).strip().splitlines()[-5:]
         target.unlink(missing_ok=True)
