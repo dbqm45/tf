@@ -330,6 +330,25 @@ def main() -> int:
               f"F-1: only .claude/ and .tf/ changed -> the gate runs nothing: {runs(repo)} {r.stdout}{r.stderr}")
         check(qg.changed_files(repo, []) == [], f"F-2: changed_files leaves out .claude/ and .tf/: {qg.changed_files(repo, [])}")
 
+    # only configuration dotfiles or documentation changed (e.g. the human edited .npmrc or a README): not code — the
+    # gate runs nothing instead of the whole suite after every turn; a code file among them runs it as always
+    with tempfile.TemporaryDirectory() as t:
+        repo = setup(Path(t) / "n1", {k: v for k, v in cfg.items() if k != "watch"})
+        (repo / "mode.txt").write_text("fail")
+        git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "add", "mode.txt")
+        git(repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "mode")
+        (repo / ".npmrc").write_text("min-release-age=7\n")
+        (repo / "docs" / "notes.md").write_text("# changed\n")
+        (repo / "README.md").write_text("# readme\n")
+        r = hook(repo)
+        check(r.returncode == 0 and blocked(r) is None and runs(repo) == 0 and "ℹ" in r.stderr,
+              f"N-1: only dotfiles and docs changed -> no tests, one note: {runs(repo)} {r.stdout}{r.stderr}")
+        r = hook(repo, "SubagentStop")
+        check(runs(repo) == 0 and "ℹ" not in r.stderr, f"N-2: the note once per state: {r.stderr}")
+        (repo / "src" / "app.py").write_text("x = 9\n")
+        r = hook(repo)
+        check(blocked(r) is not None and runs(repo) == 1, f"N-3: a code file among them -> the gate runs: {runs(repo)}")
+
     # the gate state in plain language (tf doctor, session start)
     def status(repo, *flags, **env):
         base = {k: v for k, v in os.environ.items() if k != "QG_GATE_DISABLE"}
