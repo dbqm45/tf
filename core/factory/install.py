@@ -66,6 +66,7 @@ import json
 import os
 import shutil
 import re
+import stat
 import subprocess
 import sys
 
@@ -392,9 +393,12 @@ class Plan:
         if self.dry:
             return
         dst.parent.mkdir(parents=True, exist_ok=True)
+        if dst.exists():
+            writable(dst)          # a read-only copy (from a read-only source, or the Windows read-only attribute)
         dst.write_bytes(data)
         if src is not None:
             shutil.copymode(src, dst)
+            writable(dst)          # the source's execute bit is kept, its read-only mode is not (the next update writes)
 
     def _backup(self, rel: str) -> None:
         self.backed_up.append(rel)
@@ -471,6 +475,17 @@ class Plan:
         if not self.dry:
             path.parent.mkdir(parents=True, exist_ok=True)
             write_keeping_eol(path, text)
+
+
+def writable(path: Path) -> None:
+    """Adds the owner's write permission: a factory source checked out read-only (a read-only share, a package store,
+    an archive with read-only modes) would otherwise give read-only factory files that the next update cannot write."""
+    try:
+        mode = path.stat().st_mode
+        if not mode & stat.S_IWUSR:
+            os.chmod(path, mode | stat.S_IWUSR)
+    except OSError:
+        pass
 
 
 def write_keeping_eol(path: Path, text: str) -> None:
@@ -630,7 +645,7 @@ def keep_commands(section: str, old: str) -> str:
     return COMMANDS_SECTION.sub(lambda m: m.group(1) + mine.group(2), section, count=1)
 
 
-def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> str:
+def with_block(text: str, begin: str, end: str, block: str, replace: bool, where: str = "the instructions file") -> str:
     """Inserts a block between markers at the end of the file or (with replace) replaces the existing one."""
     if begin not in text:
         return (text.rstrip() + "\n\n" if text.strip() else "") + block
@@ -639,7 +654,7 @@ def with_block(text: str, begin: str, end: str, block: str, replace: bool) -> st
     start = text.index(begin)
     end_at = text.find(end, start + len(begin))
     if end_at < 0:      # corrupted block (no end marker) — we do not guess, so as not to delete human content
-        raise SystemExit(f"✗ Marker {begin!r} without {end!r} in the instructions file. Fix it by hand (add the end marker "
+        raise SystemExit(f"✗ Marker {begin!r} without {end!r} in {where}. Fix it by hand (add the end marker "
                          "or remove the start of the block) and run again.")
     stop = end_at + len(end)
     rest = text[stop:].lstrip("\n")
@@ -669,9 +684,12 @@ def git_exclude_path(dst_root: Path) -> Path | None:
         return None
 
 
-def drop_block(text: str) -> str:
+def drop_block(text: str, where: str = ".gitignore") -> str:
     if GI_BEGIN not in text:
         return text
+    if GI_END not in text.split(GI_BEGIN, 1)[1]:   # a broken block: we do not guess where it ends (your lines follow)
+        raise SystemExit(f"✗ Marker {GI_BEGIN!r} without {GI_END!r} in {where}. Fix it by hand (add the end marker "
+                         "after the factory's lines or remove the start of the block) and run again.")
     start, stop = text.index(GI_BEGIN), text.index(GI_END) + len(GI_END)
     return (text[:start].rstrip() + "\n" + text[stop:].lstrip("\n")).lstrip("\n") if text[:start].strip() or text[stop:].strip() else ""
 
@@ -771,6 +789,25 @@ def interactive_choice(available: dict, preset: list[str]) -> list[str]:
         for tok in (t.strip() for t in raw.split(",") if t.strip()):
             chosen.append(ids[int(tok) - 1] if tok.isdigit() and 0 < int(tok) <= len(ids) else tok)
     return chosen
+
+
+def recovered_manifest(dst_root: Path) -> dict:
+    """The update base when the manifest is unreadable: the engine's version, the packs in .tf/factory/packs/, the
+    layout and the mode found on disk — no file hashes, so the update runs as for an install without a manifest."""
+    packs = sorted(p.parent.name for p in (dst_root / ".tf" / "factory" / "packs").glob("*/pack.yaml"))
+    out = {"version": version_of(dst_root), "packs": {pid: "0.0.0" for pid in packs},
+           "layout": "plugin" if (dst_root / PLUGIN / ".claude-plugin" / "plugin.json").is_file() else "default"}
+    mode = "shared" if (dst_root / LOCK).exists() else detect_mode(dst_root)   # only a team install has the lock
+    return {**out, "mode": mode} if mode else out
+
+
+def read_record(path: Path) -> dict | None:
+    """The manifest or the lock as a dict; None when the file is missing or unreadable (cut off, not JSON, not an object)."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) and data else None
 
 
 def save_manifest(dst_root: Path, manifest: dict, shared: bool) -> None:
@@ -1032,9 +1069,20 @@ def _main(argv: list[str], tmp: Path) -> int:
         return 2
     dry, update = bool(opts.get("--dry-run")), bool(opts.get("--update"))
     man_p = dst_root / MANIFEST
-    manifest = json.loads(man_p.read_text(encoding="utf-8")) if man_p.exists() else None
+    manifest = read_record(man_p)
     lock_p = dst_root / LOCK
-    lock = json.loads(lock_p.read_text(encoding="utf-8")) if lock_p.exists() else None
+    lock = read_record(lock_p)
+    if lock is None and lock_p.exists():
+        print(f"⚠ {LOCK} is unreadable (a merge conflict in it?) — ignored; a team install writes it again "
+              "on this run (commit the new one).")
+    if manifest is None and (man_p.exists() or (lock is None and lock_p.exists())):
+        # e.g. an update interrupted while writing the manifest: the update base is what is on disk (packs, layout, mode)
+        manifest = recovered_manifest(dst_root)
+        update = True
+        print(f"⚠ {MANIFEST} is unreadable or missing (cut off by an interrupted update, edited by hand) — updating "
+              f"from what is on disk (version {manifest['version']}, packs: {', '.join(manifest['packs']) or 'none'}): "
+              f"factory files changed in the project are overwritten, their copies go to {BACKUP_DIR}/. "
+              "To go back instead: python3 .tf/factory/update.py --rollback")
     if manifest is None and lock:          # clone of a team install: the update base from the lock
         print(f"ℹ No local manifest — using {LOCK} (version {lock.get('version')}) as the update base.")
         manifest = {"version": lock.get("version"), "mode": "shared", "packs": {p: "0.0.0" for p in lock.get("packs") or []},
@@ -1288,7 +1336,8 @@ def _main(argv: list[str], tmp: Path) -> int:
         else ignored_paths(plan.files)
     lines = [ln for ln in dict.fromkeys(temp + extra) if ln not in have]
     if lines:
-        plan.write(ign, with_block(ign_old, GI_BEGIN, GI_END, "\n".join([GI_BEGIN, *lines, GI_END]) + "\n", True),
+        plan.write(ign, with_block(ign_old, GI_BEGIN, GI_END, "\n".join([GI_BEGIN, *lines, GI_END]) + "\n", True,
+                                   ign_label),
                    f"{ign_label} ({len(lines)} factory entries)")
     gi = dst_root / ".gitignore"
     if exclude and gi.exists() and GI_BEGIN in gi.read_text(encoding="utf-8"):   # after an older installer version

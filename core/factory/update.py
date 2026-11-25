@@ -84,7 +84,17 @@ def newer_than(a: str, b: str) -> int:
 
 
 def is_git(src: str) -> bool:
-    return src.startswith(("https://", "http://", "git@", "ssh://")) or src.split("#")[0].endswith(".git")
+    """A git address, as install.py takes it for --pack-dir (file:// included: a local repository by URL)."""
+    return src.startswith(("https://", "http://", "git@", "ssh://", "file://")) or src.split("#")[0].endswith(".git")
+
+
+def read_manifest(path: Path) -> dict | None:
+    """The manifest as a dict; None when it is missing or unreadable (cut off by an interrupted run, edited by hand)."""
+    try:
+        data = json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def normalize(src: str) -> str:
@@ -320,7 +330,7 @@ def backup(root: Path, now: float | None = None) -> Path:
     (directories without the marker — files removed by the installer — are not touched)."""
     import shutil
     import time
-    manifest = json.loads((root / ".claude" / "factory-manifest.json").read_text(encoding="utf-8"))
+    manifest = read_manifest(root / ".claude" / "factory-manifest.json") or {}   # unreadable: settings and the file itself
     version = manifest.get("version", "0.0.0")
     stamp = time.strftime("%Y%m%d-%H%M%S", time.localtime(time.time() if now is None else now))
     base = root / BACKUP_DIR
@@ -389,9 +399,21 @@ def rollback(root: Path) -> tuple[int, str]:
     if not copies:
         return 2, f"✗ No backup in {BACKUP_DIR.as_posix()} — nothing to roll back to."
     src = copies[-1]
-    meta = json.loads((src / "backup.json").read_text(encoding="utf-8"))
+    try:
+        meta = json.loads((src / "backup.json").read_text(encoding="utf-8"))
+        if not isinstance(meta, dict):
+            raise ValueError("not an object")
+    except (OSError, ValueError) as e:
+        return 2, (f"✗ The last backup {src.relative_to(root).as_posix()} is damaged (backup.json: {e}) — nothing was "
+                   "changed. Copy the files you need from it by hand, or move it out of "
+                   f"{BACKUP_DIR.as_posix()}/ to roll back to the backup before it.")
+    absent = [rel for rel in meta.get("files", []) if not (src / rel).is_file()]
+    if absent:
+        return 2, (f"✗ The last backup {src.relative_to(root).as_posix()} is incomplete ({len(absent)} files missing, "
+                   f"e.g. {absent[0]}) — nothing was changed. Copy the files you need from it by hand, or move it out "
+                   f"of {BACKUP_DIR.as_posix()}/ to roll back to the backup before it.")
     man_p = root / ".claude" / "factory-manifest.json"
-    current = json.loads(man_p.read_text(encoding="utf-8")) if man_p.is_file() else {}
+    current = read_manifest(man_p) or {}
     cur_files = current.get("files", {})
     kept = set(meta.get("files", []))
     for rel in _factory_new(root, cur_files):
@@ -899,7 +921,12 @@ def main(argv: list[str]) -> int:
             return 0
         else:
             opts[a] = True
-    manifest = json.loads(MANIFEST.read_text(encoding="utf-8")) if MANIFEST.exists() else (lock_manifest(ROOT) or {})
+    manifest = read_manifest(MANIFEST)
+    if manifest is None and MANIFEST.exists():
+        print(f"⚠ {MANIFEST.relative_to(ROOT).as_posix()} is unreadable (cut off by an interrupted update, or edited "
+              "by hand) — the installer rebuilds the update base from what is on disk. To go back to the state "
+              "before the last update instead: python3 .tf/factory/update.py --rollback")
+    manifest = manifest if manifest is not None else (lock_manifest(ROOT) or {})
     if opts.get("--ci"):
         src = opts.get("source") or os.environ.get("TEAM_FACTORY") or manifest.get("source") or ""
         return ci_run(ROOT, normalize(src) if src else src)
@@ -957,7 +984,10 @@ def main(argv: list[str]) -> int:
             print("Skill audit of the new version: no high or medium severity findings.\n")
         installer = [sys.executable, str(installer_of(new)), str(ROOT), "--update", "--yes", "--source", src, *passthrough]
         print("Update plan:")
-        subprocess.run(installer + ["--dry-run"], check=False)
+        planned = subprocess.run(installer + ["--dry-run"], check=False)
+        if planned.returncode != 0:   # the installer refused (unknown pack, missing pack source…): before any write
+            print(f"✗ The update plan stopped (exit {planned.returncode}, the reason is above) — nothing was changed.")
+            return planned.returncode
         if opts.get("--dry-run"):
             return 0
         if high and opts.get("--yes") and not opts.get("--accept-audit"):
@@ -980,8 +1010,16 @@ def main(argv: list[str]) -> int:
         if MANIFEST.exists():
             print(f"Backup before the update: {backup(ROOT).relative_to(ROOT).as_posix()} "
                   "(undo: python3 .tf/factory/update.py --rollback)")
-        r = subprocess.run(installer, check=False)
+        try:
+            r = subprocess.run(installer, check=False)
+        except KeyboardInterrupt:
+            print("\n✗ Update interrupted — the install may be half-done. Run the update again, or go back to the state "
+                  "before it: python3 .tf/factory/update.py --rollback")
+            return 130
         if r.returncode != 0:
+            print(f"✗ The installer of version {new_version} stopped (exit {r.returncode}) — the install may be "
+                  "half-done. Fix what it reported and run the update again, or go back to the state before it: "
+                  "python3 .tf/factory/update.py --rollback")
             return r.returncode
     print("\nCheck after the update:")
     if opts.get("--full-check"):
