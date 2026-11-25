@@ -879,6 +879,9 @@ def cmd_start(root: Path, key: str, title: str, weight: str, mode: str | None, c
               cut: str | None = None) -> int:
     if load(root, key) is not None:
         return fail(f"the task {key} already exists ({CHANGES / key / 'task.json'}) — its state: tf task status {key}")
+    if task_path(root, key).exists():   # unreadable (hand-edited, a bad merge): a new task would lose its slices and evidence
+        return fail(f"{CHANGES / key / 'task.json'} exists but cannot be read as a task — fix it by hand (git diff, "
+                    "git checkout) or remove it; it is not overwritten")
     if mode is None:                 # the default mode from configuration (a person's work style within company and project limits)
         mode = work_style(root).get("default_mode") or "normal"
     elif mode_refusal(root, mode):
@@ -1116,10 +1119,15 @@ def cmd_approach(root: Path, key: str, weight: str | None, rationale: str, field
         return fail(f"the weight cannot be below full: {'; '.join(low['reasons'])} — record --weight full")
     slices, files = rules.plan_paths(root, key)
     over = rules.limit_errors(weight, slices, files)
+    declared = str(fields.get("slices") or "").strip()
+    limit = (getattr(rules, "LIMITS", {}).get(weight) or {}).get("slices")
+    if not over and limit and declared.isdecimal() and int(declared) > limit:   # the plan may not exist yet
+        over = [f"the approach declares {int(declared)} slices, the {weight} weight allows {limit}"]
     if over:
         return fail(f"the plan does not fit the {weight} weight: {'; '.join(over)} — re-assess: a heavier weight, or a "
                     "smaller plan")
-    started = STAGES.index(task.get("stage", "intake")) >= STAGES.index("implementation")
+    stage = task.get("stage") if task.get("stage") in STAGES else "intake"   # an old or hand-edited stage counts as not started
+    started = STAGES.index(stage) >= STAGES.index("implementation")
     last = (task.get("weight_log") or [{}])[-1]
     human = str(last.get("by", "")).startswith("human:")
     if rules.rank(weight) < rules.rank(current) and not who.startswith("human:") and (started or human):

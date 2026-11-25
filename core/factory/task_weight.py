@@ -148,7 +148,7 @@ def plan_slices(text: str) -> list[dict]:
         for part in m.group(3).split("·"):
             k, _, v = part.strip().partition(":")
             if k.strip().lower() == "files":
-                files = [f.strip().strip("`") for f in v.split(",") if f.strip().strip("`")]
+                files = [f.strip().strip("`").replace("\\", "/") for f in v.split(",") if f.strip().strip("`")]
         out.append({"id": m.group(2), "files": files})
     return out
 

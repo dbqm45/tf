@@ -67,6 +67,7 @@ INTRO = ("# Factory proposals\n\n> Entries come from projects; review before act
 def sanitize(text, limit: int) -> str:
     """One line for the factory repository: no control characters, headings, code fences, HTML or table markup."""
     s = re.sub(r"[\x00-\x1f\x7f-\x9f]", " ", str(text or ""))
+    s = re.sub(r"[\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]", "", s)   # bidi and zero-width: what a reviewer sees is what is there
     s = s.replace("`", "'").replace("<", "(").replace(">", ")").replace("|", "/")
     s = re.sub(r"#{2,}", "#", s)
     return " ".join(s.split()).lstrip("#-*> ").strip()[:limit]
@@ -192,7 +193,7 @@ def parse(text: str) -> tuple[list[dict], int]:
 
 def append(path: Path, entries: list[dict]) -> list[str]:
     """Appends entries whose id is not in the file yet; returns the ids added."""
-    text = path.read_text(encoding="utf-8") if path.is_file() else INTRO
+    text = path.read_text(encoding="utf-8", errors="replace") if path.is_file() else INTRO
     have = {m.group(1) for ln in text.splitlines() if (m := HEAD.match(ln.rstrip()))}
     new = [e for e in entries if e["id"] not in have]
     if new:
@@ -203,7 +204,7 @@ def append(path: Path, entries: list[dict]) -> list[str]:
 
 
 def set_status(path: Path, ids: set, status: str) -> None:
-    text = path.read_text(encoding="utf-8") if path.is_file() else ""
+    text = path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
     out, cur = [], None
     for line in text.splitlines():
         m = HEAD.match(line.rstrip())
@@ -217,7 +218,7 @@ def set_status(path: Path, ids: set, status: str) -> None:
 
 def pending(root: Path) -> list[dict]:
     path = root / PENDING
-    items = parse(path.read_text(encoding="utf-8"))[0] if path.is_file() else []
+    items = parse(path.read_text(encoding="utf-8", errors="replace"))[0] if path.is_file() else []
     return [e for e in items if e["status"] == "open"]
 
 
