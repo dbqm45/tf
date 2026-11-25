@@ -586,7 +586,8 @@ def render_persona(persona: dict, roles: dict, cfg: dict, traits: dict, personas
     extra = persona.get("extra_agents") or []   # executors of other personas this persona may reach for
     consult = consultants_for(persona, cfg)
     agent_names = [n for n, _ in team] + shared_names + extra + list(consult)
-    tools = [f"Agent({', '.join(agent_names)})", "Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill"]
+    # AskUserQuestion: a persona is a main session (`claude --agent <persona>`) and its skills ask the human with it
+    tools = [f"Agent({', '.join(agent_names)})", "Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill", "AskUserQuestion"]
     tf = tier_fields(cfg, persona.get("model_tier", "std"))
     fm = frontmatter({
         "name": persona["name"],

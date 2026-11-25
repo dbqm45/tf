@@ -147,7 +147,7 @@ shared_agents:
     tier: std
     main_only: true
     description: The factory's "task → PR" loop on request (run `claude --agent tf-task` and give the task; --auto skips plan approval, --budget USD is a hard limit). A specification, a plan of slices, a commit per slice, evidence, one PR, a time and cost report.
-    tools: ["Agent(scout, researcher, quick-fixer, scope-reviewer, spec-reviewer, architect, security-reviewer, mcp-runner)", Read, Grep, Glob, Edit, Write, Bash]
+    tools: ["Agent(scout, researcher, quick-fixer, scope-reviewer, spec-reviewer, architect, security-reviewer, mcp-runner)", Read, Grep, Glob, Edit, Write, Bash, AskUserQuestion]   # AskUserQuestion: the loop's questions to the human
     prompt: |
       You run the factory loop: you turn one task into one PR. You work only in this mode.
       Before you do anything else, read `.claude/skills/tf-task/SKILL.md` with the Read tool and run the
