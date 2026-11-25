@@ -31,6 +31,8 @@ During an active /tf-task run (`.tf/runs/<KEY>/run.json` with a stage other than
 before the PR, so tests after every turn and subagent only repeat it: the gate skips with one `ℹ` note per code state,
 `related` or not. Outside a run nothing changes. Changes only in `.tf/`, `.claude/` or `docs/project/changes/` (the factory's
 and the agent's own files, e.g. `related` written into the gate config) are not code and run nothing.
+Nor does a change made only of documentation (`*.md`, `docs/`) or configuration dotfiles (`.npmrc`,
+`.editorconfig`, `.github/…`): no test sees it, so it runs nothing (one `ℹ` note per state).
 The agent gets long command output as its beginning and end; the whole of the last run is in
 `.tf/logs/quality-gate-output.txt`.
 
@@ -127,6 +129,27 @@ def changed_files(root: Path, watch: list[str]) -> list[str]:
     names = (git(root, "diff", "HEAD", "--relative", "--name-only", "-z", *paths)
              + git(root, "ls-files", "--others", "--exclude-standard", "-z", *paths)).decode(errors="replace")
     return sorted({n for n in names.split("\0") if n and (root / n).is_file()})
+
+
+DOC_EXT = {".md", ".markdown", ".rst", ".adoc", ".txt"}
+
+
+def not_code(name: str) -> bool:
+    """A change that no test can see: documentation (`*.md`, `docs/`) or a configuration dotfile (`.npmrc`,
+    `.editorconfig`, `.gitignore`, a file under `.github/`). Anything else counts as code — a template, a style, a build
+    file — so the gate keeps running for it."""
+    parts = name.replace("\\", "/").split("/")
+    return (Path(name).suffix.lower() in DOC_EXT or parts[0] == "docs"
+            or any(p.startswith(".") and p not in (".", "..") for p in parts))
+
+
+def only_not_code(root: Path, watch: list[str]) -> bool:
+    """True when every changed path (deleted ones included) is documentation or a dotfile."""
+    paths = scope(watch)
+    names = (git(root, "diff", "HEAD", "--relative", "--name-only", "-z", *paths)
+             + git(root, "ls-files", "--others", "--exclude-standard", "-z", *paths)).decode(errors="replace")
+    found = [n for n in names.split("\0") if n]
+    return bool(found) and all(not_code(n) for n in found)
 
 
 CODE_EXT = {".py", ".go", ".rs", ".java", ".kt", ".cs", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".rb", ".php", ".swift",
@@ -314,6 +337,12 @@ def decide(root: Path, data: dict) -> dict | None:
     if red.get("fp") == fp and red.get("count", 0) >= max_blocks:
         return {"systemMessage": f"Quality gate: the tests are still red after {max_blocks} attempts on the same state of "
                                  f"the code — letting it through, the decision is a human's (`{shown(cfg['command'])}`)."}
+    if only_not_code(root, list(cfg.get("watch") or [])):
+        # e.g. the human edited .npmrc or a README: no test sees it, so the whole suite after every turn is only waiting
+        if state.get("doc_skip") != fp:
+            print("ℹ quality gate: only documentation or configuration dotfiles changed — no tests run", file=sys.stderr)
+            save_state(state_path, {**state, "doc_skip": fp})
+        return None
     task = active_run(root)
     if task:
         # A /tf-task run verifies every slice itself (`verify` evidence, reused while the files are unchanged, is required
