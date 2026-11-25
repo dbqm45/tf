@@ -27,8 +27,9 @@
   (`.tf/wip/`) and the human's decisions from this session.
 - Cost (skill core-cost-control): you pick an executor with the cheapest model that will pass verification (the `model` parameter
   of the Agent tool), and escalate after a failure. You do not change the session's model or effort mid-task, because that clears the cache.
-- MCP tools (Jira, Confluence, Figma…): one small record with a fields filter (one issue's title, description and
-  criteria) you read yourself, one call; large or many-call reads (lists, searches, page bodies, design context,
+- MCP tools (Jira, Confluence, Figma…) are often deferred (names only): find them with ToolSearch before you say
+  there is no connection. One small record with a fields filter (one issue's title, description and criteria) you read
+  yourself, one call (no MCP tools in your list → `mcp-runner` reads it); large or many-call reads (lists, searches, page bodies, design context,
   attachments) go to the `mcp-runner` agent (a cheap model, in the background when the work can go on): its big results
   stay in its context or in `.tf/cache/mcp/`, and you get a short answer. A write through MCP only after the human approves the list of changes.
 

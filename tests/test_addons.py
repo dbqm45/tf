@@ -177,6 +177,21 @@ def test_dna_by_name_learn_and_wire():
                           capture_output=True).returncode == 0
 
 
+def test_incomplete_addon_is_reinstalled_by_learn():
+    # only addon.yaml left (e.g. the scripts were not on the checked-out branch): learn reinstalls it from the factory
+    # source, keeping the add-on's own data, instead of failing with "can't open file"
+    p = project(files={"package.json": '{"dependencies": {"react": "^18.2.0"}}'})
+    assert tf_addon(p, "add", "dna").returncode == 0
+    d = p / ".tf" / "addons" / "dna"
+    (d / "dna.py").unlink()
+    r = tf_addon(p, "list")
+    assert "dna.py" in r.stdout and "missing" in r.stdout, r.stdout
+    r = tf_addon(p, "learn")
+    out = r.stdout + r.stderr
+    assert r.returncode == 0 and "reinstall" in out and "can't open file" not in out, out
+    assert (d / "dna.py").is_file()
+
+
 def test_add_by_name_from_a_git_source_with_a_branch():
     # `tf install --repo <url>#<branch>` stores the source with `#<branch>`; git must get the URL and --branch,
     # not "url#branch" (git: "unable to update url base from redirection")

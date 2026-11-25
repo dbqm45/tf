@@ -6,7 +6,22 @@
       "expect": "trigger",
       "prompt": "Zaimplementuj tę historyjkę: jako użytkownik chcę zresetować hasło linkiem z maila, link ważny 30 minut.",
       "checks": {
-        "all": [["run_report\\.py", "intake\\.py", "ticket\\.md"], ["spec\\.md", "AC-\\d", "kryteri"], ["kawałk", "S1"]]
+        "all": [
+          [
+            "run_report\\.py",
+            "intake\\.py",
+            "ticket\\.md"
+          ],
+          [
+            "spec\\.md",
+            "AC-\\d",
+            "kryteri"
+          ],
+          [
+            "kawałk",
+            "S1"
+          ]
+        ]
       }
     },
     {
@@ -14,7 +29,50 @@
       "expect": "trigger",
       "prompt": "Implement this story: as a user I want to reset my password with a link from an email, the link valid for 30 minutes.",
       "checks": {
-        "all": [["run_report\\.py", "intake\\.py", "ticket\\.md"], ["spec\\.md", "AC-\\d", "kryteri", "criteri\\w*", "acceptance"], ["kawałk", "S1", "slices?", "chunks?", "pieces?", "increments?"]]
+        "all": [
+          [
+            "run_report\\.py",
+            "intake\\.py",
+            "ticket\\.md"
+          ],
+          [
+            "spec\\.md",
+            "AC-\\d",
+            "kryteri",
+            "criteri\\w*",
+            "acceptance"
+          ],
+          [
+            "kawałk",
+            "S1",
+            "slices?",
+            "chunks?",
+            "pieces?",
+            "increments?"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zgloszenie-z-atlassian-mcp-odroczone",
+      "expect": "trigger",
+      "prompt": "/tf-task EBO-17601 — mam podłączony serwer MCP Atlassian (jego narzędzia widzę tylko z nazwy, mcp__atlassian__…).",
+      "checks": {
+        "all": [
+          [
+            "ToolSearch",
+            "mcp-runner"
+          ],
+          [
+            "atlassian",
+            "Jir",
+            "mcp__atlassian"
+          ]
+        ],
+        "none": [
+          "wklej treść",
+          "paste the content"
+        ]
       }
     },
     {
@@ -22,8 +80,23 @@
       "expect": "trigger",
       "prompt": "Zrealizuj zgłoszenie EBO-1236, jest następne w kolejce na ten sprint.",
       "checks": {
-        "all": [["intake\\.py", "tracker", "Jir", "Linear"], ["wklej", "treś[ćc] zgłoszenia", "treś[ćc] zadania"]],
-        "none": ["zainstaluj[ęe] serwer MCP", "npx .*mcp"]
+        "all": [
+          [
+            "intake\\.py",
+            "tracker",
+            "Jir",
+            "Linear"
+          ],
+          [
+            "wklej",
+            "treś[ćc] zgłoszenia",
+            "treś[ćc] zadania"
+          ]
+        ],
+        "none": [
+          "zainstaluj[ęe] serwer MCP",
+          "npx .*mcp"
+        ]
       }
     },
     {
@@ -31,8 +104,21 @@
       "expect": "trigger",
       "prompt": "Zrealizuj zgłoszenie EBO-1236 z naszej Jiry. Zmienne JIRA_BASE_URL, JIRA_EMAIL i JIRA_API_TOKEN są ustawione w środowisku.",
       "checks": {
-        "all": [["--from-tracker", "intake\\.py fetch"], ["ticket\\.md", "treś[ćc] zgłoszenia"]],
-        "none": ["zainstaluj[ęe] serwer MCP", "curl [^\\n]*(atlassian|rest/api)", "echo \\$JIRA_(API_)?TOKEN"]
+        "all": [
+          [
+            "--from-tracker",
+            "intake\\.py fetch"
+          ],
+          [
+            "ticket\\.md",
+            "treś[ćc] zgłoszenia"
+          ]
+        ],
+        "none": [
+          "zainstaluj[ęe] serwer MCP",
+          "curl [^\\n]*(atlassian|rest/api)",
+          "echo \\$JIRA_(API_)?TOKEN"
+        ]
       }
     },
     {
@@ -40,8 +126,22 @@
       "expect": "trigger",
       "prompt": "Zrealizuj zadanie do końca: oba kawałki historyjki o limicie dobowym są zrobione i zacommitowane, zgodność z planem sprawdzona. Wypchnij gałąź i wystaw PR.",
       "checks": {
-        "all": [["pr-body"], ["--body-file"], ["Jak cofnąć", "jak cofnąć"]],
-        "none": ["gh pr merge", "git push --force"]
+        "all": [
+          [
+            "pr-body"
+          ],
+          [
+            "--body-file"
+          ],
+          [
+            "Jak cofnąć",
+            "jak cofnąć"
+          ]
+        ],
+        "none": [
+          "gh pr merge",
+          "git push --force"
+        ]
       }
     },
     {
@@ -49,8 +149,21 @@
       "expect": "trigger",
       "prompt": "Zrealizuj zadanie PAY-7 pętlą /tf: zmiana w obsłudze płatności kartą ma wagę pełną, plan zatwierdzony, oba kawałki zrobione i zweryfikowane. Katalog przebiegu to .tf/runs/PAY-7/ — nie sprawdzaj go, wypisz kroki z procedury. Co jeszcze przed otwarciem PR?",
       "checks": {
-        "all": [["security-reviewer"], ["spec-reviewer"], ["run_state\\.py panel", "panel"]],
-        "none": ["gh pr merge"]
+        "all": [
+          [
+            "security-reviewer"
+          ],
+          [
+            "spec-reviewer"
+          ],
+          [
+            "run_state\\.py panel",
+            "panel"
+          ]
+        ],
+        "none": [
+          "gh pr merge"
+        ]
       }
     },
     {
@@ -58,8 +171,33 @@
       "expect": "trigger",
       "prompt": "Zrealizuj zadanie: klucz cięcia TSK-57 z planu zmiany CHG-12, bez nadzoru (/tf TSK-57 --auto --change CHG-12).",
       "checks": {
-        "all": [["intake\\.py", "run_report\\.py start --task"], ["CHG-12-TSK-57", "zadani[ea] cięcia"], ["spec\\.md", "AC-\\d", "kryteri"], ["Change: TSK-57"], ["runs/TSK-57\\.md", "raport cięcia"]],
-        "none": ["\\.tf/runs/cuts", "story\\.md", "git switch main"]
+        "all": [
+          [
+            "intake\\.py",
+            "run_report\\.py start --task"
+          ],
+          [
+            "CHG-12-TSK-57",
+            "zadani[ea] cięcia"
+          ],
+          [
+            "spec\\.md",
+            "AC-\\d",
+            "kryteri"
+          ],
+          [
+            "Change: TSK-57"
+          ],
+          [
+            "runs/TSK-57\\.md",
+            "raport cięcia"
+          ]
+        ],
+        "none": [
+          "\\.tf/runs/cuts",
+          "story\\.md",
+          "git switch main"
+        ]
       }
     },
     {
@@ -67,8 +205,39 @@
       "expect": "trigger",
       "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Przegląd zakresu kawałka S2 zwrócił jedno ustalenie ważne i dwa drobne — co robisz dalej?",
       "checks": {
-        "all": [["ważn"], ["wycof", "popraw"], ["parked", "run_state\\.py park", "park "], ["rund", "R2"], ["run_state\\.py finding", "finding "], ["zakres fail", "zakres pass", "scope fail", "scope pass", "run_state\\.py step"]],
-        "none": ["R3 ", "trzeci[aą] rund[aęy] bez"]
+        "all": [
+          [
+            "ważn"
+          ],
+          [
+            "wycof",
+            "popraw"
+          ],
+          [
+            "parked",
+            "run_state\\.py park",
+            "park "
+          ],
+          [
+            "rund",
+            "R2"
+          ],
+          [
+            "run_state\\.py finding",
+            "finding "
+          ],
+          [
+            "zakres fail",
+            "zakres pass",
+            "scope fail",
+            "scope pass",
+            "run_state\\.py step"
+          ]
+        ],
+        "none": [
+          "R3 ",
+          "trzeci[aą] rund[aęy] bez"
+        ]
       }
     },
     {
@@ -76,8 +245,22 @@
       "expect": "trigger",
       "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). W projekcie włączono loop.blocked_slices. W kawałku S2 brakuje odpowiedzi na pytanie o abonamenty, a S3 od niego nie zależy — co robisz dalej?",
       "checks": {
-        "all": [["run_state\\.py block", "zablok"], ["S3"], ["pytani"]],
-        "none": ["(?<!nie )zgaduj[ęe]", "przyjmuj[ęe] założenie i robi[ęe] S2"]
+        "all": [
+          [
+            "run_state\\.py block",
+            "zablok"
+          ],
+          [
+            "S3"
+          ],
+          [
+            "pytani"
+          ]
+        ],
+        "none": [
+          "(?<!nie )zgaduj[ęe]",
+          "przyjmuj[ęe] założenie i robi[ęe] S2"
+        ]
       }
     },
     {
@@ -85,8 +268,25 @@
       "expect": "trigger",
       "prompt": "Weź się za następne zadanie z trackera.",
       "checks": {
-        "all": [["numer", "klucz", "które zadanie", "treś[ćc]"], ["wklej", "podaj", "wznowi"]],
-        "none": ["K1 —", "S1 —", "BRAMKA K1", "GATE S1"]
+        "all": [
+          [
+            "numer",
+            "klucz",
+            "które zadanie",
+            "treś[ćc]"
+          ],
+          [
+            "wklej",
+            "podaj",
+            "wznowi"
+          ]
+        ],
+        "none": [
+          "K1 —",
+          "S1 —",
+          "BRAMKA K1",
+          "GATE S1"
+        ]
       }
     },
     {
@@ -94,8 +294,25 @@
       "expect": "trigger",
       "prompt": "Zrealizuj zadanie IMP-1 pętlą fabryki (/tf IMP-1). Kawałek S1 ma zielony dowód z verify, a scope-reviewer nie zgłosił ustaleń ważnych. Jak zamykasz kawałek?",
       "checks": {
-        "all": [["run_state\\.py done", "done <katalog>"], ["--message"], ["feat\\(", "fix\\(", "<typ>"]],
-        "none": ["git add -A", "git add \\.", "git commit -am"]
+        "all": [
+          [
+            "run_state\\.py done",
+            "done <katalog>"
+          ],
+          [
+            "--message"
+          ],
+          [
+            "feat\\(",
+            "fix\\(",
+            "<typ>"
+          ]
+        ],
+        "none": [
+          "git add -A",
+          "git add \\.",
+          "git commit -am"
+        ]
       }
     },
     {
@@ -132,19 +349,52 @@
       "id": "zmiana-ekranu-zrzuty",
       "expect": "trigger",
       "prompt": "Zrealizuj historyjkę: jako użytkownik chcę zobaczyć na ekranie logowania czerwony komunikat o błędnym haśle pod polem hasła. Zmiana dotyczy dwóch komponentów Angulara. Jak sprawdzisz, że ekran wygląda jak trzeba?",
-      "checks": {"all": [["ui_snap", "zrzut", "screenshot"], ["przed", "before"]]}
+      "checks": {
+        "all": [
+          [
+            "ui_snap",
+            "zrzut",
+            "screenshot"
+          ],
+          [
+            "przed",
+            "before"
+          ]
+        ]
+      }
     },
     {
       "id": "zmiana-ekranu-zrzuty-en",
       "expect": "trigger",
       "prompt": "Implement this story: as a user I want a red error message under the password field on the login screen. The change touches two Angular components. How will you check that the screen looks right?",
-      "checks": {"all": [["ui_snap", "screenshot"], ["before"]]}
+      "checks": {
+        "all": [
+          [
+            "ui_snap",
+            "screenshot"
+          ],
+          [
+            "before"
+          ]
+        ]
+      }
     },
     {
       "id": "zmiana-backendu-bez-zrzutow",
       "expect": "trigger",
       "prompt": "Zaimplementuj historyjkę: jako operator chcę, żeby endpoint /api/sessions zwracał pole duration w sekundach. Zmiana dotyczy tylko kontrolera i serwisu w Pythonie.",
-      "checks": {"all": [["run_report\\.py", "intake\\.py", "spec\\.md"]], "none": ["ui_snap\\.py capture"]}
+      "checks": {
+        "all": [
+          [
+            "run_report\\.py",
+            "intake\\.py",
+            "spec\\.md"
+          ]
+        ],
+        "none": [
+          "ui_snap\\.py capture"
+        ]
+      }
     },
     {
       "id": "projektujmy-bez-kodu",
@@ -156,8 +406,40 @@
       "id": "propozycja-trybu-auto",
       "expect": "trigger",
       "prompt": "Realizuję zadanie TYP-7 w pętli fabryki i po etapie intake dostałem linię: Mode: normal; proposal Auto — a small, mechanical change. Mogę od razu przełączyć na auto, żeby nie czekać na akceptację planu? Odpowiedz zwięźle.",
-      "checks": {"all": [["AskUserQuestion", "zapyta\\w* (człowieka|użytkownika|Ciebie)", "decyzj\\w* (człowieka|użytkownika|należy)"], ["tf task mode TYP-7 auto"]], "none": ["(sam|samodzielnie) (przełączam|włączam|ustawiam)"]}
+      "checks": {
+        "all": [
+          [
+            "AskUserQuestion",
+            "zapyta\\w* (człowieka|użytkownika|Ciebie)",
+            "decyzj\\w* (człowieka|użytkownika|należy)"
+          ],
+          [
+            "tf task mode TYP-7 auto"
+          ]
+        ],
+        "none": [
+          "(sam|samodzielnie) (przełączam|włączam|ustawiam)"
+        ]
+      }
     },
-    {"id": "wnioski-na-koniec-zadania", "expect": "trigger", "prompt": "Kończymy zadanie EBO-1: PR wystawiony, raport z run_report.py finish gotowy. Weryfikacja szła 27 minut, dwa identyczne przebiegi. Co zrobić z tym wnioskiem na koniec zadania?", "checks": {"all": [["--evidence"], ["tf proposals add", "proposals"], ["obserwac\\w+|observation"]]}}
+    {
+      "id": "wnioski-na-koniec-zadania",
+      "expect": "trigger",
+      "prompt": "Kończymy zadanie EBO-1: PR wystawiony, raport z run_report.py finish gotowy. Weryfikacja szła 27 minut, dwa identyczne przebiegi. Co zrobić z tym wnioskiem na koniec zadania?",
+      "checks": {
+        "all": [
+          [
+            "--evidence"
+          ],
+          [
+            "tf proposals add",
+            "proposals"
+          ],
+          [
+            "obserwac\\w+|observation"
+          ]
+        ]
+      }
+    }
   ]
 }
