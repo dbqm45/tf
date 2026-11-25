@@ -63,7 +63,8 @@ Szczegóły i lista kontrolna sesji: `references/parallel-worktrees.md`.
   wymagań w `docs/project/`.
 - Małe: jedna zmiana, kilkaset linii. Większe dziel.
 - **PR-y pisane przez agenta — agent proponuje, potok decyduje:**
-  - oznacz je: etykieta (np. `agent`) i trailer commita (`Co-Authored-By:`), żeby historia pokazywała, co napisał agent;
+  - oznacz je etykietą PR (np. `agent`); rutyna bez nadzoru commituje jako własne konto bota w git. Bez współautora AI
+    w commicie: w sesji prowadzonej przez człowieka autorem jest tylko jego `user.name`/`user.email` z git;
   - chronione ścieżki (`infra/`, auth, płatności, `.github/workflows/`, `.claude/`) mają właścicieli w CODEOWNERS i są
     wyłączone z auto-merge; zielony przebieg nic nie dowodzi, gdy PR zmienia workflow, który go wygenerował; `tf risk`
     ocenia te ścieżki wysoko;

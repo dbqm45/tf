@@ -377,9 +377,44 @@
       "prompt": "Chcę puścić dwie sesje Claude Code równolegle, każdą w swoim worktree. Ostatnio w nowym worktree brakowało pliku .env i testy nie ruszyły. Jak to ustawić, żeby nie kopiować go ręcznie za każdym razem? Odpowiedz zwięźle.",
       "checks": {
         "all": [
-          ["\\.worktreeinclude"],
-          ["--worktree", "claude -w"],
-          ["ignorowan\\w*", "gitignore", "nie (są )?śledzon\\w*", "untracked"]
+          [
+            "\\.worktreeinclude"
+          ],
+          [
+            "--worktree",
+            "claude -w"
+          ],
+          [
+            "ignorowan\\w*",
+            "gitignore",
+            "nie (są )?śledzon\\w*",
+            "untracked"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "commit-bez-wspolautora-ai",
+      "expect": "trigger",
+      "prompt": "Commituję w swoim projekcie z pomocą agenta Claude Code. Czy dodać do commita trailer Co-Authored-By z Claude i link Claude-Session? Kto ma być autorem?",
+      "checks": {
+        "all": [
+          [
+            "user\\.name",
+            "user\\.email",
+            "tożsamoś\\w* git",
+            "git identity"
+          ],
+          [
+            "[Bb]ez (trailer\\w*|współautor\\w*)",
+            "[Nn]ie dodawaj",
+            "[Nn]ie dodaj\\w*",
+            "no AI co-author",
+            "attribution"
+          ]
+        ],
+        "none": [
+          "[Dd]odaj (trailer )?Co-Authored-By: Claude"
         ]
       }
     }

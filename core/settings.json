@@ -6,6 +6,11 @@
     "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "6"
   },
   "autoCompactWindow": 200000,
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  },
   "statusLine": {
     "type": "command",
     "command": "python3 .claude/hooks/statusline.py",
@@ -68,7 +73,8 @@
       "Bash(npm publish *)",
       "Bash(docker push *)",
       "WebFetch",
-      "Bash(python3 .tf/factory/skill_gate.py *--model*)"
+      "Bash(python3 .tf/factory/skill_gate.py *--model*)",
+      "Bash(python3 .claude/skills/tf/scripts/run_state.py revert *)"
     ],
     "deny": [
       "Read(./.env)",

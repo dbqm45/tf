@@ -20,6 +20,13 @@ ROOT = next(p for p in Path(__file__).resolve().parents if (p / ".claude" / "hoo
 HOOK = ROOT / ".claude" / "hooks" / "guard_bash.py"
 
 
+def output(cmd: str, project: Path) -> dict:
+    p = subprocess.run([sys.executable, str(HOOK)], input=json.dumps({"tool_name": "Bash", "tool_input": {"command": cmd}}),
+                       env={**os.environ, "CLAUDE_PROJECT_DIR": str(project)}, capture_output=True, text=True,
+                       timeout=20)
+    return json.loads(p.stdout)["hookSpecificOutput"] if p.stdout.strip() else {}
+
+
 def run(cmd: str, project: Path) -> str:
     p = subprocess.run([sys.executable, str(HOOK)], input=json.dumps({"tool_name": "Bash", "tool_input": {"command": cmd}}),
                        env={**os.environ, "CLAUDE_PROJECT_DIR": str(project)}, capture_output=True, text=True,
@@ -80,6 +87,28 @@ def main() -> int:
         good = subprocess.run([sys.executable, str(HOOK), "--check-policy"], env={**os.environ, "CLAUDE_PROJECT_DIR": str(strict)},
                               capture_output=True, text=True, timeout=20)
         out = bad.stdout + bad.stderr
+        # A-8: git push, reset --hard and clean -f each show their own plain description (the user reads
+        # permissionDecisionReason in the permission prompt); the policy type stays `git_push` for all three
+        seen = {}
+        for cmd, words in (("git push origin feat/x", "sends your commits to the remote"),
+                           ("git reset --hard HEAD~1", "uncommitted changes"),
+                           ("git clean -fd", "untracked files"), ("git clean --force", "untracked files")):
+            o = output(cmd, plain)
+            reason = o.get("permissionDecisionReason", "")
+            seen[cmd] = reason
+            if o.get("permissionDecision") != "ask" or words not in reason or "git_push" not in reason \
+                    or "/" in reason.split("git_push")[0]:
+                fails.append(f"A-8: `{cmd}` asks with its own plain reason and the type git_push: {o}")
+            o = output(cmd, strict)
+            if o.get("permissionDecision") != "deny" or words not in o.get("permissionDecisionReason", ""):
+                fails.append(f"A-8: `{cmd}` with git_push: deny is blocked with its own reason: {o}")
+        if len(set(seen.values())) < 3:
+            fails.append(f"A-8: the three git operations have separate reasons: {seen}")
+        # A-9: two operations in one command → the prompt names both
+        o = output("git reset --hard origin/main && git push origin main", plain)
+        reason = o.get("permissionDecisionReason", "")
+        if "sends your commits" not in reason or "uncommitted changes" not in reason:
+            fails.append(f"A-9: a command with two consent operations names both: {reason}")
         if bad.returncode != 1 or "prod_command" not in out or "destructive_sql" not in out or "nieznany_typ" not in out \
                 or good.returncode != 0:
             fails.append(f"A-5: --check-policy: {bad.returncode} {out[:400]} / {good.returncode} {good.stdout[:200]}")
@@ -89,7 +118,7 @@ def main() -> int:
         fails.append("A-6: .tf/factory/config.yaml describes autonomy.operations with default values")
     for f in fails:
         print(f"✗ {f}")
-    total = 15
+    total = 25
     print(f"{'✓' if not fails else '✗'} autonomy policy: {total - len(fails)}/{total}")
     return 1 if fails else 0
 

@@ -78,7 +78,8 @@ Details and a session checklist: `references/parallel-worktrees.md`.
   requirements in `docs/project/`.
 - Small: one change, a few hundred lines. Split anything bigger.
 - **Agent-authored PRs — the agent proposes, the pipeline decides:**
-  - mark them: a label (e.g. `agent`) and a commit trailer (`Co-Authored-By:`), so history shows what the agent wrote;
+  - mark them with a PR label (e.g. `agent`); an unattended routine commits as its own bot identity in git. No AI
+    co-author trailer: in a session a person drives, the author is that person's git `user.name`/`user.email` alone;
   - protected paths (`infra/`, auth, payments, `.github/workflows/`, `.claude/`) have owners in CODEOWNERS and are
     excluded from auto-merge; a green run proves nothing when the PR edits the workflow that produced it; `tf risk` rates
     these paths high;

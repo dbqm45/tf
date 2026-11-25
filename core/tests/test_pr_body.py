@@ -110,6 +110,10 @@ def main() -> int:
         text = body(p)
         check(r.returncode == 0 and text and "pr-body.md" in r.stdout and "--body-file" in r.stdout,
               f"PB-1: pr-body saves the description in the run directory and gives --body-file: {r.returncode} {r.stdout} {r.stderr}")
+        check("AskUserQuestion" in r.stdout and "git-questions.md" in r.stdout,
+              f"PB-1b: in the normal mode pr-body reminds to ask the human before the push and the PR title: {r.stdout}")
+        check(not re.search(r"(?i)claude|co-authored-by|generated with", text),
+              f"PB-1c: the PR description carries no AI attribution: {text[-300:]}")
         pos = [text.find(h) for h in ORDER]
         check(all(x >= 0 for x in pos) and pos == sorted(pos),
               f"PB-2: the description has fixed sections in a fixed order (incl. How it was checked, Risk, How to roll back): {pos}")

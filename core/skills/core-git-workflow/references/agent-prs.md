@@ -2,7 +2,9 @@
 
 ## 1. Make agent work visible
 - A label on every agent PR (e.g. `agent`, or the routine's name) — filterable in the PR list.
-- A trailer in every agent commit: `Co-Authored-By: <agent> <address>` — searchable with `git log --grep`.
+- An unattended routine commits as its own bot identity (`user.name`/`user.email` of a bot account) — searchable with
+  `git log --author`. No AI co-author trailer (`Co-Authored-By`, `Claude-Session`): in a session a person drives, the
+  author is that person's git identity alone, and the factory's settings (`attribution`) keep Claude Code from adding one.
 - The PR body says which task or routine produced it.
 
 ## 2. Protected paths
@@ -29,7 +31,7 @@ A prompt saying "do not touch the scenarios" is not a control. What is:
 4. Step definitions, fixtures and adapters are guarded the same way — a scenario can be made green by editing its glue code.
 
 ## Example
-A nightly routine opens dependency bumps and lint fixes. Changes: label `agent-nightly`, `Co-Authored-By` trailer,
+A nightly routine opens dependency bumps and lint fixes. Changes: label `agent-nightly`, commits by the `nightly-bot` git identity,
 CODEOWNERS entry `/infra/ @platform-team`, auto-merge rule limited to PRs whose files match `package*.json` or `src/**`
 and whose CI passed; a PR touching `infra/terraform/` now waits for the platform team.
 
