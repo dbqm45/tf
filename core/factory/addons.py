@@ -95,8 +95,22 @@ def load(d: Path) -> dict:
     elif meta.get("name") != d.name:
         info["problem"] = f"name {meta.get('name')!r} differs from the directory {d.name!r}"
     else:
-        info["ok"] = True
+        lost = sorted({str(c[0]) for c in (_script_of(meta, k) for k in (meta.get("provides") or {}))
+                       if c and not (d / c[0]).is_file()})
+        if lost:   # only addon.yaml left, e.g. the scripts are not on the checked-out branch
+            info["problem"] = f"incomplete: {', '.join(lost)} missing — tf learn reinstalls it (or: tf addon add {d.name})"
+            info["incomplete"] = True
+        info["ok"] = True   # still loaded (check reports the failing command); learn repairs it
     return info
+
+
+def _script_of(meta: dict, key: str) -> tuple[str] | None:
+    """The script a `provides` command runs (`x.py …` → ("x.py",)); None for data entries (paths, dicts)."""
+    spec = (meta.get("provides") or {}).get(key)
+    if not isinstance(spec, str) or " " not in spec.strip() and not spec.strip().endswith(".py"):
+        return None
+    first = shlex.split(spec.replace("{base}", "HEAD"))[0] if spec.strip() else ""
+    return (first,) if first.endswith(".py") else None
 
 
 def installed(root: Path) -> list[dict]:
@@ -495,6 +509,11 @@ def _timed(root: Path, addons: list[dict], key: str, event: str) -> tuple[int, l
 
 
 def learn(root: Path, only: str | None) -> int:
+    for a in installed(root):   # scripts gone, addon.yaml left: copy it again from the factory source, data kept
+        if a.get("incomplete") and (not only or a["name"] == only):
+            print(f"→ {a['name']}: {a['problem'].split(' — ')[0]} — reinstalling from the factory source")
+            if add(root, a["name"]) != 0:
+                print(f"⚠ {a['name']}: could not be reinstalled — restore .tf/addons/{a['name']}/ from git, or tf addon add <path>")
     have = {a["name"] for a in installed(root)}
     for name in declared(root):   # rolled out by the company/team/project configuration
         if name not in have and (not only or name == only):
@@ -630,7 +649,7 @@ def check(root: Path, base: str | None, as_json: bool) -> int:
 
 def status(root: Path) -> list[str]:
     """Problems for tf doctor (empty: all fine or no add-ons)."""
-    return [f"add-on {a['name']}: {a['problem']}" for a in installed(root) if not a["ok"]]
+    return [f"add-on {a['name']}: {a['problem']}" for a in installed(root) if not a["ok"] or a.get("incomplete")]
 
 
 def cmd_list(root: Path, as_json: bool) -> int:
@@ -650,7 +669,7 @@ def cmd_list(root: Path, as_json: bool) -> int:
     if not rows:
         print("ℹ No add-ons. Add one: tf addon add <name | path | git URL>")
     for r in rows:
-        state = "✓" if r["ok"] else f"⚠ {r['problem']}"
+        state = "✓" if r["ok"] and not r["problem"] else f"⚠ {r['problem']}"
         print(f"{state} {r['name']} {r['version'] or '?'} — provides: {', '.join(r['provides']) or 'nothing'}"
               + ("" if r["plan"] or not r["ok"] else "  (no output yet: tf learn)")
               + (f"  — {r['pending']} items wait for the session (MCP tool or cheap model): {r['pending_file']}"

@@ -96,13 +96,16 @@ a bug still unexplained after one attempt -> opus. Optional: `python3 .claude/ho
   checkpoint, start a new session, load the plan and progress, restart the phase. Attention to the middle of a long input
   degrades; the cache lowers the price, not the clutter. Between plan phases offer: continue / fresh context with a resume
   instruction / review first. Fact-checking itself is core-grounding.
-- **MCP costs twice**: tool definitions travel with every request (tool search loads them on demand) and results stay in the
-  history. A judgement, not a size table: ONE small record with a fields filter (one issue's title, description and
+- **MCP, as cheap as it works** (https://code.claude.com/docs/en/mcp, /costs): tool definitions are deferred by default -
+  only names and server instructions are in context until a tool is used (so "listed by name" still means connected:
+  load it with ToolSearch) - and every result stays in the history. Cheapest first: a CLI or the factory's script
+  (`gh`, `intake.py fetch`) adds no tool listing. ONE small record with a fields filter (one issue's title, description and
   criteria) the main session reads itself - one call, a small result, no subagent cold start. A large result or many calls
   (lists, searches, page bodies, design context, attachments) go to the `mcp-runner` agent on a cheap model, with a call
   budget, in the background when the work can go on (`run_in_background`); it keeps large results in its own context or
   `.tf/cache/mcp/` and returns a short answer. Read once: a result already saved (`ticket.md`, a cache file) is not
-  fetched again. Connect only the servers you need, prefer a few general tools
+  fetched again. A result over `MAX_MCP_OUTPUT_TOKENS` (25k by default) Claude Code saves to a file - ask for fields, not
+  whole objects. Turn off servers this project does not use (`/mcp`; `/context` shows the cost), prefer a few general tools
   (search + execute) over dozens of narrow ones, and use a CLI when the command is known.
 - **Terminal output**: quiet reporters first (`pytest -q`, a dot reporter, `--silent`, errors only); write long logs to a file
   and read fragments (`tail`, `grep`). A hook that filters every command is foreign code with full access: audit it and get the
