@@ -27,31 +27,29 @@ The human does not give the tool's name — `/tf-task EBO-1236` is enough.
    and itself writes `ticket.md` with the title, the source, the date and the content — you add nothing. When the script refuses (missing
    variables, a wrong token, no such issue), you tell the human in one sentence why and go with point 3.
    You do not set, print or read the variables with access data.
-1. `Tracker: <type>` (from the address or from the operations card): the tracker's MCP tools are often **deferred** —
-   only their names are listed, e.g. `mcp__atlassian__…` — so search first (ToolSearch "jira" / "atlassian" / the tracker
-   name) before you decide there is none. When the tool is in your list (an MCP server for Jira, Linear, GitHub,
-   GitLab…), **you call it yourself**: one issue is one call with a fields filter
-   (the title, the description, the acceptance criteria — not comments, attachments, history or linked issues) and a
-   small result, so a subagent's cold start would cost more than the read. You hand it to `mcp-runner` only when the
-   read is large or needs many calls (see "Large reads" below), **or when your own tool list has no MCP tools** (e.g.
-   `claude --agent tf-task` limits the tools): `mcp-runner` inherits the session's MCP connections, so it reads the
-   issue (one call, the same fields) and you never ask the human to paste what a connected tracker holds.
+1. `Tracker: <type>` (from the address or from the operations card): when an MCP server for this tracker is connected
+   (Jira/Atlassian, Linear, GitHub, GitLab…), the **`mcp-runner` agent** reads the issue — you do not call MCP in the
+   main session: the tool definitions and the raw result would stay in this context for the whole task. The brief:
+   the key, one call with a fields filter (the title, the description, the acceptance criteria — not comments,
+   attachments, history or linked issues), "return the title and the content as text". `mcp-runner` inherits the
+   session's MCP connections and finds a deferred tool itself (one tool search), so a tool you only see by name
+   (`mcp__atlassian__…`) is a connection — never ask the human to paste what a connected tracker holds.
    This is **read only** — you do not change the status, comments or fields in the tracker.
 2. `Tracker: unknown`: you check which trackers are connected in the session. One → you use it. Several → you ask
    the human once (AskUserQuestion) which one issues with this prefix come from. You save the choice:
    `intake.py tracker <typ> --prefix <PREFIKS>` (e.g. `intake.py tracker jira --prefix EBO`; without `--prefix` — the default
    tracker for the remaining keys). The record goes to `.tf/config/operations.json` and you do not ask about it again.
    A preview of the record: `intake.py tracker`.
-3. No connection does not block the work — but "no connection" means neither you (after ToolSearch) nor `mcp-runner`
-   found a tool for this tracker. Then you say in one sentence what is missing ("I have no connection to Jira"), and ask
+3. No connection does not block the work — but "no connection" means `mcp-runner` reported no tool for this
+   tracker. Then you say in one sentence what is missing ("I have no connection to Jira"), and ask
    "paste the content of the issue". You install and configure nothing yourself — the human adds the connection.
 4. With `--auto` there is nobody to ask: no content or an unclear source → a STOP block with that question.
 
 ## Large reads: `mcp-runner` in the background
-Your judgement, not a size table: one record with a fields filter you read yourself; a list, a search, a page body, a
-design context, attachments or several linked issues the `mcp-runner` agent reads (a cheap model, a budget of about
-3 calls). Then:
-- the issue itself you still read directly and create the task from it (§0); the extra material (a linked page, a
+Every MCP read goes through `mcp-runner` (a cheap model, a budget of about 3 calls). The issue itself you wait for
+and create the task from it (§0); a list, a search, a page body, a design context, attachments or linked issues do not
+block the start:
+- the extra material (a linked page, a
   design, attachments) goes to the runner started with the Agent tool and `run_in_background: true`; the brief names
   the fields, the limit and the file for the result (`.tf/cache/mcp/<KEY>-<what>.md`);
 - `run_state.py fetch <katalog> begin --what intake` when you start it, `… end --what intake` when you take its result —

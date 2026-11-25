@@ -60,7 +60,6 @@
       "checks": {
         "all": [
           [
-            "ToolSearch",
             "mcp-runner"
           ],
           [
