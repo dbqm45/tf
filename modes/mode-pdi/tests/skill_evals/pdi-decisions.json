@@ -482,6 +482,31 @@
         ],
         "none": []
       }
+    },
+    {
+      "id": "triaz-bez-kodu",
+      "expect": "trigger",
+      "prompt": "Tryb mode-pdi, triaż PRB-40 z pdi: operator pisze, że musi zmieniać taryfę na 200 ładowarkach po kolei i prosi o nowy przycisk „zmień wszystkie”. W aplikacji od dawna są grupy ładowarek, a taryfę ustawia się dla grupy. Jaką rekomendację złożyć? Odpowiedz zwięźle.",
+      "checks": {
+        "all": [
+          [
+            "--no-code"
+          ],
+          [
+            "existing_feature",
+            "configuration"
+          ],
+          [
+            "--how"
+          ],
+          [
+            "rejected"
+          ]
+        ],
+        "none": [
+          "--status accepted"
+        ]
+      }
     }
   ]
 }

@@ -168,12 +168,16 @@ The report lives in pdi; tf gives only a recommendation (R7: in pdi states, the 
    `contract/problem.schema.json` (a copy next to the script); triage only for the states `new`, `clarifying`, `ready_for_triage`.
 2. Triage by the proc-issue-triage procedure (pack-it): whether it already exists, `.out-of-scope/`, reproduction, the need
    instead of the literal request (`proposed_solution` is a solution, not a problem).
+   Before `accepted`, ask whether the problem goes away without development (DV7): a configuration or data change, a
+   different way of working, or a feature that already exists and the reporter does not know. If so, recommend
+   `rejected` with `--no-code configuration|process_change|existing_feature --how "…"` (what the reporter does; pdi
+   sends it to them), not a change.
 3. `triage_pdi.py recommend prb.json --status <state> --rationale "…"` with the state's fields:
    | pdi state | Requires | tf state |
    |---|---|---|
    | `clarifying` | `--question "…"` (several) | `needs-info` |
    | `accepted` | `--brief "…"`, `--executor agent\|human` | `ready-for-agent` / `ready-for-human` |
-   | `rejected` | `--reason` from the contract's list (+ `--note`); `out_of_scope_recorded` → `--out-of-scope-file` | `wontfix` |
+   | `rejected` | `--reason` from the contract's list (+ `--note`); `out_of_scope_recorded` → `--out-of-scope-file`; without code → `--no-code KIND --how "…"` | `wontfix` |
    | `parked` | `--return-when "…"` | `needs-triage` + `deferred` |
    | `duplicate` | `--duplicate-of PRB-n` | `wontfix` |
    Evidence: `--observation "…"` (checked) and `--evidence "…"` (an AI conclusion). Result: JSON per

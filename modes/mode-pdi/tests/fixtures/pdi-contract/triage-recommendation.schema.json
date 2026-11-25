@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/dbqm45/pdi/contract/triage-recommendation.schema.json",
-  "title": "Rekomendacja triażu zgłoszenia PRB (kontrakt suity 0.23.0)",
+  "title": "Rekomendacja triażu zgłoszenia PRB (kontrakt suity 0.24.0)",
   "description": "Rekomendacja, którą wykonawca triażu (tf, F3) składa dla pdi. Stan i pola jak w problem.schema.json (R7), żeby pdi przepisało je do zgłoszenia bez tłumaczenia; tf_state z tabeli mapowania w contract/README.md. Decyzję podejmuje człowiek w pdi (triaż jest typem chronionym); zmianę (change) tworzy pdi po przyjęciu.",
   "type": "object",
   "additionalProperties": false,
@@ -94,11 +94,38 @@
         "cost_disproportionate",
         "already_exists",
         "out_of_scope_recorded",
+        "no_code",
         "other"
       ]
     },
     "rejection_note": {
       "type": "string"
+    },
+    "no_code": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "how"
+      ],
+      "description": "Rozwiązanie bez developmentu (0.24.0, DV7): problem znika po zmianie konfiguracji, procesu albo po użyciu istniejącej funkcji. Wymagane przy `rejection_reason: no_code`; `how` trafia do zgłaszającego.",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "configuration",
+            "process_change",
+            "existing_feature"
+          ],
+          "description": "`configuration` — ustawienie, flaga, dane; `process_change` — inny sposób pracy, bez zmiany systemu; `existing_feature` — funkcja już jest, zgłaszający jej nie zna."
+        },
+        "how": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000,
+          "description": "Co zrobić, żeby problem zniknął (dla zgłaszającego)."
+        }
+      }
     },
     "out_of_scope_file": {
       "type": "string",
@@ -319,6 +346,23 @@
             "const": "wontfix"
           }
         }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rejection_reason": {
+            "const": "no_code"
+          }
+        },
+        "required": [
+          "rejection_reason"
+        ]
+      },
+      "then": {
+        "required": [
+          "no_code"
+        ]
       }
     }
   ]
