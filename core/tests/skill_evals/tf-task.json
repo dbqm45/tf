@@ -563,6 +563,35 @@
           "AskUserQuestion.*komunikat\\w* commit\\w* w (trybie )?--auto"
         ]
       }
+    },
+    {
+      "id": "ta-sama-zmiana-jeden-kawalek-en",
+      "expect": "trigger",
+      "prompt": "Do the task EBO-17 with the factory loop (/tf-task EBO-17): the shared search bar gets a fixed width, the width overrides go from five list screens, and two labels are renamed. How many slices do you plan, and how do you verify each?",
+      "checks": {
+        "all": [
+          [
+            "one slice",
+            "1 slice",
+            "a single slice",
+            "jeden kawałek",
+            "S1 only"
+          ],
+          [
+            "related",
+            "findRelatedTests",
+            "narrow\\w*",
+            "the slice's (test|spec) files",
+            "touched (test|spec)"
+          ]
+        ],
+        "none": [
+          "S3 —",
+          "one slice per screen",
+          "a slice per screen",
+          "whole (project|directory|suite) for each slice"
+        ]
+      }
     }
   ]
 }

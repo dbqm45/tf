@@ -29,6 +29,9 @@ Examples of the judgement (not rules):
 - **Simple** — the same label or CSS class change in 8 templates plus one shared component: `quick`, 1 slice ("the same
   edit in many places"), one parametrized test per acceptance criterion, verification of only the touched spec files,
   a cheap diff-only review.
+- **Slices** — the same kind of change across several screens plus a label tweak: one slice, not one per screen
+  or per kind of edit. Each extra slice costs a verify, a scan, a scope review and a commit question; split only where
+  a slice could ship alone or a later one depends on an answer.
 - **Middle** — a new field through a controller, a service and a repository with existing patterns: `normal`, a spec,
   2–3 vertical slices, a unit test per behaviour, `related` per slice.
 - **Complex** — new domain logic across modules, an unclear rule, a contract change: `normal` or `full`, a spec with

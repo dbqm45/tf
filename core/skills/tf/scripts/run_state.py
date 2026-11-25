@@ -87,7 +87,11 @@ finding must have a check that will catch it next time.
 with current evidence, and the `pr` stage passes only when every slice of the task has it. The run's stage also goes
 to `task.json` (intake → intake, plan → plan, slices → implementation, pr → pr). A run directory without a task in run.json
 (the old cut layout `.tf/runs/cuts/`) does not accept task commands (`spec`, `flag`, `verify`, `trace`, `mode`, `weight`,
-`approve`) — the command says how to start the cut anew.
+`approve`) — the command says how to start the cut anew. When the command names none of the slice's files and has no
+placeholder, `verify` (and `finish-slice`) prints one `ℹ` hint: the narrowest command runs only the tests related to the
+slice's files. A hint, not a refusal.
+`stage`, `step`, `spec … new` and the commit of `done` stamp the time of each transition in run.json `timeline`;
+`run_report.py finish` turns it into the report's "Timeline" table.
 
 `finish-slice` ends a slice in one call instead of five to seven: `verify` (current evidence of the same code is reused),
 the security scan (`security_scan.py scan --slice`), the step states of the round, the scope review's result (`--review
@@ -222,6 +226,16 @@ def close_wait(meta: dict) -> None:
     """The run stops waiting for the human: the span since `needs_at` goes to `waits` (the report's time breakdown)."""
     if meta.get("stage") == "needs" and meta.get("needs_at"):
         meta.setdefault("waits", []).append({"from": meta["needs_at"], "to": now_iso(), "needs": meta.get("needs")})
+
+
+TIMELINE_MAX = 400   # stamps kept in run.json `timeline` (a run has a few dozen; the oldest go first)
+
+
+def stamp(meta: dict, **event) -> None:
+    """A time stamp of a stage transition or a slice step in `timeline` — `run_report.py finish` prints the Timeline."""
+    tl = meta.get("timeline") if isinstance(meta.get("timeline"), list) else []
+    tl.append({"at": now_iso(), **event})
+    meta["timeline"] = tl[-TIMELINE_MAX:]
 
 
 def load(run_dir: Path) -> dict | None:
@@ -547,6 +561,10 @@ def cmd_spec(run_dir: Path, project: Path, new: bool = False) -> int:
     if r is None:
         return fail("no .tf/factory/spec_check.py — update the factory (tf update).")
     print((r.stdout + r.stderr).rstrip("\n"))
+    if new and r.returncode == 0:   # the specification starts: a stage of the timeline
+        meta = load(run_dir) or meta
+        stamp(meta, stage="spec")
+        write_run(run_dir, meta)
     return r.returncode
 
 
@@ -568,7 +586,8 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
         return no_task(meta)
     if hold_refusal(meta, slice_id, run_dir):
         return fail(hold_refusal(meta, slice_id, run_dir))
-    if not command and not full and task_weight(run_dir, meta) == "quick" and not gate_related(project):
+    warned = not command and not full and task_weight(run_dir, meta) == "quick" and not gate_related(project)
+    if warned:
         print(f"⚠ {slice_id}: the approach is the fast lane, and the gate has no `related` — this runs the whole configured "
               "command; the narrow scope of the approach: --command \"<the narrowest command that runs the slice's tests>\"")
     args = ["verify", meta["key"], slice_id, "--files", files]
@@ -586,8 +605,36 @@ def cmd_verify(run_dir: Path, slice_id: str, files: str, command: str | None, ti
     print((r.stdout + r.stderr).rstrip("\n"))
     for line in criterion_hints(project, run_dir, meta, files):
         print(line)
+    hint = None if warned or full else narrow_hint(slice_id, files, command or gate_related(project) or gate_command(project))
+    if hint:
+        print(hint)
     refresh(project)
     return r.returncode
+
+
+def narrow_hint(slice_id: str, files: str, command: str | None) -> str | None:
+    """A hint, not a refusal: the verify command names none of the slice's files (a path, a file name or its stem) and
+    has no placeholder — it probably runs a whole directory or project."""
+    if not isinstance(command, str) or not command.strip() or GATE_PLACEHOLDER.search(command):
+        return None
+    cmd = command.replace("\\", "/")
+    for f in (x.strip().replace("\\", "/") for x in files.split(",") if x.strip()):
+        base = f.rsplit("/", 1)[-1]
+        stem = base.split(".", 1)[0]
+        if f in cmd or base in cmd or (len(stem) >= 3 and re.search(rf"(?<![\w-]){re.escape(stem)}(?![\w-])", cmd)):
+            return None
+    return (f"ℹ {slice_id}: the verify command names none of the slice's files — the narrowest command runs only the tests "
+            "related to them (the runner's own related-files mode, or the slice's test files), not a whole directory or "
+            "project (references/verify-scope.md)")
+
+
+def gate_command(project: Path):
+    """The `command` of the quality gate; None when it is not set."""
+    try:
+        cfg = json.loads((project / ".claude" / "quality-gate.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return cfg.get("command") if isinstance(cfg, dict) else None
 
 
 def gate_related(project: Path):
@@ -710,6 +757,7 @@ def cmd_stage(run_dir: Path, stage: str, needs: str | None, reason: str | None, 
         meta["plan_only"] = True
     if effort:
         meta["effort"] = effort
+    stamp(meta, stage=stage)
     write_run(run_dir, meta)
     refresh(project)
     print(f"✓ stage: {stage}" + (f" ({needs})" if needs else ""))
@@ -748,6 +796,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
             return 2
         steps = meta.setdefault("pr_steps", {})
         steps[PR_STEPS[rest[0]]] = rest[1]
+        stamp(meta, slice="PR", step=rest[0], state=rest[1])
         if entering:
             close_wait(meta)
             meta["stage"] = "pr"
@@ -789,6 +838,7 @@ def cmd_step(run_dir: Path, target: str, rest: list[str], project: Path) -> int:
         if state == "run" or row.get(later) not in STATES:
             row[later] = "todo"               # a new start of a step invalidates the states of the later ones
     meta["current"] = cur
+    stamp(meta, slice=target, step=step, state=state)
     if meta.get("stage") in (None, "intake", "plan", "needs", "pr", "done"):
         refused = sync_task(project, run_dir, meta, "slices")
         if refused:
@@ -1029,6 +1079,9 @@ def cmd_done(run_dir: Path, slice_id: str, message: str, project: Path, review: 
         sha = subprocess.run(["git", "-C", str(project), "rev-parse", "--short", "HEAD"], capture_output=True,
                              text=True, timeout=30).stdout.strip()
         print(f"✓ commit {sha}: {msg.splitlines()[0]} ({', '.join(files)})")
+        meta = load(run_dir) or meta
+        stamp(meta, slice=slice_id, step="commit", state="pass")
+        write_run(run_dir, meta)
     code = cmd_tick(run_dir, slice_id, project)
     if code:
         return code

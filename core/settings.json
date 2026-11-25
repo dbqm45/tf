@@ -175,6 +175,19 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/log_usage.py"
+            ],
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -252,6 +265,19 @@
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/log_usage.py"
             ],
             "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/log_usage.py"
+            ],
+            "timeout": 5
           }
         ]
       }
@@ -440,6 +466,19 @@
               "${CLAUDE_PROJECT_DIR}/.claude/hooks/tdd_guard.py"
             ],
             "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/log_usage.py"
+            ],
+            "timeout": 5
           }
         ]
       }

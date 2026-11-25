@@ -1,6 +1,7 @@
 # The verify scope: the gate's `related` command
 
-You read this when `run_report.py start` prints `⚠ The quality gate has no related`. Without `related` every `verify`
+You read this when `run_report.py start` prints `⚠ The quality gate has no related`, or `verify` prints `ℹ … the
+narrowest command`. Without `related` every `verify`
 and every gate check runs the whole configured command — in a monorepo that is minutes per slice. Nobody writes `related`
 by hand: you work it out once per project and record it; the human sees it in the plan question and may override it there.
 
@@ -23,3 +24,14 @@ by hand: you work it out once per project and record it; the human sees it in th
 
 `stage plan` prints `verify will use: …` — one line of the plan question. The human's override in the answer → record
 it the same way, with `--rationale "the human: …"`.
+
+## The narrowest verify
+- A slice's verify runs **the tests related to the slice's changed files**, through the runner's own "related to these
+  files" mode (jest's `--findRelatedTests <files>` is one example) or the slice's own test files — not a whole
+  directory, a project or a workspace target. In one measured run a directory took 132 s, while the specs of the two
+  changed components would have taken seconds.
+- `verify` prints one `ℹ` line when the command names none of the slice's files and has no placeholder. It is a hint:
+  you decide; a wider run needs a reason (a shared module many tests import, a config change).
+- **Do not interrupt a running verify.** A cut run (exit 130) leaves no evidence and is repeated in full; when it is too
+  slow, narrow the next command instead.
+- `--full` once before the PR, only when the approach says so.
