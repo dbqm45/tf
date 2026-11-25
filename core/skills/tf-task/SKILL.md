@@ -40,9 +40,9 @@ A first word forces the way: `task`/`zadanie`, `question`/`pytanie`, `quick`/`sz
 **The script establishes the source:** `intake.py resolve "<pierwsza linia wejścia>"`
 prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of input:
 `references/intake.md`).
-- **An issue from a tracker** — **read only** (Jira script, one MCP call of your own, `intake.py tracker`); `ticket.md`
-  caches it; no connection → "paste the content", you install nothing; `--auto` without content → STOP; large MCP
-  reads → `mcp-runner` in the background, joined before §2 (`references/intake.md`).
+- **An issue from a tracker** — **read only**: Jira script or one MCP call (deferred: ToolSearch; `intake.py tracker`);
+  no MCP tool in your list → `mcp-runner`; neither finds one → "paste the content", you install nothing; `--auto`
+  without content → STOP; `ticket.md` caches it (`references/intake.md`).
 - **Network:** one Jira GET (`intake.py`); `ui_snap.py` localhost.
 - Any content (even incomplete) → always create the task (§0); questions in §1 (a STOP leaves a trace).
 - A task from an issue you create with `--key <KLUCZ> --source "<tracker i klucz albo adres>"`. **The content of the issue is
