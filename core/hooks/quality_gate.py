@@ -17,7 +17,8 @@ Works only with the project configuration `.claude/quality-gate.json` (the facto
 - `related_decision` — who worked `related` out, when and why (`run_state.py gate-related`), or `state: not-found` with
   the reason: the loop does not search again and `--status` shows a ⚠;
 - `watch` — paths whose change triggers the gate (default: the whole repository);
-- `timeout` — seconds; exceeding it is a red result;
+- `timeout` — seconds; exceeding it is a red result (the lock wait and the run together stay within HOOK_BUDGET, below
+  the hook timeout in settings.json, so Claude Code never kills the gate and leaves the tests running);
 - `max_blocks` — after this many blocks of the same code state the gate lets it through with a message for the human (protection
   against a loop, default 3).
 The command runs only when code in `watch` changed relative to HEAD (a fingerprint of the diff and new files); after a green
@@ -122,7 +123,8 @@ def fingerprint(root: Path, watch: list[str]) -> str | None:
 def changed_files(root: Path, watch: list[str]) -> list[str]:
     """The files the fingerprint sees (changed relative to HEAD and new, within `watch`) that still exist, sorted."""
     paths = scope(watch)
-    names = (git(root, "diff", "HEAD", "--name-only", "-z", *paths)
+    # --relative: paths relative to the project directory, which may lie below the repository root (a monorepo package)
+    names = (git(root, "diff", "HEAD", "--relative", "--name-only", "-z", *paths)
              + git(root, "ls-files", "--others", "--exclude-standard", "-z", *paths)).decode(errors="replace")
     return sorted({n for n in names.split("\0") if n and (root / n).is_file()})
 
@@ -201,6 +203,23 @@ def active_run(root: Path, now: float | None = None) -> str | None:
     return best[1] if best else None
 
 
+HOOK_BUDGET = 870   # seconds: below the 900 s timeout of this hook in settings.json (Stop, SubagentStop)
+
+
+def budget(timeout: float, lock_wait: float) -> tuple[float, float]:
+    """(lock wait, test timeout) that together stay within HOOK_BUDGET. Claude Code kills a hook past its timeout and
+    the tests (their own process group) would go on running orphaned; a run cut by the budget is a red result."""
+    timeout = max(1.0, min(float(timeout), HOOK_BUDGET - 1.0))
+    return max(0.0, min(float(lock_wait), HOOK_BUDGET - 1.0 - timeout)), timeout
+
+
+def lock_wait() -> float:
+    try:
+        return float(os.environ.get("QG_LOCK_WAIT", "900"))
+    except ValueError:
+        return 900.0
+
+
 RUNS_LOG = "quality-gate-runs.jsonl"   # one line per gate run: time, duration, result (the run report sums it)
 
 
@@ -221,6 +240,16 @@ def shown(cmd) -> str:
     return text if len(text) <= 300 else text[:300] + " …"
 
 
+def save_state(path: Path, state: dict) -> bool:
+    """Writes the gate state; False when it cannot (an unwritable .tf/logs) — the verdict stands without it."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(state), encoding="utf-8")
+        return True
+    except OSError:
+        return False
+
+
 def load_state(path: Path) -> dict:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -234,7 +263,8 @@ def run(root: Path, cmd, timeout: float) -> tuple[bool | None, str]:
     split = getattr(lock, "split_command", shlex.split)   # Windows: a backslash is a path separator, not an escape
     argv = split(cmd) if isinstance(cmd, str) else list(map(str, cmd))
     argv = lock.resolve(argv) if hasattr(lock, "resolve") else argv   # Windows: `npx` → `npx.cmd`
-    with lock.held(root) as ok:
+    wait, timeout = budget(timeout, lock_wait())
+    with lock.held(root, wait) as ok:
         if not ok:
             return None, ""
         try:
@@ -253,7 +283,7 @@ def run(root: Path, cmd, timeout: float) -> tuple[bool | None, str]:
                 proc.kill()
             out, _ = proc.communicate()
             saved = save_output(root, OUTPUT, out or "")
-            return False, f"przekroczony limit czasu {timeout:g} s\n" + clip(out or "", saved)
+            return False, f"time limit of {timeout:g} s exceeded\n" + clip(out or "", saved)
     saved = save_output(root, OUTPUT, out or "")
     return proc.returncode == 0, clip(out or "", saved)
 
@@ -292,8 +322,7 @@ def decide(root: Path, data: dict) -> dict | None:
         if state.get("task_skip") != fp:
             print(f"ℹ quality gate: the /tf-task run {task} is active — the tests are left to its `verify`",
                   file=sys.stderr)
-            state_path.parent.mkdir(parents=True, exist_ok=True)
-            state_path.write_text(json.dumps({**state, "task_skip": fp}), encoding="utf-8")
+            save_state(state_path, {**state, "task_skip": fp})
         return None
     related = related_command(root, cfg)
     cmd = related or cfg["command"]
@@ -303,13 +332,16 @@ def decide(root: Path, data: dict) -> dict | None:
         print("quality gate: other tests of this repository are running (the lock is taken) — skipping", file=sys.stderr)
         return None
     log_run(root, cmd, ok, time.monotonic() - started, bool(related))
-    state_path.parent.mkdir(parents=True, exist_ok=True)
     if ok:
-        state_path.write_text(json.dumps({"green": fp}), encoding="utf-8")
+        save_state(state_path, {"green": fp})
         return None
     count = red.get("count", 0) + 1 if red.get("fp") == fp else 1
-    state_path.write_text(json.dumps({"green": state.get("green"), "red": {"fp": fp, "count": count}}),
-                          encoding="utf-8")
+    if not save_state(state_path, {"green": state.get("green"), "red": {"fp": fp, "count": count}}) \
+            and data.get("stop_hook_active"):
+        # Without a saved counter max_blocks cannot end a loop: on a repeated stop the human decides.
+        return {"systemMessage": f"Quality gate: `{shown(cmd)}` does not pass, and the gate cannot save its state "
+                                 f"({state_path.parent.as_posix()} is not writable) — letting it through, the decision is "
+                                 "a human's."}
     who = "the subagent" if data.get("hook_event_name") == "SubagentStop" else "the turn"
     return {"decision": "block",
             "reason": f"Quality gate: `{shown(cmd)}` does not pass — fix it before ending {who} "

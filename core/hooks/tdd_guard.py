@@ -174,6 +174,12 @@ def not_run(data: dict) -> bool:
     return bool(SHELL_NOT_FOUND_RE.search(text)) and not FAIL_RE.search(text) and not LOCK_EXIT_RE.search(text)
 
 
+def interrupted(data: dict) -> bool:
+    """The human stopped the command (PostToolUseFailure `is_interrupt`, a Bash `interrupted` response): no result."""
+    resp = data.get("tool_response")
+    return data.get("is_interrupt") is True or (isinstance(resp, dict) and resp.get("interrupted") is True)
+
+
 def red_without_assertion(data: dict) -> bool:
     text = response_text(data)
     return bool(INVALID_RED_RE.search(text)) and not VALID_MISSING_RE.search(text)
@@ -303,7 +309,10 @@ def bash_pre(data: dict, paths: list[str]) -> str | None:
     s = ctx_state(state, ctx_key(data))
     reason = gate(s, paths[0])
     s["ts"] = int(time.time())
-    save(root, state)
+    try:
+        save(root, state)
+    except OSError as e:   # an unwritable .tf/logs: the decision stands, only the state is lost
+        record_error("tdd_guard", e)
     return reason
 
 
@@ -499,7 +508,10 @@ def main() -> int:
 
         if event in ("PostToolUse", "PostToolUseFailure") and tool == "Bash":
             notes = []
-            if TEST_CMD_RE.search(str(inp.get("command") or "")) and not_run(data):
+            if TEST_CMD_RE.search(str(inp.get("command") or "")) and interrupted(data):
+                notes.append("[tdd_guard] The test run was interrupted — that is neither a red nor a green test. "
+                             "Run the tests to the end before you write production code.")
+            elif TEST_CMD_RE.search(str(inp.get("command") or "")) and not_run(data):
                 notes.append("[tdd_guard] The test command did not run (the program was not found) — that is neither "
                              "a red nor a green test. Fix the command (Windows: `npx`, `npm` are `.cmd` files; "
                              "test_lock.py finds them) and run the tests again.")

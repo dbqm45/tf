@@ -403,7 +403,7 @@ def slugify(text: str) -> str:
     return s[:40].rstrip("-") or "task"
 
 
-def git(root: Path, *args: str) -> str | None:
+def git(root: Path, *args: str, strip: bool = True) -> str | None:
     """A fast, non-blocking git call: without fsmonitor (on Windows its daemon held the pipe and the hook hung),
     without optional index locks, output in UTF-8 regardless of the system code page."""
     try:
@@ -412,7 +412,7 @@ def git(root: Path, *args: str) -> str | None:
                            timeout=4)
     except (OSError, subprocess.SubprocessError, ValueError):
         return None
-    return r.stdout.strip() if r.returncode == 0 else None
+    return (r.stdout.strip() if strip else r.stdout) if r.returncode == 0 else None
 
 
 def hook_deadline() -> None:
@@ -430,12 +430,16 @@ def hook_deadline() -> None:
 
 def changed_files(root: Path) -> list[str] | None:
     """Uncommitted changes (excluding the checkpoints themselves); None when this is not a git repository."""
-    out = git(root, "status", "--porcelain", "-uall")
+    out = git(root, "status", "--porcelain", "-uall", "-z", strip=False)   # -z: paths as they are (no quoting of non-ASCII or spaces)
     if out is None:
         return None
-    files = []
-    for line in out.splitlines():
-        path = line[3:].split(" -> ")[-1].strip().strip('"')
+    files, skip = [], False
+    for entry in out.split("\0"):
+        if skip or len(entry) < 4:   # after a rename or copy the next entry is the old path
+            skip = False
+            continue
+        skip = "R" in entry[:2] or "C" in entry[:2]
+        path = entry[3:]
         if path and not path.startswith((".tf/wip/", ".tf/")) and \
                 path not in ("docs/project/README.md", "docs/project/journal.md"):
             files.append(path)

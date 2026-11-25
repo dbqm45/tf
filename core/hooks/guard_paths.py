@@ -202,31 +202,36 @@ def main() -> None:
     if not isinstance(data.get("cwd"), (str, type(None))):
         data["cwd"] = None
 
+    # The session's cwd may lie below the project directory (after a `cd`): a path is checked against both roots.
+    roots = list(dict.fromkeys(r for r in (data.get("cwd"), os.environ.get("CLAUDE_PROJECT_DIR")) if r)) or [""]
+    globs = [ti["glob"]] if tool == "Grep" and isinstance(ti.get("glob"), str) and ti["glob"] else []
+    for g in globs:   # Grep over files picked by `glob` reads their content as well
+        norm = g.replace("\\", "/")
+        if SECRET_PATHS.search(norm) and not SAFE_ENV.search(norm):
+            decide("deny", f"Access to a file with secrets ({g}) is blocked. Use environment variables and *.example files.")
+
     for p in targets:
         norm = p.replace("\\", "/")
         if SECRET_PATHS.search(norm) and not SAFE_ENV.search(norm):
             decide("deny", f"Access to a file with secrets ({p}) is blocked. Use environment variables and *.example files.")
+        rels = [(root, rel) for root in roots for rel in (project_relative(norm, root),) if rel is not None]
         if tool in ("Edit", "Write", "MultiEdit"):
-            root = data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", "")
-            rel = project_relative(norm, root)
-            why = isolation_reason(tool, rel, ti, root or ".") if rel is not None else None
-            if why:
-                decide("deny", f"A change to {why}")
+            for root, rel in rels:
+                why = isolation_reason(tool, rel, ti, root or ".")
+                if why:
+                    decide("deny", f"A change to {why}")
         if tool in ("Edit", "Write", "NotebookEdit") and GUARDRAILS.search(norm):
             decide("ask", f"A change to the safeguards' configuration or .git ({p}) needs a human's consent.")
         if tool in ("Edit", "Write", "NotebookEdit"):
-            root = data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", "")
-            rel = project_relative(norm, root)
-            why = oracle_reason(rel, root or ".") if rel is not None else None
-            if why:
-                decide("ask", why)
+            for root, rel in rels:
+                why = oracle_reason(rel, root or ".")
+                if why:
+                    decide("ask", why)
         if os.environ.get("TF_ARCHIVE_READ") != "1" and tool in ("Read", "Edit", "Write", "NotebookEdit", "Grep", "Glob"):
-            rel = project_relative(norm, data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", ""))
-            if (rel is not None and SWEEP_ARCHIVE.search(rel)) or (p == pattern and GLOB_INTO_ARCHIVE.search(norm)):
+            if any(SWEEP_ARCHIVE.search(rel) for _, rel in rels) or (p == pattern and GLOB_INTO_ARCHIVE.search(norm)):
                 decide("deny", f"{p}: {ARCHIVE_MSG}.")
         if tool in CONTEXT_TOOLS:
-            rel = project_relative(norm, data.get("cwd") or os.environ.get("CLAUDE_PROJECT_DIR", ""))
-            if (CONTEXT_ANY.search(norm) or (rel is not None and CONTEXT_ROOT.search(rel))
+            if (CONTEXT_ANY.search(norm) or any(CONTEXT_ROOT.search(rel) for _, rel in rels)
                     or (tool == "Read" and LOCKFILES.search(norm))):
                 decide("deny", f"Context economy: {p} is dependencies, a build artifact or a lockfile. Search for the specific "
                                "place (Grep in a source file, grep -n for the package name in the lockfile); when you really "

@@ -30,15 +30,24 @@ for _stream in (sys.stdin, sys.stdout, sys.stderr):  # Windows: strona kodowa (c
     except (AttributeError, ValueError):
         pass
 
+RM_FLAG = r"(?:-{1,2}[a-zA-Z-]+\s+)"   # options of rm, in any order and split (-r -f, --recursive --force)
 DENY = [
-    (r"\brm\s+-[a-zA-Z]*(rf|fr)[a-zA-Z]*\s+(/|/\*|~/?|\$HOME/?|\.\.?/?|\*)(\s|$)", "rm -rf on the root/home/current directory"),
+    (rf"\brm\s+(?={RM_FLAG}*(?:-[a-zA-Z]*r[a-zA-Z]*|--recursive)\s)(?={RM_FLAG}*(?:-[a-zA-Z]*f[a-zA-Z]*|--force)\s)"
+     r"(?:-{1,2}[a-zA-Z-]+\s+)+(/|/\*|~/?|\$\{?HOME\}?/?|\.\.?/?|\*)(\s|$|[\"'`);&|])",
+     "rm -rf on the root/home/current directory"),
     (r"--no-preserve-root", "rm --no-preserve-root"),
     (r"\bgit\s+push\b.*(\s--force(?!-with-lease)|\s-f\b|\s\+\S+)", "git push --force (use --force-with-lease after a human's consent)"),
     (r"\b(curl|wget)\b[^|;&]*\|\s*(sudo\s+)?(sh|bash|zsh|python3?|py|node)\b", "pobieranie i wykonywanie skryptu z sieci (curl | sh)"),
-    (r"(^|[;&|]\s*)(printenv|env)\s*($|[;&|>])", "printing all environment variables (they may contain secrets)"),
+    (r"(^|[;&|]\s*)(printenv|env|export(\s+-p)?|declare\s+-[a-zA-Z]*[px][a-zA-Z]*)\s*($|[;&|>])",
+     "printing all environment variables (they may contain secrets)"),
     (r"\b(cat|less|more|head|tail|bat|strings|xxd|base64|cp|scp|rsync|source|\.)\s+[^;&|]*"
      r"(\.env(?!\.(example|sample|template))\b|id_rsa|id_ed25519|\.pem\b|\.p12\b|\.aws/credentials|/secrets?/|"
      r"\.ssh/|\.git-credentials|\.kube/config|\.docker/config\.json|\.config/gh/hosts)",
+     "reading a file with secrets"),
+    # text tools print a file just as well; the secret file must be a path argument here (not `process.env` in a pattern)
+    (r"\b(grep|egrep|fgrep|rg|ag|awk|gawk|sed|tac|nl|od|hexdump|sort|cut|diff|jq)\s+[^;&|]*(^|[\s/\"'=])"
+     r"(\.env(?!\.(example|sample|template))\b(?![\w(])|id_rsa|id_ed25519|[\w-]+\.(pem|p12)\b|\.aws/credentials|"
+     r"\.ssh/|\.git-credentials|\.kube/config)",
      "reading a file with secrets"),
     # Patterns from attack analyses (Huntress: ClickFix, fake AI instructions, React2Shell, axios) — core-agent-security
     (r"\bbase64\s+(-d|-D|--decode)\b[^;&]*\|\s*(sudo\s+)?(sh|bash|zsh|python3?|py|node|perl)\b",
@@ -125,10 +134,19 @@ GIT_GLOBAL_OPTS = re.compile(
     r"--no-pager|--paginate|-p|-P|--bare|--no-replace-objects|--literal-pathspecs|--no-optional-locks))+)(?=\s)")
 
 
+TERRAFORM_GLOBAL_OPTS = re.compile(r"\bterraform((?:\s+-(?:chdir=\S+|help|version))+)(?=\s)")
+
+
 def normalize(cmd: str) -> str:
     """`git -C dir push -f` and `git -c a=b reset --hard` are the same operations as without global options — the patterns see
-    the subcommand right after `git`."""
-    return GIT_GLOBAL_OPTS.sub("git", cmd)
+    the subcommand right after `git` (and `terraform -chdir=infra destroy` right after `terraform`)."""
+    return TERRAFORM_GLOBAL_OPTS.sub("terraform", GIT_GLOBAL_OPTS.sub("git", cmd))
+
+
+def dequote(cmd: str) -> str:
+    """The command without quotes and backslashes: `"rm" -rf /`, `r\\m -rf /` and `bash -c "rm -rf /"` read as the shell runs
+    them. Only for matching the patterns; it may join words a shell keeps apart, which can only add a match."""
+    return re.sub(r"[\"'\\]", "", cmd)
 
 
 # File writes through the shell (D-012): the same rules as Edit/Write — guard_paths (secrets, security configuration)
@@ -372,8 +390,9 @@ def main() -> None:
     if not cmd or not isinstance(cmd, str):   # data outside the Claude Code format: a decision, not a failure (onFailure: block)
         sys.exit(0)
     cmd = normalize(cmd)
+    variants = (cmd, normalize(dequote(cmd)))
     for pattern, reason in DENY:
-        if re.search(pattern, cmd, re.IGNORECASE):
+        if any(re.search(pattern, v, re.IGNORECASE) for v in variants):
             decide("deny", f"Blocked: {reason}. If it is necessary, ask a human to run it by hand.")
     if os.environ.get("TF_CONTAINER") == "1" and CONTAINER_PUSH.search(cmd):
         decide("deny", "Blocked: the factory's container has no git keys (decision D1): commit here, and the human pushes "
@@ -387,7 +406,7 @@ def main() -> None:
         check_writes(data, cmd)
     except Exception as e:  # a write-detection error never blocks (decide ends the process via SystemExit — we do not catch it)
         record_error("guard_bash", e)
-    hits = [(reason, op) for pattern, reason, op in ASK if re.search(pattern, cmd, re.IGNORECASE)]
+    hits = [(reason, op) for pattern, reason, op in ASK if any(re.search(pattern, v, re.IGNORECASE) for v in variants)]
     if hits:
         levels, _ = load_policy()
         for reason, op in hits:
