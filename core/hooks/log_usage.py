@@ -6,6 +6,9 @@ from `.claude/factory-manifest.json`, and a digest of the checksums of installed
 compared across versions (step H20).
 PostToolUse of the Agent tool (formerly Task): a delegation entry to .tf/logs/delegation.jsonl — executor, model,
 task class from the „Klasa: …” line of the brief, brief and report length; agent_id links it to the entry in usage.jsonl.
+PreToolUse / PostToolUse / PostToolUseFailure of AskUserQuestion: the question's start and end go to the active /tf-task
+run's `waits` in `.tf/runs/<KEY>/run.json` (the run report's "Waiting for the human") with the question's header —
+never the answer or the options. No active run → nothing. The hook never blocks and exits 0 on any error.
 Report: python3 .tf/factory/cost_report.py [--delegation]
 """
 from __future__ import annotations
@@ -178,9 +181,77 @@ def main() -> None:
     sys.exit(0)
 
 
+ASK_TOOL = "AskUserQuestion"
+ACTIVE_HOURS = 6                 # the same notion of an active run as the quality gate's (`quality_gate.active_run`)
+DONE_STAGES = ("done", "closed")
+
+
+def active_run_file(root: Path) -> Path | None:
+    """run.json of the active /tf-task run: a stage other than done/closed, updated within ACTIVE_HOURS; the newest."""
+    best = None
+    now = datetime.now(timezone.utc).timestamp()
+    for f in (root / ".tf" / "runs").glob("*/run.json"):
+        try:
+            age = now - f.stat().st_mtime
+            meta = json.loads(f.read_text(encoding="utf-8")) if age <= ACTIVE_HOURS * 3600 else None
+        except (OSError, ValueError):
+            continue
+        if isinstance(meta, dict) and meta.get("stage") not in DONE_STAGES and (best is None or age < best[0]):
+            best = (age, f)
+    return best[1] if best else None
+
+
+def question_headers(tool_input) -> str:
+    """The questions' short headers (the question text when there is no header); never the answers or the options."""
+    qs = tool_input.get("questions") if isinstance(tool_input, dict) else None
+    out = []
+    for q in qs if isinstance(qs, list) else []:
+        if isinstance(q, dict):
+            text = q.get("header") or str(q.get("question") or "")[:60]
+            if text:
+                out.append(" ".join(str(text).split())[:40])
+    return " · ".join(out)[:120] or "question"
+
+
+def ask_wait(data: dict, event: str) -> None:
+    """The question's start (PreToolUse) is kept as `ask_open`; its end (PostToolUse or a failure) appends a wait."""
+    root = Path(os.environ.get("CLAUDE_PROJECT_DIR") or data.get("cwd") or ".")
+    f = active_run_file(root)
+    if f is None:
+        return
+    try:
+        meta = json.loads(f.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    if not isinstance(meta, dict):
+        return
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    tid = str(data.get("tool_use_id") or "")
+    opened = meta.get("ask_open") if isinstance(meta.get("ask_open"), dict) else None
+    if event == "PreToolUse":
+        if opened and tid and opened.get("id") == tid:
+            return            # the same call again (a deferred question): the first start stays
+        meta["ask_open"] = {"from": now, "id": tid, "question": question_headers(data.get("tool_input"))}
+    else:
+        if not opened or not opened.get("from") or (tid and opened.get("id") and opened["id"] != tid):
+            return
+        meta.pop("ask_open", None)
+        waits = meta.get("waits") if isinstance(meta.get("waits"), list) else []
+        waits.append({"from": opened["from"], "to": now, "question": opened.get("question") or "question"})
+        meta["waits"] = waits
+    tmp = f.with_name("run.json.ask.tmp")
+    tmp.write_bytes((json.dumps(meta, ensure_ascii=False, indent=1) + "\n").encode("utf-8"))
+    os.replace(tmp, f)
+
+
 def log(data: dict) -> None:
     event = data.get("hook_event_name", "")
     transcript = data.get("transcript_path") or ""
+
+    if data.get("tool_name") == ASK_TOOL:
+        if event in ("PreToolUse", "PostToolUse", "PostToolUseFailure"):
+            ask_wait(data, event)
+        return
 
     if event == "PostToolUse":
         if data.get("tool_name") in ("Agent", "Task"):

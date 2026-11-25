@@ -24,7 +24,10 @@ The `.tf/runs/cuts/` directory (the old cut layout, without a task) is no longer
 time, tokens (input, output, cache read, cache write 5 min and 1 h), cost per `prices_usd_per_mtok`
 from .tf/config/config.yaml, models and agents; it appends the plan progress and the number of postponed items, and writes report.md.
 The report also says where the time went (the `verify` evidence durations, the quality-gate hook runs from
-`.tf/logs/quality-gate-runs.jsonl`, waiting for the human — `waits` in run.json — and the rest: the model and its tools)
+`.tf/logs/quality-gate-runs.jsonl`, foreground subagents from `.tf/logs/delegation.jsonl` (a part of the rest), waiting
+for the human — `waits` in run.json: `needs` blocks and AskUserQuestion
+questions timed by the `log_usage` hook, overlaps counted once — and the rest: the model and its tools), a "Timeline"
+table from the `timeline` stamps of `run_state.py` (each stage and slice step, waits subtracted and shown apart)
 and lists the recorded approaches with their escalations (`approach_log` in task.json). `start` warns once when the gate has
 no `related` and when the security scanner is missing without the project's decision.
 The issue is read once: `start --from-tracker` for a key whose `ticket.md` already exists makes no request and prints
@@ -372,11 +375,19 @@ def report_md(slug: str, rep: dict) -> str:
                   f"- Verification commands (`verify`, {t['verify_runs']} run(s)): {minutes_text(t['verify_s'])}"
                   + share(t["verify_s"]),
                   f"- Quality-gate hook runs ({t['gate_runs']}): {minutes_text(t['gate_s'])}" + share(t["gate_s"]),
-                  f"- Waiting for the human (`needs`): {minutes_text(t['wait_s'])}" + share(t["wait_s"]),
+                  f"- Waiting for the human (`needs` and questions"
+                  + (f", {t['question_waits']} question(s)" if t.get("question_waits") else "") + f"): "
+                  f"{minutes_text(t['wait_s'])}" + share(t["wait_s"]),
                   f"- The rest — the model and its tools: {minutes_text(t['model_s'])}" + share(t["model_s"])]
         if t.get("fetch_runs"):
             lines.append(f"  - of it, tracker and MCP reads (`fetch`, {t['fetch_runs']}): {minutes_text(t['fetch_s'])}"
                          + share(t["fetch_s"]) + " — a read in the background overlaps other work")
+        if t.get("agent_runs"):
+            per = " · ".join(f"{k} {v // 60}:{v % 60:02d}" for k, v in (t.get("agents") or {}).items())
+            lines.append(f"  - of it, subagents (foreground, {t['agent_runs']}): {minutes_text(t['agent_s'])}"
+                         + share(t["agent_s"]) + (f" — {per}" if per else ""))
+    if rep.get("timeline"):
+        lines += ["", *rep["timeline"]]
     return "\n".join(lines) + "\n"
 
 
@@ -565,17 +576,12 @@ def time_breakdown(project: Path, run_dir: Path, meta: dict, since: datetime, la
         if isinstance(row, dict) and seconds(row.get("duration_s")) is not None and after(row.get("at")):
             gate += seconds(row["duration_s"])
             gate_runs += 1
-    spans = [(w.get("from"), w.get("to")) for w in rows_of(meta.get("waits"))]
-    if meta.get("needs_at"):
-        spans.append((meta["needs_at"], None))
-    wait = 0.0
-    for a, b in spans:
-        start, end = parse_ts(str(a or "")), (parse_ts(str(b)) if b else last)
-        if start and end:
-            start, end = max(start, since), min(end, last)   # only within the run's measured time
-            wait += max(0.0, (end - start).total_seconds())
+    wait = sum((b - a).total_seconds() for a, b in wait_spans(meta, since, last))
     out = {"verify_s": int(verify), "verify_runs": runs, "gate_s": int(gate), "gate_runs": gate_runs,
            "wait_s": int(wait), "model_s": int(max(0.0, total - verify - gate - wait)), "total_s": int(total)}
+    asked = sum(1 for w in rows_of(meta.get("waits")) if w.get("question"))
+    if asked:   # AskUserQuestion questions timed by the log_usage hook (a part of the wait, overlaps merged)
+        out["question_waits"] = asked
     fetch = fetch_runs = 0.0
     for f in rows_of(meta.get("fetches")):  # tracker and MCP reads: a part of "the rest" (a background read overlaps other work)
         start, end = parse_ts(str(f.get("from") or "")), (parse_ts(str(f["to"])) if f.get("to") else last)
@@ -584,6 +590,101 @@ def time_breakdown(project: Path, run_dir: Path, meta: dict, since: datetime, la
             fetch_runs += 1
     if fetch_runs:
         out.update(fetch_s=int(fetch), fetch_runs=int(fetch_runs))
+    agents: dict[str, float] = {}
+    agent_runs = 0
+    try:   # foreground subagents (the log_usage hook's delegation log): the run waits for them, a part of "the rest"
+        rows = (project / ".tf" / "logs" / "delegation.jsonl").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        rows = []
+    for ln in rows:
+        try:
+            row = json.loads(ln)
+        except ValueError:
+            continue
+        ts = parse_ts(str(row.get("ts") or "")) if isinstance(row, dict) else None
+        ms = row.get("duration_ms") if ts else None
+        dur = seconds(ms / 1000) if isinstance(ms, (int, float)) and not isinstance(ms, bool) else None
+        if ts and since <= ts <= last and not row.get("background") and dur is not None:
+            name = str(row.get("agent") or "subagent")[:40]
+            agents[name] = agents.get(name, 0.0) + dur
+            agent_runs += 1
+    if agent_runs:
+        out.update(agent_s=int(sum(agents.values())), agent_runs=agent_runs,
+                   agents={k: int(v) for k, v in sorted(agents.items(), key=lambda kv: -kv[1])})
+    return out
+
+
+def wait_spans(meta: dict, since: datetime, last: datetime) -> list[tuple[datetime, datetime]]:
+    """The human's waits (`waits`: `needs` blocks and AskUserQuestion questions, and an open `needs_at`) as disjoint
+    spans within the run: a question asked during a `needs` block counts once."""
+    rows = meta.get("waits") if isinstance(meta.get("waits"), list) else []
+    spans = [(w.get("from"), w.get("to")) for w in rows if isinstance(w, dict)]
+    if meta.get("needs_at"):
+        spans.append((meta["needs_at"], None))
+    out: list[tuple[datetime, datetime]] = []
+    for a, b in spans:
+        start, end = parse_ts(str(a or "")), (parse_ts(str(b)) if b else last)
+        if start and end:
+            start, end = max(start, since), min(end, last)   # only within the run's measured time
+            if end > start:
+                out.append((start, end))
+    merged: list[tuple[datetime, datetime]] = []
+    for a, b in sorted(out):
+        if merged and a <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], b))
+        else:
+            merged.append((a, b))
+    return merged
+
+
+NEXT_STEP = {"test": "code", "code": "verify", "verify": "scan", "scan": "scope", "scope": "commit"}
+
+
+def timeline_rows(meta: dict, since: datetime, last: datetime) -> list[dict] | None:
+    """The run's stages from the `timeline` stamps (`run_state.py stage`/`step`/`done`): one row per stage or slice in the
+    order of the run, its time without the human's waits (`s`), the waits apart (`wait`), and for a slice or the PR its
+    steps. A step that passes hands the time over to the next one (test → code → verify → scan → scope → commit), a
+    failed one to the repair (`code`). None — an old run without stamps."""
+    events = []
+    for e in meta.get("timeline") if isinstance(meta.get("timeline"), list) else []:
+        ts = parse_ts(str(e.get("at") or "")) if isinstance(e, dict) else None
+        if ts is None or not (e.get("stage") or e.get("slice")):
+            continue
+        if e.get("stage"):
+            group, step = str(e["stage"]), None
+        else:
+            group, st, state = str(e["slice"]), str(e.get("step") or ""), e.get("state")
+            step = st if state == "run" or st == "commit" else ("code" if state == "fail" else NEXT_STEP.get(st, st))
+            if group.upper() == "PR":
+                group, step = "pr", st
+        events.append((min(max(ts, since), last), group, step))
+    if not events:
+        return None
+    events.sort(key=lambda x: x[0])
+    waits = wait_spans(meta, since, last)
+    phases = [(since, "start", None), *events]
+    rows: dict[str, dict] = {}
+    for i, (start, group, step) in enumerate(phases):
+        end = phases[i + 1][0] if i + 1 < len(phases) else last
+        span = max(0.0, (end - start).total_seconds())
+        wait = sum(max(0.0, (min(end, b) - max(start, a)).total_seconds()) for a, b in waits)
+        row = rows.setdefault(group, {"stage": group, "s": 0, "wait": 0, "steps": {}})
+        row["s"] += int(span - wait)
+        row["wait"] += int(wait)
+        if step:
+            row["steps"][step] = row["steps"].get(step, 0) + int(span - wait)
+    return [{**r, "steps": list(r["steps"].items())} for r in rows.values()]
+
+
+def timeline_md(meta: dict, since: datetime, last: datetime) -> list[str]:
+    rows = timeline_rows(meta, since, last)
+    if rows is None:
+        return ["## Timeline", "", "- no stage times: this run was recorded before run.json kept them"]
+    clock = lambda v: f"{int(v) // 60}:{int(v) % 60:02d}"   # noqa: E731
+    out = ["## Timeline", "", "| Stage | Time | Waiting for the human | Steps |", "|---|---|---|---|"]
+    for r in rows:
+        steps = " · ".join(f"{k} {clock(v)}" for k, v in r["steps"] if v)
+        out.append(f"| {r['stage']} | {minutes_text(r['s'])} | {minutes_text(r['wait']) if r['wait'] else '—'} | {steps} |")
     return out
 
 
@@ -748,7 +849,8 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
            "cost_usd": round(sum(t.get("_cost", 0.0) for t in data["models"].values()), 9),
            "plan": plan_progress(run_dir, committed_pieces(project, meta)), "parked": parked_count(run_dir), "parked_items": parked_items(run_dir),
            "security": security_section(run_dir), "usage_missing": usage_missing,
-           "time": time_breakdown(project, run_dir, meta, since, data["last"]), "approach": approach_log(run_dir, meta)}
+           "time": time_breakdown(project, run_dir, meta, since, data["last"]), "approach": approach_log(run_dir, meta),
+           "timeline": timeline_md(meta, since, data["last"])}
     if status:   # budget check after a slice: one line, no report written
         print(f"cost: {rep['cost_usd']:.4f} USD · tokens: {fmt_tokens(token_totals(rep['models'])['total'])} · "
               f"time: {rep['duration_s'] // 60} min · plan: "

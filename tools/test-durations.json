@@ -96,6 +96,7 @@
  "test_rules_scan.py": 0.8,
  "test_run_report.py": 7.2,
  "test_run_state.py": 26.6,
+ "test_run_timeline.py": 3.6,
  "test_schema_scan.py": 0.1,
  "test_second_review.py": 1.1,
  "test_security_scan.py": 4.3,
