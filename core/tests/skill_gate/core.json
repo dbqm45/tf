@@ -20,8 +20,8 @@
   "offline": "2026-11-20"
  },
  "core-cost-control": {
-  "fingerprint": "3b95900498f3318f",
-  "offline": "2026-11-25"
+  "fingerprint": "7c099d322a552dfc",
+  "offline": "2026-11-24"
  },
  "core-delivery-lifecycle": {
   "fingerprint": "5629086366af7866",
@@ -84,15 +84,15 @@
   "offline": "2026-11-20"
  },
  "tf": {
-  "fingerprint": "3cf658650847a760",
-  "offline": "2026-11-25"
+  "fingerprint": "3dccc71c91c97ed6",
+  "offline": "2026-11-24"
  },
  "tf-design": {
   "fingerprint": "edd9580ed1e26326",
   "offline": "2026-11-21"
  },
  "tf-task": {
-  "fingerprint": "eea4bb23bb4762cd",
+  "fingerprint": "f925bb38b4044510",
   "offline": "2026-11-25"
  }
 }

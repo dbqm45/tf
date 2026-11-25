@@ -97,8 +97,10 @@ a bug still unexplained after one attempt -> opus. Optional: `python3 .claude/ho
   degrades; the cache lowers the price, not the clutter. Between plan phases offer: continue / fresh context with a resume
   instruction / review first. Fact-checking itself is core-grounding.
 - **MCP costs twice**: tool definitions travel with every request (tool search loads them on demand) and results stay in the
-  history. So the main session does not call MCP: the `mcp-runner` agent on a cheap model does, with a fields filter and a
-  call budget, in the background when the work can go on (`run_in_background`); it keeps large results in its own context or
+  history. A judgement, not a size table: ONE small record with a fields filter (one issue's title, description and
+  criteria) the main session reads itself - one call, a small result, no subagent cold start. A large result or many calls
+  (lists, searches, page bodies, design context, attachments) go to the `mcp-runner` agent on a cheap model, with a call
+  budget, in the background when the work can go on (`run_in_background`); it keeps large results in its own context or
   `.tf/cache/mcp/` and returns a short answer. Read once: a result already saved (`ticket.md`, a cache file) is not
   fetched again. Connect only the servers you need, prefer a few general tools
   (search + execute) over dozens of narrow ones, and use a CLI when the command is known.

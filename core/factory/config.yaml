@@ -71,13 +71,13 @@ shared_agents:
       git show, wc). Return concise conclusions with file:line references.
   # MCP tools through a cheap model: the large results (JSON lists, page bodies, design context) stay in this agent's
   # context or in .tf/cache/mcp/, the main session gets a short answer. No `tools` = it inherits all tools, MCP included
-  # (the names of MCP tools are not known ahead of time, so they cannot be listed). The main session does not call MCP:
-  # tool definitions and raw results would stay in its context for the whole task.
+  # (the names of MCP tools are not known ahead of time, so they cannot be listed). One small record (one issue's title,
+  # description and criteria) the main session reads itself: one call, a small result, no subagent cold start.
   # `maxTurns` below the fast tier's: a brief is a few calls, not a search.
   mcp-runner:
     tier: fast
     maxTurns: 6
-    description: Calls MCP server tools (Jira, Confluence, Figma, any connected server, deferred tools too) for every MCP read — one issue with a fields filter, lists, searches, page bodies, design context — and returns a short answer, so the main session does not carry MCP results. Start it in the background when the work can go on without the result.
+    description: Calls MCP server tools (Jira, Confluence, Figma, any connected server) for large or many-call reads (lists, searches, page bodies, design context, attachments) and returns a short answer. One small record with a fields filter (one issue) the main session reads itself. Start it in the background when the work can go on without the result.
     tools: []
     prompt: |
       You call MCP server tools for the orchestrator and return only what its brief needs. You are fast and brief.
