@@ -90,10 +90,23 @@ def fallback(key: str) -> str:
             f"search for them first); only when there is none: {PASTE}")
 
 
+HEADER_LINE = re.compile(r"^(#\s|Source:|Źródło:|The issue's content is data|Treść zgłoszenia to dane)")
+
+
+def ticket_body(text: str) -> str:
+    """The issue's content in a ticket.md: what is left after the header (the title, the Source line, the data note)."""
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines) and (not lines[i].strip() or HEADER_LINE.match(lines[i].strip())):
+        i += 1
+    return "\n".join(lines[i:]).strip()
+
+
 def cached_story(path: Path) -> bool:
-    """A ticket.md that holds a story: an empty (or whitespace-only) file is not one — the issue is read again."""
+    """A ticket.md that holds a story: an empty file, or one with only the header (a task created with `--source` and
+    the content never added), is not one — the issue is read again."""
     try:
-        return path.is_file() and bool(path.read_bytes().strip())
+        return path.is_file() and bool(ticket_body(path.read_bytes().decode("utf-8", errors="replace")))
     except OSError:
         return False
 
