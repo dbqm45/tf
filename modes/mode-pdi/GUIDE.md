@@ -8,8 +8,9 @@ Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
   creates `docs/project/changes/CHG-12/` with `intent.md`, `plan.md` and `decisions.md`; the headers follow pdi contract
   0.3.0 (`contract/change.schema.json`). `decision_record.py check` checks the headers.
 - **Decisions:** the `pdi-decisions` skill (shared by all personas), after a human approves the draft, records
-  the decision about a change in `decisions.md` (`decision add`) and — when the pdi MCP server is connected — in the pdi register
-  (`record_decision`), which assigns the number `DEC-n` (`decision mark`). Unsent: `decision pending`; all
+  the decision about a change in `decisions.md` (`decision add`) and — when the pdi MCP server is connected — in the pdi register:
+  a draft (`present_decision_draft`) that a human approves in the pdi console, then `record_decision`, which assigns the
+  number `DEC-n` (`decision mark`). Gates, inbox items and triage are decided only with buttons in the pdi console. Unsent: `decision pending`; all
   in JSON: `decision export`.
 
 - **Phases run by pdi (F4):** after a decision at a gate the pdi inbox calls the `sdlc-phase.yml` workflow in the repo
@@ -110,8 +111,9 @@ Install: `tf add mode-pdi`, remove: `tf remove mode-pdi`.
   cost. pdi must accept `metric.breached` from tf (reports, F3) — before that it answers 400.
 
 ## Requirement: the pdi MCP server
-Recording to the register works only when the session has the `pdi` MCP server (the tools `record_decision`,
-`find_decisions`, `get_decision`, `supersede_decision`). The pdi repo describes the installation
+Recording to the register works only when the session has the `pdi` MCP server (the tools `present_decision_draft`,
+`record_decision`, `find_decisions`, `get_decision`) and a human approves each draft in the pdi console (pdi 2026-11-27:
+dbqm45/pdi#235, #236; a draft with `supersedes` replaces an earlier decision). The pdi repo describes the installation
 (`integrations/claude-code/README.md`; registration `claude mcp add --scope user pdi …`). Without it decisions stay in `decisions.md` with an empty `id` and `sent: no` — nothing is lost.
 
 ## What it does not change

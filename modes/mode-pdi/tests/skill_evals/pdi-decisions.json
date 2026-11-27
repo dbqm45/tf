@@ -14,6 +14,9 @@
             "record_decision"
           ],
           [
+            "present_decision_draft"
+          ],
+          [
             "szkic|zatwierdz|potwierdz|akcept"
           ],
           [
@@ -21,6 +24,9 @@
           ],
           [
             "CHG-12"
+          ],
+          [
+            "konsol|console"
           ]
         ],
         "none": [
@@ -41,6 +47,9 @@
             "record_decision"
           ],
           [
+            "present_decision_draft"
+          ],
+          [
             "szkic|zatwierdz|potwierdz|akcept",
             "draft",
             "approv",
@@ -56,6 +65,9 @@
           ],
           [
             "CHG-12"
+          ],
+          [
+            "konsol|console"
           ]
         ],
         "none": [
@@ -460,7 +472,7 @@
           ]
         ],
         "none": [
-          "supersede_decision bez"
+          "supersede_decision"
         ]
       }
     },

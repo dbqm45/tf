@@ -224,6 +224,8 @@ def main() -> int:
                   "kind": "product", "source": {"kind": "claude-cli"}, "drafted_by": "ai",
                   "decided_by": "właściciel produktu", "decided_at": today, "links": {"chg": "CHG-12", "prb": "PRB-34"}},
               f"E-7: argumenty record_decision zgodne z kontraktem decyzji: {first}")
+        check(first.get("present_decision_draft") == first.get("record_decision"),
+              f"E-7b: pdi takes the decision as a draft (present_decision_draft), record_decision is the old name: {first}")
         r = run(["decision", "mark", "CHG-12/D1", "--id", "DEC-41"], repo)
         text = dec.read_text(encoding="utf-8")
         check(r.returncode == 0 and "- id: DEC-41" in text and text.count("- sent: yes") == 1,
