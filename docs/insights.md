@@ -187,6 +187,10 @@ in the repo. A workflow runs as `/<name>`, so its name differs from the skill na
 - `python3 tools/bench.py run --ref <git-ref|path> --cand <git-ref|path> [--task …] [--runs N]`: an A/B of the factory
   on reference tasks (`tools/bench/`) before releasing a loop, hook or gate change; paid, only with the owner's consent
   (docs/RELEASING.md, "Before releasing a loop change"); `--fake-claude` for tests.
+- `python3 tools/stress.py run [--engine mech|model] [--suite …] [--concurrency N]`: load and edge-case tests — a library
+  of scenarios with injected faults and thresholds (`tools/stress/`), corpora of edge-case inputs for the scripts and
+  hooks (free), profiled model runs (paid, asks first) and a report of the hotspots: where the time goes and what is
+  wrong (`docs/stress.md`).
 
 ## Consultants: how teams from different overlays ask each other
 

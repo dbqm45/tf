@@ -1,0 +1,13 @@
+{
+  "name": "zadaniownik",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js",
+    "lint": "node scripts/lint.js",
+    "typecheck": "node --check src/server.js && node --check src/store.js && node --check src/routes.js",
+    "build": "echo no build"
+  }
+}

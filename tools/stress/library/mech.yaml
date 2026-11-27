@@ -1,0 +1,122 @@
+# Mechanical scenarios: no model, no cost. They run first and alone (they measure latency).
+scenarios:
+  - id: MECH-001
+    name: task weight on edge-case stories
+    category: Weight & mode
+    engine: mech
+    probe: weight
+    tags: [smoke, edge, mech]
+    description: >-
+      63 stories (pl/en, negation, synonyms the rules may not know, injection, 20k characters, one character, markdown
+      tables). An under-weight — a sensitive change judged normal or light — skips the human's plan approval in --auto.
+    expect: {min_accuracy: 0.9, max_under: 0}
+
+  - id: MECH-002
+    name: input recognition (intake resolve)
+    category: Intake
+    engine: mech
+    probe: intake
+    tags: [smoke, edge, mech]
+    description: Issue keys, tracker addresses, batches, forced-way words, files with spaces, empty input, injection.
+    expect: {min_accuracy: 0.9}
+
+  - id: MECH-003
+    name: guard hooks — evasions and false denies
+    category: Hooks
+    engine: mech
+    probe: guards
+    tags: [smoke, edge, mech, security]
+    description: >-
+      guard_bash, guard_paths and scan_secrets against evasions (quote splitting, substitution, refspec force push,
+      env dumps, dot-dot paths, case variants) and against the ordinary commands the loop runs all the time
+      (a false deny costs a model turn every time).
+    expect: {min_accuracy: 0.95, max_false_deny: 0}
+
+  - id: MECH-004
+    name: TDD gate sequences
+    category: Gates
+    engine: mech
+    probe: tdd
+    tags: [smoke, edge, mech]
+    description: Test runner spellings (npm test, node --test, verify.sh, test_lock, pytest, vitest, go, make), red without assertions, command not found, edit limits, subagent contexts.
+    expect: {min_accuracy: 0.9}
+
+  - id: MECH-005
+    name: hook overhead per agent action
+    category: Hooks
+    engine: mech
+    probe: hook_chains
+    tags: [smoke, load, mech, speed]
+    description: "Every hook registered for an action runs as Claude Code would run it; wall = the slowest hook (they run in parallel), CPU = the sum."
+    params: {repeat: 5}
+    expect: {max_ms: 250}
+
+  - id: MECH-006
+    name: hooks under concurrent load
+    category: Concurrency
+    engine: mech
+    probe: hook_load
+    tags: [load, mech]
+    description: The guard corpus at 1–32 concurrent hook calls (several agents and subagents in parallel); decisions must not change under load.
+    sizes: [1, 4, 8, 16, 32]
+
+  - id: MECH-007
+    name: the loop's script calls without a model
+    category: Loop speed
+    engine: mech
+    probe: lifecycle
+    tags: [smoke, load, mech, speed]
+    description: >-
+      The script calls of one /tf-task run (intake, start, stages, approach, spec, plan, step, finish-slice, trace,
+      drift, budget, pr-body, finish) timed one by one, three tasks in a row; also whether the live dashboard servers
+      are left running after the runs ended.
+    params: {tasks: 3}
+    expect: {max_ms: 1500}
+
+  - id: MECH-008
+    name: the slice security scan
+    category: Loop speed
+    engine: mech
+    probe: scan
+    tags: [load, mech, speed]
+    description: "semgrep startup and the OWASP ruleset per slice (the scan runs in every finish-slice)."
+    params: {repeat: 3}
+    expect: {max_ms: 2000}
+
+  - id: MECH-009
+    name: status and dashboard at scale
+    category: Scale
+    engine: mech
+    probe: status_scale
+    tags: [load, mech, scale]
+    description: tf status, tf status --all and the dashboard with 10 → 1000 tasks with runs.
+    sizes: [10, 100, 1000]
+    expect: {max_ms: 2000}
+
+  - id: MECH-010
+    name: tf work race (many workers, few tasks)
+    category: Concurrency
+    engine: mech
+    probe: work_race
+    tags: [load, mech]
+    description: "8 `tf work --once` workers started at once for 3 Auto tasks (a stub agent) — each task is taken exactly once."
+    params: {workers: 8, tasks: 3}
+
+  - id: MECH-011
+    name: install and no-op update
+    category: Install
+    engine: mech
+    probe: install
+    tags: [load, mech, speed]
+    description: Install and an update with nothing to change, per pack set and layout.
+    params: {variants: ["none:default", "pack-it:default", "pack-it:plugin"]}
+    expect: {max_ms: 2500}
+
+  - id: MECH-012
+    name: context every session loads
+    category: Loop speed
+    engine: mech
+    probe: context
+    tags: [smoke, mech, speed]
+    description: Instructions and skill/agent descriptions loaded before the first step (≈ tokens); every new session writes them to the cache.
+    expect: {max_ms: 25}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <title>Zadaniownik</title>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 2rem auto; }
+    .done { text-decoration: line-through; color: #888; }
+    .high { color: #b00; }
+  </style>
+</head>
+<body>
+  <h1>Moje zadnia</h1>
+  <form id="add">
+    <input id="title" placeholder="Nowe zadanie" aria-label="Tytuł zadania">
+    <select id="priority" aria-label="Priorytet">
+      <option value="low">niski</option>
+      <option value="normal" selected>normalny</option>
+      <option value="high">wysoki</option>
+    </select>
+    <button type="submit">Dodaj</button>
+  </form>
+  <ul id="list"></ul>
+  <script src="/app.js"></script>
+</body>
+</html>

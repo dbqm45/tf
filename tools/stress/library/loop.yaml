@@ -1,0 +1,237 @@
+# Loop speed: the same loop across task sizes, stacks and ways of working. These are the baseline for "where the
+# time goes": every run is profiled (model, scripts, tests, scan, subagents, hooks, wasted calls).
+scenarios:
+  - id: LOOP-001
+    name: XS typo in a heading
+    category: Loop speed
+    engine: model
+    tags: [smoke, model, speed, size-xs]
+    fixture: node-tasks
+    input: "W nagłówku strony (public/index.html) jest literówka: „Moje zadnia” zamiast „Moje zadania”. Popraw ją."
+    budget: 2
+    expect: {outcome: delivered, check: typo, max_wall: 60s, max_cost: 0.6, max_files: 2, forbid: [commit_on_main]}
+
+  - id: LOOP-002
+    name: S button colour and placeholder
+    category: Loop speed
+    engine: model
+    tags: [smoke, model, speed, size-s]
+    fixture: node-tasks
+    input: |
+      Jako użytkownik chcę lepiej widzieć przycisk dodawania i wiedzieć, co wpisać.
+      Kryteria akceptacji:
+      1. Przycisk „Dodaj” w formularzu ma zielone tło #2e7d32 i biały tekst (#fff).
+      2. Pole tytułu ma placeholder „Co masz do zrobienia?”.
+      3. Tekst przycisku pozostaje „Dodaj”.
+    budget: 3
+    expect: {outcome: [delivered], check: button, max_wall: 150s, max_cost: 1.2}
+
+  - id: LOOP-003
+    name: M open-task counter (API + UI)
+    category: Loop speed
+    engine: model
+    tags: [model, speed, size-m]
+    fixture: node-tasks
+    input: |
+      Jako użytkownik chcę widzieć, ile zadań mam jeszcze otwartych.
+      Kryteria akceptacji:
+      1. GET /api/tasks/stats zwraca JSON {"open": n, "done": n, "total": n} (dla pustej listy same zera).
+      2. Po dodaniu 3 zadań i oznaczeniu jednego jako zrobione stats zwraca open=2, done=1, total=3.
+      3. Pod nagłówkiem strony widać tekst „Otwarte: N”, odświeżany po dodaniu i przełączeniu zadania.
+      Poza zakresem: wykresy, historia.
+    budget: 5
+    expect: {outcome: delivered, check: stats, max_wall: 300s, max_cost: 2.0, commits_min: 1}
+
+  - id: LOOP-004
+    name: L filters and CSV export
+    category: Loop speed
+    engine: model
+    tags: [model, speed, size-l]
+    fixture: node-tasks
+    input: |
+      Jako użytkownik chcę filtrować zadania i wyeksportować je do arkusza.
+      Kryteria akceptacji:
+      1. GET /api/tasks?priority=<low|normal|high> zwraca tylko zadania o tym priorytecie; ?done=true|false filtruje po stanie; parametry można łączyć; bez parametrów lista jak dotąd.
+      2. Nieznana wartość priority lub done → 400 z {"error": ...}.
+      3. GET /api/tasks/export.csv zwraca text/csv: nagłówek id,title,priority,done,createdAt, potem jeden wiersz na zadanie w kolejności id; pola z przecinkiem, cudzysłowem lub nową linią w cudzysłowie, cudzysłów podwojony (RFC 4180).
+      4. W UI: lista rozwijana filtru priorytetu nad listą (wszystkie/niski/normalny/wysoki) i link „Eksportuj CSV” do /api/tasks/export.csv.
+      Poza zakresem: import CSV, paginacja.
+    budget: 8
+    expect: {outcome: [delivered, "stop:split"], check: filter_csv, max_wall: 600s, max_cost: 4.0}
+
+  - id: LOOP-005
+    name: S bug fix (case-insensitive priority)
+    category: Loop speed
+    engine: model
+    tags: [model, speed, size-s, bugfix]
+    fixture: node-tasks
+    input: |
+      Błąd: POST /api/tasks z {"title": "x", "priority": "HIGH"} zwraca 400 „invalid priority”. Użytkownicy wpisują priorytet wielkimi literami albo ze spacjami.
+      Kryteria akceptacji:
+      1. Priorytet jest przyjmowany bez względu na wielkość liter i spacje na brzegach ("HIGH", " Low ") i zapisywany małymi literami.
+      2. Nieznany priorytet (np. "urgent") nadal → 400.
+    budget: 3
+    expect: {outcome: delivered, check: priority_case, max_wall: 180s, max_cost: 1.5}
+
+  - id: LOOP-006
+    name: S refactor without behaviour change
+    category: Loop speed
+    engine: model
+    tags: [model, speed, size-s, refactor]
+    fixture: node-tasks
+    input: |
+      Refaktoryzacja: przenieś walidację priorytetu z src/store.js do nowego modułu src/priority.js (funkcja eksportowana), bez zmiany zachowania.
+      Kryteria akceptacji:
+      1. src/store.js używa funkcji z src/priority.js; lista dozwolonych priorytetów jest tylko w src/priority.js.
+      2. Zachowanie API i Store bez zmian (domyślny „normal”, nieznany → błąd „invalid priority”, 400 w API).
+    budget: 3
+    expect: {outcome: delivered, check: refactor_priority, max_wall: 180s, max_cost: 1.5, forbid: [assertion_removed]}
+
+  - id: LOOP-007
+    name: XS docs only (README)
+    category: Loop speed
+    engine: model
+    tags: [model, speed, size-xs, docs]
+    fixture: node-tasks
+    input: "Uzupełnij README.md o sekcję „API” z listą wszystkich endpointów (metoda, ścieżka, opis jednym zdaniem): GET /api/tasks, POST /api/tasks, POST /api/tasks/:id/toggle, DELETE /api/tasks/:id."
+    budget: 2
+    expect: {outcome: delivered, check: readme_api, max_wall: 90s, max_cost: 0.8, max_files: 2}
+
+  - id: LOOP-008
+    name: M in English (bulk delete + button)
+    category: Edge input
+    engine: model
+    tags: [model, speed, size-m, english]
+    fixture: node-tasks
+    input: |
+      As a user I want to clear all completed tasks at once.
+      Acceptance criteria:
+      1. DELETE /api/tasks?done=true removes every completed task and answers 200 with {"removed": <count>}.
+      2. Open tasks stay untouched.
+      3. The page has a "Clear completed" button that calls the endpoint and reloads the list.
+    budget: 5
+    expect: {outcome: delivered, check: clear_done, max_wall: 300s, max_cost: 2.0}
+
+  - id: LOOP-009
+    name: S python stack (bench simple task)
+    category: Loop speed
+    engine: model
+    tags: [model, speed, size-s, python]
+    fixture: py-shop
+    input: |
+      Full-width buttons and two label renames
+
+      Every page sets the width of its button by hand with an inline style. Move this into the shared button component: the component adds the CSS class `btn-block` to every button it renders, and the pages drop their inline `style="width: 100%"` overrides. In the same change rename two button labels: "Proceed" becomes "Continue" (cart and orders pages) and "Discard" becomes "Remove" (profile and wishlist pages).
+
+      Acceptance criteria:
+      - AC-1: every button rendered by app/components/button.py has the class `btn-block` next to its existing classes.
+      - AC-2: no page in app/pages/ renders an inline `width` style any more.
+      - AC-3: the cart and orders pages show "Continue" instead of "Proceed".
+      - AC-4: the profile and wishlist pages show "Remove" instead of "Discard".
+      - AC-5: all tests pass (`python3 run_tests.py`).
+    budget: 4
+    expect: {outcome: delivered, check: py_simple, max_wall: 300s, max_cost: 2.0}
+
+  - id: LOOP-010
+    name: M python stack (bench medium task)
+    category: Loop speed
+    engine: model
+    tags: [model, speed, size-m, python]
+    fixture: py-shop
+    input: |
+      Volume discount on orders
+
+      Shoppers who buy many items get a discount, and the cart shows it.
+
+      Acceptance criteria:
+      - AC-1: a new function `order_discount(lines)` in app/pricing.py returns the discount in cents for the order's lines ((unit price in cents, quantity) pairs): 5% of the order's total when the order has 10 to 49 items in total, 10% when it has 50 items or more, 0 below 10 items. The discount is rounded down to whole cents.
+      - AC-2: `order_total(lines)` returns the total after the discount.
+      - AC-3: the cart page (app/pages/cart.py) shows a line `Discount: -X.XX` before the total when a discount applies, and no discount line otherwise.
+      - AC-4: all tests pass (`python3 run_tests.py`).
+    budget: 6
+    expect: {outcome: delivered, check: py_medium, max_wall: 400s, max_cost: 2.5}
+
+  - id: MODE-001
+    name: XS typo in a plain session (no loop)
+    category: Loop speed
+    engine: model
+    tags: [model, speed, modes]
+    fixture: node-tasks
+    mode: plain
+    input: "W nagłówku strony (public/index.html) jest literówka: „Moje zadnia” zamiast „Moje zadania”. Popraw ją i zrób commit."
+    budget: 2
+    expect: {outcome: delivered, check: typo, max_wall: 45s, max_cost: 0.5}
+
+  - id: MODE-002
+    name: XS typo via /tf-task quick
+    category: Loop speed
+    engine: model
+    tags: [model, speed, modes]
+    fixture: node-tasks
+    mode: quick
+    input: "W nagłówku strony (public/index.html) jest literówka: „Moje zadnia” zamiast „Moje zadania”."
+    budget: 2
+    expect: {outcome: delivered, check: typo, max_wall: 45s, max_cost: 0.5}
+
+  - id: MODE-003
+    name: M plan only (--plan)
+    category: Loop speed
+    engine: model
+    tags: [model, speed, modes]
+    fixture: node-tasks
+    mode: plan
+    input: |
+      Jako użytkownik chcę widzieć, ile zadań mam jeszcze otwartych.
+      Kryteria akceptacji:
+      1. GET /api/tasks/stats zwraca JSON {"open": n, "done": n, "total": n} (dla pustej listy same zera).
+      2. Pod nagłówkiem strony widać tekst „Otwarte: N”.
+    budget: 2
+    expect: {outcome: [no-code, "stop:plan-approval"], max_wall: 150s, max_cost: 1.0, forbid: [code_change]}
+
+  - id: MODE-004
+    name: S with Sonnet as the session model
+    category: Loop speed
+    engine: model
+    tags: [model, speed, modes, models]
+    fixture: node-tasks
+    model: sonnet
+    input: |
+      Jako użytkownik chcę lepiej widzieć przycisk dodawania i wiedzieć, co wpisać.
+      Kryteria akceptacji:
+      1. Przycisk „Dodaj” w formularzu ma zielone tło #2e7d32 i biały tekst (#fff).
+      2. Pole tytułu ma placeholder „Co masz do zrobienia?”.
+      3. Tekst przycisku pozostaje „Dodaj”.
+    budget: 3
+    expect: {outcome: delivered, check: button, max_wall: 150s, max_cost: 0.8}
+
+  - id: MODE-005
+    name: S with Haiku as the session model
+    category: Loop speed
+    engine: model
+    tags: [model, speed, modes, models]
+    fixture: node-tasks
+    model: haiku
+    input: |
+      Jako użytkownik chcę lepiej widzieć przycisk dodawania i wiedzieć, co wpisać.
+      Kryteria akceptacji:
+      1. Przycisk „Dodaj” w formularzu ma zielone tło #2e7d32 i biały tekst (#fff).
+      2. Pole tytułu ma placeholder „Co masz do zrobienia?”.
+      3. Tekst przycisku pozostaje „Dodaj”.
+    budget: 2
+    expect: {outcome: delivered, check: button, max_wall: 150s, max_cost: 0.4}
+
+  - id: MODE-006
+    name: S in the plugin layout (tf code settings)
+    category: Loop speed
+    engine: model
+    tags: [model, modes, layout]
+    fixture: node-tasks
+    layout: plugin
+    input: |
+      Jako użytkownik chcę lepiej widzieć przycisk dodawania i wiedzieć, co wpisać.
+      Kryteria akceptacji:
+      1. Przycisk „Dodaj” w formularzu ma zielone tło #2e7d32 i biały tekst (#fff).
+      2. Pole tytułu ma placeholder „Co masz do zrobienia?”.
+      3. Tekst przycisku pozostaje „Dodaj”.
+    budget: 3
+    expect: {outcome: delivered, check: button, max_wall: 150s, max_cost: 1.2}
