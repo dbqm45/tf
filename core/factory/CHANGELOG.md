@@ -3,6 +3,10 @@
 Format: newest version on top. `python3 factory/update.py --check` shows entries newer than the installed version.
 Versions up to 2.45.0 are the history of claude-team-factory, from which this core was extracted.
 
+## [24.20.1] — 2026-11-27
+### Fixed
+- **mode-pdi:** record decisions through a draft approved in pdi (#456)
+
 ## [24.20.0] — 2026-11-25
 ### Added
 - **core:** run timeline, question waits measured, narrowest verify hint (#455)
