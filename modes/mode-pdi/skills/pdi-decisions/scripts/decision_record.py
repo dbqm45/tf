@@ -22,7 +22,8 @@ Change log conforming to the pdi 0.3.0 contract (contract/change.schema.json; fr
       appends an approved decision to decisions.md (ref CHG-12/Dn, empty id, sent: no); with --finding it is an answer
       to a ci_for_sdlc finding (field `finding`, statement = the answer), which ci_for_sdlc reads from the repo (PRB-16)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision pending [--change CHG-12]
-      JSON of unsent decisions with ready arguments for record_decision (pdi MCP)
+      JSON of unsent decisions with ready arguments for present_decision_draft (pdi MCP; the draft is approved
+      by a human in the pdi console, then record_decision(draft_id, sha256) records it)
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision mark CHG-12/D1 --id DEC-41
       records the number assigned by the pdi register and sent: yes
   python3 .claude/skills/pdi-decisions/scripts/decision_record.py decision export
@@ -402,8 +403,10 @@ def decision_import(a) -> int:
 
 
 def decision_pending(change: str | None) -> int:
-    items = [{"ref": e["ref"], "record_decision": as_record(e, h)} for e, h in all_entries(change)
-             if e.get("sent") != "yes"]
+    # pdi records a decision only from a draft a human approved in its console: the arguments go to
+    # present_decision_draft; "record_decision" is the former name of the same arguments, kept for compatibility.
+    items = [{"ref": e["ref"], "present_decision_draft": (args := as_record(e, h)), "record_decision": args}
+             for e, h in all_entries(change) if e.get("sent") != "yes"]
     print(json.dumps(items, ensure_ascii=False, indent=2))
     return 0
 

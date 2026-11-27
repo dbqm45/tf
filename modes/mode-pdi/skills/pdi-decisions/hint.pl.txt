@@ -42,13 +42,20 @@ jej tylko w treści odpowiedzi — ale też nie decydujesz sam, co jest decyzją
    `id` puste, `sent: no`. Odpowiedź na ustalenie ci_for_sdlc (np. pytanie DES-001 przy TSK-1) to taki sam wpis
    z `--finding DES-001:TSK-1` (opcjonalnie `--effect accept_risk|dismiss|confirm`, domyślnie rozwiązuje): treść
    `--statement` jest odpowiedzią, a ci_for_sdlc czyta ją z repo i zamyka ustalenie (bramka w PR też).
-3. **Rejestr pdi:** jeśli w sesji jest narzędzie MCP `record_decision` serwera pdi, `decision_record.py decision pending
-   --change CHG-12` daje gotowe argumenty; wywołaj je, a zwrócony numer zapisz: `decision mark CHG-12/Dn --id DEC-41`.
+3. **Rejestr pdi:** jeśli w sesji jest serwer MCP pdi (narzędzie `present_decision_draft`), `decision_record.py decision pending
+   --change CHG-12` daje gotowe argumenty (`present_decision_draft`); przy szkicu AI dodaj `draft_edited` (`false`, gdy
+   człowiek przyjął go bez zmian, `true`, gdy coś zmienił). Wywołaj `present_decision_draft`, podaj człowiekowi
+   `approve_url` (albo: konsola pdi, `sdlc open` → Drafts → `DRF-n`) i czekaj: **zatwierdza tylko człowiek, w konsoli;
+   „tak” w czacie niczego nie zapisuje.** Po zatwierdzeniu `record_decision` z `draft_id` i `sha256` (do godziny), a
+   zwrócony numer zapisz: `decision mark CHG-12/Dn --id DEC-41`. Odrzucenie wraca z powodem: popraw wpis i wystaw nowy
+   szkic. Bramki, pozycje skrzynki i triaż zgłoszeń rozstrzyga człowiek przyciskami w konsoli pdi; Ty nie masz do tego
+   narzędzia.
    Zanim zaproponujesz rozwiązanie w obszarze już rozstrzyganym, sprawdź `find_decisions`.
 4. **Bez serwera pdi** (narzędzia nie ma albo nie odpowiada): nie wypychasz, nie nadajesz numeru, nie zgadujesz. Wpis
-   zostaje niewysłany; mówisz człowiekowi, że czeka. Gdy serwer wróci: `decision pending`, `record_decision`, `mark`
+   zostaje niewysłany; mówisz człowiekowi, że czeka. Gdy serwer wróci: `decision pending`, `present_decision_draft`,
+   zatwierdzenie w konsoli, `record_decision`, `mark`
    (ponowienie identycznego zapisu rejestr zwraca jako istniejący wpis — bez duplikatów).
-5. Decyzja zmienia wcześniejszą → w rejestrze `supersede_decision` (nie nowa, sprzeczna decyzja), w repo stary
+5. Decyzja zmienia wcześniejszą → w rejestrze szkic z `supersedes: DEC-n` (nie nowa, sprzeczna decyzja), w repo stary
    artefakt dostaje `superseded`.
 
 Eksport wszystkich decyzji projektu (z numerem i stanem wysłania): `decision_record.py decision export`.
@@ -157,5 +164,6 @@ Zgłoszenie żyje w pdi; tf daje tylko rekomendację (R7: w stanach pdi, decyzj�
 ## Przykład
 Właściciel: „W CHG-12 eksport do CSV zamiast XLSX, klienci i tak otwierają go w arkuszu”. Pokazujesz szkic
 (co, dlaczego, kto, rodzaj `product`), po zgodzie: `decision add CHG-12 …` → `CHG-12/D1`; `decision pending`,
-`record_decision` → `DEC-41`; `decision mark CHG-12/D1 --id DEC-41`. Bez serwera: wpis `CHG-12/D1` z pustym `id`,
+`present_decision_draft` → `DRF-7`, właściciel zatwierdza go w konsoli pdi, `record_decision` → `DEC-41`;
+`decision mark CHG-12/D1 --id DEC-41`. Bez serwera: wpis `CHG-12/D1` z pustym `id`,
 `sent: no` i informacja dla człowieka.

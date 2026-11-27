@@ -1,7 +1,8 @@
 # Decisions of change {CHG}
 
 Entries are added by `decision_record.py decision add {CHG} …` (after a human approves the draft). The `id` is assigned by the pdi
-register (`record_decision` through MCP) and written in by `decision mark`; without the pdi server it stays empty, and `sent: no` — you send it
+register (a draft through MCP `present_decision_draft`, approved by a human in the pdi console, then `record_decision`) and
+written in by `decision mark`; without the pdi server it stays empty, and `sent: no` — you send it
 later (`decision pending`). Do not invent numbers.
 
 <!-- Entry pattern:

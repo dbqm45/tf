@@ -57,8 +57,14 @@ it only in the text of an answer — but you also do not decide on your own what
    `id` empty, `sent: no`. An answer to a ci_for_sdlc finding (e.g. the question DES-001 at TSK-1) is the same kind of entry
    with `--finding DES-001:TSK-1` (optionally `--effect accept_risk|dismiss|confirm`, resolves by default): the
    `--statement` text is the answer, and ci_for_sdlc reads it from the repo and closes the finding (the gate in the PR too).
-3. **The pdi register:** if the session has the MCP tool `record_decision` of the pdi server, `decision_record.py decision pending
-   --change CHG-12` gives ready arguments; call it, and record the returned number: `decision mark CHG-12/Dn --id DEC-41`.
+3. **The pdi register:** if the session has the pdi MCP server (the tool `present_decision_draft`), `decision_record.py decision
+   pending --change CHG-12` gives ready arguments (`present_decision_draft`). For an AI draft add `draft_edited`: `false`
+   when the human took it unchanged, `true` when they changed anything. Call `present_decision_draft`, give the human the
+   `approve_url` (or: the pdi console, `sdlc open` → Drafts → `DRF-n`) and wait: **only the human approves, in the console;
+   a yes in the chat does not record anything.** After the approval `record_decision` with `draft_id` and `sha256`
+   (within an hour), and record the returned number: `decision mark CHG-12/Dn --id DEC-41`. A rejection comes back with
+   the reason: fix the entry and present a new draft. Gates, inbox items and the triage of reports are decided by the human
+   with buttons in the pdi console; you have no tool for them.
    Before you propose a solution in an area already being decided, check `find_decisions`. Before the plan of a change,
    call `find_decisions` with `paths` (the files the change will touch, relative to the repo root) and/or `components`:
    it returns the decisions in force whose `applies_to` covers them, with `matched`; follow them or propose superseding
@@ -68,9 +74,10 @@ it only in the text of an answer — but you also do not decide on your own what
    `decision_cache.py refresh` updates it (`pdi-records changes`). The copy is read-only: a decision of another app is
    changed in that app, never in the copy.
 4. **Without the pdi server** (the tool is missing or does not respond): you do not push, you do not assign a number, you do not guess. The entry
-   stays unsent; you tell the human that it is waiting. When the server is back: `decision pending`, `record_decision`, `mark`
+   stays unsent; you tell the human that it is waiting. When the server is back: `decision pending`, `present_decision_draft`,
+   the approval in the console, `record_decision`, `mark`
    (repeating an identical record makes the register return it as an existing entry — no duplicates).
-5. A decision changes an earlier one → in the register `supersede_decision` (not a new, contradictory decision), in the repo the old
+5. A decision changes an earlier one → in the register a draft with `supersedes: DEC-n` (not a new, contradictory decision), in the repo the old
    artifact gets `superseded`.
 
 Export of all the project's decisions (with the number and the sending state): `decision_record.py decision export`.
@@ -187,5 +194,6 @@ The report lives in pdi; tf gives only a recommendation (R7: in pdi states, the 
 ## Example
 The owner: "In CHG-12 export to CSV instead of XLSX, customers open it in a spreadsheet anyway". You show the draft
 (what, why, who, kind `product`), after consent: `decision add CHG-12 …` → `CHG-12/D1`; `decision pending`,
-`record_decision` → `DEC-41`; `decision mark CHG-12/D1 --id DEC-41`. Without the server: the entry `CHG-12/D1` with an empty `id`,
+`present_decision_draft` → `DRF-7`, the owner approves it in the pdi console, `record_decision` → `DEC-41`;
+`decision mark CHG-12/D1 --id DEC-41`. Without the server: the entry `CHG-12/D1` with an empty `id`,
 `sent: no` and information for the human.

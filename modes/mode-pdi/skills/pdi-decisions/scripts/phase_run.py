@@ -434,7 +434,7 @@ def cmd_run(a) -> int:
             raise Refused(f"{plan} has questions in `## {QUESTIONS}` with no answer in decisions.md — delivery does "
                           "not start, because the /tf-task loop would guess the answer (PRB-3): "
                           + "; ".join(f"“{q}”" for q in open_qs)
-                          + ". Answer them at the gate in pdi (answers in decide_inbox_item), remove them from "
+                          + ". Answer them at the gate in the pdi console (the answer fields of the gate), remove them from "
                           "plan.md with fixes in the architecture phase, or mark them (N4): `[local; default: …]` "
                           "for a decision that is easy to undo, `[one_way; blocks: TSK-n]` to stop only its cuts.")
         out.update(provisional=n4["provisional"], skipped_tasks=n4["skipped_tasks"])
