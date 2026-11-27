@@ -13,6 +13,7 @@ python3 tools/stress.py run --suite smoke --yes       # the smoke set: mech + a 
 python3 tools/stress.py run --engine model --concurrency 4 --yes
 python3 tools/stress.py capacity --scenario LOOP-002 --sizes 1,2,4 --yes
 python3 tools/stress.py compare old/result.json new/result.json      # regressions, exit 1
+python3 tools/stress.py rescore <out-dir>             # re-profile and re-judge saved runs, no model calls
 ```
 
 Results go to `.work/stress/<date-time>/` (or `--out`): `result.json`, `report.md`, `junit.xml`, and for every model
@@ -47,7 +48,13 @@ so the categories add up to the run's wall time:
 - `factory scripts` (per script and subcommand: `run_state.py stage`, `run_report.py start` …),
   `factory: verify+scan+commit` (`finish-slice`, `verify`),
 - `tests / verify`, `scan`, `git`, `read / search`, `edit`, `subagents` (per agent type), `skill load`, `bookkeeping`,
-- `wasted` — calls that ended with an error or a permission denial (with the command and the first line of output).
+- `wasted` — calls that ended with an error or a permission denial (with the command and the first line of output);
+  `system/permission_denied` events of the stream are counted too.
+
+An outcome is `delivered` (the hidden check passes, or without a check: commits with a code change), `no-code`,
+`stop:<code>` (the run's `stop_code`; `stop:plan-approval` when the plan waits for the human) or `stop:unrecorded`
+(a STOP block in the answer before any task existed: no run.json, so no trace in `tf status`). Files that a fault
+left changed before the run do not count as the run's work.
 
 `run_state.py stage|step|finish-slice` and `run_report.py start|finish` mark the loop's phases (`intake`, `spec`,
 `plan`, `S1`…, `pr`, `finish`), so time is also reported per phase. The hook probe (`tools/stress/lib/hookprobe.py`)

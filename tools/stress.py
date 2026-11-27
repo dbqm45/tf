@@ -26,6 +26,7 @@ Two engines:
   python3 tools/stress.py capacity --scenario ID --sizes 1,2,4 [--out DIR] [--yes]   # N copies at once → breaking point
   python3 tools/stress.py compare <a/result.json> <b/result.json>                   # regressions, exit 1
   python3 tools/stress.py report <out-dir>                                           # rebuild report.md and junit.xml
+  python3 tools/stress.py rescore <out-dir>          # re-profile and re-judge saved model runs (no model calls)
 
 Results in <out> (default .work/stress/<date-time>/): result.json, report.md, junit.xml and per model scenario
 the project copy with .stress/stream.jsonl and .stress/hooks.jsonl. Exit code 1 when a scenario failed.
@@ -230,6 +231,25 @@ def cmd_compare(o) -> int:
     return 1 if regs else 0
 
 
+def cmd_rescore(o) -> int:
+    """Re-profile and re-evaluate every model scenario of a finished run from its saved project copy (no model)."""
+    out = Path(o.dir)
+    data = json.loads((out / "result.json").read_text())
+    lib = {s["id"]: s for s in load_library()}
+    for r in data["scenarios"]:
+        if r["engine"] != "model" or r["id"] not in lib:
+            continue
+        proj = Path(r.get("project") or out / "work" / "model" / r["id"] / f"r{r.get('repeat', 0)}")
+        if not (proj / ".stress" / "stream.jsonl").exists():
+            continue
+        r.update(model.score(lib[r["id"]], proj, r.get("proc"), r.get("faults"), r.get("model")))
+        r["why"] = report.why(r)
+    data["hotspots"] = report.hotspots(data["scenarios"], data.get("capacity"))
+    report.write_all(out, data)
+    print(report.console(data["scenarios"]))
+    return 0
+
+
 def cmd_report(o) -> int:
     out = Path(o.dir)
     data = json.loads((out / "result.json").read_text())
@@ -267,9 +287,11 @@ def main(argv: list[str]) -> int:
     c.add_argument("b")
     rp = sub.add_parser("report")
     rp.add_argument("dir")
+    rs = sub.add_parser("rescore")
+    rs.add_argument("dir")
     o = ap.parse_args(argv)
     return {"run": cmd_run, "capacity": cmd_capacity, "list": cmd_list, "check": cmd_check, "compare": cmd_compare,
-            "report": cmd_report}[o.cmd](o)
+            "report": cmd_report, "rescore": cmd_rescore}[o.cmd](o)
 
 
 if __name__ == "__main__":

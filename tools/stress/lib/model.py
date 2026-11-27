@@ -131,6 +131,8 @@ def classify(tool: str, inp: dict) -> tuple[str, str]:
 
 PHASE_RE = [
     (re.compile(r"run_state\.py\s+stage\s+\S+\s+(\w+)"), lambda m: m.group(1)),
+    (re.compile(r"run_state\.py\s+spec\b"), lambda m: "spec"),
+    (re.compile(r"run_state\.py\s+approach\b"), lambda m: "plan"),
     (re.compile(r"run_state\.py\s+(?:step|finish-slice|verify|tick|block|finding)\s+\S+\s+(S\d+)"), lambda m: m.group(1)),
     (re.compile(r"run_state\.py\s+(?:pr-body|trace|panel)\b|plan_drift\.py|pr_budget\.py"), lambda m: "pr"),
     (re.compile(r"run_report\.py\s+finish\b"), lambda m: "finish"),
@@ -146,6 +148,7 @@ def profile(stream: Path, hooks_log: Path | None = None) -> dict:
     result = {}
     sub_turns = 0
     first_tool_t = None
+    denials = []
     for e in events:
         t = e.get("_t", 0.0)
         typ = e.get("type")
@@ -157,13 +160,17 @@ def profile(stream: Path, hooks_log: Path | None = None) -> dict:
         if typ == "result":
             result = e
             continue
-        content = ((e.get("message") or {}).get("content")) if isinstance((e.get("message") or {}).get("content"), list) else []
+        if typ == "system" and e.get("subtype") == "permission_denied":
+            denials.append({"t": t, "text": str(e.get("message") or "")[:160]})
+            continue
+        msg = e.get("message") if isinstance(e.get("message"), dict) else {}
+        content = [c for c in msg.get("content") or [] if isinstance(c, dict)] if isinstance(msg.get("content"), list) else []
         if parent:                                  # inside a subagent
             if typ == "assistant":
                 sub_turns += 1
             continue
         if typ == "assistant":
-            mid = (e.get("message") or {}).get("id") or e.get("uuid")
+            mid = msg.get("id") or e.get("uuid")
             if mid not in msg_first:
                 msg_first[mid] = {"start": cursor, "msg": mid, "end": t}
                 models.append(msg_first[mid])
@@ -246,7 +253,8 @@ def profile(stream: Path, hooks_log: Path | None = None) -> dict:
         "by_label": {k: {"n": v["n"], "s": round(v["s"], 1), "errors": v["errors"], "cat": v["cat"]}
                      for k, v in sorted(by_label.items(), key=lambda kv: -kv[1]["s"])},
         "by_phase": {k: round(v, 1) for k, v in by_phase.items()},
-        "tool_calls": len(spans), "tool_errors": len(wasted), "denied": sum(1 for s in spans if s["denied"]),
+        "tool_calls": len(spans), "tool_errors": len(wasted),
+        "denied": max(sum(1 for s in spans if s["denied"]), len(denials)),
         "wasted_s": round(sum(s["excl"] for s in wasted) + 0.0, 1),
         "wasted": [{"t": s["start"], "label": s["label"], "detail": s["detail"], "out": s["out"]} for s in wasted][:30],
         "hooks": {k: {"n": v["n"], "total_s": round(v["ms"] / 1000, 2), "avg_ms": round(v["ms"] / v["n"], 1),
@@ -289,6 +297,8 @@ def collect(proj: Path, base: str = "main") -> dict:
         runs.append({"key": key, "stage": rj.get("stage"), "needs": rj.get("needs"), "stop": rj.get("stop_code"),
                      "weight": tj.get("weight"), "mode": tj.get("mode"), "timeline": rj.get("timeline") or []})
     r["runs"] = runs
+    pre = proj / ".stress" / "pre_dirty.json"
+    r["pre_dirty"] = json.loads(pre.read_text()) if pre.exists() else []
     if (proj / "verify.sh").exists():
         v = run(["./verify.sh"], proj, env=clean_env(), timeout=600)
         r["verify_ok"] = v.returncode == 0
@@ -339,20 +349,30 @@ def evaluate(sc: dict, prof: dict, col: dict, proj: Path) -> tuple[list[dict], d
     if out:
         wanted = out if isinstance(out, list) else [out]
         got = []
-        if hidden and hidden["total"] and hidden["pass"] == hidden["total"] and (col["commits"] or col["dirty"]):
+        pre = set(col.get("pre_dirty") or [])
+        new_dirty = [d for d in col["dirty"] if d not in pre]
+        code = [f for f in col["changed"] if not f.startswith("docs/")]
+        if hidden is not None:
+            if hidden["total"] and hidden["pass"] == hidden["total"] and (col["commits"] or new_dirty):
+                got.append("delivered")
+        elif col["commits"] and code:
             got.append("delivered")
-        if not [f for f in col["changed"] if not f.startswith("docs/")] and not col["dirty"]:
+        if not code and not new_dirty:
             got.append("no-code")
         got += [f"stop:{s}" for s in stops]
         if "plan" in needs:
             got.append("stop:plan-approval")
+        if not col["runs"] and re.search(r"^\s*STOP\b", prof.get("result_text") or "", re.M):
+            got.append("stop:unrecorded")       # a STOP before the task existed: no run.json, no trace in tf status
         ok = any(w in got for w in wanted)
         chk("outcome", ok, ", ".join(got) or "nothing", " | ".join(wanted))
     if hidden is not None:
-        chk("hidden acceptance check", hidden["pass"] == hidden["total"] and hidden["total"] > 0 or
-            ("delivered" not in (out if isinstance(out, list) else [out or ""])),
+        wanted = out if isinstance(out, list) else [out or ""]
+        must = wanted == ["delivered"] or ("delivered" in wanted and any(
+            c["name"] == "outcome" and "delivered" in str(c["actual"]) for c in checks))
+        chk("hidden acceptance check", (hidden["pass"] == hidden["total"] and hidden["total"] > 0) or not must,
             f"{hidden['pass']}/{hidden['total']}" + (f" — {'; '.join(hidden['fails'][:3])}" if hidden["fails"] else ""),
-            "all pass" if "delivered" in (out if isinstance(out, list) else [out or ""]) else "(informational)")
+            "all pass" if must else "(informational)")
     if exp.get("weight"):
         ok_w = exp["weight"] if isinstance(exp["weight"], list) else [exp["weight"]]
         chk("weight", any(w in ok_w for w in weights) if weights else False, ", ".join(weights) or "no task", "/".join(ok_w))
@@ -374,6 +394,20 @@ def evaluate(sc: dict, prof: dict, col: dict, proj: Path) -> tuple[list[dict], d
     return checks, hidden
 
 
+def score(sc: dict, proj: Path, rr: dict | None = None, faults: list | None = None, model: str | None = None) -> dict:
+    """Profile and evaluate a finished run from its project copy (also used by `rescore`)."""
+    prof = profile(proj / ".stress" / "stream.jsonl", proj / ".stress" / "hooks.jsonl")
+    col = collect(proj)
+    checks, hidden = evaluate(sc, prof, col, proj)
+    verdict = "PASS" if all(c["ok"] for c in checks) else "FAIL"
+    rr = rr or {}
+    if rr.get("rc") not in (0, None) and not prof.get("cost_usd") and not col["runs"]:
+        verdict = "ERROR"
+    return {"verdict": verdict, "checks": checks, "profile": prof, "faults": faults or [], "proc": rr,
+            "result": {k: v for k, v in col.items() if k not in ("diff", "_proj")}, "hidden": hidden,
+            "project": str(proj), "model": model or "default"}
+
+
 def run_model(sc: dict, work: Path, opts) -> dict:
     fixture = sc.get("fixture", "node-tasks")
     layout = sc.get("layout", "default")
@@ -381,6 +415,9 @@ def run_model(sc: dict, work: Path, opts) -> dict:
     proj = copy_project(tpl, work / "model" / sc["id"] / ("r%d" % getattr(opts, "_rep", 0)))
     env = clean_env()
     faults = apply_faults(proj, sc.get("setup"), env, work, fixture)
+    (proj / ".stress").mkdir(exist_ok=True)
+    (proj / ".stress" / "pre_dirty.json").write_text(json.dumps(
+        [l for l in git(proj, "status", "--short").stdout.splitlines() if l.strip() and ".stress" not in l]))
     install_probe(proj)
     model = sc.get("model") or opts.model
     budget = float(sc.get("budget", 3))
@@ -394,13 +431,5 @@ def run_model(sc: dict, work: Path, opts) -> dict:
     out = proj / ".stress" / "stream.jsonl"
     timeout = duration(sc.get("timeout", opts.timeout * 60))
     rr = run_claude(argv, proj, env, timeout, out)
-    prof = profile(out, proj / ".stress" / "hooks.jsonl")
-    col = collect(proj)
-    checks, hidden = evaluate(sc, prof, col, proj)
-    verdict = "PASS" if all(c["ok"] for c in checks) else "FAIL"
-    if rr["rc"] not in (0, None) and not prof.get("cost_usd") and not col["runs"]:
-        verdict = "ERROR"
     run([PY, ".claude/skills/tf/scripts/dashboard_live.py", "stop", "--project", str(proj)], proj, env=clean_env())
-    return {"verdict": verdict, "checks": checks, "profile": prof, "faults": faults, "proc": rr,
-            "result": {k: v for k, v in col.items() if k not in ("diff", "_proj")}, "hidden": hidden,
-            "project": str(proj), "model": model or "default"}
+    return score(sc, proj, rr, faults, model)
