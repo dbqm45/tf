@@ -80,7 +80,7 @@ TEST_CMD_RE = re.compile(
     r"|dotnet test|nx (test|run-many|affected)\b[^\n]*test|ng test|deno test|rspec|phpunit|tox"
     # node's own runner, the verify.sh `tf onboard` writes, make/just wrappers, run_tests.py scripts (tf stress, T004-T018)
     r"|node (?:--\S+ )*--test|verify\.sh|make (?:-\S+ )*(?:test|check)\w*|just (?:test|check)\w*"
-    r"|run_tests\.py)\b"
+    r"|run_tests\.py|run_state\.py\s+verify)\b"
     # Tests as standalone scripts: python3 tests/test_x.py, py -3 .claude\tests\test_x.py, a loop over tests/test_*.py.
     r"|\b(python3?|py)(\s+-\S+)*\s+[\"']?([^\s\"';|&]*[/\\])?(test_[^\s/\\\"';|&]*|[^\s/\\\"';|&]+_test)\.py\b"
     r"|\bfor\s+\w+\s+in\s+[^;\n]*\btest_\*[^;\n]*\.py\b")

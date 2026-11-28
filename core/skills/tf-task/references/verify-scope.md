@@ -11,7 +11,8 @@ by hand: you work it out once per project and record it; the human sees it in th
    keeps no table of tools — the command comes from this repository.
 2. Write it with a placeholder the gate fills: `{files}` (one argument per changed file), `{files,}` (one argument, the
    files joined with commas) or `{dirs}` (the directories of the changed source files).
-3. **Check it once:** run it with the placeholder replaced by one existing source file. Valid when it exits 0, or 1 with
+3. **Check it once:** run it with the placeholder replaced by one existing source file, through the test lock —
+   `python3 .claude/hooks/test_lock.py -- <command>` is allowed in an unattended run, a bare runner may be refused. Valid when it exits 0, or 1 with
    real test results (not "unknown command", "no such option" or a usage text), and it runs fewer tests than the full
    command — or at least runs that file's tests.
 
