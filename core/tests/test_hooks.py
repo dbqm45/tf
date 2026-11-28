@@ -76,10 +76,20 @@ BASH_CASES = [
     ("cp hook.sh .git/hooks/pre-commit", "ask"), ("mv x.json .claude/settings.local.json", "ask"),
     ("echo hi > notes.txt", "none"), ("git commit -m 'fix: a > b'", "none"), ("npm test > out.log 2>&1", "none"),
     ("grep -n deny .claude/hooks/guard_bash.py > /dev/null", "none"),
+    # evasions found by tf stress (tools/stress/corpus/guards.yaml)
+    ("$(echo rm) -rf /", "deny"), ("`printf rm` -rf ~", "deny"), ("echo $(date)", "none"),
+    ("python3 -c \"print(open('.env').read())\"", "deny"), ("node -e \"console.log(process.env.HOME)\"", "none"),
+    ("rm -rf .git", "deny"), ("rm -rf ./.git/", "deny"), ("rm -rf .github/workflows/old.yml", "none"),
+    ("git commit --no-verify -m x", "deny"), ("git commit -n -m x", "deny"), ("git push --no-verify origin x", "deny"),
+    ("git commit --amend --no-edit", "none"), ("git push -n origin x", "ask"),
+    ("git config --global user.email x@y", "deny"), ("git config --global --get user.email", "none"),
+    ("git config user.email x@y", "none"),
 ]
 
 PATH_CASES = [
     ("Edit", {"file_path": ".claude/cleanroom.json"}, "ask"),
+    ("Write", {"file_path": "/repo/.tf/factory/work.py"}, "ask"), ("Edit", {"file_path": ".tf/plugin/hooks/hooks.json"}, "ask"),
+    ("Read", {"file_path": "/repo/.tf/factory/work.py"}, "none"),
     ("Read", {"file_path": "/repo/.env"}, "deny"),
     ("Read", {"file_path": "/repo/.env.production"}, "deny"),
     ("Read", {"file_path": "/repo/.env.example"}, "none"),
@@ -131,6 +141,7 @@ PATH_CASES = [
 
 SECRET_CASES = [
     ('const k = "AKIAIOSFODNN7ABCDEFG";', 2),
+    ("//registry.npmjs.org/:_authToken=" + "np" + "m_" + "Ab1" * 12, 2),   # assembled: no token-shaped literal in git
     ("-----BEGIN RSA PRIVATE KEY-----", 2),
     ('password = "S3cr3t-Passw0rd-123"', 2),
     ('password = "changeme-in-production"', 0),

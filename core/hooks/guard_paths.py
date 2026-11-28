@@ -47,7 +47,9 @@ SECRET_PATHS = re.compile(
 SAFE_ENV = re.compile(r"\.env\.(example|sample|template|dist)$", re.IGNORECASE)
 
 # Self-modification of the safeguards requires human approval
-GUARDRAILS = re.compile(r"(^|/)\.claude/(settings(\.local)?\.json|hooks/|cleanroom\.json)|(^|/)\.git/")
+# the factory's engine and plugin are installed files ("like node_modules"): a change goes to the factory repository
+GUARDRAILS = re.compile(r"(^|/)\.claude/(settings(\.local)?\.json|hooks/|cleanroom\.json)|(^|/)\.git/|"
+                        r"(^|/)\.tf/(factory|plugin)/")
 
 # The isolation level: only a human lowers it (tf isolation in a terminal)
 ISOLATION_FILES = re.compile(r"^\.tf/(cache|plugin)/session-settings\.json$|^\.tf/factory/templates/sandbox\.settings\.json$")
@@ -221,7 +223,8 @@ def main() -> None:
                 if why:
                     decide("deny", f"A change to {why}")
         if tool in ("Edit", "Write", "NotebookEdit") and GUARDRAILS.search(norm):
-            decide("ask", f"A change to the safeguards' configuration or .git ({p}) needs a human's consent.")
+            decide("ask", f"A change to the safeguards' configuration, the factory's installed files or .git ({p}) needs "
+                          "a human's consent (a factory change belongs in the factory repository: tf proposals add).")
         if tool in ("Edit", "Write", "NotebookEdit"):
             for root, rel in rels:
                 why = oracle_reason(rel, root or ".")

@@ -30,6 +30,8 @@ RULES = [
     ("OpenAI-style API key", r"\bsk-(proj-)?[A-Za-z0-9]{32,}\b"),
     ("Google API key", r"\bAIza[0-9A-Za-z_-]{35}\b"),
     ("Stripe live key", r"\b(sk|rk)_live_[0-9a-zA-Z]{20,}\b"),
+    ("npm token", r"\bnpm_[A-Za-z0-9]{36}\b"),
+    ("PyPI token", r"\bpypi-AgE[A-Za-z0-9_-]{40,}"),
     ("JWT", r"\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b"),
     ("password/secret in code",
      r"(?i)\b(password|passwd|secret|api[_-]?key|access[_-]?token|client[_-]?secret)\b\s*[:=]\s*['\"]([^'\"\s]{12,})['\"]"),

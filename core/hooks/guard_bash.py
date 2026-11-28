@@ -66,6 +66,16 @@ DENY = [
     (r"\bmkfs(\.\w+)?\b|\bdd\s+[^;&|]*of=/dev/", "operations on block devices"),
     (r"\bchmod\s+(-R\s+)?0?777\b", "chmod 777"),
     (r":\(\)\s*\{\s*:\|:&\s*\};:", "fork bomb"),
+    # tf stress (tools/stress/corpus/guards.yaml B015-B032): evasions that passed
+    (r"(^|[;&|(]\s*)(\$\(|`)\s*(echo|printf)\b", "a command name built by command substitution (hides the real command)"),
+    (r"\b(python3?|py|node|ruby|perl|php|deno|bun)\b[^;&|]*(^|[\s/\"'=(])"
+     r"(\.env(?!\.(example|sample|template))\b(?![\w(])|id_rsa|id_ed25519|\.aws/credentials|\.ssh/|\.git-credentials)",
+     "reading a file with secrets through an interpreter"),
+    (r"\brm\s+(?:-{1,2}[a-zA-Z-]+\s+)+(\./)?\.git/?(\s|$|[;&|])", "deleting the repository's history (.git)"),
+    (r"\bgit\s+(commit|push|merge|rebase|am|cherry-pick)\b[^;&|]*\s--no-verify\b|\bgit\s+commit\b[^;&|]*\s-[a-zA-Z]*n\b",
+     "skipping the git hooks (--no-verify): a failed hook is a gate — fix the cause"),
+    (r"\bgit\s+config\s+(--global|--system)\b(?!\s+(--get|--list|-l)\b)",
+     "changing the user's global git configuration (identity, hooks, credentials)"),
     # git options that run an arbitrary program: git_exec_option() (by tokens, ignoring commit messages)
 ]
 
