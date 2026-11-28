@@ -6,7 +6,7 @@
 A model checked by a tool pays off where examples and random generation are not enough and a failure is expensive:
 - **concurrency and retries** — two reservations of the last seat, a double charge after a timeout, a race
   on an optimistic lock (integration tests only hit the interleavings that happened to occur);
-- **protocols and state machines** — synchronization, a charging session, the lifecycle of an invoice, a migration with two writes;
+- **protocols and state machines** — synchronization, a payment session, the lifecycle of an invoice, a migration with two writes;
 - **combinatorial rules with a limit** — discounts, credit limits, permissions combined from several sources.
 
 It does not pay off for data mapping, UI, integration with an external API, or rules that can be reviewed

@@ -44,7 +44,7 @@ REQUIRED = [
     "git branch --show-current",
     "git switch main",                         # back to the default branch after a slice
     "git switch -c story/tsk-1-fundament",     # story branch (cut)
-    "git switch -c story/import-cdr",          # story branch (ordinary)
+    "git switch -c story/import-invoices",          # story branch (ordinary)
     "git add -A",
     "git add src/payments/retry.ts",
     "git commit -m 'feat(x): y'",

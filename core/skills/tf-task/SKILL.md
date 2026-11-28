@@ -165,9 +165,9 @@ After a STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --re
 `environment`, `dependency`, `contract`, `permissions` (`references/modes-and-stops.md`).
 
 ## Example
-**Input:** `/tf-task "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`
+**Input:** `/tf-task "Jako księgowa chcę zaimportować plik faktur (CSV) i zobaczyć pozycje z błędem." --auto`
 
-**Result:** S1 a correct CSV · S2 sessions with an error · S3 a rejected file; `parked.md`: duplicates; one PR.
+**Result:** S1 a correct CSV · S2 rows with an error · S3 a rejected file; `parked.md`: duplicates; one PR.
 
 ## Sources
 - Anthropic, "Prompting Claude Opus 5.5" (platform.claude.com, read 2026-10-20).

@@ -457,11 +457,11 @@ def main() -> int:
 
         # --- F3: the intent phase from a pdi report ---
         (repo / ".claude" / "pdi-phases.json").write_text('{"intent": {"persona": "ewa"}}', encoding="utf-8")
-        problem = json.dumps({"title": "Brak operacji masowych", "who": "operator", "cannot": "zmienić wielu ładowarek",
+        problem = json.dumps({"title": "Brak operacji masowych", "who": "operator", "cannot": "zmienić wielu sklepów",
                               "impact": "dzień pracy", "proposed_solution": "przycisk bulk update"})
         r = run(["prompt", "--change", "CHG-12", "--phase", "intent"], repo, PDI_SOURCE="PRB-3", PDI_PROBLEM=problem)
         text = (jl(r) or {}).get("prompt", "")
-        check(r.returncode == 0 and "PRB-3" in text and "operator" in text and "zmienić wielu ładowarek" in text
+        check(r.returncode == 0 and "PRB-3" in text and "operator" in text and "zmienić wielu sklepów" in text
               and "dzień pracy" in text and "przycisk bulk update" in text and "not a requirement" in text,
               f"I-1: the intent phase prompt carries the report content, and the reporter's idea as a non-requirement: {text[:600]}")
         r = run(["prompt", "--change", "CHG-12", "--phase", "intent"], repo, PDI_PROBLEM="[1, 2]")

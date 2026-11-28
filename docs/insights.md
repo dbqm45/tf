@@ -208,7 +208,7 @@ State according to the Claude Code documentation (code.claude.com, the "Subagent
   another a question and gets an answer (exception: the experimental agent teams, `docs/todo.md`).
 - **A subagent does not see the conversation that called it.** It gets only a brief and returns one report.
 
-A "free conversation" of the IT persona with the EV persona is therefore not possible. Something narrower is possible:
+A "free conversation" of the IT persona with a persona of another domain overlay is therefore not possible. Something narrower is possible:
 **a persona or its executor calls a specialized subagent with knowledge of another domain and gets an answer from it.**
 
 ### The mechanism
@@ -241,7 +241,7 @@ A "free conversation" of the IT persona with the EV persona is therefore not pos
 | a persona's executor (`jan-backend`) | yes | has the `Agent` tool (the second nesting level); carries the answer into its report |
 | a consultant | no | `disallowedTools: Agent`; if the question goes beyond its domain, it says so in the answer |
 
-A typical flow: `jan-backend`, correcting a CDR, asks `ev-consult-business` how to compute kWh, gets an answer with a
+A typical flow: `jan-backend`, correcting an invoice, asks a domain overlay's `<domain>-consult-business` how to round VAT, gets an answer with a
 source and gives it in the report (the "Uncertain" or "To decide" section, if it needs a human decision).
 
 ### Costs and limits

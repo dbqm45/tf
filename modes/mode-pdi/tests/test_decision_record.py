@@ -660,12 +660,12 @@ def main() -> int:
         intent = d / "intent.md"
         intent.write_text(intent.read_text(encoding="utf-8")
                           .replace("<Whose problem, in what situation, how we know (a report, data, a conversation).>",
-                                   "Operator zmienia taryfę na 200 ładowarkach przez dzień.")
-                          .replace("- <A measurable outcome and a threshold.>", "- zmiana taryfy na 200 ładowarkach < 10 min"),
+                                   "Operator zmienia cennik w 200 sklepach przez dzień.")
+                          .replace("- <A measurable outcome and a threshold.>", "- zmiana cennika w 200 sklepach < 10 min"),
                           encoding="utf-8")
         plan = d / "plan.md"
         plan.write_text(plan.read_text(encoding="utf-8").rstrip("\n")
-                        + "\n\n## Gate questions\n- Czy limit to 1000 ładowarek? [local; default: 1000]\n- Czy migrujemy stare?\n",
+                        + "\n\n## Gate questions\n- Czy limit to 1000 sklepów? [local; default: 1000]\n- Czy migrujemy stare?\n",
                         encoding="utf-8")
         base = ["decision", "add", "CHG-12", "--why", "Skoki ruchu.", "--kind", "technical", "--by", "zespół"]
         run(base + ["--statement", "Zmiany idą przez kolejkę.", "--applies-to", "services/bulk/**"], repo)
@@ -674,14 +674,14 @@ def main() -> int:
         ctx = json.loads(r.stdout) if r.returncode == 0 else {}
         check(ctx.get("change") == "CHG-12" and ctx.get("source") == "PRB-34" and ctx.get("origin") == "local",
               f"CX-1: context names the change, its report and that it is local: {r.stdout[:300]}{r.stderr}")
-        check("Operator zmienia taryfę" in ctx.get("intent", {}).get("problem", "")
-              and ctx.get("intent", {}).get("success_metrics") == ["zmiana taryfy na 200 ładowarkach < 10 min"]
+        check("Operator zmienia cennik" in ctx.get("intent", {}).get("problem", "")
+              and ctx.get("intent", {}).get("success_metrics") == ["zmiana cennika w 200 sklepach < 10 min"]
               and "options" not in ctx.get("intent", {}),
               f"CX-2: intent sections without template placeholders: {ctx.get('intent')}")
         check([e.get("ref") for e in ctx.get("decisions", [])] == ["CHG-12/D1", "CHG-12/D2"]
               and ctx["decisions"][0].get("applies_to") == {"paths": ["services/bulk/**"]},
               f"CX-3: decisions of the change with applies_to: {ctx.get('decisions')}")
-        check([q.get("question") for q in ctx.get("open_questions", [])] == ["Czy limit to 1000 ładowarek?", "Czy migrujemy stare?"]
+        check([q.get("question") for q in ctx.get("open_questions", [])] == ["Czy limit to 1000 sklepów?", "Czy migrujemy stare?"]
               and ctx["open_questions"][0].get("default") == "1000",
               f"CX-4: unanswered gate questions with their markers: {ctx.get('open_questions')}")
         check([m.get("ref") for m in ctx.get("code_decisions", [])] == ["CHG-12/D1"]

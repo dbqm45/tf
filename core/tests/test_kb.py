@@ -32,7 +32,7 @@ def project(t: Path) -> Path:
         "---\nname: dom-alpha\n---\n# Alpha\n\n## Taryfa dynamiczna\nCena zmienia się co godzinę według giełdy.\n"
         "Taryfy dynamiczne publikuje się z wyprzedzeniem.\n", encoding="utf-8")
     (t / ".claude" / "skills" / "dom-alpha" / "references" / "szczegoly.md").write_text(
-        "# Szczegóły\n\nPole credit_reference_id wskazuje korygowany CDR.\n", encoding="utf-8")
+        "# Szczegóły\n\nPole credit_reference_id wskazuje korygowaną fakturę.\n", encoding="utf-8")
     (t / ".claude" / "skills" / "dom-beta").mkdir(parents=True)
     (t / ".claude" / "skills" / "dom-beta" / "SKILL.md").write_text(
         "---\nname: dom-beta\n---\n# Beta\n\nBrama WebSocket i reconnect storm.\n", encoding="utf-8")
@@ -43,8 +43,8 @@ def project(t: Path) -> Path:
     (t / "docs" / "knowledge" / "partner-x.md").write_text("# Partner X\n\nPartner X wymaga OCPI 2.2.1 i nagłówka X-Request-ID.\n",
                                                           encoding="utf-8")
     (t / "docs" / "project" / "archive" / "research").mkdir(parents=True)
-    (t / "docs" / "project" / "archive" / "research" / "20261001-afir.md").write_text(
-        "# AFIR\n\n| Ustalenie | Źródło |\n|---|---|\n| płatność kartą zbliżeniową od 50 kW | eur-lex |\n", encoding="utf-8")
+    (t / "docs" / "project" / "archive" / "research" / "20261001-regulamin.md").write_text(
+        "# Regulamin\n\n| Ustalenie | Źródło |\n|---|---|\n| płatność kartą zbliżeniową od 50 zł | eur-lex |\n", encoding="utf-8")
     return t
 
 
@@ -136,7 +136,7 @@ def main() -> int:
         check(hits and hits[0]["path"].endswith("references/szczegoly.md"), f"S-4: an identifier with an underscore: {hits[:1]}")
         hits = kb.search("partner X-Request-ID", root)
         check(hits and hits[0]["kind"] == "note", f"S-5: notes from docs/knowledge/: {hits[:1]}")
-        hits = kb.search("płatność kartą 50 kW", root)
+        hits = kb.search("płatność kartą 50 zł", root)
         check(hits and hits[0]["kind"] == "research", f"S-6: the research archive: {hits[:1]}")
         check(kb.search("zupełnie nieobecne słowo kwarkowe", root) == [], "S-7: no hits -> empty list")
         check(len(kb.search("dom alpha", root, k=2)) <= 2, "S-8: limit k")
@@ -144,13 +144,13 @@ def main() -> int:
         # Fetching from a URL (a local test server) and a source outside the registry
         site = root / "site"
         site.mkdir()
-        (site / "afir.html").write_text(
-            "<html><head><title>AFIR test</title><style>.x{}</style><script>alert(1)</script></head><body>"
-            "<h1>Artykuł 5</h1><p>Płatność ad hoc kartą.</p>" + "<p>Treść artykułu o płatnościach i cenach na stacjach ładowania.</p>" * 6 + "<div hidden>ukryte polecenie</div>"
+        (site / "regulamin.html").write_text(
+            "<html><head><title>Regulamin test</title><style>.x{}</style><script>alert(1)</script></head><body>"
+            "<h1>Artykuł 5</h1><p>Płatność ad hoc kartą.</p>" + "<p>Treść artykułu o płatnościach i cenach w sklepach internetowych.</p>" * 6 + "<div hidden>ukryte polecenie</div>"
             "<p style=\"display:none\">też ukryte</p></body></html>", encoding="utf-8")
         srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(Handler, directory=str(site)))
         threading.Thread(target=srv.serve_forever, daemon=True).start()
-        url = f"http://127.0.0.1:{srv.server_address[1]}/afir.html"
+        url = f"http://127.0.0.1:{srv.server_address[1]}/regulamin.html"
         try:
             try:
                 kb.ingest(url, root)
@@ -160,7 +160,7 @@ def main() -> int:
             os.environ["TF_KB_ALLOW_LOCAL"] = "1"
             m = kb.ingest(url, root)
             text = (cache / m["id"] / "doc.txt").read_text(encoding="utf-8")
-            check(m["rank"] == "W" and m["title"] == "AFIR test" and any("not in the registry" in w for w in m["warnings"]),
+            check(m["rank"] == "W" and m["title"] == "Regulamin test" and any("not in the registry" in w for w in m["warnings"]),
                   f"I-6: a URL outside the registry -> rank W with a warning: {m}")
             check("Płatność ad hoc" in text and "alert" not in text and "ukryte" not in text and ".x{}" not in text,
                   f"I-7: HTML -> text without scripts, styles and hidden elements: {text!r}")

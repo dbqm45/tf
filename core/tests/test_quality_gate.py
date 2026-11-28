@@ -373,9 +373,9 @@ def main() -> int:
         r = status(repo)
         check("disabled" in r.stdout and "settings.local.json" in r.stdout, f"S-5: a switch in the settings -> the file is named: {r.stdout}")
         (repo / ".claude" / "settings.local.json").unlink()
-        (repo / ".claude" / "quality-gate.expected-red").write_text("TDD batch: CDR import")
+        (repo / ".claude" / "quality-gate.expected-red").write_text("TDD batch: invoice import")
         r = status(repo, "--quiet-ok")
-        check("lets red tests through" in r.stdout and "CDR import" in r.stdout, f"S-6: a red-batch marker -> a warning with the reason: {r.stdout}")
+        check("lets red tests through" in r.stdout and "invoice import" in r.stdout, f"S-6: a red-batch marker -> a warning with the reason: {r.stdout}")
         repo = setup(Path(t) / "s6b", {"command": "npm test", "related_decision": {"state": "not-found",
                                                                                   "reason": "no per-file runner"}})
         r = status(repo)

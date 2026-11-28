@@ -20,7 +20,7 @@
 | key–value (Redis, DynamoDB) | key → value | cache, sessions, counters, a very large scale of simple reads | queries only by key (or designed indexes) |
 | wide-column (Cassandra, ScyllaDB) | rows with many columns, partitions | huge write volumes, time series | the data model designed up front for the queries |
 | graph (Neo4j, Neptune) | nodes and edges | multi-level relations (recommendations, networks, ReBAC permissions) | |
-| time series (TimescaleDB, InfluxDB, Prometheus) | a measurement over time | metrics, IoT, telemetry (e.g. EV chargers) | retention and aggregation over time |
+| time series (TimescaleDB, InfluxDB, Prometheus) | a measurement over time | metrics, IoT, telemetry (e.g. sensors) | retention and aggregation over time |
 | search (Elasticsearch, OpenSearch) | an inverted index | full-text search, faceted filters | not as the source of truth |
 **Several databases in one system** (polyglot persistence) only for a reason — each one is an operating cost, backups, monitoring
 and skills. By default one relational database plus a cache.

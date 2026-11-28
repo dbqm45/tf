@@ -96,9 +96,9 @@ def main() -> int:
                 return r, {}
 
         r, out = rec("--status", "accepted", "--category", "enhancement", "--executor", "agent",
-                     "--rationale", "5 zgłoszeń w 3 miesiące, dzień pracy przy każdej zmianie taryfy",
-                     "--brief", "## Brief dla wykonawcy\n**W skrócie:** zmiana konfiguracji wielu ładowarek naraz",
-                     "--observation", "5 zgłoszeń o tym samym w 3 miesiące", "--evidence", "taryfa to częsty przypadek")
+                     "--rationale", "5 zgłoszeń w 3 miesiące, dzień pracy przy każdej zmianie cennika",
+                     "--brief", "## Brief dla wykonawcy\n**W skrócie:** zmiana konfiguracji wielu sklepów naraz",
+                     "--observation", "5 zgłoszeń o tym samym w 3 miesiące", "--evidence", "cennik to częsty przypadek")
         check(r.returncode == 0 and out.get("problem") == "PRB-34" and out.get("recommended_status") == "accepted"
               and out.get("tf_state") == "ready-for-agent" and "change" not in out and out.get("drafted_by") == "ai"
               and out.get("contract_version") == contract,
@@ -108,8 +108,8 @@ def main() -> int:
         r, out = rec("--status", "accepted", "--executor", "human", "--rationale", "wymaga decyzji o cenniku",
                      "--brief", "brief")
         check(out.get("tf_state") == "ready-for-human", f"R-3: accepted with a human → ready-for-human: {out}")
-        r, out = rec("--status", "clarifying", "--rationale", "nie wiadomo, które ładowarki",
-                     "--question", "Ile ładowarek zmieniasz naraz?", "--question", "Jakie parametry?")
+        r, out = rec("--status", "clarifying", "--rationale", "nie wiadomo, które sklepy",
+                     "--question", "Ile sklepów zmieniasz naraz?", "--question", "Jakie parametry?")
         check(out.get("tf_state") == "needs-info" and len(out.get("questions", [])) == 2,
               f"R-4: clarifying → needs-info z pytaniami: {r.stdout}{r.stderr}")
         r, out = rec("--status", "rejected", "--reason", "works_as_designed", "--rationale", "import CSV już to robi",

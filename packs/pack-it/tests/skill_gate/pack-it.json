@@ -72,8 +72,8 @@
   "offline": "2026-11-20"
  },
  "arch-quality-attributes": {
-  "fingerprint": "95c7fcad139fe5e0",
-  "offline": "2026-11-20"
+  "fingerprint": "e5172e46c13696c4",
+  "offline": "2026-11-28"
  },
  "arch-system-design": {
   "fingerprint": "fda18aaf7f43cf1c",
@@ -100,8 +100,8 @@
   "offline": "2026-11-20"
  },
  "be-business-app-patterns": {
-  "fingerprint": "ce3555975fdb5ef0",
-  "offline": "2026-11-23"
+  "fingerprint": "bdebeb5cdd2ce2e2",
+  "offline": "2026-11-28"
  },
  "be-database": {
   "fingerprint": "4fc2246a22e3d53c",
@@ -204,8 +204,8 @@
   "offline": "2026-11-20"
  },
  "eng-design-patterns": {
-  "fingerprint": "80094061ca1725f4",
-  "offline": "2026-11-20"
+  "fingerprint": "0b3b70f0b4284827",
+  "offline": "2026-11-28"
  },
  "eng-design-principles": {
   "fingerprint": "ec185107ffdceb91",
@@ -436,8 +436,8 @@
   "offline": "2026-11-18"
  },
  "proc-issue-triage": {
-  "fingerprint": "38e7d294a227a8ca",
-  "offline": "2026-11-18"
+  "fingerprint": "7b8bae210e66b473",
+  "offline": "2026-11-28"
  },
  "proc-lean": {
   "fingerprint": "8fbacefc38de714d",
@@ -472,8 +472,8 @@
   "offline": "2026-11-20"
  },
  "qa-formal-methods": {
-  "fingerprint": "80b41a9bceaa049b",
-  "offline": "2026-11-18"
+  "fingerprint": "1b2849a19ac2c48f",
+  "offline": "2026-11-28"
  },
  "qa-fuzzing": {
   "fingerprint": "81428ccbc1ab4ecd",

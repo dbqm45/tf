@@ -6,7 +6,7 @@ Category: behavioral. The essence: new **operations** on a stable type hierarchy
 objects; the elements only "receive the guest" (`accept`) and direct it to the right method (double dispatch).
 
 ## Problem
-A charging tariff or a price list is an expression: a constant, a price per kWh × energy, a sum, a product, a minimum. On the same tree
+An energy tariff or a price list is an expression: a constant, a price per kWh × energy, a sum, a product, a minimum. On the same tree
 many operations are needed: computing the amount, a readable description for the customer, validation, export to a partner's format. Adding
 every operation to every node class bloats the model and mixes responsibilities.
 

@@ -87,9 +87,9 @@ def main() -> int:
         # start (step C4): the task has a durable directory docs/project/changes/<KEY>/ (ticket.md, plan.md, task.json — committed to git)
         # and a working directory .tf/runs/<KEY>/ (run.json, parked.md — outside git; not `.claude/runs/`, which Claude Code protects);
         # key T-<YYYYMMDD>-<slug>, slug without Polish characters; a new run no longer appears in .tf/runs/cuts/
-        r = run(["start", "Import rozliczeń CDR", "--story", "Jako operator chcę importować CDR."], proj, cfg)
-        runs = sorted((proj / ".tf" / "runs").glob("T-*-import-rozliczen-cdr"))
-        old = sorted((proj / ".tf" / "runs" / "cuts").glob("*-import-rozliczen-cdr"))
+        r = run(["start", "Import faktur kosztowych", "--story", "Jako księgowa chcę importować faktury."], proj, cfg)
+        runs = sorted((proj / ".tf" / "runs").glob("T-*-import-faktur-kosztowych"))
+        old = sorted((proj / ".tf" / "runs" / "cuts").glob("*-import-faktur-kosztowych"))
         check(r.returncode == 0 and len(runs) == 1 and not old and not (proj / ".claude" / "runs").exists()
               and r.stdout.strip() == f".tf/runs/{runs[0].name if runs else '?'}",
               f"R-1: start creates .tf/runs/<KEY>/ and prints its path, no .tf/runs/cuts/<slug>: {r.stdout} {r.stderr}")
@@ -102,9 +102,9 @@ def main() -> int:
                   and not (d / "plan.md").exists() and not (d / "story.md").exists(),
                   f"R-2: working and durable files: {sorted(x.name for x in d.iterdir())} "
                   f"{sorted(x.name for x in doc.iterdir()) if doc.is_dir() else '—'}")
-            check(doc.is_dir() and "importować CDR" in (doc / "ticket.md").read_text(encoding="utf-8"),
+            check(doc.is_dir() and "importować faktury" in (doc / "ticket.md").read_text(encoding="utf-8"),
                   "R-3: story text saved in ticket.md")
-            check(re.fullmatch(r"T-\d{8}-import-rozliczen-cdr", d.name) is not None, f"R-4: key with date and slug: {d.name}")
+            check(re.fullmatch(r"T-\d{8}-import-faktur-kosztowych", d.name) is not None, f"R-4: key with date and slug: {d.name}")
             meta = json.loads((d / "run.json").read_text(encoding="utf-8"))
             index = proj / "docs" / "project" / "changes" / "INDEX.md"
             check(meta.get("key") == d.name and meta.get("task_dir") == f"docs/project/changes/{d.name}"
@@ -149,7 +149,7 @@ def main() -> int:
         run_dir.mkdir(parents=True)
         (run_dir / "run.json").write_text(json.dumps({"slug": "test", "started_at": "2026-10-21T10:00:00+00:00"}))
         (run_dir / "plan.md").write_text("# Plan\n- [x] S1 import\n- [x] S2 walidacja\n- [ ] S3 raport\n")
-        (run_dir / "parked.md").write_text("# Odłożone\n- duplikaty CDR — do decyzji\n- strefy czasowe — do decyzji\n")
+        (run_dir / "parked.md").write_text("# Odłożone\n- duplikaty faktur — do decyzji\n- strefy czasowe — do decyzji\n")
         slug = re.sub(r"[^A-Za-z0-9]", "-", str(proj.resolve()))
         sess = cfg / "projects" / slug / "S1.jsonl"
         write_jsonl(sess, [

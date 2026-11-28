@@ -102,7 +102,7 @@
     {
       "id": "triaz-prb-z-pdi",
       "expect": "trigger",
-      "prompt": "Dostałem z pdi zgłoszenie PRB-34 w JSON (status new): operator nie może zmienić konfiguracji wielu ładowarek naraz, 5 zgłoszeń w 3 miesiące, proponuje przycisk bulk update. Zrób triaż i powiedz, w jakiej postaci oddać wynik do pdi. Odpowiedz zwięźle.",
+      "prompt": "Dostałem z pdi zgłoszenie PRB-34 w JSON (status new): operator nie może zmienić konfiguracji wielu sklepów naraz, 5 zgłoszeń w 3 miesiące, proponuje przycisk bulk update. Zrób triaż i powiedz, w jakiej postaci oddać wynik do pdi. Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [

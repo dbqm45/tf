@@ -91,7 +91,7 @@
     {
       "id": "problem-miedzy-nakladkami",
       "expect": "trigger",
-      "prompt": "Zespół backendu ma dodać do naszej aplikacji import rozliczeń sesji ładowania od partnera roamingowego, ale nikt u nas nie zna protokołów EV. Kogo zaangażować i jak to rozpisać? Odpowiedz zwięźle.",
+      "prompt": "Zespół backendu ma dodać do naszej aplikacji import rozliczeń od partnera płatniczego w formacie ISO 20022, ale nikt u nas nie zna tego standardu. Kogo zaangażować i jak to rozpisać? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [

@@ -71,7 +71,7 @@
     {
       "id": "ramki-figma-do-wymagan",
       "expect": "trigger",
-      "prompt": "Projektantka zrobiła w Figmie ekrany do zmiany taryfy na wielu ładowarkach. Mam plik Figmy i wymagania US-3 z kryteriami AC-1…AC-3. Jak przez Figma MCP powiązać ekrany z wymaganiami i stanami w design.md, zanim pójdzie do przeglądu? Odpowiedz zwięźle.",
+      "prompt": "Projektantka zrobiła w Figmie ekrany do zmiany cennika w wielu sklepach. Mam plik Figmy i wymagania US-3 z kryteriami AC-1…AC-3. Jak przez Figma MCP powiązać ekrany z wymaganiami i stanami w design.md, zanim pójdzie do przeglądu? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [

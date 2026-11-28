@@ -271,7 +271,7 @@
     {
       "id": "faza-intent-ze-zgloszenia",
       "expect": "trigger",
-      "prompt": "Workflow sdlc-phase uruchomiony przez pdi bez interakcji: zmiana CHG-31, faza intent, zgłoszenie PRB-3 (operator nie może zmienić konfiguracji wielu ładowarek naraz; zgłaszający proponuje przycisk bulk update). Co piszesz i jak traktujesz ten przycisk? Odpowiedz zwięźle.",
+      "prompt": "Workflow sdlc-phase uruchomiony przez pdi bez interakcji: zmiana CHG-31, faza intent, zgłoszenie PRB-3 (operator nie może zmienić konfiguracji wielu sklepów naraz; zgłaszający proponuje przycisk bulk update). Co piszesz i jak traktujesz ten przycisk? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [
@@ -498,7 +498,7 @@
     {
       "id": "triaz-bez-kodu",
       "expect": "trigger",
-      "prompt": "Tryb mode-pdi, triaż PRB-40 z pdi: operator pisze, że musi zmieniać taryfę na 200 ładowarkach po kolei i prosi o nowy przycisk „zmień wszystkie”. W aplikacji od dawna są grupy ładowarek, a taryfę ustawia się dla grupy. Jaką rekomendację złożyć? Odpowiedz zwięźle.",
+      "prompt": "Tryb mode-pdi, triaż PRB-40 z pdi: operator pisze, że musi zmieniać cennik w 200 sklepach po kolei i prosi o nowy przycisk „zmień wszystkie”. W aplikacji od dawna są grupy sklepów, a cennik ustawia się dla grupy. Jaką rekomendację złożyć? Odpowiedz zwięźle.",
       "checks": {
         "all": [
           [

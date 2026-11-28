@@ -48,8 +48,8 @@
   "offline": "2026-11-20"
  },
  "core-problem-routing": {
-  "fingerprint": "e48559a9071034dd",
-  "offline": "2026-11-20"
+  "fingerprint": "580275f15b055e25",
+  "offline": "2026-11-28"
  },
  "core-project-record": {
   "fingerprint": "9b0f034733d5b9b3",
@@ -84,7 +84,7 @@
   "offline": "2026-11-20"
  },
  "tf": {
-  "fingerprint": "3cc5020c5af63ba2",
+  "fingerprint": "7e62be6296178adb",
   "offline": "2026-11-28"
  },
  "tf-design": {
@@ -92,7 +92,7 @@
   "offline": "2026-11-21"
  },
  "tf-task": {
-  "fingerprint": "d4be82bb1c90e4cc",
+  "fingerprint": "dfcb9edf204a4d3d",
   "offline": "2026-11-28"
  }
 }

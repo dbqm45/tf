@@ -59,7 +59,7 @@ Options (in the message to the agent or with the command):
 Example:
 ```
 claude --agent tf-task
-> As an operator I want to import a CDR file (CSV) and see the sessions with an error. --auto
+> As an accountant I want to import an invoice file (CSV) and see the rows with an error. --auto
 ```
 
 ## The task's weight

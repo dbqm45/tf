@@ -162,13 +162,13 @@ Po STOP: `run_state.py stage <katalog> needs --needs stop --code <kod> --reason 
 `environment`, `dependency`, `contract`, `permissions` (`references/modes-and-stops.md`).
 
 ## Przykład
-**Wejście:** `/tf-task "Jako operator chcę zaimportować plik CDR (CSV) i zobaczyć sesje z błędem." --auto`
+**Wejście:** `/tf-task "Jako księgowa chcę zaimportować plik faktur (CSV) i zobaczyć pozycje z błędem." --auto`
 
 **Wynik:**
-- plan: S1 import poprawnego CSV (test: plik z 3 wierszami) · S2 lista sesji z błędem (test: wiersz bez EVSE ID)
+- plan: S1 import poprawnego CSV (test: plik z 3 wierszami) · S2 lista pozycji z błędem (test: wiersz bez NIP)
   · S3 komunikat o odrzuconym pliku (test: zły nagłówek → 422);
-- `parked.md`: duplikaty CDR, strefy czasowe, pliki > 50 MB — do decyzji;
-- 3 commity `feat(cdr): …`, jeden PR; raport: 14 min, 0,41 USD [przykład].
+- `parked.md`: duplikaty faktur, strefy czasowe, pliki > 50 MB — do decyzji;
+- 3 commity `feat(invoices): …`, jeden PR; raport: 14 min, 0,41 USD [przykład].
 
 ## Źródła
 - Anthropic, „Prompting Claude Opus 5.5” i „Prompting Claude Sonnet 5.5” (platform.claude.com, odczyt 2026-10-20).

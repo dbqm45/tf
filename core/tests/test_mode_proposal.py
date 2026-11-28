@@ -17,7 +17,7 @@ CHANGES = Path("docs") / "project" / "changes"
 TICKETS = {
     "TYP-1": "# Literówka w README\n\nPopraw literówkę w README: „instlacja” na „instalacja”.\n",
     "REN-1": "# Zmiana nazwy\n\nZmień nazwę funkcji calcFee na calculateFee we wszystkich miejscach.\n",
-    "CSV-1": ("# Eksport sesji\n\nJako operator chcę wyeksportować sesje ładowania z wybranego dnia do CSV. "
+    "CSV-1": ("# Eksport sesji\n\nJako trener chcę wyeksportować sesje treningowe z wybranego dnia do CSV. "
               "Kryteria akceptacji: plik ma nagłówek i jeden wiersz na sesję.\n"),
     "VAG-1": "# Raporty\n\nRaporty.\n",
     "NOC-1": ("# Filtr regionu\n\nJako operator chcę filtrować listę stacji po regionie, żeby szybciej znaleźć swoje stacje "

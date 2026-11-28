@@ -112,7 +112,7 @@ def main() -> int:
         pdi.mkdir(parents=True)
         plan = "---\nartifact: plan\nchange: CHG-12\nstatus: draft\ntasks: [TSK-57]\n---\n# Plan\n"
         (pdi / "plan.md").write_text(plan, encoding="utf-8")
-        r = run(p, "start", "CHG-12", "--title", "Import CDR")
+        r = run(p, "start", "CHG-12", "--title", "Import faktur")
         check(r.returncode == 0 and task(p, "CHG-12").get("key") == "CHG-12"
               and (pdi / "plan.md").read_text(encoding="utf-8") == plan,
               f"TS-15: an existing pdi directory gets task.json, plan.md unchanged: {r.stdout}{r.stderr}")
