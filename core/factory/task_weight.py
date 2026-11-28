@@ -46,14 +46,30 @@ SENSITIVE = (
     ("login, passwords or permissions",
      r"logowan\w*|zalogow\w*|wylogow\w*|uwierzytelni\w*|autoryzac\w*|uprawnie\w*|hasł\w*|haseł|\blogin\w*|"
      r"password\w*|sign[- ]?in|authenticat\w*|authoriz\w*|permission\w*|oauth\w*|\bjwt\b|\b2fa\b|\bmfa\b|\bsso\b"),
+    # tf stress (tools/stress/corpus/weight.yaml): these were judged normal and ran in --auto without the human's plan
+    # approval. A negation in the text ("no change to login") does not lower the weight: the text is not trusted for that.
+    ("sessions, cookies, tokens or roles",
+     r"ciasteczk\w*|\bcookies?\b|sesj\w* (użytkownik\w*|logowani\w*|przeglądark\w*)|"
+     r"(user|login|browser|auth\w*) sessions?|sessions? (cookie|token|id|fixation|hijack\w*|timeout|expir\w*)|"
+     r"\b(access|refresh|auth|api|bearer|csrf) tokens?\b|token\w* (odświeżania|dostępu|api)|"
+     r"\bcsrf\b|\bxsrf\b|\bcors\b|\brol[aięe]\b|\broles?\b|\badmin\w*|is_?admin|\brbac\b"),
+    ("a security vulnerability",
+     r"\bxss\b|sql[- ]injection|wstrzykiwan\w* sql|\binjection\b|podatnoś\w*|vulnerab\w*|\bcve-\d|\bssrf\b|"
+     r"path traversal"),
     ("payments or billing",
-     r"płatnoś\w*|płatnos\w*|faktur\w*|rozlicze\w*|zwrot\w* środków|payment\w*|\bbilling\b|invoice\w*|refund\w*|"
-     r"\bcheckout\b"),
-    ("the database schema or a migration", r"migracj\w*|schemat\w* bazy|tabel\w* w bazie|migration\w*|database schema|db schema"),
-    ("personal data", r"dan\w+ osobow\w+|\brodo\b|\bgdpr\b|\bpesel\w*|personal data"),
+     r"płatnoś\w*|płatnos\w*|płatnicz\w*|faktur\w*|rozlicze\w*|zwrot\w* środków|payment\w*|\bbilling\b|invoice\w*|"
+     r"refund\w*|\bcheckout\b|\bpayu\b|przelewy24|\bstripe\b|\bpaypal\b|\bblik\b"),
+    ("the database schema or a migration",
+     r"migracj\w*|schemat\w* bazy|tabel\w* w bazie|migration\w*|database schema|db schema|"
+     r"\b(alter|create|drop) table\b|kolumn\w* (w|do) tabel\w*|\bnot null\b"),
+    ("personal data",
+     r"dan\w+ osobow\w+|\brodo\b|\bgdpr\b|\bpesel\w*|personal data|\biban\b|numer\w* (konta|telefonu|dowodu)|"
+     r"dat\w* urodzenia|date of birth|birth_?date|e-?mail\w*|telefon\w*|phone\w*|"   # also customerEmail, phone_no
+     r"usu\w* kont\w*|delete (the |a |user |their )?accounts?|prawo do bycia zapomnian\w*|right to be forgotten"),
     ("deployment, infrastructure or secrets",
      r"wdroże\w* (na|do) produkcj\w*|produkcyjn\w*|sekret\w*|klucz\w* api|api key\w*|\bsecrets?\b|\bci/cd\b|terraform|"
-     r"kubernetes|\bhelm\b|dockerfile|deployment\w*"),
+     r"kubernetes|\bhelm\b|dockerfile|deployment\w*|\bkms\b|encrypt\w*|decrypt\w*|szyfrow\w*|zaszyfr\w*|"
+     r"certyfikat\w*|certificates?\b|\btls\b|\bssl\b"),
 )
 SMALL = (r"literówk\w*|\btypo\w*|pisowni\w*|interpunkcj\w*|przecin\w*|komentarz\w*|\breadme\b|dokumentacj\w*|"
          r"etykiet\w*|tekst\w* (przycisku|komunikatu|etykiety|linku)|zmie[nń]\w* nazw\w*|\brename\b|formatowani\w*|"
