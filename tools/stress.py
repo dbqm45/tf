@@ -2,9 +2,9 @@
 """
 tf stress: a load and edge-case test of the factory — where it is slow, where it is wrong, where it breaks.
 
-The idea follows evtest (dbqm45/ev-testing): a library of declarative scenarios (tools/stress/library/*.yaml) with
-categories, tags (suites), injected faults and thresholds; every scenario ends PASS / FAIL with the exact reason; the
-report ranks the hotspots — where the time goes and what to improve.
+A library of declarative scenarios (tools/stress/library/*.yaml) with categories, tags (suites), injected faults and
+thresholds; every scenario ends PASS / FAIL with the exact reason; the report ranks the hotspots — where the time goes
+and what to improve.
 
 Two engines:
   mech   no model, no cost, seconds: the factory's scripts and hooks driven with corpora of edge-case inputs

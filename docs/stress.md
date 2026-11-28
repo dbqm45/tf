@@ -2,9 +2,8 @@
 
 `tools/bench.py` answers "is the candidate worse than the last release on three reference tasks". `tools/stress.py`
 answers a different question: **where is the factory slow, where is it wrong, and where does it break** — across
-many inputs, task sizes, ways of working and broken environments. The idea follows evtest (`dbqm45/ev-testing`):
-a library of declarative scenarios, injected faults, thresholds, PASS / FAIL with the exact reason, and a report
-that ranks the hotspots.
+many inputs, task sizes, ways of working and broken environments: a library of declarative scenarios, injected faults,
+thresholds, PASS / FAIL with the exact reason, and a report that ranks the hotspots.
 
 ```sh
 python3 tools/stress.py list                          # the library (53 scenarios), with categories and tags

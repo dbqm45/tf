@@ -18,7 +18,7 @@ TICKETS = {
     "TYP-1": "# Literówka w README\n\nPopraw literówkę w README: „instlacja” na „instalacja”.\n",
     "REG-1": ("# Limit dobowy 45 zł\n\nJako operator parkingu chcę podnieść limit dobowy opłaty z 40 zł do 45 zł. "
               "AC1: 12 h = 45 zł. AC2: 11 h = 44 zł.\n"),
-    "CSV-1": ("# Eksport sesji\n\nJako operator chcę wyeksportować sesje ładowania z wybranego dnia do CSV. "
+    "CSV-1": ("# Eksport sesji\n\nJako trener chcę wyeksportować sesje treningowe z wybranego dnia do CSV. "
               "Kryteria akceptacji: plik ma nagłówek i jeden wiersz na sesję.\n"),
     "ENG-1": "# Fix typo in README\n\nFix a typo in the README heading.\n",
     "ENG-2": "# Password reset\n\nAs a user I want to reset my password by email. AC: the link expires after 30 minutes.\n",
@@ -81,7 +81,7 @@ def main() -> int:
         code, out, raw = weight(p, "REG-1")
         check(out.get("proposal") == "normal", f"W-4: a new rule with criteria → normal: {raw}")
         code, out, raw = weight(p, "CSV-1")
-        check(out.get("proposal") == "normal", f"W-5: “sesje ładowania” (charging sessions) is not a login — normal: {raw}")
+        check(out.get("proposal") == "normal", f"W-5: “sesje treningowe” (an ambiguous word: training sessions) is not a login — normal: {raw}")
         for key in ("SEN-1", "SEN-2", "SEN-3", "SEN-4", "SEN-5", "SEN-6", "SEN-7", "SEN-8", "SEN-9"):
             code, out, raw = weight(p, key)
             check(out.get("proposal") == "full" and out.get("reasons"), f"W-5b: {key} is a sensitive change → full: {raw}")

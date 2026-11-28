@@ -48,6 +48,8 @@ SENSITIVE = (
      r"password\w*|sign[- ]?in|authenticat\w*|authoriz\w*|permission\w*|oauth\w*|\bjwt\b|\b2fa\b|\bmfa\b|\bsso\b"),
     # tf stress (tools/stress/corpus/weight.yaml): these were judged normal and ran in --auto without the human's plan
     # approval. A negation in the text ("no change to login") does not lower the weight: the text is not trusted for that.
+    # "session", "token" and "admin" alone are ambiguous (a training session, a token counter, "as an admin I want"):
+    # only their authentication contexts count.
     ("sessions, cookies, tokens or roles",
      r"ciasteczk\w*|\bcookies?\b|sesj\w* (użytkownik\w*|logowani\w*|przeglądark\w*)|"
      r"(user|login|browser|auth\w*) sessions?|sessions? (cookie|token|id|fixation|hijack\w*|timeout|expir\w*)|"
