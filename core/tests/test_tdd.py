@@ -84,6 +84,21 @@ def main() -> int:
         for out in ("Error: Cannot find module '../src/price' imported from src/price.test.ts", "Tests  1 failed"):
             r = call("PostToolUseFailure", "Bash", {"command": "npx vitest run"}, {"stdout": out})
             check(r is None, f"real red without a warning: {out!r}: {r}")
+        # 2b. runner spellings (tf stress T004-T018): node's own runner, the verify.sh tf onboard writes, make, run_tests.py
+        for i, cmd in enumerate(("node --test src/price.test.ts", "./verify.sh", "make test", "python3 run_tests.py tests/x.py")):
+            post_edit("src/price.test.ts", session=f"rn{i}")
+            run_tests(failed=True, cmd=cmd, session=f"rn{i}")
+            check(pre("src/price.ts", session=f"rn{i}") is None, f"a red run of `{cmd}` unlocks the code")
+        # ... and whatever the project's quality-gate command is
+        (proj / ".claude").mkdir(exist_ok=True)
+        (proj / ".claude" / "quality-gate.json").write_text(json.dumps({"command": "bin/ci-tests --fast"}))
+        post_edit("src/price.test.ts", session="rn9")
+        run_tests(failed=True, cmd="bin/ci-tests --fast src/price.test.ts", session="rn9")
+        check(pre("src/price.ts", session="rn9") is None, "a red run of the project's quality-gate command unlocks the code")
+        post_edit("src/price.test.ts", session="rn10")
+        run_tests(failed=True, cmd="bin/other-script", session="rn10")
+        check(pre("src/price.ts", session="rn10") is not None, "an unknown command is still not a test run")
+        (proj / ".claude" / "quality-gate.json").unlink()
         # 3. files outside the gate
         ok = all(pre(p, session="s2") is None for p in ("src/price.test.ts", "vite.config.ts", "src/types.d.ts",
                                                           "src/app.css", "docs/a.md", "src/app.component.html",

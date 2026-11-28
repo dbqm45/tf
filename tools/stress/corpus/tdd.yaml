@@ -45,11 +45,11 @@ cases:
       - {event: PostToolUse, tool: Bash, input: {command: "python3 -m pytest tests/test_a.py"}, exit: 1, out: "FAILED tests/test_a.py::test_a - AssertionError"}
       - {event: PreToolUse, tool: Write, input: {file_path: "{proj}/app/a.py", content: "x"}, expect: allow}
   - id: T008
-    name: red with a syntax error only (no assertion ran)
+    name: red with a syntax error only (no assertion ran) — a warning, by design no block
     steps:
       - {event: PostToolUse, tool: Write, input: {file_path: "{proj}/tests/test_a.py"}}
-      - {event: PostToolUse, tool: Bash, input: {command: "python3 -m pytest tests/test_a.py"}, exit: 2, out: "E   SyntaxError: invalid syntax\nERROR collecting tests/test_a.py"}
-      - {event: PreToolUse, tool: Write, input: {file_path: "{proj}/app/a.py", content: "x"}, expect: deny}
+      - {event: PostToolUse, tool: Bash, input: {command: "python3 -m pytest tests/test_a.py"}, exit: 2, out: "E   SyntaxError: invalid syntax\nERROR collecting tests/test_a.py", note: "no assertions"}
+      - {event: PreToolUse, tool: Write, input: {file_path: "{proj}/app/a.py", content: "x"}, expect: allow}
   - id: T009
     name: command not found is not red
     steps:

@@ -77,7 +77,10 @@ EXEMPT_RE = re.compile(
 TEST_CMD_RE = re.compile(
     r"\b((npm|pnpm|yarn|bun)( run)? (test|test:\S+)|npx (vitest|jest|playwright test|mocha)|vitest|jest|mocha"
     r"|pytest|python3? -m (pytest|unittest)|mvnw? (\S+ )*(test|verify)|gradlew? (\S+ )*test|go test|cargo test"
-    r"|dotnet test|nx (test|run-many|affected)\b[^\n]*test|ng test|deno test|rspec|phpunit|tox)\b"
+    r"|dotnet test|nx (test|run-many|affected)\b[^\n]*test|ng test|deno test|rspec|phpunit|tox"
+    # node's own runner, the verify.sh `tf onboard` writes, make/just wrappers, run_tests.py scripts (tf stress, T004-T018)
+    r"|node (?:--\S+ )*--test|verify\.sh|make (?:-\S+ )*(?:test|check)\w*|just (?:test|check)\w*"
+    r"|run_tests\.py)\b"
     # Tests as standalone scripts: python3 tests/test_x.py, py -3 .claude\tests\test_x.py, a loop over tests/test_*.py.
     r"|\b(python3?|py)(\s+-\S+)*\s+[\"']?([^\s\"';|&]*[/\\])?(test_[^\s/\\\"';|&]*|[^\s/\\\"';|&]+_test)\.py\b"
     r"|\bfor\s+\w+\s+in\s+[^;\n]*\btest_\*[^;\n]*\.py\b")
@@ -153,6 +156,27 @@ SHELL_NOT_FOUND_RE = re.compile(r"^(?:\S[^\n]*: )?[^\s:]+: command not found\s*$
                                 r"|^(?:\S*/)?(?:ba|da|z)?sh: (?:\d+: |line \d+: )?[^\s:]+: not found\s*$"
                                 r"|is not recognized as an internal or external command"
                                 r"|is not recognized as the name of a cmdlet", re.M | re.I)
+
+
+def gate_commands(root: Path) -> list[str]:
+    """The project's own test commands from .claude/quality-gate.json (`command`, `related` without placeholders):
+    a run of one of them is a test run whatever the runner's name."""
+    try:
+        cfg = json.loads((root / ".claude" / "quality-gate.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    out = []
+    for key in ("command", "related"):
+        v = cfg.get(key) if isinstance(cfg, dict) else None
+        v = " ".join(v) if isinstance(v, list) else str(v or "")
+        v = re.split(r"\{files,?\}|\{dirs,?\}", v)[0].strip()   # the stable head of a `related` command
+        if len(v) >= 4:
+            out.append(v)
+    return out
+
+
+def is_test_run(root: Path, command: str) -> bool:
+    return bool(TEST_CMD_RE.search(command)) or any(g in command for g in gate_commands(root))
 
 
 def response_text(data: dict) -> str:
@@ -508,14 +532,15 @@ def main() -> int:
 
         if event in ("PostToolUse", "PostToolUseFailure") and tool == "Bash":
             notes = []
-            if TEST_CMD_RE.search(str(inp.get("command") or "")) and interrupted(data):
+            test_run = is_test_run(root, str(inp.get("command") or ""))
+            if test_run and interrupted(data):
                 notes.append("[tdd_guard] The test run was interrupted — that is neither a red nor a green test. "
                              "Run the tests to the end before you write production code.")
-            elif TEST_CMD_RE.search(str(inp.get("command") or "")) and not_run(data):
+            elif test_run and not_run(data):
                 notes.append("[tdd_guard] The test command did not run (the program was not found) — that is neither "
                              "a red nor a green test. Fix the command (Windows: `npx`, `npm` are `.cmd` files; "
                              "test_lock.py finds them) and run the tests again.")
-            elif TEST_CMD_RE.search(str(inp.get("command") or "")):
+            elif test_run:
                 if bash_failed(data):
                     s["red"] = s["seq"]
                     if not red_without_assertion(data) and s.get("tests"):
