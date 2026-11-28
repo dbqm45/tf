@@ -116,7 +116,7 @@ Deprecation works like this:
   `claude plugin marketplace remove … --scope local`); `tf doctor` reports it, `--fix` registers it;
   `TF_NO_PLUGIN_REGISTER=1` or `CI` skips the CLI; `tf code` omits `--plugin-dir` in a registered folder.
 - `tf work --once --budget <USD> [--key <KEY>] [--base <branch>] [--dry-run]` (`work.py`; configuration keys
-  `work.budget_usd`, `work.task_budget_usd`, `work.permission_mode` (`acceptEdits` is the default, `dontAsk` or `plan`), `work.lock_hours`, `work.timeout_minutes`; the agent runs with `--strict-mcp-config` and only the allowed
+  `work.budget_usd`, `work.task_budget_usd`, `work.permission_mode` (`acceptEdits` is the default, `dontAsk` or `plan`), `work.lock_hours`, `work.timeout_minutes`, `work.model` (`--model`: an alias or a model id; empty — the CLI default; several `tf work --once` processes at a time drain a queue, each task under its own lock); the agent runs with `--strict-mcp-config` and only the allowed
   environment variables (additional ones: the human's variable `TF_WORK_ENV_ALLOW`, a comma-separated list); a warning and the field
   `root_changed` of the `event: end` entry when control files in the project copy change during the run; a refusal when the agent's control files in the worktree differ from the project copy, an
   `event: refused` entry with the field `drift`; the lock `.tf/locks/<KEY>.json`
