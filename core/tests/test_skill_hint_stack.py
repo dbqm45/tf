@@ -97,6 +97,18 @@ def main() -> int:
         check("fw-spring-boot" in out and "Traceback" not in out
               and not (spring / ".tf" / "logs" / "hook-errors.jsonl").is_file(),
               f"SH-8: a corrupt technologies.json is treated as missing: {out}")
+        # SH-9: the index is cached between prompts (tf stress: ~0.5 s per prompt) and rebuilt when a skill changes
+        cache = empty / ".tf" / "cache" / "skill-hint-index.json"
+        first = hint(empty, q)
+        check(cache.is_file() and hint(empty, q) == first, f"SH-9a: the cache is written and gives the same hint: {first}")
+        d = empty / ".claude" / "skills" / "fw-quarkus"
+        d.mkdir()
+        (d / "SKILL.md").write_text(f"---\nname: fw-quarkus\ndescription: {DESC.format(fw='Quarkus')} Quarkus.\n---\n# Q\n",
+                                    encoding="utf-8")
+        out = hint(empty, q + " w Quarkus")
+        check("fw-quarkus" in out, f"SH-9b: a new skill invalidates the cache: {out}")
+        cache.write_text("{broken", encoding="utf-8")
+        check("fw-nestjs" in hint(empty, q), "SH-9c: a broken cache is rebuilt")
     for f in fails:
         print(f"✗ {f}")
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} skill_hint stack filter tests")

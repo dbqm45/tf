@@ -130,6 +130,50 @@ def load_index() -> list[dict]:
     return items
 
 
+CACHE = _PROJECT / ".tf" / "cache" / "skill-hint-index.json"
+
+
+def _fingerprint() -> str:
+    """The skills' files (path, mtime, size) and this hook's own file: a change of any of them rebuilds the index."""
+    import hashlib
+    parts = []
+    for base in (PLUGIN_SKILLS, SKILLS):
+        for p in (*sorted(base.glob("*/SKILL.md")), *sorted(base.glob(f"*/{PL_INDEX}"))):
+            try:
+                st = p.stat()
+            except OSError:
+                continue
+            parts.append(f"{p}:{st.st_mtime_ns}:{st.st_size}")
+    me = Path(__file__).stat()
+    parts.append(f"hook:{me.st_mtime_ns}:{me.st_size}")
+    return hashlib.sha1("\n".join(parts).encode("utf-8")).hexdigest()
+
+
+def cached_index() -> list[dict]:
+    """load_index() kept in .tf/cache/ between prompts (tf stress: building it took ~0.5 s of every prompt, the hook
+    blocks the prompt meanwhile). Any error falls back to building it."""
+    try:
+        fp = _fingerprint()
+        data = json.loads(CACHE.read_text(encoding="utf-8")) if CACHE.is_file() else {}
+        if data.get("fp") == fp:
+            return [{**it, "head": set(it["head"]), "body": set(it["body"]), "langs": [set(x) for x in it["langs"]]}
+                    for it in data["items"]]
+    except Exception:  # noqa: BLE001 — a broken cache is rebuilt
+        fp = None
+    items = load_index()
+    if fp:
+        try:
+            CACHE.parent.mkdir(parents=True, exist_ok=True)
+            tmp = CACHE.with_suffix(f".{os.getpid()}.tmp")
+            tmp.write_text(json.dumps({"fp": fp, "items": [
+                {**it, "head": sorted(it["head"]), "body": sorted(it["body"]), "langs": [sorted(x) for x in it["langs"]]}
+                for it in items]}, ensure_ascii=False), encoding="utf-8")
+            os.replace(tmp, CACHE)
+        except OSError:
+            pass
+    return items
+
+
 QUOTED_RE = re.compile(r"„[^”]{20,}”|\"[^\"]{20,}\"|```.*?```", re.S)
 
 
@@ -311,7 +355,7 @@ def suggest(prompt: str, items: list[dict]) -> list:
 
 
 def hint(prompt: str, data: dict | None = None) -> str:
-    items = load_index()
+    items = cached_index()
     if not items or len(prompt.strip()) < 12 or prompt.lstrip().startswith("/"):
         return ""
     picks = suggest(prompt, items)
