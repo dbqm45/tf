@@ -1094,6 +1094,9 @@ def main(argv: list[str]) -> int:
                 print(f"story refreshed: {cached.relative_to(project).as_posix()} — compare it with plan.md and spec.md")
                 return 0
         pre_dirty = dirty_paths(project) if args.begin else None
+        if pre_dirty and args.story_file:   # the story the loop itself wrote for --story-file is not a human's change
+            mine = Path(args.story_file).resolve()
+            pre_dirty = [x for x in pre_dirty if (project / x).resolve() != mine]
         rc = cmd_start(args.title, story, project, args.task, args.change, args.key, source, fetch)
         if rc == 0:
             record_budget(project, args.budget)

@@ -526,6 +526,11 @@ def main() -> int:
         r = run(["start", "Licznik", "--story", "Jako użytkownik chcę licznik.", "--budget", "2.5"], p, cfg)
         check(r.returncode == 0 and meta(p).get("budget_usd") == 2.5 and "budget: 2.5 USD" in r.stdout,
               f"B-1c: start takes the /tf-task --budget and keeps it in run.json: {r.returncode} {r.stdout[-300:]} {r.stderr[-300:]}")
+        p = repo("storyfile")
+        (p / ".tf-story.md").write_text("Jako użytkownik chcę licznik.\n")
+        r = run(["start", "Licznik", "--story-file", ".tf-story.md", "--begin", "--auto"], p, cfg)
+        check(r.returncode == 0 and meta(p).get("stage") == "intake",
+              f"B-1d: the untracked file given as --story-file does not make the tree dirty: {r.returncode} {r.stdout[-300:]}")
         p = repo("dirty")
         (p / "README.md").write_text("changed by the human\n")
         r = run(["start", "Licznik", "--story", "Jako użytkownik chcę licznik.", "--begin", "--auto"], p, cfg)
