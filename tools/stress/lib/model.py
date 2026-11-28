@@ -403,6 +403,10 @@ def score(sc: dict, proj: Path, rr: dict | None = None, faults: list | None = No
     rr = rr or {}
     if rr.get("rc") not in (0, None) and not prof.get("cost_usd") and not col["runs"]:
         verdict = "ERROR"
+    if prof.get("is_error") and re.search(r"hit your .*limit|rate limit|overloaded", prof.get("result_text") or "", re.I):
+        verdict = "ERROR"          # the account's usage limit, not the factory: the run measures nothing
+        checks.insert(0, {"name": "environment", "ok": False, "actual": (prof.get("result_text") or "")[:120],
+                          "expected": "a model that answers (usage limit hit)"})
     return {"verdict": verdict, "checks": checks, "profile": prof, "faults": faults or [], "proc": rr,
             "result": {k: v for k, v in col.items() if k not in ("diff", "_proj")}, "hidden": hidden,
             "project": str(proj), "model": model or "default"}

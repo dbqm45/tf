@@ -194,6 +194,9 @@ def cmd_capacity(o) -> int:
         base = base or row
         rows.append(row)
         print(f"{n:3}× ok {ok}/{n} · p50 {row['wall_p50']} s · max {row['wall_max']} s · {row['tasks_per_hour']} tasks/h", flush=True)
+    limited = [r for r in allres if any(c["name"] == "environment" for c in r.get("checks", []))]
+    if limited:
+        print(f"⚠ {len(limited)} run(s) hit the account's usage limit — the capacity numbers are not valid")
     breaking = next((r["size"] for r in rows if r["ok"] < r["size"] or
                      (base["wall_p50"] and r["wall_p50"] and r["wall_p50"] > 1.5 * base["wall_p50"])), None)
     cap = [{"scenario": sc["id"], "rows": rows, "breaking": breaking}]
