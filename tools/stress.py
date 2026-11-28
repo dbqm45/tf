@@ -186,7 +186,9 @@ def cmd_capacity(o) -> int:
         wall = time.time() - t0
         allres += res
         walls = [r["profile"]["wall_s"] for r in res if r.get("profile")]
-        ok = sum(r["verdict"] == "PASS" for r in res)
+        # capacity counts delivered work (outcome and hidden check), not the time or cost targets
+        ok = sum(all(c["ok"] for c in r.get("checks", []) if c["name"] in ("outcome", "hidden acceptance check"))
+                 and r["verdict"] != "ERROR" for r in res)
         st = stats(walls)
         row = {"size": n, "ok": ok, "batch_wall_s": round(wall, 1), "wall_p50": st.get("p50"), "wall_max": st.get("max"),
                "cost": round(sum((r.get("profile") or {}).get("cost_usd") or 0 for r in res), 2),

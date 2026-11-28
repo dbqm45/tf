@@ -235,7 +235,8 @@ def probe_hook_chains(proj: Path, sc: dict, work: Path) -> dict:
     reps = int((sc.get("params") or {}).get("repeat", 5))
     cases, rows = [], []
     for name, (ev, tool, tinput, kw) in actions.items():
-        hooks = [a for m, a in reg.get(ev, []) if m == "*" or (tool and re.fullmatch(m, tool))]
+        match = tool or kw.get("source") or ""      # SessionStart matches on the source (startup|resume)
+        hooks = [a for m, a in reg.get(ev, []) if m == "*" or (match and re.fullmatch(m, match))]
         per_hook = {}
         for _ in range(reps):
             for args in hooks:
