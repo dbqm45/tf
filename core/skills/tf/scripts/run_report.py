@@ -3,6 +3,9 @@
 A task run („task → PR”, skill tf): the run directory and the cost report.
 
   python3 .claude/skills/tf/scripts/run_report.py start "<title>" [--key PROJ-123] [--story "<content>" | --story-file FILE] [--source "<where from>"]
+  python3 .claude/skills/tf/scripts/run_report.py start "<title>" --story-file FILE --begin [--auto|--plan]   # + clean tree,
+        # cooldown, the story branch and the intake stage in the same call (a dirty tree → a recorded STOP, exit 3); a task
+        # created by `tf task start` (task.json, no run, no plan) is adopted, not refused
   python3 .claude/skills/tf/scripts/run_report.py start --task TSK-57 [--change CHG-12] ["<title>"]   # a cut from a pdi change plan
   python3 .claude/skills/tf/scripts/run_report.py start --key EBO-1236 --from-tracker ["<title>"] [--refresh]   # the script fetches the content from Jira
   python3 .claude/skills/tf/scripts/run_report.py status <run-directory> [--session ID]   # one line: cost, time, plan
@@ -788,14 +791,19 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
         return 2
     run_dir, docs, story_name = project / WORK / key, project / CHANGES / key, "ticket.md"
     taken = [p for p in (run_dir, docs / "task.json", docs / "plan.md", docs / "spec.md", docs / story_name) if p.exists()]
-    if taken:
+    # a task created by `tf task start` (task.json and maybe ticket.md, no run, no plan): this start adopts it — the
+    # Auto queue (`tf task mode <KEY> auto`, `tf work --once`) begins exactly like that (tf stress W-T3)
+    adopt = (not cut and not run_dir.exists() and (docs / "task.json").is_file()
+             and not (docs / "plan.md").exists() and not (docs / "spec.md").exists())
+    if taken and not adopt:
         print(f"✗ The run already exists: {taken[0]} — "
               + (f"resume it (/tf-task {task}) or delete this directory to start the cut again." if cut
                  else "finish it or give another title or `--key`."))
         return 2
     base = git_base(project)              # before any task file exists: what `run_state.py revert` returns to
-    r = task_state(project, "start", key, "--title", title, *(["--change", cut["change"], "--cut", task] if cut else []))
-    if r is None or r.returncode != 0:
+    r = None if adopt else task_state(project, "start", key, "--title", title,
+                                      *(["--change", cut["change"], "--cut", task] if cut else []))
+    if not adopt and (r is None or r.returncode != 0):
         print(f"✗ the task {key} could not be created: "
               + ((r.stdout + r.stderr).strip() if r else "no .tf/factory/task_state.py — update the factory (tf update)"))
         return 2
@@ -817,7 +825,10 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
                                                    ensure_ascii=False, indent=1) + "\n").encode("utf-8"))
     # task: where the content comes from and when it was fetched (a tracker issue, a file, a conversation); a pdi cut has its own header
     text = f"# {title}\n\n{(story or '').strip()}\n" if cut else ticket_text(title, story, source, now)
-    (docs / story_name).write_bytes(text.encode("utf-8"))
+    if not (adopt and (docs / story_name).is_file() and not (story or "").strip()):   # an adopted ticket keeps its content
+        (docs / story_name).write_bytes(text.encode("utf-8"))
+    elif not story:
+        story = (docs / story_name).read_text(encoding="utf-8")
     (docs / "plan.md").write_bytes((PLAN_TEMPLATE.format(title=title)).encode("utf-8"))
     (run_dir / "parked.md").write_bytes((PARKED_TEMPLATE.format(title=title)).encode("utf-8"))
     print(run_dir.relative_to(project) if run_dir.is_relative_to(project) else run_dir)
@@ -853,6 +864,66 @@ def cmd_start(title: str | None, story: str | None, project: Path, task: str | N
     except Exception:  # noqa: BLE001 — the preview never breaks the run start
         pass
     return 0
+
+
+def default_branch(project: Path) -> str | None:
+    """origin/HEAD's branch, else main, else master (the branch a story branch starts from)."""
+    def git(*a):
+        return subprocess.run(["git", "-C", str(project), *a], capture_output=True, text=True, timeout=30)
+    head = git("symbolic-ref", "--short", "--quiet", "refs/remotes/origin/HEAD").stdout.strip()
+    for name in ([head.split("/", 1)[1]] if "/" in head else []) + ["main", "master"]:
+        if git("rev-parse", "--verify", "--quiet", f"refs/heads/{name}").returncode == 0:
+            return name
+    return None
+
+
+def cmd_begin(project: Path, pre_dirty: list[str] | None, auto: bool, plan_mode: bool) -> int:
+    """`start --begin`: after the task exists, the rest of §0 in the same call — the clean-tree check, the version
+    cooldown, the story branch from the default branch and the intake stage (tf stress: four model turns fewer per
+    task). A dirty tree or a failed cooldown is recorded as a STOP in the task (it shows in tf status)."""
+    import run_state
+    runs = [p.parent for p in (project / WORK).glob("*/run.json")]
+    if not runs:
+        print("✗ --begin: no run directory after start")
+        return 2
+    run_dir = max(runs, key=lambda p: (p / "run.json").stat().st_mtime)
+    rel = run_dir.relative_to(project).as_posix() if run_dir.is_relative_to(project) else str(run_dir)
+
+    def stop(code: str, reason: str) -> int:
+        run_state.cmd_stage(run_dir, "needs", "stop", reason, None, False, None, project, code=code)
+        print(f"STOP — §0 start\nReason: {reason}\nDone: the task {run_dir.name} is recorded · Resume: /tf-task {run_dir.name}")
+        return 3
+
+    if pre_dirty:
+        shown = ", ".join(pre_dirty[:5]) + (f" and {len(pre_dirty) - 5} more" if len(pre_dirty) > 5 else "")
+        return stop("environment", f"the working tree is not clean ({shown}): the human commits, stashes or discards "
+                                   "these changes — the loop does not touch them")
+    cool = subprocess.run([sys.executable, str(Path(__file__).with_name("security_scan.py")), "cooldown"], cwd=project,
+                          capture_output=True, text=True, timeout=120)
+    if cool.stdout.strip():
+        print(cool.stdout.strip().splitlines()[0])
+    if cool.returncode != 0:
+        return stop("environment", "the version cooldown check failed — the human runs `tf cooldown --fix`: "
+                                   + (cool.stdout + cool.stderr).strip()[-300:])
+    slug = (read_meta(run_dir).get("slug") or run_dir.name.lower())[:60]
+
+    def git(*a):
+        return subprocess.run(["git", "-C", str(project), *a], capture_output=True, text=True, timeout=60)
+    base = default_branch(project)
+    if base and git("branch", "--show-current").stdout.strip() != base:
+        sw = git("switch", base)
+        if sw.returncode != 0:
+            return stop("environment", f"cannot switch to {base}: {sw.stderr.strip()[-200:]}")
+    branch = f"story/{slug}"
+    sw = git("switch", "-c", branch)
+    if sw.returncode != 0:
+        sw = git("switch", branch)
+    if sw.returncode != 0:
+        return stop("environment", f"cannot create the branch {branch}: {sw.stderr.strip()[-200:]}")
+    print(f"✓ branch {branch} from {base or 'HEAD'}")
+    rc = run_state.cmd_stage(run_dir, "intake", None, None, None, auto, None, project, plan_mode=plan_mode)
+    print(f"Run directory: {rel}")
+    return rc
 
 
 def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path, status: bool = False) -> int:
@@ -936,6 +1007,10 @@ def main(argv: list[str]) -> int:
                    help="fetch the --key issue from Jira with a script (read-only; credentials from environment variables)")
     s.add_argument("--source", default=None,
                    help="where the task content comes from, e.g. \"jira EBO-1236\" or the issue address (goes to ticket.md)")
+    s.add_argument("--begin", action="store_true",
+                   help="also the rest of §0: the clean tree, the cooldown, the story branch and the intake stage")
+    s.add_argument("--auto", action="store_true", help="with --begin: the task's mode Auto (stage intake --auto)")
+    s.add_argument("--plan", dest="plan_mode", action="store_true", help="with --begin: the mode Plan")
     s.add_argument("--refresh", action="store_true",
                    help="with --from-tracker: read the issue again although ticket.md exists (rewrites only ticket.md)")
     for name in ("status", "finish"):
@@ -978,7 +1053,11 @@ def main(argv: list[str]) -> int:
                     run_json.write_bytes((json.dumps(meta, ensure_ascii=False, indent=1) + "\n").encode("utf-8"))
                 print(f"story refreshed: {cached.relative_to(project).as_posix()} — compare it with plan.md and spec.md")
                 return 0
-        return cmd_start(args.title, story, project, args.task, args.change, args.key, source, fetch)
+        pre_dirty = dirty_paths(project) if args.begin else None
+        rc = cmd_start(args.title, story, project, args.task, args.change, args.key, source, fetch)
+        if rc != 0 or not args.begin:
+            return rc
+        return cmd_begin(project, pre_dirty, args.auto, args.plan_mode)
     return cmd_finish(Path(args.run_dir), args.session, args.json, project, status=args.cmd == "status")
 
 

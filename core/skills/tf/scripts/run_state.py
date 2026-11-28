@@ -3,6 +3,11 @@
 Task run state and the preview (skill tf): the only writer of the stage and round in run.json
 and the dashboard generator. The state is written by the script, not the model — the model only calls the command.
 
+  python3 .claude/skills/tf/scripts/run_state.py plan <run-directory> --weight <w> --rationale "<evidence>" [--slices N]
+        [--flag <key> | --flag none --flag-reason "…"] [--park "<item>"]… [--base <branch>] [--auto|--plan]
+        # approach + spec check + flag + parked + stage plan + worth (+ needs plan) in one call
+  python3 .claude/skills/tf/scripts/run_state.py close <run-directory> [--base <branch>]
+        # plan_drift + pr_budget + trace + stage pr + PR step + pr-body (+ STOP without a remote) + the report in one call
   python3 .claude/skills/tf/scripts/run_state.py stage <run-directory> <stage> [--needs plan|stop] [--code <code>] [--auto|--plan]
   python3 .claude/skills/tf/scripts/run_state.py mode <run-directory> [plan|normal|auto]   # the task's mode
   python3 .claude/skills/tf/scripts/run_state.py approve <run-directory>                   # the human's consent to the plan
@@ -1540,7 +1545,7 @@ def visual_check(run_dir: Path, docs: Path, project: Path, base: str | None | bo
         if base is False and not screens.is_dir():
             return None
         res = ui_snap.worth(run_dir, project, base)
-        if not res["yes"]:
+        if not res["yes"] and not res.get("no_address"):   # worth it, but no preview address: still a skipped check
             return None
         return {"state": "skipped", "reason": "the change is worth a visual check (" + as_data("; ".join(res["reasons"]), 200)
                                               + ") but none was recorded (`screens/` is missing)"}
@@ -2444,6 +2449,92 @@ def refresh(project: Path) -> None:
         pass
 
 
+def _script(project: Path, *parts: str) -> Path:
+    """A sibling skill's script next to this one (.claude/skills/… or the plugin's skills/)."""
+    return Path(__file__).resolve().parents[2].joinpath(*parts)
+
+
+def _sub(project: Path, path: Path, *args: str) -> int:
+    r = subprocess.run([sys.executable, str(path), *args], cwd=project, capture_output=True, text=True, timeout=600)
+    out = (r.stdout + r.stderr).strip()
+    if out:
+        print(out)
+    return r.returncode
+
+
+def cmd_plan(run_dir: Path, project: Path, weight: str | None, rationale: str, fields: dict, by: str | None,
+             flag: str | None, flag_reason: str, remove_by: str | None, parks: list[str], base: str | None,
+             auto: bool, plan_mode: bool) -> int:
+    """§1–§2 bookkeeping in one call (tf stress: ~6 model turns → 1): the approach, the spec check (not for the light
+    and quick weights), the feature-flag decision, the parked items, whether a visual check is worth it, the plan stage
+    and — without --auto — the wait for the human's consent. It stops at the first refusal and says which step."""
+    steps = [("approach", lambda: cmd_approach(run_dir, project, weight, rationale, fields, by))]
+    if (weight or "") not in ("light", "quick"):
+        steps.append(("spec check", lambda: cmd_spec(run_dir, project)))
+    if flag == "none":
+        steps.append(("flag", lambda: cmd_flag(run_dir, "none", None, None, flag_reason or "", project)))
+    elif flag:
+        steps.append(("flag", lambda: cmd_flag(run_dir, "set", flag, remove_by, "", project)))
+    else:
+        steps.append(("flag mode", lambda: cmd_flag(run_dir, "mode", None, None, "", project)))
+    for item in parks or []:
+        steps.append(("park", lambda item=item: cmd_park(run_dir, item, project)))
+    steps.append(("stage plan", lambda: cmd_stage(run_dir, "plan", None, None, None, auto, None, project,
+                                                   plan_mode=plan_mode)))
+    if not auto:
+        steps.append(("wait for consent", lambda: cmd_stage(run_dir, "needs", "plan", None, None, False, None, project)))
+    for name, fn in steps:
+        rc = fn()
+        if rc not in (0, None):
+            print(f"✗ plan: stopped at «{name}» (exit {rc}) — fix it and run `run_state.py plan` again "
+                  "(the steps before it are recorded)")
+            return rc
+        if name == "stage plan":
+            worth = _script(project, "tf", "scripts", "ui_snap.py")
+            if worth.is_file():
+                _sub(project, worth, "worth", str(run_dir), *(["--base", base] if base else []))
+    return 0
+
+
+def cmd_close(run_dir: Path, project: Path, base: str | None) -> int:
+    """§4 in one call (tf stress: ~7 model turns → 1): agreement with the plan, the artifact budget, the criteria trace,
+    the pr stage, the PR description, a STOP when there is no remote, and the run report. A trace error stops it: fix the
+    test, then run `close` again. Push and the PR itself stay with the loop (the human's consent)."""
+    b = ["--base", base] if base else []
+    drift = _sub(project, Path(__file__).with_name("plan_drift.py"), str(run_dir), *b)
+    budget = _script(project, "core-delivery-lifecycle", "scripts", "pr_budget.py")
+    if budget.is_file():
+        _sub(project, budget, *b)
+    rc = cmd_trace(run_dir, base, project)
+    if rc not in (0, None):
+        print("✗ close: the criteria trace has an error — fix the test (a criterion without a test or a foreign AC-n), "
+              "then run `run_state.py close` again")
+        return rc
+    for name, fn in (("stage pr", lambda: cmd_stage(run_dir, "pr", None, None, None, False, None, project)),
+                     ("plan_drift", lambda: cmd_step(run_dir, "PR", ["plan_drift", "pass" if drift == 0 else "fail"],
+                                                     project)),
+                     ("pr-body", lambda: cmd_pr_body(run_dir, base, project))):
+        rc = fn()
+        if rc not in (0, None):
+            print(f"✗ close: stopped at «{name}» (exit {rc})")
+            return rc
+    remote = subprocess.run(["git", "-C", str(project), "remote"], capture_output=True, text=True).stdout.strip()
+    stopped = False
+    if not remote:
+        cmd_stage(run_dir, "needs", "stop", "the repository has no remote (git remote): the branch cannot be pushed "
+                  "and no PR opened — the human adds a remote, pushes and opens the PR with pr-body.md", None, False,
+                  None, project, code="environment")
+        stopped = True
+    _sub(project, Path(__file__).with_name("run_report.py"), "finish", str(run_dir))
+    if stopped:
+        print("STOP — PR\nReason: no remote · Resume: from PR (push + gh pr create --body-file "
+              f"{run_dir.as_posix()}/pr-body.md)")
+        return 3
+    print("Next: the push and the PR (git-questions: the human's consent; in Auto `run_state.py push` follows the "
+          "policy), then `run_state.py stage <directory> done --pr <number>`")
+    return 0
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -2575,6 +2666,25 @@ def main(argv: list[str]) -> int:
     pb = sub.add_parser("pr-body")
     pb.add_argument("run_dir")
     pb.add_argument("--base", default=None)
+    pl = sub.add_parser("plan", help="approach + spec check + flag + parked + stage plan (+ the wait) in one call")
+    pl.add_argument("run_dir")
+    pl.add_argument("--weight", default=None)
+    pl.add_argument("--rationale", default="")
+    pl.add_argument("--slices", default=None)
+    pl.add_argument("--test-strategy", default=None)
+    pl.add_argument("--verify-scope", default=None)
+    pl.add_argument("--review", default=None)
+    pl.add_argument("--by", default=None)
+    pl.add_argument("--flag", default=None, help="the feature flag key, or `none` (then --flag-reason)")
+    pl.add_argument("--flag-reason", default="")
+    pl.add_argument("--remove-by", default=None)
+    pl.add_argument("--park", action="append", default=[], help="a parked item (repeat for several)")
+    pl.add_argument("--base", default=None)
+    pl.add_argument("--auto", action="store_true")
+    pl.add_argument("--plan", dest="plan_mode", action="store_true")
+    cl = sub.add_parser("close", help="plan_drift + pr_budget + trace + stage pr + pr-body + finish in one call")
+    cl.add_argument("run_dir")
+    cl.add_argument("--base", default=None)
     d = sub.add_parser("dashboard")
     d.add_argument("--no-cost", action="store_true")
     d.add_argument("--out", default=None)
@@ -2642,6 +2752,13 @@ def main(argv: list[str]) -> int:
         return cmd_revert(Path(args.run_dir), args.by, project)
     if args.cmd == "pr-body":
         return cmd_pr_body(Path(args.run_dir), args.base, project)
+    if args.cmd == "plan":
+        return cmd_plan(Path(args.run_dir), project, args.weight, args.rationale,
+                        {"slices": args.slices, "test_strategy": args.test_strategy, "verify_scope": args.verify_scope,
+                         "review": args.review}, args.by, args.flag, args.flag_reason, args.remove_by, args.park,
+                        args.base, args.auto, args.plan_mode)
+    if args.cmd == "close":
+        return cmd_close(Path(args.run_dir), project, args.base)
     if args.live and args.stop:
         import dashboard_live
         print("✓ The live dashboard stopped." if dashboard_live.stop(project) else "ℹ No live dashboard is running.")

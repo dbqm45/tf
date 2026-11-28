@@ -114,7 +114,15 @@ def waits_for_human(root: Path, key: str) -> bool:
         run = json.loads((root / ".tf" / "runs" / key / "run.json").read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return False
-    return isinstance(run, dict) and run.get("stage") == "needs"
+    if not (isinstance(run, dict) and run.get("stage") == "needs"):
+        return False
+    # A plan waiting for approval (after `/tf-task … --plan`) is answered by the human setting the Auto mode: that is the
+    # consent to unsupervised work (tf stress W2: otherwise the documented path deadlocks). The full weight still waits.
+    if run.get("needs") == "plan":
+        task = load_task(root, key) or {}
+        if task.get("mode") == "auto" and task.get("mode_by") == "human" and task.get("weight") != "full":
+            return False
+    return True
 
 
 def clean(text, limit: int = 120) -> str:

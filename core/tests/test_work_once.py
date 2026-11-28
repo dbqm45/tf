@@ -176,6 +176,22 @@ def main() -> int:
         r = work(p, "--once", "--budget", "3", "--key", "IMP-1", "--dry-run")
         check(r.returncode == 2 and "auto" in (r.stdout + r.stderr).lower(),
               f"WO-10: --key of a task without Auto mode → refusal with the tf task mode command: {r.stdout}{r.stderr}")
+        # a plan written with --plan waits for approval; the human's Auto mode is that approval (tf stress W2 deadlock)
+        task(p, "", "start", "IMP-5", "--title", "Licznik")
+        task(p, "", "mode", "IMP-5", "auto")                         # the human's decision (mode_by: human)
+        run5 = p / ".tf" / "runs" / "IMP-5"
+        run5.mkdir(parents=True)
+        (run5 / "run.json").write_text(json.dumps({"key": "IMP-5", "stage": "needs", "needs": "plan"}), encoding="utf-8")
+        r = work(p, "--once", "--budget", "3", "--key", "IMP-5", "--dry-run")
+        check(r.returncode == 0 and "IMP-5" in r.stdout,
+              f"WO-10b: a plan waiting for approval in a task the human put in Auto mode can be taken: {r.stdout}{r.stderr}")
+        (run5 / "run.json").write_text(json.dumps({"key": "IMP-5", "stage": "needs", "needs": "stop"}), encoding="utf-8")
+        r = work(p, "--once", "--budget", "3", "--key", "IMP-5", "--dry-run")
+        check(r.returncode == 2 and "waits for a human" in r.stdout,
+              f"WO-10c: a STOP still waits for the human: {r.returncode} {r.stdout}{r.stderr}")
+        (run5 / "run.json").unlink()
+        run5.rmdir()
+        task(p, "", "mode", "IMP-5", "normal")
         r = work(p, "--once", "--budget", "3", "--key", "IMP-2")
         check(r.returncode == 0 and len(agent_calls(p)) == 2 and Path(agent_calls(p)[-1]["cwd"]).resolve() == wt.resolve(),
               f"WO-11: --key of a task with a worktree resumes in the same worktree: {r.returncode} {r.stdout}{r.stderr}")

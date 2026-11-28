@@ -495,6 +495,49 @@ def main() -> int:
 
     for f in fails:
         print(f"✗ {f}")
+    # start --begin (tf stress: §0 in one call instead of four model turns) and the adoption of a `tf task start` task
+    with tempfile.TemporaryDirectory() as t:
+        cfg = Path(t) / "cfg"
+
+        def repo(name):
+            p = Path(t) / name
+            p.mkdir()
+            g = ["git", "-C", str(p), "-c", "user.name=T", "-c", "user.email=t@example.invalid"]
+            subprocess.run(g + ["init", "-q", "-b", "main"], capture_output=True)
+            (p / "README.md").write_text("x\n")
+            (p / ".gitignore").write_text(".tf/\n")
+            subprocess.run(g + ["add", "-A"], capture_output=True)
+            subprocess.run(g + ["commit", "-qm", "init"], capture_output=True)
+            return p
+
+        def meta(p):
+            f = next((p / ".tf" / "runs").glob("*/run.json"), None)
+            return json.loads(f.read_text()) if f else {}
+
+        p = repo("clean")
+        r = run(["start", "Licznik zadań", "--story", "Jako użytkownik chcę licznik.", "--begin", "--auto"], p, cfg)
+        branch = subprocess.run(["git", "-C", str(p), "branch", "--show-current"], capture_output=True, text=True).stdout.strip()
+        check(r.returncode == 0 and branch == "story/licznik-zadan" and meta(p).get("stage") == "intake",
+              f"B-1: --begin creates the task, the story branch from main and the intake stage: {r.returncode} {branch} "
+              f"{meta(p).get('stage')} {r.stdout[-300:]} {r.stderr[-300:]}")
+        p = repo("dirty")
+        (p / "README.md").write_text("changed by the human\n")
+        r = run(["start", "Licznik", "--story", "Jako użytkownik chcę licznik.", "--begin", "--auto"], p, cfg)
+        m = meta(p)
+        check(r.returncode == 3 and m.get("stage") == "needs" and m.get("stop_code") == "environment" and "STOP" in r.stdout
+              and (p / "README.md").read_text() == "changed by the human\n",
+              f"B-2: a dirty tree → a recorded STOP environment, the human's change untouched: {r.returncode} {m} {r.stdout[-300:]}")
+        p = repo("adopt")
+        tf_task = ROOT / ".tf" / "factory" / "task_state.py"
+        subprocess.run([sys.executable, str(tf_task), "start", "W-3", "--title", "Licznik"], cwd=p, capture_output=True)
+        (p / "docs/project/changes/W-3/ticket.md").write_text("# Licznik\n\nJako użytkownik chcę licznik otwartych zadań.\n")
+        r = run(["start", "Licznik", "--key", "W-3"], p, cfg)
+        check(r.returncode == 0 and (p / ".tf/runs/W-3/run.json").is_file()
+              and "licznik otwartych" in (p / "docs/project/changes/W-3/ticket.md").read_text(),
+              f"B-3: start adopts a task created by tf task start and keeps its ticket: {r.returncode} {r.stdout} {r.stderr}")
+        r = run(["start", "Licznik", "--key", "W-3"], p, cfg)
+        check(r.returncode == 2 and "already exists" in r.stdout, f"B-4: a second start of the same key is still refused: {r.stdout}")
+
     print(f"{'✓' if not fails else '✗'} {total - len(fails)}/{total} run report tests")
     return 1 if fails else 0
 

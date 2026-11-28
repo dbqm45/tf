@@ -52,22 +52,22 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
 - **A pdi slice key** (`/tf-task TSK-57`, `start --task`) and a round of the PR loop → first `references/pdi-cuts.md`.
 
 ## 0. Start
-1. A clean working tree, otherwise STOP. The version cooldown: `security_scan.py cooldown` — FAIL → STOP: the human runs
-   `tf cooldown --fix`; you do not change the settings yourself.
-2. `run_report.py start "<tytuł>" --story-file <plik>` (or `--story "<treść>"`; an issue: `--key PROJ-123
-   --source "<skąd>"`) creates the task and prints the run directory `.tf/runs/<KEY>/` (outside git); the permanent
-   files: `docs/project/changes/<KEY>/`, one commit at the end (§4).
+**One call:** `run_report.py start "<tytuł>" --story-file <plik> --begin` with `--auto` or `--plan`
+(or `--story "<treść>"`; an issue: `--key PROJ-123 --source "<skąd>"`) creates the task (the run directory `.tf/runs/<KEY>/`
+outside git; the permanent files `docs/project/changes/<KEY>/`, one commit at the end, §4), checks the clean tree and the
+version cooldown (`security_scan.py cooldown`), creates `story/<slug>` from the default branch, records the intake stage.
+Exit code 3 = a STOP it recorded (a dirty tree: the human's changes stay; a failed cooldown: the human runs
+`tf cooldown --fix`) — show its block and end.
    Pass the `Weight: …` line on in one sentence (`references/weight.md`).
    **Do not skip, before §1:** `⚠ … no related` → work out the narrowest tests-of-`{files}` command from the build files,
    check it on one file, `run_state.py gate-related` (`references/verify-scope.md`); `⚠ scanner:` → AskUserQuestion:
    install it or record the decision (`references/security.md`).
-3. A branch from the default one: `git switch main`, then `git switch -c story/<slug>`.
-4. **The preview:** `run_state.py stage` and `step` record the stage in `run.json` and build `.tf/runs/dashboard.html`
-   (`--auto` or `--plan` goes into the first `stage`). Pass on `Dashboard:` and `Tip:`; a preview error is not a STOP. **A refusal** (`✗`, exit code 2) is a gate: remove the
-   cause, repeat.
+- **The preview:** `run_state.py` records the stages in `run.json` and builds `.tf/runs/dashboard.html`. Pass on
+  `Dashboard:` and `Tip:`; a preview error is not a STOP. **A refusal** (`✗`, exit code 2) is a gate: remove the cause,
+  repeat.
 
 ## 1. Taking in the story
-`run_state.py stage <katalog> intake [--auto]`; follow its `Mode:` line. Can it be done without guessing: **who, what, why**;
+The intake stage is recorded by `--begin`; follow its `Mode:` line. Can it be done without guessing: **who, what, why**;
 **acceptance criteria** checkable with a test; **scope** (what we do not do). `scout` collects the repository's state
 (`plik:linia`).
 - **Knowledge about the project:** `docs/project/00-reconstruction/standards/INDEX.md`, `domain.md` and add-on
@@ -83,7 +83,7 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
 - A small ambiguity → the conservative option (fewer files), an **[assumption]**.
 - **Your approach is a judgement** (`references/weight.md`): one class or label in N templates → `quick`, one slice,
   one parametrized test per criterion, narrow verify, no spec, `plan.md` first; new domain logic across modules →
-  `normal`/`full`, spec, slices. `run_state.py approach <katalog> --weight … --rationale "<evidence>"`.
+  `normal`/`full`, spec, slices. You record it with the plan (§2): `--weight … --rationale "<evidence>"`.
 - **The specification before the plan** (only for a ready story — not at a STOP):
   `run_state.py spec <katalog> new` creates `spec.md`; fill it in: `- AC-n: Given <stan>, when <jedna akcja>,
   then <wynik sprawdzalny testem>` straight from the story's criteria (you add nothing), "Unchanged", "Out of
@@ -96,16 +96,18 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
 Every `AC-n` goes into a slice. `spec.md` changed after the plan → repeat `stage <katalog> plan`.
 - **A vertical slice** (INVEST): visible value, passes the tests and the build by itself; the first one
   is the thinnest working path. A slice = one commit, a story = one PR. More than 5 slices → propose a split and STOP.
-- **A feature flag:** `run_state.py flag <katalog> mode`; `auto` → a decision `flag … set <klucz>` or `flag … none --reason`,
+- **A feature flag:** in `auto` mode a decision is needed (`--flag <klucz>` or `--flag none --flag-reason "…"` of `plan`),
   without it the `pr` stage is rejected (`references/feature-flag.md`).
 - **Conditional phases** only with a reason: docs (a public API or documented behaviour changes), `security-reviewer`
   (auth, secrets, permissions, IaC, CI), `architect` (a decision that is hard to reverse).
-- Edge cases → `run_state.py park <katalog> "<sprawa>"` (into the PR, the report).
-- **Visual check, when worth it:** `ui_snap.py worth <katalog> --base <gałąź domyślna>`: `no` = skip it; `yes` → `references/visual-check.md` (`--visual`/`--no-visual`).
-- After the plan and the approach: `run_state.py stage <katalog> plan`. **Without `--auto`:** `run_state.py stage <katalog> needs
-  --needs plan`, show the plan with the `Approach:` line and wait; after consent
-  `run_state.py approve <katalog>`. With `--plan` you end here. **With `--auto`:** you go on; the plan goes into the PR description.
-  Modes: `references/modes-and-stops.md`.
+- Edge cases → `--park "<sprawa>"` of `plan` (repeat it; later ones: `run_state.py park <katalog> "<sprawa>"`).
+- **After writing `plan.md` (and `spec.md`) — one call:** `run_state.py plan <katalog> --weight <w> --rationale "<evidence>"
+  [--slices N] [--flag <klucz> | --flag none --flag-reason "…"] [--park "<sprawa>"]… --base <gałąź domyślna> [--auto]`
+  records the approach, checks the spec (not light/quick), the flag, the parked items, the plan stage, whether a visual
+  check is worth it (`yes` → `references/visual-check.md`, `--visual`/`--no-visual`) and, without `--auto`, the wait
+  for consent. It stops at the first refusal and names the step. **Without `--auto`:** show the
+  plan with the `Approach:` line and wait; after consent `run_state.py approve <katalog>`. With `--plan` you end here.
+  **With `--auto`:** you go on; the plan goes into the PR description. Modes: `references/modes-and-stops.md`.
 
 ## 3. The slice loop
 State: `run_state.py step <katalog> S<n> R<k> <etap> <stan>` — the stages `test`, `code`, `verify`, `scan`, `scope`; the states
@@ -128,17 +130,14 @@ State: `run_state.py step <katalog> S<n> R<k> <etap> <stan>` — the stages `tes
 
 ## 4. Finishing
 1. The conditional phases from the plan (only those).
-2. **Agreement with the plan:** `plan_drift.py <katalog> --base <gałąź domyślna>` — a change outside the plan: revert it or
-   describe a deviation. **The artifact budget:**
-   `python3 .claude/skills/core-delivery-lifecycle/scripts/pr_budget.py --base <gałąź domyślna>` — `Verdict:
-   OVER` → shorten the artifacts or describe the exception. **The criteria trace:** `run_state.py trace <katalog>
-   --base <gałąź domyślna>` — exit code 1 (a criterion without a test, a test with a foreign `AC-n`) you fix.
-3. Full weight: the panel first, `run_state.py panel <katalog>` (`security-reviewer`, `spec-reviewer`).
-   `run_state.py stage <katalog> pr` and `run_state.py step <katalog> PR plan_drift pass` (or `fail`). Push (asked first)
-   and one PR, the description (with "Jak cofnąć") from `run_state.py pr-body <katalog> --base <gałąź domyślna>` →
-   `gh pr create --body-file <plik>`; you add only deviations and the `pr_budget` exception. You do not merge.
-4. `run_state.py stage <katalog> done --pr <numer>`, then `run_report.py finish <katalog>` → `report.md`.
-   **The task's files — one commit** on `story/<slug>` (`finish` prints it), also after a STOP. Show time, cost, PR link.
+2. Full weight: the panel first, `run_state.py panel <katalog>` (`security-reviewer`, `spec-reviewer`).
+3. **One call:** `run_state.py close <katalog> --base <gałąź domyślna>` — agreement with the plan (`plan_drift`: a change
+   outside the plan → revert it or describe a deviation), the artifact budget (`Verdict: OVER` → shorten or describe the
+   exception), the criteria trace (an error stops it: fix the test, rerun), the pr stage, the PR description
+   (`run_state.py pr-body` → `.tf/runs/<KEY>/pr-body.md`, with "Jak cofnąć"), a STOP without a remote (exit 3), `report.md`.
+   Then push (asked first) and one PR: `gh pr create --body-file <plik>`; you add only deviations and the `pr_budget`
+   exception. You do not merge. After the PR: `run_state.py stage <katalog> done --pr <numer>`.
+4. **The task's files — one commit** on `story/<slug>` (`close` prints it), also after a STOP. Show time, cost, PR link.
 5. **Lessons:** observation → evidence → rule; project: `tf task close … --evidence`; factory: `tf proposals add`
    (core-agent-retro); a before/after contrast is the strongest evidence.
 
