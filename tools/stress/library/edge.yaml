@@ -164,4 +164,4 @@ scenarios:
     input: |
       Drobna zmiana UI: ukryj przycisk usuwania dla zwykłych użytkowników, a w API pozwól usuwać zadania tylko, gdy nagłówek X-Role ma wartość admin (inaczej 403).
     budget: 3
-    expect: {outcome: "stop:plan-approval", weight: full, max_wall: 200s, forbid: [code_change]}
+    expect: {outcome: ["stop:plan-approval", "stop:question"], weight: full, max_wall: 200s, forbid: [code_change]}

@@ -14,12 +14,13 @@ The "task → PR" automaton, started by `/tf-task …` or a sentence commissioni
 Rules that win over "doing more":
 - **KISS:** you do the acceptance criteria, nothing beyond them. An edge case, an idea, a risk → `parked.md`, not code.
   Except a case that breaks an acceptance criterion or security — handle it, describe it in the report.
-- **Cheapest:** the cheapest sufficient model per step; read once; needed phases; `--budget` is a hard STOP.
+- **Cheapest:** the cheapest sufficient model per step; read once; `--budget` is a hard STOP.
 - **Evidence:** every step ends with a verification command with its result; a fact about the code with `plik:linia` (core-grounding).
 - **STOP, not pushing on:** at most 2 repair attempts per gate; a blocker → a STOP block, not a workaround.
 - **A question to the human** — always AskUserQuestion: 2–4 answers, the recommended one first with "(Recommended)";
   several in one call. With `--auto` → a STOP block.
-- **Git questions:** the human approves each commit message, the push, the PR title: `references/git-questions.md`.
+- **Git questions:** the human approves each commit message, the push, the PR title (`--auto`: commit with your
+  message, unasked): `references/git-questions.md`.
 - **One action per command:** you do not chain commands with `;`, `&&` or a pipe, no `sed`, `>>` and heredoc —
   Claude Code rejects a compound command when unsupervised. You read with Read, write the plan with Write or Edit.
 
@@ -53,17 +54,17 @@ prints `Input`, `Key`, `Tracker`, `Next`; do what `Next` says (every kind of inp
 
 ## 0. Start
 **One call:** `run_report.py start "<tytuł>" --story-file <plik> --begin` with `--auto` or `--plan`
-(or `--story "<treść>"`; an issue: `--key PROJ-123 --source "<skąd>"`) creates the task (the run directory `.tf/runs/<KEY>/`
+(`--story "<treść>"`; an issue: `--key PROJ-123 --source "<skąd>"`) creates the task (the run directory `.tf/runs/<KEY>/`
 outside git; the permanent files `docs/project/changes/<KEY>/`, one commit at the end, §4), checks the clean tree and the
 version cooldown (`security_scan.py cooldown`), creates `story/<slug>` from the default branch, records the intake stage.
-Exit code 3 = a STOP it recorded (a dirty tree: the human's changes stay; a failed cooldown: the human runs
-`tf cooldown --fix`) — show its block and end.
+Exit 3 = a recorded STOP (a dirty tree: the human's edits stay; the cooldown: the human runs `tf cooldown --fix`):
+show it, end.
    Pass the `Weight: …` line on in one sentence (`references/weight.md`).
    **Do not skip, before §1:** `⚠ … no related` → work out the narrowest tests-of-`{files}` command from the build files,
    check it on one file, `run_state.py gate-related` (`references/verify-scope.md`); `⚠ scanner:` → AskUserQuestion:
    install it or record the decision (`references/security.md`).
 - **The preview:** `run_state.py` records the stages in `run.json` and builds `.tf/runs/dashboard.html`. Pass on
-  `Dashboard:` and `Tip:`; a preview error is not a STOP. **A refusal** (`✗`, exit code 2) is a gate: remove the cause,
+  `Dashboard:`, `Tip:`; a preview error is not a STOP. **A refusal** (`✗`, exit code 2) is a gate: remove the cause,
   repeat.
 
 ## 1. Taking in the story
