@@ -347,6 +347,55 @@ def _lifecycle_once(proj: Path, key_hint: str, files_mode: str, node: bool, timi
     return problems
 
 
+def _lifecycle_composite(proj: Path, key_hint: str, node: bool, timings: dict) -> list[str]:
+    """The same task as `_lifecycle_once` with the composite commands (start --begin, plan, finish-slice, close)."""
+    problems = []
+
+    def t(name, cmd, ok_codes=(0,)):
+        s = time.perf_counter()
+        p = run(cmd, proj, env=clean_env({"CLAUDE_CODE_ENTRYPOINT": "sdk-cli"}), timeout=600)
+        timings.setdefault(name, []).append((time.perf_counter() - s) * 1000)
+        if p.returncode not in ok_codes:
+            problems.append(f"{name}: exit {p.returncode} {(p.stdout + p.stderr).strip()[-200:]}")
+        return p
+
+    t("intake.py resolve", [PY, f"{R}/intake.py", "resolve", "Jako użytkownik chcę licznik " + key_hint])
+    p = t("run_report.py start --begin", [PY, f"{R}/run_report.py", "start", f"Licznik {key_hint}", "--story",
+                                          "Jako użytkownik chcę licznik. Kryteria: 1. GET /api/tasks/stats zwraca zera.",
+                                          "--begin", "--auto"])
+    m = re.search(r"\.tf/runs/([^/\s]+)", p.stdout)
+    if not m:
+        return problems + [f"no run directory in: {p.stdout[-200:]}"]
+    key = m.group(1)
+    d = f".tf/runs/{key}"
+    c = proj / "docs/project/changes" / key
+    t("run_state.py spec new", [PY, f"{R}/run_state.py", "spec", d, "new"])
+    (c / "spec.md").write_text("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given an empty store, when GET /api/tasks/stats, "
+                               "then it returns zeros.\n- AC-2: Given any store, when POST /api/tasks/stats, then 404.\n\n"
+                               "## Unchanged\n\n- the list.\n\n## Out of scope\n\n- none, because one endpoint.\n")
+    tfile = "test/stats.test.js" if node else "tests/test_stats.py"
+    sfile = "src/routes.js" if node else "app/pricing.py"
+    (c / "plan.md").write_text(f"# Plan\n\n- [ ] S1 — stats · criteria: AC-1, AC-2 ({tfile}: test_ac1) · files: {sfile}, {tfile}"
+                               " · verify: `./verify.sh` · tier: std\n")
+    t("run_state.py plan", [PY, f"{R}/run_state.py", "plan", d, "--weight", "normal", "--rationale", "src:1", "--slices", "1",
+                            "--flag", "none", "--flag-reason", "stress", "--base", "main", "--auto"])
+    if node:
+        (proj / tfile).write_text("import { test } from \"node:test\";\nimport assert from \"node:assert/strict\";\n"
+                                  "test(\"test_ac1\", () => { assert.equal(1, 1); }); // AC-1 AC-2\n")
+    else:
+        (proj / tfile).write_text("import unittest\n\n\nclass T(unittest.TestCase):\n    def test_ac1(self):  # AC-1 AC-2\n"
+                                  "        self.assertTrue(True)\n")
+    with open(proj / sfile, "a") as fh:
+        fh.write(("// " if node else "# ") + f"stats {key_hint}\n")
+    t("run_state.py finish-slice", [PY, f"{R}/run_state.py", "finish-slice", d, "S1", "--files", f"{sfile},{tfile}",
+                                    "--message", "feat(api): stats"])
+    t("run_state.py close", [PY, f"{R}/run_state.py", "close", d, "--base", "main"], ok_codes=(0, 3))
+    git(proj, "add", "-A", "docs")
+    git(proj, "commit", "-qm", f"docs(task): record {key}")
+    git(proj, "switch", "-q", "main")
+    return problems
+
+
 def _servers(proj: Path) -> int:
     p = subprocess.run(["ps", "-eo", "args"], capture_output=True, text=True)
     return sum(1 for l in p.stdout.splitlines() if "dashboard_live.py serve" in l and str(proj) in l)
@@ -357,8 +406,10 @@ def probe_lifecycle(proj: Path, sc: dict, work: Path) -> dict:
     node = (proj / "package.json").exists()
     timings, problems = {}, []
     t0 = time.perf_counter()
+    composite = bool((sc.get("params") or {}).get("composite"))
     for i in range(n):
-        problems += _lifecycle_once(proj, f"#{i}", "live", node, timings)
+        problems += (_lifecycle_composite(proj, f"#{i}", node, timings) if composite
+                     else _lifecycle_once(proj, f"#{i}", "live", node, timings))
     total = time.perf_counter() - t0
     leaked = _servers(proj)
     run([PY, f"{R}/dashboard_live.py", "stop", "--project", str(proj)], proj, env=clean_env())

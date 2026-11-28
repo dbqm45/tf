@@ -73,6 +73,18 @@ scenarios:
     params: {tasks: 3}
     expect: {max_ms: 1500}
 
+  - id: MECH-013
+    name: the loop's script calls with the composite commands
+    category: Loop speed
+    engine: mech
+    probe: lifecycle
+    tags: [smoke, load, mech, speed]
+    description: >-
+      The same task as MECH-007 with start --begin, plan, finish-slice and close (every call is a model turn in a real
+      run), as `claude -p` runs it (no live dashboard server is left behind).
+    params: {tasks: 3, composite: true}
+    expect: {max_ms: 6000}
+
   - id: MECH-008
     name: the slice security scan
     category: Loop speed
