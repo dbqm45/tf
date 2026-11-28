@@ -91,6 +91,12 @@ def main() -> int:
               f"{meta.get('stage')} {meta.get('stop_code')} {r.stdout[-500:]} {r.stderr[-300:]}")
         check((meta.get("pr_steps") or {}).get("drift") in ("pass", "fail"),
               f"C-6: close records the plan_drift step: {meta.get('pr_steps')}")
+        log = git("log", "-1", "--format=%s").stdout.strip()
+        tracked = git("ls-files", f"docs/project/changes/{d.name}").stdout
+        check(log == f"docs(task): record {d.name}" and "report.md" in tracked and not git("status", "--porcelain").stdout.strip(),
+              f"C-7: close in Auto commits the task files with the report, the tree is clean: {log} {tracked} "
+              f"{git('status', '--porcelain').stdout}")
+        check("do not run it again" in r.stdout, f"C-8: close says finish is done: {r.stdout[-300:]}")
 
     for f in fails:
         print(f"✗ {f}")

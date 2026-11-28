@@ -265,6 +265,14 @@ def main() -> int:
         r = work(s, "--once", "--budget", "2")
         check(r.returncode == 2 and "permission_mode" in r.stdout and not agent_calls(s),
               f"WO-20: a permission mode outside the allowed ones (bypassPermissions) → refusal: {r.returncode} {r.stdout}")
+        (s / ".tf" / "config" / "config.yaml").write_text("work:\n  model: \"sonnet; rm -rf /\"\n", encoding="utf-8")
+        r = work(s, "--once", "--budget", "2")
+        check(r.returncode == 2 and "work.model" in r.stdout and not agent_calls(s),
+              f"WO-20b: a model name that is not an alias or an id → refusal: {r.returncode} {r.stdout}")
+        (s / ".tf" / "config" / "config.yaml").write_text("work:\n  model: sonnet\n", encoding="utf-8")
+        r = work(s, "--once", "--budget", "2", "--dry-run")
+        check(r.returncode == 0 and "--model sonnet" in r.stdout,
+              f"WO-20c: work.model goes to the session as --model: {r.returncode} {r.stdout}{r.stderr}")
         (s / ".tf" / "config" / "config.yaml").write_text("work:\n  task_budget_usd: 5\n", encoding="utf-8")
         r = work(s, "--once", "--budget", "2")
         wt9 = s / ".tf" / "worktrees" / "IMP-9"

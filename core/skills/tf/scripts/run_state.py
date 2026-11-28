@@ -2496,7 +2496,35 @@ def cmd_plan(run_dir: Path, project: Path, weight: str | None, rationale: str, f
     return 0
 
 
-def cmd_close(run_dir: Path, project: Path, base: str | None) -> int:
+def commit_task_files(run_dir: Path, project: Path) -> int:
+    """The task's files in one commit `docs(task): record <KEY>` (§4.4): what `finish` asks for, done here."""
+    meta = load(run_dir) or {}
+    if not (meta.get("task_dir") and meta.get("key")):
+        return 0
+    paths = [meta["task_dir"]]
+    if meta.get("change") and meta.get("task"):
+        paths.append(f"{run_report.CHANGES}/{meta['change']}/runs/{meta['task']}.md")
+    elif (project / run_report.CHANGES / "INDEX.md").is_file():
+        paths.append(f"{run_report.CHANGES}/INDEX.md")
+    paths = [x for x in paths if (project / x).exists()]
+    git = lambda *a: subprocess.run(["git", "-C", str(project), *a], capture_output=True, text=True, timeout=60)
+    add = git("add", "--", *paths)
+    if add.returncode != 0:
+        print(f"✗ git add of the task files: {(add.stdout + add.stderr).strip()[-300:]}")
+        return 2
+    if git("diff", "--cached", "--quiet").returncode == 0:
+        print("✓ the task files are already committed")
+        return 0
+    msg = ["-m", f"docs(task): record {meta['key']}"] + (["-m", f"Change: {meta['task']}"] if meta.get("task") else [])
+    c = git("commit", *msg)
+    if c.returncode != 0:
+        print(f"✗ the commit of the task files: {(c.stdout + c.stderr).strip()[-300:]}")
+        return 2
+    print(f"✓ task files committed: docs(task): record {meta['key']} ({git('rev-parse', '--short', 'HEAD').stdout.strip()})")
+    return 0
+
+
+def cmd_close(run_dir: Path, project: Path, base: str | None, commit: bool = False) -> int:
     """§4 in one call (tf stress: ~7 model turns → 1): agreement with the plan, the artifact budget, the criteria trace,
     the pr stage, the PR description, a STOP when there is no remote, and the run report. A trace error stops it: fix the
     test, then run `close` again. Push and the PR itself stay with the loop (the human's consent)."""
@@ -2526,6 +2554,10 @@ def cmd_close(run_dir: Path, project: Path, base: str | None) -> int:
                   None, project, code="environment")
         stopped = True
     _sub(project, Path(__file__).with_name("run_report.py"), "finish", str(run_dir))
+    print("✓ report.md written (run_report.py finish is done — do not run it again)")
+    meta = load(run_dir) or {}
+    if commit or task_field(run_dir, meta, "mode") == "auto":   # Auto: the commit without asking (git-questions)
+        commit_task_files(run_dir, project)
     if stopped:
         print("STOP — PR\nReason: no remote · Resume: from PR (push + gh pr create --body-file "
               f"{run_dir.as_posix()}/pr-body.md)")
@@ -2685,6 +2717,7 @@ def main(argv: list[str]) -> int:
     cl = sub.add_parser("close", help="plan_drift + pr_budget + trace + stage pr + pr-body + finish in one call")
     cl.add_argument("run_dir")
     cl.add_argument("--base", default=None)
+    cl.add_argument("--commit", action="store_true", help="commit the task files (the default in the Auto mode)")
     d = sub.add_parser("dashboard")
     d.add_argument("--no-cost", action="store_true")
     d.add_argument("--out", default=None)
@@ -2758,7 +2791,7 @@ def main(argv: list[str]) -> int:
                          "review": args.review}, args.by, args.flag, args.flag_reason, args.remove_by, args.park,
                         args.base, args.auto, args.plan_mode)
     if args.cmd == "close":
-        return cmd_close(Path(args.run_dir), project, args.base)
+        return cmd_close(Path(args.run_dir), project, args.base, args.commit)
     if args.live and args.stop:
         import dashboard_live
         print("✓ The live dashboard stopped." if dashboard_live.stop(project) else "ℹ No live dashboard is running.")

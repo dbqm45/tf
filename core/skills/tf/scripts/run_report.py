@@ -877,16 +877,50 @@ def default_branch(project: Path) -> str | None:
     return None
 
 
+def latest_run(project: Path) -> Path | None:
+    runs = [p.parent for p in (project / WORK).glob("*/run.json")]
+    return max(runs, key=lambda p: (p / "run.json").stat().st_mtime) if runs else None
+
+
+def record_budget(project: Path, budget: float | None) -> None:
+    """`start --budget USD` (the /tf-task flag): kept in run.json, `status` compares the cost with it."""
+    run_dir = latest_run(project) if budget is not None else None
+    meta = read_meta(run_dir) if run_dir else None
+    if meta:
+        meta["budget_usd"] = budget
+        (run_dir / "run.json").write_bytes((json.dumps(meta, ensure_ascii=False, indent=1) + "\n").encode("utf-8"))
+        print(f"budget: {budget:g} USD")
+
+
+FILES_SHOWN = 150
+
+
+def repo_overview(project: Path, run_dir: Path) -> None:
+    """The tracked files (no `ls`/`git ls-files` turn, tf stress) and the story's shape lint when installed."""
+    r = subprocess.run(["git", "-C", str(project), "ls-files"], capture_output=True, text=True, timeout=60)
+    files = [f for f in r.stdout.splitlines() if not f.startswith((".claude/", ".tf/"))]
+    if files:
+        more = f" … and {len(files) - FILES_SHOWN} more (git ls-files)" if len(files) > FILES_SHOWN else ""
+        print(f"Files ({len(files)}): " + " ".join(files[:FILES_SHOWN]) + more)
+    lint = project / ".claude/skills/proc-requirements-shaping/scripts/requirements_lint.py"
+    meta = read_meta(run_dir) or {}
+    story = project / meta["task_dir"] / "ticket.md" if meta.get("task_dir") else None
+    if lint.is_file() and story and story.is_file():
+        out = subprocess.run([sys.executable, str(lint), "--story", str(story)], cwd=project, capture_output=True,
+                             text=True, timeout=60)
+        text = (out.stdout + out.stderr).strip()
+        print("Story lint: " + (text if text else "✓"))
+
+
 def cmd_begin(project: Path, pre_dirty: list[str] | None, auto: bool, plan_mode: bool) -> int:
     """`start --begin`: after the task exists, the rest of §0 in the same call — the clean-tree check, the version
     cooldown, the story branch from the default branch and the intake stage (tf stress: four model turns fewer per
     task). A dirty tree or a failed cooldown is recorded as a STOP in the task (it shows in tf status)."""
     import run_state
-    runs = [p.parent for p in (project / WORK).glob("*/run.json")]
-    if not runs:
+    run_dir = latest_run(project)
+    if run_dir is None:
         print("✗ --begin: no run directory after start")
         return 2
-    run_dir = max(runs, key=lambda p: (p / "run.json").stat().st_mtime)
     rel = run_dir.relative_to(project).as_posix() if run_dir.is_relative_to(project) else str(run_dir)
 
     def stop(code: str, reason: str) -> int:
@@ -922,6 +956,7 @@ def cmd_begin(project: Path, pre_dirty: list[str] | None, auto: bool, plan_mode:
         return stop("environment", f"cannot create the branch {branch}: {sw.stderr.strip()[-200:]}")
     print(f"✓ branch {branch} from {base or 'HEAD'}")
     rc = run_state.cmd_stage(run_dir, "intake", None, None, None, auto, None, project, plan_mode=plan_mode)
+    repo_overview(project, run_dir)
     print(f"Run directory: {rel}")
     return rc
 
@@ -964,7 +999,11 @@ def cmd_finish(run_dir: Path, session: str | None, as_json: bool, project: Path,
     if status:   # budget check after a slice: one line, no report written
         print(f"cost: {rep['cost_usd']:.4f} USD · tokens: {fmt_tokens(token_totals(rep['models'])['total'])} · "
               f"time: {rep['duration_s'] // 60} min · plan: "
-              f"{rep['plan']['done']}/{rep['plan']['total']} · postponed: {rep['parked']}")
+              f"{rep['plan']['done']}/{rep['plan']['total']} · postponed: {rep['parked']}"
+              + (f" · budget: {meta['budget_usd']:g} USD" if meta.get("budget_usd") else ""))
+        if meta.get("budget_usd") and rep["cost_usd"] >= meta["budget_usd"]:
+            print("✗ the budget is used up: STOP with the code `budget`")
+            return 3
         return 0
     md = report_md(meta.get("slug") or run_dir.name, rep)
     (docs_dir(run_dir, meta) / "report.md").write_bytes(md.encode("utf-8"))
@@ -1011,6 +1050,7 @@ def main(argv: list[str]) -> int:
                    help="also the rest of §0: the clean tree, the cooldown, the story branch and the intake stage")
     s.add_argument("--auto", action="store_true", help="with --begin: the task's mode Auto (stage intake --auto)")
     s.add_argument("--plan", dest="plan_mode", action="store_true", help="with --begin: the mode Plan")
+    s.add_argument("--budget", type=float, default=None, help="the /tf-task --budget in USD (a hard STOP; in run.json)")
     s.add_argument("--refresh", action="store_true",
                    help="with --from-tracker: read the issue again although ticket.md exists (rewrites only ticket.md)")
     for name in ("status", "finish"):
@@ -1055,6 +1095,8 @@ def main(argv: list[str]) -> int:
                 return 0
         pre_dirty = dirty_paths(project) if args.begin else None
         rc = cmd_start(args.title, story, project, args.task, args.change, args.key, source, fetch)
+        if rc == 0:
+            record_budget(project, args.budget)
         if rc != 0 or not args.begin:
             return rc
         return cmd_begin(project, pre_dirty, args.auto, args.plan_mode)

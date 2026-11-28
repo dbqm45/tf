@@ -52,7 +52,7 @@ LOG = Path(".tf") / "logs" / "work.jsonl"
 MANIFEST = Path(".claude") / "factory-manifest.json"
 OWN_CONFIG = Path(".tf") / "config"
 OPEN_STAGES = ("intake", "spec", "plan", "implementation", "review")
-DEFAULTS = {"budget_usd": 0, "task_budget_usd": 20, "permission_mode": "acceptEdits", "lock_hours": 6, "timeout_minutes": 180}
+DEFAULTS = {"budget_usd": 0, "task_budget_usd": 20, "permission_mode": "acceptEdits", "lock_hours": 6, "timeout_minutes": 180, "model": ""}
 # unattended, nobody answers a permission question: in -p mode a tool outside the allowed list is rejected.
 # acceptEdits (default) accepts file edits in the working directory (worktree) — without it the loop cannot write code, because
 # the factory settings do not allow Edit/Write (pilot 2026-11-15); dontAsk rejects edits too; broader modes are out
@@ -312,7 +312,11 @@ def session_settings(wt: Path) -> Path:
     return mod.launch_settings(wt)
 
 
-def agent_command(key: str, budget: str, mode: str, wt: Path | None = None, plugin_layout: bool = False) -> list[str]:
+MODEL = re.compile(r"[A-Za-z][A-Za-z0-9.\[\]_-]{1,63}")   # an alias (sonnet, opus) or a model id
+
+
+def agent_command(key: str, budget: str, mode: str, wt: Path | None = None, plugin_layout: bool = False,
+                  model: str | None = None) -> list[str]:
     agent = shlex.split(os.environ.get("TF_WORK_AGENT") or "claude")
     plugin = []
     if wt is not None and plugin_layout:
@@ -320,7 +324,7 @@ def agent_command(key: str, budget: str, mode: str, wt: Path | None = None, plug
     # --permission-prompts none: nobody answers a prompt unattended, so it is denied and the run goes on (the guard hooks
     # and permission rules still apply); --output-format json: the run's cost (total_cost_usd) for the journal
     return [*agent, *plugin, "-p", f"/tf-task {key} --auto --budget {budget}", "--max-budget-usd", budget, "--permission-mode",
-            mode, "--permission-prompts", "none", "--output-format", "json",
+            mode, "--permission-prompts", "none", "--output-format", "json", *(["--model", model] if model else []),
             "--strict-mcp-config"]   # without --mcp-config: no MCP servers from the repository or from configuration
 
 
@@ -492,6 +496,10 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
     if mode not in MODES:
         print(f"✗ work.permission_mode \"{clean(mode, 40)}\": unattended work allows only: {', '.join(MODES)}")
         return 2
+    model = str(cfg.get("model") or "").strip() or None   # work.model: the session's model (empty: the CLI default)
+    if model and not MODEL.fullmatch(model):
+        print(f"✗ work.model \"{clean(model, 40)}\": give a model alias (sonnet, opus) or a model id")
+        return 2
     if base is not None and (not base or base.startswith("-") or CONTROL.search(base)):
         print("✗ --base: give a branch name or a commit")
         return 2
@@ -527,7 +535,7 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
         if dry:
             print(f"• task: {k} — {clean(task.get('title'))}")
             print(f"• worktree: {(root / WORKTREES / k).as_posix()} (branch story/{k.lower()} from {base or 'HEAD'})")
-            print(f"• command: {shlex.join(agent_command(k, budget, mode, root / WORKTREES / k, has_plugin(root)))}")
+            print(f"• command: {shlex.join(agent_command(k, budget, mode, root / WORKTREES / k, has_plugin(root), model))}")
             return 0
         ok, note = claim(root, k, float(cfg.get("lock_hours") or 6))
         if not ok:
@@ -559,7 +567,7 @@ def run_once(root: Path, key: str | None, budget_arg: str | None, base: str | No
                              "worktree": wt.relative_to(root).as_posix()})   # before the agent: an interruption counts too
             out = ""
             try:
-                proc = subprocess.run(agent_command(k, budget, mode, wt, has_plugin(wt)), cwd=wt, env=agent_env(),
+                proc = subprocess.run(agent_command(k, budget, mode, wt, has_plugin(wt), model), cwd=wt, env=agent_env(),
                                       stdout=subprocess.PIPE, text=True, encoding="utf-8", errors="replace",
                                       timeout=float(cfg.get("timeout_minutes") or 180) * 60)
                 code, out = proc.returncode, proc.stdout or ""

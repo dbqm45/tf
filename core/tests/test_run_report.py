@@ -520,6 +520,12 @@ def main() -> int:
         check(r.returncode == 0 and branch == "story/licznik-zadan" and meta(p).get("stage") == "intake",
               f"B-1: --begin creates the task, the story branch from main and the intake stage: {r.returncode} {branch} "
               f"{meta(p).get('stage')} {r.stdout[-300:]} {r.stderr[-300:]}")
+        check("Files (2): .gitignore README.md" in r.stdout,
+              f"B-1b: --begin lists the tracked files (no ls turn): {r.stdout[-400:]}")
+        p = repo("budget")
+        r = run(["start", "Licznik", "--story", "Jako użytkownik chcę licznik.", "--budget", "2.5"], p, cfg)
+        check(r.returncode == 0 and meta(p).get("budget_usd") == 2.5 and "budget: 2.5 USD" in r.stdout,
+              f"B-1c: start takes the /tf-task --budget and keeps it in run.json: {r.returncode} {r.stdout[-300:]} {r.stderr[-300:]}")
         p = repo("dirty")
         (p / "README.md").write_text("changed by the human\n")
         r = run(["start", "Licznik", "--story", "Jako użytkownik chcę licznik.", "--begin", "--auto"], p, cfg)

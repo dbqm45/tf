@@ -555,12 +555,14 @@ styles:
 # (file edits in the worktree accepted, any other tool outside the allowed list rejected — nobody waits for consent),
 # dontAsk (rejects edits too, so the loop will not write code) or plan; unattended work accepts no other mode,
 # lock_hours — after how many hours a dead process's lock can be taken over, timeout_minutes — after how many minutes a run
-# is aborted.
+# is aborted, model — the session's model (`--model`: an alias such as sonnet or opus, or a model id; empty — the CLI
+# default). Queues: run several `tf work --once` processes at a time (each takes its own task under a lock).
 work:
   budget_usd: 0
   task_budget_usd: 20
   permission_mode: acceptEdits
   lock_hours: 6
   timeout_minutes: 180
+  model: ""
 # Extra environment variables for the agent (e.g. GITHUB_TOKEN) you provide in your own environment: TF_WORK_ENV_ALLOW=GITHUB_TOKEN
 # — deliberately not here, because this file comes with the repository.
