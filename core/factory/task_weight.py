@@ -52,7 +52,8 @@ SENSITIVE = (
      r"ciasteczk\w*|\bcookies?\b|sesj\w* (użytkownik\w*|logowani\w*|przeglądark\w*)|"
      r"(user|login|browser|auth\w*) sessions?|sessions? (cookie|token|id|fixation|hijack\w*|timeout|expir\w*)|"
      r"\b(access|refresh|auth|api|bearer|csrf) tokens?\b|token\w* (odświeżania|dostępu|api)|"
-     r"\bcsrf\b|\bxsrf\b|\bcors\b|\brol[aięe]\b|\broles?\b|\badmin\w*|is_?admin|\brbac\b"),
+     r"\bcsrf\b|\bxsrf\b|\bcors\b|\brol[aięe]\b|\broles?\b|\brbac\b|is_?admin|tylko admin\w*|"
+     r"only (an? )?admins?\b|admin[- ]only|admin\w* (role|rights|privileges|uprawnie\w*)"),   # not "as an admin I want"
     ("a security vulnerability",
      r"\bxss\b|sql[- ]injection|wstrzykiwan\w* sql|\binjection\b|podatnoś\w*|vulnerab\w*|\bcve-\d|\bssrf\b|"
      r"path traversal"),

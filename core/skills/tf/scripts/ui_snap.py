@@ -466,6 +466,13 @@ def worth(run_dir: Path, project: Path, base: str | None = None) -> dict:
     if not light and lines >= int(cfg["min_ui_lines"]):
         reasons.append(f"{lines} changed UI lines")
     if reasons:
+        card = _read_json(project / CARD).get("preview")
+        if not (isinstance(card, dict) and card.get("url")) and not detect_preview(project):
+            # worth it, but `capture` cannot run (tf stress: 12 failed captures in 41 runs) — no call that fails
+            return {"yes": False, "forced": None, "ui_files": files, "no_address": True,
+                    "reasons": reasons + ["but the project has no preview address (`preview.url` in "
+                                          ".tf/config/operations.json, no frontend framework in package.json): no capture — "
+                                          "name it in the report as a missing visual check"]}
         return {"yes": True, "forced": None, "ui_files": files, "reasons": reasons}
     why = ("a light task without a criterion about something visible" if light else
            f"only {len(files)} UI file(s) ({short}) and {lines} changed UI lines, below the thresholds "

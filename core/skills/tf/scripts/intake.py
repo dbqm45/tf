@@ -390,6 +390,8 @@ def resolve(root: Path, raw: str) -> tuple[int, dict]:
            "stage": None, "file": None, "story": None, "title": None, "text": None, "tasks": [], "keys": [], "options": options,
            "intent": intent, "ask": None, "next": ""}
     tokens = text.split()
+    if len(tokens) > 1 and all(TICKET.fullmatch(t.rstrip(",;")) for t in tokens):   # "EBO-1, EBO-2, EBO-3"
+        tokens = [t.rstrip(",;") for t in tokens]
     suffix = opts_suffix(options)
 
     def done(code: int = 0) -> tuple[int, dict]:

@@ -451,10 +451,22 @@ def wip_dir(root: Path) -> Path:
     return root / ".tf" / "wip"
 
 
+def self_cmd(root: Path) -> str:
+    """How the agent runs this script from the project root (`.claude/hooks/…` or the plugin's path): a message that
+    names the bare file name sends the agent looking for it (tf stress: `find / -name project_record.py`)."""
+    me = Path(__file__).resolve()
+    try:
+        return f"python3 {me.relative_to(root.resolve()).as_posix()}"
+    except ValueError:
+        return f"python3 {me.as_posix()}"
+
+
 def wip_items(root: Path, statuses: tuple = WIP_ACTIVE) -> list[dict]:
     folder = wip_dir(root)
     items = []
     for p in sorted(folder.glob("*.md")) if folder.exists() else []:
+        if p.name == "README.md":   # the folder's description (tf init), not a checkpoint
+            continue
         meta, body = parse(p)
         meta = meta or {}
         if meta.get("status", "active") in statuses:
@@ -551,7 +563,8 @@ def stop_reminder(root: Path, data: dict) -> str | None:
     names = ", ".join(f".tf/wip/{i['slug']}.md" for i in items)
     return (f"The checkpoint ({names}) is older than the file changes by more than {STALE_MINUTES} min. Before you finish, "
             "update it briefly: tick the finished steps with evidence, write the \"Next step\" and new agreements "
-            "from the conversation. If the task is finished: `project_record.py wip done <name>`; if paused: `wip pause <name>`.")
+            f"from the conversation. If the task is finished: `{self_cmd(root)} wip done <name>`; if paused: "
+            f"`{self_cmd(root)} wip pause <name>`.")
 
 
 def repo_drift(root: Path, body: str) -> str | None:

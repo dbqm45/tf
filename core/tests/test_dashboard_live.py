@@ -25,7 +25,8 @@ SPEC = ("# Spec\n\n## Acceptance criteria\n\n- AC-1: Given a list, when the admi
 
 
 def env_for(cfg: Path, extra=None) -> dict:
-    env = {k: v for k, v in os.environ.items() if k not in ("CI", "TF_DASHBOARD", "TF_DASHBOARD_LIVE")}
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("CI", "TF_DASHBOARD", "TF_DASHBOARD_LIVE", "CLAUDE_CODE_ENTRYPOINT")}
     return {**env, "CLAUDE_CONFIG_DIR": str(cfg), "TF_DASHBOARD_OPEN": "0", **(extra or {})}
 
 
@@ -155,6 +156,12 @@ def main() -> int:
             d = next((proj / ".tf" / "runs").glob("T-*-sort-the-list"), None)
             check(r.returncode == 0 and d is not None, f"L-0: preparing the run: {r.stdout} {r.stderr}")
             check(state(proj) is None, "L-0b: TF_DASHBOARD_OPEN=0 — run start does not start a server nobody looks at")
+            headless = Path(t) / "headless"
+            headless.mkdir()
+            r = run(REPORT, ["start", "Headless run", "--story", "A story."], headless, cfg,
+                    {"TF_DASHBOARD_OPEN": "1", "CLAUDE_CODE_ENTRYPOINT": "sdk-cli"})
+            check(r.returncode == 0 and state(headless) is None,
+                  f"L-0c: claude -p (sdk-cli) — no live server for a run nobody watches: {state(headless)} {r.stdout[-200:]}")
             if d is None:
                 print("✗ no run directory")
                 return 1

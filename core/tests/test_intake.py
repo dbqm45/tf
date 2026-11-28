@@ -226,6 +226,9 @@ def main() -> int:
         r = run(p, "resolve", "EBO-11", "EBO-22")
         check(r.returncode == 0 and "Input: batch" in r.stdout and "Keys: EBO-11, EBO-22" in r.stdout,
               f"I-27c: text output of a batch: {r.stdout}")
+        code, out, raw = resolve(p, "EBO-11,", "EBO-22,", "EBO-33")
+        check(out.get("kind") == "batch" and out.get("keys") == ["EBO-11", "EBO-22", "EBO-33"],
+              f"I-27d: keys separated with commas are a batch too: {raw}")
 
         # output for a human and invocation errors
         r = run(p, "resolve", "EBO-1236")

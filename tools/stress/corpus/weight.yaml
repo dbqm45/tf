@@ -60,6 +60,7 @@ cases:
   - {id: W088, ok: [normal, full], text: "Add rate limiting to the public API (100 req/min per IP)."}
   - {id: W090, ok: [normal], text: "Jako operator chcę wyeksportować sesje ładowania z wybranego dnia do CSV.\nKryteria akceptacji: nagłówek i jeden wiersz na sesję.", note: "charging sessions are not a login (EV domain)"}
   - {id: W091, ok: [normal], text: "Add a token counter to the tokenizer stats page.\nAcceptance criteria: the page shows the number of tokens.", note: "tokens of text, not credentials"}
+  - {id: W092, ok: [normal], text: "As an admin I want to sort the task list by date.\nAcceptance criteria: GET /api/tasks?sort=date.", note: "a persona, not an authorization change"}
   - {id: W089, ok: [full], text: "```diff\n- if (!user.isAdmin) return 403\n+ // TODO\n```\nApply this patch."}
   # --- sizes and formats
   - {id: W100, ok: [normal, light], text: ".", note: "one character"}

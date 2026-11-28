@@ -250,6 +250,9 @@ def main() -> int:
             (docs / "plan.md").write_text(f"# Plan\n- [ ] S1 — slice · criteria: AC-1 · files: {files} · verify: `x`\n", encoding="utf-8")
             return rd
 
+        (proj / ".tf" / "config").mkdir(parents=True)
+        (proj / ".tf" / "config" / "operations.json").write_text(json.dumps({"preview": {"url": "http://localhost:4200"}}))
+
         def worth(rd, *extra):
             r = run(["worth", rd, *extra], proj)
             return r.returncode, r.stdout
@@ -265,6 +268,10 @@ def main() -> int:
         check("worth: two components and a criterion about a form → yes", code == 0 and "visible" in out, out)
         code, out = worth(mk("B5", "src/app/a.component.html, src/app/b.component.html"))
         check("worth: two UI files → yes", code == 0 and "2 UI files" in out, out)
+        (proj / ".tf" / "config" / "operations.json").write_text("{}")
+        code, out = worth(mk("B5n", "src/app/a.component.html, src/app/b.component.html"))
+        check("worth: worth it but no preview address → no, and it says why", code == 1 and "no preview address" in out, out)
+        (proj / ".tf" / "config" / "operations.json").write_text(json.dumps({"preview": {"url": "http://localhost:4200"}}))
         code, out = worth(mk("B6", "src/app/a.component.html", "Pokaż przycisk Zapisz."))
         check("worth: one UI file and a Polish visible criterion → yes", code == 0 and "przycisk" in out, out)
         code, out = worth(mk("B7", "a.html, b.html", weight="light"))

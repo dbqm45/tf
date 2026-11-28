@@ -129,7 +129,7 @@ after `done` the run waits for the human's consent (`Next: STOP`), and `verify` 
 `launch` (called by `run_report.py start`) builds the dashboard and opens it in the browser; you turn this off in
 `.claude/tf.json`: {"dashboard": false} (entirely) or {"dashboard_open": false} (builds, but does not open);
 both on by default. The variables TF_DASHBOARD=0 and TF_DASHBOARD_OPEN=0 do the same without the file.
-Live mode (`dashboard_live`, on by default; {"dashboard_live": false} or TF_DASHBOARD_LIVE=0 turns it off, CI too):
+Live mode (`dashboard_live`, on by default; {"dashboard_live": false} or TF_DASHBOARD_LIVE=0 turns it off, CI and `claude -p` too):
 the page opens from a local server (`dashboard_live.py`: 127.0.0.1, a free port, a random token in the address), which
 pushes every state change to the page over Server-Sent Events — no reload, the open panel and the scroll stay.
 `launch` starts it only when it opens the page (a running one is reused and its address printed); when it cannot start
@@ -2162,6 +2162,8 @@ def options(project: Path) -> dict:
         opts["dashboard_live"] = False
     if os.environ.get("CI"):          # CI and tests: without opening the browser and without the live server
         opts["dashboard_open"] = opts["dashboard_live"] = False
+    if os.environ.get("CLAUDE_CODE_ENTRYPOINT") == "sdk-cli":   # `claude -p` (tf work, scripts): nobody opens a page, and a
+        opts["dashboard_open"] = opts["dashboard_live"] = False  # live server would idle 30 min per run (tf stress)
     return opts
 
 

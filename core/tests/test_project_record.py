@@ -27,7 +27,7 @@ def artifact(root: Path, rel: str, **fields) -> Path:
     return p
 
 
-WIP_TESTS = 8
+WIP_TESTS = 10
 
 
 def wip_tests() -> list[str]:
@@ -62,12 +62,22 @@ def wip_tests() -> list[str]:
         out = run(root, "--hook-stop", stdin="{}").stdout
         if git_ok and '"block"' not in out:
             fails.append("Stop does not remind about a stale checkpoint")
+        if git_ok and ".claude/hooks/project_record.py wip done" not in out and "project_record.py wip done" in out:
+            fails.append("Stop names project_record.py without its path (agents went looking for it)")
         if run(root, "--hook-stop", stdin='{"stop_hook_active": true}').stdout.strip():
             fails.append("Stop must not block a second time (stop_hook_active)")
         r = run(root, "wip", "done", "logowanie-przez-google", "--by", "ola")
         if r.returncode != 0 or wip.exists() or not list((root / ".tf/wip/archive").glob("*logowanie-przez-google.md")) \
                 or run(root, "--hook-stop", stdin="{}").stdout.strip():
             fails.append("wip done: the file did not reach the archive or Stop still reminds")
+        # the folder's README (tf init) is not a checkpoint: no reminder and no "work in progress" for it (tf stress)
+        (root / ".tf/wip/README.md").write_text("# .tf/wip/\n\nWork-in-progress checkpoints.\n")
+        os.utime(root / ".tf/wip/README.md", (old, old))
+        (root / "app.ts").write_text("y")
+        if run(root, "--hook-stop", stdin="{}").stdout.strip():
+            fails.append("Stop treats .tf/wip/README.md as a stale checkpoint")
+        if "wip/README" in run(root, "--hook-session").stdout:
+            fails.append("the session hook lists .tf/wip/README.md as work in progress")
     return fails
 
 
